@@ -105,7 +105,7 @@ def write_FORCES_THIRD(vaspruns,
 
     for i, disp1 in enumerate(displacements['first_atoms']):
         filesecond.write("# File: %-5d\n" % (i + 1))
-        filesecond.write("# %-5d " % disp1['number'] + 1)
+        filesecond.write("# %-5d " % (disp1['number'] + 1))
         filesecond.write("%20.16f %20.16f %20.16f\n" %
                          tuple(disp1['displacement']))
         for f in set_of_forces[i]:
@@ -118,10 +118,10 @@ def write_FORCES_THIRD(vaspruns,
         for disp2 in disp1['second_atoms']:
             for d in disp2['displacements']:
                 filethird.write("# File: %-5d\n" % (count + 1))
-                filethird.write("# %-5d " % disp1['number'] + 1)
+                filethird.write("# %-5d " % (disp1['number'] + 1))
                 filethird.write("%20.16f %20.16f %20.16f\n" %
                                  tuple(disp1['displacement']))
-                filethird.write("# %-5d " % disp2['number'] + 1)
+                filethird.write("# %-5d " % (disp2['number'] + 1))
                 filethird.write("%20.16f %20.16f %20.16f\n" % tuple(d))
 
                 for f in set_of_forces[count]:
