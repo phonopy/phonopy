@@ -1,0 +1,13 @@
+This is an example of using --nosym option in LiF. The displacements are created by
+
+% phonopy -d --dim="2 2 2" --nosym
+
+48 POSCARs are created. FORCE_SETS is created from the forces on atoms of these structures. Then DOS is calcualted by
+
+% phonopy -p --dim="2 2 2" --mp="20 20 20" --nosym
+
+where --nosym is probably required though it may work without --nosym.
+
+If non-analytical term correction is used, BORN file has to be created without considering symmetry. In the case of this example, 8 Born effective charge tensors (lines) have to be written in BORN file.
+
+% phonopy -p --dim="2 2 2" --mp="20 20 20" --nosym --nac

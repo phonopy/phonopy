@@ -1,0 +1,4 @@
+% phonopy -f vasprun.xml-{001..002}
+% phonopy -p band.conf
+
+The band path is refered to Bohnen et al., PRL 86, 5771 (2001).

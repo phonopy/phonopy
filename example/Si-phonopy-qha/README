@@ -1,0 +1,19 @@
+This example is to explain how to use phonopy-qha. Following the instruction, thermal properties at constant pressure (P=0) for silicon may be calculated. The shell script can be used only for the crystal structure whose atoms are pinned at the reduced positions by the crystal symmetry. For general crystals, the unit cells have to be relaxed before starting phonon calculations.
+
+
+Create VASP input files. POTCAR is not included in this example.
+
+% phonopy-qha --cu POSCAR
+% ./script-qha.sh -m
+
+Submit VASP jobs to GridEngine queueing system. 'calc.sh' should be modified.
+
+% ./script-qha.sh -r
+
+Correct VASP results.
+
+% ./script-qha.sh -c
+
+Calculate thermal properties at constant pressure.
+
+% phonopy-qha e-v.dat QHA-*/thermal_properties.yaml -p --sparse=50

@@ -1,0 +1,89 @@
+#!/usr/bin/env python
+
+# Copyright (C) 2012 Atsushi Togo
+# All rights reserved.
+#
+# This file is part of phonopy.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#
+# * Redistributions of source code must retain the above copyright
+#   notice, this list of conditions and the following disclaimer.
+#
+# * Redistributions in binary form must reproduce the above copyright
+#   notice, this list of conditions and the following disclaimer in
+#   the documentation and/or other materials provided with the
+#   distribution.
+#
+# * Neither the name of the phonopy project nor the names of its
+#   contributors may be used to endorse or promote products derived
+#   from this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+# COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+
+import numpy as np
+import sys
+from phonopy.interface.vasp import get_born_OUTCAR
+
+def fracval(frac):
+    if frac.find('/') == -1:
+        return float(frac)
+    else:
+        x = frac.split('/')
+        return float(x[0]) / float(x[1])
+
+from optparse import OptionParser
+parser = OptionParser()
+parser.set_defaults(num_atoms=None,
+                    primitive_axis = None,
+                    primitive_atoms=None)
+parser.add_option("-a", "--atoms", dest="primitive_atoms",
+                  action="store", type="string",
+                  help="Atom indices in primitive cell")
+parser.add_option("--pa", "--primitive_axis", dest="primitive_axis",
+                  action="store", type="string",
+                  help="Same as PRIMITIVE_AXIS tags")
+(options, args) = parser.parse_args()
+
+if args:
+    outcar_filename = args[0]
+else:
+    outcar_filename = "OUTCAR"
+
+if len(args) > 1:
+    poscar_filename = args[1]
+else:
+    poscar_filename = "POSCAR"
+
+if options.primitive_axis:
+    vals = [fracval(x) for x in options.primitive_axis.split()]
+    if len(vals) == 9:
+        primitive_axis = np.array(vals).reshape(3, 3)
+    else:
+        print "Primitive axes are incorrectly set."
+        sys.exit(1)
+else:
+    primitive_axis = np.eye(3)
+    
+borns, epsilon = get_born_OUTCAR(poscar_filename=poscar_filename,
+                                 outcar_filename=outcar_filename,
+                                 primitive_axis=primitive_axis)
+
+print "14.400"
+print ("%10.5f" * 9) %  tuple(epsilon.flatten())
+for z in borns:
+    print ("%10.5f" * 9) %  tuple(z.flatten())
+

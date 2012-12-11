@@ -1,0 +1,17 @@
+Corundum Al2O3. Forces were calculated in the 2x2x2 supercell of the hexagonal lattice. The rhombohedral primitive cell is created from the hexagonal unit cell by the transformation matrix:
+[ 2/3 -1/3 -1/3]
+[ 1/3  1/3 -2/3]
+[ 1/3  1/3  1/3].
+
+Dielectric constant and Born effective charge tensors were calculated by VASP 5 with the hexagonal unit cell. BORN for the rhombohedral primitive cell was created from the site-symmetres and following the mappings:
+
+- Atom-1 in primitive cell --> Atom-4 in hexagonal unit cell.
+- Atom-5 in primitive cell --> Atom-28 in hexagonal unit cell.
+
+The Wyckoff positions are c and a, respectively, which can be found by
+
+% phonopy --symmetry --pa="2/3 -1/3 -1/3  1/3 1/3 -2/3  1/3 1/3 1/3"
+
+The band structure is obtained by
+
+% phonopy -v -p band.conf --nac

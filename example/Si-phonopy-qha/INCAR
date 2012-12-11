@@ -1,0 +1,11 @@
+    PREC = Accurate
+   ENCUT = 300
+  IBRION = -1
+  NELMIN = 5
+   EDIFF = 1.0e-08
+   IALGO = 38
+  ISMEAR = 0; SIGMA = 0.05
+   LREAL = .FALSE.
+ ADDGRID = .TRUE.
+   LWAVE = .FALSE.
+  LCHARG = .FALSE.

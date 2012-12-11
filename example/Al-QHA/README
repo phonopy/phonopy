@@ -1,0 +1,10 @@
+This is an example of usage of phonopy-qha.
+The POSCAR's are the unit cells used to calculate thermal properties at volumes (2x2x2 supercell, VASP 5.2.11, PBE, smearing 1.0, 12x12x12 k-points, 48x48x48 q-points). Experimental values may be found at http://en.wikipedia.org/wiki/Thermal_expansion .
+
+The following command demonstrates the quasi-harmonic approximation calculation.
+
+% phonopy-qha e-v.dat thermal_properties.yaml-{-{5..1},{0..5}} --sparse=50
+
+For more plots in pdf,
+
+% phonopy-qha -s e-v.dat thermal_properties.yaml-{-{5..1},{0..5}} --sparse=50

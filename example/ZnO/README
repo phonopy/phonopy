@@ -1,0 +1,4 @@
+% phonopy -f vasprun.xml-{001..006}
+% phonopy --dim="2 2 2" --ct="0 0 0" -c POSCAR-unitcell
+
+Character table is shown.

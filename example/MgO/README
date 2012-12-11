@@ -1,0 +1,9 @@
+% phonopy -f vasprun.xml-{001..002}
+
+Without non-analytical-term correction
+
+% phonopy -p band.conf
+
+With non-analytical-term correction
+
+% phonopy -p --nac band.conf

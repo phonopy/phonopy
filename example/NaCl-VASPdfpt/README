@@ -1,0 +1,17 @@
+This is the README file for NaCl phonon calculation with DFPT functional of VASP code.
+
+POSCAR in this directory is created as SPOSCAR using the unit cell POSCAR by
+
+% phonopy -d --dim="2 2 2"
+
+This command may be ran in the other directory. Be careful that POSCAR in this direcotry is the supercell, not a unit cell.
+
+To obtain FORCE_CONSTANTS
+
+% phonopy --fc vasprun.xml
+
+Phonon analysis is done such as
+
+% phonopy -c POSCAR-unitcell -p band.conf
+
+Here you can not use POSCAR in this directory. Instead you have to use POSCAR-unitcell that is the original unit cell POSCAR used to create supercell POSCAR at the first step.
