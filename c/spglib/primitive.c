@@ -16,13 +16,12 @@
 static double current_tolerance;
 
 
-static Cell * get_primitive_with_pure_translation(SPGCONST Cell * cell,
-						  const VecDBL *pure_trans,
-						  const double symprec);
+static Primitive get_primitive_and_pure_translation(SPGCONST Cell * cell,
+						    const double symprec);
 static Cell * get_primitive_with_mapping_table(int * mapping_table,
 					       SPGCONST Cell * cell,
 					       const double symprec);
-static int set_primitive_positions(Cell * primitive,
+static int set_primitive_positions(Cell * primitive_cell,
 				   const VecDBL * position,
 				   const Cell * cell,
 				   int * const * table);
@@ -30,7 +29,7 @@ static VecDBL * get_positions_primitive(SPGCONST Cell * cell,
 					SPGCONST double prim_lat[3][3]);
 static int get_overlap_table(int ** table,
 			     const int cell_size,
-			     SPGCONST Cell *primitive,
+			     SPGCONST Cell *primitive_cell,
 			     const VecDBL * position,
 			     const double symprec);
 static int check_overlap_table(SPGCONST int **overlap_table,
@@ -44,7 +43,7 @@ static Cell * get_primitive(int * mapping_table,
 			    SPGCONST Cell * cell,
 			    const VecDBL * pure_trans,
 			    const double symprec);
-static int trim_cell(Cell * primitive,
+static int trim_cell(Cell * primitive_cell,
 		     int * mapping_table,
 		     SPGCONST Cell * cell,
 		     const double symprec);
@@ -63,26 +62,20 @@ Cell * prm_get_primitive(SPGCONST Cell * cell,
 			 const double symprec)
 {
   int *mapping_table;
-  Cell *primitive;
+  Cell *primitive_cell;
 
   mapping_table = (int*) malloc(sizeof(int) * cell->size);
-  primitive = prm_get_primitive_with_mapping_table(mapping_table,
-						   cell,
-						   symprec);
+  primitive_cell = prm_get_primitive_with_mapping_table(mapping_table,
+							cell,
+							symprec);
   free(mapping_table);
-  return primitive;
+  return primitive_cell;
 }
 
-Cell * prm_get_primitive_with_pure_translations(SPGCONST Cell * cell,
-						const VecDBL *pure_trans,
-						const double symprec)
+Primitive prm_get_primitive_and_pure_translations(SPGCONST Cell * cell,
+						  const double symprec)
 {
-  Cell *primitive;
-
-  primitive = get_primitive_with_pure_translation(cell,
-						  pure_trans,
-						  symprec);
-  return primitive;
+  return get_primitive_and_pure_translation(cell, symprec);
 }
 
 Cell * prm_get_primitive_with_mapping_table(int * mapping_table,
@@ -103,20 +96,49 @@ double prm_get_current_tolerance(void)
 /* If primitive could not be found, primitive->size = 0 is returned. */
 /* If cell is already primitive cell, */
 /* primitive cell with smallest lattice is returned. */
-static Cell * get_primitive_with_pure_translation(SPGCONST Cell * cell,
-						  const VecDBL *pure_trans,
-						  const double symprec)
+static Primitive get_primitive_and_pure_translation(SPGCONST Cell * cell,
+						    const double symprec)
 {
-  int i;
-  Cell *primitive;
+  int attempt, is_found = 0;
+  double tolerance;
   int *mapping_table;
+  Primitive primitive;
 
-  if (pure_trans->size > 1) {
-    mapping_table = (int*) malloc(sizeof(int) * cell->size);
-    primitive = get_primitive(mapping_table, cell, pure_trans, symprec);
-    free(mapping_table);
-  } else {
-    primitive = get_cell_with_smallest_lattice(cell, symprec);
+  tolerance = symprec;
+  for (attempt = 0; attempt < 100; attempt++) {
+    primitive.pure_trans = sym_get_pure_translation(cell, tolerance);
+    if (primitive.pure_trans->size == 0) {
+      mat_free_VecDBL(primitive.pure_trans);
+      continue;
+    }
+
+    if (primitive.pure_trans->size == 1) {
+      primitive.cell = get_cell_with_smallest_lattice(cell, tolerance);
+    } else {
+      mapping_table = (int*) malloc(sizeof(int) * cell->size);
+      primitive.cell = get_primitive(mapping_table,
+				     cell,
+				     primitive.pure_trans,
+				     tolerance);
+      free(mapping_table);
+    } 
+
+    if (primitive.cell->size > 0) {
+      is_found = 1;
+      break;
+    }
+
+    cel_free_cell(primitive.cell);
+    mat_free_VecDBL(primitive.pure_trans);
+    
+    tolerance *= REDUCE_RATE;
+    warning_print("spglib: Reduce tolerance to %f ", tolerance);
+    warning_print("(line %d, %s).\n", __LINE__, __FILE__);
+  }
+
+  if (! is_found) {
+    primitive.cell = cel_alloc_cell(0);
+    primitive.pure_trans = mat_alloc_VecDBL(0);
   }
 
   return primitive;
@@ -130,25 +152,25 @@ static Cell * get_primitive_with_mapping_table(int * mapping_table,
 {
   int i, attempt;
   double tolerance;
-  Cell *primitive;
+  Cell *primitive_cell;
   VecDBL *pure_trans;
 
   tolerance = symprec;
   for (attempt = 0; attempt < 100; attempt++) {
     pure_trans = sym_get_pure_translation(cell, tolerance);
     if (pure_trans->size == 1) {
-      primitive = get_cell_with_smallest_lattice(cell, symprec);
+      primitive_cell = get_cell_with_smallest_lattice(cell, symprec);
       for (i = 0; i < cell->size; i++) {
 	mapping_table[i] = i;
       }
       goto ret;
     }
     if (pure_trans->size > 1) {
-      primitive = get_primitive(mapping_table, cell, pure_trans, tolerance);
-      if (primitive->size > 0) {
+      primitive_cell = get_primitive(mapping_table, cell, pure_trans, tolerance);
+      if (primitive_cell->size > 0) {
 	goto ret;
       }
-      cel_free_cell(primitive);
+      cel_free_cell(primitive_cell);
     }
 
     tolerance *= REDUCE_RATE;
@@ -165,7 +187,7 @@ static Cell * get_primitive_with_mapping_table(int * mapping_table,
  ret:
   mat_free_VecDBL(pure_trans);
   set_current_tolerance(tolerance);
-  return primitive;
+  return primitive_cell;
 }
 
 static void set_current_tolerance(const double tolerance)
@@ -212,7 +234,7 @@ static Cell * get_primitive(int * mapping_table,
 {
   int multi;
   double prim_lattice[3][3];
-  Cell * primitive;
+  Cell * primitive_cell;
 
   debug_print("get_primitive:\n");
 
@@ -227,33 +249,33 @@ static Cell * get_primitive(int * mapping_table,
     goto not_found;
   }
 
-  primitive = cel_alloc_cell(cell->size / multi);
+  primitive_cell = cel_alloc_cell(cell->size / multi);
 
-  if (! lat_smallest_lattice_vector(primitive->lattice,
+  if (! lat_smallest_lattice_vector(primitive_cell->lattice,
 				    prim_lattice,
 				    symprec)) {
-    cel_free_cell(primitive);
+    cel_free_cell(primitive_cell);
     goto not_found;
   }
 
   /* Fit atoms into new primitive cell */
-  if (! trim_cell(primitive, mapping_table, cell, symprec)) {
-    cel_free_cell(primitive);
+  if (! trim_cell(primitive_cell, mapping_table, cell, symprec)) {
+    cel_free_cell(primitive_cell);
     goto not_found;
   }
 
   /* found */
-  return primitive;
+  return primitive_cell;
 
  not_found:
-  primitive = cel_alloc_cell(0);
+  primitive_cell = cel_alloc_cell(0);
   warning_print("spglib: Primitive cell could not be found ");
   warning_print("(line %d, %s).\n", __LINE__, __FILE__);
-  return primitive;
+  return primitive_cell;
 }
 
 
-static int trim_cell(Cell * primitive,
+static int trim_cell(Cell * primitive_cell,
 		     int * mapping_table,
 		     SPGCONST Cell * cell,
 		     const double symprec)
@@ -266,12 +288,12 @@ static int trim_cell(Cell * primitive,
 
   /* Get reduced positions of atoms in original cell with respect to */
   /* primitive lattice */
-  position = get_positions_primitive(cell, primitive->lattice);
+  position = get_positions_primitive(cell, primitive_cell->lattice);
 
   /* Create overlapping table */
   if (! get_overlap_table(overlap_table,
 			  cell->size,
-			  primitive,
+			  primitive_cell,
 			  position,
 			  symprec)) {goto err;}
 
@@ -287,7 +309,7 @@ static int trim_cell(Cell * primitive,
   }
 
   /* Copy positions. Positions of overlapped atoms are averaged. */
-  if (! set_primitive_positions(primitive,
+  if (! set_primitive_positions(primitive_cell,
 				position,
 				cell,
 				overlap_table)) {goto err;}
@@ -302,7 +324,7 @@ static int trim_cell(Cell * primitive,
   return 0;
 }
 
-static int set_primitive_positions(Cell * primitive,
+static int set_primitive_positions(Cell * primitive_cell,
 				   const VecDBL * position,
 				   const Cell * cell,
 				   int * const * table)
@@ -314,17 +336,17 @@ static int set_primitive_positions(Cell * primitive,
   for (i = 0; i < cell->size; i++) {
     is_equivalent[i] = 0;
   }
-  ratio = cell->size / primitive->size;
+  ratio = cell->size / primitive_cell->size;
 
   /* Copy positions. Positions of overlapped atoms are averaged. */
   index_prim_atom = 0;
   for (i = 0; i < cell->size; i++) {
 
     if (! is_equivalent[i]) {
-      primitive->types[index_prim_atom] = cell->types[i];
+      primitive_cell->types[index_prim_atom] = cell->types[i];
 
       for (j = 0; j < 3; j++) {
-	primitive->position[index_prim_atom][j] = 0;
+	primitive_cell->position[index_prim_atom][j] = 0;
       }
 
       for (j = 0; j < ratio; j++) { /* Loop for averaging positions */
@@ -336,18 +358,18 @@ static int set_primitive_positions(Cell * primitive,
 	  if (mat_Dabs(position->vec[table[i][0]][k] -
 		       position->vec[table[i][j]][k]) > 0.5) {
 	    if (position->vec[table[i][j]][k] < 0) {
-	      primitive->position[index_prim_atom][k] =
-		primitive->position[index_prim_atom][k] +
+	      primitive_cell->position[index_prim_atom][k] =
+		primitive_cell->position[index_prim_atom][k] +
 		position->vec[table[i][j]][k] + 1;
 	    } else {
-	      primitive->position[index_prim_atom][k] =
-		primitive->position[index_prim_atom][k] +
+	      primitive_cell->position[index_prim_atom][k] =
+		primitive_cell->position[index_prim_atom][k] +
 		position->vec[table[i][j]][k] - 1;
 	    }
 
 	  } else {
-	    primitive->position[index_prim_atom][k] =
-	      primitive->position[index_prim_atom][k] +
+	    primitive_cell->position[index_prim_atom][k] =
+	      primitive_cell->position[index_prim_atom][k] +
 	      position->vec[table[i][j]][k];
 	  }
 	}
@@ -355,11 +377,11 @@ static int set_primitive_positions(Cell * primitive,
       }
 
       for (j = 0; j < 3; j++) {	/* take average and reduce */
-	primitive->position[index_prim_atom][j] =
-	  primitive->position[index_prim_atom][j] / ratio;
-	primitive->position[index_prim_atom][j] =
-	  primitive->position[index_prim_atom][j] -
-	  mat_Nint(primitive->position[index_prim_atom][j]);
+	primitive_cell->position[index_prim_atom][j] =
+	  primitive_cell->position[index_prim_atom][j] / ratio;
+	primitive_cell->position[index_prim_atom][j] =
+	  primitive_cell->position[index_prim_atom][j] -
+	  mat_Nint(primitive_cell->position[index_prim_atom][j]);
       }
       index_prim_atom++;
     }
@@ -368,7 +390,7 @@ static int set_primitive_positions(Cell * primitive,
   free(is_equivalent);
   is_equivalent = NULL;
 
-  if (! (index_prim_atom == primitive->size)) {
+  if (! (index_prim_atom == primitive_cell->size)) {
     warning_print("spglib: Atomic positions of primitive cell could not be determined ");
     warning_print("(line %d, %s).\n", __LINE__, __FILE__);
     goto err;
@@ -409,14 +431,14 @@ static VecDBL * get_positions_primitive(SPGCONST Cell * cell,
 /* shape of overlap_table will be (cell->size, cell->size / primitive->size). */
 static int get_overlap_table(int **overlap_table,
 			     const int cell_size,
-			     SPGCONST Cell *primitive,
+			     SPGCONST Cell *primitive_cell,
 			     const VecDBL * position,
 			     const double symprec)
 {
   int i, j, attempt, num_overlap, ratio;
   double trim_tolerance;
 
-  ratio = cell_size / primitive->size;
+  ratio = cell_size / primitive_cell->size;
   trim_tolerance = symprec;
 
   for (attempt = 0; attempt < 100; attempt++) {
@@ -430,8 +452,10 @@ static int get_overlap_table(int **overlap_table,
     for (i = 0; i < cell_size; i++) {
       num_overlap = 0;
       for (j = 0; j < cell_size; j++) {
-        if (cel_is_overlap(position->vec[i], position->vec[j],
-			   primitive->lattice, trim_tolerance)) {
+        if (cel_is_overlap(position->vec[i],
+			   position->vec[j],
+			   primitive_cell->lattice,
+			   trim_tolerance)) {
           overlap_table[i][num_overlap] = j;
           num_overlap++;
         }

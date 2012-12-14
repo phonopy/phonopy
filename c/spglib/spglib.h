@@ -1,4 +1,4 @@
-/* spglib.h version 1.2.6 */
+/* spglib.h version 1.4 */
 /* Copyright (C) 2008 Atsushi Togo */
 
 #ifndef __spglib_H__
@@ -303,7 +303,6 @@ int spg_get_stabilized_reciprocal_mesh(int grid_point[][3],
 				       const int mesh[3],
 				       const int is_shift[3],
 				       const int is_time_reversal,
-				       SPGCONST double lattice[3][3],
 				       const int num_rot,
 				       SPGCONST int rotations[][3][3],
 				       const int num_q,
@@ -315,7 +314,6 @@ int spg_get_stabilized_reciprocal_mesh(int grid_point[][3],
 /* Don't forget to free memory space of triplets using spg_free_triplets */
 SpglibTriplets * spg_get_triplets_reciprocal_mesh(const int mesh[3],
 						  const int is_time_reversal,
-						  SPGCONST double lattice[3][3],
 						  const int num_rot,
 						  SPGCONST int rotations[][3][3],
 						  const double symprec);
@@ -328,7 +326,6 @@ int spg_get_triplets_reciprocal_mesh_at_q(int weights[],
 					  const int grid_point,
 					  const int mesh[3],
 					  const int is_time_reversal,
-					  SPGCONST double lattice[3][3],
 					  const int num_rot,
 					  SPGCONST int rotations[][3][3],
 					  const double symprec);
@@ -340,9 +337,7 @@ int spg_extract_triplets_reciprocal_mesh_at_q(int triplets_at_q[][3],
 					      SPGCONST int triplets[][3],
 					      const int mesh[3],
 					      const int is_time_reversal,
-					      SPGCONST double lattice[3][3],
 					      const int num_rot,
-					      SPGCONST int rotations[][3][3],
-					      const double symprec);
+					      SPGCONST int rotations[][3][3]);
 
 #endif

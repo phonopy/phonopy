@@ -235,7 +235,6 @@ def get_ir_reciprocal_mesh(mesh,
     return mapping, mesh_points
   
 def get_stabilized_reciprocal_mesh(mesh,
-                                   lattice,
                                    rotations,
                                    is_shift=np.zeros(3, dtype=int),
                                    is_time_reversal=True,
@@ -245,15 +244,6 @@ def get_stabilized_reciprocal_mesh(mesh,
     Return k-point map to the irreducible k-points and k-point grid points .
 
     The symmetry is searched from the input rotation matrices in real space.
-    The convention of 'lattice' is:
-       [[a_x, a_y, a_z],
-        [b_x, b_y, b_z],
-        [c_x, c_y, c_z]] (ASE convention)
-    Since it has to be passed to the C extention in the following format:
-       [[a_x, b_x, c_x],
-        [a_y, b_y, c_y],
-        [a_z, b_z, c_z]] (spglib convention)
-    Therefore in this method, lattice is transposed.
     
     is_shift=[0, 0, 0] gives Gamma center mesh and the values 1 give
     half mesh distance shifts.
@@ -269,7 +259,6 @@ def get_stabilized_reciprocal_mesh(mesh,
                                    np.array(mesh, dtype=int),
                                    np.array(is_shift, dtype=int),
                                    is_time_reversal * 1,
-                                   lattice.T.copy(),
                                    rotations.copy(),
                                    np.array(qpoints, dtype=float),
                                    symprec)
@@ -277,7 +266,6 @@ def get_stabilized_reciprocal_mesh(mesh,
     return mapping, mesh_points
 
 def get_triplets_reciprocal_mesh(mesh,
-                                 lattice,
                                  pointgroup,
                                  is_time_reversal=True,
                                  symprec=1e-5):
@@ -294,7 +282,6 @@ def get_triplets_reciprocal_mesh(mesh,
     triplets, weights, mesh_points = \
         spg.triplets_reciprocal_mesh(np.array(mesh, dtype=int),
                                      is_time_reversal * 1,
-                                     lattice.T.copy(),
                                      pointgroup.copy(),
                                      symprec)
 
@@ -302,7 +289,6 @@ def get_triplets_reciprocal_mesh(mesh,
 
 def get_triplets_reciprocal_mesh_at_q(fixed_grid_number,
                                       mesh,
-                                      lattice,
                                       rotations,
                                       is_time_reversal=True,
                                       symprec=1e-5):
@@ -318,7 +304,6 @@ def get_triplets_reciprocal_mesh_at_q(fixed_grid_number,
                                       fixed_grid_number,
                                       np.array(mesh, dtype=int),
                                       is_time_reversal * 1,
-                                      lattice.T.copy(),
                                       rotations.copy(),
                                       symprec)
 
@@ -328,10 +313,8 @@ def get_triplets_reciprocal_mesh_at_q(fixed_grid_number,
 def extract_triplets_reciprocal_mesh_at_q(fixed_grid_number,
                                           triplets,
                                           mesh,
-                                          lattice,
                                           pointgroup,
-                                          is_time_reversal=True,
-                                          symprec=1e-5):
+                                          is_time_reversal=True):
 
     triplets_with_q = np.zeros((len(triplets), 3), dtype=int)
     weights_with_q = np.zeros(len(triplets), dtype=int)
@@ -343,10 +326,9 @@ def extract_triplets_reciprocal_mesh_at_q(fixed_grid_number,
                                                         triplets,
                                                         np.array(mesh, dtype=int),
                                                         is_time_reversal * 1,
-                                                        lattice.T.copy(),
-                                                        pointgroup.copy(),
-                                                        symprec)
+                                                        pointgroup.copy())
     
     return \
         triplets_with_q[:num_triplets_with_q], \
         weights_with_q[:num_triplets_with_q]
+
