@@ -77,12 +77,10 @@ those for ``phonopy`` script.
 * ``-s``, ``--save``
 * ``-o``
 
-For the mesh-sampling plot, a few more options to control matplotlib
-parameters are prepared. ``--color`` option (``RB``, ``RG``, ``RGB``)
-is used to gradually change the marker colors with respect to band
-indices.
-
-
+The ``--color`` option (``RB``, ``RG``, ``RGB``) is used to gradually
+change the marker colors with respect to band indices. For the
+mesh-sampling plot, a few more options to control matplotlib
+parameters are prepared.
 
 Method to calculate mode Grüneisen parameters
 ---------------------------------------------

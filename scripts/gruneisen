@@ -98,6 +98,7 @@ parser.set_defaults(band_paths=None,
                     cell_poscar=None,
                     color_scheme=None,
                     cutoff_frequency=None,
+                    cutoff_wave_vector=1e-4,
                     is_nac=False,
                     plot_graph=False,
                     reads_force_constants=False,                    
@@ -140,6 +141,8 @@ parser.add_option("-s", "--save", dest="save_graph",
 parser.add_option("--color", dest="color_scheme",
                   action="store", type="string",
                   help="Color scheme")
+parser.add_option("--q_cutoff", dest="cutoff_wave_vector", type="float",
+                  help="Acoustic modes inside cutoff wave vector is treated.")
 parser.add_option("--cutoff", dest="cutoff_frequency", type="float",
                   help="Plot above this cutoff frequency only.")
 parser.add_option("--marker", dest="marker",
@@ -227,7 +230,8 @@ if options.band_paths:
                                  options.band_points)
     gruneisen.write_yaml_band_structure()
     if options.plot_graph:
-        plt = gruneisen.plot_band_structure(epsilon=1e-4)
+        plt = gruneisen.plot_band_structure(epsilon=options.cutoff_wave_vector,
+                                            color_scheme=options.color_scheme)
 
 
 elif options.sampling_mesh:

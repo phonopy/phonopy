@@ -111,7 +111,7 @@ Oct-12-2011: Version 1.2
 * Showing site-symmetry symbols with respective orientations in the output of
   ``--symmetry`` option.
 * Code cleanings of ``settings.py``, ``force_constant.py``, etc.
-* Starting implementation of ``character_table.py`` (:ref:`character_table_option`).
+* Starting implementation of ``character_table.py`` (:ref:`character_table_tag`).
 
 Sep-19-2011: Version 1.1
 ---------------------------

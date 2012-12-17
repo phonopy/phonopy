@@ -74,6 +74,9 @@ class DynamicalMatrix:
     def is_nac(self):
         return self._nac
 
+    def get_dimension(self):
+        return self._pcell.get_number_of_atoms() * 3
+
     def get_dynamical_matrix(self):
         return self._dynamical_matrix
 

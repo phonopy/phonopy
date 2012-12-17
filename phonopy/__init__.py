@@ -866,8 +866,11 @@ class PhonopyGruneisen:
     def write_yaml_band_structure(self):
         self._band_structure.write_yaml()
 
-    def plot_band_structure(self, epsilon=1e-4):
-        return self._band_structure.plot(epsilon=epsilon)
+    def plot_band_structure(self,
+                            epsilon=1e-4,
+                            color_scheme=None):
+        return self._band_structure.plot(epsilon=epsilon,
+                                         color_scheme=color_scheme)
         
 
 

@@ -58,6 +58,10 @@ class Gruneisen:
         if qpoints:
             self._set_gruneisen()
 
+        if self._is_band_connection:
+            self._band_order = range(self._dynmat.get_dimension())
+            self._prev_eigvecs = None
+
     def set_qpoints(self, qpoints):
         self._qpoints = qpoints
         self._set_gruneisen()
@@ -71,7 +75,6 @@ class Gruneisen:
     def _set_gruneisen(self):
         if self._is_band_connection:
             self._q_direction = self._qpoints[0] - self._qpoints[-1]
-            prev_eigvecs = None
         dD = []
         eigvals = []
         for i, q in enumerate(self._qpoints):
@@ -89,15 +92,14 @@ class Gruneisen:
                        for eig in eigvecs.T]
 
             if self._is_band_connection:
-                if i == 0:
-                    band_order = range(len(eigvals_at_q))
-                else:
-                    band_order = estimate_band_connection(prev_eigvecs,
-                                                          eigvecs,
-                                                          band_order)
-                eigvals.append([eigvals_at_q[b] for b in band_order])
-                dD.append([dD_at_q[b] for b in band_order])
-                prev_eigvecs = eigvecs
+                if self._prev_eigvecs is not None:
+                    self._band_order = estimate_band_connection(
+                        self._prev_eigvecs,
+                        eigvecs,
+                        self._band_order)
+                eigvals.append([eigvals_at_q[b] for b in self._band_order])
+                dD.append([dD_at_q[b] for b in self._band_order])
+                self._prev_eigvecs = eigvecs
             else:
                 eigvals.append(eigvals_at_q)
                 dD.append(dD_at_q)
@@ -107,7 +109,7 @@ class Gruneisen:
             
         self._gruneisen = -dD / eigvals * self._volume  / self._dV / 2
         self._eigenvalues = eigvals
-                
+
     def _get_dD(self, q):
         if (self._is_band_connection and
             self._dynmat_plus.is_nac() and 

@@ -105,7 +105,9 @@ class BandStructure:
                     
         f.close()
 
-    def plot(self, epsilon=1e-4):
+    def plot(self,
+             epsilon=None,
+             color_scheme=None):
         import matplotlib.pyplot as plt
         for band_structure in self._paths:
             (qpoints,
@@ -119,7 +121,8 @@ class BandStructure:
                       frequencies,
                       qpoints,
                       distances_with_shift,
-                      epsilon)
+                      epsilon,
+                      color_scheme)
         return plt
 
 def _get_band_qpoints(q_start, q_end, rec_lattice, num_points=51):
@@ -143,19 +146,59 @@ def _bandplot(plt,
               freqencies,
               qpoints,
               distances_with_shift,
-              epsilon=1e-4):
+              epsilon=None,
+              color_scheme=None):
+    n = len(gamma.T) - 1
     plt.subplot(2, 1, 1)
-    for curve in gamma.T.copy():
-        if (abs(qpoints[0]) < epsilon).all():
-            curve[0] = curve[1]   # To avoid divergence at Gamma
-        if (abs(qpoints[-1]) < epsilon).all():
-            curve[-1] = curve[-2] # To avoid divergence at Gamma
-        plt.plot(distances_with_shift, curve)
+    
+    for i, (curve, freqs) in enumerate(zip(gamma.T.copy(), freqencies.T)):
+
+        if epsilon is not None:
+            if np.linalg.norm(qpoints[0]) < epsilon:
+                cutoff_index = 0
+                for j, q in enumerate(qpoints):
+                    if not np.linalg.norm(q) < epsilon:
+                        cutoff_index = j
+                        break
+                for j in range(cutoff_index):
+                    if abs(freqs[j]) < abs(max(freqs)) / 10:
+                        curve[j] = curve[cutoff_index]
+    
+            if np.linalg.norm(qpoints[-1]) < epsilon:
+                range_rev = range(len(qpoints))
+                range_rev.reverse()
+                cutoff_index = len(qpoints) - 1
+                for j in range_rev:
+                    q = qpoints[j]
+                    if not np.linalg.norm(q) < epsilon:
+                        cutoff_index = j
+                        break
+                for j in range_rev:
+                    if j == cutoff_index:
+                        break
+                    if abs(freqs[j]) < abs(max(freqs)) / 10:
+                        curve[j] = curve[cutoff_index]
+
+        _plot_a_band(plt, curve, distances_with_shift, i, n, color_scheme)
     plt.xlim(0, distances_with_shift[-1])
 
     plt.subplot(2, 1, 2)
-    for freqs in freqencies.T:
-        plt.plot(distances_with_shift, freqs)
+    for i, freqs in enumerate(freqencies.T):
+        _plot_a_band(plt, freqs, distances_with_shift, i, n, color_scheme)
     plt.xlim(0, distances_with_shift[-1])
 
+def _plot_a_band(plt, curve, distances_with_shift, i, n, color_scheme):
+    color = None
+    if color_scheme == 'RB':
+        color = (1. / n * i, 0, 1./ n * (n - i))
+    elif color_scheme == 'RG':
+        color = (1. / n * i, 1./ n * (n - i), 0)
+    elif color_scheme == 'RGB':
+        color = (max(2./ n * (i - n / 2.), 0),
+                 min(2./ n * i, 2./ n * (n - i)),
+                 max(2./ n * (n / 2. - i), 0))
 
+    if color:
+        plt.plot(distances_with_shift, curve, color=color)
+    else:
+        plt.plot(distances_with_shift, curve)
