@@ -187,8 +187,8 @@ class ThermalProperties(ThermalPropertiesBase):
     def get_thermal_properties( self ):
         return self._thermal_properties
 
-    def write_yaml(self):
-        file = open('thermal_properties.yaml', 'w')
+    def write_yaml(self, filename='thermal_properties.yaml'):
+        file = open(filename, 'w')
         file.write("# Thermal properties / unit cell (natom)\n")
         file.write("\n")
         file.write("unit:\n")

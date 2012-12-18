@@ -464,8 +464,8 @@ class Phonopy:
     def plot_thermal_properties(self):
         return self._thermal_properties.plot_thermal_properties()
 
-    def write_yaml_thermal_properties(self):
-        self._thermal_properties.write_yaml()
+    def write_yaml_thermal_properties(self, filename='thermal_properties.yaml'):
+        self._thermal_properties.write_yaml(filename=filename)
 
     # Partial DOS
     def set_partial_DOS(self,

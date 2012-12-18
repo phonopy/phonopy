@@ -108,7 +108,8 @@ parser.set_defaults(band_paths=None,
                     primitive_axis=None,
                     sampling_mesh=None,
                     save_graph=False,
-                    supercell_dimension=None)
+                    supercell_dimension=None,
+                    title=None)
 parser.add_option("--band_points", dest="band_points", type="int",
                    help="Number of sampling points in a segment of band path")
 parser.add_option("--pa", "--primitive_axis", dest="primitive_axis",
@@ -153,6 +154,8 @@ parser.add_option("--markersize", dest="markersize", type="float",
 parser.add_option("-o", "--output", dest="output_filename",
                   action="store", type="string",
                   help="Output filename of PDF plot")
+parser.add_option("-t", "--title", dest="title", action="store",
+                  type="string", help="Title of plot")
 (options, args) = parser.parse_args()
 
 if len(args) is not 3:
@@ -232,6 +235,8 @@ if options.band_paths:
     if options.plot_graph:
         plt = gruneisen.plot_band_structure(epsilon=options.cutoff_wave_vector,
                                             color_scheme=options.color_scheme)
+        if options.title is not None:
+            plt.suptitle(options.title)
 
 
 elif options.sampling_mesh:
@@ -244,6 +249,8 @@ elif options.sampling_mesh:
                                   color_scheme=options.color_scheme,
                                   marker=options.marker,
                                   markersize=options.markersize)
+        if options.title is not None:
+            plt.suptitle(options.title)
 else:
     pass
 
