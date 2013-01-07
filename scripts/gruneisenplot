@@ -1,0 +1,163 @@
+#!/usr/bin/env python
+
+# Copyright (C) 2012 Atsushi Togo
+# All rights reserved.
+#
+# This file is part of phonopy.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#
+# * Redistributions of source code must retain the above copyright
+#   notice, this list of conditions and the following disclaimer.
+#
+# * Redistributions in binary form must reproduce the above copyright
+#   notice, this list of conditions and the following disclaimer in
+#   the documentation and/or other materials provided with the
+#   distribution.
+#
+# * Neither the name of the phonopy project nor the names of its
+#   contributors may be used to endorse or promote products derived
+#   from this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+# COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+
+try:
+    import yaml
+except ImportError:
+    print "You need to install python-yaml."
+    exit(1)
+    
+try:
+    from yaml import CLoader as Loader
+    from yaml import CDumper as Dumper
+except ImportError:
+    from yaml import Loader, Dumper
+
+import numpy as np
+
+def print_band(data):
+    distance = 0
+    print "#%-9s %-10s %-10s   " % ("    q_a", "    q_b", "    q_c"),
+    print "%-12s   " % "   Distance",
+    print "%-12s %-12s     ..." % ("   Gruneisen", "   Frequency")
+    for path in data['path']:
+        for q in path['phonon']:
+            print "%10.7f %10.7f %10.7f   " % (tuple(q['q-position'])),
+            print "%12.7f   " % (q['distance'] + distance),
+            for band in q['band']:
+                print "%12.7f %12.7f " % (band['gruneisen'], band['frequency']),
+            print
+        distance += path['phonon'][-1]['distance']
+
+def print_mesh(data):
+    print "#%-9s %-10s %-10s " % ("    q_a", "    q_b", "    q_c"),
+    print "%-12s " % "Multiplicity",
+    print "%-12s %-12s     ..." % ("   Gruneisen", "   Frequency")
+    for qpt in data['phonon']:
+        print "%10.7f %10.7f %10.7f " % (tuple(qpt['q-position'])),
+        print "%12d " % qpt['multiplicity'],
+        for band in qpt['band']:
+            print "%12.7f %12.7f " % (band['gruneisen'], band['frequency']),
+        print
+
+
+def plot_band(data, is_fg):
+    import matplotlib.pyplot as plt
+
+    d = []
+    g = []
+    f = []
+    distance = 0.0
+    
+    for path in data['path']:
+        for q in path['phonon']:
+            d.append(q['distance'] + distance)
+            g.append([band['gruneisen'] for band in q['band']])
+            f.append([band['frequency'] for band in q['band']])
+        distance += path['phonon'][-1]['distance']
+
+    if is_fg:
+        plt.subplot(3, 1, 1)
+        plt.plot(d, g, '-')
+        plt.subplot(3, 1, 2)
+        plt.plot(d, np.array(g) * np.array(f), '-')
+        plt.subplot(3, 1, 3)
+        plt.plot(d, f, '-')
+    else:
+        plt.subplot(2, 1, 1)
+        plt.plot(d, g, '-')
+        plt.subplot(2, 1, 2)
+        plt.plot(d, f, '-')
+    return plt
+
+def plot_mesh(data, is_fg):
+    import matplotlib.pyplot as plt
+    
+    x = []
+    y = []
+    for qpt in data['phonon']:
+        x.append([band['frequency'] for band in qpt['band']])
+        y.append([band['gruneisen'] for band in qpt['band']])
+
+    if is_fg:
+        plt.plot(x, np.array(x) * np.array(y), 'o')
+    else:
+        plt.plot(x, y, 'o')
+
+    return plt
+
+
+# Parse options
+from optparse import OptionParser
+parser = OptionParser()
+parser.set_defaults(is_fg=False,
+                    is_gnuplot=False,
+                    output_filename=None,
+                    title=None)
+parser.add_option("--gnuplot", dest="is_gnuplot", action="store_true",
+                  help="Output in gnuplot data style")
+parser.add_option("-o", "--output", dest="output_filename",
+                  action="store", type="string",
+                  help="Output filename of PDF plot")
+parser.add_option("--fg", dest="is_fg", action="store_true",
+                  help="Plot omega x gamma")
+parser.add_option("-t", "--title", dest="title", action="store",
+                  type="string", help="Title of plot")
+(options, args) = parser.parse_args()
+
+if len(args) == 0:
+    data = yaml.load(open("gruneisen.yaml").read(), Loader=Loader)
+else:
+    data = yaml.load(open(args[0]).read(), Loader=Loader)
+
+if 'path' in data:
+    if options.is_gnuplot:
+        print_band(data)
+    else:
+        plt = plot_band(data, options.is_fg)
+        if options.title is not None:
+            plt.subtitle(options.title)
+        plt.show()
+elif 'mesh' in data:
+    if options.is_gnuplot:
+        print_mesh(data)
+    else:
+        plt = plot_mesh(data, options.is_fg)
+        if options.title is not None:
+            plt.subtitle(options.title)
+        plt.show()
+        
+
