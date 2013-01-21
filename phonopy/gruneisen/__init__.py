@@ -55,7 +55,7 @@ class Gruneisen:
 
         self._gruneisen = None
         self._eigenvalues = None
-        if qpoints:
+        if qpoints is not None:
             self._set_gruneisen()
 
         if self._is_band_connection:
