@@ -764,7 +764,6 @@ def get_triplets_at_q(gp,
     weights, third_q, grid_points = \
         spg.get_triplets_reciprocal_mesh_at_q(gp,
                                               mesh,
-                                              primitive_lattice,
                                               rotations,
                                               is_time_reversal,
                                               symprec)
