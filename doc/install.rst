@@ -25,6 +25,12 @@ machine. See :ref:`virtualmachine`
     
    ``python-scipy`` is also required to use ``phonopy-qha``.
 
+   The ``texlive-fonts-recommended`` package may be required, if you
+   see the following message in ploting results::
+   
+      ! I can't find file `pncr7t'.
+
+
 2. Download the source code from:
 
    https://sourceforge.net/projects/phonopy/ .
