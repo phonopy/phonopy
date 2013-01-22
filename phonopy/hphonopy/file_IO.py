@@ -33,6 +33,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import sys
+import StringIO
 import numpy as np
 import phonopy.interface.vasp as vasp
 import phonopy.interface.wien2k as wien2k
@@ -47,32 +48,42 @@ from phonopy.cui.settings import fracval
 Damping_Factor = 0.25
 
 # Utility to read file with ignoring blank lines
-def get_line_ignore_blank(fileobj):
-    line = fileobj.readline().strip()
+def get_line_ignore_blank(f):
+    line = f.readline().strip()
     if line == '':
-        line = get_line_ignore_blank(fileobj)
+        line = get_line_ignore_blank(f)
     return line
 
 # Parse FORCE_SETS
 def parse_FORCE_SETS(num_atom,
-                     is_translational_invariance = False,
-                     filename = "FORCE_SETS"):
+                     is_translational_invariance=False,
+                     filename="FORCE_SETS"):
+    f = open(filename, 'r')
+    return get_set_of_forces(f, num_atom, is_translational_invariance)
+
+def parse_FORCE_SETS_from_strings(strings,
+                                  num_atom,
+                                  is_translational_invariance=False):
+    return get_set_of_forces(StringIO.StringIO(strings),
+                             num_atom,
+                             is_translational_invariance)
+
+def get_set_of_forces(f, num_atom, is_translational_invariance):
     set_of_forces = []
-    fileobj = open(filename, 'r')
-    natom_from_disp_yaml = int(get_line_ignore_blank(fileobj))
+    natom_from_disp_yaml = int(get_line_ignore_blank(f))
     if not num_atom==natom_from_disp_yaml:
         return None
 
-    num_displacements = int(get_line_ignore_blank(fileobj))
+    num_displacements = int(get_line_ignore_blank(f))
 
     for i in range(num_displacements):
-        line = get_line_ignore_blank(fileobj)
+        line = get_line_ignore_blank(f)
         atom_number = int(line)
-        line = get_line_ignore_blank(fileobj).split()
+        line = get_line_ignore_blank(f).split()
         displacement = np.array([float(x) for x in line])
         forces_tmp = []
         for j in range(num_atom):
-            line = get_line_ignore_blank(fileobj).split()
+            line = get_line_ignore_blank(f).split()
             forces_tmp.append(np.array([float(x) for x in line]))
         forces = Forces(atom_number-1, displacement, forces_tmp)
         if is_translational_invariance:
@@ -81,22 +92,24 @@ def parse_FORCE_SETS(num_atom,
 
     return set_of_forces
 
+    
+
 # Parse FORCES
 def parse_FORCES(cell,
-                 is_translational_invariance = False,
-                 filename = "FORCES"):
+                 is_translational_invariance=False,
+                 filename="FORCES"):
     set_of_forces = []
-    fileobj = open(filename, 'r')
-    num_displacements = int(fileobj.readline().strip())
+    f = open(filename, 'r')
+    num_displacements = int(f.readline().strip())
     for i in range(num_displacements):
-        line = fileobj.readline().strip().split()
+        line = f.readline().strip().split()
         atom_number = int(line[0])
         displacement = np.array([float(line[x]) for x in (1,2,3)])
         displacement = np.dot(displacement, cell.get_cell())
         forces_tmp = []
         for j in range(cell.get_number_of_atoms()):
             forces_tmp.append(np.array(
-                    [float(x) for x in fileobj.readline().strip().split()]))
+                    [float(x) for x in f.readline().strip().split()]))
         forces = Forces(atom_number-1, displacement, forces_tmp)
         if is_translational_invariance:
             forces.set_translational_invariance()
@@ -105,12 +118,12 @@ def parse_FORCES(cell,
     return set_of_forces
 
 # Parse QPOINTS
-def parse_QPOINTS(filename = "QPOINTS"):
-    fileobj = open(filename, 'r')
-    num_qpoints = int(fileobj.readline().strip())
+def parse_QPOINTS(filename="QPOINTS"):
+    f = open(filename, 'r')
+    num_qpoints = int(f.readline().strip())
     qpoints = []
     for i in range(num_qpoints):
-        qpoints.append([fracval(x) for x in fileobj.readline().strip().split()])
+        qpoints.append([fracval(x) for x in f.readline().strip().split()])
     return np.array(qpoints)
 
 # Write FORCE_SETS for VASP
@@ -482,10 +495,16 @@ def read_force_constant_OUTCAR(filename):
 
 # Read BORN
 def parse_BORN(primitive, is_symmetry=True, filename="BORN"):
-    file = open(filename, 'r')
+    f = open(filename, 'r')
+    return get_born_parameters(f, primitive, is_symmetry)
 
+def parse_BORN_from_strings(strings, primitive, is_symmetry=True):
+    f = StringIO.StringIO(strings)
+    return get_born_parameters(f, primitive, is_symmetry)
+
+def get_born_parameters(f, primitive, is_symmetry):
     # Read unit conversion factor, damping factor, ...
-    factors = [float(x) for x in file.readline().split()]
+    factors = [float(x) for x in f.readline().split()]
     if len(factors) < 1:
         print "BORN file format of line 1 is incorrect"
         return False
@@ -493,7 +512,7 @@ def parse_BORN(primitive, is_symmetry=True, filename="BORN"):
         factors = factors[0]
 
     # Read dielectric constant
-    line = file.readline().split()
+    line = f.readline().split()
     if not len(line) == 9:
         print "BORN file format of line 2 is incorrect"
         return False
@@ -505,7 +524,7 @@ def parse_BORN(primitive, is_symmetry=True, filename="BORN"):
     born = np.zeros((primitive.get_number_of_atoms(), 3, 3), dtype=float)
 
     for i in independent_atoms:
-        line = file.readline().split()
+        line = f.readline().split()
         if len(line) == 0:
             print "Number of lines for Born effect charge is not enough."
             return False
