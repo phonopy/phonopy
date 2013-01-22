@@ -48,21 +48,58 @@ class GroupVelocity:
     """
     
     def __init__(self,
-                 dynmat,
-                 q_direction=None,
-                 q_length=1e-3):
-        self._dynmat = dynmat
-        self._q_direction = q_direction
+                 phonon,
+                 q_points=None,
+                 q_length=1e-4):
+        """
+        q_points is a list of sets of q-point and q-direction:
+        [[q-point, q-direction], [q-point, q-direction], ...]
+        """
+        
+        self._phonon = phonon
+        self._dynmat = phonon.get_dynamical_matrix()
+        self._reciprocal_lattice = np.linalg.inv(
+            self._phonon.get_primitive().get_cell())
+        self._q_points = q_points
         self._q_length = q_length
-
-        if self._q_direction is not None:
+        if self._q_points is not None:
             self._set_group_velocity()
 
-    def set_q_direction(self, q_direction):
-        self._q_direction = q_direction
+    def set_q_points(self, q_points):
+        self._q_points = q_points
+        self._set_group_velocity()
+
+    def set_q_length(self, q_length):
+        self._q_length = q_length
 
     def get_group_velocity(self):
         return self._group_velocity
         
     def _set_group_velocity(self):
-        pass
+        for (q, n) in self._q_points:
+            print q, n
+            self._dynmat.set_dynamical_matrix(q)
+            dm = self._dynmat.get_dynamical_matrix()
+            eigvals, eigvecs = np.linalg.eigh(dm)
+            dD = self._get_dD(np.array(q), np.array(n))
+            dD_at_q = []
+            for dD_i in dD:
+                dD_i_at_q = np.array([np.vdot(eigvec, np.dot(dD_i, eigvec)).real
+                                      for eigvec in eigvecs.T])
+                dD_at_q.append(dD_i_at_q / np.sqrt(np.abs(eigvals)) / 2)
+            print np.array(dD_at_q)
+            print 
+
+    def _get_dD(self, q, n):
+        rlat = self._reciprocal_lattice
+        nc = np.dot(n, rlat)
+        dqc = self._q_length * nc / np.linalg.norm(nc)
+        ddm = []
+        for dqc_i in np.diag(dqc):
+            dq_i = np.dot(dqc_i, np.linalg.inv(rlat))
+            self._dynmat.set_dynamical_matrix(q - dq_i)
+            dm1 = self._dynmat.get_dynamical_matrix()
+            self._dynmat.set_dynamical_matrix(q + dq_i)
+            dm2 = self._dynmat.get_dynamical_matrix()
+            ddm.append(dm2 - dm1)
+        return [ddm_i / dpc_i for (ddm_i, dpc_i) in zip(ddm, dqc)]

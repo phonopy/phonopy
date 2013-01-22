@@ -1,7 +1,24 @@
 from phonopy import Phonopy
 from phonopy.interface.vasp import read_vasp_from_strings
 from phonopy.hphonopy.file_IO import parse_FORCE_SETS_from_strings, parse_BORN_from_strings
+from phonopy.group_velocity import GroupVelocity
 import numpy as np
+
+def plot_band(phonon):
+    def append_band(bands, q_start, q_end):
+        band = []
+        for i in range(51):
+            band.append(np.array(q_start) +
+                        (np.array(q_end) - np.array(q_start)) / 50 * i)
+        bands.append(band)
+    
+    bands = []
+    append_band(bands, [0.0, 0.0, 0.0], [0.5, 0.5, 0.0])
+    # append_band(bands, [0.5, 0.0, 0.0], [0.5, 0.5, 0.0])
+    # append_band(bands, [0.5, 0.5, 0.0], [0.0, 0.0, 0.0])
+    # append_band(bands, [0.0, 0.0, 0.0], [0.5, 0.5, 0.5])
+    phonon.set_band_structure(bands)
+    phonon.plot_band_structure().show()
 
 poscar_str = """Mg O                                    
    1.00000000000000     
@@ -161,21 +178,14 @@ born_str = """14.400
 1.9715466666666668 0 0 0 1.9715466666666668 0 0 0 1.9715466666666668
 -1.9721233333333332 0 0 0 -1.9721233333333332 0 0 0 -1.9721233333333332"""
 
+#
+# initial settings
+#
 cell = read_vasp_from_strings(poscar_str)
 phonon = Phonopy(cell, np.diag([2, 2, 2]))
-symmetry = phonon.get_symmetry()
 force_sets = parse_FORCE_SETS_from_strings(force_sets_str,
                                            cell.get_number_of_atoms() * 8)
-sets_of_forces = []
-displacements = []
-for force in force_sets:
-    sets_of_forces.append(force.get_forces())
-    disp = force.get_displacement()
-    atom_number = force.get_atom_number()
-    displacements.append([atom_number,
-                          disp[0], disp[1], disp[2]])
-phonon.set_displacements(displacements)
-phonon.set_forces(sets_of_forces)
+phonon.set_force_sets(force_sets)
 phonon.set_post_process(primitive_matrix=[[0, 0.5, 0.5],
                                           [0.5, 0, 0.5],
                                           [0.5, 0.5, 0]],
@@ -184,18 +194,21 @@ born_params = parse_BORN_from_strings(born_str,
                                       phonon.get_primitive())
 phonon.set_nac_params(born_params)                                      
 
-def append_band(bands, q_start, q_end):
-    band = []
-    for i in range(51):
-        band.append(np.array(q_start) +
-                    (np.array(q_end) - np.array(q_start)) / 50 * i)
-    bands.append(band)
-
-bands = []
-append_band(bands, [0.0, 0.0, 0.0], [0.5, 0.0, 0.0])
-append_band(bands, [0.5, 0.0, 0.0], [0.5, 0.5, 0.0])
-append_band(bands, [0.5, 0.5, 0.0], [0.0, 0.0, 0.0])
-append_band(bands, [0.0, 0.0, 0.0], [0.5, 0.5, 0.5])
-phonon.set_band_structure(bands)
-phonon.plot_band_structure().show()
+print phonon.get_symmetry().get_international_table()
+#
+# Run
+#
+vg = GroupVelocity(phonon)
+vg.set_q_points([
+        # [[0,0,0], [1,1,0]],
+        [[0.1,0.1,0], [1,1,0]],
+        [[0.15,0.15,0], [1,1,0]],
+        [[0.2,0.2,0], [1,1,0]],
+        [[0.25,0.25,0], [1,1,0]],
+        [[0.3,0.3,0], [1,1,0]],
+        [[0.35,0.35,0], [1,1,0]],
+        [[0.4,0.4,0], [1,1,0]],
+        [[0.45,0.45,0], [1,1,0]],
+        [[0.5,0.5,0], [1,1,0]]])
+plot_band(phonon)
 
