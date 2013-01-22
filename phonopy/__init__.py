@@ -37,7 +37,7 @@ import numpy as np
 from phonopy.structure.atoms import Atoms
 from phonopy.structure.symmetry import Symmetry
 from phonopy.structure.cells import get_supercell, Primitive, print_cell
-from phonopy.harmonic.displacement import get_least_displacements, print_displacements
+from phonopy.harmonic.displacement import get_least_displacements
 from phonopy.harmonic.force_constants import get_force_constants, symmetrize_force_constants, rotational_invariance, cutoff_force_constants
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC
 from phonopy.phonon.band_structure import BandStructure
@@ -203,14 +203,6 @@ class Phonopy:
     def get_displacement_directions(self):
         return self._displacement_directions
     displacement_directions = property(get_displacement_directions)
-
-    def print_displacements(self):
-        print "Least displacements:"
-        print " Atom       Displacement"
-        print " ----------------------------"
-        for disp in self._displacements:
-            print " %4d  " % disp[0],
-            print disp[1:4]
 
     def get_supercells_with_displacements(self):
         return self._supercells_with_displacements
