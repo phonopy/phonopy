@@ -316,6 +316,21 @@ class Phonopy:
     def set_force_constants(self, force_constants):
         self._force_constants = force_constants
 
+    def set_force_sets(self, force_sets):
+        """
+        force_sets is the list of objects of Forces class.
+        """
+        sets_of_forces = []
+        displacements = []
+        for forces in force_sets:
+            sets_of_forces.append(forces.get_forces())
+            disp = forces.get_displacement()
+            atom_number = forces.get_atom_number()
+            displacements.append([atom_number,
+                                  disp[0], disp[1], disp[2]])
+        self.set_displacements(displacements)
+        self.set_forces(sets_of_forces)
+        
     def symmetrize_force_constants(self, iteration=3):
         symmetrize_force_constants(self._force_constants, iteration)
         
