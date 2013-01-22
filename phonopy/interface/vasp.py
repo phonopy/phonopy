@@ -33,6 +33,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
+import StringIO
 from phonopy.structure.atoms import Atoms, symbol_map, atom_data
 from phonopy.structure.cells import Primitive
 from phonopy.structure.symmetry import Symmetry
@@ -246,9 +247,14 @@ def is_exist_symbols(symbols):
     return True
 
 def read_vasp(filename, symbols=None):
-    file = open(filename)
-    
-    lines = file.readlines()
+    f = open(filename)
+    return get_atoms_from_poscar(f, symbols)
+
+def read_vasp_from_strings(strings, symbols=None):
+    return get_atoms_from_poscar(StringIO.StringIO(strings), symbols)
+
+def get_atoms_from_poscar(f, symbols):
+    lines = f.readlines()
 
     line1 = [x for x in lines[0].split()]
     if is_exist_symbols(line1):
