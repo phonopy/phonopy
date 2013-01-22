@@ -13,21 +13,9 @@ print "Space group:", symmetry.get_international_table()
 
 # Read and convert forces and displacements
 force_sets = parse_FORCE_SETS(cell.get_number_of_atoms() * 4)
-sets_of_forces = []
-displacements = []
-for force in force_sets:
-    sets_of_forces.append(force.get_forces())
-    disp = force.get_displacement()
-    atom_number = force.get_atom_number()
-    displacements.append([atom_number,
-                          disp[0], disp[1], disp[2]])
-
-# A set of Displacement has to be set before phonon.set_post_process
-phonon.set_displacements(displacements)
-
 # Sets of forces have to be set before phonon.set_post_process or
 # at phonon.set_post_process(..., sets_of_forces=sets_of_forces, ...).
-phonon.set_forces(sets_of_forces)
+phonon.set_force_sets(force_sets)
 
 # To activate non-analytical term correction, 'is_nac=True' has to be set here.
 phonon.set_post_process(primitive_matrix=[[2./3, -1./3, -1./3],

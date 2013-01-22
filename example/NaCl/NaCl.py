@@ -18,10 +18,7 @@ symmetry = phonon.get_symmetry()
 print "Space group:", symmetry.get_international_table()
 
 force_sets = parse_FORCE_SETS(phonon.get_supercell().get_number_of_atoms())
-set_of_forces = [x.get_forces() for x in force_sets]
-displacements = [[x.get_atom_number()] + list(x.get_displacement())
-                 for x in force_sets]
-phonon.set_displacements(displacements)
+phonon.set_force_sets(force_sets)
 
 born = [[[1.08703, 0, 0],
          [0, 1.08703, 0],
@@ -34,7 +31,6 @@ epsilon = [[2.43533967, 0, 0],
            [0, 0, 2.43533967]]
 factors = 14.400
 phonon.set_post_process([[0, 0.5, 0.5], [0.5, 0, 0.5], [0.5, 0.5, 0]],
-                        set_of_forces,
                         is_nac=True)
 phonon.set_nac_params({'born': born,
                        'factor': factors,
