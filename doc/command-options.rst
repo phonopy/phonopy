@@ -18,9 +18,11 @@ tags:
 * ``--gc``, ``--gamma_center`` (``GAMMA_CENTER``)
 * ``--modulation`` (``MODULATION``)
 * ``--pa``, ``--primitive_axis`` (``PRIMITIVE_AXIS``)
+* ``--pd``, ``--projection_direction`` (``PROJECTION_DIRECTION``)
 * ``--readfc`` (``FORCE_CONSTANTS = READ``)
 * ``--sigma`` (``SIGMA``)
 * ``-t`` (``TPROP``)
+* ``--td`` (``TDISP``)
 * ``--tmin`` (``TMIN``)
 * ``--tmax`` (``TMAX``)
 * ``--tstep`` (``TSTEP``)
@@ -229,18 +231,17 @@ respectively (:ref:`thermal_properties_tag`).
 Thermal displacements
 ---------------------
 
-``--td``, ``--tmax``, ``--tmin``, ``--tstep``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+``--td``, ``--tmax``, ``--tmin``, ``--tstep``, ``--pd``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-**Experimental**
+These correspond to ``TDISP``, ``TMAX``, ``TMIN``, ``TSTEP``, and
+``PROJECTION_DIRECTION`` tags, respectively
+(:ref:`thermal displacements tags <thermal_displacements_tag>`).
 
-Mean square displacements projected to Cartesian axes as a function of
-temperature are calculated from the number of phonon excitations.  The
-usages of ``--tmax``, ``--tmin``, ``--tstep`` options are same as
-those in :ref:`thermal properties option
-<thermal_properties_option>`. The result is writen into
-``thermal_displacements.yaml``. See the detail of the method,
-:ref:`thermal_displacement`.
+::
+
+   % phonopy --td --pd="1 1 0"
+
 
 Smearing width
 --------------

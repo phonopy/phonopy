@@ -3,6 +3,12 @@
 Change Log
 ==========
 
+Jan-23-2013: Version 1.6.x
+----------------------------
+
+* Arbitral projection direction is allowed for thermal displacements
+  calculation. (:ref:`thermal_displacements_tag`)
+
 Nov-13-2012: Version 1.6.2
 ----------------------------
 

@@ -388,6 +388,36 @@ temperature range to be calculated. The default values of them are 0,
    TMAX = 2000
 
 
+.. _thermal_displacements_tag:
+
+Thermal displacements
+---------------------
+
+**Experimental**
+
+``TDISP``, ``TMAX``, ``TMIN``, ``TSTEP``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Mean square displacements projected to Cartesian axes as a function of
+temperature are calculated from the number of phonon excitations. The
+usages of ``TMAX``, ``TMIN``, ``TSTEP`` tags (or ``--tmax``,
+``--tmin``, ``--tstep`` options) are same as those in :ref:`thermal
+properties tags <thermal_properties_tag>`. The result is writen
+into ``thermal_displacements.yaml``. See the detail of the method,
+:ref:`thermal_displacement`.
+
+``PROJECTION_DIRECTION``
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Eigenvectors are projected along the direction specified by this tag.
+Projection direction is specified in reduced coordinates, i.e., with
+respect to *a*, *b*, *c* axes.
+
+::
+
+   TDISP = .TRUE.
+   PROJECTION_DIRECTION = 1 1 0
+
 
 Specific q-points
 -----------------
