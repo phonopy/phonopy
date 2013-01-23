@@ -613,6 +613,7 @@ class PhonopySettings(Settings):
         self._qpoints = None
         self._modulation = None
         self._pdos_indices = None
+        self._projection_direction = None
         self._character_table_q_point = None
         self._character_table_tolerance = 1e-5
         self._character_table_show_irreps = False
@@ -744,6 +745,12 @@ class PhonopySettings(Settings):
     def get_is_thermal_distances(self):
         return self._is_thermal_distances
 
+    def set_projection_direction(self, direction):
+        self._projection_direction = direction
+
+    def get_projection_direction(self):
+        return self._projection_direction
+
     def set_thermal_atom_pairs(self, atom_pairs):
         self._thermal_atom_pairs = atom_pairs
 
@@ -850,6 +857,10 @@ class PhonopyConfParser(ConfParser):
                 if self._options.is_thermal_displacements:
                     self._confs['tdisp'] = '.true.'
                     
+            if opt.dest == 'projection_direction':
+                if self._options.projection_direction is not None:
+                    self._confs['projection_direction'] = self._options.projection_direction
+
             if opt.dest == 'is_read_force_constants':
                 if self._options.is_read_force_constants:
                     self._confs['force_constants'] = 'read'
@@ -1044,6 +1055,14 @@ class PhonopyConfParser(ConfParser):
                 if len(atom_pairs) > 0:
                     self.set_parameter('tdistance', atom_pairs)
             
+            # Projection direction used for thermal displacements
+            if conf_key == 'projection_direction':
+                vals = [float(x) for x in confs['projection_direction'].split()]
+                if len(vals) < 3:
+                    self.setting_error("PROJECTION_DIRECTION (--pd) is incorrectly specified.")
+                else:
+                    self.set_parameter('projection_direction', vals)
+
 
     def _parse_conf_modulation(self, confs):
         modulation = {}
@@ -1240,3 +1259,8 @@ class PhonopyConfParser(ConfParser):
             self._settings.set_mesh_symmetry(False)
             self._settings.set_thermal_atom_pairs(params['tdistance'])
     
+        # Projection direction (currently only used for thermal displacements
+        if params.has_key('projection_direction'): 
+            self._settings.set_projection_direction(
+                params['projection_direction'])
+            

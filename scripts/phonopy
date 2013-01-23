@@ -121,6 +121,7 @@ parser.set_defaults(
     mesh_numbers=None,
     modulation=None,
     primitive_axis=None,
+    projection_direction=None,
     qpoints=None,
     quiet=False,
     q_character_table=None,
@@ -221,6 +222,9 @@ parser.add_option("-p", "--plot", dest="is_graph_plot",
 parser.add_option("--pa", "--primitive_axis", dest="primitive_axis",
                   action="store", type="string",
                   help="Same as PRIMITIVE_AXIS tags")
+parser.add_option("--pd", "--projection_direction", dest="projection_direction",
+                  action="store", type="string",
+                  help="Same as PROJECTION_DIRECTION tags")
 parser.add_option("--pm", dest="is_plusminus_displacements",
                   action="store_true",
                   help="Set plus minus displacements")
@@ -921,6 +925,9 @@ elif settings.get_run_mode() == 'mesh':
 
     # Thermal displacement
     elif settings.get_is_thermal_displacements():
+        p_direction = settings.get_projection_direction()
+        if p_direction is not None:
+            print "Projection direction:", np.array(p_direction)
         print "Calculating thermal displacements..."
         tprop_range = settings.get_thermal_property_range()
         tstep = tprop_range['step']
@@ -930,6 +937,7 @@ elif settings.get_run_mode() == 'mesh':
             tstep,
             tmax,
             tmin,
+            direction=p_direction,
             cutoff_eigenvalue=options.cutoff_eigenvalue)
         phonon.write_yaml_thermal_displacements()
 

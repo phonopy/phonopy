@@ -573,13 +573,16 @@ class Phonopy:
                                   t_step=10,
                                   t_max=1000,
                                   t_min=0,
-                                  projector=None,
+                                  direction=None,
                                   cutoff_eigenvalue=None):
         """
         cutoff_eigenvalue:
           phonon modes that have frequencies below cutoff_eigenvalue
           are ignored.
           e.g. 0.1 (THz)
+
+        direction:
+          Projection direction in reduced coordinates
         """
         if self._mesh==None:
             print "set_mesh has to be done before set_thermal_properties"
@@ -595,8 +598,8 @@ class Phonopy:
                                   factor=self._factor,
                                   cutoff_eigenvalue=cutoff_eigenvalue)
         td.set_temperature_range(t_min, t_max, t_step)
-        if not projector==None:
-            td.project_eigenvectors(projector, self._primitive.get_cell())
+        if not direction==None:
+            td.project_eigenvectors(direction, self._primitive.get_cell())
         td.set_thermal_displacements()
         
         self._thermal_displacements = td
