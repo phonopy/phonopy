@@ -169,7 +169,7 @@ site-symmetry operations. This is solved by pseudo inverse.
 .. _dynacmial_matrix_theory:
 
 Dynamical matrix
------------------
+=================
 
 The dynamical matrix is defined by
 
@@ -212,6 +212,70 @@ The atomic displacements :math:`\mathbf{u}` are given as
 where :math:`\hat{a}^\dagger` and :math:`\hat{a}` are the creation and
 annihilation operators of phonon, :math:`\hbar` is the reduced Planck
 constant, and :math:`t` is the time.
+
+
+.. _thermal_properties_expressions:
+
+Thermodynamic properties
+=========================
+
+Phonon number
+--------------
+
+.. math::
+
+   n = \frac{1}{\exp(\hbar\omega(\mathbf{q}\nu)/k_B T)-1}
+
+Harmonic phonon energy
+-----------------------
+
+.. math::
+
+   E = \sum_{\mathbf{q}\nu}\hbar\omega(\mathbf{q}\nu)\left[\frac{1}{2} +
+    \frac{1}{\exp(\hbar\omega(\mathbf{q}\nu)/k_B T)-1}\right]
+
+
+Constant volume heat capacity
+-------------------------------
+
+.. math::
+
+   C_V &= \left(\frac{\partial E}{\partial T} \right)_V \\
+       &= \sum_{\mathbf{q}\nu} k_B
+    \left(\frac{\hbar\omega(\mathbf{q}\nu)}{k_B T} \right)^2
+    \frac{\exp(\hbar\omega(\mathbf{q}\nu)/k_B
+    T)}{[\exp(\hbar\omega(\mathbf{q}\nu)/k_B T)-1]^2} 
+
+Partition function
+-------------------
+
+.. math::
+
+   Z = \exp(-\varphi/k_B T) \prod_{\mathbf{q}\nu}
+    \frac{\exp(-\hbar\omega(\mathbf{q}\nu)/2k_B
+    T)}{1-\exp(-\hbar\omega(\mathbf{q}\nu)/k_B T)} 
+
+Helmholtz free energy
+----------------------
+
+.. math::
+
+    F &= -k_B T \ln Z \\
+      &= \varphi + \frac{1}{2} \sum_{\mathbf{q}\nu}
+    \hbar\omega(\mathbf{q}\nu) + k_B T \sum_{\mathbf{q}\nu} \ln
+    \bigl[1 -\exp(-\hbar\omega(\mathbf{q}\nu)/k_B T) \bigr] 
+
+Entropy
+---------
+
+.. math::
+
+    S &= -\frac{\partial F}{\partial T} \\
+      &= -k_B \sum_{\mathbf{q}\nu} \ln
+    \left[1 -\exp(-\hbar\omega(\mathbf{k},\nu)/k_B T) \right] -
+    \frac{1}{T} \sum_{\mathbf{q}\nu} 
+    \frac{\hbar\omega(\mathbf{q}\nu)}{\exp(\hbar\omega(\mathbf{q}\nu)/k_B T)-1}
+
 
 .. |sflogo| image:: http://sflogo.sourceforge.net/sflogo.php?group_id=161614&type=1
             :target: http://sourceforge.net

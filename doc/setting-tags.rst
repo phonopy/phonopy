@@ -359,22 +359,24 @@ Thermal properties related tags
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Thermal properties, free energy, heat capacity, and entropy, are
-calculated. Thermal properties are calculated from phonon frequencies
-on a sampling mesh in the reciprocal space. Therefore These tags are
-used with ``MP`` tag and their convergence with respect to the
-sampling mesh has to be checked. Usually this calculation is not
-computationally demanding, so the convergence is easily achieved with
-increasing the density of the sampling mesh. ``-p`` option can be used
-together to plot the thermal propreties. Phonon frequencies have to be
-calculated in THz. Therefore unit conversion factor to THz may be
-specified using ``--factor`` option. The calculated values are written
-into ``thermal_properties.yaml``. The unit systems of free energy,
-heat capacity, and entropy are kJ/mol, J/K/mol, and J/K/mol,
-respectively, where 1 mol means :math:`\mathrm{N_A}\times` your input
-unit cell (not formula unit), i.e. you have to divide the value by
-number of formula unit in your unit cell by yourself. For example, in
-MgO (conventional) unit cell, if you want to compare with experimental
-results in kJ/mol, you have to divide the phonopy output by four.
+calculated from their statistical thermodynamic expressions
+(see :ref:`thermal_properties_expressions`). Thermal properties are
+calculated from phonon frequencies on a sampling mesh in the
+reciprocal space. Therefore These tags are used with ``MP`` tag and
+their convergence with respect to the sampling mesh has to be
+checked. Usually this calculation is not computationally demanding, so
+the convergence is easily achieved with increasing the density of the
+sampling mesh. ``-p`` option can be used together to plot the thermal
+propreties. Phonon frequencies have to be calculated in THz. Therefore
+unit conversion factor to THz may be specified using ``--factor``
+option. The calculated values are written into
+``thermal_properties.yaml``. The unit systems of free energy, heat
+capacity, and entropy are kJ/mol, J/K/mol, and J/K/mol, respectively,
+where 1 mol means :math:`\mathrm{N_A}\times` your input unit cell (not
+formula unit), i.e. you have to divide the value by number of formula
+unit in your unit cell by yourself. For example, in MgO (conventional)
+unit cell, if you want to compare with experimental results in kJ/mol,
+you have to divide the phonopy output by four.
 
 ``TMIN``, ``TMAX``, and ``TSTEP`` tags are used to specify the
 temperature range to be calculated. The default values of them are 0,
