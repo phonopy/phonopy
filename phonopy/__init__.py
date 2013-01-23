@@ -604,6 +604,10 @@ class Phonopy:
         
         self._thermal_displacements = td
 
+    def get_thermal_displacements(self):
+        if self._thermal_displacements is not None:
+            return self._thermal_displacements.get_thermal_displacements()
+        
     def plot_thermal_displacements(self, is_legend=False):
         return self._thermal_displacements.plot_thermal_displacements(is_legend)
 

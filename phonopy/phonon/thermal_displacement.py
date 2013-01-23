@@ -59,6 +59,7 @@ class ThermalMotion:
         self._factor = factor
         self._masses = masses
         self._masses3 = np.array([[m] * 3 for m in masses]).flatten()
+        self._temperatures = None
         self._weights = weights
 
     def _get_population(self, omega, t):
@@ -123,7 +124,12 @@ class ThermalDisplacements(ThermalMotion):
                                masses,
                                factor=VaspToTHz,
                                cutoff_eigenvalue=None)
+
+        self._displacements = None
         
+    def get_thermal_displacements(self):
+        return (self._temperatures, self._displacements)
+
     def set_thermal_displacements(self):
         eigvals = self._eigenvalues
         temps = self._temperatures
