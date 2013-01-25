@@ -587,12 +587,21 @@ class Phonopy:
         if self._mesh==None:
             print "set_mesh has to be done before set_thermal_properties"
             sys.exit(1)
+
+        eigvecs = self._mesh.get_eigenvectors()
+        eigvals = self._mesh.get_eigenvalues()
+        mesh_nums = self._mesh.get_mesh_numbers() 
+
         if self._mesh.get_eigenvectors() == None:
             print "Eigenvectors have to be calculated."
             sys.exit(1)
+            
+        if np.prod(mesh_nums) != len(eigvecs):
+            print "Sampling mesh must not be symmetrized."
+            sys.exit(1)
 
-        td = ThermalDisplacements(self._mesh.get_eigenvalues(),
-                                  self._mesh.get_eigenvectors(),
+        td = ThermalDisplacements(eigvals,
+                                  eigvecs,
                                   self._mesh.get_weights(),
                                   self._primitive.get_masses(),
                                   factor=self._factor,

@@ -140,20 +140,9 @@ class Mesh:
         self._eigenvectors = None
         self._set_eigenvalues()
 
-    def get_unique_points(self, map):
-        ir_list = []
-        for x in map:
-            is_found = True
-            for ir in ir_list:
-                if x == ir:
-                    is_found = False
-                    break
-
-            if is_found:
-                ir_list.append(x)
-
-        return np.array(ir_list)
-
+    def get_mesh_numbers(self):
+        return self._mesh
+        
     def get_qpoints(self):
         return self._qpoints
 
