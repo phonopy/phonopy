@@ -56,6 +56,8 @@ class GroupVelocity:
         """
         q_points is a list of sets of q-point and q-direction:
         [[q-point, q-direction], [q-point, q-direction], ...]
+
+        q_length is used such as D(q + q_length) - D(q - q_length).
         """
         
         self._phonon = phonon
@@ -85,26 +87,27 @@ class GroupVelocity:
             self._dynmat.set_dynamical_matrix(q)
             dm = self._dynmat.get_dynamical_matrix()
             eigvals, eigvecs = np.linalg.eigh(dm)
-            dD = self._get_dD(np.array(q), np.array(n))
             dD_at_q = []
-            for dD_i in dD: # (x, y, z)
-                dD_i_at_q = np.array([np.vdot(eigvec, np.dot(dD_i, eigvec)).real
-                                      for eigvec in eigvecs.T])
-                dD_at_q.append(dD_i_at_q / np.sqrt(np.abs(eigvals)) /
-                               2 * self._factor)
+            for dD_i in self._get_dD(np.array(q), n): # (x, y, z)
+                dD_i_at_q = [np.vdot(eigvec, np.dot(dD_i, eigvec)).real
+                             for eigvec in eigvecs.T]
+                dD_at_q.append(np.array(dD_i_at_q) /
+                               np.sqrt(np.abs(eigvals)) / 2 * self._factor)
             v_g.append(dD_at_q)
         self._group_velocity = np.array(v_g)
 
     def _get_dD(self, q, n):
+        # The names of *c mean something in Cartesian.
         rlat = self._reciprocal_lattice
+        rlat_inv = np.linalg.inv(rlat)
         nc = np.dot(n, rlat)
         dqc = self._q_length * nc / np.linalg.norm(nc)
         ddm = []
         for dqc_i in np.diag(dqc):
-            dq_i = np.dot(dqc_i, np.linalg.inv(rlat))
+            dq_i = np.dot(dqc_i, rlat_inv)
             self._dynmat.set_dynamical_matrix(q - dq_i)
             dm1 = self._dynmat.get_dynamical_matrix()
             self._dynmat.set_dynamical_matrix(q + dq_i)
             dm2 = self._dynmat.get_dynamical_matrix()
             ddm.append(dm2 - dm1)
-        return [ddm_i / dpc_i for (ddm_i, dpc_i) in zip(ddm, dqc)]
+        return [ddm_i / dpc_i for (ddm_i, dpc_i) in zip(ddm, 2 * dqc)]
