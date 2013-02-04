@@ -33,6 +33,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
+from phonopy.units import VaspToTHz
 
 class GroupVelocity:
     """
@@ -50,7 +51,8 @@ class GroupVelocity:
     def __init__(self,
                  phonon,
                  q_points=None,
-                 q_length=1e-4):
+                 q_length=1e-4,
+                 factor=VaspToTHz):
         """
         q_points is a list of sets of q-point and q-direction:
         [[q-point, q-direction], [q-point, q-direction], ...]
@@ -62,6 +64,8 @@ class GroupVelocity:
             self._phonon.get_primitive().get_cell())
         self._q_points = q_points
         self._q_length = q_length
+        self._factor = factor
+        self._group_velocity = None
         if self._q_points is not None:
             self._set_group_velocity()
 
@@ -76,19 +80,20 @@ class GroupVelocity:
         return self._group_velocity
         
     def _set_group_velocity(self):
+        v_g = []
         for (q, n) in self._q_points:
-            print q, n
             self._dynmat.set_dynamical_matrix(q)
             dm = self._dynmat.get_dynamical_matrix()
             eigvals, eigvecs = np.linalg.eigh(dm)
             dD = self._get_dD(np.array(q), np.array(n))
             dD_at_q = []
-            for dD_i in dD:
+            for dD_i in dD: # (x, y, z)
                 dD_i_at_q = np.array([np.vdot(eigvec, np.dot(dD_i, eigvec)).real
                                       for eigvec in eigvecs.T])
-                dD_at_q.append(dD_i_at_q / np.sqrt(np.abs(eigvals)) / 2)
-            print np.array(dD_at_q)
-            print 
+                dD_at_q.append(dD_i_at_q / np.sqrt(np.abs(eigvals)) /
+                               2 * self._factor)
+            v_g.append(dD_at_q)
+        self._group_velocity = np.array(v_g)
 
     def _get_dD(self, q, n):
         rlat = self._reciprocal_lattice
