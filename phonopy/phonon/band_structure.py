@@ -74,7 +74,6 @@ class BandStructure:
             self._is_eigenvectors = True
         self._paths = [np.array(path) for path in paths]
         self._distances = []
-        self._qpoints = []
         self._distance = 0.
         self._special_point = [0.]
         self._eigenvalues = None
