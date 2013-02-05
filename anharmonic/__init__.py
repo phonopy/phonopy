@@ -215,9 +215,13 @@ def get_gruneisen_parameters(fc2,
                              fc3,
                              supercell,
                              primitive,
+                             factor=None,
+                             is_ion_clamped=False,
                              symprec=1e-5):
     return Gruneisen(fc2,
                      fc3,
                      supercell,
                      primitive,
+                     factor=factor,
+                     is_ion_clamped=is_ion_clamped,
                      symprec=symprec)

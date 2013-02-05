@@ -565,15 +565,13 @@ else:
                                       fc3,
                                       supercell,
                                       primitive,
+                                      factor=VaspToTHz,
+                                      is_ion_clamped=False,
                                       symprec=options.symprec)
         qpoints = settings.get_qpoints()
         gr.set_qpoints(qpoints)
         gr.run()
-        for q, g_at_q in zip(qpoints, gr.get_gruneisen_parameters()):
-            print "Q-point: ", q
-            for i, g in enumerate(g_at_q):
-                print i + 1, ":", g.trace() / 3
-                print g
+        gr.write_yaml()
 
     #===========================
     # phonon-phonon interaction
@@ -585,8 +583,8 @@ else:
         if options.grid_points==None:
             grid_points = np.array([0])
         else:
-            grid_points = \
-                np.array([ int(x) for x in options.grid_points.split() ])
+            grid_points = np.array([int(x)
+                                    for x in options.grid_points.split()])
             
         if log_level:
             print "------ Phonon-phonon ------"

@@ -5,6 +5,7 @@ from anharmonic.fc_interpolate import get_fc_interpolation
 from phonopy.structure.cells import get_supercell, Primitive, print_cell
 from anharmonic.file_IO import write_fc3_dat, write_fc2_dat
 from anharmonic.fc_tools import expand_fc2, expand_fc3
+from phonopy.units import VaspToTHz
 
 class Gruneisen:
     def __init__(self,
@@ -12,12 +13,15 @@ class Gruneisen:
                  fc3,
                  supercell,
                  primitive,
+                 is_ion_clamped=False,
+                 factor=VaspToTHz,
                  symprec=1e-5):
-
         self._fc2 = fc2
         self._fc3 = fc3
         self._scell = supercell
         self._pcell = primitive
+        self._is_ion_clamped = is_ion_clamped
+        self._factor = factor
         self._symprec = symprec
         self._dm = DynamicalMatrix(self._scell,
                                    self._pcell,
@@ -26,23 +30,25 @@ class Gruneisen:
         self._shortest_vectors, self._multiplicity = get_shortest_vectors(
             self._scell, self._pcell, self._symprec)
 
-        self._X = self._get_X()
+        if self._is_ion_clamped:
+            num_atom_prim = self._pcell.get_number_of_atoms()
+            self._X = np.zeros((num_atom_prim, 3, 3, 3), dtype=float)
+        else:
+            self._X = self._get_X()
         self._dPhidu = self._get_dPhidu()
 
         self._gruneisen_parameters = None
-
+        self._frequencies = None
+        self._qpoints = None
 
     def run(self):
         self._gruneisen_parameters = []
-        band_indices = range(self._pcell.get_number_of_atoms()*3)
+        self._frequencies = []
         for q in self._qpoints:
-            g = []
-            for i in band_indices:
-                if (np.abs(q) < 1e-5).all() and i < 3:
-                    g.append(np.zeros((3, 3), dtype=float))
-                else:
-                    g.append(self._get_gruneisen_tensor(q, i))
-            self._gruneisen_parameters.append(np.array(g))
+            g, omega2 = self._get_gruneisen_tensor(q)
+            self._gruneisen_parameters.append(g)
+            self._frequencies.append(
+                np.sqrt(abs(omega2)) * np.sign(omega2) * self._factor)
 
     def get_gruneisen_parameters(self):
         return self._gruneisen_parameters
@@ -50,23 +56,46 @@ class Gruneisen:
     def set_qpoints(self, qpoints):
         self._qpoints = qpoints
 
-    def _get_gruneisen_tensor(self, q, s):
+    def write_yaml(self, filename="gruneisen3.yaml"):
+        if (self._qpoints is not None and
+            self._gruneisen_parameters is not None):
+            f = open(filename, 'w')
+            f.write("nqpoint: %d\n" % len(self._qpoints))
+            f.write("phonon:\n")
+            for q, g_at_q, freqs_at_q in zip(self._qpoints,
+                                             self._gruneisen_parameters,
+                                             self._frequencies):
+                f.write("- q-position: [ %10.7f, %10.7f, %10.7f ]\n" % tuple(q))
+                f.write("  band:\n")
+                for i, (g, freq) in enumerate(zip(g_at_q, freqs_at_q)):
+                    f.write("  - # %d\n" % (i + 1))
+                    f.write("    frequency: %15.10f\n" % freq)
+                    f.write("    gruneisen:\n")
+                    for g_xyz in g:
+                        f.write("    - [ %10.7f, %10.7f, %10.7f ]\n" %
+                                tuple(g_xyz))
+            f.close()
+        
+    def _get_gruneisen_tensor(self, q):
         self._dm.set_dynamical_matrix(q)
         omega2, w = np.linalg.eigh(self._dm.get_dynamical_matrix())
-        g = np.zeros((3, 3), dtype=float)
+        g = np.zeros((len(omega2), 3, 3), dtype=float)
         num_atom_prim = self._pcell.get_number_of_atoms()
         dDdu = self._get_dDdu(q)
 
-        for i in range(3):
-            for j in range(3):
-                for nu in range(num_atom_prim):
-                    for pi in range(num_atom_prim):
-                        g += (w[nu * 3 + i,s].conjugate() * 
-                              dDdu[nu, pi, i, j] * w[pi * 3 + j, s]).real
+        for s in range(len(omega2)):
+            if (np.abs(q) < 1e-5).all() and s < 3:
+                continue
+            for i in range(3):
+                for j in range(3):
+                    for nu in range(num_atom_prim):
+                        for pi in range(num_atom_prim):
+                            g[s] += (w[nu * 3 + i, s].conjugate() * 
+                                     dDdu[nu, pi, i, j] * w[pi * 3 + j, s]).real
 
-        g *= -1.0/2/omega2[s]
+            g[s] *= -1.0/2/omega2[s]
 
-        return g
+        return g, omega2
 
     def _get_dDdu(self, q):
         num_atom_prim = self._pcell.get_number_of_atoms()
