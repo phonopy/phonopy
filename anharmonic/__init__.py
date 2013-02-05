@@ -19,36 +19,36 @@ class JointDOS:
                  is_nosym=False,
                  symprec=1e-5,
                  log_level=0):
-        self.supercell = supercell
-        self.primitive = primitive
-        self.mesh = mesh
-        self.fc2 = fc2
-        self.nac_params = nac_params
-        self.sigma = sigma
-        self.omega_step = omega_step
-        self.factor = factor
-        self.freq_factor = freq_factor
-        self.freq_scale = freq_scale
-        self.is_nosym = is_nosym
-        self.symprec = symprec
-        self.log_level = log_level
+        self._supercell = supercell
+        self._primitive = primitive
+        self._mesh = mesh
+        self._fc2 = fc2
+        self._nac_params = nac_params
+        self._sigma = sigma
+        self._omega_step = omega_step
+        self._factor = factor
+        self._freq_factor = freq_factor
+        self._freq_scale = freq_scale
+        self._is_nosym = is_nosym
+        self._symprec = symprec
+        self._log_level = log_level
 
     def get_jointDOS(self, grid_points, filename=None):
         get_jointDOS(grid_points,
-                     self.mesh,
-                     self.primitive,
-                     self.supercell,
-                     self.fc2,
-                     self.nac_params,
-                     self.sigma,
-                     self.omega_step,
-                     self.factor,
-                     self.freq_factor,
-                     self.freq_scale,
-                     self.is_nosym,
-                     self.symprec,
+                     self._mesh,
+                     self._primitive,
+                     self._supercell,
+                     self._fc2,
+                     self._nac_params,
+                     self._sigma,
+                     self._omega_step,
+                     self._factor,
+                     self._freq_factor,
+                     self._freq_scale,
+                     self._is_nosym,
+                     self._symprec,
                      filename,
-                     self.log_level)
+                     self._log_level)
 
 class Phono3py:
     def __init__(self,
@@ -69,43 +69,43 @@ class Phono3py:
                  symprec=1e-5,
                  log_level=0):
 
-        self.supercell = supercell
-        self.primitive = primitive
-        self.mesh = mesh
-        self.fc3 = fc3
-        self.sigma = sigma
-        self.omega_step = omega_step
-        self.factor = factor
-        self.freq_factor = freq_factor
-        self.freq_scale = freq_scale
-        self.is_nosym = is_nosym
-        self.is_symmetrize_fc3_q = is_symmetrize_fc3_q
-        self.symprec = symprec
-        self.log_level = log_level
-        self.is_read_triplets = is_read_triplets
-        self.r2q_TI_index = r2q_TI_index
-        self.is_Peierls = is_Peierls
+        self._supercell = supercell
+        self._primitive = primitive
+        self._mesh = mesh
+        self._fc3 = fc3
+        self._sigma = sigma
+        self._omega_step = omega_step
+        self._factor = factor
+        self._freq_factor = freq_factor
+        self._freq_scale = freq_scale
+        self._is_nosym = is_nosym
+        self._is_symmetrize_fc3_q = is_symmetrize_fc3_q
+        self._symprec = symprec
+        self._log_level = log_level
+        self._is_read_triplets = is_read_triplets
+        self._r2q_TI_index = r2q_TI_index
+        self._is_Peierls = is_Peierls
 
         # Phonon-phonon
-        self.pp = None
+        self._pp = None
 
     def set_phonon_phonon(self):
-        self.pp = PhononPhonon(self.fc3,
-                               self.supercell,
-                               self.primitive,
-                               self.mesh,
-                               self.sigma,
-                               self.omega_step,
-                               self.factor,
-                               self.freq_factor,
-                               self.freq_scale,
-                               self.symprec,
-                               self.is_read_triplets,
-                               self.r2q_TI_index,
-                               self.is_symmetrize_fc3_q,
-                               self.is_Peierls,
-                               self.log_level,
-                               self.is_nosym)
+        self._pp = PhononPhonon(self._fc3,
+                                self._supercell,
+                                self._primitive,
+                                self._mesh,
+                                self._sigma,
+                                self._omega_step,
+                                self._factor,
+                                self._freq_factor,
+                                self._freq_scale,
+                                self._symprec,
+                                self._is_read_triplets,
+                                self._r2q_TI_index,
+                                self._is_symmetrize_fc3_q,
+                                self._is_Peierls,
+                                self._log_level,
+                                self._is_nosym)
 
     def set_dynamical_matrix(self,
                              fc2,
@@ -113,11 +113,11 @@ class Phono3py:
                              primitive,
                              nac_params=None,
                              nac_q_direction=None):
-        self.pp.set_dynamical_matrix(fc2,
-                                     supercell,
-                                     primitive,
-                                     nac_params,
-                                     nac_q_direction)
+        self._pp.set_dynamical_matrix(fc2,
+                                      supercell,
+                                      primitive,
+                                      nac_params,
+                                      nac_q_direction)
                            
     def get_damping_function(self,
                              grid_points=None,
@@ -132,25 +132,25 @@ class Phono3py:
 
         
         for gp in grid_points:
-            self.pp.set_triplets_at_q(gp)
+            self._pp.set_triplets_at_q(gp)
 
             if sets_of_band_indices == None:
                 if gp==0:
-                    self.pp.set_interaction_strength(
-                        range(4, self.primitive.get_number_of_atoms() * 3 + 1))
+                    self._pp.set_interaction_strength(
+                        range(4, self._primitive.get_number_of_atoms() * 3 + 1))
                 else:
-                    self.pp.set_interaction_strength(
-                        range(1, self.primitive.get_number_of_atoms() * 3 + 1))
+                    self._pp.set_interaction_strength(
+                        range(1, self._primitive.get_number_of_atoms() * 3 + 1))
 
-                self.pp.get_damping_function(temperature=temperature,
-                                             filename=filename,
-                                             gamma_option=gamma_option)
+                self._pp.get_damping_function(temperature=temperature,
+                                              filename=filename,
+                                              gamma_option=gamma_option)
             else:
                 for band_indices in sets_of_band_indices:
-                    self.pp.set_interaction_strength(band_indices)
-                    self.pp.get_damping_function(temperature=temperature,
-                                                 filename=filename,
-                                                 gamma_option=gamma_option)
+                    self._pp.set_interaction_strength(band_indices)
+                    self._pp.get_damping_function(temperature=temperature,
+                                                  filename=filename,
+                                                  gamma_option=gamma_option)
                 
 
     def get_fwhm(self,
@@ -171,19 +171,19 @@ class Phono3py:
             return False
 
         for gp in grid_points:
-            self.pp.set_triplets_at_q(gp)
+            self._pp.set_triplets_at_q(gp)
             for band_indices in sets_of_band_indices:
-                self.pp.set_interaction_strength(band_indices)
-                self.pp.get_damping_function(temperature=None,
+                self._pp.set_interaction_strength(band_indices)
+                self._pp.get_damping_function(temperature=None,
                                              filename=filename,
                                              gamma_option=gamma_option)
 
-                fwhms, temps, omegas = \
-                    self.pp.get_life_time(tmax,
-                                          tmin,
-                                          tstep,
-                                          gamma_option,
-                                          filename=filename)
+                fwhms, temps, omegas = self._pp.get_life_time(
+                    tmax,
+                    tmin,
+                    tstep,
+                    gamma_option,
+                    filename=filename)
 
 
                 print "# Grid point:", gp
@@ -206,21 +206,18 @@ class Phono3py:
             return False
 
         for gp in grid_points:
-            self.pp.set_triplets_at_q(gp)
+            self._pp.set_triplets_at_q(gp)
             for band_indices in sets_of_band_indices:
-                self.pp.set_interaction_strength(band_indices)
-                self.pp.get_decay_channels(temperature)
+                self._pp.set_interaction_strength(band_indices)
+                self._pp.get_decay_channels(temperature)
 
 def get_gruneisen_parameters(fc2,
                              fc3,
                              supercell,
                              primitive,
-                             mesh,
-                             symprec):
-    gr = Gruneisen(fc2,
-                   fc3,
-                   supercell,
-                   primitive,
-                   mesh,
-                   symprec)
-
+                             symprec=1e-5):
+    return Gruneisen(fc2,
+                     fc3,
+                     supercell,
+                     primitive,
+                     symprec=symprec)

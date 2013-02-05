@@ -9,6 +9,7 @@ class Phono3pySettings( Settings ):
         self._band_indices = None
         self._q_direction = None
         self._is_lifetime = False
+        self._qpoints = [[0, 0, 0]]
         
     def set_supercell_matrix_extra(self, matrix):
         self._supercell_matrix_extra = matrix
@@ -33,6 +34,13 @@ class Phono3pySettings( Settings ):
 
     def get_q_direction(self):
         return self._q_direction
+
+    def set_qpoints(self, qpoints):
+        self._qpoints = qpoints
+
+    def get_qpoints(self):
+        return self._qpoints
+
 
 class Phono3pyConfParser(ConfParser):
     def __init__(self, filename=None, options=None, option_list=None):
@@ -59,6 +67,11 @@ class Phono3pyConfParser(ConfParser):
             if opt.dest == 'q_direction':
                 if not self._options.q_direction==None:
                     self._confs['q_direction'] = self._options.q_direction
+
+            if opt.dest == 'qpoints':
+                if not self._options.qpoints == None:
+                    self._confs['qpoints'] = self._options.qpoints
+
 
     def _parse_conf( self ):
         confs = self._confs
@@ -96,6 +109,14 @@ class Phono3pyConfParser(ConfParser):
                 else:
                     self.set_parameter( 'q_direction', q_direction )
 
+            if conf_key == 'qpoints':
+                vals = [fracval(x) for x in confs['qpoints'].split()]
+                if len(vals) == 0 or len(vals) % 3 != 0:
+                    self.setting_error("Q-points are incorrectly set.")
+                else:
+                    self.set_parameter('qpoints',
+                                       list(np.reshape(vals, (-1, 3))))
+
     def _set_settings( self ):
         ConfParser.set_settings( self )
         params = self._parameters
@@ -116,5 +137,9 @@ class Phono3pyConfParser(ConfParser):
         if params.has_key('q_direction'):
             self._settings.set_q_direction( params['q_direction'] )
             
-
+        # Q-points mode
+        if params.has_key('qpoints'):
+            self._settings.set_qpoints(params['qpoints'])
+        
+        
 

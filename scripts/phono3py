@@ -57,7 +57,7 @@ from anharmonic.file_IO import write_fc2_dat, write_fc3_dat,\
     write_FC2_FOURTH_SETS, parse_FC2_FOURTH_SETS
 from anharmonic.displacement_fc3 import get_third_order_displacements
 from anharmonic.settings import Phono3pyConfParser
-from anharmonic import Phono3py, JointDOS
+from anharmonic import Phono3py, JointDOS, get_gruneisen_parameters
 
 # AA is created at http://www.network-science.de/ascii/.
 def print_phono3py():
@@ -118,7 +118,7 @@ parser.set_defaults(amplitude=None,
                     r2q_TI_index=None,
                     omega_step=None,
                     output_filename=None,
-                    qpoints=False,
+                    qpoints=None,
                     sigma=None,
                     supercell_dimension=None,
                     supercell_dimension_extra=None,
@@ -230,9 +230,8 @@ parser.add_option("--peierls", dest="is_Peierls",
 parser.add_option("--pm", dest="is_plusminus_displacements",
                   action="store_true",
                   help="Set plus minus displacements")
-parser.add_option("-q", "--qpoints", dest="qpoints",
-                  action="store_true",
-                  help="Calculate fc3 in reciprocal space")
+parser.add_option("--qpoints", dest="qpoints", type="string",
+                  help="Calculate at specified q-points")
 parser.add_option("--q_direction",
                   dest="q_direction",
                   type="string",
@@ -562,7 +561,19 @@ else:
     # Phonon Gruneisen parameter
     #============================
     if options.is_gruneisen:
-        pass
+        gr = get_gruneisen_parameters(fc2,
+                                      fc3,
+                                      supercell,
+                                      primitive,
+                                      symprec=options.symprec)
+        qpoints = settings.get_qpoints()
+        gr.set_qpoints(qpoints)
+        gr.run()
+        for q, g_at_q in zip(qpoints, gr.get_gruneisen_parameters()):
+            print "Q-point: ", q
+            for i, g in enumerate(g_at_q):
+                print i + 1, ":", g.trace() / 3
+                print g
 
     #===========================
     # phonon-phonon interaction
