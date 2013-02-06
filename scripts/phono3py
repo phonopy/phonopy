@@ -192,7 +192,7 @@ parser.add_option("--fc2_fourth",
                   action="store_true",
                   help="Read FC2_FOURTH_SETS")
 parser.add_option("--freq_scale", dest="freq_scale", type="float",
-                  help="Scale factor of frequency")
+                  help="Scale factor is multiplied to frequencies only, i.e., changes frequencies but assumed not to change the physical unit")
 parser.add_option("-g", "--grid_points",
                   dest="grid_points",
                   type="string",
@@ -702,13 +702,14 @@ else:
                                             options.temperature)
 
             elif settings.get_is_lifetime():
-                phono3py.get_fwhm(grid_points,
-                                  settings.get_band_indices(),
-                                  tmax=settings.get_max_temperature(),
-                                  tmin=settings.get_min_temperature(),
-                                  tstep=settings.get_temperature_step(),
-                                  gamma_option=options.gamma_option,
-                                  filename=options.output_filename)
+                phono3py.get_fwhm_and_damping_functions(
+                    grid_points,
+                    settings.get_band_indices(),
+                    tmax=settings.get_max_temperature(),
+                    tmin=settings.get_min_temperature(),
+                    tstep=settings.get_temperature_step(),
+                    gamma_option=options.gamma_option,
+                    filename=options.output_filename)
 
             else:
                 phono3py.get_damping_function(grid_points,

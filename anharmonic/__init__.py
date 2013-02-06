@@ -153,7 +153,7 @@ class Phono3py:
                                                   gamma_option=gamma_option)
                 
 
-    def get_fwhm(self,
+    def get_fwhm_and_damping_functions(self,
                  grid_points,
                  sets_of_band_indices,
                  tmax,
@@ -175,10 +175,10 @@ class Phono3py:
             for band_indices in sets_of_band_indices:
                 self._pp.set_interaction_strength(band_indices)
                 self._pp.get_damping_function(temperature=None,
-                                             filename=filename,
-                                             gamma_option=gamma_option)
+                                              filename=filename,
+                                              gamma_option=gamma_option)
 
-                fwhms, temps, omegas = self._pp.get_life_time(
+                fwhms, temps, omegas = self._pp.get_fwhm(
                     tmax,
                     tmin,
                     tstep,

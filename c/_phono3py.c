@@ -211,17 +211,17 @@ static PyObject * py_get_interaction_strength(PyObject *self, PyObject *args)
   multi = alloc_Array2D(s_num_atom, p_num_atom);
   for (i = 0; i < s_num_atom; i++) {
     for (j = 0; j < p_num_atom; j++) {
-      multi->data[ i ][ j ] = multiplicity_long[ i * p_num_atom + j ];
+      multi->data[i][j] = multiplicity_long[i * p_num_atom + j];
     }
   }
 
   s2p = alloc_Array1D(s_num_atom);
   p2s = alloc_Array1D(p_num_atom);
   for (i = 0; i < s_num_atom; i++) {
-    s2p->data[ i ] = s2p_map_long[ i ];
+    s2p->data[i] = s2p_map_long[i];
   }
   for (i = 0; i < p_num_atom; i++) {
-    p2s->data[ i ] = p2s_map_long[ i ];
+    p2s->data[i] = p2s_map_long[i];
   }
 
   q = alloc_DArray2D(3, 3);
@@ -229,10 +229,11 @@ static PyObject * py_get_interaction_strength(PyObject *self, PyObject *args)
   if (is_symmetrize_fc3_q == 0) {
     for (i = 0; i < 3; i ++) {
       for (j = 0; j < 3; j ++) {
-	q->data[i][j] = ((double*)q_triplet->data)[ i * 3 + j ];
+	q->data[i][j] = ((double*)q_triplet->data)[i * 3 + j];
       }
     }
-    fc3_q[0] = (npy_cdouble*) malloc(p_num_atom * p_num_atom * p_num_atom * 27 * sizeof(npy_cdouble));
+    fc3_q[0] = (npy_cdouble*) malloc(p_num_atom * p_num_atom *
+				     p_num_atom * 27 * sizeof(npy_cdouble));
     get_fc3_reciprocal(fc3_q[0],
 		       svecs,
 		       multi,
@@ -244,13 +245,15 @@ static PyObject * py_get_interaction_strength(PyObject *self, PyObject *args)
 		       symprec);
   } else {
     for (i = 0; i < 6; i++) {
-      fc3_q[ i ] = (npy_cdouble*) malloc(p_num_atom * p_num_atom * p_num_atom * 27 * sizeof(npy_cdouble));
+      fc3_q[i] = (npy_cdouble*) malloc(p_num_atom * p_num_atom *
+				       p_num_atom * 27 * sizeof(npy_cdouble));
       for (j = 0; j < 3; j ++) {
 	for (k = 0; k < 3; k ++) {
-	  q->data[ index_exchange[i][j] ][k] = ((double*)q_triplet->data)[ j * 3 + k ];
+	  q->data[index_exchange[i][j]][k] =
+	    ((double*)q_triplet->data)[j * 3 + k];
 	}
       }
-      get_fc3_reciprocal(fc3_q[ i ],
+      get_fc3_reciprocal(fc3_q[i],
 			 svecs,
 			 multi,
 			 q,
@@ -270,13 +273,13 @@ static PyObject * py_get_interaction_strength(PyObject *self, PyObject *args)
 
 #pragma omp parallel for private(i, j, k, band, e)
   for (n = 0; n < num_band0 * p_num_atom * p_num_atom * 9; n++) {
-    band[0] = band_indices_long[ n / (p_num_atom * p_num_atom * 9) ];
+    band[0] = band_indices_long[n / (p_num_atom * p_num_atom * 9)];
     band[1] = (n % (p_num_atom * p_num_atom * 9)) / (p_num_atom * 3);
     band[2] = n % (p_num_atom * 3);
-    if (freqs[ band[0] ] < cutoff_frequency ||
-	freqs[ p_num_atom * 3 + band[1] ] < cutoff_frequency ||
-	freqs[ 2 * p_num_atom * 3 + band[2] ] < cutoff_frequency) {
-      amps[ n ] = 0;
+    if (freqs[band[0]] < cutoff_frequency ||
+	freqs[p_num_atom * 3 + band[1]] < cutoff_frequency ||
+	freqs[2 * p_num_atom * 3 + band[2]] < cutoff_frequency) {
+      amps[n] = 0;
       continue;
     }
 
@@ -287,22 +290,29 @@ static PyObject * py_get_interaction_strength(PyObject *self, PyObject *args)
     if (is_symmetrize_fc3_q == 0) {
       for (i = 0; i < p_num_atom * 3; i++) {
 	for (j = 0; j < 3; j++) {
-	  e[j][i] = eigvecs[ j * p_num_atom * p_num_atom * 9 + i * p_num_atom * 3 + band[j] ];
+	  e[j][i] = eigvecs[j * p_num_atom * p_num_atom * 9 +
+			    i * p_num_atom * 3 + band[j]];
 	}
       }
-      amps[ n ] = get_sum_in_primivie(fc3_q[0], e[0], e[1], e[2], p_num_atom, masses) /
-	(freqs[ band[0] ] * freqs[ p_num_atom * 3 + band[1] ]  * freqs[ 2 * p_num_atom * 3 + band[2] ]);
+      amps[n] = get_sum_in_primivie(fc3_q[0], e[0], e[1], e[2],
+				    p_num_atom, masses) /
+	(freqs[band[0]] * freqs[p_num_atom * 3 + band[1]] *
+	 freqs[2 * p_num_atom * 3 + band[2]]);
     } else {
-      amps[ n ] = 0;
+      amps[n] = 0;
       for (i = 0; i < 6; i++) {
 	for (j = 0; j < p_num_atom * 3; j++) {
 	  for (k = 0; k < 3; k++) {
-	    e[ index_exchange[i][k] ][j] = eigvecs[ k * p_num_atom * p_num_atom * 9 + j * p_num_atom * 3 + band[k] ];
+	    e[index_exchange[i][k]][j] =
+	      eigvecs[k * p_num_atom * p_num_atom * 9 +
+		      j * p_num_atom * 3 + band[k]];
 	  }
 	}
-	amps[ n ] += get_sum_in_primivie(fc3_q[i], e[0], e[1], e[2], p_num_atom, masses);
+	amps[n] += get_sum_in_primivie(fc3_q[i], e[0], e[1], e[2],
+				       p_num_atom, masses);
       }
-      amps[ n ] /= 6 * freqs[ band[0] ] * freqs[ p_num_atom * 3 + band[1] ]  * freqs[ 2 * p_num_atom * 3 + band[2] ];
+      amps[n] /= 6 * freqs[band[0]] * freqs[p_num_atom * 3 + band[1]] *
+	freqs[2 * p_num_atom * 3 + band[2]];
     }
 
     for (i = 0; i < 3; i++) {
@@ -314,7 +324,7 @@ static PyObject * py_get_interaction_strength(PyObject *self, PyObject *args)
     free(fc3_q[0]);
   } else {
     for (i = 0; i < 6; i++) {
-      free(fc3_q[ i ]);
+      free(fc3_q[i]);
     }
   }
 
@@ -393,23 +403,23 @@ static PyObject * py_get_fc3_reciprocal(PyObject *self, PyObject *args)
   multi = alloc_Array2D(s_num_atom, p_num_atom);
   for (i = 0; i < s_num_atom; i++) {
     for (j = 0; j < p_num_atom; j++) {
-      multi->data[ i ][ j ] = multiplicity_long[ i * p_num_atom + j ];
+      multi->data[i][j] = multiplicity_long[i * p_num_atom + j];
     }
   }
 
   s2p = alloc_Array1D(s_num_atom);
   p2s = alloc_Array1D(p_num_atom);
   for (i = 0; i < s_num_atom; i++) {
-    s2p->data[ i ] = s2p_map_long[ i ];
+    s2p->data[i] = s2p_map_long[i];
   }
   for (i = 0; i < p_num_atom; i++) {
-    p2s->data[ i ] = p2s_map_long[ i ];
+    p2s->data[i] = p2s_map_long[i];
   }
 
   q = alloc_DArray2D(3, 3);
   for (i = 0; i < 3; i ++) {
     for (j = 0; j < 3; j ++) {
-      q->data[i][j] = ((double*)q_triplet->data)[ i * 3 + j ];
+      q->data[i][j] = ((double*)q_triplet->data)[i * 3 + j];
     }
   }
 
@@ -471,13 +481,13 @@ static PyObject * py_get_fc3_realspace(PyObject *self, PyObject *args)
   multi = alloc_Array2D(s_num_atom, p_num_atom);
   for (i = 0; i < s_num_atom; i++) {
     for (j = 0; j < p_num_atom; j++) {
-      multi->data[ i ][ j ] = multi_long[ i * p_num_atom + j ];
+      multi->data[i][j] = multi_long[i * p_num_atom + j];
     }
   }
 
   s2p = alloc_Array1D(s_num_atom);
   for (i = 0; i < s_num_atom; i++) {
-    s2p->data[ i ] = s2p_map_long[ i ];
+    s2p->data[i] = s2p_map_long[i];
   }
 
   get_fc3_realspace(fc3_real,
@@ -533,6 +543,7 @@ static PyObject * py_get_gamma(PyObject *self, PyObject *args)
   double f2, f3, n2, n3, a, factor2eV;
   double* dfun = (double*)gammas->data;
   double sum;
+  int sum_weights = 0;
   const double* o = (double*)omegas->data;
   const double* amp = (double*)amplitudes->data;
   const long* w_long = (long*)weights->data;
@@ -541,9 +552,10 @@ static PyObject * py_get_gamma(PyObject *self, PyObject *args)
   const int num_band = (int)amplitudes->dimensions[2];
   const int num_omega = (int)omegas->dimensions[0];
   const int num_triplet = (int)weights->dimensions[0];
-  int w[ num_triplet ];
+  int w[num_triplet];
   for (i = 0; i < num_triplet; i++) {
-    w[ i ] = w_long[ i ];
+    w[i] = w_long[i];
+    sum_weights += w[i];
   }
 
   factor2eV = PlanckConstant / freq_factor;
@@ -554,51 +566,51 @@ static PyObject * py_get_gamma(PyObject *self, PyObject *args)
     for (j = 0; j < num_triplet; j++) {
       for (k = 0; k < num_band; k++) {
 	for (l = 0; l < num_band; l++) {
-	  f2 = f[ j * 3 * num_band + num_band + k ];
-	  f3 = f[ j * 3 * num_band + 2 * num_band + l ];
-	  a = amp[ j * num_band0 * num_band * num_band
-		   + band_index * num_band * num_band + k * num_band + l ];
+	  f2 = f[j * 3 * num_band + num_band + k];
+	  f3 = f[j * 3 * num_band + 2 * num_band + l];
+	  a = amp[j * num_band0 * num_band * num_band +
+		  band_index * num_band * num_band + k * num_band + l];
 
 	  if (t > 0.0) {
 	    n2 = bs(f2 * factor2eV, t);
 	    n3 = bs(f3 * factor2eV, t);
 	    switch (option) {
 	    case 1:
-	      sum += ((1.0 + n2 + n3) * gauss(f2 + f3 - o[ i ], sigma) +
-		      (n3 - n2) * (gauss(f2 - f3 - o[ i ], sigma) -
-				   gauss(f3 - f2 - o[ i ], sigma))
-		      ) * a * w[ j ];
+	      sum += ((1.0 + n2 + n3) * gauss(f2 + f3 - o[i], sigma) +
+		      (n3 - n2) * (gauss(f2 - f3 - o[i], sigma) -
+				   gauss(f3 - f2 - o[i], sigma))
+		      ) * a * w[j];
 	      break;
 	    case 2:
-	      sum += (1.0 + n2 + n3) * gauss(f2 + f3 - o[ i ], sigma) * a * w[ j ];
+	      sum += (1.0 + n2 + n3) * gauss(f2 + f3 - o[i], sigma) * a * w[j];
 	      break;
 	    case 3:
-	      sum += (n3 - n2) * 2 *gauss(f2 - f3 - o[ i ], sigma) * a * w[ j ];
+	      sum += (n3 - n2) * 2 *gauss(f2 - f3 - o[i], sigma) * a * w[j];
 	      break;
 	    case 4:
-	      sum += (n3 - n2) * (gauss(f2 - f3 - o[ i ], sigma) -
-				  gauss(f3 - f2 - o[ i ], sigma)) * a * w[ j ];
+	      sum += (n3 - n2) * (gauss(f2 - f3 - o[i], sigma) -
+				  gauss(f3 - f2 - o[i], sigma)) * a * w[j];
 	      break;
 	    case 5:
-	      sum += (n3 - n2) * gauss(f2 - f3 - o[ i ], sigma) * a * w[ j ];
+	      sum += (n3 - n2) * gauss(f2 - f3 - o[i], sigma) * a * w[j];
 	      break;
 	    case 6:
-	      sum += (n2 - n3) * gauss(f3 - f2 - o[ i ], sigma) * a * w[ j ];
+	      sum += (n2 - n3) * gauss(f3 - f2 - o[i], sigma) * a * w[j];
 	      break;
 	    case 0:
 	    default:
-	      sum += ((1.0 + n2 + n3) * gauss(f2 + f3 - o[ i ], sigma) +
-		      (n3 - n2) * 2 *gauss(f2 - f3 - o[ i ], sigma)
-		      ) * a * w[ j ];
+	      sum += ((1.0 + n2 + n3) * gauss(f2 + f3 - o[i], sigma) +
+		      (n3 - n2) * 2 *gauss(f2 - f3 - o[i], sigma)
+		      ) * a * w[j];
 	      break;
 	    }
 	  } else {
-	    sum += gauss(f2 + f3 - o[ i ], sigma) * a * w[ j ];
+	    sum += gauss(f2 + f3 - o[i], sigma) * a * w[j];
 	  }
 	}
       }
     }
-    dfun[i] = sum;
+    dfun[i] = sum / sum_weights;
   }
   Py_RETURN_NONE;
 }
@@ -630,20 +642,20 @@ static PyObject * py_get_jointDOS(PyObject *self, PyObject *args)
   const int num_band = (int)frequencies->dimensions[2];
   const int num_omega = (int)omegas->dimensions[0];
   const int num_triplet = (int)weights->dimensions[0];
-  int w[ num_triplet ];
+  int w[num_triplet];
   for (i = 0; i < num_triplet; i++) {
-    w[ i ] = w_long[ i ];
+    w[i] = w_long[i];
   }
   
 #pragma omp parallel for private(j, k, l, f2, f3)
   for (i = 0; i < num_omega; i++) {
-    jdos[ i ] = 0.0;
+    jdos[i] = 0.0;
     for (j = 0; j < num_triplet; j++) {
       for (k = 0; k < num_band; k++) {
 	for (l = 0; l < num_band; l++) {
-	  f2 = f[ j * 3 * num_band + num_band + k ];
-	  f3 = f[ j * 3 * num_band + 2 * num_band + l ];
-	  jdos[ i ] += gauss(f2 + f3 - o[ i ], sigma) * w[ j ];
+	  f2 = f[j * 3 * num_band + num_band + k];
+	  f3 = f[j * 3 * num_band + 2 * num_band + l];
+	  jdos[i] += gauss(f2 + f3 - o[i], sigma) * w[j];
 	}
       }
     }
@@ -691,17 +703,17 @@ static PyObject * py_get_decay_channel(PyObject *self, PyObject *args)
 	for (l = 0; l < num_omega; l++) {
 	  address_a = i * num_omega * num_band * num_band + l * num_band * num_band + j * num_band + k;
 	  address_d = i * num_band * num_band + j * num_band + k;
-	  f2 = f[ i * 3 * num_band + num_band + j ];
-	  f3 = f[ i * 3 * num_band + 2 * num_band + k ];
+	  f2 = f[i * 3 * num_band + num_band + j];
+	  f3 = f[i * 3 * num_band + 2 * num_band + k];
 	  if (t > 0) {
 	    n2 = bs(f2 * factor2eV, t);
 	    n3 = bs(f3 * factor2eV, t);
-	    decay[ address_d ] += ((1.0 + n2 + n3) * gauss(f2 + f3 - o[ l ], sigma) +
-				   (n3 - n2) * (gauss(f2 - f3 - o[ l ], sigma) -
-						gauss(f3 - f2 - o[ l ], sigma))
-	    			   ) * amp[ address_a ];
+	    decay[address_d] += ((1.0 + n2 + n3) * gauss(f2 + f3 - o[l], sigma) +
+				 (n3 - n2) * (gauss(f2 - f3 - o[l], sigma) -
+					      gauss(f3 - f2 - o[l], sigma))
+				 ) * amp[address_a];
 	  } else {
-	    decay[ address_d ] += gauss(f2 + f3 - o[l], sigma) * amp[ address_a ];
+	    decay[address_d] += gauss(f2 + f3 - o[l], sigma) * amp[address_a];
 	  }
 	}
       }
@@ -738,7 +750,7 @@ static PyObject * py_distribute_fc3(PyObject *self, PyObject *args)
   int rot_int[3][3];
   for (i = 0; i < 3; i++) {
     for (j = 0; j < 3; j++) {
-      rot_int[i][j] = rot_long[ i*3 + j ];
+      rot_int[i][j] = rot_long[i*3 + j];
     }
   }
   const double* rot_cart_inv = (double*)rotation_cart_inv->data;
@@ -794,17 +806,17 @@ static int get_fc3_realspace(npy_cdouble* fc3_real,
 	for (l = 0; l < 3; l++) { 
 	  for (m = 0; m < 3; m++) {
 	    for (n = 0; n < 3; n++) {
-	      fc3_elem = prod(fc3_rec[ i * p_num_atom * p_num_atom * 27 +
-				       s2p->data[j] * p_num_atom * 27 +
-				       s2p->data[k] * 27 + l * 9 + m * 3 + n ],
+	      fc3_elem = prod(fc3_rec[i * p_num_atom * p_num_atom * 27 +
+				      s2p->data[j] * p_num_atom * 27 +
+				      s2p->data[k] * 27 + l * 9 + m * 3 + n],
 			      prod(phase2, phase3));
 
-	      fc3_real[ i * s_num_atom * s_num_atom * 27 +
-			j * s_num_atom * 27 +
-			k * 27 + l * 9 + m * 3 + n ].real += fc3_elem.real;
-	      fc3_real[ i * s_num_atom * s_num_atom * 27 +
-			j * s_num_atom * 27 +
-			k * 27 + l * 9 + m * 3 + n ].imag += fc3_elem.imag;
+	      fc3_real[i * s_num_atom * s_num_atom * 27 +
+		       j * s_num_atom * 27 +
+		       k * 27 + l * 9 + m * 3 + n].real += fc3_elem.real;
+	      fc3_real[i * s_num_atom * s_num_atom * 27 +
+		       j * s_num_atom * 27 +
+		       k * 27 + l * 9 + m * 3 + n].imag += fc3_elem.imag;
 		
 	    }
 	  }
@@ -826,14 +838,14 @@ static npy_cdouble get_phase_factor(const double q[3],
   int i, j;
   double phase;
   npy_cdouble exp_phase;
-  int m = multi->data[ s_atom_index ][ p_atom_index ];
+  int m = multi->data[s_atom_index][p_atom_index];
   
   exp_phase.real = 0.0;
   exp_phase.imag = 0.0;
   for (i = 0; i < m; i++) {
     phase = 0.0;
     for (j = 0; j < 3; j++) {
-      phase += q[ j ] * svecs->data[ s_atom_index ][ p_atom_index ][ i ][ j ];
+      phase += q[j] * svecs->data[s_atom_index][p_atom_index][i][j];
     }
     exp_phase.real += cos(phase * 2 * M_PI);
     exp_phase.imag += sin(phase * 2 * M_PI);
@@ -878,9 +890,9 @@ static int get_fc3_reciprocal(npy_cdouble* fc3_q,
     for (l = 0; l < 3; l++) { 
       for (m = 0; m < 3; m++) {
 	for (n = 0; n < 3; n++) {
-	  fc3_q[ i * p_num_atom * p_num_atom * 27 +
-		 j * p_num_atom * 27 +
-		 k * 27 + l * 9 + m * 3 + n ] = fc3_q_local[ l ][ m ][ n ];
+	  fc3_q[i * p_num_atom * p_num_atom * 27 +
+		j * p_num_atom * 27 +
+		k * 27 + l * 9 + m * 3 + n] = fc3_q_local[l][m][n];
 	}
       }
     }
@@ -910,8 +922,8 @@ static int get_fc3_sum_in_supercell(npy_cdouble fc3_q[3][3][3],
   for (i = 0; i < 3; i++) {
     for (j = 0; j < 3; j++) {
       for (k = 0; k < 3; k++) {
-	fc3_q[ i ][ j ][ k ].real = 0.0;
-	fc3_q[ i ][ j ][ k ].imag = 0.0;
+	fc3_q[i][j][k].real = 0.0;
+	fc3_q[i][j][k].imag = 0.0;
       }
     }
   }
@@ -921,10 +933,10 @@ static int get_fc3_sum_in_supercell(npy_cdouble fc3_q[3][3][3],
   /* Phase factor with q_1 is not used. */
   s1 = 0;
   for (i = 0; i < s_num_atom; i++) {
-    if (p2s->data[ p1 ] == s2p->data[ i ]) {
-      if (fabs(svecs->data[ i ][ p1 ][ 0 ][ 0 ]) < symprec &&
-	  fabs(svecs->data[ i ][ p1 ][ 0 ][ 1 ]) < symprec &&
-	  fabs(svecs->data[ i ][ p1 ][ 0 ][ 2 ]) < symprec) {
+    if (p2s->data[p1] == s2p->data[i]) {
+      if (fabs(svecs->data[i][p1][0][0]) < symprec &&
+	  fabs(svecs->data[i][p1][0][1]) < symprec &&
+	  fabs(svecs->data[i][p1][0][2]) < symprec) {
 	s1 = i;
       }
     }
@@ -932,38 +944,38 @@ static int get_fc3_sum_in_supercell(npy_cdouble fc3_q[3][3][3],
 
   /* Sum in terms of s2 */
   for (s2 = 0; s2 < s_num_atom; s2++) {
-    if (s2p->data[ s2 ] == p2s->data[ p2 ]) {
+    if (s2p->data[s2] == p2s->data[p2]) {
       phase2.real = 0.0;
       phase2.imag = 0.0;
       /* Supercell boundary treatment */
-      for (i = 0; i < multi->data[ s2 ][ p1 ]; i++) {
+      for (i = 0; i < multi->data[s2][p1]; i++) {
 	phase = 0.0;
-	/* phi' = q' * [ r(N;nu) - r(M;mu) ] */
+	/* phi' = q' * [r(N;nu) - r(M;mu)] */
 	for (j = 0; j < 3; j++) {
-	  phase += q->data[1][ j ] * svecs->data[ s2 ][ p1 ][ i ][ j ];
+	  phase += q->data[1][j] * svecs->data[s2][p1][i][j];
 	}
 	phase2.real += cos(phase * 2 * M_PI);
 	phase2.imag += sin(phase * 2 * M_PI);
       }
-      phase2.real /= multi->data[ s2 ][ p1 ];
-      phase2.imag /= multi->data[ s2 ][ p1 ];
+      phase2.real /= multi->data[s2][p1];
+      phase2.imag /= multi->data[s2][p1];
 
       /* Sum in terms of s3 */
       for (s3 = 0; s3 < s_num_atom; s3++) {
-	if (s2p->data[ s3 ] == p2s->data[ p3 ]) {
+	if (s2p->data[s3] == p2s->data[p3]) {
 	  phase3.real = 0.0;
 	  phase3.imag = 0.0;
-	  for (i = 0; i < multi->data[ s3 ][ p1 ]; i++) {
+	  for (i = 0; i < multi->data[s3][p1]; i++) {
 	    phase = 0.0;
-	    /* phi'' = q'' * [ r(P;pi) - r(M;mu) ] */
+	    /* phi'' = q'' * [r(P;pi) - r(M;mu)] */
 	    for (j = 0; j < 3; j++) {
-	      phase += q->data[2][ j ] * svecs->data[ s3 ][ p1 ][ i ][ j ];
+	      phase += q->data[2][j] * svecs->data[s3][p1][i][j];
 	    }
 	    phase3.real += cos(phase * 2 * M_PI);
 	    phase3.imag += sin(phase * 2 * M_PI);
 	  }
-	  phase3.real /= multi->data[ s3 ][ p1 ];
-	  phase3.imag /= multi->data[ s3 ][ p1 ];
+	  phase3.real /= multi->data[s3][p1];
+	  phase3.imag /= multi->data[s3][p1];
 
 	  /* Fourier transform */
 	  phase_prod = prod(phase2, phase3);
@@ -982,8 +994,8 @@ static int get_fc3_sum_in_supercell(npy_cdouble fc3_q[3][3][3],
 	  for (i = 0; i < 3; i++) {
 	    for (j = 0; j < 3; j++) {
 	      for (k = 0; k < 3; k++) {
-		fc3_q[ i ][ j ][ k ].real += fc3[ address + i * 9 + j * 3 + k ] * phase_prod.real;
-		fc3_q[ i ][ j ][ k ].imag += fc3[ address + i * 9 + j * 3 + k ] * phase_prod.imag;
+		fc3_q[i][j][k].real += fc3[address + i * 9 + j * 3 + k] * phase_prod.real;
+		fc3_q[i][j][k].imag += fc3[address + i * 9 + j * 3 + k] * phase_prod.imag;
 	      }
 	    }
 	  }
@@ -1018,9 +1030,9 @@ static double get_sum_in_primivie(const npy_cdouble *fc3,
 	for (a = 0; a < 3; a++) {
 	  for (b = 0; b < 3; b++) {
 	    for (c = 0; c < 3; c++) {
-	      tmp_val = prod(e1[ i1 * 3 + a ], e2[ i2 * 3 + b ]);
-	      tmp_val = prod(tmp_val, e3[ i3 * 3 + c ]);
-	      tmp_val = prod(fc3[ shift + a * 9 + b * 3 + c ], tmp_val);
+	      tmp_val = prod(e1[i1 * 3 + a], e2[i2 * 3 + b]);
+	      tmp_val = prod(tmp_val, e3[i3 * 3 + c]);
+	      tmp_val = prod(fc3[shift + a * 9 + b * 3 + c], tmp_val);
 	      local_sum.real += tmp_val.real;
 	      local_sum.imag += tmp_val.imag;
 	    }
@@ -1225,10 +1237,10 @@ static ShortestVecs * get_shortest_vecs(PyArrayObject* shortest_vectors)
       for (k = 0; k < svecs->d[2]; k++) {
 	for (l = 0; l < svecs->d[3]; l++) {
 	  svecs->data[i][j][k][l] = 
-	    ((double*)shortest_vectors->data)[ svecs->d[1] * svecs->d[2] * svecs->d[3] * i +
-					       svecs->d[2] * svecs->d[3] * j +
-					       svecs->d[3] * k +
-					       l ];
+	    ((double*)shortest_vectors->data)[svecs->d[1] * svecs->d[2] * svecs->d[3] * i +
+					      svecs->d[2] * svecs->d[3] * j +
+					      svecs->d[3] * k +
+					      l];
 	}
       }
     }
