@@ -6,6 +6,7 @@ from phonopy.structure.cells import get_supercell, Primitive, print_cell
 from anharmonic.file_IO import write_fc3_dat, write_fc2_dat
 from anharmonic.fc_tools import expand_fc2, expand_fc3
 from phonopy.units import VaspToTHz
+from phonopy.phonon.mesh import get_qpoints
 
 class Gruneisen:
     def __init__(self,
@@ -40,6 +41,8 @@ class Gruneisen:
         self._gruneisen_parameters = None
         self._frequencies = None
         self._qpoints = None
+        self._mesh = None
+        self._weights = None
 
     def run(self):
         self._gruneisen_parameters = []
@@ -56,21 +59,37 @@ class Gruneisen:
     def set_qpoints(self, qpoints):
         self._qpoints = qpoints
 
+    def set_sampling_mesh(self,
+                          mesh,
+                          grid_shift=None,
+                          is_gamma_center=False):
+        self._mesh = mesh
+        self._qpoints, self._weights = get_qpoints(self._mesh,
+                                                   self._pcell,
+                                                   grid_shift,
+                                                   is_gamma_center)
+
     def write_yaml(self, filename="gruneisen3.yaml"):
         if (self._qpoints is not None and
             self._gruneisen_parameters is not None):
             f = open(filename, 'w')
+            if self._mesh is not None:
+                f.write("mesh: [ %5d, %5d, %5d ]\n" % tuple(self._mesh))
             f.write("nqpoint: %d\n" % len(self._qpoints))
             f.write("phonon:\n")
-            for q, g_at_q, freqs_at_q in zip(self._qpoints,
-                                             self._gruneisen_parameters,
-                                             self._frequencies):
+            for i, (q, g_at_q, freqs_at_q) in enumerate(
+                zip(self._qpoints,
+                    self._gruneisen_parameters,
+                    self._frequencies)):
                 f.write("- q-position: [ %10.7f, %10.7f, %10.7f ]\n" % tuple(q))
+                if self._weights is not None:
+                    f.write("  multiplicity: %d\n" % self._weights[i])
                 f.write("  band:\n")
-                for i, (g, freq) in enumerate(zip(g_at_q, freqs_at_q)):
-                    f.write("  - # %d\n" % (i + 1))
+                for j, (g, freq) in enumerate(zip(g_at_q, freqs_at_q)):
+                    f.write("  - # %d\n" % (j + 1))
                     f.write("    frequency: %15.10f\n" % freq)
-                    f.write("    gruneisen:\n")
+                    f.write("    gruneisen: %15.10f\n" % (g.trace() / 3))
+                    f.write("    gruneisen_tensor:\n")
                     for g_xyz in g:
                         f.write("    - [ %10.7f, %10.7f, %10.7f ]\n" %
                                 tuple(g_xyz))

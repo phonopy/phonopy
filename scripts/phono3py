@@ -561,6 +561,14 @@ else:
     # Phonon Gruneisen parameter
     #============================
     if options.is_gruneisen:
+        mesh = settings.get_mesh_numbers()
+
+        if log_level:
+            print "------ Phonon Gruneisen parameter ------"
+            if mesh is not None:
+                print "Mesh:", mesh
+            sys.stdout.flush()
+
         gr = get_gruneisen_parameters(fc2,
                                       fc3,
                                       supercell,
@@ -569,7 +577,11 @@ else:
                                       is_ion_clamped=False,
                                       symprec=options.symprec)
         qpoints = settings.get_qpoints()
-        gr.set_qpoints(qpoints)
+        if mesh is not None:
+            gr.set_sampling_mesh(mesh,
+                                 is_gamma_center=True)
+        else:
+            gr.set_qpoints(qpoints)
         gr.run()
         gr.write_yaml()
 
