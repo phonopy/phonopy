@@ -145,7 +145,7 @@ parser.add_option("--color", dest="color_scheme",
 parser.add_option("--q_cutoff", dest="cutoff_wave_vector", type="float",
                   help="Acoustic modes inside cutoff wave vector is treated.")
 parser.add_option("--cutoff", dest="cutoff_frequency", type="float",
-                  help="Plot above this cutoff frequency only.")
+                  help="Plot above this cutoff frequency for mesh sampling mode.")
 parser.add_option("--marker", dest="marker",
                   action="store", type="string",
                   help="Marker for plot (matplotlib)")

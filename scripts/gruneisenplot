@@ -103,7 +103,7 @@ def plot_band(data, is_fg):
         plt.plot(d, f, '-')
     return plt
 
-def plot_mesh(data, is_fg):
+def plot_mesh(data, is_fg, cutoff_frequency=None):
     import matplotlib.pyplot as plt
     
     x = []
@@ -112,10 +112,15 @@ def plot_mesh(data, is_fg):
         x.append([band['frequency'] for band in qpt['band']])
         y.append([band['gruneisen'] for band in qpt['band']])
 
-    if is_fg:
-        plt.plot(x, np.array(x) * np.array(y), 'o')
-    else:
-        plt.plot(x, y, 'o')
+    for (g, freqs) in zip(np.transpose(y), np.transpose(x)):
+        if cutoff_frequency:
+            g = np.extract(freqs > cutoff_frequency, g)
+            freqs = np.extract(freqs > cutoff_frequency, freqs)
+    
+        if is_fg:
+            plt.plot(freqs, np.array(freqs) * np.array(g), 'o')
+        else:
+            plt.plot(freqs, g, 'o')
 
     return plt
 
@@ -125,6 +130,7 @@ from optparse import OptionParser
 parser = OptionParser()
 parser.set_defaults(is_fg=False,
                     is_gnuplot=False,
+                    cutoff_frequency=None,
                     output_filename=None,
                     title=None)
 parser.add_option("--gnuplot", dest="is_gnuplot", action="store_true",
@@ -136,6 +142,8 @@ parser.add_option("--fg", dest="is_fg", action="store_true",
                   help="Plot omega x gamma")
 parser.add_option("-t", "--title", dest="title", action="store",
                   type="string", help="Title of plot")
+parser.add_option("--cutoff", dest="cutoff_frequency", type="float",
+                  help="Plot above this cutoff frequency for mesh sampling mode.")
 (options, args) = parser.parse_args()
 
 if len(args) == 0:
@@ -155,7 +163,8 @@ elif 'mesh' in data:
     if options.is_gnuplot:
         print_mesh(data)
     else:
-        plt = plot_mesh(data, options.is_fg)
+        plt = plot_mesh(data, options.is_fg,
+                        cutoff_frequency=options.cutoff_frequency)
         if options.title is not None:
             plt.subtitle(options.title)
         plt.show()
