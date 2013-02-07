@@ -487,9 +487,8 @@ and the dynamical matrix may be used as
    data = yaml.load(open("qpoints.yaml"))
    dynmat = []
    dynmat_data = data['phonon'][0]['dynamical_matrix']
-   size = len(dynmat_data)
    for row in dynmat_data:
-       vals = np.reshape(row, (size, 2))
+       vals = np.reshape(row, (-1, 2))
        dynmat.append(vals[:, 0] + vals[:, 1] * 1j)
    dynmat = np.array(dynmat)
    

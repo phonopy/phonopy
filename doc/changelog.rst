@@ -3,12 +3,12 @@
 Change Log
 ==========
 
-Jan-23-2013: Version 1.6.x
+Feb-7-2013: Version 1.6.3
 ----------------------------
 
 * Arbitral projection direction is allowed for thermal displacements
   calculation. (:ref:`thermal_displacements_tag`)
-* A new tag `WRITEDM` or an option `--writedm` is
+* A new tag `WRITEDM` and an option `--writedm` are
   implemented. Dynamical matrices are written into ``qpoints.yaml``
   when this is used togather with the ``QPOINTS`` mode. (:ref:`writedm_tag`)
 
