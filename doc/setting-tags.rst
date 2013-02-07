@@ -430,6 +430,75 @@ Specific q-points
 When ``QPOINTS = .TRUE.``, ``QPOINTS`` file in your working directory
 is read, and the q-points written in this file are calculated.
 
+.. _writedm_tag:
+
+``WRITEDM``
+~~~~~~~~~~~~
+
+::
+
+   WRITEDM = .TRUE.
+
+Dynamical matrices :math:`D` are written into ``qpoints.yaml``
+in the following :math:`6N\times3N` format, where *N* is the number of atoms in
+the primitive cell.
+
+.. math::
+
+   D =
+   \begin{pmatrix}
+   D_{11} & D_{12} & D_{13} & \\
+   D_{21} & D_{22} & D_{23} & \cdots \\
+   D_{31} & D_{32} & D_{33} & \\
+   & \vdots &  & \\
+   \end{pmatrix},
+
+and :math:`D_{jj'}` is
+
+.. math::
+   D_{jj'} = 
+   \begin{pmatrix}
+   Re(D_{jj'}^{xx}) & Im(D_{jj'}^{xx}) & Re(D_{jj'}^{xy}) &
+   Im(D_{jj'}^{xy}) & Re(D_{jj'}^{xz}) & Im(D_{jj'}^{xz}) \\
+   Re(D_{jj'}^{yx}) & Im(D_{jj'}^{yx}) & Re(D_{jj'}^{yy}) &
+   Im(D_{jj'}^{yy}) & Re(D_{jj'}^{yz}) & Im(D_{jj'}^{yz}) \\
+   Re(D_{jj'}^{zx}) & Im(D_{jj'}^{zx}) & Re(D_{jj'}^{zy}) &
+   Im(D_{jj'}^{zy}) & Re(D_{jj'}^{zz}) & Im(D_{jj'}^{zz}) \\
+   \end{pmatrix},
+
+where *j* and *j'* are the atomic indices in the primitive cell. The
+phonon frequencies may be recovered from ``qpoints.yaml`` by writing a
+simple python script. For example, ``qpoints.yaml`` is obtained for
+NaCl at :math:`q=(0, 0.5, 0.5)` by
+
+::
+
+   phonopy --dim="2 2 2" --pa="0 1/2 1/2  1/2 0 1/2  1/2 1/2 0" --qpoints="0 1/2 1/2" --writedm
+
+and the dynamical matrix may be used as
+
+.. code-block:: python
+
+   #!/usr/bin/env python
+   
+   import yaml
+   import numpy as np
+   
+   data = yaml.load(open("qpoints.yaml"))
+   dynmat = []
+   dynmat_data = data['phonon'][0]['dynamical_matrix']
+   size = len(dynmat_data)
+   for row in dynmat_data:
+       vals = np.reshape(row, (size, 2))
+       dynmat.append(vals[:, 0] + vals[:, 1] * 1j)
+   dynmat = np.array(dynmat)
+   
+   eigvals, eigvecs, = np.linalg.eigh(dynmat)
+   frequencies = np.sqrt(np.abs(eigvals.real)) * np.sign(eigvals.real)
+   conversion_factor_to_THz = 15.633302
+   print frequencies * conversion_factor_to_THz
+
+
 Symmetry
 ---------
 

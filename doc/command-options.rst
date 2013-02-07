@@ -26,6 +26,7 @@ tags:
 * ``--tmin`` (``TMIN``)
 * ``--tmax`` (``TMAX``)
 * ``--tstep`` (``TSTEP``)
+* ``--writedm`` (``WRITEDM = .TRUE.``)
 * ``--writefc`` (``FORCE_CONSTANTS = WRITE``)
 
 
