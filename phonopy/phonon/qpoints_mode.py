@@ -40,6 +40,7 @@ def write_yaml(qpoints,
                cell,
                dynamical_matrix, 
                is_eigenvectors=False,
+               write_dynamical_matrices=False,
                factor=VaspToTHz):
     num_atom = cell.get_number_of_atoms()
     m = cell.get_masses()
@@ -71,7 +72,18 @@ def write_yaml(qpoints,
         dm = dynamical_matrix.get_dynamical_matrix()
 
         file.write("- q-position: [ %12.7f, %12.7f, %12.7f ]\n" % tuple(q))
-        file.write("  q-point:\n")
+        if write_dynamical_matrices:
+            file.write("  dynamical_matrix:\n")
+            for row in dm:
+                file.write("  - [ ")
+                for i, elem in enumerate(row):
+                    file.write("%15.10f, %15.10f" % (elem.real, elem.imag))
+                    if i == len(row) - 1:
+                        file.write(" ]\n")
+                    else:
+                        file.write(", ")
+        
+        file.write("  band:\n")
             
         if is_eigenvectors:
             eigenvalues, eigenvectors = np.linalg.eigh(dm)

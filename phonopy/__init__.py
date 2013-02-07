@@ -663,12 +663,14 @@ class Phonopy:
     def write_yaml_qpoints(self,
                            qpoints,
                            is_eigenvectors=False,
+                           write_dynamical_matrices=False,
                            factor=VaspToTHz):
         
         write_yaml_qpoints(qpoints,
                            self._primitive,
                            self._dynamical_matrix,
                            is_eigenvectors=is_eigenvectors,
+                           write_dynamical_matrices=write_dynamical_matrices,
                            factor=self._factor)
 
     # Animation
