@@ -151,7 +151,10 @@ class Phono3py:
                     self._pp.get_damping_function(temperature=temperature,
                                                   filename=filename,
                                                   gamma_option=gamma_option)
-                
+
+
+    def get_lifetimes(self):
+        pass
 
     def get_fwhm_and_damping_functions(self,
                  grid_points,

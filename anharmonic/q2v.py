@@ -62,8 +62,8 @@ class PhononPhonon:
 
         self._unit_conversion = get_unit_conversion_factor(freq_factor, N0)
 
-        self._shortest_vectors, self._multiplicity = \
-            get_shortest_vectors(supercell, primitive, symprec)
+        self._shortest_vectors, self._multiplicity = get_shortest_vectors(
+            supercell, primitive, symprec)
         self._symmetry = Symmetry(primitive, symprec)
 
         # set_interaction_strength
@@ -73,12 +73,112 @@ class PhononPhonon:
 
         # set_triplets_at_q
         self._grid_point = None
+        self._grid_points = None
         self._triplets_at_q = None
         self._weights_at_q = None
 
         # Dynamical matrix has to be set by calling self._set_dynamical matrix
         self._dm = None
         self._q_direction = None
+
+    def set_triplets_at_q(self, gp):
+        self._print_log("----- Triplets -----\n")
+
+        mesh = self._mesh
+        if self._is_nosym:
+            self._print_log("Triplets at q without considering symmetry\n")
+            (triplets_at_q,
+             weights_at_q,
+             self._grid_points) = get_nosym_triplets(mesh, gp)
+        elif self._is_read_triplets:
+            self._print_log("Reading ir-triplets at %d\n" % gp)
+            self._grid_points = parse_grid_points(
+                "grids-%d%d%d.dat" % tuple(mesh))
+            triplets_at_q, weights_at_q = parse_triplets(
+                "triplets_q-%d%d%d-%d.dat" % (tuple(mesh) + (gp,)))
+        else:
+            self._print_log("Finding ir-triplets at %d\n" % gp)
+            
+            (triplets_at_q,
+             weights_at_q,
+             self._grid_points) = get_triplets_at_q(
+                gp,
+                mesh,
+                self._primitive.get_cell(),
+                self._symmetry.get_pointgroup_operations(),
+                is_time_reversal=True,
+                symprec=self._symprec)
+
+            t_filename = "triplets_q-%d%d%d-%d.dat" % (tuple(mesh) + (gp,))
+            write_triplets(triplets_at_q, weights_at_q, mesh, t_filename)
+            g_filename = "grids-%d%d%d.dat" % tuple(mesh)
+            write_grid_points(self._grid_points, mesh, g_filename)
+
+            self._print_log("Ir-triplets at %d were written into %s.\n" %
+                            (gp, t_filename))
+            self._print_log("Mesh points were written into %s.\n" % g_filename)
+
+        self._print_log("Grid point (%d): " % gp)
+        self._print_log("[ %d %d %d ]\n" % tuple(self._grid_points[gp]))
+        self._print_log("Number of ir triplets: %d\n" % len(weights_at_q))
+        self._print_log("Sum of weights: %d\n" % weights_at_q.sum())
+
+        self._triplets_at_q = triplets_at_q
+        self._weights_at_q = weights_at_q
+        self._grid_point = gp
+
+    def set_interaction_strength(self, band_indices=None):
+        self._print_log("----- phonon-phonon interaction strength ------\n")
+
+        if band_indices == None:
+            self._band_indices = np.arange(self._num_atom * 3, dtype=int)
+        else:
+            self._band_indices = np.array(band_indices)
+
+        self._print_log(("Band indices: [" + " %d" * len(self._band_indices) +
+                         " ]\n") % tuple(self._band_indices + 1))
+
+        
+        # \Phi^2(set_of_q's, s, s', s'')
+        # Unit: mass^{-3} \Phi^2(real space)
+        #   \Phi(real space) = eV/A^3
+        #   frequency THz
+        #   mass AMU
+        # 1/36 * (\hbar/2N0)^3 * N0^2 to be multiplied somewhere else.
+        self._amplitude_at_q = np.zeros((len(self._weights_at_q),
+                                         len(self._band_indices),
+                                         self._num_atom*3,
+                                         self._num_atom*3), dtype=float)
+        self._frequencies_at_q = np.zeros((len(self._weights_at_q),
+                                           3,
+                                           self._num_atom*3), dtype=float)
+
+        for i, (q3, w) in enumerate(zip(self._triplets_at_q,
+                                        self._weights_at_q)):
+            (self._amplitude_at_q[i],
+             self._frequencies_at_q[i]) = get_interaction_strength(
+                i,
+                len(self._triplets_at_q),
+                q3,
+                w,
+                self._mesh,
+                self._grid_points,
+                self._shortest_vectors,
+                self._multiplicity,
+                self._fc3,
+                self._dm,
+                self._q_direction,
+                self._primitive,
+                self._band_indices,
+                self._factor,
+                self._freq_factor,
+                self._freq_scale,
+                self._cutoff_frequency,
+                self._symprec,
+                self._is_symmetrize_fc3_q,
+                self._is_Peierls,
+                self._r2q_TI_index,
+                self._verbose)
 
     def set_dynamical_matrix(self,
                              fc2,
@@ -94,16 +194,17 @@ class PhononPhonon:
         if not q_direction==None:
             self._q_direction = q_direction
 
+    def get_lifetime(self):
+        pass
+
     def get_fwhm(self,
                  tmax,
                  tmin,
                  tstep,
                  gamma_option=0,
-                 filename = None):
+                 filename=None):
         
-        if self._verbose:
-            print "---- FWHM calculation ----"
-            sys.stdout.flush()
+        self._print_log("---- FWHM calculation ----\n")
 
         # A set of phonon modes where the fwhm is calculated.
         q = self._grid_points[self._grid_point].astype(float) / self._mesh
@@ -147,9 +248,9 @@ class PhononPhonon:
 
 
     def get_damping_function(self,
-                             temperature = None,
-                             filename = None,
-                             gamma_option = 0):
+                             temperature=None,
+                             filename=None,
+                             gamma_option=0):
         """
         Units of inputs are supposed:
           energy: eV
@@ -166,7 +267,8 @@ class PhononPhonon:
         for i, band_index in enumerate(self._band_indices):
             if (self._grid_point == 0 and band_index < 3) or \
                     band_index < 0 or band_index > self._num_atom * 3 - 1:
-                print "The band index %d can not be calculated." % band_index
+                self._print_log("The band index %d is not calculated.\n" %
+                                band_index)
                 continue
 
             # Unit: frequency^{-1} 
@@ -191,13 +293,11 @@ class PhononPhonon:
                                     is_nosym=self._is_nosym)
 
     def get_decay_channels(self, temperature):
-        if self._verbose:
-            print "---- Decay channels ----"
-            if temperature==None:
-                print "Temperature: 0K"
-            else:
-                print "Temperature: %10.3fK" % temperature
-            sys.stdout.flush()
+        self._print_log("---- Decay channels ----\n")
+        if temperature==None:
+            self._print_log("Temperature: 0K\n")
+        else:
+            self._print_log("Temperature: %10.3fK\n" % temperature)
 
         q = self._grid_points[self._grid_point].astype(float) / self._mesh 
         if (not self._q_direction==None) and self._grid_point==0:
@@ -245,117 +345,13 @@ class PhononPhonon:
             [d.sum() * w for d, w in
              zip(decay_channels, self._weights_at_q)]).sum()
 
+        self._print_log("FWHM: %f\n" % (decay_channels_sum * 2))
+        self._print_log( "Decay channels are written into %s.\n" % filename)
+
+    def _print_log(self, text):
         if self._verbose:
-            print "FWHM: %f" % (decay_channels_sum * 2)
-            print "Decay channels are written into %s." % filename
-
-
-    def set_triplets_at_q(self, gp):
-        mesh = self._mesh
-
-        if self._verbose:
-            print "----- Triplets -----"
-
-        # Determine triplets with a specific q-point among ir-triplets
-        if self._is_nosym:
-            if self._verbose:
-                print "Triplets at q without considering symmetry"
-                sys.stdout.flush()
-            
-            triplets_at_q, weights_at_q, self._grid_points = get_nosym_triplets(mesh, gp)
-
-        elif self._is_read_triplets:
-            if self._verbose:
-                print "Reading ir-triplets at %d" % gp
-                sys.stdout.flush()
-
-            self._grid_points = parse_grid_points("grids-%d%d%d.dat" % tuple(mesh))
-            triplets_at_q, weights_at_q = parse_triplets(
-                "triplets_q-%d%d%d-%d.dat" % (mesh[0], mesh[1], mesh[2], gp ))
-        else:
-            if self._verbose:
-                print "Finding ir-triplets at %d" % gp
-                sys.stdout.flush()
-            
-            triplets_at_q, weights_at_q, self._grid_points = \
-                get_triplets_at_q(gp,
-                                  mesh,
-                                  self._primitive.get_cell(),
-                                  self._symmetry.get_pointgroup_operations(),
-                                  True,
-                                  self._symprec)
-
-            t_filename = "triplets_q-%d%d%d-%d.dat" % (mesh[0], mesh[1], mesh[2], gp)
-            write_triplets(triplets_at_q, weights_at_q, mesh, t_filename)
-            g_filename = "grids-%d%d%d.dat" % tuple(mesh)
-            write_grid_points(self._grid_points, mesh, g_filename)
-            if self._verbose:
-                print "Ir-triplets at %d were written into %s." % (gp, t_filename)
-                print "Mesh points were written into %s." % (g_filename)
-                sys.stdout.flush()
-
-        if self._verbose:
-            print "Grid point (%d):" % gp,  self._grid_points[gp]
-            print "Number of ir triplets:", (len(weights_at_q))
-            print "Sum of weights:", weights_at_q.sum()
+            sys.stdout.write(text)
             sys.stdout.flush()
-
-        self._triplets_at_q = triplets_at_q
-        self._weights_at_q = weights_at_q
-        self._grid_point = gp
-
-    def set_interaction_strength(self, band_indices=None):
-        if self._verbose:
-            print "----- phonon-phonon interaction strength ------"
-
-        if band_indices == None:
-            self._band_indices = np.arange(self._num_atom * 3, dtype=int)
-        else:
-            self._band_indices = np.array(band_indices) - 1
-
-        if self._verbose:
-            print "Band indices: ", self._band_indices + 1
-
-        
-        # \Phi^2(set_of_q's, s, s', s'')
-        # Unit: mass^{-3} \Phi^2(real space)
-        #   \Phi(real space) = eV/A^3
-        #   frequency THz
-        #   mass AMU
-        # 1/36 * (\hbar/2N0)^3 * N0^2 to be multiplied somewhere else.
-        self._amplitude_at_q = np.zeros((len(self._weights_at_q),
-                                        len(self._band_indices),
-                                        self._num_atom*3,
-                                        self._num_atom*3), dtype=float)
-        self._frequencies_at_q = np.zeros((len(self._weights_at_q),
-                                          3,
-                                          self._num_atom*3), dtype=float)
-
-        for i, (q3, w) in enumerate(zip(self._triplets_at_q, self._weights_at_q)):
-            (self._amplitude_at_q[i],
-             self._frequencies_at_q[i]) = get_interaction_strength(
-                i,
-                len(self._triplets_at_q),
-                q3,
-                w,
-                self._mesh,
-                self._grid_points,
-                self._shortest_vectors,
-                self._multiplicity,
-                self._fc3,
-                self._dm,
-                self._q_direction,
-                self._primitive,
-                self._band_indices,
-                self._factor,
-                self._freq_factor,
-                self._freq_scale,
-                self._cutoff_frequency,
-                self._symprec,
-                self._is_symmetrize_fc3_q,
-                self._is_Peierls,
-                self._r2q_TI_index,
-                self._verbose)
 
 def get_interaction_strength(triplet_number,
                              num_triplets,
@@ -773,15 +769,19 @@ def get_triplets_at_q(gp,
                       is_time_reversal=True,
                       symprec=1e-5):
 
-    weights, third_q, grid_points = \
-        spg.get_triplets_reciprocal_mesh_at_q(gp,
-                                              mesh,
-                                              rotations,
-                                              is_time_reversal,
-                                              symprec)
+    (weights,
+     third_q,
+     grid_points) = spg.get_triplets_reciprocal_mesh_at_q(gp,
+                                                          mesh,
+                                                          rotations,
+                                                          is_time_reversal,
+                                                          symprec)
 
     weights_at_q = []
     triplets_at_q = []
+    # A pair of q-points determins the third q-point by conservatoin law.
+    # If q-point triplet is independent, it is set as w > 0.
+    # Sum of w has to be prod(mesh).
     for i, (w, q) in enumerate(zip(weights, third_q)):
         if w > 0:
             weights_at_q.append(w)

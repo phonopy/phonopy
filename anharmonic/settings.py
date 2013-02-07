@@ -1,9 +1,9 @@
 import numpy as np
 from phonopy.cui.settings import Settings, ConfParser, fracval
 
-class Phono3pySettings( Settings ):
-    def __init__( self ):
-        Settings.__init__( self )
+class Phono3pySettings(Settings):
+    def __init__(self):
+        Settings.__init__(self)
 
         self._supercell_matrix_extra = None
         self._band_indices = None
@@ -73,29 +73,29 @@ class Phono3pyConfParser(ConfParser):
                     self._confs['qpoints'] = self._options.qpoints
 
 
-    def _parse_conf( self ):
+    def _parse_conf(self):
         confs = self._confs
 
         for conf_key in confs.keys():
             if conf_key == 'dim_extra':
                 matrix = [ int(x) for x in confs['dim_extra'].split() ]
-                if len( matrix ) == 9:
-                    matrix = np.array( matrix ).reshape( 3, 3 )
-                elif len( matrix ) == 3:
-                    matrix = np.diag( matrix )
+                if len(matrix) == 9:
+                    matrix = np.array(matrix).reshape(3, 3)
+                elif len(matrix) == 3:
+                    matrix = np.diag(matrix)
                 else:
                     self.setting_error("Number of elements of dim2 has to be 3 or 9.")
 
-                if matrix.shape == ( 3, 3 ):
-                    if np.linalg.det( matrix ) < 1:
+                if matrix.shape == (3, 3):
+                    if np.linalg.det(matrix) < 1:
                         self.setting_error('Determinant of supercell matrix has to be positive.')
                     else:
-                        self.set_parameter( 'dim_extra', matrix )
+                        self.set_parameter('dim_extra', matrix)
 
             if conf_key == 'band_indices':
                 vals = []
                 for sum_set in confs['band_indices'].split(','):
-                    vals.append( [ int(x) for x in sum_set.split() ] )
+                    vals.append([int(x) - 1 for x in sum_set.split()])
                 self.set_parameter('band_indices', vals)
 
             if conf_key == 'lifetime':
@@ -104,10 +104,10 @@ class Phono3pyConfParser(ConfParser):
 
             if conf_key == 'q_direction':
                 q_direction = [ float(x) for x in confs['q_direction'].split() ]
-                if len( q_direction ) < 3:
+                if len(q_direction) < 3:
                     self.setting_error("Number of elements of q_direction is less than 3")
                 else:
-                    self.set_parameter( 'q_direction', q_direction )
+                    self.set_parameter('q_direction', q_direction)
 
             if conf_key == 'qpoints':
                 vals = [fracval(x) for x in confs['qpoints'].split()]
@@ -117,8 +117,8 @@ class Phono3pyConfParser(ConfParser):
                     self.set_parameter('qpoints',
                                        list(np.reshape(vals, (-1, 3))))
 
-    def _set_settings( self ):
-        ConfParser.set_settings( self )
+    def _set_settings(self):
+        ConfParser.set_settings(self)
         params = self._parameters
 
         # Supercell size for fc2
@@ -127,15 +127,15 @@ class Phono3pyConfParser(ConfParser):
 
         # Sets of band indices that are summed
         if params.has_key('band_indices'):
-            self._settings.set_band_indices( params['band_indices'] )
+            self._settings.set_band_indices(params['band_indices'])
 
         # Calculate lifetimes
         if params.has_key('is_lifetime'):
-            self._settings.set_is_lifetime( params['is_lifetime'] )
+            self._settings.set_is_lifetime(params['is_lifetime'])
 
         # q-vector direction at q->0 for non-analytical term correction
         if params.has_key('q_direction'):
-            self._settings.set_q_direction( params['q_direction'] )
+            self._settings.set_q_direction(params['q_direction'])
             
         # Q-points mode
         if params.has_key('qpoints'):
