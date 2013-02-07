@@ -1,14 +1,16 @@
 import sys
-import os
 import numpy as np
-import phonopy.structure.spglib as spg
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC
-from phonopy.phonon.mesh import Mesh
 from phonopy.structure.symmetry import Symmetry
 from phonopy.units import VaspToTHz, PlanckConstant, Kb, THzToCm, EV, AMU, Hbar, THz, Angstrom
-from anharmonic.file_IO import write_triplets, write_grid_points, write_amplitudes, write_damping_functions, parse_triplets, parse_grid_points, write_fwhm, write_decay_channels
+from anharmonic.file_IO import write_triplets, write_grid_points, write_amplitudes, parse_triplets, parse_grid_points
+from anharmonic.triplets import get_triplets_at_q, get_nosym_triplets
 from anharmonic.r2q import get_fc3_reciprocal
 from anharmonic.shortest_distance import get_shortest_vectors
+
+def print_log(text):
+    sys.stdout.write(text)
+    sys.stdout.flush()
 
 class PhononPhonon:
     """
@@ -23,8 +25,6 @@ class PhononPhonon:
                  supercell,
                  primitive,
                  mesh,
-                 sigma=0.2,
-                 omega_step=0.1,
                  factor=VaspToTHz,
                  freq_factor=1.0, # Used to convert to THz
                  freq_scale=1.0, # Just modify frequencies
@@ -38,8 +38,6 @@ class PhononPhonon:
     
         self._freq_factor = freq_factor
         self._cutoff_frequency = 0.01 * self._freq_factor
-        self._sigma = sigma
-        self._omega_step = omega_step
         self._freq_scale = freq_scale
         self._factor = factor
         self._primitive = primitive
@@ -57,10 +55,8 @@ class PhononPhonon:
         self._is_nosym = is_nosym
         self._p2s_map = primitive.get_primitive_to_supercell_map()
         self._s2p_map = primitive.get_supercell_to_primitive_map()
-        self._num_atom = primitive.get_number_of_atoms()
         N0 = len(self._s2p_map) / len(self._p2s_map)
-
-        self._unit_conversion = get_unit_conversion_factor(freq_factor, N0)
+        self._conversion_factor = get_unit_conversion_factor(freq_factor, N0)
 
         self._shortest_vectors, self._multiplicity = get_shortest_vectors(
             supercell, primitive, symprec)
@@ -81,23 +77,52 @@ class PhononPhonon:
         self._dm = None
         self._q_direction = None
 
+    def get_amplitude(self):
+        return (self._amplitude_at_q,
+                self._weights_at_q,
+                self._frequencies_at_q)
+
+    def get_unit_conversion_factor(self):
+        return self._conversion_factor
+
+    def get_grid_point(self):
+        return self._grid_point
+
+    def get_grid_points(self):
+        return self._grid_points
+
+    def get_mesh_numbers(self):
+        return self._mesh
+
+    def get_band_indices(self):
+        return self._band_indices
+
+    def get_primitive(self):
+        return self._primitive
+
+    def get_frequency_factor(self):
+        return self._freq_factor
+    
+    def is_nosym(self):
+        return self._is_nosym
+    
     def set_triplets_at_q(self, gp):
-        self._print_log("----- Triplets -----\n")
+        self.print_log("----- Triplets -----\n")
 
         mesh = self._mesh
         if self._is_nosym:
-            self._print_log("Triplets at q without considering symmetry\n")
+            self.print_log("Triplets at q without considering symmetry\n")
             (triplets_at_q,
              weights_at_q,
              self._grid_points) = get_nosym_triplets(mesh, gp)
         elif self._is_read_triplets:
-            self._print_log("Reading ir-triplets at %d\n" % gp)
+            self.print_log("Reading ir-triplets at %d\n" % gp)
             self._grid_points = parse_grid_points(
                 "grids-%d%d%d.dat" % tuple(mesh))
             triplets_at_q, weights_at_q = parse_triplets(
                 "triplets_q-%d%d%d-%d.dat" % (tuple(mesh) + (gp,)))
         else:
-            self._print_log("Finding ir-triplets at %d\n" % gp)
+            self.print_log("Finding ir-triplets at %d\n" % gp)
             
             (triplets_at_q,
              weights_at_q,
@@ -114,28 +139,28 @@ class PhononPhonon:
             g_filename = "grids-%d%d%d.dat" % tuple(mesh)
             write_grid_points(self._grid_points, mesh, g_filename)
 
-            self._print_log("Ir-triplets at %d were written into %s.\n" %
+            self.print_log("Ir-triplets at %d were written into %s.\n" %
                             (gp, t_filename))
-            self._print_log("Mesh points were written into %s.\n" % g_filename)
+            self.print_log("Mesh points were written into %s.\n" % g_filename)
 
-        self._print_log("Grid point (%d): " % gp)
-        self._print_log("[ %d %d %d ]\n" % tuple(self._grid_points[gp]))
-        self._print_log("Number of ir triplets: %d\n" % len(weights_at_q))
-        self._print_log("Sum of weights: %d\n" % weights_at_q.sum())
+        self.print_log("Grid point (%d): " % gp)
+        self.print_log("[ %d %d %d ]\n" % tuple(self._grid_points[gp]))
+        self.print_log("Number of ir triplets: %d\n" % len(weights_at_q))
+        self.print_log("Sum of weights: %d\n" % weights_at_q.sum())
 
         self._triplets_at_q = triplets_at_q
         self._weights_at_q = weights_at_q
         self._grid_point = gp
 
     def set_interaction_strength(self, band_indices=None):
-        self._print_log("----- phonon-phonon interaction strength ------\n")
+        self.print_log("----- phonon-phonon interaction strength ------\n")
 
         if band_indices == None:
             self._band_indices = np.arange(self._num_atom * 3, dtype=int)
         else:
             self._band_indices = np.array(band_indices)
 
-        self._print_log(("Band indices: [" + " %d" * len(self._band_indices) +
+        self.print_log(("Band indices: [" + " %d" * len(self._band_indices) +
                          " ]\n") % tuple(self._band_indices + 1))
 
         
@@ -145,13 +170,13 @@ class PhononPhonon:
         #   frequency THz
         #   mass AMU
         # 1/36 * (\hbar/2N0)^3 * N0^2 to be multiplied somewhere else.
+        num_atom = self._primitive.get_number_of_atoms()
         self._amplitude_at_q = np.zeros((len(self._weights_at_q),
                                          len(self._band_indices),
-                                         self._num_atom*3,
-                                         self._num_atom*3), dtype=float)
-        self._frequencies_at_q = np.zeros((len(self._weights_at_q),
-                                           3,
-                                           self._num_atom*3), dtype=float)
+                                         num_atom * 3,
+                                         num_atom * 3), dtype=float)
+        self._frequencies_at_q = np.zeros(
+            (len(self._weights_at_q), 3, num_atom * 3), dtype=float)
 
         for i, (q3, w) in enumerate(zip(self._triplets_at_q,
                                         self._weights_at_q)):
@@ -201,10 +226,9 @@ class PhononPhonon:
         if not q_direction==None:
             self._q_direction = q_direction
 
-    def _print_log(self, text):
+    def print_log(self, text):
         if self._verbose:
-            sys.stdout.write(text)
-            sys.stdout.flush()
+            print_log(text)
 
 def get_interaction_strength(triplet_number,
                              num_triplets,
@@ -465,11 +489,6 @@ def get_unit_conversion_factor(freq_factor, N0):
         * 18 * np.pi / (2 * np.pi * THz / freq_factor) / ((Hbar * EV) **2 ) * N0 / (2 * np.pi) \
         / THz * freq_factor
         
-def get_omegas(max_omega, omega_step, sigma):
-    return np.array(range(int((max_omega * 2 + sigma * 4) / omega_step + 1)),
-                    dtype=float) * omega_step
-    
-
 #
 #  Functions used for debug
 #    

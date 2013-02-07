@@ -1,3 +1,6 @@
+import numpy as np
+from anharmonic.file_IO import write_decay_channels
+
 class DecayChannel:
     def __init__(self):
         pass

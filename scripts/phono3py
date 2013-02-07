@@ -666,8 +666,6 @@ else:
                                 primitive,
                                 mesh,
                                 fc3,
-                                sigma,
-                                omega_step,
                                 factor,
                                 freq_factor,
                                 freq_scale,
@@ -678,9 +676,6 @@ else:
                                 options.is_Peierls,
                                 options.symprec,
                                 log_level)
-
-            phono3py.set_phonon_phonon()
-
 
             if settings.get_supercell_matrix_extra()==None:
                 phono3py.set_dynamical_matrix(fc2,
@@ -694,7 +689,6 @@ else:
                                               primitive_extra,
                                               nac_params,
                                               nac_q_direction)
-
 
             if options.is_decay_channel:
                 phono3py.get_decay_channels(grid_points,
@@ -712,11 +706,18 @@ else:
                     filename=options.output_filename)
 
             else:
-                phono3py.get_damping_function(grid_points,
-                                              settings.get_band_indices(),
-                                              options.temperature,
-                                              options.output_filename,
-                                              options.gamma_option)
+                phono3py.get_damping_function(
+                    grid_points=grid_points,
+                    sets_of_band_indices=settings.get_band_indices(),
+                    sigma=sigma,
+                    omega_step=omega_step,
+                    temperature=options.temperature,
+                    filename=options.output_filename,
+                    gamma_option=options.gamma_option)
+
+
+
+
 
 
 if log_level:

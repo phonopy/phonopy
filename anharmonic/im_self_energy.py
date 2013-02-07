@@ -1,6 +1,18 @@
+import numpy as np
+from anharmonic.file_IO import write_damping_functions
+from phonopy.units import VaspToTHz
+
 class ImSelfEnergy:
-    def __init__(self):
-        pass
+    def __init__(self,
+                 interaction_strength,
+                 sigma=0.2,
+                 omega_step=0.1,
+                 verbose=False):
+
+        self._pp = interaction_strength
+        self._sigma = sigma
+        self._omega_step = omega_step
+        self._verbose = verbose
 
     def get_damping_function(self,
                              temperature=None,
@@ -13,39 +25,51 @@ class ImSelfEnergy:
           frequency: THz
         """
 
-        omegas = get_omegas(np.max(self._frequencies_at_q),
+        conversion_factor = self._pp.get_unit_conversion_factor()
+        (amplitude_at_q,
+         weights_at_q,
+         frequencies_at_q) = self._pp.get_amplitude()
+        grid_point = self._pp.get_grid_point()
+        num_atom = self._pp.get_primitive().get_number_of_atoms()
+        freq_factor = self._pp.get_frequency_factor()
+        
+        omegas = get_omegas(np.max(frequencies_at_q),
                             self._omega_step,
                             self._sigma)
-
+    
         # Calculate damping function at each band
         damps_bands = []
-        for i, band_index in enumerate(self._band_indices):
-            if (self._grid_point == 0 and band_index < 3) or \
-                    band_index < 0 or band_index > self._num_atom * 3 - 1:
-                self._print_log("The band index %d is not calculated.\n" %
-                                band_index)
+        for i, band_index in enumerate(self._pp.get_band_indices()):
+            if ((grid_point == 0 and band_index < 3) or
+                band_index < 0 or band_index > num_atom * 3 - 1):
+                if self._verbose:
+                    print "The band index %d is not calculated.\n" % band_index
                 continue
-
+    
             # Unit: frequency^{-1} 
             #   frequency THz
             # 18\pi / \hbar^2 to be multiplied
-            dampings = get_gamma(self._amplitude_at_q,
+            dampings = get_gamma(amplitude_at_q,
                                  omegas,
-                                 self._weights_at_q,
-                                 self._frequencies_at_q,
+                                 weights_at_q,
+                                 frequencies_at_q,
                                  i,
                                  temperature,
                                  self._sigma,
-                                 self._freq_factor,
-                                 gamma_option) * self._unit_conversion
-
-            write_damping_functions(self._grid_point,
+                                 freq_factor,
+                                 gamma_option) * conversion_factor
+    
+            write_damping_functions(grid_point,
                                     band_index + 1,
-                                    self._mesh,
+                                    self._pp.get_mesh_numbers(),
                                     omegas,
                                     dampings,
                                     filename=filename,
-                                    is_nosym=self._is_nosym)
+                                    is_nosym=self._pp.is_nosym())
+
+def get_omegas(max_omega, omega_step, sigma):
+    return np.array(range(int((max_omega * 2 + sigma * 4) / omega_step + 1)),
+                    dtype=float) * omega_step
 
 def get_gamma(amplitudes,
               omegas,

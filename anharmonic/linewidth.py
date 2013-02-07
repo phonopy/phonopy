@@ -1,3 +1,6 @@
+import numpy as np
+from anharmonic.file_IO import write_fwhm
+
 class LineWidth:
     def __init__(self):
         pass
