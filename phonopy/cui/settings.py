@@ -610,6 +610,7 @@ class PhonopySettings(Settings):
         self._is_thermal_displacements = False
         self._is_thermal_distances = False
         self._is_thermal_properties = False
+        self._write_dynamical_matrices = False
         self._qpoints = None
         self._modulation = None
         self._pdos_indices = None
@@ -745,6 +746,12 @@ class PhonopySettings(Settings):
     def get_is_thermal_distances(self):
         return self._is_thermal_distances
 
+    def set_write_dynamical_matrices(self, write_dynamical_matrices):
+        self._write_dynamical_matrices = write_dynamical_matrices
+
+    def get_write_dynamical_matrices(self):
+        return self._write_dynamical_matrices
+
     def set_projection_direction(self, direction):
         self._projection_direction = direction
 
@@ -865,9 +872,13 @@ class PhonopyConfParser(ConfParser):
                 if self._options.is_read_force_constants:
                     self._confs['force_constants'] = 'read'
     
-            if opt.dest == 'is_write_force_constants':
-                if self._options.is_write_force_constants:
+            if opt.dest == 'write_force_constants':
+                if self._options.write_force_constants:
                     self._confs['force_constants'] = 'write'
+    
+            if opt.dest == 'write_dynamical_matrices':
+                if self._options.write_dynamical_matrices:
+                    self._confs['writedm'] = '.true.'
     
             if opt.dest == 'q_character_table':
                 if not self._options.q_character_table == None:
@@ -961,6 +972,10 @@ class PhonopyConfParser(ConfParser):
                     else:
                         self.set_parameter('qpoints',
                                            list(np.reshape(vals, (-1, 3))))
+
+            if conf_key == 'writedm':
+                if confs['writedm'] == '.true.':
+                    self.set_parameter('write_dynamical_matrices', True)
 
             if conf_key == 'mp':
                 vals = [ int(x) for x in confs['mp'].split() ]
@@ -1181,7 +1196,11 @@ class PhonopyConfParser(ConfParser):
             self._settings.set_run_mode('qpoints')
             if params['qpoints'] != True:
                 self._settings.set_qpoints(params['qpoints'])
-        
+
+        if params.has_key('write_dynamical_matrices'):
+            if params['write_dynamical_matrices']:
+                self._settings.set_write_dynamical_matrices(True)
+                
         # Anime mode
         if params.has_key('anime_type'):
             self._settings.set_anime_type(params['anime_type'])
