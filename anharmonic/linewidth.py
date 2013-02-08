@@ -18,45 +18,25 @@ class Linewidth:
     def get_linewidth(self,
                       gamma_option=0,
                       filename=None):
-        num_atom = self._pp.get_primitive().get_number_of_atoms()
-        mesh = self._pp.get_mesh_numbers()
-        q_direction = self._pp.get_q_direction()
-        freq_scale_factor = self._pp.get_frequency_scale_factor()
         freq_conv_factor = self._pp.get_frequency_unit_conversion_factor()
-        freq_factor_to_THz = self._pp.get_frequency_factor_to_THz()
-        factor = freq_conv_factor * freq_scale_factor * freq_factor_to_THz
         unit_conversion = self._pp.get_unit_conversion_factor()
-        is_nosym = self._pp.is_nosym()
 
         # After pp.set_interaction_strength()
         (amplitude_at_q,
          weights_at_q,
          frequencies_at_q) = self._pp.get_amplitude()
         band_indices = self._pp.get_band_indices()
-        grid_point = self._pp.get_grid_point()
-        grid_address = self._pp.get_grid_address()
-
-        # After pp.set_dynamical_matrix()
-        q = grid_address[grid_point].astype(float) / mesh
-        dm = self._pp.get_dynamical_matrix()
-        if (not q_direction is not None) and grid_point == 0:
-            dm.set_dynamical_matrix(q, q_direction)
-        else:
-            dm.set_dynamical_matrix(q)
-        vals = np.linalg.eigvalsh(dm.get_dynamical_matrix()).real
-        freqs = np.sqrt(abs(vals)) * np.sign(vals) * factor
-        omegas = [freqs[x] for x in band_indices]
-
+        freqs = [self._pp.get_frequencies()[x] for x in band_indices]
 
         temps = np.arange(self._t_min,
                           self._t_max + float(self._t_step) / 2,
                           self._t_step)
-        gammas = np.zeros((len(omegas), len(temps)), dtype=float)
+        gammas = np.zeros((len(freqs), len(temps)), dtype=float)
 
-        for i in range(len(band_indices)):
+        for i, f in enumerate(freqs):
             for j, t in enumerate(temps):
                 g = get_gamma(amplitude_at_q,
-                              np.array([omegas[i]], dtype=float),
+                              np.array([f], dtype=float),
                               weights_at_q,
                               frequencies_at_q,
                               i,
@@ -66,8 +46,10 @@ class Linewidth:
                               gamma_option)[0] * unit_conversion
                 gammas[i, j] = g
 
-
         fwhms = gammas * 2
+        mesh = self._pp.get_mesh_numbers()
+        is_nosym = self._pp.is_nosym()
+        grid_point = self._pp.get_grid_point()
         for i in range(len(band_indices)):
             write_fwhm(grid_point,
                        [band_indices[i] + 1],
@@ -85,5 +67,5 @@ class Linewidth:
                    is_nosym=is_nosym,
                    filename=filename)
 
-        return fwhms, temps, omegas
+        return fwhms, temps, freqs
 

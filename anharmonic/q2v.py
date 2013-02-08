@@ -77,6 +77,10 @@ class PhononPhonon:
         self._dm = None
         self._q_direction = None
 
+        # Frequencies and eigenvectors at the grid point
+        self._frequencies = None
+        self._eigenvectors = None
+
     def get_amplitude(self):
         return (self._amplitude_at_q,
                 self._weights_at_q,
@@ -88,6 +92,12 @@ class PhononPhonon:
     def get_dynamical_matrix(self):
         return self._dm
 
+    def get_frequencies(self):
+        return self._frequencies
+
+    def get_eigenvectors(self):
+        return self._eigenvectors
+    
     def get_frequency_factor_to_THz(self):
         return self._factor
 
@@ -163,7 +173,7 @@ class PhononPhonon:
         self._triplets_at_q = triplets_at_q
         self._weights_at_q = weights_at_q
         self._grid_point = gp
-
+        
     def set_interaction_strength(self, band_indices=None):
         self.print_log("----- phonon-phonon interaction strength ------\n")
 
@@ -177,6 +187,16 @@ class PhononPhonon:
         self.print_log(("Band indices: [" + " %d" * len(self._band_indices) +
                          " ]\n") % tuple(self._band_indices + 1))
 
+        q = self._grid_address[self._grid_point].astype(float) / self._mesh
+        if (self._q_direction is not None) and self._grid_point == 0:
+            self._dm.set_dynamical_matrix(q, self._q_direction)
+        else:
+            self._dm.set_dynamical_matrix(q)
+        vals, self._eigenvectors = np.linalg.eigh(
+            self._dm.get_dynamical_matrix())
+        vals = vals.real
+        factor = self._factor * self._freq_factor * self._freq_scale
+        self._frequencies = np.sqrt(abs(vals)) * np.sign(vals) * factor
         
         # \Phi^2(set_of_q's, s, s', s'')
         # Unit: mass^{-3} \Phi^2(real space)
@@ -206,6 +226,8 @@ class PhononPhonon:
                 self._fc3,
                 self._dm,
                 self._q_direction,
+                self._frequencies,
+                self._eigenvectors,
                 self._primitive,
                 self._band_indices,
                 self._factor,
@@ -254,6 +276,8 @@ def get_interaction_strength(triplet_number,
                              fc3,
                              dm,
                              q_direction,
+                             frequencies,
+                             eigenvectors,
                              primitive,
                              band_indices,
                              factor,
@@ -281,19 +305,23 @@ def get_interaction_strength(triplet_number,
 
     # Solve dynamical matrix
     freqs = np.zeros((3, num_atom*3), dtype=float)
+    freqs[0] = frequencies.copy()
     eigvecs = np.zeros((3, num_atom*3, num_atom*3), dtype=complex)
-    for i, q in enumerate(q_set):
-        if (not q_direction==None) and q3[i]==0:
+    eigvecs[0] = eigenvectors.copy()
+    for i, q in enumerate(q_set[1:]):
+        if (q_direction is not None) and q3[i + 1] == 0:
             dm.set_dynamical_matrix(q, q_direction)
         else:
             dm.set_dynamical_matrix(q)
 
-        vals, eigvecs[i] = np.linalg.eigh(dm.get_dynamical_matrix())
+        vals, eigvecs[i + 1] = np.linalg.eigh(dm.get_dynamical_matrix())
+        vals = vals.real
         total_factor = factor * freq_factor * freq_scale
-        freqs[i] = np.sqrt(np.abs(vals)) * np.sign(vals) * total_factor
+        freqs[i + 1] = np.sqrt(np.abs(vals)) * np.sign(vals) * total_factor
 
     # Calculate interaction strength
-    amplitude = np.zeros((len(band_indices), num_atom*3, num_atom*3), dtype=float)
+    amplitude = np.zeros((len(band_indices), num_atom * 3, num_atom * 3),
+                         dtype=float)
     try:
         import anharmonic._phono3py as phono3c
         get_c_interaction_strength(amplitude,

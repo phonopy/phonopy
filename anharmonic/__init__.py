@@ -197,7 +197,7 @@ class Phono3py:
 
                 print "# Grid point:", gp
                 print "# Frequencies:", omegas
-                for fwhm, t in zip(fwhms, temps):
+                for fwhm, t in zip(fwhms.T, temps):
                     print t, fwhm
                 print
 
