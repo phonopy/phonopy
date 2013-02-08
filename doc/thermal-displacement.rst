@@ -60,6 +60,10 @@ expectation values of the combination of the operations, e.g.,
    = 0.
    
 
+  ..    \left\langle |u(jl, t)|^2 \right\rangle = \frac{\hbar}{2Nm_j}
+  .. \sum_{\mathbf{q},\nu}\omega_\nu(\mathbf{q})^{-1}
+  .. (1+2n_\nu(\mathbf{q}))|\hat{\mathbf{n}}\cdot\mathbf{e}_\nu(j,\mathbf{q})|^2
+
 .. |sflogo| image:: http://sflogo.sourceforge.net/sflogo.php?group_id=161614&type=1
             :target: http://sourceforge.net
 
