@@ -99,6 +99,7 @@ parser.set_defaults(amplitude=None,
                     is_nosym=False,
                     is_gruneisen=False,
                     is_joint_dos=False,
+                    is_linewidth=False,
                     is_lifetime=False,
                     is_nac=False,
                     is_plusminus_displacements=False,
@@ -208,7 +209,10 @@ parser.add_option("--jdos",
                   help="Calculate joint density of states")
 parser.add_option("--lt", "--lifetime", dest="is_lifetime",
                   action="store_true",
-                  help="Calculate life times")
+                  help="Calculate lifetimes")
+parser.add_option("--lw", "--linewidth", dest="is_linewidth",
+                  action="store_true",
+                  help="Calculate linewidths")
 parser.add_option("--mesh",
                   dest="mesh_numbers",
                   type="string",
@@ -629,38 +633,29 @@ else:
         else:
             freq_scale = options.freq_scale
 
-        if options.is_joint_dos:
-            if settings.get_supercell_matrix_extra()==None:
-                jdos = JointDOS(supercell,
-                                primitive,
-                                mesh,
-                                fc2,
-                                nac_params,
-                                sigma,
-                                omega_step,
-                                factor,
-                                freq_factor,
-                                freq_scale,
-                                options.is_nosym,
-                                options.symprec,
-                                log_level)
-            else:
-                jdos = JointDOS(supercell_extra,
-                                primitive_extra,
-                                mesh,
-                                fc2,
-                                nac_params,
-                                sigma,
-                                omega_step,
-                                factor,
-                                freq_factor,
-                                freq_scale,
-                                options.is_nosym,
-                                options.symprec,
-                                log_level)
+        if settings.get_supercell_matrix_extra() is None:
+            supercell_dm = supercell
+            primitive_dm = primitive
+        else:
+            supercell_dm = supercell_extra
+            primitive_dm = primitive_extra
 
+        if options.is_joint_dos:
+            jdos = JointDOS(supercell_dm,
+                            primitive_dm,
+                            mesh,
+                            fc2,
+                            nac_params,
+                            sigma,
+                            omega_step,
+                            factor,
+                            freq_factor,
+                            freq_scale,
+                            options.is_nosym,
+                            options.symprec,
+                            log_level)
             jdos.get_jointDOS(grid_points,
-                              options.output_filename)
+                              filename=options.output_filename)
         else:
             phono3py = Phono3py(supercell,
                                 primitive,
@@ -677,38 +672,35 @@ else:
                                 options.symprec,
                                 log_level)
 
-            if settings.get_supercell_matrix_extra()==None:
-                phono3py.set_dynamical_matrix(fc2,
-                                              supercell,
-                                              primitive,
-                                              nac_params,
-                                              nac_q_direction)
-            else:
-                phono3py.set_dynamical_matrix(fc2,
-                                              supercell_extra,
-                                              primitive_extra,
-                                              nac_params,
-                                              nac_q_direction)
+            phono3py.set_dynamical_matrix(fc2,
+                                          supercell_dm,
+                                          primitive_dm,
+                                          nac_params,
+                                          nac_q_direction)
 
             if options.is_decay_channel:
                 phono3py.get_decay_channels(grid_points,
                                             settings.get_band_indices(),
                                             options.temperature)
 
-            elif settings.get_is_lifetime():
-                phono3py.get_fwhm_and_damping_functions(
+            elif settings.get_is_linewidth():
+                phono3py.get_linewidth(
                     grid_points,
                     settings.get_band_indices(),
-                    tmax=settings.get_max_temperature(),
-                    tmin=settings.get_min_temperature(),
-                    tstep=settings.get_temperature_step(),
+                    sigma=sigma,
+                    t_max=settings.get_max_temperature(),
+                    t_min=settings.get_min_temperature(),
+                    t_step=settings.get_temperature_step(),
                     gamma_option=options.gamma_option,
                     filename=options.output_filename)
 
+            elif settings.get_is_lifetime():
+                pass
+
             else:
                 phono3py.get_damping_function(
-                    grid_points=grid_points,
-                    sets_of_band_indices=settings.get_band_indices(),
+                    grid_points,
+                    settings.get_band_indices(),
                     sigma=sigma,
                     omega_step=omega_step,
                     temperature=options.temperature,

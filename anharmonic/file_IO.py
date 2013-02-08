@@ -243,10 +243,11 @@ def write_triplets(triplets, weights, mesh, filename='triplets.dat'):
     for weight, q3 in zip(weights, triplets):
         w.write("%10d %10d %10d %10d\n" % (q3[0], q3[1], q3[2], weight))
 
-def write_grid_points(grid_points, mesh, filename='grid_points.dat'):
+def write_grid_address(grid_address, mesh, filename='grid_points.dat'):
     w = open(filename, 'w')
-    w.write("# Grid points for %dx %dx%d mesh (address, grid_a, grid_b, grid_c)\n" % tuple(mesh))
-    for i, q in enumerate(grid_points):
+    w.write("# Grid points for %dx %dx%d mesh"
+            "(address, grid_a, grid_b, grid_c)\n" % tuple(mesh))
+    for i, q in enumerate(grid_address):
         w.write("%10d %10d %10d %10d\n" % (i, q[0], q[1], q[2]))
 
 def write_amplitudes(amplitudes, frequencies, triplet, weight, mesh, filename):
@@ -372,7 +373,7 @@ def write_decay_channels(decay_channels,
                          frequencies,
                          triplets,
                          weights,
-                         grid_points,
+                         grid_address,
                          mesh,
                          band_indices,
                          omegas,
@@ -436,9 +437,9 @@ def write_decay_channels(decay_channels,
         w.write("# Triplet %d (%f%%)\n" %
                 (i+1, decay_rate_triplets[i][0] * 100))
         w.write(" %4d                                 # weight\n" % weight)
-        q0 = grid_points[tp[0]]
-        q1 = grid_points[tp[1]]
-        q2 = grid_points[tp[2]]
+        q0 = grid_address[tp[0]]
+        q1 = grid_address[tp[1]]
+        q2 = grid_address[tp[2]]
         w.write(" %4d / %-4d %4d / %-4d %4d / %-4d  # q\n" %
                 (q0[0], mesh[0], q0[1], mesh[1], q0[2], mesh[2]))
         w.write(" %4d / %-4d %4d / %-4d %4d / %-4d  # q'\n" %
@@ -681,17 +682,17 @@ def parse_triplets(filename):
 
     return np.array(triplets), np.array(weights)
     
-def parse_grid_points(filename):
+def parse_grid_address(filename):
     w = open(filename, 'r')
-    grid_points = []
+    grid_address = []
     for line in w:
         if line.strip()[0] == "#":
             continue
 
         line_array = [int(x) for x in line.split()]
-        grid_points.append(line_array[1:4])
+        grid_address.append(line_array[1:4])
 
-    return np.array(grid_points)
+    return np.array(grid_address)
 
 
 

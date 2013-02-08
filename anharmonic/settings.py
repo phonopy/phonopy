@@ -9,6 +9,7 @@ class Phono3pySettings(Settings):
         self._band_indices = None
         self._q_direction = None
         self._is_lifetime = False
+        self._is_linewidth = False
         self._qpoints = [[0, 0, 0]]
         
     def set_supercell_matrix_extra(self, matrix):
@@ -28,6 +29,12 @@ class Phono3pySettings(Settings):
 
     def get_is_lifetime(self):
         return self._is_lifetime
+
+    def set_is_linewidth(self, is_linewidth):
+        self._is_linewidth = is_linewidth
+
+    def get_is_linewidth(self):
+        return self._is_linewidth
 
     def set_q_direction(self, q_direction):
         self._q_direction = q_direction
@@ -63,6 +70,10 @@ class Phono3pyConfParser(ConfParser):
             if opt.dest == 'is_lifetime':
                 if self._options.is_lifetime:
                     self._confs['lifetime'] = '.true.'
+
+            if opt.dest == 'is_linewidth':
+                if self._options.is_linewidth:
+                    self._confs['linewidth'] = '.true.'
 
             if opt.dest == 'q_direction':
                 if not self._options.q_direction==None:
@@ -102,6 +113,10 @@ class Phono3pyConfParser(ConfParser):
                 if confs['lifetime'] == '.true.':
                     self.set_parameter('is_lifetime', True)
 
+            if conf_key == 'linewidth':
+                if confs['linewidth'] == '.true.':
+                    self.set_parameter('is_linewidth', True)
+
             if conf_key == 'q_direction':
                 q_direction = [ float(x) for x in confs['q_direction'].split() ]
                 if len(q_direction) < 3:
@@ -132,6 +147,10 @@ class Phono3pyConfParser(ConfParser):
         # Calculate lifetimes
         if params.has_key('is_lifetime'):
             self._settings.set_is_lifetime(params['is_lifetime'])
+
+        # Calculate linewidths
+        if params.has_key('is_linewidth'):
+            self._settings.set_is_linewidth(params['is_linewidth'])
 
         # q-vector direction at q->0 for non-analytical term correction
         if params.has_key('q_direction'):

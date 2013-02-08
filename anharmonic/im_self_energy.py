@@ -31,7 +31,8 @@ class ImSelfEnergy:
          frequencies_at_q) = self._pp.get_amplitude()
         grid_point = self._pp.get_grid_point()
         num_atom = self._pp.get_primitive().get_number_of_atoms()
-        freq_factor = self._pp.get_frequency_factor()
+        freq_factor = self._pp.get_frequency_unit_conversion_factor()
+        band_indices = self._pp.get_band_indices()
         
         omegas = get_omegas(np.max(frequencies_at_q),
                             self._omega_step,
@@ -39,7 +40,7 @@ class ImSelfEnergy:
     
         # Calculate damping function at each band
         damps_bands = []
-        for i, band_index in enumerate(self._pp.get_band_indices()):
+        for i, band_index in enumerate(band_indices):
             if ((grid_point == 0 and band_index < 3) or
                 band_index < 0 or band_index > num_atom * 3 - 1):
                 if self._verbose:

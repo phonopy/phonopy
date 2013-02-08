@@ -1,7 +1,9 @@
 import sys
-from phonopy.harmonic.force_constants import get_force_constants, symmetrize_force_constants
+import numpy as np
+import phonopy.structure.spglib as spg
 from anharmonic.q2v import PhononPhonon
 from anharmonic.im_self_energy import ImSelfEnergy
+from anharmonic.linewidth import Linewidth
 from anharmonic.jointDOS import get_jointDOS
 from anharmonic.gruneisen import Gruneisen
 
@@ -83,6 +85,11 @@ class Phono3py:
         self._r2q_TI_index = r2q_TI_index
         self._is_Peierls = is_Peierls
 
+        self._grid_points = None # The grid points to be calculated on.
+        (grid_mapping_table,
+         self._grid_address) = spg.get_ir_reciprocal_mesh(mesh,
+                                                          primitive)
+        self._ir_grid_indices = np.unique(grid_mapping_table)
         self._pp = PhononPhonon(fc3,
                                 supercell,
                                 primitive,
@@ -97,7 +104,13 @@ class Phono3py:
                                 is_Peierls=self._is_Peierls,
                                 verbose=self._log_level,
                                 is_nosym=self._is_nosym)
+        
+    def get_ir_grid_indices(self):
+        return self._ir_grid_indices
 
+    def get_grid_address(self):
+        return self._grid_address
+        
     def set_dynamical_matrix(self,
                              fc2,
                              supercell,
@@ -111,8 +124,8 @@ class Phono3py:
                                       nac_q_direction)
                            
     def get_damping_function(self,
-                             grid_points=None,
-                             sets_of_band_indices=None,
+                             grid_points,
+                             sets_of_band_indices,
                              sigma=None,
                              omega_step=None,
                              temperature=None,
@@ -144,30 +157,32 @@ class Phono3py:
             else:
                 for band_indices in sets_of_band_indices:
                     self._pp.set_interaction_strength(band_indices)
+                    self._im_self_energy.get_damping_function(
+                        temperature=temperature,
+                        filename=filename,
+                        gamma_option=gamma_option)
 
-            self._im_self_energy.get_damping_function(
-                temperature=temperature,
-                filename=filename,
-                gamma_option=gamma_option)
+    def get_linewidth(self,
+                      grid_points,
+                      sets_of_band_indices,
+                      sigma=0.2,
+                      t_max=1000,
+                      t_min=0,
+                      t_step=10,
+                      gamma_option=0,
+                      filename=None):
 
-
-    def get_lifetimes(self):
-        pass
-
-    def get_fwhm_and_damping_functions(self,
-                 grid_points,
-                 sets_of_band_indices,
-                 tmax,
-                 tmin,
-                 tstep,
-                 gamma_option=0,
-                 filename=None):
-
-        if grid_points==None:
+        lw = Linewidth(self._pp,
+                       sigma=sigma,
+                       t_max=t_max,
+                       t_min=t_min,
+                       t_step=t_step)
+        
+        if grid_points is None:
             print "Grid points are not specified."
             return False
 
-        if sets_of_band_indices==None:
+        if sets_of_band_indices is None:
             print "Band indices are not specified."
             return False
 
@@ -175,17 +190,9 @@ class Phono3py:
             self._pp.set_triplets_at_q(gp)
             for band_indices in sets_of_band_indices:
                 self._pp.set_interaction_strength(band_indices)
-                self._pp.get_damping_function(temperature=None,
-                                              filename=filename,
-                                              gamma_option=gamma_option)
-
-                fwhms, temps, omegas = self._pp.get_fwhm(
-                    tmax,
-                    tmin,
-                    tstep,
+                fwhms, temps, omegas = lw.get_linewidth(
                     gamma_option,
                     filename=filename)
-
 
                 print "# Grid point:", gp
                 print "# Frequencies:", omegas
@@ -193,24 +200,27 @@ class Phono3py:
                     print t, fwhm
                 print
 
-    def get_decay_channels(self,
-                           grid_points,
-                           sets_of_band_indices,
-                           temperature=None):
+    def get_lifetime(self):
+        pass
+                
+    # def get_decay_channels(self,
+    #                        grid_points,
+    #                        sets_of_band_indices,
+    #                        temperature=None):
 
-        if grid_points==None:
-            print "Grid points are not specified."
-            return False
+    #     if grid_points==None:
+    #         print "Grid points are not specified."
+    #         return False
 
-        if sets_of_band_indices==None:
-            print "Band indices are not specified."
-            return False
+    #     if sets_of_band_indices==None:
+    #         print "Band indices are not specified."
+    #         return False
 
-        for gp in grid_points:
-            self._pp.set_triplets_at_q(gp)
-            for band_indices in sets_of_band_indices:
-                self._pp.set_interaction_strength(band_indices)
-                self._pp.get_decay_channels(temperature)
+    #     for gp in grid_points:
+    #         self._pp.set_triplets_at_q(gp)
+    #         for band_indices in sets_of_band_indices:
+    #             self._pp.set_interaction_strength(band_indices)
+    #             self._pp.get_decay_channels(temperature)
 
 def get_gruneisen_parameters(fc2,
                              fc3,

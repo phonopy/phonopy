@@ -3,7 +3,7 @@ import numpy as np
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC
 from phonopy.structure.symmetry import Symmetry
 from phonopy.units import VaspToTHz, PlanckConstant, Kb, THzToCm, EV, AMU, Hbar, THz, Angstrom
-from anharmonic.file_IO import write_triplets, write_grid_points, write_amplitudes, parse_triplets, parse_grid_points
+from anharmonic.file_IO import write_triplets, write_grid_address, write_amplitudes, parse_triplets, parse_grid_address
 from anharmonic.triplets import get_triplets_at_q, get_nosym_triplets
 from anharmonic.r2q import get_fc3_reciprocal
 from anharmonic.shortest_distance import get_shortest_vectors
@@ -41,7 +41,7 @@ class PhononPhonon:
         self._freq_scale = freq_scale
         self._factor = factor
         self._primitive = primitive
-        self._mesh = mesh
+        self._mesh = np.array(mesh)
         self._fc3 = fc3
         self._is_read_triplets = is_read_triplets
         if r2q_TI_index == None or r2q_TI_index > 2 or r2q_TI_index < 0:
@@ -69,7 +69,7 @@ class PhononPhonon:
 
         # set_triplets_at_q
         self._grid_point = None
-        self._grid_points = None
+        self._grid_address = None
         self._triplets_at_q = None
         self._weights_at_q = None
 
@@ -82,27 +82,39 @@ class PhononPhonon:
                 self._weights_at_q,
                 self._frequencies_at_q)
 
-    def get_unit_conversion_factor(self):
-        return self._conversion_factor
+    def get_band_indices(self):
+        return self._band_indices
+
+    def get_dynamical_matrix(self):
+        return self._dm
+
+    def get_frequency_factor_to_THz(self):
+        return self._factor
+
+    def get_frequency_unit_conversion_factor(self):
+        return self._freq_factor
+
+    def get_frequency_scale_factor(self):
+        return self._freq_scale
 
     def get_grid_point(self):
         return self._grid_point
 
-    def get_grid_points(self):
-        return self._grid_points
+    def get_grid_address(self):
+        return self._grid_address
 
     def get_mesh_numbers(self):
         return self._mesh
 
-    def get_band_indices(self):
-        return self._band_indices
-
     def get_primitive(self):
         return self._primitive
 
-    def get_frequency_factor(self):
-        return self._freq_factor
+    def get_q_direction(self):
+        return self._q_direction
     
+    def get_unit_conversion_factor(self):
+        return self._conversion_factor
+
     def is_nosym(self):
         return self._is_nosym
     
@@ -114,10 +126,10 @@ class PhononPhonon:
             self.print_log("Triplets at q without considering symmetry\n")
             (triplets_at_q,
              weights_at_q,
-             self._grid_points) = get_nosym_triplets(mesh, gp)
+             self._grid_address) = get_nosym_triplets(mesh, gp)
         elif self._is_read_triplets:
             self.print_log("Reading ir-triplets at %d\n" % gp)
-            self._grid_points = parse_grid_points(
+            self._grid_address = parse_grid_address(
                 "grids-%d%d%d.dat" % tuple(mesh))
             triplets_at_q, weights_at_q = parse_triplets(
                 "triplets_q-%d%d%d-%d.dat" % (tuple(mesh) + (gp,)))
@@ -126,7 +138,7 @@ class PhononPhonon:
             
             (triplets_at_q,
              weights_at_q,
-             self._grid_points) = get_triplets_at_q(
+             self._grid_address) = get_triplets_at_q(
                 gp,
                 mesh,
                 self._primitive.get_cell(),
@@ -137,14 +149,14 @@ class PhononPhonon:
             t_filename = "triplets_q-%d%d%d-%d.dat" % (tuple(mesh) + (gp,))
             write_triplets(triplets_at_q, weights_at_q, mesh, t_filename)
             g_filename = "grids-%d%d%d.dat" % tuple(mesh)
-            write_grid_points(self._grid_points, mesh, g_filename)
+            write_grid_address(self._grid_address, mesh, g_filename)
 
             self.print_log("Ir-triplets at %d were written into %s.\n" %
                             (gp, t_filename))
             self.print_log("Mesh points were written into %s.\n" % g_filename)
 
         self.print_log("Grid point (%d): " % gp)
-        self.print_log("[ %d %d %d ]\n" % tuple(self._grid_points[gp]))
+        self.print_log("[ %d %d %d ]\n" % tuple(self._grid_address[gp]))
         self.print_log("Number of ir triplets: %d\n" % len(weights_at_q))
         self.print_log("Sum of weights: %d\n" % weights_at_q.sum())
 
@@ -187,7 +199,7 @@ class PhononPhonon:
                 q3,
                 w,
                 self._mesh,
-                self._grid_points,
+                self._grid_address,
                 self._shortest_vectors,
                 self._multiplicity,
                 self._fc3,
@@ -235,7 +247,7 @@ def get_interaction_strength(triplet_number,
                              q3,
                              w,
                              mesh,
-                             grid_points,
+                             grid_address,
                              shortest_vectors,
                              multiplicity,
                              fc3,
@@ -255,7 +267,7 @@ def get_interaction_strength(triplet_number,
 
     q_set = []
     for q in q3:
-        q_set.append(grid_points[q].astype(float) / mesh)
+        q_set.append(grid_address[q].astype(float) / mesh)
     q_set = np.array(q_set)
 
     show_interaction_strength_progress(verbose,
