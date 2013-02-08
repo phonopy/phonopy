@@ -167,8 +167,10 @@ class PhononPhonon:
     def set_interaction_strength(self, band_indices=None):
         self.print_log("----- phonon-phonon interaction strength ------\n")
 
+        num_atom = self._primitive.get_number_of_atoms()
+
         if band_indices == None:
-            self._band_indices = np.arange(self._num_atom * 3, dtype=int)
+            self._band_indices = np.arange(num_atom * 3, dtype=int)
         else:
             self._band_indices = np.array(band_indices)
 
@@ -182,7 +184,6 @@ class PhononPhonon:
         #   frequency THz
         #   mass AMU
         # 1/36 * (\hbar/2N0)^3 * N0^2 to be multiplied somewhere else.
-        num_atom = self._primitive.get_number_of_atoms()
         self._amplitude_at_q = np.zeros((len(self._weights_at_q),
                                          len(self._band_indices),
                                          num_atom * 3,

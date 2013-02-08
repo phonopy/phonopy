@@ -18,17 +18,13 @@ class Linewidth:
     def get_linewidth(self,
                       gamma_option=0,
                       filename=None):
-        grid_point = self._pp.get_grid_point()
-        grid_address = self._pp.get_grid_address()
         num_atom = self._pp.get_primitive().get_number_of_atoms()
         mesh = self._pp.get_mesh_numbers()
         q_direction = self._pp.get_q_direction()
-        dm = self._pp.get_dynamical_matrix()
         freq_scale_factor = self._pp.get_frequency_scale_factor()
         freq_conv_factor = self._pp.get_frequency_unit_conversion_factor()
         freq_factor_to_THz = self._pp.get_frequency_factor_to_THz()
         factor = freq_conv_factor * freq_scale_factor * freq_factor_to_THz
-        band_indices = self._pp.get_band_indices()
         unit_conversion = self._pp.get_unit_conversion_factor()
         is_nosym = self._pp.is_nosym()
 
@@ -36,9 +32,13 @@ class Linewidth:
         (amplitude_at_q,
          weights_at_q,
          frequencies_at_q) = self._pp.get_amplitude()
+        band_indices = self._pp.get_band_indices()
+        grid_point = self._pp.get_grid_point()
+        grid_address = self._pp.get_grid_address()
 
         # After pp.set_dynamical_matrix()
         q = grid_address[grid_point].astype(float) / mesh
+        dm = self._pp.get_dynamical_matrix()
         if (not q_direction is not None) and grid_point == 0:
             dm.set_dynamical_matrix(q, q_direction)
         else:

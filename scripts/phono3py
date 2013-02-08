@@ -596,8 +596,8 @@ else:
             options.is_joint_dos:
 
         mesh = settings.get_mesh_numbers()
-        if options.grid_points==None:
-            grid_points = np.array([0])
+        if options.grid_points is None:
+            grid_points = None
         else:
             grid_points = np.array([int(x)
                                     for x in options.grid_points.split()])
@@ -605,7 +605,8 @@ else:
         if log_level:
             print "------ Phonon-phonon ------"
             print "Mesh:", mesh
-            print "Grid points to be calculated:", grid_points
+            if grid_points is not None:
+                print "Grid points to be calculated:", grid_points
             sys.stdout.flush()
 
         if options.factor==None:
@@ -695,8 +696,13 @@ else:
                     filename=options.output_filename)
 
             elif settings.get_is_lifetime():
-                pass
-
+                phono3py.get_lifetime(
+                    sigma=sigma,
+                    t_max=settings.get_max_temperature(),
+                    t_min=settings.get_min_temperature(),
+                    t_step=settings.get_temperature_step(),
+                    gamma_option=options.gamma_option,
+                    filename=options.output_filename)
             else:
                 phono3py.get_damping_function(
                     grid_points,
