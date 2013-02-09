@@ -36,12 +36,13 @@ class BTE_RTA:
             if verbose:
                 print ("============== %d/%d ===============" %
                        (i + 1, len(self._grid_points)))
-            lifetimes.append(self._get_gamma(grid_point,
-                                             gamma_option=gamma_option,
-                                             verbose=verbose))
+            # lifetimes.append(self._get_gamma(grid_point,
+            #                                  gamma_option=gamma_option,
+            #                                  verbose=verbose))
+            self._get_gamma(grid_point,
+                            gamma_option=gamma_option,
+                            verbose=verbose)
 
-        return lifetimes
-            
     def _get_gamma(self, grid_point, gamma_option=0, verbose=True):
         freq_conv_factor = self._pp.get_frequency_unit_conversion_factor()
         unit_conversion = self._pp.get_unit_conversion_factor()
@@ -84,8 +85,6 @@ class BTE_RTA:
             w.write("%6.1f %f\n" % (t, g.sum()))
         w.close()
         
-        return partial_k
-
 def get_cv(freqs, t):
     x = freqs * THzToEv / Kb / t
     expVal = np.exp(x)
