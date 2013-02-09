@@ -117,15 +117,15 @@ def get_group_velocity(q,
     dD_at_q = []
     for dD_i in get_dD(np.array(q),
                        n,
+                       q_length,
                        dynamical_matrix,
-                       reciprocal_lattice,
-                       q_length): # (x, y, z)
+                       reciprocal_lattice): # (x, y, z)
         dD_i_at_q = [np.vdot(eigvec, np.dot(dD_i, eigvec)).real
                      for eigvec in eigvecs.T]
         dD_at_q.append(np.array(dD_i_at_q) / freqs / 2 * factor ** 2)
     return dD_at_q
         
-def get_dD(q, n, dynamical_matrix, reciprocal_lattice, q_length):
+def get_dD(q, n, q_length, dynamical_matrix, reciprocal_lattice):
     # The names of *c mean something in Cartesian.
     dynmat = dynamical_matrix
     rlat = reciprocal_lattice
