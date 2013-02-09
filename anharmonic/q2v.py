@@ -119,6 +119,9 @@ class PhononPhonon:
     def get_primitive(self):
         return self._primitive
 
+    def get_qpoint(self):
+        return self._grid_address[self._grid_point].astype(float) / self._mesh
+
     def get_q_direction(self):
         return self._q_direction
     

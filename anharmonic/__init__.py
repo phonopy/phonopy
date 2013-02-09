@@ -4,7 +4,7 @@ import phonopy.structure.spglib as spg
 from anharmonic.q2v import PhononPhonon
 from anharmonic.im_self_energy import ImSelfEnergy
 from anharmonic.linewidth import Linewidth
-from anharmonic.lifetime import Lifetime
+from anharmonic.BTE_RTA import BTE_RTA
 from anharmonic.jointDOS import get_jointDOS
 from anharmonic.gruneisen import Gruneisen
 
@@ -201,22 +201,21 @@ class Phono3py:
                     print t, fwhm
                 print
 
-    def get_lifetime(self,
-                     sigma=0.2,
-                     t_max=1000,
-                     t_min=0,
-                     t_step=10,
-                     gamma_option=0,
-                     filename=None):
-        lt = Lifetime(self._pp,
-                      sigma=sigma,
-                      t_max=t_max,
-                      t_min=t_min,
-                      t_step=t_step)
+    def get_thermal_conductivity(self,
+                                 sigma=0.2,
+                                 t_max=1000,
+                                 t_min=0,
+                                 t_step=10,
+                                 gamma_option=0,
+                                 filename=None):
+        lt = BTE_RTA(self._pp,
+                     sigma=sigma,
+                     t_max=t_max,
+                     t_min=t_min,
+                     t_step=t_step)
         print "Number of irreducible q-points:", len(self._ir_grid_indices)
         lt.set_grid_points(self._ir_grid_indices)
         lt.get_lifetime(gamma_option=gamma_option)
-
                 
     # def get_decay_channels(self,
     #                        grid_points,

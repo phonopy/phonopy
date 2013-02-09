@@ -696,7 +696,7 @@ else:
                     filename=options.output_filename)
 
             elif settings.get_is_lifetime():
-                phono3py.get_lifetime(
+                phono3py.get_thermal_conductivity(
                     sigma=sigma,
                     t_max=settings.get_max_temperature(),
                     t_min=settings.get_min_temperature(),
