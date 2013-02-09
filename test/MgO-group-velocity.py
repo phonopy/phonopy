@@ -4,21 +4,13 @@ from phonopy.hphonopy.file_IO import parse_FORCE_SETS_from_strings, parse_BORN_f
 from phonopy.group_velocity import GroupVelocity
 import numpy as np
 
-def plot_band(phonon):
-    def append_band(bands, q_start, q_end):
-        band = []
-        for i in range(51):
-            band.append(np.array(q_start) +
-                        (np.array(q_end) - np.array(q_start)) / 50 * i)
-        bands.append(band)
-    
-    bands = []
-    append_band(bands, [0.0, 0.0, 0.0], [0.5, 0.5, 0.0])
-    # append_band(bands, [0.5, 0.0, 0.0], [0.5, 0.5, 0.0])
-    # append_band(bands, [0.5, 0.5, 0.0], [0.0, 0.0, 0.0])
-    # append_band(bands, [0.0, 0.0, 0.0], [0.5, 0.5, 0.5])
-    phonon.set_band_structure(bands)
-    phonon.plot_band_structure().show()
+def get_band(q_start, q_end, ndiv):
+    band = []
+    for i in range(ndiv + 1):
+        band.append(np.array(q_start) +
+                    (np.array(q_end) - np.array(q_start)) / ndiv * i)
+    return band
+
 
 poscar_str = """Mg O                                    
    1.00000000000000     
@@ -195,20 +187,37 @@ born_params = parse_BORN_from_strings(born_str,
 phonon.set_nac_params(born_params)                                      
 
 print phonon.get_symmetry().get_international_table()
+primitive = phonon.get_primitive()
+reclat = np.linalg.inv(primitive.get_cell())
+print reclat
+
+ndiv = 100
+band = get_band([0.0, 0.0, 0.0], [0.5, 0.5, 0.0], ndiv)
+bands = [band]
+phonon.set_band_structure(bands)
+
 #
 # Run
 #
-vg = GroupVelocity(phonon)
-vg.set_q_points([
-        # [[0,0,0], [1,1,0]],
-        [[0.1,0.1,0], [1,1,0]],
-        [[0.15,0.15,0], [1,1,0]],
-        [[0.2,0.2,0], [1,1,0]],
-        [[0.25,0.25,0], [1,1,0]],
-        [[0.3,0.3,0], [1,1,0]],
-        [[0.35,0.35,0], [1,1,0]],
-        [[0.4,0.4,0], [1,1,0]],
-        [[0.45,0.45,0], [1,1,0]],
-        [[0.5,0.5,0], [1,1,0]]])
-plot_band(phonon)
+band_index = 2
+vg = GroupVelocity(phonon.get_dynamical_matrix(), phonon.get_primitive())
+q_points = [[q, [1, 1, 0]] for q in band]
+
+vg.set_q_points(q_points)
+velo = vg.get_group_velocity()[:, :, band_index]
+band = phonon.get_band_structure()
+distances = band[1]
+freqs = band[2]
+
+d_prev = distances[0][0]
+f_prev = freqs[0][:, band_index][0]
+print d_prev, f_prev
+for d, f, v in zip(distances[0][1:], freqs[0][:, band_index][1:], velo[1:]):
+    velo = (f_prev - f) / (d_prev - d)
+    print d, f, velo, v[2], velo / v[2]
+    d_prev = d
+    f_prev = f
+
+phonon.plot_band_structure().show()
+
 

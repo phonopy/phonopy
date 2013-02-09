@@ -49,7 +49,8 @@ class GroupVelocity:
     """
     
     def __init__(self,
-                 phonon,
+                 dynamical_matrix,
+                 primitive,
                  q_points=None,
                  q_length=1e-4,
                  factor=VaspToTHz):
@@ -59,18 +60,17 @@ class GroupVelocity:
 
         q_length is used such as D(q + q_length) - D(q - q_length).
         """
-        
-        self._phonon = phonon
-        self._dynmat = phonon.get_dynamical_matrix()
-        self._reciprocal_lattice = np.linalg.inv(
-            self._phonon.get_primitive().get_cell())
+        self._dynmat = dynamical_matrix
+        self._reciprocal_lattice = np.linalg.inv(primitive.get_cell())
         self._q_points = q_points
         self._q_length = q_length
         self._factor = factor
         self._group_velocity = None
+        self._eigenvectors = None
+        self._frequencies = None
         if self._q_points is not None:
             self._set_group_velocity()
-
+            
     def set_q_points(self, q_points):
         self._q_points = q_points
         self._set_group_velocity()
@@ -80,34 +80,64 @@ class GroupVelocity:
 
     def get_group_velocity(self):
         return self._group_velocity
-        
+
     def _set_group_velocity(self):
         v_g = []
         for (q, n) in self._q_points:
-            self._dynmat.set_dynamical_matrix(q)
-            dm = self._dynmat.get_dynamical_matrix()
-            eigvals, eigvecs = np.linalg.eigh(dm)
-            dD_at_q = []
-            for dD_i in self._get_dD(np.array(q), n): # (x, y, z)
-                dD_i_at_q = [np.vdot(eigvec, np.dot(dD_i, eigvec)).real
-                             for eigvec in eigvecs.T]
-                dD_at_q.append(np.array(dD_i_at_q) /
-                               np.sqrt(np.abs(eigvals)) / 2 * self._factor)
+            dD_at_q = get_group_velocity(q,
+                                         n,
+                                         self._q_length,
+                                         self._dynmat,
+                                         self._reciprocal_lattice,
+                                         self._factor,
+                                         self._frequencies,
+                                         self._eigenvectors)
             v_g.append(dD_at_q)
         self._group_velocity = np.array(v_g)
 
-    def _get_dD(self, q, n):
-        # The names of *c mean something in Cartesian.
-        rlat = self._reciprocal_lattice
-        rlat_inv = np.linalg.inv(rlat)
-        nc = np.dot(n, rlat)
-        dqc = self._q_length * nc / np.linalg.norm(nc)
-        ddm = []
-        for dqc_i in np.diag(dqc):
-            dq_i = np.dot(dqc_i, rlat_inv)
-            self._dynmat.set_dynamical_matrix(q - dq_i)
-            dm1 = self._dynmat.get_dynamical_matrix()
-            self._dynmat.set_dynamical_matrix(q + dq_i)
-            dm2 = self._dynmat.get_dynamical_matrix()
-            ddm.append(dm2 - dm1)
-        return [ddm_i / dpc_i for (ddm_i, dpc_i) in zip(ddm, 2 * dqc)]
+def get_group_velocity(q,
+                       n, # direction of dq
+                       q_length, # finite distance in q
+                       dynamical_matrix,
+                       reciprocal_lattice,
+                       factor=None,
+                       frequencies=None,
+                       eigenvectors=None):
+
+    if frequencies is None or eigenvectors is None:
+        dynamical_matrix.set_dynamical_matrix(q)
+        dm = dynamical_matrix.get_dynamical_matrix()
+        eigvals, eigvecs = np.linalg.eigh(dm)
+        eigvals = eigvals.real
+        freqs = np.sqrt(abs(eigvals)) * np.sign(eigvals) * factor
+    else:
+        eigvecs = eigenvectors
+        freqs = frequencies
+
+    dD_at_q = []
+    for dD_i in get_dD(np.array(q),
+                       n,
+                       dynamical_matrix,
+                       reciprocal_lattice,
+                       q_length): # (x, y, z)
+        dD_i_at_q = [np.vdot(eigvec, np.dot(dD_i, eigvec)).real
+                     for eigvec in eigvecs.T]
+        dD_at_q.append(np.array(dD_i_at_q) / freqs / 2 * factor ** 2)
+    return dD_at_q
+        
+def get_dD(q, n, dynamical_matrix, reciprocal_lattice, q_length):
+    # The names of *c mean something in Cartesian.
+    dynmat = dynamical_matrix
+    rlat = reciprocal_lattice
+    rlat_inv = np.linalg.inv(rlat)
+    nc = np.dot(n, rlat)
+    dqc = q_length * nc / np.linalg.norm(nc)
+    ddm = []
+    for dqc_i in np.diag(dqc):
+        dq_i = np.dot(dqc_i, rlat_inv)
+        dynmat.set_dynamical_matrix(q - dq_i)
+        dm1 = dynmat.get_dynamical_matrix()
+        dynmat.set_dynamical_matrix(q + dq_i)
+        dm2 = dynmat.get_dynamical_matrix()
+        ddm.append(dm2 - dm1)
+    return [ddm_i / dpc_i for (ddm_i, dpc_i) in zip(ddm, 2 * dqc)]
