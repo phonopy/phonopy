@@ -86,23 +86,32 @@ class GroupVelocity:
         for (q, n) in self._q_points:
             dD_at_q = get_group_velocity(q,
                                          n,
-                                         self._q_length,
                                          self._dynmat,
                                          self._reciprocal_lattice,
-                                         self._factor,
-                                         self._frequencies,
-                                         self._eigenvectors)
+                                         q_length=self._q_length,
+                                         factor=self._factor,
+                                         frequencies=self._frequencies,
+                                         eigenvectors=self._eigenvectors)
             v_g.append(dD_at_q)
         self._group_velocity = np.array(v_g)
 
-def get_group_velocity(q,
+def get_group_velocity(q, # q-point
                        n, # direction of dq
-                       q_length, # finite distance in q
                        dynamical_matrix,
                        reciprocal_lattice,
-                       factor=None,
+                       q_length=1e-4, # finite distance in q
+                       factor=VaspToTHz,
                        frequencies=None,
                        eigenvectors=None):
+    """
+    If frequencies and eigenvectors are supplied they are used
+    instead of calculating them at q-point (but not at q+dq and q-dq).
+
+    reciprocal lattice has to be given as
+    [[a_x, b_x, c_x],
+     [a_y, b_y, c_y],
+     [a_z, b_z, c_z]]
+    """
 
     if frequencies is None or eigenvectors is None:
         dynamical_matrix.set_dynamical_matrix(q)
