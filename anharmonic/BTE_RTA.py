@@ -32,7 +32,7 @@ class BTE_RTA:
          grid_address) = spg.get_ir_reciprocal_mesh(mesh,
                                                     self._primitive)
         self._grid_points = np.unique(grid_mapping_table)
-        self._grid_weights = [np.sum(grid_mapping_table == 9)
+        self._grid_weights = [np.sum(grid_mapping_table == g)
                               for g in self._grid_points]
         
     def set_grid_points(self, grid_points):
@@ -51,12 +51,13 @@ class BTE_RTA:
         partial_k = np.zeros((len(self._grid_points),
                               len(self._temperatures)), dtype=float)
         volume = self._primitive.get_volume()
-        unit_to_WmK = 1e22 * EV / volume / np.prod(self._mesh)
+        num_grid = np.prod(self._mesh)
+        unit_to_WmK = 1e22 * EV / volume / num_grid
         for i, (grid_point, w) in enumerate(zip(self._grid_points,
                                                 self._grid_weights)):
             if verbose:
-                print ("================== %d/%d ==================" %
-                       (i + 1, len(self._grid_points)))
+                print ("============== %d/%d (weight %d/%d) ==============" %
+                       (i + 1, len(self._grid_points), w, num_grid))
             partial_k[i] = self._get_gamma(grid_point,
                                            gamma_option=gamma_option,
                                            verbose=verbose) * unit_to_WmK * w
@@ -98,11 +99,13 @@ class BTE_RTA:
                                       self._sigma,
                                       freq_conv_factor,
                                       gamma_option)[0] * unit_conversion
-                        gammas[i, j] = get_cv(f, t) / g
+                        if g > 1e-5:
+                            gammas[i, j] = get_cv(f, t) / g
 
         partial_k = np.dot(gammas, (gv ** 2).sum(axis=0))
  
-        w = open("partial-k-%d.dat" % grid_point, 'w')
+        w = open("partial-k-%d%d%d-%d.dat" %
+                 (tuple(self._mesh) + (grid_point,)), 'w')
         for t, g in zip(self._temperatures, partial_k):
             w.write("%6.1f %f\n" % (t, g.sum()))
         w.close()

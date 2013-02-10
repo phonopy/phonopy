@@ -26,7 +26,7 @@ class PhononPhonon:
                  primitive,
                  mesh,
                  factor=VaspToTHz,
-                 freq_factor=1.0, # Used to convert to THz
+                 freq_factor=1.0, # Convert from THz to another (e.g., cm-1)
                  freq_scale=1.0, # Just modify frequencies
                  symprec=1e-5,
                  is_read_triplets=False,
