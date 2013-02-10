@@ -91,6 +91,9 @@ class Phono3py:
          self._grid_address) = spg.get_ir_reciprocal_mesh(mesh,
                                                           primitive)
         self._ir_grid_indices = np.unique(grid_mapping_table)
+        self._ir_weights = [np.sum(grid_mapping_table == 9)
+                            for g in self._ir_grid_indices]
+        
         self._pp = PhononPhonon(fc3,
                                 supercell,
                                 primitive,
@@ -208,6 +211,7 @@ class Phono3py:
                                  t_step=10,
                                  gamma_option=0,
                                  filename=None):
+
         lt = BTE_RTA(self._pp,
                      sigma=sigma,
                      t_max=t_max,
@@ -215,7 +219,11 @@ class Phono3py:
                      t_step=t_step)
         print "Number of irreducible q-points:", len(self._ir_grid_indices)
         lt.set_grid_points(self._ir_grid_indices)
-        lt.get_lifetime(gamma_option=gamma_option)
+        partial_ks = lt.get_kappa(gamma_option=gamma_option)
+        print np.dot(self._ir_weights, partial_ks)
+            
+
+        
                 
     # def get_decay_channels(self,
     #                        grid_points,

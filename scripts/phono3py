@@ -592,9 +592,7 @@ else:
     #===========================
     # phonon-phonon interaction
     #===========================
-    elif (not settings.get_band_indices() == None) or \
-            options.is_joint_dos:
-
+    else:
         mesh = settings.get_mesh_numbers()
         if options.grid_points is None:
             grid_points = None

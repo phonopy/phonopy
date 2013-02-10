@@ -27,11 +27,11 @@ class BTE_RTA:
     def set_temperatures(self, temperatures):
         self._temperatures = temperatures
         
-    def get_lifetime(self,
-                     gamma_option=0,
-                     filename=None,
-                     verbose=True):
-        lifetimes = []
+    def get_kappa(self,
+                  gamma_option=0,
+                  filename=None,
+                  verbose=True):
+        partial_k = []
         for i, grid_point in enumerate(self._grid_points):
             if verbose:
                 print ("============== %d/%d ===============" %
@@ -39,9 +39,11 @@ class BTE_RTA:
             # lifetimes.append(self._get_gamma(grid_point,
             #                                  gamma_option=gamma_option,
             #                                  verbose=verbose))
-            self._get_gamma(grid_point,
-                            gamma_option=gamma_option,
-                            verbose=verbose)
+            partial_k.append(self._get_gamma(grid_point,
+                                             gamma_option=gamma_option,
+                                             verbose=verbose))
+        return partial_k
+            
 
     def _get_gamma(self, grid_point, gamma_option=0, verbose=True):
         freq_conv_factor = self._pp.get_frequency_unit_conversion_factor()
@@ -77,13 +79,16 @@ class BTE_RTA:
                                       self._sigma,
                                       freq_conv_factor,
                                       gamma_option)[0] * unit_conversion
-                        gammas[i, j] = g * get_cv(f, t)
+                        gammas[i, j] = get_cv(f, t) / g
 
         partial_k = np.dot(gammas, (gv ** 2).sum(axis=0))
+ 
         w = open("partial-k-%d.dat" % grid_point, 'w')
         for t, g in zip(self._temperatures, partial_k):
             w.write("%6.1f %f\n" % (t, g.sum()))
         w.close()
+
+        return partial_k
         
 def get_cv(freqs, t):
     x = freqs * THzToEv / Kb / t
