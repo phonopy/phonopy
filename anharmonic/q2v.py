@@ -89,6 +89,9 @@ class PhononPhonon:
     def get_band_indices(self):
         return self._band_indices
 
+    def get_cutoff_frequency(self):
+        return self._cutoff_frequency
+    
     def get_dynamical_matrix(self):
         return self._dm
 

@@ -74,6 +74,7 @@ class BTE_RTA:
          weights_at_q,
          frequencies_at_q) = self._pp.get_amplitude()
         freqs = self._pp.get_frequencies()
+        cutoff_freq = self._pp.get_cutoff_frequency()
 
         gv = get_group_velocity(self._pp.get_qpoint(),
                                 [1, 0, 0], # direction
@@ -87,7 +88,7 @@ class BTE_RTA:
         for i, t in enumerate(self._temperatures):
             if t > 0:
                 for j, f in enumerate(freqs):
-                    if f > 0:
+                    if f > cutoff_freq:
                         g = get_gamma(amplitude_at_q,
                                       np.array([f], dtype=float),
                                       weights_at_q,
