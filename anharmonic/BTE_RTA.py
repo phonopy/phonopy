@@ -55,7 +55,7 @@ class BTE_RTA:
         for i, (grid_point, w) in enumerate(zip(self._grid_points,
                                                 self._grid_weights)):
             if verbose:
-                print ("============== %d/%d ===============" %
+                print ("================== %d/%d ==================" %
                        (i + 1, len(self._grid_points)))
             partial_k[i] = self._get_gamma(grid_point,
                                            gamma_option=gamma_option,
