@@ -1,6 +1,6 @@
 import sys
-import numpy as np
 import phonopy.structure.spglib as spg
+import numpy as np
 from anharmonic.q2v import PhononPhonon
 from anharmonic.im_self_energy import ImSelfEnergy
 from anharmonic.linewidth import Linewidth
@@ -217,13 +217,10 @@ class Phono3py:
                      t_max=t_max,
                      t_min=t_min,
                      t_step=t_step)
-        print "Number of irreducible q-points:", len(self._ir_grid_indices)
-        lt.set_grid_points(self._ir_grid_indices)
-        partial_ks = lt.get_kappa(gamma_option=gamma_option)
-        print np.dot(self._ir_weights, partial_ks)
-            
-
-        
+        partial_k = lt.get_kappa(gamma_option=gamma_option)
+        temperatures = lt.get_temperatures()
+        for t, k in zip(temperatures, partial_k.sum(axis=0)):
+            print t, k
                 
     # def get_decay_channels(self,
     #                        grid_points,
