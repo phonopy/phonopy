@@ -83,9 +83,8 @@ class GroupVelocity:
 
     def _set_group_velocity(self):
         v_g = []
-        for (q, n) in self._q_points:
+        for q in self._q_points:
             dD_at_q = get_group_velocity(q,
-                                         n,
                                          self._dynmat,
                                          self._reciprocal_lattice,
                                          q_length=self._q_length,
@@ -96,7 +95,6 @@ class GroupVelocity:
         self._group_velocity = np.array(v_g)
 
 def get_group_velocity(q, # q-point
-                       n, # direction of dq
                        dynamical_matrix,
                        reciprocal_lattice,
                        q_length=1e-4, # finite distance in q
@@ -125,28 +123,24 @@ def get_group_velocity(q, # q-point
 
     dD_at_q = np.zeros((3, len(freqs)), dtype=float)
     for i, dD_i in enumerate(get_dD(np.array(q),
-                                    n,
                                     q_length,
                                     dynamical_matrix,
                                     reciprocal_lattice)): # (x, y, z)
         dD_at_q[i] = [np.vdot(eigvec, np.dot(dD_i, eigvec)).real
                      for eigvec in eigvecs.T]
-        dD_at_q[i] *= factor ** 2 / freqs / 2
+        dD_at_q[i] *= factor ** 2 / freqs / 2 / (q_length * 2)
     return dD_at_q
         
-def get_dD(q, n, q_length, dynamical_matrix, reciprocal_lattice):
+def get_dD(q, q_length, dynamical_matrix, reciprocal_lattice):
     # The names of *c mean something in Cartesian.
     dynmat = dynamical_matrix
-    rlat = reciprocal_lattice
-    rlat_inv = np.linalg.inv(rlat)
-    nc = np.dot(n, rlat)
-    dqc = q_length * nc / np.linalg.norm(nc)
+    rlat_inv = np.linalg.inv(reciprocal_lattice)
     ddm = []
-    for dqc_i in np.diag(dqc):
-        dq_i = np.dot(dqc_i, rlat_inv)
+    for dqc_i in (np.eye(3) * q_length):
+        dq_i = np.dot(rlat_inv, dqc_i)
         dynmat.set_dynamical_matrix(q - dq_i)
         dm1 = dynmat.get_dynamical_matrix()
         dynmat.set_dynamical_matrix(q + dq_i)
         dm2 = dynmat.get_dynamical_matrix()
         ddm.append(dm2 - dm1)
-    return [ddm_i / dpc_i for (ddm_i, dpc_i) in zip(ddm, 2 * dqc)]
+    return ddm

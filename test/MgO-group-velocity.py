@@ -197,24 +197,33 @@ bands = [band]
 phonon.set_band_structure(bands)
 
 #
-# Run
+# Run1
 #
 band_index = 2
 vg = GroupVelocity(phonon.get_dynamical_matrix(), phonon.get_primitive())
-q_points = [[q, [1, 1, 0]] for q in band]
+q_points = band
 
 vg.set_q_points(q_points)
-velo = vg.get_group_velocity()[:, :, band_index]
-band = phonon.get_band_structure()
-distances = band[1]
-freqs = band[2]
+# vg.get_group_velocity() => narray[q, xyz, band]
 
-d_prev = distances[0][0]
-f_prev = freqs[0][:, band_index][0]
+direction = [0, 0, 1]
+unit_n = np.array(direction, dtype=float) / np.linalg.norm(direction)
+velo_001 = np.dot(vg.get_group_velocity()[:, :, band_index], unit_n)
+
+direction = [0, 1, 1]
+unit_n = np.array(direction, dtype=float) / np.linalg.norm(direction)
+velo_011 = np.dot(vg.get_group_velocity()[:, :, band_index], unit_n)
+
+band = phonon.get_band_structure()
+distances = band[1][0]
+freqs = band[2][0]
+
+d_prev = distances[0]
+f_prev = freqs[:, band_index][0]
 print d_prev, f_prev
-for d, f, v in zip(distances[0][1:], freqs[0][:, band_index][1:], velo[1:]):
-    velo = (f_prev - f) / (d_prev - d)
-    print d, f, velo, v[2], velo / v[2]
+for d, f, v in zip(distances[1:], freqs[:, band_index][1:], velo_001[1:]):
+    velo_fd = (f_prev - f) / (d_prev - d)
+    print d, f, velo_fd, v, velo_fd / v
     d_prev = d
     f_prev = f
 
