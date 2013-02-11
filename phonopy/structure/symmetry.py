@@ -71,7 +71,7 @@ class Symmetry:
 
         self.pointgroup_operations = None
         self.pointgroup = None
-        self.__pointgroup_operations()
+        self._pointgroup_operations()
 
         self.independent_atoms = None
         self.map_operations = None
@@ -111,7 +111,7 @@ class Symmetry:
             spg.get_symmetry(self.__cell, self.symprec)
         self._map_atoms()
 
-    def __pointgroup_operations(self):
+    def _pointgroup_operations(self):
         rotations = []
         for rot in self.symmetry_operations['rotations']:
             is_same = False

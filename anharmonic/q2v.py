@@ -127,6 +127,9 @@ class PhononPhonon:
 
     def get_q_direction(self):
         return self._q_direction
+
+    def get_symmetry(self):
+        return self._symmetry
     
     def get_unit_conversion_factor(self):
         return self._conversion_factor

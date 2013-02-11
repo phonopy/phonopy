@@ -153,10 +153,10 @@ class Phono3py:
             if sets_of_band_indices == None:
                 if gp==0:
                     self._pp.set_interaction_strength(
-                        range(4, self._primitive.get_number_of_atoms() * 3 + 1))
+                        range(3, self._primitive.get_number_of_atoms() * 3))
                 else:
                     self._pp.set_interaction_strength(
-                        range(1, self._primitive.get_number_of_atoms() * 3 + 1))
+                        range(self._primitive.get_number_of_atoms() * 3))
 
             else:
                 for band_indices in sets_of_band_indices:
