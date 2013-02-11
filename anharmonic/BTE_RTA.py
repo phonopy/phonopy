@@ -28,12 +28,14 @@ class BTE_RTA:
 
     def set_mesh_sampling(self, mesh):
         self._mesh = mesh
-        (grid_mapping_table,
-         grid_address) = spg.get_ir_reciprocal_mesh(mesh,
-                                                    self._primitive)
-        self._grid_points = np.unique(grid_mapping_table)
-        self._grid_weights = [np.sum(grid_mapping_table == g)
-                              for g in self._grid_points]
+        self._grid_points = range(np.prod(self._mesh))
+        self._grid_weights = [1] * np.prod(self._mesh)
+        # (grid_mapping_table,
+        #  grid_address) = spg.get_ir_reciprocal_mesh(mesh,
+        #                                             self._primitive)
+        # self._grid_points = np.unique(grid_mapping_table)
+        # self._grid_weights = [np.sum(grid_mapping_table == g)
+        #                       for g in self._grid_points]
         
     def set_grid_points(self, grid_points):
         self._grid_points = grid_points
@@ -78,11 +80,11 @@ class BTE_RTA:
         cutoff_freq = self._pp.get_cutoff_frequency()
 
         gv = get_group_velocity(self._pp.get_qpoint(),
-                                [1, 0, 0], # direction
                                 self._pp.get_dynamical_matrix(),
                                 reciprocal_lattice,
                                 eigenvectors=self._pp.get_eigenvectors(),
                                 frequencies=freqs)
+        gv = np.dot([1, 0, 0], gv) 
 
         gammas = np.zeros((len(self._temperatures), len(freqs)), dtype=float)
 
@@ -99,10 +101,10 @@ class BTE_RTA:
                                       self._sigma,
                                       freq_conv_factor,
                                       gamma_option)[0] * unit_conversion
-                        if g > 1e-5:
+                        if g > 1e-3:
                             gammas[i, j] = get_cv(f, t) / g
 
-        partial_k = np.dot(gammas, (gv ** 2).sum(axis=0))
+        partial_k = np.dot(gammas, gv ** 2)
  
         w = open("partial-k-%d%d%d-%d.dat" %
                  (tuple(self._mesh) + (grid_point,)), 'w')
