@@ -63,11 +63,11 @@ class Symmetry:
         self.wyckoff_letters = None
         self.map_atoms = None
         if not is_symmetry:
-            self.__set_nosym()
+            self._set_nosym()
         elif cell.get_magnetic_moments() == None:
-            self.__symmetry_dataset()
+            self._symmetry_dataset()
         else:
-            self.__symmetry_operations()
+            self._symmetry_operations()
 
         self.pointgroup_operations = None
         self.pointgroup = None
@@ -75,7 +75,7 @@ class Symmetry:
 
         self.independent_atoms = None
         self.map_operations = None
-        self.__map_operations()
+        self._map_operations()
 
     def get_symmetry_operations(self):
         return self.symmetry_operations
@@ -85,7 +85,7 @@ class Symmetry:
         return {'rotations': operation['rotations'][operation_number],
                 'translations': operation['translations'][operation_number]}
 
-    def __map_atoms(self):
+    def _map_atoms(self):
         rotations = self.symmetry_operations['rotations']
         translations = self.symmetry_operations['translations']
         positions = self.__cell.get_scaled_positions()
@@ -106,10 +106,10 @@ class Symmetry:
                     break
         self.map_atoms = np.array(map_atoms, dtype=int)
 
-    def __symmetry_operations(self):
+    def _symmetry_operations(self):
         self.symmetry_operations = \
             spg.get_symmetry(self.__cell, self.symprec)
-        self.__map_atoms()
+        self._map_atoms()
 
     def __pointgroup_operations(self):
         rotations = []
@@ -131,7 +131,7 @@ class Symmetry:
     def get_pointgroup(self):
         return self.pointgroup
 
-    def __symmetry_dataset(self):
+    def _symmetry_dataset(self):
         self.dataset = spg.get_symmetry_dataset(self.__cell, self.symprec)
         self.symmetry_operations = \
             {'rotations': self.dataset['rotations'],
@@ -152,7 +152,7 @@ class Symmetry:
         """
         return self.dataset
 
-    def __map_operations(self):
+    def _map_operations(self):
         ops = self.symmetry_operations
         pos = self.__cell.get_scaled_positions()
         map_operations = np.zeros(len(pos), dtype=int)
@@ -199,7 +199,7 @@ class Symmetry:
     def get_symmetry_tolerance(self):
         return self.symprec
 
-    def __set_nosym(self):
+    def _set_nosym(self):
         translations = []
         rotations = []
         
