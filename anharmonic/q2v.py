@@ -55,7 +55,7 @@ class PhononPhonon:
         self._is_nosym = is_nosym
         self._p2s_map = primitive.get_primitive_to_supercell_map()
         self._s2p_map = primitive.get_supercell_to_primitive_map()
-        N0 = len(self._s2p_map) / len(self._p2s_map)
+        N0 = supercell.get_number_of_atoms() / primitive.get_number_of_atoms()
         self._conversion_factor = get_unit_conversion_factor(freq_factor, N0)
 
         self._shortest_vectors, self._multiplicity = get_shortest_vectors(
@@ -177,7 +177,6 @@ class PhononPhonon:
         self.print_log("Grid point (%d): " % gp)
         self.print_log("[ %d %d %d ]\n" % tuple(self._grid_address[gp]))
         self.print_log("Number of ir triplets: %d\n" % len(weights_at_q))
-        self.print_log("Sum of weights: %d\n" % weights_at_q.sum())
 
         self._triplets_at_q = triplets_at_q
         self._weights_at_q = weights_at_q
@@ -363,7 +362,7 @@ def get_interaction_strength(triplet_number,
                                     r2q_TI_index,
                                     symprec)
 
-    return amplitude, freqs
+    return amplitude / np.prod(mesh), freqs
 
 def show_interaction_strength_progress(verbose,
                                        triplet_number,
@@ -535,9 +534,15 @@ def get_unit_conversion_factor(freq_factor, N0):
     and the third line gives conversion to frequncy unit
     specified by freq_factor.
     """
-    return  1.0 / 36 / 8 * (Hbar * EV)**3 / N0 / ((2 * np.pi * THz / freq_factor)**3) / AMU**3 * (EV / Angstrom**3) ** 2 \
-        * 18 * np.pi / (2 * np.pi * THz / freq_factor) / ((Hbar * EV) **2 ) * N0 / (2 * np.pi) \
-        / THz * freq_factor
+    # return  (1.0 / 36 / 8 *
+    #          (Hbar * EV) ** 3 / N0 / ((2 * np.pi * THz / freq_factor) ** 3) / AMU ** 3 *
+    #          (EV / Angstrom ** 3) ** 2 * 18 *
+    #          np.pi / (2 * np.pi * THz / freq_factor) / ((Hbar * EV) ** 2 ) *
+    #          N0 / (2 * np.pi) / THz * freq_factor
+    #          )
+    # omega => 2pi * freq * THz 
+    return np.pi * 1.0 * (Hbar * EV / 2 * np.pi) / 16 * EV ** 2 / Angstrom ** 6 / (2 * np.pi * THz) ** 3 / AMU ** 3 / (2 * np.pi * THz) / THz
+
         
 #
 #  Functions used for debug

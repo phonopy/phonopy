@@ -699,6 +699,7 @@ else:
                     t_max=settings.get_max_temperature(),
                     t_min=settings.get_min_temperature(),
                     t_step=settings.get_temperature_step(),
+                    grid_points=grid_points,
                     gamma_option=options.gamma_option,
                     filename=options.output_filename)
             else:

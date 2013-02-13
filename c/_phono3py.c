@@ -300,7 +300,7 @@ static PyObject * py_get_interaction_strength(PyObject *self, PyObject *args)
 	 freqs[2 * p_num_atom * 3 + band[2]]);
     } else {
       amps[n] = 0;
-      for (i = 0; i < 6; i++) {
+      for (i = 0; i < 6; i++) { /* Due to index exchange symmetry of V^3 */
 	for (j = 0; j < p_num_atom * 3; j++) {
 	  for (k = 0; k < 3; k++) {
 	    e[index_exchange[i][k]][j] =
@@ -512,10 +512,10 @@ static PyObject * py_get_gamma(PyObject *self, PyObject *args)
   PyArrayObject* amplitudes;
   PyArrayObject* weights;
   PyArrayObject* frequencies;
-  double sigma, t, freq_factor;
+  double sigma, t, freq_factor, cutoff_frequency;
   int band_index, option;
 
-  if (!PyArg_ParseTuple(args, "OOOOOidddi",
+  if (!PyArg_ParseTuple(args, "OOOOOiddddi",
 			&gammas,
 			&omegas,
 			&amplitudes,
@@ -525,6 +525,7 @@ static PyObject * py_get_gamma(PyObject *self, PyObject *args)
 			&sigma,
 			&freq_factor,
 			&t,
+			&cutoff_frequency,
 			&option)) {
     return NULL;
   }
@@ -543,7 +544,6 @@ static PyObject * py_get_gamma(PyObject *self, PyObject *args)
   double f2, f3, n2, n3, a, factor2eV;
   double* dfun = (double*)gammas->data;
   double sum;
-  int sum_weights = 0;
   const double* o = (double*)omegas->data;
   const double* amp = (double*)amplitudes->data;
   const long* w_long = (long*)weights->data;
@@ -555,7 +555,6 @@ static PyObject * py_get_gamma(PyObject *self, PyObject *args)
   int w[num_triplet];
   for (i = 0; i < num_triplet; i++) {
     w[i] = w_long[i];
-    sum_weights += w[i];
   }
 
   factor2eV = PlanckConstant / freq_factor;
@@ -568,6 +567,9 @@ static PyObject * py_get_gamma(PyObject *self, PyObject *args)
 	for (l = 0; l < num_band; l++) {
 	  f2 = f[j * 3 * num_band + num_band + k];
 	  f3 = f[j * 3 * num_band + 2 * num_band + l];
+	  if (f2 < cutoff_frequency || f3 < cutoff_frequency) {
+	    continue;
+	  }
 	  a = amp[j * num_band0 * num_band * num_band +
 		  band_index * num_band * num_band + k * num_band + l];
 
@@ -577,9 +579,9 @@ static PyObject * py_get_gamma(PyObject *self, PyObject *args)
 	    switch (option) {
 	    case 1:
 	      sum += ((1.0 + n2 + n3) * gauss(f2 + f3 - o[i], sigma) +
-		      (n3 - n2) * (gauss(f2 - f3 - o[i], sigma) -
-				   gauss(f3 - f2 - o[i], sigma))
-		      ) * a * w[j];
+	    	      (n3 - n2) * (gauss(f2 - f3 - o[i], sigma) -
+	    			   gauss(f3 - f2 - o[i], sigma))
+	    	      ) * a * w[j];
 	      break;
 	    case 2:
 	      sum += (1.0 + n2 + n3) * gauss(f2 + f3 - o[i], sigma) * a * w[j];
@@ -589,7 +591,7 @@ static PyObject * py_get_gamma(PyObject *self, PyObject *args)
 	      break;
 	    case 4:
 	      sum += (n3 - n2) * (gauss(f2 - f3 - o[i], sigma) -
-				  gauss(f3 - f2 - o[i], sigma)) * a * w[j];
+	    			  gauss(f3 - f2 - o[i], sigma)) * a * w[j];
 	      break;
 	    case 5:
 	      sum += (n3 - n2) * gauss(f2 - f3 - o[i], sigma) * a * w[j];
@@ -600,8 +602,8 @@ static PyObject * py_get_gamma(PyObject *self, PyObject *args)
 	    case 0:
 	    default:
 	      sum += ((1.0 + n2 + n3) * gauss(f2 + f3 - o[i], sigma) +
-		      (n3 - n2) * 2 *gauss(f2 - f3 - o[i], sigma)
-		      ) * a * w[j];
+	    	      (n3 - n2) * 2 *gauss(f2 - f3 - o[i], sigma)
+	    	      ) * a * w[j];
 	      break;
 	    }
 	  } else {
@@ -610,8 +612,9 @@ static PyObject * py_get_gamma(PyObject *self, PyObject *args)
 	}
       }
     }
-    dfun[i] = sum / sum_weights;
+    dfun[i] = sum;
   }
+
   Py_RETURN_NONE;
 }
 

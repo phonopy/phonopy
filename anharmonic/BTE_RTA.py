@@ -17,6 +17,7 @@ class BTE_RTA:
         self._t_max = t_max
         self._t_min = t_min
         self._t_step = t_step
+        self._is_nosym = is_nosym
         self._temperatures = np.arange(self._t_min,
                                        self._t_max + float(self._t_step) / 2,
                                        self._t_step)
@@ -24,16 +25,15 @@ class BTE_RTA:
         self._primitive = self._pp.get_primitive()
         self._mesh = None
         self._grid_points = None
-        self.set_mesh_sampling(self._pp.get_mesh_numbers(),
-                               is_nosym=is_nosym)
+        self.set_mesh_sampling(self._pp.get_mesh_numbers())
 
         self._point_operations = np.array(
             [rot.T
              for rot in self._pp.get_symmetry().get_pointgroup_operations()])
 
-    def set_mesh_sampling(self, mesh, is_nosym=False):
+    def set_mesh_sampling(self, mesh):
         self._mesh = np.array(mesh)
-        if is_nosym:
+        if self._is_nosym:
             self._grid_points = range(np.prod(self._mesh))
         else:
             (grid_mapping_table,
@@ -61,7 +61,7 @@ class BTE_RTA:
                               len(self._temperatures)), dtype=float)
         volume = self._primitive.get_volume()
         num_grid = np.prod(self._mesh)
-        unit_to_WmK = 1e22 * EV / volume / num_grid
+        unit_to_WmK = 1e22 * EV / volume
         for i, gp in enumerate(self._grid_points):
             if verbose:
                 print ("================= %d/%d =================" %
@@ -74,18 +74,32 @@ class BTE_RTA:
                                     reciprocal_lattice,
                                     eigenvectors=self._pp.get_eigenvectors(),
                                     frequencies=self._pp.get_frequencies())
-            rot_unit_n = self._get_rotated_unit_directions([1, 0, 0], gp)
-            print np.array(rot_unit_n)
+
+            direction = [1, 0, 0]
+            if self._is_nosym:
+                rot_unit_n = [np.array(direction)]
+            else:
+                rot_unit_n = self._get_rotated_unit_directions(direction, gp)
             gv_sum2 = np.zeros(len(self._pp.get_frequencies()), dtype=float)
             for unit_n in rot_unit_n:
                 gv_sum2 += np.dot(unit_n, gv) ** 2
-            print gv_sum2
-            lt_cv = self._get_lifetime_by_cv(gamma_option=gamma_option,
-                                             verbose=verbose)
-            partial_k[i] = np.dot(lt_cv, gv_sum2) * unit_to_WmK
 
-            w = open("partial-k-%d%d%d-%d.dat" %
-                     (tuple(self._mesh) + (gp,)), 'w')
+            filename = "partial-k-%d%d%d-%d.dat" % (tuple(self._mesh) + (gp,))
+            if verbose:
+                print "----- Partial kappa -----"
+
+                print "Partial kappa is written into %s" % filename
+                print "Frequency, Group velocity (GV), and GV squared"
+                for unit_n in rot_unit_n:
+                    print "Direction:", unit_n
+                    for f, v in zip(self._pp.get_frequencies(),
+                                    np.dot(unit_n, gv)):
+                        print "%8.3f %8.3f %12.3f" % (f, v, v**2)
+            
+            lt_cv = self._get_lifetime_by_cv(gamma_option=gamma_option)
+            partial_k[i] = np.dot(lt_cv, gv_sum2) * unit_to_WmK / num_grid
+
+            w = open(filename, 'w')
             for t, g in zip(self._temperatures, partial_k[i]):
                 w.write("%6.1f %f\n" % (t, g.sum()))
             w.close()
@@ -93,8 +107,7 @@ class BTE_RTA:
         return partial_k
 
     def _get_lifetime_by_cv(self,
-                            gamma_option=0,
-                            verbose=True):
+                            gamma_option=0):
         freq_conv_factor = self._pp.get_frequency_unit_conversion_factor()
         unit_conversion = self._pp.get_unit_conversion_factor()
         (amplitude_at_q,
@@ -117,9 +130,10 @@ class BTE_RTA:
                                       t,
                                       self._sigma,
                                       freq_conv_factor,
+                                      cutoff_freq,
                                       gamma_option)[0] * unit_conversion
-                        lt_cv[i, j] = get_cv(f, t) / g
-
+                        cv = get_cv(f, t)
+                        lt_cv[i, j] = cv / g / 2 # t = 1/2g
         return lt_cv
 
     def _get_rotated_unit_directions(self,

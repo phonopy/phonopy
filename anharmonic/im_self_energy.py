@@ -80,6 +80,7 @@ def get_gamma(amplitudes,
               temperature,
               sigma,
               freq_factor,
+              cutoff_frequency=0,
               gamma_option=0):
     
     gammas = np.zeros(len(omegas), dtype=float)
@@ -99,6 +100,7 @@ def get_gamma(amplitudes,
                       float(sigma),
                       freq_factor,
                       float(t),
+                      float(cutoff_frequency),
                       gamma_option)
 
     except ImportError:

@@ -209,6 +209,7 @@ class Phono3py:
                                  t_max=1000,
                                  t_min=0,
                                  t_step=10,
+                                 grid_points=None,
                                  gamma_option=0,
                                  filename=None):
 
@@ -217,9 +218,14 @@ class Phono3py:
                      t_max=t_max,
                      t_min=t_min,
                      t_step=t_step)
+        if grid_points is not None:
+            lt.set_grid_points(grid_points)
         partial_k = lt.get_kappa(gamma_option=gamma_option)
         temperatures = lt.get_temperatures()
+
+        w = open("kappa.dat", 'w')
         for t, k in zip(temperatures, partial_k.sum(axis=0)):
+            w.write("%8.2f %e\n" % (t, k))
             print t, k
                 
     # def get_decay_channels(self,
