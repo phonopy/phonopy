@@ -133,7 +133,7 @@ class BTE_RTA:
                                       freq_conv_factor,
                                       cutoff_freq,
                                       gamma_option)[0] * unit_conversion
-                        cv = get_cv(f, t)
+                        cv = get_cv(f / freq_conv_factor, t)
                         lt_cv[i, j] = cv / g / 2 # t = 1/2g
         return lt_cv
 
