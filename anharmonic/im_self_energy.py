@@ -149,7 +149,6 @@ def get_py_gamma(gammas,
 
             sum_ir_triplet[l, i] = sum_local
             gammas[i] += sum_local
-    gamma /= weights.sum()
 
 
 def get_sum_in_primitive(fc3_q, e1, e2, e3, primitive):

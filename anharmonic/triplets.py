@@ -23,10 +23,7 @@ def get_triplets_at_q(gp,
     # Sum of w has to be prod(mesh).
     for i, (w, q) in enumerate(zip(weights, third_q)):
         if w > 0:
-            if i == q:
-                weights_at_q.append(w)
-            else:
-                weights_at_q.append(w * 2)
+            weights_at_q.append(w)
             triplets_at_q.append([gp, i, q])
 
     return np.array(triplets_at_q), np.array(weights_at_q), grid_address
@@ -34,12 +31,10 @@ def get_triplets_at_q(gp,
 def get_nosym_triplets(mesh, grid_point0):
     grid_address = get_grid_address(mesh)
     triplets = np.zeros((len(grid_address), 3), dtype=int)
-    weights = np.ones(len(grid_address), dtype=int) * 2
+    weights = np.ones(len(grid_address), dtype=int)
     for i, g1 in enumerate(grid_address):
         g2 = - (grid_address[grid_point0] + g1)
         q = get_address(g2, mesh)
-        if i == q:
-            weights[i] = 1
         triplets[i] = [grid_point0, i, q]
 
     return triplets, weights, grid_address

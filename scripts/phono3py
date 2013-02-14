@@ -660,22 +660,22 @@ else:
                                 primitive,
                                 mesh,
                                 fc3,
-                                factor,
-                                freq_factor,
-                                freq_scale,
-                                options.is_nosym,
-                                options.is_symmetrize_fc3_q,
-                                options.is_read_triplets,
-                                options.r2q_TI_index,
-                                options.is_Peierls,
-                                options.symprec,
-                                log_level)
+                                factor=factor,
+                                freq_factor=freq_factor,
+                                is_nosym=options.is_nosym,
+                                is_symmetrize_fc3_q=options.is_symmetrize_fc3_q,
+                                is_read_triplets=options.is_read_triplets,
+                                r2q_TI_index=options.r2q_TI_index,
+                                is_Peierls=options.is_Peierls,
+                                symprec=options.symprec,
+                                log_level=log_level)
 
             phono3py.set_dynamical_matrix(fc2,
                                           supercell_dm,
                                           primitive_dm,
                                           nac_params,
-                                          nac_q_direction)
+                                          nac_q_direction,
+                                          frequency_scale_factor=freq_scale)
 
             if options.is_decay_channel:
                 phono3py.get_decay_channels(grid_points,

@@ -69,11 +69,12 @@ class BTE_RTA:
 
             self._pp.set_triplets_at_q(gp)
             self._pp.set_interaction_strength()
-            gv = get_group_velocity(self._pp.get_qpoint(),
-                                    self._pp.get_dynamical_matrix(),
-                                    reciprocal_lattice,
-                                    eigenvectors=self._pp.get_eigenvectors(),
-                                    frequencies=self._pp.get_frequencies())
+            gv = get_group_velocity(
+                self._pp.get_qpoint(),
+                self._pp.get_dynamical_matrix(),
+                reciprocal_lattice,
+                eigenvectors=self._pp.get_eigenvectors(),
+                frequencies=self._pp.get_frequencies())
 
             direction = [1, 0, 0]
             if self._is_nosym:

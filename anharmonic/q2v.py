@@ -27,7 +27,6 @@ class PhononPhonon:
                  mesh,
                  factor=VaspToTHz,
                  freq_factor=1.0, # Convert from THz to another (e.g., cm-1)
-                 freq_scale=1.0, # Just modify frequencies
                  symprec=1e-5,
                  is_read_triplets=False,
                  r2q_TI_index=None,
@@ -38,7 +37,6 @@ class PhononPhonon:
     
         self._freq_factor = freq_factor
         self._cutoff_frequency = 0.01 * self._freq_factor
-        self._freq_scale = freq_scale
         self._factor = factor
         self._primitive = primitive
         self._mesh = np.array(mesh)
@@ -55,8 +53,7 @@ class PhononPhonon:
         self._is_nosym = is_nosym
         self._p2s_map = primitive.get_primitive_to_supercell_map()
         self._s2p_map = primitive.get_supercell_to_primitive_map()
-        N0 = supercell.get_number_of_atoms() / primitive.get_number_of_atoms()
-        self._conversion_factor = get_unit_conversion_factor(freq_factor, N0)
+        self._conversion_factor = get_unit_conversion_factor(freq_factor)
 
         self._shortest_vectors, self._multiplicity = get_shortest_vectors(
             supercell, primitive, symprec)
@@ -106,9 +103,6 @@ class PhononPhonon:
 
     def get_frequency_unit_conversion_factor(self):
         return self._freq_factor
-
-    def get_frequency_scale_factor(self):
-        return self._freq_scale
 
     def get_grid_point(self):
         return self._grid_point
@@ -203,7 +197,7 @@ class PhononPhonon:
         vals, self._eigenvectors = np.linalg.eigh(
             self._dm.get_dynamical_matrix())
         vals = vals.real
-        factor = self._factor * self._freq_factor * self._freq_scale
+        factor = self._factor * self._freq_factor
         self._frequencies = np.sqrt(abs(vals)) * np.sign(vals) * factor
         
         # \Phi^2(set_of_q's, s, s', s'')
@@ -240,7 +234,6 @@ class PhononPhonon:
                 self._band_indices,
                 self._factor,
                 self._freq_factor,
-                self._freq_scale,
                 self._cutoff_frequency,
                 self._symprec,
                 self._is_symmetrize_fc3_q,
@@ -253,21 +246,26 @@ class PhononPhonon:
                              supercell,
                              primitive,
                              nac_params=None,
-                             q_direction=None):
+                             nac_q_direction=None,
+                             frequency_scale_factor=None):
         if nac_params==None:
-            self._dm = DynamicalMatrix(supercell,
-                                       primitive,
-                                       fc2,
-                                       symprec=self._symprec)
+            self._dm = DynamicalMatrix(
+                supercell,
+                primitive,
+                fc2,
+                frequency_scale_factor=frequency_scale_factor,
+                symprec=self._symprec)
         else:
-            self._dm = DynamicalMatrixNAC(supercell,
-                                          primitive,
-                                          fc2,
-                                          nac_params=nac_params,
-                                          symprec=self._symprec)
+            self._dm = DynamicalMatrixNAC(
+                supercell,
+                primitive,
+                fc2,
+                nac_params=nac_params,
+                frequency_scale_factor=frequency_scale_factor,
+                symprec=self._symprec)
 
-        if not q_direction==None:
-            self._q_direction = q_direction
+        if nac_q_direction is not None:
+            self._q_direction = nac_q_direction
 
     def print_log(self, text):
         if self._verbose:
@@ -290,7 +288,6 @@ def get_interaction_strength(triplet_number,
                              band_indices,
                              factor,
                              freq_factor,
-                             freq_scale,
                              cutoff_frequency,
                              symprec, 
                              is_symmetrize_fc3_q,
@@ -324,7 +321,7 @@ def get_interaction_strength(triplet_number,
 
         vals, eigvecs[i + 1] = np.linalg.eigh(dm.get_dynamical_matrix())
         vals = vals.real
-        total_factor = factor * freq_factor * freq_scale
+        total_factor = factor * freq_factor
         freqs[i + 1] = np.sqrt(np.abs(vals)) * np.sign(vals) * total_factor
 
     # Calculate interaction strength
@@ -528,11 +525,13 @@ def get_py_interaction_strength(amplitude,
                 amplitude[i, j[1], j[2]] = vv
 
 
-def get_unit_conversion_factor(freq_factor, N0):
+def get_unit_conversion_factor(freq_factor):
     """
-    The first two lines are used to convert to SI unit
-    and the third line gives conversion to frequncy unit
-    specified by freq_factor.
+    Input:
+      Frequency: THz * freq_factor
+      Mass: AMU
+      Force constants: eV/A^3
+
     """
     # return  (1.0 / 36 / 8 *
     #          (Hbar * EV) ** 3 / N0 / ((2 * np.pi * THz / freq_factor) ** 3) / AMU ** 3 *
@@ -540,8 +539,17 @@ def get_unit_conversion_factor(freq_factor, N0):
     #          np.pi / (2 * np.pi * THz / freq_factor) / ((Hbar * EV) ** 2 ) *
     #          N0 / (2 * np.pi) / THz * freq_factor
     #          )
-    # omega => 2pi * freq * THz 
-    return np.pi * 1.0 * (Hbar * EV / 2 * np.pi) / 16 * EV ** 2 / Angstrom ** 6 / (2 * np.pi * THz) ** 3 / AMU ** 3 / (2 * np.pi * THz) / THz
+    # omega => 2pi * freq * THz
+
+
+    # Frequency unit to angular frequency (rad/s)
+    # Mass unit to kg
+    # Force constants to J/m^3
+    # hbar to J s
+    unit_in_angular_freq = np.pi * (Hbar * EV) / 16 * EV ** 2 / Angstrom ** 6 / (2 * np.pi * (THz / freq_factor)) ** 4 / AMU ** 3
+
+    # Frequency unit in some favorite one
+    return unit_in_angular_freq / (2 * np.pi) / THz * freq_factor
 
         
 #

@@ -57,6 +57,7 @@ class DynamicalMatrix:
                  supercell,
                  primitive,
                  force_constants,
+                 frequency_scale_factor=None,
                  symprec=1e-5):
         self._scell = supercell
         self._pcell = primitive
@@ -64,6 +65,7 @@ class DynamicalMatrix:
         self._s2p_map = primitive.get_supercell_to_primitive_map()
         self._p2p_map = primitive.get_primitive_to_primitive_map()
         self._force_constants = force_constants
+        self._freq_scale = frequency_scale_factor
         self._symprec = symprec
         self._smallest_vectors, self._multiplicity = \
             get_smallest_vectors(supercell, primitive, symprec)
@@ -78,7 +80,10 @@ class DynamicalMatrix:
         return self._pcell.get_number_of_atoms() * 3
 
     def get_dynamical_matrix(self):
-        return self._dynamical_matrix
+        if self._freq_scale is not None:
+            return self._dynamical_matrix * self._freq_scale ** 2
+        else:
+            return self._dynamical_matrix
 
     def set_dynamical_matrix(self, q, verbose=False):
         try:
@@ -196,12 +201,14 @@ class DynamicalMatrixNAC(DynamicalMatrix):
                  force_constants,
                  nac_params=None,
                  method='wang',
+                 frequency_scale_factor=None,
                  symprec=1e-5):
 
         DynamicalMatrix.__init__(self,
                                  supercell,
                                  primitive,
                                  force_constants,
+                                 frequency_scale_factor=frequency_scale_factor,
                                  symprec=1e-5)
         self._bare_force_constants = self._force_constants.copy()
         self._method = method

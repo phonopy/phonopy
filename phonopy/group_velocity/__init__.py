@@ -143,4 +143,4 @@ def get_dD(q, q_length, dynamical_matrix, reciprocal_lattice):
         dynmat.set_dynamical_matrix(q + dq_i)
         dm2 = dynmat.get_dynamical_matrix()
         ddm.append(dm2 - dm1)
-    return ddm
+    return np.array(ddm)

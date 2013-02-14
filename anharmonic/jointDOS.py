@@ -39,12 +39,14 @@ def get_jointDOS(fixed_grid_points,
         dm = DynamicalMatrix(supercell,
                              primitive,
                              fc2,
+                             frequency_scale_factor=freq_scale,
                              symprec=symprec)
     else:
         dm = DynamicalMatrixNAC(supercell,
                                 primitive,
                                 fc2,
                                 nac_params=nac_params,
+                                frequency_scale_factor=freq_scale,
                                 symprec=symprec)
 
     jointDOS = []
@@ -88,7 +90,7 @@ def get_jointDOS(fixed_grid_points,
             for j, q in enumerate(q3):
                 dm.set_dynamical_matrix(q)
                 val = np.linalg.eigvalsh(dm.get_dynamical_matrix())
-                freqs[i,j] = np.sqrt(np.abs(val)) * factor * freq_factor * freq_scale
+                freqs[i,j] = np.sqrt(np.abs(val)) * factor * freq_factor
 
         omegas_at_gp = get_omegas(np.max(freqs), omega_step, sigma)
         jointDOS_at_gp = np.zeros(len(omegas_at_gp), dtype=float)

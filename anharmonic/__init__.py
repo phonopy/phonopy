@@ -62,7 +62,6 @@ class Phono3py:
                  fc3=None,
                  factor=None,
                  freq_factor=None,
-                 freq_scale=None,
                  is_nosym=False,
                  is_symmetrize_fc3_q=False,
                  is_read_triplets=False,
@@ -77,7 +76,6 @@ class Phono3py:
         self._fc3 = fc3
         self._factor = factor
         self._freq_factor = freq_factor
-        self._freq_scale = freq_scale
         self._is_nosym = is_nosym
         self._is_symmetrize_fc3_q = is_symmetrize_fc3_q
         self._symprec = symprec
@@ -100,7 +98,6 @@ class Phono3py:
                                 mesh,
                                 factor=self._factor,
                                 freq_factor=self._freq_factor,
-                                freq_scale=self._freq_scale,
                                 symprec=self._symprec,
                                 is_read_triplets=self._is_read_triplets,
                                 r2q_TI_index=self._r2q_TI_index,
@@ -120,12 +117,15 @@ class Phono3py:
                              supercell,
                              primitive,
                              nac_params=None,
-                             nac_q_direction=None):
-        self._pp.set_dynamical_matrix(fc2,
-                                      supercell,
-                                      primitive,
-                                      nac_params,
-                                      nac_q_direction)
+                             nac_q_direction=None,
+                             frequency_scale_factor=None):
+        self._pp.set_dynamical_matrix(
+            fc2,
+            supercell,
+            primitive,
+            nac_params=nac_params,
+            nac_q_direction=nac_q_direction,
+            frequency_scale_factor=frequency_scale_factor)
                            
     def get_damping_function(self,
                              grid_points,
