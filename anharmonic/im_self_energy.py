@@ -1,6 +1,6 @@
 import numpy as np
 from anharmonic.file_IO import write_damping_functions
-from phonopy.units import VaspToTHz
+from phonopy.units import VaspToTHz, PlanckConstant, Kb
 
 class ImSelfEnergy:
     def __init__(self,
@@ -151,56 +151,9 @@ def get_py_gamma(gammas,
             gammas[i] += sum_local
 
 
-def get_sum_in_primitive(fc3_q, e1, e2, e3, primitive):
-    
-    try:
-        import anharmonic._phono3py as phono3c
-        return get_c_sum_in_primitive(fc3_q, e1.copy(), e2.copy(), e3.copy(), primitive)
-               
-    except ImportError:
-        return get_py_sum_in_primitive(fc3_q, e1, e2, e3, primitive)
-               
-
-
-def get_c_sum_in_primitive(fc3_q, e1, e2, e3, primitive):
-    import anharmonic._phono3py as phono3c
-    return phono3c.sum_in_primitive(fc3_q,
-                                    e1, e2, e3,
-                                    primitive.get_masses())
-
-def get_py_sum_in_primitive(fc3_q, e1, e2, e3, primitive):
-
-    num_atom = primitive.get_number_of_atoms()
-    m = primitive.get_masses()
-    sum = 0
-
-    for i1 in range(num_atom):
-        for i2 in range(num_atom):
-            for i3 in range(num_atom):
-                sum += get_sum_in_cartesian(fc3_q[i1, i2, i3],
-                                            e1[i1*3:(i1+1)*3],
-                                            e2[i2*3:(i2+1)*3],
-                                            e3[i3*3:(i3+1)*3]) \
-                                            / np.sqrt(m[i1] * m[i2] * m[i3])
-                
-    return abs(sum)**2
-
-
-
-def get_sum_in_cartesian(f3, e1, e2, e3):
-    """
-    i1, i2, i3 are the atom indices.
-    """
-    sum = 0
-    for a in (0, 1, 2):
-        for b in (0, 1, 2):
-            for c in (0, 1, 2):
-                sum += f3[a, b, c] * e1[a] * e2[b] * e3[c]
-
-    return sum
 
 def gauss(x, sigma):
-    return 1.0 / np.sqrt(2 * np.pi) / sigma * np.exp(-x**2 / 2.0 / sigma**2)
+    return 1.0 / np.sqrt(2 * np.pi) / sigma * np.exp(-x ** 2 / 2.0 / sigma ** 2)
 
 def bs(x, t): # Bose Einstein distribution (For frequency THz)
     return 1.0 / (np.exp(PlanckConstant * 1e12 * x / (Kb * t)) - 1)

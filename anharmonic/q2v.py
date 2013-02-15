@@ -309,9 +309,9 @@ def get_interaction_strength(triplet_number,
     num_atom = primitive.get_number_of_atoms()
 
     # Solve dynamical matrix
-    freqs = np.zeros((3, num_atom*3), dtype=float)
+    freqs = np.zeros((3, num_atom * 3), dtype=float)
     freqs[0] = frequencies.copy()
-    eigvecs = np.zeros((3, num_atom*3, num_atom*3), dtype=complex)
+    eigvecs = np.zeros((3, num_atom * 3, num_atom * 3), dtype=complex)
     eigvecs[0] = eigenvectors.copy()
     for i, q in enumerate(q_set[1:]):
         if (q_direction is not None) and q3[i + 1] == 0:
@@ -524,6 +524,59 @@ def get_py_interaction_strength(amplitude,
                         
                 amplitude[i, j[1], j[2]] = vv
 
+def get_sum_in_primitive(fc3_q, e1, e2, e3, primitive):
+    
+    try:
+        import anharmonic._phono3py as phono3c
+        return get_c_sum_in_primitive(fc3_q,
+                                      e1.copy(),
+                                      e2.copy(),
+                                      e3.copy(),
+                                      primitive)
+               
+    except ImportError:
+        return get_py_sum_in_primitive(fc3_q, e1, e2, e3, primitive)
+               
+
+
+def get_c_sum_in_primitive(fc3_q, e1, e2, e3, primitive):
+    import anharmonic._phono3py as phono3c
+    return phono3c.sum_in_primitive(fc3_q,
+                                    e1,
+                                    e2,
+                                    e3,
+                                    primitive.get_masses())
+
+def get_py_sum_in_primitive(fc3_q, e1, e2, e3, primitive):
+
+    num_atom = primitive.get_number_of_atoms()
+    m = primitive.get_masses()
+    sum = 0
+
+    for i1 in range(num_atom):
+        for i2 in range(num_atom):
+            for i3 in range(num_atom):
+                sum += get_sum_in_cartesian(
+                    fc3_q[i1, i2, i3],
+                    e1[i1*3:(i1 + 1)*3],
+                    e2[i2*3:(i2 + 1)*3],
+                    e3[i3*3:(i3 + 1)*3]) / np.sqrt(m[i1] * m[i2] * m[i3])
+                
+    return abs(sum) ** 2
+
+
+
+def get_sum_in_cartesian(f3, e1, e2, e3):
+    """
+    i1, i2, i3 are the atom indices.
+    """
+    sum = 0
+    for a in (0, 1, 2):
+        for b in (0, 1, 2):
+            for c in (0, 1, 2):
+                sum += f3[a, b, c] * e1[a] * e2[b] * e3[c]
+
+    return sum
 
 def get_unit_conversion_factor(freq_factor):
     """

@@ -890,6 +890,7 @@ static int get_fc3_reciprocal(npy_cdouble* fc3_q,
 			     fc3,
 			     r2q_TI_index,
 			     symprec);
+
     for (l = 0; l < 3; l++) { 
       for (m = 0; m < 3; m++) {
 	for (n = 0; n < 3; n++) {
@@ -917,7 +918,7 @@ static int get_fc3_sum_in_supercell(npy_cdouble fc3_q[3][3][3],
 				    const int r2q_TI_index,
 				    const double symprec)
 {
-  npy_cdouble phase2, phase3, phase_prod;
+  npy_cdouble phase2, phase3, phase_prod, phase_prim;
   int i, j, k, s1, s2, s3, address;
   double phase;
   int s_num_atom = s2p->d1;
@@ -1007,8 +1008,22 @@ static int get_fc3_sum_in_supercell(npy_cdouble fc3_q[3][3][3],
     }
   }
 
-  return 0;
+  phase = 0.0;
+  for (i = 0; i < 3; i++) {
+    phase += (q->data[0][i] + q->data[1][i] + q->data[2][i]) * svecs->data[p2s->data[p1]][0][0][i];
+  }
+  phase_prim.real = cos(phase * 2 * M_PI);
+  phase_prim.imag = sin(phase * 2 * M_PI);
 
+  for (i = 0; i < 3; i++) {
+    for (j = 0; j < 3; j++) {
+      for (k = 0; k < 3; k++) {
+  	fc3_q[i][j][k] = prod(fc3_q[i][j][k], phase_prim);
+      }
+    }
+  }
+
+  return 0;
 }
 
 static double get_sum_in_primivie(const npy_cdouble *fc3,

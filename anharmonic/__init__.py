@@ -223,7 +223,7 @@ class Phono3py:
         partial_k = lt.get_kappa(gamma_option=gamma_option)
         temperatures = lt.get_temperatures()
 
-        w = open("kappa.dat", 'w')
+        w = open("kappa-m%d%d%d.dat" % tuple(self._mesh), 'w')
         for t, k in zip(temperatures, partial_k.sum(axis=0)):
             w.write("%8.2f %e\n" % (t, k))
             print t, k
