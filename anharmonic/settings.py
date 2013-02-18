@@ -8,9 +8,10 @@ class Phono3pySettings(Settings):
         self._supercell_matrix_extra = None
         self._band_indices = None
         self._q_direction = None
-        self._is_lifetime = False
+        self._is_bterta = False
         self._is_linewidth = False
         self._qpoints = [[0, 0, 0]]
+        self._no_kappa_stars = False
         
     def set_supercell_matrix_extra(self, matrix):
         self._supercell_matrix_extra = matrix
@@ -24,17 +25,23 @@ class Phono3pySettings(Settings):
     def get_band_indices(self):
         return self._band_indices
 
-    def set_is_lifetime(self, is_lifetime):
-        self._is_lifetime = is_lifetime
+    def set_is_bterta(self, is_bterta):
+        self._is_bterta = is_bterta
 
-    def get_is_lifetime(self):
-        return self._is_lifetime
+    def get_is_bterta(self):
+        return self._is_bterta
 
     def set_is_linewidth(self, is_linewidth):
         self._is_linewidth = is_linewidth
 
     def get_is_linewidth(self):
         return self._is_linewidth
+
+    def set_no_kappa_stars(self, no_kappa_stars):
+        self._no_kappa_stars = no_kappa_stars
+
+    def get_no_kappa_stars(self):
+        return self._no_kappa_stars
 
     def set_q_direction(self, q_direction):
         self._q_direction = q_direction
@@ -67,13 +74,17 @@ class Phono3pyConfParser(ConfParser):
                 if not self._options.band_indices==None:
                     self._confs['band_indices'] = self._options.band_indices
 
-            if opt.dest == 'is_lifetime':
-                if self._options.is_lifetime:
-                    self._confs['lifetime'] = '.true.'
+            if opt.dest == 'is_bterta':
+                if self._options.is_bterta:
+                    self._confs['bterta'] = '.true.'
 
             if opt.dest == 'is_linewidth':
                 if self._options.is_linewidth:
                     self._confs['linewidth'] = '.true.'
+
+            if opt.dest == 'no_kappa_stars':
+                if self._options.no_kappa_stars:
+                    self._confs['no_kappa_stars'] = '.true.'
 
             if opt.dest == 'q_direction':
                 if not self._options.q_direction==None:
@@ -109,9 +120,9 @@ class Phono3pyConfParser(ConfParser):
                     vals.append([int(x) - 1 for x in sum_set.split()])
                 self.set_parameter('band_indices', vals)
 
-            if conf_key == 'lifetime':
-                if confs['lifetime'] == '.true.':
-                    self.set_parameter('is_lifetime', True)
+            if conf_key == 'bterta':
+                if confs['bterta'] == '.true.':
+                    self.set_parameter('is_bterta', True)
 
             if conf_key == 'linewidth':
                 if confs['linewidth'] == '.true.':
@@ -132,6 +143,11 @@ class Phono3pyConfParser(ConfParser):
                     self.set_parameter('qpoints',
                                        list(np.reshape(vals, (-1, 3))))
 
+            if conf_key == 'no_kappa_stars':
+                if confs['no_kappa_stars'] == '.true.':
+                    self.set_parameter('no_kappa_stars', True)
+
+
     def _set_settings(self):
         ConfParser.set_settings(self)
         params = self._parameters
@@ -144,9 +160,9 @@ class Phono3pyConfParser(ConfParser):
         if params.has_key('band_indices'):
             self._settings.set_band_indices(params['band_indices'])
 
-        # Calculate lifetimes
-        if params.has_key('is_lifetime'):
-            self._settings.set_is_lifetime(params['is_lifetime'])
+        # Calculate thermal conductivity in BTE-RTA
+        if params.has_key('is_bterta'):
+            self._settings.set_is_bterta(params['is_bterta'])
 
         # Calculate linewidths
         if params.has_key('is_linewidth'):
@@ -160,5 +176,9 @@ class Phono3pyConfParser(ConfParser):
         if params.has_key('qpoints'):
             self._settings.set_qpoints(params['qpoints'])
         
+        # Sum partial kappa at q-stars
+        if params.has_key('no_kappa_stars'):
+            self._settings.set_no_kappa_stars(params['no_kappa_stars'])
+
         
 

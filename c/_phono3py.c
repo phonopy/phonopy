@@ -579,8 +579,7 @@ static PyObject * py_get_gamma(PyObject *self, PyObject *args)
 	    switch (option) {
 	    case 1:
 	      sum += ((1.0 + n2 + n3) * gauss(f2 + f3 - o[i], sigma) +
-	    	      (n3 - n2) * (gauss(f2 - f3 - o[i], sigma) -
-	    			   gauss(f3 - f2 - o[i], sigma))
+	    	      (n3 - n2) * 2 *gauss(f2 - f3 - o[i], sigma)
 	    	      ) * a * w[j];
 	      break;
 	    case 2:
@@ -602,7 +601,8 @@ static PyObject * py_get_gamma(PyObject *self, PyObject *args)
 	    case 0:
 	    default:
 	      sum += ((1.0 + n2 + n3) * gauss(f2 + f3 - o[i], sigma) +
-	    	      (n3 - n2) * 2 *gauss(f2 - f3 - o[i], sigma)
+	    	      (n3 - n2) * (gauss(f2 - f3 - o[i], sigma) -
+	    			   gauss(f3 - f2 - o[i], sigma))
 	    	      ) * a * w[j];
 	      break;
 	    }

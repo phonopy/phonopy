@@ -7,6 +7,7 @@ from anharmonic.linewidth import Linewidth
 from anharmonic.BTE_RTA import BTE_RTA
 from anharmonic.jointDOS import get_jointDOS
 from anharmonic.gruneisen import Gruneisen
+import anharmonic.triplets as triplets
 
 class JointDOS:
     def __init__(self,
@@ -84,14 +85,6 @@ class Phono3py:
         self._r2q_TI_index = r2q_TI_index
         self._is_Peierls = is_Peierls
 
-        self._grid_points = None # The grid points to be calculated on.
-        (grid_mapping_table,
-         self._grid_address) = spg.get_ir_reciprocal_mesh(mesh,
-                                                          primitive)
-        self._ir_grid_indices = np.unique(grid_mapping_table)
-        self._ir_weights = [np.sum(grid_mapping_table == 9)
-                            for g in self._ir_grid_indices]
-        
         self._pp = PhononPhonon(fc3,
                                 supercell,
                                 primitive,
@@ -103,14 +96,8 @@ class Phono3py:
                                 r2q_TI_index=self._r2q_TI_index,
                                 is_symmetrize_fc3_q=self._is_symmetrize_fc3_q,
                                 is_Peierls=self._is_Peierls,
-                                verbose=self._log_level,
+                                log_level=self._log_level,
                                 is_nosym=self._is_nosym)
-        
-    def get_ir_grid_indices(self):
-        return self._ir_grid_indices
-
-    def get_grid_address(self):
-        return self._grid_address
         
     def set_dynamical_matrix(self,
                              fc2,
@@ -141,7 +128,7 @@ class Phono3py:
         self._im_self_energy = ImSelfEnergy(self._pp,
                                             sigma=self._sigma,
                                             omega_step=self._omega_step,
-                                            verbose=self._log_level)
+                                            log_level=self._log_level)
 
         if grid_points==None:
             print "Grid points are not specified."
@@ -210,23 +197,33 @@ class Phono3py:
                                  t_min=0,
                                  t_step=10,
                                  grid_points=None,
+                                 no_kappa_stars=False,
                                  gamma_option=0,
                                  filename=None):
-
         lt = BTE_RTA(self._pp,
                      sigma=sigma,
                      t_max=t_max,
                      t_min=t_min,
-                     t_step=t_step)
-        if grid_points is not None:
-            lt.set_grid_points(grid_points)
-        partial_k = lt.get_kappa(gamma_option=gamma_option)
+                     t_step=t_step,
+                     no_kappa_stars=no_kappa_stars,
+                     log_level=self._log_level)
+        lt.set_mesh_sampling()
+        lt.set_grid_points(grid_points)
+        kappa = lt.get_kappa(gamma_option=gamma_option)
         temperatures = lt.get_temperatures()
 
-        w = open("kappa-m%d%d%d.dat" % tuple(self._mesh), 'w')
-        for t, k in zip(temperatures, partial_k.sum(axis=0)):
-            w.write("%8.2f %e\n" % (t, k))
-            print t, k
+        if self._log_level:
+            print "-------------- Total kappa --------------"
+            if filename is not None:
+                kappa_filename = filenale
+            else:
+                kappa_filename = "kappa-m%d%d%d.dat" % tuple(self._mesh)
+            print "Kappa at temperatures are written into %s." % kappa_filename
+            w = open(kappa_filename, 'w')
+            for t, k in zip(temperatures, kappa.sum(axis=0)):
+                w.write("%8.2f %.5f\n" % (t, k))
+                print "%8.2f %.5f" % (t, k)
+            w.close()
                 
     # def get_decay_channels(self,
     #                        grid_points,
@@ -261,3 +258,6 @@ def get_gruneisen_parameters(fc2,
                      factor=factor,
                      is_ion_clamped=is_ion_clamped,
                      symprec=symprec)
+
+def get_ir_grid_points(mesh, primitive):
+    return triplets.get_ir_grid_points(mesh, primitive)

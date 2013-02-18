@@ -60,4 +60,10 @@ def get_address(grid, mesh):
             ((grid[1] + mesh[1]) % mesh[1]) * mesh[0] +
             ((grid[2] + mesh[2]) % mesh[2]) * mesh[0] * mesh[1])
 
-
+def get_ir_grid_points(mesh, primitive):
+    grid_mapping_table, grid_address = spg.get_ir_reciprocal_mesh(mesh,
+                                                                  primitive)
+    ir_grid_indices = np.unique(grid_mapping_table)
+    ir_weights = np.array([np.sum(grid_mapping_table == g)
+                           for g in ir_grid_indices])
+    return ir_grid_indices, ir_weights

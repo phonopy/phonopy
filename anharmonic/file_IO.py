@@ -620,11 +620,11 @@ def parse_FC2_FOURTH_SETS(displacements,
                     first_disp['fc2'])
 
 def parse_QPOINTS3(filename='QPOINTS3'):
-    w = open(filename, 'r')
-    num = int(w.readline().strip())
+    f = open(filename)
+    num = int(f.readline().strip())
     count = 0
     qpoints3 = []
-    for line in w:
+    for line in f:
         line_array = [float(x) for x in line.strip().split()]
 
         if len(line_array) < 9:
@@ -640,39 +640,38 @@ def parse_QPOINTS3(filename='QPOINTS3'):
     return np.array(qpoints3)
 
 def parse_fc3(num_atom, filename='fc3.dat'):
-    w = open(filename, 'r')
+    f = open(filename)
     fc3 = np.zeros((num_atom, num_atom, num_atom, 3, 3, 3), dtype=float)
     for i in range(num_atom):
         for j in range(num_atom):
             for k in range(num_atom):
-                w.readline()
+                f.readline()
                 for l in range(3):
-                    fc3[i, j, k, l] = \
-                        [[float(x) for x in w.readline().split()],
-                         [float(x) for x in w.readline().split()],
-                         [float(x) for x in w.readline().split()]]
-                    w.readline()
+                    fc3[i, j, k, l] = [
+                        [float(x) for x in f.readline().split()],
+                        [float(x) for x in f.readline().split()],
+                        [float(x) for x in f.readline().split()]]
+                    f.readline()
     return fc3
 
 def parse_fc2(num_atom, filename='fc2.dat'):
-    w = open(filename, 'r')
+    f = open(filename)
     fc2 = np.zeros((num_atom, num_atom, 3, 3), dtype=float)
     for i in range(num_atom):
         for j in range(num_atom):
-            w.readline()
-            fc2[i, j] = \
-                [[float(x) for x in w.readline().split()],
-                 [float(x) for x in w.readline().split()],
-                 [float(x) for x in w.readline().split()]]
-            w.readline()
+            f.readline()
+            fc2[i, j] = [[float(x) for x in f.readline().split()],
+                         [float(x) for x in f.readline().split()],
+                         [float(x) for x in f.readline().split()]]
+            f.readline()
 
     return fc2
 
 def parse_triplets(filename):
-    w = open(filename, 'r')
+    f = open(filename)
     triplets = []
     weights = []
-    for line in w:
+    for line in f:
         if line.strip()[0] == "#":
             continue
 
@@ -683,9 +682,9 @@ def parse_triplets(filename):
     return np.array(triplets), np.array(weights)
     
 def parse_grid_address(filename):
-    w = open(filename, 'r')
+    f = open(filename, 'r')
     grid_address = []
-    for line in w:
+    for line in f:
         if line.strip()[0] == "#":
             continue
 
@@ -694,8 +693,15 @@ def parse_grid_address(filename):
 
     return np.array(grid_address)
 
-
-
+def parse_kappa(filename):
+    f = open(filename)
+    temps = []
+    kappa = []
+    for line in f:
+        x = line.split()
+        temps.append(float(x[0]))
+        kappa.append(float(x[1]))
+    return np.array(temps), np.array(kappa)
 
 if __name__ == '__main__':
     import numpy as np

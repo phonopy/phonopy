@@ -32,7 +32,7 @@ class PhononPhonon:
                  r2q_TI_index=None,
                  is_symmetrize_fc3_q=False,
                  is_Peierls=False,
-                 verbose=False,
+                 log_level=False,
                  is_nosym=False):
     
         self._freq_factor = freq_factor
@@ -47,7 +47,7 @@ class PhononPhonon:
         else:
             self._r2q_TI_index = r2q_TI_index
         self._symprec = symprec
-        self._verbose = verbose
+        self._log_level = log_level
         self._is_Peierls = is_Peierls
         self._is_symmetrize_fc3_q = is_symmetrize_fc3_q
         self._is_nosym = is_nosym
@@ -159,18 +159,19 @@ class PhononPhonon:
                 is_time_reversal=True,
                 symprec=self._symprec)
 
-            t_filename = "triplets_q-%d%d%d-%d.dat" % (tuple(mesh) + (gp,))
-            write_triplets(triplets_at_q, weights_at_q, mesh, t_filename)
-            g_filename = "grids-%d%d%d.dat" % tuple(mesh)
-            write_grid_address(self._grid_address, mesh, g_filename)
+            if self._log_level > 1:
+                t_filename = "triplets_q-%d%d%d-%d.dat" % (tuple(mesh) + (gp,))
+                write_triplets(triplets_at_q, weights_at_q, mesh, t_filename)
+                self.print_log("Ir-triplets at %d were written into %s.\n" %
+                               (gp, t_filename))
 
-            self.print_log("Ir-triplets at %d were written into %s.\n" %
-                            (gp, t_filename))
+            if self._log_level:
+                g_filename = "grids-%d%d%d.dat" % tuple(mesh)
+                write_grid_address(self._grid_address, mesh, g_filename)
             self.print_log("Mesh points were written into %s.\n" % g_filename)
-
-        self.print_log("Grid point (%d): " % gp)
-        self.print_log("[ %d %d %d ]\n" % tuple(self._grid_address[gp]))
-        self.print_log("Number of ir triplets: %d\n" % len(weights_at_q))
+            self.print_log("Grid point (%d): " % gp)
+            self.print_log("[ %d %d %d ]\n" % tuple(self._grid_address[gp]))
+            self.print_log("Number of ir triplets: %d\n" % len(weights_at_q))
 
         self._triplets_at_q = triplets_at_q
         self._weights_at_q = weights_at_q
@@ -239,7 +240,7 @@ class PhononPhonon:
                 self._is_symmetrize_fc3_q,
                 self._is_Peierls,
                 self._r2q_TI_index,
-                self._verbose)
+                self._log_level)
 
     def set_dynamical_matrix(self,
                              fc2,
@@ -268,7 +269,7 @@ class PhononPhonon:
             self._q_direction = nac_q_direction
 
     def print_log(self, text):
-        if self._verbose:
+        if self._log_level:
             print_log(text)
 
 def get_interaction_strength(triplet_number,
@@ -293,14 +294,14 @@ def get_interaction_strength(triplet_number,
                              is_symmetrize_fc3_q,
                              is_Peierls,
                              r2q_TI_index,
-                             verbose):
+                             log_level):
 
     q_set = []
     for q in q3:
         q_set.append(grid_address[q].astype(float) / mesh)
     q_set = np.array(q_set)
 
-    show_interaction_strength_progress(verbose,
+    show_interaction_strength_progress(log_level,
                                        triplet_number,
                                        num_triplets,
                                        w,
@@ -361,13 +362,13 @@ def get_interaction_strength(triplet_number,
 
     return amplitude / np.prod(mesh), freqs
 
-def show_interaction_strength_progress(verbose,
+def show_interaction_strength_progress(log_level,
                                        triplet_number,
                                        num_triplets,
                                        w,
                                        q_set):
-    if verbose:
-        if int(verbose) > 1:
+    if log_level:
+        if int(log_level) > 1:
             print "%d/%d: Weight %d" % (triplet_number+1, num_triplets, w)
             for q in q_set:
                 print "     " + ("%7.4f " * 3) % tuple(q)

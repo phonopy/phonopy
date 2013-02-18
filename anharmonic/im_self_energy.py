@@ -7,12 +7,12 @@ class ImSelfEnergy:
                  interaction_strength,
                  sigma=0.2,
                  omega_step=0.1,
-                 verbose=False):
+                 log_level=False):
 
         self._pp = interaction_strength
         self._sigma = sigma
         self._omega_step = omega_step
-        self._verbose = verbose
+        self._log_level = log_level
 
     def get_damping_function(self,
                              temperature=None,
@@ -43,7 +43,7 @@ class ImSelfEnergy:
         for i, band_index in enumerate(band_indices):
             if ((grid_point == 0 and band_index < 3) or
                 band_index < 0 or band_index > num_atom * 3 - 1):
-                if self._verbose:
+                if self._log_level:
                     print "The band index %d is not calculated.\n" % band_index
                 continue
     
