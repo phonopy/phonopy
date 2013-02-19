@@ -72,7 +72,8 @@ class BTE_RTA:
                               len(self._temperatures)), dtype=float)
         volume = self._primitive.get_volume()
         num_grid = np.prod(self._mesh)
-        unit_to_WmK = 1e22 * EV / volume
+        unit_to_WmK = (THz * Angstrom) ** 2 / (Angstrom ** 3) * EV / THz
+        conversion_factor = unit_to_WmK / volume / num_grid
         for i, gp in enumerate(self._grid_points):
             if self._log_level:
                 print ("================= %d/%d =================" %
@@ -122,7 +123,7 @@ class BTE_RTA:
                 for k in range(len(self._pp.get_frequencies())):
                     if gamma[j, k] > 0:
                         lt_cv[j, k] = cv[j, k] / gamma[j, k] / 2
-            kappa[i] = np.dot(lt_cv, gv_sum2) * unit_to_WmK / num_grid
+            kappa[i] = np.dot(lt_cv, gv_sum2) * conversion_factor
 
             if self._log_level:
                 w = open(filename, 'w')
