@@ -2,7 +2,7 @@ import numpy as np
 import phonopy.structure.spglib as spg
 from anharmonic.im_self_energy import get_gamma
 from phonopy.group_velocity import get_group_velocity
-from phonopy.units import Kb, THzToEv, EV
+from phonopy.units import Kb, THzToEv, EV, THz, Angstrom
 from anharmonic.file_IO import parse_kappa
 from anharmonic.triplets import get_grid_address
 
@@ -72,7 +72,7 @@ class BTE_RTA:
                               len(self._temperatures)), dtype=float)
         volume = self._primitive.get_volume()
         num_grid = np.prod(self._mesh)
-        unit_to_WmK = (THz * Angstrom) ** 2 / (Angstrom ** 3) * EV / THz
+        unit_to_WmK = (THz * Angstrom) ** 2 / (Angstrom ** 3) * EV / THz / 2 / np.pi
         conversion_factor = unit_to_WmK / volume / num_grid
         for i, gp in enumerate(self._grid_points):
             if self._log_level:

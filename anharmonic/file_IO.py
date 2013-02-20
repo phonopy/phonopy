@@ -344,6 +344,7 @@ def write_fwhm(gp,
                temps,
                fwhms,
                mesh,
+               sigma=None,
                is_nosym=False,
                filename=None):
 
@@ -353,6 +354,8 @@ def write_fwhm(gp,
                                         mesh[1],
                                         mesh[2],
                                         gp)
+    if sigma is not None:
+        fwhm_filename += ("%f" % sigma).rstrip('0') + "-"
 
     for i in band_indices:
         fwhm_filename += "b%d" % i
