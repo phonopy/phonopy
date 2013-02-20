@@ -50,15 +50,17 @@ class ImSelfEnergy:
             # Unit: frequency^{-1} 
             #   frequency THz
             # 18\pi / \hbar^2 to be multiplied
-            dampings = get_gamma(amplitude_at_q,
-                                 omegas,
-                                 weights_at_q,
-                                 frequencies_at_q,
-                                 i,
-                                 temperature,
-                                 self._sigma,
-                                 freq_factor,
-                                 gamma_option) * conversion_factor
+            dampings = get_gamma(
+                amplitude_at_q,
+                omegas,
+                weights_at_q,
+                frequencies_at_q,
+                i,
+                temperature,
+                self._sigma,
+                freq_factor,
+                cutoff_frequency=self._pp.get_cutoff_frequency(),
+                gamma_option=gamma_option) * conversion_factor
     
             write_damping_functions(grid_point,
                                     band_index + 1,

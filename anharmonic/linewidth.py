@@ -43,7 +43,8 @@ class Linewidth:
                               t,
                               self._sigma,
                               freq_conv_factor,
-                              gamma_option)[0] * unit_conversion
+                              cutoff_frequency=self._pp.get_cutoff_frequency(),
+                              gamma_option=gamma_option)[0] * unit_conversion
                 gammas[i, j] = g
 
         fwhms = gammas * 2
@@ -62,7 +63,7 @@ class Linewidth:
         write_fwhm(grid_point,
                    band_indices + 1,
                    temps,
-                   fwhms.sum(axis=0),
+                   fwhms.sum(axis=0) / len(band_indices),
                    mesh,
                    is_nosym=is_nosym,
                    filename=filename)

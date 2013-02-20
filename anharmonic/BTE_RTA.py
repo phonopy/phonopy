@@ -150,16 +150,17 @@ class BTE_RTA:
             if t > 0:
                 for j, f in enumerate(freqs):
                     if f > cutoff_freq:
-                        g = get_gamma(amplitude_at_q,
-                                      np.array([f], dtype=float),
-                                      weights_at_q,
-                                      frequencies_at_q,
-                                      j,
-                                      t,
-                                      self._sigma,
-                                      freq_conv_factor,
-                                      cutoff_freq,
-                                      gamma_option)[0] * unit_conversion
+                        g = get_gamma(
+                            amplitude_at_q,
+                            np.array([f], dtype=float),
+                            weights_at_q,
+                            frequencies_at_q,
+                            j,
+                            t,
+                            self._sigma,
+                            freq_conv_factor,
+                            cutoff_frequency=cutoff_freq,
+                            gamma_option=gamma_option)[0] * unit_conversion
                         cv[i, j] = get_cv(f / freq_conv_factor, t)
                         gamma[i, j] = g
         return gamma, cv
