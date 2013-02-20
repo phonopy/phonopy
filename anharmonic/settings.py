@@ -11,7 +11,9 @@ class Phono3pySettings(Settings):
         self._is_bterta = False
         self._is_linewidth = False
         self._qpoints = [[0, 0, 0]]
+        self._multiple_sigmas = None
         self._no_kappa_stars = False
+        self._temperatures = None
         
     def set_supercell_matrix_extra(self, matrix):
         self._supercell_matrix_extra = matrix
@@ -61,6 +63,13 @@ class Phono3pySettings(Settings):
     def get_qpoints(self):
         return self._qpoints
 
+    def set_temperatures(self, temperatures):
+        self._temperatures = temperatures
+
+    def get_temperatures(self):
+        return self._temperatures
+
+
 
 class Phono3pyConfParser(ConfParser):
     def __init__(self, filename=None, options=None, option_list=None):
@@ -103,6 +112,11 @@ class Phono3pyConfParser(ConfParser):
             if opt.dest == 'qpoints':
                 if self._options.qpoints is not None:
                     self._confs['qpoints'] = self._options.qpoints
+
+            if opt.dest == 'temperatures':
+                if self._options.temperatures is not None:
+                    self._confs['temperatures'] = self._options.temperatures
+
 
     def _parse_conf(self):
         confs = self._confs
@@ -163,6 +177,12 @@ class Phono3pyConfParser(ConfParser):
                     self.set_parameter('qpoints',
                                        list(np.reshape(vals, (-1, 3))))
 
+            if conf_key == 'temperatures':
+                vals = [fracval(x) for x in confs['temperatures'].split()]
+                if len(vals) < 1:
+                    self.setting_error("Mutiple sigmas are incorrectly set.")
+                else:
+                    self.set_parameter('temperatures', vals)
 
 
     def _set_settings(self):
@@ -200,6 +220,10 @@ class Phono3pyConfParser(ConfParser):
         # Sum partial kappa at q-stars
         if params.has_key('no_kappa_stars'):
             self._settings.set_no_kappa_stars(params['no_kappa_stars'])
+
+        # Temperatures
+        if params.has_key('temperatures'):
+            self._settings.set_temperatures(params['temperatures'])
 
         
 

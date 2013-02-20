@@ -3,26 +3,31 @@ import phonopy.structure.spglib as spg
 from anharmonic.im_self_energy import get_gamma
 from phonopy.group_velocity import get_group_velocity
 from phonopy.units import Kb, THzToEv, EV, THz, Angstrom
-from anharmonic.file_IO import parse_kappa
+from anharmonic.file_IO import parse_kappa, write_kappa
 from anharmonic.triplets import get_grid_address
 
 class BTE_RTA:
     def __init__(self,
                  interaction_strength,
-                 sigma=0.2,
+                 sigmas=[0.1],
                  t_max=1000,
                  t_min=0,
                  t_step=10,
                  no_kappa_stars=False,
-                 log_level=0):
+                 gamma_option=0,
+                 log_level=0,
+                 filename=None):
         self._pp = interaction_strength
-        self._sigma = sigma
+        self._sigmas = sigmas
         self._t_max = t_max
         self._t_min = t_min
         self._t_step = t_step
         self._no_kappa_stars = no_kappa_stars
         print "No kappa", self._no_kappa_stars
+        self._gamma_option = gamma_option
         self._log_level = log_level
+        self._filename = filename
+
         self._temperatures = np.arange(self._t_min,
                                        self._t_max + float(self._t_step) / 2,
                                        self._t_step)
@@ -33,11 +38,14 @@ class BTE_RTA:
             [rot.T for rot in
              self._pp.get_symmetry().get_pointgroup_operations()])
 
-    def set_mesh_sampling(self, mesh=None):
+    def set_mesh_numbers(self, mesh=None):
         if mesh is None:
             self._mesh = self._pp.get_mesh_numbers()
         else:
             self._mesh = np.array(mesh)
+
+    def get_mesh_numbers(self):
+        return self._mesh
         
     def set_grid_points(self, grid_points=None):
         if grid_points is None:
@@ -63,24 +71,29 @@ class BTE_RTA:
 
     def get_temperatures(self):
         return self._temperatures
-        
-    def get_kappa(self,
-                  gamma_option=0,
-                  filename=None):
-        reciprocal_lattice = np.linalg.inv(self._primitive.get_cell())
-        kappa = np.zeros((len(self._grid_points),
-                              len(self._temperatures)), dtype=float)
+
+    def get_kappa(self):
+        unit_to_WmK = (THz * Angstrom) ** 2 / (Angstrom ** 3) * EV / THz / 2 / np.pi
         volume = self._primitive.get_volume()
         num_grid = np.prod(self._mesh)
-        unit_to_WmK = (THz * Angstrom) ** 2 / (Angstrom ** 3) * EV / THz / 2 / np.pi
         conversion_factor = unit_to_WmK / volume / num_grid
-        for i, gp in enumerate(self._grid_points):
+
+        freq_conv_factor = self._pp.get_frequency_unit_conversion_factor()
+        cutoff_freq = self._pp.get_cutoff_frequency()
+        reciprocal_lattice = np.linalg.inv(self._primitive.get_cell())
+        kappa = np.zeros((len(self._sigmas),
+                          len(self._grid_points),
+                          len(self._temperatures)), dtype=float)
+
+        for i, grid_point in enumerate(self._grid_points):
             if self._log_level:
                 print ("================= %d/%d =================" %
                        (i + 1, len(self._grid_points)))
 
-            self._pp.set_triplets_at_q(gp)
+            self._pp.set_triplets_at_q(grid_point)
             self._pp.set_interaction_strength()
+
+            # Group velocity
             gv = get_group_velocity(
                 self._pp.get_qpoint(),
                 self._pp.get_dynamical_matrix(),
@@ -88,11 +101,13 @@ class BTE_RTA:
                 eigenvectors=self._pp.get_eigenvectors(),
                 frequencies=self._pp.get_frequencies())
 
+            # Sum group velocities at symmetrically equivalent q-points
             direction = [1, 0, 0]
             if self._no_kappa_stars:
                 rot_unit_n = [np.array(direction)]
             else:
-                rot_unit_n = self._get_rotated_unit_directions(direction, gp)
+                rot_unit_n = self._get_rotated_unit_directions(direction,
+                                                               grid_point)
                 # check if the number of rotations is correct.
                 if self._grid_weights[i] > 0:
                     assert len(rot_unit_n) == self._grid_weights[i]
@@ -101,40 +116,56 @@ class BTE_RTA:
             for unit_n in rot_unit_n:
                 gv_sum2 += np.dot(unit_n, gv) ** 2
 
-            if self._log_level:
-                filename = "kappa-m%d%d%d-%d.dat" % (tuple(self._mesh) + (gp,))
-                print "----- Partial kappa at grid address %d -----" % gp
+            self._show_log(grid_point, gv, rot_unit_n)
+    
+            # Heat capacity
+            cv = self._get_cv(freq_conv_factor, cutoff_freq)
 
-                print "Kappa at temperatures at grid adress %d are written into %s" % (gp, filename)
-                print "Frequency, Group velocity (x y z):"
-                for f, v in zip(self._pp.get_frequencies(), gv.T):
-                    print "%8.3f (%8.3f %8.3f %8.3f)" % ((f,) + tuple(v))
-                print "Frequency, projected group velocity (GV), and GV squared"
-                for unit_n in rot_unit_n:
-                    print "Direction:", unit_n
-                    for f, v in zip(self._pp.get_frequencies(),
-                                    np.dot(unit_n, gv)):
-                        print "%8.3f %8.3f %12.3f" % (f, v, v**2)
-                print "Sigma for delta function smearing: %f" % self._sigma
-                
-            gamma, cv = self._get_gamma_and_cv(gamma_option=gamma_option)
-            lt_cv = np.zeros_like(gamma)
-            for j in range(len(self._temperatures)):
-                for k in range(len(self._pp.get_frequencies())):
-                    if gamma[j, k] > 0:
-                        lt_cv[j, k] = cv[j, k] / gamma[j, k] / 2
-            kappa[i] = np.dot(lt_cv, gv_sum2) * conversion_factor
-
-            if self._log_level:
-                w = open(filename, 'w')
-                for t, g in zip(self._temperatures, kappa[i]):
-                    w.write("%6.1f %.5f\n" % (t, g.sum()))
-                w.close()
+            # sigma loop
+            for j, sigma in enumerate(self._sigmas):
+                if self._log_level > 0:
+                    print "Sigma used to approximate delta function by gaussian: %f" % sigma
+                (kappa[j, i],
+                 gamma) = self._get_kappa_at_sigma(gv_sum2, sigma, cv)
+                kappa[j, i] *= conversion_factor
+                if self._log_level:
+                    write_kappa(kappa[j, i],
+                                self._temperatures,
+                                self._mesh,
+                                grid_point=grid_point,
+                                sigma=sigma,
+                                filename=self._filename)
 
         return kappa
+    
+    def _get_kappa_at_sigma(self, gv_sum2, sigma, cv):
+        gamma = self._get_gamma(sigma)
+        lt_cv = np.zeros_like(gamma)
+        for j in range(len(self._temperatures)):
+            for k in range(len(self._pp.get_frequencies())):
+                if gamma[j, k] > 0:
+                    lt_cv[j, k] = cv[j, k] / gamma[j, k] / 2
+        kappa = np.dot(lt_cv, gv_sum2)
+        
+        return kappa, gamma
 
-    def _get_gamma_and_cv(self,
-                          gamma_option=0):
+    def _get_cv(self, freq_conv_factor, cutoff_frequency):
+        def get_cv(freqs, t):
+            x = freqs * THzToEv / Kb / t
+            expVal = np.exp(x)
+            return Kb * x ** 2 * expVal / (expVal - 1.0) ** 2 # eV/K
+
+        freqs = self._pp.get_frequencies()
+        cv = np.zeros((len(self._temperatures), len(freqs)), dtype=float)
+        for i, t in enumerate(self._temperatures):
+            if t > 0:
+                for j, f in enumerate(freqs):
+                    if f > cutoff_frequency:
+                        cv[i, j] = get_cv(f / freq_conv_factor, t)
+
+        return cv
+
+    def _get_gamma(self, sigma):
         freq_conv_factor = self._pp.get_frequency_unit_conversion_factor()
         unit_conversion = self._pp.get_unit_conversion_factor()
         (amplitude_at_q,
@@ -144,7 +175,6 @@ class BTE_RTA:
         cutoff_freq = self._pp.get_cutoff_frequency()
 
         gamma = -1 * np.ones((len(self._temperatures), len(freqs)), dtype=float)
-        cv = np.zeros((len(self._temperatures), len(freqs)), dtype=float)
 
         for i, t in enumerate(self._temperatures):
             if t > 0:
@@ -157,13 +187,13 @@ class BTE_RTA:
                             frequencies_at_q,
                             j,
                             t,
-                            self._sigma,
+                            sigma,
                             freq_conv_factor,
                             cutoff_frequency=cutoff_freq,
-                            gamma_option=gamma_option)[0] * unit_conversion
-                        cv[i, j] = get_cv(f / freq_conv_factor, t)
+                            gamma_option=self._gamma_option
+                            )[0] * unit_conversion
                         gamma[i, j] = g
-        return gamma, cv
+        return gamma
 
     def _get_rotated_unit_directions(self,
                                      directon,
@@ -188,14 +218,22 @@ class BTE_RTA:
 
         return rot_unit_n
 
+    def _show_log(self, grid_point, group_velocity, rot_unit_n):
+        if self._log_level:
+            print "----- Partial kappa at grid address %d -----" % grid_point
+            print "Frequency, Group velocity (x y z):"
+            for f, v in zip(self._pp.get_frequencies(), group_velocity.T):
+                print "%8.3f (%8.3f %8.3f %8.3f)" % ((f,) + tuple(v))
+            print "Frequency, projected group velocity (GV), and GV squared"
+            for unit_n in rot_unit_n:
+                print "Direction:", unit_n
+                for f, v in zip(self._pp.get_frequencies(),
+                                np.dot(unit_n, group_velocity)):
+                    print "%8.3f %8.3f %12.3f" % (f, v, v**2)
+
         
             
         
-def get_cv(freqs, t):
-    x = freqs * THzToEv / Kb / t
-    expVal = np.exp(x)
-    return Kb * x ** 2 * expVal / (expVal - 1.0) ** 2 # eV/K
-
 def sum_partial_kappa(filenames):
     temps, kappa = parse_kappa(filenames[0])
     sum_kappa = np.array(kappa)

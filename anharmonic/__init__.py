@@ -8,6 +8,7 @@ from anharmonic.BTE_RTA import BTE_RTA
 from anharmonic.jointDOS import get_jointDOS
 from anharmonic.gruneisen import Gruneisen
 import anharmonic.triplets as triplets
+from anharmonic.file_IO import write_kappa
 
 class JointDOS:
     def __init__(self,
@@ -117,27 +118,27 @@ class Phono3py:
     def get_damping_function(self,
                              grid_points,
                              sets_of_band_indices,
-                             sigma=None,
-                             omega_step=None,
-                             temperature=None,
+                             sigmas=[0.1],
+                             frequency_step=None,
+                             temperatures=[None],
                              filename=None,
                              gamma_option=0):
-
-        self._sigma = sigma
-        self._omega_step = omega_step
         self._im_self_energy = ImSelfEnergy(self._pp,
-                                            sigma=self._sigma,
-                                            omega_step=self._omega_step,
+                                            sigmas=sigmas,
+                                            frequency_step=frequency_step,
+                                            temperatures=temperatures,
+                                            gamma_option=gamma_option,
+                                            filename=filename,
                                             log_level=self._log_level)
 
-        if grid_points==None:
+        if grid_points is None:
             print "Grid points are not specified."
             return False
 
         for gp in grid_points:
             self._pp.set_triplets_at_q(gp)
 
-            if sets_of_band_indices == None:
+            if sets_of_band_indices is None:
                 if gp==0:
                     self._pp.set_interaction_strength(
                         range(3, self._primitive.get_number_of_atoms() * 3))
@@ -148,23 +149,20 @@ class Phono3py:
             else:
                 for band_indices in sets_of_band_indices:
                     self._pp.set_interaction_strength(band_indices)
-                    self._im_self_energy.get_damping_function(
-                        temperature=temperature,
-                        filename=filename,
-                        gamma_option=gamma_option)
+                    self._im_self_energy.get_damping_function()
 
     def get_linewidth(self,
                       grid_points,
                       sets_of_band_indices,
-                      sigma=0.2,
-                      t_max=1000,
+                      sigmas=[0.1],
+                      t_max=1500,
                       t_min=0,
                       t_step=10,
                       gamma_option=0,
                       filename=None):
 
         lw = Linewidth(self._pp,
-                       sigma=sigma,
+                       sigmas=sigmas,
                        t_max=t_max,
                        t_min=t_min,
                        t_step=t_step)
@@ -181,19 +179,23 @@ class Phono3py:
             self._pp.set_triplets_at_q(gp)
             for band_indices in sets_of_band_indices:
                 self._pp.set_interaction_strength(band_indices)
-                fwhms, temps, omegas = lw.get_linewidth(
-                    gamma_option,
+                fwhms_sigmas, freqs_sigmas = lw.get_linewidth(
+                    gamma_option=gamma_option,
                     filename=filename)
+                temps = lw.get_temperatures()
 
-                print "# Grid point:", gp
-                print "# Frequencies:", omegas
-                for fwhm, t in zip(fwhms.T, temps):
-                    print t, fwhm
-                print
+                for sigma, fwhms, freqs in zip(
+                    sigmas, fwhms_sigmas, freqs_sigmas):
+                    print "# Grid point:", gp
+                    print "# Sigma:", sigma
+                    print "# Frequencies:", freqs
+                    for fwhm, t in zip(fwhms.T, temps):
+                        print t, fwhm
+                    print
 
     def get_thermal_conductivity(self,
-                                 sigma=0.2,
-                                 t_max=1000,
+                                 sigmas=[0.1],
+                                 t_max=1500,
                                  t_min=0,
                                  t_step=10,
                                  grid_points=None,
@@ -201,29 +203,29 @@ class Phono3py:
                                  gamma_option=0,
                                  filename=None):
         lt = BTE_RTA(self._pp,
-                     sigma=sigma,
+                     sigmas=sigmas,
                      t_max=t_max,
                      t_min=t_min,
                      t_step=t_step,
                      no_kappa_stars=no_kappa_stars,
-                     log_level=self._log_level)
-        lt.set_mesh_sampling()
+                     gamma_option=gamma_option,
+                     log_level=self._log_level,
+                     filename=filename)
+        lt.set_mesh_numbers()
         lt.set_grid_points(grid_points)
-        kappa = lt.get_kappa(gamma_option=gamma_option)
+        
+        kappa = lt.get_kappa() # [sigma, grid_point, temperature]
         temperatures = lt.get_temperatures()
+        mesh = lt.get_mesh_numbers()
 
         if self._log_level:
             print "-------------- Total kappa --------------"
-            if filename is not None:
-                kappa_filename = filenale
-            else:
-                kappa_filename = "kappa-m%d%d%d.dat" % tuple(self._mesh)
-            print "Kappa at temperatures are written into %s." % kappa_filename
-            w = open(kappa_filename, 'w')
-            for t, k in zip(temperatures, kappa.sum(axis=0)):
-                w.write("%8.2f %.5f\n" % (t, k))
-                print "%8.2f %.5f" % (t, k)
-            w.close()
+            for sigma, kappa_at_sigma in zip(sigmas, kappa):
+                write_kappa(kappa_at_sigma.sum(axis=0),
+                            temperatures,
+                            mesh,
+                            sigma=sigma,
+                            filename=filename)
                 
     # def get_decay_channels(self,
     #                        grid_points,

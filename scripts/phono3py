@@ -120,7 +120,7 @@ parser.set_defaults(amplitude=None,
                     read_fc2_extra=False,
                     read_fc3=False,
                     r2q_TI_index=None,
-                    omega_step=None,
+                    freq_step=None,
                     output_filename=None,
                     qpoints=None,
                     sigma=None,
@@ -130,7 +130,7 @@ parser.set_defaults(amplitude=None,
                     tmax=None,
                     tmin=None,
                     tstep=None,
-                    temperature=None,
+                    temperatures=None,
                     verbose=True,
                     write_grid_points=False)
 parser.add_option("--amplitude", dest="amplitude", type="float",
@@ -230,7 +230,7 @@ parser.add_option("--noks", "--no_kappa_stars", dest="no_kappa_stars",
 parser.add_option("--nosym", dest="is_nosym",
                   action="store_true",
                   help="No symmetrization of triplets")
-parser.add_option("--omega_step", dest="omega_step", type="float",
+parser.add_option("--freq_step", dest="freq_step", type="float",
                   help="Pitch of frequency calculated")
 parser.add_option("--pa", "--primitive_axis", dest="primitive_axis",
                   action="store", type="string",
@@ -283,8 +283,8 @@ parser.add_option("-v", "--verbose", dest="verbose",
                   help="Detailed run-time information is displayed")
 parser.add_option("--loglevel", dest="log_level", type="int",
                   help="Log level")
-parser.add_option("--temp", dest="temperature", type="float",
-                  help="Temperature")
+parser.add_option("--ts", dest="temperatures", 
+                  type="string", help="Temperatures for damping functions")
 parser.add_option("--wgp", "--write_grid_points", dest="write_grid_points",
                   action="store_true",
                   help="Write grid address of irreducible grid points for specified mesh numbers to ir_grid_address.yaml")
@@ -656,9 +656,9 @@ else:
             multiple_sigmas = settings.get_multiple_sigmas()
 
         if settings.get_omega_step() is None:
-            omega_step = 0.1 * freq_factor
+            freq_step = 0.1 * freq_factor
         else:
-            omega_step = settings.get_omega_step()
+            freq_step = settings.get_omega_step()
 
         if options.freq_scale is None:
             freq_scale = 1.0
@@ -672,6 +672,11 @@ else:
             supercell_dm = supercell_extra
             primitive_dm = primitive_extra
 
+        if settings.get_temperatures() is None:
+            temperatures = [None]
+        else:
+            temperatures = settings.get_temperatures()
+
         if options.is_joint_dos:
             jdos = JointDOS(supercell_dm,
                             primitive_dm,
@@ -679,7 +684,7 @@ else:
                             fc2,
                             nac_params,
                             sigma,
-                            omega_step,
+                            freq_step,
                             factor,
                             freq_factor,
                             freq_scale,
@@ -728,7 +733,7 @@ else:
 
             elif settings.get_is_bterta():
                 phono3py.get_thermal_conductivity(
-                    sigma=sigma,
+                    sigmas=multiple_sigmas,
                     t_max=settings.get_max_temperature(),
                     t_min=settings.get_min_temperature(),
                     t_step=settings.get_temperature_step(),
@@ -740,9 +745,9 @@ else:
                 phono3py.get_damping_function(
                     grid_points,
                     settings.get_band_indices(),
-                    sigma=sigma,
-                    omega_step=omega_step,
-                    temperature=options.temperature,
+                    sigmas=multiple_sigmas,
+                    frequency_step=freq_step,
+                    temperatures=temperatures,
                     filename=options.output_filename,
                     gamma_option=options.gamma_option)
 

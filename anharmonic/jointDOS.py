@@ -4,7 +4,7 @@ from phonopy.structure.symmetry import Symmetry
 from phonopy.hphonopy.file_IO import parse_BORN
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC
 from phonopy.units import VaspToTHz
-from anharmonic.im_self_energy import get_omegas
+from anharmonic.im_self_energy import get_frequencies
 from anharmonic.triplets import get_triplets_at_q, get_nosym_triplets
 from anharmonic.file_IO import write_jointDOS
 
@@ -92,7 +92,7 @@ def get_jointDOS(fixed_grid_points,
                 val = np.linalg.eigvalsh(dm.get_dynamical_matrix())
                 freqs[i,j] = np.sqrt(np.abs(val)) * factor * freq_factor
 
-        omegas_at_gp = get_omegas(np.max(freqs), omega_step, sigma)
+        omegas_at_gp = get_frequencies(np.max(freqs), omega_step, sigma)
         jointDOS_at_gp = np.zeros(len(omegas_at_gp), dtype=float)
 
         phono3c.joint_dos(jointDOS_at_gp,

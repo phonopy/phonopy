@@ -277,42 +277,43 @@ def write_amplitudes(amplitudes, frequencies, triplet, weight, mesh, filename):
     w.close()
 
 def write_damping_functions(gp,
-                            band_index,
+                            band_indices,
                             mesh,
-                            omegas,
-                            dampings,
+                            frequencies,
+                            gammas,
+                            sigma=None,
+                            temperature=None,
                             filename=None,
                             is_nosym=False):
 
-    if filename==None:
-        if is_nosym:
-            damps_filename = "damp-m%d%d%d-g%d-b%d.nosym.dat" % (mesh[0],
-                                                                 mesh[1],
-                                                                 mesh[2],
-                                                                 gp,
-                                                                 band_index)
-        else:
-            damps_filename = "damp-m%d%d%d-g%d-b%d.dat" % (mesh[0],
-                                                           mesh[1],
-                                                           mesh[2],
-                                                           gp,
-                                                           band_index)
+    gammas_filename = "gammas"
+    gammas_filename += "-m%d%d%d-g%d-" % (mesh[0],
+                                          mesh[1],
+                                          mesh[2],
+                                          gp)
+    if sigma is not None:
+        gammas_filename += ("s%f" % sigma).rstrip('0').rstrip('\.') + "-"
 
-    else:
-        damps_filename = "damp-m%d%d%d-g%d-b%d.%s.dat" % (mesh[0],
-                                                          mesh[1],
-                                                          mesh[2],
-                                                          gp,
-                                                          band_index,
-                                                          filename)
-    w = open(damps_filename, 'w')
-    for omega, damp in zip(omegas, dampings):
-        w.write("%20.15e %20.15e\n" % (omega, damp))
+    if temperature is not None:
+        gammas_filename += ("t%f" % temperature).rstrip('0').rstrip('\.') + "-"
+
+    for i in band_indices:
+        gammas_filename += "b%d" % i
+
+    if not filename == None:
+        gammas_filename += ".%s" % filename
+    elif is_nosym:
+        gammas_filename += ".nosym"
+    gammas_filename += ".dat"
+
+    w = open(gammas_filename, 'w')
+    for freq, g in zip(frequencies, gammas):
+        w.write("%15.7f %20.15e\n" % (freq, g))
     w.close()
 
 def write_jointDOS(gp,
                    mesh,
-                   omegas,
+                   frequencies,
                    jdos,
                    filename=None,
                    is_nosym=False):
@@ -335,8 +336,8 @@ def write_jointDOS(gp,
                                                      filename)
         
     w = open(jdos_filename, 'w')
-    for omega, val in zip(omegas, jdos):
-        w.write("%20.15e %20.15e\n" % (omega, val))
+    for omega, val in zip(frequencies, jdos):
+        w.write("%15.7f %20.15e\n" % (omega, val))
     w.close()
 
 def write_fwhm(gp,
@@ -355,7 +356,7 @@ def write_fwhm(gp,
                                         mesh[2],
                                         gp)
     if sigma is not None:
-        fwhm_filename += ("%f" % sigma).rstrip('0') + "-"
+        fwhm_filename += ("s%f" % sigma).rstrip('0') + "-"
 
     for i in band_indices:
         fwhm_filename += "b%d" % i
@@ -371,15 +372,47 @@ def write_fwhm(gp,
         w.write("%15.7f %20.15e\n" % (t, v))
     w.close()
     
+def write_kappa(kappa,
+                temperatures,
+                mesh,
+                grid_point=None,
+                sigma=None,
+                filename=None):
+    kappa_filename = "kappa"
+    kappa_filename += "-m%d%d%d" % tuple(mesh)
+    sigma_str = ("%f" % sigma).rstrip('0').rstrip('\.')
+    if grid_point is not None:
+        kappa_filename += ("-g%d" % grid_point)
+    if sigma is not None:
+        kappa_filename += "-s" + sigma_str
+    if filename is not None:
+        kappa_filename += "." + filename
+    kappa_filename += ".dat"
+    print "Kappa",
+    if grid_point is not None:
+        print "at grid adress %d" % grid_point,
+    if sigma is not None:
+        if grid_point is not None:
+            print "and",
+        else:
+            print "at",
+        print "sigma %s" % sigma_str,
+    print "were written into",
+    print "%s" % kappa_filename
+    w = open(kappa_filename, 'w')
+    for t, g in zip(temperatures, kappa):
+        w.write("%6.1f %.5f\n" % (t, g))
+    w.close()
+
 def write_decay_channels(decay_channels,
-                         amplitudes,
-                         frequencies,
-                         triplets,
-                         weights,
+                         amplitudes_at_q,
+                         frequencies_at_q,
+                         triplets_at_q,
+                         weights_at_q,
                          grid_address,
                          mesh,
                          band_indices,
-                         omegas,
+                         frequencies,
                          grid_point,
                          filename = None,
                          is_nosym = False):
@@ -401,24 +434,24 @@ def write_decay_channels(decay_channels,
     w = open(decay_filename, 'w')
 
     w.write("%10d                            "
-            "# Number of triplets\n" % len(triplets))
+            "# Number of triplets\n" % len(triplets_at_q))
     w.write("%10d                            "
             "# Degeneracy\n" % len(band_indices))
     
     for i, j in enumerate(band_indices):
-        w.write("%10d %20.10e       # band  freq \n" % (j + 1, omegas[i]))
+        w.write("%10d %20.10e       # band  freq \n" % (j + 1, frequencies[i]))
     w.write("\n")
 
     decay_rate_triplets = []
     decay_channels_sum = np.array(
-        [d.sum() * weight for d, weight in zip(decay_channels, weights)]).sum()
+        [d.sum() * weight for d, weight in zip(decay_channels, weights_at_q)]).sum()
 
     w.write("# %5s %5s %-15s\n" % ("band'", "band''", "decay sum in BZ"))
     decay_rate_bands = []
     pure_sum = 0.0
-    for i in range(amplitudes.shape[2]):
-        for j in range(amplitudes.shape[2]):
-            decay_bands_sum = np.dot(decay_channels[:,i,j], weights)
+    for i in range(amplitudes_at_q.shape[2]):
+        for j in range(amplitudes_at_q.shape[2]):
+            decay_bands_sum = np.dot(decay_channels[:,i,j], weights_at_q)
             decay_rate_bands.append(
                 [decay_bands_sum / decay_channels_sum, i, j])
             pure_sum += decay_bands_sum / decay_channels_sum
@@ -430,10 +463,10 @@ def write_decay_channels(decay_channels,
                (decay_channels_sum, pure_sum*100))
 
     for i, (d, a, f, tp, weight) in enumerate(zip(decay_channels,
-                                                  amplitudes,
-                                                  frequencies,
-                                                  triplets,
-                                                  weights)):
+                                                  amplitudes_at_q,
+                                                  frequencies_at_q,
+                                                  triplets_at_q,
+                                                  weights_at_q)):
         sum_d = d.sum()
         decay_rate_triplets.append([sum_d / decay_channels_sum, i])
 
@@ -453,8 +486,8 @@ def write_decay_channels(decay_channels,
                 ("band'", "band''", "freq'", "freq''", "decay", "phi"))
 
         decay_rate_bands = []
-        for j in range(amplitudes.shape[2]):
-            for k in range(amplitudes.shape[2]):
+        for j in range(amplitudes_at_q.shape[2]):
+            for k in range(amplitudes_at_q.shape[2]):
                 decay_rate_bands.append([d[j,k] / sum_d, j, k])
 
                 w.write("%5d %5d %15.7e %15.7e %15.7e %15.7e\n" %
