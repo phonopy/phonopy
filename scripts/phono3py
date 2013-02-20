@@ -110,9 +110,10 @@ parser.set_defaults(amplitude=None,
                     is_symmetrize_fc3_r=False,
                     is_symmetrize_fc3_q=False,                     
                     is_Peierls=False,
-                    no_kappa_stars=False,
                     log_level=0,
                     mesh_numbers=None,
+                    multiple_sigmas=None,
+                    no_kappa_stars=False,
                     q_direction=None,
                     primitive_axis=None,
                     read_fc2=False,
@@ -250,6 +251,9 @@ parser.add_option("--r2q", dest="r2q_TI_index", type="int",
                   help="Index to set translational invariance in transforming fc3 from real to reciprocal space")
 parser.add_option("--sigma", dest="sigma", type="float",
                   help="Smearing width for DOS")
+parser.add_option("--multiple_sigmas", dest="multiple_sigmas",
+                  type="string",
+                  help="Multiple sigmas for smearing width used for limited functions")
 parser.add_option("--sym_fc2", dest="is_symmetrize_fc2",
                   action="store_true",
                   help="Symmetrize fc2 by index exchange")
@@ -631,7 +635,7 @@ else:
                 print "Grid points to be calculated:", grid_points
             sys.stdout.flush()
 
-        if options.factor==None:
+        if options.factor is None:
             factor = VaspToTHz
         else:
             factor = options.factor
@@ -641,17 +645,22 @@ else:
         else:
             freq_factor = 1.0
 
-        if settings.get_sigma()==None:
+        if settings.get_sigma() is None:
             sigma = 0.2 * freq_factor
         else:
             sigma = settings.get_sigma()
 
-        if settings.get_omega_step()==None:
+        if settings.get_multiple_sigmas() is None:
+            multiple_sigmas = [sigma]
+        else:
+            multiple_sigmas = settings.get_multiple_sigmas()
+
+        if settings.get_omega_step() is None:
             omega_step = 0.1 * freq_factor
         else:
             omega_step = settings.get_omega_step()
 
-        if options.freq_scale == None:
+        if options.freq_scale is None:
             freq_scale = 1.0
         else:
             freq_scale = options.freq_scale
@@ -710,7 +719,7 @@ else:
                 phono3py.get_linewidth(
                     grid_points,
                     settings.get_band_indices(),
-                    sigma=sigma,
+                    sigmas=multiple_sigmas,
                     t_max=settings.get_max_temperature(),
                     t_min=settings.get_min_temperature(),
                     t_step=settings.get_temperature_step(),

@@ -587,15 +587,7 @@ def get_unit_conversion_factor(freq_factor):
       Force constants: eV/A^3
 
     """
-    # return  (1.0 / 36 / 8 *
-    #          (Hbar * EV) ** 3 / N0 / ((2 * np.pi * THz / freq_factor) ** 3) / AMU ** 3 *
-    #          (EV / Angstrom ** 3) ** 2 * 18 *
-    #          np.pi / (2 * np.pi * THz / freq_factor) / ((Hbar * EV) ** 2 ) *
-    #          N0 / (2 * np.pi) / THz * freq_factor
-    #          )
     # omega => 2pi * freq * THz
-
-
     # Frequency unit to angular frequency (rad/s)
     # Mass unit to kg
     # Force constants to J/m^3

@@ -37,6 +37,12 @@ class Phono3pySettings(Settings):
     def get_is_linewidth(self):
         return self._is_linewidth
 
+    def set_multiple_sigmas(self, multiple_sigmas):
+        self._multiple_sigmas = multiple_sigmas
+
+    def get_multiple_sigmas(self):
+        return self._multiple_sigmas
+
     def set_no_kappa_stars(self, no_kappa_stars):
         self._no_kappa_stars = no_kappa_stars
 
@@ -71,7 +77,7 @@ class Phono3pyConfParser(ConfParser):
                     self._confs['dim_extra'] = self._options.supercell_dimension_extra
 
             if opt.dest == 'band_indices':
-                if not self._options.band_indices==None:
+                if self._options.band_indices is not None:
                     self._confs['band_indices'] = self._options.band_indices
 
             if opt.dest == 'is_bterta':
@@ -82,18 +88,21 @@ class Phono3pyConfParser(ConfParser):
                 if self._options.is_linewidth:
                     self._confs['linewidth'] = '.true.'
 
+            if opt.dest == 'multiple_sigmas':
+                if self._options.multiple_sigmas is not None:
+                    self._confs['multiple_sigmas'] = self._options.multiple_sigmas
+
             if opt.dest == 'no_kappa_stars':
                 if self._options.no_kappa_stars:
                     self._confs['no_kappa_stars'] = '.true.'
 
             if opt.dest == 'q_direction':
-                if not self._options.q_direction==None:
+                if self._options.q_direction is not None:
                     self._confs['q_direction'] = self._options.q_direction
 
             if opt.dest == 'qpoints':
-                if not self._options.qpoints == None:
+                if self._options.qpoints is not None:
                     self._confs['qpoints'] = self._options.qpoints
-
 
     def _parse_conf(self):
         confs = self._confs
@@ -128,6 +137,17 @@ class Phono3pyConfParser(ConfParser):
                 if confs['linewidth'] == '.true.':
                     self.set_parameter('is_linewidth', True)
 
+            if conf_key == 'multiple_sigmas':
+                vals = [fracval(x) for x in confs['multiple_sigmas'].split()]
+                if len(vals) < 1:
+                    self.setting_error("Mutiple sigmas are incorrectly set.")
+                else:
+                    self.set_parameter('multiple_sigmas', vals)
+
+            if conf_key == 'no_kappa_stars':
+                if confs['no_kappa_stars'] == '.true.':
+                    self.set_parameter('no_kappa_stars', True)
+
             if conf_key == 'q_direction':
                 q_direction = [ float(x) for x in confs['q_direction'].split() ]
                 if len(q_direction) < 3:
@@ -143,9 +163,6 @@ class Phono3pyConfParser(ConfParser):
                     self.set_parameter('qpoints',
                                        list(np.reshape(vals, (-1, 3))))
 
-            if conf_key == 'no_kappa_stars':
-                if confs['no_kappa_stars'] == '.true.':
-                    self.set_parameter('no_kappa_stars', True)
 
 
     def _set_settings(self):
@@ -167,6 +184,10 @@ class Phono3pyConfParser(ConfParser):
         # Calculate linewidths
         if params.has_key('is_linewidth'):
             self._settings.set_is_linewidth(params['is_linewidth'])
+
+        # Multiple sigmas
+        if params.has_key('multiple_sigmas'):
+            self._settings.set_multiple_sigmas(params['multiple_sigmas'])
 
         # q-vector direction at q->0 for non-analytical term correction
         if params.has_key('q_direction'):
