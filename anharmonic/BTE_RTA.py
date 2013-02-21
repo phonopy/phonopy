@@ -10,7 +10,7 @@ class BTE_RTA:
     def __init__(self,
                  interaction_strength,
                  sigmas=[0.1],
-                 t_max=1000,
+                 t_max=1500,
                  t_min=0,
                  t_step=10,
                  no_kappa_stars=False,
@@ -39,6 +39,8 @@ class BTE_RTA:
         self._point_operations = np.array(
             [rot.T for rot in
              self._pp.get_symmetry().get_pointgroup_operations()])
+
+        self._gamma = None
 
     def set_mesh_numbers(self, mesh=None):
         if mesh is None:
@@ -71,6 +73,9 @@ class BTE_RTA:
     def get_temperatures(self):
         return self._temperatures
 
+    def set_gamma(self, gamma):
+        self._gamma = gamma
+    
     def get_kappa(self):
         unit_to_WmK = (THz * Angstrom) ** 2 / (Angstrom ** 3) * EV / THz / 2 / np.pi
         volume = self._primitive.get_volume()
@@ -80,14 +85,16 @@ class BTE_RTA:
         freq_conv_factor = self._pp.get_frequency_unit_conversion_factor()
         cutoff_freq = self._pp.get_cutoff_frequency()
         reciprocal_lattice = np.linalg.inv(self._primitive.get_cell())
-        kappa = np.zeros((len(self._sigmas),
-                          len(self._grid_points),
-                          len(self._temperatures)), dtype=float)
         num_atom = self._primitive.get_number_of_atoms()
-        gamma = np.zeros((len(self._sigmas),
+        kappa = np.zeros((len(self._sigmas),
                           len(self._grid_points),
                           len(self._temperatures),
                           num_atom * 3), dtype=float)
+        # if gamma is not set.
+        if self._gamma is None:
+            gamma = np.zeros_like(kappa)
+        else:
+            gamma = self._gamma
 
         for i, grid_point in enumerate(self._grid_points):
             if self._log_level:
@@ -125,15 +132,16 @@ class BTE_RTA:
             # Heat capacity
             cv = self._get_cv(freq_conv_factor, cutoff_freq)
 
-            # sigma loop
-            for j, sigma in enumerate(self._sigmas):
-                if self._log_level > 0:
-                    print "Sigma used to approximate delta function by gaussian: %f" % sigma
-                (kappa[j, i],
-                 gamma[j, i]) = self._get_kappa_at_sigma(gv_sum2, sigma, cv)
-                kappa[j, i] *= conversion_factor
-                if self._log_level:
-                    write_kappa(kappa[j, i],
+            # Kappa and Gamma
+            self._get_kappa_at_sigmas(i,
+                                      kappa,
+                                      gamma,
+                                      gv_sum2,
+                                      cv,
+                                      conversion_factor)
+            if self._log_level:
+                for j, sigma in enumerate(self._sigmas):
+                    write_kappa(kappa[j, i].sum(axis=1),
                                 self._temperatures,
                                 self._mesh,
                                 gamma=gamma[j, i],
@@ -145,24 +153,34 @@ class BTE_RTA:
             if self._grid_weights is not None:
                 print "-------------- Total kappa --------------"
                 for sigma, kappa_at_sigma in zip(self._sigmas, kappa):
-                    write_kappa(kappa_at_sigma.sum(axis=0),
+                    write_kappa(kappa_at_sigma.sum(axis=0).sum(axis=1),
                                 self._temperatures,
                                 self._mesh,
                                 sigma=sigma,
                                 filename=self._filename)
 
         return kappa, gamma
-    
-    def _get_kappa_at_sigma(self, gv_sum2, sigma, cv):
-        gamma = self._get_gamma(sigma)
-        lt_cv = np.zeros_like(gamma)
-        for j in range(len(self._temperatures)):
-            for k in range(len(self._pp.get_frequencies())):
-                if gamma[j, k] > 0:
-                    lt_cv[j, k] = cv[j, k] / gamma[j, k] / 2
-        kappa = np.dot(lt_cv, gv_sum2)
-        
-        return kappa, gamma
+
+    def _get_kappa_at_sigmas(self,
+                             i,
+                             kappa,
+                             gamma,
+                             gv_sum2,
+                             cv,
+                             conversion_factor):
+        for j, sigma in enumerate(self._sigmas):
+            if self._log_level > 0:
+                print "Sigma used to approximate delta function by gaussian: %f" % sigma
+
+            if self._gamma is None:
+                gamma[j, i] = self._get_gamma(sigma)
+            
+            for k in range(len(self._temperatures)):
+                for l in range(len(self._pp.get_frequencies())):
+                    if gamma[j, i, k, l] > 0:
+                        kappa[j, i, k, l] = (gv_sum2[l] * cv[k, l] /
+                                             gamma[j, i, k, l] / 2 *
+                                             conversion_factor)
 
     def _get_cv(self, freq_conv_factor, cutoff_frequency):
         def get_cv(freqs, t):

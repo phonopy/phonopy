@@ -757,6 +757,19 @@ def parse_kappa(filename):
         kappa.append(float(x[1]))
     return np.array(temps), np.array(kappa)
 
+def parse_gamma(filename):
+    f = open(filename)
+    temps = []
+    gamma = []
+    for line in f:
+        if line.strip()[0] is "#":
+            continue
+        x = line.split()
+        temps.append(float(x[0]))
+        gamma.append([float(g) for g in x[1:]])
+    return np.array(temps), np.array(gamma)
+
+
 if __name__ == '__main__':
     import numpy as np
     import sys

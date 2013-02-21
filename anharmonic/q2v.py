@@ -117,7 +117,7 @@ class PhononPhonon:
         return self._primitive
 
     def get_qpoint(self):
-        return self._grid_address[self._grid_point].astype(float) / self._mesh
+        return self._q
 
     def get_q_direction(self):
         return self._q_direction
@@ -175,6 +175,7 @@ class PhononPhonon:
 
         self._triplets_at_q = triplets_at_q
         self._weights_at_q = weights_at_q
+        self._q = self._grid_address[gp].astype(float) / mesh
         self._grid_point = gp
         
     def set_interaction_strength(self, band_indices=None):
@@ -190,16 +191,7 @@ class PhononPhonon:
         self.print_log(("Band indices: [" + " %d" * len(self._band_indices) +
                          " ]\n") % tuple(self._band_indices + 1))
 
-        q = self._grid_address[self._grid_point].astype(float) / self._mesh
-        if (self._q_direction is not None) and self._grid_point == 0:
-            self._dm.set_dynamical_matrix(q, self._q_direction)
-        else:
-            self._dm.set_dynamical_matrix(q)
-        vals, self._eigenvectors = np.linalg.eigh(
-            self._dm.get_dynamical_matrix())
-        vals = vals.real
-        factor = self._factor * self._freq_factor
-        self._frequencies = np.sqrt(abs(vals)) * np.sign(vals) * factor
+        self.set_harmonic_phonons(self._q)
         
         # \Phi^2(set_of_q's, s, s', s'')
         # Unit: mass^{-3} \Phi^2(real space)
@@ -268,6 +260,18 @@ class PhononPhonon:
         if nac_q_direction is not None:
             self._q_direction = nac_q_direction
 
+    def set_harmonic_phonons(self, q):
+        if ((self._q_direction is not None) and
+            (q < 0.1 / max(self._mesh)).all()):
+            self._dm.set_dynamical_matrix(q, self._q_direction)
+        else:
+            self._dm.set_dynamical_matrix(q)
+        vals, self._eigenvectors = np.linalg.eigh(
+            self._dm.get_dynamical_matrix())
+        vals = vals.real
+        factor = self._factor * self._freq_factor
+        self._frequencies = np.sqrt(abs(vals)) * np.sign(vals) * factor
+            
     def print_log(self, text):
         if self._log_level:
             print_log(text)
