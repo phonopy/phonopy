@@ -34,6 +34,8 @@ class BTE_RTA:
         self._primitive = self._pp.get_primitive()
         self._mesh = None
         self._grid_points = None
+        self._grid_weights = None
+        self._grid_address = None
         self._point_operations = np.array(
             [rot.T for rot in
              self._pp.get_symmetry().get_pointgroup_operations()])
@@ -50,21 +52,18 @@ class BTE_RTA:
     def set_grid_points(self, grid_points=None):
         if grid_points is None:
             if self._no_kappa_stars:
-                self._grid_address = get_grid_address(self._mesh)
                 self._grid_points = range(np.prod(self._mesh))
-                self._grid_weights = [0] * len(self._grid_points)
             else:
-                (self._grid_mapping_table,
+                (grid_mapping_table,
                  self._grid_address) = spg.get_ir_reciprocal_mesh(
                     self._mesh,
                     self._primitive)
-                self._grid_points = np.unique(self._grid_mapping_table)
-                self._grid_weights = [np.sum(self._grid_mapping_table == g)
+                self._grid_points = np.unique(grid_mapping_table)
+                self._grid_weights = [np.sum(grid_mapping_table == g)
                                       for g in self._grid_points]
         else:
             self._grid_address = get_grid_address(self._mesh)
             self._grid_points = grid_points
-            self._grid_weights = [0] * len(self._grid_points)
 
     def set_temperatures(self, temperatures):
         self._temperatures = temperatures
@@ -84,6 +83,11 @@ class BTE_RTA:
         kappa = np.zeros((len(self._sigmas),
                           len(self._grid_points),
                           len(self._temperatures)), dtype=float)
+        num_atom = self._primitive.get_number_of_atoms()
+        gamma = np.zeros((len(self._sigmas),
+                          len(self._grid_points),
+                          len(self._temperatures),
+                          num_atom * 3), dtype=float)
 
         for i, grid_point in enumerate(self._grid_points):
             if self._log_level:
@@ -109,7 +113,7 @@ class BTE_RTA:
                 rot_unit_n = self._get_rotated_unit_directions(direction,
                                                                grid_point)
                 # check if the number of rotations is correct.
-                if self._grid_weights[i] > 0:
+                if self._grid_weights is not None:
                     assert len(rot_unit_n) == self._grid_weights[i]
                 
             gv_sum2 = np.zeros(len(self._pp.get_frequencies()), dtype=float)
@@ -126,17 +130,28 @@ class BTE_RTA:
                 if self._log_level > 0:
                     print "Sigma used to approximate delta function by gaussian: %f" % sigma
                 (kappa[j, i],
-                 gamma) = self._get_kappa_at_sigma(gv_sum2, sigma, cv)
+                 gamma[j, i]) = self._get_kappa_at_sigma(gv_sum2, sigma, cv)
                 kappa[j, i] *= conversion_factor
                 if self._log_level:
                     write_kappa(kappa[j, i],
                                 self._temperatures,
                                 self._mesh,
+                                gamma=gamma[j, i],
                                 grid_point=grid_point,
                                 sigma=sigma,
                                 filename=self._filename)
 
-        return kappa
+        if self._log_level:
+            if self._grid_weights is not None:
+                print "-------------- Total kappa --------------"
+                for sigma, kappa_at_sigma in zip(self._sigmas, kappa):
+                    write_kappa(kappa_at_sigma.sum(axis=0),
+                                self._temperatures,
+                                self._mesh,
+                                sigma=sigma,
+                                filename=self._filename)
+
+        return kappa, gamma
     
     def _get_kappa_at_sigma(self, gv_sum2, sigma, cv):
         gamma = self._get_gamma(sigma)

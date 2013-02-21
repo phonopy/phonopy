@@ -375,20 +375,24 @@ def write_fwhm(gp,
 def write_kappa(kappa,
                 temperatures,
                 mesh,
+                gamma=None,
                 grid_point=None,
                 sigma=None,
                 filename=None):
     kappa_filename = "kappa"
-    kappa_filename += "-m%d%d%d" % tuple(mesh)
+    suffix = "-m%d%d%d" % tuple(mesh)
     sigma_str = ("%f" % sigma).rstrip('0').rstrip('\.')
     if grid_point is not None:
-        kappa_filename += ("-g%d" % grid_point)
+        suffix += ("-g%d" % grid_point)
     if sigma is not None:
-        kappa_filename += "-s" + sigma_str
+        suffix += "-s" + sigma_str
     if filename is not None:
-        kappa_filename += "." + filename
-    kappa_filename += ".dat"
+        suffix += "." + filename
+    suffix += ".dat"
+    kappa_filename += suffix
     print "Kappa",
+    if gamma is not None:
+        print "and gamma",
     if grid_point is not None:
         print "at grid adress %d" % grid_point,
     if sigma is not None:
@@ -398,11 +402,23 @@ def write_kappa(kappa,
             print "at",
         print "sigma %s" % sigma_str,
     print "were written into",
+    if grid_point is not None:
+        print ""
     print "%s" % kappa_filename
     w = open(kappa_filename, 'w')
-    for t, g in zip(temperatures, kappa):
-        w.write("%6.1f %.5f\n" % (t, g))
-    w.close()
+    if gamma is not None:
+        w.write("# temp   kappa          gamma(band1) ...\n")
+        for t, k, g in zip(temperatures, kappa, gamma):
+            w.write("%6.1f %15.7e" % (t, k))
+            for g_band in g:
+                w.write(" %15.7e" % g_band)
+            w.write("\n")
+        w.close()
+    else:
+        w.write("# temp   kappa\n")
+        for t, k in zip(temperatures, kappa):
+            w.write("%6.1f %.5f\n" % (t, k))
+        w.close()
 
 def write_decay_channels(decay_channels,
                          amplitudes_at_q,
@@ -734,6 +750,8 @@ def parse_kappa(filename):
     temps = []
     kappa = []
     for line in f:
+        if line.strip()[0] is "#":
+            continue
         x = line.split()
         temps.append(float(x[0]))
         kappa.append(float(x[1]))

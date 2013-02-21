@@ -214,18 +214,9 @@ class Phono3py:
         lt.set_mesh_numbers()
         lt.set_grid_points(grid_points)
         
-        kappa = lt.get_kappa() # [sigma, grid_point, temperature]
-        temperatures = lt.get_temperatures()
-        mesh = lt.get_mesh_numbers()
-
-        if self._log_level:
-            print "-------------- Total kappa --------------"
-            for sigma, kappa_at_sigma in zip(sigmas, kappa):
-                write_kappa(kappa_at_sigma.sum(axis=0),
-                            temperatures,
-                            mesh,
-                            sigma=sigma,
-                            filename=filename)
+        kappa, gamma = lt.get_kappa() # [sigma, grid_point, temperature]
+        
+        return kappa, gamma
                 
     # def get_decay_channels(self,
     #                        grid_points,
