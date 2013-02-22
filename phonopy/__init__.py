@@ -51,6 +51,7 @@ from phonopy.phonon.animation import Animation
 from phonopy.phonon.modulation import Modulation
 from phonopy.phonon.qpoints_mode import write_yaml as write_yaml_qpoints
 from phonopy.phonon.character_table import CharacterTable
+from phonopy.group_velocity import GroupVelocity
 
 class Phonopy:
     def __init__(self,
@@ -112,6 +113,9 @@ class Phonopy:
 
         # set_character_table
         self._character_table = None
+
+        # set_group_velocity
+        self._group_velocity = None
         
     def get_primitive(self):
         return self._primitive
@@ -435,6 +439,7 @@ class Phonopy:
                           is_symmetry=is_symmetry,
                           is_eigenvectors=is_eigenvectors,
                           is_gamma_center=is_gamma_center,
+                          group_velocity=self._group_velocity,
                           factor=self._factor,
                           symprec=self._symprec)
 
@@ -661,34 +666,35 @@ class Phonopy:
 
     # Q-points mode
     def write_yaml_qpoints(self,
-                           qpoints,
+                           q_points,
                            is_eigenvectors=False,
                            write_dynamical_matrices=False,
                            factor=VaspToTHz):
         
-        write_yaml_qpoints(qpoints,
+        write_yaml_qpoints(q_points,
                            self._primitive,
                            self._dynamical_matrix,
                            is_eigenvectors=is_eigenvectors,
+                           group_velocity=self._group_velocity,
                            write_dynamical_matrices=write_dynamical_matrices,
                            factor=self._factor)
 
     # Animation
     def write_animation(self,
-                        qpoint=None,
+                        q_point=None,
                         anime_type='v_sim',
                         band_index=None,
                         amplitude=None,
                         num_div=None,
                         shift=None,
                         filename=None):
-        if qpoint==None:
+        if q_point==None:
             animation = Animation([0, 0, 0],
                                   self._dynamical_matrix,
                                   self._primitive,
                                   shift=shift)
         else:
-            animation = Animation(qpoint,
+            animation = Animation(q_point,
                                   self._dynamical_matrix,
                                   self._primitive,
                                   shift=shift)
@@ -810,6 +816,17 @@ class Phonopy:
 
     def write_yaml_character_table(self, show_irreps=False):
         self._character_table.write_yaml(show_irreps=show_irreps)
+
+    # Group velocity
+    def set_group_velocity(self,
+                           q_points=None,
+                           q_length=1e-4):
+        self._group_velocity = GroupVelocity(
+            self._dynamical_matrix,
+            self._primitive,
+            q_points=q_points,
+            q_length=q_length,
+            factor=self._factor)
 
     def _set_supercell(self):
         self._supercell = get_supercell(self._unitcell,

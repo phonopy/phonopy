@@ -47,7 +47,7 @@ from phonopy.cui.settings import Settings, PhonopyConfParser
 from phonopy.units import *
 
 
-phonopy_version = "1.6.4"
+phonopy_version = "1.6.4-pre"
 
 # AA is created at http://www.network-science.de/ascii/.
 def print_phononpy():
@@ -99,6 +99,7 @@ parser.set_defaults(
     force_constants_mode=False,
     force_sets_mode=False,
     force_sets_zero_mode=False,
+    gv_delta_q=None,
     is_band_connection=False,
     is_check_symmetry=False,
     is_displacement=False,
@@ -106,6 +107,7 @@ parser.set_defaults(
     is_gamma_center=False,
     is_graph_plot=False,
     is_graph_save=False,
+    is_group_velocity=False,
     is_legend=False,
     is_nac=False,
     is_nodiag=False,
@@ -190,6 +192,11 @@ parser.add_option("--fz", "--force_sets_zero", dest="force_sets_zero_mode",
 parser.add_option("--gc", "--gamma_center", dest="is_gamma_center",
                   action="store_true",
                   help="Set mesh as Gamma center")
+parser.add_option("--gv", "--group_velocity", dest="is_group_velocity",
+                  action="store_true",
+                  help="Calculate group velocities at q-points")
+parser.add_option("--gv_delta_q", dest="gv_delta_q", type="float",
+                  help="Delta-q distance used for group velocity calculation")
 parser.add_option("--irreps", dest="show_irreps",
                   action="store_true",
                   help="Show IR-Reps along with character table")
@@ -540,6 +547,8 @@ if log_level > 0:
         print "Band structure mode"
     if settings.get_run_mode() == 'mesh':
         print "Mesh sampling mode"
+        if settings.get_is_group_velocity():
+            print "  Group velocities are calculated."
     if settings.get_run_mode() == 'anime':
         print "Animation mode"
     if settings.get_run_mode() == 'modulation':
@@ -552,6 +561,8 @@ if log_level > 0:
             print "(dynamical matrices written out)"
         else:
             print
+        if settings.get_is_group_velocity():
+            print "  Group velocities are calculated."
     if settings.get_run_mode() == 'displacements':
         print "Creating displacements"
         if not settings.get_is_plusminus_displacement() == 'auto':
@@ -785,8 +796,9 @@ if settings.get_is_nac():
 
     phonon.set_nac_params(nac_params)
 
-# Get empty dynamical matrix
-dynamical_matrix = phonon.get_dynamical_matrix()
+# Group velocity
+if settings.get_is_group_velocity():
+    phonon.set_group_velocity(q_length=settings.get_group_velocity_delta_q())
 
 # Print cells
 if log_level > 1:
@@ -801,15 +813,15 @@ if log_level > 1:
 # QPOINTS mode
 if settings.get_run_mode() == 'qpoints':
     if settings.get_qpoints():
-        qpoints = settings.get_qpoints()
+        q_points = settings.get_qpoints()
         print "Q-points that will be calculated at:"
-        for q in qpoints:
+        for q in q_points:
             print "    ", q
     else:
         print "Frequencies at q-points given by QPOINTS:"
-        qpoints = file_IO.parse_QPOINTS()
+        q_points = file_IO.parse_QPOINTS()
     phonon.write_yaml_qpoints(
-        qpoints,
+        q_points,
         is_eigenvectors=settings.get_is_eigenvectors(),
         write_dynamical_matrices=settings.get_write_dynamical_matrices(),
         factor=factor)
@@ -839,13 +851,13 @@ elif settings.get_run_mode() == 'band':
 elif settings.get_run_mode() == 'anime':
     anime_type = settings.get_anime_type()
     if anime_type == "v_sim":
-        qpoint = settings.get_anime_qpoint()
+        q_point = settings.get_anime_qpoint()
         amplitude = settings.get_anime_amplitude()
-        phonon.write_animation(qpoint=qpoint,
+        phonon.write_animation(q_point=q_point,
                                anime_type='v_sim',
                                amplitude=amplitude)
         print "Animation type: v_sim"
-        print "q-point: [%6.3f %6.3f %6.3f]" % tuple(qpoint)
+        print "q-point: [%6.3f %6.3f %6.3f]" % tuple(q_point)
     else:
         amplitude = settings.get_anime_amplitude()
         band_index = settings.get_anime_band_index()

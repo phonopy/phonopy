@@ -602,9 +602,11 @@ class PhonopySettings(Settings):
         self._dos_range = { 'min':  None,
                             'max':  None }
         self._fits_Debye_model = False
+        self._gv_delta_q = 1e-4
         self._thermal_atom_pairs = None
         self._is_dos_mode = False
         self._is_force_constants = False
+        self._is_group_velocity = False
         self._is_gamma_center = False
         self._is_plusminus_displacement = 'auto'
         self._is_thermal_displacements = False
@@ -829,6 +831,19 @@ class PhonopySettings(Settings):
         
     def get_character_table_show_irreps(self):
         return self._character_table_show_irreps
+
+    def set_is_group_velocity(self, is_group_velocity):
+        self._is_group_velocity = is_group_velocity
+
+    def get_is_group_velocity(self):
+        return self._is_group_velocity
+
+    def set_group_velocity_delta_q(self, gv_delta_q):
+        self._gv_delta_q = gv_delta_q
+
+    def get_group_velocity_delta_q(self):
+        return self._gv_delta_q
+
         
 class PhonopyConfParser(ConfParser):
     def __init__(self, filename=None, options=None, option_list=None):
@@ -915,6 +930,14 @@ class PhonopyConfParser(ConfParser):
             if opt.dest == 'anime':
                 if self._options.anime:
                     self._confs['anime'] = self._options.anime
+
+            if opt.dest == 'is_group_velocity':
+                if self._options.is_group_velocity:
+                    self._confs['group_velocity'] = '.true.'
+
+            if opt.dest == 'gv_delta_q':
+                if self._options.gv_delta_q:
+                    self._confs['gv_delta_q'] = self._options.gv_delta_q
     
             # Overwrite
             if opt.dest == 'is_check_symmetry':
@@ -1078,6 +1101,12 @@ class PhonopyConfParser(ConfParser):
                 else:
                     self.set_parameter('projection_direction', vals)
 
+            # Group velocity
+            if conf_key == 'group_velocity':
+                self.set_parameter('is_group_velocity', confs['group_velocity'])
+
+            if conf_key == 'gv_delta_q':
+                self.set_parameter('gv_delta_q', float(confs['gv_delta_q']))
 
     def _parse_conf_modulation(self, confs):
         modulation = {}
@@ -1282,4 +1311,12 @@ class PhonopyConfParser(ConfParser):
         if params.has_key('projection_direction'): 
             self._settings.set_projection_direction(
                 params['projection_direction'])
+
+        # Group velocity
+        if params.has_key('is_group_velocity'):
+            if params['is_group_velocity'] == '.true.':
+                self._settings.set_is_group_velocity(True)
+
+        if params.has_key('gv_delta_q'): 
+            self._settings.set_group_velocity_delta_q(params['gv_delta_q'])
             

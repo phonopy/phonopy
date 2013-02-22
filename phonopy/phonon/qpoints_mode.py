@@ -40,6 +40,7 @@ def write_yaml(qpoints,
                cell,
                dynamical_matrix, 
                is_eigenvectors=False,
+               group_velocity=None,
                write_dynamical_matrices=False,
                factor=VaspToTHz):
     num_atom = cell.get_number_of_atoms()
@@ -48,42 +49,46 @@ def write_yaml(qpoints,
     positions = cell.get_scaled_positions()
     lattice = cell.get_cell()
 
-    file = open('qpoints.yaml', 'w')
-    file.write("nqpoint: %-7d\n" % len(qpoints))
-    file.write("natom:   %-7d\n" % num_atom)
-    file.write("atom-info:\n")
-    for mass, name in zip(m, names):
-        file.write("- { name: %2s, mass: %10.5f }\n" % (name, mass))
-    
-    file.write("real-basis:\n")
-    file.write("- [ %20.15f, %20.15f, %20.15f ]\n" % (tuple(lattice[0])))
-    file.write("- [ %20.15f, %20.15f, %20.15f ]\n" % (tuple(lattice[1])))
-    file.write("- [ %20.15f, %20.15f, %20.15f ]\n" % (tuple(lattice[2])))
+    if group_velocity is not None:
+        group_velocity.set_q_points(qpoints)
+        group_velocities = group_velocity.get_group_velocity()
 
-    file.write("position:\n")
+    f = open('qpoints.yaml', 'w')
+    f.write("nqpoint: %-7d\n" % len(qpoints))
+    f.write("natom:   %-7d\n" % num_atom)
+    f.write("atom-info:\n")
+    for mass, name in zip(m, names):
+        f.write("- { name: %2s, mass: %10.5f }\n" % (name, mass))
+    
+    f.write("real-basis:\n")
+    f.write("- [ %20.15f, %20.15f, %20.15f ]\n" % (tuple(lattice[0])))
+    f.write("- [ %20.15f, %20.15f, %20.15f ]\n" % (tuple(lattice[1])))
+    f.write("- [ %20.15f, %20.15f, %20.15f ]\n" % (tuple(lattice[2])))
+
+    f.write("position:\n")
     for pos in positions:
-        file.write("- [ %20.15f, %20.15f, %20.15f ]\n" % (tuple(pos)))
+        f.write("- [ %20.15f, %20.15f, %20.15f ]\n" % (tuple(pos)))
         
 
-    file.write("phonon:\n")
+    f.write("phonon:\n")
 
-    for q in qpoints:
+    for i, q in enumerate(qpoints):
         dynamical_matrix.set_dynamical_matrix(q)
         dm = dynamical_matrix.get_dynamical_matrix()
 
-        file.write("- q-position: [ %12.7f, %12.7f, %12.7f ]\n" % tuple(q))
+        f.write("- q-position: [ %12.7f, %12.7f, %12.7f ]\n" % tuple(q))
         if write_dynamical_matrices:
-            file.write("  dynamical_matrix:\n")
+            f.write("  dynamical_matrix:\n")
             for row in dm:
-                file.write("  - [ ")
-                for i, elem in enumerate(row):
-                    file.write("%15.10f, %15.10f" % (elem.real, elem.imag))
-                    if i == len(row) - 1:
-                        file.write(" ]\n")
+                f.write("  - [ ")
+                for j, elem in enumerate(row):
+                    f.write("%15.10f, %15.10f" % (elem.real, elem.imag))
+                    if j == len(row) - 1:
+                        f.write(" ]\n")
                     else:
-                        file.write(", ")
+                        f.write(", ")
         
-        file.write("  band:\n")
+        f.write("  band:\n")
             
         if is_eigenvectors:
             eigenvalues, eigenvectors = np.linalg.eigh(dm)
@@ -95,28 +100,34 @@ def write_yaml(qpoints,
                 freq = -np.sqrt(-eig)
             else:
                 freq = np.sqrt(eig)
-            file.write("  - # %d\n" % (j+1))
-            file.write("    frequency: %15.10f\n" % (freq * factor))
+            f.write("  - # %d\n" % (j+1))
+            f.write("    frequency: %15.10f\n" % (freq * factor))
+
+            if group_velocity is not None:
+                f.write("    group_velocity: ")
+                f.write("[ %15.7f, %15.7f, %15.7f ]\n" %
+                        tuple(group_velocities[i, j]))
+
 
             if is_eigenvectors:
-                file.write("    eigenvector:\n")
+                f.write("    eigenvector:\n")
                 for k in range(num_atom):
-                    file.write("    - # atom %d\n" % (k+1))
+                    f.write("    - # atom %d\n" % (k+1))
                     for l in (0,1,2):
-                        file.write("      - [ %17.14f, %17.14f ]\n" %
+                        f.write("      - [ %17.14f, %17.14f ]\n" %
                                    (eigenvectors[k*3+l,j].real,
                                     eigenvectors[k*3+l,j].imag))
 
-                file.write("    eigenvector_time_aligned:\n")
+                f.write("    eigenvector_time_aligned:\n")
                 for k in range(num_atom):
-                    file.write("    - # atom %d, freq*sqrt(m) %f, [%f %f %f]\n" %
+                    f.write("    - # atom %d, freq*sqrt(m) %f, [%f %f %f]\n" %
                                ((k+1, freq * factor * np.sqrt(m[k])) + tuple(positions[k])))
                     # Phase of dot(q, r) is added.
                     eig_aligned = eigenvectors[k*3:(k+1)*3, j] * np.exp(2j * np.pi * np.dot(positions[k], q))
                     for l in (0,1,2):
-                        file.write("      - [ %17.14f, %17.14f ] # %7.2f, %7.4f\n" %
+                        f.write("      - [ %17.14f, %17.14f ] # %7.2f, %7.4f\n" %
                                    (eig_aligned[l].real,
                                     eig_aligned[l].imag,
                                     cmath.phase(eig_aligned[l]) / np.pi * 180,
                                     abs(eig_aligned[l])))
-        file.write("\n")
+        f.write("\n")

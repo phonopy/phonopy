@@ -200,7 +200,7 @@ phonon.set_band_structure(bands)
 # Run1
 #
 band_index = 2
-vg = GroupVelocity(phonon.get_dynamical_matrix(), phonon.get_primitive())
+vg = GroupVelocity(phonon.get_dynamical_matrix(), phonon.get_primitive(), q_length=1e-5)
 q_points = band
 
 vg.set_q_points(q_points)
@@ -208,11 +208,11 @@ vg.set_q_points(q_points)
 
 direction = [0, 0, 1]
 unit_n = np.array(direction, dtype=float) / np.linalg.norm(direction)
-velo_001 = np.dot(vg.get_group_velocity()[:, :, band_index], unit_n)
+velo_001 = np.dot(vg.get_group_velocity()[:, band_index, :], unit_n)
 
 direction = [0, 1, 1]
 unit_n = np.array(direction, dtype=float) / np.linalg.norm(direction)
-velo_011 = np.dot(vg.get_group_velocity()[:, :, band_index], unit_n)
+velo_011 = np.dot(vg.get_group_velocity()[:, band_index, :], unit_n)
 
 band = phonon.get_band_structure()
 distances = band[1][0]

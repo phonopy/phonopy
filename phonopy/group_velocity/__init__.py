@@ -121,14 +121,14 @@ def get_group_velocity(q, # q-point
         eigvecs = eigenvectors
         freqs = frequencies
 
-    dD_at_q = np.zeros((3, len(freqs)), dtype=float)
+    dD_at_q = np.zeros((len(freqs), 3), dtype=float)
     for i, dD_i in enumerate(get_dD(np.array(q),
                                     q_length,
                                     dynamical_matrix,
                                     reciprocal_lattice)): # (x, y, z)
-        dD_at_q[i] = [np.vdot(eigvec, np.dot(dD_i, eigvec)).real
+        dD_at_q[:, i] = [np.vdot(eigvec, np.dot(dD_i, eigvec)).real
                      for eigvec in eigvecs.T]
-        dD_at_q[i] *= factor ** 2 / freqs / 2 / (q_length * 2)
+        dD_at_q[:, i] *= factor ** 2 / freqs / 2 / (q_length * 2)
     return dD_at_q
         
 def get_dD(q, q_length, dynamical_matrix, reciprocal_lattice):

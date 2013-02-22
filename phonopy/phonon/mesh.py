@@ -122,6 +122,7 @@ class Mesh:
                  is_symmetry=True,
                  is_eigenvectors=False,
                  is_gamma_center=False,
+                 group_velocity=None,
                  factor=VaspToTHz,
                  symprec=1e-5):
         self._mesh = np.array(mesh)
@@ -139,6 +140,10 @@ class Mesh:
         self._eigenvalues = None
         self._eigenvectors = None
         self._set_eigenvalues()
+
+        self._group_velocities = None
+        if group_velocity is not None:
+            self._set_group_velocities(group_velocity)
 
     def get_mesh_numbers(self):
         return self._mesh
@@ -190,6 +195,11 @@ class Mesh:
                     freq = np.sqrt(eig)
                 f.write("    frequency:  %15.10f\n" % (freq * self._factor))
 
+                if self._group_velocities is not None:
+                    f.write("    group_velocity: ")
+                    f.write("[ %15.7f, %15.7f, %15.7f ]\n" %
+                            tuple(self._group_velocities[i, j]))
+
                 if self._is_eigenvectors:
                     f.write("    eigenvector:\n")
                     for k in range(natom):
@@ -229,3 +239,9 @@ class Mesh:
         
         self._frequencies = np.array(np.sqrt(abs(self._eigenvalues)) *
                                      np.sign(self._eigenvalues)) * self._factor
+
+    def _set_group_velocities(self, group_velocity):
+        group_velocity.set_q_points(self._qpoints)
+        self._group_velocities = group_velocity.get_group_velocity()
+        
+        
