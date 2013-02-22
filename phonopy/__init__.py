@@ -407,6 +407,7 @@ class Phonopy:
             self._primitive,
             is_eigenvectors=is_eigenvectors,
             is_band_connection=is_band_connection,
+            group_velocity=self._group_velocity,
             factor=self._factor)
 
     def get_band_structure(self):
@@ -827,6 +828,10 @@ class Phonopy:
             q_points=q_points,
             q_length=q_length,
             factor=self._factor)
+
+    def get_group_velocity(self, q_point):
+        self._group_velocity.set_q_points([q_point])
+        return self._group_velocity.get_group_velocity()[0]
 
     def _set_supercell(self):
         self._supercell = get_supercell(self._unitcell,

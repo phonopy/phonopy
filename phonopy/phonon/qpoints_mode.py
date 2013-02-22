@@ -105,7 +105,7 @@ def write_yaml(qpoints,
 
             if group_velocity is not None:
                 f.write("    group_velocity: ")
-                f.write("[ %15.7f, %15.7f, %15.7f ]\n" %
+                f.write("[ %13.7f, %13.7f, %13.7f ]\n" %
                         tuple(group_velocities[i, j]))
 
 

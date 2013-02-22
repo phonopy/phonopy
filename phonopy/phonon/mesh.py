@@ -159,6 +159,9 @@ class Mesh:
 
     def get_frequencies(self):
         return self._frequencies
+
+    def get_group_velocities(self):
+        return self._group_velocities
     
     def get_eigenvectors(self):
         """
@@ -197,7 +200,7 @@ class Mesh:
 
                 if self._group_velocities is not None:
                     f.write("    group_velocity: ")
-                    f.write("[ %15.7f, %15.7f, %15.7f ]\n" %
+                    f.write("[ %13.7f, %13.7f, %13.7f ]\n" %
                             tuple(self._group_velocities[i, j]))
 
                 if self._is_eigenvectors:

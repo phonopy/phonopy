@@ -545,6 +545,8 @@ if not magmoms == None:
 if log_level > 0:
     if settings.get_run_mode() == 'band':
         print "Band structure mode"
+        if settings.get_is_group_velocity():
+            print "  Group velocities are calculated."
     if settings.get_run_mode() == 'mesh':
         print "Mesh sampling mode"
         if settings.get_is_group_velocity():

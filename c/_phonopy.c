@@ -237,7 +237,6 @@ static int get_dynamical_matrix_at_q(double *dynamical_matrix_real,
 static PyObject * py_get_thermal_properties(PyObject *self, PyObject *args)
 {
   double temperature;
-  double cutoff; /* Cutoff eigenvalue not to be calculated */
   PyArrayObject* frequencies;
   PyArrayObject* weights;
 

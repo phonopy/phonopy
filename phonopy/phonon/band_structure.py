@@ -63,6 +63,7 @@ class BandStructure:
                  cell,
                  is_eigenvectors=False,
                  is_band_connection=False,
+                 group_velocity=None,
                  factor=VaspToTHz,
                  verbose=False):
         self._dynamical_matrix = dynamical_matrix
@@ -72,6 +73,8 @@ class BandStructure:
         self._is_band_connection = is_band_connection
         if is_band_connection:
             self._is_eigenvectors = True
+        self._group_velocity = group_velocity
+            
         self._paths = [np.array(path) for path in paths]
         self._distances = []
         self._distance = 0.
@@ -96,6 +99,9 @@ class BandStructure:
     def get_frequencies(self):
         return self._frequencies
 
+    def get_group_velocities(self):
+        return self._group_velocities
+    
     def get_unit_conversion_factor(self):
         return self._factor
     
@@ -124,37 +130,44 @@ class BandStructure:
         return plt
 
     def write_yaml(self):
-        file = open('band.yaml', 'w')
+        f = open('band.yaml', 'w')
         natom = self._cell.get_number_of_atoms()
         nqpoint = 0
         for qpoints in self._paths:
             nqpoint += len(qpoints)
-        file.write("nqpoint: %-7d\n" % nqpoint)
-        file.write("npath: %-7d\n" % len(self._paths))
-        file.write("natom: %-7d\n" % (natom))
-        file.write("phonon:\n")
-        for qpoints, distances, frequencies, eigenvectors in zip(
+        f.write("nqpoint: %-7d\n" % nqpoint)
+        f.write("npath: %-7d\n" % len(self._paths))
+        f.write("natom: %-7d\n" % (natom))
+        f.write("phonon:\n")
+        for i, (qpoints, distances, frequencies) in enumerate(zip(
             self._paths,
             self._distances,
-            self._frequencies,
-            self._eigenvectors):
-            for i, q in enumerate(qpoints):
-                file.write("- q-position: [ %12.7f, %12.7f, %12.7f ]\n" % tuple(q))
-                file.write("  distance: %12.7f\n" % distances[i])
-                file.write("  band:\n")
-                for j, freq in enumerate(frequencies[i]):
-                    file.write("  - # %d\n" % (j+1))
-                    file.write("    frequency: %15.10f\n" % freq)
+            self._frequencies)):
+             for j, q in enumerate(qpoints):
+                f.write("- q-position: [ %12.7f, %12.7f, %12.7f ]\n" % tuple(q))
+                f.write("  distance: %12.7f\n" % distances[j])
+                f.write("  band:\n")
+                for k, freq in enumerate(frequencies[j]):
+                    f.write("  - # %d\n" % (k + 1))
+                    f.write("    frequency: %15.10f\n" % freq)
     
+                    if self._group_velocity is not None:
+                        gv = self._group_velocities[i][j, k]
+                        f.write("    group_velocity: ")
+                        f.write("[ %13.7f, %13.7f, %13.7f ]\n" % tuple(gv))
+                        
                     if self._is_eigenvectors:
-                        file.write("    eigenvector:\n")
-                        for k in range(natom):
-                            file.write("    - # atom %d\n" % (k+1))
-                            for l in (0,1,2):
-                                file.write("      - [ %17.14f, %17.14f ]\n" %
-                                           (eigenvectors[i,k*3+l,j].real,
-                                            eigenvectors[i,k*3+l,j].imag))
-                file.write("\n")
+                        eigenvectors = self._eigenvectors[i]
+                        f.write("    eigenvector:\n")
+                        for l in range(natom):
+                            f.write("    - # atom %d\n" % (l + 1))
+                            for m in (0, 1, 2):
+                                f.write("      - [ %17.14f, %17.14f ]\n" %
+                                        (eigenvectors[j, l * 3 + m, k].real,
+                                         eigenvectors[j, l * 3 + m, k].imag))
+
+                        
+                f.write("\n")
 
     def _set_initial_point(self, qpoint):
         self._lastq = qpoint.copy()
@@ -168,6 +181,7 @@ class BandStructure:
     def _set_band(self, verbose=False):
         eigvals = []
         eigvecs = []
+        group_velocities = []
         distances = []
         is_nac = self._dynamical_matrix.is_nac()
 
@@ -183,20 +197,24 @@ class BandStructure:
             
             (distances_on_path,
              eigvals_on_path,
-             eigvecs_on_path) = self._solve_dm_on_path(path,
-                                                       q_direction,
-                                                       verbose)
+             eigvecs_on_path,
+             gv_on_path) = self._solve_dm_on_path(path,
+                                                  q_direction,
+                                                  verbose)
 
             eigvals.append(np.array(eigvals_on_path))
             if self._is_eigenvectors:
                 eigvecs.append(np.array(eigvecs_on_path))
-            else:
-                eigvecs.append(None)
+            if self._group_velocity is not None:
+                group_velocities.append(np.array(gv_on_path))
             distances.append(np.array(distances_on_path))
             self._special_point.append(self._distance)
 
         self._eigenvalues = eigvals
-        self._eigenvectors = eigvecs
+        if self._is_eigenvectors:
+            self._eigenvectors = eigvecs
+        if self._group_velocity is not None:
+            self._group_velocities = group_velocities
         self._distances = distances
         
         self._set_frequencies()
@@ -206,6 +224,12 @@ class BandStructure:
         distances_on_path = []
         eigvals_on_path = []
         eigvecs_on_path = []
+        gv_on_path = []
+
+        if self._group_velocity is not None:
+            self._group_velocity.set_q_points(path)
+            gv = self._group_velocity.get_group_velocity()
+        
         for i, q in enumerate(path):
             self._shift_point(q)
             distances_on_path.append(self._distance)
@@ -233,13 +257,18 @@ class BandStructure:
                                                           band_order)
                 eigvals_on_path.append(eigvals[band_order])
                 eigvecs_on_path.append((eigvecs.T)[band_order].T)
+
+                if self._group_velocity is not None:
+                    gv_on_path.append(gv[i][band_order])
                 prev_eigvecs = eigvecs
             else:
                 eigvals_on_path.append(eigvals)
                 if self._is_eigenvectors:
                     eigvecs_on_path.append(eigvecs)
+                if self._group_velocity is not None:
+                    gv_on_path.append(gv[i])
 
-        return distances_on_path, eigvals_on_path, eigvecs_on_path
+        return distances_on_path, eigvals_on_path, eigvecs_on_path, gv_on_path
 
     def _set_frequencies(self):
         frequencies = []
@@ -252,7 +281,3 @@ class BandStructure:
             #     freqs = [np.sqrt(x) if x > 0 else -np.sqrt(-x) for x in eigs])
             # frequencies.append(np.array(freqs_on_path) * self._factor)
         self._frequencies = frequencies
-
-
-
-
