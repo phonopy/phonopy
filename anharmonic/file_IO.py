@@ -375,12 +375,15 @@ def write_fwhm(gp,
 def write_kappa(kappa,
                 temperatures,
                 mesh,
+                mesh_divisors=None,
                 gamma=None,
                 grid_point=None,
                 sigma=None,
                 filename=None):
     kappa_filename = "kappa"
     suffix = "-m%d%d%d" % tuple(mesh)
+    if (mesh_divisors != 1).any():
+        suffix += "-d%d%d%d" % tuple(mesh_divisors)
     sigma_str = ("%f" % sigma).rstrip('0').rstrip('\.')
     if grid_point is not None:
         suffix += ("-g%d" % grid_point)

@@ -199,6 +199,7 @@ class Phono3py:
                                  t_min=0,
                                  t_step=10,
                                  grid_points=None,
+                                 mesh_divisors=None,
                                  no_kappa_stars=False,
                                  gamma_option=0,
                                  filename=None):
@@ -207,11 +208,11 @@ class Phono3py:
                      t_max=t_max,
                      t_min=t_min,
                      t_step=t_step,
+                     mesh_divisors=mesh_divisors,
                      no_kappa_stars=no_kappa_stars,
                      gamma_option=gamma_option,
                      log_level=self._log_level,
                      filename=filename)
-        lt.set_mesh_numbers()
         lt.set_grid_points(grid_points)
         
         kappa, gamma = lt.get_kappa() # [sigma, grid_point, temperature]

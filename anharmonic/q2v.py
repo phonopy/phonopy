@@ -124,6 +124,9 @@ class PhononPhonon:
 
     def get_symmetry(self):
         return self._symmetry
+
+    def get_triplets_at_q(self):
+        return self._triplets_at_q
     
     def get_unit_conversion_factor(self):
         return self._conversion_factor

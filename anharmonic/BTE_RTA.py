@@ -4,7 +4,7 @@ from anharmonic.im_self_energy import get_gamma
 from phonopy.group_velocity import get_group_velocity
 from phonopy.units import Kb, THzToEv, EV, THz, Angstrom
 from anharmonic.file_IO import parse_kappa, write_kappa
-from anharmonic.triplets import get_grid_address
+from anharmonic.triplets import get_grid_address, reduce_grid_points
 
 class BTE_RTA:
     def __init__(self,
@@ -13,7 +13,9 @@ class BTE_RTA:
                  t_max=1500,
                  t_min=0,
                  t_step=10,
+                 mesh_divisors=None,
                  no_kappa_stars=False,
+                 sort_by_process=False,
                  gamma_option=0,
                  log_level=0,
                  filename=None):
@@ -23,7 +25,7 @@ class BTE_RTA:
         self._t_min = t_min
         self._t_step = t_step
         self._no_kappa_stars = no_kappa_stars
-        print "No kappa", self._no_kappa_stars
+        self._sort_by_process = sort_by_process
         self._gamma_option = gamma_option
         self._log_level = log_level
         self._filename = filename
@@ -33,6 +35,7 @@ class BTE_RTA:
                                        self._t_step)
         self._primitive = self._pp.get_primitive()
         self._mesh = None
+        self._mesh_divisors = None
         self._grid_points = None
         self._grid_weights = None
         self._grid_address = None
@@ -42,30 +45,62 @@ class BTE_RTA:
 
         self._gamma = None
 
-    def set_mesh_numbers(self, mesh=None):
+        self.set_mesh_numbers(mesh_divisors=mesh_divisors)
+
+    def set_mesh_numbers(self, mesh=None, mesh_divisors=None):
         if mesh is None:
             self._mesh = self._pp.get_mesh_numbers()
         else:
-            self._mesh = np.array(mesh)
+            self._mesh = np.array(mesh, dtype=int)
+
+        if mesh_divisors is None:
+            self._mesh_divisors = np.array([1, 1, 1], dtype=int)
+        else:
+            self._mesh_divisors = []
+            for m, n in zip(self._mesh, mesh_divisors):
+                if m % n == 0:
+                    self._mesh_divisors.append(n)
+                else:
+                    self._mesh_divisors.append(1)
+            self._mesh_divisors = np.array(self._mesh_divisors, dtype=int)
+
+            if (self._mesh_divisors != mesh_divisors).any():
+                print "Mesh numbers are not dividable by mesh divisors."
+        if self._log_level:
+            print ("Lifetime sampling mesh: [ %d %d %d ]" %
+                   tuple(self._mesh / self._mesh_divisors))
 
     def get_mesh_numbers(self):
         return self._mesh
         
     def set_grid_points(self, grid_points=None):
-        if grid_points is None:
-            if self._no_kappa_stars:
-                self._grid_points = range(np.prod(self._mesh))
-            else:
-                (grid_mapping_table,
-                 self._grid_address) = spg.get_ir_reciprocal_mesh(
-                    self._mesh,
-                    self._primitive)
-                self._grid_points = np.unique(grid_mapping_table)
-                self._grid_weights = [np.sum(grid_mapping_table == g)
-                                      for g in self._grid_points]
-        else:
+        if grid_points is not None: # Specify grid points
             self._grid_address = get_grid_address(self._mesh)
-            self._grid_points = grid_points
+            dense_grid_points = grid_points
+            self._grid_points = reduce_grid_points(self._mesh_divisors,
+                                                   self._grid_address,
+                                                   dense_grid_points)
+        elif self._no_kappa_stars: # All grid points
+            dense_grid_points = range(np.prod(self._mesh))
+            self._grid_points = reduce_grid_points(self._mesh_divisors,
+                                                   self._grid_address,
+                                                   dense_grid_points)
+        else: # Automatic sampling
+            (grid_mapping_table,
+             self._grid_address) = spg.get_ir_reciprocal_mesh(self._mesh,
+                                                              self._primitive)
+            dense_grid_points = np.unique(grid_mapping_table)
+            dense_grid_weights = [np.sum(grid_mapping_table == g)
+                                  for g in dense_grid_points]
+
+            self._grid_points, self._grid_weights = reduce_grid_points(
+                self._mesh_divisors,
+                self._grid_address,
+                dense_grid_points,
+                dense_grid_weights)
+
+            assert self._grid_weights.sum() == np.prod(self._mesh /
+                                                       self._mesh_divisors)
 
     def set_temperatures(self, temperatures):
         self._temperatures = temperatures
@@ -77,9 +112,10 @@ class BTE_RTA:
         self._gamma = gamma
     
     def get_kappa(self):
-        unit_to_WmK = (THz * Angstrom) ** 2 / (Angstrom ** 3) * EV / THz / 2 / np.pi
+        unit_to_WmK = ((THz * Angstrom) ** 2 / (Angstrom ** 3) * EV / THz /
+                       (2 * np.pi)) # 2pi comes from definition of lifetime.
         volume = self._primitive.get_volume()
-        num_grid = np.prod(self._mesh)
+        num_grid = np.prod(self._mesh / self._mesh_divisors)
         conversion_factor = unit_to_WmK / volume / num_grid
 
         freq_conv_factor = self._pp.get_frequency_unit_conversion_factor()
@@ -125,7 +161,7 @@ class BTE_RTA:
                 
             gv_sum2 = np.zeros(len(self._pp.get_frequencies()), dtype=float)
             for unit_n in rot_unit_n:
-                gv_sum2 += np.dot(unit_n, gv) ** 2
+                gv_sum2 += np.dot(gv, unit_n) ** 2
 
             self._show_log(grid_point, gv, rot_unit_n)
     
@@ -144,6 +180,7 @@ class BTE_RTA:
                     write_kappa(kappa[j, i].sum(axis=1),
                                 self._temperatures,
                                 self._mesh,
+                                mesh_divisors=self._mesh_divisors,
                                 gamma=gamma[j, i],
                                 grid_point=grid_point,
                                 sigma=sigma,
@@ -156,6 +193,7 @@ class BTE_RTA:
                     write_kappa(kappa_at_sigma.sum(axis=0).sum(axis=1),
                                 self._temperatures,
                                 self._mesh,
+                                mesh_divisors=self._mesh_divisors,
                                 sigma=sigma,
                                 filename=self._filename)
 
@@ -174,7 +212,6 @@ class BTE_RTA:
 
             if self._gamma is None:
                 gamma[j, i] = self._get_gamma(sigma)
-            
             for k in range(len(self._temperatures)):
                 for l in range(len(self._pp.get_frequencies())):
                     if gamma[j, i, k, l] > 0:
@@ -201,11 +238,12 @@ class BTE_RTA:
     def _get_gamma(self, sigma):
         freq_conv_factor = self._pp.get_frequency_unit_conversion_factor()
         unit_conversion = self._pp.get_unit_conversion_factor()
+        freqs = self._pp.get_frequencies()
+        cutoff_freq = self._pp.get_cutoff_frequency()
+
         (amplitude_at_q,
          weights_at_q,
          frequencies_at_q) = self._pp.get_amplitude()
-        freqs = self._pp.get_frequencies()
-        cutoff_freq = self._pp.get_cutoff_frequency()
 
         gamma = -1 * np.ones((len(self._temperatures), len(freqs)), dtype=float)
 
@@ -251,6 +289,43 @@ class BTE_RTA:
 
         return rot_unit_n
 
+    def _sort_normal_umklapp(self):
+        normal_a = []
+        normal_w = []
+        normal_f = []
+        umklapp_a = []
+        umklapp_w = []
+        umklapp_f = []
+        (amplitude_at_q,
+         weights_at_q,
+         frequencies_at_q) = self._pp.get_amplitude()
+        triplets_at_q = self._pp.get_triplets_at_q()
+        for a, w, f, g3 in zip(amplitude_at_q,
+                               weights_at_q,
+                               frequencies_at_q,
+                               triplets_at_q):
+            sum_q = (self._grid_address[g3[0]] +
+                     self._grid_address[g3[1]] +
+                     self._grid_address[g3[2]])
+            if (sum_q == 0).all():
+                normal_a.append(a)
+                normal_w.append(w)
+                normal_f.append(f)
+                print "N",
+            else:
+                umklapp_a.append(a)
+                umklapp_w.append(w)
+                umklapp_f.append(f)
+                print "U",
+
+        print
+        return ((np.array(normal_a, dtype=float),
+                 np.array(normal_w, dtype=int),
+                 np.array(normal_f, dtype=float)),
+                (np.array(umklapp_a, dtype=float),
+                 np.array(umklapp_w, dtype=int),
+                 np.array(umklapp_f, dtype=float)))
+    
     def _show_log(self, grid_point, group_velocity, rot_unit_n):
         if self._log_level:
             print "----- Partial kappa at grid address %d -----" % grid_point

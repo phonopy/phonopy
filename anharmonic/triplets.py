@@ -67,3 +67,29 @@ def get_ir_grid_points(mesh, primitive):
     ir_weights = np.array([np.sum(grid_mapping_table == g)
                            for g in ir_grid_indices])
     return ir_grid_indices, ir_weights
+
+def reduce_grid_points(mesh_divisors,
+                       grid_address,
+                       dense_grid_points,
+                       dense_grid_weights=None):
+    divisors = np.array(mesh_divisors, dtype=int)
+    if (divisors == 1).all():
+        grid_points = np.array(dense_grid_points, dtype=int)
+        if dense_grid_weights is not None:
+            grid_weights = np.array(dense_grid_weights, dtype=int)
+    else:
+        grid_points = []
+        grid_weights = []
+        for i, dgp in enumerate(dense_grid_points):
+            if (grid_address[dgp] % divisors == 0).all():
+                grid_points.append(dgp)
+                if dense_grid_weights is not None:
+                    grid_weights.append(dense_grid_weights[i])
+
+        grid_points = np.array(grid_points, dtype=int)
+        grid_weights = np.array(grid_weights, dtype=int)
+
+    if dense_grid_weights is None:
+        return grid_points
+    else:
+        return grid_points, grid_weights

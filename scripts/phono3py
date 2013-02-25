@@ -59,6 +59,7 @@ from anharmonic.displacement_fc3 import get_third_order_displacements
 from anharmonic.settings import Phono3pyConfParser
 from anharmonic import Phono3py, JointDOS, get_gruneisen_parameters, \
     get_ir_grid_points
+from anharmonic.triplets import get_grid_address, reduce_grid_points
 
 # AA is created at http://www.network-science.de/ascii/.
 def print_phono3py():
@@ -112,6 +113,7 @@ parser.set_defaults(amplitude=None,
                     is_Peierls=False,
                     log_level=0,
                     mesh_numbers=None,
+                    mesh_divisors=None,
                     multiple_sigmas=None,
                     no_kappa_stars=False,
                     q_direction=None,
@@ -214,13 +216,18 @@ parser.add_option("--jdos",
                   dest="is_joint_dos",
                   action="store_true",
                   help="Calculate joint density of states")
-parser.add_option("--lw", "--linewidth", dest="is_linewidth",
+parser.add_option("--lw", "--linewidth",
+                  dest="is_linewidth",
                   action="store_true",
                   help="Calculate linewidths")
 parser.add_option("--mesh",
                   dest="mesh_numbers",
                   type="string",
                   help="Mesh numbers")
+parser.add_option("--md", "--mesh_divisors",
+                  dest="mesh_divisors",
+                  type="string",
+                  help="Divisors for mesh numbers")
 parser.add_option("--nac", dest="is_nac",
                   action="store_true",
                   help="Non-analytical term correction")
@@ -435,15 +442,25 @@ else:
         print "---------------------------------------------------------------------------"
         mesh = settings.get_mesh_numbers()
         if mesh is None:
-            print "To write grid addresses, mesh numbers have to be specified."
+            print "To write grid points, mesh numbers have to be specified."
         else:
-            print "Ir-grid addresses are written into ir_grid_address.yaml."
-            grid_address, weights = get_ir_grid_points(mesh, primitive)
-            w = open("ir_grid_address.yaml", 'w')
+            print "Ir-grid points are written into ir_grid_points.yaml."
+            grid_points, weights = get_ir_grid_points(mesh, primitive)
+            w = open("ir_grid_points.yaml", 'w')
             w.write("mesh: [ %d, %d, %d ]\n" % tuple(mesh))
-            w.write("num_ir_grid_address: %d\n" % len(grid_address))
-            w.write("ir_grid_address:  # [address, weight]\n")
-            for g, weight in zip(grid_address, weights):
+            if settings.get_mesh_divisors() is None:
+                w.write("mesh_divisors: [ 1, 1, 1 ]\n")
+            else:
+                w.write("mesh_divisors: [ %d, %d, %d ]\n" %
+                        tuple(settings.get_mesh_divisors()))
+                grid_points, weights = reduce_grid_points(
+                    settings.get_mesh_divisors(),
+                    get_grid_address(mesh),
+                    grid_points,
+                    weights)
+            w.write("num_reduced_ir_grid_points: %d\n" % len(grid_points))
+            w.write("ir_grid_points:  # [address, weight]\n")
+            for g, weight in zip(grid_points, weights):
                 w.write("- [ %d, %d ]\n" % (g, weight))
         sys.exit(0)
             
@@ -630,7 +647,7 @@ else:
             
         if log_level:
             print "------ Phonon-phonon ------"
-            print "Mesh:", mesh
+            print "Mesh sampling: [ %d %d %d ]" % tuple(mesh)
             if grid_points is not None:
                 print "Grid points to be calculated:", grid_points
             sys.stdout.flush()
@@ -738,6 +755,7 @@ else:
                     t_min=settings.get_min_temperature(),
                     t_step=settings.get_temperature_step(),
                     grid_points=grid_points,
+                    mesh_divisors=settings.get_mesh_divisors(),
                     no_kappa_stars=settings.get_no_kappa_stars(),
                     gamma_option=options.gamma_option,
                     filename=options.output_filename)

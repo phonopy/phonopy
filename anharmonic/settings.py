@@ -10,9 +10,10 @@ class Phono3pySettings(Settings):
         self._q_direction = None
         self._is_bterta = False
         self._is_linewidth = False
-        self._qpoints = [[0, 0, 0]]
+        self._mesh_divisors = None
         self._multiple_sigmas = None
         self._no_kappa_stars = False
+        self._qpoints = [[0, 0, 0]]
         self._temperatures = None
         
     def set_supercell_matrix_extra(self, matrix):
@@ -69,6 +70,12 @@ class Phono3pySettings(Settings):
     def get_temperatures(self):
         return self._temperatures
 
+    def set_mesh_divisors(self, mesh_divisors):
+        self._mesh_divisors = mesh_divisors
+
+    def get_mesh_divisors(self):
+        return self._mesh_divisors
+
 
 
 class Phono3pyConfParser(ConfParser):
@@ -116,6 +123,10 @@ class Phono3pyConfParser(ConfParser):
             if opt.dest == 'temperatures':
                 if self._options.temperatures is not None:
                     self._confs['temperatures'] = self._options.temperatures
+
+            if opt.dest == 'mesh_divisors':
+                if self._options.mesh_divisors is not None:
+                    self._confs['mesh_divisors'] = self._options.mesh_divisors
 
 
     def _parse_conf(self):
@@ -180,10 +191,18 @@ class Phono3pyConfParser(ConfParser):
             if conf_key == 'temperatures':
                 vals = [fracval(x) for x in confs['temperatures'].split()]
                 if len(vals) < 1:
-                    self.setting_error("Mutiple sigmas are incorrectly set.")
+                    self.setting_error("Temperatures are incorrectly set.")
                 else:
                     self.set_parameter('temperatures', vals)
 
+            if conf_key == 'mesh_divisors':
+                vals = [int(x) for x in confs['mesh_divisors'].split()]
+                if len(vals) == 1:
+                    self.set_parameter('mesh_divisors', vals * 3)
+                elif len(vals) == 3:
+                    self.set_parameter('mesh_divisors', vals)
+                else:
+                    self.setting_error("Mesh divisors are incorrectly set.")
 
     def _set_settings(self):
         ConfParser.set_settings(self)
@@ -224,6 +243,10 @@ class Phono3pyConfParser(ConfParser):
         # Temperatures
         if params.has_key('temperatures'):
             self._settings.set_temperatures(params['temperatures'])
+
+        # Divisors for mesh numbers
+        if params.has_key('mesh_divisors'):
+            self._settings.set_mesh_divisors(params['mesh_divisors'])
 
         
 
