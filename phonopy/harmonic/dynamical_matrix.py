@@ -61,9 +61,11 @@ class DynamicalMatrix:
                  symprec=1e-5):
         self._scell = supercell
         self._pcell = primitive
-        self._p2s_map = primitive.get_primitive_to_supercell_map()
-        self._s2p_map = primitive.get_supercell_to_primitive_map()
-        self._p2p_map = primitive.get_primitive_to_primitive_map()
+        self._p2s_map = np.array(primitive.get_primitive_to_supercell_map())
+        self._s2p_map = np.array(primitive.get_supercell_to_primitive_map())
+        p2p_map = primitive.get_primitive_to_primitive_map()
+        self._p2p_map = np.array([p2p_map[self._s2p_map[i]]
+                                  for i in range(len(self._s2p_map))])
         self._force_constants = force_constants
         self._freq_scale = frequency_scale_factor
         self._symprec = symprec
@@ -185,8 +187,8 @@ class DynamicalMatrix:
                                 vectors,
                                 multiplicity,
                                 mass,
-                                np.array(self._s2p_map),
-                                np.array(self._p2s_map))
+                                self._s2p_map,
+                                self._p2s_map)
         dm = dynamical_matrix_real + dynamical_matrix_image * 1j
         self._dynamical_matrix = (dm + dm.conj().transpose()) / 2
 
@@ -199,8 +201,6 @@ class DynamicalMatrixNAC(DynamicalMatrix):
                  supercell,
                  primitive,
                  force_constants,
-                 nac_params=None,
-                 method='wang',
                  frequency_scale_factor=None,
                  symprec=1e-5):
 
@@ -211,17 +211,28 @@ class DynamicalMatrixNAC(DynamicalMatrix):
                                  frequency_scale_factor=frequency_scale_factor,
                                  symprec=1e-5)
         self._bare_force_constants = self._force_constants.copy()
-        self._method = method
-        self._nac_params = nac_params
+        self._method = None
+        self._nac_params = None
         self._nac = True
+
 
     def set_nac_params(self, nac_params, method='wang'):
         self._nac_params = nac_params
         self._method = method
 
+        self._born = np.array(self._nac_params['born'])
+        factor = self._nac_params['factor']
+        if (isinstance(factor, list) or
+            isinstance(factor, tuple)):
+            self._unit_conversion = factor[0]
+            self._damping_factor = factor[1]
+        else:
+            self._unit_conversion = factor
+            self._damping_factor = DAMPING_FACTOR
+        self._dielectric = np.array(self._nac_params['dielectric'])
+
     def set_dynamical_matrix(self, q_red, q_direction=None, verbose=False):
         num_atom = self._pcell.get_number_of_atoms()
-        nac_q = np.zeros((num_atom * 3, num_atom * 3), dtype=float)
 
         if q_direction==None:
             q = np.dot(q_red, np.linalg.inv(self._pcell.get_cell()).T)
@@ -232,50 +243,57 @@ class DynamicalMatrixNAC(DynamicalMatrix):
                 ((not q_direction==None) and
                  np.abs(q_direction).sum() < self._symprec):
             self._force_constants = self._bare_force_constants.copy()
-            DynamicalMatrix.set_dynamical_matrix(self, np.array(q_red), verbose)
+            DynamicalMatrix.set_dynamical_matrix(self, q_red, verbose)
             return False
     
-        born = np.array(self._nac_params['born'])
-        factor = self._nac_params['factor']
-        if (isinstance(factor, list) or
-            isinstance(factor, tuple)):
-            unit_conversion = factor[0]
-            damping_factor = factor[1]
-        else:
-            unit_conversion = factor
-            damping_factor = DAMPING_FACTOR
-            
-        dielectric = np.array(self._nac_params['dielectric'])
         volume = self._pcell.get_volume()
-        m = self._pcell.get_masses()
-        constant = unit_conversion * 4.0 * np.pi / volume \
-            / np.dot(q, np.dot(dielectric, q))
-        charge_sum = self._get_charge_sum(num_atom, q, born)
+        constant = self._unit_conversion * 4.0 * np.pi / volume \
+            / np.dot(q, np.dot(self._dielectric, q))
+
+
 
         # Parlinski method
         if self._method=='parlinski':
+            charge_sum = self._get_charge_sum(num_atom, q)
+            nac_q = np.zeros((num_atom * 3, num_atom * 3), dtype=float)
+            m = self._pcell.get_masses()
             q_distance = np.array(q_red) - np.array(q_red).round()
             constant *= \
-                np.exp(- np.dot(q_distance, q_distance) / damping_factor ** 2)
+                np.exp(- np.dot(q_distance, q_distance) /
+                         self._damping_factor ** 2)
             for i in range(num_atom):
                 for j in range(num_atom):
                     nac_q[ i*3:(i+1)*3, j*3:(j+1)*3 ] = \
                         charge_sum[ i, j ] * constant / np.sqrt(m[i] * m[j])
 
-            DynamicalMatrix.set_dynamical_matrix(self, np.array(q_red), verbose)
+            DynamicalMatrix.set_dynamical_matrix(self, q_red, verbose)
             self._dynamical_matrix += nac_q
 
         # Wang method (J. Phys.: Condens. Matter 22 (2010) 202201)
         else:
-            for i in range(num_atom):
-                for j in range(num_atom):
-                    nac_q[ i*3:(i+1)*3, j*3:(j+1)*3 ] = \
-                        charge_sum[ i, j ] * constant
-            self._set_NAC_force_constants(nac_q)
+            fc = self._bare_force_constants.copy()
+            try:
+                import phonopy._phonopy as phonoc
+                phonoc.nac_force_constants(fc,
+                                           q,
+                                           self._born,
+                                           self._s2p_map,
+                                           self._p2p_map,
+                                           num_atom,
+                                           constant)
+            except ImportError:
+                charge_sum = self._get_charge_sum(num_atom, q)
+                nac_q = np.zeros((num_atom * 3, num_atom * 3), dtype=float)
+                for i in range(num_atom):
+                    for j in range(num_atom):
+                        nac_q[ i*3:(i+1)*3, j*3:(j+1)*3 ] = \
+                            charge_sum[ i, j ] * constant
+                self._set_NAC_force_constants(fc, nac_q)
+
+            self._force_constants = fc
             DynamicalMatrix.set_dynamical_matrix(self, q_red, verbose)
 
-    def _set_NAC_force_constants(self, nac_q):
-        fc = self._bare_force_constants.copy()
+    def _set_NAC_force_constants(self, fc, nac_q):
         N = (self._scell.get_number_of_atoms() /
              self._pcell.get_number_of_atoms())
         for s1 in range(self._scell.get_number_of_atoms()):
@@ -285,20 +303,19 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             # only used.
             if not (s1==self._s2p_map[ s1 ]):
                 continue
-            p1 = self._p2p_map[ self._s2p_map[ s1 ] ]
+            p1 = self._p2p_map[s1]
             for s2 in range(self._scell.get_number_of_atoms()):            
-                p2 = self._p2p_map[ self._s2p_map[ s2 ] ]
+                p2 = self._p2p_map[s2]
                 fc[ s1, s2 ] += nac_q[ p1*3:(p1+1)*3, p2*3:(p2+1)*3 ] / N
-        self._force_constants = fc
 
-    def _get_charge_sum(self, num_atom, q, born):
+    def _get_charge_sum(self, num_atom, q):
         charge_sum = np.zeros((num_atom, num_atom, 3, 3), dtype=float)
         for i in range(num_atom):
             for j in range(num_atom):
                 for a in (0, 1, 2):
                     for b in (0, 1, 2):
                         charge_sum[ i, j, a, b ] = \
-                            np.dot(q, born[i, :, a]) * np.dot(q, born[j, :, b])
+                            np.dot(q, self._born[i, :, a]) * np.dot(q, self._born[j, :, b])
         return charge_sum
 
 

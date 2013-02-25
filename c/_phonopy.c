@@ -41,6 +41,7 @@
 
 /* Build dynamical matrix */
 static PyObject * py_get_dynamical_matrix(PyObject *self, PyObject *args);
+static PyObject * py_get_nac_force_constants(PyObject *self, PyObject *args);
 static PyObject * py_get_thermal_properties(PyObject *self, PyObject *args);
 static PyObject * py_distribute_fc2(PyObject *self, PyObject *args);
 static PyObject * py_get_rotated_forces(PyObject *self, PyObject *args);
@@ -55,6 +56,17 @@ static int get_dynamical_matrix_at_q(double *dynamical_matrix_real,
 				     const double *mass,
 				     const int *s2p_map, 
 				     const int *p2s_map);
+static void set_nac_force_constants(double *fc,
+				    const double *charge_sum,
+				    const int num_patom,
+				    const int num_satom,
+				    const int *p2p_map_int,
+				    const int *s2p_map_int);
+static void get_charge_sum(double *charge_sum,
+			   const int num_patom,
+			   const double factor,
+			   const double q_vector[3],
+			   const double *born);
 static double get_free_energy_omega(const double temperature,
 				    const double omega);
 static double get_entropy_omega(const double temperature,
@@ -83,6 +95,7 @@ static int nint(const double a);
 
 static PyMethodDef functions[] = {
   {"dynamical_matrix", py_get_dynamical_matrix, METH_VARARGS, "Dynamical matrix"},
+  {"nac_force_constants", py_get_nac_force_constants, METH_VARARGS, "NAC force constants"},
   {"thermal_properties", py_get_thermal_properties, METH_VARARGS, "Thermal properties"},
   {"distribute_fc2", py_distribute_fc2, METH_VARARGS, "Distribute force constants"},
   {"rotated_forces", py_get_rotated_forces, METH_VARARGS, "Rotate forces following site-symmetry"},
@@ -214,16 +227,16 @@ static int get_dynamical_matrix_at_q(double *dynamical_matrix_real,
 
 	for (l = 0; l < 3; l++) {
 	  for (m = 0; m < 3; m++) {
-	    dm_real[l][m] += force_constants[ p2s_map[i] * d_super*9 + k*9 + l*3 + m ] * cos_phase / mass_sqrt;
-	    dm_imag[l][m] += force_constants[ p2s_map[i] * d_super*9 + k*9 + l*3 + m ] * sin_phase / mass_sqrt;
+	    dm_real[l][m] += force_constants[p2s_map[i] * d_super*9 + k*9 + l*3 + m] * cos_phase / mass_sqrt;
+	    dm_imag[l][m] += force_constants[p2s_map[i] * d_super*9 + k*9 + l*3 + m] * sin_phase / mass_sqrt;
 	  }
 	}
       }
       
       for (k = 0; k < 3; k++) {
 	for (l = 0; l < 3; l++) {
-	  dynamical_matrix_real[ (i*3 + k) * d_prim * 3 + j*3 + l ] += dm_real[k][l];
-	  dynamical_matrix_image[ (i*3 + k) * d_prim * 3 + j*3 + l ] += dm_imag[k][l];
+	  dynamical_matrix_real[(i*3 + k) * d_prim * 3 + j*3 + l] += dm_real[k][l];
+	  dynamical_matrix_image[(i*3 + k) * d_prim * 3 + j*3 + l] += dm_imag[k][l];
 	}
       }
     }
@@ -232,6 +245,125 @@ static int get_dynamical_matrix_at_q(double *dynamical_matrix_real,
   return 0;
 }
 
+
+static PyObject * py_get_nac_force_constants(PyObject *self, PyObject *args)
+{
+  PyArrayObject* force_constants;
+  PyArrayObject* q_vector;
+  PyArrayObject* born;
+  PyArrayObject* s2p_map;
+  PyArrayObject* p2p_map;
+  double factor;
+  int num_patom;
+  
+
+  if (!PyArg_ParseTuple(args, "OOOOOid",
+			&force_constants,
+			&q_vector,
+			&born,
+			&s2p_map,
+			&p2p_map,
+			&num_patom,
+			&factor))
+    return NULL;
+
+  double* fc = (double*)force_constants->data;
+  const double* q = (double*)q_vector->data;
+  const double* z = (double*)born->data;
+  const long* s2p_map_long = (long*)s2p_map->data;
+  const long* p2p_map_long = (long*)p2p_map->data;
+  const int num_satom = s2p_map->dimensions[0];
+  int *s2p_map_int, *p2p_map_int;
+  int i, n;
+  double *charge_sum;
+
+  charge_sum = (double*) malloc(sizeof(double) * num_patom * num_patom * 9);
+  n = num_satom / num_patom;
+
+  s2p_map_int = (int*) malloc(num_satom * sizeof(int));
+  p2p_map_int = (int*) malloc(num_satom * sizeof(int));
+  for (i = 0; i < num_satom; i++) {
+    s2p_map_int[i] = (int)s2p_map_long[i];
+    p2p_map_int[i] = (int)p2p_map_long[i];
+  }
+
+  get_charge_sum(charge_sum, num_patom, factor / n, q, z);
+  set_nac_force_constants(fc,
+			  charge_sum,
+			  num_patom,
+			  num_satom,
+			  p2p_map_int,
+			  s2p_map_int);
+
+  free(s2p_map_int);
+  free(p2p_map_int);
+  free(charge_sum);
+
+  Py_RETURN_NONE;
+}
+
+static void set_nac_force_constants(double *fc,
+				    const double *charge_sum,
+				    const int num_patom,
+				    const int num_satom,
+				    const int *p2p_map_int,
+				    const int *s2p_map_int)
+{
+  int i, j, k, l, p1, p2;
+  
+  for (i = 0; i < num_satom; i++) {
+    if (i == s2p_map_int[i]) {
+      p1 = p2p_map_int[i];
+      for (j = 0; j < num_satom; j++) {
+	p2 = p2p_map_int[j];
+	for (k = 0; k < 3; k++) {
+	  for (l = 0; l < 3; l++) {
+	    fc[i * num_satom * 9 + j * 9 + k * 3 + l] +=
+	      charge_sum[p1 * num_patom * 9 + p2 * 9 + k * 3 + l];
+	  }
+	}
+      }
+    }
+  }
+}
+
+static void get_charge_sum(double *charge_sum,
+			   const int num_patom,
+			   const double factor,
+			   const double q_vector[3],
+			   const double *born)
+{
+  int i, j, k, a, b;
+  double (*q_born)[3];
+  
+  q_born = (double (*)[3]) malloc(sizeof(double[3]) * num_patom);
+  for (i = 0; i < num_patom; i++) {
+    for (j = 0; j < 3; j++) {
+      q_born[i][j] = 0;
+    }
+  }
+
+  for (i = 0; i < num_patom; i++) {
+    for (j = 0; j < 3; j++) {
+      for (k = 0; k < 3; k++) {
+	q_born[i][j] += q_vector[k] * born[i * 9 + k * 3 + j];
+      }
+    }
+  }
+
+  for (i = 0; i < num_patom; i++) {
+    for (j = 0; j < num_patom; j++) {
+      for (a = 0; a < 3; a++) {
+	for (b = 0; b < 3; b++) {
+	  charge_sum[i * 9 * num_patom + j * 9 + a * 3 + b] =
+	    q_born[i][a] * q_born[j][b] * factor;
+	}
+      }
+    }
+  }
+
+  free(q_born);
+}
 
 /* Thermal properties */
 static PyObject * py_get_thermal_properties(PyObject *self, PyObject *args)
