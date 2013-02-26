@@ -250,8 +250,6 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         constant = self._unit_conversion * 4.0 * np.pi / volume \
             / np.dot(q, np.dot(self._dielectric, q))
 
-
-
         # Parlinski method
         if self._method=='parlinski':
             charge_sum = self._get_charge_sum(num_atom, q)
@@ -271,17 +269,11 @@ class DynamicalMatrixNAC(DynamicalMatrix):
 
         # Wang method (J. Phys.: Condens. Matter 22 (2010) 202201)
         else:
-            fc = self._bare_force_constants.copy()
             try:
                 import phonopy._phonopy as phonoc
-                phonoc.nac_force_constants(fc,
-                                           q,
-                                           self._born,
-                                           self._s2p_map,
-                                           self._p2p_map,
-                                           num_atom,
-                                           constant)
+                self._set_c_nac_dynamical_matrix(q_red, q, constant)
             except ImportError:
+                fc = self._bare_force_constants.copy()
                 charge_sum = self._get_charge_sum(num_atom, q)
                 nac_q = np.zeros((num_atom * 3, num_atom * 3), dtype=float)
                 for i in range(num_atom):
@@ -289,9 +281,8 @@ class DynamicalMatrixNAC(DynamicalMatrix):
                         nac_q[ i*3:(i+1)*3, j*3:(j+1)*3 ] = \
                             charge_sum[ i, j ] * constant
                 self._set_NAC_force_constants(fc, nac_q)
-
-            self._force_constants = fc
-            DynamicalMatrix.set_dynamical_matrix(self, q_red, verbose)
+                self._force_constants = fc
+                DynamicalMatrix.set_dynamical_matrix(self, q_red, verbose)
 
     def _set_NAC_force_constants(self, fc, nac_q):
         N = (self._scell.get_number_of_atoms() /
@@ -318,9 +309,32 @@ class DynamicalMatrixNAC(DynamicalMatrix):
                             np.dot(q, self._born[i, :, a]) * np.dot(q, self._born[j, :, b])
         return charge_sum
 
+    def _set_c_nac_dynamical_matrix(self, q_red, q, factor):
+        import phonopy._phonopy as phonoc
 
-
-
+        fc = self._bare_force_constants.copy()
+        vectors = self._smallest_vectors
+        mass = self._pcell.get_masses()
+        multiplicity = self._multiplicity
+        size_prim = len(mass)
+        size_super = fc.shape[0]
+        dynamical_matrix_real = np.zeros((size_prim * 3, size_prim * 3),
+                                         dtype=float)
+        dynamical_matrix_image = np.zeros_like(dynamical_matrix_real)
+        phonoc.nac_dynamical_matrix(dynamical_matrix_real,
+                                    dynamical_matrix_image,
+                                    fc,
+                                    np.array(q_red, dtype=float),
+                                    vectors,
+                                    multiplicity,
+                                    mass,
+                                    self._s2p_map,
+                                    self._p2s_map,
+                                    np.array(q, dtype=float),
+                                    self._born,
+                                    factor)
+        dm = dynamical_matrix_real + dynamical_matrix_image * 1j
+        self._dynamical_matrix = (dm + dm.conj().transpose()) / 2
 
 
 # Helper methods

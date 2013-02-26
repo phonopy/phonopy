@@ -256,9 +256,9 @@ class PhononPhonon:
                 supercell,
                 primitive,
                 fc2,
-                nac_params=nac_params,
                 frequency_scale_factor=frequency_scale_factor,
                 symprec=self._symprec)
+            self._dm.set_nac_params(nac_params)
 
         if nac_q_direction is not None:
             self._q_direction = nac_q_direction
