@@ -126,7 +126,15 @@ case of VASP to transform to THz, the factor is 15.633302.
    phonon.set_band_structure(bands)
    phonon.plot_band_structure().show()
 
+   q_points, distances, frequencies, eigvecs = phonon.get_band_structure()
 
+To obtain eigenvectors, it is necessary to inform to store
+eigenvectors by::
+
+   phonon.set_band_structure(bands, is_eigenvectors=True)
+   
+
+   
 Mesh sampling
 """"""""""""""
 
@@ -140,6 +148,13 @@ the fractional mesh shift with respect to the neighboring grid points.
 
    mesh = [20, 20, 20]
    phonon.set_mesh(mesh)
+   qpoints, weights, frequencies, eigvecs = phonon.get_mesh()
+
+To obtain eigenvectors, it is necessary to inform to store
+eigenvectors by::
+
+   phonon.set_mesh([20, 20, 20], is_eigenvectors=True)
+
 
 DOS and PDOS
 """""""""""""
@@ -207,6 +222,40 @@ used for NaCl.
                           'factor': factors,
                           'dielectric': epsilon})
 
+.. _phonopy_eigenvectors:
+
+Eigenvectors
+----------------------------
+
+Eigenvectors are given as the column vectors. Internally phonopy uses
+numpy.linalg.eigh and eigh is a wrapper of LAPACK. So eigenvectors
+follow the convention of LAPACK, which can be shown at
+http://docs.scipy.org/doc/numpy/reference/generated/numpy.linalg.eigh.html
+
+Eigenvectors corresponding to phonopy yaml output are obtained as follows.
+
+Band structure
+^^^^^^^^^^^^^^^^
+
+::
+
+   if eigvecs is not None:
+       for eigvecs_on_path in eigvecs:
+           for eigvecs_at_q in eigvecs_on_path:
+               for vec in eigvecs_at_q.T:
+                   print vec
+
+Mesh sampling
+^^^^^^^^^^^^^^^^
+
+::
+
+   if eigvecs is not None:
+       for eigvecs_at_q in eigvecs:
+           for vec in eigvecs_at_q.T:
+               print vec
+
+       
 .. _phonopy_Atoms:
 
 ``Atoms`` class in Phonopy 
