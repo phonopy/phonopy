@@ -128,7 +128,11 @@ def plot_mesh(data, is_fg, cutoff_frequency=None):
 # Parse options
 from optparse import OptionParser
 parser = OptionParser()
-parser.set_defaults(is_fg=False,
+parser.set_defaults(f_max=None,
+                    f_min=None,
+                    g_max=None,
+                    g_min=None,
+                    is_fg=False,
                     is_gnuplot=False,
                     cutoff_frequency=None,
                     output_filename=None,
@@ -144,6 +148,14 @@ parser.add_option("-t", "--title", dest="title", action="store",
                   type="string", help="Title of plot")
 parser.add_option("--cutoff", dest="cutoff_frequency", type="float",
                   help="Plot above this cutoff frequency for mesh sampling mode.")
+parser.add_option("--fmax", dest="f_max", type="float",
+                  help="Maximum frequency plotted")
+parser.add_option("--fmin", dest="f_min", type="float",
+                  help="Minimum frequency plotted")
+parser.add_option("--gmax", dest="g_max", type="float",
+                  help="Maximum Gruneisen params plotted")
+parser.add_option("--gmin", dest="g_min", type="float",
+                  help="Minimum Gruneisen params plotted")
 (options, args) = parser.parse_args()
 
 if len(args) == 0:
@@ -167,6 +179,16 @@ elif 'mesh' in data:
                         cutoff_frequency=options.cutoff_frequency)
         if options.title is not None:
             plt.subtitle(options.title)
+
+        if options.f_max is not None:
+            plt.xlim(xmax=options.f_max)
+        if options.f_min is not None:
+            plt.xlim(xmin=options.f_min)
+        if options.g_max is not None:
+            plt.ylim(ymax=options.g_max)
+        if options.g_min is not None:
+            plt.ylim(ymin=options.g_min)
+
         plt.show()
         
 

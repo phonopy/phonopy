@@ -27,7 +27,7 @@ class Gruneisen:
         self._dm = DynamicalMatrix(self._scell,
                                    self._pcell,
                                    self._fc2,
-                                   self._symprec)
+                                   symprec=self._symprec)
         self._shortest_vectors, self._multiplicity = get_shortest_vectors(
             self._scell, self._pcell, self._symprec)
 
