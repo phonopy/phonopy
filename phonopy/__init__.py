@@ -217,7 +217,8 @@ class Phonopy:
                          force_constants=None,
                          is_nac=False,
                          calculate_full_force_constants=False,
-                         force_constants_decimals=None):
+                         force_constants_decimals=None,
+                         dynamical_matrix_decimals=None):
         """
         Set forces to prepare phonon calculations. The order of
         'sets_of_forces' has to correspond to that of 'displacements'.
@@ -268,24 +269,26 @@ class Phonopy:
                 self.set_force_constants(force_constants)
 
         # Dynamical Matrix
-        self.set_dynamical_matrix()
+        self.set_dynamical_matrix(decimals=dynamical_matrix_decimals)
 
     def set_nac_params(self, nac_params, method='wang'):
         if self._is_nac:
             self._dynamical_matrix.set_nac_params(nac_params, method)
 
-    def set_dynamical_matrix(self):
+    def set_dynamical_matrix(self, decimals=None):
         if self._is_nac:
             self._dynamical_matrix = \
                 DynamicalMatrixNAC(self._supercell,
                                    self._primitive,
                                    self._force_constants,
+                                   decimals=decimals,
                                    symprec=self._symprec)
         else:
             self._dynamical_matrix = \
                 DynamicalMatrix(self._supercell,
                                 self._primitive,
                                 self._force_constants,
+                                decimals=decimals,
                                 symprec=self._symprec)
 
     def get_dynamical_matrix(self):

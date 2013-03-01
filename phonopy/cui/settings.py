@@ -45,6 +45,7 @@ def fracval(frac):
 class Settings:
     def __init__(self):
         self._chemical_symbols = None
+        self._dm_decimals = None
         self._is_eigenvectors = False
         self._is_diagonal_displacement = True
         self._is_plusminus_displacement = 'auto'
@@ -190,6 +191,12 @@ class Settings:
     def get_fc_decimals(self):
         return self._fc_decimals
 
+    def set_dm_decimals(self, decimals):
+        self._dm_decimals = decimals
+
+    def get_dm_decimals(self):
+        return self._dm_decimals
+
     def set_is_symmetry(self, is_symmetry):
         self._is_symmetry = is_symmetry
 
@@ -323,6 +330,10 @@ class ConfParser:
         if params.has_key('fc_decimals'):
             self._settings.set_fc_decimals(int(params['fc_decimals']))
     
+        # Decimals of values of dynamical matrxi
+        if params.has_key('dm_decimals'):
+            self._settings.set_dm_decimals(int(params['dm_decimals']))
+    
         # Is force constants symmetry forced?
         if params.has_key('is_tensor_symmetry'):
             self._settings.set_is_tensor_symmetry(params['is_tensor_symmetry'])
@@ -443,6 +454,11 @@ class ConfParser:
                     self._confs['fc_decimals'] = \
                         self._options.force_constants_decimals
 
+            if opt.dest=='dynamical_matrix_decimals':
+                if self._options.dynamical_matrix_decimals:
+                    self._confs['dm_decimals'] = \
+                        self._options.dynamical_matrix_decimals
+
     def parse_conf(self):
         confs = self._confs
 
@@ -539,6 +555,9 @@ class ConfParser:
 
             if conf_key == 'fc_decimals':
                 self.set_parameter('fc_decimals', confs['fc_decimals'])
+
+            if conf_key == 'dm_decimals':
+                self.set_parameter('dm_decimals', confs['dm_decimals'])
 
             if conf_key == 'tensor_symmetry':
                 if confs['tensor_symmetry'] == '.true.':

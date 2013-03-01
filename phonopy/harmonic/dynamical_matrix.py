@@ -58,17 +58,20 @@ class DynamicalMatrix:
                  primitive,
                  force_constants,
                  frequency_scale_factor=None,
+                 decimals=None,
                  symprec=1e-5):
         self._scell = supercell
         self._pcell = primitive
+        self._force_constants = force_constants
+        self._freq_scale = frequency_scale_factor
+        self._decimals = decimals
+        self._symprec = symprec
+
         self._p2s_map = np.array(primitive.get_primitive_to_supercell_map())
         self._s2p_map = np.array(primitive.get_supercell_to_primitive_map())
         p2p_map = primitive.get_primitive_to_primitive_map()
         self._p2p_map = np.array([p2p_map[self._s2p_map[i]]
                                   for i in range(len(self._s2p_map))])
-        self._force_constants = force_constants
-        self._freq_scale = frequency_scale_factor
-        self._symprec = symprec
         self._smallest_vectors, self._multiplicity = \
             get_smallest_vectors(supercell, primitive, symprec)
         self._mass = self._pcell.get_masses()
@@ -82,10 +85,16 @@ class DynamicalMatrix:
         return self._pcell.get_number_of_atoms() * 3
 
     def get_dynamical_matrix(self):
+        
         if self._freq_scale is not None:
-            return self._dynamical_matrix * self._freq_scale ** 2
+            dm = self._dynamical_matrix * self._freq_scale ** 2
         else:
-            return self._dynamical_matrix
+            dm = self._dynamical_matrix
+
+        if self._decimals is None:
+            return dm
+        else:
+            return dm.round(decimals=self._decimals)
 
     def set_dynamical_matrix(self, q, verbose=False):
         try:

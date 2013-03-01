@@ -92,6 +92,7 @@ parser.set_defaults(
     band_points=None,
     cutoff_eigenvalue=None,
     cutoff_radius=None,
+    dynamical_matrix_decimals=None,
     is_dos_mode=False,
     factor=None,
     fits_debye_model=False,
@@ -183,6 +184,8 @@ parser.add_option("--fc", "--force_constants", dest="force_constants_mode",
                   help="Create FORCE_CONSTANTS from vaspurn.xml. vasprun.xml has to be passed as argument.")
 parser.add_option("--fc_decimals", dest="force_constants_decimals",
                   type="int", help="Decimals of values of force constants")
+parser.add_option("--dm_decimals", dest="dynamical_matrix_decimals",
+                  type="int", help="Decimals of values of decimals")
 parser.add_option("--fits_debye_model", dest="fits_debye_model",
                   action="store_true",
                   help="Fits total DOS to a Debye model")
@@ -721,11 +724,13 @@ if (settings.get_is_force_constants() == "write" or
     phonon.set_post_process(settings.get_primitive_matrix(),
                             is_nac=settings.get_is_nac(),
                             calculate_full_force_constants=True,
-                            force_constants_decimals=settings.get_fc_decimals())
+                            force_constants_decimals=settings.get_fc_decimals(),
+                            dynamical_matrix_decimals=settings.get_dm_decimals())
 else: # Only force constants between atoms in primitive cell and in supercell
     phonon.set_post_process(settings.get_primitive_matrix(),
                             is_nac=settings.get_is_nac(),
-                            force_constants_decimals=settings.get_fc_decimals())
+                            force_constants_decimals=settings.get_fc_decimals(),
+                            dynamical_matrix_decimals=settings.get_dm_decimals())
 
 # Impose cutoff radius on force constants
 cutoff_radius = settings.get_cutoff_radius()
