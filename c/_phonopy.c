@@ -34,8 +34,8 @@
 
 #include <Python.h>
 #include <stdio.h>
-#include <math.h>
 #include <numpy/arrayobject.h>
+#include "dynmat.h"
 
 #define KB 8.6173382568083159E-05
 
@@ -46,33 +46,6 @@ static PyObject * py_get_thermal_properties(PyObject *self, PyObject *args);
 static PyObject * py_distribute_fc2(PyObject *self, PyObject *args);
 static PyObject * py_get_rotated_forces(PyObject *self, PyObject *args);
 
-static int get_dynamical_matrix_at_q(double *dynamical_matrix_real,
-				     double *dynamical_matrix_image,
-				     const int d_prim, const int d_super,
-				     const double *force_constants, 
-				     const double *q,
-				     const double *r,
-				     const int *multi,
-				     const double *mass,
-				     const int *s2p_map, 
-				     const int *p2s_map);
-static int get_nac_dynamical_matrix_at_q(double *dynamical_matrix_real,
-					 double *dynamical_matrix_image,
-					 const int num_patom, 
-					 const int num_satom,
-					 const double *fc,
-					 const double *q,
-					 const double *r,
-					 const int *multi,
-					 const double *mass,
-					 const double *charge_sum,
-					 const int *s2p_map, 
-					 const int *p2s_map);
-static void get_charge_sum(double *charge_sum,
-			   const int num_patom,
-			   const double factor,
-			   const double q_vector[3],
-			   const double *born);
 static double get_free_energy_omega(const double temperature,
 				    const double omega);
 static double get_entropy_omega(const double temperature,
@@ -146,109 +119,46 @@ static PyObject * py_get_dynamical_matrix(PyObject *self, PyObject *args)
   const long* multi_long = (long*)multiplicity->data;
   const long* s2p_map_long = (long*)s2p_map->data;
   const long* p2s_map_long = (long*)p2s_map->data;
-  const int d_prim = p2s_map->dimensions[0];
-  const int d_super = s2p_map->dimensions[0];
+  const int num_patom = p2s_map->dimensions[0];
+  const int num_satom = s2p_map->dimensions[0];
+  const double *zero;
 
   int *multi, *s2p_map_int, *p2s_map_int;
 
-  multi = (int*) malloc(d_prim * d_super * sizeof(int));
-  for (i = 0; i < d_prim*d_super; i++) {
+  multi = (int*) malloc(num_patom * num_satom * sizeof(int));
+  for (i = 0; i < num_patom*num_satom; i++) {
     multi[i] = (int)multi_long[i];
   }
 
-  s2p_map_int = (int*) malloc(d_super * sizeof(int));
-  for (i = 0; i < d_super; i++) {
+  s2p_map_int = (int*) malloc(num_satom * sizeof(int));
+  for (i = 0; i < num_satom; i++) {
     s2p_map_int[i] = (int)s2p_map_long[i];
   }
 
-  p2s_map_int = (int*) malloc(d_prim * sizeof(int));
-  for (i = 0; i < d_prim; i++) {
+  p2s_map_int = (int*) malloc(num_patom * sizeof(int));
+  for (i = 0; i < num_patom; i++) {
     p2s_map_int[i] = (int)p2s_map_long[i];
   }
 
   get_dynamical_matrix_at_q(dm_r,
 			    dm_i,
-			    d_prim,
-			    d_super,
+			    num_patom,
+			    num_satom,
 			    fc,
 			    q,
 			    r,
 			    multi,
 			    m,
 			    s2p_map_int,
-			    p2s_map_int);
+			    p2s_map_int,
+			    0,
+			    zero);
 
   free(multi);
   free(s2p_map_int);
   free(p2s_map_int);
 
   Py_RETURN_NONE;
-}
-
-static int get_dynamical_matrix_at_q(double *dynamical_matrix_real,
-				     double *dynamical_matrix_image,
-				     const int d_prim, 
-				     const int d_super,
-				     const double *force_constants,
-				     const double *q,
-				     const double *r,
-				     const int *multi,
-				     const double *mass,
-				     const int *s2p_map, 
-				     const int *p2s_map)
-{
-  int i, j, k, l, m;
-  double phase, cos_phase, sin_phase, mass_sqrt;
-  double dm_real[3][3], dm_imag[3][3];
- 
-
-#pragma omp parallel for private(j, k, l, m, phase, cos_phase, sin_phase, mass_sqrt, dm_real, dm_imag) 
-  for (i = 0; i < d_prim; i++) { /* left index of dm */
-
-    for (j = 0; j < d_prim; j++) { /* right index of dm */
-      mass_sqrt = sqrt(mass[i] * mass[j]);
-
-      for (k = 0; k < 3; k++) {
-	for (l = 0; l < 3; l++) {
-	  dm_real[k][l] = 0;
-	  dm_imag[k][l] = 0;
-	}
-      }
-
-      for (k = 0; k < d_super; k++) { /* Lattice points of right index of fc */
-	if (! (s2p_map[k] == p2s_map[j])) {
-	  continue;
-	}
-
-	cos_phase = 0;
-	sin_phase = 0;
-	for (l = 0; l < multi[k * d_prim + i]; l++) {
-	  phase = 0;
-	  for (m = 0; m < 3; m++) {
-	    phase += q[m] * r[k * d_prim*81 + i*81 + l*3 + m];
-	  }
-	  cos_phase += cos(phase * 2 * M_PI) / multi[k * d_prim + i];
-	  sin_phase += sin(phase * 2 * M_PI) / multi[k * d_prim + i];
-	}
-
-	for (l = 0; l < 3; l++) {
-	  for (m = 0; m < 3; m++) {
-	    dm_real[l][m] += force_constants[p2s_map[i] * d_super*9 + k*9 + l*3 + m] * cos_phase / mass_sqrt;
-	    dm_imag[l][m] += force_constants[p2s_map[i] * d_super*9 + k*9 + l*3 + m] * sin_phase / mass_sqrt;
-	  }
-	}
-      }
-      
-      for (k = 0; k < 3; k++) {
-	for (l = 0; l < 3; l++) {
-	  dynamical_matrix_real[(i*3 + k) * d_prim * 3 + j*3 + l] += dm_real[k][l];
-	  dynamical_matrix_image[(i*3 + k) * d_prim * 3 + j*3 + l] += dm_imag[k][l];
-	}
-      }
-    }
-  }
-
-  return 0;
 }
 
 
@@ -319,18 +229,19 @@ static PyObject * py_get_nac_dynamical_matrix(PyObject *self, PyObject *args)
   }
 
   get_charge_sum(charge_sum, num_patom, factor / n, q_cart, z);
-  get_nac_dynamical_matrix_at_q(dm_r,
-				dm_i,
-				num_patom,
-				num_satom,
-				fc,
-				q,
-				r,
-				multi,
-				m,
-				charge_sum,
-				s2p_map_int,
-				p2s_map_int);
+  get_dynamical_matrix_at_q(dm_r,
+			    dm_i,
+			    num_patom,
+			    num_satom,
+			    fc,
+			    q,
+			    r,
+			    multi,
+			    m,
+			    s2p_map_int,
+			    p2s_map_int,
+			    1,
+			    charge_sum);
 
   free(charge_sum);
   free(multi);
@@ -338,115 +249,6 @@ static PyObject * py_get_nac_dynamical_matrix(PyObject *self, PyObject *args)
   free(p2s_map_int);
 
   Py_RETURN_NONE;
-}
-
-static int get_nac_dynamical_matrix_at_q(double *dynamical_matrix_real,
-					 double *dynamical_matrix_image,
-					 const int num_patom, 
-					 const int num_satom,
-					 const double *fc,
-					 const double *q,
-					 const double *r,
-					 const int *multi,
-					 const double *mass,
-					 const double *charge_sum,
-					 const int *s2p_map, 
-					 const int *p2s_map)
-{
-  int i, j, k, l, m, n;
-  double phase, cos_phase, sin_phase, mass_sqrt, fc_elem;
-  double dm_real[3][3], dm_imag[3][3];
-  
-/* #pragma omp parallel for private(i, j, k, l, m, phase, cos_phase, sin_phase, mass_sqrt, dm_real, dm_imag, fc_elem)  */
-/* for (n = 0; n < num_patom * num_patom; n++) { /\* left index of dm *\/ */
-#pragma omp parallel for private(j, k, l, m, phase, cos_phase, sin_phase, mass_sqrt, dm_real, dm_imag, fc_elem)
-  for (i = 0; i < num_patom; i++) {
-    for (j = 0; j < num_patom; j++) {
-      /* i = n / num_patom; */
-      /* j = n % num_patom; */
-    
-      mass_sqrt = sqrt(mass[i] * mass[j]);
-
-      for (k = 0; k < 3; k++) {
-	for (l = 0; l < 3; l++) {
-	  dm_real[k][l] = 0;
-	  dm_imag[k][l] = 0;
-	}
-      }
-
-      for (k = 0; k < num_satom; k++) { /* Lattice points of right index of fc */
-	if (s2p_map[k] != p2s_map[j]) {
-	  continue;
-	}
-
-	cos_phase = 0;
-	sin_phase = 0;
-	for (l = 0; l < multi[k * num_patom + i]; l++) {
-	  phase = 0;
-	  for (m = 0; m < 3; m++) {
-	    phase += q[m] * r[k * num_patom * 81 + i * 81 + l * 3 + m];
-	  }
-	  cos_phase += cos(phase * 2 * M_PI) / multi[k * num_patom + i];
-	  sin_phase += sin(phase * 2 * M_PI) / multi[k * num_patom + i];
-	}
-
-	for (l = 0; l < 3; l++) {
-	  for (m = 0; m < 3; m++) {
-	    fc_elem = (fc[p2s_map[i] * num_satom * 9 + k * 9 + l * 3 + m] +
-		       charge_sum[i * num_patom * 9 + j * 9 + l * 3 + m]) / mass_sqrt;
-	    dm_real[l][m] += fc_elem * cos_phase;
-	    dm_imag[l][m] += fc_elem * sin_phase;
-	  }
-	}
-      }
-      
-      for (k = 0; k < 3; k++) {
-	for (l = 0; l < 3; l++) {
-	  dynamical_matrix_real[(i * 3 + k) * num_patom * 3 + j * 3 + l] += dm_real[k][l];
-	  dynamical_matrix_image[(i * 3 + k) * num_patom * 3 + j * 3 + l] += dm_imag[k][l];
-	}
-      }
-    }
-  }
-  return 0;
-}
-
-static void get_charge_sum(double *charge_sum,
-			   const int num_patom,
-			   const double factor,
-			   const double q_vector[3],
-			   const double *born)
-{
-  int i, j, k, a, b;
-  double (*q_born)[3];
-  
-  q_born = (double (*)[3]) malloc(sizeof(double[3]) * num_patom);
-  for (i = 0; i < num_patom; i++) {
-    for (j = 0; j < 3; j++) {
-      q_born[i][j] = 0;
-    }
-  }
-
-  for (i = 0; i < num_patom; i++) {
-    for (j = 0; j < 3; j++) {
-      for (k = 0; k < 3; k++) {
-	q_born[i][j] += q_vector[k] * born[i * 9 + k * 3 + j];
-      }
-    }
-  }
-
-  for (i = 0; i < num_patom; i++) {
-    for (j = 0; j < num_patom; j++) {
-      for (a = 0; a < 3; a++) {
-	for (b = 0; b < 3; b++) {
-	  charge_sum[i * 9 * num_patom + j * 9 + a * 3 + b] =
-	    q_born[i][a] * q_born[j][b] * factor;
-	}
-      }
-    }
-  }
-
-  free(q_born);
 }
 
 /* Thermal properties */

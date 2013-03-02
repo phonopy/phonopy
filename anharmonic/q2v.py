@@ -196,12 +196,6 @@ class PhononPhonon:
 
         self.set_harmonic_phonons(self._q)
         
-        # \Phi^2(set_of_q's, s, s', s'')
-        # Unit: mass^{-3} \Phi^2(real space)
-        #   \Phi(real space) = eV/A^3
-        #   frequency THz
-        #   mass AMU
-        # 1/36 * (\hbar/2N0)^3 * N0^2 to be multiplied somewhere else.
         self._amplitude_at_q = np.zeros((len(self._weights_at_q),
                                          len(self._band_indices),
                                          num_atom * 3,
@@ -209,6 +203,34 @@ class PhononPhonon:
         self._frequencies_at_q = np.zeros(
             (len(self._weights_at_q), 3, num_atom * 3), dtype=float)
 
+        # try:
+        #     import anharmonic._phono3py as phono3c
+        #     q_set = []
+        #     for q in q3:
+        #         q_set.append(grid_address[q].astype(float) / mesh)
+        #     q_set = np.array(q_set)
+        #     num_atom = primitive.get_number_of_atoms()
+        
+        #     # Solve dynamical matrix
+        #     freqs = np.zeros((3, num_atom * 3), dtype=float)
+        #     freqs[0] = frequencies.copy()
+        #     eigvecs = np.zeros((3, num_atom * 3, num_atom * 3), dtype=complex)
+        #     eigvecs[0] = eigenvectors.copy()
+        #     for i, q in enumerate(q_set[1:]):
+        #         if (q_direction is not None) and q3[i + 1] == 0:
+        #             dm.set_dynamical_matrix(q, q_direction)
+        #         else:
+        #             dm.set_dynamical_matrix(q)
+        
+        #         vals, eigvecs[i + 1] = np.linalg.eigh(dm.get_dynamical_matrix())
+        #         vals = vals.real
+        #         total_factor = factor * freq_factor
+        #         freqs[i + 1] = np.sqrt(np.abs(vals)) * np.sign(vals) * total_factor
+        
+        #     # Calculate interaction strength
+        #     amplitude = np.zeros((len(band_indices), num_atom * 3, num_atom * 3),
+        #                          dtype=float)
+        # except ImportError:
         for i, (q3, w) in enumerate(zip(self._triplets_at_q,
                                         self._weights_at_q)):
             (self._amplitude_at_q[i],
@@ -302,7 +324,6 @@ def get_interaction_strength(triplet_number,
                              is_Peierls,
                              r2q_TI_index,
                              log_level):
-
     q_set = []
     for q in q3:
         q_set.append(grid_address[q].astype(float) / mesh)
@@ -335,6 +356,7 @@ def get_interaction_strength(triplet_number,
     # Calculate interaction strength
     amplitude = np.zeros((len(band_indices), num_atom * 3, num_atom * 3),
                          dtype=float)
+
     try:
         import anharmonic._phono3py as phono3c
         get_c_interaction_strength(amplitude,
@@ -350,7 +372,6 @@ def get_interaction_strength(triplet_number,
                                    is_symmetrize_fc3_q,
                                    r2q_TI_index,
                                    symprec)
-        
     except ImportError:
         get_py_interaction_strength(amplitude,
                                     freqs,
@@ -658,6 +679,3 @@ def print_fc3_q(fc3, q_set, shortest_vectors, multiplicity, primitive, symprec=1
                     for v in t2:
                         print "%10.5f %10.5f   %10.5f %10.5f   %10.5f %10.5f" % (v[0].real, v[0].imag, v[1].real, v[1].imag, v[2].real, v[2].imag)
                 print
-    
-    
-    

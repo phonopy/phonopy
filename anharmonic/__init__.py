@@ -180,7 +180,6 @@ class Phono3py:
             for band_indices in sets_of_band_indices:
                 self._pp.set_interaction_strength(band_indices)
                 fwhms_sigmas, freqs_sigmas = lw.get_linewidth(
-                    gamma_option=gamma_option,
                     filename=filename)
                 temps = lw.get_temperatures()
 
@@ -238,6 +237,22 @@ class Phono3py:
     #             self._pp.set_interaction_strength(band_indices)
     #             self._pp.get_decay_channels(temperature)
 
+    def solve_dynamical_matrix(self, q):
+        """Only for test phonopy zheev wrapper"""
+        import anharmonic._phono3py as phono3c
+        dm = self._pp.get_dynamical_matrix()
+        dm.set_dynamical_matrix(q)
+        dynmat = dm.get_dynamical_matrix()
+        eigvals = np.zeros(len(dynmat), dtype=float)
+        phono3c.zheev(dynmat, eigvals)
+        
+        for f, row in zip(np.sqrt(abs(eigvals)) * self._factor *
+                          np.sign(eigvals), dynmat.T):
+            print f
+            print row
+        
+
+    
 def get_gruneisen_parameters(fc2,
                              fc3,
                              supercell,

@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <numpy/arrayobject.h>
+#include <lapacke.h>
 
 /* Boltzmann constant eV/K */
 #define KB 8.6173382568083159E-05
@@ -20,6 +21,12 @@ typedef struct {
   int d2;
   double **data;
 } DArray2D;
+
+typedef struct {
+  int d1;
+  int d2;
+  npy_cdouble **data;
+} CArray2D;
 
 typedef struct {
   int d1;
@@ -46,6 +53,18 @@ static PyObject * py_get_gamma(PyObject *self, PyObject *args);
 static PyObject * py_get_decay_channel(PyObject *self, PyObject *args);
 static PyObject * py_get_jointDOS(PyObject *self, PyObject *args);
 static PyObject * py_distribute_fc3(PyObject *self, PyObject *args);
+static PyObject * py_phonopy_zheev(PyObject *self, PyObject *args);
+static int get_interaction_strength(double *amps,
+				    const npy_cdouble* eigvecs,
+				    const double *freqs,
+				    const double *masses,
+				    const Array1D *p2s,
+				    const Array2D *multi,
+				    const DArray2D *q,
+				    const ShortestVecs *svecs,
+				    const CArray2D *fc3_q,
+				    const Array1D *band_indices,
+				    const double cutoff_frequency);
 static double get_sum_in_primivie(const npy_cdouble *fc3,
 				  const npy_cdouble *e1,
 				  const npy_cdouble *e2,
@@ -125,8 +144,13 @@ static Array2D * alloc_Array2D(const int index1, const int index2);
 static void free_Array2D(Array2D * array);
 static DArray2D * alloc_DArray2D(const int index1, const int index2);
 static void free_DArray2D(DArray2D * array);
+static CArray2D * alloc_CArray2D(const int index1, const int index2);
+static void free_CArray2D(CArray2D * array);
 static Array1D * alloc_Array1D(const int index1);
 static void free_Array1D(Array1D * array);
+static int phonopy_zheev(double *w,
+			 lapack_complex_double *a,
+			 const int n);
 
 
 static PyMethodDef functions[] = {
@@ -138,6 +162,7 @@ static PyMethodDef functions[] = {
   {"joint_dos", py_get_jointDOS, METH_VARARGS, "Calculate joint density of states"},
   {"decay_channel", py_get_decay_channel, METH_VARARGS, "Calculate decay of phonons"},
   {"distribute_fc3", py_distribute_fc3, METH_VARARGS, "Distribute least fc3 to full fc3"},
+  {"zheev", py_phonopy_zheev, METH_VARARGS, "Lapack zheev wrapper"},
   {NULL, NULL, 0, NULL}
 };
 
@@ -149,13 +174,11 @@ PyMODINIT_FUNC init_phono3py(void)
 
 static PyObject * py_get_interaction_strength(PyObject *self, PyObject *args)
 {
-
-  int i, j, k, n;
-  int band[3];
-  npy_cdouble * fc3_q[6],* e[3];
-  Array1D * s2p, * p2s;
+  int i, j, k;
+  Array1D * s2p, * p2s, * band_indices;
   Array2D * multi;
   DArray2D * q;
+  CArray2D * fc3_q;
   ShortestVecs * svecs;
 
   PyArrayObject* amplitude;
@@ -201,40 +224,44 @@ static PyObject * py_get_interaction_strength(PyObject *self, PyObject *args)
   const long* band_indices_long = (long*)set_of_band_indices->data;
   const double* fc3 = (double*)force_constant_third->data;
 
-  const int s_num_atom = (int)multiplicity->dimensions[0];
-  const int p_num_atom = (int)multiplicity->dimensions[1];
+  const int num_satom = (int)multiplicity->dimensions[0];
+  const int num_patom = (int)multiplicity->dimensions[1];
   const int num_band0 = (int)set_of_band_indices->dimensions[0];
 
 
   svecs = get_shortest_vecs(shortest_vectors);
   
-  multi = alloc_Array2D(s_num_atom, p_num_atom);
-  for (i = 0; i < s_num_atom; i++) {
-    for (j = 0; j < p_num_atom; j++) {
-      multi->data[i][j] = multiplicity_long[i * p_num_atom + j];
+  multi = alloc_Array2D(num_satom, num_patom);
+  for (i = 0; i < num_satom; i++) {
+    for (j = 0; j < num_patom; j++) {
+      multi->data[i][j] = multiplicity_long[i * num_patom + j];
     }
   }
 
-  s2p = alloc_Array1D(s_num_atom);
-  p2s = alloc_Array1D(p_num_atom);
-  for (i = 0; i < s_num_atom; i++) {
+  s2p = alloc_Array1D(num_satom);
+  for (i = 0; i < num_satom; i++) {
     s2p->data[i] = s2p_map_long[i];
   }
-  for (i = 0; i < p_num_atom; i++) {
+  p2s = alloc_Array1D(num_patom);
+  for (i = 0; i < num_patom; i++) {
     p2s->data[i] = p2s_map_long[i];
   }
-
+  band_indices = alloc_Array1D(num_band0);
+  for (i = 0; i < num_band0; i++) {
+    band_indices->data[i] = band_indices_long[i];
+  }
+  
   q = alloc_DArray2D(3, 3);
+  
 
   if (is_symmetrize_fc3_q == 0) {
+    fc3_q = alloc_CArray2D(1, num_patom * num_patom * num_patom * 27);
     for (i = 0; i < 3; i ++) {
       for (j = 0; j < 3; j ++) {
 	q->data[i][j] = ((double*)q_triplet->data)[i * 3 + j];
       }
     }
-    fc3_q[0] = (npy_cdouble*) malloc(p_num_atom * p_num_atom *
-				     p_num_atom * 27 * sizeof(npy_cdouble));
-    get_fc3_reciprocal(fc3_q[0],
+    get_fc3_reciprocal(fc3_q->data[0],
 		       svecs,
 		       multi,
 		       q,
@@ -244,16 +271,15 @@ static PyObject * py_get_interaction_strength(PyObject *self, PyObject *args)
 		       r2q_TI_index,
 		       symprec);
   } else {
+    fc3_q = alloc_CArray2D(6, num_patom * num_patom * num_patom * 27);
     for (i = 0; i < 6; i++) {
-      fc3_q[i] = (npy_cdouble*) malloc(p_num_atom * p_num_atom *
-				       p_num_atom * 27 * sizeof(npy_cdouble));
       for (j = 0; j < 3; j ++) {
 	for (k = 0; k < 3; k ++) {
 	  q->data[index_exchange[i][j]][k] =
 	    ((double*)q_triplet->data)[j * 3 + k];
 	}
       }
-      get_fc3_reciprocal(fc3_q[i],
+      get_fc3_reciprocal(fc3_q->data[i],
 			 svecs,
 			 multi,
 			 q,
@@ -265,68 +291,24 @@ static PyObject * py_get_interaction_strength(PyObject *self, PyObject *args)
     }
   }
 
+  get_interaction_strength(amps,
+			   eigvecs,
+			   freqs,
+			   masses,
+			   p2s,
+			   multi,
+			   q,
+			   svecs,
+			   fc3_q,
+			   band_indices,
+			   cutoff_frequency);
+
   free_Array1D(p2s);
   free_Array1D(s2p);
   free_Array2D(multi);
   free_shortest_vecs(svecs);
   free_DArray2D(q);
-
-#pragma omp parallel for private(i, j, k, band, e)
-  for (n = 0; n < num_band0 * p_num_atom * p_num_atom * 9; n++) {
-    band[0] = band_indices_long[n / (p_num_atom * p_num_atom * 9)];
-    band[1] = (n % (p_num_atom * p_num_atom * 9)) / (p_num_atom * 3);
-    band[2] = n % (p_num_atom * 3);
-    if (freqs[band[0]] < cutoff_frequency ||
-	freqs[p_num_atom * 3 + band[1]] < cutoff_frequency ||
-	freqs[2 * p_num_atom * 3 + band[2]] < cutoff_frequency) {
-      amps[n] = 0;
-      continue;
-    }
-
-    for (i = 0; i < 3; i++) {
-      e[i] = (npy_cdouble*) malloc(p_num_atom * 3 * sizeof(npy_cdouble));
-    }
-
-    if (is_symmetrize_fc3_q == 0) {
-      for (i = 0; i < p_num_atom * 3; i++) {
-	for (j = 0; j < 3; j++) {
-	  e[j][i] = eigvecs[j * p_num_atom * p_num_atom * 9 +
-			    i * p_num_atom * 3 + band[j]];
-	}
-      }
-      amps[n] = get_sum_in_primivie(fc3_q[0], e[0], e[1], e[2],
-				    p_num_atom, masses) /
-	(freqs[band[0]] * freqs[p_num_atom * 3 + band[1]] *
-	 freqs[2 * p_num_atom * 3 + band[2]]);
-    } else {
-      amps[n] = 0;
-      for (i = 0; i < 6; i++) { /* Due to index exchange symmetry of V^3 */
-	for (j = 0; j < p_num_atom * 3; j++) {
-	  for (k = 0; k < 3; k++) {
-	    e[index_exchange[i][k]][j] =
-	      eigvecs[k * p_num_atom * p_num_atom * 9 +
-		      j * p_num_atom * 3 + band[k]];
-	  }
-	}
-	amps[n] += get_sum_in_primivie(fc3_q[i], e[0], e[1], e[2],
-				       p_num_atom, masses);
-      }
-      amps[n] /= 6 * freqs[band[0]] * freqs[p_num_atom * 3 + band[1]] *
-	freqs[2 * p_num_atom * 3 + band[2]];
-    }
-
-    for (i = 0; i < 3; i++) {
-      free(e[i]);
-    }
-  }
-
-  if (is_symmetrize_fc3_q == 0) {
-    free(fc3_q[0]);
-  } else {
-    for (i = 0; i < 6; i++) {
-      free(fc3_q[i]);
-    }
-  }
+  free_CArray2D(fc3_q);
 
   Py_RETURN_NONE;
 }
@@ -395,24 +377,24 @@ static PyObject * py_get_fc3_reciprocal(PyObject *self, PyObject *args)
   const long* s2p_map_long = (long*)s2p_map->data;
   const double* fc3 = (double*)force_constant_third->data;
 
-  const int s_num_atom = (int)multiplicity->dimensions[0];
-  const int p_num_atom = (int)multiplicity->dimensions[1];
+  const int num_satom = (int)multiplicity->dimensions[0];
+  const int num_patom = (int)multiplicity->dimensions[1];
 
   svecs = get_shortest_vecs(shortest_vectors);
   
-  multi = alloc_Array2D(s_num_atom, p_num_atom);
-  for (i = 0; i < s_num_atom; i++) {
-    for (j = 0; j < p_num_atom; j++) {
-      multi->data[i][j] = multiplicity_long[i * p_num_atom + j];
+  multi = alloc_Array2D(num_satom, num_patom);
+  for (i = 0; i < num_satom; i++) {
+    for (j = 0; j < num_patom; j++) {
+      multi->data[i][j] = multiplicity_long[i * num_patom + j];
     }
   }
 
-  s2p = alloc_Array1D(s_num_atom);
-  p2s = alloc_Array1D(p_num_atom);
-  for (i = 0; i < s_num_atom; i++) {
+  s2p = alloc_Array1D(num_satom);
+  p2s = alloc_Array1D(num_patom);
+  for (i = 0; i < num_satom; i++) {
     s2p->data[i] = s2p_map_long[i];
   }
-  for (i = 0; i < p_num_atom; i++) {
+  for (i = 0; i < num_patom; i++) {
     p2s->data[i] = p2s_map_long[i];
   }
 
@@ -473,20 +455,20 @@ static PyObject * py_get_fc3_realspace(PyObject *self, PyObject *args)
   const double* q_triplet = (double*)qpoints_triplet->data;
   const long* s2p_map_long = (long*)s2p_map->data;
  
-  const int s_num_atom = (int)multiplicity->dimensions[0];
-  const int p_num_atom = (int)multiplicity->dimensions[1];
+  const int num_satom = (int)multiplicity->dimensions[0];
+  const int num_patom = (int)multiplicity->dimensions[1];
 
   svecs = get_shortest_vecs(shortest_vectors);
 
-  multi = alloc_Array2D(s_num_atom, p_num_atom);
-  for (i = 0; i < s_num_atom; i++) {
-    for (j = 0; j < p_num_atom; j++) {
-      multi->data[i][j] = multi_long[i * p_num_atom + j];
+  multi = alloc_Array2D(num_satom, num_patom);
+  for (i = 0; i < num_satom; i++) {
+    for (j = 0; j < num_patom; j++) {
+      multi->data[i][j] = multi_long[i * num_patom + j];
     }
   }
 
-  s2p = alloc_Array1D(s_num_atom);
-  for (i = 0; i < s_num_atom; i++) {
+  s2p = alloc_Array1D(num_satom);
+  for (i = 0; i < num_satom; i++) {
     s2p->data[i] = s2p_map_long[i];
   }
 
@@ -771,6 +753,103 @@ static PyObject * py_distribute_fc3(PyObject *self, PyObject *args)
 					      symprec));
 }
 
+static PyObject * py_phonopy_zheev(PyObject *self, PyObject *args)
+{
+  PyArrayObject* dynamical_matrix;
+  PyArrayObject* eigenvalues;
+
+  if (!PyArg_ParseTuple(args, "OO",
+			&dynamical_matrix,
+			&eigenvalues)) {
+    return NULL;
+  }
+
+  const int dimension = (int)dynamical_matrix->dimensions[0];
+  npy_cdouble *dynmat = (npy_cdouble*)dynamical_matrix->data;
+  double *eigvals = (double*)eigenvalues->data;
+
+  lapack_complex_double *a;
+  int i, info;
+
+  a = (lapack_complex_double*) malloc(sizeof(lapack_complex_double) *
+				      dimension * dimension);
+  for (i = 0; i < dimension * dimension; i++) {
+    a[i] = lapack_make_complex_double(dynmat[i].real, dynmat[i].imag);
+  }
+
+  info = phonopy_zheev(eigvals, a, dimension);
+
+  for (i = 0; i < dimension * dimension; i++) {
+    dynmat[i].real = lapack_complex_double_real(a[i]);
+    dynmat[i].imag = lapack_complex_double_imag(a[i]);
+  }
+
+  return PyInt_FromLong((long) info);
+}
+
+
+static int get_interaction_strength(double *amps,
+				    const npy_cdouble* eigvecs,
+				    const double *freqs,
+				    const double *masses,
+				    const Array1D *p2s,
+				    const Array2D *multi,
+				    const DArray2D *q,
+				    const ShortestVecs *svecs,
+				    const CArray2D *fc3_q,
+				    const Array1D *band_indices,
+				    const double cutoff_frequency)
+{
+  int i, j, k, n, num_band0, num_patom;
+  int band[3];
+  npy_cdouble * e[3];
+
+  num_band0 = band_indices->d1;
+  num_patom = p2s->d1;
+  
+#pragma omp parallel for private(i, j, k, band, e)
+  for (n = 0; n < num_band0 * num_patom * num_patom * 9; n++) {
+    band[0] = band_indices->data[n / (num_patom * num_patom * 9)];
+    band[1] = (n % (num_patom * num_patom * 9)) / (num_patom * 3);
+    band[2] = n % (num_patom * 3);
+
+    if (freqs[band[0]] < cutoff_frequency ||
+	freqs[num_patom * 3 + band[1]] < cutoff_frequency ||
+	freqs[2 * num_patom * 3 + band[2]] < cutoff_frequency) {
+      amps[n] = 0;
+      continue;
+    }
+
+    for (i = 0; i < 3; i++) {
+      e[i] = (npy_cdouble*) malloc(num_patom * 3 * sizeof(npy_cdouble));
+    }
+
+    /* If symmetrize fc3_q for index exchange, i = 0..5 else i = 0*/
+    amps[n] = 0;
+    for (i = 0; i < fc3_q->d1; i++) { 
+      for (j = 0; j < num_patom * 3; j++) {
+	for (k = 0; k < 3; k++) {
+	  e[ index_exchange[i][k] ][j] =
+	    eigvecs[k * num_patom * num_patom * 9 +
+		    j * num_patom * 3 + band[k]];
+	}
+      }
+      amps[n] += get_sum_in_primivie(fc3_q->data[i], e[0], e[1], e[2],
+				     num_patom, masses);
+    }
+    amps[n] /= fc3_q->d1 *
+      freqs[band[0]] *
+      freqs[num_patom * 3 + band[1]] *
+      freqs[2 * num_patom * 3 + band[2]];
+
+    for (i = 0; i < 3; i++) {
+      free(e[i]);
+    }
+  }
+
+  return 1;
+}
+
 static int get_fc3_realspace(npy_cdouble* fc3_real,
 			     const ShortestVecs* svecs,
 			     const Array2D * multi,
@@ -782,11 +861,11 @@ static int get_fc3_realspace(npy_cdouble* fc3_real,
   int i, j, k, l, m, n;
   npy_cdouble phase2, phase3, fc3_elem;
   double q[3];
-  int s_num_atom = multi->d1;
-  int p_num_atom = multi->d2;
+  int num_satom = multi->d1;
+  int num_patom = multi->d2;
 
-  for (i = 0; i < p_num_atom; i++) {
-    for (j = 0; j < s_num_atom; j++) {
+  for (i = 0; i < num_patom; i++) {
+    for (j = 0; j < num_satom; j++) {
       q[0] = q_triplet[3];
       q[1] = q_triplet[4];
       q[2] = q_triplet[5];
@@ -796,7 +875,7 @@ static int get_fc3_realspace(npy_cdouble* fc3_real,
 				-1,
 				svecs,
 				multi);
-      for (k = 0; k < s_num_atom; k++) {
+      for (k = 0; k < num_satom; k++) {
 	q[0] = q_triplet[6];
 	q[1] = q_triplet[7];
 	q[2] = q_triplet[8];
@@ -809,16 +888,16 @@ static int get_fc3_realspace(npy_cdouble* fc3_real,
 	for (l = 0; l < 3; l++) { 
 	  for (m = 0; m < 3; m++) {
 	    for (n = 0; n < 3; n++) {
-	      fc3_elem = prod(fc3_rec[i * p_num_atom * p_num_atom * 27 +
-				      s2p->data[j] * p_num_atom * 27 +
+	      fc3_elem = prod(fc3_rec[i * num_patom * num_patom * 27 +
+				      s2p->data[j] * num_patom * 27 +
 				      s2p->data[k] * 27 + l * 9 + m * 3 + n],
 			      prod(phase2, phase3));
 
-	      fc3_real[i * s_num_atom * s_num_atom * 27 +
-		       j * s_num_atom * 27 +
+	      fc3_real[i * num_satom * num_satom * 27 +
+		       j * num_satom * 27 +
 		       k * 27 + l * 9 + m * 3 + n].real += fc3_elem.real;
-	      fc3_real[i * s_num_atom * s_num_atom * 27 +
-		       j * s_num_atom * 27 +
+	      fc3_real[i * num_satom * num_satom * 27 +
+		       j * num_satom * 27 +
 		       k * 27 + l * 9 + m * 3 + n].imag += fc3_elem.imag;
 		
 	    }
@@ -871,13 +950,13 @@ static int get_fc3_reciprocal(npy_cdouble* fc3_q,
 {
   int i, j, k, l, m, n, p;
   npy_cdouble fc3_q_local[3][3][3];
-  int p_num_atom = p2s->d1;
+  int num_patom = p2s->d1;
 
 #pragma omp parallel for private(i, j, k, l, m, n, fc3_q_local)
-  for (p = 0; p < p_num_atom * p_num_atom * p_num_atom; p++) {
-    i = p / (p_num_atom * p_num_atom);
-    j = (p % (p_num_atom * p_num_atom)) / p_num_atom;
-    k = p % p_num_atom;
+  for (p = 0; p < num_patom * num_patom * num_patom; p++) {
+    i = p / (num_patom * num_patom);
+    j = (p % (num_patom * num_patom)) / num_patom;
+    k = p % num_patom;
     get_fc3_sum_in_supercell(fc3_q_local,
 			     i,
 			     j,
@@ -894,8 +973,8 @@ static int get_fc3_reciprocal(npy_cdouble* fc3_q,
     for (l = 0; l < 3; l++) { 
       for (m = 0; m < 3; m++) {
 	for (n = 0; n < 3; n++) {
-	  fc3_q[i * p_num_atom * p_num_atom * 27 +
-		j * p_num_atom * 27 +
+	  fc3_q[i * num_patom * num_patom * 27 +
+		j * num_patom * 27 +
 		k * 27 + l * 9 + m * 3 + n] = fc3_q_local[l][m][n];
 	}
       }
@@ -921,7 +1000,7 @@ static int get_fc3_sum_in_supercell(npy_cdouble fc3_q[3][3][3],
   npy_cdouble phase2, phase3, phase_prod, phase_prim;
   int i, j, k, s1, s2, s3, address;
   double phase;
-  int s_num_atom = s2p->d1;
+  int num_satom = s2p->d1;
 
   for (i = 0; i < 3; i++) {
     for (j = 0; j < 3; j++) {
@@ -936,7 +1015,7 @@ static int get_fc3_sum_in_supercell(npy_cdouble fc3_q[3][3][3],
   /* Sum in terms of s1 is not taken due to translational invariance. */
   /* Phase factor with q_1 is not used. */
   s1 = 0;
-  for (i = 0; i < s_num_atom; i++) {
+  for (i = 0; i < num_satom; i++) {
     if (p2s->data[p1] == s2p->data[i]) {
       if (fabs(svecs->data[i][p1][0][0]) < symprec &&
 	  fabs(svecs->data[i][p1][0][1]) < symprec &&
@@ -947,7 +1026,7 @@ static int get_fc3_sum_in_supercell(npy_cdouble fc3_q[3][3][3],
   }
 
   /* Sum in terms of s2 */
-  for (s2 = 0; s2 < s_num_atom; s2++) {
+  for (s2 = 0; s2 < num_satom; s2++) {
     if (s2p->data[s2] == p2s->data[p2]) {
       phase2.real = 0.0;
       phase2.imag = 0.0;
@@ -965,7 +1044,7 @@ static int get_fc3_sum_in_supercell(npy_cdouble fc3_q[3][3][3],
       phase2.imag /= multi->data[s2][p1];
 
       /* Sum in terms of s3 */
-      for (s3 = 0; s3 < s_num_atom; s3++) {
+      for (s3 = 0; s3 < num_satom; s3++) {
 	if (s2p->data[s3] == p2s->data[p3]) {
 	  phase3.real = 0.0;
 	  phase3.imag = 0.0;
@@ -986,13 +1065,13 @@ static int get_fc3_sum_in_supercell(npy_cdouble fc3_q[3][3][3],
 
 	  switch (r2q_TI_index) {
 	  case 1:
-	    address = s3 * s_num_atom * s_num_atom * 27 + s1 * s_num_atom * 27 + s2 * 27;
+	    address = s3 * num_satom * num_satom * 27 + s1 * num_satom * 27 + s2 * 27;
 	    break;
 	  case 2:
-	    address = s2 * s_num_atom * s_num_atom * 27 + s3 * s_num_atom * 27 + s1 * 27;
+	    address = s2 * num_satom * num_satom * 27 + s3 * num_satom * 27 + s1 * 27;
 	    break;
 	  default:
-	    address = s1 * s_num_atom * s_num_atom * 27 + s2 * s_num_atom * 27 + s3 * 27;
+	    address = s1 * num_satom * num_satom * 27 + s2 * num_satom * 27 + s3 * 27;
 	    break;
 	  }
 	  for (i = 0; i < 3; i++) {
@@ -1345,6 +1424,33 @@ static void free_DArray2D(DArray2D * array)
   array = NULL;
 }
 
+static CArray2D * alloc_CArray2D(const int index1, const int index2)
+{
+  int i;
+  CArray2D * array;
+  
+  array = (CArray2D*) malloc(sizeof(CArray2D));
+  array->d1 = index1;
+  array->d2 = index2;
+  array->data = (npy_cdouble**) malloc(sizeof(npy_cdouble*) * index1);
+  for (i = 0; i < index1; i++) {
+    array->data[i] = (npy_cdouble*) malloc(sizeof(npy_cdouble) * index2);
+  }
+  
+  return array;
+}
+
+static void free_CArray2D(CArray2D * array)
+{
+  int i;
+  for (i = 0; i < array->d1; i++) {
+    free(array->data[i]);
+    array->data[i] = NULL;
+  }
+  free(array->data);
+  free(array);
+  array = NULL;
+}
 
 static Array1D * alloc_Array1D(const int index1)
 {
@@ -1363,4 +1469,14 @@ static void free_Array1D(Array1D * array)
   array->data = NULL;
   free(array);
   array = NULL;
+}
+
+static int phonopy_zheev(double *w,
+			 lapack_complex_double *a,
+			 const int n)
+{
+  lapack_int info;
+  info = LAPACKE_zheev(LAPACK_ROW_MAJOR,'V', 'U',
+		       (lapack_int)n, a, (lapack_int)n, w);
+  return (int)info;
 }

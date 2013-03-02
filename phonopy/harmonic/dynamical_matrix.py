@@ -201,8 +201,6 @@ class DynamicalMatrix:
         dm = dynamical_matrix_real + dynamical_matrix_image * 1j
         self._dynamical_matrix = (dm + dm.conj().transpose()) / 2
 
-
-
 # Non analytical term correction (NAC)
 # Call this when NAC is required instead of DynamicalMatrix
 class DynamicalMatrixNAC(DynamicalMatrix):
@@ -211,6 +209,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
                  primitive,
                  force_constants,
                  frequency_scale_factor=None,
+                 decimals=None,
                  symprec=1e-5):
 
         DynamicalMatrix.__init__(self,
@@ -218,6 +217,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
                                  primitive,
                                  force_constants,
                                  frequency_scale_factor=frequency_scale_factor,
+                                 decimals=decimals,
                                  symprec=1e-5)
         self._bare_force_constants = self._force_constants.copy()
         self._method = None

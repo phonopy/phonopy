@@ -7,7 +7,8 @@ extension = Extension('phonopy._phonopy',
                       extra_compile_args=['-fopenmp'],
                       extra_link_args=['-lgomp'],
                       include_dirs=['c'] + include_dirs_numpy,
-                      sources=['c/_phonopy.c'])
+                      sources=['c/_phonopy.c',
+                               'c/dynmat.c'])
 
 extension_spglib = Extension(
     'phonopy._spglib',

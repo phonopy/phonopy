@@ -6,7 +6,7 @@ include_dirs_numpy = [numpy.get_include()]
 extension = Extension('anharmonic._phono3py',
                       include_dirs=['c'] + include_dirs_numpy,
                       extra_compile_args=['-fopenmp'],
-                      extra_link_args=['-lgomp'],
+                      extra_link_args=['-lgomp', '-llapacke'],
                       sources=['c/_phono3py.c'])
 
 setup(name='phono3py',

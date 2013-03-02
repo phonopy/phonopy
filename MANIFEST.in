@@ -1,2 +1,2 @@
-graft c/spglib_include
+graft c
 graft example

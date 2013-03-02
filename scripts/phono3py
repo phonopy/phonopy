@@ -134,7 +134,8 @@ parser.set_defaults(amplitude=None,
                     tstep=None,
                     temperatures=None,
                     verbose=True,
-                    write_grid_points=False)
+                    write_grid_points=False,
+                    zheev_test=None)
 parser.add_option("--amplitude", dest="amplitude", type="float",
                   help="Distance of displacements")
 parser.add_option("--bi", "--band_indices", dest="band_indices",
@@ -295,6 +296,8 @@ parser.add_option("--ts", dest="temperatures",
 parser.add_option("--wgp", "--write_grid_points", dest="write_grid_points",
                   action="store_true",
                   help="Write grid address of irreducible grid points for specified mesh numbers to ir_grid_address.yaml")
+parser.add_option("--zheev", dest="zheev_test", 
+                  type="string", help="zheev test")
 (options, args) = parser.parse_args()
 option_list = parser.option_list
 
@@ -731,6 +734,10 @@ else:
                                           nac_params,
                                           nac_q_direction,
                                           frequency_scale_factor=freq_scale)
+
+            if options.zheev_test:
+                phono3py.solve_dynamical_matrix(
+                    [float(x) for x in options.zheev_test.split()])
 
             if options.is_decay_channel:
                 phono3py.get_decay_channels(grid_points,
