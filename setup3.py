@@ -10,7 +10,7 @@ extension = Extension('anharmonic._phono3py',
                       sources=['c/_phono3py.c'])
 
 setup(name='phono3py',
-      version='0.1.0',
+      version='0.2.0',
       description='This is the phono3py module.',
       author='Atsushi Togo',
       author_email='atz.togo@gmail.com',
