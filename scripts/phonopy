@@ -1007,6 +1007,8 @@ elif settings.get_run_mode() == 'mesh':
 
         if options.is_graph_plot:
             pdos_indices = settings.get_pdos_indices()
+            if pdos_indices is None:
+                pdos_indices = [range(primitive.get_number_of_atoms())]
             plot = phonon.plot_partial_DOS(
                 pdos_indices=pdos_indices,
                 legend=([np.array(x) + 1 for x in pdos_indices]))

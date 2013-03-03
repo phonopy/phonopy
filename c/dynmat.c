@@ -12,7 +12,6 @@ int get_dynamical_matrix_at_q(double *dynamical_matrix_real,
 			      const double *mass,
 			      const int *s2p_map, 
 			      const int *p2s_map,
-			      const int is_nac,
 			      const double *charge_sum)
 {
   int i, j, k, l, m;
@@ -49,7 +48,7 @@ int get_dynamical_matrix_at_q(double *dynamical_matrix_real,
 
 	for (l = 0; l < 3; l++) {
 	  for (m = 0; m < 3; m++) {
-	    if (is_nac) {
+	    if (charge_sum) {
 	    fc_elem = (fc[p2s_map[i] * num_satom * 9 + k * 9 + l * 3 + m] +
 		       charge_sum[i * num_patom * 9 +
 				  j * 9 + l * 3 + m]) / mass_sqrt;

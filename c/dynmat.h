@@ -12,7 +12,6 @@ int get_dynamical_matrix_at_q(double *dynamical_matrix_real,
 			      const double *mass,
 			      const int *s2p_map, 
 			      const int *p2s_map,
-			      const int is_nac,
 			      const double *charge_sum);
 void get_charge_sum(double *charge_sum,
 		    const int num_patom,

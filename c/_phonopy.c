@@ -121,7 +121,6 @@ static PyObject * py_get_dynamical_matrix(PyObject *self, PyObject *args)
   const long* p2s_map_long = (long*)p2s_map->data;
   const int num_patom = p2s_map->dimensions[0];
   const int num_satom = s2p_map->dimensions[0];
-  const double *zero;
 
   int *multi, *s2p_map_int, *p2s_map_int;
 
@@ -151,8 +150,7 @@ static PyObject * py_get_dynamical_matrix(PyObject *self, PyObject *args)
 			    m,
 			    s2p_map_int,
 			    p2s_map_int,
-			    0,
-			    zero);
+			    NULL);
 
   free(multi);
   free(s2p_map_int);
@@ -240,7 +238,6 @@ static PyObject * py_get_nac_dynamical_matrix(PyObject *self, PyObject *args)
 			    m,
 			    s2p_map_int,
 			    p2s_map_int,
-			    1,
 			    charge_sum);
 
   free(charge_sum);

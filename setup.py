@@ -4,8 +4,8 @@ import numpy
 include_dirs_numpy = [numpy.get_include()]
 
 extension = Extension('phonopy._phonopy',
-                      extra_compile_args=['-fopenmp'],
-                      extra_link_args=['-lgomp'],
+                      # extra_compile_args=['-fopenmp'],
+                      # extra_link_args=['-lgomp'],
                       include_dirs=['c'] + include_dirs_numpy,
                       sources=['c/_phonopy.c',
                                'c/dynmat.c'])
@@ -13,8 +13,8 @@ extension = Extension('phonopy._phonopy',
 extension_spglib = Extension(
     'phonopy._spglib',
     include_dirs=['c/spglib_include'] + include_dirs_numpy,
-    extra_compile_args=['-fopenmp'],
-    extra_link_args=['-lgomp'],
+    # extra_compile_args=['-fopenmp'],
+    # extra_link_args=['-lgomp'],
     sources=['c/_spglib.c',
              'c/spglib/cell.c',
              'c/spglib/debug.c',
@@ -35,7 +35,7 @@ extension_spglib = Extension(
 
 
 setup(name='phonopy',
-      version='1.6.4-pre',
+      version='1.6.4-pre2',
       description='This is the phonopy module.',
       author='Atsushi Togo',
       author_email='atz.togo@gmail.com',
