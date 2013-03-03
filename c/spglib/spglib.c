@@ -117,8 +117,7 @@ static int get_triplets_reciprocal_mesh_at_q(int weights[],
 					     const int mesh[3],
 					     const int is_time_reversal,
 					     const int num_rot,
-					     SPGCONST int rotations[][3][3],
-					     const double symprec);
+					     SPGCONST int rotations[][3][3]);
 
 static int extract_triplets_reciprocal_mesh_at_q(int triplets_at_q[][3],
 						 int weight_triplets_at_q[],
@@ -568,8 +567,7 @@ int spg_get_triplets_reciprocal_mesh_at_q(int weights[],
 					  const int mesh[3],
 					  const int is_time_reversal,
 					  const int num_rot,
-					  SPGCONST int rotations[][3][3],
-					  const double symprec)
+					  SPGCONST int rotations[][3][3])
 {
   return get_triplets_reciprocal_mesh_at_q(weights,
 					   grid_points,
@@ -578,8 +576,7 @@ int spg_get_triplets_reciprocal_mesh_at_q(int weights[],
 					   mesh,
 					   is_time_reversal,
 					   num_rot,
-					   rotations,
-					   symprec);
+					   rotations);
 }
 
 int spg_extract_triplets_reciprocal_mesh_at_q(int triplets_at_q[][3],
@@ -1092,8 +1089,7 @@ static int get_triplets_reciprocal_mesh_at_q(int weights[],
 					     const int mesh[3],
 					     const int is_time_reversal,
 					     const int num_rot,
-					     SPGCONST int rotations[][3][3],
-					     const double symprec)
+					     SPGCONST int rotations[][3][3])
 {
   MatINT *rot_real;
   int i, num_ir;
@@ -1109,8 +1105,7 @@ static int get_triplets_reciprocal_mesh_at_q(int weights[],
 				    grid_point,
 				    mesh,
 				    is_time_reversal,
-				    rot_real,
-				    symprec);
+				    rot_real);
 
   mat_free_MatINT(rot_real);
 

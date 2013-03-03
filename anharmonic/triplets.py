@@ -5,16 +5,14 @@ def get_triplets_at_q(gp,
                       mesh,
                       primitive_lattice,
                       rotations,
-                      is_time_reversal=True,
-                      symprec=1e-5):
+                      is_time_reversal=True):
 
     (weights,
      third_q,
      grid_address) = spg.get_triplets_reciprocal_mesh_at_q(gp,
                                                            mesh,
                                                            rotations,
-                                                           is_time_reversal,
-                                                           symprec)
+                                                           is_time_reversal)
 
     weights_at_q = []
     triplets_at_q = []

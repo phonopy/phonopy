@@ -290,13 +290,11 @@ def get_triplets_reciprocal_mesh(mesh,
 def get_triplets_reciprocal_mesh_at_q(fixed_grid_number,
                                       mesh,
                                       rotations,
-                                      is_time_reversal=True,
-                                      symprec=1e-5):
+                                      is_time_reversal=True):
 
     weights = np.zeros(np.prod(mesh), dtype=int)
     third_q = np.zeros(np.prod(mesh), dtype=int)
     mesh_points = np.zeros((np.prod(mesh), 3), dtype=int)
-    
 
     spg.triplets_reciprocal_mesh_at_q(weights,
                                       mesh_points,
@@ -304,8 +302,7 @@ def get_triplets_reciprocal_mesh_at_q(fixed_grid_number,
                                       fixed_grid_number,
                                       np.array(mesh, dtype=int),
                                       is_time_reversal * 1,
-                                      rotations.copy(),
-                                      symprec)
+                                      rotations.copy())
 
     return weights, third_q, mesh_points
         

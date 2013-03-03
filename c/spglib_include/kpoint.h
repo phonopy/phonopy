@@ -47,8 +47,7 @@ int kpt_get_ir_triplets_at_q(int weights[],
 			     const int grid_point,
 			     const int mesh[3],
 			     const int is_time_reversal,
-			     const MatINT * rotations,
-			     const double symprec);
+			     const MatINT * rotations);
 int kpt_extract_triplets_reciprocal_mesh_at_q(int triplets_at_q[][3],
 					      int weight_at_q[],
 					      const int fixed_grid_number,

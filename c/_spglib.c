@@ -714,17 +714,16 @@ static PyObject * get_triplets_reciprocal_mesh_at_q(PyObject *self, PyObject *ar
   PyArrayObject* mesh;
   int is_time_reversal;
   PyArrayObject* rotations;
-  double symprec;
-  if (!PyArg_ParseTuple(args, "OOOiOiOd",
+  if (!PyArg_ParseTuple(args, "OOOiOiO",
 			&weights,
 			&grid_points,
 			&third_q,
 			&fixed_grid_number,
 			&mesh,
 			&is_time_reversal,
-			&rotations,
-			&symprec))
+			&rotations)) {
     return NULL;
+  }
 
   int i, j, k;
 
@@ -761,8 +760,7 @@ static PyObject * get_triplets_reciprocal_mesh_at_q(PyObject *self, PyObject *ar
 					  mesh_int,
 					  is_time_reversal,
 					  num_rot,
-					  rot,
-					  symprec);
+					  rot);
 
   for (i = 0; i < num_grid; i++) {
     weights_long[i] = (long) weights_int[i];

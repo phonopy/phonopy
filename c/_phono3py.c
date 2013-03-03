@@ -46,6 +46,8 @@ static const int index_exchange[6][3] = { { 0, 1, 2 },
 					  { 1, 0, 2 } };
 
 static PyObject * py_get_interaction_strength(PyObject *self, PyObject *args);
+static PyObject * py_get_triplet_interaction_strength(PyObject *self,
+						      PyObject *args);
 static PyObject * py_get_sum_in_primitive(PyObject *self, PyObject *args);
 static PyObject * py_get_fc3_reciprocal(PyObject *self, PyObject *args);
 static PyObject * py_get_fc3_realspace(PyObject *self, PyObject *args);
@@ -55,12 +57,41 @@ static PyObject * py_get_jointDOS(PyObject *self, PyObject *args);
 static PyObject * py_distribute_fc3(PyObject *self, PyObject *args);
 static PyObject * py_phonopy_zheev(PyObject *self, PyObject *args);
 static int get_interaction_strength(double *amps,
+				    const double *q0,
+				    const double *q1,
+				    const double *q2,
+				    const Array1D *weights,
+				    const double *fc3,
+				    const double *masses,
+				    const Array1D *p2s,
+				    const Array1D *s2p,
+				    const Array2D *multi,
+				    const ShortestVecs *svecs,
+				    const double cutoff_frequency,
+				    const int is_symmetrize_fc3_q,
+				    const int r2q_TI_index,
+				    const double symprec);
+static int get_triplet_interaction_strength(double *amps,
+					    const double *fc3,
+					    const double *q_vecs,
+					    const npy_cdouble* eigvecs,
+					    const double *freqs,
+					    const double *masses,
+					    const Array1D *p2s,
+					    const Array1D *s2p,
+					    const Array2D *multi,
+					    const ShortestVecs *svecs,
+					    const Array1D *band_indices,
+					    const double cutoff_frequency,
+					    const int is_symmetrize_fc3_q,
+					    const int r2q_TI_index,
+					    const double symprec);
+static int sum_interaction_strength(double *amps,
 				    const npy_cdouble* eigvecs,
 				    const double *freqs,
 				    const double *masses,
 				    const Array1D *p2s,
 				    const Array2D *multi,
-				    const DArray2D *q,
 				    const ShortestVecs *svecs,
 				    const CArray2D *fc3_q,
 				    const Array1D *band_indices,
@@ -154,7 +185,8 @@ static int phonopy_zheev(double *w,
 
 
 static PyMethodDef functions[] = {
-  {"interaction_strength", py_get_interaction_strength, METH_VARARGS, "Phonon interaction strength"},
+  {"interaction_strength", py_get_interaction_strength, METH_VARARGS, "Interaction strength of triplets"},
+  {"triplet_interaction_strength", py_get_triplet_interaction_strength, METH_VARARGS, "One triplet interaction strength"},
   {"sum_in_primitive", py_get_sum_in_primitive, METH_VARARGS, "Summation in primitive cell"},
   {"fc3_reciprocal", py_get_fc3_reciprocal, METH_VARARGS, "Transformation of fc3 from real to reciprocal space"},
   {"fc3_realspace", py_get_fc3_realspace, METH_VARARGS, "Transformation of fc3 from reciprocal to real space"},
@@ -174,11 +206,112 @@ PyMODINIT_FUNC init_phono3py(void)
 
 static PyObject * py_get_interaction_strength(PyObject *self, PyObject *args)
 {
-  int i, j, k;
+  int i, j;
+  Array1D * s2p, * p2s, *w;
+  Array2D * multi;
+  ShortestVecs * svecs;
+
+  PyArrayObject* amplitude;
+  PyArrayObject* qvec0;
+  PyArrayObject* qvec1;
+  PyArrayObject* qvec2;
+  PyArrayObject* weights;
+  PyArrayObject* shortest_vectors;
+  PyArrayObject* multiplicity;
+  PyArrayObject* p2s_map;
+  PyArrayObject* s2p_map;
+  PyArrayObject* force_constant_third;
+  PyArrayObject* atomic_masses;
+  double symprec, cutoff_frequency;
+  int r2q_TI_index, is_symmetrize_fc3_q;
+
+  if (!PyArg_ParseTuple(args, "OOOOOOOOOOOdiid",
+			&amplitude,
+			&qvec0,
+			&qvec1,
+			&qvec2,
+			&weights,
+			&shortest_vectors,
+			&multiplicity,
+			&p2s_map,
+			&s2p_map,
+			&force_constant_third,
+			&atomic_masses,
+			&cutoff_frequency,
+			&is_symmetrize_fc3_q,
+			&r2q_TI_index,
+			&symprec)) {
+    return NULL;
+  }
+
+  double* amps = (double*)amplitude->data;
+  const double *q0 = (double*)qvec0->data;
+  const double *q1 = (double*)qvec1->data;
+  const double *q2 = (double*)qvec2->data;
+  const long *weights_long = (long*)weights->data;
+  const double* masses = (double*)atomic_masses->data;
+  const long* multiplicity_long = (long*)multiplicity->data;
+  const long* p2s_map_long = (long*)p2s_map->data;
+  const long* s2p_map_long = (long*)s2p_map->data;
+  const double* fc3 = (double*)force_constant_third->data;
+
+  const int num_satom = (int)multiplicity->dimensions[0];
+  const int num_patom = (int)multiplicity->dimensions[1];
+  const int num_triplets = (int)weights->dimensions[0];
+  
+
+  svecs = get_shortest_vecs(shortest_vectors);
+  multi = alloc_Array2D(num_satom, num_patom);
+  for (i = 0; i < num_satom; i++) {
+    for (j = 0; j < num_patom; j++) {
+      multi->data[i][j] = multiplicity_long[i * num_patom + j];
+    }
+  }
+
+  s2p = alloc_Array1D(num_satom);
+  for (i = 0; i < num_satom; i++) {
+    s2p->data[i] = s2p_map_long[i];
+  }
+  p2s = alloc_Array1D(num_patom);
+  for (i = 0; i < num_patom; i++) {
+    p2s->data[i] = p2s_map_long[i];
+  }
+  w = alloc_Array1D(num_triplets);
+  for (i = 0; i < num_triplets; i++) {
+    w->data[i] = weights_long[i];
+  }
+
+  get_interaction_strength(amps,
+			   q0,
+			   q1,
+			   q2,
+			   w,
+			   fc3,
+			   masses,
+			   p2s,
+			   s2p,
+			   multi,
+			   svecs,
+			   cutoff_frequency,
+			   is_symmetrize_fc3_q,
+			   r2q_TI_index,
+			   symprec);
+
+  free_Array1D(p2s);
+  free_Array1D(s2p);
+  free_Array2D(multi);
+  free_Array1D(w);
+  free_shortest_vecs(svecs);
+
+  Py_RETURN_NONE;
+}
+
+static PyObject * py_get_triplet_interaction_strength(PyObject *self,
+						      PyObject *args)
+{
+  int i, j;
   Array1D * s2p, * p2s, * band_indices;
   Array2D * multi;
-  DArray2D * q;
-  CArray2D * fc3_q;
   ShortestVecs * svecs;
 
   PyArrayObject* amplitude;
@@ -223,14 +356,13 @@ static PyObject * py_get_interaction_strength(PyObject *self, PyObject *args)
   const long* s2p_map_long = (long*)s2p_map->data;
   const long* band_indices_long = (long*)set_of_band_indices->data;
   const double* fc3 = (double*)force_constant_third->data;
+  const double* q_vecs = (double*)q_triplet->data;
 
   const int num_satom = (int)multiplicity->dimensions[0];
   const int num_patom = (int)multiplicity->dimensions[1];
   const int num_band0 = (int)set_of_band_indices->dimensions[0];
 
-
   svecs = get_shortest_vecs(shortest_vectors);
-  
   multi = alloc_Array2D(num_satom, num_patom);
   for (i = 0; i < num_satom; i++) {
     for (j = 0; j < num_patom; j++) {
@@ -250,65 +382,27 @@ static PyObject * py_get_interaction_strength(PyObject *self, PyObject *args)
   for (i = 0; i < num_band0; i++) {
     band_indices->data[i] = band_indices_long[i];
   }
-  
-  q = alloc_DArray2D(3, 3);
-  
 
-  if (is_symmetrize_fc3_q == 0) {
-    fc3_q = alloc_CArray2D(1, num_patom * num_patom * num_patom * 27);
-    for (i = 0; i < 3; i ++) {
-      for (j = 0; j < 3; j ++) {
-	q->data[i][j] = ((double*)q_triplet->data)[i * 3 + j];
-      }
-    }
-    get_fc3_reciprocal(fc3_q->data[0],
-		       svecs,
-		       multi,
-		       q,
-		       s2p,
-		       p2s,
-		       fc3,
-		       r2q_TI_index,
-		       symprec);
-  } else {
-    fc3_q = alloc_CArray2D(6, num_patom * num_patom * num_patom * 27);
-    for (i = 0; i < 6; i++) {
-      for (j = 0; j < 3; j ++) {
-	for (k = 0; k < 3; k ++) {
-	  q->data[index_exchange[i][j]][k] =
-	    ((double*)q_triplet->data)[j * 3 + k];
-	}
-      }
-      get_fc3_reciprocal(fc3_q->data[i],
-			 svecs,
-			 multi,
-			 q,
-			 s2p,
-			 p2s,
-			 fc3,
-			 r2q_TI_index,
-			 symprec);
-    }
-  }
-
-  get_interaction_strength(amps,
-			   eigvecs,
-			   freqs,
-			   masses,
-			   p2s,
-			   multi,
-			   q,
-			   svecs,
-			   fc3_q,
-			   band_indices,
-			   cutoff_frequency);
+  get_triplet_interaction_strength(amps,
+				   fc3,
+				   q_vecs,
+				   eigvecs,
+				   freqs,
+				   masses,
+				   p2s,
+				   s2p,
+				   multi,
+				   svecs,
+				   band_indices,
+				   cutoff_frequency,
+				   is_symmetrize_fc3_q,
+				   r2q_TI_index,
+				   symprec);
 
   free_Array1D(p2s);
   free_Array1D(s2p);
   free_Array2D(multi);
   free_shortest_vecs(svecs);
-  free_DArray2D(q);
-  free_CArray2D(fc3_q);
 
   Py_RETURN_NONE;
 }
@@ -787,14 +881,93 @@ static PyObject * py_phonopy_zheev(PyObject *self, PyObject *args)
   return PyInt_FromLong((long) info);
 }
 
-
 static int get_interaction_strength(double *amps,
+				    const double *q0,
+				    const double *q1,
+				    const double *q2,
+				    const Array1D *weights,
+				    const double *fc3,
+				    const double *masses,
+				    const Array1D *p2s,
+				    const Array1D *s2p,
+				    const Array2D *multi,
+				    const ShortestVecs *svecs,
+				    const double cutoff_frequency,
+				    const int is_symmetrize_fc3_q,
+				    const int r2q_TI_index,
+				    const double symprec)
+{
+}
+
+static int get_triplet_interaction_strength(double *amps,
+					    const double *fc3,
+					    const double *q_vecs,
+					    const npy_cdouble* eigvecs,
+					    const double *freqs,
+					    const double *masses,
+					    const Array1D *p2s,
+					    const Array1D *s2p,
+					    const Array2D *multi,
+					    const ShortestVecs *svecs,
+					    const Array1D *band_indices,
+					    const double cutoff_frequency,
+					    const int is_symmetrize_fc3_q,
+					    const int r2q_TI_index,
+					    const double symprec)
+{
+  int i, j, k, num_patom;
+  DArray2D * q;
+  CArray2D * fc3_q;
+
+  num_patom = p2s->d1;
+  
+  if (is_symmetrize_fc3_q == 0) {
+    fc3_q = alloc_CArray2D(1, num_patom * num_patom * num_patom * 27);
+  } else {
+    fc3_q = alloc_CArray2D(6, num_patom * num_patom * num_patom * 27);
+  }
+
+  q = alloc_DArray2D(3, 3);
+  for (i = 0; i < fc3_q->d1; i++) {
+    for (j = 0; j < 3; j ++) {
+      for (k = 0; k < 3; k ++) {
+	q->data[ index_exchange[i][j] ][k] = q_vecs[j * 3 + k];
+      }
+    }
+    get_fc3_reciprocal(fc3_q->data[i],
+		       svecs,
+		       multi,
+		       q,
+		       s2p,
+		       p2s,
+		       fc3,
+		       r2q_TI_index,
+		       symprec);
+  }
+
+  sum_interaction_strength(amps,
+			   eigvecs,
+			   freqs,
+			   masses,
+			   p2s,
+			   multi,
+			   svecs,
+			   fc3_q,
+			   band_indices,
+			   cutoff_frequency);
+
+  free_DArray2D(q);
+  free_CArray2D(fc3_q);
+
+  return 1;
+}
+
+static int sum_interaction_strength(double *amps,
 				    const npy_cdouble* eigvecs,
 				    const double *freqs,
 				    const double *masses,
 				    const Array1D *p2s,
 				    const Array2D *multi,
-				    const DArray2D *q,
 				    const ShortestVecs *svecs,
 				    const CArray2D *fc3_q,
 				    const Array1D *band_indices,

@@ -159,8 +159,7 @@ class PhononPhonon:
                 mesh,
                 self._primitive.get_cell(),
                 self._symmetry.get_pointgroup_operations(),
-                is_time_reversal=True,
-                symprec=self._symprec)
+                is_time_reversal=True)
 
             if self._log_level > 1:
                 t_filename = "triplets_q-%d%d%d-%d.dat" % (tuple(mesh) + (gp,))
@@ -234,7 +233,7 @@ class PhononPhonon:
         for i, (q3, w) in enumerate(zip(self._triplets_at_q,
                                         self._weights_at_q)):
             (self._amplitude_at_q[i],
-             self._frequencies_at_q[i]) = get_interaction_strength(
+             self._frequencies_at_q[i]) = get_triplet_interaction_strength(
                 i,
                 len(self._triplets_at_q),
                 q3,
@@ -301,29 +300,29 @@ class PhononPhonon:
         if self._log_level:
             print_log(text)
 
-def get_interaction_strength(triplet_number,
-                             num_triplets,
-                             q3,
-                             w,
-                             mesh,
-                             grid_address,
-                             shortest_vectors,
-                             multiplicity,
-                             fc3,
-                             dm,
-                             q_direction,
-                             frequencies,
-                             eigenvectors,
-                             primitive,
-                             band_indices,
-                             factor,
-                             freq_factor,
-                             cutoff_frequency,
-                             symprec, 
-                             is_symmetrize_fc3_q,
-                             is_Peierls,
-                             r2q_TI_index,
-                             log_level):
+def get_triplet_interaction_strength(triplet_number,
+                                     num_triplets,
+                                     q3,
+                                     w,
+                                     mesh,
+                                     grid_address,
+                                     shortest_vectors,
+                                     multiplicity,
+                                     fc3,
+                                     dm,
+                                     q_direction,
+                                     frequencies,
+                                     eigenvectors,
+                                     primitive,
+                                     band_indices,
+                                     factor,
+                                     freq_factor,
+                                     cutoff_frequency,
+                                     symprec, 
+                                     is_symmetrize_fc3_q,
+                                     is_Peierls,
+                                     r2q_TI_index,
+                                     log_level):
     q_set = []
     for q in q3:
         q_set.append(grid_address[q].astype(float) / mesh)
@@ -359,34 +358,34 @@ def get_interaction_strength(triplet_number,
 
     try:
         import anharmonic._phono3py as phono3c
-        get_c_interaction_strength(amplitude,
-                                   freqs,
-                                   eigvecs,
-                                   shortest_vectors,
-                                   multiplicity,
-                                   q_set,
-                                   fc3,
-                                   primitive,
-                                   band_indices,
-                                   cutoff_frequency,
-                                   is_symmetrize_fc3_q,
-                                   r2q_TI_index,
-                                   symprec)
+        get_c_triplet_interaction_strength(amplitude,
+                                           freqs,
+                                           eigvecs,
+                                           shortest_vectors,
+                                           multiplicity,
+                                           q_set,
+                                           fc3,
+                                           primitive,
+                                           band_indices,
+                                           cutoff_frequency,
+                                           is_symmetrize_fc3_q,
+                                           r2q_TI_index,
+                                           symprec)
     except ImportError:
-        get_py_interaction_strength(amplitude,
-                                    freqs,
-                                    eigvecs,
-                                    shortest_vectors,
-                                    multiplicity,
-                                    q_set,
-                                    fc3,
-                                    primitive,
-                                    band_indices,
-                                    cutoff_frequency,
-                                    is_symmetrize_fc3_q,
-                                    is_Peierls,
-                                    r2q_TI_index,
-                                    symprec)
+        get_py_triplet_interaction_strength(amplitude,
+                                            freqs,
+                                            eigvecs,
+                                            shortest_vectors,
+                                            multiplicity,
+                                            q_set,
+                                            fc3,
+                                            primitive,
+                                            band_indices,
+                                            cutoff_frequency,
+                                            is_symmetrize_fc3_q,
+                                            is_Peierls,
+                                            r2q_TI_index,
+                                            symprec)
 
     return amplitude / np.prod(mesh), freqs
 
@@ -426,54 +425,54 @@ def show_interaction_strength_progress(log_level,
 
     
 
-def get_c_interaction_strength(amplitude,
-                               freqs,
-                               eigvecs,
-                               shortest_vectors,
-                               multiplicity,
-                               q_set,
-                               fc3,
-                               primitive,
-                               band_indices,
-                               cutoff_frequency,
-                               is_symmetrize_fc3_q,
-                               r2q_TI_index,
-                               symprec):
+def get_c_triplet_interaction_strength(amplitude,
+                                       freqs,
+                                       eigvecs,
+                                       shortest_vectors,
+                                       multiplicity,
+                                       q_set,
+                                       fc3,
+                                       primitive,
+                                       band_indices,
+                                       cutoff_frequency,
+                                       is_symmetrize_fc3_q,
+                                       r2q_TI_index,
+                                       symprec):
     
     import anharmonic._phono3py as phono3c
     p2s_map = primitive.get_primitive_to_supercell_map()
     s2p_map = primitive.get_supercell_to_primitive_map()
 
-    phono3c.interaction_strength(amplitude,
-                                 freqs,
-                                 eigvecs,
-                                 shortest_vectors,
-                                 multiplicity,
-                                 q_set,
-                                 np.array(p2s_map),
-                                 np.array(s2p_map),
-                                 fc3,
-                                 primitive.get_masses(),
-                                 band_indices,
-                                 cutoff_frequency,
-                                 is_symmetrize_fc3_q * 1,
-                                 r2q_TI_index,
-                                 symprec)
+    phono3c.triplet_interaction_strength(amplitude,
+                                         freqs,
+                                         eigvecs,
+                                         shortest_vectors,
+                                         multiplicity,
+                                         q_set,
+                                         np.array(p2s_map),
+                                         np.array(s2p_map),
+                                         fc3,
+                                         primitive.get_masses(),
+                                         band_indices,
+                                         cutoff_frequency,
+                                         is_symmetrize_fc3_q * 1,
+                                         r2q_TI_index,
+                                         symprec)
 
-def get_py_interaction_strength(amplitude,
-                                freqs,
-                                eigvecs,
-                                shortest_vectors,
-                                multiplicity,
-                                q_set,
-                                fc3,
-                                primitive,
-                                band_indices,
-                                cutoff_frequency,
-                                is_symmetrize_fc3_q,
-                                is_Peierls,
-                                r2q_TI_index,
-                                symprec):
+def get_py_triplet_interaction_strength(amplitude,
+                                        freqs,
+                                        eigvecs,
+                                        shortest_vectors,
+                                        multiplicity,
+                                        q_set,
+                                        fc3,
+                                        primitive,
+                                        band_indices,
+                                        cutoff_frequency,
+                                        is_symmetrize_fc3_q,
+                                        is_Peierls,
+                                        r2q_TI_index,
+                                        symprec):
 
     # fc3 from real space to reciprocal space
     #

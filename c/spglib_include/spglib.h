@@ -327,8 +327,7 @@ int spg_get_triplets_reciprocal_mesh_at_q(int weights[],
 					  const int mesh[3],
 					  const int is_time_reversal,
 					  const int num_rot,
-					  SPGCONST int rotations[][3][3],
-					  const double symprec);
+					  SPGCONST int rotations[][3][3]);
 
 int spg_extract_triplets_reciprocal_mesh_at_q(int triplets_at_q[][3],
 					      int weight_triplets_at_q[],
