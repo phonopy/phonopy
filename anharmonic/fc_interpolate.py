@@ -1,7 +1,7 @@
 import sys
 import numpy as np
+from phonopy.harmonic.dynamical_matrix import get_smallest_vectors
 from anharmonic.r2q import get_fc3_reciprocal, get_fc2_reciprocal
-from anharmonic.shortest_distance import get_shortest_vectors
 from phonopy.structure.cells import get_supercell, Primitive, print_cell
 
 def get_fc_interpolation( fc3,
@@ -11,7 +11,7 @@ def get_fc_interpolation( fc3,
                           q_mesh,
                           symprec=1e-5 ):
 
-    vecs, multi = get_shortest_vectors( supercell, primitive, symprec )
+    vecs, multi = get_smallest_vectors( supercell, primitive, symprec )
     p2s = primitive.get_primitive_to_supercell_map()
     s2p = primitive.get_supercell_to_primitive_map()
     q_mesh = np.array( q_mesh )
@@ -56,7 +56,7 @@ def get_fc2_interpolation( fc2,
     
     fc2_intpl = np.zeros( ( num_atom_prim,
                             num_atom_super, 3, 3 ), dtype=complex )
-    vecs, multi = get_shortest_vectors( supercell, primitive, symprec )
+    vecs, multi = get_smallest_vectors( supercell, primitive, symprec )
     s2p = primitive.get_supercell_to_primitive_map()
     p2p = primitive.get_primitive_to_primitive_map()
     s2p_special = np.array( [ p2p[x] for x in s2p ] )
@@ -91,7 +91,7 @@ def get_fc3_interpolation( fc3,
     fc3_intpl = np.zeros( ( num_atom_prim,
                             num_atom_super,
                             num_atom_super, 3, 3, 3 ), dtype=complex )
-    vecs, multi = get_shortest_vectors( supercell, primitive, symprec )
+    vecs, multi = get_smallest_vectors( supercell, primitive, symprec )
     s2p = primitive.get_supercell_to_primitive_map()
     p2p = primitive.get_primitive_to_primitive_map()
     s2p_special = np.array( [ p2p[x] for x in s2p ] )

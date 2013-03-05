@@ -1,6 +1,5 @@
 import numpy as np
-from phonopy.harmonic.dynamical_matrix import DynamicalMatrix
-from anharmonic.shortest_distance import get_shortest_vectors
+from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, get_smallest_vectors
 from anharmonic.fc_interpolate import get_fc_interpolation
 from phonopy.structure.cells import get_supercell, Primitive, print_cell
 from anharmonic.file_IO import write_fc3_dat, write_fc2_dat
@@ -28,7 +27,7 @@ class Gruneisen:
                                    self._pcell,
                                    self._fc2,
                                    symprec=self._symprec)
-        self._shortest_vectors, self._multiplicity = get_shortest_vectors(
+        self._shortest_vectors, self._multiplicity = get_smallest_vectors(
             self._scell, self._pcell, self._symprec)
 
         if self._is_ion_clamped:

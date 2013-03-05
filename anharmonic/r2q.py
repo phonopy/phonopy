@@ -205,3 +205,18 @@ def get_fc3_sum_in_supercell(shortest_vectors,
 
     return tensor3
                             
+
+def print_fc3_q(num_atom, fc3_q, qpoints3):
+    for q_index, tensor in enumerate(fc3_q):
+        for i in range(num_atom):
+            for j in range(num_atom):
+                for k in range(num_atom):
+                    print "q1(%4.2f,%4.2f,%4.2f), q2(%4.2f,%4.2f,%4.2f), q3(%4.2f,%4.2f,%4.2f)" % tuple(qpoints3[q_index])
+                    print "atom index:", i+1, j+1, k+1
+                    for mat in tensor[i,j,k]*(Bohr**3/Rydberg):
+                        for vec in mat:
+                            print "%10.5f "*6 % (vec[0].real, vec[0].imag, 
+                                                 vec[1].real, vec[1].imag, 
+                                                 vec[2].real, vec[2].imag)
+                    print
+

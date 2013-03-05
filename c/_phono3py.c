@@ -61,6 +61,7 @@ static int get_interaction_strength(double *amps,
 				    const double *q1,
 				    const double *q2,
 				    const Array1D *weights,
+				    const double *fc2,
 				    const double *fc3,
 				    const double *masses,
 				    const Array1D *p2s,
@@ -220,12 +221,13 @@ static PyObject * py_get_interaction_strength(PyObject *self, PyObject *args)
   PyArrayObject* multiplicity;
   PyArrayObject* p2s_map;
   PyArrayObject* s2p_map;
-  PyArrayObject* force_constant_third;
+  PyArrayObject* force_constants_second;
+  PyArrayObject* force_constants_third;
   PyArrayObject* atomic_masses;
   double symprec, cutoff_frequency;
   int r2q_TI_index, is_symmetrize_fc3_q;
 
-  if (!PyArg_ParseTuple(args, "OOOOOOOOOOOdiid",
+  if (!PyArg_ParseTuple(args, "OOOOOOOOOOOOdiid",
 			&amplitude,
 			&qvec0,
 			&qvec1,
@@ -235,7 +237,8 @@ static PyObject * py_get_interaction_strength(PyObject *self, PyObject *args)
 			&multiplicity,
 			&p2s_map,
 			&s2p_map,
-			&force_constant_third,
+			&force_constants_second,
+			&force_constants_third,
 			&atomic_masses,
 			&cutoff_frequency,
 			&is_symmetrize_fc3_q,
@@ -253,7 +256,8 @@ static PyObject * py_get_interaction_strength(PyObject *self, PyObject *args)
   const long* multiplicity_long = (long*)multiplicity->data;
   const long* p2s_map_long = (long*)p2s_map->data;
   const long* s2p_map_long = (long*)s2p_map->data;
-  const double* fc3 = (double*)force_constant_third->data;
+  const double* fc2 = (double*)force_constants_second->data;
+  const double* fc3 = (double*)force_constants_third->data;
 
   const int num_satom = (int)multiplicity->dimensions[0];
   const int num_patom = (int)multiplicity->dimensions[1];
@@ -286,6 +290,7 @@ static PyObject * py_get_interaction_strength(PyObject *self, PyObject *args)
 			   q1,
 			   q2,
 			   w,
+			   fc2,
 			   fc3,
 			   masses,
 			   p2s,
@@ -322,7 +327,7 @@ static PyObject * py_get_triplet_interaction_strength(PyObject *self,
   PyArrayObject* q_triplet;
   PyArrayObject* p2s_map;
   PyArrayObject* s2p_map;
-  PyArrayObject* force_constant_third;
+  PyArrayObject* force_constants_third;
   PyArrayObject* atomic_masses;
   PyArrayObject* set_of_band_indices;
   double symprec, cutoff_frequency;
@@ -337,7 +342,7 @@ static PyObject * py_get_triplet_interaction_strength(PyObject *self,
 			&q_triplet,
 			&p2s_map,
 			&s2p_map,
-			&force_constant_third,
+			&force_constants_third,
 			&atomic_masses,
 			&set_of_band_indices,
 			&cutoff_frequency,
@@ -355,7 +360,7 @@ static PyObject * py_get_triplet_interaction_strength(PyObject *self,
   const long* p2s_map_long = (long*)p2s_map->data;
   const long* s2p_map_long = (long*)s2p_map->data;
   const long* band_indices_long = (long*)set_of_band_indices->data;
-  const double* fc3 = (double*)force_constant_third->data;
+  const double* fc3 = (double*)force_constants_third->data;
   const double* q_vecs = (double*)q_triplet->data;
 
   const int num_satom = (int)multiplicity->dimensions[0];
@@ -409,21 +414,21 @@ static PyObject * py_get_triplet_interaction_strength(PyObject *self,
 
 static PyObject * py_get_sum_in_primitive(PyObject *self, PyObject *args)
 {
-  PyArrayObject* force_constant_third;
+  PyArrayObject* force_constants_third;
   PyArrayObject* eigvec1;
   PyArrayObject* eigvec2;
   PyArrayObject* eigvec3;
   PyArrayObject* masses;
 
   if (!PyArg_ParseTuple(args, "OOOOO",
-			&force_constant_third,
+			&force_constants_third,
 			&eigvec1,
 			&eigvec2,
 			&eigvec3,
 			&masses))
     return NULL;
 
-  const npy_cdouble* fc3 = (npy_cdouble*)force_constant_third->data;
+  const npy_cdouble* fc3 = (npy_cdouble*)force_constants_third->data;
   const npy_cdouble* e1 = (npy_cdouble*)eigvec1->data;
   const npy_cdouble* e2 = (npy_cdouble*)eigvec2->data;
   const npy_cdouble* e3 = (npy_cdouble*)eigvec3->data;
@@ -441,20 +446,20 @@ static PyObject * py_get_fc3_reciprocal(PyObject *self, PyObject *args)
   PyArrayObject* q_triplet;
   PyArrayObject* p2s_map;
   PyArrayObject* s2p_map;
-  PyArrayObject* force_constant_third;
-  PyArrayObject* force_constant_third_reciprocal;
+  PyArrayObject* force_constants_third;
+  PyArrayObject* force_constants_third_reciprocal;
   const double symprec;
   const int r2q_TI_index;
   
 
   if (!PyArg_ParseTuple(args, "OOOOOOOid",
-			&force_constant_third_reciprocal,
+			&force_constants_third_reciprocal,
 			&shortest_vectors,
 			&multiplicity,
 			&q_triplet,
 			&p2s_map,
 			&s2p_map,
-			&force_constant_third,
+			&force_constants_third,
 			&r2q_TI_index,
 			&symprec))
     return NULL;
@@ -464,12 +469,12 @@ static PyObject * py_get_fc3_reciprocal(PyObject *self, PyObject *args)
   Array2D * multi;
   DArray2D * q;
   ShortestVecs * svecs;
-  npy_cdouble* fc3_q = (npy_cdouble*)force_constant_third_reciprocal->data;
+  npy_cdouble* fc3_q = (npy_cdouble*)force_constants_third_reciprocal->data;
   
   const long* multiplicity_long = (long*)multiplicity->data;
   const long* p2s_map_long = (long*)p2s_map->data;
   const long* s2p_map_long = (long*)s2p_map->data;
-  const double* fc3 = (double*)force_constant_third->data;
+  const double* fc3 = (double*)force_constants_third->data;
 
   const int num_satom = (int)multiplicity->dimensions[0];
   const int num_patom = (int)multiplicity->dimensions[1];
@@ -803,7 +808,7 @@ static PyObject * py_get_decay_channel(PyObject *self, PyObject *args)
 
 static PyObject * py_distribute_fc3(PyObject *self, PyObject *args)
 {
-  PyArrayObject* force_constant_third;
+  PyArrayObject* force_constants_third;
   int third_atom, third_atom_rot;
   PyArrayObject* positions;
   PyArrayObject* rotation;
@@ -812,7 +817,7 @@ static PyObject * py_distribute_fc3(PyObject *self, PyObject *args)
   double symprec;
 
   if (!PyArg_ParseTuple(args, "OiiOOOOd",
-			&force_constant_third,
+			&force_constants_third,
 			&third_atom,
 			&third_atom_rot,
 			&positions,
@@ -823,7 +828,7 @@ static PyObject * py_distribute_fc3(PyObject *self, PyObject *args)
     return NULL;
 
   int i, j;
-  double* fc3 = (double*)force_constant_third->data;
+  double* fc3 = (double*)force_constants_third->data;
   const double* pos = (double*)positions->data;
   const long* rot_long = (long*)rotation->data;
   int rot_int[3][3];
@@ -886,6 +891,7 @@ static int get_interaction_strength(double *amps,
 				    const double *q1,
 				    const double *q2,
 				    const Array1D *weights,
+				    const double *fc2,
 				    const double *fc3,
 				    const double *masses,
 				    const Array1D *p2s,
@@ -1481,6 +1487,44 @@ static double bs(const double x, const double t)
   return 1.0 / (exp(x / (KB * t)) - 1);
 }
 
+/* static ShortestVecs * get_shortest_vecs(PyArrayObject* shortest_vectors) */
+/* { */
+/*   int i, j, k, l; */
+/*   ShortestVecs * svecs; */
+
+/*   svecs = (ShortestVecs*) malloc(sizeof(ShortestVecs)); */
+/*   for (i = 0; i < 4; i++) { */
+/*     svecs->d[i] = shortest_vectors->dimensions[i]; */
+/*   } */
+
+  /* svecs->data = (double****) malloc(sizeof(double***) * svecs->d[0]); */
+  /* for (i = 0; i < svecs->d[0]; i++) { */
+  /*   svecs->data[i] = (double***) malloc(sizeof(double**) * svecs->d[1]); */
+  /*   for (j = 0; j < svecs->d[1]; j++) { */
+  /*     svecs->data[i][j] = (double**) malloc(sizeof(double*) * svecs->d[2]); */
+  /*     for (k = 0; k < svecs->d[2]; k++) { */
+  /* 	svecs->data[i][j][k] = (double*) malloc(sizeof(double) * svecs->d[3]); */
+  /*     } */
+  /*   } */
+  /* } */
+
+/*   for (i = 0; i < svecs->d[0]; i++) { */
+/*     for (j = 0; j < svecs->d[1]; j++) { */
+/*       for (k = 0; k < svecs->d[2]; k++) { */
+/* 	for (l = 0; l < svecs->d[3]; l++) { */
+/* 	  svecs->data[i][j][k][l] = */
+/* 	    ((double*)shortest_vectors->data)[svecs->d[1] * svecs->d[2] * svecs->d[3] * i + */
+/* 					      svecs->d[2] * svecs->d[3] * j + */
+/* 					      svecs->d[3] * k + */
+/* 					      l]; */
+/* 	} */
+/*       } */
+/*     } */
+/*   } */
+
+/*   return svecs; */
+/* } */
+
 static ShortestVecs * get_shortest_vecs(PyArrayObject* shortest_vectors)
 {
   int i, j, k, l;
@@ -1491,27 +1535,16 @@ static ShortestVecs * get_shortest_vecs(PyArrayObject* shortest_vectors)
     svecs->d[i] = shortest_vectors->dimensions[i];
   }
 
-  svecs->data = (double****) malloc(sizeof(double***) * svecs->d[0]);
+  svecs->data = (double****)(shortest_vectors->data);
   for (i = 0; i < svecs->d[0]; i++) {
-    svecs->data[i] = (double***) malloc(sizeof(double**) * svecs->d[1]);
+    svecs->data[i] =(double***)
+      ((double*)svecs->data + svecs->d[1] * svecs->d[2] * svecs->d[3] * i);
     for (j = 0; j < svecs->d[1]; j++) {
-      svecs->data[i][j] = (double**) malloc(sizeof(double*) * svecs->d[2]);
+      svecs->data[i][j] = (double**)
+	((double*)svecs->data[i] + svecs->d[2] * svecs->d[3] * j);
       for (k = 0; k < svecs->d[2]; k++) {
-	svecs->data[i][j][k] = (double*) malloc(sizeof(double) * svecs->d[3]);
-      }
-    }
-  }
-
-  for (i = 0; i < svecs->d[0]; i++) {
-    for (j = 0; j < svecs->d[1]; j++) {
-      for (k = 0; k < svecs->d[2]; k++) {
-	for (l = 0; l < svecs->d[3]; l++) {
-	  svecs->data[i][j][k][l] = 
-	    ((double*)shortest_vectors->data)[svecs->d[1] * svecs->d[2] * svecs->d[3] * i +
-					      svecs->d[2] * svecs->d[3] * j +
-					      svecs->d[3] * k +
-					      l];
-	}
+	svecs->data[i][j][k] = (double*)
+	  ((double*)svecs->data[i][j] + svecs->d[3] * k);
       }
     }
   }
@@ -1523,20 +1556,20 @@ static void free_shortest_vecs(ShortestVecs * svecs)
 {
   int i, j, k;
   
-  for (i = 0; i < svecs->d[0]; i++) {
-    for (j = 0; j < svecs->d[1]; j++) {
-      for (k = 0; k < svecs->d[2]; k++) {
-	free(svecs->data[i][j][k]);
-	svecs->data[i][j][k] = NULL;
-      }
-      free(svecs->data[i][j]);
-      svecs->data[i][j] = NULL;
-    }
-    free(svecs->data[i]);
-    svecs->data[i] = NULL;
-  }
-  free(svecs->data);
-  svecs->data = NULL;
+  /* for (i = 0; i < svecs->d[0]; i++) { */
+  /*   for (j = 0; j < svecs->d[1]; j++) { */
+  /*     for (k = 0; k < svecs->d[2]; k++) { */
+  /* 	free(svecs->data[i][j][k]); */
+  /* 	svecs->data[i][j][k] = NULL; */
+  /*     } */
+  /*     free(svecs->data[i][j]); */
+  /*     svecs->data[i][j] = NULL; */
+  /*   } */
+  /*   free(svecs->data[i]); */
+  /*   svecs->data[i] = NULL; */
+  /* } */
+  /* free(svecs->data); */
+  /* svecs->data = NULL; */
   free(svecs);
   svecs = NULL;
 }

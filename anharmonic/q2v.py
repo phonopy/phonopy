@@ -1,6 +1,6 @@
 import sys
 import numpy as np
-from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC
+from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC, get_smallest_vectors
 from phonopy.structure.symmetry import Symmetry
 from phonopy.units import VaspToTHz, PlanckConstant, Kb, THzToCm, EV, AMU, Hbar, THz, Angstrom
 from anharmonic.file_IO import write_triplets, write_grid_address, write_amplitudes, parse_triplets, parse_grid_address
@@ -55,7 +55,9 @@ class PhononPhonon:
         self._s2p_map = primitive.get_supercell_to_primitive_map()
         self._conversion_factor = get_unit_conversion_factor(freq_factor)
 
-        self._shortest_vectors, self._multiplicity = get_shortest_vectors(
+        # self._shortest_vectors, self._multiplicity = get_shortest_vectors(
+        #     supercell, primitive, symprec)
+        self._shortest_vectors, self._multiplicity = get_smallest_vectors(
             supercell, primitive, symprec)
         self._symmetry = Symmetry(primitive, symprec)
 

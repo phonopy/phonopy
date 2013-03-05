@@ -35,22 +35,22 @@ def get_shortest_vectors(supercell, primitive, symprec=1e-5):
 
     for i in range(size_super):           # loop over supercell
         for j, s_j in enumerate(p2s_map): # loop over primitive
-            vectors = get_equivalent_shortest_vectors( supercell,
-                                                       primitive,
-                                                       i,
-                                                       s_j,
-                                                       symprec)
+            vectors = get_equivalent_shortest_vectors(supercell,
+                                                      primitive,
+                                                      i,
+                                                      s_j,
+                                                      symprec)
             multiplicity[i][j] = len(vectors)
             for k, elem in enumerate(vectors):
                 shortest_vectors[i][j][k] = elem
 
     return shortest_vectors, multiplicity
 
-def get_equivalent_shortest_vectors( supercell,
-                                     primitive,
-                                     atom_number_supercell,
-                                     atom_number_primitive,
-                                     symprec=1e-5 ):
+def get_equivalent_shortest_vectors(supercell,
+                                    primitive,
+                                    atom_number_supercell,
+                                    atom_number_primitive,
+                                    symprec=1e-5):
     distances = []
     differences = []
 
@@ -58,8 +58,8 @@ def get_equivalent_shortest_vectors( supercell,
     reduced_bases = get_reduced_bases(supercell.get_cell(), symprec)
 
     # Atomic positions are confined into the lattice made of reduced bases.
-    positions = np.dot( supercell.get_positions(),
-                        np.linalg.inv(reduced_bases) )
+    positions = np.dot(supercell.get_positions(),
+                       np.linalg.inv(reduced_bases))
 
     for pos in positions:
         pos -= pos.round()
@@ -88,18 +88,4 @@ def get_equivalent_shortest_vectors( supercell,
             shortest_vectors.append(np.dot(differences[i], relative_scale))
 
     return shortest_vectors
-
-def print_fc3_q(num_atom, fc3_q, qpoints3):
-    for q_index, tensor in enumerate(fc3_q):
-        for i in range(num_atom):
-            for j in range(num_atom):
-                for k in range(num_atom):
-                    print "q1(%4.2f,%4.2f,%4.2f), q2(%4.2f,%4.2f,%4.2f), q3(%4.2f,%4.2f,%4.2f)" % tuple(qpoints3[q_index])
-                    print "atom index:", i+1, j+1, k+1
-                    for mat in tensor[i,j,k]*(Bohr**3/Rydberg):
-                        for vec in mat:
-                            print "%10.5f "*6 % (vec[0].real, vec[0].imag, 
-                                                 vec[1].real, vec[1].imag, 
-                                                 vec[2].real, vec[2].imag)
-                    print
 
