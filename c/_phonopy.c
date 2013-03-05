@@ -90,7 +90,7 @@ PyMODINIT_FUNC init_phonopy(void)
 static PyObject * py_get_dynamical_matrix(PyObject *self, PyObject *args)
 {
   PyArrayObject* dynamical_matrix_real;
-  PyArrayObject* dynamical_matrix_image;
+  PyArrayObject* dynamical_matrix_imag;
   PyArrayObject* force_constants;
   PyArrayObject* r_vector;
   PyArrayObject* q_vector;
@@ -99,9 +99,11 @@ static PyObject * py_get_dynamical_matrix(PyObject *self, PyObject *args)
   PyArrayObject* s2p_map;
   PyArrayObject* p2s_map;
 
-  if (!PyArg_ParseTuple(args, "OOOOOOOOO", &dynamical_matrix_real,
-			&dynamical_matrix_image,
-			&force_constants, &q_vector,
+  if (!PyArg_ParseTuple(args, "OOOOOOOOO",
+			&dynamical_matrix_real,
+			&dynamical_matrix_imag,
+			&force_constants,
+			&q_vector,
 			&r_vector,
 			&multiplicity,
 			&mass,
@@ -111,7 +113,7 @@ static PyObject * py_get_dynamical_matrix(PyObject *self, PyObject *args)
 
   int i;
   double* dm_r = (double*)dynamical_matrix_real->data;
-  double* dm_i = (double*)dynamical_matrix_image->data;
+  double* dm_i = (double*)dynamical_matrix_imag->data;
   const double* fc = (double*)force_constants->data;
   const double* q = (double*)q_vector->data;
   const double* r = (double*)r_vector->data;
@@ -163,7 +165,7 @@ static PyObject * py_get_dynamical_matrix(PyObject *self, PyObject *args)
 static PyObject * py_get_nac_dynamical_matrix(PyObject *self, PyObject *args)
 {
   PyArrayObject* dynamical_matrix_real;
-  PyArrayObject* dynamical_matrix_image;
+  PyArrayObject* dynamical_matrix_imag;
   PyArrayObject* force_constants;
   PyArrayObject* r_vector;
   PyArrayObject* q_cart_vector;
@@ -177,7 +179,7 @@ static PyObject * py_get_nac_dynamical_matrix(PyObject *self, PyObject *args)
 
   if (!PyArg_ParseTuple(args, "OOOOOOOOOOOd",
 			&dynamical_matrix_real,
-			&dynamical_matrix_image,
+			&dynamical_matrix_imag,
 			&force_constants,
 			&q_vector,
 			&r_vector,
@@ -191,7 +193,7 @@ static PyObject * py_get_nac_dynamical_matrix(PyObject *self, PyObject *args)
     return NULL;
 
   double* dm_r = (double*)dynamical_matrix_real->data;
-  double* dm_i = (double*)dynamical_matrix_image->data;
+  double* dm_i = (double*)dynamical_matrix_imag->data;
   const double* fc = (double*)force_constants->data;
   const double* q_cart = (double*)q_cart_vector->data;
   const double* q = (double*)q_vector->data;

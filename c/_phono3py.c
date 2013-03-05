@@ -4,6 +4,7 @@
 #include <math.h>
 #include <numpy/arrayobject.h>
 #include <lapacke.h>
+#include "dynmat.h"
 
 /* Boltzmann constant eV/K */
 #define KB 8.6173382568083159E-05
@@ -14,18 +15,21 @@ typedef struct {
   int d1;
   int d2;
   int **data;
+  int *_data;
 } Array2D;
 
 typedef struct {
   int d1;
   int d2;
   double **data;
+  double *_data;
 } DArray2D;
 
 typedef struct {
   int d1;
   int d2;
   npy_cdouble **data;
+  npy_cdouble *_data;
 } CArray2D;
 
 typedef struct {
@@ -58,8 +62,8 @@ static PyObject * py_distribute_fc3(PyObject *self, PyObject *args);
 static PyObject * py_phonopy_zheev(PyObject *self, PyObject *args);
 static int get_interaction_strength(double *amps,
 				    const double *q0,
-				    const double *q1,
-				    const double *q2,
+				    const double *q1s,
+				    const double *q2s,
 				    const Array1D *weights,
 				    const double *fc2,
 				    const double *fc3,
@@ -214,8 +218,8 @@ static PyObject * py_get_interaction_strength(PyObject *self, PyObject *args)
 
   PyArrayObject* amplitude;
   PyArrayObject* qvec0;
-  PyArrayObject* qvec1;
-  PyArrayObject* qvec2;
+  PyArrayObject* qvec1s;
+  PyArrayObject* qvec2s;
   PyArrayObject* weights;
   PyArrayObject* shortest_vectors;
   PyArrayObject* multiplicity;
@@ -230,8 +234,8 @@ static PyObject * py_get_interaction_strength(PyObject *self, PyObject *args)
   if (!PyArg_ParseTuple(args, "OOOOOOOOOOOOdiid",
 			&amplitude,
 			&qvec0,
-			&qvec1,
-			&qvec2,
+			&qvec1s,
+			&qvec2s,
 			&weights,
 			&shortest_vectors,
 			&multiplicity,
@@ -249,8 +253,8 @@ static PyObject * py_get_interaction_strength(PyObject *self, PyObject *args)
 
   double* amps = (double*)amplitude->data;
   const double *q0 = (double*)qvec0->data;
-  const double *q1 = (double*)qvec1->data;
-  const double *q2 = (double*)qvec2->data;
+  const double *q1s = (double*)qvec1s->data;
+  const double *q2s = (double*)qvec2s->data;
   const long *weights_long = (long*)weights->data;
   const double* masses = (double*)atomic_masses->data;
   const long* multiplicity_long = (long*)multiplicity->data;
@@ -287,8 +291,8 @@ static PyObject * py_get_interaction_strength(PyObject *self, PyObject *args)
 
   get_interaction_strength(amps,
 			   q0,
-			   q1,
-			   q2,
+			   q1s,
+			   q2s,
 			   w,
 			   fc2,
 			   fc3,
@@ -888,8 +892,8 @@ static PyObject * py_phonopy_zheev(PyObject *self, PyObject *args)
 
 static int get_interaction_strength(double *amps,
 				    const double *q0,
-				    const double *q1,
-				    const double *q2,
+				    const double *q1s,
+				    const double *q2s,
 				    const Array1D *weights,
 				    const double *fc2,
 				    const double *fc3,
@@ -903,6 +907,17 @@ static int get_interaction_strength(double *amps,
 				    const int r2q_TI_index,
 				    const double symprec)
 {
+  int i, num_triplets;
+  double q1[3], q2[3];
+
+  num_triplets = weights->d1;
+  for (i = 0; i < num_triplets; i++) {
+    for (j = 0; j < 3; j++) {
+      q1[3] = q1s[i * 3 + j];
+      q2[3] = q2s[i * 3 + j];
+    }
+    
+  }
 }
 
 static int get_triplet_interaction_strength(double *amps,
@@ -1487,47 +1502,9 @@ static double bs(const double x, const double t)
   return 1.0 / (exp(x / (KB * t)) - 1);
 }
 
-/* static ShortestVecs * get_shortest_vecs(PyArrayObject* shortest_vectors) */
-/* { */
-/*   int i, j, k, l; */
-/*   ShortestVecs * svecs; */
-
-/*   svecs = (ShortestVecs*) malloc(sizeof(ShortestVecs)); */
-/*   for (i = 0; i < 4; i++) { */
-/*     svecs->d[i] = shortest_vectors->dimensions[i]; */
-/*   } */
-
-  /* svecs->data = (double****) malloc(sizeof(double***) * svecs->d[0]); */
-  /* for (i = 0; i < svecs->d[0]; i++) { */
-  /*   svecs->data[i] = (double***) malloc(sizeof(double**) * svecs->d[1]); */
-  /*   for (j = 0; j < svecs->d[1]; j++) { */
-  /*     svecs->data[i][j] = (double**) malloc(sizeof(double*) * svecs->d[2]); */
-  /*     for (k = 0; k < svecs->d[2]; k++) { */
-  /* 	svecs->data[i][j][k] = (double*) malloc(sizeof(double) * svecs->d[3]); */
-  /*     } */
-  /*   } */
-  /* } */
-
-/*   for (i = 0; i < svecs->d[0]; i++) { */
-/*     for (j = 0; j < svecs->d[1]; j++) { */
-/*       for (k = 0; k < svecs->d[2]; k++) { */
-/* 	for (l = 0; l < svecs->d[3]; l++) { */
-/* 	  svecs->data[i][j][k][l] = */
-/* 	    ((double*)shortest_vectors->data)[svecs->d[1] * svecs->d[2] * svecs->d[3] * i + */
-/* 					      svecs->d[2] * svecs->d[3] * j + */
-/* 					      svecs->d[3] * k + */
-/* 					      l]; */
-/* 	} */
-/*       } */
-/*     } */
-/*   } */
-
-/*   return svecs; */
-/* } */
-
 static ShortestVecs * get_shortest_vecs(PyArrayObject* shortest_vectors)
 {
-  int i, j, k, l;
+  int i, j, k;
   ShortestVecs * svecs;
 
   svecs = (ShortestVecs*) malloc(sizeof(ShortestVecs));
@@ -1535,16 +1512,17 @@ static ShortestVecs * get_shortest_vecs(PyArrayObject* shortest_vectors)
     svecs->d[i] = shortest_vectors->dimensions[i];
   }
 
-  svecs->data = (double****)(shortest_vectors->data);
+  svecs->data = (double****) malloc(sizeof(double***) * svecs->d[0]);
   for (i = 0; i < svecs->d[0]; i++) {
-    svecs->data[i] =(double***)
-      ((double*)svecs->data + svecs->d[1] * svecs->d[2] * svecs->d[3] * i);
+    svecs->data[i] = (double***) malloc(sizeof(double**) * svecs->d[1]);
     for (j = 0; j < svecs->d[1]; j++) {
-      svecs->data[i][j] = (double**)
-	((double*)svecs->data[i] + svecs->d[2] * svecs->d[3] * j);
+      svecs->data[i][j] = (double**) malloc(sizeof(double*) * svecs->d[2]);
       for (k = 0; k < svecs->d[2]; k++) {
-	svecs->data[i][j][k] = (double*)
-	  ((double*)svecs->data[i][j] + svecs->d[3] * k);
+  	svecs->data[i][j][k] =((double*)shortest_vectors->data +
+			       svecs->d[1] * svecs->d[2] * svecs->d[3] * i +
+			       svecs->d[2] * svecs->d[3] * j +
+			       svecs->d[3] * k);
+
       }
     }
   }
@@ -1554,22 +1532,18 @@ static ShortestVecs * get_shortest_vecs(PyArrayObject* shortest_vectors)
 
 static void free_shortest_vecs(ShortestVecs * svecs)
 {
-  int i, j, k;
+  int i, j;
   
-  /* for (i = 0; i < svecs->d[0]; i++) { */
-  /*   for (j = 0; j < svecs->d[1]; j++) { */
-  /*     for (k = 0; k < svecs->d[2]; k++) { */
-  /* 	free(svecs->data[i][j][k]); */
-  /* 	svecs->data[i][j][k] = NULL; */
-  /*     } */
-  /*     free(svecs->data[i][j]); */
-  /*     svecs->data[i][j] = NULL; */
-  /*   } */
-  /*   free(svecs->data[i]); */
-  /*   svecs->data[i] = NULL; */
-  /* } */
-  /* free(svecs->data); */
-  /* svecs->data = NULL; */
+  for (i = 0; i < svecs->d[0]; i++) {
+    for (j = 0; j < svecs->d[1]; j++) {
+      free(svecs->data[i][j]);
+      svecs->data[i][j] = NULL;
+    }
+    free(svecs->data[i]);
+    svecs->data[i] = NULL;
+  }
+  free(svecs->data);
+  svecs->data = NULL;
   free(svecs);
   svecs = NULL;
 }
@@ -1582,9 +1556,10 @@ static Array2D * alloc_Array2D(const int index1, const int index2)
   array = (Array2D*) malloc(sizeof(Array2D));
   array->d1 = index1;
   array->d2 = index2;
+  array->_data = (int*) malloc(sizeof(int) * index1 * index2);
   array->data = (int**) malloc(sizeof(int*) * index1);
   for (i = 0; i < index1; i++) {
-    array->data[i] = (int*) malloc(sizeof(int) * index2);
+    array->data[i] = array->_data + i * index2;
   }
   
   return array;
@@ -1592,12 +1567,8 @@ static Array2D * alloc_Array2D(const int index1, const int index2)
 
 static void free_Array2D(Array2D * array)
 {
-  int i;
-  for (i = 0; i < array->d1; i++) {
-    free(array->data[i]);
-    array->data[i] = NULL;
-  }
   free(array->data);
+  free(array->_data);
   free(array);
   array = NULL;
 }
@@ -1610,9 +1581,10 @@ static DArray2D * alloc_DArray2D(const int index1, const int index2)
   array = (DArray2D*) malloc(sizeof(DArray2D));
   array->d1 = index1;
   array->d2 = index2;
+  array->_data = (double*) malloc(sizeof(double) * index1 * index2);
   array->data = (double**) malloc(sizeof(double*) * index1);
   for (i = 0; i < index1; i++) {
-    array->data[i] = (double*) malloc(sizeof(double) * index2);
+    array->data[i] = array->_data + i * index2;
   }
   
   return array;
@@ -1620,12 +1592,8 @@ static DArray2D * alloc_DArray2D(const int index1, const int index2)
 
 static void free_DArray2D(DArray2D * array)
 {
-  int i;
-  for (i = 0; i < array->d1; i++) {
-    free(array->data[i]);
-    array->data[i] = NULL;
-  }
   free(array->data);
+  free(array->_data);
   free(array);
   array = NULL;
 }
@@ -1638,9 +1606,10 @@ static CArray2D * alloc_CArray2D(const int index1, const int index2)
   array = (CArray2D*) malloc(sizeof(CArray2D));
   array->d1 = index1;
   array->d2 = index2;
+  array->_data = (npy_cdouble*) malloc(sizeof(npy_cdouble) * index1 * index2);
   array->data = (npy_cdouble**) malloc(sizeof(npy_cdouble*) * index1);
   for (i = 0; i < index1; i++) {
-    array->data[i] = (npy_cdouble*) malloc(sizeof(npy_cdouble) * index2);
+    array->data[i] = array->_data + i * index2;
   }
   
   return array;
@@ -1648,12 +1617,8 @@ static CArray2D * alloc_CArray2D(const int index1, const int index2)
 
 static void free_CArray2D(CArray2D * array)
 {
-  int i;
-  for (i = 0; i < array->d1; i++) {
-    free(array->data[i]);
-    array->data[i] = NULL;
-  }
   free(array->data);
+  free(array->_data);
   free(array);
   array = NULL;
 }
