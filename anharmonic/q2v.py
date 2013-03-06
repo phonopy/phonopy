@@ -51,8 +51,8 @@ class PhononPhonon:
         self._is_Peierls = is_Peierls
         self._is_symmetrize_fc3_q = is_symmetrize_fc3_q
         self._is_nosym = is_nosym
-        self._p2s_map = primitive.get_primitive_to_supercell_map()
-        self._s2p_map = primitive.get_supercell_to_primitive_map()
+        self._p2s_map = np.array(primitive.get_primitive_to_supercell_map())
+        self._s2p_map = np.array(primitive.get_supercell_to_primitive_map())
         self._conversion_factor = get_unit_conversion_factor(freq_factor)
 
         # self._shortest_vectors, self._multiplicity = get_shortest_vectors(
@@ -207,78 +207,81 @@ class PhononPhonon:
         
 
 
-        import anharmonic._phono3py as phono3c
-        q1s = []
-        q2s = []
-        q0 = self._grid_address[
-            self._triplets_at_q[0][0]].astype(float) / self._mesh
-        for q3 in self._triplets_at_q:
-            q1s.append(self._grid_address[q3[1]].astype(float) / self._mesh)
-            q2s.append(self._grid_address[q3[2]].astype(float) / self._mesh)
-        svecs_fc2, multi_fc2 = self._dm.get_shortest_vectors()
-
-        if self._dm.is_nac():
-            born = self._dm.get_born_effective_charges()
-            nac_factor = self._dm.get_nac_factor()
-            dielectric = self._dm.get_dielectric_constant()
-        else:
-            born = np.zeros((self._primitive.get_number_of_atoms(), 3, 3),
-                            dtype=float)
-            nac_factor = 0.0
-            dielectric = np.zeros((3, 3), dtype=float)
-        
-        phono3c.interaction_strength(self._amplitude_at_q,
-                                     q0,
-                                     np.array(q1s),
-                                     np.array(q2s),
-                                     self._weights_at_q,
-                                     svecs_fc2,
-                                     multi_fc2,
-                                     self._shortest_vectors,
-                                     self._multiplicity,
-                                     self._dm.get_primitive_to_supercell_map(),
-                                     self._dm.get_supercell_to_primitive_map(),
-                                     self._dm.get_force_constants,
-                                     self._fc3,
-                                     self._primitive.get_masses(),
-                                     born,
-                                     dielectric,
-                                     nac_factor,
-                                     self._cutoff_frequency,
-                                     self._is_symmetrize_fc3_q,
-                                     self._r2q_TI_index,
-                                     self._symprec)
-
-        print "Test done"
-        sys.exit(1)
-        
-        for i, (q3, w) in enumerate(zip(self._triplets_at_q,
-                                        self._weights_at_q)):
-            (self._amplitude_at_q[i],
-             self._frequencies_at_q[i]) = get_triplet_interaction_strength(
-                i,
-                len(self._triplets_at_q),
-                q3,
-                w,
-                self._mesh,
-                self._grid_address,
-                self._shortest_vectors,
-                self._multiplicity,
-                self._fc3,
-                self._dm,
-                self._q_direction,
-                self._frequencies,
-                self._eigenvectors,
-                self._primitive,
-                self._band_indices,
-                self._factor,
-                self._freq_factor,
-                self._cutoff_frequency,
-                self._symprec,
-                self._is_symmetrize_fc3_q,
-                self._is_Peierls,
-                self._r2q_TI_index,
-                self._log_level)
+        try:
+            import anharmonic._phono3py as phono3c
+            q1s = []
+            q2s = []
+            q0 = self._grid_address[
+                self._triplets_at_q[0][0]].astype(float) / self._mesh
+            for q3 in self._triplets_at_q:
+                q1s.append(self._grid_address[q3[1]].astype(float) / self._mesh)
+                q2s.append(self._grid_address[q3[2]].astype(float) / self._mesh)
+            svecs_fc2, multi_fc2 = self._dm.get_shortest_vectors()
+    
+            if self._dm.is_nac():
+                born = self._dm.get_born_effective_charges()
+                nac_factor = self._dm.get_nac_factor()
+                dielectric = self._dm.get_dielectric_constant()
+            else:
+                born = np.zeros((self._primitive.get_number_of_atoms(), 3, 3),
+                                dtype=float)
+                nac_factor = 0.0
+                dielectric = np.zeros((3, 3), dtype=float)
+            
+            phono3c.interaction_strength(self._amplitude_at_q,
+                                         self._frequencies_at_q,
+                                         q0,
+                                         np.array(q1s),
+                                         np.array(q2s),
+                                         self._weights_at_q,
+                                         svecs_fc2,
+                                         multi_fc2,
+                                         self._shortest_vectors,
+                                         self._multiplicity,
+                                         self._dm.get_primitive_to_supercell_map(),
+                                         self._dm.get_supercell_to_primitive_map(),
+                                         self._p2s_map,
+                                         self._s2p_map,
+                                         self._dm.get_force_constants(),
+                                         self._fc3,
+                                         self._primitive.get_masses(),
+                                         born,
+                                         dielectric,
+                                         nac_factor,
+                                         self._freq_factor * self._factor,
+                                         self._cutoff_frequency,
+                                         self._is_symmetrize_fc3_q,
+                                         self._r2q_TI_index,
+                                         self._symprec)
+    
+        except ImportError:
+            for i, (q3, w) in enumerate(zip(self._triplets_at_q,
+                                            self._weights_at_q)):
+                (self._amplitude_at_q[i],
+                 self._frequencies_at_q[i]) = get_triplet_interaction_strength(
+                    i,
+                    len(self._triplets_at_q),
+                    q3,
+                    w,
+                    self._mesh,
+                    self._grid_address,
+                    self._shortest_vectors,
+                    self._multiplicity,
+                    self._fc3,
+                    self._dm,
+                    self._q_direction,
+                    self._frequencies,
+                    self._eigenvectors,
+                    self._primitive,
+                    self._band_indices,
+                    self._factor,
+                    self._freq_factor,
+                    self._cutoff_frequency,
+                    self._symprec,
+                    self._is_symmetrize_fc3_q,
+                    self._is_Peierls,
+                    self._r2q_TI_index,
+                    self._log_level)
 
     def set_dynamical_matrix(self,
                              fc2,

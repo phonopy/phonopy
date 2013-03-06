@@ -44,6 +44,7 @@ static int get_phonons(lapack_complex_double *a,
 		       const double nac_factor);
 
 int get_interaction_strength(double *amps,
+			     double *freqs,
 			     const double *q0,
 			     const double *q1s,
 			     const double *q2s,
@@ -51,25 +52,36 @@ int get_interaction_strength(double *amps,
 			     const double *fc2,
 			     const double *fc3,
 			     const double *masses,
-			     const Array1D *p2s,
-			     const Array1D *s2p,
-			     const Array2D *multi,
-			     const ShortestVecs *svecs,
+			     const Array1D *p2s_fc2,
+			     const Array1D *s2p_fc2,
+			     const Array1D *p2s_fc3,
+			     const Array1D *s2p_fc3,
+			     const Array2D *multi_fc2,
+			     const ShortestVecs *svecs_fc2,
+			     const Array2D *multi_fc3,
+			     const ShortestVecs *svecs_fc3,
 			     const double *born,
 			     const double *dielectric,
 			     const double nac_factor,
+			     const double freq_unit_factor,
 			     const double cutoff_frequency,
 			     const int is_symmetrize_fc3_q,
 			     const int r2q_TI_index,
 			     const double symprec)
 {
   int i, j, num_triplets, num_patom, info0, info1, info2;
-  double q1[3], q2[3];
-  double *w0 ,*w1, *w2;
-  lapack_complex_double *a0, *a1, *a2;
+  double *q_vecs;
+  double *w0 ,*w;
+  lapack_complex_double *a0, *a;
+  Array1D *band_indices;
 
-  num_patom = p2s->d1;
+  num_patom = p2s_fc2->d1;
   num_triplets = weights->d1;
+
+  band_indices = alloc_Array1D(num_patom * 3);
+  for (i = 0; i < num_patom; i++) {
+    band_indices->data[i] = i;
+  }
 
   w0 = (double*)malloc(sizeof(double) * num_patom * 3);
   a0 = (lapack_complex_double*)
@@ -79,73 +91,84 @@ int get_interaction_strength(double *amps,
 		      q0,
 		      fc2,
 		      masses,
-		      p2s,
-		      s2p,
-		      multi,
-		      svecs,
+		      p2s_fc2,
+		      s2p_fc2,
+		      multi_fc2,
+		      svecs_fc2,
 		      born,
 		      nac_factor);
 
-  printf("freq0: ");
-  for (i = 0; i < num_patom * 3; i++) {
-    printf("%f ", w0[i]);
-  }
-  printf("\n");
-
   for (i = 0; i < num_triplets; i++) {
-    w1 = (double*)malloc(sizeof(double) * num_patom * 3);
-    w2 = (double*)malloc(sizeof(double) * num_patom * 3);
-    a1 = (lapack_complex_double*)
-      malloc(sizeof(lapack_complex_double) * num_patom * num_patom * 9);
-    a2 = (lapack_complex_double*)
-      malloc(sizeof(lapack_complex_double) * num_patom * num_patom * 9);
+    w = (double*)malloc(3 * sizeof(double) * num_patom * 3);
+    a = (lapack_complex_double*)
+      malloc(3 * sizeof(lapack_complex_double) * num_patom * num_patom * 9);
+    q_vecs = (double*)malloc(3 * sizeof(double) * 3);
     
-    for (j = 0; j < 3; j++) {
-      q1[j] = q1s[i * 3 + j];
-      q2[j] = q2s[i * 3 + j];
+    for (j = 0; j < num_patom * num_patom * 9; j++) {
+      a[j] = a0[j];
     }
 
-    info1 = get_phonons(a1,
-			w1,
-			q1,
-			fc2,
-			masses,
-			p2s,
-			s2p,
-			multi,
-			svecs,
-			born,
-			nac_factor);
-
-    info2 = get_phonons(a2,
-			w2,
-			q2,
-			fc2,
-			masses,
-			p2s,
-			s2p,
-			multi,
-			svecs,
-			born,
-			nac_factor);
-    
-    printf("freq1: ");
-      for (j = 0; j < num_patom * 3; j++) {
-	printf("%f ", w1[j]);
-      }
-    printf("\n");
-    printf("freq2: ");
     for (j = 0; j < num_patom * 3; j++) {
-      printf("%f ", w2[j]);
+      w[j] = w0[j];
     }
-    printf("\n");
 
-    free(w1);
-    free(w2);
-    free(a1);
-    free(a2);
+    for (j = 0; j < 3; j++) {
+      q_vecs[j] = q0[j];
+      q_vecs[j + 3] = q1s[i * 3 + j];
+      q_vecs[j + 6] = q2s[i * 3 + j];
+    }
+
+    info1 = get_phonons(a + num_patom * num_patom * 9,
+			w + num_patom * 3,
+			q_vecs + 3,
+			fc2,
+			masses,
+			p2s_fc2,
+			s2p_fc2,
+			multi_fc2,
+			svecs_fc2,
+			born,
+			nac_factor);
+
+    info2 = get_phonons(a + num_patom * num_patom * 18,
+			w + num_patom * 6,
+			q_vecs + 6,
+			fc2,
+			masses,
+			p2s_fc2,
+			s2p_fc2,
+			multi_fc2,
+			svecs_fc2,
+			born,
+			nac_factor);
+
+    for (j = 0; j < num_patom * 9; j++) {
+      freqs[i * num_patom * 9 + j] =
+	sqrt(fabs(w[j])) * freq_unit_factor * ((w[j] > 0) - (w[j] < 0));
+    }
+
+    get_triplet_interaction_strength
+      (amps + i * num_patom * num_patom * num_patom * 27,
+       fc3,
+       q_vecs,
+       a,
+       freqs + i * num_patom * 9,
+       masses,
+       p2s_fc3,
+       s2p_fc3,
+       multi_fc3,
+       svecs_fc3,
+       band_indices,
+       cutoff_frequency,
+       is_symmetrize_fc3_q,
+       r2q_TI_index,
+       symprec);
+
+    free(w);
+    free(a);
   }
 
+  free_Array1D(band_indices);
   free(w0);
   free(a0);
 }
@@ -632,26 +655,26 @@ static int get_phonons(lapack_complex_double *a,
     charge_sum = NULL;
   }
   get_dynamical_matrix_at_q(dm_real,
-			    dm_imag,
-			    num_patom,
-			    num_satom,
-			    fc2,
-			    q,
-			    svecs->data[0][0][0],
-			    multi->data[0],
-			    masses,
-			    s2p->data,
-			    p2s->data,
-			    charge_sum);
+  			    dm_imag,
+  			    num_patom,
+  			    num_satom,
+  			    fc2,
+  			    q,
+  			    svecs->data[0][0][0],
+  			    multi->data[0],
+  			    masses,
+  			    s2p->data,
+  			    p2s->data,
+  			    charge_sum);
   if (born) {
     free(charge_sum);
   }
 
   for (i = 0; i < num_patom * 3; i++) {
     for (j = 0; j < num_patom * 3; j++) {
-      a[i * 3 + j] = lapack_make_complex_double
-	((dm_real[i * 3 + j] + dm_real[j * 3 + i]) / 2,
-	 (dm_imag[i * 3 + j] - dm_imag[j * 3 + i]) / 2);
+      a[i * num_patom * 3 + j] = lapack_make_complex_double
+	((dm_real[i * num_patom * 3 + j] + dm_real[j * num_patom * 3 + i]) / 2,
+	 (dm_imag[i * num_patom * 3 + j] - dm_imag[j * num_patom * 3 + i]) / 2);
     }
   }
 

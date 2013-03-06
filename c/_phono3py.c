@@ -82,6 +82,7 @@ PyMODINIT_FUNC init_phono3py(void)
 static PyObject * py_get_interaction_strength(PyObject *self, PyObject *args)
 {
   PyArrayObject* amplitude;
+  PyArrayObject* frequencies;
   PyArrayObject* qvec0;
   PyArrayObject* qvec1s;
   PyArrayObject* qvec2s;
@@ -90,18 +91,21 @@ static PyObject * py_get_interaction_strength(PyObject *self, PyObject *args)
   PyArrayObject* multiplicity_fc2;
   PyArrayObject* shortest_vectors_fc3;
   PyArrayObject* multiplicity_fc3;
-  PyArrayObject* p2s_map;
-  PyArrayObject* s2p_map;
+  PyArrayObject* p2s_map_fc2;
+  PyArrayObject* s2p_map_fc2;
+  PyArrayObject* p2s_map_fc3;
+  PyArrayObject* s2p_map_fc3;
   PyArrayObject* force_constants_second;
   PyArrayObject* force_constants_third;
   PyArrayObject* atomic_masses;
   PyArrayObject* born_effective_charge;
   PyArrayObject* dielectric_constant;
-  double symprec, cutoff_frequency, nac_factor;
+  double symprec, cutoff_frequency, nac_factor, freq_unit_conversion_factor;
   int r2q_TI_index, is_symmetrize_fc3_q;
 
-  if (!PyArg_ParseTuple(args, "OOOOOOOOOOOOOOOOddiid",
+  if (!PyArg_ParseTuple(args, "OOOOOOOOOOOOOOOOOOOdddiid",
 			&amplitude,
+			&frequencies,
 			&qvec0,
 			&qvec1s,
 			&qvec2s,
@@ -110,14 +114,17 @@ static PyObject * py_get_interaction_strength(PyObject *self, PyObject *args)
 			&multiplicity_fc2,
 			&shortest_vectors_fc3,
 			&multiplicity_fc3,
-			&p2s_map,
-			&s2p_map,
+			&p2s_map_fc2,
+			&s2p_map_fc2,
+			&p2s_map_fc3,
+			&s2p_map_fc3,
 			&force_constants_second,
 			&force_constants_third,
 			&atomic_masses,
 			&born_effective_charge,
 			&dielectric_constant,
 			&nac_factor,
+			&freq_unit_conversion_factor,
 			&cutoff_frequency,
 			&is_symmetrize_fc3_q,
 			&r2q_TI_index,
@@ -127,11 +134,12 @@ static PyObject * py_get_interaction_strength(PyObject *self, PyObject *args)
 
   int i, j;
   int * svecs_dims;
-  Array1D * s2p, * p2s, *w;
+  Array1D * s2p_fc2, * p2s_fc2, * s2p_fc3, * p2s_fc3, *w;
   Array2D * multi_fc2, * multi_fc3;
   ShortestVecs * svecs_fc2, * svecs_fc3;
 
   double* amps = (double*)amplitude->data;
+  double* freqs = (double*)frequencies->data;
   const double *q0 = (double*)qvec0->data;
   const double *q1s = (double*)qvec1s->data;
   const double *q2s = (double*)qvec2s->data;
@@ -139,8 +147,10 @@ static PyObject * py_get_interaction_strength(PyObject *self, PyObject *args)
   const double* masses = (double*)atomic_masses->data;
   const long* multiplicity_long_fc2 = (long*)multiplicity_fc2->data;
   const long* multiplicity_long_fc3 = (long*)multiplicity_fc3->data;
-  const long* p2s_map_long = (long*)p2s_map->data;
-  const long* s2p_map_long = (long*)s2p_map->data;
+  const long* p2s_map_fc2_long = (long*)p2s_map_fc2->data;
+  const long* s2p_map_fc2_long = (long*)s2p_map_fc2->data;
+  const long* p2s_map_fc3_long = (long*)p2s_map_fc3->data;
+  const long* s2p_map_fc3_long = (long*)s2p_map_fc3->data;
   const double* fc2 = (double*)force_constants_second->data;
   const double* fc3 = (double*)force_constants_third->data;
   /* const double* born = (double*)born_effective_charge->data; */
@@ -180,13 +190,21 @@ static PyObject * py_get_interaction_strength(PyObject *self, PyObject *args)
     }
   }
 
-  s2p = alloc_Array1D(num_satom_fc2);
+  s2p_fc2 = alloc_Array1D(num_satom_fc2);
   for (i = 0; i < num_satom_fc2; i++) {
-    s2p->data[i] = s2p_map_long[i];
+    s2p_fc2->data[i] = s2p_map_fc2_long[i];
   }
-  p2s = alloc_Array1D(num_patom);
+  p2s_fc2 = alloc_Array1D(num_patom);
   for (i = 0; i < num_patom; i++) {
-    p2s->data[i] = p2s_map_long[i];
+    p2s_fc2->data[i] = p2s_map_fc2_long[i];
+  }
+  s2p_fc3 = alloc_Array1D(num_satom_fc3);
+  for (i = 0; i < num_satom_fc3; i++) {
+    s2p_fc3->data[i] = s2p_map_fc3_long[i];
+  }
+  p2s_fc3 = alloc_Array1D(num_patom);
+  for (i = 0; i < num_patom; i++) {
+    p2s_fc3->data[i] = p2s_map_fc3_long[i];
   }
   w = alloc_Array1D(num_triplets);
   for (i = 0; i < num_triplets; i++) {
@@ -194,6 +212,7 @@ static PyObject * py_get_interaction_strength(PyObject *self, PyObject *args)
   }
 
   get_interaction_strength(amps,
+			   freqs,
 			   q0,
 			   q1s,
 			   q2s,
@@ -201,20 +220,27 @@ static PyObject * py_get_interaction_strength(PyObject *self, PyObject *args)
 			   fc2,
 			   fc3,
 			   masses,
-			   p2s,
-			   s2p,
+			   p2s_fc2,
+			   s2p_fc2,
+			   p2s_fc3,
+			   s2p_fc3,
 			   multi_fc2,
 			   svecs_fc2,
+			   multi_fc3,
+			   svecs_fc3,
 			   born,
 			   dielectric,
 			   nac_factor,
+			   freq_unit_conversion_factor,
 			   cutoff_frequency,
 			   is_symmetrize_fc3_q,
 			   r2q_TI_index,
 			   symprec);
 
-  free_Array1D(p2s);
-  free_Array1D(s2p);
+  free_Array1D(p2s_fc2);
+  free_Array1D(s2p_fc2);
+  free_Array1D(p2s_fc3);
+  free_Array1D(s2p_fc3);
   free_Array2D(multi_fc2);
   free_Array2D(multi_fc3);
   free_Array1D(w);
