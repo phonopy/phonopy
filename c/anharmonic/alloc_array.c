@@ -19,7 +19,7 @@ ShortestVecs * get_shortest_vecs(const double* shortest_vectors,
     for (j = 0; j < svecs->d[1]; j++) {
       svecs->data[i][j] = (double**) malloc(sizeof(double*) * svecs->d[2]);
       for (k = 0; k < svecs->d[2]; k++) {
-  	svecs->data[i][j][k] =(shortest_vectors +
+  	svecs->data[i][j][k] =((double*)shortest_vectors +
 			       svecs->d[1] * svecs->d[2] * svecs->d[3] * i +
 			       svecs->d[2] * svecs->d[3] * j +
 			       svecs->d[3] * k);

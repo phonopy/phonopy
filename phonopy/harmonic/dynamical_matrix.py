@@ -84,8 +84,25 @@ class DynamicalMatrix:
     def get_dimension(self):
         return self._pcell.get_number_of_atoms() * 3
 
+    def get_supercell(self):
+        return self._scell
+
+    def get_primitive(self):
+        return self._pcell
+
+    def get_force_constants(self):
+        return self._force_constants
+
+    def get_shortest_vectors(self):
+        return self._smallest_vectors, self._multiplicity
+
+    def get_primitive_to_supercell_map(self):
+        return self._p2s_map
+
+    def get_supercell_to_primitive_map(self):
+        return self._s2p_map
+
     def get_dynamical_matrix(self):
-        
         if self._freq_scale is not None:
             dm = self._dynamical_matrix * self._freq_scale ** 2
         else:
@@ -224,7 +241,15 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         self._nac_params = None
         self._nac = True
 
+    def get_born_effective_charges(self):
+        return self._born
 
+    def get_nac_factor(self):
+        return self._unit_conversion * 4.0 * np.pi / volume
+
+    def get_dielectric_constant(self):
+        return self._dielectric
+    
     def set_nac_params(self, nac_params, method='wang'):
         self._nac_params = nac_params
         self._method = method

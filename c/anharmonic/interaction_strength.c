@@ -3,6 +3,7 @@
 #include <lapacke.h>
 #include "alloc_array.h"
 #include "dynmat.h"
+#include "lapack_wrapper.h"
 #include "interaction_strength.h"
 
 static const int index_exchange[6][3] = { { 0, 1, 2 },
@@ -30,7 +31,17 @@ static lapack_complex_double get_phase_factor(const double q[3],
 				    const Array2D * multi);
 static lapack_complex_double
 prod(const lapack_complex_double a, const lapack_complex_double b);
-
+static int get_phonons(lapack_complex_double *a,
+		       double *w,
+		       const double q[3],
+		       const double *fc2,
+		       const double *masses,
+		       const Array1D *p2s,
+		       const Array1D *s2p,
+		       const Array2D *multi,
+		       const ShortestVecs *svecs,
+		       const double *born,
+		       const double nac_factor);
 
 int get_interaction_strength(double *amps,
 			     const double *q0,
@@ -44,21 +55,99 @@ int get_interaction_strength(double *amps,
 			     const Array1D *s2p,
 			     const Array2D *multi,
 			     const ShortestVecs *svecs,
+			     const double *born,
+			     const double *dielectric,
+			     const double nac_factor,
 			     const double cutoff_frequency,
 			     const int is_symmetrize_fc3_q,
 			     const int r2q_TI_index,
 			     const double symprec)
 {
-  int i, j, num_triplets;
+  int i, j, num_triplets, num_patom, info0, info1, info2;
   double q1[3], q2[3];
+  double *w0 ,*w1, *w2;
+  lapack_complex_double *a0, *a1, *a2;
 
+  num_patom = p2s->d1;
   num_triplets = weights->d1;
+
+  w0 = (double*)malloc(sizeof(double) * num_patom * 3);
+  a0 = (lapack_complex_double*)
+    malloc(sizeof(lapack_complex_double) * num_patom * num_patom * 9);
+  info0 = get_phonons(a0,
+		      w0,
+		      q0,
+		      fc2,
+		      masses,
+		      p2s,
+		      s2p,
+		      multi,
+		      svecs,
+		      born,
+		      nac_factor);
+
+  printf("freq0: ");
+  for (i = 0; i < num_patom * 3; i++) {
+    printf("%f ", w0[i]);
+  }
+  printf("\n");
+
   for (i = 0; i < num_triplets; i++) {
+    w1 = (double*)malloc(sizeof(double) * num_patom * 3);
+    w2 = (double*)malloc(sizeof(double) * num_patom * 3);
+    a1 = (lapack_complex_double*)
+      malloc(sizeof(lapack_complex_double) * num_patom * num_patom * 9);
+    a2 = (lapack_complex_double*)
+      malloc(sizeof(lapack_complex_double) * num_patom * num_patom * 9);
+    
     for (j = 0; j < 3; j++) {
       q1[j] = q1s[i * 3 + j];
       q2[j] = q2s[i * 3 + j];
     }
+
+    info1 = get_phonons(a1,
+			w1,
+			q1,
+			fc2,
+			masses,
+			p2s,
+			s2p,
+			multi,
+			svecs,
+			born,
+			nac_factor);
+
+    info2 = get_phonons(a2,
+			w2,
+			q2,
+			fc2,
+			masses,
+			p2s,
+			s2p,
+			multi,
+			svecs,
+			born,
+			nac_factor);
+    
+    printf("freq1: ");
+      for (j = 0; j < num_patom * 3; j++) {
+	printf("%f ", w1[j]);
+      }
+    printf("\n");
+    printf("freq2: ");
+    for (j = 0; j < num_patom * 3; j++) {
+      printf("%f ", w2[j]);
+    }
+    printf("\n");
+
+    free(w1);
+    free(w2);
+    free(a1);
+    free(a2);
   }
+
+  free(w0);
+  free(a0);
 }
 
 int get_triplet_interaction_strength(double *amps,
@@ -505,4 +594,69 @@ prod(const lapack_complex_double a, const lapack_complex_double b)
      lapack_complex_double_imag(a) * lapack_complex_double_real(b) +
      lapack_complex_double_real(a) * lapack_complex_double_imag(b));
   return c;
+}
+
+static int get_phonons(lapack_complex_double *a,
+		       double *w,
+		       const double q[3],
+		       const double *fc2,
+		       const double *masses,
+		       const Array1D *p2s,
+		       const Array1D *s2p,
+		       const Array2D *multi,
+		       const ShortestVecs *svecs,
+		       const double *born,
+		       const double nac_factor)
+{
+  int i, j, num_patom, num_satom;
+  double *dm_real, *dm_imag, *charge_sum;
+
+  num_patom = p2s->d1;
+  num_satom = s2p->d1;
+
+  dm_real = (double*) malloc(sizeof(double) * num_patom * num_patom * 9);
+  dm_imag = (double*) malloc(sizeof(double) * num_patom * num_patom * 9);
+  for (i = 0; i < num_patom * num_patom * 9; i++) {
+    dm_real[i] = 0.0;
+    dm_imag[i] = 0.0;
+  }
+
+  if (born) {
+    charge_sum = (double*) malloc(sizeof(double) * num_patom * num_patom * 9);
+    get_charge_sum(charge_sum,
+		   num_patom,
+		   nac_factor,
+		   q,
+		   born);
+  } else {
+    charge_sum = NULL;
+  }
+  get_dynamical_matrix_at_q(dm_real,
+			    dm_imag,
+			    num_patom,
+			    num_satom,
+			    fc2,
+			    q,
+			    svecs->data[0][0][0],
+			    multi->data[0],
+			    masses,
+			    s2p->data,
+			    p2s->data,
+			    charge_sum);
+  if (born) {
+    free(charge_sum);
+  }
+
+  for (i = 0; i < num_patom * 3; i++) {
+    for (j = 0; j < num_patom * 3; j++) {
+      a[i * 3 + j] = lapack_make_complex_double
+	((dm_real[i * 3 + j] + dm_real[j * 3 + i]) / 2,
+	 (dm_imag[i * 3 + j] - dm_imag[j * 3 + i]) / 2);
+    }
+  }
+
+  free(dm_real);
+  free(dm_imag);
+
+  return phonopy_zheev(w, a, num_patom * 3);
 }
