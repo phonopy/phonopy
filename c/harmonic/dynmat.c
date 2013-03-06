@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 int get_dynamical_matrix_at_q(double *dynamical_matrix_real,
-			      double *dynamical_matrix_image,
+			      double *dynamical_matrix_imag,
 			      const int num_patom, 
 			      const int num_satom,
 			      const double *fc,
@@ -65,7 +65,7 @@ int get_dynamical_matrix_at_q(double *dynamical_matrix_real,
       for (k = 0; k < 3; k++) {
 	for (l = 0; l < 3; l++) {
 	  dynamical_matrix_real[(i * 3 + k) * num_patom * 3 + j * 3 + l] += dm_real[k][l];
-	  dynamical_matrix_image[(i * 3 + k) * num_patom * 3 + j * 3 + l] += dm_imag[k][l];
+	  dynamical_matrix_imag[(i * 3 + k) * num_patom * 3 + j * 3 + l] += dm_imag[k][l];
 	}
       }
     }

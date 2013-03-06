@@ -204,34 +204,6 @@ class PhononPhonon:
         self._frequencies_at_q = np.zeros(
             (len(self._weights_at_q), 3, num_atom * 3), dtype=float)
 
-        # try:
-        #     import anharmonic._phono3py as phono3c
-        #     q_set = []
-        #     for q in q3:
-        #         q_set.append(grid_address[q].astype(float) / mesh)
-        #     q_set = np.array(q_set)
-        #     num_atom = primitive.get_number_of_atoms()
-        
-        #     # Solve dynamical matrix
-        #     freqs = np.zeros((3, num_atom * 3), dtype=float)
-        #     freqs[0] = frequencies.copy()
-        #     eigvecs = np.zeros((3, num_atom * 3, num_atom * 3), dtype=complex)
-        #     eigvecs[0] = eigenvectors.copy()
-        #     for i, q in enumerate(q_set[1:]):
-        #         if (q_direction is not None) and q3[i + 1] == 0:
-        #             dm.set_dynamical_matrix(q, q_direction)
-        #         else:
-        #             dm.set_dynamical_matrix(q)
-        
-        #         vals, eigvecs[i + 1] = np.linalg.eigh(dm.get_dynamical_matrix())
-        #         vals = vals.real
-        #         total_factor = factor * freq_factor
-        #         freqs[i + 1] = np.sqrt(np.abs(vals)) * np.sign(vals) * total_factor
-        
-        #     # Calculate interaction strength
-        #     amplitude = np.zeros((len(band_indices), num_atom * 3, num_atom * 3),
-        #                          dtype=float)
-        # except ImportError:
         for i, (q3, w) in enumerate(zip(self._triplets_at_q,
                                         self._weights_at_q)):
             (self._amplitude_at_q[i],
@@ -515,7 +487,6 @@ def get_py_triplet_interaction_strength(amplitude,
                                    fc3,
                                    symprec=symprec,
                                    r2q_TI_index=r2q_TI_index))
-            
     # e[q, eigvec, eigvec_index]
     # e[3, num_atom*3, num_atom*3]
     e = eigvecs
@@ -551,7 +522,6 @@ def get_py_triplet_interaction_strength(amplitude,
                                 e[k[2],:, j[k[2]]], # q''
                                 primitive)
                         vv /= 6 * freqs[0][j[0]] * freqs[1][j[1]] * freqs[2][j[2]]
-                        
                 amplitude[i, j[1], j[2]] = vv
 
 def get_sum_in_primitive(fc3_q, e1, e2, e3, primitive):

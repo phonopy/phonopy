@@ -120,7 +120,7 @@ def get_c_fc3_reciprocal(shortest_vectors,
     num_atom = len(p2s_map)
     fc3_q = np.zeros((num_atom, num_atom, num_atom, 3, 3, 3),
                      dtype=complex)
-    
+
     phono3c.fc3_reciprocal(fc3_q,
                            shortest_vectors,
                            multiplicity,

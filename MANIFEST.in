@@ -1,2 +1,3 @@
-graft c
+graft c/harmonic_include
+graft c/spglib_include
 graft example

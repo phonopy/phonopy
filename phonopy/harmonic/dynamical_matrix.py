@@ -278,6 +278,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
 
         # Wang method (J. Phys.: Condens. Matter 22 (2010) 202201)
         else:
+            import phonopy._phonopy as phonoc
             try:
                 import phonopy._phonopy as phonoc
                 self._set_c_nac_dynamical_matrix(q_red, q, constant)
