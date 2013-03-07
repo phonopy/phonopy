@@ -60,6 +60,7 @@ int get_interaction_strength(double *amps,
 			     const ShortestVecs *svecs_fc2,
 			     const Array2D *multi_fc3,
 			     const ShortestVecs *svecs_fc3,
+			     const Array1D *band_indices,
 			     const double *born,
 			     const double *dielectric,
 			     const double nac_factor,
@@ -69,18 +70,16 @@ int get_interaction_strength(double *amps,
 			     const int r2q_TI_index,
 			     const double symprec)
 {
-  int i, j, num_triplets, num_patom, info0, info1, info2;
+  int i, j, num_triplets, num_patom, info0, info1, info2, num_grid_points;
   double *q_vecs;
   double *w0 ,*w;
   lapack_complex_double *a0, *a;
-  Array1D *band_indices;
 
   num_patom = p2s_fc2->d1;
   num_triplets = weights->d1;
-
-  band_indices = alloc_Array1D(num_patom * 3);
-  for (i = 0; i < num_patom; i++) {
-    band_indices->data[i] = i;
+  num_grid_points = 0;
+  for (i = 0; i < weights->d1; i++) {
+    num_grid_points += weights->data[i];
   }
 
   w0 = (double*)malloc(sizeof(double) * num_patom * 3);
@@ -148,7 +147,7 @@ int get_interaction_strength(double *amps,
     }
 
     get_triplet_interaction_strength
-      (amps + i * num_patom * num_patom * num_patom * 27,
+      (amps + i * band_indices->d1 * num_patom * num_patom * 9,
        fc3,
        q_vecs,
        a,
@@ -164,11 +163,19 @@ int get_interaction_strength(double *amps,
        r2q_TI_index,
        symprec);
 
+    free(q_vecs);
     free(w);
     free(a);
   }
 
-  free_Array1D(band_indices);
+  for (i = 0;
+       i < num_triplets * band_indices->d1 * num_patom * num_patom * 9;
+       i++) {
+    amps[i] = lapack_make_complex_double
+      (lapack_complex_double_real(amps[i]) / num_grid_points,
+       lapack_complex_double_imag(amps[i]) / num_grid_points);
+  }
+  
   free(w0);
   free(a0);
 }
@@ -491,7 +498,7 @@ static int sum_interaction_strength(double *amps,
 
     if (freqs[band[0]] < cutoff_frequency ||
 	freqs[num_patom * 3 + band[1]] < cutoff_frequency ||
-	freqs[2 * num_patom * 3 + band[2]] < cutoff_frequency) {
+	freqs[num_patom * 6 + band[2]] < cutoff_frequency) {
       amps[n] = 0;
       continue;
     }

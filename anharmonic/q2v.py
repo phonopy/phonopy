@@ -204,9 +204,6 @@ class PhononPhonon:
         self._frequencies_at_q = np.zeros(
             (len(self._weights_at_q), 3, num_atom * 3), dtype=float)
 
-        
-
-
         try:
             import anharmonic._phono3py as phono3c
             q1s = []
@@ -228,31 +225,33 @@ class PhononPhonon:
                 nac_factor = 0.0
                 dielectric = np.zeros((3, 3), dtype=float)
             
-            phono3c.interaction_strength(self._amplitude_at_q,
-                                         self._frequencies_at_q,
-                                         q0,
-                                         np.array(q1s),
-                                         np.array(q2s),
-                                         self._weights_at_q,
-                                         svecs_fc2,
-                                         multi_fc2,
-                                         self._shortest_vectors,
-                                         self._multiplicity,
-                                         self._dm.get_primitive_to_supercell_map(),
-                                         self._dm.get_supercell_to_primitive_map(),
-                                         self._p2s_map,
-                                         self._s2p_map,
-                                         self._dm.get_force_constants(),
-                                         self._fc3,
-                                         self._primitive.get_masses(),
-                                         born,
-                                         dielectric,
-                                         nac_factor,
-                                         self._freq_factor * self._factor,
-                                         self._cutoff_frequency,
-                                         self._is_symmetrize_fc3_q,
-                                         self._r2q_TI_index,
-                                         self._symprec)
+            phono3c.interaction_strength(
+                self._amplitude_at_q,
+                self._frequencies_at_q,
+                q0,
+                np.array(q1s),
+                np.array(q2s),
+                self._weights_at_q,
+                svecs_fc2,
+                multi_fc2,
+                self._shortest_vectors,
+                self._multiplicity,
+                self._dm.get_primitive_to_supercell_map(),
+                self._dm.get_supercell_to_primitive_map(),
+                self._p2s_map,
+                self._s2p_map,
+                self._dm.get_force_constants(),
+                self._fc3,
+                self._primitive.get_masses(),
+                self._band_indices,
+                born,
+                dielectric,
+                nac_factor,
+                self._freq_factor * self._factor,
+                self._cutoff_frequency,
+                self._is_symmetrize_fc3_q,
+                self._r2q_TI_index,
+                self._symprec)
     
         except ImportError:
             for i, (q3, w) in enumerate(zip(self._triplets_at_q,

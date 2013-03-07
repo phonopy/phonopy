@@ -98,12 +98,13 @@ static PyObject * py_get_interaction_strength(PyObject *self, PyObject *args)
   PyArrayObject* force_constants_second;
   PyArrayObject* force_constants_third;
   PyArrayObject* atomic_masses;
+  PyArrayObject* band_indicies;
   PyArrayObject* born_effective_charge;
   PyArrayObject* dielectric_constant;
   double symprec, cutoff_frequency, nac_factor, freq_unit_conversion_factor;
   int r2q_TI_index, is_symmetrize_fc3_q;
 
-  if (!PyArg_ParseTuple(args, "OOOOOOOOOOOOOOOOOOOdddiid",
+  if (!PyArg_ParseTuple(args, "OOOOOOOOOOOOOOOOOOOOdddiid",
 			&amplitude,
 			&frequencies,
 			&qvec0,
@@ -121,6 +122,7 @@ static PyObject * py_get_interaction_strength(PyObject *self, PyObject *args)
 			&force_constants_second,
 			&force_constants_third,
 			&atomic_masses,
+			&band_indicies,
 			&born_effective_charge,
 			&dielectric_constant,
 			&nac_factor,
@@ -134,7 +136,7 @@ static PyObject * py_get_interaction_strength(PyObject *self, PyObject *args)
 
   int i, j;
   int * svecs_dims;
-  Array1D * s2p_fc2, * p2s_fc2, * s2p_fc3, * p2s_fc3, *w;
+  Array1D * s2p_fc2, * p2s_fc2, * s2p_fc3, * p2s_fc3, *w, *bands;
   Array2D * multi_fc2, * multi_fc3;
   ShortestVecs * svecs_fc2, * svecs_fc3;
 
@@ -157,12 +159,19 @@ static PyObject * py_get_interaction_strength(PyObject *self, PyObject *args)
   double* born;
   born = NULL;
   const double* dielectric = (double*)dielectric_constant->data;
+  const long* bands_long = (long*)band_indicies->data;
+  
   
   const int num_satom_fc2 = (int)multiplicity_fc2->dimensions[0];
   const int num_satom_fc3 = (int)multiplicity_fc3->dimensions[0];
   const int num_patom = (int)multiplicity_fc3->dimensions[1];
   const int num_triplets = (int)weights->dimensions[0];
-  
+
+
+  bands = alloc_Array1D(band_indicies->dimensions[0]);
+  for (i = 0; i < bands->d1; i++) {
+    bands->data[i] = (int)bands_long[i];
+  }
   
   svecs_dims = (int*)malloc(sizeof(int) * 4);
   for (i = 0; i < 4; i++) {
@@ -228,6 +237,7 @@ static PyObject * py_get_interaction_strength(PyObject *self, PyObject *args)
 			   svecs_fc2,
 			   multi_fc3,
 			   svecs_fc3,
+			   bands,
 			   born,
 			   dielectric,
 			   nac_factor,
@@ -244,6 +254,7 @@ static PyObject * py_get_interaction_strength(PyObject *self, PyObject *args)
   free_Array2D(multi_fc2);
   free_Array2D(multi_fc3);
   free_Array1D(w);
+  free_Array1D(bands);
   free_shortest_vecs(svecs_fc2);
   free_shortest_vecs(svecs_fc3);
 
