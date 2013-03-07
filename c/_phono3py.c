@@ -97,14 +97,17 @@ static PyObject * py_get_interaction_strength(PyObject *self, PyObject *args)
   PyArrayObject* s2p_map_fc3;
   PyArrayObject* force_constants_second;
   PyArrayObject* force_constants_third;
-  PyArrayObject* atomic_masses;
+  PyArrayObject* atomic_masses_fc2;
+  PyArrayObject* atomic_masses_fc3;
+  PyArrayObject* reciprocal_lattice;
   PyArrayObject* band_indicies;
   PyArrayObject* born_effective_charge;
+  PyArrayObject* q_direction;
   PyArrayObject* dielectric_constant;
-  double symprec, cutoff_frequency, nac_factor, freq_unit_conversion_factor;
+  double cutoff_frequency, nac_factor, freq_unit_conversion_factor;
   int r2q_TI_index, is_symmetrize_fc3_q;
 
-  if (!PyArg_ParseTuple(args, "OOOOOOOOOOOOOOOOOOOOdddiid",
+  if (!PyArg_ParseTuple(args, "OOOOOOOOOOOOOOOOOOOOOOOdddii",
 			&amplitude,
 			&frequencies,
 			&qvec0,
@@ -121,21 +124,23 @@ static PyObject * py_get_interaction_strength(PyObject *self, PyObject *args)
 			&s2p_map_fc3,
 			&force_constants_second,
 			&force_constants_third,
-			&atomic_masses,
+			&atomic_masses_fc2,
+			&atomic_masses_fc3,
 			&band_indicies,
 			&born_effective_charge,
 			&dielectric_constant,
+			&reciprocal_lattice,
+			&q_direction,
 			&nac_factor,
 			&freq_unit_conversion_factor,
 			&cutoff_frequency,
 			&is_symmetrize_fc3_q,
-			&r2q_TI_index,
-			&symprec)) {
+			&r2q_TI_index)) {
     return NULL;
   }
 
   int i, j;
-  int * svecs_dims;
+  int svecs_dims[4];
   Array1D * s2p_fc2, * p2s_fc2, * s2p_fc3, * p2s_fc3, *w, *bands;
   Array2D * multi_fc2, * multi_fc3;
   ShortestVecs * svecs_fc2, * svecs_fc3;
@@ -146,7 +151,8 @@ static PyObject * py_get_interaction_strength(PyObject *self, PyObject *args)
   const double *q1s = (double*)qvec1s->data;
   const double *q2s = (double*)qvec2s->data;
   const long *weights_long = (long*)weights->data;
-  const double* masses = (double*)atomic_masses->data;
+  const double* masses_fc2 = (double*)atomic_masses_fc2->data;
+  const double* masses_fc3 = (double*)atomic_masses_fc3->data;
   const long* multiplicity_long_fc2 = (long*)multiplicity_fc2->data;
   const long* multiplicity_long_fc3 = (long*)multiplicity_fc3->data;
   const long* p2s_map_fc2_long = (long*)p2s_map_fc2->data;
@@ -155,13 +161,27 @@ static PyObject * py_get_interaction_strength(PyObject *self, PyObject *args)
   const long* s2p_map_fc3_long = (long*)s2p_map_fc3->data;
   const double* fc2 = (double*)force_constants_second->data;
   const double* fc3 = (double*)force_constants_third->data;
-  /* const double* born = (double*)born_effective_charge->data; */
-  double* born;
-  born = NULL;
-  const double* dielectric = (double*)dielectric_constant->data;
   const long* bands_long = (long*)band_indicies->data;
-  
-  
+  const double* rec_lat = (double*)reciprocal_lattice->data;
+  double* born;
+  if ((PyObject*)born_effective_charge == Py_None) {
+    born = NULL;
+  } else {
+    born = (double*)born_effective_charge->data;
+  }
+  double* dielectric;
+  if ((PyObject*)dielectric_constant == Py_None) {
+    dielectric = NULL;
+  } else {
+    dielectric = (double*)dielectric_constant->data;
+  }
+  double *q_dir;
+  if ((PyObject*)q_direction == Py_None) {
+    q_dir = NULL;
+  } else {
+    q_dir = (double*)q_direction->data;
+  }
+
   const int num_satom_fc2 = (int)multiplicity_fc2->dimensions[0];
   const int num_satom_fc3 = (int)multiplicity_fc3->dimensions[0];
   const int num_patom = (int)multiplicity_fc3->dimensions[1];
@@ -173,7 +193,6 @@ static PyObject * py_get_interaction_strength(PyObject *self, PyObject *args)
     bands->data[i] = (int)bands_long[i];
   }
   
-  svecs_dims = (int*)malloc(sizeof(int) * 4);
   for (i = 0; i < 4; i++) {
     svecs_dims[i] = (int)shortest_vectors_fc2->dimensions[i];
   }
@@ -184,7 +203,6 @@ static PyObject * py_get_interaction_strength(PyObject *self, PyObject *args)
   }
   svecs_fc3 = get_shortest_vecs((double*)shortest_vectors_fc3->data,
 				svecs_dims);
-  free(svecs_dims);
 
   multi_fc2 = alloc_Array2D(num_satom_fc2, num_patom);
   for (i = 0; i < num_satom_fc2; i++) {
@@ -228,7 +246,8 @@ static PyObject * py_get_interaction_strength(PyObject *self, PyObject *args)
 			   w,
 			   fc2,
 			   fc3,
-			   masses,
+			   masses_fc2,
+			   masses_fc3,
 			   p2s_fc2,
 			   s2p_fc2,
 			   p2s_fc3,
@@ -240,12 +259,13 @@ static PyObject * py_get_interaction_strength(PyObject *self, PyObject *args)
 			   bands,
 			   born,
 			   dielectric,
+			   rec_lat,
+			   q_dir,
 			   nac_factor,
 			   freq_unit_conversion_factor,
 			   cutoff_frequency,
 			   is_symmetrize_fc3_q,
-			   r2q_TI_index,
-			   symprec);
+			   r2q_TI_index);
 
   free_Array1D(p2s_fc2);
   free_Array1D(s2p_fc2);
@@ -275,10 +295,10 @@ static PyObject * py_get_triplet_interaction_strength(PyObject *self,
   PyArrayObject* force_constants_third;
   PyArrayObject* atomic_masses;
   PyArrayObject* set_of_band_indices;
-  double symprec, cutoff_frequency;
+  double cutoff_frequency;
   int r2q_TI_index, is_symmetrize_fc3_q;
 
-  if (!PyArg_ParseTuple(args, "OOOOOOOOOOOdiid",
+  if (!PyArg_ParseTuple(args, "OOOOOOOOOOOdii",
 			&amplitude,
 			&omegas,
 			&eigenvectors,
@@ -292,8 +312,7 @@ static PyObject * py_get_triplet_interaction_strength(PyObject *self,
 			&set_of_band_indices,
 			&cutoff_frequency,
 			&is_symmetrize_fc3_q,
-			&r2q_TI_index,
-			&symprec)) {
+			&r2q_TI_index)) {
     return NULL;
   }
 
@@ -365,8 +384,7 @@ static PyObject * py_get_triplet_interaction_strength(PyObject *self,
 				   band_indices,
 				   cutoff_frequency,
 				   is_symmetrize_fc3_q,
-				   r2q_TI_index,
-				   symprec);
+				   r2q_TI_index);
 
   free(lpk_eigvecs);
   free_Array1D(p2s);
@@ -449,11 +467,10 @@ static PyObject * py_get_fc3_reciprocal(PyObject *self, PyObject *args)
   PyArrayObject* s2p_map;
   PyArrayObject* force_constants_third;
   PyArrayObject* force_constants_third_reciprocal;
-  const double symprec;
   const int r2q_TI_index;
   
 
-  if (!PyArg_ParseTuple(args, "OOOOOOOid",
+  if (!PyArg_ParseTuple(args, "OOOOOOOi",
 			&force_constants_third_reciprocal,
 			&shortest_vectors,
 			&multiplicity,
@@ -461,9 +478,9 @@ static PyObject * py_get_fc3_reciprocal(PyObject *self, PyObject *args)
 			&p2s_map,
 			&s2p_map,
 			&force_constants_third,
-			&r2q_TI_index,
-			&symprec))
+			&r2q_TI_index)) {
     return NULL;
+  }
 
   int i, j;
   int * svecs_dimensions;
@@ -524,8 +541,7 @@ static PyObject * py_get_fc3_reciprocal(PyObject *self, PyObject *args)
 		     s2p,
 		     p2s,
 		     fc3,
-		     r2q_TI_index,
-		     symprec);
+		     r2q_TI_index);
   for (i = 0; i < num_patom * num_patom * num_patom * 27; i++) {
     fc3_q[i].real = lapack_complex_double_real(lpk_fc3_q[i]);
     fc3_q[i].imag = lapack_complex_double_imag(lpk_fc3_q[i]);
@@ -549,18 +565,16 @@ static PyObject * py_get_fc3_realspace(PyObject *self, PyObject *args)
   PyArrayObject* s2p_map;
   PyArrayObject* fc3_realspace;
   PyArrayObject* fc3_reciprocal;
-  const double symprec;
-  
 
-  if (!PyArg_ParseTuple(args, "OOOOOOd",
+  if (!PyArg_ParseTuple(args, "OOOOOO",
 			&fc3_realspace,
 			&shortest_vectors,
 			&multiplicity,
 			&qpoints_triplet,
 			&s2p_map,
-			&fc3_reciprocal,
-			&symprec))
+			&fc3_reciprocal)) {
     return NULL;
+  }
 
   int i, j;
   int * svecs_dimensions;
@@ -612,8 +626,7 @@ static PyObject * py_get_fc3_realspace(PyObject *self, PyObject *args)
 		    multi,
 		    q_triplet,
 		    s2p,
-		    lpk_fc3_rec,
-		    symprec);
+		    lpk_fc3_rec);
   for (i = 0; i < num_satom * num_satom * num_satom * 27; i++) {
     fc3_real[i].real = lapack_complex_double_real(lpk_fc3_real[i]);
     fc3_real[i].imag = lapack_complex_double_imag(lpk_fc3_real[i]);

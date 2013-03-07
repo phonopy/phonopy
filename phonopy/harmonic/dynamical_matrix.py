@@ -245,7 +245,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         return self._born
 
     def get_nac_factor(self):
-        return self._unit_conversion * 4.0 * np.pi / volume
+        return self._unit_conversion * 4.0 * np.pi / self._pcell.get_volume()
 
     def get_dielectric_constant(self):
         return self._dielectric
@@ -263,18 +263,18 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         else:
             self._unit_conversion = factor
             self._damping_factor = DAMPING_FACTOR
-        self._dielectric = np.array(self._nac_params['dielectric'])
+        self._dielectric = np.array(self._nac_params['dielectric'], dtype=float)
 
     def set_dynamical_matrix(self, q_red, q_direction=None, verbose=False):
         num_atom = self._pcell.get_number_of_atoms()
 
-        if q_direction==None:
+        if q_direction is None:
             q = np.dot(q_red, np.linalg.inv(self._pcell.get_cell()).T)
         else:
             q = np.dot(q_direction, np.linalg.inv(self._pcell.get_cell()).T)
 
-        if (q_direction==None and np.abs(q).sum() < self._symprec) or \
-                ((not q_direction==None) and
+        if (q_direction is None and np.abs(q).sum() < self._symprec) or \
+                ((q_direction is not None) and
                  np.abs(q_direction).sum() < self._symprec):
             self._force_constants = self._bare_force_constants.copy()
             DynamicalMatrix.set_dynamical_matrix(self, q_red, verbose)

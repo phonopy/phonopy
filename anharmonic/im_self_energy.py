@@ -34,16 +34,14 @@ class ImSelfEnergy:
 
             band_indices = []
             sum_gammas = None
+
+            sum_gammas = np.zeros_like(gammas_bands[0])
             for band_index, gammas in zip(self._pp.get_band_indices(),
                                           gammas_bands):
                 if gammas is None:
                     continue
 
-                if sum_gammas is None:
-                    sum_gammas = np.zeros_like(gammas)
-                else:
-                    sum_gammas += gammas
-
+                sum_gammas += gammas
                 band_indices.append(band_index)
                 write_damping_functions(self._pp.get_grid_point(),
                                         [band_index + 1],

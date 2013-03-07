@@ -190,13 +190,11 @@ class PhononPhonon:
         if band_indices == None:
             self._band_indices = np.arange(num_atom * 3, dtype=int)
         else:
-            self._band_indices = np.array(band_indices)
+            self._band_indices = np.array(band_indices, dtype=int)
 
         self.print_log(("Band indices: [" + " %d" * len(self._band_indices) +
                          " ]\n") % tuple(self._band_indices + 1))
-
         self.set_harmonic_phonons(self._q)
-        
         self._amplitude_at_q = np.zeros((len(self._weights_at_q),
                                          len(self._band_indices),
                                          num_atom * 3,
@@ -220,17 +218,20 @@ class PhononPhonon:
                 nac_factor = self._dm.get_nac_factor()
                 dielectric = self._dm.get_dielectric_constant()
             else:
-                born = np.zeros((self._primitive.get_number_of_atoms(), 3, 3),
-                                dtype=float)
+                born = None
                 nac_factor = 0.0
-                dielectric = np.zeros((3, 3), dtype=float)
-            
+                dielectric = None
+
+            # It seems numpy or python bug.
+            # q_direction="1 1 0" is not handled.
+            self._q_direction *= 1.0
+                
             phono3c.interaction_strength(
                 self._amplitude_at_q,
                 self._frequencies_at_q,
                 q0,
-                np.array(q1s),
-                np.array(q2s),
+                np.array(q1s, dtype=float),
+                np.array(q2s, dtype=float),
                 self._weights_at_q,
                 svecs_fc2,
                 multi_fc2,
@@ -242,17 +243,19 @@ class PhononPhonon:
                 self._s2p_map,
                 self._dm.get_force_constants(),
                 self._fc3,
+                self._dm.get_primitive().get_masses(),                
                 self._primitive.get_masses(),
                 self._band_indices,
                 born,
                 dielectric,
+                np.linalg.inv(self._dm.get_primitive().get_cell()).copy(),
+                self._q_direction,
                 nac_factor,
                 self._freq_factor * self._factor,
                 self._cutoff_frequency,
                 self._is_symmetrize_fc3_q,
-                self._r2q_TI_index,
-                self._symprec)
-    
+                self._r2q_TI_index)
+
         except ImportError:
             for i, (q3, w) in enumerate(zip(self._triplets_at_q,
                                             self._weights_at_q)):
@@ -306,7 +309,7 @@ class PhononPhonon:
             self._dm.set_nac_params(nac_params)
 
         if nac_q_direction is not None:
-            self._q_direction = nac_q_direction
+            self._q_direction = np.array(nac_q_direction, dtype=float)
 
     def set_harmonic_phonons(self, q):
         if ((self._q_direction is not None) and
@@ -393,8 +396,7 @@ def get_triplet_interaction_strength(triplet_number,
                                            band_indices,
                                            cutoff_frequency,
                                            is_symmetrize_fc3_q,
-                                           r2q_TI_index,
-                                           symprec)
+                                           r2q_TI_index)
     except ImportError:
         get_py_triplet_interaction_strength(amplitude,
                                             freqs,
@@ -408,8 +410,7 @@ def get_triplet_interaction_strength(triplet_number,
                                             cutoff_frequency,
                                             is_symmetrize_fc3_q,
                                             is_Peierls,
-                                            r2q_TI_index,
-                                            symprec)
+                                            r2q_TI_index)
 
     return amplitude / np.prod(mesh), freqs
 
@@ -460,8 +461,7 @@ def get_c_triplet_interaction_strength(amplitude,
                                        band_indices,
                                        cutoff_frequency,
                                        is_symmetrize_fc3_q,
-                                       r2q_TI_index,
-                                       symprec):
+                                       r2q_TI_index):
     
     import anharmonic._phono3py as phono3c
     p2s_map = primitive.get_primitive_to_supercell_map()
@@ -480,8 +480,7 @@ def get_c_triplet_interaction_strength(amplitude,
                                          band_indices,
                                          cutoff_frequency,
                                          is_symmetrize_fc3_q * 1,
-                                         r2q_TI_index,
-                                         symprec)
+                                         r2q_TI_index)
 
 def get_py_triplet_interaction_strength(amplitude,
                                         freqs,
@@ -495,8 +494,7 @@ def get_py_triplet_interaction_strength(amplitude,
                                         cutoff_frequency,
                                         is_symmetrize_fc3_q,
                                         is_Peierls,
-                                        r2q_TI_index,
-                                        symprec):
+                                        r2q_TI_index):
 
     # fc3 from real space to reciprocal space
     #
@@ -515,7 +513,6 @@ def get_py_triplet_interaction_strength(amplitude,
                                    p2s_map,
                                    s2p_map,
                                    fc3,
-                                   symprec=symprec,
                                    r2q_TI_index=r2q_TI_index)
     elif is_symmetrize_fc3_q:
         index_exchange = ((0, 1, 2),
@@ -535,7 +532,6 @@ def get_py_triplet_interaction_strength(amplitude,
                                    p2s_map,
                                    s2p_map,
                                    fc3,
-                                   symprec=symprec,
                                    r2q_TI_index=r2q_TI_index))
     # e[q, eigvec, eigvec_index]
     # e[3, num_atom*3, num_atom*3]

@@ -6,16 +6,14 @@ def get_fc2_reciprocal(shortest_vectors,
                        q,
                        p2s,
                        s2p,
-                       fc2,
-                       symprec=1e-5):
+                       fc2):
 
     return get_py_fc2_reciprocal(shortest_vectors,
                                  multiplicity,
                                  q,
                                  p2s,
                                  s2p,
-                                 fc2,
-                                 symprec=1e-5)
+                                 fc2)
 
 # This method assumes q1+q2+q3=G and uses only q2 and q3.
 #
@@ -29,7 +27,6 @@ def get_fc3_reciprocal(shortest_vectors,
                        p2s_map,
                        s2p_map,
                        fc3,
-                       symprec=1e-5,
                        r2q_TI_index=0):
     try:
         import anharmonic._phono3py as phono3c
@@ -39,24 +36,21 @@ def get_fc3_reciprocal(shortest_vectors,
                                     p2s_map,
                                     s2p_map,
                                     fc3,
-                                    r2q_TI_index,
-                                    symprec)
+                                    r2q_TI_index)
     except ImportError:
         return get_py_fc3_reciprocal(shortest_vectors,
                                      multiplicity,
                                      q_set,
                                      p2s_map,
                                      s2p_map,
-                                     fc3,
-                                     symprec)
+                                     fc3)
 
 def get_py_fc2_reciprocal(shortest_vectors,
                           multiplicity,
                           q,
                           p2s,
                           s2p,
-                          fc2,
-                          symprec=1e-5):
+                          fc2):
 
     num_atom_prim = len(p2s)
     fc2_rec = np.zeros((num_atom_prim, num_atom_prim, 3, 3),
@@ -112,8 +106,7 @@ def get_c_fc3_reciprocal(shortest_vectors,
                          p2s_map,
                          s2p_map,
                          fc3,
-                         r2q_TI_index,
-                         symprec=1e-5):
+                         r2q_TI_index):
 
     import anharmonic._phono3py as phono3c
 
@@ -128,8 +121,7 @@ def get_c_fc3_reciprocal(shortest_vectors,
                            np.array(p2s_map),
                            np.array(s2p_map),
                            fc3,
-                           r2q_TI_index,
-                           symprec)
+                           r2q_TI_index)
 
     return fc3_q
 
@@ -138,8 +130,7 @@ def get_py_fc3_reciprocal(shortest_vectors,
                           q_set,
                           p2s_map,
                           s2p_map,
-                          fc3,
-                          symprec=1e-5):
+                          fc3):
 
     num_atom = len(p2s_map)
     fc3_q = np.zeros((num_atom, num_atom, num_atom, 3, 3, 3),
