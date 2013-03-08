@@ -648,7 +648,7 @@ static int get_phonons(lapack_complex_double *a,
   int i, j, num_patom, num_satom;
   double q_cart[3];
   double *dm_real, *dm_imag, *charge_sum;
-  double dielectric_factor, tmp_val;
+  double inv_dielectric_factor, dielectric_factor, tmp_val;
 
   num_patom = p2s->d1;
   num_satom = s2p->d1;
@@ -661,37 +661,41 @@ static int get_phonons(lapack_complex_double *a,
   }
 
   if (born) {
-    charge_sum = (double*) malloc(sizeof(double) * num_patom * num_patom * 9);
-    if (q_direction) {
-      for (i = 0; i < 3; i++) {
-	q_cart[i] = 0.0;
-	for (j = 0; j < 3; j++) {
-	  q_cart[i] += reciprocal_lattice[i * 3 + j] * q_direction[j];
-	}
-      }
+    if (fabs(q[0]) < 1e-10 && fabs(q[1]) < 1e-10 && fabs(q[2]) < 1e-10) {
+      charge_sum = NULL;
     } else {
-      for (i = 0; i < 3; i++) {
-	q_cart[i] = 0.0;
-	for (j = 0; j < 3; j++) {
-	  q_cart[i] += reciprocal_lattice[i * 3 + j] * q[j];
+      charge_sum = (double*) malloc(sizeof(double) * num_patom * num_patom * 9);
+      if (q_direction) {
+	for (i = 0; i < 3; i++) {
+	  q_cart[i] = 0.0;
+	  for (j = 0; j < 3; j++) {
+	    q_cart[i] += reciprocal_lattice[i * 3 + j] * q_direction[j];
+	  }
+	}
+      } else {
+	for (i = 0; i < 3; i++) {
+	  q_cart[i] = 0.0;
+	  for (j = 0; j < 3; j++) {
+	    q_cart[i] += reciprocal_lattice[i * 3 + j] * q[j];
+	  }
 	}
       }
-    }
 
-    dielectric_factor = 0.0;
-    for (i = 0; i < 3; i++) {
-      tmp_val = 0.0;
-      for (j = 0; j < 3; j++) {
-	tmp_val += dielectric[i * 3 + j] * q_cart[j];
+      inv_dielectric_factor = 0.0;
+      for (i = 0; i < 3; i++) {
+	tmp_val = 0.0;
+	for (j = 0; j < 3; j++) {
+	  tmp_val += dielectric[i * 3 + j] * q_cart[j];
+	}
+	inv_dielectric_factor += tmp_val * q_cart[i];
       }
-      dielectric_factor += tmp_val * q_cart[i];
-    }
-    dielectric_factor = nac_factor / dielectric_factor / s2p->d1 * p2s->d1;
-    get_charge_sum(charge_sum,
-		   num_patom,
-		   dielectric_factor,
-		   q_cart,
+      dielectric_factor = nac_factor / inv_dielectric_factor / s2p->d1 * p2s->d1;
+      get_charge_sum(charge_sum,
+		     num_patom,
+		     dielectric_factor,
+		     q_cart,
 		   born);
+    }
   } else {
     charge_sum = NULL;
   }
@@ -703,7 +707,7 @@ static int get_phonons(lapack_complex_double *a,
   			    q,
   			    svecs->data[0][0][0],
   			    multi->data[0],
-  			    masses,
+   			    masses,
   			    s2p->data,
   			    p2s->data,
   			    charge_sum);
