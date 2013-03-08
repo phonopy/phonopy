@@ -224,7 +224,8 @@ class PhononPhonon:
 
             # It seems numpy or python bug.
             # q_direction="1 1 0" is not handled.
-            self._q_direction *= 1.0
+            if self._q_direction is not None:
+                self._q_direction *= 1.0
                 
             phono3c.interaction_strength(
                 self._amplitude_at_q,
