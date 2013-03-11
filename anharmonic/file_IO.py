@@ -769,7 +769,7 @@ def parse_gamma(filename):
             continue
         x = line.split()
         temps.append(float(x[0]))
-        gamma.append([float(g) for g in x[1:]])
+        gamma.append([float(g) for g in x[2:]])
     return np.array(temps), np.array(gamma)
 
 

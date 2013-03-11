@@ -121,6 +121,9 @@ class PhononPhonon:
     def get_qpoint(self):
         return self._q
 
+    def set_qpoint(self, q):
+        self._q = q
+
     def get_q_direction(self):
         return self._q_direction
 
@@ -194,7 +197,7 @@ class PhononPhonon:
 
         self.print_log(("Band indices: [" + " %d" * len(self._band_indices) +
                          " ]\n") % tuple(self._band_indices + 1))
-        self.set_harmonic_phonons(self._q)
+        self.set_harmonic_phonons()
         self._amplitude_at_q = np.zeros((len(self._weights_at_q),
                                          len(self._band_indices),
                                          num_atom * 3,
@@ -312,7 +315,8 @@ class PhononPhonon:
         if nac_q_direction is not None:
             self._q_direction = np.array(nac_q_direction, dtype=float)
 
-    def set_harmonic_phonons(self, q):
+    def set_harmonic_phonons(self):
+        q = self._q
         if ((self._q_direction is not None) and
             (q < 0.1 / max(self._mesh)).all()):
             self._dm.set_dynamical_matrix(q, self._q_direction)

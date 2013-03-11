@@ -15,9 +15,9 @@ class BTE_RTA:
                  t_step=10,
                  mesh_divisors=None,
                  no_kappa_stars=False,
-                 sort_by_process=False,
                  gamma_option=0,
                  log_level=0,
+                 write_logs=True,
                  filename=None):
         self._pp = interaction_strength
         self._sigmas = sigmas
@@ -25,9 +25,9 @@ class BTE_RTA:
         self._t_min = t_min
         self._t_step = t_step
         self._no_kappa_stars = no_kappa_stars
-        self._sort_by_process = sort_by_process
         self._gamma_option = gamma_option
         self._log_level = log_level
+        self._write_logs = write_logs
         self._filename = filename
 
         self._temperatures = np.arange(self._t_min,
@@ -70,6 +70,9 @@ class BTE_RTA:
             print ("Lifetime sampling mesh: [ %d %d %d ]" %
                    tuple(self._mesh / self._mesh_divisors))
 
+    def get_mesh_divisors(self):
+        return self._mesh_divisors
+
     def get_mesh_numbers(self):
         return self._mesh
         
@@ -81,6 +84,7 @@ class BTE_RTA:
                                                    self._grid_address,
                                                    dense_grid_points)
         elif self._no_kappa_stars: # All grid points
+            self._grid_address = get_grid_address(self._mesh)
             dense_grid_points = range(np.prod(self._mesh))
             self._grid_points = reduce_grid_points(self._mesh_divisors,
                                                    self._grid_address,
@@ -102,6 +106,9 @@ class BTE_RTA:
             assert self._grid_weights.sum() == np.prod(self._mesh /
                                                        self._mesh_divisors)
 
+    def get_grid_address(self):
+        return self._grid_points
+            
     def set_temperatures(self, temperatures):
         self._temperatures = temperatures
 
@@ -137,8 +144,15 @@ class BTE_RTA:
                 print ("================= %d/%d =================" %
                        (i + 1, len(self._grid_points)))
 
-            self._pp.set_triplets_at_q(grid_point)
-            self._pp.set_interaction_strength()
+
+            if self._gamma is None:
+                self._pp.set_triplets_at_q(grid_point)
+                self._pp.set_interaction_strength()
+                self._pp.set_harmonic_phonons(self._pp.get_qpoint())
+            else:
+                self._pp.set_qpoint(
+                    self._grid_address[grid_point].astype(float) / self._mesh)
+                self._pp.set_harmonic_phonons()
 
             # Group velocity
             gv = get_group_velocity(
@@ -175,7 +189,7 @@ class BTE_RTA:
                                       gv_sum2,
                                       cv,
                                       conversion_factor)
-            if self._log_level:
+            if self._write_logs:
                 for j, sigma in enumerate(self._sigmas):
                     write_kappa(kappa[j, i].sum(axis=1),
                                 self._temperatures,
@@ -186,7 +200,7 @@ class BTE_RTA:
                                 sigma=sigma,
                                 filename=self._filename)
 
-        if self._log_level:
+        if self._write_logs:
             if self._grid_weights is not None:
                 print "-------------- Total kappa --------------"
                 for sigma, kappa_at_sigma in zip(self._sigmas, kappa):

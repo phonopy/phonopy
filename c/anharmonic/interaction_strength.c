@@ -76,7 +76,7 @@ int get_interaction_strength(double *amps,
 			     const int is_symmetrize_fc3_q,
 			     const int r2q_TI_index)
 {
-  int i, j, num_triplets, num_patom, info0, info1, info2, num_grid_points;
+  int i, j, num_triplets, num_patom, num_grid_points;
   double *q_vecs;
   double *w0 ,*w;
   lapack_complex_double *a0, *a;
@@ -92,20 +92,20 @@ int get_interaction_strength(double *amps,
   a0 = (lapack_complex_double*)
     malloc(sizeof(lapack_complex_double) * num_patom * num_patom * 9);
 
-  info0 = get_phonons(a0,
-		      w0,
-		      q0,
-		      fc2,
-		      masses_fc2,
-		      p2s_fc2,
-		      s2p_fc2,
-		      multi_fc2,
-		      svecs_fc2,
-		      born,
-		      dielectric,
-		      reciprocal_lattice,
-		      q_direction,
-		      nac_factor);
+  get_phonons(a0,
+	      w0,
+	      q0,
+	      fc2,
+	      masses_fc2,
+	      p2s_fc2,
+	      s2p_fc2,
+	      multi_fc2,
+	      svecs_fc2,
+	      born,
+	      dielectric,
+	      reciprocal_lattice,
+	      q_direction,
+	      nac_factor);
 
   for (i = 0; i < num_triplets; i++) {
     w = (double*)malloc(3 * sizeof(double) * num_patom * 3);
@@ -125,35 +125,35 @@ int get_interaction_strength(double *amps,
       q_vecs[j + 6] = q2s[i * 3 + j];
     }
 
-    info1 = get_phonons(a + num_patom * num_patom * 9,
-			w + num_patom * 3,
-			q_vecs + 3,
-			fc2,
-			masses_fc2,
-			p2s_fc2,
-			s2p_fc2,
-			multi_fc2,
-			svecs_fc2,
-			born,
-			dielectric,
-			reciprocal_lattice,
-			NULL,
-			nac_factor);
+    get_phonons(a + num_patom * num_patom * 9,
+		w + num_patom * 3,
+		q_vecs + 3,
+		fc2,
+		masses_fc2,
+		p2s_fc2,
+		s2p_fc2,
+		multi_fc2,
+		svecs_fc2,
+		born,
+		dielectric,
+		reciprocal_lattice,
+		NULL,
+		nac_factor);
 
-    info2 = get_phonons(a + num_patom * num_patom * 18,
-			w + num_patom * 6,
-			q_vecs + 6,
-			fc2,
-			masses_fc2,
-			p2s_fc2,
-			s2p_fc2,
-			multi_fc2,
-			svecs_fc2,
-			born,
-			dielectric,
-			reciprocal_lattice,
-			NULL,
-			nac_factor);
+    get_phonons(a + num_patom * num_patom * 18,
+		w + num_patom * 6,
+		q_vecs + 6,
+		fc2,
+		masses_fc2,
+		p2s_fc2,
+		s2p_fc2,
+		multi_fc2,
+		svecs_fc2,
+		born,
+		dielectric,
+		reciprocal_lattice,
+		NULL,
+		nac_factor);
 
     for (j = 0; j < num_patom * 9; j++) {
       freqs[i * num_patom * 9 + j] =
@@ -661,7 +661,8 @@ static int get_phonons(lapack_complex_double *a,
   }
 
   if (born) {
-    if (fabs(q[0]) < 1e-10 && fabs(q[1]) < 1e-10 && fabs(q[2]) < 1e-10) {
+    if (fabs(q[0]) < 1e-10 && fabs(q[1]) < 1e-10 && fabs(q[2]) < 1e-10 &&
+	(!q_direction)) {
       charge_sum = NULL;
     } else {
       charge_sum = (double*) malloc(sizeof(double) * num_patom * num_patom * 9);

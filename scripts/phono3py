@@ -121,6 +121,7 @@ parser.set_defaults(amplitude=None,
                     read_fc2=False,
                     read_fc2_extra=False,
                     read_fc3=False,
+                    read_gammas=False,
                     r2q_TI_index=None,
                     freq_step=None,
                     output_filename=None,
@@ -229,6 +230,9 @@ parser.add_option("--md", "--mesh_divisors",
                   dest="mesh_divisors",
                   type="string",
                   help="Divisors for mesh numbers")
+parser.add_option("--multiple_sigmas", dest="multiple_sigmas",
+                  type="string",
+                  help="Multiple sigmas for smearing width used for limited functions")
 parser.add_option("--nac", dest="is_nac",
                   action="store_true",
                   help="Non-analytical term correction")
@@ -257,11 +261,12 @@ parser.add_option("--q_direction",
                   help="q-vector direction at q->0 for non-analytical term correction")
 parser.add_option("--r2q", dest="r2q_TI_index", type="int",
                   help="Index to set translational invariance in transforming fc3 from real to reciprocal space")
+parser.add_option("--read_gammas",
+                  dest="read_gammas",
+                  action="store_true",
+                  help="Read Gammas from files")
 parser.add_option("--sigma", dest="sigma", type="float",
                   help="Smearing width for DOS")
-parser.add_option("--multiple_sigmas", dest="multiple_sigmas",
-                  type="string",
-                  help="Multiple sigmas for smearing width used for limited functions")
 parser.add_option("--sym_fc2", dest="is_symmetrize_fc2",
                   action="store_true",
                   help="Symmetrize fc2 by index exchange")
@@ -531,7 +536,9 @@ else:
         nac_q_direction = None
 
     # fc3
-    if not options.is_joint_dos:
+    if options.is_joint_dos or options.read_gammas:
+        fc3 = None
+    else:
         if options.read_fc3: # Read FORCES_THIRD
             if log_level:
                 print  "----- Read fc3 -----"
@@ -764,6 +771,7 @@ else:
                     grid_points=grid_points,
                     mesh_divisors=settings.get_mesh_divisors(),
                     no_kappa_stars=settings.get_no_kappa_stars(),
+                    read_gammas=options.read_gammas,
                     gamma_option=options.gamma_option,
                     filename=options.output_filename)
             else:
