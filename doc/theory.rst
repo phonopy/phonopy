@@ -224,7 +224,7 @@ Phonon number
 
 .. math::
 
-   n = \frac{1}{\exp(\hbar\omega(\mathbf{q}\nu)/k_B T)-1}
+   n = \frac{1}{\exp(\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B} T)-1}
 
 Harmonic phonon energy
 -----------------------
@@ -232,7 +232,7 @@ Harmonic phonon energy
 .. math::
 
    E = \sum_{\mathbf{q}\nu}\hbar\omega(\mathbf{q}\nu)\left[\frac{1}{2} +
-    \frac{1}{\exp(\hbar\omega(\mathbf{q}\nu)/k_B T)-1}\right]
+    \frac{1}{\exp(\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B} T)-1}\right]
 
 
 Constant volume heat capacity
@@ -241,29 +241,29 @@ Constant volume heat capacity
 .. math::
 
    C_V &= \left(\frac{\partial E}{\partial T} \right)_V \\
-       &= \sum_{\mathbf{q}\nu} k_B
-    \left(\frac{\hbar\omega(\mathbf{q}\nu)}{k_B T} \right)^2
-    \frac{\exp(\hbar\omega(\mathbf{q}\nu)/k_B
-    T)}{[\exp(\hbar\omega(\mathbf{q}\nu)/k_B T)-1]^2} 
+       &= \sum_{\mathbf{q}\nu} k_\mathrm{B}
+    \left(\frac{\hbar\omega(\mathbf{q}\nu)}{k_\mathrm{B} T} \right)^2
+    \frac{\exp(\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B}
+    T)}{[\exp(\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B} T)-1]^2} 
 
 Partition function
 -------------------
 
 .. math::
 
-   Z = \exp(-\varphi/k_B T) \prod_{\mathbf{q}\nu}
-    \frac{\exp(-\hbar\omega(\mathbf{q}\nu)/2k_B
-    T)}{1-\exp(-\hbar\omega(\mathbf{q}\nu)/k_B T)} 
+   Z = \exp(-\varphi/k_\mathrm{B} T) \prod_{\mathbf{q}\nu}
+    \frac{\exp(-\hbar\omega(\mathbf{q}\nu)/2k_\mathrm{B}
+    T)}{1-\exp(-\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B} T)} 
 
 Helmholtz free energy
 ----------------------
 
 .. math::
 
-    F &= -k_B T \ln Z \\
+    F &= -k_\mathrm{B} T \ln Z \\
       &= \varphi + \frac{1}{2} \sum_{\mathbf{q}\nu}
-    \hbar\omega(\mathbf{q}\nu) + k_B T \sum_{\mathbf{q}\nu} \ln
-    \bigl[1 -\exp(-\hbar\omega(\mathbf{q}\nu)/k_B T) \bigr] 
+    \hbar\omega(\mathbf{q}\nu) + k_\mathrm{B} T \sum_{\mathbf{q}\nu} \ln
+    \bigl[1 -\exp(-\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B} T) \bigr] 
 
 Entropy
 ---------
@@ -271,11 +271,7 @@ Entropy
 .. math::
 
     S &= -\frac{\partial F}{\partial T} \\
-      &= -k_B \sum_{\mathbf{q}\nu} \ln
-    \left[1 -\exp(-\hbar\omega(\mathbf{k},\nu)/k_B T) \right] -
-    \frac{1}{T} \sum_{\mathbf{q}\nu} 
-    \frac{\hbar\omega(\mathbf{q}\nu)}{\exp(\hbar\omega(\mathbf{q}\nu)/k_B T)-1}
-
+      &= \frac{1}{2T}\sum_{\mathbf{q}\nu}\hbar\omega(\mathbf{q}\nu)\coth(\hbar\omega(\mathbf{q}\nu)/2k_\mathrm{B}T)-k_\mathrm{B} \sum_{\mathbf{q}\nu}\ln\left[2\sinh(\hbar\omega(\mathbf{q}\nu)/2k_\mathrm{B}T)\right]
 
 .. |sflogo| image:: http://sflogo.sourceforge.net/sflogo.php?group_id=161614&type=1
             :target: http://sourceforge.net
