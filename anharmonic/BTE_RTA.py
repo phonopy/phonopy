@@ -148,7 +148,7 @@ class BTE_RTA:
             if self._gamma is None:
                 self._pp.set_triplets_at_q(grid_point)
                 self._pp.set_interaction_strength()
-                self._pp.set_harmonic_phonons(self._pp.get_qpoint())
+                self._pp.set_harmonic_phonons()
             else:
                 self._pp.set_qpoint(
                     self._grid_address[grid_point].astype(float) / self._mesh)
