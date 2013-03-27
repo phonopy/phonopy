@@ -182,11 +182,6 @@ int get_interaction_strength(double *amps,
     free(a);
   }
 
-  printf("freq: ");
-  for (i = 0; i < num_patom * 9; i++) {
-    printf("%f ", freqs[num_patom * 9 + i]);
-  }
-
   for (i = 0;
        i < num_triplets * band_indices->d1 * num_patom * num_patom * 9;
        i++) {
