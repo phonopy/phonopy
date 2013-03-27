@@ -162,9 +162,9 @@ class BTE_RTA:
                              i,
                              kappa,
                              gamma):
-
         # Group velocity
-        gv_sum2 = self._get_gv_by_gv(i)
+        gv2_tensor = self._get_gv_by_gv(i)
+        gv_sum2 = gv2_tensor[:, :, 0, 0].sum(axis=0)
                 
         # Heat capacity
         cv = self._get_cv()
@@ -177,7 +177,7 @@ class BTE_RTA:
                 gamma[j, i] = self._get_gamma(sigma)
             for k in range(len(self._temperatures)):
                 for l in range(len(self._pp.get_frequencies())):
-                    if gamma[j, i, k, l] > 0:
+                    if 4 * np.pi * gamma[j, i, k, l] > 0:
                         kappa[j, i, k, l] = (gv_sum2[l] * cv[k, l] /
                                              gamma[j, i, k, l] / 2 *
                                              self._conversion_factor)
@@ -194,23 +194,22 @@ class BTE_RTA:
             frequencies=self._pp.get_frequencies())
 
         # Sum group velocities at symmetrically equivalent q-points
-        direction = [1, 0, 0]
         if self._no_kappa_stars:
-            rot_unit_n = [np.array(direction)]
+            rot_unit_n = [np.eye(3, dtype=float)]
         else:
-            rot_unit_n = self._get_rotated_unit_directions(direction,
-                                                           grid_point)
+            rot_unit_n = self._get_rotated_unit_directions(grid_point)
             # check if the number of rotations is correct.
             if self._grid_weights is not None:
                 assert len(rot_unit_n) == self._grid_weights[index]
             
-        gv_sum2 = np.zeros(len(self._pp.get_frequencies()), dtype=float)
+        gv2_tensor = []
         for unit_n in rot_unit_n:
-            gv_sum2 += np.dot(gv, unit_n) ** 2
+            gv2_tensor.append([np.outer(gv_xyz, gv_xyz)
+                               for gv_xyz in np.dot(gv, unit_n)])
 
         self._show_log(grid_point, gv, rot_unit_n)
 
-        return gv_sum2
+        return np.array(gv2_tensor)
     
     def _get_cv(self):
         def get_cv(freqs, t):
@@ -253,16 +252,13 @@ class BTE_RTA:
                             self._freq_conv_factor,
                             cutoff_frequency=self._cutoff_frequency,
                             gamma_option=self._gamma_option
-                            )[0] * unit_conversion
+                            )[0] * unit_conversion # THz in default
                         gamma[i, j] = g
         return gamma
 
-    def _get_rotated_unit_directions(self,
-                                     directon,
-                                     grid_point):
+    def _get_rotated_unit_directions(self, grid_point):
         rec_lat = np.linalg.inv(self._primitive.get_cell())
         inv_rec_lat = self._primitive.get_cell()
-        unit_n = np.array(directon) / np.linalg.norm(directon)
         orig_address = self._grid_address[grid_point]
         orbits = []
         rot_unit_n = []
@@ -276,7 +272,9 @@ class BTE_RTA:
             if not in_orbits:
                 orbits.append(rot_address)
                 rot_cart = np.dot(rec_lat, np.dot(rot, inv_rec_lat))
-                rot_unit_n.append(np.dot(rot_cart.T, unit_n))
+                rot_unit_n.append(rot_cart.T)
+                # Column vectors of rot_cart.T correspond to rotated unit
+                # vectors of [1, 0, 0], [0, 1, 0], [0, 0, 1], respectively.
 
         return rot_unit_n
 
@@ -348,10 +346,10 @@ class BTE_RTA:
                 print "%8.3f (%8.3f %8.3f %8.3f)" % ((f,) + tuple(v))
             print "Frequency, projected group velocity (GV), and GV squared"
             for unit_n in rot_unit_n:
-                print "Direction:", unit_n
+                print "Directions [%4.1f %4.1f %4.1f], [%4.1f %4.1f %4.1f], [%4.1f %4.1f %4.1f]" % tuple(unit_n.flatten())
                 for f, v in zip(self._pp.get_frequencies(),
                                 np.dot(group_velocity, unit_n)):
-                    print "%8.3f %8.3f %12.3f" % (f, v, v**2)
+                    print "%8.3f (%8.3f %8.3f %8.3f)" % ((f,) + tuple(v))
 
         
             
