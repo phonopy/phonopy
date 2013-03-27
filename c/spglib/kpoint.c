@@ -720,10 +720,10 @@ static Triplets * get_ir_triplets(const int mesh[3],
 				 const int mesh[3],
 				 PointSymmetry * pointgroup)
 {
-  int i, j, k, num_grid, weight_q, q_2, num_ir;
-  int mesh_double[3], address[3], is_shift[3];
+  int i, j, k, num_grid, q_2, num_ir_triplets, num_ir_q, count_ir_q;
+  int mesh_double[3], is_shift[3];
   int grid_double[3][3];
-  int *map_q;
+  int *map_q, *weights_tmp, *ir_grid;
   double tolerance;
   double stabilizer_q[1][3];
   PointSymmetry pointgroup_q;
@@ -749,50 +749,57 @@ static Triplets * get_ir_triplets(const int mesh[3],
 						   1,
 						   stabilizer_q);
   map_q = (int*) malloc(sizeof(int) * num_grid);
-  get_ir_reciprocal_mesh(grid_points,
-			 map_q,
-			 mesh,
-			 is_shift,
-			 &pointgroup_q);
-
+  weights_tmp = (int*) malloc(sizeof(int) * num_grid);
+  num_ir_q = get_ir_reciprocal_mesh(grid_points,
+				    map_q,
+				    mesh,
+				    is_shift,
+				    &pointgroup_q);
+  ir_grid = (int*) malloc(sizeof(int) * num_ir_q);
+  count_ir_q = 0;
   for (i = 0; i < num_grid; i++) {
     weights[i] = 0;
+    weights_tmp[i] = 0;
     third_q[i] = -1;
+    if (i == map_q[i]) {
+      ir_grid[count_ir_q] = i;
+      count_ir_q++;
+    }
   }
-  num_ir = 0;
-
   for (i = 0; i < num_grid; i++) {
-    if (i != map_q[i]) { /* pass only ir-q'-point */
-      continue;
-    }
+    weights_tmp[map_q[i]]++;
+  }
 
-    weight_q = 0;
-    for (j = 0; j < num_grid; j++) {
-      if (i == map_q[j]) {
-	weight_q++;
-      }
-    }
-
-    address_to_grid(grid_double[1], i, mesh, is_shift); /* q' */
-    for (j = 0; j < 3; j++) { /* q'' */
-      grid_double[2][j] = - grid_double[0][j] - grid_double[1][j];
+  for (i = 0; i < num_ir_q; i++) {
+    j = ir_grid[i];
+    address_to_grid(grid_double[1], j, mesh, is_shift); /* q' */
+    for (k = 0; k < 3; k++) { /* q'' */
+      grid_double[2][k] = - grid_double[0][k] - grid_double[1][k];
     }
     get_vector_modulo(grid_double[2], mesh_double);
     q_2 = grid_to_address(grid_double[2], mesh, is_shift);
-    third_q[i] = q_2;
+    third_q[j] = q_2;
+  }
 
-    if (weights[map_q[q_2]]) {
-      weights[map_q[q_2]] += weight_q;
+  num_ir_triplets = 0;
+  for (i = 0; i < num_ir_q; i++) {
+    j = ir_grid[i];
+    if (weights[map_q[third_q[j]]]) {
+      weights[map_q[third_q[j]]] += weights_tmp[j];
     } else {
-      weights[i] = weight_q;
-      num_ir++;
+      weights[j] = weights_tmp[j];
+      num_ir_triplets++;
     }
   }
 
   free(map_q);
   map_q = NULL;
+  free(ir_grid);
+  ir_grid = NULL;
+  free(weights_tmp);
+  weights_tmp = NULL;
 
-  return num_ir;
+  return num_ir_triplets;
 }
 
 static int extract_ir_triplets_with_q(int triplets_with_q[][3], 

@@ -6,6 +6,9 @@ from phonopy.units import Kb, THzToEv, EV, THz, Angstrom
 from anharmonic.file_IO import parse_kappa, write_kappa
 from anharmonic.triplets import get_grid_address, reduce_grid_points
 
+unit_to_WmK = ((THz * Angstrom) ** 2 / (Angstrom ** 3) * EV / THz /
+               (2 * np.pi)) # 2pi comes from definition of lifetime.
+
 class BTE_RTA:
     def __init__(self,
                  interaction_strength,
@@ -34,8 +37,10 @@ class BTE_RTA:
                                        self._t_max + float(self._t_step) / 2,
                                        self._t_step)
         self._primitive = self._pp.get_primitive()
-        self._mesh = None
-        self._mesh_divisors = None
+        self._cutoff_frequency = self._pp.get_cutoff_frequency()
+        self._freq_conv_factor = self._pp.get_frequency_unit_conversion_factor()
+        self._reciprocal_lattice = np.linalg.inv(
+            self._primitive.get_cell()) # a*, b*, c* are column vectors.
         self._grid_points = None
         self._grid_weights = None
         self._grid_address = None
@@ -45,30 +50,12 @@ class BTE_RTA:
 
         self._gamma = None
 
-        self.set_mesh_numbers(mesh_divisors=mesh_divisors)
-
-    def set_mesh_numbers(self, mesh=None, mesh_divisors=None):
-        if mesh is None:
-            self._mesh = self._pp.get_mesh_numbers()
-        else:
-            self._mesh = np.array(mesh, dtype=int)
-
-        if mesh_divisors is None:
-            self._mesh_divisors = np.array([1, 1, 1], dtype=int)
-        else:
-            self._mesh_divisors = []
-            for m, n in zip(self._mesh, mesh_divisors):
-                if m % n == 0:
-                    self._mesh_divisors.append(n)
-                else:
-                    self._mesh_divisors.append(1)
-            self._mesh_divisors = np.array(self._mesh_divisors, dtype=int)
-
-            if (self._mesh_divisors != mesh_divisors).any():
-                print "Mesh numbers are not dividable by mesh divisors."
-        if self._log_level:
-            print ("Lifetime sampling mesh: [ %d %d %d ]" %
-                   tuple(self._mesh / self._mesh_divisors))
+        self._mesh = None
+        self._mesh_divisors = None
+        self._set_mesh_numbers(mesh_divisors=mesh_divisors)
+        volume = self._primitive.get_volume()
+        num_grid = np.prod(self._mesh / self._mesh_divisors)
+        self._conversion_factor = unit_to_WmK / volume / num_grid
 
     def get_mesh_divisors(self):
         return self._mesh_divisors
@@ -119,31 +106,22 @@ class BTE_RTA:
         self._gamma = gamma
     
     def get_kappa(self):
-        unit_to_WmK = ((THz * Angstrom) ** 2 / (Angstrom ** 3) * EV / THz /
-                       (2 * np.pi)) # 2pi comes from definition of lifetime.
-        volume = self._primitive.get_volume()
-        num_grid = np.prod(self._mesh / self._mesh_divisors)
-        conversion_factor = unit_to_WmK / volume / num_grid
-
-        freq_conv_factor = self._pp.get_frequency_unit_conversion_factor()
-        cutoff_freq = self._pp.get_cutoff_frequency()
-        reciprocal_lattice = np.linalg.inv(self._primitive.get_cell())
         num_atom = self._primitive.get_number_of_atoms()
         kappa = np.zeros((len(self._sigmas),
                           len(self._grid_points),
                           len(self._temperatures),
                           num_atom * 3), dtype=float)
-        # if gamma is not set.
-        if self._gamma is None:
+        
+        if self._gamma is None: # if gamma is not set.
             gamma = np.zeros_like(kappa)
         else:
             gamma = self._gamma
 
-        for i, grid_point in enumerate(self._grid_points):
+        for i in range(len(self._grid_points)):
+            grid_point = self._grid_points[i]
             if self._log_level:
                 print ("================= %d/%d =================" %
                        (i + 1, len(self._grid_points)))
-
 
             if self._gamma is None:
                 self._pp.set_triplets_at_q(grid_point)
@@ -154,41 +132,8 @@ class BTE_RTA:
                     self._grid_address[grid_point].astype(float) / self._mesh)
                 self._pp.set_harmonic_phonons()
 
-            # Group velocity
-            gv = get_group_velocity(
-                self._pp.get_qpoint(),
-                self._pp.get_dynamical_matrix(),
-                reciprocal_lattice,
-                eigenvectors=self._pp.get_eigenvectors(),
-                frequencies=self._pp.get_frequencies())
-
-            # Sum group velocities at symmetrically equivalent q-points
-            direction = [1, 0, 0]
-            if self._no_kappa_stars:
-                rot_unit_n = [np.array(direction)]
-            else:
-                rot_unit_n = self._get_rotated_unit_directions(direction,
-                                                               grid_point)
-                # check if the number of rotations is correct.
-                if self._grid_weights is not None:
-                    assert len(rot_unit_n) == self._grid_weights[i]
-                
-            gv_sum2 = np.zeros(len(self._pp.get_frequencies()), dtype=float)
-            for unit_n in rot_unit_n:
-                gv_sum2 += np.dot(gv, unit_n) ** 2
-
-            self._show_log(grid_point, gv, rot_unit_n)
-    
-            # Heat capacity
-            cv = self._get_cv(freq_conv_factor, cutoff_freq)
-
-            # Kappa and Gamma
-            self._get_kappa_at_sigmas(i,
-                                      kappa,
-                                      gamma,
-                                      gv_sum2,
-                                      cv,
-                                      conversion_factor)
+            self._get_kappa_at_sigmas(i, kappa, gamma)
+            
             if self._write_logs:
                 for j, sigma in enumerate(self._sigmas):
                     write_kappa(kappa[j, i].sum(axis=1),
@@ -216,10 +161,14 @@ class BTE_RTA:
     def _get_kappa_at_sigmas(self,
                              i,
                              kappa,
-                             gamma,
-                             gv_sum2,
-                             cv,
-                             conversion_factor):
+                             gamma):
+
+        # Group velocity
+        gv_sum2 = self._get_gv_by_gv(i)
+                
+        # Heat capacity
+        cv = self._get_cv()
+
         for j, sigma in enumerate(self._sigmas):
             if self._log_level > 0:
                 print "Sigma used to approximate delta function by gaussian: %f" % sigma
@@ -231,9 +180,39 @@ class BTE_RTA:
                     if gamma[j, i, k, l] > 0:
                         kappa[j, i, k, l] = (gv_sum2[l] * cv[k, l] /
                                              gamma[j, i, k, l] / 2 *
-                                             conversion_factor)
+                                             self._conversion_factor)
 
-    def _get_cv(self, freq_conv_factor, cutoff_frequency):
+    def _get_gv_by_gv(self, index):
+        grid_point = self._grid_points[index]
+        
+        # Group velocity
+        gv = get_group_velocity(
+            self._pp.get_qpoint(),
+            self._pp.get_dynamical_matrix(),
+            self._reciprocal_lattice,
+            eigenvectors=self._pp.get_eigenvectors(),
+            frequencies=self._pp.get_frequencies())
+
+        # Sum group velocities at symmetrically equivalent q-points
+        direction = [1, 0, 0]
+        if self._no_kappa_stars:
+            rot_unit_n = [np.array(direction)]
+        else:
+            rot_unit_n = self._get_rotated_unit_directions(direction,
+                                                           grid_point)
+            # check if the number of rotations is correct.
+            if self._grid_weights is not None:
+                assert len(rot_unit_n) == self._grid_weights[index]
+            
+        gv_sum2 = np.zeros(len(self._pp.get_frequencies()), dtype=float)
+        for unit_n in rot_unit_n:
+            gv_sum2 += np.dot(gv, unit_n) ** 2
+
+        self._show_log(grid_point, gv, rot_unit_n)
+
+        return gv_sum2
+    
+    def _get_cv(self):
         def get_cv(freqs, t):
             x = freqs * THzToEv / Kb / t
             expVal = np.exp(x)
@@ -244,16 +223,14 @@ class BTE_RTA:
         for i, t in enumerate(self._temperatures):
             if t > 0:
                 for j, f in enumerate(freqs):
-                    if f > cutoff_frequency:
-                        cv[i, j] = get_cv(f / freq_conv_factor, t)
+                    if f > self._cutoff_frequency:
+                        cv[i, j] = get_cv(f / self._freq_conv_factor, t)
 
         return cv
 
     def _get_gamma(self, sigma):
-        freq_conv_factor = self._pp.get_frequency_unit_conversion_factor()
         unit_conversion = self._pp.get_unit_conversion_factor()
         freqs = self._pp.get_frequencies()
-        cutoff_freq = self._pp.get_cutoff_frequency()
 
         (amplitude_at_q,
          weights_at_q,
@@ -264,7 +241,7 @@ class BTE_RTA:
         for i, t in enumerate(self._temperatures):
             if t > 0:
                 for j, f in enumerate(freqs):
-                    if f > cutoff_freq:
+                    if f > self._cutoff_frequency:
                         g = get_gamma(
                             amplitude_at_q,
                             np.array([f], dtype=float),
@@ -273,8 +250,8 @@ class BTE_RTA:
                             j,
                             t,
                             sigma,
-                            freq_conv_factor,
-                            cutoff_frequency=cutoff_freq,
+                            self._freq_conv_factor,
+                            cutoff_frequency=self._cutoff_frequency,
                             gamma_option=self._gamma_option
                             )[0] * unit_conversion
                         gamma[i, j] = g
@@ -302,6 +279,29 @@ class BTE_RTA:
                 rot_unit_n.append(np.dot(rot_cart.T, unit_n))
 
         return rot_unit_n
+
+    def _set_mesh_numbers(self, mesh=None, mesh_divisors=None):
+        if mesh is None:
+            self._mesh = self._pp.get_mesh_numbers()
+        else:
+            self._mesh = np.array(mesh, dtype=int)
+
+        if mesh_divisors is None:
+            self._mesh_divisors = np.array([1, 1, 1], dtype=int)
+        else:
+            self._mesh_divisors = []
+            for m, n in zip(self._mesh, mesh_divisors):
+                if m % n == 0:
+                    self._mesh_divisors.append(n)
+                else:
+                    self._mesh_divisors.append(1)
+            self._mesh_divisors = np.array(self._mesh_divisors, dtype=int)
+
+            if (self._mesh_divisors != mesh_divisors).any():
+                print "Mesh numbers are not dividable by mesh divisors."
+        if self._log_level:
+            print ("Lifetime sampling mesh: [ %d %d %d ]" %
+                   tuple(self._mesh / self._mesh_divisors))
 
     def _sort_normal_umklapp(self):
         normal_a = []

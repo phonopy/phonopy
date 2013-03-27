@@ -111,7 +111,7 @@ parser.set_defaults(amplitude=None,
                     is_symmetrize_fc3_r=False,
                     is_symmetrize_fc3_q=False,                     
                     is_Peierls=False,
-                    log_level=0,
+                    log_level=None,
                     mesh_numbers=None,
                     mesh_divisors=None,
                     multiple_sigmas=None,
@@ -307,11 +307,11 @@ parser.add_option("--zheev", dest="zheev_test",
 option_list = parser.option_list
 
 # Log level
-if options.verbose:
-    log_level = 1
+if options.log_level is None:
+    log_level = options.verbose
 else:
     log_level = options.log_level
-
+    
 # Title
 if log_level:
     print_phono3py()
