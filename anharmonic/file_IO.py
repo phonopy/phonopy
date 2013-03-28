@@ -1,5 +1,6 @@
 import sys
 import numpy as np
+import h5py
 from phonopy.structure.atoms import Atoms
 from phonopy.interface import vasp
 from phonopy.hphonopy.file_IO import write_FORCE_SETS_vasp, read_force_constant_vasprun_xml
@@ -423,6 +424,50 @@ def write_kappa(kappa,
             w.write("%6.1f %.5f\n" % (t, k))
         w.close()
 
+def write_gamma_to_hdf5(gammas,
+                        kappas,
+                        temperatures,
+                        frequencies,
+                        mesh,
+                        mesh_divisors=None,
+                        grid_point=None,
+                        sigma=None,
+                        filename=None):
+    suffix = "-m%d%d%d" % tuple(mesh)
+    if (mesh_divisors != 1).any():
+        suffix += "-d%d%d%d" % tuple(mesh_divisors)
+    sigma_str = ("%f" % sigma).rstrip('0').rstrip('\.')
+    if grid_point is not None:
+        suffix += ("-g%d" % grid_point)
+    if sigma is not None:
+        suffix += "-s" + sigma_str
+    if filename is not None:
+        suffix += "." + filename
+    print "Gamma",
+    if grid_point is not None:
+        print "at grid adress %d" % grid_point,
+    if sigma is not None:
+        if grid_point is not None:
+            print "and",
+        else:
+            print "at",
+        print "sigma %s" % sigma_str,
+    print "were written into",
+    if grid_point is not None:
+        print ""
+    print "%s" % ("gamma" + suffix + ".hdf5"),
+    w = h5py.File("gamma" + suffix + ".hdf5", 'w')
+    w.create_dataset('gammas', data=gammas)
+    w.create_dataset('kappas', data=kappas)
+    w.create_dataset('frequencies', data=frequencies)
+    w.create_dataset('temperatures', data=temperatures)
+    w.close()
+
+
+
+
+
+        
 def write_decay_channels(decay_channels,
                          amplitudes_at_q,
                          frequencies_at_q,

@@ -112,6 +112,7 @@ parser.set_defaults(amplitude=None,
                     is_symmetrize_fc3_q=False,                     
                     is_Peierls=False,
                     log_level=None,
+                    max_freepath=None,
                     mesh_numbers=None,
                     mesh_divisors=None,
                     multiple_sigmas=None,
@@ -155,12 +156,6 @@ parser.add_option("-d", "--disp", dest="is_displacement",
                   help="As first stage, get least displacements")
 parser.add_option("--decay", dest="is_decay_channel",
                   action="store_true", help="Calculate decay channels")
-parser.add_option("-o", dest="output_filename",
-                  type="string",
-                  help="Filename of output of damping function")
-parser.add_option("--nodiag", dest="is_nodiag",
-                  action="store_true",
-                  help="Set displacements parallel to axes")
 parser.add_option("--dim",
                   dest="supercell_dimension",
                   type="string",
@@ -181,6 +176,10 @@ parser.add_option("--create_fc2_fourth",
                   dest="fc2_fourth_sets_mode",
                   action="store_true",
                   help="Create FC2_FOURTH_SETS")
+parser.add_option("--delta_fc2",
+                  dest="read_delta_fc2",
+                  action="store_true",
+                  help="Read DELTA_FC2_SETS")
 parser.add_option("--factor", dest="factor", type="float",
                   help="Conversion factor to favorite frequency unit")
 parser.add_option("--fc2",
@@ -195,16 +194,16 @@ parser.add_option("--fc3",
                   dest="read_fc3",
                   action="store_true",
                   help="Read third order force constants")
-parser.add_option("--delta_fc2",
-                  dest="read_delta_fc2",
-                  action="store_true",
-                  help="Read DELTA_FC2_SETS")
 parser.add_option("--fc2_fourth",
                   dest="read_fc2_fourth_sets",
                   action="store_true",
                   help="Read FC2_FOURTH_SETS")
+parser.add_option("--freepath", dest="max_freepath", type="float",
+                  help="Maximum mean free path of phonon in meter")
 parser.add_option("--freq_scale", dest="freq_scale", type="float",
                   help="Scale factor is multiplied to frequencies only, i.e., changes frequencies but assumed not to change the physical unit")
+parser.add_option("--freq_step", dest="freq_step", type="float",
+                  help="Pitch of frequency calculated")
 parser.add_option("--gamma_option", dest="gamma_option", type="int",
                   help="Option for the test of imaginary part of self energy")
 parser.add_option("--gp", "--grid_points",
@@ -222,28 +221,32 @@ parser.add_option("--lw", "--linewidth",
                   dest="is_linewidth",
                   action="store_true",
                   help="Calculate linewidths")
-parser.add_option("--mesh",
-                  dest="mesh_numbers",
-                  type="string",
-                  help="Mesh numbers")
 parser.add_option("--md", "--mesh_divisors",
                   dest="mesh_divisors",
                   type="string",
                   help="Divisors for mesh numbers")
+parser.add_option("--mesh",
+                  dest="mesh_numbers",
+                  type="string",
+                  help="Mesh numbers")
 parser.add_option("--multiple_sigmas", dest="multiple_sigmas",
                   type="string",
                   help="Multiple sigmas for smearing width used for limited functions")
 parser.add_option("--nac", dest="is_nac",
                   action="store_true",
                   help="Non-analytical term correction")
+parser.add_option("--nodiag", dest="is_nodiag",
+                  action="store_true",
+                  help="Set displacements parallel to axes")
 parser.add_option("--noks", "--no_kappa_stars", dest="no_kappa_stars",
                   action="store_true",
                   help="Deactivate summation of partial kappa at q-stars"),
 parser.add_option("--nosym", dest="is_nosym",
                   action="store_true",
                   help="No symmetrization of triplets")
-parser.add_option("--freq_step", dest="freq_step", type="float",
-                  help="Pitch of frequency calculated")
+parser.add_option("-o", dest="output_filename",
+                  type="string",
+                  help="Filename of output of damping function")
 parser.add_option("--pa", "--primitive_axis", dest="primitive_axis",
                   action="store", type="string",
                   help="Same as PRIMITIVE_AXIS tags")
@@ -768,6 +771,7 @@ else:
                     t_max=settings.get_max_temperature(),
                     t_min=settings.get_min_temperature(),
                     t_step=settings.get_temperature_step(),
+                    max_freepath=settings.get_max_freepath(),
                     grid_points=grid_points,
                     mesh_divisors=settings.get_mesh_divisors(),
                     no_kappa_stars=settings.get_no_kappa_stars(),

@@ -10,6 +10,7 @@ class Phono3pySettings(Settings):
         self._q_direction = None
         self._is_bterta = False
         self._is_linewidth = False
+        self._max_freepath = None
         self._mesh_divisors = None
         self._multiple_sigmas = None
         self._no_kappa_stars = False
@@ -39,6 +40,12 @@ class Phono3pySettings(Settings):
 
     def get_is_linewidth(self):
         return self._is_linewidth
+
+    def set_max_freepath(self, max_freepath):
+        self._max_freepath = max_freepath
+
+    def get_max_freepath(self):
+        return self._max_freepath
 
     def set_multiple_sigmas(self, multiple_sigmas):
         self._multiple_sigmas = multiple_sigmas
@@ -104,6 +111,10 @@ class Phono3pyConfParser(ConfParser):
                 if self._options.is_linewidth:
                     self._confs['linewidth'] = '.true.'
 
+            if opt.dest == 'max_freepath':
+                if self._options.max_freepath is not None:
+                    self._confs['max_freepath'] = self._options.max_freepath
+
             if opt.dest == 'multiple_sigmas':
                 if self._options.multiple_sigmas is not None:
                     self._confs['multiple_sigmas'] = self._options.multiple_sigmas
@@ -161,6 +172,9 @@ class Phono3pyConfParser(ConfParser):
             if conf_key == 'linewidth':
                 if confs['linewidth'] == '.true.':
                     self.set_parameter('is_linewidth', True)
+
+            if conf_key == 'max_freepath':
+                self.set_parameter('max_freepath', float(confs['max_freepath']))
 
             if conf_key == 'multiple_sigmas':
                 vals = [fracval(x) for x in confs['multiple_sigmas'].split()]
@@ -223,6 +237,10 @@ class Phono3pyConfParser(ConfParser):
         # Calculate linewidths
         if params.has_key('is_linewidth'):
             self._settings.set_is_linewidth(params['is_linewidth'])
+
+        # Maximum mean free path
+        if params.has_key('max_freepath'):
+            self._settings.set_max_freepath(params['max_freepath'])
 
         # Multiple sigmas
         if params.has_key('multiple_sigmas'):

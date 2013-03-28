@@ -3,7 +3,7 @@ import phonopy.structure.spglib as spg
 from anharmonic.im_self_energy import get_gamma
 from phonopy.group_velocity import get_group_velocity
 from phonopy.units import Kb, THzToEv, EV, THz, Angstrom
-from anharmonic.file_IO import parse_kappa, write_kappa
+from anharmonic.file_IO import parse_kappa, write_kappa, write_gamma_to_hdf5
 from anharmonic.triplets import get_grid_address, reduce_grid_points
 
 unit_to_WmK = ((THz * Angstrom) ** 2 / (Angstrom ** 3) * EV / THz /
@@ -16,6 +16,7 @@ class BTE_RTA:
                  t_max=1500,
                  t_min=0,
                  t_step=10,
+                 max_freepath=0.01, # in meter
                  mesh_divisors=None,
                  no_kappa_stars=False,
                  gamma_option=0,
@@ -27,6 +28,7 @@ class BTE_RTA:
         self._t_max = t_max
         self._t_min = t_min
         self._t_step = t_step
+        self._max_freepath = max_freepath
         self._no_kappa_stars = no_kappa_stars
         self._gamma_option = gamma_option
         self._log_level = log_level
@@ -145,6 +147,16 @@ class BTE_RTA:
                                 sigma=sigma,
                                 filename=self._filename)
 
+                    write_gamma_to_hdf5(gamma[j, i],
+                                        kappa[j, i],
+                                        self._temperatures,
+                                        self._pp.get_frequencies(),
+                                        self._mesh,
+                                        mesh_divisors=self._mesh_divisors,
+                                        grid_point=grid_point,
+                                        sigma=sigma,
+                                        filename=self._filename)
+
         if self._write_logs:
             if self._grid_weights is not None:
                 print "-------------- Total kappa --------------"
@@ -164,8 +176,7 @@ class BTE_RTA:
                              gamma):
         # Group velocity
         gv2_tensor = self._get_gv_by_gv(i)
-        gv_sum2 = gv2_tensor[:, :, 0, 0].sum(axis=0)
-                
+        gv_sum2 = gv2_tensor[:, :, 0, 0].sum(axis=0) # currently only [100] direction
         # Heat capacity
         cv = self._get_cv()
 
@@ -177,7 +188,8 @@ class BTE_RTA:
                 gamma[j, i] = self._get_gamma(sigma)
             for k in range(len(self._temperatures)):
                 for l in range(len(self._pp.get_frequencies())):
-                    if 4 * np.pi * gamma[j, i, k, l] > 0:
+                    gv = max(np.sqrt(gv2_tensor[:, l, 0, 0]))
+                    if gamma[j, i, k, l] > 0:
                         kappa[j, i, k, l] = (gv_sum2[l] * cv[k, l] /
                                              gamma[j, i, k, l] / 2 *
                                              self._conversion_factor)
