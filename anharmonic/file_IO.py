@@ -462,11 +462,6 @@ def write_gamma_to_hdf5(gammas,
     w.create_dataset('frequencies', data=frequencies)
     w.create_dataset('temperatures', data=temperatures)
     w.close()
-
-
-
-
-
         
 def write_decay_channels(decay_channels,
                          amplitudes_at_q,
