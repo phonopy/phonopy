@@ -46,10 +46,9 @@ class BTE_RTA:
         self._grid_points = None
         self._grid_weights = None
         self._grid_address = None
-        self._point_operations = np.array(
-            [rot.T for rot in
-             self._pp.get_symmetry().get_pointgroup_operations()])
 
+        self._point_operations = None
+        self._set_pointgroup_operations()
         self._gamma = None
 
         self._mesh = None
@@ -212,7 +211,9 @@ class BTE_RTA:
             rot_unit_n = self._get_rotated_unit_directions(grid_point)
             # check if the number of rotations is correct.
             if self._grid_weights is not None:
-                assert len(rot_unit_n) == self._grid_weights[index]
+                assert len(rot_unit_n) == self._grid_weights[index], \
+                    "Num rot_unit_n %d, weight %d" % (
+                    len(rot_unit_n), self._grid_weights[index])
             
         gv2_tensor = []
         for unit_n in rot_unit_n:
@@ -350,6 +351,24 @@ class BTE_RTA:
                  np.array(umklapp_w, dtype=int),
                  np.array(umklapp_f, dtype=float)))
     
+    def _set_pointgroup_operations(self):
+        exist_r_inv = False
+        for rot in self._pp.get_symmetry().get_pointgroup_operations():
+            if (rot == -np.eye(3, dtype=int)).all():
+                exist_r_inv = True
+                break
+
+        point_operations = [
+            rot.T for rot in
+            self._pp.get_symmetry().get_pointgroup_operations()]
+        
+        if not exist_r_inv:
+            point_operations += [
+                -rot.T for rot in
+                 self._pp.get_symmetry().get_pointgroup_operations()]
+            
+        self._point_operations = np.array(point_operations)
+
     def _show_log(self, grid_point, group_velocity, rot_unit_n):
         if self._log_level:
             print "----- Partial kappa at grid address %d -----" % grid_point

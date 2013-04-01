@@ -455,7 +455,7 @@ def write_gamma_to_hdf5(gammas,
     print "were written into",
     if grid_point is not None:
         print ""
-    print "%s" % ("gamma" + suffix + ".hdf5"),
+    print "%s" % ("gamma" + suffix + ".hdf5")
     w = h5py.File("gamma" + suffix + ".hdf5", 'w')
     w.create_dataset('gammas', data=gammas)
     w.create_dataset('kappas', data=kappas)
