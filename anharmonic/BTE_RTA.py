@@ -385,19 +385,32 @@ class BTE_RTA:
         
             
         
-def sum_partial_kappa(filenames):
-    temps, kappa = parse_kappa(filenames[0])
-    sum_kappa = np.array(kappa)
-    for filename in filenames[1:]:
-        temps, kappa = parse_kappa(filename)
-        sum_kappa += kappa
-
-    return temps, sum_kappa
-        
-
 if __name__ == '__main__':
     import sys
-    temps, kappa = sum_partial_kappa(sys.argv[1:])
-    for t, k in zip(temps, kappa):
+    import h5py
+
+    def sum_partial_kappa(filenames):
+        temps, kappa = parse_kappa(filenames[0])
+        sum_kappa = np.array(kappa)
+        for filename in filenames[1:]:
+            temps, kappa = parse_kappa(filename)
+            sum_kappa += kappa
+        return temps, sum_kappa
+    
+    def sum_partial_kappa_hdf5(filenames):
+        f = h5py.File(filenames[0], 'r')
+        kappas = f['kappas'][:]
+        temps = f['temperatures'][:]
+        for filename in filenames[1:]:
+            f = h5py.File(filename, 'r')
+            kappas += f['kappas'][:]
+        return temps, kappas
+
+    # temps, kappa = sum_partial_kappa(sys.argv[1:])
+    # for t, k in zip(temps, kappa):
+    #     print "%8.2f %.5f" % (t, k)
+    temps, kappa = sum_partial_kappa_hdf5(sys.argv[1:])
+    for t, k in zip(temps, kappa.sum(axis=1)):
         print "%8.2f %.5f" % (t, k)
+
 
