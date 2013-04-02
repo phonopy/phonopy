@@ -48,14 +48,18 @@ def fracval(frac):
 from optparse import OptionParser
 parser = OptionParser()
 parser.set_defaults(num_atoms=None,
-                    primitive_axis = None,
-                    primitive_atoms=None)
+                    primitive_axis =None,
+                    primitive_atoms=None,
+                    symmetrize_tensors=False)
 parser.add_option("-a", "--atoms", dest="primitive_atoms",
                   action="store", type="string",
                   help="Atom indices in primitive cell")
 parser.add_option("--pa", "--primitive_axis", dest="primitive_axis",
                   action="store", type="string",
                   help="Same as PRIMITIVE_AXIS tags")
+parser.add_option("--st", "--symmetrize_tensors", dest="symmetrize_tensors",
+                  action="store_true",
+                  help="Symmetrize tensors")
 (options, args) = parser.parse_args()
 
 if args:
@@ -80,7 +84,8 @@ else:
     
 borns, epsilon = get_born_OUTCAR(poscar_filename=poscar_filename,
                                  outcar_filename=outcar_filename,
-                                 primitive_axis=primitive_axis)
+                                 primitive_axis=primitive_axis,
+                                 symmetrize_tensors=options.symmetrize_tensors)
 
 print "14.400"
 print ("%10.5f" * 9) %  tuple(epsilon.flatten())

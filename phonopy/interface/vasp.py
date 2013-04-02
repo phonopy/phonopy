@@ -37,6 +37,7 @@ import StringIO
 from phonopy.structure.atoms import Atoms, symbol_map, atom_data
 from phonopy.structure.cells import Primitive
 from phonopy.structure.symmetry import Symmetry
+from phonopy.harmonic.force_constants import similarity_transformation
 
 class VasprunWrapper(object):
     """VasprunWrapper class
@@ -169,12 +170,14 @@ def get_force_constants_OUTCAR(filename):
 def get_born_OUTCAR(poscar_filename="POSCAR",
                     outcar_filename="OUTCAR",
                     primitive_axis=np.eye(3),
-                    is_symmetry=True):
+                    is_symmetry=True,
+                    symmetrize_tensors=False):
     cell = read_vasp(poscar_filename)
     primitive = Primitive(cell, primitive_axis)
     p2p = primitive.get_primitive_to_primitive_map()
     symmetry = Symmetry(primitive, is_symmetry=is_symmetry)
     independent_atoms = symmetry.get_independent_atoms()
+    prim_lat = primitive.get_cell().T
     outcar = open(outcar_filename)
     
     borns = []
@@ -205,14 +208,31 @@ def get_born_OUTCAR(poscar_filename="POSCAR",
                     outcar.readline()
                     borns.append(born)
 
+
     reduced_borns = []
     for p_i, u_i in enumerate(p2p):
         if p_i in independent_atoms:
-            reduced_borns.append(borns[u_i])
+            if symmetrize_tensors:
+                site_sym = [similarity_transformation(prim_lat, rot)
+                            for rot in symmetry.get_site_symmetry(p_i)]
+                reduced_borns.append(symmetrize_tensor(borns[u_i], site_sym))
+            else:
+                reduced_borns.append(borns[u_i])
+                
+    if symmetrize_tensors:
+        point_sym = [similarity_transformation(prim_lat, rot)
+                     for rot in symmetry.get_pointgroup_operations()]
+        epsilon = symmetrize_tensor(epsilon, point_sym)
+    else:
+        epsilon = np.array(epsilon)
 
-    return np.array(reduced_borns), np.array(epsilon)
+    return np.array(reduced_borns), epsilon
     
-
+def symmetrize_tensor(tensor, symmetry_operations):
+    tensors = np.zeros_like(tensor)
+    for sym in symmetry_operations:
+        tensors += similarity_transformation(sym, tensor)
+    return tensors / len(symmetry_operations)
 
 #
 # read VASP POSCAR
