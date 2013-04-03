@@ -3,7 +3,7 @@ import numpy as np
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC, get_smallest_vectors
 from phonopy.structure.symmetry import Symmetry
 from phonopy.units import VaspToTHz, PlanckConstant, Kb, THzToCm, EV, AMU, Hbar, THz, Angstrom
-from anharmonic.file_IO import write_triplets, write_grid_address, write_amplitudes, parse_triplets, parse_grid_address
+from anharmonic.file_IO import write_triplets, write_grid_address, parse_triplets, parse_grid_address
 from anharmonic.triplets import get_triplets_at_q, get_nosym_triplets
 from anharmonic.r2q import get_fc3_reciprocal
 from anharmonic.shortest_distance import get_shortest_vectors

@@ -3,7 +3,7 @@ import phonopy.structure.spglib as spg
 from anharmonic.im_self_energy import get_gamma
 from phonopy.group_velocity import get_group_velocity
 from phonopy.units import Kb, THzToEv, EV, THz, Angstrom
-from anharmonic.file_IO import parse_kappa, write_kappa, write_gamma_to_hdf5
+from anharmonic.file_IO import parse_kappa, write_kappa, write_gamma_to_hdf5, write_amplitude_to_hdf5
 from anharmonic.triplets import get_grid_address, reduce_grid_points
 
 unit_to_WmK = ((THz * Angstrom) ** 2 / (Angstrom ** 3) * EV / THz /
@@ -156,6 +156,16 @@ class BTE_RTA:
                                         sigma=sigma,
                                         filename=self._filename)
 
+                    (amplitude_at_q,
+                     weights_at_q,
+                     frequencies_at_q) = self._pp.get_amplitude()
+                    write_amplitude_to_hdf5(amplitude_at_q,
+                                            self._pp.get_triplets_at_q(),
+                                            weights_at_q,
+                                            frequencies_at_q,
+                                            self._mesh,
+                                            grid_point)
+
         if self._write_logs:
             if self._grid_weights is not None:
                 print "-------------- Total kappa --------------"
@@ -291,11 +301,8 @@ class BTE_RTA:
 
         return rot_unit_n
 
-    def _set_mesh_numbers(self, mesh=None, mesh_divisors=None):
-        if mesh is None:
-            self._mesh = self._pp.get_mesh_numbers()
-        else:
-            self._mesh = np.array(mesh, dtype=int)
+    def _set_mesh_numbers(self, mesh_divisors=None):
+        self._mesh = self._pp.get_mesh_numbers()
 
         if mesh_divisors is None:
             self._mesh_divisors = np.array([1, 1, 1], dtype=int)

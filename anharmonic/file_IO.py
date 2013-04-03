@@ -251,32 +251,6 @@ def write_grid_address(grid_address, mesh, filename='grid_points.dat'):
     for i, q in enumerate(grid_address):
         w.write("%10d %10d %10d %10d\n" % (i, q[0], q[1], q[2]))
 
-def write_amplitudes(amplitudes, frequencies, triplet, weight, mesh, filename):
-    w = open(filename, 'w')
-    w.write("# mesh [ %d %d %d ]\n" % tuple(mesh))
-    w.write("# weight %d\n" % weight)
-    w.write("# triplet [ %d %d %d ]\n" % tuple(triplet))
-    w.write("#%6s %6s %6s %20s %20s %20s %20s\n" %
-            ("band1", "band2", "band3", "omega1", "omega2", "omega3", "amplitude"))
-
-    num_band = amplitudes.shape[0]
-    for j1 in range(num_band):
-        if triplet[0] == 0 and (j1 < 3) :
-            continue
-        f1 = frequencies[0][j1]
-        for j2 in range(num_band):
-            if triplet[1] == 0 and j2 < 3:
-                continue
-            f2 = frequencies[1][j2]
-            for j3 in range(num_band):
-                if triplet[2] == 0 and j3 < 3:
-                    continue
-                f3 = frequencies[2][j3]
-                w.write("% 6d %6d %6d %20.15f %20.15f %20.15f %20.15e\n" % 
-                           (j1+1, j2+1, j3+1, f1, f2, f3, amplitudes[j1, j2, j3]))
-            w.write("\n")
-    w.close()
-
 def write_damping_functions(gp,
                             band_indices,
                             mesh,
@@ -461,6 +435,22 @@ def write_gamma_to_hdf5(gammas,
     w.create_dataset('kappas', data=kappas)
     w.create_dataset('frequencies', data=frequencies)
     w.create_dataset('temperatures', data=temperatures)
+    w.close()
+
+def write_amplitude_to_hdf5(amplitudes_at_q,
+                            triplets_at_q,
+                            weights_at_q,
+                            frequencies_at_q,
+                            mesh,
+                            grid_point,
+                            filename=None):
+    suffix = "-m%d%d%d" % tuple(mesh)
+    suffix += ("-g%d" % grid_point)
+    w = h5py.File("amplitude" + suffix + ".hdf5", 'w')
+    w.create_dataset('amplitudes', data=amplitudes_at_q)
+    w.create_dataset('weights', data=weights_at_q)
+    w.create_dataset('frequencies', data=frequencies_at_q)
+    w.create_dataset('triplets', data=triplets_at_q)
     w.close()
         
 def write_decay_channels(decay_channels,
