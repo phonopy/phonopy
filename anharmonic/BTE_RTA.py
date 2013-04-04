@@ -3,7 +3,7 @@ import phonopy.structure.spglib as spg
 from anharmonic.im_self_energy import get_gamma
 from phonopy.group_velocity import get_group_velocity
 from phonopy.units import Kb, THzToEv, EV, THz, Angstrom
-from anharmonic.file_IO import parse_kappa, write_kappa, write_gamma_to_hdf5, write_amplitude_to_hdf5
+from anharmonic.file_IO import write_kappa, write_gamma_to_hdf5
 from anharmonic.triplets import get_grid_address, reduce_grid_points
 
 unit_to_WmK = ((THz * Angstrom) ** 2 / (Angstrom ** 3) * EV / THz /
@@ -126,7 +126,7 @@ class BTE_RTA:
 
             if self._gamma is None:
                 self._pp.set_triplets_at_q(grid_point)
-                self._pp.set_interaction_strength()
+                self._pp.set_interaction_strength(read_amplitude=True)
                 self._pp.set_harmonic_phonons()
             else:
                 self._pp.set_qpoint(
@@ -141,7 +141,6 @@ class BTE_RTA:
                                 self._temperatures,
                                 self._mesh,
                                 mesh_divisors=self._mesh_divisors,
-                                gamma=gamma[j, i],
                                 grid_point=grid_point,
                                 sigma=sigma,
                                 filename=self._filename)
@@ -155,16 +154,6 @@ class BTE_RTA:
                                         grid_point=grid_point,
                                         sigma=sigma,
                                         filename=self._filename)
-
-                    (amplitude_at_q,
-                     weights_at_q,
-                     frequencies_at_q) = self._pp.get_amplitude()
-                    write_amplitude_to_hdf5(amplitude_at_q,
-                                            self._pp.get_triplets_at_q(),
-                                            weights_at_q,
-                                            frequencies_at_q,
-                                            self._mesh,
-                                            grid_point)
 
         if self._write_logs:
             if self._grid_weights is not None:

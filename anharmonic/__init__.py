@@ -8,7 +8,7 @@ from anharmonic.BTE_RTA import BTE_RTA
 from anharmonic.jointDOS import get_jointDOS
 from anharmonic.gruneisen import Gruneisen
 import anharmonic.triplets as triplets
-from anharmonic.file_IO import write_kappa, parse_gamma
+from anharmonic.file_IO import write_kappa, read_gamma_from_hdf5
 
 class JointDOS:
     def __init__(self,
@@ -206,8 +206,7 @@ class Phono3py:
                                  read_gammas=False,
                                  gamma_option=0,
                                  filename=None):
-
-        lt = BTE_RTA(self._pp,
+        br = BTE_RTA(self._pp,
                      sigmas=sigmas,
                      t_max=t_max,
                      t_min=t_min,
@@ -219,39 +218,27 @@ class Phono3py:
                      log_level=self._log_level,
                      write_logs=(not read_gammas),
                      filename=filename)
-        lt.set_grid_points(grid_points)
+        br.set_grid_points(grid_points)
 
         if read_gammas:
-            gammas = np.zeros(
-                (1,
-                 len(lt.get_grid_address()),
-                 len(lt.get_temperatures()),
-                 self._primitive.get_number_of_atoms() * 3),
-                dtype=float)
+            gammas = []
+            for sigma in sigmas:
+                gammas_at_sigma = []
+                for i, gp in enumerate(br.get_grid_address()):
+                    gammas_at_sigma.append(read_gamma_from_hdf5(
+                        br.get_mesh_numbers(),
+                        mesh_divisors=br.get_mesh_divisors(),
+                        grid_point=gp,
+                        sigma=sigmas[0],
+                        filename=filename))
+                gammas.append(gammas_at_sigma)
+            br.set_gamma(np.array(gammas))
+        
+        kappas, gammas = br.get_kappa() # [sigma, grid_point, temperature]
 
-            for i, gp in enumerate(lt.get_grid_address()):
-                kappa_filename = "kappa"
-                suffix = "-m%d%d%d" % tuple(self._mesh)
-                if (lt.get_mesh_divisors() != 1).any():
-                    suffix += "-d%d%d%d" % tuple(lt.get_mesh_divisors())
-                sigma_str = ("%f" % sigmas[0]).rstrip('0').rstrip('\.')
-                suffix += ("-g%d" % gp)
-                suffix += "-s" + sigma_str
-                if filename is not None:
-                    suffix += "." + filename
-                suffix += ".dat"
-                kappa_filename += suffix
-                gammas[0, i] = parse_gamma(kappa_filename)[1]
-            lt.set_gamma(gammas)
-        
-        kappas, gammas = lt.get_kappa() # [sigma, grid_point, temperature]
-        
         self._kappas = kappas
         self._gammas = gammas
 
-        for t, k in zip(lt.get_temperatures(), kappas[0].sum(axis=0).sum(axis=1)):
-            print t, k
-                
     # def get_decay_channels(self,
     #                        grid_points,
     #                        sets_of_band_indices,

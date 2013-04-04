@@ -351,7 +351,6 @@ def write_kappa(kappa,
                 temperatures,
                 mesh,
                 mesh_divisors=None,
-                gamma=None,
                 grid_point=None,
                 sigma=None,
                 filename=None):
@@ -369,8 +368,6 @@ def write_kappa(kappa,
     suffix += ".dat"
     kappa_filename += suffix
     print "Kappa",
-    if gamma is not None:
-        print "and gamma",
     if grid_point is not None:
         print "at grid adress %d" % grid_point,
     if sigma is not None:
@@ -384,19 +381,10 @@ def write_kappa(kappa,
         print ""
     print "%s" % kappa_filename
     w = open(kappa_filename, 'w')
-    if gamma is not None:
-        w.write("# temp   kappa          gamma(band1) ...\n")
-        for t, k, g in zip(temperatures, kappa, gamma):
-            w.write("%6.1f %15.7e" % (t, k))
-            for g_band in g:
-                w.write(" %15.7e" % g_band)
-            w.write("\n")
-        w.close()
-    else:
-        w.write("# temp   kappa\n")
-        for t, k in zip(temperatures, kappa):
-            w.write("%6.1f %.5f\n" % (t, k))
-        w.close()
+    w.write("# temp   kappa\n")
+    for t, k in zip(temperatures, kappa):
+        w.write("%6.1f %.5f\n" % (t, k))
+    w.close()
 
 def write_gamma_to_hdf5(gammas,
                         kappas,
@@ -437,21 +425,65 @@ def write_gamma_to_hdf5(gammas,
     w.create_dataset('temperatures', data=temperatures)
     w.close()
 
+def read_gamma_from_hdf5(mesh,
+                         mesh_divisors=None,
+                         grid_point=None,
+                         sigma=None,
+                         filename=None):
+    suffix = "-m%d%d%d" % tuple(mesh)
+    if (mesh_divisors != 1).any():
+        suffix += "-d%d%d%d" % tuple(mesh_divisors)
+    sigma_str = ("%f" % sigma).rstrip('0').rstrip('\.')
+    if grid_point is not None:
+        suffix += ("-g%d" % grid_point)
+    if sigma is not None:
+        suffix += "-s" + sigma_str
+    if filename is not None:
+        suffix += "." + filename
+    print "Gamma",
+    if grid_point is not None:
+        print "at grid adress %d" % grid_point,
+    if sigma is not None:
+        if grid_point is not None:
+            print "and",
+        else:
+            print "at",
+        print "sigma %s" % sigma_str,
+    print "were read from",
+    if grid_point is not None:
+        print ""
+    print "%s" % ("gamma" + suffix + ".hdf5")
+    f = h5py.File("gamma" + suffix + ".hdf5", 'r')
+    gammas = f['gammas'][:]
+    f.close()
+    
+    return gammas
+
 def write_amplitude_to_hdf5(amplitudes_at_q,
-                            triplets_at_q,
-                            weights_at_q,
-                            frequencies_at_q,
                             mesh,
                             grid_point,
-                            filename=None):
+                            triplets_at_q=None,
+                            weights_at_q=None,
+                            frequencies_at_q=None):
     suffix = "-m%d%d%d" % tuple(mesh)
     suffix += ("-g%d" % grid_point)
     w = h5py.File("amplitude" + suffix + ".hdf5", 'w')
     w.create_dataset('amplitudes', data=amplitudes_at_q)
-    w.create_dataset('weights', data=weights_at_q)
-    w.create_dataset('frequencies', data=frequencies_at_q)
-    w.create_dataset('triplets', data=triplets_at_q)
+    if triplets_at_q is not None:
+        w.create_dataset('triplets', data=triplets_at_q)
+    if weights_at_q is not None:
+        w.create_dataset('weights', data=weights_at_q)
+    if frequencies_at_q is not None:
+        w.create_dataset('frequencies', data=frequencies_at_q)
     w.close()
+
+def read_amplitude_from_hdf5(amplitudes_at_q,
+                             mesh,
+                             grid_point):
+    suffix = "-m%d%d%d" % tuple(mesh)
+    suffix += ("-g%d" % grid_point)
+    f = h5py.File("amplitude" + suffix + ".hdf5", 'r')
+    amplitudes_at_q[:] = f['amplitudes'][:]
         
 def write_decay_channels(decay_channels,
                          amplitudes_at_q,
@@ -777,31 +809,6 @@ def parse_grid_address(filename):
         grid_address.append(line_array[1:4])
 
     return np.array(grid_address)
-
-def parse_kappa(filename):
-    f = open(filename)
-    temps = []
-    kappa = []
-    for line in f:
-        if line.strip()[0] is "#":
-            continue
-        x = line.split()
-        temps.append(float(x[0]))
-        kappa.append(float(x[1]))
-    return np.array(temps), np.array(kappa)
-
-def parse_gamma(filename):
-    f = open(filename)
-    temps = []
-    gamma = []
-    for line in f:
-        if line.strip()[0] is "#":
-            continue
-        x = line.split()
-        temps.append(float(x[0]))
-        gamma.append([float(g) for g in x[2:]])
-    return np.array(temps), np.array(gamma)
-
 
 if __name__ == '__main__':
     import numpy as np
