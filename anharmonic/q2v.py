@@ -28,9 +28,9 @@ class PhononPhonon:
                  factor=VaspToTHz,
                  freq_factor=1.0, # Convert from THz to another (e.g., cm-1)
                  symprec=1e-5,
-                 is_read_triplets=False,
+                 read_triplets=False,
                  r2q_TI_index=None,
-                 is_symmetrize_fc3_q=False,
+                 symmetrize_fc3_q=False,
                  is_Peierls=False,
                  log_level=False,
                  is_nosym=False):
@@ -41,7 +41,7 @@ class PhononPhonon:
         self._primitive = primitive
         self._mesh = np.array(mesh)
         self._fc3 = fc3
-        self._is_read_triplets = is_read_triplets
+        self._read_triplets = read_triplets
         if r2q_TI_index == None or r2q_TI_index > 2 or r2q_TI_index < 0:
             self._r2q_TI_index = 0
         else:
@@ -49,7 +49,7 @@ class PhononPhonon:
         self._symprec = symprec
         self._log_level = log_level
         self._is_Peierls = is_Peierls
-        self._is_symmetrize_fc3_q = is_symmetrize_fc3_q
+        self._symmetrize_fc3_q = symmetrize_fc3_q
         self._is_nosym = is_nosym
         self._p2s_map = np.array(primitive.get_primitive_to_supercell_map())
         self._s2p_map = np.array(primitive.get_supercell_to_primitive_map())
@@ -148,7 +148,7 @@ class PhononPhonon:
             (triplets_at_q,
              weights_at_q,
              self._grid_address) = get_nosym_triplets(mesh, gp)
-        elif self._is_read_triplets:
+        elif self._read_triplets:
             self._print_log("Reading ir-triplets at %d\n" % gp)
             self._grid_address = parse_grid_address(
                 "grids-%d%d%d.dat" % tuple(mesh))
@@ -324,7 +324,7 @@ class PhononPhonon:
             nac_factor,
             self._freq_factor * self._factor,
             self._cutoff_frequency,
-            self._is_symmetrize_fc3_q,
+            self._symmetrize_fc3_q,
             self._r2q_TI_index)
 
 
@@ -352,7 +352,7 @@ class PhononPhonon:
                 self._freq_factor,
                 self._cutoff_frequency,
                 self._symprec,
-                self._is_symmetrize_fc3_q,
+                self._symmetrize_fc3_q,
                 self._is_Peierls,
                 self._r2q_TI_index,
                 self._log_level)
@@ -416,7 +416,7 @@ def get_triplet_interaction_strength(triplet_number,
                                      freq_factor,
                                      cutoff_frequency,
                                      symprec, 
-                                     is_symmetrize_fc3_q,
+                                     symmetrize_fc3_q,
                                      is_Peierls,
                                      r2q_TI_index,
                                      log_level):
@@ -453,7 +453,7 @@ def get_triplet_interaction_strength(triplet_number,
                                            primitive,
                                            band_indices,
                                            cutoff_frequency,
-                                           is_symmetrize_fc3_q,
+                                           symmetrize_fc3_q,
                                            r2q_TI_index)
     except ImportError:
         get_py_triplet_interaction_strength(amplitude,
@@ -466,7 +466,7 @@ def get_triplet_interaction_strength(triplet_number,
                                             primitive,
                                             band_indices,
                                             cutoff_frequency,
-                                            is_symmetrize_fc3_q,
+                                            symmetrize_fc3_q,
                                             is_Peierls,
                                             r2q_TI_index)
 
@@ -518,7 +518,7 @@ def get_c_triplet_interaction_strength(amplitude,
                                        primitive,
                                        band_indices,
                                        cutoff_frequency,
-                                       is_symmetrize_fc3_q,
+                                       symmetrize_fc3_q,
                                        r2q_TI_index):
     
     import anharmonic._phono3py as phono3c
@@ -537,7 +537,7 @@ def get_c_triplet_interaction_strength(amplitude,
                                          primitive.get_masses(),
                                          band_indices,
                                          cutoff_frequency,
-                                         is_symmetrize_fc3_q * 1,
+                                         symmetrize_fc3_q * 1,
                                          r2q_TI_index)
 
 def get_py_triplet_interaction_strength(amplitude,
@@ -550,7 +550,7 @@ def get_py_triplet_interaction_strength(amplitude,
                                         primitive,
                                         band_indices,
                                         cutoff_frequency,
-                                        is_symmetrize_fc3_q,
+                                        symmetrize_fc3_q,
                                         is_Peierls,
                                         r2q_TI_index):
 
@@ -564,7 +564,7 @@ def get_py_triplet_interaction_strength(amplitude,
     p2s_map = primitive.get_primitive_to_supercell_map()
     s2p_map = primitive.get_supercell_to_primitive_map()
 
-    if (not is_symmetrize_fc3_q) and (not is_Peierls):
+    if (not symmetrize_fc3_q) and (not is_Peierls):
         fc3_q = get_fc3_reciprocal(shortest_vectors,
                                    multiplicity,
                                    q_set,
@@ -572,7 +572,7 @@ def get_py_triplet_interaction_strength(amplitude,
                                    s2p_map,
                                    fc3,
                                    r2q_TI_index=r2q_TI_index)
-    elif is_symmetrize_fc3_q:
+    elif symmetrize_fc3_q:
         index_exchange = ((0, 1, 2),
                           (2, 0, 1),
                           (1, 2, 0),
@@ -609,7 +609,7 @@ def get_py_triplet_interaction_strength(amplitude,
                     vv = 1.0 / np.prod(mesh)
                     vv /= freqs[0][j[0]] * freqs[1][j[1]] * freqs[2][j[2]]
                 else:
-                    if not is_symmetrize_fc3_q:
+                    if not symmetrize_fc3_q:
                         vv = get_sum_in_primitive(fc3_q,
                                                   e[0,:, j[0]], # q
                                                   e[1,:, j[1]], # q'

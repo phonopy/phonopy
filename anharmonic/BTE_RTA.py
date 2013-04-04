@@ -106,7 +106,9 @@ class BTE_RTA:
     def set_gamma(self, gamma):
         self._gamma = gamma
     
-    def get_kappa(self):
+    def get_kappa(self,
+                  write_amplitude=False,
+                  read_amplitude=False):
         num_atom = self._primitive.get_number_of_atoms()
         kappa = np.zeros((len(self._sigmas),
                           len(self._grid_points),
@@ -126,7 +128,9 @@ class BTE_RTA:
 
             if self._gamma is None:
                 self._pp.set_triplets_at_q(grid_point)
-                self._pp.set_interaction_strength(read_amplitude=True)
+                self._pp.set_interaction_strength(
+                    write_amplitude=write_amplitude,
+                    read_amplitude=read_amplitude)
                 self._pp.set_harmonic_phonons()
             else:
                 self._pp.set_qpoint(

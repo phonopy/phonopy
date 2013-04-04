@@ -15,7 +15,10 @@ class Phono3pySettings(Settings):
         self._multiple_sigmas = None
         self._no_kappa_stars = False
         self._qpoints = [[0, 0, 0]]
+        self._read_amplitude = False
+        self._read_gamma = False
         self._temperatures = None
+        self._write_amplitude = False
         
     def set_supercell_matrix_extra(self, matrix):
         self._supercell_matrix_extra = matrix
@@ -83,6 +86,24 @@ class Phono3pySettings(Settings):
     def get_mesh_divisors(self):
         return self._mesh_divisors
 
+    def set_read_gamma(self, read_gamma):
+        self._read_gamma = read_gamma
+
+    def get_read_gamma(self):
+        return self._read_gamma
+
+    def set_read_amplitude(self, read_amplitude):
+        self._read_amplitude = read_amplitude
+
+    def get_read_amplitude(self):
+        return self._read_amplitude
+
+    def set_write_amplitude(self, write_amplitude):
+        self._write_amplitude = write_amplitude
+
+    def get_write_amplitude(self):
+        return self._write_amplitude
+
 
 
 class Phono3pyConfParser(ConfParser):
@@ -115,6 +136,10 @@ class Phono3pyConfParser(ConfParser):
                 if self._options.max_freepath is not None:
                     self._confs['max_freepath'] = self._options.max_freepath
 
+            if opt.dest == 'mesh_divisors':
+                if self._options.mesh_divisors is not None:
+                    self._confs['mesh_divisors'] = self._options.mesh_divisors
+
             if opt.dest == 'multiple_sigmas':
                 if self._options.multiple_sigmas is not None:
                     self._confs['multiple_sigmas'] = self._options.multiple_sigmas
@@ -131,14 +156,21 @@ class Phono3pyConfParser(ConfParser):
                 if self._options.qpoints is not None:
                     self._confs['qpoints'] = self._options.qpoints
 
+            if opt.dest == 'read_amplitude':
+                if self._options.read_amplitude:
+                    self._confs['read_amplitude'] = '.true.'
+
+            if opt.dest == 'read_gamma':
+                if self._options.read_gamma:
+                    self._confs['read_gamma'] = '.true.'
+
             if opt.dest == 'temperatures':
                 if self._options.temperatures is not None:
                     self._confs['temperatures'] = self._options.temperatures
 
-            if opt.dest == 'mesh_divisors':
-                if self._options.mesh_divisors is not None:
-                    self._confs['mesh_divisors'] = self._options.mesh_divisors
-
+            if opt.dest == 'write_amplitude':
+                if self._options.write_amplitude:
+                    self._confs['write_amplitude'] = '.true.'
 
     def _parse_conf(self):
         confs = self._confs
@@ -176,6 +208,15 @@ class Phono3pyConfParser(ConfParser):
             if conf_key == 'max_freepath':
                 self.set_parameter('max_freepath', float(confs['max_freepath']))
 
+            if conf_key == 'mesh_divisors':
+                vals = [int(x) for x in confs['mesh_divisors'].split()]
+                if len(vals) == 1:
+                    self.set_parameter('mesh_divisors', vals * 3)
+                elif len(vals) == 3:
+                    self.set_parameter('mesh_divisors', vals)
+                else:
+                    self.setting_error("Mesh divisors are incorrectly set.")
+
             if conf_key == 'multiple_sigmas':
                 vals = [fracval(x) for x in confs['multiple_sigmas'].split()]
                 if len(vals) < 1:
@@ -202,6 +243,14 @@ class Phono3pyConfParser(ConfParser):
                     self.set_parameter('qpoints',
                                        list(np.reshape(vals, (-1, 3))))
 
+            if conf_key == 'read_amplitude':
+                if confs['read_amplitude'] == '.true.':
+                    self.set_parameter('read_amplitude', True)
+
+            if conf_key == 'read_gamma':
+                if confs['read_gamma'] == '.true.':
+                    self.set_parameter('read_gamma', True)
+
             if conf_key == 'temperatures':
                 vals = [fracval(x) for x in confs['temperatures'].split()]
                 if len(vals) < 1:
@@ -209,14 +258,10 @@ class Phono3pyConfParser(ConfParser):
                 else:
                     self.set_parameter('temperatures', vals)
 
-            if conf_key == 'mesh_divisors':
-                vals = [int(x) for x in confs['mesh_divisors'].split()]
-                if len(vals) == 1:
-                    self.set_parameter('mesh_divisors', vals * 3)
-                elif len(vals) == 3:
-                    self.set_parameter('mesh_divisors', vals)
-                else:
-                    self.setting_error("Mesh divisors are incorrectly set.")
+            if conf_key == 'write_amplitude':
+                if confs['write_amplitude'] == '.true.':
+                    self.set_parameter('write_amplitude', True)
+
 
     def _set_settings(self):
         ConfParser.set_settings(self)
@@ -242,10 +287,22 @@ class Phono3pyConfParser(ConfParser):
         if params.has_key('max_freepath'):
             self._settings.set_max_freepath(params['max_freepath'])
 
+        # Divisors for mesh numbers
+        if params.has_key('mesh_divisors'):
+            self._settings.set_mesh_divisors(params['mesh_divisors'])
+
         # Multiple sigmas
         if params.has_key('multiple_sigmas'):
             self._settings.set_multiple_sigmas(params['multiple_sigmas'])
 
+        # Read phonon-phonon interaction amplitudes from hdf5
+        if params.has_key('read_amplitude'):
+            self._settings.set_read_amplitude(params['read_amplitude'])
+
+        # Read gammas from hdf5
+        if params.has_key('read_gamma'):
+            self._settings.set_read_gamma(params['read_gamma'])
+            
         # q-vector direction at q->0 for non-analytical term correction
         if params.has_key('q_direction'):
             self._settings.set_q_direction(params['q_direction'])
@@ -262,9 +319,10 @@ class Phono3pyConfParser(ConfParser):
         if params.has_key('temperatures'):
             self._settings.set_temperatures(params['temperatures'])
 
-        # Divisors for mesh numbers
-        if params.has_key('mesh_divisors'):
-            self._settings.set_mesh_divisors(params['mesh_divisors'])
+        # Write phonon-phonon interaction amplitudes from hdf5
+        if params.has_key('write_amplitude'):
+            self._settings.set_write_amplitude(params['write_amplitude'])
+
 
         
 

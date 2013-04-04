@@ -65,8 +65,8 @@ class Phono3py:
                  factor=None,
                  freq_factor=None,
                  is_nosym=False,
-                 is_symmetrize_fc3_q=False,
-                 is_read_triplets=False,
+                 symmetrize_fc3_q=False,
+                 read_triplets=False,
                  r2q_TI_index=None,
                  is_Peierls=False,
                  symprec=1e-5,
@@ -79,10 +79,10 @@ class Phono3py:
         self._factor = factor
         self._freq_factor = freq_factor
         self._is_nosym = is_nosym
-        self._is_symmetrize_fc3_q = is_symmetrize_fc3_q
+        self._symmetrize_fc3_q = symmetrize_fc3_q
         self._symprec = symprec
         self._log_level = log_level
-        self._is_read_triplets = is_read_triplets
+        self._read_triplets = read_triplets
         self._r2q_TI_index = r2q_TI_index
         self._is_Peierls = is_Peierls
         self._kappas = None
@@ -95,9 +95,9 @@ class Phono3py:
                                 factor=self._factor,
                                 freq_factor=self._freq_factor,
                                 symprec=self._symprec,
-                                is_read_triplets=self._is_read_triplets,
+                                read_triplets=self._read_triplets,
                                 r2q_TI_index=self._r2q_TI_index,
-                                is_symmetrize_fc3_q=self._is_symmetrize_fc3_q,
+                                symmetrize_fc3_q=self._symmetrize_fc3_q,
                                 is_Peierls=self._is_Peierls,
                                 log_level=self._log_level,
                                 is_nosym=self._is_nosym)
@@ -203,7 +203,9 @@ class Phono3py:
                                  grid_points=None,
                                  mesh_divisors=None,
                                  no_kappa_stars=False,
-                                 read_gammas=False,
+                                 read_gamma=False,
+                                 write_amplitude=False,
+                                 read_amplitude=False,
                                  gamma_option=0,
                                  filename=None):
         br = BTE_RTA(self._pp,
@@ -216,11 +218,11 @@ class Phono3py:
                      no_kappa_stars=no_kappa_stars,
                      gamma_option=gamma_option,
                      log_level=self._log_level,
-                     write_logs=(not read_gammas),
+                     write_logs=(not read_gamma),
                      filename=filename)
         br.set_grid_points(grid_points)
 
-        if read_gammas:
+        if read_gamma:
             gammas = []
             for sigma in sigmas:
                 gammas_at_sigma = []
@@ -234,10 +236,12 @@ class Phono3py:
                 gammas.append(gammas_at_sigma)
             br.set_gamma(np.array(gammas))
         
-        kappas, gammas = br.get_kappa() # [sigma, grid_point, temperature]
+        kappas, gammas = br.get_kappa(write_amplitude=write_amplitude,
+                                      read_amplitude=read_amplitude)
 
         self._kappas = kappas
         self._gammas = gammas
+
 
     # def get_decay_channels(self,
     #                        grid_points,
