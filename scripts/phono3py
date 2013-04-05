@@ -54,7 +54,9 @@ from anharmonic.file_IO import write_fc2_dat, write_fc3_dat,\
     parse_DELTA_FORCES, write_supercells_with_displacements,\
     parse_QPOINTS3, parse_fc3, parse_fc2,\
     write_DELTA_FC2_SETS, parse_DELTA_FC2_SETS,\
-    write_FC2_FOURTH_SETS, parse_FC2_FOURTH_SETS
+    write_FC2_FOURTH_SETS, parse_FC2_FOURTH_SETS,\
+    write_fc3_to_hdf5, write_fc2_to_hdf5,\
+    read_fc3_from_hdf5, read_fc2_from_hdf5
 from anharmonic.displacement_fc3 import get_third_order_displacements
 from anharmonic.settings import Phono3pyConfParser
 from anharmonic import Phono3py, JointDOS, get_gruneisen_parameters, \
@@ -138,8 +140,8 @@ parser.set_defaults(amplitude=None,
                     temperatures=None,
                     verbose=True,
                     write_amplitude=False,
-                    write_grid_points=False,
-                    zheev_test=None)
+                    write_gamma=False,
+                    write_grid_points=False)
 parser.add_option("--amplitude", dest="amplitude", type="float",
                   help="Distance of displacements")
 parser.add_option("--bi", "--band_indices", dest="band_indices",
@@ -305,14 +307,15 @@ parser.add_option("--loglevel", dest="log_level", type="int",
                   help="Log level")
 parser.add_option("--ts", dest="temperatures", 
                   type="string", help="Temperatures for damping functions")
-parser.add_option("--write_amplitude", dest="write_amplitude",
-                  action="store_true",
-                  help="Write phonon-phonon interaction amplitudes")
 parser.add_option("--wgp", "--write_grid_points", dest="write_grid_points",
                   action="store_true",
                   help="Write grid address of irreducible grid points for specified mesh numbers to ir_grid_address.yaml")
-parser.add_option("--zheev", dest="zheev_test", 
-                  type="string", help="zheev test")
+parser.add_option("--write_amplitude", dest="write_amplitude",
+                  action="store_true",
+                  help="Write phonon-phonon interaction amplitudes")
+parser.add_option("--write_gamma", dest="write_gamma",
+                  action="store_true",
+                  help="Write gamma")
 (options, args) = parser.parse_args()
 option_list = parser.option_list
 
@@ -488,7 +491,7 @@ else:
             print  "----- Read fc2 -----"
             sys.stdout.flush()
 
-        fc2_with_dim = parse_fc2(supercell.get_number_of_atoms())
+        fc2_with_dim = read_fc2_from_hdf5()
     else:
         if log_level:
             print "----- Solve fc2 -----"
@@ -500,6 +503,7 @@ else:
                                            supercell)
 
         write_fc2_dat(fc2_with_dim)
+        write_fc2_to_hdf5(fc2_with_dim)
 
     if settings.get_supercell_matrix_extra()==None:
         fc2 = fc2_with_dim
@@ -510,8 +514,7 @@ else:
                 print "----- Read fc2 extra -----"
                 sys.stdout.flush()
 
-            fc2 = parse_fc2(supercell_extra.get_number_of_atoms(),
-                            filename='fc2_extra.dat')
+            fc2 = read_fc2_from_hdf5(filename='fc2_extra.dat')
         else:                
             if log_level:
                 print "----- Solve fc2 extra -----"
@@ -524,6 +527,7 @@ else:
                                       symmetry_extra,
                                       supercell_extra)
             write_fc2_dat(fc2, filename='fc2_extra.dat')
+            write_fc2_to_hdf5(fc2, filename='fc2_extra.dat')
 
     if options.is_symmetrize_fc2:
         set_permutation_symmetry(fc2)
@@ -555,8 +559,7 @@ else:
             if log_level:
                 print  "----- Read fc3 -----"
                 sys.stdout.flush()
-    
-            fc3 = parse_fc3(supercell.get_number_of_atoms())
+            fc3 = read_fc3_from_hdf5()
         else: # fc3 from FORCES_THIRD and FORCES_SECOND
             if log_level:
                 print  "----- Solve fc3 -----"
@@ -607,6 +610,7 @@ else:
             if log_level:
                 print "----- Write fc3.dat -----"
             write_fc3_dat(fc3)
+            write_fc3_to_hdf5(fc3)
     
     if options.read_fc2_fourth_sets:
         displacements = parse_disp_yaml('disp.yaml')
@@ -753,10 +757,6 @@ else:
                                           nac_params,
                                           nac_q_direction,
                                           frequency_scale_factor=freq_scale)
-
-            if options.zheev_test:
-                phono3py.solve_dynamical_matrix(
-                    [float(x) for x in options.zheev_test.split()])
 
             if options.is_decay_channel:
                 phono3py.get_decay_channels(grid_points,

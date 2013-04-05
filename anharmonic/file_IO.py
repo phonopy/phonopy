@@ -229,6 +229,17 @@ def write_fc3_dat(force_constants_third, filename='fc3.dat'):
                         w.write("%20.14f %20.14f %20.14f\n" % tuple(vec))
                     w.write("\n")
 
+def write_fc3_to_hdf5(force_constants_third, filename='fc3.hdf5'):
+    w = h5py.File(filename, 'w')
+    w.create_dataset('fc3', data=force_constants_third)
+    w.close()
+
+def read_fc3_from_hdf5(filename='fc3.hdf5'):
+    f = h5py.File(filename, 'r')
+    fc3 = f['fc3'][:]
+    f.close()
+    return fc3
+    
 def write_fc2_dat(force_constants, filename='fc2.dat'):
     w = open(filename, 'w')
     for i, fcs in enumerate(force_constants):
@@ -237,6 +248,17 @@ def write_fc2_dat(force_constants, filename='fc2.dat'):
             for vec in fcb:
                 w.write("%20.14f %20.14f %20.14f\n" % tuple(vec))
             w.write("\n")
+
+def write_fc2_to_hdf5(force_constants, filename='fc2.hdf5'):
+    w = h5py.File(filename, 'w')
+    w.create_dataset('fc2', data=force_constants)
+    w.close()
+
+def read_fc2_from_hdf5(filename='fc2.hdf5'):
+    f = h5py.File(filename, 'r')
+    fc2 = f['fc2'][:]
+    f.close()
+    return fc2
 
 def write_triplets(triplets, weights, mesh, filename='triplets.dat'):
     w = open(filename, 'w')

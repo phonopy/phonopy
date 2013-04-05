@@ -19,6 +19,7 @@ class Phono3pySettings(Settings):
         self._read_gamma = False
         self._temperatures = None
         self._write_amplitude = False
+        self._write_gamma = False
         
     def set_supercell_matrix_extra(self, matrix):
         self._supercell_matrix_extra = matrix
@@ -104,6 +105,12 @@ class Phono3pySettings(Settings):
     def get_write_amplitude(self):
         return self._write_amplitude
 
+    def set_write_gamma(self, write_gamma):
+        self._write_gamma = write_gamma
+
+    def get_write_gamma(self):
+        return self._write_gamma
+
 
 
 class Phono3pyConfParser(ConfParser):
@@ -171,6 +178,10 @@ class Phono3pyConfParser(ConfParser):
             if opt.dest == 'write_amplitude':
                 if self._options.write_amplitude:
                     self._confs['write_amplitude'] = '.true.'
+
+            if opt.dest == 'write_gamma':
+                if self._options.write_gamma:
+                    self._confs['write_gamma'] = '.true.'
 
     def _parse_conf(self):
         confs = self._confs
@@ -262,6 +273,10 @@ class Phono3pyConfParser(ConfParser):
                 if confs['write_amplitude'] == '.true.':
                     self.set_parameter('write_amplitude', True)
 
+            if conf_key == 'write_gamma':
+                if confs['write_gamma'] == '.true.':
+                    self.set_parameter('write_gamma', True)
+
 
     def _set_settings(self):
         ConfParser.set_settings(self)
@@ -319,9 +334,13 @@ class Phono3pyConfParser(ConfParser):
         if params.has_key('temperatures'):
             self._settings.set_temperatures(params['temperatures'])
 
-        # Write phonon-phonon interaction amplitudes from hdf5
+        # Write phonon-phonon interaction amplitudes to hdf5
         if params.has_key('write_amplitude'):
             self._settings.set_write_amplitude(params['write_amplitude'])
+
+        # Write gamma to hdf5
+        if params.has_key('write_gamma'):
+            self._settings.set_write_gamma(params['write_gamma'])
 
 
         

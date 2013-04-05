@@ -206,6 +206,7 @@ class Phono3py:
                                  read_gamma=False,
                                  write_amplitude=False,
                                  read_amplitude=False,
+                                 write_gamma=False,
                                  gamma_option=0,
                                  filename=None):
         br = BTE_RTA(self._pp,
@@ -237,7 +238,8 @@ class Phono3py:
             br.set_gamma(np.array(gammas))
         
         kappas, gammas = br.get_kappa(write_amplitude=write_amplitude,
-                                      read_amplitude=read_amplitude)
+                                      read_amplitude=read_amplitude,
+                                      write_gamma=write_gamma)
 
         self._kappas = kappas
         self._gammas = gammas

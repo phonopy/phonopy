@@ -108,7 +108,8 @@ class BTE_RTA:
     
     def get_kappa(self,
                   write_amplitude=False,
-                  read_amplitude=False):
+                  read_amplitude=False,
+                  write_gamma=False):
         num_atom = self._primitive.get_number_of_atoms()
         kappa = np.zeros((len(self._sigmas),
                           len(self._grid_points),
@@ -139,8 +140,8 @@ class BTE_RTA:
 
             self._get_kappa_at_sigmas(i, kappa, gamma)
             
-            if self._write_logs:
-                for j, sigma in enumerate(self._sigmas):
+            for j, sigma in enumerate(self._sigmas):
+                if self._write_logs:
                     write_kappa(kappa[j, i].sum(axis=1),
                                 self._temperatures,
                                 self._mesh,
@@ -148,7 +149,7 @@ class BTE_RTA:
                                 grid_point=grid_point,
                                 sigma=sigma,
                                 filename=self._filename)
-
+                if write_gamma:
                     write_gamma_to_hdf5(gamma[j, i],
                                         kappa[j, i],
                                         self._temperatures,
@@ -377,7 +378,7 @@ class BTE_RTA:
                 print "%8.3f (%8.3f %8.3f %8.3f)" % ((f,) + tuple(v))
             print "Frequency, projected group velocity (GV), and GV squared"
             for unit_n in rot_unit_n:
-                print "Directions [%4.1f %4.1f %4.1f], [%4.1f %4.1f %4.1f], [%4.1f %4.1f %4.1f]" % tuple(unit_n.flatten())
+                print "Directions [%4.1f %4.1f %4.1f ], [%4.1f %4.1f %4.1f ], [%4.1f %4.1f %4.1f ]" % tuple(unit_n.flatten())
                 for f, v in zip(self._pp.get_frequencies(),
                                 np.dot(group_velocity, unit_n)):
                     print "%8.3f (%8.3f %8.3f %8.3f)" % ((f,) + tuple(v))
@@ -389,9 +390,18 @@ if __name__ == '__main__':
     import sys
     import h5py
 
+    def read_kappa(filename):
+        vals = []
+        for line in open(filename):
+            if line.strip()[0] == '#':
+                continue
+            vals.append([float(x) for x in line.split()])
+        vals = np.array(vals)
+        return vals[:, 0], vals[:, 1]
+
     def sum_partial_kappa(filenames):
-        temps, kappa = parse_kappa(filenames[0])
-        sum_kappa = np.array(kappa)
+        temps, kappa = read_kappa(filenames[0])
+        sum_kappa = kappa.copy()
         for filename in filenames[1:]:
             temps, kappa = parse_kappa(filename)
             sum_kappa += kappa
@@ -406,11 +416,11 @@ if __name__ == '__main__':
             kappas += f['kappas'][:]
         return temps, kappas
 
-    # temps, kappa = sum_partial_kappa(sys.argv[1:])
-    # for t, k in zip(temps, kappa):
-    #     print "%8.2f %.5f" % (t, k)
-    temps, kappa = sum_partial_kappa_hdf5(sys.argv[1:])
-    for t, k in zip(temps, kappa.sum(axis=1)):
+    temps, kappa = sum_partial_kappa(sys.argv[1:])
+    for t, k in zip(temps, kappa):
         print "%8.2f %.5f" % (t, k)
+    # temps, kappa = sum_partial_kappa_hdf5(sys.argv[1:])
+    # for t, k in zip(temps, kappa.sum(axis=1)):
+    #     print "%8.2f %.5f" % (t, k)
 
 
