@@ -6,6 +6,7 @@ Command options
 Some of command-line options are equivalent to respective setting
 tags:
 
+* ``--amplitude`` (``DISPLACEMENT_DISTANCE``)
 * ``--anime`` (``ANIME``)
 * ``--ct`` (``CHARACTER_TABLE``)
 * ``--dim`` (``DIM``)
@@ -17,6 +18,7 @@ tags:
 * ``--fits_debye_model`` (``DEBYE_MODEL = .TRUE.``)
 * ``--gc``, ``--gamma_center`` (``GAMMA_CENTER``)
 * ``--modulation`` (``MODULATION``)
+* ``--nac`` (``NAC = .TRUE.``)
 * ``--pa``, ``--primitive_axis`` (``PRIMITIVE_AXIS``)
 * ``--pd``, ``--projection_direction`` (``PROJECTION_DIRECTION``)
 * ``--readfc`` (``FORCE_CONSTANTS = READ``)
@@ -166,10 +168,8 @@ This has to be used with ``--dim`` option.
 ``--amplitude``
 ~~~~~~~~~~~~~~~~
 
-Atomic displacement amplitude is set as specified value when creating
-supercells with displacements. The default displacement amplitude is
-0.01 :math:`\textrm{\AA}`. When the ``wien2k`` option is specified,
-the default value is changed to 0.02 Bohr.
+To specify this option is same as setting the
+``DISPLACEMENT_DISTANCE`` tag (:ref:`displacement_distance_tag`).
 
 Create primitive cell
 ----------------------
@@ -290,18 +290,23 @@ where the frequency is simply shown in the unit you specified.
 
    % phonopy --factor=521.471
 
-non-analytical term correction
+Non-analytical term correction
 ------------------------------
-
-.. _nac_option:
 
 ``--nac``
 ~~~~~~~~~~
 
-Non-analytical term correction is applied to dynamical
-matrix. ``BORN`` file has to be prepared in the current directory. See
-:ref:`born`.
+Non-analytical term correction. See ``NAC`` tag (:ref:`nac_tag`).
 
+Group velocity
+---------------
+
+``--gv`` or ``--group_velocity``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+
+     
 Log level
 ----------
 

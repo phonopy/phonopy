@@ -404,8 +404,8 @@ if log_level:
         print "FC3 symmetry of index exchange in reciprocal space:", options.is_symmetrize_fc3_q
     if not options.supercell_dimension_extra == None:
         print "Extra supercell for fc2 is supplied."
-    if options.is_nac:
-        print "Non-analytical term correction:", options.is_nac
+    if settings.get_is_nac():
+        print "Non-analytical term correction:", settings.get_is_nac()
     print "Spacegroup: ", symmetry.get_international_table()
 
 ###############################################################

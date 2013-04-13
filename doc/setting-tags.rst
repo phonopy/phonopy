@@ -146,10 +146,18 @@ Be careful that the axes in ``POSCAR`` is defined by three row
 vectors, i.e., :math:`( \mathbf{a}_\mathrm{u} \; \mathbf{b}_\mathrm{u}
 \; \mathbf{c}_\mathrm{u} )^T`.
 
-
-
 Displacement creation tags
 --------------------------
+
+.. _displacement_distance_tag:
+
+``DISPLACEMENT_DISTANCE``
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Finite atomic displacement distance is set as specified value when
+creating supercells with displacements. The default displacement
+amplitude is 0.01 :math:`\textrm{\AA}`. When the ``wien2k`` option is
+specified, the default value is changed to 0.02 Bohr.
 
 ``DIAG``
 ~~~~~~~~~
@@ -497,6 +505,38 @@ and the dynamical matrix may be used as
    conversion_factor_to_THz = 15.633302
    print frequencies * conversion_factor_to_THz
 
+
+.. _nac_tag:
+
+Non-analytical term correction tag
+----------------------------------
+
+``NAC``
+~~~~~~~~~~
+
+Non-analytical term correction is applied to dynamical
+matrix. ``BORN`` file has to be prepared in the current directory. See
+:ref:`born`.
+
+::
+
+   NAC = .TRUE.
+
+.. _group_velocity_tag:
+
+Group velocity
+---------------
+
+``GROUP_VELOCITY``
+~~~~~~~~~~~~~~~~~~~
+
+Group velocities at q-points are calculated by using this tag. The
+group velocities are written into a yaml file corresponding to
+the run mode.
+
+::
+
+   GROUP_VELOCITY = .TRUE.
 
 Symmetry
 ---------

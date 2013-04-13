@@ -3,6 +3,14 @@
 Change Log
 ==========
 
+Apr-13-2013: Version 1.6.4
+---------------------------
+
+* Group velocity can be calculated using ``GROUP_VELOCITY`` tag or
+  ``--gv`` option (:ref:`group_velocity_tag`).
+* Non-analytical term correction is implemented in C, which
+  accelerates the calculation speed.
+
 Feb-7-2013: Version 1.6.3
 ----------------------------
 

@@ -47,7 +47,7 @@ from phonopy.cui.settings import Settings, PhonopyConfParser
 from phonopy.units import *
 
 
-phonopy_version = "1.6.4-pre"
+phonopy_version = "1.6.4"
 
 # AA is created at http://www.network-science.de/ascii/.
 def print_phononpy():
@@ -86,7 +86,7 @@ def print_error(message):
 
 parser = OptionParser()
 parser.set_defaults(
-    amplitude=None,
+    displacement_distance=None,
     anime=None,
     band_paths=None,
     band_points=None,
@@ -139,7 +139,7 @@ parser.set_defaults(
     verbose=False,
     wien2k_struct_file=None )
 
-parser.add_option("--amplitude", dest="amplitude", type="float",
+parser.add_option("--amplitude", dest="displacement_distance", type="float",
                   help="Distance of displacements")
 parser.add_option("--anime", dest="anime",
                   action="store", type="string",
@@ -487,13 +487,13 @@ else:
     factor = options.factor
 
 # --amplitude
-if options.amplitude == None:
+if settings.get_displacement_distance() is None:
     if interface_mode=='wien2k':
-        distance_of_displacement = 0.02
+        displacement_distance = 0.02
     else:
-        distance_of_displacement = 0.01
+        displacement_distance = 0.01
 else:
-    distance_of_displacement = options.amplitude
+    displacement_distance = settings.get_displacement_distance()
     
 ##########################################
 # Check the essential setting parameters #
@@ -580,7 +580,7 @@ if log_level > 0:
             print "  Diagonal displacement: off"
     elif not settings.get_run_mode() == 'forces':
         print "Settings:"
-        if options.is_nac:
+        if settings.get_is_nac():
             print "  Non-analytical term correction: on"
         if settings.get_is_force_constants():
             print "  Force constants:", settings.get_is_force_constants()
@@ -644,7 +644,7 @@ if settings.get_run_mode() == 'displacements':
         print "---------------------------------------------------------------------------"
 
     phonon.generate_displacements(
-        distance=distance_of_displacement,
+        distance=displacement_distance,
         is_plusminus=settings.get_is_plusminus_displacement(),
         is_diagonal=settings.get_is_diagonal_displacement(),
         is_trigonal=settings.get_is_trigonal_displacement())

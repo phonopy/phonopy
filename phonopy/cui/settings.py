@@ -46,6 +46,7 @@ class Settings:
     def __init__(self):
         self._chemical_symbols = None
         self._dm_decimals = None
+        self._displacement_distance = None
         self._is_eigenvectors = False
         self._is_diagonal_displacement = True
         self._is_plusminus_displacement = 'auto'
@@ -82,6 +83,12 @@ class Settings:
 
     def get_supercell_matrix(self):
         return self._supercell_matrix
+
+    def set_displacement_distance(self, distance):
+        self._displacement_distance = distance
+
+    def get_displacement_distance(self):
+        return self._displacement_distance
 
     def set_is_diagonal_displacement(self, is_diag):
         self._is_diagonal_displacement = is_diag
@@ -282,17 +289,24 @@ class ConfParser:
         if params.has_key('atom_name'):
             self._settings.set_chemical_symbols(params['atom_name'])
             
+        # Distance of finite displacements introduced
+        if params.has_key('displacement_distance'):
+            self._settings.set_displacement_distance(
+                params['displacement_distance'])
+    
         # Diagonal displacement
         if params.has_key('diag'):
             self._settings.set_is_diagonal_displacement(params['diag'])
     
         # Plus minus displacement
         if params.has_key('pm_displacement'):
-            self._settings.set_is_plusminus_displacement(params['pm_displacement'])
+            self._settings.set_is_plusminus_displacement(
+                params['pm_displacement'])
     
         # Trigonal displacement
         if params.has_key('is_trigonal_displacement'):
-            self._settings.set_is_trigonal_displacement(params['is_trigonal_displacement'])
+            self._settings.set_is_trigonal_displacement(
+                params['is_trigonal_displacement'])
     
         # Primitive cell shape
         if params.has_key('primitive_axis'):
@@ -316,7 +330,8 @@ class ConfParser:
     
         # Is translational invariance ?
         if params.has_key('is_translation'):
-            self._settings.set_is_translational_invariance(params['is_translation'])
+            self._settings.set_is_translational_invariance(
+                params['is_translation'])
     
         # Is rotational invariance ?
         if params.has_key('is_rotational'):
@@ -408,6 +423,11 @@ class ConfParser:
                 if self._options.supercell_dimension:
                     self._confs['dim'] = self._options.supercell_dimension
 
+            if opt.dest=='displacement_distance':
+                if self._options.displacement_distance:
+                    self._confs['displacement_distance'] = \
+                        self._options.displacement_distance
+
             if opt.dest=='is_nodiag':
                 if self._options.is_nodiag:
                     self._confs['diag'] = '.false.'
@@ -464,7 +484,7 @@ class ConfParser:
 
         for conf_key in confs.keys():
             if conf_key == 'dim':
-                matrix = [ int(x) for x in confs['dim'].split() ]
+                matrix = [int(x) for x in confs['dim'].split()]
                 if len(matrix) == 9:
                     matrix = np.array(matrix).reshape(3, 3)
                 elif len(matrix) == 3:
@@ -507,7 +527,11 @@ class ConfParser:
                 self.set_parameter(
                     'atom_name',
                     [ x.capitalize() for x in confs['atom_name'].split() ])
-                        
+
+            if conf_key == 'displacement_distance':
+                self.set_parameter('displacement_distance',
+                                   float(confs['displacement_distance']))
+                
             if conf_key == 'diag':
                 if confs['diag'] == '.false.':
                     self.set_parameter('diag', False)
