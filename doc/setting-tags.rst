@@ -508,7 +508,7 @@ and the dynamical matrix may be used as
 
 .. _nac_tag:
 
-Non-analytical term correction tag
+Non-analytical term correction 
 ----------------------------------
 
 ``NAC``
@@ -531,8 +531,11 @@ Group velocity
 ~~~~~~~~~~~~~~~~~~~
 
 Group velocities at q-points are calculated by using this tag. The
-group velocities are written into a yaml file corresponding to
-the run mode.
+group velocities are written into a yaml file corresponding to the run
+mode in Cartesian coordinates. The physical unit depends on physical
+units of input files and frequency conversion factor, but if VASP and
+the default settings (e.g., THz for phonon frequency) are simply used,
+then the physical unit will be Angstrom THz.
 
 ::
 
