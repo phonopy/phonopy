@@ -238,8 +238,7 @@ def get_stabilized_reciprocal_mesh(mesh,
                                    rotations,
                                    is_shift=np.zeros(3, dtype=int),
                                    is_time_reversal=True,
-                                   qpoints=np.array([], dtype=float),
-                                   symprec=1e-5):
+                                   qpoints=np.array([], dtype=float)):
     """
     Return k-point map to the irreducible k-points and k-point grid points .
 
@@ -260,15 +259,13 @@ def get_stabilized_reciprocal_mesh(mesh,
                                    np.array(is_shift, dtype=int),
                                    is_time_reversal * 1,
                                    rotations.copy(),
-                                   np.array(qpoints, dtype=float),
-                                   symprec)
+                                   np.array(qpoints, dtype=float))
     
     return mapping, mesh_points
 
 def get_triplets_reciprocal_mesh(mesh,
                                  pointgroup,
-                                 is_time_reversal=True,
-                                 symprec=1e-5):
+                                 is_time_reversal=True):
     """
     Return symmetry reduced triplets (set of addresses) and
     k-point grid points corresponding to addresses.
@@ -279,11 +276,10 @@ def get_triplets_reciprocal_mesh(mesh,
     half mesh distance shifts.
     """
     
-    triplets, weights, mesh_points = \
-        spg.triplets_reciprocal_mesh(np.array(mesh, dtype=int),
-                                     is_time_reversal * 1,
-                                     pointgroup.copy(),
-                                     symprec)
+    triplets, weights, mesh_points = spg.triplets_reciprocal_mesh(
+        np.array(mesh, dtype=int),
+        is_time_reversal * 1,
+        pointgroup.copy())
 
     return np.array(triplets), np.array(weights), np.array(mesh_points)
 

@@ -306,8 +306,7 @@ int spg_get_stabilized_reciprocal_mesh(int grid_point[][3],
 				       const int num_rot,
 				       SPGCONST int rotations[][3][3],
 				       const int num_q,
-				       SPGCONST double qpoints[][3],
-				       const double symprec);
+				       SPGCONST double qpoints[][3]);
 
 /* Irreducible triplets of k-points are searched under conservation of */
 /* :math:``\mathbf{k}_1 + \mathbf{k}_2 + \mathbf{k}_3 = \mathbf{G}``. */
@@ -315,8 +314,7 @@ int spg_get_stabilized_reciprocal_mesh(int grid_point[][3],
 SpglibTriplets * spg_get_triplets_reciprocal_mesh(const int mesh[3],
 						  const int is_time_reversal,
 						  const int num_rot,
-						  SPGCONST int rotations[][3][3],
-						  const double symprec);
+						  SPGCONST int rotations[][3][3]);
 
 void spg_free_triplets(SpglibTriplets * triplets);
 
