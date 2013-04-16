@@ -719,8 +719,8 @@ static Triplets * get_ir_triplets(const int mesh[3],
 				 const int mesh[3],
 				 PointSymmetry * pointgroup)
 {
-  int i, j, k, num_grid, weight_q, q_2, num_ir;
-  int mesh_double[3], address[3], is_shift[3];
+  int i, j, num_grid, weight_q, q_2, num_ir;
+  int mesh_double[3], is_shift[3];
   int grid_double[3][3];
   int *map_q;
   double tolerance;
