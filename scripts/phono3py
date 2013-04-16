@@ -663,7 +663,7 @@ else:
     #===========================
     # phonon-phonon interaction
     #===========================
-    else:
+    elif settings.get_mesh_numbers() is not None:
         mesh = settings.get_mesh_numbers()
         if options.grid_points is None:
             grid_points = None
@@ -798,11 +798,8 @@ else:
                     temperatures=temperatures,
                     filename=options.output_filename,
                     gamma_option=options.gamma_option)
-
-
-
-
-
+    else:
+        pass
 
 if log_level:
     print_end()
