@@ -514,7 +514,7 @@ else:
                 print "----- Read fc2 extra -----"
                 sys.stdout.flush()
 
-            fc2 = read_fc2_from_hdf5(filename='fc2_extra.dat')
+            fc2 = read_fc2_from_hdf5(filename='fc2_extra.hdf5')
         else:                
             if log_level:
                 print "----- Solve fc2 extra -----"
@@ -527,7 +527,7 @@ else:
                                       symmetry_extra,
                                       supercell_extra)
             write_fc2_dat(fc2, filename='fc2_extra.dat')
-            write_fc2_to_hdf5(fc2, filename='fc2_extra.dat')
+            write_fc2_to_hdf5(fc2, filename='fc2_extra.hdf5')
 
     if options.is_symmetrize_fc2:
         set_permutation_symmetry(fc2)
