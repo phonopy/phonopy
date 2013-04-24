@@ -171,11 +171,11 @@ class PhononPhonon:
                 write_triplets(triplets_at_q, weights_at_q, mesh, t_filename)
                 self._print_log("Ir-triplets at %d were written into %s.\n" %
                                (gp, t_filename))
-
-            if self._log_level:
                 g_filename = "grids-%d%d%d.dat" % tuple(mesh)
                 write_grid_address(self._grid_address, mesh, g_filename)
-            self._print_log("Mesh points were written into %s.\n" % g_filename)
+                self._print_log("Mesh points were written into %s.\n" %
+                                g_filename)
+                
             self._print_log("Grid point (%d): " % gp)
             self._print_log("[ %d %d %d ]\n" % tuple(self._grid_address[gp]))
             self._print_log("Number of ir triplets: %d\n" % len(weights_at_q))
