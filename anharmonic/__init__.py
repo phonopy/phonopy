@@ -203,10 +203,10 @@ class Phono3py:
                                  grid_points=None,
                                  mesh_divisors=None,
                                  no_kappa_stars=False,
+                                 write_gamma=False,
                                  read_gamma=False,
                                  write_amplitude=False,
                                  read_amplitude=False,
-                                 write_gamma=False,
                                  gamma_option=0,
                                  filename=None):
         br = BTE_RTA(self._pp,
