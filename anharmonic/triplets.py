@@ -7,13 +7,14 @@ def get_triplets_at_q(gp,
                       rotations,
                       is_time_reversal=True):
 
+    print "triplet c start"
     (weights,
      third_q,
      grid_address) = spg.get_triplets_reciprocal_mesh_at_q(gp,
                                                            mesh,
                                                            rotations,
                                                            is_time_reversal)
-
+    print "triplet c end"
     weights_at_q = []
     triplets_at_q = []
     # A pair of q-points determins the third q-point by conservatoin law.
@@ -23,6 +24,7 @@ def get_triplets_at_q(gp,
         if w > 0:
             weights_at_q.append(w)
             triplets_at_q.append([gp, i, q])
+    print "triplet py end"
 
     return np.array(triplets_at_q), np.array(weights_at_q), grid_address
 
