@@ -107,6 +107,7 @@ int get_interaction_strength(double *amps,
 	      q_direction,
 	      nac_factor);
 
+#pragma omp parallel for private(j, w, a, q_vecs)
   for (i = 0; i < num_triplets; i++) {
     w = (double*)malloc(3 * sizeof(double) * num_patom * 3);
     a = (lapack_complex_double*)
@@ -192,6 +193,8 @@ int get_interaction_strength(double *amps,
   
   free(w0);
   free(a0);
+
+  return 1;
 }
 
 int get_triplet_interaction_strength(double *amps,
@@ -323,7 +326,7 @@ int get_fc3_reciprocal(lapack_complex_double* fc3_q,
   lapack_complex_double fc3_q_local[3][3][3];
   int num_patom = p2s->d1;
 
-#pragma omp parallel for private(i, j, k, l, m, n, fc3_q_local)
+/* #pragma omp parallel for private(i, j, k, l, m, n, fc3_q_local) */
   for (p = 0; p < num_patom * num_patom * num_patom; p++) {
     i = p / (num_patom * num_patom);
     j = (p % (num_patom * num_patom)) / num_patom;
@@ -489,7 +492,7 @@ static int sum_interaction_strength(double *amps,
   num_band0 = band_indices->d1;
   num_patom = p2s->d1;
 
-#pragma omp parallel for private(i, j, k, band, e)
+/* #pragma omp parallel for private(i, j, k, band, e) */
   for (n = 0; n < num_band0 * num_patom * num_patom * 9; n++) {
     band[0] = band_indices->data[n / (num_patom * num_patom * 9)];
     band[1] = (n % (num_patom * num_patom * 9)) / (num_patom * 3);
