@@ -44,9 +44,9 @@ def get_grid_address(mesh):
     for i in range(mesh[2]):
         for j in range(mesh[1]):
             for k in range(mesh[0]):
-                grid_address[count] = [k - (k > (mesh[2] // 2)) * mesh[0],
+                grid_address[count] = [k - (k > (mesh[0] // 2)) * mesh[0],
                                        j - (j > (mesh[1] // 2)) * mesh[1],
-                                       i - (i > (mesh[0] // 2)) * mesh[2]]
+                                       i - (i > (mesh[2] // 2)) * mesh[2]]
 
                 count += 1
     
@@ -77,9 +77,11 @@ def reduce_grid_points(mesh_divisors,
     else:
         grid_points = []
         grid_weights = []
-        for i, dgp in enumerate(dense_grid_points):
-            if (grid_address[dgp] % divisors == 0).all():
-                grid_points.append(dgp)
+
+        for i, modulo in enumerate(
+            grid_address[dense_grid_points] % divisors):
+            if (modulo == 0).all():
+                grid_points.append(dense_grid_points[i])
                 if dense_grid_weights is not None:
                     grid_weights.append(dense_grid_weights[i])
 

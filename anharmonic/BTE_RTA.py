@@ -82,8 +82,10 @@ class BTE_RTA:
              self._grid_address) = spg.get_ir_reciprocal_mesh(self._mesh,
                                                               self._primitive)
             dense_grid_points = np.unique(grid_mapping_table)
-            dense_grid_weights = [np.sum(grid_mapping_table == g)
-                                  for g in dense_grid_points]
+            weights = np.zeros_like(grid_mapping_table)
+            for g in grid_mapping_table:
+                weights[g] += 1
+            dense_grid_weights = weights[dense_grid_points]
 
             self._grid_points, self._grid_weights = reduce_grid_points(
                 self._mesh_divisors,

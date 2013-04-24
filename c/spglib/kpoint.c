@@ -780,10 +780,10 @@ static int get_ir_triplets_at_q(int weights[],
 				const int mesh[3],
 				SPGCONST PointSymmetry * pointgroup)
 {
-  int i, j, num_grid, weight_q, q_2, num_ir_q, num_ir_triplets;
+  int i, j, num_grid, q_2, num_ir_q, num_ir_triplets, ir_address;
   int mesh_double[3], is_shift[3];
   int grid_double0[3], grid_double1[3], grid_double2[3];
-  int *map_q, *ir_addresses;
+  int *map_q, *ir_addresses, *weight_q;
   double tolerance;
   double stabilizer_q[1][3];
   PointSymmetry pointgroup_q;
@@ -825,14 +825,21 @@ static int get_ir_triplets_at_q(int weights[],
 #endif
 
   ir_addresses = (int*) malloc(sizeof(int) * num_ir_q);
+  weight_q = (int*) malloc(sizeof(int) * num_grid);
   num_ir_q = 0;
   for (i = 0; i < num_grid; i++) {
     if (map_q[i] == i) {
       ir_addresses[num_ir_q] = i;
       num_ir_q++;
     }
-    weights[i] = 0;
+    weight_q[i] = 0;
+  }
+
+#pragma omp parallel for
+  for (i = 0; i < num_grid; i++) {
+    weight_q[map_q[i]]++;
     third_q[i] = -1;
+    weights[i] = 0;
   }
 
 #pragma omp parallel for private(j, grid_double1, grid_double2)
@@ -847,26 +854,20 @@ static int get_ir_triplets_at_q(int weights[],
 
   num_ir_triplets = 0;
   for (i = 0; i < num_ir_q; i++) {
-    q_2 = third_q[ir_addresses[i]];
-    weight_q = 0;
-    
-#pragma omp parallel for reduction(+:weight_q)
-    for (j = 0; j < num_grid; j++) {
-      if (ir_addresses[i] == map_q[j]) {
-	weight_q++;
-      }
-    }
-
+    ir_address = ir_addresses[i];
+    q_2 = third_q[ir_address];
     if (weights[map_q[q_2]]) {
-      weights[map_q[q_2]] += weight_q;
+      weights[map_q[q_2]] += weight_q[ir_address];
     } else {
-      weights[ir_addresses[i]] = weight_q;
+      weights[ir_address] = weight_q[ir_address];
       num_ir_triplets++;
     }
   }
 
   free(map_q);
   map_q = NULL;
+  free(weight_q);
+  weight_q = NULL;
   free(ir_addresses);
   ir_addresses = NULL;
 
