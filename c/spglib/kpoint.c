@@ -537,6 +537,8 @@ get_ir_reciprocal_mesh_openmp(int grid[][3],
   }
 
   num_ir = 0;
+
+#pragma omp parallel for reduction(+:num_ir)
   for (i = 0; i < mesh[0] * mesh[1] * mesh[2]; i++) {
     if (map[i] == i) {
       num_ir++;

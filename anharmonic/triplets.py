@@ -37,22 +37,15 @@ def get_nosym_triplets(mesh, grid_point0):
     return triplets, weights, grid_address
 
 def get_grid_address(mesh):
-    # XYZ where X runs first.
-    # This has to match with get_ir_reciprocal_mesh.
-    grid_address = np.zeros((np.prod(mesh), 3), dtype=int)
-    count = 0
-    for i in range(mesh[2]):
-        for j in range(mesh[1]):
-            for k in range(mesh[0]):
-                grid_address[count] = [k - (k > (mesh[0] // 2)) * mesh[0],
-                                       j - (j > (mesh[1] // 2)) * mesh[1],
-                                       i - (i > (mesh[2] // 2)) * mesh[2]]
+    grid_mapping_table, grid_address = spg.get_stabilized_reciprocal_mesh(
+        mesh,
+        np.array([[[1, 0, 0], [0, 1, 0], [0, 0, 1]]], dtype=int))
 
-                count += 1
-    
-    return np.array(grid_address)
+    return grid_address
 
 def get_address(grid, mesh):
+    # X runs first in XYZ
+    # (*In spglib, Z first is possible with MACRO setting.)
     return ((grid[0] + mesh[0]) % mesh[0] +
             ((grid[1] + mesh[1]) % mesh[1]) * mesh[0] +
             ((grid[2] + mesh[2]) % mesh[2]) * mesh[0] * mesh[1])
@@ -60,10 +53,13 @@ def get_address(grid, mesh):
 def get_ir_grid_points(mesh, primitive):
     grid_mapping_table, grid_address = spg.get_ir_reciprocal_mesh(mesh,
                                                                   primitive)
-    ir_grid_indices = np.unique(grid_mapping_table)
-    ir_weights = np.array([np.sum(grid_mapping_table == g)
-                           for g in ir_grid_indices])
-    return ir_grid_indices, ir_weights
+    ir_grid_points = np.unique(grid_mapping_table)
+    weights = np.zeros_like(grid_mapping_table)
+    for g in grid_mapping_table:
+        weights[g] += 1
+    ir_grid_weights = weights[ir_grid_points]
+
+    return ir_grid_points, ir_grid_weights
 
 def reduce_grid_points(mesh_divisors,
                        grid_address,
