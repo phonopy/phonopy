@@ -221,11 +221,11 @@ class PhononPhonon:
                                     self._q_direction,
                                     self._factor * self._freq_factor)
         else:
-            try:
-                import anharmonic._phono3py as phono3c
-                self._set_c_interaction_strength()
-            except ImportError:
-                self._set_py_interaction_strength()
+            # try:
+            import anharmonic._phono3py as phono3c
+            self._set_c_interaction_strength()
+            # except ImportError:
+            #     self._set_py_interaction_strength()
 
             if write_amplitude:
                 write_amplitude_to_hdf5(self._amplitude_at_q,

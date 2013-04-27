@@ -671,13 +671,6 @@ else:
             grid_points = np.array([int(x)
                                     for x in options.grid_points.split()])
             
-        if log_level:
-            print "------ Phonon-phonon ------"
-            print "Mesh sampling: [ %d %d %d ]" % tuple(mesh)
-            if grid_points is not None:
-                print "Grid points to be calculated:", grid_points
-            sys.stdout.flush()
-
         if options.factor is None:
             factor = VaspToTHz
         else:
@@ -719,6 +712,13 @@ else:
             temperatures = [None]
         else:
             temperatures = settings.get_temperatures()
+
+        if log_level:
+            print "------ Settings ------"
+            print "Mesh sampling: [ %d %d %d ]" % tuple(mesh)
+            if grid_points is not None:
+                print "Grid points to be calculated:", grid_points
+            sys.stdout.flush()
 
         if options.is_joint_dos:
             jdos = JointDOS(supercell_dm,

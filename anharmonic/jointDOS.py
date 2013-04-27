@@ -64,8 +64,7 @@ def get_jointDOS(fixed_grid_points,
                                   mesh,
                                   primitive.get_cell(),
                                   symmetry.get_pointgroup_operations(),
-                                  True,
-                                  symprec)
+                                  True)
 
         if verbose:
             print "Grid point (%d):" % gp,  grid_points[gp]

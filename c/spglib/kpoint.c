@@ -835,13 +835,12 @@ static int get_ir_triplets_at_q(int weights[],
       num_ir_q++;
     }
     weight_q[i] = 0;
-  }
-
-#pragma omp parallel for
-  for (i = 0; i < num_grid; i++) {
-    weight_q[map_q[i]]++;
     third_q[i] = -1;
     weights[i] = 0;
+  }
+
+  for (i = 0; i < num_grid; i++) {
+    weight_q[map_q[i]]++;
   }
 
 #pragma omp parallel for private(j, grid_double1, grid_double2)

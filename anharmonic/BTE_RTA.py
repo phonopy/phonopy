@@ -375,15 +375,12 @@ class BTE_RTA:
     def _show_log(self, grid_point, group_velocity, rot_unit_n):
         if self._log_level:
             print "----- Partial kappa at grid address %d -----" % grid_point
-            print "Frequency, Group velocity (x y z):"
-            for f, v in zip(self._pp.get_frequencies(), group_velocity):
-                print "%8.3f (%8.3f %8.3f %8.3f)" % ((f,) + tuple(v))
-            print "Frequency, projected group velocity (GV), and GV squared"
-            for unit_n in rot_unit_n:
-                print "Directions [%4.1f %4.1f %4.1f ], [%4.1f %4.1f %4.1f ], [%4.1f %4.1f %4.1f ]" % tuple(unit_n.flatten())
+            print "Frequency, projected group velocity (x, y, z) at k* (k-star)"
+            for i, unit_n in enumerate(rot_unit_n):
+                print " k*%-2d" % (i + 1)
                 for f, v in zip(self._pp.get_frequencies(),
                                 np.dot(group_velocity, unit_n)):
-                    print "%8.3f (%8.3f %8.3f %8.3f)" % ((f,) + tuple(v))
+                    print "%8.3f   (%8.3f %8.3f %8.3f)" % ((f,) + tuple(v))
 
         
             

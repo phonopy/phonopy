@@ -19,6 +19,7 @@ extension = Extension(
              'c/harmonic/dynmat.c',
              'c/harmonic/lapack_wrapper.c',
              'c/anharmonic/interaction_strength.c',
+             'c/anharmonic/gamma.c',
              'c/anharmonic/alloc_array.c'])
 
 setup(name='phono3py',

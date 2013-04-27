@@ -15,15 +15,18 @@ def get_triplets_at_q(gp,
                                                            is_time_reversal)
     weights_at_q = []
     triplets_at_q = []
-    # A pair of q-points determins the third q-point by conservatoin law.
-    # If q-point triplet is independent, it is set as w > 0.
-    # Sum of w has to be prod(mesh).
     for i, (w, q) in enumerate(zip(weights, third_q)):
         if w > 0:
             weights_at_q.append(w)
             triplets_at_q.append([gp, i, q])
 
-    return np.array(triplets_at_q), np.array(weights_at_q), grid_address
+    weights_at_q = np.array(weights_at_q)
+            
+    assert np.prod(mesh) == weights_at_q.sum(), \
+        "Num grid points %d, sum of weight %d" % (
+                    np.prod(mesh), weights_at_q.sum())
+
+    return np.array(triplets_at_q), weights_at_q, grid_address
 
 def get_nosym_triplets(mesh, grid_point0):
     grid_address = get_grid_address(mesh)
