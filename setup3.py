@@ -6,8 +6,8 @@ include_dirs_lapacke = ['../lapacke/include']
 
 extension = Extension(
     'anharmonic._phono3py',
-    include_dirs=(['c/harmonic_include',
-                   'c/anharmonic_include'] +
+    include_dirs=(['c/harmonic_h',
+                   'c/anharmonic_h'] +
                   include_dirs_numpy +
                   include_dirs_lapacke),
     extra_compile_args=['-fopenmp'],

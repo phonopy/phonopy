@@ -6,13 +6,13 @@ include_dirs_numpy = [numpy.get_include()]
 extension = Extension('phonopy._phonopy',
                       # extra_compile_args=['-fopenmp'],
                       # extra_link_args=['-lgomp'],
-                      include_dirs=['c/harmonic_include'] + include_dirs_numpy,
+                      include_dirs=['c/harmonic_h'] + include_dirs_numpy,
                       sources=['c/_phonopy.c',
                                'c/harmonic/dynmat.c'])
 
 extension_spglib = Extension(
     'phonopy._spglib',
-    include_dirs=['c/spglib_include'] + include_dirs_numpy,
+    include_dirs=['c/spglib_h'] + include_dirs_numpy,
     extra_compile_args=['-fopenmp'],
     extra_link_args=['-lgomp'],
     sources=['c/_spglib.c',

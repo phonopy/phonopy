@@ -4,10 +4,10 @@
 #include <math.h>
 #include <numpy/arrayobject.h>
 #include <lapacke.h>
-#include "harmonic_include/dynmat.h"
-#include "harmonic_include/lapack_wrapper.h"
-#include "anharmonic_include/interaction_strength.h"
-#include "anharmonic_include/alloc_array.h"
+#include "dynmat.h"
+#include "lapack_wrapper.h"
+#include "interaction_strength.h"
+#include "alloc_array.h"
 
 /* Boltzmann constant eV/K */
 #define KB 8.6173382568083159E-05
