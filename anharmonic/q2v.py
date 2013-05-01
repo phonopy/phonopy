@@ -68,10 +68,13 @@ class PhononPhonon:
 
         # set_triplets_at_q
         self._grid_point = None
-        self._grid_address = None
         self._triplets_at_q = None
         self._weights_at_q = None
 
+        # Grid points of mesh
+        self._grid_address = None
+        self._q_grid = None
+        
         # Dynamical matrix has to be set by calling self._set_dynamical matrix
         self._dm = None
         self._q_direction = None
@@ -182,8 +185,10 @@ class PhononPhonon:
 
         self._triplets_at_q = triplets_at_q
         self._weights_at_q = weights_at_q
-        self._q = self._grid_address[gp].astype(float) / mesh
         self._grid_point = gp
+        if self._q_grid is None: # This should be created only once.
+            self._q_grid = self._grid_address / mesh.astype(float)
+        self._q = self._q_grid[gp].copy()
         
     def set_interaction_strength(self,
                                  band_indices=None,
@@ -216,16 +221,16 @@ class PhononPhonon:
                                     self._eigenvectors,
                                     q3,
                                     self._mesh,
-                                    self._grid_address,
+                                    self._q_grid,
                                     self._dm,
                                     self._q_direction,
                                     self._factor * self._freq_factor)
         else:
-            # try:
-            import anharmonic._phono3py as phono3c
-            self._set_c_interaction_strength()
-            # except ImportError:
-            #     self._set_py_interaction_strength()
+            try:
+                import anharmonic._phono3py as phono3c
+                self._set_c_interaction_strength()
+            except ImportError:
+                self._set_py_interaction_strength()
 
             if write_amplitude:
                 write_amplitude_to_hdf5(self._amplitude_at_q,
@@ -274,13 +279,10 @@ class PhononPhonon:
     def _set_c_interaction_strength(self):
         import anharmonic._phono3py as phono3c
 
-        q1s = []
-        q2s = []
-        q0 = self._grid_address[
-            self._triplets_at_q[0][0]].astype(float) / self._mesh
-        for q3 in self._triplets_at_q:
-            q1s.append(self._grid_address[q3[1]].astype(float) / self._mesh)
-            q2s.append(self._grid_address[q3[2]].astype(float) / self._mesh)
+        q0 = self._q
+        q1s = self._q_grid[self._triplets_at_q[:, 1]]
+        q2s = self._q_grid[self._triplets_at_q[:, 2]]
+        
         svecs_fc2, multi_fc2 = self._dm.get_shortest_vectors()
 
         if self._dm.is_nac():
@@ -301,8 +303,8 @@ class PhononPhonon:
             self._amplitude_at_q,
             self._frequencies_at_q,
             q0,
-            np.array(q1s, dtype=float),
-            np.array(q2s, dtype=float),
+            q1s,
+            q2s,
             self._weights_at_q,
             svecs_fc2,
             multi_fc2,
@@ -338,7 +340,7 @@ class PhononPhonon:
                 q3,
                 w,
                 self._mesh,
-                self._grid_address,
+                self._q_grid,
                 self._shortest_vectors,
                 self._multiplicity,
                 self._fc3,
@@ -369,16 +371,11 @@ def set_triplet_phonons(freqs,
                         eigvecs_at_q0,
                         q3,
                         mesh,
-                        grid_address,                        
+                        q_grid,
                         dm,
                         q_direction,
                         factor):
-                        
-    q_set = []
-    for q in q3:
-        q_set.append(grid_address[q].astype(float) / mesh)
-    q_set = np.array(q_set)
-
+    q_set = q_grid[q3]
     num_atom = dm.get_primitive().get_number_of_atoms()
 
     # Solve dynamical matrix
@@ -402,7 +399,7 @@ def get_triplet_interaction_strength(triplet_number,
                                      q3,
                                      w,
                                      mesh,
-                                     grid_address,
+                                     q_grid,
                                      shortest_vectors,
                                      multiplicity,
                                      fc3,
@@ -428,7 +425,7 @@ def get_triplet_interaction_strength(triplet_number,
                                          eigenvectors,
                                          q3,
                                          mesh,
-                                         grid_address,
+                                         q_grid,
                                          dm,
                                          q_direction,
                                          factor * freq_factor)
