@@ -23,7 +23,7 @@ extension = Extension(
              'c/anharmonic/alloc_array.c'])
 
 setup(name='phono3py',
-      version='0.2.0',
+      version='0.3.0',
       description='This is the phono3py module.',
       author='Atsushi Togo',
       author_email='atz.togo@gmail.com',
