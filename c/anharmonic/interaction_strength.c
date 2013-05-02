@@ -45,14 +45,16 @@ static int get_phonons(lapack_complex_double *a,
 		       const double *dielectric,
 		       const double *reciprocal_lattice,
 		       const double *q_direction,
-		       const double nac_factor);
+		       const double nac_factor,
+		       const char uplo);
 
 int get_interaction_strength(double *amps,
 			     double *freqs,
+			     const int num_triplets,
+			     const int num_grid_points,
 			     const double *q0,
 			     const double *q1s,
 			     const double *q2s,
-			     const Array1D *weights,
 			     const double *fc2,
 			     const double *fc3,
 			     const double *masses_fc2,
@@ -74,19 +76,15 @@ int get_interaction_strength(double *amps,
 			     const double freq_unit_factor,
 			     const double cutoff_frequency,
 			     const int is_symmetrize_fc3_q,
-			     const int r2q_TI_index)
+			     const int r2q_TI_index,
+			     const char uplo)
 {
-  int i, j, num_triplets, num_patom, num_grid_points;
+  int i, j, num_patom;
   double *q_vecs;
   double *w0 ,*w;
   lapack_complex_double *a0, *a;
 
   num_patom = p2s_fc2->d1;
-  num_triplets = weights->d1;
-  num_grid_points = 0;
-  for (i = 0; i < weights->d1; i++) {
-    num_grid_points += weights->data[i];
-  }
 
   w0 = (double*)malloc(sizeof(double) * num_patom * 3);
   a0 = (lapack_complex_double*)
@@ -105,7 +103,8 @@ int get_interaction_strength(double *amps,
 	      dielectric,
 	      reciprocal_lattice,
 	      q_direction,
-	      nac_factor);
+	      nac_factor,
+	      uplo);
 
 #pragma omp parallel for private(j, w, a, q_vecs)
   for (i = 0; i < num_triplets; i++) {
@@ -139,7 +138,8 @@ int get_interaction_strength(double *amps,
 		dielectric,
 		reciprocal_lattice,
 		NULL,
-		nac_factor);
+		nac_factor,
+		uplo);
 
     get_phonons(a + num_patom * num_patom * 18,
 		w + num_patom * 6,
@@ -154,13 +154,13 @@ int get_interaction_strength(double *amps,
 		dielectric,
 		reciprocal_lattice,
 		NULL,
-		nac_factor);
+		nac_factor,
+		uplo);
 
     for (j = 0; j < num_patom * 9; j++) {
       freqs[i * num_patom * 9 + j] =
 	sqrt(fabs(w[j])) * freq_unit_factor * ((w[j] > 0) - (w[j] < 0));
     }
-
 
     get_triplet_interaction_strength
       (amps + i * band_indices->d1 * num_patom * num_patom * 9,
@@ -187,160 +187,7 @@ int get_interaction_strength(double *amps,
   for (i = 0;
        i < num_triplets * band_indices->d1 * num_patom * num_patom * 9;
        i++) {
-    amps[i] = lapack_make_complex_double
-      (lapack_complex_double_real(amps[i]) / num_grid_points,
-       lapack_complex_double_imag(amps[i]) / num_grid_points);
-  }
-  
-  free(w0);
-  free(a0);
-
-  return 1;
-}
-
-int get_interaction_strength2(double *amps,
-			      double *freqs,
-			      const double *q0,
-			      const double *q1s,
-			      const double *q2s,
-			      const Array1D *weights,
-			      const double *fc2,
-			      const double *fc3,
-			      const double *masses_fc2,
-			      const double *masses_fc3,
-			      const Array1D *p2s_fc2,
-			      const Array1D *s2p_fc2,
-			      const Array1D *p2s_fc3,
-			      const Array1D *s2p_fc3,
-			      const Array2D *multi_fc2,
-			      const ShortestVecs *svecs_fc2,
-			      const Array2D *multi_fc3,
-			      const ShortestVecs *svecs_fc3,
-			      const Array1D *band_indices,
-			      const double *born,
-			      const double *dielectric,
-			      const double *reciprocal_lattice,
-			      const double *q_direction,
-			      const double nac_factor,
-			      const double freq_unit_factor,
-			      const double cutoff_frequency,
-			      const int is_symmetrize_fc3_q,
-			      const int r2q_TI_index)
-{
-  int i, j, num_triplets, num_patom, num_grid_points;
-  double *q_vecs;
-  double *w0 ,*w;
-  lapack_complex_double *a0, *a;
-
-  num_patom = p2s_fc2->d1;
-  num_triplets = weights->d1;
-  num_grid_points = 0;
-  for (i = 0; i < weights->d1; i++) {
-    num_grid_points += weights->data[i];
-  }
-
-  w0 = (double*)malloc(sizeof(double) * num_patom * 3);
-  a0 = (lapack_complex_double*)
-    malloc(sizeof(lapack_complex_double) * num_patom * num_patom * 9);
-
-  get_phonons(a0,
-	      w0,
-	      q0,
-	      fc2,
-	      masses_fc2,
-	      p2s_fc2,
-	      s2p_fc2,
-	      multi_fc2,
-	      svecs_fc2,
-	      born,
-	      dielectric,
-	      reciprocal_lattice,
-	      q_direction,
-	      nac_factor);
-
-#pragma omp parallel for private(j, w, a, q_vecs)
-  for (i = 0; i < num_triplets; i++) {
-    w = (double*)malloc(3 * sizeof(double) * num_patom * 3);
-    a = (lapack_complex_double*)
-      malloc(3 * sizeof(lapack_complex_double) * num_patom * num_patom * 9);
-    q_vecs = (double*)malloc(3 * sizeof(double) * 3);
-    
-    for (j = 0; j < num_patom * num_patom * 9; j++) {
-      a[j] = a0[j];
-    }
-    for (j = 0; j < num_patom * 3; j++) {
-      w[j] = w0[j];
-    }
-    for (j = 0; j < 3; j++) {
-      q_vecs[j] = q0[j];
-      q_vecs[j + 3] = q1s[i * 3 + j];
-      q_vecs[j + 6] = q2s[i * 3 + j];
-    }
-
-    get_phonons(a + num_patom * num_patom * 9,
-		w + num_patom * 3,
-		q_vecs + 3,
-		fc2,
-		masses_fc2,
-		p2s_fc2,
-		s2p_fc2,
-		multi_fc2,
-		svecs_fc2,
-		born,
-		dielectric,
-		reciprocal_lattice,
-		NULL,
-		nac_factor);
-
-    get_phonons(a + num_patom * num_patom * 18,
-		w + num_patom * 6,
-		q_vecs + 6,
-		fc2,
-		masses_fc2,
-		p2s_fc2,
-		s2p_fc2,
-		multi_fc2,
-		svecs_fc2,
-		born,
-		dielectric,
-		reciprocal_lattice,
-		NULL,
-		nac_factor);
-
-    for (j = 0; j < num_patom * 9; j++) {
-      freqs[i * num_patom * 9 + j] =
-	sqrt(fabs(w[j])) * freq_unit_factor * ((w[j] > 0) - (w[j] < 0));
-    }
-
-
-    get_triplet_interaction_strength
-      (amps + i * band_indices->d1 * num_patom * num_patom * 9,
-       fc3,
-       q_vecs,
-       a,
-       freqs + i * num_patom * 9,
-       masses_fc3,
-       p2s_fc3,
-       s2p_fc3,
-       multi_fc3,
-       svecs_fc3,
-       band_indices,
-       cutoff_frequency,
-       is_symmetrize_fc3_q,
-       r2q_TI_index);
-
-    free(q_vecs);
-    free(w);
-    free(a);
-  }
-
-#pragma omp parallel for
-  for (i = 0;
-       i < num_triplets * band_indices->d1 * num_patom * num_patom * 9;
-       i++) {
-    amps[i] = lapack_make_complex_double
-      (lapack_complex_double_real(amps[i]) / num_grid_points,
-       lapack_complex_double_imag(amps[i]) / num_grid_points);
+    amps[i] /= num_grid_points;
   }
   
   free(w0);
@@ -412,9 +259,9 @@ int get_triplet_interaction_strength(double *amps,
 
 int get_fc3_realspace(lapack_complex_double* fc3_real,
 		      const ShortestVecs* svecs,
-		      const Array2D * multi,
+		      const Array2D* multi,
 		      const double* q_triplet,
-		      const Array1D * s2p,
+		      const int* s2p,
 		      const lapack_complex_double* fc3_rec)
 {
   int i, j, k, l, m, n;
@@ -448,8 +295,8 @@ int get_fc3_realspace(lapack_complex_double* fc3_real,
 	  for (m = 0; m < 3; m++) {
 	    for (n = 0; n < 3; n++) {
 	      fc3_elem = prod(fc3_rec[i * num_patom * num_patom * 27 +
-				      s2p->data[j] * num_patom * 27 +
-				      s2p->data[k] * 27 + l * 9 + m * 3 + n],
+				      s2p[j] * num_patom * 27 +
+				      s2p[k] * 27 + l * 9 + m * 3 + n],
 			      prod(phase2, phase3));
 
 	      fc3_real[i * num_satom * num_satom * 27 +
@@ -793,7 +640,8 @@ static int get_phonons(lapack_complex_double *a,
 		       const double *dielectric,
 		       const double *reciprocal_lattice,
 		       const double *q_direction,
-		       const double nac_factor)
+		       const double nac_factor,
+		       const char uplo)
 {
   int i, j, num_patom, num_satom;
   double q_cart[3];
@@ -845,7 +693,7 @@ static int get_phonons(lapack_complex_double *a,
 		     num_patom,
 		     dielectric_factor,
 		     q_cart,
-		   born);
+		     born);
     }
   } else {
     charge_sum = NULL;
@@ -877,5 +725,5 @@ static int get_phonons(lapack_complex_double *a,
   free(dm_real);
   free(dm_imag);
 
-  return phonopy_zheev(w, a, num_patom * 3);
+  return phonopy_zheev(w, a, num_patom * 3, uplo);
 }

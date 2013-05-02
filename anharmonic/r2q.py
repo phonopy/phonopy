@@ -118,8 +118,8 @@ def get_c_fc3_reciprocal(shortest_vectors,
                            shortest_vectors,
                            multiplicity,
                            q_set,
-                           np.array(p2s_map),
-                           np.array(s2p_map),
+                           np.int32(p2s_map),
+                           np.int32(s2p_map),
                            fc3,
                            r2q_TI_index)
 

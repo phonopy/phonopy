@@ -40,7 +40,7 @@ class ThermalPropertiesBase:
         self._temperature = 0
         self._frequencies = frequencies
         if weights == None:
-            self._weights = np.ones(frequencies.shape[0], dtype=int)
+            self._weights = np.ones(frequencies.shape[0], dtype='int32')
         else:
             self._weights = weights
         self._nqpoint = frequencies.shape[0]

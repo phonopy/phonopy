@@ -11,7 +11,7 @@ def get_triplets_at_q(gp,
      third_q,
      grid_address) = spg.get_triplets_reciprocal_mesh_at_q(gp,
                                                            mesh,
-                                                           rotations,
+                                                           np.int64(rotations),
                                                            is_time_reversal)
     weights_at_q = []
     triplets_at_q = []
@@ -20,18 +20,19 @@ def get_triplets_at_q(gp,
             weights_at_q.append(w)
             triplets_at_q.append([gp, i, q])
 
-    weights_at_q = np.array(weights_at_q)
+    weights_at_q = np.array(weights_at_q, dtype='int32')
+    triplets_at_q = np.array(triplets_at_q, dtype='int32')
             
     assert np.prod(mesh) == weights_at_q.sum(), \
         "Num grid points %d, sum of weight %d" % (
                     np.prod(mesh), weights_at_q.sum())
 
-    return np.array(triplets_at_q), weights_at_q, grid_address
+    return triplets_at_q, weights_at_q, grid_address
 
 def get_nosym_triplets(mesh, grid_point0):
     grid_address = get_grid_address(mesh)
-    triplets = np.zeros((len(grid_address), 3), dtype=int)
-    weights = np.ones(len(grid_address), dtype=int)
+    triplets = np.zeros((len(grid_address), 3), dtype='int32')
+    weights = np.ones(len(grid_address), dtype='int32')
     for i, g1 in enumerate(grid_address):
         g2 = - (grid_address[grid_point0] + g1)
         q = get_address(g2, mesh)

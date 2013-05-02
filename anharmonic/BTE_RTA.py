@@ -301,7 +301,7 @@ class BTE_RTA:
         self._mesh = self._pp.get_mesh_numbers()
 
         if mesh_divisors is None:
-            self._mesh_divisors = np.array([1, 1, 1], dtype=int)
+            self._mesh_divisors = np.array([1, 1, 1], dtype='int32')
         else:
             self._mesh_divisors = []
             for m, n in zip(self._mesh, mesh_divisors):
@@ -309,7 +309,7 @@ class BTE_RTA:
                     self._mesh_divisors.append(n)
                 else:
                     self._mesh_divisors.append(1)
-            self._mesh_divisors = np.array(self._mesh_divisors, dtype=int)
+            self._mesh_divisors = np.array(self._mesh_divisors, dtype='int32')
 
             if (self._mesh_divisors != mesh_divisors).any():
                 print "Mesh numbers are not dividable by mesh divisors."
@@ -348,16 +348,16 @@ class BTE_RTA:
 
         print
         return ((np.array(normal_a, dtype=float),
-                 np.array(normal_w, dtype=int),
+                 np.array(normal_w, dtype='int32'),
                  np.array(normal_f, dtype=float)),
                 (np.array(umklapp_a, dtype=float),
-                 np.array(umklapp_w, dtype=int),
+                 np.array(umklapp_w, dtype='int32'),
                  np.array(umklapp_f, dtype=float)))
     
     def _set_pointgroup_operations(self):
         exist_r_inv = False
         for rot in self._pp.get_symmetry().get_pointgroup_operations():
-            if (rot == -np.eye(3, dtype=int)).all():
+            if (rot == -np.eye(3, dtype='int32')).all():
                 exist_r_inv = True
                 break
 

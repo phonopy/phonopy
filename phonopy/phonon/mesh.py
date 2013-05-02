@@ -79,7 +79,7 @@ def _get_qpoint_symmetry(mesh,
                                            is_time_reversal,
                                            symprec)
     ir_list = np.unique(mapping)
-    weights = np.zeros(ir_list.shape[0], dtype=int)
+    weights = np.zeros(ir_list.shape[0], dtype='int32')
     qpoints = np.zeros((ir_list.shape[0], 3), dtype=float)
 
     for i, g in enumerate(ir_list):
@@ -107,7 +107,7 @@ def _get_qpoint_no_symmetry(mesh, shift):
                                          q[2] - (q[2] > 0.5)]))
 
     qpoints = np.array(qpoints)
-    weights = np.ones(qpoints.shape[0], dtype=int)
+    weights = np.ones(qpoints.shape[0], dtype='int32')
 
     return qpoints, weights
 

@@ -26,14 +26,14 @@ static int distribute_fc3(double *fc3,
 			  const int third_atom_rot,
 			  const double *positions,
 			  const int num_atom,
-			  const int rot[3][3],
+			  const int * rot,
 			  const double *rot_cartesian,
 			  const double *trans,
 			  const double symprec);
 static int get_atom_by_symmetry(const int atom_number,
 				const int num_atom,
 				const double *positions,
-				const int rot[3][3],
+				const int *rot,
 				const double *trans,
 				const double symprec);
 static void tensor3_roation(double *fc3,
@@ -79,7 +79,6 @@ static PyObject * py_get_interaction_strength(PyObject *self, PyObject *args)
   PyArrayObject* qvec0;
   PyArrayObject* qvec1s;
   PyArrayObject* qvec2s;
-  PyArrayObject* weights;
   PyArrayObject* shortest_vectors_fc2;
   PyArrayObject* multiplicity_fc2;
   PyArrayObject* shortest_vectors_fc3;
@@ -98,15 +97,16 @@ static PyObject * py_get_interaction_strength(PyObject *self, PyObject *args)
   PyArrayObject* q_direction;
   PyArrayObject* dielectric_constant;
   double cutoff_frequency, nac_factor, freq_unit_conversion_factor;
-  int r2q_TI_index, is_symmetrize_fc3_q;
+  int num_grid_points, r2q_TI_index, is_symmetrize_fc3_q;
+  char uplo;
 
-  if (!PyArg_ParseTuple(args, "OOOOOOOOOOOOOOOOOOOOOOOdddii",
+  if (!PyArg_ParseTuple(args, "OOiOOOOOOOOOOOOOOOOOOOOdddiic",
 			&amplitude,
 			&frequencies,
+			&num_grid_points,
 			&qvec0,
 			&qvec1s,
 			&qvec2s,
-			&weights,
 			&shortest_vectors_fc2,
 			&multiplicity_fc2,
 			&shortest_vectors_fc3,
@@ -128,13 +128,14 @@ static PyObject * py_get_interaction_strength(PyObject *self, PyObject *args)
 			&freq_unit_conversion_factor,
 			&cutoff_frequency,
 			&is_symmetrize_fc3_q,
-			&r2q_TI_index)) {
+			&r2q_TI_index,
+			&uplo)) {
     return NULL;
   }
 
   int i, j;
   int svecs_dims[4];
-  Array1D * s2p_fc2, * p2s_fc2, * s2p_fc3, * p2s_fc3, *w, *bands;
+  Array1D * s2p_fc2, * p2s_fc2, * s2p_fc3, * p2s_fc3, *bands;
   Array2D * multi_fc2, * multi_fc3;
   ShortestVecs * svecs_fc2, * svecs_fc3;
 
@@ -143,18 +144,17 @@ static PyObject * py_get_interaction_strength(PyObject *self, PyObject *args)
   const double *q0 = (double*)qvec0->data;
   const double *q1s = (double*)qvec1s->data;
   const double *q2s = (double*)qvec2s->data;
-  const long *weights_long = (long*)weights->data;
   const double* masses_fc2 = (double*)atomic_masses_fc2->data;
   const double* masses_fc3 = (double*)atomic_masses_fc3->data;
-  const long* multiplicity_long_fc2 = (long*)multiplicity_fc2->data;
-  const long* multiplicity_long_fc3 = (long*)multiplicity_fc3->data;
-  const long* p2s_map_fc2_long = (long*)p2s_map_fc2->data;
-  const long* s2p_map_fc2_long = (long*)s2p_map_fc2->data;
-  const long* p2s_map_fc3_long = (long*)p2s_map_fc3->data;
-  const long* s2p_map_fc3_long = (long*)s2p_map_fc3->data;
+  const int* multiplicity_fc2_int = (int*)multiplicity_fc2->data;
+  const int* multiplicity_fc3_int = (int*)multiplicity_fc3->data;
+  const int* p2s_map_fc2_int = (int*)p2s_map_fc2->data;
+  const int* s2p_map_fc2_int = (int*)s2p_map_fc2->data;
+  const int* p2s_map_fc3_int = (int*)p2s_map_fc3->data;
+  const int* s2p_map_fc3_int = (int*)s2p_map_fc3->data;
   const double* fc2 = (double*)force_constants_second->data;
   const double* fc3 = (double*)force_constants_third->data;
-  const long* bands_long = (long*)band_indicies->data;
+  const int* bands_int = (int*)band_indicies->data;
   const double* rec_lat = (double*)reciprocal_lattice->data;
   double* born;
   if ((PyObject*)born_effective_charge == Py_None) {
@@ -178,12 +178,11 @@ static PyObject * py_get_interaction_strength(PyObject *self, PyObject *args)
   const int num_satom_fc2 = (int)multiplicity_fc2->dimensions[0];
   const int num_satom_fc3 = (int)multiplicity_fc3->dimensions[0];
   const int num_patom = (int)multiplicity_fc3->dimensions[1];
-  const int num_triplets = (int)weights->dimensions[0];
-
+  const int num_triplets = (int)amplitude->dimensions[0];
 
   bands = alloc_Array1D(band_indicies->dimensions[0]);
   for (i = 0; i < bands->d1; i++) {
-    bands->data[i] = (int)bands_long[i];
+    bands->data[i] = (int)bands_int[i];
   }
   
   for (i = 0; i < 4; i++) {
@@ -200,43 +199,40 @@ static PyObject * py_get_interaction_strength(PyObject *self, PyObject *args)
   multi_fc2 = alloc_Array2D(num_satom_fc2, num_patom);
   for (i = 0; i < num_satom_fc2; i++) {
     for (j = 0; j < num_patom; j++) {
-      multi_fc2->data[i][j] = multiplicity_long_fc2[i * num_patom + j];
+      multi_fc2->data[i][j] = multiplicity_fc2_int[i * num_patom + j];
     }
   }
   multi_fc3 = alloc_Array2D(num_satom_fc3, num_patom);
   for (i = 0; i < num_satom_fc3; i++) {
     for (j = 0; j < num_patom; j++) {
-      multi_fc3->data[i][j] = multiplicity_long_fc3[i * num_patom + j];
+      multi_fc3->data[i][j] = multiplicity_fc3_int[i * num_patom + j];
     }
   }
 
   s2p_fc2 = alloc_Array1D(num_satom_fc2);
   for (i = 0; i < num_satom_fc2; i++) {
-    s2p_fc2->data[i] = s2p_map_fc2_long[i];
+    s2p_fc2->data[i] = s2p_map_fc2_int[i];
   }
   p2s_fc2 = alloc_Array1D(num_patom);
   for (i = 0; i < num_patom; i++) {
-    p2s_fc2->data[i] = p2s_map_fc2_long[i];
+    p2s_fc2->data[i] = p2s_map_fc2_int[i];
   }
   s2p_fc3 = alloc_Array1D(num_satom_fc3);
   for (i = 0; i < num_satom_fc3; i++) {
-    s2p_fc3->data[i] = s2p_map_fc3_long[i];
+    s2p_fc3->data[i] = s2p_map_fc3_int[i];
   }
   p2s_fc3 = alloc_Array1D(num_patom);
   for (i = 0; i < num_patom; i++) {
-    p2s_fc3->data[i] = p2s_map_fc3_long[i];
-  }
-  w = alloc_Array1D(num_triplets);
-  for (i = 0; i < num_triplets; i++) {
-    w->data[i] = weights_long[i];
+    p2s_fc3->data[i] = p2s_map_fc3_int[i];
   }
 
   get_interaction_strength(amps,
 			   freqs,
+			   num_triplets,
+			   num_grid_points,
 			   q0,
 			   q1s,
 			   q2s,
-			   w,
 			   fc2,
 			   fc3,
 			   masses_fc2,
@@ -258,7 +254,8 @@ static PyObject * py_get_interaction_strength(PyObject *self, PyObject *args)
 			   freq_unit_conversion_factor,
 			   cutoff_frequency,
 			   is_symmetrize_fc3_q,
-			   r2q_TI_index);
+			   r2q_TI_index,
+			   uplo);
 
   free_Array1D(p2s_fc2);
   free_Array1D(s2p_fc2);
@@ -266,7 +263,6 @@ static PyObject * py_get_interaction_strength(PyObject *self, PyObject *args)
   free_Array1D(s2p_fc3);
   free_Array2D(multi_fc2);
   free_Array2D(multi_fc3);
-  free_Array1D(w);
   free_Array1D(bands);
   free_shortest_vecs(svecs_fc2);
   free_shortest_vecs(svecs_fc3);
@@ -320,10 +316,10 @@ static PyObject * py_get_triplet_interaction_strength(PyObject *self,
   const double* freqs = (double*)omegas->data;
   const npy_cdouble* eigvecs = (npy_cdouble*)eigenvectors->data;
   const double* masses = (double*)atomic_masses->data;
-  const long* multiplicity_long = (long*)multiplicity->data;
-  const long* p2s_map_long = (long*)p2s_map->data;
-  const long* s2p_map_long = (long*)s2p_map->data;
-  const long* band_indices_long = (long*)set_of_band_indices->data;
+  const int* multiplicity_int = (int*)multiplicity->data;
+  const int* p2s_map_int = (int*)p2s_map->data;
+  const int* s2p_map_int = (int*)s2p_map->data;
+  const int* band_indices_int = (int*)set_of_band_indices->data;
   const double* fc3 = (double*)force_constants_third->data;
   const double* q_vecs = (double*)q_triplet->data;
 
@@ -340,21 +336,21 @@ static PyObject * py_get_triplet_interaction_strength(PyObject *self,
   multi = alloc_Array2D(num_satom, num_patom);
   for (i = 0; i < num_satom; i++) {
     for (j = 0; j < num_patom; j++) {
-      multi->data[i][j] = multiplicity_long[i * num_patom + j];
+      multi->data[i][j] = multiplicity_int[i * num_patom + j];
     }
   }
 
   s2p = alloc_Array1D(num_satom);
   for (i = 0; i < num_satom; i++) {
-    s2p->data[i] = s2p_map_long[i];
+    s2p->data[i] = s2p_map_int[i];
   }
   p2s = alloc_Array1D(num_patom);
   for (i = 0; i < num_patom; i++) {
-    p2s->data[i] = p2s_map_long[i];
+    p2s->data[i] = p2s_map_int[i];
   }
   band_indices = alloc_Array1D(num_band0);
   for (i = 0; i < num_band0; i++) {
-    band_indices->data[i] = band_indices_long[i];
+    band_indices->data[i] = band_indices_int[i];
   }
 
   lpk_eigvecs = (lapack_complex_double*)
@@ -363,7 +359,7 @@ static PyObject * py_get_triplet_interaction_strength(PyObject *self,
     lpk_eigvecs[i] = lapack_make_complex_double
       (eigvecs[i].real, eigvecs[i].imag);
   }
-  
+
   get_triplet_interaction_strength(amps,
 				   fc3,
 				   q_vecs,
@@ -485,9 +481,9 @@ static PyObject * py_get_fc3_reciprocal(PyObject *self, PyObject *args)
   
   npy_cdouble* fc3_q = (npy_cdouble*)force_constants_third_reciprocal->data;
   
-  const long* multiplicity_long = (long*)multiplicity->data;
-  const long* p2s_map_long = (long*)p2s_map->data;
-  const long* s2p_map_long = (long*)s2p_map->data;
+  const int* multiplicity_int = (int*)multiplicity->data;
+  const int* p2s_map_int = (int*)p2s_map->data;
+  const int* s2p_map_int = (int*)s2p_map->data;
   const double* fc3 = (double*)force_constants_third->data;
 
   const int num_satom = (int)multiplicity->dimensions[0];
@@ -503,17 +499,17 @@ static PyObject * py_get_fc3_reciprocal(PyObject *self, PyObject *args)
   multi = alloc_Array2D(num_satom, num_patom);
   for (i = 0; i < num_satom; i++) {
     for (j = 0; j < num_patom; j++) {
-      multi->data[i][j] = multiplicity_long[i * num_patom + j];
+      multi->data[i][j] = multiplicity_int[i * num_patom + j];
     }
   }
 
   s2p = alloc_Array1D(num_satom);
   p2s = alloc_Array1D(num_patom);
   for (i = 0; i < num_satom; i++) {
-    s2p->data[i] = s2p_map_long[i];
+    s2p->data[i] = s2p_map_int[i];
   }
   for (i = 0; i < num_patom; i++) {
-    p2s->data[i] = p2s_map_long[i];
+    p2s->data[i] = p2s_map_int[i];
   }
 
   q = alloc_DArray2D(3, 3);
@@ -571,16 +567,15 @@ static PyObject * py_get_fc3_realspace(PyObject *self, PyObject *args)
 
   int i, j;
   int * svecs_dimensions;
-  Array1D * s2p;
   Array2D * multi;
   ShortestVecs * svecs;
   lapack_complex_double *lpk_fc3_real, *lpk_fc3_rec;
 
   npy_cdouble* fc3_real = (npy_cdouble*)fc3_realspace->data;
   const npy_cdouble* fc3_rec = (npy_cdouble*)fc3_reciprocal->data;
-  const long* multi_long = (long*)multiplicity->data;
+  const int* multi_int = (int*)multiplicity->data;
   const double* q_triplet = (double*)qpoints_triplet->data;
-  const long* s2p_map_long = (long*)s2p_map->data;
+  const int* s2p_map_int = (int*)s2p_map->data;
  
   const int num_satom = (int)multiplicity->dimensions[0];
   const int num_patom = (int)multiplicity->dimensions[1];
@@ -595,13 +590,8 @@ static PyObject * py_get_fc3_realspace(PyObject *self, PyObject *args)
   multi = alloc_Array2D(num_satom, num_patom);
   for (i = 0; i < num_satom; i++) {
     for (j = 0; j < num_patom; j++) {
-      multi->data[i][j] = multi_long[i * num_patom + j];
+      multi->data[i][j] = multi_int[i * num_patom + j];
     }
-  }
-
-  s2p = alloc_Array1D(num_satom);
-  for (i = 0; i < num_satom; i++) {
-    s2p->data[i] = s2p_map_long[i];
   }
 
   lpk_fc3_real = (lapack_complex_double*)
@@ -618,7 +608,7 @@ static PyObject * py_get_fc3_realspace(PyObject *self, PyObject *args)
 		    svecs,
 		    multi,
 		    q_triplet,
-		    s2p,
+		    s2p_map_int,
 		    lpk_fc3_rec);
   for (i = 0; i < num_satom * num_satom * num_satom * 27; i++) {
     fc3_real[i].real = lapack_complex_double_real(lpk_fc3_real[i]);
@@ -626,7 +616,6 @@ static PyObject * py_get_fc3_realspace(PyObject *self, PyObject *args)
   }
   free(lpk_fc3_real);
   free(lpk_fc3_rec);
-  free_Array1D(s2p);
   free_Array2D(multi);
   free_shortest_vecs(svecs);
 
@@ -671,18 +660,12 @@ static PyObject * py_get_gamma(PyObject *self, PyObject *args)
   double* dfun = (double*)gammas->data;
   const double* o = (double*)omegas->data;
   const double* amp = (double*)amplitudes->data;
-  const long* w_long = (long*)weights->data;
+  const int* w = (int*)weights->data;
   const double* f = (double*)frequencies->data;
   const int num_band0 = (int)amplitudes->dimensions[1];
   const int num_band = (int)amplitudes->dimensions[2];
   const int num_omega = (int)omegas->dimensions[0];
   const int num_triplet = (int)weights->dimensions[0];
-
-  int i;
-  int w[num_triplet];
-  for (i = 0; i < num_triplet; i++) {
-    w[i] = w_long[i];
-  }
 
   get_gamma(dfun,
 	    num_omega,
@@ -722,16 +705,11 @@ static PyObject * py_get_jointDOS(PyObject *self, PyObject *args)
   
   double* jdos = (double*)jointdos->data;
   const double* o = (double*)omegas->data;
-  const long* w_long = (long*)weights->data;
+  const int* w = (int*)weights->data;
   const double* f = (double*)frequencies->data;
   const int num_band = (int)frequencies->dimensions[2];
   const int num_omega = (int)omegas->dimensions[0];
   const int num_triplet = (int)weights->dimensions[0];
-  int i;
-  int w[num_triplet];
-  for (i = 0; i < num_triplet; i++) {
-    w[i] = w_long[i];
-  }
 
   get_jointDOS(jdos,
 	       num_omega,
@@ -809,16 +787,9 @@ static PyObject * py_distribute_fc3(PyObject *self, PyObject *args)
 			&symprec))
     return NULL;
 
-  int i, j;
   double* fc3 = (double*)force_constants_third->data;
   const double* pos = (double*)positions->data;
-  const long* rot_long = (long*)rotation->data;
-  int rot_int[3][3];
-  for (i = 0; i < 3; i++) {
-    for (j = 0; j < 3; j++) {
-      rot_int[i][j] = rot_long[i*3 + j];
-    }
-  }
+  const int* rot = (int*)rotation->data;
   const double* rot_cart_inv = (double*)rotation_cart_inv->data;
   const double* trans = (double*)translation->data;
   const int num_atom = (int)positions->dimensions[0];
@@ -828,7 +799,7 @@ static PyObject * py_distribute_fc3(PyObject *self, PyObject *args)
 					      third_atom_rot,
 					      pos,
 					      num_atom,
-					      rot_int,
+					      rot,
 					      rot_cart_inv,
 					      trans,
 					      symprec));
@@ -858,7 +829,7 @@ static PyObject * py_phonopy_zheev(PyObject *self, PyObject *args)
     a[i] = lapack_make_complex_double(dynmat[i].real, dynmat[i].imag);
   }
 
-  info = phonopy_zheev(eigvals, a, dimension);
+  info = phonopy_zheev(eigvals, a, dimension, 'L');
 
   for (i = 0; i < dimension * dimension; i++) {
     dynmat[i].real = lapack_complex_double_real(a[i]);
@@ -876,7 +847,7 @@ static int distribute_fc3(double *fc3,
 			  const int third_atom_rot,
 			  const double *positions,
 			  const int num_atom,
-			  const int rot[3][3],
+			  const int *rot,
 			  const double *rot_cart_inv,
 			  const double *trans,
 			  const double symprec)
@@ -919,7 +890,7 @@ static int distribute_fc3(double *fc3,
 static int get_atom_by_symmetry(const int atom_number,
 				const int num_atom,
 				const double *positions,
-				const int rot[3][3],
+				const int *rot,
 				const double *trans,
 				const double symprec)
 {
@@ -929,7 +900,7 @@ static int get_atom_by_symmetry(const int atom_number,
   for (i = 0; i < 3; i++) {
     rot_pos[i] = trans[i];
     for (j = 0; j < 3; j++) {
-      rot_pos[i] += rot[i][j] * positions[atom_number * 3 + j];
+      rot_pos[i] += rot[i * 3 + j] * positions[atom_number * 3 + j];
     }
   }
 

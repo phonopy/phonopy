@@ -166,8 +166,8 @@ def distribute_force_constants(force_constants,
                                     map_atom_disp,
                                     i,
                                     rot_cartesian,
-                                    rotations[ map_sym ],
-                                    trans[ map_sym ],
+                                    rotations[map_sym],
+                                    trans[map_sym],
                                     symprec)
     
             force_constants[atom_disp, i] /= len(map_atom_disps)
@@ -348,7 +348,8 @@ def solve_force_constants_disps(force_constants,
             try:
                 import phonopy._phonopy as phonoc
                 for forces in sets_of_forces:
-                    rotated_forces = np.zeros(len(site_symmetry) * 3)
+                    rotated_forces = np.zeros(len(site_symmetry) * 3,
+                                              dtype=float)
                     phonoc.rotated_forces(rotated_forces,
                                           positions,
                                           i,

@@ -59,7 +59,7 @@ static int distribute_fc2(double * fc2,
 			  const int atom_disp,
 			  const int map_atom_disp,
 			  const double * r_cart,
-			  int r[3][3],
+			  const int * r,
 			  const double * t,
 			  const double symprec);
 static int get_rotated_forces(double * rotated_forces,
@@ -67,7 +67,7 @@ static int get_rotated_forces(double * rotated_forces,
 			      const int num_pos,
 			      const int atom_number,
 			      const double * f,
-			      int (*r)[3][3],
+			      const int * r,
 			      const int num_rot,
 			      const double symprec);
 static int nint(const double a);
@@ -96,8 +96,8 @@ static PyObject * py_get_dynamical_matrix(PyObject *self, PyObject *args)
   PyArrayObject* q_vector;
   PyArrayObject* multiplicity;
   PyArrayObject* mass;
-  PyArrayObject* s2p_map;
-  PyArrayObject* p2s_map;
+  PyArrayObject* super2prim_map;
+  PyArrayObject* prim2super_map;
 
   if (!PyArg_ParseTuple(args, "OOOOOOOOO",
 			&dynamical_matrix_real,
@@ -107,39 +107,21 @@ static PyObject * py_get_dynamical_matrix(PyObject *self, PyObject *args)
 			&r_vector,
 			&multiplicity,
 			&mass,
-			&s2p_map,
-			&p2s_map))
+			&super2prim_map,
+			&prim2super_map))
     return NULL;
 
-  int i;
   double* dm_r = (double*)dynamical_matrix_real->data;
   double* dm_i = (double*)dynamical_matrix_imag->data;
   const double* fc = (double*)force_constants->data;
   const double* q = (double*)q_vector->data;
   const double* r = (double*)r_vector->data;
   const double* m = (double*)mass->data;
-  const long* multi_long = (long*)multiplicity->data;
-  const long* s2p_map_long = (long*)s2p_map->data;
-  const long* p2s_map_long = (long*)p2s_map->data;
-  const int num_patom = p2s_map->dimensions[0];
-  const int num_satom = s2p_map->dimensions[0];
-
-  int *multi, *s2p_map_int, *p2s_map_int;
-
-  multi = (int*) malloc(num_patom * num_satom * sizeof(int));
-  for (i = 0; i < num_patom*num_satom; i++) {
-    multi[i] = (int)multi_long[i];
-  }
-
-  s2p_map_int = (int*) malloc(num_satom * sizeof(int));
-  for (i = 0; i < num_satom; i++) {
-    s2p_map_int[i] = (int)s2p_map_long[i];
-  }
-
-  p2s_map_int = (int*) malloc(num_patom * sizeof(int));
-  for (i = 0; i < num_patom; i++) {
-    p2s_map_int[i] = (int)p2s_map_long[i];
-  }
+  const int* multi = (int*)multiplicity->data;
+  const int* s2p_map = (int*)super2prim_map->data;
+  const int* p2s_map = (int*)prim2super_map->data;
+  const int num_patom = prim2super_map->dimensions[0];
+  const int num_satom = super2prim_map->dimensions[0];
 
   get_dynamical_matrix_at_q(dm_r,
 			    dm_i,
@@ -150,13 +132,9 @@ static PyObject * py_get_dynamical_matrix(PyObject *self, PyObject *args)
 			    r,
 			    multi,
 			    m,
-			    s2p_map_int,
-			    p2s_map_int,
+			    s2p_map,
+			    p2s_map,
 			    NULL);
-
-  free(multi);
-  free(s2p_map_int);
-  free(p2s_map_int);
 
   Py_RETURN_NONE;
 }
@@ -172,8 +150,8 @@ static PyObject * py_get_nac_dynamical_matrix(PyObject *self, PyObject *args)
   PyArrayObject* q_vector;
   PyArrayObject* multiplicity;
   PyArrayObject* mass;
-  PyArrayObject* s2p_map;
-  PyArrayObject* p2s_map;
+  PyArrayObject* super2prim_map;
+  PyArrayObject* prim2super_map;
   PyArrayObject* born;
   double factor;
 
@@ -185,8 +163,8 @@ static PyObject * py_get_nac_dynamical_matrix(PyObject *self, PyObject *args)
 			&r_vector,
 			&multiplicity,
 			&mass,
-			&s2p_map,
-			&p2s_map,
+			&super2prim_map,
+			&prim2super_map,
 			&q_cart_vector,
 			&born,
 			&factor))
@@ -200,33 +178,17 @@ static PyObject * py_get_nac_dynamical_matrix(PyObject *self, PyObject *args)
   const double* r = (double*)r_vector->data;
   const double* m = (double*)mass->data;
   const double* z = (double*)born->data;
-  const long* multi_long = (long*)multiplicity->data;
-  const long* s2p_map_long = (long*)s2p_map->data;
-  const long* p2s_map_long = (long*)p2s_map->data;
-  const int num_patom = p2s_map->dimensions[0];
-  const int num_satom = s2p_map->dimensions[0];
+  const int* multi = (int*)multiplicity->data;
+  const int* s2p_map = (int*)super2prim_map->data;
+  const int* p2s_map = (int*)prim2super_map->data;
+  const int num_patom = prim2super_map->dimensions[0];
+  const int num_satom = super2prim_map->dimensions[0];
 
-  int i, n;
-  int *multi, *s2p_map_int, *p2s_map_int;
+  int n;
   double *charge_sum;
 
   charge_sum = (double*) malloc(sizeof(double) * num_patom * num_patom * 9);
   n = num_satom / num_patom;
-
-  multi = (int*) malloc(num_patom * num_satom * sizeof(int));
-  for (i = 0; i < num_patom * num_satom; i++) {
-    multi[i] = (int)multi_long[i];
-  }
-
-  s2p_map_int = (int*) malloc(num_satom * sizeof(int));
-  for (i = 0; i < num_satom; i++) {
-    s2p_map_int[i] = (int)s2p_map_long[i];
-  }
-
-  p2s_map_int = (int*) malloc(num_patom * sizeof(int));
-  for (i = 0; i < num_patom; i++) {
-    p2s_map_int[i] = (int)p2s_map_long[i];
-  }
 
   get_charge_sum(charge_sum, num_patom, factor / n, q_cart, z);
   get_dynamical_matrix_at_q(dm_r,
@@ -238,14 +200,11 @@ static PyObject * py_get_nac_dynamical_matrix(PyObject *self, PyObject *args)
 			    r,
 			    multi,
 			    m,
-			    s2p_map_int,
-			    p2s_map_int,
+			    s2p_map,
+			    p2s_map,
 			    charge_sum);
 
   free(charge_sum);
-  free(multi);
-  free(s2p_map_int);
-  free(p2s_map_int);
 
   Py_RETURN_NONE;
 }
@@ -265,7 +224,7 @@ static PyObject * py_get_thermal_properties(PyObject *self, PyObject *args)
   }
 
   const double* freqs = (double*)frequencies->data;
-  const long* w = (long*)weights->data;
+  const int* w = (int*)weights->data;
   const int num_qpoints = frequencies->dimensions[0];
   const int num_bands = frequencies->dimensions[1];
 
@@ -356,22 +315,13 @@ static PyObject * py_distribute_fc2(PyObject *self, PyObject *args)
     return NULL;
   }
 
-  const long* r_long = (long*)rotation->data;
+  const int* r = (int*)rotation->data;
   const double* r_cart = (double*)rotation_cart->data;
   double* fc2 = (double*)force_constants->data;
   const double* t = (double*)translation->data;
   const double* pos = (double*)positions->data;
   const int num_pos = positions->dimensions[0];
 
-
-  int i, j;
-  int r[3][3];
-
-  for (i = 0; i < 3; i++){
-    for (j = 0; j < 3; j++){
-      r[i][j] = (int) r_long[ i * 3 + j ];
-    }
-  }
   distribute_fc2(fc2,
 		 pos,
 		 num_pos,
@@ -391,7 +341,7 @@ static int distribute_fc2(double * fc2,
 			  const int atom_disp,
 			  const int map_atom_disp,
 			  const double * r_cart,
-			  int r[3][3],
+			  const int * r,
 			  const double * t,
 			  const double symprec)
 {
@@ -402,18 +352,18 @@ static int distribute_fc2(double * fc2,
 #pragma omp parallel for private(j, k, l, m, rot_pos, diff, is_found, rot_atom, address_new, address)
   for (i = 0; i < num_pos; i++) {
     for (j = 0; j < 3; j++) {
-      rot_pos[ j ] = t[j];
+      rot_pos[j] = t[j];
       for (k = 0; k < 3; k++) {
-	rot_pos[ j ] += r[ j ][ k ] * pos[ i * 3 + k ];
+	rot_pos[j] += r[j * 3 + k] * pos[i * 3 + k];
       }
     }
 
     for (j = 0; j < num_pos; j++) {
       is_found = 1;
       for (k = 0; k < 3; k++) {
-	diff[ k ] = pos[ j * 3 + k ] - rot_pos[ k ];
-	diff[ k ] -= nint(diff[k]);
-	if (fabs(diff[ k ]) > symprec) {
+	diff[k] = pos[j * 3 + k] - rot_pos[k];
+	diff[k] -= nint(diff[k]);
+	if (fabs(diff[k]) > symprec) {
 	  is_found = 0;
 	  break;
 	}
@@ -436,9 +386,9 @@ static int distribute_fc2(double * fc2,
       for (k = 0; k < 3; k++) {
 	for (l = 0; l < 3; l++) {
 	  for (m = 0; m < 3; m++) {
-	    fc2[ address_new + j * 3 + k ] +=
-	      r_cart[ l * 3 + j ] * r_cart[ m * 3 + k ] *
-	      fc2[ address + l * 3 + m ];
+	    fc2[address_new + j * 3 + k] +=
+	      r_cart[l * 3 + j] * r_cart[m * 3 + k] *
+	      fc2[address + l * 3 + m];
 	  }
 	}
       }
@@ -469,34 +419,21 @@ static PyObject * py_get_rotated_forces(PyObject *self, PyObject *args)
     return NULL;
   }
 
-  const long* rots_long = (long*)rotations->data;
+  const int* r = (int*)rotations->data;
   const int num_rot = rotations->dimensions[0];
   const double* pos = (double*)positions->data;
   const int num_pos = positions->dimensions[0];
   const double* f = (double*)forces->data;
   double* rot_forces = (double*)rotated_forces->data;
 
-  int i, j, k;
-  int (*r)[3][3];
-  if (! ((r = (int (*)[3][3]) malloc(sizeof(int[3][3]) * num_rot))  == NULL)) {
-    for (i = 0; i < num_rot; i++){
-      for (j = 0; j < 3; j++){
-	for (k = 0; k < 3; k++){
-	  r[i][j][k] = (int) rots_long[ i * 9 + j * 3 + k ];
-	}
-      }
-    }
-    get_rotated_forces(rot_forces,
-		       pos,
-		       num_pos,
-		       atom_number,
-		       f,
-		       r,
-		       num_rot,
-		       symprec);
-
-    free(r);
-  }
+  get_rotated_forces(rot_forces,
+		     pos,
+		     num_pos,
+		     atom_number,
+		     f,
+		     r,
+		     num_rot,
+		     symprec);
 
   Py_RETURN_NONE;
 }
@@ -507,7 +444,7 @@ static int get_rotated_forces(double * rotated_forces,
 			      const int num_pos,
 			      const int atom_number,
 			      const double * f,
-			      int (*r)[3][3],
+			      const int * r,
 			      const int num_rot,
 			      const double symprec)
 {
@@ -517,25 +454,25 @@ static int get_rotated_forces(double * rotated_forces,
 #pragma omp parallel for private(j, k, rot_pos, diff, is_found)
   for (i = 0; i < num_rot; i++) {
     for (j = 0; j < 3; j++) {
-      rot_pos[ j ] = 0;
+      rot_pos[j] = 0;
       for (k = 0; k < 3; k++) {
-	rot_pos[ j ] += r[ i ][ j ][ k ] * pos[ atom_number * 3 + k ];
+	rot_pos[j] += r[i * 9 + j * 3 + k] * pos[atom_number * 3 + k];
       }
     }
     
     for (j = 0; j < num_pos; j++) {
       is_found = 1;
       for (k = 0; k < 3; k++) {
-	diff[ k ] = pos[ j * 3 + k ] - rot_pos[ k ];
-	diff[ k ] -= nint(diff[k]);
-	if (fabs(diff[ k ]) > symprec) {
+	diff[k] = pos[j * 3 + k] - rot_pos[k];
+	diff[k] -= nint(diff[k]);
+	if (fabs(diff[k]) > symprec) {
 	  is_found = 0;
 	  break;
 	}
       }
       if (is_found) {
 	for (k = 0; k < 3; k++) {
-	  rotated_forces[ i * 3 + k ] = f[ j * 3 + k ];
+	  rotated_forces[i * 3 + k] = f[j * 3 + k];
 	}
 	break;
       }

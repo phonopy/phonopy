@@ -139,6 +139,7 @@ parser.set_defaults(amplitude=None,
                     tstep=None,
                     temperatures=None,
                     verbose=True,
+                    uplo='L',
                     write_amplitude=False,
                     write_gamma=False,
                     write_grid_points=False)
@@ -307,6 +308,10 @@ parser.add_option("--loglevel", dest="log_level", type="int",
                   help="Log level")
 parser.add_option("--ts", dest="temperatures", 
                   type="string", help="Temperatures for damping functions")
+parser.add_option("--uplo",
+                  dest="uplo",
+                  type="string",
+                  help="Lapack zheev UPLO")
 parser.add_option("--wgp", "--write_grid_points", dest="write_grid_points",
                   action="store_true",
                   help="Write grid address of irreducible grid points for specified mesh numbers to ir_grid_address.yaml")
@@ -749,7 +754,8 @@ else:
                                 r2q_TI_index=options.r2q_TI_index,
                                 is_Peierls=options.is_Peierls,
                                 symprec=options.symprec,
-                                log_level=log_level)
+                                log_level=log_level,
+                                lapack_zheev_uplo=options.uplo)
 
             phono3py.set_dynamical_matrix(fc2,
                                           supercell_dm,

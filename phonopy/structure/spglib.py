@@ -45,8 +45,8 @@ def get_symmetry(bulk, symprec=1e-5, angle_tolerance=-1.0):
                                                    symprec,
                                                    angle_tolerance)
   
-    return {'rotations': rotation[:num_sym],
-            'translations': translation[:num_sym]}
+    return {'rotations': np.int32(rotation[:num_sym].copy()),
+            'translations': np.int32(translation[:num_sym].copy())}
 
 def get_symmetry_dataset(bulk, symprec=1e-5, angle_tolerance=-1.0):
     """
@@ -88,11 +88,11 @@ def get_symmetry_dataset(bulk, symprec=1e-5, angle_tolerance=-1.0):
     dataset['hall'] = dataset['hall'].strip()
     dataset['transformation_matrix'] = np.array(dataset['transformation_matrix'])
     dataset['origin_shift'] = np.array(dataset['origin_shift'])
-    dataset['rotations'] = np.array(dataset['rotations'])
+    dataset['rotations'] = np.int32(dataset['rotations'])
     dataset['translations'] = np.array(dataset['translations'])
     letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
     dataset['wyckoffs'] = [letters[x] for x in dataset['wyckoffs']]
-    dataset['equivalent_atoms'] = np.array(dataset['equivalent_atoms'])
+    dataset['equivalent_atoms'] = np.int32(dataset['equivalent_atoms'])
 
     return dataset
 

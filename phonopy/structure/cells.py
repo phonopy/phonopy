@@ -256,12 +256,12 @@ class Primitive(Atoms):
         inv_F = np.linalg.inv(self.frame)
         s2p_map = []
         for i in range(pos.shape[0]):
-            s_pos = np.dot( pos[i], inv_F.T )
+            s_pos = np.dot(pos[i], inv_F.T)
             for j in self.p2s_map:
-                p_pos = np.dot( pos[j], inv_F.T )
+                p_pos = np.dot(pos[j], inv_F.T)
                 diff = p_pos - s_pos
                 diff -= diff.round()
-                if ( abs(diff) < self.symprec ).all():
+                if (abs(diff) < self.symprec).all():
                     s2p_map.append(j)
                     break
         self.s2p_map = s2p_map

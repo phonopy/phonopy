@@ -57,14 +57,16 @@ def get_jointDOS(fixed_grid_points,
                 print "Triplets at q without considering symmetry"
                 sys.stdout.flush()
             
-            triplets_at_q, weights_at_q, grid_points = get_nosym_triplets(mesh, gp)
+            (triplets_at_q,
+             weights_at_q,
+             grid_points) = get_nosym_triplets(mesh, gp)
         else:
-            triplets_at_q, weights_at_q, grid_points = \
-                get_triplets_at_q(gp,
-                                  mesh,
-                                  primitive.get_cell(),
-                                  symmetry.get_pointgroup_operations(),
-                                  True)
+            triplets_at_q, weights_at_q, grid_points = get_triplets_at_q(
+                gp,
+                mesh,
+                primitive.get_cell(),
+                symmetry.get_pointgroup_operations(),
+                True)
 
         if verbose:
             print "Grid point (%d):" % gp,  grid_points[gp]
