@@ -176,7 +176,7 @@ class Symmetry:
             if not is_same:
                 rotations.append(rot)
 
-        self.pointgroup_operations = np.array(rotations)
+        self.pointgroup_operations = np.int32(rotations)
         self.pointgroup = get_pointgroup(self.pointgroup_operations)[0]
 
     def _map_operations(self):

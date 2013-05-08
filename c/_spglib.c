@@ -200,7 +200,7 @@ static PyObject * get_pointgroup(PyObject *self, PyObject *args)
     return NULL;
   }
 
-  long *rot_long = (long*)rotations->data;
+  int *rot_int = (int*)rotations->data;
 
   int i, j, k;
   int trans_mat[3][3];
@@ -212,7 +212,7 @@ static PyObject * get_pointgroup(PyObject *self, PyObject *args)
   for (i = 0; i < num_rot; i++) {
     for (j = 0; j < 3; j++) {
       for (k = 0; k < 3; k++) {
-	rot[i][j][k] = (int) rot_long[ i*9 + j*3 + k ];
+	rot[i][j][k] = (int) rot_int[ i*9 + j*3 + k ];
       }
     }
   }
