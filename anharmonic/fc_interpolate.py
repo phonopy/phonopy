@@ -105,7 +105,7 @@ def get_fc3_interpolation(fc3,
     vecs, multi = get_smallest_vectors(supercell, primitive, symprec)
     s2p = primitive.get_supercell_to_primitive_map()
     p2p = primitive.get_primitive_to_primitive_map()
-    s2p_special = np.int32([p2p[x] for x in s2p])
+    s2p_special = np.intc([p2p[x] for x in s2p])
 
     for i, q2 in enumerate(mesh_points):
         for j, q3 in enumerate(mesh_points):
@@ -175,15 +175,15 @@ def get_py_fc3_realspace( fc3_rec, q2, q3, s2p, p2p, vecs, multi, symprec=1e-5 )
     return fc3_intpl_qset
             
 
-def get_mesh_points( q_mesh ):
+def get_mesh_points(q_mesh):
     mesh_points = []
-    for i in range( q_mesh[0] ):
-        for j in range( q_mesh[1] ):
-            for k in range( q_mesh[2] ):
-                mesh_points.append( [ i, j, k ] )
+    for i in range(q_mesh[0]):
+        for j in range(q_mesh[1]):
+            for k in range(q_mesh[2]):
+                mesh_points.append([i, j, k])
 
-    mesh_points = np.array( mesh_points ) - q_mesh * ( mesh_points > q_mesh / 2 )
-    mesh_points = mesh_points.astype(float) / q_mesh
+    mesh_points = np.array(mesh_points) - q_mesh * (mesh_points > q_mesh / 2)
+    mesh_points = mesh_points.astype('double') / q_mesh
 
     return mesh_points
     

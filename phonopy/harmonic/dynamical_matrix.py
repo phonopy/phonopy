@@ -67,8 +67,8 @@ class DynamicalMatrix:
         self._decimals = decimals
         self._symprec = symprec
 
-        self._p2s_map = np.int32(primitive.get_primitive_to_supercell_map())
-        self._s2p_map = np.int32(primitive.get_supercell_to_primitive_map())
+        self._p2s_map = np.intc(primitive.get_primitive_to_supercell_map())
+        self._s2p_map = np.intc(primitive.get_supercell_to_primitive_map())
         p2p_map = primitive.get_primitive_to_primitive_map()
         self._p2p_map = [p2p_map[self._s2p_map[i]]
                          for i in range(len(self._s2p_map))]
@@ -203,12 +203,12 @@ class DynamicalMatrix:
         size_prim = len(mass)
         size_super = fc.shape[0]
         dynamical_matrix_real = np.zeros((size_prim * 3, size_prim * 3),
-                                         dtype=float)
+                                         dtype='double')
         dynamical_matrix_image = np.zeros_like(dynamical_matrix_real)
         phonoc.dynamical_matrix(dynamical_matrix_real,
                                 dynamical_matrix_image,
                                 fc,
-                                np.array(q, dtype=float),
+                                np.array(q, dtype='double'),
                                 vectors,
                                 multiplicity,
                                 mass,
@@ -262,7 +262,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         else:
             self._unit_conversion = factor
             self._damping_factor = DAMPING_FACTOR
-        self._dielectric = np.array(self._nac_params['dielectric'], dtype=float)
+        self._dielectric = np.array(self._nac_params['dielectric'], dtype='double')
 
     def set_dynamical_matrix(self, q_red, q_direction=None, verbose=False):
         num_atom = self._pcell.get_number_of_atoms()
@@ -286,7 +286,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         # Parlinski method
         if self._method=='parlinski':
             charge_sum = self._get_charge_sum(num_atom, q)
-            nac_q = np.zeros((num_atom * 3, num_atom * 3), dtype=float)
+            nac_q = np.zeros((num_atom * 3, num_atom * 3), dtype='double')
             m = self._pcell.get_masses()
             q_distance = np.array(q_red) - np.array(q_red).round()
             constant *= \
@@ -309,7 +309,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             except ImportError:
                 fc = self._bare_force_constants.copy()
                 charge_sum = self._get_charge_sum(num_atom, q)
-                nac_q = np.zeros((num_atom * 3, num_atom * 3), dtype=float)
+                nac_q = np.zeros((num_atom * 3, num_atom * 3), dtype='double')
                 for i in range(num_atom):
                     for j in range(num_atom):
                         nac_q[i*3:(i+1)*3, j*3:(j+1)*3] = \
@@ -334,7 +334,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
                 fc[s1, s2] += nac_q[p1*3:(p1+1)*3, p2*3:(p2+1)*3] / N
 
     def _get_charge_sum(self, num_atom, q):
-        charge_sum = np.zeros((num_atom, num_atom, 3, 3), dtype=float)
+        charge_sum = np.zeros((num_atom, num_atom, 3, 3), dtype='double')
         for i in range(num_atom):
             for j in range(num_atom):
                 for a in (0, 1, 2):
@@ -353,18 +353,18 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         size_prim = len(mass)
         size_super = fc.shape[0]
         dynamical_matrix_real = np.zeros((size_prim * 3, size_prim * 3),
-                                         dtype=float)
+                                         dtype='double')
         dynamical_matrix_image = np.zeros_like(dynamical_matrix_real)
         phonoc.nac_dynamical_matrix(dynamical_matrix_real,
                                     dynamical_matrix_image,
                                     fc,
-                                    np.array(q_red, dtype=float),
+                                    np.array(q_red, dtype='double'),
                                     vectors,
                                     multiplicity,
                                     mass,
                                     self._s2p_map,
                                     self._p2s_map,
-                                    np.array(q, dtype=float),
+                                    np.array(q, dtype='double'),
                                     self._born,
                                     factor)
         dm = dynamical_matrix_real + dynamical_matrix_image * 1j
@@ -415,8 +415,8 @@ def get_smallest_vectors(supercell, primitive, symprec):
     p2s_map = primitive.get_primitive_to_supercell_map()
     size_super = supercell.get_number_of_atoms()
     size_prim = primitive.get_number_of_atoms()
-    r = np.zeros((size_super, size_prim, 27, 3), dtype=float)
-    multiplicity = np.zeros((size_super, size_prim), dtype='int32')
+    r = np.zeros((size_super, size_prim, 27, 3), dtype='double')
+    multiplicity = np.zeros((size_super, size_prim), dtype='intc')
 
     for i in range(size_super): # run in supercell
         for j, s_j in enumerate(p2s_map): # run in primitive

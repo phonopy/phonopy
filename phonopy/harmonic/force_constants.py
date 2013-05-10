@@ -114,7 +114,7 @@ def run_force_constants(supercell,
     
     force_constants = np.zeros((supercell.get_number_of_atoms(),
                                 supercell.get_number_of_atoms(),
-                                3, 3), dtype=float)
+                                3, 3), dtype='double')
 
     # Fill force_constants[ displaced_atoms, all_atoms_in_supercell ]
     atom_list_done = get_force_constants_disps(force_constants,
@@ -349,7 +349,7 @@ def solve_force_constants_disps(force_constants,
                 import phonopy._phonopy as phonoc
                 for forces in sets_of_forces:
                     rotated_forces = np.zeros(len(site_symmetry) * 3,
-                                              dtype=float)
+                                              dtype='double')
                     phonoc.rotated_forces(rotated_forces,
                                           positions,
                                           i,
@@ -441,7 +441,7 @@ def set_tensor_symmetry(force_constants, supercell, symmetry):
     # Look for the symmetrically equivalent force constant tensors
     for i, pos_i in enumerate(positions):
         for j, pos_j in enumerate(positions):
-            tmp_fc = np.zeros((3, 3), dtype=float)
+            tmp_fc = np.zeros((3, 3), dtype='double')
             for k, rot in enumerate(rotations):
                 cart_rot = similarity_transformation(
                     supercell.get_cell().T, rot)
@@ -501,7 +501,7 @@ def rotational_invariance(force_constants,
     
     for pi, p in enumerate(p2s):
         for i in range(3):
-            mat = np.zeros((3, 3), dtype=float)
+            mat = np.zeros((3, 3), dtype='double')
             for s in range(supercell.get_number_of_atoms()):
                 vecs = np.array(get_equivalent_smallest_vectors(
                         s, p, supercell, primitive.get_cell(), symprec))

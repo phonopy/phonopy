@@ -116,7 +116,7 @@ class BTE_RTA:
         kappa = np.zeros((len(self._sigmas),
                           len(self._grid_points),
                           len(self._temperatures),
-                          num_atom * 3), dtype=float)
+                          num_atom * 3), dtype='double')
         
         if self._gamma is None: # if gamma is not set.
             gamma = np.zeros_like(kappa)
@@ -212,7 +212,7 @@ class BTE_RTA:
 
         # Sum group velocities at symmetrically equivalent q-points
         if self._no_kappa_stars:
-            rot_unit_n = [np.eye(3, dtype=float)]
+            rot_unit_n = [np.eye(3, dtype='double')]
         else:
             rot_unit_n = self._get_rotated_unit_directions(grid_point)
             # check if the number of rotations is correct.
@@ -237,7 +237,7 @@ class BTE_RTA:
             return Kb * x ** 2 * expVal / (expVal - 1.0) ** 2 # eV/K
 
         freqs = self._pp.get_frequencies()
-        cv = np.zeros((len(self._temperatures), len(freqs)), dtype=float)
+        cv = np.zeros((len(self._temperatures), len(freqs)), dtype='double')
         for i, t in enumerate(self._temperatures):
             if t > 0:
                 for j, f in enumerate(freqs):
@@ -254,7 +254,7 @@ class BTE_RTA:
          weights_at_q,
          frequencies_at_q) = self._pp.get_amplitude()
 
-        gamma = -1 * np.ones((len(self._temperatures), len(freqs)), dtype=float)
+        gamma = -1 * np.ones((len(self._temperatures), len(freqs)), dtype='double')
 
         for i, t in enumerate(self._temperatures):
             if t > 0:
@@ -262,7 +262,7 @@ class BTE_RTA:
                     if f > self._cutoff_frequency:
                         g = get_gamma(
                             amplitude_at_q,
-                            np.array([f], dtype=float),
+                            np.array([f], dtype='double'),
                             weights_at_q,
                             frequencies_at_q,
                             j,
@@ -301,7 +301,7 @@ class BTE_RTA:
         self._mesh = self._pp.get_mesh_numbers()
 
         if mesh_divisors is None:
-            self._mesh_divisors = np.array([1, 1, 1], dtype='int32')
+            self._mesh_divisors = np.intc([1, 1, 1])
         else:
             self._mesh_divisors = []
             for m, n in zip(self._mesh, mesh_divisors):
@@ -309,7 +309,7 @@ class BTE_RTA:
                     self._mesh_divisors.append(n)
                 else:
                     self._mesh_divisors.append(1)
-            self._mesh_divisors = np.array(self._mesh_divisors, dtype='int32')
+            self._mesh_divisors = np.intc(self._mesh_divisors)
 
             if (self._mesh_divisors != mesh_divisors).any():
                 print "Mesh numbers are not dividable by mesh divisors."
@@ -347,17 +347,17 @@ class BTE_RTA:
                 print "U",
 
         print
-        return ((np.array(normal_a, dtype=float),
-                 np.array(normal_w, dtype='int32'),
-                 np.array(normal_f, dtype=float)),
-                (np.array(umklapp_a, dtype=float),
-                 np.array(umklapp_w, dtype='int32'),
-                 np.array(umklapp_f, dtype=float)))
+        return ((np.double(normal_a),
+                 np.intc(normal_w),
+                 np.double(normal_f)),
+                (np.double(umklapp_a),
+                 np.intc(umklapp_w),
+                 np.double(umklapp_f)))
     
     def _set_pointgroup_operations(self):
         exist_r_inv = False
         for rot in self._pp.get_symmetry().get_pointgroup_operations():
-            if (rot == -np.eye(3, dtype='int32')).all():
+            if (rot == -np.eye(3, dtype='intc')).all():
                 exist_r_inv = True
                 break
 

@@ -45,7 +45,7 @@ def get_qpoints(mesh_numbers,
                 is_symmetry=True):
     mesh = np.array(mesh_numbers)
     if grid_shift == None:
-        shift = np.zeros(3, dtype=float)
+        shift = np.zeros(3, dtype='double')
     else:
         shift = np.array(grid_shift)
 
@@ -79,8 +79,8 @@ def _get_qpoint_symmetry(mesh,
                                            is_time_reversal,
                                            symprec)
     ir_list = np.unique(mapping)
-    weights = np.zeros(ir_list.shape[0], dtype='int32')
-    qpoints = np.zeros((ir_list.shape[0], 3), dtype=float)
+    weights = np.zeros(ir_list.shape[0], dtype='intc')
+    qpoints = np.zeros((ir_list.shape[0], 3), dtype='double')
 
     for i, g in enumerate(ir_list):
         weights[i] = np.sum(mapping == g)
@@ -106,8 +106,8 @@ def _get_qpoint_no_symmetry(mesh, shift):
                                          q[1] - (q[1] > 0.5),
                                          q[2] - (q[2] > 0.5)]))
 
-    qpoints = np.array(qpoints)
-    weights = np.ones(qpoints.shape[0], dtype='int32')
+    qpoints = np.array(qpoints, dtype='double')
+    weights = np.ones(qpoints.shape[0], dtype='intc')
 
     return qpoints, weights
 

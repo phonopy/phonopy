@@ -80,7 +80,7 @@ def get_jointDOS(fixed_grid_points,
 
         freqs = np.zeros((len(triplets_at_q), 3,
                           primitive.get_number_of_atoms() * 3),
-                         dtype=float)
+                         dtype='double')
         
         for i, g3 in enumerate(triplets_at_q):
             q3 = []
@@ -94,7 +94,7 @@ def get_jointDOS(fixed_grid_points,
                 freqs[i,j] = np.sqrt(np.abs(val)) * factor * freq_factor
 
         omegas_at_gp = get_frequencies(np.max(freqs), omega_step, sigma)
-        jointDOS_at_gp = np.zeros(len(omegas_at_gp), dtype=float)
+        jointDOS_at_gp = np.zeros(len(omegas_at_gp), dtype='double')
 
         phono3c.joint_dos(jointDOS_at_gp,
                           omegas_at_gp,

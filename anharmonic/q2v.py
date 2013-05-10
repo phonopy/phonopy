@@ -54,8 +54,8 @@ class PhononPhonon:
         self._is_nosym = is_nosym
         self._lapack_zheev_uplo = lapack_zheev_uplo
         
-        self._p2s_map = np.int32(primitive.get_primitive_to_supercell_map())
-        self._s2p_map = np.int32(primitive.get_supercell_to_primitive_map())
+        self._p2s_map = np.intc(primitive.get_primitive_to_supercell_map())
+        self._s2p_map = np.intc(primitive.get_supercell_to_primitive_map())
         self._conversion_factor = get_unit_conversion_factor(freq_factor)
 
         self._shortest_vectors, self._multiplicity = get_smallest_vectors(
@@ -187,7 +187,7 @@ class PhononPhonon:
         self._weights_at_q = weights_at_q
         self._grid_point = gp
         if self._q_grid is None: # This should be created only once.
-            self._q_grid = self._grid_address / mesh.astype(float)
+            self._q_grid = self._grid_address / mesh.astype('double')
         self._q = self._q_grid[gp].copy()
         
     def set_interaction_strength(self,
@@ -197,18 +197,18 @@ class PhononPhonon:
         self._print_log("----- phonon-phonon interaction strength ------\n")
         num_atom = self._primitive.get_number_of_atoms()
         if band_indices == None:
-            self._band_indices = np.arange(num_atom * 3, dtype='int32')
+            self._band_indices = np.arange(num_atom * 3, dtype='intc')
         else:
-            self._band_indices = np.int32(band_indices)
+            self._band_indices = np.intc(band_indices)
         self._print_log(("Band indices: [" + " %d" * len(self._band_indices) +
                          " ]\n") % tuple(self._band_indices + 1))
         self.set_harmonic_phonons()
         self._amplitude_at_q = np.zeros((len(self._weights_at_q),
                                          len(self._band_indices),
                                          num_atom * 3,
-                                         num_atom * 3), dtype=float)
+                                         num_atom * 3), dtype='double')
         self._frequencies_at_q = np.zeros(
-            (len(self._weights_at_q), 3, num_atom * 3), dtype=float)
+            (len(self._weights_at_q), 3, num_atom * 3), dtype='double')
 
         if read_amplitude:
             read_amplitude_from_hdf5(self._amplitude_at_q,
@@ -261,7 +261,7 @@ class PhononPhonon:
             self._dm.set_nac_params(nac_params)
 
         if nac_q_direction is not None:
-            self._q_direction = np.array(nac_q_direction, dtype=float)
+            self._q_direction = np.array(nac_q_direction, dtype='double')
 
     def set_harmonic_phonons(self):
         q = self._q
@@ -420,7 +420,7 @@ def get_triplet_interaction_strength(triplet_number,
                                      log_level):
 
     num_atom = dm.get_primitive().get_number_of_atoms()
-    freqs = np.zeros((3, num_atom * 3), dtype=float)
+    freqs = np.zeros((3, num_atom * 3), dtype='double')
     q_set, eigvecs = set_triplet_phonons(freqs,
                                          frequencies,
                                          eigenvectors,
@@ -431,7 +431,7 @@ def get_triplet_interaction_strength(triplet_number,
                                          q_direction,
                                          factor * freq_factor)
     amplitude = np.zeros((len(band_indices), num_atom * 3, num_atom * 3),
-                         dtype=float)
+                         dtype='double')
 
     show_interaction_strength_progress(log_level,
                                        triplet_number,
@@ -520,8 +520,8 @@ def get_c_triplet_interaction_strength(amplitude,
                                        r2q_TI_index):
     
     import anharmonic._phono3py as phono3c
-    p2s_map = np.int32(primitive.get_primitive_to_supercell_map())
-    s2p_map = np.int32(primitive.get_supercell_to_primitive_map())
+    p2s_map = np.intc(primitive.get_primitive_to_supercell_map())
+    s2p_map = np.intc(primitive.get_supercell_to_primitive_map())
 
     phono3c.triplet_interaction_strength(amplitude,
                                          freqs,
@@ -584,7 +584,7 @@ def get_py_triplet_interaction_strength(amplitude,
                                    multiplicity,
                                    np.array([q_set[k[0]],
                                              q_set[k[1]],
-                                             q_set[k[2]]], dtype=float),
+                                             q_set[k[2]]], dtype='double'),
                                    p2s_map,
                                    s2p_map,
                                    fc3,
