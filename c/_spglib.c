@@ -76,12 +76,7 @@ static PyObject * get_dataset(PyObject *self, PyObject *args)
   SPGCONST double (*lat)[3] = (double(*)[3])lattice->data;
   SPGCONST double (*pos)[3] = (double(*)[3])position->data;
   const int num_atom = position->dimensions[0];
-  const long* typat_long = (long*)atom_type->data;
-
-  int typat[atom_type->dimensions[0]];
-  for (i = 0; i < num_atom; i++) {
-    typat[i] = (int)typat_long[i];
-  }
+  const int* typat = (int*)atom_type->data;
 
   dataset = spgat_get_dataset(lat,
 			      pos,
@@ -157,7 +152,6 @@ static PyObject * get_dataset(PyObject *self, PyObject *args)
 
 static PyObject * get_spacegroup(PyObject *self, PyObject *args)
 {
-  int i;
   double symprec, angle_tolerance;
   char symbol[26];
   PyArrayObject* lattice;
@@ -175,11 +169,7 @@ static PyObject * get_spacegroup(PyObject *self, PyObject *args)
   SPGCONST double (*lat)[3] = (double(*)[3])lattice->data;
   SPGCONST double (*pos)[3] = (double(*)[3])position->data;
   const int num_atom = position->dimensions[0];
-  const long* typat_long = (long*)atom_type->data;
-
-  int typat[num_atom];
-  for (i = 0; i < num_atom; i++)
-    typat[i] = (int)typat_long[i];
+  const int* typat = (int*)atom_type->data;
 
   const int num_spg = spgat_get_international(symbol,
 					      lat,
@@ -212,7 +202,7 @@ static PyObject * get_pointgroup(PyObject *self, PyObject *args)
   for (i = 0; i < num_rot; i++) {
     for (j = 0; j < 3; j++) {
       for (k = 0; k < 3; k++) {
-	rot[i][j][k] = (int) rot_int[ i*9 + j*3 + k ];
+	rot[i][j][k] = (int) rot_int[i*9 + j*3 + k];
       }
     }
   }
@@ -239,7 +229,7 @@ static PyObject * get_pointgroup(PyObject *self, PyObject *args)
 
 static PyObject * refine_cell(PyObject *self, PyObject *args)
 {
-  int i, num_atom;
+  int num_atom;
   double symprec, angle_tolerance;
   PyArrayObject* lattice;
   PyArrayObject* position;
@@ -256,12 +246,7 @@ static PyObject * refine_cell(PyObject *self, PyObject *args)
 
   double (*lat)[3] = (double(*)[3])lattice->data;
   SPGCONST double (*pos)[3] = (double(*)[3])position->data;
-  long* typat_long = (long*)atom_type->data;
-
-  int typat[atom_type->dimensions[0]];
-  for (i = 0; i < num_atom; i++) {
-    typat[i] = (int)typat_long[i];
-  }
+  int* typat = (int*)atom_type->data;
 
   int num_atom_brv = spgat_refine_cell(lat,
 				       pos,
@@ -270,17 +255,12 @@ static PyObject * refine_cell(PyObject *self, PyObject *args)
 				       symprec,
 				       angle_tolerance);
 
-  for (i = 0; i < num_atom_brv; i++) {
-    typat_long[i] = typat[i];
-  }
-
   return PyInt_FromLong((long) num_atom_brv);
 }
 
 
 static PyObject * find_primitive(PyObject *self, PyObject *args)
 {
-  int i;
   double symprec, angle_tolerance;
   PyArrayObject* lattice;
   PyArrayObject* position;
@@ -297,23 +277,14 @@ static PyObject * find_primitive(PyObject *self, PyObject *args)
   double (*lat)[3] = (double(*)[3])lattice->data;
   double (*pos)[3] = (double(*)[3])position->data;
   int num_atom = position->dimensions[0];
-  long* types_long = (long*)atom_type->data;
+  int* types = (int*)atom_type->data;
 
-  int types[num_atom];
-  for (i = 0; i < num_atom; i++) {
-    types[i] = (int)types_long[i];
-  }
-  
   int num_atom_prim = spgat_find_primitive(lat,
 					   pos,
 					   types,
 					   num_atom,
 					   symprec,
 					   angle_tolerance);
-
-  for (i = 0; i < num_atom_prim; i++) {
-    types_long[i] = types[i];
-  }
 
   return PyInt_FromLong((long) num_atom_prim);
 }
@@ -340,18 +311,13 @@ static PyObject * get_symmetry(PyObject *self, PyObject *args)
 
   SPGCONST double (*lat)[3] = (double(*)[3])lattice->data;
   SPGCONST double (*pos)[3] = (double(*)[3])position->data;
-  const long* types_long = (long*)atom_type->data;
+  const int* types = (int*)atom_type->data;
   const int num_atom = position->dimensions[0];
-  long *rot_long = (long*)rotation->data;
+  int *rot_int = (int*)rotation->data;
   double (*trans)[3] = (double(*)[3])translation->data;
   const int num_sym_from_array_size = rotation->dimensions[0];
 
   int rot[num_sym_from_array_size][3][3];
-  
-  int types[num_atom];
-  for (i = 0; i < num_atom; i++) {
-    types[i] = (int)types_long[i];
-  }
   
   /* num_sym has to be larger than num_sym_from_array_size. */
   const int num_sym = spgat_get_symmetry(rot,
@@ -366,7 +332,7 @@ static PyObject * get_symmetry(PyObject *self, PyObject *args)
   for (i = 0; i < num_sym; i++) {
     for (j = 0; j < 3; j++) {
       for (k = 0; k < 3; k++) {
-	rot_long[i*9+j*3+k] = (long)rot[i][j][k];
+	rot_int[i*9 + j*3 + k] = (int)rot[i][j][k];
       }
     }
   }
@@ -400,17 +366,13 @@ static PyObject * get_symmetry_with_collinear_spin(PyObject *self,
   SPGCONST double (*lat)[3] = (double(*)[3])lattice->data;
   SPGCONST double (*pos)[3] = (double(*)[3])position->data;
   const double *spins = (double*) magmom->data;
-  const long* types_long = (long*)atom_type->data;
+  const int* types = (int*)atom_type->data;
   const int num_atom = position->dimensions[0];
-  long *rot_long = (long*)rotation->data;
+  int *rot_int = (int*)rotation->data;
   double (*trans)[3] = (double(*)[3])translation->data;
   const int num_sym_from_array_size = rotation->dimensions[0];
 
   int rot[num_sym_from_array_size][3][3];
-  int types[num_atom];
-  for (i = 0; i < num_atom; i++) {
-    types[i] = (int)types_long[i];
-  }
   
   /* num_sym has to be larger than num_sym_from_array_size. */
   const int num_sym = 
@@ -427,7 +389,7 @@ static PyObject * get_symmetry_with_collinear_spin(PyObject *self,
   for (i = 0; i < num_sym; i++) {
     for (j = 0; j < 3; j++) {
       for (k = 0; k < 3; k++) {
-	rot_long[i*9+j*3+k] = (long)rot[i][j][k];
+	rot_int[i*9 + j*3 + k] = (int)rot[i][j][k];
       }
     }
   }
@@ -437,7 +399,6 @@ static PyObject * get_symmetry_with_collinear_spin(PyObject *self,
 
 static PyObject * get_ir_kpoints(PyObject *self, PyObject *args)
 {
-  int i;
   double symprec;
   int is_time_reversal;
   PyArrayObject* kpoint;
@@ -453,15 +414,9 @@ static PyObject * get_ir_kpoints(PyObject *self, PyObject *args)
   SPGCONST double (*pos)[3] = (double(*)[3])position->data;
   SPGCONST double (*kpts)[3] = (double(*)[3])kpoint->data;
   const int num_kpoint = kpoint->dimensions[0];
-  const long* types_long = (long*)atom_type->data;
+  const int* types = (int*)atom_type->data;
   const int num_atom = position->dimensions[0];
-  long *map_long = (long*)kpoint_map->data;
-  
-  int types[num_atom];
-  for (i = 0; i < num_atom; i++)
-    types[i] = (int)types_long[i];
-
-  int map[num_kpoint];
+  int *map = (int*)kpoint_map->data;
 
   /* num_sym has to be larger than num_sym_from_array_size. */
   const int num_ir_kpt = spg_get_ir_kpoints(map,
@@ -473,9 +428,6 @@ static PyObject * get_ir_kpoints(PyObject *self, PyObject *args)
 					    num_atom,
 					    is_time_reversal,
 					    symprec);
-
-  for (i = 0; i < num_kpoint; i++)
-    map_long[i] = (long) map[i];
 
   return PyInt_FromLong((long) num_ir_kpt);
 }
@@ -507,29 +459,16 @@ static PyObject * get_ir_reciprocal_mesh(PyObject *self, PyObject *args)
   SPGCONST double (*lat)[3] = (double(*)[3])lattice->data;
   SPGCONST double (*pos)[3] = (double(*)[3])position->data;
   const int num_grid = grid_point->dimensions[0];
-  const long* types_long = (long*)atom_type->data;
-  const long* mesh_long = (long*)mesh->data;
-  const long* is_shift_long = (long*)is_shift->data;
+  const int* types = (int*)atom_type->data;
+  const int* mesh_int = (int*)mesh->data;
+  const int* is_shift_int = (int*)is_shift->data;
   const int num_atom = position->dimensions[0];
-  long *grid_long = (long*)grid_point->data;
+  int *grid_pint = (int*)grid_point->data;
   int grid_int[num_grid][3];
-  long *map_long = (long*)map->data;
-  int map_int[num_grid];
-  
-  int types[num_atom];
-  for (i = 0; i < num_atom; i++) {
-    types[i] = (int)types_long[i];
-  }
-
-  int mesh_int[3];
-  int is_shift_int[3];
-  for (i = 0; i < 3; i++) {
-    mesh_int[i] = (int) mesh_long[i];
-    is_shift_int[i] = (int) is_shift_long[i];
-  }  
+  int*map_int = (int*)map->data;
 
   /* Check memory space */
-  if (mesh_int[0]*mesh_int[1]*mesh_int[2] > num_grid) {
+  if (mesh_int[0] * mesh_int[1] * mesh_int[2] > num_grid) {
     return NULL;
   }
 
@@ -546,9 +485,9 @@ static PyObject * get_ir_reciprocal_mesh(PyObject *self, PyObject *args)
 						symprec);
   
   for (i = 0; i < mesh_int[0] * mesh_int[1] * mesh_int[2]; i++) {
-    for (j = 0; j < 3; j++)
-      grid_long[ i*3 + j ] = (long) grid_int[i][j];
-    map_long[i] = (long) map_int[i];
+    for (j = 0; j < 3; j++) {
+      grid_pint[i*3 + j] = (int) grid_int[i][j];
+    }
   }
   
   return PyInt_FromLong((long) num_ir);
@@ -575,29 +514,20 @@ static PyObject * get_stabilized_reciprocal_mesh(PyObject *self, PyObject *args)
     return NULL;
   }
 
-  long *grid_long = (long*)grid_point->data;
+  int *grid_pint = (int*)grid_point->data;
   const int num_grid = grid_point->dimensions[0];
   int grid_int[num_grid][3];
 
-  long *map_long = (long*)map->data;
-  int map_int[num_grid];
-
-  int mesh_int[3];
-  int is_shift_int[3];
-  const long* mesh_long = (long*)mesh->data;
-  const long* is_shift_long = (long*)is_shift->data;
-  for (i = 0; i < 3; i++) {
-    mesh_int[i] = (int) mesh_long[i];
-    is_shift_int[i] = (int) is_shift_long[i];
-  }  
-
-  const long* rot_long = (long*)rotations->data;
+  int *map_int = (int*)map->data;
+  const int* mesh_int = (int*)mesh->data;
+  const int* is_shift_int = (int*)is_shift->data;
+  const int* rot_int = (int*)rotations->data;
   const int num_rot = rotations->dimensions[0];
   int rot[num_rot][3][3];
   for (i = 0; i < num_rot; i++) {
     for (j = 0; j < 3; j++) {
       for (k = 0; k < 3; k++) {
-	rot[i][j][k] = (int) rot_long[ i*9 + j*3 + k ];
+	rot[i][j][k] = rot_int[i*9 + j*3 + k];
       }
     }
   }
@@ -606,7 +536,7 @@ static PyObject * get_stabilized_reciprocal_mesh(PyObject *self, PyObject *args)
   const int num_q = qpoints->dimensions[0];
 
   /* Check memory space */
-  if (mesh_int[0]*mesh_int[1]*mesh_int[2] > num_grid) {
+  if (mesh_int[0] * mesh_int[1] * mesh_int[2] > num_grid) {
     return NULL;
   }
 
@@ -622,9 +552,8 @@ static PyObject * get_stabilized_reciprocal_mesh(PyObject *self, PyObject *args)
   
   for (i = 0; i < mesh_int[0] * mesh_int[1] * mesh_int[2]; i++) {
     for (j = 0; j < 3; j++) {
-      grid_long[ i*3 + j ] = (long) grid_int[i][j];
+      grid_pint[i*3 + j] = grid_int[i][j];
     }
-    map_long[i] = (long) map_int[i];
   }
   
   return PyInt_FromLong((long) num_ir);
@@ -645,18 +574,14 @@ static PyObject * get_triplets_reciprocal_mesh(PyObject *self, PyObject *args)
   int i, j, k, num_grid;
   PyObject * triplets, * weights, *tp, *ret_array, *mesh_points;
 
-  int mesh_int[3];
-  const long* mesh_long = (long*)mesh->data;
-  for (i = 0; i < 3; i++) {
-    mesh_int[i] = (int) mesh_long[i];
-  }  
-  const long* rot_long = (long*)rotations->data;
+  const int* mesh_int = (int*)mesh->data;
+  const int* rot_int = (int*)rotations->data;
   const int num_rot = rotations->dimensions[0];
   int rot[num_rot][3][3];
   for (i = 0; i < num_rot; i++) {
     for (j = 0; j < 3; j++) {
       for (k = 0; k < 3; k++) {
-	rot[i][j][k] = (int) rot_long[ i*9 + j*3 + k ];
+	rot[i][j][k] = rot_int[i*9 + j*3 + k];
       }
     }
   }
@@ -724,26 +649,19 @@ static PyObject * get_triplets_reciprocal_mesh_at_q(PyObject *self, PyObject *ar
   int i, j, k;
 
   const int num_grid = grid_points->dimensions[0];
-  long *grid_points_long = (long*)grid_points->data;
+  int *grid_points_pint = (int*)grid_points->data;
   int grid_points_int[num_grid][3];
-  long *weights_long = (long*)weights->data;
-  int weights_int[num_grid];
-  long *third_q_long = (long*)third_q->data;
-  int third_q_int[num_grid];
+  int *weights_int = (int*)weights->data;
+  int *third_q_int = (int*)third_q->data;
 
-  int mesh_int[3];
-  const long* mesh_long = (long*)mesh->data;
-  for (i = 0; i < 3; i++) {
-    mesh_int[i] = (int) mesh_long[i];
-  }  
-
-  const long* rot_long = (long*)rotations->data;
+  const int* mesh_int = (int*)mesh->data;
+  const int* rot_int = (int*)rotations->data;
   const int num_rot = rotations->dimensions[0];
   int rot[num_rot][3][3];
   for (i = 0; i < num_rot; i++) {
     for (j = 0; j < 3; j++) {
       for (k = 0; k < 3; k++) {
-	rot[i][j][k] = (int) rot_long[ i*9 + j*3 + k ];
+	rot[i][j][k] = rot_int[i*9 + j*3 + k];
       }
     }
   }
@@ -759,10 +677,8 @@ static PyObject * get_triplets_reciprocal_mesh_at_q(PyObject *self, PyObject *ar
 					  rot);
 
   for (i = 0; i < num_grid; i++) {
-    weights_long[i] = (long) weights_int[i];
-    third_q_long[i] = (long) third_q_int[i];
     for (j = 0; j < 3; j++) {
-      grid_points_long[ i*3 + j ] = (long) grid_points_int[i][j];
+      grid_points_pint[i*3 + j] = grid_points_int[i][j];
     }
   }
   
@@ -790,35 +706,28 @@ static PyObject * extract_triplets_reciprocal_mesh_at_q(PyObject *self, PyObject
     return NULL;
   }
 
-  const long *triplets_long = (long*)triplets->data;
+  const int *triplets_pint = (int*)triplets->data;
   const int num_triplets = triplets->dimensions[0];
   int triplets_int[num_triplets][3];
 
   for (i = 0; i < num_triplets; i++) {
     for (j = 0; j < 3; j++) {
-      triplets_int[i][j] = (long) triplets_long[ i*3 + j ];
+      triplets_int[i][j] = triplets_pint[i*3 + j];
     }
   }
 
-  long *triplets_at_q_long = (long*)triplets_at_q->data;
+  int *triplets_at_q_pint = (int*)triplets_at_q->data;
   int triplets_at_q_int[num_triplets][3];
+  int *weight_triplets_at_q_int = (int*)weight_triplets_at_q->data;
 
-  long *weight_triplets_at_q_long = (long*)weight_triplets_at_q->data;
-  int weight_triplets_at_q_int[num_triplets];
-
-  int mesh_int[3];
-  const long* mesh_long = (long*)mesh->data;
-  for (i = 0; i < 3; i++) {
-    mesh_int[i] = (int) mesh_long[i];
-  }  
-
-  const long* rot_long = (long*)rotations->data;
+  const int* mesh_int = (int*)mesh->data;
+  const int* rot_int = (int*)rotations->data;
   const int num_rot = rotations->dimensions[0];
   int rot[num_rot][3][3];
   for (i = 0; i < num_rot; i++) {
     for (j = 0; j < 3; j++) {
       for (k = 0; k < 3; k++) {
-	rot[i][j][k] = (int) rot_long[ i*9 + j*3 + k ];
+	rot[i][j][k] = rot_int[i*9 + j*3 + k];
       }
     }
   }
@@ -835,9 +744,8 @@ static PyObject * extract_triplets_reciprocal_mesh_at_q(PyObject *self, PyObject
 					      rot);
 
   for (i = 0; i < num_triplets_at_q; i++) {
-    weight_triplets_at_q_long[i] = (long) weight_triplets_at_q_int[i];
     for (j = 0; j < 3; j++) {
-      triplets_at_q_long[ i*3 + j ] = (long) triplets_at_q_int[i][j];
+      triplets_at_q_pint[i*3 + j] = triplets_at_q_int[i][j];
     }
   }
   

@@ -124,7 +124,7 @@ class Symmetry:
             if (abs(diff - diff.round()) < symprec).all():
                 site_symmetries.append(r)
 
-        return np.int32(site_symmetries)
+        return np.intc(site_symmetries)
 
     def get_symmetry_tolerance(self):
         return self.symprec
@@ -176,7 +176,7 @@ class Symmetry:
             if not is_same:
                 rotations.append(rot)
 
-        self.pointgroup_operations = np.int32(rotations)
+        self.pointgroup_operations = np.intc(rotations)
         self.pointgroup = get_pointgroup(self.pointgroup_operations)[0]
 
     def _map_operations(self):
@@ -217,17 +217,17 @@ class Symmetry:
                     trans = p - positions[ipos0]
                     trans -= np.floor(trans)
                     translations.append(trans)
-                    rotations.append(np.eye(3, dtype='int32'))
+                    rotations.append(np.eye(3, dtype='intc'))
 
             self.map_atoms = s2u_map
         else:
             rotations.append(np.eye(3, dtype=int))
-            translations.append(np.zeros(3, dtype=float))
+            translations.append(np.zeros(3, dtype='double'))
             self.map_atoms = range(self.__cell.get_number_of_atoms())
 
-        self.symmetry_operations = {'rotations': np.int32(rotations),
+        self.symmetry_operations = {'rotations': np.intc(rotations),
                                     'translations': np.array(translations,
-                                                             dtype=float)}
+                                                             dtype='double')}
         self.international_table = 'P1 (1)'
         self.wyckoff_letters = ['a'] * self.__cell.get_number_of_atoms()
 

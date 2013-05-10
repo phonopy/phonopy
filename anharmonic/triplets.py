@@ -43,7 +43,8 @@ def get_nosym_triplets(mesh, grid_point0):
 def get_grid_address(mesh):
     grid_mapping_table, grid_address = spg.get_stabilized_reciprocal_mesh(
         mesh,
-        np.array([[[1, 0, 0], [0, 1, 0], [0, 0, 1]]], dtype=int))
+        [[[1, 0, 0], [0, 1, 0], [0, 0, 1]]],
+        is_time_reversal=False)
 
     return grid_address
 
