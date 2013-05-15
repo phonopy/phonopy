@@ -229,7 +229,7 @@ class Modulation:
                                       freqs,
                                       self._phonon_modes):
             file.write("- q-position: [ %12.7f, %12.7f, %12.7f ]\n" %
-                       tuple(q))
+                       tuple(mode[0]))
             file.write("  band: %d\n" % (mode[1] + 1))
             file.write("  amplitude: %f\n" % mode[2])
             file.write("  phase: %f\n" % mode[3])

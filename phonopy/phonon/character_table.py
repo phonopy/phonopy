@@ -653,8 +653,7 @@ class CharacterTable:
                                           self._symprec).get_dataset()
 
         (self._rotations_at_q,
-         self._translations_at_q,
-         self._q_rotations) = self._get_rotations_at_q()
+         self._translations_at_q) = self._get_rotations_at_q()
 
         self._g = len(self._rotations_at_q)
 
@@ -710,22 +709,17 @@ class CharacterTable:
     def _get_rotations_at_q(self):
         rotations_at_q = []
         trans_at_q = []
-        q_rotations = []
-        lat = self._primitive.get_cell().T
-        metric = np.dot(lat.T, lat)
-        
         for r, t in zip(self._symmetry_dataset['rotations'],
                         self._symmetry_dataset['translations']):
-            r_q = similarity_transformation(metric, r)
-            diff = np.dot(r_q, self._q) - self._q
+
+            # Using r.T is used instead of np.linalg.inv(r.T)
+            diff = np.dot(r.T, self._q) - self._q 
+
             if (abs(diff - diff.round()) < self._symprec).all():
                 rotations_at_q.append(r)
                 trans_at_q.append(t)
-                q_rotations.append(r_q)
 
-        return (np.array(rotations_at_q),
-                np.array(trans_at_q),
-                np.array(q_rotations))
+        return np.array(rotations_at_q), np.array(trans_at_q)
 
     def _get_conventional_rotations(self):
         spacegroup_symbol = self._symmetry_dataset['international'][0]
@@ -758,14 +752,13 @@ class CharacterTable:
     def _get_mapping_matrix(self):
         matrices = []
         
-        for (r, t, r_q) in zip(self._rotations_at_q,
-                               self._translations_at_q,
-                               self._q_rotations):
+        for (r, t) in zip(self._rotations_at_q,
+                          self._translations_at_q):
     
             lat = self._primitive.get_cell().T
             r_cart = similarity_transformation(lat, r)
     
-            perm_mat = self._get_modified_permutation_matrix(r, t, r_q)
+            perm_mat = self._get_modified_permutation_matrix(r, t)
             matrices.append(np.kron(perm_mat, r_cart))
 
         return np.array(matrices)
@@ -779,7 +772,7 @@ class CharacterTable:
             irrep_dims.append(len(irrep_Rs[0]))
         return np.array(characters), np.array(irrep_dims)
 
-    def _get_modified_permutation_matrix(self, r, t, r_q):
+    def _get_modified_permutation_matrix(self, r, t):
         num_atom = self._primitive.get_number_of_atoms()
         pos = self._primitive.get_scaled_positions()
         matrix = np.zeros((num_atom, num_atom), dtype=complex)
