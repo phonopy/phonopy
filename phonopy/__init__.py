@@ -801,7 +801,7 @@ class Phonopy:
         self._modulation.write_yaml()
 
 
-    # Character table
+    # Characters of irreducible representations
     def set_character_table(self, q, degeneracy_tolerance):
         self._character_table = CharacterTable(
             self._dynamical_matrix,
