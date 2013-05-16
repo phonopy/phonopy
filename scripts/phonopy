@@ -47,7 +47,7 @@ from phonopy.cui.settings import Settings, PhonopyConfParser
 from phonopy.units import *
 
 
-phonopy_version = "1.6.4"
+phonopy_version = "1.7"
 
 # AA is created at http://www.network-science.de/ascii/.
 def print_phononpy():
