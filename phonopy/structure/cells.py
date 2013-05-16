@@ -150,7 +150,7 @@ def trim_cell(relative_axes, cell, symprec):
         # overlap positions are removed.
         for t_pos in trimed_positions:
             diff = t_pos - tmp_pos
-            diff -= diff.round()
+            diff -= np.rint(diff)
             if np.linalg.norm(np.dot(diff, trimed_lattice)) < symprec:
                 is_overlap = True
                 break
@@ -260,7 +260,7 @@ class Primitive(Atoms):
             for j in self.p2s_map:
                 p_pos = np.dot(pos[j], inv_F.T)
                 diff = p_pos - s_pos
-                diff -= diff.round()
+                diff -= np.rint(diff)
                 if (abs(diff) < self.symprec).all():
                     s2p_map.append(j)
                     break
@@ -287,7 +287,7 @@ def get_distance(atoms, a0, a1, tolerance=1e-5):
     scaled_pos = np.dot( atoms.get_positions(), np.linalg.inv(reduced_bases) )
     # move scaled atomic positions into -0.5 < r <= 0.5
     for pos in scaled_pos:
-        pos -= pos.round()
+        pos -= np.rint(pos)
 
     # Look for the shortest one in surrounded 3x3x3 cells 
     distances = []
@@ -307,7 +307,7 @@ def get_distance_with_center( atoms, center, atom_num, tolerance=1e-5 ):
     scaled_pos = np.dot( atoms.get_positions(), np.linalg.inv(reduced_bases) )
     # move scaled atomic positions into -0.5 < r <= 0.5
     for pos in scaled_pos:
-        pos -= pos.round()
+        pos -= np.rint(pos)
 
     # Look for the shortest one in surrounded 3x3x3 cells 
     distances = []

@@ -361,7 +361,7 @@ def write_vasp(filename, atoms, direct=True):
     lines += "\n"
     lines += "Direct\n"
     for vec in scaled_positions:
-        for x in (vec - vec.round()):
+        for x in (vec - np.rint(vec)):
             if float('%20.16f' % x) < 0.0:
                 lines += "%20.16f" % (x + 1.0)
             else:

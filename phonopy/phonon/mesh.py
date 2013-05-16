@@ -49,9 +49,9 @@ def get_qpoints(mesh_numbers,
     else:
         shift = np.array(grid_shift)
 
-    diffby2 = np.abs(shift * 2 - (shift * 2).round())
+    diffby2 = np.abs(shift * 2 - np.rint(shift * 2))
     if (diffby2 < symprec).all() and is_symmetry: # No shift or half shift case
-        diff = np.abs(shift - shift.round())
+        diff = np.abs(shift - np.rint(shift))
         if is_gamma_center:
             return _get_qpoint_symmetry(mesh,
                                         (diff > symprec),

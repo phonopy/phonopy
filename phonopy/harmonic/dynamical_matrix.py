@@ -288,10 +288,9 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             charge_sum = self._get_charge_sum(num_atom, q)
             nac_q = np.zeros((num_atom * 3, num_atom * 3), dtype='double')
             m = self._pcell.get_masses()
-            q_distance = np.array(q_red) - np.array(q_red).round()
-            constant *= \
-                np.exp(- np.dot(q_distance, q_distance) /
-                         self._damping_factor ** 2)
+            q_distance = np.array(q_red) - np.rint(q_red)
+            constant *= np.exp(- np.dot(q_distance, q_distance) /
+                                 self._damping_factor ** 2)
             for i in range(num_atom):
                 for j in range(num_atom):
                     nac_q[i*3:(i+1)*3, j*3:(j+1)*3] = \
@@ -385,7 +384,7 @@ def get_equivalent_smallest_vectors(atom_number_supercell,
 
     # Atomic positions are confined into the lattice made of reduced bases.
     for pos in positions:
-        pos -= pos.round()
+        pos -= np.rint(pos)
 
     p_pos = positions[atom_number_primitive]
     s_pos = positions[atom_number_supercell]

@@ -220,7 +220,7 @@ def distribute_fc2_part(force_constants,
             rot_atom = -1
             for j, pos_j in enumerate(positions):
                 diff = pos_j - rot_pos
-                if (abs(diff - diff.round()) < symprec).all():
+                if (abs(diff - np.rint(diff)) < symprec).all():
                     rot_atom = j
                     break
         
@@ -250,7 +250,7 @@ def get_atom_mapping_by_symmetry(atom_list_done,
         rot_pos = np.dot(positions[atom_number], r.T) + t
         for j in atom_list_done:
             diff = positions[j] - rot_pos
-            if (abs(diff -diff.round()) < symprec).all():
+            if (abs(diff - np.rint(diff)) < symprec).all():
                 return j, i
 
     print 'Input forces are not enough to calculate force constants,'
@@ -273,7 +273,7 @@ def get_all_atom_mappings_by_symmetry(atom_list_done,
         rot_pos = np.dot(positions[atom_number], r.T) + t
         for j in atom_list_done:
             diff = positions[j] - rot_pos
-            if (abs(diff -diff.round()) < symprec).all():
+            if (abs(diff - np.rint(diff)) < symprec).all():
                 map_atoms.append(j)
                 map_syms.append(i)
                 break

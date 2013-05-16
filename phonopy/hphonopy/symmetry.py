@@ -62,7 +62,7 @@ def get_symmetry_yaml(cell, symmetry, phonopy_version=None):
             yaml += "  - [%2d, %2d ,%2d]\n" % tuple(vec)
         yaml += "  translation: ["
         for j, x in enumerate(t):
-            if abs(x - x.round()) < 1e-5:
+            if abs(x - np.rint(x)) < 1e-5:
                 yaml += " 0.00000"
             else:
                 yaml += "%8.5f" % x

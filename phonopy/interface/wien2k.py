@@ -305,7 +305,7 @@ def distribute_forces( supercell, disp, forces, filename, symprec ):
         for i, pos_wien2k in enumerate( atoms_in_dot_scf ):
             for j, pos in enumerate( cell.get_scaled_positions() ):
                 diff = pos_wien2k - pos
-                diff -= diff.round()
+                diff -= np.rint(diff)
                 if ( abs( diff ) < 0.00001 ).all():
                     forces_remap.append(
                         np.dot( forces[ i ], rotations[ map_operations[ j ] ].T ) )

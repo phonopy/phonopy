@@ -712,10 +712,10 @@ class CharacterTable:
         for r, t in zip(self._symmetry_dataset['rotations'],
                         self._symmetry_dataset['translations']):
 
-            # Using r.T is used instead of np.linalg.inv(r.T)
-            diff = np.dot(r.T, self._q) - self._q 
+            # Using r is used instead of np.linalg.inv(r)
+            diff = np.dot(self._q, r) - self._q 
 
-            if (abs(diff - diff.round()) < self._symprec).all():
+            if (abs(diff - diff.rint()) < self._symprec).all():
                 rotations_at_q.append(r)
                 trans_at_q.append(t)
 
@@ -745,7 +745,7 @@ class CharacterTable:
 
         for r in rotations:
             r_conv = similarity_transformation(np.linalg.inv(tmat), r)
-            trans_rots.append(r_conv.round().astype(int))
+            trans_rots.append(r_conv.rint().astype(int))
 
         return np.array(trans_rots)
 
@@ -780,7 +780,7 @@ class CharacterTable:
             p_rot = np.dot(r, p1) + t
             for j, p2 in enumerate(pos):
                 diff = p_rot - p2
-                if (abs(diff - diff.round()) < self._symprec).all():
+                if (abs(diff - diff.rint()) < self._symprec).all():
                     phase_factor = np.dot(p1 - p_rot, self._q)
                     matrix[j, i] = np.exp(2j * np.pi * phase_factor)
 

@@ -121,7 +121,7 @@ class Symmetry:
         for r, t in zip(rot, trans):
             rot_pos = np.dot(pos, r.T) + t
             diff = pos - rot_pos
-            if (abs(diff - diff.round()) < symprec).all():
+            if (abs(diff - np.rint(diff)) < symprec).all():
                 site_symmetries.append(r)
 
         return np.intc(site_symmetries)
@@ -140,7 +140,7 @@ class Symmetry:
             for j in range(i):
                 for r, t in zip(rotations, translations):
                     diff = np.dot(p, r.T) + t - positions[j]
-                    diff -= diff.round()
+                    diff -= np.rint(diff)
                     dist = np.linalg.norm(np.dot(diff, lattice))
                     if dist < self.symprec:
                         map_atoms[i] = j
@@ -192,7 +192,7 @@ class Symmetry:
                 zip(ops['rotations'], ops['translations'])):
                 
                 diff = np.dot(pos[i], r.T) + t - pos[eq_atom]
-                if (abs(diff - diff.round()) < self.symprec).all():
+                if (abs(diff - np.rint(diff)) < self.symprec).all():
                     map_operations[i] = j
                     break
 
