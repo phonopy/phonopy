@@ -634,7 +634,6 @@ class CharacterTable:
     def __init__(self,
                  dynamical_matrix,
                  q,
-                 primitive,
                  factor=VaspToTHz,
                  symprec=1e-5,
                  degeneracy_tolerance=1e-5,
@@ -645,7 +644,7 @@ class CharacterTable:
         self._q = np.array(q)
         self._degeneracy_tolerance = degeneracy_tolerance
         self._symprec = symprec
-        self._primitive = primitive
+        self._primitive = dynamical_matrix.get_primitive()
 
 
         self._eigvecs, self._freqs = self._get_eigenvectors(dynamical_matrix)
@@ -671,8 +670,10 @@ class CharacterTable:
             self._rotation_symbols = self._get_rotation_symbols()
             if (abs(self._q) < self._symprec).all() and self._rotation_symbols:
                 self._ir_labels = self._get_ir_labels()
-            else:
+            elif (abs(self._q) < self._symprec).all():
                 print "Database for this point group is not preprared."
+            else:
+                print "Database for non-Gamma point is not prepared."
         else:
             self._rotation_symbols = None
 
@@ -693,6 +694,9 @@ class CharacterTable:
 
     def get_rotation_symbols(self):
         return self._rotation_symbols
+
+    def get_rotations(self):
+        return self._conventional_rotations
 
     def get_projection_operators(self, idx_irrep, i=None, j=None):
         if i == None or j == None:

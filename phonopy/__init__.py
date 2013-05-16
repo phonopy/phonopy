@@ -806,7 +806,6 @@ class Phonopy:
         self._character_table = CharacterTable(
             self._dynamical_matrix,
             q,
-            self._primitive,
             factor=self._factor,
             symprec=self._symprec,
             degeneracy_tolerance=degeneracy_tolerance,
