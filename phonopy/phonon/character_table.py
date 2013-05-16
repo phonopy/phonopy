@@ -676,14 +676,20 @@ class CharacterTable:
         else:
             self._rotation_symbols = None
 
-    def get_matrices(self):
-        return self._matrices
+    def get_band_indices(self):
+        return self._degenerate_sets
+
+    def get_characters(self):
+        return self._characters
 
     def get_eigenvectors(self):
         return self._eigvecs
 
     def get_ir_representations(self):
         return self._irreps
+
+    def get_matrices(self):
+        return self._matrices
 
     def get_rotation_symbols(self):
         return self._rotation_symbols
@@ -715,7 +721,7 @@ class CharacterTable:
             # Using r is used instead of np.linalg.inv(r)
             diff = np.dot(self._q, r) - self._q 
 
-            if (abs(diff - diff.rint()) < self._symprec).all():
+            if (abs(diff - np.rint(diff)) < self._symprec).all():
                 rotations_at_q.append(r)
                 trans_at_q.append(t)
 
@@ -745,7 +751,7 @@ class CharacterTable:
 
         for r in rotations:
             r_conv = similarity_transformation(np.linalg.inv(tmat), r)
-            trans_rots.append(r_conv.rint().astype(int))
+            trans_rots.append(np.rint(r_conv).astype(int))
 
         return np.array(trans_rots)
 
@@ -780,7 +786,7 @@ class CharacterTable:
             p_rot = np.dot(r, p1) + t
             for j, p2 in enumerate(pos):
                 diff = p_rot - p2
-                if (abs(diff - diff.rint()) < self._symprec).all():
+                if (abs(diff - np.rint(diff)) < self._symprec).all():
                     phase_factor = np.dot(p1 - p_rot, self._q)
                     matrix[j, i] = np.exp(2j * np.pi * phase_factor)
 
