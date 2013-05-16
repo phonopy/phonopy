@@ -21,4 +21,9 @@ phonon.set_post_process()
 
 # Character table
 phonon.set_character_table([1./3, 1./3, 0], 1e-4)
-phonon.show_character_table()
+ct = phonon.get_character_table() 
+band_indices = ct.get_band_indices()
+characters = np.rint(ct.get_characters()).real
+for bi, cts in zip(band_indices, characters):
+    print np.array(bi) + 1, cts
+# phonon.show_character_table()

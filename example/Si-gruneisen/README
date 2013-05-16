@@ -4,4 +4,4 @@ For band structure type calculation:
 
 For mesh sampling calculation:
 
-% % gruneisen orig plus minus --dim="2 2 2"  --pa="0 1/2 1/2 1/2 0 1/2 1/2 1/2 0" --mesh="20 20 20" -p -c POSCAR-unitcell
+% gruneisen orig plus minus --dim="2 2 2"  --pa="0 1/2 1/2 1/2 0 1/2 1/2 1/2 0" --mesh="20 20 20" -p -c POSCAR-unitcell
