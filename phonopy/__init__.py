@@ -87,7 +87,7 @@ class Phonopy:
         self._is_nac = False
 
         # set_force_constants or set_forces
-        self._sets_of_forces = None
+        self._set_of_forces_objects = None
         self._force_constants = None
 
         # set_band_structure
@@ -214,14 +214,16 @@ class Phonopy:
     def set_post_process(self,
                          primitive_matrix=np.eye(3, dtype=float),
                          sets_of_forces=None,
+                         set_of_forces_objects=None,
                          force_constants=None,
                          is_nac=False,
                          calculate_full_force_constants=False,
                          force_constants_decimals=None,
                          dynamical_matrix_decimals=None):
         """
-        Set forces to prepare phonon calculations. The order of
-        'sets_of_forces' has to correspond to that of 'displacements'.
+        Set forces or force constants to prepare phonon calculations.
+        The order of 'sets_of_forces' has to correspond to that of
+        'displacements' that should be already stored.
 
         primitive_matrix:
           Relative axes of primitive cell to the input unit cell.
@@ -234,6 +236,9 @@ class Phonopy:
            [[[f_1x, f_1y, f_1z], [f_2x, f_2y, f_2z], ...], # first supercell
              [[f_1x, f_1y, f_1z], [f_2x, f_2y, f_2z], ...], # second supercell
              ...                                                  ]
+
+        set_of_forces_objects:
+           [FORCES_object, FORCES_object, FORCES_object, ...]
         """
 
         self._is_nac = is_nac
@@ -245,32 +250,34 @@ class Phonopy:
             np.dot(inv_supercell_matrix, primitive_matrix),
             self._symprec)
 
-        # Force constants
-        if self._force_constants==None:
-            if force_constants == None:
-                if self._sets_of_forces==None:
-                    if not sets_of_forces == None:
-                        self.set_forces(sets_of_forces)
-                    else:
-                        print "In set_post_process, sets_of_forces or force_constants"
-                        print "has to be set."
-                        return False
+        # Set set of FORCES objects or force constants
+        if sets_of_forces is not None:
+            self.set_forces(sets_of_forces)
+        elif set_of_forces_objects is not None:
+            self.set_force_sets(set_of_forces_objects)
+        elif force_constants is not None:
+            self.set_force_constants(force_constants)
 
-                if calculate_full_force_constants:
-                    self.set_force_constants_from_forces(
-                        distributed_atom_list=None,
-                        force_constants_decimals=force_constants_decimals)
-                else:
-                    self.set_force_constants_from_forces(
-                        distributed_atom_list=\
-                            self._primitive.get_primitive_to_supercell_map(),
-                        force_constants_decimals=force_constants_decimals)
+        # Calculate force cosntants from forces (full or symmetry reduced)
+        if self._set_of_forces_objects is not None:
+            if calculate_full_force_constants:
+                self.set_force_constants_from_forces(
+                    distributed_atom_list=None,
+                    force_constants_decimals=force_constants_decimals)
             else:
-                self.set_force_constants(force_constants)
+                p2s_map = self._primitive.get_primitive_to_supercell_map()
+                self.set_force_constants_from_forces(
+                    distributed_atom_list=p2s_map,
+                    force_constants_decimals=force_constants_decimals)
 
+        if self._force_constants is None:
+            print "In set_post_process, sets_of_forces or force_constants"
+            print "has to be set."
+            return False
+            
         # Dynamical Matrix
         self.set_dynamical_matrix(decimals=dynamical_matrix_decimals)
-
+        
     def set_nac_params(self, nac_params, method='wang'):
         if self._is_nac:
             self._dynamical_matrix.set_nac_params(nac_params, method)
@@ -301,13 +308,13 @@ class Phonopy:
             forces.append(Forces(disp[0],
                                  disp[1:4],
                                  sets_of_forces[i]))
-        self._sets_of_forces = forces
+        self._set_of_forces_objects = forces
 
     def set_force_constants_from_forces(self,
                                         distributed_atom_list=None,
                                         force_constants_decimals=None):
         self._force_constants = get_force_constants(
-            self._sets_of_forces,
+            self._set_of_forces_objects,
             self._symmetry,
             self._supercell,
             atom_list=distributed_atom_list,
@@ -323,20 +330,8 @@ class Phonopy:
     def set_force_constants(self, force_constants):
         self._force_constants = force_constants
 
-    def set_force_sets(self, force_sets):
-        """
-        force_sets is the list of objects of Forces class.
-        """
-        sets_of_forces = []
-        displacements = []
-        for forces in force_sets:
-            sets_of_forces.append(forces.get_forces())
-            disp = forces.get_displacement()
-            atom_number = forces.get_atom_number()
-            displacements.append([atom_number,
-                                  disp[0], disp[1], disp[2]])
-        self.set_displacements(displacements)
-        self.set_forces(sets_of_forces)
+    def set_force_sets(self, sets_of_forces_objects):
+        self._set_of_forces_objects = sets_of_forces_objects
         
     def symmetrize_force_constants(self, iteration=3):
         symmetrize_force_constants(self._force_constants, iteration)
@@ -802,7 +797,7 @@ class Phonopy:
 
 
     # Characters of irreducible representations
-    def set_character_table(self, q, degeneracy_tolerance):
+    def set_character_table(self, q, degeneracy_tolerance=1e-4):
         self._character_table = CharacterTable(
             self._dynamical_matrix,
             q,
