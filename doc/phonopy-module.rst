@@ -70,8 +70,8 @@ Force calculation
 ^^^^^^^^^^^^^^^^^^
 
 Run force calculations for the supercells.
-Then collect forces from the calculation results. The set of forces
-has to be given in nested list (``set_of_forces``) as::
+Then collect forces from the calculation results. The sets of forces
+has to be given in nested list (``sets_of_forces``) as::
 
    [ [ [ f_1x, f_1y, f_1z ], [ f_2x, f_2y, f_2z ], ... ], # first supercell
      [ [ f_1x, f_1y, f_1z ], [ f_2x, f_2y, f_2z ], ... ], # second supercell
@@ -83,11 +83,11 @@ Post process
 Prepare dynamical matrix internally (``set_post_process``)  with
 
 - primitive matrix (3x3 matrix, see :ref:`variable_primitive_matrix`)
-- set of forces
+- sets of forces
 
 ::
 
-   phonon.set_post_process([[0,0.5,0.5],[0.5,0,0.5],[0.5,0.5,0]], set_of_forces)
+   phonon.set_post_process([[0,0.5,0.5],[0.5,0,0.5],[0.5,0.5,0]], sets_of_forces)
 
 
 Band structure
@@ -216,7 +216,7 @@ used for NaCl.
               [0, 0, 2.43533967]]
    factors = 14.400
    phonon.set_post_process([[0, 0.5, 0.5], [0.5, 0, 0.5], [0.5, 0.5, 0]],
-                           set_of_forces,
+                           sets_of_forces,
 			   is_nac=True)
    phonon.set_nac_params({'born': born,
                           'factor': factors,
