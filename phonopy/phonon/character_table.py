@@ -135,12 +135,12 @@ character_table = { '6/mmm':
                         { 'rotation_list':
                               [ 'E', 'C6', 'C3', 'C2', 'sgv', 'sgd' ],
                           'character_table':
-                              { 'A1': [ 1, 1, 1, 1, 1, 1],
-                                'A2': [ 1, 1, 1, 1,-1,-1],
-                                'B1': [ 1,-1, 1,-1, 1,-1],
-                                'B2': [ 1,-1, 1,-1,-1, 1],
-                                'E1': [ 2, 1,-1,-2, 0, 0],
-                                'E2': [ 2,-1,-1, 2, 0, 0] },
+                              { 'A1': [ 1, 1, 1, 1, 1, 1 ],
+                                'A2': [ 1, 1, 1, 1,-1,-1 ],
+                                'B1': [ 1,-1, 1,-1, 1,-1 ],
+                                'B2': [ 1,-1, 1,-1,-1, 1 ],
+                                'E1': [ 2, 1,-1,-2, 0, 0 ],
+                                'E2': [ 2,-1,-1, 2, 0, 0 ] },
                           'mapping_table': [
             { 'E'  : [ ( ( 1, 0, 0 ),
                          ( 0, 1, 0 ),
@@ -660,7 +660,7 @@ class CharacterTable:
          self._transformation_matrix,
          self._conventional_rotations) = self._get_conventional_rotations()
 
-        self._matrices = self._get_mapping_matrix()
+        self._ground_matrices = self._get_ground_matrix()
         self._degenerate_sets = self._get_degenerate_sets()
         self._irreps = self._get_ir_representations()
         self._characters, self._irrep_dims = self._get_characters()
@@ -671,9 +671,11 @@ class CharacterTable:
             if (abs(self._q) < self._symprec).all() and self._rotation_symbols:
                 self._ir_labels = self._get_ir_labels()
             elif (abs(self._q) < self._symprec).all():
-                print "Database for this point group is not preprared."
+                if self._log_level > 0:
+                    print "Database for this point group is not preprared."
             else:
-                print "Database for non-Gamma point is not prepared."
+                if self._log_level > 0:
+                    print "Database for non-Gamma point is not prepared."
         else:
             self._rotation_symbols = None
 
@@ -689,8 +691,8 @@ class CharacterTable:
     def get_ir_representations(self):
         return self._irreps
 
-    def get_matrices(self):
-        return self._matrices
+    def get_ground_matrices(self):
+        return self._ground_matrices
 
     def get_rotation_symbols(self):
         return self._rotation_symbols
@@ -759,7 +761,7 @@ class CharacterTable:
 
         return np.array(trans_rots)
 
-    def _get_mapping_matrix(self):
+    def _get_ground_matrix(self):
         matrices = []
         
         for (r, t) in zip(self._rotations_at_q,
@@ -816,7 +818,7 @@ class CharacterTable:
         irrep = []
         for band_indices in self._degenerate_sets:
             irrep_Rs = []
-            for mat in self._matrices:
+            for mat in self._ground_matrices:
                 l = len(band_indices)
 
                 if l == 1:
@@ -839,13 +841,14 @@ class CharacterTable:
     def _get_character_projection_operators(self, idx_irrep):
         dim = self._irrep_dims[idx_irrep]
         chars = self._characters[idx_irrep]
-        return np.sum([mat * char.conj() for mat, char
-                       in zip(self._matrices, chars)], axis=0) * dim / self._g
+        return np.sum([mat * char.conj()
+                       for mat, char in zip(self._ground_matrices, chars)],
+                      axis=0) * dim / self._g
 
     def _get_projection_operators(self, idx_irrep, i, j):
         dim = self._irrep_dims[idx_irrep]
         return np.sum([mat * r[i, j].conj() for mat, r
-                       in zip(self._matrices, self._irreps[idx_irrep])],
+                       in zip(self._ground_matrices, self._irreps[idx_irrep])],
                       axis=0) * dim / self._g
     
     def _get_rotation_symbols(self):
@@ -975,66 +978,71 @@ class CharacterTable:
                 print
 
     def _write_yaml(self, show_irreps):
-        f = open("character_table.yaml", 'w')
-        f.write("q-position: [ %12.7f, %12.7f, %12.7f ]\n" % tuple(self._q))
-        f.write("point_group: %s\n" % self._pointgroup_symbol)
-        f.write("transformation_matrix:\n")
+        w = open("character_table.yaml", 'w')
+        w.write("q-position: [ %12.7f, %12.7f, %12.7f ]\n" % tuple(self._q))
+        w.write("point_group: %s\n" % self._pointgroup_symbol)
+        w.write("transformation_matrix:\n")
         for v in self._transformation_matrix:
-            f.write("- [ %10.7f, %10.7f, %10.7f ]\n" % tuple(v))
-        f.write("rotations:\n")
+            w.write("- [ %10.7f, %10.7f, %10.7f ]\n" % tuple(v))
+        w.write("rotations:\n")
         for i, r in enumerate(self._conventional_rotations):
-            if self._rotation_symbols:
-                f.write("- symbol: %s\n" % self._rotation_symbols[i])
-            f.write("  representation:\n")
+            w.write("- matrix:\n")
             for v in r:
-                f.write("  - [ %2d, %2d, %2d ]\n" % tuple(v))
-        f.write("\n")
-        f.write("character_table:\n")
+                w.write("  - [ %2d, %2d, %2d ]\n" % tuple(v))
+            if self._rotation_symbols:
+                w.write("  symbol: %s\n" % self._rotation_symbols[i])
+        w.write("normal_modes:\n")
         for i, deg_set in enumerate(self._degenerate_sets):
-            f.write("- frequency: %-15.10f\n" % self._freqs[deg_set[0]])
+            w.write("- band_indices: [ ")
+            w.write("%d" % (deg_set[0] + 1))
+            for bi in deg_set[1:]:
+                w.write(", %d" % (bi + 1))
+            w.write(" ]\n")
+            w.write("  frequency: %-15.10f\n" % self._freqs[deg_set[0]])
             if self._ir_labels:
-                f.write("  ir_label: %s\n" % self._ir_labels[i])
-            f.write("  characters: [ ")
-            chars = self._characters[i]
-            for chi in chars[:-1]:
-                f.write("%2.0f, " % chi.real)
-            f.write("%2.0f ]\n" % chars[-1].real)
+                w.write("  ir_label: %s\n" % self._ir_labels[i])
+            w.write("  characters: [ ")
+            chars = np.rint(self._characters[i].real)
+            w.write("%2d" % chars[0])
+            for chi in chars[1:]:
+                w.write(", %2d" % chi)
+            w.write(" ]\n")
 
         if show_irreps:
             self._write_yaml_irreps(f)
             
-        f.close()
+        w.close()
 
     def _write_yaml_irreps(self, file_pointer):
-        f = file_pointer
+        w = file_pointer
         if not self._irreps:
             self._irrep = self._get_ir_representations()
 
-        f.write("\n")
-        f.write("irreps:\n")
+        w.write("\n")
+        w.write("irreps:\n")
         for i, (deg_set, irrep_Rs) in enumerate(
             zip(self._degenerate_sets, self._irreps)):
-            f.write("- # %d\n" % (i + 1))
+            w.write("- # %d\n" % (i + 1))
             for j, irrep_R in enumerate(irrep_Rs):
                 if self._rotation_symbols:
                     symbol = self._rotation_symbols[j]
                 else:
                     symbol = ''
                 if len(deg_set) > 1:
-                    f.write("  - # %d %s\n" % (j + 1, symbol))
+                    w.write("  - # %d %s\n" % (j + 1, symbol))
                     for k, v in enumerate(irrep_R):
-                        f.write("    - [ ")
+                        w.write("    - [ ")
                         for x in v[:-1]:
-                            f.write("%10.7f, %10.7f,   " % (x.real, x.imag))
-                        f.write("%10.7f, %10.7f ] # (" %
+                            w.write("%10.7f, %10.7f,   " % (x.real, x.imag))
+                        w.write("%10.7f, %10.7f ] # (" %
                                 (v[-1].real, v[-1].imag))
                         
-                        f.write(("%5.0f" * len(v)) %
+                        w.write(("%5.0f" * len(v)) %
                                 tuple((np.angle(v) / np.pi * 180) % 360))
-                        f.write(")\n")
+                        w.write(")\n")
                 else:
                     x = irrep_R[0][0]
-                    f.write("  - [ [ %10.7f, %10.7f ] ] # (%3.0f) %d %s\n" %
+                    w.write("  - [ [ %10.7f, %10.7f ] ] # (%3.0f) %d %s\n" %
                             (x.real, x.imag,
                              (np.angle(x) / np.pi * 180) % 360, j + 1, symbol))
                 
