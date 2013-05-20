@@ -451,10 +451,12 @@ def read_gamma_from_hdf5(mesh,
                          mesh_divisors=None,
                          grid_point=None,
                          sigma=None,
-                         filename=None):
+                         filename=None,
+                         verbose=True):
     suffix = "-m%d%d%d" % tuple(mesh)
-    if (mesh_divisors != 1).any():
-        suffix += "-d%d%d%d" % tuple(mesh_divisors)
+    if mesh_divisors is not None:
+        if (mesh_divisors != 1).any():
+            suffix += "-d%d%d%d" % tuple(mesh_divisors)
     sigma_str = ("%f" % sigma).rstrip('0').rstrip('\.')
     if grid_point is not None:
         suffix += ("-g%d" % grid_point)
@@ -462,22 +464,24 @@ def read_gamma_from_hdf5(mesh,
         suffix += "-s" + sigma_str
     if filename is not None:
         suffix += "." + filename
-    print "Gamma",
-    if grid_point is not None:
-        print "at grid adress %d" % grid_point,
-    if sigma is not None:
-        if grid_point is not None:
-            print "and",
-        else:
-            print "at",
-        print "sigma %s" % sigma_str,
-    print "were read from",
-    if grid_point is not None:
-        print ""
-    print "%s" % ("gamma" + suffix + ".hdf5")
     f = h5py.File("gamma" + suffix + ".hdf5", 'r')
     gammas = f['gammas'][:]
     f.close()
+
+    if verbose:
+        print "Gamma",
+        if grid_point is not None:
+            print "at grid adress %d" % grid_point,
+        if sigma is not None:
+            if grid_point is not None:
+                print "and",
+            else:
+                print "at",
+            print "sigma %s" % sigma_str,
+        print "were read from",
+        if grid_point is not None:
+            print ""
+        print "%s" % ("gamma" + suffix + ".hdf5")
     
     return gammas
 
