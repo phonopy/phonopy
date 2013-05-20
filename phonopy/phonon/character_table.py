@@ -776,7 +776,6 @@ class CharacterTable:
         return np.array(matrices)
 
     def _get_characters(self):
-        import sys
         characters = []
         irrep_dims = []
         for irrep_Rs in self._irreps:
@@ -1020,7 +1019,7 @@ class CharacterTable:
             # w.write(" ]\n")
 
         if show_irreps:
-            self._write_yaml_irreps(f)
+            self._write_yaml_irreps(w)
             
         w.close()
 
