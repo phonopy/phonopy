@@ -1002,11 +1002,22 @@ class CharacterTable:
             if self._ir_labels:
                 w.write("  ir_label: %s\n" % self._ir_labels[i])
             w.write("  characters: [ ")
-            chars = np.rint(self._characters[i].real)
-            w.write("%2d" % chars[0])
+            chars = np.rint(self._characters[i].real).astype(int)
+            w.write("%2d" % (chars[0]))
             for chi in chars[1:]:
                 w.write(", %2d" % chi)
             w.write(" ]\n")
+            # w.write("  characters_real: [ ")
+            # chars = self._characters[i]
+            # w.write("%5.2f" % (chars[0].real))
+            # for chi in chars[1:]:
+            #     w.write(", %5.2f" % chi.real)
+            # w.write(" ]\n")
+            # w.write("  characters_imag: [ ")
+            # w.write("%5.2f" % (chars[0].imag))
+            # for chi in chars[1:]:
+            #     w.write(", %5.2f" % chi.imag)
+            # w.write(" ]\n")
 
         if show_irreps:
             self._write_yaml_irreps(f)
