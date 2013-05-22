@@ -127,7 +127,7 @@ def get_group_velocity(q, # q-point
                                     dynamical_matrix,
                                     reciprocal_lattice)): # (x, y, z)
         dD_at_q[:, i] = [np.vdot(eigvec, np.dot(dD_i, eigvec)).real
-                     for eigvec in eigvecs.T]
+                         for eigvec in eigvecs.T]
         dD_at_q[:, i] *= factor ** 2 / freqs / 2 / (q_length * 2)
     return dD_at_q
         
