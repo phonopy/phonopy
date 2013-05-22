@@ -409,13 +409,13 @@ def write_kappa(kappa,
         w.write("%6.1f %.5f\n" % (t, k))
     w.close()
 
-def write_kappa_to_hdf5(gammas,
-                        kappas,
-                        temperatures,
-                        frequencies,
-                        group_velocities,
+def write_kappa_to_hdf5(gamma,
+                        temperature,
+                        frequency,
+                        group_velocity,
                         cv,
                         mesh,
+                        kappa=None,
                         mesh_divisors=None,
                         grid_point=None,
                         sigma=None,
@@ -443,12 +443,13 @@ def write_kappa_to_hdf5(gammas,
     print "were written into",
     print "\"%s\"" % ("kappa" + suffix + ".hdf5")
     w = h5py.File("kappa" + suffix + ".hdf5", 'w')
-    w.create_dataset('gammas', data=gammas)
-    w.create_dataset('kappas', data=kappas)
-    w.create_dataset('frequencies', data=frequencies)
-    w.create_dataset('temperatures', data=temperatures)
-    w.create_dataset('group_velocities', data=group_velocities)
-    w.create_dataset('heat_capacities', data=cv)
+    w.create_dataset('gamma', data=gamma)
+    w.create_dataset('frequency', data=frequency)
+    w.create_dataset('temperature', data=temperature)
+    w.create_dataset('group_velocity', data=group_velocity)
+    w.create_dataset('heat_capacity', data=cv)
+    if kappa is not None:
+        w.create_dataset('kappa', data=kappa)
     w.close()
 
 def read_gamma_from_hdf5(mesh,
@@ -468,8 +469,8 @@ def read_gamma_from_hdf5(mesh,
         suffix += "-s" + sigma_str
     if filename is not None:
         suffix += "." + filename
-    f = h5py.File("gamma" + suffix + ".hdf5", 'r')
-    gammas = f['gammas'][:]
+    f = h5py.File("kappa" + suffix + ".hdf5", 'r')
+    gammas = f['gamma'][:]
     f.close()
 
     if verbose:

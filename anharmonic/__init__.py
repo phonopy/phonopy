@@ -8,7 +8,7 @@ from anharmonic.BTE_RTA import BTE_RTA
 from anharmonic.jointDOS import get_jointDOS
 from anharmonic.gruneisen import Gruneisen
 import anharmonic.triplets as triplets
-from anharmonic.file_IO import write_kappa, read_gamma_from_hdf5
+from anharmonic.file_IO import write_kappa_to_hdf5, read_gamma_from_hdf5
 
 class JointDOS:
     def __init__(self,
@@ -86,8 +86,8 @@ class Phono3py:
         self._read_triplets = read_triplets
         self._r2q_TI_index = r2q_TI_index
         self._is_Peierls = is_Peierls
-        self._kappas = None
-        self._gammas = None
+        self._kappa = None
+        self._gamma = None
 
         self._pp = PhononPhonon(fc3,
                                 supercell,
@@ -225,36 +225,49 @@ class Phono3py:
         br.set_grid_points(grid_points)
 
         if read_gamma:
-            gammas = []
+            gamma = []
             for sigma in sigmas:
-                gammas_at_sigma = []
+                gamma_at_sigma = []
                 for i, gp in enumerate(br.get_grid_address()):
-                    gammas_at_sigma.append(read_gamma_from_hdf5(
+                    gamma_at_sigma.append(read_gamma_from_hdf5(
                         br.get_mesh_numbers(),
                         mesh_divisors=br.get_mesh_divisors(),
                         grid_point=gp,
-                        sigma=sigmas[0],
+                        sigma=sigma,
                         filename=filename))
-                gammas.append(gammas_at_sigma)
-            br.set_gamma(np.array(gammas))
+                gamma.append(gamma_at_sigma)
+            br.set_gamma(np.double(gamma))
         
-        kappas, gammas = br.get_kappa(write_amplitude=write_amplitude,
-                                      read_amplitude=read_amplitude,
-                                      write_gamma=write_gamma)
+        mode_kappa, gamma = br.get_kappa(write_amplitude=write_amplitude,
+                                         read_amplitude=read_amplitude,
+                                         write_gamma=write_gamma)
 
         if grid_points is None:
-            print "-------------- Total kappa --------------"
-            for sigma, kappa_at_sigma in zip(sigmas, kappas):
-                write_kappa(kappa_at_sigma.sum(axis=0).sum(axis=1),
-                            br.get_temperatures(),
-                            br.get_mesh_numbers(),
-                            mesh_divisors=mesh_divisors,
-                            sigma=sigma,
-                            filename=filename)
-            
+            temperatures = br.get_temperatures()
+            for i, sigma in enumerate(sigmas):
+                print
+                kappa = mode_kappa[i].sum(axis=2).sum(axis=0)
+                print "----------- Thermal conductivity (W/m-k) for",
+                print "sigma=%s -----------" % sigma
+                print ("#%6s     " + " %-9s" * 6) % ("T(K)", "xx", "yy", "zz",
+                                                    "yz", "xz", "xy")
+                for t, k in zip(temperatures, kappa):
+                    print ("%7.1f" + " %9.3f" * 6) % ((t,) + tuple(k))
+                print
+                write_kappa_to_hdf5(gamma[i],
+                                    temperatures,
+                                    br.get_frequencies(),
+                                    br.get_group_velocities(),
+                                    br.get_mode_heat_capacities(),
+                                    br.get_mesh_numbers(),
+                                    kappa=kappa,
+                                    mesh_divisors=br.get_mesh_divisors(),
+                                    sigma=sigma,
+                                    filename=filename)
 
-        self._kappas = kappas
-        self._gammas = gammas
+
+        self._kappa = kappa
+        self._gamma = gamma
 
 
     # def get_decay_channels(self,

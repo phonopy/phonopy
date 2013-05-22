@@ -48,6 +48,7 @@ class BTE_RTA:
         self._point_operations = None
         self._set_pointgroup_operations()
         self._gamma = None
+        self._frequencies = None
         self._cv = None
         self._gv = None
 
@@ -63,6 +64,15 @@ class BTE_RTA:
 
     def get_mesh_numbers(self):
         return self._mesh
+
+    def get_group_velocities(self):
+        return self._gv
+
+    def get_mode_heat_capacities(self):
+        return self._cv
+
+    def get_frequencies(self):
+        return self._frequencies
         
     def set_grid_points(self, grid_points=None):
         if grid_points is not None: # Specify grid points
@@ -116,10 +126,14 @@ class BTE_RTA:
         kappa = np.zeros((len(self._sigmas),
                           len(self._grid_points),
                           len(self._temperatures),
-                          num_atom * 3), dtype='double')
+                          num_atom * 3,
+                          6), dtype='double')
         
         if self._gamma is None: # if gamma is not set.
-            gamma = np.zeros_like(kappa)
+            gamma = np.zeros((len(self._sigmas),
+                              len(self._grid_points),
+                              len(self._temperatures),
+                              num_atom * 3), dtype='double')
         else:
             gamma = self._gamma
 
@@ -129,6 +143,9 @@ class BTE_RTA:
         self._cv = np.zeros((len(self._grid_points),
                              len(self._temperatures),
                              num_atom * 3), dtype='double')
+
+        self._frequencies = np.zeros((len(self._grid_points),
+                                      num_atom * 3), dtype='double')
 
         for i in range(len(self._grid_points)):
             grid_point = self._grid_points[i]
@@ -152,7 +169,6 @@ class BTE_RTA:
             for j, sigma in enumerate(self._sigmas):
                 if write_gamma:
                     write_kappa_to_hdf5(gamma[j, i],
-                                        kappa[j, i],
                                         self._temperatures,
                                         self._pp.get_frequencies(),
                                         self._gv[i],
@@ -169,20 +185,25 @@ class BTE_RTA:
                              i,
                              kappa,
                              gamma):
+        freqs = self._pp.get_frequencies()
+        self._frequencies[i] = freqs
+        
         # Group velocity [num_freqs, 3]
         gv = get_group_velocity(
             self._pp.get_qpoint(),
             self._pp.get_dynamical_matrix(),
             self._reciprocal_lattice,
             eigenvectors=self._pp.get_eigenvectors(),
-            frequencies=self._pp.get_frequencies())
+            frequencies=freqs)
         self._gv[i] = gv
         
         # Outer product of group velocities (v x v) [num_k*, num_freqs, 3, 3]
         gv_by_gv_tensor = self._get_gv_by_gv(gv, i)
 
         # Sum all vxv at k*
-        gv_sum2 = gv_by_gv_tensor[:, :, 0, 0].sum(axis=0) # currently only [100] direction
+        gv_sum2 = np.zeros((6, len(freqs)), dtype='double')
+        for j, vxv in enumerate(([0, 0], [1, 1], [2, 2], [1, 2], [0, 2], [0, 1])):
+            gv_sum2[j] = gv_by_gv_tensor[:, :, vxv[0], vxv[1]].sum(axis=0)
 
         # Heat capacity [num_temps, num_freqs]
         cv = self._get_cv()
@@ -197,11 +218,11 @@ class BTE_RTA:
             if self._gamma is None:
                 gamma[j, i] = self._get_gamma(sigma)
             for k in range(len(self._temperatures)):
-                for l in range(len(self._pp.get_frequencies())):
+                for l in range(len(freqs)):
                     if gamma[j, i, k, l] > 0:
-                        kappa[j, i, k, l] = (gv_sum2[l] * cv[k, l] /
-                                             gamma[j, i, k, l] / 2 *
-                                             self._conversion_factor)
+                        kappa[j, i, k, l, :] = (gv_sum2[:, l] * cv[k, l] /
+                                                gamma[j, i, k, l] / 2 *
+                                                self._conversion_factor)
 
     def _get_gv_by_gv(self, gv, index):
         grid_point = self._grid_points[index]
