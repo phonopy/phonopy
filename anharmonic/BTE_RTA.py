@@ -48,6 +48,7 @@ class BTE_RTA:
         self._point_operations = None
         self._set_pointgroup_operations()
         self._gamma = None
+        self._read_gamma = False
         self._frequencies = None
         self._cv = None
         self._gv = None
@@ -117,58 +118,42 @@ class BTE_RTA:
 
     def set_gamma(self, gamma):
         self._gamma = gamma
-    
-    def get_kappa(self,
-                  write_amplitude=False,
-                  read_amplitude=False,
-                  write_gamma=False):
-        num_atom = self._primitive.get_number_of_atoms()
-        kappa = np.zeros((len(self._sigmas),
-                          len(self._grid_points),
-                          len(self._temperatures),
-                          num_atom * 3,
-                          6), dtype='double')
+        self._read_gamma = True
+
+    def get_gamma(self):
+        return self._gamma
         
-        if self._gamma is None: # if gamma is not set.
-            gamma = np.zeros((len(self._sigmas),
-                              len(self._grid_points),
-                              len(self._temperatures),
-                              num_atom * 3), dtype='double')
-        else:
-            gamma = self._gamma
-
-        self._gv = np.zeros((len(self._grid_points),
-                             num_atom * 3,
-                             3), dtype='double')
-        self._cv = np.zeros((len(self._grid_points),
-                             len(self._temperatures),
-                             num_atom * 3), dtype='double')
-
-        self._frequencies = np.zeros((len(self._grid_points),
-                                      num_atom * 3), dtype='double')
-
+    def get_kappa(self):
+        return self._kappa
+        
+    def calculate_kappa(self,
+                        write_amplitude=False,
+                        read_amplitude=False,
+                        write_gamma=False):
+        self._allocate_values()
         for i in range(len(self._grid_points)):
             grid_point = self._grid_points[i]
             if self._log_level:
                 print ("================= %d/%d =================" %
                        (i + 1, len(self._grid_points)))
 
-            if self._gamma is None:
+            if self._read_gamma:
+                self._pp.set_qpoint(
+                    self._grid_address[grid_point].astype(float) / self._mesh)
+                self._pp.set_harmonic_phonons()
+            else:
                 self._pp.set_triplets_at_q(grid_point)
                 self._pp.set_interaction_strength(
                     write_amplitude=write_amplitude,
                     read_amplitude=read_amplitude)
                 self._pp.set_harmonic_phonons()
-            else:
-                self._pp.set_qpoint(
-                    self._grid_address[grid_point].astype(float) / self._mesh)
-                self._pp.set_harmonic_phonons()
+                self._set_gamma_at_sigmas(i)
 
-            self._get_kappa_at_sigmas(i, kappa, gamma)
+            self._set_kappa_at_sigmas(i)
             
-            for j, sigma in enumerate(self._sigmas):
-                if write_gamma:
-                    write_kappa_to_hdf5(gamma[j, i],
+            if write_gamma:
+                for j, sigma in enumerate(self._sigmas):
+                    write_kappa_to_hdf5(self._gamma[j, i],
                                         self._temperatures,
                                         self._pp.get_frequencies(),
                                         self._gv[i],
@@ -179,12 +164,35 @@ class BTE_RTA:
                                         sigma=sigma,
                                         filename=self._filename)
 
-        return kappa, gamma
+    def _allocate_values(self):
+        num_freqs = self._primitive.get_number_of_atoms() * 3
+        self._kappa = np.zeros((len(self._sigmas),
+                                len(self._grid_points),
+                                len(self._temperatures),
+                                num_freqs,
+                                6), dtype='double')
+        if not self._read_gamma:
+            self._gamma = np.zeros((len(self._sigmas),
+                                    len(self._grid_points),
+                                    len(self._temperatures),
+                                    num_freqs), dtype='double')
+        self._gv = np.zeros((len(self._grid_points),
+                             num_freqs,
+                             3), dtype='double')
+        self._cv = np.zeros((len(self._grid_points),
+                             len(self._temperatures),
+                             num_freqs), dtype='double')
 
-    def _get_kappa_at_sigmas(self,
-                             i,
-                             kappa,
-                             gamma):
+        self._frequencies = np.zeros((len(self._grid_points),
+                                      num_freqs), dtype='double')
+        
+    def _set_gamma_at_sigmas(self, i):
+        for j, sigma in enumerate(self._sigmas):
+            if self._log_level > 0:
+                print "Calculating Gamma using sigma=%s" % sigma
+            self._gamma[j, i] = self._get_gamma(sigma)
+    
+    def _set_kappa_at_sigmas(self, i):
         freqs = self._pp.get_frequencies()
         self._frequencies[i] = freqs
         
@@ -211,18 +219,13 @@ class BTE_RTA:
 
         # Kappa
         for j, sigma in enumerate(self._sigmas):
-            if self._log_level > 0:
-                print "Sigma used to approximate delta function",
-                print "by gaussian: %f" % sigma
-
-            if self._gamma is None:
-                gamma[j, i] = self._get_gamma(sigma)
             for k in range(len(self._temperatures)):
                 for l in range(len(freqs)):
-                    if gamma[j, i, k, l] > 0:
-                        kappa[j, i, k, l, :] = (gv_sum2[:, l] * cv[k, l] /
-                                                gamma[j, i, k, l] / 2 *
-                                                self._conversion_factor)
+                    if self._gamma[j, i, k, l] > 0:
+                        self._kappa[j, i, k, l, :] = (
+                            gv_sum2[:, l] * cv[k, l] /
+                            (self._gamma[j, i, k, l] * 2) *
+                            self._conversion_factor)
 
     def _get_gv_by_gv(self, gv, index):
         grid_point = self._grid_points[index]
@@ -244,7 +247,9 @@ class BTE_RTA:
             gv2_tensor.append([np.outer(gv_xyz, gv_xyz)
                                for gv_xyz in np.dot(gv, unit_n)])
 
-        self._show_log(grid_point, gv, rot_unit_n)
+        if self._log_level:
+            self._show_log(grid_point, gv, rot_unit_n)
+            print
 
         return np.array(gv2_tensor)
     
@@ -391,14 +396,13 @@ class BTE_RTA:
         self._point_operations = np.array(point_operations)
 
     def _show_log(self, grid_point, group_velocity, rot_unit_n):
-        if self._log_level:
-            print "----- Partial kappa at grid address %d -----" % grid_point
-            print "Frequency, projected group velocity (x, y, z) at k* (k-star)"
-            for i, unit_n in enumerate(rot_unit_n):
-                print " k*%-2d" % (i + 1)
-                for f, v in zip(self._pp.get_frequencies(),
-                                np.dot(group_velocity, unit_n)):
-                    print "%8.3f   (%8.3f %8.3f %8.3f)" % ((f,) + tuple(v))
+        print "----- Partial kappa at grid address %d -----" % grid_point
+        print "Frequency, projected group velocity (x, y, z) at k* (k-star)"
+        for i, unit_n in enumerate(rot_unit_n):
+            print " k*%-2d" % (i + 1)
+            for f, v in zip(self._pp.get_frequencies(),
+                            np.dot(group_velocity, unit_n)):
+                print "%8.3f   (%8.3f %8.3f %8.3f)" % ((f,) + tuple(v))
 
         
             

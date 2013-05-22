@@ -237,10 +237,12 @@ class Phono3py:
                         filename=filename))
                 gamma.append(gamma_at_sigma)
             br.set_gamma(np.double(gamma))
-        
-        mode_kappa, gamma = br.get_kappa(write_amplitude=write_amplitude,
-                                         read_amplitude=read_amplitude,
-                                         write_gamma=write_gamma)
+
+        br.calculate_kappa(write_amplitude=write_amplitude,
+                           read_amplitude=read_amplitude,
+                           write_gamma=write_gamma)        
+        mode_kappa = br.get_kappa()
+        gamma = br.get_gamma()
 
         if grid_points is None:
             temperatures = br.get_temperatures()
