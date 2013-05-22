@@ -378,8 +378,9 @@ def write_kappa(kappa,
                 filename=None):
     kappa_filename = "kappa"
     suffix = "-m%d%d%d" % tuple(mesh)
-    if (mesh_divisors != 1).any():
-        suffix += "-d%d%d%d" % tuple(mesh_divisors)
+    if mesh_divisors is not None:
+        if (np.array(mesh_divisors, dtype=int) != 1).any():
+            suffix += "-d%d%d%d" % tuple(mesh_divisors)
     sigma_str = ("%f" % sigma).rstrip('0').rstrip('\.')
     if grid_point is not None:
         suffix += ("-g%d" % grid_point)
@@ -401,25 +402,28 @@ def write_kappa(kappa,
     print "were written into",
     if grid_point is not None:
         print ""
-    print "%s" % kappa_filename
+    print "\"%s\"" % kappa_filename
     w = open(kappa_filename, 'w')
     w.write("# temp   kappa\n")
     for t, k in zip(temperatures, kappa):
         w.write("%6.1f %.5f\n" % (t, k))
     w.close()
 
-def write_gamma_to_hdf5(gammas,
+def write_kappa_to_hdf5(gammas,
                         kappas,
                         temperatures,
                         frequencies,
+                        group_velocities,
+                        cv,
                         mesh,
                         mesh_divisors=None,
                         grid_point=None,
                         sigma=None,
                         filename=None):
     suffix = "-m%d%d%d" % tuple(mesh)
-    if (mesh_divisors != 1).any():
-        suffix += "-d%d%d%d" % tuple(mesh_divisors)
+    if mesh_divisors is not None:
+        if (np.array(mesh_divisors, dtype=int) != 1).any():
+            suffix += "-d%d%d%d" % tuple(mesh_divisors)
     sigma_str = ("%f" % sigma).rstrip('0').rstrip('\.')
     if grid_point is not None:
         suffix += ("-g%d" % grid_point)
@@ -427,7 +431,7 @@ def write_gamma_to_hdf5(gammas,
         suffix += "-s" + sigma_str
     if filename is not None:
         suffix += "." + filename
-    print "Gamma",
+    print "Values to calculate kappa",
     if grid_point is not None:
         print "at grid adress %d" % grid_point,
     if sigma is not None:
@@ -435,16 +439,16 @@ def write_gamma_to_hdf5(gammas,
             print "and",
         else:
             print "at",
-        print "sigma %s" % sigma_str,
+        print "sigma %s" % sigma_str
     print "were written into",
-    if grid_point is not None:
-        print ""
-    print "%s" % ("gamma" + suffix + ".hdf5")
-    w = h5py.File("gamma" + suffix + ".hdf5", 'w')
+    print "\"%s\"" % ("kappa" + suffix + ".hdf5")
+    w = h5py.File("kappa" + suffix + ".hdf5", 'w')
     w.create_dataset('gammas', data=gammas)
     w.create_dataset('kappas', data=kappas)
     w.create_dataset('frequencies', data=frequencies)
     w.create_dataset('temperatures', data=temperatures)
+    w.create_dataset('group_velocities', data=group_velocities)
+    w.create_dataset('heat_capacities', data=cv)
     w.close()
 
 def read_gamma_from_hdf5(mesh,

@@ -3,7 +3,7 @@ import phonopy.structure.spglib as spg
 from anharmonic.im_self_energy import get_gamma
 from phonopy.group_velocity import get_group_velocity
 from phonopy.units import Kb, THzToEv, EV, THz, Angstrom
-from anharmonic.file_IO import write_kappa, write_gamma_to_hdf5
+from anharmonic.file_IO import write_kappa_to_hdf5
 from anharmonic.triplets import get_grid_address, reduce_grid_points
 
 unit_to_WmK = ((THz * Angstrom) ** 2 / (Angstrom ** 3) * EV / THz /
@@ -21,7 +21,6 @@ class BTE_RTA:
                  no_kappa_stars=False,
                  gamma_option=0,
                  log_level=0,
-                 write_logs=True,
                  filename=None):
         self._pp = interaction_strength
         self._sigmas = sigmas
@@ -32,7 +31,6 @@ class BTE_RTA:
         self._no_kappa_stars = no_kappa_stars
         self._gamma_option = gamma_option
         self._log_level = log_level
-        self._write_logs = write_logs
         self._filename = filename
 
         self._temperatures = np.arange(self._t_min,
@@ -50,6 +48,8 @@ class BTE_RTA:
         self._point_operations = None
         self._set_pointgroup_operations()
         self._gamma = None
+        self._cv = None
+        self._gv = None
 
         self._mesh = None
         self._mesh_divisors = None
@@ -123,6 +123,13 @@ class BTE_RTA:
         else:
             gamma = self._gamma
 
+        self._gv = np.zeros((len(self._grid_points),
+                             num_atom * 3,
+                             3), dtype='double')
+        self._cv = np.zeros((len(self._grid_points),
+                             len(self._temperatures),
+                             num_atom * 3), dtype='double')
+
         for i in range(len(self._grid_points)):
             grid_point = self._grid_points[i]
             if self._log_level:
@@ -143,35 +150,18 @@ class BTE_RTA:
             self._get_kappa_at_sigmas(i, kappa, gamma)
             
             for j, sigma in enumerate(self._sigmas):
-                if self._write_logs:
-                    write_kappa(kappa[j, i].sum(axis=1),
-                                self._temperatures,
-                                self._mesh,
-                                mesh_divisors=self._mesh_divisors,
-                                grid_point=grid_point,
-                                sigma=sigma,
-                                filename=self._filename)
                 if write_gamma:
-                    write_gamma_to_hdf5(gamma[j, i],
+                    write_kappa_to_hdf5(gamma[j, i],
                                         kappa[j, i],
                                         self._temperatures,
                                         self._pp.get_frequencies(),
+                                        self._gv[i],
+                                        self._cv[i],
                                         self._mesh,
                                         mesh_divisors=self._mesh_divisors,
                                         grid_point=grid_point,
                                         sigma=sigma,
                                         filename=self._filename)
-
-        if self._write_logs:
-            if self._grid_weights is not None:
-                print "-------------- Total kappa --------------"
-                for sigma, kappa_at_sigma in zip(self._sigmas, kappa):
-                    write_kappa(kappa_at_sigma.sum(axis=0).sum(axis=1),
-                                self._temperatures,
-                                self._mesh,
-                                mesh_divisors=self._mesh_divisors,
-                                sigma=sigma,
-                                filename=self._filename)
 
         return kappa, gamma
 
@@ -179,42 +169,49 @@ class BTE_RTA:
                              i,
                              kappa,
                              gamma):
-        # Group velocity
-        gv2_tensor = self._get_gv_by_gv(i)
-        gv_sum2 = gv2_tensor[:, :, 0, 0].sum(axis=0) # currently only [100] direction
-        # Heat capacity
-        cv = self._get_cv()
-
-        for j, sigma in enumerate(self._sigmas):
-            if self._log_level > 0:
-                print "Sigma used to approximate delta function by gaussian: %f" % sigma
-
-            if self._gamma is None:
-                gamma[j, i] = self._get_gamma(sigma)
-            for k in range(len(self._temperatures)):
-                for l in range(len(self._pp.get_frequencies())):
-                    gv = max(np.sqrt(gv2_tensor[:, l, 0, 0]))
-                    if gamma[j, i, k, l] > 0:
-                        kappa[j, i, k, l] = (gv_sum2[l] * cv[k, l] /
-                                             gamma[j, i, k, l] / 2 *
-                                             self._conversion_factor)
-
-    def _get_gv_by_gv(self, index):
-        grid_point = self._grid_points[index]
-        
-        # Group velocity
+        # Group velocity [num_freqs, 3]
         gv = get_group_velocity(
             self._pp.get_qpoint(),
             self._pp.get_dynamical_matrix(),
             self._reciprocal_lattice,
             eigenvectors=self._pp.get_eigenvectors(),
             frequencies=self._pp.get_frequencies())
+        self._gv[i] = gv
+        
+        # Outer product of group velocities (v x v) [num_k*, num_freqs, 3, 3]
+        gv_by_gv_tensor = self._get_gv_by_gv(gv, i)
+
+        # Sum all vxv at k*
+        gv_sum2 = gv_by_gv_tensor[:, :, 0, 0].sum(axis=0) # currently only [100] direction
+
+        # Heat capacity [num_temps, num_freqs]
+        cv = self._get_cv()
+        self._cv[i] = cv
+
+        # Kappa
+        for j, sigma in enumerate(self._sigmas):
+            if self._log_level > 0:
+                print "Sigma used to approximate delta function",
+                print "by gaussian: %f" % sigma
+
+            if self._gamma is None:
+                gamma[j, i] = self._get_gamma(sigma)
+            for k in range(len(self._temperatures)):
+                for l in range(len(self._pp.get_frequencies())):
+                    if gamma[j, i, k, l] > 0:
+                        kappa[j, i, k, l] = (gv_sum2[l] * cv[k, l] /
+                                             gamma[j, i, k, l] / 2 *
+                                             self._conversion_factor)
+
+    def _get_gv_by_gv(self, gv, index):
+        grid_point = self._grid_points[index]
 
         # Sum group velocities at symmetrically equivalent q-points
-        if self._no_kappa_stars:
+        if self._no_kappa_stars: # [Identity(3)]: [1, 3, 3] 
             rot_unit_n = [np.eye(3, dtype='double')]
-        else:
+        else: # [num_k*, 3, 3]
             rot_unit_n = self._get_rotated_unit_directions(grid_point)
+
             # check if the number of rotations is correct.
             if self._grid_weights is not None:
                 assert len(rot_unit_n) == self._grid_weights[index], \

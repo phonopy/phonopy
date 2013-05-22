@@ -221,7 +221,6 @@ class Phono3py:
                      no_kappa_stars=no_kappa_stars,
                      gamma_option=gamma_option,
                      log_level=self._log_level,
-                     write_logs=(not read_gamma),
                      filename=filename)
         br.set_grid_points(grid_points)
 
@@ -242,6 +241,17 @@ class Phono3py:
         kappas, gammas = br.get_kappa(write_amplitude=write_amplitude,
                                       read_amplitude=read_amplitude,
                                       write_gamma=write_gamma)
+
+        if grid_points is None:
+            print "-------------- Total kappa --------------"
+            for sigma, kappa_at_sigma in zip(sigmas, kappas):
+                write_kappa(kappa_at_sigma.sum(axis=0).sum(axis=1),
+                            br.get_temperatures(),
+                            br.get_mesh_numbers(),
+                            mesh_divisors=mesh_divisors,
+                            sigma=sigma,
+                            filename=filename)
+            
 
         self._kappas = kappas
         self._gammas = gammas
