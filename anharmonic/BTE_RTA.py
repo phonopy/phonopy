@@ -155,10 +155,10 @@ class BTE_RTA:
                 for j, sigma in enumerate(self._sigmas):
                     write_kappa_to_hdf5(self._gamma[j, i],
                                         self._temperatures,
-                                        self._pp.get_frequencies(),
-                                        self._gv[i],
-                                        self._cv[i],
                                         self._mesh,
+                                        frequency=self._pp.get_frequencies(),
+                                        group_velocity=self._gv[i],
+                                        heat_capacity=self._cv[i],
                                         mesh_divisors=self._mesh_divisors,
                                         grid_point=grid_point,
                                         sigma=sigma,

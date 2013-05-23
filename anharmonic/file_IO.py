@@ -411,10 +411,10 @@ def write_kappa(kappa,
 
 def write_kappa_to_hdf5(gamma,
                         temperature,
-                        frequency,
-                        group_velocity,
-                        cv,
                         mesh,
+                        frequency=None,
+                        group_velocity=None,
+                        heat_capacity=None,
                         kappa=None,
                         mesh_divisors=None,
                         grid_point=None,
@@ -447,7 +447,8 @@ def write_kappa_to_hdf5(gamma,
     w.create_dataset('frequency', data=frequency)
     w.create_dataset('temperature', data=temperature)
     w.create_dataset('group_velocity', data=group_velocity)
-    w.create_dataset('heat_capacity', data=cv)
+    if heat_capacity is not None:
+        w.create_dataset('heat_capacity', data=heat_capacity)
     if kappa is not None:
         w.create_dataset('kappa', data=kappa)
     w.close()

@@ -258,10 +258,10 @@ class Phono3py:
                 print
                 write_kappa_to_hdf5(gamma[i],
                                     temperatures,
-                                    br.get_frequencies(),
-                                    br.get_group_velocities(),
-                                    br.get_mode_heat_capacities(),
                                     br.get_mesh_numbers(),
+                                    frequency=br.get_frequencies(),
+                                    group_velocity=br.get_group_velocities(),
+                                    heat_capacity=br.get_mode_heat_capacities(),
                                     kappa=kappa,
                                     mesh_divisors=br.get_mesh_divisors(),
                                     sigma=sigma,
