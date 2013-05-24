@@ -267,8 +267,7 @@ class Phono3py:
                                     sigma=sigma,
                                     filename=filename)
 
-
-        self._kappa = kappa
+        self._kappa = mode_kappa
         self._gamma = gamma
 
 
