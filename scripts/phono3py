@@ -43,12 +43,12 @@ from phonopy.interface.vasp import read_vasp
 from phonopy.structure.cells import get_supercell, Primitive, print_cell
 from phonopy.structure.symmetry import Symmetry
 from phonopy.harmonic.forces import Forces
-from phonopy.harmonic.force_constants import get_force_constants, set_permutation_symmetry, symmetrize_force_constants
+from phonopy.harmonic.force_constants import get_force_constants, set_permutation_symmetry, symmetrize_force_constants, set_translational_invariance
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrix
 from phonopy.hphonopy.file_IO import parse_FORCE_SETS
 from phonopy.units import THzToCm, VaspToTHz
 from phonopy.hphonopy.file_IO import parse_BORN
-from anharmonic.fc3 import get_fc3, symmetrize_fc3
+from anharmonic.fc3 import get_fc3, symmetrize_fc3, set_translational_invariance_fc3
 from anharmonic.file_IO import write_fc2_dat, write_fc3_dat,\
     parse_disp_yaml, parse_FORCES_THIRD, write_FORCES_THIRD,\
     parse_DELTA_FORCES, write_supercells_with_displacements,\
@@ -566,6 +566,9 @@ else:
                 print  "----- Read fc3 -----"
                 sys.stdout.flush()
             fc3 = read_fc3_from_hdf5()
+            if options.is_translational_symmetry:
+                set_translational_invariance_fc3(fc3)
+                set_translational_invariance(fc2)
         else: # fc3 from FORCES_THIRD and FORCES_SECOND
             if log_level:
                 print  "----- Solve fc3 -----"
@@ -592,9 +595,9 @@ else:
                 for k in range(3):
                     for l in range(3):
                         for m in range(3):
-                            val1 = fc3[:,i,j,k,l,m].sum()
-                            val2 = fc3[i,:,j,k,l,m].sum()
-                            val3 = fc3[i,j,:,k,l,m].sum()
+                            val1 = fc3[:, i, j, k, l, m].sum()
+                            val2 = fc3[i, :, j, k, l, m].sum()
+                            val3 = fc3[i, j, :, k, l, m].sum()
                             if abs(val1) > abs(maxval1):
                                 maxval1 = val1
                             if abs(val2) > abs(maxval2):
@@ -602,7 +605,7 @@ else:
                             if abs(val3) > abs(maxval3):
                                 maxval3 = val3
         
-        print "max:", maxval1, maxval2, maxval3 
+        print "max drift:", maxval1, maxval2, maxval3 
         
 
         # Symmetrize fc3_r

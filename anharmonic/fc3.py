@@ -1,7 +1,7 @@
 import sys
 import numpy as np
 from anharmonic.fc2 import get_restricted_fc2
-from phonopy.harmonic.force_constants import similarity_transformation, set_permutation_symmetry, set_translational_invariance
+from phonopy.harmonic.force_constants import similarity_transformation, set_permutation_symmetry, set_translational_invariance_per_index
 from anharmonic.displacement_fc3 import get_reduced_site_symmetry
 from anharmonic.file_IO import write_fc2_dat
 
@@ -31,7 +31,7 @@ def get_fc3(supercell,
                    verbose=verbose)
 
     if is_translational_symmetry:
-        set_translational_invariance_fc3(fc3)
+        set_translational_invariance_fc3_per_index(fc3)
 
     return fc3
 
@@ -62,13 +62,24 @@ def symmetrize_fc3_part(fc3, a, b, c):
     return tensor3
 
 def set_translational_invariance_fc3(fc3):
-    for i in range(fc3.shape[1]):
-        for j in range(fc3.shape[2]):
+    for i in range(3):
+        set_translational_invariance_fc3_per_index(fc3, index=i)
+
+def set_translational_invariance_fc3_per_index(fc3, index=0):
+    for i in range(fc3.shape[(1 + index) % 3]):
+        for j in range(fc3.shape[(2 + index) % 3]):
             for k in range(fc3.shape[3]):
                 for l in range(fc3.shape[4]):
                     for m in range(fc3.shape[5]):
-                        fc3[:, i, j, k, l, m] -= np.sum(
-                            fc3[:, i, j, k, l, m]) / fc3.shape[0]
+                        if index == 0:
+                            fc3[:, i, j, k, l, m] -= np.sum(
+                                fc3[:, i, j, k, l, m]) / fc3.shape[0]
+                        elif index == 1:
+                            fc3[j, :, i, k, l, m] -= np.sum(
+                                fc3[j, :, i, k, l, m]) / fc3.shape[1]
+                        elif index == 2:
+                            fc3[i, j, :, k, l, m] -= np.sum(
+                                fc3[i, j, :, k, l, m]) / fc3.shape[2]
     
 def distribute_fc3(fc3,
                    first_disp_atoms,
@@ -258,7 +269,7 @@ def _get_delta_fc2(dataset_first_atom,
                                   reduced_site_sym,
                                   symprec)
     if is_translational_symmetry:
-        set_translational_invariance(disp_fc2)
+        set_translational_invariance_per_index(disp_fc2)
             
     return disp_fc2 - fc2
 

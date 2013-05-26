@@ -461,11 +461,23 @@ def set_translational_invariance(force_constants):
     translational invariance. If the sum is not zero, this error is
     uniformly subtracted from force constants.
     """
-    for i in range(force_constants.shape[1]):
-        for j in range(force_constants.shape[2]):
-            for k in range(force_constants.shape[3]):
-                force_constants[:,i,j,k] -= np.sum(
-                    force_constants[:,i,j,k]) / force_constants.shape[0]
+    set_translational_invariance_per_index(force_constants, index=0)
+    set_translational_invariance_per_index(force_constants, index=1)
+
+def set_translational_invariance_per_index(force_constants, index=0):
+    if index == 0:
+        for i in range(force_constants.shape[1]):
+            for j in range(force_constants.shape[2]):
+                for k in range(force_constants.shape[3]):
+                    force_constants[:, i, j, k] -= np.sum(
+                        force_constants[:, i, j, k]) / force_constants.shape[0]
+    elif index == 1:
+        for i in range(force_constants.shape[0]):
+            for j in range(force_constants.shape[2]):
+                for k in range(force_constants.shape[3]):
+                    force_constants[i, :, j, k] -= np.sum(
+                        force_constants[i, :, j, k]) / force_constants.shape[1]
+
 
 def set_permutation_symmetry(force_constants):
     """
