@@ -43,7 +43,7 @@ from phonopy.interface.vasp import read_vasp
 from phonopy.structure.cells import get_supercell, Primitive, print_cell
 from phonopy.structure.symmetry import Symmetry
 from phonopy.harmonic.forces import Forces
-from phonopy.harmonic.force_constants import get_force_constants, set_permutation_symmetry
+from phonopy.harmonic.force_constants import get_force_constants, set_permutation_symmetry, symmetrize_force_constants
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrix
 from phonopy.hphonopy.file_IO import parse_FORCE_SETS
 from phonopy.units import THzToCm, VaspToTHz
@@ -280,9 +280,6 @@ parser.add_option("--sigma", dest="sigma", type="float",
 parser.add_option("--sym_fc2", dest="is_symmetrize_fc2",
                   action="store_true",
                   help="Symmetrize fc2 by index exchange")
-parser.add_option("--tsym", dest="is_translational_symmetry",
-                  action="store_true",
-                  help="Impose translational invariance condition")
 parser.add_option("--sym_fc3r", dest="is_symmetrize_fc3_r",
                   action="store_true",
                   help="Symmetrize fc3 in real space by index exchange")
@@ -295,6 +292,9 @@ parser.add_option("--tmin", dest="tmin", type="string",
                   help="Minimum calculated temperature")
 parser.add_option("--tstep", dest="tstep", type="string",
                   help="Calculated temperature step")
+parser.add_option("--tsym", dest="is_translational_symmetry",
+                  action="store_true",
+                  help="Impose translational invariance condition")
 parser.add_option("--tolerance", dest="symprec", type="float",
                   help="Symmetry tolerance to search")
 parser.add_option("--tp",
@@ -536,6 +536,7 @@ else:
 
     if options.is_symmetrize_fc2:
         set_permutation_symmetry(fc2)
+        # symmetrize_force_constants(fc2)
 
     if settings.get_is_nac():
         if os.path.exists('BORN'):
