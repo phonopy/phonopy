@@ -1,5 +1,5 @@
 import numpy as np
-from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, get_smallest_vectors
+from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC, get_smallest_vectors
 from anharmonic.fc_interpolate import get_fc_interpolation
 from phonopy.structure.cells import get_supercell, Primitive, print_cell
 from anharmonic.file_IO import write_fc3_dat, write_fc2_dat
@@ -13,6 +13,8 @@ class Gruneisen:
                  fc3,
                  supercell,
                  primitive,
+                 nac_params=None,
+                 nac_q_direction=None,
                  is_ion_clamped=False,
                  factor=VaspToTHz,
                  symprec=1e-5):
@@ -23,10 +25,19 @@ class Gruneisen:
         self._is_ion_clamped = is_ion_clamped
         self._factor = factor
         self._symprec = symprec
-        self._dm = DynamicalMatrix(self._scell,
-                                   self._pcell,
-                                   self._fc2,
-                                   symprec=self._symprec)
+
+        if nac_params is None:
+            self._dm = DynamicalMatrix(self._scell,
+                                       self._pcell,
+                                       self._fc2,
+                                       symprec=self._symprec)
+        else:
+            self._dm = DynamicalMatrixNAC(self._scell,
+                                          self._pcell,
+                                          self._fc2,
+                                          symprec=self._symprec)
+            self._dm.set_nac_params(nac_params)
+        self._nac_q_direction = nac_q_direction
         self._shortest_vectors, self._multiplicity = get_smallest_vectors(
             self._scell, self._pcell, self._symprec)
 
@@ -95,7 +106,10 @@ class Gruneisen:
             f.close()
         
     def _get_gruneisen_tensor(self, q):
-        self._dm.set_dynamical_matrix(q)
+        if self._nac_q_direction is None:
+            self._dm.set_dynamical_matrix(q)
+        else:
+            self._dm.set_dynamical_matrix(q, self._nac_q_direction)
         omega2, w = np.linalg.eigh(self._dm.get_dynamical_matrix())
         g = np.zeros((len(omega2), 3, 3), dtype=float)
         num_atom_prim = self._pcell.get_number_of_atoms()

@@ -653,14 +653,16 @@ else:
                                       fc3,
                                       supercell,
                                       primitive,
-                                      factor=VaspToTHz,
+                                      nac_params=nac_params,
+                                      nac_q_direction=nac_q_direction,
                                       is_ion_clamped=False,
+                                      factor=VaspToTHz,
                                       symprec=options.symprec)
-        qpoints = settings.get_qpoints()
         if mesh is not None:
             gr.set_sampling_mesh(mesh,
                                  is_gamma_center=True)
         else:
+            qpoints = settings.get_qpoints()
             gr.set_qpoints(qpoints)
         gr.run()
         gr.write_yaml()

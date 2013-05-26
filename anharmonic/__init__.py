@@ -310,15 +310,19 @@ def get_gruneisen_parameters(fc2,
                              fc3,
                              supercell,
                              primitive,
-                             factor=None,
+                             nac_params=None,
+                             nac_q_direction=None,
                              is_ion_clamped=False,
+                             factor=None,
                              symprec=1e-5):
     return Gruneisen(fc2,
                      fc3,
                      supercell,
                      primitive,
-                     factor=factor,
+                     nac_params=nac_params,
+                     nac_q_direction=nac_q_direction,
                      is_ion_clamped=is_ion_clamped,
+                     factor=factor,
                      symprec=symprec)
 
 def get_ir_grid_points(mesh, primitive):
