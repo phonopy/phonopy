@@ -52,16 +52,39 @@ class Gruneisen:
         self._frequencies = None
         self._qpoints = None
         self._mesh = None
+        self._band_paths = None
+        self._band_distances = None
         self._weights = None
 
     def run(self):
-        self._gruneisen_parameters = []
-        self._frequencies = []
-        for q in self._qpoints:
+        if self._band_paths is None:
+            (self._gruneisen_parameters,
+             self._frequencies) = self._calculate_at_qpoints(self._qpoints)
+        else:
+            (self._gruneisen_parameters,
+             self._frequencies) = self._calculate_band_paths()
+
+    def _calculate_at_qpoints(self, qpoints):
+        gruneisen_parameters = []
+        frequencies = []
+        for q in qpoints:
             g, omega2 = self._get_gruneisen_tensor(q)
-            self._gruneisen_parameters.append(g)
-            self._frequencies.append(
+            gruneisen_parameters.append(g)
+            frequencies.append(
                 np.sqrt(abs(omega2)) * np.sign(omega2) * self._factor)
+
+        return gruneisen_parameters, frequencies
+            
+    def _calculate_band_paths(self):
+        gruneisen_parameters = []
+        frequencies = []
+        for path in self._band_paths:
+            (gruneisen_at_path,
+             frequencies_at_path) = self._calculate_at_qpoints(path)
+            gruneisen_parameters.append(gruneisen_at_path)
+            frequencies.append(frequencies_at_path)
+
+        return gruneisen_parameters, frequencies
 
     def get_gruneisen_parameters(self):
         return self._gruneisen_parameters
@@ -78,6 +101,17 @@ class Gruneisen:
                                                    self._pcell,
                                                    grid_shift,
                                                    is_gamma_center)
+
+    def set_band_structure(self, paths):
+        self._band_paths = paths
+        rec_lattice = np.linalg.inv(self._pcell.get_cell())
+        self._band_distances = []
+        for path in paths:
+            distances_at_path = [0.]
+            for i in range(len(path) - 1):
+                distances_at_path.append(np.linalg.norm(
+                        np.dot(rec_lattice, path[i + 1] - path[i])))
+            self._band_distances.append(distances_at_path)
 
     def write_yaml(self, filename="gruneisen3.yaml"):
         if (self._qpoints is not None and

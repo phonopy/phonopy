@@ -44,6 +44,7 @@ def fracval(frac):
 
 class Settings:
     def __init__(self):
+        self._band_paths = None
         self._chemical_symbols = None
         self._dm_decimals = None
         self._displacement_distance = None
@@ -216,6 +217,12 @@ class Settings:
     def get_is_mesh_symmetry(self):
         return self._is_mesh_symmetry
 
+    def set_bands(self, bands):
+        self._band_paths = bands
+
+    def get_bands(self):
+        return self._band_paths
+
     def set_sigma(self, sigma):
         self._sigma = sigma
 
@@ -256,9 +263,9 @@ class ConfParser:
         self._options = options
         self._option_list = option_list
 
-        if not filename==None:
+        if filename is not None:
             self.read_file(filename) # store data in self._confs
-        if (not options==None) and (not option_list==None):
+        if (options is not None) and (option_list is not None):
             self.read_options() # store data in self._confs
         self.parse_conf() # self.parameters[key] = val
 
@@ -357,6 +364,27 @@ class ConfParser:
         if params.has_key('mesh_numbers'):
             self._settings.set_mesh_numbers(params['mesh_numbers'])
 
+        # Band paths
+        if params.has_key('band_paths'):
+            if params.has_key('band_points'):
+                npoints = params['band_points'] - 1
+            else:
+                npoints = 50
+                
+            bands = []
+            
+            for band_path in params['band_paths']:
+                nd = len(band_path)
+                for i in range(nd - 1):
+                    diff = (band_path[i + 1] - band_path[i]) / npoints
+                    band = [band_path[i].copy()]
+                    q = np.zeros(3)
+                    for j in range(npoints):
+                        q += diff
+                        band.append(band_path[i] + q)
+                    bands.append(band)
+            self._settings.set_bands(bands)
+
         # Spectram drawing step
         if params.has_key('omega_step'):
             self._settings.set_omega_step(params['omega_step'])
@@ -448,6 +476,14 @@ class ConfParser:
             if opt.dest=='is_nomeshsym':
                 if self._options.is_nomeshsym:
                     self._confs['mesh_symmetry'] = '.false.'
+
+            if opt.dest == 'band_paths':
+                if not self._options.band_paths == None:
+                    self._confs['band'] = self._options.band_paths
+
+            if opt.dest == 'band_points':
+                if not self._options.band_points == None:
+                    self._confs['band_points'] = self._options.band_points
 
             if opt.dest=='omega_step':
                 if self._options.omega_step:
@@ -593,6 +629,20 @@ class ConfParser:
                     self.setting_error("Mesh numbers are incorrectly set.")
                 self.set_parameter('mesh_numbers', vals[:3])
 
+            if conf_key == 'band_points':
+                self.set_parameter('band_points',
+                                   int(confs['band_points']))
+
+            if conf_key == 'band':
+                bands = []
+                for section in confs['band'].split(','):
+                    points = [fracval(x) for x in section.split()]
+                    if len(points) % 3 != 0:
+                        self.setting_error("BAND is incorrectly set.")
+                        break
+                    bands.append(np.array(points).reshape(-1, 3))
+                self.set_parameter('band_paths', bands)
+
             if conf_key == 'omega_step':
                 if isinstance(confs['omega_step'], str):
                     val = float(confs['omega_step'].split()[0])
@@ -637,7 +687,6 @@ class PhonopySettings(Settings):
         self._anime_qpoint = None
         self._anime_shift = None
         self._anime_type = 'v_sim'
-        self._bands = None
         self._band_labels = None
         self._band_connection = False
         self._cutoff_radius = None
@@ -684,12 +733,6 @@ class PhonopySettings(Settings):
 
     def get_is_force_constants(self):
         return self._is_force_constants
-
-    def set_bands(self, bands):
-        self._bands = bands
-
-    def get_bands(self):
-        return self._bands
 
     def set_band_labels(self, labels):
         self._band_labels = labels
@@ -950,14 +993,6 @@ class PhonopyConfParser(ConfParser):
                 if not self._options.qpoints == None:
                     self._confs['qpoints'] = self._options.qpoints
 
-            if opt.dest == 'band_paths':
-                if not self._options.band_paths == None:
-                    self._confs['band'] = self._options.band_paths
-
-            if opt.dest == 'band_points':
-                if not self._options.band_points == None:
-                    self._confs['band_points'] = self._options.band_points
-
             if opt.dest == 'is_band_connection':
                 if self._options.is_band_connection:
                     self._confs['band_connection'] = '.true.'
@@ -995,23 +1030,9 @@ class PhonopyConfParser(ConfParser):
                 if confs['create_displacements'] == '.true.':
                     self.set_parameter('create_displacements', True)
 
-            if conf_key == 'band_points':
-                self.set_parameter('band_points',
-                                   int(confs['band_points']))
-
             if conf_key == 'band_labels':
                 labels = [x for x in confs['band_labels'].split()]
                 self.set_parameter('band_labels', labels)
-
-            if conf_key == 'band':
-                bands = []
-                for section in confs['band'].split(','):
-                    points = [fracval(x) for x in section.split()]
-                    if len(points) % 3 != 0:
-                        self.setting_error("BAND is incorrectly set.")
-                        break
-                    bands.append(np.array(points).reshape(-1, 3))
-                self.set_parameter('band', bands)
 
             if conf_key == 'band_connection':
                 if confs['band_connection'] == '.true.':
@@ -1236,26 +1257,8 @@ class PhonopyConfParser(ConfParser):
                                     is_gamma_center=gamma_center)
     
         # band mode
-        if params.has_key('band'):
-            if params.has_key('band_points'):
-                npoints = params['band_points'] - 1
-            else:
-                npoints = 50
-                
+        if params.has_key('band_paths'):
             self._settings.set_run_mode('band')
-            bands = []
-            
-            for band_path in params['band']:
-                nd = len(band_path)
-                for i in range(nd - 1):
-                    diff = (band_path[i + 1] - band_path[i]) / npoints
-                    band = [band_path[i].copy()]
-                    q = np.zeros(3)
-                    for j in range(npoints):
-                        q += diff
-                        band.append(band_path[i] + q)
-                    bands.append(band)
-            self._settings.set_bands(bands)
 
         if params.has_key('band_labels'):
             self._settings.set_band_labels(params['band_labels'])

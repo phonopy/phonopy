@@ -88,6 +88,8 @@ def print_error(message):
 parser = OptionParser()
 parser.set_defaults(amplitude=None,
                     band_indices=None,
+                    band_paths=None,
+                    band_points=None,
                     cell_poscar=None,
                     delta_fc2=False,
                     factor=None,
@@ -148,6 +150,12 @@ parser.add_option("--amplitude", dest="amplitude", type="float",
 parser.add_option("--bi", "--band_indices", dest="band_indices",
                   type="string",
                   help="Band indices where life time is calculated")
+parser.add_option("--band", dest="band_paths",
+                  action="store", type="string",
+                  help="Band structure paths calculated for Gruneisen parameter")
+parser.add_option("--band_points", dest="band_points",
+                  type="int",
+                  help="Number of points calculated on a band segment in the band structure Gruneisen parameter calculation")
 parser.add_option("--br", "--bterta", dest="is_bterta",
                   action="store_true",
                   help="Calculate thermal conductivity in BTE-RTA")
@@ -646,11 +654,17 @@ else:
     #============================
     if options.is_gruneisen:
         mesh = settings.get_mesh_numbers()
+        band_paths = settings.get_bands()
 
         if log_level:
             print "------ Phonon Gruneisen parameter ------"
             if mesh is not None:
                 print "Mesh:", mesh
+            elif band_paths is not None:
+                print "Paths in reciprocal reduced coordinates:"
+                for path in band_paths:
+                    print ("[%5.2f %5.2f %5.2f] --> [%5.2f %5.2f %5.2f]" % 
+                           (tuple(path[0]) + tuple(path[-1])))
             sys.stdout.flush()
 
         gr = get_gruneisen_parameters(fc2,
