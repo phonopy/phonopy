@@ -159,8 +159,9 @@ class Gruneisen:
         frequencies = []
         for i, q in enumerate(qpoints):
             if self._dm.is_nac():
-                if (np.abs(q) < 1e-5).all():
-                    if self._run_mode == 'band':
+                if (np.abs(q) < 1e-5).all(): # If q is almost at Gamma
+                    if self._run_mode == 'band': 
+                        # Direction estimated from neighboring point
                         if i > 0:
                             q_dir = qpoints[i] - qpoints[i - 1]
                         elif i == 0 and len(qpoints) > 1:
@@ -169,12 +170,12 @@ class Gruneisen:
                             q_dir = None
                         g, omega2 = self._get_gruneisen_tensor(
                             q, nac_q_direction=q_dir)
-                    else:
+                    else: # Specified q-vector
                         g, omega2 = self._get_gruneisen_tensor(
                             q, nac_q_direction=self._nac_q_direction)
-                else:
+                else: # If q is away from Gamma-point, then q-vector
                     g, omega2 = self._get_gruneisen_tensor(q, nac_q_direction=q)
-            else:
+            else: # Without NAC
                 g, omega2 = self._get_gruneisen_tensor(q)
             gruneisen_parameters.append(g)
             frequencies.append(
