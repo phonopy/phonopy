@@ -65,6 +65,7 @@ class Settings:
         self._mesh = None
         self._omega_step = None
         self._primitive_matrix = np.eye(3, dtype=float)
+        self._qpoints = None
         self._run_mode = None
         self._sigma = None
         self._supercell_matrix = None
@@ -222,6 +223,12 @@ class Settings:
 
     def get_bands(self):
         return self._band_paths
+
+    def set_qpoints(self, qpoints):
+        self._qpoints = qpoints
+
+    def get_qpoints(self):
+        return self._qpoints
 
     def set_sigma(self, sigma):
         self._sigma = sigma
@@ -385,6 +392,11 @@ class ConfParser:
                     bands.append(band)
             self._settings.set_bands(bands)
 
+        # Q-points mode
+        if params.has_key('qpoints'):
+            if params['qpoints'] is not True:
+                self._settings.set_qpoints(params['qpoints'])
+
         # Spectram drawing step
         if params.has_key('omega_step'):
             self._settings.set_omega_step(params['omega_step'])
@@ -430,87 +442,90 @@ class ConfParser:
 
     def read_options(self):
         for opt in self._option_list:
-
-            if opt.dest=='is_plusminus_displacements':
+            if opt.dest == 'is_plusminus_displacements':
                 if self._options.is_plusminus_displacements:
                     self._confs['pm'] = '.true.'
 
-            if opt.dest=='is_trigonal_displacements':
+            if opt.dest == 'is_trigonal_displacements':
                 if self._options.is_trigonal_displacements:
                     self._confs['trigonal'] = '.true.'
 
-            if opt.dest=='mesh_numbers':
+            if opt.dest == 'mesh_numbers':
                 if self._options.mesh_numbers:
                     self._confs['mesh_numbers'] = self._options.mesh_numbers
 
-            if opt.dest=='primitive_axis':
+            if opt.dest == 'primitive_axis':
                 if self._options.primitive_axis:
                     self._confs['primitive_axis'] = self._options.primitive_axis
                     
-            if opt.dest=='supercell_dimension':
+            if opt.dest == 'supercell_dimension':
                 if self._options.supercell_dimension:
                     self._confs['dim'] = self._options.supercell_dimension
 
-            if opt.dest=='displacement_distance':
+            if opt.dest == 'displacement_distance':
                 if self._options.displacement_distance:
                     self._confs['displacement_distance'] = \
                         self._options.displacement_distance
 
-            if opt.dest=='is_nodiag':
+            if opt.dest == 'is_nodiag':
                 if self._options.is_nodiag:
                     self._confs['diag'] = '.false.'
 
-            if opt.dest=='is_eigenvectors':
+            if opt.dest == 'is_eigenvectors':
                 if self._options.is_eigenvectors:
                     self._confs['eigenvectors'] = '.true.'
                     
-            if opt.dest=='is_nac':
+            if opt.dest == 'is_nac':
                 if self._options.is_nac:
                     self._confs['nac'] = '.true.'
 
-            if opt.dest=='is_nosym':
+            if opt.dest == 'is_nosym':
                 if self._options.is_nosym:
                     self._confs['symmetry'] = '.false.'
                     self._confs['mesh_symmetry'] = '.false.'
 
-            if opt.dest=='is_nomeshsym':
+            if opt.dest == 'is_nomeshsym':
                 if self._options.is_nomeshsym:
                     self._confs['mesh_symmetry'] = '.false.'
 
             if opt.dest == 'band_paths':
-                if not self._options.band_paths == None:
+                if self._options.band_paths is not None:
                     self._confs['band'] = self._options.band_paths
 
             if opt.dest == 'band_points':
-                if not self._options.band_points == None:
+                if self._options.band_points is not None:
                     self._confs['band_points'] = self._options.band_points
 
-            if opt.dest=='omega_step':
+            if opt.dest == 'qpoints':
+                if self._options.qpoints is not None:
+                    self._confs['qpoints'] = self._options.qpoints
+
+            if opt.dest == 'omega_step':
                 if self._options.omega_step:
                     self._confs['omega_step'] = self._options.omega_step
 
-            if opt.dest=='sigma':
+            if opt.dest == 'sigma':
                 if self._options.sigma:
                     self._confs['sigma'] = self._options.sigma
 
-            if opt.dest=='tmin':
+            if opt.dest == 'tmin':
                 if self._options.tmin:
                     self._confs['tmin'] = self._options.tmin
 
-            if opt.dest=='tmax':
+            if opt.dest == 'tmax':
                 if self._options.tmax:
                     self._confs['tmax'] = self._options.tmax
                     
-            if opt.dest=='tstep':
+            if opt.dest == 'tstep':
                 if self._options.tstep:
                     self._confs['tstep'] = self._options.tstep
 
-            if opt.dest=='force_constants_decimals':
+            if opt.dest == 'force_constants_decimals':
                 if self._options.force_constants_decimals:
                     self._confs['fc_decimals'] = \
                         self._options.force_constants_decimals
 
-            if opt.dest=='dynamical_matrix_decimals':
+            if opt.dest == 'dynamical_matrix_decimals':
                 if self._options.dynamical_matrix_decimals:
                     self._confs['dm_decimals'] = \
                         self._options.dynamical_matrix_decimals
@@ -643,6 +658,17 @@ class ConfParser:
                     bands.append(np.array(points).reshape(-1, 3))
                 self.set_parameter('band_paths', bands)
 
+            if conf_key == 'qpoints':
+                if confs['qpoints'] == '.true.':
+                    self.set_parameter('qpoints', True)
+                else:
+                    vals = [fracval(x) for x in confs['qpoints'].split()]
+                    if len(vals) == 0 or len(vals) % 3 != 0:
+                        self.setting_error("Q-points are incorrectly set.")
+                    else:
+                        self.set_parameter('qpoints',
+                                           list(np.reshape(vals, (-1, 3))))
+
             if conf_key == 'omega_step':
                 if isinstance(confs['omega_step'], str):
                     val = float(confs['omega_step'].split()[0])
@@ -705,7 +731,6 @@ class PhonopySettings(Settings):
         self._is_thermal_distances = False
         self._is_thermal_properties = False
         self._write_dynamical_matrices = False
-        self._qpoints = None
         self._modulation = None
         self._pdos_indices = None
         self._projection_direction = None
@@ -894,12 +919,6 @@ class PhonopySettings(Settings):
     def get_modulation(self):
         return self._modulation
 
-    def set_qpoints(self, qpoints):
-        self._qpoints = qpoints
-
-    def get_qpoints(self):
-        return self._qpoints
-
     def set_character_table_q_point(self, q_point):
         self._character_table_q_point = q_point
         
@@ -982,16 +1001,12 @@ class PhonopyConfParser(ConfParser):
                     self._confs['writedm'] = '.true.'
     
             if opt.dest == 'q_character_table':
-                if not self._options.q_character_table == None:
+                if self._options.q_character_table is not None:
                     self._confs['character_table'] = self._options.q_character_table
 
             if opt.dest == 'show_irreps':
                 if self._options.show_irreps:
                     self._confs['irreps'] = '.true.'
-
-            if opt.dest == 'qpoints':
-                if not self._options.qpoints == None:
-                    self._confs['qpoints'] = self._options.qpoints
 
             if opt.dest == 'is_band_connection':
                 if self._options.is_band_connection:
@@ -1048,17 +1063,6 @@ class PhonopyConfParser(ConfParser):
                 else:
                     val = confs['cutoff_radius']
                 self.set_parameter('cutoff_radius', val)
-
-            if conf_key == 'qpoints':
-                if confs['qpoints'] == '.true.':
-                    self.set_parameter('qpoints', True)
-                else:
-                    vals = [fracval(x) for x in confs['qpoints'].split()]
-                    if len(vals) == 0 or len(vals) % 3 != 0:
-                        self.setting_error("Q-points are incorrectly set.")
-                    else:
-                        self.set_parameter('qpoints',
-                                           list(np.reshape(vals, (-1, 3))))
 
             if conf_key == 'writedm':
                 if confs['writedm'] == '.true.':
@@ -1269,8 +1273,6 @@ class PhonopyConfParser(ConfParser):
         # Q-points mode
         if params.has_key('qpoints'):
             self._settings.set_run_mode('qpoints')
-            if params['qpoints'] != True:
-                self._settings.set_qpoints(params['qpoints'])
 
         if params.has_key('write_dynamical_matrices'):
             if params['write_dynamical_matrices']:
@@ -1283,7 +1285,7 @@ class PhonopyConfParser(ConfParser):
         if params.has_key('anime'):
             self._settings.set_run_mode('anime')
             anime_type = self._settings.get_anime_type()
-            if anime_type=='v_sim':
+            if anime_type == 'v_sim':
                 qpoints = [ fracval(x) for x in params['anime'][0:3] ]
                 self._settings.set_anime_qpoint(qpoints)
                 if len(params['anime']) > 3:

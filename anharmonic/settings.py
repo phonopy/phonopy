@@ -14,7 +14,6 @@ class Phono3pySettings(Settings):
         self._mesh_divisors = None
         self._multiple_sigmas = None
         self._no_kappa_stars = False
-        self._qpoints = [[0, 0, 0]]
         self._read_amplitude = False
         self._read_gamma = False
         self._temperatures = None
@@ -69,12 +68,6 @@ class Phono3pySettings(Settings):
     def get_q_direction(self):
         return self._q_direction
 
-    def set_qpoints(self, qpoints):
-        self._qpoints = qpoints
-
-    def get_qpoints(self):
-        return self._qpoints
-
     def set_temperatures(self, temperatures):
         self._temperatures = temperatures
 
@@ -124,7 +117,7 @@ class Phono3pyConfParser(ConfParser):
     def _read_options(self):
         for opt in self._option_list:
             if opt.dest == 'supercell_dimension_extra':
-                if not self._options.supercell_dimension_extra==None:
+                if self._options.supercell_dimension_extra is not None:
                     self._confs['dim_extra'] = self._options.supercell_dimension_extra
 
             if opt.dest == 'band_indices':
@@ -158,10 +151,6 @@ class Phono3pyConfParser(ConfParser):
             if opt.dest == 'q_direction':
                 if self._options.q_direction is not None:
                     self._confs['q_direction'] = self._options.q_direction
-
-            if opt.dest == 'qpoints':
-                if self._options.qpoints is not None:
-                    self._confs['qpoints'] = self._options.qpoints
 
             if opt.dest == 'read_amplitude':
                 if self._options.read_amplitude:
@@ -246,14 +235,6 @@ class Phono3pyConfParser(ConfParser):
                 else:
                     self.set_parameter('q_direction', q_direction)
 
-            if conf_key == 'qpoints':
-                vals = [fracval(x) for x in confs['qpoints'].split()]
-                if len(vals) == 0 or len(vals) % 3 != 0:
-                    self.setting_error("Q-points are incorrectly set.")
-                else:
-                    self.set_parameter('qpoints',
-                                       list(np.reshape(vals, (-1, 3))))
-
             if conf_key == 'read_amplitude':
                 if confs['read_amplitude'] == '.true.':
                     self.set_parameter('read_amplitude', True)
@@ -322,10 +303,6 @@ class Phono3pyConfParser(ConfParser):
         if params.has_key('q_direction'):
             self._settings.set_q_direction(params['q_direction'])
             
-        # Q-points mode
-        if params.has_key('qpoints'):
-            self._settings.set_qpoints(params['qpoints'])
-        
         # Sum partial kappa at q-stars
         if params.has_key('no_kappa_stars'):
             self._settings.set_no_kappa_stars(params['no_kappa_stars'])

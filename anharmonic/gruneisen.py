@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC, get_smallest_vectors
 from anharmonic.fc_interpolate import get_fc_interpolation
@@ -25,7 +26,6 @@ class Gruneisen:
         self._is_ion_clamped = is_ion_clamped
         self._factor = factor
         self._symprec = symprec
-
         if nac_params is None:
             self._dm = DynamicalMatrix(self._scell,
                                        self._pcell,
@@ -54,21 +54,128 @@ class Gruneisen:
         self._mesh = None
         self._band_paths = None
         self._band_distances = None
+        self._run_mode = None
         self._weights = None
 
     def run(self):
-        if self._band_paths is None:
+        if self._run_mode == 'band':
+            (self._gruneisen_parameters,
+             self._frequencies) = self._calculate_band_paths()
+        elif self._run_mode == 'qpoints' or self._run_mode == 'mesh':
             (self._gruneisen_parameters,
              self._frequencies) = self._calculate_at_qpoints(self._qpoints)
         else:
-            (self._gruneisen_parameters,
-             self._frequencies) = self._calculate_band_paths()
+            sys.stderr.write('Q-points are not specified.\n')
 
+    def get_gruneisen_parameters(self):
+        return self._gruneisen_parameters
+
+    def set_qpoints(self, qpoints):
+        self._run_mode = 'qpoints'
+        self._qpoints = qpoints
+
+    def set_sampling_mesh(self,
+                          mesh,
+                          grid_shift=None,
+                          is_gamma_center=False):
+        self._run_mode = 'mesh'
+        self._mesh = mesh
+        self._qpoints, self._weights = get_qpoints(self._mesh,
+                                                   self._pcell,
+                                                   grid_shift,
+                                                   is_gamma_center)
+
+    def set_band_structure(self, paths):
+        self._run_mode = 'band'
+        self._band_paths = paths
+        rec_lattice = np.linalg.inv(self._pcell.get_cell())
+        self._band_distances = []
+        for path in paths:
+            distances_at_path = [0.]
+            for i in range(len(path) - 1):
+                distances_at_path.append(np.linalg.norm(
+                        np.dot(rec_lattice, path[i + 1] - path[i])) +
+                                         distances_at_path[-1])
+            self._band_distances.append(distances_at_path)
+
+    def write_yaml(self, filename="gruneisen3.yaml"):
+        if self._gruneisen_parameters is not None:
+            f = open(filename, 'w')
+            if self._run_mode == 'band':
+                self._write_band_yaml(f)
+            elif self._run_mode == 'qpoints' or self._run_mode == 'mesh':
+                self._write_yaml(f)
+            f.close()
+
+    def _write_yaml(self, f):
+        if self._run_mode == 'mesh':
+            f.write("mesh: [ %5d, %5d, %5d ]\n" % tuple(self._mesh))
+        f.write("nqpoint: %d\n" % len(self._qpoints))
+        f.write("phonon:\n")
+        for i, (q, g_at_q, freqs_at_q) in enumerate(
+            zip(self._qpoints,
+                self._gruneisen_parameters,
+                self._frequencies)):
+            f.write("- q-position: [ %10.7f, %10.7f, %10.7f ]\n" % tuple(q))
+            if self._weights is not None:
+                f.write("  multiplicity: %d\n" % self._weights[i])
+            f.write("  band:\n")
+            for j, (g, freq) in enumerate(zip(g_at_q, freqs_at_q)):
+                f.write("  - # %d\n" % (j + 1))
+                f.write("    frequency: %15.10f\n" % freq)
+                f.write("    gruneisen: %15.10f\n" % (g.trace() / 3))
+                f.write("    gruneisen_tensor:\n")
+                for g_xyz in g:
+                    f.write("    - [ %10.7f, %10.7f, %10.7f ]\n" %
+                            tuple(g_xyz))
+        
+    def _write_band_yaml(self, f):
+        f.write("path:\n\n")
+        for path, distances, gs, fs in zip(self._band_paths,
+                                           self._band_distances,
+                                           self._gruneisen_parameters,
+                                           self._frequencies):
+            f.write("- nqpoint: %d\n" % len(path))
+            f.write("  phonon:\n")
+            for i, (q, d, g_at_q, freqs_at_q) in enumerate(
+                zip(path, distances, gs, fs)):
+                f.write("  - q-position: [ %10.7f, %10.7f, %10.7f ]\n"
+                        % tuple(q))
+                f.write("    distance: %10.7f\n" % d)
+                f.write("    band:\n")
+                for j, (g, freq) in enumerate(zip(g_at_q, freqs_at_q)):
+                    f.write("    - # %d\n" % (j + 1))
+                    f.write("      frequency: %15.10f\n" % freq)
+                    f.write("      gruneisen: %15.10f\n" % (g.trace() / 3))
+                    f.write("      gruneisen_tensor:\n")
+                    for g_xyz in g:
+                        f.write("      - [ %10.7f, %10.7f, %10.7f ]\n" %
+                                tuple(g_xyz))
+                f.write("\n")
+                        
+        
     def _calculate_at_qpoints(self, qpoints):
         gruneisen_parameters = []
         frequencies = []
-        for q in qpoints:
-            g, omega2 = self._get_gruneisen_tensor(q)
+        for i, q in enumerate(qpoints):
+            if self._dm.is_nac():
+                if (np.abs(q) < 1e-5).all():
+                    if self._run_mode == 'band':
+                        if i > 0:
+                            q_dir = qpoints[i] - qpoints[i - 1]
+                        elif i == 0 and len(qpoints) > 1:
+                            q_dir = qpoints[i + 1] - qpoints[i]
+                        else:
+                            q_dir = None
+                        g, omega2 = self._get_gruneisen_tensor(
+                            q, nac_q_direction=q_dir)
+                    else:
+                        g, omega2 = self._get_gruneisen_tensor(
+                            q, nac_q_direction=self._nac_q_direction)
+                else:
+                    g, omega2 = self._get_gruneisen_tensor(q, nac_q_direction=q)
+            else:
+                g, omega2 = self._get_gruneisen_tensor(q)
             gruneisen_parameters.append(g)
             frequencies.append(
                 np.sqrt(abs(omega2)) * np.sign(omega2) * self._factor)
@@ -86,64 +193,11 @@ class Gruneisen:
 
         return gruneisen_parameters, frequencies
 
-    def get_gruneisen_parameters(self):
-        return self._gruneisen_parameters
-
-    def set_qpoints(self, qpoints):
-        self._qpoints = qpoints
-
-    def set_sampling_mesh(self,
-                          mesh,
-                          grid_shift=None,
-                          is_gamma_center=False):
-        self._mesh = mesh
-        self._qpoints, self._weights = get_qpoints(self._mesh,
-                                                   self._pcell,
-                                                   grid_shift,
-                                                   is_gamma_center)
-
-    def set_band_structure(self, paths):
-        self._band_paths = paths
-        rec_lattice = np.linalg.inv(self._pcell.get_cell())
-        self._band_distances = []
-        for path in paths:
-            distances_at_path = [0.]
-            for i in range(len(path) - 1):
-                distances_at_path.append(np.linalg.norm(
-                        np.dot(rec_lattice, path[i + 1] - path[i])))
-            self._band_distances.append(distances_at_path)
-
-    def write_yaml(self, filename="gruneisen3.yaml"):
-        if (self._qpoints is not None and
-            self._gruneisen_parameters is not None):
-            f = open(filename, 'w')
-            if self._mesh is not None:
-                f.write("mesh: [ %5d, %5d, %5d ]\n" % tuple(self._mesh))
-            f.write("nqpoint: %d\n" % len(self._qpoints))
-            f.write("phonon:\n")
-            for i, (q, g_at_q, freqs_at_q) in enumerate(
-                zip(self._qpoints,
-                    self._gruneisen_parameters,
-                    self._frequencies)):
-                f.write("- q-position: [ %10.7f, %10.7f, %10.7f ]\n" % tuple(q))
-                if self._weights is not None:
-                    f.write("  multiplicity: %d\n" % self._weights[i])
-                f.write("  band:\n")
-                for j, (g, freq) in enumerate(zip(g_at_q, freqs_at_q)):
-                    f.write("  - # %d\n" % (j + 1))
-                    f.write("    frequency: %15.10f\n" % freq)
-                    f.write("    gruneisen: %15.10f\n" % (g.trace() / 3))
-                    f.write("    gruneisen_tensor:\n")
-                    for g_xyz in g:
-                        f.write("    - [ %10.7f, %10.7f, %10.7f ]\n" %
-                                tuple(g_xyz))
-            f.close()
-        
-    def _get_gruneisen_tensor(self, q):
-        if self._nac_q_direction is None:
+    def _get_gruneisen_tensor(self, q, nac_q_direction=None):
+        if nac_q_direction is None:
             self._dm.set_dynamical_matrix(q)
         else:
-            self._dm.set_dynamical_matrix(q, self._nac_q_direction)
+            self._dm.set_dynamical_matrix(q, nac_q_direction)
         omega2, w = np.linalg.eigh(self._dm.get_dynamical_matrix())
         g = np.zeros((len(omega2), 3, 3), dtype=float)
         num_atom_prim = self._pcell.get_number_of_atoms()

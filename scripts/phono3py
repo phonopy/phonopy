@@ -655,6 +655,14 @@ else:
     if options.is_gruneisen:
         mesh = settings.get_mesh_numbers()
         band_paths = settings.get_bands()
+        qpoints = settings.get_qpoints()
+
+        if (mesh is None and
+            band_paths is None and
+            qpoints is None):
+            if log_level:
+                print "An option of --mesh, --band, or --qpoints has to be specified."
+                sys.exit(1)
 
         if log_level:
             print "------ Phonon Gruneisen parameter ------"
@@ -679,8 +687,9 @@ else:
         if mesh is not None:
             gr.set_sampling_mesh(mesh,
                                  is_gamma_center=True)
-        else:
-            qpoints = settings.get_qpoints()
+        elif band_paths is not None:
+            gr.set_band_structure(band_paths)
+        elif qpoints is not None:
             gr.set_qpoints(qpoints)
         gr.run()
         gr.write_yaml()
