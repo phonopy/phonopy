@@ -35,6 +35,11 @@
 import numpy as np
 from phonopy.units import *
 
+def mode_cv(temp, freqs): # freqs (eV)
+    x = freqs / Kb / temp
+    expVal = np.exp(x)
+    return Kb * x ** 2 * expVal / (expVal - 1.0) ** 2
+
 class ThermalPropertiesBase:
     def __init__(self, frequencies, weights=None):
         self._temperature = 0
@@ -68,12 +73,9 @@ class ThermalPropertiesBase:
             return self._zero_point_energy
 
     def get_heat_capacity_v(self):
-
-        def func(temp, omega):
-            expVal = np.exp(omega / (Kb * temp))
-            return Kb * (omega / (Kb * temp)) ** 2 * expVal / (expVal - 1.0) ** 2
-
-        cv = self.get_thermal_property(func)
+        func = mode_cv
+        
+        cv = self.get_thermal_property(mode_cv)
         return cv / np.sum(self._weights) * EvTokJmol
 
     def get_entropy(self):
