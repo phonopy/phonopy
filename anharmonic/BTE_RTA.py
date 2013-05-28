@@ -3,6 +3,7 @@ import phonopy.structure.spglib as spg
 from anharmonic.im_self_energy import get_gamma
 from phonopy.group_velocity import get_group_velocity
 from phonopy.units import Kb, THzToEv, EV, THz, Angstrom
+from phonopy.phonon.thermal_properties import mode_cv
 from anharmonic.file_IO import write_kappa_to_hdf5
 from anharmonic.triplets import get_grid_address, reduce_grid_points
 
@@ -254,18 +255,14 @@ class BTE_RTA:
         return np.array(gv2_tensor)
     
     def _get_cv(self):
-        def get_cv(freqs, t):
-            x = freqs * THzToEv / Kb / t
-            expVal = np.exp(x)
-            return Kb * x ** 2 * expVal / (expVal - 1.0) ** 2 # eV/K
-
         freqs = self._pp.get_frequencies()
         cv = np.zeros((len(self._temperatures), len(freqs)), dtype='double')
         for i, t in enumerate(self._temperatures):
             if t > 0:
                 for j, f in enumerate(freqs):
                     if f > self._cutoff_frequency:
-                        cv[i, j] = get_cv(f / self._freq_conv_factor, t)
+                        cv[i, j] = mode_cv(
+                            t, f * THzToEv / self._freq_conv_factor) # eV/K
 
         return cv
 
@@ -280,22 +277,21 @@ class BTE_RTA:
         gamma = -1 * np.ones((len(self._temperatures), len(freqs)), dtype='double')
 
         for i, t in enumerate(self._temperatures):
-            if t > 0:
-                for j, f in enumerate(freqs):
-                    if f > self._cutoff_frequency:
-                        g = get_gamma(
-                            amplitude_at_q,
-                            np.array([f], dtype='double'),
-                            weights_at_q,
-                            frequencies_at_q,
-                            j,
-                            t,
-                            sigma,
-                            self._freq_conv_factor,
-                            cutoff_frequency=self._cutoff_frequency,
-                            gamma_option=self._gamma_option
-                            )[0] * unit_conversion # THz in default
-                        gamma[i, j] = g
+            for j, f in enumerate(freqs):
+                if f > self._cutoff_frequency:
+                    g = get_gamma(
+                        amplitude_at_q,
+                        np.array([f], dtype='double'),
+                        weights_at_q,
+                        frequencies_at_q,
+                        j,
+                        t,
+                        sigma,
+                        self._freq_conv_factor,
+                        cutoff_frequency=self._cutoff_frequency,
+                        gamma_option=self._gamma_option
+                        )[0] * unit_conversion # THz in default
+                    gamma[i, j] = g
         return gamma
 
     def _get_rotated_unit_directions(self, grid_point):
