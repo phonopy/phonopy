@@ -34,7 +34,10 @@
 
 import numpy as np
 from phonopy.phonon.mesh import get_qpoints
+from phonopy.phonon.thermal_properties import mode_cv
 from phonopy.gruneisen import Gruneisen
+from phonopy.units import THzToEv
+
 
 class Mesh:
     def __init__(self,
@@ -125,3 +128,11 @@ class Mesh:
                     plt.plot(freqs, g, marker)
         
         return plt      
+
+
+def get_thermodynamic_Gruneisen_parameter(gammas, frequencies, t):
+    if t > 0:
+        cv = mode_cv(t, frequencies * THzToEv)
+        return np.sum(gammas * cv) / np.sum(cv)
+    else:
+        return 0.
