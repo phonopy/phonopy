@@ -57,9 +57,13 @@ class ThermalPropertiesBase:
         else:
             self._weights = weights
         self._nqpoint = frequencies.shape[0]
+        self._run_projection = False
 
+    def set_run_projection(self, run_projection):
+        self._run_projection = run_projection
+        
     def get_free_energy(self, t):
-        free_energy = self._calculate_thermal_property(mode_F, t, )
+        free_energy = self._calculate_thermal_property(mode_F, t)
         return free_energy / np.sum(self._weights) * EvTokJmol
 
     def get_heat_capacity_v(self, t):
@@ -71,7 +75,7 @@ class ThermalPropertiesBase:
         return entropy / np.sum(self._weights) * EvTokJmol
 
     def _calculate_thermal_property(self, func, t):
-        if self._eigenvectors is None:
+        if not self._run_projection:
             t_property = 0.0
             if t > 0:
                 for freqs, w in zip(self._frequencies, self._weights):
@@ -111,16 +115,6 @@ class ThermalProperties(ThermalPropertiesBase):
     def get_high_T_entropy(self):
         return self._high_T_entropy
 
-    def get_c_thermal_properties(self, t):
-        import phonopy._phonopy as phonoc
-
-        if t > 0:
-            return phonoc.thermal_properties(t,
-                                             self._frequencies,
-                                             self._weights)
-        else:
-            return (0.0, 0.0, 0.0)
-
     def plot_thermal_properties(self):
         import matplotlib.pyplot as plt
         
@@ -148,14 +142,16 @@ class ThermalProperties(ThermalPropertiesBase):
         try:
             import phonopy._phonopy as phonoc
             for t in temperatures:
-                props = self.get_c_thermal_properties(t)
+                props = self._get_c_thermal_properties(t)
                 fe.append(props[0] * EvTokJmol + self._zero_point_energy)
                 entropy.append(props[1] * EvTokJmol * 1000)
                 cv.append(props[2] * EvTokJmol * 1000)
         except ImportError:
             for t in temperatures:
-                fe.append(self.get_free_energy(t))
-                entropy.append(self.get_entropy(t) * 1000,)
+                props = self._get_py_thermal_properties(t)
+                fe.append(props[0])
+                entropy.append(props[1] * 1000,)
+                cv.append(props[2] * 1000)
 
         self._thermal_properties = [temperatures,
                                     np.double(fe),
@@ -167,6 +163,7 @@ class ThermalProperties(ThermalPropertiesBase):
             entropy = []
             cv = []
             energy = []
+            self.set_run_projection(True)
             for t in temperatures:
                 fe.append(self.get_free_energy(t))
                 entropy.append(self.get_entropy(t) * 1000,)
@@ -176,6 +173,7 @@ class ThermalProperties(ThermalPropertiesBase):
                                                   np.double(fe),
                                                   np.double(entropy),
                                                   np.double(cv)]
+            self.set_run_projection(False)
             
 
     def get_thermal_properties( self ):
@@ -249,6 +247,21 @@ class ThermalProperties(ThermalPropertiesBase):
             f.write(" # %15.7f\n" % np.sum(energy))
             f.write("\n")
             
+    def _get_c_thermal_properties(self, t):
+        import phonopy._phonopy as phonoc
+
+        if t > 0:
+            return phonoc.thermal_properties(t,
+                                             self._frequencies,
+                                             self._weights)
+        else:
+            return (0.0, 0.0, 0.0)
+
+    def _get_py_thermal_properties(self, t):
+        return (self.get_free_energy(t),
+                self.get_entropy(t),
+                self.get_heat_capacity_v(t))
+
     def _set_high_T_entropy_and_zero_point_energy(self):
         zp_energy = 0.0
         entropy = 0.0
