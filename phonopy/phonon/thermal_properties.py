@@ -56,11 +56,10 @@ class ThermalPropertiesBase:
             self._weights = np.ones(frequencies.shape[0], dtype='int32')
         else:
             self._weights = weights
-        self._nqpoint = frequencies.shape[0]
-        self._run_projection = False
+        self._projection = False
 
-    def set_run_projection(self, run_projection):
-        self._run_projection = run_projection
+    def set_projection(self, projection):
+        self._projection = projection
         
     def get_free_energy(self, t):
         free_energy = self._calculate_thermal_property(mode_F, t)
@@ -75,7 +74,7 @@ class ThermalPropertiesBase:
         return entropy / np.sum(self._weights) * EvTokJmol
 
     def _calculate_thermal_property(self, func, t):
-        if not self._run_projection:
+        if not self._projection:
             t_property = 0.0
             if t > 0:
                 for freqs, w in zip(self._frequencies, self._weights):
@@ -100,6 +99,7 @@ class ThermalProperties(ThermalPropertiesBase):
                  frequencies,
                  weights=None,
                  eigenvectors=None,
+                 is_projection=False,
                  cutoff_frequency=None):
         ThermalPropertiesBase.__init__(self, frequencies, weights, eigenvectors)
         if cutoff_frequency is not None:
@@ -108,6 +108,7 @@ class ThermalProperties(ThermalPropertiesBase):
         else:
             self._frequencies = np.double(frequencies) * THzToEv
         self._set_high_T_entropy_and_zero_point_energy()
+        self._is_projection = is_projection
         
     def get_zero_point_energy(self):
         return self._zero_point_energy
@@ -147,6 +148,7 @@ class ThermalProperties(ThermalPropertiesBase):
                 entropy.append(props[1] * EvTokJmol * 1000)
                 cv.append(props[2] * EvTokJmol * 1000)
         except ImportError:
+            self.set_projection(False)
             for t in temperatures:
                 props = self._get_py_thermal_properties(t)
                 fe.append(props[0])
@@ -158,12 +160,12 @@ class ThermalProperties(ThermalPropertiesBase):
                                     np.double(entropy),
                                     np.double(cv)]
 
-        if self._eigenvectors is not None:
+        if self._is_projection:
             fe = []
             entropy = []
             cv = []
             energy = []
-            self.set_run_projection(True)
+            self.set_projection(True)
             for t in temperatures:
                 fe.append(self.get_free_energy(t))
                 entropy.append(self.get_entropy(t) * 1000,)
@@ -173,8 +175,6 @@ class ThermalProperties(ThermalPropertiesBase):
                                                   np.double(fe),
                                                   np.double(entropy),
                                                   np.double(cv)]
-            self.set_run_projection(False)
-            
 
     def get_thermal_properties( self ):
         return self._thermal_properties
@@ -182,7 +182,7 @@ class ThermalProperties(ThermalPropertiesBase):
     def write_yaml(self, filename='thermal_properties.yaml'):
         f = open(filename, 'w')
         self._write_tp_yaml(f)
-        if self._eigenvectors is not None:
+        if self._is_projection:
             self._write_projected_tp_yaml(f)
         f.close()
         
@@ -217,34 +217,34 @@ class ThermalProperties(ThermalPropertiesBase):
         f.write("projected_thermal_properties:\n")
         temperatures, fe, entropy, cv = self._projected_thermal_properties
         for i, t in enumerate(temperatures):
-            f.write("- temperature:   %15.7f\n" % t)
+            f.write("- temperature:   %13.7f\n" % t)
             f.write(
-                ("  free_energy:   [ " + "%15.7f, " *
-                 (len(fe[i]) - 1) + "%15.7f ]") % tuple(fe[i]))
-            f.write(" # %15.7f\n" % np.sum(fe[i]))
+                ("  free_energy:   [ " + "%13.7f, " *
+                 (len(fe[i]) - 1) + "%13.7f ]") % tuple(fe[i]))
+            f.write(" # %13.7f\n" % np.sum(fe[i]))
             f.write(
-                ("  entropy:       [ " + "%15.7f, " *
-                 (len(entropy[i]) - 1) + "%15.7f ]") % tuple(entropy[i]))
-            f.write(" # %15.7f\n" % np.sum(entropy[i]))
+                ("  entropy:       [ " + "%13.7f, " *
+                 (len(entropy[i]) - 1) + "%13.7f ]") % tuple(entropy[i]))
+            f.write(" # %13.7f\n" % np.sum(entropy[i]))
             # Sometimes 'nan' of C_V is returned at low temperature.
             f.write("  heat_capacity: [ ")
             sum_cv = 0.0
             for j, cv_i in enumerate(cv[i]):
                 if np.isnan(cv_i):
-                    f.write("%15.7f" % 0)
+                    f.write("%13.7f" % 0)
                 else:
                     sum_cv += cv_i
-                    f.write("%15.7f" % cv_i)
+                    f.write("%13.7f" % cv_i)
                 if j < len(cv[i]) - 1:
                     f.write(", ")
                 else:
                     f.write(" ]")
-            f.write(" # %15.7f\n" % sum_cv)
+            f.write(" # %13.7f\n" % sum_cv)
             energy = fe[i] + entropy[i] * t / 1000
             f.write(
-                ("  energy:        [ " + "%15.7f, " *
-                 (len(energy) - 1) + "%15.7f ]") % tuple(energy))
-            f.write(" # %15.7f\n" % np.sum(energy))
+                ("  energy:        [ " + "%13.7f, " *
+                 (len(energy) - 1) + "%13.7f ]") % tuple(energy))
+            f.write(" # %13.7f\n" % np.sum(energy))
             f.write("\n")
             
     def _get_c_thermal_properties(self, t):

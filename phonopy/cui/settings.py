@@ -730,6 +730,7 @@ class PhonopySettings(Settings):
         self._is_thermal_displacements = False
         self._is_thermal_distances = False
         self._is_thermal_properties = False
+        self._is_projected_thermal_properties = False
         self._write_dynamical_matrices = False
         self._modulation = None
         self._pdos_indices = None
@@ -836,6 +837,12 @@ class PhonopySettings(Settings):
 
     def get_is_thermal_properties(self):
         return self._is_thermal_properties
+
+    def set_is_projected_thermal_properties(self, is_ptp):
+        self._is_projected_thermal_properties = is_ptp
+
+    def get_is_projected_thermal_properties(self):
+        return self._is_projected_thermal_properties
 
     def set_thermal_property_range(self, tmin, tmax, tstep):
         self._tmax = tmax
@@ -979,6 +986,10 @@ class PhonopyConfParser(ConfParser):
             if opt.dest == 'is_thermal_properties':
                 if self._options.is_thermal_properties:
                     self._confs['tprop'] = '.true.'
+
+            if opt.dest == 'is_projected_thermal_properties':
+                if self._options.is_projected_thermal_properties:
+                    self._confs['ptprop'] = '.true.'
 
             if opt.dest == 'is_thermal_displacements':
                 if self._options.is_thermal_displacements:
@@ -1144,6 +1155,10 @@ class PhonopyConfParser(ConfParser):
             # Thermal properties
             if conf_key == 'tprop':
                 self.set_parameter('tprop', confs['tprop'])
+
+            # Projected thermal properties
+            if conf_key == 'ptprop':
+                self.set_parameter('ptprop', confs['ptprop'])
 
             # Thermal displacement
             if conf_key == 'tdisp':
@@ -1340,6 +1355,14 @@ class PhonopyConfParser(ConfParser):
         if params.has_key('tprop'):
             if params['tprop'] == '.true.':
                 self._settings.set_is_thermal_properties(True)
+    
+        # Projected thermal properties
+        if params.has_key('ptprop'):
+            if params['ptprop'] == '.true.':
+                self._settings.set_is_thermal_properties(True)
+                self._settings.set_is_projected_thermal_properties(True)
+                self._settings.set_is_eigenvectors(True)
+                self._settings.set_is_mesh_symmetry(False)
     
         # Thermal displacement
         if params.has_key('tdisp'):

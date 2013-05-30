@@ -456,6 +456,7 @@ class Phonopy:
                                t_step=10,
                                t_max=1000,
                                t_min=0,
+                               is_projection=False,
                                cutoff_frequency=None):
         if self._mesh==None:
             print "set_mesh has to be done before set_thermal_properties"
@@ -464,6 +465,7 @@ class Phonopy:
         tp = ThermalProperties(self._mesh.get_frequencies(),
                                weights=self._mesh.get_weights(),
                                eigenvectors=self._mesh.get_eigenvectors(),
+                               is_projection=is_projection,
                                cutoff_frequency=cutoff_frequency)
         tp.set_thermal_properties(t_step, t_max, t_min)
         self._thermal_properties = tp
