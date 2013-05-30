@@ -463,6 +463,7 @@ class Phonopy:
 
         tp = ThermalProperties(self._mesh.get_frequencies(),
                                weights=self._mesh.get_weights(),
+                               eigenvectors=self._mesh.get_eigenvectors(),
                                cutoff_frequency=cutoff_frequency)
         tp.set_thermal_properties(t_step, t_max, t_min)
         self._thermal_properties = tp
