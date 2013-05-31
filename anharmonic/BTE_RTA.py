@@ -110,6 +110,9 @@ class BTE_RTA:
 
     def get_grid_address(self):
         return self._grid_points
+
+    def get_grid_weights(self):
+        return self._grid_weights
             
     def set_temperatures(self, temperatures):
         self._temperatures = temperatures

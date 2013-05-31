@@ -263,6 +263,7 @@ class Phono3py:
                                     group_velocity=br.get_group_velocities(),
                                     heat_capacity=br.get_mode_heat_capacities(),
                                     kappa=kappa,
+                                    weight=br.get_grid_weights(),
                                     mesh_divisors=br.get_mesh_divisors(),
                                     sigma=sigma,
                                     filename=filename)
