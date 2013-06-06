@@ -241,7 +241,7 @@ class BTE_RTA:
 
         # Sum group velocities at symmetrically equivalent q-points
         if self._no_kappa_stars: # [1, 3, 3] 
-            rotations = [np.eye(3, dtype='double')]
+            rotations = [np.eye(3, dtype=int)]
         else: # [num_k*, 3, 3]
             rotations = self._get_rotations_for_star(grid_point)
 
@@ -252,12 +252,16 @@ class BTE_RTA:
                     len(rotations), self._grid_weights[index])
             
         gv2_tensor = []
-        for rot in rotations:
+        inv_rec_lat = self._primitive.get_cell()
+        rec_lat = np.linalg.inv(inv_rec_lat)
+        rotations_cartesian = [np.dot(rec_lat, np.dot(r, inv_rec_lat))
+                               for r in rotations]
+        for rot in rotations_cartesian:
             gv2_tensor.append([np.outer(gv_rot_band_index, gv_rot_band_index)
                                for gv_rot_band_index in np.dot(rot, gv.T).T])
 
         if self._log_level:
-            self._show_log(grid_point, gv, rotations)
+            self._show_log(grid_point, gv, rotations_cartesian, rotations)
             print
 
         return np.array(gv2_tensor)
@@ -303,8 +307,6 @@ class BTE_RTA:
         return gamma
 
     def _get_rotations_for_star(self, grid_point):
-        rec_lat = np.linalg.inv(self._primitive.get_cell())
-        inv_rec_lat = self._primitive.get_cell()
         orig_address = self._grid_address[grid_point]
         orbits = []
         rotations = []
@@ -317,8 +319,7 @@ class BTE_RTA:
                     break
             if not in_orbits:
                 orbits.append(rot_address)
-                rot_cart = np.dot(rec_lat, np.dot(rot, inv_rec_lat))
-                rotations.append(rot_cart)
+                rotations.append(rot)
 
         return rotations
 
@@ -379,11 +380,18 @@ class BTE_RTA:
                  np.intc(umklapp_w),
                  np.double(umklapp_f)))
     
-    def _show_log(self, grid_point, group_velocity, rotations):
+    def _show_log(self,
+                  grid_point,
+                  group_velocity,
+                  rotations_cartesian,
+                  rotations):
         print "----- Partial kappa at grid address %d -----" % grid_point
         print "Frequency, projected group velocity (x, y, z) at k* (k-star)"
-        for i, rot in enumerate(rotations):
-            print " k*%-2d" % (i + 1)
+        q = self._grid_address[grid_point].astype(float) / self._mesh
+        for i, (rotc, rot) in enumerate(zip(rotations_cartesian, rotations)):
+            q_rot = np.dot(rot, q)
+            q_rot -= np.rint(q_rot)
+            print " k*%-2d (%5.2f %5.2f %5.2f)" % ((i + 1,) + tuple(q_rot))
             for f, v in zip(self._pp.get_frequencies(),
                             np.dot(rot, group_velocity.T).T):
                 print "%8.3f   (%8.3f %8.3f %8.3f)" % ((f,) + tuple(v))
