@@ -46,8 +46,8 @@ class BTE_RTA:
         self._grid_weights = None
         self._grid_address = None
 
-        self._point_operations = None
-        self._set_pointgroup_operations()
+        self._point_operations = get_pointgroup_operations(
+            self._pp.get_symmetry().get_pointgroup_operations())
         self._gamma = None
         self._read_gamma = False
         self._frequencies = None
@@ -240,24 +240,24 @@ class BTE_RTA:
         grid_point = self._grid_points[index]
 
         # Sum group velocities at symmetrically equivalent q-points
-        if self._no_kappa_stars: # [Identity(3)]: [1, 3, 3] 
-            rot_unit_n = [np.eye(3, dtype='double')]
+        if self._no_kappa_stars: # [1, 3, 3] 
+            rotations = [np.eye(3, dtype='double')]
         else: # [num_k*, 3, 3]
-            rot_unit_n = self._get_rotated_unit_directions(grid_point)
+            rotations = self._get_rotations_for_star(grid_point)
 
             # check if the number of rotations is correct.
             if self._grid_weights is not None:
-                assert len(rot_unit_n) == self._grid_weights[index], \
-                    "Num rot_unit_n %d, weight %d" % (
-                    len(rot_unit_n), self._grid_weights[index])
+                assert len(rotations) == self._grid_weights[index], \
+                    "Num rotations %d, weight %d" % (
+                    len(rotations), self._grid_weights[index])
             
         gv2_tensor = []
-        for unit_n in rot_unit_n:
-            gv2_tensor.append([np.outer(gv_xyz, gv_xyz)
-                               for gv_xyz in np.dot(gv, unit_n)])
+        for rot in rotations:
+            gv2_tensor.append([np.outer(gv_rot_band_index, gv_rot_band_index)
+                               for gv_rot_band_index in np.dot(rot, gv.T).T])
 
         if self._log_level:
-            self._show_log(grid_point, gv, rot_unit_n)
+            self._show_log(grid_point, gv, rotations)
             print
 
         return np.array(gv2_tensor)
@@ -302,12 +302,12 @@ class BTE_RTA:
                     gamma[i, j] = g
         return gamma
 
-    def _get_rotated_unit_directions(self, grid_point):
+    def _get_rotations_for_star(self, grid_point):
         rec_lat = np.linalg.inv(self._primitive.get_cell())
         inv_rec_lat = self._primitive.get_cell()
         orig_address = self._grid_address[grid_point]
         orbits = []
-        rot_unit_n = []
+        rotations = []
         for rot in self._point_operations:
             rot_address = np.dot(rot, orig_address) % self._mesh
             in_orbits = False
@@ -318,11 +318,9 @@ class BTE_RTA:
             if not in_orbits:
                 orbits.append(rot_address)
                 rot_cart = np.dot(rec_lat, np.dot(rot, inv_rec_lat))
-                rot_unit_n.append(rot_cart.T)
-                # Column vectors of rot_cart.T correspond to rotated unit
-                # vectors of [1, 0, 0], [0, 1, 0], [0, 0, 1], respectively.
+                rotations.append(rot_cart)
 
-        return rot_unit_n
+        return rotations
 
     def _set_mesh_numbers(self, mesh_divisors=None):
         self._mesh = self._pp.get_mesh_numbers()
@@ -381,34 +379,30 @@ class BTE_RTA:
                  np.intc(umklapp_w),
                  np.double(umklapp_f)))
     
-    def _set_pointgroup_operations(self):
-        exist_r_inv = False
-        for rot in self._pp.get_symmetry().get_pointgroup_operations():
-            if (rot == -np.eye(3, dtype='intc')).all():
-                exist_r_inv = True
-                break
-
-        point_operations = [
-            rot.T for rot in
-            self._pp.get_symmetry().get_pointgroup_operations()]
-        
-        if not exist_r_inv:
-            point_operations += [
-                -rot.T for rot in
-                 self._pp.get_symmetry().get_pointgroup_operations()]
-            
-        self._point_operations = np.array(point_operations)
-
-    def _show_log(self, grid_point, group_velocity, rot_unit_n):
+    def _show_log(self, grid_point, group_velocity, rotations):
         print "----- Partial kappa at grid address %d -----" % grid_point
         print "Frequency, projected group velocity (x, y, z) at k* (k-star)"
-        for i, unit_n in enumerate(rot_unit_n):
+        for i, rot in enumerate(rotations):
             print " k*%-2d" % (i + 1)
             for f, v in zip(self._pp.get_frequencies(),
-                            np.dot(group_velocity, unit_n)):
+                            np.dot(rot, group_velocity.T).T):
                 print "%8.3f   (%8.3f %8.3f %8.3f)" % ((f,) + tuple(v))
 
         
+def get_pointgroup_operations(point_operations_real):
+    exist_r_inv = False
+    for rot in point_operations_real:
+        if (rot + np.eye(3, dtype='intc') == 0).all():
+            exist_r_inv = True
+            break
+
+    point_operations = [rot.T for rot in point_operations_real]
+    
+    if not exist_r_inv:
+        point_operations += [-rot.T for rot in point_operations_real]
+        
+    return np.array(point_operations)
+
             
         
 if __name__ == '__main__':
