@@ -416,6 +416,7 @@ def write_kappa_to_hdf5(gamma,
                         group_velocity=None,
                         heat_capacity=None,
                         kappa=None,
+                        qpoint=None,
                         weight=None,
                         mesh_divisors=None,
                         grid_point=None,
@@ -452,6 +453,8 @@ def write_kappa_to_hdf5(gamma,
         w.create_dataset('heat_capacity', data=heat_capacity)
     if kappa is not None:
         w.create_dataset('kappa', data=kappa)
+    if qpoint is not None:
+        w.create_dataset('qpoint', data=qpoint)
     if weight is not None:
         w.create_dataset('weight', data=weight)
     w.close()

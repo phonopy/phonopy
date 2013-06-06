@@ -108,7 +108,12 @@ class BTE_RTA:
             assert self._grid_weights.sum() == np.prod(self._mesh /
                                                        self._mesh_divisors)
 
-    def get_grid_address(self):
+    def get_qpoints(self):
+        qpoints = np.double([self._grid_address[gp].astype(float) / self._mesh
+                             for gp in self._grid_points])
+        return qpoints
+            
+    def get_grid_points(self):
         return self._grid_points
 
     def get_grid_weights(self):

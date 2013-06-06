@@ -228,7 +228,7 @@ class Phono3py:
             gamma = []
             for sigma in sigmas:
                 gamma_at_sigma = []
-                for i, gp in enumerate(br.get_grid_address()):
+                for i, gp in enumerate(br.get_grid_points()):
                     gamma_at_sigma.append(read_gamma_from_hdf5(
                         br.get_mesh_numbers(),
                         mesh_divisors=br.get_mesh_divisors(),
@@ -263,6 +263,7 @@ class Phono3py:
                                     group_velocity=br.get_group_velocities(),
                                     heat_capacity=br.get_mode_heat_capacities(),
                                     kappa=kappa,
+                                    qpoint=br.get_qpoints(),
                                     weight=br.get_grid_weights(),
                                     mesh_divisors=br.get_mesh_divisors(),
                                     sigma=sigma,
