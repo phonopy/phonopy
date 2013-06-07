@@ -521,7 +521,7 @@ if (not settings.get_run_mode() and
 
 # - supercell matrix
 if settings.get_supercell_matrix()==None:
-    print "Supercell matrix (NDIM, MATDIM, or --dim) is not found."
+    print "Supercell matrix (DIM or --dim) is not found."
     if log_level > 0:
         print_end()
     sys.exit(1)
