@@ -3,6 +3,9 @@
 Thermal displacement
 ====================
 
+Mean square displacement
+--------------------------
+
 From Eq. (10.71) in the book "Thermodynamics of Crystal", atomic
 displacement, **u**, is written by
 
@@ -16,15 +19,16 @@ displacement, **u**, is written by
    e^\alpha_\nu(j,\mathbf{q})
 
 where *j* and *l* are the labels for the *j*-th atomic position in the
-*l*-th unit cell, *t* is the time, :math:`\alpha` is the Cartesian
-component, *m* is the atomic mass, *N* is the number of the unit
-cells, :math:`\mathbf{q}` is the wave vector, :math:`\nu` is the index
-of phonon mode. *e* is the polarization vector of the atom *jl* and
-the band :math:`\nu` at :math:`\mathbf{q}`. :math:`\mathbf{r}(jl)` is
-the atomic position and :math:`\omega` is the phonon
-frequency. :math:`\hat{a}^\dagger` and :math:`\hat{a}` are the
-creation and annihilation operators of phonon. The expectation value
-of the squared atomic displacement is calculated as,
+*l*-th unit cell, *t* is the time, :math:`\alpha` is an axis (a
+Cartesian axis in the default behavior of phonopy), *m* is the atomic
+mass, *N* is the number of the unit cells, :math:`\mathbf{q}` is the
+wave vector, :math:`\nu` is the index of phonon mode. *e* is the
+polarization vector of the atom *jl* and the band :math:`\nu` at
+:math:`\mathbf{q}`. :math:`\mathbf{r}(jl)` is the atomic position and
+:math:`\omega` is the phonon frequency. :math:`\hat{a}^\dagger` and
+:math:`\hat{a}` are the creation and annihilation operators of
+phonon. The expectation value of the squared atomic displacement is
+calculated as,
 
 .. math::
 
@@ -58,11 +62,24 @@ expectation values of the combination of the operations, e.g.,
 
    \langle|\hat{a}^\dagger_\nu(\mathbf{q})\hat{a}^\dagger_{\nu'}(\mathbf{q'})|\rangle
    = 0.
-   
 
-  ..    \left\langle |u(jl, t)|^2 \right\rangle = \frac{\hbar}{2Nm_j}
-  .. \sum_{\mathbf{q},\nu}\omega_\nu(\mathbf{q})^{-1}
-  .. (1+2n_\nu(\mathbf{q}))|\hat{\mathbf{n}}\cdot\mathbf{e}_\nu(j,\mathbf{q})|^2
+Projection to an arbitrary axis from the Cartesian axes
+--------------------------------------------------------
+
+In phonopy, eigenvectors are calculated in the Cartesian axes that are
+defined in the input structure file. Mean square displacement along an
+arbitrary axis is obtained projecting eigenvectors in the Cartesian
+axes as follows:
+
+.. math::
+
+   \left\langle |u(jl, t)|^2 \right\rangle = \frac{\hbar}{2Nm_j}
+   \sum_{\mathbf{q},\nu}\omega_\nu(\mathbf{q})^{-1}
+   (1+2n_\nu(\mathbf{q}))|
+   \hat{\mathbf{n}}\cdot\mathbf{e}_\nu(j,\mathbf{q})|^2
+
+where :math:`\hat{\mathbf{n}}` is an arbitrary unit direction.
+
 
 .. |sflogo| image:: http://sflogo.sourceforge.net/sflogo.php?group_id=161614&type=1
             :target: http://sourceforge.net
