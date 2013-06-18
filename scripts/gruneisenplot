@@ -74,7 +74,7 @@ def print_mesh(data):
         print
 
 
-def plot_band(data, is_fg):
+def plot_band(data, is_fg, g_max, g_min):
     import matplotlib.pyplot as plt
 
     d = []
@@ -90,17 +90,23 @@ def plot_band(data, is_fg):
         distance += path['phonon'][-1]['distance']
 
     if is_fg:
-        plt.subplot(3, 1, 1)
+        ax1 = plt.subplot(3, 1, 1)
         plt.plot(d, g, '-')
-        plt.subplot(3, 1, 2)
+        ax2 = plt.subplot(3, 1, 2)
         plt.plot(d, np.array(g) * np.array(f), '-')
-        plt.subplot(3, 1, 3)
+        ax3 = plt.subplot(3, 1, 3)
         plt.plot(d, f, '-')
     else:
-        plt.subplot(2, 1, 1)
+        ax1 = plt.subplot(2, 1, 1)
         plt.plot(d, g, '-')
-        plt.subplot(2, 1, 2)
+        ax2 = plt.subplot(2, 1, 2)
         plt.plot(d, f, '-')
+
+    if g_max is not None:
+        ax1.set_ylim(ymax=g_max)
+    if g_min is not None:
+        ax1.set_ylim(ymin=g_min)
+        
     return plt
 
 def plot_mesh(data, is_fg, cutoff_frequency=None):
@@ -167,7 +173,7 @@ if 'path' in data:
     if options.is_gnuplot:
         print_band(data)
     else:
-        plt = plot_band(data, options.is_fg)
+        plt = plot_band(data, options.is_fg, options.g_max, options.g_min)
         if options.title is not None:
             plt.subtitle(options.title)
         plt.show()
