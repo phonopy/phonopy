@@ -809,6 +809,8 @@ class Phonopy:
             degeneracy_tolerance=degeneracy_tolerance,
             log_level=self._log_level)
 
+        return self._character_table.run()
+
     def get_character_table(self):
         return self._character_table
         

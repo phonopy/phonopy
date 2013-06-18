@@ -71,13 +71,20 @@ def print_end():
   \___|_| |_|\__,_|
 """
 
+def print_error():
+    print """  ___ _ __ _ __ ___  _ __ 
+ / _ \ '__| '__/ _ \| '__|
+|  __/ |  | | | (_) | |   
+ \___|_|  |_|  \___/|_|
+"""
+
 def print_attention(attention_text):
     print "*******************************************************************"
     print attention_text
     print "*******************************************************************"
     print ""
 
-def print_error(message):
+def print_error_message(message):
     print message
 
 #################
@@ -296,6 +303,9 @@ parser.add_option("--writedm", dest="write_dynamical_matrices",
 (options, args) = parser.parse_args()
 option_list = parser.option_list
 
+# Error
+no_error = True
+
 # Set log level
 log_level = 1
 if options.verbose:
@@ -346,14 +356,14 @@ if options.force_sets_mode or options.force_sets_zero_mode:
         if interface_mode == 'wien2k':
             displacements, supercell = file_IO.parse_disp_yaml_with_supercell('disp.yaml')
     else:
-        print_error("disp.yaml could not be found.")
+        print_error_message("disp.yaml could not be found.")
         if log_level > 0:
             print_end()
         sys.exit(1)
 
     for filename in args:
         if not os.path.exists(filename):
-            print_error("%s could not be found." % filename)
+            print_error_message("%s could not be found." % filename)
             if log_level > 0:
                 print_end()
             sys.exit(1)
@@ -362,7 +372,7 @@ if options.force_sets_mode or options.force_sets_zero_mode:
     if options.force_sets_zero_mode:
         num_disp_files -= 1
     if not len(displacements)== num_disp_files:
-        print_error("Number of files to be read don't match to number of displacements in disp.yaml.")
+        print_error_message("Number of files to be read don't match to number of displacements in disp.yaml.")
         if log_level > 0:
             print_end()
         sys.exit(1)
@@ -409,7 +419,7 @@ if interface_mode=='vasp':
         if os.path.exists('POSCAR'):
             unitcell_filename = 'POSCAR'
         else:
-            print_error("POSCAR could not be found.")
+            print_error_message("POSCAR could not be found.")
             if log_level > 0:
                 print_end()
             sys.exit(1)
@@ -417,7 +427,7 @@ if interface_mode=='vasp':
         if os.path.exists(options.cell_poscar):
             unitcell_filename = options.cell_poscar
         else:
-            print_error("The file \'%s\' could not be found." %
+            print_error_message("The file \'%s\' could not be found." %
                         options.cell_poscar)
             if log_level > 0:
                 print_end()
@@ -431,7 +441,7 @@ if interface_mode=='wien2k':
         unitcell, npts, r0s, rmts = \
             wien2k.parse_wien2k_struct(options.wien2k_struct_file)
     else:
-        print_error("The file \'%s\' could not be found." %
+        print_error_message("The file \'%s\' could not be found." %
                     options.wien2k_struct_file)
         if log_level > 0:
             print_end()
@@ -439,7 +449,7 @@ if interface_mode=='wien2k':
 
 # Quick check of the structure
 if np.linalg.det(unitcell.get_cell()) < 0.0:
-    print_error('Determinant of the lattice vector matrix has to be positive.')
+    print_error_message('Determinant of the lattice vector matrix has to be positive.')
     if log_level > 0:
         print_end()
     sys.exit(0)
@@ -469,7 +479,7 @@ if len(args) > 0:
                                          option_list=option_list)
         settings = phonopy_conf.get_settings()
     else:
-        print_error("The setting file \'%s\' could not be found." %
+        print_error_message("The setting file \'%s\' could not be found." %
                     args[0])
         if log_level > 0:
             print_end()
@@ -542,7 +552,7 @@ if not magmoms == None:
         unitcell.set_magnetic_moments(magmoms)
     else:
         error_text = "Invalid MAGMOM setting"
-        print_error(error_text)
+        print_error_message(error_text)
         if log_level > 0:
             print_end()
         sys.exit(1)
@@ -684,7 +694,7 @@ if settings.get_run_mode() == 'displacements':
 if settings.get_is_force_constants() == 'read':
     if not os.path.exists('FORCE_CONSTANTS'):
         error_text = "\nFORCE_CONSTANTS file could not be found."
-        print_error(error_text)
+        print_error_message(error_text)
         if log_level > 0:
             print_end()
         sys.exit(1)
@@ -695,7 +705,7 @@ if settings.get_is_force_constants() == 'read':
 else:
     if not os.path.exists('FORCE_SETS'):
         error_text = "\nFORCE_SETS could not be found."
-        print_error(error_text)
+        print_error_message(error_text)
         if log_level > 0:
             print_end()
         sys.exit(1)
@@ -704,7 +714,7 @@ else:
     if forces==None:
         error_text = "\nNumber of atoms in FORCE_SETS doesn't match to supercell.\n"
         error_text += "Please check DIM and FORCE_SETS."
-        print_error(error_text)
+        print_error_message(error_text)
         if log_level > 0:
             print_end()
         sys.exit(1)
@@ -781,8 +791,8 @@ for m, s in zip(primitive.get_masses(),
     if m < 0.1:
         if symbols_with_no_mass.count(s) == 0:
             symbols_with_no_mass.append(s)
-            print_error("Atomic mass of \'%s\' is not implemented." % s)
-            print_error("MASS tag can be used to set atomic masses.")
+            print_error_message("Atomic mass of \'%s\' is not implemented." % s)
+            print_error_message("MASS tag can be used to set atomic masses.")
 
 if len(symbols_with_no_mass) > 0:
     if log_level > 0:
@@ -795,13 +805,13 @@ if settings.get_is_nac():
         nac_params = file_IO.parse_BORN(primitive, settings.get_is_symmetry())
         if not nac_params:
             error_text = "BORN file could not be read correctly."
-            print_error(error_text)
+            print_error_message(error_text)
             if log_level > 0:
                 print_end()
             sys.exit(1)
     else:
         error_text = "\nBORN could not be found."
-        print_error(error_text)
+        print_error_message(error_text)
         if log_level > 0:
             print_end()
         sys.exit(1)
@@ -897,11 +907,13 @@ elif settings.get_run_mode()=='modulation':
 
 # Character table
 elif settings.get_run_mode() == 'character_table':
-    phonon.set_character_table(settings.get_character_table_q_point(),
-                               settings.get_character_table_tolerance())
-    show_irreps = settings.get_character_table_show_irreps()
-    phonon.show_character_table(show_irreps)
-    phonon.write_yaml_character_table(show_irreps)
+    if phonon.set_character_table(settings.get_character_table_q_point(),
+                                  settings.get_character_table_tolerance()):
+        show_irreps = settings.get_character_table_show_irreps()
+        phonon.show_character_table(show_irreps)
+        phonon.write_yaml_character_table(show_irreps)
+    else:
+        no_error = False
 
 # Mesh
 elif settings.get_run_mode() == 'mesh':
@@ -1047,5 +1059,7 @@ elif settings.get_run_mode() == 'mesh':
 
 # END
 if log_level > 0:
-    print_end()
-
+    if no_error:
+        print_end()
+    else:
+        print_error()

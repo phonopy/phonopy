@@ -645,12 +645,21 @@ class CharacterTable:
         self._degeneracy_tolerance = degeneracy_tolerance
         self._symprec = symprec
         self._primitive = dynamical_matrix.get_primitive()
+        self._dynamical_matrix = dynamical_matrix
 
-
-        self._eigvecs, self._freqs = self._get_eigenvectors(dynamical_matrix)
+    def run(self):
+        (self._eigvecs,
+         self._freqs) = self._get_eigenvectors(self._dynamical_matrix)
         self._symmetry_dataset = Symmetry(self._primitive,
                                           self._symprec).get_dataset()
 
+        if not self._is_primitive_cell():
+            print
+            print "Non-primitve cell is used."
+            print "Your unit cell may be transformed to a primitive cell",
+            print "by PRIMITIVE_AXIS tag."
+            return False
+        
         (self._rotations_at_q,
          self._translations_at_q) = self._get_rotations_at_q()
 
@@ -678,6 +687,8 @@ class CharacterTable:
                     print "Database for non-Gamma point is not prepared."
         else:
             self._rotation_symbols = None
+
+        return True
 
     def get_band_indices(self):
         return self._degenerate_sets
@@ -900,6 +911,16 @@ class CharacterTable:
                 
         return ir_labels
 
+    def _is_primitive_cell(self):
+        num_identity = 0
+        for r in self._symmetry_dataset['rotations']:
+            if (r - np.eye(3, dtype='intc') == 0).all():
+                num_identity += 1
+                if num_identity > 1:
+                    return False
+        else:
+            return True
+    
     def _show(self, show_irreps):
         print
         print "-----------------"
