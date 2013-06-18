@@ -314,7 +314,7 @@ def get_gruneisen_parameters(fc2,
                              primitive,
                              nac_params=None,
                              nac_q_direction=None,
-                             is_ion_clamped=False,
+                             ion_clamped=False,
                              factor=None,
                              symprec=1e-5):
     return Gruneisen(fc2,
@@ -323,7 +323,7 @@ def get_gruneisen_parameters(fc2,
                      primitive,
                      nac_params=nac_params,
                      nac_q_direction=nac_q_direction,
-                     is_ion_clamped=is_ion_clamped,
+                     ion_clamped=ion_clamped,
                      factor=factor,
                      symprec=symprec)
 

@@ -16,14 +16,14 @@ class Gruneisen:
                  primitive,
                  nac_params=None,
                  nac_q_direction=None,
-                 is_ion_clamped=False,
+                 ion_clamped=False,
                  factor=VaspToTHz,
                  symprec=1e-5):
         self._fc2 = fc2
         self._fc3 = fc3
         self._scell = supercell
         self._pcell = primitive
-        self._is_ion_clamped = is_ion_clamped
+        self._ion_clamped = ion_clamped
         self._factor = factor
         self._symprec = symprec
         if nac_params is None:
@@ -41,11 +41,12 @@ class Gruneisen:
         self._shortest_vectors, self._multiplicity = get_smallest_vectors(
             self._scell, self._pcell, self._symprec)
 
-        if self._is_ion_clamped:
+        if self._ion_clamped:
             num_atom_prim = self._pcell.get_number_of_atoms()
             self._X = np.zeros((num_atom_prim, 3, 3, 3), dtype=float)
         else:
             self._X = self._get_X()
+            print self._X
         self._dPhidu = self._get_dPhidu()
 
         self._gruneisen_parameters = None

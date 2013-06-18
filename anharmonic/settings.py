@@ -8,6 +8,7 @@ class Phono3pySettings(Settings):
         self._supercell_matrix_extra = None
         self._band_indices = None
         self._q_direction = None
+        self._ion_clamped = False
         self._is_bterta = False
         self._is_linewidth = False
         self._max_freepath = None
@@ -31,6 +32,12 @@ class Phono3pySettings(Settings):
 
     def get_band_indices(self):
         return self._band_indices
+
+    def set_ion_clamped(self, ion_clamped):
+        self._ion_clamped = ion_clamped
+
+    def get_ion_clamped(self):
+        return self._ion_clamped
 
     def set_is_bterta(self, is_bterta):
         self._is_bterta = is_bterta
@@ -124,6 +131,10 @@ class Phono3pyConfParser(ConfParser):
                 if self._options.band_indices is not None:
                     self._confs['band_indices'] = self._options.band_indices
 
+            if opt.dest == 'ion_clamped':
+                if self._options.ion_clamped:
+                    self._confs['ion_clamped'] = '.true.'
+
             if opt.dest == 'is_bterta':
                 if self._options.is_bterta:
                     self._confs['bterta'] = '.true.'
@@ -196,6 +207,10 @@ class Phono3pyConfParser(ConfParser):
                 for sum_set in confs['band_indices'].split(','):
                     vals.append([int(x) - 1 for x in sum_set.split()])
                 self.set_parameter('band_indices', vals)
+
+            if conf_key == 'ion_clamped':
+                if confs['ion_clamped'] == '.true.':
+                    self.set_parameter('ion_clamped', True)
 
             if conf_key == 'bterta':
                 if confs['bterta'] == '.true.':
@@ -270,6 +285,10 @@ class Phono3pyConfParser(ConfParser):
         # Sets of band indices that are summed
         if params.has_key('band_indices'):
             self._settings.set_band_indices(params['band_indices'])
+
+        # Atoms are clamped under applied strain in Gruneisen parameter calculation
+        if params.has_key('ion_clamped'):
+            self._settings.set_ion_clamped(params['ion_clamped'])
 
         # Calculate thermal conductivity in BTE-RTA
         if params.has_key('is_bterta'):

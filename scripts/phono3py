@@ -98,6 +98,7 @@ parser.set_defaults(amplitude=None,
                     freq_scale=None,
                     gamma_option=0,
                     grid_points=None,
+                    ion_clamped=False,
                     is_cm=False,
                     is_decay_channel=False,
                     is_nodiag=False,
@@ -226,6 +227,9 @@ parser.add_option("--gp", "--grid_points",
 parser.add_option("--gruneisen", dest="is_gruneisen",
                   action="store_true",
                   help="Calculate phonon Gruneisen parameter")
+parser.add_option("--ion_clamped", dest="ion_clamped",
+                  action="store_true",
+                  help="Atoms are clamped under applied strain in Gruneisen parameter calculation")
 parser.add_option("--jdos",
                   dest="is_joint_dos",
                   action="store_true",
@@ -656,6 +660,7 @@ else:
         mesh = settings.get_mesh_numbers()
         band_paths = settings.get_bands()
         qpoints = settings.get_qpoints()
+        ion_clamped = settings.get_ion_clamped()
 
         if (mesh is None and
             band_paths is None and
@@ -673,6 +678,9 @@ else:
                 for path in band_paths:
                     print ("[%5.2f %5.2f %5.2f] --> [%5.2f %5.2f %5.2f]" % 
                            (tuple(path[0]) + tuple(path[-1])))
+            if ion_clamped:
+                print "To be calculated with ion clamped."
+                
             sys.stdout.flush()
 
         gr = get_gruneisen_parameters(fc2,
@@ -681,7 +689,7 @@ else:
                                       primitive,
                                       nac_params=nac_params,
                                       nac_q_direction=nac_q_direction,
-                                      is_ion_clamped=False,
+                                      ion_clamped=ion_clamped,
                                       factor=VaspToTHz,
                                       symprec=options.symprec)
         if mesh is not None:
