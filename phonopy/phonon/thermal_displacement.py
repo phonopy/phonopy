@@ -39,11 +39,10 @@ from phonopy.harmonic.dynamical_matrix import get_equivalent_smallest_vectors
 
 class ThermalMotion:
     def __init__(self,
-                 eigenvalues,
+                 frequencies, # have to be supplied in THz
                  eigenvectors,
                  weights,
                  masses,
-                 factor=VaspToTHz,
                  cutoff_eigenvalue=None):
 
         if cutoff_eigenvalue==None:
@@ -53,24 +52,23 @@ class ThermalMotion:
             
         self._distances = None
         self._displacements = None
-        self._eigenvalues = eigenvalues
+        self._frequencies = frequencies
         self._p_eigenvectors = None
         self._eigenvectors = eigenvectors
-        self._factor = factor
-        self._masses = masses
-        self._masses3 = np.array([[m] * 3 for m in masses]).flatten()
+        self._masses = masses * AMU
+        self._masses3 = np.array([[m] * 3 for m in masses]).flatten() * AMU
         self._temperatures = None
         self._weights = weights
 
-    def _get_population(self, omega, t):
+    def _get_population(self, freq, t): # freq in THz
         if t < 1: # temperatue less than 1 K is approximated as 0 K.
             return 0
         else:
-            return 1.0 / (np.exp(omega * THzToEv / (Kb * t)) - 1)
+            return 1.0 / (np.exp(freq * THzToEv / (Kb * t)) - 1)
 
-    def get_Q2(self, omega, t):
+    def get_Q2(self, freq, t): # freq in THz
         return Hbar * EV / Angstrom ** 2 * (
-            (self._get_population(omega, t) + 0.5) / (omega * 1e12 * 2 * np.pi))
+            (self._get_population(freq, t) + 0.5) / (freq * 1e12 * 2 * np.pi))
 
     def set_temperature_range(self, t_min=0, t_max=1000, t_step=10):
         if t_min < 0:
@@ -94,7 +92,7 @@ class ThermalMotion:
           Projection direction in fractional coordinates
         """
 
-        if not lattice==None:
+        if lattice is not None:
             projector = np.dot(direction, lattice)
         else:
             projector = np.array(direction, dtype=float)
@@ -110,19 +108,17 @@ class ThermalMotion:
 
 class ThermalDisplacements(ThermalMotion):
     def __init__(self,
-                 eigenvalues,
+                 frequencies, # Have to be supplied in THz
                  eigenvectors,
                  weights,
                  masses,
-                 factor=VaspToTHz,
                  cutoff_eigenvalue=None):
 
         ThermalMotion.__init__(self,
-                               eigenvalues,
+                               frequencies,
                                eigenvectors,
                                weights,
                                masses,
-                               factor=VaspToTHz,
                                cutoff_eigenvalue=None)
 
         self._displacements = None
@@ -131,7 +127,7 @@ class ThermalDisplacements(ThermalMotion):
         return (self._temperatures, self._displacements)
 
     def set_thermal_displacements(self):
-        eigvals = self._eigenvalues
+        freqs = self._frequencies
         temps = self._temperatures
         weights = self._weights
         if self._p_eigenvectors is not None:
@@ -142,18 +138,17 @@ class ThermalDisplacements(ThermalMotion):
             eigvecs = self._eigenvectors
 
         disps = np.zeros((len(temps), len(masses)), dtype=float)
-        for eigs, vecs2, w in zip(eigvals, abs(eigvecs) ** 2, weights):
-            for e, v2 in zip(eigs, vecs2.T * w):
-                if e > self._cutoff_eigenvalue:
-                    omega = np.sqrt(e) * self._factor # To THz
-                    c = v2 / masses / AMU
+        for fs, vecs2, w in zip(freqs, abs(eigvecs) ** 2, weights):
+            for f, v2 in zip(fs, vecs2.T * w):
+                if f > np.sqrt(self._cutoff_eigenvalue):
+                    c = v2 / masses
                     for i, t in enumerate(temps):
-                        disps[i] += self.get_Q2(omega, t) * c
+                        disps[i] += self.get_Q2(f, t) * c
             
-        self._displacements = np.array(disps) / weights.sum()
+        self._displacements = disps / weights.sum()
 
     def write_yaml(self):
-        natom = len(self._eigenvalues[0])/3
+        natom = len(self._masses)
         f = open('thermal_displacements.yaml', 'w')
         f.write("# Thermal displacements\n")
         f.write("natom: %5d\n" % (natom))
@@ -184,16 +179,84 @@ class ThermalDisplacements(ThermalMotion):
         return plt
 
 
+class ThermalDisplacementMatrix(ThermalMotion):
+    def __init__(self,
+                 frequencies, # Have to be supplied in THz
+                 eigenvectors,
+                 weights,
+                 masses,
+                 cutoff_eigenvalue=None):
+
+        ThermalMotion.__init__(self,
+                               frequencies,
+                               eigenvectors,
+                               weights,
+                               masses,
+                               cutoff_eigenvalue=None)
+
+        self._disp_matrix = None
+
+    def get_thermal_displacement_matrix(self):
+        return (self._temperatures, self._disp_matrix)
+
+    def set_thermal_displacement_matrix(self):
+        disps = np.zeros((len(self._temperatures), len(self._masses),
+                          3, 3), dtype=float)
+
+        for freqs, eigvecs, w in zip(self._frequencies,
+                                     self._eigenvectors,
+                                     self._weights):
+            for f, vec in zip(freqs, eigvecs.T):
+                if f > np.sqrt(self._cutoff_eigenvalue):
+                    c = []
+                    for v, m in zip(vec.reshape(-1, 3), self._masses):
+                        c.append(np.outer(v, v.conj()) / m)
+                    for i, t in enumerate(temps):
+                        disps[i] += self.get_Q2(f, t) * np.array(c)
+            
+        self._disp_matrix = disps / weights.sum()
+
+    def write_yaml(self):
+        natom = len(self._masses)
+        f = open('thermal_displacements.yaml', 'w')
+        f.write("# Thermal displacements\n")
+        f.write("natom: %5d\n" % (natom))
+
+        f.write("thermal_displacements:\n")
+        for t, u in zip(self._temperatures, self._displacements):
+            f.write("- temperature:   %15.7f\n" % t)
+            f.write("  displacements:\n")
+            for i, elems in enumerate(np.reshape(u, (natom, -1))):
+                f.write("  - [ %10.7f" % elems[0])
+                for j in range(len(elems) - 1):
+                    f.write(", %10.7f" % elems[j + 1])
+                f.write(" ] # atom %d\n" % (i + 1))
+        
+    def plot_thermal_displacement_matrix(self, is_legend=False):
+        import matplotlib.pyplot as plt
+
+        plots = []
+        labels = []
+        xyz = ['x', 'y', 'z']
+        for i, u in enumerate(self._displacements.transpose()):
+            plots.append(plt.plot(self._temperatures, u ))
+            labels.append("%d-%s" % ( i//3 + 1, xyz[i % 3]))
+        
+        if is_legend:
+            plt.legend(plots, labels, loc='upper left')
+            
+        return plt
+        
+
 class ThermalDistances(ThermalMotion):
     def __init__(self,
-                 eigenvalues,
+                 frequencies, # Have to be supplied in THz
                  eigenvectors,
                  weights,
                  supercell,
                  primitive,
                  qpoints,
                  symprec=1e-5,
-                 factor=VaspToTHz,
                  cutoff_eigenvalue=None):
 
         self._primitive = primitive
@@ -202,11 +265,10 @@ class ThermalDistances(ThermalMotion):
         self._symprec = symprec
 
         ThermalMotion.__init__(self,
-                               eigenvalues,
+                               frequencies,
                                eigenvectors,
                                weights,
                                primitive.get_masses(),
-                               factor=VaspToTHz,
                                cutoff_eigenvalue=None)
 
     def _get_cross(self, v, delta_r, q, atom1, atom2):
@@ -229,29 +291,28 @@ class ThermalDistances(ThermalMotion):
 
             self._project_eigenvectors(delta_r, self._primitive.get_cell())
             
-            for eigs, vecs, q, w in zip(self._eigenvalues,
-                                        self._p_eigenvectors,
-                                        self._qpoints,
-                                        self._weights):
-                c_cross = w / (
-                    np.sqrt(self._masses[patom1] * self._masses[patom2]) * AMU)
-                c1 = w / (self._masses[patom1] * AMU)
-                c2 = w / (self._masses[patom2] * AMU)
+            for freqs, vecs, q, w in zip(self._frequencies,
+                                         self._p_eigenvectors,
+                                         self._qpoints,
+                                         self._weights):
+                c_cross = w / np.sqrt(self._masses[patom1] *
+                                      self._masses[patom2])
+                c1 = w / self._masses[patom1]
+                c2 = w / self._masses[patom2]
 
-                for e, v in zip(eigs, vecs.T):
+                for f, v in zip(freqs, vecs.T):
                     cross_term = self._get_cross(v, delta_r, q, patom1, patom2)
                     v2 = abs(v)**2
-                    if e > self._cutoff_eigenvalue:
-                        omega = np.sqrt(e) * self._factor # To THz
+                    if f > np.sqrt(self._cutoff_eigenvalue):
                         for j, t in enumerate(self._temperatures):
-                            dists[j, i] += self.get_Q2(omega, t) * (
+                            dists[j, i] += self.get_Q2(f, t) * (
                                 v2[patom1] * c1 + cross_term * c_cross + v2[patom2] * c2)
             
         self._atom_pairs = atom_pairs
         self._distances = dists / self._weights.sum()
                              
     def write_yaml(self):
-        natom = len(self._eigenvalues[0]) / 3
+        natom = len(self._masses)
         f = open('thermal_distances.yaml', 'w')
         f.write("natom: %5d\n" % (natom))
 

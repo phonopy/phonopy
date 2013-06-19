@@ -596,7 +596,7 @@ class Phonopy:
             sys.exit(1)
 
         eigvecs = self._mesh.get_eigenvectors()
-        eigvals = self._mesh.get_eigenvalues()
+        frequencies = self._mesh.get_frequencies()
         mesh_nums = self._mesh.get_mesh_numbers() 
 
         if self._mesh.get_eigenvectors() == None:
@@ -607,11 +607,10 @@ class Phonopy:
             print "Sampling mesh must not be symmetrized."
             sys.exit(1)
 
-        td = ThermalDisplacements(eigvals,
+        td = ThermalDisplacements(frequencies,
                                   eigvecs,
                                   self._mesh.get_weights(),
                                   self._primitive.get_masses(),
-                                  factor=self._factor,
                                   cutoff_eigenvalue=cutoff_eigenvalue)
         td.set_temperature_range(t_min, t_max, t_step)
         if not direction==None:
@@ -648,14 +647,13 @@ class Phonopy:
           e.g. 0.1 (THz)
         """
 
-        td = ThermalDistances(self._mesh.get_eigenvalues(),
+        td = ThermalDistances(self._mesh.get_frequencies(),
                               self._mesh.get_eigenvectors(),
                               self._mesh.get_weights(),
                               self._supercell,
                               self._primitive,
                               self._mesh.get_qpoints(),
                               symprec=self._symprec,
-                              factor=self._factor,
                               cutoff_eigenvalue=cutoff_eigenvalue)
         td.set_temperature_range(t_min, t_max, t_step)
         td.set_thermal_distances(atom_pairs)
