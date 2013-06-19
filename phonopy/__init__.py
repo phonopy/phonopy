@@ -46,7 +46,7 @@ from phonopy.harmonic.forces import Forces
 from phonopy.phonon.mesh import Mesh
 from phonopy.units import VaspToTHz
 from phonopy.phonon.dos import TotalDos, PartialDos
-from phonopy.phonon.thermal_displacement import ThermalDisplacements, ThermalDistances
+from phonopy.phonon.thermal_displacement import ThermalDisplacements, ThermalDistances, ThermalDisplacementMatrices
 from phonopy.phonon.animation import Animation
 from phonopy.phonon.modulation import Modulation
 from phonopy.phonon.qpoints_mode import write_yaml as write_yaml_qpoints
@@ -102,6 +102,9 @@ class Phonopy:
         # set_thermal_displacements
         self._thermal_displacements = None
 
+        # set_thermal_displacement_matrices
+        self._thermal_displacement_matrices = None
+        
         # set_partial_DOS
         self._pdos = None
 
@@ -586,7 +589,7 @@ class Phonopy:
         cutoff_eigenvalue:
           phonon modes that have frequencies below cutoff_eigenvalue
           are ignored.
-          e.g. 0.1 (THz)
+          e.g. 0.1 (THz^2)
 
         direction:
           Projection direction in reduced coordinates
@@ -599,7 +602,7 @@ class Phonopy:
         frequencies = self._mesh.get_frequencies()
         mesh_nums = self._mesh.get_mesh_numbers() 
 
-        if self._mesh.get_eigenvectors() == None:
+        if self._mesh.get_eigenvectors() is None:
             print "Eigenvectors have to be calculated."
             sys.exit(1)
             
@@ -609,13 +612,12 @@ class Phonopy:
 
         td = ThermalDisplacements(frequencies,
                                   eigvecs,
-                                  self._mesh.get_weights(),
                                   self._primitive.get_masses(),
                                   cutoff_eigenvalue=cutoff_eigenvalue)
         td.set_temperature_range(t_min, t_max, t_step)
-        if not direction==None:
+        if direction is not None:
             td.project_eigenvectors(direction, self._primitive.get_cell())
-        td.set_thermal_displacements()
+        td.run()
         
         self._thermal_displacements = td
 
@@ -624,11 +626,58 @@ class Phonopy:
             return self._thermal_displacements.get_thermal_displacements()
         
     def plot_thermal_displacements(self, is_legend=False):
-        return self._thermal_displacements.plot_thermal_displacements(is_legend)
+        return self._thermal_displacements.plot(is_legend)
 
     def write_yaml_thermal_displacements(self):
         self._thermal_displacements.write_yaml()
 
+    # Thermal displacement matrices
+    def set_thermal_displacement_matrices(self,
+                                           t_step=10,
+                                           t_max=1000,
+                                           t_min=0,
+                                           cutoff_eigenvalue=None):
+        """
+        cutoff_eigenvalue:
+          phonon modes that have frequencies below cutoff_eigenvalue
+          are ignored.
+          e.g. 0.1 (THz^2)
+
+        direction:
+          Projection direction in reduced coordinates
+        """
+        if self._mesh==None:
+            print "set_mesh has to be done before set_thermal_properties"
+            sys.exit(1)
+
+        eigvecs = self._mesh.get_eigenvectors()
+        frequencies = self._mesh.get_frequencies()
+        mesh_nums = self._mesh.get_mesh_numbers() 
+
+        if self._mesh.get_eigenvectors() is None:
+            print "Eigenvectors have to be calculated."
+            sys.exit(1)
+            
+        if np.prod(mesh_nums) != len(eigvecs):
+            print "Sampling mesh must not be symmetrized."
+            sys.exit(1)
+
+        tdm = ThermalDisplacementMatrices(frequencies,
+                                           eigvecs,
+                                           self._primitive.get_masses(),
+                                           cutoff_eigenvalue=cutoff_eigenvalue)
+        tdm.set_temperature_range(t_min, t_max, t_step)
+        tdm.run()
+        
+        self._thermal_displacement_matrices = tdm
+
+    def get_thermal_displacement_matrices(self):
+        if self._thermal_displacement_matrices is not None:
+            return self._thermal_displacement_matrices.get_thermal_displacement_matrices()
+        
+    def write_yaml_thermal_displacement_matrices(self):
+        self._thermal_displacement_matrices.write_yaml()
+        
     # Thermal displacement
     def set_thermal_distances(self,
                               atom_pairs,
@@ -644,19 +693,18 @@ class Phonopy:
         cutoff_eigenvalue:
           phonon modes that have frequencies below cutoff_eigenvalue
           are ignored.
-          e.g. 0.1 (THz)
+          e.g. 0.1 (THz^2)
         """
 
         td = ThermalDistances(self._mesh.get_frequencies(),
                               self._mesh.get_eigenvectors(),
-                              self._mesh.get_weights(),
                               self._supercell,
                               self._primitive,
                               self._mesh.get_qpoints(),
                               symprec=self._symprec,
                               cutoff_eigenvalue=cutoff_eigenvalue)
         td.set_temperature_range(t_min, t_max, t_step)
-        td.set_thermal_distances(atom_pairs)
+        td.run(atom_pairs)
 
         self._thermal_distances = td
 

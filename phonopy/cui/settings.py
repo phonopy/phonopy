@@ -728,6 +728,7 @@ class PhonopySettings(Settings):
         self._is_gamma_center = False
         self._is_plusminus_displacement = 'auto'
         self._is_thermal_displacements = False
+        self._is_thermal_displacement_matrices = False
         self._is_thermal_distances = False
         self._is_thermal_properties = False
         self._is_projected_thermal_properties = False
@@ -859,6 +860,12 @@ class PhonopySettings(Settings):
 
     def get_is_thermal_displacements(self):
         return self._is_thermal_displacements
+
+    def set_is_thermal_displacement_matrices(self, is_displacement_matrices):
+        self._is_thermal_displacement_matrices = is_displacement_matrices
+
+    def get_is_thermal_displacement_matrices(self):
+        return self._is_thermal_displacement_matrices
 
     def set_is_thermal_distances(self, is_thermal_distances):
         self._is_thermal_distances = is_thermal_distances
@@ -994,6 +1001,10 @@ class PhonopyConfParser(ConfParser):
             if opt.dest == 'is_thermal_displacements':
                 if self._options.is_thermal_displacements:
                     self._confs['tdisp'] = '.true.'
+
+            if opt.dest == 'is_thermal_displacement_matrices':
+                if self._options.is_thermal_displacement_matrices:
+                    self._confs['tdispmat'] = '.true.'
                     
             if opt.dest == 'projection_direction':
                 if self._options.projection_direction is not None:
@@ -1163,6 +1174,10 @@ class PhonopyConfParser(ConfParser):
             # Thermal displacement
             if conf_key == 'tdisp':
                 self.set_parameter('tdisp', confs['tdisp'])
+
+            # Thermal displacement matrices
+            if conf_key == 'tdispmat':
+                self.set_parameter('tdispmat', confs['tdispmat'])
 
             # Thermal distance
             if conf_key == 'tdistance':
@@ -1364,14 +1379,21 @@ class PhonopyConfParser(ConfParser):
                 self._settings.set_is_eigenvectors(True)
                 self._settings.set_is_mesh_symmetry(False)
     
-        # Thermal displacement
+        # Thermal displacements
         if params.has_key('tdisp'):
             if params['tdisp'] == '.true.':
                 self._settings.set_is_thermal_displacements(True)
                 self._settings.set_is_eigenvectors(True)
                 self._settings.set_mesh_symmetry(False)
     
-        # Thermal distance
+        # Thermal displacement matrices
+        if params.has_key('tdispmat'):
+            if params['tdispmat'] == '.true.':
+                self._settings.set_is_thermal_displacement_matrices(True)
+                self._settings.set_is_eigenvectors(True)
+                self._settings.set_mesh_symmetry(False)
+    
+        # Thermal distances
         if params.has_key('tdistance'): 
             self._settings.set_is_thermal_distances(True)
             self._settings.set_is_eigenvectors(True)

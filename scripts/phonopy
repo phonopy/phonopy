@@ -124,6 +124,7 @@ parser.set_defaults(
     is_plusminus_displacements=False,
     is_read_force_constants=False,
     is_thermal_displacements=False,
+    is_thermal_displacement_matrices=False,
     is_thermal_properties=False,
     is_projected_thermal_properties=False,
     is_trigonal_displacements=False,
@@ -270,7 +271,11 @@ parser.add_option("-t", "--thermal_property", dest="is_thermal_properties",
 parser.add_option("--td", "--thermal_displacements",
                   dest="is_thermal_displacements",
                   action="store_true",
-                  help="Output thermal displacement")
+                  help="Output thermal displacements")
+parser.add_option("--tdm", "--thermal_displacement_matrix",
+                  dest="is_thermal_displacement_matrices",
+                  action="store_true",
+                  help="Output thermal displacement matrices")
 parser.add_option("--tmax", dest="tmax", type="string",
                   help="Maximum calculated temperature")
 parser.add_option("--qpoints", dest="qpoints", type="string",
@@ -937,7 +942,7 @@ elif settings.get_run_mode() == 'mesh':
 
     phonon.write_yaml_mesh()
 
-    # Thermal property
+    # Thermalp roperty
     if settings.get_is_thermal_properties():
         print "Calculating thermal properties..."
         tprop_range = settings.get_thermal_property_range()
@@ -970,7 +975,7 @@ elif settings.get_run_mode() == 'mesh':
             else:
                 plot.show()
 
-    # Thermal displacement
+    # Thermal displacements
     elif settings.get_is_thermal_displacements():
         p_direction = settings.get_projection_direction()
         if p_direction is not None:
@@ -994,6 +999,20 @@ elif settings.get_run_mode() == 'mesh':
                 plot.savefig('thermal_displacement.pdf')
             else:
                 plot.show()
+
+    # Thermal displacement matrices
+    elif settings.get_is_thermal_displacement_matrices():
+        print "Calculating thermal displacement matrices..."
+        tprop_range = settings.get_thermal_property_range()
+        tstep = tprop_range['step']
+        tmax = tprop_range['max']
+        tmin = tprop_range['min']
+        phonon.set_thermal_displacement_matrices(
+            tstep,
+            tmax,
+            tmin,
+            cutoff_eigenvalue=options.cutoff_eigenvalue)
+        phonon.write_yaml_thermal_displacement_matrices()
 
     # Thermal displacement
     elif settings.get_is_thermal_distances():
