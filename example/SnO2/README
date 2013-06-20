@@ -1,0 +1,28 @@
+SnO2 rutile structure.
+The space group type is P4_2/mnm (136). This is a non-symmorphic space group and a screw axis of c exists. Usually slope of phonon band normal to the Brillouin zone boundary becomes zero, but there are some positive and negative slopes are found at the Brilloun zone boundary due to the screw symmetry operation. This can be watched by 
+
+% phonopy --dim="2 2 2" --band="0 0 0  0 0 1" -p
+
+where Z=(0, 0, 1/2). Non-zero slope indicates non-zero group velocity. But phonopy is usually not able to calculate these group velocity correctly. An example of wrongly calculated group velocity is shown as follows. We obtain the group velocity by
+
+% phonopy --dim="2 2 2" --band="0 0 0  0 0 1" --gv
+
+In band.yaml file, group velocity of band #7 and #8 at q=(0, 0, 0.5) are shown as
+
+  - # 7
+    frequency:    7.5390344506
+    group_velocity: [    -0.0000000,     0.0000000,   -16.7130708 ]
+  - # 8
+    frequency:    7.5390344506
+    group_velocity: [     0.0000000,    -0.0000000,    16.7130708 ]
+
+But at the neighboring q-point of q=(0, 0, 0.52),
+
+  - # 7
+    frequency:    7.3428399771
+    group_velocity: [    -0.0000000,     0.0000000,   -32.1764347 ]
+  - # 8
+    frequency:    7.7304844141
+    group_velocity: [     0.0000000,    -0.0000000,    30.6385174 ]
+
+This doesn't mean the group velocity suddenly changes between these neighboring q-points. The group velocity at q=(0, 0, 0.52) is correctly calcualted but not at q=(0, 0, 0.5). Therefore the group velocity close to q=(0, 0, 0.5) should be used instead of the value at q=(0, 0, 0.5) if we can accept this approximation.
