@@ -17,6 +17,8 @@ tags:
 * ``--eigvecs``, ``--eigenvectors`` (``EIGENVECTORS = .TRUE.``)
 * ``--fits_debye_model`` (``DEBYE_MODEL = .TRUE.``)
 * ``--gc``, ``--gamma_center`` (``GAMMA_CENTER``)
+* ``--gv``, ``--group_velocity`` (``GROUP_VELOCITY = .TRUE.``)
+* ``--gv_delta_q`` (``GV_DELTA_Q``)
 * ``--modulation`` (``MODULATION``)
 * ``--nac`` (``NAC = .TRUE.``)
 * ``--pa``, ``--primitive_axis`` (``PRIMITIVE_AXIS``)

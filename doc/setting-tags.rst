@@ -541,6 +541,18 @@ then the physical unit will be Angstrom THz.
 
    GROUP_VELOCITY = .TRUE.
 
+Technical details are shown at :ref:`group_velocity`.
+
+``GV_DELTA_Q``
+~~~~~~~~~~~~~~~
+
+The reciprocal distance used for finite difference method is
+specified. The default value is 1e-4.
+
+::
+
+   GV_DELTA_Q = 0.01
+
 Symmetry
 ---------
 
@@ -816,19 +828,23 @@ Characters of irreducible representations of phonon modes
 ~~~~~~~~~~~~~~~~~~~~
 
 Characters of irreducible representations (IRs) of phonon modes are
-shown. The first three values gives a *q*-point in reduced coordinates
-to be calculated. The unit cell has to be set as the primitive
-cell. The degenerated modes are searched only by the closeness of
+shown. For this calculation, a primitive cell has to be used. If the
+input unit cell is a non-primitive cell, it has to be transformed to a
+primitive cell using ``PRIMITIVE_AXIS`` tag (or ``--pa`` option).
+
+The first three values gives a *q*-point in reduced coordinates
+to be calculated.  The degenerated modes are searched only by the closeness of
 frequencies. The frequency difference to be tolerated is specified by
 the fourth value in the frequency unit that the user specified.
+
+::
+
+   CHARACTER_TABLE = 0 0 0 1e-3
 
 Only the databases of IRs for a few point group types at the
 :math:`\Gamma` point are implemented. If the database is available,
 the symbols of the IRs and the rotation operations are shown.
 
-::
-
-   CHARACTER_TABLE = 0 0 0 1e-3
 
 ``IRREPS``
 ~~~~~~~~~~~
