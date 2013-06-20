@@ -62,10 +62,14 @@ special point symbols).
 
 |i0|
 
-Non-zero slope indicates non-zero group
-velocity. But phonopy is usually not able to calculate these group
-velocity correctly. An example of wrongly calculated group velocity is
-shown as follows. We obtain the group velocity by
+Non-zero slope indicates non-zero group velocity. But phonopy is
+usually not able to calculate these group velocity correctly. Because
+phonon mode is degenerate at this point and the numerically calculated
+eigenvector for the degenerate mode is determined almost randomly with
+respect to very little numerical noise, and this eigenvecor doesn't
+have ability to represent group velocity (or vector variable). An
+example of wrongly calculated group velocity is shown as follows. We
+obtain the group velocity by
 
 ::
 
@@ -109,8 +113,9 @@ structure is drawn along the path :math:`(0.1, 0, 0) \rightarrow (0.1,
 
 |i1|
 
-This path crosses the Brillouin zone boundary perpendicularly, too. 
-Similarly the group velocities are calculated at q=(0.1, 0, 0.5)
+This path crosses the Brillouin zone boundary perpendicularly, too.
+Similarly the group velocities are incorrectly calculated at q=(0.1,
+0, 0.5) as
 
 ::
 
@@ -121,7 +126,8 @@ Similarly the group velocities are calculated at q=(0.1, 0, 0.5)
     frequency:    7.5297693984
     group_velocity: [    -1.3426747,     2.7158889,     3.4458117 ]
 
-and at q-point of q=(0.1, 0, 0.52)
+The group velocity q-point of q=(0.1, 0, 0.52) is correctly calculated
+as
 
 ::
 
@@ -132,13 +138,3 @@ and at q-point of q=(0.1, 0, 0.52)
     frequency:    7.7173472223
     group_velocity: [    -1.6375441,    -0.0000000,    30.4311514 ]
 
-The y component of group velocity at q=(0, 0, 0.5) is also
-suspected. To check this, the band path of :math:`Z(0, 0, 0.5)
-\rightarrow R(0, 0.5, 0.5) \rightarrow Z(0, 0, 1)`  is drawn as
-    
-.. |i2| image:: SnO2-ZRZ.png
-        :scale: 75
-
-|i2|
-
-This figure indicates the y component of group velocity 
