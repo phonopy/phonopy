@@ -19,6 +19,8 @@ class BTE_RTA:
                  t_step=10,
                  max_freepath=0.01, # in meter
                  mesh_divisors=None,
+                 coase_mesh_shift=None,
+                 is_mesh_shift=None,
                  no_kappa_stars=False,
                  gamma_option=0,
                  log_level=0,
@@ -56,7 +58,9 @@ class BTE_RTA:
 
         self._mesh = None
         self._mesh_divisors = None
-        self._set_mesh_numbers(mesh_divisors=mesh_divisors)
+        self._coase_mesh_shift = None
+        self._set_mesh_numbers(mesh_divisors=mesh_divisors,
+                               coase_mesh_shift=coase_mesh_shift)
         volume = self._primitive.get_volume()
         num_grid = np.prod(self._mesh / self._mesh_divisors)
         self._conversion_factor = unit_to_WmK / volume / num_grid
@@ -323,22 +327,33 @@ class BTE_RTA:
 
         return rotations
 
-    def _set_mesh_numbers(self, mesh_divisors=None):
+    def _set_mesh_numbers(self, mesh_divisors=None, coase_mesh_shift=None):
         self._mesh = self._pp.get_mesh_numbers()
 
         if mesh_divisors is None:
             self._mesh_divisors = np.intc([1, 1, 1])
         else:
             self._mesh_divisors = []
-            for m, n in zip(self._mesh, mesh_divisors):
+            for i, (m, n) in enumerate(zip(self._mesh, mesh_divisors)):
                 if m % n == 0:
                     self._mesh_divisors.append(n)
                 else:
                     self._mesh_divisors.append(1)
+                    print ("Mesh number %d for the " +
+                           ["first", "second", "third"][i] + 
+                           " axis is not dividable by divisor %d.") % (m, n)
             self._mesh_divisors = np.intc(self._mesh_divisors)
-
-            if (self._mesh_divisors != mesh_divisors).any():
-                print "Mesh numbers are not dividable by mesh divisors."
+            if coase_mesh_shift is None:
+                self._coase_mesh_shift = [False, False, False]
+            else:
+                self._coase_mesh_shift = coase_mesh_shift
+            for i in range(3):
+                if (self._coase_mesh_shift[i] and
+                    (self._mesh_divisors[i] % 2 != 0)):
+                    print ("Coase grid along " +
+                           ["first", "second", "third"][i] + 
+                           " axis can not be shifted. Set False.")
+                    self._coase_mesh_shift[i] = False
         if self._log_level:
             print ("Lifetime sampling mesh: [ %d %d %d ]" %
                    tuple(self._mesh / self._mesh_divisors))

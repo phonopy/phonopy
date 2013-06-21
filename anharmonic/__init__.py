@@ -204,6 +204,7 @@ class Phono3py:
                                  max_freepath=0.01, # in meter
                                  grid_points=None,
                                  mesh_divisors=None,
+                                 coase_mesh_shift=None,
                                  no_kappa_stars=False,
                                  write_gamma=False,
                                  read_gamma=False,
@@ -218,6 +219,7 @@ class Phono3py:
                      t_step=t_step,
                      max_freepath=max_freepath,
                      mesh_divisors=mesh_divisors,
+                     coase_mesh_shift=coase_mesh_shift,
                      no_kappa_stars=no_kappa_stars,
                      gamma_option=gamma_option,
                      log_level=self._log_level,

@@ -69,7 +69,8 @@ def get_ir_grid_points(mesh, primitive):
 def reduce_grid_points(mesh_divisors,
                        grid_address,
                        dense_grid_points,
-                       dense_grid_weights=None):
+                       dense_grid_weights=None,
+                       coase_mesh_shift=None):
     divisors = np.array(mesh_divisors, dtype=int)
     if (divisors == 1).all():
         grid_points = np.array(dense_grid_points, dtype=int)
