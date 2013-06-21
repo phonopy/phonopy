@@ -3,6 +3,15 @@
 Change Log
 ==========
 
+Apr-13-2013: Version 1.7
+---------------------------
+
+* The tag ``CHARACTER_TABLE`` was renamed to ``IRREPS``
+  (:ref:`irreps_tag`). The output file name was also renamed to
+  ``irreps.yaml``. In the ir-reps calculation, imaginary part of
+  characters are shown by the argument. The format of yaml file
+  (``irreps.yaml``) was modified.
+
 Apr-13-2013: Version 1.6.4
 ---------------------------
 
@@ -128,7 +137,7 @@ Oct-12-2011: Version 1.2
 * Showing site-symmetry symbols with respective orientations in the output of
   ``--symmetry`` option.
 * Code cleanings of ``settings.py``, ``force_constant.py``, etc.
-* Starting implementation of ``character_table.py`` (:ref:`character_table_tag`).
+* Starting implementation of ``character_table.py`` (:ref:`irreps_tag`).
 
 Sep-19-2011: Version 1.1
 ---------------------------

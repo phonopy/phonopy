@@ -822,9 +822,9 @@ the default value is 0.
 Characters of irreducible representations of phonon modes
 ----------------------------------------------------------
 
-.. _character_table_tag:
+.. _irreps_tag:
 
-``CHARACTER_TABLE``
+``IRREPS``
 ~~~~~~~~~~~~~~~~~~~~
 
 Characters of irreducible representations (IRs) of phonon modes are
@@ -839,14 +839,14 @@ the fourth value in the frequency unit that the user specified.
 
 ::
 
-   CHARACTER_TABLE = 0 0 0 1e-3
+   IRREPS = 0 0 0 1e-3
 
 Only the databases of IRs for a few point group types at the
 :math:`\Gamma` point are implemented. If the database is available,
 the symbols of the IRs and the rotation operations are shown.
 
 
-``IRREPS``
+``SHOW_IRREPS``
 ~~~~~~~~~~~
 
 **Experimental**
@@ -855,8 +855,8 @@ Irreducible representations are shown along with character table.
 
 ::
 
-   CHARACTER_TABLE = 1/3 1/3 0
-   IRREPS = .TRUE.   
+   IRREPS = 1/3 1/3 0
+   SHOW_IRREPS = .TRUE.   
 
 
 .. |sflogo| image:: http://sflogo.sourceforge.net/sflogo.php?group_id=161614&type=1
