@@ -164,7 +164,7 @@ parser.add_option("--band_points", dest="band_points",
 parser.add_option("-c", "--cell", dest="cell_poscar",
                   action="store", type="string",
                   help="Read unit cell", metavar="FILE")
-parser.add_option("--ct", "--irreps_qpoint", dest="irreps_qpoint",
+parser.add_option("--irreps", "--irreps_qpoint", dest="irreps_qpoint",
                   action="store", type="string",
                   help="A q-point where characters of irreps are calculated")
 parser.add_option("--cutoff", dest="cutoff_frequency", type="float",
