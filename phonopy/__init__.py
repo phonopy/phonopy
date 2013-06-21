@@ -50,7 +50,7 @@ from phonopy.phonon.thermal_displacement import ThermalDisplacements, ThermalDis
 from phonopy.phonon.animation import Animation
 from phonopy.phonon.modulation import Modulation
 from phonopy.phonon.qpoints_mode import write_yaml as write_yaml_qpoints
-from phonopy.phonon.character_table import CharacterTable
+from phonopy.phonon.irreps import IrReps
 from phonopy.group_velocity import GroupVelocity
 
 class Phonopy:
@@ -115,7 +115,7 @@ class Phonopy:
         self._modulation = None
 
         # set_character_table
-        self._character_table = None
+        self._irreps = None
 
         # set_group_velocity
         self._group_velocity = None
@@ -846,8 +846,8 @@ class Phonopy:
 
 
     # Characters of irreducible representations
-    def set_character_table(self, q, degeneracy_tolerance=1e-4):
-        self._character_table = CharacterTable(
+    def set_irreps(self, q, degeneracy_tolerance=1e-4):
+        self._irreps = IrReps(
             self._dynamical_matrix,
             q,
             factor=self._factor,
@@ -855,16 +855,16 @@ class Phonopy:
             degeneracy_tolerance=degeneracy_tolerance,
             log_level=self._log_level)
 
-        return self._character_table.run()
+        return self._irreps.run()
 
-    def get_character_table(self):
-        return self._character_table
+    def get_irreps(self):
+        return self._irreps
         
-    def show_character_table(self, show_irreps=False):
-        self._character_table.show(show_irreps=show_irreps)
+    def show_irreps(self, show_irreps=False):
+        self._irreps.show(show_irreps=show_irreps)
 
-    def write_yaml_character_table(self, show_irreps=False):
-        self._character_table.write_yaml(show_irreps=show_irreps)
+    def write_yaml_irreps(self, show_irreps=False):
+        self._irreps.write_yaml(show_irreps=show_irreps)
 
     # Group velocity
     def set_group_velocity(self,

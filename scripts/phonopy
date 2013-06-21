@@ -136,7 +136,7 @@ parser.set_defaults(
     projection_direction=None,
     qpoints=None,
     quiet=False,
-    q_character_table=None,
+    irreps_qpoint=None,
     sigma=None,
     show_irreps=False,
     supercell_dimension=None,
@@ -164,9 +164,9 @@ parser.add_option("--band_points", dest="band_points",
 parser.add_option("-c", "--cell", dest="cell_poscar",
                   action="store", type="string",
                   help="Read unit cell", metavar="FILE")
-parser.add_option("--ct", "--character_table", dest="q_character_table",
+parser.add_option("--ct", "--irreps_qpoint", dest="irreps_qpoint",
                   action="store", type="string",
-                  help="A q-point where the character table is calculated")
+                  help="A q-point where characters of irreps are calculated")
 parser.add_option("--cutoff", dest="cutoff_frequency", type="float",
                   help="Thermal properties are not calculated below this cutoff frequency.")
 parser.add_option("--cr", "--cutoff_radius", dest="cutoff_radius", type="float",
@@ -209,9 +209,9 @@ parser.add_option("--gv", "--group_velocity", dest="is_group_velocity",
                   help="Calculate group velocities at q-points")
 parser.add_option("--gv_delta_q", dest="gv_delta_q", type="float",
                   help="Delta-q distance used for group velocity calculation")
-parser.add_option("--irreps", dest="show_irreps",
+parser.add_option("--show_irreps", dest="show_irreps",
                   action="store_true",
-                  help="Show IR-Reps along with character table")
+                  help="Show IR-Reps along with characters")
 parser.add_option("--legend", dest="is_legend",
                   action="store_true",
                   help="Legend of plots is shown in thermal displacements")
@@ -579,8 +579,8 @@ if log_level > 0:
         print "Animation mode"
     if settings.get_run_mode() == 'modulation':
         print "Modulation mode"
-    if settings.get_run_mode() == 'character_table':
-        print "Character table mode"
+    if settings.get_run_mode() == 'irreps':
+        print "Ir-representation mode"
     if settings.get_run_mode() == 'qpoints':
         print "QPOINTS mode",
         if settings.get_write_dynamical_matrices():
@@ -911,13 +911,13 @@ elif settings.get_run_mode()=='modulation':
     phonon.write_modulations()
     phonon.write_yaml_modulations()
 
-# Character table
-elif settings.get_run_mode() == 'character_table':
-    if phonon.set_character_table(settings.get_character_table_q_point(),
-                                  settings.get_character_table_tolerance()):
-        show_irreps = settings.get_character_table_show_irreps()
-        phonon.show_character_table(show_irreps)
-        phonon.write_yaml_character_table(show_irreps)
+# Ir-representation
+elif settings.get_run_mode() == 'irreps':
+    if phonon.set_irreps(settings.get_irreps_q_point(),
+                         settings.get_irreps_tolerance()):
+        show_irreps = settings.get_show_irreps()
+        phonon.show_irreps(show_irreps)
+        phonon.write_yaml_irreps(show_irreps)
     else:
         no_error = False
 

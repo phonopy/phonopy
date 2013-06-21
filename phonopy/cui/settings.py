@@ -736,9 +736,9 @@ class PhonopySettings(Settings):
         self._modulation = None
         self._pdos_indices = None
         self._projection_direction = None
-        self._character_table_q_point = None
-        self._character_table_tolerance = 1e-5
-        self._character_table_show_irreps = False
+        self._irreps_q_point = None
+        self._irreps_tolerance = 1e-5
+        self._show_irreps = False
 
     def set_run_mode(self, run_mode):
         modes = ['qpoints',
@@ -747,7 +747,7 @@ class PhonopySettings(Settings):
                  'anime',
                  'modulation',
                  'displacements',
-                 'character_table']
+                 'irreps']
         for mode in modes:
             if run_mode.lower() == mode:
                 self._run_mode = run_mode
@@ -933,23 +933,23 @@ class PhonopySettings(Settings):
     def get_modulation(self):
         return self._modulation
 
-    def set_character_table_q_point(self, q_point):
-        self._character_table_q_point = q_point
+    def set_irreps_q_point(self, q_point):
+        self._irreps_q_point = q_point
         
-    def get_character_table_q_point(self):
-        return self._character_table_q_point
+    def get_irreps_q_point(self):
+        return self._irreps_q_point
 
-    def set_character_table_tolerance(self, tolerance):
-        self._character_table_tolerance = tolerance
+    def set_irreps_tolerance(self, tolerance):
+        self._irreps_tolerance = tolerance
         
-    def get_character_table_tolerance(self):
-        return self._character_table_tolerance
+    def get_irreps_tolerance(self):
+        return self._irreps_tolerance
 
-    def set_character_table_show_irreps(self, show_irreps):
-        self._character_table_show_irreps = show_irreps
+    def set_show_irreps(self, show_irreps):
+        self._show_irreps = show_irreps
         
-    def get_character_table_show_irreps(self):
-        return self._character_table_show_irreps
+    def get_show_irreps(self):
+        return self._show_irreps
 
     def set_is_group_velocity(self, is_group_velocity):
         self._is_group_velocity = is_group_velocity
@@ -1022,13 +1022,13 @@ class PhonopyConfParser(ConfParser):
                 if self._options.write_dynamical_matrices:
                     self._confs['writedm'] = '.true.'
     
-            if opt.dest == 'q_character_table':
-                if self._options.q_character_table is not None:
-                    self._confs['character_table'] = self._options.q_character_table
+            if opt.dest == 'irreps_qpoint':
+                if self._options.irreps_qpoint is not None:
+                    self._confs['irreps'] = self._options.irreps_qpoint
 
             if opt.dest == 'show_irreps':
                 if self._options.show_irreps:
-                    self._confs['irreps'] = '.true.'
+                    self._confs['show_irreps'] = '.true.'
 
             if opt.dest == 'is_band_connection':
                 if self._options.is_band_connection:
@@ -1134,16 +1134,16 @@ class PhonopyConfParser(ConfParser):
                 self._parse_conf_modulation(confs)
 
             # Character table
-            if conf_key == 'character_table':
-                vals = [ fracval(x) for x in confs['character_table'].split()]
-                if len(vals) == 3 or len(vals) == 4:
-                    self.set_parameter('character_table', vals)
-                else:
-                    self.setting_error("CHARACTER_TABLE is incorrectly set.")
-
             if conf_key == 'irreps':
-                if confs['irreps'] == '.true.':
-                    self.set_parameter('irreps', True)
+                vals = [ fracval(x) for x in confs['irreps'].split()]
+                if len(vals) == 3 or len(vals) == 4:
+                    self.set_parameter('irreps_qpoint', vals)
+                else:
+                    self.setting_error("IRREPS is incorrectly set.")
+
+            if conf_key == 'show_irreps':
+                if confs['show_irreps'] == '.true.':
+                    self.set_parameter('show_irreps', True)
 
             # DOS
             if conf_key == 'pdos':
@@ -1334,16 +1334,15 @@ class PhonopyConfParser(ConfParser):
             self._settings.set_modulation(params['modulation'])
     
         # Character table mode
-        if params.has_key('character_table'):
-            self._settings.set_run_mode('character_table')
-            self._settings.set_character_table_q_point(
-                params['character_table'][:3])
-            if len(params['character_table']) == 4:
-                self._settings.set_character_table_tolerance(
-                    params['character_table'][3])
+        if params.has_key('irreps_qpoint'):
+            self._settings.set_run_mode('irreps')
+            self._settings.set_irreps_q_point(
+                params['irreps_qpoint'][:3])
+            if len(params['irreps_qpoint']) == 4:
+                self._settings.set_irreps_tolerance(params['irreps_qpoint'][3])
 
-            if params.has_key('irreps'):
-                self._settings.set_character_table_show_irreps(params['irreps'])
+            if params.has_key('show_irreps'):
+                self._settings.set_show_irreps(params['show_irreps'])
                 
         # DOS
         if params.has_key('dos_range'):
