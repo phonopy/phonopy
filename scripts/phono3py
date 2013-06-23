@@ -729,7 +729,7 @@ else:
             grid_points = None
         else:
             grid_points = np.array([int(x)
-                                    for x in options.grid_points.split()])
+                                    for x in options.grid_points.replace(',', ' ').split()])
             
         if options.factor is None:
             factor = VaspToTHz
