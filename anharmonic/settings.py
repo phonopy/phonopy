@@ -13,7 +13,7 @@ class Phono3pySettings(Settings):
         self._is_linewidth = False
         self._max_freepath = None
         self._mesh_divisors = None
-        self._coase_mesh_shift = None
+        self._coarse_mesh_shifts = None
         self._multiple_sigmas = None
         self._no_kappa_stars = False
         self._read_amplitude = False
@@ -88,11 +88,11 @@ class Phono3pySettings(Settings):
     def get_mesh_divisors(self):
         return self._mesh_divisors
 
-    def set_coase_mesh_shift(self, coase_mesh_shift):
-        self._coase_mesh_shift = coase_mesh_shift
+    def set_coarse_mesh_shifts(self, coarse_mesh_shifts):
+        self._coarse_mesh_shifts = coarse_mesh_shifts
 
-    def get_coase_mesh_shift(self):
-        return self._coase_mesh_shift
+    def get_coarse_mesh_shifts(self):
+        return self._coarse_mesh_shifts
 
     def set_read_gamma(self, read_gamma):
         self._read_gamma = read_gamma
@@ -240,7 +240,7 @@ class Phono3pyConfParser(ConfParser):
                     for i in range(3):
                         if is_shift[i] and (divs[i] % 2 != 0):
                             is_shift[i] = False
-                            self.setting_error("Coase grid shift along the " +
+                            self.setting_error("Coarse grid shift along the " +
                                                ["first", "second", "third"][i] +
                                                " axis is not allowed.")
                     self.set_parameter('mesh_divisors', divs + is_shift)
@@ -321,7 +321,8 @@ class Phono3pyConfParser(ConfParser):
         if params.has_key('mesh_divisors'):
             self._settings.set_mesh_divisors(params['mesh_divisors'][:3])
             if len(params['mesh_divisors']) > 3:
-                self._settings.set_coase_mesh_shift(params['mesh_divisors'][3:])
+                self._settings.set_coarse_mesh_shifts(
+                    params['mesh_divisors'][3:])
 
         # Multiple sigmas
         if params.has_key('multiple_sigmas'):

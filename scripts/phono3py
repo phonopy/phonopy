@@ -59,9 +59,8 @@ from anharmonic.file_IO import write_fc2_dat, write_fc3_dat,\
     read_fc3_from_hdf5, read_fc2_from_hdf5
 from anharmonic.displacement_fc3 import get_third_order_displacements
 from anharmonic.settings import Phono3pyConfParser
-from anharmonic import Phono3py, JointDOS, get_gruneisen_parameters, \
-    get_ir_grid_points
-from anharmonic.triplets import get_grid_address, reduce_grid_points
+from anharmonic import Phono3py, JointDOS, get_gruneisen_parameters    
+from anharmonic.triplets import get_grid_address, get_ir_grid_points, from_coarse_to_dense_grid_points
 
 # AA is created at http://www.network-science.de/ascii/.
 def print_phono3py():
@@ -482,25 +481,43 @@ else:
         if mesh is None:
             print "To write grid points, mesh numbers have to be specified."
         else:
-            print "Ir-grid points are written into ir_grid_points.yaml."
-            grid_points, weights = get_ir_grid_points(mesh, primitive)
-            w = open("ir_grid_points.yaml", 'w')
-            w.write("mesh: [ %d, %d, %d ]\n" % tuple(mesh))
             mesh_divs = settings.get_mesh_divisors()
             if mesh_divs is None:
-                w.write("mesh_divisors: [ 1, 1, 1 ]\n")
-            else:
-                w.write("mesh_divisors: [ %d, %d, %d ]\n" % tuple(mesh_divs))
-                grid_points, weights = reduce_grid_points(
-                    mesh_divs,
-                    get_grid_address(mesh),
-                    grid_points,
-                    dense_grid_weights=weights,
-                    coase_mesh_shift=settings.get_coase_mesh_shift())
+                mesh_divs = [1, 1, 1]
+            mesh = np.intc(mesh)
+            mesh_divs = np.intc(mesh_divs)
+            coarse_mesh = mesh / mesh_divs
+            coarse_mesh_shifts = settings.get_coarse_mesh_shifts()
+            if coarse_mesh_shifts is None:
+                coarse_mesh_shifts = [False, False, False]
+            print "Ir-grid points are written into ir_grid_points.yaml."
+
+            (coarse_grid_points,
+             coarse_grid_weights,
+             coarse_grid_address) = get_ir_grid_points(
+                coarse_mesh,
+                primitive,
+                mesh_shifts=coarse_mesh_shifts)
+
+            grid_points = from_coarse_to_dense_grid_points(
+                mesh,
+                mesh_divs,
+                coarse_grid_points,
+                coarse_grid_address,
+                coarse_mesh_shifts=coarse_mesh_shifts)
+            
+            w = open("ir_grid_points.yaml", 'w')
+            w.write("mesh: [ %d, %d, %d ]\n" % tuple(mesh))
+            w.write("mesh_divisors: [ %d, %d, %d ]\n" % tuple(mesh_divs))
             w.write("num_reduced_ir_grid_points: %d\n" % len(grid_points))
             w.write("ir_grid_points:  # [address, weight]\n")
-            for g, weight in zip(grid_points, weights):
-                w.write("- [ %d, %d ]\n" % (g, weight))
+
+            grid_address = get_grid_address(mesh)
+            for g, weight in zip(grid_points, coarse_grid_weights):
+                w.write("- grid_point: %d\n" % g)
+                w.write("  weight: %d\n" % weight)
+                w.write("  q-point: [ %12.7f, %12.7f, %12.7f ]\n" %
+                        tuple(grid_address[g].astype('double') / mesh))
         sys.exit(0)
             
     # fc2
@@ -827,7 +844,7 @@ else:
                     max_freepath=settings.get_max_freepath(),
                     grid_points=grid_points,
                     mesh_divisors=settings.get_mesh_divisors(),
-                    coase_mesh_shift=settings.get_coase_mesh_shift(),
+                    coarse_mesh_shifts=settings.get_coarse_mesh_shifts(),
                     no_kappa_stars=settings.get_no_kappa_stars(),
                     write_gamma=settings.get_write_gamma(),
                     read_gamma=settings.get_read_gamma(),

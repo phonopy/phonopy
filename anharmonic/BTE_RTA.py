@@ -5,7 +5,7 @@ from phonopy.group_velocity import get_group_velocity
 from phonopy.units import Kb, THzToEv, EV, THz, Angstrom
 from phonopy.phonon.thermal_properties import mode_cv
 from anharmonic.file_IO import write_kappa_to_hdf5
-from anharmonic.triplets import get_grid_address, reduce_grid_points
+from anharmonic.triplets import get_grid_address, reduce_grid_points, get_ir_grid_points, from_coarse_to_dense_grid_points
 
 unit_to_WmK = ((THz * Angstrom) ** 2 / (Angstrom ** 3) * EV / THz /
                (2 * np.pi)) # 2pi comes from definition of lifetime.
@@ -19,8 +19,7 @@ class BTE_RTA:
                  t_step=10,
                  max_freepath=0.01, # in meter
                  mesh_divisors=None,
-                 coase_mesh_shift=None,
-                 is_mesh_shift=None,
+                 coarse_mesh_shifts=None,
                  no_kappa_stars=False,
                  gamma_option=0,
                  log_level=0,
@@ -58,12 +57,13 @@ class BTE_RTA:
 
         self._mesh = None
         self._mesh_divisors = None
-        self._coase_mesh_shift = None
+        self._coarse_mesh = None
+        self._coarse_mesh_shifts = None
         self._set_mesh_numbers(mesh_divisors=mesh_divisors,
-                               coase_mesh_shift=coase_mesh_shift)
+                               coarse_mesh_shifts=coarse_mesh_shifts)
         volume = self._primitive.get_volume()
-        num_grid = np.prod(self._mesh / self._mesh_divisors)
-        self._conversion_factor = unit_to_WmK / volume / num_grid
+        self._conversion_factor = unit_to_WmK / volume
+        self._sum_num_kstar = 0
 
     def get_mesh_divisors(self):
         return self._mesh_divisors
@@ -83,31 +83,37 @@ class BTE_RTA:
     def set_grid_points(self, grid_points=None):
         if grid_points is not None: # Specify grid points
             self._grid_address = get_grid_address(self._mesh)
-            dense_grid_points = grid_points
-            self._grid_points = reduce_grid_points(self._mesh_divisors,
-                                                   self._grid_address,
-                                                   dense_grid_points)
-        elif self._no_kappa_stars: # All grid points
-            self._grid_address = get_grid_address(self._mesh)
-            dense_grid_points = range(np.prod(self._mesh))
-            self._grid_points = reduce_grid_points(self._mesh_divisors,
-                                                   self._grid_address,
-                                                   dense_grid_points)
-        else: # Automatic sampling
-            (grid_mapping_table,
-             self._grid_address) = spg.get_ir_reciprocal_mesh(self._mesh,
-                                                              self._primitive)
-            dense_grid_points = np.unique(grid_mapping_table)
-            weights = np.zeros_like(grid_mapping_table)
-            for g in grid_mapping_table:
-                weights[g] += 1
-            dense_grid_weights = weights[dense_grid_points]
-
-            self._grid_points, self._grid_weights = reduce_grid_points(
+            self._grid_points = reduce_grid_points(
                 self._mesh_divisors,
                 self._grid_address,
-                dense_grid_points,
-                dense_grid_weights)
+                grid_points,
+                coarse_mesh_shifts=self._coarse_mesh_shifts)
+        elif self._no_kappa_stars: # All grid points
+            self._grid_address = get_grid_address(self._mesh)
+            coarse_grid_address = get_grid_address(self._coarse_mesh)
+            coarse_grid_points = np.arange(np.prod(self._coarse_mesh),
+                                           dtype='intc')
+            self._grid_points = from_coarse_to_dense_grid_points(
+                self._mesh,
+                self._mesh_divisors,
+                coarse_grid_points,
+                coarse_grid_address,
+                coarse_mesh_shifts=self._coarse_mesh_shifts)
+        else: # Automatic sampling
+            (coarse_grid_points,
+             coarse_grid_weights,
+             coarse_grid_address) = get_ir_grid_points(
+                self._coarse_mesh,
+                self._primitive,
+                mesh_shifts=self._coarse_mesh_shifts)
+            self._grid_points = from_coarse_to_dense_grid_points(
+                self._mesh,
+                self._mesh_divisors,
+                coarse_grid_points,
+                coarse_grid_address,
+                coarse_mesh_shifts=self._coarse_mesh_shifts)
+            self._grid_address = get_grid_address(self._mesh)
+            self._grid_weights = coarse_grid_weights
 
             assert self._grid_weights.sum() == np.prod(self._mesh /
                                                        self._mesh_divisors)
@@ -137,7 +143,7 @@ class BTE_RTA:
         return self._gamma
         
     def get_kappa(self):
-        return self._kappa
+        return self._kappa / self._sum_num_kstar
         
     def calculate_kappa(self,
                         write_amplitude=False,
@@ -220,10 +226,12 @@ class BTE_RTA:
         
         # Outer product of group velocities (v x v) [num_k*, num_freqs, 3, 3]
         gv_by_gv_tensor = self._get_gv_by_gv(gv, i)
+        self._sum_num_kstar += len(gv_by_gv_tensor)
 
         # Sum all vxv at k*
         gv_sum2 = np.zeros((6, len(freqs)), dtype='double')
-        for j, vxv in enumerate(([0, 0], [1, 1], [2, 2], [1, 2], [0, 2], [0, 1])):
+        for j, vxv in enumerate(
+            ([0, 0], [1, 1], [2, 2], [1, 2], [0, 2], [0, 1])):
             gv_sum2[j] = gv_by_gv_tensor[:, :, vxv[0], vxv[1]].sum(axis=0)
 
         # Heat capacity [num_temps, num_freqs]
@@ -251,9 +259,15 @@ class BTE_RTA:
 
             # check if the number of rotations is correct.
             if self._grid_weights is not None:
-                assert len(rotations) == self._grid_weights[index], \
-                    "Num rotations %d, weight %d" % (
-                    len(rotations), self._grid_weights[index])
+                if len(rotations) != self._grid_weights[index]:
+                    if self._log_level:
+                        print "*" * 33  + "Warning" + "*" * 33
+                        print (" Number of elements in k* is unequal "
+                               "to number of equivalent grid-points.")
+                        print "*" * 73
+                # assert len(rotations) == self._grid_weights[index], \
+                #     "Num rotations %d, weight %d" % (
+                #     len(rotations), self._grid_weights[index])
             
         gv2_tensor = []
         inv_rec_lat = self._primitive.get_cell()
@@ -327,7 +341,7 @@ class BTE_RTA:
 
         return rotations
 
-    def _set_mesh_numbers(self, mesh_divisors=None, coase_mesh_shift=None):
+    def _set_mesh_numbers(self, mesh_divisors=None, coarse_mesh_shifts=None):
         self._mesh = self._pp.get_mesh_numbers()
 
         if mesh_divisors is None:
@@ -343,17 +357,20 @@ class BTE_RTA:
                            ["first", "second", "third"][i] + 
                            " axis is not dividable by divisor %d.") % (m, n)
             self._mesh_divisors = np.intc(self._mesh_divisors)
-            if coase_mesh_shift is None:
-                self._coase_mesh_shift = [False, False, False]
+            if coarse_mesh_shifts is None:
+                self._coarse_mesh_shifts = [False, False, False]
             else:
-                self._coase_mesh_shift = coase_mesh_shift
+                self._coarse_mesh_shifts = coarse_mesh_shifts
             for i in range(3):
-                if (self._coase_mesh_shift[i] and
+                if (self._coarse_mesh_shifts[i] and
                     (self._mesh_divisors[i] % 2 != 0)):
-                    print ("Coase grid along " +
+                    print ("Coarse grid along " +
                            ["first", "second", "third"][i] + 
                            " axis can not be shifted. Set False.")
-                    self._coase_mesh_shift[i] = False
+                    self._coarse_mesh_shifts[i] = False
+
+        self._coarse_mesh = self._mesh / self._mesh_divisors
+
         if self._log_level:
             print ("Lifetime sampling mesh: [ %d %d %d ]" %
                    tuple(self._mesh / self._mesh_divisors))
