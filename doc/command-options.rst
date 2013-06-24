@@ -1,4 +1,4 @@
-. _command_options:
+.. _command_options:
 
 Command options
 ===============
@@ -8,7 +8,6 @@ tags:
 
 * ``--amplitude`` (``DISPLACEMENT_DISTANCE``)
 * ``--anime`` (``ANIME``)
-* ``--ct`` (``CHARACTER_TABLE``)
 * ``--dim`` (``DIM``)
 * ``--mp``, ``--mesh`` (``MP``)
 * ``--band`` (``BAND``)
@@ -19,10 +18,13 @@ tags:
 * ``--gc``, ``--gamma_center`` (``GAMMA_CENTER``)
 * ``--gv``, ``--group_velocity`` (``GROUP_VELOCITY = .TRUE.``)
 * ``--gv_delta_q`` (``GV_DELTA_Q``)
+* ``--irreps`` (``IRREPS``)
+* ``--show_irreps`` (``SHOW_IRREPS``)
 * ``--modulation`` (``MODULATION``)
 * ``--nac`` (``NAC = .TRUE.``)
 * ``--pa``, ``--primitive_axis`` (``PRIMITIVE_AXIS``)
 * ``--pd``, ``--projection_direction`` (``PROJECTION_DIRECTION``)
+* ``--pdos`` (``PDOS``)
 * ``--readfc`` (``FORCE_CONSTANTS = READ``)
 * ``--sigma`` (``SIGMA``)
 * ``-t`` (``TPROP``)

@@ -3,14 +3,26 @@
 Change Log
 ==========
 
-Apr-13-2013: Version 1.7
+xxx-xx-xxxx: Version 1.7.1
+---------------------------
+
+* ``--pdos`` option is created. This is same as ``PDOS`` tag.
+
+Jun-21-2013: Version 1.7
 ---------------------------
 
 * The tag ``CHARACTER_TABLE`` was renamed to ``IRREPS``
-  (:ref:`irreps_tag`). The output file name was also renamed to
-  ``irreps.yaml``. In the ir-reps calculation, imaginary part of
-  characters are shown by the argument. The format of yaml file
-  (``irreps.yaml``) was modified.
+  (:ref:`irreps_tag`), and the option of ``--ct`` was renamed to
+  ``--irreps`` as well. To show Ir-representations along with
+  characters, ``SHOW_IRREPS`` tag (or ``--show_irreps`` option) is
+  used. The output file name was also renamed to ``irreps.yaml``. In
+  the ir-reps calculation, display and file outputs were modified to
+  show the arguments of complex value characters.
+* Numpy array types of 'double' and 'intc' for those arrays
+  passed to numpy C-API are used.
+* ``thermal_displacement.py`` is slightly modified for the preparation
+  to include thermal displacement matrix.
+* Symmetry finder update (spglib 1.4.2).
 
 Apr-13-2013: Version 1.6.4
 ---------------------------
