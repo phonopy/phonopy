@@ -186,7 +186,7 @@ if options.show_legend:
             labels = indices
     else:
         labels = indices
-    plt.legend( plots, labels, loc='upper left' )
+    plt.legend(labels, loc='upper left' )
 
 if not options.title == None:
     plt.title( options.title )
