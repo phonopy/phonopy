@@ -726,6 +726,7 @@ class PhonopySettings(Settings):
         self._is_force_constants = False
         self._is_group_velocity = False
         self._is_gamma_center = False
+        self._is_hdf5 = False
         self._is_plusminus_displacement = 'auto'
         self._is_thermal_displacements = False
         self._is_thermal_displacement_matrices = False
@@ -760,6 +761,12 @@ class PhonopySettings(Settings):
 
     def get_is_force_constants(self):
         return self._is_force_constants
+
+    def set_is_hdf5(self, is_hdf5):
+        self._is_hdf5 = is_hdf5
+
+    def get_is_hdf5(self):
+        return self._is_hdf5
 
     def set_band_labels(self, labels):
         self._band_labels = labels
@@ -986,6 +993,10 @@ class PhonopyConfParser(ConfParser):
                 if self._options.is_dos_mode:
                     self._confs['dos'] = '.true.'
 
+            if opt.dest == 'pdos':
+                if self._options.pdos:
+                    self._confs['pdos'] = self._options.pdos
+
             if opt.dest == 'fits_debye_model':
                 if self._options.fits_debye_model:
                     self._confs['debye_model'] = '.true.'
@@ -1017,6 +1028,10 @@ class PhonopyConfParser(ConfParser):
             if opt.dest == 'write_force_constants':
                 if self._options.write_force_constants:
                     self._confs['force_constants'] = 'write'
+    
+            if opt.dest == 'is_hdf5':
+                if self._options.is_hdf5:
+                    self._confs['hdf5'] = '.true.'
     
             if opt.dest == 'write_dynamical_matrices':
                 if self._options.write_dynamical_matrices:
@@ -1089,6 +1104,10 @@ class PhonopyConfParser(ConfParser):
             if conf_key == 'writedm':
                 if confs['writedm'] == '.true.':
                     self.set_parameter('write_dynamical_matrices', True)
+
+            if conf_key == 'hdf5':
+                if confs['hdf5'] == '.true.':
+                    self.set_parameter('hdf5', True)
 
             if conf_key == 'mp':
                 vals = [ int(x) for x in confs['mp'].split() ]
@@ -1250,12 +1269,16 @@ class PhonopyConfParser(ConfParser):
             if params['create_displacements']:
                 self._settings.set_run_mode('displacements')
     
-        # Is force constants written or read ?
+        # Is force constants written or read?
         if params.has_key('force_constants'):
             if params['force_constants'] == 'write':
                 self._settings.set_is_force_constants("write")
             elif params['force_constants'] == 'read':
                 self._settings.set_is_force_constants("read")
+
+        # Use hdf5?
+        if params.has_key('hdf5'):
+            self._settings.set_is_hdf5(params['hdf5'])
 
         # Cutoff radius of force constants
         if params.has_key('cutoff_radius'):

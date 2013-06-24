@@ -47,7 +47,7 @@ from phonopy.cui.settings import Settings, PhonopyConfParser
 from phonopy.units import *
 
 
-phonopy_version = "1.7"
+phonopy_version = "1.7.1"
 
 # AA is created at http://www.network-science.de/ascii/.
 def print_phononpy():
@@ -85,7 +85,18 @@ def print_attention(attention_text):
     print ""
 
 def print_error_message(message):
+    print
     print message
+
+def file_exists(filename, log_level):
+    if os.path.exists(filename):
+        return True
+    else:
+        error_text = "%s not found." % filename
+        print_error_message(error_text)
+        if log_level > 0:
+            print_error()
+        sys.exit(1)
 
 #################
 # Parse options #
@@ -116,6 +127,7 @@ parser.set_defaults(
     is_graph_plot=False,
     is_graph_save=False,
     is_group_velocity=False,
+    is_hdf5=False,
     is_legend=False,
     is_nac=False,
     is_nodiag=False,
@@ -209,9 +221,8 @@ parser.add_option("--gv", "--group_velocity", dest="is_group_velocity",
                   help="Calculate group velocities at q-points")
 parser.add_option("--gv_delta_q", dest="gv_delta_q", type="float",
                   help="Delta-q distance used for group velocity calculation")
-parser.add_option("--show_irreps", dest="show_irreps",
-                  action="store_true",
-                  help="Show IR-Reps along with characters")
+parser.add_option("--hdf5", dest="is_hdf5", action="store_true",
+                  help="Use hdf5 for force constants")
 parser.add_option("--legend", dest="is_legend",
                   action="store_true",
                   help="Legend of plots is shown in thermal displacements")
@@ -240,10 +251,13 @@ parser.add_option("-p", "--plot", dest="is_graph_plot",
                   help="Plot data")
 parser.add_option("--pa", "--primitive_axis", dest="primitive_axis",
                   action="store", type="string",
-                  help="Same as PRIMITIVE_AXIS tags")
+                  help="Same as PRIMITIVE_AXIS tag")
 parser.add_option("--pd", "--projection_direction", dest="projection_direction",
                   action="store", type="string",
-                  help="Same as PROJECTION_DIRECTION tags")
+                  help="Same as PROJECTION_DIRECTION tag")
+parser.add_option("--pdos", dest="pdos",
+                  action="store", type="string",
+                  help="Same as PDOS tag")
 parser.add_option("--pm", dest="is_plusminus_displacements",
                   action="store_true",
                   help="Set plus minus displacements")
@@ -260,6 +274,9 @@ parser.add_option("--readfc", dest="is_read_force_constants",
 parser.add_option("-s", "--save", dest="is_graph_save",
                   action="store_true",
                   help="Save plot data in pdf")
+parser.add_option("--show_irreps", dest="show_irreps",
+                  action="store_true",
+                  help="Show IR-Reps along with characters")
 parser.add_option("--sigma", dest="sigma", type="string",
                   help="Smearing width for DOS")
 parser.add_option("--symmetry", dest="is_check_symmetry",
@@ -355,23 +372,14 @@ if options.force_constants_mode:
 ###################################################
 if options.force_sets_mode or options.force_sets_zero_mode:
 
-    if os.path.exists('disp.yaml'):
+    if file_exists('disp.ayml', log_level):
         if interface_mode == 'vasp':
             displacements, natom = file_IO.parse_disp_yaml('disp.yaml')
         if interface_mode == 'wien2k':
             displacements, supercell = file_IO.parse_disp_yaml_with_supercell('disp.yaml')
-    else:
-        print_error_message("disp.yaml could not be found.")
-        if log_level > 0:
-            print_end()
-        sys.exit(1)
 
     for filename in args:
-        if not os.path.exists(filename):
-            print_error_message("%s could not be found." % filename)
-            if log_level > 0:
-                print_end()
-            sys.exit(1)
+        file_exists(filename, log_level)
 
     num_disp_files = len(args)
     if options.force_sets_zero_mode:
@@ -421,36 +429,19 @@ if options.force_sets_mode or options.force_sets_zero_mode:
 # POSCAR
 if interface_mode=='vasp':
     if options.cell_poscar == None:
-        if os.path.exists('POSCAR'):
+        if file_exists("POSCAR", log_level):
             unitcell_filename = 'POSCAR'
-        else:
-            print_error_message("POSCAR could not be found.")
-            if log_level > 0:
-                print_end()
-            sys.exit(1)
     else:
-        if os.path.exists(options.cell_poscar):
+        if file_exists(options.cell_poscar, log_level):
             unitcell_filename = options.cell_poscar
-        else:
-            print_error_message("The file \'%s\' could not be found." %
-                        options.cell_poscar)
-            if log_level > 0:
-                print_end()
-            sys.exit(1)
 
     unitcell = vasp.read_vasp(unitcell_filename)
 
 # Wien2k struct
 if interface_mode=='wien2k':
-    if os.path.exists(options.wien2k_struct_file):
-        unitcell, npts, r0s, rmts = \
-            wien2k.parse_wien2k_struct(options.wien2k_struct_file)
-    else:
-        print_error_message("The file \'%s\' could not be found." %
-                    options.wien2k_struct_file)
-        if log_level > 0:
-            print_end()
-        sys.exit(1)
+    if file_existss(options.wien2k_struct_file, log_level):
+        unitcell, npts, r0s, rmts = wien2k.parse_wien2k_struct(
+            options.wien2k_struct_file)
 
 # Quick check of the structure
 if np.linalg.det(unitcell.get_cell()) < 0.0:
@@ -478,17 +469,11 @@ if options.is_check_symmetry:
 # Parse the setting file #
 ##########################
 if len(args) > 0:
-    if os.path.exists(args[0]):
+    if file_exists(args[0], log_level):
         phonopy_conf = PhonopyConfParser(filename=args[0],
                                          options=options,
                                          option_list=option_list)
         settings = phonopy_conf.get_settings()
-    else:
-        print_error_message("The setting file \'%s\' could not be found." %
-                    args[0])
-        if log_level > 0:
-            print_end()
-        sys.exit(1)
 else:
     phonopy_conf = PhonopyConfParser(options=options,
                                      option_list=option_list)
@@ -604,7 +589,11 @@ if log_level > 0:
         if settings.get_is_nac():
             print "  Non-analytical term correction: on"
         if settings.get_is_force_constants():
-            print "  Force constants:", settings.get_is_force_constants()
+            print "  Force constants:", settings.get_is_force_constants(),
+            if settings.get_is_hdf5():
+                print "from hdf5"
+            else:
+                print
         if settings.get_fc_symmetry_iteration() > 0:
             print "  Force constants symmetrization: %d times" % settings.get_fc_symmetry_iteration()
         if settings.get_is_tensor_symmetry():
@@ -696,26 +685,25 @@ if settings.get_run_mode() == 'displacements':
         print_end()
     sys.exit(0)
 
-# Read force constants from FORCE_CONSTANTS.
+# Read force constants from FORCE_CONSTANTS or force_constants.hdf5.
 if settings.get_is_force_constants() == 'read':
-    if not os.path.exists('FORCE_CONSTANTS'):
-        error_text = "\nFORCE_CONSTANTS file could not be found."
-        print_error_message(error_text)
-        if log_level > 0:
-            print_end()
-        sys.exit(1)
+    if settings.get_is_hdf5():
+        try:
+            import h5py
+        except ImportError:
+            print "You need to install python-h5py."
+            exit(1)
 
-    phonon.set_force_constants(file_IO.parse_FORCE_CONSTANTS('FORCE_CONSTANTS'))
+        if file_exists("force_constants.hdf5", log_level):
+            fc = file_IO.read_force_constants_hdf5("force_constants.hdf5")
+    
+    elif file_exists("FORCE_CONSTANTS", log_level):
+        fc = file_IO.parse_FORCE_CONSTANTS("FORCE_CONSTANTS")
+    phonon.set_force_constants(fc)
 
 # Read forces from FORCE_SETS
 else:
-    if not os.path.exists('FORCE_SETS'):
-        error_text = "\nFORCE_SETS could not be found."
-        print_error_message(error_text)
-        if log_level > 0:
-            print_end()
-        sys.exit(1)
-
+    file_exists("FORCE_SETS", log_level)
     forces = file_IO.parse_FORCE_SETS(supercell.get_number_of_atoms())
     if forces==None:
         error_text = "\nNumber of atoms in FORCE_SETS doesn't match to supercell.\n"
@@ -807,7 +795,7 @@ if len(symbols_with_no_mass) > 0:
 
 # Non-analytical term correction (LO-TO splitting)
 if settings.get_is_nac():
-    if os.path.exists('BORN'):
+    if file_exists("BORN", log_level):
         nac_params = file_IO.parse_BORN(primitive, settings.get_is_symmetry())
         if not nac_params:
             error_text = "BORN file could not be read correctly."
@@ -815,13 +803,6 @@ if settings.get_is_nac():
             if log_level > 0:
                 print_end()
             sys.exit(1)
-    else:
-        error_text = "\nBORN could not be found."
-        print_error_message(error_text)
-        if log_level > 0:
-            print_end()
-        sys.exit(1)
-
     phonon.set_nac_params(nac_params)
 
 # Group velocity
@@ -1040,7 +1021,6 @@ elif settings.get_run_mode() == 'mesh':
                                omega_min=dos_range['min'],
                                omega_max=dos_range['max'],
                                omega_pitch=dos_range['step'])
-
         phonon.write_partial_DOS()
 
         if options.is_graph_plot:

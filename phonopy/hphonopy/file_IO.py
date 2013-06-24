@@ -492,6 +492,10 @@ def read_force_constant_vasprun_xml(filename):
 def read_force_constant_OUTCAR(filename):
     return vasp.get_force_constants_OUTCAR(filename)
 
+def read_force_constants_hdf5(filename="force_constants.hdf5"):
+    import h5py
+    f = h5py.File(filename)
+    return f[f.keys()[0]][:]
 
 # Read BORN
 def parse_BORN(primitive, is_symmetry=True, filename="BORN"):
