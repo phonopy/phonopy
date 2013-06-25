@@ -68,9 +68,14 @@ displacements written in ``disp.yaml`` file has to correpond to that of
 
    % phonopy -f disp-001/vasprun.xml disp-002/vasprun.xml ...
 
-If there are many displacements, shell expansions are useful, e.g.,
-``disp-*/vasprun.xml``, or ``disp-{001..128}/vasprun.xml`` (for zsh,
-and recent bash).
+Attention:
+
+* Site-projected wave function information (the same information as
+  ``PROCAR``) siginificantly increases the size of ``vasprun.xml``. So
+  parsing xml file uses huge memory space. It is recommended
+* to switch off to calculate it.  If there are many displacements, shell
+  expansions are useful, e.g., ``disp-*/vasprun.xml``, or
+  ``disp-{001..128}/vasprun.xml`` (for zsh, and recent bash).
 
 ``--fz`` option is used to subtract residual forces in the equilibrium
 supercell.
