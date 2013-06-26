@@ -785,15 +785,15 @@ else:
                             primitive_dm,
                             mesh,
                             fc2,
-                            nac_params,
-                            sigma,
-                            freq_step,
-                            factor,
-                            freq_factor,
-                            freq_scale,
-                            options.is_nosym,
-                            options.symprec,
-                            log_level)
+                            nac_params=nac_params,
+                            sigma=sigma,
+                            frequency_step=freq_step,
+                            factor=factor,
+                            frequency_factor=freq_factor,
+                            frequency_scale_factor=freq_scale,
+                            is_nosym=options.is_nosym,
+                            symprec=options.symprec,
+                            log_level=log_level)
             jdos.get_jointDOS(grid_points,
                               filename=options.output_filename)
         else:
@@ -802,7 +802,7 @@ else:
                                 mesh,
                                 fc3,
                                 factor=factor,
-                                freq_factor=freq_factor,
+                                frequency_factor=freq_factor,
                                 is_nosym=options.is_nosym,
                                 symmetrize_fc3_q=options.is_symmetrize_fc3_q,
                                 read_triplets=options.is_read_triplets,

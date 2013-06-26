@@ -12,16 +12,16 @@ from anharmonic.file_IO import write_kappa_to_hdf5, read_gamma_from_hdf5
 
 class JointDOS:
     def __init__(self,
-                 supercell=None,
-                 primitive=None,
-                 mesh=None,
-                 fc2=None,
+                 supercell,
+                 primitive,
+                 mesh,
+                 fc2,
                  nac_params=None,
                  sigma=None,
-                 omega_step=None,
+                 frequency_step=None,
                  factor=None,
-                 freq_factor=None,
-                 freq_scale=None,
+                 frequency_factor=None,
+                 frequency_scale_factor=None,
                  is_nosym=False,
                  symprec=1e-5,
                  log_level=0):
@@ -31,10 +31,10 @@ class JointDOS:
         self._fc2 = fc2
         self._nac_params = nac_params
         self._sigma = sigma
-        self._omega_step = omega_step
+        self._frequency_step = frequency_step
         self._factor = factor
-        self._freq_factor = freq_factor
-        self._freq_scale = freq_scale
+        self._frequency_factor = frequency_factor
+        self._frequency_scale_factor = frequency_scale_factor
         self._is_nosym = is_nosym
         self._symprec = symprec
         self._log_level = log_level
@@ -45,16 +45,16 @@ class JointDOS:
                      self._primitive,
                      self._supercell,
                      self._fc2,
-                     self._nac_params,
-                     self._sigma,
-                     self._omega_step,
-                     self._factor,
-                     self._freq_factor,
-                     self._freq_scale,
-                     self._is_nosym,
-                     self._symprec,
-                     filename,
-                     self._log_level)
+                     nac_params=self._nac_params,
+                     sigma=self._sigma,
+                     frequency_step=self._frequency_step,
+                     factor=self._factor,
+                     frequency_factor=self._frequency_factor,
+                     frequency_scale=self._frequency_scale_factor,
+                     is_nosym=self._is_nosym,
+                     symprec=self._symprec,
+                     filename=filename,
+                     log_level=self._log_level)
 
 class Phono3py:
     def __init__(self,
@@ -63,7 +63,7 @@ class Phono3py:
                  mesh=None,
                  fc3=None,
                  factor=None,
-                 freq_factor=None,
+                 frequency_factor=None,
                  is_nosym=False,
                  symmetrize_fc3_q=False,
                  read_triplets=False,
@@ -78,7 +78,7 @@ class Phono3py:
         self._mesh = mesh
         self._fc3 = fc3
         self._factor = factor
-        self._freq_factor = freq_factor
+        self._frequency_factor = frequency_factor
         self._is_nosym = is_nosym
         self._symmetrize_fc3_q = symmetrize_fc3_q
         self._symprec = symprec
@@ -94,7 +94,7 @@ class Phono3py:
                                 primitive,
                                 mesh,
                                 factor=self._factor,
-                                freq_factor=self._freq_factor,
+                                frequency_factor=self._frequency_factor,
                                 symprec=self._symprec,
                                 read_triplets=self._read_triplets,
                                 r2q_TI_index=self._r2q_TI_index,

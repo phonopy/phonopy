@@ -16,7 +16,7 @@ class PhononPhonon:
     """
     This code expects phonon frequecies to be in THz unit.
     To make frequencies in THz, 'factor' is used.
-    'freq_factor' is used to output in different unit, e.g., cm-1.
+    'frequency_factor' is used to output in different unit, e.g., cm-1.
     'freq_scale' is multiplied to adjust frequencies,
        e.g., to correct underestimation of frequencies by GGA.
     """
@@ -26,7 +26,7 @@ class PhononPhonon:
                  primitive,
                  mesh,
                  factor=VaspToTHz,
-                 freq_factor=1.0, # Convert from THz to another (e.g., cm-1)
+                 frequency_factor=1.0, # Convert from THz to another (e.g., cm-1)
                  symprec=1e-5,
                  read_triplets=False,
                  r2q_TI_index=None,
@@ -36,8 +36,8 @@ class PhononPhonon:
                  is_nosym=False,
                  lapack_zheev_uplo='L'):
     
-        self._freq_factor = freq_factor
-        self._cutoff_frequency = 0.01 * self._freq_factor
+        self._frequency_factor = frequency_factor
+        self._cutoff_frequency = 0.01 * self._frequency_factor
         self._factor = factor
         self._primitive = primitive
         self._mesh = np.array(mesh)
@@ -56,7 +56,7 @@ class PhononPhonon:
         
         self._p2s_map = np.intc(primitive.get_primitive_to_supercell_map())
         self._s2p_map = np.intc(primitive.get_supercell_to_primitive_map())
-        self._conversion_factor = get_unit_conversion_factor(freq_factor)
+        self._conversion_factor = get_unit_conversion_factor(frequency_factor)
 
         self._shortest_vectors, self._multiplicity = get_smallest_vectors(
             supercell, primitive, symprec)
@@ -108,7 +108,7 @@ class PhononPhonon:
         return self._factor
 
     def get_frequency_unit_conversion_factor(self):
-        return self._freq_factor
+        return self._frequency_factor
 
     def get_grid_point(self):
         return self._grid_point
@@ -224,7 +224,7 @@ class PhononPhonon:
                                     self._q_grid,
                                     self._dm,
                                     self._q_direction,
-                                    self._factor * self._freq_factor)
+                                    self._factor * self._frequency_factor)
         else:
             try:
                 import anharmonic._phono3py as phono3c
@@ -273,7 +273,7 @@ class PhononPhonon:
         vals, self._eigenvectors = np.linalg.eigh(
             self._dm.get_dynamical_matrix())
         vals = vals.real
-        factor = self._factor * self._freq_factor
+        factor = self._factor * self._frequency_factor
         self._frequencies = np.sqrt(abs(vals)) * np.sign(vals) * factor
 
     def _set_c_interaction_strength(self):
@@ -324,7 +324,7 @@ class PhononPhonon:
             np.linalg.inv(self._dm.get_primitive().get_cell()).copy(),
             self._q_direction,
             nac_factor,
-            self._freq_factor * self._factor,
+            self._frequency_factor * self._factor,
             self._cutoff_frequency,
             self._symmetrize_fc3_q,
             self._r2q_TI_index,
@@ -352,7 +352,7 @@ class PhononPhonon:
                 self._primitive,
                 self._band_indices,
                 self._factor,
-                self._freq_factor,
+                self._frequency_factor,
                 self._cutoff_frequency,
                 self._symprec,
                 self._symmetrize_fc3_q,
@@ -411,7 +411,7 @@ def get_triplet_interaction_strength(triplet_number,
                                      primitive,
                                      band_indices,
                                      factor,
-                                     freq_factor,
+                                     frequency_factor,
                                      cutoff_frequency,
                                      symprec, 
                                      symmetrize_fc3_q,
@@ -429,7 +429,7 @@ def get_triplet_interaction_strength(triplet_number,
                                          q_grid,
                                          dm,
                                          q_direction,
-                                         factor * freq_factor)
+                                         factor * frequency_factor)
     amplitude = np.zeros((len(band_indices), num_atom * 3, num_atom * 3),
                          dtype='double')
 
@@ -680,10 +680,10 @@ def get_sum_in_cartesian(f3, e1, e2, e3):
 
     return sum
 
-def get_unit_conversion_factor(freq_factor):
+def get_unit_conversion_factor(frequency_factor):
     """
     Input:
-      Frequency: THz * freq_factor
+      Frequency: THz * frequency_factor
       Mass: AMU
       Force constants: eV/A^3
 
@@ -693,10 +693,10 @@ def get_unit_conversion_factor(freq_factor):
     # Mass unit to kg
     # Force constants to J/m^3
     # hbar to J s
-    unit_in_angular_freq = np.pi * (Hbar * EV) / 16 * EV ** 2 / Angstrom ** 6 / (2 * np.pi * (THz / freq_factor)) ** 4 / AMU ** 3
+    unit_in_angular_freq = np.pi * (Hbar * EV) / 16 * EV ** 2 / Angstrom ** 6 / (2 * np.pi * (THz / frequency_factor)) ** 4 / AMU ** 3
 
     # Frequency unit in some favorite one
-    return unit_in_angular_freq / (2 * np.pi) / THz * freq_factor
+    return unit_in_angular_freq / (2 * np.pi) / THz * frequency_factor
 
         
 #

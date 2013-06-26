@@ -46,7 +46,6 @@ class Gruneisen:
             self._X = np.zeros((num_atom_prim, 3, 3, 3), dtype=float)
         else:
             self._X = self._get_X()
-            print self._X
         self._dPhidu = self._get_dPhidu()
 
         self._gruneisen_parameters = None

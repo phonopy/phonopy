@@ -18,14 +18,14 @@ def get_jointDOS(fixed_grid_points,
                  fc2,
                  nac_params=None,
                  sigma=0.2,
-                 omega_step=0.1,
+                 frequency_step=0.1,
                  factor=VaspToTHz,
-                 freq_factor=1.0,
-                 freq_scale=1.0,
+                 frequency_factor=1.0,
+                 frequency_scale=1.0,
                  is_nosym=False,
                  symprec=1e-5,
                  filename=None,
-                 verbose=False):
+                 log_level=False):
 
     try:
         import anharmonic._phono3py as phono3c
@@ -39,21 +39,21 @@ def get_jointDOS(fixed_grid_points,
         dm = DynamicalMatrix(supercell,
                              primitive,
                              fc2,
-                             frequency_scale_factor=freq_scale,
+                             frequency_scale_factor=frequency_scale,
                              symprec=symprec)
     else:
         dm = DynamicalMatrixNAC(supercell,
                                 primitive,
                                 fc2,
-                                nac_params=nac_params,
-                                frequency_scale_factor=freq_scale,
+                                frequency_scale_factor=frequency_scale,
                                 symprec=symprec)
+        dm.set_nac_params(nac_params)
 
     jointDOS = []
     omegas = []
     for gp in fixed_grid_points:
         if is_nosym:
-            if verbose:
+            if log_level:
                 print "Triplets at q without considering symmetry"
                 sys.stdout.flush()
             
@@ -68,7 +68,7 @@ def get_jointDOS(fixed_grid_points,
                 symmetry.get_pointgroup_operations(),
                 True)
 
-        if verbose:
+        if log_level:
             print "Grid point (%d):" % gp,  grid_points[gp]
             if is_nosym:
                 print "Number of ir triplets:",
@@ -91,9 +91,9 @@ def get_jointDOS(fixed_grid_points,
             for j, q in enumerate(q3):
                 dm.set_dynamical_matrix(q)
                 val = np.linalg.eigvalsh(dm.get_dynamical_matrix())
-                freqs[i,j] = np.sqrt(np.abs(val)) * factor * freq_factor
+                freqs[i,j] = np.sqrt(np.abs(val)) * factor * frequency_factor
 
-        omegas_at_gp = get_frequencies(np.max(freqs), omega_step, sigma)
+        omegas_at_gp = get_frequencies(np.max(freqs), frequency_step, sigma)
         jointDOS_at_gp = np.zeros(len(omegas_at_gp), dtype='double')
 
         phono3c.joint_dos(jointDOS_at_gp,
