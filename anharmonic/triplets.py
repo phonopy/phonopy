@@ -1,27 +1,24 @@
 import numpy as np
 import phonopy.structure.spglib as spg
 
-def get_triplets_at_q(gp,
+def get_triplets_at_q(grid_point,
                       mesh,
-                      primitive_lattice,
-                      rotations,
+                      point_group, # real space point group of space group
                       is_time_reversal=True):
-
-    (weights,
-     third_q,
-     grid_address) = spg.get_triplets_reciprocal_mesh_at_q(gp,
-                                                           mesh,
-                                                           np.int64(rotations),
-                                                           is_time_reversal)
+    weights, third_q, grid_address = spg.get_triplets_reciprocal_mesh_at_q(
+        grid_point,
+        mesh,
+        point_group,
+        is_time_reversal)
     weights_at_q = []
     triplets_at_q = []
     for i, (w, q) in enumerate(zip(weights, third_q)):
         if w > 0:
             weights_at_q.append(w)
-            triplets_at_q.append([gp, i, q])
+            triplets_at_q.append([grid_point, i, q])
 
-    weights_at_q = np.array(weights_at_q, dtype='int32')
-    triplets_at_q = np.array(triplets_at_q, dtype='int32')
+    weights_at_q = np.intc(weights_at_q)
+    triplets_at_q = np.intc(triplets_at_q)
             
     assert np.prod(mesh) == weights_at_q.sum(), \
         "Num grid points %d, sum of weight %d" % (
@@ -29,14 +26,14 @@ def get_triplets_at_q(gp,
 
     return triplets_at_q, weights_at_q, grid_address
 
-def get_nosym_triplets(mesh, grid_point0):
+def get_nosym_triplets_at_q(grid_point, mesh):
     grid_address = get_grid_address(mesh)
-    triplets = np.zeros((len(grid_address), 3), dtype='int32')
-    weights = np.ones(len(grid_address), dtype='int32')
+    triplets = np.zeros((len(grid_address), 3), dtype='intc')
+    weights = np.ones(len(grid_address), dtype='intc')
     for i, g1 in enumerate(grid_address):
-        g2 = - (grid_address[grid_point0] + g1)
+        g2 = - (grid_address[grid_point] + g1)
         q = get_grid_point_from_address(g2, mesh)
-        triplets[i] = [grid_point0, i, q]
+        triplets[i] = [grid_point, i, q]
 
     return triplets, weights, grid_address
 

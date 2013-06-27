@@ -100,8 +100,8 @@ class Phono3py:
                                 r2q_TI_index=self._r2q_TI_index,
                                 symmetrize_fc3_q=self._symmetrize_fc3_q,
                                 is_Peierls=self._is_Peierls,
-                                log_level=self._log_level,
                                 is_nosym=self._is_nosym,
+                                log_level=self._log_level,
                                 lapack_zheev_uplo=lapack_zheev_uplo)
         
     def set_dynamical_matrix(self,

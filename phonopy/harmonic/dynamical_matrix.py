@@ -411,10 +411,26 @@ def get_equivalent_smallest_vectors(atom_number_supercell,
     return smallest_vectors
 
 def get_smallest_vectors(supercell, primitive, symprec):
+    """
+    shortest_vectors:
+
+      Shortest vectors from an atom in primitive cell to an atom in
+      supercell in the fractional coordinates. If an atom in supercell
+      is on the border centered at an atom in primitive and there are
+      multiple vectors that have the same distance and different
+      directions, several shortest vectors are stored. The
+      multiplicity is stored in another array, "multiplicity".
+      [atom_super, atom_primitive, multiple-vectors, 3]
+      
+    multiplicity:
+      Number of multiple shortest vectors (third index of "shortest_vectors")
+      [atom_super, atom_primitive]
+    """
+
     p2s_map = primitive.get_primitive_to_supercell_map()
     size_super = supercell.get_number_of_atoms()
     size_prim = primitive.get_number_of_atoms()
-    r = np.zeros((size_super, size_prim, 27, 3), dtype='double')
+    shortest_vectors = np.zeros((size_super, size_prim, 27, 3), dtype='double')
     multiplicity = np.zeros((size_super, size_prim), dtype='intc')
 
     for i in range(size_super): # run in supercell
@@ -426,7 +442,7 @@ def get_smallest_vectors(supercell, primitive, symprec):
                                                       symprec)
             multiplicity[i][j] = len(vectors)
             for k, elem in enumerate(vectors):
-                r[i][j][k] = elem
+                shortest_vectors[i][j][k] = elem
 
-    return r, multiplicity
+    return shortest_vectors, multiplicity
 

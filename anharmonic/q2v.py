@@ -4,9 +4,8 @@ from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNA
 from phonopy.structure.symmetry import Symmetry
 from phonopy.units import VaspToTHz, PlanckConstant, Kb, THzToCm, EV, AMU, Hbar, THz, Angstrom
 from anharmonic.file_IO import write_triplets, write_grid_address, parse_triplets, parse_grid_address, read_amplitude_from_hdf5, write_amplitude_to_hdf5
-from anharmonic.triplets import get_triplets_at_q, get_nosym_triplets
+from anharmonic.triplets import get_triplets_at_q, get_nosym_triplets_at_q
 from anharmonic.r2q import get_fc3_reciprocal
-from anharmonic.shortest_distance import get_shortest_vectors
 
 def print_log(text):
     sys.stdout.write(text)
@@ -32,8 +31,8 @@ class PhononPhonon:
                  r2q_TI_index=None,
                  symmetrize_fc3_q=False,
                  is_Peierls=False,
-                 log_level=False,
                  is_nosym=False,
+                 log_level=False,
                  lapack_zheev_uplo='L'):
     
         self._frequency_factor = frequency_factor
@@ -151,7 +150,7 @@ class PhononPhonon:
             self._print_log("Triplets at q without considering symmetry\n")
             (triplets_at_q,
              weights_at_q,
-             self._grid_address) = get_nosym_triplets(mesh, gp)
+             self._grid_address) = get_nosym_triplets_at_q(gp, mesh)
         elif self._read_triplets:
             self._print_log("Reading ir-triplets at %d\n" % gp)
             self._grid_address = parse_grid_address(
@@ -165,7 +164,6 @@ class PhononPhonon:
              self._grid_address) = get_triplets_at_q(
                 gp,
                 mesh,
-                self._primitive.get_cell(),
                 self._symmetry.get_pointgroup_operations(),
                 is_time_reversal=True)
              

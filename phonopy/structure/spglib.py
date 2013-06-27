@@ -17,7 +17,7 @@ def get_symmetry(bulk, symprec=1e-5, angle_tolerance=-1.0):
     # Atomic positions have to be specified by scaled positions for spglib.
     positions = bulk.get_scaled_positions().copy()
     lattice = bulk.get_cell().T.copy()
-    numbers = np.intc(bulk.get_atomic_numbers())
+    numbers = np.intc(bulk.get_atomic_numbers()).copy()
   
     # Get number of symmetry operations and allocate symmetry operations
     # multi = spg.multiplicity(cell, positions, numbers, symprec)
@@ -66,7 +66,7 @@ def get_symmetry_dataset(bulk, symprec=1e-5, angle_tolerance=-1.0):
     """
     positions = bulk.get_scaled_positions().copy()
     lattice = bulk.get_cell().T.copy()
-    numbers = np.intc(bulk.get_atomic_numbers())
+    numbers = np.intc(bulk.get_atomic_numbers()).copy()
     keys = ('number',
             'international',
             'hall',
@@ -105,7 +105,7 @@ def get_spacegroup(bulk, symprec=1e-5, angle_tolerance=-1.0):
     # Atomic positions have to be specified by scaled positions for spglib.
     return spg.spacegroup(bulk.get_cell().T.copy(),
                           bulk.get_scaled_positions().copy(),
-                          np.intc(bulk.get_atomic_numbers()),
+                          np.intc(bulk.get_atomic_numbers()).copy(),
                           symprec,
                           angle_tolerance)
 
@@ -148,7 +148,7 @@ def get_pointgroup(rotations):
     """
 
     # (symbol, pointgroup_number, transformation_matrix)
-    return spg.pointgroup(np.intc(rotations))
+    return spg.pointgroup(np.intc(rotations).copy())
 
 def refine_cell(bulk, symprec=1e-5, angle_tolerance=-1.0):
     """
@@ -183,7 +183,7 @@ def find_primitive(bulk, symprec=1e-5, angle_tolerance=-1.0):
     # Atomic positions have to be specified by scaled positions for spglib.
     positions = bulk.get_scaled_positions().copy()
     lattice = bulk.get_cell().T.copy()
-    numbers = np.intc(bulk.get_atomic_numbers())
+    numbers = np.intc(bulk.get_atomic_numbers()).copy()
 
     # lattice is transposed with respect to the definition of Atoms class
     num_atom_prim = spg.primitive(lattice,
@@ -210,7 +210,7 @@ def get_ir_kpoints(kpoint,
                    kpoint,
                    bulk.get_cell().T.copy(),
                    bulk.get_scaled_positions().copy(),
-                   np.intc(bulk.get_atomic_numbers()),
+                   np.intc(bulk.get_atomic_numbers()).copy(),
                    is_time_reversal * 1,
                    symprec)
     return mapping
@@ -230,12 +230,12 @@ def get_ir_reciprocal_mesh(mesh,
     mesh_points = np.zeros((np.prod(mesh), 3), dtype='intc')
     spg.ir_reciprocal_mesh(mesh_points,
                            mapping,
-                           np.intc(mesh),
-                           np.intc(is_shift),
+                           np.intc(mesh).copy(),
+                           np.intc(is_shift).copy(),
                            is_time_reversal * 1,
                            bulk.get_cell().T.copy(),
                            bulk.get_scaled_positions().copy(),
-                           np.intc(bulk.get_atomic_numbers()),
+                           np.intc(bulk.get_atomic_numbers()).copy(),
                            symprec)
   
     return mapping, mesh_points
@@ -256,12 +256,12 @@ def get_stabilized_reciprocal_mesh(mesh,
     
     mapping = np.zeros(np.prod(mesh), dtype='intc')
     mesh_points = np.zeros((np.prod(mesh), 3), dtype='intc')
-    qpoints = np.double(qpoints)
+    qpoints = np.double(qpoints).copy()
     if qpoints.shape == (3,):
         qpoints = np.double([qpoints])
     spg.stabilized_reciprocal_mesh(mesh_points,
                                    mapping,
-                                   np.intc(mesh),
+                                   np.intc(mesh).copy(),
                                    np.intc(is_shift),
                                    is_time_reversal * 1,
                                    np.intc(rotations).copy(),
@@ -283,7 +283,7 @@ def get_triplets_reciprocal_mesh(mesh,
     """
     
     triplets, weights, mesh_points = spg.triplets_reciprocal_mesh(
-        np.intc(mesh),
+        np.intc(mesh).copy(),
         is_time_reversal * 1,
         np.intc(pointgroup).copy())
 
@@ -302,7 +302,7 @@ def get_triplets_reciprocal_mesh_at_q(fixed_grid_number,
                                       mesh_points,
                                       third_q,
                                       fixed_grid_number,
-                                      np.intc(mesh),
+                                      np.intc(mesh).copy(),
                                       is_time_reversal * 1,
                                       np.intc(rotations).copy())
 
@@ -323,7 +323,7 @@ def extract_triplets_reciprocal_mesh_at_q(fixed_grid_number,
         weights_with_q,
         fixed_grid_number,
         triplets,
-        np.array(mesh, dtype='intc'),
+        np.intc(mesh).copy(),
         is_time_reversal * 1,
         np.intc(pointgroup).copy())
     

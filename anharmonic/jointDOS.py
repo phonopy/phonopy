@@ -5,7 +5,7 @@ from phonopy.hphonopy.file_IO import parse_BORN
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC
 from phonopy.units import VaspToTHz
 from anharmonic.im_self_energy import get_frequencies
-from anharmonic.triplets import get_triplets_at_q, get_nosym_triplets
+from anharmonic.triplets import get_triplets_at_q, get_nosym_triplets_at_q
 from anharmonic.file_IO import write_jointDOS
 
 #
@@ -59,12 +59,11 @@ def get_jointDOS(fixed_grid_points,
             
             (triplets_at_q,
              weights_at_q,
-             grid_points) = get_nosym_triplets(mesh, gp)
+             grid_points) = get_nosym_triplets_at_q(gp, mesh)
         else:
             triplets_at_q, weights_at_q, grid_points = get_triplets_at_q(
                 gp,
                 mesh,
-                primitive.get_cell(),
                 symmetry.get_pointgroup_operations(),
                 True)
 
