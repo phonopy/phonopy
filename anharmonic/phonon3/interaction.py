@@ -3,6 +3,7 @@ from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNA
 from phonopy.structure.symmetry import Symmetry
 from phonopy.units import VaspToTHz
 from anharmonic.phonon3.real_to_reciprocal import RealToReciprocal
+from anharmonic.phonon3.reciprocal_to_normal import ReciprocalToNormal
 from anharmonic.triplets import get_triplets_at_q
 
 class Phonon3:
@@ -44,17 +45,32 @@ class Phonon3:
         self._triplets_at_q = None
         self._weights_at_q = None
         self._grid_address = None
-        self._qpoint_triplets = None
+        self._triplets_address = None
 
     def run(self):
         r2r = RealToReciprocal(self._fc3,
-                               self._qpoint_triplets,
                                self._supercell_fc3,
                                self._primitive_fc3,
+                               self._triplets_address,
+                               self._mesh,
                                symprec=self._symprec)
         r2r.run()
-        print r2r.get_fc3_reciprocal()
-
+        fc3_reciprocal = r2r.get_fc3_reciprocal()
+        print fc3_reciprocal
+        num_grid = np.prod(self._mesh)
+        num_band = self._primitive_fc3.get_number_of_atoms() * 3
+        
+        q_done = np.zeros(num_grid, dtype='byte')
+        frequencies = np.zeros((num_grid, num_band), dtype='double')
+        eigenvectors = np.zeros((num_grid, num_band, num_band),
+                                dtype='complex128')
+        r2n = ReciprocalToNormal(fc3_reciprocal,
+                                 self._qpoint_triplets,
+                                 self._primitive_fc3,
+                                 self._dm,
+                                 frequencies,
+                                 eigenvectors,
+                                 q_done)
 
     def set_triplets_at_q(self, grid_point):
         if self._is_nosym:
@@ -70,8 +86,7 @@ class Phonon3:
         self._triplets_at_q = triplets_at_q
         self._weights_at_q = weights_at_q
         self._grid_address = grid_address
-        self._qpoint_triplets = (grid_address[triplets_at_q].astype('double') /
-                                 self._mesh)
+        self._triplets_address = grid_address[triplets_at_q]
 
     def set_dynamical_matrix(self,
                              fc2,

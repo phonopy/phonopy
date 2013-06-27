@@ -810,7 +810,7 @@ else:
                                          nac_params=nac_params,
                                          nac_q_direction=nac_q_direction,
                                          frequency_scale_factor=freq_scale)
-            phonon3.set_triplets_at_q(0)
+            phonon3.set_triplets_at_q(grid_points[0])
             phonon3.run()
             
 
