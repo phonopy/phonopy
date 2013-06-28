@@ -48,29 +48,35 @@ class Phonon3:
         self._triplets_address = None
 
     def run(self):
+        num_grid = np.prod(self._mesh)
+        num_band = self._primitive_fc3.get_number_of_atoms() * 3
+        self._q_done = np.zeros(num_grid, dtype='byte')
+        self._frequencies = np.zeros((num_grid, num_band), dtype='double')
+        self._eigenvectors = np.zeros((num_grid, num_band, num_band),
+                                      dtype='complex128')
+
         r2r = RealToReciprocal(self._fc3,
                                self._supercell_fc3,
                                self._primitive_fc3,
                                self._triplets_address,
                                self._mesh,
                                symprec=self._symprec)
-        r2r.run()
-        fc3_reciprocal = r2r.get_fc3_reciprocal()
-        print fc3_reciprocal
-        num_grid = np.prod(self._mesh)
-        num_band = self._primitive_fc3.get_number_of_atoms() * 3
         
-        q_done = np.zeros(num_grid, dtype='byte')
-        frequencies = np.zeros((num_grid, num_band), dtype='double')
-        eigenvectors = np.zeros((num_grid, num_band, num_band),
-                                dtype='complex128')
-        r2n = ReciprocalToNormal(fc3_reciprocal,
-                                 self._qpoint_triplets,
-                                 self._primitive_fc3,
-                                 self._dm,
-                                 frequencies,
-                                 eigenvectors,
-                                 q_done)
+        r2n = ReciprocalToNormal(self._primitive_fc3,
+                                 self._frequencies,
+                                 self._eigenvectors)
+
+        for i, grid_triplet in enumerate(self._triplets_at_q):
+            print "%d / %d" % (i + 1, len(self._triplets_at_q))
+            r2r.run(self._grid_address[grid_triplet])
+            fc3_reciprocal = r2r.get_fc3_reciprocal()
+            print fc3_reciprocal
+            for gp in grid_triplet:
+                self._set_phonon(gp)
+            r2n.run(fc3_reciprocal, grid_triplet)
+            print r2n.get_reciprocal_to_normal()
+
+        print self._q_done
 
     def set_triplets_at_q(self, grid_point):
         if self._is_nosym:
@@ -116,3 +122,17 @@ class Phonon3:
                 symprec=self._symprec)
             self._dm.set_nac_params(nac_params)
             self._nac_q_direction = nac_q_direction
+
+    def _set_phonon(self, grid_point):
+        gp = grid_point
+        if self._q_done[gp] == 0:
+            self._q_done[gp] = 1
+            q = self._grid_address[gp].astype('double') / self._mesh
+            self._dm.set_dynamical_matrix(q)
+            dm = self._dm.get_dynamical_matrix()
+            eigvals, eigvecs = np.linalg.eigh(dm)
+            eigvals = eigvals.real
+            self._frequencies[gp] = (np.sqrt(np.abs(eigvals)) *
+                                     np.sign(eigvals) * self._factor)
+            self._eigenvectors[gp] = eigvecs
+

@@ -27,51 +27,44 @@ class RealToReciprocal:
 
         self._fc3_reciprocal = None
 
-    def run(self):
+    def run(self, triplet):
+        self._triplet = triplet
         num_patom = self._primitive.get_number_of_atoms()
-        num_triplets = len(self._triplets_address)
         self._fc3_reciprocal = np.zeros(
-            (num_triplets, num_patom, num_patom, num_patom, 3, 3, 3),
-            dtype='complex128')
-
-        for i, triplet in enumerate(self._triplets_address):
-            print "%d / %d" % (i + 1, num_triplets)
-            print triplet
-            self._real_to_reciprocal(triplet, i)
+            (num_patom, num_patom, num_patom, 3, 3, 3), dtype='complex128')
+        self._real_to_reciprocal()
 
     def get_fc3_reciprocal(self):
-        return self._fc3_reciprocal
+        return self._fc3_reciprocal / np.prod(self._mesh)
 
-    def _real_to_reciprocal(self, triplet, t_index):
+    def _real_to_reciprocal(self):
         num_patom = self._primitive.get_number_of_atoms()
         sum_triplets = np.where(
-            np.all(triplet != 0, axis=0), triplet.sum(axis=0), 0)
+            np.all(self._triplet != 0, axis=0), self._triplet.sum(axis=0), 0)
         sum_q = sum_triplets.astype('double') / self._mesh
-
-        print sum_q
-
         for i in range(num_patom):
             for j in range(num_patom):
                 for k in range(num_patom):
-                    self._real_to_reciprocal_elements(
-                        (i, j, k), triplet, t_index)
+                    self._fc3_reciprocal[
+                        i, j, k] = self._real_to_reciprocal_elements((i, j, k))
 
             prephase = self._get_prephase(sum_q, i)
-            self._fc3_reciprocal[t_index, i] *= prephase
+            self._fc3_reciprocal[i] *= prephase
                 
-    def _real_to_reciprocal_elements(self, patom_indices, triplet, t_index):
+    def _real_to_reciprocal_elements(self, patom_indices):
         num_satom = self._supercell.get_number_of_atoms()
         pi = patom_indices
         i = self._p2s_map[pi[0]]
+        fc3_reciprocal = np.zeros((3, 3, 3), dtype='complex128')
         for j in range(num_satom):
             if self._s2p_map[j] != self._p2s_map[pi[1]]:
                 continue
             for k in range(num_satom):
                 if self._s2p_map[k] != self._p2s_map[pi[2]]:
                     continue
-                phase = self._get_phase((i, j, k), pi[0], triplet)
-                self._fc3_reciprocal[
-                    t_index, pi[0], pi[1], pi[2]] += self._fc3[i, j, k] * phase
+                phase = self._get_phase((i, j, k), pi[0])
+                fc3_reciprocal += self._fc3[i, j, k] * phase
+        return fc3_reciprocal
 
     def _get_prephase(self, sum_q, patom_index):
         r = self._primitive.get_scaled_positions()[patom_index]
@@ -79,8 +72,7 @@ class RealToReciprocal:
 
     def _get_phase(self,
                    satom_indices,
-                   patom0_index,
-                   triplet):
+                   patom0_index):
         si = satom_indices
         p0 = patom0_index
         phase = 1+0j
@@ -88,6 +80,6 @@ class RealToReciprocal:
             vs = self._smallest_vectors[si[i], p0,
                                         :self._multiplicity[si[i], p0]]
             phase *= (np.exp(2j * np.pi * np.dot(
-                        vs, triplet[i].astype('double') / self._mesh)).sum() /
-                      self._multiplicity[si[i], p0])
+                        vs, self._triplet[i].astype('double') /
+                        self._mesh)).sum() / self._multiplicity[si[i], p0])
         return phase
