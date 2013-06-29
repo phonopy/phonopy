@@ -280,6 +280,23 @@ class PhononPhonon:
         q0 = self._q
         q1s = self._q_grid[self._triplets_at_q[:, 1]]
         q2s = self._q_grid[self._triplets_at_q[:, 2]]
+
+        # gp_triplets = self._grid_address[self._triplets_at_q]
+        # for i, triplet in enumerate(gp_triplets):
+        #     for j, condition in enumerate(triplet.sum(axis=0) == 0):
+        #         if condition:
+        #             continue
+        #         nums = triplet.T[j]
+        #         if 0 in nums:
+        #             if nums[0] == 0:
+        #                 gp_triplets[i, 2, j] = -nums[1]
+        #             elif nums[1] == 0:
+        #                 gp_triplets[i, 2, j] = -nums[0]
+        #             else:
+        #                 gp_triplets[i, 1, j] = -nums[0]
+
+        # q1s = gp_triplets[:, 1, :] / self._mesh.astype('double')
+        # q2s = gp_triplets[:, 2, :] / self._mesh.astype('double')
         
         svecs_fc2, multi_fc2 = self._dm.get_shortest_vectors()
 

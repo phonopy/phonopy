@@ -786,6 +786,7 @@ else:
 
         if options.test:
             from anharmonic.phonon3.interaction import Phonon3
+            from anharmonic.phonon3.gamma import Gamma
             print "------------------"
             print "class Phonon3 test"
             print "------------------"
@@ -811,8 +812,45 @@ else:
                                          nac_q_direction=nac_q_direction,
                                          frequency_scale_factor=freq_scale)
             phonon3.set_triplets_at_q(grid_points[0])
-            phonon3.run()
+            # phonon3.run()
+            # interaction = phonon3.get_interaction_strength()
+            # freqs, eigvecs, ph_done  = phonon3.get_phonons()
+            # triplets, weights = phonon3.get_triplets_at_q()
+            import h5py
+            # w = h5py.File("gamma161616-g2-test.hdf5", 'w')
+            # w.create_dataset('interaction', data=interaction)
+            # w.create_dataset('frequency', data=freqs)
+            # w.create_dataset('eigenvector', data=eigvecs)
+            # w.create_dataset('triplet', data=triplets)
+            # w.create_dataset('weight', data=weights)
+            # w.close()
+            fp3 = h5py.File("gamma161616-g2-test.hdf5", 'r')
+            interaction = fp3['interaction'][:]
+            freqs = fp3['frequency'][:]
+            eigvecs = fp3['eigenvector'][:]
+            triplets = fp3['triplet'][:]
+            weights = fp3['weight'][:]
+            fp3.close()
             
+            gamma = Gamma(interaction,
+                          freqs,
+                          eigvecs,
+                          triplets,
+                          weights,
+                          sigma=0.1)
+            gamma.set_temperature(300)
+            fpoints = np.linspace(0, 35, 600)
+            gamma.set_frequency_points(fpoints)
+            gamma.set_grid_point(0)
+            gamma.run()
+            
+            w = open("plot.dat", 'w')
+            for f, g in zip(fpoints, gamma.get_gamma().T):
+                w.write("%f " % f)
+                for v in g:
+                    w.write("%f " % v)
+                w.write("\n")
+
 
         elif options.is_joint_dos:
             jdos = JointDOS(supercell_dm,

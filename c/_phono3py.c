@@ -9,6 +9,8 @@
 #include "interaction_strength.h"
 #include "gamma.h"
 #include "alloc_array.h"
+#include "interaction.h"
+#include "array.h"
 
 static PyObject * py_get_interaction_strength(PyObject *self, PyObject *args);
 static PyObject * py_get_triplet_interaction_strength(PyObject *self,
@@ -19,8 +21,12 @@ static PyObject * py_get_fc3_realspace(PyObject *self, PyObject *args);
 static PyObject * py_get_gamma(PyObject *self, PyObject *args);
 static PyObject * py_get_decay_channel(PyObject *self, PyObject *args);
 static PyObject * py_get_jointDOS(PyObject *self, PyObject *args);
+
+
+static PyObject * py_get_interaction(PyObject *self, PyObject *args);
 static PyObject * py_distribute_fc3(PyObject *self, PyObject *args);
 static PyObject * py_phonopy_zheev(PyObject *self, PyObject *args);
+
 static int distribute_fc3(double *fc3,
 			  const int third_atom,
 			  const int third_atom_rot,
@@ -61,6 +67,7 @@ static PyMethodDef functions[] = {
   {"gamma", py_get_gamma, METH_VARARGS, "Calculate damping function with gaussian smearing"},
   {"joint_dos", py_get_jointDOS, METH_VARARGS, "Calculate joint density of states"},
   {"decay_channel", py_get_decay_channel, METH_VARARGS, "Calculate decay of phonons"},
+  {"interaction", py_get_interaction, METH_VARARGS, "Interaction of triplets"},
   {"distribute_fc3", py_distribute_fc3, METH_VARARGS, "Distribute least fc3 to full fc3"},
   {"zheev", py_phonopy_zheev, METH_VARARGS, "Lapack zheev wrapper"},
   {NULL, NULL, 0, NULL}
@@ -71,6 +78,153 @@ PyMODINIT_FUNC init_phono3py(void)
   Py_InitModule3("_phono3py", functions, "C-extension for phono3py\n\n...\n");
   return;
 }
+
+static PyObject * py_get_interaction(PyObject *self, PyObject *args)
+{
+  PyArrayObject* amplitude;
+  PyArrayObject* frequencies;
+  PyArrayObject* eigenvectors;
+  PyArrayObject* phonon_done_py;
+  PyArrayObject* gridpoint_triplets;
+  PyArrayObject* grid_address_py;
+  PyArrayObject* mesh_py;
+  PyArrayObject* shortest_vectors_fc2;
+  PyArrayObject* multiplicity_fc2;
+  PyArrayObject* shortest_vectors_fc3;
+  PyArrayObject* multiplicity_fc3;
+  PyArrayObject* fc2_py;
+  PyArrayObject* fc3_py;
+  PyArrayObject* atomic_masses_fc2;
+  PyArrayObject* atomic_masses_fc3;
+  PyArrayObject* p2s_map_fc2;
+  PyArrayObject* s2p_map_fc2;
+  PyArrayObject* p2s_map_fc3;
+  PyArrayObject* s2p_map_fc3;
+  PyArrayObject* reciprocal_lattice;
+  PyArrayObject* band_indicies_py;
+  PyArrayObject* born_effective_charge;
+  PyArrayObject* q_direction;
+  PyArrayObject* dielectric_constant;
+  double nac_factor, freq_unit_conversion_factor;
+  char uplo;
+
+  if (!PyArg_ParseTuple(args, "OOOOOOOOOOOOOOOOOOOOOOOOddc",
+			&amplitude,
+			&frequencies,
+			&eigenvectors,
+			&phonon_done_py,
+			&gridpoint_triplets,
+			&grid_address_py,
+			&mesh_py,
+			&fc2_py,
+			&fc3_py,
+			&shortest_vectors_fc2,
+			&multiplicity_fc2,
+			&shortest_vectors_fc3,
+			&multiplicity_fc3,
+			&atomic_masses_fc2,
+			&atomic_masses_fc3,
+			&p2s_map_fc2,
+			&s2p_map_fc2,
+			&p2s_map_fc3,
+			&s2p_map_fc3,
+			&band_indicies_py,
+			&born_effective_charge,
+			&dielectric_constant,
+			&reciprocal_lattice,
+			&q_direction,
+			&nac_factor,
+			&freq_unit_conversion_factor,
+			&uplo)) {
+    return NULL;
+  }
+
+  double* born;
+  double* dielectric;
+  double *q_dir;
+  Darray* amps = convert_to_darray(amplitude);
+  Darray* freqs = convert_to_darray(frequencies);
+  /* npy_cdouble and lapack_complex_double may not be compatible. */
+  /* So eigenvectors should not be used in Python side */
+  Carray* eigvecs = convert_to_carray(eigenvectors);
+  int* phonon_done = (int*)phonon_done_py->data;
+  Iarray* triplets = convert_to_iarray(gridpoint_triplets);
+  Iarray* grid_address = convert_to_iarray(grid_address_py);
+  const int* mesh = (int*)mesh_py->data;
+  Darray* fc2 = convert_to_darray(fc2_py);
+  Darray* fc3 = convert_to_darray(fc3_py);
+  Darray* svecs_fc2 = convert_to_darray(shortest_vectors_fc2);
+  Iarray* multi_fc2 = convert_to_iarray(multiplicity_fc2);
+  Darray* svecs_fc3 = convert_to_darray(shortest_vectors_fc3);
+  Iarray* multi_fc3 = convert_to_iarray(multiplicity_fc3);
+  const double* masses_fc2 = (double*)atomic_masses_fc2->data;
+  const double* masses_fc3 = (double*)atomic_masses_fc3->data;
+  const int* p2s_fc2 = (int*)p2s_map_fc2->data;
+  const int* s2p_fc2 = (int*)s2p_map_fc2->data;
+  const int* p2s_fc3 = (int*)p2s_map_fc3->data;
+  const int* s2p_fc3 = (int*)s2p_map_fc3->data;
+  Iarray* band_indicies = convert_to_iarray(band_indicies_py);
+  const double* rec_lat = (double*)reciprocal_lattice->data;
+  if ((PyObject*)born_effective_charge == Py_None) {
+    born = NULL;
+  } else {
+    born = (double*)born_effective_charge->data;
+  }
+  if ((PyObject*)dielectric_constant == Py_None) {
+    dielectric = NULL;
+  } else {
+    dielectric = (double*)dielectric_constant->data;
+  }
+  if ((PyObject*)q_direction == Py_None) {
+    q_dir = NULL;
+  } else {
+    q_dir = (double*)q_direction->data;
+  }
+
+  get_interaction(amps,
+		  freqs,
+		  eigvecs,
+		  phonon_done,
+		  triplets,
+		  grid_address,
+		  mesh,
+		  fc2,
+		  fc3,
+		  svecs_fc2,
+		  multi_fc2,
+		  svecs_fc3,
+		  multi_fc3,
+		  masses_fc2,
+		  masses_fc3,
+		  p2s_fc2,
+		  s2p_fc2,
+		  p2s_fc3,
+		  s2p_fc3,
+		  band_indicies,
+		  born,
+		  dielectric,
+		  rec_lat,
+		  q_dir,
+		  nac_factor,
+		  freq_unit_conversion_factor,
+		  uplo);
+
+  free(amps);
+  free(freqs);
+  free(eigvecs);
+  free(triplets);
+  free(grid_address);
+  free(fc2);
+  free(fc3);
+  free(svecs_fc2);
+  free(multi_fc2);
+  free(svecs_fc3);
+  free(multi_fc3);
+  free(band_indicies);
+  
+  Py_RETURN_NONE;
+}
+
 
 static PyObject * py_get_interaction_strength(PyObject *self, PyObject *args)
 {

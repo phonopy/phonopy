@@ -7,7 +7,8 @@ include_dirs_lapacke = ['../lapacke/include']
 extension = Extension(
     'anharmonic._phono3py',
     include_dirs=(['c/harmonic_h',
-                   'c/anharmonic_h'] +
+                   'c/anharmonic_h',
+                   'c/phonon3_h'] +
                   include_dirs_numpy +
                   include_dirs_lapacke),
     extra_compile_args=['-fopenmp'],
@@ -20,10 +21,12 @@ extension = Extension(
              'c/harmonic/lapack_wrapper.c',
              'c/anharmonic/interaction_strength.c',
              'c/anharmonic/gamma.c',
-             'c/anharmonic/alloc_array.c'])
+             'c/anharmonic/alloc_array.c',
+             'c/phonon3/interaction.c',
+             'c/phonon3/array.c'])
 
 setup(name='phono3py',
-      version='0.3.0',
+      version='0.4.0',
       description='This is the phono3py module.',
       author='Atsushi Togo',
       author_email='atz.togo@gmail.com',
