@@ -14,8 +14,8 @@ class Phonon3:
                  mesh,
                  factor=VaspToTHz,
                  frequency_factor=1.0,
-                 symprec=1e-3,
                  is_nosym=False,
+                 symprec=1e-3,
                  log_level=False,
                  lapack_zheev_uplo='L'):
         self._fc3 = fc3 
@@ -38,14 +38,25 @@ class Phonon3:
         self._triplets_address = None
         self._interaction_strength = None
 
+
     def run(self):
         num_grid = np.prod(self._mesh)
         num_band = self._primitive_fc3.get_number_of_atoms() * 3
+        num_triplets = len(self._triplets_at_q)
         self._phonon_done = np.zeros(num_grid, dtype='byte')
         self._frequencies = np.zeros((num_grid, num_band), dtype='double')
         self._eigenvectors = np.zeros((num_grid, num_band, num_band),
                                       dtype='complex128')
 
+        self._interaction_strength = np.zeros(
+            (num_triplets, num_band, num_band, num_band), dtype='double')
+        self._run_py()
+
+    def _run_c(self):
+        import anharmonic._phono3py as phono3c
+        phono3c.interaction
+        
+    def _run_py(self):
         r2r = RealToReciprocal(self._fc3,
                                self._supercell_fc3,
                                self._primitive_fc3,
@@ -57,7 +68,6 @@ class Phonon3:
                                  self._frequencies,
                                  self._eigenvectors)
 
-        self._interaction_strength = []
         for i, grid_triplet in enumerate(self._triplets_at_q):
             print "%d / %d" % (i + 1, len(self._triplets_at_q))
             r2r.run(self._grid_address[grid_triplet])
@@ -65,12 +75,9 @@ class Phonon3:
             for gp in grid_triplet:
                 self._set_phonon(gp)
             r2n.run(fc3_reciprocal, grid_triplet)
-            # fc3_normal is squared value, which is stored in 'double' array.
-            # [1/6(hbar/2N)^(3/2)N]^2 is not multipled 
-            fc3_normal = r2n.get_reciprocal_to_normal()
-            self._interaction_strength.append(fc3_normal)
+            self._interaction_strength[i] = r2n.get_reciprocal_to_normal()
 
-        self._interaction_strength = np.double(self._interaction_strength)
+        self._interaction_strength *= self._unit_conversion
             
     def get_interaction_strength(self):
         return self._interaction_strength
