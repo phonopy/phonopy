@@ -24,6 +24,7 @@ static PyObject * py_get_jointDOS(PyObject *self, PyObject *args);
 
 
 static PyObject * py_get_interaction(PyObject *self, PyObject *args);
+static PyObject * py_set_phonon_triplets(PyObject *self, PyObject *args);
 static PyObject * py_distribute_fc3(PyObject *self, PyObject *args);
 static PyObject * py_phonopy_zheev(PyObject *self, PyObject *args);
 
@@ -68,6 +69,7 @@ static PyMethodDef functions[] = {
   {"joint_dos", py_get_jointDOS, METH_VARARGS, "Calculate joint density of states"},
   {"decay_channel", py_get_decay_channel, METH_VARARGS, "Calculate decay of phonons"},
   {"interaction", py_get_interaction, METH_VARARGS, "Interaction of triplets"},
+  {"phonon_triplets", py_set_phonon_triplets, METH_VARARGS, "Set phonon triplets"},
   {"distribute_fc3", py_distribute_fc3, METH_VARARGS, "Distribute least fc3 to full fc3"},
   {"zheev", py_phonopy_zheev, METH_VARARGS, "Lapack zheev wrapper"},
   {NULL, NULL, 0, NULL}
@@ -78,6 +80,117 @@ PyMODINIT_FUNC init_phono3py(void)
   Py_InitModule3("_phono3py", functions, "C-extension for phono3py\n\n...\n");
   return;
 }
+
+static PyObject * py_set_phonon_triplets(PyObject *self, PyObject *args)
+{
+  PyArrayObject* frequencies;
+  PyArrayObject* eigenvectors;
+  PyArrayObject* phonon_done_py;
+  PyArrayObject* gridpoint_triplets;
+  PyArrayObject* grid_address_py;
+  PyArrayObject* mesh_py;
+  PyArrayObject* shortest_vectors_fc2;
+  PyArrayObject* multiplicity_fc2;
+  PyArrayObject* fc2_py;
+  PyArrayObject* atomic_masses_fc2;
+  PyArrayObject* p2s_map_fc2;
+  PyArrayObject* s2p_map_fc2;
+  PyArrayObject* reciprocal_lattice;
+  PyArrayObject* band_indicies_py;
+  PyArrayObject* born_effective_charge;
+  PyArrayObject* q_direction;
+  PyArrayObject* dielectric_constant;
+  double nac_factor, unit_conversion_factor;
+  char uplo;
+
+  if (!PyArg_ParseTuple(args, "OOOOOOOOOOOOdOOOOdc",
+			&frequencies,
+			&eigenvectors,
+			&phonon_done_py,
+			&gridpoint_triplets,
+			&grid_address_py,
+			&mesh_py,
+			&fc2_py,
+			&shortest_vectors_fc2,
+			&multiplicity_fc2,
+			&atomic_masses_fc2,
+			&p2s_map_fc2,
+			&s2p_map_fc2,
+			&unit_conversion_factor,
+			&born_effective_charge,
+			&dielectric_constant,
+			&reciprocal_lattice,
+			&q_direction,
+			&nac_factor,
+			&uplo)) {
+    return NULL;
+  }
+
+  double* born;
+  double* dielectric;
+  double *q_dir;
+  Darray* freqs = convert_to_darray(frequencies);
+  /* npy_cdouble and lapack_complex_double may not be compatible. */
+  /* So eigenvectors should not be used in Python side */
+  Carray* eigvecs = convert_to_carray(eigenvectors);
+  char* phonon_done = (char*)phonon_done_py->data;
+  Iarray* triplets = convert_to_iarray(gridpoint_triplets);
+  Iarray* grid_address = convert_to_iarray(grid_address_py);
+  const int* mesh = (int*)mesh_py->data;
+  Darray* fc2 = convert_to_darray(fc2_py);
+  Darray* svecs_fc2 = convert_to_darray(shortest_vectors_fc2);
+  Iarray* multi_fc2 = convert_to_iarray(multiplicity_fc2);
+  const double* masses_fc2 = (double*)atomic_masses_fc2->data;
+  const int* p2s_fc2 = (int*)p2s_map_fc2->data;
+  const int* s2p_fc2 = (int*)s2p_map_fc2->data;
+  const double* rec_lat = (double*)reciprocal_lattice->data;
+  if ((PyObject*)born_effective_charge == Py_None) {
+    born = NULL;
+  } else {
+    born = (double*)born_effective_charge->data;
+  }
+  if ((PyObject*)dielectric_constant == Py_None) {
+    dielectric = NULL;
+  } else {
+    dielectric = (double*)dielectric_constant->data;
+  }
+  if ((PyObject*)q_direction == Py_None) {
+    q_dir = NULL;
+  } else {
+    q_dir = (double*)q_direction->data;
+  }
+
+  set_phonon_triplets(freqs,
+		      eigvecs,
+		      phonon_done,
+		      triplets,
+		      grid_address,
+		      mesh,
+		      fc2,
+		      svecs_fc2,
+		      multi_fc2,
+		      masses_fc2,
+		      p2s_fc2,
+		      s2p_fc2,
+		      unit_conversion_factor,
+		      born,
+		      dielectric,
+		      rec_lat,
+		      q_dir,
+		      nac_factor,
+		      uplo);
+
+  free(freqs);
+  free(eigvecs);
+  free(triplets);
+  free(grid_address);
+  free(fc2);
+  free(svecs_fc2);
+  free(multi_fc2);
+  
+  Py_RETURN_NONE;
+}
+
 
 static PyObject * py_get_interaction(PyObject *self, PyObject *args)
 {

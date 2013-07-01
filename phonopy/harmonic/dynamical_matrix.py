@@ -253,7 +253,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         self._nac_params = nac_params
         self._method = method
 
-        self._born = np.array(self._nac_params['born'])
+        self._born = np.double(self._nac_params['born'])
         factor = self._nac_params['factor']
         if (isinstance(factor, list) or
             isinstance(factor, tuple)):

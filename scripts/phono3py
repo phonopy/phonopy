@@ -791,42 +791,63 @@ else:
             print "class Phonon3 test"
             print "------------------"
 
-            phonon3 = Phonon3(fc3,
-                              supercell,
-                              primitive,
-                              mesh,
-                              factor=factor,
-                              frequency_factor=freq_factor,
-                              is_nosym=options.is_nosym,
-                              symprec=options.symprec,
-                              log_level=log_level,
-                              lapack_zheev_uplo=options.uplo)
-            phonon3.set_dynamical_matrix(fc2,
-                                         supercell_dm,
-                                         primitive_dm,
-                                         nac_params=nac_params,
-                                         nac_q_direction=nac_q_direction,
-                                         frequency_scale_factor=freq_scale)
-            phonon3.set_triplets_at_q(grid_points[0])
-            phonon3.run()
-            interaction = phonon3.get_interaction_strength()
-            freqs, eigvecs, ph_done  = phonon3.get_phonons()
-            triplets, weights = phonon3.get_triplets_at_q()
-            import h5py
-            w = h5py.File("gamma121212-g650-test.hdf5", 'w')
-            w.create_dataset('interaction', data=interaction)
-            w.create_dataset('frequency', data=freqs)
-            w.create_dataset('eigenvector', data=eigvecs)
-            w.create_dataset('triplet', data=triplets)
-            w.create_dataset('weight', data=weights)
-            w.close()
-            # fp3 = h5py.File("gamma161616-g650-test.hdf5", 'r')
-            # interaction = fp3['interaction'][:]
-            # freqs = fp3['frequency'][:]
-            # eigvecs = fp3['eigenvector'][:]
-            # triplets = fp3['triplet'][:]
-            # weights = fp3['weight'][:]
-            # fp3.close()
+            if not options.read_amplitude:
+                phonon3 = Phonon3(fc3,
+                                  supercell,
+                                  primitive,
+                                  mesh,
+                                  frequency_conversion_factor=factor,
+                                  is_nosym=options.is_nosym,
+                                  symprec=options.symprec,
+                                  log_level=log_level,
+                                  lapack_zheev_uplo=options.uplo)
+
+                phonon3.set_dynamical_matrix(fc2,
+                                             supercell_dm,
+                                             primitive_dm,
+                                             nac_params=nac_params,
+                                             frequency_scale_factor=freq_scale)
+                phonon3.set_q_direction(q_direction=nac_q_direction)
+
+                phonon3.set_triplets_at_q(grid_points[0])
+                phonon3.run()
+
+                interaction = phonon3.get_interaction_strength()
+                freqs, eigvecs, ph_done  = phonon3.get_phonons()
+                triplets, weights = phonon3.get_triplets_at_q()
+
+                # import h5py
+                # suffix = "-m%d%d%d" % tuple(mesh)
+                # suffix += ("-g%d" % grid_points[0])
+                # w = h5py.File("phonon" + suffix + ".hdf5", 'w') 
+                # w.create_dataset('triplet', data=triplets)
+                # w.create_dataset('weight', data=weights)
+                # w.create_dataset('frequency', data=freqs)
+                # w.create_dataset('eigenvector', data=eigvecs)
+                # w.create_dataset('phonon_done', data=ph_done)
+                # w.close()
+
+                from anharmonic.file_IO import write_amplitude_to_hdf5
+                write_amplitude_to_hdf5(interaction,
+                                        mesh,
+                                        grid_points[0],
+                                        triplet=triplets,
+                                        weight=weights,
+                                        frequency=freqs,
+                                        eigenvector=eigvecs)
+
+                sys.exit(0)
+            else:
+                import h5py
+                suffix = "-m%d%d%d" % tuple(mesh)
+                suffix += ("-g%d" % grid_points[0])
+                fp3 = h5py.File("amplitude" + suffix + ".hdf5", 'r')
+                interaction = fp3['amplitude'][:]
+                freqs = fp3['frequency'][:]
+                eigvecs = fp3['eigenvector'][:]
+                triplets = fp3['triplet'][:]
+                weights = fp3['weight'][:]
+                fp3.close()
             
             gamma = Gamma(interaction,
                           freqs,
@@ -839,7 +860,6 @@ else:
             gamma.set_frequency_points(fpoints)
             gamma.set_grid_point(grid_points[0])
             gamma.run()
-
             
             w = open("plot.dat", 'w')
             for f, g in zip(fpoints, gamma.get_gamma().T):

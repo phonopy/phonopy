@@ -497,22 +497,25 @@ def read_gamma_from_hdf5(mesh,
     
     return gammas
 
-def write_amplitude_to_hdf5(amplitudes_at_q,
+def write_amplitude_to_hdf5(amplitude,
                             mesh,
                             grid_point,
-                            triplets_at_q=None,
-                            weights_at_q=None,
-                            frequencies_at_q=None):
+                            triplet=None,
+                            weight=None,
+                            frequency=None,
+                            eigenvector=None):
     suffix = "-m%d%d%d" % tuple(mesh)
     suffix += ("-g%d" % grid_point)
     w = h5py.File("amplitude" + suffix + ".hdf5", 'w')
-    w.create_dataset('amplitudes', data=amplitudes_at_q)
-    if triplets_at_q is not None:
-        w.create_dataset('triplets', data=triplets_at_q)
-    if weights_at_q is not None:
-        w.create_dataset('weights', data=weights_at_q)
-    if frequencies_at_q is not None:
-        w.create_dataset('frequencies', data=frequencies_at_q)
+    w.create_dataset('amplitude', data=amplitude)
+    if triplet is not None:
+        w.create_dataset('triplet', data=triplet)
+    if weight is not None:
+        w.create_dataset('weight', data=weight)
+    if frequency is not None:
+        w.create_dataset('frequency', data=frequency)
+    if eigenvector is not None:
+        w.create_dataset('eigenvector', data=eigenvector)
     w.close()
 
 def read_amplitude_from_hdf5(amplitudes_at_q,

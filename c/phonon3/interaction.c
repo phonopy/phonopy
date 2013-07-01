@@ -9,7 +9,7 @@
 
 static int collect_undone_grid_points(int *undone,
 				      const Iarray *triplets,
-				      const int *phonon_done);
+				      const char *phonon_done);
 static int get_phonons(lapack_complex_double *a,
 		       double *w,
 		       const double q[3],
@@ -28,12 +28,98 @@ static int get_phonons(lapack_complex_double *a,
 static lapack_complex_double
 prod(const lapack_complex_double a, const lapack_complex_double b);
 
+int set_phonon_triplets(Darray *freqs,
+			Carray *eigvecs,
+			char *phonon_done,
+			const Iarray *triplets,
+			const Iarray *grid_address,
+			const int *mesh,
+			const Darray *fc2,
+			const Darray *svecs_fc2,
+			const Iarray *multi_fc2,
+			const double *masses_fc2,
+			const int *p2s_fc2,
+			const int *s2p_fc2,
+			const double unit_conversion_factor,
+			const double *born,
+			const double *dielectric,
+			const double *reciprocal_lattice,
+			const double *q_direction,
+			const double nac_factor,
+			const char uplo)
+{
+  int i, j, gp, num_patom, num_band, num_triplets, num_grid_points, num_undone;
+  int *undone;
+  double f;
+  double q[3];
+
+  num_patom = multi_fc2->dims[1];
+  num_band = num_patom * 3;
+  num_triplets = triplets->dims[0];
+  num_grid_points = grid_address->dims[0];
+
+  undone = (int*)malloc(sizeof(int) * num_grid_points);
+  num_undone = collect_undone_grid_points(undone, triplets, phonon_done);
+
+#pragma omp parallel for private(j, q, gp, f)
+  for (i = 0; i < num_undone; i++) {
+    gp = undone[i];
+    for (j = 0; j < 3; j++) {
+      q[j] = ((double)grid_address->data[gp * 3 + j]) / mesh[j];
+    }
+
+    if (gp == 0) {
+      get_phonons(eigvecs->data + num_band * num_band * gp,
+		  freqs->data + num_band * gp,
+		  q,
+		  fc2,
+		  masses_fc2,
+		  p2s_fc2,
+		  s2p_fc2,
+		  multi_fc2,
+		  svecs_fc2,
+		  born,
+		  dielectric,
+		  reciprocal_lattice,
+		  q_direction,
+		  nac_factor,
+		  uplo);
+    } else {
+      get_phonons(eigvecs->data + num_band * num_band * gp,
+		  freqs->data + num_band * gp,
+		  q,
+		  fc2,
+		  masses_fc2,
+		  p2s_fc2,
+		  s2p_fc2,
+		  multi_fc2,
+		  svecs_fc2,
+		  born,
+		  dielectric,
+		  reciprocal_lattice,
+		  NULL,
+		  nac_factor,
+		  uplo);
+    }
+    for (j = 0; j < num_band; j++) {
+      f = freqs->data[num_band * gp + j];
+      freqs->data[num_band * gp + j] = 
+	sqrt(fabs(f)) * ((f > 0) - (f < 0)) * unit_conversion_factor;
+    }
+    phonon_done[gp] = 1;
+  }
+
+  free(undone);
+
+  return 0;
+}
+
 int get_interaction(Darray *amps,
 		    Darray *freqs,
 		    Carray *eigvecs,
-		    int *phonon_done,
-		    Iarray *triplets,
-		    Iarray *grid_address,
+		    char *phonon_done,
+		    const Iarray *triplets,
+		    const Iarray *grid_address,
 		    const int *mesh,
 		    const Darray *fc2,
 		    const Darray *fc3,
@@ -65,49 +151,6 @@ int get_interaction(Darray *amps,
   /* Second calculate phonons distributing by OpenMP. */
   /* Third proceed to calculate interaction. */
 
-  num_patom = multi_fc2->dims[1];
-  num_band = num_patom * 3;
-  num_triplets = triplets->dims[0];
-  num_grid_points = grid_address->dims[0];
-
-  undone = (int*)malloc(sizeof(int) * num_grid_points);
-  num_undone = collect_undone_grid_points(undone, triplets, phonon_done);
-
-#pragma omp parallel for private(j, q, gp, f)
-  for (i = 0; i < num_undone; i++) {
-    gp = undone[i];
-    for (j = 0; j < 3; j++) {
-      q[j] = ((double)grid_address->data[gp * 3 + j]) / mesh[j];
-    }
-    get_phonons(eigvecs->data + num_band * num_band * gp,
-		freqs->data + num_band * gp,
-		q,
-		fc2,
-		masses_fc2,
-		p2s_fc2,
-		s2p_fc2,
-		multi_fc2,
-		svecs_fc2,
-		born,
-		dielectric,
-		reciprocal_lattice,
-		NULL,
-		nac_factor,
-		uplo);
-    for (j = 0; j < num_band; j++) {
-      f = freqs->data[num_band * gp + j];
-      freqs->data[num_band * gp + j] = 
-	sqrt(fabs(f)) * freq_unit_factor * ((f > 0) - (f < 0));
-    }
-    phonon_done[gp] = 1;
-  }
-
-  free(undone);
-
-  for (i = 0; i < num_grid_points; i++) {
-    printf("%d/%d ", i, phonon_done[i]);
-  }
-  printf("\n");
 
 /* #pragma omp parallel for private(j, w, a, q_vecs) */
 /*   for (i = 0; i < num_triplets; i++) { */
@@ -126,23 +169,25 @@ int get_interaction(Darray *amps,
 
 static int collect_undone_grid_points(int *undone,
 				      const Iarray *triplets,
-				      const int *phonon_done)
+				      const char *phonon_done)
 {
-  int i, j, num_undone;
+  int i, j, gp, num_undone;
 
   num_undone = 0;
 
-  for (i = 0; i < 3; j++) {
-    if (phonon_done[i] == 0) {
-      undone[num_undone] = phonon_done[i];
+  for (i = 0; i < 3; i++) {
+    gp = triplets->data[i];
+    if (phonon_done[gp] == 0) {
+      undone[num_undone] = gp;
       num_undone++;
     }
   }
 
   for (i = 0; i < triplets->dims[0]; i++) {
     for (j = 0; j < 2; j++) {
-      if (phonon_done[i * 3 + j + 1] == 0) {
-	undone[num_undone] = phonon_done[i * 3 + j + 1];
+      gp = triplets->data[i * 3 + j + 1];
+      if (phonon_done[gp] == 0) {
+	undone[num_undone] = gp;
 	num_undone++;
       }
     }
