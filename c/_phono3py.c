@@ -10,7 +10,7 @@
 #include "gamma.h"
 #include "alloc_array.h"
 #include "interaction.h"
-#include "array.h"
+#include "phonoc_array.h"
 
 static PyObject * py_get_interaction_strength(PyObject *self, PyObject *args);
 static PyObject * py_get_triplet_interaction_strength(PyObject *self,

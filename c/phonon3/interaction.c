@@ -3,7 +3,7 @@
 #include <math.h>
 #include <lapacke.h>
 #include "dynmat.h"
-#include "array.h"
+#include "phonoc_array.h"
 #include "lapack_wrapper.h"
 #include "interaction.h"
 
@@ -25,8 +25,6 @@ static int get_phonons(lapack_complex_double *a,
 		       const double *q_direction,
 		       const double nac_factor,
 		       const char uplo);
-static lapack_complex_double
-prod(const lapack_complex_double a, const lapack_complex_double b);
 
 int set_phonon_triplets(Darray *freqs,
 			Carray *eigvecs,
@@ -300,14 +298,3 @@ static int get_phonons(lapack_complex_double *a,
   return phonopy_zheev(w, a, num_patom * 3, uplo);
 }
 
-static lapack_complex_double
-prod(const lapack_complex_double a, const lapack_complex_double b)
-{
-  lapack_complex_double c;
-  c = lapack_make_complex_double
-    (lapack_complex_double_real(a) * lapack_complex_double_real(b) -
-     lapack_complex_double_imag(a) * lapack_complex_double_imag(b),
-     lapack_complex_double_imag(a) * lapack_complex_double_real(b) +
-     lapack_complex_double_real(a) * lapack_complex_double_imag(b));
-  return c;
-}

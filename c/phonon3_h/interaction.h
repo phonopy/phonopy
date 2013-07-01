@@ -1,7 +1,7 @@
 #ifndef __interaction_H__
 #define __interaction_H__
 
-#include "array.h"
+#include "phonoc_array.h"
 
 int set_phonon_triplets(Darray *freqs,
 			Carray *eigvecs,

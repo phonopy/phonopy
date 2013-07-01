@@ -4,6 +4,9 @@
 #include <lapacke.h>
 #include "array.h"
 
+static lapack_complex_double
+prod(const lapack_complex_double a, const lapack_complex_double b);
+
 /* fc3_reciprocal[num_patom, num_patom, num_patom, 3, 3, 3] */
 int real_to_reciprocal(lapack_complex_double *fc3_reciprocal,
 		       const Iarray *triplets,
@@ -90,3 +93,15 @@ static lapack_complex_double get_phase(const Iarray *triplets,
 {
 }
 				       
+
+static lapack_complex_double
+prod(const lapack_complex_double a, const lapack_complex_double b)
+{
+  lapack_complex_double c;
+  c = lapack_make_complex_double
+    (lapack_complex_double_real(a) * lapack_complex_double_real(b) -
+     lapack_complex_double_imag(a) * lapack_complex_double_imag(b),
+     lapack_complex_double_imag(a) * lapack_complex_double_real(b) +
+     lapack_complex_double_real(a) * lapack_complex_double_imag(b));
+  return c;
+}

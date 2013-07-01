@@ -1,7 +1,7 @@
 #include <Python.h>
 #include <numpy/arrayobject.h>
 #include <lapacke.h>
-#include "array.h"
+#include "phonoc_array.h"
 
 Iarray* convert_to_iarray(const PyArrayObject* npyary)
 {
