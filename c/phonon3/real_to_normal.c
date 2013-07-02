@@ -56,6 +56,7 @@ static int real_to_reciprocal_elements(lapack_complex_double *fc3_rec_elem,
 				       const int pi2)
 {
   int i, j, k, num_satom;
+  double fc3_elem;
   lapack_complex_double phase;
   num_satom = multi->dims[0];
   
@@ -75,6 +76,17 @@ static int real_to_reciprocal_elements(lapack_complex_double *fc3_rec_elem,
 			multi,
 			pi0,
 			i, j, k);
+      for (l = 0; l < 27; i++) {
+	fc3_elem = fc3->data[i * 27 * num_satom * num_satom +
+			     j * 27 * num_satom +
+			     k * 27 +
+			     l];
+	fc3_rec_elem[l] =
+	  lapack_make_complex_double(lapack_complex_double_real(phase) *
+				     fc3_elem,
+				     lapack_complex_double_imag(phase) *
+				     fc3_elem);
+      }
     }
   }
 
