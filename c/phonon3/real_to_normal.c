@@ -2,24 +2,103 @@
 #include <stdlib.h>
 #include <math.h>
 #include <lapacke.h>
-#include "array.h"
+#include "phonoc_array.h"
 
+#define M_2PI 6.283185307179586
+
+static void real_to_reciprocal(lapack_complex_double *fc3_reciprocal,
+			       const double q[6],
+			       const double sum_q[3],
+			       const Darray *fc3,
+			       const Darray *shortest_vectors,
+			       const Iarray *multiplicity,
+			       const int *p2s_map,
+			       const int *s2p_map);
+static void real_to_reciprocal_elements(lapack_complex_double *fc3_rec_elem,
+					const double q[6],
+					const double sum_q[3],
+					const Darray *fc3,
+					const Darray *shortest_vectors,
+					const Iarray *multiplicity,
+					const int *p2s,
+					const int *s2p,
+					const int pi0,
+					const int pi1,
+					const int pi2);
+static double get_phase(const double q[6],		       
+			const Darray *shortest_vectors,
+			const Iarray *multiplicity,
+			const int pi0,
+			const int si1,
+			const int si2);
+static void reciprocal_to_normal(double *fc3_normal_squared,
+				 const lapack_complex_double *fc3_reciprocal,
+				 const Darray *freqs,
+				 const Carray *eigvecs,
+				 const double *masses);
 static lapack_complex_double
 prod(const lapack_complex_double a, const lapack_complex_double b);
 
+double real_to_normal(const Darray *freqs,
+		      const Carray *eigvecs,
+		      const Darray *fc3,
+		      const double q[6], /* q2, q3 */
+		      const double sum_q[3], /* q1+q2+q3 */
+		      const Darray *shortest_vectors,
+		      const Iarray *multiplicity,
+		      const double *masses,
+		      const int *p2s_map,
+		      const int *s2p_map)
+{
+  int num_patom, num_band;
+  lapack_complex_double *fc3_reciprocal;
+  double *fc3_normal_squared;
+
+  num_patom = multiplicity->dims[1];
+  num_band = num_patom * 3;
+  
+  fc3_reciprocal =
+    (lapack_complex_double*)malloc(sizeof(lapack_complex_double) *
+				   num_patom * num_patom * num_patom * 27);
+
+  real_to_reciprocal(fc3_reciprocal,
+		     q,
+		     sum_q,
+		     fc3,
+		     shortest_vectors,
+		     multiplicity,
+		     p2s_map,
+		     s2p_map);
+
+  fc3_normal_squared =
+    (double*)malloc(sizeof(double) * num_band * num_band * num_band);
+  
+  reciprocal_to_normal(fc3_normal_squared,
+		       fc3_reciprocal,
+		       freqs,
+		       eigvecs,
+		       masses);
+
+  free(fc3_reciprocal);
+
+}
+
+/*-------------------------------------------------*/
+/* Transform fc3 in real space to reciprocal space */
+/*-------------------------------------------------*/
+
 /* fc3_reciprocal[num_patom, num_patom, num_patom, 3, 3, 3] */
-int real_to_reciprocal(lapack_complex_double *fc3_reciprocal,
-		       const Iarray *triplets,
-		       const Iarray *grid_address,
-		       const int *mesh,
-		       const Darray *fc3,
-		       const Darray *shortest_vectors,
-		       const Iarray *multiplicity,
-		       const int *p2s_map,
-		       const int *s2p_map)
+static void real_to_reciprocal(lapack_complex_double *fc3_reciprocal,
+			       const double q[6],
+			       const double sum_q[3],
+			       const Darray *fc3,
+			       const Darray *shortest_vectors,
+			       const Iarray *multiplicity,
+			       const int *p2s_map,
+			       const int *s2p_map)
 {
   int i, j, k, num_patom;
-  num_patom = multi->dims[1];
+  num_patom = multiplicity->dims[1];
 
   for (i = 0; i < num_patom; i++) {
     for (j = 0; j < num_patom; j++) {
@@ -28,9 +107,8 @@ int real_to_reciprocal(lapack_complex_double *fc3_reciprocal,
 				    i * 27 * num_patom * num_patom +
 				    j * 27 * num_patom +
 				    k * 27,
-				    triplets,
-				    grid_address,
-				    mesh,
+				    q,
+				    sum_q,
 				    fc3,
 				    shortest_vectors,
 				    multiplicity,
@@ -42,25 +120,33 @@ int real_to_reciprocal(lapack_complex_double *fc3_reciprocal,
   }
 }		       
 
-static int real_to_reciprocal_elements(lapack_complex_double *fc3_rec_elem,
-				       const Iarray *triplets,
-				       const Iarray *grid_address,
-				       const int *mesh,
-				       const Darray *fc3,
-				       const Darray *svecs,
-				       const Iarray *multi,
-				       const int *p2s,
-				       const int *s2p,
-				       const int pi0,
-				       const int pi1,
-				       const int pi2)
+static void real_to_reciprocal_elements(lapack_complex_double *fc3_rec_elem,
+					const double q[6],
+					const double sum_q[3],
+					const Darray *fc3,
+					const Darray *shortest_vectors,
+					const Iarray *multiplicity,
+					const int *p2s,
+					const int *s2p,
+					const int pi0,
+					const int pi1,
+					const int pi2)
 {
-  int i, j, k, num_satom;
-  double fc3_elem;
-  lapack_complex_double phase;
-  num_satom = multi->dims[0];
-  
+  int i, j, k, l, num_satom;
+  double phase, pre_phase, cos_phase, sin_phase;
+  double *fc3_elem;
+
+  num_satom = multiplicity->dims[0];
+
   i = p2s[pi0];
+
+  pre_phase = 0;
+  for (j = 0; j < 3; j++) {
+    pre_phase += shortest_vectors->data
+      [p2s[i] * shortest_vectors->dims[1] *
+       shortest_vectors->dims[2] * 3 + j] * sum_q[j];
+  }
+  
   for (j = 0; j < num_satom; j++) {
     if (s2p[j] != p2s[pi1]) {
       continue;
@@ -69,42 +155,70 @@ static int real_to_reciprocal_elements(lapack_complex_double *fc3_rec_elem,
       if (s2p[k] != p2s[pi2]) {
 	continue;
       }
-      phase = get_phase(triplets,
-			grid_address,
-			mesh,
-			svecs,
-			multi,
-			pi0,
-			i, j, k);
+      phase = get_phase(q, shortest_vectors, multiplicity, pi0, j, k);
+      phase += pre_phase;
+      phase *= M_2PI;
+      cos_phase = cos(phase);
+      sin_phase = sin(phase);
+      fc3_elem = fc3->data + (i * 27 * num_satom * num_satom +
+			      j * 27 * num_satom +
+			      k * 27);
       for (l = 0; l < 27; i++) {
-	fc3_elem = fc3->data[i * 27 * num_satom * num_satom +
-			     j * 27 * num_satom +
-			     k * 27 +
-			     l];
 	fc3_rec_elem[l] =
-	  lapack_make_complex_double(lapack_complex_double_real(phase) *
-				     fc3_elem,
-				     lapack_complex_double_imag(phase) *
-				     fc3_elem);
+	  lapack_make_complex_double(cos_phase * fc3_elem[l],
+				     sin_phase * fc3_elem[l]);
       }
     }
   }
-
 }
 
-
-static lapack_complex_double get_phase(const Iarray *triplets,
-				       const Iarray *grid_address,
-				       const int *mesh,
-				       const Darray *svecs,
-				       const Iarray *multi,
-				       const int pi0,
-				       const int si0,
-				       const int si1,
-				       const int si2)
+/* return phase factor without 2pi */
+static double get_phase(const double q[6],		       
+			const Darray *shortest_vectors,
+			const Iarray *multiplicity,
+			const int pi0,
+			const int si1,
+			const int si2)
 {
+  int i, j, k;
+  int addrs[2], multi[2];
+  double *svecs[2];
+  double phase[2];
+
+  svecs[0] = shortest_vectors + (si1 * shortest_vectors->dims[1] *
+				 shortest_vectors->dims[2] * 3 +
+				 pi0 * shortest_vectors->dims[2] * 3);
+  svecs[1] = shortest_vectors + (si2 * shortest_vectors->dims[1] *
+				 shortest_vectors->dims[2] * 3 +
+				 pi0 * shortest_vectors->dims[2] * 3);
+  multi[0] = multiplicity->data[si1 * multiplicity->dims[1]];
+  multi[1] = multiplicity->data[si2 * multiplicity->dims[1]];
+
+  for (i = 0; i < 2; i++) {
+    phase[i] = 0;
+    for (j = 0; j < multi[i]; j++) {
+      for (k = 0; k < 3; k++) {
+	phase[i] += q[3 + k] * svecs[i][j * 3 + k];
+      }
+    }
+    phase[i] /= multi[i];
+  }
+
+  return phase[0] + phase[1];
 }
 				       
+
+/*---------------------------------------------------------*/
+/* Transform fc3 in reciprocal space to normal coordinates */
+/*---------------------------------------------------------*/
+
+static void reciprocal_to_normal(double *fc3_normal_squared,
+				 const lapack_complex_double *fc3_reciprocal,
+				 const Darray *freqs,
+				 const Carray *eigvecs,
+				 const double *masses)
+{
+}
 
 static lapack_complex_double
 prod(const lapack_complex_double a, const lapack_complex_double b)

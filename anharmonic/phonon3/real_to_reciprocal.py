@@ -61,7 +61,7 @@ class RealToReciprocal:
             for k in range(num_satom):
                 if self._s2p_map[k] != self._p2s_map[pi[2]]:
                     continue
-                phase = self._get_phase((i, j, k), pi[0])
+                phase = self._get_phase((j, k), pi[0])
                 fc3_reciprocal += self._fc3[i, j, k] * phase
         return fc3_reciprocal
 
@@ -75,7 +75,7 @@ class RealToReciprocal:
         si = satom_indices
         p0 = patom0_index
         phase = 1+0j
-        for i in (1, 2):
+        for i in (0, 1):
             vs = self._smallest_vectors[si[i], p0,
                                         :self._multiplicity[si[i], p0]]
             phase *= (np.exp(2j * np.pi * np.dot(

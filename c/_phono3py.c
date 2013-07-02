@@ -260,7 +260,7 @@ static PyObject * py_get_interaction(PyObject *self, PyObject *args)
   /* npy_cdouble and lapack_complex_double may not be compatible. */
   /* So eigenvectors should not be used in Python side */
   Carray* eigvecs = convert_to_carray(eigenvectors);
-  int* phonon_done = (int*)phonon_done_py->data;
+  char* phonon_done = (char*)phonon_done_py->data;
   Iarray* triplets = convert_to_iarray(gridpoint_triplets);
   Iarray* grid_address = convert_to_iarray(grid_address_py);
   const int* mesh = (int*)mesh_py->data;

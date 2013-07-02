@@ -23,7 +23,8 @@ extension = Extension(
              'c/anharmonic/gamma.c',
              'c/anharmonic/alloc_array.c',
              'c/phonon3/interaction.c',
-             'c/phonon3/array.c'])
+             'c/phonon3/real_to_normal.c',
+             'c/phonon3/phonoc_array.c'])
 
 setup(name='phono3py',
       version='0.4.0',
