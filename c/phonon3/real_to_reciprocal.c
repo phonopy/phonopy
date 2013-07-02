@@ -6,14 +6,6 @@
 
 #define M_2PI 6.283185307179586
 
-static void real_to_reciprocal(lapack_complex_double *fc3_reciprocal,
-			       const double q[6],
-			       const double sum_q[3],
-			       const Darray *fc3,
-			       const Darray *shortest_vectors,
-			       const Iarray *multiplicity,
-			       const int *p2s_map,
-			       const int *s2p_map);
 static void real_to_reciprocal_elements(lapack_complex_double *fc3_rec_elem,
 					const double q[6],
 					const double sum_q[3],
@@ -31,71 +23,16 @@ static double get_phase(const double q[6],
 			const int pi0,
 			const int si1,
 			const int si2);
-static void reciprocal_to_normal(double *fc3_normal_squared,
-				 const lapack_complex_double *fc3_reciprocal,
-				 const Darray *freqs,
-				 const Carray *eigvecs,
-				 const double *masses);
-static lapack_complex_double
-prod(const lapack_complex_double a, const lapack_complex_double b);
-
-double real_to_normal(const Darray *freqs,
-		      const Carray *eigvecs,
-		      const Darray *fc3,
-		      const double q[6], /* q2, q3 */
-		      const double sum_q[3], /* q1+q2+q3 */
-		      const Darray *shortest_vectors,
-		      const Iarray *multiplicity,
-		      const double *masses,
-		      const int *p2s_map,
-		      const int *s2p_map)
-{
-  int num_patom, num_band;
-  lapack_complex_double *fc3_reciprocal;
-  double *fc3_normal_squared;
-
-  num_patom = multiplicity->dims[1];
-  num_band = num_patom * 3;
-  
-  fc3_reciprocal =
-    (lapack_complex_double*)malloc(sizeof(lapack_complex_double) *
-				   num_patom * num_patom * num_patom * 27);
-
-  real_to_reciprocal(fc3_reciprocal,
-		     q,
-		     sum_q,
-		     fc3,
-		     shortest_vectors,
-		     multiplicity,
-		     p2s_map,
-		     s2p_map);
-
-  fc3_normal_squared =
-    (double*)malloc(sizeof(double) * num_band * num_band * num_band);
-  
-  reciprocal_to_normal(fc3_normal_squared,
-		       fc3_reciprocal,
-		       freqs,
-		       eigvecs,
-		       masses);
-
-  free(fc3_reciprocal);
-
-}
-
-/*-------------------------------------------------*/
-/* Transform fc3 in real space to reciprocal space */
-/*-------------------------------------------------*/
 
 /* fc3_reciprocal[num_patom, num_patom, num_patom, 3, 3, 3] */
-static void real_to_reciprocal(lapack_complex_double *fc3_reciprocal,
-			       const double q[6],
-			       const double sum_q[3],
-			       const Darray *fc3,
-			       const Darray *shortest_vectors,
-			       const Iarray *multiplicity,
-			       const int *p2s_map,
-			       const int *s2p_map)
+void real_to_reciprocal(lapack_complex_double *fc3_reciprocal,
+			const double q[6],
+			const double sum_q[3],
+			const Darray *fc3,
+			const Darray *shortest_vectors,
+			const Iarray *multiplicity,
+			const int *p2s_map,
+			const int *s2p_map)
 {
   int i, j, k, num_patom;
   num_patom = multiplicity->dims[1];
@@ -208,26 +145,3 @@ static double get_phase(const double q[6],
 }
 				       
 
-/*---------------------------------------------------------*/
-/* Transform fc3 in reciprocal space to normal coordinates */
-/*---------------------------------------------------------*/
-
-static void reciprocal_to_normal(double *fc3_normal_squared,
-				 const lapack_complex_double *fc3_reciprocal,
-				 const Darray *freqs,
-				 const Carray *eigvecs,
-				 const double *masses)
-{
-}
-
-static lapack_complex_double
-prod(const lapack_complex_double a, const lapack_complex_double b)
-{
-  lapack_complex_double c;
-  c = lapack_make_complex_double
-    (lapack_complex_double_real(a) * lapack_complex_double_real(b) -
-     lapack_complex_double_imag(a) * lapack_complex_double_imag(b),
-     lapack_complex_double_imag(a) * lapack_complex_double_real(b) +
-     lapack_complex_double_real(a) * lapack_complex_double_imag(b));
-  return c;
-}

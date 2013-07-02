@@ -6,7 +6,23 @@
 #include "phonoc_array.h"
 #include "lapack_wrapper.h"
 #include "interaction.h"
+#include "real_to_reciprocal.h"
+#include "reciprocal_to_normal.h"
 
+static double real_to_normal(const double *freqs1,
+			     const double *freqs2,
+			     const double *freqs3,		      
+			     const lapack_complex_double *eigvecs1,
+			     const lapack_complex_double *eigvecs2,
+			     const lapack_complex_double *eigvecs3,
+			     const Darray *fc3,
+			     const double q[6], /* q2, q3 */
+			     const double sum_q[3], /* q1+q2+q3 */
+			     const Darray *shortest_vectors,
+			     const Iarray *multiplicity,
+			     const double *masses,
+			     const int *p2s_map,
+			     const int *s2p_map);
 static int collect_undone_grid_points(int *undone,
 				      const Iarray *triplets,
 				      const char *phonon_done);
@@ -26,8 +42,8 @@ static int get_phonons(lapack_complex_double *a,
 		       const double nac_factor,
 		       const char uplo);
 
-int set_phonon_triplets(Darray *freqs,
-			Carray *eigvecs,
+int set_phonon_triplets(Darray *frequencies,
+			Carray *eigenvectors,
 			char *phonon_done,
 			const Iarray *triplets,
 			const Iarray *grid_address,
@@ -67,8 +83,8 @@ int set_phonon_triplets(Darray *freqs,
     }
 
     if (gp == 0) {
-      get_phonons(eigvecs->data + num_band * num_band * gp,
-		  freqs->data + num_band * gp,
+      get_phonons(eigenvectors->data + num_band * num_band * gp,
+		  frequencies->data + num_band * gp,
 		  q,
 		  fc2,
 		  masses_fc2,
@@ -83,8 +99,8 @@ int set_phonon_triplets(Darray *freqs,
 		  nac_factor,
 		  uplo);
     } else {
-      get_phonons(eigvecs->data + num_band * num_band * gp,
-		  freqs->data + num_band * gp,
+      get_phonons(eigenvectors->data + num_band * num_band * gp,
+		  frequencies->data + num_band * gp,
 		  q,
 		  fc2,
 		  masses_fc2,
@@ -100,8 +116,8 @@ int set_phonon_triplets(Darray *freqs,
 		  uplo);
     }
     for (j = 0; j < num_band; j++) {
-      f = freqs->data[num_band * gp + j];
-      freqs->data[num_band * gp + j] = 
+      f = frequencies->data[num_band * gp + j];
+      frequencies->data[num_band * gp + j] = 
 	sqrt(fabs(f)) * ((f > 0) - (f < 0)) * unit_conversion_factor;
     }
     phonon_done[gp] = 1;
@@ -113,8 +129,8 @@ int set_phonon_triplets(Darray *freqs,
 }
 
 int get_interaction(Darray *amps,
-		    Darray *freqs,
-		    Carray *eigvecs,
+		    Darray *frequencies,
+		    Carray *eigenvectors,
 		    char *phonon_done,
 		    const Iarray *triplets,
 		    const Iarray *grid_address,
@@ -140,29 +156,96 @@ int get_interaction(Darray *amps,
 		    const double freq_unit_factor,
 		    const char uplo)
 {
-  int i, j, gp, num_patom, num_band, num_triplets, num_grid_points, num_undone;
-  int *undone;
-  double f;
-  double q[3];
+  int i, j, num_band;
+  int *gp, *gp_addrs;
+  double *freqs[3];
+  lapack_complex_double *eigvecs[3];
+  double q[9], sum_q[3];
 
-  /* First collect all grid-points where phonon is not yet calculated. */
-  /* Second calculate phonons distributing by OpenMP. */
-  /* Third proceed to calculate interaction. */
-
-
-/* #pragma omp parallel for private(j, w, a, q_vecs) */
-/*   for (i = 0; i < num_triplets; i++) { */
-/*     ; */
-/*   } */
-
-/* #pragma omp parallel for */
-/*   for (i = 0; */
-/*        i < num_triplets * band_indices->dims[0] * num_band * num_band; */
-/*        i++) { */
-/*     amps[i] /= num_grid_points; */
-/*   } */
-
+  num_band = frequencies->dims[1];
+  num_grid = grid_address->dims[0];
+  
+  for (i = 0; i < triplets->dims[0]; i++) {
+    gp = triplets->data + i * 3;
+    for (j = 0; j < 3; j++) {
+      freqs[j] = frequencies->data + gp[j] * num_band;
+      eigvecs[j] = eigenvectors->data + gp[j] * num_band * num_band;
+      gp_addrs = grid_address + gp[j];
+      for (k = 0; k < 3; k++) {
+	q[j * 3 + k] = ((double)gp_addrs[k]) / mesh[k];
+      }
+    }
+    
+    real_to_normal(freqs[0],
+		   freqs[1],
+		   freqs[2],
+		   eigvecs[0],
+		   eigvecs[1],
+		   eigvecs[2],
+		   fc3,
+		   q, /* q2, q3 */
+		   sum_q, /* q1+q2+q3 */
+		   shortest_vectors,
+		   multiplicity,
+		   masses,
+		   p2s_map,
+		   s2p_map);
+  }
+  
   return 1;
+}
+
+static double real_to_normal(const double *freqs1,
+			     const double *freqs2,
+			     const double *freqs3,		      
+			     const lapack_complex_double *eigvecs1,
+			     const lapack_complex_double *eigvecs2,
+			     const lapack_complex_double *eigvecs3,
+			     const Darray *fc3,
+			     const double q[6], /* q2, q3 */
+			     const double sum_q[3], /* q1+q2+q3 */
+			     const Darray *shortest_vectors,
+			     const Iarray *multiplicity,
+			     const double *masses,
+			     const int *p2s_map,
+			     const int *s2p_map)
+{
+  int num_patom, num_band;
+  lapack_complex_double *fc3_reciprocal;
+  double *fc3_normal_squared;
+
+  num_patom = multiplicity->dims[1];
+  num_band = num_patom * 3;
+  
+  fc3_reciprocal =
+    (lapack_complex_double*)malloc(sizeof(lapack_complex_double) *
+				   num_patom * num_patom * num_patom * 27);
+
+  real_to_reciprocal(fc3_reciprocal,
+		     q,
+		     sum_q,
+		     fc3,
+		     shortest_vectors,
+		     multiplicity,
+		     p2s_map,
+		     s2p_map);
+
+  fc3_normal_squared =
+    (double*)malloc(sizeof(double) * num_band * num_band * num_band);
+  
+  reciprocal_to_normal(fc3_normal_squared,
+		       fc3_reciprocal,
+		       freqs1,
+		       freqs2,
+		       freqs3,
+		       eigvecs1,
+		       eigvecs2,
+		       eigvecs3,
+		       masses);
+
+  free(fc3_normal_squared);
+  free(fc3_reciprocal);
+
 }
 
 static int collect_undone_grid_points(int *undone,
