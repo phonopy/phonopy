@@ -1,9 +1,11 @@
 #ifndef __real_to_reciprocal_H__
 #define __real_to_reciprocal_H__
 
+#include <lapacke.h>
+#include "phonoc_array.h"
+
 void real_to_reciprocal(lapack_complex_double *fc3_reciprocal,
-			const double q[6],
-			const double sum_q[3],
+			const double q[9],
 			const Darray *fc3,
 			const Darray *shortest_vectors,
 			const Iarray *multiplicity,

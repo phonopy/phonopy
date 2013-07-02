@@ -1,10 +1,18 @@
 #ifndef __reciprocal_to_normal_H__
 #define __reciprocal_to_normal_H__
 
-void reciprocal_to_normal(double *fc3_normal_squared,
+#include <lapacke.h>
+#include "phonoc_array.h"
+
+void reciprocal_to_normal(Darray *fc3_normal_squared,
 			  const lapack_complex_double *fc3_reciprocal,
-			  const Darray *freqs,
-			  const Carray *eigvecs,
-			  const double *masses);
+			  const double *freqs0,
+			  const double *freqs1,
+			  const double *freqs2,
+			  const lapack_complex_double *eigvecs0,
+			  const lapack_complex_double *eigvecs1,
+			  const lapack_complex_double *eigvecs2,
+			  const double *masses,
+			  const int *band_indices);
 
 #endif

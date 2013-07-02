@@ -96,7 +96,6 @@ static PyObject * py_set_phonon_triplets(PyObject *self, PyObject *args)
   PyArrayObject* p2s_map_fc2;
   PyArrayObject* s2p_map_fc2;
   PyArrayObject* reciprocal_lattice;
-  PyArrayObject* band_indicies_py;
   PyArrayObject* born_effective_charge;
   PyArrayObject* q_direction;
   PyArrayObject* dielectric_constant;
@@ -194,146 +193,76 @@ static PyObject * py_set_phonon_triplets(PyObject *self, PyObject *args)
 
 static PyObject * py_get_interaction(PyObject *self, PyObject *args)
 {
-  PyArrayObject* amplitude;
+  PyArrayObject* fc3_normal_squared_py;
   PyArrayObject* frequencies;
   PyArrayObject* eigenvectors;
-  PyArrayObject* phonon_done_py;
   PyArrayObject* gridpoint_triplets;
   PyArrayObject* grid_address_py;
   PyArrayObject* mesh_py;
-  PyArrayObject* shortest_vectors_fc2;
-  PyArrayObject* multiplicity_fc2;
-  PyArrayObject* shortest_vectors_fc3;
-  PyArrayObject* multiplicity_fc3;
-  PyArrayObject* fc2_py;
+  PyArrayObject* shortest_vectors;
+  PyArrayObject* multiplicity;
   PyArrayObject* fc3_py;
-  PyArrayObject* atomic_masses_fc2;
-  PyArrayObject* atomic_masses_fc3;
-  PyArrayObject* p2s_map_fc2;
-  PyArrayObject* s2p_map_fc2;
-  PyArrayObject* p2s_map_fc3;
-  PyArrayObject* s2p_map_fc3;
-  PyArrayObject* reciprocal_lattice;
+  PyArrayObject* atomic_masses;
+  PyArrayObject* p2s_map;
+  PyArrayObject* s2p_map;
   PyArrayObject* band_indicies_py;
-  PyArrayObject* born_effective_charge;
-  PyArrayObject* q_direction;
-  PyArrayObject* dielectric_constant;
-  double nac_factor, freq_unit_conversion_factor;
-  char uplo;
 
-  if (!PyArg_ParseTuple(args, "OOOOOOOOOOOOOOOOOOOOOOOOddc",
-			&amplitude,
+  if (!PyArg_ParseTuple(args, "OOOOOOOOOOOOO",
+			&fc3_normal_squared_py,
 			&frequencies,
 			&eigenvectors,
-			&phonon_done_py,
 			&gridpoint_triplets,
 			&grid_address_py,
 			&mesh_py,
-			&fc2_py,
 			&fc3_py,
-			&shortest_vectors_fc2,
-			&multiplicity_fc2,
-			&shortest_vectors_fc3,
-			&multiplicity_fc3,
-			&atomic_masses_fc2,
-			&atomic_masses_fc3,
-			&p2s_map_fc2,
-			&s2p_map_fc2,
-			&p2s_map_fc3,
-			&s2p_map_fc3,
-			&band_indicies_py,
-			&born_effective_charge,
-			&dielectric_constant,
-			&reciprocal_lattice,
-			&q_direction,
-			&nac_factor,
-			&freq_unit_conversion_factor,
-			&uplo)) {
+			&shortest_vectors,
+			&multiplicity,
+			&atomic_masses,
+			&p2s_map,
+			&s2p_map,
+			&band_indicies_py)) {
     return NULL;
   }
 
-  double* born;
-  double* dielectric;
-  double *q_dir;
-  Darray* amps = convert_to_darray(amplitude);
+
+  Darray* fc3_normal_squared = convert_to_darray(fc3_normal_squared_py);
   Darray* freqs = convert_to_darray(frequencies);
   /* npy_cdouble and lapack_complex_double may not be compatible. */
   /* So eigenvectors should not be used in Python side */
   Carray* eigvecs = convert_to_carray(eigenvectors);
-  char* phonon_done = (char*)phonon_done_py->data;
   Iarray* triplets = convert_to_iarray(gridpoint_triplets);
   Iarray* grid_address = convert_to_iarray(grid_address_py);
   const int* mesh = (int*)mesh_py->data;
-  Darray* fc2 = convert_to_darray(fc2_py);
   Darray* fc3 = convert_to_darray(fc3_py);
-  Darray* svecs_fc2 = convert_to_darray(shortest_vectors_fc2);
-  Iarray* multi_fc2 = convert_to_iarray(multiplicity_fc2);
-  Darray* svecs_fc3 = convert_to_darray(shortest_vectors_fc3);
-  Iarray* multi_fc3 = convert_to_iarray(multiplicity_fc3);
-  const double* masses_fc2 = (double*)atomic_masses_fc2->data;
-  const double* masses_fc3 = (double*)atomic_masses_fc3->data;
-  const int* p2s_fc2 = (int*)p2s_map_fc2->data;
-  const int* s2p_fc2 = (int*)s2p_map_fc2->data;
-  const int* p2s_fc3 = (int*)p2s_map_fc3->data;
-  const int* s2p_fc3 = (int*)s2p_map_fc3->data;
-  Iarray* band_indicies = convert_to_iarray(band_indicies_py);
-  const double* rec_lat = (double*)reciprocal_lattice->data;
-  if ((PyObject*)born_effective_charge == Py_None) {
-    born = NULL;
-  } else {
-    born = (double*)born_effective_charge->data;
-  }
-  if ((PyObject*)dielectric_constant == Py_None) {
-    dielectric = NULL;
-  } else {
-    dielectric = (double*)dielectric_constant->data;
-  }
-  if ((PyObject*)q_direction == Py_None) {
-    q_dir = NULL;
-  } else {
-    q_dir = (double*)q_direction->data;
-  }
+  Darray* svecs = convert_to_darray(shortest_vectors);
+  Iarray* multi = convert_to_iarray(multiplicity);
+  const double* masses = (double*)atomic_masses->data;
+  const int* p2s = (int*)p2s_map->data;
+  const int* s2p = (int*)s2p_map->data;
+  const int* band_indicies = (int*)band_indicies_py->data;
 
-  get_interaction(amps,
+  get_interaction(fc3_normal_squared,
 		  freqs,
 		  eigvecs,
-		  phonon_done,
 		  triplets,
 		  grid_address,
 		  mesh,
-		  fc2,
 		  fc3,
-		  svecs_fc2,
-		  multi_fc2,
-		  svecs_fc3,
-		  multi_fc3,
-		  masses_fc2,
-		  masses_fc3,
-		  p2s_fc2,
-		  s2p_fc2,
-		  p2s_fc3,
-		  s2p_fc3,
-		  band_indicies,
-		  born,
-		  dielectric,
-		  rec_lat,
-		  q_dir,
-		  nac_factor,
-		  freq_unit_conversion_factor,
-		  uplo);
+		  svecs,
+		  multi,
+		  masses,
+		  p2s,
+		  s2p,
+		  band_indicies);
 
-  free(amps);
+  free(fc3_normal_squared);
   free(freqs);
   free(eigvecs);
   free(triplets);
   free(grid_address);
-  free(fc2);
   free(fc3);
-  free(svecs_fc2);
-  free(multi_fc2);
-  free(svecs_fc3);
-  free(multi_fc3);
-  free(band_indicies);
+  free(svecs);
+  free(multi);
   
   Py_RETURN_NONE;
 }

@@ -7,8 +7,7 @@
 #define M_2PI 6.283185307179586
 
 static void real_to_reciprocal_elements(lapack_complex_double *fc3_rec_elem,
-					const double q[6],
-					const double sum_q[3],
+					const double q[9],
 					const Darray *fc3,
 					const Darray *shortest_vectors,
 					const Iarray *multiplicity,
@@ -17,7 +16,7 @@ static void real_to_reciprocal_elements(lapack_complex_double *fc3_rec_elem,
 					const int pi0,
 					const int pi1,
 					const int pi2);
-static double get_phase(const double q[6],		       
+static double get_phase(const double q[9],		       
 			const Darray *shortest_vectors,
 			const Iarray *multiplicity,
 			const int pi0,
@@ -26,8 +25,7 @@ static double get_phase(const double q[6],
 
 /* fc3_reciprocal[num_patom, num_patom, num_patom, 3, 3, 3] */
 void real_to_reciprocal(lapack_complex_double *fc3_reciprocal,
-			const double q[6],
-			const double sum_q[3],
+			const double q[9],
 			const Darray *fc3,
 			const Darray *shortest_vectors,
 			const Iarray *multiplicity,
@@ -45,7 +43,6 @@ void real_to_reciprocal(lapack_complex_double *fc3_reciprocal,
 				    j * 27 * num_patom +
 				    k * 27,
 				    q,
-				    sum_q,
 				    fc3,
 				    shortest_vectors,
 				    multiplicity,
@@ -58,8 +55,7 @@ void real_to_reciprocal(lapack_complex_double *fc3_reciprocal,
 }		       
 
 static void real_to_reciprocal_elements(lapack_complex_double *fc3_rec_elem,
-					const double q[6],
-					const double sum_q[3],
+					const double q[9],
 					const Darray *fc3,
 					const Darray *shortest_vectors,
 					const Iarray *multiplicity,
@@ -81,7 +77,7 @@ static void real_to_reciprocal_elements(lapack_complex_double *fc3_rec_elem,
   for (j = 0; j < 3; j++) {
     pre_phase += shortest_vectors->data
       [p2s[i] * shortest_vectors->dims[1] *
-       shortest_vectors->dims[2] * 3 + j] * sum_q[j];
+       shortest_vectors->dims[2] * 3 + j] * (q[j] + q[3 + j] + q[6 + j]);
   }
   
   for (j = 0; j < num_satom; j++) {
@@ -110,7 +106,7 @@ static void real_to_reciprocal_elements(lapack_complex_double *fc3_rec_elem,
 }
 
 /* return phase factor without 2pi */
-static double get_phase(const double q[6],		       
+static double get_phase(const double q[9],
 			const Darray *shortest_vectors,
 			const Iarray *multiplicity,
 			const int pi0,
@@ -118,15 +114,15 @@ static double get_phase(const double q[6],
 			const int si2)
 {
   int i, j, k;
-  int addrs[2], multi[2];
+  int multi[2];
   double *svecs[2];
   double phase[2];
 
-  svecs[0] = shortest_vectors + (si1 * shortest_vectors->dims[1] *
-				 shortest_vectors->dims[2] * 3 +
-				 pi0 * shortest_vectors->dims[2] * 3);
-  svecs[1] = shortest_vectors + (si2 * shortest_vectors->dims[1] *
-				 shortest_vectors->dims[2] * 3 +
+  svecs[0] = shortest_vectors->data + (si1 * shortest_vectors->dims[1] *
+				       shortest_vectors->dims[2] * 3 +
+				       pi0 * shortest_vectors->dims[2] * 3);
+  svecs[1] = shortest_vectors->data + (si2 * shortest_vectors->dims[1] *
+				       shortest_vectors->dims[2] * 3 +
 				 pi0 * shortest_vectors->dims[2] * 3);
   multi[0] = multiplicity->data[si1 * multiplicity->dims[1]];
   multi[1] = multiplicity->data[si2 * multiplicity->dims[1]];
@@ -135,7 +131,8 @@ static double get_phase(const double q[6],
     phase[i] = 0;
     for (j = 0; j < multi[i]; j++) {
       for (k = 0; k < 3; k++) {
-	phase[i] += q[3 + k] * svecs[i][j * 3 + k];
+	/* q0 is not used. */
+	phase[i] += q[(i + 1) * 3 + k] * svecs[i][j * 3 + k];
       }
     }
     phase[i] /= multi[i];
