@@ -1,5 +1,5 @@
-#ifndef __array_H__
-#define __array_H__
+#ifndef __phonoc_array_H__
+#define __phonoc_array_H__
 
 #include <Python.h>
 #include <numpy/arrayobject.h>

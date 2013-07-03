@@ -9,7 +9,7 @@
 #include "real_to_reciprocal.h"
 #include "reciprocal_to_normal.h"
 
-static void real_to_normal(Darray *fc3_normal_squared,
+static void real_to_normal(double *fc3_normal_squared,
 			   const double *freqs0,
 			   const double *freqs1,
 			   const double *freqs2,		      
@@ -23,7 +23,9 @@ static void real_to_normal(Darray *fc3_normal_squared,
 			   const double *masses,
 			   const int *p2s_map,
 			   const int *s2p_map,
-			   const int *band_indices);
+			   const int *band_indices,
+			   const int num_band0,
+			   const int num_band);
 static int collect_undone_grid_points(int *undone,
 				      const Iarray *triplets,
 				      const char *phonon_done);
@@ -140,7 +142,7 @@ void get_interaction(Darray *fc3_normal_squared,
 		     const int *s2p_map,
 		     const int *band_indices)
 {
-  int i, j, k, num_band, zero_index, sum_gp_addrs;
+  int i, j, k, num_band, num_band0, zero_index, sum_gp_addrs;
   int *gp;
   int gp_addrs[9];
   double *freqs[3];
@@ -148,8 +150,10 @@ void get_interaction(Darray *fc3_normal_squared,
   double q[9];
 
   num_band = frequencies->dims[1];
-  
+  num_band0 = fc3_normal_squared->dims[1];
+
   for (i = 0; i < triplets->dims[0]; i++) {
+    printf("%d / %d\n", i + 1, triplets->dims[0]);
     gp = triplets->data + i * 3;
     for (j = 0; j < 3; j++) { /* row */
       freqs[j] = frequencies->data + gp[j] * num_band;
@@ -176,11 +180,12 @@ void get_interaction(Darray *fc3_normal_squared,
     }
     for (j = 0; j < 3; j++) { /* row */
       for (k = 0; k < 3; k++) { /* column */
-      	q[j * 3 + k] = ((double)gp_addrs[j* 3 + k]) / mesh[k];
+      	q[j * 3 + k] = ((double)gp_addrs[j * 3 + k]) / mesh[k];
       }
     }
-    
-    real_to_normal(fc3_normal_squared,
+
+    real_to_normal((fc3_normal_squared->data +
+		    i * num_band0 * num_band * num_band),
 		   freqs[0],
 		   freqs[1],
 		   freqs[2],
@@ -194,11 +199,13 @@ void get_interaction(Darray *fc3_normal_squared,
 		   masses,
 		   p2s_map,
 		   s2p_map,
-		   band_indices);
+		   band_indices,
+		   num_band0,
+		   num_band);
   }
 }
 
-static void real_to_normal(Darray *fc3_normal_squared,
+static void real_to_normal(double *fc3_normal_squared,
 			   const double *freqs0,
 			   const double *freqs1,
 			   const double *freqs2,		      
@@ -212,12 +219,15 @@ static void real_to_normal(Darray *fc3_normal_squared,
 			   const double *masses,
 			   const int *p2s_map,
 			   const int *s2p_map,
-			   const int *band_indices)
+			   const int *band_indices,
+			   const int num_band0,
+			   const int num_band)
+			   
 {
   int num_patom;
   lapack_complex_double *fc3_reciprocal;
 
-  num_patom = multiplicity->dims[1];
+  num_patom = num_band / 3;
   
   fc3_reciprocal =
     (lapack_complex_double*)malloc(sizeof(lapack_complex_double) *
@@ -240,7 +250,9 @@ static void real_to_normal(Darray *fc3_normal_squared,
 		       eigvecs1,
 		       eigvecs2,
 		       masses,
-		       band_indices);
+		       band_indices,
+		       num_band0,
+		       num_band);
 
   free(fc3_reciprocal);
 }
@@ -377,4 +389,3 @@ static int get_phonons(lapack_complex_double *a,
 
   return phonopy_zheev(w, a, num_patom * 3, uplo);
 }
-

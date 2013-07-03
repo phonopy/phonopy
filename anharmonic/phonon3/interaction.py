@@ -1,5 +1,5 @@
 import numpy as np
-from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC
+from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC, get_smallest_vectors
 from phonopy.structure.symmetry import Symmetry
 from phonopy.units import VaspToTHz
 from anharmonic.phonon3.real_to_reciprocal import RealToReciprocal
@@ -59,63 +59,6 @@ class Phonon3:
         else:
             self._run_py()
 
-    def _run_c(self):
-        import anharmonic._phono3py as phono3c
-        
-        svecs, multiplicity = self._dm.get_shortest_vectors()
-        masses = np.double(self._dm.get_primitive().get_masses())
-        rec_lattice = np.double(self._dm.get_primitive().get_cell().T.copy())
-        if self._dm.is_nac():
-            born = self._dm.get_born_effective_charges()
-            nac_factor = self._dm.get_nac_factor()
-            dielectric = self._dm.get_dielectric_constant()
-        else:
-            born = None
-            nac_factor = None
-            dielectric = None
-
-        phono3c.phonon_triplets(self._frequencies,
-                                self._eigenvectors,
-                                self._phonon_done,
-                                self._triplets_at_q,
-                                self._grid_address,
-                                self._mesh,
-                                self._dm.get_force_constants(),
-                                svecs,
-                                multiplicity,
-                                masses,
-                                self._dm.get_primitive_to_supercell_map(),
-                                self._dm.get_supercell_to_primitive_map(),
-                                self._frequency_conversion_factor,
-                                born,
-                                dielectric,
-                                rec_lattice,
-                                self._nac_q_direction,
-                                nac_factor,
-                                self._lapack_zheev_uplo)
-
-        
-    def _run_py(self):
-        r2r = RealToReciprocal(self._fc3,
-                               self._supercell_fc3,
-                               self._primitive_fc3,
-                               self._triplets_address,
-                               self._mesh,
-                               symprec=self._symprec)
-        
-        r2n = ReciprocalToNormal(self._primitive_fc3,
-                                 self._frequencies,
-                                 self._eigenvectors)
-
-        for i, grid_triplet in enumerate(self._triplets_at_q):
-            print "%d / %d" % (i + 1, len(self._triplets_at_q))
-            r2r.run(self._grid_address[grid_triplet])
-            fc3_reciprocal = r2r.get_fc3_reciprocal()
-            for gp in grid_triplet:
-                self._set_phonon(gp)
-            r2n.run(fc3_reciprocal, grid_triplet)
-            self._interaction_strength[i] = r2n.get_reciprocal_to_normal()
-
     def get_interaction_strength(self):
         return self._interaction_strength
 
@@ -172,7 +115,94 @@ class Phonon3:
         if q_direction is not None:
             self._nac_q_direction = np.double(q_direction)
 
-    def _set_phonon(self, grid_point):
+    def _run_c(self):
+        import anharmonic._phono3py as phono3c
+        
+        # for i, grid_triplet in enumerate(self._triplets_at_q):
+        #     for gp in grid_triplet:
+        #         self._set_phonon_py(gp)
+        self._set_phonon_c()
+
+        num_band = self._primitive_fc3.get_number_of_atoms() * 3
+        band_indices = np.intc(range(num_band))
+        svecs, multiplicity = get_smallest_vectors(self._supercell_fc3,
+                                                   self._primitive_fc3,
+                                                   self._symprec)
+        masses = np.double(self._primitive_fc3.get_masses())
+        p2s = np.intc(self._primitive_fc3.get_primitive_to_supercell_map())
+        s2p = np.intc(self._primitive_fc3.get_supercell_to_primitive_map())
+
+        phono3c.interaction(self._interaction_strength,
+                            self._frequencies,
+                            self._eigenvectors,
+                            self._triplets_at_q,
+                            self._grid_address,
+                            self._mesh,
+                            self._fc3,
+                            svecs,
+                            multiplicity,
+                            np.double(masses),
+                            p2s,
+                            s2p,
+                            band_indices)
+
+    def _set_phonon_c(self):
+        import anharmonic._phono3py as phono3c
+        
+        svecs, multiplicity = self._dm.get_shortest_vectors()
+        masses = np.double(self._dm.get_primitive().get_masses())
+        rec_lattice = np.double(self._dm.get_primitive().get_cell().T.copy())
+        if self._dm.is_nac():
+            born = self._dm.get_born_effective_charges()
+            nac_factor = self._dm.get_nac_factor()
+            dielectric = self._dm.get_dielectric_constant()
+        else:
+            born = None
+            nac_factor = None
+            dielectric = None
+
+        phono3c.phonon_triplets(self._frequencies,
+                                self._eigenvectors,
+                                self._phonon_done,
+                                self._triplets_at_q,
+                                self._grid_address,
+                                self._mesh,
+                                self._dm.get_force_constants(),
+                                svecs,
+                                multiplicity,
+                                masses,
+                                self._dm.get_primitive_to_supercell_map(),
+                                self._dm.get_supercell_to_primitive_map(),
+                                self._frequency_conversion_factor,
+                                born,
+                                dielectric,
+                                rec_lattice,
+                                self._nac_q_direction,
+                                nac_factor,
+                                self._lapack_zheev_uplo)
+        
+    def _run_py(self):
+        r2r = RealToReciprocal(self._fc3,
+                               self._supercell_fc3,
+                               self._primitive_fc3,
+                               self._triplets_address,
+                               self._mesh,
+                               symprec=self._symprec)
+        
+        r2n = ReciprocalToNormal(self._primitive_fc3,
+                                 self._frequencies,
+                                 self._eigenvectors)
+
+        for i, grid_triplet in enumerate(self._triplets_at_q):
+            print "%d / %d" % (i + 1, len(self._triplets_at_q))
+            r2r.run(self._grid_address[grid_triplet])
+            fc3_reciprocal = r2r.get_fc3_reciprocal()
+            for gp in grid_triplet:
+                self._set_phonon_py(gp)
+            r2n.run(fc3_reciprocal, grid_triplet)
+            self._interaction_strength[i] = r2n.get_reciprocal_to_normal()
+
+    def _set_phonon_py(self, grid_point):
         gp = grid_point
         if self._phonon_done[gp] == 0:
             self._phonon_done[gp] = 1

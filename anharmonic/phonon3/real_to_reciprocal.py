@@ -79,6 +79,6 @@ class RealToReciprocal:
             vs = self._smallest_vectors[si[i], p0,
                                         :self._multiplicity[si[i], p0]]
             phase *= (np.exp(2j * np.pi * np.dot(
-                        vs, self._triplet[i].astype('double') /
+                        vs, self._triplet[i + 1].astype('double') /
                         self._mesh)).sum() / self._multiplicity[si[i], p0])
         return phase

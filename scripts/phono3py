@@ -801,14 +801,12 @@ else:
                                   symprec=options.symprec,
                                   log_level=log_level,
                                   lapack_zheev_uplo=options.uplo)
-
                 phonon3.set_dynamical_matrix(fc2,
                                              supercell_dm,
                                              primitive_dm,
                                              nac_params=nac_params,
                                              frequency_scale_factor=freq_scale)
                 phonon3.set_q_direction(q_direction=nac_q_direction)
-
                 phonon3.set_triplets_at_q(grid_points[0])
                 phonon3.run()
 
@@ -827,16 +825,14 @@ else:
                 # w.create_dataset('phonon_done', data=ph_done)
                 # w.close()
 
-                from anharmonic.file_IO import write_amplitude_to_hdf5
-                write_amplitude_to_hdf5(interaction,
-                                        mesh,
-                                        grid_points[0],
-                                        triplet=triplets,
-                                        weight=weights,
-                                        frequency=freqs,
-                                        eigenvector=eigvecs)
-
-                sys.exit(0)
+                # from anharmonic.file_IO import write_amplitude_to_hdf5
+                # write_amplitude_to_hdf5(interaction,
+                #                         mesh,
+                #                         grid_points[0],
+                #                         triplet=triplets,
+                #                         weight=weights,
+                #                         frequency=freqs,
+                #                         eigenvector=eigvecs)
             else:
                 import h5py
                 suffix = "-m%d%d%d" % tuple(mesh)

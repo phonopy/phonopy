@@ -25,7 +25,8 @@ extension = Extension(
              'c/phonon3/interaction.c',
              'c/phonon3/real_to_reciprocal.c',
              'c/phonon3/reciprocal_to_normal.c',
-             'c/phonon3/phonoc_array.c'])
+             'c/phonon3/phonoc_array.c',
+             'c/phonon3/phonoc_math.c'])
 
 setup(name='phono3py',
       version='0.4.0',
