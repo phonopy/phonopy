@@ -825,14 +825,14 @@ else:
                 # w.create_dataset('phonon_done', data=ph_done)
                 # w.close()
 
-                # from anharmonic.file_IO import write_amplitude_to_hdf5
-                # write_amplitude_to_hdf5(interaction,
-                #                         mesh,
-                #                         grid_points[0],
-                #                         triplet=triplets,
-                #                         weight=weights,
-                #                         frequency=freqs,
-                #                         eigenvector=eigvecs)
+                from anharmonic.file_IO import write_amplitude_to_hdf5
+                write_amplitude_to_hdf5(interaction,
+                                        mesh,
+                                        grid_points[0],
+                                        triplet=triplets,
+                                        weight=weights,
+                                        frequency=freqs,
+                                        eigenvector=eigvecs)
             else:
                 import h5py
                 suffix = "-m%d%d%d" % tuple(mesh)

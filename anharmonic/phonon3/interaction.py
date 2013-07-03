@@ -118,10 +118,10 @@ class Phonon3:
     def _run_c(self):
         import anharmonic._phono3py as phono3c
         
-        for i, grid_triplet in enumerate(self._triplets_at_q):
-            for gp in grid_triplet:
-                self._set_phonon_py(gp)
-        # self._set_phonon_c()
+        # for i, grid_triplet in enumerate(self._triplets_at_q):
+        #     for gp in grid_triplet:
+        #         self._set_phonon_py(gp)
+        self._set_phonon_c()
 
         num_band = self._primitive_fc3.get_number_of_atoms() * 3
         band_indices = np.intc(range(num_band))
@@ -151,14 +151,15 @@ class Phonon3:
         
         svecs, multiplicity = self._dm.get_shortest_vectors()
         masses = np.double(self._dm.get_primitive().get_masses())
-        rec_lattice = np.double(self._dm.get_primitive().get_cell().T.copy())
+        rec_lattice = np.double(
+            np.linalg.inv(self._dm.get_primitive().get_cell())).copy()
         if self._dm.is_nac():
             born = self._dm.get_born_effective_charges()
             nac_factor = self._dm.get_nac_factor()
             dielectric = self._dm.get_dielectric_constant()
         else:
             born = None
-            nac_factor = None
+            nac_factor = 0
             dielectric = None
 
         phono3c.phonon_triplets(self._frequencies,
