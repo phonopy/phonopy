@@ -262,7 +262,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         else:
             self._unit_conversion = factor
             self._damping_factor = DAMPING_FACTOR
-        self._dielectric = np.array(self._nac_params['dielectric'], dtype='double')
+        self._dielectric = np.double(self._nac_params['dielectric'])
 
     def set_dynamical_matrix(self, q_red, q_direction=None, verbose=False):
         num_atom = self._pcell.get_number_of_atoms()

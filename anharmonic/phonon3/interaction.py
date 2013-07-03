@@ -118,10 +118,10 @@ class Phonon3:
     def _run_c(self):
         import anharmonic._phono3py as phono3c
         
-        # for i, grid_triplet in enumerate(self._triplets_at_q):
-        #     for gp in grid_triplet:
-        #         self._set_phonon_py(gp)
-        self._set_phonon_c()
+        for i, grid_triplet in enumerate(self._triplets_at_q):
+            for gp in grid_triplet:
+                self._set_phonon_py(gp)
+        # self._set_phonon_c()
 
         num_band = self._primitive_fc3.get_number_of_atoms() * 3
         band_indices = np.intc(range(num_band))
@@ -209,7 +209,7 @@ class Phonon3:
             q = self._grid_address[gp].astype('double') / self._mesh
             self._dm.set_dynamical_matrix(q)
             dm = self._dm.get_dynamical_matrix()
-            eigvals, eigvecs = np.linalg.eigh(dm)
+            eigvals, eigvecs = np.linalg.eigh(dm, UPLO=self._lapack_zheev_uplo)
             eigvals = eigvals.real
             self._frequencies[gp] = (np.sqrt(np.abs(eigvals)) * np.sign(eigvals)
                                      * self._frequency_conversion_factor)

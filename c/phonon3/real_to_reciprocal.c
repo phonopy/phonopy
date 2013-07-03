@@ -10,7 +10,6 @@
 static void real_to_reciprocal_elements(lapack_complex_double *fc3_rec_elem,
 					const double q[9],
 					const Darray *fc3,
-					const double pre_phase,
 					const Darray *shortest_vectors,
 					const Iarray *multiplicity,
 					const int *p2s,
@@ -36,17 +35,11 @@ void real_to_reciprocal(lapack_complex_double *fc3_reciprocal,
 {
   int i, j, k, num_patom;
   double pre_phase;
+  lapack_complex_double pre_phase_factor;
+  
   num_patom = multiplicity->dims[1];
 
   for (i = 0; i < num_patom; i++) {
-
-    pre_phase = 0;
-    for (j = 0; j < 3; j++) {
-      pre_phase += shortest_vectors->data
-	[i * shortest_vectors->dims[1] *
-	 shortest_vectors->dims[2] * 3 + j] * (q[j] + q[3 + j] + q[6 + j]);
-    }
-
     for (j = 0; j < num_patom; j++) {
       for (k = 0; k < num_patom; k++) {
 	real_to_reciprocal_elements(fc3_reciprocal +
@@ -55,13 +48,27 @@ void real_to_reciprocal(lapack_complex_double *fc3_reciprocal,
 				    k * 27,
 				    q,
 				    fc3,
-				    pre_phase,
 				    shortest_vectors,
 				    multiplicity,
 				    p2s_map,
 				    s2p_map,
 				    i, j, k);
+	
       }
+    }
+
+    pre_phase = 0;
+    for (j = 0; j < 3; j++) {
+      pre_phase += shortest_vectors->data
+    	[p2s_map[i] * shortest_vectors->dims[1] *
+    	 shortest_vectors->dims[2] * 3 + j] * (q[j] + q[3 + j] + q[6 + j]);
+    }
+    pre_phase_factor = lapack_make_complex_double(cos(M_2PI * pre_phase),
+    						  sin(M_2PI * pre_phase));
+    for (j = 0; j < num_patom * num_patom * 27; j++) {
+      fc3_reciprocal[i * num_patom * num_patom * 27 + j] =
+    	phonoc_complex_prod(fc3_reciprocal[i * num_patom * num_patom * 27 + j],
+    			    pre_phase_factor);
     }
   }
 }		       
@@ -69,7 +76,6 @@ void real_to_reciprocal(lapack_complex_double *fc3_reciprocal,
 static void real_to_reciprocal_elements(lapack_complex_double *fc3_rec_elem,
 					const double q[9],
 					const Darray *fc3,
-					const double pre_phase,
 					const Darray *shortest_vectors,
 					const Iarray *multiplicity,
 					const int *p2s,
@@ -79,7 +85,7 @@ static void real_to_reciprocal_elements(lapack_complex_double *fc3_rec_elem,
 					const int pi2)
 {
   int i, j, k, l, num_satom;
-  lapack_complex_double pre_phase_factor, phase_factor;
+  lapack_complex_double phase_factor;
   double fc3_rec_real[27], fc3_rec_imag[27];
   double *fc3_elem;
 
@@ -113,18 +119,11 @@ static void real_to_reciprocal_elements(lapack_complex_double *fc3_rec_elem,
       }
     }
   }
-  
-
-  pre_phase_factor = lapack_make_complex_double(cos(M_2PI * pre_phase),
-						sin(M_2PI * pre_phase));
 
   for (i = 0; i < 27; i++) {
     fc3_rec_elem[i] =
-      phonoc_complex_prod(lapack_make_complex_double(fc3_rec_real[i],
-						     fc3_rec_imag[i]),
-			  pre_phase_factor);
+      lapack_make_complex_double(fc3_rec_real[i], fc3_rec_imag[i]);
   }
-
 }
 
 static lapack_complex_double get_phase_factor(const double q[9],
@@ -147,8 +146,8 @@ static lapack_complex_double get_phase_factor(const double q[9],
   svecs[1] = shortest_vectors->data + (si2 * shortest_vectors->dims[1] *
 				       shortest_vectors->dims[2] * 3 +
 				       pi0 * shortest_vectors->dims[2] * 3);
-  multi[0] = multiplicity->data[si1 * multiplicity->dims[1]];
-  multi[1] = multiplicity->data[si2 * multiplicity->dims[1]];
+  multi[0] = multiplicity->data[si1 * multiplicity->dims[1] + pi0];
+  multi[1] = multiplicity->data[si2 * multiplicity->dims[1] + pi0];
 
   for (i = 0; i < 2; i++) {
     sum_real = 0;

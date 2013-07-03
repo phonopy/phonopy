@@ -77,7 +77,7 @@ void set_phonon_triplets(Darray *frequencies,
   undone = (int*)malloc(sizeof(int) * num_grid_points);
   num_undone = collect_undone_grid_points(undone, triplets, phonon_done);
 
-#pragma omp parallel for private(j, q, gp, f)
+/* #pragma omp parallel for private(j, q, gp, f) */
   for (i = 0; i < num_undone; i++) {
     gp = undone[i];
     for (j = 0; j < 3; j++) {
@@ -152,6 +152,7 @@ void get_interaction(Darray *fc3_normal_squared,
   num_band = frequencies->dims[1];
   num_band0 = fc3_normal_squared->dims[1];
 
+/* #pragma omp parallel for private(j, q, gp, f) */
   for (i = 0; i < triplets->dims[0]; i++) {
     printf("%d / %d\n", i + 1, triplets->dims[0]);
     gp = triplets->data + i * 3;
