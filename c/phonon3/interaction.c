@@ -44,6 +44,10 @@ static int get_phonons(lapack_complex_double *a,
 		       const double *q_direction,
 		       const double nac_factor,
 		       const char uplo);
+static void get_qpoint(double q[9],
+		       const int *gp_triplet,
+		       const int *grid_address,
+		       const int mesh[3]);
 
 void set_phonon_triplets(Darray *frequencies,
 			 Carray *eigenvectors,
@@ -142,9 +146,8 @@ void get_interaction(Darray *fc3_normal_squared,
 		     const int *s2p_map,
 		     const int *band_indices)
 {
-  int i, j, k, num_band, num_band0, zero_index, sum_gp_addrs;
+  int i, j, num_band, num_band0;
   int *gp;
-  int gp_addrs[9];
   double *freqs[3];
   lapack_complex_double *eigvecs[3];
   double q[9];
@@ -152,37 +155,16 @@ void get_interaction(Darray *fc3_normal_squared,
   num_band = frequencies->dims[1];
   num_band0 = fc3_normal_squared->dims[1];
 
-/* #pragma omp parallel for private(j, q, gp, f) */
+#pragma omp parallel for private(j, q, gp, freqs, eigvecs)
   for (i = 0; i < triplets->dims[0]; i++) {
     printf("%d / %d\n", i + 1, triplets->dims[0]);
+
     gp = triplets->data + i * 3;
-    for (j = 0; j < 3; j++) { /* row */
+    get_qpoint(q, gp, grid_address->data, mesh);
+
+    for (j = 0; j < 3; j++) {
       freqs[j] = frequencies->data + gp[j] * num_band;
       eigvecs[j] = eigenvectors->data + gp[j] * num_band * num_band;
-      for (k = 0; k < 3; k++) { /* column */
-	gp_addrs[j * 3 + k] = grid_address->data[gp[j] * 3 + k];
-      }
-    }
-
-    /* Two q-points are on boundary. */
-    /* One is moved to the other side of boundary. */
-    for (j = 0; j < 3; j++) { /* column */
-      sum_gp_addrs = 0;
-      zero_index = -1;
-      for (k = 0; k < 3; k++) { /* row */
-	if (gp_addrs[k * 3 + j] == 0) {
-	  zero_index = k;
-	}
-	sum_gp_addrs += gp_addrs[k * 3 + j];
-      }
-      if (zero_index > -1 && sum_gp_addrs == mesh[j]) {
-	gp_addrs[((zero_index + 2) % 3) * 3 + j] *= -1;
-      }
-    }
-    for (j = 0; j < 3; j++) { /* row */
-      for (k = 0; k < 3; k++) { /* column */
-      	q[j * 3 + k] = ((double)gp_addrs[j * 3 + k]) / mesh[k];
-      }
     }
 
     real_to_normal((fc3_normal_squared->data +
@@ -389,4 +371,41 @@ static int get_phonons(lapack_complex_double *a,
   free(dm_imag);
 
   return phonopy_zheev(w, a, num_patom * 3, uplo);
+}
+
+static void get_qpoint(double q[9],
+		       const int *gp_triplet,
+		       const int *grid_address,
+		       const int mesh[3])
+{
+  int i, j, gp, zero_index, sum_gp_addrs;
+  int gp_addrs[9];
+
+  for (i = 0; i < 3; i++) { /* row */
+    gp = gp_triplet[i];
+    for (j = 0; j < 3; j++) { /* column */
+      gp_addrs[i * 3 + j] = grid_address[gp * 3 + j];
+    }
+  }
+
+  /* Two q-points are on boundary. */
+  /* One is moved to the other side of boundary. */
+  for (i = 0; i < 3; i++) { /* column */
+    sum_gp_addrs = 0;
+    zero_index = -1;
+    for (j = 0; j < 3; j++) { /* row */
+      if (gp_addrs[j * 3 + i] == 0) {
+	zero_index = j;
+      }
+      sum_gp_addrs += gp_addrs[j * 3 + i];
+    }
+    if (zero_index > -1 && sum_gp_addrs == mesh[i]) {
+      gp_addrs[((zero_index + 2) % 3) * 3 + i] *= -1;
+    }
+  }
+  for (i = 0; i < 3; i++) { /* row */
+    for (j = 0; j < 3; j++) { /* column */
+      q[i * 3 + j] = ((double)gp_addrs[i * 3 + j]) / mesh[j];
+    }
+  }
 }
