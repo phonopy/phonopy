@@ -42,9 +42,14 @@ class Phonon3:
         self._dm = None
         self._nac_q_direction = None
 
-    def run(self, lang='C'):
-        num_grid = np.prod(self._mesh)
+    def run(self, band_indices=None, lang='C'):
         num_band = self._primitive_fc3.get_number_of_atoms() * 3
+
+        if band_indices is None:
+            band_indices = np.arange(len(num_band), dtype='intc')
+        else:
+            band_indices = np.intc(band_indices)
+        num_grid = np.prod(self._mesh)
         num_triplets = len(self._triplets_at_q)
         self._phonon_done = np.zeros(num_grid, dtype='byte')
         self._frequencies = np.zeros((num_grid, num_band), dtype='double')
@@ -52,7 +57,8 @@ class Phonon3:
                                       dtype='complex128')
 
         self._interaction_strength = np.zeros(
-            (num_triplets, num_band, num_band, num_band), dtype='double')
+            (num_triplets, len(band_indices), num_band, num_band),
+            dtype='double')
 
         if lang == 'C':
             self._run_c()

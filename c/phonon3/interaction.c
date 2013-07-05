@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 #include <lapacke.h>
 #include "dynmat.h"
 #include "phonoc_array.h"
@@ -132,6 +131,7 @@ void set_phonon_triplets(Darray *frequencies,
   free(undone);
 }
 
+/* fc3_normal_squared[num_triplets, num_band0, num_band, num_band] */
 void get_interaction(Darray *fc3_normal_squared,
 		     const Darray *frequencies,
 		     const Carray *eigenvectors,

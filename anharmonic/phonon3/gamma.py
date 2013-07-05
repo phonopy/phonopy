@@ -12,13 +12,11 @@ class Gamma:
     def __init__(self,
                  interaction_strength,
                  frequencies,
-                 eigenvectors,
                  triplets,
                  triplet_weights,
                  sigma=0.1):
         self._interaction_strength = interaction_strength
         self._frequencies = frequencies
-        self._eigenvectors = eigenvectors
         self._triplets = triplets
         self._triplet_weights = triplet_weights
         self._sigma = sigma
@@ -35,14 +33,15 @@ class Gamma:
                                  / (2 * np.pi * THz) ** 3
                                  / AMU ** 3
                                  * 18 * np.pi / (Hbar * EV) ** 2
-                                 / (2 * np.pi * THz) ** 2)
+                                 / (2 * np.pi * THz) ** 2
+                                 / len(self._frequencies))
 
     def run(self):
         num_band = len(self._band_indices)
         num_fpoints = len(self._fpoints)
         self._gamma = np.zeros((num_band, num_fpoints), dtype='double')
         self._run_gamma()
-        self._gamma *= self._unit_conversion / len(self._frequencies)
+        self._gamma *= self._unit_conversion
 
     def get_gamma(self):
         return self._gamma

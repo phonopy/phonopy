@@ -847,7 +847,6 @@ else:
             
             gamma = Gamma(interaction,
                           freqs,
-                          eigvecs,
                           triplets,
                           weights,
                           sigma=0.1)
