@@ -46,7 +46,7 @@ class Phonon3:
         num_band = self._primitive_fc3.get_number_of_atoms() * 3
 
         if band_indices is None:
-            band_indices = np.arange(len(num_band), dtype='intc')
+            band_indices = np.arange(num_band, dtype='intc')
         else:
             band_indices = np.intc(band_indices)
         num_grid = np.prod(self._mesh)

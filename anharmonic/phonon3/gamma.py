@@ -10,14 +10,14 @@ def occupation(x, t):
 
 class Gamma:
     def __init__(self,
-                 interaction_strength,
+                 fc3_normal_squared,
                  frequencies,
-                 triplets,
+                 grid_point_triplets,
                  triplet_weights,
                  sigma=0.1):
-        self._interaction_strength = interaction_strength
+        self._fc3_normal_squared = fc3_normal_squared
         self._frequencies = frequencies
-        self._triplets = triplets
+        self._grid_point_triplets = grid_point_triplets
         self._triplet_weights = triplet_weights
         self._sigma = sigma
 
@@ -36,12 +36,15 @@ class Gamma:
                                  / (2 * np.pi * THz) ** 2
                                  / len(self._frequencies))
 
-    def run(self):
-        num_band = len(self._band_indices)
+    def run(self, lang='C'):
+        num_band0 = len(self._band_indices)
         num_fpoints = len(self._fpoints)
-        self._gamma = np.zeros((num_band, num_fpoints), dtype='double')
-        self._run_gamma()
-        self._gamma *= self._unit_conversion
+        self._gamma = np.zeros((num_fpoints, num_band0), dtype='double')
+
+        if lang == 'C':
+            self._run_c()
+        else:
+            self._run_py()
 
     def get_gamma(self):
         return self._gamma
@@ -63,14 +66,29 @@ class Gamma:
         """
         self._band_indices = np.intc(band_indices)
 
+    def _run_c(self):
+        import anharmonic._phono3py as phono3c
+        phono3c.imag_self_energy(self._gamma,
+                                 self._fc3_normal_squared,
+                                 self._grid_point_triplets,
+                                 self._triplet_weights,
+                                 self._frequencies,
+                                 self._fpoints,
+                                 self._temperature,
+                                 self._sigma,
+                                 self._unit_conversion)
+
+    def _run_py(self):
+        self._run_gamma()
+        self._gamma *= self._unit_conversion
+
     def _run_gamma(self):
         for i, (triplet, w, interaction) in enumerate(
-            zip(self._triplets,
+            zip(self._grid_point_triplets,
                 self._triplet_weights,
-                self._interaction_strength)):
-            print "%d / %d" % (i + 1, len(self._triplets))
+                self._fc3_normal_squared)):
+            print "%d / %d" % (i + 1, len(self._grid_point_triplets))
 
-            interaction_band = interaction[self._band_indices]
             # freqs[2, num_band]
             freqs = self._frequencies[triplet[1:]]
             if self._temperature > 0:
@@ -89,7 +107,7 @@ class Gamma:
                               self._sigma)
                 g3 = gaussian(self._fpoints - freqs[0][j] + freqs[1][k],
                               self._sigma)
-                self._gamma[i] += (
+                self._gamma[:, i] += (
                     (n2 + n3 + 1) * g1 +
                     (n2 - n3) * (g2 - g3)) * interaction[i, j, k] * weight
 
@@ -97,5 +115,5 @@ class Gamma:
         for (i, j, k) in list(np.ndindex(interaction.shape)):
             g1 = gaussian(self._fpoints - freqs[0][j] - freqs[1][k],
                           self._sigma)
-            self._gamma[i] += g1 * interaction[i, j, k] * weight
+            self._gamma[:, i] += g1 * interaction[i, j, k] * weight
         

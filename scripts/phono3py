@@ -854,10 +854,10 @@ else:
             fpoints = np.linspace(0, 35, 600)
             gamma.set_frequency_points(fpoints)
             gamma.set_grid_point(grid_points[0])
-            gamma.run()
+            gamma.run(lang='C')
             
             w = open("plot.dat", 'w')
-            for f, g in zip(fpoints, gamma.get_gamma().T):
+            for f, g in zip(fpoints, gamma.get_gamma()):
                 w.write("%f " % f)
                 for v in g:
                     w.write("%f " % v)

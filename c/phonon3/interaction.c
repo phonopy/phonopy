@@ -80,7 +80,7 @@ void set_phonon_triplets(Darray *frequencies,
   undone = (int*)malloc(sizeof(int) * num_grid_points);
   num_undone = collect_undone_grid_points(undone, triplets, phonon_done);
 
-/* #pragma omp parallel for private(j, q, gp, f) */
+#pragma omp parallel for private(j, q, gp, f)
   for (i = 0; i < num_undone; i++) {
     gp = undone[i];
     for (j = 0; j < 3; j++) {
@@ -147,7 +147,7 @@ void get_interaction(Darray *fc3_normal_squared,
 		     const int *band_indices)
 {
   int i, j, num_band, num_band0;
-  int *gp;
+  int gp_triplet[3];
   double *freqs[3];
   lapack_complex_double *eigvecs[3];
   double q[9];
@@ -155,16 +155,18 @@ void get_interaction(Darray *fc3_normal_squared,
   num_band = frequencies->dims[1];
   num_band0 = fc3_normal_squared->dims[1];
 
-#pragma omp parallel for private(j, q, gp, freqs, eigvecs)
+#pragma omp parallel for private(j, q, gp_triplet, freqs, eigvecs)
   for (i = 0; i < triplets->dims[0]; i++) {
     printf("%d / %d\n", i + 1, triplets->dims[0]);
 
-    gp = triplets->data + i * 3;
-    get_qpoint(q, gp, grid_address->data, mesh);
+    for (j = 0; j < 3; j++) {
+      gp_triplet[j] = triplets->data[i * 3 + j];
+    }
+    get_qpoint(q, gp_triplet, grid_address->data, mesh);
 
     for (j = 0; j < 3; j++) {
-      freqs[j] = frequencies->data + gp[j] * num_band;
-      eigvecs[j] = eigenvectors->data + gp[j] * num_band * num_band;
+      freqs[j] = frequencies->data + gp_triplet[j] * num_band;
+      eigvecs[j] = eigenvectors->data + gp_triplet[j] * num_band * num_band;
     }
 
     real_to_normal((fc3_normal_squared->data +

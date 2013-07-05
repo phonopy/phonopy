@@ -5,8 +5,6 @@
 #include "phonoc_array.h"
 #include "phonoc_math.h"
 
-#define M_2PI 6.283185307179586
-
 static void real_to_reciprocal_elements(lapack_complex_double *fc3_rec_elem,
 					const double q[9],
 					const Darray *fc3,

@@ -11,6 +11,7 @@
 #include "alloc_array.h"
 #include "interaction.h"
 #include "phonoc_array.h"
+#include "imag_self_energy.h"
 
 static PyObject * py_get_interaction_strength(PyObject *self, PyObject *args);
 static PyObject * py_get_triplet_interaction_strength(PyObject *self,
@@ -24,6 +25,7 @@ static PyObject * py_get_jointDOS(PyObject *self, PyObject *args);
 
 
 static PyObject * py_get_interaction(PyObject *self, PyObject *args);
+static PyObject * py_get_imag_self_energy(PyObject *self, PyObject *args);
 static PyObject * py_set_phonon_triplets(PyObject *self, PyObject *args);
 static PyObject * py_distribute_fc3(PyObject *self, PyObject *args);
 static PyObject * py_phonopy_zheev(PyObject *self, PyObject *args);
@@ -69,6 +71,7 @@ static PyMethodDef functions[] = {
   {"joint_dos", py_get_jointDOS, METH_VARARGS, "Calculate joint density of states"},
   {"decay_channel", py_get_decay_channel, METH_VARARGS, "Calculate decay of phonons"},
   {"interaction", py_get_interaction, METH_VARARGS, "Interaction of triplets"},
+  {"imag_self_energy", py_get_imag_self_energy, METH_VARARGS, "Imaginary part of self energy"},
   {"phonon_triplets", py_set_phonon_triplets, METH_VARARGS, "Set phonon triplets"},
   {"distribute_fc3", py_distribute_fc3, METH_VARARGS, "Distribute least fc3 to full fc3"},
   {"zheev", py_phonopy_zheev, METH_VARARGS, "Lapack zheev wrapper"},
@@ -86,7 +89,7 @@ static PyObject * py_set_phonon_triplets(PyObject *self, PyObject *args)
   PyArrayObject* frequencies;
   PyArrayObject* eigenvectors;
   PyArrayObject* phonon_done_py;
-  PyArrayObject* gridpoint_triplets;
+  PyArrayObject* grid_point_triplets;
   PyArrayObject* grid_address_py;
   PyArrayObject* mesh_py;
   PyArrayObject* shortest_vectors_fc2;
@@ -106,7 +109,7 @@ static PyObject * py_set_phonon_triplets(PyObject *self, PyObject *args)
 			&frequencies,
 			&eigenvectors,
 			&phonon_done_py,
-			&gridpoint_triplets,
+			&grid_point_triplets,
 			&grid_address_py,
 			&mesh_py,
 			&fc2_py,
@@ -133,7 +136,7 @@ static PyObject * py_set_phonon_triplets(PyObject *self, PyObject *args)
   /* So eigenvectors should not be used in Python side */
   Carray* eigvecs = convert_to_carray(eigenvectors);
   char* phonon_done = (char*)phonon_done_py->data;
-  Iarray* triplets = convert_to_iarray(gridpoint_triplets);
+  Iarray* triplets = convert_to_iarray(grid_point_triplets);
   Iarray* grid_address = convert_to_iarray(grid_address_py);
   const int* mesh = (int*)mesh_py->data;
   Darray* fc2 = convert_to_darray(fc2_py);
@@ -196,7 +199,7 @@ static PyObject * py_get_interaction(PyObject *self, PyObject *args)
   PyArrayObject* fc3_normal_squared_py;
   PyArrayObject* frequencies;
   PyArrayObject* eigenvectors;
-  PyArrayObject* gridpoint_triplets;
+  PyArrayObject* grid_point_triplets;
   PyArrayObject* grid_address_py;
   PyArrayObject* mesh_py;
   PyArrayObject* shortest_vectors;
@@ -211,7 +214,7 @@ static PyObject * py_get_interaction(PyObject *self, PyObject *args)
 			&fc3_normal_squared_py,
 			&frequencies,
 			&eigenvectors,
-			&gridpoint_triplets,
+			&grid_point_triplets,
 			&grid_address_py,
 			&mesh_py,
 			&fc3_py,
@@ -230,7 +233,7 @@ static PyObject * py_get_interaction(PyObject *self, PyObject *args)
   /* npy_cdouble and lapack_complex_double may not be compatible. */
   /* So eigenvectors should not be used in Python side */
   Carray* eigvecs = convert_to_carray(eigenvectors);
-  Iarray* triplets = convert_to_iarray(gridpoint_triplets);
+  Iarray* triplets = convert_to_iarray(grid_point_triplets);
   Iarray* grid_address = convert_to_iarray(grid_address_py);
   const int* mesh = (int*)mesh_py->data;
   Darray* fc3 = convert_to_darray(fc3_py);
@@ -263,6 +266,53 @@ static PyObject * py_get_interaction(PyObject *self, PyObject *args)
   free(fc3);
   free(svecs);
   free(multi);
+  
+  Py_RETURN_NONE;
+}
+
+static PyObject * py_get_imag_self_energy(PyObject *self, PyObject *args)
+{
+  PyArrayObject* gamma_py;
+  PyArrayObject* fc3_normal_squared_py;
+  PyArrayObject* frequencies_py;
+  PyArrayObject* grid_point_triplets_py;
+  PyArrayObject* triplet_weights_py;
+  PyArrayObject* fpoints_py;
+  double sigma, unit_conversion_factor, temperature;
+
+  if (!PyArg_ParseTuple(args, "OOOOOOddd",
+			&gamma_py,
+			&fc3_normal_squared_py,
+			&grid_point_triplets_py,
+			&triplet_weights_py,
+			&frequencies_py,
+			&fpoints_py,
+			&temperature,
+			&sigma,
+			&unit_conversion_factor)) {
+    return NULL;
+  }
+
+
+  Darray* fc3_normal_squared = convert_to_darray(fc3_normal_squared_py);
+  Darray* fpoints = convert_to_darray(fpoints_py);
+  double* gamma = (double*)gamma_py->data;
+  const double* frequencies = (double*)frequencies_py->data;
+  const int* grid_point_triplets = (int*)grid_point_triplets_py->data;
+  const int* triplet_weights = (int*)triplet_weights_py->data;
+
+  get_imag_self_energy(gamma,
+		       fc3_normal_squared,
+		       fpoints,
+		       frequencies,
+		       grid_point_triplets,
+		       triplet_weights,
+		       sigma,
+		       temperature,
+		       unit_conversion_factor);
+
+  free(fc3_normal_squared);
+  free(fpoints);
   
   Py_RETURN_NONE;
 }
