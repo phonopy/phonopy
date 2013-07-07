@@ -372,7 +372,7 @@ if options.force_constants_mode:
 ###################################################
 if options.force_sets_mode or options.force_sets_zero_mode:
 
-    if file_exists('disp.ayml', log_level):
+    if file_exists('disp.yaml', log_level):
         if interface_mode == 'vasp':
             displacements, natom = file_IO.parse_disp_yaml('disp.yaml')
         if interface_mode == 'wien2k':

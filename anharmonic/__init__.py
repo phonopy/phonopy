@@ -1,14 +1,11 @@
-import sys
-import phonopy.structure.spglib as spg
 import numpy as np
-from anharmonic.q2v import PhononPhonon
-from anharmonic.im_self_energy import ImSelfEnergy
-from anharmonic.linewidth import Linewidth
+from anharmonic.phonon3.imag_self_energy import ImagSelfEnergy
+from anharmonic.phonon3.interaction import Interaction
 from anharmonic.BTE_RTA import BTE_RTA
 from anharmonic.jointDOS import get_jointDOS
 from anharmonic.gruneisen import Gruneisen
 import anharmonic.triplets as triplets
-from anharmonic.file_IO import write_kappa_to_hdf5, read_gamma_from_hdf5
+from anharmonic.file_IO import write_kappa_to_hdf5, read_gamma_from_hdf5, write_damping_functions
 
 class JointDOS:
     def __init__(self,
@@ -58,17 +55,14 @@ class JointDOS:
 
 class Phono3py:
     def __init__(self,
-                 supercell=None,
-                 primitive=None,
-                 mesh=None,
-                 fc3=None,
-                 factor=None,
-                 frequency_factor=None,
+                 supercell,
+                 primitive,
+                 mesh,
+                 fc3,
+                 band_indices=None,
+                 frequency_factor_to_THz=None,
                  is_nosym=False,
-                 symmetrize_fc3_q=False,
-                 read_triplets=False,
-                 r2q_TI_index=None,
-                 is_Peierls=False,
+                 symmetrize_fc3=False,
                  symprec=1e-5,
                  log_level=0,
                  lapack_zheev_uplo='L'):
@@ -77,32 +71,31 @@ class Phono3py:
         self._primitive = primitive
         self._mesh = mesh
         self._fc3 = fc3
-        self._factor = factor
-        self._frequency_factor = frequency_factor
+        if band_indices is None:
+            self._band_indices = np.arange(
+                primitive.get_number_of_atoms() * 3, dtype='intc')
+        else:
+            self._band_indices = np.intc(band_indices)
+        self._frequency_factor_to_THz = frequency_factor_to_THz
         self._is_nosym = is_nosym
-        self._symmetrize_fc3_q = symmetrize_fc3_q
+        self._symmetrize_fc3 = symmetrize_fc3
         self._symprec = symprec
         self._log_level = log_level
-        self._read_triplets = read_triplets
-        self._r2q_TI_index = r2q_TI_index
-        self._is_Peierls = is_Peierls
         self._kappa = None
         self._gamma = None
 
-        self._pp = PhononPhonon(fc3,
-                                supercell,
-                                primitive,
-                                mesh,
-                                factor=self._factor,
-                                frequency_factor=self._frequency_factor,
-                                symprec=self._symprec,
-                                read_triplets=self._read_triplets,
-                                r2q_TI_index=self._r2q_TI_index,
-                                symmetrize_fc3_q=self._symmetrize_fc3_q,
-                                is_Peierls=self._is_Peierls,
-                                is_nosym=self._is_nosym,
-                                log_level=self._log_level,
-                                lapack_zheev_uplo=lapack_zheev_uplo)
+        self._interaction = Interaction(
+            fc3,
+            supercell,
+            primitive,
+            mesh,
+            band_indices=self._band_indices,
+            frequency_factor_to_THz=self._frequency_factor_to_THz,
+            symprec=self._symprec,
+            symmetrize_fc3=self._symmetrize_fc3,
+            is_nosym=self._is_nosym,
+            log_level=self._log_level,
+            lapack_zheev_uplo=lapack_zheev_uplo)
         
     def set_dynamical_matrix(self,
                              fc2,
@@ -111,49 +104,57 @@ class Phono3py:
                              nac_params=None,
                              nac_q_direction=None,
                              frequency_scale_factor=None):
-        self._pp.set_dynamical_matrix(
+        self._interaction.set_dynamical_matrix(
             fc2,
             supercell,
             primitive,
             nac_params=nac_params,
-            nac_q_direction=nac_q_direction,
             frequency_scale_factor=frequency_scale_factor)
+        self._interaction.set_nac_q_direction(nac_q_direction=nac_q_direction)
                            
-    def get_damping_function(self,
+    def get_imag_self_energy(self,
                              grid_points,
-                             sets_of_band_indices,
+                             frequency_step=1.0,
                              sigmas=[0.1],
-                             frequency_step=None,
-                             temperatures=[None],
-                             filename=None,
-                             gamma_option=0):
-        self._im_self_energy = ImSelfEnergy(self._pp,
-                                            sigmas=sigmas,
-                                            frequency_step=frequency_step,
-                                            temperatures=temperatures,
-                                            gamma_option=gamma_option,
-                                            filename=filename,
-                                            log_level=self._log_level)
-
-        if grid_points is None:
-            print "Grid points are not specified."
-            return False
-
+                             temperatures=[0.0],
+                             filename=None):
         for gp in grid_points:
-            self._pp.set_triplets_at_q(gp)
+            self._interaction.set_triplets_at_q(grid_points)
+            for sigma in sigmas:
+                for t in temperatures:
+                    imag_self_energy = ImagSelfEnergy(
+                        self._interaction,
+                        temperature=t,
+                        sigma=sigma)
+                    imag_self_energy.run_interaction()
+                    max_freq = (np.amax(self._interaction.get_phonons()[0]) * 2
+                                + sigma * 4)
+                    fpoints = np.linspace(0, max_freq,
+                                          int(max_freq / frequency_step))
+                    imag_self_energy.set_fpoints(fpoints)
+                    imag_self_energy.run()
+                    gamma = imag_self_energy.get_imag_self_energy()
+                    fpoints = imag_self_energy.get_fpoints()
 
-            if sets_of_band_indices is None:
-                if gp==0:
-                    self._pp.set_interaction_strength(
-                        range(3, self._primitive.get_number_of_atoms() * 3))
-                else:
-                    self._pp.set_interaction_strength(
-                        range(self._primitive.get_number_of_atoms() * 3))
-
-            else:
-                for band_indices in sets_of_band_indices:
-                    self._pp.set_interaction_strength(band_indices)
-                    self._im_self_energy.get_damping_function()
+                    for bi in self._band_indices:
+                        write_damping_functions(gp,
+                                                [bi + 1],
+                                                self._mesh,
+                                                fpoints,
+                                                gamma[:, bi],
+                                                sigma=sigma,
+                                                temperature=t,
+                                                filename=filename)
+                    write_damping_functions(
+                        gp,
+                        self._band_indices + 1,
+                        self._mesh,
+                        fpoints,
+                        (gamma[:, self._band_indices].sum(axis=1) /
+                         len(self._band_indices)),
+                        sigma=sigma,
+                        temperature=t,
+                        filename=filename)
 
     def get_linewidth(self,
                       grid_points,
@@ -273,26 +274,6 @@ class Phono3py:
 
         self._kappa = mode_kappa
         self._gamma = gamma
-
-
-    # def get_decay_channels(self,
-    #                        grid_points,
-    #                        sets_of_band_indices,
-    #                        temperature=None):
-
-    #     if grid_points==None:
-    #         print "Grid points are not specified."
-    #         return False
-
-    #     if sets_of_band_indices==None:
-    #         print "Band indices are not specified."
-    #         return False
-
-    #     for gp in grid_points:
-    #         self._pp.set_triplets_at_q(gp)
-    #         for band_indices in sets_of_band_indices:
-    #             self._pp.set_interaction_strength(band_indices)
-    #             self._pp.get_decay_channels(temperature)
 
     def solve_dynamical_matrix(self, q):
         """Only for test phonopy zheev wrapper"""

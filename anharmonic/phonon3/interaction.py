@@ -6,13 +6,15 @@ from anharmonic.phonon3.real_to_reciprocal import RealToReciprocal
 from anharmonic.phonon3.reciprocal_to_normal import ReciprocalToNormal
 from anharmonic.triplets import get_triplets_at_q
 
-class Phonon3:
+class Interaction:
     def __init__(self,
                  fc3,
                  supercell,
                  primitive,
                  mesh,
-                 frequency_conversion_factor=VaspToTHz,
+                 band_indices=None,
+                 frequency_factor_to_THz=VaspToTHz,
+                 symmetrize_fc3=False,
                  is_nosym=False,
                  symprec=1e-3,
                  log_level=False,
@@ -21,8 +23,15 @@ class Phonon3:
         self._supercell_fc3 = supercell
         self._primitive_fc3 = primitive
         self._mesh = np.intc(mesh)
-        self._frequency_conversion_factor = frequency_conversion_factor
+        
+        num_band = primitive.get_number_of_atoms() * 3
+        if band_indices is None:
+            self._band_indices = np.arange(num_band, dtype='intc')
+        else:
+            self._band_indices = np.intc(band_indices)
+        self._frequency_factor_to_THz = frequency_factor_to_THz
         self._symprec = symprec
+        self._symmetrize_fc3 = symmetrize_fc3
         self._is_nosym = is_nosym
         self._log_level = log_level
         self._lapack_zheev_uplo = lapack_zheev_uplo
@@ -42,13 +51,9 @@ class Phonon3:
         self._dm = None
         self._nac_q_direction = None
 
-    def run(self, band_indices=None, lang='C'):
+    def run(self, lang='C'):
         num_band = self._primitive_fc3.get_number_of_atoms() * 3
 
-        if band_indices is None:
-            band_indices = np.arange(num_band, dtype='intc')
-        else:
-            band_indices = np.intc(band_indices)
         num_grid = np.prod(self._mesh)
         num_triplets = len(self._triplets_at_q)
         self._phonon_done = np.zeros(num_grid, dtype='byte')
@@ -57,7 +62,7 @@ class Phonon3:
                                       dtype='complex128')
 
         self._interaction_strength = np.zeros(
-            (num_triplets, len(band_indices), num_band, num_band),
+            (num_triplets, len(self._band_indices), num_band, num_band),
             dtype='double')
 
         if lang == 'C':
@@ -117,9 +122,9 @@ class Phonon3:
                 symprec=self._symprec)
             self._dm.set_nac_params(nac_params)
 
-    def set_q_direction(self, q_direction=None):
-        if q_direction is not None:
-            self._nac_q_direction = np.double(q_direction)
+    def set_nac_q_direction(self, nac_q_direction=None):
+        if nac_q_direction is not None:
+            self._nac_q_direction = np.double(nac_q_direction)
 
     def _run_c(self):
         import anharmonic._phono3py as phono3c
@@ -130,7 +135,6 @@ class Phonon3:
         self._set_phonon_c()
 
         num_band = self._primitive_fc3.get_number_of_atoms() * 3
-        band_indices = np.intc(range(num_band))
         svecs, multiplicity = get_smallest_vectors(self._supercell_fc3,
                                                    self._primitive_fc3,
                                                    self._symprec)
@@ -150,7 +154,7 @@ class Phonon3:
                             np.double(masses),
                             p2s,
                             s2p,
-                            band_indices)
+                            self._band_indices)
 
     def _set_phonon_c(self):
         import anharmonic._phono3py as phono3c
@@ -180,7 +184,7 @@ class Phonon3:
                                 masses,
                                 self._dm.get_primitive_to_supercell_map(),
                                 self._dm.get_supercell_to_primitive_map(),
-                                self._frequency_conversion_factor,
+                                self._frequency_factor_to_THz,
                                 born,
                                 dielectric,
                                 rec_lattice,
@@ -219,5 +223,5 @@ class Phonon3:
             eigvals, eigvecs = np.linalg.eigh(dm, UPLO=self._lapack_zheev_uplo)
             eigvals = eigvals.real
             self._frequencies[gp] = (np.sqrt(np.abs(eigvals)) * np.sign(eigvals)
-                                     * self._frequency_conversion_factor)
+                                     * self._frequency_factor_to_THz)
             self._eigenvectors[gp] = eigvecs

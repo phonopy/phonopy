@@ -7,19 +7,19 @@
 #define THZTOEVPARKB 47.992398658977166
 #define INVSQRT2PI 0.3989422804014327
 
-static double get_gamma_at_band(const int num_band,
-				const double *fc3_normal_sqared,
-				const double fpoint,
-				const double *freqs0,
-				const double *freqs1,
-				const double sigma,
-				const double temperature);
+static double get_imag_self_energy_at_band(const int num_band,
+					   const double *fc3_normal_sqared,
+					   const double fpoint,
+					   const double *freqs0,
+					   const double *freqs1,
+					   const double sigma,
+					   const double temperature);
 static double gaussian(const double x, const double sigma);
 static double occupation(const double x, const double t);
     
-/* gamma[num_fpoints, num_band0] */
+/* imag_self_energy[num_fpoints, num_band0] */
 /* fc3_normal_sqared[num_triplets, num_band0, num_band, num_band] */
-void get_imag_self_energy(double *gamma,
+void get_imag_self_energy(double *imag_self_energy,
 			  const Darray *fc3_normal_sqared,
 			  const Darray *freq_points,
 			  const double *frequencies,
@@ -43,8 +43,8 @@ void get_imag_self_energy(double *gamma,
     printf("%d / %d\n", i + 1, num_triplets);
     for (j = 0; j < num_fpoints; j++) {
       for (k = 0; k < num_band0; k++) {
-	gamma[j * num_band0 + k] +=
-	  get_gamma_at_band(num_band,
+	imag_self_energy[j * num_band0 + k] +=
+	  get_imag_self_energy_at_band(num_band,
 			    fc3_normal_sqared->data +
 			    i * num_band0 * num_band * num_band +
 			    k * num_band * num_band,
@@ -59,13 +59,13 @@ void get_imag_self_energy(double *gamma,
   }
 }
 
-static double get_gamma_at_band(const int num_band,
-				const double *fc3_normal_sqared,
-				const double fpoint,
-				const double *freqs0,
-				const double *freqs1,
-				const double sigma,
-				const double temperature)
+static double get_imag_self_energy_at_band(const int num_band,
+					   const double *fc3_normal_sqared,
+					   const double fpoint,
+					   const double *freqs0,
+					   const double *freqs1,
+					   const double sigma,
+					   const double temperature)
 {
   int i, j;
   double n2, n3, g1, g2, g3, sum_g;

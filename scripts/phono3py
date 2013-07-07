@@ -109,7 +109,6 @@ parser.set_defaults(amplitude=None,
                     is_bterta=False,
                     is_nac=False,
                     is_plusminus_displacements=False,
-                    is_read_triplets=False,
                     is_translational_symmetry=False,
                     is_symmetrize_fc2=False,
                     is_symmetrize_fc3_r=False,
@@ -312,10 +311,6 @@ parser.add_option("--tsym", dest="is_translational_symmetry",
                   help="Impose translational invariance condition")
 parser.add_option("--tolerance", dest="symprec", type="float",
                   help="Symmetry tolerance to search")
-parser.add_option("--tp",
-                  dest="is_read_triplets",
-                  action="store_true",
-                  help="Read triplets")
 parser.add_option("-v", "--verbose", dest="verbose",
                   action="store_true",
                   help="Detailed run-time information is displayed")
@@ -784,88 +779,7 @@ else:
                 print "Grid points to be calculated:", grid_points
             sys.stdout.flush()
 
-        if options.test:
-            from anharmonic.phonon3.interaction import Phonon3
-            from anharmonic.phonon3.gamma import Gamma
-            print "------------------"
-            print "class Phonon3 test"
-            print "------------------"
-
-            if not options.read_amplitude:
-                phonon3 = Phonon3(fc3,
-                                  supercell,
-                                  primitive,
-                                  mesh,
-                                  frequency_conversion_factor=factor,
-                                  is_nosym=options.is_nosym,
-                                  symprec=options.symprec,
-                                  log_level=log_level,
-                                  lapack_zheev_uplo=options.uplo)
-                phonon3.set_dynamical_matrix(fc2,
-                                             supercell_dm,
-                                             primitive_dm,
-                                             nac_params=nac_params,
-                                             frequency_scale_factor=freq_scale)
-                phonon3.set_q_direction(q_direction=nac_q_direction)
-                phonon3.set_triplets_at_q(grid_points[0])
-                phonon3.run()
-
-                interaction = phonon3.get_interaction_strength()
-                freqs, eigvecs, ph_done  = phonon3.get_phonons()
-                triplets, weights = phonon3.get_triplets_at_q()
-
-                # import h5py
-                # suffix = "-m%d%d%d" % tuple(mesh)
-                # suffix += ("-g%d" % grid_points[0])
-                # w = h5py.File("phonon" + suffix + ".hdf5", 'w') 
-                # w.create_dataset('triplet', data=triplets)
-                # w.create_dataset('weight', data=weights)
-                # w.create_dataset('frequency', data=freqs)
-                # w.create_dataset('eigenvector', data=eigvecs)
-                # w.create_dataset('phonon_done', data=ph_done)
-                # w.close()
-
-                from anharmonic.file_IO import write_amplitude_to_hdf5
-                write_amplitude_to_hdf5(interaction,
-                                        mesh,
-                                        grid_points[0],
-                                        triplet=triplets,
-                                        weight=weights,
-                                        frequency=freqs,
-                                        eigenvector=eigvecs)
-            else:
-                import h5py
-                suffix = "-m%d%d%d" % tuple(mesh)
-                suffix += ("-g%d" % grid_points[0])
-                fp3 = h5py.File("amplitude" + suffix + ".hdf5", 'r')
-                interaction = fp3['amplitude'][:]
-                freqs = fp3['frequency'][:]
-                eigvecs = fp3['eigenvector'][:]
-                triplets = fp3['triplet'][:]
-                weights = fp3['weight'][:]
-                fp3.close()
-            
-            gamma = Gamma(interaction,
-                          freqs,
-                          triplets,
-                          weights,
-                          sigma=0.1)
-            gamma.set_temperature(300)
-            fpoints = np.linspace(0, 35, 600)
-            gamma.set_frequency_points(fpoints)
-            gamma.set_grid_point(grid_points[0])
-            gamma.run(lang='C')
-            
-            w = open("plot.dat", 'w')
-            for f, g in zip(fpoints, gamma.get_gamma()):
-                w.write("%f " % f)
-                for v in g:
-                    w.write("%f " % v)
-                w.write("\n")
-
-
-
-        elif options.is_joint_dos:
+        if options.is_joint_dos:
             jdos = JointDOS(supercell_dm,
                             primitive_dm,
                             mesh,
@@ -886,13 +800,9 @@ else:
                                 primitive,
                                 mesh,
                                 fc3,
-                                factor=factor,
-                                frequency_factor=freq_factor,
+                                frequency_factor_to_THz=factor,
                                 is_nosym=options.is_nosym,
-                                symmetrize_fc3_q=options.is_symmetrize_fc3_q,
-                                read_triplets=options.is_read_triplets,
-                                r2q_TI_index=options.r2q_TI_index,
-                                is_Peierls=options.is_Peierls,
+                                symmetrize_fc3=options.is_symmetrize_fc3_q,
                                 symprec=options.symprec,
                                 log_level=log_level,
                                 lapack_zheev_uplo=options.uplo)
@@ -904,12 +814,7 @@ else:
                                           nac_q_direction=nac_q_direction,
                                           frequency_scale_factor=freq_scale)
 
-            if options.is_decay_channel:
-                phono3py.get_decay_channels(grid_points,
-                                            settings.get_band_indices(),
-                                            options.temperature)
-
-            elif settings.get_is_linewidth():
+            if settings.get_is_linewidth():
                 phono3py.get_linewidth(
                     grid_points,
                     settings.get_band_indices(),
@@ -938,14 +843,12 @@ else:
                     gamma_option=options.gamma_option,
                     filename=options.output_filename)
             else:
-                phono3py.get_damping_function(
+                phono3py.get_imag_self_energy(
                     grid_points,
-                    settings.get_band_indices(),
-                    sigmas=multiple_sigmas,
                     frequency_step=freq_step,
+                    sigmas=multiple_sigmas,
                     temperatures=temperatures,
-                    filename=options.output_filename,
-                    gamma_option=options.gamma_option)
+                    filename=options.output_filename)
     else:
         pass
 
