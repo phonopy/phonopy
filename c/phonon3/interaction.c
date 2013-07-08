@@ -157,8 +157,6 @@ void get_interaction(Darray *fc3_normal_squared,
 
 #pragma omp parallel for private(j, q, gp_triplet, freqs, eigvecs)
   for (i = 0; i < triplets->dims[0]; i++) {
-    printf("%d / %d\n", i + 1, triplets->dims[0]);
-
     for (j = 0; j < 3; j++) {
       gp_triplet[j] = triplets->data[i * 3 + j];
     }

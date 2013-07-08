@@ -7,52 +7,6 @@ from anharmonic.gruneisen import Gruneisen
 import anharmonic.triplets as triplets
 from anharmonic.file_IO import write_kappa_to_hdf5, read_gamma_from_hdf5, write_damping_functions
 
-class JointDOS:
-    def __init__(self,
-                 supercell,
-                 primitive,
-                 mesh,
-                 fc2,
-                 nac_params=None,
-                 sigma=None,
-                 frequency_step=None,
-                 factor=None,
-                 frequency_factor=None,
-                 frequency_scale_factor=None,
-                 is_nosym=False,
-                 symprec=1e-5,
-                 log_level=0):
-        self._supercell = supercell
-        self._primitive = primitive
-        self._mesh = mesh
-        self._fc2 = fc2
-        self._nac_params = nac_params
-        self._sigma = sigma
-        self._frequency_step = frequency_step
-        self._factor = factor
-        self._frequency_factor = frequency_factor
-        self._frequency_scale_factor = frequency_scale_factor
-        self._is_nosym = is_nosym
-        self._symprec = symprec
-        self._log_level = log_level
-
-    def get_jointDOS(self, grid_points, filename=None):
-        get_jointDOS(grid_points,
-                     self._mesh,
-                     self._primitive,
-                     self._supercell,
-                     self._fc2,
-                     nac_params=self._nac_params,
-                     sigma=self._sigma,
-                     frequency_step=self._frequency_step,
-                     factor=self._factor,
-                     frequency_factor=self._frequency_factor,
-                     frequency_scale=self._frequency_scale_factor,
-                     is_nosym=self._is_nosym,
-                     symprec=self._symprec,
-                     filename=filename,
-                     log_level=self._log_level)
-
 class Phono3py:
     def __init__(self,
                  supercell,
@@ -72,10 +26,10 @@ class Phono3py:
         self._mesh = mesh
         self._fc3 = fc3
         if band_indices is None:
-            self._band_indices = np.arange(
-                primitive.get_number_of_atoms() * 3, dtype='intc')
+            self._band_indices = [
+                np.arange(primitive.get_number_of_atoms() * 3)]
         else:
-            self._band_indices = np.intc(band_indices)
+            self._band_indices = band_indices
         self._frequency_factor_to_THz = frequency_factor_to_THz
         self._is_nosym = is_nosym
         self._symmetrize_fc3 = symmetrize_fc3
@@ -84,12 +38,14 @@ class Phono3py:
         self._kappa = None
         self._gamma = None
 
+        band_indices_flatten = np.intc(
+            [x for bi in self._band_indices for x in bi])
         self._interaction = Interaction(
             fc3,
             supercell,
             primitive,
             mesh,
-            band_indices=self._band_indices,
+            band_indices=band_indices_flatten,
             frequency_factor_to_THz=self._frequency_factor_to_THz,
             symprec=self._symprec,
             symmetrize_fc3=self._symmetrize_fc3,
@@ -119,7 +75,7 @@ class Phono3py:
                              temperatures=[0.0],
                              filename=None):
         for gp in grid_points:
-            self._interaction.set_triplets_at_q(grid_points)
+            self._interaction.set_triplets_at_q(gp)
             for sigma in sigmas:
                 for t in temperatures:
                     imag_self_energy = ImagSelfEnergy(
@@ -136,66 +92,61 @@ class Phono3py:
                     gamma = imag_self_energy.get_imag_self_energy()
                     fpoints = imag_self_energy.get_fpoints()
 
-                    for bi in self._band_indices:
-                        write_damping_functions(gp,
-                                                [bi + 1],
-                                                self._mesh,
-                                                fpoints,
-                                                gamma[:, bi],
-                                                sigma=sigma,
-                                                temperature=t,
-                                                filename=filename)
-                    write_damping_functions(
-                        gp,
-                        self._band_indices + 1,
-                        self._mesh,
-                        fpoints,
-                        (gamma[:, self._band_indices].sum(axis=1) /
-                         len(self._band_indices)),
-                        sigma=sigma,
-                        temperature=t,
-                        filename=filename)
+                    for i, bi in enumerate(self._band_indices):
+                        pos = 0
+                        for j in range(i):
+                            pos += len(self._band_indices[j])
+
+                        write_damping_functions(
+                            gp,
+                            bi,
+                            self._mesh,
+                            fpoints,
+                            gamma[:, pos:(pos + len(bi))].sum(axis=1) / len(bi),
+                            sigma=sigma,
+                            temperature=t,
+                            filename=filename)
 
     def get_linewidth(self,
                       grid_points,
-                      sets_of_band_indices,
                       sigmas=[0.1],
                       t_max=1500,
                       t_min=0,
                       t_step=10,
-                      gamma_option=0,
                       filename=None):
-
-        lw = Linewidth(self._pp,
-                       sigmas=sigmas,
-                       t_max=t_max,
-                       t_min=t_min,
-                       t_step=t_step)
-        
-        if grid_points is None:
-            print "Grid points are not specified."
-            return False
-
-        if sets_of_band_indices is None:
-            print "Band indices are not specified."
-            return False
-
         for gp in grid_points:
-            self._pp.set_triplets_at_q(gp)
-            for band_indices in sets_of_band_indices:
-                self._pp.set_interaction_strength(band_indices)
-                fwhms_sigmas, freqs_sigmas = lw.get_linewidth(
-                    filename=filename)
-                temps = lw.get_temperatures()
+            self._interaction.set_triplets_at_q(gp)
+            for sigma in sigmas:
+                for t in temperatures:
+                    imag_self_energy = ImagSelfEnergy(
+                        self._interaction,
+                        temperature=t,
+                        sigma=sigma)
+                    imag_self_energy.run_interaction()
+                    fpoints = self._interaction.get_phonons()[0][gp]
+                    
+                    fpoints = np.linspace(0, max_freq,
+                                          int(max_freq / frequency_step))
+                    imag_self_energy.set_fpoints(fpoints)
+                    imag_self_energy.run()
+                    gamma = imag_self_energy.get_imag_self_energy()
+                    fpoints = imag_self_energy.get_fpoints()
 
-                for sigma, fwhms, freqs in zip(
-                    sigmas, fwhms_sigmas, freqs_sigmas):
-                    print "# Grid point:", gp
-                    print "# Sigma:", sigma
-                    print "# Frequencies:", freqs
-                    for fwhm, t in zip(fwhms.T, temps):
-                        print t, fwhm
-                    print
+                    for i, bi in enumerate(self._band_indices):
+                        pos = 0
+                        for j in range(i):
+                            pos += len(self._band_indices[j])
+
+                        write_damping_functions(
+                            gp,
+                            bi,
+                            self._mesh,
+                            fpoints,
+                            gamma[:, pos:(pos + len(bi))].sum(axis=1) / len(bi),
+                            sigma=sigma,
+                            temperature=t,
+                            filename=filename)
+
 
     def get_thermal_conductivity(self,
                                  sigmas=[0.1],
@@ -291,6 +242,53 @@ class Phono3py:
         
 
     
+class JointDOS:
+    def __init__(self,
+                 supercell,
+                 primitive,
+                 mesh,
+                 fc2,
+                 nac_params=None,
+                 sigma=None,
+                 frequency_step=None,
+                 factor=None,
+                 frequency_factor=None,
+                 frequency_scale_factor=None,
+                 is_nosym=False,
+                 symprec=1e-5,
+                 log_level=0):
+        self._supercell = supercell
+        self._primitive = primitive
+        self._mesh = mesh
+        self._fc2 = fc2
+        self._nac_params = nac_params
+        self._sigma = sigma
+        self._frequency_step = frequency_step
+        self._factor = factor
+        self._frequency_factor = frequency_factor
+        self._frequency_scale_factor = frequency_scale_factor
+        self._is_nosym = is_nosym
+        self._symprec = symprec
+        self._log_level = log_level
+
+    def get_jointDOS(self, grid_points, filename=None):
+        get_jointDOS(grid_points,
+                     self._mesh,
+                     self._primitive,
+                     self._supercell,
+                     self._fc2,
+                     nac_params=self._nac_params,
+                     sigma=self._sigma,
+                     frequency_step=self._frequency_step,
+                     factor=self._factor,
+                     frequency_factor=self._frequency_factor,
+                     frequency_scale=self._frequency_scale_factor,
+                     is_nosym=self._is_nosym,
+                     symprec=self._symprec,
+                     filename=filename,
+                     log_level=self._log_level)
+
+
 def get_gruneisen_parameters(fc2,
                              fc3,
                              supercell,

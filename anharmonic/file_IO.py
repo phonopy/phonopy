@@ -295,7 +295,7 @@ def write_damping_functions(gp,
         gammas_filename += ("t%f" % temperature).rstrip('0').rstrip('\.') + "-"
 
     for i in band_indices:
-        gammas_filename += "b%d" % i
+        gammas_filename += "b%d" % (i + 1)
 
     if not filename == None:
         gammas_filename += ".%s" % filename

@@ -800,6 +800,7 @@ else:
                                 primitive,
                                 mesh,
                                 fc3,
+                                band_indices=settings.get_band_indices(),
                                 frequency_factor_to_THz=factor,
                                 is_nosym=options.is_nosym,
                                 symmetrize_fc3=options.is_symmetrize_fc3_q,

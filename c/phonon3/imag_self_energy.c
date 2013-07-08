@@ -40,7 +40,6 @@ void get_imag_self_energy(double *imag_self_energy,
   for (i = 0; i < num_triplets; i++) {
     gp1 = grid_point_triplets[i * 3 + 1];
     gp2 = grid_point_triplets[i * 3 + 2];
-    printf("%d / %d\n", i + 1, num_triplets);
     for (j = 0; j < num_fpoints; j++) {
       for (k = 0; k < num_band0; k++) {
 	imag_self_energy[j * num_band0 + k] +=
