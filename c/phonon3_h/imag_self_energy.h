@@ -5,7 +5,7 @@
 
 void get_imag_self_energy(double *gamma,
 			  const Darray *fc3_normal_sqared,
-			  const Darray *freq_points,
+			  const double fpoint,
 			  const double *frequencies,
 			  const int *grid_point_triplets,
 			  const int *triplet_weights,

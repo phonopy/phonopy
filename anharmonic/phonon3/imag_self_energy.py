@@ -11,19 +11,18 @@ def occupation(x, t):
 class ImagSelfEnergy:
     def __init__(self,
                  interaction,
+                 grid_point=0,
                  fpoints=None,
-                 temperature=None,
+                 temperature=-1,
                  sigma=0.1,
                  lang='C'):
         self._interaction = interaction
-        if temperature is None:
-            self._temperature = -1
-        else:
-            self._temperature = temperature
+        self._temperature = temperature
         self._sigma = sigma
         self._fpoints = fpoints
-        self._lang = lang
+        self._grid_point = grid_point
 
+        self._lang = lang
         self._imag_self_energy = None
         self._fc3_normal_squared = None
         self._frequencies = None
@@ -45,9 +44,11 @@ class ImagSelfEnergy:
                 self._run_py()
 
     def run_interaction(self):
+        self._interaction.set_triplets_at_q(self._grid_point)
         self._interaction.run(lang=self._lang)
         self._fc3_normal_squared = self._interaction.get_interaction_strength()
-        self._frequencies = self._interaction.get_phonons()[0]
+        (self._frequencies,
+         self._eigenvectors) = self._interaction.get_phonons()[:1]
         (self._grid_point_triplets,
          self._triplet_weights) = self._interaction.get_triplets_at_q()
         
@@ -63,23 +64,36 @@ class ImagSelfEnergy:
     def get_imag_self_energy(self):
         return self._imag_self_energy
 
-    def get_fpoints(self):
-        return self._fpoints
+    def get_phonon_at_grid_point(self):
+        return (self._frequencies[self._grid_point],
+                self._eigenvectors[self._grid_point])
+
+    def set_grid_point(self, grid_point):
+        self._grid_point = grid_point
+        self._fc3_normal_squared = None
+        
+    def set_sigma(self, sigma):
+        self._sigma = sigma
 
     def set_fpoints(self, fpoints):
         self._fpoints = fpoints
-    
+
+    def set_temperature(self, temperature):
+        self._temperature = temperature
+        
     def _run_c(self):
         import anharmonic._phono3py as phono3c
-        phono3c.imag_self_energy(self._imag_self_energy,
-                                 self._fc3_normal_squared,
-                                 self._grid_point_triplets,
-                                 self._triplet_weights,
-                                 self._frequencies,
-                                 np.double(self._fpoints),
-                                 self._temperature,
-                                 self._sigma,
-                                 self._unit_conversion)
+        num_band0 = self._imag_self_energy.shape[1]
+        for i, fpoint in enumerate(self._fpoints):
+            phono3c.imag_self_energy(self._imag_self_energy[i],
+                                     self._fc3_normal_squared,
+                                     self._grid_point_triplets,
+                                     self._triplet_weights,
+                                     self._frequencies,
+                                     fpoint,
+                                     self._temperature,
+                                     self._sigma,
+                                     self._unit_conversion)
 
     def _run_py(self):
         self._run_imag_self_energy()

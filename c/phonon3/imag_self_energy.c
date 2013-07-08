@@ -14,14 +14,20 @@ static double get_imag_self_energy_at_band(const int num_band,
 					   const double *freqs1,
 					   const double sigma,
 					   const double temperature);
+static double get_imag_self_energy_at_band_0K(const int num_band,
+					      const double *fc3_normal_sqared,
+					      const double fpoint,
+					      const double *freqs0,
+					      const double *freqs1,
+					      const double sigma);
 static double gaussian(const double x, const double sigma);
 static double occupation(const double x, const double t);
     
-/* imag_self_energy[num_fpoints, num_band0] */
+/* imag_self_energy[num_band0] */
 /* fc3_normal_sqared[num_triplets, num_band0, num_band, num_band] */
 void get_imag_self_energy(double *imag_self_energy,
 			  const Darray *fc3_normal_sqared,
-			  const Darray *freq_points,
+			  const double fpoint,
 			  const double *frequencies,
 			  const int *grid_point_triplets,
 			  const int *triplet_weights,
@@ -29,32 +35,45 @@ void get_imag_self_energy(double *imag_self_energy,
 			  const double temperature,
 			  const double unit_conversion_factor)
 {
-  int i, j, k, num_triplets, num_band0, num_band, num_fpoints, gp1, gp2;
+  int i, j, num_triplets, num_band0, num_band, gp1, gp2;
+  double sum_g;
 
   num_triplets = fc3_normal_sqared->dims[0];
   num_band0 = fc3_normal_sqared->dims[1];
   num_band = fc3_normal_sqared->dims[2];
-  num_fpoints = freq_points->dims[0];
 
-#pragma omp parallel for private(j, k, gp1, gp2)
-  for (i = 0; i < num_triplets; i++) {
-    gp1 = grid_point_triplets[i * 3 + 1];
-    gp2 = grid_point_triplets[i * 3 + 2];
-    for (j = 0; j < num_fpoints; j++) {
-      for (k = 0; k < num_band0; k++) {
-	imag_self_energy[j * num_band0 + k] +=
+  for (i = 0; i < num_band0; i++) {
+    sum_g = 0;
+#pragma omp parallel for private(gp1, gp2) reduction(+:sum_g)
+    for (j = 0; j < num_triplets; j++) {
+      gp1 = grid_point_triplets[j * 3 + 1];
+      gp2 = grid_point_triplets[j * 3 + 2];
+      if (temperature > 0) {
+	sum_g +=
 	  get_imag_self_energy_at_band(num_band,
-			    fc3_normal_sqared->data +
-			    i * num_band0 * num_band * num_band +
-			    k * num_band * num_band,
-			    freq_points->data[j],
-			    frequencies + gp1 * num_band,
-			    frequencies + gp2 * num_band,
-			    sigma,
-			    temperature) *
-	  triplet_weights[i] * unit_conversion_factor;
+				       fc3_normal_sqared->data +
+				       j * num_band0 * num_band * num_band +
+				       i * num_band * num_band,
+				       fpoint,
+				       frequencies + gp1 * num_band,
+				       frequencies + gp2 * num_band,
+				       sigma,
+				       temperature) *
+	  triplet_weights[j] * unit_conversion_factor;
+      } else {
+	sum_g +=
+	  get_imag_self_energy_at_band_0K(num_band,
+					  fc3_normal_sqared->data +
+					  j * num_band0 * num_band * num_band +
+					  i * num_band * num_band,
+					  fpoint,
+					  frequencies + gp1 * num_band,
+					  frequencies + gp2 * num_band,
+					  sigma) *
+	  triplet_weights[j] * unit_conversion_factor;
       }
     }
+    imag_self_energy[i] = sum_g;
   }
 }
 
@@ -81,6 +100,30 @@ static double get_imag_self_energy_at_band(const int num_band,
 	  g3 = gaussian(fpoint - freqs0[i] + freqs1[j], sigma);
 	  sum_g += ((n2 + n3 + 1) * g1 + (n2 - n3) * (g2 - g3)) *
 	    fc3_normal_sqared[i * num_band + j];
+	}
+      }
+    }
+  }
+  return sum_g;
+}
+
+static double get_imag_self_energy_at_band_0K(const int num_band,
+					      const double *fc3_normal_sqared,
+					      const double fpoint,
+					      const double *freqs0,
+					      const double *freqs1,
+					      const double sigma)
+{
+  int i, j;
+  double g1, sum_g;
+
+  sum_g = 0;
+  for (i = 0; i < num_band; i++) {
+    if (freqs0[i] > 0) {
+      for (j = 0; j < num_band; j++) {
+	if (freqs1[j] > 0) {
+	  g1 = gaussian(fpoint - freqs0[i] - freqs1[j], sigma);
+	  sum_g += g1 * fc3_normal_sqared[i * num_band + j];
 	}
       }
     }

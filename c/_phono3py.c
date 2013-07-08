@@ -277,16 +277,15 @@ static PyObject * py_get_imag_self_energy(PyObject *self, PyObject *args)
   PyArrayObject* frequencies_py;
   PyArrayObject* grid_point_triplets_py;
   PyArrayObject* triplet_weights_py;
-  PyArrayObject* fpoints_py;
-  double sigma, unit_conversion_factor, temperature;
+  double sigma, unit_conversion_factor, temperature, fpoint;
 
-  if (!PyArg_ParseTuple(args, "OOOOOOddd",
+  if (!PyArg_ParseTuple(args, "OOOOOdddd",
 			&gamma_py,
 			&fc3_normal_squared_py,
 			&grid_point_triplets_py,
 			&triplet_weights_py,
 			&frequencies_py,
-			&fpoints_py,
+			&fpoint,
 			&temperature,
 			&sigma,
 			&unit_conversion_factor)) {
@@ -295,7 +294,6 @@ static PyObject * py_get_imag_self_energy(PyObject *self, PyObject *args)
 
 
   Darray* fc3_normal_squared = convert_to_darray(fc3_normal_squared_py);
-  Darray* fpoints = convert_to_darray(fpoints_py);
   double* gamma = (double*)gamma_py->data;
   const double* frequencies = (double*)frequencies_py->data;
   const int* grid_point_triplets = (int*)grid_point_triplets_py->data;
@@ -303,7 +301,7 @@ static PyObject * py_get_imag_self_energy(PyObject *self, PyObject *args)
 
   get_imag_self_energy(gamma,
 		       fc3_normal_squared,
-		       fpoints,
+		       fpoint,
 		       frequencies,
 		       grid_point_triplets,
 		       triplet_weights,
@@ -312,7 +310,6 @@ static PyObject * py_get_imag_self_energy(PyObject *self, PyObject *args)
 		       unit_conversion_factor);
 
   free(fc3_normal_squared);
-  free(fpoints);
   
   Py_RETURN_NONE;
 }

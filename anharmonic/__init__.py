@@ -38,14 +38,14 @@ class Phono3py:
         self._kappa = None
         self._gamma = None
 
-        band_indices_flatten = np.intc(
+        self._band_indices_flatten = np.intc(
             [x for bi in self._band_indices for x in bi])
         self._interaction = Interaction(
             fc3,
             supercell,
             primitive,
             mesh,
-            band_indices=band_indices_flatten,
+            band_indices=self._band_indices_flatten,
             frequency_factor_to_THz=self._frequency_factor_to_THz,
             symprec=self._symprec,
             symmetrize_fc3=self._symmetrize_fc3,
@@ -74,23 +74,21 @@ class Phono3py:
                              sigmas=[0.1],
                              temperatures=[0.0],
                              filename=None):
+        ise = ImagSelfEnergy(self._interaction)
         for gp in grid_points:
-            self._interaction.set_triplets_at_q(gp)
+            ise.set_grid_point(gp)
+            ise.run_interaction()
             for sigma in sigmas:
+                ise.set_sigma(sigma)
                 for t in temperatures:
-                    imag_self_energy = ImagSelfEnergy(
-                        self._interaction,
-                        temperature=t,
-                        sigma=sigma)
-                    imag_self_energy.run_interaction()
+                    ise.set_temperature(t)
                     max_freq = (np.amax(self._interaction.get_phonons()[0]) * 2
                                 + sigma * 4)
-                    fpoints = np.linspace(0, max_freq,
-                                          int(max_freq / frequency_step))
-                    imag_self_energy.set_fpoints(fpoints)
-                    imag_self_energy.run()
-                    gamma = imag_self_energy.get_imag_self_energy()
-                    fpoints = imag_self_energy.get_fpoints()
+                    fpoints = np.arange(0, max_freq + frequency_step / 2,
+                                        frequency_step)
+                    ise.set_fpoints(fpoints)
+                    ise.run()
+                    gamma = ise.get_imag_self_energy()
 
                     for i, bi in enumerate(self._band_indices):
                         pos = 0
@@ -114,23 +112,20 @@ class Phono3py:
                       t_min=0,
                       t_step=10,
                       filename=None):
+        ise = ImagSelfEnergy(self._interaction)
+        temperatures = np.arange(t_min, t_max + t_step / 2.0, t_step)
         for gp in grid_points:
-            self._interaction.set_triplets_at_q(gp)
+            ise.set_grid_point(gp)
+            ise.run_interaction()
+            freqs = ise.get_phonon_at_grid_point()[0]
+            freqs_bi = freqs[self._band_indices_flatten]
             for sigma in sigmas:
+                ise.set_sigma(sigma)
                 for t in temperatures:
-                    imag_self_energy = ImagSelfEnergy(
-                        self._interaction,
-                        temperature=t,
-                        sigma=sigma)
-                    imag_self_energy.run_interaction()
-                    fpoints = self._interaction.get_phonons()[0][gp]
-                    
-                    fpoints = np.linspace(0, max_freq,
-                                          int(max_freq / frequency_step))
-                    imag_self_energy.set_fpoints(fpoints)
-                    imag_self_energy.run()
-                    gamma = imag_self_energy.get_imag_self_energy()
-                    fpoints = imag_self_energy.get_fpoints()
+                    ise.set_temperature(t)
+                    ise.set_fpoints(freqs_bi)
+                    ise.run()
+                    gamma = ise.get_imag_self_energy()
 
                     for i, bi in enumerate(self._band_indices):
                         pos = 0
