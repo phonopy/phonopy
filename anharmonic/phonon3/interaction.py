@@ -20,8 +20,8 @@ class Interaction:
                  log_level=False,
                  lapack_zheev_uplo='L'):
         self._fc3 = fc3 
-        self._supercell_fc3 = supercell
-        self._primitive_fc3 = primitive
+        self._supercell = supercell
+        self._primitive = primitive
         self._mesh = np.intc(mesh)
         
         num_band = primitive.get_number_of_atoms() * 3
@@ -37,8 +37,8 @@ class Interaction:
         self._lapack_zheev_uplo = lapack_zheev_uplo
 
         symmetry = Symmetry(primitive, symprec=symprec)
-        self._point_group = symmetry.get_pointgroup_operations()
-        
+        self._point_group_operations = symmetry.get_pointgroup_operations()
+
         self._triplets_at_q = None
         self._weights_at_q = None
         self._grid_address = None
@@ -52,7 +52,7 @@ class Interaction:
         self._nac_q_direction = None
 
     def run(self, lang='C'):
-        num_band = self._primitive_fc3.get_number_of_atoms() * 3
+        num_band = self._primitive.get_number_of_atoms() * 3
 
         num_grid = np.prod(self._mesh)
         num_triplets = len(self._triplets_at_q)
@@ -73,15 +73,33 @@ class Interaction:
     def get_interaction_strength(self):
         return self._interaction_strength
 
+    def get_mesh_numbers(self):
+        return self._mesh
+    
     def get_phonons(self):
         return (self._frequencies,
                 self._eigenvectors,
                 self._phonon_done)
+
+    def get_dynamical_matrix(self):
+        return self._dm
+
+    def get_primitive(self):
+        return self._primitive
+
+    def get_point_group_operations(self):
+        return self._point_group_operations
     
     def get_triplets_at_q(self):
         return self._triplets_at_q, self._weights_at_q
+
+    def get_band_indices(self):
+        return self._band_indices
+
+    def get_frequency_factor_to_THz(self):
+        return self._frequency_factor_to_THz
     
-    def set_triplets_at_q(self, grid_point):
+    def set_grid_point(self, grid_point):
         if self._is_nosym:
             triplets_at_q, weights_at_q, grid_address = get_nosym_triplets(
                 self._mesh,
@@ -90,7 +108,7 @@ class Interaction:
             triplets_at_q, weights_at_q, grid_address = get_triplets_at_q(
                 grid_point,
                 self._mesh,
-                self._point_group)
+                self._point_group_operations)
 
         self._triplets_at_q = triplets_at_q
         self._weights_at_q = weights_at_q
@@ -129,18 +147,15 @@ class Interaction:
     def _run_c(self):
         import anharmonic._phono3py as phono3c
         
-        # for i, grid_triplet in enumerate(self._triplets_at_q):
-        #     for gp in grid_triplet:
-        #         self._set_phonon_py(gp)
         self._set_phonon_c()
 
-        num_band = self._primitive_fc3.get_number_of_atoms() * 3
-        svecs, multiplicity = get_smallest_vectors(self._supercell_fc3,
-                                                   self._primitive_fc3,
+        num_band = self._primitive.get_number_of_atoms() * 3
+        svecs, multiplicity = get_smallest_vectors(self._supercell,
+                                                   self._primitive,
                                                    self._symprec)
-        masses = np.double(self._primitive_fc3.get_masses())
-        p2s = np.intc(self._primitive_fc3.get_primitive_to_supercell_map())
-        s2p = np.intc(self._primitive_fc3.get_supercell_to_primitive_map())
+        masses = np.double(self._primitive.get_masses())
+        p2s = np.intc(self._primitive.get_primitive_to_supercell_map())
+        s2p = np.intc(self._primitive.get_supercell_to_primitive_map())
 
         phono3c.interaction(self._interaction_strength,
                             self._frequencies,
@@ -194,13 +209,13 @@ class Interaction:
         
     def _run_py(self):
         r2r = RealToReciprocal(self._fc3,
-                               self._supercell_fc3,
-                               self._primitive_fc3,
+                               self._supercell,
+                               self._primitive,
                                self._triplets_address,
                                self._mesh,
                                symprec=self._symprec)
         
-        r2n = ReciprocalToNormal(self._primitive_fc3,
+        r2n = ReciprocalToNormal(self._primitive,
                                  self._frequencies,
                                  self._eigenvectors)
 

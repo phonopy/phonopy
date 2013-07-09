@@ -818,12 +818,10 @@ else:
             if settings.get_is_linewidth():
                 phono3py.get_linewidth(
                     grid_points,
-                    settings.get_band_indices(),
                     sigmas=multiple_sigmas,
                     t_max=settings.get_max_temperature(),
                     t_min=settings.get_min_temperature(),
                     t_step=settings.get_temperature_step(),
-                    gamma_option=options.gamma_option,
                     filename=options.output_filename)
 
             elif settings.get_is_bterta():
@@ -832,7 +830,6 @@ else:
                     t_max=settings.get_max_temperature(),
                     t_min=settings.get_min_temperature(),
                     t_step=settings.get_temperature_step(),
-                    max_freepath=settings.get_max_freepath(),
                     grid_points=grid_points,
                     mesh_divisors=settings.get_mesh_divisors(),
                     coarse_mesh_shifts=settings.get_coarse_mesh_shifts(),
@@ -841,7 +838,6 @@ else:
                     read_gamma=settings.get_read_gamma(),
                     write_amplitude=settings.get_write_amplitude(),
                     read_amplitude=settings.get_read_amplitude(),
-                    gamma_option=options.gamma_option,
                     filename=options.output_filename)
             else:
                 phono3py.get_imag_self_energy(

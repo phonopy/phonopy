@@ -53,7 +53,7 @@ class GroupVelocity:
                  primitive,
                  q_points=None,
                  q_length=1e-4,
-                 factor=VaspToTHz):
+                 frequency_factor_to_THz=VaspToTHz):
         """
         q_points is a list of sets of q-point and q-direction:
         [[q-point, q-direction], [q-point, q-direction], ...]
@@ -64,7 +64,7 @@ class GroupVelocity:
         self._reciprocal_lattice = np.linalg.inv(primitive.get_cell())
         self._q_points = q_points
         self._q_length = q_length
-        self._factor = factor
+        self._factor = frequency_factor_to_THz
         self._group_velocity = None
         self._eigenvectors = None
         self._frequencies = None
@@ -88,7 +88,7 @@ class GroupVelocity:
                                          self._dynmat,
                                          self._reciprocal_lattice,
                                          q_length=self._q_length,
-                                         factor=self._factor,
+                                         frequency_factor_to_THz=self._factor,
                                          frequencies=self._frequencies,
                                          eigenvectors=self._eigenvectors)
             v_g.append(dD_at_q)
@@ -98,7 +98,7 @@ def get_group_velocity(q, # q-point
                        dynamical_matrix,
                        reciprocal_lattice,
                        q_length=1e-4, # finite distance in q
-                       factor=VaspToTHz,
+                       frequency_factor_to_THz=VaspToTHz,
                        frequencies=None,
                        eigenvectors=None):
     """
@@ -111,6 +111,8 @@ def get_group_velocity(q, # q-point
      [a_z, b_z, c_z]]
     """
 
+    factor = frequency_factor_to_THz
+    
     if frequencies is None or eigenvectors is None:
         dynamical_matrix.set_dynamical_matrix(q)
         dm = dynamical_matrix.get_dynamical_matrix()

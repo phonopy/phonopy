@@ -875,7 +875,7 @@ class Phonopy:
             self._primitive,
             q_points=q_points,
             q_length=q_length,
-            factor=self._factor)
+            frequency_factor_to_THz=self._factor)
 
     def get_group_velocity(self, q_point):
         self._group_velocity.set_q_points([q_point])

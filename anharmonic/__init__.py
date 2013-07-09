@@ -1,11 +1,11 @@
 import numpy as np
 from anharmonic.phonon3.imag_self_energy import ImagSelfEnergy
 from anharmonic.phonon3.interaction import Interaction
-from anharmonic.BTE_RTA import BTE_RTA
+from anharmonic.phonon3.conductivity_RTA import conductivity_RTA
 from anharmonic.jointDOS import get_jointDOS
 from anharmonic.gruneisen import Gruneisen
 import anharmonic.triplets as triplets
-from anharmonic.file_IO import write_kappa_to_hdf5, read_gamma_from_hdf5, write_damping_functions
+from anharmonic.file_IO import write_kappa_to_hdf5, read_gamma_from_hdf5, write_damping_functions, write_linewidth
 
 class Phono3py:
     def __init__(self,
@@ -117,30 +117,28 @@ class Phono3py:
         for gp in grid_points:
             ise.set_grid_point(gp)
             ise.run_interaction()
-            freqs = ise.get_phonon_at_grid_point()[0]
-            freqs_bi = freqs[self._band_indices_flatten]
             for sigma in sigmas:
                 ise.set_sigma(sigma)
-                for t in temperatures:
+                gamma = np.zeros((len(temperatures),
+                                  len(self._band_indices_flatten)),
+                                 dtype='double')
+                for i, t in enumerate(temperatures):
                     ise.set_temperature(t)
-                    ise.set_fpoints(freqs_bi)
                     ise.run()
-                    gamma = ise.get_imag_self_energy()
+                    gamma[i] = ise.get_imag_self_energy()
 
-                    for i, bi in enumerate(self._band_indices):
-                        pos = 0
-                        for j in range(i):
-                            pos += len(self._band_indices[j])
+                for i, bi in enumerate(self._band_indices):
+                    pos = 0
+                    for j in range(i):
+                        pos += len(self._band_indices[j])
 
-                        write_damping_functions(
-                            gp,
-                            bi,
-                            self._mesh,
-                            fpoints,
-                            gamma[:, pos:(pos + len(bi))].sum(axis=1) / len(bi),
-                            sigma=sigma,
-                            temperature=t,
-                            filename=filename)
+                    write_linewidth(gp,
+                                    bi,
+                                    temperatures,
+                                    gamma[:, pos:(pos+len(bi))],
+                                    self._mesh,
+                                    sigma=sigma,
+                                    filename=filename)
 
 
     def get_thermal_conductivity(self,
@@ -148,7 +146,6 @@ class Phono3py:
                                  t_max=1500,
                                  t_min=0,
                                  t_step=10,
-                                 max_freepath=0.01, # in meter
                                  grid_points=None,
                                  mesh_divisors=None,
                                  coarse_mesh_shifts=None,
@@ -157,20 +154,17 @@ class Phono3py:
                                  read_gamma=False,
                                  write_amplitude=False,
                                  read_amplitude=False,
-                                 gamma_option=0,
                                  filename=None):
-        br = BTE_RTA(self._pp,
-                     sigmas=sigmas,
-                     t_max=t_max,
-                     t_min=t_min,
-                     t_step=t_step,
-                     max_freepath=max_freepath,
-                     mesh_divisors=mesh_divisors,
-                     coarse_mesh_shifts=coarse_mesh_shifts,
-                     no_kappa_stars=no_kappa_stars,
-                     gamma_option=gamma_option,
-                     log_level=self._log_level,
-                     filename=filename)
+        br = conductivity_RTA(self._interaction,
+                              sigmas=sigmas,
+                              t_max=t_max,
+                              t_min=t_min,
+                              t_step=t_step,
+                              mesh_divisors=mesh_divisors,
+                              coarse_mesh_shifts=coarse_mesh_shifts,
+                              no_kappa_stars=no_kappa_stars,
+                              log_level=self._log_level,
+                              filename=filename)
         br.set_grid_points(grid_points)
 
         if read_gamma:

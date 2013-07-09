@@ -337,35 +337,35 @@ def write_jointDOS(gp,
         w.write("%15.7f %20.15e\n" % (omega, val))
     w.close()
 
-def write_fwhm(gp,
-               band_indices,
-               temps,
-               fwhms,
-               mesh,
-               sigma=None,
-               is_nosym=False,
-               filename=None):
+def write_linewidth(gp,
+                    band_indices,
+                    temperatures,
+                    gamma,
+                    mesh,
+                    sigma=None,
+                    is_nosym=False,
+                    filename=None):
 
-    fwhm_filename = "fwhm"
+    lw_filename = "linewidth"
 
-    fwhm_filename += "-m%d%d%d-g%d-" % (mesh[0],
+    lw_filename += "-m%d%d%d-g%d-" % (mesh[0],
                                         mesh[1],
                                         mesh[2],
                                         gp)
     if sigma is not None:
-        fwhm_filename += ("s%f" % sigma).rstrip('0') + "-"
+        lw_filename += ("s%f" % sigma).rstrip('0') + "-"
 
     for i in band_indices:
-        fwhm_filename += "b%d" % i
+        lw_filename += "b%d" % (i + 1)
 
     if not filename == None:
-        fwhm_filename += ".%s" % filename
+        lw_filename += ".%s" % filename
     elif is_nosym:
-        fwhm_filename += ".nosym"
-    fwhm_filename += ".dat"
+        lw_filename += ".nosym"
+    lw_filename += ".dat"
 
-    w = open(fwhm_filename, 'w')
-    for v, t in zip(fwhms, temps):
+    w = open(lw_filename, 'w')
+    for v, t in zip(gamma.sum(axis=1) * 2 / gamma.shape[1], temperatures):
         w.write("%15.7f %20.15e\n" % (t, v))
     w.close()
     

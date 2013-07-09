@@ -12,5 +12,13 @@ void get_imag_self_energy(double *gamma,
 			  const double sigma,
 			  const double temperature,
 			  const double unit_conversion_factor);
-
+void get_imag_self_energy_at_bands(double *imag_self_energy,
+				   const Darray *fc3_normal_sqared,
+				   const int *band_indices,
+				   const double *frequencies,
+				   const int *grid_point_triplets,
+				   const int *triplet_weights,
+				   const double sigma,
+				   const double temperature,
+				   const double unit_conversion_factor);
 #endif
