@@ -26,8 +26,8 @@ static void real_to_normal(double *fc3_normal_squared,
 			   const int num_band0,
 			   const int num_band);
 static int collect_undone_grid_points(int *undone,
-				      const Iarray *triplets,
-				      const char *phonon_done);
+				      char *phonon_done,
+				      const Iarray *triplets);
 static int get_phonons(lapack_complex_double *a,
 		       double *w,
 		       const double q[3],
@@ -78,7 +78,7 @@ void set_phonon_triplets(Darray *frequencies,
   num_grid_points = grid_address->dims[0];
 
   undone = (int*)malloc(sizeof(int) * num_grid_points);
-  num_undone = collect_undone_grid_points(undone, triplets, phonon_done);
+  num_undone = collect_undone_grid_points(undone, phonon_done, triplets);
 
 #pragma omp parallel for private(j, q, gp, f)
   for (i = 0; i < num_undone; i++) {
@@ -125,7 +125,6 @@ void set_phonon_triplets(Darray *frequencies,
       frequencies->data[num_band * gp + j] = 
 	sqrt(fabs(f)) * ((f > 0) - (f < 0)) * unit_conversion_factor;
     }
-    phonon_done[gp] = 1;
   }
 
   free(undone);
@@ -241,27 +240,27 @@ static void real_to_normal(double *fc3_normal_squared,
 }
 
 static int collect_undone_grid_points(int *undone,
-				      const Iarray *triplets,
-				      const char *phonon_done)
+				      char *phonon_done,
+				      const Iarray *triplets)
 {
   int i, j, gp, num_undone;
 
   num_undone = 0;
 
-  for (i = 0; i < 3; i++) {
-    gp = triplets->data[i];
-    if (phonon_done[gp] == 0) {
-      undone[num_undone] = gp;
-      num_undone++;
-    }
+  gp = triplets->data[0];
+  if (phonon_done[gp] == 0) {
+    undone[num_undone] = gp;
+    num_undone++;
+    phonon_done[gp] = 1;
   }
 
   for (i = 0; i < triplets->dims[0]; i++) {
-    for (j = 0; j < 2; j++) {
-      gp = triplets->data[i * 3 + j + 1];
+    for (j = 1; j < 3; j++) {
+      gp = triplets->data[i * 3 + j];
       if (phonon_done[gp] == 0) {
 	undone[num_undone] = gp;
 	num_undone++;
+	phonon_done[gp] = 1;
       }
     }
   }
@@ -295,6 +294,7 @@ static int get_phonons(lapack_complex_double *a,
 
   dm_real = (double*) malloc(sizeof(double) * num_patom * num_patom * 9);
   dm_imag = (double*) malloc(sizeof(double) * num_patom * num_patom * 9);
+
   for (i = 0; i < num_patom * num_patom * 9; i++) {
     dm_real[i] = 0.0;
     dm_imag[i] = 0.0;
@@ -343,6 +343,7 @@ static int get_phonons(lapack_complex_double *a,
   } else {
     charge_sum = NULL;
   }
+
   get_dynamical_matrix_at_q(dm_real,
   			    dm_imag,
   			    num_patom,

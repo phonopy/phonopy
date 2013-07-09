@@ -161,10 +161,14 @@ class conductivity_RTA:
             if self._read_gamma:
                 self._pp.set_harmonic_phonons()
             else:
+                if self._log_level > 0:
+                    print "Finding ir-triplets"
                 self._ise.set_grid_point(grid_point)
+
+                if self._log_level > 0:
+                    print "Calculating interaction"
                 self._ise.run_interaction()
-                (self._frequencies_at_q,
-                 self._eigenvectors_at_q) = self._ise.get_phonon_at_grid_point()
+
                 self._set_gamma_at_sigmas(i)
 
             self._set_kappa_at_sigmas(i)
@@ -356,43 +360,6 @@ class conductivity_RTA:
             print ("Lifetime sampling mesh: [ %d %d %d ]" %
                    tuple(self._mesh / self._mesh_divisors))
 
-    def _sort_normal_umklapp(self):
-        normal_a = []
-        normal_w = []
-        normal_f = []
-        umklapp_a = []
-        umklapp_w = []
-        umklapp_f = []
-        (amplitude_at_q,
-         weights_at_q,
-         frequencies_at_q) = self._pp.get_amplitude()
-        triplets_at_q = self._pp.get_triplets_at_q()
-        for a, w, f, g3 in zip(amplitude_at_q,
-                               weights_at_q,
-                               frequencies_at_q,
-                               triplets_at_q):
-            sum_q = (self._grid_address[g3[0]] +
-                     self._grid_address[g3[1]] +
-                     self._grid_address[g3[2]])
-            if (sum_q == 0).all():
-                normal_a.append(a)
-                normal_w.append(w)
-                normal_f.append(f)
-                print "N",
-            else:
-                umklapp_a.append(a)
-                umklapp_w.append(w)
-                umklapp_f.append(f)
-                print "U",
-
-        print
-        return ((np.double(normal_a),
-                 np.intc(normal_w),
-                 np.double(normal_f)),
-                (np.double(umklapp_a),
-                 np.intc(umklapp_w),
-                 np.double(umklapp_f)))
-    
     def _show_log(self,
                   grid_point,
                   group_velocity,

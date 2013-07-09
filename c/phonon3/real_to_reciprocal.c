@@ -19,8 +19,8 @@ static lapack_complex_double get_phase_factor(const double q[9],
 					      const Darray *shortest_vectors,
 					      const Iarray *multiplicity,
 					      const int pi0,
-					      const int si1,
-					      const int si2);
+					      const int si,
+					      const int qi);
 
 /* fc3_reciprocal[num_patom, num_patom, num_patom, 3, 3, 3] */
 void real_to_reciprocal(lapack_complex_double *fc3_reciprocal,
@@ -83,7 +83,7 @@ static void real_to_reciprocal_elements(lapack_complex_double *fc3_rec_elem,
 					const int pi2)
 {
   int i, j, k, l, num_satom;
-  lapack_complex_double phase_factor;
+  lapack_complex_double phase_factor, phase_factor1, phase_factor2;
   double fc3_rec_real[27], fc3_rec_imag[27];
   double *fc3_elem;
 
@@ -100,15 +100,19 @@ static void real_to_reciprocal_elements(lapack_complex_double *fc3_rec_elem,
     if (s2p[j] != p2s[pi1]) {
       continue;
     }
+    phase_factor1 =
+      get_phase_factor(q, shortest_vectors, multiplicity, pi0, j, 1);
     for (k = 0; k < num_satom; k++) {
       if (s2p[k] != p2s[pi2]) {
 	continue;
       }
-      phase_factor =
-	get_phase_factor(q, shortest_vectors, multiplicity, pi0, j, k);
+      phase_factor2 =
+	get_phase_factor(q, shortest_vectors, multiplicity, pi0, k, 2);
       fc3_elem = fc3->data + (i * 27 * num_satom * num_satom +
 			      j * 27 * num_satom +
 			      k * 27);
+
+      phase_factor = phonoc_complex_prod(phase_factor1, phase_factor2);
       for (l = 0; l < 27; l++) {
 	fc3_rec_real[l] +=
 	  lapack_complex_double_real(phase_factor) * fc3_elem[l];
@@ -128,43 +132,30 @@ static lapack_complex_double get_phase_factor(const double q[9],
 					      const Darray *shortest_vectors,
 					      const Iarray *multiplicity,
 					      const int pi0,
-					      const int si1,
-					      const int si2)
+					      const int si,
+					      const int qi)
 {
-  int i, j, k;
-  int multi[2];
-  double *svecs[2];
-  double phase_real[2], phase_imag[2];
+  int i, j, multi;
+  double *svecs;
   double sum_real, sum_imag, phase;
-  lapack_complex_double phase1, phase2;
 
-  svecs[0] = shortest_vectors->data + (si1 * shortest_vectors->dims[1] *
-				       shortest_vectors->dims[2] * 3 +
-				       pi0 * shortest_vectors->dims[2] * 3);
-  svecs[1] = shortest_vectors->data + (si2 * shortest_vectors->dims[1] *
-				       shortest_vectors->dims[2] * 3 +
-				       pi0 * shortest_vectors->dims[2] * 3);
-  multi[0] = multiplicity->data[si1 * multiplicity->dims[1] + pi0];
-  multi[1] = multiplicity->data[si2 * multiplicity->dims[1] + pi0];
+  svecs = shortest_vectors->data + (si * shortest_vectors->dims[1] *
+				    shortest_vectors->dims[2] * 3 +
+				    pi0 * shortest_vectors->dims[2] * 3);
+  multi = multiplicity->data[si * multiplicity->dims[1] + pi0];
 
-  for (i = 0; i < 2; i++) {
-    sum_real = 0;
-    sum_imag = 0;
-    for (j = 0; j < multi[i]; j++) {
-      phase = 0;
-      for (k = 0; k < 3; k++) {
-	/* q0 is not used. */
-	phase += q[(i + 1) * 3 + k] * svecs[i][j * 3 + k];
-      }
-      sum_real += cos(M_2PI * phase);
-      sum_imag += sin(M_2PI * phase);
+  sum_real = 0;
+  sum_imag = 0;
+  for (i = 0; i < multi; i++) {
+    phase = 0;
+    for (j = 0; j < 3; j++) {
+      phase += q[qi * 3 + j] * svecs[i * 3 + j];
     }
-    phase_real[i] = sum_real / multi[i];
-    phase_imag[i] = sum_imag / multi[i];
+    sum_real += cos(M_2PI * phase);
+    sum_imag += sin(M_2PI * phase);
   }
+  sum_real /= multi;
+  sum_imag /= multi;
 
-  phase1 = lapack_make_complex_double(phase_real[0], phase_imag[0]);
-  phase2 = lapack_make_complex_double(phase_real[1], phase_imag[1]);
-  
-  return phonoc_complex_prod(phase1, phase2);
+  return lapack_make_complex_double(sum_real, sum_imag);
 }

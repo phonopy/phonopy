@@ -11,16 +11,16 @@ def occupation(x, t):
 class ImagSelfEnergy:
     def __init__(self,
                  interaction,
-                 grid_point=0,
+                 grid_point=None,
                  fpoints=None,
-                 temperature=-1,
+                 temperature=None,
                  sigma=0.1,
                  lang='C'):
         self._interaction = interaction
-        self._temperature = temperature
-        self._sigma = sigma
-        self._fpoints = fpoints
-        self._grid_point = grid_point
+        self.set_sigma(sigma)
+        self.set_temperature(temperature)
+        self.set_fpoints(fpoints)
+        self.set_grid_point(grid_point=grid_point)
 
         self._lang = lang
         self._imag_self_energy = None
@@ -50,7 +50,6 @@ class ImagSelfEnergy:
                 self._run_py_with_fpoints()
 
     def run_interaction(self):
-        self._interaction.set_grid_point(self._grid_point)
         self._interaction.run(lang=self._lang)
         self._fc3_normal_squared = self._interaction.get_interaction_strength()
         (self._frequencies,
@@ -74,18 +73,31 @@ class ImagSelfEnergy:
         return (self._frequencies[self._grid_point],
                 self._eigenvectors[self._grid_point])
 
-    def set_grid_point(self, grid_point):
-        self._grid_point = grid_point
-        self._fc3_normal_squared = None
+    def set_grid_point(self, grid_point=None):
+        if grid_point is None:
+            self._grid_point = None
+        else:
+            self._grid_point = grid_point
+            self._interaction.set_grid_point(grid_point)
+            self._fc3_normal_squared = None
         
     def set_sigma(self, sigma):
-        self._sigma = sigma
+        if sigma is None:
+            self._sigma = None
+        else:
+            self._sigma = float(sigma)
 
     def set_fpoints(self, fpoints):
-        self._fpoints = fpoints
+        if fpoints is None:
+            self._fpoints = None
+        else:
+            self._fpoints = np.double(fpoints)
 
     def set_temperature(self, temperature):
-        self._temperature = temperature
+        if temperature is None:
+            self._temperature = None
+        else:
+            self._temperature = float(temperature)
         
     def _run_c_with_band_indices(self):
         import anharmonic._phono3py as phono3c
