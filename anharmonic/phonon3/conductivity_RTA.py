@@ -143,14 +143,14 @@ class conductivity_RTA:
         
     def get_kappa(self):
         return self._kappa / self._sum_num_kstar
-        
+
     def calculate_kappa(self,
                         write_amplitude=False,
                         read_amplitude=False,
                         write_gamma=False):
         self._allocate_values()
-        for i in range(len(self._grid_points)):
-            grid_point = self._grid_points[i]
+        num_band = self._primitive.get_number_of_atoms()
+        for i, grid_point in enumerate(self._grid_points):
             self._qpoint = (self._grid_address[grid_point].astype('double') /
                             self._mesh)
             
@@ -159,7 +159,7 @@ class conductivity_RTA:
                        (i + 1, len(self._grid_points)))
 
             if self._read_gamma:
-                self._pp.set_harmonic_phonons()
+                self._frequencies[i] = self._get_phonon_c()
             else:
                 if self._log_level > 0:
                     print "Finding ir-triplets"
@@ -168,7 +168,7 @@ class conductivity_RTA:
                 if self._log_level > 0:
                     print "Calculating interaction"
                 self._ise.run_interaction()
-
+                self._frequencies[i] = self._ise.get_phonon_at_grid_point()[0]
                 self._set_gamma_at_sigmas(i)
 
             self._set_kappa_at_sigmas(i)
@@ -179,7 +179,7 @@ class conductivity_RTA:
                         self._gamma[j, i],
                         self._temperatures,
                         self._mesh,
-                        frequency=self._ise.get_phonon_at_grid_point()[0],
+                        frequency=self._frequencies[i],
                         group_velocity=self._gv[i],
                         heat_capacity=self._cv[i],
                         mesh_divisors=self._mesh_divisors,
@@ -210,7 +210,7 @@ class conductivity_RTA:
                                       num_freqs), dtype='double')
         
     def _set_gamma_at_sigmas(self, i):
-        freqs = self._ise.get_phonon_at_grid_point()[0]
+        freqs = self._frequencies[i]
         for j, sigma in enumerate(self._sigmas):
             if self._log_level > 0:
                 print "Calculating Gamma using sigma=%s" % sigma
@@ -224,16 +224,13 @@ class conductivity_RTA:
                                                 gamma_at_gp, -1)
     
     def _set_kappa_at_sigmas(self, i):
-        freqs, eigvecs = self._ise.get_phonon_at_grid_point()
-        self._frequencies[i] = freqs
+        freqs = self._frequencies[i]
         
         # Group velocity [num_freqs, 3]
         gv = get_group_velocity(
             self._qpoint,
             self._dynamical_matrix,
             self._reciprocal_lattice,
-            eigenvectors=eigvecs,
-            frequencies=freqs,
             frequency_factor_to_THz=self._frequency_factor_to_THz)
         self._gv[i] = gv
         
@@ -248,7 +245,7 @@ class conductivity_RTA:
             gv_sum2[j] = gv_by_gv_tensor[:, :, vxv[0], vxv[1]].sum(axis=0)
 
         # Heat capacity [num_temps, num_freqs]
-        cv = self._get_cv()
+        cv = self._get_cv(freqs)
         self._cv[i] = cv
 
         # Kappa
@@ -261,8 +258,8 @@ class conductivity_RTA:
                             (self._gamma[j, i, k, l] * 2) *
                             self._conversion_factor)
 
-    def _get_gv_by_gv(self, gv, index):
-        grid_point = self._grid_points[index]
+    def _get_gv_by_gv(self, gv, i):
+        grid_point = self._grid_points[i]
 
         # Sum group velocities at symmetrically equivalent q-points
         if self._no_kappa_stars: # [1, 3, 3] 
@@ -272,15 +269,15 @@ class conductivity_RTA:
 
             # check if the number of rotations is correct.
             if self._grid_weights is not None:
-                if len(rotations) != self._grid_weights[index]:
+                if len(rotations) != self._grid_weights[i]:
                     if self._log_level:
                         print "*" * 33  + "Warning" + "*" * 33
                         print (" Number of elements in k* is unequal "
                                "to number of equivalent grid-points.")
                         print "*" * 73
-                # assert len(rotations) == self._grid_weights[index], \
+                # assert len(rotations) == self._grid_weights[i], \
                 #     "Num rotations %d, weight %d" % (
-                #     len(rotations), self._grid_weights[index])
+                #     len(rotations), self._grid_weights[i])
             
         gv2_tensor = []
         inv_rec_lat = self._primitive.get_cell()
@@ -292,13 +289,16 @@ class conductivity_RTA:
                                for gv_rot_band_index in np.dot(rot, gv.T).T])
 
         if self._log_level:
-            self._show_log(grid_point, gv, rotations_cartesian, rotations)
+            self._show_log(grid_point,
+                           self._frequencies[i],
+                           gv,
+                           rotations_cartesian,
+                           rotations)
             print
 
         return np.array(gv2_tensor)
     
-    def _get_cv(self):
-        freqs = self._ise.get_phonon_at_grid_point()[0]
+    def _get_cv(self, freqs):
         cv = np.zeros((len(self._temperatures), len(freqs)), dtype='double')
         for i, t in enumerate(self._temperatures):
             if t > 0:
@@ -360,8 +360,54 @@ class conductivity_RTA:
             print ("Lifetime sampling mesh: [ %d %d %d ]" %
                    tuple(self._mesh / self._mesh_divisors))
 
+    def _get_phonon_c(self):
+        import anharmonic._phono3py as phono3c
+
+        dm = self._dynamical_matrix
+        svecs, multiplicity = dm.get_shortest_vectors()
+        masses = np.double(dm.get_primitive().get_masses())
+        rec_lattice = np.double(
+            np.linalg.inv(dm.get_primitive().get_cell())).copy()
+        if dm.is_nac():
+            born = dm.get_born_effective_charges()
+            nac_factor = dm.get_nac_factor()
+            dielectric = dm.get_dielectric_constant()
+        else:
+            born = None
+            nac_factor = 0
+            dielectric = None
+        uplo = self._pp.get_lapack_zheev_uplo()
+        num_freqs = len(masses) * 3
+        frequencies = np.zeros(num_freqs, dtype='double')
+        eigenvectors = np.zeros((num_freqs, num_freqs), dtype='complex128')
+
+        phono3c.phonon(frequencies,
+                       eigenvectors,
+                       np.double(self._qpoint),
+                       dm.get_force_constants(),
+                       svecs,
+                       multiplicity,
+                       masses,
+                       dm.get_primitive_to_supercell_map(),
+                       dm.get_supercell_to_primitive_map(),
+                       self._frequency_factor_to_THz,
+                       born,
+                       dielectric,
+                       rec_lattice,
+                       None,
+                       nac_factor,
+                       uplo)
+        # dm.set_dynamical_matrix(self._qpoint)
+        # dynmat = dm.get_dynamical_matrix()
+        # eigvals = np.linalg.eigvalsh(dynmat).real
+        # frequencies = (np.sqrt(np.abs(eigvals)) * np.sign(eigvals) *
+        #                self._frequency_factor_to_THz)
+
+        return frequencies
+
     def _show_log(self,
                   grid_point,
+                  frequencies,
                   group_velocity,
                   rotations_cartesian,
                   rotations):
@@ -372,7 +418,7 @@ class conductivity_RTA:
             q_rot = np.dot(rot, q)
             q_rot -= np.rint(q_rot)
             print " k*%-2d (%5.2f %5.2f %5.2f)" % ((i + 1,) + tuple(q_rot))
-            for f, v in zip(self._ise.get_phonon_at_grid_point()[0],
+            for f, v in zip(frequencies,
                             np.dot(rot, group_velocity.T).T):
                 print "%8.3f   (%8.3f %8.3f %8.3f)" % ((f,) + tuple(v))
 

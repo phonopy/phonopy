@@ -21,4 +21,12 @@ void get_imag_self_energy_at_bands(double *imag_self_energy,
 				   const double sigma,
 				   const double temperature,
 				   const double unit_conversion_factor);
+int get_jointDOS(double *jdos,
+		 const int num_omega,
+		 const int num_triplet,
+		 const int num_band,
+		 const double *o,
+		 const double *f,
+		 const int *w,
+		 const double sigma);
 #endif

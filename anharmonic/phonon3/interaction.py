@@ -98,7 +98,10 @@ class Interaction:
 
     def get_frequency_factor_to_THz(self):
         return self._frequency_factor_to_THz
-    
+
+    def get_lapack_zheev_uplo(self):
+        return self._lapack_zheev_uplo
+        
     def set_grid_point(self, grid_point):
         if self._is_nosym:
             triplets_at_q, weights_at_q, grid_address = get_nosym_triplets(

@@ -97,6 +97,35 @@ void get_imag_self_energy_at_bands(double *imag_self_energy,
   }
 }
 
+int get_jointDOS(double *jdos,
+		 const int num_omega,
+		 const int num_triplet,
+		 const int num_band,
+		 const double *o,
+		 const double *f,
+		 const int *w,
+		 const double sigma)
+{
+  int i, j, k, l;
+  double f2, f3;
+
+#pragma omp parallel for private(j, k, l, f2, f3)
+  for (i = 0; i < num_omega; i++) {
+    jdos[i] = 0.0;
+    for (j = 0; j < num_triplet; j++) {
+      for (k = 0; k < num_band; k++) {
+	for (l = 0; l < num_band; l++) {
+	  f2 = f[j * 3 * num_band + num_band + k];
+	  f3 = f[j * 3 * num_band + 2 * num_band + l];
+	  jdos[i] += gaussian(f2 + f3 - o[i], sigma) * w[j];
+	}
+      }
+    }
+  }
+
+  return 1;
+}
+
 static double get_imag_self_energy_at_band(double *imag_self_energy,
 					   const int band_index,
 					   const Darray *fc3_normal_sqared,

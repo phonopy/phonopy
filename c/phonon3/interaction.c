@@ -28,25 +28,125 @@ static void real_to_normal(double *fc3_normal_squared,
 static int collect_undone_grid_points(int *undone,
 				      char *phonon_done,
 				      const Iarray *triplets);
-static int get_phonons(lapack_complex_double *a,
-		       double *w,
-		       const double q[3],
-		       const Darray *fc2,
-		       const double *masses,
-		       const int *p2s,
-		       const int *s2p,
-		       const Iarray *multi,
-		       const Darray *svecs,
-		       const double *born,
-		       const double *dielectric,
-		       const double *reciprocal_lattice,
-		       const double *q_direction,
-		       const double nac_factor,
-		       const char uplo);
 static void get_qpoint(double q[9],
 		       const int *gp_triplet,
 		       const int *grid_address,
 		       const int mesh[3]);
+
+int get_phonons(lapack_complex_double *a,
+		double *w,
+		const double q[3],
+		const Darray *fc2,
+		const double *masses,
+		const int *p2s,
+		const int *s2p,
+		const Iarray *multi,
+		const Darray *svecs,
+		const double *born,
+		const double *dielectric,
+		const double *reciprocal_lattice,
+		const double *q_direction,
+		const double nac_factor,
+		const double unit_conversion_factor,
+		const char uplo)
+{
+  int i, j, num_patom, num_satom, info;
+  double q_cart[3];
+  double *dm_real, *dm_imag, *charge_sum;
+  double inv_dielectric_factor, dielectric_factor, tmp_val;
+
+  num_patom = multi->dims[1];
+  num_satom = multi->dims[0];
+
+  dm_real = (double*) malloc(sizeof(double) * num_patom * num_patom * 9);
+  dm_imag = (double*) malloc(sizeof(double) * num_patom * num_patom * 9);
+
+  for (i = 0; i < num_patom * num_patom * 9; i++) {
+    dm_real[i] = 0.0;
+    dm_imag[i] = 0.0;
+  }
+
+  if (born) {
+    if (fabs(q[0]) < 1e-10 && fabs(q[1]) < 1e-10 && fabs(q[2]) < 1e-10 &&
+	(!q_direction)) {
+      charge_sum = NULL;
+    } else {
+      charge_sum = (double*) malloc(sizeof(double) * num_patom * num_patom * 9);
+      if (q_direction) {
+	for (i = 0; i < 3; i++) {
+	  q_cart[i] = 0.0;
+	  for (j = 0; j < 3; j++) {
+	    q_cart[i] += reciprocal_lattice[i * 3 + j] * q_direction[j];
+	  }
+	}
+      } else {
+	for (i = 0; i < 3; i++) {
+	  q_cart[i] = 0.0;
+	  for (j = 0; j < 3; j++) {
+	    q_cart[i] += reciprocal_lattice[i * 3 + j] * q[j];
+	  }
+	}
+      }
+
+      inv_dielectric_factor = 0.0;
+      for (i = 0; i < 3; i++) {
+	tmp_val = 0.0;
+	for (j = 0; j < 3; j++) {
+	  tmp_val += dielectric[i * 3 + j] * q_cart[j];
+	}
+	inv_dielectric_factor += tmp_val * q_cart[i];
+      }
+      /* N = num_satom / num_patom = number of prim-cell in supercell */
+      /* N is used for Wang's method. */
+      dielectric_factor = nac_factor /
+	inv_dielectric_factor / num_satom * num_patom;
+      get_charge_sum(charge_sum,
+		     num_patom,
+		     dielectric_factor,
+		     q_cart,
+		     born);
+    }
+  } else {
+    charge_sum = NULL;
+  }
+
+  get_dynamical_matrix_at_q(dm_real,
+  			    dm_imag,
+  			    num_patom,
+  			    num_satom,
+  			    fc2->data,
+  			    q,
+  			    svecs->data,
+  			    multi->data,
+   			    masses,
+  			    s2p,
+  			    p2s,
+  			    charge_sum);
+  if (born) {
+    free(charge_sum);
+  }
+
+  for (i = 0; i < num_patom * 3; i++) {
+    for (j = 0; j < num_patom * 3; j++) {
+      a[i * num_patom * 3 + j] = lapack_make_complex_double
+	((dm_real[i * num_patom * 3 + j] + dm_real[j * num_patom * 3 + i]) / 2,
+	 (dm_imag[i * num_patom * 3 + j] - dm_imag[j * num_patom * 3 + i]) / 2);
+    }
+  }
+
+
+  free(dm_real);
+  free(dm_imag);
+
+  info = phonopy_zheev(w, a, num_patom * 3, uplo);
+  
+  for (i = 0; i < num_patom * 3; i++) {
+    w[i] =
+      sqrt(fabs(w[i])) * ((w[i] > 0) - (w[i] < 0)) * unit_conversion_factor;
+  }
+  
+  return info;
+}
 
 void set_phonon_triplets(Darray *frequencies,
 			 Carray *eigenvectors,
@@ -70,7 +170,6 @@ void set_phonon_triplets(Darray *frequencies,
 {
   int i, j, gp, num_patom, num_band, num_grid_points, num_undone;
   int *undone;
-  double f;
   double q[3];
 
   num_patom = multi_fc2->dims[1];
@@ -80,7 +179,7 @@ void set_phonon_triplets(Darray *frequencies,
   undone = (int*)malloc(sizeof(int) * num_grid_points);
   num_undone = collect_undone_grid_points(undone, phonon_done, triplets);
 
-#pragma omp parallel for private(j, q, gp, f)
+#pragma omp parallel for private(j, q, gp)
   for (i = 0; i < num_undone; i++) {
     gp = undone[i];
     for (j = 0; j < 3; j++) {
@@ -102,6 +201,7 @@ void set_phonon_triplets(Darray *frequencies,
 		  reciprocal_lattice,
 		  q_direction,
 		  nac_factor,
+		  unit_conversion_factor,
 		  uplo);
     } else {
       get_phonons(eigenvectors->data + num_band * num_band * gp,
@@ -118,12 +218,8 @@ void set_phonon_triplets(Darray *frequencies,
 		  reciprocal_lattice,
 		  NULL,
 		  nac_factor,
+		  unit_conversion_factor,
 		  uplo);
-    }
-    for (j = 0; j < num_band; j++) {
-      f = frequencies->data[num_band * gp + j];
-      frequencies->data[num_band * gp + j] = 
-	sqrt(fabs(f)) * ((f > 0) - (f < 0)) * unit_conversion_factor;
     }
   }
 
@@ -268,111 +364,6 @@ static int collect_undone_grid_points(int *undone,
   return num_undone;
 }
 
-static int get_phonons(lapack_complex_double *a,
-		       double *w,
-		       const double q[3],
-		       const Darray *fc2,
-		       const double *masses,
-		       const int *p2s,
-		       const int *s2p,
-		       const Iarray *multi,
-		       const Darray *svecs,
-		       const double *born,
-		       const double *dielectric,
-		       const double *reciprocal_lattice,
-		       const double *q_direction,
-		       const double nac_factor,
-		       const char uplo)
-{
-  int i, j, num_patom, num_satom;
-  double q_cart[3];
-  double *dm_real, *dm_imag, *charge_sum;
-  double inv_dielectric_factor, dielectric_factor, tmp_val;
-
-  num_patom = multi->dims[1];
-  num_satom = multi->dims[0];
-
-  dm_real = (double*) malloc(sizeof(double) * num_patom * num_patom * 9);
-  dm_imag = (double*) malloc(sizeof(double) * num_patom * num_patom * 9);
-
-  for (i = 0; i < num_patom * num_patom * 9; i++) {
-    dm_real[i] = 0.0;
-    dm_imag[i] = 0.0;
-  }
-
-  if (born) {
-    if (fabs(q[0]) < 1e-10 && fabs(q[1]) < 1e-10 && fabs(q[2]) < 1e-10 &&
-	(!q_direction)) {
-      charge_sum = NULL;
-    } else {
-      charge_sum = (double*) malloc(sizeof(double) * num_patom * num_patom * 9);
-      if (q_direction) {
-	for (i = 0; i < 3; i++) {
-	  q_cart[i] = 0.0;
-	  for (j = 0; j < 3; j++) {
-	    q_cart[i] += reciprocal_lattice[i * 3 + j] * q_direction[j];
-	  }
-	}
-      } else {
-	for (i = 0; i < 3; i++) {
-	  q_cart[i] = 0.0;
-	  for (j = 0; j < 3; j++) {
-	    q_cart[i] += reciprocal_lattice[i * 3 + j] * q[j];
-	  }
-	}
-      }
-
-      inv_dielectric_factor = 0.0;
-      for (i = 0; i < 3; i++) {
-	tmp_val = 0.0;
-	for (j = 0; j < 3; j++) {
-	  tmp_val += dielectric[i * 3 + j] * q_cart[j];
-	}
-	inv_dielectric_factor += tmp_val * q_cart[i];
-      }
-      /* N = num_satom / num_patom = number of prim-cell in supercell */
-      /* N is used for Wang's method. */
-      dielectric_factor = nac_factor /
-	inv_dielectric_factor / num_satom * num_patom;
-      get_charge_sum(charge_sum,
-		     num_patom,
-		     dielectric_factor,
-		     q_cart,
-		     born);
-    }
-  } else {
-    charge_sum = NULL;
-  }
-
-  get_dynamical_matrix_at_q(dm_real,
-  			    dm_imag,
-  			    num_patom,
-  			    num_satom,
-  			    fc2->data,
-  			    q,
-  			    svecs->data,
-  			    multi->data,
-   			    masses,
-  			    s2p,
-  			    p2s,
-  			    charge_sum);
-  if (born) {
-    free(charge_sum);
-  }
-
-  for (i = 0; i < num_patom * 3; i++) {
-    for (j = 0; j < num_patom * 3; j++) {
-      a[i * num_patom * 3 + j] = lapack_make_complex_double
-	((dm_real[i * num_patom * 3 + j] + dm_real[j * num_patom * 3 + i]) / 2,
-	 (dm_imag[i * num_patom * 3 + j] - dm_imag[j * num_patom * 3 + i]) / 2);
-    }
-  }
-
-  free(dm_real);
-  free(dm_imag);
-
-  return phonopy_zheev(w, a, num_patom * 3, uplo);
-}
 
 static void get_qpoint(double q[9],
 		       const int *gp_triplet,
