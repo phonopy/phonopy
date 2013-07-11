@@ -4,7 +4,6 @@ from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNA
 from anharmonic.fc_interpolate import get_fc_interpolation
 from phonopy.structure.cells import get_supercell, Primitive, print_cell
 from anharmonic.file_IO import write_fc3_dat, write_fc2_dat
-from anharmonic.fc_tools import expand_fc2, expand_fc3
 from phonopy.units import VaspToTHz
 from phonopy.phonon.mesh import get_qpoints
 

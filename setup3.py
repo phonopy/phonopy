@@ -32,7 +32,6 @@ setup(name='phono3py',
       author='Atsushi Togo',
       author_email='atz.togo@gmail.com',
       url='http://phonopy.sourceforge.net/',
-      packages=['anharmonic',
-                'anharmonic.phonon3'],
+      packages=['anharmonic'],
       scripts=['scripts/phono3py'],
       ext_modules=[extension])
