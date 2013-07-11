@@ -2,9 +2,9 @@ import numpy as np
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC, get_smallest_vectors
 from phonopy.structure.symmetry import Symmetry
 from phonopy.units import VaspToTHz
-from anharmonic.phonon3.real_to_reciprocal import RealToReciprocal
-from anharmonic.phonon3.reciprocal_to_normal import ReciprocalToNormal
-from anharmonic.triplets import get_triplets_at_q
+from anharmonic.real_to_reciprocal import RealToReciprocal
+from anharmonic.reciprocal_to_normal import ReciprocalToNormal
+from anharmonic.triplets import get_triplets_at_q, get_nosym_triplets_at_q
 
 class Interaction:
     def __init__(self,
@@ -101,12 +101,14 @@ class Interaction:
 
     def get_lapack_zheev_uplo(self):
         return self._lapack_zheev_uplo
+
+    def is_nosym(self):
+        return self._is_nosym
         
     def set_grid_point(self, grid_point):
         if self._is_nosym:
-            triplets_at_q, weights_at_q, grid_address = get_nosym_triplets(
-                self._mesh,
-                grid_point)
+            triplets_at_q, weights_at_q, grid_address = get_nosym_triplets_at_q(
+                grid_point, self._mesh)
         else:
             triplets_at_q, weights_at_q, grid_address = get_triplets_at_q(
                 grid_point,

@@ -5,7 +5,7 @@ from phonopy.units import Kb, THzToEv, EV, THz, Angstrom
 from phonopy.phonon.thermal_properties import mode_cv
 from anharmonic.file_IO import write_kappa_to_hdf5
 from anharmonic.triplets import get_grid_address, reduce_grid_points, get_ir_grid_points, from_coarse_to_dense_grid_points
-from anharmonic.phonon3.imag_self_energy import ImagSelfEnergy
+from anharmonic.imag_self_energy import ImagSelfEnergy
 
 unit_to_WmK = ((THz * Angstrom) ** 2 / (Angstrom ** 3) * EV / THz /
                (2 * np.pi)) # 2pi comes from definition of lifetime.
@@ -98,6 +98,7 @@ class conductivity_RTA:
                 coarse_grid_points,
                 coarse_grid_address,
                 coarse_mesh_shifts=self._coarse_mesh_shifts)
+            self._grid_weights = np.ones(len(self._grid_points), dtype='intc')
         else: # Automatic sampling
             (coarse_grid_points,
              coarse_grid_weights,
@@ -157,35 +158,27 @@ class conductivity_RTA:
             if self._log_level:
                 print ("================= %d/%d =================" %
                        (i + 1, len(self._grid_points)))
+                print "q-point: (%5.2f %5.2f %5.2f)" % tuple(self._qpoint)
 
             if self._read_gamma:
                 self._frequencies[i] = self._get_phonon_c()
             else:
                 if self._log_level > 0:
-                    print "Finding ir-triplets"
-                self._ise.set_grid_point(grid_point)
+                    print "Number of triplets:",
 
+                self._ise.set_grid_point(grid_point)
+                
                 if self._log_level > 0:
+                    print len(self._pp.get_triplets_at_q()[0])
                     print "Calculating interaction"
                 self._ise.run_interaction()
                 self._frequencies[i] = self._ise.get_phonon_at_grid_point()[0]
                 self._set_gamma_at_sigmas(i)
 
             self._set_kappa_at_sigmas(i)
-            
+
             if write_gamma:
-                for j, sigma in enumerate(self._sigmas):
-                    write_kappa_to_hdf5(
-                        self._gamma[j, i],
-                        self._temperatures,
-                        self._mesh,
-                        frequency=self._frequencies[i],
-                        group_velocity=self._gv[i],
-                        heat_capacity=self._cv[i],
-                        mesh_divisors=self._mesh_divisors,
-                        grid_point=grid_point,
-                        sigma=sigma,
-                        filename=self._filename)
+                self._write_gamma(i, grid_point)
 
     def _allocate_values(self):
         num_freqs = self._primitive.get_number_of_atoms() * 3
@@ -213,7 +206,7 @@ class conductivity_RTA:
         freqs = self._frequencies[i]
         for j, sigma in enumerate(self._sigmas):
             if self._log_level > 0:
-                print "Calculating Gamma using sigma=%s" % sigma
+                print "Calculating Gamma with sigma=%s" % sigma
 
             self._ise.set_sigma(sigma)
             for k, t in enumerate(self._temperatures):
@@ -234,6 +227,10 @@ class conductivity_RTA:
             frequency_factor_to_THz=self._frequency_factor_to_THz)
         self._gv[i] = gv
         
+        # Heat capacity [num_temps, num_freqs]
+        cv = self._get_cv(freqs)
+        self._cv[i] = cv
+
         # Outer product of group velocities (v x v) [num_k*, num_freqs, 3, 3]
         gv_by_gv_tensor = self._get_gv_by_gv(gv, i)
         self._sum_num_kstar += len(gv_by_gv_tensor)
@@ -243,10 +240,6 @@ class conductivity_RTA:
         for j, vxv in enumerate(
             ([0, 0], [1, 1], [2, 2], [1, 2], [0, 2], [0, 1])):
             gv_sum2[j] = gv_by_gv_tensor[:, :, vxv[0], vxv[1]].sum(axis=0)
-
-        # Heat capacity [num_temps, num_freqs]
-        cv = self._get_cv(freqs)
-        self._cv[i] = cv
 
         # Kappa
         for j, sigma in enumerate(self._sigmas):
@@ -260,25 +253,7 @@ class conductivity_RTA:
 
     def _get_gv_by_gv(self, gv, i):
         grid_point = self._grid_points[i]
-
-        # Sum group velocities at symmetrically equivalent q-points
-        if self._no_kappa_stars: # [1, 3, 3] 
-            rotations = [np.eye(3, dtype=int)]
-        else: # [num_k*, 3, 3]
-            rotations = self._get_rotations_for_star(grid_point)
-
-            # check if the number of rotations is correct.
-            if self._grid_weights is not None:
-                if len(rotations) != self._grid_weights[i]:
-                    if self._log_level:
-                        print "*" * 33  + "Warning" + "*" * 33
-                        print (" Number of elements in k* is unequal "
-                               "to number of equivalent grid-points.")
-                        print "*" * 73
-                # assert len(rotations) == self._grid_weights[i], \
-                #     "Num rotations %d, weight %d" % (
-                #     len(rotations), self._grid_weights[i])
-            
+        rotations = self._get_rotations_for_star(i)
         gv2_tensor = []
         inv_rec_lat = self._primitive.get_cell()
         rec_lat = np.linalg.inv(inv_rec_lat)
@@ -292,9 +267,7 @@ class conductivity_RTA:
             self._show_log(grid_point,
                            self._frequencies[i],
                            gv,
-                           rotations_cartesian,
                            rotations)
-            print
 
         return np.array(gv2_tensor)
     
@@ -309,20 +282,36 @@ class conductivity_RTA:
         return cv
 
 
-    def _get_rotations_for_star(self, grid_point):
-        orig_address = self._grid_address[grid_point]
-        orbits = []
-        rotations = []
-        for rot in self._point_operations:
-            rot_address = np.dot(rot, orig_address) % self._mesh
-            in_orbits = False
-            for orbit in orbits:
-                if (rot_address == orbit).all():
-                    in_orbits = True
-                    break
-            if not in_orbits:
-                orbits.append(rot_address)
-                rotations.append(rot)
+    def _get_rotations_for_star(self, i):
+        if self._no_kappa_stars:
+            rotations = [np.eye(3, dtype=int)]
+        else:
+            grid_point = self._grid_points[i]
+            orig_address = self._grid_address[grid_point]
+            orbits = []
+            rotations = []
+            for rot in self._point_operations:
+                rot_address = np.dot(rot, orig_address) % self._mesh
+                in_orbits = False
+                for orbit in orbits:
+                    if (rot_address == orbit).all():
+                        in_orbits = True
+                        break
+                if not in_orbits:
+                    orbits.append(rot_address)
+                    rotations.append(rot)
+    
+            # check if the number of rotations is correct.
+            if self._grid_weights is not None:
+                if len(rotations) != self._grid_weights[i]:
+                    if self._log_level:
+                        print "*" * 33  + "Warning" + "*" * 33
+                        print (" Number of elements in k* is unequal "
+                               "to number of equivalent grid-points.")
+                        print "*" * 73
+                # assert len(rotations) == self._grid_weights[i], \
+                #     "Num rotations %d, weight %d" % (
+                #     len(rotations), self._grid_weights[i])
 
         return rotations
 
@@ -409,18 +398,33 @@ class conductivity_RTA:
                   grid_point,
                   frequencies,
                   group_velocity,
-                  rotations_cartesian,
                   rotations):
         print "----- Partial kappa at grid address %d -----" % grid_point
         print "Frequency, projected group velocity (x, y, z) at k* (k-star)"
         q = self._grid_address[grid_point].astype(float) / self._mesh
-        for i, (rotc, rot) in enumerate(zip(rotations_cartesian, rotations)):
+        for i, rot in enumerate(rotations):
             q_rot = np.dot(rot, q)
             q_rot -= np.rint(q_rot)
             print " k*%-2d (%5.2f %5.2f %5.2f)" % ((i + 1,) + tuple(q_rot))
             for f, v in zip(frequencies,
                             np.dot(rot, group_velocity.T).T):
                 print "%8.3f   (%8.3f %8.3f %8.3f)" % ((f,) + tuple(v))
+
+        print
+
+    def _write_gamma(self, i, grid_point):
+        for j, sigma in enumerate(self._sigmas):
+            write_kappa_to_hdf5(
+                self._gamma[j, i],
+                self._temperatures,
+                self._mesh,
+                frequency=self._frequencies[i],
+                group_velocity=self._gv[i],
+                heat_capacity=self._cv[i],
+                mesh_divisors=self._mesh_divisors,
+                grid_point=grid_point,
+                sigma=sigma,
+                filename=self._filename)
 
         
 def get_pointgroup_operations(point_operations_real):

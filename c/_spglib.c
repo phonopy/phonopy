@@ -549,7 +549,7 @@ static PyObject * get_stabilized_reciprocal_mesh(PyObject *self, PyObject *args)
 							rot,
 							num_q,
 							q);
-  
+
   for (i = 0; i < mesh_int[0] * mesh_int[1] * mesh_int[2]; i++) {
     for (j = 0; j < 3; j++) {
       grid_pint[i*3 + j] = grid_int[i][j];

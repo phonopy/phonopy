@@ -1,7 +1,6 @@
 import sys
 import numpy as np
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC, get_smallest_vectors
-from anharmonic.fc_interpolate import get_fc_interpolation
 from phonopy.structure.cells import get_supercell, Primitive, print_cell
 from anharmonic.file_IO import write_fc3_dat, write_fc2_dat
 from phonopy.units import VaspToTHz

@@ -28,6 +28,7 @@ def get_triplets_at_q(grid_point,
 
 def get_nosym_triplets_at_q(grid_point, mesh):
     grid_address = get_grid_address(mesh)
+
     triplets = np.zeros((len(grid_address), 3), dtype='intc')
     weights = np.ones(len(grid_address), dtype='intc')
     for i, g1 in enumerate(grid_address):
