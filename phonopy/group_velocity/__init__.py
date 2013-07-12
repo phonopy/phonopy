@@ -128,17 +128,20 @@ def get_group_velocity(q, # q-point
                                     q_length,
                                     dynamical_matrix,
                                     reciprocal_lattice)): # (x, y, z)
-        dD_at_q[:, i] = [np.vdot(eigvec, np.dot(dD_i, eigvec)).real
-                         for eigvec in eigvecs.T]
+        # dD_at_q[:, i] = [np.vdot(eigvec, np.dot(dD_i, eigvec)).real
+        #                  for eigvec in eigvecs.T]
+        pert_dD = perturb_dD(dD_i, freqs, eigvecs)
+        # dD_at_q[:, i] = np.linalg.eigvalsh(pert_dD).real
+        dD_at_q[:, i] = pert_dD
         dD_at_q[:, i] *= factor ** 2 / freqs / 2 / (q_length * 2)
     return dD_at_q
-        
+
 def get_dD(q, q_length, dynamical_matrix, reciprocal_lattice):
     # The names of *c mean something in Cartesian.
     dynmat = dynamical_matrix
     rlat_inv = np.linalg.inv(reciprocal_lattice)
     ddm = []
-    for dqc_i in (np.eye(3) * q_length):
+    for dqc_i in (np.eye(3) * q_length): # xyz
         dq_i = np.dot(rlat_inv, dqc_i)
         dynmat.set_dynamical_matrix(q - dq_i)
         dm1 = dynmat.get_dynamical_matrix()
@@ -146,3 +149,31 @@ def get_dD(q, q_length, dynamical_matrix, reciprocal_lattice):
         dm2 = dynmat.get_dynamical_matrix()
         ddm.append(dm2 - dm1)
     return np.array(ddm)
+
+def perturb_dD(dD, freqs, eigvecs):
+    deg_sets = degenerate_sets(freqs)
+    pdD = np.zeros(len(freqs), dtype='double')
+    pos = 0
+    for deg in deg_sets:
+        eigsets = eigvecs[:, deg]
+        pdD[pos:pos + len(deg)] = np.linalg.eigvalsh(
+            np.dot(eigsets.T.conj(), np.dot(dD, eigsets))).real
+        pos += len(deg)
+    return pdD
+    
+def degenerate_sets(freqs):
+    indices = []
+    done = []
+    for i in range(len(freqs)):
+        if i in done:
+            continue
+        else:
+            f_set = [i]
+            done.append(i)
+        for j in range(i + 1, len(freqs)):
+            if (np.abs(freqs[f_set] - freqs[j]) < 0.001).any():
+                f_set.append(j)
+                done.append(j)
+        indices.append(f_set[:])
+
+    return indices
