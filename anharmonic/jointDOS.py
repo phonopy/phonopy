@@ -91,7 +91,8 @@ def get_jointDOS(fixed_grid_points,
                 val = np.linalg.eigvalsh(dm.get_dynamical_matrix())
                 freqs[i,j] = np.sqrt(np.abs(val)) * factor * frequency_factor
 
-        omegas_at_gp = np.arange(0, np.max(freqs) + sigma * 4, frequency_step)
+        omegas_at_gp = np.arange(0, np.max(freqs) * 2 + sigma * 4,
+                                 frequency_step)
         jointDOS_at_gp = np.zeros(len(omegas_at_gp), dtype='double')
 
         phono3c.joint_dos(jointDOS_at_gp,
