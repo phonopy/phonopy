@@ -24,7 +24,8 @@ static void real_to_normal(double *fc3_normal_squared,
 			   const int *s2p_map,
 			   const int *band_indices,
 			   const int num_band0,
-			   const int num_band);
+			   const int num_band,
+			   const double cutoff_frequency);
 static int collect_undone_grid_points(int *undone,
 				      char *phonon_done,
 				      const Iarray *triplets);
@@ -239,7 +240,8 @@ void get_interaction(Darray *fc3_normal_squared,
 		     const double *masses,
 		     const int *p2s_map,
 		     const int *s2p_map,
-		     const int *band_indices)
+		     const int *band_indices,
+		     const double cutoff_frequency)
 {
   int i, j, num_band, num_band0;
   int gp_triplet[3];
@@ -279,7 +281,8 @@ void get_interaction(Darray *fc3_normal_squared,
 		   s2p_map,
 		   band_indices,
 		   num_band0,
-		   num_band);
+		   num_band,
+		   cutoff_frequency);
   }
 }
 
@@ -299,7 +302,8 @@ static void real_to_normal(double *fc3_normal_squared,
 			   const int *s2p_map,
 			   const int *band_indices,
 			   const int num_band0,
-			   const int num_band)
+			   const int num_band,
+			   const double cutoff_frequency)
 			   
 {
   int num_patom;
@@ -330,7 +334,8 @@ static void real_to_normal(double *fc3_normal_squared,
 		       masses,
 		       band_indices,
 		       num_band0,
-		       num_band);
+		       num_band,
+		       cutoff_frequency);
 
   free(fc3_reciprocal);
 }

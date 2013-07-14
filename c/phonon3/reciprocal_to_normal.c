@@ -23,7 +23,8 @@ void reciprocal_to_normal(double *fc3_normal_squared,
 			  const double *masses,
 			  const int *band_indices,
 			  const int num_band0,
-			  const int num_band)
+			  const int num_band,
+			  const double cutoff_frequency)
 {
   int i, j, k, num_atom;
   double fff;
@@ -31,11 +32,11 @@ void reciprocal_to_normal(double *fc3_normal_squared,
   num_atom = num_band / 3;
 
   for (i = 0; i < num_band0; i++) {
-    if (freqs0[i] > 0) {
+    if (freqs0[i] > cutoff_frequency) {
       for (j = 0; j < num_band; j++) {
-	if (freqs1[j] > 0) {
+	if (freqs1[j] > cutoff_frequency) {
 	  for (k = 0; k < num_band; k++) {
-	    if (freqs2[k] > 0) {
+	    if (freqs2[k] > cutoff_frequency) {
 	      fff = freqs0[i] * freqs1[j] * freqs2[k];
 	      fc3_normal_squared[i * num_band * num_band +
 				 j * num_band +

@@ -285,8 +285,9 @@ static PyObject * py_get_interaction(PyObject *self, PyObject *args)
   PyArrayObject* p2s_map;
   PyArrayObject* s2p_map;
   PyArrayObject* band_indicies_py;
+  double cutoff_frequency;
 
-  if (!PyArg_ParseTuple(args, "OOOOOOOOOOOOO",
+  if (!PyArg_ParseTuple(args, "OOOOOOOOOOOOOd",
 			&fc3_normal_squared_py,
 			&frequencies,
 			&eigenvectors,
@@ -299,7 +300,8 @@ static PyObject * py_get_interaction(PyObject *self, PyObject *args)
 			&atomic_masses,
 			&p2s_map,
 			&s2p_map,
-			&band_indicies_py)) {
+			&band_indicies_py,
+			&cutoff_frequency)) {
     return NULL;
   }
 
@@ -332,7 +334,8 @@ static PyObject * py_get_interaction(PyObject *self, PyObject *args)
 		  masses,
 		  p2s,
 		  s2p,
-		  band_indicies);
+		  band_indicies,
+		  cutoff_frequency);
 
   free(fc3_normal_squared);
   free(freqs);
@@ -353,9 +356,9 @@ static PyObject * py_get_imag_self_energy(PyObject *self, PyObject *args)
   PyArrayObject* frequencies_py;
   PyArrayObject* grid_point_triplets_py;
   PyArrayObject* triplet_weights_py;
-  double sigma, unit_conversion_factor, temperature, fpoint;
+  double sigma, unit_conversion_factor, cutoff_frequency, temperature, fpoint;
 
-  if (!PyArg_ParseTuple(args, "OOOOOdddd",
+  if (!PyArg_ParseTuple(args, "OOOOOddddd",
 			&gamma_py,
 			&fc3_normal_squared_py,
 			&grid_point_triplets_py,
@@ -364,7 +367,8 @@ static PyObject * py_get_imag_self_energy(PyObject *self, PyObject *args)
 			&fpoint,
 			&temperature,
 			&sigma,
-			&unit_conversion_factor)) {
+			&unit_conversion_factor,
+			&cutoff_frequency)) {
     return NULL;
   }
 
@@ -383,7 +387,8 @@ static PyObject * py_get_imag_self_energy(PyObject *self, PyObject *args)
 		       triplet_weights,
 		       sigma,
 		       temperature,
-		       unit_conversion_factor);
+		       unit_conversion_factor,
+		       cutoff_frequency);
 
   free(fc3_normal_squared);
   
@@ -399,9 +404,9 @@ static PyObject * py_get_imag_self_energy_at_bands(PyObject *self,
   PyArrayObject* grid_point_triplets_py;
   PyArrayObject* triplet_weights_py;
   PyArrayObject* band_indices_py;
-  double sigma, unit_conversion_factor, temperature;
+  double sigma, unit_conversion_factor, cutoff_frequency, temperature;
 
-  if (!PyArg_ParseTuple(args, "OOOOOOddd",
+  if (!PyArg_ParseTuple(args, "OOOOOOdddd",
 			&gamma_py,
 			&fc3_normal_squared_py,
 			&grid_point_triplets_py,
@@ -410,7 +415,8 @@ static PyObject * py_get_imag_self_energy_at_bands(PyObject *self,
 			&band_indices_py,
 			&temperature,
 			&sigma,
-			&unit_conversion_factor)) {
+			&unit_conversion_factor,
+			&cutoff_frequency)) {
     return NULL;
   }
 
@@ -430,7 +436,8 @@ static PyObject * py_get_imag_self_energy_at_bands(PyObject *self,
 				triplet_weights,
 				sigma,
 				temperature,
-				unit_conversion_factor);
+				unit_conversion_factor,
+				cutoff_frequency);
 
   free(fc3_normal_squared);
   

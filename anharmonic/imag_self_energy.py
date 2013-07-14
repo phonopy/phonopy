@@ -1,5 +1,6 @@
 import numpy as np
 from phonopy.units import THzToEv, Kb, VaspToTHz, Hbar, EV, Angstrom, THz, AMU
+from phonopy.group_velocity import degenerate_sets
 
 def gaussian(x, sigma):
     return 1.0 / np.sqrt(2 * np.pi) / sigma * np.exp(-x**2 / 2 / sigma**2)
@@ -29,6 +30,7 @@ class ImagSelfEnergy:
         self._grid_point_triplets = None
         self._triplet_weights = None
         self._unit_conversion = None
+        self._cutoff_frequency = interaction.get_cutoff_frequency()
 
     def run(self):
         if self._fc3_normal_squared is None:        
@@ -67,7 +69,16 @@ class ImagSelfEnergy:
                                  / len(self._frequencies))
 
     def get_imag_self_energy(self):
-        return self._imag_self_energy
+        if self._cutoff_frequency is None:
+            return self._imag_self_energy
+        else: # Averaging imag-self-energies by degenerate bands
+            imag_se = self._imag_self_energy
+            freqs = self._frequencies[self._grid_point]
+            deg_sets = degenerate_sets(freqs) # such like [[0,1], [2], [3,4,5]]
+            for dset in deg_sets:
+                imag_se[dset] = imag_se[dset].sum() / len(dset)
+            return imag_se
+            
 
     def get_phonon_at_grid_point(self):
         return (self._frequencies[self._grid_point],
@@ -110,7 +121,8 @@ class ImagSelfEnergy:
                                           band_indices,
                                           self._temperature,
                                           self._sigma,
-                                          self._unit_conversion)
+                                          self._unit_conversion,
+                                          self._cutoff_frequency)
 
     def _run_c_with_fpoints(self):
         import anharmonic._phono3py as phono3c
@@ -123,7 +135,8 @@ class ImagSelfEnergy:
                                      fpoint,
                                      self._temperature,
                                      self._sigma,
-                                     self._unit_conversion)
+                                     self._unit_conversion,
+                                     self._cutoff_frequency)
 
     def _run_py_with_band_indices(self):
         band_indices = self._interaction.get_band_indices()
@@ -150,7 +163,8 @@ class ImagSelfEnergy:
     def _imag_self_energy_at_bands(self, i, freqs, interaction, weight):
         sum_g = 0
         for (j, k) in list(np.ndindex(interaction.shape[1:])):
-            if freqs[1][j] > 0 and freqs[2][k] > 0:
+            if (freqs[1][j] > self._cutoff_frequency and
+                freqs[2][k] > self._cutoff_frequency):
                 n2 = occupation(freqs[1][j], self._temperature)
                 n3 = occupation(freqs[2][k], self._temperature)
                 g1 = gaussian(freqs[0, i] - freqs[1, j] - freqs[2, k],
@@ -191,7 +205,8 @@ class ImagSelfEnergy:
 
     def _imag_self_energy_with_fpoints(self, freqs, interaction, weight):
         for (i, j, k) in list(np.ndindex(interaction.shape)):
-            if freqs[0][j] > 0 and freqs[1][k] > 0:
+            if (freqs[0][j] > self._cutoff_frequency and
+                freqs[1][k] > self._cutoff_frequency):
                 n2 = occupation(freqs[0][j], self._temperature)
                 n3 = occupation(freqs[1][k], self._temperature)
                 g1 = gaussian(self._fpoints - freqs[0][j] - freqs[1][k],

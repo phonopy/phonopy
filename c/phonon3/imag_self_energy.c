@@ -16,20 +16,23 @@ static double get_imag_self_energy_at_band(double *imag_self_energy,
 					   const int *triplet_weights,
 					   const double sigma,
 					   const double temperature,
-					   const double unit_conversion_factor);
+					   const double unit_conversion_factor,
+					   const double cutoff_frequency);
 static double sum_imag_self_energy_at_band(const int num_band,
 					   const double *fc3_normal_sqared,
 					   const double fpoint,
 					   const double *freqs0,
 					   const double *freqs1,
 					   const double sigma,
-					   const double temperature);
+					   const double temperature,
+					   const double cutoff_frequency);
 static double sum_imag_self_energy_at_band_0K(const int num_band,
 					      const double *fc3_normal_sqared,
 					      const double fpoint,
 					      const double *freqs0,
 					      const double *freqs1,
-					      const double sigma);
+					      const double sigma,
+					      const double cutoff_frequency);
 static double gaussian(const double x, const double sigma);
 static double occupation(const double x, const double t);
     
@@ -43,7 +46,8 @@ void get_imag_self_energy(double *imag_self_energy,
 			  const int *triplet_weights,
 			  const double sigma,
 			  const double temperature,
-			  const double unit_conversion_factor)
+			  const double unit_conversion_factor,
+			  const double cutoff_frequency)
 {
   int i, num_band0;
   num_band0 = fc3_normal_sqared->dims[1];
@@ -59,7 +63,8 @@ void get_imag_self_energy(double *imag_self_energy,
 				   triplet_weights,
 				   sigma,
 				   temperature,
-				   unit_conversion_factor);
+				   unit_conversion_factor,
+				   cutoff_frequency);
   }
 }
 
@@ -71,7 +76,8 @@ void get_imag_self_energy_at_bands(double *imag_self_energy,
 				   const int *triplet_weights,
 				   const double sigma,
 				   const double temperature,
-				   const double unit_conversion_factor)
+				   const double unit_conversion_factor,
+				   const double cutoff_frequency)
 {
   int i, num_band0, num_band, gp0;
   double fpoint;
@@ -93,7 +99,8 @@ void get_imag_self_energy_at_bands(double *imag_self_energy,
 				   triplet_weights,
 				   sigma,
 				   temperature,
-				   unit_conversion_factor);
+				   unit_conversion_factor,
+				   cutoff_frequency);
   }
 }
 
@@ -135,7 +142,8 @@ static double get_imag_self_energy_at_band(double *imag_self_energy,
 					   const int *triplet_weights,
 					   const double sigma,
 					   const double temperature,
-					   const double unit_conversion_factor)
+					   const double unit_conversion_factor,
+					   const double cutoff_frequency)
 {
   int i, num_triplets, num_band0, num_band, gp1, gp2;
   double sum_g;
@@ -159,7 +167,8 @@ static double get_imag_self_energy_at_band(double *imag_self_energy,
 				     frequencies + gp1 * num_band,
 				     frequencies + gp2 * num_band,
 				     sigma,
-				     temperature) *
+				     temperature,
+				     cutoff_frequency) *
 	triplet_weights[i] * unit_conversion_factor;
     } else {
       sum_g +=
@@ -170,7 +179,8 @@ static double get_imag_self_energy_at_band(double *imag_self_energy,
 					fpoint,
 					frequencies + gp1 * num_band,
 					frequencies + gp2 * num_band,
-					sigma) *
+					sigma,
+					cutoff_frequency) *
 	triplet_weights[i] * unit_conversion_factor;
     }
   }
@@ -183,17 +193,18 @@ static double sum_imag_self_energy_at_band(const int num_band,
 					   const double *freqs0,
 					   const double *freqs1,
 					   const double sigma,
-					   const double temperature)
+					   const double temperature,
+					   const double cutoff_frequency)
 {
   int i, j;
   double n2, n3, g1, g2, g3, sum_g;
 
   sum_g = 0;
   for (i = 0; i < num_band; i++) {
-    if (freqs0[i] > 0) {
+    if (freqs0[i] > cutoff_frequency) {
       n2 = occupation(freqs0[i], temperature);
       for (j = 0; j < num_band; j++) {
-	if (freqs1[j] > 0) {
+	if (freqs1[j] > cutoff_frequency) {
 	  n3 = occupation(freqs1[j], temperature);
 	  g1 = gaussian(fpoint - freqs0[i] - freqs1[j], sigma);
 	  g2 = gaussian(fpoint + freqs0[i] - freqs1[j], sigma);
@@ -212,16 +223,17 @@ static double sum_imag_self_energy_at_band_0K(const int num_band,
 					      const double fpoint,
 					      const double *freqs0,
 					      const double *freqs1,
-					      const double sigma)
+					      const double sigma,
+					      const double cutoff_frequency)
 {
   int i, j;
   double g1, sum_g;
 
   sum_g = 0;
   for (i = 0; i < num_band; i++) {
-    if (freqs0[i] > 0) {
+    if (freqs0[i] > cutoff_frequency) {
       for (j = 0; j < num_band; j++) {
-	if (freqs1[j] > 0) {
+	if (freqs1[j] > cutoff_frequency) {
 	  g1 = gaussian(fpoint - freqs0[i] - freqs1[j], sigma);
 	  sum_g += g1 * fc3_normal_sqared[i * num_band + j];
 	}

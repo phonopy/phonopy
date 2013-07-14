@@ -433,17 +433,6 @@ def write_kappa_to_hdf5(gamma,
         suffix += "-s" + sigma_str
     if filename is not None:
         suffix += "." + filename
-    print "Values to calculate kappa",
-    if grid_point is not None:
-        print "at grid adress %d" % grid_point,
-    if sigma is not None:
-        if grid_point is not None:
-            print "and",
-        else:
-            print "at",
-        print "sigma %s" % sigma_str
-    print "were written into",
-    print "\"%s\"" % ("kappa" + suffix + ".hdf5")
     w = h5py.File("kappa" + suffix + ".hdf5", 'w')
     w.create_dataset('gamma', data=gamma)
     w.create_dataset('frequency', data=frequency)
@@ -458,6 +447,19 @@ def write_kappa_to_hdf5(gamma,
     if weight is not None:
         w.create_dataset('weight', data=weight)
     w.close()
+
+    print "Values to calculate kappa",
+    if grid_point is not None:
+        print "at grid adress %d" % grid_point,
+    if sigma is not None:
+        if grid_point is not None:
+            print "and",
+        else:
+            print "at",
+        print "sigma %s" % sigma_str
+    print "were written into",
+    print "\"%s\"" % ("kappa" + suffix + ".hdf5")
+    print
 
 def read_gamma_from_hdf5(mesh,
                          mesh_divisors=None,

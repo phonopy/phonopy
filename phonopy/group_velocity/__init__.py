@@ -35,6 +35,57 @@
 import numpy as np
 from phonopy.units import VaspToTHz
 
+def get_group_velocity(q, # q-point
+                       dynamical_matrix,
+                       q_length=1e-4, # finite distance in q
+                       frequency_factor_to_THz=VaspToTHz):
+    """
+    If frequencies and eigenvectors are supplied they are used
+    instead of calculating them at q-point (but not at q+dq and q-dq).
+
+    reciprocal lattice has to be given as
+    [[a_x, b_x, c_x],
+     [a_y, b_y, c_y],
+     [a_z, b_z, c_z]]
+    """
+
+    gv = GroupVelocity(dynamical_matrix,
+                       [q],
+                       q_length=q_length,
+                       frequency_factor_to_THz=frequency_factor_to_THz)
+    return gv.get_group_velocity()[0]
+
+directions_all = np.array([[1, 0, 0],  # x
+                           [0, 1, 0],  # y
+                           [0, 0, 1],  # z
+                           [0, 1, 1],  # yz
+                           [1, 0, 1],  # zx
+                           [1, 1, 0],  # xy
+                           [1, 1, 1]]) # xyz
+directions = np.array([[1, 0, 0],  # x
+                       [0, 1, 0],  # y
+                       [0, 0, 1],  # z
+                       [1, 0, 1],  # zx
+                       [0, 1, 1]]) # yz
+            
+
+def degenerate_sets(freqs, cutoff=1e-4):
+    indices = []
+    done = []
+    for i in range(len(freqs)):
+        if i in done:
+            continue
+        else:
+            f_set = [i]
+            done.append(i)
+        for j in range(i + 1, len(freqs)):
+            if (np.abs(freqs[f_set] - freqs[j]) < cutoff).any():
+                f_set.append(j)
+                done.append(j)
+        indices.append(f_set[:])
+
+    return indices
+
 class GroupVelocity:
     """
     d omega   ----
@@ -50,7 +101,6 @@ class GroupVelocity:
     
     def __init__(self,
                  dynamical_matrix,
-                 primitive,
                  q_points=None,
                  q_length=1e-4,
                  frequency_factor_to_THz=VaspToTHz):
@@ -61,16 +111,15 @@ class GroupVelocity:
         q_length is used such as D(q + q_length) - D(q - q_length).
         """
         self._dynmat = dynamical_matrix
-        self._reciprocal_lattice = np.linalg.inv(primitive.get_cell())
+        primitive = dynamical_matrix.get_primitive()
+        self._reciprocal_lattice_inv = primitive.get_cell()
         self._q_points = q_points
         self._q_length = q_length
         self._factor = frequency_factor_to_THz
         self._group_velocity = None
-        self._eigenvectors = None
-        self._frequencies = None
         if self._q_points is not None:
             self._set_group_velocity()
-            
+
     def set_q_points(self, q_points):
         self._q_points = q_points
         self._set_group_velocity()
@@ -84,96 +133,89 @@ class GroupVelocity:
     def _set_group_velocity(self):
         v_g = []
         for q in self._q_points:
-            dD_at_q = get_group_velocity(q,
-                                         self._dynmat,
-                                         self._reciprocal_lattice,
-                                         q_length=self._q_length,
-                                         frequency_factor_to_THz=self._factor,
-                                         frequencies=self._frequencies,
-                                         eigenvectors=self._eigenvectors)
+            dD_at_q = self._set_group_velocity_at_q(q)
             v_g.append(dD_at_q)
         self._group_velocity = np.array(v_g)
 
-def get_group_velocity(q, # q-point
-                       dynamical_matrix,
-                       reciprocal_lattice,
-                       q_length=1e-4, # finite distance in q
-                       frequency_factor_to_THz=VaspToTHz,
-                       frequencies=None,
-                       eigenvectors=None):
-    """
-    If frequencies and eigenvectors are supplied they are used
-    instead of calculating them at q-point (but not at q+dq and q-dq).
-
-    reciprocal lattice has to be given as
-    [[a_x, b_x, c_x],
-     [a_y, b_y, c_y],
-     [a_z, b_z, c_z]]
-    """
-
-    factor = frequency_factor_to_THz
-    
-    if frequencies is None or eigenvectors is None:
-        dynamical_matrix.set_dynamical_matrix(q)
-        dm = dynamical_matrix.get_dynamical_matrix()
+    def _set_group_velocity_at_q(self, q):
+        self._dynmat.set_dynamical_matrix(q)
+        dm = self._dynmat.get_dynamical_matrix()
         eigvals, eigvecs = np.linalg.eigh(dm)
         eigvals = eigvals.real
-        freqs = np.sqrt(abs(eigvals)) * np.sign(eigvals) * factor
-    else:
-        eigvecs = eigenvectors
-        freqs = frequencies
-
-    dD_at_q = np.zeros((len(freqs), 3), dtype=float)
-    for i, dD_i in enumerate(get_dD(np.array(q),
-                                    q_length,
-                                    dynamical_matrix,
-                                    reciprocal_lattice)): # (x, y, z)
-        # dD_at_q[:, i] = [np.vdot(eigvec, np.dot(dD_i, eigvec)).real
-        #                  for eigvec in eigvecs.T]
-        pert_dD = perturb_dD(dD_i, freqs, eigvecs)
-        # dD_at_q[:, i] = np.linalg.eigvalsh(pert_dD).real
-        dD_at_q[:, i] = pert_dD
-        dD_at_q[:, i] *= factor ** 2 / freqs / 2 / (q_length * 2)
-    return dD_at_q
-
-def get_dD(q, q_length, dynamical_matrix, reciprocal_lattice):
-    # The names of *c mean something in Cartesian.
-    dynmat = dynamical_matrix
-    rlat_inv = np.linalg.inv(reciprocal_lattice)
-    ddm = []
-    for dqc_i in (np.eye(3) * q_length): # xyz
-        dq_i = np.dot(rlat_inv, dqc_i)
-        dynmat.set_dynamical_matrix(q - dq_i)
-        dm1 = dynmat.get_dynamical_matrix()
-        dynmat.set_dynamical_matrix(q + dq_i)
-        dm2 = dynmat.get_dynamical_matrix()
-        ddm.append(dm2 - dm1)
-    return np.array(ddm)
-
-def perturb_dD(dD, freqs, eigvecs):
-    deg_sets = degenerate_sets(freqs)
-    pdD = np.zeros(len(freqs), dtype='double')
-    pos = 0
-    for deg in deg_sets:
-        eigsets = eigvecs[:, deg]
-        pdD[pos:pos + len(deg)] = np.linalg.eigvalsh(
-            np.dot(eigsets.T.conj(), np.dot(dD, eigsets))).real
-        pos += len(deg)
-    return pdD
+        freqs = np.sqrt(abs(eigvals)) * np.sign(eigvals) * self._factor
     
-def degenerate_sets(freqs):
-    indices = []
-    done = []
-    for i in range(len(freqs)):
-        if i in done:
-            continue
-        else:
-            f_set = [i]
-            done.append(i)
-        for j in range(i + 1, len(freqs)):
-            if (np.abs(freqs[f_set] - freqs[j]) < 0.001).any():
-                f_set.append(j)
-                done.append(j)
-        indices.append(f_set[:])
+        gv = np.zeros((len(freqs), 3), dtype='double')
+        deg_sets = degenerate_sets(freqs)
 
-    return indices
+        ddm_dirs = self._get_dD(np.array(q)) # x, y, z, yz, zx, xy, xyz
+        pos = 0
+        for deg in deg_sets:
+            gv_dirs = np.zeros((len(deg), len(directions)), dtype='double')
+            for i, ddm in enumerate(ddm_dirs):
+                gv_dirs[:, i] = self._perturb_D(ddm, eigvecs[:, deg])
+
+            gv[pos:pos+len(deg)] = self._sort_gv(np.array(gv_dirs))
+            pos += len(deg)
+
+        for i in range(3):
+            gv[:, i] *= self._factor ** 2 / freqs / 2 / (self._q_length * 2)
+
+        return gv
+    
+    def _get_dD(self, q):
+        # The names of *c mean something in Cartesian.
+        rlat_inv = self._reciprocal_lattice_inv
+        ddm = []
+        for dqc_i in (directions * self._q_length):
+            dq_i = np.dot(rlat_inv, dqc_i)
+            self._dynmat.set_dynamical_matrix(q - dq_i)
+            dm1 = self._dynmat.get_dynamical_matrix()
+            self._dynmat.set_dynamical_matrix(q + dq_i)
+            dm2 = self._dynmat.get_dynamical_matrix()
+            ddm.append(dm2 - dm1)
+        return np.array(ddm)
+    
+    def _perturb_D(self, dD, eigsets):
+        eigvals = np.linalg.eigvalsh(
+            np.dot(eigsets.T.conj(), np.dot(dD, eigsets)))
+        return eigvals.real
+        
+    def _sort_gv(self, gv_dirs):
+        num_deg = len(gv_dirs)
+        gv = np.zeros((num_deg, 5), dtype='double')
+        gv[:, 2] = gv_dirs[:, 2]
+
+        for i in (0, 1): # x, y
+            done_x = [False] * num_deg
+            done_xz = [False] * num_deg
+            for j in range(num_deg):
+                indices = self._search(j, gv_dirs, i, done_x, done_xz)
+                gv[j, i] = gv_dirs[indices[1], i]
+                gv[j, 3 + i] = gv_dirs[indices[0], 3 + i]
+
+        return gv[:, :3]
+                
+    def _search(self, i, gv, i_xy, done_x, done_xz):
+        num_deg = len(gv)
+        z = gv[i, 2]
+        min_delta = None
+        min_indices = None
+
+        for j in range(num_deg):
+            z_x = gv[j, 3 + i_xy]
+            for k in range(num_deg):
+                x = gv[k, i_xy]
+                delta = x + z - z_x
+                if abs(delta) < min_delta or min_indices is None:
+                    if done_x[k] or done_xz[j]:
+                        continue
+                    else:
+                        min_delta = abs(delta)
+                        min_indices = [j, k]
+
+        done_x[min_indices[1]] = True
+        done_xz[min_indices[0]] = True
+
+        return min_indices
+
+            

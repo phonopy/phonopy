@@ -872,7 +872,6 @@ class Phonopy:
                            q_length=1e-4):
         self._group_velocity = GroupVelocity(
             self._dynamical_matrix,
-            self._primitive,
             q_points=q_points,
             q_length=q_length,
             frequency_factor_to_THz=self._factor)

@@ -48,6 +48,7 @@ class Settings:
         self._chemical_symbols = None
         self._dm_decimals = None
         self._displacement_distance = None
+        self._gv_delta_q = 1e-4
         self._is_eigenvectors = False
         self._is_diagonal_displacement = True
         self._is_plusminus_displacement = 'auto'
@@ -260,6 +261,12 @@ class Settings:
     def get_temperature_step(self):
         return self._tstep
 
+    def set_group_velocity_delta_q(self, gv_delta_q):
+        self._gv_delta_q = gv_delta_q
+
+    def get_group_velocity_delta_q(self):
+        return self._gv_delta_q
+
 
 
 # Parse phonopy setting filen
@@ -413,6 +420,10 @@ class ConfParser:
         if params.has_key('tstep'):
             self._settings.set_temperature_step(params['tstep'])
 
+        # Group velocity finite difference
+        if params.has_key('gv_delta_q'): 
+            self._settings.set_group_velocity_delta_q(params['gv_delta_q'])
+            
     def read_file(self, filename):
         file = open(filename, 'r')
         confs = self._confs
@@ -530,6 +541,11 @@ class ConfParser:
                     self._confs['dm_decimals'] = \
                         self._options.dynamical_matrix_decimals
 
+            if opt.dest == 'gv_delta_q':
+                if self._options.gv_delta_q:
+                    self._confs['gv_delta_q'] = self._options.gv_delta_q
+    
+
     def parse_conf(self):
         confs = self._confs
 
@@ -612,6 +628,7 @@ class ConfParser:
             if conf_key == 'symmetry':
                 if confs['symmetry'] == '.false.':
                     self.set_parameter('is_symmetry', False)
+                    self.set_parameter('is_mesh_symmetry', False)
 
             if conf_key == 'mesh_symmetry':
                 if confs['mesh_symmetry'] == '.false.':
@@ -695,6 +712,10 @@ class ConfParser:
                 val = float(confs['tstep'].split()[0])
                 self.set_parameter('tstep', val)
 
+            # Group velocity finite difference
+            if conf_key == 'gv_delta_q':
+                self.set_parameter('gv_delta_q', float(confs['gv_delta_q']))
+
     def set_parameter(self, key, val):
         self._parameters[key] = val
 
@@ -720,7 +741,6 @@ class PhonopySettings(Settings):
         self._dos_range = { 'min':  None,
                             'max':  None }
         self._fits_Debye_model = False
-        self._gv_delta_q = 1e-4
         self._thermal_atom_pairs = None
         self._is_dos_mode = False
         self._is_force_constants = False
@@ -964,12 +984,6 @@ class PhonopySettings(Settings):
     def get_is_group_velocity(self):
         return self._is_group_velocity
 
-    def set_group_velocity_delta_q(self, gv_delta_q):
-        self._gv_delta_q = gv_delta_q
-
-    def get_group_velocity_delta_q(self):
-        return self._gv_delta_q
-
         
 class PhonopyConfParser(ConfParser):
     def __init__(self, filename=None, options=None, option_list=None):
@@ -1065,10 +1079,6 @@ class PhonopyConfParser(ConfParser):
                 if self._options.is_group_velocity:
                     self._confs['group_velocity'] = '.true.'
 
-            if opt.dest == 'gv_delta_q':
-                if self._options.gv_delta_q:
-                    self._confs['gv_delta_q'] = self._options.gv_delta_q
-    
             # Overwrite
             if opt.dest == 'is_check_symmetry':
                 if self._options.is_check_symmetry: # Dummy 'dim' setting for sym-check
@@ -1221,9 +1231,6 @@ class PhonopyConfParser(ConfParser):
             # Group velocity
             if conf_key == 'group_velocity':
                 self.set_parameter('is_group_velocity', confs['group_velocity'])
-
-            if conf_key == 'gv_delta_q':
-                self.set_parameter('gv_delta_q', float(confs['gv_delta_q']))
 
     def _parse_conf_modulation(self, confs):
         modulation = {}
@@ -1432,6 +1439,3 @@ class PhonopyConfParser(ConfParser):
             if params['is_group_velocity'] == '.true.':
                 self._settings.set_is_group_velocity(True)
 
-        if params.has_key('gv_delta_q'): 
-            self._settings.set_group_velocity_delta_q(params['gv_delta_q'])
-            

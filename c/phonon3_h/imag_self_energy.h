@@ -11,7 +11,8 @@ void get_imag_self_energy(double *gamma,
 			  const int *triplet_weights,
 			  const double sigma,
 			  const double temperature,
-			  const double unit_conversion_factor);
+			  const double unit_conversion_factor,
+			  const double cutoff_frequency);
 void get_imag_self_energy_at_bands(double *imag_self_energy,
 				   const Darray *fc3_normal_sqared,
 				   const int *band_indices,
@@ -20,7 +21,8 @@ void get_imag_self_energy_at_bands(double *imag_self_energy,
 				   const int *triplet_weights,
 				   const double sigma,
 				   const double temperature,
-				   const double unit_conversion_factor);
+				   const double unit_conversion_factor,
+				   const double cutoff_frequency);
 int get_jointDOS(double *jdos,
 		 const int num_omega,
 		 const int num_triplet,

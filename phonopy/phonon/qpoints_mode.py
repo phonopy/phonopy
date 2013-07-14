@@ -65,6 +65,12 @@ def write_yaml(qpoints,
     f.write("- [ %20.15f, %20.15f, %20.15f ]\n" % (tuple(lattice[1])))
     f.write("- [ %20.15f, %20.15f, %20.15f ]\n" % (tuple(lattice[2])))
 
+    rec_lattice = np.linalg.inv(lattice).T
+    f.write("reciprocal-basis: # q point is multiplied from rhs.\n")
+    f.write("- [ %20.15f, %20.15f, %20.15f ]\n" % (tuple(rec_lattice[0])))
+    f.write("- [ %20.15f, %20.15f, %20.15f ]\n" % (tuple(rec_lattice[1])))
+    f.write("- [ %20.15f, %20.15f, %20.15f ]\n" % (tuple(rec_lattice[2])))
+
     f.write("position:\n")
     for pos in positions:
         f.write("- [ %20.15f, %20.15f, %20.15f ]\n" % (tuple(pos)))

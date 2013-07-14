@@ -18,6 +18,7 @@ class Phono3py:
                  is_nosym=False,
                  symmetrize_fc3=False,
                  symprec=1e-5,
+                 cutoff_frequency=1e-4,
                  log_level=0,
                  lapack_zheev_uplo='L'):
 
@@ -34,6 +35,7 @@ class Phono3py:
         self._is_nosym = is_nosym
         self._symmetrize_fc3 = symmetrize_fc3
         self._symprec = symprec
+        self._cutoff_frequency = cutoff_frequency
         self._log_level = log_level
         self._kappa = None
         self._gamma = None
@@ -48,6 +50,7 @@ class Phono3py:
             band_indices=self._band_indices_flatten,
             frequency_factor_to_THz=self._frequency_factor_to_THz,
             symprec=self._symprec,
+            cutoff_frequency=self._cutoff_frequency,
             symmetrize_fc3=self._symmetrize_fc3,
             is_nosym=self._is_nosym,
             log_level=self._log_level,
@@ -150,6 +153,7 @@ class Phono3py:
                                  mesh_divisors=None,
                                  coarse_mesh_shifts=None,
                                  no_kappa_stars=False,
+                                 gv_delta_q=1e-4, # for group velocity
                                  write_gamma=False,
                                  read_gamma=False,
                                  write_amplitude=False,
@@ -163,6 +167,7 @@ class Phono3py:
                               mesh_divisors=mesh_divisors,
                               coarse_mesh_shifts=coarse_mesh_shifts,
                               no_kappa_stars=no_kappa_stars,
+                              gv_delta_q=gv_delta_q,
                               log_level=self._log_level,
                               filename=filename)
         br.set_grid_points(grid_points)
@@ -190,7 +195,6 @@ class Phono3py:
         if grid_points is None:
             temperatures = br.get_temperatures()
             for i, sigma in enumerate(sigmas):
-                print
                 kappa = mode_kappa[i].sum(axis=2).sum(axis=0)
                 print "----------- Thermal conductivity (W/m-k) for",
                 print "sigma=%s -----------" % sigma

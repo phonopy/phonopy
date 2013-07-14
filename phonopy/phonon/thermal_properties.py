@@ -37,7 +37,7 @@ from phonopy.units import *
 
 def mode_cv(temp, freqs): # freqs (eV)
     x = freqs / Kb / temp
-    expVal = np.exp(x)
+    expVal = np.exp(x) 
     return Kb * x ** 2 * expVal / (expVal - 1.0) ** 2
 
 def mode_F(temp, freqs):

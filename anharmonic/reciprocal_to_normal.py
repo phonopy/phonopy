@@ -4,10 +4,12 @@ class ReciprocalToNormal:
     def __init__(self,
                  primitive,
                  frequencies,
-                 eigenvectors):
+                 eigenvectors,
+                 cutoff_frequency=0):
         self._primitive = primitive
         self._frequencies = frequencies
         self._eigenvectors = eigenvectors
+        self._cutoff_frequency = cutoff_frequency
 
         self._masses = self._primitive.get_masses()
 
@@ -27,8 +29,9 @@ class ReciprocalToNormal:
         e1, e2, e3 = self._eigenvectors[grid_triplet]
         f1, f2, f3 = self._frequencies[grid_triplet]
         num_band = len(f1)
+        cutoff = self._cutoff_frequency
         for (i, j, k) in list(np.ndindex((num_band,) * 3)):
-            if f1[i] > 0 and f2[j] > 0 and f3[k] > 0:
+            if f1[i] > cutoff and f2[j] > cutoff and f3[k] > cutoff:
                 fc3_elem = self._sum_in_atoms((i, j, k), (e1, e2, e3))
                 fff = f1[i] * f2[j] * f3[k]
                 self._fc3_normal[i, j, k] = np.abs(fc3_elem) ** 2 / fff

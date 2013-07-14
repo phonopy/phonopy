@@ -20,6 +20,7 @@ class conductivity_RTA:
                  mesh_divisors=None,
                  coarse_mesh_shifts=None,
                  no_kappa_stars=False,
+                 gv_delta_q=1e-4, # finite difference for group veolocity
                  log_level=0,
                  filename=None):
         self._pp = interaction
@@ -30,6 +31,7 @@ class conductivity_RTA:
         self._t_min = t_min
         self._t_step = t_step
         self._no_kappa_stars = no_kappa_stars
+        self._gv_delta_q = gv_delta_q
         self._log_level = log_level
         self._filename = filename
 
@@ -39,9 +41,7 @@ class conductivity_RTA:
         self._primitive = self._pp.get_primitive()
         self._dynamical_matrix = self._pp.get_dynamical_matrix()
         self._frequency_factor_to_THz = self._pp.get_frequency_factor_to_THz()
-        self._cutoff_frequency = 0
-        self._reciprocal_lattice = np.linalg.inv(
-            self._primitive.get_cell()) # a*, b*, c* are column vectors.
+        self._cutoff_frequency = self._pp.get_cutoff_frequency()
         self._grid_points = None
         self._grid_weights = None
         self._grid_address = None
@@ -156,8 +156,9 @@ class conductivity_RTA:
                             self._mesh)
             
             if self._log_level:
-                print ("================= %d/%d =================" %
-                       (i + 1, len(self._grid_points)))
+                print ("===================== Grid point %d (%d/%d) "
+                       "=====================" %
+                       (grid_point, i + 1, len(self._grid_points)))
                 print "q-point: (%5.2f %5.2f %5.2f)" % tuple(self._qpoint)
 
             if self._read_gamma:
@@ -207,14 +208,13 @@ class conductivity_RTA:
         for j, sigma in enumerate(self._sigmas):
             if self._log_level > 0:
                 print "Calculating Gamma with sigma=%s" % sigma
-
             self._ise.set_sigma(sigma)
             for k, t in enumerate(self._temperatures):
                 self._ise.set_temperature(t)
                 self._ise.run()
-                gamma_at_gp = self._ise.get_imag_self_energy()
-                self._gamma[j, i, k] = np.where(freqs > self._cutoff_frequency,
-                                                gamma_at_gp, -1)
+                gamma_at_gp = np.where(freqs > self._cutoff_frequency,
+                                       self._ise.get_imag_self_energy(), -1)
+                self._gamma[j, i, k] = gamma_at_gp
     
     def _set_kappa_at_sigmas(self, i):
         freqs = self._frequencies[i]
@@ -223,7 +223,7 @@ class conductivity_RTA:
         gv = get_group_velocity(
             self._qpoint,
             self._dynamical_matrix,
-            self._reciprocal_lattice,
+            q_length=self._gv_delta_q,
             frequency_factor_to_THz=self._frequency_factor_to_THz)
         self._gv[i] = gv
         
@@ -273,12 +273,21 @@ class conductivity_RTA:
     
     def _get_cv(self, freqs):
         cv = np.zeros((len(self._temperatures), len(freqs)), dtype='double')
-        for i, t in enumerate(self._temperatures):
-            if t > 0:
-                for j, f in enumerate(freqs):
-                    if f > self._cutoff_frequency:
-                        cv[i, j] = mode_cv(t, f * THzToEv) # eV/K
+        # for i, t in enumerate(self._temperatures):
+        #     if t > 0:
+        #         for j, f in enumerate(freqs):
+        #             if f > self._cutoff_frequency:
+        #                 cv[i, j] = mode_cv(t, f * THzToEv) # eV/K
 
+        # T/freq has to be large enough to avoid divergence.
+        # Otherwise just set 0.
+        for i, f in enumerate(freqs):
+            finite_t = (self._temperatures > f / 100)
+            if f > self._cutoff_frequency:
+                cv[:, i] = np.where(
+                    finite_t, mode_cv(
+                        np.where(finite_t, self._temperatures, 10000),
+                        f * THzToEv), 0)
         return cv
 
 
@@ -400,7 +409,8 @@ class conductivity_RTA:
                   group_velocity,
                   rotations):
         print "----- Partial kappa at grid address %d -----" % grid_point
-        print "Frequency, projected group velocity (x, y, z) at k* (k-star)"
+        print "Frequency, projected group velocity (x, y, z), norm at k-stars",
+        print " (dq=%3.1e)" % self._gv_delta_q
         q = self._grid_address[grid_point].astype(float) / self._mesh
         for i, rot in enumerate(rotations):
             q_rot = np.dot(rot, q)
@@ -408,7 +418,8 @@ class conductivity_RTA:
             print " k*%-2d (%5.2f %5.2f %5.2f)" % ((i + 1,) + tuple(q_rot))
             for f, v in zip(frequencies,
                             np.dot(rot, group_velocity.T).T):
-                print "%8.3f   (%8.3f %8.3f %8.3f)" % ((f,) + tuple(v))
+                print "%8.3f   (%8.3f %8.3f %8.3f) %8.3f" % (
+                    f, v[0], v[1], v[2], np.linalg.norm(v))
 
         print
 

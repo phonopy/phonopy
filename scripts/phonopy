@@ -554,12 +554,13 @@ if log_level > 0:
     if settings.get_run_mode() == 'band':
         print "Band structure mode"
         if settings.get_is_group_velocity():
-            print ("  With group velocity calculation (dq=%3.1e)." %
+            print ("  With group velocity calculation (dq=%3.1e)" %
                    settings.get_group_velocity_delta_q())
     if settings.get_run_mode() == 'mesh':
         print "Mesh sampling mode"
         if settings.get_is_group_velocity():
-            print "  Group velocities are calculated."
+            print ("  With group velocity calculation (dq=%3.1e)" %
+                   settings.get_group_velocity_delta_q())
     if settings.get_run_mode() == 'anime':
         print "Animation mode"
     if settings.get_run_mode() == 'modulation':
@@ -573,7 +574,8 @@ if log_level > 0:
         else:
             print
         if settings.get_is_group_velocity():
-            print "  Group velocities are calculated."
+            print ("  With group velocity (dq=%3.1e)" %
+                   settings.get_group_velocity_delta_q())
     if settings.get_run_mode() == 'displacements':
         print "Creating displacements"
         if not settings.get_is_plusminus_displacement() == 'auto':

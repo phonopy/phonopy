@@ -27,7 +27,7 @@ extension = Extension(
              'c/phonon3/imag_self_energy.c'])
 
 setup(name='phono3py',
-      version='0.4.0',
+      version='0.4.1',
       description='This is the phono3py module.',
       author='Atsushi Togo',
       author_email='atz.togo@gmail.com',
