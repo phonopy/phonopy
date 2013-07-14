@@ -3,10 +3,11 @@
 Change Log
 ==========
 
-xxx-xx-xxxx: Version 1.7.1
+July-14-2013: Version 1.7.1
 ---------------------------
 
-* ``--pdos`` option is created. This is same as ``PDOS`` tag.
+* ``--pdos`` option was created. This is same as ``PDOS`` tag.
+* Group velocity with degenerate modes was improved.
 
 Jun-21-2013: Version 1.7
 ---------------------------

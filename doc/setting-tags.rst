@@ -3,6 +3,8 @@
 Setting tags
 ============
 
+Most of the setting tags have corresponding command-line options (:ref:`command_options`).
+
 For specifying real and reciprocal points, fractional values
 (e.g. ``1/3``) are accepted. However fractional values must not
 have space among characters (e.g. ``1 / 3``) are not allowed.
@@ -98,8 +100,6 @@ Be careful that the axes in ``POSCAR`` is defined by three row
 vectors, i.e., :math:`( \mathbf{a}_\mathrm{u} \; \mathbf{b}_\mathrm{u}
 \; \mathbf{c}_\mathrm{u} )^T`.
 
-
-
 .. _primitive_axis_tag:
 
 ``PRIMITIVE_AXIS``
@@ -148,6 +148,17 @@ vectors, i.e., :math:`( \mathbf{a}_\mathrm{u} \; \mathbf{b}_\mathrm{u}
 
 Displacement creation tags
 --------------------------
+
+``CREATE_DISPLACEMENTS``
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Supercells with displacements are created.  This tag is used as the
+post process of phonon calculation.
+
+::
+
+   CREATE_DISPLACEMENTS = .TRUE.
+   DIM = 2 2 2
 
 .. _displacement_distance_tag:
 
@@ -236,8 +247,6 @@ anything.
 
 ``BAND_CONNECTION``
 ~~~~~~~~~~~~~~~~~~~~
-
-**Experimental**
 
 With this option, band connections are estimated from eigenvectors and
 band structure is drawn considering band crossings. In sensitive
@@ -331,7 +340,7 @@ curve and atom 3, 4, 5, and, 6 are summarized as the other curve.
 ``SIGMA``
 ~~~~~~~~~
 
-This option specifies the deviation of a smearing function. The unit
+This tag specifies the deviation of a smearing function. The unit
 is same as that of final result of DOS, i.e., for VASP without
 ``--factor`` option, it is THz. The default value is the value given
 by the difference of maximum and minimum frequencies divided by 100.
@@ -408,11 +417,10 @@ Thermal displacements
 
 Mean square displacements projected to Cartesian axes as a function of
 temperature are calculated from the number of phonon excitations. The
-usages of ``TMAX``, ``TMIN``, ``TSTEP`` tags (or ``--tmax``,
-``--tmin``, ``--tstep`` options) are same as those in :ref:`thermal
-properties tags <thermal_properties_tag>`. The result is writen
-into ``thermal_displacements.yaml``. See the detail of the method,
-:ref:`thermal_displacement`.
+usages of ``TMAX``, ``TMIN``, ``TSTEP`` tags are same as those in
+:ref:`thermal properties tags <thermal_properties_tag>`. The result is
+writen into ``thermal_displacements.yaml``. See the detail of the
+method, :ref:`thermal_displacement`.
 
 ``PROJECTION_DIRECTION``
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -516,7 +524,7 @@ Non-analytical term correction
 
 Non-analytical term correction is applied to dynamical
 matrix. ``BORN`` file has to be prepared in the current directory. See
-:ref:`born`.
+:ref:`born` and :ref:`non_analytical_term_correction_theory`.
 
 ::
 
@@ -555,6 +563,23 @@ specified. The default value is 1e-4.
 
 Symmetry
 ---------
+
+
+.. _symmetry_tag:
+
+``SYMMETRY``
+~~~~~~~~~~~~~
+
+P1 symmetry is enforced to the input unit cell by setting ``SYMMETRY = .FALSE``.
+
+.. _nomeshsym_tag:
+
+``MESH_SYMMETRY``
+~~~~~~~~~~~~~~~~~~
+
+Symmetry search on the reciprocal sampling mesh is disabled by setting
+``MESH_SYMMETRY = .FALSE.``.
+
 
 .. _fc_symmetry_tag:
 
@@ -642,11 +667,11 @@ Force constants
 
    FORCE_CONSTANTS = READ
 
-There are three options, ``READ`` and ``WRITE``, and ``.FALSE.``. The
-defualt is ``.FALSE.``. When ``FORCE_CONSTANTS = READ``, force
-constants are read from ``FORCE_CONSTANTS`` file. With ``FORCE_CONSTANTS = WRITE``, force
-constants calculated from ``FORCE_SETS`` are written to
-``FORCE_CONSTANTS`` file.
+There are three values to be set, which are ``READ`` and ``WRITE``,
+and ``.FALSE.``. The defualt is ``.FALSE.``. When ``FORCE_CONSTANTS =
+READ``, force constants are read from ``FORCE_CONSTANTS`` file. With
+``FORCE_CONSTANTS = WRITE``, force constants calculated from
+``FORCE_SETS`` are written to ``FORCE_CONSTANTS`` file.
 
 The file format of ``FORCE_CONSTANTS`` is shown
 :ref:`here <file_force_constants>`.
@@ -830,7 +855,7 @@ Characters of irreducible representations of phonon modes
 Characters of irreducible representations (IRs) of phonon modes are
 shown. For this calculation, a primitive cell has to be used. If the
 input unit cell is a non-primitive cell, it has to be transformed to a
-primitive cell using ``PRIMITIVE_AXIS`` tag (or ``--pa`` option).
+primitive cell using ``PRIMITIVE_AXIS`` tag.
 
 The first three values gives a *q*-point in reduced coordinates
 to be calculated.  The degenerated modes are searched only by the closeness of
@@ -847,7 +872,7 @@ the symbols of the IRs and the rotation operations are shown.
 
 
 ``SHOW_IRREPS``
-~~~~~~~~~~~
+~~~~~~~~~~~~~~~~
 
 **Experimental**
 

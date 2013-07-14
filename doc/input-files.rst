@@ -203,29 +203,7 @@ Example
 ``BORN`` (optional)
 -----------------------
 
-This file is used with the ``--nac`` option (:ref:`nac_option`).
-
-Non-analytical term correction
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-To correct long range interaction of macroscopic electric field
-induced by polarization of collective ionic motions near the
-:math:`\Gamma`-point, non-analytical term is added to dynamical matrix
-(:ref:`reference_NAC`).  At
-:math:`\mathbf{q}\to\mathbf{0}`, the dynamical matrix with
-non-analytical term is given by,
-
-.. math::
-
-   D_{\alpha\beta}(jj',\mathbf{q}\to \mathbf{0}) =
-    D_{\alpha\beta}^{\mathrm{N}}(jj',\mathbf{q}\to \mathbf{0})
-    + \frac{4\pi}{\sqrt{m_j m_j}\Omega_0}
-    \frac{[\sum_{\gamma}q_{\gamma}Z^{*}_{j,\gamma\alpha}][\sum_{\gamma'}q_{\gamma'}Z^{*}_{j',\gamma'\beta}]}
-    {\sum_{\alpha\beta}q_{\alpha}\epsilon_{\alpha\beta}^{\infty} q_{\beta}}.
-
-Phonon frequencies at general **q**-points are interpolated by the
-method of Wang *et al.* (:ref:`reference_wang_NAC`).
-
+This file is used with the ``--nac`` option or ``NAC`` tag.
 
 .. ``--nac_old`` option
 .. ~~~~~~~~~~~~~~~~~~~~~

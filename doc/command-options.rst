@@ -8,6 +8,7 @@ tags:
 
 * ``--amplitude`` (``DISPLACEMENT_DISTANCE``)
 * ``--anime`` (``ANIME``)
+* ``-d``  (``CREATE_DISPLACEMENTS = .TRUE.``
 * ``--dim`` (``DIM``)
 * ``--mp``, ``--mesh`` (``MP``)
 * ``--band`` (``BAND``)
@@ -22,6 +23,8 @@ tags:
 * ``--show_irreps`` (``SHOW_IRREPS``)
 * ``--modulation`` (``MODULATION``)
 * ``--nac`` (``NAC = .TRUE.``)
+* ``--nosym`` (``SYMMETRY = .FALSE.``)
+* ``--nomeshsym`` (``MESH_SYMMETRY = .FALSE.``)
 * ``--pa``, ``--primitive_axis`` (``PRIMITIVE_AXIS``)
 * ``--pd``, ``--projection_direction`` (``PROJECTION_DIRECTION``)
 * ``--pdos`` (``PDOS``)
@@ -34,8 +37,6 @@ tags:
 * ``--tstep`` (``TSTEP``)
 * ``--writedm`` (``WRITEDM = .TRUE.``)
 * ``--writefc`` (``FORCE_CONSTANTS = WRITE``)
-
-
 
 When both of command-line option and setting tag for the same purpose
 are set simultaneously, the command-line options overide the setting
@@ -153,44 +154,6 @@ more details, please refer :ref:`vasp_dfpt_interface`.
 ..    % phonopy --fco OUTCAR
 
 
-Create supercell and displacements 
------------------------------------
-
-.. _dim_option:
-
-``--dim``
-~~~~~~~~~~
-
-This works same as specifying the tag ``DIM`` (:ref:`dimension_tag`).
-
-.. _create_displacement_option:
-
-``--displacement`` or ``-d``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-This has to be used with ``--dim`` option.
-
-::
-
-   % phonopy -d --dim="2 2 1"
-
-``--amplitude``
-~~~~~~~~~~~~~~~~
-
-To specify this option is same as setting the
-``DISPLACEMENT_DISTANCE`` tag (:ref:`displacement_distance_tag`).
-
-Create primitive cell
-----------------------
-
-.. _primitive_axis_option:
-
-``--primitive_axis`` or ``--pa``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-This is shortcut of the setting tag :ref:`primitive_axis_tag`.
-
-
 .. _graph_option:
 
 Graph plotting
@@ -216,52 +179,6 @@ Result is plotted (saved) to PDF file.
 
    % phonopy -p -s
 
-
-Mesh numbers
--------------
-
-``--mp``
-~~~~~~~~~
-
-Same as the setting tag :ref:`mp_tag`.
-
-Thermal properties
--------------------
-
-.. _thermal_properties_option:
-
-``-t``, ``--tmax``, ``--tmin``, ``--tstep``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-These correspond to ``TPROP``, ``TMAX``, ``TMIN``, and ``TSTEP`` tags,
-respectively (:ref:`thermal_properties_tag`).
-
-.. _thermal_displacements_option:
-
-Thermal displacements
----------------------
-
-``--td``, ``--tmax``, ``--tmin``, ``--tstep``, ``--pd``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-These correspond to ``TDISP``, ``TMAX``, ``TMIN``, ``TSTEP``, and
-``PROJECTION_DIRECTION`` tags, respectively
-(:ref:`thermal displacements tags <thermal_displacements_tag>`).
-
-::
-
-   % phonopy --td --pd="1 1 0"
-
-
-Smearing width
---------------
-
-.. _smearing_width_option:
-
-``--sigma``
-~~~~~~~~~~~
-
-Same as the setting tag :ref:`sigma_tag`.
 
 Calculate DOS
 -------------
@@ -299,23 +216,6 @@ where the frequency is simply shown in the unit you specified.
 
    % phonopy --factor=521.471
 
-Non-analytical term correction
-------------------------------
-
-``--nac``
-~~~~~~~~~~
-
-Non-analytical term correction. See ``NAC`` tag (:ref:`nac_tag`).
-
-Group velocity
----------------
-
-``--gv`` or ``--group_velocity``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-
-     
 Log level
 ----------
 
@@ -356,20 +256,6 @@ This tag can be used together with the ``--cell``, ``--wien2k``, or
 ``--primitive_axis`` option.
 
 
-.. _nosym_option:
-
-``--nosym``
-~~~~~~~~~~~
-
-P1 symmetry is enforced to the input unit cell.
-
-.. _nomeshsym_option:
-
-``--nomeshsym``
-~~~~~~~~~~~~~~~~
-
-Symmetry search on the reciprocal sampling mesh is disabled.
-
 Input cell
 ----------
 
@@ -400,32 +286,6 @@ the P lattice is supported**.  See more information
 ::
 
    % phonopy --wien2k=case.struct
-
-
-Read and write ``FORCE_CONSTANTS``
-------------------------------------
-
-.. _readfc_option:
-
-``--readfc`` 
-~~~~~~~~~~~~~
-
-This option activates ``FORCE_CONSTANTS = READ`` instead of reading ``FORCES``.
-
-::
-
-   % phonopy --readfc
-
-.. _writefc_option:
-
-``--writefc``
-~~~~~~~~~~~~~
-
-This option sets ``FORCE_CONSTANTS = WRITE``.
-
-::
-
-   % phonopy --writefc --dim="2 2 2"
 
 
 .. |sflogo| image:: http://sflogo.sourceforge.net/sflogo.php?group_id=161614&type=1
