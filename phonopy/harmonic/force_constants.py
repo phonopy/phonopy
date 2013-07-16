@@ -296,113 +296,70 @@ def get_force_constants_disps(force_constants,
     symprec = symmetry.get_symmetry_tolerance()
     disp_atom_list = np.unique(
         [forces.get_atom_number() for forces in set_of_forces])
+    lat = supercell.get_cell().T
 
     for disp_atom_number in disp_atom_list:
         site_symmetry = symmetry.get_site_symmetry(disp_atom_number)
-        symmetry_matrices = get_symmetry_matrices(supercell, site_symmetry)
-        rot_disps = []
-        row_forces = []
+        positions = supercell.get_scaled_positions()
+        pos_center = positions[disp_atom_number].copy()
+        positions -= pos_center
+        rot_map_syms = get_positions_sent_by_rot_inv(positions,
+                                                     site_symmetry,
+                                                     symprec)
+        site_sym_cart = [similarity_transformation(lat, sym)
+                         for sym in site_symmetry]
 
-        # Bind several displacements of a displaced atom
-        # with symmetry operations
+        rot_disps = []
+        raw_forces = []
+
         for forces in set_of_forces:
-            if not forces.get_atom_number() == disp_atom_number:
+            if forces.get_atom_number() != disp_atom_number:
                 continue
 
-            displacement = forces.get_displacement()
-            # Displacement * Rotation (U * A)
-            rot_disps.append(get_rotated_displacements(displacement,
-                                                       symmetry_matrices))
-            row_forces.append(forces.get_forces())
+            u = forces.get_displacement()
+            rot_disps.append([np.dot(sym, u) for sym in site_sym_cart])
+            raw_forces.append(forces.get_forces())
 
-        # Bind forces for several displacements and symmetry
-        # operations of a displaced atom
-        rot_disps = np.array(rot_disps).reshape(-1, 9)
-        inv = np.linalg.pinv(rot_disps)
+        rot_disps = np.reshape(rot_disps, (-1, 3))
+        inv_displacements = np.linalg.pinv(rot_disps)
 
-        solve_force_constants_disps(force_constants,
-                                    supercell,
-                                    disp_atom_number,
-                                    site_symmetry,
-                                    row_forces,
-                                    inv,
-                                    symprec)
+        for i in range(supercell.get_number_of_atoms()):
+            combined_forces = []
+            for forces in raw_forces:
+                combined_forces.append(
+                    get_rotated_forces(forces[rot_map_syms[:, i]],
+                                       site_sym_cart))
+    
+            combined_forces = np.reshape(combined_forces, (-1, 3))
+            force_constants[disp_atom_number, i] = -np.dot(
+                inv_displacements, combined_forces)
 
     return disp_atom_list
 
-
-def solve_force_constants_disps(force_constants,
-                                supercell,
-                                disp_atom_number,
-                                site_symmetry,
-                                sets_of_forces,
-                                inv_displacements,
-                                symprec):
-        for i in range(supercell.get_number_of_atoms()):
-            # Shift positions according to set disp_atom_number is at origin
-            positions = supercell.get_scaled_positions()
-            pos_center = positions[disp_atom_number].copy()
-            positions -= pos_center
-            # Combined forces (F)
-            combined_forces = []
-            try:
-                import phonopy._phonopy as phonoc
-                for forces in sets_of_forces:
-                    rotated_forces = np.zeros(len(site_symmetry) * 3,
-                                              dtype='double')
-                    phonoc.rotated_forces(rotated_forces,
-                                          positions,
-                                          i,
-                                          forces,
-                                          site_symmetry,
-                                          symprec)
-                    combined_forces.append(rotated_forces)
-            except ImportError:
-                for forces in sets_of_forces:
-                    combined_forces.append(
-                        get_rotated_forces(positions,
-                                           i,
-                                           forces,
-                                           site_symmetry,
-                                           symprec))
-    
-            combined_forces = np.array(combined_forces).reshape(-1, 1)
-            # Force constant (P) = -(U * A)^-1 * (F)
-            force_constants[disp_atom_number,i] = \
-                -np.dot(inv_displacements, combined_forces).reshape(3, 3)
-
-
-def get_rotated_forces(positions,
-                       atom_number,
-                       forces,
-                       site_symmetry,
-                       symprec=1e-5):
-    """
-    Pack forces on atoms translated by site symmetry
-    
-    The relation:
-    R [ F(r) ] = F(R.r)
-    where R is a rotation cetering at displaced atom.
-    (This is not the transformation of a function,
-     but just the rotation of force vector at r.)
-    """
-    rot_forces = []
+def get_positions_sent_by_rot_inv(positions,
+                                  site_symmetry,
+                                  symprec):
+    rot_map_syms = []
     for sym in site_symmetry:
-        rot_pos = np.dot(positions[atom_number], sym.T)
-
+        rot_map = np.zeros(len(positions), dtype='intc')
+        rot_pos = np.dot(positions, sym.T)
         is_found = False
-        for i, p in enumerate(positions):
-            diff = p - rot_pos
-            if (abs(diff - diff.round()) < symprec).all():
-                rot_forces.append(forces[i])
-                is_found = True
-                break
+        for i, rot_pos_i in enumerate(rot_pos):
+            diff = positions - rot_pos_i
+            j = np.nonzero((
+                    np.abs(diff - np.rint(diff)) < symprec).all(axis=1))[0]
+            rot_map[j] = i
 
-        if not is_found:
-            print "Phonopy encontered symmetry problem"
+        rot_map_syms.append(rot_map)
+
+    return np.intc(rot_map_syms)
+
+def get_rotated_forces(forces_syms, site_sym_cart):
+    rot_forces = []
+    for forces, sym_cart in zip(forces_syms, site_sym_cart):
+        rot_forces.append(np.dot(forces, sym_cart.T))
 
     return rot_forces
-
 
 def set_tensor_symmetry(force_constants, supercell, symmetry):
     """
@@ -537,68 +494,7 @@ def force_constants_log(force_constants):
                     i + 1, j + 1, v[0], v[1], v[2])
 
 
-# Shared functions to calculate force constant
-def get_symmetry_matrices(cell, site_symmetry):
-    """
-    Transformation of 2nd order force constant
-
-    In the phonopy implementation (Cartesian coords.)
-
-    (R.F)^T = -(R.U)^T Psi' --> F^T = -U^T.R^T.Psi'.R
-    Therefore,
-    Psi = R^T.Psi'.R --> Psi' = R.Psi.R^T
-
-    The symmetrical relation between Psi and Psi' can be represented
-    by a 9x9 matrix. What we want is transformation matrix A defined
-    by
-
-    P' = A.P
-
-    where P' and P are the 9x1 matrices and A is the 9x9 matrices.
-    """
-    matrices = []
-    for reduced_rot in site_symmetry:
-        mat = []
-        rot = similarity_transformation(cell.get_cell().T, reduced_rot)
-        for i in range(3):
-            for j in range(3):
-                psi = []
-                for k in range(3):
-                    for l in range(3):
-                        psi.append(rot[i, k] * rot[j, l])
-                mat.append(psi)
-        matrices.append(mat)
-    return np.array(matrices)
-
 def similarity_transformation(rot, mat):
     """ R x M x R^-1 """
     return np.dot(rot, np.dot(mat, np.linalg.inv(rot)))
-                
-def get_rotated_displacements(displacement, symmetry_matrices):
-    """
-    U x A
-                                                [123456789]
-                                                [2        ]
-                                                [3        ]
-      [ d_x  0   0   d_y  0   0   d_z  0   0  ] [4        ]
-    U [  0  d_x  0    0  d_y  0    0  d_z  0  ] [5   A    ]
-      [  0   0  d_x   0   0  d_y   0   0  d_z ] [6        ]
-                                                [7        ]
-                                                [8        ]
-                                                [9        ]
-    """
-    rot_disps = []
-    for sym in symmetry_matrices:
-        rot_disps.append(np.dot(expand_displacement(displacement), sym))
-    return rot_disps
-
-def expand_displacement(displacement):
-    """
-    [ d_x  0   0   d_y  0   0   d_z  0   0  ]
-    [  0  d_x  0    0  d_y  0    0  d_z  0  ]
-    [  0   0  d_x   0   0  d_y   0   0  d_z ]
-    """
-    d = displacement
-    disp = np.hstack((np.eye(3)*d[0], np.eye(3)*d[1], np.eye(3)*d[2]))
-    return disp
 

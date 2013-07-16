@@ -44,7 +44,6 @@ static PyObject * py_get_dynamical_matrix(PyObject *self, PyObject *args);
 static PyObject * py_get_nac_dynamical_matrix(PyObject *self, PyObject *args);
 static PyObject * py_get_thermal_properties(PyObject *self, PyObject *args);
 static PyObject * py_distribute_fc2(PyObject *self, PyObject *args);
-static PyObject * py_get_rotated_forces(PyObject *self, PyObject *args);
 
 static double get_free_energy_omega(const double temperature,
 				    const double omega);
@@ -62,14 +61,6 @@ static int distribute_fc2(double * fc2,
 			  const int * r,
 			  const double * t,
 			  const double symprec);
-static int get_rotated_forces(double * rotated_forces,
-			      const double * pos,
-			      const int num_pos,
-			      const int atom_number,
-			      const double * f,
-			      const int * r,
-			      const int num_rot,
-			      const double symprec);
 static int nint(const double a);
 
 static PyMethodDef functions[] = {
@@ -77,7 +68,6 @@ static PyMethodDef functions[] = {
   {"nac_dynamical_matrix", py_get_nac_dynamical_matrix, METH_VARARGS, "NAC dynamical matrix"},
   {"thermal_properties", py_get_thermal_properties, METH_VARARGS, "Thermal properties"},
   {"distribute_fc2", py_distribute_fc2, METH_VARARGS, "Distribute force constants"},
-  {"rotated_forces", py_get_rotated_forces, METH_VARARGS, "Rotate forces following site-symmetry"},
   {NULL, NULL, 0, NULL}
 };
 
@@ -399,92 +389,6 @@ static int distribute_fc2(double * fc2,
 
   return is_found;
 }
-
-static PyObject * py_get_rotated_forces(PyObject *self, PyObject *args)
-{
-  PyArrayObject* rotated_forces;
-  PyArrayObject* positions;
-  PyArrayObject* rotations;
-  PyArrayObject* forces;
-  int atom_number;
-  double symprec;
-
-  if (!PyArg_ParseTuple(args, "OOiOOd",
-			&rotated_forces,
-			&positions,
-			&atom_number,
-			&forces,
-			&rotations,
-			&symprec)) {
-    return NULL;
-  }
-
-  const int* r = (int*)rotations->data;
-  const int num_rot = rotations->dimensions[0];
-  const double* pos = (double*)positions->data;
-  const int num_pos = positions->dimensions[0];
-  const double* f = (double*)forces->data;
-  double* rot_forces = (double*)rotated_forces->data;
-
-  get_rotated_forces(rot_forces,
-		     pos,
-		     num_pos,
-		     atom_number,
-		     f,
-		     r,
-		     num_rot,
-		     symprec);
-
-  Py_RETURN_NONE;
-}
-
-
-static int get_rotated_forces(double * rotated_forces,
-			      const double * pos,
-			      const int num_pos,
-			      const int atom_number,
-			      const double * f,
-			      const int * r,
-			      const int num_rot,
-			      const double symprec)
-{
-  int i, j, k, is_found;
-  double rot_pos[3], diff[3];
-
-#pragma omp parallel for private(j, k, rot_pos, diff, is_found)
-  for (i = 0; i < num_rot; i++) {
-    for (j = 0; j < 3; j++) {
-      rot_pos[j] = 0;
-      for (k = 0; k < 3; k++) {
-	rot_pos[j] += r[i * 9 + j * 3 + k] * pos[atom_number * 3 + k];
-      }
-    }
-    
-    for (j = 0; j < num_pos; j++) {
-      is_found = 1;
-      for (k = 0; k < 3; k++) {
-	diff[k] = pos[j * 3 + k] - rot_pos[k];
-	diff[k] -= nint(diff[k]);
-	if (fabs(diff[k]) > symprec) {
-	  is_found = 0;
-	  break;
-	}
-      }
-      if (is_found) {
-	for (k = 0; k < 3; k++) {
-	  rotated_forces[i * 3 + k] = f[j * 3 + k];
-	}
-	break;
-      }
-    }
-    if (! is_found) {
-      printf("Phonopy encounted symmetry problem (c)\n");
-    }
-  }
-
-  return 1;
-}
-				 
 
 static int nint(const double a)
 {
