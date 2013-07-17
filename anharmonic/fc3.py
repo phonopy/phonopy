@@ -1,8 +1,7 @@
 import sys
 import numpy as np
-from anharmonic.fc2 import get_restricted_fc2
-from phonopy.harmonic.force_constants import similarity_transformation, set_permutation_symmetry, set_translational_invariance_per_index
-from anharmonic.displacement_fc3 import get_reduced_site_symmetry
+from phonopy.harmonic.force_constants import similarity_transformation, set_permutation_symmetry, set_translational_invariance_per_index, distribute_force_constants, solve_force_constants
+from anharmonic.displacement_fc3 import get_reduced_site_symmetry, get_bond_symmetry
 from anharmonic.file_IO import write_fc2_dat
 
 def get_fc3(supercell,
@@ -203,7 +202,8 @@ def get_fc3_one_atom(fc3,
     for i, v in enumerate(delta_fc2s):
         filename = "delta_fc2-%d-%d.dat" % (first_atom_num + 1, i + 1)
         write_fc2_dat(v, filename=filename)
-        
+
+
 def get_atom_by_symmetry(positions,
                          rotation,
                          trans,
@@ -264,14 +264,73 @@ def _get_delta_fc2(dataset_first_atom,
                    reduced_site_sym,
                    is_translational_symmetry,
                    symprec=1e-5):
-    disp_fc2 = get_restricted_fc2(supercell,
-                                  dataset_first_atom,
-                                  reduced_site_sym,
-                                  symprec)
+    disp_fc2 = _get_restricted_fc2(supercell,
+                                   dataset_first_atom,
+                                   reduced_site_sym,
+                                   symprec)
     if is_translational_symmetry:
         set_translational_invariance_per_index(disp_fc2)
             
     return disp_fc2 - fc2
+
+def _get_restricted_fc2(supercell,
+                        displacements,
+                        reduced_site_sym,
+                        symprec=1e-5):
+    """
+    displacements = {'number': 3,
+                     'displacement': [0.01, 0.00, 0.01]
+                     'second_atoms': [{'number': 7,
+                                       'displacements': [[]],
+                                       'delta_forces': []}]}
+
+    number: Atomic index, starting with 0.
+    displacement: displacement of 1st displaced atom in Cartesian.
+    displacements: displacements of 2st displaced atom in Cartesian.
+    delta_forces: diff. of 2 atomic disp. forces and 1 atomic disp. forces
+    Number of elements of 'displacements' and 'delta_forces' are same.
+    """
+    num_atom = supercell.get_number_of_atoms()
+    atom1 = displacements['number']
+    fc2 = np.zeros((num_atom, num_atom, 3, 3), dtype='double')
+    atom_list_done = []
+    for disps_second in displacements['second_atoms']:
+        disps2 = disps_second['displacements']
+        atom2 = disps_second['number']
+        sets_of_forces = disps_second['delta_forces']
+        atom_list_done.append(atom2)
+        bond_sym = get_bond_symmetry(
+            reduced_site_sym,
+            supercell.get_scaled_positions(),
+            atom1,
+            atom2,
+            symprec)
+
+        solve_force_constants(fc2,
+                              atom2,
+                              disps2,
+                              sets_of_forces,
+                              supercell,
+                              bond_sym,
+                              symprec)
+
+    # Shift positions according to set atom1 is at origin
+    lattice = supercell.get_cell()
+    positions = supercell.get_scaled_positions()
+    pos_center = positions[atom1].copy()
+    positions -= pos_center
+    atom_list = range(num_atom)
+    distribute_force_constants(fc2,
+                               atom_list,
+                               atom_list_done,
+                               lattice,
+                               positions,
+                               np.intc(reduced_site_sym).copy(),
+                               np.zeros((len(reduced_site_sym), 3),
+                                        dtype='double'),
+                               symprec)
+    return fc2
+        
 
 def _solve_fc3(fc3,
                first_atom_num,
