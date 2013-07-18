@@ -1,6 +1,6 @@
 import sys
 import numpy as np
-from phonopy.harmonic.force_constants import similarity_transformation, set_permutation_symmetry, set_translational_invariance_per_index, distribute_force_constants, solve_force_constants
+from phonopy.harmonic.force_constants import similarity_transformation, set_permutation_symmetry, set_translational_invariance_per_index, distribute_force_constants, solve_force_constants, get_rotated_displacement, get_positions_sent_by_rot_inv
 from anharmonic.displacement_fc3 import get_reduced_site_symmetry, get_bond_symmetry
 from anharmonic.file_IO import write_fc2_dat
 
@@ -161,22 +161,24 @@ def get_fc3_one_atom(fc3,
     displacements_first = []
     delta_fc2s = []
     for dataset_first_atom in disp_dataset['first_atoms']:
-        if first_atom_num == dataset_first_atom['number']:
-            displacements_first.append(dataset_first_atom['displacement'])
-            if 'delta_fc2' in dataset_first_atom:
-                delta_fc2s.append(dataset_first_atom['delta_fc2'])
-            else:
-                direction = np.dot(dataset_first_atom['displacement'],
-                                   np.linalg.inv(supercell.get_cell()))
-                reduced_site_sym = get_reduced_site_symmetry(
-                    site_symmetry, direction, symprec)
-                delta_fc2s.append(_get_delta_fc2(
-                        dataset_first_atom,
-                        fc2,
-                        supercell,
-                        reduced_site_sym,
-                        is_translational_symmetry,
-                        symprec))
+        if first_atom_num != dataset_first_atom['number']:
+            continue
+        
+        displacements_first.append(dataset_first_atom['displacement'])
+        if 'delta_fc2' in dataset_first_atom:
+            delta_fc2s.append(dataset_first_atom['delta_fc2'])
+        else:
+            direction = np.dot(dataset_first_atom['displacement'],
+                               np.linalg.inv(supercell.get_cell()))
+            reduced_site_sym = get_reduced_site_symmetry(
+                site_symmetry, direction, symprec)
+            delta_fc2s.append(_get_delta_fc2(
+                    dataset_first_atom,
+                    fc2,
+                    supercell,
+                    reduced_site_sym,
+                    is_translational_symmetry,
+                    symprec))
 
     _solve_fc3(fc3,
                first_atom_num,
@@ -264,19 +266,19 @@ def _get_delta_fc2(dataset_first_atom,
                    reduced_site_sym,
                    is_translational_symmetry,
                    symprec=1e-5):
-    disp_fc2 = _get_restricted_fc2(supercell,
-                                   dataset_first_atom,
-                                   reduced_site_sym,
-                                   symprec)
+    disp_fc2 = _get_constrained_fc2(supercell,
+                                    dataset_first_atom,
+                                    reduced_site_sym,
+                                    symprec)
     if is_translational_symmetry:
         set_translational_invariance_per_index(disp_fc2)
             
     return disp_fc2 - fc2
 
-def _get_restricted_fc2(supercell,
-                        displacements,
-                        reduced_site_sym,
-                        symprec=1e-5):
+def _get_constrained_fc2(supercell,
+                         displacements,
+                         reduced_site_sym,
+                         symprec=1e-5):
     """
     displacements = {'number': 3,
                      'displacement': [0.01, 0.00, 0.01]
@@ -335,93 +337,36 @@ def _get_restricted_fc2(supercell,
 def _solve_fc3(fc3,
                first_atom_num,
                supercell,
-               site_sym,
+               site_symmetry,
                displacements_first,
                delta_fc2s,
                symprec=1e-5):
-    num_atoms = supercell.get_number_of_atoms()
-    lattice = supercell.get_cell()
+    lattice = supercell.get_cell().T
+    site_sym_cart = [similarity_transformation(lattice, sym)
+                     for sym in site_symmetry]
+    num_atom = supercell.get_number_of_atoms()
     positions = supercell.get_scaled_positions()
-    rot_disps = np.zeros((0, 27), dtype=float)
-
-    for i, disp_cart in enumerate(displacements_first):
-        for j, rot in enumerate(site_sym):
-            rot_cart = similarity_transformation(lattice.T, rot)
-	    rot_disps = np.vstack(
-                (rot_disps, np.dot(_expand_displacement_third(disp_cart),
-                                   _get_symmetry_matrices_third(rot_cart))))
-
+    pos_center = positions[first_atom_num].copy()
+    positions -= pos_center
+    rot_map_syms = get_positions_sent_by_rot_inv(positions,
+                                                 site_symmetry,
+                                                 symprec)
+    
+    rot_disps = get_rotated_displacement(displacements_first, site_sym_cart)
     inv_U = np.linalg.pinv(rot_disps)
-
-    for i in range(num_atoms):
-        for j in range(num_atoms):
-            delta_fc2_rot = np.zeros(
-                (len(delta_fc2s), len(site_sym), 3, 3), dtype=float)
-
-            for k, delta_fc2 in enumerate(delta_fc2s):
-                for l, rot in enumerate(site_sym):
-                    rot_atom_i = _get_atom_by_site_symmetry(positions,
-                                                            rot,
-                                                            i,
-                                                            first_atom_num,
-                                                            symprec)
-                    rot_atom_j = _get_atom_by_site_symmetry(positions,
-                                                            rot,
-                                                            j,
-                                                            first_atom_num,
-                                                            symprec)
-                    delta_fc2_rot[k, l] = delta_fc2[rot_atom_i, rot_atom_j]
-
-            fc3[first_atom_num, i, j] = np.dot(
-                inv_U, delta_fc2_rot.reshape(-1,1)).reshape(3, 3, 3)
-
-def _get_atom_by_site_symmetry(positions,
-                               rotation,
-                               atom_num,
-                               atom_center,
-                               symprec=1e-5):
-
-    rot_pos = np.dot(positions[atom_num] - positions[atom_center],
-                     rotation.transpose()) + positions[atom_center]
-
-    for i, pos in enumerate(positions):
-        diff = pos - rot_pos
-        if (abs(diff - diff.round()) < symprec).all():
-            return i
-
-    print 'Position or site symmetry is wrong.'
-    raise ValueError
-
-def _expand_displacement_third(displacement):
-    """
-    [dx  0  0  0  0  0  0  0  0 dy  0  0  0  0  0  0  0  0 dz  0  0  0  0  0  0  0  0]
-    [ 0 dx  0  0  0  0  0  0  0  0 dy  0  0  0  0  0  0  0  0 dz  0  0  0  0  0  0  0]
-    [ 0  0 dx  0  0  0  0  0  0  0  0 dy  0  0  0  0  0  0  0  0 dz  0  0  0  0  0  0]
-    [ 0  0  0 dx  0  0  0  0  0  0  0  0 dy  0  0  0  0  0  0  0  0 dz  0  0  0  0  0]
-    [ 0  0  0  0 dx  0  0  0  0  0  0  0  0 dy  0  0  0  0  0  0  0  0 dz  0  0  0  0]
-    [ 0  0  0  0  0 dx  0  0  0  0  0  0  0  0 dy  0  0  0  0  0  0  0  0 dz  0  0  0]
-    [ 0  0  0  0  0  0 dx  0  0  0  0  0  0  0  0 dy  0  0  0  0  0  0  0  0 dz  0  0]
-    [ 0  0  0  0  0  0  0 dx  0  0  0  0  0  0  0  0 dy  0  0  0  0  0  0  0  0 dz  0]
-    [ 0  0  0  0  0  0  0  0 dx  0  0  0  0  0  0  0  0 dy  0  0  0  0  0  0  0  0 dz]
-    """
-    d = displacement
-    return np.hstack((np.eye(9) * d[0], np.eye(9) * d[1], np.eye(9) * d[2]))
-
-def _get_symmetry_matrices_third(rotation_cartesian):
-    """ Set 27x27 symmetry matricies """
-    r = rotation_cartesian
-    mat = []
-    for i in range(3):
-        for j in range(3):
-            for k in range(3):
-                psi = []
-                for l in range(3):
-                    for m in range(3):
-                        for n in range(3):
-                            psi.append(r[i, l] * r[j, m] * r[k, n])
-                mat.append(psi)
-    return np.array(mat)
-
+    for (i, j) in list(np.ndindex(num_atom, num_atom)):
+        fc3[first_atom_num, i, j] = np.dot(inv_U, _get_rotated_fc2s(
+                i, j, delta_fc2s, rot_map_syms, site_sym_cart)).reshape(3, 3, 3)
+                                           
+def _get_rotated_fc2s(i, j, fc2s, rot_map_syms, site_sym_cart):
+    num_sym = len(site_sym_cart)
+    rotated_fc2s = []
+    for fc2 in fc2s:
+        for sym, map_sym in zip(site_sym_cart, rot_map_syms):
+            fc2_rot = fc2[map_sym[i], map_sym[j]]
+            rotated_fc2s.append(similarity_transformation(sym, fc2_rot))
+    return np.reshape(rotated_fc2s, (-1, 9))
+            
 def _third_rank_tensor_rotation(rot_cart, tensor):
     rot_tensor = np.zeros((3,3,3), dtype=float)
     for i in (0,1,2):

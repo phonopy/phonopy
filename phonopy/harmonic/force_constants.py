@@ -341,10 +341,7 @@ def solve_force_constants(force_constants,
                                                  symprec)
     site_sym_cart = [similarity_transformation(lat, sym)
                      for sym in site_symmetry]
-    rot_disps = []
-    for u in displacements:
-        rot_disps.append([np.dot(sym, u) for sym in site_sym_cart])
-    rot_disps = np.reshape(rot_disps, (-1, 3))
+    rot_disps = get_rotated_displacement(displacements, site_sym_cart)
     inv_displacements = np.linalg.pinv(rot_disps)
 
     for i in range(supercell.get_number_of_atoms()):
@@ -375,6 +372,12 @@ def get_positions_sent_by_rot_inv(positions,
         rot_map_syms.append(rot_map)
 
     return np.intc(rot_map_syms)
+
+def get_rotated_displacement(displacements, site_sym_cart):
+    rot_disps = []
+    for u in displacements:
+        rot_disps.append([np.dot(sym, u) for sym in site_sym_cart])
+    return np.reshape(rot_disps, (-1, 3))
 
 def get_rotated_forces(forces_syms, site_sym_cart):
     rot_forces = []
