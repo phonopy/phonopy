@@ -48,7 +48,7 @@ from phonopy.harmonic.dynamical_matrix import DynamicalMatrix
 from phonopy.hphonopy.file_IO import parse_FORCE_SETS
 from phonopy.units import THzToCm, VaspToTHz
 from phonopy.hphonopy.file_IO import parse_BORN
-from anharmonic.fc3 import get_fc3, symmetrize_fc3, set_translational_invariance_fc3
+from anharmonic.phonon3.fc3 import get_fc3, symmetrize_fc3, set_translational_invariance_fc3
 from anharmonic.file_IO import write_fc2_dat, write_fc3_dat,\
     parse_disp_yaml, parse_FORCES_THIRD, write_FORCES_THIRD,\
     parse_DELTA_FORCES, write_supercells_with_displacements,\
@@ -57,10 +57,10 @@ from anharmonic.file_IO import write_fc2_dat, write_fc3_dat,\
     write_FC2_FOURTH_SETS, parse_FC2_FOURTH_SETS,\
     write_fc3_to_hdf5, write_fc2_to_hdf5,\
     read_fc3_from_hdf5, read_fc2_from_hdf5
-from anharmonic.displacement_fc3 import get_third_order_displacements
+from anharmonic.phonon3.displacement_fc3 import get_third_order_displacements
 from anharmonic.settings import Phono3pyConfParser
-from anharmonic import Phono3py, JointDOS, get_gruneisen_parameters    
-from anharmonic.triplets import get_grid_address, get_ir_grid_points, from_coarse_to_dense_grid_points
+from anharmonic.phonon3 import Phono3py, JointDOS, get_gruneisen_parameters    
+from anharmonic.phonon3.triplets import get_grid_address, get_ir_grid_points, from_coarse_to_dense_grid_points
 
 # AA is created at http://www.network-science.de/ascii/.
 def print_phono3py():

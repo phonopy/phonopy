@@ -1,7 +1,7 @@
 import sys
 import numpy as np
 from phonopy.harmonic.force_constants import similarity_transformation, set_permutation_symmetry, set_translational_invariance_per_index, distribute_force_constants, solve_force_constants, get_rotated_displacement, get_positions_sent_by_rot_inv
-from anharmonic.displacement_fc3 import get_reduced_site_symmetry, get_bond_symmetry
+from anharmonic.phonon3.displacement_fc3 import get_reduced_site_symmetry, get_bond_symmetry
 from anharmonic.file_IO import write_fc2_dat
 
 def get_fc3(supercell,

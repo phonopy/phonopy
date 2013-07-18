@@ -4,8 +4,8 @@ from phonopy.group_velocity import get_group_velocity
 from phonopy.units import Kb, THzToEv, EV, THz, Angstrom
 from phonopy.phonon.thermal_properties import mode_cv
 from anharmonic.file_IO import write_kappa_to_hdf5
-from anharmonic.triplets import get_grid_address, reduce_grid_points, get_ir_grid_points, from_coarse_to_dense_grid_points
-from anharmonic.imag_self_energy import ImagSelfEnergy
+from anharmonic.phonon3.triplets import get_grid_address, reduce_grid_points, get_ir_grid_points, from_coarse_to_dense_grid_points
+from anharmonic.phonon3.imag_self_energy import ImagSelfEnergy
 
 unit_to_WmK = ((THz * Angstrom) ** 2 / (Angstrom ** 3) * EV / THz /
                (2 * np.pi)) # 2pi comes from definition of lifetime.

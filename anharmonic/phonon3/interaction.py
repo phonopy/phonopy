@@ -2,9 +2,9 @@ import numpy as np
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC, get_smallest_vectors
 from phonopy.structure.symmetry import Symmetry
 from phonopy.units import VaspToTHz
-from anharmonic.real_to_reciprocal import RealToReciprocal
-from anharmonic.reciprocal_to_normal import ReciprocalToNormal
-from anharmonic.triplets import get_triplets_at_q, get_nosym_triplets_at_q
+from anharmonic.phonon3.real_to_reciprocal import RealToReciprocal
+from anharmonic.phonon3.reciprocal_to_normal import ReciprocalToNormal
+from anharmonic.phonon3.triplets import get_triplets_at_q, get_nosym_triplets_at_q
 
 class Interaction:
     def __init__(self,
