@@ -34,5 +34,6 @@ setup(name='phono3py',
       url='http://phonopy.sourceforge.net/',
       packages=['anharmonic',
                 'anharmonic.phonon3'],
-      scripts=['scripts/phono3py'],
+      scripts=['scripts/phono3py',
+               'scripts/phono4py'],
       ext_modules=[extension])
