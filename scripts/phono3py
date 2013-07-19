@@ -97,7 +97,6 @@ parser.set_defaults(amplitude=None,
                     grid_points=None,
                     gv_delta_q=None,
                     ion_clamped=False,
-                    is_cm=False,
                     is_decay_channel=False,
                     is_nodiag=False,
                     is_displacement=False,
@@ -112,7 +111,6 @@ parser.set_defaults(amplitude=None,
                     is_symmetrize_fc2=False,
                     is_symmetrize_fc3_r=False,
                     is_symmetrize_fc3_q=False,                     
-                    is_Peierls=False,
                     log_level=None,
                     max_freepath=None,
                     mesh_numbers=None,
@@ -126,7 +124,6 @@ parser.set_defaults(amplitude=None,
                     read_fc2_extra=False,
                     read_fc3=False,
                     read_gamma=False,
-                    r2q_TI_index=None,
                     freq_step=None,
                     output_filename=None,
                     qpoints=None,
@@ -134,7 +131,6 @@ parser.set_defaults(amplitude=None,
                     supercell_dimension=None,
                     supercell_dimension_extra=None,
                     symprec=1e-5,
-                    test=False,
                     tmax=None,
                     tmin=None,
                     tstep=None,
@@ -161,8 +157,6 @@ parser.add_option("--br", "--bterta", dest="is_bterta",
 parser.add_option("-c", "--cell", dest="cell_poscar",
                   action="store", type="string",
                   help="Read unit cell", metavar="FILE")
-parser.add_option("--cm", dest="is_cm",
-                  action="store_true", help="Convert THz to cm^-1")
 parser.add_option("-d", "--disp", dest="is_displacement",
                   action="store_true",
                   help="As first stage, get least displacements")
@@ -267,9 +261,6 @@ parser.add_option("-o", dest="output_filename",
 parser.add_option("--pa", "--primitive_axis", dest="primitive_axis",
                   action="store", type="string",
                   help="Same as PRIMITIVE_AXIS tags")
-parser.add_option("--peierls", dest="is_Peierls",
-                  action="store_true",
-                  help="Peierls approximation")
 parser.add_option("--pm", dest="is_plusminus_displacements",
                   action="store_true",
                   help="Set plus minus displacements")
@@ -279,8 +270,6 @@ parser.add_option("--q_direction",
                   dest="q_direction",
                   type="string",
                   help="q-vector direction at q->0 for non-analytical term correction")
-parser.add_option("--r2q", dest="r2q_TI_index", type="int",
-                  help="Index to set translational invariance in transforming fc3 from real to reciprocal space")
 parser.add_option("--read_amplitude", dest="read_amplitude",
                   action="store_true",
                   help="Read phonon-phonon interaction amplitudes")
@@ -298,9 +287,6 @@ parser.add_option("--sym_fc3r", dest="is_symmetrize_fc3_r",
 parser.add_option("--sym_fc3q", dest="is_symmetrize_fc3_q",
                   action="store_true",
                   help="Symmetrize fc3 in reciprocal space by index exchange")
-parser.add_option("--test", dest="test",
-                  action="store_true",
-                  help="Used for code test")
 parser.add_option("--tmax", dest="tmax", type="string",
                   help="Maximum calculated temperature")
 parser.add_option("--tmin", dest="tmin", type="string",
@@ -685,18 +671,15 @@ else:
         if options.grid_points is None:
             grid_points = None
         else:
-            grid_points = np.array([int(x)
-                                    for x in options.grid_points.replace(',', ' ').split()])
+            grid_points = np.array(
+                [int(x) for x in options.grid_points.replace(',', ' ').split()])
             
         if options.factor is None:
             factor = VaspToTHz
         else:
             factor = options.factor
 
-        if options.is_cm:
-            freq_factor = THzToCm
-        else:
-            freq_factor = 1.0
+        freq_factor = 1.0
 
         if settings.get_sigma() is None:
             sigma = 0.2 * freq_factor
