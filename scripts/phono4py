@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (C) 2011 Atsushi Togo
+# Copyright (C) 2013 Atsushi Togo
 # All rights reserved.
 #
 # This file is part of phonopy.
@@ -39,28 +39,20 @@ import sys
 import numpy as np
 from optparse import OptionParser
 
-from phonopy.interface.vasp import read_vasp
+from phonopy.interface.vasp import read_vasp, write_vasp
 from phonopy.structure.cells import get_supercell, Primitive, print_cell
 from phonopy.structure.symmetry import Symmetry
-from phonopy.harmonic.forces import Forces
-from phonopy.harmonic.force_constants import get_force_constants, set_permutation_symmetry, symmetrize_force_constants, set_translational_invariance
+from phonopy.harmonic.force_constants import set_translational_invariance
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrix
 from phonopy.hphonopy.file_IO import parse_FORCE_SETS
-from phonopy.units import THzToCm, VaspToTHz
-from phonopy.hphonopy.file_IO import parse_BORN
-from anharmonic.phonon3.fc3 import get_fc3, symmetrize_fc3, set_translational_invariance_fc3
-from anharmonic.file_IO import write_fc2_dat, write_fc3_dat,\
-    parse_disp_yaml, parse_FORCES_THIRD, write_FORCES_THIRD,\
-    parse_DELTA_FORCES, write_supercells_with_displacements,\
-    parse_QPOINTS3, parse_fc3, parse_fc2,\
-    write_DELTA_FC2_SETS, parse_DELTA_FC2_SETS,\
+from phonopy.units import VaspToTHz
+from anharmonic.phonon3.fc3 import symmetrize_fc3, set_translational_invariance_fc3
+from anharmonic.file_IO import \
+    parse_disp_yaml, write_DELTA_FC2_SETS, parse_DELTA_FC2_SETS,\
     write_FC2_FOURTH_SETS, parse_FC2_FOURTH_SETS,\
-    write_fc3_to_hdf5, write_fc2_to_hdf5,\
     read_fc3_from_hdf5, read_fc2_from_hdf5
 from anharmonic.phonon3.displacement_fc3 import get_third_order_displacements
 from anharmonic.settings import Phono3pyConfParser
-from anharmonic.phonon3 import Phono3py, JointDOS, get_gruneisen_parameters    
-from anharmonic.phonon3.triplets import get_grid_address, get_ir_grid_points, from_coarse_to_dense_grid_points
 
 # AA is created at http://www.network-science.de/ascii/.
 def print_phono4py():
@@ -99,7 +91,7 @@ parser.set_defaults(amplitude=None,
                     log_level=None,
                     primitive_axis=None,
                     read_fc2=False,
-                    read_fc2_extra=False,
+                    read_fc2_fourth_sets=False,                    
                     read_fc3=False,
                     output_filename=None,
                     supercell_dimension=None,
@@ -157,9 +149,6 @@ parser.add_option("--sym_fc3r", dest="is_symmetrize_fc3_r",
 parser.add_option("--sym_fc3q", dest="is_symmetrize_fc3_q",
                   action="store_true",
                   help="Symmetrize fc3 in reciprocal space by index exchange")
-parser.add_option("--test", dest="test",
-                  action="store_true",
-                  help="Used for code test")
 parser.add_option("--tsym", dest="is_translational_symmetry",
                   action="store_true",
                   help="Impose translational invariance condition")
@@ -179,6 +168,13 @@ if options.log_level is None:
 else:
     log_level = options.log_level
     
+# Create FC2_FOURTH_SETS
+if options.fc2_fourth_sets_mode:
+    displacements = parse_disp_yaml('disp.yaml')
+    write_FC2_FOURTH_SETS(args, displacements)
+    print_end()
+    exit(0)
+
 # Title
 if log_level:
     print_phono4py()
@@ -220,10 +216,6 @@ unitcell = read_vasp(unitcell_filename,
 supercell = get_supercell(unitcell, settings.get_supercell_matrix())
 symmetry = Symmetry(supercell, options.symprec)
 
-if not settings.get_supercell_matrix_extra()==None:
-    supercell_extra = get_supercell(unitcell, settings.get_supercell_matrix_extra())
-    symmetry_extra = Symmetry(supercell_extra, options.symprec)
-
 # Log
 if log_level:
     print "Spacegroup: ", symmetry.get_international_table()
@@ -240,7 +232,8 @@ if options.is_displacement:
     write_supercells_with_displacements(supercell,
                                         dds,
                                         options.amplitude)
-
+    write_vasp('POSCAR-0000', supercell, direct=True)
+    
 ##########################################
 # Calculate fourth-order force constants #
 ##########################################
@@ -261,7 +254,7 @@ else:
             print "%5.2f"*3 % tuple(vec)
 
     # fc2
-    if options.read_fc2 or options.read_delta_fc2:
+    if options.read_fc2:
         if log_level:
             print  "----- Read fc2 -----"
             sys.stdout.flush()
@@ -291,21 +284,16 @@ else:
         maxval1 = 0
         maxval2 = 0
         maxval3 = 0
-        for i in range(num_atom):
-            for j in range(num_atom):
-                for k in range(3):
-                    for l in range(3):
-                        for m in range(3):
-                            val1 = fc3[:, i, j, k, l, m].sum()
-                            val2 = fc3[i, :, j, k, l, m].sum()
-                            val3 = fc3[i, j, :, k, l, m].sum()
-                            if abs(val1) > abs(maxval1):
-                                maxval1 = val1
-                            if abs(val2) > abs(maxval2):
-                                maxval2 = val2
-                            if abs(val3) > abs(maxval3):
-                                maxval3 = val3
-        
+        for i, j, k, l, m in list(np.ndindex((num_atom, num_atom, 3, 3, 3))):
+            val1 = fc3[:, i, j, k, l, m].sum()
+            val2 = fc3[i, :, j, k, l, m].sum()
+            val3 = fc3[i, j, :, k, l, m].sum()
+            if abs(val1) > abs(maxval1):
+                maxval1 = val1
+            if abs(val2) > abs(maxval2):
+                maxval2 = val2
+            if abs(val3) > abs(maxval3):
+                maxval3 = val3
         print "max drift:", maxval1, maxval2, maxval3 
         
 
@@ -331,7 +319,6 @@ else:
                     count += 1
                     print count
                     print disp[0, 0]
-            
 
         sys.exit(0)
             

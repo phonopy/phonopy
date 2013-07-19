@@ -42,18 +42,17 @@ from optparse import OptionParser
 from phonopy.interface.vasp import read_vasp
 from phonopy.structure.cells import get_supercell, Primitive, print_cell
 from phonopy.structure.symmetry import Symmetry
-from phonopy.harmonic.forces import Forces
-from phonopy.harmonic.force_constants import get_force_constants, set_permutation_symmetry, symmetrize_force_constants, set_translational_invariance
-from phonopy.harmonic.dynamical_matrix import DynamicalMatrix
+from phonopy.harmonic.force_constants import get_force_constants, \
+    set_permutation_symmetry, symmetrize_force_constants, \
+    set_translational_invariance
 from phonopy.hphonopy.file_IO import parse_FORCE_SETS, parse_BORN
-from phonopy.units import THzToCm, VaspToTHz
-from anharmonic.phonon3.fc3 import get_fc3, symmetrize_fc3, set_translational_invariance_fc3
+from phonopy.units import VaspToTHz
+from anharmonic.phonon3.fc3 import get_fc3, symmetrize_fc3, \
+    set_translational_invariance_fc3
 from anharmonic.file_IO import write_fc2_dat, write_fc3_dat,\
-    parse_disp_yaml, parse_FORCES_THIRD, write_FORCES_THIRD,\
+    parse_disp_yaml, write_FORCES_THIRD,\
     parse_DELTA_FORCES, write_supercells_with_displacements,\
-    parse_QPOINTS3, parse_fc3, parse_fc2,\
     write_DELTA_FC2_SETS, parse_DELTA_FC2_SETS,\
-    write_FC2_FOURTH_SETS, parse_FC2_FOURTH_SETS,\
     write_fc3_to_hdf5, write_fc2_to_hdf5,\
     read_fc3_from_hdf5, read_fc2_from_hdf5, write_ir_grid_points
 from anharmonic.phonon3.displacement_fc3 import get_third_order_displacements
@@ -91,7 +90,6 @@ parser.set_defaults(amplitude=None,
                     delta_fc2=False,
                     factor=None,
                     delta_fc2_sets_mode=False,
-                    fc2_fourth_sets_mode=False,
                     freq_scale=None,
                     gamma_option=0,
                     grid_points=None,
@@ -178,10 +176,6 @@ parser.add_option("--cdfc2", "--create_delta_fc2",
                   dest="delta_fc2_sets_mode",
                   action="store_true",
                   help="Create DELTA_FC2_SETS")
-parser.add_option("--create_fc2_fourth",
-                  dest="fc2_fourth_sets_mode",
-                  action="store_true",
-                  help="Create FC2_FOURTH_SETS")
 parser.add_option("--delta_fc2",
                   dest="read_delta_fc2",
                   action="store_true",
@@ -200,10 +194,6 @@ parser.add_option("--fc3",
                   dest="read_fc3",
                   action="store_true",
                   help="Read third order force constants")
-parser.add_option("--fc2_fourth",
-                  dest="read_fc2_fourth_sets",
-                  action="store_true",
-                  help="Read FC2_FOURTH_SETS")
 parser.add_option("--freepath", dest="max_freepath", type="float",
                   help="Maximum mean free path of phonon in meter")
 parser.add_option("--freq_scale", dest="freq_scale", type="float",
@@ -345,13 +335,6 @@ if options.delta_fc2_sets_mode:
     print_end()
     exit(0)
 
-# Create FC2_FOURTH_SETS
-if options.fc2_fourth_sets_mode:
-    displacements = parse_disp_yaml('disp.yaml')
-    write_FC2_FOURTH_SETS(args, displacements)
-    print_end()
-    exit(0)
-
 # Import input files
 if len(args) > 0:
     phono3py_conf = Phono3pyConfParser(filename=args[0],
@@ -390,7 +373,7 @@ unitcell = read_vasp(unitcell_filename,
 supercell = get_supercell(unitcell, settings.get_supercell_matrix())
 symmetry = Symmetry(supercell, options.symprec)
 
-if not settings.get_supercell_matrix_extra()==None:
+if settings.get_supercell_matrix_extra() is not None:
     supercell_extra = get_supercell(unitcell, settings.get_supercell_matrix_extra())
     symmetry_extra = Symmetry(supercell_extra, options.symprec)
 
@@ -583,21 +566,16 @@ else:
         maxval1 = 0
         maxval2 = 0
         maxval3 = 0
-        for i in range(num_atom):
-            for j in range(num_atom):
-                for k in range(3):
-                    for l in range(3):
-                        for m in range(3):
-                            val1 = fc3[:, i, j, k, l, m].sum()
-                            val2 = fc3[i, :, j, k, l, m].sum()
-                            val3 = fc3[i, j, :, k, l, m].sum()
-                            if abs(val1) > abs(maxval1):
-                                maxval1 = val1
-                            if abs(val2) > abs(maxval2):
-                                maxval2 = val2
-                            if abs(val3) > abs(maxval3):
-                                maxval3 = val3
-        
+        for i, j, k, l, m in list(np.ndindex((num_atom, num_atom, 3, 3, 3))):
+            val1 = fc3[:, i, j, k, l, m].sum()
+            val2 = fc3[i, :, j, k, l, m].sum()
+            val3 = fc3[i, j, :, k, l, m].sum()
+            if abs(val1) > abs(maxval1):
+                maxval1 = val1
+            if abs(val2) > abs(maxval2):
+                maxval2 = val2
+            if abs(val3) > abs(maxval3):
+                maxval3 = val3
         print "max drift:", maxval1, maxval2, maxval3 
         
 
