@@ -4,6 +4,7 @@ import h5py
 from phonopy.structure.atoms import Atoms
 from phonopy.interface import vasp
 from phonopy.hphonopy.file_IO import write_FORCE_SETS_vasp, read_force_constant_vasprun_xml
+from anharmonic.phonon3.triplets import get_grid_address, get_ir_grid_points, from_coarse_to_dense_grid_points
 
 ###########
 #
@@ -136,12 +137,12 @@ def write_FORCES_THIRD(vaspruns,
 
 def write_DELTA_FC2_SETS(vaspruns,
                          displacements,
-                         fc2_file='fc2.dat',
                          dfc2_file='DELTA_FC2_SETS'):
     fc2_set = get_force_constants_from_vasprun_xmls(vaspruns)
     w = open(dfc2_file, 'w')
     perfect_fc2 = fc2_set.pop(0)
-    write_fc2_dat(perfect_fc2, fc2_file)
+    # write_fc2_dat(perfect_fc2)
+    write_fc2_to_hdf5(perfect_fc2)
     for i, (dfc2, first_disp) in enumerate(
         zip(fc2_set, displacements['first_atoms'])):
         w.write("# File: %d\n" % (i + 1))
@@ -256,7 +257,12 @@ def write_fc2_to_hdf5(force_constants, filename='fc2.hdf5'):
 
 def read_fc2_from_hdf5(filename='fc2.hdf5'):
     f = h5py.File(filename, 'r')
-    fc2 = f['fc2'][:]
+    if 'fc2' in f.keys():
+        fc2 = f['fc2'][:]
+    elif 'force_constants' in f.keys():
+        fc2 = f['force_constants'][:]
+    else:
+        fc2 = None
     f.close()
     return fc2
 
@@ -636,6 +642,43 @@ def write_decay_channels(decay_channels,
 
 def mycmp(a, b):
     return cmp(b[0], a[0])
+
+def write_ir_grid_points(primitive, mesh, mesh_divs, coarse_mesh_shifts):
+    if mesh_divs is None:
+        mesh_divs = [1, 1, 1]
+    mesh = np.intc(mesh)
+    mesh_divs = np.intc(mesh_divs)
+    coarse_mesh = mesh / mesh_divs
+    if coarse_mesh_shifts is None:
+        coarse_mesh_shifts = [False, False, False]
+
+    (coarse_grid_points,
+     coarse_grid_weights,
+     coarse_grid_address) = get_ir_grid_points(
+        coarse_mesh,
+        primitive,
+        mesh_shifts=coarse_mesh_shifts)
+
+    grid_points = from_coarse_to_dense_grid_points(
+        mesh,
+        mesh_divs,
+        coarse_grid_points,
+        coarse_grid_address,
+        coarse_mesh_shifts=coarse_mesh_shifts)
+    
+    w = open("ir_grid_points.yaml", 'w')
+    w.write("mesh: [ %d, %d, %d ]\n" % tuple(mesh))
+    w.write("mesh_divisors: [ %d, %d, %d ]\n" % tuple(mesh_divs))
+    w.write("num_reduced_ir_grid_points: %d\n" % len(grid_points))
+    w.write("ir_grid_points:  # [address, weight]\n")
+
+    grid_address = get_grid_address(mesh)
+    for g, weight in zip(grid_points, coarse_grid_weights):
+        w.write("- grid_point: %d\n" % g)
+        w.write("  weight: %d\n" % weight)
+        w.write("  q-point: [ %12.7f, %12.7f, %12.7f ]\n" %
+                tuple(grid_address[g].astype('double') / mesh))
+
 
 # 
 # Input

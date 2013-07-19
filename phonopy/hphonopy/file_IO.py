@@ -462,6 +462,13 @@ def write_FORCE_CONSTANTS(force_constants, filename='FORCE_CONSTANTS'):
                 w.write(("%22.15f"*3 + "\n") % tuple(vec))
     w.close()
 
+def write_force_constants_to_hdf5(force_constants,
+                                  filename='force_constants.hdf5'):
+    import h5py
+    w = h5py.File(filename, 'w')
+    w.create_dataset('force_constants', data=force_constants)
+    w.close()
+
 # Read FORCE_CONSTANTS
 def parse_FORCE_CONSTANTS(filename):
     fcfile = open(filename)

@@ -45,9 +45,8 @@ from phonopy.structure.symmetry import Symmetry
 from phonopy.harmonic.forces import Forces
 from phonopy.harmonic.force_constants import get_force_constants, set_permutation_symmetry, symmetrize_force_constants, set_translational_invariance
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrix
-from phonopy.hphonopy.file_IO import parse_FORCE_SETS
+from phonopy.hphonopy.file_IO import parse_FORCE_SETS, parse_BORN
 from phonopy.units import THzToCm, VaspToTHz
-from phonopy.hphonopy.file_IO import parse_BORN
 from anharmonic.phonon3.fc3 import get_fc3, symmetrize_fc3, set_translational_invariance_fc3
 from anharmonic.file_IO import write_fc2_dat, write_fc3_dat,\
     parse_disp_yaml, parse_FORCES_THIRD, write_FORCES_THIRD,\
@@ -56,11 +55,10 @@ from anharmonic.file_IO import write_fc2_dat, write_fc3_dat,\
     write_DELTA_FC2_SETS, parse_DELTA_FC2_SETS,\
     write_FC2_FOURTH_SETS, parse_FC2_FOURTH_SETS,\
     write_fc3_to_hdf5, write_fc2_to_hdf5,\
-    read_fc3_from_hdf5, read_fc2_from_hdf5
+    read_fc3_from_hdf5, read_fc2_from_hdf5, write_ir_grid_points
 from anharmonic.phonon3.displacement_fc3 import get_third_order_displacements
 from anharmonic.settings import Phono3pyConfParser
 from anharmonic.phonon3 import Phono3py, JointDOS, get_gruneisen_parameters    
-from anharmonic.phonon3.triplets import get_grid_address, get_ir_grid_points, from_coarse_to_dense_grid_points
 
 # AA is created at http://www.network-science.de/ascii/.
 def print_phono3py():
@@ -418,8 +416,8 @@ if log_level:
         print "FC2 symmetry of index exchange:", options.is_symmetrize_fc2
     if options.is_symmetrize_fc3_r:
         print "FC3 symmetry of index exchange in real space:", options.is_symmetrize_fc3_r
-    if options.is_symmetrize_fc3_q:
-        print "FC3 symmetry of index exchange in reciprocal space:", options.is_symmetrize_fc3_q
+    # if options.is_symmetrize_fc3_q:
+    #     print "FC3 symmetry of index exchange in reciprocal space:", options.is_symmetrize_fc3_q
     if not options.supercell_dimension_extra == None:
         print "Extra supercell for fc2 is supplied."
     if settings.get_is_nac():
@@ -483,43 +481,10 @@ else:
         if mesh is None:
             print "To write grid points, mesh numbers have to be specified."
         else:
-            mesh_divs = settings.get_mesh_divisors()
-            if mesh_divs is None:
-                mesh_divs = [1, 1, 1]
-            mesh = np.intc(mesh)
-            mesh_divs = np.intc(mesh_divs)
-            coarse_mesh = mesh / mesh_divs
-            coarse_mesh_shifts = settings.get_coarse_mesh_shifts()
-            if coarse_mesh_shifts is None:
-                coarse_mesh_shifts = [False, False, False]
             print "Ir-grid points are written into ir_grid_points.yaml."
-
-            (coarse_grid_points,
-             coarse_grid_weights,
-             coarse_grid_address) = get_ir_grid_points(
-                coarse_mesh,
-                primitive,
-                mesh_shifts=coarse_mesh_shifts)
-
-            grid_points = from_coarse_to_dense_grid_points(
-                mesh,
-                mesh_divs,
-                coarse_grid_points,
-                coarse_grid_address,
-                coarse_mesh_shifts=coarse_mesh_shifts)
-            
-            w = open("ir_grid_points.yaml", 'w')
-            w.write("mesh: [ %d, %d, %d ]\n" % tuple(mesh))
-            w.write("mesh_divisors: [ %d, %d, %d ]\n" % tuple(mesh_divs))
-            w.write("num_reduced_ir_grid_points: %d\n" % len(grid_points))
-            w.write("ir_grid_points:  # [address, weight]\n")
-
-            grid_address = get_grid_address(mesh)
-            for g, weight in zip(grid_points, coarse_grid_weights):
-                w.write("- grid_point: %d\n" % g)
-                w.write("  weight: %d\n" % weight)
-                w.write("  q-point: [ %12.7f, %12.7f, %12.7f ]\n" %
-                        tuple(grid_address[g].astype('double') / mesh))
+            mesh_divs = settings.get_mesh_divisors()
+            coarse_mesh_shifts = settings.get_coarse_mesh_shifts()
+            write_ir_grid_points(primitive, mesh, mesh_divs, coarse_mesh_shifts)
         sys.exit(0)
             
     # fc2
@@ -527,8 +492,16 @@ else:
         if log_level:
             print  "----- Read fc2 -----"
             sys.stdout.flush()
-
-        fc2_with_dim = read_fc2_from_hdf5()
+        if os.path.exists('fc2.hdf5'):
+            fc2_with_dim = read_fc2_from_hdf5()
+        elif os.path.exists('force_constants.hdf5'):
+            fc2_with_dim = read_fc2_from_hdf5(filename='force_constants.hdf5')
+        else:
+            print "fc2.hdf5 not found"
+            if log_level:
+                print_end()
+            sys.exit(0)
+            
     else:
         if log_level:
             print "----- Solve fc2 -----"
@@ -570,6 +543,9 @@ else:
         set_permutation_symmetry(fc2)
         # symmetrize_force_constants(fc2)
 
+    if options.is_translational_symmetry:
+        set_translational_invariance(fc2)
+
     if settings.get_is_nac():
         if os.path.exists('BORN'):
             if settings.get_supercell_matrix_extra()==None:
@@ -600,7 +576,6 @@ else:
             fc3 = read_fc3_from_hdf5()
             if options.is_translational_symmetry:
                 set_translational_invariance_fc3(fc3)
-                set_translational_invariance(fc2)
         else: # fc3 from FORCES_THIRD and FORCES_SECOND
             if log_level:
                 print  "----- Solve fc3 -----"
@@ -653,26 +628,6 @@ else:
             write_fc3_dat(fc3)
             write_fc3_to_hdf5(fc3)
     
-    if options.read_fc2_fourth_sets:
-        displacements = parse_disp_yaml('disp.yaml')
-        parse_FC2_FOURTH_SETS(displacements)
-        
-        count = 0
-        for first_disp in displacements['first_atoms']:
-            count += 1
-            print count
-            print first_disp['fc2'][0, 0]
-
-        for first_disp in displacements['first_atoms']:
-            for second_disp in first_disp['second_atoms']:
-                for disp in second_disp['delta_fc2']:
-                    count += 1
-                    print count
-                    print disp[0, 0]
-            
-
-        sys.exit(0)
-            
     #============================
     # Phonon Gruneisen parameter
     #============================

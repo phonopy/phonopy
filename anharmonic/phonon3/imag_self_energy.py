@@ -47,10 +47,10 @@ class ImagSelfEnergy:
         else:
             self._imag_self_energy = np.zeros((len(self._fpoints), num_band0),
                                               dtype='double')
-            # if self._lang == 'C':
-            #     self._run_c_with_fpoints()
-            # else:
-            self._run_py_with_fpoints()
+            if self._lang == 'C':
+                self._run_c_with_fpoints()
+            else:
+                self._run_py_with_fpoints()
 
     def run_interaction(self):
         self._interaction.run(lang=self._lang)

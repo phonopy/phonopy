@@ -360,9 +360,24 @@ if options.force_constants_mode:
         sys.exit(0)
 
     force_constants, atom_types = fc_and_atom_types
-    file_IO.write_FORCE_CONSTANTS(force_constants)
+    if options.is_hdf5:
+        try:
+            import h5py
+        except ImportError:
+            print "You need to install python-h5py."
+            if log_level > 0:
+                print_end()
+            sys.exit(1)
+    
+        file_IO.write_force_constants_to_hdf5(force_constants)
+        if log_level > 0:
+            print "force_constants.hdf5 has been created from vasprun.xml."
+    else:
+        file_IO.write_FORCE_CONSTANTS(force_constants)
+        if log_level > 0:
+            print "FORCE_CONSTANTS has been created from vasprun.xml."
+
     if log_level > 0:
-        print "FORCE_CONSTANTS has been created from vasprun.xml."
         print "Atom types:", atom_types
         print_end()
     sys.exit(0)
@@ -694,7 +709,9 @@ if settings.get_is_force_constants() == 'read':
             import h5py
         except ImportError:
             print "You need to install python-h5py."
-            exit(1)
+            if log_level > 0:
+                print_end()
+            sys.exit(1)
 
         if file_exists("force_constants.hdf5", log_level):
             fc = file_IO.read_force_constants_hdf5("force_constants.hdf5")
