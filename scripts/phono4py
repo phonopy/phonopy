@@ -86,124 +86,45 @@ def print_error(message):
 # Parse options
 parser = OptionParser()
 parser.set_defaults(amplitude=None,
-                    band_indices=None,
-                    band_paths=None,
-                    band_points=None,
                     cell_poscar=None,
-                    delta_fc2=False,
-                    factor=None,
-                    delta_fc2_sets_mode=False,
                     fc2_fourth_sets_mode=False,
-                    freq_scale=None,
-                    gamma_option=0,
-                    grid_points=None,
-                    gv_delta_q=None,
-                    ion_clamped=False,
-                    is_cm=False,
-                    is_decay_channel=False,
                     is_nodiag=False,
                     is_displacement=False,
                     is_nosym=False,
-                    is_gruneisen=False,
-                    is_joint_dos=False,
-                    is_linewidth=False,
-                    is_bterta=False,
-                    is_nac=False,
                     is_plusminus_displacements=False,
                     is_translational_symmetry=False,
                     is_symmetrize_fc2=False,
                     is_symmetrize_fc3_r=False,
                     is_symmetrize_fc3_q=False,                     
-                    is_Peierls=False,
                     log_level=None,
-                    max_freepath=None,
-                    mesh_numbers=None,
-                    mesh_divisors=None,
-                    multiple_sigmas=None,
-                    no_kappa_stars=False,
-                    q_direction=None,
                     primitive_axis=None,
-                    read_amplitude=False,
                     read_fc2=False,
                     read_fc2_extra=False,
                     read_fc3=False,
-                    read_gamma=False,
-                    r2q_TI_index=None,
-                    freq_step=None,
                     output_filename=None,
-                    qpoints=None,
-                    sigma=None,
                     supercell_dimension=None,
-                    supercell_dimension_extra=None,
                     symprec=1e-5,
-                    test=False,
-                    tmax=None,
-                    tmin=None,
-                    tstep=None,
-                    temperatures=None,
-                    verbose=True,
-                    uplo='L',
-                    write_amplitude=False,
-                    write_gamma=False,
-                    write_grid_points=False)
+                    verbose=True)
 parser.add_option("--amplitude", dest="amplitude", type="float",
                   help="Distance of displacements")
-parser.add_option("--bi", "--band_indices", dest="band_indices",
-                  type="string",
-                  help="Band indices where life time is calculated")
-parser.add_option("--band", dest="band_paths",
-                  action="store", type="string",
-                  help="Band structure paths calculated for Gruneisen parameter")
-parser.add_option("--band_points", dest="band_points",
-                  type="int",
-                  help="Number of points calculated on a band segment in the band structure Gruneisen parameter calculation")
-parser.add_option("--br", "--bterta", dest="is_bterta",
-                  action="store_true",
-                  help="Calculate thermal conductivity in BTE-RTA")
 parser.add_option("-c", "--cell", dest="cell_poscar",
                   action="store", type="string",
                   help="Read unit cell", metavar="FILE")
-parser.add_option("--cm", dest="is_cm",
-                  action="store_true", help="Convert THz to cm^-1")
 parser.add_option("-d", "--disp", dest="is_displacement",
                   action="store_true",
                   help="As first stage, get least displacements")
-parser.add_option("--decay", dest="is_decay_channel",
-                  action="store_true", help="Calculate decay channels")
 parser.add_option("--dim",
                   dest="supercell_dimension",
                   type="string",
                   help="Supercell dimension")
-parser.add_option("--dim2",
-                  dest="supercell_dimension_extra",
-                  type="string",
-                  help="Supercell dimension for extra fc2")
-parser.add_option("--cf3", "--create_f3",
-                  dest="forces_third_mode",
-                  action="store_true",
-                  help="Create FORCES_THIRD")
-parser.add_option("--cdfc2", "--create_delta_fc2",
-                  dest="delta_fc2_sets_mode",
-                  action="store_true",
-                  help="Create DELTA_FC2_SETS")
 parser.add_option("--create_fc2_fourth",
                   dest="fc2_fourth_sets_mode",
                   action="store_true",
                   help="Create FC2_FOURTH_SETS")
-parser.add_option("--delta_fc2",
-                  dest="read_delta_fc2",
-                  action="store_true",
-                  help="Read DELTA_FC2_SETS")
-parser.add_option("--factor", dest="factor", type="float",
-                  help="Conversion factor to favorite frequency unit")
 parser.add_option("--fc2",
                   dest="read_fc2",
                   action="store_true",
                   help="Read second order force constants")
-parser.add_option("--fc2_extra",
-                  dest="read_fc2_extra",
-                  action="store_true",
-                  help="Read extra second order force constants")
 parser.add_option("--fc3",
                   dest="read_fc3",
                   action="store_true",
@@ -212,54 +133,9 @@ parser.add_option("--fc2_fourth",
                   dest="read_fc2_fourth_sets",
                   action="store_true",
                   help="Read FC2_FOURTH_SETS")
-parser.add_option("--freepath", dest="max_freepath", type="float",
-                  help="Maximum mean free path of phonon in meter")
-parser.add_option("--freq_scale", dest="freq_scale", type="float",
-                  help="Scale factor is multiplied to frequencies only, i.e., changes frequencies but assumed not to change the physical unit")
-parser.add_option("--freq_step", dest="freq_step", type="float",
-                  help="Pitch of frequency calculated")
-parser.add_option("--gamma_option", dest="gamma_option", type="int",
-                  help="Option for the test of imaginary part of self energy")
-parser.add_option("--gp", "--grid_points",
-                  dest="grid_points",
-                  type="string",
-                  help="Fixed grid points where damping functions are calculated ")
-parser.add_option("--gruneisen", dest="is_gruneisen",
-                  action="store_true",
-                  help="Calculate phonon Gruneisen parameter")
-parser.add_option("--gv_delta_q", dest="gv_delta_q", type="float",
-                  help="Delta-q distance used for group velocity calculation")
-parser.add_option("--ion_clamped", dest="ion_clamped",
-                  action="store_true",
-                  help="Atoms are clamped under applied strain in Gruneisen parameter calculation")
-parser.add_option("--jdos",
-                  dest="is_joint_dos",
-                  action="store_true",
-                  help="Calculate joint density of states")
-parser.add_option("--lw", "--linewidth",
-                  dest="is_linewidth",
-                  action="store_true",
-                  help="Calculate linewidths")
-parser.add_option("--md", "--mesh_divisors",
-                  dest="mesh_divisors",
-                  type="string",
-                  help="Divisors for mesh numbers")
-parser.add_option("--mesh",
-                  dest="mesh_numbers",
-                  type="string",
-                  help="Mesh numbers")
-parser.add_option("--multiple_sigmas", dest="multiple_sigmas",
-                  type="string",
-                  help="Multiple sigmas for smearing width used for limited functions")
-parser.add_option("--nac", dest="is_nac",
-                  action="store_true",
-                  help="Non-analytical term correction")
 parser.add_option("--nodiag", dest="is_nodiag",
                   action="store_true",
                   help="Set displacements parallel to axes")
-parser.add_option("--noks", "--no_kappa_stars", dest="no_kappa_stars",
-                  action="store_true",
-                  help="Deactivate summation of partial kappa at q-stars"),
 parser.add_option("--nosym", dest="is_nosym",
                   action="store_true",
                   help="No symmetrization of triplets")
@@ -269,28 +145,9 @@ parser.add_option("-o", dest="output_filename",
 parser.add_option("--pa", "--primitive_axis", dest="primitive_axis",
                   action="store", type="string",
                   help="Same as PRIMITIVE_AXIS tags")
-parser.add_option("--peierls", dest="is_Peierls",
-                  action="store_true",
-                  help="Peierls approximation")
 parser.add_option("--pm", dest="is_plusminus_displacements",
                   action="store_true",
                   help="Set plus minus displacements")
-parser.add_option("--qpoints", dest="qpoints", type="string",
-                  help="Calculate at specified q-points")
-parser.add_option("--q_direction",
-                  dest="q_direction",
-                  type="string",
-                  help="q-vector direction at q->0 for non-analytical term correction")
-parser.add_option("--r2q", dest="r2q_TI_index", type="int",
-                  help="Index to set translational invariance in transforming fc3 from real to reciprocal space")
-parser.add_option("--read_amplitude", dest="read_amplitude",
-                  action="store_true",
-                  help="Read phonon-phonon interaction amplitudes")
-parser.add_option("--read_gamma", dest="read_gamma",
-                  action="store_true",
-                  help="Read Gammas from files")
-parser.add_option("--sigma", dest="sigma", type="float",
-                  help="Smearing width for DOS")
 parser.add_option("--sym_fc2", dest="is_symmetrize_fc2",
                   action="store_true",
                   help="Symmetrize fc2 by index exchange")
@@ -303,12 +160,6 @@ parser.add_option("--sym_fc3q", dest="is_symmetrize_fc3_q",
 parser.add_option("--test", dest="test",
                   action="store_true",
                   help="Used for code test")
-parser.add_option("--tmax", dest="tmax", type="string",
-                  help="Maximum calculated temperature")
-parser.add_option("--tmin", dest="tmin", type="string",
-                  help="Minimum calculated temperature")
-parser.add_option("--tstep", dest="tstep", type="string",
-                  help="Calculated temperature step")
 parser.add_option("--tsym", dest="is_translational_symmetry",
                   action="store_true",
                   help="Impose translational invariance condition")
@@ -319,21 +170,6 @@ parser.add_option("-v", "--verbose", dest="verbose",
                   help="Detailed run-time information is displayed")
 parser.add_option("--loglevel", dest="log_level", type="int",
                   help="Log level")
-parser.add_option("--ts", dest="temperatures", 
-                  type="string", help="Temperatures for damping functions")
-parser.add_option("--uplo",
-                  dest="uplo",
-                  type="string",
-                  help="Lapack zheev UPLO")
-parser.add_option("--wgp", "--write_grid_points", dest="write_grid_points",
-                  action="store_true",
-                  help="Write grid address of irreducible grid points for specified mesh numbers to ir_grid_address.yaml")
-parser.add_option("--write_amplitude", dest="write_amplitude",
-                  action="store_true",
-                  help="Write phonon-phonon interaction amplitudes")
-parser.add_option("--write_gamma", dest="write_gamma",
-                  action="store_true",
-                  help="Write gamma")
 (options, args) = parser.parse_args()
 option_list = parser.option_list
 
