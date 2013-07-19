@@ -1,0 +1,503 @@
+#!/usr/bin/env python
+
+# Copyright (C) 2011 Atsushi Togo
+# All rights reserved.
+#
+# This file is part of phonopy.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#
+# * Redistributions of source code must retain the above copyright
+#   notice, this list of conditions and the following disclaimer.
+#
+# * Redistributions in binary form must reproduce the above copyright
+#   notice, this list of conditions and the following disclaimer in
+#   the documentation and/or other materials provided with the
+#   distribution.
+#
+# * Neither the name of the phonopy project nor the names of its
+#   contributors may be used to endorse or promote products derived
+#   from this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+# COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+
+import os
+import sys
+import numpy as np
+from optparse import OptionParser
+
+from phonopy.interface.vasp import read_vasp
+from phonopy.structure.cells import get_supercell, Primitive, print_cell
+from phonopy.structure.symmetry import Symmetry
+from phonopy.harmonic.forces import Forces
+from phonopy.harmonic.force_constants import get_force_constants, set_permutation_symmetry, symmetrize_force_constants, set_translational_invariance
+from phonopy.harmonic.dynamical_matrix import DynamicalMatrix
+from phonopy.hphonopy.file_IO import parse_FORCE_SETS
+from phonopy.units import THzToCm, VaspToTHz
+from phonopy.hphonopy.file_IO import parse_BORN
+from anharmonic.phonon3.fc3 import get_fc3, symmetrize_fc3, set_translational_invariance_fc3
+from anharmonic.file_IO import write_fc2_dat, write_fc3_dat,\
+    parse_disp_yaml, parse_FORCES_THIRD, write_FORCES_THIRD,\
+    parse_DELTA_FORCES, write_supercells_with_displacements,\
+    parse_QPOINTS3, parse_fc3, parse_fc2,\
+    write_DELTA_FC2_SETS, parse_DELTA_FC2_SETS,\
+    write_FC2_FOURTH_SETS, parse_FC2_FOURTH_SETS,\
+    write_fc3_to_hdf5, write_fc2_to_hdf5,\
+    read_fc3_from_hdf5, read_fc2_from_hdf5
+from anharmonic.phonon3.displacement_fc3 import get_third_order_displacements
+from anharmonic.settings import Phono3pyConfParser
+from anharmonic.phonon3 import Phono3py, JointDOS, get_gruneisen_parameters    
+from anharmonic.phonon3.triplets import get_grid_address, get_ir_grid_points, from_coarse_to_dense_grid_points
+
+# AA is created at http://www.network-science.de/ascii/.
+def print_phono4py():
+    print """       _                       _  _               
+ _ __ | |__   ___  _ __   ___ | || |  _ __  _   _ 
+| '_ \| '_ \ / _ \| '_ \ / _ \| || |_| '_ \| | | |
+| |_) | | | | (_) | | | | (_) |__   _| |_) | |_| |
+| .__/|_| |_|\___/|_| |_|\___/   |_| | .__/ \__, |
+|_|                                  |_|    |___/ 
+"""
+
+def print_end():
+    print """                 _ 
+   ___ _ __   __| |
+  / _ \ '_ \ / _` |
+ |  __/ | | | (_| |
+  \___|_| |_|\__,_|
+"""
+
+def print_error(message):
+    print message
+
+# Parse options
+parser = OptionParser()
+parser.set_defaults(amplitude=None,
+                    band_indices=None,
+                    band_paths=None,
+                    band_points=None,
+                    cell_poscar=None,
+                    delta_fc2=False,
+                    factor=None,
+                    delta_fc2_sets_mode=False,
+                    fc2_fourth_sets_mode=False,
+                    freq_scale=None,
+                    gamma_option=0,
+                    grid_points=None,
+                    gv_delta_q=None,
+                    ion_clamped=False,
+                    is_cm=False,
+                    is_decay_channel=False,
+                    is_nodiag=False,
+                    is_displacement=False,
+                    is_nosym=False,
+                    is_gruneisen=False,
+                    is_joint_dos=False,
+                    is_linewidth=False,
+                    is_bterta=False,
+                    is_nac=False,
+                    is_plusminus_displacements=False,
+                    is_translational_symmetry=False,
+                    is_symmetrize_fc2=False,
+                    is_symmetrize_fc3_r=False,
+                    is_symmetrize_fc3_q=False,                     
+                    is_Peierls=False,
+                    log_level=None,
+                    max_freepath=None,
+                    mesh_numbers=None,
+                    mesh_divisors=None,
+                    multiple_sigmas=None,
+                    no_kappa_stars=False,
+                    q_direction=None,
+                    primitive_axis=None,
+                    read_amplitude=False,
+                    read_fc2=False,
+                    read_fc2_extra=False,
+                    read_fc3=False,
+                    read_gamma=False,
+                    r2q_TI_index=None,
+                    freq_step=None,
+                    output_filename=None,
+                    qpoints=None,
+                    sigma=None,
+                    supercell_dimension=None,
+                    supercell_dimension_extra=None,
+                    symprec=1e-5,
+                    test=False,
+                    tmax=None,
+                    tmin=None,
+                    tstep=None,
+                    temperatures=None,
+                    verbose=True,
+                    uplo='L',
+                    write_amplitude=False,
+                    write_gamma=False,
+                    write_grid_points=False)
+parser.add_option("--amplitude", dest="amplitude", type="float",
+                  help="Distance of displacements")
+parser.add_option("--bi", "--band_indices", dest="band_indices",
+                  type="string",
+                  help="Band indices where life time is calculated")
+parser.add_option("--band", dest="band_paths",
+                  action="store", type="string",
+                  help="Band structure paths calculated for Gruneisen parameter")
+parser.add_option("--band_points", dest="band_points",
+                  type="int",
+                  help="Number of points calculated on a band segment in the band structure Gruneisen parameter calculation")
+parser.add_option("--br", "--bterta", dest="is_bterta",
+                  action="store_true",
+                  help="Calculate thermal conductivity in BTE-RTA")
+parser.add_option("-c", "--cell", dest="cell_poscar",
+                  action="store", type="string",
+                  help="Read unit cell", metavar="FILE")
+parser.add_option("--cm", dest="is_cm",
+                  action="store_true", help="Convert THz to cm^-1")
+parser.add_option("-d", "--disp", dest="is_displacement",
+                  action="store_true",
+                  help="As first stage, get least displacements")
+parser.add_option("--decay", dest="is_decay_channel",
+                  action="store_true", help="Calculate decay channels")
+parser.add_option("--dim",
+                  dest="supercell_dimension",
+                  type="string",
+                  help="Supercell dimension")
+parser.add_option("--dim2",
+                  dest="supercell_dimension_extra",
+                  type="string",
+                  help="Supercell dimension for extra fc2")
+parser.add_option("--cf3", "--create_f3",
+                  dest="forces_third_mode",
+                  action="store_true",
+                  help="Create FORCES_THIRD")
+parser.add_option("--cdfc2", "--create_delta_fc2",
+                  dest="delta_fc2_sets_mode",
+                  action="store_true",
+                  help="Create DELTA_FC2_SETS")
+parser.add_option("--create_fc2_fourth",
+                  dest="fc2_fourth_sets_mode",
+                  action="store_true",
+                  help="Create FC2_FOURTH_SETS")
+parser.add_option("--delta_fc2",
+                  dest="read_delta_fc2",
+                  action="store_true",
+                  help="Read DELTA_FC2_SETS")
+parser.add_option("--factor", dest="factor", type="float",
+                  help="Conversion factor to favorite frequency unit")
+parser.add_option("--fc2",
+                  dest="read_fc2",
+                  action="store_true",
+                  help="Read second order force constants")
+parser.add_option("--fc2_extra",
+                  dest="read_fc2_extra",
+                  action="store_true",
+                  help="Read extra second order force constants")
+parser.add_option("--fc3",
+                  dest="read_fc3",
+                  action="store_true",
+                  help="Read third order force constants")
+parser.add_option("--fc2_fourth",
+                  dest="read_fc2_fourth_sets",
+                  action="store_true",
+                  help="Read FC2_FOURTH_SETS")
+parser.add_option("--freepath", dest="max_freepath", type="float",
+                  help="Maximum mean free path of phonon in meter")
+parser.add_option("--freq_scale", dest="freq_scale", type="float",
+                  help="Scale factor is multiplied to frequencies only, i.e., changes frequencies but assumed not to change the physical unit")
+parser.add_option("--freq_step", dest="freq_step", type="float",
+                  help="Pitch of frequency calculated")
+parser.add_option("--gamma_option", dest="gamma_option", type="int",
+                  help="Option for the test of imaginary part of self energy")
+parser.add_option("--gp", "--grid_points",
+                  dest="grid_points",
+                  type="string",
+                  help="Fixed grid points where damping functions are calculated ")
+parser.add_option("--gruneisen", dest="is_gruneisen",
+                  action="store_true",
+                  help="Calculate phonon Gruneisen parameter")
+parser.add_option("--gv_delta_q", dest="gv_delta_q", type="float",
+                  help="Delta-q distance used for group velocity calculation")
+parser.add_option("--ion_clamped", dest="ion_clamped",
+                  action="store_true",
+                  help="Atoms are clamped under applied strain in Gruneisen parameter calculation")
+parser.add_option("--jdos",
+                  dest="is_joint_dos",
+                  action="store_true",
+                  help="Calculate joint density of states")
+parser.add_option("--lw", "--linewidth",
+                  dest="is_linewidth",
+                  action="store_true",
+                  help="Calculate linewidths")
+parser.add_option("--md", "--mesh_divisors",
+                  dest="mesh_divisors",
+                  type="string",
+                  help="Divisors for mesh numbers")
+parser.add_option("--mesh",
+                  dest="mesh_numbers",
+                  type="string",
+                  help="Mesh numbers")
+parser.add_option("--multiple_sigmas", dest="multiple_sigmas",
+                  type="string",
+                  help="Multiple sigmas for smearing width used for limited functions")
+parser.add_option("--nac", dest="is_nac",
+                  action="store_true",
+                  help="Non-analytical term correction")
+parser.add_option("--nodiag", dest="is_nodiag",
+                  action="store_true",
+                  help="Set displacements parallel to axes")
+parser.add_option("--noks", "--no_kappa_stars", dest="no_kappa_stars",
+                  action="store_true",
+                  help="Deactivate summation of partial kappa at q-stars"),
+parser.add_option("--nosym", dest="is_nosym",
+                  action="store_true",
+                  help="No symmetrization of triplets")
+parser.add_option("-o", dest="output_filename",
+                  type="string",
+                  help="Filename of output of damping function")
+parser.add_option("--pa", "--primitive_axis", dest="primitive_axis",
+                  action="store", type="string",
+                  help="Same as PRIMITIVE_AXIS tags")
+parser.add_option("--peierls", dest="is_Peierls",
+                  action="store_true",
+                  help="Peierls approximation")
+parser.add_option("--pm", dest="is_plusminus_displacements",
+                  action="store_true",
+                  help="Set plus minus displacements")
+parser.add_option("--qpoints", dest="qpoints", type="string",
+                  help="Calculate at specified q-points")
+parser.add_option("--q_direction",
+                  dest="q_direction",
+                  type="string",
+                  help="q-vector direction at q->0 for non-analytical term correction")
+parser.add_option("--r2q", dest="r2q_TI_index", type="int",
+                  help="Index to set translational invariance in transforming fc3 from real to reciprocal space")
+parser.add_option("--read_amplitude", dest="read_amplitude",
+                  action="store_true",
+                  help="Read phonon-phonon interaction amplitudes")
+parser.add_option("--read_gamma", dest="read_gamma",
+                  action="store_true",
+                  help="Read Gammas from files")
+parser.add_option("--sigma", dest="sigma", type="float",
+                  help="Smearing width for DOS")
+parser.add_option("--sym_fc2", dest="is_symmetrize_fc2",
+                  action="store_true",
+                  help="Symmetrize fc2 by index exchange")
+parser.add_option("--sym_fc3r", dest="is_symmetrize_fc3_r",
+                  action="store_true",
+                  help="Symmetrize fc3 in real space by index exchange")
+parser.add_option("--sym_fc3q", dest="is_symmetrize_fc3_q",
+                  action="store_true",
+                  help="Symmetrize fc3 in reciprocal space by index exchange")
+parser.add_option("--test", dest="test",
+                  action="store_true",
+                  help="Used for code test")
+parser.add_option("--tmax", dest="tmax", type="string",
+                  help="Maximum calculated temperature")
+parser.add_option("--tmin", dest="tmin", type="string",
+                  help="Minimum calculated temperature")
+parser.add_option("--tstep", dest="tstep", type="string",
+                  help="Calculated temperature step")
+parser.add_option("--tsym", dest="is_translational_symmetry",
+                  action="store_true",
+                  help="Impose translational invariance condition")
+parser.add_option("--tolerance", dest="symprec", type="float",
+                  help="Symmetry tolerance to search")
+parser.add_option("-v", "--verbose", dest="verbose",
+                  action="store_true",
+                  help="Detailed run-time information is displayed")
+parser.add_option("--loglevel", dest="log_level", type="int",
+                  help="Log level")
+parser.add_option("--ts", dest="temperatures", 
+                  type="string", help="Temperatures for damping functions")
+parser.add_option("--uplo",
+                  dest="uplo",
+                  type="string",
+                  help="Lapack zheev UPLO")
+parser.add_option("--wgp", "--write_grid_points", dest="write_grid_points",
+                  action="store_true",
+                  help="Write grid address of irreducible grid points for specified mesh numbers to ir_grid_address.yaml")
+parser.add_option("--write_amplitude", dest="write_amplitude",
+                  action="store_true",
+                  help="Write phonon-phonon interaction amplitudes")
+parser.add_option("--write_gamma", dest="write_gamma",
+                  action="store_true",
+                  help="Write gamma")
+(options, args) = parser.parse_args()
+option_list = parser.option_list
+
+# Log level
+if options.log_level is None:
+    log_level = options.verbose
+else:
+    log_level = options.log_level
+    
+# Title
+if log_level:
+    print_phono4py()
+
+if len(args) > 0:
+    phono3py_conf = Phono3pyConfParser(filename=args[0],
+                                       options=options,
+                                       option_list=option_list)
+    settings = phono3py_conf.get_settings()
+
+else:
+    phono3py_conf = Phono3pyConfParser(options=options,
+                                       option_list=option_list)
+    settings = phono3py_conf.get_settings()
+
+# Read POSCAR
+if options.cell_poscar == None:
+    if os.path.exists('POSCAR'):
+        unitcell_filename = 'POSCAR'
+    else:
+        print_error("POSCAR could not be found.")
+        if log_level:
+            print_end()
+        sys.exit(1)
+else:
+    if os.path.exists(options.cell_poscar):
+        unitcell_filename = options.cell_poscar
+    else:
+        print_error("The file \'%s\' could not be found." %
+                    options.cell_poscar)
+        if log_level:
+            print_end()
+        sys.exit(1)
+    
+unitcell = read_vasp(unitcell_filename,
+                     settings.get_chemical_symbols())
+
+# Supercell and Symmetry 
+supercell = get_supercell(unitcell, settings.get_supercell_matrix())
+symmetry = Symmetry(supercell, options.symprec)
+
+if not settings.get_supercell_matrix_extra()==None:
+    supercell_extra = get_supercell(unitcell, settings.get_supercell_matrix_extra())
+    symmetry_extra = Symmetry(supercell_extra, options.symprec)
+
+# Log
+if log_level:
+    print "Spacegroup: ", symmetry.get_international_table()
+
+###############################################################
+# Create supercells with displacements and exit (pre-process) #
+###############################################################
+if options.is_displacement:
+    dds = get_third_order_displacements(
+        supercell,
+        symmetry,
+        is_plusminus=settings.get_is_plusminus_displacement(),
+        is_diagonal=settings.get_is_diagonal_displacement())
+    write_supercells_with_displacements(supercell,
+                                        dds,
+                                        options.amplitude)
+
+##########################################
+# Calculate fourth-order force constants #
+##########################################
+else:
+    primitive = Primitive(
+        supercell,
+        np.dot(np.linalg.inv(settings.get_supercell_matrix()),
+               settings.get_primitive_matrix()),
+        options.symprec)
+
+    if log_level:
+        print "------------------------ primitive cell for fc ---------------------------"
+        print_cell(primitive)
+        print "-------------------------- supercell for fc ------------------------------"
+        print_cell(supercell, mapping=primitive.get_supercell_to_primitive_map())
+        print "----------------- ratio (supercell for fc)/(primitive) -------------------"
+        for vec in np.dot(supercell.get_cell(), np.linalg.inv(primitive.get_cell())):
+            print "%5.2f"*3 % tuple(vec)
+
+    # fc2
+    if options.read_fc2 or options.read_delta_fc2:
+        if log_level:
+            print  "----- Read fc2 -----"
+            sys.stdout.flush()
+        if os.path.exists('fc2.hdf5'):
+            fc2_with_dim = read_fc2_from_hdf5()
+        elif os.path.exists('force_constants.hdf5'):
+            fc2_with_dim = read_fc2_from_hdf5(filename='force_constants.hdf5')
+        else:
+            print "fc2.hdf5 not found"
+            if log_level:
+                print_end()
+            sys.exit(0)
+            
+        if options.is_translational_symmetry:
+            set_translational_invariance(fc2)
+
+    # fc3
+    if options.read_fc3: # Read FORCES_THIRD
+        if log_level:
+            print  "----- Read fc3 -----"
+            sys.stdout.flush()
+        fc3 = read_fc3_from_hdf5()
+        if options.is_translational_symmetry:
+            set_translational_invariance_fc3(fc3)
+
+        num_atom = fc3.shape[0]
+        maxval1 = 0
+        maxval2 = 0
+        maxval3 = 0
+        for i in range(num_atom):
+            for j in range(num_atom):
+                for k in range(3):
+                    for l in range(3):
+                        for m in range(3):
+                            val1 = fc3[:, i, j, k, l, m].sum()
+                            val2 = fc3[i, :, j, k, l, m].sum()
+                            val3 = fc3[i, j, :, k, l, m].sum()
+                            if abs(val1) > abs(maxval1):
+                                maxval1 = val1
+                            if abs(val2) > abs(maxval2):
+                                maxval2 = val2
+                            if abs(val3) > abs(maxval3):
+                                maxval3 = val3
+        
+        print "max drift:", maxval1, maxval2, maxval3 
+        
+
+        # Symmetrize fc3_r
+        if options.is_symmetrize_fc3_r:
+            if log_level:
+                print "----- Symmetrize fc3 real space -----"
+            symmetrize_fc3(fc3)
+            
+    if options.read_fc2_fourth_sets:
+        displacements = parse_disp_yaml('disp.yaml')
+        parse_FC2_FOURTH_SETS(displacements)
+        
+        count = 0
+        for first_disp in displacements['first_atoms']:
+            count += 1
+            print count
+            print first_disp['fc2'][0, 0]
+
+        for first_disp in displacements['first_atoms']:
+            for second_disp in first_disp['second_atoms']:
+                for disp in second_disp['delta_fc2']:
+                    count += 1
+                    print count
+                    print disp[0, 0]
+            
+
+        sys.exit(0)
+            
+if log_level:
+    print_end()
