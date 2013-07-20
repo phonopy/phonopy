@@ -438,7 +438,7 @@ def set_tensor_symmetry(force_constants, supercell, symmetry):
 def set_translational_invariance(force_constants):
     """
     Translational invariance is imposed.  This is quite simple
-    implementation, which is just take sum of the force constants in
+    implementation, which is just taking sum of the force constants in
     an axis and an atom index. The sum has to be zero due to the
     translational invariance. If the sum is not zero, this error is
     uniformly subtracted from force constants.
