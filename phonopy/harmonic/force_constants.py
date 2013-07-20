@@ -127,7 +127,7 @@ def run_force_constants(supercell,
     rotations = symmetry.get_symmetry_operations()['rotations']
     trans = symmetry.get_symmetry_operations()['translations']
     positions = supercell.get_scaled_positions()
-    lattice = supercell.get_cell()
+    lattice = supercell.get_cell().T
     distribute_force_constants(force_constants,
                                atom_list,
                                atom_list_done,
@@ -165,7 +165,7 @@ def distribute_force_constants(force_constants,
                 for map_atom_disp, map_sym in zip(map_atom_disps, map_syms):
                     # L R L^-1
                     rot_cartesian = np.double(similarity_transformation(
-                        lattice.T, rotations[map_sym]))
+                        lattice, rotations[map_sym]))
                     distribute_fc2_part(force_constants,
                                         positions,
                                         atom_disp,
@@ -188,7 +188,7 @@ def distribute_force_constants(force_constants,
     
             # L R L^-1
             rot_cartesian = np.double(similarity_transformation(
-                    lattice.T, rotations[map_sym]))
+                    lattice, rotations[map_sym]))
     
             _distribute_fc2_part(force_constants,
                                  positions,

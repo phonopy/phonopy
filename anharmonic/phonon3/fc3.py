@@ -11,7 +11,8 @@ def get_fc3(supercell,
             is_translational_symmetry=False,
             verbose=False):
     num_atom = supercell.get_number_of_atoms()
-    fc3 = np.zeros((num_atom, num_atom, num_atom, 3, 3, 3), dtype=float)
+    fc3 = np.zeros((num_atom, num_atom, num_atom, 3, 3, 3), dtype='double')
+
 
     _get_fc3_least_atoms(fc3,
                          supercell,
@@ -23,20 +24,98 @@ def get_fc3(supercell,
 
     first_disp_atoms = np.unique(
         [x['number'] for x in disp_dataset['first_atoms']])
+
+    rotations = symmetry.get_symmetry_operations()['rotations']
+    translations = symmetry.get_symmetry_operations()['translations']
+    symprec = symmetry.get_symmetry_tolerance()
+    lattice = supercell.get_cell().T
+    positions = supercell.get_scaled_positions()
+
+    if verbose:
+        print "----- Copying fc3 -----"
+
     distribute_fc3(fc3,
                    first_disp_atoms,
-                   supercell,
-                   symmetry,
-                   verbose=verbose)
+                   lattice,
+                   positions,
+                   rotations,
+                   translations,
+                   symprec,
+                   verbose)
 
     if is_translational_symmetry:
         set_translational_invariance_fc3_per_index(fc3)
 
     return fc3
 
+def distribute_fc3(fc3,
+                   first_disp_atoms,
+                   lattice,
+                   positions,
+                   rotations,
+                   translations,
+                   symprec,
+                   verbose):
+    num_atom = len(positions)
+
+    for i in range(num_atom):
+        if i in first_disp_atoms:
+            continue
+
+        for atom_index_done in first_disp_atoms:
+            rot_num = get_atom_mapping_by_symmetry(positions,
+                                                   i,
+                                                   atom_index_done,
+                                                   rotations,
+                                                   translations,
+                                                   symprec)
+            if rot_num > -1:
+                i_rot = atom_index_done
+                rot = rotations[rot_num]
+                trans = translations[rot_num]
+                break
+
+        if rot_num < 0:
+            print "Position or symmetry may be wrong."
+            raise ValueError
+
+        if verbose > 2:
+            print "  [ %d, x, x ] to [ %d, x, x ]" % (i_rot + 1, i + 1)
+            sys.stdout.flush()
+
+
+        rot_cart_inv = similarity_transformation(lattice, rot).T
+
+        try:
+            import anharmonic._phono3py as phono3c
+            phono3c.distribute_fc3(fc3,
+                                   i,
+                                   i_rot,
+                                   positions,
+                                   rot,
+                                   rot_cart_inv.copy(),
+                                   trans,
+                                   symprec)
+        
+        except ImportError:
+            for j in range(num_atom):
+                j_rot = get_atom_by_symmetry(positions,
+                                             rot,
+                                             trans,
+                                             j,
+                                             symprec)
+                for k in range(num_atom):
+                    k_rot = get_atom_by_symmetry(positions,
+                                                 rot,
+                                                 trans,
+                                                 k,
+                                                 symprec)
+                    fc3[i, j, k] = third_rank_tensor_rotation(
+                        rot_cart_inv, fc3[i_rot, j_rot, k_rot])
+
 def symmetrize_fc3(fc3):
     num_atom = fc3.shape[0]
-    fc3_sym = np.zeros(fc3.shape, dtype=float)
+    fc3_sym = np.zeros(fc3.shape, dtype='double')
     for i in range(num_atom):
         for j in range(num_atom):
             for k in range(num_atom):
@@ -48,7 +127,7 @@ def symmetrize_fc3(fc3):
                 fc3[i, j, k] = fc3_sym[i, j, k]
 
 def symmetrize_fc3_part(fc3, a, b, c):
-    tensor3 = np.zeros((3,3,3), dtype=float)
+    tensor3 = np.zeros((3,3,3), dtype='double')
     for i in range(3):
         for j in range(3):
             for k in range(3):
@@ -80,84 +159,45 @@ def set_translational_invariance_fc3_per_index(fc3, index=0):
                             fc3[i, j, :, k, l, m] -= np.sum(
                                 fc3[i, j, :, k, l, m]) / fc3.shape[2]
     
-def distribute_fc3(fc3,
-                   first_disp_atoms,
-                   supercell,
-                   symmetry,
-                   verbose=False):
+def third_rank_tensor_rotation(rot_cart, tensor):
+    rot_tensor = np.zeros((3,3,3), dtype='double')
+    for i in (0,1,2):
+        for j in (0,1,2):
+            for k in (0,1,2):
+                rot_tensor[i, j, k] = _third_rank_tensor_rotation_elem(
+                    rot_cart, tensor, i, j, k)
+    return rot_tensor
 
-    rotations = symmetry.get_symmetry_operations()['rotations']
-    translations = symmetry.get_symmetry_operations()['translations']
+def _get_fc3_least_atoms(fc3,
+                         supercell,
+                         disp_dataset,
+                         fc2,
+                         symmetry,
+                         is_translational_symmetry,
+                         verbose):
     symprec = symmetry.get_symmetry_tolerance()
-    lattice = supercell.get_cell()
-    positions = supercell.get_scaled_positions()
-    num_atoms = supercell.get_number_of_atoms()
+    unique_first_atom_nums = np.unique(
+        [x['number'] for x in disp_dataset['first_atoms']])
+    for first_atom_num in unique_first_atom_nums:
+        _get_fc3_one_atom(fc3,
+                          supercell,
+                          disp_dataset,
+                          fc2,
+                          first_atom_num,
+                          symmetry.get_site_symmetry(first_atom_num),
+                          is_translational_symmetry,
+                          symprec,
+                          verbose)
 
-    if verbose:
-        print "----- Copying fc3 -----"
-
-    for i in range(num_atoms):
-        if i in first_disp_atoms:
-            continue
-
-        for atom_index_done in first_disp_atoms:
-            rot_num = get_atom_mapping_by_symmetry(positions,
-                                                   i,
-                                                   atom_index_done,
-                                                   symmetry)
-            if rot_num > -1:
-                i_rot = atom_index_done
-                rot = rotations[rot_num]
-                trans = translations[rot_num]
-                break
-
-        if rot_num < 0:
-            print "Position or symmetry may be wrong."
-            raise ValueError
-
-        if verbose > 2:
-            print "  [ %d, x, x ] to [ %d, x, x ]" % (i_rot + 1, i + 1)
-            sys.stdout.flush()
-
-
-        rot_cart_inv = similarity_transformation(lattice.T, rot).T
-
-        try:
-            import anharmonic._phono3py as phono3c
-            phono3c.distribute_fc3(fc3,
-                                   i,
-                                   i_rot,
-                                   positions,
-                                   rot,
-                                   rot_cart_inv.copy(),
-                                   trans,
-                                   symprec)
-        
-        except ImportError:
-            for j in range(num_atoms):
-                j_rot = get_atom_by_symmetry(positions,
-                                             rot,
-                                             trans,
-                                             j,
-                                             symprec)
-                for k in range(num_atoms):
-                    k_rot = get_atom_by_symmetry(positions,
-                                                 rot,
-                                                 trans,
-                                                 k,
-                                                 symprec)
-                    fc3[i, j, k] = _third_rank_tensor_rotation(
-                        rot_cart_inv, fc3[i_rot, j_rot, k_rot])
-
-def get_fc3_one_atom(fc3,
-                     supercell,
-                     disp_dataset,
-                     fc2,
-                     first_atom_num,
-                     site_symmetry,
-                     is_translational_symmetry=False,
-                     symprec=1e-5,
-                     verbose=False):
+def _get_fc3_one_atom(fc3,
+                      supercell,
+                      disp_dataset,
+                      fc2,
+                      first_atom_num,
+                      site_symmetry,
+                      is_translational_symmetry,
+                      symprec,
+                      verbose):
     displacements_first = []
     delta_fc2s = []
     for dataset_first_atom in disp_dataset['first_atoms']:
@@ -180,13 +220,13 @@ def get_fc3_one_atom(fc3,
                     is_translational_symmetry,
                     symprec))
 
-    _solve_fc3(fc3,
-               first_atom_num,
-               supercell,
-               site_symmetry,
-               displacements_first,
-               delta_fc2s,
-               symprec)
+    solve_fc3(fc3,
+              first_atom_num,
+              supercell,
+              site_symmetry,
+              displacements_first,
+              delta_fc2s,
+              symprec)
 
     if verbose:
         print "Displacements for fc3[ %d, x, x ]" % (first_atom_num + 1)
@@ -200,11 +240,6 @@ def get_fc3_one_atom(fc3,
                 print "  [%2d %2d %2d]" % tuple(v[1])
                 print "  [%2d %2d %2d]\n" % tuple(v[2])
                 sys.stdout.flush()
-
-    for i, v in enumerate(delta_fc2s):
-        filename = "delta_fc2-%d-%d.dat" % (first_atom_num + 1, i + 1)
-        write_fc2_dat(v, filename=filename)
-
 
 def get_atom_by_symmetry(positions,
                          rotation,
@@ -224,13 +259,12 @@ def get_atom_by_symmetry(positions,
 def get_atom_mapping_by_symmetry(positions,
                                  atom_search, 
                                  atom_target,
-                                 symmetry):
+                                 rotations,
+                                 translations,
+                                 symprec):
     map_sym = -1
-    rotations = symmetry.get_symmetry_operations()['rotations']
-    trans = symmetry.get_symmetry_operations()['translations']
-    symprec = symmetry.get_symmetry_tolerance()
 
-    for i, (r, t) in enumerate(zip(rotations, trans)):
+    for i, (r, t) in enumerate(zip(rotations, translations)):
         rot_pos = np.dot(positions[atom_search], r.T) + t
         diff = rot_pos - positions[atom_target]
         if (abs(diff -diff.round()) < symprec).all():
@@ -239,33 +273,12 @@ def get_atom_mapping_by_symmetry(positions,
 
     return map_sym
 
-def _get_fc3_least_atoms(fc3,
-                         supercell,
-                         disp_dataset,
-                         fc2,
-                         symmetry,
-                         is_translational_symmetry=False,
-                         verbose=False):
-    symprec = symmetry.get_symmetry_tolerance()
-    unique_first_atom_nums = np.unique(
-        [x['number'] for x in disp_dataset['first_atoms']])
-    for first_atom_num in unique_first_atom_nums:
-        get_fc3_one_atom(fc3,
-                         supercell,
-                         disp_dataset,
-                         fc2,
-                         first_atom_num,
-                         symmetry.get_site_symmetry(first_atom_num),
-                         is_translational_symmetry,
-                         symprec,
-                         verbose)
-
 def _get_delta_fc2(dataset_first_atom,
                    fc2,
                    supercell,
                    reduced_site_sym,
                    is_translational_symmetry,
-                   symprec=1e-5):
+                   symprec):
     disp_fc2 = _get_constrained_fc2(supercell,
                                     dataset_first_atom,
                                     reduced_site_sym,
@@ -278,7 +291,7 @@ def _get_delta_fc2(dataset_first_atom,
 def _get_constrained_fc2(supercell,
                          displacements,
                          reduced_site_sym,
-                         symprec=1e-5):
+                         symprec):
     """
     displacements = {'number': 3,
                      'displacement': [0.01, 0.00, 0.01]
@@ -317,7 +330,7 @@ def _get_constrained_fc2(supercell,
                               symprec)
 
     # Shift positions according to set atom1 is at origin
-    lattice = supercell.get_cell()
+    lattice = supercell.get_cell().T
     positions = supercell.get_scaled_positions()
     pos_center = positions[atom1].copy()
     positions -= pos_center
@@ -334,13 +347,13 @@ def _get_constrained_fc2(supercell,
     return fc2
         
 
-def _solve_fc3(fc3,
-               first_atom_num,
-               supercell,
-               site_symmetry,
-               displacements_first,
-               delta_fc2s,
-               symprec=1e-5):
+def solve_fc3(fc3,
+              first_atom_num,
+              supercell,
+              site_symmetry,
+              displacements_first,
+              delta_fc2s,
+              symprec):
     lattice = supercell.get_cell().T
     site_sym_cart = [similarity_transformation(lattice, sym)
                      for sym in site_symmetry]
@@ -367,15 +380,6 @@ def _get_rotated_fc2s(i, j, fc2s, rot_map_syms, site_sym_cart):
             rotated_fc2s.append(similarity_transformation(sym, fc2_rot))
     return np.reshape(rotated_fc2s, (-1, 9))
             
-def _third_rank_tensor_rotation(rot_cart, tensor):
-    rot_tensor = np.zeros((3,3,3), dtype=float)
-    for i in (0,1,2):
-        for j in (0,1,2):
-            for k in (0,1,2):
-                rot_tensor[i, j, k] = _third_rank_tensor_rotation_elem(
-                    rot_cart, tensor, i, j, k)
-    return rot_tensor
-
 def _third_rank_tensor_rotation_elem(rot, tensor, l, m, n):
     sum = 0.
     for i in (0, 1, 2):

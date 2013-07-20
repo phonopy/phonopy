@@ -53,6 +53,7 @@ from anharmonic.file_IO import \
     read_fc3_from_hdf5, read_fc2_from_hdf5
 from anharmonic.phonon3.displacement_fc3 import get_third_order_displacements
 from anharmonic.settings import Phono3pyConfParser
+from anharmonic.phonon4.fc4 import get_fc4
 
 # AA is created at http://www.network-science.de/ascii/.
 def print_phono4py():
@@ -203,8 +204,7 @@ else:
     if os.path.exists(options.cell_poscar):
         unitcell_filename = options.cell_poscar
     else:
-        print_error("The file \'%s\' could not be found." %
-                    options.cell_poscar)
+        print_error("%s not found" % options.cell_poscar)
         if log_level:
             print_end()
         sys.exit(1)
@@ -253,74 +253,46 @@ else:
         for vec in np.dot(supercell.get_cell(), np.linalg.inv(primitive.get_cell())):
             print "%5.2f"*3 % tuple(vec)
 
-    # fc2
-    if options.read_fc2:
-        if log_level:
-            print  "----- Read fc2 -----"
-            sys.stdout.flush()
-        if os.path.exists('fc2.hdf5'):
-            fc2_with_dim = read_fc2_from_hdf5()
-        elif os.path.exists('force_constants.hdf5'):
-            fc2_with_dim = read_fc2_from_hdf5(filename='force_constants.hdf5')
-        else:
-            print "fc2.hdf5 not found"
-            if log_level:
-                print_end()
-            sys.exit(0)
-            
-        if options.is_translational_symmetry:
-            set_translational_invariance(fc2)
-
     # fc3
-    if options.read_fc3: # Read FORCES_THIRD
+    if log_level:
+        print  "----- Read fc3 -----"
+        sys.stdout.flush()
+    fc3 = read_fc3_from_hdf5()
+    if options.is_translational_symmetry:
+        set_translational_invariance_fc3(fc3)
+
+    num_atom = fc3.shape[0]
+    maxval1 = 0
+    maxval2 = 0
+    maxval3 = 0
+    for i, j, k, l, m in list(np.ndindex((num_atom, num_atom, 3, 3, 3))):
+        val1 = fc3[:, i, j, k, l, m].sum()
+        val2 = fc3[i, :, j, k, l, m].sum()
+        val3 = fc3[i, j, :, k, l, m].sum()
+        if abs(val1) > abs(maxval1):
+            maxval1 = val1
+        if abs(val2) > abs(maxval2):
+            maxval2 = val2
+        if abs(val3) > abs(maxval3):
+            maxval3 = val3
+    print "max drift:", maxval1, maxval2, maxval3 
+    
+
+    # Symmetrize fc3_r
+    if options.is_symmetrize_fc3_r:
         if log_level:
-            print  "----- Read fc3 -----"
-            sys.stdout.flush()
-        fc3 = read_fc3_from_hdf5()
-        if options.is_translational_symmetry:
-            set_translational_invariance_fc3(fc3)
+            print "----- Symmetrize fc3 real space -----"
+        symmetrize_fc3(fc3)
 
-        num_atom = fc3.shape[0]
-        maxval1 = 0
-        maxval2 = 0
-        maxval3 = 0
-        for i, j, k, l, m in list(np.ndindex((num_atom, num_atom, 3, 3, 3))):
-            val1 = fc3[:, i, j, k, l, m].sum()
-            val2 = fc3[i, :, j, k, l, m].sum()
-            val3 = fc3[i, j, :, k, l, m].sum()
-            if abs(val1) > abs(maxval1):
-                maxval1 = val1
-            if abs(val2) > abs(maxval2):
-                maxval2 = val2
-            if abs(val3) > abs(maxval3):
-                maxval3 = val3
-        print "max drift:", maxval1, maxval2, maxval3 
+    # fc4
+    displacements = parse_disp_yaml('disp.yaml')
+    parse_FC2_FOURTH_SETS(displacements)
+    get_fc4(supercell,
+            displacements,
+            fc3,
+            symmetry,
+            is_translational_symmetry=False,
+            verbose=log_level)
         
-
-        # Symmetrize fc3_r
-        if options.is_symmetrize_fc3_r:
-            if log_level:
-                print "----- Symmetrize fc3 real space -----"
-            symmetrize_fc3(fc3)
-            
-    if options.read_fc2_fourth_sets:
-        displacements = parse_disp_yaml('disp.yaml')
-        parse_FC2_FOURTH_SETS(displacements)
-        
-        count = 0
-        for first_disp in displacements['first_atoms']:
-            count += 1
-            print count
-            print first_disp['fc2'][0, 0]
-
-        for first_disp in displacements['first_atoms']:
-            for second_disp in first_disp['second_atoms']:
-                for disp in second_disp['delta_fc2']:
-                    count += 1
-                    print count
-                    print disp[0, 0]
-
-        sys.exit(0)
-            
 if log_level:
     print_end()

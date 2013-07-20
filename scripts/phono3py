@@ -125,6 +125,7 @@ parser.set_defaults(amplitude=None,
                     freq_step=None,
                     output_filename=None,
                     qpoints=None,
+                    quiet=False,
                     sigma=None,
                     supercell_dimension=None,
                     supercell_dimension_extra=None,
@@ -133,7 +134,7 @@ parser.set_defaults(amplitude=None,
                     tmin=None,
                     tstep=None,
                     temperatures=None,
-                    verbose=True,
+                    verbose=False,
                     uplo='L',
                     write_amplitude=False,
                     write_gamma=False,
@@ -260,6 +261,9 @@ parser.add_option("--q_direction",
                   dest="q_direction",
                   type="string",
                   help="q-vector direction at q->0 for non-analytical term correction")
+parser.add_option("-q", "--quiet", dest="quiet",
+                  action="store_true",
+                  help="Print out smallest information")
 parser.add_option("--read_amplitude", dest="read_amplitude",
                   action="store_true",
                   help="Read phonon-phonon interaction amplitudes")
@@ -312,10 +316,13 @@ parser.add_option("--write_gamma", dest="write_gamma",
 option_list = parser.option_list
 
 # Log level
-if options.log_level is None:
-    log_level = options.verbose
-else:
-    log_level = options.log_level
+log_level = 1
+if options.verbose:
+    log_level = 2
+if options.quiet:
+    log_level = 0
+if not options.log_level==None:
+    log_level=options.log_level
     
 # Title
 if log_level:
