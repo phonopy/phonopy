@@ -37,26 +37,26 @@ def get_fc4(supercell,
     symprec = symmetry.get_symmetry_tolerance()
     lattice = supercell.get_cell().T
     positions = supercell.get_scaled_positions()
-    distribute_fc4(fc4,
-                   first_disp_atoms,
-                   lattice,
-                   positions,
-                   rotations,
-                   translations,
-                   symprec,
-                   verbose)
+    _distribute_fc4(fc4,
+                    first_disp_atoms,
+                    lattice,
+                    positions,
+                    rotations,
+                    translations,
+                    symprec,
+                    verbose)
 
     print "Wriging fc4.hdf5"
     write_fc4_to_hdf5(fc4)
     
-def distribute_fc4(fc4,
-                   first_disp_atoms,
-                   lattice,
-                   positions,
-                   rotations,
-                   translations,
-                   symprec,
-                   verbose):
+def _distribute_fc4(fc4,
+                    first_disp_atoms,
+                    lattice,
+                    positions,
+                    rotations,
+                    translations,
+                    symprec,
+                    verbose):
     num_atom = len(positions)
 
     for i in range(num_atom):
