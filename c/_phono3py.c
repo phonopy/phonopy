@@ -18,39 +18,63 @@ static PyObject * py_get_imag_self_energy_at_bands(PyObject *self,
 static PyObject * py_set_phonon_triplets(PyObject *self, PyObject *args);
 static PyObject * py_get_phonon(PyObject *self, PyObject *args);
 static PyObject * py_distribute_fc3(PyObject *self, PyObject *args);
+static PyObject * py_distribute_fc4(PyObject *self, PyObject *args);
+static PyObject * py_rotate_delta_fc3s(PyObject *self, PyObject *args);
 static PyObject * py_phonopy_zheev(PyObject *self, PyObject *args);
 
 static int distribute_fc3(double *fc3,
 			  const int third_atom,
-			  const int third_atom_rot,
-			  const double *positions,
+			  const int *atom_mapping,
 			  const int num_atom,
-			  const int * rot,
-			  const double *rot_cartesian,
-			  const double *trans,
-			  const double symprec);
-static int get_atom_by_symmetry(const int atom_number,
-				const int num_atom,
-				const double *positions,
-				const int *rot,
-				const double *trans,
-				const double symprec);
-static void tensor3_roation(double *fc3,
-			    const int third_atom,
-			    const int third_atom_rot,
+			  const double *rot_cart);
+static int distribute_fc4(double *fc4,
+			  const int fourth_atom,
+			  const int *atom_mapping,
+			  const int num_atom,
+			  const double *rot_cart);
+static int rotate_delta_fc3s(double *rotated_delta_fc3s,
+			     const double *delta_fc3s,
+			     const int *rot_map_syms,
+			     const double *site_sym_cart,
+			     const int num_rot,
+			     const int num_delta_fc3s,
+			     const int atom1,
+			     const int atom2,
+			     const int atom3,
+			     const int num_atom);
+static void tensor3_roation(double *rot_tensor,
+			    const double *fc3,
 			    const int atom_i,
 			    const int atom_j,
+			    const int atom_k,
 			    const int atom_rot_i,
 			    const int atom_rot_j,
+			    const int atom_rot_k,
 			    const int num_atom,
 			    const double *rot_cartesian);
-static double tensor3_rotation_elem(double tensor[3][3][3],
+static double tensor3_rotation_elem(const double tensor[27],
 				    const double *r,
 				    const int l,
 				    const int m,
 				    const int n);
-static int nint(const double a);
-
+static void tensor4_roation(double *rot_tensor,
+			    const double *fc4,
+			    const int atom_i,
+			    const int atom_j,
+			    const int atom_k,
+			    const int atom_l,
+			    const int atom_rot_i,
+			    const int atom_rot_j,
+			    const int atom_rot_k,
+			    const int atom_rot_l,
+			    const int num_atom,
+			    const double *rot_cartesian);
+static double tensor4_rotation_elem(const double tensor[81],
+				    const double *r,
+				    const int m,
+				    const int n,
+				    const int p,
+				    const int q);
 static PyMethodDef functions[] = {
   {"joint_dos", py_get_jointDOS, METH_VARARGS, "Calculate joint density of states"},
   {"interaction", py_get_interaction, METH_VARARGS, "Interaction of triplets"},
@@ -59,6 +83,8 @@ static PyMethodDef functions[] = {
   {"phonon_triplets", py_set_phonon_triplets, METH_VARARGS, "Set phonon triplets"},
   {"phonon", py_get_phonon, METH_VARARGS, "Get phonon"},
   {"distribute_fc3", py_distribute_fc3, METH_VARARGS, "Distribute least fc3 to full fc3"},
+  {"distribute_fc4", py_distribute_fc4, METH_VARARGS, "Distribute least fc4 to full fc4"},
+  {"rotate_delta_fc3s", py_rotate_delta_fc3s, METH_VARARGS, "Rotate delta fc3s"},
   {"zheev", py_phonopy_zheev, METH_VARARGS, "Lapack zheev wrapper"},
   {NULL, NULL, 0, NULL}
 };
@@ -484,40 +510,94 @@ static PyObject * py_get_jointDOS(PyObject *self, PyObject *args)
 static PyObject * py_distribute_fc3(PyObject *self, PyObject *args)
 {
   PyArrayObject* force_constants_third;
-  int third_atom, third_atom_rot;
-  PyArrayObject* positions;
-  PyArrayObject* rotation;
+  int third_atom;
   PyArrayObject* rotation_cart_inv;
-  PyArrayObject* translation;
-  double symprec;
+  PyArrayObject* atom_mapping_py;
 
-  if (!PyArg_ParseTuple(args, "OiiOOOOd",
+  if (!PyArg_ParseTuple(args, "OiOO",
 			&force_constants_third,
 			&third_atom,
-			&third_atom_rot,
-			&positions,
-			&rotation,
-			&rotation_cart_inv,
-			&translation,
-			&symprec))
+			&atom_mapping_py,
+			&rotation_cart_inv)) {
     return NULL;
+  }
 
   double* fc3 = (double*)force_constants_third->data;
-  const double* pos = (double*)positions->data;
-  const int* rot = (int*)rotation->data;
   const double* rot_cart_inv = (double*)rotation_cart_inv->data;
-  const double* trans = (double*)translation->data;
-  const int num_atom = (int)positions->dimensions[0];
+  const int* atom_mapping = (int*)atom_mapping_py->data;
+  const int num_atom = (int)atom_mapping_py->dimensions[0];
 
   return PyInt_FromLong((long) distribute_fc3(fc3,
 					      third_atom,
-					      third_atom_rot,
-					      pos,
+					      atom_mapping,
 					      num_atom,
-					      rot,
-					      rot_cart_inv,
-					      trans,
-					      symprec));
+					      rot_cart_inv));
+}
+
+static PyObject * py_distribute_fc4(PyObject *self, PyObject *args)
+{
+  PyArrayObject* force_constants_fourth;
+  int fourth_atom;
+  PyArrayObject* rotation_cart_inv;
+  PyArrayObject* atom_mapping_py;
+
+  if (!PyArg_ParseTuple(args, "OiOO",
+			&force_constants_fourth,
+			&fourth_atom,
+			&atom_mapping_py,
+			&rotation_cart_inv)) {
+    return NULL;
+  }
+
+  double* fc4 = (double*)force_constants_fourth->data;
+  const double* rot_cart_inv = (double*)rotation_cart_inv->data;
+  const int* atom_mapping = (int*)atom_mapping_py->data;
+  const int num_atom = (int)atom_mapping_py->dimensions[0];
+
+  return PyInt_FromLong((long) distribute_fc4(fc4,
+					      fourth_atom,
+					      atom_mapping,
+					      num_atom,
+					      rot_cart_inv));
+}
+
+static PyObject * py_rotate_delta_fc3s(PyObject *self, PyObject *args)
+{
+  PyArrayObject* rotated_delta_fc3s_py;
+  PyArrayObject* delta_fc3s_py;
+  PyArrayObject* atom_mappings_of_rotations_py;
+  PyArrayObject* site_symmetries_cartesian_py;
+  int atom1, atom2, atom3;
+
+  if (!PyArg_ParseTuple(args, "OOOOiii",
+			&rotated_delta_fc3s_py,
+			&delta_fc3s_py,
+			&atom_mappings_of_rotations_py,
+			&site_symmetries_cartesian_py,
+			&atom1,
+			&atom2,
+			&atom3)) {
+    return NULL;
+  }
+
+  double* rotated_delta_fc3s = (double*)rotated_delta_fc3s_py->data;
+  const double* delta_fc3s = (double*)delta_fc3s_py->data;
+  const int* rot_map_syms = (int*)atom_mappings_of_rotations_py->data;
+  const double* site_syms_cart = (double*)site_symmetries_cartesian_py->data;
+  const int num_rot = (int)site_symmetries_cartesian_py->dimensions[0];
+  const int num_delta_fc3s = (int)delta_fc3s_py->dimensions[0];
+  const int num_atom = (int)delta_fc3s_py->dimensions[1];
+
+  return PyInt_FromLong((long) rotate_delta_fc3s(rotated_delta_fc3s,
+						 delta_fc3s,
+						 rot_map_syms,
+						 site_syms_cart,
+						 num_rot,
+						 num_delta_fc3s,
+						 atom1,
+						 atom2,
+						 atom3,
+						 num_atom));
 }
 
 static PyObject * py_phonopy_zheev(PyObject *self, PyObject *args)
@@ -559,104 +639,92 @@ static PyObject * py_phonopy_zheev(PyObject *self, PyObject *args)
 
 static int distribute_fc3(double *fc3,
 			  const int third_atom,
-			  const int third_atom_rot,
-			  const double *positions,
+			  const int *atom_mapping,
 			  const int num_atom,
-			  const int *rot,
-			  const double *rot_cart_inv,
-			  const double *trans,
-			  const double symprec)
+			  const double *rot_cart)
 {
-  int i, j, atom_rot_i, atom_rot_j;
+  int i, j, atom_rot_i, atom_rot_j, third_atom_rot;
+  double *tensor;
+
+  third_atom_rot = atom_mapping[third_atom];
   
   for (i = 0; i < num_atom; i++) {
-    atom_rot_i =
-      get_atom_by_symmetry(i, num_atom, positions, rot, trans, symprec);
-
-    if (atom_rot_i < 0) {
-      fprintf(stderr, "phono3c: Unexpected behavior in distribute_fc3.\n");
-      fprintf(stderr, "phono3c: atom_i %d\n", i);
-      return 0;
-    }
+    atom_rot_i = atom_mapping[i];
 
     for (j = 0; j < num_atom; j++) {
-      atom_rot_j =
-	get_atom_by_symmetry(j, num_atom, positions, rot, trans, symprec);
-
-      if (atom_rot_j < 0) {
-	fprintf(stderr, "phono3c: Unexpected behavior in distribute_fc3.\n");
-	return 0;
-      }
-
-      tensor3_roation(fc3,
+      atom_rot_j = atom_mapping[j];
+      tensor = (fc3 +
+		27 * num_atom * num_atom * third_atom +
+		27 * num_atom * i +
+		27 * j);
+      tensor3_roation(tensor,
+		      fc3,
 		      third_atom,
-		      third_atom_rot,
 		      i,
 		      j,
+		      third_atom_rot,
 		      atom_rot_i,
 		      atom_rot_j,
 		      num_atom,
-		      rot_cart_inv);
+		      rot_cart);
     }
   }
   return 1;
 }
 
-static int get_atom_by_symmetry(const int atom_number,
-				const int num_atom,
-				const double *positions,
-				const int *rot,
-				const double *trans,
-				const double symprec)
+static int rotate_delta_fc3s(double *rotated_delta_fc3s,
+			     const double *delta_fc3s,
+			     const int *rot_map_syms,
+			     const double *site_sym_cart,
+			     const int num_rot,
+			     const int num_delta_fc3s,
+			     const int atom1,
+			     const int atom2,
+			     const int atom3,
+			     const int num_atom)
 {
-  int i, j, found;
-  double rot_pos[3], diff[3];
-  
-  for (i = 0; i < 3; i++) {
-    rot_pos[i] = trans[i];
-    for (j = 0; j < 3; j++) {
-      rot_pos[i] += rot[i * 3 + j] * positions[atom_number * 3 + j];
+  int i, j;
+  double *rot_tensor;
+  for (i = 0; i < num_delta_fc3s; i++) {
+    for (j = 0; j < num_rot; j++) {
+      rot_tensor = rotated_delta_fc3s + i * num_rot * 27 + j * 27;
+      tensor3_roation(rot_tensor,
+		      delta_fc3s +
+		      i * num_rot * num_atom * num_atom * num_atom * 27,
+		      atom1,
+		      atom2,
+		      atom3,
+		      rot_map_syms[atom1],
+		      rot_map_syms[atom2],
+		      rot_map_syms[atom3],
+		      num_atom,
+		      site_sym_cart + j * 9);
     }
   }
-
-  for (i = 0; i < num_atom; i++) {
-    found = 1;
-    for (j = 0; j < 3; j++) {
-      diff[j] = positions[i * 3 + j] - rot_pos[j];
-      diff[j] -= nint(diff[j]);
-      if (fabs(diff[j]) > symprec) {
-	found = 0;
-	break;
-      }
-    }
-    if (found) {
-      return i;
-    }
-  }
-  /* Not found */
-  return -1;
+  return 0;
 }
 
-static void tensor3_roation(double *fc3,
-			    const int third_atom,
-			    const int third_atom_rot,
+static void tensor3_roation(double *rot_tensor,
+			    const double *fc3,
 			    const int atom_i,
 			    const int atom_j,
+			    const int atom_k,
 			    const int atom_rot_i,
 			    const int atom_rot_j,
+			    const int atom_rot_k,
 			    const int num_atom,
-			    const double *rot_cart_inv)
+			    const double *rot_cartesian)
 {
   int i, j, k;
-  double tensor[3][3][3];
+  double tensor[27];
 
   for (i = 0; i < 3; i++) {
     for (j = 0; j < 3; j++) {
       for (k = 0; k < 3; k++) {
-	tensor[i][j][k] = fc3[27 * num_atom * num_atom * third_atom_rot +
-			      27 * num_atom * atom_rot_i +
-			      27 * atom_rot_j +
-			      9 * i + 3 * j + k];
+	tensor[i * 9 + j * 3 + k] = fc3[27 * num_atom * num_atom * atom_rot_i +
+					27 * num_atom * atom_rot_j +
+					27 * atom_rot_k +
+					9 * i + 3 * j + k];
       }
     }
   }
@@ -664,17 +732,14 @@ static void tensor3_roation(double *fc3,
   for (i = 0; i < 3; i++) {
     for (j = 0; j < 3; j++) {
       for (k = 0; k < 3; k++) {
-	fc3[27 * num_atom * num_atom * third_atom +
-	    27 * num_atom * atom_i +
-	    27 * atom_j +
-	    9 * i + 3 * j + k] = 
-	  tensor3_rotation_elem(tensor, rot_cart_inv, i, j, k);
+	rot_tensor[i * 9 + j * 3 + k] = 
+	  tensor3_rotation_elem(tensor, rot_cartesian, i, j, k);
       }
     }
   }
 }
 
-static double tensor3_rotation_elem(double tensor[3][3][3],
+static double tensor3_rotation_elem(const double tensor[27],
 				    const double *r,
 				    const int l,
 				    const int m,
@@ -687,7 +752,8 @@ static double tensor3_rotation_elem(double tensor[3][3][3],
   for (i = 0; i < 3; i++) {
     for (j = 0; j < 3; j++) {
       for (k = 0; k < 3; k++) {
-	sum += r[l * 3 + i] * r[m * 3 + j] * r[n * 3 + k] * tensor[i][j][k];
+	sum += r[l * 3 + i] * r[m * 3 + j] * r[n * 3 + k] *
+	  tensor[i * 9 + j * 3 + k];
       }
     }
   }
@@ -695,11 +761,113 @@ static double tensor3_rotation_elem(double tensor[3][3][3],
 }
 
 
-static int nint(const double a)
+static int distribute_fc4(double *fc4,
+			  const int fourth_atom,
+			  const int *atom_mapping,
+			  const int num_atom,
+			  const double *rot_cart)
 {
-  if (a < 0.0)
-    return (int) (a - 0.5);
-  else
-    return (int) (a + 0.5);
+  int i, j, k, atom_rot_i, atom_rot_j, atom_rot_k, fourth_atom_rot;
+  double *tensor;
+
+  fourth_atom_rot = atom_mapping[fourth_atom];
+  
+  for (i = 0; i < num_atom; i++) {
+    atom_rot_i = atom_mapping[i];
+
+    for (j = 0; j < num_atom; j++) {
+      atom_rot_j = atom_mapping[j];
+
+      for (k = 0; k < num_atom; k++) {
+	atom_rot_k = atom_mapping[k];
+
+	tensor = (fc4 +
+		  81 * num_atom * num_atom * num_atom * fourth_atom +
+		  81 * num_atom * num_atom * i +
+		  81 * num_atom * j +
+		  81 * k);
+	tensor4_roation(tensor,
+			fc4,
+			fourth_atom,
+			i,
+			j,
+			k,
+			fourth_atom_rot,
+			atom_rot_i,
+			atom_rot_j,
+			atom_rot_k,
+			num_atom,
+			rot_cart);
+      }
+    }
+  }
+  return 1;
+}
+
+static void tensor4_roation(double *rot_tensor,
+			    const double *fc4,
+			    const int atom_i,
+			    const int atom_j,
+			    const int atom_k,
+			    const int atom_l,
+			    const int atom_rot_i,
+			    const int atom_rot_j,
+			    const int atom_rot_k,
+			    const int atom_rot_l,
+			    const int num_atom,
+			    const double *rot_cartesian)
+{
+  int i, j, k, l;
+  double tensor[81];
+
+  for (i = 0; i < 3; i++) {
+    for (j = 0; j < 3; j++) {
+      for (k = 0; k < 3; k++) {
+	for (l = 0; l < 3; l++) {
+	  tensor[i * 27 + j * 9 + k * 3 + l] =
+	    fc4[81 * num_atom * num_atom * num_atom * atom_rot_i +
+		81 * num_atom * num_atom * atom_rot_j +
+		81 * num_atom * atom_rot_k +
+		81 * atom_rot_l +
+		27 * i + 9 * j + 3 * k + l];
+	}
+      }
+    }
+  }
+
+  for (i = 0; i < 3; i++) {
+    for (j = 0; j < 3; j++) {
+      for (k = 0; k < 3; k++) {
+	for (l = 0; l < 3; l++) {
+	  rot_tensor[i * 27 + j * 9 + k * 3 + l] = 
+	    tensor4_rotation_elem(tensor, rot_cartesian, i, j, k, l);
+	}
+      }
+    }
+  }
+}
+
+static double tensor4_rotation_elem(const double tensor[81],
+				    const double *r,
+				    const int m,
+				    const int n,
+				    const int p,
+				    const int q)
+{
+  int i, j, k, l;
+  double sum;
+
+  sum = 0.0;
+  for (i = 0; i < 3; i++) {
+    for (j = 0; j < 3; j++) {
+      for (k = 0; k < 3; k++) {
+	for (l = 0; l < 3; l++) {
+	sum += r[m * 3 + i] * r[n * 3 + j] * r[p * 3 + k] * r[q * 3 + l] *
+	  tensor[i * 27 + j * 9 + k * 3 + l];
+	}
+      }
+    }
+  }
+  return sum;
 }
 

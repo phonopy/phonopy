@@ -22,17 +22,16 @@ def get_fc3(supercell,
                          is_translational_symmetry,
                          verbose)
 
+    if verbose:
+        print "----- Copying fc3 -----"
+
     first_disp_atoms = np.unique(
         [x['number'] for x in disp_dataset['first_atoms']])
-
     rotations = symmetry.get_symmetry_operations()['rotations']
     translations = symmetry.get_symmetry_operations()['translations']
     symprec = symmetry.get_symmetry_tolerance()
     lattice = supercell.get_cell().T
     positions = supercell.get_scaled_positions()
-
-    if verbose:
-        print "----- Copying fc3 -----"
 
     distribute_fc3(fc3,
                    first_disp_atoms,
@@ -83,33 +82,28 @@ def distribute_fc3(fc3,
             print "  [ %d, x, x ] to [ %d, x, x ]" % (i_rot + 1, i + 1)
             sys.stdout.flush()
 
-
-        rot_cart_inv = similarity_transformation(lattice, rot).T
+        atom_mapping = np.zeros(num_atom, dtype='intc')
+        for j in range(num_atom):
+            atom_mapping[j] = get_atom_by_symmetry(positions,
+                                                   rot,
+                                                   trans,
+                                                   j,
+                                                   symprec)
+        rot_cart_inv = np.double(
+            similarity_transformation(lattice, rot).T.copy())
 
         try:
             import anharmonic._phono3py as phono3c
             phono3c.distribute_fc3(fc3,
                                    i,
-                                   i_rot,
-                                   positions,
-                                   rot,
-                                   rot_cart_inv.copy(),
-                                   trans,
-                                   symprec)
+                                   atom_mapping,
+                                   rot_cart_inv)
         
         except ImportError:
             for j in range(num_atom):
-                j_rot = get_atom_by_symmetry(positions,
-                                             rot,
-                                             trans,
-                                             j,
-                                             symprec)
+                j_rot = atom_mapping[j]
                 for k in range(num_atom):
-                    k_rot = get_atom_by_symmetry(positions,
-                                                 rot,
-                                                 trans,
-                                                 k,
-                                                 symprec)
+                    k_rot = atom_mapping[k]
                     fc3[i, j, k] = third_rank_tensor_rotation(
                         rot_cart_inv, fc3[i_rot, j_rot, k_rot])
 
