@@ -392,8 +392,8 @@ if log_level:
         print "FC2 symmetry of index exchange:", options.is_symmetrize_fc2
     if options.is_symmetrize_fc3_r:
         print "FC3 symmetry of index exchange in real space:", options.is_symmetrize_fc3_r
-    # if options.is_symmetrize_fc3_q:
-    #     print "FC3 symmetry of index exchange in reciprocal space:", options.is_symmetrize_fc3_q
+    if options.is_symmetrize_fc3_q:
+        print "FC3 symmetry of index exchange in reciprocal space:", options.is_symmetrize_fc3_q
     if not options.supercell_dimension_extra == None:
         print "Extra supercell for fc2 is supplied."
     if settings.get_is_nac():
@@ -729,7 +729,7 @@ else:
                                 band_indices=settings.get_band_indices(),
                                 frequency_factor_to_THz=factor,
                                 is_nosym=options.is_nosym,
-                                symmetrize_fc3=options.is_symmetrize_fc3_q,
+                                symmetrize_fc3_q=options.is_symmetrize_fc3_q,
                                 symprec=options.symprec,
                                 log_level=log_level,
                                 lapack_zheev_uplo=options.uplo)

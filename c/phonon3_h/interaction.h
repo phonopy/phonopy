@@ -51,5 +51,6 @@ void get_interaction(Darray *fc3_normal_squared,
 		     const int *p2s_map,
 		     const int *s2p_map,
 		     const int *band_indices,
+		     const int is_sym_q,
 		     const double cutoff_frequency);
 #endif

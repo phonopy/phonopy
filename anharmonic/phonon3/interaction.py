@@ -14,8 +14,8 @@ class Interaction:
                  mesh,
                  band_indices=None,
                  frequency_factor_to_THz=VaspToTHz,
-                 symmetrize_fc3=False,
                  is_nosym=False,
+                 symmetrize_fc3_q=False,
                  symprec=1e-3,
                  cutoff_frequency=None,
                  log_level=False,
@@ -33,8 +33,8 @@ class Interaction:
         self._frequency_factor_to_THz = frequency_factor_to_THz
         self._symprec = symprec
         self._cutoff_frequency = cutoff_frequency
-        self._symmetrize_fc3 = symmetrize_fc3
         self._is_nosym = is_nosym
+        self._symmetrize_fc3_q = symmetrize_fc3_q
         self._log_level = log_level
         self._lapack_zheev_uplo = lapack_zheev_uplo
 
@@ -188,6 +188,7 @@ class Interaction:
                             p2s,
                             s2p,
                             self._band_indices,
+                            self._symmetrize_fc3_q,
                             cutoff)
 
     def _set_phonon_c(self):

@@ -15,7 +15,7 @@ class Phono3py:
                  band_indices=None,
                  frequency_factor_to_THz=None,
                  is_nosym=False,
-                 symmetrize_fc3=False,
+                 symmetrize_fc3_q=False,
                  symprec=1e-5,
                  cutoff_frequency=1e-4,
                  log_level=0,
@@ -32,7 +32,7 @@ class Phono3py:
             self._band_indices = band_indices
         self._frequency_factor_to_THz = frequency_factor_to_THz
         self._is_nosym = is_nosym
-        self._symmetrize_fc3 = symmetrize_fc3
+        self._symmetrize_fc3_q = symmetrize_fc3_q
         self._symprec = symprec
         self._cutoff_frequency = cutoff_frequency
         self._log_level = log_level
@@ -50,8 +50,8 @@ class Phono3py:
             frequency_factor_to_THz=self._frequency_factor_to_THz,
             symprec=self._symprec,
             cutoff_frequency=self._cutoff_frequency,
-            symmetrize_fc3=self._symmetrize_fc3,
             is_nosym=self._is_nosym,
+            symmetrize_fc3_q=self._symmetrize_fc3_q,
             log_level=self._log_level,
             lapack_zheev_uplo=lapack_zheev_uplo)
         

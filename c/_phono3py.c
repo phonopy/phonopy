@@ -312,8 +312,9 @@ static PyObject * py_get_interaction(PyObject *self, PyObject *args)
   PyArrayObject* s2p_map;
   PyArrayObject* band_indicies_py;
   double cutoff_frequency;
+  int symmetrize_fc3_q;
 
-  if (!PyArg_ParseTuple(args, "OOOOOOOOOOOOOd",
+  if (!PyArg_ParseTuple(args, "OOOOOOOOOOOOOid",
 			&fc3_normal_squared_py,
 			&frequencies,
 			&eigenvectors,
@@ -327,6 +328,7 @@ static PyObject * py_get_interaction(PyObject *self, PyObject *args)
 			&p2s_map,
 			&s2p_map,
 			&band_indicies_py,
+			&symmetrize_fc3_q,
 			&cutoff_frequency)) {
     return NULL;
   }
@@ -361,6 +363,7 @@ static PyObject * py_get_interaction(PyObject *self, PyObject *args)
 		  p2s,
 		  s2p,
 		  band_indicies,
+		  symmetrize_fc3_q,
 		  cutoff_frequency);
 
   free(fc3_normal_squared);
