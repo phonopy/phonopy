@@ -395,6 +395,7 @@ static void real_to_normal_sym_q(double *fc3_normal_squared,
 				 const double cutoff_frequency)
 {
   int i, j, k, l;
+  int band_ex[3];
   double q_ex[9];
   double *fc3_normal_squared_ex;
 
@@ -408,7 +409,7 @@ static void real_to_normal_sym_q(double *fc3_normal_squared,
   for (i = 0; i < 6; i++) {
     for (j = 0; j < 3; j ++) {
       for (k = 0; k < 3; k ++) {
-	q_ex[index_exchange[i][j] * 3 + k] = q[j * 3 + k];
+	q_ex[j * 3 + k] = q[index_exchange[i][j] * 3 + k];
       }
     }
     real_to_normal(fc3_normal_squared_ex,
@@ -432,12 +433,16 @@ static void real_to_normal_sym_q(double *fc3_normal_squared,
     for (j = 0; j < num_band0; j++) {
       for (k = 0; k < num_band; k++) {
 	for (l = 0; l < num_band; l++) {
+	  band_ex[0] = band_indices[j];
+	  band_ex[1] = k;
+	  band_ex[2] = l;
 	  fc3_normal_squared[j * num_band * num_band +
 			     k * num_band +
 			     l] +=
-	    fc3_normal_squared_ex[band_indices[j] * num_band * num_band +
-				  k * num_band +
-				  l] / 6;
+	    fc3_normal_squared_ex[band_ex[index_exchange[i][0]] *
+				  num_band * num_band +
+				  band_ex[index_exchange[i][1]] * num_band +
+				  band_ex[index_exchange[i][2]]] / 6;
 	}
       }
     }
