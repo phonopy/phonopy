@@ -386,7 +386,12 @@ def get_rotated_forces(forces_syms, site_sym_cart):
 
     return rot_forces
 
-def set_tensor_symmetry(force_constants, supercell, symmetry):
+def set_tensor_symmetry(force_constants,
+                        lattice,
+                        positions,
+                        rotations,
+                        translations,
+                        symprec):
     """
     Full force constants are symmetrized using crystal symmetry.
     This method extracts symmetrically equivalent sets of atomic pairs and
@@ -395,11 +400,6 @@ def set_tensor_symmetry(force_constants, supercell, symmetry):
     Since get_force_constants_disps may include crystal symmetry, this method
     is usually meaningless.
     """
-
-    positions = supercell.get_scaled_positions()
-    symprec = symmetry.get_symmetry_tolerance()
-    rotations = symmetry.get_symmetry_operations()['rotations']
-    translations = symmetry.get_symmetry_operations()['translations']
 
     fc_bak = force_constants.copy()
 
@@ -425,8 +425,7 @@ def set_tensor_symmetry(force_constants, supercell, symmetry):
         for j, pos_j in enumerate(positions):
             tmp_fc = np.zeros((3, 3), dtype='double')
             for k, rot in enumerate(rotations):
-                cart_rot = similarity_transformation(
-                    supercell.get_cell().T, rot)
+                cart_rot = similarity_transformation(lattice, rot)
 
                 # Reverse rotation of force constant is summed
                 tmp_fc += similarity_transformation(cart_rot.T,

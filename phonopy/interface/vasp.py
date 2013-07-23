@@ -111,7 +111,7 @@ def get_force_constants_vasprun_xml(vasprun):
         if not fc_tmp.shape==(num_atom*3, num_atom*3):
             return False
         # num_atom = fc_tmp.shape[0] / 3
-        force_constants = np.zeros((num_atom, num_atom, 3, 3), dtype=float)
+        force_constants = np.zeros((num_atom, num_atom, 3, 3), dtype='double')
     
         for i in range(num_atom):
             for j in range(num_atom):
