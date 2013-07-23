@@ -1,9 +1,11 @@
 import sys
 import numpy as np
 from phonopy.harmonic.force_constants import similarity_transformation, get_positions_sent_by_rot_inv, get_rotated_displacement
-from anharmonic.phonon3.fc3 import set_translational_invariance_fc3_per_index, solve_fc3, distribute_fc3, third_rank_tensor_rotation, get_atom_mapping_by_symmetry, get_atom_by_symmetry
-from anharmonic.file_IO import write_fc4_to_hdf5
+from anharmonic.phonon3.fc3 import set_translational_invariance_fc3_per_index, solve_fc3, distribute_fc3, third_rank_tensor_rotation, get_atom_mapping_by_symmetry, get_atom_by_symmetry, show_drift_fc3, symmetrize_fc3
 from anharmonic.phonon3.displacement_fc3 import get_reduced_site_symmetry, get_bond_symmetry
+from phonopy.structure.symmetry import Symmetry
+from phonopy.harmonic.force_constants import set_tensor_symmetry
+
 
 def get_fc4(supercell,
             disp_dataset,
@@ -46,9 +48,97 @@ def get_fc4(supercell,
                     symprec,
                     verbose)
 
-    print "Wriging fc4.hdf5"
-    write_fc4_to_hdf5(fc4)
+    if is_translational_symmetry:
+        set_translational_invariance_fc4_per_index(fc4)
+
+    return fc4
     
+def set_translational_invariance_fc4(fc4):
+    for i in range(3):
+        set_translational_invariance_fc4_per_index(fc4, index=i)
+
+def set_translational_invariance_fc4_per_index(fc4, index=0):
+    for i, j, k, l, m, n, p in list(np.ndindex(
+            (fc4.shape[(1 + index) % 3],
+             fc4.shape[(2 + index) % 3],
+             fc4.shape[(3 + index) % 3]) + fc4.shape[4:])):
+        if index == 0:
+            fc4[:, i, j, k, l, m, n, p] -= np.sum(
+                fc4[:, i, j, k, l, m, n, p]) / fc4.shape[0]
+        elif index == 1:
+            fc4[k, :, i, j, l, m, n, p] -= np.sum(
+                fc4[j, :, i, k, l, m, n, p]) / fc4.shape[1]
+        elif index == 2:
+            fc4[j, k, :, i, l, m, n, p] -= np.sum(
+                fc4[j, k, :, i, l, m, n, p]) / fc4.shape[2]
+        elif index == 3:
+            fc4[i, j, k, :, l, m, n, p] -= np.sum(
+                fc4[i, j, k, :, l, m, n, p]) / fc4.shape[3]
+
+def symmetrize_fc4(fc4):
+    num_atom = fc4.shape[0]
+    fc4_sym = np.zeros(fc4.shape, dtype='double')
+    for (i, j, k, l) in list(
+        np.ndindex(num_atom, num_atom, num_atom, num_atom)):
+        fc4_sym[i, j, k, l] = symmetrize_fc4_part(fc4, i, j, k, l)
+
+    for (i, j, k, l) in list(
+        np.ndindex(num_atom, num_atom, num_atom, num_atom)):
+        fc4[i, j, k, l] = fc4_sym[i, j, k, l]
+
+def symmetrize_fc4_part(fc4, a, b, c, d):
+    tensor4 = np.zeros((3, 3, 3, 3), dtype='double')
+    for (i, j, k, l) in list(np.ndindex(3, 3, 3, 3)):
+        tensor4[i, j, k, l] = (
+            fc4[a, b, c, d, i, j, k, l] +
+            fc4[a, b, d, c, i, j, l, k] +
+            fc4[a, c, b, d, i, k, j, l] +
+            fc4[a, c, d, b, i, k, l, j] +
+            fc4[a, d, b, c, i, l, j, k] +
+            fc4[a, d, c, b, i, l, k, j] +
+            fc4[b, a, c, d, j, i, k, l] +
+            fc4[b, a, d, c, j, i, l, k] +
+            fc4[b, c, a, d, j, k, i, l] +
+            fc4[b, c, d, a, j, k, l, i] +
+            fc4[b, d, a, c, j, l, i, k] +
+            fc4[b, d, c, a, j, l, k, i] +
+            fc4[c, a, b, d, k, i, j, l] +
+            fc4[c, a, d, b, k, i, l, j] +
+            fc4[c, b, a, d, k, j, i, l] +
+            fc4[c, b, d, a, k, j, l, i] +
+            fc4[c, d, a, b, k, l, i, j] +
+            fc4[c, d, b, a, k, l, j, i] +
+            fc4[d, a, b, c, l, i, j, k] +
+            fc4[d, a, c, b, l, i, k, j] +
+            fc4[d, b, a, c, l, j, i, k] +
+            fc4[d, b, c, a, l, j, k, i] +
+            fc4[d, c, a, b, l, k, i, j] +
+            fc4[d, c, b, a, l, k, j, i]) / 24
+
+    return tensor4
+
+def show_drift_fc4(fc4, name="fc4"):
+    num_atom = fc4.shape[0]
+    maxval1 = 0
+    maxval2 = 0
+    maxval3 = 0
+    maxval4 = 0
+    for i, j, k, l, m, n, p in list(
+        np.ndindex((num_atom, num_atom, num_atom, 3, 3, 3, 3))):
+        val1 = fc4[:, i, j, k, l, m, n, p].sum()
+        val2 = fc4[k, :, i, j, l, m, n, p].sum()
+        val3 = fc4[j, k, :, i, l, m, n, p].sum()
+        val4 = fc4[i, j, k, :, l, m, n, p].sum()
+        if abs(val1) > abs(maxval1):
+            maxval1 = val1
+        if abs(val2) > abs(maxval2):
+            maxval2 = val2
+        if abs(val3) > abs(maxval3):
+            maxval3 = val3
+        if abs(val4) > abs(maxval4):
+            maxval4 = val4
+    print ("max drift of %s:" % name), maxval1, maxval2, maxval3, maxval4
+
 def _distribute_fc4(fc4,
                     first_disp_atoms,
                     lattice,
@@ -107,8 +197,10 @@ def _distribute_fc4(fc4,
                 j_rot = atom_mapping[j]
                 for k in range(num_atom):
                     k_rot = atom_mapping[k]
-                    fc3[i, j, k] = third_rank_tensor_rotation(
-                        rot_cart_inv, fc3[i_rot, j_rot, k_rot])
+                    for l in range(num_atom):
+                        l_rot = atom_mapping[l]
+                        fc4[i, j, k, l] = _fourth_rank_tensor_rotation(
+                            rot_cart_inv, fc4[i_rot, j_rot, k_rot, l_rot])
 
 def _get_fc4_least_atoms(fc4,
                          supercell,
@@ -197,10 +289,12 @@ def _get_delta_fc3(dataset_first_atom,
                                     reduced_site_sym,
                                     symprec,
                                     verbose)
-
+    
     if is_translational_symmetry:
         set_translational_invariance_fc3_per_index(disp_fc3)
-            
+
+    show_drift_fc3(disp_fc3, name="fc3 with disp.")
+
     return disp_fc3 - fc3
 
 def _get_constrained_fc3(supercell,
@@ -239,6 +333,27 @@ def _get_constrained_fc3(supercell,
             atom2,
             symprec)
 
+        # lattice = supercell.get_cell().T
+        # positions = supercell.get_scaled_positions()
+        # pos_center = positions[atom2].copy()
+        # positions -= pos_center
+        # delta_fc2s_new = []
+        # for disp2, delta_fc2 in zip(disps2, delta_fc2s):
+        #     direction = np.dot(np.linalg.inv(lattice), disp2)
+        #     reduced_bond_sym = get_reduced_site_symmetry(
+        #         bond_sym, direction, symprec)
+        #     fc2_copy = delta_fc2.copy()
+        #     print reduced_bond_sym
+        #     set_tensor_symmetry(delta_fc2,
+        #                         lattice,
+        #                         positions,
+        #                         reduced_bond_sym,
+        #                         np.zeros((len(reduced_site_sym), 3),
+        #                                  dtype='double'),
+        #                         symprec)
+        #     delta_fc2s_new.append(delta_fc2)
+        # delta_fc2s = np.double(delta_fc2s_new)
+
         if verbose > 1:
             print ("Second displacements for fc4[ %d, %d, x, x ]" %
                    (atom1 + 1, atom2 + 1))
@@ -265,8 +380,7 @@ def _get_constrained_fc3(supercell,
                    lattice,
                    positions,
                    np.intc(reduced_site_sym).copy(),
-                   np.zeros((len(reduced_site_sym), 3),
-                            dtype='double'),
+                   np.zeros((len(reduced_site_sym), 3), dtype='double'),
                    symprec,
                    verbose)
     return fc3
@@ -313,7 +427,22 @@ def _rotate_delta_fc3s(i, j, k, fc3s, rot_map_syms, site_sym_cart):
     except ImportError:
         print "Copying delta fc3s at (%d, %d, %d)" % (i + 1, j + 1, k + 1)
         for l, fc3 in enumerate(fc3s):
-            for m, (sym, map_sym) in enumerate(zip(site_sym_cart, rot_map_syms)):
+            for m, (sym, map_sym) in enumerate(zip(site_sym_cart,
+                                                   rot_map_syms)):
                 fc3_rot = fc3[map_sym[i], map_sym[j], map_sym[k]]
                 rotated_fc3s[l, m] = third_rank_tensor_rotation(sym, fc3_rot)
         return np.reshape(rotated_fc3s, (-1, 27))
+
+def _fourth_rank_tensor_rotation(rot_cart, tensor):
+    rot_tensor = np.zeros((3, 3, 3, 3), dtype='double')
+    for i, j, k, l in list(np.ndindex(3, 3, 3, 3)):
+        rot_tensor[i, j, k, l] = _fourth_rank_tensor_rotation_elem(
+            rot_cart, tensor, i, j, k, l)
+    return rot_tensor
+
+def _fourth_rank_tensor_rotation_elem(rot, tensor, l, m, n, p):
+    sum_elems = 0.
+    for i, j, k, l in list(np.ndindex(3, 3, 3, 3)):
+        sum_elems += (rot[l, i] * rot[m, j] * rot[n, k] * rot[p, l] *
+                      tensor[i, j, k, l])
+    return sum_elems

@@ -139,12 +139,19 @@ def write_DELTA_FC2_SETS(vaspruns,
                          displacements,
                          dfc2_file='DELTA_FC2_SETS'):
     fc2_set = get_force_constants_from_vasprun_xmls(vaspruns)
-    w = open(dfc2_file, 'w')
     perfect_fc2 = fc2_set.pop(0)
-    # write_fc2_dat(perfect_fc2)
     write_fc2_to_hdf5(perfect_fc2)
-    for i, (dfc2, first_disp) in enumerate(
-        zip(fc2_set, displacements['first_atoms'])):
+    delta_fc2s = [fc2 - perfect_fc2 for fc2 in fc2_set]
+    write_DELTA_FC2_SETS_from_delta_fc2s(delta_fc2s,
+                                         displacements,
+                                         dfc2_file=dfc2_file)
+
+def write_DELTA_FC2_SETS_from_delta_fc2s(delta_fc2s,
+                                         displacements,
+                                         dfc2_file='DELTA_FC2_SETS'):
+    w = open(dfc2_file, 'w')
+    for i, (dfc2, first_disp) in enumerate(zip(delta_fc2s,
+                                               displacements['first_atoms'])):
         w.write("# File: %d\n" % (i + 1))
         w.write("# %-5d " % (first_disp['number'] + 1))
         w.write("%20.16f %20.16f %20.16f\n" %
@@ -152,38 +159,35 @@ def write_DELTA_FC2_SETS(vaspruns,
         for j in range(dfc2.shape[0]):
             for k in range(dfc2.shape[1]):
                 w.write("# %d - %d\n" % (j + 1, k + 1))
-                for vec in (dfc2 - perfect_fc2)[j, k]:
+                for vec in dfc2[j, k]:
                     w.write("%20.14f %20.14f %20.14f\n" % tuple(vec))
+    w.close()
 
-def write_FC2_FOURTH_SETS(vaspruns,
-                          displacements,
-                          fc2fc4_file='FC2_FOURTH_SETS'):
+def write_DELTA_FC2_FOURTH_SETS(vaspruns,
+                                displacements,
+                                dfc2_file='DELTA_FC2_FOURTH_SETS'):
     """Write displaced fc2 for fc4 from vasprun.xml's"""
     
     fc2_set = get_force_constants_from_vasprun_xmls(vaspruns)
-    w = open(fc2fc4_file, 'w')
+    perfect_fc2 = fc2_set.pop(0)
+    write_fc2_to_hdf5(perfect_fc2)
+
+    fc2s_first = []
+    w = open(dfc2_file, 'w')
     count = 0
-    for first_disp in displacements['first_atoms']:
+
+    for i, first_disp in enumerate(displacements['first_atoms']):
         count += 1
-        dfc2 = fc2_set.pop(0)
+        fc2s_first.append(fc2_set.pop(0))
 
-        w.write("# File: %d\n" % count)
-        w.write("# %-5d " % (first_disp['number'] + 1))
-        w.write("%20.16f %20.16f %20.16f\n" %
-                tuple(first_disp['displacement']))
-
-        for i in range(dfc2.shape[0]):
-            for j in range(dfc2.shape[1]):
-                w.write("# %d - %d\n" % (i + 1, j + 1))
-                for vec in dfc2[i, j]:
-                    w.write("%20.14f %20.14f %20.14f\n" % tuple(vec))
-
-    for first_disp in displacements['first_atoms']:
+    delta_fc2s = [fc2 - perfect_fc2 for fc2 in fc2s_first]
+    write_DELTA_FC2_SETS_from_delta_fc2s(delta_fc2s, displacements)
+        
+    for i, first_disp in enumerate(displacements['first_atoms']):
         for second_disp in first_disp['second_atoms']:
             for disp in second_disp['displacements']:
                 count += 1
-                dfc2 = fc2_set.pop(0)
-                
+                dfc2 = fc2_set.pop(0) - fc2s_first[i]
                 w.write("# File: %d\n" % count)
                 w.write("# %-5d" % (first_disp['number'] + 1))
                 w.write("%20.16f %20.16f %20.16f\n" %
@@ -191,10 +195,10 @@ def write_FC2_FOURTH_SETS(vaspruns,
                 w.write("# %-5d" % (second_disp['number'] + 1))
                 w.write("%20.16f %20.16f %20.16f\n" % tuple(disp))
             
-                for i in range(dfc2.shape[0]):
-                    for j in range(dfc2.shape[1]):
-                        w.write("# %d - %d\n" % (i + 1, j + 1))
-                        for vec in dfc2[i, j]:
+                for j in range(dfc2.shape[0]):
+                    for k in range(dfc2.shape[1]):
+                        w.write("# %d - %d\n" % (j + 1, k + 1))
+                        for vec in dfc2[j, k]:
                             w.write("%20.14f %20.14f %20.14f\n" % tuple(vec))
 
 def write_fc3_yaml(force_constants_third,
@@ -818,20 +822,17 @@ def parse_DELTA_FC2_SETS(displacements,
         first_disp['delta_fc2'] = parse_force_constants_lines(fc2_file,
                                                               num_atom)
 
-def parse_FC2_FOURTH_SETS(displacements,
-                          filename='FC2_FOURTH_SETS'):
+def parse_DELTA_FC2_FOURTH_SETS(displacements,
+                                filename='DELTA_FC2_FOURTH_SETS'):
     fc2_file = open(filename, 'r')
     delta_fc2s = []
     num_atom = displacements['natom']
-    for first_disp in displacements['first_atoms']:
-        first_disp['fc2'] = parse_force_constants_lines(fc2_file, num_atom)
     for first_disp in displacements['first_atoms']:
         for second_disp in first_disp['second_atoms']:
             second_disp['delta_fc2'] = []
             for disp in second_disp['displacements']:
                 second_disp['delta_fc2'].append(
-                    parse_force_constants_lines(fc2_file, num_atom) -
-                    first_disp['fc2'])
+                    parse_force_constants_lines(fc2_file, num_atom))
 
 def parse_QPOINTS3(filename='QPOINTS3'):
     f = open(filename)

@@ -177,7 +177,7 @@ parser.add_option("--cdfc2", "--create_delta_fc2",
                   dest="delta_fc2_sets_mode",
                   action="store_true",
                   help="Create DELTA_FC2_SETS")
-parser.add_option("--delta_fc2",
+parser.add_option("--dfc2", "--delta_fc2",
                   dest="read_delta_fc2",
                   action="store_true",
                   help="Read DELTA_FC2_SETS")

@@ -42,18 +42,20 @@ from optparse import OptionParser
 from phonopy.interface.vasp import read_vasp, write_vasp
 from phonopy.structure.cells import get_supercell, Primitive, print_cell
 from phonopy.structure.symmetry import Symmetry
-from phonopy.harmonic.force_constants import set_translational_invariance
+from phonopy.harmonic.force_constants import set_translational_invariance, set_permutation_symmetry
+
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrix
 from phonopy.hphonopy.file_IO import parse_FORCE_SETS
 from phonopy.units import VaspToTHz
-from anharmonic.phonon3.fc3 import symmetrize_fc3, set_translational_invariance_fc3
+from anharmonic.phonon3.fc3 import symmetrize_fc3, set_translational_invariance_fc3, show_drift_fc3, get_fc3
 from anharmonic.file_IO import \
     parse_disp_yaml, write_DELTA_FC2_SETS, parse_DELTA_FC2_SETS,\
-    write_FC2_FOURTH_SETS, parse_FC2_FOURTH_SETS,\
-    read_fc3_from_hdf5, read_fc2_from_hdf5
+    write_DELTA_FC2_FOURTH_SETS, parse_DELTA_FC2_FOURTH_SETS,\
+    read_fc3_from_hdf5, read_fc2_from_hdf5, write_fc4_to_hdf5, \
+    write_fc3_to_hdf5, write_supercells_with_displacements
 from anharmonic.phonon3.displacement_fc3 import get_third_order_displacements
 from anharmonic.settings import Phono3pyConfParser
-from anharmonic.phonon4.fc4 import get_fc4
+from anharmonic.phonon4.fc4 import get_fc4, show_drift_fc4, set_translational_invariance_fc4, symmetrize_fc4
 
 # AA is created at http://www.network-science.de/ascii/.
 def print_phono4py():
@@ -88,12 +90,11 @@ parser.set_defaults(amplitude=None,
                     is_translational_symmetry=False,
                     is_symmetrize_fc2=False,
                     is_symmetrize_fc3_r=False,
-                    is_symmetrize_fc3_q=False,                     
+                    is_symmetrize_fc4_r=False,
                     log_level=None,
                     primitive_axis=None,
-                    read_fc2=False,
-                    read_fc2_fourth_sets=False,                    
                     read_fc3=False,
+                    read_fc4=False,
                     output_filename=None,
                     supercell_dimension=None,
                     symprec=1e-5,
@@ -113,19 +114,15 @@ parser.add_option("--dim",
 parser.add_option("--create_fc2_fourth",
                   dest="fc2_fourth_sets_mode",
                   action="store_true",
-                  help="Create FC2_FOURTH_SETS")
-parser.add_option("--fc2",
-                  dest="read_fc2",
-                  action="store_true",
-                  help="Read second order force constants")
+                  help="Create DELTA_FC2_FOURTH_SETS, DELTA_FC2_SETS, and fc2.hdf")
 parser.add_option("--fc3",
                   dest="read_fc3",
                   action="store_true",
                   help="Read third order force constants")
-parser.add_option("--fc2_fourth",
-                  dest="read_fc2_fourth_sets",
+parser.add_option("--fc4",
+                  dest="read_fc4",
                   action="store_true",
-                  help="Read FC2_FOURTH_SETS")
+                  help="Read fourth order force constants")
 parser.add_option("--nodiag", dest="is_nodiag",
                   action="store_true",
                   help="Set displacements parallel to axes")
@@ -147,9 +144,9 @@ parser.add_option("--sym_fc2", dest="is_symmetrize_fc2",
 parser.add_option("--sym_fc3r", dest="is_symmetrize_fc3_r",
                   action="store_true",
                   help="Symmetrize fc3 in real space by index exchange")
-parser.add_option("--sym_fc3q", dest="is_symmetrize_fc3_q",
+parser.add_option("--sym_fc4r", dest="is_symmetrize_fc4_r",
                   action="store_true",
-                  help="Symmetrize fc3 in reciprocal space by index exchange")
+                  help="Symmetrize fc4 in real space by index exchange")
 parser.add_option("--tsym", dest="is_translational_symmetry",
                   action="store_true",
                   help="Impose translational invariance condition")
@@ -172,7 +169,7 @@ else:
 # Create FC2_FOURTH_SETS
 if options.fc2_fourth_sets_mode:
     displacements = parse_disp_yaml('disp.yaml')
-    write_FC2_FOURTH_SETS(args, displacements)
+    write_DELTA_FC2_FOURTH_SETS(args, displacements)
     print_end()
     exit(0)
 
@@ -253,46 +250,88 @@ else:
         for vec in np.dot(supercell.get_cell(), np.linalg.inv(primitive.get_cell())):
             print "%5.2f"*3 % tuple(vec)
 
-    # fc3
+    # fc2
     if log_level:
-        print  "----- Read fc3 -----"
+        print  "----- Read fc2 -----"
         sys.stdout.flush()
-    fc3 = read_fc3_from_hdf5()
+    if os.path.exists('fc2.hdf5'):
+        fc2 = read_fc2_from_hdf5()
+    else:
+        print "fc2.hdf5 not found"
+        if log_level:
+            print_end()
+        sys.exit(0)
+
+    if options.is_symmetrize_fc2:
+        set_permutation_symmetry(fc2)
+
     if options.is_translational_symmetry:
-        set_translational_invariance_fc3(fc3)
+        set_translational_invariance(fc2)
+            
+    # fc3
+    if options.read_fc3: # Read fc3.hdf5
+        if log_level:
+            print  "----- Read fc3 -----"
+            sys.stdout.flush()
+        fc3 = read_fc3_from_hdf5()
+        if options.is_translational_symmetry:
+            set_translational_invariance_fc3(fc3)
+    else: # fc3 from DELTA_FC2_SETS
+        if log_level:
+            print  "----- Solve fc3 -----"
+            sys.stdout.flush()
 
-    num_atom = fc3.shape[0]
-    maxval1 = 0
-    maxval2 = 0
-    maxval3 = 0
-    for i, j, k, l, m in list(np.ndindex((num_atom, num_atom, 3, 3, 3))):
-        val1 = fc3[:, i, j, k, l, m].sum()
-        val2 = fc3[i, :, j, k, l, m].sum()
-        val3 = fc3[i, j, :, k, l, m].sum()
-        if abs(val1) > abs(maxval1):
-            maxval1 = val1
-        if abs(val2) > abs(maxval2):
-            maxval2 = val2
-        if abs(val3) > abs(maxval3):
-            maxval3 = val3
-    print "max drift:", maxval1, maxval2, maxval3 
-    
+        displacements = parse_disp_yaml('disp.yaml')
+        parse_DELTA_FC2_SETS(displacements)
+        fc3 = get_fc3(supercell,
+                      displacements,
+                      fc2,
+                      symmetry,
+                      options.is_translational_symmetry,
+                      verbose=log_level)
 
-    # Symmetrize fc3_r
     if options.is_symmetrize_fc3_r:
         if log_level:
-            print "----- Symmetrize fc3 real space -----"
+            print "----- Symmetrize fc3 by index exchange in real space  -----"
         symmetrize_fc3(fc3)
 
+    show_drift_fc3(fc3)
+
+    if not options.read_fc3:
+        if log_level:
+            print "----- Write fc3.hdf5 -----"
+        write_fc3_to_hdf5(fc3)
+
     # fc4
-    displacements = parse_disp_yaml('disp.yaml')
-    parse_FC2_FOURTH_SETS(displacements)
-    get_fc4(supercell,
+    if options.read_fc4: # Read fc4.hdf
+        if log_level:
+            print  "----- Read fc4 -----"
+            sys.stdout.flush()
+        fc3 = read_fc4_from_hdf5()
+        if options.is_translational_symmetry:
+            set_translational_invariance_fc4(fc4)
+    else:        
+        displacements = parse_disp_yaml('disp.yaml')
+        parse_DELTA_FC2_FOURTH_SETS(displacements)
+        fc4 = get_fc4(
+            supercell,
             displacements,
             fc3,
             symmetry,
-            is_translational_symmetry=False,
+            is_translational_symmetry=options.is_translational_symmetry,
             verbose=log_level)
+
+    if options.is_symmetrize_fc4_r:
+        if log_level:
+            print "----- Symmetrize fc4 by index exchange in real space -----"
+        symmetrize_fc4(fc4)
+
+    show_drift_fc4(fc4)
+
+    if not options.read_fc4:
+        if log_level:
+            print "----- Write fc4.hdf5 -----"
+        write_fc4_to_hdf5(fc4)
         
 if log_level:
     print_end()
