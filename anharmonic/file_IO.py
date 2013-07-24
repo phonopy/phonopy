@@ -24,74 +24,181 @@ def write_supercells_with_displacements(supercell,
         distance = amplitude
     
     # YAML
-    file = open('disp.yaml', 'w')
-    file.write("natom: %d\n" %  supercell.get_number_of_atoms())
-    file.write("num_first_displacements: %d\n" %  len(double_displacements))
+    w = open('disp.yaml', 'w')
+    w.write("natom: %d\n" %  supercell.get_number_of_atoms())
+    w.write("num_first_displacements: %d\n" %  len(double_displacements))
     num_second = 0
     for d1 in double_displacements:
         for d2 in d1['second_atoms']:
             num_second += len(d2['directions'])
-    file.write("num_second_displacements: %d\n" %  num_second)
-    file.write("first_atoms:\n")
+    w.write("num_second_displacements: %d\n" %  num_second)
+    w.write("first_atoms:\n")
     lattice = supercell.get_cell()
-    lattice_inv = np.linalg.inv(lattice)
     count1 = 1
     count2 = len(double_displacements) + 1
     for disp1 in double_displacements:
-        disp_cartesian3 = np.dot(disp1['direction'], lattice)
-        disp_cartesian3 = disp_cartesian3 / np.linalg.norm(disp_cartesian3) * distance
+        disp_cart1 = np.dot(disp1['direction'], lattice)
+        disp_cart1 = disp_cart1 / np.linalg.norm(disp_cart1) * distance
         positions = supercell.get_positions()
-        positions[disp1['number']] += disp_cartesian3
-        atoms = Atoms(numbers = supercell.get_atomic_numbers(),
-                      masses = supercell.get_masses(),
-                      positions = positions,
-                      cell = lattice,
-                      pbc = True)
+        positions[disp1['number']] += disp_cart1
+        atoms = Atoms(numbers=supercell.get_atomic_numbers(),
+                      masses=supercell.get_masses(),
+                      positions=positions,
+                      cell=lattice,
+                      pbc=True)
         vasp.write_vasp('POSCAR-%04d' % count1, atoms, direct=True)
 
         # YAML
-        file.write("- number: %5d\n" % (disp1['number'] + 1))
-        file.write("  displacement:\n")
-        file.write("    [ %20.16f,%20.16f,%20.16f ] # %d \n" %
-                   (disp_cartesian3[0], disp_cartesian3[1], disp_cartesian3[2], count1))
-        file.write("  second_atoms:\n")
+        w.write("- number: %5d\n" % (disp1['number'] + 1))
+        w.write("  displacement:\n")
+        w.write("    [ %20.16f,%20.16f,%20.16f ] # %d \n" %
+                   (disp_cart1[0], disp_cart1[1], disp_cart1[2], count1))
+        w.write("  second_atoms:\n")
         count1 += 1
 
         for disp2 in disp1['second_atoms']:
             # YAML
-            file.write("  - number: %5d\n" % (disp2['number'] + 1))
-            file.write("    displacements:\n")
+            w.write("  - number: %5d\n" % (disp2['number'] + 1))
+            w.write("    displacements:\n")
             
             for direction in disp2['directions']:
-                disp_cartesian2 = np.dot(direction, lattice)
-                disp_cartesian2 = disp_cartesian2 / np.linalg.norm(disp_cartesian2) * distance
+                disp_cart2 = np.dot(direction, lattice)
+                disp_cart2 = disp_cart2 / np.linalg.norm(disp_cart2) * distance
                 positions = supercell.get_positions()
-                positions[disp1['number']] += disp_cartesian3
-                positions[disp2['number']] += disp_cartesian2
-                atoms = Atoms(numbers = supercell.get_atomic_numbers(),
-                               masses = supercell.get_masses(),
-                               positions = positions,
-                               cell = lattice,
-                               pbc = True)
+                positions[disp1['number']] += disp_cart1
+                positions[disp2['number']] += disp_cart2
+                atoms = Atoms(numbers=supercell.get_atomic_numbers(),
+                               masses=supercell.get_masses(),
+                               positions=positions,
+                               cell=lattice,
+                               pbc=True)
                 vasp.write_vasp('POSCAR-%04d' % count2, atoms, direct=True)
 
                 # YAML
-                file.write("    - [ %20.16f,%20.16f,%20.16f ] # %d \n" %
-                           (disp_cartesian2[0], disp_cartesian2[1], disp_cartesian2[2], count2))
+                w.write("    - [ %20.16f,%20.16f,%20.16f ] # %d \n" %
+                           (disp_cart2[0], disp_cart2[1], disp_cart2[2], count2))
                 count2 += 1
 
-    file.write("lattice:\n")
+    w.write("lattice:\n")
     for axis in supercell.get_cell():
-        file.write("- [ %20.15f,%20.15f,%20.15f ]\n" % tuple(axis))
+        w.write("- [ %20.15f,%20.15f,%20.15f ]\n" % tuple(axis))
     symbols = supercell.get_chemical_symbols()
     positions = supercell.get_scaled_positions()
-    file.write("atoms:\n")
+    w.write("atoms:\n")
     for i, (s, v) in enumerate(zip(symbols, positions)):
-        file.write("- symbol: %-2s # %d\n" % (s, i+1))
-        file.write("  position: [ %18.14f,%18.14f,%18.14f ]\n" % \
+        w.write("- symbol: %-2s # %d\n" % (s, i+1))
+        w.write("  position: [ %18.14f,%18.14f,%18.14f ]\n" % \
                        (v[0], v[1], v[2]))
 
-    file.close()
+    w.close()
+
+def write_supercells_with_three_displacements(supercell,
+                                              triple_displacements,
+                                              amplitude=None):
+    if amplitude==None:
+        distance = 0.01
+    else:
+        distance = amplitude
+    
+    # YAML
+    w = open('disp.yaml', 'w')
+    w.write("natom: %d\n" %  supercell.get_number_of_atoms())
+
+    num_first = len(triple_displacements)
+    w.write("num_first_displacements: %d\n" % num_first)
+    num_second = 0
+    for d1 in triple_displacements:
+        num_second += len(d1['second_atoms'])
+    w.write("num_second_displacements: %d\n" %  num_second)
+    num_third = 0
+    for d1 in triple_displacements:
+        for d2 in d1['second_atoms']:
+            for d3 in d2['third_atoms']:
+                num_third += len(d3['directions'])
+    w.write("num_third_displacements: %d\n" %  num_third)
+    w.write("first_atoms:\n")
+    lattice = supercell.get_cell()
+    count1 = 1
+    count2 = num_first + 1
+    count3 = num_second + num_first + 1
+    for disp1 in triple_displacements:
+        disp_cart1 = np.dot(disp1['direction'], lattice)
+        disp_cart1 = disp_cart1 / np.linalg.norm(disp_cart1) * distance
+        positions = supercell.get_positions()
+        positions[disp1['number']] += disp_cart1
+        atoms = Atoms(numbers=supercell.get_atomic_numbers(),
+                      masses=supercell.get_masses(),
+                      positions=positions,
+                      cell=lattice,
+                      pbc=True)
+        vasp.write_vasp('POSCAR-%05d' % count1, atoms, direct=True)
+
+        # YAML
+        w.write("- number: %5d\n" % (disp1['number'] + 1))
+        w.write("  displacement:\n")
+        w.write("    [ %20.16f,%20.16f,%20.16f ] # %d \n" %
+                   (disp_cart1[0], disp_cart1[1], disp_cart1[2], count1))
+        w.write("  second_atoms:\n")
+        count1 += 1
+
+        for disp2 in disp1['second_atoms']:
+            disp_cart2 = np.dot(disp2['direction'], lattice)
+            disp_cart2 = disp_cart2 / np.linalg.norm(disp_cart2) * distance
+            positions = supercell.get_positions()
+            positions[disp1['number']] += disp_cart1
+            positions[disp2['number']] += disp_cart2
+            atoms = Atoms(numbers=supercell.get_atomic_numbers(),
+                          masses=supercell.get_masses(),
+                          positions=positions,
+                          cell=lattice,
+                          pbc=True)
+            vasp.write_vasp('POSCAR-%05d' % count2, atoms, direct=True)
+
+            # YAML
+            w.write("  - number: %5d\n" % (disp2['number'] + 1))
+            w.write("    displacement:\n")
+            w.write("      [ %20.16f,%20.16f,%20.16f ] # %d \n" %
+                    (disp_cart2[0], disp_cart2[1], disp_cart2[2], count2))
+            w.write("    third_atoms:\n")
+
+            count2 += 1
+
+            for disp3 in disp2['third_atoms']:
+                w.write("    - number: %5d\n" % (disp3['number'] + 1))
+                w.write("      displacements:\n")
+                for direction in disp3['directions']:
+                    disp_cart3 = np.dot(direction, lattice)
+                    disp_cart3 = (disp_cart3 / np.linalg.norm(disp_cart3) *
+                                  distance)
+                    positions = supercell.get_positions()
+                    positions[disp1['number']] += disp_cart1
+                    positions[disp2['number']] += disp_cart2
+                    positions[disp3['number']] += disp_cart3
+                    atoms = Atoms(numbers=supercell.get_atomic_numbers(),
+                                  masses=supercell.get_masses(),
+                                  positions=positions,
+                                  cell=lattice,
+                                  pbc=True)
+                    vasp.write_vasp('POSCAR-%05d' % count3, atoms, direct=True)
+    
+                    # YAML
+                    w.write("      - [ %20.16f,%20.16f,%20.16f ] # %d \n" %
+                            (disp_cart3[0], disp_cart3[1], disp_cart3[2],
+                             count3))
+                    count3 += 1
+
+    w.write("lattice:\n")
+    for axis in supercell.get_cell():
+        w.write("- [ %20.15f,%20.15f,%20.15f ]\n" % tuple(axis))
+    symbols = supercell.get_chemical_symbols()
+    positions = supercell.get_scaled_positions()
+    w.write("atoms:\n")
+    for i, (s, v) in enumerate(zip(symbols, positions)):
+        w.write("- symbol: %-2s # %d\n" % (s, i+1))
+        w.write("  position: [ %18.14f,%18.14f,%18.14f ]\n" % \
+                       (v[0], v[1], v[2]))
+
+    w.close()
 
 def write_FORCES_THIRD(vaspruns,
                        displacements,

@@ -52,8 +52,10 @@ from anharmonic.file_IO import \
     parse_disp_yaml, write_DELTA_FC2_SETS, parse_DELTA_FC2_SETS,\
     write_DELTA_FC2_FOURTH_SETS, parse_DELTA_FC2_FOURTH_SETS,\
     read_fc3_from_hdf5, read_fc2_from_hdf5, write_fc4_to_hdf5, \
-    write_fc3_to_hdf5, write_supercells_with_displacements
+    write_fc3_to_hdf5, write_supercells_with_displacements, \
+    write_supercells_with_three_displacements
 from anharmonic.phonon3.displacement_fc3 import get_third_order_displacements
+from anharmonic.phonon4.displacement_fc4 import get_fourth_order_displacements
 from anharmonic.settings import Phono3pyConfParser
 from anharmonic.phonon4.fc4 import get_fc4, show_drift_fc4, set_translational_invariance_fc4, symmetrize_fc4
 
@@ -221,14 +223,14 @@ if log_level:
 # Create supercells with displacements and exit (pre-process) #
 ###############################################################
 if options.is_displacement:
-    dds = get_third_order_displacements(
+    dds = get_fourth_order_displacements(
         supercell,
         symmetry,
         is_plusminus=settings.get_is_plusminus_displacement(),
         is_diagonal=settings.get_is_diagonal_displacement())
-    write_supercells_with_displacements(supercell,
-                                        dds,
-                                        options.amplitude)
+    write_supercells_with_three_displacements(supercell,
+                                              dds,
+                                              options.amplitude)
     write_vasp('POSCAR-0000', supercell, direct=True)
     
 ##########################################
