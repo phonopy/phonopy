@@ -206,8 +206,9 @@ def _get_fc3_one_atom(fc3,
                                np.linalg.inv(supercell.get_cell()))
             reduced_site_sym = get_reduced_site_symmetry(
                 site_symmetry, direction, symprec)
-            delta_fc2s.append(_get_delta_fc2(
-                    dataset_first_atom,
+            delta_fc2s.append(get_delta_fc2(
+                    dataset_first_atom['second_atoms'],
+                    dataset_first_atom['number'],
                     fc2,
                     supercell,
                     reduced_site_sym,
@@ -267,54 +268,62 @@ def get_atom_mapping_by_symmetry(positions,
 
     return map_sym
 
-def _get_delta_fc2(dataset_first_atom,
-                   fc2,
-                   supercell,
-                   reduced_site_sym,
-                   is_translational_symmetry,
-                   symprec):
-    disp_fc2 = _get_constrained_fc2(supercell,
-                                    dataset_first_atom,
-                                    reduced_site_sym,
-                                    symprec)
-    if is_translational_symmetry:
-        set_translational_invariance_per_index(disp_fc2)
-            
+def get_delta_fc2(dataset_second_atoms,
+                  atom1,
+                  fc2,
+                  supercell,
+                  reduced_site_sym,
+                  is_translational_symmetry,
+                  symprec):
+    disp_fc2 = get_constrained_fc2(supercell,
+                                   dataset_second_atoms,
+                                   atom1,
+                                   reduced_site_sym,
+                                   is_translational_symmetry,
+                                   symprec)
     return disp_fc2 - fc2
 
-def _get_constrained_fc2(supercell,
-                         displacements,
-                         reduced_site_sym,
-                         symprec):
+def get_constrained_fc2(supercell,
+                        dataset_second_atoms,
+                        atom1,
+                        reduced_site_sym,
+                        is_translational_symmetry,
+                        symprec):
     """
-    displacements = {'number': 3,
-                     'displacement': [0.01, 0.00, 0.01]
-                     'second_atoms': [{'number': 7,
-                                       'displacements': [[]],
-                                       'delta_forces': []}]}
+    dataset_second_atoms: [{'number': 7,
+                            'displacements': [[]],
+                            'delta_forces': []}, ...] or
 
-    number: Atomic index, starting with 0.
-    displacement: displacement of 1st displaced atom in Cartesian.
-    displacements: displacements of 2st displaced atom in Cartesian.
-    delta_forces: diff. of 2 atomic disp. forces and 1 atomic disp. forces
-    Number of elements of 'displacements' and 'delta_forces' are same.
+    dataset_second_atoms: [{'number': 7,
+                            'displacement': [],
+                            'delta_forces': []}, ...]
     """
     num_atom = supercell.get_number_of_atoms()
-    atom1 = displacements['number']
     fc2 = np.zeros((num_atom, num_atom, 3, 3), dtype='double')
+    atom_list = np.unique([x['number'] for x in dataset_second_atoms])
     atom_list_done = []
-    for disps_second in displacements['second_atoms']:
-        disps2 = disps_second['displacements']
-        atom2 = disps_second['number']
-        sets_of_forces = disps_second['delta_forces']
-        atom_list_done.append(atom2)
-        bond_sym = get_bond_symmetry(
-            reduced_site_sym,
-            supercell.get_scaled_positions(),
-            atom1,
-            atom2,
-            symprec)
-
+    for atom2 in atom_list:
+        disps2 = []
+        sets_of_forces = []
+        for disps_second in dataset_second_atoms:
+            if atom2 != disps_second['number']:
+                continue
+            atom_list_done.append(atom2)
+            bond_sym = get_bond_symmetry(
+                reduced_site_sym,
+                supercell.get_scaled_positions(),
+                atom1,
+                atom2,
+                symprec)
+    
+            if 'displacements' in disps_second:
+                disps2 = disps_second['displacements']
+                sets_of_forces = disps_second['delta_forces']
+                break
+            else:
+                disps2.append(disps_second['displacement'])
+                sets_of_forces.append(disps_second['delta_forces'])
+    
         solve_force_constants(fc2,
                               atom2,
                               disps2,
@@ -338,6 +347,10 @@ def _get_constrained_fc2(supercell,
                                np.zeros((len(reduced_site_sym), 3),
                                         dtype='double'),
                                symprec)
+
+    if is_translational_symmetry:
+        set_translational_invariance_per_index(fc2)
+
     return fc2
         
 

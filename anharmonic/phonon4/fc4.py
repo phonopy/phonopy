@@ -1,11 +1,10 @@
 import sys
 import numpy as np
 from phonopy.harmonic.force_constants import similarity_transformation, get_positions_sent_by_rot_inv, get_rotated_displacement
-from anharmonic.phonon3.fc3 import set_translational_invariance_fc3_per_index, solve_fc3, distribute_fc3, third_rank_tensor_rotation, get_atom_mapping_by_symmetry, get_atom_by_symmetry, show_drift_fc3, symmetrize_fc3
+from anharmonic.phonon3.fc3 import set_translational_invariance_fc3_per_index, solve_fc3, distribute_fc3, third_rank_tensor_rotation, get_atom_mapping_by_symmetry, get_atom_by_symmetry, show_drift_fc3, symmetrize_fc3, get_delta_fc2, get_constrained_fc2
 from anharmonic.phonon3.displacement_fc3 import get_reduced_site_symmetry, get_bond_symmetry
 from phonopy.structure.symmetry import Symmetry
 from phonopy.harmonic.force_constants import set_tensor_symmetry
-
 
 def get_fc4(supercell,
             disp_dataset,
@@ -287,6 +286,7 @@ def _get_delta_fc3(dataset_first_atom,
     disp_fc3 = _get_constrained_fc3(supercell,
                                     dataset_first_atom,
                                     reduced_site_sym,
+                                    is_translational_symmetry,
                                     symprec,
                                     verbose)
     
@@ -300,14 +300,15 @@ def _get_delta_fc3(dataset_first_atom,
 def _get_constrained_fc3(supercell,
                          displacements,
                          reduced_site_sym,
+                         is_translational_symmetry,
                          symprec,
                          verbose):
     """
     displacements = {'number': 3,
                      'displacement': [0.01, 0.00, 0.01]
                      'second_atoms': [{'number': 7,
-                                       'displacements': [[]],
-                                       'delta_fc2': []}]}
+                                       'displacement': [],
+                                       'delta_fc2': }]}
 
     number: Atomic index, starting with 0.
     displacement: displacement of 1st displaced atom in Cartesian.
@@ -321,51 +322,58 @@ def _get_constrained_fc3(supercell,
     fc3 = np.zeros((num_atom, num_atom, num_atom, 3, 3, 3), dtype='double')
     atom_list_done = []
 
-    for disps_second in displacements['second_atoms']:
-        disps2 = disps_second['displacements']
-        atom2 = disps_second['number']
-        delta_fc2s = disps_second['delta_fc2']
-        atom_list_done.append(atom2)
-        bond_sym = get_bond_symmetry(
-            reduced_site_sym,
-            supercell.get_scaled_positions(),
-            atom1,
-            atom2,
-            symprec)
+    if 'delta_forces' in displacements['second_atoms'][0]:
+        fc2_with_one_disp = get_constrained_fc2(supercell,
+                                                displacements['second_atoms'],
+                                                atom1,
+                                                reduced_site_sym,
+                                                is_translational_symmetry,
+                                                symprec)
+    
+    atom_list = np.unique([x['number'] for x in displacements['second_atoms']])
+    for atom2 in atom_list:
+        disps2 = []
+        delta_fc2s = []
+        for disps_second in displacements['second_atoms']:
+            if atom2 != disps_second['number']:
+                continue
+            atom_list_done.append(atom2)
+            bond_sym = get_bond_symmetry(
+                reduced_site_sym,
+                supercell.get_scaled_positions(),
+                atom1,
+                atom2,
+                symprec)
+            disps2.append(disps_second['displacement'])
 
-        # lattice = supercell.get_cell().T
-        # positions = supercell.get_scaled_positions()
-        # pos_center = positions[atom2].copy()
-        # positions -= pos_center
-        # delta_fc2s_new = []
-        # for disp2, delta_fc2 in zip(disps2, delta_fc2s):
-        #     direction = np.dot(np.linalg.inv(lattice), disp2)
-        #     reduced_bond_sym = get_reduced_site_symmetry(
-        #         bond_sym, direction, symprec)
-        #     fc2_copy = delta_fc2.copy()
-        #     print reduced_bond_sym
-        #     set_tensor_symmetry(delta_fc2,
-        #                         lattice,
-        #                         positions,
-        #                         reduced_bond_sym,
-        #                         np.zeros((len(reduced_site_sym), 3),
-        #                                  dtype='double'),
-        #                         symprec)
-        #     delta_fc2s_new.append(delta_fc2)
-        # delta_fc2s = np.double(delta_fc2s_new)
-
-        if verbose > 1:
-            print ("Second displacements for fc4[ %d, %d, x, x ]" %
-                   (atom1 + 1, atom2 + 1))
-            for i, v in enumerate(disps2):
-                print "  [%7.4f %7.4f %7.4f]" % tuple(v)
-        solve_fc3(fc3,
-                  atom2,
-                  supercell,
-                  bond_sym,
-                  disps2,
-                  delta_fc2s,
-                  symprec=symprec)
+            if 'delta_fc2' in disps_second:
+                delta_fc2s.append(disps_second['delta_fc2'])
+            else:
+                direction = np.dot(disps_second['displacement'],
+                                   np.linalg.inv(supercell.get_cell()))
+                reduced_bond_sym = get_reduced_site_symmetry(
+                    bond_sym, direction, symprec)
+                delta_fc2s.append(get_delta_fc2(
+                        disps_second['third_atoms'],
+                        atom2,
+                        fc2_with_one_disp,
+                        supercell,
+                        reduced_bond_sym,
+                        is_translational_symmetry,
+                        symprec))
+    
+            if verbose > 1:
+                print ("Second displacements for fc4[ %d, %d, x, x ]" %
+                       (atom1 + 1, atom2 + 1))
+                for i, v in enumerate(disps2):
+                    print "  [%7.4f %7.4f %7.4f]" % tuple(v)
+            solve_fc3(fc3,
+                      atom2,
+                      supercell,
+                      bond_sym,
+                      disps2,
+                      delta_fc2s,
+                      symprec=symprec)
 
     # Shift positions according to set atom1 is at origin
     lattice = supercell.get_cell().T

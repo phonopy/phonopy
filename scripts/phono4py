@@ -49,8 +49,11 @@ from phonopy.hphonopy.file_IO import parse_FORCE_SETS
 from phonopy.units import VaspToTHz
 from anharmonic.phonon3.fc3 import symmetrize_fc3, set_translational_invariance_fc3, show_drift_fc3, get_fc3
 from anharmonic.file_IO import \
-    parse_disp_yaml, write_DELTA_FC2_SETS, parse_DELTA_FC2_SETS,\
+    parse_disp_fc3_yaml, parse_disp_fc4_yaml,\
+    parse_DELTA_FORCES, parse_DELTA_FORCES_FOURTH,\
+    write_DELTA_FC2_SETS, parse_DELTA_FC2_SETS, \
     write_DELTA_FC2_FOURTH_SETS, parse_DELTA_FC2_FOURTH_SETS,\
+    write_FORCES_FOURTH,\
     read_fc3_from_hdf5, read_fc2_from_hdf5, write_fc4_to_hdf5, \
     write_fc3_to_hdf5, write_supercells_with_displacements, \
     write_supercells_with_three_displacements
@@ -85,6 +88,7 @@ parser = OptionParser()
 parser.set_defaults(amplitude=None,
                     cell_poscar=None,
                     fc2_fourth_sets_mode=False,
+                    forces_fourth_mode=False,
                     is_nodiag=False,
                     is_displacement=False,
                     is_nosym=False,
@@ -95,6 +99,7 @@ parser.set_defaults(amplitude=None,
                     is_symmetrize_fc4_r=False,
                     log_level=None,
                     primitive_axis=None,
+                    read_fc2_fourth=False,
                     read_fc3=False,
                     read_fc4=False,
                     output_filename=None,
@@ -117,6 +122,14 @@ parser.add_option("--create_fc2_fourth",
                   dest="fc2_fourth_sets_mode",
                   action="store_true",
                   help="Create DELTA_FC2_FOURTH_SETS, DELTA_FC2_SETS, and fc2.hdf")
+parser.add_option("--cf4", "--create_f4",
+                  dest="forces_fourth_mode",
+                  action="store_true",
+                  help="Create FORCES_FOURTH")
+parser.add_option("--fc2_fourth",
+                  dest="read_fc2_fourth",
+                  action="store_true",
+                  help="Read DELTA_FC2_FOURTH_SETS, DELTA_FC2_SETS, and fc2.hdf")
 parser.add_option("--fc3",
                   dest="read_fc3",
                   action="store_true",
@@ -170,8 +183,15 @@ else:
     
 # Create FC2_FOURTH_SETS
 if options.fc2_fourth_sets_mode:
-    displacements = parse_disp_yaml('disp.yaml')
+    displacements = parse_disp_fc3_yaml()
     write_DELTA_FC2_FOURTH_SETS(args, displacements)
+    print_end()
+    exit(0)
+
+# Create FC2_FOURTH_SETS
+if options.forces_fourth_mode:
+    displacements = parse_disp_fc4_yaml()
+    write_FORCES_FOURTH(args, displacements)
     print_end()
     exit(0)
 
@@ -278,13 +298,17 @@ else:
         fc3 = read_fc3_from_hdf5()
         if options.is_translational_symmetry:
             set_translational_invariance_fc3(fc3)
-    else: # fc3 from DELTA_FC2_SETS
+    else:
         if log_level:
             print  "----- Solve fc3 -----"
             sys.stdout.flush()
 
-        displacements = parse_disp_yaml('disp.yaml')
-        parse_DELTA_FC2_SETS(displacements)
+        if options.read_fc2_fourth: # fc3 from DELTA_FC2_SETS
+            displacements = parse_disp_fc3_yaml()
+            parse_DELTA_FC2_SETS(displacements)
+        else: # fc3 from DELTA_FORCES
+            displacements = parse_disp_fc3_yaml()
+            parse_DELTA_FORCES(displacements)
         fc3 = get_fc3(supercell,
                       displacements,
                       fc2,
@@ -312,9 +336,13 @@ else:
         fc3 = read_fc4_from_hdf5()
         if options.is_translational_symmetry:
             set_translational_invariance_fc4(fc4)
-    else:        
-        displacements = parse_disp_yaml('disp.yaml')
-        parse_DELTA_FC2_FOURTH_SETS(displacements)
+    else:
+        if options.read_fc2_fourth:
+            displacements = parse_disp_fc4_yaml()
+            parse_DELTA_FC2_FOURTH_SETS(displacements)
+        else: # fc4 from FORCES_FOURTH, FORCES_THIRD and FORCES_SECOND
+            displacements = parse_disp_fc4_yaml()
+            parse_DELTA_FORCES_FOURTH(displacements)
         fc4 = get_fc4(
             supercell,
             displacements,
@@ -322,6 +350,7 @@ else:
             symmetry,
             is_translational_symmetry=options.is_translational_symmetry,
             verbose=log_level)
+        
 
     if options.is_symmetrize_fc4_r:
         if log_level:

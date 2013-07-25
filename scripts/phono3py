@@ -50,7 +50,7 @@ from phonopy.units import VaspToTHz
 from anharmonic.phonon3.fc3 import get_fc3, symmetrize_fc3, \
     set_translational_invariance_fc3
 from anharmonic.file_IO import write_fc2_dat, write_fc3_dat,\
-    parse_disp_yaml, write_FORCES_THIRD,\
+    parse_disp_fc3_yaml, write_FORCES_THIRD,\
     parse_DELTA_FORCES, write_supercells_with_displacements,\
     write_DELTA_FC2_SETS, parse_DELTA_FC2_SETS,\
     write_fc3_to_hdf5, write_fc2_to_hdf5,\
@@ -330,14 +330,14 @@ if log_level:
 
 # Create FORCES_THIRD
 if options.forces_third_mode:
-    displacements = parse_disp_yaml('disp.yaml')
+    displacements = parse_disp_fc3_yaml()
     write_FORCES_THIRD(args, displacements)
     print_end()
     exit(0)
 
 # Create DELTA_FC2_SETS
 if options.delta_fc2_sets_mode:
-    displacements = parse_disp_yaml('disp.yaml')
+    displacements = parse_disp_fc3_yaml()
     write_DELTA_FC2_SETS(args, displacements)
     print_end()
     exit(0)
@@ -545,7 +545,7 @@ else:
         settings.get_read_amplitude()):
         fc3 = None
     else:
-        if options.read_fc3: # Read FORCES_THIRD
+        if options.read_fc3: # Read fc3.hdf5
             if log_level:
                 print  "----- Read fc3 -----"
                 sys.stdout.flush()
@@ -557,7 +557,7 @@ else:
                 print  "----- Solve fc3 -----"
                 sys.stdout.flush()
 
-            displacements = parse_disp_yaml('disp.yaml')
+            displacements = parse_disp_fc3_yaml()
             if options.read_delta_fc2:
                 parse_DELTA_FC2_SETS(displacements)
             else:
