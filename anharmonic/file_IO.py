@@ -344,43 +344,46 @@ def write_DELTA_FC2_SETS_from_delta_fc2s(delta_fc2s,
                     w.write("%20.14f %20.14f %20.14f\n" % tuple(vec))
     w.close()
 
+# From 0000 to the end of the numbers
 def write_DELTA_FC2_FOURTH_SETS(vaspruns,
                                 disp_dataset,
                                 dfc2_file='DELTA_FC2_FOURTH_SETS'):
     """Write displaced fc2 for fc4 from vasprun.xml's"""
     
     fc2_set = get_force_constants_from_vasprun_xmls(vaspruns)
+    fc2s_first = []
+    count = 0
+    w = open(dfc2_file, 'w')
+
+    # fc2
     perfect_fc2 = fc2_set.pop(0)
     write_fc2_to_hdf5(perfect_fc2)
 
-    fc2s_first = []
-    w = open(dfc2_file, 'w')
-    count = 0
-
+    # fc3
     for i, first_disp in enumerate(disp_dataset['first_atoms']):
         count += 1
         fc2s_first.append(fc2_set.pop(0))
-
     delta_fc2s = [fc2 - perfect_fc2 for fc2 in fc2s_first]
     write_DELTA_FC2_SETS_from_delta_fc2s(delta_fc2s, disp_dataset)
         
+    # fc4
     for i, first_disp in enumerate(disp_dataset['first_atoms']):
         for second_disp in first_disp['second_atoms']:
-            for disp in second_disp['displacements']:
-                count += 1
-                dfc2 = fc2_set.pop(0) - fc2s_first[i]
-                w.write("# File: %d\n" % count)
-                w.write("# %-5d" % (first_disp['number'] + 1))
-                w.write("%20.16f %20.16f %20.16f\n" %
+            disp = second_disp['displacement']
+            count += 1
+            dfc2 = fc2_set.pop(0) - fc2s_first[i]
+            w.write("# File: %d\n" % count)
+            w.write("# %-5d" % (first_disp['number'] + 1))
+            w.write("%20.16f %20.16f %20.16f\n" %
                     tuple(first_disp['displacement']))
-                w.write("# %-5d" % (second_disp['number'] + 1))
-                w.write("%20.16f %20.16f %20.16f\n" % tuple(disp))
-            
-                for j in range(dfc2.shape[0]):
-                    for k in range(dfc2.shape[1]):
-                        w.write("# %d - %d\n" % (j + 1, k + 1))
-                        for vec in dfc2[j, k]:
-                            w.write("%20.14f %20.14f %20.14f\n" % tuple(vec))
+            w.write("# %-5d" % (second_disp['number'] + 1))
+            w.write("%20.16f %20.16f %20.16f\n" % tuple(disp))
+        
+            for j in range(dfc2.shape[0]):
+                for k in range(dfc2.shape[1]):
+                    w.write("# %d - %d\n" % (j + 1, k + 1))
+                    for vec in dfc2[j, k]:
+                        w.write("%20.14f %20.14f %20.14f\n" % tuple(vec))
 
 def write_fc3_yaml(force_constants_third,
                    filename='fc3.yaml',
