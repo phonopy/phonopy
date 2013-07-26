@@ -693,13 +693,13 @@ static int rotate_delta_fc3s(double *rotated_delta_fc3s,
       rot_tensor = rotated_delta_fc3s + i * num_rot * 27 + j * 27;
       tensor3_roation(rot_tensor,
 		      delta_fc3s +
-		      i * num_rot * num_atom * num_atom * num_atom * 27,
+		      i * num_atom * num_atom * num_atom * 27,
 		      atom1,
 		      atom2,
 		      atom3,
-		      rot_map_syms[atom1],
-		      rot_map_syms[atom2],
-		      rot_map_syms[atom3],
+		      rot_map_syms[num_atom * j + atom1],
+		      rot_map_syms[num_atom * j + atom2],
+		      rot_map_syms[num_atom * j + atom3],
 		      num_atom,
 		      site_sym_cart + j * 9);
     }

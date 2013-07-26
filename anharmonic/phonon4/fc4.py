@@ -428,13 +428,13 @@ def _solve_fc4(fc4,
                 i, j, k, delta_fc3s, rot_map_syms, site_sym_cart)
             ).reshape(3, 3, 3, 3)
 
-def _rotate_delta_fc3s(i, j, k, fc3s, rot_map_syms, site_sym_cart):
-    rotated_fc3s = np.zeros((len(fc3s), len(site_sym_cart), 3, 3, 3),
+def _rotate_delta_fc3s(i, j, k, delta_fc3s, rot_map_syms, site_sym_cart):
+    rotated_fc3s = np.zeros((len(delta_fc3s), len(site_sym_cart), 3, 3, 3),
                             dtype='double')
     try:
         import anharmonic._phono3py as phono3c
         phono3c.rotate_delta_fc3s(rotated_fc3s,
-                                  fc3s,
+                                  delta_fc3s,
                                   rot_map_syms,
                                   site_sym_cart,
                                   i,
@@ -443,7 +443,7 @@ def _rotate_delta_fc3s(i, j, k, fc3s, rot_map_syms, site_sym_cart):
         return np.reshape(rotated_fc3s, (-1, 27))
     except ImportError:
         print "Copying delta fc3s at (%d, %d, %d)" % (i + 1, j + 1, k + 1)
-        for l, fc3 in enumerate(fc3s):
+        for l, fc3 in enumerate(delta_fc3s):
             for m, (sym, map_sym) in enumerate(zip(site_sym_cart,
                                                    rot_map_syms)):
                 fc3_rot = fc3[map_sym[i], map_sym[j], map_sym[k]]
