@@ -291,10 +291,6 @@ def get_constrained_fc2(supercell,
                         symprec):
     """
     dataset_second_atoms: [{'number': 7,
-                            'displacements': [[]],
-                            'delta_forces': []}, ...] or
-
-    dataset_second_atoms: [{'number': 7,
                             'displacement': [],
                             'delta_forces': []}, ...]
     """
@@ -316,13 +312,8 @@ def get_constrained_fc2(supercell,
                 atom2,
                 symprec)
     
-            if 'displacements' in disps_second:
-                disps2 = disps_second['displacements']
-                sets_of_forces = disps_second['delta_forces']
-                break
-            else:
-                disps2.append(disps_second['displacement'])
-                sets_of_forces.append(disps_second['delta_forces'])
+            disps2.append(disps_second['displacement'])
+            sets_of_forces.append(disps_second['delta_forces'])
     
         solve_force_constants(fc2,
                               atom2,

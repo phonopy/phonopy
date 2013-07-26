@@ -5,6 +5,7 @@ from phonopy.structure.atoms import Atoms
 from phonopy.interface import vasp
 from phonopy.hphonopy.file_IO import write_FORCE_SETS_vasp, read_force_constant_vasprun_xml
 from anharmonic.phonon3.triplets import get_grid_address, get_ir_grid_points, from_coarse_to_dense_grid_points
+from phonopy.harmonic.forces import Forces
 
 ###########
 #
@@ -12,9 +13,6 @@ from anharmonic.phonon3.triplets import get_grid_address, get_ir_grid_points, fr
 #
 ###########
 
-#
-# Output
-#
 def write_supercells_with_displacements(supercell,
                                         double_displacements,
                                         amplitude=None,
@@ -229,18 +227,17 @@ def write_supercells_with_three_displacements(supercell,
     w4.close()
 
 def write_FORCES_THIRD(vaspruns,
-                       displacements,
+                       disp_dataset,
                        forces_third='FORCES_THIRD',
-                       forces_second='FORCES_SECOND',
-                       force_sets='FORCE_SETS'):
-    natom = displacements['natom']
-    num_disp1 = len(displacements['first_atoms'])
+                       forces_second='FORCES_SECOND'):
+    natom = disp_dataset['natom']
+    num_disp1 = len(disp_dataset['first_atoms'])
     disp_datasets = []
     set_of_forces = get_forces_from_vasprun_xmls(vaspruns, natom)
     w3 = open(forces_third, 'w')
     w2 = open(forces_second, 'w')
 
-    for i, disp1 in enumerate(displacements['first_atoms']):
+    for i, disp1 in enumerate(disp_dataset['first_atoms']):
         w2.write("# File: %-5d\n" % (i + 1))
         w2.write("# %-5d " % (disp1['number'] + 1))
         w2.write("%20.16f %20.16f %20.16f\n" %
@@ -251,7 +248,7 @@ def write_FORCES_THIRD(vaspruns,
         disp_datasets.append([disp1['number'], disp1['displacement']])
 
     count = num_disp1
-    for disp1 in displacements['first_atoms']:
+    for disp1 in disp_dataset['first_atoms']:
         atom1 = disp1['number']
         atom_list = np.unique([x['number'] for x in disp1['second_atoms']])
         for atom2 in atom_list:
@@ -260,7 +257,7 @@ def write_FORCES_THIRD(vaspruns,
                 if disp2['number'] != atom2:
                     continue
 
-                if 'displacements' in disp2:
+                if 'disp_dataset' in disp2:
                     disps2 = disp2['displacements']
                     break
                 else:
@@ -278,72 +275,64 @@ def write_FORCES_THIRD(vaspruns,
                     w3.write("%15.10f %15.10f %15.10f\n" % tuple(forces))
                 count += 1
 
-    write_FORCE_SETS_vasp(vaspruns[:num_disp1],
-                          disp_datasets,
-                          natom,
-                          force_sets,
-                          verbose=False)
-
 def write_FORCES_FOURTH(vaspruns,
-                        displacements,
+                        disp_dataset,
                         forces_fourth='FORCES_FOURTH',
                         forces_third='FORCES_THIRD',
-                        forces_second='FORCES_SECOND',
-                        force_sets='FORCE_SETS'):
+                        forces_second='FORCES_SECOND'):
 
     count = 0
-    for disp1 in displacements['first_atoms']:
+    for disp1 in disp_dataset['first_atoms']:
         count += 1
         for disp2 in disp1['second_atoms']:
             count += 1
     write_FORCES_THIRD(vaspruns[:count],
-                       displacements,
+                       disp_dataset,
                        forces_third=forces_third,
-                       forces_second=forces_second,
-                       force_sets=force_sets)
-    natom = displacements['natom']
+                       forces_second=forces_second)
+    natom = disp_dataset['natom']
     set_of_forces = get_forces_from_vasprun_xmls(vaspruns[count:],
                                                  natom,
                                                  index_shift=count)
     count_begin = count
     w4 = open(forces_fourth, 'w')
-    for disp1 in displacements['first_atoms']:
+    for disp1 in disp_dataset['first_atoms']:
         atom1 = disp1['number']
         for disp2 in disp1['second_atoms']:
             atom2 = disp2['number']
             for disp3 in disp2['third_atoms']:
                 atom3 = disp3['number']
-                for d in disp3['displacements']:
-                    w4.write("# File: %-5d\n" % (count + 1))
-                    w4.write("# %-5d " % (atom1 + 1))
-                    w4.write("%20.16f %20.16f %20.16f\n" %
-                             tuple(disp1['displacement']))
-                    w4.write("# %-5d " % (atom2 + 1))
-                    w4.write("%20.16f %20.16f %20.16f\n" %
-                             tuple(disp2['displacement']))
-                    w4.write("# %-5d " % (atom3 + 1))
-                    w4.write("%20.16f %20.16f %20.16f\n" % tuple(d))
-                    for forces in set_of_forces[count - count_begin]:
-                        w4.write("%15.10f %15.10f %15.10f\n" % tuple(forces))
-                    count += 1
+                d = disp3['displacement']
+                w4.write("# File: %-5d\n" % (count + 1))
+                w4.write("# %-5d " % (atom1 + 1))
+                w4.write("%20.16f %20.16f %20.16f\n" %
+                         tuple(disp1['displacement']))
+                w4.write("# %-5d " % (atom2 + 1))
+                w4.write("%20.16f %20.16f %20.16f\n" %
+                         tuple(disp2['displacement']))
+                w4.write("# %-5d " % (atom3 + 1))
+                w4.write("%20.16f %20.16f %20.16f\n" % tuple(d))
+                for forces in set_of_forces[count - count_begin]:
+                    w4.write("%15.10f %15.10f %15.10f\n" % tuple(forces))
+                count += 1
                 
 def write_DELTA_FC2_SETS(vaspruns,
-                         displacements,
+                         disp_dataset,
                          dfc2_file='DELTA_FC2_SETS'):
     fc2_set = get_force_constants_from_vasprun_xmls(vaspruns)
     perfect_fc2 = fc2_set.pop(0)
     write_fc2_to_hdf5(perfect_fc2)
     delta_fc2s = [fc2 - perfect_fc2 for fc2 in fc2_set]
     write_DELTA_FC2_SETS_from_delta_fc2s(delta_fc2s,
-                                         displacements,
+                                         disp_dataset,
                                          dfc2_file=dfc2_file)
 
 def write_DELTA_FC2_SETS_from_delta_fc2s(delta_fc2s,
-                                         displacements,
+                                         disp_dataset,
                                          dfc2_file='DELTA_FC2_SETS'):
     w = open(dfc2_file, 'w')
     for i, (dfc2, first_disp) in enumerate(zip(delta_fc2s,
-                                               displacements['first_atoms'])):
+                                               disp_dataset['first_atoms'])):
         w.write("# File: %d\n" % (i + 1))
         w.write("# %-5d " % (first_disp['number'] + 1))
         w.write("%20.16f %20.16f %20.16f\n" %
@@ -356,7 +345,7 @@ def write_DELTA_FC2_SETS_from_delta_fc2s(delta_fc2s,
     w.close()
 
 def write_DELTA_FC2_FOURTH_SETS(vaspruns,
-                                displacements,
+                                disp_dataset,
                                 dfc2_file='DELTA_FC2_FOURTH_SETS'):
     """Write displaced fc2 for fc4 from vasprun.xml's"""
     
@@ -368,14 +357,14 @@ def write_DELTA_FC2_FOURTH_SETS(vaspruns,
     w = open(dfc2_file, 'w')
     count = 0
 
-    for i, first_disp in enumerate(displacements['first_atoms']):
+    for i, first_disp in enumerate(disp_dataset['first_atoms']):
         count += 1
         fc2s_first.append(fc2_set.pop(0))
 
     delta_fc2s = [fc2 - perfect_fc2 for fc2 in fc2s_first]
-    write_DELTA_FC2_SETS_from_delta_fc2s(delta_fc2s, displacements)
+    write_DELTA_FC2_SETS_from_delta_fc2s(delta_fc2s, disp_dataset)
         
-    for i, first_disp in enumerate(displacements['first_atoms']):
+    for i, first_disp in enumerate(disp_dataset['first_atoms']):
         for second_disp in first_disp['second_atoms']:
             for disp in second_disp['displacements']:
                 count += 1
@@ -887,9 +876,6 @@ def write_ir_grid_points(primitive, mesh, mesh_divs, coarse_mesh_shifts):
                 tuple(grid_address[g].astype('double') / mesh))
 
 
-# 
-# Input
-#
 def get_forces_from_vasprun_xmls(vaspruns, num_atom, index_shift=0):
     try:
         from lxml import etree
@@ -966,65 +952,130 @@ def parse_force_constants_lines(fcthird_file, num_atom):
                        
 def parse_disp_fc3_yaml(filename="disp_fc3.yaml"):
     dataset = parse_yaml(filename)
+    natom = dataset['natom']
+    new_dataset = {}
+    new_dataset['natom'] = natom
+    new_first_atoms = []
     for first_atoms in dataset['first_atoms']:
         first_atoms['number'] -= 1
+        atom1 = first_atoms['number']
+        disp1 = first_atoms['displacement']
+        new_second_atoms = []
         for second_atoms in first_atoms['second_atoms']:
             second_atoms['number'] -= 1
+            atom2 = second_atoms['number']
+            for disp2 in second_atoms['displacements']:
+                new_second_atoms.append(
+                    {'number': atom2, 'displacement': disp2})
+        new_first_atoms.append(
+            {'number': atom1,
+             'displacement': disp1,
+             'second_atoms': new_second_atoms})
+    new_dataset['first_atoms'] = new_first_atoms
 
-    return dataset
+    return new_dataset
     
 def parse_disp_fc4_yaml(filename="disp_fc4.yaml"):
     dataset = parse_yaml(filename)
+    natom = dataset['natom']
+    new_dataset = {}
+    new_dataset['natom'] = natom
+    new_first_atoms = []
     for first_atoms in dataset['first_atoms']:
         first_atoms['number'] -= 1
+        atom1 = first_atoms['number']
+        disp1 = first_atoms['displacement']
+        new_second_atoms = []
         for second_atoms in first_atoms['second_atoms']:
             second_atoms['number'] -= 1
+            atom2 = second_atoms['number']
+            disp2 = second_atoms['displacement']
+            new_third_atoms = []
             for third_atoms in second_atoms['third_atoms']:
                 third_atoms['number'] -= 1
+                atom3 = third_atoms['number']
+                for disp3 in third_atoms['displacements']:
+                    new_third_atoms.append(
+                        {'number': atom3, 'displacement': disp3})
+            new_second_atoms.append(
+                {'number': atom2,
+                 'displacement': disp2,
+                 'third_atoms': new_third_atoms})
+        new_first_atoms.append(
+            {'number': atom1,
+             'displacement': disp1,
+             'second_atoms': new_second_atoms})
+    new_dataset['first_atoms'] = new_first_atoms
 
-    return dataset
+    return new_dataset
     
-def parse_DELTA_FORCES(displacements,
+def parse_FORCES_SECOND(disp_dataset,
+                        is_translational_invariance=False,
+                        filename="FORCES_SECOND"):
+    f = open(filename, 'r')
+    return get_set_of_forces(f, disp_dataset, is_translational_invariance)
+
+def get_set_of_forces(f, disp_dataset, is_translational_invariance):
+    num_atom = disp_dataset['natom']
+    set_of_forces = []
+    atom_list = [x['number'] for x in disp_dataset['first_atoms']]
+    disps = [x['displacement'] for x in disp_dataset['first_atoms']]
+    for atom_number, displacement in zip(atom_list, disps):
+        force_vals = []
+        for line in f:
+            line_str = line.strip()
+            if line_str == "":
+                continue
+            elif line[0] == '#':
+                continue
+            else:
+                force_vals.append([float(x) for x in line.split()])
+            if len(force_vals) == num_atom:
+                break
+        forces = Forces(atom_number, displacement, np.double(force_vals))
+        if is_translational_invariance:
+            forces.set_translational_invariance()
+        set_of_forces.append(forces)
+
+    return set_of_forces
+
+def parse_DELTA_FORCES(disp_dataset,
                        filethird='FORCES_THIRD',
                        filesecond='FORCES_SECOND'):
     forces_third = open(filethird, 'r')
     forces_second = open(filesecond, 'r')
-    num_atom = displacements['natom']
+    num_atom = disp_dataset['natom']
 
-    for disp1 in displacements['first_atoms']:
+    for disp1 in disp_dataset['first_atoms']:
         second_forces = parse_force_lines(forces_second, num_atom)
         for disp2 in disp1['second_atoms']:
-            disp2['delta_forces'] = []
-            for i in range(len(disp2['displacements'])):
-                third_forces = parse_force_lines(forces_third, num_atom)
-                disp2['delta_forces'].append(third_forces - second_forces)
+            third_forces = parse_force_lines(forces_third, num_atom)
+            disp2['delta_forces'] = third_forces - second_forces
 
-def parse_DELTA_FORCES_FOURTH(displacements,
+def parse_DELTA_FORCES_FOURTH(disp_dataset,
                               file4='FORCES_FOURTH',
                               file3='FORCES_THIRD',
                               file2='FORCES_SECOND'):
     f4 = open(file4, 'r')
     f3 = open(file3, 'r')
     f2 = open(file2, 'r')
-    num_atom = displacements['natom']
+    num_atom = disp_dataset['natom']
 
-    for disp1 in displacements['first_atoms']:
+    for disp1 in disp_dataset['first_atoms']:
         second_forces = parse_force_lines(f2, num_atom)
         for disp2 in disp1['second_atoms']:
             third_forces = parse_force_lines(f3, num_atom)
             disp2['delta_forces'] = third_forces - second_forces
             for disp3 in disp2['third_atoms']:
-                disp3['delta_forces'] = []
-                for i in range(len(disp3['displacements'])):
-                    fourth_forces = parse_force_lines(f4, num_atom)
-                    disp3['delta_forces'].append(fourth_forces - third_forces)
+                fourth_forces = parse_force_lines(f4, num_atom)
+                disp3['delta_forces'] = fourth_forces - third_forces
                 
-def parse_FORCES_THIRD(displacements,
+def parse_FORCES_THIRD(disp_dataset,
                        filename='FORCES_THIRD'):
     forcefile = open(filename, 'r')
-    num_atom = displacements['natom']
+    num_atom = disp_dataset['natom']
     num_disp = 0
-    for disp1 in displacements['first_atoms']:
+    for disp1 in disp_dataset['first_atoms']:
         for disp2 in disp1['second_atoms']:
             num_disp += len(disp2['displacements'])
     sets_of_forces = []
@@ -1033,21 +1084,21 @@ def parse_FORCES_THIRD(displacements,
     
     return np.array(sets_of_forces)
 
-def parse_DELTA_FC2_SETS(displacements,
+def parse_DELTA_FC2_SETS(disp_dataset,
                          filename='DELTA_FC2_SETS'):
     fc2_file = open(filename, 'r')
     delta_fc2s = []
-    num_atom = displacements['natom']
-    for first_disp in displacements['first_atoms']:
+    num_atom = disp_dataset['natom']
+    for first_disp in disp_dataset['first_atoms']:
         first_disp['delta_fc2'] = parse_force_constants_lines(fc2_file,
                                                               num_atom)
 
-def parse_DELTA_FC2_FOURTH_SETS(displacements,
+def parse_DELTA_FC2_FOURTH_SETS(disp_dataset,
                                 filename='DELTA_FC2_FOURTH_SETS'):
     fc2_file = open(filename, 'r')
     delta_fc2s = []
-    num_atom = displacements['natom']
-    for first_disp in displacements['first_atoms']:
+    num_atom = disp_dataset['natom']
+    for first_disp in disp_dataset['first_atoms']:
         for second_disp in first_disp['second_atoms']:
             second_disp['delta_fc2'] = parse_force_constants_lines(fc2_file,
                                                                    num_atom)

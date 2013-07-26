@@ -45,14 +45,14 @@ from phonopy.structure.symmetry import Symmetry
 from phonopy.harmonic.force_constants import get_force_constants, \
     set_permutation_symmetry, symmetrize_force_constants, \
     set_translational_invariance
-from phonopy.hphonopy.file_IO import parse_FORCE_SETS, parse_BORN
+from phonopy.hphonopy.file_IO import parse_BORN
 from phonopy.units import VaspToTHz
 from anharmonic.phonon3.fc3 import get_fc3, symmetrize_fc3, \
     set_translational_invariance_fc3
 from anharmonic.file_IO import write_fc2_dat, write_fc3_dat,\
     parse_disp_fc3_yaml, write_FORCES_THIRD,\
     parse_DELTA_FORCES, write_supercells_with_displacements,\
-    write_DELTA_FC2_SETS, parse_DELTA_FC2_SETS,\
+    write_DELTA_FC2_SETS, parse_DELTA_FC2_SETS, parse_FORCES_SECOND, \
     write_fc3_to_hdf5, write_fc2_to_hdf5,\
     read_fc3_from_hdf5, read_fc2_from_hdf5, write_ir_grid_points
 from anharmonic.phonon3.displacement_fc3 import get_third_order_displacements
@@ -330,15 +330,15 @@ if log_level:
 
 # Create FORCES_THIRD
 if options.forces_third_mode:
-    displacements = parse_disp_fc3_yaml()
-    write_FORCES_THIRD(args, displacements)
+    disp_dataset = parse_disp_fc3_yaml()
+    write_FORCES_THIRD(args, disp_dataset)
     print_end()
     exit(0)
 
 # Create DELTA_FC2_SETS
 if options.delta_fc2_sets_mode:
-    displacements = parse_disp_fc3_yaml()
-    write_DELTA_FC2_SETS(args, displacements)
+    disp_dataset = parse_disp_fc3_yaml()
+    write_DELTA_FC2_SETS(args, disp_dataset)
     print_end()
     exit(0)
 
@@ -483,7 +483,8 @@ else:
             print "----- Solve fc2 -----"
             sys.stdout.flush()
 
-        forces_second = parse_FORCE_SETS(supercell.get_number_of_atoms())
+        disp_dataset = parse_disp_fc3_yaml()
+        forces_second = parse_FORCES_SECOND(disp_dataset)
         fc2_with_dim = get_force_constants(forces_second,
                                            symmetry,
                                            supercell)
@@ -557,13 +558,13 @@ else:
                 print  "----- Solve fc3 -----"
                 sys.stdout.flush()
 
-            displacements = parse_disp_fc3_yaml()
+            disp_dataset = parse_disp_fc3_yaml()
             if options.read_delta_fc2:
-                parse_DELTA_FC2_SETS(displacements)
+                parse_DELTA_FC2_SETS(disp_dataset)
             else:
-                parse_DELTA_FORCES(displacements)
+                parse_DELTA_FORCES(disp_dataset)
             fc3 = get_fc3(supercell,
-                          displacements,
+                          disp_dataset,
                           fc2_with_dim,
                           symmetry,
                           options.is_translational_symmetry,

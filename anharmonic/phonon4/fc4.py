@@ -304,17 +304,25 @@ def _get_constrained_fc3(supercell,
                          symprec,
                          verbose):
     """
-    displacements = {'number': 3,
-                     'displacement': [0.01, 0.00, 0.01]
-                     'second_atoms': [{'number': 7,
-                                       'displacement': [],
-                                       'delta_fc2': }]}
+    Two displacements and force constants calculation (e.g. DFPT)
 
-    number: Atomic index, starting with 0.
-    displacement: displacement of 1st displaced atom in Cartesian.
-    displacements: displacements of 2st displaced atom in Cartesian.
-    delta_fc2: diff. of 2 atomic disp. fc2 and 1 atomic disp. fc2
-    Number of elements of 'displacements' and 'delta_fc2' are same.
+        displacements = {'number': 3,
+                         'displacement': [0.01, 0.00, 0.01]
+                         'second_atoms': [{'number': 7,
+                                           'displacement': [],
+                                           'delta_fc2': }]}
+
+    Three displacements and force calculation
+
+        displacements = {'number': 3,
+                         'displacement': [0.01, 0.00, 0.01]
+                         'second_atoms': [{'number': 7,
+                                           'displacement': [],
+                                           'third_atoms': ... }]}
+           third_atoms is like:
+                         'third_atoms': [{'number': 56,
+                                          'displacement': [],
+                                          'delta_forces': ... }]}
     """
     num_atom = supercell.get_number_of_atoms()
     atom1 = displacements['number']
@@ -353,6 +361,7 @@ def _get_constrained_fc3(supercell,
                                    np.linalg.inv(supercell.get_cell()))
                 reduced_bond_sym = get_reduced_site_symmetry(
                     bond_sym, direction, symprec)
+
                 delta_fc2s.append(get_delta_fc2(
                         disps_second['third_atoms'],
                         atom2,

@@ -42,10 +42,8 @@ from optparse import OptionParser
 from phonopy.interface.vasp import read_vasp, write_vasp
 from phonopy.structure.cells import get_supercell, Primitive, print_cell
 from phonopy.structure.symmetry import Symmetry
-from phonopy.harmonic.force_constants import set_translational_invariance, set_permutation_symmetry
-
+from phonopy.harmonic.force_constants import set_translational_invariance, set_permutation_symmetry, get_force_constants
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrix
-from phonopy.hphonopy.file_IO import parse_FORCE_SETS
 from phonopy.units import VaspToTHz
 from anharmonic.phonon3.fc3 import symmetrize_fc3, set_translational_invariance_fc3, show_drift_fc3, get_fc3
 from anharmonic.file_IO import \
@@ -53,9 +51,10 @@ from anharmonic.file_IO import \
     parse_DELTA_FORCES, parse_DELTA_FORCES_FOURTH,\
     write_DELTA_FC2_SETS, parse_DELTA_FC2_SETS, \
     write_DELTA_FC2_FOURTH_SETS, parse_DELTA_FC2_FOURTH_SETS,\
-    write_FORCES_FOURTH,\
+    write_FORCES_FOURTH, parse_FORCES_SECOND, \
     read_fc3_from_hdf5, read_fc2_from_hdf5, write_fc4_to_hdf5, \
-    write_fc3_to_hdf5, write_supercells_with_displacements, \
+    write_fc3_to_hdf5, write_fc2_to_hdf5, \
+    write_supercells_with_displacements, \
     write_supercells_with_three_displacements
 from anharmonic.phonon3.displacement_fc3 import get_third_order_displacements
 from anharmonic.phonon4.displacement_fc4 import get_fourth_order_displacements
@@ -100,6 +99,7 @@ parser.set_defaults(amplitude=None,
                     log_level=None,
                     primitive_axis=None,
                     read_fc2_fourth=False,
+                    read_fc2=False,
                     read_fc3=False,
                     read_fc4=False,
                     output_filename=None,
@@ -111,13 +111,6 @@ parser.add_option("--amplitude", dest="amplitude", type="float",
 parser.add_option("-c", "--cell", dest="cell_poscar",
                   action="store", type="string",
                   help="Read unit cell", metavar="FILE")
-parser.add_option("-d", "--disp", dest="is_displacement",
-                  action="store_true",
-                  help="As first stage, get least displacements")
-parser.add_option("--dim",
-                  dest="supercell_dimension",
-                  type="string",
-                  help="Supercell dimension")
 parser.add_option("--create_fc2_fourth",
                   dest="fc2_fourth_sets_mode",
                   action="store_true",
@@ -126,6 +119,17 @@ parser.add_option("--cf4", "--create_f4",
                   dest="forces_fourth_mode",
                   action="store_true",
                   help="Create FORCES_FOURTH")
+parser.add_option("-d", "--disp", dest="is_displacement",
+                  action="store_true",
+                  help="As first stage, get least displacements")
+parser.add_option("--dim",
+                  dest="supercell_dimension",
+                  type="string",
+                  help="Supercell dimension")
+parser.add_option("--fc2",
+                  dest="read_fc2",
+                  action="store_true",
+                  help="Read second order force constants")
 parser.add_option("--fc2_fourth",
                   dest="read_fc2_fourth",
                   action="store_true",
@@ -273,16 +277,29 @@ else:
             print "%5.2f"*3 % tuple(vec)
 
     # fc2
-    if log_level:
-        print  "----- Read fc2 -----"
-        sys.stdout.flush()
-    if os.path.exists('fc2.hdf5'):
-        fc2 = read_fc2_from_hdf5()
-    else:
-        print "fc2.hdf5 not found"
+    if options.read_fc2:
         if log_level:
-            print_end()
-        sys.exit(0)
+            print  "----- Read fc2 -----"
+            sys.stdout.flush()
+        if os.path.exists('fc2.hdf5'):
+            fc2 = read_fc2_from_hdf5()
+        else:
+            print "fc2.hdf5 not found"
+            if log_level:
+                print_end()
+            sys.exit(0)
+    else:
+        if log_level:
+            print "----- Solve fc2 -----"
+            sys.stdout.flush()
+
+        disp_dataset = parse_disp_fc4_yaml()
+        forces_second = parse_FORCES_SECOND(disp_dataset)
+        fc2 = get_force_constants(forces_second,
+                                  symmetry,
+                                  supercell)
+
+        write_fc2_to_hdf5(fc2)
 
     if options.is_symmetrize_fc2:
         set_permutation_symmetry(fc2)
