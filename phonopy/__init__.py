@@ -51,7 +51,7 @@ from phonopy.phonon.animation import Animation
 from phonopy.phonon.modulation import Modulation
 from phonopy.phonon.qpoints_mode import write_yaml as write_yaml_qpoints
 from phonopy.phonon.irreps import IrReps
-from phonopy.group_velocity import GroupVelocity
+from phonopy.phonon.group_velocity import GroupVelocity
 
 class Phonopy:
     def __init__(self,

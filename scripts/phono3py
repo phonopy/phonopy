@@ -45,7 +45,7 @@ from phonopy.structure.symmetry import Symmetry
 from phonopy.harmonic.force_constants import get_force_constants, \
     set_permutation_symmetry, symmetrize_force_constants, \
     set_translational_invariance
-from phonopy.hphonopy.file_IO import parse_BORN
+from phonopy.file_IO import parse_BORN
 from phonopy.units import VaspToTHz
 from anharmonic.phonon3.fc3 import get_fc3, symmetrize_fc3, \
     set_translational_invariance_fc3

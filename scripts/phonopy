@@ -39,11 +39,11 @@ import os
 import numpy as np
 from phonopy import *
 from optparse import OptionParser
-import phonopy.hphonopy.file_IO as file_IO
+import phonopy.file_IO as file_IO
 import phonopy.interface.wien2k as wien2k
 import phonopy.interface.vasp as vasp
-from phonopy.hphonopy.symmetry import check_symmetry
 from phonopy.cui.settings import Settings, PhonopyConfParser
+from phonopy.cui.show_symmetry import check_symmetry
 from phonopy.units import *
 
 

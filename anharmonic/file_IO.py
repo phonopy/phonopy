@@ -3,7 +3,7 @@ import numpy as np
 import h5py
 from phonopy.structure.atoms import Atoms
 from phonopy.interface import vasp
-from phonopy.hphonopy.file_IO import write_FORCE_SETS_vasp, read_force_constant_vasprun_xml
+from phonopy.file_IO import write_FORCE_SETS_vasp, read_force_constant_vasprun_xml
 from anharmonic.phonon3.triplets import get_grid_address, get_ir_grid_points, from_coarse_to_dense_grid_points
 from phonopy.harmonic.forces import Forces
 
