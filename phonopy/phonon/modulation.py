@@ -37,6 +37,7 @@ import sys
 from phonopy.structure.atoms import Atoms
 from phonopy.interface.vasp import write_vasp
 from phonopy.units import VaspToTHz
+from phonopy.phonon.group_velocity import degenerate_sets, delta_dynamical_matrix
 
 class Modulation:
     def __init__(self,
@@ -44,6 +45,7 @@ class Modulation:
                  cell,
                  dimension,
                  phonon_modes,
+                 delta_q=None,
                  factor=VaspToTHz):
 
         """Class describe atomic modulations
@@ -55,18 +57,20 @@ class Modulation:
         self._cell = cell
         self._phonon_modes = phonon_modes
         self._dimension = dimension
+        self._delta_q = delta_q # 1st order perturbation direction
         self._factor = factor
 
         self._delta_modulations = []
         self._eigvecs = []
         self._eigvals = []
+
+    def run(self):
         for ph_mode in self._phonon_modes:
             q, band_index, amplitude, argument = ph_mode
-            self._dm.set_dynamical_matrix(q)
-            eigval, eigvec = np.linalg.eigh(self._dm.get_dynamical_matrix())
-            u = self._get_delta(eigvec[:, band_index], q)
-            self._eigvecs.append(eigvec[:, band_index])
-            self._eigvals.append(eigval[band_index].real)
+            eigvals, eigvecs = self._get_eigenvectors(q)
+            u = self._get_delta(eigvecs[:, band_index], q)
+            self._eigvecs.append(eigvecs[:, band_index])
+            self._eigvals.append(eigvals[band_index])
             # Set phase of modulation so that phase of the element
             # that has maximum absolute value becomes 0.
             self._set_phase_of_modulation(u, argument)
@@ -161,6 +165,25 @@ class Modulation:
                      symbols=symbols,
                      pbc=True)
 
+    def _get_eigenvectors(self, q):
+        self._dm.set_dynamical_matrix(q)
+        eigvals, eigvecs = np.linalg.eigh(self._dm.get_dynamical_matrix())
+        eigvals = eigvals.real
+        if self._delta_q is None:
+            return eigvals, eigvecs
+        else:
+            deg_sets = degenerate_sets(eigvals)
+            for deg in deg_sets:
+                eigsets = eigvecs[:, deg].copy()
+                dD = delta_dynamical_matrix(np.array(q),
+                                            np.array(self._delta_q),
+                                            self._dm)
+                p_eigvals, p_eigvecs = np.linalg.eigh(
+                    np.dot(eigsets.T.conj(), np.dot(dD, eigsets)))
+                eigvecs[:, deg] = np.dot(eigsets, p_eigvecs)
+
+            return eigvals, eigvecs
+
     def write_yaml(self):
         file = open('modulation.yaml', 'w')
         dim = self._dimension
@@ -237,6 +260,7 @@ class Modulation:
             file.write("  eigenvector:\n")
             for j in range(num_atom):
                 file.write("  - # atom %d\n" % (j + 1))
-                for k in (0,1,2):
-                    file.write("    - [ %17.14f, %17.14f ]\n" %
-                               (eigvec[j * 3 + k].real, eigvec[j * 3 + k].imag))
+                for k in (0, 1, 2):
+                    val = eigvec[j * 3 + k]
+                    file.write("    - [ %17.14f, %17.14f ] # %f\n" %
+                               (val.real, val.imag, np.angle(val, deg=True)))

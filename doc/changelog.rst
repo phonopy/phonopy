@@ -3,6 +3,12 @@
 Change Log
 ==========
 
+xx-xx-2013: Version 1.7.2
+---------------------------
+
+* group_velocity/__init__.py is moved to phonon directory.
+* hphonopy/file_IO.py is moved to top directory.
+
 July-14-2013: Version 1.7.1
 ---------------------------
 

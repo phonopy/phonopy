@@ -815,12 +815,14 @@ class Phonopy:
                     
 
     # Modulation
-    def set_modulations(self, dimension, phonon_modes):
+    def set_modulations(self, dimension, phonon_modes, delta_q=None):
         self._modulation = Modulation(self._dynamical_matrix,
                                       self._primitive,
                                       dimension=dimension,
                                       phonon_modes=phonon_modes,
+                                      delta_q= delta_q,
                                       factor=self._factor)
+        self._modulation.run()
                     
     def get_modulations(self):
         """Returns cells with modulations as Atoms objects"""

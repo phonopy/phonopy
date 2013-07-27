@@ -86,6 +86,16 @@ def degenerate_sets(freqs, cutoff=1e-4):
 
     return indices
 
+def delta_dynamical_matrix(q,
+                           delta_q,
+                           dynmat):
+    dynmat.set_dynamical_matrix(q - delta_q)
+    dm1 = dynmat.get_dynamical_matrix()
+    dynmat.set_dynamical_matrix(q + delta_q)
+    dm2 = dynmat.get_dynamical_matrix()
+    return dm2 - dm1
+
+
 class GroupVelocity:
     """
     d omega   ----
@@ -164,15 +174,12 @@ class GroupVelocity:
     
     def _get_dD(self, q):
         # The names of *c mean something in Cartesian.
-        rlat_inv = self._reciprocal_lattice_inv
         ddm = []
         for dqc_i in (directions * self._q_length):
-            dq_i = np.dot(rlat_inv, dqc_i)
-            self._dynmat.set_dynamical_matrix(q - dq_i)
-            dm1 = self._dynmat.get_dynamical_matrix()
-            self._dynmat.set_dynamical_matrix(q + dq_i)
-            dm2 = self._dynmat.get_dynamical_matrix()
-            ddm.append(dm2 - dm1)
+            dq = np.dot(self._reciprocal_lattice_inv, dqc_i)
+            ddm.append(delta_dynamical_matrix(q,
+                                              dq,
+                                              self._dynmat))
         return np.array(ddm)
     
     def _perturb_D(self, dD, eigsets):

@@ -47,7 +47,7 @@ from phonopy.cui.show_symmetry import check_symmetry
 from phonopy.units import *
 
 
-phonopy_version = "1.7.1"
+phonopy_version = "1.7.2"
 
 # AA is created at http://www.network-science.de/ascii/.
 def print_phononpy():
@@ -907,7 +907,11 @@ elif settings.get_run_mode()=='modulation':
     mod_setting = settings.get_modulation()
     phonon_modes = mod_setting['modulations']
     dimension = mod_setting['dimension']
-    phonon.set_modulations(dimension, phonon_modes)
+    if 'delta_q' in mod_setting:
+        delta_q = mod_setting['delta_q']
+    else:
+        delta_q = None
+    phonon.set_modulations(dimension, phonon_modes, delta_q=delta_q)
     phonon.write_modulations()
     phonon.write_yaml_modulations()
 
