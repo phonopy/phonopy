@@ -95,7 +95,9 @@ def get_force_constants_vasprun_xml(vasprun):
     num_atom = 0
     for event, element in vasprun:
         if num_atom==0:
-            atom_types, masses, num_atom = get_atom_types_from_vasprun_xml(element)
+            (atom_types,
+             masses,
+             num_atom) = get_atom_types_from_vasprun_xml(element)
 
         # Get Hessian matrix (normalized by masses)
         if element.tag == 'varray':
@@ -104,11 +106,11 @@ def get_force_constants_vasprun_xml(vasprun):
                 for v in element.xpath('./v'):
                     fc_tmp.append([float(x) for x in v.text.strip().split()])
 
-    if fc_tmp==None:
+    if fc_tmp is None:
         return False
     else:
         fc_tmp = np.array(fc_tmp)
-        if not fc_tmp.shape==(num_atom*3, num_atom*3):
+        if fc_tmp.shape != (num_atom * 3, num_atom * 3):
             return False
         # num_atom = fc_tmp.shape[0] / 3
         force_constants = np.zeros((num_atom, num_atom, 3, 3), dtype='double')
@@ -121,7 +123,7 @@ def get_force_constants_vasprun_xml(vasprun):
         for i in range(num_atom):
             for j in range(num_atom):
                 force_constants[i, j] *= -np.sqrt(masses[i] * masses[j])
-    
+
         return force_constants, atom_types
 
 def get_atom_types_from_vasprun_xml(element):
