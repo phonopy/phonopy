@@ -48,7 +48,7 @@ class Settings:
         self._chemical_symbols = None
         self._dm_decimals = None
         self._displacement_distance = None
-        self._gv_delta_q = 1e-4
+        self._gv_delta_q = None
         self._is_eigenvectors = False
         self._is_diagonal_displacement = True
         self._is_plusminus_displacement = 'auto'

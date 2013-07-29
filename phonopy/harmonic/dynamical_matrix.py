@@ -123,7 +123,6 @@ class DynamicalMatrix:
     def _set_py_dynamical_matrix(self,
                                  q,
                                  verbose=False):
-        pos = self._scell.get_scaled_positions()
         fc = self._force_constants
         vecs = self._smallest_vectors
         multiplicity = self._multiplicity

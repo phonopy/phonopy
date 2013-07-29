@@ -1,6 +1,6 @@
 import numpy as np
 from phonopy.units import THzToEv, Kb, VaspToTHz, Hbar, EV, Angstrom, THz, AMU
-from phonopy.group_velocity import degenerate_sets
+from phonopy.phonon.group_velocity import degenerate_sets
 
 def gaussian(x, sigma):
     return 1.0 / np.sqrt(2 * np.pi) / sigma * np.exp(-x**2 / 2 / sigma**2)

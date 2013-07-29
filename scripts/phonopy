@@ -519,8 +519,8 @@ else:
 # Check the essential setting parameters #
 ##########################################
 # - run mode
-if (not settings.get_run_mode() and
-    not settings.get_is_force_constants() == "write"):
+run_mode = settings.get_run_mode()
+if (not run_mode and not settings.get_is_force_constants() == "write"):
     print "One of the following run modes has to be specified."
     for mode in ['Mesh sampling (MP, --mesh)',
                  'Q-points (QPOINTS)',
@@ -566,32 +566,32 @@ if not magmoms == None:
 # Log of phonopy settings #
 ###########################
 if log_level > 0:
-    if settings.get_run_mode() == 'band':
+    if run_mode== 'band':
         print "Band structure mode"
-        if settings.get_is_group_velocity():
-            print ("  With group velocity calculation (dq=%3.1e)" %
-                   settings.get_group_velocity_delta_q())
-    if settings.get_run_mode() == 'mesh':
+    if run_mode == 'mesh':
         print "Mesh sampling mode"
-        if settings.get_is_group_velocity():
-            print ("  With group velocity calculation (dq=%3.1e)" %
-                   settings.get_group_velocity_delta_q())
-    if settings.get_run_mode() == 'anime':
+    if run_mode == 'anime':
         print "Animation mode"
-    if settings.get_run_mode() == 'modulation':
+    if run_mode == 'modulation':
         print "Modulation mode"
-    if settings.get_run_mode() == 'irreps':
+    if run_mode == 'irreps':
         print "Ir-representation mode"
-    if settings.get_run_mode() == 'qpoints':
+    if run_mode == 'qpoints':
         print "QPOINTS mode",
         if settings.get_write_dynamical_matrices():
             print "(dynamical matrices written out)"
         else:
             print
-        if settings.get_is_group_velocity():
-            print ("  With group velocity (dq=%3.1e)" %
-                   settings.get_group_velocity_delta_q())
-    if settings.get_run_mode() == 'displacements':
+    if (run_mode == 'band' or
+        run_mode == 'mesh' or
+        run_mode == 'qpoints') and settings.get_is_group_velocity():
+        print "  With group velocity calculation",
+        gv_delta_q = settings.get_group_velocity_delta_q()
+        if gv_delta_q is not None:
+            print "(dq=%3.1e)" % gv_delta_q
+        else:
+            print
+    if run_mode == 'displacements':
         print "Creating displacements"
         if not settings.get_is_plusminus_displacement() == 'auto':
             print "  Plus Minus displacement: ",
@@ -601,7 +601,7 @@ if log_level > 0:
                 print "only one direction"
         if not settings.get_is_diagonal_displacement():
             print "  Diagonal displacement: off"
-    elif not settings.get_run_mode() == 'forces':
+    elif not run_mode == 'forces':
         print "Settings:"
         if settings.get_is_nac():
             print "  Non-analytical term correction: on"
@@ -615,13 +615,13 @@ if log_level > 0:
             print "  Force constants symmetrization: %d times" % settings.get_fc_symmetry_iteration()
         if settings.get_is_tensor_symmetry():
             print "  Tensor symmetry: on"
-        if settings.get_run_mode() == 'mesh':
+        if run_mode == 'mesh':
             print "  Sampling mesh: ", np.array(settings.get_mesh()[0])
 
 #################
 #      Run      #
 #################
-if settings.get_run_mode() == 'displacements':
+if run_mode == 'displacements':
     phonon = Phonopy(unitcell, 
                      settings.get_supercell_matrix(),
                      factor=factor,
@@ -660,7 +660,7 @@ if log_level > 0:
             phonon.get_symmetry().get_international_table()
 
 # Least displacements (write disp.yaml and SPOSCAR)
-if settings.get_run_mode() == 'displacements':
+if run_mode == 'displacements':
 
     # Print cells
     if log_level > 1:
@@ -839,7 +839,7 @@ if log_level > 1:
     print "---------------------------------------------------------------------------"
 
 # QPOINTS mode
-if settings.get_run_mode() == 'qpoints':
+if run_mode == 'qpoints':
     if settings.get_qpoints():
         q_points = settings.get_qpoints()
         print "Q-points that will be calculated at:"
@@ -855,7 +855,7 @@ if settings.get_run_mode() == 'qpoints':
         factor=factor)
 
 # Band plot
-elif settings.get_run_mode() == 'band':
+elif run_mode == 'band':
     print "Paths in reciprocal reduced coordinates:"
     bands = settings.get_bands()
     for band in bands:
@@ -876,7 +876,7 @@ elif settings.get_run_mode() == 'band':
             plot.show()
 
 # Animation        
-elif settings.get_run_mode() == 'anime':
+elif run_mode == 'anime':
     anime_type = settings.get_anime_type()
     if anime_type == "v_sim":
         q_point = settings.get_anime_qpoint()
@@ -903,7 +903,7 @@ elif settings.get_run_mode() == 'anime':
                                shift=shift)
 
 # Modulation
-elif settings.get_run_mode()=='modulation':
+elif run_mode=='modulation':
     mod_setting = settings.get_modulation()
     phonon_modes = mod_setting['modulations']
     dimension = mod_setting['dimension']
@@ -916,7 +916,7 @@ elif settings.get_run_mode()=='modulation':
     phonon.write_yaml_modulations()
 
 # Ir-representation
-elif settings.get_run_mode() == 'irreps':
+elif run_mode == 'irreps':
     if phonon.set_irreps(settings.get_irreps_q_point(),
                          settings.get_irreps_tolerance()):
         show_irreps = settings.get_show_irreps()
@@ -926,7 +926,7 @@ elif settings.get_run_mode() == 'irreps':
         no_error = False
 
 # Mesh
-elif settings.get_run_mode() == 'mesh':
+elif run_mode == 'mesh':
     (mesh,
      mesh_shift,
      t_symmetry,

@@ -1,6 +1,6 @@
 import numpy as np
 import phonopy.structure.spglib as spg
-from phonopy.group_velocity import get_group_velocity
+from phonopy.phonon.group_velocity import get_group_velocity
 from phonopy.units import Kb, THzToEv, EV, THz, Angstrom
 from phonopy.phonon.thermal_properties import mode_cv
 from anharmonic.file_IO import write_kappa_to_hdf5

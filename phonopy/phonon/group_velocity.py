@@ -34,6 +34,7 @@
 
 import numpy as np
 from phonopy.units import VaspToTHz
+from phonopy.harmonic.derivative_dynmat import DerivativeOfDynamicalMatrix
 
 def get_group_velocity(q, # q-point
                        dynamical_matrix,
@@ -112,7 +113,7 @@ class GroupVelocity:
     def __init__(self,
                  dynamical_matrix,
                  q_points=None,
-                 q_length=1e-4,
+                 q_length=None,
                  frequency_factor_to_THz=VaspToTHz):
         """
         q_points is a list of sets of q-point and q-direction:
@@ -125,6 +126,8 @@ class GroupVelocity:
         self._reciprocal_lattice_inv = primitive.get_cell()
         self._q_points = q_points
         self._q_length = q_length
+        if q_length is None:
+            self._ddm = DerivativeOfDynamicalMatrix(dynamical_matrix)
         self._factor = frequency_factor_to_THz
         self._group_velocity = None
         if self._q_points is not None:
@@ -168,19 +171,35 @@ class GroupVelocity:
             pos += len(deg)
 
         for i in range(3):
-            gv[:, i] *= self._factor ** 2 / freqs / 2 / (self._q_length * 2)
+            gv[:, i] *= self._factor ** 2 / freqs / 2
 
         return gv
-    
+
     def _get_dD(self, q):
-        # The names of *c mean something in Cartesian.
+        if self._q_length is None:
+            return self._get_dD_analytical(q)
+        else:
+            return self._get_dD_FD(q)
+    
+    def _get_dD_FD(self, q): # finite difference
         ddm = []
         for dqc_i in (directions * self._q_length):
             dq = np.dot(self._reciprocal_lattice_inv, dqc_i)
             ddm.append(delta_dynamical_matrix(q,
                                               dq,
-                                              self._dynmat))
+                                              self._dynmat) /
+                       (self._q_length * 2))
         return np.array(ddm)
+    
+    def _get_dD_analytical(self, q):
+        self._ddm.run(q)
+        ddm = self._ddm.get_derivative_of_dynamical_matrix()
+        ddm_dirs = np.zeros((len(directions),) + ddm.shape[1:],
+                            dtype='complex128')
+        for i, d in enumerate(directions):
+            for j in range(3):
+                ddm_dirs[i] += d[j] * ddm[j]
+        return ddm_dirs
     
     def _perturb_D(self, dD, eigsets):
         eigvals = np.linalg.eigvalsh(
