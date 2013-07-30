@@ -38,6 +38,7 @@ from phonopy.structure.atoms import Atoms
 from phonopy.interface.vasp import write_vasp
 from phonopy.units import VaspToTHz
 from phonopy.phonon.group_velocity import degenerate_sets, delta_dynamical_matrix
+from phonopy.harmonic.derivative_dynmat import DerivativeOfDynamicalMatrix
 
 class Modulation:
     def __init__(self,
@@ -58,8 +59,8 @@ class Modulation:
         self._phonon_modes = phonon_modes
         self._dimension = dimension
         self._delta_q = delta_q # 1st order perturbation direction
+        self._ddm = DerivativeOfDynamicalMatrix(dynamical_matrix)
         self._factor = factor
-
         self._delta_modulations = []
         self._eigvecs = []
         self._eigvals = []
@@ -175,14 +176,23 @@ class Modulation:
             deg_sets = degenerate_sets(eigvals)
             for deg in deg_sets:
                 eigsets = eigvecs[:, deg].copy()
-                dD = delta_dynamical_matrix(np.array(q),
-                                            np.array(self._delta_q),
-                                            self._dm)
+                dD = self._get_dD(q)
                 p_eigvals, p_eigvecs = np.linalg.eigh(
                     np.dot(eigsets.T.conj(), np.dot(dD, eigsets)))
                 eigvecs[:, deg] = np.dot(eigsets, p_eigvecs)
 
             return eigvals, eigvecs
+
+    def _get_dD(self, q):
+        # dD = delta_dynamical_matrix(np.array(q),
+        #                             np.array(self._delta_q),
+        #                             self._dm)
+        self._ddm.run(q)
+        ddm = self._ddm.get_derivative_of_dynamical_matrix()
+        dD = np.zeros(ddm.shape[1:], dtype='complex128')
+        for i in range(3):
+            dD += (self._delta_q[i] / np.linalg.norm(self._delta_q)) * ddm[i] 
+        return dD
 
     def write_yaml(self):
         file = open('modulation.yaml', 'w')

@@ -38,7 +38,7 @@ from phonopy.harmonic.derivative_dynmat import DerivativeOfDynamicalMatrix
 
 def get_group_velocity(q, # q-point
                        dynamical_matrix,
-                       q_length=1e-4, # finite distance in q
+                       q_length=None, # finite distance in q
                        frequency_factor_to_THz=VaspToTHz):
     """
     If frequencies and eigenvectors are supplied they are used
@@ -128,6 +128,8 @@ class GroupVelocity:
         self._q_length = q_length
         if q_length is None:
             self._ddm = DerivativeOfDynamicalMatrix(dynamical_matrix)
+        else:
+            self._ddm = None
         self._factor = frequency_factor_to_THz
         self._group_velocity = None
         if self._q_points is not None:
