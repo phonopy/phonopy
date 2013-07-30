@@ -418,6 +418,19 @@ def write_fc3_dat(force_constants_third, filename='fc3.dat'):
                         w.write("%20.14f %20.14f %20.14f\n" % tuple(vec))
                     w.write("\n")
 
+def write_fc4_dat(fc4, filename='fc4.dat'):
+    w = open(filename, 'w')
+    for (i, j, k, l) in list(np.ndindex(fc4.shape[:4])):
+        tensor4 = fc4[i, j, k, l]
+        w.write(" %d - %d - %d - %d (%f)\n" % (i+1, j+1, k+1, l+1, np.abs(tensor4).sum()))
+        for tensor3 in tensor4:
+            for tensor2 in tensor3:
+                for vec in tensor2:
+                    w.write("%20.14f %20.14f %20.14f\n" % tuple(vec))
+                w.write("\n")
+            w.write("\n")
+        w.write("\n")
+
 def write_fc4_to_hdf5(force_constants_fourth, filename='fc4.hdf5'):
     w = h5py.File(filename, 'w')
     w.create_dataset('fc4', data=force_constants_fourth)

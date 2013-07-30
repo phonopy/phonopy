@@ -59,7 +59,7 @@ from anharmonic.file_IO import \
 from anharmonic.phonon3.displacement_fc3 import get_third_order_displacements
 from anharmonic.phonon4.displacement_fc4 import get_fourth_order_displacements
 from anharmonic.settings import Phono3pyConfParser
-from anharmonic.phonon4.fc4 import get_fc4, show_drift_fc4, set_translational_invariance_fc4, symmetrize_fc4
+from anharmonic.phonon4.fc4 import get_fc4, show_drift_fc4, set_translational_invariance_fc4, set_permutation_symmetry_fc4
 
 # AA is created at http://www.network-science.de/ascii/.
 def print_phono4py():
@@ -299,13 +299,16 @@ else:
                                   symmetry,
                                   supercell)
 
-        write_fc2_to_hdf5(fc2)
-
     if options.is_symmetrize_fc2:
         set_permutation_symmetry(fc2)
 
     if options.is_translational_symmetry:
         set_translational_invariance(fc2)
+
+    if not options.read_fc2:
+        if log_level:
+            print "----- Write fc2.hdf5 -----"
+        write_fc2_to_hdf5(fc2)
             
     # fc3
     if options.read_fc3: # Read fc3.hdf5
@@ -326,12 +329,14 @@ else:
         else: # fc3 from DELTA_FORCES
             displacements = parse_disp_fc3_yaml()
             parse_DELTA_FORCES(displacements)
-        fc3 = get_fc3(supercell,
-                      displacements,
-                      fc2,
-                      symmetry,
-                      options.is_translational_symmetry,
-                      verbose=log_level)
+        fc3 = get_fc3(
+            supercell,
+            displacements,
+            fc2,
+            symmetry,
+            is_translational_symmetry=options.is_translational_symmetry,
+            is_permutation_symmetry=options.is_symmetrize_fc3_r,          
+            verbose=log_level)
 
     if options.is_symmetrize_fc3_r:
         if log_level:
@@ -366,13 +371,14 @@ else:
             fc3,
             symmetry,
             is_translational_symmetry=options.is_translational_symmetry,
+            is_permutation_symmetry=options.is_symmetrize_fc4_r,
             verbose=log_level)
         
 
     if options.is_symmetrize_fc4_r:
         if log_level:
             print "----- Symmetrize fc4 by index exchange in real space -----"
-        symmetrize_fc4(fc4)
+        set_permutation_symmetry_fc4(fc4)
 
     show_drift_fc4(fc4)
 

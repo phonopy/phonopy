@@ -9,6 +9,7 @@ def get_fc3(supercell,
             fc2,
             symmetry,
             is_translational_symmetry=False,
+            is_permutation_symmetry=False,
             verbose=False):
     num_atom = supercell.get_number_of_atoms()
     fc3 = np.zeros((num_atom, num_atom, num_atom, 3, 3, 3), dtype='double')
@@ -20,6 +21,7 @@ def get_fc3(supercell,
                          fc2,
                          symmetry,
                          is_translational_symmetry,
+                         is_permutation_symmetry,
                          verbose)
 
     if verbose:
@@ -107,30 +109,24 @@ def distribute_fc3(fc3,
                     fc3[i, j, k] = third_rank_tensor_rotation(
                         rot_cart_inv, fc3[i_rot, j_rot, k_rot])
 
-def symmetrize_fc3(fc3):
+def set_permutation_symmetry_fc3(fc3):
     num_atom = fc3.shape[0]
     fc3_sym = np.zeros(fc3.shape, dtype='double')
-    for i in range(num_atom):
-        for j in range(num_atom):
-            for k in range(num_atom):
-                fc3_sym[i, j, k] = symmetrize_fc3_part(fc3, i, j, k)
+    for (i, j, k) in list(np.ndindex(num_atom, num_atom, num_atom)):
+        fc3_sym[i, j, k] = set_permutation_symmetry_fc3_part(fc3, i, j, k)
 
-    for i in range(num_atom):
-        for j in range(num_atom):
-            for k in range(num_atom):
-                fc3[i, j, k] = fc3_sym[i, j, k]
+    for (i, j, k) in list(np.ndindex(num_atom, num_atom, num_atom)):
+        fc3[i, j, k] = fc3_sym[i, j, k]
 
-def symmetrize_fc3_part(fc3, a, b, c):
+def set_permutation_symmetry_fc3_part(fc3, a, b, c):
     tensor3 = np.zeros((3,3,3), dtype='double')
-    for i in range(3):
-        for j in range(3):
-            for k in range(3):
-                tensor3[i, j, k] = (fc3[a, b, c, i, j, k] +
-                                    fc3[c, a, b, k, i, j] +
-                                    fc3[b, c, a, j, k, i] +
-                                    fc3[a, c, b, i, k, j] +
-                                    fc3[b, a, c, j, i, k] +
-                                    fc3[c, b, a, k, j, i]) / 6
+    for (i, j, k) in list(np.ndindex(num_atom, num_atom, num_atom)):
+        tensor3[i, j, k] = (fc3[a, b, c, i, j, k] +
+                            fc3[c, a, b, k, i, j] +
+                            fc3[b, c, a, j, k, i] +
+                            fc3[a, c, b, i, k, j] +
+                            fc3[b, a, c, j, i, k] +
+                            fc3[c, b, a, k, j, i]) / 6
     return tensor3
 
 def set_translational_invariance_fc3(fc3):
@@ -168,6 +164,7 @@ def _get_fc3_least_atoms(fc3,
                          fc2,
                          symmetry,
                          is_translational_symmetry,
+                         is_permutation_symmetry,
                          verbose):
     symprec = symmetry.get_symmetry_tolerance()
     unique_first_atom_nums = np.unique(
@@ -180,61 +177,9 @@ def _get_fc3_least_atoms(fc3,
                           first_atom_num,
                           symmetry.get_site_symmetry(first_atom_num),
                           is_translational_symmetry,
+                          is_permutation_symmetry,
                           symprec,
                           verbose)
-
-def _get_fc3_one_atom(fc3,
-                      supercell,
-                      disp_dataset,
-                      fc2,
-                      first_atom_num,
-                      site_symmetry,
-                      is_translational_symmetry,
-                      symprec,
-                      verbose):
-    displacements_first = []
-    delta_fc2s = []
-    for dataset_first_atom in disp_dataset['first_atoms']:
-        if first_atom_num != dataset_first_atom['number']:
-            continue
-        
-        displacements_first.append(dataset_first_atom['displacement'])
-        if 'delta_fc2' in dataset_first_atom:
-            delta_fc2s.append(dataset_first_atom['delta_fc2'])
-        else:
-            direction = np.dot(dataset_first_atom['displacement'],
-                               np.linalg.inv(supercell.get_cell()))
-            reduced_site_sym = get_reduced_site_symmetry(
-                site_symmetry, direction, symprec)
-            delta_fc2s.append(get_delta_fc2(
-                    dataset_first_atom['second_atoms'],
-                    dataset_first_atom['number'],
-                    fc2,
-                    supercell,
-                    reduced_site_sym,
-                    is_translational_symmetry,
-                    symprec))
-
-    solve_fc3(fc3,
-              first_atom_num,
-              supercell,
-              site_symmetry,
-              displacements_first,
-              delta_fc2s,
-              symprec)
-
-    if verbose:
-        print "Displacements for fc3[ %d, x, x ]" % (first_atom_num + 1)
-        for i, v in enumerate(displacements_first):
-            print "  [%7.4f %7.4f %7.4f]" % tuple(v)
-            sys.stdout.flush()
-        if verbose > 2:
-            print "Site symmetry:"
-            for i, v in enumerate(site_symmetry):
-                print "  [%2d %2d %2d] #%2d" % tuple(list(v[0])+[i+1])
-                print "  [%2d %2d %2d]" % tuple(v[1])
-                print "  [%2d %2d %2d]\n" % tuple(v[2])
-                sys.stdout.flush()
 
 def get_atom_by_symmetry(positions,
                          rotation,
@@ -274,12 +219,14 @@ def get_delta_fc2(dataset_second_atoms,
                   supercell,
                   reduced_site_sym,
                   is_translational_symmetry,
+                  is_permutation_symmetry,
                   symprec):
     disp_fc2 = get_constrained_fc2(supercell,
                                    dataset_second_atoms,
                                    atom1,
                                    reduced_site_sym,
                                    is_translational_symmetry,
+                                   is_permutation_symmetry,
                                    symprec)
     return disp_fc2 - fc2
 
@@ -288,6 +235,7 @@ def get_constrained_fc2(supercell,
                         atom1,
                         reduced_site_sym,
                         is_translational_symmetry,
+                        is_permutation_symmetry,
                         symprec):
     """
     dataset_second_atoms: [{'number': 7,
@@ -342,6 +290,9 @@ def get_constrained_fc2(supercell,
     if is_translational_symmetry:
         set_translational_invariance_per_index(fc2)
 
+    if is_permutation_symmetry:
+        set_permutation_symmetry(fc2)
+
     return fc2
         
 
@@ -386,6 +337,61 @@ def show_drift_fc3(fc3, name="fc3"):
             maxval3 = val3
     print ("max drift of %s:" % name), maxval1, maxval2, maxval3 
         
+def _get_fc3_one_atom(fc3,
+                      supercell,
+                      disp_dataset,
+                      fc2,
+                      first_atom_num,
+                      site_symmetry,
+                      is_translational_symmetry,
+                      is_permutation_symmetry,
+                      symprec,
+                      verbose):
+    displacements_first = []
+    delta_fc2s = []
+    for dataset_first_atom in disp_dataset['first_atoms']:
+        if first_atom_num != dataset_first_atom['number']:
+            continue
+        
+        displacements_first.append(dataset_first_atom['displacement'])
+        if 'delta_fc2' in dataset_first_atom:
+            delta_fc2s.append(dataset_first_atom['delta_fc2'])
+        else:
+            direction = np.dot(dataset_first_atom['displacement'],
+                               np.linalg.inv(supercell.get_cell()))
+            reduced_site_sym = get_reduced_site_symmetry(
+                site_symmetry, direction, symprec)
+            delta_fc2s.append(get_delta_fc2(
+                    dataset_first_atom['second_atoms'],
+                    dataset_first_atom['number'],
+                    fc2,
+                    supercell,
+                    reduced_site_sym,
+                    is_translational_symmetry,
+                    is_permutation_symmetry,
+                    symprec))
+
+    solve_fc3(fc3,
+              first_atom_num,
+              supercell,
+              site_symmetry,
+              displacements_first,
+              delta_fc2s,
+              symprec)
+
+    if verbose:
+        print "Displacements for fc3[ %d, x, x ]" % (first_atom_num + 1)
+        for i, v in enumerate(displacements_first):
+            print "  [%7.4f %7.4f %7.4f]" % tuple(v)
+            sys.stdout.flush()
+        if verbose > 2:
+            print "Site symmetry:"
+            for i, v in enumerate(site_symmetry):
+                print "  [%2d %2d %2d] #%2d" % tuple(list(v[0])+[i+1])
+                print "  [%2d %2d %2d]" % tuple(v[1])
+                print "  [%2d %2d %2d]\n" % tuple(v[2])
+                sys.stdout.flush()
+
 def _get_rotated_fc2s(i, j, fc2s, rot_map_syms, site_sym_cart):
     num_sym = len(site_sym_cart)
     rotated_fc2s = []

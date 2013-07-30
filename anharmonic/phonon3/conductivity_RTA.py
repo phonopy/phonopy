@@ -410,7 +410,10 @@ class conductivity_RTA:
                   rotations):
         print "----- Partial kappa at grid address %d -----" % grid_point
         print "Frequency, projected group velocity (x, y, z), norm at k-stars",
-        print " (dq=%3.1e)" % self._gv_delta_q
+        if self._gv_delta_q is None:
+            print
+        else:
+            print " (dq=%3.1e)" % self._gv_delta_q
         q = self._grid_address[grid_point].astype(float) / self._mesh
         for i, rot in enumerate(rotations):
             q_rot = np.dot(rot, q)
