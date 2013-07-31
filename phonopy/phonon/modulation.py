@@ -117,13 +117,11 @@ class Modulation:
         m = self._cell.get_masses()
         r = self._cell.get_scaled_positions()
         u = []
-        for a in range(dim[0]):
-            for b in range(dim[1]):
-                for c in range(dim[2]):
-                    for i, e in enumerate(eigvec):
-                        phase = 2j * np.pi * (
-                            np.dot(r[i//3] + np.array([a,b,c]), q))
-                        u.append(e / np.sqrt(m[i//3]) * np.exp(phase)) 
+        for a, b, c in list(np.ndindex(tuple(dim))):
+            for i, e in enumerate(eigvec):
+                phase = 2j * np.pi * (
+                    np.dot(r[i//3] + np.array([a,b,c]), q))
+                u.append(e / np.sqrt(m[i//3]) * np.exp(phase)) 
     
         return np.array(u)
 
@@ -177,12 +175,22 @@ class Modulation:
             for deg in deg_sets:
                 eigsets = eigvecs[:, deg].copy()
                 dD = self._get_dD(q)
-                p_eigvals, p_eigvecs = np.linalg.eigh(
-                    np.dot(eigsets.T.conj(), np.dot(dD, eigsets)))
+                dD_part = np.dot(eigsets.T.conj(), np.dot(dD, eigsets))
+                p_eigvals, p_eigvecs = np.linalg.eigh(dD_part)
                 eigvecs[:, deg] = np.dot(eigsets, p_eigvecs)
 
             return eigvals, eigvecs
 
+    def _check_eigvecs(self, eigvals, eigvecs, dynmat):
+        modified = np.diag(np.dot(eigvecs.conj().T, np.dot(dynmat, eigvecs)))
+        print self._eigvals_to_frequencies(eigvals)
+        print self._eigvals_to_frequencies(modified)
+        print
+
+    def _eigvals_to_frequencies(self, eigvals):
+        e = np.array(eigvals).real
+        return np.sqrt(np.abs(e)) * np.sign(e) * self._factor
+            
     def _get_dD(self, q):
         # dD = delta_dynamical_matrix(np.array(q),
         #                             np.array(self._delta_q),
@@ -257,7 +265,7 @@ class Modulation:
                            (p[2].real, p[2].imag, i + 1, abs(p[2])))
 
         file.write("phonon:\n")
-        freqs = np.sqrt(np.abs(self._eigvals)) * np.sign(self._eigvals)
+        freqs = self._eigvals_to_frequencies(self._eigvals)
         for eigvec, freq, mode in zip(self._eigvecs,
                                       freqs,
                                       self._phonon_modes):
@@ -266,7 +274,7 @@ class Modulation:
             file.write("  band: %d\n" % (mode[1] + 1))
             file.write("  amplitude: %f\n" % mode[2])
             file.write("  phase: %f\n" % mode[3])
-            file.write("  frequency: %15.10f\n" % (freq * factor))
+            file.write("  frequency: %15.10f\n" % freq)
             file.write("  eigenvector:\n")
             for j in range(num_atom):
                 file.write("  - # atom %d\n" % (j + 1))
