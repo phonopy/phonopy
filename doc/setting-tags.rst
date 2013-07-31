@@ -774,9 +774,9 @@ of the eigenvectors with amplitudes and phase factors as
 
 
 where :math:`A` is the amplitude, :math:`\phi` is the phase, and
-:math:`m_j` is the mass of *j*-th atom, :math:`\mathbf{q}` is the
-q-point specified, :math:`\mathbf{r}_j` is the position of
-*j*-th atom, and :math:`\mathbf{e}_j` is
+:math:`m_j` is the mass of the *j*-th atom, :math:`\mathbf{q}` is the
+q-point specified, :math:`\mathbf{r}_{jl}` is the position of the
+*j*-th atom and in the *l*-th unit cell, and :math:`\mathbf{e}_j` is
 the *j*-th part of eigenvector. Convention of eigenvector or dynamical
 matrix employed in phonopy is shown in :ref:`dynacmial_matrix_theory`.
 
