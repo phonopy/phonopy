@@ -39,7 +39,7 @@ import sys
 import numpy as np
 from optparse import OptionParser
 
-from phonopy.interface.vasp import read_vasp, write_vasp
+from phonopy.interface.vasp import read_vasp
 from phonopy.structure.cells import get_supercell, Primitive, print_cell
 from phonopy.structure.symmetry import Symmetry
 from phonopy.harmonic.force_constants import set_translational_invariance, set_permutation_symmetry, get_force_constants
@@ -255,7 +255,6 @@ if options.is_displacement:
     write_supercells_with_three_displacements(supercell,
                                               dds,
                                               options.amplitude)
-    write_vasp('POSCAR-0000', supercell, direct=True)
     
 ##########################################
 # Calculate fourth-order force constants #
