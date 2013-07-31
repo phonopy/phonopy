@@ -31,7 +31,7 @@ def get_fc4(supercell,
                          verbose)
 
     if verbose:
-        print "----- Copying fc4 -----"
+        print "(Copying fc4...)"
 
     first_disp_atoms = np.unique(
         [x['number'] for x in disp_dataset['first_atoms']])
@@ -399,7 +399,7 @@ def _get_constrained_fc3(supercell,
     positions -= pos_center
 
     if verbose:
-        print "----- Copying delta fc3 -----"
+        print "(Copying delta fc3...)"
     distribute_fc3(fc3,
                    atom_list_done,
                    lattice,

@@ -25,7 +25,7 @@ def get_fc3(supercell,
                          verbose)
 
     if verbose:
-        print "----- Copying fc3 -----"
+        print "(Copying fc3...)"
 
     first_disp_atoms = np.unique(
         [x['number'] for x in disp_dataset['first_atoms']])
@@ -110,17 +110,16 @@ def distribute_fc3(fc3,
                         rot_cart_inv, fc3[i_rot, j_rot, k_rot])
 
 def set_permutation_symmetry_fc3(fc3):
-    num_atom = fc3.shape[0]
     fc3_sym = np.zeros(fc3.shape, dtype='double')
-    for (i, j, k) in list(np.ndindex(num_atom, num_atom, num_atom)):
+    for (i, j, k) in list(np.ndindex(fc3.shape[:3])):
         fc3_sym[i, j, k] = set_permutation_symmetry_fc3_part(fc3, i, j, k)
 
-    for (i, j, k) in list(np.ndindex(num_atom, num_atom, num_atom)):
+    for (i, j, k) in list(np.ndindex(fc3.shape[:3])):
         fc3[i, j, k] = fc3_sym[i, j, k]
 
 def set_permutation_symmetry_fc3_part(fc3, a, b, c):
-    tensor3 = np.zeros((3,3,3), dtype='double')
-    for (i, j, k) in list(np.ndindex(num_atom, num_atom, num_atom)):
+    tensor3 = np.zeros((3, 3, 3), dtype='double')
+    for (i, j, k) in list(np.ndindex(3, 3, 3)):
         tensor3[i, j, k] = (fc3[a, b, c, i, j, k] +
                             fc3[c, a, b, k, i, j] +
                             fc3[b, c, a, j, k, i] +
