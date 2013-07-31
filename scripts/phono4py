@@ -45,7 +45,7 @@ from phonopy.structure.symmetry import Symmetry
 from phonopy.harmonic.force_constants import set_translational_invariance, set_permutation_symmetry, get_force_constants
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrix
 from phonopy.units import VaspToTHz
-from anharmonic.phonon3.fc3 import symmetrize_fc3, set_translational_invariance_fc3, show_drift_fc3, get_fc3
+from anharmonic.phonon3.fc3 import set_permutation_symmetry_fc3, set_translational_invariance_fc3, show_drift_fc3, get_fc3
 from anharmonic.file_IO import \
     parse_disp_fc3_yaml, parse_disp_fc4_yaml,\
     parse_DELTA_FORCES, parse_DELTA_FORCES_FOURTH,\
@@ -340,7 +340,7 @@ else:
     if options.is_symmetrize_fc3_r:
         if log_level:
             print "----- Symmetrize fc3 by index exchange in real space  -----"
-        symmetrize_fc3(fc3)
+        set_permutation_symmetry_fc3(fc3)
 
     show_drift_fc3(fc3)
 
