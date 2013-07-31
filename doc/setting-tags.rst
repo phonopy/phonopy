@@ -769,12 +769,16 @@ of the eigenvectors with amplitudes and phase factors as
 
 .. math::
 
-   A\operatorname{Re}\left[\frac{\mathbf{e}_j\exp(i\phi)}{\sqrt{m_j}}\right],
+   \frac{A} { \sqrt{m_j} } \operatorname{Re} \left[ \exp(i\phi)
+   \mathbf{e}_j \exp( \mathbf{q} \cdot \mathbf{r}_j ) \right],
 
 
 where :math:`A` is the amplitude, :math:`\phi` is the phase, and
-:math:`m_j` is the mass of *j*-th atom, and :math:`\mathbf{e}_j` is
-the *j*-th part of eigenvector.
+:math:`m_j` is the mass of *j*-th atom, :math:`\mathbf{q}` is the
+q-point specified, :math:`\mathbf{r}_j` is the position of
+*j*-th atom, and :math:`\mathbf{e}_j` is
+the *j*-th part of eigenvector. Convention of eigenvector or dynamical
+matrix employed in phonopy is shown in :ref:`dynacmial_matrix_theory`.
 
 If several modes are specified as shown in the example above, they are
 overlapped on the structure. The output filenames are
@@ -785,7 +789,7 @@ the modulations are summed. ``MPOSCAR-orig`` is the structure without
 containing modulation, but the dimension is the one that is specified.
 Some information is written into ``modulation.yaml``.
 
-Version 1.6
+Usage
 ^^^^^^^^^^^^^
 
 The first three values correspond to the supercell dimension.  The
@@ -799,7 +803,7 @@ optional. If it is not specified, 0 is used.
 
 Before multiplying user specified phase factor, the phase of
 the modulation vector is adjusted as the largest absolute value,
-:math:`\left|\mathbf{e}_j\exp(i\phi)/\sqrt{m_j}\right|`, of element of
+:math:`\left|\mathbf{e}_j\right|/\sqrt{m_j}`, of element of
 3N dimensional modulation vector to be real. The complex modulation
 vector is shown in ``modulation.yaml``.
 
@@ -815,34 +819,6 @@ vector is shown in ``modulation.yaml``.
 
    MODULATION = 3 3 1, 1/3 1/3 0 1 1 0, 1/3 1/3 0 1 1 90
    
-
-
-Version < 1.6
-^^^^^^^^^^^^^
-
-The first three values correspond to a q-point in the reduced
-coordinates in reciprocal space. The next three values give the
-supercell dimensions that have to be specified by integers. The first
-six values and the rest are sperated by comma ``,``.  The band
-indices, amplitude, and phase factor to generate modulations are
-specified by the following values as follows.
-
-The value sets separated by comma ``,`` represent normal modes to be
-modulated, i.e., several normal modes can be simultaneously specified.
-In each set, three values can be specified. The first and second
-values give the band index and amplitude, respectively. The third
-value can optionally specified as the phase factor in degrees, where
-the default value is 0.
-
-::
-
-   MODULATION = 1/3 1/3 0 3 3 1, 1 2, 2 3.5
-
-
-
-
-
-
 
 Characters of irreducible representations of phonon modes
 ----------------------------------------------------------
