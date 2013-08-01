@@ -85,18 +85,10 @@ class DerivativeOfDynamicalMatrix:
                 phase_multi = np.exp([np.vdot(vec, q) * 2j * np.pi
                                       for vec in vecs_multi])
                 vecs_multi_cart = np.dot(vecs_multi, self._pcell.get_cell())
+                coef = (2j * np.pi * vecs_multi_cart) ** self._derivative_order
                 for l in range(3):
-                    if self._derivative_order == 1:
-                        ddm_local[l] += (fc[s_i, k] * 2j * np.pi *
-                                         (vecs_multi_cart[:, l] *
-                                          phase_multi).sum() / multi / mass)
-                    elif self._derivative_order == 2:
-                        ddm_local[l] += (-fc[s_i, k] * 4 * np.pi ** 2 *
-                                         (vecs_multi_cart[:, l] ** 2 *
-                                          phase_multi).sum() / multi / mass)
-                    else:
-                        print "Order of derivative of dynamical matrix",
-                        print "is not set correctly."
+                    ddm_local[l] += (fc[s_i, k] / mass *
+                                     (coef[:, l] * phase_multi).sum() / multi)
 
             ddm[:, (i * 3):(i * 3 + 3), (j * 3):(j * 3 + 3)] = ddm_local
 
