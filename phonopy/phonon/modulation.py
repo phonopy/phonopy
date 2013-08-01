@@ -47,6 +47,7 @@ class Modulation:
                  dimension,
                  phonon_modes,
                  delta_q=None,
+                 derivative_order=1,
                  factor=VaspToTHz):
 
         """Class describe atomic modulations
@@ -58,8 +59,11 @@ class Modulation:
         self._cell = cell
         self._phonon_modes = phonon_modes
         self._dimension = dimension
-        self._delta_q = delta_q # 1st order perturbation direction
+        self._delta_q = delta_q # 1st/2nd order perturbation direction
+
         self._ddm = DerivativeOfDynamicalMatrix(dynamical_matrix)
+        self._ddm.set_derivative_order(derivative_order)
+
         self._factor = factor
         self._delta_modulations = []
         self._eigvecs = []

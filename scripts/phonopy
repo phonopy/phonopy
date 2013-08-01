@@ -911,7 +911,12 @@ elif run_mode=='modulation':
         delta_q = mod_setting['delta_q']
     else:
         delta_q = None
-    phonon.set_modulations(dimension, phonon_modes, delta_q=delta_q)
+    derivative_order = mod_setting['order']
+        
+    phonon.set_modulations(dimension,
+                           phonon_modes,
+                           delta_q=delta_q,
+                           derivative_order=derivative_order)
     phonon.write_modulations()
     phonon.write_yaml_modulations()
 

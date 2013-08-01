@@ -815,12 +815,17 @@ class Phonopy:
                     
 
     # Modulation
-    def set_modulations(self, dimension, phonon_modes, delta_q=None):
+    def set_modulations(self,
+                        dimension,
+                        phonon_modes,
+                        delta_q=None,
+                        derivative_order=1):
         self._modulation = Modulation(self._dynamical_matrix,
                                       self._primitive,
                                       dimension=dimension,
                                       phonon_modes=phonon_modes,
                                       delta_q= delta_q,
+                                      derivative_order=derivative_order,
                                       factor=self._factor)
         self._modulation.run()
                     

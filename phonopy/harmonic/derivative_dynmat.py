@@ -48,11 +48,15 @@ class DerivativeOfDynamicalMatrix:
         self._mass = self._pcell.get_masses()
         self._nac = False
 
+        self._derivative_order = 1
         self._ddm = None
 
     def run(self, q):
         self._run_py(q)
 
+    def set_derivative_order(self, order):
+        self._derivative_order = order
+        
     def get_derivative_of_dynamical_matrix(self):
         return self._ddm
         
@@ -82,9 +86,17 @@ class DerivativeOfDynamicalMatrix:
                                       for vec in vecs_multi])
                 vecs_multi_cart = np.dot(vecs_multi, self._pcell.get_cell())
                 for l in range(3):
-                    ddm_local[l] += (fc[s_i, k] * 2j * np.pi *
-                                     (vecs_multi_cart[:, l] *
-                                      phase_multi).sum() / multi / mass)
+                    if self._derivative_order == 1:
+                        ddm_local[l] += (fc[s_i, k] * 2j * np.pi *
+                                         (vecs_multi_cart[:, l] *
+                                          phase_multi).sum() / multi / mass)
+                    elif self._derivative_order == 2:
+                        ddm_local[l] += (-fc[s_i, k] * 4 * np.pi ** 2 *
+                                         (vecs_multi_cart[:, l] ** 2 *
+                                          phase_multi).sum() / multi / mass)
+                    else:
+                        print "Order of derivative of dynamical matrix",
+                        print "is not set correctly."
 
             ddm[:, (i * 3):(i * 3 + 3), (j * 3):(j * 3 + 3)] = ddm_local
 
