@@ -142,10 +142,6 @@ class DynamicalMatrix:
                             vec = vecs[k][i][l]
                             phase.append(np.vdot(vec, q) * 2j * np.pi)
                         phase_factor = np.exp(phase).sum()
-                        if verbose:
-                            self._phase_log(s_i, k, l, vec, phase_factor * multi,
-                                           np.linalg.norm(
-                                    np.dot(vec, self._pcell.get_cell())))
                         dm_local += fc[s_i, k] * phase_factor / mass / multi
 
                 dm[(i*3):(i*3+3), (j*3):(j*3+3)] += dm_local
@@ -155,12 +151,6 @@ class DynamicalMatrix:
 
         if verbose:
             self._dynamical_matrix_log()
-
-    def _phase_log(self, s_i, k, l, vec, exp_phase, distance):
-        print "(%3d)-(%3d)  %1d" % (s_i+1, k+1, l+1)
-        print "vector: ", "%10.5f"*3 % tuple(vec)
-        print "phase:  ", "%10.5f"*2 % (exp_phase.real, exp_phase.imag)
-        print "distance: ", distance
 
     def _dynamical_matrix_log(self):
         dm = self._dynamical_matrix

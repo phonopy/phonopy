@@ -168,18 +168,19 @@ class Modulation:
         self._dm.set_dynamical_matrix(q)
         eigvals, eigvecs = np.linalg.eigh(self._dm.get_dynamical_matrix())
         eigvals = eigvals.real
+        eigvecs_new = np.zeros_like(eigvecs)
         if self._delta_q is None:
             return eigvals, eigvecs
         else:
             deg_sets = degenerate_sets(eigvals)
+            dD = self._get_dD(q)
             for deg in deg_sets:
-                eigsets = eigvecs[:, deg].copy()
-                dD = self._get_dD(q)
+                eigsets = eigvecs[:, deg]
                 dD_part = np.dot(eigsets.T.conj(), np.dot(dD, eigsets))
                 p_eigvals, p_eigvecs = np.linalg.eigh(dD_part)
-                eigvecs[:, deg] = np.dot(eigsets, p_eigvecs)
+                eigvecs_new[:, deg] = np.dot(eigsets, p_eigvecs)
 
-            return eigvals, eigvecs
+            return eigvals, eigvecs_new
 
     def _check_eigvecs(self, eigvals, eigvecs, dynmat):
         modified = np.diag(np.dot(eigvecs.conj().T, np.dot(dynmat, eigvecs)))
@@ -194,13 +195,15 @@ class Modulation:
     def _get_dD(self, q):
         # dD = delta_dynamical_matrix(np.array(q),
         #                             np.array(self._delta_q),
-        #                             self._dm)
+        #                             self._dm) / np.linalg.norm(self._delta_q) / 2
+        # return dD
+        
         self._ddm.run(q)
         ddm = self._ddm.get_derivative_of_dynamical_matrix()
         dD = np.zeros(ddm.shape[1:], dtype='complex128')
         for i in range(3):
-            dD += (self._delta_q[i] / np.linalg.norm(self._delta_q)) * ddm[i] 
-        return dD
+            dD += self._delta_q[i] * ddm[i]
+        return dD / np.linalg.norm(self._delta_q)
 
     def write_yaml(self):
         file = open('modulation.yaml', 'w')

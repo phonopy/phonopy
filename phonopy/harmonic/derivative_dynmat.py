@@ -63,7 +63,7 @@ class DerivativeOfDynamicalMatrix:
         num_patom = len(self._p2s_map)
         num_satom = len(self._s2p_map)
 
-        # The first 3 used for Catesian index of a vector
+        # The first "3" used for Catesian index of a vector
         ddm = np.zeros((3, 3 * num_patom, 3 * num_patom), dtype=complex)
 
         for i, j in list(np.ndindex(num_patom, num_patom)):
@@ -86,7 +86,7 @@ class DerivativeOfDynamicalMatrix:
                                      (vecs_multi_cart[:, l] *
                                       phase_multi).sum() / multi / mass)
 
-            ddm[:, (i * 3):(i * 3 + 3), (j * 3):(j * 3 + 3)] += ddm_local
+            ddm[:, (i * 3):(i * 3 + 3), (j * 3):(j * 3 + 3)] = ddm_local
 
-        # Impose symmetric condition
+        # Impose Hermite condition
         self._ddm = np.array([(ddm[i] + ddm[i].conj().T) / 2 for i in range(3)])
