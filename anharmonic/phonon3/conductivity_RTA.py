@@ -1,5 +1,6 @@
 import numpy as np
 import phonopy.structure.spglib as spg
+from phonopy.harmonic.force_constants import similarity_transformation
 from phonopy.phonon.group_velocity import get_group_velocity
 from phonopy.units import Kb, THzToEv, EV, THz, Angstrom
 from phonopy.phonon.thermal_properties import mode_cv
@@ -255,9 +256,8 @@ class conductivity_RTA:
         grid_point = self._grid_points[i]
         rotations = self._get_rotations_for_star(i)
         gv2_tensor = []
-        inv_rec_lat = self._primitive.get_cell()
-        rec_lat = np.linalg.inv(inv_rec_lat)
-        rotations_cartesian = [np.dot(rec_lat, np.dot(r, inv_rec_lat))
+        rec_lat = np.linalg.inv(self._primitive.get_cell()).T
+        rotations_cartesian = [similarity_transformation(rec_lat, r)
                                for r in rotations]
         for rot in rotations_cartesian:
             gv2_tensor.append([np.outer(gv_rot_band_index, gv_rot_band_index)
@@ -308,7 +308,7 @@ class conductivity_RTA:
                         break
                 if not in_orbits:
                     orbits.append(rot_address)
-                    rotations.append(rot)
+                    rotations.append(rot.T)
     
             # check if the number of rotations is correct.
             if self._grid_weights is not None:
