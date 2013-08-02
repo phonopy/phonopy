@@ -46,13 +46,12 @@ class DerivativeOfDynamicalMatrix:
         self._p2s_map = self._dynmat.get_primitive_to_supercell_map()
         self._s2p_map = self._dynmat.get_supercell_to_primitive_map()
         self._mass = self._pcell.get_masses()
-        self._nac = False
 
         self._derivative_order = 1
         self._ddm = None
 
-    def run(self, q):
-        self._run_py(q)
+    def run(self, q, q_direction=None):
+        self._run_py(q, q_direction=q_direction)
 
     def set_derivative_order(self, order):
         self._derivative_order = order
@@ -60,7 +59,15 @@ class DerivativeOfDynamicalMatrix:
     def get_derivative_of_dynamical_matrix(self):
         return self._ddm
         
-    def _run_py(self, q):
+    def _run_py(self, q, q_direction=None):
+        if self._dynmat.is_nac():
+            if q_direction is None:
+                fc_nac = self._nac(q)
+                d_nac = self._d_nac(q)
+            else:
+                fc_nac = self._nac(q_direction)
+                d_nac = self._d_nac(q_direction)
+
         fc = self._force_constants
         vecs = self._smallest_vectors
         multiplicity = self._multiplicity
@@ -86,11 +93,86 @@ class DerivativeOfDynamicalMatrix:
                                       for vec in vecs_multi])
                 vecs_multi_cart = np.dot(vecs_multi, self._pcell.get_cell())
                 coef = (2j * np.pi * vecs_multi_cart) ** self._derivative_order
+
                 for l in range(3):
-                    ddm_local[l] += (fc[s_i, k] / mass *
-                                     (coef[:, l] * phase_multi).sum() / multi)
+                    if self._dynmat.is_nac():
+                        fc_elem = fc[s_i, k] + fc_nac[i, j]
+                    else:
+                        fc_elem = fc[s_i, k]
+                    
+                    ddm_local[l] += (fc_elem / mass *
+                                     (coef[:, l] * phase_multi).sum() +
+                                     d_nac[l, i, j] * phase_multi.sum()) / multi
 
             ddm[:, (i * 3):(i * 3 + 3), (j * 3):(j * 3 + 3)] = ddm_local
 
         # Impose Hermite condition
         self._ddm = np.array([(ddm[i] + ddm[i].conj().T) / 2 for i in range(3)])
+
+    def _nac(self, q_direction):
+        """nac_term = (A1 (x) A2) / B * coef.
+        """
+        num_atom = self._pcell.get_number_of_atoms()
+        nac_q = np.zeros((num_atom, num_atom, 3, 3), dtype='double')
+        if (np.abs(q_direction) < 1e-5).all():
+            return nac_q
+
+        rec_lat = np.linalg.inv(self._pcell.get_cell())
+        nac_factor = self._dynmat.get_nac_factor()
+        Z = self._dynmat.get_born_effective_charges()
+        e = self._dynmat.get_dielectric_constant()
+        q = np.dot(rec_lat, q_direction)
+
+        B = self._B(e, q)
+        for i in range(num_atom):
+            A_i = self._A(q, Z, i)
+            for j in range(num_atom):
+                A_j = self._A(q, Z, j)
+                nac_q[i, j] = np.outer(A_i, A_j) / B
+
+        num_satom = self._scell.get_number_of_atoms()
+        N = num_satom / num_atom
+
+        return nac_q * nac_factor / N
+    
+    def _d_nac(self, q_direction):
+        num_atom = self._pcell.get_number_of_atoms()
+        d_nac_q = np.zeros((3, num_atom, num_atom, 3, 3), dtype='double')
+        if (np.abs(q_direction) < 1e-5).all():
+            return d_nac_q
+
+        rec_lat = np.linalg.inv(self._pcell.get_cell())
+        nac_factor = self._dynmat.get_nac_factor()
+        Z = self._dynmat.get_born_effective_charges()
+        e = self._dynmat.get_dielectric_constant()
+        q = np.dot(rec_lat, q_direction)
+
+        B = self._B(e, q)
+        for xyz in range(3):
+            dB = self._dB(e, q, xyz)
+            for i in range(num_atom):
+                A_i = self._A(q, Z, i)
+                dA_i = self._dA(Z, i, xyz)
+                for j in range(num_atom):
+                    A_j = self._A(q, Z, j)
+                    dA_j = self._dA(Z, j, xyz)
+                    d_nac_q[xyz, i, j] = (
+                        (np.outer(dA_i, A_j) + np.outer(A_i, dA_j)) / B -
+                        np.outer(A_i, A_j) * dB / B ** 2)
+
+        num_satom = self._scell.get_number_of_atoms()
+        N = num_satom / num_atom
+        return d_nac_q * nac_factor / N
+
+    def _A(self, q, Z, atom_num):
+        return np.dot(q, Z[atom_num])
+
+    def _B(self, epsilon, q):
+        return np.dot(q, np.dot(epsilon, q))
+
+    def _dA(self, Z, atom_num, xyz):
+        return Z[atom_num, xyz, :]
+
+    def _dB(self, epsilon, q, xyz):
+        e = epsilon
+        return np.dot(e[xyz], q) * 2

@@ -296,12 +296,12 @@ class DynamicalMatrixNAC(DynamicalMatrix):
                 self._set_c_nac_dynamical_matrix(q_red, q, constant)
             except ImportError:
                 fc = self._bare_force_constants.copy()
-                charge_sum = self._get_charge_sum(num_atom, q)
-                nac_q = np.zeros((num_atom * 3, num_atom * 3), dtype='double')
+                nac_q = np.zeros((num_atom, num_atom, 3, 3), dtype='double')
                 for i in range(num_atom):
+                    A_i = np.dot(q, self._born[i])
                     for j in range(num_atom):
-                        nac_q[i*3:(i+1)*3, j*3:(j+1)*3] = \
-                            charge_sum[i, j] * constant
+                        A_j = np.dot(q, self._born[j])
+                        nac_q[i, j] = np.outer(A_i, A_j) * constant
                 self._set_NAC_force_constants(fc, nac_q)
                 self._force_constants = fc
                 DynamicalMatrix.set_dynamical_matrix(self, q_red, verbose)
@@ -319,7 +319,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             p1 = self._p2p_map[s1]
             for s2 in range(self._scell.get_number_of_atoms()):            
                 p2 = self._p2p_map[s2]
-                fc[s1, s2] += nac_q[p1*3:(p1+1)*3, p2*3:(p2+1)*3] / N
+                fc[s1, s2] += nac_q[p1, p2] / N
 
     def _get_charge_sum(self, num_atom, q):
         charge_sum = np.zeros((num_atom, num_atom, 3, 3), dtype='double')
