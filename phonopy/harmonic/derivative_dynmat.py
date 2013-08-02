@@ -99,10 +99,13 @@ class DerivativeOfDynamicalMatrix:
                         fc_elem = fc[s_i, k] + fc_nac[i, j]
                     else:
                         fc_elem = fc[s_i, k]
-                    
-                    ddm_local[l] += (fc_elem / mass *
-                                     (coef[:, l] * phase_multi).sum() +
-                                     d_nac[l, i, j] * phase_multi.sum()) / multi
+
+                    ddm_elem = fc_elem * (coef[:, l] * phase_multi).sum()
+                    if self._dynmat.is_nac() and self._derivative_order == 1:
+                        ddm_elem += d_nac[l, i, j] * phase_multi.sum()
+
+                    ddm_local[l] +=  ddm_elem / multi / mass
+                                         
 
             ddm[:, (i * 3):(i * 3 + 3), (j * 3):(j * 3 + 3)] = ddm_local
 
