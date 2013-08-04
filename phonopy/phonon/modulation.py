@@ -47,7 +47,7 @@ class Modulation:
                  dimension,
                  phonon_modes,
                  delta_q=None,
-                 derivative_order=1,
+                 derivative_order=None,
                  factor=VaspToTHz):
 
         """Class describe atomic modulations
@@ -62,7 +62,8 @@ class Modulation:
         self._delta_q = delta_q # 1st/2nd order perturbation direction
 
         self._ddm = DerivativeOfDynamicalMatrix(dynamical_matrix)
-        self._ddm.set_derivative_order(derivative_order)
+
+        self._derivative_order = derivative_order
 
         self._factor = factor
         self._delta_modulations = []
@@ -172,19 +173,37 @@ class Modulation:
         self._dm.set_dynamical_matrix(q)
         eigvals, eigvecs = np.linalg.eigh(self._dm.get_dynamical_matrix())
         eigvals = eigvals.real
-        eigvecs_new = np.zeros_like(eigvecs)
         if self._delta_q is None:
             return eigvals, eigvecs
-        else:
-            deg_sets = degenerate_sets(eigvals)
-            dD = self._get_dD(q)
-            for deg in deg_sets:
-                eigsets = eigvecs[:, deg]
-                dD_part = np.dot(eigsets.T.conj(), np.dot(dD, eigsets))
-                p_eigvals, p_eigvecs = np.linalg.eigh(dD_part)
-                eigvecs_new[:, deg] = np.dot(eigsets, p_eigvecs)
 
-            return eigvals, eigvecs_new
+        eigvecs_new = np.zeros_like(eigvecs)
+        deg_sets = degenerate_sets(eigvals)
+
+        if self._derivative_order is None:
+            self._ddm.set_derivative_order(1)
+            dD1 = self._get_dD(q)
+            self._ddm.set_derivative_order(2)
+            dD2 = self._get_dD(q)
+        else:
+            self._ddm.set_derivative_order(self._derivative_order)
+            dD = self._get_dD(q)
+
+        for deg in deg_sets:
+            if len(deg) == 1:
+                continue
+            
+            if self._derivative_order is not None:
+                eigvecs_new = self._rearrange_eigenvectors(dD, eigvecs[:, deg])
+            else:
+                eigvecs_new = self._rearrange_eigenvectors(dD1, eigvecs[:, deg])
+                if eigvecs_new is None:
+                    eigvecs_new = self._rearrange_eigenvectors(
+                        dD2, eigvecs[:, deg])
+
+            if eigvecs_new is not None:
+                eigvecs[:, deg] = eigvecs_new
+
+        return eigvals, eigvecs
 
     def _check_eigvecs(self, eigvals, eigvecs, dynmat):
         modified = np.diag(np.dot(eigvecs.conj().T, np.dot(dynmat, eigvecs)))
@@ -197,11 +216,6 @@ class Modulation:
         return np.sqrt(np.abs(e)) * np.sign(e) * self._factor
             
     def _get_dD(self, q):
-        # dD = delta_dynamical_matrix(np.array(q),
-        #                             np.array(self._delta_q),
-        #                             self._dm) / np.linalg.norm(self._delta_q) / 2
-        # return dD
-        
         self._ddm.run(q)
         ddm = self._ddm.get_derivative_of_dynamical_matrix()
         dD = np.zeros(ddm.shape[1:], dtype='complex128')
@@ -209,6 +223,15 @@ class Modulation:
             dD += self._delta_q[i] * ddm[i]
         return dD / np.linalg.norm(self._delta_q)
 
+    def _rearrange_eigenvectors(self, dD, eigvecs_deg):
+        dD_part = np.dot(eigvecs_deg.T.conj(), np.dot(dD, eigvecs_deg))
+        p_eigvals, p_eigvecs = np.linalg.eigh(dD_part)
+        
+        if (np.abs(p_eigvals - p_eigvals[0]) < 1e-5).all():
+            return None
+        else:
+            return np.dot(eigvecs_deg, p_eigvecs)
+    
     def write_yaml(self):
         file = open('modulation.yaml', 'w')
         dim = self._dimension
