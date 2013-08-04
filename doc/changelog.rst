@@ -14,6 +14,9 @@ Aug-4-2013: Version 1.7.2
   matrix in the default configuration instead of previous finite
   difference method. Group velocity calculation with the finite
   difference method can be still activated by ``--gv_delta_q`` option.
+* Force constants solver was partially rewritten. The order and shape
+  of matrices in the formula is rearranged
+  (:ref:`force_constants_solver_theory`).
 
 July-14-2013: Version 1.7.1
 ---------------------------

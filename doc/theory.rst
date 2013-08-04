@@ -48,12 +48,13 @@ where :math:`F_\beta(j'l'; \Delta r_\alpha{(jl)})` are the forces on
 atoms with a finite displacement :math:`\Delta r_\alpha{(jl)}` and
 usually :math:`F_\beta(j'l') \equiv 0`.
 
+.. _force_constants_solver_theory:
    
-The Palinski-Li-Kawazoe method
-==============================
+Modified Palinski-Li-Kawazoe method
+====================================
 
-The following is considered as the Parlinski-Li-Kawazoe method,
-however the exact definition may be different. 
+The following is a modified and simplified version of the
+Parlinski-Li-Kawazoe method.
 
 The last equation above is represented by matrices as
 
@@ -62,38 +63,28 @@ The last equation above is represented by matrices as
    \mathbf{F} = - \mathbf{U} \mathbf{P},
 
 where :math:`\mathbf{F}`, :math:`\mathbf{P}`, and :math:`\mathbf{U}`
-are given by
+for a pair of atoms, e.g. :math:`\{jl, j'l'\}`, are given by
 
 .. math::
 
    \mathbf{F} = 
     \begin{pmatrix}
-     F_{x} \\
-     F_{y} \\
-     F_{z} 
+     F_{x} & F_{y} & F_{z} 
     \end{pmatrix},
 
 .. math::
-   \mathbf{P} = 
+   \mathbf{P} =
      \begin{pmatrix}
-     \Phi_{xx} \\
-     \Phi_{xy} \\
-     \Phi_{xz} \\
-     \Phi_{yx} \\
-     \Phi_{yy} \\
-     \Phi_{yz} \\
-     \Phi_{zx} \\
-     \Phi_{zy} \\
-     \Phi_{zz}
+     \Phi_{xx} & \Phi_{xy} & \Phi_{xz} \\
+     \Phi_{yx} & \Phi_{yy} & \Phi_{yz} \\
+     \Phi_{zx} & \Phi_{zy} & \Phi_{zz}
    \end{pmatrix},
 
 .. math::
 
-   \mathbf{U} = 
+   \mathbf{U} =
     \begin{pmatrix}
-      \Delta r_{x} & 0 & 0 & \Delta r_{y} & 0 & 0 & \Delta r_{z} & 0 & 0 \\
-      0 & \Delta r_{x} & 0 & 0 & \Delta r_{y} & 0 & 0 & \Delta r_{z} & 0 \\
-      0 & 0 & \Delta r_{x} & 0 & 0 & \Delta r_{y} & 0 & 0 & \Delta r_{z} \\
+      \Delta r_{x} & \Delta r_{y} & \Delta r_{z} \\
     \end{pmatrix}.
 
 The matrix equation is expanded for number of
@@ -133,17 +124,19 @@ may be solved by pseudo inverse such as
 
 Required number of atomic displacements to solve the simultaneous
 equations may be reduced using site-point symmetries. The matrix
-equation can be written using a site-point symmetry operation as
+equation can be written using a symmetry operation as
 
 .. math::
 
-  \mathbf{F}' = -\mathbf{U} \mathbf{A} \mathbf{P},
+  \hat{R}(\mathbf{F}) = -\hat{R}(\mathbf{U})\mathbf{P},
 
-where :math:`\mathbf{F}'` is the force at the atomic site translated
-from the original atomic site by the site-point symmetry operation,
-and :math:`\mathbf{A}` is the :math:`9\times 9` site-point symmetry
-matrix to rotate :math:`\mathbf{P}`.  Thus, the combined simultaneous
-equations are built such as
+where :math:`\hat{R}` is the site symmetry
+operation centring at
+:math:`\mathbf{r}(jl)`. :math:`\hat{R}(\mathbf{F})` and :math:`\hat{R}(\mathbf{U})` are defined as
+:math:`\mathbf{RF}(\hat{R^{-1}}(j'l'))` and :math:`\mathbf{RU}`,
+respectively, where :math:`\mathbf{R}` is the matrix
+representation of the rotation operation. The combined
+simultaneous equations are built such as
 
 .. math::
 
@@ -155,12 +148,11 @@ equations are built such as
    \mathbf{F}^{(2)}_2 \\
    \vdots \end{pmatrix} = -
    \begin{pmatrix}
-   \mathbf{U}_1
-   \mathbf{A}^{(1)} \\
+   \mathbf{U}^{(1)}_1 \\ 
    \vdots \\
-   \mathbf{U}_1 \mathbf{A}^{(2)} \\
-   \mathbf{U}_2 \mathbf{A}^{(1)} \\
-   \mathbf{U}_2 \mathbf{A}^{(2)} \\
+   \mathbf{U}^{(2)}_1 \\
+   \mathbf{U}^{(1)}_2 \\
+   \mathbf{U}^{(2)}_2 \\
    \vdots
    \end{pmatrix}
    \mathbf{P}.
@@ -173,7 +165,7 @@ site-symmetry operations. This is solved by pseudo inverse.
 Dynamical matrix
 =================
 
-The dynamical matrix is defined by
+In phonopy, a phase convention of dynamical matrix is used as follows:
 
 .. math::
 
