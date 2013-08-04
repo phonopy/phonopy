@@ -3,11 +3,17 @@
 Change Log
 ==========
 
-xx-xx-2013: Version 1.7.2
+Aug-4-2013: Version 1.7.2
 ---------------------------
 
-* group_velocity/__init__.py is moved to phonon directory.
-* hphonopy/file_IO.py is moved to top directory.
+* ``group_velocity/__init__.py`` is moved to ``phonon`` directory.
+* ``hphonopy/file_IO.py`` is moved to top directory.
+* New ``harmonic/derivative_dynmat.py``: Analytical derivatives of
+  dynamical matrix
+* Group velocity is computed by analytical derivatives of dynamical
+  matrix in the default configuration instead of previous finite
+  difference method. Group velocity calculation with the finite
+  difference method can be still activated by ``--gv_delta_q`` option.
 
 July-14-2013: Version 1.7.1
 ---------------------------
