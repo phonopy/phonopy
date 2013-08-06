@@ -4,7 +4,8 @@ from anharmonic.phonon3.interaction import Interaction
 from anharmonic.phonon3.conductivity_RTA import conductivity_RTA
 from anharmonic.phonon3.jointDOS import get_jointDOS
 from anharmonic.phonon3.gruneisen import Gruneisen
-from anharmonic.file_IO import write_kappa_to_hdf5, read_gamma_from_hdf5, write_damping_functions, write_linewidth
+from anharmonic.file_IO import write_kappa_to_hdf5
+from anharmonic.file_IO import read_gamma_from_hdf5, write_damping_functions, write_linewidth
 
 class Phono3py:
     def __init__(self,
@@ -202,18 +203,18 @@ class Phono3py:
                 for t, k in zip(temperatures, kappa):
                     print ("%7.1f" + " %9.3f" * 6) % ((t,) + tuple(k))
                 print
-                write_kappa_to_hdf5(gamma[i],
-                                    temperatures,
-                                    br.get_mesh_numbers(),
-                                    frequency=br.get_frequencies(),
-                                    group_velocity=br.get_group_velocities(),
-                                    heat_capacity=br.get_mode_heat_capacities(),
-                                    kappa=kappa,
-                                    qpoint=br.get_qpoints(),
-                                    weight=br.get_grid_weights(),
-                                    mesh_divisors=br.get_mesh_divisors(),
-                                    sigma=sigma,
-                                    filename=filename)
+                write_kappa(gamma[i],
+                            temperatures,
+                            br.get_mesh_numbers(),
+                            frequency=br.get_frequencies(),
+                            group_velocity=br.get_group_velocities(),
+                            heat_capacity=br.get_mode_heat_capacities(),
+                            kappa=kappa,
+                            qpoint=br.get_qpoints(),
+                            weight=br.get_grid_weights(),
+                            mesh_divisors=br.get_mesh_divisors(),
+                            sigma=sigma,
+                            filename=filename)
 
         self._kappa = mode_kappa
         self._gamma = gamma

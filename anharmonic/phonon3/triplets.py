@@ -106,6 +106,30 @@ def from_coarse_to_dense_grid_points(dense_mesh,
                                                              dense_mesh))
     return np.intc(dense_grid_points)
 
+def get_coarse_ir_grid_points(primitive, mesh, mesh_divs, coarse_mesh_shifts):
+    if mesh_divs is None:
+        mesh_divs = [1, 1, 1]
+    mesh = np.intc(mesh)
+    mesh_divs = np.intc(mesh_divs)
+    coarse_mesh = mesh / mesh_divs
+    if coarse_mesh_shifts is None:
+        coarse_mesh_shifts = [False, False, False]
+    (coarse_grid_points,
+     coarse_grid_weights,
+     coarse_grid_address) = get_ir_grid_points(
+        coarse_mesh,
+        primitive,
+        mesh_shifts=coarse_mesh_shifts)
+    grid_points = from_coarse_to_dense_grid_points(
+        mesh,
+        mesh_divs,
+        coarse_grid_points,
+        coarse_grid_address,
+        coarse_mesh_shifts=coarse_mesh_shifts)
+    grid_address = get_grid_address(mesh)
+
+    return grid_points, coarse_grid_weights, grid_address
+
 
 if __name__ == '__main__':
     # This checks if ir_grid_points.yaml gives correct dense grid points

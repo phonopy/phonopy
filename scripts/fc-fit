@@ -1,0 +1,98 @@
+#!/usr/bin/env python
+
+# Copyright (C) 2013 Atsushi Togo
+# All rights reserved.
+#
+# This file is part of phonopy.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#
+# * Redistributions of source code must retain the above copyright
+#   notice, this list of conditions and the following disclaimer.
+#
+# * Redistributions in binary form must reproduce the above copyright
+#   notice, this list of conditions and the following disclaimer in
+#   the documentation and/or other materials provided with the
+#   distribution.
+#
+# * Neither the name of the phonopy project nor the names of its
+#   contributors may be used to endorse or promote products derived
+#   from this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+# COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+
+import os
+import sys
+import numpy as np
+from optparse import OptionParser
+from phonopy.interface.vasp import read_vasp
+from phonopy.structure.cells import get_supercell, Primitive
+from phonopy.structure.symmetry import Symmetry
+from anharmonic.fc.force_fit import FC2Fit, FC3Fit
+from anharmonic.file_IO import parse_disp_fc4_yaml, parse_FORCES_FOURTH
+
+def print_error(message):
+    print message
+
+parser = OptionParser()
+parser.set_defaults(cell_poscar=None,
+                    primitive_axis=None,
+                    supercell_dimension=None,
+                    symprec=1e-5)
+parser.add_option("-c", "--cell", dest="cell_poscar",
+                  action="store", type="string",
+                  help="Read unit cell", metavar="FILE")
+parser.add_option("--dim", dest="supercell_dimension",
+                  type="string", help="Supercell dimension")
+parser.add_option("--pa", "--primitive_axis", dest="primitive_axis",
+                  action="store", type="string",
+                  help="Same as PRIMITIVE_AXIS tags")
+parser.add_option("--tolerance", dest="symprec", type="float",
+                  help="Symmetry tolerance to search")
+(options, args) = parser.parse_args()
+
+if options.supercell_dimension is None:
+    print_error("\'--dim\' has to be set")
+    sys.exit(1)
+    
+dimension = np.array([int(x) for x in options.supercell_dimension.split()])
+if len(dimension) == 3:
+    dimension = np.diag(dimension)
+
+# Read POSCAR
+if options.cell_poscar is None:
+    unitcell_filename = 'POSCAR'
+else:
+    unitcell_filename = options.cell_poscar
+if os.path.exists(unitcell_filename):
+    unitcell = read_vasp(unitcell_filename)
+else:
+    print_error("%s could not be found." % unitcell_filename)
+    sys.exit(1)
+
+# Supercell and Symmetry 
+supercell = get_supercell(unitcell, dimension)
+symmetry = Symmetry(supercell, options.symprec)
+
+print "Spacegroup: ", symmetry.get_international_table()
+
+disp_dataset = parse_disp_fc4_yaml()
+parse_FORCES_FOURTH(disp_dataset)
+
+# fc2fit = FC2Fit(supercell, disp_dataset, symmetry)
+# fc2fit.run()
+fc3fit = FC3Fit(supercell, disp_dataset, symmetry)
+fc3fit.run()

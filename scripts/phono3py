@@ -55,6 +55,7 @@ from anharmonic.file_IO import write_fc2_dat, write_fc3_dat,\
     write_DELTA_FC2_SETS, parse_DELTA_FC2_SETS, parse_FORCES_SECOND, \
     write_fc3_to_hdf5, write_fc2_to_hdf5,\
     read_fc3_from_hdf5, read_fc2_from_hdf5, write_ir_grid_points
+from anharmonic.phonon3.triplets import get_coarse_ir_grid_points
 from anharmonic.phonon3.displacement_fc3 import get_third_order_displacements
 from anharmonic.settings import Phono3pyConfParser
 from anharmonic.phonon3 import Phono3py, JointDOS, get_gruneisen_parameters    
@@ -459,8 +460,19 @@ else:
         else:
             print "Ir-grid points are written into ir_grid_points.yaml."
             mesh_divs = settings.get_mesh_divisors()
-            coarse_mesh_shifts = settings.get_coarse_mesh_shifts()
-            write_ir_grid_points(primitive, mesh, mesh_divs, coarse_mesh_shifts)
+            (grid_points,
+             coarse_grid_weights,
+             grid_address) = get_coarse_ir_grid_points(
+                primitive,
+                mesh,
+                mesh_divs,
+                settings.get_coarse_mesh_shifts())
+            write_ir_grid_points(mesh,
+                                 mesh_divs,
+                                 grid_points,
+                                 coarse_grid_weights,
+                                 grid_address)
+                                 
         sys.exit(0)
             
     # fc2

@@ -4,7 +4,6 @@ import h5py
 from phonopy.structure.atoms import Atoms
 from phonopy.interface import vasp
 from phonopy.file_IO import write_FORCE_SETS_vasp, read_force_constant_vasprun_xml
-from anharmonic.phonon3.triplets import get_grid_address, get_ir_grid_points, from_coarse_to_dense_grid_points
 from phonopy.harmonic.forces import Forces
 
 ###########
@@ -855,36 +854,17 @@ def write_decay_channels(decay_channels,
 def mycmp(a, b):
     return cmp(b[0], a[0])
 
-def write_ir_grid_points(primitive, mesh, mesh_divs, coarse_mesh_shifts):
-    if mesh_divs is None:
-        mesh_divs = [1, 1, 1]
-    mesh = np.intc(mesh)
-    mesh_divs = np.intc(mesh_divs)
-    coarse_mesh = mesh / mesh_divs
-    if coarse_mesh_shifts is None:
-        coarse_mesh_shifts = [False, False, False]
-
-    (coarse_grid_points,
-     coarse_grid_weights,
-     coarse_grid_address) = get_ir_grid_points(
-        coarse_mesh,
-        primitive,
-        mesh_shifts=coarse_mesh_shifts)
-
-    grid_points = from_coarse_to_dense_grid_points(
-        mesh,
-        mesh_divs,
-        coarse_grid_points,
-        coarse_grid_address,
-        coarse_mesh_shifts=coarse_mesh_shifts)
-    
+def write_ir_grid_points(mesh,
+                         mesh_divs,
+                         grid_points,
+                         coarse_grid_weights,
+                         grid_address):
     w = open("ir_grid_points.yaml", 'w')
     w.write("mesh: [ %d, %d, %d ]\n" % tuple(mesh))
     w.write("mesh_divisors: [ %d, %d, %d ]\n" % tuple(mesh_divs))
     w.write("num_reduced_ir_grid_points: %d\n" % len(grid_points))
     w.write("ir_grid_points:  # [address, weight]\n")
 
-    grid_address = get_grid_address(mesh)
     for g, weight in zip(grid_points, coarse_grid_weights):
         w.write("- grid_point: %d\n" % g)
         w.write("  weight: %d\n" % weight)
@@ -1079,12 +1059,32 @@ def parse_DELTA_FORCES_FOURTH(disp_dataset,
 
     for disp1 in disp_dataset['first_atoms']:
         second_forces = parse_force_lines(f2, num_atom)
+        disp1['forces'] = second_forces
         for disp2 in disp1['second_atoms']:
             third_forces = parse_force_lines(f3, num_atom)
             disp2['delta_forces'] = third_forces - second_forces
             for disp3 in disp2['third_atoms']:
                 fourth_forces = parse_force_lines(f4, num_atom)
                 disp3['delta_forces'] = fourth_forces - third_forces
+
+def parse_FORCES_FOURTH(disp_dataset,
+                        file4='FORCES_FOURTH',
+                        file3='FORCES_THIRD',
+                        file2='FORCES_SECOND'):
+    f4 = open(file4, 'r')
+    f3 = open(file3, 'r')
+    f2 = open(file2, 'r')
+    num_atom = disp_dataset['natom']
+
+    for disp1 in disp_dataset['first_atoms']:
+        second_forces = parse_force_lines(f2, num_atom)
+        disp1['forces'] = second_forces
+        for disp2 in disp1['second_atoms']:
+            third_forces = parse_force_lines(f3, num_atom)
+            disp2['forces'] = third_forces
+            for disp3 in disp2['third_atoms']:
+                fourth_forces = parse_force_lines(f4, num_atom)
+                disp3['forces'] = fourth_forces
                 
 def parse_FORCES_THIRD(disp_dataset,
                        filename='FORCES_THIRD'):
