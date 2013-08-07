@@ -256,18 +256,19 @@ class conductivity_RTA:
         grid_point = self._grid_points[i]
         rotations = self._get_rotations_for_star(i)
         gv2_tensor = []
-        rec_lat = np.linalg.inv(self._primitive.get_cell()).T
+        rec_lat = np.linalg.inv(self._primitive.get_cell())
         rotations_cartesian = [similarity_transformation(rec_lat, r)
                                for r in rotations]
-        for rot in rotations_cartesian:
-            gv2_tensor.append([np.outer(gv_rot_band_index, gv_rot_band_index)
-                               for gv_rot_band_index in np.dot(rot, gv.T).T])
+        for rot_c in rotations_cartesian:
+            gv2_tensor.append([np.outer(gv_rot, gv_rot)
+                               for gv_rot in np.dot(rot_c, gv.T).T])
 
         if self._log_level:
             self._show_log(grid_point,
                            self._frequencies[i],
                            gv,
-                           rotations)
+                           rotations,
+                           rotations_cartesian)
 
         return np.array(gv2_tensor)
     
@@ -308,7 +309,7 @@ class conductivity_RTA:
                         break
                 if not in_orbits:
                     orbits.append(rot_address)
-                    rotations.append(rot.T)
+                    rotations.append(rot)
     
             # check if the number of rotations is correct.
             if self._grid_weights is not None:
@@ -407,7 +408,8 @@ class conductivity_RTA:
                   grid_point,
                   frequencies,
                   group_velocity,
-                  rotations):
+                  rotations,
+                  rotations_cartesian):
         print "----- Partial kappa at grid address %d -----" % grid_point
         print "Frequency, projected group velocity (x, y, z), norm at k-stars",
         if self._gv_delta_q is None:
@@ -415,12 +417,11 @@ class conductivity_RTA:
         else:
             print " (dq=%3.1e)" % self._gv_delta_q
         q = self._grid_address[grid_point].astype(float) / self._mesh
-        for i, rot in enumerate(rotations):
+        for i, (rot, rot_c) in enumerate(zip(rotations, rotations_cartesian)):
             q_rot = np.dot(rot, q)
             q_rot -= np.rint(q_rot)
             print " k*%-2d (%5.2f %5.2f %5.2f)" % ((i + 1,) + tuple(q_rot))
-            for f, v in zip(frequencies,
-                            np.dot(rot, group_velocity.T).T):
+            for f, v in zip(frequencies, np.dot(rot_c, group_velocity.T).T):
                 print "%8.3f   (%8.3f %8.3f %8.3f) %8.3f" % (
                     f, v[0], v[1], v[2], np.linalg.norm(v))
 

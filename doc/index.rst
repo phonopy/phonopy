@@ -13,6 +13,7 @@ supercell approach.
 - Phonon dispersion relation (band structure)
 - Phonon DOS and partial-DOS
 - Phonon thermal properties, free energy, heat capacity, and entropy
+- Phonon group velocity
 - Thermal expansion and heat capacity at constant pressure within
   quasi-harmonic approximation (:ref:`phonopy-qha <phonopy_qha>`)
 - Mode Grüneisen parameters (:ref:`gruneisen <phonopy_gruneisen>`)
