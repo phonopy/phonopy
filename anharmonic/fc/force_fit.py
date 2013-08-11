@@ -33,120 +33,120 @@ class FC3Fit:
             [x['number'] for x in dataset['first_atoms']])
         
         for first_atom_num in unique_first_atom_nums:
-            datasets_1st = []
+            disp_pairs = []
+            sets_of_forces = []
             for dataset_1st in dataset['first_atoms']:
                 if first_atom_num != dataset_1st['number']:
                     continue
-                datasets_1st.append(dataset_1st)
-            self._get_matrices_2nd(datasets_1st)
+                disp_pairs_each, sets_of_forces_each = \
+                    self._collect_disp_pairs_and_forces(dataset_1st)
+                disp_pairs.append(disp_pairs_each)
+                sets_of_forces.append(sets_of_forces_each)
 
-    def _get_matrices_2nd(self, datasets_1st):
-        for dataset_1st in datasets_1st:
-            self._expand_forces_of_2nd_displacements(dataset_1st)
-        first_atom_num = datasets_1st[0]['number']
+            self._get_matrices_2nd(first_atom_num, disp_pairs, sets_of_forces)
+
+    def _get_matrices_2nd(self, first_atom_num, disp_pairs, sets_of_forces):
         site_symmetry = self._symmetry.get_site_symmetry(first_atom_num)
+        positions = self._positions.copy() - self._positions[first_atom_num]
+        rot_map_syms = get_positions_sent_by_rot_inv(positions,
+                                                     site_symmetry,
+                                                     self._symprec)
 
         for second_atom_num in range(self._num_atom):
-            rot_disps = None
-            rot_forces = None
-            for dataset_1st in datasets_1st:
-                disp1 = dataset_1st['displacement']
-                disp_pairs = []
-                sets_of_forces = []
-                for dataset_2nd in dataset_1st['second_atoms']:
-                    if second_atom_num != dataset_2nd['number']:
-                        continue
-                    disp_pairs.append([disp1, dataset_2nd['displacement']])
-                    sets_of_forces.append(dataset_2nd['forces'])
-    
-                # rot_disps1 (Num-pairs x num-site-syms, 3)
-                # rot_disps2 (Num-pairs x num-site-syms, 3)
-                # rot_disps_pair (Num-pairs x num-site-syms, 9)
+            rot_disps = []
+            rot_forces = []
+            rot_atom_map = rot_map_syms[:, second_atom_num]
+
+            for disp_pairs_each, sets_of_forces_each in zip(
+                disp_pairs, sets_of_forces):
                 (rot_disps1,
                  rot_disps2,
-                 rot_disps_pair) = self._rotate_displacements(disp_pairs,
-                                                              site_symmetry)
+                 rot_disps_pair) = self._rotate_displacements(disp_pairs_each,
+                                                              site_symmetry,
+                                                              rot_atom_map)
                 ones = np.ones(rot_disps1.shape[0]).reshape((-1, 1))
-                rot_disps_tmp = np.hstack(
-                    (ones, rot_disps1, rot_disps2, rot_disps_pair))
-                rot_forces_tmp = self._create_force_matrix(sets_of_forces,
-                                                           site_symmetry,
-                                                           first_atom_num)
-                if rot_disps is None:
-                    rot_disps = rot_disps_tmp
-                else:
-                    rot_disps = np.vstack((rot_disps, rot_disps_tmp))
+                rot_disps.append(np.hstack(
+                        (ones, rot_disps1, rot_disps2, rot_disps_pair)))
+                rot_forces.append(self._create_force_matrix(sets_of_forces_each,
+                                                            site_symmetry,
+                                                            rot_atom_map,
+                                                            rot_map_syms))
 
-                if rot_forces is None:
-                    rot_forces = rot_forces_tmp
-                else:
-                    rot_forces = np.vstack((rot_forces, rot_forces_tmp))
+                print rot_disps[-1].shape, rot_forces[-1].shape
             
-            fc = self._solve(rot_disps, rot_forces, len(datasets_1st))
-
-            print "d", rot_disps.shape, "f", rot_forces.shape, "fc", fc.shape
+            fc = self._solve(rot_disps, rot_forces)
+            
+            # print "d", rot_disps.shape, "f", rot_forces.shape, "fc", fc.shape
             fc2 = fc[:, 1:4, :].reshape((self._num_atom, 3, 3))
+            fc2_b = fc[:, 4:7, :].reshape((self._num_atom, 3, 3))
             self._fc2[first_atom_num] += fc2
             fc3 = fc[:, 7:, :].reshape((self._num_atom, 3, 3, 3))
             self._fc3[first_atom_num, second_atom_num] = fc3
 
         self._fc2[first_atom_num] /= self._num_atom
+        print self._fc2[first_atom_num]
+
         from anharmonic.file_IO import write_fc3_dat
         write_fc3_dat(self._fc3, 'fc3-oneshot.dat')
 
-    def _create_force_matrix(self,
-                             sets_of_forces,
-                             site_symmetry,
-                             disp_atom_num):
-        site_syms_cart = [similarity_transformation(self._lattice, sym)
-                          for sym in site_symmetry]
-
-        positions = (self._positions.copy() -
-                     self._positions[disp_atom_num])
-        rot_map_syms = get_positions_sent_by_rot_inv(positions,
-                                                     site_symmetry,
-                                                     self._symprec)
-        force_matrix = []
-        for i in range(self._num_atom):
-            for forces in sets_of_forces:
-                force_matrix.append(
-                    get_rotated_forces(forces[rot_map_syms[:, i]],
-                                       site_syms_cart))
-        return np.reshape(force_matrix, (self._num_atom, -1, 3))
-        
-    def _solve(self, rot_disps, rot_forces, num_disp1):
-        inv_disps = np.linalg.pinv(rot_disps)
+    def _solve(self, rot_disps, rot_forces):
         fc = []
+
+        disps = None
+        for d in rot_disps:
+            if disps is None:
+                disps = d
+            else:
+                disps = np.vstack((disps, d))
+        inv_disps = np.linalg.pinv(disps)
 
         for i in range(self._num_atom):
             forces = None
-            for j in range(num_disp1):
+            for f in rot_forces:
                 if forces is None:
-                    forces = rot_forces[j]
+                    forces = f[i]
                 else:
-                    forces = np.vstack((forces, rot_forces[j]))
+                    forces = np.vstack((forces, f[i]))
             fc.append(-np.dot(inv_disps, forces))
         
         return np.array(fc)
 
-    def _rotate_displacements(self, disp_pairs, site_syms):
+    def _create_force_matrix(self,
+                             sets_of_forces,
+                             site_symmetry,
+                             rot_atom_map,
+                             rot_map_syms):
+        site_syms_cart = [similarity_transformation(self._lattice, sym)
+                          for sym in site_symmetry]
+        force_matrix = []
+        for i in range(self._num_atom):
+            force_matrix_atom = []
+            for map_sym, rot_atom_num, sym in zip(
+                rot_map_syms, rot_atom_map, site_syms_cart):
+                for forces in sets_of_forces[rot_atom_num]:
+                    force_matrix_atom.append(np.dot(sym, forces[map_sym[i]]))
+            force_matrix.append(force_matrix_atom)
+        return np.double(force_matrix)
+        
+    def _rotate_displacements(self, disp_pairs, site_symmetry, rot_atom_map):
         rot_disps1 = []
         rot_disps2 = []
         rot_disps_pair = []
 
-        for (u1, u2) in disp_pairs:
-            for ssym in site_syms:
-                ssym_c = similarity_transformation(self._lattice, ssym)
+        for rot_atom_num, ssym in zip(rot_atom_map, site_symmetry):
+            ssym_c = similarity_transformation(self._lattice, ssym)
+            for (u1, u2) in disp_pairs[rot_atom_num]:
                 Su1 = np.dot(ssym_c, u1)
                 Su2 = np.dot(ssym_c, u2)
                 rot_disps1.append(Su1)
                 rot_disps2.append(Su2)
-                rot_disps_pair.append(np.outer(Su1, Su2))
-        return (np.reshape(rot_disps1, (-1, 3)),
-                np.reshape(rot_disps2, (-1, 3)),
-                np.reshape(rot_disps_pair, (-1, 9)))
+                rot_disps_pair.append(np.outer(Su1, Su2).flatten())
 
-    def _expand_forces_of_2nd_displacements(self, dataset_1st):
+        return (np.double(rot_disps1),
+                np.double(rot_disps2),
+                np.double(rot_disps_pair))
+
+    def _collect_disp_pairs_and_forces(self, dataset_1st):
         first_atom_num = dataset_1st['number']
         site_symmetry = self._symmetry.get_site_symmetry(first_atom_num)
         disp1 = dataset_1st['displacement']
@@ -160,34 +160,71 @@ class FC3Fit:
                                                      reduced_site_sym,
                                                      self._symprec)
 
-        new_datasets = []
-        for i in range(self._num_atom):
-            if i in unique_second_atom_nums:
-                continue
+        set_of_disps = []
+        sets_of_forces = []
+        for second_atom_num in range(self._num_atom):
+            if second_atom_num in unique_second_atom_nums:
+                set_of_disps_atom2 = []
+                sets_of_forces_atom2 = []
+                for dataset_2nd in dataset_1st['second_atoms']:
+                    if dataset_2nd['number'] != second_atom_num:
+                        continue
+                    set_of_disps_atom2.append(dataset_2nd['displacement'])
+                    sets_of_forces_atom2.append(dataset_2nd['forces'])
+                set_of_disps.append(set_of_disps_atom2)
+                sets_of_forces.append(sets_of_forces_atom2)
+            else:
+                set_of_disps.append(None)
+                sets_of_forces.append(None)
 
-            sym_cart = None
-            orig_atom_num = None
-            for j, sym in enumerate(reduced_site_sym):
-                if rot_map_syms[j, i] in unique_second_atom_nums:
-                    sym_cart = similarity_transformation(self._lattice, sym)
-                    orig_atom_num = rot_map_syms[j, i]
-                    break
+        disp_pairs = []
+        for second_atom_num in range(self._num_atom):
+            if set_of_disps[second_atom_num] is not None:
+                disp_pairs.append(
+                    [[disp1, d] for d in set_of_disps[second_atom_num]])
+            else:
+                (sets_of_forces_atom2,
+                 set_of_disps_atom2) = self._copy_dataset_2nd(
+                    second_atom_num,
+                    set_of_disps,
+                    sets_of_forces,
+                    unique_second_atom_nums,
+                    reduced_site_sym,
+                    rot_map_syms)
 
-            assert sym_cart is not None, "Something is wrong."
+                disp_pairs.append(
+                    [[disp1, d] for d in set_of_disps_atom2])
+                sets_of_forces[second_atom_num] = sets_of_forces_atom2
 
-            for dataset_2nd in dataset_1st['second_atoms']:
-                if orig_atom_num != dataset_2nd['number']:
-                    continue
-                
-                forces = np.double([
-                        np.dot(sym_cart, f) for f in dataset_2nd['forces']])
-                disp = np.dot(sym_cart, dataset_2nd['displacement'])
-                              
-                new_datasets.append({'forces': forces,
-                                     'displacement': disp,
-                                     'number': i})
-        dataset_1st['second_atoms'] += new_datasets
-            
+        return disp_pairs, sets_of_forces
+
+    def _copy_dataset_2nd(self,
+                          second_atom_num,
+                          set_of_disps,
+                          sets_of_forces,
+                          unique_second_atom_nums,
+                          reduced_site_sym,
+                          rot_map_syms):
+        sym_cart = None
+        rot_atom_map = None
+        for i, sym in enumerate(reduced_site_sym):
+            if rot_map_syms[i, second_atom_num] in unique_second_atom_nums:
+                sym_cart = similarity_transformation(self._lattice, sym)
+                rot_atom_map = rot_map_syms[i, :]
+                break
+
+        assert sym_cart is not None, "Something is wrong."
+
+        forces = []
+        disps = []
+
+        for sets_of_forces_orig_atom in sets_of_forces[rot_atom_map[second_atom_num]]:
+            forces.append(np.dot(sets_of_forces_orig_atom[rot_atom_map], sym_cart.T))
+
+        disps = [np.dot(sym_cart, d)
+                 for d in set_of_disps[rot_atom_map[second_atom_num]]]
+
+        return forces, disps
     
             
 class FC2Fit:
