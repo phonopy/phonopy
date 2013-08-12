@@ -36,20 +36,18 @@ class FC4Fit:
         return self._fc4
         
     def _calculate(self):
-        dataset = self._dataset
         unique_first_atom_nums = np.unique(
-            [x['number'] for x in dataset['first_atoms']])
+            [x['number'] for x in self._dataset['first_atoms']])
         
         for first_atom_num in unique_first_atom_nums:
             disp_pairs = []
             sets_of_forces = []
-            for dataset_1st in dataset['first_atoms']:
+            for dataset_1st in self._dataset['first_atoms']:
                 if first_atom_num != dataset_1st['number']:
                     continue
-                disp_pairs_each_dir, sets_of_forces_each_dir = \
-                    self._collect_disp_pairs_and_forces(dataset_1st)
-                disp_pairs.append(disp_pairs_each_dir)
-                sets_of_forces.append(sets_of_forces_each_dir)
+                d, f = self._collect_disp_pairs_and_forces(dataset_1st)
+                disp_pairs += d
+                sets_of_forces += f
 
             self._fit(first_atom_num, disp_pairs, sets_of_forces)
 
@@ -72,21 +70,14 @@ class FC4Fit:
                                                      self._symprec)
 
         for second_atom_num in range(self._num_atom):
-            rot_disps = []
-            rot_forces = []
             rot_atom_map = rot_map_syms[:, second_atom_num]
-
-            for disp_pairs_each, sets_of_forces_each in zip(disp_pairs,
-                                                            sets_of_forces):
-                rot_disps.append(
-                    self._create_displacement_matrix(disp_pairs_each,
-                                                     site_symmetry,
-                                                     rot_atom_map))
-                rot_forces.append(self._create_force_matrix(sets_of_forces_each,
-                                                            site_symmetry,
-                                                            rot_atom_map,
-                                                            rot_map_syms))
-
+            rot_disps = self._create_displacement_matrix(disp_pairs,
+                                                         site_symmetry,
+                                                         rot_atom_map)
+            rot_forces = self._create_force_matrix(sets_of_forces,
+                                                   site_symmetry,
+                                                   rot_atom_map,
+                                                   rot_map_syms)
             fc = self._solve(rot_disps, rot_forces)
             fc2 = fc[:, 1:4, :].reshape((self._num_atom, 3, 3))
             fc2_b = fc[:, 4:7, :].reshape((self._num_atom, 3, 3))
@@ -98,23 +89,9 @@ class FC4Fit:
 
     def _solve(self, rot_disps, rot_forces):
         fc = []
-
-        disps = None
-        for d in rot_disps:
-            if disps is None:
-                disps = d
-            else:
-                disps = np.vstack((disps, d))
-        inv_disps = np.linalg.pinv(disps)
-
+        inv_disps = np.linalg.pinv(rot_disps)
         for i in range(self._num_atom):
-            forces = None
-            for f in rot_forces:
-                if forces is None:
-                    forces = f[i]
-                else:
-                    forces = np.vstack((forces, f[i]))
-            fc.append(-np.dot(inv_disps, forces))
+            fc.append(-np.dot(inv_disps, rot_forces[i]))
         
         return np.array(fc)
 
