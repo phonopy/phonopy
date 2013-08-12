@@ -2,10 +2,9 @@ import sys
 import numpy as np
 from phonopy.harmonic.force_constants import similarity_transformation, get_positions_sent_by_rot_inv
 from anharmonic.phonon3.displacement_fc3 import get_reduced_site_symmetry
-from anharmonic.phonon3.fc3 import distribute_fc3
+from anharmonic.phonon3.fc4 import distribute_fc4
 
-
-class FC3Fit:
+class FC4Fit:
     def __init__(self,
                  supercell,
                  disp_dataset,
@@ -26,12 +25,15 @@ class FC3Fit:
                              dtype='double')
         self._fc3 = np.zeros((self._num_atom, self._num_atom, self._num_atom,
                               3, 3, 3), dtype='double')
+        self._fc4 = np.zeros(
+            (self._num_atom, self._num_atom, self._num_atom, self._num_atom,
+             3, 3, 3, 3), dtype='double')
 
     def run(self):
         self._calculate()
 
-    def get_fc3(self):
-        return self._fc3
+    def get_fc4(self):
+        return self._fc4
         
     def _calculate(self):
         dataset = self._dataset
@@ -53,7 +55,7 @@ class FC3Fit:
 
         rotations = self._symmetry.get_symmetry_operations()['rotations']
         translations = self._symmetry.get_symmetry_operations()['translations']
-        distribute_fc3(self._fc3,
+        distribute_fc4(self._fc4,
                        unique_first_atom_nums,
                        self._lattice,
                        self._positions,

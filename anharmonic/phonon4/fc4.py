@@ -40,14 +40,14 @@ def get_fc4(supercell,
     symprec = symmetry.get_symmetry_tolerance()
     lattice = supercell.get_cell().T
     positions = supercell.get_scaled_positions()
-    _distribute_fc4(fc4,
-                    first_disp_atoms,
-                    lattice,
-                    positions,
-                    rotations,
-                    translations,
-                    symprec,
-                    verbose)
+    distribute_fc4(fc4,
+                   first_disp_atoms,
+                   lattice,
+                   positions,
+                   rotations,
+                   translations,
+                   symprec,
+                   verbose)
 
     if is_translational_symmetry:
         set_translational_invariance_fc4_per_index(fc4)
@@ -140,14 +140,14 @@ def show_drift_fc4(fc4, name="fc4"):
             maxval4 = val4
     print ("max drift of %s:" % name), maxval1, maxval2, maxval3, maxval4
 
-def _distribute_fc4(fc4,
-                    first_disp_atoms,
-                    lattice,
-                    positions,
-                    rotations,
-                    translations,
-                    symprec,
-                    verbose):
+def distribute_fc4(fc4,
+                   first_disp_atoms,
+                   lattice,
+                   positions,
+                   rotations,
+                   translations,
+                   symprec,
+                   verbose):
     num_atom = len(positions)
 
     for i in range(num_atom):
