@@ -41,8 +41,11 @@ from optparse import OptionParser
 from phonopy.interface.vasp import read_vasp
 from phonopy.structure.cells import get_supercell, Primitive
 from phonopy.structure.symmetry import Symmetry
-from anharmonic.fc.force_fit import FC2Fit, FC3Fit
+from anharmonic.force_fit.fc2 import FC2Fit
+from anharmonic.force_fit.fc3 import FC3Fit
 from anharmonic.file_IO import parse_disp_fc4_yaml, parse_FORCES_FOURTH
+from anharmonic.file_IO import write_fc3_dat
+from anharmonic.phonon3.fc3 import show_drift_fc3
 
 def print_error(message):
     print message
@@ -96,3 +99,8 @@ parse_FORCES_FOURTH(disp_dataset)
 # fc2fit.run()
 fc3fit = FC3Fit(supercell, disp_dataset, symmetry)
 fc3fit.run()
+fc3 = fc3fit.get_fc3()
+
+show_drift_fc3(fc3)
+
+write_fc3_dat(fc3, 'fc3-fit.dat')
