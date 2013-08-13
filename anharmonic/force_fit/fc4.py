@@ -86,7 +86,7 @@ class FC4Fit:
                                                      self._symprec)
         site_syms_cart = [similarity_transformation(self._lattice, sym)
                           for sym in site_symmetry]
-
+        
         for second_atom_num in range(self._num_atom):
             for third_atom_num in range(self._num_atom):
                 rot_disps = self._create_displacement_matrix(second_atom_num,
@@ -229,7 +229,7 @@ class FC4Fit:
                 set_of_disps.append(None)
                 sets_of_forces.append(None)
                 set_of_disp2s.append(None)
-
+                
         self._distribute_2nd_forces_and_disps(
             set_of_disps,
             sets_of_forces,
@@ -290,20 +290,20 @@ class FC4Fit:
             rot_forces_dir = []
             rot_disps_dir = []
             for third_atom_num in range(self._num_atom):
-                mapped_3rd_num = rot_atom_map[third_atom_num]
+                mapped_3rd_atom = rot_atom_map[third_atom_num]
                 rot_forces_dir.append(
                     [np.dot(f[rot_atom_map], sym_cart.T)
-                     for f in forces_dir[mapped_3rd_num]])
-                rot_disps_dir.append([np.dot(sym_cart, d)
-                                      for d in disps_dir[mapped_3rd_num]])
+                     for f in forces_dir[mapped_3rd_atom]])
+                rot_disps_dir.append(
+                    np.dot(disps_dir[mapped_3rd_atom], sym_cart.T))
 
             forces.append(rot_forces_dir)
             disps.append(rot_disps_dir)
 
         set_of_disps[second_atom_num] = disps
         sets_of_forces[second_atom_num] = forces
-        set_of_disp2s[second_atom_num] = [
-            np.dot(sym_cart, d) for d in set_of_disp2s[mapped_2nd_atom]]
+        set_of_disp2s[second_atom_num] = np.dot(
+            set_of_disp2s[mapped_2nd_atom], sym_cart.T)
 
     def _collect_3rd_forcecs_and_disps(self, dataset_2nd, reduced_bond_sym):
         third_atom_nums = [x['number'] for x in dataset_2nd['third_atoms']]
@@ -378,9 +378,7 @@ class FC4Fit:
         forces = []
         for set_of_forces_orig in sets_of_forces[rot_atom_map[third_atom_num]]:
             forces.append(np.dot(set_of_forces_orig[rot_atom_map], sym_cart.T))
-
-        disps = [np.dot(sym_cart, d)
-                 for d in set_of_disps[rot_atom_map[third_atom_num]]]
+        disps = np.dot(set_of_disps[rot_atom_map[third_atom_num]], sym_cart.T)
 
         set_of_disps[third_atom_num] = disps
         sets_of_forces[third_atom_num] = forces
