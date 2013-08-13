@@ -44,8 +44,8 @@ class FC3Fit:
                 if first_atom_num != dataset_1st['number']:
                     continue
                 d, f = self._collect_disp_pairs_and_forces(dataset_1st)
-                disp_pairs += d
-                sets_of_forces += f
+                disp_pairs.append(d)
+                sets_of_forces.append(f)
 
             self._fit(first_atom_num, disp_pairs, sets_of_forces)
 
@@ -102,34 +102,37 @@ class FC3Fit:
                           for sym in site_symmetry]
         force_matrix = []
         for i in range(self._num_atom):
-            force_matrix_atom = []
-            for map_sym, rot_atom_num, sym in zip(
-                rot_map_syms, rot_atom_map, site_syms_cart):
-                for forces in sets_of_forces[rot_atom_num]:
-                    force_matrix_atom.append(np.dot(sym, forces[map_sym[i]]))
-            force_matrix.append(force_matrix_atom)
+            for sets_of_forces_u1 in sets_of_forces:
+                force_matrix_atom = []
+                for map_sym, rot_atom_num, sym in zip(
+                    rot_map_syms, rot_atom_map, site_syms_cart):
+                    for forces in sets_of_forces_u1[rot_atom_num]:
+                        force_matrix_atom.append(np.dot(sym,
+                                                        forces[map_sym[i]]))
+                force_matrix.append(force_matrix_atom)
         return np.double(force_matrix)
         
     def _create_displacement_matrix(self,
                                     disp_pairs,
                                     site_symmetry,
                                     rot_atom_map):
-        rot_disps1 = []
-        rot_disps2 = []
+        rot_disp1s = []
+        rot_disp2s = []
         rot_disps_pair = []
 
-        for rot_atom_num, ssym in zip(rot_atom_map, site_symmetry):
-            ssym_c = similarity_transformation(self._lattice, ssym)
-            for (u1, u2) in disp_pairs[rot_atom_num]:
-                Su1 = np.dot(ssym_c, u1)
-                Su2 = np.dot(ssym_c, u2)
-                rot_disps1.append(Su1)
-                rot_disps2.append(Su2)
-                rot_disps_pair.append(np.outer(Su1, Su2).flatten())
+        for disp_pairs_u1 in disp_pairs:
+            for rot_atom_num, ssym in zip(rot_atom_map, site_symmetry):
+                ssym_c = similarity_transformation(self._lattice, ssym)
+                for (u1, u2) in disp_pairs_u1[rot_atom_num]:
+                    Su1 = np.dot(ssym_c, u1)
+                    Su2 = np.dot(ssym_c, u2)
+                    rot_disp1s.append(Su1)
+                    rot_disp2s.append(Su2)
+                    rot_disps_pair.append(np.outer(Su1, Su2).flatten())
+    
+        ones = np.ones(len(rot_disp1s)).reshape((-1, 1))
 
-        ones = np.ones(len(rot_disps1)).reshape((-1, 1))
-
-        return np.hstack((ones, rot_disps1, rot_disps2, rot_disps_pair))
+        return np.hstack((ones, rot_disp1s, rot_disp2s, rot_disps_pair))
                
                
 
