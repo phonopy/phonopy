@@ -76,6 +76,7 @@ class FC4Fit:
                         [[disp1, d2, d3] for d3 in d3_dirs_atom])
                 disp_triplets_u2.append(disp_triplets_u3)
             disp_triplets.append(disp_triplets_u2)
+
         return disp_triplets
 
     def _fit(self, first_atom_num, disp_triplets, sets_of_forces):
@@ -100,12 +101,12 @@ class FC4Fit:
                                                        site_syms_cart,
                                                        rot_map_syms)
                 fc = self._solve(rot_disps, rot_forces)
-                fc2_1 = fc[:, 1:4, :].reshape((self._num_atom, 3, 3))
-                fc2_2 = fc[:, 4:7, :].reshape((self._num_atom, 3, 3))
-                fc2_3 = fc[:, 7:10, :].reshape((self._num_atom, 3, 3))
-                fc3_1 = fc[:, 10:19, :].reshape((self._num_atom, 3, 3, 3))
-                fc3_2 = fc[:, 19:28, :].reshape((self._num_atom, 3, 3, 3))
-                fc3_3 = fc[:, 28:37, :].reshape((self._num_atom, 3, 3, 3))
+                # fc2_1 = fc[:, 1:4, :].reshape((self._num_atom, 3, 3))
+                # fc2_2 = fc[:, 4:7, :].reshape((self._num_atom, 3, 3))
+                # fc2_3 = fc[:, 7:10, :].reshape((self._num_atom, 3, 3))
+                # fc3_1 = fc[:, 10:19, :].reshape((self._num_atom, 3, 3, 3))
+                # fc3_2 = fc[:, 19:28, :].reshape((self._num_atom, 3, 3, 3))
+                # fc3_3 = fc[:, 28:37, :].reshape((self._num_atom, 3, 3, 3))
                 fc4 = fc[:, 37:, :].reshape((self._num_atom, 3, 3, 3, 3))
 
                 self._fc4[first_atom_num,
@@ -164,23 +165,20 @@ class FC4Fit:
                     rot_atom_map[second_atom_num]]:
                     for (u1, u2, u3) in triplets_3rd_atoms[
                         rot_atom_map[third_atom_num]]:
-
+                        
                         Su1 = np.dot(ssym_c, u1)
                         Su2 = np.dot(ssym_c, u2)
                         Su3 = np.dot(ssym_c, u3)
                         rot_disp1s.append(Su1)
                         rot_disp2s.append(Su2)
                         rot_disp3s.append(Su3)
-                        rot_pair12s.append(
-                            np.outer(Su1, Su2).flatten())
-                        rot_pair23s.append(
-                            np.outer(Su2, Su3).flatten())
-                        rot_pair31s.append(
-                            np.outer(Su3, Su1).flatten())
+                        rot_pair12s.append(np.outer(Su1, Su2).flatten())
+                        rot_pair23s.append(np.outer(Su2, Su3).flatten())
+                        rot_pair31s.append(np.outer(Su3, Su1).flatten())
                         rot_triplets.append(
                             self._get_triplet_tensor(Su1, Su2, Su3))
 
-        ones = np.ones(len(rot_disp1s)).reshape((-1, 1))
+        ones = -np.ones(len(rot_disp1s)).reshape((-1, 1))
 
         return np.hstack((ones, rot_disp1s, rot_disp2s, rot_disp3s,
                           rot_pair12s, rot_pair23s, rot_pair31s, rot_triplets))
@@ -229,7 +227,7 @@ class FC4Fit:
                 set_of_disps.append(None)
                 sets_of_forces.append(None)
                 set_of_disp2s.append(None)
-                
+
         self._distribute_2nd_forces_and_disps(
             set_of_disps,
             sets_of_forces,
@@ -285,20 +283,21 @@ class FC4Fit:
         forces = []
         disps = []
         mapped_2nd_atom = rot_atom_map[second_atom_num]
-        for disps_dir, forces_dir in zip(set_of_disps[mapped_2nd_atom],
-                                         sets_of_forces[mapped_2nd_atom]):
-            rot_forces_dir = []
-            rot_disps_dir = []
+        for disps_3rd_atoms, forces_3rd_atoms in zip(
+            set_of_disps[mapped_2nd_atom], sets_of_forces[mapped_2nd_atom]):
+
+            rot_forces = []
+            rot_disps = []
             for third_atom_num in range(self._num_atom):
                 mapped_3rd_atom = rot_atom_map[third_atom_num]
-                rot_forces_dir.append(
+                rot_forces.append(
                     [np.dot(f[rot_atom_map], sym_cart.T)
-                     for f in forces_dir[mapped_3rd_atom]])
-                rot_disps_dir.append(
-                    np.dot(disps_dir[mapped_3rd_atom], sym_cart.T))
+                     for f in forces_3rd_atoms[mapped_3rd_atom]])
+                rot_disps.append(
+                    np.dot(disps_3rd_atoms[mapped_3rd_atom], sym_cart.T))
 
-            forces.append(rot_forces_dir)
-            disps.append(rot_disps_dir)
+            forces.append(rot_forces)
+            disps.append(rot_disps)
 
         set_of_disps[second_atom_num] = disps
         sets_of_forces[second_atom_num] = forces
@@ -375,9 +374,8 @@ class FC4Fit:
 
         assert sym_cart is not None, "Something is wrong."
 
-        forces = []
-        for set_of_forces_orig in sets_of_forces[rot_atom_map[third_atom_num]]:
-            forces.append(np.dot(set_of_forces_orig[rot_atom_map], sym_cart.T))
+        forces = [np.dot(f[rot_atom_map], sym_cart.T)
+                  for f in sets_of_forces[rot_atom_map[third_atom_num]]]
         disps = np.dot(set_of_disps[rot_atom_map[third_atom_num]], sym_cart.T)
 
         set_of_disps[third_atom_num] = disps
@@ -428,4 +426,16 @@ class FC4Fit:
 
         sys.exit(1)
                 
+    def _show_disp_triplets(self, disp_triplets):
+        for i, disp_triplets_u2 in enumerate(disp_triplets):
+            for j, disp_triplets_u3 in enumerate(disp_triplets_u2):
+                for k, triplets_dirs in enumerate(disp_triplets_u3):
+                    for l, triplets in enumerate(triplets_dirs):
+                        print "[%7.4f %7.4f %7.4f]" % tuple(triplets[0]),
+                        print ("%2d(%1d)[%7.4f %7.4f %7.4f]" %
+                               ((i + 1, j + 1) + tuple(triplets[1]))),
+                        print ("%2d(%1d)[%7.4f %7.4f %7.4f]" %
+                               ((k + 1, l + 1) + tuple(triplets[2])))
 
+                       
+        sys.exit(1)
