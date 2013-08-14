@@ -46,7 +46,7 @@ class FC4Fit:
                 if first_atom_num != dataset_1st['number']:
                     continue
                 d1 = dataset_1st['displacement']
-                d3, f, d2 = self._collect_forces_and_disps(dataset_1st)
+                d3, f, d2 = self._collect_forces_and_disps_new(dataset_1st)
                 sets_of_forces.append(f)
                 disp_triplets.append(self._get_disp_triplets(d1, d2, d3))
 
@@ -191,6 +191,135 @@ class FC4Fit:
                    tensor.append(u1x * u2x * u3x)
         return tensor
     
+    def _collect_forces_and_disps_new(self, dataset_1st):
+        disps = [None] * self._num_atom
+        forces = [None] * self._num_atom
+        disp2s = [None] * self._num_atom
+        first_atom_num = dataset_1st['number']
+        reduced_site_sym = self._get_reduced_site_sym(dataset_1st)
+
+        for i in range(self._num_atom):
+            for dataset_2nd in dataset_1st['second_atoms']:
+                if dataset_2nd['number'] != i:
+                    continue
+                disp2 = dataset_2nd['displacement']
+                if disp2s[i] is None:
+                    disp2s[i] = [disp2]
+                else:
+                    disp2s[i].append(disp2)
+                
+                disps_3 = [[]] * self._num_atom
+                forces_3 = [[]] * self._num_atom
+                for j in range(self._num_atom):
+                    for dataset_3rd in dataset_2nd['third_atoms']:
+                        if dataset_3rd['number'] != j:
+                            continue
+                        disps_3[j].append(dataset_3rd['displacement'])
+                        forces_3[j].append(dataset_3rd['forces'])
+
+                print len(disps_3[0])
+                sys.exit(1)
+                        
+                for j in range(self._num_atom):
+                    if len(disps_3[j]) == 0:
+                        reduced_bond_sym = self._get_reduced_bond_sym(
+                            reduced_site_sym,
+                            first_atom_num,
+                            i,
+                            disp2)
+                        self._distribute_3(
+                            disps_3,
+                            forces_3,
+                            i,
+                            j,
+                            reduced_bond_sym)
+
+                if disps[i] is None:
+                    disps[i] = [[]] * self._num_atom
+                    forces[i] = [[]] * self._num_atom
+                    
+                for j in range(self._num_atom):
+                    disps[i][j] += disps_3[j]
+                    forces[i][j] += forces_3[j]
+
+        for i in range(self._num_atom):
+            if disps[i] is not None:
+                for j in range(self._num_atom):
+                    print i + 1, j + 1,
+                    if disps[i][j] is not None:
+                        print len(disps[i][j])
+                    else:
+                        print "None"
+            else:
+                print i + 1, "None"
+        for i in range(self._num_atom):
+            print i + 1, disp2s[i]
+        sys.exit(1)
+
+    def _distribute_2(self):
+        sym_cart = None
+        rot_atom_map = None
+        for i, sym in enumerate(reduced_site_sym):
+            if rot_map_syms[i, second_atom_num] in unique_second_atom_nums:
+                sym_cart = similarity_transformation(self._lattice, sym)
+                rot_atom_map = rot_map_syms[i, :]
+                break
+
+        assert sym_cart is not None, "Something is wrong."
+
+        forces = []
+        disps = []
+        mapped_2nd_atom = rot_atom_map[second_atom_num]
+        for disps_3rd_atoms, forces_3rd_atoms in zip(
+            set_of_disps[mapped_2nd_atom], sets_of_forces[mapped_2nd_atom]):
+
+            rot_forces = []
+            rot_disps = []
+            for third_atom_num in range(self._num_atom):
+                mapped_3rd_atom = rot_atom_map[third_atom_num]
+                rot_forces.append(
+                    [np.dot(f[rot_atom_map], sym_cart.T)
+                     for f in forces_3rd_atoms[mapped_3rd_atom]])
+                rot_disps.append(
+                    np.dot(disps_3rd_atoms[mapped_3rd_atom], sym_cart.T))
+
+            forces.append(rot_forces)
+            disps.append(rot_disps)
+
+        set_of_disps[second_atom_num] = disps
+        sets_of_forces[second_atom_num] = forces
+        set_of_disp2s[second_atom_num] = np.dot(
+            set_of_disp2s[mapped_2nd_atom], sym_cart.T)
+        pass
+
+    def _distribute_3(self,
+                      disps_3,
+                      forces_3,
+                      second_atom_num,
+                      third_atom_num,
+                      reduced_bond_sym):
+        positions = self._positions.copy() - self._positions[second_atom_num]
+        rot_map_syms = get_positions_sent_by_rot_inv(positions,
+                                                     reduced_bond_sym,
+                                                     self._symprec)
+
+        sym_cart = None
+        rot_atom_map = None
+        for i, sym in enumerate(reduced_bond_sym):
+            if disps_3[rot_map_syms[i, third_atom_num]] is not None:
+                sym_cart = similarity_transformation(self._lattice, sym)
+                rot_atom_map = rot_map_syms[i, :]
+                break
+
+        assert sym_cart is not None, "Something is wrong."
+
+        forces = [np.dot(f[rot_atom_map], sym_cart.T)
+                  for f in forces_3[rot_atom_map[third_atom_num]]]
+        disps = [np.dot(sym_cart, d) for d in disps_3[rot_atom_map[third_atom_num]]]
+
+        disps_3[third_atom_num] = disps
+        forces_3[third_atom_num] = forces
+
     def _collect_forces_and_disps(self, dataset_1st):
         first_atom_num = dataset_1st['number']
         second_atom_nums = [x['number'] for x in dataset_1st['second_atoms']]
