@@ -51,6 +51,8 @@ class FC3Fit:
 
         rotations = self._symmetry.get_symmetry_operations()['rotations']
         translations = self._symmetry.get_symmetry_operations()['translations']
+
+        print "ditributing fc3..."
         distribute_fc3(self._fc3,
                        unique_first_atom_nums,
                        self._lattice,
@@ -78,12 +80,8 @@ class FC3Fit:
                                                    rot_map_syms)
             fc = self._solve(rot_disps, rot_forces)
             fc2 = fc[:, 1:4, :].reshape((self._num_atom, 3, 3))
-            fc2_b = fc[:, 4:7, :].reshape((self._num_atom, 3, 3))
-            self._fc2[first_atom_num] += fc2
-            fc3 = fc[:, 7:, :].reshape((self._num_atom, 3, 3, 3))
+            fc3 = fc[:, 7:16, :].reshape((self._num_atom, 3, 3, 3))
             self._fc3[first_atom_num, second_atom_num] = fc3
-
-        self._fc2[first_atom_num] /= self._num_atom
 
     def _solve(self, rot_disps, rot_forces):
         fc = []
@@ -118,7 +116,9 @@ class FC3Fit:
                                     rot_atom_map):
         rot_disp1s = []
         rot_disp2s = []
-        rot_disps_pair = []
+        rot_pair12 = []
+        rot_pair11 = []
+        rot_pair22 = []
 
         for disp_pairs_u1 in disp_pairs:
             for rot_atom_num, ssym in zip(rot_atom_map, site_symmetry):
@@ -128,11 +128,14 @@ class FC3Fit:
                     Su2 = np.dot(ssym_c, u2)
                     rot_disp1s.append(Su1)
                     rot_disp2s.append(Su2)
-                    rot_disps_pair.append(np.outer(Su1, Su2).flatten())
+                    rot_pair12.append(np.outer(Su1, Su2).flatten())
+                    rot_pair11.append(np.outer(Su1, Su1).flatten())
+                    rot_pair22.append(np.outer(Su2, Su2).flatten())
     
         ones = np.ones(len(rot_disp1s)).reshape((-1, 1))
 
-        return np.hstack((ones, rot_disp1s, rot_disp2s, rot_disps_pair))
+        return np.hstack((ones, rot_disp1s, rot_disp2s,
+                          rot_pair12, rot_pair11, rot_pair22))
                
                
 
