@@ -124,16 +124,15 @@ class FC4Fit:
                           second_atom_num,
                           third_atom_num] = fc4
 
-                print fc4
-
             print second_atom_num + 1
 
     def _solve(self, rot_disps, rot_forces):
         fc = []
+        cutoff = 1e-13
         import anharmonic._phono3py as phono3c
         (m, n) = rot_disps.shape
         inv_disps = np.zeros((n, m), dtype='double')
-        phono3c.pinv(np.double(rot_disps), inv_disps)
+        phono3c.pinv(np.double(rot_disps), inv_disps, cutoff)
         # inv_disps = np.linalg.pinv(rot_disps)
         for i in range(self._num_atom):
             fc.append(-np.dot(inv_disps, rot_forces[i]))

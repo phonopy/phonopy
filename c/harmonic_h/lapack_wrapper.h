@@ -9,6 +9,7 @@ int phonopy_zheev(double *w,
 int phonopy_pinv(double *data_out,
 		 const double *data_in,
 		 const int m,
-		 const int n);
+		 const int n,
+		 const double cutoff);
 
 #endif

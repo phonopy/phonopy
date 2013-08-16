@@ -645,10 +645,12 @@ static PyObject * py_phonopy_pinv(PyObject *self, PyObject *args)
 {
   PyArrayObject* data_in_py;
   PyArrayObject* data_out_py;
+  double cutoff;
 
-  if (!PyArg_ParseTuple(args, "OO",
+  if (!PyArg_ParseTuple(args, "OOd",
 			&data_in_py,
-			&data_out_py)) {
+			&data_out_py,
+			&cutoff)) {
     return NULL;
   }
 
@@ -658,7 +660,7 @@ static PyObject * py_phonopy_pinv(PyObject *self, PyObject *args)
   double *data_out = (double*)data_out_py->data;
   int info;
   
-  info = phonopy_pinv(data_out, data_in, m, n);
+  info = phonopy_pinv(data_out, data_in, m, n, cutoff);
 
   return PyInt_FromLong((long) info);
 }
