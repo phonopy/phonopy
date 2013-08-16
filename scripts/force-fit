@@ -45,7 +45,7 @@ from anharmonic.force_fit.fc2 import FC2Fit
 from anharmonic.force_fit.fc3 import FC3Fit
 from anharmonic.force_fit.fc4 import FC4Fit
 from anharmonic.file_IO import parse_disp_fc4_yaml, parse_FORCES_FOURTH
-from anharmonic.file_IO import write_fc3_dat, write_fc4_dat
+from anharmonic.file_IO import write_fc3_dat, write_fc4_dat, write_fc4_to_hdf5
 from anharmonic.phonon3.fc3 import show_drift_fc3
 from anharmonic.phonon4.fc4 import show_drift_fc4
 
@@ -128,7 +128,8 @@ if options.fc4:
     print "Calculating drift fc4..."
     show_drift_fc4(fc4)
     print "Writing fc4..."
-    write_fc4_dat(fc4, 'fc4-fit.dat')
+    write_fc4_to_hdf5(fc4, 'fc4-fit.hdf5')
+    # write_fc4_dat(fc4, 'fc4-fit.dat')
     
     fc3 = fc4fit.get_fc3()
     print "Calculating drift of fc3..."

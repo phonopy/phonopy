@@ -107,14 +107,14 @@ class FC4Fit:
                 print rot_disps.shape
                 fc = self._solve(rot_disps, rot_forces)
                 fc2 = fc[:, 1:4, :].reshape((self._num_atom, 3, 3))
-                fc3 = fc[:, 10:19, :].reshape((self._num_atom, 3, 3, 3))
-                fc4 = fc[:, 172:199, :].reshape((self._num_atom, 3, 3, 3, 3))
+                fc3 = fc[:, 19:28, :].reshape((self._num_atom, 3, 3, 3))
+                fc4 = fc[:, 226:253, :].reshape((self._num_atom, 3, 3, 3, 3))
 
                 self._fc3[first_atom_num,
-                          second_atom_num] = fc3
+                          second_atom_num] = fc3 * 2
                 self._fc4[first_atom_num,
                           second_atom_num,
-                          third_atom_num] = fc4
+                          third_atom_num] = fc4 * 6
 
             print second_atom_num + 1
 
@@ -157,12 +157,7 @@ class FC4Fit:
         rot_disp1s = []
         rot_disp2s = []
         rot_disp3s = []
-        rot_pair12s = []
-        rot_pair23s = []
-        rot_pair31s = []
-        rot_pair11s = []
-        rot_pair22s = []
-        rot_pair33s = []
+        rot_pairs = []
         rot_triplets = []
 
         for disps in disp_triplets:
@@ -176,36 +171,76 @@ class FC4Fit:
                     rot_disp1s.append(Su1)
                     rot_disp2s.append(Su2)
                     rot_disp3s.append(Su3)
-                    rot_pair12s.append(np.outer(Su1, Su2).flatten())
-                    rot_pair23s.append(np.outer(Su2, Su3).flatten())
-                    rot_pair31s.append(np.outer(Su3, Su1).flatten())
-                    rot_pair11s.append(np.outer(Su1, Su1).flatten())
-                    rot_pair22s.append(np.outer(Su2, Su2).flatten())
-                    rot_pair33s.append(np.outer(Su3, Su3).flatten())
-                    rot_triplets.append(
-                        self._get_triplet_tensor(Su1, Su2, Su3))
+                    rot_pairs.append(self._get_pair_tensor(Su1, Su2, Su3))
+                    rot_triplets.append(self._get_triplet_tensor(Su1, Su2, Su3))
 
         ones = -np.ones(len(rot_disp1s)).reshape((-1, 1))
 
         return np.hstack((ones, rot_disp1s, rot_disp2s, rot_disp3s,
-                          rot_pair12s, rot_pair23s, rot_pair31s,
-                          rot_pair11s, rot_pair22s, rot_pair33s,
-                          rot_triplets))
+                          rot_pairs, rot_triplets))
+
+    def _get_pair_tensor(self, u1, u2, u3):
+        # 0 (0, 0)
+        # 1 (0, 1)
+        # 2 (0, 2)
+        # 3 (1, 0)
+        # 4 (1, 1)
+        # 5 (1, 2)
+        # 6 (2, 0)
+        # 7 (2, 1)
+        # 8 (2, 2)
+
+        u = [u1, u2, u3]
+        tensor = []
+        for (i, j) in list(np.ndindex(3, 3)):
+            for u1x in u[i]:
+                for u2x in u[j]:
+                    tensor.append(u1x * u2x)
+        return tensor
 
     def _get_triplet_tensor(self, u1, u2, u3):
         u = [u1, u2, u3]
-
         tensor = []
-        for (i, j, k) in ((0, 0, 0),
-                          (0, 0, 1),
-                          (0, 0, 2),
-                          (0, 1, 1),
-                          (0, 1, 2),
-                          (0, 2, 2),
-                          (1, 1, 1),
-                          (1, 1, 2),
-                          (1, 2, 2),
-                          (2, 2, 2)):
+        # for (i, j, k) in ((0, 0, 0),
+        #                   (0, 0, 1),
+        #                   (0, 0, 2),
+        #                   (0, 1, 1),
+        #                   (0, 1, 2),
+        #                   (0, 2, 2),
+        #                   (1, 1, 1),
+        #                   (1, 1, 2),
+        #                   (1, 2, 2),
+        #                   (2, 2, 2)):
+
+        # 0 (0, 0, 0)
+        # 1 (0, 0, 1)
+        # 2 (0, 0, 2)
+        # 3 (0, 1, 0)
+        # 4 (0, 1, 1)
+        # 5 (0, 1, 2)
+        # 6 (0, 2, 0)
+        # 7 (0, 2, 1)
+        # 8 (0, 2, 2)
+        # 9 (1, 0, 0)
+        # 10 (1, 0, 1)
+        # 11 (1, 0, 2)
+        # 12 (1, 1, 0)
+        # 13 (1, 1, 1)
+        # 14 (1, 1, 2)
+        # 15 (1, 2, 0)
+        # 16 (1, 2, 1)
+        # 17 (1, 2, 2)
+        # 18 (2, 0, 0)
+        # 19 (2, 0, 1)
+        # 20 (2, 0, 2)
+        # 21 (2, 1, 0)
+        # 22 (2, 1, 1)
+        # 23 (2, 1, 2)
+        # 24 (2, 2, 0)
+        # 25 (2, 2, 1)
+        # 26 (2, 2, 2)
+
+        for (i, j, k) in list(np.ndindex(3, 3, 3)):
             for u1x in u[i]:
                 for u2x in u[j]:
                     for u3x in u[k]:
