@@ -21,6 +21,7 @@ static PyObject * py_distribute_fc3(PyObject *self, PyObject *args);
 static PyObject * py_distribute_fc4(PyObject *self, PyObject *args);
 static PyObject * py_rotate_delta_fc3s(PyObject *self, PyObject *args);
 static PyObject * py_phonopy_zheev(PyObject *self, PyObject *args);
+static PyObject * py_phonopy_pinv(PyObject *self, PyObject *args);
 
 static int distribute_fc3(double *fc3,
 			  const int third_atom,
@@ -86,6 +87,7 @@ static PyMethodDef functions[] = {
   {"distribute_fc4", py_distribute_fc4, METH_VARARGS, "Distribute least fc4 to full fc4"},
   {"rotate_delta_fc3s", py_rotate_delta_fc3s, METH_VARARGS, "Rotate delta fc3s"},
   {"zheev", py_phonopy_zheev, METH_VARARGS, "Lapack zheev wrapper"},
+  {"pinv", py_phonopy_pinv, METH_VARARGS, "Pseudo-inverse using Lapack dgesvd"},
   {NULL, NULL, 0, NULL}
 };
 
@@ -636,6 +638,28 @@ static PyObject * py_phonopy_zheev(PyObject *self, PyObject *args)
 
   free(a);
   
+  return PyInt_FromLong((long) info);
+}
+
+static PyObject * py_phonopy_pinv(PyObject *self, PyObject *args)
+{
+  PyArrayObject* data_in_py;
+  PyArrayObject* data_out_py;
+
+  if (!PyArg_ParseTuple(args, "OO",
+			&data_in_py,
+			&data_out_py)) {
+    return NULL;
+  }
+
+  const int m = (int)data_in_py->dimensions[0];
+  const int n = (int)data_in_py->dimensions[1];
+  const double *data_in = (double*)data_in_py->data;
+  double *data_out = (double*)data_out_py->data;
+  int info;
+  
+  info = phonopy_pinv(data_out, data_in, m, n);
+
   return PyInt_FromLong((long) info);
 }
 

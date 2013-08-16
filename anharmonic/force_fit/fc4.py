@@ -107,20 +107,34 @@ class FC4Fit:
                 print rot_disps.shape
                 fc = self._solve(rot_disps, rot_forces)
                 fc2 = fc[:, 1:4, :].reshape((self._num_atom, 3, 3))
+                # fc3 = fc[:, 19:28, :].reshape((self._num_atom, 3, 3, 3))
+                # fc4 = fc[:, 226:253, :].reshape((self._num_atom, 3, 3, 3, 3))
                 fc3 = fc[:, 19:28, :].reshape((self._num_atom, 3, 3, 3))
-                fc4 = fc[:, 226:253, :].reshape((self._num_atom, 3, 3, 3, 3))
+                fc4 = fc[:, 172:199, :].reshape((self._num_atom, 3, 3, 3, 3))
+
+                # self._fc3[first_atom_num,
+                #           second_atom_num] = fc3 * 2
+                # self._fc4[first_atom_num,
+                #           second_atom_num,
+                #           third_atom_num] = fc4 * 6
 
                 self._fc3[first_atom_num,
-                          second_atom_num] = fc3 * 2
+                          second_atom_num] = fc3
                 self._fc4[first_atom_num,
                           second_atom_num,
-                          third_atom_num] = fc4 * 6
+                          third_atom_num] = fc4
+
+                print fc4
 
             print second_atom_num + 1
 
     def _solve(self, rot_disps, rot_forces):
         fc = []
-        inv_disps = np.linalg.pinv(rot_disps)
+        import anharmonic._phono3py as phono3c
+        (m, n) = rot_disps.shape
+        inv_disps = np.zeros((n, m), dtype='double')
+        phono3c.pinv(np.double(rot_disps), inv_disps)
+        # inv_disps = np.linalg.pinv(rot_disps)
         for i in range(self._num_atom):
             fc.append(-np.dot(inv_disps, rot_forces[i]))
         
@@ -192,7 +206,13 @@ class FC4Fit:
 
         u = [u1, u2, u3]
         tensor = []
-        for (i, j) in list(np.ndindex(3, 3)):
+        for (i, j) in ((0, 0),
+                       (0, 1),
+                       (0, 2),
+                       (1, 1),
+                       (1, 2),
+                       (2, 2)):
+        # for (i, j) in list(np.ndindex(3, 3)):
             for u1x in u[i]:
                 for u2x in u[j]:
                     tensor.append(u1x * u2x)
@@ -201,16 +221,6 @@ class FC4Fit:
     def _get_triplet_tensor(self, u1, u2, u3):
         u = [u1, u2, u3]
         tensor = []
-        # for (i, j, k) in ((0, 0, 0),
-        #                   (0, 0, 1),
-        #                   (0, 0, 2),
-        #                   (0, 1, 1),
-        #                   (0, 1, 2),
-        #                   (0, 2, 2),
-        #                   (1, 1, 1),
-        #                   (1, 1, 2),
-        #                   (1, 2, 2),
-        #                   (2, 2, 2)):
 
         # 0 (0, 0, 0)
         # 1 (0, 0, 1)
@@ -240,7 +250,17 @@ class FC4Fit:
         # 25 (2, 2, 1)
         # 26 (2, 2, 2)
 
-        for (i, j, k) in list(np.ndindex(3, 3, 3)):
+        for (i, j, k) in ((0, 0, 0),
+                          (0, 0, 1),
+                          (0, 0, 2),
+                          (0, 1, 1),
+                          (0, 1, 2),
+                          (0, 2, 2),
+                          (1, 1, 1),
+                          (1, 1, 2),
+                          (1, 2, 2),
+                          (2, 2, 2)):
+        # for (i, j, k) in list(np.ndindex(3, 3, 3)):
             for u1x in u[i]:
                 for u2x in u[j]:
                     for u3x in u[k]:
