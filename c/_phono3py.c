@@ -22,6 +22,7 @@ static PyObject * py_distribute_fc4(PyObject *self, PyObject *args);
 static PyObject * py_rotate_delta_fc3s(PyObject *self, PyObject *args);
 static PyObject * py_phonopy_zheev(PyObject *self, PyObject *args);
 static PyObject * py_phonopy_pinv(PyObject *self, PyObject *args);
+static PyObject * py_phonopy_pinv_mt(PyObject *self, PyObject *args);
 
 static int distribute_fc3(double *fc3,
 			  const int third_atom,
@@ -88,6 +89,7 @@ static PyMethodDef functions[] = {
   {"rotate_delta_fc3s", py_rotate_delta_fc3s, METH_VARARGS, "Rotate delta fc3s"},
   {"zheev", py_phonopy_zheev, METH_VARARGS, "Lapack zheev wrapper"},
   {"pinv", py_phonopy_pinv, METH_VARARGS, "Pseudo-inverse using Lapack dgesvd"},
+  {"pinv_mt", py_phonopy_pinv_mt, METH_VARARGS, "Multi-threading pseudo-inverse using Lapack dgesvd"},
   {NULL, NULL, 0, NULL}
 };
 
@@ -661,6 +663,41 @@ static PyObject * py_phonopy_pinv(PyObject *self, PyObject *args)
   int info;
   
   info = phonopy_pinv(data_out, data_in, m, n, cutoff);
+
+  return PyInt_FromLong((long) info);
+}
+
+static PyObject * py_phonopy_pinv_mt(PyObject *self, PyObject *args)
+{
+  PyArrayObject* data_in_py;
+  PyArrayObject* data_out_py;
+  PyArrayObject* row_nums_py;
+  int max_row_num, column_num;
+  double cutoff;
+
+  if (!PyArg_ParseTuple(args, "OOOiid",
+			&data_in_py,
+			&data_out_py,
+			&row_nums_py,
+			&max_row_num,
+			&column_num,
+			&cutoff)) {
+    return NULL;
+  }
+
+  const int *row_nums = (int*)row_nums_py->data;
+  const int num_thread = (int)row_nums_py->dimensions[0];
+  const double *data_in = (double*)data_in_py->data;
+  double *data_out = (double*)data_out_py->data;
+  int info;
+  
+  info = phonopy_pinv_mt(data_out,
+			 data_in,
+			 num_thread,
+			 row_nums,
+			 max_row_num,
+			 column_num,
+			 cutoff);
 
   return PyInt_FromLong((long) info);
 }

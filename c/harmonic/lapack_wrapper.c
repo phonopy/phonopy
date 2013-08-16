@@ -25,7 +25,7 @@ int phonopy_pinv(double *data_out,
   double *s, *a, *u, *vt, *superb;
 
   a = (double*)malloc(sizeof(double) * m * n);
-  s = (double*)malloc(sizeof(double) * n);
+  s = (double*)malloc(sizeof(double) * min(m,n));
   u = (double*)malloc(sizeof(double) * m * m);
   vt = (double*)malloc(sizeof(double) * n * n);
   superb = (double*)malloc(sizeof(double) * (min(m,n) - 1));
@@ -54,7 +54,7 @@ int phonopy_pinv(double *data_out,
 
   for (i = 0; i < m; i++) {
     for (j = 0; j < n; j++) {
-      for (k = 0; k < n; k++) {
+      for (k = 0; k < min(m,n); k++) {
 	if (s[k] > cutoff) {
 	  data_out[j * m + i] += u[i * m + k] / s[k] * vt[k * n + j];
 	}
@@ -69,4 +69,25 @@ int phonopy_pinv(double *data_out,
   free(superb);
 
   return (int)info;
+}
+
+int phonopy_pinv_mt(double *data_out,
+		    const double *data_in,
+		    const int num_thread,
+		    const int *row_nums,
+		    const int max_row_num,
+		    const int column_num,
+		    const double cutoff)
+{
+  int i, info;
+
+#pragma omp parallel for private(info)
+  for (i = 0; i < num_thread; i++) {
+    info = phonopy_pinv(data_out + i * max_row_num * column_num,
+			data_in + i * max_row_num * column_num,
+			row_nums[i],
+			column_num,
+			cutoff);
+  }
+  return 0;
 }
