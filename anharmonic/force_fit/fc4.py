@@ -99,11 +99,7 @@ class FC4Fit:
                         rot_map_syms))
                 print rot_disps_set[third_atom_num].shape
 
-            try:
-                import anharmonic._phono3py as phono3c
-                inv_disps_set = self._invert_displacements(rot_disps_set)
-            except ImportError:
-                inv_disps_set = [np.linalg.pinv(d) for d in rot_disps_set]
+            inv_disps_set = self._invert_displacements(rot_disps_set)
             
             for third_atom_num in range(self._num_atom):
                 rot_forces = self._create_force_matrix(
@@ -122,31 +118,35 @@ class FC4Fit:
                 self._fc3[first_atom_num, second_atom_num] = fc3
                 self._fc4[first_atom_num, second_atom_num, third_atom_num] = fc4
 
+                print fc4
             print second_atom_num + 1
 
     def _invert_displacements(self, rot_disps_set):
-        row_nums = np.intc([x.shape[0] for x in rot_disps_set])
-        max_row_num = max(row_nums)
-        column_num = rot_disps_set[0].shape[1]
-        rot_disps = np.zeros((self._num_atom, max_row_num * column_num),
-                             dtype='double')
-        for i in range(self._num_atom):
-            rot_disps[
-                i, :row_nums[i] * column_num] = rot_disps_set[i].flatten()
-        inv_disps = np.zeros_like(rot_disps)
-
-        import anharmonic._phono3py as phono3c
-        info = phono3c.pinv_mt(rot_disps,
-                               inv_disps,
-                               row_nums,
-                               max_row_num,
-                               column_num,
-                               1e-13)
-        inv_disps_set = []
-        for i in range(self._num_atom):
-            inv_disps_set.append(
-                inv_disps[i, :row_nums[i] * column_num].reshape(column_num, -1))
-
+        try:
+            import anharmonic._phono3py as phono3c
+            row_nums = np.intc([x.shape[0] for x in rot_disps_set])
+            max_row_num = max(row_nums)
+            column_num = rot_disps_set[0].shape[1]
+            rot_disps = np.zeros((self._num_atom, max_row_num * column_num),
+                                 dtype='double')
+            for i in range(self._num_atom):
+                rot_disps[
+                    i, :row_nums[i] * column_num] = rot_disps_set[i].flatten()
+            inv_disps = np.zeros_like(rot_disps)
+            info = phono3c.pinv_mt(rot_disps,
+                                   inv_disps,
+                                   row_nums,
+                                   max_row_num,
+                                   column_num,
+                                   1e-13)
+            inv_disps_set = []
+            inv_disps_set = [
+                inv_disps[i, :row_nums[i] * column_num].reshape(column_num, -1)
+                for i in range(self._num_atom)]
+            
+        except ImportError:
+            inv_disps_set = [np.linalg.pinv(d) for d in rot_disps_set]
+            
         return inv_disps_set
     
     def _solve(self, inv_disps, rot_forces):
@@ -184,12 +184,7 @@ class FC4Fit:
                                     disp_triplets,
                                     site_syms_cart,
                                     rot_map_syms):
-        rot_disp1s = []
-        rot_disp2s = []
-        rot_disp3s = []
-        rot_pairs = []
-        rot_triplets = []
-
+        rot_disps = []
         for disps in disp_triplets:
             for rot_atom_map, sym in zip(rot_map_syms, site_syms_cart):
                 rot_num2 = rot_atom_map[second_atom_num]
@@ -198,17 +193,13 @@ class FC4Fit:
                     Su1 = np.dot(sym, u1)
                     Su2 = np.dot(sym, u2)
                     Su3 = np.dot(sym, u3)
-                    rot_disp1s.append(Su1)
-                    rot_disp2s.append(Su2)
-                    rot_disp3s.append(Su3)
-                    rot_pairs.append(self._get_pair_tensor(Su1, Su2, Su3))
-                    rot_triplets.append(self._get_triplet_tensor(Su1, Su2, Su3))
+                    rot_disps.append(np.hstack(
+                            ([-1], Su1, Su2, Su3,
+                             self._get_pair_tensor(Su1, Su2, Su3),
+                             self._get_triplet_tensor(Su1, Su2, Su3))))
 
-        ones = -np.ones(len(rot_disp1s)).reshape((-1, 1))
-
-        return np.hstack((ones, rot_disp1s, rot_disp2s, rot_disp3s,
-                          rot_pairs, rot_triplets))
-
+        return np.double(rot_disps)
+                    
     def _get_pair_tensor(self, u1, u2, u3):
         # 0 (0, 0)
         # 1 (0, 1)
