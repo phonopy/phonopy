@@ -53,7 +53,6 @@ class FC4Fit:
                 d3, f = self._collect_forces_and_disps(dataset_1st)
                 disp_triplets.append(d3)
                 sets_of_forces.append(f)
-                # disp_triplets.append(self._get_disp_triplets(d1, d2, d3))
 
             self._fit(first_atom_num, disp_triplets, sets_of_forces)
 
@@ -99,22 +98,12 @@ class FC4Fit:
                         site_syms_cart,
                         rot_map_syms))
                 print rot_disps_set[third_atom_num].shape
-            row_nums = np.intc([x.shape[0] for x in rot_disps_set])
-            max_row_num = max(row_nums)
-            column_num = rot_disps_set[0].shape[1]
-            rot_disps = np.zeros((self._num_atom, max_row_num * column_num),
-                                 dtype='double')
-            for i in range(self._num_atom):
-                rot_disps[
-                    i, :row_nums[i] * column_num] = rot_disps_set[i].flatten()
-            inv_disps = np.zeros_like(rot_disps)
-            import anharmonic._phono3py as phono3c
-            info = phono3c.pinv_mt(rot_disps,
-                                   inv_disps,
-                                   row_nums,
-                                   max_row_num,
-                                   column_num,
-                                   1e-13)
+
+            try:
+                import anharmonic._phono3py as phono3c
+                inv_disps_set = self._invert_displacements(rot_disps_set)
+            except ImportError:
+                inv_disps_set = [np.linalg.pinv(d) for d in rot_disps_set]
             
             for third_atom_num in range(self._num_atom):
                 rot_forces = self._create_force_matrix(
@@ -124,52 +113,44 @@ class FC4Fit:
                     site_syms_cart,
                     rot_map_syms)
 
-                fc = self._solve_mt(
-                    inv_disps[third_atom_num,
-                              :row_nums[third_atom_num] * column_num].reshape(
-                        column_num, row_nums[third_atom_num]), rot_forces)
-
-                # fc = self._solve(rot_disps_set[third_atom_num], rot_forces)
+                fc = self._solve(inv_disps_set[third_atom_num], rot_forces)
                 fc2 = fc[:, 1:4, :].reshape((self._num_atom, 3, 3))
-                # fc3 = fc[:, 19:28, :].reshape((self._num_atom, 3, 3, 3))
-                # fc4 = fc[:, 226:253, :].reshape((self._num_atom, 3, 3, 3, 3))
                 fc3 = fc[:, 19:28, :].reshape((self._num_atom, 3, 3, 3))
                 fc4 = fc[:, 172:199, :].reshape((self._num_atom, 3, 3, 3, 3))
 
-                # self._fc3[first_atom_num,
-                #           second_atom_num] = fc3 * 2
-                # self._fc4[first_atom_num,
-                #           second_atom_num,
-                #           third_atom_num] = fc4 * 6
-
-                self._fc3[first_atom_num,
-                          second_atom_num] = fc3
-                self._fc4[first_atom_num,
-                          second_atom_num,
-                          third_atom_num] = fc4
+                self._fc2[first_atom_num] = fc2
+                self._fc3[first_atom_num, second_atom_num] = fc3
+                self._fc4[first_atom_num, second_atom_num, third_atom_num] = fc4
 
             print second_atom_num + 1
 
-    def _solve_mt(self, inv_disps, rot_forces):
-        fc = []
+    def _invert_displacements(self, rot_disps_set):
+        row_nums = np.intc([x.shape[0] for x in rot_disps_set])
+        max_row_num = max(row_nums)
+        column_num = rot_disps_set[0].shape[1]
+        rot_disps = np.zeros((self._num_atom, max_row_num * column_num),
+                             dtype='double')
         for i in range(self._num_atom):
-            fc.append(-np.dot(inv_disps, rot_forces[i]))
-        
-        return np.array(fc)
-        
-            
-    def _solve(self, rot_disps, rot_forces):
-        cutoff = 1e-13
+            rot_disps[
+                i, :row_nums[i] * column_num] = rot_disps_set[i].flatten()
+        inv_disps = np.zeros_like(rot_disps)
+
         import anharmonic._phono3py as phono3c
-        (m, n) = rot_disps.shape
-        inv_disps = np.zeros((n, m), dtype='double')
-        info = phono3c.pinv(np.double(rot_disps), inv_disps, cutoff)
-        if info > 0:
-            print "SVD did not converge."
-        elif info < 0:
-            print "%d-th argument had an illegal value." % (-info)
-        
-        # inv_disps = np.linalg.pinv(rot_disps)
+        info = phono3c.pinv_mt(rot_disps,
+                               inv_disps,
+                               row_nums,
+                               max_row_num,
+                               column_num,
+                               1e-13)
+        inv_disps_set = []
+        for i in range(self._num_atom):
+            inv_disps_set.append(
+                inv_disps[i, :row_nums[i] * column_num].reshape(column_num, -1))
+
+        return inv_disps_set
+    
+    def _solve(self, inv_disps, rot_forces):
+        fc = []
         for i in range(self._num_atom):
             fc.append(-np.dot(inv_disps, rot_forces[i]))
         
