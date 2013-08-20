@@ -139,29 +139,32 @@ class FrequencyShift:
         self._set_phonon_py(gp)
         igp = invert_grid_point(gp, self._grid_address, self._mesh)
 
-        for t in self._temperatures:
-            for band_index in self._band_indices:
-                q = self._grid_address[gp].astype('double') / self._mesh
-                print "q-point:", q, "band index:", band_index + 1
-                fc4_normal = np.zeros((len(self._quartets_at_q),
-                                       len(self._frequencies[0])),
-                                      dtype='complex128')
-                
-                if self._frequencies[gp][band_index] < self._cutoff_frequency:
-                    continue
-    
-                for i, (gp1, w) in enumerate(zip(self._quartets_at_q,
-                                                 self._weights_at_q)):
-                    igp1 = invert_grid_point(gp, self._grid_address, self._mesh)
-                    r2r.run(self._grid_address[[igp, gp, gp1, igp1]])
-                    fc4_reciprocal = r2r.get_fc4_reciprocal()
-                    self._set_phonon_py(gp1)
-                    r2n.run(fc4_reciprocal, gp, band_index, gp1)
+        for band_index in self._band_indices:
+            q = self._grid_address[gp].astype('double') / self._mesh
+            print "q-point:", q, "band index:", band_index + 1
+            fc4_normal = np.zeros((len(self._quartets_at_q),
+                                   len(self._frequencies[0])),
+                                  dtype='complex128')
+            
+            if self._frequencies[gp][band_index] < self._cutoff_frequency:
+                continue
+
+            for i, (gp1, w) in enumerate(zip(self._quartets_at_q,
+                                             self._weights_at_q)):
+                igp1 = invert_grid_point(gp, self._grid_address, self._mesh)
+                r2r.run(self._grid_address[[igp, gp, gp1, igp1]])
+                fc4_reciprocal = r2r.get_fc4_reciprocal()
+                self._set_phonon_py(gp1)
+                r2n.run(fc4_reciprocal, gp, band_index, gp1)
+                fc4_normal[i] = r2n.get_reciprocal_to_normal()
+
+            for t in self._temperatures:
+                shift = 0j
+                for i, gp1 in enumerate(self._quartets_at_q):
                     occupations = be_func(self._frequencies[gp1], t)
-                    fc4_normal[i] = (r2n.get_reciprocal_to_normal() *
-                                     self._unit_conversion *
-                                     (2 * occupations + 1))
-                print fc4_normal.sum()
+                    shift += (fc4_normal[i] * self._unit_conversion *
+                              (2 * occupations + 1)).sum()
+                print "temp:", t, "shift:", shift
 
     def _set_phonon_py(self, grid_point):
         gp = grid_point
