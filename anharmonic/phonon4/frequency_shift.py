@@ -59,7 +59,8 @@ class FrequencyShift:
         # Unit to THz of Gamma
         self._unit_conversion = (EV / Angstrom ** 4 / AMU ** 2
                                  / (2 * np.pi * THz) ** 2
-                                 * Hbar * EV / (2 * np.pi * THz) / 8)
+                                 * Hbar * EV / (2 * np.pi * THz) / 8
+                                 / len(self._grid_address))
 
     def run(self):
         num_band = self._primitive.get_number_of_atoms() * 3
@@ -133,10 +134,6 @@ class FrequencyShift:
                                  self._frequencies,
                                  self._eigenvectors,
                                  cutoff_frequency=self._cutoff_frequency)
-        N = (self._supercell.get_number_of_atoms() /
-             self._primitive.get_number_of_atoms())
-        Ng = len(self._grid_address)
-        unit_conv = self._unit_conversion / N / Ng                         
         
         gp = self._grid_point
         self._set_phonon_py(gp)
@@ -162,7 +159,8 @@ class FrequencyShift:
                     r2n.run(fc4_reciprocal, gp, band_index, gp1)
                     occupations = be_func(self._frequencies[gp1], t)
                     fc4_normal[i] = (r2n.get_reciprocal_to_normal() *
-                                     unit_conv * (2 * occupations + 1))
+                                     self._unit_conversion *
+                                     (2 * occupations + 1))
                 print fc4_normal.sum()
 
     def _set_phonon_py(self, grid_point):
