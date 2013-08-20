@@ -9,10 +9,10 @@ from anharmonic.file_IO import read_gamma_from_hdf5, write_damping_functions, wr
 
 class Phono3py:
     def __init__(self,
+                 fc3,
                  supercell,
                  primitive,
                  mesh,
-                 fc3,
                  band_indices=None,
                  frequency_factor_to_THz=None,
                  is_nosym=False,
@@ -22,10 +22,10 @@ class Phono3py:
                  log_level=0,
                  lapack_zheev_uplo='L'):
 
+        self._fc3 = fc3
         self._supercell = supercell
         self._primitive = primitive
         self._mesh = mesh
-        self._fc3 = fc3
         if band_indices is None:
             self._band_indices = [
                 np.arange(primitive.get_number_of_atoms() * 3)]
@@ -203,18 +203,18 @@ class Phono3py:
                 for t, k in zip(temperatures, kappa):
                     print ("%7.1f" + " %9.3f" * 6) % ((t,) + tuple(k))
                 print
-                write_kappa(gamma[i],
-                            temperatures,
-                            br.get_mesh_numbers(),
-                            frequency=br.get_frequencies(),
-                            group_velocity=br.get_group_velocities(),
-                            heat_capacity=br.get_mode_heat_capacities(),
-                            kappa=kappa,
-                            qpoint=br.get_qpoints(),
-                            weight=br.get_grid_weights(),
-                            mesh_divisors=br.get_mesh_divisors(),
-                            sigma=sigma,
-                            filename=filename)
+                write_kappa_to_hdf5(gamma[i],
+                                    temperatures,
+                                    br.get_mesh_numbers(),
+                                    frequency=br.get_frequencies(),
+                                    group_velocity=br.get_group_velocities(),
+                                    heat_capacity=br.get_mode_heat_capacities(),
+                                    kappa=kappa,
+                                    qpoint=br.get_qpoints(),
+                                    weight=br.get_grid_weights(),
+                                    mesh_divisors=br.get_mesh_divisors(),
+                                    sigma=sigma,
+                                    filename=filename)
 
         self._kappa = mode_kappa
         self._gamma = gamma

@@ -437,7 +437,7 @@ def write_fc4_to_hdf5(force_constants_fourth, filename='fc4.hdf5'):
 
 def read_fc4_from_hdf5(filename='fc4.hdf5'):
     f = h5py.File(filename, 'r')
-    fc3 = f['fc4'][:]
+    fc4 = f['fc4'][:]
     f.close()
     return fc4
     

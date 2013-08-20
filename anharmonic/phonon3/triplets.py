@@ -53,6 +53,11 @@ def get_grid_point_from_address(grid, mesh):
             ((grid[1] + mesh[1]) % mesh[1]) * mesh[0] +
             ((grid[2] + mesh[2]) % mesh[2]) * mesh[0] * mesh[1])
 
+def invert_grid_point(grid_point, grid_address, mesh):
+    # gp --> [address] --> [-address] --> inv_gp
+    address = grid_address[grid_point]
+    return get_grid_point_from_address(-address, mesh)
+
 def get_ir_grid_points(mesh, primitive, mesh_shifts=[False, False, False]):
     grid_mapping_table, grid_address = spg.get_ir_reciprocal_mesh(
         mesh,

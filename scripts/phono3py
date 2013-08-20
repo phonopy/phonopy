@@ -737,10 +737,10 @@ else:
             jdos.get_jointDOS(grid_points,
                               filename=options.output_filename)
         else:
-            phono3py = Phono3py(supercell,
+            phono3py = Phono3py(fc3,
+                                supercell,
                                 primitive,
                                 mesh,
-                                fc3,
                                 band_indices=settings.get_band_indices(),
                                 frequency_factor_to_THz=factor,
                                 is_nosym=options.is_nosym,

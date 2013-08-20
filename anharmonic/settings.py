@@ -7,15 +7,16 @@ class Phono3pySettings(Settings):
 
         self._supercell_matrix_extra = None
         self._band_indices = None
-        self._q_direction = None
+        self._coarse_mesh_shifts = None
+        self._grid_points = None
         self._ion_clamped = False
         self._is_bterta = False
         self._is_linewidth = False
         self._max_freepath = None
         self._mesh_divisors = None
-        self._coarse_mesh_shifts = None
         self._multiple_sigmas = None
         self._no_kappa_stars = False
+        self._q_direction = None
         self._read_amplitude = False
         self._read_gamma = False
         self._temperatures = None
@@ -33,6 +34,12 @@ class Phono3pySettings(Settings):
 
     def get_band_indices(self):
         return self._band_indices
+
+    def set_grid_points(self, grid_points):
+        self._grid_points = grid_points
+
+    def get_grid_points(self):
+        return self._grid_points
 
     def set_ion_clamped(self, ion_clamped):
         self._ion_clamped = ion_clamped
@@ -138,6 +145,10 @@ class Phono3pyConfParser(ConfParser):
                 if self._options.band_indices is not None:
                     self._confs['band_indices'] = self._options.band_indices
 
+            if opt.dest == 'grid_points':
+                if self._options.grid_points is not None:
+                    self._confs['grid_points'] = self._options.grid_points
+
             if opt.dest == 'ion_clamped':
                 if self._options.ion_clamped:
                     self._confs['ion_clamped'] = '.true.'
@@ -214,6 +225,10 @@ class Phono3pyConfParser(ConfParser):
                 for sum_set in confs['band_indices'].split(','):
                     vals.append([int(x) - 1 for x in sum_set.split()])
                 self.set_parameter('band_indices', vals)
+
+            if conf_key == 'grid_points':
+                vals = [int(x) for x in confs['grid_points'].split()]
+                self.set_parameter('grid_points', vals)
 
             if conf_key == 'ion_clamped':
                 if confs['ion_clamped'] == '.true.':
@@ -300,6 +315,10 @@ class Phono3pyConfParser(ConfParser):
         # Sets of band indices that are summed
         if params.has_key('band_indices'):
             self._settings.set_band_indices(params['band_indices'])
+
+        # Grid points
+        if params.has_key('grid_points'):
+            self._settings.set_grid_points(params['grid_points'])
 
         # Atoms are clamped under applied strain in Gruneisen parameter calculation
         if params.has_key('ion_clamped'):

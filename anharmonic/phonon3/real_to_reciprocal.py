@@ -6,13 +6,11 @@ class RealToReciprocal:
                  fc3,
                  supercell,
                  primitive,
-                 triplets_address,
                  mesh,
                  symprec=1e-5):
         self._fc3 = fc3
         self._supercell = supercell
         self._primitive = primitive
-        self._triplets_address = triplets_address
         self._mesh = mesh
         self._symprec = symprec
         
@@ -69,9 +67,7 @@ class RealToReciprocal:
         r = self._primitive.get_scaled_positions()[patom_index]
         return np.exp(2j * np.pi * np.dot(sum_q, r))
 
-    def _get_phase(self,
-                   satom_indices,
-                   patom0_index):
+    def _get_phase(self, satom_indices, patom0_index):
         si = satom_indices
         p0 = patom0_index
         phase = 1+0j

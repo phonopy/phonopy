@@ -44,7 +44,6 @@ class Interaction:
         self._triplets_at_q = None
         self._weights_at_q = None
         self._grid_address = None
-        self._triplets_address = None
         self._interaction_strength = None
 
         self._phonon_done = None
@@ -123,7 +122,6 @@ class Interaction:
         self._triplets_at_q = triplets_at_q
         self._weights_at_q = weights_at_q
         self._grid_address = grid_address
-        self._triplets_address = grid_address[triplets_at_q]
 
     def set_dynamical_matrix(self,
                              fc2,
@@ -231,7 +229,6 @@ class Interaction:
         r2r = RealToReciprocal(self._fc3,
                                self._supercell,
                                self._primitive,
-                               self._triplets_address,
                                self._mesh,
                                symprec=self._symprec)
 
