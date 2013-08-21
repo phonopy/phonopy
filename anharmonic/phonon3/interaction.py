@@ -6,6 +6,53 @@ from anharmonic.phonon3.real_to_reciprocal import RealToReciprocal
 from anharmonic.phonon3.reciprocal_to_normal import ReciprocalToNormal
 from anharmonic.phonon3.triplets import get_triplets_at_q, get_nosym_triplets_at_q
 
+def get_dynamical_matrix(fc2,
+                         supercell,
+                         primitive,
+                         nac_params=None,
+                         frequency_scale_factor=None,
+                         decimals=None,
+                         symprec=1e-5):
+    if nac_params is None:
+        dm = DynamicalMatrix(
+            supercell,
+            primitive,
+            fc2,
+            frequency_scale_factor=frequency_scale_factor,
+            decimals=decimals,
+            symprec=symprec)
+    else:
+        dm = DynamicalMatrixNAC(
+            supercell,
+            primitive,
+            fc2,
+            frequency_scale_factor=frequency_scale_factor,
+            decimals=decimals,
+            symprec=symprec)
+        dm.set_nac_params(nac_params)
+    return dm
+
+def set_phonon_py(grid_point,
+                  phonon_done,
+                  frequencies,
+                  eigenvectors,
+                  grid_address,
+                  mesh,
+                  dynamical_matrix,
+                  frequency_factor_to_THz,                  
+                  lapack_zheev_uplo):
+    gp = grid_point
+    if phonon_done[gp] == 0:
+        phonon_done[gp] = 1
+        q = grid_address[gp].astype('double') / mesh
+        dynamical_matrix.set_dynamical_matrix(q)
+        dm = dynamical_matrix.get_dynamical_matrix()
+        eigvals, eigvecs = np.linalg.eigh(dm, UPLO=lapack_zheev_uplo)
+        eigvals = eigvals.real
+        frequencies[gp] = (np.sqrt(np.abs(eigvals)) * np.sign(eigvals)
+                                 * frequency_factor_to_THz)
+        eigenvectors[gp] = eigvecs
+
 class Interaction:
     def __init__(self,
                  fc3,
@@ -18,7 +65,6 @@ class Interaction:
                  symmetrize_fc3_q=False,
                  symprec=1e-3,
                  cutoff_frequency=None,
-                 log_level=False,
                  lapack_zheev_uplo='L'):
         self._fc3 = fc3 
         self._supercell = supercell
@@ -35,7 +81,6 @@ class Interaction:
         self._cutoff_frequency = cutoff_frequency
         self._is_nosym = is_nosym
         self._symmetrize_fc3_q = symmetrize_fc3_q
-        self._log_level = log_level
         self._lapack_zheev_uplo = lapack_zheev_uplo
 
         symmetry = Symmetry(primitive, symprec=symprec)
@@ -130,23 +175,14 @@ class Interaction:
                              nac_params=None,
                              frequency_scale_factor=None,
                              decimals=None):
-        if nac_params is None:
-            self._dm = DynamicalMatrix(
-                supercell,
-                primitive,
-                fc2,
-                frequency_scale_factor=frequency_scale_factor,
-                decimals=decimals,
-                symprec=self._symprec)
-        else:
-            self._dm = DynamicalMatrixNAC(
-                supercell,
-                primitive,
-                fc2,
-                frequency_scale_factor=frequency_scale_factor,
-                decimals=decimals,
-                symprec=self._symprec)
-            self._dm.set_nac_params(nac_params)
+        self._dm = get_dynamical_matrix(
+            fc2,
+            supercell,
+            primitive,
+            nac_params=nac_params,
+            frequency_scale_factor=frequency_scale_factor,
+            decimals=decimals,
+            symprec=self._symprec)
 
     def set_nac_q_direction(self, nac_q_direction=None):
         if nac_q_direction is not None:
@@ -155,11 +191,11 @@ class Interaction:
     def _run_c(self):
         import anharmonic._phono3py as phono3c
         
-        # for i, grid_triplet in enumerate(self._triplets_at_q):
-        #     for gp in grid_triplet:
-        #         self._set_phonon_py(gp)
+        for i, grid_triplet in enumerate(self._triplets_at_q):
+            for gp in grid_triplet:
+                self._set_phonon_py(gp)
 
-        self._set_phonon_c()
+        # self._set_phonon_c()
 
         num_band = self._primitive.get_number_of_atoms() * 3
         svecs, multiplicity = get_smallest_vectors(self._supercell,
@@ -251,14 +287,12 @@ class Interaction:
             self._interaction_strength[i] = r2n.get_reciprocal_to_normal()
 
     def _set_phonon_py(self, grid_point):
-        gp = grid_point
-        if self._phonon_done[gp] == 0:
-            self._phonon_done[gp] = 1
-            q = self._grid_address[gp].astype('double') / self._mesh
-            self._dm.set_dynamical_matrix(q)
-            dm = self._dm.get_dynamical_matrix()
-            eigvals, eigvecs = np.linalg.eigh(dm, UPLO=self._lapack_zheev_uplo)
-            eigvals = eigvals.real
-            self._frequencies[gp] = (np.sqrt(np.abs(eigvals)) * np.sign(eigvals)
-                                     * self._frequency_factor_to_THz)
-            self._eigenvectors[gp] = eigvecs
+        set_phonon_py(grid_point,
+                      self._phonon_done,
+                      self._frequencies,
+                      self._eigenvectors,
+                      self._grid_address,
+                      self._mesh,
+                      self._dm,
+                      self._frequency_factor_to_THz,                  
+                      self._lapack_zheev_uplo)

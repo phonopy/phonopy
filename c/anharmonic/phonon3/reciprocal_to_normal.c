@@ -2,6 +2,7 @@
 #include <math.h>
 #include "phonoc_array.h"
 #include "phonoc_math.h"
+#include "phonon3_h/reciprocal_to_normal.h"
 
 static double fc3_sum_squared(const int bi0,
 			      const int bi1,

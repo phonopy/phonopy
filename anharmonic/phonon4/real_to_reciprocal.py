@@ -29,12 +29,25 @@ class RealToReciprocal:
         num_patom = self._primitive.get_number_of_atoms()
         self._fc4_reciprocal = np.zeros(
             (num_patom,) * 4 + (3,) * 4, dtype='complex128')
-        self._real_to_reciprocal()
+
+        self._real_to_reciprocal_c()
+        # self._real_to_reciprocal_py()
 
     def get_fc4_reciprocal(self):
         return self._fc4_reciprocal
 
-    def _real_to_reciprocal(self):
+    def _real_to_reciprocal_c(self):
+        import anharmonic._phono3py as phono3c
+        phono3c.real_to_reciprocal4(self._fc4_reciprocal,
+                                    np.double(self._fc4),
+                                    np.double(self._quartet /
+                                              self._mesh.astype('double')),
+                                    self._smallest_vectors,
+                                    self._multiplicity,
+                                    self._p2s_map,
+                                    self._s2p_map)
+
+    def _real_to_reciprocal_py(self):
         num_patom = self._primitive.get_number_of_atoms()
         for (i, j, k, l) in list(np.ndindex(
                 num_patom, num_patom, num_patom, num_patom)):

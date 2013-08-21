@@ -15,7 +15,6 @@ class Phono4py:
                  cutoff_frequency=1e-4,
                  log_level=False,
                  lapack_zheev_uplo='L'):
-                 
         self._fc4 = fc4
         self._supercell = supercell
         self._primitive = primitive

@@ -86,6 +86,7 @@ def print_error(message):
 # Parse options
 parser = OptionParser()
 parser.set_defaults(amplitude=None,
+                    band_indices=None,
                     cell_poscar=None,
                     factor=None,
                     fc2_fourth_sets_mode=False,
@@ -113,6 +114,9 @@ parser.set_defaults(amplitude=None,
                     verbose=True)
 parser.add_option("--amplitude", dest="amplitude", type="float",
                   help="Distance of displacements")
+parser.add_option("--bi", "--band_indices", dest="band_indices",
+                  type="string",
+                  help="Band indices where life time is calculated")
 parser.add_option("-c", "--cell", dest="cell_poscar",
                   action="store", type="string",
                   help="Read unit cell", metavar="FILE")
@@ -411,6 +415,7 @@ else:
                         supercell,
                         primitive,
                         mesh,
+                        band_indices=settings.get_band_indices(),
                         frequency_factor_to_THz=factor,
                         cutoff_frequency=1e-2,
                         is_nosym=options.is_nosym,

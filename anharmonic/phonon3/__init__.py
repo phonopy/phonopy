@@ -53,7 +53,6 @@ class Phono3py:
             cutoff_frequency=self._cutoff_frequency,
             is_nosym=self._is_nosym,
             symmetrize_fc3_q=self._symmetrize_fc3_q,
-            log_level=self._log_level,
             lapack_zheev_uplo=lapack_zheev_uplo)
         
     def set_dynamical_matrix(self,

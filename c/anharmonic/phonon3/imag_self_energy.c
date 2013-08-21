@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include "phonoc_array.h"
-#include "imag_self_energy.h"
+#include "phonon3_h/imag_self_energy.h"
 
 #define THZTOEVPARKB 47.992398658977166
 #define INVSQRT2PI 0.3989422804014327

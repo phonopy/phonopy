@@ -5,13 +5,17 @@
 #include <numpy/arrayobject.h>
 #include <lapacke.h>
 #include "lapack_wrapper.h"
-#include "interaction.h"
 #include "phonoc_array.h"
-#include "imag_self_energy.h"
+#include "phonon3_h/interaction.h"
+#include "phonon3_h/imag_self_energy.h"
+#include "phonon4_h/real_to_reciprocal.h"
+#include "phonon4_h/frequency_shift.h"
 
 static PyObject * py_get_jointDOS(PyObject *self, PyObject *args);
 
 static PyObject * py_get_interaction(PyObject *self, PyObject *args);
+static PyObject * py_real_to_reciprocal4(PyObject *self, PyObject *args);
+static PyObject * py_reciprocal_to_normal4(PyObject *self, PyObject *args);
 static PyObject * py_get_imag_self_energy(PyObject *self, PyObject *args);
 static PyObject * py_get_imag_self_energy_at_bands(PyObject *self,
 						   PyObject *args);
@@ -82,6 +86,8 @@ static PyMethodDef functions[] = {
   {"interaction", py_get_interaction, METH_VARARGS, "Interaction of triplets"},
   {"imag_self_energy", py_get_imag_self_energy, METH_VARARGS, "Imaginary part of self energy"},
   {"imag_self_energy_at_bands", py_get_imag_self_energy_at_bands, METH_VARARGS, "Imaginary part of self energy at phonon frequencies of bands"},
+  {"real_to_reciprocal4", py_real_to_reciprocal4, METH_VARARGS, "Transform fc4 of real space to reciprocal space"},
+  {"reciprocal_to_normal4", py_reciprocal_to_normal4, METH_VARARGS, "Transform fc4 of reciprocal space to normal coordinate in special case for frequency shift"},
   {"phonon_triplets", py_set_phonon_triplets, METH_VARARGS, "Set phonon triplets"},
   {"phonon", py_get_phonon, METH_VARARGS, "Get phonon"},
   {"distribute_fc3", py_distribute_fc3, METH_VARARGS, "Distribute least fc3 to full fc3"},
@@ -379,6 +385,102 @@ static PyObject * py_get_interaction(PyObject *self, PyObject *args)
   free(svecs);
   free(multi);
   
+  Py_RETURN_NONE;
+}
+
+static PyObject * py_real_to_reciprocal4(PyObject *self, PyObject *args)
+{
+  PyArrayObject* fc4_py;
+  PyArrayObject* fc4_reciprocal_py;
+  PyArrayObject* q_py;
+  PyArrayObject* shortest_vectors;
+  PyArrayObject* multiplicity;
+  PyArrayObject* p2s_map;
+  PyArrayObject* s2p_map;
+
+  if (!PyArg_ParseTuple(args, "OOOOOOO",
+			&fc4_reciprocal_py,
+			&fc4_py,
+			&q_py,
+			&shortest_vectors,
+			&multiplicity,
+			&p2s_map,
+			&s2p_map)) {
+    return NULL;
+  }
+
+  Darray* fc4 = convert_to_darray(fc4_py);
+  lapack_complex_double* fc4_reciprocal =
+    (lapack_complex_double*)fc4_reciprocal_py->data;
+  Darray* svecs = convert_to_darray(shortest_vectors);
+  Iarray* multi = convert_to_iarray(multiplicity);
+  const int* p2s = (int*)p2s_map->data;
+  const int* s2p = (int*)s2p_map->data;
+  const double* q = (double*)q_py->data;
+
+  real_to_reciprocal4(fc4_reciprocal,
+		      q,
+		      fc4,
+		      svecs,
+		      multi,
+		      p2s,
+		      s2p);
+
+  free(fc4);
+  free(svecs);
+  free(multi);
+  
+  Py_RETURN_NONE;
+}
+
+static PyObject * py_reciprocal_to_normal4(PyObject *self, PyObject *args)
+{
+  PyArrayObject* fc4_normal_py;
+  PyArrayObject* fc4_reciprocal_py;
+  PyArrayObject* frequencies_py;
+  PyArrayObject* eigenvectors_py;
+  PyArrayObject* grid_points_py;
+  PyArrayObject* masses_py;
+  PyArrayObject* band_indicies_py;
+  double cutoff_frequency;
+
+  if (!PyArg_ParseTuple(args, "OOOOOOOd",
+			&fc4_normal_py,
+			&fc4_reciprocal_py,
+			&frequencies_py,
+			&eigenvectors_py,
+			&grid_points_py,
+			&masses_py,
+			&band_indicies_py,
+			&cutoff_frequency)) {
+    return NULL;
+  }
+
+  lapack_complex_double* fc4_normal =
+    (lapack_complex_double*)fc4_normal_py->data;
+  const lapack_complex_double* fc4_reciprocal =
+    (lapack_complex_double*)fc4_reciprocal_py->data;
+  const lapack_complex_double* eigenvectors =
+    (lapack_complex_double*)eigenvectors_py->data;
+  const double* frequencies = (double*)frequencies_py->data;
+  const int* grid_points = (int*)grid_points_py->data;
+  const double* masses = (double*)masses_py->data;
+  const int* band_indices = (int*)band_indicies_py->data;
+  const int num_band0 = (int)band_indicies_py->dimensions[0];
+  const int num_band = (int)frequencies_py->dimensions[1];
+
+  reciprocal_to_normal4(fc4_normal,
+			fc4_reciprocal,
+			frequencies + grid_points[0] * num_band,
+			frequencies + grid_points[1] * num_band,
+			eigenvectors + grid_points[0] * num_band * num_band,
+			eigenvectors + grid_points[1] * num_band * num_band,
+			masses,
+			band_indices,
+			num_band0,
+			num_band,
+			cutoff_frequency);
+
   Py_RETURN_NONE;
 }
 

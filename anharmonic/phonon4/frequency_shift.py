@@ -1,6 +1,7 @@
 import numpy as np
 from phonopy.structure.symmetry import Symmetry
 import phonopy.structure.spglib as spg
+from anharmonic.phonon3.interaction import get_dynamical_matrix, set_phonon_py
 from anharmonic.phonon3.triplets import get_grid_address, invert_grid_point
 from anharmonic.phonon3.imag_self_energy import occupation as be_func
 from anharmonic.phonon4.real_to_reciprocal import RealToReciprocal
@@ -25,6 +26,7 @@ class FrequencyShift:
         self._fc4 = fc4
         self._supercell = supercell
         self._primitive = primitive
+        self._masses = self._primitive.get_masses()
         self._mesh = np.intc(mesh)
         if temperatures is None:
             self._temperatures = np.double([0])
@@ -72,24 +74,27 @@ class FrequencyShift:
         self._run_py()
 
     def set_grid_point(self, grid_point):
-        if self._is_nosym:
-            quartets_at_q = np.arange(len(self._grid_address), dtype='intc')
-            weights_at_q = np.ones(len(self._grid_address), dtype='intc')
-        else:
-            q = self._grid_address[grid_point].astype('double') / self._mesh
-            (grid_mapping_table,
-             grid_address) = spg.get_stabilized_reciprocal_mesh(
-                self._mesh,
-                self._point_group_operations,
-                is_shift=np.zeros(3, dtype='intc'),
-                is_time_reversal=True,
-                qpoints=np.double([q]))
+        # if self._is_nosym:
+        #     quartets_at_q = np.arange(len(self._grid_address), dtype='intc')
+        #     weights_at_q = np.ones(len(self._grid_address), dtype='intc')
+        # else:
+        #     q = self._grid_address[grid_point].astype('double') / self._mesh
+        #     (grid_mapping_table,
+        #      grid_address) = spg.get_stabilized_reciprocal_mesh(
+        #         self._mesh,
+        #         self._point_group_operations,
+        #         is_shift=np.zeros(3, dtype='intc'),
+        #         is_time_reversal=True,
+        #         qpoints=np.double([q]))
 
-            quartets_at_q = np.intc(np.unique(grid_mapping_table))
-            weights_at_q_all = np.zeros_like(grid_mapping_table)
-            for g in grid_mapping_table:
-                weights_at_q[g] += 1
-            weights_at_q = weights_at_q_all[quartets_at_q]
+        #     quartets_at_q = np.intc(np.unique(grid_mapping_table))
+        #     weights_at_q_all = np.zeros_like(grid_mapping_table)
+        #     for g in grid_mapping_table:
+        #         weights_at_q[g] += 1
+        #     weights_at_q = weights_at_q_all[quartets_at_q]
+
+        quartets_at_q = np.arange(len(self._grid_address), dtype='intc')
+        weights_at_q = np.ones(len(self._grid_address), dtype='intc')
 
         self._grid_point = grid_point
         self._quartets_at_q = quartets_at_q
@@ -102,29 +107,28 @@ class FrequencyShift:
                              nac_params=None,
                              frequency_scale_factor=None,
                              decimals=None):
-        if nac_params is None:
-            self._dm = DynamicalMatrix(
-                supercell,
-                primitive,
-                fc2,
-                frequency_scale_factor=frequency_scale_factor,
-                decimals=decimals,
-                symprec=self._symprec)
-        else:
-            self._dm = DynamicalMatrixNAC(
-                supercell,
-                primitive,
-                fc2,
-                frequency_scale_factor=frequency_scale_factor,
-                decimals=decimals,
-                symprec=self._symprec)
-            self._dm.set_nac_params(nac_params)
+        self._dm = get_dynamical_matrix(
+            fc2,
+            supercell,
+            primitive,
+            nac_params=nac_params,
+            frequency_scale_factor=frequency_scale_factor,
+            decimals=decimals,
+            symprec=self._symprec)
 
     def set_nac_q_direction(self, nac_q_direction=None):
         if nac_q_direction is not None:
             self._nac_q_direction = np.double(nac_q_direction)
 
     def _run_py(self):
+        self._fc4_normal = np.zeros((len(self._quartets_at_q),
+                                     len(self._band_indices),
+                                     len(self._frequencies[0])),
+                                    dtype='complex128')
+        self._calculate_fc4_normal_py()
+        self._show_frequency_shifts()
+
+    def _calculate_fc4_normal_py(self):
         r2r = RealToReciprocal(self._fc4,
                                self._supercell,
                                self._primitive,
@@ -139,45 +143,81 @@ class FrequencyShift:
         self._set_phonon_py(gp)
         igp = invert_grid_point(gp, self._grid_address, self._mesh)
 
-        for band_index in self._band_indices:
-            q = self._grid_address[gp].astype('double') / self._mesh
-            print "q-point:", q, "band index:", band_index + 1
-            fc4_normal = np.zeros((len(self._quartets_at_q),
-                                   len(self._frequencies[0])),
-                                  dtype='complex128')
-            
-            if self._frequencies[gp][band_index] < self._cutoff_frequency:
-                continue
+        if self._log_level:
+            print "---- Fourier transformation of fc4 ----"
+            q1 = self._grid_address[gp] / self._mesh.astype('double')
 
-            for i, (gp1, w) in enumerate(zip(self._quartets_at_q,
-                                             self._weights_at_q)):
+        for i, (gp1, w) in enumerate(zip(self._quartets_at_q,
+                                         self._weights_at_q)):
+            if self._log_level:
+                q2 = self._grid_address[gp1] / self._mesh.astype('double')
+
+            # for j, band_index in enumerate(self._band_indices):
+            #     if self._frequencies[gp][band_index] < self._cutoff_frequency:
+            #         continue
+            #     if self._log_level:
+            #         print "q1:", q1, "q2:", q2, "band index:", band_index + 1
+            #     igp1 = invert_grid_point(gp, self._grid_address, self._mesh)
+            #     r2r.run(self._grid_address[[igp, gp, gp1, igp1]])
+            #     fc4_reciprocal = r2r.get_fc4_reciprocal()
+            #     self._set_phonon_py(gp1)
+            #     r2n.run(fc4_reciprocal, gp, band_index, gp1)
+            #     self._fc4_normal[i, j] = r2n.get_reciprocal_to_normal()
+
+            num_patom = self._primitive.get_number_of_atoms()
+            fc4_reciprocal = np.zeros((len(self._band_indices),) +
+                                      (num_patom,) * 4 + (3,) * 4,
+                                      dtype='complex128')
+
+            for j, band_index in enumerate(self._band_indices):
+                if self._frequencies[gp][band_index] < self._cutoff_frequency:
+                    continue
+                # if self._log_level:
+                #     print "q1:", q1, "q2:", q2, "band index:", band_index + 1
                 igp1 = invert_grid_point(gp, self._grid_address, self._mesh)
                 r2r.run(self._grid_address[[igp, gp, gp1, igp1]])
-                fc4_reciprocal = r2r.get_fc4_reciprocal()
+                fc4_reciprocal[j] = r2r.get_fc4_reciprocal()
                 self._set_phonon_py(gp1)
-                r2n.run(fc4_reciprocal, gp, band_index, gp1)
-                fc4_normal[i] = r2n.get_reciprocal_to_normal()
 
+            fc4_normal_gp = np.zeros((len(self._band_indices),
+                                      len(self._frequencies[0])),
+                                     dtype='complex128')
+
+            import anharmonic._phono3py as phono3c
+            phono3c.reciprocal_to_normal4(fc4_normal_gp,
+                                          fc4_reciprocal,
+                                          self._frequencies,
+                                          self._eigenvectors,
+                                          np.intc([gp, gp1]),
+                                          self._masses,
+                                          self._band_indices,
+                                          self._cutoff_frequency);
+            self._fc4_normal[i] = fc4_normal_gp
+            
+
+    def _show_frequency_shifts(self):
+        for i, band_index in enumerate(self._band_indices):
             for t in self._temperatures:
                 shift = 0j
-                for i, gp1 in enumerate(self._quartets_at_q):
-                    occupations = be_func(self._frequencies[gp1], t)
-                    shift += (fc4_normal[i] * self._unit_conversion *
+                for j, gp1 in enumerate(self._quartets_at_q):
+                    if t > 0:
+                        occupations = be_func(self._frequencies[gp1], t)
+                    else:
+                        occupations = np.zeros_like(self._frequencies[gp1])
+                    shift += (self._fc4_normal[j, i] * self._unit_conversion *
                               (2 * occupations + 1)).sum()
-                print "temp:", t, "shift:", shift
+                print "band index:", band_index + 1, "temp:", t, "shift:", shift
 
     def _set_phonon_py(self, grid_point):
-        gp = grid_point
-        if self._phonon_done[gp] == 0:
-            self._phonon_done[gp] = 1
-            q = self._grid_address[gp].astype('double') / self._mesh
-            self._dm.set_dynamical_matrix(q)
-            dm = self._dm.get_dynamical_matrix()
-            eigvals, eigvecs = np.linalg.eigh(dm, UPLO=self._lapack_zheev_uplo)
-            eigvals = eigvals.real
-            self._frequencies[gp] = (np.sqrt(np.abs(eigvals)) * np.sign(eigvals)
-                                     * self._frequency_factor_to_THz)
-            self._eigenvectors[gp] = eigvecs
+        set_phonon_py(grid_point,
+                      self._phonon_done,
+                      self._frequencies,
+                      self._eigenvectors,
+                      self._grid_address,
+                      self._mesh,
+                      self._dm,
+                      self._frequency_factor_to_THz,                  
+                      self._lapack_zheev_uplo)
 
 class ReciprocalToNormal:
     def __init__(self,
