@@ -3,22 +3,6 @@
 
 #include "phonoc_array.h"
 
-int get_phonons(lapack_complex_double *a,
-		double *w,
-		const double q[3],
-		const Darray *fc2,
-		const double *masses,
-		const int *p2s,
-		const int *s2p,
-		const Iarray *multi,
-		const Darray *svecs,
-		const double *born,
-		const double *dielectric,
-		const double *reciprocal_lattice,
-		const double *q_direction,
-		const double nac_factor,
-		const double unit_conversion_factor,
-		const char uplo);
 void set_phonon_triplets(Darray *frequencies,
 			 Carray *eigenvectors,
 			 char *phonon_done,

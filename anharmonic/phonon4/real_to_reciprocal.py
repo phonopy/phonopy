@@ -24,14 +24,16 @@ class RealToReciprocal:
         self._quartet = None
         self._fc4_reciprocal = None
 
-    def run(self, quartet):
+    def run(self, quartet, lang='py'):
         self._quartet = quartet
         num_patom = self._primitive.get_number_of_atoms()
         self._fc4_reciprocal = np.zeros(
             (num_patom,) * 4 + (3,) * 4, dtype='complex128')
 
-        self._real_to_reciprocal_c()
-        # self._real_to_reciprocal_py()
+        if lang=='C':
+            self._real_to_reciprocal_c()
+        else:
+            self._real_to_reciprocal_py()
 
     def get_fc4_reciprocal(self):
         return self._fc4_reciprocal

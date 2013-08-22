@@ -2,7 +2,9 @@
 #include <math.h>
 #include "phonoc_array.h"
 #include "phonoc_math.h"
+#include "phonoc_utils.h"
 #include "phonon4_h/frequency_shift.h"
+#include "phonon4_h/real_to_reciprocal.h"
 
 static lapack_complex_double fc4_sum(const int bi0,
 				     const int bi1,
@@ -11,6 +13,139 @@ static lapack_complex_double fc4_sum(const int bi0,
 				     const lapack_complex_double *fc4_reciprocal,
 				     const double *masses,
 				     const int num_atom);
+static int collect_undone_grid_points(int *undone,
+				      char *phonon_done,
+				      const int num_grid_points,
+				      const int *grid_points);
+
+
+void get_fc4_normal_for_frequency_shift(double *fc4_normal_real,
+					const Darray *frequencies,
+					const Carray *eigenvectors,
+					const int grid_point0,
+					const Iarray *grid_points1,
+					const Iarray *grid_address,
+					const int *mesh,
+					const Darray *fc4,
+					const Darray *shortest_vectors,
+					const Iarray *multiplicity,
+					const double *masses,
+					const int *p2s_map,
+					const int *s2p_map,
+					const Iarray *band_indices,
+					const double cutoff_frequency)
+{
+  int i, j, num_atom, num_band, num_band0, num_grid_points, fc4_stride, grid_point1;
+  lapack_complex_double *fc4_reciprocal, *fc4_normal;
+  double q[12];
+
+  num_atom = multiplicity->dims[1];
+  num_band = frequencies->dims[1];
+  num_band0 = band_indices->dims[0];
+  num_grid_points = grid_points1->dims[0];
+  fc4_stride = num_band0 * num_band;
+
+  fc4_reciprocal = (lapack_complex_double*)
+    malloc(sizeof(lapack_complex_double) *
+	   num_atom * num_atom * num_atom * num_atom * 81);
+  fc4_normal = (lapack_complex_double*)
+    malloc(sizeof(lapack_complex_double) * fc4_stride);
+
+  for (i = 0; i < 3; i++) {
+    q[i + 3] = (double)grid_address->data[grid_point0 * 3 + i] / mesh[i];
+    q[i] = -q[i + 3];
+  }
+
+  for (i = 0; i < num_grid_points; i++) {
+    grid_point1 = grid_points1->data[i];
+    for (j = 0; j < 3; j++) {
+      q[j + 6] = (double)grid_address->data[grid_point1 * 3 + j] / mesh[j];
+      q[j + 9] = -q[j + 6];
+    }
+    
+    real_to_reciprocal4(fc4_reciprocal,
+			q,
+			fc4,
+			shortest_vectors,
+			multiplicity,
+			p2s_map,
+			s2p_map);
+
+    reciprocal_to_normal4(fc4_normal,
+			  fc4_reciprocal,
+			  frequencies->data + grid_point0 * num_band,
+			  frequencies->data + grid_point1 * num_band,
+			  eigenvectors->data + grid_point0 * num_band * num_band,
+			  eigenvectors->data + grid_point1 * num_band * num_band,
+			  masses,
+			  band_indices->data,
+			  num_band0,
+			  num_band,
+			  cutoff_frequency);
+
+    for (j = 0; j < fc4_stride; j++) {
+      fc4_normal_real[fc4_stride * i + j] =
+	lapack_complex_double_real(fc4_normal[j]);
+    }
+  }
+
+  free(fc4_reciprocal);
+  free(fc4_normal);
+}
+
+void set_phonons_for_frequency_shift(Darray *frequencies,
+				     Carray *eigenvectors,
+				     char *phonon_done,
+				     const Iarray *grid_points,
+				     const Iarray *grid_address,
+				     const int *mesh,
+				     const Darray *fc2,
+				     const Darray *svecs_fc2,
+				     const Iarray *multi_fc2,
+				     const double *masses_fc2,
+				     const int *p2s_fc2,
+				     const int *s2p_fc2,
+				     const double unit_conversion_factor,
+				     const double *born,
+				     const double *dielectric,
+				     const double *reciprocal_lattice,
+				     const double *q_direction,
+				     const double nac_factor,
+				     const char uplo)
+{
+  int num_grid_points, num_undone;
+  int *undone;
+
+  num_grid_points = grid_address->dims[0];
+
+  undone = (int*)malloc(sizeof(int) * num_grid_points);
+  num_undone = collect_undone_grid_points(undone,
+					  phonon_done,
+					  grid_points->dims[0],
+					  grid_points->data);
+
+  get_undone_phonons(frequencies,
+		     eigenvectors,
+		     undone,
+		     num_undone,
+		     grid_address,
+		     mesh,
+		     fc2,
+		     svecs_fc2,
+		     multi_fc2,
+		     masses_fc2,
+		     p2s_fc2,
+		     s2p_fc2,
+		     unit_conversion_factor,
+		     born,
+		     dielectric,
+		     reciprocal_lattice,
+		     q_direction,
+		     nac_factor,
+		     uplo);
+  
+  free(undone);
+}
 
 void reciprocal_to_normal4(lapack_complex_double *fc4_normal,
 			   const lapack_complex_double *fc4_reciprocal,
@@ -47,7 +182,11 @@ void reciprocal_to_normal4(lapack_complex_double *fc4_normal,
 	}
       }
     }
-  }    
+  }
+  for (j = 0; j < num_band * num_band0; j++) {
+    printf("%f ", lapack_complex_double_real(fc4_normal[j]));
+  }
+  printf("\n");
 }
 
 static lapack_complex_double fc4_sum(const int bi0,
@@ -111,4 +250,25 @@ static lapack_complex_double fc4_sum(const int bi0,
     }
   }
   return lapack_make_complex_double(sum_real, sum_imag);
+}
+
+static int collect_undone_grid_points(int *undone,
+				      char *phonon_done,
+				      const int num_grid_points,
+				      const int *grid_points)
+{
+  int i, gp, num_undone;
+
+  num_undone = 0;
+
+  for (i = 0; i < num_grid_points; i++) {
+    gp = grid_points[i];
+    if (phonon_done[gp] == 0) {
+      undone[num_undone] = gp;
+      num_undone++;
+      phonon_done[gp] = 1;
+    }
+  }
+
+  return num_undone;
 }

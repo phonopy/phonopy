@@ -6,6 +6,7 @@
 #include <lapacke.h>
 #include "lapack_wrapper.h"
 #include "phonoc_array.h"
+#include "phonoc_utils.h"
 #include "phonon3_h/interaction.h"
 #include "phonon3_h/imag_self_energy.h"
 #include "phonon4_h/real_to_reciprocal.h"
@@ -14,12 +15,14 @@
 static PyObject * py_get_jointDOS(PyObject *self, PyObject *args);
 
 static PyObject * py_get_interaction(PyObject *self, PyObject *args);
+static PyObject * py_get_fc4_normal_for_frequency_shift(PyObject *self, PyObject *args);
 static PyObject * py_real_to_reciprocal4(PyObject *self, PyObject *args);
 static PyObject * py_reciprocal_to_normal4(PyObject *self, PyObject *args);
 static PyObject * py_get_imag_self_energy(PyObject *self, PyObject *args);
 static PyObject * py_get_imag_self_energy_at_bands(PyObject *self,
 						   PyObject *args);
 static PyObject * py_set_phonon_triplets(PyObject *self, PyObject *args);
+static PyObject * py_set_phonons_grid_points(PyObject *self, PyObject *args);
 static PyObject * py_get_phonon(PyObject *self, PyObject *args);
 static PyObject * py_distribute_fc3(PyObject *self, PyObject *args);
 static PyObject * py_distribute_fc4(PyObject *self, PyObject *args);
@@ -84,11 +87,13 @@ static double tensor4_rotation_elem(const double tensor[81],
 static PyMethodDef functions[] = {
   {"joint_dos", py_get_jointDOS, METH_VARARGS, "Calculate joint density of states"},
   {"interaction", py_get_interaction, METH_VARARGS, "Interaction of triplets"},
+  {"fc4_normal_for_frequency_shift", py_get_fc4_normal_for_frequency_shift, METH_VARARGS, "Calculate f4 normal for frequency shift"},
   {"imag_self_energy", py_get_imag_self_energy, METH_VARARGS, "Imaginary part of self energy"},
   {"imag_self_energy_at_bands", py_get_imag_self_energy_at_bands, METH_VARARGS, "Imaginary part of self energy at phonon frequencies of bands"},
   {"real_to_reciprocal4", py_real_to_reciprocal4, METH_VARARGS, "Transform fc4 of real space to reciprocal space"},
   {"reciprocal_to_normal4", py_reciprocal_to_normal4, METH_VARARGS, "Transform fc4 of reciprocal space to normal coordinate in special case for frequency shift"},
   {"phonon_triplets", py_set_phonon_triplets, METH_VARARGS, "Set phonon triplets"},
+  {"phonons_grid_points", py_set_phonons_grid_points, METH_VARARGS, "Set phonons on grid points"},
   {"phonon", py_get_phonon, METH_VARARGS, "Get phonon"},
   {"distribute_fc3", py_distribute_fc3, METH_VARARGS, "Distribute least fc3 to full fc3"},
   {"distribute_fc4", py_distribute_fc4, METH_VARARGS, "Distribute least fc4 to full fc4"},
@@ -206,6 +211,115 @@ static PyObject * py_set_phonon_triplets(PyObject *self, PyObject *args)
   free(freqs);
   free(eigvecs);
   free(triplets);
+  free(grid_address);
+  free(fc2);
+  free(svecs_fc2);
+  free(multi_fc2);
+  
+  Py_RETURN_NONE;
+}
+
+static PyObject * py_set_phonons_grid_points(PyObject *self, PyObject *args)
+{
+  PyArrayObject* frequencies;
+  PyArrayObject* eigenvectors;
+  PyArrayObject* phonon_done_py;
+  PyArrayObject* grid_points_py;
+  PyArrayObject* grid_address_py;
+  PyArrayObject* mesh_py;
+  PyArrayObject* shortest_vectors_fc2;
+  PyArrayObject* multiplicity_fc2;
+  PyArrayObject* fc2_py;
+  PyArrayObject* atomic_masses_fc2;
+  PyArrayObject* p2s_map_fc2;
+  PyArrayObject* s2p_map_fc2;
+  PyArrayObject* reciprocal_lattice;
+  PyArrayObject* born_effective_charge;
+  PyArrayObject* q_direction;
+  PyArrayObject* dielectric_constant;
+  double nac_factor, unit_conversion_factor;
+  char uplo;
+
+  if (!PyArg_ParseTuple(args, "OOOOOOOOOOOOdOOOOdc",
+			&frequencies,
+			&eigenvectors,
+			&phonon_done_py,
+			&grid_points_py,
+			&grid_address_py,
+			&mesh_py,
+			&fc2_py,
+			&shortest_vectors_fc2,
+			&multiplicity_fc2,
+			&atomic_masses_fc2,
+			&p2s_map_fc2,
+			&s2p_map_fc2,
+			&unit_conversion_factor,
+			&born_effective_charge,
+			&dielectric_constant,
+			&reciprocal_lattice,
+			&q_direction,
+			&nac_factor,
+			&uplo)) {
+    return NULL;
+  }
+
+  double* born;
+  double* dielectric;
+  double *q_dir;
+  Darray* freqs = convert_to_darray(frequencies);
+  /* npy_cdouble and lapack_complex_double may not be compatible. */
+  /* So eigenvectors should not be used in Python side */
+  Carray* eigvecs = convert_to_carray(eigenvectors);
+  char* phonon_done = (char*)phonon_done_py->data;
+  Iarray* grid_points = convert_to_iarray(grid_points_py);
+  Iarray* grid_address = convert_to_iarray(grid_address_py);
+  const int* mesh = (int*)mesh_py->data;
+  Darray* fc2 = convert_to_darray(fc2_py);
+  Darray* svecs_fc2 = convert_to_darray(shortest_vectors_fc2);
+  Iarray* multi_fc2 = convert_to_iarray(multiplicity_fc2);
+  const double* masses_fc2 = (double*)atomic_masses_fc2->data;
+  const int* p2s_fc2 = (int*)p2s_map_fc2->data;
+  const int* s2p_fc2 = (int*)s2p_map_fc2->data;
+  const double* rec_lat = (double*)reciprocal_lattice->data;
+  if ((PyObject*)born_effective_charge == Py_None) {
+    born = NULL;
+  } else {
+    born = (double*)born_effective_charge->data;
+  }
+  if ((PyObject*)dielectric_constant == Py_None) {
+    dielectric = NULL;
+  } else {
+    dielectric = (double*)dielectric_constant->data;
+  }
+  if ((PyObject*)q_direction == Py_None) {
+    q_dir = NULL;
+  } else {
+    q_dir = (double*)q_direction->data;
+  }
+
+  set_phonons_for_frequency_shift(freqs,
+				  eigvecs,
+				  phonon_done,
+				  grid_points,
+				  grid_address,
+				  mesh,
+				  fc2,
+				  svecs_fc2,
+				  multi_fc2,
+				  masses_fc2,
+				  p2s_fc2,
+				  s2p_fc2,
+				  unit_conversion_factor,
+				  born,
+				  dielectric,
+				  rec_lat,
+				  q_dir,
+				  nac_factor,
+				  uplo);
+
+  free(freqs);
+  free(eigvecs);
+  free(grid_points);
   free(grid_address);
   free(fc2);
   free(svecs_fc2);
@@ -384,6 +498,88 @@ static PyObject * py_get_interaction(PyObject *self, PyObject *args)
   free(fc3);
   free(svecs);
   free(multi);
+  
+  Py_RETURN_NONE;
+}
+
+static PyObject * py_get_fc4_normal_for_frequency_shift(PyObject *self,
+							PyObject *args)
+{
+  PyArrayObject* fc4_normal_py;
+  PyArrayObject* frequencies_py;
+  PyArrayObject* eigenvectors_py;
+  PyArrayObject* grid_points1_py;
+  PyArrayObject* grid_address_py;
+  PyArrayObject* mesh_py;
+  PyArrayObject* fc4_py;
+  PyArrayObject* shortest_vectors_py;
+  PyArrayObject* multiplicity_py;
+  PyArrayObject* masses_py;
+  PyArrayObject* p2s_map_py;
+  PyArrayObject* s2p_map_py;
+  PyArrayObject* band_indicies_py;
+  double cutoff_frequency;
+  int grid_point0;
+
+  if (!PyArg_ParseTuple(args, "OOOiOOOOOOOOOOd",
+			&fc4_normal_py,
+			&frequencies_py,
+			&eigenvectors_py,
+			&grid_point0,
+			&grid_points1_py,
+			&grid_address_py,
+			&mesh_py,
+			&fc4_py,
+			&shortest_vectors_py,
+			&multiplicity_py,
+			&masses_py,
+			&p2s_map_py,
+			&s2p_map_py,
+			&band_indicies_py,
+			&cutoff_frequency)) {
+    return NULL;
+  }
+
+  double* fc4_normal = (double*)fc4_normal_py->data;
+  Darray* freqs = convert_to_darray(frequencies_py);
+  /* npy_cdouble and lapack_complex_double may not be compatible. */
+  /* So eigenvectors should not be used in Python side */
+  Carray* eigvecs = convert_to_carray(eigenvectors_py);
+  Iarray* grid_points1 = convert_to_iarray(grid_points1_py);
+  Iarray* grid_address = convert_to_iarray(grid_address_py);
+  const int* mesh = (int*)mesh_py->data;
+  Darray* fc4 = convert_to_darray(fc4_py);
+  Darray* svecs = convert_to_darray(shortest_vectors_py);
+  Iarray* multi = convert_to_iarray(multiplicity_py);
+  const double* masses = (double*)masses_py->data;
+  const int* p2s = (int*)p2s_map_py->data;
+  const int* s2p = (int*)s2p_map_py->data;
+  Iarray* band_indicies = convert_to_iarray(band_indicies_py);
+
+  get_fc4_normal_for_frequency_shift(fc4_normal,
+				     freqs,
+				     eigvecs,
+				     grid_point0,
+				     grid_points1,
+				     grid_address,
+				     mesh,
+				     fc4,
+				     svecs,
+				     multi,
+				     masses,
+				     p2s,
+				     s2p,
+				     band_indicies,
+				     cutoff_frequency);
+
+  free(freqs);
+  free(eigvecs);
+  free(grid_points1);
+  free(grid_address);
+  free(fc4);
+  free(svecs);
+  free(multi);
+  free(band_indicies);
   
   Py_RETURN_NONE;
 }

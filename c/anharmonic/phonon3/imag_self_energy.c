@@ -2,10 +2,8 @@
 #include <stdlib.h>
 #include <math.h>
 #include "phonoc_array.h"
+#include "phonoc_utils.h"
 #include "phonon3_h/imag_self_energy.h"
-
-#define THZTOEVPARKB 47.992398658977166
-#define INVSQRT2PI 0.3989422804014327
 
 static double get_imag_self_energy_at_band(double *imag_self_energy,
 					   const int band_index,
@@ -33,8 +31,6 @@ static double sum_imag_self_energy_at_band_0K(const int num_band,
 					      const double *freqs1,
 					      const double sigma,
 					      const double cutoff_frequency);
-static double gaussian(const double x, const double sigma);
-static double occupation(const double x, const double t);
     
 /* imag_self_energy[num_band0] */
 /* fc3_normal_sqared[num_triplets, num_band0, num_band, num_band] */
@@ -202,10 +198,10 @@ static double sum_imag_self_energy_at_band(const int num_band,
   sum_g = 0;
   for (i = 0; i < num_band; i++) {
     if (freqs0[i] > cutoff_frequency) {
-      n2 = occupation(freqs0[i], temperature);
+      n2 = bose_einstein(freqs0[i], temperature);
       for (j = 0; j < num_band; j++) {
 	if (freqs1[j] > cutoff_frequency) {
-	  n3 = occupation(freqs1[j], temperature);
+	  n3 = bose_einstein(freqs1[j], temperature);
 	  g1 = gaussian(fpoint - freqs0[i] - freqs1[j], sigma);
 	  g2 = gaussian(fpoint + freqs0[i] - freqs1[j], sigma);
 	  g3 = gaussian(fpoint - freqs0[i] + freqs1[j], sigma);
@@ -243,12 +239,3 @@ static double sum_imag_self_energy_at_band_0K(const int num_band,
   return sum_g;
 }
 
-static double gaussian(const double x, const double sigma)
-{
-  return INVSQRT2PI / sigma * exp(-x * x / 2 / sigma / sigma);
-}  
-
-static double occupation(const double x, const double t)
-{
-  return 1.0 / (exp(THZTOEVPARKB * x / t) - 1);
-}

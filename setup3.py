@@ -20,6 +20,7 @@ extension = Extension(
              'c/harmonic/lapack_wrapper.c',
              'c/anharmonic/phonoc_array.c',
              'c/anharmonic/phonoc_math.c',
+             'c/anharmonic/phonoc_utils.c',
              'c/anharmonic/phonon3/interaction.c',
              'c/anharmonic/phonon3/real_to_reciprocal.c',
              'c/anharmonic/phonon3/reciprocal_to_normal.c',
