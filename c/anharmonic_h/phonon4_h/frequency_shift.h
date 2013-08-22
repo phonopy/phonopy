@@ -4,21 +4,22 @@
 #include <lapacke.h>
 #include "phonoc_array.h"
 
-void get_fc4_normal_for_frequency_shift(double *fc4_normal_real,
-					const Darray *frequencies,
-					const Carray *eigenvectors,
-					const int grid_point0,
-					const Iarray *grid_points1,
-					const Iarray *grid_address,
-					const int *mesh,
-					const Darray *fc4,
-					const Darray *shortest_vectors,
-					const Iarray *multiplicity,
-					const double *masses,
-					const int *p2s_map,
-					const int *s2p_map,
-					const Iarray *band_indices,
-					const double cutoff_frequency);
+void
+get_fc4_normal_for_frequency_shift(double *fc4_normal_real,
+				   const double *frequencies,
+				   const lapack_complex_double *eigenvectors,
+				   const int grid_point0,
+				   const Iarray *grid_points1,
+				   const Iarray *grid_address,
+				   const int *mesh,
+				   const double *fc4,
+				   const Darray *shortest_vectors,
+				   const Iarray *multiplicity,
+				   const double *masses,
+				   const int *p2s_map,
+				   const int *s2p_map,
+				   const Iarray *band_indices,
+				   const double cutoff_frequency);
 void set_phonons_for_frequency_shift(Darray *frequencies,
 				     Carray *eigenvectors,
 				     char *phonon_done,

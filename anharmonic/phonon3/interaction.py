@@ -191,11 +191,11 @@ class Interaction:
     def _run_c(self):
         import anharmonic._phono3py as phono3c
         
-        for i, grid_triplet in enumerate(self._triplets_at_q):
-            for gp in grid_triplet:
-                self._set_phonon_py(gp)
+        # for i, grid_triplet in enumerate(self._triplets_at_q):
+        #     for gp in grid_triplet:
+        #         self._set_phonon_py(gp)
 
-        # self._set_phonon_c()
+        self._set_phonon_c()
 
         num_band = self._primitive.get_number_of_atoms() * 3
         svecs, multiplicity = get_smallest_vectors(self._supercell,

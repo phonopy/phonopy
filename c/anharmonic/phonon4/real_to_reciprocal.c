@@ -10,7 +10,7 @@
 
 static void real_to_reciprocal_elements(lapack_complex_double *fc4_rec_elem,
 					const double q[12],
-					const Darray *fc4,
+					const double *fc4,
 					const Darray *shortest_vectors,
 					const Iarray *multiplicity,
 					const int *p2s,
@@ -23,7 +23,7 @@ static void real_to_reciprocal_elements(lapack_complex_double *fc4_rec_elem,
 /* fc4_reciprocal[num_patom, num_patom, num_patom, num_patom, 3, 3, 3, 3] */
 void real_to_reciprocal4(lapack_complex_double *fc4_reciprocal,
 			 const double q[12],
-			 const Darray *fc4,
+			 const double *fc4,
 			 const Darray *shortest_vectors,
 			 const Iarray *multiplicity,
 			 const int *p2s_map,
@@ -58,7 +58,7 @@ void real_to_reciprocal4(lapack_complex_double *fc4_reciprocal,
 
 static void real_to_reciprocal_elements(lapack_complex_double *fc4_rec_elem,
 					const double q[12],
-					const Darray *fc4,
+					const double *fc4,
 					const Darray *shortest_vectors,
 					const Iarray *multiplicity,
 					const int *p2s,
@@ -71,7 +71,7 @@ static void real_to_reciprocal_elements(lapack_complex_double *fc4_rec_elem,
   int i, j, k, l, m, num_satom;
   lapack_complex_double phase_factor, phase_factors[3];
   double fc4_rec_real[81], fc4_rec_imag[81];
-  double *fc4_elem;
+  int fc4_elem_address;
 
   for (i = 0; i < 81; i++) {
     fc4_rec_real[i] = 0;
@@ -103,18 +103,18 @@ static void real_to_reciprocal_elements(lapack_complex_double *fc4_rec_elem,
 	phase_factors[2] =
 	  get_phase_factor(q, shortest_vectors, multiplicity, pi0, l, 3);
 	
-	fc4_elem = fc4->data + (i * 81 * num_satom * num_satom * num_satom +
-				j * 81 * num_satom * num_satom +
-				k * 81 * num_satom +
-				l * 81);
+	fc4_elem_address = (i * 81 * num_satom * num_satom * num_satom +
+			    j * 81 * num_satom * num_satom +
+			    k * 81 * num_satom +
+			    l * 81);
 
 	phase_factor = phonoc_complex_prod(phase_factors[0], phase_factors[1]);
 	phase_factor = phonoc_complex_prod(phase_factor, phase_factors[2]);
 	for (m = 0; m < 81; m++) {
 	  fc4_rec_real[m] +=
-	    lapack_complex_double_real(phase_factor) * fc4_elem[m];
+	    lapack_complex_double_real(phase_factor) * fc4[fc4_elem_address + m];
 	  fc4_rec_imag[m] +=
-	    lapack_complex_double_imag(phase_factor) * fc4_elem[m];
+	    lapack_complex_double_imag(phase_factor) * fc4[fc4_elem_address + m];
 	}
       }
     }

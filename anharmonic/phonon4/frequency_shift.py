@@ -149,7 +149,9 @@ class FrequencyShift:
         svecs, multiplicity = self._dm.get_shortest_vectors()
         gp = self._grid_point
         self._set_phonon_c([gp])
-        self._set_phonon_c(self._quartets_at_q)
+        for gp1 in self._quartets_at_q:
+            self._set_phonon_c([gp1])
+        # self._set_phonon_c(self._quartets_at_q)
 
         if self._log_level:
             print "---- Fourier transformation of fc4 ----"
@@ -184,10 +186,14 @@ class FrequencyShift:
             print "---- Fourier transformation of fc4 ----"
             q1 = self._grid_address[gp] / self._mesh.astype('double')
 
+        fc4_reciprocal = np.zeros((num_patom,) * 4 + (3,) * 4,
+                                  dtype='complex128')
+        fc4_normal_gp = np.zeros((len(self._band_indices),
+                                  len(self._frequencies[0])),
+                                 dtype='complex128')
+        
         for i, (gp1, w) in enumerate(zip(self._quartets_at_q,
                                          self._weights_at_q)):
-            fc4_reciprocal = np.zeros((num_patom,) * 4 + (3,) * 4,
-                                      dtype='complex128')
             igp1 = invert_grid_point(gp1, self._grid_address, self._mesh)
 
             quartet = self._grid_address[[igp, gp, gp1, igp1]]
@@ -200,12 +206,7 @@ class FrequencyShift:
                 self._dm.get_primitive_to_supercell_map(),
                 self._dm.get_supercell_to_primitive_map())
 
-            fc4_normal_gp = np.zeros((len(self._band_indices),
-                                      len(self._frequencies[0])),
-                                     dtype='complex128')
-
             self._set_phonon_c([gp1])
-
             phono3c.reciprocal_to_normal4(fc4_normal_gp,
                                           fc4_reciprocal,
                                           self._frequencies,
@@ -214,7 +215,7 @@ class FrequencyShift:
                                           self._masses,
                                           self._band_indices,
                                           self._cutoff_frequency);
-            self._fc4_normal[i] = fc4_normal_gp
+            self._fc4_normal[i] = fc4_normal_gp.copy()
 
     def _calculate_fc4_normal_py(self):
         r2r = RealToReciprocal(self._fc4,

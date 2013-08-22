@@ -19,37 +19,37 @@ static int collect_undone_grid_points(int *undone,
 				      const int *grid_points);
 
 
-void get_fc4_normal_for_frequency_shift(double *fc4_normal_real,
-					const Darray *frequencies,
-					const Carray *eigenvectors,
-					const int grid_point0,
-					const Iarray *grid_points1,
-					const Iarray *grid_address,
-					const int *mesh,
-					const Darray *fc4,
-					const Darray *shortest_vectors,
-					const Iarray *multiplicity,
-					const double *masses,
-					const int *p2s_map,
-					const int *s2p_map,
-					const Iarray *band_indices,
-					const double cutoff_frequency)
+void
+get_fc4_normal_for_frequency_shift(double *fc4_normal_real,
+				   const double *frequencies,
+				   const lapack_complex_double *eigenvectors,
+				   const int grid_point0,
+				   const Iarray *grid_points1,
+				   const Iarray *grid_address,
+				   const int *mesh,
+				   const double *fc4,
+				   const Darray *shortest_vectors,
+				   const Iarray *multiplicity,
+				   const double *masses,
+				   const int *p2s_map,
+				   const int *s2p_map,
+				   const Iarray *band_indices,
+				   const double cutoff_frequency)
 {
-  int i, j, num_atom, num_band, num_band0, num_grid_points, fc4_stride, grid_point1;
+  int i, j, num_atom, num_band, num_band0, num_grid_points, grid_point1;
   lapack_complex_double *fc4_reciprocal, *fc4_normal;
   double q[12];
 
   num_atom = multiplicity->dims[1];
-  num_band = frequencies->dims[1];
+  num_band = num_atom * 3;
   num_band0 = band_indices->dims[0];
   num_grid_points = grid_points1->dims[0];
-  fc4_stride = num_band0 * num_band;
 
   fc4_reciprocal = (lapack_complex_double*)
     malloc(sizeof(lapack_complex_double) *
 	   num_atom * num_atom * num_atom * num_atom * 81);
   fc4_normal = (lapack_complex_double*)
-    malloc(sizeof(lapack_complex_double) * fc4_stride);
+    malloc(sizeof(lapack_complex_double) * num_band0 * num_band);
 
   for (i = 0; i < 3; i++) {
     q[i + 3] = (double)grid_address->data[grid_point0 * 3 + i] / mesh[i];
@@ -73,18 +73,18 @@ void get_fc4_normal_for_frequency_shift(double *fc4_normal_real,
 
     reciprocal_to_normal4(fc4_normal,
 			  fc4_reciprocal,
-			  frequencies->data + grid_point0 * num_band,
-			  frequencies->data + grid_point1 * num_band,
-			  eigenvectors->data + grid_point0 * num_band * num_band,
-			  eigenvectors->data + grid_point1 * num_band * num_band,
+			  frequencies + grid_point0 * num_band,
+			  frequencies + grid_point1 * num_band,
+			  eigenvectors + grid_point0 * num_band * num_band,
+			  eigenvectors + grid_point1 * num_band * num_band,
 			  masses,
 			  band_indices->data,
 			  num_band0,
 			  num_band,
 			  cutoff_frequency);
 
-    for (j = 0; j < fc4_stride; j++) {
-      fc4_normal_real[fc4_stride * i + j] =
+    for (j = 0; j < num_band0 * num_band; j++) {
+      fc4_normal_real[num_band0 * num_band * i + j] =
 	lapack_complex_double_real(fc4_normal[j]);
     }
   }
@@ -183,10 +183,10 @@ void reciprocal_to_normal4(lapack_complex_double *fc4_normal,
       }
     }
   }
-  for (j = 0; j < num_band * num_band0; j++) {
-    printf("%f ", lapack_complex_double_real(fc4_normal[j]));
-  }
-  printf("\n");
+  /* for (j = 0; j < num_band * num_band0; j++) { */
+  /*   printf("%f ", lapack_complex_double_real(fc4_normal[j])); */
+  /* } */
+  /* printf("\n"); */
 }
 
 static lapack_complex_double fc4_sum(const int bi0,

@@ -416,6 +416,10 @@ static PyObject * py_get_phonon(PyObject *self, PyObject *args)
 	      unit_conversion_factor,
 	      uplo);
 
+  free(fc2);
+  free(svecs);
+  free(multi);
+  
   Py_RETURN_NONE;
 }
 
@@ -541,14 +545,15 @@ static PyObject * py_get_fc4_normal_for_frequency_shift(PyObject *self,
   }
 
   double* fc4_normal = (double*)fc4_normal_py->data;
-  Darray* freqs = convert_to_darray(frequencies_py);
+  double* freqs = (double*)frequencies_py->data;
   /* npy_cdouble and lapack_complex_double may not be compatible. */
   /* So eigenvectors should not be used in Python side */
-  Carray* eigvecs = convert_to_carray(eigenvectors_py);
+  lapack_complex_double* eigvecs =
+    (lapack_complex_double*)eigenvectors_py->data;
   Iarray* grid_points1 = convert_to_iarray(grid_points1_py);
   Iarray* grid_address = convert_to_iarray(grid_address_py);
   const int* mesh = (int*)mesh_py->data;
-  Darray* fc4 = convert_to_darray(fc4_py);
+  double* fc4 = (double*)fc4_py->data;
   Darray* svecs = convert_to_darray(shortest_vectors_py);
   Iarray* multi = convert_to_iarray(multiplicity_py);
   const double* masses = (double*)masses_py->data;
@@ -572,11 +577,8 @@ static PyObject * py_get_fc4_normal_for_frequency_shift(PyObject *self,
 				     band_indicies,
 				     cutoff_frequency);
 
-  free(freqs);
-  free(eigvecs);
   free(grid_points1);
   free(grid_address);
-  free(fc4);
   free(svecs);
   free(multi);
   free(band_indicies);
@@ -605,7 +607,7 @@ static PyObject * py_real_to_reciprocal4(PyObject *self, PyObject *args)
     return NULL;
   }
 
-  Darray* fc4 = convert_to_darray(fc4_py);
+  double* fc4 = (double*)fc4_py->data;
   lapack_complex_double* fc4_reciprocal =
     (lapack_complex_double*)fc4_reciprocal_py->data;
   Darray* svecs = convert_to_darray(shortest_vectors);
@@ -622,7 +624,6 @@ static PyObject * py_real_to_reciprocal4(PyObject *self, PyObject *args)
 		      p2s,
 		      s2p);
 
-  free(fc4);
   free(svecs);
   free(multi);
   
