@@ -149,9 +149,7 @@ class FrequencyShift:
         svecs, multiplicity = self._dm.get_shortest_vectors()
         gp = self._grid_point
         self._set_phonon_c([gp])
-        for gp1 in self._quartets_at_q:
-            self._set_phonon_c([gp1])
-        # self._set_phonon_c(self._quartets_at_q)
+        self._set_phonon_c(self._quartets_at_q)
 
         if self._log_level:
             print "---- Fourier transformation of fc4 ----"
@@ -180,8 +178,6 @@ class FrequencyShift:
         num_patom = self._primitive.get_number_of_atoms()
         gp = self._grid_point
         self._set_phonon_c([gp])
-        igp = invert_grid_point(gp, self._grid_address, self._mesh)
-
         if self._log_level:
             print "---- Fourier transformation of fc4 ----"
             q1 = self._grid_address[gp] / self._mesh.astype('double')
@@ -191,22 +187,21 @@ class FrequencyShift:
         fc4_normal_gp = np.zeros((len(self._band_indices),
                                   len(self._frequencies[0])),
                                  dtype='complex128')
+        self._set_phonon_c(self._quartets_at_q)
         
         for i, (gp1, w) in enumerate(zip(self._quartets_at_q,
                                          self._weights_at_q)):
-            igp1 = invert_grid_point(gp1, self._grid_address, self._mesh)
-
-            quartet = self._grid_address[[igp, gp, gp1, igp1]]
+            q0, q1 = self._grid_address[[gp, gp1]]
+            quartet = np.double([-q0, q0, q1, -q1]) / self._mesh
             phono3c.real_to_reciprocal4(
                 fc4_reciprocal,
                 np.double(self._fc4),
-                np.double(quartet / self._mesh.astype('double')),
+                np.double(quartet),
                 svecs,
                 multiplicity,
                 self._dm.get_primitive_to_supercell_map(),
                 self._dm.get_supercell_to_primitive_map())
 
-            self._set_phonon_c([gp1])
             phono3c.reciprocal_to_normal4(fc4_normal_gp,
                                           fc4_reciprocal,
                                           self._frequencies,
