@@ -64,7 +64,7 @@ class FrequencyShift:
                                  * Hbar * EV / (2 * np.pi * THz) / 8
                                  / len(self._grid_address))
 
-    def run(self, lang='C'):
+    def run(self, lang='py'):
         num_band = self._primitive.get_number_of_atoms() * 3
         num_grid = np.prod(self._mesh)
         self._phonon_done = np.zeros(num_grid, dtype='byte')
@@ -179,6 +179,17 @@ class FrequencyShift:
                                self._primitive,
                                self._mesh,
                                symprec=self._symprec)
+        # For testing
+        # r2r.run(self._grid_address[[0, 0, 10, -10]])
+        # fc4_reciprocal = r2r.get_fc4_reciprocal()
+        # import h5py
+        # w = h5py.File("fc4-reciprocal.hdf5", 'w')
+        # w.create_dataset('fc4recreal', data=fc4_reciprocal.real)
+        # w.create_dataset('fc4recimag', data=fc4_reciprocal.imag)
+        # w.close()
+        # import sys
+        # print "done"
+        # sys.exit(1)
         r2n = ReciprocalToNormal(self._primitive,
                                  self._frequencies,
                                  self._eigenvectors,
