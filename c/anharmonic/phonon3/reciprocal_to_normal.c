@@ -50,7 +50,16 @@ void reciprocal_to_normal(double *fc3_normal_squared,
 				num_atom) / fff;
 	    }
 	  }
+	} else {
+	  for (k = 0; k < num_band; k++) {
+	    fc3_normal_squared[i * num_band * num_band +
+			       j * num_band + k] = 0;
+	  }
 	}
+      }
+    } else {
+      for (j = 0; j < num_band * num_band; j++) {
+	fc3_normal_squared[i * num_band * num_band + j] = 0;
       }
     }
   }    
