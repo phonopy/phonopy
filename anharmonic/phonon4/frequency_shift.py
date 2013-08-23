@@ -64,7 +64,7 @@ class FrequencyShift:
                                  * Hbar * EV / (2 * np.pi * THz) / 8
                                  / len(self._grid_address))
 
-    def run(self, lang='py'):
+    def run(self, lang='C'):
         num_band = self._primitive.get_number_of_atoms() * 3
         num_grid = np.prod(self._mesh)
         self._phonon_done = np.zeros(num_grid, dtype='byte')
@@ -74,7 +74,6 @@ class FrequencyShift:
         self._frequency_shifts = np.zeros((len(self._temperatures),
                                            len(self._band_indices)),
                                            dtype='double')
-
         if lang=='C':
             self._run_c()
         else:
@@ -148,7 +147,11 @@ class FrequencyShift:
 
     def _calculate_fc4_normal_c(self):
         import anharmonic._phono3py as phono3c
-        svecs, multiplicity = self._dm.get_shortest_vectors()
+        svecs, multiplicity = get_smallest_vectors(self._supercell,
+                                                   self._primitive,
+                                                   self._symprec)
+        p2s = np.intc(self._primitive.get_primitive_to_supercell_map())
+        s2p = np.intc(self._primitive.get_supercell_to_primitive_map())
         gp = self._grid_point
         self._set_phonon_c([gp])
         self._set_phonon_c(self._quartets_at_q)
@@ -168,8 +171,8 @@ class FrequencyShift:
             svecs,
             multiplicity,
             self._masses,
-            self._dm.get_primitive_to_supercell_map(),
-            self._dm.get_supercell_to_primitive_map(),
+            p2s,
+            s2p,
             self._band_indices,
             self._cutoff_frequency)
 
