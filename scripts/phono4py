@@ -55,7 +55,8 @@ from anharmonic.file_IO import \
     read_fc4_from_hdf5, read_fc3_from_hdf5, read_fc2_from_hdf5, \
     write_fc4_to_hdf5, write_fc3_to_hdf5, write_fc2_to_hdf5, \
     write_supercells_with_displacements, \
-    write_supercells_with_three_displacements
+    write_supercells_with_three_displacements, \
+    write_freq_shifts_to_hdf5
 from anharmonic.phonon3.displacement_fc3 import get_third_order_displacements
 from anharmonic.phonon4.displacement_fc4 import get_fourth_order_displacements
 from anharmonic.settings import Phono3pyConfParser
@@ -425,9 +426,9 @@ else:
     phono4py.set_dynamical_matrix(fc2,
                                   supercell,
                                   primitive)
-    phono4py.get_frequency_shift(settings.get_grid_points())
-                                  
-
+    phono4py.run_frequency_shift(settings.get_grid_points())
+    freq_shifts = phono4py.get_frequency_shift()
+    write_freq_shifts_to_hdf5(freq_shifts)
                         
         
 if log_level:

@@ -490,6 +490,11 @@ def write_grid_address(grid_address, mesh, filename='grid_points.dat'):
     for i, q in enumerate(grid_address):
         w.write("%10d %10d %10d %10d\n" % (i, q[0], q[1], q[2]))
 
+def write_freq_shifts_to_hdf5(freq_shifts, filename='freq_shifts.hdf5'):
+    w = h5py.File(filename, 'w')
+    w.create_dataset('shift', data=freq_shifts)
+    w.close()
+
 def write_damping_functions(gp,
                             band_indices,
                             mesh,

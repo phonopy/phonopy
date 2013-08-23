@@ -71,6 +71,9 @@ class FrequencyShift:
         self._frequencies = np.zeros((num_grid, num_band), dtype='double')
         self._eigenvectors = np.zeros((num_grid, num_band, num_band),
                                       dtype='complex128')
+        self._frequency_shifts = np.zeros((len(self._temperatures),
+                                           len(self._band_indices)),
+                                           dtype='double')
 
         if lang=='C':
             self._run_c()
@@ -124,17 +127,16 @@ class FrequencyShift:
         if nac_q_direction is not None:
             self._nac_q_direction = np.double(nac_q_direction)
 
+    def get_frequency_shifts(self):
+        return self._frequency_shifts
+
     def _run_c(self):
         self._fc4_normal = np.zeros((len(self._quartets_at_q),
                                      len(self._band_indices),
                                      len(self._frequencies[0])),
                                     dtype='double')
-        # self._fc4_normal = np.zeros((len(self._quartets_at_q),
-        #                              len(self._band_indices),
-        #                              len(self._frequencies[0])),
-        #                             dtype='complex128')
         self._calculate_fc4_normal_c()
-        self._show_frequency_shifts()
+        self._set_frequency_shifts()
 
     def _run_py(self):
         self._fc4_normal = np.zeros((len(self._quartets_at_q),
@@ -142,7 +144,7 @@ class FrequencyShift:
                                      len(self._frequencies[0])),
                                     dtype='complex128')
         self._calculate_fc4_normal_py()
-        self._show_frequency_shifts()
+        self._set_frequency_shifts()
 
     def _calculate_fc4_normal_c(self):
         import anharmonic._phono3py as phono3c
@@ -170,47 +172,6 @@ class FrequencyShift:
             self._dm.get_supercell_to_primitive_map(),
             self._band_indices,
             self._cutoff_frequency)
-
-    def _calculate_fc4_normal_c2(self):
-        import anharmonic._phono3py as phono3c
-
-        svecs, multiplicity = self._dm.get_shortest_vectors()
-        num_patom = self._primitive.get_number_of_atoms()
-        gp = self._grid_point
-        self._set_phonon_c([gp])
-        if self._log_level:
-            print "---- Fourier transformation of fc4 ----"
-            q1 = self._grid_address[gp] / self._mesh.astype('double')
-
-        fc4_reciprocal = np.zeros((num_patom,) * 4 + (3,) * 4,
-                                  dtype='complex128')
-        fc4_normal_gp = np.zeros((len(self._band_indices),
-                                  len(self._frequencies[0])),
-                                 dtype='complex128')
-        self._set_phonon_c(self._quartets_at_q)
-        
-        for i, (gp1, w) in enumerate(zip(self._quartets_at_q,
-                                         self._weights_at_q)):
-            q0, q1 = self._grid_address[[gp, gp1]]
-            quartet = np.double([-q0, q0, q1, -q1]) / self._mesh
-            phono3c.real_to_reciprocal4(
-                fc4_reciprocal,
-                np.double(self._fc4),
-                np.double(quartet),
-                svecs,
-                multiplicity,
-                self._dm.get_primitive_to_supercell_map(),
-                self._dm.get_supercell_to_primitive_map())
-
-            phono3c.reciprocal_to_normal4(fc4_normal_gp,
-                                          fc4_reciprocal,
-                                          self._frequencies,
-                                          self._eigenvectors,
-                                          np.intc([gp, gp1]),
-                                          self._masses,
-                                          self._band_indices,
-                                          self._cutoff_frequency);
-            self._fc4_normal[i] = fc4_normal_gp.copy()
 
     def _calculate_fc4_normal_py(self):
         r2r = RealToReciprocal(self._fc4,
@@ -249,18 +210,19 @@ class FrequencyShift:
                 r2n.run(fc4_reciprocal, gp, band_index, gp1)
                 self._fc4_normal[i, j] = r2n.get_reciprocal_to_normal()
 
-    def _show_frequency_shifts(self):
-        for i, band_index in enumerate(self._band_indices):
-            for t in self._temperatures:
+    def _set_frequency_shifts(self):
+        for i, t in enumerate(self._temperatures):
+            for j, band_index in enumerate(self._band_indices):
                 shift = 0
-                for j, gp1 in enumerate(self._quartets_at_q):
+                for k, gp1 in enumerate(self._quartets_at_q):
                     if t > 0:
                         occupations = be_func(self._frequencies[gp1], t)
                     else:
                         occupations = np.zeros_like(self._frequencies[gp1])
-                    shift += (self._fc4_normal[j, i] * self._unit_conversion *
+                    shift += (self._fc4_normal[k, j] * self._unit_conversion *
                               (2 * occupations + 1)).sum()
                 print "band index:", band_index + 1, "temp:", t, "shift:", shift
+                self._frequency_shifts[i, j] = shift
 
     def _set_phonon_py(self, grid_point):
         set_phonon_py(grid_point,

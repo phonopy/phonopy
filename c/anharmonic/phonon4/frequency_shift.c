@@ -6,6 +6,22 @@
 #include "phonon4_h/frequency_shift.h"
 #include "phonon4_h/real_to_reciprocal.h"
 
+static void get_fc4_normal_for_frequency_shift_at_gp
+(double *fc4_normal_real,
+ const double *frequencies,
+ const lapack_complex_double *eigenvectors,
+ const int grid_point0,
+ const int grid_point1,
+ const int *grid_address,
+ const int *mesh,
+ const double *fc4,
+ const Darray *shortest_vectors,
+ const Iarray *multiplicity,
+ const double *masses,
+ const int *p2s_map,
+ const int *s2p_map,
+ const Iarray *band_indices,
+ const double cutoff_frequency);
 static lapack_complex_double fc4_sum(const int bi0,
 				     const int bi1,
 				     const lapack_complex_double *eigvecs0,
@@ -25,7 +41,7 @@ get_fc4_normal_for_frequency_shift(double *fc4_normal_real,
 				   const lapack_complex_double *eigenvectors,
 				   const int grid_point0,
 				   const Iarray *grid_points1,
-				   const Iarray *grid_address,
+				   const int *grid_address,
 				   const int *mesh,
 				   const double *fc4,
 				   const Darray *shortest_vectors,
@@ -33,65 +49,36 @@ get_fc4_normal_for_frequency_shift(double *fc4_normal_real,
 				   const double *masses,
 				   const int *p2s_map,
 				   const int *s2p_map,
-				   const Iarray *band_indices,
+				   const Iarray *band_indicies,
 				   const double cutoff_frequency)
 {
-  int i, j, num_atom, num_band, num_band0, num_grid_points, grid_point1;
-  lapack_complex_double *fc4_reciprocal, *fc4_normal;
-  double q[12];
+  int i, num_atom, num_band, num_band0;
 
   num_atom = multiplicity->dims[1];
   num_band = num_atom * 3;
-  num_band0 = band_indices->dims[0];
-  num_grid_points = grid_points1->dims[0];
+  num_band0 = band_indicies->dims[0];
 
-  fc4_reciprocal = (lapack_complex_double*)
-    malloc(sizeof(lapack_complex_double) *
-	   num_atom * num_atom * num_atom * num_atom * 81);
-  fc4_normal = (lapack_complex_double*)
-    malloc(sizeof(lapack_complex_double) * num_band0 * num_band);
-
-  for (i = 0; i < 3; i++) {
-    q[i + 3] = (double)grid_address->data[grid_point0 * 3 + i] / mesh[i];
-    q[i] = -q[i + 3];
+#pragma omp parallel for private(i)
+  for (i = 0; i < grid_points1->dims[0]; i++) {
+    get_fc4_normal_for_frequency_shift_at_gp(fc4_normal_real +
+					     i * num_band0 * num_band,
+					     frequencies,
+					     eigenvectors,
+					     grid_point0,
+					     grid_points1->data[i],
+					     grid_address,
+					     mesh,
+					     fc4,
+					     shortest_vectors,
+					     multiplicity,
+					     masses,
+					     p2s_map,
+					     s2p_map,
+					     band_indicies,
+					     cutoff_frequency);
   }
-
-  for (i = 0; i < num_grid_points; i++) {
-    grid_point1 = grid_points1->data[i];
-    for (j = 0; j < 3; j++) {
-      q[j + 6] = (double)grid_address->data[grid_point1 * 3 + j] / mesh[j];
-      q[j + 9] = -q[j + 6];
-    }
-    
-    real_to_reciprocal4(fc4_reciprocal,
-			q,
-			fc4,
-			shortest_vectors,
-			multiplicity,
-			p2s_map,
-			s2p_map);
-
-    reciprocal_to_normal4(fc4_normal,
-			  fc4_reciprocal,
-			  frequencies + grid_point0 * num_band,
-			  frequencies + grid_point1 * num_band,
-			  eigenvectors + grid_point0 * num_band * num_band,
-			  eigenvectors + grid_point1 * num_band * num_band,
-			  masses,
-			  band_indices->data,
-			  num_band0,
-			  num_band,
-			  cutoff_frequency);
-
-    for (j = 0; j < num_band0 * num_band; j++) {
-      fc4_normal_real[num_band0 * num_band * i + j] =
-	lapack_complex_double_real(fc4_normal[j]);
-    }
-  }
-
-  free(fc4_reciprocal);
-  free(fc4_normal);
 }
+
 
 void set_phonons_for_frequency_shift(Darray *frequencies,
 				     Carray *eigenvectors,
@@ -179,14 +166,81 @@ void reciprocal_to_normal4(lapack_complex_double *fc4_normal,
 	  fc4_normal[i * num_band + j] = lapack_make_complex_double
 	    (lapack_complex_double_real(fc4_sum_elem) / freqs0[bi] / freqs1[j],
 	     lapack_complex_double_imag(fc4_sum_elem) / freqs0[bi] / freqs1[j]);
+	} else {
+	  fc4_normal[i * num_band + j] = 0;
 	}
+      }
+    } else {
+      for (j = 0; j < num_band; j++) {
+	fc4_normal[i * num_band + j] = 0;
       }
     }
   }
-  /* for (j = 0; j < num_band * num_band0; j++) { */
-  /*   printf("%f ", lapack_complex_double_real(fc4_normal[j])); */
-  /* } */
-  /* printf("\n"); */
+}
+
+static void get_fc4_normal_for_frequency_shift_at_gp
+(double *fc4_normal_real,
+ const double *frequencies,
+ const lapack_complex_double *eigenvectors,
+ const int grid_point0,
+ const int grid_point1,
+ const int *grid_address,
+ const int *mesh,
+ const double *fc4,
+ const Darray *shortest_vectors,
+ const Iarray *multiplicity,
+ const double *masses,
+ const int *p2s_map,
+ const int *s2p_map,
+ const Iarray *band_indices,
+ const double cutoff_frequency)
+{
+  int i, num_atom, num_band, num_band0;
+  lapack_complex_double *fc4_reciprocal, *fc4_normal;
+  double q[12];
+
+  num_atom = multiplicity->dims[1];
+  num_band = num_atom * 3;
+  num_band0 = band_indices->dims[0];
+
+  fc4_reciprocal = (lapack_complex_double*)
+    malloc(sizeof(lapack_complex_double) *
+	   num_atom * num_atom * num_atom * num_atom * 81);
+  fc4_normal = (lapack_complex_double*)
+    malloc(sizeof(lapack_complex_double) * num_band0 * num_band);
+
+  for (i = 0; i < 3; i++) {
+    q[i + 3] = (double)grid_address[grid_point0 * 3 + i] / mesh[i];
+    q[i] = -q[i + 3];
+    q[i + 6] = (double)grid_address[grid_point1 * 3 + i] / mesh[i];
+    q[i + 9] = -q[i + 6];
+  }
+    
+  real_to_reciprocal4(fc4_reciprocal,
+		      q,
+		      fc4,
+		      shortest_vectors,
+		      multiplicity,
+		      p2s_map,
+		      s2p_map);
+  reciprocal_to_normal4(fc4_normal,
+			fc4_reciprocal,
+			frequencies + grid_point0 * num_band,
+			frequencies + grid_point1 * num_band,
+			eigenvectors + grid_point0 * num_band * num_band,
+			eigenvectors + grid_point1 * num_band * num_band,
+			masses,
+			band_indices->data,
+			num_band0,
+			num_band,
+			cutoff_frequency);
+  
+  for (i = 0; i < num_band0 * num_band; i++) {
+    fc4_normal_real[i] = lapack_complex_double_real(fc4_normal[i]);
+  }
+
+  free(fc4_reciprocal);
+  free(fc4_normal);
 }
 
 static lapack_complex_double fc4_sum(const int bi0,

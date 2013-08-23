@@ -4,7 +4,7 @@
 #include <Python.h>
 #include <numpy/arrayobject.h>
 #include <lapacke.h>
-#define MAX_NUM_DIM 5
+#define MAX_NUM_DIM 20
 
 /* It is assumed that number of dimensions is known for each array. */
 typedef struct {

@@ -551,7 +551,7 @@ static PyObject * py_get_fc4_normal_for_frequency_shift(PyObject *self,
   lapack_complex_double* eigvecs =
     (lapack_complex_double*)eigenvectors_py->data;
   Iarray* grid_points1 = convert_to_iarray(grid_points1_py);
-  Iarray* grid_address = convert_to_iarray(grid_address_py);
+  const int* grid_address = (int*)grid_address_py->data;
   const int* mesh = (int*)mesh_py->data;
   double* fc4 = (double*)fc4_py->data;
   Darray* svecs = convert_to_darray(shortest_vectors_py);
@@ -578,7 +578,6 @@ static PyObject * py_get_fc4_normal_for_frequency_shift(PyObject *self,
 				     cutoff_frequency);
 
   free(grid_points1);
-  free(grid_address);
   free(svecs);
   free(multi);
   free(band_indicies);

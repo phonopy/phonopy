@@ -34,21 +34,8 @@ class Phono4py:
         self._band_indices_flatten = np.intc(
             [x for bi in self._band_indices for x in bi])
 
-    def set_dynamical_matrix(self,
-                             fc2,
-                             supercell,
-                             primitive,
-                             nac_params=None,
-                             nac_q_direction=None,
-                             frequency_scale_factor=None):
-        self._interaction.set_dynamical_matrix(
-            fc2,
-            supercell,
-            primitive,
-            nac_params=nac_params,
-            frequency_scale_factor=frequency_scale_factor)
-        self._interaction.set_nac_q_direction(nac_q_direction=nac_q_direction)
-
+        self._frequency_shifts = None
+        
     def set_frequency_shift(self, temperatures=None):
         self._interaction = FrequencyShift(
             self._fc4,
@@ -64,7 +51,30 @@ class Phono4py:
             log_level=self._log_level,
             lapack_zheev_uplo=self._lapack_zheev_uplo)
 
-    def get_frequency_shift(self, grid_points):
+    def set_dynamical_matrix(self,
+                             fc2,
+                             supercell,
+                             primitive,
+                             nac_params=None,
+                             nac_q_direction=None,
+                             frequency_scale_factor=None):
+        self._interaction.set_dynamical_matrix(
+            fc2,
+            supercell,
+            primitive,
+            nac_params=nac_params,
+            frequency_scale_factor=frequency_scale_factor)
+        self._interaction.set_nac_q_direction(nac_q_direction=nac_q_direction)
+
+    def run_frequency_shift(self, grid_points):
+        freq_shifts = []
         for gp in grid_points:
             self._interaction.set_grid_point(gp)
             self._interaction.run()
+            freq_shifts.append(self._interaction.get_frequency_shifts())
+
+        self._frequency_shifts = np.double(freq_shifts)
+
+    def get_frequency_shift(self):
+        return self._frequency_shifts
+        
