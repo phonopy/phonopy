@@ -134,16 +134,21 @@ class FrequencyShift:
                                      len(self._band_indices),
                                      len(self._frequencies[0])),
                                     dtype='double')
+        if self._log_level:
+            print "Calculating interaction of fc4"
         self._calculate_fc4_normal_c()
-        self._set_frequency_shifts()
 
+        if self._log_level:
+            print "Calculating frequency shifts"
+        self._set_frequency_shifts_c()
+        
     def _run_py(self):
         self._fc4_normal = np.zeros((len(self._quartets_at_q),
                                      len(self._band_indices),
                                      len(self._frequencies[0])),
                                     dtype='complex128')
         self._calculate_fc4_normal_py()
-        self._set_frequency_shifts()
+        self._set_frequency_shifts_py()
 
     def _calculate_fc4_normal_c(self):
         import anharmonic._phono3py as phono3c
@@ -155,9 +160,6 @@ class FrequencyShift:
         gp = self._grid_point
         self._set_phonon_c([gp])
         self._set_phonon_c(self._quartets_at_q)
-
-        if self._log_level:
-            print "---- Fourier transformation of fc4 ----"
 
         phono3c.fc4_normal_for_frequency_shift(
             self._fc4_normal,
@@ -175,6 +177,17 @@ class FrequencyShift:
             s2p,
             self._band_indices,
             self._cutoff_frequency)
+
+    def _set_frequency_shifts_c(self):
+        import anharmonic._phono3py as phono3c
+        phono3c.fc4_frequency_shifts(
+            self._frequency_shifts,
+            self._fc4_normal,
+            self._frequencies,
+            self._quartets_at_q,
+            self._temperatures,
+            self._band_indices,
+            self._unit_conversion)
 
     def _calculate_fc4_normal_py(self):
         r2r = RealToReciprocal(self._fc4,
@@ -224,7 +237,7 @@ class FrequencyShift:
                 r2n.run(fc4_reciprocal, gp, band_index, gp1)
                 self._fc4_normal[i, j] = r2n.get_reciprocal_to_normal()
 
-    def _set_frequency_shifts(self):
+    def _set_frequency_shifts_py(self):
         for i, t in enumerate(self._temperatures):
             for j, band_index in enumerate(self._band_indices):
                 shift = 0

@@ -34,6 +34,41 @@ static int collect_undone_grid_points(int *undone,
 				      const int num_grid_points,
 				      const int *grid_points);
 
+void get_fc4_frequency_shifts(double *frequency_shifts,
+			      const double *fc4_normal_real,
+			      const double *frequencies,
+			      const Iarray *grid_points1,
+			      const Darray *temperatures,
+			      const int *band_indicies,
+			      const int num_band0,
+			      const int num_band,
+			      const double unit_conversion_factor)
+{
+  int i, j, k, l;
+  double shift, num_phonon;
+
+
+  for (i = 0; i < temperatures->dims[0]; i++) {
+    for (j = 0; j < num_band0; j++) {
+      shift = 0;
+#pragma omp parallel for reduction(+:shift) private(k, l, num_phonon)
+      for (k = 0; k < grid_points1->dims[0]; k++) {
+	for (l = 0; l < num_band; l++) {
+	  if (temperatures->data[i] > 0) {
+	    num_phonon = 2 *
+	      bose_einstein(frequencies[grid_points1->data[k] * num_band + l],
+			    temperatures->data[i]) + 1;
+	  } else {
+	    num_phonon = 1;
+	  }
+	  shift += unit_conversion_factor * fc4_normal_real
+	    [k * num_band0 * num_band + j * num_band + l] * num_phonon;
+	}
+      }
+      frequency_shifts[i * num_band0 + j] = shift;
+    }    
+  }
+}
 
 void
 get_fc4_normal_for_frequency_shift(double *fc4_normal_real,

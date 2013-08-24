@@ -4,6 +4,15 @@
 #include <lapacke.h>
 #include "phonoc_array.h"
 
+void get_fc4_frequency_shifts(double *frequency_shifts,
+			      const double *fc4_normal_real,
+			      const double *frequencies,
+			      const Iarray *grid_points1,
+			      const Darray *temperatures,
+			      const int *band_indicies,
+			      const int num_band0,
+			      const int num_band,
+			      const double unit_conversion_factor);
 void
 get_fc4_normal_for_frequency_shift(double *fc4_normal_real,
 				   const double *frequencies,

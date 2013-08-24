@@ -16,6 +16,7 @@ static PyObject * py_get_jointDOS(PyObject *self, PyObject *args);
 
 static PyObject * py_get_interaction(PyObject *self, PyObject *args);
 static PyObject * py_get_fc4_normal_for_frequency_shift(PyObject *self, PyObject *args);
+static PyObject * py_get_fc4_frequency_shifts(PyObject *self, PyObject *args);
 static PyObject * py_real_to_reciprocal4(PyObject *self, PyObject *args);
 static PyObject * py_reciprocal_to_normal4(PyObject *self, PyObject *args);
 static PyObject * py_get_imag_self_energy(PyObject *self, PyObject *args);
@@ -87,7 +88,8 @@ static double tensor4_rotation_elem(const double tensor[81],
 static PyMethodDef functions[] = {
   {"joint_dos", py_get_jointDOS, METH_VARARGS, "Calculate joint density of states"},
   {"interaction", py_get_interaction, METH_VARARGS, "Interaction of triplets"},
-  {"fc4_normal_for_frequency_shift", py_get_fc4_normal_for_frequency_shift, METH_VARARGS, "Calculate f4 normal for frequency shift"},
+  {"fc4_normal_for_frequency_shift", py_get_fc4_normal_for_frequency_shift, METH_VARARGS, "Calculate fc4 normal for frequency shift"},
+  {"fc4_frequency_shifts", py_get_fc4_frequency_shifts, METH_VARARGS, "Calculate fc4 frequency shift"},
   {"imag_self_energy", py_get_imag_self_energy, METH_VARARGS, "Imaginary part of self energy"},
   {"imag_self_energy_at_bands", py_get_imag_self_energy_at_bands, METH_VARARGS, "Imaginary part of self energy at phonon frequencies of bands"},
   {"real_to_reciprocal4", py_real_to_reciprocal4, METH_VARARGS, "Transform fc4 of real space to reciprocal space"},
@@ -581,6 +583,52 @@ static PyObject * py_get_fc4_normal_for_frequency_shift(PyObject *self,
   free(svecs);
   free(multi);
   free(band_indicies);
+  
+  Py_RETURN_NONE;
+}
+
+static PyObject * py_get_fc4_frequency_shifts(PyObject *self, PyObject *args)
+{
+  PyArrayObject* frequency_shifts_py;
+  PyArrayObject* fc4_normal_py;
+  PyArrayObject* frequencies_py;
+  PyArrayObject* grid_points1_py;
+  PyArrayObject* temperatures_py;
+  PyArrayObject* band_indicies_py;
+  double unit_conversion_factor;
+
+  if (!PyArg_ParseTuple(args, "OOOOOOd",
+			&frequency_shifts_py,
+			&fc4_normal_py,
+			&frequencies_py,
+			&grid_points1_py,
+			&temperatures_py,
+			&band_indicies_py,
+			&unit_conversion_factor)) {
+    return NULL;
+  }
+
+  double* freq_shifts = (double*)frequency_shifts_py->data;
+  double* fc4_normal = (double*)fc4_normal_py->data;
+  double* freqs = (double*)frequencies_py->data;
+  Iarray* grid_points1 = convert_to_iarray(grid_points1_py);
+  Darray* temperatures = convert_to_darray(temperatures_py);
+  int* band_indicies = (int*)band_indicies_py->data;
+  const int num_band0 = (int)band_indicies_py->dimensions[0];
+  const int num_band = (int)frequencies_py->dimensions[1];
+
+  get_fc4_frequency_shifts(freq_shifts,
+			   fc4_normal,
+			   freqs,
+			   grid_points1,
+			   temperatures,
+			   band_indicies,
+			   num_band0,
+			   num_band,
+			   unit_conversion_factor);
+
+  free(grid_points1);
+  free(temperatures);
   
   Py_RETURN_NONE;
 }

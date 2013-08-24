@@ -67,13 +67,21 @@ class Phono4py:
         self._interaction.set_nac_q_direction(nac_q_direction=nac_q_direction)
 
     def run_frequency_shift(self, grid_points):
+        if self._log_level:
+            print "----- Frequency shifts of fc4 -----"
+        
         freq_shifts = []
-        for gp in grid_points:
+        for i, gp in enumerate(grid_points):
+            if self._log_level:
+                print "=====================",
+                print "Grid point %d (%d/%d)" % (gp, i + 1, len(grid_points)),
+                print "====================="
             self._interaction.set_grid_point(gp)
             self._interaction.run()
             freq_shifts.append(self._interaction.get_frequency_shifts())
 
         self._frequency_shifts = np.double(freq_shifts)
+        print self._frequency_shifts
 
     def get_frequency_shift(self):
         return self._frequency_shifts
