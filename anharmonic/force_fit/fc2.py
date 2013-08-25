@@ -1,5 +1,5 @@
 import numpy as np
-from phonopy.harmonic.force_constants import similarity_transformation, get_rotated_displacement, get_rotated_forces, get_positions_sent_by_rot_inv
+from phonopy.harmonic.force_constants import similarity_transformation, get_rotated_displacement, get_rotated_forces, get_positions_sent_by_rot_inv, distribute_force_constants
 
 class FC2Fit:
     def __init__(self,
@@ -46,6 +46,17 @@ class FC2Fit:
                                                    site_sym_cart,
                                                    first_atom_num)
             self._fc2[first_atom_num, :] = self._solve(rot_disps, rot_forces)
+
+        rotations = self._symmetry.get_symmetry_operations()['rotations']
+        trans = self._symmetry.get_symmetry_operations()['translations']
+        distribute_force_constants(self._fc2,
+                                   range(self._num_atom),
+                                   unique_first_atom_nums,
+                                   self._lattice,
+                                   self._positions,
+                                   rotations,
+                                   trans,
+                                   self._symprec)
 
     def _create_force_matrix(self,
                              sets_of_forces,
