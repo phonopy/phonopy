@@ -71,23 +71,23 @@ int phonopy_pinv(double *data_out,
   return (int)info;
 }
 
-int phonopy_pinv_mt(double *data_out,
-		    const double *data_in,
-		    const int num_thread,
-		    const int *row_nums,
-		    const int max_row_num,
-		    const int column_num,
-		    const double cutoff)
+void phonopy_pinv_mt(double *data_out,
+		     int *info_out,
+		     const double *data_in,
+		     const int num_thread,
+		     const int *row_nums,
+		     const int max_row_num,
+		     const int column_num,
+		     const double cutoff)
 {
-  int i, info;
+  int i;
 
-#pragma omp parallel for private(info)
+#pragma omp parallel for
   for (i = 0; i < num_thread; i++) {
-    info = phonopy_pinv(data_out + i * max_row_num * column_num,
-			data_in + i * max_row_num * column_num,
-			row_nums[i],
-			column_num,
-			cutoff);
+    info_out[i] = phonopy_pinv(data_out + i * max_row_num * column_num,
+			       data_in + i * max_row_num * column_num,
+			       row_nums[i],
+			       column_num,
+			       cutoff);
   }
-  return 0;
 }

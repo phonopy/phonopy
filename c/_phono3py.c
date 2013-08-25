@@ -1018,16 +1018,18 @@ static PyObject * py_phonopy_pinv_mt(PyObject *self, PyObject *args)
   PyArrayObject* data_in_py;
   PyArrayObject* data_out_py;
   PyArrayObject* row_nums_py;
+  PyArrayObject* info_py;
   int max_row_num, column_num;
   double cutoff;
 
-  if (!PyArg_ParseTuple(args, "OOOiid",
+  if (!PyArg_ParseTuple(args, "OOOiidO",
 			&data_in_py,
 			&data_out_py,
 			&row_nums_py,
 			&max_row_num,
 			&column_num,
-			&cutoff)) {
+			&cutoff,
+			&info_py)) {
     return NULL;
   }
 
@@ -1035,17 +1037,18 @@ static PyObject * py_phonopy_pinv_mt(PyObject *self, PyObject *args)
   const int num_thread = (int)row_nums_py->dimensions[0];
   const double *data_in = (double*)data_in_py->data;
   double *data_out = (double*)data_out_py->data;
-  int info;
+  int *info = (int*)info_py->data;
   
-  info = phonopy_pinv_mt(data_out,
-			 data_in,
-			 num_thread,
-			 row_nums,
-			 max_row_num,
-			 column_num,
-			 cutoff);
+  phonopy_pinv_mt(data_out,
+		  info,
+		  data_in,
+		  num_thread,
+		  row_nums,
+		  max_row_num,
+		  column_num,
+		  cutoff);
 
-  return PyInt_FromLong((long) info);
+  Py_RETURN_NONE;
 }
 
 

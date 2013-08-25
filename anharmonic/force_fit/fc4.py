@@ -125,6 +125,7 @@ class FC4Fit:
         try:
             import anharmonic._phono3py as phono3c
             row_nums = np.intc([x.shape[0] for x in rot_disps_set])
+            info = np.zeros(len(row_nums), dtype='intc')
             max_row_num = max(row_nums)
             column_num = rot_disps_set[0].shape[1]
             rot_disps = np.zeros((self._num_atom, max_row_num * column_num),
@@ -133,12 +134,13 @@ class FC4Fit:
                 rot_disps[
                     i, :row_nums[i] * column_num] = rot_disps_set[i].flatten()
             inv_disps = np.zeros_like(rot_disps)
-            info = phono3c.pinv_mt(rot_disps,
-                                   inv_disps,
-                                   row_nums,
-                                   max_row_num,
-                                   column_num,
-                                   1e-13)
+            phono3c.pinv_mt(rot_disps,
+                            inv_disps,
+                            row_nums,
+                            max_row_num,
+                            column_num,
+                            1e-13,
+                            info)
             inv_disps_set = []
             inv_disps_set = [
                 inv_disps[i, :row_nums[i] * column_num].reshape(column_num, -1)

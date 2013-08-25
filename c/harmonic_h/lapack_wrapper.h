@@ -11,12 +11,13 @@ int phonopy_pinv(double *data_out,
 		 const int m,
 		 const int n,
 		 const double cutoff);
-int phonopy_pinv_mt(double *data_out,
-		    const double *data_in,
-		    const int num_thread,
-		    const int *row_nums,
-		    const int max_row_num,
-		    const int column_num,
-		    const double cutoff);
+void phonopy_pinv_mt(double *data_out,
+		     int *info_out,
+		     const double *data_in,
+		     const int num_thread,
+		     const int *row_nums,
+		     const int max_row_num,
+		     const int column_num,
+		     const double cutoff);
 
 #endif

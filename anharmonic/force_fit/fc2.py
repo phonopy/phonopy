@@ -20,7 +20,9 @@ class FC2Fit:
 
     def run(self):
         self._get_matrices()
-        print self._fc2
+
+    def get_fc2(self):
+        return self._fc2
 
     def _get_matrices(self):
         unique_first_atom_nums = np.unique(
