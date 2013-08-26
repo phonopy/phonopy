@@ -5,7 +5,7 @@
 static PyObject * py_phonopy_pinv(PyObject *self, PyObject *args);
 static PyObject * py_phonopy_pinv_mt(PyObject *self, PyObject *args);
 static PyObject * py_displacement_matrix_fc4(PyObject *self, PyObject *args);
-void get_tensor1(double sym_u[9], const double u[9], const double *sym);
+void get_tensor1(double sym_u[9], const double *u, const double *sym);
 int set_tensor2(double *disp_matrix, const double u[9]);
 int set_tensor3(double *disp_matrix, const double u[9]);
 
@@ -115,7 +115,7 @@ static PyObject * py_displacement_matrix_fc4(PyObject *self, PyObject *args)
   const int *rot_map_syms = (int*)rot_map_syms_py->data;
 
   int i, j, k, l, rot_num2, rot_num3, address, num_disp, count;
-  double u[9], sym_u[9];
+  double sym_u[9];
 
   count = 0;
   for (i = 0; i < num_first_disps; i++) {
@@ -131,10 +131,9 @@ static PyObject * py_displacement_matrix_fc4(PyObject *self, PyObject *args)
       for (k = 0; k < num_disp; k++) {
 	disp_matrix[count] = -1;
 	count++;
-	for (l = 0; l < 9; l++) {
-	  u[l] = disp_triplets[address + k * 9 + l];
-	}
-	get_tensor1(sym_u, u, site_syms_cart + j * 9);
+	get_tensor1(sym_u,
+		    disp_triplets + (address + k) * 9,
+		    site_syms_cart + j * 9);
 	for (l = 0; l < 9; l++) {
 	  disp_matrix[count] = sym_u[l];
 	  count++;
@@ -147,14 +146,15 @@ static PyObject * py_displacement_matrix_fc4(PyObject *self, PyObject *args)
   return PyInt_FromLong((long) count);
 }
 
-void get_tensor1(double sym_u[9], const double u[9], const double *sym)
+void get_tensor1(double sym_u[9], const double *u, const double *sym)
 {
   int i, j, k;
 
   for (i = 0; i < 3; i++) {
     for (j = 0; j < 3; j++) {
+      sym_u[i * 3 + j] = 0;
       for (k = 0; k < 3; k++) {
-	sym_u[i * 3 + j] = sym[j * 3 + k] * u[i * 3 + k];
+	sym_u[i * 3 + j] += sym[j * 3 + k] * u[i * 3 + k];
       }
     }
   }

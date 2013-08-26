@@ -101,8 +101,9 @@ class FC4Fit:
         site_syms_cart = np.double([similarity_transformation(self._lattice, sym)
                                     for sym in site_symmetry])
 
-        triplets_c, num_triplets = self._create_displacement_triplets_for_c(
-            disp_triplets)
+        (disp_triplets_rearranged,
+         num_triplets) = self._create_displacement_triplets_for_c(disp_triplets)
+        max_num_disp = np.amax(num_triplets[:, :, :, 1])
         
         for second_atom_num in range(self._num_atom):
             print second_atom_num + 1
@@ -114,10 +115,11 @@ class FC4Fit:
                     rot_disps_set.append(self._create_displacement_matrix_c(
                             second_atom_num,
                             third_atom_num,
-                            triplets_c,
+                            disp_triplets_rearranged,
                             num_triplets,
                             site_syms_cart,
-                            rot_map_syms))
+                            rot_map_syms,
+                            max_num_disp))
                 except ImportError:
                     rot_disps_set.append(self._create_displacement_matrix(
                             second_atom_num,
@@ -167,7 +169,6 @@ class FC4Fit:
                              column_num,
                              1e-13,
                              info)
-            inv_disps_set = []
             inv_disps_set = [
                 inv_disps[i, :row_nums[i] * column_num].reshape(column_num, -1)
                 for i in range(self._num_atom)]
@@ -250,11 +251,13 @@ class FC4Fit:
                                       disp_triplets,
                                       num_disps,
                                       site_syms_cart,
-                                      rot_map_syms):
+                                      rot_map_syms,
+                                      max_num_disp):
         import anharmonic._forcefit as forcefit
         num_row_elem = 27 * 10 + 9 * 6 + 3 * 3 + 1
-        disp_matrix_tmp = np.zeros((len(disp_triplets) * len(site_syms_cart),
-                                    num_row_elem), dtype='double')
+        disp_matrix_tmp = np.zeros(
+            (len(num_disps) * max_num_disp * len(site_syms_cart), num_row_elem),
+            dtype='double')
         num_elems = forcefit.displacement_matrix_fc4(disp_matrix_tmp,
                                                      second_atom_num,
                                                      third_atom_num,
