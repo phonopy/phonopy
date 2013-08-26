@@ -41,6 +41,7 @@ from optparse import OptionParser
 from phonopy.interface.vasp import read_vasp
 from phonopy.structure.cells import get_supercell, Primitive
 from phonopy.structure.symmetry import Symmetry
+from phonopy.harmonic.force_constants import show_drift_force_constants
 from anharmonic.force_fit.fc2 import FC2Fit
 from anharmonic.force_fit.fc3 import FC3Fit
 from anharmonic.force_fit.fc4 import FC4Fit
@@ -134,10 +135,14 @@ if options.fc4:
     show_drift_fc4(fc4)
     print "Writing fc4..."
     write_fc4_to_hdf5(fc4, 'fc4-fit.hdf5')
-    # write_fc4_dat(fc4, 'fc4-fit.dat')
     
     fc3 = fc4fit.get_fc3()
     print "Calculating drift of fc3..."
     show_drift_fc3(fc3)
     print "Writing fc3..."
     write_fc3_to_hdf5(fc3, 'fc3-fit.hdf5')
+
+    fc2 = fc4fit.get_fc2()
+    show_drift_force_constants(fc2, name="fc2")
+    print "Writing fc2..."
+    write_fc2_to_hdf5(fc2, 'fc2-fit.hdf5')

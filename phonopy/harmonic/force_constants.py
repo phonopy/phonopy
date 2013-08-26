@@ -522,3 +522,16 @@ def similarity_transformation(rot, mat):
     """ R x M x R^-1 """
     return np.dot(rot, np.dot(mat, np.linalg.inv(rot)))
 
+def show_drift_force_constants(force_constants, name="force constants"):
+    num_atom = force_constants.shape[0]
+    maxval1 = 0
+    maxval2 = 0
+    for i, j, k in list(np.ndindex((num_atom, 3, 3))):
+        val1 = force_constants[:, i, j, k].sum()
+        val2 = force_constants[i, :, j, k].sum()
+        if abs(val1) > abs(maxval1):
+            maxval1 = val1
+        if abs(val2) > abs(maxval2):
+            maxval2 = val2
+    print ("max drift of %s:" % name), maxval1, maxval2
+        

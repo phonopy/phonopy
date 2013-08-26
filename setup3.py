@@ -28,6 +28,19 @@ extension = Extension(
              'c/anharmonic/phonon4/real_to_reciprocal.c',
              'c/anharmonic/phonon4/frequency_shift.c'])
 
+extension_forcefit = Extension(
+    'anharmonic._forcefit',
+    include_dirs=(['c/harmonic_h'] +
+                  include_dirs_numpy +
+                  include_dirs_lapacke),
+    extra_compile_args=['-fopenmp'],
+    extra_link_args=['-lgomp',
+                     '../lapacke/liblapacke.a',
+                     '-llapack',
+                     '-lblas'],
+    sources=['c/_forcefit.c',
+             'c/harmonic/lapack_wrapper.c'])
+
 setup(name='phono3py',
       version='0.5.1',
       description='This is the phono3py module.',
@@ -41,4 +54,4 @@ setup(name='phono3py',
       scripts=['scripts/force-fit',
                'scripts/phono3py',
                'scripts/phono4py'],
-      ext_modules=[extension])
+      ext_modules=[extension, extension_forcefit])

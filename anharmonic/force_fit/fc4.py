@@ -1,6 +1,6 @@
 import sys
 import numpy as np
-from phonopy.harmonic.force_constants import similarity_transformation, get_positions_sent_by_rot_inv
+from phonopy.harmonic.force_constants import similarity_transformation, get_positions_sent_by_rot_inv, distribute_force_constants
 from anharmonic.phonon3.displacement_fc3 import get_reduced_site_symmetry, get_bond_symmetry
 from anharmonic.phonon4.fc4 import distribute_fc4
 from anharmonic.phonon3.fc3 import distribute_fc3
@@ -33,6 +33,9 @@ class FC4Fit:
     def run(self):
         self._calculate()
 
+    def get_fc2(self):
+        return self._fc2
+        
     def get_fc3(self):
         return self._fc3
         
@@ -79,28 +82,54 @@ class FC4Fit:
                        self._symprec,
                        self._verbose)
 
+        print "ditributing fc2..."
+        distribute_force_constants(self._fc2,
+                                   range(self._num_atom),
+                                   unique_first_atom_nums,
+                                   self._lattice,
+                                   self._positions,
+                                   rotations,
+                                   translations,
+                                   self._symprec)
+
     def _fit(self, first_atom_num, disp_triplets, sets_of_forces):
         site_symmetry = self._symmetry.get_site_symmetry(first_atom_num)
         positions = self._positions.copy() - self._positions[first_atom_num]
         rot_map_syms = get_positions_sent_by_rot_inv(positions,
                                                      site_symmetry,
                                                      self._symprec)
-        site_syms_cart = [similarity_transformation(self._lattice, sym)
-                          for sym in site_symmetry]
+        site_syms_cart = np.double([similarity_transformation(self._lattice, sym)
+                                    for sym in site_symmetry])
+
+        triplets_c, num_triplets = self._create_displacement_triplets_for_c(
+            disp_triplets)
         
         for second_atom_num in range(self._num_atom):
+            print second_atom_num + 1
+
             rot_disps_set = []
             for third_atom_num in range(self._num_atom):
-                rot_disps_set.append(self._create_displacement_matrix(
-                        second_atom_num,
-                        third_atom_num,
-                        disp_triplets,
-                        site_syms_cart,
-                        rot_map_syms))
-                print rot_disps_set[third_atom_num].shape
+                try:
+                    import anharmonic._forcefit as forcefit
+                    rot_disps_set.append(self._create_displacement_matrix_c(
+                            second_atom_num,
+                            third_atom_num,
+                            triplets_c,
+                            num_triplets,
+                            site_syms_cart,
+                            rot_map_syms))
+                except ImportError:
+                    rot_disps_set.append(self._create_displacement_matrix(
+                            second_atom_num,
+                            third_atom_num,
+                            disp_triplets,
+                            site_syms_cart,
+                            rot_map_syms))
+                    
+                print third_atom_num + 1, rot_disps_set[third_atom_num].shape
 
             inv_disps_set = self._invert_displacements(rot_disps_set)
-            
+
             for third_atom_num in range(self._num_atom):
                 rot_forces = self._create_force_matrix(
                     second_atom_num,
@@ -118,12 +147,9 @@ class FC4Fit:
                 self._fc3[first_atom_num, second_atom_num] = fc3
                 self._fc4[first_atom_num, second_atom_num, third_atom_num] = fc4
 
-                print fc4
-            print second_atom_num + 1
-
     def _invert_displacements(self, rot_disps_set):
         try:
-            import anharmonic._phono3py as phono3c
+            import anharmonic._forcefit as forcefit
             row_nums = np.intc([x.shape[0] for x in rot_disps_set])
             info = np.zeros(len(row_nums), dtype='intc')
             max_row_num = max(row_nums)
@@ -134,13 +160,13 @@ class FC4Fit:
                 rot_disps[
                     i, :row_nums[i] * column_num] = rot_disps_set[i].flatten()
             inv_disps = np.zeros_like(rot_disps)
-            phono3c.pinv_mt(rot_disps,
-                            inv_disps,
-                            row_nums,
-                            max_row_num,
-                            column_num,
-                            1e-13,
-                            info)
+            forcefit.pinv_mt(rot_disps,
+                             inv_disps,
+                             row_nums,
+                             max_row_num,
+                             column_num,
+                             1e-13,
+                             info)
             inv_disps_set = []
             inv_disps_set = [
                 inv_disps[i, :row_nums[i] * column_num].reshape(column_num, -1)
@@ -201,6 +227,43 @@ class FC4Fit:
                              self._get_triplet_tensor(Su1, Su2, Su3))))
 
         return np.double(rot_disps)
+                    
+    def _create_displacement_triplets_for_c(self, disp_triplets):
+        num_disps = np.zeros(
+            (len(disp_triplets), self._num_atom, self._num_atom, 2),
+            dtype='intc')
+        triplets = []
+        count = 0
+        for i in range(len(disp_triplets)):
+            for j in range(self._num_atom):
+                for k in range(self._num_atom):
+                    num_disp = len(disp_triplets[i][j][k])
+                    num_disps[i, j, k] = [count, num_disp]
+                    count += num_disp
+                    triplets += disp_triplets[i][j][k]
+
+        return np.double(triplets), num_disps
+
+    def _create_displacement_matrix_c(self,
+                                      second_atom_num,
+                                      third_atom_num,
+                                      disp_triplets,
+                                      num_disps,
+                                      site_syms_cart,
+                                      rot_map_syms):
+        import anharmonic._forcefit as forcefit
+        num_row_elem = 27 * 10 + 9 * 6 + 3 * 3 + 1
+        disp_matrix_tmp = np.zeros((len(disp_triplets) * len(site_syms_cart),
+                                    num_row_elem), dtype='double')
+        num_elems = forcefit.displacement_matrix_fc4(disp_matrix_tmp,
+                                                     second_atom_num,
+                                                     third_atom_num,
+                                                     disp_triplets,
+                                                     num_disps,
+                                                     site_syms_cart,
+                                                     rot_map_syms)
+        disp_matrix = disp_matrix_tmp[:num_elems / num_row_elem].copy()
+        return disp_matrix
                     
     def _get_pair_tensor(self, u1, u2, u3):
         # 0 (0, 0)
@@ -335,18 +398,6 @@ class FC4Fit:
                     i,
                     reduced_site_sym)
                 
-        # for i in range(self._num_atom):
-        #     if disps[i] is not None:
-        #         for j in range(self._num_atom):
-        #             print i + 1, j + 1,
-        #             if disps[i][j] is not None:
-        #                 print len(disps[i][j])
-        #             else:
-        #                 print "None"
-        #     else:
-        #         print i + 1, "None"
-        # sys.exit(1)
-
         return disps, forces
 
     def _distribute_2(self,
