@@ -187,8 +187,8 @@ def distribute_fc4(fc4,
             similarity_transformation(lattice, rot).T.copy())
 
         try:
-            import anharmonic._phono3py as phono3c
-            phono3c.distribute_fc4(fc4,
+            import anharmonic._phono4py as phono4c
+            phono4c.distribute_fc4(fc4,
                                    i,
                                    atom_mapping,
                                    rot_cart_inv)
@@ -447,8 +447,8 @@ def _rotate_delta_fc3s(i, j, k, delta_fc3s, rot_map_syms, site_sym_cart):
     rotated_fc3s = np.zeros((len(delta_fc3s), len(site_sym_cart), 3, 3, 3),
                             dtype='double')
     try:
-        import anharmonic._phono3py as phono3c
-        phono3c.rotate_delta_fc3s(rotated_fc3s,
+        import anharmonic._phono4py as phono4c
+        phono4c.rotate_delta_fc3s(rotated_fc3s,
                                   delta_fc3s,
                                   rot_map_syms,
                                   site_sym_cart,

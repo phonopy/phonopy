@@ -21,10 +21,33 @@ extension = Extension(
              'c/anharmonic/phonoc_array.c',
              'c/anharmonic/phonoc_math.c',
              'c/anharmonic/phonoc_utils.c',
+             'c/anharmonic/phonon3/fc3.c',
              'c/anharmonic/phonon3/interaction.c',
              'c/anharmonic/phonon3/real_to_reciprocal.c',
              'c/anharmonic/phonon3/reciprocal_to_normal.c',
              'c/anharmonic/phonon3/imag_self_energy.c',
+             'c/anharmonic/phonon4/real_to_reciprocal.c',
+             'c/anharmonic/phonon4/frequency_shift.c'])
+
+extension_phono4py = Extension(
+    'anharmonic._phono4py',
+    include_dirs=(['c/harmonic_h',
+                   'c/anharmonic_h'] +
+                  include_dirs_numpy +
+                  include_dirs_lapacke),
+    extra_compile_args=['-fopenmp'],
+    extra_link_args=['-lgomp',
+                     '../lapacke/liblapacke.a',
+                     '-llapack',
+                     '-lblas'],
+    sources=['c/_phono4py.c',
+             'c/harmonic/dynmat.c',
+             'c/harmonic/lapack_wrapper.c',
+             'c/anharmonic/phonoc_array.c',
+             'c/anharmonic/phonoc_math.c',
+             'c/anharmonic/phonoc_utils.c',
+             'c/anharmonic/phonon3/fc3.c',
+             'c/anharmonic/phonon4/fc4.c',
              'c/anharmonic/phonon4/real_to_reciprocal.c',
              'c/anharmonic/phonon4/frequency_shift.c'])
 
@@ -54,4 +77,6 @@ setup(name='phono3py',
       scripts=['scripts/force-fit',
                'scripts/phono3py',
                'scripts/phono4py'],
-      ext_modules=[extension, extension_forcefit])
+      ext_modules=[extension,
+                   extension_phono4py,
+                   extension_forcefit])

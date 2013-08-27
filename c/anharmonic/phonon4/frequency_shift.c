@@ -1,5 +1,5 @@
 #include <lapacke.h>
-#include <math.h>
+#include <stdlib.h>
 #include "phonoc_array.h"
 #include "phonoc_math.h"
 #include "phonoc_utils.h"

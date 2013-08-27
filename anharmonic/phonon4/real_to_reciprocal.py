@@ -39,8 +39,8 @@ class RealToReciprocal:
         return self._fc4_reciprocal
 
     def _real_to_reciprocal_c(self):
-        import anharmonic._phono3py as phono3c
-        phono3c.real_to_reciprocal4(self._fc4_reciprocal,
+        import anharmonic._phono4py as phono4c
+        phono4c.real_to_reciprocal4(self._fc4_reciprocal,
                                     np.double(self._fc4),
                                     np.double(self._quartet /
                                               self._mesh.astype('double')),

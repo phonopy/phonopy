@@ -151,7 +151,7 @@ class FrequencyShift:
         self._set_frequency_shifts_py()
 
     def _calculate_fc4_normal_c(self):
-        import anharmonic._phono3py as phono3c
+        import anharmonic._phono4py as phono4c
         svecs, multiplicity = get_smallest_vectors(self._supercell,
                                                    self._primitive,
                                                    self._symprec)
@@ -161,7 +161,7 @@ class FrequencyShift:
         self._set_phonon_c([gp])
         self._set_phonon_c(self._quartets_at_q)
 
-        phono3c.fc4_normal_for_frequency_shift(
+        phono4c.fc4_normal_for_frequency_shift(
             self._fc4_normal,
             self._frequencies,
             self._eigenvectors,
@@ -179,8 +179,8 @@ class FrequencyShift:
             self._cutoff_frequency)
 
     def _set_frequency_shifts_c(self):
-        import anharmonic._phono3py as phono3c
-        phono3c.fc4_frequency_shifts(
+        import anharmonic._phono4py as phono4c
+        phono4c.fc4_frequency_shifts(
             self._frequency_shifts,
             self._fc4_normal,
             self._frequencies,
@@ -263,7 +263,7 @@ class FrequencyShift:
                       self._lapack_zheev_uplo)
 
     def _set_phonon_c(self, grid_points):
-        import anharmonic._phono3py as phono3c
+        import anharmonic._phono4py as phono4c
         
         svecs, multiplicity = self._dm.get_shortest_vectors()
         masses = np.double(self._dm.get_primitive().get_masses())
@@ -278,7 +278,7 @@ class FrequencyShift:
             nac_factor = 0
             dielectric = None
 
-        phono3c.phonons_grid_points(self._frequencies,
+        phono4c.phonons_grid_points(self._frequencies,
                                     self._eigenvectors,
                                     self._phonon_done,
                                     np.intc(grid_points),
