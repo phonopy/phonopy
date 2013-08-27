@@ -78,7 +78,11 @@ class Interaction:
             self._band_indices = np.intc(band_indices)
         self._frequency_factor_to_THz = frequency_factor_to_THz
         self._symprec = symprec
-        self._cutoff_frequency = cutoff_frequency
+
+        if cutoff_frequency is None:
+            self._cutoff_frequency = 0
+        else:
+            self._cutoff_frequency = cutoff_frequency
         self._is_nosym = is_nosym
         self._symmetrize_fc3_q = symmetrize_fc3_q
         self._lapack_zheev_uplo = lapack_zheev_uplo
@@ -205,10 +209,6 @@ class Interaction:
         p2s = np.intc(self._primitive.get_primitive_to_supercell_map())
         s2p = np.intc(self._primitive.get_supercell_to_primitive_map())
 
-        if self._cutoff_frequency is None:
-            cutoff = 0
-        else:
-            cutoff = self._cutoff_frequency
         phono3c.interaction(self._interaction_strength,
                             self._frequencies,
                             self._eigenvectors,
@@ -223,7 +223,7 @@ class Interaction:
                             s2p,
                             self._band_indices,
                             self._symmetrize_fc3_q,
-                            cutoff)
+                            self._cutoff_frequency)
 
     def _set_phonon_c(self):
         import anharmonic._phono3py as phono3c
@@ -268,14 +268,10 @@ class Interaction:
                                self._mesh,
                                symprec=self._symprec)
 
-        if self._cutoff_frequency is None:
-            cutoff = 0
-        else:
-            cutoff = self._cutoff_frequency
         r2n = ReciprocalToNormal(self._primitive,
                                  self._frequencies,
                                  self._eigenvectors,
-                                 cutoff_frequency=cutoff)
+                                 cutoff_frequency=self._cutoff_frequency)
 
         for i, grid_triplet in enumerate(self._triplets_at_q):
             print "%d / %d" % (i + 1, len(self._triplets_at_q))
