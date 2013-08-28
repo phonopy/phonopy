@@ -64,6 +64,7 @@ int distribute_fc4(double *fc4,
 
   fourth_atom_rot = atom_mapping[fourth_atom];
   
+#pragma omp parallel for private(j, k, atom_rot_i, atom_rot_j, atom_rot_k)
   for (i = 0; i < num_atom; i++) {
     atom_rot_i = atom_mapping[i];
 
@@ -94,6 +95,94 @@ int distribute_fc4(double *fc4,
     }
   }
   return 1;
+}
+
+void set_translational_invariance_fc4(double *fc4,
+				      const int num_atom)
+{
+  int i;
+
+  for (i = 0; i < 4; i++) {
+    set_translational_invariance_fc4_per_index(fc4, num_atom, i);
+  }
+}
+  
+void set_translational_invariance_fc4_per_index(double *fc4,
+						const int num_atom,
+						const int index)
+{
+  int i, j, k, l, m;
+  double sum, drift;
+
+#pragma omp parallel for private(j, k, l, m, sum, drift)
+  for (i = 0; i < 81; i++) {
+    for (j = 0; j < num_atom; j++) {
+      for (k = 0; k < num_atom; k++) {
+	for (l = 0; l < num_atom; l++) {
+	  sum = 0;
+	  for (m = 0; m < num_atom; m++) {
+	    switch (index) {
+	    case 0:
+	      sum += fc4[m * num_atom * num_atom * num_atom * 81 +
+			 j * num_atom * num_atom * 81 +
+			 k * num_atom * 81 +
+			 l * 81 + i];
+	      break;
+	    case 1:
+	      sum += fc4[j * num_atom * num_atom * num_atom * 81 +
+			 m * num_atom * num_atom * 81 +
+			 k * num_atom * 81 +
+			 l * 81 + i];
+	      break;
+	    case 2:
+	      sum += fc4[j * num_atom * num_atom * num_atom * 81 +
+			 k * num_atom * num_atom * 81 +
+			 m * num_atom * 81 +			 
+			 l * 81 + i];
+	      break;
+	    case 3:
+	      sum += fc4[j * num_atom * num_atom * num_atom * 81 +
+			 k * num_atom * num_atom * 81 +
+			 l * num_atom * 81 +
+			 m * 81 + i];
+	      break;
+	    }
+	  }
+
+	  drift = sum / num_atom;
+	  for (m = 0; m < num_atom; m++) {
+	    switch (index) {
+	    case 0:
+	      fc4[m * num_atom * num_atom * num_atom * 81 +
+		  j * num_atom * num_atom * 81 +
+		  k * num_atom * 81 +
+		  l * 81 + i] -= drift;
+	      break;
+	    case 1:
+	      fc4[j * num_atom * num_atom * num_atom * 81 +
+		  m * num_atom * num_atom * 81 +
+		  k * num_atom * 81 +
+		  l * 81 + i] -= drift;
+	      break;
+	    case 2:
+	      fc4[j * num_atom * num_atom * num_atom * 81 +
+		  k * num_atom * num_atom * 81 +
+		  m * num_atom * 81 +			 
+		  l * 81 + i] -= drift;
+	      break;
+	    case 3:
+	      fc4[j * num_atom * num_atom * num_atom * 81 +
+		  k * num_atom * num_atom * 81 +
+		  l * num_atom * 81 +
+		  m * 81 + i] -= drift;
+	      break;
+	    }
+	  }
+	}
+      }
+    }
+  }
+  
 }
 
 static void tensor4_roation(double *rot_tensor,
@@ -130,10 +219,10 @@ static void tensor4_roation(double *rot_tensor,
   for (i = 0; i < 3; i++) {
     for (j = 0; j < 3; j++) {
       for (k = 0; k < 3; k++) {
-	for (l = 0; l < 3; l++) {
-	  rot_tensor[i * 27 + j * 9 + k * 3 + l] = 
-	    tensor4_rotation_elem(tensor, rot_cartesian, i, j, k, l);
-	}
+  	for (l = 0; l < 3; l++) {
+  	  rot_tensor[i * 27 + j * 9 + k * 3 + l] =
+  	    tensor4_rotation_elem(tensor, rot_cartesian, i, j, k, l);
+  	}
       }
     }
   }

@@ -16,5 +16,10 @@ int distribute_fc4(double *fc4,
 		   const int *atom_mapping,
 		   const int num_atom,
 		   const double *rot_cart);
+void set_translational_invariance_fc4(double *fc4,
+				      const int num_atom);
+void set_translational_invariance_fc4_per_index(double *fc4,
+						const int num_atom,
+						const int index);
 
 #endif

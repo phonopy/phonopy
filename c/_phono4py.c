@@ -15,6 +15,8 @@ static PyObject * py_reciprocal_to_normal4(PyObject *self, PyObject *args);
 static PyObject * py_set_phonons_grid_points(PyObject *self, PyObject *args);
 static PyObject * py_distribute_fc4(PyObject *self, PyObject *args);
 static PyObject * py_rotate_delta_fc3s(PyObject *self, PyObject *args);
+static PyObject * py_set_translational_invariance_fc4(PyObject *self,
+						      PyObject *args);
 
 static PyMethodDef functions[] = {
   {"fc4_normal_for_frequency_shift", py_get_fc4_normal_for_frequency_shift, METH_VARARGS, "Calculate fc4 normal for frequency shift"},
@@ -24,6 +26,7 @@ static PyMethodDef functions[] = {
   {"phonons_grid_points", py_set_phonons_grid_points, METH_VARARGS, "Set phonons on grid points"},
   {"distribute_fc4", py_distribute_fc4, METH_VARARGS, "Distribute least fc4 to full fc4"},
   {"rotate_delta_fc3s", py_rotate_delta_fc3s, METH_VARARGS, "Rotate delta fc3s"},
+  {"translational_invariance_fc4", py_set_translational_invariance_fc4, METH_VARARGS, "Set translational invariance for fc4"},
   {NULL, NULL, 0, NULL}
 };
 
@@ -426,4 +429,24 @@ static PyObject * py_rotate_delta_fc3s(PyObject *self, PyObject *args)
 						 atom2,
 						 atom3,
 						 num_atom));
+}
+
+static PyObject * py_set_translational_invariance_fc4(PyObject *self,
+						      PyObject *args)
+{
+  PyArrayObject* fc4_py;
+  int index;
+
+  if (!PyArg_ParseTuple(args, "Oi",
+			&fc4_py,
+			&index)) {
+    return NULL;
+  }
+
+  double* fc4 = (double*)fc4_py->data;
+  const int num_atom = (int)fc4_py->dimensions[0];
+
+  set_translational_invariance_fc4_per_index(fc4, num_atom, index);
+
+  Py_RETURN_NONE;
 }

@@ -55,10 +55,22 @@ def get_fc4(supercell,
     return fc4
     
 def set_translational_invariance_fc4(fc4):
-    for i in range(4):
-        set_translational_invariance_fc4_per_index(fc4, index=i)
+    try:
+        import anharmonic._phono4py as phono4c
+        for i in range(4):
+            phono4c.translational_invariance_fc4(fc4, i)
+    except ImportError:
+        for i in range(4):
+            set_translational_invariance_fc4_per_index(fc4, index=i)
 
 def set_translational_invariance_fc4_per_index(fc4, index=0):
+    try:
+        import anharmonic._phono4py as phono4c
+        phono4c.translational_invariance_fc4(fc4, index)
+    except ImportError:
+        set_translational_invariance_fc4_per_index_py(fc4, index)
+    
+def set_translational_invariance_fc4_per_index_py(fc4, index=0):
     for i, j, k, l, m, n, p in list(np.ndindex(
             (fc4.shape[(1 + index) % 3],
              fc4.shape[(2 + index) % 3],

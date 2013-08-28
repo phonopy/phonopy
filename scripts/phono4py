@@ -378,6 +378,9 @@ else:
             sys.stdout.flush()
         fc4 = read_fc4_from_hdf5()
         if options.is_translational_symmetry:
+            if log_level:
+                print "----- Impose translational invariance "
+                print "condition to fc4 -----"
             set_translational_invariance_fc4(fc4)
     else:
         if options.read_fc2_fourth:
@@ -411,25 +414,28 @@ else:
         factor = VaspToTHz
     else:
         factor = options.factor
+
     mesh = settings.get_mesh_numbers()
-    phono4py = Phono4py(fc4,
-                        supercell,
-                        primitive,
-                        mesh,
-                        band_indices=settings.get_band_indices(),
-                        frequency_factor_to_THz=factor,
-                        cutoff_frequency=1e-2,
-                        is_nosym=options.is_nosym,
-                        symprec=options.symprec,
-                        log_level=log_level)
-    phono4py.set_frequency_shift(temperatures=settings.get_temperatures())
-    phono4py.set_dynamical_matrix(fc2,
-                                  supercell,
-                                  primitive)
-    phono4py.run_frequency_shift(settings.get_grid_points())
-    freq_shifts = phono4py.get_frequency_shift()
-    write_freq_shifts_to_hdf5(freq_shifts)
-                        
+
+    if mesh is not None:
+        phono4py = Phono4py(fc4,
+                            supercell,
+                            primitive,
+                            mesh,
+                            band_indices=settings.get_band_indices(),
+                            frequency_factor_to_THz=factor,
+                            cutoff_frequency=1e-2,
+                            is_nosym=options.is_nosym,
+                            symprec=options.symprec,
+                            log_level=log_level)
+        phono4py.set_frequency_shift(temperatures=settings.get_temperatures())
+        phono4py.set_dynamical_matrix(fc2,
+                                      supercell,
+                                      primitive)
+        phono4py.run_frequency_shift(settings.get_grid_points())
+        freq_shifts = phono4py.get_frequency_shift()
+        write_freq_shifts_to_hdf5(freq_shifts)
+                            
         
 if log_level:
     print_end()
