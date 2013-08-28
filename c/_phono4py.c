@@ -14,9 +14,12 @@ static PyObject * py_real_to_reciprocal4(PyObject *self, PyObject *args);
 static PyObject * py_reciprocal_to_normal4(PyObject *self, PyObject *args);
 static PyObject * py_set_phonons_grid_points(PyObject *self, PyObject *args);
 static PyObject * py_distribute_fc4(PyObject *self, PyObject *args);
-static PyObject * py_rotate_delta_fc3s(PyObject *self, PyObject *args);
+static PyObject * py_rotate_delta_fc3s_elem(PyObject *self, PyObject *args);
 static PyObject * py_set_translational_invariance_fc4(PyObject *self,
 						      PyObject *args);
+static PyObject * py_set_permutation_symmetry_fc4(PyObject *self,
+						  PyObject *args);
+static PyObject * py_get_drift_fc4(PyObject *self, PyObject *args);
 
 static PyMethodDef functions[] = {
   {"fc4_normal_for_frequency_shift", py_get_fc4_normal_for_frequency_shift, METH_VARARGS, "Calculate fc4 normal for frequency shift"},
@@ -25,8 +28,10 @@ static PyMethodDef functions[] = {
   {"reciprocal_to_normal4", py_reciprocal_to_normal4, METH_VARARGS, "Transform fc4 of reciprocal space to normal coordinate in special case for frequency shift"},
   {"phonons_grid_points", py_set_phonons_grid_points, METH_VARARGS, "Set phonons on grid points"},
   {"distribute_fc4", py_distribute_fc4, METH_VARARGS, "Distribute least fc4 to full fc4"},
-  {"rotate_delta_fc3s", py_rotate_delta_fc3s, METH_VARARGS, "Rotate delta fc3s"},
+  {"rotate_delta_fc3s_elem", py_rotate_delta_fc3s_elem, METH_VARARGS, "Rotate delta fc3s for a set of atomic indices"},
   {"translational_invariance_fc4", py_set_translational_invariance_fc4, METH_VARARGS, "Set translational invariance for fc4"},
+  {"permutation_symmetry_fc4", py_set_permutation_symmetry_fc4, METH_VARARGS, "Set permutation symmetry for fc4"},
+  {"drift_fc4", py_get_drift_fc4, METH_VARARGS, "Get drifts of fc4"},
   {NULL, NULL, 0, NULL}
 };
 
@@ -392,7 +397,7 @@ static PyObject * py_distribute_fc4(PyObject *self, PyObject *args)
 					      rot_cart_inv));
 }
 
-static PyObject * py_rotate_delta_fc3s(PyObject *self, PyObject *args)
+static PyObject * py_rotate_delta_fc3s_elem(PyObject *self, PyObject *args)
 {
   PyArrayObject* rotated_delta_fc3s_py;
   PyArrayObject* delta_fc3s_py;
@@ -419,16 +424,16 @@ static PyObject * py_rotate_delta_fc3s(PyObject *self, PyObject *args)
   const int num_delta_fc3s = (int)delta_fc3s_py->dimensions[0];
   const int num_atom = (int)delta_fc3s_py->dimensions[1];
 
-  return PyInt_FromLong((long) rotate_delta_fc3s(rotated_delta_fc3s,
-						 delta_fc3s,
-						 rot_map_syms,
-						 site_syms_cart,
-						 num_rot,
-						 num_delta_fc3s,
-						 atom1,
-						 atom2,
-						 atom3,
-						 num_atom));
+  return PyInt_FromLong((long) rotate_delta_fc3s_elem(rotated_delta_fc3s,
+						      delta_fc3s,
+						      rot_map_syms,
+						      site_syms_cart,
+						      num_rot,
+						      num_delta_fc3s,
+						      atom1,
+						      atom2,
+						      atom3,
+						      num_atom));
 }
 
 static PyObject * py_set_translational_invariance_fc4(PyObject *self,
@@ -449,4 +454,47 @@ static PyObject * py_set_translational_invariance_fc4(PyObject *self,
   set_translational_invariance_fc4_per_index(fc4, num_atom, index);
 
   Py_RETURN_NONE;
+}
+
+static PyObject * py_set_permutation_symmetry_fc4(PyObject *self, PyObject *args)
+{
+  PyArrayObject* fc4_py;
+
+  if (!PyArg_ParseTuple(args, "O",
+			&fc4_py)) {
+    return NULL;
+  }
+
+  double* fc4 = (double*)fc4_py->data;
+  const int num_atom = (int)fc4_py->dimensions[0];
+
+  set_permutation_symmetry_fc4(fc4, num_atom);
+
+  Py_RETURN_NONE;
+}
+
+static PyObject * py_get_drift_fc4(PyObject *self, PyObject *args)
+{
+  PyArrayObject* fc4_py;
+
+  if (!PyArg_ParseTuple(args, "O",
+			&fc4_py)) {
+    return NULL;
+  }
+
+  double* fc4 = (double*)fc4_py->data;
+  const int num_atom = (int)fc4_py->dimensions[0];
+
+  int i;
+  double drift[4];
+  PyObject* drift_py;
+
+  get_drift_fc4(drift, fc4, num_atom);
+  drift_py = PyList_New(4);
+
+  for (i = 0; i < 4; i++) {
+    PyList_SetItem(drift_py, i, PyFloat_FromDouble(drift[i]));
+  }
+
+  return drift_py;
 }

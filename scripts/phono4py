@@ -403,6 +403,9 @@ else:
             print "----- Symmetrize fc4 by index exchange in real space -----"
         set_permutation_symmetry_fc4(fc4)
 
+        
+    if log_level:
+        print "(Calculating fc4 drift...)"
     show_drift_fc4(fc4)
 
     if not options.read_fc4:

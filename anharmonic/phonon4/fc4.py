@@ -89,15 +89,20 @@ def set_translational_invariance_fc4_per_index_py(fc4, index=0):
                 fc4[i, j, k, :, l, m, n, p]) / fc4.shape[3]
 
 def set_permutation_symmetry_fc4(fc4):
-    num_atom = fc4.shape[0]
-    fc4_sym = np.zeros(fc4.shape, dtype='double')
-    for (i, j, k, l) in list(
-        np.ndindex(num_atom, num_atom, num_atom, num_atom)):
-        fc4_sym[i, j, k, l] = set_permutation_symmetry_fc4_part(fc4, i, j, k, l)
-
-    for (i, j, k, l) in list(
-        np.ndindex(num_atom, num_atom, num_atom, num_atom)):
-        fc4[i, j, k, l] = fc4_sym[i, j, k, l]
+    try:
+        import anharmonic._phono4py as phono4c
+        phono4c.permutation_symmetry_fc4(fc4)
+    except ImportError:
+        num_atom = fc4.shape[0]
+        fc4_sym = np.zeros(fc4.shape, dtype='double')
+        for (i, j, k, l) in list(
+            np.ndindex(num_atom, num_atom, num_atom, num_atom)):
+            fc4_sym[i, j, k, l] = set_permutation_symmetry_fc4_part(
+                fc4, i, j, k, l)
+    
+        for (i, j, k, l) in list(
+            np.ndindex(num_atom, num_atom, num_atom, num_atom)):
+            fc4[i, j, k, l] = fc4_sym[i, j, k, l]
 
 def set_permutation_symmetry_fc4_part(fc4, a, b, c, d):
     tensor4 = np.zeros((3, 3, 3, 3), dtype='double')
@@ -131,25 +136,33 @@ def set_permutation_symmetry_fc4_part(fc4, a, b, c, d):
     return tensor4
 
 def show_drift_fc4(fc4, name="fc4"):
-    num_atom = fc4.shape[0]
-    maxval1 = 0
-    maxval2 = 0
-    maxval3 = 0
-    maxval4 = 0
-    for i, j, k, l, m, n, p in list(
-        np.ndindex((num_atom, num_atom, num_atom, 3, 3, 3, 3))):
-        val1 = fc4[:, i, j, k, l, m, n, p].sum()
-        val2 = fc4[k, :, i, j, l, m, n, p].sum()
-        val3 = fc4[j, k, :, i, l, m, n, p].sum()
-        val4 = fc4[i, j, k, :, l, m, n, p].sum()
-        if abs(val1) > abs(maxval1):
-            maxval1 = val1
-        if abs(val2) > abs(maxval2):
-            maxval2 = val2
-        if abs(val3) > abs(maxval3):
-            maxval3 = val3
-        if abs(val4) > abs(maxval4):
-            maxval4 = val4
+    try:
+        import anharmonic._phono4py as phono4c
+        (maxval1,
+         maxval2,
+         maxval3,
+         maxval4) = phono4c.drift_fc4(fc4)
+    except ImportError:
+        num_atom = fc4.shape[0]
+        maxval1 = 0
+        maxval2 = 0
+        maxval3 = 0
+        maxval4 = 0
+        for i, j, k, l, m, n, p in list(
+            np.ndindex((num_atom, num_atom, num_atom, 3, 3, 3, 3))):
+            val1 = fc4[:, i, j, k, l, m, n, p].sum()
+            val2 = fc4[k, :, i, j, l, m, n, p].sum()
+            val3 = fc4[j, k, :, i, l, m, n, p].sum()
+            val4 = fc4[i, j, k, :, l, m, n, p].sum()
+            if abs(val1) > abs(maxval1):
+                maxval1 = val1
+            if abs(val2) > abs(maxval2):
+                maxval2 = val2
+            if abs(val3) > abs(maxval3):
+                maxval3 = val3
+            if abs(val4) > abs(maxval4):
+                maxval4 = val4
+    
     print ("max drift of %s:" % name), maxval1, maxval2, maxval3, maxval4
 
 def distribute_fc4(fc4,
@@ -310,7 +323,8 @@ def _get_delta_fc3(dataset_first_atom,
                                     symprec,
                                     verbose)
     
-    show_drift_fc3(disp_fc3, name="fc3 with disp.")
+    if verbose:
+        show_drift_fc3(disp_fc3, name="fc3 with disp.")
 
     return disp_fc3 - fc3
 
@@ -396,6 +410,7 @@ def _get_constrained_fc3(supercell,
                        (atom1 + 1, atom2 + 1))
                 for i, v in enumerate(disps2):
                     print "  [%7.4f %7.4f %7.4f]" % tuple(v)
+
             solve_fc3(fc3,
                       atom2,
                       supercell,
@@ -449,24 +464,25 @@ def _solve_fc4(fc4,
     
     rot_disps = get_rotated_displacement(displacements_first, site_sym_cart)
     inv_U = np.linalg.pinv(rot_disps)
+
     for (i, j, k) in list(np.ndindex(num_atom, num_atom, num_atom)):
         fc4[first_atom_num, i, j, k] = np.dot(
             inv_U, _rotate_delta_fc3s(
                 i, j, k, delta_fc3s, rot_map_syms, site_sym_cart)
             ).reshape(3, 3, 3, 3)
-
+            
 def _rotate_delta_fc3s(i, j, k, delta_fc3s, rot_map_syms, site_sym_cart):
     rotated_fc3s = np.zeros((len(delta_fc3s), len(site_sym_cart), 3, 3, 3),
                             dtype='double')
     try:
         import anharmonic._phono4py as phono4c
-        phono4c.rotate_delta_fc3s(rotated_fc3s,
-                                  delta_fc3s,
-                                  rot_map_syms,
-                                  site_sym_cart,
-                                  i,
-                                  j,
-                                  k)
+        phono4c.rotate_delta_fc3s_elem(rotated_fc3s,
+                                       delta_fc3s,
+                                       rot_map_syms,
+                                       site_sym_cart,
+                                       i,
+                                       j,
+                                       k)
         return np.reshape(rotated_fc3s, (-1, 27))
     except ImportError:
         print "Copying delta fc3s at (%d, %d, %d)" % (i + 1, j + 1, k + 1)

@@ -17,6 +17,7 @@ int distribute_fc3(double *fc3,
 
   third_atom_rot = atom_mapping[third_atom];
   
+#pragma omp parallel for private(j, atom_rot_i, atom_rot_j, tensor)
   for (i = 0; i < num_atom; i++) {
     atom_rot_i = atom_mapping[i];
 

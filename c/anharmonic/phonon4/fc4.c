@@ -1,3 +1,5 @@
+#include <math.h>
+#include <stdlib.h>
 #include "phonon3_h/fc3.h"
 #include "phonon4_h/fc4.h"
 
@@ -19,17 +21,31 @@ static double tensor4_rotation_elem(const double tensor[81],
 				    const int n,
 				    const int p,
 				    const int q);
+static double get_drift_fc4_elem(const double *fc4,
+				 const int num_atom,
+				 const int i,
+				 const int j,
+				 const int k,
+				 const int l,
+				 const int index);
+void set_permutation_symmetry_fc4_elem(double *fc4_elem,
+				       const double *fc4_tmp,
+				       const int a,
+				       const int b,
+				       const int c,
+				       const int d,
+				       const int num_atom);
 
-int rotate_delta_fc3s(double *rotated_delta_fc3s,
-		      const double *delta_fc3s,
-		      const int *rot_map_syms,
-		      const double *site_sym_cart,
-		      const int num_rot,
-		      const int num_delta_fc3s,
-		      const int atom1,
-		      const int atom2,
-		      const int atom3,
-		      const int num_atom)
+int rotate_delta_fc3s_elem(double *rotated_delta_fc3s,
+			   const double *delta_fc3s,
+			   const int *rot_map_syms,
+			   const double *site_sym_cart,
+			   const int num_rot,
+			   const int num_delta_fc3s,
+			   const int atom1,
+			   const int atom2,
+			   const int atom3,
+			   const int num_atom)
 {
   int i, j;
   double *rot_tensor;
@@ -64,7 +80,7 @@ int distribute_fc4(double *fc4,
 
   fourth_atom_rot = atom_mapping[fourth_atom];
   
-#pragma omp parallel for private(j, k, atom_rot_i, atom_rot_j, atom_rot_k)
+#pragma omp parallel for private(j, k, atom_rot_i, atom_rot_j, atom_rot_k, tensor)
   for (i = 0; i < num_atom; i++) {
     atom_rot_i = atom_mapping[i];
 
@@ -112,44 +128,15 @@ void set_translational_invariance_fc4_per_index(double *fc4,
 						const int index)
 {
   int i, j, k, l, m;
-  double sum, drift;
+  double drift;
 
-#pragma omp parallel for private(j, k, l, m, sum, drift)
+#pragma omp parallel for private(j, k, l, m, drift)
   for (i = 0; i < 81; i++) {
     for (j = 0; j < num_atom; j++) {
       for (k = 0; k < num_atom; k++) {
 	for (l = 0; l < num_atom; l++) {
-	  sum = 0;
-	  for (m = 0; m < num_atom; m++) {
-	    switch (index) {
-	    case 0:
-	      sum += fc4[m * num_atom * num_atom * num_atom * 81 +
-			 j * num_atom * num_atom * 81 +
-			 k * num_atom * 81 +
-			 l * 81 + i];
-	      break;
-	    case 1:
-	      sum += fc4[j * num_atom * num_atom * num_atom * 81 +
-			 m * num_atom * num_atom * 81 +
-			 k * num_atom * 81 +
-			 l * 81 + i];
-	      break;
-	    case 2:
-	      sum += fc4[j * num_atom * num_atom * num_atom * 81 +
-			 k * num_atom * num_atom * 81 +
-			 m * num_atom * 81 +			 
-			 l * 81 + i];
-	      break;
-	    case 3:
-	      sum += fc4[j * num_atom * num_atom * num_atom * 81 +
-			 k * num_atom * num_atom * 81 +
-			 l * num_atom * 81 +
-			 m * 81 + i];
-	      break;
-	    }
-	  }
-
-	  drift = sum / num_atom;
+	  drift =
+	    get_drift_fc4_elem(fc4, num_atom, i, j, k, l, index) / num_atom;
 	  for (m = 0; m < num_atom; m++) {
 	    switch (index) {
 	    case 0:
@@ -182,9 +169,237 @@ void set_translational_invariance_fc4_per_index(double *fc4,
       }
     }
   }
-  
 }
 
+void set_permutation_symmetry_fc4(double *fc4, const int num_atom)
+{
+  double *fc4_tmp;
+  int i, j, k, l;
+
+  fc4_tmp = (double*)malloc(sizeof(double) *
+			    num_atom * num_atom * num_atom * num_atom * 81);
+
+#pragma omp parallel for
+  for (i = 0; i < num_atom * num_atom * num_atom * num_atom * 81; i++) {
+    fc4_tmp[i] = fc4[i];
+  }
+
+#pragma omp parallel for private(j, k, l)
+  for (i = 0; i < num_atom; i++) {
+    for (j = 0; j < num_atom; j++) {
+      for (k = 0; k < num_atom; k++) {
+	for (l = 0; l < num_atom; l++) {
+	  set_permutation_symmetry_fc4_elem
+	    (fc4 +
+	     i * num_atom * num_atom * num_atom * 81 +
+	     j * num_atom * num_atom * 81 +
+	     k * num_atom * 81 +
+	     l * 81, fc4_tmp, i, j, k, l, num_atom);
+	}
+      }
+    }
+  }
+  
+  free(fc4_tmp);
+}
+
+void set_permutation_symmetry_fc4_elem(double *fc4_elem,
+				       const double *fc4_tmp,
+				       const int a,
+				       const int b,
+				       const int c,
+				       const int d,
+				       const int num_atom)
+{
+  int i, j, k, l;
+
+  for (i = 0; i < 3; i++) {
+    for (j = 0; j < 3; j++) {
+      for (k = 0; k < 3; k++) {
+	for (l = 0; l < 3; l++) {
+	  fc4_elem[i * 27 + j * 9 + k * 3 + l] =
+	    (fc4_tmp[a * num_atom * num_atom * num_atom * 81 +
+		     b * num_atom * num_atom * 81 +
+		     c * num_atom * 81+
+		     d * 81 + i * 27 + j * 9 + k * 3 + l] +
+	     fc4_tmp[a * num_atom * num_atom * num_atom * 81 +
+		     b * num_atom * num_atom * 81 +
+		     d * num_atom * 81+
+		     c * 81 + i * 27 + j * 9 + l * 3 + k] +
+	     fc4_tmp[a * num_atom * num_atom * num_atom * 81 +
+		     c * num_atom * num_atom * 81 +
+		     b * num_atom * 81+
+		     d * 81 + i * 27 + k * 9 + j * 3 + l] +
+	     fc4_tmp[a * num_atom * num_atom * num_atom * 81 +
+		     c * num_atom * num_atom * 81 +
+		     d * num_atom * 81+
+		     b * 81 + i * 27 + k * 9 + l * 3 + j] +
+	     fc4_tmp[a * num_atom * num_atom * num_atom * 81 +
+		     d * num_atom * num_atom * 81 +
+		     b * num_atom * 81+
+		     c * 81 + i * 27 + l * 9 + j * 3 + k] +
+	     fc4_tmp[a * num_atom * num_atom * num_atom * 81 +
+		     d * num_atom * num_atom * 81 +
+		     c * num_atom * 81+
+		     b * 81 + i * 27 + l * 9 + k * 3 + j] +
+	     fc4_tmp[b * num_atom * num_atom * num_atom * 81 +
+		     a * num_atom * num_atom * 81 +
+		     c * num_atom * 81+
+		     d * 81 + j * 27 + i * 9 + k * 3 + l] +
+	     fc4_tmp[b * num_atom * num_atom * num_atom * 81 +
+		     a * num_atom * num_atom * 81 +
+		     d * num_atom * 81+
+		     c * 81 + j * 27 + i * 9 + l * 3 + k] +
+	     fc4_tmp[b * num_atom * num_atom * num_atom * 81 +
+		     c * num_atom * num_atom * 81 +
+		     a * num_atom * 81+
+		     d * 81 + j * 27 + k * 9 + i * 3 + l] +
+	     fc4_tmp[b * num_atom * num_atom * num_atom * 81 +
+		     c * num_atom * num_atom * 81 +
+		     d * num_atom * 81+
+		     a * 81 + j * 27 + k * 9 + l * 3 + i] +
+	     fc4_tmp[b * num_atom * num_atom * num_atom * 81 +
+		     d * num_atom * num_atom * 81 +
+		     a * num_atom * 81+
+		     c * 81 + j * 27 + l * 9 + i * 3 + k] +
+	     fc4_tmp[b * num_atom * num_atom * num_atom * 81 +
+		     d * num_atom * num_atom * 81 +
+		     c * num_atom * 81+
+		     a * 81 + j * 27 + l * 9 + k * 3 + i] +
+	     fc4_tmp[c * num_atom * num_atom * num_atom * 81 +
+		     a * num_atom * num_atom * 81 +
+		     b * num_atom * 81+
+		     d * 81 + k * 27 + i * 9 + j * 3 + l] +
+	     fc4_tmp[c * num_atom * num_atom * num_atom * 81 +
+		     a * num_atom * num_atom * 81 +
+		     d * num_atom * 81+
+		     b * 81 + k * 27 + i * 9 + l * 3 + j] +
+	     fc4_tmp[c * num_atom * num_atom * num_atom * 81 +
+		     b * num_atom * num_atom * 81 +
+		     a * num_atom * 81+
+		     d * 81 + k * 27 + j * 9 + i * 3 + l] +
+	     fc4_tmp[c * num_atom * num_atom * num_atom * 81 +
+		     b * num_atom * num_atom * 81 +
+		     d * num_atom * 81+
+		     a * 81 + k * 27 + j * 9 + l * 3 + i] +
+	     fc4_tmp[c * num_atom * num_atom * num_atom * 81 +
+		     d * num_atom * num_atom * 81 +
+		     a * num_atom * 81+
+		     b * 81 + k * 27 + l * 9 + i * 3 + j] +
+	     fc4_tmp[c * num_atom * num_atom * num_atom * 81 +
+		     d * num_atom * num_atom * 81 +
+		     b * num_atom * 81+
+		     a * 81 + k * 27 + l * 9 + j * 3 + i] +
+	     fc4_tmp[d * num_atom * num_atom * num_atom * 81 +
+		     a * num_atom * num_atom * 81 +
+		     b * num_atom * 81+
+		     c * 81 + l * 27 + i * 9 + j * 3 + k] +
+	     fc4_tmp[d * num_atom * num_atom * num_atom * 81 +
+		     a * num_atom * num_atom * 81 +
+		     c * num_atom * 81+
+		     b * 81 + l * 27 + i * 9 + k * 3 + j] +
+	     fc4_tmp[d * num_atom * num_atom * num_atom * 81 +
+		     b * num_atom * num_atom * 81 +
+		     a * num_atom * 81+
+		     c * 81 + l * 27 + j * 9 + i * 3 + k] +
+	     fc4_tmp[d * num_atom * num_atom * num_atom * 81 +
+		     b * num_atom * num_atom * 81 +
+		     c * num_atom * 81+
+		     a * 81 + l * 27 + j * 9 + k * 3 + i] +
+	     fc4_tmp[d * num_atom * num_atom * num_atom * 81 +
+		     c * num_atom * num_atom * 81 +
+		     a * num_atom * 81+
+		     b * 81 + l * 27 + k * 9 + i * 3 + j] +
+	     fc4_tmp[d * num_atom * num_atom * num_atom * 81 +
+		     c * num_atom * num_atom * 81 +
+		     b * num_atom * 81+
+		     a * 81 + l * 27 + k * 9 + j * 3 + i]) / 24;
+	}
+      }
+    }
+  }
+}
+				  
+
+void get_drift_fc4(double *drifts_out, const double *fc4, const int num_atom)
+{
+  int i, j, k, l, index;
+  double drift;
+  double max_drift[81];
+  
+
+  for (index = 0; index < 4; index++) {
+    for (i = 0; i < 81; i++) {
+      max_drift[i] = 0;
+    }
+
+#pragma omp parallel for private(j, k, l, drift)
+    for (i = 0; i < 81; i++) {
+      for (j = 0; j < num_atom; j++) {
+	for (k = 0; k < num_atom; k++) {
+	  for (l = 0; l < num_atom; l++) {
+	    drift = get_drift_fc4_elem(fc4, num_atom, i, j, k, l, index);
+	    if (fabs(max_drift[i]) < fabs(drift)) {
+	      max_drift[i] = drift;
+	    }
+	  }
+	}
+      }
+    }
+
+    drift = 0;
+    for (i = 0; i < 81; i++) {
+      if (fabs(drift) < fabs(max_drift[i])) {
+	drift = max_drift[i];
+      }
+    }
+    drifts_out[index] = drift;
+  }
+}
+
+static double get_drift_fc4_elem(const double *fc4,
+				 const int num_atom,
+				 const int i,
+				 const int j,
+				 const int k,
+				 const int l,
+				 const int index)
+{
+  double sum;
+  int m;
+  
+  sum = 0;
+  for (m = 0; m < num_atom; m++) {
+    switch (index) {
+    case 0:
+      sum += fc4[m * num_atom * num_atom * num_atom * 81 +
+		 j * num_atom * num_atom * 81 +
+		 k * num_atom * 81 +
+		 l * 81 + i];
+      break;
+    case 1:
+      sum += fc4[j * num_atom * num_atom * num_atom * 81 +
+		 m * num_atom * num_atom * 81 +
+		 k * num_atom * 81 +
+		 l * 81 + i];
+      break;
+    case 2:
+      sum += fc4[j * num_atom * num_atom * num_atom * 81 +
+		 k * num_atom * num_atom * 81 +
+		 m * num_atom * 81 +			 
+		 l * 81 + i];
+      break;
+    case 3:
+      sum += fc4[j * num_atom * num_atom * num_atom * 81 +
+		 k * num_atom * num_atom * 81 +
+		 l * num_atom * 81 +
+		 m * 81 + i];
+      break;
+    }
+  }
+
+  return sum;
+}
 static void tensor4_roation(double *rot_tensor,
 			    const double *fc4,
 			    const int atom_i,
