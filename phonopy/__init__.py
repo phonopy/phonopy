@@ -819,13 +819,15 @@ class Phonopy:
                         dimension,
                         phonon_modes,
                         delta_q=None,
-                        derivative_order=None):
+                        derivative_order=None,
+                        nac_q_direction=None):
         self._modulation = Modulation(self._dynamical_matrix,
                                       self._primitive,
                                       dimension=dimension,
                                       phonon_modes=phonon_modes,
                                       delta_q= delta_q,
                                       derivative_order=derivative_order,
+                                      nac_q_direction=nac_q_direction,
                                       factor=self._factor)
         self._modulation.run()
                     

@@ -48,6 +48,7 @@ class Modulation:
                  phonon_modes,
                  delta_q=None,
                  derivative_order=None,
+                 nac_q_direction=None,
                  factor=VaspToTHz):
 
         """Class describe atomic modulations
@@ -60,6 +61,7 @@ class Modulation:
         self._phonon_modes = phonon_modes
         self._dimension = dimension
         self._delta_q = delta_q # 1st/2nd order perturbation direction
+        self._nac_q_direction = nac_q_direction
 
         self._ddm = DerivativeOfDynamicalMatrix(dynamical_matrix)
 
@@ -170,7 +172,10 @@ class Modulation:
                      pbc=True)
 
     def _get_eigenvectors(self, q):
-        self._dm.set_dynamical_matrix(q)
+        if self._nac_q_direction is not None and (np.abs(q) < 1e-5).all():
+            self._dm.set_dynamical_matrix(q, q_direction=self._nac_q_direction)
+        else:        
+            self._dm.set_dynamical_matrix(q)
         eigvals, eigvecs = np.linalg.eigh(self._dm.get_dynamical_matrix())
         eigvals = eigvals.real
         if self._delta_q is None:

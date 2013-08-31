@@ -147,6 +147,7 @@ parser.set_defaults(
     primitive_axis=None,
     projection_direction=None,
     qpoints=None,
+    q_direction=None,
     quiet=False,
     irreps_qpoint=None,
     sigma=None,
@@ -297,6 +298,10 @@ parser.add_option("--tmax", dest="tmax", type="string",
                   help="Maximum calculated temperature")
 parser.add_option("--qpoints", dest="qpoints", type="string",
                   help="Calculate at specified q-points")
+parser.add_option("--q_direction",
+                  dest="q_direction",
+                  type="string",
+                  help="q-vector direction at q->0 for non-analytical term correction")
 parser.add_option("--tmin", dest="tmin", type="string",
                   help="Minimum calculated temperature")
 parser.add_option("--trigonal", dest="is_trigonal_displacements",
@@ -916,7 +921,8 @@ elif run_mode=='modulation':
     phonon.set_modulations(dimension,
                            phonon_modes,
                            delta_q=delta_q,
-                           derivative_order=derivative_order)
+                           derivative_order=derivative_order,
+                           nac_q_direction=settings.get_q_direction())
     phonon.write_modulations()
     phonon.write_yaml_modulations()
 

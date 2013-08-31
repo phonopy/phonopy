@@ -67,6 +67,7 @@ class Settings:
         self._omega_step = None
         self._primitive_matrix = np.eye(3, dtype=float)
         self._qpoints = None
+        self._q_direction = None
         self._run_mode = None
         self._sigma = None
         self._supercell_matrix = None
@@ -230,6 +231,12 @@ class Settings:
 
     def get_qpoints(self):
         return self._qpoints
+
+    def set_q_direction(self, q_direction):
+        self._q_direction = q_direction
+
+    def get_q_direction(self):
+        return self._q_direction
 
     def set_sigma(self, sigma):
         self._sigma = sigma
@@ -511,6 +518,10 @@ class ConfParser:
                 if self._options.qpoints is not None:
                     self._confs['qpoints'] = self._options.qpoints
 
+            if opt.dest == 'q_direction':
+                if self._options.q_direction is not None:
+                    self._confs['q_direction'] = self._options.q_direction
+
             if opt.dest == 'omega_step':
                 if self._options.omega_step:
                     self._confs['omega_step'] = self._options.omega_step
@@ -685,6 +696,13 @@ class ConfParser:
                     else:
                         self.set_parameter('qpoints',
                                            list(np.reshape(vals, (-1, 3))))
+
+            if conf_key == 'q_direction':
+                q_direction = [ float(x) for x in confs['q_direction'].split() ]
+                if len(q_direction) < 3:
+                    self.setting_error("Number of elements of q_direction is less than 3")
+                else:
+                    self.set_parameter('q_direction', q_direction)
 
             if conf_key == 'omega_step':
                 if isinstance(confs['omega_step'], str):
@@ -1345,6 +1363,10 @@ class PhonopyConfParser(ConfParser):
             if params['write_dynamical_matrices']:
                 self._settings.set_write_dynamical_matrices(True)
                 
+        # q-vector direction at q->0 for non-analytical term correction
+        if params.has_key('q_direction'):
+            self._settings.set_q_direction(params['q_direction'])
+            
         # Anime mode
         if params.has_key('anime_type'):
             self._settings.set_anime_type(params['anime_type'])

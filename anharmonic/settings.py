@@ -16,7 +16,6 @@ class Phono3pySettings(Settings):
         self._mesh_divisors = None
         self._multiple_sigmas = None
         self._no_kappa_stars = False
-        self._q_direction = None
         self._read_amplitude = False
         self._read_gamma = False
         self._temperatures = None
@@ -76,12 +75,6 @@ class Phono3pySettings(Settings):
 
     def get_no_kappa_stars(self):
         return self._no_kappa_stars
-
-    def set_q_direction(self, q_direction):
-        self._q_direction = q_direction
-
-    def get_q_direction(self):
-        return self._q_direction
 
     def set_temperatures(self, temperatures):
         self._temperatures = temperatures
@@ -177,10 +170,6 @@ class Phono3pyConfParser(ConfParser):
                 if self._options.no_kappa_stars:
                     self._confs['no_kappa_stars'] = '.true.'
 
-            if opt.dest == 'q_direction':
-                if self._options.q_direction is not None:
-                    self._confs['q_direction'] = self._options.q_direction
-
             if opt.dest == 'read_amplitude':
                 if self._options.read_amplitude:
                     self._confs['read_amplitude'] = '.true.'
@@ -273,13 +262,6 @@ class Phono3pyConfParser(ConfParser):
                 if confs['no_kappa_stars'] == '.true.':
                     self.set_parameter('no_kappa_stars', True)
 
-            if conf_key == 'q_direction':
-                q_direction = [ float(x) for x in confs['q_direction'].split() ]
-                if len(q_direction) < 3:
-                    self.setting_error("Number of elements of q_direction is less than 3")
-                else:
-                    self.set_parameter('q_direction', q_direction)
-
             if conf_key == 'read_amplitude':
                 if confs['read_amplitude'] == '.true.':
                     self.set_parameter('read_amplitude', True)
@@ -354,10 +336,6 @@ class Phono3pyConfParser(ConfParser):
         # Read gammas from hdf5
         if params.has_key('read_gamma'):
             self._settings.set_read_gamma(params['read_gamma'])
-            
-        # q-vector direction at q->0 for non-analytical term correction
-        if params.has_key('q_direction'):
-            self._settings.set_q_direction(params['q_direction'])
             
         # Sum partial kappa at q-stars
         if params.has_key('no_kappa_stars'):
