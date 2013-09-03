@@ -93,7 +93,6 @@ class ImagSelfEnergy:
                                 len(bi_set))
             return imag_se
             
-
     def get_phonon_at_grid_point(self):
         return (self._frequencies[self._grid_point],
                 self._eigenvectors[self._grid_point])
