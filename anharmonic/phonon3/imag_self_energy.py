@@ -74,7 +74,7 @@ class ImagSelfEnergy:
         if self._cutoff_frequency is None:
             return self._imag_self_energy
         else: # Averaging imag-self-energies by degenerate bands
-            imag_se = self._imag_self_energy
+            imag_se = np.zeros_like(self._imag_self_energy)
             freqs = self._frequencies[self._grid_point]
             deg_sets = degenerate_sets(freqs) # such like [[0,1], [2], [3,4,5]]
             for dset in deg_sets:
@@ -85,10 +85,12 @@ class ImagSelfEnergy:
                 if len(bi_set) > 0:
                     for i in bi_set:
                         if self._fpoints is None:
-                            imag_se[i] = imag_se[bi_set].sum() / len(bi_set)
+                            imag_se[i] = (self._imag_self_energy[bi_set].sum() /
+                                          len(bi_set))
                         else:
-                            imag_se[:, i] = (imag_se[:, bi_set].sum(axis=1) /
-                                             len(bi_set))
+                            imag_se[:, i] = (
+                                self._imag_self_energy[:, bi_set].sum(axis=1) /
+                                len(bi_set))
             return imag_se
             
 
