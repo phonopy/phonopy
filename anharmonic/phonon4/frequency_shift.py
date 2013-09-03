@@ -58,6 +58,8 @@ class FrequencyShift:
         self._dm = None
         self._nac_q_direction = None
 
+        self._frequency_shifts = None
+        
         # Unit to THz of Gamma
         self._unit_conversion = (EV / Angstrom ** 4 / AMU ** 2
                                  / (2 * np.pi * THz) ** 2
