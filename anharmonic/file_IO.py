@@ -569,11 +569,7 @@ def write_linewidth(gp,
                     filename=None):
 
     lw_filename = "linewidth"
-
-    lw_filename += "-m%d%d%d-g%d-" % (mesh[0],
-                                        mesh[1],
-                                        mesh[2],
-                                        gp)
+    lw_filename += "-m%d%d%d-g%d-" % (mesh[0], mesh[1], mesh[2], gp)
     if sigma is not None:
         lw_filename += ("s%f" % sigma).rstrip('0') + "-"
 
@@ -588,6 +584,29 @@ def write_linewidth(gp,
 
     w = open(lw_filename, 'w')
     for v, t in zip(gamma.sum(axis=1) * 2 / gamma.shape[1], temperatures):
+        w.write("%15.7f %20.15e\n" % (t, v))
+    w.close()
+
+def write_frequency_shift(gp,
+                          band_indices,
+                          temperatures,
+                          delta,
+                          mesh,
+                          is_nosym=False,
+                          filename=None):
+
+    fst_filename = "frequency_shift"
+    fst_filename += "-m%d%d%d-g%d-" % (mesh[0], mesh[1], mesh[2], gp)
+    for i in band_indices:
+        fst_filename += "b%d" % (i + 1)
+    if not filename == None:
+        fst_filename += ".%s" % filename
+    elif is_nosym:
+        fst_filename += ".nosym"
+    fst_filename += ".dat"
+
+    w = open(fst_filename, 'w')
+    for v, t in zip(delta.sum(axis=1) * 2 / delta.shape[1], temperatures):
         w.write("%15.7f %20.15e\n" % (t, v))
     w.close()
     

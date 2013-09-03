@@ -108,6 +108,7 @@ parser.set_defaults(amplitude=None,
                     is_gruneisen=False,
                     is_joint_dos=False,
                     is_linewidth=False,
+                    is_frequency_shift=False,
                     is_bterta=False,
                     is_nac=False,
                     is_plusminus_displacements=False,
@@ -229,6 +230,10 @@ parser.add_option("--lw", "--linewidth",
                   dest="is_linewidth",
                   action="store_true",
                   help="Calculate linewidths")
+parser.add_option("--fst", "--frequency_shift",
+                  dest="is_frequency_shift",
+                  action="store_true",
+                  help="Calculate frequency shifts")
 parser.add_option("--md", "--mesh_divisors",
                   dest="mesh_divisors",
                   type="string",
@@ -765,7 +770,14 @@ else:
                     t_min=settings.get_min_temperature(),
                     t_step=settings.get_temperature_step(),
                     filename=options.output_filename)
-
+            elif settings.get_is_frequency_shift():
+                phono3py.get_frequency_shift(
+                    grid_points,
+                    epsilon=sigma,
+                    t_max=settings.get_max_temperature(),
+                    t_min=settings.get_min_temperature(),
+                    t_step=settings.get_temperature_step(),
+                    filename=options.output_filename)
             elif settings.get_is_bterta():
                 phono3py.get_thermal_conductivity(
                     sigmas=multiple_sigmas,

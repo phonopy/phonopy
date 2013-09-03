@@ -12,6 +12,7 @@ class Phono3pySettings(Settings):
         self._ion_clamped = False
         self._is_bterta = False
         self._is_linewidth = False
+        self._is_frequency_shift = False
         self._max_freepath = None
         self._mesh_divisors = None
         self._multiple_sigmas = None
@@ -57,6 +58,12 @@ class Phono3pySettings(Settings):
 
     def get_is_linewidth(self):
         return self._is_linewidth
+
+    def set_is_frequency_shift(self, is_frequency_shift):
+        self._is_frequency_shift = is_frequency_shift
+
+    def get_is_frequency_shift(self):
+        return self._is_frequency_shift
 
     def set_max_freepath(self, max_freepath):
         self._max_freepath = max_freepath
@@ -154,6 +161,10 @@ class Phono3pyConfParser(ConfParser):
                 if self._options.is_linewidth:
                     self._confs['linewidth'] = '.true.'
 
+            if opt.dest == 'is_frequency_shift':
+                if self._options.is_frequency_shift:
+                    self._confs['frequency_shift'] = '.true.'
+
             if opt.dest == 'max_freepath':
                 if self._options.max_freepath is not None:
                     self._confs['max_freepath'] = self._options.max_freepath
@@ -230,6 +241,10 @@ class Phono3pyConfParser(ConfParser):
             if conf_key == 'linewidth':
                 if confs['linewidth'] == '.true.':
                     self.set_parameter('is_linewidth', True)
+
+            if conf_key == 'frequency_shift':
+                if confs['frequency_shift'] == '.true.':
+                    self.set_parameter('is_frequency_shift', True)
 
             if conf_key == 'max_freepath':
                 self.set_parameter('max_freepath', float(confs['max_freepath']))
@@ -313,6 +328,10 @@ class Phono3pyConfParser(ConfParser):
         # Calculate linewidths
         if params.has_key('is_linewidth'):
             self._settings.set_is_linewidth(params['is_linewidth'])
+
+        # Calculate frequency_shifts
+        if params.has_key('is_frequency_shift'):
+            self._settings.set_is_frequency_shift(params['is_frequency_shift'])
 
         # Maximum mean free path
         if params.has_key('max_freepath'):

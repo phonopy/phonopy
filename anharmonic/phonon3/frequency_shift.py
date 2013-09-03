@@ -9,10 +9,10 @@ class FrequencyShift:
                  grid_point=None,
                  fpoints=None,
                  temperature=None,
-                 sigma=0.1,
+                 epsilon=0.1,
                  lang='C'):
         self._interaction = interaction
-        self.set_sigma(sigma)
+        self.set_epsilon(epsilon)
         self.set_temperature(temperature)
         self.set_fpoints(fpoints)
         self.set_grid_point(grid_point=grid_point)
@@ -66,7 +66,7 @@ class FrequencyShift:
                                  / (2 * np.pi * THz) ** 2
                                  / len(self._frequencies))
 
-    def get_frequency_shifts(self):
+    def get_frequency_shift(self):
         if self._cutoff_frequency is None:
             return self._frequency_shifts
         else: # Averaging frequency shifts by degenerate bands
@@ -101,6 +101,14 @@ class FrequencyShift:
             self._interaction.set_grid_point(grid_point)
             self._fc3_normal_squared = None
         
+    def set_epsilon(self, epsilon):
+        if epsilon is None:
+            self._epsilon = None
+        else:
+            self._epsilon = float(epsilon)
+
+        print "epsilon:", self._epsilon
+
     def set_fpoints(self, fpoints):
         if fpoints is None:
             self._fpoints = None
@@ -113,32 +121,32 @@ class FrequencyShift:
         else:
             self._temperature = float(temperature)
         
-    def _run_c_with_band_indices(self):
-        import anharmonic._phono3py as phono3c
-        phono3c.imag_self_energy_at_bands(self._imag_self_energy,
-                                          self._fc3_normal_squared,
-                                          self._grid_point_triplets,
-                                          self._triplet_weights,
-                                          self._frequencies,
-                                          self._band_indices,
-                                          self._temperature,
-                                          self._sigma,
-                                          self._unit_conversion,
-                                          self._cutoff_frequency)
+    # def _run_c_with_band_indices(self):
+    #     import anharmonic._phono3py as phono3c
+    #     phono3c.imag_self_energy_at_bands(self._imag_self_energy,
+    #                                       self._fc3_normal_squared,
+    #                                       self._grid_point_triplets,
+    #                                       self._triplet_weights,
+    #                                       self._frequencies,
+    #                                       self._band_indices,
+    #                                       self._temperature,
+    #                                       self._sigma,
+    #                                       self._unit_conversion,
+    #                                       self._cutoff_frequency)
 
-    def _run_c_with_fpoints(self):
-        import anharmonic._phono3py as phono3c
-        for i, fpoint in enumerate(self._fpoints):
-            phono3c.imag_self_energy(self._imag_self_energy[i],
-                                     self._fc3_normal_squared,
-                                     self._grid_point_triplets,
-                                     self._triplet_weights,
-                                     self._frequencies,
-                                     fpoint,
-                                     self._temperature,
-                                     self._sigma,
-                                     self._unit_conversion,
-                                     self._cutoff_frequency)
+    # def _run_c_with_fpoints(self):
+    #     import anharmonic._phono3py as phono3c
+    #     for i, fpoint in enumerate(self._fpoints):
+    #         phono3c.imag_self_energy(self._imag_self_energy[i],
+    #                                  self._fc3_normal_squared,
+    #                                  self._grid_point_triplets,
+    #                                  self._triplet_weights,
+    #                                  self._frequencies,
+    #                                  fpoint,
+    #                                  self._temperature,
+    #                                  self._sigma,
+    #                                  self._unit_conversion,
+    #                                  self._cutoff_frequency)
 
     def _run_py_with_band_indices(self):
         for i, (triplet, w, interaction) in enumerate(
@@ -163,42 +171,41 @@ class FrequencyShift:
     def _frequency_shifts_at_bands(self, i, bi, freqs, interaction, weight):
         sum_d = 0
         for (j, k) in list(np.ndindex(interaction.shape[1:])):
-            if (freqs[1][j] > self._cutoff_frequency and
-                freqs[2][k] > self._cutoff_frequency):
+            if (freqs[1, j] > self._cutoff_frequency and
+                freqs[2, k] > self._cutoff_frequency):
                 d = 0.0
-                n2 = occupation(freqs[1][j], self._temperature)
-                n3 = occupation(freqs[2][k], self._temperature)
+                n2 = occupation(freqs[1, j], self._temperature)
+                n3 = occupation(freqs[2, k], self._temperature)
                 f1 = freqs[0, bi] + freqs[1, j] + freqs[2, k]
                 f2 = freqs[0, bi] - freqs[1, j] - freqs[2, k]
                 f3 = freqs[0, bi] - freqs[1, j] + freqs[2, k]
                 f4 = freqs[0, bi] + freqs[1, j] - freqs[2, k]
 
-                if abs(f1) > self._cutoff_frequency:
+                if abs(f1) > self._epsilon:
                     d -= (n2 + n3 + 1) / f1
-                if abs(f2) > self._cutoff_frequency:
+                if abs(f2) > self._epsilon:
                     d += (n2 + n3 + 1) / f2
-                if abs(f3) > self._cutoff_frequency:
+                if abs(f3) > self._epsilon:
                     d -= (n2 - n3) / f3
-                if abs(f4) > self._cutoff_frequency:
+                if abs(f4) > self._epsilon:
                     d += (n2 - n3) / f4
                 sum_d += d * interaction[i, j, k] * weight
         return sum_d
 
-    def _imag_self_energy_at_bands_0K(self, i, bi, freqs, interaction, weight):
+    def _frequency_shifts_at_bands_0K(self, i, bi, freqs, interaction, weight):
         sum_d = 0
         for (j, k) in list(np.ndindex(interaction.shape[1:])):
-            if (freqs[1][j] > self._cutoff_frequency and
-                freqs[2][k] > self._cutoff_frequency):
+            if (freqs[1, j] > self._cutoff_frequency and
+                freqs[2, k] > self._cutoff_frequency):
                 d = 0.0
                 f1 = freqs[0, bi] + freqs[1, j] + freqs[2, k]
                 f2 = freqs[0, bi] - freqs[1, j] - freqs[2, k]
-                if abs(f1) > self._cutoff_frequency:
+                if abs(f1) > self._epsilon:
                     d -= 1.0 / f1
-                if abs(f2) > self._cutoff_frequency:
+                if abs(f2) > self._epsilon:
                     d += 1.0 / f2
                 sum_d += d * interaction[i, j, k] * weight
         return sum_d
-
 
     def _run_py_with_fpoints(self):
         for i, (triplet, w, interaction) in enumerate(
@@ -216,25 +223,48 @@ class FrequencyShift:
 
         self._frequency_shifts *= self._unit_conversion
 
-    def _imag_self_energy_with_fpoints(self, freqs, interaction, weight):
+    def _frequency_shifts_with_fpoints(self, freqs, interaction, weight):
+        for (i, j, k) in list(np.ndindex(interaction.shape)):
+            if (freqs[0, j] > self._cutoff_frequency and
+                freqs[1, k] > self._cutoff_frequency):
+
+                d = np.zeros(len(self._fpoints), dtype='double')
+                n2 = occupation(freqs[0, j], self._temperature)
+                n3 = occupation(freqs[1, k], self._temperature)
+                f1s = self._fpoints + freqs[0, j] + freqs[1, k]
+                f2s = self._fpoints - freqs[0, j] - freqs[1, k]
+                f3s = self._fpoints - freqs[0, j] + freqs[1, k]
+                f4s = self._fpoints + freqs[0, j] - freqs[1, k]
+
+                for l, (f1, f2, f3, f4) in enumerate(
+                    zip(f1s, f2s, f3s, f4s)):
+                    if abs(f1) > self._epsilon:
+                        d[l] -= (n2 + n3 + 1) / f1
+                    if abs(f2) > self._epsilon:
+                        d[l] += (n2 + n3 + 1) / f2
+                    if abs(f3) > self._epsilon:
+                        d[l] -= (n2 - n3) / f3
+                    if abs(f4) > self._epsilon:
+                        d[l] += (n2 - n3) / f4
+
+                d *= interaction[i, j, k] * weight 
+                self._frequency_shifts[:, i] += d
+
+    def _frequency_shifts_with_fpoints_0K(self, freqs, interaction, weight):
         for (i, j, k) in list(np.ndindex(interaction.shape)):
             if (freqs[0][j] > self._cutoff_frequency and
                 freqs[1][k] > self._cutoff_frequency):
-                n2 = occupation(freqs[0][j], self._temperature)
-                n3 = occupation(freqs[1][k], self._temperature)
-                g1 = gaussian(self._fpoints - freqs[0][j] - freqs[1][k],
-                              self._sigma)
-                g2 = gaussian(self._fpoints + freqs[0][j] - freqs[1][k],
-                              self._sigma)
-                g3 = gaussian(self._fpoints - freqs[0][j] + freqs[1][k],
-                              self._sigma)
-                self._imag_self_energy[:, i] += (
-                    (n2 + n3 + 1) * g1 +
-                    (n2 - n3) * (g2 - g3)) * interaction[i, j, k] * weight
+                d = np.zeros(len(self._fpoints), dtype='double')
+                f1s = self._fpoints + freqs[0, j] + freqs[1, k]
+                f2s = self._fpoints - freqs[0, j] - freqs[1, k]
 
-    def _imag_self_energy_with_fpoints_0K(self, freqs, interaction, weight):
-        for (i, j, k) in list(np.ndindex(interaction.shape)):
-            g1 = gaussian(self._fpoints - freqs[0][j] - freqs[1][k],
-                          self._sigma)
-            self._imag_self_energy[:, i] += g1 * interaction[i, j, k] * weight
+                for l, (f1, f2) in enumerate(zip(f1s, f2s)):
+                    if abs(f1) > self._epsilon:
+                        d[l] -= 1.0 / f1
+                    if abs(f2) > self._epsilon:
+                        d[l] += 1.0 / f2
+
+                d *= interaction[i, j, k] * weight 
+                self._frequency_shifts[:, i] += d
+
         

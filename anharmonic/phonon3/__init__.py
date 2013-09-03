@@ -1,11 +1,12 @@
 import numpy as np
 from anharmonic.phonon3.imag_self_energy import ImagSelfEnergy
+from anharmonic.phonon3.frequency_shift import FrequencyShift
 from anharmonic.phonon3.interaction import Interaction
 from anharmonic.phonon3.conductivity_RTA import conductivity_RTA
 from anharmonic.phonon3.jointDOS import get_jointDOS
 from anharmonic.phonon3.gruneisen import Gruneisen
 from anharmonic.file_IO import write_kappa_to_hdf5
-from anharmonic.file_IO import read_gamma_from_hdf5, write_damping_functions, write_linewidth
+from anharmonic.file_IO import read_gamma_from_hdf5, write_damping_functions, write_linewidth, write_frequency_shift
 
 class Phono3py:
     def __init__(self,
@@ -142,6 +143,38 @@ class Phono3py:
                                     sigma=sigma,
                                     filename=filename)
 
+    def get_frequency_shift(self,
+                            grid_points,
+                            epsilon=0.1,
+                            t_max=1500,
+                            t_min=0,
+                            t_step=10,
+                            filename=None):
+        fst = FrequencyShift(self._interaction)
+        temperatures = np.arange(t_min, t_max + t_step / 2.0, t_step)
+        for gp in grid_points:
+            fst.set_grid_point(gp)
+            fst.run_interaction()
+            fst.set_epsilon(epsilon)
+            delta = np.zeros((len(temperatures),
+                              len(self._band_indices_flatten)),
+                             dtype='double')
+            for i, t in enumerate(temperatures):
+                fst.set_temperature(t)
+                fst.run()
+                delta[i] = fst.get_frequency_shift()
+
+            for i, bi in enumerate(self._band_indices):
+                pos = 0
+                for j in range(i):
+                    pos += len(self._band_indices[j])
+
+                write_frequency_shift(gp,
+                                      bi,
+                                      temperatures,
+                                      delta[:, pos:(pos+len(bi))],
+                                      self._mesh,
+                                      filename=filename)
 
     def get_thermal_conductivity(self,
                                  sigmas=[0.1],
