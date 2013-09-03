@@ -48,7 +48,7 @@ from phonopy.harmonic.force_constants import get_force_constants, \
 from phonopy.file_IO import parse_BORN
 from phonopy.units import VaspToTHz
 from anharmonic.phonon3.fc3 import get_fc3, set_permutation_symmetry_fc3, \
-    set_translational_invariance_fc3
+    set_translational_invariance_fc3, show_drift_fc3
 from anharmonic.file_IO import write_fc2_dat, write_fc3_dat,\
     parse_disp_fc3_yaml, write_FORCES_THIRD,\
     parse_DELTA_FORCES, write_supercells_with_displacements,\
@@ -60,6 +60,8 @@ from anharmonic.phonon3.displacement_fc3 import get_third_order_displacements
 from anharmonic.settings import Phono3pyConfParser
 from anharmonic.phonon3 import Phono3py, JointDOS, get_gruneisen_parameters    
 
+phono3py_version = "0.5.3"
+
 # AA is created at http://www.network-science.de/ascii/.
 def print_phono3py():
     print """        _                      _____             
@@ -69,6 +71,10 @@ def print_phono3py():
  | .__/|_| |_|\___/|_| |_|\___/____/| .__/ \__, |
  |_|                                |_|    |___/ 
 """
+
+def print_version(version):
+    print " " * 36, version
+    print ""
 
 def print_end():
     print """                 _ 
@@ -328,6 +334,7 @@ if not options.log_level==None:
 # Title
 if log_level:
     print_phono3py()
+    print_version(phono3py_version)
 
 # Create FORCES_THIRD
 if options.forces_third_mode:
@@ -501,7 +508,8 @@ else:
                                            symmetry,
                                            supercell)
 
-        write_fc2_dat(fc2_with_dim)
+        if log_level:
+            print "----- Write fc2.hdf5 -----"
         write_fc2_to_hdf5(fc2_with_dim)
 
     if settings.get_supercell_matrix_extra()==None:
@@ -525,7 +533,8 @@ else:
             fc2 = get_force_constants(forces_second_extra,
                                       symmetry_extra,
                                       supercell_extra)
-            write_fc2_dat(fc2, filename='fc2_extra.dat')
+            if log_level:
+                print "----- Write fc2_extra.hdf5 -----"
             write_fc2_to_hdf5(fc2, filename='fc2_extra.hdf5')
 
     if options.is_symmetrize_fc2:
@@ -584,34 +593,18 @@ else:
                 is_permutation_symmetry=options.is_symmetrize_fc3_r,
                 verbose=log_level)
 
-        num_atom = fc3.shape[0]
-        maxval1 = 0
-        maxval2 = 0
-        maxval3 = 0
-        for i, j, k, l, m in list(np.ndindex((num_atom, num_atom, 3, 3, 3))):
-            val1 = fc3[:, i, j, k, l, m].sum()
-            val2 = fc3[i, :, j, k, l, m].sum()
-            val3 = fc3[i, j, :, k, l, m].sum()
-            if abs(val1) > abs(maxval1):
-                maxval1 = val1
-            if abs(val2) > abs(maxval2):
-                maxval2 = val2
-            if abs(val3) > abs(maxval3):
-                maxval3 = val3
-        print "max drift:", maxval1, maxval2, maxval3 
-        
-
         # Symmetrize fc3_r
         if options.is_symmetrize_fc3_r:
             if log_level:
                 print "----- Symmetrize fc3 real space -----"
             set_permutation_symmetry_fc3(fc3)
+
+        show_drift_fc3(fc3)
             
         # Write fc3
         if not options.read_fc3:
             if log_level:
-                print "----- Write fc3.dat -----"
-            write_fc3_dat(fc3)
+                print "----- Write fc3.hdf5 -----"
             write_fc3_to_hdf5(fc3)
     
     #============================
