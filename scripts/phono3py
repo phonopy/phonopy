@@ -69,11 +69,10 @@ def print_phono3py():
  | '_ \| '_ \ / _ \| '_ \ / _ \ |_ \| '_ \| | | |
  | |_) | | | | (_) | | | | (_) |__) | |_) | |_| |
  | .__/|_| |_|\___/|_| |_|\___/____/| .__/ \__, |
- |_|                                |_|    |___/ 
-"""
+ |_|                                |_|    |___/ """
 
 def print_version(version):
-    print " " * 36, version
+    print " " * 42, version
     print ""
 
 def print_end():
