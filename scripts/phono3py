@@ -495,7 +495,6 @@ else:
             if log_level:
                 print_end()
             sys.exit(0)
-            
     else:
         if log_level:
             print "----- Solve fc2 -----"
@@ -507,9 +506,18 @@ else:
                                            symmetry,
                                            supercell)
 
+    if options.is_symmetrize_fc2:
+        set_permutation_symmetry(fc2_with_dim)
+
+    if options.is_translational_symmetry:
+        set_translational_invariance(fc2_with_dim)
+
+    if not options.read_fc2:
         if log_level:
             print "----- Write fc2.hdf5 -----"
         write_fc2_to_hdf5(fc2_with_dim)
+
+
 
     if settings.get_supercell_matrix_extra()==None:
         fc2 = fc2_with_dim
@@ -532,16 +540,17 @@ else:
             fc2 = get_force_constants(forces_second_extra,
                                       symmetry_extra,
                                       supercell_extra)
+
+        if options.is_symmetrize_fc2:
+            set_permutation_symmetry(fc2)
+
+        if options.is_translational_symmetry:
+            set_translational_invariance(fc2)
+
+        if not options.read_fc2_extra:
             if log_level:
                 print "----- Write fc2_extra.hdf5 -----"
             write_fc2_to_hdf5(fc2, filename='fc2_extra.hdf5')
-
-    if options.is_symmetrize_fc2:
-        set_permutation_symmetry(fc2)
-        # symmetrize_force_constants(fc2)
-
-    if options.is_translational_symmetry:
-        set_translational_invariance(fc2)
 
     if settings.get_is_nac():
         if os.path.exists('BORN'):
