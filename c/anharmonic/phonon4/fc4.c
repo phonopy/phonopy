@@ -28,13 +28,20 @@ static double get_drift_fc4_elem(const double *fc4,
 				 const int k,
 				 const int l,
 				 const int index);
-void set_permutation_symmetry_fc4_elem(double *fc4_elem,
-				       const double *fc4_tmp,
-				       const int a,
-				       const int b,
-				       const int c,
-				       const int d,
-				       const int num_atom);
+static void copy_permutation_symmetry_fc4_elem(double *fc4,
+					       const double fc4_elem[81],
+					       const int a,
+					       const int b,
+					       const int c,
+					       const int d,
+					       const int num_atom);
+static void set_permutation_symmetry_fc4_elem(double *fc4_elem,
+					      const double *fc4,
+					      const int a,
+					      const int b,
+					      const int c,
+					      const int d,
+					      const int num_atom);
 
 int rotate_delta_fc3s_elem(double *rotated_delta_fc3s,
 			   const double *delta_fc3s,
@@ -173,43 +180,169 @@ void set_translational_invariance_fc4_per_index(double *fc4,
 
 void set_permutation_symmetry_fc4(double *fc4, const int num_atom)
 {
-  double *fc4_tmp;
+  double fc4_elem[81];
   int i, j, k, l;
 
-  fc4_tmp = (double*)malloc(sizeof(double) *
-			    num_atom * num_atom * num_atom * num_atom * 81);
-
-#pragma omp parallel for
-  for (i = 0; i < num_atom * num_atom * num_atom * num_atom * 81; i++) {
-    fc4_tmp[i] = fc4[i];
-  }
-
-#pragma omp parallel for private(j, k, l)
+#pragma omp parallel for private(j, k, l, fc4_elem)
   for (i = 0; i < num_atom; i++) {
-    for (j = 0; j < num_atom; j++) {
-      for (k = 0; k < num_atom; k++) {
-	for (l = 0; l < num_atom; l++) {
-	  set_permutation_symmetry_fc4_elem
-	    (fc4 +
-	     i * num_atom * num_atom * num_atom * 81 +
-	     j * num_atom * num_atom * 81 +
-	     k * num_atom * 81 +
-	     l * 81, fc4_tmp, i, j, k, l, num_atom);
+    for (j = i; j < num_atom; j++) {
+      for (k = j; k < num_atom; k++) {
+	for (l = k; l < num_atom; l++) {
+	  set_permutation_symmetry_fc4_elem(fc4_elem, fc4, i, j, k, l, num_atom);
+	  copy_permutation_symmetry_fc4_elem(fc4, fc4_elem,
+					     i, j, k, l, num_atom);
 	}
       }
     }
   }
-  
-  free(fc4_tmp);
 }
 
-void set_permutation_symmetry_fc4_elem(double *fc4_elem,
-				       const double *fc4_tmp,
-				       const int a,
-				       const int b,
-				       const int c,
-				       const int d,
-				       const int num_atom)
+static void copy_permutation_symmetry_fc4_elem(double *fc4,
+					       const double fc4_elem[81],
+					       const int a,
+					       const int b,
+					       const int c,
+					       const int d,
+					       const int num_atom)
+{
+  int i, j, k, l;
+
+  for (i = 0; i < 3; i++) {
+    for (j = 0; j < 3; j++) {
+      for (k = 0; k < 3; k++) {
+	for (l = 0; l < 3; l++) {
+	  fc4[a * num_atom * num_atom * num_atom * 81 +
+	      b * num_atom * num_atom * 81 +
+	      c * num_atom * 81+
+	      d * 81 + i * 27 + j * 9 + k * 3 + l] =
+	    fc4_elem[i * 27 + j * 9 + k * 3 + l];
+	  fc4[a * num_atom * num_atom * num_atom * 81 +
+	      b * num_atom * num_atom * 81 +
+	      d * num_atom * 81+
+	      c * 81 + i * 27 + j * 9 + l * 3 + k] = 
+	  fc4[a * num_atom * num_atom * num_atom * 81 +
+	      c * num_atom * num_atom * 81 +
+	      b * num_atom * 81+
+	      d * 81 + i * 27 + k * 9 + j * 3 + l] =
+	    fc4_elem[i * 27 + j * 9 + k * 3 + l];
+	  fc4[a * num_atom * num_atom * num_atom * 81 +
+	      c * num_atom * num_atom * 81 +
+	      d * num_atom * 81+
+	      b * 81 + i * 27 + k * 9 + l * 3 + j] = 
+	    fc4_elem[i * 27 + j * 9 + k * 3 + l];
+	  fc4[a * num_atom * num_atom * num_atom * 81 +
+	      d * num_atom * num_atom * 81 +
+	      b * num_atom * 81+
+	      c * 81 + i * 27 + l * 9 + j * 3 + k] =
+	    fc4_elem[i * 27 + j * 9 + k * 3 + l];
+	  fc4[a * num_atom * num_atom * num_atom * 81 +
+	      d * num_atom * num_atom * 81 +
+	      c * num_atom * 81+
+	      b * 81 + i * 27 + l * 9 + k * 3 + j] =
+	    fc4_elem[i * 27 + j * 9 + k * 3 + l];
+	  fc4[b * num_atom * num_atom * num_atom * 81 +
+	      a * num_atom * num_atom * 81 +
+	      c * num_atom * 81+
+	      d * 81 + j * 27 + i * 9 + k * 3 + l] =
+	    fc4_elem[i * 27 + j * 9 + k * 3 + l];
+	  fc4[b * num_atom * num_atom * num_atom * 81 +
+	      a * num_atom * num_atom * 81 +
+	      d * num_atom * 81+
+	      c * 81 + j * 27 + i * 9 + l * 3 + k] =
+	    fc4_elem[i * 27 + j * 9 + k * 3 + l];
+	  fc4[b * num_atom * num_atom * num_atom * 81 +
+	      c * num_atom * num_atom * 81 +
+	      a * num_atom * 81+
+	      d * 81 + j * 27 + k * 9 + i * 3 + l] =
+	    fc4_elem[i * 27 + j * 9 + k * 3 + l];
+	  fc4[b * num_atom * num_atom * num_atom * 81 +
+	      c * num_atom * num_atom * 81 +
+	      d * num_atom * 81+
+	      a * 81 + j * 27 + k * 9 + l * 3 + i] =
+	    fc4_elem[i * 27 + j * 9 + k * 3 + l];
+	  fc4[b * num_atom * num_atom * num_atom * 81 +
+	      d * num_atom * num_atom * 81 +
+	      a * num_atom * 81+
+	      c * 81 + j * 27 + l * 9 + i * 3 + k] =
+	    fc4_elem[i * 27 + j * 9 + k * 3 + l];
+	  fc4[b * num_atom * num_atom * num_atom * 81 +
+	      d * num_atom * num_atom * 81 +
+	      c * num_atom * 81+
+	      a * 81 + j * 27 + l * 9 + k * 3 + i] =
+	    fc4_elem[i * 27 + j * 9 + k * 3 + l];
+	  fc4[c * num_atom * num_atom * num_atom * 81 +
+	      a * num_atom * num_atom * 81 +
+	      b * num_atom * 81+
+	      d * 81 + k * 27 + i * 9 + j * 3 + l] =
+	    fc4_elem[i * 27 + j * 9 + k * 3 + l];
+	  fc4[c * num_atom * num_atom * num_atom * 81 +
+	      a * num_atom * num_atom * 81 +
+	      d * num_atom * 81+
+	      b * 81 + k * 27 + i * 9 + l * 3 + j] =
+	    fc4_elem[i * 27 + j * 9 + k * 3 + l];
+	  fc4[c * num_atom * num_atom * num_atom * 81 +
+	      b * num_atom * num_atom * 81 +
+	      a * num_atom * 81+
+	      d * 81 + k * 27 + j * 9 + i * 3 + l] =
+	    fc4_elem[i * 27 + j * 9 + k * 3 + l];
+	  fc4[c * num_atom * num_atom * num_atom * 81 +
+	      b * num_atom * num_atom * 81 +
+	      d * num_atom * 81+
+	      a * 81 + k * 27 + j * 9 + l * 3 + i] =
+	    fc4_elem[i * 27 + j * 9 + k * 3 + l];
+	  fc4[c * num_atom * num_atom * num_atom * 81 +
+	      d * num_atom * num_atom * 81 +
+	      a * num_atom * 81+
+	      b * 81 + k * 27 + l * 9 + i * 3 + j] =
+	    fc4_elem[i * 27 + j * 9 + k * 3 + l];
+	  fc4[c * num_atom * num_atom * num_atom * 81 +
+	      d * num_atom * num_atom * 81 +
+	      b * num_atom * 81+
+	      a * 81 + k * 27 + l * 9 + j * 3 + i] =
+	    fc4_elem[i * 27 + j * 9 + k * 3 + l];
+	  fc4[d * num_atom * num_atom * num_atom * 81 +
+	      a * num_atom * num_atom * 81 +
+	      b * num_atom * 81+
+	      c * 81 + l * 27 + i * 9 + j * 3 + k] =
+	    fc4_elem[i * 27 + j * 9 + k * 3 + l];
+	  fc4[d * num_atom * num_atom * num_atom * 81 +
+	      a * num_atom * num_atom * 81 +
+	      c * num_atom * 81+
+	      b * 81 + l * 27 + i * 9 + k * 3 + j] =
+	    fc4_elem[i * 27 + j * 9 + k * 3 + l];
+	  fc4[d * num_atom * num_atom * num_atom * 81 +
+	      b * num_atom * num_atom * 81 +
+	      a * num_atom * 81+
+	      c * 81 + l * 27 + j * 9 + i * 3 + k] =
+	    fc4_elem[i * 27 + j * 9 + k * 3 + l];
+	  fc4[d * num_atom * num_atom * num_atom * 81 +
+	      b * num_atom * num_atom * 81 +
+	      c * num_atom * 81+
+	      a * 81 + l * 27 + j * 9 + k * 3 + i] =
+	    fc4_elem[i * 27 + j * 9 + k * 3 + l];
+	  fc4[d * num_atom * num_atom * num_atom * 81 +
+	      c * num_atom * num_atom * 81 +
+	      a * num_atom * 81+
+	      b * 81 + l * 27 + k * 9 + i * 3 + j] =
+	    fc4_elem[i * 27 + j * 9 + k * 3 + l];
+	  fc4[d * num_atom * num_atom * num_atom * 81 +
+	      c * num_atom * num_atom * 81 +
+	      b * num_atom * 81+
+	      a * 81 + l * 27 + k * 9 + j * 3 + i] =
+	   fc4_elem[i * 27 + j * 9 + k * 3 + l];
+	}
+      }
+    }
+  }
+}
+
+static void set_permutation_symmetry_fc4_elem(double *fc4_elem,
+					      const double *fc4,
+					      const int a,
+					      const int b,
+					      const int c,
+					      const int d,
+					      const int num_atom)
 {
   int i, j, k, l;
 
@@ -218,102 +351,102 @@ void set_permutation_symmetry_fc4_elem(double *fc4_elem,
       for (k = 0; k < 3; k++) {
 	for (l = 0; l < 3; l++) {
 	  fc4_elem[i * 27 + j * 9 + k * 3 + l] =
-	    (fc4_tmp[a * num_atom * num_atom * num_atom * 81 +
-		     b * num_atom * num_atom * 81 +
-		     c * num_atom * 81+
-		     d * 81 + i * 27 + j * 9 + k * 3 + l] +
-	     fc4_tmp[a * num_atom * num_atom * num_atom * 81 +
-		     b * num_atom * num_atom * 81 +
-		     d * num_atom * 81+
-		     c * 81 + i * 27 + j * 9 + l * 3 + k] +
-	     fc4_tmp[a * num_atom * num_atom * num_atom * 81 +
-		     c * num_atom * num_atom * 81 +
-		     b * num_atom * 81+
-		     d * 81 + i * 27 + k * 9 + j * 3 + l] +
-	     fc4_tmp[a * num_atom * num_atom * num_atom * 81 +
-		     c * num_atom * num_atom * 81 +
-		     d * num_atom * 81+
-		     b * 81 + i * 27 + k * 9 + l * 3 + j] +
-	     fc4_tmp[a * num_atom * num_atom * num_atom * 81 +
-		     d * num_atom * num_atom * 81 +
-		     b * num_atom * 81+
-		     c * 81 + i * 27 + l * 9 + j * 3 + k] +
-	     fc4_tmp[a * num_atom * num_atom * num_atom * 81 +
-		     d * num_atom * num_atom * 81 +
-		     c * num_atom * 81+
-		     b * 81 + i * 27 + l * 9 + k * 3 + j] +
-	     fc4_tmp[b * num_atom * num_atom * num_atom * 81 +
-		     a * num_atom * num_atom * 81 +
-		     c * num_atom * 81+
-		     d * 81 + j * 27 + i * 9 + k * 3 + l] +
-	     fc4_tmp[b * num_atom * num_atom * num_atom * 81 +
-		     a * num_atom * num_atom * 81 +
-		     d * num_atom * 81+
-		     c * 81 + j * 27 + i * 9 + l * 3 + k] +
-	     fc4_tmp[b * num_atom * num_atom * num_atom * 81 +
-		     c * num_atom * num_atom * 81 +
-		     a * num_atom * 81+
-		     d * 81 + j * 27 + k * 9 + i * 3 + l] +
-	     fc4_tmp[b * num_atom * num_atom * num_atom * 81 +
-		     c * num_atom * num_atom * 81 +
-		     d * num_atom * 81+
-		     a * 81 + j * 27 + k * 9 + l * 3 + i] +
-	     fc4_tmp[b * num_atom * num_atom * num_atom * 81 +
-		     d * num_atom * num_atom * 81 +
-		     a * num_atom * 81+
-		     c * 81 + j * 27 + l * 9 + i * 3 + k] +
-	     fc4_tmp[b * num_atom * num_atom * num_atom * 81 +
-		     d * num_atom * num_atom * 81 +
-		     c * num_atom * 81+
-		     a * 81 + j * 27 + l * 9 + k * 3 + i] +
-	     fc4_tmp[c * num_atom * num_atom * num_atom * 81 +
-		     a * num_atom * num_atom * 81 +
-		     b * num_atom * 81+
-		     d * 81 + k * 27 + i * 9 + j * 3 + l] +
-	     fc4_tmp[c * num_atom * num_atom * num_atom * 81 +
-		     a * num_atom * num_atom * 81 +
-		     d * num_atom * 81+
-		     b * 81 + k * 27 + i * 9 + l * 3 + j] +
-	     fc4_tmp[c * num_atom * num_atom * num_atom * 81 +
-		     b * num_atom * num_atom * 81 +
-		     a * num_atom * 81+
-		     d * 81 + k * 27 + j * 9 + i * 3 + l] +
-	     fc4_tmp[c * num_atom * num_atom * num_atom * 81 +
-		     b * num_atom * num_atom * 81 +
-		     d * num_atom * 81+
-		     a * 81 + k * 27 + j * 9 + l * 3 + i] +
-	     fc4_tmp[c * num_atom * num_atom * num_atom * 81 +
-		     d * num_atom * num_atom * 81 +
-		     a * num_atom * 81+
-		     b * 81 + k * 27 + l * 9 + i * 3 + j] +
-	     fc4_tmp[c * num_atom * num_atom * num_atom * 81 +
-		     d * num_atom * num_atom * 81 +
-		     b * num_atom * 81+
-		     a * 81 + k * 27 + l * 9 + j * 3 + i] +
-	     fc4_tmp[d * num_atom * num_atom * num_atom * 81 +
-		     a * num_atom * num_atom * 81 +
-		     b * num_atom * 81+
-		     c * 81 + l * 27 + i * 9 + j * 3 + k] +
-	     fc4_tmp[d * num_atom * num_atom * num_atom * 81 +
-		     a * num_atom * num_atom * 81 +
-		     c * num_atom * 81+
-		     b * 81 + l * 27 + i * 9 + k * 3 + j] +
-	     fc4_tmp[d * num_atom * num_atom * num_atom * 81 +
-		     b * num_atom * num_atom * 81 +
-		     a * num_atom * 81+
-		     c * 81 + l * 27 + j * 9 + i * 3 + k] +
-	     fc4_tmp[d * num_atom * num_atom * num_atom * 81 +
-		     b * num_atom * num_atom * 81 +
-		     c * num_atom * 81+
-		     a * 81 + l * 27 + j * 9 + k * 3 + i] +
-	     fc4_tmp[d * num_atom * num_atom * num_atom * 81 +
-		     c * num_atom * num_atom * 81 +
-		     a * num_atom * 81+
-		     b * 81 + l * 27 + k * 9 + i * 3 + j] +
-	     fc4_tmp[d * num_atom * num_atom * num_atom * 81 +
-		     c * num_atom * num_atom * 81 +
-		     b * num_atom * 81+
-		     a * 81 + l * 27 + k * 9 + j * 3 + i]) / 24;
+	    (fc4[a * num_atom * num_atom * num_atom * 81 +
+		 b * num_atom * num_atom * 81 +
+		 c * num_atom * 81+
+		 d * 81 + i * 27 + j * 9 + k * 3 + l] +
+	     fc4[a * num_atom * num_atom * num_atom * 81 +
+		 b * num_atom * num_atom * 81 +
+		 d * num_atom * 81+
+		 c * 81 + i * 27 + j * 9 + l * 3 + k] +
+	     fc4[a * num_atom * num_atom * num_atom * 81 +
+		 c * num_atom * num_atom * 81 +
+		 b * num_atom * 81+
+		 d * 81 + i * 27 + k * 9 + j * 3 + l] +
+	     fc4[a * num_atom * num_atom * num_atom * 81 +
+		 c * num_atom * num_atom * 81 +
+		 d * num_atom * 81+
+		 b * 81 + i * 27 + k * 9 + l * 3 + j] +
+	     fc4[a * num_atom * num_atom * num_atom * 81 +
+		 d * num_atom * num_atom * 81 +
+		 b * num_atom * 81+
+		 c * 81 + i * 27 + l * 9 + j * 3 + k] +
+	     fc4[a * num_atom * num_atom * num_atom * 81 +
+		 d * num_atom * num_atom * 81 +
+		 c * num_atom * 81+
+		 b * 81 + i * 27 + l * 9 + k * 3 + j] +
+	     fc4[b * num_atom * num_atom * num_atom * 81 +
+		 a * num_atom * num_atom * 81 +
+		 c * num_atom * 81+
+		 d * 81 + j * 27 + i * 9 + k * 3 + l] +
+	     fc4[b * num_atom * num_atom * num_atom * 81 +
+		 a * num_atom * num_atom * 81 +
+		 d * num_atom * 81+
+		 c * 81 + j * 27 + i * 9 + l * 3 + k] +
+	     fc4[b * num_atom * num_atom * num_atom * 81 +
+		 c * num_atom * num_atom * 81 +
+		 a * num_atom * 81+
+		 d * 81 + j * 27 + k * 9 + i * 3 + l] +
+	     fc4[b * num_atom * num_atom * num_atom * 81 +
+		 c * num_atom * num_atom * 81 +
+		 d * num_atom * 81+
+		 a * 81 + j * 27 + k * 9 + l * 3 + i] +
+	     fc4[b * num_atom * num_atom * num_atom * 81 +
+		 d * num_atom * num_atom * 81 +
+		 a * num_atom * 81+
+		 c * 81 + j * 27 + l * 9 + i * 3 + k] +
+	     fc4[b * num_atom * num_atom * num_atom * 81 +
+		 d * num_atom * num_atom * 81 +
+		 c * num_atom * 81+
+		 a * 81 + j * 27 + l * 9 + k * 3 + i] +
+	     fc4[c * num_atom * num_atom * num_atom * 81 +
+		 a * num_atom * num_atom * 81 +
+		 b * num_atom * 81+
+		 d * 81 + k * 27 + i * 9 + j * 3 + l] +
+	     fc4[c * num_atom * num_atom * num_atom * 81 +
+		 a * num_atom * num_atom * 81 +
+		 d * num_atom * 81+
+		 b * 81 + k * 27 + i * 9 + l * 3 + j] +
+	     fc4[c * num_atom * num_atom * num_atom * 81 +
+		 b * num_atom * num_atom * 81 +
+		 a * num_atom * 81+
+		 d * 81 + k * 27 + j * 9 + i * 3 + l] +
+	     fc4[c * num_atom * num_atom * num_atom * 81 +
+		 b * num_atom * num_atom * 81 +
+		 d * num_atom * 81+
+		 a * 81 + k * 27 + j * 9 + l * 3 + i] +
+	     fc4[c * num_atom * num_atom * num_atom * 81 +
+		 d * num_atom * num_atom * 81 +
+		 a * num_atom * 81+
+		 b * 81 + k * 27 + l * 9 + i * 3 + j] +
+	     fc4[c * num_atom * num_atom * num_atom * 81 +
+		 d * num_atom * num_atom * 81 +
+		 b * num_atom * 81+
+		 a * 81 + k * 27 + l * 9 + j * 3 + i] +
+	     fc4[d * num_atom * num_atom * num_atom * 81 +
+		 a * num_atom * num_atom * 81 +
+		 b * num_atom * 81+
+		 c * 81 + l * 27 + i * 9 + j * 3 + k] +
+	     fc4[d * num_atom * num_atom * num_atom * 81 +
+		 a * num_atom * num_atom * 81 +
+		 c * num_atom * 81+
+		 b * 81 + l * 27 + i * 9 + k * 3 + j] +
+	     fc4[d * num_atom * num_atom * num_atom * 81 +
+		 b * num_atom * num_atom * 81 +
+		 a * num_atom * 81+
+		 c * 81 + l * 27 + j * 9 + i * 3 + k] +
+	     fc4[d * num_atom * num_atom * num_atom * 81 +
+		 b * num_atom * num_atom * 81 +
+		 c * num_atom * 81+
+		 a * 81 + l * 27 + j * 9 + k * 3 + i] +
+	     fc4[d * num_atom * num_atom * num_atom * 81 +
+		 c * num_atom * num_atom * 81 +
+		 a * num_atom * 81+
+		 b * 81 + l * 27 + k * 9 + i * 3 + j] +
+	     fc4[d * num_atom * num_atom * num_atom * 81 +
+		 c * num_atom * num_atom * 81 +
+		 b * num_atom * 81+
+		 a * 81 + l * 27 + k * 9 + j * 3 + i]) / 24;
 	}
       }
     }
