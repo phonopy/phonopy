@@ -119,6 +119,10 @@ class Phono3py:
         temperatures = np.arange(t_min, t_max + t_step / 2.0, t_step)
         for gp in grid_points:
             ise.set_grid_point(gp)
+            if self._log_level:
+                weights = self._interaction.get_triplets_at_q()[1]
+                print "Number of ir-triplets:",
+                print "%d / %d" % (len(weights), weights.sum())
             ise.run_interaction()
             for sigma in sigmas:
                 ise.set_sigma(sigma)
@@ -154,6 +158,10 @@ class Phono3py:
         temperatures = np.arange(t_min, t_max + t_step / 2.0, t_step)
         for gp in grid_points:
             fst.set_grid_point(gp)
+            if self._log_level:
+                weights = self._interaction.get_triplets_at_q()[1]
+                print "Number of ir-triplets:",
+                print "%d / %d" % (len(weights), weights.sum())
             fst.run_interaction()
             fst.set_epsilon(epsilon)
             delta = np.zeros((len(temperatures),
