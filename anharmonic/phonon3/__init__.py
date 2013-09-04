@@ -174,6 +174,7 @@ class Phono3py:
                                       temperatures,
                                       delta[:, pos:(pos+len(bi))],
                                       self._mesh,
+                                      epsilon=epsilon,
                                       filename=filename)
 
     def get_thermal_conductivity(self,

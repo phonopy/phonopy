@@ -107,8 +107,6 @@ class FrequencyShift:
         else:
             self._epsilon = float(epsilon)
 
-        print "epsilon:", self._epsilon
-
     def set_fpoints(self, fpoints):
         if fpoints is None:
             self._fpoints = None
@@ -153,7 +151,6 @@ class FrequencyShift:
             zip(self._grid_point_triplets,
                 self._triplet_weights,
                 self._fc3_normal_squared)):
-            print "%d / %d" % (i + 1, len(self._grid_point_triplets))
 
             freqs = self._frequencies[triplet]
             for j, bi in enumerate(self._band_indices):
@@ -181,14 +178,19 @@ class FrequencyShift:
                 f3 = freqs[0, bi] - freqs[1, j] + freqs[2, k]
                 f4 = freqs[0, bi] + freqs[1, j] - freqs[2, k]
 
-                if abs(f1) > self._epsilon:
-                    d -= (n2 + n3 + 1) / f1
-                if abs(f2) > self._epsilon:
-                    d += (n2 + n3 + 1) / f2
-                if abs(f3) > self._epsilon:
-                    d -= (n2 - n3) / f3
-                if abs(f4) > self._epsilon:
-                    d += (n2 - n3) / f4
+                # if abs(f1) > self._epsilon:
+                #     d -= (n2 + n3 + 1) / f1
+                # if abs(f2) > self._epsilon:
+                #     d += (n2 + n3 + 1) / f2
+                # if abs(f3) > self._epsilon:
+                #     d -= (n2 - n3) / f3
+                # if abs(f4) > self._epsilon:
+                #     d += (n2 - n3) / f4
+                d -= (n2 + n3 + 1) * f1 / (f1 ** 2 + self._epsilon ** 2)
+                d += (n2 + n3 + 1) * f2 / (f2 ** 2 + self._epsilon ** 2)
+                d -= (n2 - n3) * f3 / (f3 ** 2 + self._epsilon ** 2)
+                d += (n2 - n3) * f4 / (f4 ** 2 + self._epsilon ** 2)
+
                 sum_d += d * interaction[i, j, k] * weight
         return sum_d
 
@@ -200,10 +202,14 @@ class FrequencyShift:
                 d = 0.0
                 f1 = freqs[0, bi] + freqs[1, j] + freqs[2, k]
                 f2 = freqs[0, bi] - freqs[1, j] - freqs[2, k]
-                if abs(f1) > self._epsilon:
-                    d -= 1.0 / f1
-                if abs(f2) > self._epsilon:
-                    d += 1.0 / f2
+
+                # if abs(f1) > self._epsilon:
+                #     d -= 1.0 / f1
+                # if abs(f2) > self._epsilon:
+                #     d += 1.0 / f2
+                d -= 1.0 * f1 / (f1 ** 2 + self._epsilon ** 2)
+                d += 1.0 * f2 / (f2 ** 2 + self._epsilon ** 2)
+
                 sum_d += d * interaction[i, j, k] * weight
         return sum_d
 
@@ -212,7 +218,6 @@ class FrequencyShift:
             zip(self._grid_point_triplets,
                 self._triplet_weights,
                 self._fc3_normal_squared)):
-            print "%d / %d" % (i + 1, len(self._grid_point_triplets))
 
             # freqs[2, num_band]
             freqs = self._frequencies[triplet[1:]]
@@ -266,5 +271,3 @@ class FrequencyShift:
 
                 d *= interaction[i, j, k] * weight 
                 self._frequency_shifts[:, i] += d
-
-        
