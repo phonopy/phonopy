@@ -269,26 +269,6 @@ def get_stabilized_reciprocal_mesh(mesh,
     
     return mapping, mesh_points
 
-def get_triplets_reciprocal_mesh(mesh,
-                                 pointgroup,
-                                 is_time_reversal=True):
-    """
-    Return symmetry reduced triplets (set of addresses) and
-    k-point grid points corresponding to addresses.
-    The k-point grid is accessed by mesh_points[address].
-
-    The symmetry is searched from the input rotation matrices in real space.
-    is_shift=[0, 0, 0] gives Gamma center mesh and the values 1 give
-    half mesh distance shifts.
-    """
-    
-    triplets, weights, mesh_points = spg.triplets_reciprocal_mesh(
-        np.intc(mesh).copy(),
-        is_time_reversal * 1,
-        np.intc(pointgroup).copy())
-
-    return np.intc(triplets), np.intc(weights), np.intc(mesh_points)
-
 def get_triplets_reciprocal_mesh_at_q(fixed_grid_number,
                                       mesh,
                                       rotations,
@@ -308,25 +288,16 @@ def get_triplets_reciprocal_mesh_at_q(fixed_grid_number,
 
     return weights, third_q, mesh_points
         
-
-def extract_triplets_reciprocal_mesh_at_q(fixed_grid_number,
-                                          triplets,
-                                          mesh,
-                                          pointgroup,
-                                          is_time_reversal=True):
-
-    triplets_with_q = np.zeros((len(triplets), 3), dtype='intc')
-    weights_with_q = np.zeros(len(triplets), dtype='intc')
-
-    num_triplets_with_q = spg.triplets_reciprocal_mesh_at_q_from_triplets(
-        triplets_with_q,
-        weights_with_q,
-        fixed_grid_number,
-        triplets,
-        np.intc(mesh).copy(),
-        is_time_reversal * 1,
-        np.intc(pointgroup).copy())
-    
-    return (triplets_with_q[:num_triplets_with_q].copy(),
-            weights_with_q[:num_triplets_with_q].copy())
-
+def get_grid_triplets_at_q(q_grid_point,
+                           grid_points,
+                           third_q,
+                           mesh):
+    num_ir_tripltes = (third_q != -1).sum()
+    triplets = np.zeros((num_ir_tripltes, 3), dtype='intc')
+    spg.grid_triplets_at_q(triplets,
+                           q_grid_point,
+                           grid_points,
+                           third_q,
+                           np.intc(mesh).copy())
+    return triplets
+                           

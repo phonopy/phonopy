@@ -102,12 +102,6 @@ static int get_stabilized_reciprocal_mesh(int grid_point[][3],
 					  SPGCONST int rotations[][3][3],
 					  const int num_q,
 					  SPGCONST double qpoints[][3]);
-
-static SpglibTriplets * get_triplets_reciprocal_mesh(const int mesh[3],
-						     const int is_time_reversal,
-						     const int num_rot,
-						     SPGCONST int rotations[][3][3]);
-
 static int get_triplets_reciprocal_mesh_at_q(int weights[],
 					     int grid_points[][3],
 					     int third_q[],
@@ -116,16 +110,6 @@ static int get_triplets_reciprocal_mesh_at_q(int weights[],
 					     const int is_time_reversal,
 					     const int num_rot,
 					     SPGCONST int rotations[][3][3]);
-
-static int extract_triplets_reciprocal_mesh_at_q(int triplets_at_q[][3],
-						 int weight_triplets_at_q[],
-						 const int fixed_grid_number,
-						 const int num_triplets,
-						 SPGCONST int triplets[][3],
-						 const int mesh[3],
-						 const int is_time_reversal,
-						 const int num_rot,
-						 SPGCONST int rotations[][3][3]);
 
 
 SpglibDataset * spg_get_dataset(SPGCONST double lattice[3][3],
@@ -531,29 +515,6 @@ int spg_get_stabilized_reciprocal_mesh(int grid_point[][3],
 					qpoints);
 }
 
-SpglibTriplets * spg_get_triplets_reciprocal_mesh(const int mesh[3],
-						  const int is_time_reversal,
-						  const int num_rot,
-						  SPGCONST int rotations[][3][3])
-{
-  return get_triplets_reciprocal_mesh(mesh,
-				      is_time_reversal,
-				      num_rot,
-				      rotations);
-}
-
-void spg_free_triplets(SpglibTriplets * spg_triplets)
-{
-  free(spg_triplets->triplets);
-  spg_triplets->triplets = NULL;
-  free(spg_triplets->weights);
-  spg_triplets->weights = NULL;
-  free(spg_triplets);
-  free(spg_triplets->mesh_points);
-  spg_triplets->mesh_points = NULL;
-  spg_triplets = NULL;
-}
-
 int spg_get_triplets_reciprocal_mesh_at_q(int weights[],
 					  int grid_points[][3],
 					  int third_q[],
@@ -573,27 +534,19 @@ int spg_get_triplets_reciprocal_mesh_at_q(int weights[],
 					   rotations);
 }
 
-int spg_extract_triplets_reciprocal_mesh_at_q(int triplets_at_q[][3],
-					      int weight_triplets_at_q[],
-					      const int fixed_grid_number,
-					      const int num_triplets,
-					      SPGCONST int triplets[][3],
-					      const int mesh[3],
-					      const int is_time_reversal,
-					      const int num_rot,
-					      SPGCONST int rotations[][3][3])
-{
-  return extract_triplets_reciprocal_mesh_at_q(triplets_at_q,
-					       weight_triplets_at_q,
-					       fixed_grid_number,
-					       num_triplets,
-					       triplets,
-					       mesh,
-					       is_time_reversal,
-					       num_rot,
-					       rotations);
-}
+void spg_set_grid_triplets_at_q(int triplets[][3],
+				const int q_grid_point,
+				SPGCONST int grid_points[][3],
+				const int third_q[],
+				const int mesh[3])
 
+{
+  set_grid_triplets_at_q(triplets,
+			 q_grid_point,
+			 grid_points,
+			 third_q,
+			 mesh);
+}
 
 static SpglibDataset * get_dataset(SPGCONST double lattice[3][3],
 				   SPGCONST double position[][3],
@@ -1025,53 +978,6 @@ static int get_stabilized_reciprocal_mesh(int grid_point[][3],
   return num_ir;
 }
 
-static SpglibTriplets * get_triplets_reciprocal_mesh(const int mesh[3],
-						     const int is_time_reversal,
-						     const int num_rot,
-						     SPGCONST int rotations[][3][3])
-{
-  int i, j, num_grid;
-  MatINT *rot_real;
-  Triplets *tps;
-  SpglibTriplets *spg_triplets;
-  
-  num_grid = mesh[0] * mesh[1] * mesh[2];
-  rot_real = mat_alloc_MatINT(num_rot);
-  for (i = 0; i < num_rot; i++) {
-    mat_copy_matrix_i3(rot_real->mat[i], rotations[i]);
-  }
-
-  tps = kpt_get_triplets_reciprocal_mesh(mesh,
-					 is_time_reversal,
-					 rot_real);
-  mat_free_MatINT(rot_real);
-
-  spg_triplets = (SpglibTriplets*) malloc(sizeof(SpglibTriplets));
-  spg_triplets->size = tps->size;
-  spg_triplets->triplets = (int (*)[3]) malloc(sizeof(int[3]) * tps->size);
-  spg_triplets->weights = (int*) malloc(sizeof(int) * tps->size);
-  spg_triplets->mesh_points = (int (*)[3]) malloc(sizeof(int[3]) * num_grid);
-
-  for (i = 0; i < 3; i++) {
-    spg_triplets->mesh[i] = tps->mesh[i];
-  }
-  for (i = 0; i < num_grid; i++) {
-    for (j = 0; j < 3; j++) {
-      spg_triplets->mesh_points[i][j] = tps->mesh_points[i][j];
-    }
-  }
-
-  for (i = 0; i < tps->size; i++) {
-    for (j = 0; j < 3; j++) {
-      spg_triplets->triplets[i][j] = tps->triplets[i][j];
-    }
-    spg_triplets->weights[i] = tps->weights[i];
-  }
-  kpt_free_triplets(tps);
-
-  return spg_triplets;
-}
-
 static int get_triplets_reciprocal_mesh_at_q(int weights[],
 					     int grid_points[][3],
 					     int third_q[],
@@ -1102,35 +1008,3 @@ static int get_triplets_reciprocal_mesh_at_q(int weights[],
   return num_ir;
 }
 
-static int extract_triplets_reciprocal_mesh_at_q(int triplets_at_q[][3],
-						 int weight_triplets_at_q[],
-						 const int fixed_grid_number,
-						 const int num_triplets,
-						 SPGCONST int triplets[][3],
-						 const int mesh[3],
-						 const int is_time_reversal,
-						 const int num_rot,
-						 SPGCONST int rotations[][3][3])
-{
-  MatINT *rot_real;
-  int i, num_ir;
-  
-  rot_real = mat_alloc_MatINT(num_rot);
-  for (i = 0; i < num_rot; i++) {
-    mat_copy_matrix_i3(rot_real->mat[i], rotations[i]);
-  }
-
-  num_ir = kpt_extract_triplets_reciprocal_mesh_at_q(triplets_at_q,
-						     weight_triplets_at_q,
-						     fixed_grid_number,
-						     num_triplets,
-						     triplets,
-						     mesh,
-						     is_time_reversal,
-						     rot_real);
-
-  
-  mat_free_MatINT(rot_real);
-
-  return num_ir;
-}

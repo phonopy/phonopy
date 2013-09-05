@@ -13,9 +13,8 @@ static PyObject * find_primitive(PyObject *self, PyObject *args);
 static PyObject * get_ir_kpoints(PyObject *self, PyObject *args);
 static PyObject * get_ir_reciprocal_mesh(PyObject *self, PyObject *args);
 static PyObject * get_stabilized_reciprocal_mesh(PyObject *self, PyObject *args);
-static PyObject * get_triplets_reciprocal_mesh(PyObject *self, PyObject *args);
 static PyObject * get_triplets_reciprocal_mesh_at_q(PyObject *self, PyObject *args);
-static PyObject * extract_triplets_reciprocal_mesh_at_q(PyObject *self, PyObject *args);
+static PyObject * get_grid_triplets_at_q(PyObject *self, PyObject *args);
 
 static PyMethodDef functions[] = {
   {"dataset", get_dataset, METH_VARARGS,
@@ -38,13 +37,10 @@ static PyMethodDef functions[] = {
    "Reciprocal mesh points with map"},
   {"stabilized_reciprocal_mesh", get_stabilized_reciprocal_mesh, METH_VARARGS,
    "Reciprocal mesh points with map"},
-  {"triplets_reciprocal_mesh", get_triplets_reciprocal_mesh, METH_VARARGS,
-   "Triplets on reciprocal mesh points"},
   {"triplets_reciprocal_mesh_at_q", get_triplets_reciprocal_mesh_at_q,
    METH_VARARGS, "Triplets on reciprocal mesh points at a specific q-point"},
-  {"triplets_reciprocal_mesh_at_q_from_triplets",
-   extract_triplets_reciprocal_mesh_at_q, METH_VARARGS,
-   "Triplets on reciprocal mesh points at a specific q-point extracted from full triplets"},
+  {"grid_triplets_at_q", get_grid_triplets_at_q,
+   METH_VARARGS, "Grid point triplets on reciprocal mesh points at a specific q-point are set from output variables of triplets_reciprocal_mesh_at_q"},
   {NULL, NULL, 0, NULL}
 };
 
@@ -559,73 +555,6 @@ static PyObject * get_stabilized_reciprocal_mesh(PyObject *self, PyObject *args)
   return PyInt_FromLong((long) num_ir);
 }
 
-static PyObject * get_triplets_reciprocal_mesh(PyObject *self, PyObject *args)
-{
-  PyArrayObject* mesh;
-  int is_time_reversal;
-  PyArrayObject* rotations;
-  if (!PyArg_ParseTuple(args, "OiO",
-			&mesh,
-			&is_time_reversal,
-			&rotations)) {
-    return NULL;
-  }
-
-  int i, j, k, num_grid;
-  PyObject * triplets, * weights, *tp, *ret_array, *mesh_points;
-
-  const int* mesh_int = (int*)mesh->data;
-  const int* rot_int = (int*)rotations->data;
-  const int num_rot = rotations->dimensions[0];
-  int rot[num_rot][3][3];
-  for (i = 0; i < num_rot; i++) {
-    for (j = 0; j < 3; j++) {
-      for (k = 0; k < 3; k++) {
-	rot[i][j][k] = rot_int[i*9 + j*3 + k];
-      }
-    }
-  }
-
-  SpglibTriplets * spg_triplets =
-    spg_get_triplets_reciprocal_mesh(mesh_int,
-				     is_time_reversal,
-				     num_rot,
-				     rot);
-
-  num_grid = mesh_int[0] * mesh_int[1] * mesh_int[2];
-  ret_array = PyList_New(3);
-  triplets = PyList_New(spg_triplets->size);
-  weights = PyList_New(spg_triplets->size);
-  mesh_points = PyList_New(num_grid);
-  
-  for (i = 0; i < spg_triplets->size; i++) {
-    tp = PyList_New(3);
-    for (j = 0; j < 3; j++) {
-      PyList_SetItem(tp, j,
-		     PyInt_FromLong((long) spg_triplets->triplets[i][j]));
-    }
-    PyList_SetItem(triplets, i, tp);
-    PyList_SetItem(weights, i, PyInt_FromLong((long) spg_triplets->weights[i]));
-  }
-
-  for (i = 0; i < num_grid; i++) {
-    tp = PyList_New(3);
-    for (j = 0; j < 3; j++) {
-      PyList_SetItem(tp, j,
-		     PyInt_FromLong((long) spg_triplets->mesh_points[i][j]));
-    }
-    PyList_SetItem(mesh_points, i, tp);
-  }
-
-  PyList_SetItem(ret_array, 0, triplets);
-  PyList_SetItem(ret_array, 1, weights);
-  PyList_SetItem(ret_array, 2, mesh_points);
-
-  spg_free_triplets(spg_triplets);
-
-  return ret_array;
-}
-
 static PyObject * get_triplets_reciprocal_mesh_at_q(PyObject *self, PyObject *args)
 {
   PyArrayObject* weights;
@@ -685,71 +614,52 @@ static PyObject * get_triplets_reciprocal_mesh_at_q(PyObject *self, PyObject *ar
   return PyInt_FromLong((long) num_ir);
 }
 
-static PyObject * extract_triplets_reciprocal_mesh_at_q(PyObject *self, PyObject *args)
+
+static PyObject * get_grid_triplets_at_q(PyObject *self, PyObject *args)
 {
-  int i, j, k;
-  PyArrayObject* triplets_at_q;
-  PyArrayObject* weight_triplets_at_q;
-  int fixed_grid_number;
-  PyArrayObject* triplets;
-  PyArrayObject* mesh;
-  int is_time_reversal;
-  PyArrayObject* rotations;
-  if (!PyArg_ParseTuple(args, "OOiOOiO",
-			&triplets_at_q,
-			&weight_triplets_at_q,
-			&fixed_grid_number,
-			&triplets,
-			&mesh,
-			&is_time_reversal,
-			&rotations)) {
+  PyArrayObject* triplets_py;
+  PyArrayObject* grid_points_py;
+  PyArrayObject* third_q_py;
+  PyArrayObject* mesh_py;
+  int q_grid_point;
+  if (!PyArg_ParseTuple(args, "OiOOO",
+			&triplets_py,
+			&q_grid_point,
+			&grid_points_py,
+			&third_q_py,
+			&mesh_py)) {
     return NULL;
   }
 
-  const int *triplets_pint = (int*)triplets->data;
-  const int num_triplets = triplets->dimensions[0];
-  int triplets_int[num_triplets][3];
-
-  for (i = 0; i < num_triplets; i++) {
+  int i, j;
+  
+  int *p_triplets = (int*)triplets_py->data;
+  const int num_ir_triplets = (int)triplets_py->dimensions[0];
+  const int *p_grid_points = (int*)grid_points_py->data;
+  const int num_grid_points = (int)grid_points_py->dimensions[0];
+  const int *third_q = (int*)third_q_py->data;
+  const int *mesh = (int*)mesh_py->data;
+  int triplets[num_ir_triplets][3];
+  int grid_points[num_grid_points][3];
+  for (i = 0; i < num_grid_points; i++) {
     for (j = 0; j < 3; j++) {
-      triplets_int[i][j] = triplets_pint[i*3 + j];
-    }
-  }
-
-  int *triplets_at_q_pint = (int*)triplets_at_q->data;
-  int triplets_at_q_int[num_triplets][3];
-  int *weight_triplets_at_q_int = (int*)weight_triplets_at_q->data;
-
-  const int* mesh_int = (int*)mesh->data;
-  const int* rot_int = (int*)rotations->data;
-  const int num_rot = rotations->dimensions[0];
-  int rot[num_rot][3][3];
-  for (i = 0; i < num_rot; i++) {
-    for (j = 0; j < 3; j++) {
-      for (k = 0; k < 3; k++) {
-	rot[i][j][k] = rot_int[i*9 + j*3 + k];
-      }
-    }
-  }
-
-  const int num_triplets_at_q =
-    spg_extract_triplets_reciprocal_mesh_at_q(triplets_at_q_int,
-					      weight_triplets_at_q_int,
-					      fixed_grid_number,
-					      num_triplets,
-					      triplets_int,
-					      mesh_int,
-					      is_time_reversal,
-					      num_rot,
-					      rot);
-
-  for (i = 0; i < num_triplets_at_q; i++) {
-    for (j = 0; j < 3; j++) {
-      triplets_at_q_pint[i*3 + j] = triplets_at_q_int[i][j];
+      grid_points[i][j] = p_grid_points[i * 3 + j];
     }
   }
   
-  return PyInt_FromLong((long) num_triplets_at_q);
+  spg_set_grid_triplets_at_q(triplets,
+			     q_grid_point,
+			     grid_points,
+			     third_q,
+			     mesh);
+  
+  for (i = 0; i < num_ir_triplets; i++) {
+    for (j = 0; j < 3; j++) {
+      p_triplets[i * 3 + j] = triplets[i][j];
+    }
+  }
+
+  Py_RETURN_NONE;
 }
 
 

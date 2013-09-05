@@ -101,12 +101,16 @@ class conductivity_RTA:
                 coarse_mesh_shifts=self._coarse_mesh_shifts)
             self._grid_weights = np.ones(len(self._grid_points), dtype='intc')
         else: # Automatic sampling
+            if self._coarse_mesh_shifts is None:
+                mesh_shifts = [False, False, False]
+            else:
+                mesh_shifts = self._coarse_mesh_shifts
             (coarse_grid_points,
              coarse_grid_weights,
              coarse_grid_address) = get_ir_grid_points(
                 self._coarse_mesh,
                 self._primitive,
-                mesh_shifts=self._coarse_mesh_shifts)
+                mesh_shifts=mesh_shifts)
             self._grid_points = from_coarse_to_dense_grid_points(
                 self._mesh,
                 self._mesh_divisors,

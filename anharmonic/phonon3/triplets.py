@@ -10,19 +10,26 @@ def get_triplets_at_q(grid_point,
         mesh,
         point_group,
         is_time_reversal)
-    weights_at_q = []
-    triplets_at_q = []
-    for i, (w, q) in enumerate(zip(weights, third_q)):
-        if w > 0:
-            weights_at_q.append(w)
-            triplets_at_q.append([grid_point, i, q])
+    # weights_at_q = []
+    # triplets_at_q = []
+    # for i, (w, q) in enumerate(zip(weights, third_q)):
+    #     if w > 0:
+    #         weights_at_q.append(w)
+    #         triplets_at_q.append([grid_point, i, q])
 
-    weights_at_q = np.intc(weights_at_q)
-    triplets_at_q = np.intc(triplets_at_q)
+    # weights_at_q = np.intc(weights_at_q)
+    # triplets_at_q = np.intc(triplets_at_q)
             
-    assert np.prod(mesh) == weights_at_q.sum(), \
-        "Num grid points %d, sum of weight %d" % (
-                    np.prod(mesh), weights_at_q.sum())
+    # assert np.prod(mesh) == weights_at_q.sum(), \
+    #     "Num grid points %d, sum of weight %d" % (
+    #                 np.prod(mesh), weights_at_q.sum())
+
+    triplets_at_q = spg.get_grid_triplets_at_q(
+        grid_point,
+        grid_address,
+        third_q,
+        mesh)
+    weights_at_q = np.extract(weights > 0, weights)
 
     return triplets_at_q, weights_at_q, grid_address
 

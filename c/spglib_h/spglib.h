@@ -72,14 +72,6 @@ typedef struct {
   int *equivalent_atoms;
 } SpglibDataset;
 
-typedef struct {
-  int size;
-  int (*triplets)[3];
-  int *weights;
-  int mesh[3];
-  int (*mesh_points)[3];
-} SpglibTriplets;
-
 SpglibDataset * spg_get_dataset(SPGCONST double lattice[3][3],
 				SPGCONST double position[][3],
 				const int types[],
@@ -311,13 +303,6 @@ int spg_get_stabilized_reciprocal_mesh(int grid_point[][3],
 /* Irreducible triplets of k-points are searched under conservation of */
 /* :math:``\mathbf{k}_1 + \mathbf{k}_2 + \mathbf{k}_3 = \mathbf{G}``. */
 /* Don't forget to free memory space of triplets using spg_free_triplets */
-SpglibTriplets * spg_get_triplets_reciprocal_mesh(const int mesh[3],
-						  const int is_time_reversal,
-						  const int num_rot,
-						  SPGCONST int rotations[][3][3]);
-
-void spg_free_triplets(SpglibTriplets * triplets);
-
 int spg_get_triplets_reciprocal_mesh_at_q(int weights[],
 					  int grid_points[][3],
 					  int third_q[],
@@ -326,15 +311,12 @@ int spg_get_triplets_reciprocal_mesh_at_q(int weights[],
 					  const int is_time_reversal,
 					  const int num_rot,
 					  SPGCONST int rotations[][3][3]);
-
-int spg_extract_triplets_reciprocal_mesh_at_q(int triplets_at_q[][3],
-					      int weight_triplets_at_q[],
-					      const int fixed_grid_number,
-					      const int num_triplets,
-					      SPGCONST int triplets[][3],
-					      const int mesh[3],
-					      const int is_time_reversal,
-					      const int num_rot,
-					      SPGCONST int rotations[][3][3]);
-
+/* Irreducible grid-point-triplets are stored. */
+/* When a mesh number is even number, grid address is calculated with */
+/* mesh-number + 1 mesh (i.e. odd mesh number). */
+void spg_set_grid_triplets_at_q(int triplets[][3],
+				const int q_grid_point,
+				SPGCONST int grid_points[][3],
+				const int third_q[],
+				const int mesh[3]);
 #endif

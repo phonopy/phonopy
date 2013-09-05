@@ -7,14 +7,6 @@
 #include "symmetry.h"
 #include "mathfunc.h"
 
-typedef struct {
-  int size;
-  int (*triplets)[3];
-  int *weights;
-  int mesh[3];
-  int (*mesh_points)[3];
-} Triplets;
-
 int kpt_get_irreducible_kpoints(int map[],
 				SPGCONST double kpoints[][3], 
 				const int num_kpoint,
@@ -35,10 +27,6 @@ int kpt_get_stabilized_reciprocal_mesh(int grid_points[][3],
 				       const MatINT * pointgroup_real,
 				       const int num_q,
 				       SPGCONST double qpoints[][3]);
-Triplets * kpt_get_triplets_reciprocal_mesh(const int mesh[3],
-					    const int is_time_reversal,
-					    const MatINT * pointgroup_real);
-void kpt_free_triplets(Triplets * t);
 int kpt_get_ir_triplets_at_q(int weights[],
 			     int grid_points[][3],
 			     int third_q[],
@@ -46,12 +34,9 @@ int kpt_get_ir_triplets_at_q(int weights[],
 			     const int mesh[3],
 			     const int is_time_reversal,
 			     const MatINT * rotations);
-int kpt_extract_triplets_reciprocal_mesh_at_q(int triplets_at_q[][3],
-					      int weight_at_q[],
-					      const int fixed_grid_number,
-					      const int num_triplets,
-					      SPGCONST int triplets[][3],
-					      const int mesh[3],
-					      const int is_time_reversal,
-					      const MatINT * pointgroup_real);
+void set_grid_triplets_at_q(int triplets[][3],
+			    const int q_grid_point,
+			    SPGCONST int grid_points[][3],
+			    const int third_q[],
+			    const int mesh[3]);
 #endif
