@@ -30,6 +30,8 @@ def get_triplets_at_q(grid_point,
         third_q,
         mesh)
     weights_at_q = np.extract(weights > 0, weights)
+    print np.extract(third_q >= 0, third_q), len(np.extract(third_q >= 0, third_q))
+    print weights_at_q, len(weights_at_q), weights_at_q.sum()
 
     return triplets_at_q, weights_at_q, grid_address
 
