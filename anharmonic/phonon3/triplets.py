@@ -10,6 +10,7 @@ def get_triplets_at_q(grid_point,
         mesh,
         point_group,
         is_time_reversal)
+
     # weights_at_q = []
     # triplets_at_q = []
     # for i, (w, q) in enumerate(zip(weights, third_q)):
@@ -19,31 +20,44 @@ def get_triplets_at_q(grid_point,
 
     # weights_at_q = np.intc(weights_at_q)
     # triplets_at_q = np.intc(triplets_at_q)
-            
-    # assert np.prod(mesh) == weights_at_q.sum(), \
-    #     "Num grid points %d, sum of weight %d" % (
-    #                 np.prod(mesh), weights_at_q.sum())
 
     triplets_at_q = spg.get_grid_triplets_at_q(
         grid_point,
         grid_address,
         third_q,
+        weights,
         mesh)
     weights_at_q = np.extract(weights > 0, weights)
-    print np.extract(third_q >= 0, third_q), len(np.extract(third_q >= 0, third_q))
-    print weights_at_q, len(weights_at_q), weights_at_q.sum()
+    grid_address = get_grid_address([x + (x % 2 == 0) for x in mesh])
+
+    assert np.prod(mesh) == weights_at_q.sum(), \
+        "Num grid points %d, sum of weight %d" % (
+                    np.prod(mesh), weights_at_q.sum())
 
     return triplets_at_q, weights_at_q, grid_address
 
 def get_nosym_triplets_at_q(grid_point, mesh):
     grid_address = get_grid_address(mesh)
 
-    triplets = np.zeros((len(grid_address), 3), dtype='intc')
     weights = np.ones(len(grid_address), dtype='intc')
+    third_q = np.zeros_like(weights)
+
+    # triplets = np.zeros((len(grid_address), 3), dtype='intc')
+    # for i, g1 in enumerate(grid_address):
+    #     g2 = - (grid_address[grid_point] + g1)
+    #     q = get_grid_point_from_address(g2, mesh)
+    #     triplets[i] = [grid_point, i, q]
+
     for i, g1 in enumerate(grid_address):
         g2 = - (grid_address[grid_point] + g1)
-        q = get_grid_point_from_address(g2, mesh)
-        triplets[i] = [grid_point, i, q]
+        third_q[i] = get_grid_point_from_address(g2, mesh)
+    triplets = spg.get_grid_triplets_at_q(
+        grid_point,
+        grid_address,
+        third_q,
+        weights,
+        mesh)
+    grid_address = get_grid_address([x + (x % 2 == 0) for x in mesh])
 
     return triplets, weights, grid_address
 

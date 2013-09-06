@@ -121,6 +121,7 @@ class Phono3py:
             ise.set_grid_point(gp)
             if self._log_level:
                 weights = self._interaction.get_triplets_at_q()[1]
+                print "------ Linewidth ------"
                 print "Number of ir-triplets:",
                 print "%d / %d" % (len(weights), weights.sum())
             ise.run_interaction()
@@ -160,6 +161,7 @@ class Phono3py:
             fst.set_grid_point(gp)
             if self._log_level:
                 weights = self._interaction.get_triplets_at_q()[1]
+                print "------ Frequency shift -o- ------"
                 print "Number of ir-triplets:",
                 print "%d / %d" % (len(weights), weights.sum())
             fst.run_interaction()

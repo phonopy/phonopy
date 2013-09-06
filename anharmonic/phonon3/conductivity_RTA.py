@@ -250,7 +250,7 @@ class conductivity_RTA:
         for j, sigma in enumerate(self._sigmas):
             for k in range(len(self._temperatures)):
                 for l in range(len(freqs)):
-                    if self._gamma[j, i, k, l] > 0:
+                    if self._gamma[j, i, k, l] > 1e-12:
                         self._kappa[j, i, k, l, :] = (
                             gv_sum2[:, l] * cv[k, l] /
                             (self._gamma[j, i, k, l] * 2) *

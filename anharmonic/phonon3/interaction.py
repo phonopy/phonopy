@@ -50,7 +50,7 @@ def set_phonon_py(grid_point,
         eigvals, eigvecs = np.linalg.eigh(dm, UPLO=lapack_zheev_uplo)
         eigvals = eigvals.real
         frequencies[gp] = (np.sqrt(np.abs(eigvals)) * np.sign(eigvals)
-                                 * frequency_factor_to_THz)
+                           * frequency_factor_to_THz)
         eigenvectors[gp] = eigvecs
 
 class Interaction:
@@ -104,13 +104,13 @@ class Interaction:
     def run(self, lang='C'):
         num_band = self._primitive.get_number_of_atoms() * 3
 
-        num_grid = np.prod(self._mesh)
+        mesh_with_boundary = [x + (x % 2 == 0) for x in self._mesh]
+        num_grid = np.prod(mesh_with_boundary)
         num_triplets = len(self._triplets_at_q)
         self._phonon_done = np.zeros(num_grid, dtype='byte')
         self._frequencies = np.zeros((num_grid, num_band), dtype='double')
         self._eigenvectors = np.zeros((num_grid, num_band, num_band),
                                       dtype='complex128')
-
         self._interaction_strength = np.zeros(
             (num_triplets, len(self._band_indices), num_band, num_band),
             dtype='double')

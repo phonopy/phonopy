@@ -57,10 +57,11 @@ class ImagSelfEnergy:
         self._fc3_normal_squared = self._interaction.get_interaction_strength()
         (self._frequencies,
          self._eigenvectors) = self._interaction.get_phonons()[:2]
-        (self._grid_point_triplets,
-         self._triplet_weights) = self._interaction.get_triplets_at_q()
         self._band_indices = self._interaction.get_band_indices()
         
+        mesh = self._interaction.get_mesh_numbers()
+        num_grid = np.prod(mesh)
+
         # Unit to THz of Gamma
         self._unit_conversion = ((Hbar * EV) ** 3 / 36 / 8
                                  * EV ** 2 / Angstrom ** 6
@@ -68,7 +69,7 @@ class ImagSelfEnergy:
                                  / AMU ** 3
                                  * 18 * np.pi / (Hbar * EV) ** 2
                                  / (2 * np.pi * THz) ** 2
-                                 / len(self._frequencies))
+                                 / num_grid)
 
     def get_imag_self_energy(self):
         if self._cutoff_frequency is None:
@@ -101,9 +102,11 @@ class ImagSelfEnergy:
         if grid_point is None:
             self._grid_point = None
         else:
-            self._grid_point = grid_point
             self._interaction.set_grid_point(grid_point)
             self._fc3_normal_squared = None
+            (self._grid_point_triplets,
+             self._triplet_weights) = self._interaction.get_triplets_at_q()
+            self._grid_point = self._grid_point_triplets[0, 0]
         
     def set_sigma(self, sigma):
         if sigma is None:

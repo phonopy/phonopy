@@ -620,13 +620,15 @@ static PyObject * get_grid_triplets_at_q(PyObject *self, PyObject *args)
   PyArrayObject* triplets_py;
   PyArrayObject* grid_points_py;
   PyArrayObject* third_q_py;
+  PyArrayObject* weights_py;
   PyArrayObject* mesh_py;
   int q_grid_point;
-  if (!PyArg_ParseTuple(args, "OiOOO",
+  if (!PyArg_ParseTuple(args, "OiOOOO",
 			&triplets_py,
 			&q_grid_point,
 			&grid_points_py,
 			&third_q_py,
+			&weights_py,
 			&mesh_py)) {
     return NULL;
   }
@@ -638,6 +640,7 @@ static PyObject * get_grid_triplets_at_q(PyObject *self, PyObject *args)
   const int *p_grid_points = (int*)grid_points_py->data;
   const int num_grid_points = (int)grid_points_py->dimensions[0];
   const int *third_q = (int*)third_q_py->data;
+  const int *weights = (int*)weights_py->data;
   const int *mesh = (int*)mesh_py->data;
   int triplets[num_ir_triplets][3];
   int grid_points[num_grid_points][3];
@@ -651,6 +654,7 @@ static PyObject * get_grid_triplets_at_q(PyObject *self, PyObject *args)
 			     q_grid_point,
 			     grid_points,
 			     third_q,
+			     weights,
 			     mesh);
   
   for (i = 0; i < num_ir_triplets; i++) {

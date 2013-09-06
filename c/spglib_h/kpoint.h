@@ -34,9 +34,10 @@ int kpt_get_ir_triplets_at_q(int weights[],
 			     const int mesh[3],
 			     const int is_time_reversal,
 			     const MatINT * rotations);
-void set_grid_triplets_at_q(int triplets[][3],
-			    const int q_grid_point,
-			    SPGCONST int grid_points[][3],
-			    const int third_q[],
-			    const int mesh[3]);
+void kpt_set_grid_triplets_at_q(int triplets[][3],
+				const int q_grid_point,
+				SPGCONST int grid_points[][3],
+				const int third_q[],
+				const int weights[],
+				const int mesh[3]);
 #endif

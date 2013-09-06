@@ -888,7 +888,8 @@ def write_ir_grid_points(mesh,
                          grid_address):
     w = open("ir_grid_points.yaml", 'w')
     w.write("mesh: [ %d, %d, %d ]\n" % tuple(mesh))
-    w.write("mesh_divisors: [ %d, %d, %d ]\n" % tuple(mesh_divs))
+    if mesh_divs is not None:
+        w.write("mesh_divisors: [ %d, %d, %d ]\n" % tuple(mesh_divs))
     w.write("num_reduced_ir_grid_points: %d\n" % len(grid_points))
     w.write("ir_grid_points:  # [address, weight]\n")
 

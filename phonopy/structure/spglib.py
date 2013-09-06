@@ -291,13 +291,15 @@ def get_triplets_reciprocal_mesh_at_q(fixed_grid_number,
 def get_grid_triplets_at_q(q_grid_point,
                            grid_points,
                            third_q,
+                           weights,
                            mesh):
-    num_ir_tripltes = (third_q != -1).sum()
+    num_ir_tripltes = (weights > 0).sum()
     triplets = np.zeros((num_ir_tripltes, 3), dtype='intc')
     spg.grid_triplets_at_q(triplets,
                            q_grid_point,
                            grid_points,
                            third_q,
+                           weights,
                            np.intc(mesh).copy())
     return triplets
                            

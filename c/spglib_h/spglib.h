@@ -318,5 +318,6 @@ void spg_set_grid_triplets_at_q(int triplets[][3],
 				const int q_grid_point,
 				SPGCONST int grid_points[][3],
 				const int third_q[],
+				const int weights[],
 				const int mesh[3]);
 #endif

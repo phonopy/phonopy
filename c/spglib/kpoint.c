@@ -43,6 +43,12 @@ static int get_ir_triplets_at_q(int weights[],
 				const int grid_point,
 				const int mesh[3],
 				SPGCONST PointSymmetry * pointgroup);
+static void set_grid_triplets_at_q(int triplets[][3],
+				   const int q_grid_point,
+				   SPGCONST int grid_points[][3],
+				   const int third_q[],
+				   const int weights[],
+				   const int mesh[3]);
 static void address_to_grid(int grid_double[3],
 			    const int address,
 			    const int mesh[3],
@@ -183,69 +189,21 @@ int kpt_get_ir_triplets_at_q(int weights[],
 			      &pointgroup);
 }
 
-void set_grid_triplets_at_q(int triplets[][3],
-			    const int q_grid_point,
-			    SPGCONST int grid_points[][3],
-			    const int third_q[],
-			    const int mesh[3])
+void kpt_set_grid_triplets_at_q(int triplets[][3],
+				const int q_grid_point,
+				SPGCONST int grid_points[][3],
+				const int third_q[],
+				const int weights[],
+				const int mesh[3])
 {
-  const int is_shift[3] = {0, 0, 0};
-  int i, j, k, num_edge, edge_pos, num_ir;
-  int grid_double[3][3], ex_mesh[3], ex_mesh_double[3];
-
-  for (i = 0; i < 3; i++) {
-    ex_mesh[i] = mesh[i] + (mesh[i] % 2 == 0);
-    ex_mesh_double[i] = ex_mesh[i] * 2;
-  }
-
-  for (i = 0; i < 3; i++) {
-    grid_double[0][i] = grid_points[q_grid_point][i] * 2;
-  }
-
-  num_ir = 0;
-
-  for (i = 0; i < mesh[0] * mesh[1] * mesh[2]; i++) {
-    if (third_q[i] < 0) {
-      continue;
-    }
-
-    for (j = 0; j < 3; j++) {
-      grid_double[1][j] = grid_points[i][j] * 2;
-      grid_double[2][j] = grid_points[third_q[i]][j] * 2;
-    }
-
-    for (j = 0; j < 3; j++) {
-      num_edge = 0;
-      edge_pos = -1;
-      for (k = 0; k < 3; k++) {
-	if (abs(grid_double[k][j]) == mesh[j]) {
-	  num_edge++;
-	  edge_pos = k;
-	}
-      }
-
-      if (num_edge == 1) {
-	grid_double[edge_pos][j] = 0;
-	for (k = 0; k < 3; k++) {
-	  if (k != edge_pos) {
-	    grid_double[edge_pos][j] -= grid_double[k][j];
-	  }
-	}
-      }
-      if (num_edge == 2) {
-	grid_double[edge_pos][j] = -grid_double[edge_pos][j];
-      }
-    }
-
-    for (j = 0; j < 3; j++) {
-      get_vector_modulo(grid_double[j], ex_mesh_double);
-      triplets[num_ir][j] = grid_to_address(grid_double[j], ex_mesh, is_shift);
-    }
-    
-    num_ir++;
-  }
-
+  set_grid_triplets_at_q(triplets,
+			 q_grid_point,
+			 grid_points,
+			 third_q,
+			 weights,
+			 mesh);
 }
+
 
       
 
@@ -645,6 +603,71 @@ static int get_ir_triplets_at_q(int weights[],
   ir_addresses = NULL;
 
   return num_ir_triplets;
+}
+
+static void set_grid_triplets_at_q(int triplets[][3],
+				   const int q_grid_point,
+				   SPGCONST int grid_points[][3],
+				   const int third_q[],
+				   const int weights[],
+				   const int mesh[3])
+{
+  const int is_shift[3] = {0, 0, 0};
+  int i, j, k, num_edge, edge_pos, num_ir;
+  int grid_double[3][3], ex_mesh[3], ex_mesh_double[3];
+
+  for (i = 0; i < 3; i++) {
+    ex_mesh[i] = mesh[i] + (mesh[i] % 2 == 0);
+    ex_mesh_double[i] = ex_mesh[i] * 2;
+  }
+
+  for (i = 0; i < 3; i++) {
+    grid_double[0][i] = grid_points[q_grid_point][i] * 2;
+  }
+
+  num_ir = 0;
+
+  for (i = 0; i < mesh[0] * mesh[1] * mesh[2]; i++) {
+    if (weights[i] < 1) {
+      continue;
+    }
+
+    for (j = 0; j < 3; j++) {
+      grid_double[1][j] = grid_points[i][j] * 2;
+      grid_double[2][j] = grid_points[third_q[i]][j] * 2;
+    }
+
+    for (j = 0; j < 3; j++) {
+      num_edge = 0;
+      edge_pos = -1;
+      for (k = 0; k < 3; k++) {
+	if (abs(grid_double[k][j]) == mesh[j]) {
+	  num_edge++;
+	  edge_pos = k;
+	}
+      }
+
+      if (num_edge == 1) {
+	grid_double[edge_pos][j] = 0;
+	for (k = 0; k < 3; k++) {
+	  if (k != edge_pos) {
+	    grid_double[edge_pos][j] -= grid_double[k][j];
+	  }
+	}
+      }
+      if (num_edge == 2) {
+	grid_double[edge_pos][j] = -grid_double[edge_pos][j];
+      }
+    }
+
+    for (j = 0; j < 3; j++) {
+      get_vector_modulo(grid_double[j], ex_mesh_double);
+      triplets[num_ir][j] = grid_to_address(grid_double[j], ex_mesh, is_shift);
+    }
+    
+    num_ir++;
+  }
+
 }
 
 static int grid_to_address(const int grid_double[3],
