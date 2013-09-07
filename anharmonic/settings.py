@@ -5,9 +5,9 @@ class Phono3pySettings(Settings):
     def __init__(self):
         Settings.__init__(self)
 
-        self._supercell_matrix_extra = None
         self._band_indices = None
         self._coarse_mesh_shifts = None
+        self._cutoff_lifetime = 1e-4 # in second
         self._grid_points = None
         self._ion_clamped = False
         self._is_bterta = False
@@ -19,21 +19,28 @@ class Phono3pySettings(Settings):
         self._no_kappa_stars = False
         self._read_amplitude = False
         self._read_gamma = False
+        self._supercell_matrix_extra = None
         self._temperatures = None
         self._write_amplitude = False
         self._write_gamma = False
         
-    def set_supercell_matrix_extra(self, matrix):
-        self._supercell_matrix_extra = matrix
-
-    def get_supercell_matrix_extra(self):
-        return self._supercell_matrix_extra
-
     def set_band_indices(self, band_indices):
         self._band_indices = band_indices
 
     def get_band_indices(self):
         return self._band_indices
+
+    def set_coarse_mesh_shifts(self, coarse_mesh_shifts):
+        self._coarse_mesh_shifts = coarse_mesh_shifts
+
+    def get_coarse_mesh_shifts(self):
+        return self._coarse_mesh_shifts
+
+    def set_cutoff_lifetime(self, cutoff_lifetime):
+        self._cutoff_lifetime = cutoff_lifetime
+
+    def get_cutoff_lifetime(self):
+        return self._cutoff_lifetime
 
     def set_grid_points(self, grid_points):
         self._grid_points = grid_points
@@ -71,6 +78,12 @@ class Phono3pySettings(Settings):
     def get_max_freepath(self):
         return self._max_freepath
 
+    def set_mesh_divisors(self, mesh_divisors):
+        self._mesh_divisors = mesh_divisors
+
+    def get_mesh_divisors(self):
+        return self._mesh_divisors
+
     def set_multiple_sigmas(self, multiple_sigmas):
         self._multiple_sigmas = multiple_sigmas
 
@@ -83,24 +96,6 @@ class Phono3pySettings(Settings):
     def get_no_kappa_stars(self):
         return self._no_kappa_stars
 
-    def set_temperatures(self, temperatures):
-        self._temperatures = temperatures
-
-    def get_temperatures(self):
-        return self._temperatures
-
-    def set_mesh_divisors(self, mesh_divisors):
-        self._mesh_divisors = mesh_divisors
-
-    def get_mesh_divisors(self):
-        return self._mesh_divisors
-
-    def set_coarse_mesh_shifts(self, coarse_mesh_shifts):
-        self._coarse_mesh_shifts = coarse_mesh_shifts
-
-    def get_coarse_mesh_shifts(self):
-        return self._coarse_mesh_shifts
-
     def set_read_gamma(self, read_gamma):
         self._read_gamma = read_gamma
 
@@ -112,6 +107,18 @@ class Phono3pySettings(Settings):
 
     def get_read_amplitude(self):
         return self._read_amplitude
+
+    def set_supercell_matrix_extra(self, matrix):
+        self._supercell_matrix_extra = matrix
+
+    def get_supercell_matrix_extra(self):
+        return self._supercell_matrix_extra
+
+    def set_temperatures(self, temperatures):
+        self._temperatures = temperatures
+
+    def get_temperatures(self):
+        return self._temperatures
 
     def set_write_amplitude(self, write_amplitude):
         self._write_amplitude = write_amplitude
@@ -144,6 +151,10 @@ class Phono3pyConfParser(ConfParser):
             if opt.dest == 'band_indices':
                 if self._options.band_indices is not None:
                     self._confs['band_indices'] = self._options.band_indices
+
+            if opt.dest == 'cutoff_lifetime':
+                if self._options.cutoff_lifetime is not None:
+                    self._confs['cutoff_lifetime'] = self._options.cutoff_lifetime
 
             if opt.dest == 'grid_points':
                 if self._options.grid_points is not None:
@@ -225,6 +236,9 @@ class Phono3pyConfParser(ConfParser):
                 for sum_set in confs['band_indices'].split(','):
                     vals.append([int(x) - 1 for x in sum_set.split()])
                 self.set_parameter('band_indices', vals)
+
+            if conf_key == 'cutoff_lifetime':
+                self.set_parameter('cutoff_lifetime', confs['cutoff_lifetime'])
 
             if conf_key == 'grid_points':
                 vals = [int(x) for x in confs['grid_points'].split()]
@@ -312,6 +326,10 @@ class Phono3pyConfParser(ConfParser):
         # Sets of band indices that are summed
         if params.has_key('band_indices'):
             self._settings.set_band_indices(params['band_indices'])
+
+        # Cutoff lifetime used for thermal conductivity calculation
+        if params.has_key('cutoff_lifetime'):
+            self._settings.set_cutoff_lifetime(params['cutoff_lifetime'])
 
         # Grid points
         if params.has_key('grid_points'):

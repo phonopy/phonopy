@@ -20,6 +20,7 @@ class conductivity_RTA:
                  t_step=10,
                  mesh_divisors=None,
                  coarse_mesh_shifts=None,
+                 cutoff_lifetime=1e-4, # in second
                  no_kappa_stars=False,
                  gv_delta_q=1e-4, # finite difference for group veolocity
                  log_level=0,
@@ -43,6 +44,8 @@ class conductivity_RTA:
         self._dynamical_matrix = self._pp.get_dynamical_matrix()
         self._frequency_factor_to_THz = self._pp.get_frequency_factor_to_THz()
         self._cutoff_frequency = self._pp.get_cutoff_frequency()
+        self._cutoff_lifetime = cutoff_lifetime
+        
         self._grid_points = None
         self._grid_weights = None
         self._grid_address = None
@@ -165,6 +168,7 @@ class conductivity_RTA:
                        "=====================" %
                        (grid_point, i + 1, len(self._grid_points)))
                 print "q-point: (%5.2f %5.2f %5.2f)" % tuple(self._qpoint)
+                print "Lifetime cutoff (sec): %e" % self._cutoff_lifetime
 
             if self._read_gamma:
                 self._frequencies[i] = self._get_phonon_c()
@@ -217,9 +221,7 @@ class conductivity_RTA:
             for k, t in enumerate(self._temperatures):
                 self._ise.set_temperature(t)
                 self._ise.run()
-                gamma_at_gp = np.where(freqs > self._cutoff_frequency,
-                                       self._ise.get_imag_self_energy(), -1)
-                self._gamma[j, i, k] = gamma_at_gp
+                self._gamma[j, i, k] = self._ise.get_imag_self_energy()
     
     def _set_kappa_at_sigmas(self, i):
         freqs = self._frequencies[i]
@@ -248,13 +250,12 @@ class conductivity_RTA:
 
         # Kappa
         for j, sigma in enumerate(self._sigmas):
-            for k in range(len(self._temperatures)):
-                for l in range(len(freqs)):
-                    if self._gamma[j, i, k, l] > 1e-12:
-                        self._kappa[j, i, k, l, :] = (
-                            gv_sum2[:, l] * cv[k, l] /
-                            (self._gamma[j, i, k, l] * 2) *
-                            self._conversion_factor)
+            for k, l in list(np.ndindex(len(self._temperatures), len(freqs))):
+                if self._gamma[j, i, k, l] < 1.0 / self._cutoff_lifetime / THz:
+                    continue
+                self._kappa[j, i, k, l, :] = (
+                    gv_sum2[:, l] * cv[k, l] / (self._gamma[j, i, k, l] * 2) *
+                    self._conversion_factor)
 
     def _get_gv_by_gv(self, gv, i):
         grid_point = self._grid_points[i]

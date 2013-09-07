@@ -195,6 +195,7 @@ class Phono3py:
                                  grid_points=None,
                                  mesh_divisors=None,
                                  coarse_mesh_shifts=None,
+                                 cutoff_lifetime=1e-4, # in second
                                  no_kappa_stars=False,
                                  gv_delta_q=1e-4, # for group velocity
                                  write_gamma=False,
@@ -209,6 +210,7 @@ class Phono3py:
                               t_step=t_step,
                               mesh_divisors=mesh_divisors,
                               coarse_mesh_shifts=coarse_mesh_shifts,
+                              cutoff_lifetime=cutoff_lifetime,
                               no_kappa_stars=no_kappa_stars,
                               gv_delta_q=gv_delta_q,
                               log_level=self._log_level,
