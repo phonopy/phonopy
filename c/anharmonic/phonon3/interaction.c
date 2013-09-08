@@ -343,34 +343,12 @@ static void get_qpoint(double q[9],
 		       const int *grid_address,
 		       const int mesh[3])
 {
-  int i, j, gp, zero_index, sum_gp_addrs;
-  int gp_addrs[9];
+  int i, j, gp;
 
   for (i = 0; i < 3; i++) { /* row */
     gp = gp_triplet[i];
     for (j = 0; j < 3; j++) { /* column */
-      gp_addrs[i * 3 + j] = grid_address[gp * 3 + j];
-    }
-  }
-
-  /* Two q-points are on boundary. */
-  /* One is moved to the other side of boundary. */
-  for (i = 0; i < 3; i++) { /* column */
-    sum_gp_addrs = 0;
-    zero_index = -1;
-    for (j = 0; j < 3; j++) { /* row */
-      if (gp_addrs[j * 3 + i] == 0) {
-	zero_index = j;
-      }
-      sum_gp_addrs += gp_addrs[j * 3 + i];
-    }
-    if (zero_index > -1 && sum_gp_addrs == mesh[i]) {
-      gp_addrs[((zero_index + 2) % 3) * 3 + i] *= -1;
-    }
-  }
-  for (i = 0; i < 3; i++) { /* row */
-    for (j = 0; j < 3; j++) { /* column */
-      q[i * 3 + j] = ((double)gp_addrs[i * 3 + j]) / mesh[j];
+      q[i * 3 + j] = ((double)grid_address[gp * 3 + j]) / mesh[j];
     }
   }
 }

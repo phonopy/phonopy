@@ -180,7 +180,7 @@ class conductivity_RTA:
                 
                 if self._log_level > 0:
                     print len(self._pp.get_triplets_at_q()[0])
-                    print "Calculating interaction"
+                    print "Calculating interaction..."
                 self._ise.run_interaction()
                 self._frequencies[i] = self._ise.get_phonon_at_grid_point()[0]
                 self._set_gamma_at_sigmas(i)
@@ -251,7 +251,7 @@ class conductivity_RTA:
         # Kappa
         for j, sigma in enumerate(self._sigmas):
             for k, l in list(np.ndindex(len(self._temperatures), len(freqs))):
-                if self._gamma[j, i, k, l] < 1.0 / self._cutoff_lifetime / THz:
+                if self._gamma[j, i, k, l] < 0.5 / self._cutoff_lifetime / THz:
                     continue
                 self._kappa[j, i, k, l, :] = (
                     gv_sum2[:, l] * cv[k, l] / (self._gamma[j, i, k, l] * 2) *
