@@ -143,6 +143,9 @@ class Interaction:
     def get_triplets_at_q(self):
         return self._triplets_at_q, self._weights_at_q
 
+    def get_grid_address(self):
+        return self._grid_address
+
     def get_band_indices(self):
         return self._band_indices
 

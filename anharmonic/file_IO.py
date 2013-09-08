@@ -477,11 +477,27 @@ def read_fc2_from_hdf5(filename='fc2.hdf5'):
     f.close()
     return fc2
 
-def write_triplets(triplets, weights, mesh, filename='triplets.dat'):
-    w = open(filename, 'w')
-    w.write("# Triplets for %dx%dx%d mesh (address_1, address_2, address_3, weight)\n" % tuple(mesh))
-    for weight, q3 in zip(weights, triplets):
-        w.write("%10d %10d %10d %10d\n" % (q3[0], q3[1], q3[2], weight))
+def write_triplets(triplets,
+                   weights,
+                   mesh,
+                   grid_address,
+                   grid_point=None,
+                   filename=None):
+    triplets_filename = "triplets"
+    suffix = "-m%d%d%d" % tuple(mesh)
+    if grid_point is not None:
+        suffix += ("-g%d" % grid_point)
+    if filename is not None:
+        suffix += "." + filename
+    suffix += ".dat"
+    triplets_filename += suffix
+    w = open(triplets_filename, 'w')
+    for weight, g3 in zip(weights, triplets):
+        w.write("%4d    " % weight)
+        for q3 in grid_address[g3]:
+            w.write("%4d %4d %4d    " % tuple(q3))
+        w.write("\n")
+    w.close()
 
 def write_grid_address(grid_address, mesh, filename='grid_points.dat'):
     w = open(filename, 'w')

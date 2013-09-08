@@ -4,7 +4,7 @@ from phonopy.harmonic.force_constants import similarity_transformation
 from phonopy.phonon.group_velocity import get_group_velocity
 from phonopy.units import Kb, THzToEv, EV, THz, Angstrom
 from phonopy.phonon.thermal_properties import mode_cv
-from anharmonic.file_IO import write_kappa_to_hdf5
+from anharmonic.file_IO import write_kappa_to_hdf5, write_triplets
 from anharmonic.phonon3.triplets import get_grid_address, reduce_grid_points, get_ir_grid_points, from_coarse_to_dense_grid_points
 from anharmonic.phonon3.imag_self_energy import ImagSelfEnergy
 
@@ -181,6 +181,7 @@ class conductivity_RTA:
                 if self._log_level > 0:
                     print len(self._pp.get_triplets_at_q()[0])
                     print "Calculating interaction..."
+                    
                 self._ise.run_interaction()
                 self._frequencies[i] = self._ise.get_phonon_at_grid_point()[0]
                 self._set_gamma_at_sigmas(i)
@@ -189,6 +190,7 @@ class conductivity_RTA:
 
             if write_gamma:
                 self._write_gamma(i, grid_point)
+                self._write_triplets(grid_point)
 
     def _allocate_values(self):
         num_freqs = self._primitive.get_number_of_atoms() * 3
@@ -441,11 +443,21 @@ class conductivity_RTA:
                 frequency=self._frequencies[i],
                 group_velocity=self._gv[i],
                 heat_capacity=self._cv[i],
+                kappa=self._kappa[j, i],
                 mesh_divisors=self._mesh_divisors,
                 grid_point=grid_point,
                 sigma=sigma,
                 filename=self._filename)
 
+    def _write_triplets(self, grid_point):
+        triplets, weights = self._pp.get_triplets_at_q()
+        grid_address = self._pp.get_grid_address()
+        write_triplets(triplets,
+                       weights,
+                       self._mesh,
+                       grid_address,
+                       grid_point=grid_point,
+                       filename=self._filename)
         
 def get_pointgroup_operations(point_operations_real):
     exist_r_inv = False
