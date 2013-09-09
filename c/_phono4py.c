@@ -314,7 +314,7 @@ static PyObject * py_set_phonons_grid_points(PyObject *self, PyObject *args)
   Carray* eigvecs = convert_to_carray(eigenvectors);
   char* phonon_done = (char*)phonon_done_py->data;
   Iarray* grid_points = convert_to_iarray(grid_points_py);
-  Iarray* grid_address = convert_to_iarray(grid_address_py);
+  const int* grid_address = (int*)grid_address_py->data;
   const int* mesh = (int*)mesh_py->data;
   Darray* fc2 = convert_to_darray(fc2_py);
   Darray* svecs_fc2 = convert_to_darray(shortest_vectors_fc2);
@@ -362,7 +362,6 @@ static PyObject * py_set_phonons_grid_points(PyObject *self, PyObject *args)
   free(freqs);
   free(eigvecs);
   free(grid_points);
-  free(grid_address);
   free(fc2);
   free(svecs_fc2);
   free(multi_fc2);

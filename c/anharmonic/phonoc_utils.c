@@ -12,7 +12,7 @@ void get_undone_phonons(Darray *frequencies,
 			Carray *eigenvectors,
 			const int *undone_grid_points,
 			const int num_undone_grid_points,
-			const Iarray *grid_address,
+			const int *grid_address,
 			const int *mesh,
 			const Darray *fc2,
 			const Darray *svecs_fc2,
@@ -37,7 +37,7 @@ void get_undone_phonons(Darray *frequencies,
   for (i = 0; i < num_undone_grid_points; i++) {
     gp = undone_grid_points[i];
     for (j = 0; j < 3; j++) {
-      q[j] = ((double)grid_address->data[gp * 3 + j]) / mesh[j];
+      q[j] = ((double)grid_address[gp * 3 + j]) / mesh[j];
     }
 
     if (gp == 0) {

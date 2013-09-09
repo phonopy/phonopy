@@ -48,16 +48,12 @@ static void real_to_normal_sym_q(double *fc3_normal_squared,
 static int collect_undone_grid_points(int *undone,
 				      char *phonon_done,
 				      const Iarray *triplets);
-static void get_qpoint(double q[9],
-		       const int *gp_triplet,
-		       const int *grid_address,
-		       const int mesh[3]);
 
 void set_phonon_triplets(Darray *frequencies,
 			 Carray *eigenvectors,
 			 char *phonon_done,
 			 const Iarray *triplets,
-			 const Iarray *grid_address,
+			 const int *grid_address,
 			 const int *mesh,
 			 const Darray *fc2,
 			 const Darray *svecs_fc2,
@@ -73,11 +69,10 @@ void set_phonon_triplets(Darray *frequencies,
 			 const double nac_factor,
 			 const char uplo)
 {
-  int num_grid_points, num_undone;
+  int num_undone;
   int *undone;
 
-  num_grid_points = grid_address->dims[0];
-  undone = (int*)malloc(sizeof(int) * num_grid_points);
+  undone = (int*)malloc(sizeof(int) * frequencies->dims[0]);
   num_undone = collect_undone_grid_points(undone, phonon_done, triplets);
 
   get_undone_phonons(frequencies,
@@ -108,7 +103,7 @@ void get_interaction(Darray *fc3_normal_squared,
 		     const Darray *frequencies,
 		     const Carray *eigenvectors,
 		     const Iarray *triplets,
-		     const Iarray *grid_address,
+		     const int *grid_address,
 		     const int *mesh,
 		     const Darray *fc3,
 		     const Darray *shortest_vectors,
@@ -120,8 +115,7 @@ void get_interaction(Darray *fc3_normal_squared,
 		     const int symmetrize_fc3_q,
 		     const double cutoff_frequency)
 {
-  int i, j, num_band, num_band0;
-  int gp_triplet[3];
+  int i, j, k, gp, num_band, num_band0;
   double *freqs[3];
   lapack_complex_double *eigvecs[3];
   double q[9];
@@ -129,16 +123,16 @@ void get_interaction(Darray *fc3_normal_squared,
   num_band = frequencies->dims[1];
   num_band0 = fc3_normal_squared->dims[1];
 
-#pragma omp parallel for private(j, q, gp_triplet, freqs, eigvecs)
+#pragma omp parallel for private(j, q, gp, freqs, eigvecs)
   for (i = 0; i < triplets->dims[0]; i++) {
-    for (j = 0; j < 3; j++) {
-      gp_triplet[j] = triplets->data[i * 3 + j];
-    }
-    get_qpoint(q, gp_triplet, grid_address->data, mesh);
 
     for (j = 0; j < 3; j++) {
-      freqs[j] = frequencies->data + gp_triplet[j] * num_band;
-      eigvecs[j] = eigenvectors->data + gp_triplet[j] * num_band * num_band;
+      gp = triplets->data[i * 3 + j];
+      for (k = 0; k < 3; k++) {
+	q[j * 3 + k] = ((double)grid_address[gp * 3 + k]) / mesh[k];
+      }
+      freqs[j] = frequencies->data + gp * num_band;
+      eigvecs[j] = eigenvectors->data + gp * num_band * num_band;
     }
 
     if (symmetrize_fc3_q) {
@@ -315,16 +309,8 @@ static int collect_undone_grid_points(int *undone,
   int i, j, gp, num_undone;
 
   num_undone = 0;
-
-  gp = triplets->data[0];
-  if (phonon_done[gp] == 0) {
-    undone[num_undone] = gp;
-    num_undone++;
-    phonon_done[gp] = 1;
-  }
-
   for (i = 0; i < triplets->dims[0]; i++) {
-    for (j = 1; j < 3; j++) {
+    for (j = 0; j < 3; j++) {
       gp = triplets->data[i * 3 + j];
       if (phonon_done[gp] == 0) {
 	undone[num_undone] = gp;
@@ -335,20 +321,4 @@ static int collect_undone_grid_points(int *undone,
   }
 
   return num_undone;
-}
-
-
-static void get_qpoint(double q[9],
-		       const int *gp_triplet,
-		       const int *grid_address,
-		       const int mesh[3])
-{
-  int i, j, gp;
-
-  for (i = 0; i < 3; i++) { /* row */
-    gp = gp_triplet[i];
-    for (j = 0; j < 3; j++) { /* column */
-      q[i * 3 + j] = ((double)grid_address[gp * 3 + j]) / mesh[j];
-    }
-  }
 }

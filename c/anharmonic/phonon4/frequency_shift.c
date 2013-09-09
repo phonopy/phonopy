@@ -119,7 +119,7 @@ void set_phonons_for_frequency_shift(Darray *frequencies,
 				     Carray *eigenvectors,
 				     char *phonon_done,
 				     const Iarray *grid_points,
-				     const Iarray *grid_address,
+				     const int *grid_address,
 				     const int *mesh,
 				     const Darray *fc2,
 				     const Darray *svecs_fc2,
@@ -135,12 +135,10 @@ void set_phonons_for_frequency_shift(Darray *frequencies,
 				     const double nac_factor,
 				     const char uplo)
 {
-  int num_grid_points, num_undone;
+  int num_undone;
   int *undone;
 
-  num_grid_points = grid_address->dims[0];
-
-  undone = (int*)malloc(sizeof(int) * num_grid_points);
+  undone = (int*)malloc(sizeof(int) * frequencies->dims[0]);
   num_undone = collect_undone_grid_points(undone,
 					  phonon_done,
 					  grid_points->dims[0],

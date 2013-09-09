@@ -95,7 +95,7 @@ static PyObject * py_set_phonon_triplets(PyObject *self, PyObject *args)
   Carray* eigvecs = convert_to_carray(eigenvectors);
   char* phonon_done = (char*)phonon_done_py->data;
   Iarray* triplets = convert_to_iarray(grid_point_triplets);
-  Iarray* grid_address = convert_to_iarray(grid_address_py);
+  const int* grid_address = (int*)grid_address_py->data;
   const int* mesh = (int*)mesh_py->data;
   Darray* fc2 = convert_to_darray(fc2_py);
   Darray* svecs_fc2 = convert_to_darray(shortest_vectors_fc2);
@@ -143,7 +143,6 @@ static PyObject * py_set_phonon_triplets(PyObject *self, PyObject *args)
   free(freqs);
   free(eigvecs);
   free(triplets);
-  free(grid_address);
   free(fc2);
   free(svecs_fc2);
   free(multi_fc2);
@@ -292,7 +291,7 @@ static PyObject * py_get_interaction(PyObject *self, PyObject *args)
   /* So eigenvectors should not be used in Python side */
   Carray* eigvecs = convert_to_carray(eigenvectors);
   Iarray* triplets = convert_to_iarray(grid_point_triplets);
-  Iarray* grid_address = convert_to_iarray(grid_address_py);
+  const int* grid_address = (int*)grid_address_py->data;
   const int* mesh = (int*)mesh_py->data;
   Darray* fc3 = convert_to_darray(fc3_py);
   Darray* svecs = convert_to_darray(shortest_vectors);
@@ -322,7 +321,6 @@ static PyObject * py_get_interaction(PyObject *self, PyObject *args)
   free(freqs);
   free(eigvecs);
   free(triplets);
-  free(grid_address);
   free(fc3);
   free(svecs);
   free(multi);
