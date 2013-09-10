@@ -31,6 +31,15 @@ static int get_symmetry(int rotation[][3][3],
 			const int num_atom,
 			const double symprec);
 
+static int get_symmetry_from_dataset(int rotation[][3][3],
+				     double translation[][3],
+				     const int max_size,
+				     SPGCONST double lattice[3][3],
+				     SPGCONST double position[][3],
+				     const int types[],
+				     const int num_atom,
+				     const double symprec);
+
 static int get_symmetry_with_collinear_spin(int rotation[][3][3],
 					    double translation[][3],
 					    const int max_size,
@@ -177,14 +186,14 @@ int spg_get_symmetry(int rotation[][3][3],
 {
   sym_set_angle_tolerance(-1.0);
 
-  return get_symmetry(rotation,
-		      translation,
-		      max_size,
-		      lattice,
-		      position,
-		      types,
-		      num_atom,
-		      symprec);
+  return get_symmetry_from_dataset(rotation,
+				   translation,
+				   max_size,
+				   lattice,
+				   position,
+				   types,
+				   num_atom,
+				   symprec);
 }
 
 int spgat_get_symmetry(int rotation[][3][3],
@@ -199,14 +208,14 @@ int spgat_get_symmetry(int rotation[][3][3],
 {
   sym_set_angle_tolerance(angle_tolerance);
 
-  return get_symmetry(rotation,
-		      translation,
-		      max_size,
-		      lattice,
-		      position,
-		      types,
-		      num_atom,
-		      symprec);
+  return get_symmetry_from_dataset(rotation,
+				   translation,
+				   max_size,
+				   lattice,
+				   position,
+				   types,
+				   num_atom,
+				   symprec);
 }
 
 int spg_get_symmetry_with_collinear_spin(int rotation[][3][3],
@@ -708,6 +717,48 @@ static int get_symmetry(int rotation[][3][3],
   sym_free_symmetry(symmetry);
 
   return size;
+}
+
+static int get_symmetry_from_dataset(int rotation[][3][3],
+				     double translation[][3],
+				     const int max_size,
+				     SPGCONST double lattice[3][3],
+				     SPGCONST double position[][3],
+				     const int types[],
+				     const int num_atom,
+				     const double symprec)
+{
+  int i, j, k, num_sym;
+  SpglibDataset *dataset;
+
+  dataset = get_dataset(lattice,
+			position,
+			types,
+			num_atom,
+			symprec);
+  
+  if (dataset->n_operations > max_size) {
+    fprintf(stderr,
+	    "spglib: Indicated max size(=%d) is less than number ", max_size);
+    fprintf(stderr,
+	    "spglib: of symmetry operations(=%d).\n", dataset->n_operations);
+    num_sym = 0;
+    goto ret;
+  }
+
+  num_sym = dataset->n_operations;
+  for (i = 0; i < num_sym; i++) {
+    for (j = 0; j < 3; j++) {
+      translation[i][j] = dataset->translations[i][j];
+      for (k = 0; k < 3; k++) {
+	rotation[i][j][k] = dataset->rotations[i][j][k];
+      }
+    }	  
+  }
+  
+ ret:
+  spg_free_dataset(dataset);
+  return num_sym;
 }
 
 static int get_symmetry_with_collinear_spin(int rotation[][3][3],
