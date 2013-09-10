@@ -262,6 +262,7 @@ class conductivity_RTA:
     def _get_gv_by_gv(self, gv, i):
         grid_point = self._grid_points[i]
         rotations = self._get_rotations_for_star(i)
+        self._get_group_veclocities_at_star(i, gv)
         gv2_tensor = []
         rec_lat = np.linalg.inv(self._primitive.get_cell())
         rotations_cartesian = [similarity_transformation(rec_lat, r)
@@ -331,6 +332,37 @@ class conductivity_RTA:
                 #     len(rotations), self._grid_weights[i])
 
         return rotations
+
+    def _get_group_veclocities_at_star(self, i, gv):
+        grid_point = self._grid_points[i]
+        orig_address = self._grid_address[grid_point]
+        orbits = []
+        for rot in self._point_operations:
+            rot_address = np.dot(rot, orig_address) % self._mesh
+            in_orbits = False
+            for orbit in orbits:
+                if (rot_address == orbit).all():
+                    in_orbits = True
+                    break
+            if not in_orbits:
+                orbits.append(rot_address)
+
+        rec_lat = np.linalg.inv(self._primitive.get_cell())
+        
+        gv_at_star = np.zeros((len(orbits),) + gv.shape, dtype='double')
+        weights = np.zeros(len(orbits), dtype='intc')
+        for rot in self._point_operations:
+            rot_address = np.dot(rot, orig_address) % self._mesh
+            for j, orbit in enumerate(orbits):
+                if (rot_address == orbit).all():
+                    rot_c = similarity_transformation(rec_lat, rot)
+                    gv_at_star[j] += np.dot(rot_c, gv.T).T
+                    weights[j] += 1
+
+        for j in range(len(orbits)):
+            gv_at_star[j] /= weights[j]
+
+        print gv_at_star
 
     def _set_mesh_numbers(self, mesh_divisors=None, coarse_mesh_shifts=None):
         self._mesh = self._pp.get_mesh_numbers()

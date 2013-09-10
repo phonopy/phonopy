@@ -57,12 +57,12 @@ def get_group_velocity(q, # q-point
     return gv.get_group_velocity()[0]
 
 directions_all = np.array([[1, 0, 0],  # x
-                           [0, 1, 0],  # y
-                           [0, 0, 1],  # z
-                           [0, 1, 1],  # yz
-                           [1, 0, 1],  # zx
-                           [1, 1, 0],  # xy
-                           [1, 1, 1]]) # xyz
+                           [0, 2, 0],  # y
+                           [0, 0, 3],  # z
+                           [0, 2, 3],  # yz
+                           [1, 0, 3],  # zx
+                           [1, 2, 0],  # xy
+                           [1, 2, 3]]) # xyz
 directions = np.array([[1, 0, 0],  # x
                        [0, 1, 0],  # y
                        [0, 0, 1],  # z
@@ -165,11 +165,11 @@ class GroupVelocity:
         ddm_dirs = self._get_dD(np.array(q)) # x, y, z, yz, zx, xy, xyz
         pos = 0
         for deg in deg_sets:
-            gv_dirs = np.zeros((len(deg), len(directions)), dtype='double')
+            gv_dirs = np.zeros((len(deg), len(directions_all)), dtype='double')
             for i, ddm in enumerate(ddm_dirs):
                 gv_dirs[:, i] = self._perturb_D(ddm, eigvecs[:, deg])
 
-            gv[pos:pos+len(deg)] = self._sort_gv(np.array(gv_dirs))
+            gv[pos:pos+len(deg)] = self._sort_gv(np.array(gv_dirs)) / [1, 2, 3]
             pos += len(deg)
 
         for i in range(3):
@@ -185,7 +185,7 @@ class GroupVelocity:
     
     def _get_dD_FD(self, q): # finite difference
         ddm = []
-        for dqc_i in (directions * self._q_length):
+        for dqc_i in (directions_all * self._q_length):
             dq = np.dot(self._reciprocal_lattice_inv, dqc_i)
             ddm.append(delta_dynamical_matrix(q,
                                               dq,
@@ -196,9 +196,9 @@ class GroupVelocity:
     def _get_dD_analytical(self, q):
         self._ddm.run(q)
         ddm = self._ddm.get_derivative_of_dynamical_matrix()
-        ddm_dirs = np.zeros((len(directions),) + ddm.shape[1:],
+        ddm_dirs = np.zeros((len(directions_all),) + ddm.shape[1:],
                             dtype='complex128')
-        for i, d in enumerate(directions):
+        for i, d in enumerate(directions_all):
             for j in range(3):
                 ddm_dirs[i] += d[j] * ddm[j]
         return ddm_dirs
