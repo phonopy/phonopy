@@ -45,7 +45,7 @@ from phonopy.harmonic.force_constants import show_drift_force_constants
 from anharmonic.force_fit.fc2 import FC2Fit
 from anharmonic.force_fit.fc3 import FC3Fit
 from anharmonic.force_fit.fc4 import FC4Fit
-from anharmonic.file_IO import parse_disp_fc4_yaml, parse_FORCES_FOURTH
+from anharmonic.file_IO import parse_disp_fc4_yaml, parse_FORCES_FOURTH, parse_disp_fc3_yaml, parse_FORCES_THIRD
 from anharmonic.file_IO import write_fc3_dat, write_fc4_dat, write_fc4_to_hdf5, write_fc3_to_hdf5, write_fc2_to_hdf5
 from anharmonic.phonon3.fc3 import show_drift_fc3
 from anharmonic.phonon4.fc4 import show_drift_fc4
@@ -107,11 +107,9 @@ symmetry = Symmetry(supercell, options.symprec)
 
 print "Spacegroup: ", symmetry.get_international_table()
 
-disp_dataset = parse_disp_fc4_yaml()
-parse_FORCES_FOURTH(disp_dataset)
-
-
 if options.fc2:
+    disp_dataset = parse_disp_fc3_yaml()
+    parse_FORCES_THIRD(disp_dataset)
     fc2fit = FC2Fit(supercell, disp_dataset, symmetry)
     fc2fit.run()
     fc2 = fc2fit.get_fc2()
@@ -119,6 +117,8 @@ if options.fc2:
     write_fc2_to_hdf5(fc2, 'fc2-fit.hdf5')
 
 if options.fc3:
+    disp_dataset = parse_disp_fc3_yaml()
+    parse_FORCES_THIRD(disp_dataset)
     fc3fit = FC3Fit(supercell, disp_dataset, symmetry)
     fc3fit.run()
     fc3 = fc3fit.get_fc3()
@@ -128,6 +128,8 @@ if options.fc3:
     write_fc3_to_hdf5(fc3, 'fc3-fit.hdf5')
 
 if options.fc4:
+    disp_dataset = parse_disp_fc4_yaml()
+    parse_FORCES_FOURTH(disp_dataset)
     fc4fit = FC4Fit(supercell, disp_dataset, symmetry)
     fc4fit.run()
     fc4 = fc4fit.get_fc4()

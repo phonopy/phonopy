@@ -1131,18 +1131,18 @@ def parse_FORCES_FOURTH(disp_dataset,
                 disp3['forces'] = fourth_forces
                 
 def parse_FORCES_THIRD(disp_dataset,
-                       filename='FORCES_THIRD'):
-    forcefile = open(filename, 'r')
+                       file3='FORCES_THIRD',
+                       file2='FORCES_SECOND'):
+    f3 = open(file3, 'r')
+    f2 = open(file2, 'r')
     num_atom = disp_dataset['natom']
-    num_disp = 0
+
     for disp1 in disp_dataset['first_atoms']:
+        second_forces = parse_force_lines(f2, num_atom)
+        disp1['forces'] = second_forces
         for disp2 in disp1['second_atoms']:
-            num_disp += len(disp2['displacements'])
-    sets_of_forces = []
-    for i in range(num_disp):
-        sets_of_forces.append(parse_force_lines(forcefile, num_atom))
-    
-    return np.array(sets_of_forces)
+            third_forces = parse_force_lines(f3, num_atom)
+            disp2['forces'] = third_forces
 
 def parse_DELTA_FC2_SETS(disp_dataset,
                          filename='DELTA_FC2_SETS'):
