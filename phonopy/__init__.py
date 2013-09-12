@@ -715,6 +715,7 @@ class Phonopy:
     # Q-points mode
     def write_yaml_qpoints(self,
                            q_points,
+                           nac_q_direction=None,
                            is_eigenvectors=False,
                            write_dynamical_matrices=False,
                            factor=VaspToTHz):
@@ -722,6 +723,7 @@ class Phonopy:
         write_yaml_qpoints(q_points,
                            self._primitive,
                            self._dynamical_matrix,
+                           nac_q_direction=nac_q_direction,
                            is_eigenvectors=is_eigenvectors,
                            group_velocity=self._group_velocity,
                            write_dynamical_matrices=write_dynamical_matrices,

@@ -39,6 +39,7 @@ from phonopy.units import VaspToTHz
 def write_yaml(qpoints,
                cell,
                dynamical_matrix, 
+               nac_q_direction=None,
                is_eigenvectors=False,
                group_velocity=None,
                write_dynamical_matrices=False,
@@ -79,7 +80,10 @@ def write_yaml(qpoints,
     w.write("phonon:\n")
 
     for i, q in enumerate(qpoints):
-        dynamical_matrix.set_dynamical_matrix(q)
+        if nac_q_direction is not None and (np.abs(q) < 1e-5).all():
+            dynamical_matrix.set_dynamical_matrix(q, q_direction=nac_q_direction)
+        else:
+            dynamical_matrix.set_dynamical_matrix(q)
         dm = dynamical_matrix.get_dynamical_matrix()
 
         w.write("- q-position: [ %12.7f, %12.7f, %12.7f ]\n" % tuple(q))

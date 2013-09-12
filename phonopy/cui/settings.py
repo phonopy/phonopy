@@ -698,7 +698,7 @@ class ConfParser:
                                            list(np.reshape(vals, (-1, 3))))
 
             if conf_key == 'q_direction':
-                q_direction = [ float(x) for x in confs['q_direction'].split() ]
+                q_direction = [fracval(x) for x in confs['q_direction'].split()]
                 if len(q_direction) < 3:
                     self.setting_error("Number of elements of q_direction is less than 3")
                 else:
