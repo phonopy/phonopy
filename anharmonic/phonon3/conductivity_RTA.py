@@ -168,7 +168,7 @@ class conductivity_RTA:
                        "=====================" %
                        (grid_point, i + 1, len(self._grid_points)))
                 print "q-point: (%5.2f %5.2f %5.2f)" % tuple(self._qpoint)
-                print "Lifetime cutoff (sec): %e" % self._cutoff_lifetime
+                print "Lifetime cutoff (sec): %-10.3e" % self._cutoff_lifetime
 
             if self._read_gamma:
                 self._frequencies[i] = self._get_phonon_c()

@@ -44,7 +44,7 @@ from phonopy.structure.cells import get_supercell, Primitive, print_cell
 from phonopy.structure.symmetry import Symmetry
 from phonopy.harmonic.force_constants import get_force_constants, \
     set_permutation_symmetry, symmetrize_force_constants, \
-    set_translational_invariance
+    set_translational_invariance, show_drift_force_constants
 from phonopy.file_IO import parse_BORN
 from phonopy.units import VaspToTHz
 from anharmonic.phonon3.fc3 import get_fc3, set_permutation_symmetry_fc3, \
@@ -93,6 +93,7 @@ parser.set_defaults(amplitude=None,
                     band_paths=None,
                     band_points=None,
                     cell_poscar=None,
+                    cutoff_frequency=1e-2,
                     cutoff_lifetime=1e-4,
                     delta_fc2=False,
                     factor=None,
@@ -164,7 +165,10 @@ parser.add_option("--br", "--bterta", dest="is_bterta",
 parser.add_option("-c", "--cell", dest="cell_poscar",
                   action="store", type="string",
                   help="Read unit cell", metavar="FILE")
-parser.add_option("--cl", "--cutoff_lifetime", dest="cutoff_lifetime",
+parser.add_option("--cutfreq", "--cutoff_frequency", dest="cutoff_frequency",
+                  type="float",
+                  help="Phonon modes below this frequency are ignored.")
+parser.add_option("--cutlt", "--cutoff_lifetime", dest="cutoff_lifetime",
                   type="float",
                   help="Cutoff lifetime in second used for thermal conductivity calculation")
 parser.add_option("-d", "--disp", dest="is_displacement",
@@ -521,6 +525,8 @@ else:
     if options.is_translational_symmetry:
         set_translational_invariance(fc2_with_dim)
 
+    show_drift_force_constants(fc2_with_dim, name='fc2')
+    
     if not options.read_fc2:
         if log_level:
             print "----- Write fc2.hdf5 -----"
@@ -556,6 +562,8 @@ else:
         if options.is_translational_symmetry:
             set_translational_invariance(fc2)
 
+        show_drift_force_constants(fc2, 'fc2_extra')
+            
         if not options.read_fc2_extra:
             if log_level:
                 print "----- Write fc2_extra.hdf5 -----"
@@ -747,11 +755,15 @@ else:
             jdos.get_jointDOS(grid_points,
                               filename=options.output_filename)
         else:
+            if log_level:
+                print "Cutoff frequency:", settings.get_cutoff_frequency()
+            
             phono3py = Phono3py(fc3,
                                 supercell,
                                 primitive,
                                 mesh,
                                 band_indices=settings.get_band_indices(),
+                                cutoff_frequency=settings.get_cutoff_frequency(),
                                 frequency_factor_to_THz=factor,
                                 is_nosym=options.is_nosym,
                                 symmetrize_fc3_q=options.is_symmetrize_fc3_q,

@@ -15,11 +15,11 @@ class Phono3py:
                  primitive,
                  mesh,
                  band_indices=None,
+                 cutoff_frequency=1e-4,
                  frequency_factor_to_THz=None,
                  is_nosym=False,
                  symmetrize_fc3_q=False,
                  symprec=1e-5,
-                 cutoff_frequency=1e-4,
                  log_level=0,
                  lapack_zheev_uplo='L'):
 
@@ -43,6 +43,7 @@ class Phono3py:
 
         self._band_indices_flatten = np.intc(
             [x for bi in self._band_indices for x in bi])
+
         self._interaction = Interaction(
             fc3,
             supercell,
@@ -263,22 +264,6 @@ class Phono3py:
 
         self._kappa = mode_kappa
         self._gamma = gamma
-
-    def solve_dynamical_matrix(self, q):
-        """Only for test phonopy zheev wrapper"""
-        import anharmonic._phono3py as phono3c
-        dm = self._pp.get_dynamical_matrix()
-        dm.set_dynamical_matrix(q)
-        dynmat = dm.get_dynamical_matrix()
-        eigvals = np.zeros(len(dynmat), dtype=float)
-        phono3c.zheev(dynmat, eigvals)
-        
-        for f, row in zip(np.sqrt(abs(eigvals)) * self._factor *
-                          np.sign(eigvals), dynmat.T):
-            print f
-            print row
-        
-
     
 class JointDOS:
     def __init__(self,

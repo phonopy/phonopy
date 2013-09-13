@@ -7,6 +7,7 @@ class Phono3pySettings(Settings):
 
         self._band_indices = None
         self._coarse_mesh_shifts = None
+        self._cutoff_frequency = 1e-4
         self._cutoff_lifetime = 1e-4 # in second
         self._grid_points = None
         self._ion_clamped = False
@@ -35,6 +36,12 @@ class Phono3pySettings(Settings):
 
     def get_coarse_mesh_shifts(self):
         return self._coarse_mesh_shifts
+
+    def set_cutoff_frequency(self, cutoff_frequency):
+        self._cutoff_frequency = cutoff_frequency
+
+    def get_cutoff_frequency(self):
+        return self._cutoff_frequency
 
     def set_cutoff_lifetime(self, cutoff_lifetime):
         self._cutoff_lifetime = cutoff_lifetime
@@ -152,6 +159,10 @@ class Phono3pyConfParser(ConfParser):
                 if self._options.band_indices is not None:
                     self._confs['band_indices'] = self._options.band_indices
 
+            if opt.dest == 'cutoff_frequency':
+                if self._options.cutoff_frequency is not None:
+                    self._confs['cutoff_frequency'] = self._options.cutoff_frequency
+
             if opt.dest == 'cutoff_lifetime':
                 if self._options.cutoff_lifetime is not None:
                     self._confs['cutoff_lifetime'] = self._options.cutoff_lifetime
@@ -236,6 +247,9 @@ class Phono3pyConfParser(ConfParser):
                 for sum_set in confs['band_indices'].split(','):
                     vals.append([int(x) - 1 for x in sum_set.split()])
                 self.set_parameter('band_indices', vals)
+
+            if conf_key == 'cutoff_frequency':
+                self.set_parameter('cutoff_frequency', confs['cutoff_frequency'])
 
             if conf_key == 'cutoff_lifetime':
                 self.set_parameter('cutoff_lifetime', confs['cutoff_lifetime'])
@@ -326,6 +340,10 @@ class Phono3pyConfParser(ConfParser):
         # Sets of band indices that are summed
         if params.has_key('band_indices'):
             self._settings.set_band_indices(params['band_indices'])
+
+        # Phonon modes below this frequency are ignored.
+        if params.has_key('cutoff_frequency'):
+            self._settings.set_cutoff_frequency(params['cutoff_frequency'])
 
         # Cutoff lifetime used for thermal conductivity calculation
         if params.has_key('cutoff_lifetime'):
