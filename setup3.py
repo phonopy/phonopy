@@ -65,7 +65,7 @@ extension_forcefit = Extension(
              'c/harmonic/lapack_wrapper.c'])
 
 setup(name='phono3py',
-      version='0.6.0',
+      version='0.6.2',
       description='This is the phono3py module.',
       author='Atsushi Togo',
       author_email='atz.togo@gmail.com',
