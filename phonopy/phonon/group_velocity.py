@@ -56,20 +56,6 @@ def get_group_velocity(q, # q-point
                        frequency_factor_to_THz=frequency_factor_to_THz)
     return gv.get_group_velocity()[0]
 
-directions_all = np.array([[1, 0, 0],  # x
-                           [0, 1, 0],  # y
-                           [0, 0, 1],  # z
-                           [0, 1, 1],  # yz
-                           [1, 0, 1],  # zx
-                           [1, 1, 0],  # xy
-                           [1, 1, 1]]) # xyz
-directions = np.array([[1, 0, 0],  # x
-                       [0, 1, 0],  # y
-                       [0, 0, 1],  # z
-                       [1, 0, 1],  # zx
-                       [0, 1, 1]]) # yz
-            
-
 def degenerate_sets(freqs, cutoff=1e-4):
     indices = []
     done = []
@@ -131,9 +117,17 @@ class GroupVelocity:
         else:
             self._ddm = None
         self._factor = frequency_factor_to_THz
+
+        self._directions = np.array([[1, 2, 3],
+                                     [1, 0, 0],
+                                     [0, 1, 0],
+                                     [0, 0, 1]], dtype='double')
+        self._directions[0] /= np.linalg.norm(self._directions[0])
+
         self._group_velocity = None
         if self._q_points is not None:
             self._set_group_velocity()
+
 
     def set_q_points(self, q_points):
         self._q_points = q_points
@@ -162,14 +156,10 @@ class GroupVelocity:
         gv = np.zeros((len(freqs), 3), dtype='double')
         deg_sets = degenerate_sets(freqs)
 
-        ddm_dirs = self._get_dD(np.array(q)) # x, y, z, yz, zx, xy, xyz
+        ddms = self._get_dD(np.array(q))
         pos = 0
         for deg in deg_sets:
-            gv_dirs = np.zeros((len(deg), len(directions)), dtype='double')
-            for i, ddm in enumerate(ddm_dirs):
-                gv_dirs[:, i] = self._perturb_D(ddm, eigvecs[:, deg])
-
-            gv[pos:pos+len(deg)] = self._sort_gv(np.array(gv_dirs))
+            gv[pos:pos+len(deg)] = self._perturb_D(ddms, eigvecs[:, deg])
             pos += len(deg)
 
         for i in range(3):
@@ -185,65 +175,31 @@ class GroupVelocity:
     
     def _get_dD_FD(self, q): # finite difference
         ddm = []
-        for dqc_i in (directions * self._q_length):
-            dq = np.dot(self._reciprocal_lattice_inv, dqc_i)
-            ddm.append(delta_dynamical_matrix(q,
-                                              dq,
-                                              self._dynmat) /
-                       (self._q_length * 2))
+        for dqc in self._directions * self._q_length:
+            dq = np.dot(self._reciprocal_lattice_inv, dqc)
+            ddm.append(delta_dynamical_matrix(q, dq, self._dynmat) /
+                       self._q_length / 2)
         return np.array(ddm)
     
     def _get_dD_analytical(self, q):
         self._ddm.run(q)
         ddm = self._ddm.get_derivative_of_dynamical_matrix()
-        ddm_dirs = np.zeros((len(directions),) + ddm.shape[1:],
+        ddm_dirs = np.zeros((len(self._directions),) + ddm.shape[1:],
                             dtype='complex128')
-        for i, d in enumerate(directions):
+        for i, dq in enumerate(self._directions):
             for j in range(3):
-                ddm_dirs[i] += d[j] * ddm[j]
+                ddm_dirs[i] += dq[j] * ddm[j]
         return ddm_dirs
     
-    def _perturb_D(self, dD, eigsets):
-        eigvals = np.linalg.eigvalsh(
-            np.dot(eigsets.T.conj(), np.dot(dD, eigsets)))
-        return eigvals.real
+    def _perturb_D(self, ddms, eigsets):
+        eigvals, eigvecs = np.linalg.eigh(
+            np.dot(eigsets.T.conj(), np.dot(ddms[0], eigsets)))
+
+        gv = []
+        rot_eigsets = np.dot(eigsets, eigvecs)
+        for ddm in ddms[1:]:
+            gv.append(
+                np.diag(np.dot(rot_eigsets.T.conj(),
+                               np.dot(ddm, rot_eigsets))).real)
         
-    def _sort_gv(self, gv_dirs):
-        num_deg = len(gv_dirs)
-        gv = np.zeros((num_deg, 5), dtype='double')
-        gv[:, 2] = gv_dirs[:, 2]
-
-        for i in (0, 1): # x, y
-            done_x = [False] * num_deg
-            done_xz = [False] * num_deg
-            for j in range(num_deg):
-                indices = self._search(j, gv_dirs, i, done_x, done_xz)
-                gv[j, i] = gv_dirs[indices[1], i]
-                gv[j, 3 + i] = gv_dirs[indices[0], 3 + i]
-
-        return gv[:, :3]
-                
-    def _search(self, i, gv, i_xy, done_x, done_xz):
-        num_deg = len(gv)
-        z = gv[i, 2]
-        min_delta = None
-        min_indices = None
-
-        for j in range(num_deg):
-            z_x = gv[j, 3 + i_xy]
-            for k in range(num_deg):
-                x = gv[k, i_xy]
-                delta = x + z - z_x
-                if abs(delta) < min_delta or min_indices is None:
-                    if done_x[k] or done_xz[j]:
-                        continue
-                    else:
-                        min_delta = abs(delta)
-                        min_indices = [j, k]
-
-        done_x[min_indices[1]] = True
-        done_xz[min_indices[0]] = True
-
-        return min_indices
-
-            
+        return np.transpose(gv)
