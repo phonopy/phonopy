@@ -128,7 +128,6 @@ class GroupVelocity:
         if self._q_points is not None:
             self._set_group_velocity()
 
-
     def set_q_points(self, q_points):
         self._q_points = q_points
         self._set_group_velocity()
