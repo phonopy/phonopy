@@ -1,7 +1,7 @@
 import numpy as np
 import phonopy.structure.spglib as spg
 from phonopy.harmonic.force_constants import similarity_transformation
-from phonopy.phonon.group_velocity import get_group_velocity
+from phonopy.phonon.group_velocity import get_group_velocity, degenerate_sets
 from phonopy.units import Kb, THzToEv, EV, THz, Angstrom
 from phonopy.phonon.thermal_properties import mode_cv
 from anharmonic.file_IO import write_kappa_to_hdf5, write_triplets
@@ -241,7 +241,7 @@ class conductivity_RTA:
         self._cv[i] = cv
 
         # Outer product of group velocities (v x v) [num_k*, num_freqs, 3, 3]
-        gv_by_gv_tensor = self._get_gv_by_gv(gv, i)
+        gv_by_gv_tensor = self._get_gv_by_gv(i)
         self._sum_num_kstar += len(gv_by_gv_tensor)
 
         # Sum all vxv at k*
@@ -259,22 +259,31 @@ class conductivity_RTA:
                     gv_sum2[:, l] * cv[k, l] / (self._gamma[j, i, k, l] * 2) *
                     self._conversion_factor)
 
-    def _get_gv_by_gv(self, gv, i):
+    def _get_gv_by_gv(self, i):
+        deg_sets = degenerate_sets(self._frequencies[i])
         grid_point = self._grid_points[i]
         rotations = self._get_rotations_for_star(i)
-        self._get_group_veclocities_at_star(i, gv)
+        # self._get_group_veclocities_at_star(i, gv)
         gv2_tensor = []
         rec_lat = np.linalg.inv(self._primitive.get_cell())
         rotations_cartesian = [similarity_transformation(rec_lat, r)
                                for r in rotations]
         for rot_c in rotations_cartesian:
-            gv2_tensor.append([np.outer(gv_rot, gv_rot)
-                               for gv_rot in np.dot(rot_c, gv.T).T])
+            gvs_rot = np.dot(rot_c, self._gv[i].T).T
+
+            # Take average of group veclocities of degenerate phonon modes
+            # and then calculate gv x gv to preserve symmetry
+            gvs = np.zeros_like(gvs_rot)
+            for deg in deg_sets:
+                gv_ave = gvs_rot[deg].sum(axis=0) / len(deg)
+                for j in deg:
+                    gvs[j] = gv_ave
+            gv2_tensor.append([np.outer(gv, gv) for gv in gvs])
 
         if self._log_level:
             self._show_log(grid_point,
                            self._frequencies[i],
-                           gv,
+                           self._gv[i],
                            rotations,
                            rotations_cartesian)
 
@@ -505,43 +514,6 @@ def get_pointgroup_operations(point_operations_real):
         
     return np.array(point_operations)
 
-            
-        
-if __name__ == '__main__':
-    import sys
-    import h5py
 
-    def read_kappa(filename):
-        vals = []
-        for line in open(filename):
-            if line.strip()[0] == '#':
-                continue
-            vals.append([float(x) for x in line.split()])
-        vals = np.array(vals)
-        return vals[:, 0], vals[:, 1]
-
-    def sum_partial_kappa(filenames):
-        temps, kappa = read_kappa(filenames[0])
-        sum_kappa = kappa.copy()
-        for filename in filenames[1:]:
-            temps, kappa = parse_kappa(filename)
-            sum_kappa += kappa
-        return temps, sum_kappa
-    
-    def sum_partial_kappa_hdf5(filenames):
-        f = h5py.File(filenames[0], 'r')
-        kappas = f['kappas'][:]
-        temps = f['temperatures'][:]
-        for filename in filenames[1:]:
-            f = h5py.File(filename, 'r')
-            kappas += f['kappas'][:]
-        return temps, kappas
-
-    temps, kappa = sum_partial_kappa(sys.argv[1:])
-    for t, k in zip(temps, kappa):
-        print "%8.2f %.5f" % (t, k)
-    # temps, kappa = sum_partial_kappa_hdf5(sys.argv[1:])
-    # for t, k in zip(temps, kappa.sum(axis=1)):
-    #     print "%8.2f %.5f" % (t, k)
 
 
