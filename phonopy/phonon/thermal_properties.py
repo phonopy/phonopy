@@ -106,7 +106,7 @@ class ThermalProperties(ThermalPropertiesBase):
             self._frequencies = np.where(frequencies > cutoff_frequency,
                                          frequencies, -1)
         else:
-            self._frequencies = np.double(frequencies) * THzToEv
+            self._frequencies = np.array(frequencies, dtype='double') * THzToEv
         self._set_high_T_entropy_and_zero_point_energy()
         self._is_projection = is_projection
         
@@ -156,9 +156,9 @@ class ThermalProperties(ThermalPropertiesBase):
                 cv.append(props[2] * 1000)
 
         self._thermal_properties = [temperatures,
-                                    np.double(fe),
-                                    np.double(entropy),
-                                    np.double(cv)]
+                                    np.array(fe, dtype='double'),
+                                    np.array(entropy, dtype='double'),
+                                    np.array(cv, dtype='double')]
 
         if self._is_projection:
             fe = []
@@ -171,10 +171,11 @@ class ThermalProperties(ThermalPropertiesBase):
                 entropy.append(self.get_entropy(t) * 1000,)
                 cv.append(self.get_heat_capacity_v(t) * 1000)
 
-            self._projected_thermal_properties = [temperatures,
-                                                  np.double(fe),
-                                                  np.double(entropy),
-                                                  np.double(cv)]
+            self._projected_thermal_properties = [
+                temperatures,
+                np.array(fe, dtype='double'),
+                np.array(entropy, dtype='double'),
+                np.array(cv, dtype='double')]
 
     def get_thermal_properties( self ):
         return self._thermal_properties

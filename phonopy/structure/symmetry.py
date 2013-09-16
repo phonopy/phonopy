@@ -124,7 +124,7 @@ class Symmetry:
             if (abs(diff - np.rint(diff)) < symprec).all():
                 site_symmetries.append(r)
 
-        return np.intc(site_symmetries)
+        return np.array(site_symmetries, dtype='intc')
 
     def get_symmetry_tolerance(self):
         return self.symprec
@@ -176,7 +176,7 @@ class Symmetry:
             if not is_same:
                 rotations.append(rot)
 
-        self.pointgroup_operations = np.intc(rotations)
+        self.pointgroup_operations = np.array(rotations, dtype='intc')
         self.pointgroup = get_pointgroup(self.pointgroup_operations)[0]
 
     def _map_operations(self):
@@ -225,7 +225,8 @@ class Symmetry:
             translations.append(np.zeros(3, dtype='double'))
             self.map_atoms = range(self.__cell.get_number_of_atoms())
 
-        self.symmetry_operations = {'rotations': np.intc(rotations),
+        self.symmetry_operations = {'rotations': np.array(rotations,
+                                                          dtype='intc'),
                                     'translations': np.array(translations,
                                                              dtype='double')}
         self.international_table = 'P1 (1)'

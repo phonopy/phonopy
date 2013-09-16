@@ -67,8 +67,10 @@ class DynamicalMatrix:
         self._decimals = decimals
         self._symprec = symprec
 
-        self._p2s_map = np.intc(primitive.get_primitive_to_supercell_map())
-        self._s2p_map = np.intc(primitive.get_supercell_to_primitive_map())
+        self._p2s_map = np.array(primitive.get_primitive_to_supercell_map(),
+                                 dtype='intc')
+        self._s2p_map = np.array(primitive.get_supercell_to_primitive_map(),
+                                 dtype='intc')
         p2p_map = primitive.get_primitive_to_primitive_map()
         self._p2p_map = [p2p_map[self._s2p_map[i]]
                          for i in range(len(self._s2p_map))]
@@ -242,7 +244,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         self._nac_params = nac_params
         self._method = method
 
-        self._born = np.double(self._nac_params['born'])
+        self._born = np.array(self._nac_params['born'], dtype='double')
         factor = self._nac_params['factor']
         if (isinstance(factor, list) or
             isinstance(factor, tuple)):
@@ -251,7 +253,8 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         else:
             self._unit_conversion = factor
             self._damping_factor = DAMPING_FACTOR
-        self._dielectric = np.double(self._nac_params['dielectric'])
+        self._dielectric = np.array(self._nac_params['dielectric'],
+                                    dtype='double')
 
     def set_dynamical_matrix(self, q_red, q_direction=None, verbose=False):
         num_atom = self._pcell.get_number_of_atoms()

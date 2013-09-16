@@ -164,8 +164,8 @@ def distribute_force_constants(force_constants,
             for i, pos_i in enumerate(positions):
                 for map_atom_disp, map_sym in zip(map_atom_disps, map_syms):
                     # L R L^-1
-                    rot_cartesian = np.double(similarity_transformation(
-                        lattice, rotations[map_sym]))
+                    rot_cartesian = np.array(similarity_transformation(
+                        lattice, rotations[map_sym]), dtype='double')
                     distribute_fc2_part(force_constants,
                                         positions,
                                         atom_disp,
@@ -187,8 +187,8 @@ def distribute_force_constants(force_constants,
                 symprec)
     
             # L R L^-1
-            rot_cartesian = np.double(similarity_transformation(
-                    lattice, rotations[map_sym]))
+            rot_cartesian = np.array(similarity_transformation(
+                    lattice, rotations[map_sym]), dtype='double')
     
             _distribute_fc2_part(force_constants,
                                  positions,
@@ -371,7 +371,7 @@ def get_positions_sent_by_rot_inv(positions,
 
         rot_map_syms.append(rot_map)
 
-    return np.intc(rot_map_syms)
+    return np.array(rot_map_syms, dtype='intc')
 
 def get_rotated_displacement(displacements, site_sym_cart):
     rot_disps = []
