@@ -169,7 +169,6 @@ class GroupVelocity:
         for i in range(3):
             gv[:, i] *= self._factor ** 2 / freqs / 2
 
-        return gv
         return self._symmetrize_group_velocity(gv, q)
 
     def _symmetrize_group_velocity(self, gv, q):
