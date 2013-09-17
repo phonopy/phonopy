@@ -1,6 +1,5 @@
 import numpy as np
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC, get_smallest_vectors
-from phonopy.structure.symmetry import Symmetry
 from phonopy.units import VaspToTHz
 from anharmonic.phonon3.real_to_reciprocal import RealToReciprocal
 from anharmonic.phonon3.reciprocal_to_normal import ReciprocalToNormal
@@ -59,25 +58,25 @@ class Interaction:
                  supercell,
                  primitive,
                  mesh,
+                 symmetry,
                  band_indices=None,
                  frequency_factor_to_THz=VaspToTHz,
                  is_nosym=False,
                  symmetrize_fc3_q=False,
-                 symprec=1e-3,
                  cutoff_frequency=None,
                  lapack_zheev_uplo='L'):
         self._fc3 = fc3 
         self._supercell = supercell
         self._primitive = primitive
-        self._mesh = np.intc(mesh)
+        self._mesh = np.array(mesh, dtype='intc')
+        self._symmetry = symmetry
         
         num_band = primitive.get_number_of_atoms() * 3
         if band_indices is None:
             self._band_indices = np.arange(num_band, dtype='intc')
         else:
-            self._band_indices = np.intc(band_indices)
+            self._band_indices = np.array(band_indices, dtype='intc')
         self._frequency_factor_to_THz = frequency_factor_to_THz
-        self._symprec = symprec
 
         if cutoff_frequency is None:
             self._cutoff_frequency = 0
@@ -87,8 +86,7 @@ class Interaction:
         self._symmetrize_fc3_q = symmetrize_fc3_q
         self._lapack_zheev_uplo = lapack_zheev_uplo
 
-        symmetry = Symmetry(primitive, symprec=symprec)
-        self._point_group_operations = symmetry.get_pointgroup_operations()
+        self._symprec = symmetry.get_symmetry_tolerance()
 
         self._triplets_at_q = None
         self._weights_at_q = None
@@ -137,9 +135,6 @@ class Interaction:
     def get_primitive(self):
         return self._primitive
 
-    def get_point_group_operations(self):
-        return self._point_group_operations
-    
     def get_triplets_at_q(self):
         return self._triplets_at_q, self._weights_at_q
 
@@ -169,7 +164,7 @@ class Interaction:
             triplets_at_q, weights_at_q, grid_address = get_triplets_at_q(
                 grid_point,
                 self._mesh,
-                self._point_group_operations)
+                self._symmetry.get_pointgroup_operations())
 
         self._triplets_at_q = triplets_at_q
         self._weights_at_q = weights_at_q
@@ -193,7 +188,7 @@ class Interaction:
 
     def set_nac_q_direction(self, nac_q_direction=None):
         if nac_q_direction is not None:
-            self._nac_q_direction = np.double(nac_q_direction)
+            self._nac_q_direction = np.array(nac_q_direction, dtype='double')
 
     def _run_c(self):
         import anharmonic._phono3py as phono3c
@@ -208,9 +203,11 @@ class Interaction:
         svecs, multiplicity = get_smallest_vectors(self._supercell,
                                                    self._primitive,
                                                    self._symprec)
-        masses = np.double(self._primitive.get_masses())
-        p2s = np.intc(self._primitive.get_primitive_to_supercell_map())
-        s2p = np.intc(self._primitive.get_supercell_to_primitive_map())
+        masses = np.array(self._primitive.get_masses(), dtype='double')
+        p2s = np.array(self._primitive.get_primitive_to_supercell_map(),
+                       dtype='intc')
+        s2p = np.array(self._primitive.get_supercell_to_primitive_map(),
+                       dtype='intc')
 
         phono3c.interaction(self._interaction_strength,
                             self._frequencies,
@@ -221,7 +218,7 @@ class Interaction:
                             self._fc3,
                             svecs,
                             multiplicity,
-                            np.double(masses),
+                            np.array(masses, dtype='double'),
                             p2s,
                             s2p,
                             self._band_indices,
@@ -232,9 +229,10 @@ class Interaction:
         import anharmonic._phono3py as phono3c
         
         svecs, multiplicity = self._dm.get_shortest_vectors()
-        masses = np.double(self._dm.get_primitive().get_masses())
-        rec_lattice = np.double(
-            np.linalg.inv(self._dm.get_primitive().get_cell())).copy()
+        masses = np.array(self._dm.get_primitive().get_masses(), dtype='double')
+        rec_lattice = np.array(
+            np.linalg.inv(self._dm.get_primitive().get_cell()),
+            dtype='double').copy()
         if self._dm.is_nac():
             born = self._dm.get_born_effective_charges()
             nac_factor = self._dm.get_nac_factor()

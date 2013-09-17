@@ -14,6 +14,7 @@ unit_to_WmK = ((THz * Angstrom) ** 2 / (Angstrom ** 3) * EV / THz /
 class conductivity_RTA:
     def __init__(self,
                  interaction,
+                 symmetry,
                  sigmas=[0.1],
                  t_max=1500,
                  t_min=0,
@@ -45,13 +46,14 @@ class conductivity_RTA:
         self._frequency_factor_to_THz = self._pp.get_frequency_factor_to_THz()
         self._cutoff_frequency = self._pp.get_cutoff_frequency()
         self._cutoff_lifetime = cutoff_lifetime
+
+        self._symmetry = symmetry
+        self._point_operations = symmetry.get_reciprocal_operations()
         
         self._grid_points = None
         self._grid_weights = None
         self._grid_address = None
 
-        self._point_operations = get_pointgroup_operations(
-            self._pp.get_point_group_operations())
         self._gamma = None
         self._read_gamma = False
         self._frequencies = None
@@ -127,8 +129,8 @@ class conductivity_RTA:
                                                        self._mesh_divisors)
 
     def get_qpoints(self):
-        qpoints = np.double([self._grid_address[gp].astype(float) / self._mesh
-                             for gp in self._grid_points])
+        qpoints = np.array([self._grid_address[gp].astype(float) / self._mesh
+                            for gp in self._grid_points], dtype='double')
         return qpoints
             
     def get_grid_points(self):
@@ -233,6 +235,7 @@ class conductivity_RTA:
             self._qpoint,
             self._dynamical_matrix,
             q_length=self._gv_delta_q,
+            symmetry=self._symmetry,
             frequency_factor_to_THz=self._frequency_factor_to_THz)
         self._gv[i] = gv
         
@@ -263,7 +266,6 @@ class conductivity_RTA:
         deg_sets = degenerate_sets(self._frequencies[i])
         grid_point = self._grid_points[i]
         rotations = self._get_rotations_for_star(i)
-        # self._get_group_veclocities_at_star(i, gv)
         gv2_tensor = []
         rec_lat = np.linalg.inv(self._primitive.get_cell())
         rotations_cartesian = [similarity_transformation(rec_lat, r)
@@ -273,12 +275,12 @@ class conductivity_RTA:
 
             # Take average of group veclocities of degenerate phonon modes
             # and then calculate gv x gv to preserve symmetry
-            gvs = np.zeros_like(gvs_rot)
-            for deg in deg_sets:
-                gv_ave = gvs_rot[deg].sum(axis=0) / len(deg)
-                for j in deg:
-                    gvs[j] = gv_ave
-            gv2_tensor.append([np.outer(gv, gv) for gv in gvs])
+            # gvs = np.zeros_like(gvs_rot)
+            # for deg in deg_sets:
+            #     gv_ave = gvs_rot[deg].sum(axis=0) / len(deg)
+            #     for j in deg:
+            #         gvs[j] = gv_ave
+            gv2_tensor.append([np.outer(gv, gv) for gv in gvs_rot])
 
         if self._log_level:
             self._show_log(grid_point,
@@ -327,7 +329,7 @@ class conductivity_RTA:
                 if not in_orbits:
                     orbits.append(rot_address)
                     rotations.append(rot)
-    
+
             # check if the number of rotations is correct.
             if self._grid_weights is not None:
                 if len(rotations) != self._grid_weights[i]:
@@ -342,42 +344,11 @@ class conductivity_RTA:
 
         return rotations
 
-    def _get_group_veclocities_at_star(self, i, gv):
-        grid_point = self._grid_points[i]
-        orig_address = self._grid_address[grid_point]
-        orbits = []
-        for rot in self._point_operations:
-            rot_address = np.dot(rot, orig_address) % self._mesh
-            in_orbits = False
-            for orbit in orbits:
-                if (rot_address == orbit).all():
-                    in_orbits = True
-                    break
-            if not in_orbits:
-                orbits.append(rot_address)
-
-        rec_lat = np.linalg.inv(self._primitive.get_cell())
-        
-        gv_at_star = np.zeros((len(orbits),) + gv.shape, dtype='double')
-        weights = np.zeros(len(orbits), dtype='intc')
-        for rot in self._point_operations:
-            rot_address = np.dot(rot, orig_address) % self._mesh
-            for j, orbit in enumerate(orbits):
-                if (rot_address == orbit).all():
-                    rot_c = similarity_transformation(rec_lat, rot)
-                    gv_at_star[j] += np.dot(rot_c, gv.T).T
-                    weights[j] += 1
-
-        for j in range(len(orbits)):
-            gv_at_star[j] /= weights[j]
-
-        print gv_at_star
-
     def _set_mesh_numbers(self, mesh_divisors=None, coarse_mesh_shifts=None):
         self._mesh = self._pp.get_mesh_numbers()
 
         if mesh_divisors is None:
-            self._mesh_divisors = np.intc([1, 1, 1])
+            self._mesh_divisors = np.array([1, 1, 1], dtype='intc')
         else:
             self._mesh_divisors = []
             for i, (m, n) in enumerate(zip(self._mesh, mesh_divisors)):
@@ -388,7 +359,7 @@ class conductivity_RTA:
                     print ("Mesh number %d for the " +
                            ["first", "second", "third"][i] + 
                            " axis is not dividable by divisor %d.") % (m, n)
-            self._mesh_divisors = np.intc(self._mesh_divisors)
+            self._mesh_divisors = np.array(self._mesh_divisors, dtype='intc')
             if coarse_mesh_shifts is None:
                 self._coarse_mesh_shifts = [False, False, False]
             else:
@@ -412,9 +383,9 @@ class conductivity_RTA:
 
         dm = self._dynamical_matrix
         svecs, multiplicity = dm.get_shortest_vectors()
-        masses = np.double(dm.get_primitive().get_masses())
-        rec_lattice = np.double(
-            np.linalg.inv(dm.get_primitive().get_cell())).copy()
+        masses = np.array(dm.get_primitive().get_masses(), dtype='double')
+        rec_lattice = np.array(np.linalg.inv(dm.get_primitive().get_cell()),
+                               dtype='double').copy()
         if dm.is_nac():
             born = dm.get_born_effective_charges()
             nac_factor = dm.get_nac_factor()
@@ -430,7 +401,7 @@ class conductivity_RTA:
 
         phono3c.phonon(frequencies,
                        eigenvectors,
-                       np.double(self._qpoint),
+                       np.array(self._qpoint, dtype='double'),
                        dm.get_force_constants(),
                        svecs,
                        multiplicity,
@@ -500,20 +471,3 @@ class conductivity_RTA:
                        grid_point=grid_point,
                        filename=self._filename)
         
-def get_pointgroup_operations(point_operations_real):
-    exist_r_inv = False
-    for rot in point_operations_real:
-        if (rot + np.eye(3, dtype='intc') == 0).all():
-            exist_r_inv = True
-            break
-
-    point_operations = [rot.T for rot in point_operations_real]
-    
-    if not exist_r_inv:
-        point_operations += [-rot.T for rot in point_operations_real]
-        
-    return np.array(point_operations)
-
-
-
-

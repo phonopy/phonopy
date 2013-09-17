@@ -1,4 +1,5 @@
 import numpy as np
+from phonopy.structure.symmetry import Symmetry
 from anharmonic.phonon3.imag_self_energy import ImagSelfEnergy
 from anharmonic.phonon3.frequency_shift import FrequencyShift
 from anharmonic.phonon3.interaction import Interaction
@@ -35,7 +36,6 @@ class Phono3py:
         self._frequency_factor_to_THz = frequency_factor_to_THz
         self._is_nosym = is_nosym
         self._symmetrize_fc3_q = symmetrize_fc3_q
-        self._symprec = symprec
         self._cutoff_frequency = cutoff_frequency
         self._log_level = log_level
         self._kappa = None
@@ -44,14 +44,16 @@ class Phono3py:
         self._band_indices_flatten = np.intc(
             [x for bi in self._band_indices for x in bi])
 
+        self._symmetry = Symmetry(primitive, symprec)
+        
         self._interaction = Interaction(
             fc3,
             supercell,
             primitive,
             mesh,
+            self._symmetry,
             band_indices=self._band_indices_flatten,
             frequency_factor_to_THz=self._frequency_factor_to_THz,
-            symprec=self._symprec,
             cutoff_frequency=self._cutoff_frequency,
             is_nosym=self._is_nosym,
             symmetrize_fc3_q=self._symmetrize_fc3_q,
@@ -205,6 +207,7 @@ class Phono3py:
                                  read_amplitude=False,
                                  filename=None):
         br = conductivity_RTA(self._interaction,
+                              self._symmetry,
                               sigmas=sigmas,
                               t_max=t_max,
                               t_min=t_min,
