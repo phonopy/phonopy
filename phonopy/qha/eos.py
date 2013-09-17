@@ -32,12 +32,6 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-try:
-    from scipy.optimize import leastsq
-except ImportError:
-    print "You need to install python-scipy."
-    exit(1)
-
 import numpy as np
 
 def get_eos(eos):
@@ -104,6 +98,12 @@ class EOSFit:
         def residuals(p, eos, v, e):
             return eos(p, v) - e
         
+        try:
+            from scipy.optimize import leastsq
+        except ImportError:
+            print "You need to install python-scipy."
+            exit(1)
+
         result = leastsq(residuals,
                          initial_parameter[:],
                          args=(self._eos, self._volume, self._energy),
