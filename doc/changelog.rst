@@ -3,6 +3,16 @@
 Change Log
 ==========
 
+Sep-17-2013: Version 1.7.3
+---------------------------
+
+* Fix. Segmentation fault happens in some specific systems
+  (e.g. Kubuntu 12.04 32bit) due to a different behavior of numpy
+  array creation.
+* Group velocity for degenerate phonon mode is calculated slightly
+  different from older version and now it is symmetrized by
+  site-symmetry of q-point.
+
 Aug-4-2013: Version 1.7.2
 ---------------------------
 
