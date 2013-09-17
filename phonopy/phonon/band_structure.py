@@ -188,18 +188,10 @@ class BandStructure:
         for path in self._paths:
             self._set_initial_point(path[0])
 
-            q_direction = None # used for NAC only
-            if is_nac:
-                # One of end points has to be Gamma point.
-                if (np.linalg.norm(path[0]) < 0.0001 or 
-                    np.linalg.norm(path[-1]) < 0.0001):
-                    q_direction = path[0] - path[-1]
-            
             (distances_on_path,
              eigvals_on_path,
              eigvecs_on_path,
              gv_on_path) = self._solve_dm_on_path(path,
-                                                  q_direction,
                                                   verbose)
 
             eigvals.append(np.array(eigvals_on_path))
@@ -219,7 +211,7 @@ class BandStructure:
         
         self._set_frequencies()
 
-    def _solve_dm_on_path(self, path, q_direction, verbose):
+    def _solve_dm_on_path(self, path, verbose):
         is_nac = self._dynamical_matrix.is_nac()
         distances_on_path = []
         eigvals_on_path = []
@@ -235,6 +227,9 @@ class BandStructure:
             distances_on_path.append(self._distance)
             
             if is_nac:
+                q_direction = None
+                if (np.abs(q) < 0.0001).all(): # For Gamma point
+                    q_direction = path[0] - path[-1]
                 self._dynamical_matrix.set_dynamical_matrix(
                     q, q_direction=q_direction, verbose=verbose)
             else:
