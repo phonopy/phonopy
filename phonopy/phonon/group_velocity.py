@@ -131,8 +131,14 @@ class GroupVelocity:
         self._q_points = None
         self._group_velocity = None
 
-    def set_q_points(self, q_points):
+    def set_q_points(self, q_points, perturbation=None):
         self._q_points = q_points
+        if perturbation is None:
+            self._directions[0] = np.array([1, 2, 3])
+        else:
+            self._directions[0] = np.dot(
+                self._reciprocal_lattice, perturbation)
+        self._directions[0] /= np.linalg.norm(self._directions[0])
         self._set_group_velocity()
 
     def set_q_length(self, q_length):
@@ -163,6 +169,7 @@ class GroupVelocity:
         for i in range(3):
             gv[:, i] *= self._factor ** 2 / freqs / 2
 
+        return gv
         return self._symmetrize_group_velocity(gv, q)
 
     def _symmetrize_group_velocity(self, gv, q):
