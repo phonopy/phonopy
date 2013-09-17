@@ -169,13 +169,14 @@ class GroupVelocity:
         for i in range(3):
             gv[:, i] *= self._factor ** 2 / freqs / 2
 
+        # return gv
         return self._symmetrize_group_velocity(gv, q)
 
     def _symmetrize_group_velocity(self, gv, q):
         rotations = []
         for r in self._symmetry.get_reciprocal_operations():
-            diff = q - np.dot(r, q)
-            diff -= np.rint(diff)
+            q_in_BZ = q - np.rint(q)
+            diff = q_in_BZ - np.dot(r, q_in_BZ)
             if (np.abs(diff) < self._symmetry.get_symmetry_tolerance()).all():
                 rotations.append(r)
 
