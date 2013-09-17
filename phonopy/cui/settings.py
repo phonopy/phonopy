@@ -680,7 +680,7 @@ class ConfParser:
                 bands = []
                 for section in confs['band'].split(','):
                     points = [fracval(x) for x in section.split()]
-                    if len(points) % 3 != 0:
+                    if len(points) % 3 != 0 or len(points) < 6:
                         self.setting_error("BAND is incorrectly set.")
                         break
                     bands.append(np.array(points).reshape(-1, 3))
