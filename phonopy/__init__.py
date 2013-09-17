@@ -85,6 +85,7 @@ class Phonopy:
         self._primitive = None
         self._dynamical_matrix = None
         self._is_nac = False
+        self._primitive_symmetry = None
 
         # set_force_constants or set_forces
         self._set_of_forces_objects = None
@@ -252,6 +253,7 @@ class Phonopy:
             self._supercell,
             np.dot(inv_supercell_matrix, primitive_matrix),
             self._symprec)
+        self._set_primitive_symmetry()
 
         # Set set of FORCES objects or force constants
         if sets_of_forces is not None:
@@ -883,9 +885,12 @@ class Phonopy:
                            q_length=1e-4):
         self._group_velocity = GroupVelocity(
             self._dynamical_matrix,
-            q_points=q_points,
             q_length=q_length,
+            symmetry=self._primitive_symmetry,
             frequency_factor_to_THz=self._factor)
+
+        if q_points is not None:
+            self._group_velocity.set_q_points(q_points)
 
     def get_group_velocity(self, q_point):
         self._group_velocity.set_q_points([q_point])
@@ -900,6 +905,11 @@ class Phonopy:
         self._symmetry = Symmetry(self._supercell,
                                   self._symprec,
                                   self._is_symmetry)
+
+    def _set_primitive_symmetry(self):
+        self._primitive_symmetry = Symmetry(self._primitive,
+                                            self._symprec,
+                                            self._is_symmetry)
 
     def _set_supercells_with_displacements(self):
         supercells = []
