@@ -51,7 +51,7 @@ def write_yaml(qpoints,
     lattice = cell.get_cell()
 
     if group_velocity is not None:
-        group_velocity.set_q_points(qpoints)
+        group_velocity.set_q_points(qpoints, perturbation=nac_q_direction)
         group_velocities = group_velocity.get_group_velocity()
 
     w = open('qpoints.yaml', 'w')

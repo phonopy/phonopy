@@ -130,9 +130,11 @@ class GroupVelocity:
 
         self._q_points = None
         self._group_velocity = None
+        self._perturbation = None
 
     def set_q_points(self, q_points, perturbation=None):
         self._q_points = q_points
+        self._perturbation = perturbation
         if perturbation is None:
             self._directions[0] = np.array([1, 2, 3])
         else:
@@ -169,8 +171,10 @@ class GroupVelocity:
         for i in range(3):
             gv[:, i] *= self._factor ** 2 / freqs / 2
 
-        # return gv
-        return self._symmetrize_group_velocity(gv, q)
+        if self._perturbation is None:
+            return self._symmetrize_group_velocity(gv, q)
+        else:
+            return gv
 
     def _symmetrize_group_velocity(self, gv, q):
         rotations = []
