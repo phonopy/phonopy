@@ -1,7 +1,7 @@
 import numpy as np
 import phonopy.structure.spglib as spg
 from phonopy.harmonic.force_constants import similarity_transformation
-from phonopy.phonon.group_velocity import get_group_velocity, degenerate_sets
+from phonopy.phonon.group_velocity import get_group_velocity
 from phonopy.units import Kb, THzToEv, EV, THz, Angstrom
 from phonopy.phonon.thermal_properties import mode_cv
 from anharmonic.file_IO import write_kappa_to_hdf5, write_triplets
@@ -263,7 +263,6 @@ class conductivity_RTA:
                     self._conversion_factor)
 
     def _get_gv_by_gv(self, i):
-        deg_sets = degenerate_sets(self._frequencies[i])
         grid_point = self._grid_points[i]
         rotations = self._get_rotations_for_star(i)
         gv2_tensor = []
@@ -272,14 +271,6 @@ class conductivity_RTA:
                                for r in rotations]
         for rot_c in rotations_cartesian:
             gvs_rot = np.dot(rot_c, self._gv[i].T).T
-
-            # Take average of group veclocities of degenerate phonon modes
-            # and then calculate gv x gv to preserve symmetry
-            # gvs = np.zeros_like(gvs_rot)
-            # for deg in deg_sets:
-            #     gv_ave = gvs_rot[deg].sum(axis=0) / len(deg)
-            #     for j in deg:
-            #         gvs[j] = gv_ave
             gv2_tensor.append([np.outer(gv, gv) for gv in gvs_rot])
 
         if self._log_level:
@@ -293,12 +284,6 @@ class conductivity_RTA:
     
     def _get_cv(self, freqs):
         cv = np.zeros((len(self._temperatures), len(freqs)), dtype='double')
-        # for i, t in enumerate(self._temperatures):
-        #     if t > 0:
-        #         for j, f in enumerate(freqs):
-        #             if f > self._cutoff_frequency:
-        #                 cv[i, j] = mode_cv(t, f * THzToEv) # eV/K
-
         # T/freq has to be large enough to avoid divergence.
         # Otherwise just set 0.
         for i, f in enumerate(freqs):
