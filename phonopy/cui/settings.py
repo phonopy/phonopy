@@ -542,6 +542,10 @@ class ConfParser:
                 if self._options.tstep:
                     self._confs['tstep'] = self._options.tstep
 
+            if opt.dest == 'fc_symmetry':
+                if self._options.fc_symmetry:
+                    self._confs['fc_symmetry'] = self._options.fc_symmetry
+
             if opt.dest == 'force_constants_decimals':
                 if self._options.force_constants_decimals:
                     self._confs['fc_decimals'] = \
