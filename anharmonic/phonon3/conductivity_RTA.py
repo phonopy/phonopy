@@ -49,6 +49,9 @@ class conductivity_RTA:
 
         self._symmetry = symmetry
         self._point_operations = symmetry.get_reciprocal_operations()
+        rec_lat = np.linalg.inv(self._primitive.get_cell())
+        self._rotations_cartesian = [similarity_transformation(rec_lat, r)
+                                     for r in self._point_operations]
         
         self._grid_points = None
         self._grid_weights = None
@@ -264,21 +267,24 @@ class conductivity_RTA:
 
     def _get_gv_by_gv(self, i):
         grid_point = self._grid_points[i]
-        rotations = self._get_rotations_for_star(i)
+        rotation_map = self._get_rotation_map_for_star(i)
         gv2_tensor = []
-        rec_lat = np.linalg.inv(self._primitive.get_cell())
-        rotations_cartesian = [similarity_transformation(rec_lat, r)
-                               for r in rotations]
-        for rot_c in rotations_cartesian:
-            gvs_rot = np.dot(rot_c, self._gv[i].T).T
-            gv2_tensor.append([np.outer(gv, gv) for gv in gvs_rot])
-
+        for j in np.unique(rotation_map):
+            gv_by_gv = np.zeros((len(self._gv[i]), 3, 3), dtype='double')
+            multiplicity = 0
+            for k, rot_c in enumerate(self._rotations_cartesian):
+                if rotation_map[k] == j:
+                    gvs_rot = np.dot(rot_c, self._gv[i].T).T
+                    gv_by_gv += [np.outer(gv, gv) for gv in gvs_rot]
+                    multiplicity += 1
+            gv_by_gv /= multiplicity
+            gv2_tensor.append(gv_by_gv)
+                    
         if self._log_level:
             self._show_log(grid_point,
                            self._frequencies[i],
                            self._gv[i],
-                           rotations,
-                           rotations_cartesian)
+                           rotation_map)
 
         return np.array(gv2_tensor)
     
@@ -296,28 +302,25 @@ class conductivity_RTA:
         return cv
 
 
-    def _get_rotations_for_star(self, i):
+    def _get_rotation_map_for_star(self, i):
         if self._no_kappa_stars:
-            rotations = [np.eye(3, dtype=int)]
+            rotation_map = np.ones(1, dtype='intc')
         else:
             grid_point = self._grid_points[i]
             orig_address = self._grid_address[grid_point]
-            orbits = []
-            rotations = []
-            for rot in self._point_operations:
-                rot_address = np.dot(rot, orig_address) % self._mesh
-                in_orbits = False
-                for orbit in orbits:
-                    if (rot_address == orbit).all():
-                        in_orbits = True
+            rot_addresses = [np.dot(rot, orig_address)
+                             for rot in self._point_operations]
+
+            rotation_map = []
+            for rot_adrs in rot_addresses:
+                for j, rot_adrs_comp in enumerate(rot_addresses):
+                    if ((rot_adrs - rot_adrs_comp) % self._mesh == 0).all():
+                        rotation_map.append(j)
                         break
-                if not in_orbits:
-                    orbits.append(rot_address)
-                    rotations.append(rot)
 
             # check if the number of rotations is correct.
             if self._grid_weights is not None:
-                if len(rotations) != self._grid_weights[i]:
+                if len(set(rotation_map)) != self._grid_weights[i]:
                     if self._log_level:
                         print "*" * 33  + "Warning" + "*" * 33
                         print (" Number of elements in k* is unequal "
@@ -327,7 +330,7 @@ class conductivity_RTA:
                 #     "Num rotations %d, weight %d" % (
                 #     len(rotations), self._grid_weights[i])
 
-        return rotations
+        return rotation_map
 
     def _set_mesh_numbers(self, mesh_divisors=None, coarse_mesh_shifts=None):
         self._mesh = self._pp.get_mesh_numbers()
@@ -412,8 +415,7 @@ class conductivity_RTA:
                   grid_point,
                   frequencies,
                   group_velocity,
-                  rotations,
-                  rotations_cartesian):
+                  rotation_map):
         print "----- Partial kappa at grid address %d -----" % grid_point
         print "Frequency, projected group velocity (x, y, z), norm at k-stars",
         if self._gv_delta_q is None:
@@ -421,13 +423,15 @@ class conductivity_RTA:
         else:
             print " (dq=%3.1e)" % self._gv_delta_q
         q = self._grid_address[grid_point].astype(float) / self._mesh
-        for i, (rot, rot_c) in enumerate(zip(rotations, rotations_cartesian)):
-            q_rot = np.dot(rot, q)
-            q_rot -= np.rint(q_rot)
-            print " k*%-2d (%5.2f %5.2f %5.2f)" % ((i + 1,) + tuple(q_rot))
-            for f, v in zip(frequencies, np.dot(rot_c, group_velocity.T).T):
-                print "%8.3f   (%8.3f %8.3f %8.3f) %8.3f" % (
-                    f, v[0], v[1], v[2], np.linalg.norm(v))
+        for i, j in enumerate(np.unique(rotation_map)):
+            for k, (rot, rot_c) in enumerate(zip(
+                    self._point_operations, self._rotations_cartesian)):
+                if rotation_map[k] == j:
+                    q_rot = np.dot(rot, q)
+                    print " k*%-2d (%5.2f %5.2f %5.2f)" % ((i + 1,) + tuple(q_rot))
+                    for f, v in zip(frequencies, np.dot(rot_c, group_velocity.T).T):
+                        print "%8.3f   (%8.3f %8.3f %8.3f) %8.3f" % (
+                            f, v[0], v[1], v[2], np.linalg.norm(v))
 
         print
 
