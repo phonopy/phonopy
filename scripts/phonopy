@@ -304,7 +304,7 @@ parser.add_option("--qpoints", dest="qpoints", type="string",
 parser.add_option("--q_direction",
                   dest="q_direction",
                   type="string",
-                  help="q-vector direction of q-vector perturbation used for NAC at q->0 and group velocity for degenerate phonon mode in q-points mode")
+                  help="Direction of q-vector perturbation used for NAC at q->0 and group velocity for degenerate phonon mode in q-points mode")
 parser.add_option("--tmin", dest="tmin", type="string",
                   help="Minimum calculated temperature")
 parser.add_option("--trigonal", dest="is_trigonal_displacements",
