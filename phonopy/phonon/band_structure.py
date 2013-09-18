@@ -270,9 +270,4 @@ class BandStructure:
         for eigs_path in self._eigenvalues:
             frequencies.append(np.sqrt(abs(eigs_path)) * np.sign(eigs_path)
                                * self._factor)
-            ## This expression may not be supported in old python versions.
-            # freqs_on_path = []
-            # for eigs in eigs_path:
-            #     freqs = [np.sqrt(x) if x > 0 else -np.sqrt(-x) for x in eigs])
-            # frequencies.append(np.array(freqs_on_path) * self._factor)
         self._frequencies = frequencies
