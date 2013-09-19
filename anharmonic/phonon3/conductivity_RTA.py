@@ -48,7 +48,10 @@ class conductivity_RTA:
         self._cutoff_lifetime = cutoff_lifetime
 
         self._symmetry = symmetry
-        self._point_operations = symmetry.get_reciprocal_operations()
+        if self._no_kappa_stars:
+            self._point_operations = [np.identity(3, dtype='intc')]
+        else:
+            self._point_operations = symmetry.get_reciprocal_operations()
         rec_lat = np.linalg.inv(self._primitive.get_cell())
         self._rotations_cartesian = [similarity_transformation(rec_lat, r)
                                      for r in self._point_operations]
@@ -233,22 +236,12 @@ class conductivity_RTA:
     def _set_kappa_at_sigmas(self, i):
         freqs = self._frequencies[i]
         
-        # Group velocity [num_freqs, 3]
-        gv = get_group_velocity(
-            self._qpoint,
-            self._dynamical_matrix,
-            q_length=self._gv_delta_q,
-            symmetry=self._symmetry,
-            frequency_factor_to_THz=self._frequency_factor_to_THz)
-        self._gv[i] = gv
-        
         # Heat capacity [num_temps, num_freqs]
         cv = self._get_cv(freqs)
         self._cv[i] = cv
 
         # Outer product of group velocities (v x v) [num_k*, num_freqs, 3, 3]
         gv_by_gv_tensor = self._get_gv_by_gv(i)
-        self._sum_num_kstar += len(gv_by_gv_tensor)
 
         # Sum all vxv at k*
         gv_sum2 = np.zeros((6, len(freqs)), dtype='double')
@@ -266,57 +259,30 @@ class conductivity_RTA:
                     self._conversion_factor)
 
     def _get_gv_by_gv(self, i):
-        grid_point = self._grid_points[i]
-        rotation_map = self._get_rotation_map_for_star(i)
-        gv2_tensor = []
-        for j in np.unique(rotation_map):
-            gv_by_gv = np.zeros((len(self._gv[i]), 3, 3), dtype='double')
-            multiplicity = 0
-            for k, rot_c in enumerate(self._rotations_cartesian):
-                if rotation_map[k] == j:
-                    gvs_rot = np.dot(rot_c, self._gv[i].T).T
-                    gv_by_gv += [np.outer(gv, gv) for gv in gvs_rot]
-                    multiplicity += 1
-            gv_by_gv /= multiplicity
-            gv2_tensor.append(gv_by_gv)
-                    
-        if self._log_level:
-            self._show_log(grid_point,
-                           self._frequencies[i],
-                           self._gv[i],
-                           rotation_map)
+        # If q-point is on the boundary,
+        # group velocities are also calculated on the other boundaries
+        # and the average is taken.
+        gv_by_gv = []
+        grid_addresses = self._get_grid_address(i)
+        for j, grid_address in enumerate(grid_addresses):
+            qpoint = grid_address.astype('double') / self._mesh
+            # Group velocity [num_freqs, 3]
+            gv = get_group_velocity(
+                qpoint,
+                self._dynamical_matrix,
+                q_length=self._gv_delta_q,
+                symmetry=self._symmetry,
+                frequency_factor_to_THz=self._frequency_factor_to_THz)
+            if j == 0:
+                self._gv[i] = gv
+            rotation_map = self._get_rotation_map_for_star(grid_address)
+            gv_by_gv += self._get_gv_by_gv_on_star(gv, rotation_map)
 
-        return np.array(gv2_tensor)
-    
-    def _get_cv(self, freqs):
-        cv = np.zeros((len(self._temperatures), len(freqs)), dtype='double')
-        # T/freq has to be large enough to avoid divergence.
-        # Otherwise just set 0.
-        for i, f in enumerate(freqs):
-            finite_t = (self._temperatures > f / 100)
-            if f > self._cutoff_frequency:
-                cv[:, i] = np.where(
-                    finite_t, mode_cv(
-                        np.where(finite_t, self._temperatures, 10000),
-                        f * THzToEv), 0)
-        return cv
-
-
-    def _get_rotation_map_for_star(self, i):
-        if self._no_kappa_stars:
-            rotation_map = np.ones(1, dtype='intc')
-        else:
-            grid_point = self._grid_points[i]
-            orig_address = self._grid_address[grid_point]
-            rot_addresses = [np.dot(rot, orig_address)
-                             for rot in self._point_operations]
-
-            rotation_map = []
-            for rot_adrs in rot_addresses:
-                for j, rot_adrs_comp in enumerate(rot_addresses):
-                    if ((rot_adrs - rot_adrs_comp) % self._mesh == 0).all():
-                        rotation_map.append(j)
-                        break
+            if self._log_level:
+                self._show_log(qpoint,
+                               self._frequencies[i],
+                               gv,
+                               rotation_map)
 
             # check if the number of rotations is correct.
             if self._grid_weights is not None:
@@ -330,7 +296,69 @@ class conductivity_RTA:
                 #     "Num rotations %d, weight %d" % (
                 #     len(rotations), self._grid_weights[i])
 
+        self._sum_num_kstar += len(gv_by_gv) / len(grid_addresses)
+
+        return np.array(gv_by_gv, dtype='double') / len(grid_addresses)
+
+    def _get_grid_address(self, i):
+        orig_address = self._grid_address[self._grid_points[i]]
+        numbers = []
+        for j in range(3):
+            mesh_j = self._mesh[j]
+            adrs = orig_address[j]
+            if (mesh_j % 2 == 0 and adrs == mesh_j / 2):
+                numbers.append([adrs, -adrs])
+            else:
+                numbers.append([adrs])
+
+        grid_address = []
+        for a in numbers[0]:
+            for b in numbers[1]:
+                for c in numbers[2]:
+                    grid_address.append([a, b, c])
+
+        return np.array(grid_address, dtype='intc')
+
+    def _get_gv_by_gv_on_star(self, group_velocity, rotation_map):
+        gv2_tensor = []
+        for j in np.unique(rotation_map):
+            gv_by_gv = np.zeros((len(group_velocity), 3, 3), dtype='double')
+            multiplicity = 0
+            for k, rot_c in enumerate(self._rotations_cartesian):
+                if rotation_map[k] == j:
+                    gvs_rot = np.dot(rot_c, group_velocity.T).T
+                    gv_by_gv += [np.outer(gv, gv) for gv in gvs_rot]
+                    multiplicity += 1
+            gv_by_gv /= multiplicity
+            gv2_tensor.append(gv_by_gv)
+
+        return gv2_tensor
+    
+    def _get_rotation_map_for_star(self, orig_address):
+        rot_addresses = [np.dot(rot, orig_address)
+                         for rot in self._point_operations]
+        rotation_map = []
+        for rot_adrs in rot_addresses:
+            for i, rot_adrs_comp in enumerate(rot_addresses):
+                if ((rot_adrs - rot_adrs_comp) % self._mesh == 0).all():
+                    rotation_map.append(i)
+                    break
+
         return rotation_map
+
+    def _get_cv(self, freqs):
+        cv = np.zeros((len(self._temperatures), len(freqs)), dtype='double')
+        # T/freq has to be large enough to avoid divergence.
+        # Otherwise just set 0.
+        for i, f in enumerate(freqs):
+            finite_t = (self._temperatures > f / 100)
+            if f > self._cutoff_frequency:
+                cv[:, i] = np.where(
+                    finite_t, mode_cv(
+                        np.where(finite_t, self._temperatures, 10000),
+                        f * THzToEv), 0)
+        return cv
+
 
     def _set_mesh_numbers(self, mesh_divisors=None, coarse_mesh_shifts=None):
         self._mesh = self._pp.get_mesh_numbers()
@@ -412,27 +440,28 @@ class conductivity_RTA:
         return frequencies
 
     def _show_log(self,
-                  grid_point,
+                  q,
                   frequencies,
                   group_velocity,
                   rotation_map):
-        print "----- Partial kappa at grid address %d -----" % grid_point
         print "Frequency, projected group velocity (x, y, z), norm at k-stars",
         if self._gv_delta_q is None:
             print
         else:
             print " (dq=%3.1e)" % self._gv_delta_q
-        q = self._grid_address[grid_point].astype(float) / self._mesh
+        
         for i, j in enumerate(np.unique(rotation_map)):
-            for k, (rot, rot_c) in enumerate(zip(
-                    self._point_operations, self._rotations_cartesian)):
-                if rotation_map[k] == j:
-                    q_rot = np.dot(rot, q)
-                    print " k*%-2d (%5.2f %5.2f %5.2f)" % ((i + 1,) + tuple(q_rot))
-                    for f, v in zip(frequencies, np.dot(rot_c, group_velocity.T).T):
-                        print "%8.3f   (%8.3f %8.3f %8.3f) %8.3f" % (
-                            f, v[0], v[1], v[2], np.linalg.norm(v))
+            for k, (rot, rot_c) in enumerate(zip(self._point_operations,
+                                                 self._rotations_cartesian)):
+                if rotation_map[k] != j:
+                    continue
 
+                print " k*%-2d (%5.2f %5.2f %5.2f)" % ((i + 1,) +
+                                                       tuple(np.dot(rot, q)))
+                for f, v in zip(frequencies,
+                                np.dot(rot_c, group_velocity.T).T):
+                    print "%8.3f   (%8.3f %8.3f %8.3f) %8.3f" % (
+                        f, v[0], v[1], v[2], np.linalg.norm(v))
         print
 
     def _write_gamma(self, i, grid_point):
