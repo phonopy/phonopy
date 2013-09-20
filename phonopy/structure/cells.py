@@ -187,7 +187,7 @@ def print_cell(cell, mapping=None):
             print "%5d %-2s%18.14f%18.14f%18.14f %7.3f" % \
                 (i+1, symbols[i], v[0], v[1], v[2], masses[i]),
         else:
-            print "%5d %-2s%18.14f%18.14f%18.14f %7.3f  %5.3" % \
+            print "%5d %-2s%18.14f%18.14f%18.14f %7.3f  %5.3f" % \
                 (i+1, symbols[i], v[0], v[1], v[2], masses[i], magmoms[i]),
         # print 
         if mapping == None:
