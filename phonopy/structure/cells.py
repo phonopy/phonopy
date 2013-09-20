@@ -394,4 +394,3 @@ def get_cell_matrix(a, b, c, alpha, beta, gamma):
     lattice[1] = np.array([b1, b2, b3]) * b
     lattice[2] = np.array([c1, c2, c3]) * c
     return lattice
-
