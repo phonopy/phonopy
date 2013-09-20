@@ -299,12 +299,15 @@ def get_distance(cell, a0, a1, tolerance=1e-5):
 #
 # Delaunay reduction
 #    
-def get_reduced_bases(cell, tolerance=1e-5):
+def get_reduced_bases(lattice, tolerance=1e-5):
     """
     This is an implementation of Delaunay reduction.
     Some information is found in International table.
+
+    lattice: row vectors
+    return lattice: row vectors
     """
-    return get_Delaunay_reduction(cell, tolerance)
+    return get_Delaunay_reduction(lattice, tolerance)
 
 def get_Delaunay_reduction(lattice, tolerance):
     extended_bases = np.zeros((4, 3), dtype='double')

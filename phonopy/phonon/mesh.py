@@ -34,6 +34,7 @@
 
 import numpy as np
 from phonopy.structure.symmetry import get_ir_reciprocal_mesh
+from phonopy.structure.brillouin_zone import get_qpoints_in_Brillouin_zone
 from phonopy.units import VaspToTHz
 
 def get_qpoints(mesh_numbers,
@@ -53,21 +54,32 @@ def get_qpoints(mesh_numbers,
     if (diffby2 < symprec).all() and is_symmetry: # No shift or half shift case
         diff = np.abs(shift - np.rint(shift))
         if is_gamma_center:
-            return _get_qpoint_symmetry(mesh,
-                                        (diff > symprec),
-                                        cell,
-                                        is_time_reversal,
-                                        symprec)
+            qpoints, weights = _get_qpoint_symmetry(mesh,
+                                                    (diff > symprec),
+                                                    cell,
+                                                    is_time_reversal,
+                                                    symprec)
         else: # Monkhorst-pack
-            return _get_qpoint_symmetry(mesh,
-                                        np.logical_xor((diff > symprec),
-                                                       (mesh % 2 == 0)),
-                                        cell,
-                                        is_time_reversal,
-                                        symprec)
+            qpoints, weights = _get_qpoint_symmetry(
+                mesh,
+                np.logical_xor((diff > symprec),
+                               (mesh % 2 == 0)),
+                cell,
+                is_time_reversal,
+                symprec)
     else:
-        return _get_qpoint_no_symmetry(mesh, shift)
+        qpoints, weights = _get_qpoint_no_symmetry(mesh, shift)
 
+    primitive_vectors = np.linalg.inv(cell.get_cell())
+    qpoint_set_in_BZ = get_qpoints_in_Brillouin_zone(primitive_vectors,
+                                                     mesh,
+                                                     qpoints)
+    qpoints_in_BZ = np.array([q_set[0] for q_set in qpoint_set_in_BZ],
+                             dtype='double')
+
+    return qpoints_in_BZ, weights
+    # return qpoints, weights
+        
 def _get_qpoint_symmetry(mesh,
                          is_shift,
                          cell,

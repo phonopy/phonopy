@@ -33,24 +33,76 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
-
 from phonopy.structure.cells import get_reduced_bases
+
+search_space = np.array([
+        [-1, -1, -1],
+        [-1, -1, 0],
+        [-1, -1, 1],
+        [-1, 0, -1],
+        [-1, 0, 0],
+        [-1, 0, 1],
+        [-1, 1, -1],
+        [-1, 1, 0],
+        [-1, 1, 1],
+        [0, -1, -1],
+        [0, -1, 0],
+        [0, -1, 1],
+        [0, 0, -1],
+        [0, 0, 0],
+        [0, 0, 1],
+        [0, 1, -1],
+        [0, 1, 0],
+        [0, 1, 1],
+        [1, -1, -1],
+        [1, -1, 0],
+        [1, -1, 1],
+        [1, 0, -1],
+        [1, 0, 0],
+        [1, 0, 1],
+        [1, 1, -1],
+        [1, 1, 0],
+        [1, 1, 1]], dtype='intc')
+
+def get_qpoints_in_Brillouin_zone(primitive_vectors,
+                                  mesh,
+                                  qpoints):
+    bz = BrillouinZone(primitive_vectors, mesh)
+    bz.run(qpoints)
+    return bz.get_qpoints()
 
 class BrillouinZone:
     def __init__(self,
                  primitive_vectors,
-                 mesh,
-                 qpoints):
+                 mesh):
         self._primitive_vectors = primitive_vectors # column vectors
         self._mesh = mesh
         longest = max([np.linalg.norm(vec) for vec in primitive_vectors.T])
-        self._reduced_bases = get_reduced_bases(primitive_vectors,
-                                                longest / max(mesh) / 10)
-        self._qpoints = np.dot(np.linalg.inv(self._reduced_bases),
-                               np.dot(primitive_vectors, qpoints.T)).T
+        self._tolerance = longest / max(mesh) / 10
+        self._reduced_bases = get_reduced_bases(primitive_vectors.T,
+                                                self._tolerance).T
+        self._primitive_vectors_inv = np.linalg.inv(self._primitive_vectors)
+        self._reduced_bases_inv = np.linalg.inv(self._reduced_bases)
 
-        print self._qpoints
-                 
+    def run(self, qpoints):
+        reduced_qpoints = np.dot(self._reduced_bases_inv,
+                                 np.dot(self._primitive_vectors, qpoints.T)).T
+        self._shortest_qpoints = []
+        for q in reduced_qpoints:
+            distances = np.array([(np.dot(self._reduced_bases, q + g) ** 2).sum()
+                                  for g in search_space], dtype='double')
+            min_dist = min(distances)
+            shortest_indices = [i for i, d in enumerate(distances - min_dist)
+                                if abs(d) < self._tolerance ** 2]
+
+            self._shortest_qpoints.append(
+                np.dot(self._primitive_vectors_inv,
+                       np.dot(self._reduced_bases,
+                              (search_space[shortest_indices] + q).T)).T)
+
+    def get_qpoints(self):
+        return self._shortest_qpoints
+    
 if __name__ == '__main__':
     from phonopy.interface.vasp import read_vasp
     from phonopy.structure.spglib import get_ir_reciprocal_mesh
@@ -65,8 +117,13 @@ if __name__ == '__main__':
 
     ir_grid_points = np.unique(mapping_table)
     qpoints = grid_addrees[ir_grid_points] / np.array(mesh, dtype='double')
-    
-    bz = BrillouinZone(np.linalg.inv(cell.get_cell()),
-                       mesh,
-                       qpoints)
+
+    primitive_vectors = np.linalg.inv(cell.get_cell())
+    bz = BrillouinZone(primitive_vectors, mesh)
+    bz.run(qpoints)
+    sv = bz.get_qpoints()
+    for q, vs in zip(qpoints, sv):
+        print q
+        for v in vs:
+            print v, np.linalg.norm(np.dot(primitive_vectors, v))
 
