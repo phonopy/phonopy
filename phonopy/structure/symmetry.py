@@ -37,21 +37,6 @@ import numpy as np
 import phonopy.structure.spglib as spg
 from phonopy.structure.atoms import Atoms
 
-def find_primitive(cell, symprec=1e-5):
-    """
-    A primitive cell is searched in the input cell. When a primitive
-    cell is found, an object of Atoms class of the primitive cell is
-    returned. When not, None is returned.
-    """
-    lattice, positions, numbers = spg.find_primitive(cell, symprec)
-    if lattice == None:
-        return None
-    else:
-        return Atoms(numbers=numbers,
-                     scaled_positions=positions,
-                     cell=lattice,
-                     pbc=True)
-
 class Symmetry:
     def __init__(self, cell, symprec=1e-5, is_symmetry=True):
         self._cell = cell
@@ -250,32 +235,45 @@ class Symmetry:
         self._international_table = 'P1 (1)'
         self._wyckoff_letters = ['a'] * self._cell.get_number_of_atoms()
 
+def find_primitive(cell, symprec=1e-5):
+    """
+    A primitive cell is searched in the input cell. When a primitive
+    cell is found, an object of Atoms class of the primitive cell is
+    returned. When not, None is returned.
+    """
+    lattice, positions, numbers = spg.find_primitive(cell, symprec)
+    if lattice == None:
+        return None
+    else:
+        return Atoms(numbers=numbers,
+                     scaled_positions=positions,
+                     cell=lattice,
+                     pbc=True)
+
 def get_pointgroup(rotations):
     ptg = spg.get_pointgroup(rotations)
     return ptg[0].strip(), ptg[2]
 
-def get_ir_reciprocal_mesh(mesh,
-                           cell,
-                           is_shift=np.zeros(3, dtype=int),
-                           is_time_reversal=False,
-                           symprec=1e-5):
-    """
-    Return k-point map to the irreducible k-points and k-point grid points .
-    The symmetry is serched from the input cell.
-    is_shift=[ 0, 0, 0 ] gives Gamma center mesh.
-    """
+def get_lattice_vector_equivalence(point_symmetry):
+    """Return (b==c, c==a, a==b)"""
+    # primitive_vectors: column vectors
 
-    return spg.get_ir_reciprocal_mesh(mesh,
-                                      cell,
-                                      is_shift,
-                                      is_time_reversal,
-                                      symprec)
+    equivalence = [False, False, False]
+    for r in point_symmetry:
+        if (np.abs(r[:, 0]) == [0, 1, 0]).all():
+            equivalence[2] = True
+        if (np.abs(r[:, 0]) == [0, 0, 1]).all():
+            equivalence[1] = True
+        if (np.abs(r[:, 1]) == [1, 0, 0]).all():
+            equivalence[2] = True
+        if (np.abs(r[:, 1]) == [0, 0, 1]).all():
+            equivalence[0] = True
+        if (np.abs(r[:, 2]) == [1, 0, 0]).all():
+            equivalence[1] = True
+        if (np.abs(r[:, 2]) == [0, 1, 0]).all():
+            equivalence[0] = True
 
-def get_ir_kpoints(kpoints, cell, is_time_reversal=False, symprec=1e-5):
-
-    return spg.get_ir_kpoints(kpoints, cell, is_time_reversal, symprec)
-
-    
+    return equivalence
 
 
 if __name__ == '__main__':
