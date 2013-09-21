@@ -56,10 +56,11 @@ class Mesh:
                               primitive.get_volume(),
                               phonon_plus.get_primitive().get_volume(),
                               phonon_minus.get_primitive().get_volume())
-        self._qpoints, self._weights = get_qpoints(self._mesh,
-                                                   primitive,
-                                                   grid_shift,
-                                                   is_gamma_center)
+        self._qpoints, self._weights = get_qpoints(
+            self._mesh,
+            primitive,
+            grid_shift=grid_shift,
+            is_gamma_center=is_gamma_center)
         gruneisen.set_qpoints(self._qpoints)
         self._gamma = gruneisen.get_gruneisen()
         self._eigenvalues = gruneisen.get_eigenvalues()

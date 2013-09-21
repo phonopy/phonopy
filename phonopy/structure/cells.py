@@ -111,7 +111,7 @@ def get_surrounding_frame(supercell_matrix):
     #  [0,2,0] is the frame for FCC from simple cubic.
     #  [0,0,2]
     m = np.array(supercell_matrix)
-    axes = np.array([[ 0, 0, 0],
+    axes = np.array([[0, 0, 0],
                      m[:,0],
                      m[:,1],
                      m[:,2],
@@ -213,9 +213,9 @@ class Supercell(Atoms):
 class Primitive(Atoms):
     def __init__(self, supercell, primitive_frame, symprec = 1e-5):
         """
-        primitive_frame ( 3x3 matrix ):
+        primitive_frame (3x3 matrix):
         Primitive lattice is given by
-           np.dot( primitive_frame.T, supercell.get_cell())
+           np.dot(primitive_frame.T, supercell.get_cell())
         """
         self.frame = np.array(primitive_frame)
         self.symprec = symprec
@@ -271,20 +271,17 @@ class Primitive(Atoms):
         Mapping table from supercell index to primitive index
         in primitive cell
         """
-        self.p2p_map = dict([ ( j, i ) for i, j in enumerate( self.p2s_map ) ])
-
-
-
+        self.p2p_map = dict([(j, i) for i, j in enumerate(self.p2s_map)])
 
 #
 # Get distance between a pair of atoms
 #
-def get_distance(atoms, a0, a1, tolerance=1e-5):
+def get_distance(cell, a0, a1, tolerance=1e-5):
     """
     Return the shortest distance between a pair of atoms in PBC
     """
-    reduced_bases = get_reduced_bases( atoms.get_cell(), tolerance)
-    scaled_pos = np.dot( atoms.get_positions(), np.linalg.inv(reduced_bases) )
+    reduced_bases = get_reduced_bases(cell.get_cell(), tolerance)
+    scaled_pos = np.dot(cell.get_positions(), np.linalg.inv(reduced_bases))
     # move scaled atomic positions into -0.5 < r <= 0.5
     for pos in scaled_pos:
         pos -= np.rint(pos)
@@ -294,45 +291,27 @@ def get_distance(atoms, a0, a1, tolerance=1e-5):
     for i in (-1, 0, 1):
         for j in (-1, 0, 1):
             for k in (-1, 0, 1):
-                distances.append( np.linalg.norm(
-                        np.dot(scaled_pos[a0] - scaled_pos[a1] + np.array([i,j,k]),
-                               reduced_bases) ) )
+                distances.append(np.linalg.norm(
+                        np.dot(scaled_pos[a0] - scaled_pos[a1] + [i, j, k],
+                               reduced_bases)))
     return min(distances)
-
-def get_distance_with_center( atoms, center, atom_num, tolerance=1e-5 ):
-    """
-    Return the shortest distance to atom from specified position
-    """
-    reduced_bases = get_reduced_bases( atoms.get_cell(), tolerance)
-    scaled_pos = np.dot( atoms.get_positions(), np.linalg.inv(reduced_bases) )
-    # move scaled atomic positions into -0.5 < r <= 0.5
-    for pos in scaled_pos:
-        pos -= np.rint(pos)
-
-    # Look for the shortest one in surrounded 3x3x3 cells 
-    distances = []
-    for i in (-1, 0, 1):
-        for j in (-1, 0, 1):
-            for k in (-1, 0, 1):
-                distances.append( np.linalg.norm(
-                        np.dot(scaled_pos[atom_num] - center + np.array([i,j,k]),
-                               reduced_bases) ) )
-    return min(distances)
-    
 
 #
 # Delaunay reduction
 #    
-def get_reduced_bases(cell, tolerance=1e-5):
+def get_reduced_bases(lattice, tolerance=1e-5):
     """
     This is an implementation of Delaunay reduction.
     Some information is found in International table.
+
+    lattice: row vectors
+    return lattice: row vectors
     """
-    return get_Delaunay_reduction(cell, tolerance)
+    return get_Delaunay_reduction(lattice, tolerance)
 
 def get_Delaunay_reduction(lattice, tolerance):
-    extended_bases = np.zeros((4,3), dtype=float)
-    extended_bases[:3,:] = lattice
+    extended_bases = np.zeros((4, 3), dtype='double')
+    extended_bases[:3, :] = lattice
     extended_bases[3] = -np.sum(lattice, axis=0)
 
     for i in range(100):
@@ -346,12 +325,12 @@ def get_Delaunay_reduction(lattice, tolerance):
     return shortest
 
 def reduce_bases(extended_bases, tolerance):
-    metric = np.dot(extended_bases, extended_bases.transpose())
+    metric = np.dot(extended_bases, extended_bases.T)
     for i in range(4):
         for j in range(i+1, 4):
             if metric[i][j] > tolerance:
                 for k in range(4):
-                    if (not k == i) and (not k == j):
+                    if (k != i) and (k != j):
                         extended_bases[k] += extended_bases[i]
                 extended_bases[i] = -extended_bases[i]
                 extended_bases[j] = extended_bases[j]
@@ -364,9 +343,9 @@ def reduce_bases(extended_bases, tolerance):
 def get_shortest_bases_from_extented_bases(extended_bases, tolerance):
 
     def mycmp(x, y):
-        return cmp(np.vdot(x,x), np.vdot(y,y))
+        return cmp(np.vdot(x, x), np.vdot(y, y))
 
-    basis = np.zeros((7,3), dtype=float)
+    basis = np.zeros((7, 3), dtype='double')
     basis[:4] = extended_bases
     basis[4]  = extended_bases[0] + extended_bases[1]
     basis[5]  = extended_bases[1] + extended_bases[2]
@@ -377,10 +356,11 @@ def get_shortest_bases_from_extented_bases(extended_bases, tolerance):
     # Choose shortest and linearly independent three bases
     # This algorithm may not be perfect.
     for i in range(7):
-        for j in range(i+1, 7):
-            for k in range(j+1, 7):
-                if abs(np.linalg.det([basis[i],basis[j],basis[k]])) > tolerance:
-                    return np.array([basis[i],basis[j],basis[k]])
+        for j in range(i + 1, 7):
+            for k in range(j + 1, 7):
+                if abs(np.linalg.det(
+                        [basis[i], basis[j], basis[k]])) > tolerance:
+                    return np.array([basis[i], basis[j], basis[k]])
 
     print "Delaunary reduction is failed."
     return basis[:3]
@@ -388,17 +368,17 @@ def get_shortest_bases_from_extented_bases(extended_bases, tolerance):
 #
 # Other tiny tools
 #    
-def get_angles( lattice ):
-    a, b, c = get_cell_parameters( lattice )
-    alpha = np.arccos(np.vdot(lattice[1], lattice[2]) / b / c ) / np.pi * 180
-    beta  = np.arccos(np.vdot(lattice[2], lattice[0]) / c / a ) / np.pi * 180
-    gamma = np.arccos(np.vdot(lattice[0], lattice[1]) / a / b ) / np.pi * 180
+def get_angles(lattice):
+    a, b, c = get_cell_parameters(lattice)
+    alpha = np.arccos(np.vdot(lattice[1], lattice[2]) / b / c) / np.pi * 180
+    beta  = np.arccos(np.vdot(lattice[2], lattice[0]) / c / a) / np.pi * 180
+    gamma = np.arccos(np.vdot(lattice[0], lattice[1]) / a / b) / np.pi * 180
     return alpha, beta, gamma
 
-def get_cell_parameters( lattice ):
-    return np.sqrt( np.dot ( lattice, lattice.transpose() ).diagonal() )
+def get_cell_parameters(lattice):
+    return np.sqrt(np.dot (lattice, lattice.transpose()).diagonal())
 
-def get_cell_matrix( a, b, c, alpha, beta, gamma ):
+def get_cell_matrix(a, b, c, alpha, beta, gamma):
     # These follow 'matrix_lattice_init' in matrix.c of GDIS
     alpha *= np.pi / 180
     beta *= np.pi / 180
@@ -406,39 +386,14 @@ def get_cell_matrix( a, b, c, alpha, beta, gamma ):
     a1 = a
     a2 = 0.0
     a3 = 0.0
-    b1 = np.cos( gamma )
-    b2 = np.sin( gamma )
+    b1 = np.cos(gamma)
+    b2 = np.sin(gamma)
     b3 = 0.0
-    c1 = np.cos( beta )
-    c2 = ( 2 * np.cos( alpha ) + b1**2 + b2**2 - 2 * b1 * c1 - 1 ) / ( 2 * b2 )
-    c3 = np.sqrt( 1 - c1**2 - c2**2 )
-    lattice = np.zeros( ( 3, 3 ), dtype=float )
-    lattice[ 0, 0 ] = a
-    lattice[ 1 ] = np.array( [ b1, b2, b3 ] ) * b
-    lattice[ 2 ] = np.array( [ c1, c2, c3 ] ) * c
+    c1 = np.cos(beta)
+    c2 = (2 * np.cos(alpha) + b1**2 + b2**2 - 2 * b1 * c1 - 1) / (2 * b2)
+    c3 = np.sqrt(1 - c1**2 - c2**2)
+    lattice = np.zeros((3, 3), dtype='double')
+    lattice[0, 0] = a
+    lattice[1] = np.array([b1, b2, b3]) * b
+    lattice[2] = np.array([c1, c2, c3]) * c
     return lattice
-
-if __name__ == '__main__':
-    # Parse options
-    from optparse import OptionParser
-    from phonopy.interface.vasp import read_vasp
-
-    parser = OptionParser()
-    parser.set_defaults( atom_num = 1,
-                         pos_str = None )
-    parser.add_option("-n", dest="atom_num", type="int",
-			help="center atom")
-    parser.add_option("-p", dest="pos_str", type="string",
-			help="center position")
-    (options, args) = parser.parse_args()
-
-
-    cell = read_vasp('SPOSCAR')
-
-    if options.pos_str == None:
-        center = cell.get_scaled_positions()[ options.atom_num - 1 ]
-    else:
-        center = np.array( [ float(x) for x in options.pos_str.split() ] )
-
-    for i in range(cell.get_number_of_atoms()):
-        print "%2d  %f" % (i+1, get_distance_with_center(cell, center, i))

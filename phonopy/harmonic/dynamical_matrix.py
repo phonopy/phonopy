@@ -371,8 +371,7 @@ def get_equivalent_smallest_vectors(atom_number_supercell,
     distances = []
     differences = []
     reduced_bases = get_reduced_bases(supercell.get_cell(), symprec)
-    positions = np.dot(supercell.get_positions(),
-                       np.linalg.inv(reduced_bases))
+    positions = np.dot(supercell.get_positions(), np.linalg.inv(reduced_bases))
 
     # Atomic positions are confined into the lattice made of reduced bases.
     for pos in positions:
@@ -387,7 +386,7 @@ def get_equivalent_smallest_vectors(atom_number_supercell,
                 # the atom in supercell cell plus a supercell lattice
                 # point. This is related to determine the phase
                 # convension when building dynamical matrix.
-                diff = s_pos + np.array([i, j, k]) - p_pos
+                diff = s_pos + [i, j, k] - p_pos
                 differences.append(diff)
                 vec = np.dot(diff, reduced_bases)
                 distances.append(np.linalg.norm(vec))
