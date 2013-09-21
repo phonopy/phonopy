@@ -143,6 +143,9 @@ class Phonopy:
         return self._symmetry
     symmetry = property(get_symmetry)
 
+    def get_primitive_symmetry(self):
+        return self._primitive_symmetry
+
     def get_unit_conversion_factor(self):
         return self._factor
     unit_conversion_factor = property(get_unit_conversion_factor)
@@ -444,6 +447,7 @@ class Phonopy:
                           is_eigenvectors=is_eigenvectors,
                           is_gamma_center=is_gamma_center,
                           group_velocity=self._group_velocity,
+                          symmetry=self._primitive_symmetry,
                           factor=self._factor,
                           symprec=self._symprec)
 
