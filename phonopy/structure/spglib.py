@@ -264,6 +264,8 @@ def get_stabilized_reciprocal_mesh(mesh,
     qpoints = np.array(qpoints, dtype='double').copy()
     if qpoints.shape == (3,):
         qpoints = np.array([qpoints], dtype='double')
+    if qpoints.shape == (0,):
+        qpoints = np.array([[0, 0, 0]], dtype='double')
     spg.stabilized_reciprocal_mesh(mesh_points,
                                    mapping,
                                    np.array(mesh, dtype='intc').copy(),
