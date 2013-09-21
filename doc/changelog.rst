@@ -3,6 +3,20 @@
 Change Log
 ==========
 
+Sep-21-2013: Version 1.7.4
+---------------------------
+
+* ``gruneisen`` didn't run because it didn't follow the move of
+  the ``file_IO.py`` file location. This is fixed.
+* The formula of non-analytical term correction implemented in phonopy
+  is not translational invariant in reciprocal space. This induces
+  tiny difference of the choice of equivalent q-points being different
+  by reciprocal primitive vectors. Now in the mesh sampling mode
+  (``MP``), q-points are automatically moved to inside
+  first-Brillouin-zone.
+* Symmetry of mesh numbers is checked. If the symmetry disagrees
+  crystal symmetry, mesh symmetrization is disabled.
+
 Sep-17-2013: Version 1.7.3
 ---------------------------
 
