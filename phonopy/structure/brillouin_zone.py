@@ -65,20 +65,18 @@ search_space = np.array([
         [1, 1, 1]], dtype='intc')
 
 def get_qpoints_in_Brillouin_zone(primitive_vectors,
-                                  mesh,
-                                  qpoints):
-    bz = BrillouinZone(primitive_vectors, mesh)
+                                  qpoints,
+                                  tolerance=1e-5):
+    bz = BrillouinZone(primitive_vectors, tolerance=tolerance)
     bz.run(qpoints)
     return bz.get_qpoints()
 
 class BrillouinZone:
     def __init__(self,
                  primitive_vectors,
-                 mesh):
+                 tolerance=1e-5):
         self._primitive_vectors = primitive_vectors # column vectors
-        self._mesh = mesh
-        longest = max([np.linalg.norm(vec) for vec in primitive_vectors.T])
-        self._tolerance = longest / max(mesh) / 10
+        self._tolerance = tolerance
         self._reduced_bases = get_reduced_bases(primitive_vectors.T,
                                                 self._tolerance).T
         self._primitive_vectors_inv = np.linalg.inv(self._primitive_vectors)

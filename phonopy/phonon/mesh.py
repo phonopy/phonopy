@@ -42,9 +42,10 @@ def get_qpoints(mesh_numbers,
                 grid_shift=None,
                 is_gamma_center=True,
                 is_time_reversal=True,
+                fit_in_BZ=True,
                 symprec=1e-5,
                 is_symmetry=True):
-    mesh = np.array(mesh_numbers)
+    mesh = np.array(mesh_numbers, dtype='intc')
     if grid_shift == None:
         shift = np.zeros(3, dtype='double')
     else:
@@ -52,39 +53,47 @@ def get_qpoints(mesh_numbers,
 
     diffby2 = np.abs(shift * 2 - np.rint(shift * 2))
     if (diffby2 < symprec).all() and is_symmetry: # No shift or half shift case
-        diff = np.abs(shift - np.rint(shift))
-        if is_gamma_center:
-            qpoints, weights = _get_qpoint_symmetry(mesh,
-                                                    (diff > symprec),
-                                                    cell,
-                                                    is_time_reversal,
-                                                    symprec)
-        else: # Monkhorst-pack
-            qpoints, weights = _get_qpoint_symmetry(
+        qpoints, weights = _get_qpoint_symmetry(
                 mesh,
-                np.logical_xor((diff > symprec),
-                               (mesh % 2 == 0)),
+                shift,
                 cell,
+                is_gamma_center,
                 is_time_reversal,
                 symprec)
     else:
-        qpoints, weights = _get_qpoint_no_symmetry(mesh, shift)
+        qpoints, weights = _get_qpoint_no_symmetry(mesh, shift, is_gamma_center)
 
-    primitive_vectors = np.linalg.inv(cell.get_cell())
+    if fit_in_BZ:
+        primitive_vectors = np.linalg.inv(cell.get_cell()) # column vectors
+        qpoints_in_BZ = _fit_qpoints_in_BZ(primitive_vectors, mesh, qpoints)
+        return qpoints_in_BZ, weights
+    else:
+        return qpoints, weights
+
+def _fit_qpoints_in_BZ(primitive_vectors, mesh, qpoints):
+    # primitive_vectors: column vectors
+    longest = max([np.linalg.norm(vec) for vec in primitive_vectors.T])
+    tolerance = longest / max(mesh) / 10
     qpoint_set_in_BZ = get_qpoints_in_Brillouin_zone(primitive_vectors,
-                                                     mesh,
-                                                     qpoints)
+                                                     qpoints,
+                                                     tolerance=tolerance)
     qpoints_in_BZ = np.array([q_set[0] for q_set in qpoint_set_in_BZ],
                              dtype='double')
+    return qpoints_in_BZ
+    
 
-    return qpoints_in_BZ, weights
-    # return qpoints, weights
-        
 def _get_qpoint_symmetry(mesh,
-                         is_shift,
+                         shift,
                          cell,
+                         is_gamma_center,
                          is_time_reversal,
                          symprec):
+    diff = np.abs(shift - np.rint(shift))
+    if is_gamma_center:
+        is_shift = (diff > symprec)
+    else: # Monkhorst-pack
+        is_shift = np.logical_xor((diff > symprec), (mesh % 2 == 0))
+
     mapping, grid = get_ir_reciprocal_mesh(mesh,
                                            cell,
                                            is_shift * 1,
@@ -101,22 +110,19 @@ def _get_qpoint_symmetry(mesh,
 
     return qpoints, weights
 
-def _get_qpoint_no_symmetry(mesh, shift):
+def _get_qpoint_no_symmetry(mesh, shift, is_gamma_center):
     qpoints = []
-    qshift = shift / mesh
-    for i in (0, 1, 2):
-        if mesh[i] % 2 == 0:
-            qshift[i] += 0.5 / mesh[i]
-            
-    for i in range(mesh[2]):
-        for j in range(mesh[1]):
-            for k in range(mesh[0]):
-                q = np.array([float(k) / mesh[0],
-                              float(j) / mesh[1],
-                              float(i) / mesh[2]]) + qshift
-                qpoints.append(np.array([q[0] - (q[0] > 0.5),
-                                         q[1] - (q[1] > 0.5),
-                                         q[2] - (q[2] > 0.5)]))
+    if is_gamma_center:
+        qshift = [0, 0, 0]
+    else:
+        qshift = shift / mesh
+        for i in (0, 1, 2):
+            if mesh[i] % 2 == 0:
+                qshift[i] += 0.5 / mesh[i]
+
+    for grid_address in list(np.ndindex(tuple(mesh))):
+        q = np.array(grid_address, dtype='double') / mesh + qshift
+        qpoints.append(q - (q > 0.5))
 
     qpoints = np.array(qpoints, dtype='double')
     weights = np.ones(qpoints.shape[0], dtype='intc')
@@ -142,13 +148,16 @@ class Mesh:
         self._factor = factor
         self._cell = cell
         self._dynamical_matrix = dynamical_matrix
-        self._qpoints, self._weights = get_qpoints(self._mesh,
-                                                   self._cell,
-                                                   shift,
-                                                   is_gamma_center,
-                                                   is_time_reversal,
-                                                   symprec,
-                                                   is_symmetry)
+        self._qpoints, self._weights = get_qpoints(
+            self._mesh,
+            self._cell,
+            grid_shift=shift,
+            is_gamma_center=is_gamma_center,
+            is_time_reversal=is_time_reversal,
+            symprec=symprec,
+            is_symmetry=is_symmetry)
+
+        self._frequencies = None
         self._eigenvalues = None
         self._eigenvectors = None
         self._set_eigenvalues()
