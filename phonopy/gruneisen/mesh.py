@@ -50,6 +50,7 @@ class Mesh:
         self._mesh = mesh
         self._factor = phonon.get_unit_conversion_factor(),
         primitive = phonon.get_primitive()
+        primitive_symmetry = phonon.get_primitive_symmetry()
         gruneisen = Gruneisen(phonon.get_dynamical_matrix(),
                               phonon_plus.get_dynamical_matrix(),
                               phonon_minus.get_dynamical_matrix(),
@@ -60,7 +61,8 @@ class Mesh:
             self._mesh,
             primitive,
             grid_shift=grid_shift,
-            is_gamma_center=is_gamma_center)
+            is_gamma_center=is_gamma_center,
+            symmetry=primitive_symmetry)
         gruneisen.set_qpoints(self._qpoints)
         self._gamma = gruneisen.get_gruneisen()
         self._eigenvalues = gruneisen.get_eigenvalues()
