@@ -100,13 +100,18 @@ class BrillouinZone:
 
     def get_qpoints(self):
         return self._shortest_qpoints
+
+
+    
     
 if __name__ == '__main__':
     from phonopy.interface.vasp import read_vasp
+    from phonopy.structure.symmetry import Symmetry, get_lattice_vector_equivalence
     from phonopy.structure.spglib import get_ir_reciprocal_mesh
     import sys
 
     cell = read_vasp(sys.argv[1])
+    symmetry = Symmetry(cell)
     mesh = [10, 10, 10]
     mapping_table, grid_addrees = get_ir_reciprocal_mesh(
         mesh,
@@ -117,7 +122,7 @@ if __name__ == '__main__':
     qpoints = grid_addrees[ir_grid_points] / np.array(mesh, dtype='double')
 
     primitive_vectors = np.linalg.inv(cell.get_cell())
-    bz = BrillouinZone(primitive_vectors, mesh)
+    bz = BrillouinZone(primitive_vectors)
     bz.run(qpoints)
     sv = bz.get_qpoints()
     for q, vs in zip(qpoints, sv):
@@ -125,3 +130,6 @@ if __name__ == '__main__':
         for v in vs:
             print v, np.linalg.norm(np.dot(primitive_vectors, v))
 
+    rotations = symmetry.get_reciprocal_operations()
+    print get_lattice_vector_equivalence(rotations)
+    
