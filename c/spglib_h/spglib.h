@@ -318,6 +318,7 @@ int spg_get_triplets_reciprocal_mesh_at_q(int weights[],
 					  const int is_time_reversal,
 					  const int num_rot,
 					  SPGCONST int rotations[][3][3]);
+
 /* Irreducible grid-point-triplets are stored. */
 /* When a mesh number is even number, grid address is calculated with */
 /* mesh-number + 1 mesh (i.e. odd mesh number). */
