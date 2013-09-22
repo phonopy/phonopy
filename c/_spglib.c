@@ -13,6 +13,7 @@ static PyObject * find_primitive(PyObject *self, PyObject *args);
 static PyObject * get_ir_kpoints(PyObject *self, PyObject *args);
 static PyObject * get_ir_reciprocal_mesh(PyObject *self, PyObject *args);
 static PyObject * get_stabilized_reciprocal_mesh(PyObject *self, PyObject *args);
+static PyObject * relocate_BZ_grid_address(PyObject *self, PyObject *args);
 static PyObject * get_triplets_reciprocal_mesh_at_q(PyObject *self, PyObject *args);
 static PyObject * get_grid_triplets_at_q(PyObject *self, PyObject *args);
 
@@ -37,6 +38,8 @@ static PyMethodDef functions[] = {
    "Reciprocal mesh points with map"},
   {"stabilized_reciprocal_mesh", get_stabilized_reciprocal_mesh, METH_VARARGS,
    "Reciprocal mesh points with map"},
+  {"BZ_grid_address", relocate_BZ_grid_address, METH_VARARGS,
+   "Relocate grid addresses inside Brillouin zone"},
   {"triplets_reciprocal_mesh_at_q", get_triplets_reciprocal_mesh_at_q,
    METH_VARARGS, "Triplets on reciprocal mesh points at a specific q-point"},
   {"grid_triplets_at_q", get_grid_triplets_at_q,
@@ -553,6 +556,37 @@ static PyObject * get_stabilized_reciprocal_mesh(PyObject *self, PyObject *args)
   }
   
   return PyInt_FromLong((long) num_ir);
+}
+
+static PyObject * relocate_BZ_grid_address(PyObject *self, PyObject *args)
+{
+  PyArrayObject* grid_address_py;
+  PyArrayObject* multiplicity_py;
+  PyArrayObject* mesh_py;
+  PyArrayObject* is_shift_py;
+  PyArrayObject* reciprocal_lattice_py;
+  if (!PyArg_ParseTuple(args, "OOOOO",
+			&grid_address_py,
+			&multiplicity_py,
+			&mesh_py,
+			&reciprocal_lattice_py,
+			&is_shift_py)) {
+    return NULL;
+  }
+
+  int (*grid_address)[3] = (int(*)[3])grid_address_py->data;
+  int *multiplicity = (int*)multiplicity_py->data;
+  const int* mesh = (int*)mesh_py->data;
+  const int* is_shift = (int*)is_shift_py->data;
+  SPGCONST double (*reciprocal_lattice)[3]  =
+    (double(*)[3])reciprocal_lattice_py->data;
+  
+  spg_relocate_BZ_grid_address(grid_address,
+			       multiplicity,
+			       mesh,
+			       reciprocal_lattice,
+			       is_shift);
+  Py_RETURN_NONE;
 }
 
 static PyObject * get_triplets_reciprocal_mesh_at_q(PyObject *self, PyObject *args)

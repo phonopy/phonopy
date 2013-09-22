@@ -65,11 +65,11 @@ get_ir_reciprocal_mesh_openmp(int grid_address[][3],
 			      const int mesh[3],
 			      const int is_shift[3],
 			      SPGCONST PointSymmetry * point_symmetry);
-static void
-relocate_grid_address_to_brillouin_zone(int grid_address[][3],
-					const int mesh[3],
-					const int is_shift[3],
-					SPGCONST double rec_lattice[3][3]);
+static void relocate_BZ_grid_address(int grid_address[][3],
+				     int multiplicity[],
+				     const int mesh[3],
+				     SPGCONST double rec_lattice[3][3],
+				     const int is_shift[3]);
 static double get_tolerance_for_BZ_reduction(SPGCONST double rec_lattice[3][3]);
 static int get_ir_triplets_at_q(int weights[],
 				int grid_address[][3],
@@ -201,6 +201,19 @@ int kpt_get_stabilized_reciprocal_mesh(int grid_address[][3],
 				&pointgroup_q);
 #endif
 
+}
+
+void kpt_relocate_BZ_grid_address(int grid_address[][3],
+				  int multiplicity[],
+				  const int mesh[3],
+				  SPGCONST double rec_lattice[3][3],
+				  const int is_shift[3])
+{
+  relocate_BZ_grid_address(grid_address,
+			   multiplicity,
+			   mesh,
+			   rec_lattice,
+			   is_shift);
 }
 
 int kpt_get_ir_triplets_at_q(int weights[],
@@ -539,11 +552,11 @@ get_ir_reciprocal_mesh_openmp(int grid_address[][3],
 
 /* Relocate grid addresses to first Brillouin zone */
 /* grid_address is overwritten. */
-static void
-relocate_grid_address_to_brillouin_zone(int grid_address[][3],
-					const int mesh[3],
-					const int is_shift[3],
-					SPGCONST double rec_lattice[3][3])
+static void relocate_BZ_grid_address(int grid_address[][3],
+				     int multiplicity[],
+				     const int mesh[3],
+				     SPGCONST double rec_lattice[3][3],
+				     const int is_shift[3])
 {
   double tolerance, min_distance;
   double vector[3], distance[27];
@@ -569,8 +582,16 @@ relocate_grid_address_to_brillouin_zone(int grid_address[][3],
 	min_index = j;
       }
     }
+
     for (j = 0; j < 3; j++) {
       grid_address[i][j] += search_space[min_index][j] * mesh[j];
+    }
+
+    multiplicity[i] = 0;
+    for (j = 0; j < 27; j++) {
+      if (distance[j] < min_distance + tolerance) {
+	multiplicity[i]++;
+      }
     }
   }
 }
