@@ -11,16 +11,6 @@ def get_triplets_at_q(grid_point,
         point_group,
         is_time_reversal)
 
-    # weights_at_q = []
-    # triplets_at_q = []
-    # for i, (w, q) in enumerate(zip(weights, third_q)):
-    #     if w > 0:
-    #         weights_at_q.append(w)
-    #         triplets_at_q.append([grid_point, i, q])
-
-    # weights_at_q = np.intc(weights_at_q)
-    # triplets_at_q = np.intc(triplets_at_q)
-
     triplets_at_q = spg.get_grid_triplets_at_q(
         grid_point,
         grid_address,
@@ -41,12 +31,6 @@ def get_nosym_triplets_at_q(grid_point, mesh):
 
     weights = np.ones(len(grid_address), dtype='intc')
     third_q = np.zeros_like(weights)
-
-    # triplets = np.zeros((len(grid_address), 3), dtype='intc')
-    # for i, g1 in enumerate(grid_address):
-    #     g2 = - (grid_address[grid_point] + g1)
-    #     q = get_grid_point_from_address(g2, mesh)
-    #     triplets[i] = [grid_point, i, q]
 
     for i, g1 in enumerate(grid_address):
         g2 = - (grid_address[grid_point] + g1)
@@ -132,13 +116,13 @@ def from_coarse_to_dense_grid_points(dense_mesh,
         dense_address = cga * mesh_divisors + shifts * (mesh_divisors / 2)
         dense_grid_points.append(get_grid_point_from_address(dense_address,
                                                              dense_mesh))
-    return np.intc(dense_grid_points)
+    return np.array(dense_grid_points, dtype='intc')
 
 def get_coarse_ir_grid_points(primitive, mesh, mesh_divs, coarse_mesh_shifts):
     if mesh_divs is None:
         mesh_divs = [1, 1, 1]
-    mesh = np.intc(mesh)
-    mesh_divs = np.intc(mesh_divs)
+    mesh = np.array(mesh, dtype='intc')
+    mesh_divs = np.array(mesh_divs, dtype='intc')
     coarse_mesh = mesh / mesh_divs
     if coarse_mesh_shifts is None:
         coarse_mesh_shifts = [False, False, False]
