@@ -14,6 +14,34 @@
 /* element first. But when GRID_ORDER_XYZ is defined, it is changed to right */ 
 /* element first. */
 
+static int search_space[][3] = {{0, 0, 0},
+				{0, 0, 1},
+				{0, 1, -1},
+				{0, 1, 0},
+				{0, 1, 1},
+				{1, -1, -1},
+				{1, -1, 0},
+				{1, -1, 1},
+				{1, 0, -1},
+				{1, 0, 0},
+				{1, 0, 1},
+				{1, 1, -1},
+				{1, 1, 0},
+				{1, 1, 1},
+				{-1, -1, -1},
+				{-1, -1, 0},
+				{-1, -1, 1},
+				{-1, 0, -1},
+				{-1, 0, 0},
+				{-1, 0, 1},
+				{-1, 1, -1},
+				{-1, 1, 0},
+				{-1, 1, 1},
+				{0, -1, -1},
+				{0, -1, 0},
+				{0, -1, 1},
+				{0, 0, -1}};
+
 static PointSymmetry get_point_group_reciprocal(const MatINT * rotations,
 						const int is_time_reversal);
 static PointSymmetry
@@ -26,40 +54,46 @@ static int get_ir_kpoints(int map[],
 			  const int num_kpoint,
 			  SPGCONST PointSymmetry * point_symmetry,
 			  const double symprec);
-static int get_ir_reciprocal_mesh(int grid_points[][3],
+static int get_ir_reciprocal_mesh(int grid_address[][3],
 				  int map[],
 				  const int mesh[3],
 				  const int is_shift[3],
 				  SPGCONST PointSymmetry * point_symmetry);
 static int
-get_ir_reciprocal_mesh_openmp(int grid_points[][3],
+get_ir_reciprocal_mesh_openmp(int grid_address[][3],
 			      int map[],
 			      const int mesh[3],
 			      const int is_shift[3],
 			      SPGCONST PointSymmetry * point_symmetry);
+static void
+relocate_grid_address_to_brillouin_zone(int grid_address[][3],
+					const int mesh[3],
+					const int is_shift[3],
+					SPGCONST double rec_lattice[3][3]);
+static double get_tolerance_for_BZ_reduction(SPGCONST double rec_lattice[3][3]);
 static int get_ir_triplets_at_q(int weights[],
-				int grid_points[][3],
+				int grid_address[][3],
 				int third_q[],
 				const int grid_point,
 				const int mesh[3],
 				SPGCONST PointSymmetry * pointgroup);
 static void set_grid_triplets_at_q(int triplets[][3],
 				   const int q_grid_point,
-				   SPGCONST int grid_points[][3],
+				   SPGCONST int grid_address[][3],
 				   const int third_q[],
 				   const int weights[],
 				   const int mesh[3]);
-static void address_to_grid(int grid_double[3],
-			    const int address,
-			    const int mesh[3],
-			    const int is_shift[3]);
-static void get_grid_points(int grid_point[3],
-			    const int grid[3],
-			    const int mesh[3]);
+static void grid_point_to_grid_double(int grid_double[3],
+				      const int address,
+				      const int mesh[3],
+				      const int is_shift[3]);
+static void get_grid_address(int grid_address[3],
+			     const int grid[3],
+			     const int mesh[3]);
 static void get_vector_modulo(int v[3], const int m[3]);
-static int grid_to_address(const int grid[3],
-			   const int mesh[3],
-			   const int is_shift[3]);
+static int get_grid_point(const int grid[3],
+			  const int mesh[3],
+			  const int is_shift[3]);
 
 int kpt_get_irreducible_kpoints(int map[],
 				SPGCONST double kpoints[][3],
@@ -84,7 +118,7 @@ int kpt_get_irreducible_kpoints(int map[],
   return get_ir_kpoints(map, kpoints, num_kpoint, &point_symmetry, symprec);
 }
 
-/* grid_point (e.g. 4x4x4 mesh)                               */
+/* grid_address (e.g. 4x4x4 mesh)                             */
 /*    [[ 0  0  0]                                             */
 /*     [ 1  0  0]                                             */
 /*     [ 2  0  0]                                             */
@@ -96,7 +130,7 @@ int kpt_get_irreducible_kpoints(int map[],
 /*     ....      ]                                            */
 /*                                                            */
 /* Each value of 'map' correspnds to the index of grid_point. */
-int kpt_get_irreducible_reciprocal_mesh(int grid_points[][3],
+int kpt_get_irreducible_reciprocal_mesh(int grid_address[][3],
 					int map[],
 					const int mesh[3],
 					const int is_shift[3],
@@ -117,13 +151,13 @@ int kpt_get_irreducible_reciprocal_mesh(int grid_points[][3],
   mat_free_MatINT(rotations);
 
 #ifdef _OPENMP
-  return get_ir_reciprocal_mesh_openmp(grid_points,
+  return get_ir_reciprocal_mesh_openmp(grid_address,
 				       map,
 				       mesh,
 				       is_shift,
 				       &point_symmetry);
 #else
-  return get_ir_reciprocal_mesh(grid_points,
+  return get_ir_reciprocal_mesh(grid_address,
 				map,
 				mesh,
 				is_shift,
@@ -132,7 +166,7 @@ int kpt_get_irreducible_reciprocal_mesh(int grid_points[][3],
   
 }
 
-int kpt_get_stabilized_reciprocal_mesh(int grid_points[][3],
+int kpt_get_stabilized_reciprocal_mesh(int grid_address[][3],
 				       int map[],
 				       const int mesh[3],
 				       const int is_shift[3],
@@ -154,13 +188,13 @@ int kpt_get_stabilized_reciprocal_mesh(int grid_points[][3],
 						   qpoints);
 
 #ifdef _OPENMP
-  return get_ir_reciprocal_mesh_openmp(grid_points,
+  return get_ir_reciprocal_mesh_openmp(grid_address,
 				       map,
 				       mesh,
 				       is_shift,
 				       &pointgroup_q);
 #else
-  return get_ir_reciprocal_mesh(grid_points,
+  return get_ir_reciprocal_mesh(grid_address,
 				map,
 				mesh,
 				is_shift,
@@ -170,7 +204,7 @@ int kpt_get_stabilized_reciprocal_mesh(int grid_points[][3],
 }
 
 int kpt_get_ir_triplets_at_q(int weights[],
-			     int grid_points[][3],
+			     int grid_address[][3],
 			     int third_q[],
 			     const int grid_point,
 			     const int mesh[3],
@@ -182,7 +216,7 @@ int kpt_get_ir_triplets_at_q(int weights[],
   pointgroup = get_point_group_reciprocal(rotations,
 					  is_time_reversal);
   return get_ir_triplets_at_q(weights,
-			      grid_points,
+			      grid_address,
 			      third_q,
 			      grid_point,
 			      mesh,
@@ -191,14 +225,14 @@ int kpt_get_ir_triplets_at_q(int weights[],
 
 void kpt_set_grid_triplets_at_q(int triplets[][3],
 				const int q_grid_point,
-				SPGCONST int grid_points[][3],
+				SPGCONST int grid_address[][3],
 				const int third_q[],
 				const int weights[],
 				const int mesh[3])
 {
   set_grid_triplets_at_q(triplets,
 			 q_grid_point,
-			 grid_points,
+			 grid_address,
 			 third_q,
 			 weights,
 			 mesh);
@@ -207,8 +241,6 @@ void kpt_set_grid_triplets_at_q(int triplets[][3],
 
       
 
-/* qpoints are used to find stabilizers (operations). */
-/* num_q is the number of the qpoints. */
 static PointSymmetry get_point_group_reciprocal(const MatINT * rotations,
 						const int is_time_reversal)
 {
@@ -372,7 +404,7 @@ static int get_ir_kpoints(int map[],
   return num_ir_kpoint;
 }
 
-static int get_ir_reciprocal_mesh(int grid_points[][3],
+static int get_ir_reciprocal_mesh(int grid_address[][3],
 				  int map[],
 				  const int mesh[3],
 				  const int is_shift[3],
@@ -385,7 +417,7 @@ static int get_ir_reciprocal_mesh(int grid_points[][3],
   /* grid: reducible grid points */
   /* map: the mapping from each point to ir-point. */
 
-  int i, j, k, l, address, address_rot, num_ir = 0;
+  int i, j, k, l, grid_point, grid_point_rot, num_ir = 0;
   int grid_double[3], grid_rot[3], mesh_double[3];
 
   for (i = 0; i < 3; i++) {
@@ -413,25 +445,25 @@ static int get_ir_reciprocal_mesh(int grid_points[][3],
   	grid_double[2] = k * 2 + is_shift[2];
 #endif	
 
-	address = grid_to_address(grid_double, mesh, is_shift);
-	get_grid_points(grid_points[address], grid_double, mesh);
+	grid_point = get_grid_point(grid_double, mesh, is_shift);
+	get_grid_address(grid_address[grid_point], grid_double, mesh);
 
 	for (l = 0; l < point_symmetry->size; l++) {
 	  mat_multiply_matrix_vector_i3(grid_rot,
 					point_symmetry->rot[l],	grid_double);
 	  get_vector_modulo(grid_rot, mesh_double);
-	  address_rot = grid_to_address(grid_rot, mesh, is_shift);
+	  grid_point_rot = get_grid_point(grid_rot, mesh, is_shift);
 
-	  if (address_rot > -1) { /* Invalid if even --> odd or odd --> even */
-	    if (map[address_rot] > -1) {
-	      map[address] = map[address_rot];
+	  if (grid_point_rot > -1) { /* Invalid if even --> odd or odd --> even */
+	    if (map[grid_point_rot] > -1) {
+	      map[grid_point] = map[grid_point_rot];
 	      break;
 	    }
 	  }
 	}
 	
-	if (map[address] == -1) {
-	  map[address] = address;
+	if (map[grid_point] == -1) {
+	  map[grid_point] = grid_point;
 	  num_ir++;
 	}
       }
@@ -442,13 +474,13 @@ static int get_ir_reciprocal_mesh(int grid_points[][3],
 }
 
 static int
-get_ir_reciprocal_mesh_openmp(int grid_points[][3],
+get_ir_reciprocal_mesh_openmp(int grid_address[][3],
 			      int map[],
 			      const int mesh[3],
 			      const int is_shift[3],
 			      SPGCONST PointSymmetry * point_symmetry)
 {
-  int i, j, k, l, address, address_rot, num_ir;
+  int i, j, k, l, grid_point, grid_point_rot, num_ir;
   int grid_double[3], grid_rot[3], mesh_double[3];
 
   for (i = 0; i < 3; i++) {
@@ -456,7 +488,7 @@ get_ir_reciprocal_mesh_openmp(int grid_points[][3],
   }
 
 #ifndef GRID_ORDER_XYZ
-#pragma omp parallel for private(j, k, l, address, address_rot, grid_double, grid_rot)
+#pragma omp parallel for private(j, k, l, grid_point, grid_point_rot, grid_double, grid_rot)
   for (i = 0; i < mesh[2]; i++) {
     for (j = 0; j < mesh[1]; j++) {
       for (k = 0; k < mesh[0]; k++) {
@@ -464,7 +496,7 @@ get_ir_reciprocal_mesh_openmp(int grid_points[][3],
 	grid_double[1] = j * 2 + is_shift[1];
 	grid_double[2] = i * 2 + is_shift[2];
 #else
-#pragma omp parallel for private(j, k, l, address, address_rot, grid_double, grid_rot)
+#pragma omp parallel for private(j, k, l, grid_point, grid_point_rot, grid_double, grid_rot)
   for (i = 0; i < mesh[0]; i++) {
     for (j = 0; j < mesh[1]; j++) {
       for (k = 0; k < mesh[2]; k++) {
@@ -473,19 +505,19 @@ get_ir_reciprocal_mesh_openmp(int grid_points[][3],
   	grid_double[2] = k * 2 + is_shift[2];
 #endif	
 
-	address = grid_to_address(grid_double, mesh, is_shift);
-	map[address] = address;
-	get_grid_points(grid_points[address], grid_double, mesh);
+	grid_point = get_grid_point(grid_double, mesh, is_shift);
+	map[grid_point] = grid_point;
+	get_grid_address(grid_address[grid_point], grid_double, mesh);
 
 	for (l = 0; l < point_symmetry->size; l++) {
 	  mat_multiply_matrix_vector_i3(grid_rot,
 					point_symmetry->rot[l],	grid_double);
 	  get_vector_modulo(grid_rot, mesh_double);
-	  address_rot = grid_to_address(grid_rot, mesh, is_shift);
+	  grid_point_rot = get_grid_point(grid_rot, mesh, is_shift);
 
-	  if (address_rot > -1) { /* Invalid if even --> odd or odd --> even */
-	    if (address_rot < map[address]) {
-	      map[address] = address_rot;
+	  if (grid_point_rot > -1) { /* Invalid if even --> odd or odd --> even */
+	    if (grid_point_rot < map[grid_point]) {
+	      map[grid_point] = grid_point_rot;
 	    }
 	  }
 	}
@@ -505,17 +537,77 @@ get_ir_reciprocal_mesh_openmp(int grid_points[][3],
   return num_ir;
 }
 
+/* Relocate grid addresses to first Brillouin zone */
+/* grid_address is overwritten. */
+static void
+relocate_grid_address_to_brillouin_zone(int grid_address[][3],
+					const int mesh[3],
+					const int is_shift[3],
+					SPGCONST double rec_lattice[3][3])
+{
+  double tolerance, min_distance;
+  double vector[3], distance[27];
+  int i, j, k, min_index;
+  int address[3];
+
+  tolerance = get_tolerance_for_BZ_reduction(rec_lattice);
+
+  for (i = 0; i < mesh[0] * mesh[1] * mesh[2]; i++) {
+    for (j = 0; j < 27; j++) {
+      for (k = 0; k < 3; k++) {
+	address[k] = grid_address[i][k];
+	address[k] += search_space[j][k] * mesh[k];
+      }
+      mat_multiply_matrix_vector_di3(vector, rec_lattice, address);
+      distance[j] = mat_norm_squared_d3(vector);
+    }
+    min_distance = distance[0];
+    min_index = 0;
+    for (j = 1; j < 27; j++) {
+      if (distance[j] + tolerance < min_distance) {
+	min_distance = distance[j];
+	min_index = j;
+      }
+    }
+    for (j = 0; j < 3; j++) {
+      grid_address[i][j] += search_space[min_index][j] * mesh[j];
+    }
+  }
+}
+
+static double get_tolerance_for_BZ_reduction(SPGCONST double rec_lattice[3][3])
+{
+  int i, j;
+  double tolerance;
+  double length[3];
+  
+  for (i = 0; i < 3; i++) {
+    length[i] = 0;
+    for (j = 0; j < 3; j++) {
+      length[i] += rec_lattice[j][i] * rec_lattice[j][i];
+    }
+  }
+  tolerance = length[0];
+  for (i = 1; i < 3; i++) {
+    if (tolerance > length[i]) {
+      tolerance = length[i];
+    }
+  }
+  tolerance /= 10;
+  return tolerance;
+}
+ 
 static int get_ir_triplets_at_q(int weights[],
-				int grid_points[][3],
+				int grid_address[][3],
 				int third_q[],
 				const int grid_point,
 				const int mesh[3],
 				SPGCONST PointSymmetry * pointgroup)
 {
-  int i, j, num_grid, q_2, num_ir_q, num_ir_triplets, ir_address;
+  int i, j, num_grid, q_2, num_ir_q, num_ir_triplets, ir_grid_point;
   int mesh_double[3], is_shift[3];
   int grid_double0[3], grid_double1[3], grid_double2[3];
-  int *map_q, *ir_addresses, *weight_q;
+  int *map_q, *ir_grid_points, *weight_q;
   double tolerance;
   double stabilizer_q[1][3];
   PointSymmetry pointgroup_q;
@@ -531,7 +623,7 @@ static int get_ir_triplets_at_q(int weights[],
   }
 
   /* Search irreducible q-points (map_q) with a stabilizer */
-  address_to_grid(grid_double0, grid_point, mesh, is_shift); /* q */
+  grid_point_to_grid_double(grid_double0, grid_point, mesh, is_shift); /* q */
   for (i = 0; i < 3; i++) {
     stabilizer_q[0][i] = (double)grid_double0[i] / mesh_double[i];
   }
@@ -543,25 +635,25 @@ static int get_ir_triplets_at_q(int weights[],
   map_q = (int*) malloc(sizeof(int) * num_grid);
 
 #ifdef _OPENMP
-  num_ir_q = get_ir_reciprocal_mesh_openmp(grid_points,
+  num_ir_q = get_ir_reciprocal_mesh_openmp(grid_address,
 					   map_q,
 					   mesh,
 					   is_shift,
 					   &pointgroup_q);
 #else
-  num_ir_q = get_ir_reciprocal_mesh(grid_points,
+  num_ir_q = get_ir_reciprocal_mesh(grid_address,
 				    map_q,
 				    mesh,
 				    is_shift,
 				    &pointgroup_q);
 #endif
 
-  ir_addresses = (int*) malloc(sizeof(int) * num_ir_q);
+  ir_grid_points = (int*) malloc(sizeof(int) * num_ir_q);
   weight_q = (int*) malloc(sizeof(int) * num_grid);
   num_ir_q = 0;
   for (i = 0; i < num_grid; i++) {
     if (map_q[i] == i) {
-      ir_addresses[num_ir_q] = i;
+      ir_grid_points[num_ir_q] = i;
       num_ir_q++;
     }
     weight_q[i] = 0;
@@ -575,22 +667,22 @@ static int get_ir_triplets_at_q(int weights[],
 
 #pragma omp parallel for private(j, grid_double1, grid_double2)
   for (i = 0; i < num_ir_q; i++) {
-    address_to_grid(grid_double1, ir_addresses[i], mesh, is_shift); /* q' */
+    grid_point_to_grid_double(grid_double1, ir_grid_points[i], mesh, is_shift); /* q' */
     for (j = 0; j < 3; j++) { /* q'' */
       grid_double2[j] = - grid_double0[j] - grid_double1[j];
     }
     get_vector_modulo(grid_double2, mesh_double);
-    third_q[ir_addresses[i]] = grid_to_address(grid_double2, mesh, is_shift);
+    third_q[ir_grid_points[i]] = get_grid_point(grid_double2, mesh, is_shift);
   }
 
   num_ir_triplets = 0;
   for (i = 0; i < num_ir_q; i++) {
-    ir_address = ir_addresses[i];
-    q_2 = third_q[ir_address];
+    ir_grid_point = ir_grid_points[i];
+    q_2 = third_q[ir_grid_point];
     if (weights[map_q[q_2]]) {
-      weights[map_q[q_2]] += weight_q[ir_address];
+      weights[map_q[q_2]] += weight_q[ir_grid_point];
     } else {
-      weights[ir_address] = weight_q[ir_address];
+      weights[ir_grid_point] = weight_q[ir_grid_point];
       num_ir_triplets++;
     }
   }
@@ -599,15 +691,15 @@ static int get_ir_triplets_at_q(int weights[],
   map_q = NULL;
   free(weight_q);
   weight_q = NULL;
-  free(ir_addresses);
-  ir_addresses = NULL;
+  free(ir_grid_points);
+  ir_grid_points = NULL;
 
   return num_ir_triplets;
 }
 
 static void set_grid_triplets_at_q(int triplets[][3],
 				   const int q_grid_point,
-				   SPGCONST int grid_points[][3],
+				   SPGCONST int grid_address[][3],
 				   const int third_q[],
 				   const int weights[],
 				   const int mesh[3])
@@ -622,7 +714,7 @@ static void set_grid_triplets_at_q(int triplets[][3],
   }
 
   for (i = 0; i < 3; i++) {
-    grid_double[0][i] = grid_points[q_grid_point][i] * 2;
+    grid_double[0][i] = grid_address[q_grid_point][i] * 2;
   }
 
   num_ir = 0;
@@ -633,8 +725,8 @@ static void set_grid_triplets_at_q(int triplets[][3],
     }
 
     for (j = 0; j < 3; j++) {
-      grid_double[1][j] = grid_points[i][j] * 2;
-      grid_double[2][j] = grid_points[third_q[i]][j] * 2;
+      grid_double[1][j] = grid_address[i][j] * 2;
+      grid_double[2][j] = grid_address[third_q[i]][j] * 2;
     }
 
     for (j = 0; j < 3; j++) {
@@ -662,7 +754,7 @@ static void set_grid_triplets_at_q(int triplets[][3],
 
     for (j = 0; j < 3; j++) {
       get_vector_modulo(grid_double[j], ex_mesh_double);
-      triplets[num_ir][j] = grid_to_address(grid_double[j], ex_mesh, is_shift);
+      triplets[num_ir][j] = get_grid_point(grid_double[j], ex_mesh, is_shift);
     }
     
     num_ir++;
@@ -670,9 +762,9 @@ static void set_grid_triplets_at_q(int triplets[][3],
 
 }
 
-static int grid_to_address(const int grid_double[3],
-			   const int mesh[3],
-			   const int is_shift[3])
+static int get_grid_point(const int grid_double[3],
+			  const int mesh[3],
+			  const int is_shift[3])
 {
   int i, grid[3];
 
@@ -695,22 +787,22 @@ static int grid_to_address(const int grid_double[3],
 #endif  
 }
 
-static void address_to_grid(int grid_double[3],
-			    const int address,
-			    const int mesh[3],
-			    const int is_shift[3])
+static void grid_point_to_grid_double(int grid_double[3],
+				      const int grid_point,
+				      const int mesh[3],
+				      const int is_shift[3])
 {
   int i;
   int grid[3];
 
 #ifndef GRID_ORDER_XYZ
-  grid[2] = address / (mesh[0] * mesh[1]);
-  grid[1] = (address - grid[2] * mesh[0] * mesh[1]) / mesh[0];
-  grid[0] = address % mesh[0];
+  grid[2] = grid_point / (mesh[0] * mesh[1]);
+  grid[1] = (grid_point - grid[2] * mesh[0] * mesh[1]) / mesh[0];
+  grid[0] = grid_point % mesh[0];
 #else
-  grid[0] = address / (mesh[1] * mesh[2]);
-  grid[1] = (address - grid[0] * mesh[1] * mesh[2]) / mesh[2];
-  grid[2] = address % mesh[2];
+  grid[0] = grid_point / (mesh[1] * mesh[2]);
+  grid[1] = (grid_point - grid[0] * mesh[1] * mesh[2]) / mesh[2];
+  grid[2] = grid_point % mesh[2];
 #endif
 
   for (i = 0; i < 3; i++) {
@@ -718,23 +810,23 @@ static void address_to_grid(int grid_double[3],
   }
 }
 
-static void get_grid_points(int grid[3],
-			    const int grid_double[3],
-			    const int mesh[3])
+static void get_grid_address(int address[3],
+			     const int grid_double[3],
+			     const int mesh[3])
 {
   int i;
 
   for (i = 0; i < 3; i++) {
     if (grid_double[i] % 2 == 0) {
-      grid[i] = grid_double[i] / 2;
+      address[i] = grid_double[i] / 2;
     } else {
-      grid[i] = (grid_double[i] - 1) / 2;
+      address[i] = (grid_double[i] - 1) / 2;
     }
 
 #ifndef GRID_BOUNDARY_AS_NEGATIVE
-    grid[i] = grid[i] - mesh[i] * (grid[i] > mesh[i] / 2);
+    address[i] = address[i] - mesh[i] * (address[i] > mesh[i] / 2);
 #else
-    grid[i] = grid[i] - mesh[i] * (grid[i] >= mesh[i] / 2);
+    address[i] = address[i] - mesh[i] * (address[i] >= mesh[i] / 2);
 #endif
   }  
 }

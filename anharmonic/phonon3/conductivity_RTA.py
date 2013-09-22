@@ -5,7 +5,7 @@ from phonopy.phonon.group_velocity import get_group_velocity
 from phonopy.units import Kb, THzToEv, EV, THz, Angstrom
 from phonopy.phonon.thermal_properties import mode_cv
 from anharmonic.file_IO import write_kappa_to_hdf5, write_triplets
-from anharmonic.phonon3.triplets import get_grid_address, reduce_grid_points, get_ir_grid_points, from_coarse_to_dense_grid_points
+from anharmonic.phonon3.triplets import get_grid_address, reduce_grid_points, get_ir_grid_points, from_coarse_to_dense_grid_points, get_grid_points_in_Brillouin_zone
 from anharmonic.phonon3.imag_self_energy import ImagSelfEnergy
 
 unit_to_WmK = ((THz * Angstrom) ** 2 / (Angstrom ** 3) * EV / THz /
@@ -134,6 +134,12 @@ class conductivity_RTA:
             assert self._grid_weights.sum() == np.prod(self._mesh /
                                                        self._mesh_divisors)
 
+        rec_lat = np.linalg.inv(self._primitive.get_cell())
+        look_at_grid_address_in_BZ(rec_lat,
+                                   self._mesh,
+                                   self._grid_address,
+                                   self._grid_points)
+            
     def get_qpoints(self):
         qpoints = np.array([self._grid_address[gp].astype(float) / self._mesh
                             for gp in self._grid_points], dtype='double')
@@ -489,3 +495,18 @@ class conductivity_RTA:
                        grid_point=grid_point,
                        filename=self._filename)
         
+
+def look_at_grid_address_in_BZ(rec_lat, mesh, grid_address, grid_points):
+    bz_adrs = get_grid_points_in_Brillouin_zone(rec_lat,
+                                                mesh,
+                                                grid_address,
+                                                grid_points,
+                                                with_boundary=False)
+
+    for gp, bza in zip(grid_points, bz_adrs):
+        q = np.dot(rec_lat, grid_address[gp]) / mesh
+        print gp, grid_address[gp], q, np.linalg.norm(q)
+        for a in bza:
+            q = np.dot(rec_lat, a) / mesh
+            print "-->", a, q, np.linalg.norm(q)
+        print

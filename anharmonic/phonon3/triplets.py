@@ -147,19 +147,6 @@ def get_coarse_ir_grid_points(primitive, mesh, mesh_divs, coarse_mesh_shifts):
     return grid_points, coarse_grid_weights, grid_address
 
 search_space = np.array([
-        [-1, -1, -1],
-        [-1, -1, 0],
-        [-1, -1, 1],
-        [-1, 0, -1],
-        [-1, 0, 0],
-        [-1, 0, 1],
-        [-1, 1, -1],
-        [-1, 1, 0],
-        [-1, 1, 1],
-        [0, -1, -1],
-        [0, -1, 0],
-        [0, -1, 1],
-        [0, 0, -1],
         [0, 0, 0],
         [0, 0, 1],
         [0, 1, -1],
@@ -173,7 +160,20 @@ search_space = np.array([
         [1, 0, 1],
         [1, 1, -1],
         [1, 1, 0],
-        [1, 1, 1]], dtype='intc')
+        [1, 1, 1],
+        [-1, -1, -1],
+        [-1, -1, 0],
+        [-1, -1, 1],
+        [-1, 0, -1],
+        [-1, 0, 0],
+        [-1, 0, 1],
+        [-1, 1, -1],
+        [-1, 1, 0],
+        [-1, 1, 1],
+        [0, -1, -1],
+        [0, -1, 0],
+        [0, -1, 1],
+        [0, 0, -1]], dtype='intc')
 
 def get_grid_points_in_Brillouin_zone(primitive_vectors, # column vectors
                                       mesh,
@@ -193,13 +193,12 @@ class GridBrillouinZone:
                  mesh,
                  grid_address,
                  with_boundary=False): # extended grid if True
-        self._primitive_vectors = primitive_vectors # column vectors
+        self._primitive_vectors = np.array(primitive_vectors) # column vectors
         self._mesh = mesh
         self._grid_address = grid_address
         self._with_boundary = with_boundary
-        
-        longest = max([np.linalg.norm(vec) for vec in primitive_vectors.T])
-        self._tolerance = longest / 10
+
+        self._tolerance = min(np.sum(self._primitive_vectors ** 2, axis=0)) / 10
         self._primitive_vectors_inv = np.linalg.inv(self._primitive_vectors)
         self._search_space = search_space * mesh
 
@@ -213,7 +212,7 @@ class GridBrillouinZone:
                  for g in self._search_space], dtype='double')
             min_dist = min(distances)
             shortest_indices = [i for i, d in enumerate(distances - min_dist)
-                                if abs(d) < self._tolerance ** 2]
+                                if abs(d) < self._tolerance]
             self._shortest_addresses.append(
                 self._search_space[shortest_indices] + address)
 
