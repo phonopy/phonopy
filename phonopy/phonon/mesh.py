@@ -82,12 +82,11 @@ def _check_mesh_numbers_symmetry(mesh, symmetry):
     rotations = symmetry.get_reciprocal_operations()
     lattice_equiv = get_lattice_vector_equivalence(rotations)
     return np.array_equal(mesh_equiv, lattice_equiv)
-        
 
 def _fit_qpoints_in_BZ(primitive_vectors, mesh, qpoints):
     # primitive_vectors: column vectors
-    longest = max([np.linalg.norm(vec) for vec in primitive_vectors.T])
-    tolerance = longest / max(mesh) / 10
+    shortest = np.sqrt(min(np.sum(primitive_vectors ** 2, axis=0)))
+    tolerance = shortest / max(mesh) / 10
     qpoint_set_in_BZ = get_qpoints_in_Brillouin_zone(primitive_vectors,
                                                      qpoints,
                                                      tolerance=tolerance)
