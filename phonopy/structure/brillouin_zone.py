@@ -69,7 +69,7 @@ def get_qpoints_in_Brillouin_zone(primitive_vectors,
                                   tolerance=1e-5):
     bz = BrillouinZone(primitive_vectors, tolerance=tolerance)
     bz.run(qpoints)
-    return bz.get_qpoints()
+    return bz.get_shortest_qpoints()
 
 class BrillouinZone:
     def __init__(self,
@@ -81,6 +81,8 @@ class BrillouinZone:
                                                 self._tolerance).T
         self._primitive_vectors_inv = np.linalg.inv(self._primitive_vectors)
         self._reduced_bases_inv = np.linalg.inv(self._reduced_bases)
+
+        self._shortest_qpoints = None
 
     def run(self, qpoints):
         reduced_qpoints = np.dot(self._reduced_bases_inv,
@@ -98,11 +100,9 @@ class BrillouinZone:
                        np.dot(self._reduced_bases,
                               (search_space[shortest_indices] + q).T)).T)
 
-    def get_qpoints(self):
+    def get_shortest_qpoints(self):
         return self._shortest_qpoints
 
-
-    
     
 if __name__ == '__main__':
     from phonopy.interface.vasp import read_vasp
