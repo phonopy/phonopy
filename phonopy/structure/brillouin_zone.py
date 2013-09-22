@@ -79,14 +79,14 @@ class BrillouinZone:
         self._tolerance = tolerance
         self._reduced_bases = get_reduced_bases(primitive_vectors.T,
                                                 self._tolerance).T
-        self._primitive_vectors_inv = np.linalg.inv(self._primitive_vectors)
-        self._reduced_bases_inv = np.linalg.inv(self._reduced_bases)
+        self._tmat = np.dot(
+            np.linalg.inv(self._primitive_vectors), self._reduced_bases)
+        self._tmat_inv = np.linalg.inv(self._tmat)
 
         self._shortest_qpoints = None
 
     def run(self, qpoints):
-        reduced_qpoints = np.dot(self._reduced_bases_inv,
-                                 np.dot(self._primitive_vectors, qpoints.T)).T
+        reduced_qpoints = np.dot(qpoints, self._tmat_inv.T)
         self._shortest_qpoints = []
         for q in reduced_qpoints:
             distances = np.array([(np.dot(self._reduced_bases, q + g) ** 2).sum()
@@ -94,16 +94,12 @@ class BrillouinZone:
             min_dist = min(distances)
             shortest_indices = [i for i, d in enumerate(distances - min_dist)
                                 if abs(d) < self._tolerance ** 2]
-
             self._shortest_qpoints.append(
-                np.dot(self._primitive_vectors_inv,
-                       np.dot(self._reduced_bases,
-                              (search_space[shortest_indices] + q).T)).T)
+                np.dot(search_space[shortest_indices] + q, self._tmat.T))
 
     def get_shortest_qpoints(self):
         return self._shortest_qpoints
 
-    
 if __name__ == '__main__':
     from phonopy.interface.vasp import read_vasp
     from phonopy.structure.symmetry import Symmetry, get_lattice_vector_equivalence
