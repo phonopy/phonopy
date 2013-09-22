@@ -53,12 +53,16 @@ def get_grid_address(mesh):
 
     return grid_address
 
-def get_grid_point_from_address(grid, mesh):
+def get_grid_point_from_address(address, mesh, with_boundary=False):
     # X runs first in XYZ
     # (*In spglib, Z first is possible with MACRO setting.)
-    return ((grid[0] + mesh[0]) % mesh[0] +
-            ((grid[1] + mesh[1]) % mesh[1]) * mesh[0] +
-            ((grid[2] + mesh[2]) % mesh[2]) * mesh[0] * mesh[1])
+    if with_boundary:
+        m = [x + (x % 2 == 0) for x in mesh]
+    else:
+        m = mesh
+    return (address[0] % m[0] +
+            (address[1] % m[1]) * m[0] +
+            (address[2] % m[2]) * m[0] * m[1])
 
 def invert_grid_point(grid_point, grid_address, mesh):
     # gp --> [address] --> [-address] --> inv_gp
@@ -142,6 +146,80 @@ def get_coarse_ir_grid_points(primitive, mesh, mesh_divs, coarse_mesh_shifts):
 
     return grid_points, coarse_grid_weights, grid_address
 
+search_space = np.array([
+        [-1, -1, -1],
+        [-1, -1, 0],
+        [-1, -1, 1],
+        [-1, 0, -1],
+        [-1, 0, 0],
+        [-1, 0, 1],
+        [-1, 1, -1],
+        [-1, 1, 0],
+        [-1, 1, 1],
+        [0, -1, -1],
+        [0, -1, 0],
+        [0, -1, 1],
+        [0, 0, -1],
+        [0, 0, 0],
+        [0, 0, 1],
+        [0, 1, -1],
+        [0, 1, 0],
+        [0, 1, 1],
+        [1, -1, -1],
+        [1, -1, 0],
+        [1, -1, 1],
+        [1, 0, -1],
+        [1, 0, 0],
+        [1, 0, 1],
+        [1, 1, -1],
+        [1, 1, 0],
+        [1, 1, 1]], dtype='intc')
+
+def get_grid_points_in_Brillouin_zone(primitive_vectors, # column vectors
+                                      mesh,
+                                      grid_address,
+                                      grid_points,
+                                      with_boundary=False):
+    gbz = GridBrillouinZone(primitive_vectors,
+                            mesh,
+                            grid_address,
+                            with_boundary=with_boundary)
+    gbz.run(grid_points)
+    return gbz.get_shortest_addresses()
+
+class GridBrillouinZone:
+    def __init__(self,
+                 primitive_vectors,
+                 mesh,
+                 grid_address,
+                 with_boundary=False): # extended grid if True
+        self._primitive_vectors = primitive_vectors # column vectors
+        self._mesh = mesh
+        self._grid_address = grid_address
+        self._with_boundary = with_boundary
+        
+        longest = max([np.linalg.norm(vec) for vec in primitive_vectors.T])
+        self._tolerance = longest / 10
+        self._primitive_vectors_inv = np.linalg.inv(self._primitive_vectors)
+        self._search_space = search_space * mesh
+
+        self._shortest_addresses = None
+
+    def run(self, grid_points):
+        self._shortest_addresses = []
+        for address in self._grid_address[grid_points]:
+            distances = np.array(
+                [(np.dot(self._primitive_vectors, address + g) ** 2).sum()
+                 for g in self._search_space], dtype='double')
+            min_dist = min(distances)
+            shortest_indices = [i for i, d in enumerate(distances - min_dist)
+                                if abs(d) < self._tolerance ** 2]
+            self._shortest_addresses.append(
+                self._search_space[shortest_indices] + address)
+
+    def get_shortest_addresses(self):
+        return self._shortest_addresses
+    
 
 if __name__ == '__main__':
     # This checks if ir_grid_points.yaml gives correct dense grid points
