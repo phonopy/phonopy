@@ -36,19 +36,6 @@ import numpy as np
 from phonopy.structure.cells import get_reduced_bases
 
 search_space = np.array([
-        [-1, -1, -1],
-        [-1, -1, 0],
-        [-1, -1, 1],
-        [-1, 0, -1],
-        [-1, 0, 0],
-        [-1, 0, 1],
-        [-1, 1, -1],
-        [-1, 1, 0],
-        [-1, 1, 1],
-        [0, -1, -1],
-        [0, -1, 0],
-        [0, -1, 1],
-        [0, 0, -1],
         [0, 0, 0],
         [0, 0, 1],
         [0, 1, -1],
@@ -62,7 +49,20 @@ search_space = np.array([
         [1, 0, 1],
         [1, 1, -1],
         [1, 1, 0],
-        [1, 1, 1]], dtype='intc')
+        [1, 1, 1],
+        [-1, -1, -1],
+        [-1, -1, 0],
+        [-1, -1, 1],
+        [-1, 0, -1],
+        [-1, 0, 0],
+        [-1, 0, 1],
+        [-1, 1, -1],
+        [-1, 1, 0],
+        [-1, 1, 1],
+        [0, -1, -1],
+        [0, -1, 0],
+        [0, -1, 1],
+        [0, 0, -1]], dtype='intc')
 
 def get_qpoints_in_Brillouin_zone(primitive_vectors,
                                   qpoints,
@@ -103,26 +103,47 @@ class BrillouinZone:
 if __name__ == '__main__':
     from phonopy.interface.vasp import read_vasp
     from phonopy.structure.symmetry import Symmetry, get_lattice_vector_equivalence
-    from phonopy.structure.spglib import get_ir_reciprocal_mesh
+    from phonopy.structure.spglib import get_ir_reciprocal_mesh, relocate_BZ_grid_address
     import sys
 
     cell = read_vasp(sys.argv[1])
     symmetry = Symmetry(cell)
-    mesh = [10, 10, 10]
-    mapping_table, grid_addrees = get_ir_reciprocal_mesh(
+    mesh = [4, 4, 4]
+    is_shift = np.array([1, 1, 1], dtype='intc')
+    mapping_table, grid_address = get_ir_reciprocal_mesh(
         mesh,
         cell,
-        is_shift=[0, 0, 0])
+        is_shift=is_shift)
 
     ir_grid_points = np.unique(mapping_table)
-    qpoints = grid_addrees[ir_grid_points] / np.array(mesh, dtype='double')
-
+    grid_address_copy = grid_address.copy()
     primitive_vectors = np.linalg.inv(cell.get_cell())
+    multiplicity = relocate_BZ_grid_address(grid_address_copy,
+                                            mesh,
+                                            np.linalg.inv(cell.get_cell()),
+                                            is_shift=is_shift)
+    # qpoints = grid_address[ir_grid_points] / np.array(mesh, dtype='double')
+    qpoints = (grid_address + is_shift.astype('double') / 2) / mesh
+    qpoints -= (qpoints > 0.5001) * 1
+
+    print multiplicity
+
+    for g, gc in zip(grid_address, grid_address_copy):
+        print g, gc,
+        if np.all(g == gc):
+            print
+        else:
+            print "*"
+    
     bz = BrillouinZone(primitive_vectors)
     bz.run(qpoints)
-    sv = bz.get_qpoints()
+    sv = bz.get_shortest_qpoints()
     for q, vs in zip(qpoints, sv):
-        print q
+        print q,
+        if np.allclose(q, vs[0]):
+            print
+        else:
+            print "*", np.linalg.norm(np.dot(primitive_vectors, q))
         for v in vs:
             print v, np.linalg.norm(np.dot(primitive_vectors, v))
 

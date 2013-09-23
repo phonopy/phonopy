@@ -4,12 +4,17 @@ import phonopy.structure.spglib as spg
 def get_triplets_at_q(grid_point,
                       mesh,
                       point_group, # real space point group of space group
+                      primitive_lattice, # column vectors
                       is_time_reversal=True):
     weights, third_q, grid_address = spg.get_triplets_reciprocal_mesh_at_q(
         grid_point,
         mesh,
         point_group,
         is_time_reversal)
+
+    multiplicity = spg.relocate_BZ_grid_address(grid_address,
+                                                mesh,
+                                                primitive_lattice)
 
     triplets_at_q = spg.get_grid_triplets_at_q(
         grid_point,
@@ -18,7 +23,11 @@ def get_triplets_at_q(grid_point,
         weights,
         mesh)
     weights_at_q = np.extract(weights > 0, weights)
-    grid_address = get_grid_address([x + (x % 2 == 0) for x in mesh])
+    extended_mesh = [x + (x % 2 == 0) for x in mesh]
+    grid_address = get_grid_address(extended_mesh)
+    multiplicity = spg.relocate_BZ_grid_address(grid_address,
+                                                extended_mesh,
+                                                primitive_lattice)
 
     assert np.prod(mesh) == weights_at_q.sum(), \
         "Num grid points %d, sum of weight %d" % (

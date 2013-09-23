@@ -134,15 +134,20 @@ class conductivity_RTA:
             assert self._grid_weights.sum() == np.prod(self._mesh /
                                                        self._mesh_divisors)
 
-        rec_lat = np.linalg.inv(self._primitive.get_cell())
-        look_at_grid_address_in_BZ(rec_lat,
-                                   self._mesh,
-                                   self._grid_address,
-                                   self._grid_points)
+        primitive_lattice = np.linalg.inv(self._primitive.get_cell())
+        multiplicity = spg.relocate_BZ_grid_address(self._grid_address,
+                                                    self._mesh,
+                                                    primitive_lattice)
+
+        # rec_lat = np.linalg.inv(self._primitive.get_cell())
+        # look_at_grid_address_in_BZ(rec_lat,
+        #                            self._mesh,
+        #                            self._grid_address,
+        #                            self._grid_points)
             
     def get_qpoints(self):
-        qpoints = np.array([self._grid_address[gp].astype(float) / self._mesh
-                            for gp in self._grid_points], dtype='double')
+        qpoints = np.array(self._grid_address[self._grid_points] /
+                           self._mesh.astype('double'), dtype='double')
         return qpoints
             
     def get_grid_points(self):

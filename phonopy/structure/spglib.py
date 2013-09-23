@@ -244,6 +244,19 @@ def get_ir_reciprocal_mesh(mesh,
                            symprec)
   
     return mapping, mesh_points
+
+def relocate_BZ_grid_address(grid_address,
+                             mesh,
+                             reciprocal_lattice, # column vectors
+                             is_shift=np.zeros(3, dtype='intc')):
+    multiplicity = np.zeros(len(grid_address), dtype='intc')
+    spg.BZ_grid_address(grid_address,
+                        multiplicity,
+                        np.array(mesh, dtype='intc').copy(),
+                        np.array(reciprocal_lattice, dtype='double').copy(),
+                        np.array(is_shift, dtype='intc').copy())
+                    
+    return multiplicity
   
 def get_stabilized_reciprocal_mesh(mesh,
                                    rotations,

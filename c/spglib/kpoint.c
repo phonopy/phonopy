@@ -568,8 +568,8 @@ static void relocate_BZ_grid_address(int grid_address[][3],
   for (i = 0; i < mesh[0] * mesh[1] * mesh[2]; i++) {
     for (j = 0; j < 27; j++) {
       for (k = 0; k < 3; k++) {
-	address[k] = grid_address[i][k];
-	address[k] += search_space[j][k] * mesh[k];
+	address[k] = grid_address[i][k] * 2;
+	address[k] += search_space[j][k] * mesh[k] * 2 + is_shift[k];
       }
       mat_multiply_matrix_vector_di3(vector, rec_lattice, address);
       distance[j] = mat_norm_squared_d3(vector);
@@ -718,16 +718,17 @@ static int get_ir_triplets_at_q(int weights[],
   return num_ir_triplets;
 }
 
+/* Triplets: [grid_point, i, third_q[i]], weights[i] > 0 */
 static void set_grid_triplets_at_q(int triplets[][3],
-				   const int q_grid_point,
+				   const int grid_point,
 				   SPGCONST int grid_address[][3],
 				   const int third_q[],
 				   const int weights[],
 				   const int mesh[3])
 {
   const int is_shift[3] = {0, 0, 0};
-  int i, j, k, num_edge, edge_pos, num_ir;
-  int grid_double[3][3], ex_mesh[3], ex_mesh_double[3];
+  int i, j, k, num_ir, smallest_index, smallest_g;
+  int grid_double[3][3], ex_mesh[3], ex_mesh_double[3], sum_g[27];
 
   for (i = 0; i < 3; i++) {
     ex_mesh[i] = mesh[i] + (mesh[i] % 2 == 0);
@@ -735,7 +736,7 @@ static void set_grid_triplets_at_q(int triplets[][3],
   }
 
   for (i = 0; i < 3; i++) {
-    grid_double[0][i] = grid_address[q_grid_point][i] * 2;
+    grid_double[0][i] = grid_address[grid_point][i] * 2;
   }
 
   num_ir = 0;
@@ -750,29 +751,27 @@ static void set_grid_triplets_at_q(int triplets[][3],
       grid_double[2][j] = grid_address[third_q[i]][j] * 2;
     }
 
-    for (j = 0; j < 3; j++) {
-      num_edge = 0;
-      edge_pos = -1;
+    for (j = 0; j < 27; j++) {
+      sum_g[j] = 0;
       for (k = 0; k < 3; k++) {
-	if (abs(grid_double[k][j]) == mesh[j]) {
-	  num_edge++;
-	  edge_pos = k;
-	}
-      }
-
-      if (num_edge == 1) {
-	grid_double[edge_pos][j] = 0;
-	for (k = 0; k < 3; k++) {
-	  if (k != edge_pos) {
-	    grid_double[edge_pos][j] -= grid_double[k][j];
-	  }
-	}
-      }
-      if (num_edge == 2) {
-	grid_double[edge_pos][j] = -grid_double[edge_pos][j];
+	sum_g[j] += abs(grid_double[0][k] + grid_double[1][k] +
+			grid_double[2][k] + search_space[j][k] * mesh[k] * 2);
       }
     }
 
+    smallest_index = 0;
+    smallest_g = sum_g[0];
+    for (j = 1; j < 27; j++) {
+      if (smallest_g > sum_g[j]) {
+	smallest_index = j;
+	smallest_g = sum_g[j];
+      }
+    }
+
+    for (j = 0; j < 3; j++) {
+      grid_double[2][j] += search_space[smallest_index][j] * mesh[j] * 2;
+    }
+    
     for (j = 0; j < 3; j++) {
       get_vector_modulo(grid_double[j], ex_mesh_double);
       triplets[num_ir][j] = get_grid_point(grid_double[j], ex_mesh, is_shift);

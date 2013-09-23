@@ -164,7 +164,8 @@ class Interaction:
             triplets_at_q, weights_at_q, grid_address = get_triplets_at_q(
                 grid_point,
                 self._mesh,
-                self._symmetry.get_pointgroup_operations())
+                self._symmetry.get_pointgroup_operations(),
+                np.linalg.inv(self._primitive.get_cell()))
 
         self._triplets_at_q = triplets_at_q
         self._weights_at_q = weights_at_q
