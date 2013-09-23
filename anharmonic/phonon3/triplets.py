@@ -35,7 +35,7 @@ def get_triplets_at_q(grid_point,
 
     return triplets_at_q, weights_at_q, grid_address
 
-def get_nosym_triplets_at_q(grid_point, mesh):
+def get_nosym_triplets_at_q(grid_point, mesh, primitive_lattice):
     grid_address = get_grid_address(mesh)
 
     weights = np.ones(len(grid_address), dtype='intc')
@@ -44,14 +44,21 @@ def get_nosym_triplets_at_q(grid_point, mesh):
     for i, g1 in enumerate(grid_address):
         g2 = - (grid_address[grid_point] + g1)
         third_q[i] = get_grid_point_from_address(g2, mesh)
+
+    multiplicity = spg.relocate_BZ_grid_address(grid_address,
+                                                mesh,
+                                                primitive_lattice)
     triplets = spg.get_grid_triplets_at_q(
         grid_point,
         grid_address,
         third_q,
         weights,
         mesh)
-    grid_address = get_grid_address([x + (x % 2 == 0) for x in mesh])
-
+    extended_mesh = [x + (x % 2 == 0) for x in mesh]
+    grid_address = get_grid_address(extended_mesh)
+    multiplicity = spg.relocate_BZ_grid_address(grid_address,
+                                                extended_mesh,
+                                                primitive_lattice)
     return triplets, weights, grid_address
 
 def get_grid_address(mesh):
@@ -152,6 +159,10 @@ def get_coarse_ir_grid_points(primitive, mesh, mesh_divs, coarse_mesh_shifts):
         coarse_grid_address,
         coarse_mesh_shifts=coarse_mesh_shifts)
     grid_address = get_grid_address(mesh)
+    primitive_lattice = np.linalg.inv(primitive.get_cell())
+    multiplicity = spg.relocate_BZ_grid_address(grid_address,
+                                                mesh,
+                                                primitive_lattice)
 
     return grid_points, coarse_grid_weights, grid_address
 

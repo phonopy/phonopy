@@ -491,7 +491,6 @@ else:
                                  grid_points,
                                  coarse_grid_weights,
                                  grid_address)
-                                 
         sys.exit(0)
             
     # fc2

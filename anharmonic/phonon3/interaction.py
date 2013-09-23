@@ -167,6 +167,9 @@ class Interaction:
                 self._symmetry.get_pointgroup_operations(),
                 np.linalg.inv(self._primitive.get_cell()))
 
+        for triplet in triplets_at_q:
+            print grid_address[triplet] / self._mesh.astype('double')
+            
         self._triplets_at_q = triplets_at_q
         self._weights_at_q = weights_at_q
         self._grid_address = grid_address
