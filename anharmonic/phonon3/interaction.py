@@ -168,7 +168,8 @@ class Interaction:
                 np.linalg.inv(self._primitive.get_cell()))
 
         for triplet in triplets_at_q:
-            print grid_address[triplet] / self._mesh.astype('double')
+            print grid_address[triplet]
+            print "=",(grid_address[triplet]).sum(axis=0)
             
         self._triplets_at_q = triplets_at_q
         self._weights_at_q = weights_at_q
