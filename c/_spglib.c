@@ -15,7 +15,7 @@ static PyObject * get_ir_reciprocal_mesh(PyObject *self, PyObject *args);
 static PyObject * get_stabilized_reciprocal_mesh(PyObject *self, PyObject *args);
 static PyObject * relocate_BZ_grid_address(PyObject *self, PyObject *args);
 static PyObject * get_triplets_reciprocal_mesh_at_q(PyObject *self, PyObject *args);
-static PyObject * get_grid_triplets_at_q(PyObject *self, PyObject *args);
+static PyObject * get_BZ_triplets_at_q(PyObject *self, PyObject *args);
 
 static PyMethodDef functions[] = {
   {"dataset", get_dataset, METH_VARARGS,
@@ -42,8 +42,8 @@ static PyMethodDef functions[] = {
    "Relocate grid addresses inside Brillouin zone"},
   {"triplets_reciprocal_mesh_at_q", get_triplets_reciprocal_mesh_at_q,
    METH_VARARGS, "Triplets on reciprocal mesh points at a specific q-point"},
-  {"grid_triplets_at_q", get_grid_triplets_at_q,
-   METH_VARARGS, "Grid point triplets on reciprocal mesh points at a specific q-point are set from output variables of triplets_reciprocal_mesh_at_q"},
+  {"BZ_triplets_at_q", get_BZ_triplets_at_q,
+   METH_VARARGS, "Triplets in reciprocal primitive lattice are transformed to those in BZ."},
   {NULL, NULL, 0, NULL}
 };
 
@@ -531,32 +531,37 @@ static PyObject * get_stabilized_reciprocal_mesh(PyObject *self, PyObject *args)
 
 static PyObject * relocate_BZ_grid_address(PyObject *self, PyObject *args)
 {
+  PyArrayObject* bz_grid_address_py;
+  PyArrayObject* bz_map_py;
   PyArrayObject* grid_address_py;
-  PyArrayObject* multiplicity_py;
   PyArrayObject* mesh_py;
   PyArrayObject* is_shift_py;
   PyArrayObject* reciprocal_lattice_py;
-  if (!PyArg_ParseTuple(args, "OOOOO",
+  if (!PyArg_ParseTuple(args, "OOOOOO",
+			&bz_grid_address_py,
+			&bz_map_py,
 			&grid_address_py,
-			&multiplicity_py,
 			&mesh_py,
 			&reciprocal_lattice_py,
 			&is_shift_py)) {
     return NULL;
   }
 
-  int (*grid_address)[3] = (int(*)[3])grid_address_py->data;
-  int *multiplicity = (int*)multiplicity_py->data;
+  int (*bz_grid_address)[3] = (int(*)[3])bz_grid_address_py->data;
+  int *bz_map = (int*)bz_map_py->data;
+  SPGCONST int (*grid_address)[3] = (int(*)[3])grid_address_py->data;
   const int* mesh = (int*)mesh_py->data;
   const int* is_shift = (int*)is_shift_py->data;
   SPGCONST double (*reciprocal_lattice)[3]  =
     (double(*)[3])reciprocal_lattice_py->data;
   
-  spg_relocate_BZ_grid_address(grid_address,
-			       multiplicity,
+  spg_relocate_BZ_grid_address(bz_grid_address,
+			       bz_map,
+			       grid_address,
 			       mesh,
 			       reciprocal_lattice,
 			       is_shift);
+
   Py_RETURN_NONE;
 }
 
@@ -612,19 +617,21 @@ static PyObject * get_triplets_reciprocal_mesh_at_q(PyObject *self, PyObject *ar
 }
 
 
-static PyObject * get_grid_triplets_at_q(PyObject *self, PyObject *args)
+static PyObject * get_BZ_triplets_at_q(PyObject *self, PyObject *args)
 {
   PyArrayObject* triplets_py;
   PyArrayObject* grid_address_py;
-  PyArrayObject* third_q_py;
+  PyArrayObject* bz_grid_address_py;
+  PyArrayObject* bz_map_py;
   PyArrayObject* weights_py;
   PyArrayObject* mesh_py;
-  int q_grid_point;
-  if (!PyArg_ParseTuple(args, "OiOOOO",
+  int grid_point;
+  if (!PyArg_ParseTuple(args, "OiOOOOO",
 			&triplets_py,
-			&q_grid_point,
+			&grid_point,
 			&grid_address_py,
-			&third_q_py,
+			&bz_grid_address_py,
+			&bz_map_py,
 			&weights_py,
 			&mesh_py)) {
     return NULL;
@@ -632,18 +639,21 @@ static PyObject * get_grid_triplets_at_q(PyObject *self, PyObject *args)
 
   int (*triplets)[3] = (int(*)[3])triplets_py->data;
   SPGCONST int (*grid_address)[3] = (int(*)[3])grid_address_py->data;
-  const int *third_q = (int*)third_q_py->data;
+  SPGCONST int (*bz_grid_address)[3] = (int(*)[3])bz_grid_address_py->data;
+  const int *bz_map = (int*)bz_map_py->data;
   const int *weights = (int*)weights_py->data;
   const int *mesh = (int*)mesh_py->data;
+  int num_ir;
   
-  spg_set_grid_triplets_at_q(triplets,
-			     q_grid_point,
-			     grid_address,
-			     third_q,
-			     weights,
-			     mesh);
-  
-  Py_RETURN_NONE;
+  num_ir = spg_get_BZ_triplets_at_q(triplets,
+				    grid_point,
+				    grid_address,
+				    bz_grid_address,
+				    bz_map,
+				    weights,
+				    mesh);
+
+  return PyInt_FromLong((long) num_ir);
 }
 
 

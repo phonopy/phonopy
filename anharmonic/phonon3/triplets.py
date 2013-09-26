@@ -11,55 +11,39 @@ def get_triplets_at_q(grid_point,
         mesh,
         point_group,
         is_time_reversal)
-
-    multiplicity = spg.relocate_BZ_grid_address(grid_address,
-                                                mesh,
-                                                primitive_lattice)
-
-    triplets_at_q = spg.get_grid_triplets_at_q(
+    bz_grid_address, bz_map = spg.relocate_BZ_grid_address(grid_address,
+                                                           mesh,
+                                                           primitive_lattice)
+    triplets_at_q = spg.get_BZ_triplets_at_q(
         grid_point,
         grid_address,
-        third_q,
+        bz_grid_address,
+        bz_map,
         weights,
         mesh)
-    weights_at_q = np.extract(weights > 0, weights)
-    extended_mesh = [x + (x % 2 == 0) for x in mesh]
-    grid_address = get_grid_address(extended_mesh)
-    multiplicity = spg.relocate_BZ_grid_address(grid_address,
-                                                extended_mesh,
-                                                primitive_lattice)
+    ir_weights = np.extract(weights > 0, weights)
 
-    assert np.prod(mesh) == weights_at_q.sum(), \
+    assert np.prod(mesh) == ir_weights.sum(), \
         "Num grid points %d, sum of weight %d" % (
-                    np.prod(mesh), weights_at_q.sum())
+                    np.prod(mesh), ir_weights.sum())
 
-    return triplets_at_q, weights_at_q, grid_address
+    return triplets_at_q, ir_weights, bz_grid_address
 
 def get_nosym_triplets_at_q(grid_point, mesh, primitive_lattice):
     grid_address = get_grid_address(mesh)
-
     weights = np.ones(len(grid_address), dtype='intc')
     third_q = np.zeros_like(weights)
-
-    for i, g1 in enumerate(grid_address):
-        g2 = - (grid_address[grid_point] + g1)
-        third_q[i] = get_grid_point_from_address(g2, mesh)
-
-    multiplicity = spg.relocate_BZ_grid_address(grid_address,
-                                                mesh,
-                                                primitive_lattice)
-    triplets = spg.get_grid_triplets_at_q(
+    bz_grid_address, bz_map = spg.relocate_BZ_grid_address(grid_address,
+                                                           mesh,
+                                                           primitive_lattice)
+    triplets_at_q = spg.get_BZ_triplets_at_q(
         grid_point,
         grid_address,
-        third_q,
+        bz_grid_address,
+        bz_map,
         weights,
         mesh)
-    extended_mesh = [x + (x % 2 == 0) for x in mesh]
-    grid_address = get_grid_address(extended_mesh)
-    multiplicity = spg.relocate_BZ_grid_address(grid_address,
-                                                extended_mesh,
-                                                primitive_lattice)
-    return triplets, weights, grid_address
+    return triplets, weights, bz_grid_address
 
 def get_grid_address(mesh):
     grid_mapping_table, grid_address = spg.get_stabilized_reciprocal_mesh(

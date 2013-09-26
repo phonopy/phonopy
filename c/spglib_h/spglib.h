@@ -301,10 +301,11 @@ int spg_get_stabilized_reciprocal_mesh(int grid_address[][3],
 				       SPGCONST double qpoints[][3]);
 
 /* Grid addresses are relocated inside Brillouin zone. */
-void spg_relocate_BZ_grid_address(int grid_address[][3],
-				  int multiplicity[],
+void spg_relocate_BZ_grid_address(int bz_grid_address[][3],
+				  int bz_map[],
+				  int grid_address[][3],
 				  const int mesh[3],
-				  SPGCONST double reciprocal_lattice[3][3],
+				  SPGCONST double rec_lattice[3][3],
 				  const int is_shift[3]);
 
 /* Irreducible triplets of k-points are searched under conservation of */
@@ -319,13 +320,13 @@ int spg_get_triplets_reciprocal_mesh_at_q(int weights[],
 					  const int num_rot,
 					  SPGCONST int rotations[][3][3]);
 
-/* Irreducible grid-point-triplets are stored. */
-/* When a mesh number is even number, grid address is calculated with */
-/* mesh-number + 1 mesh (i.e. odd mesh number). */
-void spg_set_grid_triplets_at_q(int triplets[][3],
-				const int q_grid_point,
-				SPGCONST int grid_address[][3],
-				const int third_q[],
-				const int weights[],
-				const int mesh[3]);
+/* Irreducible grid-point-triplets in BZ are stored. */
+/* Number of ir-triplets is returned. */
+int spg_get_BZ_triplets_at_q(int triplets[][3],
+			     const int grid_point,
+			     SPGCONST int grid_address[][3],
+			     SPGCONST int bz_grid_address[][3],
+			     const int bz_map[],
+			     const int weights[],
+			     const int mesh[3]);
 #endif

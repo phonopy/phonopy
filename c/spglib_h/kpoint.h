@@ -27,8 +27,9 @@ int kpt_get_stabilized_reciprocal_mesh(int grid_address[][3],
 				       const MatINT * pointgroup_real,
 				       const int num_q,
 				       SPGCONST double qpoints[][3]);
-void kpt_relocate_BZ_grid_address(int grid_address[][3],
-				  int multiplicity[],
+void kpt_relocate_BZ_grid_address(int bz_grid_address[][3],
+				  int bz_map[],
+				  int grid_address[][3],
 				  const int mesh[3],
 				  SPGCONST double rec_lattice[3][3],
 				  const int is_shift[3]);
@@ -39,10 +40,11 @@ int kpt_get_ir_triplets_at_q(int weights[],
 			     const int mesh[3],
 			     const int is_time_reversal,
 			     const MatINT * rotations);
-void kpt_set_grid_triplets_at_q(int triplets[][3],
-				const int q_grid_point,
-				SPGCONST int grid_address[][3],
-				const int third_q[],
-				const int weights[],
-				const int mesh[3]);
+int kpt_get_BZ_triplets_at_q(int triplets[][3],
+			     const int grid_point,
+			     SPGCONST int grid_address[][3],
+			     SPGCONST int bz_grid_address[][3],
+			     const int bz_map[],
+			     const int weights[],
+			     const int mesh[3]);
 #endif

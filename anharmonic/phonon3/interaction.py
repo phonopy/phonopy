@@ -102,7 +102,7 @@ class Interaction:
     def run(self, lang='C'):
         num_band = self._primitive.get_number_of_atoms() * 3
 
-        mesh_with_boundary = [x + (x % 2 == 0) for x in self._mesh]
+        mesh_with_boundary = (mesh[0] + 1) * (mesh[1] + 1) * (mesh[2] + 1)
         num_grid = np.prod(mesh_with_boundary)
         num_triplets = len(self._triplets_at_q)
         self._phonon_done = np.zeros(num_grid, dtype='byte')
@@ -168,8 +168,12 @@ class Interaction:
                 np.linalg.inv(self._primitive.get_cell()))
 
         for triplet in triplets_at_q:
-            print grid_address[triplet]
-            print "=",(grid_address[triplet]).sum(axis=0)
+            sum_q = (grid_address[triplet]).sum(axis=0)
+            if (sum_q % self._mesh != 0).any():
+                print "============= Warning =================="
+                print grid_address[triplet]
+                print sum_q
+                print "============= Warning =================="
             
         self._triplets_at_q = triplets_at_q
         self._weights_at_q = weights_at_q

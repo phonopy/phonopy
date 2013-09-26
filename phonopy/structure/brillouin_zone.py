@@ -109,35 +109,27 @@ if __name__ == '__main__':
     cell = read_vasp(sys.argv[1])
     symmetry = Symmetry(cell)
     mesh = [4, 4, 4]
-    is_shift = np.array([1, 1, 1], dtype='intc')
+    is_shift = np.array([0, 0, 0], dtype='intc')
     mapping_table, grid_address = get_ir_reciprocal_mesh(
         mesh,
         cell,
         is_shift=is_shift)
-
     ir_grid_points = np.unique(mapping_table)
-    grid_address_copy = grid_address.copy()
     primitive_vectors = np.linalg.inv(cell.get_cell())
-    multiplicity = relocate_BZ_grid_address(grid_address_copy,
-                                            mesh,
-                                            np.linalg.inv(cell.get_cell()),
-                                            is_shift=is_shift)
-    # qpoints = grid_address[ir_grid_points] / np.array(mesh, dtype='double')
-    qpoints = (grid_address + is_shift.astype('double') / 2) / mesh
+    bz_grid_address, bz_map = relocate_BZ_grid_address(
+        grid_address,
+        mesh,
+        np.linalg.inv(cell.get_cell()),
+        is_shift=is_shift)
+
+    bz_points = np.extract(bz_map > -1, bz_map)
+    qpoints = (grid_address + is_shift / 2.0) / mesh
     qpoints -= (qpoints > 0.5001) * 1
 
-    print multiplicity
-
-    for g, gc in zip(grid_address, grid_address_copy):
-        print g, gc,
-        if np.all(g == gc):
-            print
-        else:
-            print "*"
-    
     bz = BrillouinZone(primitive_vectors)
     bz.run(qpoints)
     sv = bz.get_shortest_qpoints()
+    print len(bz_points), np.sum(len(x) for x in sv)
     for q, vs in zip(qpoints, sv):
         print q,
         if np.allclose(q, vs[0]):

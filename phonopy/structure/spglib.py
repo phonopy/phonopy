@@ -249,14 +249,17 @@ def relocate_BZ_grid_address(grid_address,
                              mesh,
                              reciprocal_lattice, # column vectors
                              is_shift=np.zeros(3, dtype='intc')):
-    multiplicity = np.zeros(len(grid_address), dtype='intc')
-    spg.BZ_grid_address(grid_address,
-                        multiplicity,
+    bz_grid_address = np.zeros(
+        ((mesh[0] + 1) * (mesh[1] + 1) * (mesh[2] + 1), 3), dtype='intc')
+    bz_map = np.zeros(np.prod(mesh) * 8, dtype='intc')
+    spg.BZ_grid_address(bz_grid_address,
+                        bz_map,
+                        grid_address,
                         np.array(mesh, dtype='intc').copy(),
                         np.array(reciprocal_lattice, dtype='double').copy(),
                         np.array(is_shift, dtype='intc').copy())
-                    
-    return multiplicity
+
+    return bz_grid_address, bz_map
   
 def get_stabilized_reciprocal_mesh(mesh,
                                    rotations,
@@ -308,18 +311,21 @@ def get_triplets_reciprocal_mesh_at_q(fixed_grid_number,
 
     return weights, third_q, mesh_points
         
-def get_grid_triplets_at_q(q_grid_point,
-                           grid_points,
-                           third_q,
-                           weights,
-                           mesh):
+def get_BZ_triplets_at_q(grid_point,
+                         grid_address,
+                         bz_grid_address,
+                         bz_map,
+                         weights,
+                         mesh):
+    """grid_address is overwritten."""
     num_ir_tripltes = (weights > 0).sum()
     triplets = np.zeros((num_ir_tripltes, 3), dtype='intc')
-    spg.grid_triplets_at_q(triplets,
-                           q_grid_point,
-                           grid_points,
-                           third_q,
-                           weights,
-                           np.array(mesh, dtype='intc').copy())
+    num_ir_ret = spg.BZ_triplets_at_q(triplets,
+                                      grid_point,
+                                      grid_address,
+                                      bz_grid_address,
+                                      bz_map,
+                                      weights,
+                                      np.array(mesh, dtype='intc').copy())
     return triplets
                            

@@ -524,16 +524,18 @@ int spg_get_stabilized_reciprocal_mesh(int grid_address[][3],
 					qpoints);
 }
 
-void spg_relocate_BZ_grid_address(int grid_address[][3],
-				  int multiplicity[],
+void spg_relocate_BZ_grid_address(int bz_grid_address[][3],
+				  int bz_map[],
+				  int grid_address[][3],
 				  const int mesh[3],
-				  SPGCONST double reciprocal_lattice[3][3],
+				  SPGCONST double rec_lattice[3][3],
 				  const int is_shift[3])
 {
-  kpt_relocate_BZ_grid_address(grid_address,
-			       multiplicity,
+  kpt_relocate_BZ_grid_address(bz_grid_address,
+			       bz_map,
+			       grid_address,
 			       mesh,
-			       reciprocal_lattice,
+			       rec_lattice,
 			       is_shift);
 }
 
@@ -556,20 +558,22 @@ int spg_get_triplets_reciprocal_mesh_at_q(int weights[],
 					   rotations);
 }
 
-void spg_set_grid_triplets_at_q(int triplets[][3],
-				const int q_grid_point,
-				SPGCONST int grid_address[][3],
-				const int third_q[],
-				const int weights[],
-				const int mesh[3])
+int spg_get_BZ_triplets_at_q(int triplets[][3],
+			     const int grid_point,
+			     SPGCONST int grid_address[][3],
+			     SPGCONST int bz_grid_address[][3],
+			     const int bz_map[],
+			     const int weights[],
+			     const int mesh[3])
 
 {
-  kpt_set_grid_triplets_at_q(triplets,
-			     q_grid_point,
-			     grid_address,
-			     third_q,
-			     weights,
-			     mesh);
+  return kpt_get_BZ_triplets_at_q(triplets,
+				  grid_point,
+				  grid_address,
+				  bz_grid_address,
+				  bz_map,
+				  weights,
+				  mesh);
 }
 
 static SpglibDataset * get_dataset(SPGCONST double lattice[3][3],
