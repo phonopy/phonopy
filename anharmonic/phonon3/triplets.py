@@ -43,7 +43,7 @@ def get_nosym_triplets_at_q(grid_point, mesh, primitive_lattice):
         bz_map,
         weights,
         mesh)
-    return triplets, weights, bz_grid_address
+    return triplets_at_q, weights, bz_grid_address
 
 def get_grid_address(mesh):
     grid_mapping_table, grid_address = spg.get_stabilized_reciprocal_mesh(

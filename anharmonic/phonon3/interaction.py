@@ -102,7 +102,7 @@ class Interaction:
     def run(self, lang='C'):
         num_band = self._primitive.get_number_of_atoms() * 3
 
-        mesh_with_boundary = (mesh[0] + 1) * (mesh[1] + 1) * (mesh[2] + 1)
+        mesh_with_boundary = np.prod(self._mesh + 1)
         num_grid = np.prod(mesh_with_boundary)
         num_triplets = len(self._triplets_at_q)
         self._phonon_done = np.zeros(num_grid, dtype='byte')
@@ -157,15 +157,16 @@ class Interaction:
         return self._cutoff_frequency
         
     def set_grid_point(self, grid_point):
+        reciprocal_lattice = np.linalg.inv(self._primitive.get_cell())
         if self._is_nosym:
             triplets_at_q, weights_at_q, grid_address = get_nosym_triplets_at_q(
-                grid_point, self._mesh)
+                grid_point, self._mesh, reciprocal_lattice)
         else:
             triplets_at_q, weights_at_q, grid_address = get_triplets_at_q(
                 grid_point,
                 self._mesh,
                 self._symmetry.get_pointgroup_operations(),
-                np.linalg.inv(self._primitive.get_cell()))
+                reciprocal_lattice)
 
         for triplet in triplets_at_q:
             sum_q = (grid_address[triplet]).sum(axis=0)
