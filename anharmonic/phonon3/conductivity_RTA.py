@@ -260,65 +260,39 @@ class conductivity_RTA:
                     self._conversion_factor)
 
     def _get_gv_by_gv(self, i):
-        # If q-point is on the boundary,
-        # group velocities are also calculated on the other boundaries
-        # and the average is taken.
-        gv_by_gv = []
-        grid_addresses = self._get_grid_address(i)
-        for j, grid_address in enumerate(grid_addresses):
-            qpoint = grid_address.astype('double') / self._mesh
-            # Group velocity [num_freqs, 3]
-            gv = get_group_velocity(
-                qpoint,
-                self._dynamical_matrix,
-                q_length=self._gv_delta_q,
-                symmetry=self._symmetry,
-                frequency_factor_to_THz=self._frequency_factor_to_THz)
-            if j == 0:
-                self._gv[i] = gv
-            rotation_map = self._get_rotation_map_for_star(grid_address)
-            gv_by_gv += self._get_gv_by_gv_on_star(gv, rotation_map)
+        grid_address = self._grid_address[self._grid_points[i]]
+        # Group velocity [num_freqs, 3]
+        gv = get_group_velocity(
+            self._qpoint,
+            self._dynamical_matrix,
+            q_length=self._gv_delta_q,
+            symmetry=self._symmetry,
+            frequency_factor_to_THz=self._frequency_factor_to_THz)
+        self._gv[i] = gv
+        rotation_map = self._get_rotation_map_for_star(grid_address)
+        gv_by_gv = self._get_gv_by_gv_on_star(gv, rotation_map)
 
-            if self._log_level:
-                self._show_log(qpoint,
-                               self._frequencies[i],
-                               gv,
-                               rotation_map)
+        if self._log_level:
+            self._show_log(self._qpoint,
+                           self._frequencies[i],
+                           gv,
+                           rotation_map)
 
-            # check if the number of rotations is correct.
-            if self._grid_weights is not None:
-                if len(set(rotation_map)) != self._grid_weights[i]:
-                    if self._log_level:
-                        print "*" * 33  + "Warning" + "*" * 33
-                        print (" Number of elements in k* is unequal "
-                               "to number of equivalent grid-points.")
-                        print "*" * 73
-                # assert len(rotations) == self._grid_weights[i], \
-                #     "Num rotations %d, weight %d" % (
-                #     len(rotations), self._grid_weights[i])
+        # check if the number of rotations is correct.
+        if self._grid_weights is not None:
+            if len(set(rotation_map)) != self._grid_weights[i]:
+                if self._log_level:
+                    print "*" * 33  + "Warning" + "*" * 33
+                    print (" Number of elements in k* is unequal "
+                           "to number of equivalent grid-points.")
+                    print "*" * 73
+            # assert len(rotations) == self._grid_weights[i], \
+            #     "Num rotations %d, weight %d" % (
+            #     len(rotations), self._grid_weights[i])
 
-        self._sum_num_kstar += len(gv_by_gv) / len(grid_addresses)
+        self._sum_num_kstar += len(gv_by_gv)
 
-        return np.array(gv_by_gv, dtype='double') / len(grid_addresses)
-
-    def _get_grid_address(self, i):
-        orig_address = self._grid_address[self._grid_points[i]]
-        numbers = []
-        for j in range(3):
-            mesh_j = self._mesh[j]
-            adrs = orig_address[j]
-            if (mesh_j % 2 == 0 and adrs == mesh_j / 2):
-                numbers.append([adrs, -adrs])
-            else:
-                numbers.append([adrs])
-
-        grid_address = []
-        for a in numbers[0]:
-            for b in numbers[1]:
-                for c in numbers[2]:
-                    grid_address.append([a, b, c])
-
-        return np.array(grid_address, dtype='intc')
+        return np.array(gv_by_gv, dtype='double')
 
     def _get_gv_by_gv_on_star(self, group_velocity, rotation_map):
         gv2_tensor = []
@@ -450,21 +424,32 @@ class conductivity_RTA:
             print
         else:
             print " (dq=%3.1e)" % self._gv_delta_q
-        
-        for i, j in enumerate(np.unique(rotation_map)):
-            for k, (rot, rot_c) in enumerate(zip(self._point_operations,
-                                                 self._rotations_cartesian)):
-                if rotation_map[k] != j:
-                    continue
 
-                print " k*%-2d (%5.2f %5.2f %5.2f)" % ((i + 1,) +
-                                                       tuple(np.dot(rot, q)))
-                for f, v in zip(frequencies,
-                                np.dot(rot_c, group_velocity.T).T):
-                    print "%8.3f   (%8.3f %8.3f %8.3f) %8.3f" % (
-                        f, v[0], v[1], v[2], np.linalg.norm(v))
-        print
-
+        if self._log_level > 1:
+            for i, j in enumerate(np.unique(rotation_map)):
+                for k, (rot, rot_c) in enumerate(zip(self._point_operations,
+                                                     self._rotations_cartesian)):
+                    if rotation_map[k] != j:
+                        continue
+    
+                    print " k*%-2d (%5.2f %5.2f %5.2f)" % ((i + 1,) +
+                                                           tuple(np.dot(rot, q)))
+                    for f, v in zip(frequencies,
+                                    np.dot(rot_c, group_velocity.T).T):
+                        print "%8.3f   (%8.3f %8.3f %8.3f) %8.3f" % (
+                            f, v[0], v[1], v[2], np.linalg.norm(v))
+            print
+        else:
+            num_ks = len(np.unique(rotation_map))
+            if num_ks == 1:
+                print " 1 orbit",
+            else:
+                print " %d orbits" % num_ks,
+            print "of k* at (%5.2f %5.2f %5.2f)" % tuple(q)
+            for f, v in zip(frequencies, group_velocity):
+                print "%8.3f   (%8.3f %8.3f %8.3f) %8.3f" % (
+                    f, v[0], v[1], v[2], np.linalg.norm(v))
+    
     def _write_gamma(self, i, grid_point):
         for j, sigma in enumerate(self._sigmas):
             write_kappa_to_hdf5(
