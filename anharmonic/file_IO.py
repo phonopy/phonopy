@@ -901,11 +901,15 @@ def write_ir_grid_points(mesh,
                          mesh_divs,
                          grid_points,
                          coarse_grid_weights,
-                         grid_address):
+                         grid_address,
+                         primitive_lattice):
     w = open("ir_grid_points.yaml", 'w')
     w.write("mesh: [ %d, %d, %d ]\n" % tuple(mesh))
     if mesh_divs is not None:
         w.write("mesh_divisors: [ %d, %d, %d ]\n" % tuple(mesh_divs))
+    w.write("reciprocal_lattice:\n")
+    for vec, axis in zip(primitive_lattice.T, ('a*', 'b*', 'c*')):
+        w.write("- [ %12.8f, %12.8f, %12.8f ] # %2s\n" % (tuple(vec) + (axis,)))
     w.write("num_reduced_ir_grid_points: %d\n" % len(grid_points))
     w.write("ir_grid_points:  # [address, weight]\n")
 

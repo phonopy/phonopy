@@ -53,6 +53,13 @@ def get_grid_address(mesh):
 
     return grid_address
 
+def get_bz_grid_address(mesh, primitive_lattice):
+    grid_address = get_grid_address(mesh)
+    bz_grid_address, bz_map = spg.relocate_BZ_grid_address(grid_address,
+                                                           mesh,
+                                                           primitive_lattice)
+    return grid_address
+
 def get_grid_point_from_address(address, mesh, with_boundary=False):
     # X runs first in XYZ
     # (*In spglib, Z first is possible with MACRO setting.)
@@ -122,7 +129,11 @@ def from_coarse_to_dense_grid_points(dense_mesh,
                                                              dense_mesh))
     return np.array(dense_grid_points, dtype='intc')
 
-def get_coarse_ir_grid_points(primitive, mesh, mesh_divs, coarse_mesh_shifts):
+def get_coarse_ir_grid_points(primitive,
+                              mesh,
+                              mesh_divs,
+                              coarse_mesh_shifts,
+                              is_nosym=False):
     if mesh_divs is None:
         mesh_divs = [1, 1, 1]
     mesh = np.array(mesh, dtype='intc')
@@ -130,12 +141,19 @@ def get_coarse_ir_grid_points(primitive, mesh, mesh_divs, coarse_mesh_shifts):
     coarse_mesh = mesh / mesh_divs
     if coarse_mesh_shifts is None:
         coarse_mesh_shifts = [False, False, False]
-    (coarse_grid_points,
-     coarse_grid_weights,
-     coarse_grid_address) = get_ir_grid_points(
-        coarse_mesh,
-        primitive,
-        mesh_shifts=coarse_mesh_shifts)
+
+    if is_nosym:
+        coarse_grid_address = get_grid_address(coarse_mesh)
+        coarse_grid_points = np.arange(np.prod(coarse_mesh),
+                                       dtype='intc')
+        coarse_grid_weights = np.ones(len(coarse_grid_points), dtype='intc')
+    else:
+        (coarse_grid_points,
+         coarse_grid_weights,
+         coarse_grid_address) = get_ir_grid_points(
+            coarse_mesh,
+            primitive,
+            mesh_shifts=coarse_mesh_shifts)
     grid_points = from_coarse_to_dense_grid_points(
         mesh,
         mesh_divs,
@@ -144,9 +162,9 @@ def get_coarse_ir_grid_points(primitive, mesh, mesh_divs, coarse_mesh_shifts):
         coarse_mesh_shifts=coarse_mesh_shifts)
     grid_address = get_grid_address(mesh)
     primitive_lattice = np.linalg.inv(primitive.get_cell())
-    multiplicity = spg.relocate_BZ_grid_address(grid_address,
-                                                mesh,
-                                                primitive_lattice)
+    spg.relocate_BZ_grid_address(grid_address,
+                                 mesh,
+                                 primitive_lattice)
 
     return grid_points, coarse_grid_weights, grid_address
 

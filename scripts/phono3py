@@ -485,12 +485,14 @@ else:
                 primitive,
                 mesh,
                 mesh_divs,
-                settings.get_coarse_mesh_shifts())
+                settings.get_coarse_mesh_shifts(),
+                is_nosym=options.no_kappa_stars)
             write_ir_grid_points(mesh,
                                  mesh_divs,
                                  grid_points,
                                  coarse_grid_weights,
-                                 grid_address)
+                                 grid_address,
+                                 np.linalg.inv(primitive.get_cell()))
         sys.exit(0)
             
     # fc2
