@@ -65,12 +65,12 @@ get_ir_reciprocal_mesh_openmp(int grid_address[][3],
 			      const int mesh[3],
 			      const int is_shift[3],
 			      SPGCONST PointSymmetry * point_symmetry);
-static void relocate_BZ_grid_address(int bz_grid_address[][3],
-				     int bz_map[],
-				     int grid_address[][3],
-				     const int mesh[3],
-				     SPGCONST double rec_lattice[3][3],
-				     const int is_shift[3]);
+static int relocate_BZ_grid_address(int bz_grid_address[][3],
+				    int bz_map[],
+				    int grid_address[][3],
+				    const int mesh[3],
+				    SPGCONST double rec_lattice[3][3],
+				    const int is_shift[3]);
 static double get_tolerance_for_BZ_reduction(SPGCONST double rec_lattice[3][3]);
 static int get_ir_triplets_at_q(int weights[],
 				int grid_address[][3],
@@ -204,19 +204,19 @@ int kpt_get_stabilized_reciprocal_mesh(int grid_address[][3],
 
 }
 
-void kpt_relocate_BZ_grid_address(int bz_grid_address[][3],
-				  int bz_map[],
-				  int grid_address[][3],
-				  const int mesh[3],
-				  SPGCONST double rec_lattice[3][3],
-				  const int is_shift[3])
+int kpt_relocate_BZ_grid_address(int bz_grid_address[][3],
+				 int bz_map[],
+				 int grid_address[][3],
+				 const int mesh[3],
+				 SPGCONST double rec_lattice[3][3],
+				 const int is_shift[3])
 {
-  relocate_BZ_grid_address(bz_grid_address,
-			   bz_map,
-			   grid_address,
-			   mesh,
-			   rec_lattice,
-			   is_shift);
+  return relocate_BZ_grid_address(bz_grid_address,
+				  bz_map,
+				  grid_address,
+				  mesh,
+				  rec_lattice,
+				  is_shift);
 }
 
 int kpt_get_ir_triplets_at_q(int weights[],
@@ -558,12 +558,12 @@ get_ir_reciprocal_mesh_openmp(int grid_address[][3],
 /* Relocate grid addresses to first Brillouin zone */
 /* bz_grid_address[prod(mesh + 1)][3] */
 /* bz_map[prod(mesh * 2)] */
-static void relocate_BZ_grid_address(int bz_grid_address[][3],
-				     int bz_map[],
-				     int grid_address[][3],
-				     const int mesh[3],
-				     SPGCONST double rec_lattice[3][3],
-				     const int is_shift[3])
+static int relocate_BZ_grid_address(int bz_grid_address[][3],
+				    int bz_map[],
+				    int grid_address[][3],
+				    const int mesh[3],
+				    SPGCONST double rec_lattice[3][3],
+				    const int is_shift[3])
 {
   double tolerance, min_distance;
   double vector[3], distance[27];
@@ -618,6 +618,8 @@ static void relocate_BZ_grid_address(int bz_grid_address[][3],
       grid_address[i][j] += search_space[min_index][j] * mesh[j];
     }
   }
+
+  return num_gp;
 }
 
 static double get_tolerance_for_BZ_reduction(SPGCONST double rec_lattice[3][3])

@@ -53,12 +53,15 @@ def get_grid_address(mesh):
 
     return grid_address
 
-def get_bz_grid_address(mesh, primitive_lattice):
+def get_bz_grid_address(mesh, primitive_lattice, with_boundary=False):
     grid_address = get_grid_address(mesh)
     bz_grid_address, bz_map = spg.relocate_BZ_grid_address(grid_address,
                                                            mesh,
                                                            primitive_lattice)
-    return grid_address
+    if with_boundary:
+        return bz_grid_address
+    else:
+        return grid_address
 
 def get_grid_point_from_address(address, mesh, with_boundary=False):
     # X runs first in XYZ

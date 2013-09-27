@@ -59,6 +59,7 @@ class conductivity_RTA:
         self._grid_points = None
         self._grid_weights = None
         self._grid_address = None
+        self._grid_address_with_boundary = None # Used only when no_kappa_stars
 
         self._gamma = None
         self._read_gamma = False
@@ -106,6 +107,8 @@ class conductivity_RTA:
             coarse_grid_address = get_grid_address(self._coarse_mesh)
             coarse_grid_points = np.arange(np.prod(self._coarse_mesh),
                                            dtype='intc')
+            self._grid_address_with_boundary = get_bz_grid_address(
+                self._mesh, primitive_lattice, with_boundary=True)
             self._grid_points = from_coarse_to_dense_grid_points(
                 self._mesh,
                 self._mesh_divisors,
@@ -261,22 +264,46 @@ class conductivity_RTA:
 
     def _get_gv_by_gv(self, i):
         grid_address = self._grid_address[self._grid_points[i]]
-        # Group velocity [num_freqs, 3]
-        gv = get_group_velocity(
-            self._qpoint,
-            self._dynamical_matrix,
-            q_length=self._gv_delta_q,
-            symmetry=self._symmetry,
-            frequency_factor_to_THz=self._frequency_factor_to_THz)
-        self._gv[i] = gv
-        rotation_map = self._get_rotation_map_for_star(grid_address)
-        gv_by_gv = self._get_gv_by_gv_on_star(gv, rotation_map)
+        if self._no_kappa_stars:
+            gv_by_gv_tmp = []
+            rotation_map = [0]
+            for address in self._grid_address_with_boundary:
+                if ((grid_address - address) % self._mesh == 0).all():
+                    qpoint = address.astype('double') / self._mesh
+                    gv = get_group_velocity(
+                        qpoint,
+                        self._dynamical_matrix,
+                        q_length=self._gv_delta_q,
+                        symmetry=self._symmetry,
+                        frequency_factor_to_THz=self._frequency_factor_to_THz)
+                    self._gv[i] = gv
+                    gv_by_gv_tmp.append(
+                        self._get_gv_by_gv_on_star(gv, rotation_map)[0])
 
-        if self._log_level:
-            self._show_log(self._qpoint,
-                           self._frequencies[i],
-                           gv,
-                           rotation_map)
+                    if self._log_level:
+                        self._show_log(qpoint,
+                                       self._frequencies[i],
+                                       gv,
+                                       rotation_map)
+
+            gv_by_gv = [np.sum(gv_by_gv_tmp, axis=0) / len(gv_by_gv_tmp)]
+        else:
+            # Group velocity [num_freqs, 3]
+            gv = get_group_velocity(
+                self._qpoint,
+                self._dynamical_matrix,
+                q_length=self._gv_delta_q,
+                symmetry=self._symmetry,
+                frequency_factor_to_THz=self._frequency_factor_to_THz)
+            self._gv[i] = gv
+            rotation_map = self._get_rotation_map_for_star(grid_address)
+            gv_by_gv = self._get_gv_by_gv_on_star(gv, rotation_map)
+
+            if self._log_level:
+                self._show_log(self._qpoint,
+                               self._frequencies[i],
+                               gv,
+                               rotation_map)
 
         # check if the number of rotations is correct.
         if self._grid_weights is not None:
@@ -419,7 +446,7 @@ class conductivity_RTA:
                   frequencies,
                   group_velocity,
                   rotation_map):
-        print "Frequency, projected group velocity (x, y, z), norm at k-stars",
+        print "Frequency, projected group velocity (x, y, z), group velocity norm",
         if self._gv_delta_q is None:
             print
         else:
@@ -474,5 +501,3 @@ class conductivity_RTA:
                        grid_address,
                        grid_point=grid_point,
                        filename=self._filename)
-        
-

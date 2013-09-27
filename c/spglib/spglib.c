@@ -524,19 +524,19 @@ int spg_get_stabilized_reciprocal_mesh(int grid_address[][3],
 					qpoints);
 }
 
-void spg_relocate_BZ_grid_address(int bz_grid_address[][3],
-				  int bz_map[],
-				  int grid_address[][3],
-				  const int mesh[3],
-				  SPGCONST double rec_lattice[3][3],
-				  const int is_shift[3])
+int spg_relocate_BZ_grid_address(int bz_grid_address[][3],
+				 int bz_map[],
+				 int grid_address[][3],
+				 const int mesh[3],
+				 SPGCONST double rec_lattice[3][3],
+				 const int is_shift[3])
 {
-  kpt_relocate_BZ_grid_address(bz_grid_address,
-			       bz_map,
-			       grid_address,
-			       mesh,
-			       rec_lattice,
-			       is_shift);
+  return kpt_relocate_BZ_grid_address(bz_grid_address,
+				      bz_map,
+				      grid_address,
+				      mesh,
+				      rec_lattice,
+				      is_shift);
 }
 
 int spg_get_triplets_reciprocal_mesh_at_q(int weights[],

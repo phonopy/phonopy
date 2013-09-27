@@ -554,15 +554,16 @@ static PyObject * relocate_BZ_grid_address(PyObject *self, PyObject *args)
   const int* is_shift = (int*)is_shift_py->data;
   SPGCONST double (*reciprocal_lattice)[3]  =
     (double(*)[3])reciprocal_lattice_py->data;
+  int num_ir_gp;
   
-  spg_relocate_BZ_grid_address(bz_grid_address,
-			       bz_map,
-			       grid_address,
-			       mesh,
-			       reciprocal_lattice,
-			       is_shift);
+  num_ir_gp = spg_relocate_BZ_grid_address(bz_grid_address,
+					   bz_map,
+					   grid_address,
+					   mesh,
+					   reciprocal_lattice,
+					   is_shift);
 
-  Py_RETURN_NONE;
+  return PyInt_FromLong((long) num_ir_gp);
 }
 
 static PyObject * get_triplets_reciprocal_mesh_at_q(PyObject *self, PyObject *args)

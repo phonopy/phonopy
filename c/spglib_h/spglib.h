@@ -301,12 +301,13 @@ int spg_get_stabilized_reciprocal_mesh(int grid_address[][3],
 				       SPGCONST double qpoints[][3]);
 
 /* Grid addresses are relocated inside Brillouin zone. */
-void spg_relocate_BZ_grid_address(int bz_grid_address[][3],
-				  int bz_map[],
-				  int grid_address[][3],
-				  const int mesh[3],
-				  SPGCONST double rec_lattice[3][3],
-				  const int is_shift[3]);
+/* Number of ir-grid-points inside Brillouin zone is returned. */
+int spg_relocate_BZ_grid_address(int bz_grid_address[][3],
+				 int bz_map[],
+				 int grid_address[][3],
+				 const int mesh[3],
+				 SPGCONST double rec_lattice[3][3],
+				 const int is_shift[3]);
 
 /* Irreducible triplets of k-points are searched under conservation of */
 /* :math:``\mathbf{k}_1 + \mathbf{k}_2 + \mathbf{k}_3 = \mathbf{G}``. */

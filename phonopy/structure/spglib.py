@@ -252,14 +252,15 @@ def relocate_BZ_grid_address(grid_address,
     bz_grid_address = np.zeros(
         ((mesh[0] + 1) * (mesh[1] + 1) * (mesh[2] + 1), 3), dtype='intc')
     bz_map = np.zeros(np.prod(mesh) * 8, dtype='intc')
-    spg.BZ_grid_address(bz_grid_address,
-                        bz_map,
-                        grid_address,
-                        np.array(mesh, dtype='intc').copy(),
-                        np.array(reciprocal_lattice, dtype='double').copy(),
-                        np.array(is_shift, dtype='intc').copy())
+    num_bz_ir = spg.BZ_grid_address(
+        bz_grid_address,
+        bz_map,
+        grid_address,
+        np.array(mesh, dtype='intc').copy(),
+        np.array(reciprocal_lattice, dtype='double').copy(),
+        np.array(is_shift, dtype='intc').copy())
 
-    return bz_grid_address, bz_map
+    return bz_grid_address[:num_bz_ir], bz_map
   
 def get_stabilized_reciprocal_mesh(mesh,
                                    rotations,
