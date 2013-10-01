@@ -462,7 +462,7 @@ if interface_mode=='vasp':
 
 # Wien2k struct
 if interface_mode=='wien2k':
-    if file_existss(options.wien2k_struct_file, log_level):
+    if file_exists(options.wien2k_struct_file, log_level):
         unitcell, npts, r0s, rmts = wien2k.parse_wien2k_struct(
             options.wien2k_struct_file)
 

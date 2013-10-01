@@ -253,9 +253,14 @@ def get_independent_atoms_in_dot_scf( filename ):
     positions = []
     for line in open( filename ):
         if line[:4] == ":POS":
-            x = float( line[30:37] )
-            y = float( line[38:45] )
-            z = float( line[46:53] )
+            if "POSITION" in line:
+                x = float( line[30:37] )
+                y = float( line[38:45] )
+                z = float( line[46:53] )
+            else:
+                x = float( line[27:34] )
+                y = float( line[35:42] )
+                z = float( line[43:50] )
             num_atom = int(line[4:7])
             positions.append([x,y,z])
 
