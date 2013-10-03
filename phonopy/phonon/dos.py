@@ -105,6 +105,8 @@ class TotalDos(Dos):
     def __init__(self, frequencies, weights, sigma=None):
         Dos.__init__(self, frequencies, weights, sigma)
         self._freq_Debye = None
+        self._omegas = None
+        self._dos = None
 
     def calculate(self):
         omega = self._omega_min
@@ -180,27 +182,31 @@ class TotalDos(Dos):
 
 
 class PartialDos(Dos):
-    def __init__(self, frequencies, weights, eigenvectors, sigma=None):
+    def __init__(self,
+                 frequencies,
+                 weights,
+                 eigenvectors,
+                 sigma=None,
+                 direction=None):
         Dos.__init__(self, frequencies, weights, sigma)
-        self._eigenvectors2 = (np.abs(eigenvectors))**2
-
-    def get_partial_density_of_states_at_omega(self, index, amplitudes):
-        eigvec2 = self._eigenvectors2
-        return np.sum(
-            np.dot(self._weights,
-                   eigvec2[:,index,:] * amplitudes)) / np.sum(self._weights)
+        self._eigenvectors = eigenvectors
+        if direction is not None:
+            self._direction = np.array(
+                direction, dtype='double') / np.linalg.norm(direction)
+        else:
+            self._direction = None
+        self._partial_dos = None
+        self._omegas = None
 
     def calculate(self):
         omega = self._omega_min
         pdos = []
         omegas = []
+        weights = self._weights / float(np.sum(self._weights))
         while omega < self._omega_max + self._omega_pitch/10 :
             omegas.append(omega)
-            axis_dos = []
             amplitudes = self._smearing_function.calc(self._frequencies - omega)
-            for i in range(self._frequencies.shape[1]):
-                axis_dos.append(
-                    self.get_partial_density_of_states_at_omega(i, amplitudes))
+            axis_dos = self._get_partial_dos_at_omega(amplitudes, weights)
             omega += self._omega_pitch
             pdos.append(axis_dos)
 
@@ -245,7 +251,10 @@ class PartialDos(Dos):
                 if i > num_atom - 1 or i < 0:
                     print "Your specified atom number is out of range."
                     raise ValueError
-                pdos_sum += self._partial_dos[i*3:(i+1)*3].sum(axis=0)
+                if self._direction is None:
+                    pdos_sum += self._partial_dos[i*3:(i+1)*3].sum(axis=0)
+                else:
+                    pdos_sum += self._partial_dos[i:i+1].sum(axis=0)
             plots.append(plt.plot(self._omegas, pdos_sum))
 
         if not legend==None:
@@ -257,11 +266,25 @@ class PartialDos(Dos):
     def write(self):
         file = open('partial_dos.dat', 'w')
         file.write("# Sigma = %f\n" % self._sigma)
-        num_mode = self._frequencies.shape[1]
+        num_band = self._frequencies.shape[1]
         for omega, pdos in zip(self._omegas, self._partial_dos.transpose()):
             file.write("%20.10f" % omega)
-            file.write(("%20.10f" * num_mode) % tuple(pdos))
+            file.write(("%20.10f" * len(pdos)) % tuple(pdos))
             file.write("\n")
 
-
-
+    def _get_partial_dos_at_omega(self, amplitudes, weights):
+        num_band = self._frequencies.shape[1]
+        eigvecs = self._eigenvectors
+        if self._direction is None:
+            pdos = [(np.dot(weights,
+                            np.abs(eigvecs[:, i, :]) ** 2 * amplitudes)).sum()
+                    for i in range(num_band)]
+        else:
+            pdos = []
+            for i in range(num_band / 3):
+                proj_eigvecs = eigvecs[:, i * 3, :] * self._direction[0]
+                proj_eigvecs += eigvecs[:, i * 3 + 1, :] * self._direction[1]
+                proj_eigvecs += eigvecs[:, i * 3 + 2, :] * self._direction[2]
+                pdos.append(np.dot(weights,
+                                   np.abs(proj_eigvecs) ** 2 * amplitudes).sum())
+        return pdos

@@ -148,12 +148,6 @@ class Settings:
     def get_mesh_shift(self):
         return self._mesh_shift
 
-    def set_mesh_symmetry(self, mesh_symmetry=True):
-        self._is_mesh_symmetry = mesh_symmetry
-
-    def get_mesh_symmetry(self):
-        return self._is_mesh_symmetry
-
     def set_time_symmetry(self, time_symmetry=True):
         self._is_time_symmetry = time_symmetry
 
@@ -1446,26 +1440,30 @@ class PhonopyConfParser(ConfParser):
             if params['tdisp'] == '.true.':
                 self._settings.set_is_thermal_displacements(True)
                 self._settings.set_is_eigenvectors(True)
-                self._settings.set_mesh_symmetry(False)
+                self._settings.set_is_mesh_symmetry(False)
     
         # Thermal displacement matrices
         if params.has_key('tdispmat'):
             if params['tdispmat'] == '.true.':
                 self._settings.set_is_thermal_displacement_matrices(True)
                 self._settings.set_is_eigenvectors(True)
-                self._settings.set_mesh_symmetry(False)
+                self._settings.set_is_mesh_symmetry(False)
     
         # Thermal distances
         if params.has_key('tdistance'): 
             self._settings.set_is_thermal_distances(True)
             self._settings.set_is_eigenvectors(True)
-            self._settings.set_mesh_symmetry(False)
+            self._settings.set_is_mesh_symmetry(False)
             self._settings.set_thermal_atom_pairs(params['tdistance'])
     
         # Projection direction (currently only used for thermal displacements
         if params.has_key('projection_direction'): 
             self._settings.set_projection_direction(
                 params['projection_direction'])
+
+            if params.has_key('pdos'):
+                self._settings.set_is_mesh_symmetry(False)
+                
 
         # Group velocity
         if params.has_key('is_group_velocity'):

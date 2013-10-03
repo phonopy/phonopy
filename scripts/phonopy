@@ -1055,10 +1055,12 @@ elif run_mode == 'mesh':
             (not settings.get_is_thermal_properties()):
 
         dos_range = settings.get_dos_range()
+        p_direction = settings.get_projection_direction()
         phonon.set_partial_DOS(sigma=settings.get_sigma(),
                                omega_min=dos_range['min'],
                                omega_max=dos_range['max'],
-                               omega_pitch=dos_range['step'])
+                               omega_pitch=dos_range['step'],
+                               direction=p_direction)
         phonon.write_partial_DOS()
 
         if options.is_graph_plot:

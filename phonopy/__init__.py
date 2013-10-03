@@ -495,7 +495,8 @@ class Phonopy:
                         sigma=None,
                         omega_min=None,
                         omega_max=None,
-                        omega_pitch=None):
+                        omega_pitch=None,
+                        direction=None):
 
         if self._mesh==None:
             print "set_mesh has to be done before set_thermal_properties"
@@ -503,11 +504,15 @@ class Phonopy:
         if self._mesh.get_eigenvectors() == None:
             print "Eigenvectors have to be calculated."
             sys.exit(1)
-
+        if direction is not None:
+            direction_cart = np.dot(direction, self._primitive.get_cell())
+        else:
+            direction_cart = None
         pdos = PartialDos(self._mesh.get_frequencies(),
                           self._mesh.get_weights(),
                           self._mesh.get_eigenvectors(),
-                          sigma=sigma)
+                          sigma=sigma,
+                          direction=direction_cart)
         pdos.set_draw_area(omega_min,
                            omega_max,
                            omega_pitch)
