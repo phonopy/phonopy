@@ -334,6 +334,22 @@ gives the atom index in primitive cell. ``,`` separates the atom
 sets. Therefore in the example, atom 1 and 2 are summarized as one
 curve and atom 3, 4, 5, and, 6 are summarized as the other curve.
 
+The projection is applied along arbitrary direction using
+``PROJECTION_DIRECTION`` tag.
+
+.. _projection_direction_tag:
+
+``PROJECTION_DIRECTION``
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Eigenvectors are projected along the direction specified by this tag.
+Projection direction is specified in reduced coordinates, i.e., with
+respect to *a*, *b*, *c* axes.
+
+::
+
+   PDOS = 1, 2   
+   PROJECTION_DIRECTION = -1 1 1
 
 .. _sigma_tag:
 
@@ -422,12 +438,8 @@ usages of ``TMAX``, ``TMIN``, ``TSTEP`` tags are same as those in
 writen into ``thermal_displacements.yaml``. See the detail of the
 method, :ref:`thermal_displacement`.
 
-``PROJECTION_DIRECTION``
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-Eigenvectors are projected along the direction specified by this tag.
-Projection direction is specified in reduced coordinates, i.e., with
-respect to *a*, *b*, *c* axes.
+The projection is applied along arbitrary direction using
+``PROJECTION_DIRECTION`` tag (:ref:`projection_direction_tag`).
 
 ::
 

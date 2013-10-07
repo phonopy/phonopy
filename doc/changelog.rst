@@ -6,6 +6,13 @@ Change Log
 Sep-21-2013: Version 1.7.4
 ---------------------------
 
+* PDOS with projection along arbitrary direction was implemented. See
+  :ref:`projection_direction_tag`. 
+* ``partial_dos.dat`` format was changed. XYZ projected PDOS is not
+  output. Instead atom projected PDOS (sum of XYZ projected PDOS)
+  is written. See :ref:`output_files`.
+* DOS and PDOS python interface was modified. The keyword of
+  ``omega_something`` is changed to ``freq_something``.
 * ``gruneisen`` didn't run because it didn't follow the move of
   the ``file_IO.py`` file location. This is fixed.
 * The formula of non-analytical term correction implemented in phonopy
@@ -14,8 +21,11 @@ Sep-21-2013: Version 1.7.4
   by reciprocal primitive vectors. Now in the mesh sampling mode
   (``MP``), q-points are automatically moved to inside
   first-Brillouin-zone.
-* Symmetry of mesh numbers is checked. If the symmetry disagrees
-  crystal symmetry, mesh symmetrization is disabled.
+* In the mesh sampling mode, consistency of symmetry of mesh numbers
+  to crystal symmetry is checked. If the symmetry disagrees with
+  crystal symmetry, mesh symmetrization (equivalent to ``MESH_SYMMETRY
+  = .FALSE.``) is disabled.
+* Wien2k interface is updated to adapt Wien2k-13.
 
 Sep-17-2013: Version 1.7.3
 ---------------------------
@@ -117,8 +127,7 @@ June-29-2012: Version 1.5
   values of segments of band paths. For qpoints, frequencies,
   eigenvalues, eigenvectors, the previous array structures are
   recovered by numpy.vstack and for distances, numpy.hstack.
-* Experimental support on thermal displacement
-  (:ref:`thermal_displacements_option`).
+* Experimental support on thermal displacement.
 * Experimental support on fitting DOS to a Debye model
   (:ref:`debye_model_tag`) implemented by Jörg Meyer.
 
@@ -137,7 +146,7 @@ May-21-2012: Version 1.4.1
 May-13-2012: Version 1.4
 ---------------------------
 
-* ``--writefc`` option is implemented (:ref:`writefc_option`)
+* ``--writefc`` option is implemented.
 * In using ``MODULATION`` tag, phase factor for each mode can be
   specified as the third value of each mode in degrees.
 * Arguments of ``get_modulation`` in Phonopy module were modified.
@@ -183,7 +192,7 @@ Oct-12-2011: Version 1.2
 ---------------------------
 
 * Closing support of the ``--nac_old`` option.
-* The option ``--nomeshsym`` is available on the manual (:ref:`nomeshsym_option`).
+* The option ``--nomeshsym`` is available on the manual.
 * Symmetry finder update that includes the bug fix of Wyckoff letter
   assignment.
 * Showing site-symmetry symbols with respective orientations in the output of
@@ -194,7 +203,7 @@ Oct-12-2011: Version 1.2
 Sep-19-2011: Version 1.1
 ---------------------------
 
-* ``--readfc`` option is implemented (:ref:`readfc_option`)
+* ``--readfc`` option is implemented.
 * A bit of clean-up of the code ``dynamical_matrix.py``,
   ``force_constant.py`` and ``_phonopy.c`` to make implementations
   similar to the formulations often written in text books.
@@ -205,7 +214,7 @@ Sep-5-2011: Version 1.0
 * ``settings.py`` is moved to ``phonopy/cui/Phonopy``. The configure
   parser from a file and options is modified.
 * Usage of ``MODULATION`` tag was changed.
-* The option ``--nosym`` is available on the manual (:ref:`nosym_option`).
+* The option ``--nosym`` is available on the manual.
 
 Aug-8-2011: Version 0.9.6
 ---------------------------
@@ -280,8 +289,7 @@ Feb-20-2011: Version 0.9.4
   - Setting file has to be passed to phonopy as the first argunment.
   - FORCES is replaced by FORCE_SETS (:ref:`file_forces`).
   - DISP is replaced by disp.yaml.
-  - LSUPER tag is removed. Please use -d option
-    (:ref:`create_displacement_option`).
+  - LSUPER tag is removed. Please use -d option.
   - NDIM and MATDIM tags are replaced by DIM tag (:ref:`dimension_tag`).
   - Band structure setting tags are changed to BAND tag
     (:ref:`band_structure_related_tags`).
@@ -476,7 +484,7 @@ Feb-10-2010: Version 0.7.3
 Jan-12-2010: Version 0.7.2
 ------------------------------------
 * [**Experimental**] Non-analytical term correction
-  was implemented. (:ref:`nac_option`)
+  was implemented.
 
 Dec-8-2009: Version 0.7.1 released
 ------------------------------------

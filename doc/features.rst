@@ -14,14 +14,14 @@ Density of states
 
 Total and partial density of states are calculated based on the
 *q*-point sampling mesh (:ref:`dos_related_tags`). Smearing parameter
-is set by ``--sigma`` (:ref:`smearing_width_option`).
+is set by :ref:`sigma_tag` tag or ``--sigma`` option.
 
 Thermal properties
 ------------------
 
 Helmholtz free energy, heat capacity at constant volume, and entropy
 at temperatures are calculated from the phonon frequencies on the
-*q*-point sampling mesh (:ref:`thermal_properties_option`).
+*q*-point sampling mesh (:ref:`thermal_properties_tag`).
 
 Animation
 ----------

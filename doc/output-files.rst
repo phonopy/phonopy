@@ -37,7 +37,7 @@ A set of frequencies calculated by the
 ``thermal_properties.yaml``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The :ref:`thermal properties <thermal_properties_option>` calculated
+The :ref:`thermal properties <thermal_properties_tag>` calculated
 with ``-t`` option are stored in the YAML format.
 
 ``thermal_properties.yaml`` is plot using the tool ``propplot`` (:ref:`propplot_tool`).
@@ -54,21 +54,34 @@ File format of ``partial_dos.dat``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The first column is the phonon frequency. The following colums are the
-x, y, z projected density of states for atoms in the primitive
-cell. In the :ref:`NaCl example <example_pdos>`, there are two atoms
-in the primitive cell, which are one Na and one Cl atoms. The order of
-atoms in the primitive cell is confirmed running phonopy with the
-``-v`` option. The ``partial_dos.dat`` of this example is starting
-with the following lines::
+projected density of states for atoms in the primitive cell. In the
+:ref:`NaCl example <example_pdos>`, there are two atoms in the
+primitive cell, which are one Na and one Cl atoms. The order of atoms
+in the primitive cell is confirmed running phonopy with the ``-v``
+option. The ``partial_dos.dat`` of this example is starting with the
+following lines::
 
-   # Sigma = 0.063235
-          -0.6693582319        0.0000000000        0.0000000000        0.0000000000        0.0000000000        0.0000000000        0.0000000000
-          -0.6377407678        0.0000000000        0.0000000000        0.0000000000        0.0000000000        0.0000000000        0.0000000000
+   # Sigma = 0.063253
+          -0.6695362607        0.0000000000        0.0000000000
+          -0.6379098952        0.0000000000        0.0000000000
+          -0.6062835296        0.0000000000        0.0000000000
+          -0.5746571641        0.0000000000        0.0000000000
+          -0.5430307986        0.0000000000        0.0000000000
+          -0.5114044331        0.0000000000        0.0000000000
+          -0.4797780675        0.0000000000        0.0000000000
+          -0.4481517020        0.0000000000        0.0000000000
+          -0.4165253365        0.0000000000        0.0000000000
+          -0.3848989710        0.0000000000        0.0000000000
+          -0.3532726054        0.0000000004        0.0000000006
+          -0.3216462399        0.0000000044        0.0000000066
+          -0.2900198744        0.0000000370        0.0000000551
+          -0.2583935089        0.0000002410        0.0000003596
+          -0.2267671433        0.0000012239        0.0000018260
    ...
 
-where from the left in each line, frequency, x of Na, y of
-Na, z of Na, x of Cl, y of Cl, z of Cl. The first line is just a
-comment for remembering the sigma value used.
+where from the left to right in each line, frequency, PDOS of Na and
+PDOS of Cl. The first line is just a comment to remember the sigma
+value used.
 
 ``disp.yaml``
 ^^^^^^^^^^^^^^^

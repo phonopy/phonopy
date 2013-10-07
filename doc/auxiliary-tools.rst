@@ -30,40 +30,20 @@ To obtain a simple text format data::
 ``pdosplot``
 ------------
 
-Partial density of states (PDOS) are plotted. This can handle the
-Cartesian axis resolved PDOS. Usually PDOS is calculated only at the
-irreducible *q*-points. Therefore symmetrically equivalent directions
-can give different values. Since the sum of the values of the
-equivalent directions is correct, it is required to take average by
-users. To avoid this, :ref:`nomeshsym_option` option
-when running phonopy can be used. This will take more time to
-calculate PDOS since all the *q*-points on the mesh will be
-calculated.
+Partial density of states (PDOS) are plotted. 
 
-``-i`` option is
-essential. This options is used as shown in the example below,
+``-i`` option is used as
 
 ::
    
    pdosplot -i '1 2 4 5, 3 6' -o 'pdos.pdf' partial_dos.dat
 
-The indices and comma in '1 2 3 4, 5 6' mean as follows. The indices are separated into
-blocks by comma (1 2 4 5 and 3 6). Cartesian axis resolved PDOS specified by the
-successive indices separated by space in each block are summed up. The
-PDOS of blocks are drawn simultaneously.
-
-Indices are defined as 
-
-- 1 2 3 : X Y Z of the 1st atom, respectively
-- 4 5 6 : X Y Z of the 2nd atom, respectively
-- and so on
-
-In the example, X and Y components of atom 1 and 2 are summed and Z
-component of atom 1 and 2 are summed, and they are plotted. When
-``-o`` option with a file name is specified, the plot is saved
-in PDF format to the file name.
-
-A few more options are prepared and shown by ``-h`` option.
+The indices and comma in '1 2 3 4, 5 6' mean as follows. The indices
+are separated into blocks by comma (1 2 4 5 and 3 6). PDOS specified
+by the successive indices separated by space in each block are summed
+up. The PDOS of blocks are drawn simultaneously. Indices usually
+correspond to atoms.  A few more options are prepared and shown by
+``-h`` option.
 
 .. _propplot_tool:
 
