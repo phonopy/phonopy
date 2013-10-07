@@ -750,7 +750,8 @@ else:
                               disp[0], disp[1], disp[2]])
 
     phonon.set_displacements(displacements)
-    print "Calculating force constants..."
+    if log_level > 0:
+        print "Calculating force constants..."
     phonon.set_forces(sets_of_forces)
                        
 # Construct dynamical matrix
@@ -964,7 +965,8 @@ elif run_mode == 'mesh':
 
     # Thermalp roperty
     if settings.get_is_thermal_properties():
-        print "Calculating thermal properties..."
+        if log_level > 0:
+            print "Calculating thermal properties..."
         tprop_range = settings.get_thermal_property_range()
         tstep = tprop_range['step']
         tmax = tprop_range['max']
@@ -998,9 +1000,10 @@ elif run_mode == 'mesh':
     # Thermal displacements
     elif settings.get_is_thermal_displacements():
         p_direction = settings.get_projection_direction()
-        if p_direction is not None:
-            print "Projection direction:", np.array(p_direction)
-        print "Calculating thermal displacements..."
+        if log_level > 0:
+            if p_direction is not None:
+                print "Projection direction:", np.array(p_direction)
+            print "Calculating thermal displacements..."
         tprop_range = settings.get_thermal_property_range()
         tstep = tprop_range['step']
         tmax = tprop_range['max']
@@ -1022,7 +1025,8 @@ elif run_mode == 'mesh':
 
     # Thermal displacement matrices
     elif settings.get_is_thermal_displacement_matrices():
-        print "Calculating thermal displacement matrices..."
+        if log_level > 0:
+            print "Calculating thermal displacement matrices..."
         tprop_range = settings.get_thermal_property_range()
         tstep = tprop_range['step']
         tmax = tprop_range['max']
@@ -1036,7 +1040,8 @@ elif run_mode == 'mesh':
 
     # Thermal displacement
     elif settings.get_is_thermal_distances():
-        print "Calculating thermal distances..."
+        if log_level > 0:
+            print "Calculating thermal distances..."
         tprop_range = settings.get_thermal_property_range()
         tstep = tprop_range['step']
         tmax = tprop_range['max']
@@ -1053,13 +1058,16 @@ elif run_mode == 'mesh':
     elif settings.get_is_eigenvectors() and \
             (options.is_graph_plot or settings.get_is_dos_mode()) and \
             (not settings.get_is_thermal_properties()):
-
-        dos_range = settings.get_dos_range()
         p_direction = settings.get_projection_direction()
+        if log_level > 0:
+            if p_direction is not None:
+                print "Projection direction:", np.array(p_direction)
+            print "Calculating PDOS..."
+        dos_range = settings.get_dos_range()
         phonon.set_partial_DOS(sigma=settings.get_sigma(),
-                               omega_min=dos_range['min'],
-                               omega_max=dos_range['max'],
-                               omega_pitch=dos_range['step'],
+                               freq_min=dos_range['min'],
+                               freq_max=dos_range['max'],
+                               freq_pitch=dos_range['step'],
                                direction=p_direction)
         phonon.write_partial_DOS()
 
@@ -1079,9 +1087,12 @@ elif run_mode == 'mesh':
     elif (options.is_graph_plot or settings.get_is_dos_mode()):
         dos_range = settings.get_dos_range()
         phonon.set_total_DOS(sigma=settings.get_sigma(),
-                             omega_min=dos_range['min'],
-                             omega_max=dos_range['max'],
-                             omega_pitch=dos_range['step'])
+                             freq_min=dos_range['min'],
+                             freq_max=dos_range['max'],
+                             freq_pitch=dos_range['step'])
+
+        print "Calculating DOS..."
+
         if settings.get_fits_Debye_model():
             phonon.set_Debye_frequency()
             print "Debye frequency: %10.5f" % phonon.get_Debye_frequency()

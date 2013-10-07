@@ -493,9 +493,9 @@ class Phonopy:
     # Partial DOS
     def set_partial_DOS(self,
                         sigma=None,
-                        omega_min=None,
-                        omega_max=None,
-                        omega_pitch=None,
+                        freq_min=None,
+                        freq_max=None,
+                        freq_pitch=None,
                         direction=None):
 
         if self._mesh==None:
@@ -513,29 +513,22 @@ class Phonopy:
                           self._mesh.get_eigenvectors(),
                           sigma=sigma,
                           direction=direction_cart)
-        pdos.set_draw_area(omega_min,
-                           omega_max,
-                           omega_pitch)
+        pdos.set_draw_area(freq_min,
+                           freq_max,
+                           freq_pitch)
         pdos.calculate()
         self._pdos = pdos
 
     def get_partial_DOS(self):
         """
-        Retern omegas and partial_dos.
-        The first element is omegas and the second is partial_dos.
+        Retern frequencies and partial_dos.
+        The first element is freqs and the second is partial_dos.
         
-        omegas: [freq1, freq2, ...]
+        frequencies: [freq1, freq2, ...]
         partial_dos:
-          [[elem1-freq1, elem1-freq2, ...],
-           [elem2-freq1, elem2-freq2, ...],
+          [[atom1-freq1, atom1-freq2, ...],
+           [atom2-freq1, atom2-freq2, ...],
            ...]
-
-          where
-           elem1: atom1-x compornent
-           elem2: atom1-y compornent
-           elem3: atom1-z compornent
-           elem4: atom2-x compornent
-           ...
         """
         return self._pdos.get_partial_dos()
 
@@ -549,9 +542,9 @@ class Phonopy:
     # Total DOS
     def set_total_DOS(self,
                       sigma=None,
-                      omega_min=None,
-                      omega_max=None,
-                      omega_pitch=None):
+                      freq_min=None,
+                      freq_max=None,
+                      freq_pitch=None):
 
         if self._mesh==None:
             print "set_mesh has to be done before set_thermal_properties"
@@ -560,18 +553,18 @@ class Phonopy:
         total_dos = TotalDos(self._mesh.get_frequencies(),
                              self._mesh.get_weights(),
                              sigma=sigma)
-        total_dos.set_draw_area(omega_min,
-                                omega_max,
-                                omega_pitch)
+        total_dos.set_draw_area(freq_min,
+                                freq_max,
+                                freq_pitch)
         total_dos.calculate()
         self._total_dos = total_dos
 
     def get_total_DOS(self):
         """
-        Retern omegas and total dos.
-        The first element is omegas and the second is total dos.
+        Retern frequencies and total dos.
+        The first element is freqs and the second is total dos.
         
-        omegas: [freq1, freq2, ...]
+        frequencies: [freq1, freq2, ...]
         total_dos: [dos1, dos2, ...]
         """
         return self._total_dos.get_dos()
