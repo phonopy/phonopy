@@ -175,7 +175,7 @@ class Interaction:
                 print grid_address[triplet]
                 print sum_q
                 print "============= Warning =================="
-            
+
         self._triplets_at_q = triplets_at_q
         self._weights_at_q = weights_at_q
         self._grid_address = grid_address

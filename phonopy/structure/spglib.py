@@ -252,7 +252,7 @@ def relocate_BZ_grid_address(grid_address,
     bz_grid_address = np.zeros(
         ((mesh[0] + 1) * (mesh[1] + 1) * (mesh[2] + 1), 3), dtype='intc')
     bz_map = np.zeros(
-        (2 * mesh[0] - 0) * (2 * mesh[1] - 0) * (2 * mesh[2] - 0), dtype='intc')
+        (2 * mesh[0] - 1) * (2 * mesh[1] - 1) * (2 * mesh[2] - 1), dtype='intc')
     num_bz_ir = spg.BZ_grid_address(
         bz_grid_address,
         bz_map,
