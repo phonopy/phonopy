@@ -17,7 +17,6 @@ def get_triplets_at_q(grid_point,
                                                            primitive_lattice)
     triplets_at_q = spg.get_BZ_triplets_at_q(
         grid_point,
-        grid_address,
         bz_grid_address,
         bz_map,
         weights,

@@ -314,7 +314,6 @@ def get_triplets_reciprocal_mesh_at_q(fixed_grid_number,
     return weights, third_q, mesh_points
         
 def get_BZ_triplets_at_q(grid_point,
-                         grid_address,
                          bz_grid_address,
                          bz_map,
                          weights,
@@ -324,7 +323,6 @@ def get_BZ_triplets_at_q(grid_point,
     triplets = np.zeros((num_ir_tripltes, 3), dtype='intc')
     num_ir_ret = spg.BZ_triplets_at_q(triplets,
                                       grid_point,
-                                      grid_address,
                                       bz_grid_address,
                                       bz_map,
                                       weights,
