@@ -122,6 +122,7 @@ parser.set_defaults(amplitude=None,
                     is_symmetrize_fc3_q=False,                     
                     log_level=None,
                     max_freepath=None,
+                    mass_variances=None,
                     mesh_numbers=None,
                     mesh_divisors=None,
                     multiple_sigmas=None,
@@ -258,6 +259,9 @@ parser.add_option("--mesh",
 parser.add_option("--multiple_sigmas", dest="multiple_sigmas",
                   type="string",
                   help="Multiple sigmas for smearing width used for limited functions")
+parser.add_option("--mv", "--mass_variances", dest="mass_variances",
+                  type="string",
+                  help="Mass variance parameters for isotope scattering")
 parser.add_option("--nac", dest="is_nac",
                   action="store_true",
                   help="Non-analytical term correction")
@@ -762,14 +766,17 @@ else:
             jdos.get_jointDOS(grid_points,
                               filename=options.output_filename)
         elif options.is_isotope:
-            mass_variance = None
-            iso = Isotope(mesh, mass_variance)
+            mass_variances = settings.get_mass_variances()
+            iso = Isotope(mesh, mass_variances)
             iso.set_dynamical_matrix(fc2,
                                      supercell_dm,
                                      primitive_dm,
                                      nac_params=nac_params,
                                      frequency_scale_factor=freq_scale)
-            print iso.run(0, 3)
+            band_indeces = np.intc([x for bi in settings.get_band_indices()
+                                    for x in bi])
+            for gp in grid_points:
+                print iso.run(gp, band_indeces)
         else:
             if log_level:
                 print "Cutoff frequency:", settings.get_cutoff_frequency()

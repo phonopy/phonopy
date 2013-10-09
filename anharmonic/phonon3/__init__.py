@@ -225,16 +225,25 @@ class Phono3py:
         if read_gamma:
             gamma = []
             for sigma in sigmas:
-                gamma_at_sigma = []
-                for i, gp in enumerate(br.get_grid_points()):
-                    gamma_at_sigma.append(read_gamma_from_hdf5(
-                        br.get_mesh_numbers(),
-                        mesh_divisors=br.get_mesh_divisors(),
-                        grid_point=gp,
-                        sigma=sigma,
-                        filename=filename))
+                gamma_at_sigma = read_gamma_from_hdf5(
+                    br.get_mesh_numbers(),
+                    mesh_divisors=br.get_mesh_divisors(),
+                    sigma=sigma,
+                    filename=filename)
+                if gamma_at_sigma is False:
+                    gamma_at_simga = []
+                    for i, gp in enumerate(br.get_grid_points()):
+                        gamma_gp = read_gamma_from_hdf5(
+                            br.get_mesh_numbers(),
+                            mesh_divisors=br.get_mesh_divisors(),
+                            grid_point=gp,
+                            sigma=sigma,
+                            filename=filename)
+                        if gamma_gp is False:
+                            print "Gamma at grid point %d doesn't exist." % gp
+                        gamma_at_sigma.append(gamma_gp)
                 gamma.append(gamma_at_sigma)
-            br.set_gamma(np.double(gamma))
+            br.set_gamma(np.array(gamma, dtype='double'))
 
         br.calculate_kappa(write_amplitude=write_amplitude,
                            read_amplitude=read_amplitude,

@@ -8,13 +8,13 @@ from phonopy.units import VaspToTHz
 class Isotope:
     def __init__(self,
                  mesh,
-                 mass_variance, # length of list is num_atom.
+                 mass_variances, # length of list is num_atom.
                  sigma=0.1,
                  frequency_factor_to_THz=VaspToTHz,
                  symprec=1e-5,
                  lapack_zheev_uplo='L'):
         self._mesh = mesh
-        self._mass_variance = mass_variance
+        self._mass_variances = mass_variances
         self._sigma = sigma
         self._symprec = symprec
         self._frequency_factor_to_THz = frequency_factor_to_THz
@@ -28,12 +28,12 @@ class Isotope:
         self._eigenvectors = None
         self._phonon_done = None
         self._dm = None
-        self._band_index = None
+        self._band_indices = None
         self._grid_point = None
 
-    def run(self, grid_point, band_index):
+    def run(self, grid_point, band_indices):
         self._grid_point = grid_point
-        self._band_index = band_index
+        self._band_indices = band_indices
         primitive = self._dm.get_primitive()
         num_grid = np.prod(self._mesh)
         self._grid_points = np.arange(num_grid, dtype='intc')
@@ -51,10 +51,12 @@ class Isotope:
                                                      primitive_lattice)
         return self._run_py()
 
-    def set_phonons(self, frequencies, eigenvectors, phonon_done):
+    def set_phonons(self, frequencies, eigenvectors, phonon_done, dm=None):
         self._frequencies = frequencies
         self._eigenvectors = eigenvectors
         self._phonon_done = phonon_done
+        if dm is not None:
+            self._dm = dm
 
     def get_phonons(self):
         return (self._frequencies,
@@ -88,19 +90,21 @@ class Isotope:
         for gp in self._grid_points:
             self._set_phonon_py(gp)
 
-        vec0 = self._eigenvectors[
-            self._grid_point][:, self._band_index].reshape(-1, 3)
-        f0 = self._frequencies[self._grid_point][self._band_index]
+        t_inv = []
+        for bi in self._band_indices:
+            vec0 = self._eigenvectors[self._grid_point][:, bi].reshape(-1, 3)
+            f0 = self._frequencies[self._grid_point][bi]
+            ti_sum = 0.0
+            for freqs, eigvecs in zip(self._frequencies, self._eigenvectors):
+                for f, vec in zip(freqs, eigvecs.T):
+                    ti_sum_band = 0.0
+                    for v, v0, g in zip(
+                        vec.reshape(-1, 3), vec0, self._mass_variances):
+                        ti_sum_band += g * np.abs(np.vdot(v, v0)) ** 2
+                    ti_sum += ti_sum_band * gaussian(f0 - f, self._sigma)
+            t_inv.append(np.pi ** 2 / np.prod(self._mesh) * f0 ** 2 * ti_sum)
 
-        tinv = 0.0
-        mass_variance = [1.97e-4, 1.97e-4, 0, 0]
-        for freqs, eigvecs in zip(self._frequencies, self._eigenvectors):
-            for f, vec in zip(freqs, eigvecs.T):
-                for v, v0, g in zip(vec.reshape(-1, 3), vec0, mass_variance):
-                    tinv += g * np.abs(np.vdot(v, v0)) ** 2 * gaussian(f0 - f, self._sigma)
-        tinv = np.pi / 2 / np.prod(self._mesh) * f0 ** 2
-
-        return tinv
+        return np.array(t_inv, dtype='double')
             
     def _set_phonon_c(self):
         set_phonon_c(self._dm,

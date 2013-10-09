@@ -14,6 +14,7 @@ class Phono3pySettings(Settings):
         self._is_bterta = False
         self._is_linewidth = False
         self._is_frequency_shift = False
+        self._mass_variances = None
         self._max_freepath = None
         self._mesh_divisors = None
         self._multiple_sigmas = None
@@ -78,6 +79,12 @@ class Phono3pySettings(Settings):
 
     def get_is_frequency_shift(self):
         return self._is_frequency_shift
+
+    def set_mass_variances(self, mass_variances):
+        self._mass_variances = mass_variances
+
+    def get_mass_variances(self):
+        return self._mass_variances
 
     def set_max_freepath(self, max_freepath):
         self._max_freepath = max_freepath
@@ -187,6 +194,10 @@ class Phono3pyConfParser(ConfParser):
                 if self._options.is_frequency_shift:
                     self._confs['frequency_shift'] = '.true.'
 
+            if opt.dest == 'mass_variances':
+                if self._options.mass_variances is not None:
+                    self._confs['mass_variances'] = self._options.mass_variances
+
             if opt.dest == 'max_freepath':
                 if self._options.max_freepath is not None:
                     self._confs['max_freepath'] = self._options.max_freepath
@@ -273,6 +284,13 @@ class Phono3pyConfParser(ConfParser):
             if conf_key == 'frequency_shift':
                 if confs['frequency_shift'] == '.true.':
                     self.set_parameter('is_frequency_shift', True)
+
+            if conf_key == 'mass_variances':
+                vals = [fracval(x) for x in confs['mass_variances'].split()]
+                if len(vals) < 1:
+                    self.setting_error("Mass variance parameters are incorrectly set.")
+                else:
+                    self.set_parameter('mass_variances', vals)
 
             if conf_key == 'max_freepath':
                 self.set_parameter('max_freepath', float(confs['max_freepath']))
@@ -368,6 +386,10 @@ class Phono3pyConfParser(ConfParser):
         # Calculate frequency_shifts
         if params.has_key('is_frequency_shift'):
             self._settings.set_is_frequency_shift(params['is_frequency_shift'])
+
+        # Mass variance parameters
+        if params.has_key('mass_variances'):
+            self._settings.set_mass_variances(params['mass_variances'])
 
         # Maximum mean free path
         if params.has_key('max_freepath'):

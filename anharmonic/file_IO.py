@@ -1,4 +1,5 @@
 import sys
+import os
 import numpy as np
 import h5py
 from phonopy.structure.atoms import Atoms
@@ -738,6 +739,10 @@ def read_gamma_from_hdf5(mesh,
         suffix += "-s" + sigma_str
     if filename is not None:
         suffix += "." + filename
+
+    if not os.path.exists("kappa" + suffix + ".hdf5"):
+        return False
+        
     f = h5py.File("kappa" + suffix + ".hdf5", 'r')
     gammas = f['gamma'][:]
     f.close()
