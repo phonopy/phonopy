@@ -8,6 +8,7 @@ from anharmonic.phonon3.jointDOS import get_jointDOS
 from anharmonic.phonon3.gruneisen import Gruneisen
 from anharmonic.file_IO import write_kappa_to_hdf5
 from anharmonic.file_IO import read_gamma_from_hdf5, write_damping_functions, write_linewidth, write_frequency_shift
+from anharmonic.other.isotope import Isotope
 
 class Phono3py:
     def __init__(self,
@@ -267,7 +268,10 @@ class Phono3py:
 
         self._kappa = mode_kappa
         self._gamma = gamma
-    
+
+    def get_isotope_lifetime(self):
+        pass
+
 class JointDOS:
     def __init__(self,
                  supercell,

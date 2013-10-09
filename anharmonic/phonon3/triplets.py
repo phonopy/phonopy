@@ -38,7 +38,6 @@ def get_nosym_triplets_at_q(grid_point, mesh, primitive_lattice):
                                                            primitive_lattice)
     triplets_at_q = spg.get_BZ_triplets_at_q(
         grid_point,
-        grid_address,
         bz_grid_address,
         bz_map,
         weights,
@@ -61,7 +60,7 @@ def get_bz_grid_address(mesh, primitive_lattice, with_boundary=False):
     if with_boundary:
         return bz_grid_address
     else:
-        return grid_address
+        return bz_grid_address[:np.prod(mesh)]
 
 def get_grid_point_from_address(address, mesh, with_boundary=False):
     # X runs first in XYZ

@@ -19,7 +19,7 @@ static PyObject * py_get_interaction(PyObject *self, PyObject *args);
 static PyObject * py_get_imag_self_energy(PyObject *self, PyObject *args);
 static PyObject * py_get_imag_self_energy_at_bands(PyObject *self,
 						   PyObject *args);
-static PyObject * py_set_phonon_triplets(PyObject *self, PyObject *args);
+static PyObject * py_set_phonons_at_gridpoints(PyObject *self, PyObject *args);
 static PyObject * py_get_phonon(PyObject *self, PyObject *args);
 static PyObject * py_distribute_fc3(PyObject *self, PyObject *args);
 static PyObject * py_phonopy_zheev(PyObject *self, PyObject *args);
@@ -29,7 +29,7 @@ static PyMethodDef functions[] = {
   {"interaction", py_get_interaction, METH_VARARGS, "Interaction of triplets"},
   {"imag_self_energy", py_get_imag_self_energy, METH_VARARGS, "Imaginary part of self energy"},
   {"imag_self_energy_at_bands", py_get_imag_self_energy_at_bands, METH_VARARGS, "Imaginary part of self energy at phonon frequencies of bands"},
-  {"phonon_triplets", py_set_phonon_triplets, METH_VARARGS, "Set phonon triplets"},
+  {"phonons_at_gridpoints", py_set_phonons_at_gridpoints, METH_VARARGS, "Set phonons at grid points"},
   {"phonon", py_get_phonon, METH_VARARGS, "Get phonon"},
   {"distribute_fc3", py_distribute_fc3, METH_VARARGS, "Distribute least fc3 to full fc3"},
   {"zheev", py_phonopy_zheev, METH_VARARGS, "Lapack zheev wrapper"},
@@ -42,12 +42,12 @@ PyMODINIT_FUNC init_phono3py(void)
   return;
 }
 
-static PyObject * py_set_phonon_triplets(PyObject *self, PyObject *args)
+static PyObject * py_set_phonons_at_gridpoints(PyObject *self, PyObject *args)
 {
   PyArrayObject* frequencies;
   PyArrayObject* eigenvectors;
   PyArrayObject* phonon_done_py;
-  PyArrayObject* grid_point_triplets;
+  PyArrayObject* grid_points_py;
   PyArrayObject* grid_address_py;
   PyArrayObject* mesh_py;
   PyArrayObject* shortest_vectors_fc2;
@@ -67,7 +67,7 @@ static PyObject * py_set_phonon_triplets(PyObject *self, PyObject *args)
 			&frequencies,
 			&eigenvectors,
 			&phonon_done_py,
-			&grid_point_triplets,
+			&grid_points_py,
 			&grid_address_py,
 			&mesh_py,
 			&fc2_py,
@@ -94,7 +94,7 @@ static PyObject * py_set_phonon_triplets(PyObject *self, PyObject *args)
   /* So eigenvectors should not be used in Python side */
   Carray* eigvecs = convert_to_carray(eigenvectors);
   char* phonon_done = (char*)phonon_done_py->data;
-  Iarray* triplets = convert_to_iarray(grid_point_triplets);
+  Iarray* grid_points = convert_to_iarray(grid_points_py);
   const int* grid_address = (int*)grid_address_py->data;
   const int* mesh = (int*)mesh_py->data;
   Darray* fc2 = convert_to_darray(fc2_py);
@@ -120,29 +120,29 @@ static PyObject * py_set_phonon_triplets(PyObject *self, PyObject *args)
     q_dir = (double*)q_direction->data;
   }
 
-  set_phonon_triplets(freqs,
-		      eigvecs,
-		      phonon_done,
-		      triplets,
-		      grid_address,
-		      mesh,
-		      fc2,
-		      svecs_fc2,
-		      multi_fc2,
-		      masses_fc2,
-		      p2s_fc2,
-		      s2p_fc2,
-		      unit_conversion_factor,
-		      born,
-		      dielectric,
-		      rec_lat,
-		      q_dir,
-		      nac_factor,
-		      uplo);
+  set_phonons_at_gridpoints(freqs,
+			    eigvecs,
+			    phonon_done,
+			    grid_points,
+			    grid_address,
+			    mesh,
+			    fc2,
+			    svecs_fc2,
+			    multi_fc2,
+			    masses_fc2,
+			    p2s_fc2,
+			    s2p_fc2,
+			    unit_conversion_factor,
+			    born,
+			    dielectric,
+			    rec_lat,
+			    q_dir,
+			    nac_factor,
+			    uplo);
 
   free(freqs);
   free(eigvecs);
-  free(triplets);
+  free(grid_points);
   free(fc2);
   free(svecs_fc2);
   free(multi_fc2);

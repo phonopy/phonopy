@@ -31,6 +31,52 @@ def get_dynamical_matrix(fc2,
         dm.set_nac_params(nac_params)
     return dm
 
+def set_phonon_c(dm,
+                 frequencies,
+                 eigenvectors,
+                 phonon_done,
+                 grid_points,
+                 grid_address,
+                 mesh,
+                 frequency_factor_to_THz,
+                 nac_q_direction,
+                 lapack_zheev_uplo):
+    import anharmonic._phono3py as phono3c
+    svecs, multiplicity = dm.get_shortest_vectors()
+    masses = np.array(dm.get_primitive().get_masses(), dtype='double')
+    rec_lattice = np.array(
+        np.linalg.inv(dm.get_primitive().get_cell()),
+        dtype='double').copy()
+    if dm.is_nac():
+        born = dm.get_born_effective_charges()
+        nac_factor = dm.get_nac_factor()
+        dielectric = dm.get_dielectric_constant()
+    else:
+        born = None
+        nac_factor = 0
+        dielectric = None
+
+    phono3c.phonons_at_gridpoints(
+        frequencies,
+        eigenvectors,
+        phonon_done,
+        grid_points,
+        grid_address,
+        np.array(mesh, dtype='intc'),
+        dm.get_force_constants(),
+        svecs,
+        multiplicity,
+        masses,
+        dm.get_primitive_to_supercell_map(),
+        dm.get_supercell_to_primitive_map(),
+        frequency_factor_to_THz,
+        born,
+        dielectric,
+        rec_lattice,
+        nac_q_direction,
+        nac_factor,
+        lapack_zheev_uplo)
+
 def set_phonon_py(grid_point,
                   phonon_done,
                   frequencies,
@@ -236,41 +282,16 @@ class Interaction:
                             self._cutoff_frequency)
 
     def _set_phonon_c(self):
-        import anharmonic._phono3py as phono3c
-        
-        svecs, multiplicity = self._dm.get_shortest_vectors()
-        masses = np.array(self._dm.get_primitive().get_masses(), dtype='double')
-        rec_lattice = np.array(
-            np.linalg.inv(self._dm.get_primitive().get_cell()),
-            dtype='double').copy()
-        if self._dm.is_nac():
-            born = self._dm.get_born_effective_charges()
-            nac_factor = self._dm.get_nac_factor()
-            dielectric = self._dm.get_dielectric_constant()
-        else:
-            born = None
-            nac_factor = 0
-            dielectric = None
-
-        phono3c.phonon_triplets(self._frequencies,
-                                self._eigenvectors,
-                                self._phonon_done,
-                                self._triplets_at_q,
-                                self._grid_address,
-                                self._mesh,
-                                self._dm.get_force_constants(),
-                                svecs,
-                                multiplicity,
-                                masses,
-                                self._dm.get_primitive_to_supercell_map(),
-                                self._dm.get_supercell_to_primitive_map(),
-                                self._frequency_factor_to_THz,
-                                born,
-                                dielectric,
-                                rec_lattice,
-                                self._nac_q_direction,
-                                nac_factor,
-                                self._lapack_zheev_uplo)
+        set_phonon_c(self._dm,
+                     self._frequencies,
+                     self._eigenvectors,
+                     self._phonon_done,
+                     self._triplets_at_q.flatten(),
+                     self._grid_address,
+                     self._mesh,
+                     self._frequency_factor_to_THz,
+                     self._nac_q_direction,
+                     self._lapack_zheev_uplo)
         
     def _run_py(self):
         r2r = RealToReciprocal(self._fc3,

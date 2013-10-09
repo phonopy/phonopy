@@ -45,58 +45,6 @@ static void real_to_normal_sym_q(double *fc3_normal_squared,
 				 const int num_band0,
 				 const int num_band,
 				 const double cutoff_frequency);
-static int collect_undone_grid_points(int *undone,
-				      char *phonon_done,
-				      const Iarray *triplets);
-
-void set_phonon_triplets(Darray *frequencies,
-			 Carray *eigenvectors,
-			 char *phonon_done,
-			 const Iarray *triplets,
-			 const int *grid_address,
-			 const int *mesh,
-			 const Darray *fc2,
-			 const Darray *svecs_fc2,
-			 const Iarray *multi_fc2,
-			 const double *masses_fc2,
-			 const int *p2s_fc2,
-			 const int *s2p_fc2,
-			 const double unit_conversion_factor,
-			 const double *born,
-			 const double *dielectric,
-			 const double *reciprocal_lattice,
-			 const double *q_direction,
-			 const double nac_factor,
-			 const char uplo)
-{
-  int num_undone;
-  int *undone;
-
-  undone = (int*)malloc(sizeof(int) * frequencies->dims[0]);
-  num_undone = collect_undone_grid_points(undone, phonon_done, triplets);
-
-  get_undone_phonons(frequencies,
-		     eigenvectors,
-		     undone,
-		     num_undone,
-		     grid_address,
-		     mesh,
-		     fc2,
-		     svecs_fc2,
-		     multi_fc2,
-		     masses_fc2,
-		     p2s_fc2,
-		     s2p_fc2,
-		     unit_conversion_factor,
-		     born,
-		     dielectric,
-		     reciprocal_lattice,
-		     q_direction,
-		     nac_factor,
-		     uplo);
-
-  free(undone);
-}
 
 /* fc3_normal_squared[num_triplets, num_band0, num_band, num_band] */
 void get_interaction(Darray *fc3_normal_squared,
@@ -302,23 +250,3 @@ static void real_to_normal_sym_q(double *fc3_normal_squared,
 
 }
 
-static int collect_undone_grid_points(int *undone,
-				      char *phonon_done,
-				      const Iarray *triplets)
-{
-  int i, j, gp, num_undone;
-
-  num_undone = 0;
-  for (i = 0; i < triplets->dims[0]; i++) {
-    for (j = 0; j < 3; j++) {
-      gp = triplets->data[i * 3 + j];
-      if (phonon_done[gp] == 0) {
-	undone[num_undone] = gp;
-	num_undone++;
-	phonon_done[gp] = 1;
-      }
-    }
-  }
-
-  return num_undone;
-}

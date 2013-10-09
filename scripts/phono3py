@@ -58,7 +58,8 @@ from anharmonic.file_IO import write_fc2_dat, write_fc3_dat,\
 from anharmonic.phonon3.triplets import get_coarse_ir_grid_points
 from anharmonic.phonon3.displacement_fc3 import get_third_order_displacements
 from anharmonic.settings import Phono3pyConfParser
-from anharmonic.phonon3 import Phono3py, JointDOS, get_gruneisen_parameters    
+from anharmonic.phonon3 import Phono3py, JointDOS, get_gruneisen_parameters
+from anharmonic.other.isotope import Isotope
 
 phono3py_version = "0.6.2"
 
@@ -108,6 +109,7 @@ parser.set_defaults(amplitude=None,
                     is_displacement=False,
                     is_nosym=False,
                     is_gruneisen=False,
+                    is_isotope=False,
                     is_joint_dos=False,
                     is_linewidth=False,
                     is_frequency_shift=False,
@@ -230,6 +232,9 @@ parser.add_option("--gv_delta_q", dest="gv_delta_q", type="float",
 parser.add_option("--ion_clamped", dest="ion_clamped",
                   action="store_true",
                   help="Atoms are clamped under applied strain in Gruneisen parameter calculation")
+parser.add_option("--isotope", dest="is_isotope",
+                  action="store_true",
+                  help="Isotope scattering lifetime")
 parser.add_option("--jdos",
                   dest="is_joint_dos",
                   action="store_true",
@@ -589,6 +594,7 @@ else:
 
     # fc3
     if (options.is_joint_dos or
+        options.is_isotope or
         settings.get_read_gamma() or
         settings.get_read_amplitude()):
         fc3 = None
@@ -755,6 +761,15 @@ else:
                             log_level=log_level)
             jdos.get_jointDOS(grid_points,
                               filename=options.output_filename)
+        elif options.is_isotope:
+            mass_variance = None
+            iso = Isotope(mesh, mass_variance)
+            iso.set_dynamical_matrix(fc2,
+                                     supercell_dm,
+                                     primitive_dm,
+                                     nac_params=nac_params,
+                                     frequency_scale_factor=freq_scale)
+            print iso.run(0, 3)
         else:
             if log_level:
                 print "Cutoff frequency:", settings.get_cutoff_frequency()
