@@ -325,7 +325,6 @@ int spg_get_triplets_reciprocal_mesh_at_q(int weights[],
 /* Number of ir-triplets is returned. */
 int spg_get_BZ_triplets_at_q(int triplets[][3],
 			     const int grid_point,
-			     SPGCONST int grid_address[][3],
 			     SPGCONST int bz_grid_address[][3],
 			     const int bz_map[],
 			     const int weights[],

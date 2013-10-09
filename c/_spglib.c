@@ -621,16 +621,14 @@ static PyObject * get_triplets_reciprocal_mesh_at_q(PyObject *self, PyObject *ar
 static PyObject * get_BZ_triplets_at_q(PyObject *self, PyObject *args)
 {
   PyArrayObject* triplets_py;
-  PyArrayObject* grid_address_py;
   PyArrayObject* bz_grid_address_py;
   PyArrayObject* bz_map_py;
   PyArrayObject* weights_py;
   PyArrayObject* mesh_py;
   int grid_point;
-  if (!PyArg_ParseTuple(args, "OiOOOOO",
+  if (!PyArg_ParseTuple(args, "OiOOOO",
 			&triplets_py,
 			&grid_point,
-			&grid_address_py,
 			&bz_grid_address_py,
 			&bz_map_py,
 			&weights_py,
@@ -639,7 +637,6 @@ static PyObject * get_BZ_triplets_at_q(PyObject *self, PyObject *args)
   }
 
   int (*triplets)[3] = (int(*)[3])triplets_py->data;
-  SPGCONST int (*grid_address)[3] = (int(*)[3])grid_address_py->data;
   SPGCONST int (*bz_grid_address)[3] = (int(*)[3])bz_grid_address_py->data;
   const int *bz_map = (int*)bz_map_py->data;
   const int *weights = (int*)weights_py->data;
@@ -648,7 +645,6 @@ static PyObject * get_BZ_triplets_at_q(PyObject *self, PyObject *args)
   
   num_ir = spg_get_BZ_triplets_at_q(triplets,
 				    grid_point,
-				    grid_address,
 				    bz_grid_address,
 				    bz_map,
 				    weights,

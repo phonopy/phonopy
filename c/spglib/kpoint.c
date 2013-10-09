@@ -80,7 +80,6 @@ static int get_ir_triplets_at_q(int weights[],
 				SPGCONST PointSymmetry * pointgroup);
 static int get_BZ_triplets_at_q(int triplets[][3],
 				const int grid_point,
-				SPGCONST int grid_address[][3],
 				SPGCONST int bz_grid_address[][3],
 				const int bz_map[],
 				const int weights[],
@@ -246,7 +245,6 @@ int kpt_get_ir_triplets_at_q(int weights[],
 
 int kpt_get_BZ_triplets_at_q(int triplets[][3],
 			     const int grid_point,
-			     SPGCONST int grid_address[][3],
 			     SPGCONST int bz_grid_address[][3],
 			     const int bz_map[],
 			     const int weights[],
@@ -254,7 +252,6 @@ int kpt_get_BZ_triplets_at_q(int triplets[][3],
 {
   return get_BZ_triplets_at_q(triplets,
 			      grid_point,
-			      grid_address,
 			      bz_grid_address,
 			      bz_map,
 			      weights,
@@ -573,20 +570,20 @@ static int relocate_BZ_grid_address(int bz_grid_address[][3],
   double tolerance, min_distance;
   double vector[3], distance[27];
   int bzmesh[3], bzmesh_double[3], address_double[3];
-  int i, j, k, min_index, num_gp, bzgp;
+  int i, j, k, min_index, boundary_gp, total_num_gp, bzgp, gp;
 
   tolerance = get_tolerance_for_BZ_reduction(rec_lattice);
   for (i = 0; i < 3; i++) {
     bzmesh[i] = mesh[i] * 2 - 1;
     bzmesh_double[i] = bzmesh[i] * 2;
   }
-  num_gp = 0;
-
   for (i = 0; i < bzmesh[0] * bzmesh[1] * bzmesh[2]; i++) {
     bz_map[i] = -1;
   }
   
-  for (i = 0; i < mesh[0] * mesh[1] * mesh[2]; i++) {
+  boundary_gp = 0;
+  total_num_gp = mesh[0] * mesh[1] * mesh[2];
+  for (i = 0; i < total_num_gp; i++) {
     for (j = 0; j < 27; j++) {
       for (k = 0; k < 3; k++) {
 	address_double[k] =
@@ -606,28 +603,29 @@ static int relocate_BZ_grid_address(int bz_grid_address[][3],
 
     for (j = 0; j < 27; j++) {
       if (distance[j] < min_distance + tolerance) {
-	for (k = 0; k < 3; k++) {
-	  bz_grid_address[num_gp][k] = 
-	    grid_address[i][k] + search_space[j][k] * mesh[k];
-	  address_double[k] = bz_grid_address[num_gp][k] * 2 + is_shift[k];
+	if (j == min_index) {
+	  gp = i;
+	} else {
+	  gp = boundary_gp + total_num_gp;
 	}
 	for (k = 0; k < 3; k++) {
+	  bz_grid_address[gp][k] = 
+	    grid_address[i][k] + search_space[j][k] * mesh[k];
+	  address_double[k] = bz_grid_address[gp][k] * 2 + is_shift[k];
 	  if (address_double[k] < 0) {
 	    address_double[k] += bzmesh_double[k];
 	  }
 	}
 	bzgp = get_grid_point(address_double, bzmesh);
-	bz_map[bzgp] = num_gp;
-	num_gp++;
+	bz_map[bzgp] = gp;
+	if (j != min_index) {
+	  boundary_gp++;
+	}
       }
-    }
-
-    for (j = 0; j < 3; j++) {
-      grid_address[i][j] += search_space[min_index][j] * mesh[j];
     }
   }
 
-  return num_gp;
+  return boundary_gp + total_num_gp;
 }
 
 static double get_tolerance_for_BZ_reduction(SPGCONST double rec_lattice[3][3])
@@ -755,7 +753,6 @@ static int get_ir_triplets_at_q(int weights[],
 
 static int get_BZ_triplets_at_q(int triplets[][3],
 				const int grid_point,
-				SPGCONST int grid_address[][3],
 				SPGCONST int bz_grid_address[][3],
 				const int bz_map[],
 				const int weights[],
@@ -782,8 +779,8 @@ static int get_BZ_triplets_at_q(int triplets[][3],
 #pragma omp parallel for private(j, k, address, address_double)
   for (i = 0; i < num_ir; i++) {
     for (j = 0; j < 3; j++) {
-      address[0][j] = grid_address[grid_point][j];
-      address[1][j] = grid_address[ir_grid_points[i]][j];
+      address[0][j] = bz_grid_address[grid_point][j];
+      address[1][j] = bz_grid_address[ir_grid_points[i]][j];
       address[2][j] = - address[0][j] - address[1][j];
     }
     get_third_q_of_triplets_at_q(address,
@@ -951,5 +948,3 @@ static void get_vector_modulo(int v[3], const int m[3])
       v[i] += m[i];
   }
 }
-
-
