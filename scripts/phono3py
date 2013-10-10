@@ -58,8 +58,7 @@ from anharmonic.file_IO import write_fc2_dat, write_fc3_dat,\
 from anharmonic.phonon3.triplets import get_coarse_ir_grid_points
 from anharmonic.phonon3.displacement_fc3 import get_third_order_displacements
 from anharmonic.settings import Phono3pyConfParser
-from anharmonic.phonon3 import Phono3py, JointDOS, get_gruneisen_parameters
-from anharmonic.other.isotope import Isotope
+from anharmonic.phonon3 import Phono3py, JointDOS, IsotopeScattering, get_gruneisen_parameters
 
 phono3py_version = "0.6.2"
 
@@ -766,17 +765,32 @@ else:
             jdos.get_jointDOS(grid_points,
                               filename=options.output_filename)
         elif options.is_isotope:
+            if log_level:
+                print "Cutoff frequency:", settings.get_cutoff_frequency()
             mass_variances = settings.get_mass_variances()
-            iso = Isotope(mesh, mass_variances)
+            iso = IsotopeScattering(
+                mesh,
+                mass_variances,
+                frequency_factor_to_THz=factor,
+                symprec=options.symprec,
+                cutoff_frequency=settings.get_cutoff_frequency(),
+                lapack_zheev_uplo=options.uplo)
             iso.set_dynamical_matrix(fc2,
                                      supercell_dm,
                                      primitive_dm,
                                      nac_params=nac_params,
                                      frequency_scale_factor=freq_scale)
-            band_indeces = np.intc([x for bi in settings.get_band_indices()
-                                    for x in bi])
+            if settings.get_band_indices() is None:
+                band_indices = None
+            else:
+                band_indices = np.intc([x for bi in settings.get_band_indices()
+                                        for x in bi])
             for gp in grid_points:
-                print iso.run(gp, band_indeces)
+                for sigma in multiple_sigmas:
+                    if log_level:
+                        print "Sigma:", sigma
+                    iso.set_sigma(sigma)
+                    print iso.run(gp, band_indices)
         else:
             if log_level:
                 print "Cutoff frequency:", settings.get_cutoff_frequency()
@@ -823,6 +837,7 @@ else:
                     t_max=settings.get_max_temperature(),
                     t_min=settings.get_min_temperature(),
                     t_step=settings.get_temperature_step(),
+                    mass_variances=settings.get_mass_variances(),
                     grid_points=grid_points,
                     mesh_divisors=settings.get_mesh_divisors(),
                     coarse_mesh_shifts=settings.get_coarse_mesh_shifts(),

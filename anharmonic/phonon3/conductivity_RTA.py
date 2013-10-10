@@ -7,6 +7,7 @@ from phonopy.phonon.thermal_properties import mode_cv
 from anharmonic.file_IO import write_kappa_to_hdf5, write_triplets
 from anharmonic.phonon3.triplets import get_grid_address, reduce_grid_points, get_ir_grid_points, from_coarse_to_dense_grid_points, get_grid_points_in_Brillouin_zone, get_bz_grid_address
 from anharmonic.phonon3.imag_self_energy import ImagSelfEnergy
+from anharmonic.other.isotope import Isotope
 
 unit_to_WmK = ((THz * Angstrom) ** 2 / (Angstrom ** 3) * EV / THz /
                (2 * np.pi)) # 2pi comes from definition of lifetime.
@@ -19,6 +20,7 @@ class conductivity_RTA:
                  t_max=1500,
                  t_min=0,
                  t_step=10,
+                 mass_variances=None,
                  mesh_divisors=None,
                  coarse_mesh_shifts=None,
                  cutoff_lifetime=1e-4, # in second
@@ -66,6 +68,7 @@ class conductivity_RTA:
         self._frequencies = None
         self._cv = None
         self._gv = None
+        self._gamma_iso = None
 
         self._mesh = None
         self._mesh_divisors = None
@@ -76,6 +79,11 @@ class conductivity_RTA:
         volume = self._primitive.get_volume()
         self._conversion_factor = unit_to_WmK / volume
         self._sum_num_kstar = 0
+
+        self._isotope = None
+        self._mass_variances = None
+        if mass_variances is not None:
+            self._set_isotope(mass_variances)
 
     def get_mesh_divisors(self):
         return self._mesh_divisors
@@ -181,6 +189,10 @@ class conductivity_RTA:
                        (grid_point, i + 1, len(self._grid_points)))
                 print "q-point: (%5.2f %5.2f %5.2f)" % tuple(self._qpoint)
                 print "Lifetime cutoff (sec): %-10.3e" % self._cutoff_lifetime
+                if self._isotope is not None:
+                    print "Mass variance parameters:",
+                    print ("%5.2e " * len(self._mass_variances)) % tuple(
+                        self._mass_variances)
 
             if self._read_gamma:
                 self._frequencies[i] = self._get_phonon_c()
@@ -197,6 +209,9 @@ class conductivity_RTA:
                 self._ise.run_interaction()
                 self._frequencies[i] = self._ise.get_phonon_at_grid_point()[0]
                 self._set_gamma_at_sigmas(i)
+
+            if self._isotope is not None:
+                self._set_gamma_isotope_at_sigmas(i)
 
             self._set_kappa_at_sigmas(i)
 
@@ -225,17 +240,33 @@ class conductivity_RTA:
 
         self._frequencies = np.zeros((len(self._grid_points),
                                       num_freqs), dtype='double')
+
+        self._gamma_iso = np.zeros((len(self._sigmas),
+                                    len(self._grid_points),
+                                    num_freqs), dtype='double')
         
     def _set_gamma_at_sigmas(self, i):
         freqs = self._frequencies[i]
         for j, sigma in enumerate(self._sigmas):
             if self._log_level > 0:
-                print "Calculating Gamma with sigma=%s" % sigma
+                print "Calculating ph-ph strength with sigma=%s" % sigma
             self._ise.set_sigma(sigma)
             for k, t in enumerate(self._temperatures):
                 self._ise.set_temperature(t)
                 self._ise.run()
                 self._gamma[j, i, k] = self._ise.get_imag_self_energy()
+                
+    def _set_gamma_isotope_at_sigmas(self, i):
+        for j, sigma in enumerate(self._sigmas):
+            if self._log_level > 0:
+                print "Calculating ph-isotope strength with sigma=%s" % sigma
+            pp_freqs, pp_eigvecs, pp_phonon_done = self._pp.get_phonons()
+            self._isotope.set_phonons(pp_freqs,
+                                      pp_eigvecs,
+                                      pp_phonon_done,
+                                      dm=self._dynamical_matrix)
+            self._isotope.run(i)
+            self._gamma_iso[j, i] = self._isotope.get_gamma()
     
     def _set_kappa_at_sigmas(self, i):
         freqs = self._frequencies[i]
@@ -256,10 +287,16 @@ class conductivity_RTA:
         # Kappa
         for j, sigma in enumerate(self._sigmas):
             for k, l in list(np.ndindex(len(self._temperatures), len(freqs))):
-                if self._gamma[j, i, k, l] < 0.5 / self._cutoff_lifetime / THz:
+                g_phph = self._gamma[j, i, k, l]
+                if g_phph < 0.5 / self._cutoff_lifetime / THz:
                     continue
+                if self._isotope is None:
+                    g_sum = g_phph
+                else:
+                    g_iso = self._gamma_iso[j, i, l]
+                    g_sum = g_phph + g_iso
                 self._kappa[j, i, k, l, :] = (
-                    gv_sum2[:, l] * cv[k, l] / (self._gamma[j, i, k, l] * 2) *
+                    gv_sum2[:, l] * cv[k, l] / (g_sum * 2) *
                     self._conversion_factor)
 
     def _get_gv_by_gv(self, i):
@@ -361,7 +398,6 @@ class conductivity_RTA:
                         f * THzToEv), 0)
         return cv
 
-
     def _set_mesh_numbers(self, mesh_divisors=None, coarse_mesh_shifts=None):
         self._mesh = self._pp.get_mesh_numbers()
 
@@ -433,13 +469,17 @@ class conductivity_RTA:
                        None,
                        nac_factor,
                        uplo)
-        # dm.set_dynamical_matrix(self._qpoint)
-        # dynmat = dm.get_dynamical_matrix()
-        # eigvals = np.linalg.eigvalsh(dynmat).real
-        # frequencies = (np.sqrt(np.abs(eigvals)) * np.sign(eigvals) *
-        #                self._frequency_factor_to_THz)
-
         return frequencies
+
+    def _set_isotope(self, mass_variances):
+        self._mass_variances = np.array(mass_variances, dtype='double')
+        self._isotope = Isotope(
+            self._mesh,
+            mass_variances,
+            frequency_factor_to_THz=self._frequency_factor_to_THz,
+            symprec=self._symmetry.get_symmetry_tolerance(),
+            cutoff_frequency=self._cutoff_frequency,
+            lapack_zheev_uplo=self._pp.get_lapack_zheev_uplo())
 
     def _show_log(self,
                   q,

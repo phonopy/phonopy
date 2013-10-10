@@ -9,6 +9,7 @@ from anharmonic.phonon3.gruneisen import Gruneisen
 from anharmonic.file_IO import write_kappa_to_hdf5
 from anharmonic.file_IO import read_gamma_from_hdf5, write_damping_functions, write_linewidth, write_frequency_shift
 from anharmonic.other.isotope import Isotope
+from phonopy.units import VaspToTHz
 
 class Phono3py:
     def __init__(self,
@@ -18,13 +19,12 @@ class Phono3py:
                  mesh,
                  band_indices=None,
                  cutoff_frequency=1e-4,
-                 frequency_factor_to_THz=None,
+                 frequency_factor_to_THz=VaspToTHz,
                  is_nosym=False,
                  symmetrize_fc3_q=False,
                  symprec=1e-5,
                  log_level=0,
                  lapack_zheev_uplo='L'):
-
         self._fc3 = fc3
         self._supercell = supercell
         self._primitive = primitive
@@ -196,6 +196,7 @@ class Phono3py:
                                  t_max=1500,
                                  t_min=0,
                                  t_step=10,
+                                 mass_variances=None,
                                  grid_points=None,
                                  mesh_divisors=None,
                                  coarse_mesh_shifts=None,
@@ -213,6 +214,7 @@ class Phono3py:
                               t_max=t_max,
                               t_min=t_min,
                               t_step=t_step,
+                              mass_variances=mass_variances,
                               mesh_divisors=mesh_divisors,
                               coarse_mesh_shifts=coarse_mesh_shifts,
                               cutoff_lifetime=cutoff_lifetime,
@@ -278,8 +280,51 @@ class Phono3py:
         self._kappa = mode_kappa
         self._gamma = gamma
 
-    def get_isotope_lifetime(self):
-        pass
+class IsotopeScattering:
+    def __init__(self,
+                 mesh,
+                 mass_variances, # length of list is num_atom.
+                 sigma=0.1,
+                 frequency_factor_to_THz=VaspToTHz,
+                 symprec=1e-5,
+                 cutoff_frequency=None,
+                 lapack_zheev_uplo='L'):
+        self._iso = Isotope(mesh,
+                            mass_variances,
+                            sigma=sigma,
+                            frequency_factor_to_THz=frequency_factor_to_THz,
+                            symprec=symprec,
+                            cutoff_frequency=cutoff_frequency,
+                            lapack_zheev_uplo=lapack_zheev_uplo)
+
+    def run(self, grid_point, band_indices=None):
+        if band_indices is None:
+            bi = [np.arange(self._primitive.get_number_of_atoms() * 3)]
+        else:
+            bi = band_indices
+        self._iso.run(grid_point, bi)
+        g_iso = self._iso.get_gamma()
+        return g_iso
+    
+    def set_dynamical_matrix(self,
+                             fc2,
+                             supercell,
+                             primitive,
+                             nac_params=None,
+                             frequency_scale_factor=None,
+                             decimals=None):
+        self._primitive = primitive
+        self._iso.set_dynamical_matrix(
+            fc2,
+            supercell,
+            primitive,
+            nac_params=nac_params,
+            frequency_scale_factor=frequency_scale_factor,
+            decimals=decimals)
+
+    def set_sigma(self, sigma):
+        self._iso.set_sigma(sigma)
+        
 
 class JointDOS:
     def __init__(self,
@@ -291,7 +336,7 @@ class JointDOS:
                  sigma=None,
                  frequency_step=None,
                  factor=None,
-                 frequency_factor=None,
+                 frequency_factor=VaspToTHz,
                  frequency_scale_factor=None,
                  is_nosym=False,
                  symprec=1e-5,

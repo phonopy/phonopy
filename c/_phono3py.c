@@ -10,8 +10,7 @@
 #include "phonon3_h/fc3.h"
 #include "phonon3_h/interaction.h"
 #include "phonon3_h/imag_self_energy.h"
-#include "phonon4_h/real_to_reciprocal.h"
-#include "phonon4_h/frequency_shift.h"
+#include "other_h/isotope.h"
 
 static PyObject * py_get_jointDOS(PyObject *self, PyObject *args);
 
@@ -23,6 +22,7 @@ static PyObject * py_set_phonons_at_gridpoints(PyObject *self, PyObject *args);
 static PyObject * py_get_phonon(PyObject *self, PyObject *args);
 static PyObject * py_distribute_fc3(PyObject *self, PyObject *args);
 static PyObject * py_phonopy_zheev(PyObject *self, PyObject *args);
+static PyObject * py_get_isotope_strength(PyObject *self, PyObject *args);
 
 static PyMethodDef functions[] = {
   {"joint_dos", py_get_jointDOS, METH_VARARGS, "Calculate joint density of states"},
@@ -33,6 +33,7 @@ static PyMethodDef functions[] = {
   {"phonon", py_get_phonon, METH_VARARGS, "Get phonon"},
   {"distribute_fc3", py_distribute_fc3, METH_VARARGS, "Distribute least fc3 to full fc3"},
   {"zheev", py_phonopy_zheev, METH_VARARGS, "Lapack zheev wrapper"},
+  {"isotope_strength", py_get_isotope_strength, METH_VARARGS, "Isotope scattering strength"},
   {NULL, NULL, 0, NULL}
 };
 
@@ -420,6 +421,56 @@ static PyObject * py_get_imag_self_energy_at_bands(PyObject *self,
 				cutoff_frequency);
 
   free(fc3_normal_squared);
+  
+  Py_RETURN_NONE;
+}
+
+static PyObject * py_get_isotope_strength(PyObject *self, PyObject *args)
+{
+  PyArrayObject* gamma_py;
+  PyArrayObject* frequencies_py;
+  PyArrayObject* eigenvectors_py;
+  PyArrayObject* band_indicies_py;
+  PyArrayObject* mass_variances_py;
+  int grid_point;
+  int num_grid_points;
+  double cutoff_frequency;
+  double sigma;
+
+  if (!PyArg_ParseTuple(args, "OiOOOOidd",
+			&gamma_py,
+			&grid_point,
+			&mass_variances_py,
+			&frequencies_py,
+			&eigenvectors_py,
+			&band_indicies_py,
+			&num_grid_points,
+			&sigma,
+			&cutoff_frequency)) {
+    return NULL;
+  }
+
+
+  double* gamma = (double*)gamma_py->data;
+  const double* frequencies = (double*)frequencies_py->data;
+  const lapack_complex_double* eigenvectors =
+    (lapack_complex_double*)eigenvectors_py->data;
+  const int* band_indicies = (int*)band_indicies_py->data;
+  const double* mass_variances = (double*)mass_variances_py->data;
+  const int num_band = (int)frequencies_py->dimensions[1];
+  const int num_band0 = (int)band_indicies_py->dimensions[0];
+
+  get_isotope_scattering_strength(gamma,
+				  grid_point,
+				  mass_variances,
+				  frequencies,
+				  eigenvectors,
+				  num_grid_points,
+				  band_indicies,
+				  num_band,
+				  num_band0,
+				  sigma,
+				  cutoff_frequency);
   
   Py_RETURN_NONE;
 }

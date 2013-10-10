@@ -9,14 +9,21 @@ class Isotope:
     def __init__(self,
                  mesh,
                  mass_variances, # length of list is num_atom.
+                 band_indices=None,
                  sigma=0.1,
                  frequency_factor_to_THz=VaspToTHz,
                  symprec=1e-5,
+                 cutoff_frequency=None,
                  lapack_zheev_uplo='L'):
         self._mesh = mesh
-        self._mass_variances = mass_variances
+        self._mass_variances = np.array(mass_variances, dtype='double')
+        self._band_indices = band_indices
         self._sigma = sigma
         self._symprec = symprec
+        if cutoff_frequency is None:
+            self._cutoff_frequency = 0
+        else:
+            self._cutoff_frequency = cutoff_frequency
         self._frequency_factor_to_THz = frequency_factor_to_THz
         self._lapack_zheev_uplo = lapack_zheev_uplo
         self._nac_q_direction = None
@@ -30,11 +37,22 @@ class Isotope:
         self._dm = None
         self._band_indices = None
         self._grid_point = None
+        self._gamma = None
 
-    def run(self, grid_point, band_indices):
+    def set_sigma(self, sigma):
+        if sigma is None:
+            self._sigma = None
+        else:
+            self._sigma = float(sigma)
+
+    def run(self, grid_point):
         self._grid_point = grid_point
-        self._band_indices = band_indices
         primitive = self._dm.get_primitive()
+        num_band = primitive.get_number_of_atoms() * 3
+        if self._band_indices is None:
+            self._band_indices = np.arange(num_band, dtype='intc')
+        else:
+            self._band_indices = np.array(self._band_indices, dtype='intc')
         num_grid = np.prod(self._mesh)
         self._grid_points = np.arange(num_grid, dtype='intc')
         
@@ -49,8 +67,11 @@ class Isotope:
             primitive_lattice = np.linalg.inv(primitive.get_cell())
             self._grid_address = get_bz_grid_address(self._mesh,
                                                      primitive_lattice)
-        return self._run_py()
+        self._run_c()
 
+    def get_gamma(self):
+        return self._gamma
+        
     def set_phonons(self, frequencies, eigenvectors, phonon_done, dm=None):
         self._frequencies = frequencies
         self._eigenvectors = eigenvectors
@@ -85,26 +106,39 @@ class Isotope:
 
     def _run_c(self):
         self._set_phonon_c()
+        import anharmonic._phono3py as phono3c
+        gamma = np.zeros(len(self._band_indices), dtype='double')
+        phono3c.isotope_strength(gamma,
+                                 self._grid_point,
+                                 self._mass_variances,
+                                 self._frequencies,
+                                 self._eigenvectors,
+                                 self._band_indices,
+                                 np.prod(self._mesh),
+                                 self._sigma,
+                                 self._cutoff_frequency)
+        self._gamma = np.pi ** 2 / np.prod(self._mesh) * gamma
 
     def _run_py(self):
         for gp in self._grid_points:
             self._set_phonon_py(gp)
 
+        mass_v = np.array([[m] * 3 for m in self._mass_variances],
+                          dtype='double').flatten()
         t_inv = []
         for bi in self._band_indices:
-            vec0 = self._eigenvectors[self._grid_point][:, bi].reshape(-1, 3)
+            vec0 = self._eigenvectors[self._grid_point][:, bi].conj()
             f0 = self._frequencies[self._grid_point][bi]
             ti_sum = 0.0
-            for freqs, eigvecs in zip(self._frequencies, self._eigenvectors):
-                for f, vec in zip(freqs, eigvecs.T):
-                    ti_sum_band = 0.0
-                    for v, v0, g in zip(
-                        vec.reshape(-1, 3), vec0, self._mass_variances):
-                        ti_sum_band += g * np.abs(np.vdot(v, v0)) ** 2
+            for i in range(np.prod(self._mesh)):
+                for f, vec in zip(self._frequencies[i], self._eigenvectors[i].T):
+                    if f < self._cutoff_frequency:
+                        continue
+                    ti_sum_band = np.sum(np.abs(vec * vec0) ** 2 * mass_v)
                     ti_sum += ti_sum_band * gaussian(f0 - f, self._sigma)
             t_inv.append(np.pi ** 2 / np.prod(self._mesh) * f0 ** 2 * ti_sum)
 
-        return np.array(t_inv, dtype='double')
+        self._gamma = np.array(t_inv, dtype='double') / 2
             
     def _set_phonon_c(self):
         set_phonon_c(self._dm,
