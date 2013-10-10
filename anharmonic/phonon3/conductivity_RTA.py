@@ -249,7 +249,7 @@ class conductivity_RTA:
         freqs = self._frequencies[i]
         for j, sigma in enumerate(self._sigmas):
             if self._log_level > 0:
-                print "Calculating ph-ph strength with sigma=%s" % sigma
+                print "Calculating Gamma of ph-ph with sigma=%s" % sigma
             self._ise.set_sigma(sigma)
             for k, t in enumerate(self._temperatures):
                 self._ise.set_temperature(t)
@@ -259,7 +259,7 @@ class conductivity_RTA:
     def _set_gamma_isotope_at_sigmas(self, i):
         for j, sigma in enumerate(self._sigmas):
             if self._log_level > 0:
-                print "Calculating ph-isotope strength with sigma=%s" % sigma
+                print "Calculating Gamma of ph-isotope with sigma=%s" % sigma
             pp_freqs, pp_eigvecs, pp_phonon_done = self._pp.get_phonons()
             self._isotope.set_phonons(pp_freqs,
                                       pp_eigvecs,
