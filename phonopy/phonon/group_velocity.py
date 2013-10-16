@@ -103,7 +103,8 @@ class GroupVelocity:
                  dynamical_matrix,
                  q_length=None,
                  symmetry=None,
-                 frequency_factor_to_THz=VaspToTHz):
+                 frequency_factor_to_THz=VaspToTHz,
+                 cutoff_frequency=1e-4):
         """
         q_points is a list of sets of q-point and q-direction:
         [[q-point, q-direction], [q-point, q-direction], ...]
@@ -121,6 +122,7 @@ class GroupVelocity:
             self._ddm = None
         self._symmetry = symmetry
         self._factor = frequency_factor_to_THz
+        self._cutoff_frequency = cutoff_frequency
 
         self._directions = np.array([[1, 2, 3],
                                      [1, 0, 0],
@@ -168,8 +170,11 @@ class GroupVelocity:
             gv[pos:pos+len(deg)] = self._perturb_D(ddms, eigvecs[:, deg])
             pos += len(deg)
 
-        for i in range(3):
-            gv[:, i] *= self._factor ** 2 / freqs / 2
+        for i, f in enumerate(freqs):
+            if f > self._cutoff_frequency:
+                gv[i, :] *= self._factor ** 2 / f / 2
+            else:
+                gv[i, :] = 0
 
         if self._perturbation is None:
             return self._symmetrize_group_velocity(gv, q)
