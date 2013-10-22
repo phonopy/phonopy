@@ -148,7 +148,7 @@ class Interaction:
     def run(self, lang='C'):
         num_band = self._primitive.get_number_of_atoms() * 3
 
-        mesh_with_boundary = np.prod(self._mesh + 1)
+        mesh_with_boundary = self._mesh + 1
         num_grid = np.prod(mesh_with_boundary)
         num_triplets = len(self._triplets_at_q)
         self._phonon_done = np.zeros(num_grid, dtype='byte')

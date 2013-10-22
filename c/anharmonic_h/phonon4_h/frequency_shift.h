@@ -27,7 +27,7 @@ get_fc4_normal_for_frequency_shift(double *fc4_normal_real,
 				   const double *masses,
 				   const int *p2s_map,
 				   const int *s2p_map,
-				   const Iarray *band_indices,
+				   const Iarray *band_indicies,
 				   const double cutoff_frequency);
 void reciprocal_to_normal4(lapack_complex_double *fc4_normal,
 			   const lapack_complex_double *fc4_reciprocal,

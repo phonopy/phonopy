@@ -62,21 +62,25 @@ def get_bz_grid_address(mesh, primitive_lattice, with_boundary=False):
     else:
         return bz_grid_address[:np.prod(mesh)]
 
-def get_grid_point_from_address(address, mesh, with_boundary=False):
+def get_grid_point_from_address(address, mesh):
     # X runs first in XYZ
     # (*In spglib, Z first is possible with MACRO setting.)
-    if with_boundary:
-        m = [x + (x % 2 == 0) for x in mesh]
-    else:
-        m = mesh
+    m = mesh
     return (address[0] % m[0] +
             (address[1] % m[1]) * m[0] +
             (address[2] % m[2]) * m[0] * m[1])
 
-def invert_grid_point(grid_point, grid_address, mesh):
+def get_bz_grid_point_from_address(address, mesh, bz_map):
+    # X runs first in XYZ
+    # (*In spglib, Z first is possible with MACRO setting.)
+    # 2m-1 is defined in kpoint.c of spglib.
+    m = 2 * np.array(mesh, dtype='intc') - 1
+    return bz_map[get_grid_point_from_address(address, m)]
+
+def invert_grid_point(grid_point, mesh, grid_address, bz_map):
     # gp --> [address] --> [-address] --> inv_gp
     address = grid_address[grid_point]
-    return get_grid_point_from_address(-address, mesh)
+    return get_bz_grid_point_from_address(-address, mesh, bz_map)
 
 def get_ir_grid_points(mesh, primitive, mesh_shifts=[False, False, False]):
     grid_mapping_table, grid_address = spg.get_ir_reciprocal_mesh(

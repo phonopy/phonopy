@@ -47,7 +47,10 @@ class FrequencyShift:
         symmetry = Symmetry(primitive, symprec=symprec)
         self._point_group_operations = symmetry.get_pointgroup_operations()
 
-        self._grid_address = get_grid_address(mesh)
+        self._grid_address = None
+        self._bz_map = None
+        self._set_grid_address()
+        
         self._grid_point = None
         self._quartets_at_q = None
         self._weights_at_q = None
@@ -64,11 +67,12 @@ class FrequencyShift:
         self._unit_conversion = (EV / Angstrom ** 4 / AMU ** 2
                                  / (2 * np.pi * THz) ** 2
                                  * Hbar * EV / (2 * np.pi * THz) / 8
-                                 / len(self._grid_address))
+                                 / np.prod(self._mesh))
 
     def run(self, lang='C'):
         num_band = self._primitive.get_number_of_atoms() * 3
-        num_grid = np.prod(self._mesh)
+        mesh_with_boundary = self._mesh + 1
+        num_grid = np.prod(mesh_with_boundary)
         self._phonon_done = np.zeros(num_grid, dtype='byte')
         self._frequencies = np.zeros((num_grid, num_band), dtype='double')
         self._eigenvectors = np.zeros((num_grid, num_band, num_band),
@@ -101,8 +105,8 @@ class FrequencyShift:
         #     weights_at_q = weights_at_q_all[quartets_at_q]
 
         # Only nosym is supported.
-        quartets_at_q = np.arange(len(self._grid_address), dtype='intc')
-        weights_at_q = np.ones(len(self._grid_address), dtype='intc')
+        quartets_at_q = np.arange(np.prod(self._mesh), dtype='intc')
+        weights_at_q = np.ones(np.prod(self._mesh), dtype='intc')
 
         self._grid_point = grid_point
         self._quartets_at_q = quartets_at_q
@@ -131,6 +135,13 @@ class FrequencyShift:
     def get_frequency_shifts(self):
         return self._frequency_shifts
 
+    def _set_grid_address(self):
+        grid_address = get_grid_address(self._mesh)
+        self._grid_address, self._bz_map = spg.relocate_BZ_grid_address(
+            grid_address,
+            self._mesh,
+            np.linalg.inv(self._primitive.get_cell()))
+            
     def _run_c(self):
         self._fc4_normal = np.zeros((len(self._quartets_at_q),
                                      len(self._band_indices),
@@ -197,17 +208,6 @@ class FrequencyShift:
                                self._primitive,
                                self._mesh,
                                symprec=self._symprec)
-        # For testing
-        # r2r.run(self._grid_address[[0, 0, 10, -10]])
-        # fc4_reciprocal = r2r.get_fc4_reciprocal()
-        # import h5py
-        # w = h5py.File("fc4-reciprocal.hdf5", 'w')
-        # w.create_dataset('fc4recreal', data=fc4_reciprocal.real)
-        # w.create_dataset('fc4recimag', data=fc4_reciprocal.imag)
-        # w.close()
-        # import sys
-        # print "done"
-        # sys.exit(1)
         r2n = ReciprocalToNormal(self._primitive,
                                  self._frequencies,
                                  self._eigenvectors,
@@ -215,7 +215,8 @@ class FrequencyShift:
         
         gp = self._grid_point
         self._set_phonon_py(gp)
-        igp = invert_grid_point(gp, self._grid_address, self._mesh)
+        igp = invert_grid_point(gp, self._mesh, self._grid_address, self._bz_map)
+        assert igp > -1, "q-point is not correctly determined."
 
         if self._log_level:
             print "---- Fourier transformation of fc4 ----"
@@ -226,7 +227,12 @@ class FrequencyShift:
             if self._log_level:
                 q2 = self._grid_address[gp1] / self._mesh.astype('double')
 
-            igp1 = invert_grid_point(gp1, self._grid_address, self._mesh)
+            igp1 = invert_grid_point(gp1,
+                                     self._mesh,
+                                     self._grid_address,
+                                     self._bz_map)
+            assert igp1 > -1, "q-point is not correctly determined."
+
             r2r.run(self._grid_address[[igp, gp, gp1, igp1]])
             fc4_reciprocal = r2r.get_fc4_reciprocal()
             self._set_phonon_py(gp1)
