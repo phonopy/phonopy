@@ -626,7 +626,7 @@ def write_frequency_shift(gp,
     fst_filename += ".dat"
 
     w = open(fst_filename, 'w')
-    for v, t in zip(delta.sum(axis=1) * 2 / delta.shape[1], temperatures):
+    for v, t in zip(delta.sum(axis=1) / delta.shape[1], temperatures):
         w.write("%15.7f %20.15e\n" % (t, v))
     w.close()
     

@@ -63,7 +63,7 @@ class FrequencyShift:
 
         self._frequency_shifts = None
         
-        # Unit to THz of Gamma
+        # Unit to THz of Delta
         self._unit_conversion = (EV / Angstrom ** 4 / AMU ** 2
                                  / (2 * np.pi * THz) ** 2
                                  * Hbar * EV / (2 * np.pi * THz) / 8
@@ -225,6 +225,7 @@ class FrequencyShift:
         for i, (gp1, w) in enumerate(zip(self._quartets_at_q,
                                          self._weights_at_q)):
             if self._log_level:
+                print "%d / %d" % (i + 1, len(self._quartets_at_q))
                 q2 = self._grid_address[gp1] / self._mesh.astype('double')
 
             igp1 = invert_grid_point(gp1,

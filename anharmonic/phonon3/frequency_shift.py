@@ -60,7 +60,7 @@ class FrequencyShift:
         mesh = self._interaction.get_mesh_numbers()
         num_grid = np.prod(mesh)
 
-        # Unit to THz of Gamma
+        # Unit to THz of Delta
         self._unit_conversion = ((Hbar * EV) ** 3 / 36 / 8
                                  * EV ** 2 / Angstrom ** 6
                                  / (2 * np.pi * THz) ** 3
