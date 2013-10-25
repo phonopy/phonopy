@@ -7,14 +7,12 @@ class FrequencyShift:
     def __init__(self,
                  interaction,
                  grid_point=None,
-                 fpoints=None,
                  temperature=None,
                  epsilon=0.1,
                  lang='C'):
         self._interaction = interaction
         self.set_epsilon(epsilon)
         self.set_temperature(temperature)
-        self.set_fpoints(fpoints)
         self.set_grid_point(grid_point=grid_point)
 
         self._lang = lang
@@ -34,19 +32,8 @@ class FrequencyShift:
             self.run_interaction()
 
         num_band0 = self._fc3_normal_squared.shape[1]
-        if self._fpoints is None:
-            self._frequency_shifts = np.zeros(num_band0, dtype='double')
-            # if self._lang == 'C':
-            #     self._run_c_with_band_indices()
-            # else:
-            self._run_py_with_band_indices()
-        else:
-            self._frequency_shifts = np.zeros((len(self._fpoints), num_band0),
-                                              dtype='double')
-            # if self._lang == 'C':
-            #     self._run_c_with_fpoints()
-            # else:
-            self._run_py_with_fpoints()
+        self._frequency_shifts = np.zeros(num_band0, dtype='double')
+        self._run_py_with_band_indices()
 
     def run_interaction(self):
         self._interaction.run(lang=self._lang)
@@ -83,13 +70,8 @@ class FrequencyShift:
                         bi_set.append(i)
                 if len(bi_set) > 0:
                     for i in bi_set:
-                        if self._fpoints is None:
-                            shifts[i] = (self._frequency_shifts[bi_set].sum() /
-                                         len(bi_set))
-                        else:
-                            shifts[:, i] = (
-                                self._frequency_shifts[:, bi_set].sum(axis=1) /
-                                len(bi_set))
+                        shifts[i] = (self._frequency_shifts[bi_set].sum() /
+                                     len(bi_set))
             return shifts
 
     def get_phonon_at_grid_point(self):
@@ -112,45 +94,12 @@ class FrequencyShift:
         else:
             self._epsilon = float(epsilon)
 
-    def set_fpoints(self, fpoints):
-        if fpoints is None:
-            self._fpoints = None
-        else:
-            self._fpoints = np.double(fpoints)
-
     def set_temperature(self, temperature):
         if temperature is None:
             self._temperature = None
         else:
             self._temperature = float(temperature)
         
-    # def _run_c_with_band_indices(self):
-    #     import anharmonic._phono3py as phono3c
-    #     phono3c.imag_self_energy_at_bands(self._imag_self_energy,
-    #                                       self._fc3_normal_squared,
-    #                                       self._grid_point_triplets,
-    #                                       self._triplet_weights,
-    #                                       self._frequencies,
-    #                                       self._band_indices,
-    #                                       self._temperature,
-    #                                       self._sigma,
-    #                                       self._unit_conversion,
-    #                                       self._cutoff_frequency)
-
-    # def _run_c_with_fpoints(self):
-    #     import anharmonic._phono3py as phono3c
-    #     for i, fpoint in enumerate(self._fpoints):
-    #         phono3c.imag_self_energy(self._imag_self_energy[i],
-    #                                  self._fc3_normal_squared,
-    #                                  self._grid_point_triplets,
-    #                                  self._triplet_weights,
-    #                                  self._frequencies,
-    #                                  fpoint,
-    #                                  self._temperature,
-    #                                  self._sigma,
-    #                                  self._unit_conversion,
-    #                                  self._cutoff_frequency)
-
     def _run_py_with_band_indices(self):
         for i, (triplet, w, interaction) in enumerate(
             zip(self._grid_point_triplets,
@@ -217,62 +166,3 @@ class FrequencyShift:
 
                 sum_d += d * interaction[i, j, k] * weight
         return sum_d
-
-    def _run_py_with_fpoints(self):
-        for i, (triplet, w, interaction) in enumerate(
-            zip(self._grid_point_triplets,
-                self._triplet_weights,
-                self._fc3_normal_squared)):
-
-            # freqs[2, num_band]
-            freqs = self._frequencies[triplet[1:]]
-            if self._temperature > 0:
-                self._frequency_shifts_with_fpoints(freqs, interaction, w)
-            else:
-                self._frequency_shifts_with_fpoints_0K(freqs, interaction, w)
-
-        self._frequency_shifts *= self._unit_conversion
-
-    def _frequency_shifts_with_fpoints(self, freqs, interaction, weight):
-        for (i, j, k) in list(np.ndindex(interaction.shape)):
-            if (freqs[0, j] > self._cutoff_frequency and
-                freqs[1, k] > self._cutoff_frequency):
-
-                d = np.zeros(len(self._fpoints), dtype='double')
-                n2 = occupation(freqs[0, j], self._temperature)
-                n3 = occupation(freqs[1, k], self._temperature)
-                f1s = self._fpoints + freqs[0, j] + freqs[1, k]
-                f2s = self._fpoints - freqs[0, j] - freqs[1, k]
-                f3s = self._fpoints - freqs[0, j] + freqs[1, k]
-                f4s = self._fpoints + freqs[0, j] - freqs[1, k]
-
-                for l, (f1, f2, f3, f4) in enumerate(
-                    zip(f1s, f2s, f3s, f4s)):
-                    if abs(f1) > self._epsilon:
-                        d[l] -= (n2 + n3 + 1) / f1
-                    if abs(f2) > self._epsilon:
-                        d[l] += (n2 + n3 + 1) / f2
-                    if abs(f3) > self._epsilon:
-                        d[l] -= (n2 - n3) / f3
-                    if abs(f4) > self._epsilon:
-                        d[l] += (n2 - n3) / f4
-
-                d *= interaction[i, j, k] * weight 
-                self._frequency_shifts[:, i] += d
-
-    def _frequency_shifts_with_fpoints_0K(self, freqs, interaction, weight):
-        for (i, j, k) in list(np.ndindex(interaction.shape)):
-            if (freqs[0][j] > self._cutoff_frequency and
-                freqs[1][k] > self._cutoff_frequency):
-                d = np.zeros(len(self._fpoints), dtype='double')
-                f1s = self._fpoints + freqs[0, j] + freqs[1, k]
-                f2s = self._fpoints - freqs[0, j] - freqs[1, k]
-
-                for l, (f1, f2) in enumerate(zip(f1s, f2s)):
-                    if abs(f1) > self._epsilon:
-                        d[l] -= 1.0 / f1
-                    if abs(f2) > self._epsilon:
-                        d[l] += 1.0 / f2
-
-                d *= interaction[i, j, k] * weight 
-                self._frequency_shifts[:, i] += d
