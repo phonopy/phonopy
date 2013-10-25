@@ -160,19 +160,19 @@ static void real_to_normal(double *fc3_normal_squared,
 		     p2s_map,
 		     s2p_map);
 
-  reciprocal_to_normal(fc3_normal_squared,
-		       fc3_reciprocal,
-		       freqs0,
-		       freqs1,
-		       freqs2,
-		       eigvecs0,
-		       eigvecs1,
-		       eigvecs2,
-		       masses,
-		       band_indices,
-		       num_band0,
-		       num_band,
-		       cutoff_frequency);
+  reciprocal_to_normal_squared(fc3_normal_squared,
+			       fc3_reciprocal,
+			       freqs0,
+			       freqs1,
+			       freqs2,
+			       eigvecs0,
+			       eigvecs1,
+			       eigvecs2,
+			       masses,
+			       band_indices,
+			       num_band0,
+			       num_band,
+			       cutoff_frequency);
 
   free(fc3_reciprocal);
 }
