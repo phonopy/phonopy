@@ -299,10 +299,10 @@ class Interaction:
                                self._primitive,
                                self._mesh,
                                symprec=self._symprec)
-
         r2n = ReciprocalToNormal(self._primitive,
                                  self._frequencies,
                                  self._eigenvectors,
+                                 self._band_indices,
                                  cutoff_frequency=self._cutoff_frequency)
 
         for i, grid_triplet in enumerate(self._triplets_at_q):
@@ -312,7 +312,8 @@ class Interaction:
             for gp in grid_triplet:
                 self._set_phonon_py(gp)
             r2n.run(fc3_reciprocal, grid_triplet)
-            self._interaction_strength[i] = r2n.get_reciprocal_to_normal()
+            self._interaction_strength[i] = np.abs(
+                r2n.get_reciprocal_to_normal()) ** 2
 
     def _set_phonon_py(self, grid_point):
         set_phonon_py(grid_point,

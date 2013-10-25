@@ -5,10 +5,12 @@ class ReciprocalToNormal:
                  primitive,
                  frequencies,
                  eigenvectors,
+                 band_indices,
                  cutoff_frequency=0):
         self._primitive = primitive
         self._frequencies = frequencies
         self._eigenvectors = eigenvectors
+        self._band_indices = band_indices
         self._cutoff_frequency = cutoff_frequency
 
         self._masses = self._primitive.get_masses()
@@ -19,7 +21,8 @@ class ReciprocalToNormal:
     def run(self, fc3_reciprocal, grid_triplet):
         num_band = self._primitive.get_number_of_atoms() * 3
         self._fc3_reciprocal = fc3_reciprocal
-        self._fc3_normal = np.zeros((num_band,) * 3, dtype='double')
+        self._fc3_normal = np.zeros(
+            (len(self._band_indices), num_band, num_band), dtype='complex128')
         self._reciprocal_to_normal(grid_triplet)
 
     def get_reciprocal_to_normal(self):
@@ -30,11 +33,13 @@ class ReciprocalToNormal:
         f1, f2, f3 = self._frequencies[grid_triplet]
         num_band = len(f1)
         cutoff = self._cutoff_frequency
-        for (i, j, k) in list(np.ndindex((num_band,) * 3)):
-            if f1[i] > cutoff and f2[j] > cutoff and f3[k] > cutoff:
-                fc3_elem = self._sum_in_atoms((i, j, k), (e1, e2, e3))
-                fff = f1[i] * f2[j] * f3[k]
-                self._fc3_normal[i, j, k] = np.abs(fc3_elem) ** 2 / fff
+        for (i, j, k) in list(np.ndindex(
+                len(self._band_indices), num_band, num_band)):
+            bi = self._band_indices[i]
+            if f1[bi] > cutoff and f2[j] > cutoff and f3[k] > cutoff:
+                fc3_elem = self._sum_in_atoms((bi, j, k), (e1, e2, e3))
+                fff = np.sqrt(f1[bi] * f2[j] * f3[k])
+                self._fc3_normal[i, j, k] = fc3_elem / fff
 
     def _sum_in_atoms(self, band_indices, eigvecs):
         num_atom = self._primitive.get_number_of_atoms()
