@@ -70,9 +70,9 @@ def get_eos(eos):
         xi = 3.0 / 2 * (p[2] - 1)
         return p[0] + 9 * p[1] * p[3] / (xi**2) * (1 + (xi * (1 - x) - 1) * np.exp(xi * (1 - x)))
     
-    if eos is 'murnaghan':
+    if eos=='murnaghan':
         return murnaghan
-    elif eos is 'birch_murnaghan':
+    elif eos=='birch_murnaghan':
         return birch_murnaghan
     else:
         return vinet

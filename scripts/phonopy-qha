@@ -252,7 +252,7 @@ if options.is_bulk_modulus_only:
     
     bulk_modulus = PhonopyQHA(volumes,
                               electronic_energies,
-                              options.eos)
+                              eos=options.eos)
     parameters = bulk_modulus.get_bulk_modulus_parameters()
     print "Volume: ", parameters[3]
     print "Energy: ", parameters[0]

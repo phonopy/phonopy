@@ -92,7 +92,6 @@ class QHA:
                  fe_phonon, # kJ/mol
                  eos='vinet',
                  t_max=None):
-
         self._volumes = np.array(volumes)
         self._electronic_energies = np.array(electronic_energies)
 

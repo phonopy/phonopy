@@ -1025,7 +1025,7 @@ class PhonopyQHA:
         """
         self._bulk_modulus = BulkModulus(volumes,
                                          electronic_energies,
-                                         eos)
+                                         eos=eos)
 
         if temperatures is not None:
             self._qha = QHA(volumes,
