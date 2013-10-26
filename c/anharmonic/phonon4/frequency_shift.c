@@ -200,12 +200,12 @@ void reciprocal_to_normal4(lapack_complex_double *fc4_normal,
 	    (lapack_complex_double_real(fc4_sum_elem) / freqs0[bi] / freqs1[j],
 	     lapack_complex_double_imag(fc4_sum_elem) / freqs0[bi] / freqs1[j]);
 	} else {
-	  fc4_normal[i * num_band + j] = 0;
+	  fc4_normal[i * num_band + j] = lapack_make_complex_double(0, 0);
 	}
       }
     } else {
       for (j = 0; j < num_band; j++) {
-	fc4_normal[i * num_band + j] = 0;
+	fc4_normal[i * num_band + j] = lapack_make_complex_double(0, 0);
       }
     }
   }
