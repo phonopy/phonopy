@@ -155,7 +155,9 @@ class Symmetry:
         self._map_atoms = self._dataset['equivalent_atoms']
 
     def _set_symmetry_operations(self):
-        self._symmetry_operations = spg.get_symmetry(self._cell, self._symprec)
+        self._symmetry_operations = spg.get_symmetry(self._cell,
+                                                     self._symprec,
+                                                     use_magmoms=True)
         self._set_map_atoms()
 
     def _set_pointgroup_operations(self):
