@@ -5,7 +5,7 @@ Spglib interface for ASE
 import phonopy._spglib as spg
 import numpy as np
 
-def get_symmetry(bulk, symprec=1e-5, angle_tolerance=-1.0):
+def get_symmetry(bulk, use_magmoms=False, symprec=1e-5, angle_tolerance=-1.0):
     """
     Return symmetry operations as hash.
     Hash key 'rotations' gives the numpy integer array
@@ -17,25 +17,17 @@ def get_symmetry(bulk, symprec=1e-5, angle_tolerance=-1.0):
     # Atomic positions have to be specified by scaled positions for spglib.
     positions = bulk.get_scaled_positions().copy()
     lattice = bulk.get_cell().T.copy()
-    numbers = np.array(bulk.get_atomic_numbers(), dtype='intc').copy()
-  
+    numbers = np.intc(bulk.get_atomic_numbers()).copy()
+
     # Get number of symmetry operations and allocate symmetry operations
     # multi = spg.multiplicity(cell, positions, numbers, symprec)
     multi = 48 * bulk.get_number_of_atoms()
     rotation = np.zeros((multi, 3, 3), dtype='intc')
     translation = np.zeros((multi, 3))
-  
+
     # Get symmetry operations
-    magmoms = bulk.get_magnetic_moments()
-    if magmoms == None:
-        num_sym = spg.symmetry(rotation,
-                               translation,
-                               lattice,
-                               positions,
-                               numbers,
-                               symprec,
-                               angle_tolerance)
-    else:
+    if use_magmoms:
+        magmoms = bulk.get_magnetic_moments()
         num_sym = spg.symmetry_with_collinear_spin(rotation,
                                                    translation,
                                                    lattice,
@@ -44,7 +36,15 @@ def get_symmetry(bulk, symprec=1e-5, angle_tolerance=-1.0):
                                                    magmoms,
                                                    symprec,
                                                    angle_tolerance)
-  
+    else:
+        num_sym = spg.symmetry(rotation,
+                               translation,
+                               lattice,
+                               positions,
+                               numbers,
+                               symprec,
+                               angle_tolerance)
+
     return {'rotations': rotation[:num_sym].copy(),
             'translations': translation[:num_sym].copy()}
 
