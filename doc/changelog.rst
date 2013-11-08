@@ -6,6 +6,8 @@ Change Log
 Sep-21-2013: Version 1.7.4
 ---------------------------
 
+* Thermal displacement matrix is implemented. See
+  :ref:`thermal_displacement_matrices_tag` and :ref:`thermal_displacement`.
 * PDOS with projection along arbitrary direction was implemented. See
   :ref:`projection_direction_tag`. 
 * ``partial_dos.dat`` format was changed. XYZ projected PDOS is not

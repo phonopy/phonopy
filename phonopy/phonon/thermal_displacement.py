@@ -216,9 +216,15 @@ class ThermalDisplacementMatrices(ThermalMotion):
             f.write("- temperature:   %15.7f\n" % t)
             f.write("  displacement_matrices:\n")
             for i, mat in enumerate(matrices):
-                f.write("  - # atom %d\n" % (i + 1))
-                for v in mat:
-                    f.write("    [ %f, %f, %f, %f, %f, %f ]\n" % (tuple(v.real) + tuple(v.imag)))
+                ## For checking imaginary part that should be zero
+                # f.write("  - # atom %d\n" % (i + 1))
+                # for v in mat:
+                #     f.write("    [ %f, %f, %f, %f, %f, %f ]\n" %
+                #             (tuple(v.real) + tuple(v.imag)))
+                m = mat.real
+                f.write("  - [ %f, %f, %f, %f, %f, %f ] # atom %d\n" %
+                        (m[0, 0], m[1, 1], m[2, 2],
+                         m[1, 2], m[0, 2], m[0, 1], i + 1))
         
 class ThermalDistances(ThermalMotion):
     def __init__(self,

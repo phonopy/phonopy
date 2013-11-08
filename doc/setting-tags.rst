@@ -421,12 +421,12 @@ temperature range to be calculated. The default values of them are 0,
    TMAX = 2000
 
 
-.. _thermal_displacements_tag:
-
 Thermal displacements
 ---------------------
 
 **Experimental**
+
+.. _thermal_displacements_tag:
 
 ``TDISP``, ``TMAX``, ``TMIN``, ``TSTEP``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -445,6 +445,20 @@ The projection is applied along arbitrary direction using
 
    TDISP = .TRUE.
    PROJECTION_DIRECTION = 1 1 0
+
+.. _thermal_displacement_matrices_tag:
+
+``TDISPMAT``, ``TMAX``, ``TMIN``, ``TSTEP``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Mean square displacement matricies are calculated. The difinition is
+shown at :ref:`thermal_displacement`. The result is
+writen into ``thermal_displacement_matrices.yaml`` where six matrix
+elements are given in the order of xx, yy, zz, yz, xz, xy.
+
+::
+
+   TDISPMAT = .TRUE.
 
 
 Specific q-points

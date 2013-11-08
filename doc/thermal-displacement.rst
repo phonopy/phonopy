@@ -63,6 +63,21 @@ expectation values of the combination of the operations, e.g.,
    \langle|\hat{a}^\dagger_\nu(\mathbf{q})\hat{a}^\dagger_{\nu'}(\mathbf{q'})|\rangle
    = 0.
 
+Mean square displacement matrix
+--------------------------------
+
+Mean square displacement matrix is defined as follows:
+
+.. math::
+
+   \mathrm{B}(j, t) = \frac{\hbar}{2Nm_j}
+   \sum_{\mathbf{q},\nu}\omega_\nu(\mathbf{q})^{-1}
+   (1+2n_\nu(\mathbf{q}))
+   \mathbf{e}_\nu(j,\mathbf{q}) \otimes \mathbf{e}^*_\nu(j,\mathbf{q}).
+
+This is a symmetry matrix and diagonal elements are same as mean
+square displacement calculated along Cartesian x, y, z directions.
+
 Projection to an arbitrary axis from the Cartesian axes
 --------------------------------------------------------
 

@@ -32,6 +32,7 @@ tags:
 * ``--sigma`` (``SIGMA``)
 * ``-t`` (``TPROP``)
 * ``--td`` (``TDISP``)
+* ``--tdm`` (``TDISPMAT``)
 * ``--tmin`` (``TMIN``)
 * ``--tmax`` (``TMAX``)
 * ``--tstep`` (``TSTEP``)
