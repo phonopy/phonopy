@@ -7,6 +7,7 @@ class Phono3pySettings(Settings):
 
         self._band_indices = None
         self._coarse_mesh_shifts = None
+        self._cutoff_displacements = None
         self._cutoff_frequency = 1e-4
         self._cutoff_lifetime = 1e-4 # in second
         self._grid_points = None
@@ -37,6 +38,12 @@ class Phono3pySettings(Settings):
 
     def get_coarse_mesh_shifts(self):
         return self._coarse_mesh_shifts
+
+    def set_cutoff_displacements(self, cutoff_displacements):
+        self._cutoff_displacements = cutoff_displacements
+
+    def get_cutoff_displacements(self):
+        return self._cutoff_displacements
 
     def set_cutoff_frequency(self, cutoff_frequency):
         self._cutoff_frequency = cutoff_frequency
@@ -166,6 +173,10 @@ class Phono3pyConfParser(ConfParser):
                 if self._options.band_indices is not None:
                     self._confs['band_indices'] = self._options.band_indices
 
+            if opt.dest == 'cutoff_displacements':
+                if self._options.cutoff_displacements is not None:
+                    self._confs['cutoff_displacements'] = self._options.cutoff_displacements
+
             if opt.dest == 'cutoff_frequency':
                 if self._options.cutoff_frequency is not None:
                     self._confs['cutoff_frequency'] = self._options.cutoff_frequency
@@ -258,6 +269,9 @@ class Phono3pyConfParser(ConfParser):
                 for sum_set in confs['band_indices'].split(','):
                     vals.append([int(x) - 1 for x in sum_set.split()])
                 self.set_parameter('band_indices', vals)
+
+            if conf_key == 'cutoff_displacements':
+                self.set_parameter('cutoff_displacements', confs['cutoff_displacements'])
 
             if conf_key == 'cutoff_frequency':
                 self.set_parameter('cutoff_frequency', confs['cutoff_frequency'])
@@ -358,6 +372,12 @@ class Phono3pyConfParser(ConfParser):
         # Sets of band indices that are summed
         if params.has_key('band_indices'):
             self._settings.set_band_indices(params['band_indices'])
+
+        # Cutoff distance used for supercell creation with displacements and
+        # making third-order force constants
+        if params.has_key('cutoff_displacements'):
+            self._settings.set_cutoff_displacements(
+                params['cutoff_displacements'])
 
         # Phonon modes below this frequency are ignored.
         if params.has_key('cutoff_frequency'):

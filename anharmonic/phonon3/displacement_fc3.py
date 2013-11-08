@@ -1,6 +1,7 @@
 import numpy as np
 from phonopy.harmonic.displacement import get_least_displacements, \
     directions_axis, get_displacement, is_minus_displacement
+from phonopy.harmonic.dynamical_matrix import get_equivalent_smallest_vectors
 
 def get_third_order_displacements(cell,
                                   symmetry,
@@ -15,6 +16,7 @@ def get_third_order_displacements(cell,
     # Atom 3: Force is mesuared on this atom.
 
     positions = cell.get_scaled_positions()
+    lattice = cell.get_cell()
 
     # Least displacements for third order force constants in yaml file
     #
@@ -63,6 +65,14 @@ def get_third_order_displacements(cell,
                                                positions,
                                                symprec,
                                                is_diagonal)
+            min_distance = np.linalg.norm(
+                np.dot(get_equivalent_smallest_vectors(
+                        atom1,
+                        atom2,
+                        cell,
+                        lattice,
+                        symprec)[0], lattice))
+            dds_atom2['distance'] = min_distance
             dds_atom1['second_atoms'].append(dds_atom2)
         dds.append(dds_atom1)
     
