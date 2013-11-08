@@ -27,7 +27,7 @@ lines. The sixth line contains the number of atoms for each atomic
 species, which have to correspond to the atomic positions in the
 order. The seventh line should be written as ``Direct``. This means
 that the atomic positions are represented in fractional (reduced)
-coordinates. When you write chemicla symbols in the first line, they
+coordinates. When you write chemical symbols in the first line, they
 are read and those defined by the ``ATOM_NAME`` tag are overwritten.
 
 .. _example_POSCAR1:
@@ -94,7 +94,7 @@ In the following example, the third line is the displaced atom number
 that corresponds to the atom number in the supercell created by
 phonopy. The fourth line gives the displacements in **Cartesian
 coordinates**. The lines below, the atomic forces in **Cartesian
-coordinates** are written. Once all the forces for a supercell have
+coordinates** are written. Once all the forces for a supercell are
 written, the next set of forces are written. This routine is repeated
 until the forces of all the displacements have been written.
 
@@ -127,10 +127,10 @@ Example
 ``FORCE_CONSTANTS``
 -------------------
 
-If force constants of a supercell are known, ``FORCES`` is not
-necessary to be prepared. Phonopy has interface to read and write
+If the force constants of a supercell are known, it is not
+necessary to prepared ``FORCES``. Phonopy has an interface to read and write
 ``FORCE_CONSTANTS``.  To read and write ``FORCE_CONSTANTS`` are
-controled by :ref:`force_constants_tag`.
+controlled by :ref:`force_constants_tag`.
 
 VASP users can use :ref:`VASP DFPT interface <vasp_force_constants>`
 to create ``FORCE_CONSTANTS`` from ``vasprun.xml``.

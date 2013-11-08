@@ -61,7 +61,7 @@ results are saved into text files in simple data format.
 ``--tmax`` 
 ~~~~~~~~~~~~
 
-The maximum temprerature calculated is specified. This temperature has
+The maximum temperature calculated is specified. This temperature has
 to be lower than the maximum temperature calculated in
 ``thermal_properties.yaml`` to let at least two temperature points
 fewer. The default value is ``--tmax=1000``.
@@ -76,7 +76,7 @@ coefficient are plotted on the display.
 ~~~~~~~~~~~~~~
 
 This is used with ``-s`` or ``-p`` to thin out the number of plots of
-the fitting results at temepratures. When ``--sparse=10``, 1/10 is
+the fitting results at temperatures. When ``--sparse=10``, 1/10 is
 only plotted.
 
 ``-s`` 
@@ -109,7 +109,7 @@ Output files
 - Bulk modulus vs T (``bulk_modulus-temperature.*``)
 - Gibbs free energy vs T (``gibbs-temperature.*``)
 - Volume change with respect to the volume at 300 K vs T (``volume_expansion.*``)
-- Heat capacity at constant puressure vs T derived by
+- Heat capacity at constant pressure vs T derived by
   :math:`-T\frac{\partial^2 G}{\partial T^2}`  (``Cp-temperature.*``)
 - Heat capacity at constant puressure vs T by polynomial fittings of
   Cv and S (``Cp-temperature_polyfit.*``)

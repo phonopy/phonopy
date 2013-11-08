@@ -64,7 +64,7 @@ file when creating supercell with displacements, and
 ``vasprun.xml``'s, which are the VASP output files. ``disp.yaml`` in
 the current directory is automatically read. The order of
 displacements written in ``disp.yaml`` file has to correpond to that of
-``vapsrun.xml`` files .
+``vasprun.xml`` files .
 
 ::
 

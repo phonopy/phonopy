@@ -50,7 +50,7 @@ usually :math:`F_\beta(j'l') \equiv 0`.
 
 .. _force_constants_solver_theory:
    
-Modified Palinski-Li-Kawazoe method
+Modified Parlinski-Li-Kawazoe method
 ====================================
 
 The following is a modified and simplified version of the
@@ -175,7 +175,7 @@ In phonopy, a phase convention of dynamical matrix is used as follows:
     \exp(i\mathbf{q}\cdot[\mathbf{r}(j'l')-\mathbf{r}(j0)]),
 
 where :math:`m` is the atomic mass and :math:`\mathbf{q}` is the wave
-vector. An equation of motion is writtein as
+vector. An equation of motion is written as
 
 .. math::
 

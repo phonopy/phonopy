@@ -16,6 +16,7 @@ from phonopy.harmonic.forces import Forces
 def write_supercells_with_displacements(supercell,
                                         double_displacements,
                                         amplitude=None,
+                                        cutoff_distance=None,
                                         filename='disp_fc3.yaml'):
     if amplitude==None:
         distance = 0.01
@@ -26,6 +27,8 @@ def write_supercells_with_displacements(supercell,
     w = open(filename, 'w')
     w.write("natom: %d\n" %  supercell.get_number_of_atoms())
     w.write("num_first_displacements: %d\n" %  len(double_displacements))
+    if cutoff_distance is not None:
+        w.write("cutoff_distance: %f\n" %  cutoff_distance)
     num_second = 0
     for d1 in double_displacements:
         for d2 in d1['second_atoms']:
@@ -58,6 +61,13 @@ def write_supercells_with_displacements(supercell,
         for disp2 in disp1['second_atoms']:
             # YAML
             w.write("  - number: %5d\n" % (disp2['number'] + 1))
+            w.write("    distance: %f\n" % disp2['distance'])
+            included = (disp2['distance'] < cutoff_distance or
+                        cutoff_distance is None)
+            if included:
+                w.write("    included: %s\n" % "true")
+            else:
+                w.write("    included: %s\n" % "false")
             w.write("    displacements:\n")
             
             for direction in disp2['directions']:
@@ -71,7 +81,8 @@ def write_supercells_with_displacements(supercell,
                                positions=positions,
                                cell=lattice,
                                pbc=True)
-                vasp.write_vasp('POSCAR-%04d' % count2, atoms, direct=True)
+                if included:
+                    vasp.write_vasp('POSCAR-%04d' % count2, atoms, direct=True)
 
                 # YAML
                 w.write("    - [ %20.16f,%20.16f,%20.16f ] # %d \n" %
@@ -248,32 +259,26 @@ def write_FORCES_THIRD(vaspruns,
         disp_datasets.append([disp1['number'], disp1['displacement']])
 
     count = num_disp1
+    file_count = num_disp1
     for disp1 in disp_dataset['first_atoms']:
         atom1 = disp1['number']
-        atom_list = np.unique([x['number'] for x in disp1['second_atoms']])
-        for atom2 in atom_list:
-            disps2 = []
-            for disp2 in disp1['second_atoms']:
-                if disp2['number'] != atom2:
-                    continue
+        for disp2 in disp1['second_atoms']:
+            atom2 = disp2['number']
+            w3.write("# File: %-5d\n" % (count + 1))
+            w3.write("# %-5d " % (atom1 + 1))
+            w3.write("%20.16f %20.16f %20.16f\n" % tuple(disp1['displacement']))
+            w3.write("# %-5d " % (atom2 + 1))
+            w3.write("%20.16f %20.16f %20.16f\n" % tuple(disp2['displacement']))
 
-                if 'disp_dataset' in disp2:
-                    disps2 = disp2['displacements']
-                    break
-                else:
-                    disps2.append(disp2['displacement'])
-                    
-            for d in disps2:
-                w3.write("# File: %-5d\n" % (count + 1))
-                w3.write("# %-5d " % (atom1 + 1))
-                w3.write("%20.16f %20.16f %20.16f\n" %
-                         tuple(disp1['displacement']))
-                w3.write("# %-5d " % (atom2 + 1))
-                w3.write("%20.16f %20.16f %20.16f\n" % tuple(d))
-
-                for forces in set_of_forces[count]:
+            if disp2['included']:
+                for forces in set_of_forces[file_count]:
                     w3.write("%15.10f %15.10f %15.10f\n" % tuple(forces))
-                count += 1
+                file_count += 1
+            else:
+                for j in range(natom):
+                    w3.write("%15.10f %15.10f %15.10f\n" % (0, 0, 0))
+            count += 1
+            
 
 def write_FORCES_FOURTH(vaspruns,
                         disp_dataset,
@@ -1013,13 +1018,14 @@ def parse_disp_fc3_yaml(filename="disp_fc3.yaml"):
         for second_atoms in first_atoms['second_atoms']:
             second_atoms['number'] -= 1
             atom2 = second_atoms['number']
+            included = second_atoms['included']
             for disp2 in second_atoms['displacements']:
-                new_second_atoms.append(
-                    {'number': atom2, 'displacement': disp2})
-        new_first_atoms.append(
-            {'number': atom1,
-             'displacement': disp1,
-             'second_atoms': new_second_atoms})
+                new_second_atoms.append({'number': atom2,
+                                         'displacement': disp2,
+                                         'included': included})
+        new_first_atoms.append({'number': atom1,
+                                'displacement': disp1,
+                                'second_atoms': new_second_atoms})
     new_dataset['first_atoms'] = new_first_atoms
 
     return new_dataset
