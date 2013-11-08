@@ -3,7 +3,7 @@
 Change Log
 ==========
 
-Sep-21-2013: Version 1.7.4
+Oct-3-2013: Version 1.7.4
 ---------------------------
 
 * Thermal displacement matrix is implemented. See
@@ -28,6 +28,7 @@ Sep-21-2013: Version 1.7.4
   crystal symmetry, mesh symmetrization (equivalent to ``MESH_SYMMETRY
   = .FALSE.``) is disabled.
 * Wien2k interface is updated to adapt Wien2k-13.
+* Fix the problem that only Vinet EOS worked in phonopy-qha.
 
 Sep-17-2013: Version 1.7.3
 ---------------------------
