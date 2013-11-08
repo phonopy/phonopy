@@ -54,19 +54,20 @@ as follows ::
 ``DIM``
 ~~~~~~~~~~
 
-The supercell is created from input unit cell. When three integers are
-specified, supercell elongated along axes of unit cell is created.
+The supercell is created from the input unit cell. When three integers
+are specified, a supercell elongated along axes of unit cell is
+created.
 
 ::
 
    DIM = 2 2 3
 
-In this case, 2x2x3 supercell is created.
+In this case, a 2x2x3 supercell is created.
 
 
 When nine integers are specified, the supercell is created by
-multiplying supercell matrix :math:`M_\mathrm{s}` with unit cell. For
-example,
+multiplying the supercell matrix :math:`M_\mathrm{s}` with the unit
+cell. For example,
 
 ::
 
@@ -114,7 +115,7 @@ Likewise,
 
    PRIMITIVE_AXIS = 0 1/2 1/2  1/2 0 1/2  1/2 1/2 0
 
-The primitive cell for building dynamical matrix is created by
+The primitive cell for building the dynamical matrix is created by
 multiplying primitive-axis matrix :math:`M_\mathrm{p}`. Let the matrix
 as,
 
@@ -176,7 +177,7 @@ specified, the default value is changed to 0.02 Bohr.
 When this tag is set ``.FALSE.``, displacements in diagonal directions
 are not searched, i.e. all the displacements are along the lattice
 vectors. ``DIAG = .FALSE.`` is recommended if one of the lattice
-parameter of your supercell is mush longer or much shorter than the
+parameter of your supercell is much longer or much shorter than the
 other lattice parameters.
 
 ``PM``
@@ -363,7 +364,7 @@ by the difference of maximum and minimum frequencies divided by 100.
 
 ::
 
-   SIMGA = 0.1
+   SIGMA = 0.1
 
 .. _debye_model_tag:
 
@@ -598,7 +599,7 @@ Symmetry search on the reciprocal sampling mesh is disabled by setting
 ``FC_SYMMETRY``
 ~~~~~~~~~~~~~~~~
 
-This tag is used to symmetrize force cosntants partly. The number of
+This tag is used to symmetrize force constants partly. The number of
 iteration of the following set of symmetrization applied to force
 constants is specified. The default value is 0. In the case of VASP,
 this tag is usually unnecessary to be specified.
@@ -680,7 +681,7 @@ Force constants
    FORCE_CONSTANTS = READ
 
 There are three values to be set, which are ``READ`` and ``WRITE``,
-and ``.FALSE.``. The defualt is ``.FALSE.``. When ``FORCE_CONSTANTS =
+and ``.FALSE.``. The default is ``.FALSE.``. When ``FORCE_CONSTANTS =
 READ``, force constants are read from ``FORCE_CONSTANTS`` file. With
 ``FORCE_CONSTANTS = WRITE``, force constants calculated from
 ``FORCE_SETS`` are written to ``FORCE_CONSTANTS`` file.
@@ -723,7 +724,7 @@ For v_sim
 
    ANIME = 0.5 0.5 0
 
-The values mean a *q*-point to be calculated. An animation file of
+The values are the *q*-point to be calculated. An animation file of
 ``anime.ascii`` is generated.
 
 .. toctree::

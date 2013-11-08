@@ -67,7 +67,7 @@ In the post-process,
 
 1. Force constants are calculated from the sets of forces
 2. A part of dynamical matrix is built from the force constants
-3. Phonon frequencies and eigenvetors are calculated from the
+3. Phonon frequencies and eigenvectors are calculated from the
    dynamical matrices with the specified *q*-points.
 
 For mesh sampling calculation, prepare the following setting file named, e.g., 
@@ -85,12 +85,12 @@ Thermal properties are calculated with the sampling mesh by::
 
    % phonopy -t mesh.conf
 
-You should check the convergece with respect to the mesh numbers.
+You should check the convergence with respect to the mesh numbers.
 Thermal properties can be plotted by::
 
    % phonopy -t -p mesh.conf
 
-Projected DOS is calcualted by the following setting file named, e.g., ``pdos.conf``::
+Projected DOS is calculated by the following setting file named, e.g., ``pdos.conf``::
 
    ATOM_NAME = Si O
    DIM = 2 2 3
