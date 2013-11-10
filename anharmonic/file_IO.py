@@ -17,7 +17,8 @@ def write_supercells_with_displacements(supercell,
                                         double_displacements,
                                         amplitude=None,
                                         cutoff_distance=None,
-                                        filename='disp_fc3.yaml'):
+                                        filename='disp_fc3.yaml',
+                                        log_level=False):
     if amplitude==None:
         distance = 0.01
     else:
@@ -26,18 +27,24 @@ def write_supercells_with_displacements(supercell,
     # YAML
     w = open(filename, 'w')
     w.write("natom: %d\n" %  supercell.get_number_of_atoms())
-    w.write("num_first_displacements: %d\n" %  len(double_displacements))
+
+    num_first = len(double_displacements)
+    w.write("num_first_displacements: %d\n" %  num_first)
     if cutoff_distance is not None:
         w.write("cutoff_distance: %f\n" %  cutoff_distance)
+
     num_second = 0
+    num_second_files = 0
     for d1 in double_displacements:
         for d2 in d1['second_atoms']:
             num_second += len(d2['directions'])
     w.write("num_second_displacements: %d\n" %  num_second)
+
     w.write("first_atoms:\n")
     lattice = supercell.get_cell()
     count1 = 1
-    count2 = len(double_displacements) + 1
+    count2 = num_first + 1
+    count_files = 0
     for disp1 in double_displacements:
         disp_cart1 = np.dot(disp1['direction'], lattice)
         disp_cart1 = disp_cart1 / np.linalg.norm(disp_cart1) * distance
@@ -48,13 +55,15 @@ def write_supercells_with_displacements(supercell,
                       positions=positions,
                       cell=lattice,
                       pbc=True)
-        vasp.write_vasp('POSCAR-%04d' % count1, atoms, direct=True)
+        vasp.write_vasp('POSCAR-%05d' % count1, atoms, direct=True)
+        count_files += 1
 
         # YAML
         w.write("- number: %5d\n" % (disp1['number'] + 1))
         w.write("  displacement:\n")
-        w.write("    [ %20.16f,%20.16f,%20.16f ] # %d \n" %
-                   (disp_cart1[0], disp_cart1[1], disp_cart1[2], count1))
+        w.write("    [ %20.16f,%20.16f,%20.16f ] # %05d\n" %
+                   (disp_cart1[0], disp_cart1[1], disp_cart1[2],
+                    count1))
         w.write("  second_atoms:\n")
         count1 += 1
 
@@ -82,11 +91,13 @@ def write_supercells_with_displacements(supercell,
                                cell=lattice,
                                pbc=True)
                 if included:
-                    vasp.write_vasp('POSCAR-%04d' % count2, atoms, direct=True)
+                    vasp.write_vasp('POSCAR-%05d' % count2, atoms, direct=True)
+                    count_files += 1
 
                 # YAML
-                w.write("    - [ %20.16f,%20.16f,%20.16f ] # %d \n" %
-                           (disp_cart2[0], disp_cart2[1], disp_cart2[2], count2))
+                w.write("    - [ %20.16f,%20.16f,%20.16f ] # %05d\n" %
+                           (disp_cart2[0], disp_cart2[1], disp_cart2[2],
+                            count2))
                 count2 += 1
 
     w.write("lattice:\n")
@@ -99,8 +110,13 @@ def write_supercells_with_displacements(supercell,
         w.write("- symbol: %-2s # %d\n" % (s, i+1))
         w.write("  position: [ %18.14f,%18.14f,%18.14f ]\n" % \
                        (v[0], v[1], v[2]))
-
     w.close()
+
+    if log_level:
+        print "Number of displacems are %d." % (num_first + num_second)
+        if cutoff_distance is not None:
+            print "Cutoff distance for displacements is %f." % cutoff_distance
+            print "Only %d supercell files are created." % count_files
 
 def write_supercells_with_three_displacements(supercell,
                                               triple_displacements,
@@ -253,14 +269,14 @@ def write_FORCES_THIRD(vaspruns,
         w2.write("# %-5d " % (disp1['number'] + 1))
         w2.write("%20.16f %20.16f %20.16f\n" %
                          tuple(disp1['displacement']))
-        for f in set_of_forces[i]:
-            w2.write("%15.10f %15.10f %15.10f\n" % (tuple(f)))
+        for forces in set_of_forces[i]:
+            w2.write("%15.10f %15.10f %15.10f\n" % (tuple(forces)))
         
         disp_datasets.append([disp1['number'], disp1['displacement']])
 
     count = num_disp1
     file_count = num_disp1
-    for disp1 in disp_dataset['first_atoms']:
+    for i, disp1 in enumerate(disp_dataset['first_atoms']):
         atom1 = disp1['number']
         for disp2 in disp1['second_atoms']:
             atom2 = disp2['number']
@@ -275,8 +291,10 @@ def write_FORCES_THIRD(vaspruns,
                     w3.write("%15.10f %15.10f %15.10f\n" % tuple(forces))
                 file_count += 1
             else:
-                for j in range(natom):
-                    w3.write("%15.10f %15.10f %15.10f\n" % (0, 0, 0))
+                for forces in set_of_forces[i]:
+                    w3.write("%15.10f %15.10f %15.10f\n" % (tuple(forces)))
+                # for j in range(natom):
+                #     w3.write("%15.10f %15.10f %15.10f\n" % (0, 0, 0))
             count += 1
             
 
