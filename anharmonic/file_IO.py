@@ -15,15 +15,10 @@ from phonopy.harmonic.forces import Forces
 
 def write_supercells_with_displacements(supercell,
                                         double_displacements,
-                                        amplitude=None,
+                                        distance=0.03,
                                         cutoff_distance=None,
                                         filename='disp_fc3.yaml',
                                         log_level=False):
-    if amplitude==None:
-        distance = 0.01
-    else:
-        distance = amplitude
-    
     # YAML
     w = open(filename, 'w')
     w.write("natom: %d\n" %  supercell.get_number_of_atoms())
@@ -34,17 +29,23 @@ def write_supercells_with_displacements(supercell,
         w.write("cutoff_distance: %f\n" %  cutoff_distance)
 
     num_second = 0
-    num_second_files = 0
+    num_disp_files = 0
     for d1 in double_displacements:
+        num_disp_files += 1
         for d2 in d1['second_atoms']:
             num_second += len(d2['directions'])
+            included = (d2['distance'] < cutoff_distance or
+                        cutoff_distance is None)
+            if included:
+                num_disp_files += len(d2['directions'])
+                
     w.write("num_second_displacements: %d\n" %  num_second)
+    w.write("num_displacements_created: %d\n" %  num_disp_files)
 
     w.write("first_atoms:\n")
     lattice = supercell.get_cell()
     count1 = 1
     count2 = num_first + 1
-    count_files = 0
     for disp1 in double_displacements:
         disp_cart1 = np.dot(disp1['direction'], lattice)
         disp_cart1 = disp_cart1 / np.linalg.norm(disp_cart1) * distance
@@ -56,14 +57,12 @@ def write_supercells_with_displacements(supercell,
                       cell=lattice,
                       pbc=True)
         vasp.write_vasp('POSCAR-%05d' % count1, atoms, direct=True)
-        count_files += 1
 
         # YAML
         w.write("- number: %5d\n" % (disp1['number'] + 1))
         w.write("  displacement:\n")
-        w.write("    [ %20.16f,%20.16f,%20.16f ] # %05d\n" %
-                   (disp_cart1[0], disp_cart1[1], disp_cart1[2],
-                    count1))
+        w.write("    [%20.16f,%20.16f,%20.16f ] # %05d\n" %
+                (disp_cart1[0], disp_cart1[1], disp_cart1[2], count1))
         w.write("  second_atoms:\n")
         count1 += 1
 
@@ -71,12 +70,15 @@ def write_supercells_with_displacements(supercell,
             # YAML
             w.write("  - number: %5d\n" % (disp2['number'] + 1))
             w.write("    distance: %f\n" % disp2['distance'])
+
             included = (disp2['distance'] < cutoff_distance or
                         cutoff_distance is None)
-            if included:
-                w.write("    included: %s\n" % "true")
-            else:
-                w.write("    included: %s\n" % "false")
+            if cutoff_distance is not None:
+                if included:
+                    w.write("    included: %s\n" % "true")
+                else:
+                    w.write("    included: %s\n" % "false")
+
             w.write("    displacements:\n")
             
             for direction in disp2['directions']:
@@ -92,10 +94,9 @@ def write_supercells_with_displacements(supercell,
                                pbc=True)
                 if included:
                     vasp.write_vasp('POSCAR-%05d' % count2, atoms, direct=True)
-                    count_files += 1
 
                 # YAML
-                w.write("    - [ %20.16f,%20.16f,%20.16f ] # %05d\n" %
+                w.write("    - [%20.16f,%20.16f,%20.16f ] # %05d\n" %
                            (disp_cart2[0], disp_cart2[1], disp_cart2[2],
                             count2))
                 count2 += 1
@@ -112,11 +113,7 @@ def write_supercells_with_displacements(supercell,
                        (v[0], v[1], v[2]))
     w.close()
 
-    if log_level:
-        print "Number of displacems are %d." % (num_first + num_second)
-        if cutoff_distance is not None:
-            print "Cutoff distance for displacements is %f." % cutoff_distance
-            print "Only %d supercell files are created." % count_files
+    return num_first + num_second, num_disp_files
 
 def write_supercells_with_three_displacements(supercell,
                                               triple_displacements,

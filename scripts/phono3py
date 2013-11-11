@@ -94,8 +94,9 @@ parser.set_defaults(band_indices=None,
                     cell_poscar=None,
                     cutoff_frequency=1e-2,
                     cutoff_lifetime=1e-4,
+                    cutoff_pair_distance=None,
                     delta_fc2=False,
-                    displacement_distance=None,
+                    displacement_distance=0.03,
                     factor=None,
                     delta_fc2_sets_mode=False,
                     freq_scale=None,
@@ -167,15 +168,15 @@ parser.add_option("--br", "--bterta", dest="is_bterta",
 parser.add_option("-c", "--cell", dest="cell_poscar",
                   action="store", type="string",
                   help="Read unit cell", metavar="FILE")
-parser.add_option("--cutdisp", "--cutoff_displacements", dest="cutoff_displacements",
-                  type="float",
-                  help="Cutoff distance for supercell creation with displacements and making third-order force constants")
 parser.add_option("--cutfreq", "--cutoff_frequency", dest="cutoff_frequency",
                   type="float",
                   help="Phonon modes below this frequency are ignored.")
 parser.add_option("--cutlt", "--cutoff_lifetime", dest="cutoff_lifetime",
                   type="float",
                   help="Cutoff lifetime in second used for thermal conductivity calculation")
+parser.add_option("--cutpair", "--cutoff_pair_distance", dest="cutoff_pair_distance",
+                  type="float",
+                  help="Cutoff distance between pairs of displaced atoms used for supercell creation with displacements and making third-order force constants")
 parser.add_option("-d", "--disp", dest="is_displacement",
                   action="store_true",
                   help="As first stage, get least displacements")
@@ -441,13 +442,24 @@ if options.is_displacement:
         is_plusminus=settings.get_is_plusminus_displacement(),
         is_diagonal=settings.get_is_diagonal_displacement())
     disp_distance = settings.get_displacement_distance()
-    cutoff_distance = settings.get_cutoff_displacements()
-    write_supercells_with_displacements(supercell,
-                                        dds,
-                                        amplitude=disp_distance,
-                                        cutoff_distance=cutoff_distance,
-                                        log_level=log_level)
+    cutoff_distance = settings.get_cutoff_pair_distance()
     if log_level:
+        print
+        print "Displacement distance:", disp_distance
+
+    num_disps, num_disp_files = write_supercells_with_displacements(
+        supercell,
+        dds,
+        distance=disp_distance,
+        cutoff_distance=cutoff_distance,
+        log_level=log_level)
+    
+    if log_level:
+        print "Total number of displacements:", num_disps
+        if cutoff_distance is not None:
+            print "Cutoff distance for displacements:", cutoff_distance
+            print "Number of displacement supercell",
+            print "files created:", num_disp_files
         print_end()
     sys.exit(0)
 
