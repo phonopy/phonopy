@@ -53,13 +53,14 @@ class Settings:
         self._is_diagonal_displacement = True
         self._is_plusminus_displacement = 'auto'
         self._is_trigonal_displacement = False
-        self._is_tensor_symmetry = False
+        self._fc_spg_symmetry = False
         self._is_translational_invariance = False
         self._is_rotational_invariance = False
         self._is_nac = False
         self._is_symmetry = True
         self._is_mesh_symmetry = True
         self._fc_decimals = None
+        self._fc_spg_symmetry = False
         self._fc_symmetry_iteration = 0
         self._masses = None
         self._magmoms = None
@@ -68,19 +69,12 @@ class Settings:
         self._primitive_matrix = np.eye(3, dtype=float)
         self._qpoints = None
         self._q_direction = None
-        self._run_mode = None
         self._sigma = None
         self._supercell_matrix = None
         self._is_time_symmetry = True
         self._tmax = 1000
         self._tmin = 0
         self._tstep = 10
-
-    def set_run_mode(self, run_mode):
-        self._run_mode = run_mode
-
-    def get_run_mode(self):
-        return self._run_mode
 
     def set_supercell_matrix(self, matrix):
         self._supercell_matrix = matrix
@@ -166,12 +160,6 @@ class Settings:
     def get_is_eigenvectors(self):
         return self._is_eigenvectors
 
-    def set_is_tensor_symmetry(self, is_tensor_symmetry):
-        self._is_tensor_symmetry = is_tensor_symmetry
-
-    def get_is_tensor_symmetry(self):
-        return self._is_tensor_symmetry
-
     def set_is_translational_invariance(self, is_translational_invariance):
         self._is_translational_invariance = is_translational_invariance
 
@@ -183,6 +171,12 @@ class Settings:
 
     def get_is_rotational_invariance(self):
         return self._is_rotational_invariance
+
+    def set_fc_spg_symmetry(self, fc_spg_symmetry):
+        self._fc_spg_symmetry = fc_spg_symmetry
+
+    def get_fc_spg_symmetry(self):
+        return self._fc_spg_symmetry
 
     def set_fc_symmetry_iteration(self, iteration):
         self._fc_symmetry_iteration = iteration
@@ -359,7 +353,12 @@ class ConfParser:
         if params.has_key('is_rotational'):
             self._settings.set_is_rotational_invariance(params['is_rotational'])
     
-        # Enforce force constant symmetry?
+        # Enforce space group symmetyr to force constants?
+        if params.has_key('fc_spg_symmetry'):
+            self._settings.set_fc_spg_symmetry(params['fc_spg_symmetry'])
+
+        # Enforce translational invariance and index permutation symmetry
+        # to force constants?
         if params.has_key('fc_symmetry'):
             self._settings.set_fc_symmetry_iteration(int(params['fc_symmetry']))
     
@@ -371,10 +370,6 @@ class ConfParser:
         if params.has_key('dm_decimals'):
             self._settings.set_dm_decimals(int(params['dm_decimals']))
     
-        # Is force constants symmetry forced?
-        if params.has_key('is_tensor_symmetry'):
-            self._settings.set_is_tensor_symmetry(params['is_tensor_symmetry'])
-
         # Mesh sampling numbers
         if params.has_key('mesh_numbers'):
             self._settings.set_mesh_numbers(params['mesh_numbers'])
@@ -536,6 +531,10 @@ class ConfParser:
                 if self._options.tstep:
                     self._confs['tstep'] = self._options.tstep
 
+            if opt.dest == 'fc_spg_symmetry':
+                if self._options.fc_spg_symmetry:
+                    self._confs['fc_spg_symmetry'] = '.true.'
+
             if opt.dest == 'fc_symmetry':
                 if self._options.fc_symmetry:
                     self._confs['fc_symmetry'] = self._options.fc_symmetry
@@ -651,6 +650,10 @@ class ConfParser:
                 if confs['rotational'] == '.true.':
                     self.set_parameter('is_rotational', True)
 
+            if conf_key == 'fc_spg_symmetry':
+                if confs['fc_spg_symmetry'] == '.true.':
+                    self.set_parameter('fc_spg_symmetry', True)
+
             if conf_key == 'fc_symmetry':
                 self.set_parameter('fc_symmetry', confs['fc_symmetry'])
 
@@ -659,10 +662,6 @@ class ConfParser:
 
             if conf_key == 'dm_decimals':
                 self.set_parameter('dm_decimals', confs['dm_decimals'])
-
-            if conf_key == 'tensor_symmetry':
-                if confs['tensor_symmetry'] == '.true.':
-                    self.set_parameter('is_tensor_symmetry', True)
 
             if conf_key == 'mesh_numbers':
                 vals = [ int(x) for x in confs['mesh_numbers'].split() ]
@@ -757,7 +756,8 @@ class PhonopySettings(Settings):
         self._dos_range = { 'min':  None,
                             'max':  None }
         self._fits_Debye_model = False
-        self._thermal_atom_pairs = None
+        self._irreps_q_point = None
+        self._irreps_tolerance = 1e-5
         self._is_dos_mode = False
         self._is_force_constants = False
         self._is_group_velocity = False
@@ -769,13 +769,13 @@ class PhonopySettings(Settings):
         self._is_thermal_distances = False
         self._is_thermal_properties = False
         self._is_projected_thermal_properties = False
-        self._write_dynamical_matrices = False
         self._modulation = None
         self._pdos_indices = None
         self._projection_direction = None
-        self._irreps_q_point = None
-        self._irreps_tolerance = 1e-5
+        self._run_mode = None
         self._show_irreps = False
+        self._thermal_atom_pairs = None
+        self._write_dynamical_matrices = False
 
     def set_run_mode(self, run_mode):
         modes = ['qpoints',

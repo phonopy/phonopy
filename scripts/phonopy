@@ -47,7 +47,7 @@ from phonopy.cui.show_symmetry import check_symmetry
 from phonopy.units import *
 
 
-phonopy_version = "1.7.4"
+phonopy_version = "1.7.5"
 
 # AA is created at http://www.network-science.de/ascii/.
 def print_phononpy():
@@ -114,6 +114,7 @@ parser.set_defaults(
     is_dos_mode=False,
     factor=None,
     fc_symmetry=None,
+    fc_spg_symmetry=False,
     fits_debye_model=False,
     force_constants_decimals=None,
     force_constants_mode=False,
@@ -191,6 +192,8 @@ parser.add_option("-d", "--displacement", dest="is_displacement",
 parser.add_option("--dim", dest="supercell_dimension",
                   action="store", type="string",
                   help="Same behavior as DIM tag")
+parser.add_option("--dm_decimals", dest="dynamical_matrix_decimals",
+                  type="int", help="Decimals of values of decimals")
 parser.add_option("--dos", dest="is_dos_mode",
                   action="store_true",
                   help="Calculate (P)DOS")
@@ -207,10 +210,11 @@ parser.add_option("--fc", "--force_constants", dest="force_constants_mode",
                   help="Create FORCE_CONSTANTS from vaspurn.xml. vasprun.xml has to be passed as argument.")
 parser.add_option("--fc_decimals", dest="force_constants_decimals",
                   type="int", help="Decimals of values of force constants")
+parser.add_option("--fc_spg_symmetry", dest="fc_spg_symmetry",
+                  action="store_true",
+                  help="Enforce space group symmetry to force constants")
 parser.add_option("--fc_symmetry", dest="fc_symmetry",
                   type="int", help="Symmetrize force constants")
-parser.add_option("--dm_decimals", dest="dynamical_matrix_decimals",
-                  type="int", help="Decimals of values of decimals")
 parser.add_option("--fits_debye_model", dest="fits_debye_model",
                   action="store_true",
                   help="Fits total DOS to a Debye model")
@@ -609,22 +613,22 @@ if log_level > 0:
                 print "only one direction"
         if not settings.get_is_diagonal_displacement():
             print "  Diagonal displacement: off"
-    elif not run_mode == 'forces':
-        print "Settings:"
-        if settings.get_is_nac():
-            print "  Non-analytical term correction: on"
-        if settings.get_is_force_constants():
-            print "  Force constants:", settings.get_is_force_constants(),
-            if settings.get_is_hdf5():
-                print "from hdf5"
-            else:
-                print
-        if settings.get_fc_symmetry_iteration() > 0:
-            print "  Force constants symmetrization: %d times" % settings.get_fc_symmetry_iteration()
-        if settings.get_is_tensor_symmetry():
-            print "  Tensor symmetry: on"
-        if run_mode == 'mesh':
-            print "  Sampling mesh: ", np.array(settings.get_mesh()[0])
+
+    print "Settings:"
+    if settings.get_is_nac():
+        print "  Non-analytical term correction: on"
+    if settings.get_is_force_constants():
+        print "  Force constants:", settings.get_is_force_constants(),
+        if settings.get_is_hdf5():
+            print "from hdf5"
+        else:
+            print
+    if settings.get_fc_symmetry_iteration() > 0:
+        print "  Force constants symmetrization: %d times" % settings.get_fc_symmetry_iteration()
+    if settings.get_fc_spg_symmetry():
+        print "  Enforce space group symmetry to force constants: on"
+    if run_mode == 'mesh':
+        print "  Sampling mesh: ", np.array(settings.get_mesh()[0])
 
 #################
 #      Run      #
@@ -756,7 +760,8 @@ else:
                        
 # Construct dynamical matrix
 if (settings.get_is_force_constants() == "write" or
-    settings.get_fc_symmetry_iteration() > 0):
+    settings.get_fc_symmetry_iteration() > 0 or
+    settings.get_fc_spg_symmetry()):
     # Need to calculate full force constant tensors
     phonon.set_post_process(settings.get_primitive_matrix(),
                             is_nac=settings.get_is_nac(),
@@ -775,18 +780,20 @@ if cutoff_radius:
     phonon.set_force_constants_zero_with_radius(cutoff_radius)
     phonon.set_dynamical_matrix()
 
-# Imporse translational invariance 
+# Enforce space group symmetry to force constants
+if settings.get_fc_spg_symmetry():
+    phonon.symmetrize_force_constants_by_space_group()
+    phonon.set_dynamical_matrix()
+
+# Imporse translational invariance and index permulation symmetry to
+# force constants
 if settings.get_fc_symmetry_iteration() > 0:
     phonon.symmetrize_force_constants(settings.get_fc_symmetry_iteration())
     phonon.set_dynamical_matrix()
 
 # Write FORCE_CONSTANTS
 if settings.get_is_force_constants() == "write":
-    if settings.get_is_force_constants() == 'read':
-        file_IO.write_FORCE_CONSTANTS(phonon.get_force_constants(),
-                                      'FORCE_CONSTANTS-new')
-    else:        
-        file_IO.write_FORCE_CONSTANTS(phonon.get_force_constants())
+    file_IO.write_FORCE_CONSTANTS(phonon.get_force_constants())
 
 # Show the rotational invariance condition (just show!)
 if settings.get_is_rotational_invariance():

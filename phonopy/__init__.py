@@ -38,7 +38,7 @@ from phonopy.structure.atoms import Atoms
 from phonopy.structure.symmetry import Symmetry
 from phonopy.structure.cells import get_supercell, Primitive, print_cell
 from phonopy.harmonic.displacement import get_least_displacements
-from phonopy.harmonic.force_constants import get_force_constants, symmetrize_force_constants, rotational_invariance, cutoff_force_constants
+from phonopy.harmonic.force_constants import get_force_constants, symmetrize_force_constants, rotational_invariance, cutoff_force_constants, set_tensor_symmetry
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC
 from phonopy.phonon.band_structure import BandStructure
 from phonopy.phonon.thermal_properties import ThermalProperties
@@ -343,6 +343,16 @@ class Phonopy:
         
     def symmetrize_force_constants(self, iteration=3):
         symmetrize_force_constants(self._force_constants, iteration)
+
+    def symmetrize_force_constants_by_space_group(self):
+        rotations = self._symmetry.get_symmetry_operations()['rotations']
+        translations = self._symmetry.get_symmetry_operations()['translations']
+        set_tensor_symmetry(self._force_constants,
+                            self._supercell.get_cell().T,
+                            self._supercell.get_scaled_positions(),
+                            rotations,
+                            translations,
+                            self._symprec)
         
     def get_force_constants(self):
         return self._force_constants
