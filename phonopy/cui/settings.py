@@ -262,8 +262,6 @@ class Settings:
     def get_group_velocity_delta_q(self):
         return self._gv_delta_q
 
-
-
 # Parse phonopy setting filen
 class ConfParser:
     def __init__(self, filename=None, options=None, option_list=None):
@@ -449,52 +447,6 @@ class ConfParser:
 
     def read_options(self):
         for opt in self._option_list:
-            if opt.dest == 'is_plusminus_displacements':
-                if self._options.is_plusminus_displacements:
-                    self._confs['pm'] = '.true.'
-
-            if opt.dest == 'is_trigonal_displacements':
-                if self._options.is_trigonal_displacements:
-                    self._confs['trigonal'] = '.true.'
-
-            if opt.dest == 'mesh_numbers':
-                if self._options.mesh_numbers:
-                    self._confs['mesh_numbers'] = self._options.mesh_numbers
-
-            if opt.dest == 'primitive_axis':
-                if self._options.primitive_axis:
-                    self._confs['primitive_axis'] = self._options.primitive_axis
-                    
-            if opt.dest == 'supercell_dimension':
-                if self._options.supercell_dimension:
-                    self._confs['dim'] = self._options.supercell_dimension
-
-            if opt.dest == 'displacement_distance':
-                if self._options.displacement_distance:
-                    self._confs['displacement_distance'] = \
-                        self._options.displacement_distance
-
-            if opt.dest == 'is_nodiag':
-                if self._options.is_nodiag:
-                    self._confs['diag'] = '.false.'
-
-            if opt.dest == 'is_eigenvectors':
-                if self._options.is_eigenvectors:
-                    self._confs['eigenvectors'] = '.true.'
-                    
-            if opt.dest == 'is_nac':
-                if self._options.is_nac:
-                    self._confs['nac'] = '.true.'
-
-            if opt.dest == 'is_nosym':
-                if self._options.is_nosym:
-                    self._confs['symmetry'] = '.false.'
-                    self._confs['mesh_symmetry'] = '.false.'
-
-            if opt.dest == 'is_nomeshsym':
-                if self._options.is_nomeshsym:
-                    self._confs['mesh_symmetry'] = '.false.'
-
             if opt.dest == 'band_paths':
                 if self._options.band_paths is not None:
                     self._confs['band'] = self._options.band_paths
@@ -503,33 +455,15 @@ class ConfParser:
                 if self._options.band_points is not None:
                     self._confs['band_points'] = self._options.band_points
 
-            if opt.dest == 'qpoints':
-                if self._options.qpoints is not None:
-                    self._confs['qpoints'] = self._options.qpoints
+            if opt.dest == 'displacement_distance':
+                if self._options.displacement_distance:
+                    self._confs['displacement_distance'] = \
+                        self._options.displacement_distance
 
-            if opt.dest == 'q_direction':
-                if self._options.q_direction is not None:
-                    self._confs['q_direction'] = self._options.q_direction
-
-            if opt.dest == 'omega_step':
-                if self._options.omega_step:
-                    self._confs['omega_step'] = self._options.omega_step
-
-            if opt.dest == 'sigma':
-                if self._options.sigma:
-                    self._confs['sigma'] = self._options.sigma
-
-            if opt.dest == 'tmin':
-                if self._options.tmin:
-                    self._confs['tmin'] = self._options.tmin
-
-            if opt.dest == 'tmax':
-                if self._options.tmax:
-                    self._confs['tmax'] = self._options.tmax
-                    
-            if opt.dest == 'tstep':
-                if self._options.tstep:
-                    self._confs['tstep'] = self._options.tstep
+            if opt.dest == 'dynamical_matrix_decimals':
+                if self._options.dynamical_matrix_decimals:
+                    self._confs['dm_decimals'] = \
+                        self._options.dynamical_matrix_decimals
 
             if opt.dest == 'fc_spg_symmetry':
                 if self._options.fc_spg_symmetry:
@@ -544,15 +478,82 @@ class ConfParser:
                     self._confs['fc_decimals'] = \
                         self._options.force_constants_decimals
 
-            if opt.dest == 'dynamical_matrix_decimals':
-                if self._options.dynamical_matrix_decimals:
-                    self._confs['dm_decimals'] = \
-                        self._options.dynamical_matrix_decimals
-
             if opt.dest == 'gv_delta_q':
                 if self._options.gv_delta_q:
                     self._confs['gv_delta_q'] = self._options.gv_delta_q
-    
+
+            if opt.dest == 'is_eigenvectors':
+                if self._options.is_eigenvectors:
+                    self._confs['eigenvectors'] = '.true.'
+                    
+            if opt.dest == 'is_nac':
+                if self._options.is_nac:
+                    self._confs['nac'] = '.true.'
+
+            if opt.dest == 'is_nodiag':
+                if self._options.is_nodiag:
+                    self._confs['diag'] = '.false.'
+
+            if opt.dest == 'is_nomeshsym':
+                if self._options.is_nomeshsym:
+                    self._confs['mesh_symmetry'] = '.false.'
+
+            if opt.dest == 'is_nosym':
+                if self._options.is_nosym:
+                    self._confs['symmetry'] = '.false.'
+                    self._confs['mesh_symmetry'] = '.false.'
+
+            if opt.dest == 'is_plusminus_displacements':
+                if self._options.is_plusminus_displacements:
+                    self._confs['pm'] = '.true.'
+
+            if opt.dest == 'is_trigonal_displacements':
+                if self._options.is_trigonal_displacements:
+                    self._confs['trigonal'] = '.true.'
+
+            if opt.dest == 'masses':
+                if self._options.masses:
+                    self._confs['mass'] = self._options.masses
+
+            if opt.dest == 'mesh_numbers':
+                if self._options.mesh_numbers:
+                    self._confs['mesh_numbers'] = self._options.mesh_numbers
+
+            if opt.dest == 'omega_step':
+                if self._options.omega_step:
+                    self._confs['omega_step'] = self._options.omega_step
+
+            if opt.dest == 'primitive_axis':
+                if self._options.primitive_axis:
+                    self._confs['primitive_axis'] = self._options.primitive_axis
+                    
+            if opt.dest == 'supercell_dimension':
+                if self._options.supercell_dimension:
+                    self._confs['dim'] = self._options.supercell_dimension
+
+            if opt.dest == 'qpoints':
+                if self._options.qpoints is not None:
+                    self._confs['qpoints'] = self._options.qpoints
+
+            if opt.dest == 'q_direction':
+                if self._options.q_direction is not None:
+                    self._confs['q_direction'] = self._options.q_direction
+
+            if opt.dest == 'sigma':
+                if self._options.sigma:
+                    self._confs['sigma'] = self._options.sigma
+
+            if opt.dest == 'tmax':
+                if self._options.tmax:
+                    self._confs['tmax'] = self._options.tmax
+                    
+            if opt.dest == 'tmin':
+                if self._options.tmin:
+                    self._confs['tmin'] = self._options.tmin
+
+            if opt.dest == 'tstep':
+                if self._options.tstep:
+                    self._confs['tstep'] = self._options.tstep
 
     def parse_conf(self):
         confs = self._confs
