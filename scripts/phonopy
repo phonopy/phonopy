@@ -144,6 +144,7 @@ parser.set_defaults(
     is_trigonal_displacements=False,
     is_wien2k_p1=False,
     loglevel=None,
+    masses=None,
     mesh_numbers=None,
     modulation=None,
     primitive_axis=None,
@@ -236,6 +237,9 @@ parser.add_option("--legend", dest="is_legend",
                   help="Legend of plots is shown in thermal displacements")
 parser.add_option("--loglevel", dest="loglevel", type="int",
                   help="Log level")
+parser.add_option("--mass", dest="masses",
+                  action="store", type="string",
+                  help="Same as MASS tag")
 parser.add_option("--modulation", dest="modulation",
                   action="store", type="string",
                   help="Same as MODULATION tag")
