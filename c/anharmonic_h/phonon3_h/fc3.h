@@ -16,5 +16,6 @@ void tensor3_roation(double *rot_tensor,
 		     const int atom_rot_k,
 		     const int num_atom,
 		     const double *rot_cartesian);
+void set_permutation_symmetry_fc3(double *fc3, const int num_atom);
 
 #endif

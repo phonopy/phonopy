@@ -110,12 +110,16 @@ def distribute_fc3(fc3,
                         rot_cart_inv, fc3[i_rot, j_rot, k_rot])
 
 def set_permutation_symmetry_fc3(fc3):
-    num_atom = fc3.shape[0]
-    for i in range(num_atom):
-        for j in range(i, num_atom):
-            for k in range(j, num_atom):
-                fc3_elem = set_permutation_symmetry_fc3_elem(fc3, i, j, k)
-                copy_permutation_symmetry_fc3_elem(fc3, fc3_elem, i, j, k)
+    try:
+        import anharmonic._phono3py as phono3c
+        phono3c.permutation_symmetry_fc3(fc3)
+    except ImportError:
+        num_atom = fc3.shape[0]
+        for i in range(num_atom):
+            for j in range(i, num_atom):
+                for k in range(j, num_atom):
+                    fc3_elem = set_permutation_symmetry_fc3_elem(fc3, i, j, k)
+                    copy_permutation_symmetry_fc3_elem(fc3, fc3_elem, i, j, k)
 
 def set_permutation_symmetry_fc3_deprecated(fc3):
     fc3_sym = np.zeros(fc3.shape, dtype='double')

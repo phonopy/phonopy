@@ -23,6 +23,8 @@ static PyObject * py_get_phonon(PyObject *self, PyObject *args);
 static PyObject * py_distribute_fc3(PyObject *self, PyObject *args);
 static PyObject * py_phonopy_zheev(PyObject *self, PyObject *args);
 static PyObject * py_get_isotope_strength(PyObject *self, PyObject *args);
+static PyObject * py_set_permutation_symmetry_fc3(PyObject *self,
+						  PyObject *args);
 
 static PyMethodDef functions[] = {
   {"joint_dos", py_get_jointDOS, METH_VARARGS, "Calculate joint density of states"},
@@ -34,6 +36,7 @@ static PyMethodDef functions[] = {
   {"distribute_fc3", py_distribute_fc3, METH_VARARGS, "Distribute least fc3 to full fc3"},
   {"zheev", py_phonopy_zheev, METH_VARARGS, "Lapack zheev wrapper"},
   {"isotope_strength", py_get_isotope_strength, METH_VARARGS, "Isotope scattering strength"},
+  {"permutation_symmetry_fc3", py_set_permutation_symmetry_fc3, METH_VARARGS, "Set permutation symmetry for fc3"},
   {NULL, NULL, 0, NULL}
 };
 
@@ -539,6 +542,22 @@ static PyObject * py_distribute_fc3(PyObject *self, PyObject *args)
 					      rot_cart_inv));
 }
 
+static PyObject * py_set_permutation_symmetry_fc3(PyObject *self, PyObject *args)
+{
+  PyArrayObject* fc3_py;
+
+  if (!PyArg_ParseTuple(args, "O",
+			&fc3_py)) {
+    return NULL;
+  }
+
+  double* fc3 = (double*)fc3_py->data;
+  const int num_atom = (int)fc3_py->dimensions[0];
+
+  set_permutation_symmetry_fc3(fc3, num_atom);
+
+  Py_RETURN_NONE;
+}
 
 static PyObject * py_phonopy_zheev(PyObject *self, PyObject *args)
 {

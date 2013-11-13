@@ -5,6 +5,18 @@ static double tensor3_rotation_elem(const double tensor[27],
 				    const int l,
 				    const int m,
 				    const int n);
+static void copy_permutation_symmetry_fc3_elem(double *fc3,
+					       const double fc3_elem[27],
+					       const int a,
+					       const int b,
+					       const int c,
+					       const int num_atom);
+static void set_permutation_symmetry_fc3_elem(double *fc3_elem,
+					      const double *fc3,
+					      const int a,
+					      const int b,
+					      const int c,
+					      const int num_atom);
 
 int distribute_fc3(double *fc3,
 		   const int third_atom,
@@ -77,6 +89,23 @@ void tensor3_roation(double *rot_tensor,
   }
 }
 
+void set_permutation_symmetry_fc3(double *fc3, const int num_atom)
+{
+  double fc3_elem[27];
+  int i, j, k;
+
+#pragma omp parallel for private(j, k, fc3_elem)
+  for (i = 0; i < num_atom; i++) {
+    for (j = i; j < num_atom; j++) {
+      for (k = j; k < num_atom; k++) {
+	set_permutation_symmetry_fc3_elem(fc3_elem, fc3, i, j, k, num_atom);
+	copy_permutation_symmetry_fc3_elem(fc3, fc3_elem,
+					   i, j, k, num_atom);
+      }
+    }
+  }
+}
+
 static double tensor3_rotation_elem(const double tensor[27],
 				    const double *r,
 				    const int l,
@@ -98,3 +127,80 @@ static double tensor3_rotation_elem(const double tensor[27],
   return sum;
 }
 
+
+static void copy_permutation_symmetry_fc3_elem(double *fc3,
+					       const double fc3_elem[27],
+					       const int a,
+					       const int b,
+					       const int c,
+					       const int num_atom)
+{
+  int i, j, k;
+
+  for (i = 0; i < 3; i++) {
+    for (j = 0; j < 3; j++) {
+      for (k = 0; k < 3; k++) {
+	fc3[a * num_atom * num_atom * 27 +
+	    b * num_atom * 27 +
+	    c * 27 + i * 9 + j * 3 + k] =
+	  fc3_elem[i * 9 + j * 3 + k];
+	fc3[a * num_atom * num_atom * 27 +
+	    c * num_atom * 27 +
+	    b * 27 + i * 9 + k * 3 + j] =
+	  fc3_elem[i * 9 + j * 3 + k];
+	fc3[b * num_atom * num_atom * 27 +
+	    a * num_atom * 27 +
+	    c * 27 + j * 9 + i * 3 + k] =
+	  fc3_elem[i * 9 + j * 3 + k];
+	fc3[b * num_atom * num_atom * 27 +
+	    c * num_atom * 27 +
+	    a * 27 + j * 9 + k * 3 + i] =
+	  fc3_elem[i * 9 + j * 3 + k];
+	fc3[c * num_atom * num_atom * 27 +
+	    a * num_atom * 27 +
+	    b * 27 + k * 9 + i * 3 + j] =
+	  fc3_elem[i * 9 + j * 3 + k];
+	fc3[c * num_atom * num_atom * 27 +
+	    b * num_atom * 27 +
+	    a * 27 + k * 9 + j * 3 + i] =
+	  fc3_elem[i * 9 + j * 3 + k];
+      }
+    }
+  }
+}
+
+static void set_permutation_symmetry_fc3_elem(double *fc3_elem,
+					      const double *fc3,
+					      const int a,
+					      const int b,
+					      const int c,
+					      const int num_atom)
+{
+  int i, j, k;
+
+  for (i = 0; i < 3; i++) {
+    for (j = 0; j < 3; j++) {
+      for (k = 0; k < 3; k++) {
+	fc3_elem[i * 9 + j * 3 + k] =
+	  (fc3[a * num_atom * num_atom * 27 +
+	       b * num_atom * 27 +
+	       c * 27 + i * 9 + j * 3 + k] +
+	   fc3[a * num_atom * num_atom * 27 +
+	       c * num_atom * 27 +
+	       b * 27 + i * 9 + k * 3 + j] +
+	   fc3[b * num_atom * num_atom * 27 +
+	       a * num_atom * 27 +
+	       c * 27 + j * 9 + i * 3 + k] +
+	   fc3[b * num_atom * num_atom * 27 +
+	       c * num_atom * 27 +
+	       a * 27 + j * 9 + k * 3 + i] +
+	   fc3[c * num_atom * num_atom * 27 +
+	       a * num_atom * 27 +
+	       b * 27 + k * 9 + i * 3 + j] +
+	   fc3[c * num_atom * num_atom * 27 +
+	       b * num_atom * 27 +
+	       a * 27 + k * 9 + j * 3 + i]) / 6;
+      }
+    }
+  }
+}
