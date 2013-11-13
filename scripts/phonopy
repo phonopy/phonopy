@@ -341,9 +341,6 @@ parser.add_option("--writedm", dest="write_dynamical_matrices",
 (options, args) = parser.parse_args()
 option_list = parser.option_list
 
-# Error
-no_error = True
-
 # Set log level
 log_level = 1
 if options.verbose:
@@ -370,7 +367,8 @@ else:
 if options.force_constants_mode:
     fc_and_atom_types = file_IO.read_force_constant_vasprun_xml(args[0])
     if not fc_and_atom_types:
-        print "\'%s\' dones not contain necessary information." % args[0]
+        print_error_message(
+            "\'%s\' dones not contain necessary information." % args[0])
         if log_level > 0:
             print_end()
         sys.exit(0)
@@ -380,7 +378,7 @@ if options.force_constants_mode:
         try:
             import h5py
         except ImportError:
-            print "You need to install python-h5py."
+            print_error_message("You need to install python-h5py.")
             if log_level > 0:
                 print_end()
             sys.exit(1)
@@ -416,7 +414,8 @@ if options.force_sets_mode or options.force_sets_zero_mode:
     if options.force_sets_zero_mode:
         num_disp_files -= 1
     if not len(displacements)== num_disp_files:
-        print_error_message("Number of files to be read don't match to number of displacements in disp.yaml.")
+        print_error_message("Number of files to be read don't match "
+                            "to number of displacements in disp.yaml.")
         if log_level > 0:
             print_end()
         sys.exit(1)
@@ -476,7 +475,8 @@ if interface_mode=='wien2k':
 
 # Quick check of the structure
 if np.linalg.det(unitcell.get_cell()) < 0.0:
-    print_error_message('Determinant of the lattice vector matrix has to be positive.')
+    print_error_message("Determinant of the lattice vector matrix "
+                        "has to be positive.")
     if log_level > 0:
         print_end()
     sys.exit(0)
@@ -552,7 +552,7 @@ if (not run_mode and not settings.get_is_force_constants() == "write"):
 
 # - supercell matrix
 if settings.get_supercell_matrix()==None:
-    print "Supercell matrix (DIM or --dim) is not found."
+    print_error_message("Supercell matrix (DIM or --dim) is not found.")
     if log_level > 0:
         print_end()
     sys.exit(1)
@@ -627,10 +627,10 @@ if log_level > 0:
             print "from hdf5"
         else:
             print
-    if settings.get_fc_symmetry_iteration() > 0:
-        print "  Force constants symmetrization: %d times" % settings.get_fc_symmetry_iteration()
     if settings.get_fc_spg_symmetry():
         print "  Enforce space group symmetry to force constants: on"
+    if settings.get_fc_symmetry_iteration() > 0:
+        print "  Force constants symmetrization: %d times" % settings.get_fc_symmetry_iteration()
     if run_mode == 'mesh':
         print "  Sampling mesh: ", np.array(settings.get_mesh()[0])
 
@@ -714,7 +714,8 @@ if run_mode == 'displacements':
                                                  cells_with_disps)
 
     if log_level > 0:
-        print "\ndisp.yaml and supercells have been created."
+        print
+        print "disp.yaml and supercells have been created."
         print_end()
     sys.exit(0)
 
@@ -724,7 +725,7 @@ if settings.get_is_force_constants() == 'read':
         try:
             import h5py
         except ImportError:
-            print "You need to install python-h5py."
+            print_error_message("You need to install python-h5py.")
             if log_level > 0:
                 print_end()
             sys.exit(1)
@@ -741,8 +742,8 @@ else:
     file_exists("FORCE_SETS", log_level)
     forces = file_IO.parse_FORCE_SETS(supercell.get_number_of_atoms())
     if forces==None:
-        error_text = "\nNumber of atoms in FORCE_SETS doesn't match to supercell.\n"
-        error_text += "Please check DIM and FORCE_SETS."
+        error_text = "\nNumber of atoms in FORCE_SETS doesn't match"
+        error_test += "to supercell.\nPlease check DIM and FORCE_SETS."
         print_error_message(error_text)
         if log_level > 0:
             print_end()
@@ -862,12 +863,14 @@ if log_level > 1:
 if run_mode == 'qpoints':
     if settings.get_qpoints():
         q_points = settings.get_qpoints()
-        print "Q-points that will be calculated at:"
-        for q in q_points:
-            print "    ", q
+        if log_level > 0:
+            print "Q-points that will be calculated at:"
+            for q in q_points:
+                print "    ", q
     else:
-        print "Frequencies at q-points given by QPOINTS:"
         q_points = file_IO.parse_QPOINTS()
+        if log_level > 0:
+            print "Frequencies at q-points given by QPOINTS:"
     phonon.write_yaml_qpoints(
         q_points,
         nac_q_direction=settings.get_q_direction(),
@@ -877,11 +880,12 @@ if run_mode == 'qpoints':
 
 # Band plot
 elif run_mode == 'band':
-    print "Paths in reciprocal reduced coordinates:"
     bands = settings.get_bands()
-    for band in bands:
-        print "[%5.2f %5.2f %5.2f] --> [%5.2f %5.2f %5.2f]" % \
-            (tuple(band[0]) + tuple(band[-1]))
+    if log_level > 0:
+        print "Paths in reciprocal reduced coordinates:"
+        for band in bands:
+            print("[%5.2f %5.2f %5.2f] --> [%5.2f %5.2f %5.2f]" % 
+                  (tuple(band[0]) + tuple(band[-1])))
 
     phonon.set_band_structure(
         bands,
@@ -905,23 +909,26 @@ elif run_mode == 'anime':
         phonon.write_animation(q_point=q_point,
                                anime_type='v_sim',
                                amplitude=amplitude)
-        print "Animation type: v_sim"
-        print "q-point: [%6.3f %6.3f %6.3f]" % tuple(q_point)
+        if log_level > 0:
+            print "Animation type: v_sim"
+            print "q-point: [%6.3f %6.3f %6.3f]" % tuple(q_point)
     else:
         amplitude = settings.get_anime_amplitude()
         band_index = settings.get_anime_band_index()
         division = settings.get_anime_division()
         shift = settings.get_anime_shift()
-        print "Animation type: ", anime_type
-        print "amplitude: ", amplitude
-        if not anime_type=="jmol":
-            print "band index: ", band_index
-            print "Number of images: ", division
         phonon.write_animation(anime_type=anime_type,
                                band_index=band_index,
                                amplitude=amplitude,
                                num_div=division,
                                shift=shift)
+
+        if log_level > 0:
+            print "Animation type: ", anime_type
+            print "amplitude: ", amplitude
+            if not anime_type=="jmol":
+                print "band index: ", band_index
+                print "Number of images: ", division
 
 # Modulation
 elif run_mode=='modulation':
@@ -949,8 +956,6 @@ elif run_mode == 'irreps':
         show_irreps = settings.get_show_irreps()
         phonon.show_irreps(show_irreps)
         phonon.write_yaml_irreps(show_irreps)
-    else:
-        no_error = False
 
 # Mesh
 elif run_mode == 'mesh':
@@ -1102,11 +1107,13 @@ elif run_mode == 'mesh':
                              freq_max=dos_range['max'],
                              freq_pitch=dos_range['step'])
 
-        print "Calculating DOS..."
+        if log_level > 0:
+            print "Calculating DOS..."
 
         if settings.get_fits_Debye_model():
             phonon.set_Debye_frequency()
-            print "Debye frequency: %10.5f" % phonon.get_Debye_frequency()
+            if log_level > 0:
+                print "Debye frequency: %10.5f" % phonon.get_Debye_frequency()
         phonon.write_total_DOS()
 
         if options.is_graph_plot:
@@ -1116,12 +1123,6 @@ elif run_mode == 'mesh':
             else:
                 plot.show()
 
-        
-    
-
 # END
 if log_level > 0:
-    if no_error:
-        print_end()
-    else:
-        print_error()
+    print_end()
