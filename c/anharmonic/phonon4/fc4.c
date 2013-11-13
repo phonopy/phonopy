@@ -220,6 +220,7 @@ static void copy_permutation_symmetry_fc4_elem(double *fc4,
 	      b * num_atom * num_atom * 81 +
 	      d * num_atom * 81+
 	      c * 81 + i * 27 + j * 9 + l * 3 + k] = 
+	    fc4_elem[i * 27 + j * 9 + k * 3 + l];
 	  fc4[a * num_atom * num_atom * num_atom * 81 +
 	      c * num_atom * num_atom * 81 +
 	      b * num_atom * 81+
