@@ -1,6 +1,6 @@
 from phonopy import Phonopy
 from phonopy.interface.vasp import read_vasp
-from phonopy.hphonopy.file_IO import parse_FORCE_SETS
+from phonopy.file_IO import parse_FORCE_SETS
 import numpy as np
 
 def get_frequency(poscar_filename, force_sets_filename):

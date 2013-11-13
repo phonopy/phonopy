@@ -1,6 +1,6 @@
 from phonopy import Phonopy
 from phonopy.interface.vasp import read_vasp
-from phonopy.hphonopy.file_IO import parse_FORCE_SETS, parse_BORN
+from phonopy.file_IO import parse_FORCE_SETS, parse_BORN
 import numpy as np
 
 cell = read_vasp("POSCAR")
@@ -20,8 +20,8 @@ phonon.set_force_sets(force_sets)
 phonon.set_post_process()
 
 # Character table
-phonon.set_character_table([1./3, 1./3, 0], 1e-4)
-ct = phonon.get_character_table() 
+phonon.set_irreps([1./3, 1./3, 0], 1e-4)
+ct = phonon.get_irreps() 
 band_indices = ct.get_band_indices()
 characters = np.rint(ct.get_characters()).real
 for bi, cts in zip(band_indices, characters):

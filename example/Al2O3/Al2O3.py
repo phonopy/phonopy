@@ -1,6 +1,6 @@
 from phonopy import Phonopy
 from phonopy.interface.vasp import read_vasp
-from phonopy.hphonopy.file_IO import parse_FORCE_SETS, parse_BORN
+from phonopy.file_IO import parse_FORCE_SETS, parse_BORN
 import numpy as np
 
 cell = read_vasp("POSCAR")
