@@ -534,9 +534,10 @@ else:
 ##########################################
 # Check the essential setting parameters #
 ##########################################
-# - run mode
 run_mode = settings.get_run_mode()
-if (not run_mode and not settings.get_is_force_constants() == "write"):
+if (run_mode is None and
+    settings.get_is_force_constants() != "write" and
+    not settings.get_fc_spg_symmetry()):
     print "One of the following run modes has to be specified."
     for mode in ['Mesh sampling (MP, --mesh)',
                  'Q-points (QPOINTS)',
@@ -787,7 +788,15 @@ if cutoff_radius:
 
 # Enforce space group symmetry to force constants
 if settings.get_fc_spg_symmetry():
+    if log_level > 0:
+        print
+        print "Force constants are symmetrized by space group operations."
+        print "This may take some time..."
     phonon.symmetrize_force_constants_by_space_group()
+    file_IO.write_FORCE_CONSTANTS(phonon.get_force_constants(),
+                                  filename='FORCE_CONSTANTS_SPG')
+    if log_level > 0:
+        print "Symmetrized force constants are written into FORCE_CONSTANTS_SPG"
     phonon.set_dynamical_matrix()
 
 # Imporse translational invariance and index permulation symmetry to
