@@ -1,6 +1,8 @@
 import sys
 import numpy as np
 from phonopy.harmonic.force_constants import similarity_transformation, set_permutation_symmetry, distribute_force_constants, solve_force_constants, get_rotated_displacement, get_positions_sent_by_rot_inv, set_translational_invariance
+from phonopy.harmonic.dynamical_matrix import get_equivalent_smallest_vectors
+from phonopy.structure.cells import Primitive
 from anharmonic.phonon3.displacement_fc3 import get_reduced_site_symmetry, get_bond_symmetry
 from anharmonic.file_IO import write_fc2_dat
 
@@ -13,8 +15,6 @@ def get_fc3(supercell,
             verbose=False):
     num_atom = supercell.get_number_of_atoms()
     fc3 = np.zeros((num_atom, num_atom, num_atom, 3, 3, 3), dtype='double')
-
-
     _get_fc3_least_atoms(fc3,
                          supercell,
                          disp_dataset,
@@ -178,28 +178,6 @@ def third_rank_tensor_rotation(rot_cart, tensor):
                     rot_cart, tensor, i, j, k)
     return rot_tensor
 
-def _get_fc3_least_atoms(fc3,
-                         supercell,
-                         disp_dataset,
-                         fc2,
-                         symmetry,
-                         is_translational_symmetry,
-                         is_permutation_symmetry,
-                         verbose):
-    symprec = symmetry.get_symmetry_tolerance()
-    unique_first_atom_nums = np.unique(
-        [x['number'] for x in disp_dataset['first_atoms']])
-    for first_atom_num in unique_first_atom_nums:
-        _get_fc3_one_atom(fc3,
-                          supercell,
-                          disp_dataset,
-                          fc2,
-                          first_atom_num,
-                          symmetry.get_site_symmetry(first_atom_num),
-                          is_translational_symmetry,
-                          is_permutation_symmetry,
-                          symprec,
-                          verbose)
 
 def get_atom_by_symmetry(positions,
                          rotation,
@@ -340,6 +318,22 @@ def solve_fc3(fc3,
         fc3[first_atom_num, i, j] = np.dot(inv_U, _get_rotated_fc2s(
                 i, j, delta_fc2s, rot_map_syms, site_sym_cart)).reshape(3, 3, 3)
 
+def cutoff_fc3(fc3, cell, cutoff_distance, symprec=1e-5):
+    num_atom = cell.get_number_of_atoms()
+    lattice = cell.get_cell()
+    min_distances = np.zeros((num_atom, num_atom), dtype='double')
+    for i in range(num_atom): # run in supercell
+        for j in range(num_atom): # run in primitive
+            min_distances[i, j] = np.linalg.norm(np.dot(
+                    get_equivalent_smallest_vectors(
+                        i, j, cell, lattice, symprec)[0], lattice))
+            
+    for i, j, k in np.ndindex(num_atom, num_atom, num_atom):
+        for pair in ((i, j), (j, k), (k, i)):
+            if min_distances[pair] > cutoff_distance:
+                fc3[i, j, k] = 0
+                break
+
 def show_drift_fc3(fc3, name="fc3"):
     num_atom = fc3.shape[0]
     maxval1 = 0
@@ -357,6 +351,29 @@ def show_drift_fc3(fc3, name="fc3"):
             maxval3 = val3
     print ("max drift of %s:" % name), maxval1, maxval2, maxval3 
         
+def _get_fc3_least_atoms(fc3,
+                         supercell,
+                         disp_dataset,
+                         fc2,
+                         symmetry,
+                         is_translational_symmetry,
+                         is_permutation_symmetry,
+                         verbose):
+    symprec = symmetry.get_symmetry_tolerance()
+    unique_first_atom_nums = np.unique(
+        [x['number'] for x in disp_dataset['first_atoms']])
+    for first_atom_num in unique_first_atom_nums:
+        _get_fc3_one_atom(fc3,
+                          supercell,
+                          disp_dataset,
+                          fc2,
+                          first_atom_num,
+                          symmetry.get_site_symmetry(first_atom_num),
+                          is_translational_symmetry,
+                          is_permutation_symmetry,
+                          symprec,
+                          verbose)
+
 def _get_fc3_one_atom(fc3,
                       supercell,
                       disp_dataset,

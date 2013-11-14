@@ -48,7 +48,7 @@ from phonopy.harmonic.force_constants import get_force_constants, \
 from phonopy.file_IO import parse_BORN
 from phonopy.units import VaspToTHz
 from anharmonic.phonon3.fc3 import get_fc3, set_permutation_symmetry_fc3, \
-    set_translational_invariance_fc3, show_drift_fc3
+    set_translational_invariance_fc3, show_drift_fc3, cutoff_fc3
 from anharmonic.file_IO import write_fc2_dat, write_fc3_dat,\
     parse_disp_fc3_yaml, write_FORCES_THIRD,\
     parse_DELTA_FORCES, write_supercells_with_displacements,\
@@ -426,6 +426,9 @@ if log_level:
         print "FC3 symmetry of index exchange in real space:", options.is_symmetrize_fc3_r
     if options.is_symmetrize_fc3_q:
         print "FC3 symmetry of index exchange in reciprocal space:", options.is_symmetrize_fc3_q
+    if settings.get_cutoff_pair_distance() is not None:
+        print "Cutoff pair-distance for fc3:",
+        print settings.get_cutoff_pair_distance()
     if not options.supercell_dimension_extra == None:
         print "Extra supercell for fc2 is supplied."
     if settings.get_is_nac():
@@ -654,8 +657,15 @@ else:
             print "----- Symmetrize fc3 real space -----"
         set_permutation_symmetry_fc3(fc3)
 
+    # fc3 is cutoff by the distances among atoms
+    if settings.get_cutoff_pair_distance() is not None:
+        cutoff_distance = settings.get_cutoff_pair_distance()
+        if log_level:
+            print "----- Cut-off fc3 -----"
+        cutoff_fc3(fc3, supercell, cutoff_distance, options.symprec)
+
     show_drift_fc3(fc3)
-        
+
     # Write fc3
     if not options.read_fc3:
         if log_level:
