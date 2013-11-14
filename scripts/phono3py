@@ -60,7 +60,7 @@ from anharmonic.phonon3.displacement_fc3 import get_third_order_displacements
 from anharmonic.settings import Phono3pyConfParser
 from anharmonic.phonon3 import Phono3py, JointDOS, IsotopeScattering, get_gruneisen_parameters
 
-phono3py_version = "0.7.2"
+phono3py_version = "0.7.4"
 
 # AA is created at http://www.network-science.de/ascii/.
 def print_phono3py():
