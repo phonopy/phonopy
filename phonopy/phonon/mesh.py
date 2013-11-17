@@ -69,7 +69,10 @@ def get_qpoints(mesh_numbers,
 
     if fit_in_BZ:
         primitive_vectors = np.linalg.inv(cell.get_cell()) # column vectors
-        qpoints_in_BZ = _fit_qpoints_in_BZ(primitive_vectors, mesh, qpoints)
+        qpoints_in_BZ = _fit_qpoints_in_BZ(primitive_vectors,
+                                           mesh,
+                                           qpoints,
+                                           symprec)
         return qpoints_in_BZ, weights
     else:
         return qpoints, weights
@@ -83,10 +86,10 @@ def _check_mesh_numbers_symmetry(mesh, symmetry):
     lattice_equiv = get_lattice_vector_equivalence(rotations)
     return np.array_equal(mesh_equiv, lattice_equiv)
 
-def _fit_qpoints_in_BZ(primitive_vectors, mesh, qpoints):
+def _fit_qpoints_in_BZ(primitive_vectors, mesh, qpoints, symprec):
     # primitive_vectors: column vectors
     shortest = np.sqrt(min(np.sum(primitive_vectors ** 2, axis=0)))
-    tolerance = shortest / max(mesh) / 10
+    tolerance = shortest * symprec
     qpoint_set_in_BZ = get_qpoints_in_Brillouin_zone(primitive_vectors,
                                                      qpoints,
                                                      tolerance=tolerance)

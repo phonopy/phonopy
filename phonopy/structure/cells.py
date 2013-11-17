@@ -363,7 +363,7 @@ def get_shortest_bases_from_extented_bases(extended_bases, tolerance):
                     return np.array([basis[i], basis[j], basis[k]])
 
     print "Delaunary reduction is failed."
-    return basis[:3]
+    return np.array(basis[:3], dtype='double')
 
 #
 # Other tiny tools
