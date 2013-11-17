@@ -1030,14 +1030,14 @@ def parse_disp_fc3_yaml(filename="disp_fc3.yaml"):
         atom1 = first_atoms['number']
         disp1 = first_atoms['displacement']
         new_second_atoms = []
-        for second_atoms in first_atoms['second_atoms']:
-            second_atoms['number'] -= 1
-            atom2 = second_atoms['number']
-            if 'included' in second_atoms:
-                included = second_atoms['included']
+        for second_atom in first_atoms['second_atoms']:
+            second_atom['number'] -= 1
+            atom2 = second_atom['number']
+            if 'included' in second_atom:
+                included = second_atom['included']
             else:
                 included = True
-            for disp2 in second_atoms['displacements']:
+            for disp2 in second_atom['displacements']:
                 new_second_atoms.append({'number': atom2,
                                          'displacement': disp2,
                                          'included': included})
