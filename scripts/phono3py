@@ -659,10 +659,11 @@ else:
 
     # fc3 is cutoff by the distances among atoms
     if settings.get_cutoff_pair_distance() is not None:
-        cutoff_distance = settings.get_cutoff_pair_distance()
+        # cutoff_distance = settings.get_cutoff_pair_distance()
         if log_level:
             print "----- Cut-off fc3 -----"
-        cutoff_fc3(fc3, supercell, cutoff_distance, options.symprec)
+        # cutoff_fc3_by_zero(fc3, supercell, cutoff_distance, options.symprec)
+        cutoff_fc3(fc3, supercell, disp_dataset, symmetry)
 
     show_drift_fc3(fc3)
 
