@@ -233,7 +233,7 @@ class Phono3py:
                     sigma=sigma,
                     filename=filename)
                 if gamma_at_sigma is False:
-                    gamma_at_simga = []
+                    gamma_at_sigma = []
                     for i, gp in enumerate(br.get_grid_points()):
                         gamma_gp = read_gamma_from_hdf5(
                             br.get_mesh_numbers(),
