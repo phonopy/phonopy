@@ -766,7 +766,7 @@ def read_gamma_from_hdf5(mesh,
     f = h5py.File("kappa" + suffix + ".hdf5", 'r')
     gammas = f['gamma'][:]
     f.close()
-
+    
     if verbose:
         print "Gamma",
         if grid_point is not None:
@@ -780,7 +780,7 @@ def read_gamma_from_hdf5(mesh,
         print "were read from",
         if grid_point is not None:
             print ""
-        print "%s" % ("gamma" + suffix + ".hdf5")
+        print "%s" % ("kappa" + suffix + ".hdf5")
     
     return gammas
 
