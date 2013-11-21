@@ -347,7 +347,6 @@ def cutoff_fc3(fc3,
 
     if verbose:
         print
-        print
 
 def cutoff_fc3_by_zero(fc3, supercell, cutoff_distance, symprec=1e-5):
     num_atom = supercell.get_number_of_atoms()
