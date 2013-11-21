@@ -1024,6 +1024,8 @@ def parse_disp_fc3_yaml(filename="disp_fc3.yaml"):
     natom = dataset['natom']
     new_dataset = {}
     new_dataset['natom'] = natom
+    if 'cutoff_distance' in dataset:
+        new_dataset['cutoff_distance'] = dataset['cutoff_distance']
     new_first_atoms = []
     for first_atoms in dataset['first_atoms']:
         first_atoms['number'] -= 1
