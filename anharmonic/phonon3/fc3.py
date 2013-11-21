@@ -332,8 +332,6 @@ def cutoff_fc3(fc3,
         print "Creating contracted fc3..."
     num_atom = supercell.get_number_of_atoms()
     for i in range(num_atom):
-        if verbose:
-            print i + 1,
         for j in range(i, num_atom):
             for k in range(j, num_atom):
                 sum_done = (fc3_done[i, j, k] +
