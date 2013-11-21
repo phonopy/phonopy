@@ -322,10 +322,18 @@ def solve_fc3(fc3,
 def cutoff_fc3(fc3,
                supercell,
                disp_dataset,
-               symmetry):
+               symmetry,
+               verbose=False):
+    if verbose:
+        print "Building atom mapping table..."
     fc3_done = _get_fc3_done(supercell, disp_dataset, symmetry)
+
+    if verbose:
+        print "Creating contracted fc3..."
     num_atom = supercell.get_number_of_atoms()
     for i in range(num_atom):
+        if verbose:
+            print i + 1,
         for j in range(i, num_atom):
             for k in range(j, num_atom):
                 sum_done = (fc3_done[i, j, k] +
@@ -338,6 +346,10 @@ def cutoff_fc3(fc3,
                     ave_fc3 = set_permutation_symmetry_fc3_elem(
                         fc3, i, j, k, divisor=sum_done)
                     copy_permutation_symmetry_fc3_elem(fc3, ave_fc3, i, j, k)
+
+    if verbose:
+        print
+        print
 
 def cutoff_fc3_by_zero(fc3, supercell, cutoff_distance, symprec=1e-5):
     num_atom = supercell.get_number_of_atoms()
@@ -477,12 +489,13 @@ def _get_fc3_done(supercell, disp_dataset, symmetry):
 
     atom_mapping = []
     for rot, trans in zip(rotations, translations):
-        atom_mapping.append([get_atom_by_symmetry(
-                    positions,
-                    rot,
-                    trans,
-                    i,
-                    symprec) for i in range(num_atom)])
+        atom_indices = []
+        for rot_pos in (np.dot(positions, rot.T) + trans):
+            diff = positions - rot_pos
+            diff -= np.rint(diff)
+            atom_indices.append(
+                np.where((np.abs(diff) < symprec).all(axis=1))[0][0])
+        atom_mapping.append(atom_indices)
     
     for dataset_first_atom in disp_dataset['first_atoms']:
         first_atom_num = dataset_first_atom['number']
