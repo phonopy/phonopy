@@ -48,7 +48,8 @@ from phonopy.harmonic.force_constants import get_force_constants, \
 from phonopy.file_IO import parse_BORN
 from phonopy.units import VaspToTHz
 from anharmonic.phonon3.fc3 import get_fc3, set_permutation_symmetry_fc3, \
-    set_translational_invariance_fc3, show_drift_fc3, cutoff_fc3
+    set_translational_invariance_fc3, show_drift_fc3, cutoff_fc3, \
+    cutoff_fc3_by_zero
 from anharmonic.file_IO import write_fc2_dat, write_fc3_dat,\
     parse_disp_fc3_yaml, write_FORCES_THIRD,\
     parse_DELTA_FORCES, write_supercells_with_displacements,\
@@ -651,19 +652,29 @@ else:
             is_permutation_symmetry=options.is_symmetrize_fc3_r,
             verbose=log_level)
 
+        if 'cutoff_distance' in disp_dataset:
+            if settings.get_cutoff_pair_distance() is None:
+                if log_level:
+                    print "----- Cut-off fc3 -----"
+                    print "Cut-off distance:", disp_dataset['cutoff_distance']
+                cutoff_fc3(fc3,
+                           supercell,
+                           disp_dataset,
+                           symmetry,
+                           verbose=log_level)
+
+    # fc3 is cut-off by the distances among atoms
+    if settings.get_cutoff_pair_distance() is not None:
+        cutoff_distance = settings.get_cutoff_pair_distance()
+        if log_level:
+            print "----- Cut-off fc3 by zero -----"
+        cutoff_fc3_by_zero(fc3, supercell, cutoff_distance, options.symprec)
+
     # Symmetrize fc3_r
     if options.is_symmetrize_fc3_r:
         if log_level:
             print "----- Symmetrize fc3 real space -----"
         set_permutation_symmetry_fc3(fc3)
-
-    # fc3 is cutoff by the distances among atoms
-    if settings.get_cutoff_pair_distance() is not None:
-        # cutoff_distance = settings.get_cutoff_pair_distance()
-        if log_level:
-            print "----- Cut-off fc3 -----"
-        # cutoff_fc3_by_zero(fc3, supercell, cutoff_distance, options.symprec)
-        cutoff_fc3(fc3, supercell, disp_dataset, symmetry, verbose=log_level)
 
     show_drift_fc3(fc3)
 
