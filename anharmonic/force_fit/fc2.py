@@ -52,7 +52,8 @@ class FC2Fit:
                                                    site_sym_cart,
                                                    rot_map_syms)
             fc = self._solve(rot_disps, rot_forces)
-            self._fc2[first_atom_num, :] = fc[:, 1:, :]
+            for i in range(self._num_atom):
+                self._fc2[first_atom_num, i] = fc[i, 1:, :]
 
         rotations = self._symmetry.get_symmetry_operations()['rotations']
         trans = self._symmetry.get_symmetry_operations()['translations']
@@ -81,8 +82,8 @@ class FC2Fit:
                                     disps,
                                     site_sym_cart):
         rot_disps = []
-        for ssym_c in site_sym_cart:
-            for u in disps:
+        for u in disps:
+            for ssym_c in site_sym_cart:
                 Su = np.dot(ssym_c, u)
                 rot_disps.append(Su)
     
@@ -92,9 +93,5 @@ class FC2Fit:
         
     def _solve(self, rot_disps, rot_forces):
         inv_disps = np.linalg.pinv(rot_disps)
-        print inv_disps.shape
-        print rot_forces.shape
         return np.array([-np.dot(inv_disps, f) for f in rot_forces],
                         dtype='double')
-        
-            
