@@ -175,7 +175,8 @@ parser.add_option("--cutfreq", "--cutoff_frequency", dest="cutoff_frequency",
 parser.add_option("--cutlt", "--cutoff_lifetime", dest="cutoff_lifetime",
                   type="float",
                   help="Cutoff lifetime in second used for thermal conductivity calculation")
-parser.add_option("--cutpair", "--cutoff_pair_distance", dest="cutoff_pair_distance",
+parser.add_option("--cutpair", "--cutoff_pair_distance",
+                  dest="cutoff_pair_distance",
                   type="float",
                   help="Cutoff distance between pairs of displaced atoms used for supercell creation with displacements and making third-order force constants")
 parser.add_option("-d", "--disp", dest="is_displacement",
