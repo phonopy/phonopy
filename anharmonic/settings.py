@@ -7,6 +7,7 @@ class Phono3pySettings(Settings):
 
         self._band_indices = None
         self._coarse_mesh_shifts = None
+        self._cutoff_fc3_distance = None
         self._cutoff_pair_distance = None
         self._cutoff_frequency = 1e-4
         self._cutoff_lifetime = 1e-4 # in second
@@ -38,6 +39,12 @@ class Phono3pySettings(Settings):
 
     def get_coarse_mesh_shifts(self):
         return self._coarse_mesh_shifts
+
+    def set_cutoff_fc3_distance(self, cutoff_fc3_distance):
+        self._cutoff_fc3_distance = cutoff_fc3_distance
+
+    def get_cutoff_fc3_distance(self):
+        return self._cutoff_fc3_distance
 
     def set_cutoff_pair_distance(self, cutoff_pair_distance):
         self._cutoff_pair_distance = cutoff_pair_distance
@@ -167,23 +174,32 @@ class Phono3pyConfParser(ConfParser):
         for opt in self._option_list:
             if opt.dest == 'supercell_dimension_extra':
                 if self._options.supercell_dimension_extra is not None:
-                    self._confs['dim_extra'] = self._options.supercell_dimension_extra
+                    self._confs['dim_extra'] = \
+                        self._options.supercell_dimension_extra
 
             if opt.dest == 'band_indices':
                 if self._options.band_indices is not None:
                     self._confs['band_indices'] = self._options.band_indices
 
+            if opt.dest == 'cutoff_fc3_distance':
+                if self._options.cutoff_fc3_distance is not None:
+                    self._confs['cutoff_fc3_distance'] = \
+                        self._options.cutoff_fc3_distance
+
             if opt.dest == 'cutoff_pair_distance':
                 if self._options.cutoff_pair_distance is not None:
-                    self._confs['cutoff_pair_distance'] = self._options.cutoff_pair_distance
+                    self._confs['cutoff_pair_distance'] = \
+                        self._options.cutoff_pair_distance
 
             if opt.dest == 'cutoff_frequency':
                 if self._options.cutoff_frequency is not None:
-                    self._confs['cutoff_frequency'] = self._options.cutoff_frequency
+                    self._confs['cutoff_frequency'] = \
+                        self._options.cutoff_frequency
 
             if opt.dest == 'cutoff_lifetime':
                 if self._options.cutoff_lifetime is not None:
-                    self._confs['cutoff_lifetime'] = self._options.cutoff_lifetime
+                    self._confs['cutoff_lifetime'] = \
+                        self._options.cutoff_lifetime
 
             if opt.dest == 'grid_points':
                 if self._options.grid_points is not None:
@@ -270,8 +286,13 @@ class Phono3pyConfParser(ConfParser):
                     vals.append([int(x) - 1 for x in sum_set.split()])
                 self.set_parameter('band_indices', vals)
 
+            if conf_key == 'cutoff_fc3_distance':
+                self.set_parameter('cutoff_fc3_distance',
+                                   confs['cutoff_fc3_distance'])
+
             if conf_key == 'cutoff_pair_distance':
-                self.set_parameter('cutoff_pair_distance', confs['cutoff_pair_distance'])
+                self.set_parameter('cutoff_pair_distance',
+                                   confs['cutoff_pair_distance'])
 
             if conf_key == 'cutoff_frequency':
                 self.set_parameter('cutoff_frequency', confs['cutoff_frequency'])
@@ -372,6 +393,11 @@ class Phono3pyConfParser(ConfParser):
         # Sets of band indices that are summed
         if params.has_key('band_indices'):
             self._settings.set_band_indices(params['band_indices'])
+
+        # Cutoff distance of third-order force constants. Elements where any 
+        # pair of atoms has larger distance than cut-off distance are set zero.
+        if params.has_key('cutoff_fc3_distance'):
+            self._settings.set_cutoff_fc3_distance(params['cutoff_fc3_distance'])
 
         # Cutoff distance between pairs of displaced atoms used for supercell
         # creation with displacements and making third-order force constants
