@@ -61,7 +61,7 @@ from anharmonic.phonon3.displacement_fc3 import get_third_order_displacements
 from anharmonic.settings import Phono3pyConfParser
 from anharmonic.phonon3 import Phono3py, JointDOS, IsotopeScattering, get_gruneisen_parameters
 
-phono3py_version = "0.7.4"
+phono3py_version = "0.7.6"
 
 # AA is created at http://www.network-science.de/ascii/.
 def print_phono3py():
@@ -93,6 +93,7 @@ parser.set_defaults(band_indices=None,
                     band_paths=None,
                     band_points=None,
                     cell_poscar=None,
+                    cutoff_fc3_distance=None,
                     cutoff_frequency=1e-2,
                     cutoff_lifetime=1e-4,
                     cutoff_pair_distance=None,
@@ -169,6 +170,10 @@ parser.add_option("--br", "--bterta", dest="is_bterta",
 parser.add_option("-c", "--cell", dest="cell_poscar",
                   action="store", type="string",
                   help="Read unit cell", metavar="FILE")
+parser.add_option("--cutfc3", "--cutoff_fc3_distance",
+                  dest="cutoff_fc3_distance",
+                  type="float",
+                  help="Cutoff distance of third-order force constants. Elements where any pair of atoms has larger distance than cut-off distance are set zero.")
 parser.add_option("--cutfreq", "--cutoff_frequency", dest="cutoff_frequency",
                   type="float",
                   help="Phonon modes below this frequency are ignored.")
@@ -428,9 +433,9 @@ if log_level:
         print "FC3 symmetry of index exchange in real space:", options.is_symmetrize_fc3_r
     if options.is_symmetrize_fc3_q:
         print "FC3 symmetry of index exchange in reciprocal space:", options.is_symmetrize_fc3_q
-    if settings.get_cutoff_pair_distance() is not None:
-        print "Cutoff pair-distance for fc3:",
-        print settings.get_cutoff_pair_distance()
+    if settings.get_cutoff_fc3_distance() is not None:
+        print "FC3 cutoff distance:",
+        print settings.get_cutoff_fc3_distance()
     if not options.supercell_dimension_extra == None:
         print "Extra supercell for fc2 is supplied."
     if settings.get_is_nac():
@@ -665,8 +670,8 @@ else:
                            verbose=log_level)
 
     # fc3 is cut-off by the distances among atoms
-    if settings.get_cutoff_pair_distance() is not None:
-        cutoff_distance = settings.get_cutoff_pair_distance()
+    if settings.get_cutoff_fc3_distance() is not None:
+        cutoff_distance = settings.get_cutoff_fc3_distance()
         if log_level:
             print "----- Cut-off fc3 by zero -----"
         cutoff_fc3_by_zero(fc3, supercell, cutoff_distance, options.symprec)
