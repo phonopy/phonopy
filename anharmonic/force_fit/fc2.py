@@ -1,11 +1,14 @@
 import numpy as np
-from phonopy.harmonic.force_constants import similarity_transformation, get_rotated_displacement, get_rotated_forces, get_positions_sent_by_rot_inv, distribute_force_constants
+from phonopy.harmonic.force_constants import similarity_transformation, get_positions_sent_by_rot_inv, distribute_force_constants
+from phonopy.harmonic.dynamical_matrix import get_equivalent_smallest_vectors
 
 class FC2Fit:
     def __init__(self,
                  supercell,
                  disp_dataset,
-                 symmetry):
+                 symmetry,
+                 translational_invariance=False,
+                 rotational_invariance=False):
 
         self._scell = supercell
         self._lattice = supercell.get_cell().T
@@ -17,49 +20,121 @@ class FC2Fit:
         
         self._fc2 = np.zeros((self._num_atom, self._num_atom, 3, 3),
                              dtype='double')
+        self._rot_inv = rotational_invariance
+        self._trans_inv = translational_invariance
 
     def run(self):
-        self._get_matrices()
+        self._unique_first_atom_nums = np.unique(
+            [x['number'] for x in self._dataset['first_atoms']])
+
+        if self._rot_inv or self._trans_inv:
+            if self._trans_inv:
+                print "Translational invariance: On"
+            if self._rot_inv:
+                print "Rotational invariance: On"
+            self._set_fc2_displaced_atoms_one_shot()
+        else:
+            self._set_fc2_each_displaced_atom()
+        self._distribute()
 
     def get_fc2(self):
         return self._fc2
 
-    def _get_matrices(self):
-        unique_first_atom_nums = np.unique(
-            [x['number'] for x in self._dataset['first_atoms']])
-        
-        for first_atom_num in unique_first_atom_nums:
-            disps = []
-            sets_of_forces = []
-            for dataset_1st in self._dataset['first_atoms']:
-                if first_atom_num != dataset_1st['number']:
-                    continue
-                disps.append(dataset_1st['displacement'])
-                sets_of_forces.append(dataset_1st['forces'])
+    def _set_fc2_displaced_atoms_one_shot(self):
+        for first_atom_num in self._unique_first_atom_nums:
+            print "Atom: ", first_atom_num + 1
+            disp_mat = []
+            rot_disps, rot_forces = self._get_matrices(first_atom_num)
+            for d in rot_disps:
+                disp_mat.append(np.kron(d[1:4], np.eye(3)))
 
-            site_symmetry = self._symmetry.get_site_symmetry(first_atom_num)
-            positions = (self._positions.copy() -
-                         self._positions[first_atom_num])
-            rot_map_syms = get_positions_sent_by_rot_inv(positions,
-                                                         site_symmetry,
-                                                         self._symprec)
-            site_sym_cart = [similarity_transformation(self._lattice, sym)
-                             for sym in site_symmetry]
-            # rot_disps = get_rotated_displacement(disps, site_sym_cart)
-            rot_disps = self._create_displacement_matrix(disps,
-                                                         site_sym_cart)
-            rot_forces = self._create_force_matrix(sets_of_forces,
-                                                   site_sym_cart,
-                                                   rot_map_syms)
+            disp_big_mat = np.kron(np.eye(self._num_atom),
+                                   np.reshape(disp_mat, (-1, 9)))
+            disp_big_mat = np.hstack((np.ones((disp_big_mat.shape[0], 3)),
+                                      disp_big_mat))
+            force_mat = np.reshape(rot_forces, (-1, 1))
+            if self._rot_inv:
+                rimat = self._get_rotational_invariance_matrix(first_atom_num)
+                disp_big_mat = np.vstack((disp_big_mat, rimat))
+                force_mat = np.vstack((force_mat, np.zeros((9, 1))))
+
+            if self._trans_inv:
+                timat = self._get_translational_invariance_matrix()
+                disp_big_mat = np.vstack((disp_big_mat, timat))
+                force_mat = np.vstack((force_mat, np.zeros((9, 1))))
+
+            inv_disp_mat = np.linalg.pinv(disp_big_mat)
+            fc2 = -np.dot(inv_disp_mat, force_mat).flatten()
+            print "  Recidual force:", fc2[:3]
+            self._fc2[first_atom_num] = fc2[3:].reshape(-1, 3, 3)
+            
+    def _get_rotational_invariance_matrix(self, patom_num):
+        rimat = np.zeros((9, 9 * self._num_atom + 3), dtype='double')
+        rimat[:9, :3] = [[ 0, 0, 0],
+                         [-1, 0, 0],
+                         [ 1, 0, 0],
+                         [ 0, 1, 0],
+                         [ 0, 0, 0],
+                         [ 0,-1, 0],
+                         [ 0, 0,-1],
+                         [ 0, 0, 1],
+                         [ 0, 0, 0]]
+        for i in range(self._num_atom):
+            vectors = get_equivalent_smallest_vectors(i,
+                                                      patom_num,
+                                                      self._scell,
+                                                      self._lattice.T,
+                                                      self._symprec)
+            r = np.array(vectors).sum(axis=0) / len(vectors)
+            r = np.array(vectors)[0]
+            rimat_each = np.kron(np.eye(3), [[0, r[2], -r[1]],
+                                             [-r[2], 0, r[0]],
+                                             [r[1], -r[0], 0]])
+            rimat[:, (i * 9 + 3):((i + 1) * 9 + 3)] = rimat_each
+        return rimat
+
+    def _get_translational_invariance_matrix(self):
+        timat = np.zeros((9, 9 * self._num_atom + 3))
+        timat[:, 3:] = np.kron(np.ones(self._num_atom), np.eye(9))
+        return timat
+
+    def _set_fc2_each_displaced_atom(self):
+        for first_atom_num in self._unique_first_atom_nums:
+            rot_disps, rot_forces = self._get_matrices(first_atom_num)
             fc = self._solve(rot_disps, rot_forces)
             for i in range(self._num_atom):
                 self._fc2[first_atom_num, i] = fc[i, 1:, :]
 
+    def _get_matrices(self, first_atom_num):
+        disps = []
+        sets_of_forces = []
+        for dataset_1st in self._dataset['first_atoms']:
+            if first_atom_num != dataset_1st['number']:
+                continue
+            disps.append(dataset_1st['displacement'])
+            sets_of_forces.append(dataset_1st['forces'])
+
+        site_symmetry = self._symmetry.get_site_symmetry(first_atom_num)
+        positions = (self._positions.copy() -
+                     self._positions[first_atom_num])
+        rot_map_syms = get_positions_sent_by_rot_inv(positions,
+                                                     site_symmetry,
+                                                     self._symprec)
+        site_sym_cart = [similarity_transformation(self._lattice, sym)
+                         for sym in site_symmetry]
+        rot_disps = self._create_displacement_matrix(disps,
+                                                     site_sym_cart)
+        rot_forces = self._create_force_matrix(sets_of_forces,
+                                               site_sym_cart,
+                                               rot_map_syms)
+        return rot_disps, rot_forces
+        
+    def _distribute(self):
         rotations = self._symmetry.get_symmetry_operations()['rotations']
         trans = self._symmetry.get_symmetry_operations()['translations']
         distribute_force_constants(self._fc2,
                                    range(self._num_atom),
-                                   unique_first_atom_nums,
+                                   self._unique_first_atom_nums,
                                    self._lattice,
                                    self._positions,
                                    rotations,

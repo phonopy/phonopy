@@ -59,8 +59,10 @@ parser.set_defaults(cell_poscar=None,
                     fc3=False,
                     fc4=False,
                     primitive_axis=None,
+                    rot_inv=False,
                     supercell_dimension=None,
-                    symprec=1e-5)
+                    symprec=1e-5,
+                    trans_inv=False)
 parser.add_option("-c", "--cell", dest="cell_poscar",
                   action="store", type="string",
                   help="Read unit cell", metavar="FILE")
@@ -78,8 +80,14 @@ parser.add_option("--fc4", dest="fc4",
 parser.add_option("--pa", "--primitive_axis", dest="primitive_axis",
                   action="store", type="string",
                   help="Same as PRIMITIVE_AXIS tags")
+parser.add_option("--ri", dest="rot_inv",
+                  action="store_true",
+                  help="Enforce rotational invariance")
 parser.add_option("--tolerance", dest="symprec", type="float",
                   help="Symmetry tolerance to search")
+parser.add_option("--ti", dest="trans_inv",
+                  action="store_true",
+                  help="Enforce translational invariance")
 (options, args) = parser.parse_args()
 
 if options.supercell_dimension is None:
@@ -110,7 +118,11 @@ print "Spacegroup: ", symmetry.get_international_table()
 if options.fc2:
     disp_dataset = parse_disp_fc3_yaml()
     parse_FORCES_THIRD(disp_dataset)
-    fc2fit = FC2Fit(supercell, disp_dataset, symmetry)
+    fc2fit = FC2Fit(supercell,
+                    disp_dataset,
+                    symmetry,
+                    translational_invariance=options.trans_inv,
+                    rotational_invariance=options.rot_inv)
     fc2fit.run()
     fc2 = fc2fit.get_fc2()
     print "Writing fc2..."
