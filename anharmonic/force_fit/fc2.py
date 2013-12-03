@@ -46,20 +46,24 @@ class FC2Fit:
             disp_mat = []
             rot_disps, rot_forces = self._get_matrices(first_atom_num)
             for d in rot_disps:
-                disp_mat.append(np.kron(d[1:4], np.eye(3)))
-
+                disp_mat.append(np.kron(d, np.eye(3)))
             disp_big_mat = np.kron(np.eye(self._num_atom),
                                    np.reshape(disp_mat, (-1, 9)))
-            disp_big_mat = np.hstack((np.ones((disp_big_mat.shape[0], 3)),
-                                      disp_big_mat))
+            residual_force_mat = np.kron(np.ones((len(disp_big_mat) / 3, 1)),
+                                         np.eye(3))
+            disp_big_mat = np.hstack((residual_force_mat, disp_big_mat))
             force_mat = np.reshape(rot_forces, (-1, 1))
             if self._rot_inv:
+                amplitude = np.sqrt((rot_disps ** 2).sum() / len(rot_disps))
                 rimat = self._get_rotational_invariance_matrix(first_atom_num)
+                rimat *= amplitude
                 disp_big_mat = np.vstack((disp_big_mat, rimat))
                 force_mat = np.vstack((force_mat, np.zeros((9, 1))))
 
             if self._trans_inv:
+                amplitude = np.sqrt((rot_disps ** 2).sum() / len(rot_disps))
                 timat = self._get_translational_invariance_matrix()
+                timat *= amplitude
                 disp_big_mat = np.vstack((disp_big_mat, timat))
                 force_mat = np.vstack((force_mat, np.zeros((9, 1))))
 
@@ -85,8 +89,8 @@ class FC2Fit:
                                                       self._scell,
                                                       self._lattice.T,
                                                       self._symprec)
-            r = np.array(vectors).sum(axis=0) / len(vectors)
-            r = np.array(vectors)[0]
+            r_frac = np.array(vectors).sum(axis=0) / len(vectors)
+            r = np.dot(self._lattice, r_frac)
             rimat_each = np.kron(np.eye(3), [[0, r[2], -r[1]],
                                              [-r[2], 0, r[0]],
                                              [r[1], -r[0], 0]])
@@ -101,7 +105,8 @@ class FC2Fit:
     def _set_fc2_each_displaced_atom(self):
         for first_atom_num in self._unique_first_atom_nums:
             rot_disps, rot_forces = self._get_matrices(first_atom_num)
-            fc = self._solve(rot_disps, rot_forces)
+            ones = np.ones(len(rot_disps)).reshape((-1, 1))
+            fc = self._solve(np.hstack((ones, rot_disps)), rot_forces)
             for i in range(self._num_atom):
                 self._fc2[first_atom_num, i] = fc[i, 1:, :]
 
@@ -161,10 +166,8 @@ class FC2Fit:
             for ssym_c in site_sym_cart:
                 Su = np.dot(ssym_c, u)
                 rot_disps.append(Su)
-    
-        ones = np.ones(len(rot_disps)).reshape((-1, 1))
 
-        return np.hstack((ones, rot_disps))
+        return np.array(rot_disps, dtype='double')
         
     def _solve(self, rot_disps, rot_forces):
         inv_disps = np.linalg.pinv(rot_disps)
