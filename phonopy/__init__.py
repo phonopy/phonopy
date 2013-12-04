@@ -36,7 +36,7 @@ import sys
 import numpy as np
 from phonopy.structure.atoms import Atoms
 from phonopy.structure.symmetry import Symmetry
-from phonopy.structure.cells import get_supercell, Primitive, print_cell
+from phonopy.structure.cells import get_supercell, get_primitive, print_cell
 from phonopy.harmonic.displacement import get_least_displacements
 from phonopy.harmonic.force_constants import get_force_constants, symmetrize_force_constants, rotational_invariance, cutoff_force_constants, set_tensor_symmetry
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC
@@ -252,7 +252,7 @@ class Phonopy:
 
         # Primitive cell
         inv_supercell_matrix = np.linalg.inv(self._supercell_matrix)
-        self._primitive = Primitive(
+        self._primitive = get_primitive(
             self._supercell,
             np.dot(inv_supercell_matrix, primitive_matrix),
             self._symprec)

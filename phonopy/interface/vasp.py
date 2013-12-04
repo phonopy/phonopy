@@ -35,7 +35,7 @@
 import numpy as np
 import StringIO
 from phonopy.structure.atoms import Atoms, symbol_map, atom_data
-from phonopy.structure.cells import Primitive
+from phonopy.structure.cells import get_primitive
 from phonopy.structure.symmetry import Symmetry
 from phonopy.harmonic.force_constants import similarity_transformation
 
@@ -175,7 +175,7 @@ def get_born_OUTCAR(poscar_filename="POSCAR",
                     is_symmetry=True,
                     symmetrize_tensors=False):
     cell = read_vasp(poscar_filename)
-    primitive = Primitive(cell, primitive_axis)
+    primitive = get_primitive(cell, primitive_axis)
     p2p = primitive.get_primitive_to_primitive_map()
     symmetry = Symmetry(primitive, is_symmetry=is_symmetry)
     independent_atoms = symmetry.get_independent_atoms()

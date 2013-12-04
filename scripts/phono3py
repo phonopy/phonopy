@@ -40,7 +40,7 @@ import numpy as np
 from optparse import OptionParser
 
 from phonopy.interface.vasp import read_vasp
-from phonopy.structure.cells import get_supercell, Primitive, print_cell
+from phonopy.structure.cells import get_supercell, get_primitive, print_cell
 from phonopy.structure.symmetry import Symmetry
 from phonopy.harmonic.force_constants import get_force_constants, \
     set_permutation_symmetry, symmetrize_force_constants, \
@@ -476,14 +476,14 @@ if options.is_displacement:
 #########################################
 # Calculate third-order force constants #
 #########################################
-primitive = Primitive(
+primitive = get_primitive(
     supercell,
     np.dot(np.linalg.inv(settings.get_supercell_matrix()),
            settings.get_primitive_matrix()),
     options.symprec)
 
 if not settings.get_supercell_matrix_extra()==None:
-    primitive_extra = Primitive(
+    primitive_extra = get_primitive(
         supercell_extra,
         np.dot(np.linalg.inv(settings.get_supercell_matrix_extra()),
                settings.get_primitive_matrix()),

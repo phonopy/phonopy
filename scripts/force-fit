@@ -39,7 +39,7 @@ import sys
 import numpy as np
 from optparse import OptionParser
 from phonopy.interface.vasp import read_vasp
-from phonopy.structure.cells import get_supercell, Primitive
+from phonopy.structure.cells import get_supercell
 from phonopy.structure.symmetry import Symmetry
 from phonopy.harmonic.force_constants import show_drift_force_constants
 from anharmonic.force_fit.fc2 import FC2Fit
@@ -58,7 +58,6 @@ parser.set_defaults(cell_poscar=None,
                     fc2=False,
                     fc3=False,
                     fc4=False,
-                    primitive_axis=None,
                     rot_inv=False,
                     supercell_dimension=None,
                     symprec=1e-5,
@@ -77,9 +76,6 @@ parser.add_option("--fc3", dest="fc3",
 parser.add_option("--fc4", dest="fc4",
                   action="store_true",
                   help="Calculate fc4")
-parser.add_option("--pa", "--primitive_axis", dest="primitive_axis",
-                  action="store", type="string",
-                  help="Same as PRIMITIVE_AXIS tags")
 parser.add_option("--ri", dest="rot_inv",
                   action="store_true",
                   help="Enforce rotational invariance")

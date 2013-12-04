@@ -2,7 +2,6 @@ import sys
 import numpy as np
 from phonopy.harmonic.force_constants import similarity_transformation, set_permutation_symmetry, distribute_force_constants, solve_force_constants, get_rotated_displacement, get_positions_sent_by_rot_inv, set_translational_invariance
 from phonopy.harmonic.dynamical_matrix import get_equivalent_smallest_vectors
-from phonopy.structure.cells import Primitive
 from anharmonic.phonon3.displacement_fc3 import get_reduced_site_symmetry, get_bond_symmetry
 from anharmonic.file_IO import write_fc2_dat
 

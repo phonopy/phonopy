@@ -816,14 +816,14 @@ if settings.get_is_rotational_invariance():
 
 # Atomic mass modification
 primitive = phonon.get_primitive()
-if not settings.get_masses()==None:
+if settings.get_masses() is not None:
     primitive_masses = settings.get_masses()
     primitive.set_masses(primitive_masses)
     phonon.set_primitive(primitive)
     supercell_masses = []
     p2p_map = primitive.get_primitive_to_primitive_map()
     for i, s_i in enumerate(primitive.get_supercell_to_primitive_map()):
-        supercell_masses.append(primitive_masses[ p2p_map[s_i] ])
+        supercell_masses.append(primitive_masses[p2p_map[s_i]])
     supercell.set_masses(supercell_masses)
     phonon.set_supercell(supercell)
 

@@ -36,7 +36,7 @@ import sys
 import numpy as np
 import phonopy.structure.spglib as spg
 from phonopy.structure.symmetry import Symmetry, find_primitive, get_pointgroup
-from phonopy.structure.cells import Primitive, print_cell, get_supercell
+from phonopy.structure.cells import get_primitive, print_cell, get_supercell
 from phonopy.interface.vasp import write_vasp
 from phonopy.structure.atoms import Atoms
 
@@ -97,9 +97,7 @@ def check_symmetry(input_cell,
                    symprec=1e-5,
                    phonopy_version=None):
 
-    cell = Primitive(input_cell,
-                     primitive_axis,
-                     symprec)
+    cell = get_primitive(input_cell, primitive_axis, symprec=symprec)
 
     symmetry = Symmetry(cell, symprec)
     print get_symmetry_yaml(cell, symmetry, phonopy_version),
