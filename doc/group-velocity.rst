@@ -1,8 +1,5 @@
 .. _group_velocity:
 
-Group velocity
-====================
-
 Method
 ------------
 

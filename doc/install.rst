@@ -55,8 +55,14 @@ machine. See :ref:`virtualmachine`
    install location can be specified by the option ``--home``.
 
 
+Special cases on installation
+==============================
+   
+.. toctree::
+   :maxdepth: 1
 
-
+   MacOSX   
+   virtualmachine
 
 .. |sflogo| image:: http://sflogo.sourceforge.net/sflogo.php?group_id=161614&type=1
             :target: http://sourceforge.net

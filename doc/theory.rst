@@ -291,6 +291,20 @@ Entropy
     S &= -\frac{\partial F}{\partial T} \\
       &= \frac{1}{2T}\sum_{\mathbf{q}\nu}\hbar\omega(\mathbf{q}\nu)\coth(\hbar\omega(\mathbf{q}\nu)/2k_\mathrm{B}T)-k_\mathrm{B} \sum_{\mathbf{q}\nu}\ln\left[2\sinh(\hbar\omega(\mathbf{q}\nu)/2k_\mathrm{B}T)\right]
 
+Thermal displacement
+======================
+
+.. toctree::
+
+   thermal-displacement
+
+Group velocity
+================
+
+.. toctree::
+
+   group-velocity
+      
 .. |sflogo| image:: http://sflogo.sourceforge.net/sflogo.php?group_id=161614&type=1
             :target: http://sourceforge.net
 

@@ -1,8 +1,5 @@
 .. _thermal_displacement:
 
-Thermal displacement
-====================
-
 Mean square displacement
 --------------------------
 
