@@ -3,6 +3,14 @@
 Change Log
 ==========
 
+Dec-4-2013: Version 1.7.5
+---------------------------
+
+* ``--mass`` option is created to shortcut of the ``MASS`` tag.
+* ``--fc_spg_symmetry`` option is created to symmetrize force
+  constants.
+* Symmetry finder update (spglib version 1.5.2)
+
 Oct-3-2013: Version 1.7.4
 ---------------------------
 
