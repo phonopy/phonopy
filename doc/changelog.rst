@@ -3,6 +3,11 @@
 Change Log
 ==========
 
+Dec-4-2013: Version 1.7.6
+---------------------------
+
+* The display output with ``-v`` option is enriched.
+
 Dec-4-2013: Version 1.7.5
 ---------------------------
 

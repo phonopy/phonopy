@@ -42,10 +42,13 @@ option, partial density of states are calculated.
 This tag is not necessary to use usually, because atomic masses are
 automatically set from the chemical symbols.
 
-Atomic masses of a primitive cell are overwritten by the values
-specified. This tag does not affect to the symmetry findings. For
-example, when there are six atoms in a primitive cell, ``MASS`` is set
-as follows ::
+Atomic masses of a **primitive cell** are overwritten by the values
+specified. The order of atoms in the primitive cell that is defined by
+``PRIMITIVE_AXIS`` tag can be shown using ``-v`` option. It must be
+noted that this tag does not affect to the symmetry search.
+
+For example, when there are six atoms in a primitive cell, ``MASS`` is
+set as follows ::
 
    MASS =   28.085 28.085 16.000 16.000 16.000 16.000
 

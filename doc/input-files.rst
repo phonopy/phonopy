@@ -249,12 +249,10 @@ in Cartesian coordinates. The nine values correspond to the tensor
 elements of xx, xy, xz, yx, yy, yz, zx, zy, and zz.
 
 From the third line, Born effective charges :math:`Z` for the
-independent atoms in the primitive cell have to be written in
+independent atoms in the **primitive cell** have to be written in
 Cartesian coordinates. The independent atoms can be found using the
-``--symmetry`` option. If ``PRIMITIVE_AXIS`` is supposed to be used to
-calculate phonons, the option ``--primitive_axis`` has to be set
-together with the ``--symmetry`` option.
-
+``-v`` option. The independent atoms are marked by ``*`` in front of
+atomic positions.
 
 Example
 ~~~~~~~
