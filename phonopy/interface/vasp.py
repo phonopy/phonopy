@@ -35,7 +35,7 @@
 import numpy as np
 import StringIO
 from phonopy.structure.atoms import Atoms, symbol_map, atom_data
-from phonopy.structure.cells import get_primitive
+from phonopy.structure.cells import get_primitive, get_supercell
 from phonopy.structure.symmetry import Symmetry
 from phonopy.harmonic.force_constants import similarity_transformation
 
@@ -172,14 +172,16 @@ def get_force_constants_OUTCAR(filename):
 def get_born_OUTCAR(poscar_filename="POSCAR",
                     outcar_filename="OUTCAR",
                     primitive_axis=np.eye(3),
+                    supercell_matrix=np.eye(3, dtype='intc'),
                     is_symmetry=True,
                     symmetrize_tensors=False):
-    cell = read_vasp(poscar_filename)
-    primitive = get_primitive(cell, primitive_axis)
-    p2p = primitive.get_primitive_to_primitive_map()
-    symmetry = Symmetry(primitive, is_symmetry=is_symmetry)
-    independent_atoms = symmetry.get_independent_atoms()
-    prim_lat = primitive.get_cell().T
+    ucell = read_vasp(poscar_filename)
+    scell = get_supercell(ucell, supercell_matrix)
+    inv_smat = np.linalg.inv(supercell_matrix)
+    pcell = get_primitive(scell, np.dot(inv_smat, primitive_axis))
+    u_sym = Symmetry(ucell, is_symmetry=is_symmetry)
+    p_sym = Symmetry(pcell, is_symmetry=is_symmetry)
+    prim_lat = pcell.get_cell().T
     outcar = open(outcar_filename)
     
     borns = []
@@ -204,31 +206,37 @@ def get_born_OUTCAR(poscar_filename="POSCAR",
             if "ion" in line:
                 for i in range(num_atom):
                     born = []
-                    born.append([float(x) for x in outcar.readline().split()][1:])
-                    born.append([float(x) for x in outcar.readline().split()][1:])
-                    born.append([float(x) for x in outcar.readline().split()][1:])
+                    born.append([float(x)
+                                 for x in outcar.readline().split()][1:])
+                    born.append([float(x)
+                                 for x in outcar.readline().split()][1:])
+                    born.append([float(x)
+                                 for x in outcar.readline().split()][1:])
                     outcar.readline()
                     borns.append(born)
 
-
-    reduced_borns = []
-    for p_i, u_i in enumerate(p2p):
-        if p_i in independent_atoms:
-            if symmetrize_tensors:
-                site_sym = [similarity_transformation(prim_lat, rot)
-                            for rot in symmetry.get_site_symmetry(p_i)]
-                reduced_borns.append(symmetrize_tensor(borns[u_i], site_sym))
-            else:
-                reduced_borns.append(borns[u_i])
-                
+    borns = np.array(borns, dtype='double')
+    epsilon = np.array(epsilon, dtype='double')
     if symmetrize_tensors:
-        point_sym = [similarity_transformation(prim_lat, rot)
-                     for rot in symmetry.get_pointgroup_operations()]
+        point_sym = [similarity_transformation(prim_lat, r)
+                     for r in u_sym.get_pointgroup_operations()]
         epsilon = symmetrize_tensor(epsilon, point_sym)
-    else:
-        epsilon = np.array(epsilon)
+        for i in range(num_atom):
+            z = borns[i]
+            site_sym = [similarity_transformation(prim_lat, r)
+                        for r in u_sym.get_site_symmetry(i)]
+            borns[i] = symmetrize_tensor(z, site_sym)
 
-    return np.array(reduced_borns), epsilon
+        sum_born = borns.sum(axis=0) / len(borns)
+        borns -= sum_born
+
+    p2s = np.array(pcell.get_primitive_to_supercell_map(), dtype='intc')
+    s_indep_atoms = p2s[p_sym.get_independent_atoms()]
+    u2u = scell.get_unitcell_to_unitcell_map()
+    u_indep_atoms = [u2u[x] for x in s_indep_atoms]
+    reduced_borns = borns[u_indep_atoms].copy()
+
+    return reduced_borns, epsilon
     
 def symmetrize_tensor(tensor, symmetry_operations):
     tensors = np.zeros_like(tensor)

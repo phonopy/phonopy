@@ -50,10 +50,14 @@ parser = OptionParser()
 parser.set_defaults(num_atoms=None,
                     primitive_axis =None,
                     primitive_atoms=None,
+                    supercell_matrix=None,
                     symmetrize_tensors=False)
 parser.add_option("-a", "--atoms", dest="primitive_atoms",
                   action="store", type="string",
                   help="Atom indices in primitive cell")
+parser.add_option("--dim", dest="supercell_matrix",
+                  action="store", type="string",
+                  help="Same behavior as DIM tag")
 parser.add_option("--pa", "--primitive_axis", dest="primitive_axis",
                   action="store", type="string",
                   help="Same as PRIMITIVE_AXIS tags")
@@ -81,10 +85,21 @@ if options.primitive_axis:
         sys.exit(1)
 else:
     primitive_axis = np.eye(3)
-    
+
+if options.supercell_matrix:
+    vals = [int(x) for x in options.supercell_matrix.split()]
+    if len(vals) == 9:
+        supercell_matrix = np.reshape(np.array(vals, dtype='intc'), (3, 3))
+    elif len(vals) == 3:
+        supercell_matrix = np.diag(np.array(vals, dtype='intc'))
+    else:
+        print "Supercell matrix is incorrectly set."
+        sys.exit(1)
+        
 borns, epsilon = get_born_OUTCAR(poscar_filename=poscar_filename,
                                  outcar_filename=outcar_filename,
                                  primitive_axis=primitive_axis,
+                                 supercell_matrix=supercell_matrix,
                                  symmetrize_tensors=options.symmetrize_tensors)
 
 print "14.400"
