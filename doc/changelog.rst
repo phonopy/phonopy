@@ -7,6 +7,7 @@ Dec-4-2013: Version 1.7.6
 ---------------------------
 
 * The display output with ``-v`` option is enriched.
+* Symmetrization for ``outcar-born`` is implemented (Experimental).
 
 Dec-4-2013: Version 1.7.5
 ---------------------------

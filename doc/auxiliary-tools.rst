@@ -135,6 +135,17 @@ type file and ``POSCAR`` type file, respectively. If both are omitted,
 
 This is same as :ref:`primitive_axis_tag`.
 
+``--dim``
+^^^^^^^^^^
+
+This is same as :ref:`dimension_tag`.
+
+``--st``
+^^^^^^^^^
+
+**Experimental**
+
+Dielectric constant and Born effective charge tensors are symmetrized.
 
 .. |sflogo| image:: http://sflogo.sourceforge.net/sflogo.php?group_id=161614&type=1
             :target: http://sourceforge.net
