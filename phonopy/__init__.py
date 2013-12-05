@@ -120,13 +120,35 @@ class Phonopy:
 
         # set_group_velocity
         self._group_velocity = None
+
+    def set_masses(self, masses):
+        p_masses = np.array(masses)
+        self._primitive.set_masses(p_masses)
+        p2p_map = self._primitive.get_primitive_to_primitive_map()
+        s_masses = p_masses[[p2p_map[x] for x in
+                             self._primitive.get_supercell_to_primitive_map()]]
+        self._supercell.set_masses(s_masses)
+        u2s_map = self._supercell.get_unitcell_to_supercell_map()
+        u_masses = s_masses[u2s_map]
+        self._unitcell.set_masses(u_masses)
         
     def get_primitive(self):
         return self._primitive
     primitive = property(get_primitive)
 
-    def set_primitive(self, primitive):
-        self._primitive = primitive
+    def set_primitive_matrix(self, primitive_matrix=np.eye(3)):
+        inv_supercell_matrix = np.linalg.inv(self._supercell_matrix)
+        trans_mat = np.dot(inv_supercell_matrix, primitive_matrix)
+        self._primitive = get_primitive(
+            self._supercell,
+            trans_mat,
+            self._symprec)
+        num_satom = self._supercell.get_number_of_atoms()
+        num_patom = self._primitive.get_number_of_atoms()
+        if abs(num_satom * np.linalg.det(trans_mat) - num_patom) < 0.1:
+            return True
+        else:
+            return False
 
     def get_unitcell(self):
         return self._unitcell
@@ -149,7 +171,7 @@ class Phonopy:
     def get_unit_conversion_factor(self):
         return self._factor
     unit_conversion_factor = property(get_unit_conversion_factor)
-    
+
     def generate_displacements(self,
                                distance=0.01,
                                is_plusminus='auto',
@@ -219,7 +241,7 @@ class Phonopy:
         return self._supercells_with_displacements
 
     def set_post_process(self,
-                         primitive_matrix=np.eye(3, dtype=float),
+                         primitive_matrix=None,
                          sets_of_forces=None,
                          set_of_forces_objects=None,
                          force_constants=None,
@@ -251,11 +273,10 @@ class Phonopy:
         self._is_nac = is_nac
 
         # Primitive cell
-        inv_supercell_matrix = np.linalg.inv(self._supercell_matrix)
-        self._primitive = get_primitive(
-            self._supercell,
-            np.dot(inv_supercell_matrix, primitive_matrix),
-            self._symprec)
+        if primitive_matrix is not None:
+            self.set_primitive_matrix(primitive_matrix)
+        elif self._primitive is None:
+            self.set_primitive_matrix()
         self._set_primitive_symmetry()
 
         # Set set of FORCES objects or force constants

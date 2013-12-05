@@ -66,7 +66,7 @@ class Settings:
         self._magmoms = None
         self._mesh = None
         self._omega_step = None
-        self._primitive_matrix = np.eye(3, dtype=float)
+        self._primitive_matrix = None
         self._qpoints = None
         self._q_direction = None
         self._sigma = None

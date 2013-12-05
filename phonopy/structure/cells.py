@@ -92,7 +92,7 @@ def trim_cell(relative_axes, cell, symprec):
 
     return trimed_cell, atom_map
 
-def print_cell(cell, mapping=None):
+def print_cell(cell, mapping=None, stars=None):
     symbols = cell.get_chemical_symbols()
     masses = cell.get_masses()
     magmoms = cell.get_magnetic_moments()
@@ -103,14 +103,19 @@ def print_cell(cell, mapping=None):
     print "  c %20.15f %20.15f %20.15f" % tuple(lattice[2])
     print "Atomic positions (fractional):"
     for i, v in enumerate(cell.get_scaled_positions()):
+        num = " "
+        if stars is not None:
+            if i in stars:
+                num = "*"
+        num += "%d" % (i + 1)
         if magmoms == None:
-            print "%5d %-2s%18.14f%18.14f%18.14f %7.3f" % \
-                (i+1, symbols[i], v[0], v[1], v[2], masses[i]),
+            print "%5s %-2s%18.14f%18.14f%18.14f %7.3f" % \
+                (num, symbols[i], v[0], v[1], v[2], masses[i]),
         else:
-            print "%5d %-2s%18.14f%18.14f%18.14f %7.3f  %5.3f" % \
-                (i+1, symbols[i], v[0], v[1], v[2], masses[i], magmoms[i]),
-        # print 
-        if mapping == None:
+            print "%5s %-2s%18.14f%18.14f%18.14f %7.3f  %5.3f" % \
+                (num, symbols[i], v[0], v[1], v[2], masses[i], magmoms[i]),
+
+        if mapping is None:
             print
         else:
             print ">", mapping[i]+1
@@ -169,7 +174,7 @@ class Supercell(Atoms):
 
         multi = supercell.get_number_of_atoms() / unitcell.get_number_of_atoms() 
         self._u2s_map = np.arange(unitcell.get_number_of_atoms()) * multi
-        self._u2u_map = dict([(j, i) for i, j in enumerate(self.u2s_map)])
+        self._u2u_map = dict([(j, i) for i, j in enumerate(self._u2s_map)])
         self._s2u_map = np.array(u2sur_map)[sur2s_map] * multi
 
     def _get_surrounding_frame(self, supercell_matrix):
