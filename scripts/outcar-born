@@ -95,7 +95,9 @@ if options.supercell_matrix:
     else:
         print "Supercell matrix is incorrectly set."
         sys.exit(1)
-        
+else:
+    supercell_matrix = np.eye(3, dtype='intc')
+
 borns, epsilon = get_born_OUTCAR(poscar_filename=poscar_filename,
                                  outcar_filename=outcar_filename,
                                  primitive_axis=primitive_axis,
