@@ -32,6 +32,7 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import sys
 import numpy as np
 import StringIO
 from phonopy.structure.atoms import Atoms, symbol_map, atom_data
@@ -181,7 +182,7 @@ def get_born_OUTCAR(poscar_filename="POSCAR",
     pcell = get_primitive(scell, np.dot(inv_smat, primitive_axis))
     u_sym = Symmetry(ucell, is_symmetry=is_symmetry)
     p_sym = Symmetry(pcell, is_symmetry=is_symmetry)
-    prim_lat = pcell.get_cell().T
+    lattice = ucell.get_cell().T
     outcar = open(outcar_filename)
     
     borns = []
@@ -218,18 +219,36 @@ def get_born_OUTCAR(poscar_filename="POSCAR",
     borns = np.array(borns, dtype='double')
     epsilon = np.array(epsilon, dtype='double')
     if symmetrize_tensors:
-        point_sym = [similarity_transformation(prim_lat, r)
+        borns_orig = borns.copy()
+        point_sym = [similarity_transformation(lattice, r)
                      for r in u_sym.get_pointgroup_operations()]
         epsilon = symmetrize_tensor(epsilon, point_sym)
         for i in range(num_atom):
             z = borns[i]
-            site_sym = [similarity_transformation(prim_lat, r)
+            site_sym = [similarity_transformation(lattice, r)
                         for r in u_sym.get_site_symmetry(i)]
             borns[i] = symmetrize_tensor(z, site_sym)
 
+        rotations = u_sym.get_symmetry_operations()['rotations']
+        map_atoms = u_sym.get_map_atoms()
+        borns_copy = np.zeros_like(borns)
+        for i, m_i in enumerate(map_atoms):
+            count = 0
+            for j, r_j in enumerate(u_sym.get_map_operations()):
+                if map_atoms[j] == m_i:
+                    count += 1
+                    r_cart = similarity_transformation(lattice, rotations[r_j])
+                    borns_copy[i] += similarity_transformation(r_cart, borns[j])
+            borns_copy[i] /= count
+
+        borns = borns_copy
         sum_born = borns.sum(axis=0) / len(borns)
         borns -= sum_born
 
+        if (np.abs(borns_orig - borns) > 0.1).any():
+            sys.stderr.write(
+                "Born effective charge symmetrization might go wrong.\n")
+        
     p2s = np.array(pcell.get_primitive_to_supercell_map(), dtype='intc')
     s_indep_atoms = p2s[p_sym.get_independent_atoms()]
     u2u = scell.get_unitcell_to_unitcell_map()
