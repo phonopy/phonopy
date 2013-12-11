@@ -42,12 +42,12 @@ class ThermalMotion:
                  frequencies, # have to be supplied in THz
                  eigenvectors,
                  masses,
-                 cutoff_eigenvalue=None):
+                 cutoff_frequency=None):
 
-        if cutoff_eigenvalue==None:
-            self._cutoff_eigenvalue = 0
+        if cutoff_frequency==None:
+            self._cutoff_frequency = 0
         else:
-            self._cutoff_eigenvalue = cutoff_eigenvalue
+            self._cutoff_frequency = cutoff_frequency
             
         self._distances = None
         self._displacements = None
@@ -109,13 +109,13 @@ class ThermalDisplacements(ThermalMotion):
                  frequencies, # Have to be supplied in THz
                  eigenvectors,
                  masses,
-                 cutoff_eigenvalue=None):
+                 cutoff_frequency=None):
 
         ThermalMotion.__init__(self,
                                frequencies,
                                eigenvectors,
                                masses,
-                               cutoff_eigenvalue=None)
+                               cutoff_frequency=cutoff_frequency)
 
         self._displacements = None
         
@@ -135,7 +135,7 @@ class ThermalDisplacements(ThermalMotion):
         disps = np.zeros((len(temps), len(masses)), dtype=float)
         for fs, vecs2 in zip(freqs, abs(eigvecs) ** 2):
             for f, v2 in zip(fs, vecs2.T):
-                if f > np.sqrt(self._cutoff_eigenvalue):
+                if f > self._cutoff_frequency:
                     c = v2 / masses
                     for i, t in enumerate(temps):
                         disps[i] += self.get_Q2(f, t) * c
@@ -179,13 +179,13 @@ class ThermalDisplacementMatrices(ThermalMotion):
                  frequencies, # Have to be supplied in THz
                  eigenvectors,
                  masses,
-                 cutoff_eigenvalue=None):
+                 cutoff_frequency=None):
 
         ThermalMotion.__init__(self,
                                frequencies,
                                eigenvectors,
                                masses,
-                               cutoff_eigenvalue=None)
+                               cutoff_frequency=None)
 
         self._disp_matrices = None
 
@@ -198,7 +198,7 @@ class ThermalDisplacementMatrices(ThermalMotion):
 
         for freqs, eigvecs in zip(self._frequencies, self._eigenvectors):
             for f, vec in zip(freqs, eigvecs.T):
-                if f > np.sqrt(self._cutoff_eigenvalue):
+                if f > self._cutoff_frequency:
                     c = []
                     for v, m in zip(vec.reshape(-1, 3), self._masses):
                         c.append(np.outer(v, v.conj()) / m)
@@ -234,7 +234,7 @@ class ThermalDistances(ThermalMotion):
                  primitive,
                  qpoints,
                  symprec=1e-5,
-                 cutoff_eigenvalue=None):
+                 cutoff_frequency=None):
 
         self._primitive = primitive
         self._supercell = supercell
@@ -245,7 +245,7 @@ class ThermalDistances(ThermalMotion):
                                frequencies,
                                eigenvectors,
                                primitive.get_masses(),
-                               cutoff_eigenvalue=None)
+                               cutoff_frequency=None)
 
     def _get_cross(self, v, delta_r, q, atom1, atom2):
         phase = np.exp(2j * np.pi * np.dot(delta_r, q))
@@ -278,7 +278,7 @@ class ThermalDistances(ThermalMotion):
                 for f, v in zip(freqs, vecs.T):
                     cross_term = self._get_cross(v, delta_r, q, patom1, patom2)
                     v2 = abs(v)**2
-                    if f > np.sqrt(self._cutoff_eigenvalue):
+                    if f > self._cutoff_frequency:
                         for j, t in enumerate(self._temperatures):
                             dists[j, i] += self.get_Q2(f, t) * (
                                 v2[patom1] * c1 + cross_term * c_cross + v2[patom2] * c2)

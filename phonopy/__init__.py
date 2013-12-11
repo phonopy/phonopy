@@ -619,12 +619,11 @@ class Phonopy:
                                   t_max=1000,
                                   t_min=0,
                                   direction=None,
-                                  cutoff_eigenvalue=None):
+                                  cutoff_frequency=None):
         """
-        cutoff_eigenvalue:
-          phonon modes that have frequencies below cutoff_eigenvalue
+        cutoff_frequency:
+          phonon modes that have frequencies below cutoff_frequency
           are ignored.
-          e.g. 0.1 (THz^2)
 
         direction:
           Projection direction in reduced coordinates
@@ -648,7 +647,7 @@ class Phonopy:
         td = ThermalDisplacements(frequencies,
                                   eigvecs,
                                   self._primitive.get_masses(),
-                                  cutoff_eigenvalue=cutoff_eigenvalue)
+                                  cutoff_frequency=cutoff_frequency)
         td.set_temperature_range(t_min, t_max, t_step)
         if direction is not None:
             td.project_eigenvectors(direction, self._primitive.get_cell())
@@ -671,12 +670,11 @@ class Phonopy:
                                            t_step=10,
                                            t_max=1000,
                                            t_min=0,
-                                           cutoff_eigenvalue=None):
+                                           cutoff_frequency=None):
         """
-        cutoff_eigenvalue:
-          phonon modes that have frequencies below cutoff_eigenvalue
+        cutoff_frequency:
+          phonon modes that have frequencies below cutoff_frequency
           are ignored.
-          e.g. 0.1 (THz^2)
 
         direction:
           Projection direction in reduced coordinates
@@ -700,7 +698,7 @@ class Phonopy:
         tdm = ThermalDisplacementMatrices(frequencies,
                                            eigvecs,
                                            self._primitive.get_masses(),
-                                           cutoff_eigenvalue=cutoff_eigenvalue)
+                                           cutoff_frequency=cutoff_frequency)
         tdm.set_temperature_range(t_min, t_max, t_step)
         tdm.run()
         
@@ -719,16 +717,15 @@ class Phonopy:
                               t_step=10,
                               t_max=1000,
                               t_min=0,
-                              cutoff_eigenvalue=None):
+                              cutoff_frequency=None):
         """
         atom_pairs: List of list
           Mean square distances are calculated for the atom_pairs
           e.g. [[1, 2], [1, 4]]
 
-        cutoff_eigenvalue:
-          phonon modes that have frequencies below cutoff_eigenvalue
+        cutoff_frequency:
+          phonon modes that have frequencies below cutoff_frequency
           are ignored.
-          e.g. 0.1 (THz^2)
         """
 
         td = ThermalDistances(self._mesh.get_frequencies(),
@@ -737,7 +734,7 @@ class Phonopy:
                               self._primitive,
                               self._mesh.get_qpoints(),
                               symprec=self._symprec,
-                              cutoff_eigenvalue=cutoff_eigenvalue)
+                              cutoff_frequency=cutoff_frequency)
         td.set_temperature_range(t_min, t_max, t_step)
         td.run(atom_pairs)
 

@@ -108,7 +108,7 @@ parser.set_defaults(
     anime=None,
     band_paths=None,
     band_points=None,
-    cutoff_eigenvalue=None,
+    cutoff_frequency=None,
     cutoff_radius=None,
     dynamical_matrix_decimals=None,
     is_dos_mode=False,
@@ -183,9 +183,10 @@ parser.add_option("-c", "--cell", dest="cell_poscar",
 parser.add_option("--irreps", "--irreps_qpoint", dest="irreps_qpoint",
                   action="store", type="string",
                   help="A q-point where characters of irreps are calculated")
-parser.add_option("--cutoff", dest="cutoff_frequency", type="float",
+parser.add_option("--cutoff_freq", "--cutoff_frequency",
+                  dest="cutoff_frequency", type="float",
                   help="Thermal properties are not calculated below this cutoff frequency.")
-parser.add_option("--cr", "--cutoff_radius", dest="cutoff_radius", type="float",
+parser.add_option("--cutoff_radius", dest="cutoff_radius", type="float",
                   help="Out of cutoff radius, force constants are set zero.")
 parser.add_option("-d", "--displacement", dest="is_displacement",
                   action="store_true",
@@ -970,7 +971,7 @@ elif run_mode == 'mesh':
 
     phonon.write_yaml_mesh()
 
-    # Thermalp roperty
+    # Thermal property
     if settings.get_is_thermal_properties():
         if log_level > 0:
             print "Calculating thermal properties..."
@@ -983,7 +984,7 @@ elif run_mode == 'mesh':
             tmax,
             tmin,
             is_projection=settings.get_is_projected_thermal_properties(),
-            cutoff_frequency=options.cutoff_frequency)
+            cutoff_frequency=settings.get_cutoff_frequency())
         phonon.write_yaml_thermal_properties()
 
         if log_level > 0:
@@ -1020,7 +1021,7 @@ elif run_mode == 'mesh':
             tmax,
             tmin,
             direction=p_direction,
-            cutoff_eigenvalue=options.cutoff_eigenvalue)
+            cutoff_frequency=settings.get_cutoff_frequency())
         phonon.write_yaml_thermal_displacements()
 
         if options.is_graph_plot:
@@ -1042,10 +1043,10 @@ elif run_mode == 'mesh':
             tstep,
             tmax,
             tmin,
-            cutoff_eigenvalue=options.cutoff_eigenvalue)
+            cutoff_frequency=settings.get_cutoff_frequency())
         phonon.write_yaml_thermal_displacement_matrices()
 
-    # Thermal displacement
+    # Thermal distances
     elif settings.get_is_thermal_distances():
         if log_level > 0:
             print "Calculating thermal distances..."
@@ -1058,7 +1059,7 @@ elif run_mode == 'mesh':
             tstep,
             tmax,
             tmin,
-            cutoff_eigenvalue=options.cutoff_eigenvalue)
+            cutoff_frequency=settings.get_cutoff_frequency())
         phonon.write_yaml_thermal_distances()
 
     # Partial DOS

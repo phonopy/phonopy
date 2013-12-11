@@ -752,6 +752,7 @@ class PhonopySettings(Settings):
         self._anime_type = 'v_sim'
         self._band_labels = None
         self._band_connection = False
+        self._cutoff_frequency = None
         self._cutoff_radius = None
         self._dos = None
         self._dos_range = { 'min':  None,
@@ -816,6 +817,12 @@ class PhonopySettings(Settings):
 
     def get_is_band_connection(self):
         return self._band_connection
+
+    def set_cutoff_frequency(self, cutoff_frequency):
+        self._cutoff_frequency = cutoff_frequency
+
+    def get_cutoff_frequency(self):
+        return self._cutoff_frequency
 
     def set_cutoff_radius(self, cutoff_radius):
         self._cutoff_radius = cutoff_radius
@@ -1080,6 +1087,10 @@ class PhonopyConfParser(ConfParser):
                 if self._options.is_band_connection:
                     self._confs['band_connection'] = '.true.'
 
+            if opt.dest == 'cutoff_frequency':
+                if self._options.cutoff_frequency:
+                    self._confs['cutoff_frequency'] = self._options.cutoff_frequency
+
             if opt.dest == 'cutoff_radius':
                 if self._options.cutoff_radius:
                     self._confs['cutoff_radius'] = self._options.cutoff_radius
@@ -1121,6 +1132,13 @@ class PhonopyConfParser(ConfParser):
                 self.set_parameter('force_constants',
                                    confs['force_constants'])
 
+            if conf_key == 'cutoff_frequency':
+                if isinstance(confs['cutoff_frequency'], str):
+                    val = float(confs['cutoff_frequency'].split()[0])
+                else:
+                    val = confs['cutoff_frequency']
+                self.set_parameter('cutoff_frequency', val)
+
             if conf_key == 'cutoff_radius':
                 if isinstance(confs['cutoff_radius'], str):
                     val = float(confs['cutoff_radius'].split()[0])
@@ -1137,7 +1155,7 @@ class PhonopyConfParser(ConfParser):
                     self.set_parameter('hdf5', True)
 
             if conf_key == 'mp':
-                vals = [ int(x) for x in confs['mp'].split() ]
+                vals = [int(x) for x in confs['mp'].split()]
                 if len(vals) < 3:
                     self.setting_error("Mesh numbers are incorrectly set.")
                 self.set_parameter('mesh_numbers', vals[:3])
@@ -1311,6 +1329,10 @@ class PhonopyConfParser(ConfParser):
         if params.has_key('hdf5'):
             self._settings.set_is_hdf5(params['hdf5'])
 
+        # Cutoff frequency
+        if params.has_key('cutoff_frequency'):
+            self._settings.set_cutoff_frequency(params['cutoff_frequency'])
+    
         # Cutoff radius of force constants
         if params.has_key('cutoff_radius'):
             self._settings.set_cutoff_radius(params['cutoff_radius'])
