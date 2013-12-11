@@ -476,17 +476,21 @@ if options.is_displacement:
 #########################################
 # Calculate third-order force constants #
 #########################################
+if settings.get_primitive_matrix() is None:
+    primitive_matrix = np.eye(3, dtype='double')
+else:
+    primitive_matrix = np.array(settings.get_primitive_matrix(), dtype='double')
+    
 primitive = get_primitive(
     supercell,
-    np.dot(np.linalg.inv(settings.get_supercell_matrix()),
-           settings.get_primitive_matrix()),
+    np.dot(np.linalg.inv(settings.get_supercell_matrix()), primitive_matrix),
     options.symprec)
 
-if not settings.get_supercell_matrix_extra()==None:
+if settings.get_supercell_matrix_extra() is not None:
     primitive_extra = get_primitive(
         supercell_extra,
         np.dot(np.linalg.inv(settings.get_supercell_matrix_extra()),
-               settings.get_primitive_matrix()),
+               primitive_matrix),
         options.symprec)
 
 if log_level:
@@ -497,7 +501,7 @@ if log_level:
     print "----------------- ratio (supercell for fc)/(primitive) -------------------"
     for vec in np.dot(supercell.get_cell(), np.linalg.inv(primitive.get_cell())):
         print "%5.2f"*3 % tuple(vec)
-if log_level and (not settings.get_supercell_matrix_extra()==None):
+if log_level and (settings.get_supercell_matrix_extra() is not None):
     print "------------------------- primitive cell extra ----------------------------"
     print_cell(primitive_extra)
     print "--------------------------- supercell extra -------------------------------"
@@ -556,13 +560,10 @@ else:
 
     disp_dataset = parse_disp_fc3_yaml()
     forces_second = parse_FORCES_SECOND(disp_dataset)
-    fc2_with_dim = get_force_constants(forces_second,
-                                       symmetry,
-                                       supercell)
+    fc2_with_dim = get_force_constants(forces_second, symmetry, supercell)
 
 if options.is_symmetrize_fc2:
     set_permutation_symmetry(fc2_with_dim)
-
 if options.is_translational_symmetry:
     set_translational_invariance(fc2_with_dim)
 
