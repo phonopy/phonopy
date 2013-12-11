@@ -14,6 +14,7 @@ tags:
 * ``--band`` (``BAND``)
 * ``--band_points``  (``BAND_POINTS``)
 * ``--band_connection``  (``BAND_CONNECTION = .TRUE.``)
+* ``--cutoff_freq`` (``CUTOFF_FREQUENCY``)
 * ``--eigvecs``, ``--eigenvectors`` (``EIGENVECTORS = .TRUE.``)
 * ``--fits_debye_model`` (``DEBYE_MODEL = .TRUE.``)
 * ``--gc``, ``--gamma_center`` (``GAMMA_CENTER``)

@@ -3,11 +3,14 @@
 Change Log
 ==========
 
-Dec-4-2013: Version 1.7.6
+Dec-11-2013: Version 1.7.6
 ---------------------------
 
 * The display output with ``-v`` option is enriched.
 * Symmetrization for ``outcar-born`` is implemented (Experimental).
+* Cutoff-frequency ``CUTOFF_FREQUENCY`` (``--cutoff_freq``) is
+  implemented to ignore frequencies lower than this cutoff frequency
+  to calculate thermal properties and thermal displacements.
 
 Dec-4-2013: Version 1.7.5
 ---------------------------

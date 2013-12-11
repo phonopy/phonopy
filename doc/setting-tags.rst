@@ -464,6 +464,11 @@ elements are given in the order of xx, yy, zz, yz, xz, xy.
 
    TDISPMAT = .TRUE.
 
+``CUTOFF_FREQUENCY``
+~~~~~~~~~~~~~~~~~~~~~
+
+Frequencies lower than this cutoff frequency are not used to calculate
+thermal displacements.
 
 Specific q-points
 -----------------
