@@ -93,12 +93,13 @@ def get_symmetry_yaml(cell, symmetry, phonopy_version=None):
     return yaml
 
 def check_symmetry(input_cell,
-                   primitive_axis=np.eye(3, dtype=float),
+                   primitive_axis=None,
                    symprec=1e-5,
                    phonopy_version=None):
-
-    cell = get_primitive(input_cell, primitive_axis, symprec=symprec)
-
+    if primitive_axis is None:
+        cell = get_primitive(input_cell, np.eye(3), symprec=symprec)
+    else:
+        cell = get_primitive(input_cell, primitive_axis, symprec=symprec)
     symmetry = Symmetry(cell, symprec)
     print get_symmetry_yaml(cell, symmetry, phonopy_version),
 
