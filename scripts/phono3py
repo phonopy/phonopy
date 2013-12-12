@@ -747,7 +747,7 @@ else:
             filename = 'fc3.hdf5'
         else:
             filename = 'fc3.' + options.output_filename + '.hdf5'
-        write_fc3_to_hdf5(fc3)
+        write_fc3_to_hdf5(fc3, filename=filename)
 
 #============================
 # Phonon Gruneisen parameter
