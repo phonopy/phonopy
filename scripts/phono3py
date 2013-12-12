@@ -650,27 +650,33 @@ else:
             parse_DELTA_FC2_SETS(disp_dataset)
         else:
             parse_DELTA_FORCES(disp_dataset)
-        fc3 = get_fc3(
-            supercell,
-            disp_dataset,
-            fc2_with_dim,
-            symmetry,
-            is_translational_symmetry=options.is_translational_symmetry,
-            is_permutation_symmetry=options.is_symmetrize_fc3_r,
-            verbose=log_level)
 
         if 'cutoff_distance' in disp_dataset:
-            if settings.get_cutoff_pair_distance() is None:
-                if log_level:
-                    print "----- Cut-off fc3 -----"
-                    print "Cut-off distance:", disp_dataset['cutoff_distance']
-                cutoff_fc3(fc3,
-                           supercell,
-                           disp_dataset,
-                           symmetry,
-                           verbose=log_level)
+            fc3 = get_fc3(
+                supercell,
+                disp_dataset,
+                fc2_with_dim,
+                symmetry,
+                verbose=log_level)
+            if log_level:
+                print "----- Cut-off fc3 -----"
+                print "Cut-off distance:", disp_dataset['cutoff_distance']
+            cutoff_fc3(fc3,
+                       supercell,
+                       disp_dataset,
+                       symmetry,
+                       verbose=log_level)
+        else:
+            fc3 = get_fc3(
+                supercell,
+                disp_dataset,
+                fc2_with_dim,
+                symmetry,
+                is_translational_symmetry=options.is_translational_symmetry,
+                is_permutation_symmetry=options.is_symmetrize_fc3_r,
+                verbose=log_level)
 
-    # fc3 is cut-off by the distances among atoms
+    # fc3 is cut-off by the distances among atoms and replaced by zero.
     if settings.get_cutoff_fc3_distance() is not None:
         cutoff_distance = settings.get_cutoff_fc3_distance()
         if log_level:

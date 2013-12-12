@@ -283,15 +283,16 @@ def write_FORCES_THIRD(vaspruns,
             w3.write("# %-5d " % (atom2 + 1))
             w3.write("%20.16f %20.16f %20.16f\n" % tuple(disp2['displacement']))
 
+            # For supercell calculation reduction
             if disp2['included']:
                 for forces in set_of_forces[file_count]:
                     w3.write("%15.10f %15.10f %15.10f\n" % tuple(forces))
                 file_count += 1
             else:
-                for forces in set_of_forces[i]:
-                    w3.write("%15.10f %15.10f %15.10f\n" % (tuple(forces)))
-                # for j in range(natom):
-                #     w3.write("%15.10f %15.10f %15.10f\n" % (0, 0, 0))
+                # for forces in set_of_forces[i]:
+                #     w3.write("%15.10f %15.10f %15.10f\n" % (tuple(forces)))
+                for j in range(natom):
+                    w3.write("%15.10f %15.10f %15.10f\n" % (0, 0, 0))
             count += 1
             
 

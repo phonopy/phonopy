@@ -285,8 +285,6 @@ def get_constrained_fc2(supercell,
                                         dtype='double'),
                                symprec)
 
-    show_drift_force_constants(fc2)
-    
     if is_translational_symmetry:
         set_translational_invariance(fc2)
 
@@ -335,20 +333,32 @@ def cutoff_fc3(fc3,
     for i in range(num_atom):
         for j in range(i, num_atom):
             for k in range(j, num_atom):
-                sum_done = (fc3_done[i, j, k] +
-                            fc3_done[k, i, j] +
-                            fc3_done[j, k, i] +
-                            fc3_done[j, i, k] +
-                            fc3_done[k, j, i] +
-                            fc3_done[i, k, j])
-                if sum_done < 6 and sum_done > 0:
-                    ave_fc3 = set_permutation_symmetry_fc3_elem(
-                        fc3, i, j, k, divisor=sum_done)
-                    copy_permutation_symmetry_fc3_elem(fc3, ave_fc3, i, j, k)
+                ave_fc3 = _set_permutation_symmetry_fc3_elem_with_cutoff(
+                    fc3, fc3_done, i, j, k)
+                copy_permutation_symmetry_fc3_elem(fc3, ave_fc3, i, j, k)
 
     if verbose:
         print
 
+def _set_permutation_symmetry_fc3_elem_with_cutoff(fc3, fc3_done, a, b, c):
+    sum_done = (fc3_done[a, b, c] +
+                fc3_done[c, a, b] +
+                fc3_done[b, c, a] +
+                fc3_done[b, a, c] +
+                fc3_done[c, b, a] +
+                fc3_done[a, c, b])
+    tensor3 = np.zeros((3, 3, 3), dtype='double')
+    if sum_done > 0:
+        for (i, j, k) in list(np.ndindex(3, 3, 3)):
+            tensor3[i, j, k] = (fc3[a, b, c, i, j, k] * fc3_done[a, b, c] +
+                                fc3[c, a, b, k, i, j] * fc3_done[c, a, b] +
+                                fc3[b, c, a, j, k, i] * fc3_done[b, c, a] +
+                                fc3[a, c, b, i, k, j] * fc3_done[a, c, b] +
+                                fc3[b, a, c, j, i, k] * fc3_done[b, a, c] +
+                                fc3[c, b, a, k, j, i] * fc3_done[c, b, a])
+            tensor3[i, j, k] /= sum_done
+    return tensor3
+        
 def cutoff_fc3_by_zero(fc3, supercell, cutoff_distance, symprec=1e-5):
     num_atom = supercell.get_number_of_atoms()
     lattice = supercell.get_cell()
