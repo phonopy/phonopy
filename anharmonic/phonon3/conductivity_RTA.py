@@ -197,12 +197,12 @@ class conductivity_RTA:
             if self._read_gamma:
                 self._frequencies[i] = self._get_phonon_c()
             else:
-                if self._log_level > 0:
+                if self._log_level:
                     print "Number of triplets:",
 
                 self._ise.set_grid_point(grid_point)
                 
-                if self._log_level > 0:
+                if self._log_level:
                     print len(self._pp.get_triplets_at_q()[0])
                     print "Calculating interaction..."
                     
@@ -217,7 +217,8 @@ class conductivity_RTA:
 
             if write_gamma:
                 self._write_gamma(i, grid_point)
-                self._write_triplets(grid_point)
+                if self._log_level > 1:
+                    self._write_triplets(grid_point)
 
     def _allocate_values(self):
         num_freqs = self._primitive.get_number_of_atoms() * 3
@@ -248,7 +249,7 @@ class conductivity_RTA:
     def _set_gamma_at_sigmas(self, i):
         freqs = self._frequencies[i]
         for j, sigma in enumerate(self._sigmas):
-            if self._log_level > 0:
+            if self._log_level:
                 print "Calculating Gamma of ph-ph with sigma=%s" % sigma
             self._ise.set_sigma(sigma)
             for k, t in enumerate(self._temperatures):
@@ -258,7 +259,7 @@ class conductivity_RTA:
                 
     def _set_gamma_isotope_at_sigmas(self, i):
         for j, sigma in enumerate(self._sigmas):
-            if self._log_level > 0:
+            if self._log_level:
                 print "Calculating Gamma of ph-isotope with sigma=%s" % sigma
             pp_freqs, pp_eigvecs, pp_phonon_done = self._pp.get_phonons()
             self._isotope.set_phonons(pp_freqs,
