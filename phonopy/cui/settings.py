@@ -703,17 +703,11 @@ class ConfParser:
                     self.set_parameter('q_direction', q_direction)
 
             if conf_key == 'omega_step':
-                if isinstance(confs['omega_step'], str):
-                    val = float(confs['omega_step'].split()[0])
-                else:
-                    val = confs['omega_step']
+                val = float(confs['omega_step'])
                 self.set_parameter('omega_step', val)
 
             if conf_key == 'sigma':
-                if isinstance(confs['sigma'], str):
-                    val = float(confs['sigma'].split()[0])
-                else:
-                    val = confs['sigma']
+                val = float(confs['sigma'])
                 self.set_parameter('sigma', val)
 
             if conf_key == 'tmin':
@@ -1133,17 +1127,11 @@ class PhonopyConfParser(ConfParser):
                                    confs['force_constants'])
 
             if conf_key == 'cutoff_frequency':
-                if isinstance(confs['cutoff_frequency'], str):
-                    val = float(confs['cutoff_frequency'].split()[0])
-                else:
-                    val = confs['cutoff_frequency']
+                val = float(confs['cutoff_frequency'])
                 self.set_parameter('cutoff_frequency', val)
 
             if conf_key == 'cutoff_radius':
-                if isinstance(confs['cutoff_radius'], str):
-                    val = float(confs['cutoff_radius'].split()[0])
-                else:
-                    val = confs['cutoff_radius']
+                val = float(confs['cutoff_radius'])
                 self.set_parameter('cutoff_radius', val)
 
             if conf_key == 'writedm':

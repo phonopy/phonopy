@@ -276,7 +276,7 @@ class Phono3pyConfParser(ConfParser):
 
                 if matrix.shape == (3, 3):
                     if np.linalg.det(matrix) < 1:
-                        self.setting_error('Determinant of supercell matrix has to be positive.')
+                        self.setting_error("Determinant of supercell matrix has to be positive.")
                     else:
                         self.set_parameter('dim_extra', matrix)
 
@@ -288,17 +288,19 @@ class Phono3pyConfParser(ConfParser):
 
             if conf_key == 'cutoff_fc3_distance':
                 self.set_parameter('cutoff_fc3_distance',
-                                   confs['cutoff_fc3_distance'])
+                                   float(confs['cutoff_fc3_distance']))
 
             if conf_key == 'cutoff_pair_distance':
                 self.set_parameter('cutoff_pair_distance',
-                                   confs['cutoff_pair_distance'])
+                                   float(confs['cutoff_pair_distance']))
 
             if conf_key == 'cutoff_frequency':
-                self.set_parameter('cutoff_frequency', confs['cutoff_frequency'])
+                self.set_parameter('cutoff_frequency',
+                                   float(confs['cutoff_frequency']))
 
             if conf_key == 'cutoff_lifetime':
-                self.set_parameter('cutoff_lifetime', confs['cutoff_lifetime'])
+                self.set_parameter('cutoff_lifetime',
+                                   float(confs['cutoff_lifetime']))
 
             if conf_key == 'grid_points':
                 vals = [int(x) for x in confs['grid_points'].split()]
