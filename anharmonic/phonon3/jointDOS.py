@@ -109,8 +109,8 @@ def get_jointDOS(fixed_grid_points,
                        mesh,
                        omegas_at_gp,
                        jdos,
-                       filename,
-                       is_nosym)
+                       filename=filename,
+                       is_nosym=is_nosym)
 
     return jointDOS, omegas
 

@@ -80,7 +80,7 @@ class Phono3py:
                              frequency_step=1.0,
                              sigmas=[0.1],
                              temperatures=[0.0],
-                             filename=None):
+                             output_filename=None):
         ise = ImagSelfEnergy(self._interaction)
         for gp in grid_points:
             ise.set_grid_point(gp)
@@ -110,7 +110,7 @@ class Phono3py:
                             gamma[:, pos:(pos + len(bi))].sum(axis=1) / len(bi),
                             sigma=sigma,
                             temperature=t,
-                            filename=filename)
+                            filename=output_filename)
 
     def get_linewidth(self,
                       grid_points,
@@ -118,7 +118,7 @@ class Phono3py:
                       t_max=1500,
                       t_min=0,
                       t_step=10,
-                      filename=None):
+                      output_filename=None):
         ise = ImagSelfEnergy(self._interaction)
         temperatures = np.arange(t_min, t_max + t_step / 2.0, t_step)
         for gp in grid_points:
@@ -150,7 +150,7 @@ class Phono3py:
                                     gamma[:, pos:(pos+len(bi))],
                                     self._mesh,
                                     sigma=sigma,
-                                    filename=filename)
+                                    filename=output_filename)
 
     def get_frequency_shift(self,
                             grid_points,
@@ -158,7 +158,7 @@ class Phono3py:
                             t_max=1500,
                             t_min=0,
                             t_step=10,
-                            filename=None):
+                            output_filename=None):
         fst = FrequencyShift(self._interaction)
         temperatures = np.arange(t_min, t_max + t_step / 2.0, t_step)
         for gp in grid_points:
@@ -189,7 +189,7 @@ class Phono3py:
                                       delta[:, pos:(pos+len(bi))],
                                       self._mesh,
                                       epsilon=epsilon,
-                                      filename=filename)
+                                      filename=output_filename)
 
     def get_thermal_conductivity(self,
                                  sigmas=[0.1],
@@ -207,7 +207,8 @@ class Phono3py:
                                  read_gamma=False,
                                  write_amplitude=False,
                                  read_amplitude=False,
-                                 filename=None):
+                                 output_filename=None,
+                                 input_filename=None):
         br = conductivity_RTA(self._interaction,
                               self._symmetry,
                               sigmas=sigmas,
@@ -221,7 +222,7 @@ class Phono3py:
                               no_kappa_stars=no_kappa_stars,
                               gv_delta_q=gv_delta_q,
                               log_level=self._log_level,
-                              filename=filename)
+                              filename=output_filename)
         br.set_grid_points(grid_points)
 
         if read_gamma:
@@ -231,7 +232,7 @@ class Phono3py:
                     br.get_mesh_numbers(),
                     mesh_divisors=br.get_mesh_divisors(),
                     sigma=sigma,
-                    filename=filename)
+                    filename=input_filename)
                 if gamma_at_sigma is False:
                     gamma_at_sigma = []
                     for i, gp in enumerate(br.get_grid_points()):
@@ -240,7 +241,7 @@ class Phono3py:
                             mesh_divisors=br.get_mesh_divisors(),
                             grid_point=gp,
                             sigma=sigma,
-                            filename=filename)
+                            filename=input_filename)
                         if gamma_gp is False:
                             print "Gamma at grid point %d doesn't exist." % gp
                         gamma_at_sigma.append(gamma_gp)
@@ -275,7 +276,7 @@ class Phono3py:
                                     weight=br.get_grid_weights(),
                                     mesh_divisors=br.get_mesh_divisors(),
                                     sigma=sigma,
-                                    filename=filename)
+                                    filename=output_filename)
 
         self._kappa = mode_kappa
         self._gamma = gamma
@@ -355,7 +356,7 @@ class JointDOS:
         self._symprec = symprec
         self._log_level = log_level
 
-    def get_jointDOS(self, grid_points, filename=None):
+    def get_jointDOS(self, grid_points, output_filename=None):
         get_jointDOS(grid_points,
                      self._mesh,
                      self._primitive,
@@ -369,7 +370,7 @@ class JointDOS:
                      frequency_scale=self._frequency_scale_factor,
                      is_nosym=self._is_nosym,
                      symprec=self._symprec,
-                     filename=filename,
+                     filename=output_filename,
                      log_level=self._log_level)
 
 
@@ -391,4 +392,3 @@ def get_gruneisen_parameters(fc2,
                      ion_clamped=ion_clamped,
                      factor=factor,
                      symprec=symprec)
-
