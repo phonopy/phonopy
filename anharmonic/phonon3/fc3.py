@@ -24,7 +24,7 @@ def get_fc3(supercell,
                          verbose)
 
     if verbose:
-        print "(Copying fc3...)"
+        print "Copying fc3..."
 
     first_disp_atoms = np.unique(
         [x['number'] for x in disp_dataset['first_atoms']])
@@ -81,7 +81,7 @@ def distribute_fc3(fc3,
             raise ValueError
 
         if verbose > 2:
-            print "  [ %d, x, x ] to [ %d, x, x ]" % (i_rot + 1, i + 1)
+            print "    [ %d, x, x ] to [ %d, x, x ]" % (i_rot + 1, i + 1)
             sys.stdout.flush()
 
         atom_mapping = np.zeros(num_atom, dtype='intc')
@@ -192,7 +192,7 @@ def get_atom_by_symmetry(positions,
         if (abs(diff -diff.round()) < symprec).all():
             return i
 
-    print 'Position or symmetry is wrong.'
+    print "Position or symmetry is wrong."
     raise ValueError
 
 def get_atom_mapping_by_symmetry(positions,
@@ -337,9 +337,6 @@ def cutoff_fc3(fc3,
                     fc3, fc3_done, i, j, k)
                 copy_permutation_symmetry_fc3_elem(fc3, ave_fc3, i, j, k)
 
-    if verbose:
-        print
-
 def _set_permutation_symmetry_fc3_elem_with_cutoff(fc3, fc3_done, a, b, c):
     sum_done = (fc3_done[a, b, c] +
                 fc3_done[c, a, b] +
@@ -458,16 +455,16 @@ def _get_fc3_one_atom(fc3,
               symprec)
 
     if verbose:
-        print "Displacements for fc3[ %d, x, x ]" % (first_atom_num + 1)
+        print "- Displacements for fc3[ %d, x, x ]" % (first_atom_num + 1)
         for i, v in enumerate(displacements_first):
-            print "  [%7.4f %7.4f %7.4f]" % tuple(v)
+            print "    [%7.4f %7.4f %7.4f]" % tuple(v)
             sys.stdout.flush()
         if verbose > 2:
-            print "Site symmetry:"
+            print "  Site symmetry:"
             for i, v in enumerate(site_symmetry):
-                print "  [%2d %2d %2d] #%2d" % tuple(list(v[0])+[i+1])
-                print "  [%2d %2d %2d]" % tuple(v[1])
-                print "  [%2d %2d %2d]\n" % tuple(v[2])
+                print "    [%2d %2d %2d] #%2d" % tuple(list(v[0])+[i+1])
+                print "    [%2d %2d %2d]" % tuple(v[1])
+                print "    [%2d %2d %2d]\n" % tuple(v[2])
                 sys.stdout.flush()
 
 def _get_rotated_fc2s(i, j, fc2s, rot_map_syms, site_sym_cart):

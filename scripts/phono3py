@@ -87,6 +87,16 @@ def print_end():
 def print_error(message):
     print message
 
+def file_exists(filename, log_level):
+    if os.path.exists(filename):
+        return True
+    else:
+        error_text = "%s not found." % filename
+        print_error_message(error_text)
+        if log_level > 0:
+            print_error()
+        sys.exit(1)
+    
 # Parse options
 parser = OptionParser()
 parser.set_defaults(band_indices=None,
@@ -377,6 +387,9 @@ if options.forces_third_mode:
         filename = 'disp_fc3.yaml'
     else:
         filename = 'disp_fc3.' + options.input_filename + '.yaml'
+    file_exists(filename, log_level)
+    if log_level:
+        print "Displacement dataset is read from %s." % filename
     disp_dataset = parse_disp_fc3_yaml()
     write_FORCES_THIRD(args, disp_dataset)
     print_end()
@@ -388,6 +401,9 @@ if options.delta_fc2_sets_mode:
         filename = 'disp_fc3.yaml'
     else:
         filename = 'disp_fc3.' + options.input_filename + '.yaml'
+    file_exists(filename, log_level)
+    if log_level:
+        print "Displacement dataset is read from %s." % filename
     disp_dataset = parse_disp_fc3_yaml()
     write_DELTA_FC2_SETS(args, disp_dataset)
     print_end()
@@ -407,22 +423,11 @@ else:
 
 # Read POSCAR
 if options.cell_poscar == None:
-    if os.path.exists('POSCAR'):
-        unitcell_filename = 'POSCAR'
-    else:
-        print_error("POSCAR could not be found.")
-        if log_level:
-            print_end()
-        sys.exit(1)
+    file_exists('POSCAR', log_level)
+    unitcell_filename = 'POSCAR'
 else:
-    if os.path.exists(options.cell_poscar):
-        unitcell_filename = options.cell_poscar
-    else:
-        print_error("The file \'%s\' could not be found." %
-                    options.cell_poscar)
-        if log_level:
-            print_end()
-        sys.exit(1)
+    file_exists(options.cell_poscar, log_level)
+    unitcell_filename = options.cell_poscar
     
 unitcell = read_vasp(unitcell_filename,
                      settings.get_chemical_symbols())
@@ -511,19 +516,19 @@ if settings.get_supercell_matrix_extra() is not None:
         options.symprec)
 
 if log_level:
-    print "------------------------ primitive cell for fc ---------------------------"
+    print "---------------------------- primitive cell --------------------------------"
     print_cell(primitive)
-    print "-------------------------- supercell for fc ------------------------------"
+    print "------------------------------- supercell ----------------------------------"
     print_cell(supercell, mapping=primitive.get_supercell_to_primitive_map())
-    print "----------------- ratio (supercell for fc)/(primitive) -------------------"
+    print "------------------ ratio (supercell for fc)/(primitive) --------------------"
     for vec in np.dot(supercell.get_cell(), np.linalg.inv(primitive.get_cell())):
         print "%5.2f"*3 % tuple(vec)
 if log_level and (settings.get_supercell_matrix_extra() is not None):
-    print "------------------------- primitive cell extra ----------------------------"
+    print "-------------------------- primitive cell extra -----------------------------"
     print_cell(primitive_extra)
-    print "--------------------------- supercell extra -------------------------------"
+    print "---------------------------- supercell extra --------------------------------"
     print_cell(supercell_extra, mapping=primitive_extra.get_supercell_to_primitive_map())
-    print "--------------- ratio (supercell extra)/(primitive  extra) ----------------"
+    print "---------------- ratio (supercell extra)/(primitive  extra) -----------------"
     for vec in np.dot(supercell_extra.get_cell(),
                        np.linalg.inv(primitive_extra.get_cell())):
         print "%5.2f"*3 % tuple(vec)
@@ -557,30 +562,27 @@ if options.write_grid_points:
     sys.exit(0)
         
 # fc2
+if log_level:
+    print "------------------------------ fc2 ------------------------------"
+    sys.stdout.flush()
 if options.read_fc2 or options.read_delta_fc2:
-    if log_level:
-        print  "----- Read fc2 -----"
-        sys.stdout.flush()
     if options.input_filename is None:
         filename = 'fc2.hdf5'
     else:
         filename = 'fc2.' + options.input_filename + '.hdf5'
-    if os.path.exists(filename):
-        fc2_with_dim = read_fc2_from_hdf5(filename=filename)
-    else:
-        print "%s not found" % filename
-        if log_level:
-            print_end()
-        sys.exit(0)
-else:
+    file_exists(filename, log_level)
     if log_level:
-        print "----- Solve fc2 -----"
-        sys.stdout.flush()
-
+        print "Reading fc2 from %s..." % filename
+    fc2_with_dim = read_fc2_from_hdf5(filename=filename)
+else:
     if options.input_filename is None:
         filename = 'disp_fc3.yaml'
     else:
         filename = 'disp_fc3.' + options.input_filename + '.yaml'
+    file_exists(filename, log_level)
+    if log_level:
+        print "Displacement dataset is read from %s." % filename
+        print "Solving fc2..."
     disp_dataset = parse_disp_fc3_yaml(filename=filename)
     forces_second = parse_FORCES_SECOND(disp_dataset)
     fc2_with_dim = get_force_constants(forces_second, symmetry, supercell)
@@ -593,34 +595,34 @@ if options.is_translational_symmetry:
 show_drift_force_constants(fc2_with_dim, name='fc2')
 
 if not options.read_fc2:
-    if log_level:
-        print "----- Write fc2.hdf5 -----"
-
     if options.output_filename is None:
         filename = 'fc2.hdf5'
     else:
         filename = 'fc2.' + options.output_filename + '.hdf5'
+    if log_level:
+        print "Writing fc2 to %s..." % filename
     write_fc2_to_hdf5(fc2_with_dim, filename=filename)
 
 if settings.get_supercell_matrix_extra()==None:
     fc2 = fc2_with_dim
 else:
+    if log_level:
+        print "--------------------------- fc2 extra ---------------------------"
+        sys.stdout.flush()
     # fc2 extra (FORCE_SETS_EXTRA)
     if options.read_fc2_extra:
-        if log_level:
-            print "----- Read fc2 extra -----"
-            sys.stdout.flush()
 
         if options.input_filename is None:
             filename = 'fc2_extra.hdf5'
         else:
             filename = 'fc2_extra.' + options.input_filename + '.hdf5'
+        file_exists(filename, log_level)
+        if log_level:
+            print "Reading fc2-extra from %s..." % filename
         fc2 = read_fc2_from_hdf5(filename=filename)
     else:                
         if log_level:
-            print "----- Solve fc2 extra -----"
-            sys.stdout.flush()
-
+            print "Solving fc2 extra..."
         forces_second_extra = parse_FORCE_SETS(
             supercell_extra.get_number_of_atoms(),
             filename="FORCE_SETS_EXTRA")
@@ -634,31 +636,24 @@ else:
     if options.is_translational_symmetry:
         set_translational_invariance(fc2)
 
-    show_drift_force_constants(fc2, 'fc2_extra')
+    show_drift_force_constants(fc2, 'fc2-extra')
         
     if not options.read_fc2_extra:
-        if log_level:
-            print "----- Write fc2_extra.hdf5 -----"
-
         if options.output_filename is None:
             filename = 'fc2_extra.hdf5'
         else:
             filename = 'fc2_extra.' + options.output_filename + '.hdf5'
+        if log_level:
+            print "Writing fc2-extra to %s..." % filename
         write_fc2_to_hdf5(fc2, filename=filename)
 
 if settings.get_is_nac():
-    if os.path.exists('BORN'):
-        if settings.get_supercell_matrix_extra()==None:
-            nac_params = parse_BORN(primitive)
-        else:
-            nac_params = parse_BORN(primitive_extra)
-
-        nac_q_direction = settings.get_q_direction()
+    file_exists('BORN', log_level)
+    if settings.get_supercell_matrix_extra()==None:
+        nac_params = parse_BORN(primitive)
     else:
-        print_error("BORN not found")
-        if log_level:
-            print_end()
-        sys.exit(1)
+        nac_params = parse_BORN(primitive_extra)
+    nac_q_direction = settings.get_q_direction()
 else:
     nac_params = None
     nac_q_direction = None
@@ -670,27 +665,30 @@ if (options.is_joint_dos or
     settings.get_read_amplitude()):
     fc3 = None
 else:
-    if options.read_fc3: # Read fc3.hdf5
-        if log_level:
-            print  "----- Read fc3 -----"
-            sys.stdout.flush()
+    if log_level:
+        print "------------------------------ fc3 ------------------------------"
+        sys.stdout.flush()
 
+    if options.read_fc3: # Read fc3.hdf5
         if options.input_filename is None:
             filename = 'fc3.hdf5'
         else:
             filename = 'fc3.' + options.input_filename + '.hdf5'
+        file_exists(filename, log_level)
+        if log_level:
+            print "Reading fc3 from %s..." % filename
         fc3 = read_fc3_from_hdf5(filename=filename)
         if options.is_translational_symmetry:
             set_translational_invariance_fc3(fc3)
     else: # fc3 from FORCES_THIRD and FORCES_SECOND
-        if log_level:
-            print  "----- Solve fc3 -----"
-            sys.stdout.flush()
-
         if options.input_filename is None:
             filename = 'disp_fc3.yaml'
         else:
             filename = 'disp_fc3.' + options.input_filename + '.yaml'
+        file_exists(filename, log_level)
+        if log_level:
+            print "Displacement dataset is read from %s." % filename
+            print "Solving fc3:"
         disp_dataset = parse_disp_fc3_yaml(filename=filename)
 
         if options.read_delta_fc2:
@@ -706,8 +704,7 @@ else:
                 symmetry,
                 verbose=log_level)
             if log_level:
-                print "----- Cut-off fc3 -----"
-                print "Cut-off distance:", disp_dataset['cutoff_distance']
+                print "Cutting-off fc3 (cut-off distance: %f)" % disp_dataset['cutoff_distance']
             cutoff_fc3(fc3,
                        supercell,
                        disp_dataset,
@@ -727,26 +724,25 @@ else:
     if settings.get_cutoff_fc3_distance() is not None:
         cutoff_distance = settings.get_cutoff_fc3_distance()
         if log_level:
-            print "----- Cut-off fc3 by zero -----"
+            print "Cutting-off fc3 by zero (cut-off distance: %f)" % cutoff_distance
         cutoff_fc3_by_zero(fc3, supercell, cutoff_distance, options.symprec)
 
     # Symmetrize fc3_r
     if options.is_symmetrize_fc3_r:
         if log_level:
-            print "----- Symmetrize fc3 real space -----"
+            print "Symmetrizing fc3 in real space index exchange..."
         set_permutation_symmetry_fc3(fc3)
 
     show_drift_fc3(fc3)
 
     # Write fc3
     if not options.read_fc3:
-        if log_level:
-            print "----- Write fc3.hdf5 -----"
-
         if options.output_filename is None:
             filename = 'fc3.hdf5'
         else:
             filename = 'fc3.' + options.output_filename + '.hdf5'
+        if log_level:
+            print "Writing fc3 to %s" % filename
         write_fc3_to_hdf5(fc3, filename=filename)
 
 #============================
@@ -855,7 +851,7 @@ elif settings.get_mesh_numbers() is not None:
         temperatures = settings.get_temperatures()
 
     if log_level:
-        print "------ Settings ------"
+        print "--------------------------- Settings ----------------------------"
         print "Mesh sampling: [ %d %d %d ]" % tuple(mesh)
         if grid_points is not None:
             print "Grid points to be calculated:", grid_points
