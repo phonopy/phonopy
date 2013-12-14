@@ -272,11 +272,14 @@ class Phono3pyConfParser(ConfParser):
                 elif len(matrix) == 3:
                     matrix = np.diag(matrix)
                 else:
-                    self.setting_error("Number of elements of dim2 has to be 3 or 9.")
+                    self.setting_error(
+                        "Number of elements of dim2 has to be 3 or 9.")
 
                 if matrix.shape == (3, 3):
                     if np.linalg.det(matrix) < 1:
-                        self.setting_error("Determinant of supercell matrix has to be positive.")
+                        self.setting_error(
+                            "Determinant of supercell matrix has " +
+                            "to be positive.")
                     else:
                         self.set_parameter('dim_extra', matrix)
 
@@ -303,7 +306,8 @@ class Phono3pyConfParser(ConfParser):
                                    float(confs['cutoff_lifetime']))
 
             if conf_key == 'grid_points':
-                vals = [int(x) for x in confs['grid_points'].split()]
+                vals = [int(x) for x in
+                        confs['grid_points'].replace(',', ' ').split()]
                 self.set_parameter('grid_points', vals)
 
             if conf_key == 'ion_clamped':

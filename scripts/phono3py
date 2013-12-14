@@ -243,8 +243,7 @@ parser.add_option("--freq_step", dest="freq_step", type="float",
 parser.add_option("--gamma_option", dest="gamma_option", type="int",
                   help="Option for the test of imaginary part of self energy")
 parser.add_option("--gp", "--grid_points",
-                  dest="grid_points",
-                  type="string",
+                  dest="grid_points", type="string",
                   help="Fixed grid points where damping functions are calculated ")
 parser.add_option("--gruneisen", dest="is_gruneisen",
                   action="store_true",
@@ -805,12 +804,9 @@ if options.is_gruneisen:
 #===========================
 elif settings.get_mesh_numbers() is not None:
     mesh = settings.get_mesh_numbers()
-    if options.grid_points is None:
-        grid_points = None
-    else:
-        grid_points = np.array(
-            [int(x) for x in options.grid_points.replace(',', ' ').split()])
-        
+    grid_points = settings.get_grid_points()
+    if grid_points is not None:
+        grid_points = np.array(grid_points)
     if options.factor is None:
         factor = VaspToTHz
     else:
@@ -854,7 +850,18 @@ elif settings.get_mesh_numbers() is not None:
         print "--------------------------- Settings ----------------------------"
         print "Mesh sampling: [ %d %d %d ]" % tuple(mesh)
         if grid_points is not None:
-            print "Grid points to be calculated:", grid_points
+            print "Grid points to be calculated:",
+            if len(grid_points) > 8:
+                for i, gp in enumerate(grid_points):
+                    if i % 10 == 0:
+                        print
+                        print " ",
+                    print gp,
+                print
+            else:
+                for gp in grid_points:
+                    print gp,
+                print
         sys.stdout.flush()
 
     if options.is_joint_dos:
