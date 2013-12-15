@@ -92,8 +92,6 @@ def get_set_of_forces(f, num_atom, is_translational_invariance):
 
     return set_of_forces
 
-    
-
 # Parse FORCES
 def parse_FORCES(cell,
                  is_translational_invariance=False,
