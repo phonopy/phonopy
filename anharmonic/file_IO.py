@@ -945,7 +945,6 @@ def write_ir_grid_points(mesh,
         w.write("  q-point: [ %12.7f, %12.7f, %12.7f ]\n" %
                 tuple(grid_address[g].astype('double') / mesh))
 
-
 def get_forces_from_vasprun_xmls(vaspruns, num_atom, index_shift=0):
     try:
         from lxml import etree
@@ -1019,6 +1018,20 @@ def parse_force_constants_lines(fcthird_file, num_atom):
         return None
     else:
         return np.array(fc2).reshape(num_atom, num_atom, 3, 3)
+
+def parse_disp_yaml_to_disp_dataset(filename="disp.yaml"):
+    dataset = parse_yaml(filename)
+    natom = dataset['natom']
+    new_dataset = {}
+    new_dataset['natom'] = natom
+    new_first_atoms = []
+    for first_atoms in dataset['displacements']:
+        first_atoms['atom'] -= 1
+        atom1 = first_atoms['atom']
+        disp1 = first_atoms['displacement']
+        new_first_atoms.append({'number': atom1, 'displacement': disp1})
+    new_dataset['first_atoms'] = new_first_atoms
+    return new_dataset
                        
 def parse_disp_fc3_yaml(filename="disp_fc3.yaml"):
     dataset = parse_yaml(filename)
@@ -1085,36 +1098,6 @@ def parse_disp_fc4_yaml(filename="disp_fc4.yaml"):
 
     return new_dataset
     
-def parse_FORCES_SECOND(disp_dataset,
-                        is_translational_invariance=False,
-                        filename="FORCES_SECOND"):
-    f = open(filename, 'r')
-    return get_set_of_forces(f, disp_dataset, is_translational_invariance)
-
-def get_set_of_forces(f, disp_dataset, is_translational_invariance):
-    num_atom = disp_dataset['natom']
-    set_of_forces = []
-    atom_list = [x['number'] for x in disp_dataset['first_atoms']]
-    disps = [x['displacement'] for x in disp_dataset['first_atoms']]
-    for atom_number, displacement in zip(atom_list, disps):
-        force_vals = []
-        for line in f:
-            line_str = line.strip()
-            if line_str == "":
-                continue
-            elif line[0] == '#':
-                continue
-            else:
-                force_vals.append([float(x) for x in line.split()])
-            if len(force_vals) == num_atom:
-                break
-        forces = Forces(atom_number, displacement, np.double(force_vals))
-        if is_translational_invariance:
-            forces.set_translational_invariance()
-        set_of_forces.append(forces)
-
-    return set_of_forces
-
 def parse_DELTA_FORCES(disp_dataset,
                        filethird='FORCES_THIRD',
                        filesecond='FORCES_SECOND'):
@@ -1165,7 +1148,7 @@ def parse_FORCES_FOURTH(disp_dataset,
             for disp3 in disp2['third_atoms']:
                 fourth_forces = parse_force_lines(f4, num_atom)
                 disp3['forces'] = fourth_forces
-                
+
 def parse_FORCES_THIRD(disp_dataset,
                        file3='FORCES_THIRD',
                        file2='FORCES_SECOND'):
@@ -1179,6 +1162,14 @@ def parse_FORCES_THIRD(disp_dataset,
         for disp2 in disp1['second_atoms']:
             third_forces = parse_force_lines(f3, num_atom)
             disp2['forces'] = third_forces
+
+def parse_FORCES_SECOND(disp_dataset,
+                        filename="FORCES_SECOND"):
+    f2 = open(filename, 'r')
+    num_atom = disp_dataset['natom']
+    for disp1 in disp_dataset['first_atoms']:
+        second_forces = parse_force_lines(f2, num_atom)
+        disp1['forces'] = second_forces
 
 def parse_DELTA_FC2_SETS(disp_dataset,
                          filename='DELTA_FC2_SETS'):

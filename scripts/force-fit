@@ -45,7 +45,7 @@ from phonopy.harmonic.force_constants import show_drift_force_constants
 from anharmonic.force_fit.fc2 import FC2Fit
 from anharmonic.force_fit.fc3 import FC3Fit
 from anharmonic.force_fit.fc4 import FC4Fit
-from anharmonic.file_IO import parse_disp_fc4_yaml, parse_FORCES_FOURTH, parse_disp_fc3_yaml, parse_FORCES_THIRD
+from anharmonic.file_IO import parse_disp_fc4_yaml, parse_FORCES_FOURTH, parse_disp_fc3_yaml, parse_disp_yaml_to_disp_dataset, parse_FORCES_THIRD, parse_FORCES_SECOND
 from anharmonic.file_IO import write_fc3_dat, write_fc4_dat, write_fc4_to_hdf5, write_fc3_to_hdf5, write_fc2_to_hdf5
 from anharmonic.phonon3.fc3 import show_drift_fc3
 from anharmonic.phonon4.fc4 import show_drift_fc4
@@ -55,6 +55,7 @@ def print_error(message):
 
 parser = OptionParser()
 parser.set_defaults(cell_poscar=None,
+                    coef_invariants=0.1,
                     fc2=False,
                     fc3=False,
                     fc4=False,
@@ -65,6 +66,8 @@ parser.set_defaults(cell_poscar=None,
 parser.add_option("-c", "--cell", dest="cell_poscar",
                   action="store", type="string",
                   help="Read unit cell", metavar="FILE")
+parser.add_option("--ci", dest="coef_invariants", type="float",
+                  help="Coefficient to be multiplied with invariat matrix")
 parser.add_option("--dim", dest="supercell_dimension",
                   type="string", help="Supercell dimension")
 parser.add_option("--fc2", dest="fc2",
@@ -112,13 +115,18 @@ symmetry = Symmetry(supercell, options.symprec)
 print "Spacegroup: ", symmetry.get_international_table()
 
 if options.fc2:
-    disp_dataset = parse_disp_fc3_yaml()
-    parse_FORCES_THIRD(disp_dataset)
+    if os.path.exists("disp.yaml"):
+        disp_dataset = parse_disp_yaml_to_disp_dataset()
+        parse_FORCES_SECOND(disp_dataset)
+    else:
+        disp_dataset = parse_disp_fc3_yaml()
+        parse_FORCES_THIRD(disp_dataset)
     fc2fit = FC2Fit(supercell,
                     disp_dataset,
                     symmetry,
                     translational_invariance=options.trans_inv,
-                    rotational_invariance=options.rot_inv)
+                    rotational_invariance=options.rot_inv,
+                    coef_invariants=options.coef_invariants)
     fc2fit.run()
     fc2 = fc2fit.get_fc2()
     print "Writing fc2..."

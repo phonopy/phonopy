@@ -8,7 +8,8 @@ class FC2Fit:
                  disp_dataset,
                  symmetry,
                  translational_invariance=False,
-                 rotational_invariance=False):
+                 rotational_invariance=False,
+                 coef_invariants=None):
 
         self._scell = supercell
         self._lattice = supercell.get_cell().T
@@ -17,6 +18,7 @@ class FC2Fit:
         self._dataset = disp_dataset
         self._symmetry = symmetry
         self._symprec = symmetry.get_symmetry_tolerance()
+        self._coef_invariants = coef_invariants
         
         self._fc2 = np.zeros((self._num_atom, self._num_atom, 3, 3),
                              dtype='double')
@@ -54,14 +56,20 @@ class FC2Fit:
             disp_big_mat = np.hstack((residual_force_mat, disp_big_mat))
             force_mat = np.reshape(rot_forces, (-1, 1))
             if self._rot_inv:
-                amplitude = np.sqrt((rot_disps ** 2).sum() / len(rot_disps))
+                if self._coef_invariants is None:
+                    amplitude = np.sqrt((rot_disps ** 2).sum() / len(rot_disps))
+                else:
+                    amplitude = self._coef_invariants
                 rimat = self._get_rotational_invariance_matrix(first_atom_num)
                 rimat *= amplitude
                 disp_big_mat = np.vstack((disp_big_mat, rimat))
                 force_mat = np.vstack((force_mat, np.zeros((9, 1))))
 
             if self._trans_inv:
-                amplitude = np.sqrt((rot_disps ** 2).sum() / len(rot_disps))
+                if self._coef_invariants is None:
+                    amplitude = np.sqrt((rot_disps ** 2).sum() / len(rot_disps))
+                else:
+                    amplitude = self._coef_invariants
                 timat = self._get_translational_invariance_matrix()
                 timat *= amplitude
                 disp_big_mat = np.vstack((disp_big_mat, timat))
