@@ -9,7 +9,8 @@ class FC2Fit:
                  symmetry,
                  translational_invariance=False,
                  rotational_invariance=False,
-                 coef_invariants=None):
+                 coef_invariants=None,
+                 pinv_cutoff=1e-13):
 
         self._scell = supercell
         self._lattice = supercell.get_cell().T
@@ -19,6 +20,10 @@ class FC2Fit:
         self._symmetry = symmetry
         self._symprec = symmetry.get_symmetry_tolerance()
         self._coef_invariants = coef_invariants
+        if pinv_cutoff is None:
+            self._pinv_cutoff = 1e-13
+        else:
+            self._pinv_cutoff = pinv_cutoff
         
         self._fc2 = np.zeros((self._num_atom, self._num_atom, 3, 3),
                              dtype='double')
@@ -43,8 +48,19 @@ class FC2Fit:
         return self._fc2
 
     def _set_fc2_displaced_atoms_one_shot(self):
+        disp_big_matrices, force_matrices = self._get_big_matrices_for_one_shot()
+        inv_big_matrices = self._pinv_multithread(disp_big_matrices)
+        for i, inv_disp_mat, force_mat in zip(self._unique_first_atom_nums,
+                                              inv_big_matrices,
+                                              force_matrices):
+            fc2 = -np.dot(inv_disp_mat, force_mat).flatten()
+            print "  Recidual force (atom %d):" % (i + 1), fc2[:3]
+            self._fc2[i] = fc2[3:].reshape(-1, 3, 3)
+            
+    def _get_big_matrices_for_one_shot(self):
+        disp_big_matrices = []
+        force_matrices = []
         for first_atom_num in self._unique_first_atom_nums:
-            print "Atom: ", first_atom_num + 1
             disp_mat = []
             rot_disps, rot_forces = self._get_matrices(first_atom_num)
             for d in rot_disps:
@@ -75,11 +91,11 @@ class FC2Fit:
                 disp_big_mat = np.vstack((disp_big_mat, timat))
                 force_mat = np.vstack((force_mat, np.zeros((9, 1))))
 
-            inv_disp_mat = np.linalg.pinv(disp_big_mat)
-            fc2 = -np.dot(inv_disp_mat, force_mat).flatten()
-            print "  Recidual force:", fc2[:3]
-            self._fc2[first_atom_num] = fc2[3:].reshape(-1, 3, 3)
-            
+            disp_big_matrices.append(disp_big_mat)
+            force_matrices.append(force_mat)
+
+        return disp_big_matrices, force_matrices
+
     def _get_rotational_invariance_matrix(self, patom_num):
         rimat = np.zeros((9, 9 * self._num_atom + 3), dtype='double')
         rimat[:9, :3] = [[ 0, 0, 0],
@@ -178,6 +194,52 @@ class FC2Fit:
         return np.array(rot_disps, dtype='double')
         
     def _solve(self, rot_disps, rot_forces):
-        inv_disps = np.linalg.pinv(rot_disps)
+        inv_disps = self._pinv(rot_disps)
         return np.array([-np.dot(inv_disps, f) for f in rot_forces],
                         dtype='double')
+
+    def _pinv(self, matrix):
+        try:
+            import anharmonic._forcefit as forcefit
+            mat_shape = matrix.shape
+            inv_matrix = np.zeros((mat_shape[1], mat_shape[0]), dtype='double')
+            forcefit.pinv(matrix,
+                          inv_matrix,
+                          self._pinv_cutoff)
+        except ImportError:
+            inv_matrix = np.linalg.pinv(matrix, rcond=self._pinv_cutoff)
+
+        return inv_matrix
+    
+    def _pinv_multithread(self, matrices):
+        inv_matrices = []
+        try:
+            import anharmonic._forcefit as forcefit
+
+            multi = len(matrices)
+            row_nums = np.intc([m.shape[0] for m in matrices])
+            info = np.zeros(len(row_nums), dtype='intc')
+            max_row_num = max(row_nums)
+            column_num = matrices[0].shape[1]
+            mats_in = np.zeros((multi, max_row_num * column_num),
+                               dtype='double')
+            for i in range(multi):
+                mats_in[i, :row_nums[i] * column_num] = matrices[i].flatten()
+            mats_out = np.zeros_like(mats_in)
+            forcefit.pinv_mt(mats_in,
+                             mats_out,
+                             row_nums,
+                             max_row_num,
+                             column_num,
+                             self._pinv_cutoff,
+                             info)
+            inv_matrices = [
+                mats_out[i, :row_nums[i] * column_num].reshape(column_num, -1)
+                for i in range(multi)]
+        except ImportError:
+            for mat in matrices:
+                inv_mat = np.linalg.pinv(mat)
+                inv_matrices.append(inv_mat)
+        return inv_matrices
+            
+    

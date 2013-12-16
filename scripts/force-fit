@@ -55,7 +55,8 @@ def print_error(message):
 
 parser = OptionParser()
 parser.set_defaults(cell_poscar=None,
-                    coef_invariants=0.1,
+                    coef_invariants=None,
+                    pinv_cutoff=None,
                     fc2=False,
                     fc3=False,
                     fc4=False,
@@ -79,6 +80,8 @@ parser.add_option("--fc3", dest="fc3",
 parser.add_option("--fc4", dest="fc4",
                   action="store_true",
                   help="Calculate fc4")
+parser.add_option("--pinv_cutoff", dest="pinv_cutoff", type="float",
+                  help="Cutoff value for pseudo-inversion")
 parser.add_option("--ri", dest="rot_inv",
                   action="store_true",
                   help="Enforce rotational invariance")
@@ -121,12 +124,17 @@ if options.fc2:
     else:
         disp_dataset = parse_disp_fc3_yaml()
         parse_FORCES_THIRD(disp_dataset)
+    if options.coef_invariants is not None:
+        print "Adjustment parameter: %e" % options.coef_invariants
+    if options.pinv_cutoff is not None:
+        print "Cutoff value for pseudo inversion: %e" % options.pinv_cutoff
     fc2fit = FC2Fit(supercell,
                     disp_dataset,
                     symmetry,
                     translational_invariance=options.trans_inv,
                     rotational_invariance=options.rot_inv,
-                    coef_invariants=options.coef_invariants)
+                    coef_invariants=options.coef_invariants,
+                    pinv_cutoff=options.pinv_cutoff)
     fc2fit.run()
     fc2 = fc2fit.get_fc2()
     print "Writing fc2..."
