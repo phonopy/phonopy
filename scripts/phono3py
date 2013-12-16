@@ -42,10 +42,10 @@ from optparse import OptionParser
 from phonopy.interface.vasp import read_vasp
 from phonopy.structure.cells import get_supercell, get_primitive, print_cell
 from phonopy.structure.symmetry import Symmetry
-from phonopy.harmonic.force_constants import get_force_constants, \
+from phonopy.harmonic.force_constants import get_fc2, get_force_constants, \
     set_permutation_symmetry, symmetrize_force_constants, \
     set_translational_invariance, show_drift_force_constants
-from phonopy.file_IO import parse_BORN
+from phonopy.file_IO import parse_BORN, parse_FORCE_SETS
 from phonopy.units import VaspToTHz
 from anharmonic.phonon3.fc3 import get_fc3, set_permutation_symmetry_fc3, \
     set_translational_invariance_fc3, show_drift_fc3, cutoff_fc3, \
@@ -84,7 +84,14 @@ def print_end():
   \___|_| |_|\__,_|
 """
 
-def print_error(message):
+def print_error():
+    print """  ___ _ __ _ __ ___  _ __ 
+ / _ \ '__| '__/ _ \| '__|
+|  __/ |  | | | (_) | |   
+ \___|_|  |_|  \___/|_|
+"""
+
+def print_error_message(message):
     print message
 
 def file_exists(filename, log_level):
@@ -583,8 +590,8 @@ else:
         print "Displacement dataset is read from %s." % filename
         print "Solving fc2..."
     disp_dataset = parse_disp_fc3_yaml(filename=filename)
-    forces_second = parse_FORCES_SECOND(disp_dataset)
-    fc2_with_dim = get_force_constants(forces_second, symmetry, supercell)
+    parse_FORCES_SECOND(disp_dataset)
+    fc2_with_dim = get_fc2(supercell, symmetry, disp_dataset)
 
 if options.is_symmetrize_fc2:
     set_permutation_symmetry(fc2_with_dim)
