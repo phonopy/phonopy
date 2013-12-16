@@ -42,19 +42,15 @@ def get_force_constants(set_of_forces,
                         supercell,
                         atom_list=None,
                         decimals=None):
-
-    if atom_list==None:
-        force_constants = run_force_constants(
-            supercell,
-            symmetry,
-            set_of_forces,
-            range(supercell.get_number_of_atoms()))
-    else:
-        force_constants = run_force_constants(supercell,
-                                              symmetry,
-                                              set_of_forces,
-                                              atom_list)
-
+    first_atoms = [{'number': x.get_atom_number(),
+                    'displacement': x.get_displacement(),
+                    'forces': x.get_forces()} for x in set_of_forces]
+    dataset = {'natom': supercell.get_number_of_atoms(),
+               'first_atoms': first_atoms}
+    force_constants = get_fc2(supercell,
+                              symmetry,
+                              dataset,
+                              atom_list=atom_list)
     if decimals:
         return force_constants.round(decimals=decimals)
     else:
@@ -93,10 +89,10 @@ def symmetrize_force_constants(force_constants, iteration=3):
         set_permutation_symmetry(force_constants)
         set_translational_invariance(force_constants)
 
-def run_force_constants(supercell,
-                        symmetry,
-                        set_of_forces,
-                        atom_list):
+def get_fc2(supercell,
+            symmetry,
+            dataset,
+            atom_list=None):
     """
     Bare force_constants is returned.
 
@@ -111,7 +107,7 @@ def run_force_constants(supercell,
       j: Atom index at which force on the atom is measured.
       a, b: Cartesian direction indices = (0, 1, 2) for i and j, respectively
     """
-    
+
     force_constants = np.zeros((supercell.get_number_of_atoms(),
                                 supercell.get_number_of_atoms(),
                                 3, 3), dtype='double')
@@ -119,7 +115,7 @@ def run_force_constants(supercell,
     # Fill force_constants[ displaced_atoms, all_atoms_in_supercell ]
     atom_list_done = _get_force_constants_disps(force_constants,
                                                 supercell,
-                                                set_of_forces,
+                                                dataset,
                                                 symmetry)
 
     # Distribute non-equivalent force constants to those equivalent
@@ -128,14 +124,25 @@ def run_force_constants(supercell,
     trans = symmetry.get_symmetry_operations()['translations']
     positions = supercell.get_scaled_positions()
     lattice = supercell.get_cell().T
-    distribute_force_constants(force_constants,
-                               atom_list,
-                               atom_list_done,
-                               lattice,
-                               positions,
-                               rotations,
-                               trans,
-                               symprec)
+
+    if atom_list is None:
+        distribute_force_constants(force_constants,
+                                   range(supercell.get_number_of_atoms()),
+                                   atom_list_done,
+                                   lattice,
+                                   positions,
+                                   rotations,
+                                   trans,
+                                   symprec)
+    else:
+        distribute_force_constants(force_constants,
+                                   atom_list,
+                                   atom_list_done,
+                                   lattice,
+                                   positions,
+                                   rotations,
+                                   trans,
+                                   symprec)
 
     return force_constants
 
@@ -291,29 +298,25 @@ def get_all_atom_mappings_by_symmetry(atom_list_done,
 
 def _get_force_constants_disps(force_constants,
                                supercell,
-                               set_of_forces,
+                               dataset,
                                symmetry):
     """
     Phi = -F / d
     """
     
     symprec = symmetry.get_symmetry_tolerance()
-    disp_atom_list = np.unique(
-        [forces.get_atom_number() for forces in set_of_forces])
-
+    disp_atom_list = np.unique([x['number'] for x in dataset['first_atoms']])
     for disp_atom_number in disp_atom_list:
         disps = []
         sets_of_forces = []
 
-        for forces in set_of_forces:
-            if forces.get_atom_number() != disp_atom_number:
+        for x in dataset['first_atoms']:
+            if x['number'] != disp_atom_number:
                 continue
-
-            disps.append(forces.get_displacement())
-            sets_of_forces.append(forces.get_forces())
+            disps.append(x['displacement'])
+            sets_of_forces.append(x['forces'])
 
         site_symmetry = symmetry.get_site_symmetry(disp_atom_number)
-
         solve_force_constants(force_constants,
                               disp_atom_number,
                               disps,
