@@ -116,13 +116,14 @@ parser.set_defaults(band_indices=None,
                     cutoff_pair_distance=None,
                     delta_fc2=False,
                     displacement_distance=0.03,
-                    factor=None,
                     delta_fc2_sets_mode=False,
+                    factor=None,
                     freq_scale=None,
                     gamma_option=0,
                     grid_points=None,
                     gv_delta_q=None,
                     input_filename=None,
+                    input_output_filename=None,
                     ion_clamped=False,
                     is_decay_channel=False,
                     is_nodiag=False,
@@ -260,6 +261,9 @@ parser.add_option("--gv_delta_q", dest="gv_delta_q", type="float",
 parser.add_option("-i", dest="input_filename",
                   type="string",
                   help="Input filename extension")
+parser.add_option("--io", dest="input_output_filename",
+                  type="string",
+                  help="Input and output filename extension")
 parser.add_option("--ion_clamped", dest="ion_clamped",
                   action="store_true",
                   help="Atoms are clamped under applied strain in Gruneisen parameter calculation")
@@ -381,7 +385,14 @@ if options.quiet:
     log_level = 0
 if not options.log_level==None:
     log_level=options.log_level
-    
+
+# Input and output filename extension
+input_filename = options.input_filename
+output_filename = options.output_filename
+if options.input_output_filename is not None:
+    input_filename = options.input_output_filename
+    output_filename = options.input_output_filename
+
 # Title
 if log_level:
     print_phono3py()
@@ -389,10 +400,10 @@ if log_level:
 
 # Create FORCES_THIRD
 if options.forces_third_mode:
-    if options.input_filename is None:
+    if input_filename is None:
         filename = 'disp_fc3.yaml'
     else:
-        filename = 'disp_fc3.' + options.input_filename + '.yaml'
+        filename = 'disp_fc3.' + input_filename + '.yaml'
     file_exists(filename, log_level)
     if log_level:
         print "Displacement dataset is read from %s." % filename
@@ -403,10 +414,10 @@ if options.forces_third_mode:
 
 # Create DELTA_FC2_SETS
 if options.delta_fc2_sets_mode:
-    if options.input_filename is None:
+    if input_filename is None:
         filename = 'disp_fc3.yaml'
     else:
-        filename = 'disp_fc3.' + options.input_filename + '.yaml'
+        filename = 'disp_fc3.' + input_filename + '.yaml'
     file_exists(filename, log_level)
     if log_level:
         print "Displacement dataset is read from %s." % filename
@@ -480,10 +491,10 @@ if options.is_displacement:
         print
         print "Displacement distance:", disp_distance
 
-    if options.output_filename is None:
+    if output_filename is None:
         filename = 'disp_fc3.yaml'
     else:
-        filename = 'disp_fc3.' + options.output_filename + '.yaml'
+        filename = 'disp_fc3.' + output_filename + '.yaml'
     num_disps, num_disp_files = write_supercells_with_displacements(
         supercell,
         dds,
@@ -572,19 +583,19 @@ if log_level:
     print "------------------------------ fc2 ------------------------------"
     sys.stdout.flush()
 if options.read_fc2 or options.read_delta_fc2:
-    if options.input_filename is None:
+    if input_filename is None:
         filename = 'fc2.hdf5'
     else:
-        filename = 'fc2.' + options.input_filename + '.hdf5'
+        filename = 'fc2.' + input_filename + '.hdf5'
     file_exists(filename, log_level)
     if log_level:
         print "Reading fc2 from %s..." % filename
     fc2_with_dim = read_fc2_from_hdf5(filename=filename)
 else:
-    if options.input_filename is None:
+    if input_filename is None:
         filename = 'disp_fc3.yaml'
     else:
-        filename = 'disp_fc3.' + options.input_filename + '.yaml'
+        filename = 'disp_fc3.' + input_filename + '.yaml'
     file_exists(filename, log_level)
     if log_level:
         print "Displacement dataset is read from %s." % filename
@@ -601,10 +612,10 @@ if options.is_translational_symmetry:
 show_drift_force_constants(fc2_with_dim, name='fc2')
 
 if not options.read_fc2:
-    if options.output_filename is None:
+    if output_filename is None:
         filename = 'fc2.hdf5'
     else:
-        filename = 'fc2.' + options.output_filename + '.hdf5'
+        filename = 'fc2.' + output_filename + '.hdf5'
     if log_level:
         print "Writing fc2 to %s..." % filename
     write_fc2_to_hdf5(fc2_with_dim, filename=filename)
@@ -618,10 +629,10 @@ else:
     # fc2 extra (FORCE_SETS_EXTRA)
     if options.read_fc2_extra:
 
-        if options.input_filename is None:
+        if input_filename is None:
             filename = 'fc2_extra.hdf5'
         else:
-            filename = 'fc2_extra.' + options.input_filename + '.hdf5'
+            filename = 'fc2_extra.' + input_filename + '.hdf5'
         file_exists(filename, log_level)
         if log_level:
             print "Reading fc2-extra from %s..." % filename
@@ -645,10 +656,10 @@ else:
     show_drift_force_constants(fc2, 'fc2-extra')
         
     if not options.read_fc2_extra:
-        if options.output_filename is None:
+        if output_filename is None:
             filename = 'fc2_extra.hdf5'
         else:
-            filename = 'fc2_extra.' + options.output_filename + '.hdf5'
+            filename = 'fc2_extra.' + output_filename + '.hdf5'
         if log_level:
             print "Writing fc2-extra to %s..." % filename
         write_fc2_to_hdf5(fc2, filename=filename)
@@ -676,10 +687,10 @@ else:
         sys.stdout.flush()
 
     if options.read_fc3: # Read fc3.hdf5
-        if options.input_filename is None:
+        if input_filename is None:
             filename = 'fc3.hdf5'
         else:
-            filename = 'fc3.' + options.input_filename + '.hdf5'
+            filename = 'fc3.' + input_filename + '.hdf5'
         file_exists(filename, log_level)
         if log_level:
             print "Reading fc3 from %s..." % filename
@@ -687,10 +698,10 @@ else:
         if options.is_translational_symmetry:
             set_translational_invariance_fc3(fc3)
     else: # fc3 from FORCES_THIRD and FORCES_SECOND
-        if options.input_filename is None:
+        if input_filename is None:
             filename = 'disp_fc3.yaml'
         else:
-            filename = 'disp_fc3.' + options.input_filename + '.yaml'
+            filename = 'disp_fc3.' + input_filename + '.yaml'
         file_exists(filename, log_level)
         if log_level:
             print "Displacement dataset is read from %s." % filename
@@ -743,10 +754,10 @@ else:
 
     # Write fc3
     if not options.read_fc3:
-        if options.output_filename is None:
+        if output_filename is None:
             filename = 'fc3.hdf5'
         else:
-            filename = 'fc3.' + options.output_filename + '.hdf5'
+            filename = 'fc3.' + output_filename + '.hdf5'
         if log_level:
             print "Writing fc3 to %s" % filename
         write_fc3_to_hdf5(fc3, filename=filename)
@@ -800,10 +811,10 @@ if options.is_gruneisen:
         gr.set_qpoints(qpoints)
     gr.run()
 
-    if options.output_filename is None:
+    if output_filename is None:
         filename = 'gruneisen3.yaml'
     else:
-        filename = 'gruneisen3.' + options.output_filename + '.yaml'
+        filename = 'gruneisen3.' + output_filename + '.yaml'
     gr.write_yaml(filename=filename)
 
 #===========================
@@ -886,7 +897,7 @@ elif settings.get_mesh_numbers() is not None:
                         symprec=options.symprec,
                         log_level=log_level)
         jdos.get_jointDOS(grid_points,
-                          output_filename=options.output_filename)
+                          output_filename=output_filename)
     elif options.is_isotope:
         if log_level:
             print "Cutoff frequency:", settings.get_cutoff_frequency()
@@ -945,7 +956,7 @@ elif settings.get_mesh_numbers() is not None:
                 t_max=settings.get_max_temperature(),
                 t_min=settings.get_min_temperature(),
                 t_step=settings.get_temperature_step(),
-                output_filename=options.output_filename)
+                output_filename=output_filename)
         elif settings.get_is_frequency_shift():
             phono3py.get_frequency_shift(
                 grid_points,
@@ -953,7 +964,7 @@ elif settings.get_mesh_numbers() is not None:
                 t_max=settings.get_max_temperature(),
                 t_min=settings.get_min_temperature(),
                 t_step=settings.get_temperature_step(),
-                output_filename=options.output_filename)
+                output_filename=output_filename)
         elif settings.get_is_bterta():
             phono3py.get_thermal_conductivity(
                 sigmas=multiple_sigmas,
@@ -971,15 +982,15 @@ elif settings.get_mesh_numbers() is not None:
                 read_gamma=settings.get_read_gamma(),
                 write_amplitude=settings.get_write_amplitude(),
                 read_amplitude=settings.get_read_amplitude(),
-                output_filename=options.output_filename,
-                input_filename=options.input_filename)
+                output_filename=output_filename,
+                input_filename=input_filename)
         else:
             phono3py.get_imag_self_energy(
                 grid_points,
                 frequency_step=freq_step,
                 sigmas=multiple_sigmas,
                 temperatures=temperatures,
-                output_filename=options.output_filename)
+                output_filename=output_filename)
 else:
     pass
 
