@@ -45,10 +45,18 @@ from phonopy.harmonic.force_constants import show_drift_force_constants
 from anharmonic.force_fit.fc2 import FC2Fit
 from anharmonic.force_fit.fc3 import FC3Fit
 from anharmonic.force_fit.fc4 import FC4Fit
-from anharmonic.file_IO import parse_disp_fc4_yaml, parse_FORCES_FOURTH, parse_disp_fc3_yaml, parse_disp_yaml_to_disp_dataset, parse_FORCES_THIRD, parse_FORCES_SECOND
+from anharmonic.file_IO import parse_disp_fc4_yaml, parse_FORCES_FOURTH, parse_disp_fc3_yaml, parse_disp_yaml_to_disp_dataset, parse_FORCES_THIRD, parse_FORCES_SECOND, parse_FORCE_SETS_with_disp_dataset
 from anharmonic.file_IO import write_fc3_dat, write_fc4_dat, write_fc4_to_hdf5, write_fc3_to_hdf5, write_fc2_to_hdf5
 from anharmonic.phonon3.fc3 import show_drift_fc3
 from anharmonic.phonon4.fc4 import show_drift_fc4
+
+def file_exists(filename):
+    if os.path.exists(filename):
+        return True
+    else:
+        error_text = "%s not found." % filename
+        print_error(error_text)
+        sys.exit(1)
 
 def print_error(message):
     print message
@@ -57,6 +65,7 @@ parser = OptionParser()
 parser.set_defaults(cell_poscar=None,
                     coef_invariants=None,
                     pinv_cutoff=None,
+                    read_phonopy_files=False,
                     fc2=False,
                     fc3=False,
                     fc4=False,
@@ -80,6 +89,9 @@ parser.add_option("--fc3", dest="fc3",
 parser.add_option("--fc4", dest="fc4",
                   action="store_true",
                   help="Calculate fc4")
+parser.add_option("--phonopy", dest="read_phonopy_files",
+                  action="store_true",
+                  help="Read disp.yaml and FORCE_SETS")
 parser.add_option("--pinv_cutoff", dest="pinv_cutoff", type="float",
                   help="Cutoff value for pseudo-inversion")
 parser.add_option("--ri", dest="rot_inv",
@@ -118,10 +130,14 @@ symmetry = Symmetry(supercell, options.symprec)
 print "Spacegroup: ", symmetry.get_international_table()
 
 if options.fc2:
-    if os.path.exists("disp.yaml"):
+    if options.read_phonopy_files:
+        file_exists("disp.yaml")
+        file_exists("FORCE_SETS")
         disp_dataset = parse_disp_yaml_to_disp_dataset()
-        parse_FORCES_SECOND(disp_dataset)
+        parse_FORCE_SETS_with_disp_dataset(disp_dataset)
     else:
+        file_exists("disp_fc3.yaml")
+        file_exists("FORCES_SECOND")
         disp_dataset = parse_disp_fc3_yaml()
         parse_FORCES_THIRD(disp_dataset)
     if options.coef_invariants is not None:
@@ -141,6 +157,9 @@ if options.fc2:
     write_fc2_to_hdf5(fc2, 'fc2-fit.hdf5')
 
 if options.fc3:
+    file_exists("disp_fc3.yaml")
+    file_exists("FORCES_SECOND")
+    file_exists("FORCES_THIRD")
     disp_dataset = parse_disp_fc3_yaml()
     parse_FORCES_THIRD(disp_dataset)
     fc3fit = FC3Fit(supercell, disp_dataset, symmetry)
@@ -152,6 +171,10 @@ if options.fc3:
     write_fc3_to_hdf5(fc3, 'fc3-fit.hdf5')
 
 if options.fc4:
+    file_exists("disp_fc4.yaml")
+    file_exists("FORCES_SECOND")
+    file_exists("FORCES_THIRD")
+    file_exists("FORCES_FOURTH")
     disp_dataset = parse_disp_fc4_yaml()
     parse_FORCES_FOURTH(disp_dataset)
     fc4fit = FC4Fit(supercell, disp_dataset, symmetry)
