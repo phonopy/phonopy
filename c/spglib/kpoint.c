@@ -67,7 +67,7 @@ get_ir_reciprocal_mesh_openmp(int grid_address[][3],
 			      SPGCONST PointSymmetry * point_symmetry);
 static int relocate_BZ_grid_address(int bz_grid_address[][3],
 				    int bz_map[],
-				    int grid_address[][3],
+				    SPGCONST int grid_address[][3],
 				    const int mesh[3],
 				    SPGCONST double rec_lattice[3][3],
 				    const int is_shift[3]);
@@ -210,7 +210,7 @@ int kpt_get_stabilized_reciprocal_mesh(int grid_address[][3],
 
 int kpt_relocate_BZ_grid_address(int bz_grid_address[][3],
 				 int bz_map[],
-				 int grid_address[][3],
+				 SPGCONST int grid_address[][3],
 				 const int mesh[3],
 				 SPGCONST double rec_lattice[3][3],
 				 const int is_shift[3])
@@ -562,7 +562,7 @@ get_ir_reciprocal_mesh_openmp(int grid_address[][3],
 /* bz_map[prod(mesh * 2 - 1)] */
 static int relocate_BZ_grid_address(int bz_grid_address[][3],
 				    int bz_map[],
-				    int grid_address[][3],
+				    SPGCONST int grid_address[][3],
 				    const int mesh[3],
 				    SPGCONST double rec_lattice[3][3],
 				    const int is_shift[3])
@@ -570,7 +570,7 @@ static int relocate_BZ_grid_address(int bz_grid_address[][3],
   double tolerance, min_distance;
   double vector[3], distance[27];
   int bzmesh[3], bzmesh_double[3], address_double[3];
-  int i, j, k, min_index, boundary_gp, total_num_gp, bzgp, gp;
+  int i, j, k, min_index, boundary_num_gp, total_num_gp, bzgp, gp;
 
   tolerance = get_tolerance_for_BZ_reduction(rec_lattice);
   for (i = 0; i < 3; i++) {
@@ -581,7 +581,7 @@ static int relocate_BZ_grid_address(int bz_grid_address[][3],
     bz_map[i] = -1;
   }
   
-  boundary_gp = 0;
+  boundary_num_gp = 0;
   total_num_gp = mesh[0] * mesh[1] * mesh[2];
   for (i = 0; i < total_num_gp; i++) {
     for (j = 0; j < 27; j++) {
@@ -606,7 +606,7 @@ static int relocate_BZ_grid_address(int bz_grid_address[][3],
 	if (j == min_index) {
 	  gp = i;
 	} else {
-	  gp = boundary_gp + total_num_gp;
+	  gp = boundary_num_gp + total_num_gp;
 	}
 	for (k = 0; k < 3; k++) {
 	  bz_grid_address[gp][k] = 
@@ -619,13 +619,13 @@ static int relocate_BZ_grid_address(int bz_grid_address[][3],
 	bzgp = get_grid_point(address_double, bzmesh);
 	bz_map[bzgp] = gp;
 	if (j != min_index) {
-	  boundary_gp++;
+	  boundary_num_gp++;
 	}
       }
     }
   }
 
-  return boundary_gp + total_num_gp;
+  return boundary_num_gp + total_num_gp;
 }
 
 static double get_tolerance_for_BZ_reduction(SPGCONST double rec_lattice[3][3])

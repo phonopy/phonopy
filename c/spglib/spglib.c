@@ -526,7 +526,7 @@ int spg_get_stabilized_reciprocal_mesh(int grid_address[][3],
 
 int spg_relocate_BZ_grid_address(int bz_grid_address[][3],
 				 int bz_map[],
-				 int grid_address[][3],
+				 SPGCONST int grid_address[][3],
 				 const int mesh[3],
 				 SPGCONST double rec_lattice[3][3],
 				 const int is_shift[3])
