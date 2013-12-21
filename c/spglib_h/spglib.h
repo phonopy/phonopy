@@ -302,9 +302,29 @@ int spg_get_stabilized_reciprocal_mesh(int grid_address[][3],
 
 /* Grid addresses are relocated inside Brillouin zone. */
 /* Number of ir-grid-points inside Brillouin zone is returned. */
+/* It is assumed that the following arrays have the shapes of */
+/*   bz_grid_address[prod(mesh + 1)][3] */
+/*   bz_map[prod(mesh * 2 - 1)] */
+/* where grid_address[prod(mesh)][3]. */
+/* Each element of grid_address is mapped to each element of */
+/* bz_grid_address with keeping element order. bz_grid_address has */
+/* larger memory space to represent BZ surface even if some points */
+/* on a surface are translationally equivalent to the other points */
+/* on the other surface. Those equivalent points are added successively */
+/* as grid point numbers to bz_grid_address. Those added grid points */
+/* are stored after the address of end point of grid_address, i.e. */
+/*                                                                       */
+/* |-----------------array size of bz_grid_address---------------------| */
+/* |--grid addresses similar to grid_address--|--newly added ones--|xxx| */
+/*                                                                       */
+/* where xxx means the memory space that may not be used. Number of grid */
+/* points stored in bz_grid_address is returned. */
+/* bz_map is used to recover grid point index expanded to include BZ */
+/* surface from grid address. The grid point indices are mapped to */
+/* (mesh[0] * 2 -1) x (mesh[1] * 2 -1) x (mesh[2] * 2 -1) space (bz_map). */
 int spg_relocate_BZ_grid_address(int bz_grid_address[][3],
 				 int bz_map[],
-				 int grid_address[][3],
+				 SPGCONST int grid_address[][3],
 				 const int mesh[3],
 				 SPGCONST double rec_lattice[3][3],
 				 const int is_shift[3]);
