@@ -105,7 +105,7 @@ borns, epsilon = get_born_OUTCAR(poscar_filename=poscar_filename,
                                  symmetrize_tensors=options.symmetrize_tensors)
 
 print "14.400"
-print ("%10.5f" * 9) %  tuple(epsilon.flatten())
+print ("%12.7f" * 9) %  tuple(epsilon.flatten())
 for z in borns:
-    print ("%10.5f" * 9) %  tuple(z.flatten())
+    print ("%12.7f" * 9) %  tuple(z.flatten())
 
