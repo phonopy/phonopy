@@ -45,9 +45,7 @@ import phonopy.interface.vasp as vasp
 from phonopy.cui.settings import Settings, PhonopyConfParser
 from phonopy.cui.show_symmetry import check_symmetry
 from phonopy.units import *
-
-
-phonopy_version = "1.7.6"
+from phonopy.version import phonopy_version
 
 # AA is created at http://www.network-science.de/ascii/.
 def print_phononpy():
@@ -1103,8 +1101,8 @@ elif run_mode == 'mesh':
             else:
                 plot.show()
 else:
-    print "--------------------------------------------------"
-    print " One of the following run modes may be specified."
+    print "--------------------------------------------------------------------------"
+    print " One of the following run modes may be specified for phonon calculations."
     for mode in ['Mesh sampling (MP, --mesh)',
                  'Q-points (QPOINTS, --qpoints)',
                  'Band structure (BAND, --band)',
@@ -1113,7 +1111,7 @@ else:
                  'Characters of Irreps (IRREPS, --irreps)',
                  'Create displacements (-d)']:
         print " -", mode
-    print "--------------------------------------------------"
+    print "--------------------------------------------------------------------------"
 
 # END
 if log_level > 0:
