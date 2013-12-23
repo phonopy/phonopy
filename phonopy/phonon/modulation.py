@@ -43,7 +43,6 @@ from phonopy.harmonic.derivative_dynmat import DerivativeOfDynamicalMatrix
 class Modulation:
     def __init__(self,
                  dynamical_matrix,
-                 cell,
                  dimension,
                  phonon_modes,
                  delta_q=None,
@@ -57,7 +56,7 @@ class Modulation:
         
         """
         self._dm = dynamical_matrix
-        self._cell = cell
+        self._cell = dynamical_matrix.get_primitive()
         self._phonon_modes = phonon_modes
         self._dimension = dimension
         self._delta_q = delta_q # 1st/2nd order perturbation direction

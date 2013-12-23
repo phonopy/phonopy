@@ -43,13 +43,12 @@ class Animation:
     def __init__(self,
                  qpoint,
                  dynamical_matrix,
-                 primitive,
                  shift=None):
-
         dynamical_matrix.set_dynamical_matrix(qpoint)
         self._eigenvalues, self._eigenvectors = \
             np.linalg.eigh(dynamical_matrix.get_dynamical_matrix())
         self._qpoint = qpoint
+        primitive = dynamical_matrix.get_primitive()
         self._positions = primitive.get_scaled_positions()
         self._symbols = primitive.get_chemical_symbols()
         self._masses = primitive.get_masses()

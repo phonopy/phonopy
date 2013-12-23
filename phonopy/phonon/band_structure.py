@@ -60,14 +60,13 @@ class BandStructure:
     def __init__(self,
                  paths,
                  dynamical_matrix,
-                 cell,
                  is_eigenvectors=False,
                  is_band_connection=False,
                  group_velocity=None,
                  factor=VaspToTHz,
                  verbose=False):
         self._dynamical_matrix = dynamical_matrix
-        self._cell = cell
+        self._cell = dynamical_matrix.get_primitive()
         self._factor = factor
         self._is_eigenvectors = is_eigenvectors
         self._is_band_connection = is_band_connection

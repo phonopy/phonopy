@@ -37,13 +37,13 @@ import cmath
 from phonopy.units import VaspToTHz
 
 def write_yaml(qpoints,
-               cell,
                dynamical_matrix, 
                nac_q_direction=None,
                is_eigenvectors=False,
                group_velocity=None,
                write_dynamical_matrices=False,
                factor=VaspToTHz):
+    cell = dynamical_matrix.get_primitive()
     num_atom = cell.get_number_of_atoms()
     m = cell.get_masses()
     names = cell.get_chemical_symbols()
