@@ -90,7 +90,7 @@ def get_least_displacements(symmetry,
                                      is_trigonal,
                                      log_level):
             displacements.append([atom_num,
-                                    disp[0], disp[1], disp[2]])
+                                  disp[0], disp[1], disp[2]])
             if is_plusminus == 'auto':
                 if is_minus_displacement(disp, site_symmetry):
                     displacements.append([atom_num,
