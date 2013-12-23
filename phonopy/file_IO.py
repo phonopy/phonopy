@@ -66,7 +66,7 @@ def parse_FORCE_SETS_from_strings(strings,
 
 def get_set_of_forces(f, is_translational_invariance):
     set_of_forces = []
-    natom = int(get_line_ignore_blank(f))
+    num_atom = int(get_line_ignore_blank(f))
     num_displacements = int(get_line_ignore_blank(f))
 
     for i in range(num_displacements):
@@ -88,7 +88,10 @@ def get_set_of_forces(f, is_translational_invariance):
                   'forces': forces_tmp}
         set_of_forces.append(forces)
 
-    return set_of_forces
+    dataset = {'natom': num_atom,
+               'first_atoms': set_of_forces}
+    
+    return dataset
 
 # Parse QPOINTS
 def parse_QPOINTS(filename="QPOINTS"):
@@ -229,96 +232,6 @@ def write_FORCE_SETS(filename,
     if verbose:
         print >> sys.stderr, "\n"
 
-# Write FORCES
-def write_FORCES(lattice,
-                 forces_filenames,
-                 displacements,
-                 filename='FORCE_SETS',
-                 amplitude=0.01,
-                 mode='vasp',
-                 is_zero_point=False,
-                 is_fropho_disp=False):
-
-    if mode == "vasp":
-        try:
-            from lxml import etree
-        except ImportError:
-            print "You need to install python-lxml."
-            sys.exit(1)
-
-    if is_zero_point:
-        force_files = forces_filenames[1:]
-        if mode == "wien2k":
-            zero_forces = wien2k.get_forces_wien2k(forces_filenames[0], lattice)
-        else: # "vasp" case
-            zero_forces = \
-                vasp.get_forces_vasprun_xml(etree.iterparse(
-                    vasp.VasprunWrapper(forces_filenames[0]),
-                    tag='varray'))
-    else:
-        force_files = forces_filenames
-        zero_forces = None
-
-    displacements = sort_displacements(displacements)
-    forces = []
-
-    # Show progress 
-    print >> sys.stderr, "counter (file index):",
-    for i in range(len(displacements)):
-        if mode == "wien2k": # wien2k
-            forces.append(wien2k.get_forces_wien2k(force_files[i], lattice))
-        else: # vasp
-            forces.append(
-                vasp.get_forces_vasprun_xml(etree.iterparse(
-                        vasp.VasprunWrapper(force_files[i]),
-                        tag='varray')))
-
-    write_FORCES_from_forces(lattice,
-                             forces,
-                             displacements,
-                             amplitude,
-                             filename,
-                             zero_forces,
-                             is_fropho_disp,
-                             verbose=True)
-
-    # Show progress 
-    print >> sys.stderr, "\n"
-
-def write_FORCES_from_forces(lattice,
-                             forces,
-                             displacements,
-                             amplitude=0.01,
-                             filename='FORCE_SETS',
-                             zero_forces=None,
-                             is_fropho_disp=False,
-                             verbose=False):
-    
-    file = open(filename, 'w')
-    file.write("%-5d\n" % len(displacements))
-    for count, disp in enumerate(displacements):
-
-        # Show progress
-        if verbose:
-            print >> sys.stderr, "%d (%d) " % (count+1, disp[4]+1),
-
-        if is_fropho_disp:
-            # To emulate fropho mkforces.rb:
-            disp_frac = np.dot(disp[1:4], np.linalg.inv(lattice)) * amplitude
-        else:
-            disp_cartesian = np.dot(disp[1:4], lattice)
-            disp_cartesian = disp_cartesian / np.linalg.norm(disp_cartesian) * amplitude
-            disp_frac = np.dot(disp_cartesian, np.linalg.inv(lattice))
-        
-        file.write("%-5d %15.10f %15.10f %15.10f\n" % ((disp[0]+1,) + tuple(disp_frac)))
-
-        # Subtract residual forces
-        if not zero_forces==None:
-            forces[disp[4]] -= zero_forces
-
-        for f in forces[disp[4]]:
-            file.write("%15.10f %15.10f %15.10f\n" % (tuple(f)))
-
 def mycmp(x, y):
     return cmp(x[0], y[0])
 
@@ -388,14 +301,6 @@ def parse_DISP(filename='DISP'):
             displacements.append(
                 [int(a[0])-1, float(a[1]), float(a[2]), float(a[3])])
     return displacements
-
-# Write DISP
-def write_DISP(displacements):
-    file = open('DISP', 'w')
-    for disp in displacements:
-        file.write("%4d " % (disp[0] + 1))
-        file.write("%2d %2d %2d\n" % tuple(disp[1:4]))
-    file.close()
 
 # Write disp.yaml
 def write_disp_yaml(displacements, supercell, directions=None,
