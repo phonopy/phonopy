@@ -37,7 +37,6 @@ import StringIO
 import numpy as np
 import phonopy.interface.vasp as vasp
 import phonopy.interface.wien2k as wien2k
-from phonopy.harmonic.forces import Forces
 from phonopy.harmonic.displacement import directions_axis, get_least_displacements
 from phonopy.structure.symmetry import Symmetry
 from phonopy.harmonic.force_constants import similarity_transformation
@@ -55,25 +54,19 @@ def get_line_ignore_blank(f):
     return line
 
 # Parse FORCE_SETS
-def parse_FORCE_SETS(num_atom,
-                     is_translational_invariance=False,
+def parse_FORCE_SETS(is_translational_invariance=False,
                      filename="FORCE_SETS"):
     f = open(filename, 'r')
-    return get_set_of_forces(f, num_atom, is_translational_invariance)
+    return get_set_of_forces(f, is_translational_invariance)
 
 def parse_FORCE_SETS_from_strings(strings,
-                                  num_atom,
                                   is_translational_invariance=False):
     return get_set_of_forces(StringIO.StringIO(strings),
-                             num_atom,
                              is_translational_invariance)
 
-def get_set_of_forces(f, num_atom, is_translational_invariance):
+def get_set_of_forces(f, is_translational_invariance):
     set_of_forces = []
-    natom_from_disp_yaml = int(get_line_ignore_blank(f))
-    if not num_atom==natom_from_disp_yaml:
-        return None
-
+    natom = int(get_line_ignore_blank(f))
     num_displacements = int(get_line_ignore_blank(f))
 
     for i in range(num_displacements):
@@ -85,32 +78,14 @@ def get_set_of_forces(f, num_atom, is_translational_invariance):
         for j in range(num_atom):
             line = get_line_ignore_blank(f).split()
             forces_tmp.append(np.array([float(x) for x in line]))
-        forces = Forces(atom_number-1, displacement, forces_tmp)
-        if is_translational_invariance:
-            forces.set_translational_invariance()
-        set_of_forces.append(forces)
+        forces_tmp = np.array(forces_tmp, dtype='double')
 
-    return set_of_forces
-
-# Parse FORCES
-def parse_FORCES(cell,
-                 is_translational_invariance=False,
-                 filename="FORCES"):
-    set_of_forces = []
-    f = open(filename, 'r')
-    num_displacements = int(f.readline().strip())
-    for i in range(num_displacements):
-        line = f.readline().strip().split()
-        atom_number = int(line[0])
-        displacement = np.array([float(line[x]) for x in (1,2,3)])
-        displacement = np.dot(displacement, cell.get_cell())
-        forces_tmp = []
-        for j in range(cell.get_number_of_atoms()):
-            forces_tmp.append(np.array(
-                    [float(x) for x in f.readline().strip().split()]))
-        forces = Forces(atom_number-1, displacement, forces_tmp)
         if is_translational_invariance:
-            forces.set_translational_invariance()
+            forces_tmp -= np.sum(forces_tmp, axis=0) / len(forces_tmp)
+
+        forces = {'number': atom_number - 1,
+                  'displacement': displacement,
+                  'forces': forces_tmp}
         set_of_forces.append(forces)
 
     return set_of_forces
