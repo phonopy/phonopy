@@ -54,13 +54,11 @@ def get_line_ignore_blank(f):
     return line
 
 # Parse FORCE_SETS
-def parse_FORCE_SETS(is_translational_invariance=False,
-                     filename="FORCE_SETS"):
+def parse_FORCE_SETS(is_translational_invariance=False, filename="FORCE_SETS"):
     f = open(filename, 'r')
     return get_set_of_forces(f, is_translational_invariance)
 
-def parse_FORCE_SETS_from_strings(strings,
-                                  is_translational_invariance=False):
+def parse_FORCE_SETS_from_strings(strings, is_translational_invariance=False):
     return get_set_of_forces(StringIO.StringIO(strings),
                              is_translational_invariance)
 
@@ -441,9 +439,3 @@ def get_born_parameters(f, primitive, is_symmetry):
 
     return non_anal
 
-    
-
-
-if __name__ == '__main__':
-    print read_force_constant_vasprun_xml("vasprun.xml")
-#     print read_force_constant_OUTCAR("OUTCAR")

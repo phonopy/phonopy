@@ -5,7 +5,6 @@ import h5py
 from phonopy.structure.atoms import Atoms
 from phonopy.interface import vasp
 from phonopy.file_IO import write_FORCE_SETS_vasp, read_force_constant_vasprun_xml, parse_FORCE_SETS
-from phonopy.harmonic.forces import Forces
 
 ###########
 #

@@ -51,48 +51,13 @@ def get_force_constants(set_of_forces,
                               symmetry,
                               dataset,
                               atom_list=atom_list)
-    if decimals:
-        return force_constants.round(decimals=decimals)
-    else:
-        return force_constants
-
-def cutoff_force_constants(force_constants,
-                           supercell,
-                           cutoff_radius,
-                           symprec=1e-5):
-    num_atom = supercell.get_number_of_atoms()
-    reduced_bases = get_reduced_bases(supercell.get_cell(), symprec)
-    positions = np.dot(supercell.get_positions(),
-                       np.linalg.inv(reduced_bases))
-    for i in range(num_atom):
-        pos_i = positions[i]
-        for j in range(num_atom):
-            pos_j = positions[j]
-            min_distance = get_shortest_distance_in_PBC(pos_i,
-                                                        pos_j,
-                                                        reduced_bases)
-            if min_distance > cutoff_radius:
-                force_constants[i, j] = 0.0
-
-def get_shortest_distance_in_PBC(pos_i, pos_j, reduced_bases):
-    distances = []
-    for k in (-1, 0, 1):
-        for l in (-1, 0, 1):
-            for m in (-1, 0, 1):
-                diff = pos_j + np.array([k, l, m]) - pos_i
-                distances.append(np.linalg.norm(np.dot(diff, reduced_bases)))
-    return np.min(distances)
-                        
-
-def symmetrize_force_constants(force_constants, iteration=3):
-    for i in range(iteration):
-        set_permutation_symmetry(force_constants)
-        set_translational_invariance(force_constants)
+    return force_constants
 
 def get_fc2(supercell,
             symmetry,
             dataset,
-            atom_list=None):
+            atom_list=None,
+            decimals=None):
     """
     Bare force_constants is returned.
 
@@ -144,7 +109,43 @@ def get_fc2(supercell,
                                    trans,
                                    symprec)
 
-    return force_constants
+    if decimals:
+        return force_constants.round(decimals=decimals)
+    else:
+        return force_constants
+
+def cutoff_force_constants(force_constants,
+                           supercell,
+                           cutoff_radius,
+                           symprec=1e-5):
+    num_atom = supercell.get_number_of_atoms()
+    reduced_bases = get_reduced_bases(supercell.get_cell(), symprec)
+    positions = np.dot(supercell.get_positions(),
+                       np.linalg.inv(reduced_bases))
+    for i in range(num_atom):
+        pos_i = positions[i]
+        for j in range(num_atom):
+            pos_j = positions[j]
+            min_distance = get_shortest_distance_in_PBC(pos_i,
+                                                        pos_j,
+                                                        reduced_bases)
+            if min_distance > cutoff_radius:
+                force_constants[i, j] = 0.0
+
+def get_shortest_distance_in_PBC(pos_i, pos_j, reduced_bases):
+    distances = []
+    for k in (-1, 0, 1):
+        for l in (-1, 0, 1):
+            for m in (-1, 0, 1):
+                diff = pos_j + np.array([k, l, m]) - pos_i
+                distances.append(np.linalg.norm(np.dot(diff, reduced_bases)))
+    return np.min(distances)
+                        
+
+def symmetrize_force_constants(force_constants, iteration=3):
+    for i in range(iteration):
+        set_permutation_symmetry(force_constants)
+        set_translational_invariance(force_constants)
 
 def distribute_force_constants(force_constants,
                                atom_list,

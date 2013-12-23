@@ -38,11 +38,10 @@ from phonopy.structure.atoms import Atoms
 from phonopy.structure.symmetry import Symmetry
 from phonopy.structure.cells import get_supercell, get_primitive, print_cell
 from phonopy.harmonic.displacement import get_least_displacements
-from phonopy.harmonic.force_constants import get_force_constants, symmetrize_force_constants, rotational_invariance, cutoff_force_constants, set_tensor_symmetry
+from phonopy.harmonic.force_constants import get_fc2, symmetrize_force_constants, rotational_invariance, cutoff_force_constants, set_tensor_symmetry
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC
 from phonopy.phonon.band_structure import BandStructure
 from phonopy.phonon.thermal_properties import ThermalProperties
-from phonopy.harmonic.forces import Forces
 from phonopy.phonon.mesh import Mesh
 from phonopy.units import VaspToTHz
 from phonopy.phonon.dos import TotalDos, PartialDos
@@ -88,7 +87,7 @@ class Phonopy:
         self._primitive_symmetry = None
 
         # set_force_constants or set_forces
-        self._set_of_forces_objects = None
+        self._displacement_dataset = None
         self._force_constants = None
 
         # set_band_structure
@@ -196,14 +195,13 @@ class Phonopy:
         """
 
         lattice = self._supercell.get_cell()
+        self._displacement_directions = get_least_displacements(
+            self._symmetry, 
+            is_plusminus=is_plusminus,
+            is_diagonal=is_diagonal,
+            is_trigonal=is_trigonal,
+            log_level=self._log_level)
         self._displacements = []
-        self._displacement_directions = \
-            get_least_displacements(self._symmetry, 
-                                    is_plusminus=is_plusminus,
-                                    is_diagonal=is_diagonal,
-                                    is_trigonal=is_trigonal,
-                                    log_level=self._log_level)
-
         for disp in self._displacement_directions:
             atom_num = disp[0]
             disp_cartesian = np.dot(disp[1:], lattice)
@@ -212,7 +210,6 @@ class Phonopy:
                                        disp_cartesian[0],
                                        disp_cartesian[1],
                                        disp_cartesian[2]])
-
         self._set_supercells_with_displacements()
 
     def set_displacements(self, displacements):
@@ -243,7 +240,7 @@ class Phonopy:
     def set_post_process(self,
                          primitive_matrix=None,
                          sets_of_forces=None,
-                         set_of_forces_objects=None,
+                         displacement_dataset=None,
                          force_constants=None,
                          is_nac=False,
                          calculate_full_force_constants=False,
@@ -262,14 +259,19 @@ class Phonopy:
              (supercell_lattice * (supercell_matrix)^-1 * primitive_matrix)^T
 
         sets_of_forces:
+          This requires that self._displacements is set in advance.
            [[[f_1x, f_1y, f_1z], [f_2x, f_2y, f_2z], ...], # first supercell
              [[f_1x, f_1y, f_1z], [f_2x, f_2y, f_2z], ...], # second supercell
              ...                                                  ]
 
-        set_of_forces_objects:
-           [FORCES_object, FORCES_object, FORCES_object, ...]
+        displacement_dataset:
+           {'natom': number_of_atoms_in_supercell,
+            'first_atoms': [
+              {'number': atom index of displaced atom,
+               'displacement': displacement in Cartesian coordinates,
+               'forces': forces on atoms in supercell},
+              {...}, ...]}
         """
-
         self._is_nac = is_nac
 
         # Primitive cell
@@ -282,13 +284,13 @@ class Phonopy:
         # Set set of FORCES objects or force constants
         if sets_of_forces is not None:
             self.set_forces(sets_of_forces)
-        elif set_of_forces_objects is not None:
-            self.set_force_sets(set_of_forces_objects)
+        elif displacement_dataset is not None:
+            self.set_force_sets(displacement_dataset)
         elif force_constants is not None:
             self.set_force_constants(force_constants)
 
         # Calculate force cosntants from forces (full or symmetry reduced)
-        if self._set_of_forces_objects is not None:
+        if self._displacement_dataset is not None:
             if calculate_full_force_constants:
                 self.set_force_constants_from_forces(
                     distributed_atom_list=None,
@@ -332,25 +334,22 @@ class Phonopy:
     dynamical_matrix = property(get_dynamical_matrix)
 
     def set_forces(self, sets_of_forces):
-        forces = []
-        for i, disp in enumerate(self._displacements):
-            forces.append(Forces(disp[0],
-                                 disp[1:4],
-                                 sets_of_forces[i]))
-        self._set_of_forces_objects = forces
+        disps = [{'number': disp[0], 'displacement': disp[1:4], 'forces': forces}
+                 for forces, disp in zip(sets_of_forces, self._displacements)]
+        self._displacement_dataset = {'natom': len(disps[0]['forces']),
+                                      'first_atoms': disps}
 
     def set_force_constants_from_forces(self,
                                         distributed_atom_list=None,
                                         force_constants_decimals=None):
-        self._force_constants = get_force_constants(
-            self._set_of_forces_objects,
-            self._symmetry,
+        self._force_constants = get_fc2(
             self._supercell,
+            self._symmetry,
+            self._displacement_dataset,
             atom_list=distributed_atom_list,
             decimals=force_constants_decimals)
 
-    def set_force_constants_zero_with_radius(self,
-                                             cutoff_radius):
+    def set_force_constants_zero_with_radius(self, cutoff_radius):
         cutoff_force_constants(self._force_constants,
                                self._supercell,
                                cutoff_radius,
@@ -359,8 +358,8 @@ class Phonopy:
     def set_force_constants(self, force_constants):
         self._force_constants = force_constants
 
-    def set_force_sets(self, sets_of_forces_objects):
-        self._set_of_forces_objects = sets_of_forces_objects
+    def set_force_sets(self, force_sets):
+        self._displacement_dataset = force_sets
         
     def symmetrize_force_constants(self, iteration=3):
         symmetrize_force_constants(self._force_constants, iteration)

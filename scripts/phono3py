@@ -640,13 +640,9 @@ else:
     else:                
         if log_level:
             print "Solving fc2 extra..."
-        forces_second_extra = parse_FORCE_SETS(
-            supercell_extra.get_number_of_atoms(),
-            filename="FORCE_SETS_EXTRA")
-        fc2 = get_force_constants(forces_second_extra,
-                                  symmetry_extra,
-                                  supercell_extra)
-
+        forces_second_extra = parse_FORCE_SETS(filename="FORCE_SETS_EXTRA")
+        fc2 = get_fc2(supercell_extra, symmetry_extra, forces_second_extra)
+        
     if options.is_symmetrize_fc2:
         set_permutation_symmetry(fc2)
 

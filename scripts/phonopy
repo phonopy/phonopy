@@ -713,8 +713,7 @@ if run_mode == 'displacements':
             settings.get_supercell_matrix(),
             filename=options.wien2k_struct_file)
     else:
-        vasp.write_supercells_with_displacements(supercell,
-                                                 cells_with_disps)
+        vasp.write_supercells_with_displacements(supercell, cells_with_disps)
 
     if log_level > 0:
         print
@@ -742,28 +741,17 @@ if settings.get_is_force_constants() == 'read':
 
 # Read forces from FORCE_SETS
 elif os.path.exists("FORCE_SETS"):
-    forces = file_IO.parse_FORCE_SETS(supercell.get_number_of_atoms())
-    if forces==None:
+    force_sets = file_IO.parse_FORCE_SETS()
+    if force_sets is None:
         error_text = "\nNumber of atoms in FORCE_SETS doesn't match"
         error_test += "to supercell.\nPlease check DIM and FORCE_SETS."
         print_error_message(error_text)
         if log_level > 0:
             print_end()
         sys.exit(1)
-    
-    sets_of_forces = []
-    displacements = []
-    for force in forces:
-        sets_of_forces.append(force.get_forces())
-        disp = force.get_displacement()
-        atom_number = force.get_atom_number()
-        displacements.append([atom_number,
-                              disp[0], disp[1], disp[2]])
-
-    phonon.set_displacements(displacements)
+    phonon.set_force_sets(force_sets)
     if log_level > 0:
         print "Calculating force constants..."
-    phonon.set_forces(sets_of_forces)
 else:
     if log_level > 1:
         print_end()

@@ -55,19 +55,14 @@ def get_phonon(cell_filename,
                born_filename=None):
     cell = read_vasp(cell_filename)
     phonon = Phonopy(cell, dim, is_auto_displacements=False)
-    force_sets = parse_FORCE_SETS(phonon.get_supercell().get_number_of_atoms(),
-                                  filename=force_sets_filename)
-    set_of_forces = [x.get_forces() for x in force_sets]
-    displacements = [[x.get_atom_number()] + list(x.get_displacement())
-                     for x in force_sets]
-    phonon.set_displacements(displacements)
+    phonon.set_force_sets(parse_FORCE_SETS(filename=force_sets_filename))
     
-    is_nac = False
-    if born_filename:
+    if born_filename is None:
+        is_nac = False
+    else:
         is_nac = True
-    phonon.set_post_process(primitive_axis,
-                            set_of_forces,
-                            is_nac=is_nac)
+        
+    phonon.set_post_process(primitive_axis, is_nac=is_nac)
     if born_filename:
         phonon.set_nac_params(parse_BORN(phonon.get_primitive(),
                                          filename=born_filename))
