@@ -38,14 +38,13 @@ from phonopy.phonon.thermal_properties import mode_cv
 from phonopy.gruneisen import Gruneisen
 from phonopy.units import THzToEv
 
-
 class Mesh:
     def __init__(self,
                  phonon,
                  phonon_plus,
                  phonon_minus,
                  mesh,
-                 grid_shift=None,
+                 shift=None,
                  is_gamma_center=False):
         self._mesh = mesh
         self._factor = phonon.get_unit_conversion_factor(),
@@ -59,8 +58,8 @@ class Mesh:
                               phonon_minus.get_primitive().get_volume())
         self._qpoints, self._weights = get_qpoints(
             self._mesh,
-            primitive,
-            grid_shift=grid_shift,
+            np.linalg.inv(primitive.get_cell()),
+            q_mesh_shift=shift,
             is_gamma_center=is_gamma_center,
             symmetry=primitive_symmetry)
         gruneisen.set_qpoints(self._qpoints)

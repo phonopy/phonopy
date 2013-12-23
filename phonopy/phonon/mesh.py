@@ -39,8 +39,8 @@ from phonopy.structure.symmetry import get_lattice_vector_equivalence
 from phonopy.units import VaspToTHz
 
 def get_qpoints(mesh_numbers,
-                cell,
-                grid_shift=None,
+                reciprocal_lattice, # column vectors
+                q_mesh_shift=None, # Monkhorst-Pack style grid shift
                 is_gamma_center=True,
                 is_time_reversal=True,
                 fit_in_BZ=True,
@@ -48,10 +48,10 @@ def get_qpoints(mesh_numbers,
                 symprec=1e-5,
                 is_symmetry=True):
     mesh = np.array(mesh_numbers, dtype='intc')
-    if grid_shift == None:
+    if q_mesh_shift is None:
         shift = np.zeros(3, dtype='double')
     else:
-        shift = np.array(grid_shift)
+        shift = np.array(q_mesh_shift)
 
     diffby2 = np.abs(shift * 2 - np.rint(shift * 2))
     if ((diffby2 < symprec).all() and # No shift or half shift case
@@ -68,8 +68,7 @@ def get_qpoints(mesh_numbers,
                                                          is_gamma_center)
 
     if fit_in_BZ:
-        primitive_vectors = np.linalg.inv(cell.get_cell()) # column vectors
-        qpoints_in_BZ = _fit_qpoints_in_BZ(primitive_vectors,
+        qpoints_in_BZ = _fit_qpoints_in_BZ(reciprocal_lattice,
                                            mesh,
                                            qpoints,
                                            symprec)
@@ -86,11 +85,11 @@ def _check_mesh_numbers_symmetry(mesh, symmetry):
     lattice_equiv = get_lattice_vector_equivalence(rotations)
     return np.array_equal(mesh_equiv, lattice_equiv)
 
-def _fit_qpoints_in_BZ(primitive_vectors, mesh, qpoints, symprec):
-    # primitive_vectors: column vectors
-    shortest = np.sqrt(min(np.sum(primitive_vectors ** 2, axis=0)))
+def _fit_qpoints_in_BZ(reciprocal_lattice, mesh, qpoints, symprec):
+    # reciprocal_lattice: column vectors
+    shortest = np.sqrt(min(np.sum(reciprocal_lattice ** 2, axis=0)))
     tolerance = shortest * symprec
-    qpoint_set_in_BZ = get_qpoints_in_Brillouin_zone(primitive_vectors,
+    qpoint_set_in_BZ = get_qpoints_in_Brillouin_zone(reciprocal_lattice,
                                                      qpoints,
                                                      tolerance=tolerance)
     qpoints_in_BZ = np.array([q_set[0] for q_set in qpoint_set_in_BZ],
@@ -152,7 +151,6 @@ def _get_qpoints_without_symmetry(mesh, shift, is_gamma_center):
 class Mesh:
     def __init__(self,
                  dynamical_matrix,
-                 cell,
                  mesh,
                  shift=None,
                  is_time_reversal=False,
@@ -166,12 +164,12 @@ class Mesh:
         self._mesh = np.array(mesh)
         self._is_eigenvectors = is_eigenvectors
         self._factor = factor
-        self._cell = cell
+        self._cell = dynamical_matrix.get_primitive()
         self._dynamical_matrix = dynamical_matrix
         self._qpoints, self._weights = get_qpoints(
             self._mesh,
-            self._cell,
-            grid_shift=shift,
+            np.linalg.inv(self._cell.get_cell()),
+            q_mesh_shift=shift,
             is_gamma_center=is_gamma_center,
             is_time_reversal=is_time_reversal,
             symmetry=symmetry,
