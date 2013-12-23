@@ -8,14 +8,9 @@ def get_frequency(poscar_filename, force_sets_filename):
     volume = bulk.get_volume()
     phonon = Phonopy(bulk, [[2, 0, 0], [0, 2, 0], [0, 0, 2]],
                      is_auto_displacements=False)
-    force_sets = parse_FORCE_SETS(phonon.get_supercell().get_number_of_atoms(),
-                                  filename=force_sets_filename)
-    set_of_forces = [x.get_forces() for x in force_sets]
-    displacements = [[x.get_atom_number()] + list(x.get_displacement())
-                     for x in force_sets]
-    phonon.set_displacements(displacements)
-    phonon.set_post_process([[0, 0.5, 0.5], [0.5, 0, 0.5], [0.5, 0.5, 0]],
-                            set_of_forces)
+    force_sets = parse_FORCE_SETS(filename=force_sets_filename)
+    phonon.set_force_sets(force_sets)
+    phonon.set_post_process([[0, 0.5, 0.5], [0.5, 0, 0.5], [0.5, 0.5, 0]])
     return phonon.get_frequencies([0.5, 0.5, 0]), volume
 
 frequencies = []
@@ -35,5 +30,3 @@ for curve in np.array(frequencies).T:
     print
     print
 plt.show()
-
-

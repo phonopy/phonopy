@@ -17,7 +17,7 @@ phonon = Phonopy(bulk, [[2, 0, 0], [0, 2, 0], [0, 0, 2]],
 symmetry = phonon.get_symmetry()
 print "Space group:", symmetry.get_international_table()
 
-force_sets = parse_FORCE_SETS(phonon.get_supercell().get_number_of_atoms())
+force_sets = parse_FORCE_SETS()
 phonon.set_force_sets(force_sets)
 
 born = [[[1.08703, 0, 0],

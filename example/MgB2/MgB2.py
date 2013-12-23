@@ -12,7 +12,7 @@ symmetry = phonon.get_symmetry()
 print "Space group:", symmetry.get_international_table()
 
 # Read forces and displacements
-force_sets = parse_FORCE_SETS(cell.get_number_of_atoms() * 18)
+force_sets = parse_FORCE_SETS()
 
 # Sets of forces have to be set before phonon.set_post_process or
 # at phonon.set_post_process(..., sets_of_forces=sets_of_forces, ...).
