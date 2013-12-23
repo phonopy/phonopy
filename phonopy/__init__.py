@@ -440,7 +440,6 @@ class Phonopy:
         self._band_structure = BandStructure(
             bands,
             self._dynamical_matrix,
-            self._primitive,
             is_eigenvectors=is_eigenvectors,
             is_band_connection=is_band_connection,
             group_velocity=self._group_velocity,
@@ -469,7 +468,6 @@ class Phonopy:
                  is_gamma_center=False):
 
         self._mesh = Mesh(self._dynamical_matrix,
-                          self._primitive,
                           mesh,
                           shift=shift,
                           is_time_reversal=is_time_reversal,
@@ -752,7 +750,6 @@ class Phonopy:
                            factor=VaspToTHz):
         
         write_yaml_qpoints(q_points,
-                           self._primitive,
                            self._dynamical_matrix,
                            nac_q_direction=nac_q_direction,
                            is_eigenvectors=is_eigenvectors,
@@ -772,12 +769,10 @@ class Phonopy:
         if q_point==None:
             animation = Animation([0, 0, 0],
                                   self._dynamical_matrix,
-                                  self._primitive,
                                   shift=shift)
         else:
             animation = Animation(q_point,
                                   self._dynamical_matrix,
-                                  self._primitive,
                                   shift=shift)
         if anime_type=='v_sim':
             if amplitude:
@@ -855,7 +850,6 @@ class Phonopy:
                         derivative_order=None,
                         nac_q_direction=None):
         self._modulation = Modulation(self._dynamical_matrix,
-                                      self._primitive,
                                       dimension=dimension,
                                       phonon_modes=phonon_modes,
                                       delta_q=delta_q,
@@ -976,13 +970,13 @@ class PhonopyGruneisen:
         
     def set_mesh(self,
                  mesh,
-                 grid_shift=None,
+                 shift=None,
                  is_gamma_center=False):
         self._mesh = GruneisenMesh(self._phonon,
                                    self._phonon_plus,
                                    self._phonon_minus,
                                    mesh,
-                                   grid_shift=grid_shift,
+                                   shift=shift,
                                    is_gamma_center=is_gamma_center)
 
     def write_yaml_mesh(self):
