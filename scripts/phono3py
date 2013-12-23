@@ -799,8 +799,7 @@ if options.is_gruneisen:
                                   factor=VaspToTHz,
                                   symprec=options.symprec)
     if mesh is not None:
-        gr.set_sampling_mesh(mesh,
-                             is_gamma_center=True)
+        gr.set_sampling_mesh(mesh, is_gamma_center=True)
     elif band_paths is not None:
         gr.set_band_structure(band_paths)
     elif qpoints is not None:
