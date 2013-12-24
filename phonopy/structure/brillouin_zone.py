@@ -64,25 +64,20 @@ search_space = np.array([
         [0, -1, 1],
         [0, 0, -1]], dtype='intc')
 
-def get_qpoints_in_Brillouin_zone(primitive_vectors,
-                                  qpoints,
-                                  tolerance=1e-5):
-    bz = BrillouinZone(primitive_vectors, tolerance=tolerance)
+def get_qpoints_in_Brillouin_zone(primitive_vectors, qpoints):
+    bz = BrillouinZone(primitive_vectors)
     bz.run(qpoints)
     return bz.get_shortest_qpoints()
 
 class BrillouinZone:
-    def __init__(self,
-                 primitive_vectors,
-                 tolerance=1e-5):
+    def __init__(self, primitive_vectors):
         self._primitive_vectors = primitive_vectors # column vectors
-        self._tolerance = tolerance
+        self._tolerance = min(np.sum(primitive_vectors ** 2, axis=0)) * 0.01
         self._reduced_bases = get_reduced_bases(primitive_vectors.T,
-                                                self._tolerance).T
-        self._tmat = np.dot(
-            np.linalg.inv(self._primitive_vectors), self._reduced_bases)
+                                                np.sqrt(self._tolerance)).T
+        self._tmat = np.dot(np.linalg.inv(self._primitive_vectors),
+                            self._reduced_bases)
         self._tmat_inv = np.linalg.inv(self._tmat)
-
         self._shortest_qpoints = None
 
     def run(self, qpoints):
@@ -93,7 +88,7 @@ class BrillouinZone:
                                   for g in search_space], dtype='double')
             min_dist = min(distances)
             shortest_indices = [i for i, d in enumerate(distances - min_dist)
-                                if abs(d) < self._tolerance ** 2]
+                                if abs(d) < self._tolerance]
             self._shortest_qpoints.append(
                 np.dot(search_space[shortest_indices] + q, self._tmat.T))
 
