@@ -86,11 +86,6 @@ class TetrahedronMethod:
 
         self._vertices = tetras
 
-# class TetrahedronMesh:
-#     def __init__(self,
-#                  dynamical_matrix,
-#                  mesh,
-        
 if __name__ == '__main__':
     import sys
     from phonopy import Phonopy
@@ -98,6 +93,7 @@ if __name__ == '__main__':
     from phonopy.interface.vasp import read_vasp
     from phonopy.file_IO import parse_FORCE_SETS, parse_BORN
     from phonopy.structure.spglib import get_stabilized_reciprocal_mesh
+    from phonopy.phonon.tetrahedron_mesh import TetrahedronMesh
 
     cell = read_vasp(sys.argv[1])
     phonon = Phonopy(cell, [[2, 0, 0], [0, 2, 0], [0, 0, 2]],
@@ -111,16 +107,21 @@ if __name__ == '__main__':
     born = parse_BORN(primitive)
     phonon.set_nac_params(born)
     mesh = [4, 4, 4]
-    phonon.set_mesh(mesh)
-    phonon.set_total_DOS(sigma=0.1)
-    phonon.plot_total_DOS().show()
+    # phonon.set_mesh(mesh)
+    # phonon.set_total_DOS(sigma=0.1)
+    # phonon.plot_total_DOS().show()
     
-    rotations = symmetry.get_symmetry_operations()['rotations']
+    rotations = symmetry.get_pointgroup_operations()
     gp_map, grid_address = get_stabilized_reciprocal_mesh(mesh, rotations)
     trh = TetrahedronMethod(np.linalg.inv(cell.get_cell()),
                             [4, 4, 4],
                             None,
                             grid_address,
                             gp_map)
+
+    thm = TetrahedronMesh(phonon.get_dynamical_matrix(),
+                          mesh,
+                          rotations)
+                          
     trh.run()
     
