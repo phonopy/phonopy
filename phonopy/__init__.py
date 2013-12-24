@@ -467,17 +467,17 @@ class Phonopy:
                  is_eigenvectors=False,
                  is_gamma_center=False):
 
-        self._mesh = Mesh(self._dynamical_matrix,
-                          mesh,
-                          shift=shift,
-                          is_time_reversal=is_time_reversal,
-                          is_symmetry=is_symmetry,
-                          is_eigenvectors=is_eigenvectors,
-                          is_gamma_center=is_gamma_center,
-                          group_velocity=self._group_velocity,
-                          symmetry=self._primitive_symmetry,
-                          factor=self._factor,
-                          symprec=self._symprec)
+        self._mesh = Mesh(
+            self._dynamical_matrix,
+            mesh,
+            shift=shift,
+            is_time_reversal=is_time_reversal,
+            is_symmetry=is_symmetry,
+            is_eigenvectors=is_eigenvectors,
+            is_gamma_center=is_gamma_center,
+            group_velocity=self._group_velocity,
+            rotations=self._primitive_symmetry.get_pointgroup_operations(),
+            factor=self._factor)
 
     def get_mesh(self):
         return (self._mesh.get_qpoints(),
@@ -730,7 +730,6 @@ class Phonopy:
                               self._supercell,
                               self._primitive,
                               self._mesh.get_qpoints(),
-                              symprec=self._symprec,
                               cutoff_frequency=cutoff_frequency)
         td.set_temperature_range(t_min, t_max, t_step)
         td.run(atom_pairs)

@@ -33,7 +33,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
-from phonopy.structure.spglib import get_ir_reciprocal_mesh, get_stabilized_reciprocal_mesh
+from phonopy.structure.spglib import get_stabilized_reciprocal_mesh
 from phonopy.structure.brillouin_zone import get_qpoints_in_Brillouin_zone
 from phonopy.structure.symmetry import get_lattice_vector_equivalence
 from phonopy.units import VaspToTHz
@@ -44,74 +44,79 @@ def get_qpoints(mesh_numbers,
                 is_gamma_center=True,
                 is_time_reversal=True,
                 fit_in_BZ=True,
-                symmetry=None,
-                symprec=1e-5,
+                rotations=None, # Point group operations in real space
                 is_symmetry=True):
-    mesh = np.array(mesh_numbers, dtype='intc')
-    if q_mesh_shift is None:
-        shift = np.zeros(3, dtype='double')
-    else:
-        shift = np.array(q_mesh_shift)
+    is_shift = shift2boolean(mesh_numbers,
+                             q_mesh_shift=q_mesh_shift,
+                             is_gamma_center=is_gamma_center)
 
-    diffby2 = np.abs(shift * 2 - np.rint(shift * 2))
-    if ((diffby2 < symprec).all() and # No shift or half shift case
-        is_symmetry and
-        _check_mesh_numbers_symmetry(mesh, symmetry)):
-        qpoints, weights = _get_ir_qpoints(mesh,
-                                           shift,
-                                           symmetry,
-                                           is_gamma_center,
+    if is_shift and is_symmetry and has_mesh_symmetry(mesh_numbers, rotations):
+        qpoints, weights = _get_ir_qpoints(mesh_numbers,
+                                           is_shift,
+                                           rotations,
                                            is_time_reversal)
     else:
-        qpoints, weights = _get_qpoints_without_symmetry(mesh,
-                                                         shift,
+        qpoints, weights = _get_qpoints_without_symmetry(mesh_numbers,
+                                                         q_mesh_shift,
                                                          is_gamma_center)
 
     if fit_in_BZ:
-        qpoints_in_BZ = _fit_qpoints_in_BZ(reciprocal_lattice,
-                                           mesh,
-                                           qpoints,
-                                           symprec)
+        qpoints_in_BZ = _fit_qpoints_in_BZ(reciprocal_lattice, qpoints)
         return qpoints_in_BZ, weights
     else:
         return qpoints, weights
 
-def _check_mesh_numbers_symmetry(mesh, symmetry):
-    if symmetry is None:
+def shift2boolean(mesh_numbers,
+                  q_mesh_shift=None,
+                  is_gamma_center=False,
+                  tolerance=1e-5):
+    """
+    Tolerance is used to judge zero/half gird shift.
+    This value is not necessary to be changed usually.
+    """
+    mesh = np.array(mesh_numbers, dtype='intc')
+    if q_mesh_shift is None:
+        shift = np.zeros(3, dtype='double')
+    else:
+        shift = np.array(q_mesh_shift, dtype='double')
+
+    diffby2 = np.abs(shift * 2 - np.rint(shift * 2))
+    if (diffby2 < 0.01).all(): # zero/half shift
+        if is_gamma_center:
+            is_shift = [0, 0, 0]
+        else: # Monkhorst-pack
+            diff = np.abs(shift - np.rint(shift))
+            is_shift = list(np.logical_xor((diff > 0.1), (mesh % 2 == 0)) * 1)
+    else:
+        is_shift = None
+
+    return is_shift
+    
+def has_mesh_symmetry(mesh, rotations):
+    if rotations is None:
         return False
 
     mesh_equiv = [mesh[1] == mesh[2], mesh[2] == mesh[0], mesh[0] == mesh[1]]
-    rotations = symmetry.get_reciprocal_operations()
-    lattice_equiv = get_lattice_vector_equivalence(rotations)
+    lattice_equiv = get_lattice_vector_equivalence([r.T for r in rotations])
     return np.array_equal(mesh_equiv, lattice_equiv)
 
-def _fit_qpoints_in_BZ(reciprocal_lattice, mesh, qpoints, symprec):
+def _fit_qpoints_in_BZ(reciprocal_lattice, qpoints):
     # reciprocal_lattice: column vectors
-    shortest = np.sqrt(min(np.sum(reciprocal_lattice ** 2, axis=0)))
-    tolerance = shortest * symprec
     qpoint_set_in_BZ = get_qpoints_in_Brillouin_zone(reciprocal_lattice,
-                                                     qpoints,
-                                                     tolerance=tolerance)
+                                                     qpoints)
     qpoints_in_BZ = np.array([q_set[0] for q_set in qpoint_set_in_BZ],
                              dtype='double')
     return qpoints_in_BZ
     
 
 def _get_ir_qpoints(mesh,
-                    shift,
-                    symmetry,
-                    is_gamma_center,
+                    is_shift,
+                    rotations,
                     is_time_reversal):
-    if is_gamma_center:
-        is_shift = np.zeros(3, dtype='intc')
-    else: # Monkhorst-pack
-        diff = np.abs(shift - np.rint(shift))
-        is_shift = np.logical_xor((diff > 0.1), (mesh % 2 == 0))
-
     mapping, grid = get_stabilized_reciprocal_mesh(
         mesh,
-        symmetry.get_pointgroup_operations(),
-        is_shift=(is_shift * 1),
+        rotations,
+        is_shift=is_shift,
         is_time_reversal=is_time_reversal)
         
     ir_list = np.unique(mapping)
@@ -122,24 +127,26 @@ def _get_ir_qpoints(mesh,
         weights[g]  += 1
     ir_weights = weights[ir_list]
 
+    shift = np.array(is_shift, dtype='intc') * 0.5
     for i, g in enumerate(ir_list):
-        ir_qpoints[i] = (grid[g] + is_shift * 0.5) / mesh
+        ir_qpoints[i] = (grid[g] + shift) / mesh
         ir_qpoints[i] -= (ir_qpoints[i] > 0.5) * 1
 
     return ir_qpoints, ir_weights
 
 def _get_qpoints_without_symmetry(mesh, shift, is_gamma_center):
     qpoints = []
-    if is_gamma_center:
+    mesh_float = np.array(mesh, dtype='double')
+    if is_gamma_center or (shift is None):
         qshift = [0, 0, 0]
     else:
-        qshift = shift / mesh
+        qshift = shift / mesh_float
         for i in (0, 1, 2):
             if mesh[i] % 2 == 0:
                 qshift[i] += 0.5 / mesh[i]
 
     for grid_address in list(np.ndindex(tuple(mesh))):
-        q = np.array(grid_address, dtype='double') / mesh + qshift
+        q = grid_address / mesh_float + qshift
         qpoints.append(q - (q > 0.5))
 
     qpoints = np.array(qpoints, dtype='double')
@@ -158,10 +165,9 @@ class Mesh:
                  is_eigenvectors=False,
                  is_gamma_center=False,
                  group_velocity=None,
-                 symmetry=None,
-                 factor=VaspToTHz,
-                 symprec=1e-5):
-        self._mesh = np.array(mesh)
+                 rotations=None, # Point group operations in real space
+                 factor=VaspToTHz):
+        self._mesh = np.array(mesh, dtype='intc')
         self._is_eigenvectors = is_eigenvectors
         self._factor = factor
         self._cell = dynamical_matrix.get_primitive()
@@ -172,8 +178,7 @@ class Mesh:
             q_mesh_shift=shift,
             is_gamma_center=is_gamma_center,
             is_time_reversal=is_time_reversal,
-            symmetry=symmetry,
-            symprec=symprec,
+            rotations=rotations,
             is_symmetry=is_symmetry)
 
         self._frequencies = None
@@ -286,5 +291,3 @@ class Mesh:
     def _set_group_velocities(self, group_velocity):
         group_velocity.set_q_points(self._qpoints)
         self._group_velocities = group_velocity.get_group_velocity()
-        
-        

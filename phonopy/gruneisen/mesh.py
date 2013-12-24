@@ -61,7 +61,7 @@ class Mesh:
             np.linalg.inv(primitive.get_cell()),
             q_mesh_shift=shift,
             is_gamma_center=is_gamma_center,
-            symmetry=primitive_symmetry)
+            rotations=primitive_symmetry.get_pointgroup_operations())
         gruneisen.set_qpoints(self._qpoints)
         self._gamma = gruneisen.get_gruneisen()
         self._eigenvalues = gruneisen.get_eigenvalues()
