@@ -186,7 +186,7 @@ int kpt_get_stabilized_reciprocal_mesh(int grid_address[][3],
   pointgroup = get_point_group_reciprocal(rotations,
 					  is_time_reversal);
 
-  tolerance = 0.1 / (mesh[0] + mesh[1] + mesh[2]);
+  tolerance = 0.01 / (mesh[0] + mesh[1] + mesh[2]);
   pointgroup_q = get_point_group_reciprocal_with_q(&pointgroup,
 						   tolerance,
 						   num_q,
@@ -646,7 +646,7 @@ static double get_tolerance_for_BZ_reduction(SPGCONST double rec_lattice[3][3])
       tolerance = length[i];
     }
   }
-  tolerance /= 100;
+  tolerance *= 0.01;
   return tolerance;
 }
  
@@ -665,8 +665,7 @@ static int get_ir_triplets_at_q(int weights[],
   double stabilizer_q[1][3];
   PointSymmetry pointgroup_q;
 
-  tolerance = 0.1 / (mesh[0] + mesh[1] + mesh[2]);
-
+  tolerance = 0.01 / (mesh[0] + mesh[1] + mesh[2]);
   num_grid = mesh[0] * mesh[1] * mesh[2];
 
   for (i = 0; i < 3; i++) {
