@@ -106,7 +106,7 @@ if __name__ == '__main__':
     primitive = phonon.get_primitive()
     born = parse_BORN(primitive)
     phonon.set_nac_params(born)
-    mesh = [4, 4, 4]
+    mesh = [8, 8, 8]
     # phonon.set_mesh(mesh)
     # phonon.set_total_DOS(sigma=0.1)
     # phonon.plot_total_DOS().show()
@@ -114,7 +114,7 @@ if __name__ == '__main__':
     rotations = symmetry.get_pointgroup_operations()
     gp_map, grid_address = get_stabilized_reciprocal_mesh(mesh, rotations)
     trh = TetrahedronMethod(np.linalg.inv(cell.get_cell()),
-                            [4, 4, 4],
+                            mesh,
                             None,
                             grid_address,
                             gp_map)
@@ -122,6 +122,7 @@ if __name__ == '__main__':
     thm = TetrahedronMesh(phonon.get_dynamical_matrix(),
                           mesh,
                           rotations)
+                          # shift=[0.5, 0.5, 0.5])
                           
     trh.run()
     

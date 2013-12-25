@@ -67,12 +67,14 @@ class TetrahedronMesh:
         self._set_grid_points()
 
     def _set_grid_points(self):
+        mesh = self._mesh
+        
         if not self._is_symmetry:
             print "Disabling mesh symmetry is not supported."
-        assert has_mesh_symmetry(self._mesh, self._rotations), \
+        assert has_mesh_symmetry(mesh, self._rotations), \
             "Mesh numbers don't have proper symmetry."
             
-        self._is_shift = shift2boolean(self._mesh,
+        self._is_shift = shift2boolean(mesh,
                                        q_mesh_shift=self._shift,
                                        is_gamma_center=self._is_gamma_center)
 
@@ -81,16 +83,41 @@ class TetrahedronMesh:
             print "Mesh shift is set [0, 0, 0]."
 
         self._gp_map, self._grid_address = get_stabilized_reciprocal_mesh(
-            self._mesh,
+            mesh,
             self._rotations,
             is_shift=self._is_shift,
             is_time_reversal=self._is_time_reversal)
 
-        bz_grid_address, bz_gp_map = relocate_BZ_grid_address(
+        if self._grid_address[1][0] == 1:
+            grid_order = [1, mesh[0], mesh[0] * mesh[1]]
+        else:
+            grid_order = [mesh[2] * mesh[1], mesh[2], 1]
+
+        grid_address_with_boundary, bz_gp_map = relocate_BZ_grid_address(
             self._grid_address,
-            self._mesh,
+            mesh,
             np.linalg.inv(self._cell.get_cell()),
             is_shift=self._is_shift)
+
+        shift = [s * 0.5 for s in self._is_shift]
+        qpoints = (grid_address_with_boundary + shift) / mesh
+        # for q in np.dot(qpoints, np.linalg.inv(self._cell.get_cell()).T):
+        #     print q[0], q[1], q[2]
         
-        print self._gp_map
-        print bz_gp_map        
+        multiplicities = np.zeros(len(grid_address_with_boundary), dtype='intc')
+        gp_with_boundary = np.dot(grid_address_with_boundary % mesh, grid_order)
+        for gp in gp_with_boundary:
+            multiplicities[gp] += 1
+        for i in range(np.prod(mesh), len(multiplicities)):
+            multiplicities[i] = multiplicities[gp_with_boundary[i]]
+
+
+        
+        ## This is probably unnecessary.
+        # bz_grid_address = get_stabilized_reciprocal_mesh(
+        #     [m * 2 - 1 for m in mesh],
+        #     [[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+        #     is_time_reversal=False)[0]
+        
+        # print self._gp_map
+        # print bz_gp_map
