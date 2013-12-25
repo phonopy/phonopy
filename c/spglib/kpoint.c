@@ -123,18 +123,18 @@ int kpt_get_irreducible_kpoints(int map[],
   return get_ir_kpoints(map, kpoints, num_kpoint, &point_symmetry, symprec);
 }
 
-/* grid_address (e.g. 4x4x4 mesh)                             */
-/*    [[ 0  0  0]                                             */
-/*     [ 1  0  0]                                             */
-/*     [ 2  0  0]                                             */
-/*     [-1  0  0]                                             */
-/*     [ 0  1  0]                                             */
-/*     [ 1  1  0]                                             */
-/*     [ 2  1  0]                                             */
-/*     [-1  1  0]                                             */
-/*     ....      ]                                            */
-/*                                                            */
-/* Each value of 'map' correspnds to the index of grid_point. */
+/* grid_address (e.g. 4x4x4 mesh, unless GRID_ORDER_XYZ is defined) */
+/*    [[ 0  0  0]                                                   */
+/*     [ 1  0  0]                                                   */
+/*     [ 2  0  0]                                                   */
+/*     [-1  0  0]                                                   */
+/*     [ 0  1  0]                                                   */
+/*     [ 1  1  0]                                                   */
+/*     [ 2  1  0]                                                   */
+/*     [-1  1  0]                                                   */
+/*     ....      ]                                                  */
+/*                                                                  */
+/* Each value of 'map' correspnds to the index of grid_point.       */
 int kpt_get_irreducible_reciprocal_mesh(int grid_address[][3],
 					int map[],
 					const int mesh[3],
@@ -257,9 +257,6 @@ int kpt_get_BZ_triplets_at_q(int triplets[][3],
 			      weights,
 			      mesh);
 }
-
-
-      
 
 static PointSymmetry get_point_group_reciprocal(const MatINT * rotations,
 						const int is_time_reversal)
