@@ -86,6 +86,9 @@ class DynamicalMatrix:
     def get_dimension(self):
         return self._pcell.get_number_of_atoms() * 3
 
+    def get_decimals(self):
+        return self._decimals
+    
     def get_supercell(self):
         return self._scell
 

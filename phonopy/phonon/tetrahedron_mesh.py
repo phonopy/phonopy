@@ -43,7 +43,7 @@ class TetrahedronMesh:
                  mesh,
                  rotations, # Point group operations in real space
                  shift=None,
-                 is_time_reversal=False,
+                 is_time_reversal=True,
                  is_symmetry=True,
                  is_eigenvectors=False,
                  is_gamma_center=False,
@@ -65,6 +65,7 @@ class TetrahedronMesh:
         # self._set_eigenvalues()
 
         self._set_grid_points()
+        self._set_phonon()
 
     def _set_grid_points(self):
         mesh = self._mesh
@@ -82,42 +83,34 @@ class TetrahedronMesh:
             print "Only mesh shift of 0 or 1/2 is allowed."
             print "Mesh shift is set [0, 0, 0]."
 
-        self._gp_map, self._grid_address = get_stabilized_reciprocal_mesh(
+        self._gp_map, grid_address = get_stabilized_reciprocal_mesh(
             mesh,
             self._rotations,
             is_shift=self._is_shift,
             is_time_reversal=self._is_time_reversal)
 
-        if self._grid_address[1][0] == 1:
-            grid_order = [1, mesh[0], mesh[0] * mesh[1]]
-        else:
-            grid_order = [mesh[2] * mesh[1], mesh[2], 1]
-
-        grid_address_with_boundary, bz_gp_map = relocate_BZ_grid_address(
-            self._grid_address,
+        print np.unique(self._gp_map)
+        
+        self._grid_address = relocate_BZ_grid_address(
+            grid_address,
             mesh,
             np.linalg.inv(self._cell.get_cell()),
-            is_shift=self._is_shift)
+            is_shift=self._is_shift)[0][:np.prod(mesh)]
 
         shift = [s * 0.5 for s in self._is_shift]
-        qpoints = (grid_address_with_boundary + shift) / mesh
-        # for q in np.dot(qpoints, np.linalg.inv(self._cell.get_cell()).T):
-        #     print q[0], q[1], q[2]
-        
-        multiplicities = np.zeros(len(grid_address_with_boundary), dtype='intc')
-        gp_with_boundary = np.dot(grid_address_with_boundary % mesh, grid_order)
-        for gp in gp_with_boundary:
-            multiplicities[gp] += 1
-        for i in range(np.prod(mesh), len(multiplicities)):
-            multiplicities[i] = multiplicities[gp_with_boundary[i]]
+        self._qpoints = (self._grid_address + shift) / mesh
 
+    def _set_phonon(self):
+        self._eigenvalues = np.zeros(
+            (np.prod(self._mesh), self._cell.get_number_of_atoms() * 3),
+            dtype='double')
+        self._frequencies = np.zeros_like(self._eigenvalues)
+        for gp in np.unique(self._gp_map):
+            self._dynamical_matrix.set_dynamical_matrix(self._qpoints[gp])
+            print self._qpoints[gp]
+            dm = self._dynamical_matrix.get_dynamical_matrix()
+            self._eigenvalues[gp] = np.linalg.eigvalsh(dm).real
+        self._frequencies = np.array(np.sqrt(abs(self._eigenvalues)) *
+                                     np.sign(self._eigenvalues)) * self._factor
 
-        
-        ## This is probably unnecessary.
-        # bz_grid_address = get_stabilized_reciprocal_mesh(
-        #     [m * 2 - 1 for m in mesh],
-        #     [[1, 0, 0], [0, 1, 0], [0, 0, 1]],
-        #     is_time_reversal=False)[0]
-        
-        # print self._gp_map
-        # print bz_gp_map
+        print self._frequencies

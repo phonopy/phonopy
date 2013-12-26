@@ -12,16 +12,15 @@ symmetry = phonon.get_symmetry()
 print "Space group:", symmetry.get_international_table()
 
 # Read and convert forces and displacements
-force_sets = parse_FORCE_SETS()
+force_sets = parse_FORCE_SETS(cell.get_number_of_atoms() * 4)
 # Sets of forces have to be set before phonon.set_post_process or
 # at phonon.set_post_process(..., sets_of_forces=sets_of_forces, ...).
 phonon.set_force_sets(force_sets)
 
-# To activate non-analytical term correction, 'is_nac=True' has to be set here.
+# To activate non-analytical term correction.
 phonon.set_post_process(primitive_matrix=[[2./3, -1./3, -1./3],
                                           [1./3, 1./3, -2./3],
-                                          [1./3, 1./3, 1./3]],
-                        is_nac=True)
+                                          [1./3, 1./3, 1./3]])
 
 # Parameters for non-analytical term correction can be set
 # also after phonon.set_post_process

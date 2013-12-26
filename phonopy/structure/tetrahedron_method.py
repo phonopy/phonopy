@@ -98,7 +98,6 @@ if __name__ == '__main__':
     cell = read_vasp(sys.argv[1])
     phonon = Phonopy(cell, [[2, 0, 0], [0, 2, 0], [0, 0, 2]],
                      is_auto_displacements=False)
-    symmetry = phonon.get_symmetry()
     force_sets = parse_FORCE_SETS()
     phonon.set_force_sets(force_sets)
     phonon.set_post_process([[0, 0.5, 0.5], [0.5, 0, 0.5], [0.5, 0.5, 0]],
@@ -106,7 +105,8 @@ if __name__ == '__main__':
     primitive = phonon.get_primitive()
     born = parse_BORN(primitive)
     phonon.set_nac_params(born)
-    mesh = [8, 8, 8]
+    symmetry = phonon.get_primitive_symmetry()
+    mesh = [4, 4, 4]
     # phonon.set_mesh(mesh)
     # phonon.set_total_DOS(sigma=0.1)
     # phonon.plot_total_DOS().show()
@@ -121,8 +121,8 @@ if __name__ == '__main__':
 
     thm = TetrahedronMesh(phonon.get_dynamical_matrix(),
                           mesh,
-                          rotations)
-                          # shift=[0.5, 0.5, 0.5])
+                          rotations,
+                          is_gamma_center=True)
                           
-    trh.run()
+    # trh.run()
     

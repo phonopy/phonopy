@@ -160,7 +160,7 @@ class Mesh:
                  dynamical_matrix,
                  mesh,
                  shift=None,
-                 is_time_reversal=False,
+                 is_time_reversal=True,
                  is_symmetry=True,
                  is_eigenvectors=False,
                  is_gamma_center=False,
@@ -279,12 +279,6 @@ class Mesh:
         self._set_frequencies()
             
     def _set_frequencies(self):
-        ## This expression works only python >= 2.5
-        #  frequencies = []
-        # for eigs in self._eigenvalues:
-        #     frequencies.append(
-        #         [np.sqrt(x) if x > 0 else -np.sqrt(-x) for x in eigs])
-        
         self._frequencies = np.array(np.sqrt(abs(self._eigenvalues)) *
                                      np.sign(self._eigenvalues)) * self._factor
 

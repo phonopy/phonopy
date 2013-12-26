@@ -85,6 +85,7 @@ class Phonopy:
         self._dynamical_matrix = None
         self._is_nac = False
         self._primitive_symmetry = None
+        self._dynamical_matrix_decimals = None
 
         # set_force_constants or set_forces
         self._displacement_dataset = None
@@ -161,10 +162,12 @@ class Phonopy:
         self._supercell = supercell
 
     def get_symmetry(self):
+        """return symmetry of supercell"""
         return self._symmetry
     symmetry = property(get_symmetry)
 
     def get_primitive_symmetry(self):
+        """return symmetry of primitive cell"""
         return self._primitive_symmetry
 
     def get_unit_conversion_factor(self):
@@ -242,7 +245,6 @@ class Phonopy:
                          sets_of_forces=None,
                          displacement_dataset=None,
                          force_constants=None,
-                         is_nac=False,
                          calculate_full_force_constants=False,
                          force_constants_decimals=None,
                          dynamical_matrix_decimals=None):
@@ -272,7 +274,7 @@ class Phonopy:
                'forces': forces on atoms in supercell},
               {...}, ...]}
         """
-        self._is_nac = is_nac
+        self._dynamical_matrix_decimals = dynamical_matrix_decimals
 
         # Primitive cell
         if primitive_matrix is not None:
@@ -307,27 +309,33 @@ class Phonopy:
             return False
             
         # Dynamical Matrix
-        self.set_dynamical_matrix(decimals=dynamical_matrix_decimals)
+        self.set_dynamical_matrix()
         
     def set_nac_params(self, nac_params, method='wang'):
-        if self._is_nac:
+        if self._dynamical_matrix is None:
+            print "set_post_process has to be called before this is called."
+            return False
+        else:
+            if not self._is_nac:
+                self._is_nac = True
+                self.set_dynamical_matrix()
             self._dynamical_matrix.set_nac_params(nac_params, method)
 
-    def set_dynamical_matrix(self, decimals=None):
+    def set_dynamical_matrix(self):
         if self._is_nac:
-            self._dynamical_matrix = \
-                DynamicalMatrixNAC(self._supercell,
-                                   self._primitive,
-                                   self._force_constants,
-                                   decimals=decimals,
-                                   symprec=self._symprec)
+            self._dynamical_matrix = DynamicalMatrixNAC(
+                self._supercell,
+                self._primitive,
+                self._force_constants,
+                decimals=self._dynamical_matrix_decimals,
+                symprec=self._symprec)
         else:
-            self._dynamical_matrix = \
-                DynamicalMatrix(self._supercell,
-                                self._primitive,
-                                self._force_constants,
-                                decimals=decimals,
-                                symprec=self._symprec)
+            self._dynamical_matrix = DynamicalMatrix(
+                self._supercell,
+                self._primitive,
+                self._force_constants,
+                decimals=self._dynamical_matrix_decimals,
+                symprec=self._symprec)
 
     def get_dynamical_matrix(self):
         return self._dynamical_matrix
@@ -425,11 +433,6 @@ class Phonopy:
                 frequencies.append(np.sqrt(eig))
 
         return np.array(frequencies) * self._factor, eigenvectors
-                
-        ## This expression may not be supported in old python versions.
-        # frequencies = np.array(
-        #     [np.sqrt(x) if x > 0 else -np.sqrt(-x) for x in eigvals])
-        # return frequencies * self._factor, eigenvectors
 
     # Band structure
     def set_band_structure(self,
