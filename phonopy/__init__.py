@@ -86,7 +86,8 @@ class Phonopy:
         self._is_nac = False
         self._primitive_symmetry = None
         self._dynamical_matrix_decimals = None
-
+        self._force_constants_decimals = None
+        
         # set_force_constants or set_forces
         self._displacement_dataset = None
         self._force_constants = None
@@ -275,6 +276,7 @@ class Phonopy:
               {...}, ...]}
         """
         self._dynamical_matrix_decimals = dynamical_matrix_decimals
+        self._force_constants_decimals = force_constants_decimals
 
         # Primitive cell
         if primitive_matrix is not None:
@@ -294,14 +296,11 @@ class Phonopy:
         # Calculate force cosntants from forces (full or symmetry reduced)
         if self._displacement_dataset is not None:
             if calculate_full_force_constants:
-                self.set_force_constants_from_forces(
-                    distributed_atom_list=None,
-                    force_constants_decimals=force_constants_decimals)
+                self.set_force_constants_from_forces()
             else:
                 p2s_map = self._primitive.get_primitive_to_supercell_map()
                 self.set_force_constants_from_forces(
-                    distributed_atom_list=p2s_map,
-                    force_constants_decimals=force_constants_decimals)
+                    distributed_atom_list=p2s_map)
 
         if self._force_constants is None:
             print "In set_post_process, sets_of_forces or force_constants"
@@ -321,7 +320,10 @@ class Phonopy:
                 self.set_dynamical_matrix()
             self._dynamical_matrix.set_nac_params(nac_params, method)
 
-    def set_dynamical_matrix(self):
+    def set_dynamical_matrix(self, dynamical_matrix_decimals=None):
+        if dynamical_matrix_decimals is not None:
+            self._dynamical_matrix_decimals = dynamical_matrix_decimals
+        
         if self._is_nac:
             self._dynamical_matrix = DynamicalMatrixNAC(
                 self._supercell,
@@ -350,12 +352,15 @@ class Phonopy:
     def set_force_constants_from_forces(self,
                                         distributed_atom_list=None,
                                         force_constants_decimals=None):
+        if force_constants_decimals is not None:
+            self._force_constants_decimals = force_constants_decimals
+            
         self._force_constants = get_fc2(
             self._supercell,
             self._symmetry,
             self._displacement_dataset,
             atom_list=distributed_atom_list,
-            decimals=force_constants_decimals)
+            decimals=self._force_constants_decimals)
 
     def set_force_constants_zero_with_radius(self, cutoff_radius):
         cutoff_force_constants(self._force_constants,
