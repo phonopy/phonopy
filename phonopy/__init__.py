@@ -287,7 +287,7 @@ class Phonopy:
         if sets_of_forces is not None:
             self.set_forces(sets_of_forces)
         elif displacement_dataset is not None:
-            self.set_force_sets(displacement_dataset)
+            self._displacement_dataset = displacement_dataset
         elif force_constants is not None:
             self.set_force_constants(force_constants)
 
@@ -950,8 +950,6 @@ class Phonopy:
                     pbc=True))
 
         self._supercells_with_displacements = supercells
-                        
-
 
 
 
