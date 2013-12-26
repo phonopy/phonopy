@@ -87,7 +87,8 @@ Prepare dynamical matrix internally (``set_post_process``)  with
 
 ::
 
-   phonon.set_post_process([[0,0.5,0.5],[0.5,0,0.5],[0.5,0.5,0]], sets_of_forces)
+   phonon.set_post_process([[0, 0.5, 0.5], [0.5, 0, 0.5], [0.5, 0.5, 0]],
+                           sets_of_forces)
 
 
 Band structure
@@ -109,18 +110,18 @@ case of VASP to transform to THz, the factor is 15.633302.
 ::
 
    bands = []
-   q_start  = np.array([0.5,0.5,0.0])
-   q_end    = np.array([0.0,0.0,0.0])
+   q_start  = np.array([0.5, 0.5, 0.0])
+   q_end    = np.array([0.0, 0.0, 0.0])
    band = []
    for i in range(51):
        band.append(q_start + (q_end - q_start) / 50 * i)
    bands.append(band)
    
-   q_start  = np.array([0.0,0.0,0.0])
-   q_end    = np.array([0.5,0.0,0.0])
+   q_start  = np.array([0.0, 0.0, 0.0])
+   q_end    = np.array([0.5, 0.0, 0.0])
    band = []
    for i in range(51):
-       band.append(q_start + ( q_end - q_start ) / 50 * i)
+       band.append(q_start + (q_end - q_start) / 50 * i)
    bands.append(band)
    
    phonon.set_band_structure(bands)
@@ -201,7 +202,8 @@ To apply non-analytical term correction, Born effective charge tensors
 for all atoms in **primitive** cell, dielectric constant tensor, and
 the unit conversion factor have to be correctly set. The tensors are
 given in Cartesian coordinates. The following example is that can be
-used for NaCl.
+used for NaCl. ``is_nac = True`` has to be set at ``set_post_process``
+older than phonopy version 1.8.0.
 
 ::
 
@@ -216,8 +218,7 @@ used for NaCl.
               [0, 0, 2.43533967]]
    factors = 14.400
    phonon.set_post_process([[0, 0.5, 0.5], [0.5, 0, 0.5], [0.5, 0.5, 0]],
-                           sets_of_forces,
-			   is_nac=True)
+                           sets_of_forces)
    phonon.set_nac_params({'born': born,
                           'factor': factors,
                           'dielectric': epsilon})
