@@ -34,25 +34,42 @@
 
 import numpy as np
 
+cube_vertices = np.array([[0, 0, 0],
+                          [1, 0, 0],
+                          [0, 1, 0],
+                          [1, 1, 0],
+                          [0, 0, 1],
+                          [1, 0, 1],
+                          [0, 1, 1],
+                          [1, 1, 1]], dtype='intc')
+
 class TetrahedronMethod:
     def __init__(self,
                  primitive_vectors,
-                 mesh,
-                 frequencies,
-                 grid_address=None,
-                 ir_grid_points_map=None):
+                 mesh):
         self._reclat = primitive_vectors # column vectors
         self._mesh = mesh
-        self._frequencies = frequencies
-        self._grid_address = grid_address
-        self._gp_map = ir_grid_points_map
         self._vertices = None
+        self._relative_grid_address = None
 
     def run(self):
         self._create_tetrahedrons()
-        print self._vertices
+        self._set_relative_grid_address()
 
+    def get_tetrahedrons(self):
+        return self._relative_grid_address
+        
     def _create_tetrahedrons(self):
+        #
+        #     6-------7
+        #    /|      /|
+        #   / |     / |
+        #  4-------5  |
+        #  |  2----|--3
+        #  | /     | /
+        #  |/      |/
+        #  0-------1
+        #
         # i: vec        neighbours
         # 0: O          1, 2, 4    
         # 1: a          0, 3, 5
@@ -86,43 +103,13 @@ class TetrahedronMethod:
 
         self._vertices = tetras
 
-if __name__ == '__main__':
-    import sys
-    from phonopy import Phonopy
-    from phonopy.structure.symmetry import Symmetry
-    from phonopy.interface.vasp import read_vasp
-    from phonopy.file_IO import parse_FORCE_SETS, parse_BORN
-    from phonopy.structure.spglib import get_stabilized_reciprocal_mesh
-    from phonopy.phonon.tetrahedron_mesh import TetrahedronMesh
-
-    cell = read_vasp(sys.argv[1])
-    phonon = Phonopy(cell, [[2, 0, 0], [0, 2, 0], [0, 0, 2]],
-                     is_auto_displacements=False)
-    force_sets = parse_FORCE_SETS()
-    phonon.set_force_sets(force_sets)
-    phonon.set_post_process([[0, 0.5, 0.5], [0.5, 0, 0.5], [0.5, 0.5, 0]],
-                            is_nac=True)
-    primitive = phonon.get_primitive()
-    born = parse_BORN(primitive)
-    phonon.set_nac_params(born)
-    symmetry = phonon.get_primitive_symmetry()
-    mesh = [4, 4, 4]
-    # phonon.set_mesh(mesh)
-    # phonon.set_total_DOS(sigma=0.1)
-    # phonon.plot_total_DOS().show()
-    
-    rotations = symmetry.get_pointgroup_operations()
-    gp_map, grid_address = get_stabilized_reciprocal_mesh(mesh, rotations)
-    trh = TetrahedronMethod(np.linalg.inv(cell.get_cell()),
-                            mesh,
-                            None,
-                            grid_address,
-                            gp_map)
-
-    thm = TetrahedronMesh(phonon.get_dynamical_matrix(),
-                          mesh,
-                          rotations,
-                          is_gamma_center=True)
-                          
-    # trh.run()
-    
+    def _set_relative_grid_address(self):
+        relative_grid_address = np.zeros((24, 4, 3), dtype='intc')
+        pos = 0
+        for i in range(8):
+            cube_shifted = cube_vertices - cube_vertices[i]
+            for tetra in self._vertices:
+                if i in tetra:
+                    relative_grid_address[pos, :, :] = cube_shifted[tetra]
+                    pos += 1
+        self._relative_grid_address = relative_grid_address

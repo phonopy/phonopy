@@ -36,6 +36,7 @@ import numpy as np
 from phonopy.phonon.mesh import shift2boolean, has_mesh_symmetry
 from phonopy.structure.spglib import get_stabilized_reciprocal_mesh, relocate_BZ_grid_address
 from phonopy.units import VaspToTHz
+from phonopy.structure.tetrahedron_method import TetrahedronMethod
 
 class TetrahedronMesh:
     def __init__(self,
@@ -62,11 +63,18 @@ class TetrahedronMesh:
         self._frequencies = None
         self._eigenvalues = None
         self._eigenvectors = None
-        # self._set_eigenvalues()
 
+    def run(self):
+        self._set_tetrahedrons()
         self._set_grid_points()
         self._set_phonon()
+        self._get_grid_points(0)
 
+    def _set_tetrahedrons(self):
+        trh = TetrahedronMethod(np.linalg.inv(self._cell.get_cell()), self._mesh)
+        trh.run()
+        self._tetrahedrons =  trh.get_tetrahedrons()        
+        
     def _set_grid_points(self):
         mesh = self._mesh
         
@@ -89,8 +97,11 @@ class TetrahedronMesh:
             is_shift=self._is_shift,
             is_time_reversal=self._is_time_reversal)
 
-        print np.unique(self._gp_map)
-        
+        if grid_address[1, 0] == 1:
+            self._grid_order = [1, mesh[0], mesh[0] * mesh[1]]
+        else:
+            self._grid_order = [mesh[2] * mesh[1], mesh[2], 1]
+
         self._grid_address = relocate_BZ_grid_address(
             grid_address,
             mesh,
@@ -107,10 +118,15 @@ class TetrahedronMesh:
         self._frequencies = np.zeros_like(self._eigenvalues)
         for gp in np.unique(self._gp_map):
             self._dynamical_matrix.set_dynamical_matrix(self._qpoints[gp])
-            print self._qpoints[gp]
             dm = self._dynamical_matrix.get_dynamical_matrix()
             self._eigenvalues[gp] = np.linalg.eigvalsh(dm).real
         self._frequencies = np.array(np.sqrt(abs(self._eigenvalues)) *
                                      np.sign(self._eigenvalues)) * self._factor
 
-        print self._frequencies
+    def _get_grid_points(self, gp):
+        neighbors = np.zeros((24, 4), dtype='intc')
+        for i, t in enumerate(self._tetrahedrons):
+            address = t + self._grid_address[gp]
+            neighbors[i] = np.dot(address % self._mesh, self._grid_order)
+            print self._frequencies[self._gp_map[neighbors[i]]]
+        print neighbors
