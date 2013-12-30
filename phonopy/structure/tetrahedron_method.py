@@ -51,15 +51,39 @@ class TetrahedronMethod:
         self._mesh = mesh
         self._vertices = None
         self._relative_grid_address = None
-
-    def run(self):
-        self._create_tetrahedrons()
+        self._central_indices = None
+        self._tetrahedra_omegas = None
+        self._sort_indices = None
+        self._omegas = None
+        self._create_tetrahedra()
         self._set_relative_grid_address()
 
-    def get_tetrahedrons(self):
+    def run(self, omega, value='g'):
+        sum_value = 0.0
+        for omegas, indices in zip(self._tetrahedra_omegas,
+                                   self._sort_indices):
+            self._omegas = omegas[indices]
+            i_where = np.where(omega < self._omegas)[0]
+            if len(i_where):
+                i = i_where[0]
+            else:
+                i = 4
+            
+            if value == 'n':
+                sum_value += self._n(omega, i)
+            elif value == 'g':
+                sum_value += self._g(omega, i)
+
+        return sum_value / 24
+
+    def get_tetrahedra(self):
         return self._relative_grid_address
+
+    def set_tetrahedra_omegas(self, tetrahedra_omegas):
+        self._tetrahedra_omegas = tetrahedra_omegas
+        self._sort_indices = np.argsort(self._tetrahedra_omegas, axis=1)
         
-    def _create_tetrahedrons(self):
+    def _create_tetrahedra(self):
         #
         #     6-------7
         #    /|      /|
@@ -105,11 +129,93 @@ class TetrahedronMethod:
 
     def _set_relative_grid_address(self):
         relative_grid_address = np.zeros((24, 4, 3), dtype='intc')
+        central_indices = np.zeros(24, dtype='intc')
         pos = 0
         for i in range(8):
             cube_shifted = cube_vertices - cube_vertices[i]
             for tetra in self._vertices:
                 if i in tetra:
+                    central_indices[pos] = np.where(tetra==i)[0][0]
                     relative_grid_address[pos, :, :] = cube_shifted[tetra]
                     pos += 1
         self._relative_grid_address = relative_grid_address
+        self._central_indices = central_indices
+
+    def _f(self, omega, n, m):
+        return (omega - self._omegas[m]) / (self._omegas[n] - self._omegas[m])
+
+    def _n(self, omega, i):
+        if i == 0:
+            return self._n_0()
+        elif i == 1:
+            return self._n_1(omega)
+        elif i == 2:
+            return self._n_2(omega)
+        elif i == 3:
+            return self._n_3(omega)
+        elif i == 4:
+            return self._n_4()
+        else:
+            assert False
+
+    def _g(self, omega, i):
+        if i == 0:
+            return self._g_0()
+        elif i == 1:
+            return self._g_1(omega)
+        elif i == 2:
+            return self._g_2(omega)
+        elif i == 3:
+            return self._g_3(omega)
+        elif i == 4:
+            return self._g_4()
+        else:
+            assert False
+    
+    def _n_0(self):
+        """omega < omega1"""
+        return 0.0
+
+    def _n_1(self, omega):
+        """omega1 < omega < omega2"""
+        return (self._f(omega, 1, 0) * self._f(omega, 2, 0) *
+                self._f(omega, 3, 0))
+
+    def _n_2(self, omega):
+        """omega2 < omega < omega3"""
+        return (self._f(omega, 3, 1) * self._f(omega, 2, 1) +
+                self._f(omega, 3, 0) * self._f(omega, 1, 3) *
+                self._f(omega, 2, 1) +
+                self._f(omega, 3, 0) * self._f(omega, 2, 0) *
+                self._f(omega, 1, 2))
+                
+    def _n_3(self, omega):
+        """omega2 < omega < omega3"""
+        return (1 - self._f(omega, 0, 3) * self._f(omega, 1, 3) *
+                self._f(omega, 2, 3))
+
+    def _n_4(self):
+        """omega4 < omega"""
+        return 1.0
+
+    def _g_0(self):
+        """omega < omega1"""
+        return 0.0
+
+    def _g_1(self, omega):
+        """omega1 < omega < omega2"""
+        return 3 * self._n_1(omega) / (omega - self._omegas[0])
+
+    def _g_2(self, omega):
+        """omega2 < omega < omega3"""
+        return 3 / (self._omegas[3] - self._omegas[0]) * (
+            self._f(omega, 1, 2) * self._f(omega, 2, 0) +
+            self._f(omega, 2, 1) * self._f(omega, 1, 3))
+
+    def _g_3(self, omega):
+        """omega3 < omega < omega4"""
+        return 3 * (1 - self._n_3(omega)) / (self._omegas[3] - omega)
+
+    def _g_4(self):
+        """omega4 < omega"""
+        return 0.0

@@ -32,6 +32,7 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import sys
 import numpy as np
 from phonopy.phonon.mesh import shift2boolean, has_mesh_symmetry
 from phonopy.structure.spglib import get_stabilized_reciprocal_mesh, relocate_BZ_grid_address
@@ -59,22 +60,45 @@ class TetrahedronMesh:
         self._is_eigenvectors = is_eigenvectors
         self._factor = factor
 
+        self._grid_address = None
+        self._grid_mapping_table = None
+        self._grid_order = None
+        self._ir_grid_points = None
+        self._ir_grid_weights = None
+
         self._cell = dynamical_matrix.get_primitive()
         self._frequencies = None
         self._eigenvalues = None
         self._eigenvectors = None
 
+        self._tm = None
+        self._tetrahedra_frequencies = None
+        
     def run(self):
-        self._set_tetrahedrons()
         self._set_grid_points()
         self._set_phonon()
-        self._get_grid_points(0)
+        self._tm = TetrahedronMethod(np.linalg.inv(self._cell.get_cell()),
+                                     self._mesh)
+        n = 201
+        max_frequency = np.amax(self._frequencies)
+        freq_points = np.linspace(0, 10, n)
+        max_i = np.where(max_frequency < freq_points)[0][0]
+            
+        dos = np.zeros(n, dtype='double')
+        for i, (gp, weight) in enumerate(
+            zip(self._ir_grid_points, self._ir_grid_weights)):
+            print "# %d/%d" % (i + 1, len(self._ir_grid_weights))
+            sys.stdout.flush()
+            self._set_tetrahedra_frequencies(gp)
+            for frequencies in self._tetrahedra_frequencies:
+                self._tm.set_tetrahedra_omegas(frequencies)
+                for j, f in enumerate(freq_points[:max_i]):
+                    dos[j] += self._tm.run(f, value='g') * weight
 
-    def _set_tetrahedrons(self):
-        trh = TetrahedronMethod(np.linalg.inv(self._cell.get_cell()), self._mesh)
-        trh.run()
-        self._tetrahedrons =  trh.get_tetrahedrons()        
-        
+        dos /= np.prod(self._mesh)
+        for f, d in zip(freq_points, dos):
+            print f, d
+
     def _set_grid_points(self):
         mesh = self._mesh
         
@@ -91,7 +115,7 @@ class TetrahedronMesh:
             print "Only mesh shift of 0 or 1/2 is allowed."
             print "Mesh shift is set [0, 0, 0]."
 
-        self._gp_map, grid_address = get_stabilized_reciprocal_mesh(
+        self._grid_mapping_table, grid_address = get_stabilized_reciprocal_mesh(
             mesh,
             self._rotations,
             is_shift=self._is_shift,
@@ -111,22 +135,32 @@ class TetrahedronMesh:
         shift = [s * 0.5 for s in self._is_shift]
         self._qpoints = (self._grid_address + shift) / mesh
 
+        self._ir_grid_points = np.unique(self._grid_mapping_table)
+        weights = np.zeros_like(self._grid_mapping_table)
+        for gp in self._grid_mapping_table:
+            weights[gp] += 1
+        self._ir_grid_weights = weights[self._ir_grid_points]
+
     def _set_phonon(self):
         self._eigenvalues = np.zeros(
             (np.prod(self._mesh), self._cell.get_number_of_atoms() * 3),
             dtype='double')
         self._frequencies = np.zeros_like(self._eigenvalues)
-        for gp in np.unique(self._gp_map):
+        for gp in np.unique(self._grid_mapping_table):
             self._dynamical_matrix.set_dynamical_matrix(self._qpoints[gp])
             dm = self._dynamical_matrix.get_dynamical_matrix()
             self._eigenvalues[gp] = np.linalg.eigvalsh(dm).real
         self._frequencies = np.array(np.sqrt(abs(self._eigenvalues)) *
                                      np.sign(self._eigenvalues)) * self._factor
 
-    def _get_grid_points(self, gp):
+    def _set_tetrahedra_frequencies(self, gp):
         neighbors = np.zeros((24, 4), dtype='intc')
-        for i, t in enumerate(self._tetrahedrons):
+        frequencies = np.zeros((self._frequencies.shape[1], 24, 4),
+                               dtype='double')
+        for i, t in enumerate(self._tm.get_tetrahedra()):
             address = t + self._grid_address[gp]
             neighbors[i] = np.dot(address % self._mesh, self._grid_order)
-            print self._frequencies[self._gp_map[neighbors[i]]]
-        print neighbors
+            frequencies[:, i, :] = self._frequencies[
+                self._grid_mapping_table[neighbors[i]]].T
+        self._tetrahedra_frequencies = frequencies
+
