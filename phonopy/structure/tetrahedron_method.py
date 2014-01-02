@@ -58,24 +58,27 @@ class TetrahedronMethod:
         self._create_tetrahedra()
         self._set_relative_grid_address()
 
-    def run(self, omega, value='g'):
+    def run(self, omega, value='I'):
         sum_value = 0.0
         self._omega = omega
-        for omegas, indices in zip(self._tetrahedra_omegas,
-                                   self._sort_indices):
+        for omegas, indices, ci in zip(self._tetrahedra_omegas,
+                                       self._sort_indices,
+                                       self._central_indices):
             self._vertices_omegas = omegas[indices]
             i_where = np.where(self._omega < self._vertices_omegas)[0]
             if len(i_where):
                 i = i_where[0]
             else:
                 i = 4
-            
-            if value == 'n':
-                sum_value += self._n(i)
-            elif value == 'g':
-                sum_value += self._g(i)
 
-        return sum_value / 24
+            if value == 'I':
+                sum_value += self._I(i, np.where(indices==ci)[0][0]) * self._g(i)
+            elif value == 'J':
+                sum_value += self._J(i, np.where(indices==ci)[0][0]) * self._n(i)
+            else:
+                assert False
+
+        return sum_value / 6
 
     def get_tetrahedra(self):
         return self._relative_grid_address
@@ -146,6 +149,47 @@ class TetrahedronMethod:
         return ((self._omega - self._vertices_omegas[m]) /
                 (self._vertices_omegas[n] - self._vertices_omegas[m]))
 
+    def _I(self, i, ci):
+        if i == 0:
+            return self._I_0()
+        elif i == 1:
+            if ci == 0:
+                return self._I_10()
+            elif ci == 1:
+                return self._I_11()
+            elif ci == 2:
+                return self._I_12()
+            elif ci == 3:
+                return self._I_13()
+            else:
+                assert False
+        elif i == 2:
+            if ci == 0:
+                return self._I_20()
+            elif ci == 1:
+                return self._I_21()
+            elif ci == 2:
+                return self._I_22()
+            elif ci == 3:
+                return self._I_23()
+            else:
+                assert False
+        elif i == 3:
+            if ci == 0:
+                return self._I_30()
+            elif ci == 1:
+                return self._I_31()
+            elif ci == 2:
+                return self._I_32()
+            elif ci == 3:
+                return self._I_33()
+            else:
+                assert False
+        elif i == 4:
+            return self._I_4()
+        else:
+            assert False
+
     def _n(self, i):
         if i == 0:
             return self._n_0()
@@ -190,7 +234,7 @@ class TetrahedronMethod:
                 
     def _n_3(self):
         """omega2 < omega < omega3"""
-        return (1 - self._f(0, 3) * self._f(1, 3) * self._f(2, 3))
+        return (1.0 - self._f(0, 3) * self._f(1, 3) * self._f(2, 3))
 
     def _n_4(self):
         """omega4 < omega"""
@@ -212,7 +256,7 @@ class TetrahedronMethod:
 
     def _g_3(self):
         """omega3 < omega < omega4"""
-        return 3 * (1 - self._n_3()) / (self._vertices_omegas[3] - self._omega)
+        return 3 * (1.0 - self._n_3()) / (self._vertices_omegas[3] - self._omega)
 
     def _g_4(self):
         """omega4 < omega"""
@@ -222,10 +266,7 @@ class TetrahedronMethod:
         return 0.0
     
     def _J_10(self):
-        return (1 +
-                self._f(0, 1) +
-                self._f(0, 2) +
-                self._f(0, 3)) / 4
+        return (1.0 + self._f(0, 1) + self._f(0, 2) + self._f(0, 3)) / 4
 
     def _J_11(self):
         return self._f(1, 0) / 4
@@ -239,13 +280,13 @@ class TetrahedronMethod:
     def _J_20(self):
         return (self._f(3, 1) * self._f(2, 1) +
                 self._f(3, 0) * self._f(1, 3) * self._f(2, 1) *
-                (1 + self._f(0, 3)) +
+                (1.0 + self._f(0, 3)) +
                 self._f(3, 0) * self._f(2, 0) * self._f(1, 2) *
-                (1 + self._f(0, 3) + self._f(0, 2))) / 4
+                (1.0 + self._f(0, 3) + self._f(0, 2))) / 4
 
     def _J_21(self):
         return (self._f(3, 1) * self._f(2, 1) *
-                (1 + self._f(1, 3) + self._f(1, 2)) +
+                (1.0 + self._f(1, 3) + self._f(1, 2)) +
                 self._f(3, 0) * self._f(1, 3) * self._f(2, 1) *
                 (self._f(1, 3) + self._f(1, 2)) +
                 self._f(3, 0) * self._f(2, 0) * self._f(1, 2) *
@@ -268,20 +309,20 @@ class TetrahedronMethod:
                 self._f(3, 0)) / 4
 
     def _J_30(self):
-        return ((1 - self._f(0, 3) ** 2 * self._f(1, 3) * self._f(2, 3)) /
+        return ((1.0 - self._f(0, 3) ** 2 * self._f(1, 3) * self._f(2, 3)) /
                 4 / self._n_3())
 
     def _J_31(self):
-        return ((1 - self._f(0, 3) * self._f(1, 3) ** 2 * self._f(2, 3)) /
+        return ((1.0 - self._f(0, 3) * self._f(1, 3) ** 2 * self._f(2, 3)) /
                 4 / self._n_3())
 
     def _J_32(self):
-        return ((1 + self._f(0, 3) * self._f(1, 3) * self._f(2, 3) ** 2) /
+        return ((1.0 + self._f(0, 3) * self._f(1, 3) * self._f(2, 3) ** 2) /
                 4 / self._n_3())
 
     def _J_33(self):
-        return ((1 - self._f(0, 3) * self._f(1, 3) * self._f(2, 3) *
-                 (1 + self._f(3, 0) + self._f(3, 1) + self._f(3, 2))) /
+        return ((1.0 - self._f(0, 3) * self._f(1, 3) * self._f(2, 3) *
+                 (1.0 + self._f(3, 0) + self._f(3, 1) + self._f(3, 2))) /
                 4 / self._n_3())
 
     def _J_4(self):
@@ -291,9 +332,7 @@ class TetrahedronMethod:
         return 0.0
     
     def _I_10(self):
-        return (self._f(0, 1) +
-                self._f(0, 2) +
-                self._f(0, 3)) / 3
+        return (self._f(0, 1) + self._f(0, 2) + self._f(0, 3)) / 3
 
     def _I_11(self):
         return self._f(1, 0) / 3
@@ -329,13 +368,13 @@ class TetrahedronMethod:
                 ) / 3
 
     def _I_30(self):
-        return self._f(0, 2) / 3
+        return self._f(0, 3) / 3
 
     def _I_31(self):
-        return self._f(1, 2) / 3
+        return self._f(1, 3) / 3
 
     def _I_32(self):
-        return self._f(2, 2) / 3
+        return self._f(2, 3) / 3
 
     def _I_33(self):
         return (self._f(3, 0) + self._f(3, 1) + self._f(3, 2)) / 3

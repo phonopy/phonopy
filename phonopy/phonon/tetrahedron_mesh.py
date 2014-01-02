@@ -93,7 +93,7 @@ class TetrahedronMesh:
             for frequencies in self._tetrahedra_frequencies:
                 self._tm.set_tetrahedra_omegas(frequencies)
                 for j, f in enumerate(freq_points[:max_i]):
-                    dos[j] += self._tm.run(f, value='g') * weight
+                    dos[j] += self._tm.run(f, value='I') * weight
 
         dos /= np.prod(self._mesh)
         for f, d in zip(freq_points, dos):
