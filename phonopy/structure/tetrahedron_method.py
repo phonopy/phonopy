@@ -60,19 +60,20 @@ class TetrahedronMethod:
 
     def run(self, omega, value='g'):
         sum_value = 0.0
+        self._omega = omega
         for omegas, indices in zip(self._tetrahedra_omegas,
                                    self._sort_indices):
-            self._omegas = omegas[indices]
-            i_where = np.where(omega < self._omegas)[0]
+            self._vertices_omegas = omegas[indices]
+            i_where = np.where(self._omega < self._vertices_omegas)[0]
             if len(i_where):
                 i = i_where[0]
             else:
                 i = 4
             
             if value == 'n':
-                sum_value += self._n(omega, i)
+                sum_value += self._n(i)
             elif value == 'g':
-                sum_value += self._g(omega, i)
+                sum_value += self._g(i)
 
         return sum_value / 24
 
@@ -141,32 +142,33 @@ class TetrahedronMethod:
         self._relative_grid_address = relative_grid_address
         self._central_indices = central_indices
 
-    def _f(self, omega, n, m):
-        return (omega - self._omegas[m]) / (self._omegas[n] - self._omegas[m])
+    def _f(self, n, m):
+        return ((self._omega - self._vertices_omegas[m]) /
+                (self._vertices_omegas[n] - self._vertices_omegas[m]))
 
-    def _n(self, omega, i):
+    def _n(self, i):
         if i == 0:
             return self._n_0()
         elif i == 1:
-            return self._n_1(omega)
+            return self._n_1()
         elif i == 2:
-            return self._n_2(omega)
+            return self._n_2()
         elif i == 3:
-            return self._n_3(omega)
+            return self._n_3()
         elif i == 4:
             return self._n_4()
         else:
             assert False
 
-    def _g(self, omega, i):
+    def _g(self, i):
         if i == 0:
             return self._g_0()
         elif i == 1:
-            return self._g_1(omega)
+            return self._g_1()
         elif i == 2:
-            return self._g_2(omega)
+            return self._g_2()
         elif i == 3:
-            return self._g_3(omega)
+            return self._g_3()
         elif i == 4:
             return self._g_4()
         else:
@@ -176,23 +178,19 @@ class TetrahedronMethod:
         """omega < omega1"""
         return 0.0
 
-    def _n_1(self, omega):
+    def _n_1(self):
         """omega1 < omega < omega2"""
-        return (self._f(omega, 1, 0) * self._f(omega, 2, 0) *
-                self._f(omega, 3, 0))
+        return self._f(1, 0) * self._f(2, 0) * self._f(3, 0)
 
-    def _n_2(self, omega):
+    def _n_2(self):
         """omega2 < omega < omega3"""
-        return (self._f(omega, 3, 1) * self._f(omega, 2, 1) +
-                self._f(omega, 3, 0) * self._f(omega, 1, 3) *
-                self._f(omega, 2, 1) +
-                self._f(omega, 3, 0) * self._f(omega, 2, 0) *
-                self._f(omega, 1, 2))
+        return (self._f(3, 1) * self._f(2, 1) +
+                self._f(3, 0) * self._f(1, 3) * self._f(2, 1) +
+                self._f(3, 0) * self._f(2, 0) * self._f(1, 2))
                 
-    def _n_3(self, omega):
+    def _n_3(self):
         """omega2 < omega < omega3"""
-        return (1 - self._f(omega, 0, 3) * self._f(omega, 1, 3) *
-                self._f(omega, 2, 3))
+        return (1 - self._f(0, 3) * self._f(1, 3) * self._f(2, 3))
 
     def _n_4(self):
         """omega4 < omega"""
@@ -202,20 +200,146 @@ class TetrahedronMethod:
         """omega < omega1"""
         return 0.0
 
-    def _g_1(self, omega):
+    def _g_1(self):
         """omega1 < omega < omega2"""
-        return 3 * self._n_1(omega) / (omega - self._omegas[0])
+        return 3 * self._n_1() / (self._omega - self._vertices_omegas[0])
 
-    def _g_2(self, omega):
+    def _g_2(self):
         """omega2 < omega < omega3"""
-        return 3 / (self._omegas[3] - self._omegas[0]) * (
-            self._f(omega, 1, 2) * self._f(omega, 2, 0) +
-            self._f(omega, 2, 1) * self._f(omega, 1, 3))
+        return 3 / (self._vertices_omegas[3] - self._vertices_omegas[0]) * (
+            self._f(1, 2) * self._f(2, 0) +
+            self._f(2, 1) * self._f(1, 3))
 
-    def _g_3(self, omega):
+    def _g_3(self):
         """omega3 < omega < omega4"""
-        return 3 * (1 - self._n_3(omega)) / (self._omegas[3] - omega)
+        return 3 * (1 - self._n_3()) / (self._vertices_omegas[3] - self._omega)
 
     def _g_4(self):
         """omega4 < omega"""
         return 0.0
+
+    def _J0(self):
+        return 0.0
+    
+    def _J_10(self):
+        return (1 +
+                self._f(0, 1) +
+                self._f(0, 2) +
+                self._f(0, 3)) / 4
+
+    def _J_11(self):
+        return self._f(1, 0) / 4
+
+    def _J_12(self):
+        return self._f(2, 0) / 4
+
+    def _J_13(self):
+        return self._f(3, 0) / 4
+
+    def _J_20(self):
+        return (self._f(3, 1) * self._f(2, 1) +
+                self._f(3, 0) * self._f(1, 3) * self._f(2, 1) *
+                (1 + self._f(0, 3)) +
+                self._f(3, 0) * self._f(2, 0) * self._f(1, 2) *
+                (1 + self._f(0, 3) + self._f(0, 2))) / 4
+
+    def _J_21(self):
+        return (self._f(3, 1) * self._f(2, 1) *
+                (1 + self._f(1, 3) + self._f(1, 2)) +
+                self._f(3, 0) * self._f(1, 3) * self._f(2, 1) *
+                (self._f(1, 3) + self._f(1, 2)) +
+                self._f(3, 0) * self._f(2, 0) * self._f(1, 2) *
+                self._f(1, 2)) / 4
+
+    def _J_22(self):
+        return (self._f(3, 1) * self._f(2, 1) *
+                self._f(2, 1) +
+                self._f(3, 0) * self._f(1, 3) * self._f(2, 1) *
+                self._f(2, 1) +
+                self._f(3, 0) * self._f(2, 0) * self._f(1, 2) *
+                (self._f(2, 1) + self._f(2, 0))) / 4
+
+    def _J_23(self):
+        return (self._f(3, 1) * self._f(2, 1) *
+                self._f(3, 2) +
+                self._f(3, 0) * self._f(1, 3) * self._f(2, 1) *
+                (self._f(3, 2) + self._f(3, 0)) +
+                self._f(3, 0) * self._f(2, 0) * self._f(1, 2) *
+                self._f(3, 0)) / 4
+
+    def _J_30(self):
+        return ((1 - self._f(0, 3) ** 2 * self._f(1, 3) * self._f(2, 3)) /
+                4 / self._n_3())
+
+    def _J_31(self):
+        return ((1 - self._f(0, 3) * self._f(1, 3) ** 2 * self._f(2, 3)) /
+                4 / self._n_3())
+
+    def _J_32(self):
+        return ((1 + self._f(0, 3) * self._f(1, 3) * self._f(2, 3) ** 2) /
+                4 / self._n_3())
+
+    def _J_33(self):
+        return ((1 - self._f(0, 3) * self._f(1, 3) * self._f(2, 3) *
+                 (1 + self._f(3, 0) + self._f(3, 1) + self._f(3, 2))) /
+                4 / self._n_3())
+
+    def _J_4(self):
+        return 0.25
+
+    def _I_0(self):
+        return 0.0
+    
+    def _I_10(self):
+        return (self._f(0, 1) +
+                self._f(0, 2) +
+                self._f(0, 3)) / 3
+
+    def _I_11(self):
+        return self._f(1, 0) / 3
+
+    def _I_12(self):
+        return self._f(2, 0) / 3
+
+    def _I_13(self):
+        return self._f(3, 0) / 3
+
+    def _I_20(self):
+        return (self._f(0, 3) +
+                self._f(0, 2) * self._f(2, 0) * self._f(1, 2) /
+                (self._f(1, 2) * self._f(2, 0) + self._f(2, 1) * self._f(1, 3))
+                ) / 3
+
+    def _I_21(self):
+        return (self._f(1, 2) +
+                self._f(1, 3) ** 2 * self._f(2, 1) /
+                (self._f(1, 2) * self._f(2, 0) + self._f(2, 1) * self._f(1, 3))
+                ) / 3
+
+    def _I_22(self):
+        return (self._f(2, 1) +
+                self._f(2, 0) ** 2 * self._f(1, 2) /
+                (self._f(1, 2) * self._f(2, 0) + self._f(2, 1) * self._f(1, 3))
+                ) / 3
+                
+    def _I_23(self):
+        return (self._f(3, 0) +
+                self._f(3, 1) * self._f(1, 3) * self._f(2, 1) /
+                (self._f(1, 2) * self._f(2, 0) + self._f(2, 1) * self._f(1, 3))
+                ) / 3
+
+    def _I_30(self):
+        return self._f(0, 2) / 3
+
+    def _I_31(self):
+        return self._f(1, 2) / 3
+
+    def _I_32(self):
+        return self._f(2, 2) / 3
+
+    def _I_33(self):
+        return (self._f(3, 0) + self._f(3, 1) + self._f(3, 2)) / 3
+
+    def _I_4(self):
+        return 0.0
+
