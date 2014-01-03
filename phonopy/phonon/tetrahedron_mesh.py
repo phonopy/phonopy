@@ -74,17 +74,18 @@ class TetrahedronMesh:
         self._tm = None
         self._tetrahedra_frequencies = None
         
-    def run(self):
+    def run(self, value='I', division_number=201):
         self._set_grid_points()
         self._set_phonon()
         self._tm = TetrahedronMethod(np.linalg.inv(self._cell.get_cell()),
                                      self._mesh)
-        n = 201
         max_frequency = np.amax(self._frequencies)
-        freq_points = np.linspace(0, 10, n)
-        max_i = np.where(max_frequency < freq_points)[0][0]
+        # max_frequency *= np.sign(max_frequency) * 1.001
+        min_frequency = np.amin(self._frequencies)
+        # min_frequency *= np.sign(min_frequency) * 1.001
+        freq_points = np.linspace(min_frequency, max_frequency, division_number)
             
-        dos = np.zeros(n, dtype='double')
+        dos = np.zeros(division_number, dtype='double')
         for i, (gp, weight) in enumerate(
             zip(self._ir_grid_points, self._ir_grid_weights)):
             print "# %d/%d" % (i + 1, len(self._ir_grid_weights))
@@ -92,8 +93,8 @@ class TetrahedronMesh:
             self._set_tetrahedra_frequencies(gp)
             for frequencies in self._tetrahedra_frequencies:
                 self._tm.set_tetrahedra_omegas(frequencies)
-                for j, f in enumerate(freq_points[:max_i]):
-                    dos[j] += self._tm.run(f, value='I') * weight
+                for j, f in enumerate(freq_points):
+                    dos[j] += self._tm.run(f, value=value) * weight
 
         dos /= np.prod(self._mesh)
         for f, d in zip(freq_points, dos):

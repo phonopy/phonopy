@@ -34,7 +34,7 @@
 
 import numpy as np
 
-cube_vertices = np.array([[0, 0, 0],
+parallelepiped_vertices = np.array([[0, 0, 0],
                           [1, 0, 0],
                           [0, 1, 0],
                           [1, 1, 0],
@@ -136,11 +136,11 @@ class TetrahedronMethod:
         central_indices = np.zeros(24, dtype='intc')
         pos = 0
         for i in range(8):
-            cube_shifted = cube_vertices - cube_vertices[i]
+            ppd_shifted = parallelepiped_vertices - parallelepiped_vertices[i]
             for tetra in self._vertices:
                 if i in tetra:
                     central_indices[pos] = np.where(tetra==i)[0][0]
-                    relative_grid_address[pos, :, :] = cube_shifted[tetra]
+                    relative_grid_address[pos, :, :] = ppd_shifted[tetra]
                     pos += 1
         self._relative_grid_address = relative_grid_address
         self._central_indices = central_indices
@@ -148,6 +148,47 @@ class TetrahedronMethod:
     def _f(self, n, m):
         return ((self._omega - self._vertices_omegas[m]) /
                 (self._vertices_omegas[n] - self._vertices_omegas[m]))
+
+    def _J(self, i, ci):
+        if i == 0:
+            return self._J_0()
+        elif i == 1:
+            if ci == 0:
+                return self._J_10()
+            elif ci == 1:
+                return self._J_11()
+            elif ci == 2:
+                return self._J_12()
+            elif ci == 3:
+                return self._J_13()
+            else:
+                assert False
+        elif i == 2:
+            if ci == 0:
+                return self._J_20()
+            elif ci == 1:
+                return self._J_21()
+            elif ci == 2:
+                return self._J_22()
+            elif ci == 3:
+                return self._J_23()
+            else:
+                assert False
+        elif i == 3:
+            if ci == 0:
+                return self._J_30()
+            elif ci == 1:
+                return self._J_31()
+            elif ci == 2:
+                return self._J_32()
+            elif ci == 3:
+                return self._J_33()
+            else:
+                assert False
+        elif i == 4:
+            return self._J_4()
+        else:
+            assert False
 
     def _I(self, i, ci):
         if i == 0:
@@ -246,7 +287,9 @@ class TetrahedronMethod:
 
     def _g_1(self):
         """omega1 < omega < omega2"""
-        return 3 * self._n_1() / (self._omega - self._vertices_omegas[0])
+        # return 3 * self._n_1() / (self._omega - self._vertices_omegas[0])
+        return (3 * self._f(1, 0) * self._f(2, 0) /
+                (self._vertices_omegas[3] - self._vertices_omegas[0]))
 
     def _g_2(self):
         """omega2 < omega < omega3"""
@@ -256,13 +299,15 @@ class TetrahedronMethod:
 
     def _g_3(self):
         """omega3 < omega < omega4"""
-        return 3 * (1.0 - self._n_3()) / (self._vertices_omegas[3] - self._omega)
+        # return 3 * (1.0 - self._n_3()) / (self._vertices_omegas[3] - self._omega)
+        return (3 * self._f(1, 3) * self._f(2, 3) /
+                (self._vertices_omegas[3] - self._vertices_omegas[0]))
 
     def _g_4(self):
         """omega4 < omega"""
         return 0.0
 
-    def _J0(self):
+    def _J_0(self):
         return 0.0
     
     def _J_10(self):
@@ -282,7 +327,7 @@ class TetrahedronMethod:
                 self._f(3, 0) * self._f(1, 3) * self._f(2, 1) *
                 (1.0 + self._f(0, 3)) +
                 self._f(3, 0) * self._f(2, 0) * self._f(1, 2) *
-                (1.0 + self._f(0, 3) + self._f(0, 2))) / 4
+                (1.0 + self._f(0, 3) + self._f(0, 2))) / 4 / self._n_2()
 
     def _J_21(self):
         return (self._f(3, 1) * self._f(2, 1) *
@@ -290,7 +335,7 @@ class TetrahedronMethod:
                 self._f(3, 0) * self._f(1, 3) * self._f(2, 1) *
                 (self._f(1, 3) + self._f(1, 2)) +
                 self._f(3, 0) * self._f(2, 0) * self._f(1, 2) *
-                self._f(1, 2)) / 4
+                self._f(1, 2)) / 4 / self._n_2()
 
     def _J_22(self):
         return (self._f(3, 1) * self._f(2, 1) *
@@ -298,15 +343,15 @@ class TetrahedronMethod:
                 self._f(3, 0) * self._f(1, 3) * self._f(2, 1) *
                 self._f(2, 1) +
                 self._f(3, 0) * self._f(2, 0) * self._f(1, 2) *
-                (self._f(2, 1) + self._f(2, 0))) / 4
+                (self._f(2, 1) + self._f(2, 0))) / 4 / self._n_2()
 
     def _J_23(self):
         return (self._f(3, 1) * self._f(2, 1) *
-                self._f(3, 2) +
+                self._f(3, 1) +
                 self._f(3, 0) * self._f(1, 3) * self._f(2, 1) *
-                (self._f(3, 2) + self._f(3, 0)) +
+                (self._f(3, 1) + self._f(3, 0)) +
                 self._f(3, 0) * self._f(2, 0) * self._f(1, 2) *
-                self._f(3, 0)) / 4
+                self._f(3, 0)) / 4 / self._n_2()
 
     def _J_30(self):
         return ((1.0 - self._f(0, 3) ** 2 * self._f(1, 3) * self._f(2, 3)) /
