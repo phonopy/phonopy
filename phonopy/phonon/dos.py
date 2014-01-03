@@ -86,7 +86,7 @@ class Dos:
 
         if freq_pitch == None:
             self._freq_pitch = (self._frequencies.max() -
-                                 self._frequencies.min()) / 200
+                                self._frequencies.min()) / 200
         else:
             self._freq_pitch = freq_pitch
 
