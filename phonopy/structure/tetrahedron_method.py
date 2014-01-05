@@ -50,13 +50,13 @@ class TetrahedronMethod:
         self._reclat = primitive_vectors # column vectors
         self._mesh = mesh
         self._vertices = None
-        self._relative_grid_address = None
+        self._relative_grid_addresses = None
         self._central_indices = None
         self._tetrahedra_omegas = None
         self._sort_indices = None
         self._omegas = None
         self._create_tetrahedra()
-        self._set_relative_grid_address()
+        self._set_relative_grid_addresses()
 
     def run(self, omega, value='I'):
         sum_value = 0.0
@@ -81,9 +81,15 @@ class TetrahedronMethod:
         return sum_value / 6
 
     def get_tetrahedra(self):
-        return self._relative_grid_address
+        """
+        Returns relative grid addresses at vertices of tetrahedra
+        """
+        return self._relative_grid_addresses
 
     def set_tetrahedra_omegas(self, tetrahedra_omegas):
+        """
+        tetrahedra_omegas: (24, 4) omegas at self._relative_grid_addresses
+        """
         self._tetrahedra_omegas = tetrahedra_omegas
         self._sort_indices = np.argsort(self._tetrahedra_omegas, axis=1)
         
@@ -131,8 +137,8 @@ class TetrahedronMethod:
 
         self._vertices = tetras
 
-    def _set_relative_grid_address(self):
-        relative_grid_address = np.zeros((24, 4, 3), dtype='intc')
+    def _set_relative_grid_addresses(self):
+        relative_grid_addresses = np.zeros((24, 4, 3), dtype='intc')
         central_indices = np.zeros(24, dtype='intc')
         pos = 0
         for i in range(8):
@@ -140,9 +146,9 @@ class TetrahedronMethod:
             for tetra in self._vertices:
                 if i in tetra:
                     central_indices[pos] = np.where(tetra==i)[0][0]
-                    relative_grid_address[pos, :, :] = ppd_shifted[tetra]
+                    relative_grid_addresses[pos, :, :] = ppd_shifted[tetra]
                     pos += 1
-        self._relative_grid_address = relative_grid_address
+        self._relative_grid_addresses = relative_grid_addresses
         self._central_indices = central_indices
 
     def _f(self, n, m):

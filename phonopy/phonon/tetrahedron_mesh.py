@@ -73,32 +73,39 @@ class TetrahedronMesh:
 
         self._tm = None
         self._tetrahedra_frequencies = None
+        self._integration_weights = None
         
-    def run(self, value='I', division_number=201):
+    def get_integration_weights(self):
+        return self._integration_weights
+
+    def get_frequency_points(self):
+        return self._frequency_points
+
+    def run_dos(self, division_number=201):
+        self._run_at_frequencies(value='I', division_number=division_number)
+
+    def _run_at_frequencies(self, value='I', division_number=201):
         self._set_grid_points()
         self._set_phonon()
         self._tm = TetrahedronMethod(np.linalg.inv(self._cell.get_cell()),
                                      self._mesh)
         max_frequency = np.amax(self._frequencies)
-        # max_frequency *= np.sign(max_frequency) * 1.001
         min_frequency = np.amin(self._frequencies)
-        # min_frequency *= np.sign(min_frequency) * 1.001
         freq_points = np.linspace(min_frequency, max_frequency, division_number)
-            
-        dos = np.zeros(division_number, dtype='double')
-        for i, (gp, weight) in enumerate(
-            zip(self._ir_grid_points, self._ir_grid_weights)):
+        integration_weights = np.zeros(division_number, dtype='double')
+        
+        for i, (gp, w) in enumerate(zip(self._ir_grid_points,
+                                        self._ir_grid_weights)):
             print "# %d/%d" % (i + 1, len(self._ir_grid_weights))
             sys.stdout.flush()
             self._set_tetrahedra_frequencies(gp)
             for frequencies in self._tetrahedra_frequencies:
                 self._tm.set_tetrahedra_omegas(frequencies)
                 for j, f in enumerate(freq_points):
-                    dos[j] += self._tm.run(f, value=value) * weight
+                    integration_weights[j] += self._tm.run(f, value=value) * w
 
-        dos /= np.prod(self._mesh)
-        for f, d in zip(freq_points, dos):
-            print f, d
+        self._integration_weights = integration_weights / np.prod(self._mesh)
+        self._frequency_points = freq_points
 
     def _set_grid_points(self):
         mesh = self._mesh
@@ -133,7 +140,7 @@ class TetrahedronMesh:
             np.linalg.inv(self._cell.get_cell()),
             is_shift=self._is_shift)[0][:np.prod(mesh)]
 
-        shift = [s * 0.5 for s in self._is_shift]
+        shift = np.array(self._is_shift, dtype='intc') * 0.5
         self._qpoints = (self._grid_address + shift) / mesh
 
         self._ir_grid_points = np.unique(self._grid_mapping_table)
@@ -156,8 +163,8 @@ class TetrahedronMesh:
 
     def _set_tetrahedra_frequencies(self, gp):
         neighbors = np.zeros((24, 4), dtype='intc')
-        frequencies = np.zeros((self._frequencies.shape[1], 24, 4),
-                               dtype='double')
+        frequencies = np.zeros(
+            (self._frequencies.shape[1], 24, 4), dtype='double')
         for i, t in enumerate(self._tm.get_tetrahedra()):
             address = t + self._grid_address[gp]
             neighbors[i] = np.dot(address % self._mesh, self._grid_order)
