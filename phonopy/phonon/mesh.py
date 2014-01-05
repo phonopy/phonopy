@@ -33,7 +33,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
-from phonopy.structure.spglib import get_stabilized_reciprocal_mesh
+from phonopy.structure.spglib import get_stabilized_reciprocal_mesh, relocate_BZ_grid_address
 from phonopy.structure.brillouin_zone import get_qpoints_in_Brillouin_zone
 from phonopy.structure.symmetry import get_lattice_vector_equivalence
 from phonopy.units import VaspToTHz
@@ -54,17 +54,23 @@ def get_qpoints(mesh_numbers,
         qpoints, weights = _get_ir_qpoints(mesh_numbers,
                                            is_shift,
                                            rotations,
-                                           is_time_reversal)
+                                           reciprocal_lattice,
+                                           is_time_reversal=is_time_reversal,
+                                           fit_in_BZ=True)
     else:
-        qpoints, weights = _get_qpoints_without_symmetry(mesh_numbers,
-                                                         q_mesh_shift,
-                                                         is_gamma_center)
+        qpoints, weights = _get_ir_qpoints(mesh_numbers,
+                                           is_shift,
+                                           [np.eye(3, dtype='intc')],
+                                           reciprocal_lattice,
+                                           is_time_reversal=False,
+                                           fit_in_BZ=True)
 
-    if fit_in_BZ:
-        qpoints_in_BZ = _fit_qpoints_in_BZ(reciprocal_lattice, qpoints)
-        return qpoints_in_BZ, weights
-    else:
-        return qpoints, weights
+    return qpoints, weights
+    # if fit_in_BZ:
+    #     qpoints_in_BZ = _fit_qpoints_in_BZ(reciprocal_lattice, qpoints)
+    #     return qpoints_in_BZ, weights
+    # else:
+    #     return qpoints, weights
 
 def shift2boolean(mesh_numbers,
                   q_mesh_shift=None,
@@ -112,47 +118,30 @@ def _fit_qpoints_in_BZ(reciprocal_lattice, qpoints):
 def _get_ir_qpoints(mesh,
                     is_shift,
                     rotations,
-                    is_time_reversal):
-    mapping, grid = get_stabilized_reciprocal_mesh(
+                    reciprocal_lattice,
+                    is_time_reversal=True,
+                    fit_in_BZ=True):
+    grid_mapping_table, grid_address = get_stabilized_reciprocal_mesh(
         mesh,
         rotations,
         is_shift=is_shift,
         is_time_reversal=is_time_reversal)
-        
-    ir_list = np.unique(mapping)
-    weights = np.zeros_like(mapping)
-    ir_qpoints = np.zeros((len(ir_list), 3), dtype='double')
 
-    for g in mapping:
-        weights[g]  += 1
+    bz_grid_address = relocate_BZ_grid_address(
+        grid_address,
+        mesh,
+        reciprocal_lattice,
+        is_shift=is_shift)[0][:np.prod(mesh)]
+    
+    ir_list = np.unique(grid_mapping_table)
+    weights = np.zeros_like(grid_mapping_table)
+    for gp in grid_mapping_table:
+        weights[gp]  += 1
     ir_weights = weights[ir_list]
-
     shift = np.array(is_shift, dtype='intc') * 0.5
-    for i, g in enumerate(ir_list):
-        ir_qpoints[i] = (grid[g] + shift) / mesh
-        ir_qpoints[i] -= (ir_qpoints[i] > 0.5) * 1
+    ir_qpoints = (bz_grid_address[ir_list] + shift) / mesh
 
     return ir_qpoints, ir_weights
-
-def _get_qpoints_without_symmetry(mesh, shift, is_gamma_center):
-    qpoints = []
-    mesh_float = np.array(mesh, dtype='double')
-    if is_gamma_center or (shift is None):
-        qshift = [0, 0, 0]
-    else:
-        qshift = shift / mesh_float
-        for i in (0, 1, 2):
-            if mesh[i] % 2 == 0:
-                qshift[i] += 0.5 / mesh[i]
-
-    for grid_address in list(np.ndindex(tuple(mesh))):
-        q = grid_address / mesh_float + qshift
-        qpoints.append(q - (q > 0.5))
-
-    qpoints = np.array(qpoints, dtype='double')
-    weights = np.ones(qpoints.shape[0], dtype='intc')
-
-    return qpoints, weights
 
 
 class Mesh:
