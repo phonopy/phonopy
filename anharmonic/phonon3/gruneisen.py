@@ -82,7 +82,7 @@ class Gruneisen:
             self._mesh,
             np.linalg.inv(self._pcell.get_cell()),
             q_mesh_shift=shift,
-            is_gamma_center)
+            is_gamma_center=is_gamma_center)
 
     def set_band_structure(self, paths):
         self._run_mode = 'band'
