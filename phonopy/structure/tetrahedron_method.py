@@ -35,20 +35,18 @@
 import numpy as np
 
 parallelepiped_vertices = np.array([[0, 0, 0],
-                          [1, 0, 0],
-                          [0, 1, 0],
-                          [1, 1, 0],
-                          [0, 0, 1],
-                          [1, 0, 1],
-                          [0, 1, 1],
-                          [1, 1, 1]], dtype='intc')
+                                    [1, 0, 0],
+                                    [0, 1, 0],
+                                    [1, 1, 0],
+                                    [0, 0, 1],
+                                    [1, 0, 1],
+                                    [0, 1, 1],
+                                    [1, 1, 1]], dtype='intc')
 
 class TetrahedronMethod:
     def __init__(self,
-                 primitive_vectors,
-                 mesh):
-        self._reclat = primitive_vectors # column vectors
-        self._mesh = mesh
+                 primitive_vectors):
+        self._primitive_vectors = primitive_vectors # column vectors
         self._vertices = None
         self._relative_grid_addresses = None
         self._central_indices = None
@@ -113,7 +111,7 @@ class TetrahedronMethod:
         # 5: c + a      1, 4, 7
         # 6: c + b      2, 4, 7
         # 7: c + a + b  3, 5, 6
-        a, b, c = self._reclat.T
+        a, b, c = self._primitive_vectors.T
         diag_vecs = np.array([ a + b + c,  # 0-7
                               -a + b + c,  # 1-6
                                a - b + c,  # 2-5

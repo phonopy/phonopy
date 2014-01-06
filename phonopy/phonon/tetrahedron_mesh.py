@@ -87,8 +87,7 @@ class TetrahedronMesh:
     def _run_at_frequencies(self, value='I', division_number=201):
         self._set_grid_points()
         self._set_phonon()
-        self._tm = TetrahedronMethod(np.linalg.inv(self._cell.get_cell()),
-                                     self._mesh)
+        self._tm = TetrahedronMethod(np.linalg.inv(self._cell.get_cell()))
         max_frequency = np.amax(self._frequencies)
         min_frequency = np.amin(self._frequencies)
         freq_points = np.linspace(min_frequency, max_frequency, division_number)
