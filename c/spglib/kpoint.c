@@ -14,33 +14,35 @@
 /* element first. But when GRID_ORDER_XYZ is defined, it is changed to right */ 
 /* element first. */
 
-static int search_space[][3] = {{0, 0, 0},
-				{0, 0, 1},
-				{0, 1, -1},
-				{0, 1, 0},
-				{0, 1, 1},
-				{1, -1, -1},
-				{1, -1, 0},
-				{1, -1, 1},
-				{1, 0, -1},
-				{1, 0, 0},
-				{1, 0, 1},
-				{1, 1, -1},
-				{1, 1, 0},
-				{1, 1, 1},
-				{-1, -1, -1},
-				{-1, -1, 0},
-				{-1, -1, 1},
-				{-1, 0, -1},
-				{-1, 0, 0},
-				{-1, 0, 1},
-				{-1, 1, -1},
-				{-1, 1, 0},
-				{-1, 1, 1},
-				{0, -1, -1},
-				{0, -1, 0},
-				{0, -1, 1},
-				{0, 0, -1}};
+static int search_space[][3] = {
+  {0, 0, 0},
+  {0, 0, 1},
+  {0, 1, -1},
+  {0, 1, 0},
+  {0, 1, 1},
+  {1, -1, -1},
+  {1, -1, 0},
+  {1, -1, 1},
+  {1, 0, -1},
+  {1, 0, 0},
+  {1, 0, 1},
+  {1, 1, -1},
+  {1, 1, 0},
+  {1, 1, 1},
+  {-1, -1, -1},
+  {-1, -1, 0},
+  {-1, -1, 1},
+  {-1, 0, -1},
+  {-1, 0, 0},
+  {-1, 0, 1},
+  {-1, 1, -1},
+  {-1, 1, 0},
+  {-1, 1, 1},
+  {0, -1, -1},
+  {0, -1, 0},
+  {0, -1, 1},
+  {0, 0, -1}
+};
 
 static PointSymmetry get_point_group_reciprocal(const MatINT * rotations,
 						const int is_time_reversal);
@@ -844,9 +846,9 @@ static void get_third_q_of_triplets_at_q(int address[3][3],
       goto escape;
     }
   }
-  printf("******* Warning *******\n");
-  printf(" No third-q was found.\n");
-  printf("******* Warning *******\n");
+  warning_print("******* Warning *******\n");
+  warning_print(" No third-q was found.\n");
+  warning_print("******* Warning *******\n");
 
  escape:
 
