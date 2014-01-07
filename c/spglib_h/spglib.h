@@ -349,4 +349,15 @@ int spg_get_BZ_triplets_at_q(int triplets[][3],
 			     const int bz_map[],
 			     const int weights[],
 			     const int mesh[3]);
+
+void
+spg_get_tetrahedra_relative_grid_address(int relative_grid_address[24][4][3],
+					 SPGCONST double rec_lattice[3][3]);
+
+double
+spg_get_tetrahedra_integration_weight(const double omega,
+				      SPGCONST double tetrahedra_omegas[24][4],
+				      const char function);
+
 #endif
+

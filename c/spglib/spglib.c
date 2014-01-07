@@ -4,24 +4,27 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "spglib.h"
-#include "refinement.h"
 #include "cell.h"
+#include "kpoint.h"
 #include "lattice.h"
 #include "mathfunc.h"
 #include "pointgroup.h"
+#include "spglib.h"
 #include "primitive.h"
+#include "refinement.h"
 #include "spacegroup.h"
-#include "symmetry.h"
-#include "kpoint.h"
 #include "spin.h"
+#include "symmetry.h"
+#include "tetrahedron_method.h"
 
+/*---------*/
+/* general */
+/*---------*/
 static SpglibDataset * get_dataset(SPGCONST double lattice[3][3],
 				   SPGCONST double position[][3],
 				   const int types[],
 				   const int num_atom,
 				   const double symprec);
-
 static int get_symmetry(int rotation[][3][3],
 			double translation[][3],
 			const int max_size,
@@ -30,7 +33,6 @@ static int get_symmetry(int rotation[][3][3],
 			const int types[],
 			const int num_atom,
 			const double symprec);
-
 static int get_symmetry_from_dataset(int rotation[][3][3],
 				     double translation[][3],
 				     const int max_size,
@@ -39,7 +41,6 @@ static int get_symmetry_from_dataset(int rotation[][3][3],
 				     const int types[],
 				     const int num_atom,
 				     const double symprec);
-
 static int get_symmetry_with_collinear_spin(int rotation[][3][3],
 					    double translation[][3],
 					    const int max_size,
@@ -49,38 +50,36 @@ static int get_symmetry_with_collinear_spin(int rotation[][3][3],
 					    const double spins[],
 					    const int num_atom,
 					    const double symprec);
-
 static int get_multiplicity(SPGCONST double lattice[3][3],
 			    SPGCONST double position[][3],
 			    const int types[],
 			    const int num_atom,
 			    const double symprec);
-
 static int find_primitive(double lattice[3][3],
 			  double position[][3],
 			  int types[],
 			  const int num_atom,
 			  const double symprec);
-
 static int get_international(char symbol[11],
 			     SPGCONST double lattice[3][3],
 			     SPGCONST double position[][3],
 			     const int types[],
 			     const int num_atom,
 			     const double symprec);
-
 static int get_schoenflies(char symbol[10],
 			   SPGCONST double lattice[3][3],
 			   SPGCONST double position[][3],
 			   const int types[], const int num_atom,
 			   const double symprec);
-
 static int refine_cell(double lattice[3][3],
 		       double position[][3],
 		       int types[],
 		       const int num_atom,
 		       const double symprec);
 
+/*---------*/
+/* kpoints */
+/*---------*/
 static int get_ir_kpoints(int map[],
 			  SPGCONST double kpoints[][3],
 			  const int num_kpoint,
@@ -121,6 +120,13 @@ static int get_triplets_reciprocal_mesh_at_q(int weights[],
 					     SPGCONST int rotations[][3][3]);
 
 
+/*========*/
+/* global */
+/*========*/
+
+/*---------*/
+/* general */
+/*---------*/
 SpglibDataset * spg_get_dataset(SPGCONST double lattice[3][3],
 				SPGCONST double position[][3],
 				const int types[],
@@ -455,6 +461,9 @@ int spgat_refine_cell(double lattice[3][3],
 		     symprec);
 }
 
+/*---------*/
+/* kpoints */
+/*---------*/
 int spg_get_ir_kpoints(int map[],
 		       SPGCONST double kpoints[][3],
 		       const int num_kpoint,
@@ -574,6 +583,33 @@ int spg_get_BZ_triplets_at_q(int triplets[][3],
 				  mesh);
 }
 
+/*--------------------*/
+/* tetrahedron method */
+/*--------------------*/
+void
+spg_get_tetrahedra_relative_grid_address(int relative_grid_address[24][4][3],
+					 SPGCONST double rec_lattice[3][3])
+{
+  thm_get_relative_grid_address(relative_grid_address, rec_lattice);
+}
+
+double
+spg_get_tetrahedra_integration_weight(const double omega,
+				      SPGCONST double tetrahedra_omegas[24][4],
+				      const char function)
+{
+  return thm_get_integration_weight(omega, tetrahedra_omegas, function);
+}
+
+
+
+/*=======*/
+/* local */
+/*=======*/
+
+/*---------*/
+/* general */
+/*---------*/
 static SpglibDataset * get_dataset(SPGCONST double lattice[3][3],
 				   SPGCONST double position[][3],
 				   const int types[],
@@ -949,6 +985,9 @@ static int refine_cell(double lattice[3][3],
   return num_atom_bravais;
 }
 
+/*---------*/
+/* kpoints */
+/*---------*/
 static int get_ir_kpoints(int map[],
 			  SPGCONST double kpoints[][3],
 			  const int num_kpoint,

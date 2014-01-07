@@ -30,7 +30,7 @@ static int main_diagonals[4][3] = {{ 1, 1, 1},  /* 0-7 */
 				   { 1,-1, 1},  /* 2-5 */
 				   { 1, 1,-1}}; /* 3-4 */
 
-static int relative_grid_address[4][24][4][3] = {
+static int db_relative_grid_address[4][24][4][3] = {
   {
     { { 0,  0,  0}, { 1,  0,  0}, { 1,  1,  0}, { 1,  1,  1}, },
     { { 0,  0,  0}, { 1,  0,  0}, { 1,  0,  1}, { 1,  1,  1}, },
@@ -137,7 +137,18 @@ static int relative_grid_address[4][24][4][3] = {
   },
 };
 
-
+static double
+get_integration_weight(const double omega,
+		       SPGCONST double tetrahedra_omegas[24][4],
+		       double (*gn)(const int,
+				    const double,
+				    const double[4]),
+		       double (*IJ)(const int,
+				    const int,
+				    const double,
+				    const double[4]));
+static int get_main_diagonal(SPGCONST double rec_lattice[3][3]);
+static int sort_omegas(double v[4]);
 static double _f(const int n,
 		 const int m,
 		 const double omega,
@@ -237,14 +248,33 @@ void thm_get_relative_grid_address(int relative_grid_address[24][4][3],
     for (j = 0; j < 4; j++) {
       for (k = 0; k < 3; k++) {
 	relative_grid_address[i][j][k] =
-	  relative_grid_address[main_diag_index][i][j][k];
+	  db_relative_grid_address[main_diag_index][i][j][k];
       }
     }
   }
 }
 
-void thm_get_integration_weight(const double omega,
-				SPGCONST double tetrahedra_omegas[24][4])
+double thm_get_integration_weight(const double omega,
+				  SPGCONST double tetrahedra_omegas[24][4],
+				  const char function)
+{
+  if (function == 'I') {
+    return get_integration_weight(omega, tetrahedra_omegas, _g, _I);
+  } else {
+    return get_integration_weight(omega, tetrahedra_omegas, _n, _J);
+  }
+}
+
+static double
+get_integration_weight(const double omega,
+		       SPGCONST double tetrahedra_omegas[24][4],
+		       double (*gn)(const int,
+				    const double,
+				    const double[4]),
+		       double (*IJ)(const int,
+				    const int,
+				    const double,
+				    const double[4]))
 {
   int i, j, k, ci;
   double v[4];
@@ -258,18 +288,18 @@ void thm_get_integration_weight(const double omega,
     }
     ci = sort_omegas(v);
     if (omega < v[0]) {
-      sum += _J(0, ci, omega, v);
+      sum += IJ(0, ci, omega, v) * gn(0, omega, v);
     } else {
       if (omega < v[1]) {
-	sum += _J(1, ci, omega, v);
+	sum += IJ(1, ci, omega, v) * gn(1, omega, v);
       } else {
 	if (omega < v[2]) {
-	  sum += _J(2, ci, omega, v);
+	  sum += IJ(2, ci, omega, v) * gn(2, omega, v);
 	} else {
 	  if (omega < v[3]) {
-	    sum += _J(3, ci, omega, v);
+	    sum += IJ(3, ci, omega, v) * gn(3, omega, v);
 	  } else {
-	    sum += _J(4, ci, omega, v);
+	    sum += IJ(4, ci, omega, v) * gn(4, omega, v);
 	  }
 	}
       }
@@ -300,7 +330,7 @@ static int sort_omegas(double v[4])
     w[3] = v[2];
   } else {
     w[2] = v[2];
-    w[3] = w[3];
+    w[3] = v[3];
   }
 
   if (w[0] > w[2]) {
@@ -331,7 +361,7 @@ static int sort_omegas(double v[4])
   if (v[1] > v[2]) {
     w[1] = v[1];
     v[1] = v[2];
-    v[2] = v[1];
+    v[2] = w[1];
     if (i == 4) {
       i = 2;
     }
@@ -353,13 +383,13 @@ static int get_main_diagonal(SPGCONST double rec_lattice[3][3])
 {
   int i, shortest;
   double length, min_length;
-  doulbe main_diag[3];
+  double main_diag[3];
 
   shortest = 0;
-  mat_multiply_matrix_vector_di3(main_diag, rec_lattice, main_diag[0]);
+  mat_multiply_matrix_vector_di3(main_diag, rec_lattice, main_diagonals[0]);
   min_length = mat_norm_squared_d3(main_diag);
   for (i = 1; i < 4; i++) {
-    mat_multiply_matrix_vector_di3(main_diag, rec_lattice, main_diag[i]);
+    mat_multiply_matrix_vector_di3(main_diag, rec_lattice, main_diagonals[i]);
     length = mat_norm_squared_d3(main_diag);
     if (min_length > length) {
       min_length = length;
