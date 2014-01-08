@@ -75,7 +75,20 @@ class GridPoints:
         self._rotations = rotations
         self._is_symmetry = is_symmetry
 
-        self._set_grid_points()
+        self._ir_qpoints = None
+        self._grid_address = None
+        self._ir_grid_points = None
+        self._ir_weights = None
+        self._grid_mapping_table = None
+        
+        if self._is_shift is None:
+            self._is_symmetry = False
+            self._is_shift = self._shift2boolean(None)
+            self._set_grid_points()
+            self._ir_qpoints += q_mesh_shift / self._mesh
+            self._fit_qpoints_in_BZ()
+        else:
+            self._set_grid_points()
 
     def get_grid_address(self):
         return self._grid_address
@@ -99,8 +112,6 @@ class GridPoints:
         else:
             self._set_ir_qpoints([np.eye(3, dtype='intc')],
                                  is_time_reversal=False)
-        # if fit_in_BZ:
-        #     qpoints_in_BZ = self._fit_qpoints_in_BZ()
     
     def _shift2boolean(self,
                        q_mesh_shift,
@@ -124,11 +135,7 @@ class GridPoints:
                 is_shift = list(np.logical_xor((diff > 0.1),
                                                (self._mesh % 2 == 0)) * 1)
         else:
-            print "*****************************************"
-            print " Only mesh shift of 0 or 1/2 is allowed."
-            print " Gamma center mesh is used."
-            print "*****************************************"
-            is_shift = [0, 0, 0]
+            is_shift = None
 
         return is_shift
         
@@ -144,10 +151,10 @@ class GridPoints:
     def _fit_qpoints_in_BZ(self):
         # reciprocal_lattice: column vectors
         qpoint_set_in_BZ = get_qpoints_in_Brillouin_zone(self._rec_lat,
-                                                         self._qpoints)
+                                                         self._ir_qpoints)
         qpoints_in_BZ = np.array([q_set[0] for q_set in qpoint_set_in_BZ],
                                  dtype='double')
-        self._qpoints = qpoints_in_BZ
+        self._ir_qpoints = qpoints_in_BZ
         
     def _set_ir_qpoints(self,
                         rotations,

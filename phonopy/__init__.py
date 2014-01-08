@@ -520,11 +520,27 @@ class Phonopy:
 
     def get_tetrahedron_mesh_total_DOS(self):
         thm = self._tetrahedron_mesh
-        return thm.get_frequency_points(), thm.get_dos()
+        return thm.get_frequency_points(), thm.get_total_dos()
 
     def get_tetrahedron_mesh_partial_DOS(self):
         thm = self._tetrahedron_mesh
         return thm.get_frequency_points(), thm.get_partial_dos()
+
+    def write_tetrahedron_mesh_total_DOS(self):
+        thm = self._tetrahedron_mesh
+        return thm.write_total_dos()
+
+    def write_tetrahedron_mesh_partial_DOS(self):
+        thm = self._tetrahedron_mesh
+        return thm.write_partial_dos()
+
+    def plot_tetrahedron_mesh_total_DOS(self):
+        thm = self._tetrahedron_mesh
+        return thm.plot_total_dos()
+
+    def plot_tetrahedron_mesh_partial_DOS(self, pdos_indices=None, legend=None):
+        thm = self._tetrahedron_mesh
+        return thm.plot_partial_dos(indices=pdos_indices, legend=legend)
     
     # Thermal property
     def set_thermal_properties(self,

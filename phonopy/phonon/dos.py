@@ -78,7 +78,7 @@ def plot_total_dos(frequency_points,
     
     return plt
 
-def plot_partial_tos(frequency_points,
+def plot_partial_dos(frequency_points,
                      partial_dos,
                      indices=None,
                      legend=None):
@@ -300,7 +300,7 @@ class PartialDos(Dos):
         return self._frequency_points, self._partial_dos
 
     def plot_pdos(self, indices=None, legend=None):
-        return plot_partial_tos(self._frequency_points,
+        return plot_partial_dos(self._frequency_points,
                                 self._partial_dos,
                                 indices=indices,
                                 legend=legend)

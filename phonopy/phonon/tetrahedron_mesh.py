@@ -35,6 +35,7 @@
 import sys
 import numpy as np
 from phonopy.structure.tetrahedron_method import TetrahedronMethod
+from phonopy.phonon.dos import write_total_dos, write_partial_dos, plot_total_dos, plot_partial_dos
 
 class TetrahedronMesh:
     def __init__(self, mesh_object):
@@ -54,16 +55,31 @@ class TetrahedronMesh:
         self._tetrahedra_frequencies = None
         self._integration_weights = None
 
-        self._dos = None
-        self._pdos = None
+        self._total_dos = None
+        self._partial_dos = None
 
         self._prepare()
         
-    def get_dos(self):
-        return self._dos
+    def get_total_dos(self):
+        return self._total_dos
 
     def get_partial_dos(self):
-        return self._pdos
+        return self._partial_dos
+
+    def write_total_dos(self):
+        return write_total_dos(self._frequency_points, self._total_dos)
+
+    def write_partial_dos(self):
+        return write_partial_dos(self._frequency_points, self._partial_dos)
+    
+    def plot_total_dos(self):
+        return plot_total_dos(self._frequency_points, self._total_dos)
+
+    def plot_partial_dos(self, indices=None, legend=None):
+        return plot_partial_dos(self._frequency_points,
+                                self._partial_dos,
+                                indices=indices,
+                                legend=legend)
     
     def get_integration_weights(self):
         return self._integration_weights
@@ -73,7 +89,7 @@ class TetrahedronMesh:
 
     def run_dos(self, value='I', division_number=201):
         self._run_at_frequencies(value=value, division_number=division_number)
-        self._dos = np.sum(
+        self._total_dos = np.sum(
             np.dot(self._integration_weights, self._ir_grid_weights), axis=1)
 
         if self._eigenvectors is not None:
@@ -81,7 +97,8 @@ class TetrahedronMesh:
 
     def _set_pdos(self):
         num_freqs = len(self._frequency_points)
-        self._pdos = np.zeros((self._cell.get_number_of_atoms(), num_freqs))
+        self._partial_dos = np.zeros((self._cell.get_number_of_atoms(),
+                                      num_freqs), dtype='double')
         
         for j in range(len(self._frequency_points)):
             for i, w in enumerate(self._ir_grid_weights):
@@ -89,7 +106,7 @@ class TetrahedronMesh:
                             for vec in (np.abs(self._eigenvectors[i]) ** 2).T]
                 for ib, frac in enumerate(partials):
                     piw = self._integration_weights[j, ib, i] * frac * w
-                    self._pdos[:, j] += piw
+                    self._partial_dos[:, j] += piw
             
     def _run_at_frequencies(self, value='I', division_number=201):
         max_frequency = np.amax(self._frequencies)
