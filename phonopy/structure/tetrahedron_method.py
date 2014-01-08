@@ -33,6 +33,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
+import phonopy.structure.spglib as spg
 
 parallelepiped_vertices = np.array([[0, 0, 0],
                                     [1, 0, 0],
@@ -57,6 +58,19 @@ class TetrahedronMethod:
         self._set_relative_grid_addresses()
 
     def run(self, omega, value='I'):
+        try:
+            import phonopy._phonopy as phonoc
+            return self._run_c(omega, value=value)
+        except ImportError:
+            return self._run_py(omega, value=value)
+
+    def _run_c(self, omega, value='I'):
+        return spg.get_tetrahedra_integration_weight(omega,
+                                                     self._tetrahedra_omegas,
+                                                     function=value)
+            
+    def _run_py(self, omega, value='I'):
+        self._sort_indices = np.argsort(self._tetrahedra_omegas, axis=1)
         sum_value = 0.0
         self._omega = omega
         for omegas, indices, ci in zip(self._tetrahedra_omegas,
@@ -89,7 +103,6 @@ class TetrahedronMethod:
         tetrahedra_omegas: (24, 4) omegas at self._relative_grid_addresses
         """
         self._tetrahedra_omegas = tetrahedra_omegas
-        self._sort_indices = np.argsort(self._tetrahedra_omegas, axis=1)
         
     def _create_tetrahedra(self):
         #
@@ -136,18 +149,26 @@ class TetrahedronMethod:
         self._vertices = tetras
 
     def _set_relative_grid_addresses(self):
-        relative_grid_addresses = np.zeros((24, 4, 3), dtype='intc')
-        central_indices = np.zeros(24, dtype='intc')
-        pos = 0
-        for i in range(8):
-            ppd_shifted = parallelepiped_vertices - parallelepiped_vertices[i]
-            for tetra in self._vertices:
-                if i in tetra:
-                    central_indices[pos] = np.where(tetra==i)[0][0]
-                    relative_grid_addresses[pos, :, :] = ppd_shifted[tetra]
-                    pos += 1
-        self._relative_grid_addresses = relative_grid_addresses
-        self._central_indices = central_indices
+        try:
+            import phonopy._phonopy as phonoc
+            rga = spg.get_tetrahedra_relative_grid_address(
+                self._primitive_vectors)
+            self._relative_grid_addresses = rga
+
+        except ImportError:
+            relative_grid_addresses = np.zeros((24, 4, 3), dtype='intc')
+            central_indices = np.zeros(24, dtype='intc')
+            pos = 0
+            for i in range(8):
+                ppd_shifted = (parallelepiped_vertices -
+                               parallelepiped_vertices[i])
+                for tetra in self._vertices:
+                    if i in tetra:
+                        central_indices[pos] = np.where(tetra==i)[0][0]
+                        relative_grid_addresses[pos, :, :] = ppd_shifted[tetra]
+                        pos += 1
+            self._relative_grid_addresses = relative_grid_addresses
+            self._central_indices = central_indices
 
     def _f(self, n, m):
         return ((self._omega - self._vertices_omegas[m]) /

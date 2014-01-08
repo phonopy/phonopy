@@ -4,8 +4,8 @@ import numpy
 include_dirs_numpy = [numpy.get_include()]
 
 extension = Extension('phonopy._phonopy',
-                      # extra_compile_args=['-fopenmp'],
-                      # extra_link_args=['-lgomp'],
+                      extra_compile_args=['-fopenmp'],
+                      extra_link_args=['-lgomp'],
                       include_dirs=['c/harmonic_h'] + include_dirs_numpy,
                       sources=['c/_phonopy.c',
                                'c/harmonic/dynmat.c'])
@@ -31,7 +31,8 @@ extension_spglib = Extension(
              'c/spglib/spg_database.c',
              'c/spglib/spglib.c',
              'c/spglib/spin.c',
-             'c/spglib/symmetry.c'])
+             'c/spglib/symmetry.c',
+             'c/spglib/tetrahedron_method.c'])
 
 
 setup(name='phonopy',

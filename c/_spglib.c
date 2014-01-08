@@ -8,14 +8,20 @@ static PyObject * get_spacegroup(PyObject *self, PyObject *args);
 static PyObject * get_pointgroup(PyObject *self, PyObject *args);
 static PyObject * refine_cell(PyObject *self, PyObject *args);
 static PyObject * get_symmetry(PyObject *self, PyObject *args);
-static PyObject * get_symmetry_with_collinear_spin(PyObject *self, PyObject *args);
+static PyObject *
+get_symmetry_with_collinear_spin(PyObject *self, PyObject *args);
 static PyObject * find_primitive(PyObject *self, PyObject *args);
 static PyObject * get_ir_kpoints(PyObject *self, PyObject *args);
 static PyObject * get_ir_reciprocal_mesh(PyObject *self, PyObject *args);
 static PyObject * get_stabilized_reciprocal_mesh(PyObject *self, PyObject *args);
 static PyObject * relocate_BZ_grid_address(PyObject *self, PyObject *args);
-static PyObject * get_triplets_reciprocal_mesh_at_q(PyObject *self, PyObject *args);
+static PyObject *
+get_triplets_reciprocal_mesh_at_q(PyObject *self, PyObject *args);
 static PyObject * get_BZ_triplets_at_q(PyObject *self, PyObject *args);
+static PyObject *
+get_tetrahedra_relative_grid_address(PyObject *self, PyObject *args);
+static PyObject *
+get_tetrahedra_integration_weight(PyObject *self, PyObject *args);
 
 static PyMethodDef functions[] = {
   {"dataset", get_dataset, METH_VARARGS,
@@ -44,6 +50,10 @@ static PyMethodDef functions[] = {
    METH_VARARGS, "Triplets on reciprocal mesh points at a specific q-point"},
   {"BZ_triplets_at_q", get_BZ_triplets_at_q,
    METH_VARARGS, "Triplets in reciprocal primitive lattice are transformed to those in BZ."},
+  {"tetrahedra_relative_grid_address", get_tetrahedra_relative_grid_address,
+   METH_VARARGS, "Relative grid addresses of vertices of 24 tetrahedra"},
+  {"tetrahedra_integration_weight", get_tetrahedra_integration_weight,
+   METH_VARARGS, "Integration weight for tetrahedron method"},
   {NULL, NULL, 0, NULL}
 };
 
@@ -653,4 +663,55 @@ static PyObject * get_BZ_triplets_at_q(PyObject *self, PyObject *args)
   return PyInt_FromLong((long) num_ir);
 }
 
+static PyObject *
+get_tetrahedra_relative_grid_address(PyObject *self, PyObject *args)
+{
+  PyArrayObject* relative_grid_address_py;
+  PyArrayObject* reciprocal_lattice_py;
+  if (!PyArg_ParseTuple(args, "OO",
+			&relative_grid_address_py,
+			&reciprocal_lattice_py)) {
+    return NULL;
+  }
 
+  int i, j, k;
+  int *p_relative_grid_address =  (int*)relative_grid_address_py->data;
+  int relative_grid_address[24][4][3];
+  SPGCONST double (*reciprocal_lattice)[3] =
+    (double(*)[3])reciprocal_lattice_py->data;
+
+  spg_get_tetrahedra_relative_grid_address(relative_grid_address,
+					   reciprocal_lattice);
+
+  for (i = 0; i < 24; i++) {
+    for (j = 0; j < 4; j++) {
+      for (k = 0; k < 3; k++) {
+	p_relative_grid_address[i * 12 + j * 3 + k] = 
+	  relative_grid_address[i][j][k];
+      }
+    }
+  }
+  
+  Py_RETURN_NONE;
+}
+
+static PyObject *
+get_tetrahedra_integration_weight(PyObject *self, PyObject *args)
+{
+  double omega;
+  PyArrayObject* tetrahedra_omegas_py;
+  char function;
+  if (!PyArg_ParseTuple(args, "dOc",
+			&omega,
+			&tetrahedra_omegas_py,
+			&function)) {
+    return NULL;
+  }
+
+  double (*tetrahedra_omegas)[4] = (double(*)[4])tetrahedra_omegas_py->data;
+  double iw = spg_get_tetrahedra_integration_weight(omega,
+						    tetrahedra_omegas,
+						    function);
+
+  return PyFloat_FromDouble(iw);
+}

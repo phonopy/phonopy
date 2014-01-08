@@ -276,7 +276,7 @@ get_integration_weight(const double omega,
 				    const double,
 				    const double[4]))
 {
-  int i, j, k, ci;
+  int i, j, ci;
   double v[4];
   double sum;
 

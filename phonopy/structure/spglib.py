@@ -354,3 +354,27 @@ def get_BZ_triplets_at_q(grid_point,
                                       np.array(mesh, dtype='intc').copy())
     return triplets
                            
+def get_tetrahedra_relative_grid_address(reciprocal_lattice):
+    """
+    reciprocal_lattice:
+      column vectors of reciprocal lattice which can be obtained by
+      reciprocal_lattice = np.linalg.inv(bulk.get_cell())
+    """
+    
+    relative_grid_address = np.zeros((24, 4, 3), dtype='intc')
+    spg.tetrahedra_relative_grid_address(relative_grid_address,
+                                         np.array(reciprocal_lattice,
+                                                  dtype='double').copy())
+    return relative_grid_address
+
+    
+def get_tetrahedra_integration_weight(omega,
+                                      tetrahedra_omegas,
+                                      function='I'):
+    return spg.tetrahedra_integration_weight(
+        omega,
+        np.array(tetrahedra_omegas, dtype='double').copy(),
+        function)
+
+                                      
+                                               
