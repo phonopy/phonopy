@@ -51,6 +51,7 @@ from phonopy.phonon.modulation import Modulation
 from phonopy.phonon.qpoints_mode import write_yaml as write_yaml_qpoints
 from phonopy.phonon.irreps import IrReps
 from phonopy.phonon.group_velocity import GroupVelocity
+from phonopy.phonon.tetrahedron_mesh import TetrahedronMesh
 
 class Phonopy:
     def __init__(self,
@@ -97,6 +98,9 @@ class Phonopy:
 
         # set_mesh
         self._mesh = None
+
+        # set_tetrahedron_mesh
+        self._tetrahedron_mesh = None
 
         # set_thermal_properties
         self._thermal_properties = None
@@ -496,6 +500,32 @@ class Phonopy:
     def write_yaml_mesh(self):
         self._mesh.write_yaml()
 
+    # Tetrahedron mesh
+    def set_tetrahedron_mesh(self):
+        if self._mesh is None:
+            print "set_mesh has to be done before set_tetrahedron_mesh"
+            return False
+    
+        self._tetrahedron_mesh = TetrahedronMesh(self._mesh)
+
+    def set_tetrahedron_mesh_DOS(self):
+        if self._tetrahedron_mesh is None:
+            if self._mesh is None:
+                print "set_mesh has to be done before set_tetrahedron_mesh"
+                return False
+            else:
+                self.set_tetrahedron_mesh()
+
+        self._tetrahedron_mesh.run_dos(value='I')
+
+    def get_tetrahedron_mesh_total_DOS(self):
+        thm = self._tetrahedron_mesh
+        return thm.get_frequency_points(), thm.get_dos()
+
+    def get_tetrahedron_mesh_partial_DOS(self):
+        thm = self._tetrahedron_mesh
+        return thm.get_frequency_points(), thm.get_partial_dos()
+    
     # Thermal property
     def set_thermal_properties(self,
                                t_step=10,
@@ -503,17 +533,17 @@ class Phonopy:
                                t_min=0,
                                is_projection=False,
                                cutoff_frequency=None):
-        if self._mesh==None:
+        if self._mesh is None:
             print "set_mesh has to be done before set_thermal_properties"
-            sys.exit(1)
-
-        tp = ThermalProperties(self._mesh.get_frequencies(),
-                               weights=self._mesh.get_weights(),
-                               eigenvectors=self._mesh.get_eigenvectors(),
-                               is_projection=is_projection,
-                               cutoff_frequency=cutoff_frequency)
-        tp.set_thermal_properties(t_step, t_max, t_min)
-        self._thermal_properties = tp
+            return False
+        else:
+            tp = ThermalProperties(self._mesh.get_frequencies(),
+                                   weights=self._mesh.get_weights(),
+                                   eigenvectors=self._mesh.get_eigenvectors(),
+                                   is_projection=is_projection,
+                                   cutoff_frequency=cutoff_frequency)
+            tp.set_thermal_properties(t_step, t_max, t_min)
+            self._thermal_properties = tp
 
     def get_thermal_properties(self):
         temps, fe, entropy, cv = \

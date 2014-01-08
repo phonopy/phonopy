@@ -256,7 +256,7 @@ class PartialDos(Dos):
                 if i > num_atom - 1 or i < 0:
                     print "Your specified atom number is out of range."
                     raise ValueError
-                pdos_sum += self._partial_dos[i:i+1].sum(axis=0)
+                pdos_sum += self._partial_dos[i]
             plots.append(plt.plot(self._freqs, pdos_sum))
 
         if not legend==None:

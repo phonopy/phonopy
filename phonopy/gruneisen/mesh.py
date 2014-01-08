@@ -33,7 +33,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
-from phonopy.phonon.mesh import get_qpoints
+from phonopy.structure.grid_points import get_qpoints
 from phonopy.phonon.thermal_properties import mode_cv
 from phonopy.gruneisen import Gruneisen
 from phonopy.units import THzToEv

@@ -4,7 +4,7 @@ from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNA
 from phonopy.structure.cells import get_supercell
 from anharmonic.file_IO import write_fc3_dat, write_fc2_dat
 from phonopy.units import VaspToTHz
-from phonopy.phonon.mesh import get_qpoints
+from phonopy.structure.grid_points import get_qpoints
 
 class Gruneisen:
     def __init__(self,
