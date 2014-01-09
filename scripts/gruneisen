@@ -62,7 +62,7 @@ def get_phonon(cell_filename,
     else:
         is_nac = True
         
-    phonon.set_post_process(primitive_axis, is_nac=is_nac)
+    phonon.set_post_process(primitive_axis)
     if born_filename:
         phonon.set_nac_params(parse_BORN(phonon.get_primitive(),
                                          filename=born_filename))
