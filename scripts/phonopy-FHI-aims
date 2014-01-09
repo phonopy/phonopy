@@ -33,8 +33,8 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 #
-# 2013/12/22 togo : Follow the changes of Mesh, BandStructure, and Animation
-#                   classes (phonopy-1.8.0)
+# 2014/1/9 togo : Follow the changes of Mesh, BandStructure, and Animation
+#                 classes (phonopy-1.8.0)
 #
 # 2011/11/13 jm : included support for initial magnetic moments -
 #                 (initial_moment tag in geometry.in)
@@ -443,9 +443,7 @@ def post_process_band(phonopy_obj, parameters, frequency_unit_factor, is_eigenve
 from phonopy.phonon.dos import TotalDos
 def post_process_dos(phonopy_obj, mesh_obj, parameters, do_matplotlib=False):
     broad = parameters["broad"]
-    dos_obj = TotalDos(mesh_obj.get_frequencies(),
-                       mesh_obj.get_weights(),
-                       sigma=broad)
+    dos_obj = TotalDos(mesh_obj, sigma=broad)
     fmin = parameters["fstart"]
     fmax = parameters["fend"] 
     fstep = ( fmax - fmin ) / parameters["fpoints"]
@@ -699,7 +697,7 @@ if __name__ == "__main__":
     # (always unit matrix here), i.e. supercell_matrix inversion (as required for Primitive()) is done 
     # in Phonopy.set_post_process() directly.
     print "# preparing calculation of dynamical matrix"
-    phonopy_obj.set_post_process(numpy.eye(3), set_of_forces, is_nac=requested_nac)
+    phonopy_obj.set_post_process(numpy.eye(3), set_of_forces)
     if requested_nac:
         from phonopy.hphonopy.file_IO import parse_BORN
         nac_file = control.phonon["nac"]["file"]
