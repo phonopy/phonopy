@@ -38,20 +38,20 @@ from phonopy.phonon.tetrahedron_mesh import TetrahedronMesh
 
 def write_total_dos(frequency_points,
                     total_dos,
-                    sigma=None):
+                    comment=None):
     fp = open('total_dos.dat', 'w')
-    if sigma is not None:
-        fp.write("# Sigma = %f\n" % sigma)
+    if comment is not None:
+        fp.write("# %s\n" % comment)
 
     for freq, dos in zip(frequency_points, total_dos):
         fp.write("%20.10f%20.10f\n" % (freq, dos))
 
 def write_partial_dos(frequency_points,
                       partial_dos,
-                      sigma=None):
+                      comment=None):
     fp = open('partial_dos.dat', 'w')
-    if sigma is not None:
-        fp.write("# Sigma = %f\n" % sigma)
+    if comment is not None:
+        fp.write("# %s\n" % comment)
         
     for freq, pdos in zip(frequency_points, partial_dos.T):
         fp.write("%20.10f" % freq)
@@ -248,13 +248,13 @@ class TotalDos(Dos):
 
     def write(self):
         if self._tetrahedron_mesh is None:
-            sigma = self._sigma
+            comment = "Sigma = %f" % self._sigma
         else:
-            sigma = None
+            comment = "Tetrahedron method"
             
         write_total_dos(self._frequency_points,
                         self._dos,
-                        sigma=sigma)
+                        comment=comment)
 
     def _get_density_of_states_at_freq(self, f):
         return np.sum(np.dot(
@@ -334,13 +334,13 @@ class PartialDos(Dos):
     
     def write(self):
         if self._tetrahedron_mesh is None:
-            sigma = self._sigma
+            comment = "Sigma = %f" % self._sigma
         else:
-            sigma = None
+            comment = "Tetrahedron method"
             
         write_partial_dos(self._frequency_points,
                           self._partial_dos,
-                          sigma=sigma)
+                          comment=comment)
 
     def _get_partial_dos_at_freq(self, amplitudes, weights):
         num_band = self._frequencies.shape[1]
