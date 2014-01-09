@@ -35,7 +35,6 @@
 import sys
 import numpy as np
 from phonopy.structure.tetrahedron_method import TetrahedronMethod
-from phonopy.phonon.dos import write_total_dos, write_partial_dos, plot_total_dos, plot_partial_dos
 
 class TetrahedronMesh:
     def __init__(self, mesh_object):
@@ -66,59 +65,32 @@ class TetrahedronMesh:
     def get_partial_dos(self):
         return self._partial_dos
 
-    def write_total_dos(self):
-        return write_total_dos(self._frequency_points, self._total_dos)
-
-    def write_partial_dos(self):
-        return write_partial_dos(self._frequency_points, self._partial_dos)
-    
-    def plot_total_dos(self):
-        return plot_total_dos(self._frequency_points, self._total_dos)
-
-    def plot_partial_dos(self, indices=None, legend=None):
-        return plot_partial_dos(self._frequency_points,
-                                self._partial_dos,
-                                indices=indices,
-                                legend=legend)
-    
     def get_integration_weights(self):
         return self._integration_weights
 
     def get_frequency_points(self):
         return self._frequency_points
 
-    def run_dos(self, value='I', division_number=201):
-        self._run_at_frequencies(value=value, division_number=division_number)
-        self._total_dos = np.sum(
-            np.dot(self._integration_weights, self._ir_grid_weights), axis=1)
+    def run_at_frequencies(self,
+                           value='I',
+                           division_number=201,
+                           frequency_points=None):                            
+        if frequency_points is None:
+            max_frequency = np.amax(self._frequencies)
+            min_frequency = np.amin(self._frequencies)
+            self._frequency_points = np.linspace(min_frequency,
+                                                 max_frequency,
+                                                 division_number)
+        else:
+            self._frequency_points = frequency_points
 
-        if self._eigenvectors is not None:
-            self._set_pdos()
 
-    def _set_pdos(self):
-        num_freqs = len(self._frequency_points)
-        self._partial_dos = np.zeros((self._cell.get_number_of_atoms(),
-                                      num_freqs), dtype='double')
         
-        for j in range(len(self._frequency_points)):
-            for i, w in enumerate(self._ir_grid_weights):
-                partials = [vec.reshape(-1, 3).sum(axis=1)
-                            for vec in (np.abs(self._eigenvectors[i]) ** 2).T]
-                for ib, frac in enumerate(partials):
-                    piw = self._integration_weights[j, ib, i] * frac * w
-                    self._partial_dos[:, j] += piw
-            
-    def _run_at_frequencies(self, value='I', division_number=201):
-        max_frequency = np.amax(self._frequencies)
-        min_frequency = np.amin(self._frequencies)
         num_ir_grid_points = len(self._ir_grid_points)
         num_band = self._cell.get_number_of_atoms() * 3
+        num_freqs = len(self._frequency_points)
         self._integration_weights = np.zeros(
-            (division_number, num_band, num_ir_grid_points), dtype='double')
-        self._frequency_points = np.linspace(min_frequency,
-                                             max_frequency,
-                                             division_number)
-
+            (num_freqs, num_band, num_ir_grid_points), dtype='double')
         self._tm = TetrahedronMethod(np.linalg.inv(self._cell.get_cell()))
         relative_grid_address = self._tm.get_tetrahedra()
 

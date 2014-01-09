@@ -135,6 +135,7 @@ parser.set_defaults(
     is_nosym=False,
     is_plusminus_displacements=False,
     is_read_force_constants=False,
+    is_tetrahedron_method=False,
     is_thermal_displacements=False,
     is_thermal_displacement_matrices=False,
     is_thermal_properties=False,
@@ -304,6 +305,9 @@ parser.add_option("--tdm", "--thermal_displacement_matrix",
                   dest="is_thermal_displacement_matrices",
                   action="store_true",
                   help="Output thermal displacement matrices")
+parser.add_option("--thm", "--tetrahedron_method", dest="is_tetrahedron_method",
+                  action="store_true",
+                  help="Use tetrahedron method for DOS/PDOS")
 parser.add_option("--tmax", dest="tmax", type="string",
                   help="Maximum calculated temperature")
 parser.add_option("--qpoints", dest="qpoints", type="string",
@@ -1056,11 +1060,13 @@ elif run_mode == 'mesh':
                 print "Projection direction:", np.array(p_direction)
             print "Calculating PDOS..."
         dos_range = settings.get_dos_range()
-        phonon.set_partial_DOS(sigma=settings.get_sigma(),
-                               freq_min=dos_range['min'],
-                               freq_max=dos_range['max'],
-                               freq_pitch=dos_range['step'],
-                               direction=p_direction)
+        phonon.set_partial_DOS(
+            sigma=settings.get_sigma(),
+            freq_min=dos_range['min'],
+            freq_max=dos_range['max'],
+            freq_pitch=dos_range['step'],
+            tetrahedron_method=settings.get_is_tetrahedron_method(),
+            direction=p_direction)
         phonon.write_partial_DOS()
 
         if options.is_graph_plot:
@@ -1078,10 +1084,13 @@ elif run_mode == 'mesh':
     # Total DOS
     elif (options.is_graph_plot or settings.get_is_dos_mode()):
         dos_range = settings.get_dos_range()
-        phonon.set_total_DOS(sigma=settings.get_sigma(),
-                             freq_min=dos_range['min'],
-                             freq_max=dos_range['max'],
-                             freq_pitch=dos_range['step'])
+        
+        phonon.set_total_DOS(
+            sigma=settings.get_sigma(),
+            freq_min=dos_range['min'],
+            freq_max=dos_range['max'],
+            freq_pitch=dos_range['step'],
+            tetrahedron_method=settings.get_is_tetrahedron_method())
 
         if log_level > 0:
             print "Calculating DOS..."

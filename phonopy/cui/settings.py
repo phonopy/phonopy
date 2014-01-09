@@ -46,24 +46,25 @@ class Settings:
     def __init__(self):
         self._band_paths = None
         self._chemical_symbols = None
-        self._dm_decimals = None
         self._displacement_distance = None
+        self._dm_decimals = None
         self._gv_delta_q = None
-        self._is_eigenvectors = False
         self._is_diagonal_displacement = True
-        self._is_plusminus_displacement = 'auto'
-        self._is_trigonal_displacement = False
-        self._fc_spg_symmetry = False
-        self._is_translational_invariance = False
-        self._is_rotational_invariance = False
-        self._is_nac = False
-        self._is_symmetry = True
+        self._is_eigenvectors = False
         self._is_mesh_symmetry = True
+        self._is_nac = False
+        self._is_rotational_invariance = False
+        self._is_plusminus_displacement = 'auto'
+        self._is_symmetry = True
+        self._is_tetrahedron_method = False
+        self._is_time_symmetry = True
+        self._is_translational_invariance = False
+        self._is_trigonal_displacement = False
         self._fc_decimals = None
         self._fc_spg_symmetry = False
         self._fc_symmetry_iteration = 0
-        self._masses = None
         self._magmoms = None
+        self._masses = None
         self._mesh = None
         self._omega_step = None
         self._primitive_matrix = None
@@ -71,7 +72,6 @@ class Settings:
         self._q_direction = None
         self._sigma = None
         self._supercell_matrix = None
-        self._is_time_symmetry = True
         self._tmax = 1000
         self._tmin = 0
         self._tstep = 10
@@ -99,6 +99,12 @@ class Settings:
 
     def get_is_plusminus_displacement(self):
         return self._is_plusminus_displacement
+
+    def set_is_tetrahedron_method(self, is_thm):
+        self._is_tetrahedron_method = is_thm
+
+    def get_is_tetrahedron_method(self):
+        return self._is_tetrahedron_method
 
     def set_is_trigonal_displacement(self, is_trigonal):
         self._is_trigonal_displacement = is_trigonal
@@ -406,6 +412,11 @@ class ConfParser:
         if params.has_key('sigma'):
             self._settings.set_sigma(params['sigma'])
 
+        # Tetrahedron method
+        if params.has_key('is_tetrahedron_method'):
+            self._settings.set_is_tetrahedron_method(
+                params['is_tetrahedron_method'])
+            
         # Temerature range
         if params.has_key('tmax'):
             self._settings.set_max_temperature(params['tmax'])
@@ -506,6 +517,10 @@ class ConfParser:
             if opt.dest == 'is_plusminus_displacements':
                 if self._options.is_plusminus_displacements:
                     self._confs['pm'] = '.true.'
+
+            if opt.dest == 'is_tetrahedron_method':
+                if self._options.is_tetrahedron_method:
+                    self._confs['tetrahedron'] = '.true.'
 
             if opt.dest == 'is_trigonal_displacements':
                 if self._options.is_trigonal_displacements:
@@ -710,6 +725,12 @@ class ConfParser:
                 val = float(confs['sigma'])
                 self.set_parameter('sigma', val)
 
+            if conf_key == 'tetrahedron':
+                if confs['tetrahedron'] == '.false.':
+                    self.set_parameter('is_tetrahedron_method', False)
+                if confs['tetrahedron'] == '.true.':
+                    self.set_parameter('is_tetrahedron_method', True)
+                
             if conf_key == 'tmin':
                 val = float(confs['tmin'].split()[0])
                 self.set_parameter('tmin', val)

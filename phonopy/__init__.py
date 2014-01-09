@@ -99,8 +99,8 @@ class Phonopy:
         # set_mesh
         self._mesh = None
 
-        # set_tetrahedron_mesh
-        self._tetrahedron_mesh = None
+        # set_tetrahedron_method
+        self._tetrahedron_method = None
 
         # set_thermal_properties
         self._thermal_properties = None
@@ -508,40 +508,6 @@ class Phonopy:
     
         self._tetrahedron_mesh = TetrahedronMesh(self._mesh)
 
-    def set_tetrahedron_mesh_DOS(self):
-        if self._tetrahedron_mesh is None:
-            if self._mesh is None:
-                print "set_mesh has to be done before set_tetrahedron_mesh"
-                return False
-            else:
-                self.set_tetrahedron_mesh()
-
-        self._tetrahedron_mesh.run_dos(value='I')
-
-    def get_tetrahedron_mesh_total_DOS(self):
-        thm = self._tetrahedron_mesh
-        return thm.get_frequency_points(), thm.get_total_dos()
-
-    def get_tetrahedron_mesh_partial_DOS(self):
-        thm = self._tetrahedron_mesh
-        return thm.get_frequency_points(), thm.get_partial_dos()
-
-    def write_tetrahedron_mesh_total_DOS(self):
-        thm = self._tetrahedron_mesh
-        return thm.write_total_dos()
-
-    def write_tetrahedron_mesh_partial_DOS(self):
-        thm = self._tetrahedron_mesh
-        return thm.write_partial_dos()
-
-    def plot_tetrahedron_mesh_total_DOS(self):
-        thm = self._tetrahedron_mesh
-        return thm.plot_total_dos()
-
-    def plot_tetrahedron_mesh_partial_DOS(self, pdos_indices=None, legend=None):
-        thm = self._tetrahedron_mesh
-        return thm.plot_partial_dos(indices=pdos_indices, legend=legend)
-    
     # Thermal property
     def set_thermal_properties(self,
                                t_step=10,
@@ -578,8 +544,8 @@ class Phonopy:
                         freq_min=None,
                         freq_max=None,
                         freq_pitch=None,
+                        tetrahedron_method=False,
                         direction=None):
-
         if self._mesh==None:
             print "set_mesh has to be done before set_thermal_properties"
             sys.exit(1)
@@ -590,15 +556,12 @@ class Phonopy:
             direction_cart = np.dot(direction, self._primitive.get_cell())
         else:
             direction_cart = None
-        pdos = PartialDos(self._mesh.get_frequencies(),
-                          self._mesh.get_weights(),
-                          self._mesh.get_eigenvectors(),
+        pdos = PartialDos(self._mesh,
                           sigma=sigma,
+                          tetrahedron_method=tetrahedron_method,
                           direction=direction_cart)
-        pdos.set_draw_area(freq_min,
-                           freq_max,
-                           freq_pitch)
-        pdos.calculate()
+        pdos.set_draw_area(freq_min, freq_max, freq_pitch)
+        pdos.run()
         self._pdos = pdos
 
     def get_partial_DOS(self):
@@ -626,19 +589,18 @@ class Phonopy:
                       sigma=None,
                       freq_min=None,
                       freq_max=None,
-                      freq_pitch=None):
+                      freq_pitch=None,
+                      tetrahedron_method=False):
 
         if self._mesh==None:
             print "set_mesh has to be done before set_thermal_properties"
             sys.exit(1)
 
-        total_dos = TotalDos(self._mesh.get_frequencies(),
-                             self._mesh.get_weights(),
-                             sigma=sigma)
-        total_dos.set_draw_area(freq_min,
-                                freq_max,
-                                freq_pitch)
-        total_dos.calculate()
+        total_dos = TotalDos(self._mesh,
+                             sigma=sigma,
+                             tetrahedron_method=tetrahedron_method)
+        total_dos.set_draw_area(freq_min, freq_max, freq_pitch)
+        total_dos.run()
         self._total_dos = total_dos
 
     def get_total_DOS(self):
