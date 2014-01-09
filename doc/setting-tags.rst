@@ -371,6 +371,11 @@ by the difference of maximum and minimum frequencies divided by 100.
 
 .. _debye_model_tag:
 
+``TETRAHEDRON``
+~~~~~~~~~~~~~~~~
+
+Tetrahedron method is used instead of smearing method.
+
 ``DEBYE_MODEL``
 ~~~~~~~~~~~~~~~~
 

@@ -3,9 +3,13 @@
 Change Log
 ==========
 
-Dec-11-2013: Version 1.7.6
+Jan-9-2014: Version 1.8.0
 ---------------------------
 
+This version is dangerous. A lot of code is modified internally.
+
+* Tetrahedron method is implemented for total and partial DOS.
+  This is activated by ``--thm`` option.
 * The display output with ``-v`` option is enriched.
 * Symmetrization for ``outcar-born`` is implemented (Experimental).
 * Cutoff-frequency ``CUTOFF_FREQUENCY`` (``--cutoff_freq``) is

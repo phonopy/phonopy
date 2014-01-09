@@ -34,6 +34,7 @@ tags:
 * ``-t`` (``TPROP``)
 * ``--td`` (``TDISP``)
 * ``--tdm`` (``TDISPMAT``)
+* ``--thm``, ``--tetrahedron_method`` (``TETRAHEDRON``)
 * ``--tmin`` (``TMIN``)
 * ``--tmax`` (``TMAX``)
 * ``--tstep`` (``TSTEP``)
