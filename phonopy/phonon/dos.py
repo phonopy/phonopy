@@ -314,7 +314,7 @@ class PartialDos(Dos):
         thm.run_at_frequencies(value='I',
                                frequency_points=self._frequency_points)
         iw = thm.get_integration_weights()
-        for j in range(len(self._frequency_points)):
+        for j in range(num_freqs):
             for i, w in enumerate(self._weights):
                 for ib, frac in enumerate(self._eigvecs2[i].T):
                     self._partial_dos[:, j] += iw[j, ib, i] * frac * w
