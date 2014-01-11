@@ -4,7 +4,9 @@
 #ifndef __mathfunc_H__
 #define __mathfunc_H__
 
+#ifndef SPGCONST
 #define SPGCONST
+#endif
 
 typedef struct {
   int size;

@@ -11,6 +11,8 @@
 #include "phonon3_h/interaction.h"
 #include "phonon3_h/imag_self_energy.h"
 #include "other_h/isotope.h"
+#include "spglib_h/tetrahedron_method.h"
+
 
 static PyObject * py_get_jointDOS(PyObject *self, PyObject *args);
 
@@ -25,6 +27,7 @@ static PyObject * py_phonopy_zheev(PyObject *self, PyObject *args);
 static PyObject * py_get_isotope_strength(PyObject *self, PyObject *args);
 static PyObject * py_set_permutation_symmetry_fc3(PyObject *self,
 						  PyObject *args);
+static PyObject * py_tetrahedron_method(PyObject *self,	PyObject *args);
 
 static PyMethodDef functions[] = {
   {"joint_dos", py_get_jointDOS, METH_VARARGS, "Calculate joint density of states"},
@@ -37,6 +40,7 @@ static PyMethodDef functions[] = {
   {"zheev", py_phonopy_zheev, METH_VARARGS, "Lapack zheev wrapper"},
   {"isotope_strength", py_get_isotope_strength, METH_VARARGS, "Isotope scattering strength"},
   {"permutation_symmetry_fc3", py_set_permutation_symmetry_fc3, METH_VARARGS, "Set permutation symmetry for fc3"},
+  {"tetrahedron_method", py_tetrahedron_method, METH_VARARGS, "Tetrahedron method for Brillouin zone integration"},
   {NULL, NULL, 0, NULL}
 };
 
@@ -559,6 +563,26 @@ static PyObject * py_set_permutation_symmetry_fc3(PyObject *self, PyObject *args
   Py_RETURN_NONE;
 }
 
+static PyObject * py_tetrahedron_method(PyObject *self, PyObject *args)
+{
+  double omega;
+  PyArrayObject* tetrahedra_omegas_py;
+  char function;
+  if (!PyArg_ParseTuple(args, "dOc",
+			&omega,
+			&tetrahedra_omegas_py,
+			&function)) {
+    return NULL;
+  }
+
+  double (*tetrahedra_omegas)[4] = (double(*)[4])tetrahedra_omegas_py->data;
+  double iw = thm_get_integration_weight(omega,
+					 tetrahedra_omegas,
+					 function);
+
+  return PyFloat_FromDouble(iw);
+}
+
 static PyObject * py_phonopy_zheev(PyObject *self, PyObject *args)
 {
   PyArrayObject* dynamical_matrix;
@@ -594,4 +618,5 @@ static PyObject * py_phonopy_zheev(PyObject *self, PyObject *args)
   
   return PyInt_FromLong((long) info);
 }
+
 

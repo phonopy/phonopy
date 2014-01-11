@@ -6,7 +6,9 @@
 
 /* SPGCONST is used instead of 'const' so to avoid gcc warning. */
 /* However there should be better way than this way.... */
+#ifndef SPGCONST
 #define SPGCONST
+#endif
 
 /*
   ------------------------------------------------------------------
