@@ -11,7 +11,6 @@ def get_triplets_at_q(grid_point,
         mesh,
         point_group,
         is_time_reversal)
-    grid_address_orig = grid_address.copy()
     bz_grid_address, bz_map = spg.relocate_BZ_grid_address(grid_address,
                                                            mesh,
                                                            primitive_lattice)
