@@ -12,11 +12,18 @@ Parlinski-Li-Kawazoe method
 - \K. Parlinski, Z. Q. Li, and Y. Kawazoe, Phys. Rev. Lett. 78, 4063 (1997)
 
 Parlinski-Li-Kawazoe method is based on the supercell approach with
-the finite displacement method. The calculation and symmetrization of
-force constants are executed by using singular-value decomposition
-(pseudo-inverse). The key of this method would be the matrix
-formulations of equations, which leads to the coherent and flexible
-implementation.
+the finite displacement method. 
+
+Force constants are calculated using Moore–Penrose pseudoinverse by
+fitting symmetry reduced elements of force constans to the linear
+relations between atomic forces and atomic displacements. The
+pseudoinverse is easy to handle arbitrary number of displacements
+amplitudes and directions, and can rely on the exisiting library,
+e.g., LAPACK.
+
+In phonopy, the symmetry reduced elements of force constants are not
+prepared. Simply all the elements of force constans between atoms in
+a primitive cell and the supercell are fit. 
 
 .. _reference_NAC:
 
@@ -46,12 +53,20 @@ Other methods for calculating force constants
 
 .. _reference_small_displacement:
 
+Parlinsk-Li-Kawazoe method
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+`PHONON <http://wolf.ifj.edu.pl/phonon/>`_ is the original
+implementation of the Parlinsk-Li-Kawazoe method.
+
 Small displacement method
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - Dario Alfè, Computer Physics Communications, 180, 2622 (2009)
 
-PHON is based on the small displacement method.
+`PHON <http://www.homepages.ucl.ac.uk/~ucfbdxa/phon/>`_ is based on the
+small displacement method.
+
 
 .. _reference_dfpt:
 
@@ -60,10 +75,11 @@ DFPT
 
 - Xavier Gonze and Changyol Lee, Phys. Rev. B 55, 10355 (1997)
 
-The most famous implementation is Abinit. Currently there are many
-implementations of DFPT. VASP can calculate force constants using DFPT
-however only at Gamma-point.
-
+Currently there are several many implementations such as `Abinit
+<http://www.abinit.org/>`_, `Quantum espresso
+<http://www.quantum-espresso.org/>`_, `Elk
+<http://elk.sourceforge.net/>`_, etc.  VASP can calculate force constants
+using DFPT however only at Gamma-point.
 
 For the study of basics
 ------------------------
