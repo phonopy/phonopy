@@ -254,7 +254,7 @@ def relocate_BZ_grid_address(grid_address,
     Number of ir-grid-points inside Brillouin zone is returned. 
     It is assumed that the following arrays have the shapes of 
       bz_grid_address[prod(mesh + 1)][3] 
-      bz_map[prod(mesh * 2 - 1)] 
+      bz_map[prod(mesh * 2)] 
     where grid_address[prod(mesh)][3]. 
     Each element of grid_address is mapped to each element of 
     bz_grid_address with keeping element order. bz_grid_address has 
@@ -271,13 +271,13 @@ def relocate_BZ_grid_address(grid_address,
     points stored in bz_grid_address is returned. 
     bz_map is used to recover grid point index expanded to include BZ 
     surface from grid address. The grid point indices are mapped to 
-    (mesh[0] * 2 -1) x (mesh[1] * 2 -1) x (mesh[2] * 2 -1) space (bz_map).
+    (mesh[0] * 2) x (mesh[1] * 2) x (mesh[2] * 2) space (bz_map).
     """
     
     bz_grid_address = np.zeros(
         ((mesh[0] + 1) * (mesh[1] + 1) * (mesh[2] + 1), 3), dtype='intc')
     bz_map = np.zeros(
-        (2 * mesh[0] - 1) * (2 * mesh[1] - 1) * (2 * mesh[2] - 1), dtype='intc')
+        (2 * mesh[0]) * (2 * mesh[1]) * (2 * mesh[2]), dtype='intc')
     num_bz_ir = spg.BZ_grid_address(
         bz_grid_address,
         bz_map,

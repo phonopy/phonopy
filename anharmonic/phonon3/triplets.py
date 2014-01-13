@@ -72,8 +72,8 @@ def get_grid_point_from_address(address, mesh):
 def get_bz_grid_point_from_address(address, mesh, bz_map):
     # X runs first in XYZ
     # (*In spglib, Z first is possible with MACRO setting.)
-    # 2m-1 is defined in kpoint.c of spglib.
-    m = 2 * np.array(mesh, dtype='intc') - 1
+    # 2m is defined in kpoint.c of spglib.
+    m = 2 * np.array(mesh, dtype='intc')
     return bz_map[get_grid_point_from_address(address, m)]
 
 def invert_grid_point(grid_point, mesh, grid_address, bz_map):
