@@ -50,6 +50,8 @@ def get_jointDOS(fixed_grid_points,
 
     jointDOS = []
     omegas = []
+    reciprocal_lattice = np.linalg.inv(primitive.get_cell())
+    num_band = primitive.get_number_of_atoms() * 3
     for gp in fixed_grid_points:
         if is_nosym:
             if log_level:
@@ -58,13 +60,16 @@ def get_jointDOS(fixed_grid_points,
             
             (triplets_at_q,
              weights_at_q,
-             grid_points) = get_nosym_triplets_at_q(gp, mesh)
+             grid_points) = get_nosym_triplets_at_q(
+                 gp,
+                 mesh,
+                 reciprocal_lattice)
         else:
             triplets_at_q, weights_at_q, grid_points = get_triplets_at_q(
                 gp,
                 mesh,
                 symmetry.get_pointgroup_operations(),
-                True)
+                reciprocal_lattice)
 
         if log_level:
             print "Grid point (%d):" % gp,  grid_points[gp]
@@ -76,20 +81,14 @@ def get_jointDOS(fixed_grid_points,
             print "Sum of weights:", weights_at_q.sum()
             sys.stdout.flush()
 
-        freqs = np.zeros((len(triplets_at_q), 3,
-                          primitive.get_number_of_atoms() * 3),
-                         dtype='double')
+        freqs = np.zeros((len(triplets_at_q), 3, num_band), dtype='double')
         
         for i, g3 in enumerate(triplets_at_q):
-            q3 = []
-            for g in g3:
-                q3.append(grid_points[g].astype(float) / mesh)
-            q3 = np.array(q3)
-
+            q3 = grid_points[g3] / np.array(mesh, dtype='double')
             for j, q in enumerate(q3):
                 dm.set_dynamical_matrix(q)
                 val = np.linalg.eigvalsh(dm.get_dynamical_matrix())
-                freqs[i,j] = np.sqrt(np.abs(val)) * factor * frequency_factor
+                freqs[i, j] = np.sqrt(np.abs(val)) * factor * frequency_factor
 
         omegas_at_gp = np.arange(0, np.max(freqs) * 2 + sigma * 4,
                                  frequency_step)
