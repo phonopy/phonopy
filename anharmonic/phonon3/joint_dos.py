@@ -131,19 +131,23 @@ class JointDos:
         # print np.nonzero(multi > 1)[0]
         
         num_triplets = len(self._triplets_at_q)
-        vertices = np.zeros((num_triplets, 2, 24, 4), dtype='intc')
+        self._vertices = np.zeros((num_triplets, 24, 4, 2), dtype='intc')
         for i, tp in enumerate(self._triplets_at_q):
-            for j in range(2):
-                adrs = self._grid_address[tp[j + 1]] + relative_adrs
+            for j, adrs_shift in enumerate((relative_adrs, -relative_adrs)):
+                adrs = self._grid_address[tp[j + 1]] + adrs_shift
                 bz_gp = np.dot(adrs % bzmesh, bz_grid_order)
                 gp = np.dot(adrs % self._mesh, grid_order)
                 vgp = self._bz_map[bz_gp]
-                vertices[i, j] = vgp + (vgp == -1) * (gp + 1)
+                self._vertices[i, :, :, j] = vgp + (vgp == -1) * (gp + 1)
+
+        self._set_phonon_at_grid_points(
+            np.array([self._triplets_at_q[0][0]], dtype='intc'))
+        self._set_phonon_at_grid_points(self._vertices.flatten())
 
     def _smearing_method(self):
         import anharmonic._phono3py as phono3c
 
-        self._set_phonon_at_triplets()
+        self._set_phonon_at_grid_points(self._triplets_at_q.flatten())
         f_max = np.max(self._frequencies) * 2 + self._sigma * 4
         f_min = np.min(self._frequencies) * 2 - self._sigma * 4
         freq_points = np.arange(f_min, f_max, self._frequency_step)
@@ -194,12 +198,12 @@ class JointDos:
 
         return triplets_at_q, weights_at_q, grid_address, bz_map
 
-    def _set_phonon_at_triplets(self):
+    def _set_phonon_at_grid_points(self, grid_points):
         set_phonon_c(self._dm,
                      self._frequencies,
                      self._eigenvectors,
                      self._phonon_done,
-                     self._triplets_at_q.flatten(),
+                     grid_points,
                      self._grid_address,
                      self._mesh,
                      self._frequency_factor_to_THz,
