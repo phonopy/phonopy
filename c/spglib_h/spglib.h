@@ -306,7 +306,7 @@ int spg_get_stabilized_reciprocal_mesh(int grid_address[][3],
 /* Number of ir-grid-points inside Brillouin zone is returned. */
 /* It is assumed that the following arrays have the shapes of */
 /*   bz_grid_address[prod(mesh + 1)][3] */
-/*   bz_map[prod(mesh * 2 - 1)] */
+/*   bz_map[prod(mesh * 2)] */
 /* where grid_address[prod(mesh)][3]. */
 /* Each element of grid_address is mapped to each element of */
 /* bz_grid_address with keeping element order. bz_grid_address has */
@@ -323,7 +323,7 @@ int spg_get_stabilized_reciprocal_mesh(int grid_address[][3],
 /* points stored in bz_grid_address is returned. */
 /* bz_map is used to recover grid point index expanded to include BZ */
 /* surface from grid address. The grid point indices are mapped to */
-/* (mesh[0] * 2 -1) x (mesh[1] * 2 -1) x (mesh[2] * 2 -1) space (bz_map). */
+/* (mesh[0] * 2) x (mesh[1] * 2) x (mesh[2] * 2) space (bz_map). */
 int spg_relocate_BZ_grid_address(int bz_grid_address[][3],
 				 int bz_map[],
 				 SPGCONST int grid_address[][3],

@@ -558,7 +558,7 @@ get_ir_reciprocal_mesh_openmp(int grid_address[][3],
 
 /* Relocate grid addresses to first Brillouin zone */
 /* bz_grid_address[prod(mesh + 1)][3] */
-/* bz_map[prod(mesh * 2 - 1)] */
+/* bz_map[prod(mesh * 2)] */
 static int relocate_BZ_grid_address(int bz_grid_address[][3],
 				    int bz_map[],
 				    SPGCONST int grid_address[][3],
@@ -573,7 +573,7 @@ static int relocate_BZ_grid_address(int bz_grid_address[][3],
 
   tolerance = get_tolerance_for_BZ_reduction(rec_lattice);
   for (i = 0; i < 3; i++) {
-    bzmesh[i] = mesh[i] * 2 - 1;
+    bzmesh[i] = mesh[i] * 2;
     bzmesh_double[i] = bzmesh[i] * 2;
   }
   for (i = 0; i < bzmesh[0] * bzmesh[1] * bzmesh[2]; i++) {
@@ -761,7 +761,7 @@ static int get_BZ_triplets_at_q(int triplets[][3],
   int *ir_grid_points;
 
   for (i = 0; i < 3; i++) {
-    bzmesh[i] = mesh[i] * 2 - 1;
+    bzmesh[i] = mesh[i] * 2;
     bzmesh_double[i] = bzmesh[i] * 2;
   }
 
@@ -824,21 +824,21 @@ static void get_third_q_of_triplets_at_q(int address[3][3],
     for (j = 0; j < 3; j++) {
       address_double[j] = (address[2][j] + search_space[i][j] * mesh[j]) * 2;
     }
-    if (abs(address_double[0] > bzmesh[0]) ||
-	abs(address_double[1] > bzmesh[1]) ||
-	abs(address_double[2] > bzmesh[2]) ||
-	abs(address_double[0] < -bzmesh[0]) ||
-	abs(address_double[1] < -bzmesh[1]) ||
-	abs(address_double[2] < -bzmesh[2])) { /* outside extended zone */
-      bzgp[i] = -1;
-      continue;
-    }
-    for (j = 0; j < 3; j++) {
-      if (address_double[j] < 0) {
-	address_double[j] += bzmesh_double[j];
+    if ((address_double[0] < bzmesh[0]) &&
+	(address_double[1] < bzmesh[1]) &&
+	(address_double[2] < bzmesh[2]) &&
+	(address_double[0] > -bzmesh[0]) &&
+	(address_double[1] > -bzmesh[1]) &&
+	(address_double[2] > -bzmesh[2])) { /* inside extended zone */
+      for (j = 0; j < 3; j++) {
+	if (address_double[j] < 0) {
+	  address_double[j] += bzmesh_double[j];
+	}
       }
+      bzgp[i] = bz_map[get_grid_point(address_double, bzmesh)];
+    } else {
+      bzgp[i] = -1;
     }
-    bzgp[i] = bz_map[get_grid_point(address_double, bzmesh)];
   }
 
   for (i = 0; i < 27; i++) {
