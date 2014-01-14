@@ -122,11 +122,24 @@ class JointDos:
     def _collect_tetrahedra_grid_points(self):
         relative_adrs = self._tetrahedron_method.get_tetrahedra()
         bzmesh = self._mesh * 2
+        grid_order = [1, self._mesh[0], self._mesh[0] * self._mesh[1]]
         bz_grid_order = [1, bzmesh[0], bzmesh[0] * bzmesh[1]]
 
-        print self._bz_map
-        print len(self._bz_map)
-    
+        # multi = np.zeros(np.prod(self._mesh), dtype='intc')
+        # for gp in np.dot(self._grid_address % self._mesh, grid_order):
+        #     multi[gp] += 1
+        # print np.nonzero(multi > 1)[0]
+        
+        num_triplets = len(self._triplets_at_q)
+        vertices = np.zeros((num_triplets, 2, 24, 4), dtype='intc')
+        for i, tp in enumerate(self._triplets_at_q):
+            for j in range(2):
+                adrs = self._grid_address[tp[j + 1]] + relative_adrs
+                bz_gp = np.dot(adrs % bzmesh, bz_grid_order)
+                gp = np.dot(adrs % self._mesh, grid_order)
+                vgp = self._bz_map[bz_gp]
+                vertices[i, j] = vgp + (vgp == -1) * (gp + 1)
+
     def _smearing_method(self):
         import anharmonic._phono3py as phono3c
 
@@ -167,7 +180,7 @@ class JointDos:
                  gp,
                  self._mesh,
                  self._reciprocal_lattice,
-                 with_bz_map)
+                 with_bz_map=True)
         else:
             (triplets_at_q,
              weights_at_q,
