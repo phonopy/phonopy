@@ -66,7 +66,7 @@ class Settings:
         self._magmoms = None
         self._masses = None
         self._mesh = None
-        self._omega_step = None
+        self._frequency_pitch = None
         self._primitive_matrix = None
         self._qpoints = None
         self._q_direction = None
@@ -238,11 +238,11 @@ class Settings:
     def get_sigma(self):
         return self._sigma
 
-    def set_omega_step(self, omega_step):
-        self._omega_step = omega_step
+    def set_frequency_pitch(self, frequency_pitch):
+        self._frequency_pitch = frequency_pitch
 
-    def get_omega_step(self):
-        return self._omega_step
+    def get_frequency_pitch(self):
+        return self._frequency_pitch
 
     def set_max_temperature(self, tmax):
         self._tmax = tmax
@@ -405,8 +405,8 @@ class ConfParser:
                 self._settings.set_qpoints(params['qpoints'])
 
         # Spectram drawing step
-        if params.has_key('omega_step'):
-            self._settings.set_omega_step(params['omega_step'])
+        if params.has_key('frequency_pitch'):
+            self._settings.set_frequency_pitch(params['frequency_pitch'])
 
         # Smearing width
         if params.has_key('sigma'):
@@ -534,9 +534,9 @@ class ConfParser:
                 if self._options.mesh_numbers:
                     self._confs['mesh_numbers'] = self._options.mesh_numbers
 
-            if opt.dest == 'omega_step':
-                if self._options.omega_step:
-                    self._confs['omega_step'] = self._options.omega_step
+            if opt.dest == 'frequency_pitch':
+                if self._options.frequency_pitch:
+                    self._confs['frequency_pitch'] = self._options.frequency_pitch
 
             if opt.dest == 'primitive_axis':
                 if self._options.primitive_axis:
@@ -717,9 +717,9 @@ class ConfParser:
                 else:
                     self.set_parameter('q_direction', q_direction)
 
-            if conf_key == 'omega_step':
-                val = float(confs['omega_step'])
-                self.set_parameter('omega_step', val)
+            if conf_key == 'frequency_pitch':
+                val = float(confs['frequency_pitch'])
+                self.set_parameter('frequency_pitch', val)
 
             if conf_key == 'sigma':
                 val = float(confs['sigma'])
@@ -879,12 +879,12 @@ class PhonopySettings(Settings):
     def set_dos_range(self, dos_min, dos_max, dos_step):
         self._dos_range = {'min':  dos_min,
                            'max':  dos_max}
-        self._omega_step = dos_step
+        self._frequency_pitch = dos_step
 
     def get_dos_range(self):
         dos_range = {'min': self._dos_range['min'],
                      'max': self._dos_range['max'],
-                     'step': self._omega_step}
+                     'step': self._frequency_pitch}
         return dos_range
 
     def set_fits_Debye_model(self, fits_Debye_model):
