@@ -155,7 +155,7 @@ parser.set_defaults(band_indices=None,
                     read_fc2_extra=False,
                     read_fc3=False,
                     read_gamma=False,
-                    freq_step=None,
+                    frequency_pitch=None,
                     output_filename=None,
                     qpoints=None,
                     quiet=False,
@@ -246,8 +246,8 @@ parser.add_option("--freepath", dest="max_freepath", type="float",
                   help="Maximum mean free path of phonon in meter")
 parser.add_option("--freq_scale", dest="freq_scale", type="float",
                   help="Scale factor is multiplied to frequencies only, i.e., changes frequencies but assumed not to change the physical unit")
-parser.add_option("--freq_step", dest="freq_step", type="float",
-                  help="Pitch of frequency calculated")
+parser.add_option("--freq_pitch", dest="frequency_pitch", type="float",
+                  help="Pitch in frequency for spectrum")
 parser.add_option("--gamma_option", dest="gamma_option", type="int",
                   help="Option for the test of imaginary part of self energy")
 parser.add_option("--gp", "--grid_points",
@@ -837,10 +837,10 @@ elif settings.get_mesh_numbers() is not None:
     else:
         multiple_sigmas = settings.get_multiple_sigmas()
 
-    if settings.get_omega_step() is None:
+    if settings.get_frequency_pitch() is None:
         freq_step = 0.1 * freq_factor
     else:
-        freq_step = settings.get_omega_step()
+        freq_step = settings.get_frequency_pitch()
 
     if options.freq_scale is None:
         freq_scale = 1.0
