@@ -151,10 +151,11 @@ class Interaction:
         mesh_with_boundary = self._mesh + 1
         num_grid = np.prod(mesh_with_boundary)
         num_triplets = len(self._triplets_at_q)
-        self._phonon_done = np.zeros(num_grid, dtype='byte')
-        self._frequencies = np.zeros((num_grid, num_band), dtype='double')
-        self._eigenvectors = np.zeros((num_grid, num_band, num_band),
-                                      dtype='complex128')
+        if self._phonon_done is None:
+            self._phonon_done = np.zeros(num_grid, dtype='byte')
+            self._frequencies = np.zeros((num_grid, num_band), dtype='double')
+            self._eigenvectors = np.zeros((num_grid, num_band, num_band),
+                                          dtype='complex128')
         self._interaction_strength = np.zeros(
             (num_triplets, len(self._band_indices), num_band, num_band),
             dtype='double')

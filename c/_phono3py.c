@@ -485,35 +485,39 @@ static PyObject * py_get_isotope_strength(PyObject *self, PyObject *args)
 static PyObject * py_get_jointDOS(PyObject *self, PyObject *args)
 {
   PyArrayObject* jointdos;
-  PyArrayObject* omegas;
-  PyArrayObject* weights;
-  PyArrayObject* frequencies;
+  PyArrayObject* frequency_points_py;
+  PyArrayObject* triplets_py;
+  PyArrayObject* triplets_weights_py;
+  PyArrayObject* frequencies_py;
   double sigma;
 
-  if (!PyArg_ParseTuple(args, "OOOOd",
+  if (!PyArg_ParseTuple(args, "OOOOOd",
 			&jointdos,
-			&omegas,
-			&weights,
-			&frequencies,
+			&frequency_points_py,
+			&triplets_py,
+			&triplets_weights_py,
+			&frequencies_py,
 			&sigma)) {
     return NULL;
   }
   
   double* jdos = (double*)jointdos->data;
-  const double* o = (double*)omegas->data;
-  const int* w = (int*)weights->data;
-  const double* f = (double*)frequencies->data;
-  const int num_band = (int)frequencies->dimensions[2];
-  const int num_omega = (int)omegas->dimensions[0];
-  const int num_triplet = (int)weights->dimensions[0];
+  const double* freq_points = (double*)frequency_points_py->data;
+  const int* triplets = (int*)triplets_py->data;
+  const int* weights = (int*)triplets_weights_py->data;
+  const double* frequencies = (double*)frequencies_py->data;
+  const int num_band = (int)frequencies_py->dimensions[1];
+  const int num_fpoints = (int)frequency_points_py->dimensions[0];
+  const int num_triplet = (int)triplets_weights_py->dimensions[0];
 
   get_jointDOS(jdos,
-	       num_omega,
+	       num_fpoints,
 	       num_triplet,
 	       num_band,
-	       o,
-	       f,
-	       w,
+	       freq_points,
+	       frequencies,
+	       triplets,
+	       weights,
 	       sigma);
   
   Py_RETURN_NONE;

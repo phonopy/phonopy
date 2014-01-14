@@ -24,11 +24,12 @@ void get_imag_self_energy_at_bands(double *imag_self_energy,
 				   const double unit_conversion_factor,
 				   const double cutoff_frequency);
 int get_jointDOS(double *jdos,
-		 const int num_omega,
+		 const int num_fpoints,
 		 const int num_triplet,
 		 const int num_band,
-		 const double *o,
-		 const double *f,
-		 const int *w,
+		 const double *frequency_points,
+		 const double *frequencies,
+		 const int *triplets,
+		 const int *weights,
 		 const double sigma);
 #endif

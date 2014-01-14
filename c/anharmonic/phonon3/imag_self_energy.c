@@ -101,26 +101,29 @@ void get_imag_self_energy_at_bands(double *imag_self_energy,
 }
 
 int get_jointDOS(double *jdos,
-		 const int num_omega,
+		 const int num_fpoints,
 		 const int num_triplet,
 		 const int num_band,
-		 const double *o,
-		 const double *f,
-		 const int *w,
+		 const double *frequency_points,
+		 const double *frequencies,
+		 const int *triplets,
+		 const int *weights,
 		 const double sigma)
 {
-  int i, j, k, l;
-  double f2, f3;
+  int i, j, k, l, gp1, gp2;
+  double f1, f2;
 
-#pragma omp parallel for private(j, k, l, f2, f3)
-  for (i = 0; i < num_omega; i++) {
+/* #pragma omp parallel for private(j, k, l, f1, f2, gp1, gp2) */
+  for (i = 0; i < num_fpoints; i++) {
     jdos[i] = 0.0;
     for (j = 0; j < num_triplet; j++) {
       for (k = 0; k < num_band; k++) {
 	for (l = 0; l < num_band; l++) {
-	  f2 = f[j * 3 * num_band + num_band + k];
-	  f3 = f[j * 3 * num_band + 2 * num_band + l];
-	  jdos[i] += gaussian(f2 + f3 - o[i], sigma) * w[j];
+	  gp1 = triplets[j * 3 + 1];
+	  gp2 = triplets[j * 3 + 2];
+	  f1 = frequencies[gp1 * num_band + k];
+	  f2 = frequencies[gp2 * num_band + l];
+	  jdos[i] += gaussian(f1 + f2 - frequency_points[i], sigma) * weights[j];
 	}
       }
     }

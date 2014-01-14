@@ -5,7 +5,8 @@ def get_triplets_at_q(grid_point,
                       mesh,
                       point_group, # real space point group of space group
                       primitive_lattice, # column vectors
-                      is_time_reversal=True):
+                      is_time_reversal=True,
+                      with_bz_map=False):
     weights, third_q, grid_address = spg.get_triplets_reciprocal_mesh_at_q(
         grid_point,
         mesh,
@@ -26,9 +27,15 @@ def get_triplets_at_q(grid_point,
         "Num grid points %d, sum of weight %d" % (
                     np.prod(mesh), ir_weights.sum())
 
-    return triplets_at_q, ir_weights, bz_grid_address
+    if with_bz_map:
+        return triplets_at_q, ir_weights, bz_grid_address, bz_map
+    else:
+        return triplets_at_q, ir_weights, bz_grid_address
 
-def get_nosym_triplets_at_q(grid_point, mesh, primitive_lattice):
+def get_nosym_triplets_at_q(grid_point,
+                            mesh,
+                            primitive_lattice,
+                            with_bz_map=False):
     grid_address = get_grid_address(mesh)
     weights = np.ones(len(grid_address), dtype='intc')
     third_q = np.zeros_like(weights)
@@ -41,7 +48,11 @@ def get_nosym_triplets_at_q(grid_point, mesh, primitive_lattice):
         bz_map,
         weights,
         mesh)
-    return triplets_at_q, weights, bz_grid_address
+
+    if with_bz_map:
+        return triplets_at_q, weights, bz_grid_address, bz_map
+    else:    
+        return triplets_at_q, weights, bz_grid_address
 
 def get_grid_address(mesh):
     grid_mapping_table, grid_address = spg.get_stabilized_reciprocal_mesh(

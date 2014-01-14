@@ -638,11 +638,14 @@ if log_level > 0:
     if settings.get_is_nac():
         print "  Non-analytical term correction: on"
     if settings.get_is_force_constants():
-        print "  Force constants:", settings.get_is_force_constants(),
-        if settings.get_is_hdf5():
-            print "from hdf5"
+        if settings.get_is_force_constants() == "write":
+            print "  Force constants: Write into",
         else:
-            print
+            print "  Force constants: Read from",
+        if settings.get_is_hdf5():
+            print "hdf5"
+        else:
+            print "FORCE_CONSTANTS"
     if settings.get_fc_spg_symmetry():
         print "  Enforce space group symmetry to force constants: on"
     if settings.get_fc_symmetry_iteration() > 0:
@@ -800,9 +803,14 @@ if settings.get_fc_symmetry_iteration() > 0:
 
 # Write FORCE_CONSTANTS
 if settings.get_is_force_constants() == "write":
-    file_IO.write_FORCE_CONSTANTS(phonon.get_force_constants())
     if log_level > 0:
-        print "Force constants are written into FORCE_CONSTANTS."
+        print "Force constants are written into",
+    if settings.get_is_hdf5():
+        file_IO.write_force_constants_to_hdf5(phonon.get_force_constants())
+        print "force_constants.hdf5."
+    else:
+        print "FORCE_CONSTANTS."
+        file_IO.write_FORCE_CONSTANTS(phonon.get_force_constants())
 
 # Show the rotational invariance condition (just show!)
 if settings.get_is_rotational_invariance():

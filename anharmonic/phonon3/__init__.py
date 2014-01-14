@@ -4,10 +4,9 @@ from anharmonic.phonon3.imag_self_energy import ImagSelfEnergy
 from anharmonic.phonon3.frequency_shift import FrequencyShift
 from anharmonic.phonon3.interaction import Interaction
 from anharmonic.phonon3.conductivity_RTA import conductivity_RTA
-from anharmonic.phonon3.jointDOS import get_jointDOS
+from anharmonic.phonon3.joint_dos import JointDos
 from anharmonic.phonon3.gruneisen import Gruneisen
-from anharmonic.file_IO import write_kappa_to_hdf5
-from anharmonic.file_IO import read_gamma_from_hdf5, write_damping_functions, write_linewidth, write_frequency_shift
+from anharmonic.file_IO import read_gamma_from_hdf5, write_damping_functions, write_linewidth, write_frequency_shift, write_jointDOS, write_kappa_to_hdf5
 from anharmonic.other.isotope import Isotope
 from phonopy.units import VaspToTHz
 
@@ -327,7 +326,7 @@ class IsotopeScattering:
         self._iso.set_sigma(sigma)
         
 
-class JointDOS:
+class Phono3pyJointDos:
     def __init__(self,
                  supercell,
                  primitive,
@@ -336,11 +335,11 @@ class JointDOS:
                  nac_params=None,
                  sigma=None,
                  frequency_step=None,
-                 factor=None,
-                 frequency_factor=VaspToTHz,
+                 frequency_factor_to_THz=VaspToTHz,
                  frequency_scale_factor=None,
                  is_nosym=False,
                  symprec=1e-5,
+                 output_filename=None,
                  log_level=0):
         self._supercell = supercell
         self._primitive = primitive
@@ -349,31 +348,46 @@ class JointDOS:
         self._nac_params = nac_params
         self._sigma = sigma
         self._frequency_step = frequency_step
-        self._factor = factor
-        self._frequency_factor = frequency_factor
+        self._frequency_factor_to_THz = frequency_factor_to_THz
         self._frequency_scale_factor = frequency_scale_factor
         self._is_nosym = is_nosym
         self._symprec = symprec
+        self._filename = output_filename
         self._log_level = log_level
 
-    def get_jointDOS(self, grid_points, output_filename=None):
-        get_jointDOS(grid_points,
-                     self._mesh,
-                     self._primitive,
-                     self._supercell,
-                     self._fc2,
-                     nac_params=self._nac_params,
-                     sigma=self._sigma,
-                     frequency_step=self._frequency_step,
-                     factor=self._factor,
-                     frequency_factor=self._frequency_factor,
-                     frequency_scale=self._frequency_scale_factor,
-                     is_nosym=self._is_nosym,
-                     symprec=self._symprec,
-                     filename=output_filename,
-                     log_level=self._log_level)
+        self._jdos = JointDos(
+            self._mesh,
+            self._primitive,
+            self._supercell,
+            self._fc2,
+            nac_params=self._nac_params,
+            sigma=self._sigma,
+            frequency_step=self._frequency_step,
+            frequency_factor_to_THz=self._frequency_factor_to_THz,
+            frequency_scale_factor=self._frequency_scale_factor,
+            is_nosym=self._is_nosym,
+            symprec=self._symprec,
+            filename=output_filename,
+            log_level=self._log_level)
 
+    def run(self, grid_points):
+        self._grid_points = grid_points
+        self._jdos.run(grid_points)
 
+    def get_jointDos(self, grid_points):
+        return self._jdos.get_joint_dos(), self._jdos.get_frequency_points()
+
+    def write(self):
+        for gp, jdos, freq_points in zip(self._grid_points,
+                                         self._jdos.get_joint_dos(),
+                                         self._jdos.get_frequency_points()):
+            write_jointDOS(gp,
+                           self._mesh,
+                           freq_points,
+                           jdos,
+                           filename=self._filename,
+                           is_nosym=self._is_nosym)
+        
 def get_gruneisen_parameters(fc2,
                              fc3,
                              supercell,

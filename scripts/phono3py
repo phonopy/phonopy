@@ -59,7 +59,7 @@ from anharmonic.file_IO import write_fc2_dat, write_fc3_dat,\
 from anharmonic.phonon3.triplets import get_coarse_ir_grid_points
 from anharmonic.phonon3.displacement_fc3 import get_third_order_displacements
 from anharmonic.settings import Phono3pyConfParser
-from anharmonic.phonon3 import Phono3py, JointDOS, IsotopeScattering, get_gruneisen_parameters
+from anharmonic.phonon3 import Phono3py, Phono3pyJointDos, IsotopeScattering, get_gruneisen_parameters
 
 phono3py_version = "0.8.0"
 
@@ -878,21 +878,23 @@ elif settings.get_mesh_numbers() is not None:
         sys.stdout.flush()
 
     if options.is_joint_dos:
-        jdos = JointDOS(supercell_dm,
-                        primitive_dm,
-                        mesh,
-                        fc2,
-                        nac_params=nac_params,
-                        sigma=sigma,
-                        frequency_step=freq_step,
-                        factor=factor,
-                        frequency_factor=freq_factor,
-                        frequency_scale_factor=freq_scale,
-                        is_nosym=options.is_nosym,
-                        symprec=options.symprec,
-                        log_level=log_level)
-        jdos.get_jointDOS(grid_points,
-                          output_filename=output_filename)
+        joint_dos = Phono3pyJointDos(supercell_dm,
+                                     primitive_dm,
+                                     mesh,
+                                     fc2,
+                                     nac_params=nac_params,
+                                     sigma=sigma,
+                                     frequency_step=freq_step,
+                                     frequency_factor_to_THz=factor,
+                                     frequency_scale_factor=freq_scale,
+                                     is_nosym=options.is_nosym,
+                                     symprec=options.symprec,
+                                     output_filename=output_filename,
+                                     log_level=log_level)
+        joint_dos.run(grid_points)
+        joint_dos.write()
+        
+        
     elif options.is_isotope:
         if log_level:
             print "Cutoff frequency:", settings.get_cutoff_frequency()
