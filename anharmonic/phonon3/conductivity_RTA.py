@@ -7,6 +7,7 @@ from phonopy.phonon.thermal_properties import mode_cv
 from anharmonic.file_IO import write_kappa_to_hdf5, write_triplets
 from anharmonic.phonon3.triplets import get_grid_address, reduce_grid_points, get_ir_grid_points, from_coarse_to_dense_grid_points, get_grid_points_in_Brillouin_zone, get_bz_grid_address
 from anharmonic.phonon3.imag_self_energy import ImagSelfEnergy
+from anharmonic.phonon3.interaction import set_phonon_c
 from anharmonic.other.isotope import Isotope
 
 unit_to_WmK = ((THz * Angstrom) ** 2 / (Angstrom ** 3) * EV / THz /
@@ -44,7 +45,7 @@ class conductivity_RTA:
                                        self._t_max + float(self._t_step) / 2,
                                        self._t_step)
         self._primitive = self._pp.get_primitive()
-        self._dynamical_matrix = self._pp.get_dynamical_matrix()
+        self._dm = self._pp.get_dynamical_matrix()
         self._frequency_factor_to_THz = self._pp.get_frequency_factor_to_THz()
         self._cutoff_frequency = self._pp.get_cutoff_frequency()
         self._cutoff_lifetime = cutoff_lifetime
@@ -61,11 +62,12 @@ class conductivity_RTA:
         self._grid_points = None
         self._grid_weights = None
         self._grid_address = None
-        self._grid_address_with_boundary = None # Used only when no_kappa_stars
 
         self._gamma = None
         self._read_gamma = False
         self._frequencies = None
+        self._eigenvectors = None
+        self._phonon_done = None
         self._cv = None
         self._gv = None
         self._gamma_iso = None
@@ -98,12 +100,12 @@ class conductivity_RTA:
         return self._cv
 
     def get_frequencies(self):
-        return self._frequencies
+        return self._frequencies[self._grid_points]
         
     def set_grid_points(self, grid_points=None):
         primitive_lattice = np.linalg.inv(self._primitive.get_cell())
-        self._grid_address = get_bz_grid_address(self._mesh,
-                                                 primitive_lattice)
+        self._grid_address = get_bz_grid_address(
+            self._mesh, primitive_lattice, with_boundary=True)
 
         if grid_points is not None: # Specify grid points
             self._grid_points = reduce_grid_points(
@@ -115,8 +117,6 @@ class conductivity_RTA:
             coarse_grid_address = get_grid_address(self._coarse_mesh)
             coarse_grid_points = np.arange(np.prod(self._coarse_mesh),
                                            dtype='intc')
-            self._grid_address_with_boundary = get_bz_grid_address(
-                self._mesh, primitive_lattice, with_boundary=True)
             self._grid_points = from_coarse_to_dense_grid_points(
                 self._mesh,
                 self._mesh_divisors,
@@ -178,36 +178,21 @@ class conductivity_RTA:
                         read_amplitude=False,
                         write_gamma=False):
         self._allocate_values()
-        num_band = self._primitive.get_number_of_atoms()
+        self._set_phonon_c()
+
         for i, grid_point in enumerate(self._grid_points):
             self._qpoint = (self._grid_address[grid_point].astype('double') /
                             self._mesh)
-            
-            if self._log_level:
-                print ("===================== Grid point %d (%d/%d) "
-                       "=====================" %
-                       (grid_point, i + 1, len(self._grid_points)))
-                print "q-point: (%5.2f %5.2f %5.2f)" % tuple(self._qpoint)
-                print "Lifetime cutoff (sec): %-10.3e" % self._cutoff_lifetime
-                if self._isotope is not None:
-                    print "Mass variance parameters:",
-                    print ("%5.2e " * len(self._mass_variances)) % tuple(
-                        self._mass_variances)
-
-            if self._read_gamma:
-                self._frequencies[i] = self._get_phonon_c()
-            else:
-                if self._log_level:
-                    print "Number of triplets:",
-
+            self._show_log_header(i)            
+            if not self._read_gamma:
                 self._ise.set_grid_point(grid_point)
                 
                 if self._log_level:
+                    print "Number of triplets:",
                     print len(self._pp.get_triplets_at_q()[0])
                     print "Calculating interaction..."
                     
                 self._ise.run_interaction()
-                self._frequencies[i] = self._ise.get_phonon_at_grid_point()[0]
                 self._set_gamma_at_sigmas(i)
 
             if self._isotope is not None:
@@ -216,38 +201,47 @@ class conductivity_RTA:
             self._set_kappa_at_sigmas(i)
 
             if write_gamma:
-                self._write_gamma(i, grid_point)
+                self._write_gamma(i)
                 if self._log_level > 1:
                     self._write_triplets(grid_point)
 
+    def _show_log_header(self, i):
+        if self._log_level:
+            gp = self._grid_points[i]
+            print ("===================== Grid point %d (%d/%d) "
+                   "=====================" %
+                   (gp, i + 1, len(self._grid_points)))
+            print "q-point: (%5.2f %5.2f %5.2f)" % tuple(self._qpoint)
+            print "Lifetime cutoff (sec): %-10.3e" % self._cutoff_lifetime
+            if self._isotope is not None:
+                print "Mass variance parameters:",
+                print ("%5.2e " * len(self._mass_variances)) % tuple(
+                    self._mass_variances)
+                        
     def _allocate_values(self):
-        num_freqs = self._primitive.get_number_of_atoms() * 3
+        num_band = self._primitive.get_number_of_atoms() * 3
+        num_grid_points = len(self._grid_points)
         self._kappa = np.zeros((len(self._sigmas),
-                                len(self._grid_points),
+                                num_grid_points,
                                 len(self._temperatures),
-                                num_freqs,
+                                num_band,
                                 6), dtype='double')
         if not self._read_gamma:
             self._gamma = np.zeros((len(self._sigmas),
-                                    len(self._grid_points),
+                                    num_grid_points,
                                     len(self._temperatures),
-                                    num_freqs), dtype='double')
-        self._gv = np.zeros((len(self._grid_points),
-                             num_freqs,
+                                    num_band), dtype='double')
+        self._gv = np.zeros((num_grid_points,
+                             num_band,
                              3), dtype='double')
-        self._cv = np.zeros((len(self._grid_points),
+        self._cv = np.zeros((num_grid_points,
                              len(self._temperatures),
-                             num_freqs), dtype='double')
-
-        self._frequencies = np.zeros((len(self._grid_points),
-                                      num_freqs), dtype='double')
-
+                             num_band), dtype='double')
         self._gamma_iso = np.zeros((len(self._sigmas),
-                                    len(self._grid_points),
-                                    num_freqs), dtype='double')
+                                    num_grid_points,
+                                    num_band), dtype='double')
         
     def _set_gamma_at_sigmas(self, i):
-        freqs = self._frequencies[i]
         for j, sigma in enumerate(self._sigmas):
             if self._log_level:
                 print "Calculating Gamma of ph-ph with sigma=%s" % sigma
@@ -265,12 +259,12 @@ class conductivity_RTA:
             self._isotope.set_phonons(pp_freqs,
                                       pp_eigvecs,
                                       pp_phonon_done,
-                                      dm=self._dynamical_matrix)
+                                      dm=self._dm)
             self._isotope.run(i)
             self._gamma_iso[j, i] = self._isotope.get_gamma()
     
     def _set_kappa_at_sigmas(self, i):
-        freqs = self._frequencies[i]
+        freqs = self._frequencies[self._grid_points[i]]
         
         # Heat capacity [num_temps, num_freqs]
         cv = self._get_cv(freqs)
@@ -301,16 +295,17 @@ class conductivity_RTA:
                     self._conversion_factor)
 
     def _get_gv_by_gv(self, i):
-        grid_address = self._grid_address[self._grid_points[i]]
+        gp = self._grid_points[i]
+        grid_address = self._grid_address[gp]
         if self._no_kappa_stars:
             gv_by_gv_tmp = []
             rotation_map = [0]
-            for address in self._grid_address_with_boundary:
+            for address in self._grid_address:
                 if ((grid_address - address) % self._mesh == 0).all():
                     qpoint = address.astype('double') / self._mesh
                     gv = get_group_velocity(
                         qpoint,
-                        self._dynamical_matrix,
+                        self._dm,
                         q_length=self._gv_delta_q,
                         symmetry=self._symmetry,
                         frequency_factor_to_THz=self._frequency_factor_to_THz)
@@ -320,7 +315,7 @@ class conductivity_RTA:
 
                     if self._log_level:
                         self._show_log(qpoint,
-                                       self._frequencies[i],
+                                       self._frequencies[gp],
                                        gv,
                                        rotation_map)
 
@@ -329,7 +324,7 @@ class conductivity_RTA:
             # Group velocity [num_freqs, 3]
             gv = get_group_velocity(
                 self._qpoint,
-                self._dynamical_matrix,
+                self._dm,
                 q_length=self._gv_delta_q,
                 symmetry=self._symmetry,
                 frequency_factor_to_THz=self._frequency_factor_to_THz)
@@ -339,7 +334,7 @@ class conductivity_RTA:
 
             if self._log_level:
                 self._show_log(self._qpoint,
-                               self._frequencies[i],
+                               self._frequencies[gp],
                                gv,
                                rotation_map)
 
@@ -433,44 +428,21 @@ class conductivity_RTA:
             print ("Lifetime sampling mesh: [ %d %d %d ]" %
                    tuple(self._mesh / self._mesh_divisors))
 
-    def _get_phonon_c(self):
-        import anharmonic._phono3py as phono3c
+    def _set_phonon_c(self):
+        (self._frequencies,
+         self._eigenvectors,
+         self._phonon_done) = self._pp.get_phonons()
 
-        dm = self._dynamical_matrix
-        svecs, multiplicity = dm.get_shortest_vectors()
-        masses = np.array(dm.get_primitive().get_masses(), dtype='double')
-        rec_lattice = np.array(np.linalg.inv(dm.get_primitive().get_cell()),
-                               dtype='double').copy()
-        if dm.is_nac():
-            born = dm.get_born_effective_charges()
-            nac_factor = dm.get_nac_factor()
-            dielectric = dm.get_dielectric_constant()
-        else:
-            born = None
-            nac_factor = 0
-            dielectric = None
-        uplo = self._pp.get_lapack_zheev_uplo()
-        num_freqs = len(masses) * 3
-        frequencies = np.zeros(num_freqs, dtype='double')
-        eigenvectors = np.zeros((num_freqs, num_freqs), dtype='complex128')
-
-        phono3c.phonon(frequencies,
-                       eigenvectors,
-                       np.array(self._qpoint, dtype='double'),
-                       dm.get_force_constants(),
-                       svecs,
-                       multiplicity,
-                       masses,
-                       dm.get_primitive_to_supercell_map(),
-                       dm.get_supercell_to_primitive_map(),
-                       self._frequency_factor_to_THz,
-                       born,
-                       dielectric,
-                       rec_lattice,
-                       None,
-                       nac_factor,
-                       uplo)
-        return frequencies
+        set_phonon_c(self._dm,
+                     self._frequencies,
+                     self._eigenvectors,
+                     self._phonon_done,
+                     self._grid_points,
+                     self._grid_address,
+                     self._mesh,
+                     self._frequency_factor_to_THz,
+                     None,
+                     self._pp.get_lapack_zheev_uplo())    
 
     def _set_isotope(self, mass_variances):
         self._mass_variances = np.array(mass_variances, dtype='double')
@@ -518,13 +490,14 @@ class conductivity_RTA:
                 print "%8.3f   (%8.3f %8.3f %8.3f) %8.3f" % (
                     f, v[0], v[1], v[2], np.linalg.norm(v))
     
-    def _write_gamma(self, i, grid_point):
+    def _write_gamma(self, i):
+        gp = self._grid_points[i]
         for j, sigma in enumerate(self._sigmas):
             write_kappa_to_hdf5(
                 self._gamma[j, i],
                 self._temperatures,
                 self._mesh,
-                frequency=self._frequencies[i],
+                frequency=self._frequencies[gp],
                 group_velocity=self._gv[i],
                 heat_capacity=self._cv[i],
                 kappa=self._kappa[j, i],

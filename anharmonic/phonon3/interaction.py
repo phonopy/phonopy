@@ -145,17 +145,17 @@ class Interaction:
         self._dm = None
         self._nac_q_direction = None
 
-    def run(self, lang='C'):
         num_band = self._primitive.get_number_of_atoms() * 3
-
         mesh_with_boundary = self._mesh + 1
         num_grid = np.prod(mesh_with_boundary)
+        self._phonon_done = np.zeros(num_grid, dtype='byte')
+        self._frequencies = np.zeros((num_grid, num_band), dtype='double')
+        self._eigenvectors = np.zeros((num_grid, num_band, num_band),
+                                      dtype='complex128')
+        
+    def run(self, lang='C'):
+        num_band = self._primitive.get_number_of_atoms() * 3
         num_triplets = len(self._triplets_at_q)
-        if self._phonon_done is None:
-            self._phonon_done = np.zeros(num_grid, dtype='byte')
-            self._frequencies = np.zeros((num_grid, num_band), dtype='double')
-            self._eigenvectors = np.zeros((num_grid, num_band, num_band),
-                                          dtype='complex128')
         self._interaction_strength = np.zeros(
             (num_triplets, len(self._band_indices), num_band, num_band),
             dtype='double')
