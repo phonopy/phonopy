@@ -103,6 +103,8 @@ class TetrahedronMesh:
                 for j, f in enumerate(self._frequency_points):
                     iw = self._tm.run(f, value=value)
                     self._integration_weights[j, ib, i] = iw
+                # iw = self._tm.run(self._frequency_points, value=value)
+                # self._integration_weights[:, ib, i] = iw
 
         self._integration_weights /= np.prod(self._mesh)
 

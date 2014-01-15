@@ -137,6 +137,18 @@ static int db_relative_grid_address[4][24][4][3] = {
   },
 };
 
+static void
+get_integration_weight_at_omegas(double *integration_weights,
+				 const int num_omegas,
+				 const double *omegas,
+				 SPGCONST double tetrahedra_omegas[24][4],
+				 double (*gn)(const int,
+					      const double,
+					      const double[4]),
+				 double (*IJ)(const int,
+					      const int,
+					      const double,
+					      const double[4]));
 static double
 get_integration_weight(const double omega,
 		       SPGCONST double tetrahedra_omegas[24][4],
@@ -259,9 +271,58 @@ double thm_get_integration_weight(const double omega,
 				  const char function)
 {
   if (function == 'I') {
-    return get_integration_weight(omega, tetrahedra_omegas, _g, _I);
+    return get_integration_weight(omega,
+				  tetrahedra_omegas,
+				  _g, _I);
   } else {
-    return get_integration_weight(omega, tetrahedra_omegas, _n, _J);
+    return get_integration_weight(omega,
+				  tetrahedra_omegas,
+				  _n, _J);
+  }
+}
+
+void
+thm_get_integration_weight_at_omegas(double *integration_weights,
+				     const int num_omegas,
+				     const double *omegas,
+				     SPGCONST double tetrahedra_omegas[24][4],
+				     const char function)
+{
+  if (function == 'I') {
+    get_integration_weight_at_omegas(integration_weights,
+				     num_omegas,
+				     omegas,
+				     tetrahedra_omegas,
+				     _g, _I);
+  } else {
+    get_integration_weight_at_omegas(integration_weights,
+				     num_omegas,
+				     omegas,
+				     tetrahedra_omegas,
+				     _n, _J);
+  }
+}
+
+static void
+get_integration_weight_at_omegas(double *integration_weights,
+				 const int num_omegas,
+				 const double *omegas,
+				 SPGCONST double tetrahedra_omegas[24][4],
+				 double (*gn)(const int,
+					      const double,
+					      const double[4]),
+				 double (*IJ)(const int,
+					      const int,
+					      const double,
+					      const double[4]))
+{
+  int i;
+
+#pragma omp parallel for
+  for (i = 0; i < num_omegas; i++) {
+    integration_weights[i] = get_integration_weight(omegas[i],
+						    tetrahedra_omegas,
+						    gn, IJ);
   }
 }
 
@@ -277,11 +338,10 @@ get_integration_weight(const double omega,
 				    const double[4]))
 {
   int i, j, ci;
-  double v[4];
   double sum;
+  double v[4];
 
   sum = 0;
-
   for (i = 0; i < 24; i++) {
     for (j = 0; j < 4; j++) {
       v[j] = tetrahedra_omegas[i][j];
@@ -305,7 +365,6 @@ get_integration_weight(const double omega,
       }
     }
   }
-    
   return sum / 6;
 }
 

@@ -368,13 +368,22 @@ def get_tetrahedra_relative_grid_address(reciprocal_lattice):
     return relative_grid_address
 
     
-def get_tetrahedra_integration_weight(omega,
+def get_tetrahedra_integration_weight(omegas,
                                       tetrahedra_omegas,
                                       function='I'):
-    return spg.tetrahedra_integration_weight(
-        omega,
-        np.array(tetrahedra_omegas, dtype='double').copy(),
-        function)
+    if isinstance(omegas, float):
+        return spg.tetrahedra_integration_weight(
+            omegas,
+            np.array(tetrahedra_omegas, dtype='double').copy(),
+            function)
+    else:
+        integration_weights = np.zeros(len(omegas), dtype='double')
+        spg.tetrahedra_integration_weight_at_omegas(
+            integration_weights,
+            np.array(omegas, dtype='double'),
+            np.array(tetrahedra_omegas, dtype='double').copy(),
+            function)
+        return integration_weights
 
                                       
                                                

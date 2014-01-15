@@ -111,47 +111,56 @@ class JointDos:
                 sys.stdout.flush()
 
             if self._tetrahedron_method is None:
-                self._smearing_method()
+                self._run_smearing_method()
             else:
                 self._collect_tetrahedra_grid_points()
-                sys.exit(0)
+                self._run_tetrahedron_method_py()
 
-    def _tetrahedron_method(self, gp):
-        pass
+    def _run_tetrahedron_method_py(self):
+        self._set_phonon_at_grid_points(
+            np.array([self._triplets_at_q[0][0]], dtype='intc'))
+        self._set_phonon_at_grid_points(self._vertices.flatten())
+        num_triplets = len(self._triplets_at_q)
+        thm = self._tetrahedron_method
+        f_max = np.max(self._frequencies) * 2 + self._frequency_step / 10
+        f_min = np.min(self._frequencies) * 2
+        freq_points = np.arange(f_min, f_max, self._frequency_step,
+                                dtype='double')
+        jdos = np.zeros_like(freq_points)
+        for vertices, w in zip(self._vertices, self._weights_at_q):
+            for i, j in list(np.ndindex(self._num_band, self._num_band)):
+                f1 = self._frequencies[vertices, i]
+                f2 = self._frequencies[vertices, j]
+                thm.set_tetrahedra_omegas(f1 + f2)
+                jdos += thm.run(freq_points) * w
+
+        self._joint_dos.append(jdos / np.prod(self._mesh))
+        self._frequency_points.append(freq_points)
 
     def _collect_tetrahedra_grid_points(self):
         relative_adrs = self._tetrahedron_method.get_tetrahedra()
         bzmesh = self._mesh * 2
         grid_order = [1, self._mesh[0], self._mesh[0] * self._mesh[1]]
         bz_grid_order = [1, bzmesh[0], bzmesh[0] * bzmesh[1]]
-
-        # multi = np.zeros(np.prod(self._mesh), dtype='intc')
-        # for gp in np.dot(self._grid_address % self._mesh, grid_order):
-        #     multi[gp] += 1
-        # print np.nonzero(multi > 1)[0]
-        
         num_triplets = len(self._triplets_at_q)
-        self._vertices = np.zeros((num_triplets, 24, 4, 2), dtype='intc')
+        self._vertices = np.zeros((num_triplets, 2, 24, 4), dtype='intc')
         for i, tp in enumerate(self._triplets_at_q):
             for j, adrs_shift in enumerate((relative_adrs, -relative_adrs)):
                 adrs = self._grid_address[tp[j + 1]] + adrs_shift
                 bz_gp = np.dot(adrs % bzmesh, bz_grid_order)
                 gp = np.dot(adrs % self._mesh, grid_order)
                 vgp = self._bz_map[bz_gp]
-                self._vertices[i, :, :, j] = vgp + (vgp == -1) * (gp + 1)
+                self._vertices[i, j] = vgp + (vgp == -1) * (gp + 1)
 
-        self._set_phonon_at_grid_points(
-            np.array([self._triplets_at_q[0][0]], dtype='intc'))
-        self._set_phonon_at_grid_points(self._vertices.flatten())
-
-    def _smearing_method(self):
+    def _run_smearing_method(self):
         import anharmonic._phono3py as phono3c
 
         self._set_phonon_at_grid_points(self._triplets_at_q.flatten())
         f_max = np.max(self._frequencies) * 2 + self._sigma * 4
         f_min = np.min(self._frequencies) * 2 - self._sigma * 4
-        freq_points = np.arange(f_min, f_max, self._frequency_step)
-        jdos = np.zeros(len(freq_points), dtype='double')
+        freq_points = np.arange(f_min, f_max, self._frequency_step,
+                                dtype='double')
+        jdos = np.zeros_like(freq_points)
         phono3c.joint_dos(jdos,
                           freq_points,
                           self._triplets_at_q,

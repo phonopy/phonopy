@@ -57,18 +57,35 @@ class TetrahedronMethod:
         self._create_tetrahedra()
         self._set_relative_grid_addresses()
 
-    def run(self, omega, value='I'):
+    def run(self, omegas, value='I'):
         try:
             import phonopy._phonopy as phonoc
-            return self._run_c(omega, value=value)
+            return self._run_c(omegas, value=value)
         except ImportError:
-            return self._run_py(omega, value=value)
+            if isinstance(omegas, float):
+                return self._run_py(omega, value=value)
+            else:
+                integration_weights = np.zeros(len(omegas), dtype='double')
+                for i, omega in enumerate(omegas):
+                    integration_weights[i] = self._run_py(omega, value=value)
+
+    def get_tetrahedra(self):
+        """
+        Returns relative grid addresses at vertices of tetrahedra
+        """
+        return self._relative_grid_addresses
+
+    def set_tetrahedra_omegas(self, tetrahedra_omegas):
+        """
+        tetrahedra_omegas: (24, 4) omegas at self._relative_grid_addresses
+        """
+        self._tetrahedra_omegas = tetrahedra_omegas
 
     def _run_c(self, omega, value='I'):
         return spg.get_tetrahedra_integration_weight(omega,
                                                      self._tetrahedra_omegas,
                                                      function=value)
-            
+
     def _run_py(self, omega, value='I'):
         self._sort_indices = np.argsort(self._tetrahedra_omegas, axis=1)
         sum_value = 0.0
@@ -92,18 +109,6 @@ class TetrahedronMethod:
 
         return sum_value / 6
 
-    def get_tetrahedra(self):
-        """
-        Returns relative grid addresses at vertices of tetrahedra
-        """
-        return self._relative_grid_addresses
-
-    def set_tetrahedra_omegas(self, tetrahedra_omegas):
-        """
-        tetrahedra_omegas: (24, 4) omegas at self._relative_grid_addresses
-        """
-        self._tetrahedra_omegas = tetrahedra_omegas
-        
     def _create_tetrahedra(self):
         #
         #     6-------7

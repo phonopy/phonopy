@@ -355,11 +355,16 @@ int spg_get_BZ_triplets_at_q(int triplets[][3],
 void
 spg_get_tetrahedra_relative_grid_address(int relative_grid_address[24][4][3],
 					 SPGCONST double rec_lattice[3][3]);
-
 double
 spg_get_tetrahedra_integration_weight(const double omega,
 				      SPGCONST double tetrahedra_omegas[24][4],
 				      const char function);
-
+void
+spg_get_tetrahedra_integration_weight_at_omegas
+(double *integration_weights,
+ const int num_omegas,
+ const double *omegas,
+ SPGCONST double tetrahedra_omegas[24][4],
+ const char function);
 #endif
 

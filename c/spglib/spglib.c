@@ -598,7 +598,24 @@ spg_get_tetrahedra_integration_weight(const double omega,
 				      SPGCONST double tetrahedra_omegas[24][4],
 				      const char function)
 {
-  return thm_get_integration_weight(omega, tetrahedra_omegas, function);
+  return thm_get_integration_weight(omega,
+				    tetrahedra_omegas,
+				    function);
+}
+
+void
+spg_get_tetrahedra_integration_weight_at_omegas
+(double *integration_weights,
+ const int num_omegas,
+ const double *omegas,
+ SPGCONST double tetrahedra_omegas[24][4],
+ const char function)
+{
+  thm_get_integration_weight_at_omegas(integration_weights,
+				       num_omegas,
+				       omegas,
+				       tetrahedra_omegas,
+				       function);
 }
 
 

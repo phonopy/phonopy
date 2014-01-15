@@ -22,6 +22,8 @@ static PyObject *
 get_tetrahedra_relative_grid_address(PyObject *self, PyObject *args);
 static PyObject *
 get_tetrahedra_integration_weight(PyObject *self, PyObject *args);
+static PyObject *
+get_tetrahedra_integration_weight_at_omegas(PyObject *self, PyObject *args);
 
 static PyMethodDef functions[] = {
   {"dataset", get_dataset, METH_VARARGS, "Dataset for crystal symmetry"},
@@ -50,6 +52,9 @@ static PyMethodDef functions[] = {
    METH_VARARGS, "Relative grid addresses of vertices of 24 tetrahedra"},
   {"tetrahedra_integration_weight", get_tetrahedra_integration_weight,
    METH_VARARGS, "Integration weight for tetrahedron method"},
+  {"tetrahedra_integration_weight_at_omegas",
+   get_tetrahedra_integration_weight_at_omegas,
+   METH_VARARGS, "Integration weight for tetrahedron method at omegas"},
   {NULL, NULL, 0, NULL}
 };
 
@@ -642,10 +647,42 @@ get_tetrahedra_integration_weight(PyObject *self, PyObject *args)
     return NULL;
   }
 
-  double (*tetrahedra_omegas)[4] = (double(*)[4])tetrahedra_omegas_py->data;
+  SPGCONST double (*tetrahedra_omegas)[4] =
+    (double(*)[4])tetrahedra_omegas_py->data;
+  
   double iw = spg_get_tetrahedra_integration_weight(omega,
 						    tetrahedra_omegas,
 						    function);
 
   return PyFloat_FromDouble(iw);
+}
+
+static PyObject *
+get_tetrahedra_integration_weight_at_omegas(PyObject *self, PyObject *args)
+{
+  PyArrayObject* integration_weights_py;
+  PyArrayObject* omegas_py;
+  PyArrayObject* tetrahedra_omegas_py;
+  char function;
+  if (!PyArg_ParseTuple(args, "OOOc",
+			&integration_weights_py,
+			&omegas_py,
+			&tetrahedra_omegas_py,
+			&function)) {
+    return NULL;
+  }
+
+  const double *omegas = (double*)omegas_py->data;
+  double *iw = (double*)integration_weights_py->data;
+  const int num_omegas = (int)omegas_py->dimensions[0];
+  SPGCONST double (*tetrahedra_omegas)[4] =
+    (double(*)[4])tetrahedra_omegas_py->data;
+  
+  spg_get_tetrahedra_integration_weight_at_omegas(iw,
+						  num_omegas,
+						  omegas,
+						  tetrahedra_omegas,
+						  function);
+
+  Py_RETURN_NONE;
 }
