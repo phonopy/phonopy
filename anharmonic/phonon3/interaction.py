@@ -3,7 +3,7 @@ from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNA
 from phonopy.units import VaspToTHz
 from anharmonic.phonon3.real_to_reciprocal import RealToReciprocal
 from anharmonic.phonon3.reciprocal_to_normal import ReciprocalToNormal
-from anharmonic.phonon3.triplets import get_triplets_at_q, get_nosym_triplets_at_q
+from anharmonic.phonon3.triplets import get_triplets_at_q, get_nosym_triplets_at_q, get_bz_grid_address
 
 def get_dynamical_matrix(fc2,
                          supercell,
@@ -45,8 +45,7 @@ def set_phonon_c(dm,
     svecs, multiplicity = dm.get_shortest_vectors()
     masses = np.array(dm.get_primitive().get_masses(), dtype='double')
     rec_lattice = np.array(
-        np.linalg.inv(dm.get_primitive().get_cell()),
-        dtype='double').copy()
+        np.linalg.inv(dm.get_primitive().get_cell()), dtype='double')
     if dm.is_nac():
         born = dm.get_born_effective_charges()
         nac_factor = dm.get_nac_factor()
@@ -145,13 +144,7 @@ class Interaction:
         self._dm = None
         self._nac_q_direction = None
 
-        num_band = self._primitive.get_number_of_atoms() * 3
-        mesh_with_boundary = self._mesh + 1
-        num_grid = np.prod(mesh_with_boundary)
-        self._phonon_done = np.zeros(num_grid, dtype='byte')
-        self._frequencies = np.zeros((num_grid, num_band), dtype='double')
-        self._eigenvectors = np.zeros((num_grid, num_band, num_band),
-                                      dtype='complex128')
+        self._allocate_phonon()
         
     def run(self, lang='C'):
         num_band = self._primitive.get_number_of_atoms() * 3
@@ -172,9 +165,7 @@ class Interaction:
         return self._mesh
     
     def get_phonons(self):
-        return (self._frequencies,
-                self._eigenvectors,
-                self._phonon_done)
+        return self._frequencies, self._eigenvectors, self._phonon_done
 
     def get_dynamical_matrix(self):
         return self._dm
@@ -247,15 +238,16 @@ class Interaction:
         if nac_q_direction is not None:
             self._nac_q_direction = np.array(nac_q_direction, dtype='double')
 
-    def _run_c(self):
-        import anharmonic._phono3py as phono3c
-        
+    def set_phonon(self, grid_points):
         # for i, grid_triplet in enumerate(self._triplets_at_q):
         #     for gp in grid_triplet:
         #         self._set_phonon_py(gp)
-
-        self._set_phonon_c()
-
+        self._set_phonon_c(grid_points)
+            
+    def _run_c(self):
+        import anharmonic._phono3py as phono3c
+        
+        self.set_phonon(self._triplets_at_q.ravel())
         num_band = self._primitive.get_number_of_atoms() * 3
         svecs, multiplicity = get_smallest_vectors(self._supercell,
                                                    self._primitive,
@@ -282,12 +274,12 @@ class Interaction:
                             self._symmetrize_fc3_q,
                             self._cutoff_frequency)
 
-    def _set_phonon_c(self):
+    def _set_phonon_c(self, grid_points):
         set_phonon_c(self._dm,
                      self._frequencies,
                      self._eigenvectors,
                      self._phonon_done,
-                     self._triplets_at_q.flatten(),
+                     grid_points,
                      self._grid_address,
                      self._mesh,
                      self._frequency_factor_to_THz,
@@ -326,3 +318,14 @@ class Interaction:
                       self._dm,
                       self._frequency_factor_to_THz,                  
                       self._lapack_zheev_uplo)
+
+    def _allocate_phonon(self):
+        primitive_lattice = np.linalg.inv(self._primitive.get_cell())
+        self._grid_address = get_bz_grid_address(
+            self._mesh, primitive_lattice, with_boundary=True)
+        num_band = self._primitive.get_number_of_atoms() * 3
+        num_grid = len(self._grid_address)
+        self._phonon_done = np.zeros(num_grid, dtype='byte')
+        self._frequencies = np.zeros((num_grid, num_band), dtype='double')
+        self._eigenvectors = np.zeros((num_grid, num_band, num_band),
+                                      dtype='complex128')

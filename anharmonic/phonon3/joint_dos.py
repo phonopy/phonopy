@@ -15,8 +15,8 @@ class JointDos:
                  supercell,
                  fc2,
                  nac_params=None,
-                 sigma=0.2,
-                 tetrahedron_method=True,
+                 sigma=0.1,
+                 tetrahedron_method=False,
                  frequency_step=0.1,
                  frequency_factor_to_THz=VaspToTHz,
                  frequency_scale_factor=1.0,
@@ -26,13 +26,13 @@ class JointDos:
                  log_level=False,
                  lapack_zheev_uplo='L'):
 
-        self._grid_points = None
+        self._grid_point = None
         self._mesh = np.array(mesh, dtype='intc')
         self._primitive = primitive
         self._supercell = supercell
         self._fc2 = fc2
         self._nac_params = nac_params
-        self._sigma = sigma
+        self.set_sigma(sigma)
 
         self._frequency_step = frequency_step
         self._frequency_factor_to_THz = frequency_factor_to_THz
@@ -62,8 +62,8 @@ class JointDos:
         self._joint_dos = None
         self._frequency_points = None
 
-    def run(self, grid_points):
-        self._grid_points = grid_points
+    def run(self, grid_point):
+        self._grid_point = grid_point
 
         mesh_with_boundary = self._mesh + 1
         num_grid = np.prod(mesh_with_boundary)
@@ -90,31 +90,42 @@ class JointDos:
     def set_nac_q_direction(self, nac_q_direction=None):
         if nac_q_direction is not None:
             self._nac_q_direction = np.array(nac_q_direction, dtype='double')
+
+    def set_sigma(self, sigma):
+        if sigma is None:
+            self._sigma = None
+        else:
+            self._sigma = float(sigma)
             
     def _run_c(self):
+        gp = self._grid_point
         self._joint_dos = []
         self._frequency_points = []
-        for gp in self._grid_points:
-            (self._triplets_at_q,
-             self._weights_at_q,
-             self._grid_address,
-             self._bz_map) = self._get_triplets(gp)
-            
-            if self._log_level:
-                print "Grid point (%d):" % gp,  self._grid_address[gp]
-                if self._is_nosym:
-                    print "Number of ir triplets:",
-                else:
-                    print "Number of triplets:",
-                print (len(self._weights_at_q))
-                print "Sum of weights:", self._weights_at_q.sum()
-                sys.stdout.flush()
-
+        (self._triplets_at_q,
+         self._weights_at_q,
+         self._grid_address,
+         self._bz_map) = self._get_triplets(gp)
+        
+        if self._log_level:
+            print "Grid point (%d):" % gp,  self._grid_address[gp]
             if self._tetrahedron_method is None:
-                self._run_smearing_method()
+                print "Sigma:", self._sigma
             else:
-                self._collect_tetrahedra_grid_points()
-                self._run_tetrahedron_method_py()
+                print("Tetrahedron method is used for " 
+                      "Brillouin zone integration.")
+            if self._is_nosym:
+                print "Number of ir triplets:",
+            else:
+                print "Number of triplets:",
+            print (len(self._weights_at_q))
+            # print "Sum of weights:", self._weights_at_q.sum()
+            sys.stdout.flush()
+
+        if self._tetrahedron_method is None:
+            self._run_smearing_method()
+        else:
+            self._collect_tetrahedra_grid_points()
+            self._run_tetrahedron_method_py()
 
     def _run_tetrahedron_method_py(self):
         self._set_phonon_at_grid_points(
@@ -134,8 +145,8 @@ class JointDos:
                 thm.set_tetrahedra_omegas(f1 + f2)
                 jdos += thm.run(freq_points) * w
 
-        self._joint_dos.append(jdos / np.prod(self._mesh))
-        self._frequency_points.append(freq_points)
+        self._joint_dos = jdos / np.prod(self._mesh)
+        self._frequency_points = freq_points
 
     def _collect_tetrahedra_grid_points(self):
         relative_adrs = self._tetrahedron_method.get_tetrahedra()
@@ -168,8 +179,8 @@ class JointDos:
                           self._frequencies,
                           self._sigma)
         jdos /= np.prod(self._mesh)
-        self._joint_dos.append(jdos)
-        self._frequency_points.append(freq_points)
+        self._joint_dos = jdos
+        self._frequency_points = freq_points
         
     def _set_dynamical_matrix(self):
         self._dm = get_dynamical_matrix(

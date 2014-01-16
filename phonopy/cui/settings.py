@@ -226,10 +226,10 @@ class Settings:
     def get_qpoints(self):
         return self._qpoints
 
-    def set_q_direction(self, q_direction):
+    def set_nac_q_direction(self, q_direction):
         self._q_direction = q_direction
 
-    def get_q_direction(self):
+    def get_nac_q_direction(self):
         return self._q_direction
 
     def set_sigma(self, sigma):
@@ -339,6 +339,10 @@ class ConfParser:
         # Non analytical term correction?
         if params.has_key('is_nac'):
             self._settings.set_is_nac(params['is_nac'])
+
+        # q-direction for non analytical term correction
+        if params.has_key('q_direction'):
+            self._settings.set_nac_q_direction(params['q_direction'])
     
         # Is crystal symmetry searched?
         if params.has_key('is_symmetry'):

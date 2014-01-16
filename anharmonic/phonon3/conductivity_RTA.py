@@ -5,7 +5,7 @@ from phonopy.phonon.group_velocity import get_group_velocity
 from phonopy.units import Kb, THzToEv, EV, THz, Angstrom
 from phonopy.phonon.thermal_properties import mode_cv
 from anharmonic.file_IO import write_kappa_to_hdf5, write_triplets
-from anharmonic.phonon3.triplets import get_grid_address, reduce_grid_points, get_ir_grid_points, from_coarse_to_dense_grid_points, get_grid_points_in_Brillouin_zone, get_bz_grid_address
+from anharmonic.phonon3.triplets import get_grid_address, reduce_grid_points, get_ir_grid_points, from_coarse_to_dense_grid_points
 from anharmonic.phonon3.imag_self_energy import ImagSelfEnergy
 from anharmonic.phonon3.interaction import set_phonon_c
 from anharmonic.other.isotope import Isotope
@@ -17,10 +17,9 @@ class conductivity_RTA:
     def __init__(self,
                  interaction,
                  symmetry,
+                 temperatures=[300.0],
                  sigmas=[0.1],
-                 t_max=1500,
-                 t_min=0,
-                 t_step=10,
+                 tetrahedron_method=False,
                  mass_variances=None,
                  mesh_divisors=None,
                  coarse_mesh_shifts=None,
@@ -31,19 +30,12 @@ class conductivity_RTA:
                  filename=None):
         self._pp = interaction
         self._ise = ImagSelfEnergy(self._pp)
-
+        self._temperatures = temperatures
         self._sigmas = sigmas
-        self._t_max = t_max
-        self._t_min = t_min
-        self._t_step = t_step
         self._no_kappa_stars = no_kappa_stars
         self._gv_delta_q = gv_delta_q
         self._log_level = log_level
         self._filename = filename
-
-        self._temperatures = np.arange(self._t_min,
-                                       self._t_max + float(self._t_step) / 2,
-                                       self._t_step)
         self._primitive = self._pp.get_primitive()
         self._dm = self._pp.get_dynamical_matrix()
         self._frequency_factor_to_THz = self._pp.get_frequency_factor_to_THz()
@@ -66,8 +58,6 @@ class conductivity_RTA:
         self._gamma = None
         self._read_gamma = False
         self._frequencies = None
-        self._eigenvectors = None
-        self._phonon_done = None
         self._cv = None
         self._gv = None
         self._gamma_iso = None
@@ -103,9 +93,7 @@ class conductivity_RTA:
         return self._frequencies[self._grid_points]
         
     def set_grid_points(self, grid_points=None):
-        primitive_lattice = np.linalg.inv(self._primitive.get_cell())
-        self._grid_address = get_bz_grid_address(
-            self._mesh, primitive_lattice, with_boundary=True)
+        self._grid_address = self._pp.get_grid_address()
 
         if grid_points is not None: # Specify grid points
             self._grid_points = reduce_grid_points(
@@ -146,10 +134,11 @@ class conductivity_RTA:
             assert self._grid_weights.sum() == np.prod(self._mesh /
                                                        self._mesh_divisors)
 
+        self._qpoints = np.array(self._grid_address[self._grid_points] /
+                                 self._mesh.astype('double'), dtype='double')
+
     def get_qpoints(self):
-        qpoints = np.array(self._grid_address[self._grid_points] /
-                           self._mesh.astype('double'), dtype='double')
-        return qpoints
+        return self._qpoints
             
     def get_grid_points(self):
         return self._grid_points
@@ -178,11 +167,10 @@ class conductivity_RTA:
                         read_amplitude=False,
                         write_gamma=False):
         self._allocate_values()
-        self._set_phonon_c()
+        self._pp.set_phonon(self._grid_points)
+        self._frequencies = self._pp.get_phonons()[0]
 
         for i, grid_point in enumerate(self._grid_points):
-            self._qpoint = (self._grid_address[grid_point].astype('double') /
-                            self._mesh)
             self._show_log_header(i)            
             if not self._read_gamma:
                 self._ise.set_grid_point(grid_point)
@@ -211,7 +199,7 @@ class conductivity_RTA:
             print ("===================== Grid point %d (%d/%d) "
                    "=====================" %
                    (gp, i + 1, len(self._grid_points)))
-            print "q-point: (%5.2f %5.2f %5.2f)" % tuple(self._qpoint)
+            print "q-point: (%5.2f %5.2f %5.2f)" % tuple(self._qpoints[i])
             print "Lifetime cutoff (sec): %-10.3e" % self._cutoff_lifetime
             if self._isotope is not None:
                 print "Mass variance parameters:",
@@ -323,7 +311,7 @@ class conductivity_RTA:
         else:
             # Group velocity [num_freqs, 3]
             gv = get_group_velocity(
-                self._qpoint,
+                self._qpoints[i],
                 self._dm,
                 q_length=self._gv_delta_q,
                 symmetry=self._symmetry,
@@ -333,7 +321,7 @@ class conductivity_RTA:
             gv_by_gv = self._get_gv_by_gv_on_star(gv, rotation_map)
 
             if self._log_level:
-                self._show_log(self._qpoint,
+                self._show_log(self._qpoints[i],
                                self._frequencies[gp],
                                gv,
                                rotation_map)
@@ -427,22 +415,6 @@ class conductivity_RTA:
         if self._log_level:
             print ("Lifetime sampling mesh: [ %d %d %d ]" %
                    tuple(self._mesh / self._mesh_divisors))
-
-    def _set_phonon_c(self):
-        (self._frequencies,
-         self._eigenvectors,
-         self._phonon_done) = self._pp.get_phonons()
-
-        set_phonon_c(self._dm,
-                     self._frequencies,
-                     self._eigenvectors,
-                     self._phonon_done,
-                     self._grid_points,
-                     self._grid_address,
-                     self._mesh,
-                     self._frequency_factor_to_THz,
-                     None,
-                     self._pp.get_lapack_zheev_uplo())    
 
     def _set_isotope(self, mass_variances):
         self._mass_variances = np.array(mass_variances, dtype='double')

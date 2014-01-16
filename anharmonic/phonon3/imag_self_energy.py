@@ -1,6 +1,7 @@
 import numpy as np
 from phonopy.units import THzToEv, Kb, VaspToTHz, Hbar, EV, Angstrom, THz, AMU
 from phonopy.phonon.group_velocity import degenerate_sets
+from phonopy.structure.tetrahedron_method import TetrahedronMethod
 
 def gaussian(x, sigma):
     return 1.0 / np.sqrt(2 * np.pi) / sigma * np.exp(-x**2 / 2 / sigma**2)
@@ -16,6 +17,7 @@ class ImagSelfEnergy:
                  fpoints=None,
                  temperature=None,
                  sigma=0.1,
+                 tetrahedron_method=False,
                  lang='C'):
         self._interaction = interaction
         self.set_sigma(sigma)
@@ -23,6 +25,13 @@ class ImagSelfEnergy:
         self.set_fpoints(fpoints)
         self.set_grid_point(grid_point=grid_point)
 
+        if tetrahedron_method:
+            reciprocal_lattice = np.linalg.inv(
+                self._interaction.get_primitive().get_cell())
+            self._tetrahedron_method = TetrahedronMethod(reciprocal_lattice)
+        else:
+            self._tetrahedron_method = None
+        
         self._lang = lang
         self._imag_self_energy = None
         self._fc3_normal_squared = None
@@ -74,30 +83,26 @@ class ImagSelfEnergy:
     def get_imag_self_energy(self):
         if self._cutoff_frequency is None:
             return self._imag_self_energy
-        else: # Averaging imag-self-energies by degenerate bands
-            imag_se = np.zeros_like(self._imag_self_energy)
-            freqs = self._frequencies[self._grid_point]
-            deg_sets = degenerate_sets(freqs) # such like [[0,1], [2], [3,4,5]]
-            for dset in deg_sets:
-                bi_set = []
-                for i, bi in enumerate(self._band_indices):
-                    if bi in dset:
-                        bi_set.append(i)
-                if len(bi_set) > 0:
-                    for i in bi_set:
-                        if self._fpoints is None:
-                            imag_se[i] = (self._imag_self_energy[bi_set].sum() /
-                                          len(bi_set))
-                        else:
-                            imag_se[:, i] = (
-                                self._imag_self_energy[:, bi_set].sum(axis=1) /
-                                len(bi_set))
-            return imag_se
-            
-    def get_phonon_at_grid_point(self):
-        return (self._frequencies[self._grid_point],
-                self._eigenvectors[self._grid_point])
 
+        # Averaging imag-self-energies by degenerate bands
+        imag_se = np.zeros_like(self._imag_self_energy)
+        freqs = self._frequencies[self._grid_point]
+        deg_sets = degenerate_sets(freqs)
+        for dset in deg_sets:
+            bi_set = []
+            for i, bi in enumerate(self._band_indices):
+                if bi in dset:
+                    bi_set.append(i)
+            for i in bi_set:
+                if self._fpoints is None:
+                    imag_se[i] = (self._imag_self_energy[bi_set].sum() /
+                                  len(bi_set))
+                else:
+                    imag_se[:, i] = (
+                        self._imag_self_energy[:, bi_set].sum(axis=1) /
+                        len(bi_set))
+        return imag_se
+            
     def set_grid_point(self, grid_point=None):
         if grid_point is None:
             self._grid_point = None

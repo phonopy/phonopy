@@ -74,10 +74,6 @@ class FrequencyShift:
                                      len(bi_set))
             return shifts
 
-    def get_phonon_at_grid_point(self):
-        return (self._frequencies[self._grid_point],
-                self._eigenvectors[self._grid_point])
-
     def set_grid_point(self, grid_point=None):
         if grid_point is None:
             self._grid_point = None

@@ -567,29 +567,22 @@ def write_damping_functions(gp,
         w.write("%15.7f %20.15e\n" % (freq, g))
     w.close()
 
-def write_jointDOS(gp,
-                   mesh,
-                   frequencies,
-                   jdos,
-                   filename=None,
-                   is_nosym=False):
-    if filename==None:
-        if is_nosym:
-            jdos_filename = "jdos-m%d%d%d-g%d.nosym.dat" % (mesh[0],
-                                                            mesh[1],
-                                                            mesh[2],
-                                                            gp)
-        else:
-            jdos_filename = "jdos-m%d%d%d-g%d.dat" % (mesh[0],
-                                                      mesh[1],
-                                                      mesh[2],
-                                                      gp)
-    else:
-        jdos_filename = "jdos-m%d%d%d-g%d.%s.dat" % (mesh[0],
-                                                     mesh[1],
-                                                     mesh[2],
-                                                     gp,
-                                                     filename)
+def write_joint_dos(gp,
+                    mesh,
+                    frequencies,
+                    jdos,
+                    sigma=None,
+                    filename=None,
+                    is_nosym=False):
+
+    jdos_filename = "jdos-m%d%d%d-g%d" % (mesh[0], mesh[1], mesh[2], gp)
+    if sigma is not None:
+        jdos_filename += ("-s%f" % sigma).rstrip('0').rstrip('\.')
+    if is_nosym:
+        jdos_filename += ".nosym"
+    if filename is not None:
+        jdos_filename += ".%s" % filename
+    jdos_filename += ".dat" 
         
     w = open(jdos_filename, 'w')
     for omega, val in zip(frequencies, jdos):

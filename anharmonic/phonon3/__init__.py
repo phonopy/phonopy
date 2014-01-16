@@ -6,7 +6,7 @@ from anharmonic.phonon3.interaction import Interaction
 from anharmonic.phonon3.conductivity_RTA import conductivity_RTA
 from anharmonic.phonon3.joint_dos import JointDos
 from anharmonic.phonon3.gruneisen import Gruneisen
-from anharmonic.file_IO import read_gamma_from_hdf5, write_damping_functions, write_linewidth, write_frequency_shift, write_jointDOS, write_kappa_to_hdf5
+from anharmonic.file_IO import read_gamma_from_hdf5, write_damping_functions, write_linewidth, write_frequency_shift, write_joint_dos, write_kappa_to_hdf5
 from anharmonic.other.isotope import Isotope
 from phonopy.units import VaspToTHz
 
@@ -16,6 +16,7 @@ class Phono3py:
                  supercell,
                  primitive,
                  mesh,
+                 tetrahedron_method=False,
                  band_indices=None,
                  cutoff_frequency=1e-4,
                  frequency_factor_to_THz=VaspToTHz,
@@ -28,6 +29,7 @@ class Phono3py:
         self._supercell = supercell
         self._primitive = primitive
         self._mesh = mesh
+        self._tetrahedron_method = tetrahedron_method
         if band_indices is None:
             self._band_indices = [
                 np.arange(primitive.get_number_of_atoms() * 3)]
@@ -78,14 +80,26 @@ class Phono3py:
                              grid_points,
                              frequency_step=1.0,
                              sigmas=[0.1],
-                             temperatures=[0.0],
+                             temperatures=[0.0, 300.0],
                              output_filename=None):
+        if temperatures is None:
+            print "Temperatures have to be set."
+            return False
+
         ise = ImagSelfEnergy(self._interaction)
         for gp in grid_points:
             ise.set_grid_point(gp)
+            if self._log_level:
+                weights = self._interaction.get_triplets_at_q()[1]
+                print "------ Imaginary part of self energy ------"
+                print "Grid point: %d" % gp
+                print "Number of ir-triplets:",
+                print "%d / %d" % (len(weights), weights.sum())
             ise.run_interaction()
             for sigma in sigmas:
                 ise.set_sigma(sigma)
+                if self._log_level:
+                    print "Sigma:", sigma
                 for t in temperatures:
                     ise.set_temperature(t)
                     max_freq = (np.amax(self._interaction.get_phonons()[0]) * 2
@@ -114,12 +128,9 @@ class Phono3py:
     def get_linewidth(self,
                       grid_points,
                       sigmas=[0.1],
-                      t_max=1500,
-                      t_min=0,
-                      t_step=10,
+                      temperatures=np.arange(0, 1001, 10, dtype='double'),
                       output_filename=None):
         ise = ImagSelfEnergy(self._interaction)
-        temperatures = np.arange(t_min, t_max + t_step / 2.0, t_step)
         for gp in grid_points:
             ise.set_grid_point(gp)
             if self._log_level:
@@ -154,12 +165,9 @@ class Phono3py:
     def get_frequency_shift(self,
                             grid_points,
                             epsilon=0.1,
-                            t_max=1500,
-                            t_min=0,
-                            t_step=10,
+                            temperatures=np.arange(0, 1001, 10, dtype='double'),
                             output_filename=None):
         fst = FrequencyShift(self._interaction)
-        temperatures = np.arange(t_min, t_max + t_step / 2.0, t_step)
         for gp in grid_points:
             fst.set_grid_point(gp)
             if self._log_level:
@@ -190,30 +198,28 @@ class Phono3py:
                                       epsilon=epsilon,
                                       filename=output_filename)
 
-    def get_thermal_conductivity(self,
-                                 sigmas=[0.1],
-                                 t_max=1500,
-                                 t_min=0,
-                                 t_step=10,
-                                 mass_variances=None,
-                                 grid_points=None,
-                                 mesh_divisors=None,
-                                 coarse_mesh_shifts=None,
-                                 cutoff_lifetime=1e-4, # in second
-                                 no_kappa_stars=False,
-                                 gv_delta_q=1e-4, # for group velocity
-                                 write_gamma=False,
-                                 read_gamma=False,
-                                 write_amplitude=False,
-                                 read_amplitude=False,
-                                 output_filename=None,
-                                 input_filename=None):
+    def get_thermal_conductivity(
+            self,
+            temperatures=np.arange(0, 1001, 10, dtype='double'),
+            sigmas=[0.1],
+            mass_variances=None,
+            grid_points=None,
+            mesh_divisors=None,
+            coarse_mesh_shifts=None,
+            cutoff_lifetime=1e-4, # in second
+            no_kappa_stars=False,
+            gv_delta_q=1e-4, # for group velocity
+            write_gamma=False,
+            read_gamma=False,
+            write_amplitude=False,
+            read_amplitude=False,
+            output_filename=None,
+            input_filename=None):
         br = conductivity_RTA(self._interaction,
                               self._symmetry,
+                              temperatures=temperatures,
                               sigmas=sigmas,
-                              t_max=t_max,
-                              t_min=t_min,
-                              t_step=t_step,
+                              tetrahedron_method=self._tetrahedron_method,
                               mass_variances=mass_variances,
                               mesh_divisors=mesh_divisors,
                               coarse_mesh_shifts=coarse_mesh_shifts,
@@ -333,7 +339,8 @@ class Phono3pyJointDos:
                  mesh,
                  fc2,
                  nac_params=None,
-                 sigma=None,
+                 sigmas=[0.1],
+                 tetrahedron_method=False,
                  frequency_step=None,
                  frequency_factor_to_THz=VaspToTHz,
                  frequency_scale_factor=None,
@@ -346,7 +353,8 @@ class Phono3pyJointDos:
         self._mesh = mesh
         self._fc2 = fc2
         self._nac_params = nac_params
-        self._sigma = sigma
+        self._sigmas = sigmas
+        self._tetrahedron_method = tetrahedron_method
         self._frequency_step = frequency_step
         self._frequency_factor_to_THz = frequency_factor_to_THz
         self._frequency_scale_factor = frequency_scale_factor
@@ -361,7 +369,7 @@ class Phono3pyJointDos:
             self._supercell,
             self._fc2,
             nac_params=self._nac_params,
-            sigma=self._sigma,
+            tetrahedron_method=self._tetrahedron_method,
             frequency_step=self._frequency_step,
             frequency_factor_to_THz=self._frequency_factor_to_THz,
             frequency_scale_factor=self._frequency_scale_factor,
@@ -371,22 +379,24 @@ class Phono3pyJointDos:
             log_level=self._log_level)
 
     def run(self, grid_points):
-        self._grid_points = grid_points
-        self._jdos.run(grid_points)
+        for gp in grid_points:
+            if self._tetrahedron_method:
+                self._jdos.run(gp)
+                self._write(gp, sigma=None)
+            else:
+                for sigma in self._sigmas:
+                    self._jdos.set_sigma(sigma)
+                    self._jdos.run(gp)
+                    self._write(gp, sigma)
 
-    def get_jointDos(self, grid_points):
-        return self._jdos.get_joint_dos(), self._jdos.get_frequency_points()
-
-    def write(self):
-        for gp, jdos, freq_points in zip(self._grid_points,
-                                         self._jdos.get_joint_dos(),
-                                         self._jdos.get_frequency_points()):
-            write_jointDOS(gp,
-                           self._mesh,
-                           freq_points,
-                           jdos,
-                           filename=self._filename,
-                           is_nosym=self._is_nosym)
+    def _write(self, gp, sigma=None):
+        write_joint_dos(gp,
+                        self._mesh,
+                        self._jdos.get_frequency_points(),
+                        self._jdos.get_joint_dos(),
+                        sigma=sigma,
+                        filename=self._filename,
+                        is_nosym=self._is_nosym)
         
 def get_gruneisen_parameters(fc2,
                              fc3,

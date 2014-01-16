@@ -141,6 +141,7 @@ parser.set_defaults(band_indices=None,
                     is_symmetrize_fc2=False,
                     is_symmetrize_fc3_r=False,
                     is_symmetrize_fc3_q=False,                     
+                    is_tetrahedron_method=False,
                     log_level=None,
                     max_freepath=None,
                     mass_variances=None,
@@ -359,6 +360,9 @@ parser.add_option("-v", "--verbose", dest="verbose",
                   help="Detailed run-time information is displayed")
 parser.add_option("--loglevel", dest="log_level", type="int",
                   help="Log level")
+parser.add_option("--thm", "--tetrahedron_method", dest="is_tetrahedron_method",
+                  action="store_true",
+                  help="Use tetrahedron method")
 parser.add_option("--ts", dest="temperatures", 
                   type="string", help="Temperatures for damping functions")
 parser.add_option("--uplo",
@@ -666,7 +670,7 @@ if settings.get_is_nac():
         nac_params = parse_BORN(primitive)
     else:
         nac_params = parse_BORN(primitive_extra)
-    nac_q_direction = settings.get_q_direction()
+    nac_q_direction = settings.get_nac_q_direction()
 else:
     nac_params = None
     nac_q_direction = None
@@ -854,10 +858,6 @@ elif settings.get_mesh_numbers() is not None:
         supercell_dm = supercell_extra
         primitive_dm = primitive_extra
 
-    if settings.get_temperatures() is None:
-        temperatures = [None]
-    else:
-        temperatures = settings.get_temperatures()
 
     if log_level:
         print "--------------------------- Settings ----------------------------"
@@ -878,22 +878,22 @@ elif settings.get_mesh_numbers() is not None:
         sys.stdout.flush()
 
     if options.is_joint_dos:
-        joint_dos = Phono3pyJointDos(supercell_dm,
-                                     primitive_dm,
-                                     mesh,
-                                     fc2,
-                                     nac_params=nac_params,
-                                     sigma=sigma,
-                                     frequency_step=freq_step,
-                                     frequency_factor_to_THz=factor,
-                                     frequency_scale_factor=freq_scale,
-                                     is_nosym=options.is_nosym,
-                                     symprec=options.symprec,
-                                     output_filename=output_filename,
-                                     log_level=log_level)
+        joint_dos = Phono3pyJointDos(
+            supercell_dm,
+            primitive_dm,
+            mesh,
+            fc2,
+            nac_params=nac_params,
+            sigmas=multiple_sigmas,
+            tetrahedron_method=settings.get_is_tetrahedron_method(),
+            frequency_step=freq_step,
+            frequency_factor_to_THz=factor,
+            frequency_scale_factor=freq_scale,
+            is_nosym=options.is_nosym,
+            symprec=options.symprec,
+            output_filename=output_filename,
+            log_level=log_level)
         joint_dos.run(grid_points)
-        joint_dos.write()
-        
         
     elif options.is_isotope:
         if log_level:
@@ -926,18 +926,20 @@ elif settings.get_mesh_numbers() is not None:
         if log_level:
             print "Cutoff frequency:", settings.get_cutoff_frequency()
         
-        phono3py = Phono3py(fc3,
-                            supercell,
-                            primitive,
-                            mesh,
-                            band_indices=settings.get_band_indices(),
-                            cutoff_frequency=settings.get_cutoff_frequency(),
-                            frequency_factor_to_THz=factor,
-                            is_nosym=options.is_nosym,
-                            symmetrize_fc3_q=options.is_symmetrize_fc3_q,
-                            symprec=options.symprec,
-                            log_level=log_level,
-                            lapack_zheev_uplo=options.uplo)
+            phono3py = Phono3py(
+                fc3,
+                supercell,
+                primitive,
+                mesh,
+                tetrahedron_method=settings.get_is_tetrahedron_method(),
+                band_indices=settings.get_band_indices(),
+                cutoff_frequency=settings.get_cutoff_frequency(),
+                frequency_factor_to_THz=factor,
+                is_nosym=options.is_nosym,
+                symmetrize_fc3_q=options.is_symmetrize_fc3_q,
+                symprec=options.symprec,
+                log_level=log_level,
+                lapack_zheev_uplo=options.uplo)
 
         phono3py.set_dynamical_matrix(fc2,
                                       supercell_dm,
@@ -946,28 +948,31 @@ elif settings.get_mesh_numbers() is not None:
                                       nac_q_direction=nac_q_direction,
                                       frequency_scale_factor=freq_scale)
 
+        if settings.get_temperatures() is None:
+            t_max=settings.get_max_temperature()
+            t_min=settings.get_min_temperature()
+            t_step=settings.get_temperature_step()
+            temperatures = np.arange(t_min, t_max + float(t_step) / 10,
+                                     t_step)
+        else:
+            temperatures = settings.get_temperatures()
+            
         if settings.get_is_linewidth():
             phono3py.get_linewidth(
                 grid_points,
                 sigmas=multiple_sigmas,
-                t_max=settings.get_max_temperature(),
-                t_min=settings.get_min_temperature(),
-                t_step=settings.get_temperature_step(),
+                temperatures=temperatures,
                 output_filename=output_filename)
         elif settings.get_is_frequency_shift():
             phono3py.get_frequency_shift(
                 grid_points,
                 epsilon=sigma,
-                t_max=settings.get_max_temperature(),
-                t_min=settings.get_min_temperature(),
-                t_step=settings.get_temperature_step(),
+                temperatures=temperatures,
                 output_filename=output_filename)
         elif settings.get_is_bterta():
             phono3py.get_thermal_conductivity(
+                temperatures=temperatures,
                 sigmas=multiple_sigmas,
-                t_max=settings.get_max_temperature(),
-                t_min=settings.get_min_temperature(),
-                t_step=settings.get_temperature_step(),
                 mass_variances=settings.get_mass_variances(),
                 grid_points=grid_points,
                 mesh_divisors=settings.get_mesh_divisors(),
@@ -986,7 +991,7 @@ elif settings.get_mesh_numbers() is not None:
                 grid_points,
                 frequency_step=freq_step,
                 sigmas=multiple_sigmas,
-                temperatures=temperatures,
+                temperatures=settings.get_temperatures(),
                 output_filename=output_filename)
 else:
     pass
