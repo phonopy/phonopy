@@ -136,6 +136,7 @@ class Interaction:
         self._triplets_at_q = None
         self._weights_at_q = None
         self._grid_address = None
+        self._bz_map = None
         self._interaction_strength = None
 
         self._phonon_done = None
@@ -179,6 +180,9 @@ class Interaction:
     def get_grid_address(self):
         return self._grid_address
 
+    def get_bz_map(self):
+        return self._bz_map
+    
     def get_band_indices(self):
         return self._band_indices
 
@@ -197,14 +201,24 @@ class Interaction:
     def set_grid_point(self, grid_point):
         reciprocal_lattice = np.linalg.inv(self._primitive.get_cell())
         if self._is_nosym:
-            triplets_at_q, weights_at_q, grid_address = get_nosym_triplets_at_q(
-                grid_point, self._mesh, reciprocal_lattice)
+            (triplets_at_q,
+             weights_at_q,
+             grid_address,
+             bz_map) = get_nosym_triplets_at_q(
+                grid_point,
+                self._mesh,
+                reciprocal_lattice,
+                with_bz_map=True)
         else:
-            triplets_at_q, weights_at_q, grid_address = get_triplets_at_q(
+            (triplets_at_q,
+             weights_at_q,
+             grid_address,
+             bz_map)= get_triplets_at_q(
                 grid_point,
                 self._mesh,
                 self._symmetry.get_pointgroup_operations(),
-                reciprocal_lattice)
+                reciprocal_lattice,
+                with_bz_map=True)
 
         for triplet in triplets_at_q:
             sum_q = (grid_address[triplet]).sum(axis=0)
@@ -217,6 +231,7 @@ class Interaction:
         self._triplets_at_q = triplets_at_q
         self._weights_at_q = weights_at_q
         self._grid_address = grid_address
+        self._bz_map = bz_map
 
     def set_dynamical_matrix(self,
                              fc2,

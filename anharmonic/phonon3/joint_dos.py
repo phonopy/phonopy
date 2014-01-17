@@ -4,7 +4,7 @@ from phonopy.structure.symmetry import Symmetry
 from phonopy.file_IO import parse_BORN
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC
 from phonopy.units import VaspToTHz
-from anharmonic.phonon3.triplets import get_triplets_at_q, get_nosym_triplets_at_q
+from anharmonic.phonon3.triplets import get_triplets_at_q, get_nosym_triplets_at_q, get_tetrahedra_vertices
 from anharmonic.phonon3.interaction import get_dynamical_matrix, set_phonon_c
 from phonopy.structure.tetrahedron_method import TetrahedronMethod
 
@@ -124,14 +124,16 @@ class JointDos:
         if self._tetrahedron_method is None:
             self._run_smearing_method()
         else:
-            self._collect_tetrahedra_grid_points()
-            self._run_tetrahedron_method_py()
+            self._run_tetrahedron_method()
 
-    def _run_tetrahedron_method_py(self):
-        self._set_phonon_at_grid_points(
-            np.array([self._triplets_at_q[0][0]], dtype='intc'))
-        self._set_phonon_at_grid_points(self._vertices.flatten())
-        num_triplets = len(self._triplets_at_q)
+    def _run_tetrahedron_method(self):
+        self._vertices = get_tetrahedra_vertices(
+            self._tetrahedron_method.get_tetrahedra(),
+            self._mesh,
+            self._triplets_at_q,
+            self._grid_address,
+            self._bz_map)
+        self._set_phonon_at_grid_points(self._vertices.ravel())
         thm = self._tetrahedron_method
         f_max = np.max(self._frequencies) * 2 + self._frequency_step / 10
         f_min = np.min(self._frequencies) * 2
@@ -140,33 +142,18 @@ class JointDos:
         jdos = np.zeros_like(freq_points)
         for vertices, w in zip(self._vertices, self._weights_at_q):
             for i, j in list(np.ndindex(self._num_band, self._num_band)):
-                f1 = self._frequencies[vertices, i]
-                f2 = self._frequencies[vertices, j]
+                f1 = self._frequencies[vertices[0], i]
+                f2 = self._frequencies[vertices[1], j]
                 thm.set_tetrahedra_omegas(f1 + f2)
                 jdos += thm.run(freq_points) * w
 
         self._joint_dos = jdos / np.prod(self._mesh)
         self._frequency_points = freq_points
 
-    def _collect_tetrahedra_grid_points(self):
-        relative_adrs = self._tetrahedron_method.get_tetrahedra()
-        bzmesh = self._mesh * 2
-        grid_order = [1, self._mesh[0], self._mesh[0] * self._mesh[1]]
-        bz_grid_order = [1, bzmesh[0], bzmesh[0] * bzmesh[1]]
-        num_triplets = len(self._triplets_at_q)
-        self._vertices = np.zeros((num_triplets, 2, 24, 4), dtype='intc')
-        for i, tp in enumerate(self._triplets_at_q):
-            for j, adrs_shift in enumerate((relative_adrs, -relative_adrs)):
-                adrs = self._grid_address[tp[j + 1]] + adrs_shift
-                bz_gp = np.dot(adrs % bzmesh, bz_grid_order)
-                gp = np.dot(adrs % self._mesh, grid_order)
-                vgp = self._bz_map[bz_gp]
-                self._vertices[i, j] = vgp + (vgp == -1) * (gp + 1)
-
     def _run_smearing_method(self):
         import anharmonic._phono3py as phono3c
 
-        self._set_phonon_at_grid_points(self._triplets_at_q.flatten())
+        self._set_phonon_at_grid_points(self._triplets_at_q.ravel())
         f_max = np.max(self._frequencies) * 2 + self._sigma * 4
         f_min = np.min(self._frequencies) * 2 - self._sigma * 4
         freq_points = np.arange(f_min, f_max, self._frequency_step,

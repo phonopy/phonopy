@@ -2,6 +2,8 @@ import numpy as np
 from phonopy.units import THzToEv, Kb, VaspToTHz, Hbar, EV, Angstrom, THz, AMU
 from phonopy.phonon.group_velocity import degenerate_sets
 from phonopy.structure.tetrahedron_method import TetrahedronMethod
+from anharmonic.phonon3.triplets import get_tetrahedra_vertices
+from anharmonic.phonon3.interaction import set_phonon_c
 
 def gaussian(x, sigma):
     return 1.0 / np.sqrt(2 * np.pi) / sigma * np.exp(-x**2 / 2 / sigma**2)
@@ -9,69 +11,42 @@ def gaussian(x, sigma):
 def occupation(x, t):
     return 1.0 / (np.exp(THzToEv * x / (Kb * t)) - 1) 
     
-
 class ImagSelfEnergy:
     def __init__(self,
                  interaction,
                  grid_point=None,
-                 fpoints=None,
+                 frequency_points=None,
                  temperature=None,
-                 sigma=0.1,
-                 tetrahedron_method=False,
+                 sigma=None,
+                 tetrahedron_method=True,
                  lang='C'):
         self._interaction = interaction
         self.set_sigma(sigma)
         self.set_temperature(temperature)
-        self.set_fpoints(fpoints)
+        self.set_frequency_points(frequency_points)
         self.set_grid_point(grid_point=grid_point)
 
-        if tetrahedron_method:
-            reciprocal_lattice = np.linalg.inv(
-                self._interaction.get_primitive().get_cell())
-            self._tetrahedron_method = TetrahedronMethod(reciprocal_lattice)
-        else:
-            self._tetrahedron_method = None
-        
         self._lang = lang
         self._imag_self_energy = None
         self._fc3_normal_squared = None
         self._frequencies = None
-        self._grid_point_triplets = None
+        self._triplets_at_q = None
         self._triplet_weights = None
         self._band_indices = None
         self._unit_conversion = None
         self._cutoff_frequency = interaction.get_cutoff_frequency()
 
-    def run(self):
-        if self._fc3_normal_squared is None:        
-            self.run_interaction()
-
-        num_band0 = self._fc3_normal_squared.shape[1]
-        if self._fpoints is None:
-            self._imag_self_energy = np.zeros(num_band0, dtype='double')
-            if self._lang == 'C':
-                self._run_c_with_band_indices()
-            else:
-                self._run_py_with_band_indices()
-        else:
-            self._imag_self_energy = np.zeros((len(self._fpoints), num_band0),
-                                              dtype='double')
-            if self._lang == 'C':
-                self._run_c_with_fpoints()
-            else:
-                self._run_py_with_fpoints()
-
-    def run_interaction(self):
-        self._interaction.run(lang=self._lang)
-        self._fc3_normal_squared = self._interaction.get_interaction_strength()
-        (self._frequencies,
-         self._eigenvectors) = self._interaction.get_phonons()[:2]
-        self._band_indices = self._interaction.get_band_indices()
+        self._tetrahedron_method = None
+        self._vertices = None
+        self._grid_address = None
+        self._bz_map = None
+        if tetrahedron_method:
+            self.set_tetrahedron_method()
         
-        mesh = self._interaction.get_mesh_numbers()
-        num_grid = np.prod(mesh)
+        self._mesh = self._interaction.get_mesh_numbers()
 
         # Unit to THz of Gamma
+        num_grid = np.prod(self._mesh)
         self._unit_conversion = ((Hbar * EV) ** 3 / 36 / 8
                                  * EV ** 2 / Angstrom ** 6
                                  / (2 * np.pi * THz) ** 3
@@ -80,6 +55,26 @@ class ImagSelfEnergy:
                                  / (2 * np.pi * THz) ** 2
                                  / num_grid)
 
+    def run(self):
+        if self._fc3_normal_squared is None:        
+            self.run_interaction()
+
+        num_band0 = self._fc3_normal_squared.shape[1]
+        if self._frequency_points is None:
+            self._imag_self_energy = np.zeros(num_band0, dtype='double')
+            self._run_with_band_indices()
+        else:
+            self._imag_self_energy = np.zeros(
+                (len(self._frequency_points), num_band0), dtype='double')
+            self._run_with_frequency_points()
+
+    def run_interaction(self):
+        self._interaction.run(lang=self._lang)
+        self._fc3_normal_squared = self._interaction.get_interaction_strength()
+        (self._frequencies,
+         self._eigenvectors) = self._interaction.get_phonons()[:2]
+        self._band_indices = self._interaction.get_band_indices()
+        
     def get_imag_self_energy(self):
         if self._cutoff_frequency is None:
             return self._imag_self_energy
@@ -94,7 +89,7 @@ class ImagSelfEnergy:
                 if bi in dset:
                     bi_set.append(i)
             for i in bi_set:
-                if self._fpoints is None:
+                if self._frequency_points is None:
                     imag_se[i] = (self._imag_self_energy[bi_set].sum() /
                                   len(bi_set))
                 else:
@@ -109,21 +104,37 @@ class ImagSelfEnergy:
         else:
             self._interaction.set_grid_point(grid_point)
             self._fc3_normal_squared = None
-            (self._grid_point_triplets,
+            (self._triplets_at_q,
              self._triplet_weights) = self._interaction.get_triplets_at_q()
-            self._grid_point = self._grid_point_triplets[0, 0]
-        
+            self._grid_point = grid_point
+
+            if self._tetrahedron_method is not None:
+                grid_address = self._interaction.get_grid_address()
+                bz_map = self._interaction.get_bz_map()
+                self._vertices = get_tetrahedra_vertices(
+                    self._tetrahedron_method.get_tetrahedra(),
+                    self._mesh,
+                    self._triplets_at_q,
+                    grid_address,
+                    bz_map)
+                self._interaction.set_phonon(self._vertices.ravel())
+            
     def set_sigma(self, sigma):
         if sigma is None:
             self._sigma = None
         else:
             self._sigma = float(sigma)
 
-    def set_fpoints(self, fpoints):
-        if fpoints is None:
-            self._fpoints = None
+    def set_tetrahedron_method(self):
+        reciprocal_lattice = np.linalg.inv(
+            self._interaction.get_primitive().get_cell())
+        self._tetrahedron_method = TetrahedronMethod(reciprocal_lattice)
+
+    def set_frequency_points(self, frequency_points):
+        if frequency_points is None:
+            self._frequency_points = None
         else:
-            self._fpoints = np.double(fpoints)
+            self._frequency_points = np.double(frequency_points)
 
     def set_temperature(self, temperature):
         if temperature is None:
@@ -131,11 +142,26 @@ class ImagSelfEnergy:
         else:
             self._temperature = float(temperature)
         
+    def _run_with_band_indices(self):
+        if self._lang == 'C':
+            self._run_c_with_band_indices()
+        else:
+            self._run_py_with_band_indices()
+    
+    def _run_with_frequency_points(self):
+        if self._sigma is None:
+            self._run_thm_with_frequency_points()
+        else:
+            if self._lang == 'C':
+                self._run_c_with_frequency_points()
+            else:
+                self._run_py_with_frequency_points()
+
     def _run_c_with_band_indices(self):
         import anharmonic._phono3py as phono3c
         phono3c.imag_self_energy_at_bands(self._imag_self_energy,
                                           self._fc3_normal_squared,
-                                          self._grid_point_triplets,
+                                          self._triplets_at_q,
                                           self._triplet_weights,
                                           self._frequencies,
                                           self._band_indices,
@@ -144,12 +170,12 @@ class ImagSelfEnergy:
                                           self._unit_conversion,
                                           self._cutoff_frequency)
 
-    def _run_c_with_fpoints(self):
+    def _run_c_with_frequency_points(self):
         import anharmonic._phono3py as phono3c
-        for i, fpoint in enumerate(self._fpoints):
+        for i, fpoint in enumerate(self._frequency_points):
             phono3c.imag_self_energy(self._imag_self_energy[i],
                                      self._fc3_normal_squared,
-                                     self._grid_point_triplets,
+                                     self._triplets_at_q,
                                      self._triplet_weights,
                                      self._frequencies,
                                      fpoint,
@@ -160,25 +186,23 @@ class ImagSelfEnergy:
 
     def _run_py_with_band_indices(self):
         for i, (triplet, w, interaction) in enumerate(
-            zip(self._grid_point_triplets,
+            zip(self._triplets_at_q,
                 self._triplet_weights,
                 self._fc3_normal_squared)):
-            print "%d / %d" % (i + 1, len(self._grid_point_triplets))
+            print "%d / %d" % (i + 1, len(self._triplets_at_q))
 
             freqs = self._frequencies[triplet]
             for j, bi in enumerate(self._band_indices):
                 if self._temperature > 0:
                     self._imag_self_energy[j] += (
-                        self._imag_self_energy_at_bands(
-                            j, bi, freqs, interaction, w))
+                        self._ise_at_bands(j, bi, freqs, interaction, w))
                 else:
                     self._imag_self_energy[j] += (
-                        self._imag_self_energy_at_bands_0K(
-                            j, bi, freqs, interaction, w))
+                        self._ise_at_bands_0K(j, bi, freqs, interaction, w))
 
         self._imag_self_energy *= self._unit_conversion
 
-    def _imag_self_energy_at_bands(self, i, bi, freqs, interaction, weight):
+    def _ise_at_bands(self, i, bi, freqs, interaction, weight):
         sum_g = 0
         for (j, k) in list(np.ndindex(interaction.shape[1:])):
             if (freqs[1][j] > self._cutoff_frequency and
@@ -195,7 +219,7 @@ class ImagSelfEnergy:
                           (n2 - n3) * (g2 - g3)) * interaction[i, j, k] * weight
         return sum_g
 
-    def _imag_self_energy_at_bands_0K(self, i, bi, freqs, interaction, weight):
+    def _ise_at_bands_0K(self, i, bi, freqs, interaction, weight):
         sum_g = 0
         for (j, k) in list(np.ndindex(interaction.shape[1:])):
             g1 = gaussian(freqs[0, bi] - freqs[1, j] - freqs[2, k],
@@ -205,41 +229,78 @@ class ImagSelfEnergy:
         return sum_g
 
 
-    def _run_py_with_fpoints(self):
+    def _run_py_with_frequency_points(self):
         for i, (triplet, w, interaction) in enumerate(
-            zip(self._grid_point_triplets,
+            zip(self._triplets_at_q,
                 self._triplet_weights,
                 self._fc3_normal_squared)):
-            print "%d / %d" % (i + 1, len(self._grid_point_triplets))
+            print "%d / %d" % (i + 1, len(self._triplets_at_q))
 
             # freqs[2, num_band]
             freqs = self._frequencies[triplet[1:]]
             if self._temperature > 0:
-                self._imag_self_energy_with_fpoints(freqs, interaction, w)
+                self._ise_with_frequency_points(freqs, interaction, w)
             else:
-                self._imag_self_energy_with_fpoints_0K(freqs, interaction, w)
+                self._ise_with_frequency_points_0K(freqs, interaction, w)
 
         self._imag_self_energy *= self._unit_conversion
 
-    def _imag_self_energy_with_fpoints(self, freqs, interaction, weight):
-        for (i, j, k) in list(np.ndindex(interaction.shape)):
+    def _ise_with_frequency_points(self, freqs, interaction, weight):
+        for j, k in list(np.ndindex(interaction.shape[1:])):
             if (freqs[0][j] > self._cutoff_frequency and
                 freqs[1][k] > self._cutoff_frequency):
                 n2 = occupation(freqs[0][j], self._temperature)
                 n3 = occupation(freqs[1][k], self._temperature)
-                g1 = gaussian(self._fpoints - freqs[0][j] - freqs[1][k],
-                              self._sigma)
-                g2 = gaussian(self._fpoints + freqs[0][j] - freqs[1][k],
-                              self._sigma)
-                g3 = gaussian(self._fpoints - freqs[0][j] + freqs[1][k],
-                              self._sigma)
+                g1 = gaussian(self._frequency_points
+                              - freqs[0][j] - freqs[1][k], self._sigma)
+                g2 = gaussian(self._frequency_points
+                              + freqs[0][j] - freqs[1][k], self._sigma)
+                g3 = gaussian(self._frequency_points
+                              - freqs[0][j] + freqs[1][k], self._sigma)
+            else:
+                continue
+            
+            for i in range(len(interaction)):
                 self._imag_self_energy[:, i] += (
                     (n2 + n3 + 1) * g1 +
                     (n2 - n3) * (g2 - g3)) * interaction[i, j, k] * weight
 
-    def _imag_self_energy_with_fpoints_0K(self, freqs, interaction, weight):
+    def _ise_with_frequency_points_0K(self, freqs, interaction, weight):
         for (i, j, k) in list(np.ndindex(interaction.shape)):
-            g1 = gaussian(self._fpoints - freqs[0][j] - freqs[1][k],
+            g1 = gaussian(self._frequency_points - freqs[0][j] - freqs[1][k],
                           self._sigma)
             self._imag_self_energy[:, i] += g1 * interaction[i, j, k] * weight
         
+    def _run_thm_with_frequency_points(self):
+        self._set_phonon_at_grid_points(self._vertices.flatten())
+        thm = self._tetrahedron_method
+        f_max = np.max(self._frequencies) * 2 + self._frequency_step / 10
+        f_min = np.min(self._frequencies) * 2
+        freq_points = np.arange(f_min, f_max, self._frequency_step,
+                                dtype='double')
+        ise = np.zeros_like(freq_points)
+        for tp, vertices, w, interaction in zip(self._triplets_at_q,
+                                                self._vertices,
+                                                self._weights_at_q,
+                                                self._interaction):
+            for i, j in list(np.ndindex(self._interaction[2:])):
+                n2 = occupation(self._frequencies[tp[1]][j], self._temperature)
+                n3 = occupation(self._frequencies[tp[2]][k], self._temperature)
+                f1 = self._frequencies[vertices[0], i]
+                f2 = self._frequencies[vertices[1], j]
+                thm.set_tetrahedra_omegas(f1 + f2)
+                ise += thm.run(freq_points) * w
+
+                for k in range(len(interaction)):
+                    self._imag_self_energy[:, i] += (
+                        (n2 + n3 + 1) * g1 +
+                        (n2 - n3) * (g2 - g3)) * interaction[k, i, j] * w
+
+        self._imag_self_energy *= self._unit_conversion
+                
+                
+    def _ise_thm_with_frequency_points_0K(self, freqs, interaction, weight):
+        for (i, j, k) in list(np.ndindex(interaction.shape)):
+            g1 = gaussian(self._frequency_points - freqs[0][j] - freqs[1][k],
+                          self._sigma)
+            self._imag_self_energy[:, i] += g1 * interaction[i, j, k] * weight

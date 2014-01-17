@@ -832,12 +832,15 @@ elif settings.get_mesh_numbers() is not None:
     freq_factor = 1.0
 
     if settings.get_sigma() is None:
-        sigma = 0.2 * freq_factor
+        sigma = None
     else:
         sigma = settings.get_sigma()
 
     if settings.get_multiple_sigmas() is None:
-        multiple_sigmas = [sigma]
+        if sigma:
+            multiple_sigmas = [sigma]
+        else:
+            multiple_sigmas = []
     else:
         multiple_sigmas = settings.get_multiple_sigmas()
 

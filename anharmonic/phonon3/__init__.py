@@ -79,7 +79,7 @@ class Phono3py:
     def get_imag_self_energy(self,
                              grid_points,
                              frequency_step=1.0,
-                             sigmas=[0.1],
+                             sigmas=[],
                              temperatures=[0.0, 300.0],
                              output_filename=None):
         if temperatures is None:
@@ -96,41 +96,73 @@ class Phono3py:
                 print "Number of ir-triplets:",
                 print "%d / %d" % (len(weights), weights.sum())
             ise.run_interaction()
+            max_phonon_freq = np.amax(self._interaction.get_phonons()[0])
+            if self._tetrahedron_method:
+                ise.set_sigma(None)
+                ise.set_tetrahedron_method()
+                fmax = max_phonon_freq * 2 + frequency_step / 10
+                fmin = 0
+                frequency_points = np.arange(fmin, fmax, frequency_step)
+                ise.set_frequency_points(frequency_points)
+                if self._log_level:
+                    print "Tetrahedron method"
+                for t in temperatures:
+                    ise.set_temperature(t)
+                    ise.run()
+                    self._write_imag_self_energy(
+                        ise.get_imag_self_energy(),
+                        gp,
+                        frequency_points,
+                        t,
+                        filename=output_filename)
+                    
             for sigma in sigmas:
                 ise.set_sigma(sigma)
+                fmax = max_phonon_freq * 2 + sigma * 4 + frequency_step / 10
+                fmin = 0
+                frequency_points = np.arange(fmin, fmax, frequency_step)
+                ise.set_frequency_points(frequency_points)
                 if self._log_level:
                     print "Sigma:", sigma
                 for t in temperatures:
                     ise.set_temperature(t)
-                    max_freq = (np.amax(self._interaction.get_phonons()[0]) * 2
-                                + sigma * 4)
-                    fpoints = np.arange(0, max_freq + frequency_step / 2,
-                                        frequency_step)
-                    ise.set_fpoints(fpoints)
                     ise.run()
-                    gamma = ise.get_imag_self_energy()
+                    self._write_imag_self_energy(
+                        ise.get_imag_self_energy(),
+                        gp,
+                        frequency_points,
+                        t,
+                        sigma=sigma,
+                        filename=output_filename)
 
-                    for i, bi in enumerate(self._band_indices):
-                        pos = 0
-                        for j in range(i):
-                            pos += len(self._band_indices[j])
-
-                        write_damping_functions(
-                            gp,
-                            bi,
-                            self._mesh,
-                            fpoints,
-                            gamma[:, pos:(pos + len(bi))].sum(axis=1) / len(bi),
-                            sigma=sigma,
-                            temperature=t,
-                            filename=output_filename)
-
+    def _write_imag_self_energy(self,
+                                gamma,
+                                grid_point,
+                                frequency_points,
+                                temperature,
+                                sigma=None,
+                                filename=None):
+        for i, bi in enumerate(self._band_indices):
+            pos = 0
+            for j in range(i):
+                pos += len(self._band_indices[j])
+            write_damping_functions(
+                grid_point,
+                bi,
+                self._mesh,
+                frequency_points,
+                gamma[:, pos:(pos + len(bi))].sum(axis=1) / len(bi),
+                sigma=sigma,
+                temperature=temperature,
+                filename=filename)
+                        
     def get_linewidth(self,
                       grid_points,
                       sigmas=[0.1],
                       temperatures=np.arange(0, 1001, 10, dtype='double'),
                       output_filename=None):
-        ise = ImagSelfEnergy(self._interaction)
+        ise = ImagSelfEnergy(self._interaction,
+                             tetrahedron_method=self._tetrahedron_method)
         for gp in grid_points:
             ise.set_grid_point(gp)
             if self._log_level:
@@ -253,9 +285,9 @@ class Phono3py:
                 gamma.append(gamma_at_sigma)
             br.set_gamma(np.array(gamma, dtype='double'))
 
-        br.calculate_kappa(write_amplitude=write_amplitude,
-                           read_amplitude=read_amplitude,
-                           write_gamma=write_gamma)        
+        br.run(write_amplitude=write_amplitude,
+               read_amplitude=read_amplitude,
+               write_gamma=write_gamma)        
         mode_kappa = br.get_kappa()
         gamma = br.get_gamma()
 

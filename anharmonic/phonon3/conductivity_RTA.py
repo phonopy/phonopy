@@ -77,21 +77,37 @@ class conductivity_RTA:
         if mass_variances is not None:
             self._set_isotope(mass_variances)
 
-    def get_mesh_divisors(self):
-        return self._mesh_divisors
+    def run(self,
+            write_amplitude=False,
+            read_amplitude=False,
+            write_gamma=False):
+        self._allocate_values()
+        self._pp.set_phonon(self._grid_points)
+        self._frequencies = self._pp.get_phonons()[0]
 
-    def get_mesh_numbers(self):
-        return self._mesh
+        for i, grid_point in enumerate(self._grid_points):
+            self._show_log_header(i)            
+            if not self._read_gamma:
+                self._ise.set_grid_point(grid_point)
+                
+                if self._log_level:
+                    print "Number of triplets:",
+                    print len(self._pp.get_triplets_at_q()[0])
+                    print "Calculating interaction..."
+                    
+                self._ise.run_interaction()
+                self._set_gamma_at_sigmas(i)
 
-    def get_group_velocities(self):
-        return self._gv
+            if self._isotope is not None:
+                self._set_gamma_isotope_at_sigmas(i)
 
-    def get_mode_heat_capacities(self):
-        return self._cv
+            self._set_kappa_at_sigmas(i)
 
-    def get_frequencies(self):
-        return self._frequencies[self._grid_points]
-        
+            if write_gamma:
+                self._write_gamma(i)
+                if self._log_level > 1:
+                    self._write_triplets(grid_point)
+
     def set_grid_points(self, grid_points=None):
         self._grid_address = self._pp.get_grid_address()
 
@@ -137,6 +153,21 @@ class conductivity_RTA:
         self._qpoints = np.array(self._grid_address[self._grid_points] /
                                  self._mesh.astype('double'), dtype='double')
 
+    def get_mesh_divisors(self):
+        return self._mesh_divisors
+
+    def get_mesh_numbers(self):
+        return self._mesh
+
+    def get_group_velocities(self):
+        return self._gv
+
+    def get_mode_heat_capacities(self):
+        return self._cv
+
+    def get_frequencies(self):
+        return self._frequencies[self._grid_points]
+        
     def get_qpoints(self):
         return self._qpoints
             
@@ -161,37 +192,6 @@ class conductivity_RTA:
         
     def get_kappa(self):
         return self._kappa / self._sum_num_kstar
-
-    def calculate_kappa(self,
-                        write_amplitude=False,
-                        read_amplitude=False,
-                        write_gamma=False):
-        self._allocate_values()
-        self._pp.set_phonon(self._grid_points)
-        self._frequencies = self._pp.get_phonons()[0]
-
-        for i, grid_point in enumerate(self._grid_points):
-            self._show_log_header(i)            
-            if not self._read_gamma:
-                self._ise.set_grid_point(grid_point)
-                
-                if self._log_level:
-                    print "Number of triplets:",
-                    print len(self._pp.get_triplets_at_q()[0])
-                    print "Calculating interaction..."
-                    
-                self._ise.run_interaction()
-                self._set_gamma_at_sigmas(i)
-
-            if self._isotope is not None:
-                self._set_gamma_isotope_at_sigmas(i)
-
-            self._set_kappa_at_sigmas(i)
-
-            if write_gamma:
-                self._write_gamma(i)
-                if self._log_level > 1:
-                    self._write_triplets(grid_point)
 
     def _show_log_header(self, i):
         if self._log_level:
