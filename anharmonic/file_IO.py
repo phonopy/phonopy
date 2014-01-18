@@ -700,10 +700,10 @@ def write_kappa_to_hdf5(gamma,
     if mesh_divisors is not None:
         if (np.array(mesh_divisors, dtype=int) != 1).any():
             suffix += "-d%d%d%d" % tuple(mesh_divisors)
-    sigma_str = ("%f" % sigma).rstrip('0').rstrip('\.')
     if grid_point is not None:
         suffix += ("-g%d" % grid_point)
     if sigma is not None:
+        sigma_str = ("%f" % sigma).rstrip('0').rstrip('\.')
         suffix += "-s" + sigma_str
     if filename is not None:
         suffix += "." + filename

@@ -56,18 +56,14 @@ class TetrahedronMethod:
         self._omegas = None
         self._create_tetrahedra()
         self._set_relative_grid_addresses()
+        self._integration_weight = None
 
     def run(self, omegas, value='I'):
         try:
             import phonopy._phonopy as phonoc
-            return self._run_c(omegas, value=value)
+            self._run_c(omegas, value=value)
         except ImportError:
-            if isinstance(omegas, float):
-                return self._run_py(omega, value=value)
-            else:
-                integration_weights = np.zeros(len(omegas), dtype='double')
-                for i, omega in enumerate(omegas):
-                    integration_weights[i] = self._run_py(omega, value=value)
+            pass
 
     def get_tetrahedra(self):
         """
@@ -81,12 +77,25 @@ class TetrahedronMethod:
         """
         self._tetrahedra_omegas = tetrahedra_omegas
 
-    def _run_c(self, omega, value='I'):
-        return spg.get_tetrahedra_integration_weight(omega,
-                                                     self._tetrahedra_omegas,
-                                                     function=value)
+    def get_integration_weight(self):
+        return self._integration_weight
+
+    def _run_c(self, omegas, value='I'):
+        self._integration_weight = spg.get_tetrahedra_integration_weight(
+            omegas,
+            self._tetrahedra_omegas,
+            function=value)
 
     def _run_py(self, omega, value='I'):
+        if isinstance(omegas, float) or isinstance(omegas, int):
+            iw = self._get_integration_weight_py(omegas, value=value)
+        else:
+            iw = np.zeros(len(omegas), dtype='double')
+            for i, omega in enumerate(omegas):
+                iw = self._get_integration_weight_py(omega, value=value)
+        self._integration_weight = iw
+
+    def _get_integration_weight_py(self, omega, value='I'):
         self._sort_indices = np.argsort(self._tetrahedra_omegas, axis=1)
         sum_value = 0.0
         self._omega = omega

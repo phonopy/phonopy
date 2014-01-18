@@ -929,20 +929,20 @@ elif settings.get_mesh_numbers() is not None:
         if log_level:
             print "Cutoff frequency:", settings.get_cutoff_frequency()
         
-            phono3py = Phono3py(
-                fc3,
-                supercell,
-                primitive,
-                mesh,
-                tetrahedron_method=settings.get_is_tetrahedron_method(),
-                band_indices=settings.get_band_indices(),
-                cutoff_frequency=settings.get_cutoff_frequency(),
-                frequency_factor_to_THz=factor,
-                is_nosym=options.is_nosym,
-                symmetrize_fc3_q=options.is_symmetrize_fc3_q,
-                symprec=options.symprec,
-                log_level=log_level,
-                lapack_zheev_uplo=options.uplo)
+        phono3py = Phono3py(
+            fc3,
+            supercell,
+            primitive,
+            mesh,
+            tetrahedron_method=settings.get_is_tetrahedron_method(),
+            band_indices=settings.get_band_indices(),
+            cutoff_frequency=settings.get_cutoff_frequency(),
+            frequency_factor_to_THz=factor,
+            is_nosym=options.is_nosym,
+            symmetrize_fc3_q=options.is_symmetrize_fc3_q,
+            symprec=options.symprec,
+            log_level=log_level,
+            lapack_zheev_uplo=options.uplo)
 
         phono3py.set_dynamical_matrix(fc2,
                                       supercell_dm,

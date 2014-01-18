@@ -145,7 +145,9 @@ class JointDos:
                 f1 = self._frequencies[vertices[0], i]
                 f2 = self._frequencies[vertices[1], j]
                 thm.set_tetrahedra_omegas(f1 + f2)
-                jdos += thm.run(freq_points) * w
+                thm.run(freq_points)
+                iw = thm.get_integration_weight()
+                jdos += iw * w
 
         self._joint_dos = jdos / np.prod(self._mesh)
         self._frequency_points = freq_points

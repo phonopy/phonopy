@@ -87,6 +87,11 @@ class Phono3py:
             return False
 
         ise = ImagSelfEnergy(self._interaction)
+        if self._tetrahedron_method:
+            thm_plus_sigmas = [None] + list(sigmas)
+        else:
+            thm_plus_sigmas = list(sigmas)
+        
         for gp in grid_points:
             ise.set_grid_point(gp)
             if self._log_level:
@@ -96,35 +101,37 @@ class Phono3py:
                 print "Number of ir-triplets:",
                 print "%d / %d" % (len(weights), weights.sum())
             ise.run_interaction()
-            max_phonon_freq = np.amax(self._interaction.get_phonons()[0])
-            if self._tetrahedron_method:
-                ise.set_sigma(None)
-                ise.set_tetrahedron_method()
-                fmax = max_phonon_freq * 2 + frequency_step / 10
-                fmin = 0
-                frequency_points = np.arange(fmin, fmax, frequency_step)
-                ise.set_frequency_points(frequency_points)
+            frequencies = self._interaction.get_phonons()[0]
+            max_phonon_freq = np.amax(frequencies)
+
+            if self._log_level:
+                adrs = self._interaction.get_grid_address()[gp]
+                q = adrs.astype('double') / self._mesh
+                print "q-point:", q
+                print "Phonon frequency:"
+                print frequencies[gp]
+            
+            for sigma in thm_plus_sigmas:
                 if self._log_level:
-                    print "Tetrahedron method"
-                for t in temperatures:
-                    ise.set_temperature(t)
-                    ise.run()
-                    self._write_imag_self_energy(
-                        ise.get_imag_self_energy(),
-                        gp,
-                        frequency_points,
-                        t,
-                        filename=output_filename)
-                    
-            for sigma in sigmas:
+                    if sigma:
+                        print "Sigma:", sigma
+                    else:
+                        print "Tetrahedron method"
                 ise.set_sigma(sigma)
-                fmax = max_phonon_freq * 2 + sigma * 4 + frequency_step / 10
+                if sigma:
+                    fmax = max_phonon_freq * 2 + sigma * 4 + frequency_step / 10
+                else:
+                    fmax = max_phonon_freq * 2 + frequency_step / 10
                 fmin = 0
                 frequency_points = np.arange(fmin, fmax, frequency_step)
                 ise.set_frequency_points(frequency_points)
-                if self._log_level:
-                    print "Sigma:", sigma
+
+                if not sigma:
+                    ise.set_integration_weights()
+                
                 for t in temperatures:
+                    if self._log_level:
+                        print "Temperature:", t
                     ise.set_temperature(t)
                     ise.run()
                     self._write_imag_self_energy(
@@ -158,24 +165,46 @@ class Phono3py:
                         
     def get_linewidth(self,
                       grid_points,
-                      sigmas=[0.1],
+                      sigmas=[],
                       temperatures=np.arange(0, 1001, 10, dtype='double'),
                       output_filename=None):
-        ise = ImagSelfEnergy(self._interaction,
-                             tetrahedron_method=self._tetrahedron_method)
+        ise = ImagSelfEnergy(self._interaction)
+        if self._tetrahedron_method:
+            thm_plus_sigmas = [None] + list(sigmas)
+        else:
+            thm_plus_sigmas = list(sigmas)
+            
         for gp in grid_points:
             ise.set_grid_point(gp)
             if self._log_level:
                 weights = self._interaction.get_triplets_at_q()[1]
                 print "------ Linewidth ------"
+                print "Grid point: %d" % gp
                 print "Number of ir-triplets:",
                 print "%d / %d" % (len(weights), weights.sum())
             ise.run_interaction()
-            for sigma in sigmas:
+            frequencies = self._interaction.get_phonons()[0]
+            if self._log_level:
+                adrs = self._interaction.get_grid_address()[gp]
+                q = adrs.astype('double') / self._mesh
+                print "q-point:", q
+                print "Phonon frequency:"
+                print frequencies[gp]
+            
+            for sigma in thm_plus_sigmas:
+                if self._log_level:
+                    if sigma:
+                        print "Sigma:", sigma
+                    else:
+                        print "Tetrahedron method"
                 ise.set_sigma(sigma)
                 gamma = np.zeros((len(temperatures),
                                   len(self._band_indices_flatten)),
                                  dtype='double')
+
+                if not sigma:
+                    ise.set_integration_weights()
+                
                 for i, t in enumerate(temperatures):
                     ise.set_temperature(t)
                     ise.run()
@@ -233,7 +262,7 @@ class Phono3py:
     def get_thermal_conductivity(
             self,
             temperatures=np.arange(0, 1001, 10, dtype='double'),
-            sigmas=[0.1],
+            sigmas=[],
             mass_variances=None,
             grid_points=None,
             mesh_divisors=None,
@@ -247,6 +276,10 @@ class Phono3py:
             read_amplitude=False,
             output_filename=None,
             input_filename=None):
+        if self._tetrahedron_method:
+            thm_plus_sigmas = [None] + list(sigmas)
+        else:
+            thm_plus_sigmas = list(sigmas)
         br = conductivity_RTA(self._interaction,
                               self._symmetry,
                               temperatures=temperatures,
@@ -293,10 +326,13 @@ class Phono3py:
 
         if grid_points is None:
             temperatures = br.get_temperatures()
-            for i, sigma in enumerate(sigmas):
+            for i, sigma in enumerate(thm_plus_sigmas):
                 kappa = mode_kappa[i].sum(axis=2).sum(axis=0)
-                print "----------- Thermal conductivity (W/m-k) for",
-                print "sigma=%s -----------" % sigma
+                print "----------- Thermal conductivity (W/m-k)",
+                if sigma:
+                    print "for sigma=%s -----------" % sigma
+                else:
+                    print "with tetrahedron method -----------"
                 print ("#%6s     " + " %-9s" * 6) % ("T(K)", "xx", "yy", "zz",
                                                     "yz", "xz", "xy")
                 for t, k in zip(temperatures, kappa):
@@ -371,7 +407,7 @@ class Phono3pyJointDos:
                  mesh,
                  fc2,
                  nac_params=None,
-                 sigmas=[0.1],
+                 sigmas=[],
                  tetrahedron_method=False,
                  frequency_step=None,
                  frequency_factor_to_THz=VaspToTHz,
@@ -415,11 +451,13 @@ class Phono3pyJointDos:
             if self._tetrahedron_method:
                 self._jdos.run(gp)
                 self._write(gp, sigma=None)
-            else:
+            elif self._sigmas:
                 for sigma in self._sigmas:
                     self._jdos.set_sigma(sigma)
                     self._jdos.run(gp)
                     self._write(gp, sigma)
+            else:
+                print "sigma or tetrahedron method has to be set."
 
     def _write(self, gp, sigma=None):
         write_joint_dos(gp,

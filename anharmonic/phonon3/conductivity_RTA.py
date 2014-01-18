@@ -17,9 +17,9 @@ class conductivity_RTA:
     def __init__(self,
                  interaction,
                  symmetry,
-                 temperatures=[300.0],
-                 sigmas=[0.1],
-                 tetrahedron_method=False,
+                 temperatures=np.arange(0, 1001, 10, dtype='double'),
+                 sigmas=[],
+                 tetrahedron_method=True,
                  mass_variances=None,
                  mesh_divisors=None,
                  coarse_mesh_shifts=None,
@@ -29,9 +29,13 @@ class conductivity_RTA:
                  log_level=0,
                  filename=None):
         self._pp = interaction
+        self._tetrahedron_method = tetrahedron_method
         self._ise = ImagSelfEnergy(self._pp)
         self._temperatures = temperatures
-        self._sigmas = sigmas
+        if tetrahedron_method:
+            self._sigmas = [None] + list(sigmas)
+        else:
+            self._sigmas = list(sigmas)
         self._no_kappa_stars = no_kappa_stars
         self._gv_delta_q = gv_delta_q
         self._log_level = log_level
@@ -232,8 +236,14 @@ class conductivity_RTA:
     def _set_gamma_at_sigmas(self, i):
         for j, sigma in enumerate(self._sigmas):
             if self._log_level:
-                print "Calculating Gamma of ph-ph with sigma=%s" % sigma
+                print "Calculating Gamma of ph-ph with",
+                if sigma is None:
+                    print "tetrahedron method"
+                else:
+                    print "sigma=%s" % sigma
             self._ise.set_sigma(sigma)
+            if not sigma:
+                self._ise.set_integration_weights()
             for k, t in enumerate(self._temperatures):
                 self._ise.set_temperature(t)
                 self._ise.run()
@@ -268,7 +278,7 @@ class conductivity_RTA:
             gv_sum2[j] = gv_by_gv_tensor[:, :, vxv[0], vxv[1]].sum(axis=0)
 
         # Kappa
-        for j, sigma in enumerate(self._sigmas):
+        for j in range(len(self._sigmas)):
             for k, l in list(np.ndindex(len(self._temperatures), len(freqs))):
                 g_phph = self._gamma[j, i, k, l]
                 if g_phph < 0.5 / self._cutoff_lifetime / THz:
