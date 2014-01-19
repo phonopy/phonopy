@@ -84,8 +84,6 @@ class TetrahedronMesh:
         else:
             self._frequency_points = frequency_points
 
-
-        
         num_ir_grid_points = len(self._ir_grid_points)
         num_band = self._cell.get_number_of_atoms() * 3
         num_freqs = len(self._frequency_points)
@@ -95,16 +93,12 @@ class TetrahedronMesh:
         relative_grid_address = self._tm.get_tetrahedra()
 
         for i, gp in enumerate(self._ir_grid_points):
-            # print "#", (i + 1)
-            # sys.stdout.flush()        
             self._set_tetrahedra_frequencies(gp, relative_grid_address)
             for ib, frequencies in enumerate(self._tetrahedra_frequencies):
                 self._tm.set_tetrahedra_omegas(frequencies)
-                for j, f in enumerate(self._frequency_points):
-                    iw = self._tm.run(f, value=value)
-                    self._integration_weights[j, ib, i] = iw
-                # iw = self._tm.run(self._frequency_points, value=value)
-                # self._integration_weights[:, ib, i] = iw
+                self._tm.run(self._frequency_points, value=value)
+                iw = self._tm.get_integration_weight()
+                self._integration_weights[:, ib, i] = iw
 
         self._integration_weights /= np.prod(self._mesh)
 
