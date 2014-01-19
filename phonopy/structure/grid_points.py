@@ -146,7 +146,7 @@ class GridPoints:
         mesh_equiv = [m[1] == m[2], m[2] == m[0], m[0] == m[1]]
         lattice_equiv = get_lattice_vector_equivalence(
             [r.T for r in self._rotations])
-        return np.array_equal(mesh_equiv, lattice_equiv)
+        return np.extract(lattice_equiv, mesh_equiv).all()
     
     def _fit_qpoints_in_BZ(self):
         # reciprocal_lattice: column vectors
