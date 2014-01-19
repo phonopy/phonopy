@@ -202,23 +202,6 @@ def find_primitive(bulk, symprec=1e-5, angle_tolerance=-1.0):
     else:
         return None, None, None
   
-def get_ir_kpoints(kpoint,
-                   bulk,
-                   is_time_reversal=True,
-                   symprec=1e-5):
-    """
-    Retrun irreducible kpoints
-    """
-    mapping = np.zeros(kpoint.shape[0], dtype='intc')
-    spg.ir_kpoints(mapping,
-                   kpoint,
-                   bulk.get_cell().T.copy(),
-                   bulk.get_scaled_positions().copy(),
-                   np.array(bulk.get_atomic_numbers(), dtype='intc').copy(),
-                   is_time_reversal * 1,
-                   symprec)
-    return mapping
-  
 def get_ir_reciprocal_mesh(mesh,
                            bulk,
                            is_shift=np.zeros(3, dtype='intc'),
@@ -353,7 +336,24 @@ def get_BZ_triplets_at_q(grid_point,
                                       weights,
                                       np.array(mesh, dtype='intc').copy())
     return triplets
-                           
+
+def get_triplets_tetrahedra_vertices(relative_grid_address,
+                                     mesh,
+                                     triplets,
+                                     bz_grid_address,
+                                     bz_map):
+    num_tripltes = len(triplets)
+    vertices = np.zeros((num_tripltes, 2, 24, 4), dtype='intc')
+    num_ir_ret = spg.triplets_tetrahedra_vertices(
+        vertices,
+        relative_grid_address,
+        np.array(mesh, dtype='intc').copy(),
+        triplets,
+        bz_grid_address,
+        bz_map)
+
+    return vertices
+
 def get_tetrahedra_relative_grid_address(reciprocal_lattice):
     """
     reciprocal_lattice:
