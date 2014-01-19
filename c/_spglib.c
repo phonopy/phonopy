@@ -11,13 +11,14 @@ static PyObject * get_symmetry(PyObject *self, PyObject *args);
 static PyObject *
 get_symmetry_with_collinear_spin(PyObject *self, PyObject *args);
 static PyObject * find_primitive(PyObject *self, PyObject *args);
-static PyObject * get_ir_kpoints(PyObject *self, PyObject *args);
 static PyObject * get_ir_reciprocal_mesh(PyObject *self, PyObject *args);
 static PyObject * get_stabilized_reciprocal_mesh(PyObject *self, PyObject *args);
 static PyObject * relocate_BZ_grid_address(PyObject *self, PyObject *args);
 static PyObject *
 get_triplets_reciprocal_mesh_at_q(PyObject *self, PyObject *args);
 static PyObject * get_BZ_triplets_at_q(PyObject *self, PyObject *args);
+static PyObject *
+get_triplets_tetrahedra_vertices(PyObject *self, PyObject *args);
 static PyObject *
 get_tetrahedra_relative_grid_address(PyObject *self, PyObject *args);
 static PyObject *
@@ -36,8 +37,6 @@ static PyMethodDef functions[] = {
    METH_VARARGS, "Symmetry operations with collinear spin magnetic moments"},
   {"primitive", find_primitive, METH_VARARGS,
    "Find primitive cell in the input cell"},
-  {"ir_kpoints", get_ir_kpoints, METH_VARARGS,
-   "Irreducible k-points"},
   {"ir_reciprocal_mesh", get_ir_reciprocal_mesh, METH_VARARGS,
    "Reciprocal mesh points with map"},
   {"stabilized_reciprocal_mesh", get_stabilized_reciprocal_mesh, METH_VARARGS,
@@ -48,6 +47,8 @@ static PyMethodDef functions[] = {
    METH_VARARGS, "Triplets on reciprocal mesh points at a specific q-point"},
   {"BZ_triplets_at_q", get_BZ_triplets_at_q,
    METH_VARARGS, "Triplets in reciprocal primitive lattice are transformed to those in BZ."},
+  {"triplets_tetrahedra_vertices", get_triplets_tetrahedra_vertices,
+   METH_VARARGS, "Tetrahedra vertices of tetrahedron method for triplets"},
   {"tetrahedra_relative_grid_address", get_tetrahedra_relative_grid_address,
    METH_VARARGS, "Relative grid addresses of vertices of 24 tetrahedra"},
   {"tetrahedra_integration_weight", get_tetrahedra_integration_weight,
@@ -375,41 +376,6 @@ static PyObject * get_symmetry_with_collinear_spin(PyObject *self,
   return PyInt_FromLong((long) num_sym);
 }
 
-static PyObject * get_ir_kpoints(PyObject *self, PyObject *args)
-{
-  double symprec;
-  int is_time_reversal;
-  PyArrayObject* kpoint;
-  PyArrayObject* kpoint_map;
-  PyArrayObject* lattice;
-  PyArrayObject* position;
-  PyArrayObject* atom_type;
-  if (!PyArg_ParseTuple(args, "OOOOOid", &kpoint_map, &kpoint, &lattice, &position,
-			&atom_type, &is_time_reversal, &symprec))
-    return NULL;
-
-  SPGCONST double (*lat)[3] = (double(*)[3])lattice->data;
-  SPGCONST double (*pos)[3] = (double(*)[3])position->data;
-  SPGCONST double (*kpts)[3] = (double(*)[3])kpoint->data;
-  const int num_kpoint = kpoint->dimensions[0];
-  const int* types = (int*)atom_type->data;
-  const int num_atom = position->dimensions[0];
-  int *map = (int*)kpoint_map->data;
-
-  /* num_sym has to be larger than num_sym_from_array_size. */
-  const int num_ir_kpt = spg_get_ir_kpoints(map,
-					    kpts,
-					    num_kpoint,
-					    lat,
-					    pos,
-					    types,
-					    num_atom,
-					    is_time_reversal,
-					    symprec);
-
-  return PyInt_FromLong((long) num_ir_kpt);
-}
-
 static PyObject * get_ir_reciprocal_mesh(PyObject *self, PyObject *args)
 {
   double symprec;
@@ -610,6 +576,44 @@ static PyObject * get_BZ_triplets_at_q(PyObject *self, PyObject *args)
 				    mesh);
 
   return PyInt_FromLong((long) num_ir);
+}
+
+static PyObject *
+get_triplets_tetrahedra_vertices(PyObject *self, PyObject *args)
+{
+  PyArrayObject* vertices_py;
+  PyArrayObject* relative_grid_address_py;
+  PyArrayObject* mesh_py;
+  PyArrayObject* triplets_py;
+  PyArrayObject* bz_grid_address_py;
+  PyArrayObject* bz_map_py;
+  if (!PyArg_ParseTuple(args, "OOOOOO",
+			&vertices_py,
+			&relative_grid_address_py,
+			&mesh_py,
+			&triplets_py,
+			&bz_grid_address_py,
+			&bz_map_py)) {
+    return NULL;
+  }
+
+  SPGCONST int (*vertices)[2][24][4] = (int(*)[2][24][4])vertices_py->data;
+  SPGCONST int (*relative_grid_address)[4][3] =
+    (int(*)[4][3])relative_grid_address_py->data;
+  const int *mesh = (int*)mesh_py->data;
+  SPGCONST int (*triplets)[3] = (int(*)[3])triplets_py->data;
+  const int num_triplets = (int)triplets_py->dimensions[0];
+  SPGCONST int (*bz_grid_address)[3] = (int(*)[3])bz_grid_address_py->data;
+  const int *bz_map = (int*)bz_map_py->data;
+  
+  spg_get_triplets_tetrahedra_vertices(vertices,
+				       num_triplets,
+				       relative_grid_address,
+				       mesh,
+				       triplets,
+				       bz_grid_address,
+				       bz_map);
+  Py_RETURN_NONE;
 }
 
 static PyObject *

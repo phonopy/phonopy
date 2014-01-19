@@ -569,22 +569,39 @@ static PyObject * py_set_permutation_symmetry_fc3(PyObject *self, PyObject *args
 
 static PyObject * py_tetrahedron_method(PyObject *self, PyObject *args)
 {
-  double omega;
-  PyArrayObject* tetrahedra_omegas_py;
-  char function;
-  if (!PyArg_ParseTuple(args, "dOc",
-			&omega,
-			&tetrahedra_omegas_py,
-			&function)) {
+  PyArrayObject* vertices_py;
+  PyArrayObject* relative_grid_address_py;
+  PyArrayObject* mesh_py;
+  PyArrayObject* triplets_py;
+  PyArrayObject* bz_grid_address_py;
+  PyArrayObject* bz_map_py;
+  if (!PyArg_ParseTuple(args, "OOOOOO",
+			&vertices_py,
+			&relative_grid_address_py,
+			&mesh_py,
+			&triplets_py,
+			&bz_grid_address_py,
+			&bz_map_py)) {
     return NULL;
   }
 
-  double (*tetrahedra_omegas)[4] = (double(*)[4])tetrahedra_omegas_py->data;
-  double iw = thm_get_integration_weight(omega,
-					 tetrahedra_omegas,
-					 function);
-
-  return PyFloat_FromDouble(iw);
+  SPGCONST int (*vertices)[2][24][4] = (int(*)[2][24][4])vertices_py->data;
+  SPGCONST int (*relative_grid_address)[4][3] =
+    (int(*)[4][3])relative_grid_address_py->data;
+  const int *mesh = (int*)mesh_py->data;
+  SPGCONST int (*triplets)[3] = (int(*)[3])triplets_py->data;
+  const int num_triplets = (int)triplets_py->dimensions[0];
+  SPGCONST int (*bz_grid_address)[3] = (int(*)[3])bz_grid_address_py->data;
+  const int *bz_map = (int*)bz_map_py->data;
+  
+  spg_get_triplets_tetrahedra_vertices(vertices,
+				       num_triplets,
+				       relative_grid_address,
+				       mesh,
+				       triplets,
+				       bz_grid_address,
+				       bz_map);
+  Py_RETURN_NONE;
 }
 
 static PyObject * py_phonopy_zheev(PyObject *self, PyObject *args)

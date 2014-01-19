@@ -80,16 +80,6 @@ static int refine_cell(double lattice[3][3],
 /*---------*/
 /* kpoints */
 /*---------*/
-static int get_ir_kpoints(int map[],
-			  SPGCONST double kpoints[][3],
-			  const int num_kpoint,
-			  SPGCONST double lattice[3][3],
-			  SPGCONST double position[][3],
-			  const int types[],
-			  const int num_atom,
-			  const int is_time_reversal,
-			  const double symprec);
-
 static int get_ir_reciprocal_mesh(int grid_address[][3],
 				  int map[],
 				  const int mesh[3],
@@ -464,29 +454,6 @@ int spgat_refine_cell(double lattice[3][3],
 /*---------*/
 /* kpoints */
 /*---------*/
-int spg_get_ir_kpoints(int map[],
-		       SPGCONST double kpoints[][3],
-		       const int num_kpoint,
-		       SPGCONST double lattice[3][3],
-		       SPGCONST double position[][3],
-		       const int types[],
-		       const int num_atom,
-		       const int is_time_reversal,
-		       const double symprec)
-{
-  sym_set_angle_tolerance(-1.0);
-
-  return get_ir_kpoints(map,
-			kpoints,
-			num_kpoint,
-			lattice,
-			position,
-			types,
-			num_atom,
-			is_time_reversal,
-			symprec);
-}
-
 int spg_get_ir_reciprocal_mesh(int grid_address[][3],
 			       int map[],
 			       const int mesh[3],
@@ -583,6 +550,24 @@ int spg_get_BZ_triplets_at_q(int triplets[][3],
 				  mesh);
 }
 
+void spg_get_triplets_tetrahedra_vertices
+(int vertices[][2][24][4],
+ const int num_triplets,
+ SPGCONST int relative_grid_address[24][4][3],
+ const int mesh[3],
+ SPGCONST int triplets[][3],
+ SPGCONST int bz_grid_address[][3],
+ const int bz_map[])
+{
+  kpt_get_triplets_tetrahedra_vertices(vertices,
+				       num_triplets,
+				       relative_grid_address,
+				       mesh,
+				       triplets,
+				       bz_grid_address,
+				       bz_map);
+}
+
 /*--------------------*/
 /* tetrahedron method */
 /*--------------------*/
@@ -605,9 +590,9 @@ spg_get_tetrahedra_integration_weight(const double omega,
 
 void
 spg_get_tetrahedra_integration_weight_at_omegas
-(double *integration_weights,
+(double integration_weights[],
  const int num_omegas,
- const double *omegas,
+ const double omegas[],
  SPGCONST double tetrahedra_omegas[24][4],
  const char function)
 {
@@ -617,7 +602,6 @@ spg_get_tetrahedra_integration_weight_at_omegas
 				       tetrahedra_omegas,
 				       function);
 }
-
 
 
 /*=======*/
@@ -1005,38 +989,6 @@ static int refine_cell(double lattice[3][3],
 /*---------*/
 /* kpoints */
 /*---------*/
-static int get_ir_kpoints(int map[],
-			  SPGCONST double kpoints[][3],
-			  const int num_kpoint,
-			  SPGCONST double lattice[3][3],
-			  SPGCONST double position[][3],
-			  const int types[],
-			  const int num_atom,
-			  const int is_time_reversal,
-			  const double symprec)
-{
-  Symmetry *symmetry;
-  Cell *cell;
-  int num_ir_kpoint;
-
-  cell = cel_alloc_cell(num_atom);
-  cel_set_cell(cell, lattice, position, types);
-  symmetry = sym_get_operation(cell, symprec);
-
-  num_ir_kpoint = kpt_get_irreducible_kpoints(map,
-					      kpoints,
-					      num_kpoint,
-					      symmetry,
-					      is_time_reversal,
-					      symprec);
-
-
-  cel_free_cell(cell);
-  sym_free_symmetry(symmetry);
-
-  return num_ir_kpoint;
-}
-
 static int get_ir_reciprocal_mesh(int grid_address[][3],
 				  int map[],
 				  const int mesh[3],
@@ -1048,25 +1000,27 @@ static int get_ir_reciprocal_mesh(int grid_address[][3],
 				  const int num_atom,
 				  const double symprec)
 {
-  Symmetry *symmetry;
-  Cell *cell;
-  int num_ir;
+  SpglibDataset *dataset;
+  int num_ir, i;
+  MatINT *rotations;
 
-  cell = cel_alloc_cell(num_atom);
-  cel_set_cell(cell, lattice, position, types);
-  symmetry = sym_get_operation(cell, symprec);
-
+  dataset = get_dataset(lattice,
+			position,
+			types,
+			num_atom,
+			symprec);
+  rotations = mat_alloc_MatINT(dataset->n_operations);
+  for (i = 0; i < dataset->n_operations; i++) {
+    mat_copy_matrix_i3(rotations->mat[i], dataset->rotations[i]);
+  }
   num_ir = kpt_get_irreducible_reciprocal_mesh(grid_address,
 					       map,
 					       mesh,
 					       is_shift,
 					       is_time_reversal,
-					       symmetry);
-
-
-  cel_free_cell(cell);
-  sym_free_symmetry(symmetry);
-
+					       rotations);
+  mat_free_MatINT(rotations);
+  spg_free_dataset(dataset);
   return num_ir;
 }
 
