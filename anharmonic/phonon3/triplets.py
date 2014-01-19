@@ -228,21 +228,30 @@ def get_grid_points_in_Brillouin_zone(primitive_vectors, # column vectors
 def get_tetrahedra_vertices(relative_address,
                             mesh,
                             triplets_at_q,
-                            grid_address,
-                            bz_map):
-    bzmesh = mesh * 2
-    grid_order = [1, mesh[0], mesh[0] * mesh[1]]
-    bz_grid_order = [1, bzmesh[0], bzmesh[0] * bzmesh[1]]
-    num_triplets = len(triplets_at_q)
-    vertices = np.zeros((num_triplets, 2, 24, 4), dtype='intc')
-    for i, tp in enumerate(triplets_at_q):
-        for j, adrs_shift in enumerate((relative_address, -relative_address)):
-            adrs = grid_address[tp[j + 1]] + adrs_shift
-            bz_gp = np.dot(adrs % bzmesh, bz_grid_order)
-            gp = np.dot(adrs % mesh, grid_order)
-            vgp = bz_map[bz_gp]
-            vertices[i, j] = vgp + (vgp == -1) * (gp + 1)
-    return vertices
+                            bz_grid_address,
+                            bz_map,
+                            lang='C'):
+    if lang == 'C':
+        return spg.get_triplets_tetrahedra_vertices(relative_address,
+                                                    mesh,
+                                                    triplets_at_q,
+                                                    bz_grid_address,
+                                                    bz_map)
+    else:
+        bzmesh = mesh * 2
+        grid_order = [1, mesh[0], mesh[0] * mesh[1]]
+        bz_grid_order = [1, bzmesh[0], bzmesh[0] * bzmesh[1]]
+        num_triplets = len(triplets_at_q)
+        vertices = np.zeros((num_triplets, 2, 24, 4), dtype='intc')
+        for i, tp in enumerate(triplets_at_q):
+            for j, adrs_shift in enumerate(
+                    (relative_address, -relative_address)):
+                adrs = grid_address[tp[j + 1]] + adrs_shift
+                bz_gp = np.dot(adrs % bzmesh, bz_grid_order)
+                gp = np.dot(adrs % mesh, grid_order)
+                vgp = bz_map[bz_gp]
+                vertices[i, j] = vgp + (vgp == -1) * (gp + 1)
+        return vertices
 
 class GridBrillouinZone:
     def __init__(self,

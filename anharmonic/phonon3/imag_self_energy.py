@@ -336,12 +336,12 @@ class ImagSelfEnergy:
     def _set_integration_weights(self):
         reciprocal_lattice = np.linalg.inv(
             self._interaction.get_primitive().get_cell())
-        tetrahedron_method = TetrahedronMethod(reciprocal_lattice)
+        thm = TetrahedronMethod(reciprocal_lattice)
         
         grid_address = self._interaction.get_grid_address()
         bz_map = self._interaction.get_bz_map()
         tetrahedra_vertices = get_tetrahedra_vertices(
-            tetrahedron_method.get_tetrahedra(),
+            thm.get_tetrahedra(),
             self._mesh,
             self._triplets_at_q,
             grid_address,
@@ -358,14 +358,12 @@ class ImagSelfEnergy:
                              len(frequency_points)), dtype='double')
         self._g2 = np.zeros_like(self._g1)
         self._g3 = np.zeros_like(self._g1)
-        
-        thm = tetrahedron_method
-        for i, (vertices, tp, w, interaction) in enumerate(
+
+        for i, (vertices, tp, w) in enumerate(
                 zip(tetrahedra_vertices,
                     self._triplets_at_q,
-                    self._weights_at_q,
-                    self._fc3_normal_squared)):
-            for j, k in list(np.ndindex(interaction.shape[1:])):
+                    self._weights_at_q)):
+            for j, k in list(np.ndindex(self._fc3_normal_squared.shape[2:])):
                 f1_v = self._frequencies[vertices[0], j]
                 f2_v = self._frequencies[vertices[1], k]
                 thm.set_tetrahedra_omegas(f1_v + f2_v)

@@ -63,7 +63,7 @@ class TetrahedronMethod:
             import phonopy._phonopy as phonoc
             self._run_c(omegas, value=value)
         except ImportError:
-            pass
+            self._run_py(omegas, value=value)
 
     def get_tetrahedra(self):
         """
@@ -86,7 +86,7 @@ class TetrahedronMethod:
             self._tetrahedra_omegas,
             function=value)
 
-    def _run_py(self, omega, value='I'):
+    def _run_py(self, omegas, value='I'):
         if isinstance(omegas, float) or isinstance(omegas, int):
             iw = self._get_integration_weight_py(omegas, value=value)
         else:
