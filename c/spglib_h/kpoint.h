@@ -39,6 +39,13 @@ int kpt_get_BZ_triplets_at_q(int triplets[][3],
 			     const int bz_map[],
 			     const int weights[],
 			     const int mesh[3]);
+void kpt_get_neighboring_grid_points(int relative_grid_points[],
+				     const int grid_point,
+				     SPGCONST int relative_grid_address[][3],
+				     const int num_relative_grid_address,
+				     const int mesh[3],
+				     SPGCONST int bz_grid_address[][3],
+				     const int bz_map[]);
 void kpt_get_triplet_tetrahedra_vertices
 (int vertices[2][24][4],
  SPGCONST int relative_grid_address[24][4][3],

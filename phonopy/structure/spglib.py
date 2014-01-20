@@ -337,6 +337,21 @@ def get_BZ_triplets_at_q(grid_point,
                                       np.array(mesh, dtype='intc').copy())
     return triplets
 
+def get_neighboring_grid_points(grid_point,
+                                relative_grid_address,
+                                mesh,
+                                bz_grid_address,
+                                bz_map):
+    relative_grid_points = np.zeros(len(relative_grid_address), dtype='intc')
+    spg.neighboring_grid_points(relative_grid_points,
+                                grid_point,
+                                relative_grid_address,
+                                mesh,
+                                bz_grid_address,
+                                bz_map)
+    return relative_grid_points
+    
+
 def get_triplets_tetrahedra_vertices(relative_grid_address,
                                      mesh,
                                      triplets,

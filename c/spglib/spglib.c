@@ -550,6 +550,24 @@ int spg_get_BZ_triplets_at_q(int triplets[][3],
 				  mesh);
 }
 
+void spg_get_neighboring_grid_points(int relative_grid_points[],
+				     const int grid_point,
+				     SPGCONST int relative_grid_address[][3],
+				     const int num_relative_grid_address,
+				     const int mesh[3],
+				     SPGCONST int bz_grid_address[][3],
+				     const int bz_map[])
+{
+  kpt_get_neighboring_grid_points(relative_grid_points,
+				  grid_point,
+				  relative_grid_address,
+				  num_relative_grid_address,
+				  mesh,
+				  bz_grid_address,
+				  bz_map);
+}
+
+
 void spg_get_triplet_tetrahedra_vertices
 (int vertices[2][24][4],
  SPGCONST int relative_grid_address[24][4][3],

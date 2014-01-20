@@ -17,6 +17,7 @@ static PyObject * relocate_BZ_grid_address(PyObject *self, PyObject *args);
 static PyObject *
 get_triplets_reciprocal_mesh_at_q(PyObject *self, PyObject *args);
 static PyObject * get_BZ_triplets_at_q(PyObject *self, PyObject *args);
+static PyObject *get_neighboring_grid_points(PyObject *self, PyObject *args);
 static PyObject *
 get_triplet_tetrahedra_vertices(PyObject *self, PyObject *args);
 static PyObject *
@@ -47,6 +48,8 @@ static PyMethodDef functions[] = {
    METH_VARARGS, "Triplets on reciprocal mesh points at a specific q-point"},
   {"BZ_triplets_at_q", get_BZ_triplets_at_q,
    METH_VARARGS, "Triplets in reciprocal primitive lattice are transformed to those in BZ."},
+  {"neighboring_grid_points", get_neighboring_grid_points,
+   METH_VARARGS, "Neighboring grid points by relative grid addresses"},
   {"triplet_tetrahedra_vertices", get_triplet_tetrahedra_vertices,
    METH_VARARGS, "Tetrahedra vertices of tetrahedron method for triplets"},
   {"tetrahedra_relative_grid_address", get_tetrahedra_relative_grid_address,
@@ -576,6 +579,42 @@ static PyObject * get_BZ_triplets_at_q(PyObject *self, PyObject *args)
 				    mesh);
 
   return PyInt_FromLong((long) num_ir);
+}
+
+static PyObject *get_neighboring_grid_points(PyObject *self, PyObject *args)
+{
+  PyArrayObject* relative_grid_points_py;
+  PyArrayObject* relative_grid_address_py;
+  PyArrayObject* mesh_py;
+  PyArrayObject* bz_grid_address_py;
+  PyArrayObject* bz_map_py;
+  int grid_point;
+  if (!PyArg_ParseTuple(args, "OiOOOO",
+			&relative_grid_points_py,
+			&grid_point,
+			&relative_grid_address_py,
+			&mesh_py,
+			&bz_grid_address_py,
+			&bz_map_py)) {
+    return NULL;
+  }
+
+  int* relative_grid_points = (int*)relative_grid_points_py->data;
+  SPGCONST int (*relative_grid_address)[3] =
+    (int(*)[3])relative_grid_address_py->data;
+  const int num_relative_grid_address = relative_grid_address_py->dimensions[0];
+  const int *mesh = (int*)mesh_py->data;
+  SPGCONST int (*bz_grid_address)[3] = (int(*)[3])bz_grid_address_py->data;
+  const int *bz_map = (int*)bz_map_py->data;
+  
+  spg_get_neighboring_grid_points(relative_grid_points,
+				  grid_point,
+				  relative_grid_address,
+				  num_relative_grid_address,
+				  mesh,
+				  bz_grid_address,
+				  bz_map);
+  Py_RETURN_NONE;
 }
 
 static PyObject *

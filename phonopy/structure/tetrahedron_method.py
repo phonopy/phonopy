@@ -71,6 +71,18 @@ class TetrahedronMethod:
         """
         return self._relative_grid_addresses
 
+    def get_unique_tetrahedra_vertices(self):
+        unique_vertices = []
+        for adrs in self._relative_grid_addresses.reshape(-1, 3):
+            found = False
+            for uadrs in unique_vertices:
+                if (uadrs == adrs).all():
+                    found = True
+                    break
+            if not found:
+                unique_vertices.append(adrs)
+        return np.array(unique_vertices, dtype='intc')
+    
     def set_tetrahedra_omegas(self, tetrahedra_omegas):
         """
         tetrahedra_omegas: (24, 4) omegas at self._relative_grid_addresses
