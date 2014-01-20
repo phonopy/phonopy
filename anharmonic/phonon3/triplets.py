@@ -232,11 +232,16 @@ def get_tetrahedra_vertices(relative_address,
                             bz_map,
                             lang='C'):
     if lang == 'C':
-        return spg.get_triplets_tetrahedra_vertices(relative_address,
-                                                    mesh,
-                                                    triplets_at_q,
-                                                    bz_grid_address,
-                                                    bz_map)
+        import anharmonic._phono3py as phono3c
+        num_tripltes = len(triplets_at_q)
+        vertices = np.zeros((num_tripltes, 2, 24, 4), dtype='intc')
+        phono3c.triplets_tetrahedra_vertices(vertices,
+                                             relative_address,
+                                             mesh,
+                                             triplets_at_q,
+                                             bz_grid_address,
+                                             bz_map)
+        return vertices
     else:
         bzmesh = mesh * 2
         grid_order = [1, mesh[0], mesh[0] * mesh[1]]

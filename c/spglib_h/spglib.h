@@ -313,7 +313,10 @@ int spg_relocate_BZ_grid_address(int bz_grid_address[][3],
 
 /* Irreducible triplets of k-points are searched under conservation of */
 /* :math:``\mathbf{k}_1 + \mathbf{k}_2 + \mathbf{k}_3 = \mathbf{G}``. */
-/* Don't forget to free memory space of triplets using spg_free_triplets */
+/* Memory spaces of grid_address[prod(mesh)][3], weights[prod(mesh)] */
+/* and third_q[prod(mesh)] are required. rotations are point-group- */
+/* operations in real space for which duplicate operations are allowed */
+/* in the input. */
 int spg_get_triplets_reciprocal_mesh_at_q(int weights[],
 					  int grid_address[][3],
 					  int third_q[],
@@ -324,21 +327,24 @@ int spg_get_triplets_reciprocal_mesh_at_q(int weights[],
 					  SPGCONST int rotations[][3][3]);
 
 /* Irreducible grid-point-triplets in BZ are stored. */
+/* triplets are recovered from grid_point and triplet_weights. */
+/* BZ boundary is considered in this recovery. Therefore grid addresses */
+/* are given not by grid_address, but by bz_grid_address. */
+/* triplets[num_ir_triplets][3] = number of non-zero triplets weights*/
 /* Number of ir-triplets is returned. */
 int spg_get_BZ_triplets_at_q(int triplets[][3],
 			     const int grid_point,
 			     SPGCONST int bz_grid_address[][3],
 			     const int bz_map[],
-			     const int weights[],
+			     const int triplet_weights[],
 			     const int mesh[3]);
 
-/* Tetrahedra vertices of tetrahedron method for triplets */
-void spg_get_triplets_tetrahedra_vertices
-(int vertices[][2][24][4],
- const int num_triplets,
+/* Tetrahedra vertices of tetrahedron method for a triplet */
+void spg_get_triplet_tetrahedra_vertices
+(int vertices[2][24][4],
  SPGCONST int relative_grid_address[24][4][3],
  const int mesh[3],
- SPGCONST int triplets[][3],
+ const int triplet[3],
  SPGCONST int bz_grid_address[][3],
  const int bz_map[]);
 

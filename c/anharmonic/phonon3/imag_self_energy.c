@@ -100,6 +100,13 @@ void get_imag_self_energy_at_bands(double *imag_self_energy,
   }
 }
 
+void get_thm_imag_self_energy_at_bands()
+{
+  ;
+}
+
+
+
 int get_jointDOS(double *jdos,
 		 const int num_fpoints,
 		 const int num_triplet,

@@ -538,7 +538,7 @@ int spg_get_BZ_triplets_at_q(int triplets[][3],
 			     const int grid_point,
 			     SPGCONST int bz_grid_address[][3],
 			     const int bz_map[],
-			     const int weights[],
+			     const int triplet_weights[],
 			     const int mesh[3])
 
 {
@@ -546,26 +546,24 @@ int spg_get_BZ_triplets_at_q(int triplets[][3],
 				  grid_point,
 				  bz_grid_address,
 				  bz_map,
-				  weights,
+				  triplet_weights,
 				  mesh);
 }
 
-void spg_get_triplets_tetrahedra_vertices
-(int vertices[][2][24][4],
- const int num_triplets,
+void spg_get_triplet_tetrahedra_vertices
+(int vertices[2][24][4],
  SPGCONST int relative_grid_address[24][4][3],
  const int mesh[3],
- SPGCONST int triplets[][3],
+ const int triplet[3],
  SPGCONST int bz_grid_address[][3],
  const int bz_map[])
 {
-  kpt_get_triplets_tetrahedra_vertices(vertices,
-				       num_triplets,
-				       relative_grid_address,
-				       mesh,
-				       triplets,
-				       bz_grid_address,
-				       bz_map);
+  kpt_get_triplet_tetrahedra_vertices(vertices,
+				      relative_grid_address,
+				      mesh,
+				      triplet,
+				      bz_grid_address,
+				      bz_map);
 }
 
 /*--------------------*/

@@ -358,11 +358,22 @@ class ImagSelfEnergy:
                              len(frequency_points)), dtype='double')
         self._g2 = np.zeros_like(self._g1)
         self._g3 = np.zeros_like(self._g1)
-
-        for i, (vertices, tp, w) in enumerate(
-                zip(tetrahedra_vertices,
-                    self._triplets_at_q,
-                    self._weights_at_q)):
+        self._set_triplets_integration_weights_py(thm,
+                                                  tetrahedra_vertices,
+                                                  frequency_points)
+        
+    def _set_triplets_integration_weights_c(self,
+                                            thm,
+                                            tetrahedra_vertices,
+                                            frequency_points):
+        pass
+        
+    def _set_triplets_integration_weights_py(self,
+                                             thm,
+                                             tetrahedra_vertices,
+                                             frequency_points):
+        for i, (vertices, tp) in enumerate(
+                zip(tetrahedra_vertices, self._triplets_at_q)):
             for j, k in list(np.ndindex(self._fc3_normal_squared.shape[2:])):
                 f1_v = self._frequencies[vertices[0], j]
                 f2_v = self._frequencies[vertices[1], k]

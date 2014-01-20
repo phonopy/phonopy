@@ -228,18 +228,17 @@ int kpt_get_BZ_triplets_at_q(int triplets[][3],
 			      mesh);
 }
 
-void kpt_get_triplets_tetrahedra_vertices
-(int vertices[][2][24][4],
- const int num_triplets,
+void kpt_get_triplet_tetrahedra_vertices
+(int vertices[2][24][4],
  SPGCONST int relative_grid_address[24][4][3],
  const int mesh[3],
- SPGCONST int triplets[][3],
+ const int triplet[3],
  SPGCONST int bz_grid_address[][3],
  const int bz_map[])
 {
   int mesh_double[3], bzmesh[3], bzmesh_double[3],
     address_double[3], bz_address_double[3];
-  int i, j, k, l, m, gp, bz_gp;
+  int i, j, k, l, gp, bz_gp;
 
   for (i = 0; i < 3; i++) {
     mesh_double[i] = mesh[i] * 2;
@@ -247,29 +246,26 @@ void kpt_get_triplets_tetrahedra_vertices
     bzmesh_double[i] = bzmesh[i] * 2;
   }
 
-#pragma omp parallel for private(j, k, l, m, address_double, bz_address_double, gp, bz_gp)
-  for (i = 0; i < num_triplets; i++) {
-    for (j = 1; j < 3; j++) {
-      for (k = 0; k < 24; k++) {
-	for (l = 0; l < 4; l++) {
-	  for (m = 0; m < 3; m++) {
-	    address_double[m] = bz_grid_address[triplets[i][j]][m] * 2;
-	    if (j == 1) {
-	      address_double[m] += relative_grid_address[k][l][m] * 2;
-	    } else {
-	      address_double[m] -= relative_grid_address[k][l][m] * 2;
-	    }
-	    bz_address_double[m] = address_double[m];
-	  }
-	  get_vector_modulo(bz_address_double, bzmesh_double);
-	  bz_gp = bz_map[get_grid_point(bz_address_double, bzmesh)];
-	  if (bz_gp == -1) {
-	    get_vector_modulo(address_double, mesh_double);
-	    gp = get_grid_point(address_double, mesh);
-	    vertices[i][j - 1][k][l] = gp;
+  for (i = 1; i < 3; i++) {
+    for (j = 0; j < 24; j++) {
+      for (k = 0; k < 4; k++) {
+	for (l = 0; l < 3; l++) {
+	  address_double[l] = bz_grid_address[triplet[i]][l] * 2;
+	  if (i == 1) {
+	    address_double[l] += relative_grid_address[j][k][l] * 2;
 	  } else {
-	    vertices[i][j - 1][k][l] = bz_gp;
+	    address_double[l] -= relative_grid_address[j][k][l] * 2;
 	  }
+	  bz_address_double[l] = address_double[l];
+	}
+	get_vector_modulo(bz_address_double, bzmesh_double);
+	bz_gp = bz_map[get_grid_point(bz_address_double, bzmesh)];
+	if (bz_gp == -1) {
+	  get_vector_modulo(address_double, mesh_double);
+	  gp = get_grid_point(address_double, mesh);
+	  vertices[i - 1][j][k] = gp;
+	} else {
+	  vertices[i - 1][j][k] = bz_gp;
 	}
       }
     }

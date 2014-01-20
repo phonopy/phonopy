@@ -344,13 +344,16 @@ def get_triplets_tetrahedra_vertices(relative_grid_address,
                                      bz_map):
     num_tripltes = len(triplets)
     vertices = np.zeros((num_tripltes, 2, 24, 4), dtype='intc')
-    num_ir_ret = spg.triplets_tetrahedra_vertices(
-        vertices,
-        relative_grid_address,
-        np.array(mesh, dtype='intc').copy(),
-        triplets,
-        bz_grid_address,
-        bz_map)
+    for i, tp in enumerate(triplets):
+        vertices_at_tp = np.zeros((2, 24, 4), dtype='intc')
+        spg.triplet_tetrahedra_vertices(
+            vertices_at_tp,
+            relative_grid_address,
+            np.array(mesh, dtype='intc').copy(),
+            tp,
+            bz_grid_address,
+            bz_map)
+        vertices[i] = vertices_at_tp
 
     return vertices
 

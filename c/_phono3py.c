@@ -11,7 +11,7 @@
 #include "phonon3_h/interaction.h"
 #include "phonon3_h/imag_self_energy.h"
 #include "other_h/isotope.h"
-#include "spglib_h/tetrahedron_method.h"
+#include "spglib_h/kpoint.h"
 
 
 static PyObject * py_get_jointDOS(PyObject *self, PyObject *args);
@@ -27,7 +27,10 @@ static PyObject * py_phonopy_zheev(PyObject *self, PyObject *args);
 static PyObject * py_get_isotope_strength(PyObject *self, PyObject *args);
 static PyObject * py_set_permutation_symmetry_fc3(PyObject *self,
 						  PyObject *args);
-static PyObject * py_tetrahedron_method(PyObject *self,	PyObject *args);
+static PyObject *
+py_get_triplets_tetrahedra_vertices(PyObject *self, PyObject *args);
+static PyObject *
+py_get_triplets_integration_weights(PyObject *self, PyObject *args);
 
 static PyMethodDef functions[] = {
   {"joint_dos", py_get_jointDOS, METH_VARARGS, "Calculate joint density of states"},
@@ -40,7 +43,8 @@ static PyMethodDef functions[] = {
   {"zheev", py_phonopy_zheev, METH_VARARGS, "Lapack zheev wrapper"},
   {"isotope_strength", py_get_isotope_strength, METH_VARARGS, "Isotope scattering strength"},
   {"permutation_symmetry_fc3", py_set_permutation_symmetry_fc3, METH_VARARGS, "Set permutation symmetry for fc3"},
-  {"tetrahedron_method", py_tetrahedron_method, METH_VARARGS, "Tetrahedron method for Brillouin zone integration"},
+  {"triplets_tetrahedra_vertices", py_get_triplets_tetrahedra_vertices, METH_VARARGS, "Tetrahedra vertices of triplets for tetrahedron method"},
+  {"triplets_integration_weights", py_get_triplets_integration_weights, METH_VARARGS, "Integration weights of tetrahedron method for triplets"},
   {NULL, NULL, 0, NULL}
 };
 
@@ -567,7 +571,8 @@ static PyObject * py_set_permutation_symmetry_fc3(PyObject *self, PyObject *args
   Py_RETURN_NONE;
 }
 
-static PyObject * py_tetrahedron_method(PyObject *self, PyObject *args)
+static PyObject *
+py_get_triplets_tetrahedra_vertices(PyObject *self, PyObject *args)
 {
   PyArrayObject* vertices_py;
   PyArrayObject* relative_grid_address_py;
@@ -593,15 +598,26 @@ static PyObject * py_tetrahedron_method(PyObject *self, PyObject *args)
   const int num_triplets = (int)triplets_py->dimensions[0];
   SPGCONST int (*bz_grid_address)[3] = (int(*)[3])bz_grid_address_py->data;
   const int *bz_map = (int*)bz_map_py->data;
+
+  int i;
   
-  spg_get_triplets_tetrahedra_vertices(vertices,
-				       num_triplets,
-				       relative_grid_address,
-				       mesh,
-				       triplets,
-				       bz_grid_address,
-				       bz_map);
+#pragma omp parallel for
+  for (i = 0; i < num_triplets; i++) {
+    kpt_get_triplet_tetrahedra_vertices(vertices[i],
+					relative_grid_address,
+					mesh,
+					triplets[i],
+					bz_grid_address,
+					bz_map);
+  }
+  
   Py_RETURN_NONE;
+}
+
+static PyObject *
+py_get_triplets_integration_weights(PyObject *self, PyObject *args)
+{
+  ;
 }
 
 static PyObject * py_phonopy_zheev(PyObject *self, PyObject *args)
