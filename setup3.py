@@ -28,6 +28,7 @@ extension = Extension(
              'c/anharmonic/phonon3/real_to_reciprocal.c',
              'c/anharmonic/phonon3/reciprocal_to_normal.c',
              'c/anharmonic/phonon3/imag_self_energy.c',
+             'c/anharmonic/phonon3/imag_self_energy_thm.c',
              'c/anharmonic/other/isotope.c',
              'c/spglib/debug.c',
              'c/spglib/kpoint.c',
