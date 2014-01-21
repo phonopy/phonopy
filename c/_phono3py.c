@@ -10,6 +10,7 @@
 #include "phonon3_h/fc3.h"
 #include "phonon3_h/interaction.h"
 #include "phonon3_h/imag_self_energy.h"
+#include "phonon3_h/imag_self_energy_thm.h"
 #include "other_h/isotope.h"
 #include "spglib_h/kpoint.h"
 #include "spglib_h/tetrahedron_method.h"
@@ -21,6 +22,8 @@ static PyObject * py_get_interaction(PyObject *self, PyObject *args);
 static PyObject * py_get_imag_self_energy(PyObject *self, PyObject *args);
 static PyObject * py_get_imag_self_energy_at_bands(PyObject *self,
 						   PyObject *args);
+static PyObject * py_get_thm_imag_self_energy_at_bands(PyObject *self,
+						       PyObject *args);
 static PyObject * py_set_phonons_at_gridpoints(PyObject *self, PyObject *args);
 static PyObject * py_get_phonon(PyObject *self, PyObject *args);
 static PyObject * py_distribute_fc3(PyObject *self, PyObject *args);
@@ -44,6 +47,7 @@ static PyMethodDef functions[] = {
   {"interaction", py_get_interaction, METH_VARARGS, "Interaction of triplets"},
   {"imag_self_energy", py_get_imag_self_energy, METH_VARARGS, "Imaginary part of self energy"},
   {"imag_self_energy_at_bands", py_get_imag_self_energy_at_bands, METH_VARARGS, "Imaginary part of self energy at phonon frequencies of bands"},
+  {"thm_imag_self_energy_at_bands", py_get_thm_imag_self_energy_at_bands, METH_VARARGS, "Imaginary part of self energy at phonon frequencies of bands for tetrahedron method"},
   {"phonons_at_gridpoints", py_set_phonons_at_gridpoints, METH_VARARGS, "Set phonons at grid points"},
   {"phonon", py_get_phonon, METH_VARARGS, "Get phonon"},
   {"distribute_fc3", py_distribute_fc3, METH_VARARGS, "Distribute least fc3 to full fc3"},
@@ -443,6 +447,57 @@ static PyObject * py_get_imag_self_energy_at_bands(PyObject *self,
   Py_RETURN_NONE;
 }
 
+static PyObject * py_get_thm_imag_self_energy_at_bands(PyObject *self,
+						       PyObject *args)
+{
+  PyArrayObject* gamma_py;
+  PyArrayObject* fc3_normal_squared_py;
+  PyArrayObject* frequencies_py;
+  PyArrayObject* grid_point_triplets_py;
+  PyArrayObject* triplet_weights_py;
+  PyArrayObject* band_indices_py;
+  PyArrayObject* g_py;
+  double unit_conversion_factor, cutoff_frequency, temperature;
+
+  if (!PyArg_ParseTuple(args, "OOOOOOdOdd",
+			&gamma_py,
+			&fc3_normal_squared_py,
+			&grid_point_triplets_py,
+			&triplet_weights_py,
+			&frequencies_py,
+			&band_indices_py,
+			&temperature,
+			&g_py,
+			&unit_conversion_factor,
+			&cutoff_frequency)) {
+    return NULL;
+  }
+
+
+  Darray* fc3_normal_squared = convert_to_darray(fc3_normal_squared_py);
+  double* gamma = (double*)gamma_py->data;
+  double* g = (double*)g_py->data;
+  const double* frequencies = (double*)frequencies_py->data;
+  const int* band_indices = (int*)band_indices_py->data;
+  const int* grid_point_triplets = (int*)grid_point_triplets_py->data;
+  const int* triplet_weights = (int*)triplet_weights_py->data;
+
+  get_thm_imag_self_energy_at_bands(gamma,
+				    fc3_normal_squared,
+				    band_indices,
+				    frequencies,
+				    grid_point_triplets,
+				    triplet_weights,
+				    g,
+				    temperature,
+				    unit_conversion_factor,
+				    cutoff_frequency);
+
+  free(fc3_normal_squared);
+  
+  Py_RETURN_NONE;
+}
+
 static PyObject * py_get_isotope_strength(PyObject *self, PyObject *args)
 {
   PyArrayObject* gamma_py;
@@ -698,22 +753,19 @@ py_set_triplets_integration_weights(PyObject *self, PyObject *args)
 	}
 	for (l = 0; l < num_band0; l++) {
 	  f0 = frequency_points[l];
-	  adrs_shift = (i * num_band * num_band * num_band0 +
-			b1 * num_band * num_band0 +
-			b2 * num_band0);
-	  iw[adrs_shift + l] =
+	  adrs_shift = (i * num_band0 * num_band * num_band +
+			l * num_band * num_band + b1 * num_band + b2) * 2;
+	  iw[adrs_shift] =
 	    thm_get_integration_weight(f0, freq_vertices[0], 'I');
-
-
-	  adrs_shift += num_triplets * num_band * num_band * num_band0;
-	  iw[adrs_shift + l] =
+	  iw[adrs_shift + 1] =
 	    thm_get_integration_weight(f0, freq_vertices[1], 'I');
-	  iw[adrs_shift + l] -=
+	  iw[adrs_shift + 1] -=
 	    thm_get_integration_weight(f0, freq_vertices[2], 'I');
 	}
       }	
     }
   }
+	    
   Py_RETURN_NONE;
 }
 
