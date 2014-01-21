@@ -113,14 +113,13 @@ class Interaction:
         self._fc3 = fc3 
         self._supercell = supercell
         self._primitive = primitive
-        self._mesh = np.array(mesh, dtype='intc')
+        self._mesh = np.array(mesh, dtype='intc').copy()
         self._symmetry = symmetry
-        
         num_band = primitive.get_number_of_atoms() * 3
         if band_indices is None:
             self._band_indices = np.arange(num_band, dtype='intc')
         else:
-            self._band_indices = np.array(band_indices, dtype='intc')
+            self._band_indices = np.array(band_indices, dtype='intc').copy()
         self._frequency_factor_to_THz = frequency_factor_to_THz
 
         if cutoff_frequency is None:

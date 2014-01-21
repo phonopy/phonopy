@@ -228,7 +228,7 @@ int kpt_get_BZ_triplets_at_q(int triplets[][3],
 			      mesh);
 }
 
-void kpt_get_neighboring_grid_points(int relative_grid_points[],
+void kpt_get_neighboring_grid_points(int neighboring_grid_points[],
 				     const int grid_point,
 				     SPGCONST int relative_grid_address[][3],
 				     const int num_relative_grid_address,
@@ -255,58 +255,12 @@ void kpt_get_neighboring_grid_points(int relative_grid_points[],
     bz_gp = bz_map[get_grid_point(bz_address_double, bzmesh)];
     if (bz_gp == -1) {
       get_vector_modulo(address_double, mesh_double);
-      relative_grid_points[i] = get_grid_point(address_double, mesh);
+      neighboring_grid_points[i] = get_grid_point(address_double, mesh);
     } else {
-      relative_grid_points[i] = bz_gp;
+      neighboring_grid_points[i] = bz_gp;
     }
   }
 }
-
-void kpt_get_triplet_tetrahedra_vertices
-(int vertices[2][24][4],
- SPGCONST int relative_grid_address[24][4][3],
- const int mesh[3],
- const int triplet[3],
- SPGCONST int bz_grid_address[][3],
- const int bz_map[])
-{
-  int mesh_double[3], bzmesh[3], bzmesh_double[3],
-    address_double[3], bz_address_double[3];
-  int i, j, k, l, gp, bz_gp;
-
-  for (i = 0; i < 3; i++) {
-    mesh_double[i] = mesh[i] * 2;
-    bzmesh[i] = mesh[i] * 2;
-    bzmesh_double[i] = bzmesh[i] * 2;
-  }
-
-  for (i = 1; i < 3; i++) {
-    for (j = 0; j < 24; j++) {
-      for (k = 0; k < 4; k++) {
-	for (l = 0; l < 3; l++) {
-	  address_double[l] = bz_grid_address[triplet[i]][l] * 2;
-	  if (i == 1) {
-	    address_double[l] += relative_grid_address[j][k][l] * 2;
-	  } else {
-	    address_double[l] -= relative_grid_address[j][k][l] * 2;
-	  }
-	  bz_address_double[l] = address_double[l];
-	}
-	get_vector_modulo(bz_address_double, bzmesh_double);
-	bz_gp = bz_map[get_grid_point(bz_address_double, bzmesh)];
-	if (bz_gp == -1) {
-	  get_vector_modulo(address_double, mesh_double);
-	  gp = get_grid_point(address_double, mesh);
-	  vertices[i - 1][j][k] = gp;
-	} else {
-	  vertices[i - 1][j][k] = bz_gp;
-	}
-      }
-    }
-  }
-}
-
-
 
 static MatINT *get_point_group_reciprocal(const MatINT * rotations,
 					  const int is_time_reversal)

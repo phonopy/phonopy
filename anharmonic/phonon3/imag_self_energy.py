@@ -37,13 +37,7 @@ class ImagSelfEnergy:
         self._unit_conversion = None
         self._cutoff_frequency = interaction.get_cutoff_frequency()
 
-        self._tetrahedron_method = None
-        self._vertices = None
-        self._grid_address = None
-        self._bz_map = None
-        self._g1 = None
-        self._g2 = None
-        self._g3 = None
+        self._g = None # integration weights of tetrahedron method
         self._mesh = self._interaction.get_mesh_numbers()
 
         # Unit to THz of Gamma
@@ -238,8 +232,8 @@ class ImagSelfEnergy:
                     f2 > self._cutoff_frequency):
                     n2 = n[i, 0, j]
                     n3 = n[i, 1, k]
-                    g1 = self._g1[i, j, k]
-                    g2_g3 = self._g2_g3[i, j, k] # g2 - g3
+                    g1 = self._g[0, i, j, k]
+                    g2_g3 = self._g[1, i, j, k] # g2 - g3
                     self._imag_self_energy[:] += (
                         (n2 + n3 + 1) * g1 +
                         (n2 - n3) * (g2_g3)) * interaction[:, j, k] * w
@@ -250,7 +244,7 @@ class ImagSelfEnergy:
         for i, (w, interaction) in enumerate(zip(self._weights_at_q,
                                                  self._fc3_normal_squared)):
             for j, k in list(np.ndindex(interaction.shape[1:])):
-                g1 = self._g1[i, j, k]
+                g1 = self._g[0, i, j, k]
                 self._imag_self_energy[:] += g1 * interaction[:, j, k] * w
 
         self._imag_self_energy *= self._unit_conversion
@@ -314,8 +308,8 @@ class ImagSelfEnergy:
                     f2 > self._cutoff_frequency):
                     n2 = occupation(f1, self._temperature)
                     n3 = occupation(f2, self._temperature)
-                    g1 = self._g1[i, j, k]
-                    g2_g3 = self._g2_g3[i, j, k] # g2 - g3
+                    g1 = self._g[0, i, j, k]
+                    g2_g3 = self._g[1, i, j, k] # g2 - g3
                     for l in range(len(interaction)):
                         self._imag_self_energy[:, l] += (
                             (n2 + n3 + 1) * g1 +
@@ -327,7 +321,7 @@ class ImagSelfEnergy:
         for i, (w, interaction) in enumerate(zip(self._weights_at_q,
                                                  self._fc3_normal_squared)):
             for j, k in list(np.ndindex(interaction.shape[1:])):
-                g1 = self._g1[i, j, k]
+                g1 = self._g[0, i, j, k]
                 for l in range(len(interaction)):
                     self._imag_self_energy[:, l] += g1 * interaction[l, j, k] * w
 
@@ -339,60 +333,78 @@ class ImagSelfEnergy:
         thm = TetrahedronMethod(reciprocal_lattice)
         grid_address = self._interaction.get_grid_address()
         bz_map = self._interaction.get_bz_map()
-
-        unique_vertices = thm.get_unique_tetrahedra_vertices()
-        grid_points = np.array([self._triplets_at_q[0, 0]], dtype='intc')
-        for i, j in zip((1, 2), (1, -1)):
-            for gp in np.unique(self._triplets_at_q[:, i]):
-                grid_points = np.hstack(
-                    (grid_points,
-                     get_neighboring_grid_points(gp,
-                                                 j * unique_vertices,
-                                                 self._mesh,
+        self._set_triplets_integration_weights_c(thm,
                                                  grid_address,
-                                                 bz_map)))
-        self._interaction.set_phonon(np.unique(grid_points))
-        tetrahedra_vertices = get_tetrahedra_vertices(
-            thm.get_tetrahedra(),
-            self._mesh,
-            self._triplets_at_q,
-            grid_address,
-            bz_map)
+                                                 bz_map)
+        
+    def _set_triplets_integration_weights_c(self,
+                                            thm,
+                                            grid_address,
+                                            bz_map):
+        import anharmonic._phono3py as phono3c
+        unique_vertices = thm.get_unique_tetrahedra_vertices()
+        for i, j in zip((1, 2), (1, -1)):
+            neighboring_grid_points = np.zeros(
+                len(unique_vertices) * len(self._triplets_at_q), dtype='intc')
+            phono3c.neighboring_grid_points(
+                neighboring_grid_points,
+                self._triplets_at_q[:, i].flatten(),
+                j * unique_vertices,
+                self._mesh,
+                grid_address,
+                bz_map)
+            self._interaction.set_phonon(np.unique(neighboring_grid_points))
+
         if self._frequency_points is None:
             gp = self._grid_point
             frequency_points = self._frequencies[gp][self._band_indices]
         else:
             frequency_points = self._frequency_points
-            
         shape = self._fc3_normal_squared.shape
-        self._g1 = np.zeros((shape[0], shape[2], shape[3],
-                             len(frequency_points)), dtype='double')
-        self._g2_g3 = np.zeros_like(self._g1)
-        self._set_triplets_integration_weights_py(thm,
-                                                  tetrahedra_vertices,
-                                                  frequency_points)
-        
-    def _set_triplets_integration_weights_c(self,
-                                            thm,
-                                            tetrahedra_vertices,
-                                            frequency_points):
-        pass
+        self._g = np.zeros(
+            (2, shape[0], shape[2], shape[3], len(frequency_points)),
+            dtype='double')
+
+        phono3c.triplets_integration_weights(
+            self._g,
+            np.array(frequency_points, dtype='double'),
+            thm.get_tetrahedra(),
+            self._mesh,
+            self._triplets_at_q,
+            self._frequencies,
+            grid_address,
+            bz_map)
         
     def _set_triplets_integration_weights_py(self,
                                              thm,
-                                             tetrahedra_vertices,
-                                             frequency_points):
-        for i, (vertices, tp) in enumerate(
-                zip(tetrahedra_vertices, self._triplets_at_q)):
+                                             grid_address,
+                                             bz_map):
+        tetrahedra_vertices = get_tetrahedra_vertices(thm.get_tetrahedra(),
+                                                      self._mesh,
+                                                      self._triplets_at_q,
+                                                      grid_address,
+                                                      bz_map);
+        self._interaction.set_phonon(np.unique(tetrahedra_vertices))
+        if self._frequency_points is None:
+            gp = self._grid_point
+            frequency_points = self._frequencies[gp][self._band_indices]
+        else:
+            frequency_points = self._frequency_points
+        shape = self._fc3_normal_squared.shape
+        self._g = np.zeros(
+            (2, shape[0], shape[2], shape[3], len(frequency_points)),
+            dtype='double')
+
+        for i, vertices in enumerate(tetrahedra_vertices):
             for j, k in list(np.ndindex(self._fc3_normal_squared.shape[2:])):
                 f1_v = self._frequencies[vertices[0], j]
                 f2_v = self._frequencies[vertices[1], k]
                 thm.set_tetrahedra_omegas(f1_v + f2_v)
                 thm.run(frequency_points)
-                self._g1[i, j, k] = thm.get_integration_weight()
+                self._g[0, i, j, k] = thm.get_integration_weight()
                 thm.set_tetrahedra_omegas(-f1_v + f2_v)
                 thm.run(frequency_points)
-                self._g2_g3[i, j, k] = thm.get_integration_weight()
+                self._g[1, i, j, k] = thm.get_integration_weight()
                 thm.set_tetrahedra_omegas(f1_v - f2_v)
                 thm.run(frequency_points)
-                self._g2_g3[i, j, k] -= thm.get_integration_weight()
+                self._g[1, i, j, k] -= thm.get_integration_weight()

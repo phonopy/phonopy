@@ -19,8 +19,6 @@ get_triplets_reciprocal_mesh_at_q(PyObject *self, PyObject *args);
 static PyObject * get_BZ_triplets_at_q(PyObject *self, PyObject *args);
 static PyObject *get_neighboring_grid_points(PyObject *self, PyObject *args);
 static PyObject *
-get_triplet_tetrahedra_vertices(PyObject *self, PyObject *args);
-static PyObject *
 get_tetrahedra_relative_grid_address(PyObject *self, PyObject *args);
 static PyObject *
 get_tetrahedra_integration_weight(PyObject *self, PyObject *args);
@@ -50,8 +48,6 @@ static PyMethodDef functions[] = {
    METH_VARARGS, "Triplets in reciprocal primitive lattice are transformed to those in BZ."},
   {"neighboring_grid_points", get_neighboring_grid_points,
    METH_VARARGS, "Neighboring grid points by relative grid addresses"},
-  {"triplet_tetrahedra_vertices", get_triplet_tetrahedra_vertices,
-   METH_VARARGS, "Tetrahedra vertices of tetrahedron method for triplets"},
   {"tetrahedra_relative_grid_address", get_tetrahedra_relative_grid_address,
    METH_VARARGS, "Relative grid addresses of vertices of 24 tetrahedra"},
   {"tetrahedra_integration_weight", get_tetrahedra_integration_weight,
@@ -614,42 +610,6 @@ static PyObject *get_neighboring_grid_points(PyObject *self, PyObject *args)
 				  mesh,
 				  bz_grid_address,
 				  bz_map);
-  Py_RETURN_NONE;
-}
-
-static PyObject *
-get_triplet_tetrahedra_vertices(PyObject *self, PyObject *args)
-{
-  PyArrayObject* vertices_py;
-  PyArrayObject* relative_grid_address_py;
-  PyArrayObject* mesh_py;
-  PyArrayObject* triplet_py;
-  PyArrayObject* bz_grid_address_py;
-  PyArrayObject* bz_map_py;
-  if (!PyArg_ParseTuple(args, "OOOOOO",
-			&vertices_py,
-			&relative_grid_address_py,
-			&mesh_py,
-			&triplet_py,
-			&bz_grid_address_py,
-			&bz_map_py)) {
-    return NULL;
-  }
-
-  SPGCONST int (*vertices)[24][4] = (int(*)[24][4])vertices_py->data;
-  SPGCONST int (*relative_grid_address)[4][3] =
-    (int(*)[4][3])relative_grid_address_py->data;
-  const int *mesh = (int*)mesh_py->data;
-  const int *triplet = (int*)triplet_py->data;
-  SPGCONST int (*bz_grid_address)[3] = (int(*)[3])bz_grid_address_py->data;
-  const int *bz_map = (int*)bz_map_py->data;
-  
-  spg_get_triplet_tetrahedra_vertices(vertices,
-				      relative_grid_address,
-				      mesh,
-				      triplet,
-				      bz_grid_address,
-				      bz_map);
   Py_RETURN_NONE;
 }
 

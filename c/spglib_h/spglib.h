@@ -347,15 +347,6 @@ void spg_get_neighboring_grid_points(int relative_grid_points[],
 				     SPGCONST int bz_grid_address[][3],
 				     const int bz_map[]);
 
-/* Tetrahedra vertices of tetrahedron method for a triplet */
-void spg_get_triplet_tetrahedra_vertices
-(int vertices[2][24][4],
- SPGCONST int relative_grid_address[24][4][3],
- const int mesh[3],
- const int triplet[3],
- SPGCONST int bz_grid_address[][3],
- const int bz_map[]);
-
 void
 spg_get_tetrahedra_relative_grid_address(int relative_grid_address[24][4][3],
 					 SPGCONST double rec_lattice[3][3]);
