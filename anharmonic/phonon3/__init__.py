@@ -448,13 +448,31 @@ class Phono3pyJointDos:
 
     def run(self, grid_points):
         for gp in grid_points:
+            self._jdos.set_grid_point(gp)
+            
+            if self._log_level:
+                weights = self._jdos.get_triplets_at_q()[1]
+                print "------ Joint DOS ------"
+                print "Grid point: %d" % gp
+                print "Number of ir-triplets:",
+                print "%d / %d" % (len(weights), weights.sum())
+                adrs = self._jdos.get_grid_address()[gp]
+                q = adrs.astype('double') / self._mesh
+                print "q-point:", q
+                print "Phonon frequency:"
+                frequencies = self._jdos.get_phonons()[0]
+                print frequencies[gp]
+            
             if self._tetrahedron_method:
-                self._jdos.run(gp)
+                print "Tetrahedron method"
+                self._jdos.set_sigma(None)
+                self._jdos.run()
                 self._write(gp, sigma=None)
-            elif self._sigmas:
+            if self._sigmas:
                 for sigma in self._sigmas:
+                    print "Sigma:", sigma
                     self._jdos.set_sigma(sigma)
-                    self._jdos.run(gp)
+                    self._jdos.run()
                     self._write(gp, sigma)
             else:
                 print "sigma or tetrahedron method has to be set."

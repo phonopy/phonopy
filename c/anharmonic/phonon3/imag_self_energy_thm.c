@@ -21,8 +21,8 @@ sum_thm_imag_self_energy_at_band_0K(const int num_band,
 void get_thm_imag_self_energy_at_bands(double *imag_self_energy,
 				       const Darray *fc3_normal_sqared,
 				       const double *frequencies,
-				       const int *grid_point_triplets,
-				       const int *triplet_weights,
+				       const int *triplets,
+				       const int *weights,
 				       const double *g,
 				       const double temperature,
 				       const double unit_conversion_factor,
@@ -40,8 +40,8 @@ void get_thm_imag_self_energy_at_bands(double *imag_self_energy,
   
 #pragma omp parallel for private(j, gp1, gp2, sum_g, n1, n2, f1, f2)
   for (i = 0; i < num_triplets; i++) {
-    gp1 = grid_point_triplets[i * 3 + 1];
-    gp2 = grid_point_triplets[i * 3 + 2];
+    gp1 = triplets[i * 3 + 1];
+    gp2 = triplets[i * 3 + 2];
     n1 = (double*)malloc(sizeof(double) * num_band);
     n2 = (double*)malloc(sizeof(double) * num_band);
     for (j = 0; j < num_band; j++) {
@@ -89,7 +89,7 @@ void get_thm_imag_self_energy_at_bands(double *imag_self_energy,
   for (i = 0; i < num_band0; i++) {
     imag_self_energy[i] = 0;
     for (j = 0; j < num_triplets; j++) {
-      imag_self_energy[i] += ise[j * num_band0 + i] * triplet_weights[j];
+      imag_self_energy[i] += ise[j * num_band0 + i] * weights[j];
     }
     imag_self_energy[i] *= unit_conversion_factor;
   }
