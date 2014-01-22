@@ -455,17 +455,15 @@ static PyObject * py_get_thm_imag_self_energy_at_bands(PyObject *self,
   PyArrayObject* frequencies_py;
   PyArrayObject* grid_point_triplets_py;
   PyArrayObject* triplet_weights_py;
-  PyArrayObject* band_indices_py;
   PyArrayObject* g_py;
   double unit_conversion_factor, cutoff_frequency, temperature;
 
-  if (!PyArg_ParseTuple(args, "OOOOOOdOdd",
+  if (!PyArg_ParseTuple(args, "OOOOOdOdd",
 			&gamma_py,
 			&fc3_normal_squared_py,
 			&grid_point_triplets_py,
 			&triplet_weights_py,
 			&frequencies_py,
-			&band_indices_py,
 			&temperature,
 			&g_py,
 			&unit_conversion_factor,
@@ -478,13 +476,11 @@ static PyObject * py_get_thm_imag_self_energy_at_bands(PyObject *self,
   double* gamma = (double*)gamma_py->data;
   double* g = (double*)g_py->data;
   const double* frequencies = (double*)frequencies_py->data;
-  const int* band_indices = (int*)band_indices_py->data;
   const int* grid_point_triplets = (int*)grid_point_triplets_py->data;
   const int* triplet_weights = (int*)triplet_weights_py->data;
 
   get_thm_imag_self_energy_at_bands(gamma,
 				    fc3_normal_squared,
-				    band_indices,
 				    frequencies,
 				    grid_point_triplets,
 				    triplet_weights,
