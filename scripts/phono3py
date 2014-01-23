@@ -829,8 +829,6 @@ elif settings.get_mesh_numbers() is not None:
     else:
         factor = options.factor
 
-    freq_factor = 1.0
-
     if settings.get_sigma() is None:
         sigma = None
     else:
@@ -845,7 +843,7 @@ elif settings.get_mesh_numbers() is not None:
         multiple_sigmas = settings.get_multiple_sigmas()
 
     if settings.get_frequency_pitch() is None:
-        freq_step = 0.1 * freq_factor
+        freq_step = 0.1
     else:
         freq_step = settings.get_frequency_pitch()
 
@@ -935,6 +933,7 @@ elif settings.get_mesh_numbers() is not None:
             primitive,
             mesh,
             tetrahedron_method=settings.get_is_tetrahedron_method(),
+            sigmas=multiple_sigmas,
             band_indices=settings.get_band_indices(),
             cutoff_frequency=settings.get_cutoff_frequency(),
             frequency_factor_to_THz=factor,
@@ -963,9 +962,8 @@ elif settings.get_mesh_numbers() is not None:
         if settings.get_is_linewidth():
             phono3py.get_linewidth(
                 grid_points,
-                sigmas=multiple_sigmas,
-                temperatures=temperatures,
-                output_filename=output_filename)
+                temperatures=temperatures)
+            phono3py.write_linewidth(filename=output_filename)
         elif settings.get_is_frequency_shift():
             phono3py.get_frequency_shift(
                 grid_points,
@@ -993,9 +991,8 @@ elif settings.get_mesh_numbers() is not None:
             phono3py.get_imag_self_energy(
                 grid_points,
                 frequency_step=freq_step,
-                sigmas=multiple_sigmas,
-                temperatures=settings.get_temperatures(),
-                output_filename=output_filename)
+                temperatures=settings.get_temperatures())
+            phono3py.write_imag_self_energy(filename=output_filename)
 else:
     pass
 

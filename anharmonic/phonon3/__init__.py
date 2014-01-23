@@ -1,12 +1,12 @@
 import numpy as np
 from phonopy.structure.symmetry import Symmetry
-from anharmonic.phonon3.imag_self_energy import ImagSelfEnergy
+from anharmonic.phonon3.imag_self_energy import get_imag_self_energy, write_imag_self_energy, get_linewidth, write_linewidth
 from anharmonic.phonon3.frequency_shift import FrequencyShift
 from anharmonic.phonon3.interaction import Interaction
 from anharmonic.phonon3.conductivity_RTA import conductivity_RTA
 from anharmonic.phonon3.joint_dos import JointDos
 from anharmonic.phonon3.gruneisen import Gruneisen
-from anharmonic.file_IO import read_gamma_from_hdf5, write_damping_functions, write_linewidth, write_frequency_shift, write_joint_dos, write_kappa_to_hdf5
+from anharmonic.file_IO import read_gamma_from_hdf5, write_frequency_shift, write_joint_dos, write_kappa_to_hdf5
 from anharmonic.other.isotope import Isotope
 from phonopy.units import VaspToTHz
 
@@ -17,6 +17,7 @@ class Phono3py:
                  primitive,
                  mesh,
                  tetrahedron_method=False,
+                 sigmas = [],
                  band_indices=None,
                  cutoff_frequency=1e-4,
                  frequency_factor_to_THz=VaspToTHz,
@@ -29,23 +30,24 @@ class Phono3py:
         self._supercell = supercell
         self._primitive = primitive
         self._mesh = mesh
-        self._tetrahedron_method = tetrahedron_method
         if band_indices is None:
             self._band_indices = [
                 np.arange(primitive.get_number_of_atoms() * 3)]
         else:
             self._band_indices = band_indices
+            
+        self._tetrahedron_method = tetrahedron_method
+        if tetrahedron_method:
+            self._sigmas = [None] + list(sigmas)
+        else:
+            self._sigmas = list(sigmas)
+        
         self._frequency_factor_to_THz = frequency_factor_to_THz
         self._is_nosym = is_nosym
         self._symmetrize_fc3_q = symmetrize_fc3_q
         self._cutoff_frequency = cutoff_frequency
         self._log_level = log_level
-        self._kappa = None
-        self._gamma = None
-
-        self._band_indices_flatten = np.intc(
-            [x for bi in self._band_indices for x in bi])
-
+        self._band_indices_flatten = np.hstack(self._band_indices).astype('intc')
         self._symmetry = Symmetry(primitive, symprec)
         
         self._interaction = Interaction(
@@ -60,7 +62,20 @@ class Phono3py:
             is_nosym=self._is_nosym,
             symmetrize_fc3_q=self._symmetrize_fc3_q,
             lapack_zheev_uplo=lapack_zheev_uplo)
-        
+
+        # Thermal conductivity
+        self._kappa = None
+        self._gamma = None
+
+        # Imaginary part of self energy at frequency points
+        self._imag_self_energy = None
+        self._grid_points = None
+        self._frequency_points = None
+        self._temperatures = None
+
+        # Linewidth (Imaginary part of self energy x 2) at temperatures
+        self._linewidth = None
+                
     def set_dynamical_matrix(self,
                              fc2,
                              supercell,
@@ -78,150 +93,48 @@ class Phono3py:
                            
     def get_imag_self_energy(self,
                              grid_points,
-                             frequency_step=1.0,
-                             sigmas=[],
+                             frequency_step=0.1,
                              temperatures=[0.0, 300.0],
                              output_filename=None):
-        if temperatures is None:
-            print "Temperatures have to be set."
-            return False
-
-        ise = ImagSelfEnergy(self._interaction)
-        if self._tetrahedron_method:
-            thm_plus_sigmas = [None] + list(sigmas)
-        else:
-            thm_plus_sigmas = list(sigmas)
-        
-        for gp in grid_points:
-            ise.set_grid_point(gp)
-            if self._log_level:
-                weights = self._interaction.get_triplets_at_q()[1]
-                print "------ Imaginary part of self energy ------"
-                print "Grid point: %d" % gp
-                print "Number of ir-triplets:",
-                print "%d / %d" % (len(weights), weights.sum())
-            ise.run_interaction()
-            frequencies = self._interaction.get_phonons()[0]
-            max_phonon_freq = np.amax(frequencies)
-
-            if self._log_level:
-                adrs = self._interaction.get_grid_address()[gp]
-                q = adrs.astype('double') / self._mesh
-                print "q-point:", q
-                print "Phonon frequency:"
-                print frequencies[gp]
+        self._grid_points = grid_points
+        self._temperatures = temperatures
+        self._imag_self_energy, self._frequency_points = get_imag_self_energy(
+            self._interaction,
+            grid_points,
+            self._sigmas,
+            frequency_step=frequency_step,
+            temperatures=temperatures,
+            log_level=self._log_level)
             
-            for sigma in thm_plus_sigmas:
-                if self._log_level:
-                    if sigma:
-                        print "Sigma:", sigma
-                    else:
-                        print "Tetrahedron method"
-                ise.set_sigma(sigma)
-                if sigma:
-                    fmax = max_phonon_freq * 2 + sigma * 4 + frequency_step / 10
-                else:
-                    fmax = max_phonon_freq * 2 + frequency_step / 10
-                fmin = 0
-                frequency_points = np.arange(fmin, fmax, frequency_step)
-                ise.set_frequency_points(frequency_points)
-
-                if not sigma:
-                    ise.set_integration_weights()
-                
-                for t in temperatures:
-                    if self._log_level:
-                        print "Temperature:", t
-                    ise.set_temperature(t)
-                    ise.run()
-                    self._write_imag_self_energy(
-                        ise.get_imag_self_energy(),
-                        gp,
-                        frequency_points,
-                        t,
-                        sigma=sigma,
-                        filename=output_filename)
-
-    def _write_imag_self_energy(self,
-                                gamma,
-                                grid_point,
-                                frequency_points,
-                                temperature,
-                                sigma=None,
-                                filename=None):
-        for i, bi in enumerate(self._band_indices):
-            pos = 0
-            for j in range(i):
-                pos += len(self._band_indices[j])
-            write_damping_functions(
-                grid_point,
-                bi,
-                self._mesh,
-                frequency_points,
-                gamma[:, pos:(pos + len(bi))].sum(axis=1) / len(bi),
-                sigma=sigma,
-                temperature=temperature,
-                filename=filename)
-                        
+    def write_imag_self_energy(self, filename=None):
+        write_imag_self_energy(self._imag_self_energy,
+                               self._mesh,
+                               self._grid_points,
+                               self._band_indices,
+                               self._frequency_points,
+                               self._temperatures,
+                               self._sigmas,
+                               filename=filename)
+        
     def get_linewidth(self,
                       grid_points,
-                      sigmas=[],
-                      temperatures=np.arange(0, 1001, 10, dtype='double'),
-                      output_filename=None):
-        ise = ImagSelfEnergy(self._interaction)
-        if self._tetrahedron_method:
-            thm_plus_sigmas = [None] + list(sigmas)
-        else:
-            thm_plus_sigmas = list(sigmas)
-            
-        for gp in grid_points:
-            ise.set_grid_point(gp)
-            if self._log_level:
-                weights = self._interaction.get_triplets_at_q()[1]
-                print "------ Linewidth ------"
-                print "Grid point: %d" % gp
-                print "Number of ir-triplets:",
-                print "%d / %d" % (len(weights), weights.sum())
-            ise.run_interaction()
-            frequencies = self._interaction.get_phonons()[0]
-            if self._log_level:
-                adrs = self._interaction.get_grid_address()[gp]
-                q = adrs.astype('double') / self._mesh
-                print "q-point:", q
-                print "Phonon frequency:"
-                print frequencies[gp]
-            
-            for sigma in thm_plus_sigmas:
-                if self._log_level:
-                    if sigma:
-                        print "Sigma:", sigma
-                    else:
-                        print "Tetrahedron method"
-                ise.set_sigma(sigma)
-                gamma = np.zeros((len(temperatures),
-                                  len(self._band_indices_flatten)),
-                                 dtype='double')
+                      temperatures=np.arange(0, 1001, 10, dtype='double')):
+        self._grid_points = grid_points
+        self._temperatures = temperatures
+        self._linewidth = get_linewidth(self._interaction,
+                                        grid_points,
+                                        self._sigmas,
+                                        temperatures=temperatures,
+                                        log_level=self._log_level)
 
-                if not sigma:
-                    ise.set_integration_weights()
-                
-                for i, t in enumerate(temperatures):
-                    ise.set_temperature(t)
-                    ise.run()
-                    gamma[i] = ise.get_imag_self_energy()
-
-                for i, bi in enumerate(self._band_indices):
-                    pos = 0
-                    for j in range(i):
-                        pos += len(self._band_indices[j])
-
-                    write_linewidth(gp,
-                                    bi,
-                                    temperatures,
-                                    gamma[:, pos:(pos+len(bi))],
-                                    self._mesh,
-                                    sigma=sigma,
-                                    filename=output_filename)
+    def write_linewidth(self, filename=None):
+        write_linewidth(self._linewidth,
+                        self._band_indices,
+                        self._mesh,
+                        self._grid_points,
+                        self._sigmas,
+                        self._temperatures,
+                        filename=filename)
 
     def get_frequency_shift(self,
                             grid_points,
