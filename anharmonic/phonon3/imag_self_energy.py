@@ -365,7 +365,7 @@ class ImagSelfEnergy:
     def _set_integration_weights(self):
         reciprocal_lattice = np.linalg.inv(
             self._interaction.get_primitive().get_cell())
-        thm = TetrahedronMethod(reciprocal_lattice)
+        thm = TetrahedronMethod(reciprocal_lattice, mesh=self._mesh)
         grid_address = self._interaction.get_grid_address()
         bz_map = self._interaction.get_bz_map()
         self._set_triplets_integration_weights_c(thm,

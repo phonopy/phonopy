@@ -372,17 +372,18 @@ def get_triplets_tetrahedra_vertices(relative_grid_address,
 
     return vertices
 
-def get_tetrahedra_relative_grid_address(reciprocal_lattice):
+def get_tetrahedra_relative_grid_address(microzone_lattice):
     """
     reciprocal_lattice:
-      column vectors of reciprocal lattice which can be obtained by
-      reciprocal_lattice = np.linalg.inv(bulk.get_cell())
+      column vectors of parallel piped microzone lattice
+      which can be obtained by:
+      microzone_lattice = np.linalg.inv(bulk.get_cell()) / mesh
     """
     
     relative_grid_address = np.zeros((24, 4, 3), dtype='intc')
-    spg.tetrahedra_relative_grid_address(relative_grid_address,
-                                         np.array(reciprocal_lattice,
-                                                  dtype='double').copy())
+    spg.tetrahedra_relative_grid_address(
+        relative_grid_address, np.array(microzone_lattice,
+                                        dtype='double').copy())
     return relative_grid_address
 
     

@@ -50,7 +50,7 @@ class JointDos:
 
         if tetrahedron_method:
             self._tetrahedron_method = TetrahedronMethod(
-                self._reciprocal_lattice)
+                self._reciprocal_lattice, mesh=self._mesh)
         else:
             self._tetrahedron_method = None
 

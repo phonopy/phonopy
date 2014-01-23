@@ -46,8 +46,10 @@ parallelepiped_vertices = np.array([[0, 0, 0],
 
 class TetrahedronMethod:
     def __init__(self,
-                 primitive_vectors):
-        self._primitive_vectors = primitive_vectors # column vectors
+                 primitive_vectors,
+                 mesh=[1, 1, 1]):
+        self._primitive_vectors = np.array(
+            primitive_vectors, dtype='double') / mesh # column vectors
         self._vertices = None
         self._relative_grid_addresses = None
         self._central_indices = None

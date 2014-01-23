@@ -89,7 +89,9 @@ class TetrahedronMesh:
         num_freqs = len(self._frequency_points)
         self._integration_weights = np.zeros(
             (num_freqs, num_band, num_ir_grid_points), dtype='double')
-        self._tm = TetrahedronMethod(np.linalg.inv(self._cell.get_cell()))
+
+        reciprocal_lattice = np.linalg.inv(self._cell.get_cell())
+        self._tm = TetrahedronMethod(reciprocal_lattice, mesh=self._mesh)
         relative_grid_address = self._tm.get_tetrahedra()
 
         for i, gp in enumerate(self._ir_grid_points):
