@@ -540,6 +540,8 @@ def write_grid_address(grid_address, mesh, filename=None):
         w.write("%10d    %8d %8d %8d     " % (i, bz_q[0], bz_q[1], bz_q[2]))
         w.write("%8d %8d %8d\n" % tuple(q))
 
+    return grid_address_filename
+
 def write_freq_shifts_to_hdf5(freq_shifts, filename='freq_shifts.hdf5'):
     w = h5py.File(filename, 'w')
     w.create_dataset('shift', data=freq_shifts)
@@ -947,7 +949,9 @@ def write_ir_grid_points(mesh,
     for g, weight in zip(grid_points, coarse_grid_weights):
         w.write("- grid_point: %d\n" % g)
         w.write("  weight: %d\n" % weight)
-        w.write("  q-point: [ %12.7f, %12.7f, %12.7f ]\n" %
+        w.write("  grid_address: [ %12d, %12d, %12d ]\n" %
+                tuple(grid_address[g]))
+        w.write("  q-point:      [ %12.7f, %12.7f, %12.7f ]\n" %
                 tuple(grid_address[g].astype('double') / mesh))
 
 def get_forces_from_vasprun_xmls(vaspruns, num_atom, index_shift=0):

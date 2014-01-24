@@ -54,8 +54,8 @@ from anharmonic.file_IO import write_fc2_dat, write_fc3_dat,\
     parse_disp_fc3_yaml, write_FORCES_THIRD,\
     parse_DELTA_FORCES, write_supercells_with_displacements,\
     write_DELTA_FC2_SETS, parse_DELTA_FC2_SETS, parse_FORCES_SECOND, \
-    write_fc3_to_hdf5, write_fc2_to_hdf5,\
-    read_fc3_from_hdf5, read_fc2_from_hdf5, write_ir_grid_points
+    write_fc3_to_hdf5, write_fc2_to_hdf5, read_fc3_from_hdf5, \
+    read_fc2_from_hdf5, write_ir_grid_points, write_grid_address
 from anharmonic.phonon3.triplets import get_coarse_ir_grid_points
 from anharmonic.phonon3.displacement_fc3 import get_third_order_displacements
 from anharmonic.settings import Phono3pyConfParser
@@ -554,14 +554,13 @@ if log_level and (settings.get_supercell_matrix_extra() is not None):
                        np.linalg.inv(primitive_extra.get_cell())):
         print "%5.2f"*3 % tuple(vec)
 
-# Write ir-grid points
+# Write ir-grid points and grid addresses
 if options.write_grid_points:
     print "---------------------------------------------------------------------------"
     mesh = settings.get_mesh_numbers()
     if mesh is None:
-        print "To write grid points, mesh numbers have to be specified."
+        print "To write grid points, mesh numbers have to be set."
     else:
-        print "Ir-grid points are written into ir_grid_points.yaml."
         mesh_divs = settings.get_mesh_divisors()
         (grid_points,
          coarse_grid_weights,
@@ -577,6 +576,10 @@ if options.write_grid_points:
                              coarse_grid_weights,
                              grid_address,
                              np.linalg.inv(primitive.get_cell()))
+        gadrs_fname = write_grid_address(grid_address, mesh)
+
+        print "Ir-grid points are written into \"ir_grid_points.yaml\"."
+        print "Grid address are written into \"%s\"." % gadrs_fname
 
     if log_level:
         print_end()
