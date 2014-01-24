@@ -64,7 +64,7 @@ class Phono3py:
             lapack_zheev_uplo=lapack_zheev_uplo)
 
         # Thermal conductivity
-        self._thermal_conductivity = None
+        self._thermal_conductivity = None # conductivity_RTA object
 
         # Imaginary part of self energy at frequency points
         self._imag_self_energy = None
@@ -75,7 +75,10 @@ class Phono3py:
         self._grid_points = None
         self._frequency_points = None
         self._temperatures = None
-                
+
+    def get_interaction_strength(self):
+        return self._interaction
+        
     def set_dynamical_matrix(self,
                              fc2,
                              supercell,
@@ -170,7 +173,10 @@ class Phono3py:
                 read_gamma=read_gamma,
                 input_filename=input_filename,
                 output_filename=output_filename,
-                log_level=self._log_level)        
+                log_level=self._log_level)
+
+    def get_thermal_conductivity(self):
+        return self._thermal_conductivity
 
     def get_frequency_shift(self,
                             grid_points,
