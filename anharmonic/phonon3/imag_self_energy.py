@@ -582,7 +582,7 @@ class ImagSelfEnergy:
                                                       self._mesh,
                                                       self._triplets_at_q,
                                                       grid_address,
-                                                      bz_map);
+                                                      bz_map)
         self._interaction.set_phonon(np.unique(tetrahedra_vertices))
         if self._frequency_points is None:
             gp = self._grid_point
@@ -603,7 +603,7 @@ class ImagSelfEnergy:
                 self._g[i, :, j, k, 0] = thm.get_integration_weight()
                 thm.set_tetrahedra_omegas(-f1_v + f2_v)
                 thm.run(frequency_points)
-                self._g[i, :, j, k, 0] = thm.get_integration_weight()
+                self._g[i, :, j, k, 1] = thm.get_integration_weight()
                 thm.set_tetrahedra_omegas(f1_v - f2_v)
                 thm.run(frequency_points)
-                self._g[i, :, j, k, 0] -= thm.get_integration_weight()
+                self._g[i, :, j, k, 1] -= thm.get_integration_weight()
