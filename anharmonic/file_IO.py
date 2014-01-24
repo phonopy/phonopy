@@ -520,12 +520,25 @@ def write_triplets(triplets,
         w.write("\n")
     w.close()
 
-def write_grid_address(grid_address, mesh, filename='grid_points.dat'):
-    w = open(filename, 'w')
-    w.write("# Grid points for %dx %dx%d mesh"
-            "(address, grid_a, grid_b, grid_c)\n" % tuple(mesh))
-    for i, q in enumerate(grid_address):
-        w.write("%10d %10d %10d %10d\n" % (i, q[0], q[1], q[2]))
+def write_grid_address(grid_address, mesh, filename=None):
+    grid_address_filename = "grid_address"
+    suffix = "-m%d%d%d" % tuple(mesh)
+    if filename is not None:
+        suffix += "." + filename
+    suffix += ".dat"
+    grid_address_filename += suffix
+    
+    w = open(grid_address_filename, 'w')
+    w.write("# Grid addresses for %dx%dx%d mesh\n" % tuple(mesh))
+    w.write("#%9s    %8s %8s %8s     %8s %8s %8s\n" %
+            ("index", "a", "b", "c",
+             ("a%%%d" % mesh[0]), ("b%%%d" % mesh[1]), ("c%%%d" % mesh[2])))
+    for i, bz_q in enumerate(grid_address):
+        if i == np.prod(mesh):
+            w.write("#" + "-" * 78 + "\n")
+        q = bz_q % mesh
+        w.write("%10d    %8d %8d %8d     " % (i, bz_q[0], bz_q[1], bz_q[2]))
+        w.write("%8d %8d %8d\n" % tuple(q))
 
 def write_freq_shifts_to_hdf5(freq_shifts, filename='freq_shifts.hdf5'):
     w = h5py.File(filename, 'w')
@@ -731,7 +744,7 @@ def write_kappa_to_hdf5(gamma,
         else:
             print "at",
         print "sigma %s" % sigma_str
-    print "were written into",
+    print "were written into"
     print "\"%s\"" % ("kappa" + suffix + ".hdf5")
     print
 
@@ -745,10 +758,10 @@ def read_gamma_from_hdf5(mesh,
     if mesh_divisors is not None:
         if (mesh_divisors != 1).any():
             suffix += "-d%d%d%d" % tuple(mesh_divisors)
-    sigma_str = ("%f" % sigma).rstrip('0').rstrip('\.')
     if grid_point is not None:
         suffix += ("-g%d" % grid_point)
     if sigma is not None:
+        sigma_str = ("%f" % sigma).rstrip('0').rstrip('\.')
         suffix += "-s" + sigma_str
     if filename is not None:
         suffix += "." + filename

@@ -960,7 +960,7 @@ elif settings.get_mesh_numbers() is not None:
             temperatures = settings.get_temperatures()
             
         if settings.get_is_linewidth():
-            phono3py.get_linewidth(
+            phono3py.run_linewidth(
                 grid_points,
                 temperatures=temperatures)
             phono3py.write_linewidth(filename=output_filename)
@@ -971,7 +971,7 @@ elif settings.get_mesh_numbers() is not None:
                 temperatures=temperatures,
                 output_filename=output_filename)
         elif settings.get_is_bterta():
-            phono3py.get_thermal_conductivity(
+            phono3py.run_thermal_conductivity(
                 temperatures=temperatures,
                 sigmas=multiple_sigmas,
                 mass_variances=settings.get_mass_variances(),
@@ -985,10 +985,10 @@ elif settings.get_mesh_numbers() is not None:
                 read_gamma=settings.get_read_gamma(),
                 write_amplitude=settings.get_write_amplitude(),
                 read_amplitude=settings.get_read_amplitude(),
-                output_filename=output_filename,
-                input_filename=input_filename)
+                input_filename=input_filename,
+                output_filename=output_filename)
         else:
-            phono3py.get_imag_self_energy(
+            phono3py.run_imag_self_energy(
                 grid_points,
                 frequency_step=freq_step,
                 temperatures=settings.get_temperatures())
