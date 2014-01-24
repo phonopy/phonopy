@@ -41,8 +41,7 @@ def get_thermal_conductivity(
                           cutoff_lifetime=cutoff_lifetime,
                           no_kappa_stars=no_kappa_stars,
                           gv_delta_q=gv_delta_q,
-                          log_level=log_level,
-                          filename=output_filename)
+                          log_level=log_level)
     br.initialize(grid_points)
 
     if read_gamma:
@@ -56,6 +55,8 @@ def get_thermal_conductivity(
 
     if grid_points is None:
         _write_kappa(br, filename=output_filename, log_level=log_level)
+
+    return br
         
 def _write_gamma(br, interaction, i, filename=None):
     grid_points = br.get_grid_points()
@@ -182,8 +183,7 @@ class conductivity_RTA:
                  cutoff_lifetime=1e-4, # in second
                  no_kappa_stars=False,
                  gv_delta_q=None, # finite difference for group veolocity
-                 log_level=0,
-                 filename=None):
+                 log_level=0):
         self._pp = interaction
         self._tetrahedron_method = tetrahedron_method
         self._ise = ImagSelfEnergy(self._pp)
@@ -192,7 +192,6 @@ class conductivity_RTA:
         self._no_kappa_stars = no_kappa_stars
         self._gv_delta_q = gv_delta_q
         self._log_level = log_level
-        self._filename = filename
         self._primitive = self._pp.get_primitive()
         self._dm = self._pp.get_dynamical_matrix()
         self._frequency_factor_to_THz = self._pp.get_frequency_factor_to_THz()

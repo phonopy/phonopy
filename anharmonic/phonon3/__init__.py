@@ -64,17 +64,17 @@ class Phono3py:
             lapack_zheev_uplo=lapack_zheev_uplo)
 
         # Thermal conductivity
-        self._kappa = None
-        self._gamma = None
+        self._thermal_conductivity = None
 
         # Imaginary part of self energy at frequency points
         self._imag_self_energy = None
-        self._grid_points = None
-        self._frequency_points = None
-        self._temperatures = None
 
         # Linewidth (Imaginary part of self energy x 2) at temperatures
         self._linewidth = None
+
+        self._grid_points = None
+        self._frequency_points = None
+        self._temperatures = None
                 
     def set_dynamical_matrix(self,
                              fc2,
@@ -154,7 +154,7 @@ class Phono3py:
             input_filename=None,
             output_filename=None):
 
-        get_thermal_conductivity(
+        self._thermal_conductivity = get_thermal_conductivity(
                 self._interaction,
                 self._symmetry,
                 temperatures=temperatures,
@@ -171,84 +171,6 @@ class Phono3py:
                 input_filename=input_filename,
                 output_filename=output_filename,
                 log_level=self._log_level)        
-        
-        # if self._tetrahedron_method:
-        #     thm_plus_sigmas = [None] + list(sigmas)
-        # else:
-        #     thm_plus_sigmas = list(sigmas)
-        # br = conductivity_RTA(self._interaction,
-        #                       self._symmetry,
-        #                       temperatures=temperatures,
-        #                       sigmas=sigmas,
-        #                       tetrahedron_method=self._tetrahedron_method,
-        #                       mass_variances=mass_variances,
-        #                       mesh_divisors=mesh_divisors,
-        #                       coarse_mesh_shifts=coarse_mesh_shifts,
-        #                       cutoff_lifetime=cutoff_lifetime,
-        #                       no_kappa_stars=no_kappa_stars,
-        #                       gv_delta_q=gv_delta_q,
-        #                       log_level=self._log_level,
-        #                       filename=output_filename)
-        # br.set_grid_points(grid_points)
-
-        # if read_gamma:
-        #     gamma = []
-        #     for sigma in sigmas:
-        #         gamma_at_sigma = read_gamma_from_hdf5(
-        #             br.get_mesh_numbers(),
-        #             mesh_divisors=br.get_mesh_divisors(),
-        #             sigma=sigma,
-        #             filename=input_filename)
-        #         if gamma_at_sigma is False:
-        #             gamma_at_sigma = []
-        #             for i, gp in enumerate(br.get_grid_points()):
-        #                 gamma_gp = read_gamma_from_hdf5(
-        #                     br.get_mesh_numbers(),
-        #                     mesh_divisors=br.get_mesh_divisors(),
-        #                     grid_point=gp,
-        #                     sigma=sigma,
-        #                     filename=input_filename)
-        #                 if gamma_gp is False:
-        #                     print "Gamma at grid point %d doesn't exist." % gp
-        #                 gamma_at_sigma.append(gamma_gp)
-        #         gamma.append(gamma_at_sigma)
-        #     br.set_gamma(np.array(gamma, dtype='double'))
-
-        # br.run(write_amplitude=write_amplitude,
-        #        read_amplitude=read_amplitude,
-        #        write_gamma=write_gamma)        
-        # mode_kappa = br.get_kappa()
-        # gamma = br.get_gamma()
-
-        # if grid_points is None:
-        #     temperatures = br.get_temperatures()
-        #     for i, sigma in enumerate(thm_plus_sigmas):
-        #         kappa = mode_kappa[i].sum(axis=2).sum(axis=0)
-        #         print "----------- Thermal conductivity (W/m-k)",
-        #         if sigma:
-        #             print "for sigma=%s -----------" % sigma
-        #         else:
-        #             print "with tetrahedron method -----------"
-        #         print ("#%6s     " + " %-9s" * 6) % ("T(K)", "xx", "yy", "zz",
-        #                                             "yz", "xz", "xy")
-        #         for t, k in zip(temperatures, kappa):
-        #             print ("%7.1f" + " %9.3f" * 6) % ((t,) + tuple(k))
-        #         print
-        #         write_kappa_to_hdf5(gamma[i],
-        #                             temperatures,
-        #                             br.get_mesh_numbers(),
-        #                             frequency=br.get_frequencies(),
-        #                             group_velocity=br.get_group_velocities(),
-        #                             heat_capacity=br.get_mode_heat_capacities(),
-        #                             kappa=kappa,
-        #                             qpoint=br.get_qpoints(),
-        #                             weight=br.get_grid_weights(),
-        #                             mesh_divisors=br.get_mesh_divisors(),
-        #                             sigma=sigma,
-        #                             filename=output_filename)
-
-        # self._kappa = mode_kappa
-        # self._gamma = gamma
 
     def get_frequency_shift(self,
                             grid_points,
