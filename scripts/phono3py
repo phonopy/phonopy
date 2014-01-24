@@ -931,10 +931,10 @@ elif settings.get_mesh_numbers() is not None:
             print "Cutoff frequency:", settings.get_cutoff_frequency()
         
         phono3py = Phono3py(
-            fc3,
             supercell,
             primitive,
             mesh,
+            fc3=fc3,
             tetrahedron_method=settings.get_is_tetrahedron_method(),
             sigmas=multiple_sigmas,
             band_indices=settings.get_band_indices(),

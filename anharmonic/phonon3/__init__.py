@@ -12,10 +12,10 @@ from phonopy.units import VaspToTHz
 
 class Phono3py:
     def __init__(self,
-                 fc3,
                  supercell,
                  primitive,
                  mesh,
+                 fc3=None,
                  tetrahedron_method=False,
                  sigmas = [],
                  band_indices=None,
@@ -51,11 +51,11 @@ class Phono3py:
         self._symmetry = Symmetry(primitive, symprec)
         
         self._interaction = Interaction(
-            fc3,
             supercell,
             primitive,
             mesh,
             self._symmetry,
+            fc3=fc3,
             band_indices=self._band_indices_flatten,
             frequency_factor_to_THz=self._frequency_factor_to_THz,
             cutoff_frequency=self._cutoff_frequency,

@@ -99,11 +99,11 @@ def set_phonon_py(grid_point,
 
 class Interaction:
     def __init__(self,
-                 fc3,
                  supercell,
                  primitive,
                  mesh,
                  symmetry,
+                 fc3=None,
                  band_indices=None,
                  frequency_factor_to_THz=VaspToTHz,
                  is_nosym=False,

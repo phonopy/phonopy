@@ -279,7 +279,7 @@ class conductivity_RTA:
              coarse_grid_weights,
              coarse_grid_address) = get_ir_grid_points(
                 self._coarse_mesh,
-                self._primitive,
+                self._symmetry.get_pointgroup_operations(),
                 mesh_shifts=mesh_shifts)
             self._grid_points = from_coarse_to_dense_grid_points(
                 self._mesh,

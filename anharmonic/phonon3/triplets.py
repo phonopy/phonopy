@@ -92,10 +92,10 @@ def invert_grid_point(grid_point, mesh, grid_address, bz_map):
     address = grid_address[grid_point]
     return get_bz_grid_point_from_address(-address, mesh, bz_map)
 
-def get_ir_grid_points(mesh, primitive, mesh_shifts=[False, False, False]):
-    grid_mapping_table, grid_address = spg.get_ir_reciprocal_mesh(
+def get_ir_grid_points(mesh, rotations, mesh_shifts=[False, False, False]):
+    grid_mapping_table, grid_address = spg.get_stabilized_reciprocal_mesh(
         mesh,
-        primitive,
+        rotations,
         is_shift=np.where(mesh_shifts, 1, 0))
     ir_grid_points = np.unique(grid_mapping_table)
     weights = np.zeros_like(grid_mapping_table)
