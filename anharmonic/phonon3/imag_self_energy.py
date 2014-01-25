@@ -532,14 +532,9 @@ class ImagSelfEnergy:
         thm = TetrahedronMethod(reciprocal_lattice, mesh=self._mesh)
         grid_address = self._interaction.get_grid_address()
         bz_map = self._interaction.get_bz_map()
-        self._set_triplets_integration_weights_c(thm,
-                                                 grid_address,
-                                                 bz_map)
+        self._set_triplets_integration_weights_c(thm, grid_address, bz_map)
         
-    def _set_triplets_integration_weights_c(self,
-                                            thm,
-                                            grid_address,
-                                            bz_map):
+    def _set_triplets_integration_weights_c(self, thm, grid_address, bz_map):
         import anharmonic._phono3py as phono3c
         unique_vertices = thm.get_unique_tetrahedra_vertices()
         for i, j in zip((1, 2), (1, -1)):
@@ -574,10 +569,7 @@ class ImagSelfEnergy:
             grid_address,
             bz_map)
         
-    def _set_triplets_integration_weights_py(self,
-                                             thm,
-                                             grid_address,
-                                             bz_map):
+    def _set_triplets_integration_weights_py(self, thm, grid_address, bz_map):
         tetrahedra_vertices = get_tetrahedra_vertices(thm.get_tetrahedra(),
                                                       self._mesh,
                                                       self._triplets_at_q,

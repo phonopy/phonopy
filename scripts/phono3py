@@ -565,11 +565,12 @@ if options.write_grid_points:
         (grid_points,
          coarse_grid_weights,
          grid_address) = get_coarse_ir_grid_points(
-            primitive,
-            mesh,
-            mesh_divs,
-            settings.get_coarse_mesh_shifts(),
-            is_nosym=options.no_kappa_stars)
+             primitive,
+             mesh,
+             mesh_divs,
+             settings.get_coarse_mesh_shifts(),
+             is_nosym=options.no_kappa_stars,
+             symprec=options.symprec)
         write_ir_grid_points(mesh,
                              mesh_divs,
                              grid_points,
@@ -845,6 +846,9 @@ elif settings.get_mesh_numbers() is not None:
     else:
         multiple_sigmas = settings.get_multiple_sigmas()
 
+    if settings.get_is_tetrahedron_method():
+        multiple_sigmas = [None] + multiple_sigmas
+
     if settings.get_frequency_pitch() is None:
         freq_step = 0.1
     else:
@@ -889,7 +893,6 @@ elif settings.get_mesh_numbers() is not None:
             fc2,
             nac_params=nac_params,
             sigmas=multiple_sigmas,
-            tetrahedron_method=settings.get_is_tetrahedron_method(),
             frequency_step=freq_step,
             frequency_factor_to_THz=factor,
             frequency_scale_factor=freq_scale,
@@ -918,9 +921,8 @@ elif settings.get_mesh_numbers() is not None:
         if settings.get_band_indices() is None:
             band_indices = None
         else:
-            band_indices = np.intc([x for bi in settings.get_band_indices()
-                                    for x in bi])
-        for gp in grid_points:
+            band_indices = np.hstack(self._band_indices).astype('intc')
+            
             for sigma in multiple_sigmas:
                 if log_level:
                     print "Sigma:", sigma
@@ -935,7 +937,6 @@ elif settings.get_mesh_numbers() is not None:
             primitive,
             mesh,
             fc3=fc3,
-            tetrahedron_method=settings.get_is_tetrahedron_method(),
             sigmas=multiple_sigmas,
             band_indices=settings.get_band_indices(),
             cutoff_frequency=settings.get_cutoff_frequency(),

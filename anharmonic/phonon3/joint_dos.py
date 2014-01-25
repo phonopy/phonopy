@@ -15,8 +15,7 @@ class JointDos:
                  supercell,
                  fc2,
                  nac_params=None,
-                 sigma=0.1,
-                 tetrahedron_method=False,
+                 sigma=None,
                  frequency_step=0.1,
                  frequency_factor_to_THz=VaspToTHz,
                  frequency_scale_factor=1.0,
@@ -48,12 +47,7 @@ class JointDos:
         self._set_dynamical_matrix()
         self._symmetry = Symmetry(primitive, symprec)
 
-        if tetrahedron_method:
-            self._tetrahedron_method = TetrahedronMethod(
-                self._reciprocal_lattice, mesh=self._mesh)
-        else:
-            self._tetrahedron_method = None
-
+        self._tetrahedron_method = None
         self._phonon_done = None
         self._frequencies = None
         self._eigenvectors = None
@@ -112,6 +106,8 @@ class JointDos:
         
     def _run_c(self, lang='Py'):
         if self._sigma is None:
+            self._tetrahedron_method = TetrahedronMethod(
+                self._reciprocal_lattice, mesh=self._mesh)
             if lang == 'C':
                 self._run_c_tetrahedron_method()
             else:

@@ -106,7 +106,8 @@ class ThermalProperties(ThermalPropertiesBase):
             self._frequencies = np.where(frequencies > cutoff_frequency,
                                          frequencies, -1)
         else:
-            self._frequencies = np.array(frequencies, dtype='double') * THzToEv
+            self._frequencies = np.array(frequencies,
+                                         dtype='double', order='C') * THzToEv
         self._set_high_T_entropy_and_zero_point_energy()
         self._is_projection = is_projection
         

@@ -168,7 +168,7 @@ def _set_gamma_from_file(br, filename=None):
                     print "Gamma at grid point %d doesn't exist." % gp
                 gamma_at_sigma.append(gamma_gp)
         gamma.append(gamma_at_sigma)
-    br.set_gamma(np.array(gamma, dtype='double'))
+    br.set_gamma(np.array(gamma, dtype='double', order='C'))
 
 class conductivity_RTA:
     def __init__(self,
@@ -293,7 +293,8 @@ class conductivity_RTA:
                                                        self._mesh_divisors)
 
         self._qpoints = np.array(self._grid_address[self._grid_points] /
-                                 self._mesh.astype('double'), dtype='double')
+                                 self._mesh.astype('double'),
+                                 dtype='double', order='C')
 
         self._sum_num_kstar = 0
         self._grid_point_count = 0
@@ -520,7 +521,7 @@ class conductivity_RTA:
 
             self._sum_num_kstar += len(gv_by_gv)
 
-        return np.array(gv_by_gv, dtype='double')
+        return np.array(gv_by_gv, dtype='double', order='C')
 
     def _get_gv_by_gv_on_star(self, group_velocity, rotation_map):
         gv2_tensor = []

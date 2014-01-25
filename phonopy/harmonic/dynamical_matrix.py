@@ -247,7 +247,8 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         self._nac_params = nac_params
         self._method = method
 
-        self._born = np.array(self._nac_params['born'], dtype='double')
+        self._born = np.array(self._nac_params['born'],
+                              dtype='double', order='C')
         factor = self._nac_params['factor']
         if (isinstance(factor, list) or
             isinstance(factor, tuple)):
@@ -257,7 +258,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             self._unit_conversion = factor
             self._damping_factor = DAMPING_FACTOR
         self._dielectric = np.array(self._nac_params['dielectric'],
-                                    dtype='double')
+                                    dtype='double', order='C')
 
     def set_dynamical_matrix(self, q_red, q_direction=None, verbose=False):
         num_atom = self._pcell.get_number_of_atoms()

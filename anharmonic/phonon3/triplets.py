@@ -1,5 +1,6 @@
 import numpy as np
 import phonopy.structure.spglib as spg
+from phonopy.structure.symmetry import Symmetry
 
 def get_triplets_at_q(grid_point,
                       mesh,
@@ -110,11 +111,11 @@ def reduce_grid_points(mesh_divisors,
                        dense_grid_points,
                        dense_grid_weights=None,
                        coarse_mesh_shifts=None):
-    divisors = np.array(mesh_divisors, dtype=int)
+    divisors = np.array(mesh_divisors, dtype='intc')
     if (divisors == 1).all():
-        coarse_grid_points = np.array(dense_grid_points, dtype=int)
+        coarse_grid_points = np.array(dense_grid_points, dtype='intc')
         if dense_grid_weights is not None:
-            coarse_grid_weights = np.array(dense_grid_weights, dtype=int)
+            coarse_grid_weights = np.array(dense_grid_weights, dtype='intc')
     else:
         grid_weights = []
         if coarse_mesh_shifts is None:
@@ -147,11 +148,14 @@ def from_coarse_to_dense_grid_points(dense_mesh,
 
 def get_coarse_ir_grid_points(primitive,
                               mesh,
-                              mesh_divs,
+                              mesh_divisors,
                               coarse_mesh_shifts,
-                              is_nosym=False):
-    if mesh_divs is None:
+                              is_nosym=False,
+                              symprec=1e-5):
+    if mesh_divisors is None:
         mesh_divs = [1, 1, 1]
+    else:
+        mesh_divs = mesh_divisors
     mesh = np.array(mesh, dtype='intc')
     mesh_divs = np.array(mesh_divs, dtype='intc')
     coarse_mesh = mesh / mesh_divs
@@ -160,15 +164,15 @@ def get_coarse_ir_grid_points(primitive,
 
     if is_nosym:
         coarse_grid_address = get_grid_address(coarse_mesh)
-        coarse_grid_points = np.arange(np.prod(coarse_mesh),
-                                       dtype='intc')
+        coarse_grid_points = np.arange(np.prod(coarse_mesh), dtype='intc')
         coarse_grid_weights = np.ones(len(coarse_grid_points), dtype='intc')
     else:
+        symmetry = Symmetry(primitive, symprec)
         (coarse_grid_points,
          coarse_grid_weights,
          coarse_grid_address) = get_ir_grid_points(
             coarse_mesh,
-            primitive,
+            symmetry.get_pointgroup_operations(),
             mesh_shifts=coarse_mesh_shifts)
     grid_points = from_coarse_to_dense_grid_points(
         mesh,
@@ -211,7 +215,7 @@ search_space = np.array([
         [0, -1, -1],
         [0, -1, 0],
         [0, -1, 1],
-        [0, 0, -1]], dtype='intc')
+        [0, 0, -1]], dtype='intc', order='C')
 
 def get_grid_points_in_Brillouin_zone(primitive_vectors, # column vectors
                                       mesh,

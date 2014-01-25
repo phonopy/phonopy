@@ -52,7 +52,7 @@ class Atoms:
         if cell == None:
             self.cell=None
         else:
-            self.cell = np.array(cell, dtype=float)
+            self.cell = np.array(cell, dtype='double', order='C')
 
         # position
         self.scaled_positions = None
@@ -68,7 +68,7 @@ class Atoms:
         if numbers==None:
             self.numbers = None
         else:
-            self.numbers = np.array(numbers, dtype=int)
+            self.numbers = np.array(numbers, dtype='intc')
 
         # masses
         self.set_masses(masses)
@@ -90,7 +90,7 @@ class Atoms:
 
 
     def set_cell(self, cell):
-        self.cell = np.array(cell, dtype=float)
+        self.cell = np.array(cell, dtype='double', order='C')
 
     def get_cell(self):
         return self.cell.copy()
@@ -103,7 +103,8 @@ class Atoms:
         return np.dot(self.scaled_positions, self.cell)
 
     def set_scaled_positions(self, scaled_positions):
-        self.scaled_positions = np.array(scaled_positions, dtype=float)
+        self.scaled_positions = np.array(scaled_positions,
+                                         dtype='double', order='C')
 
     def get_scaled_positions(self):
         return self.scaled_positions.copy()
@@ -112,7 +113,7 @@ class Atoms:
         if masses == None:
             self.masses = None
         else:
-            self.masses = np.array(masses, dtype=float)
+            self.masses = np.array(masses, dtype='double')
 
     def get_masses(self):
         return self.masses.copy()
@@ -121,7 +122,7 @@ class Atoms:
         if magmoms == None:
             self.magmoms = None
         else:
-            self.magmoms = np.array(magmoms, dtype=float)
+            self.magmoms = np.array(magmoms, dtype='double')
 
     def get_magnetic_moments(self):
         if self.magmoms == None:

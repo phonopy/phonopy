@@ -45,7 +45,7 @@ def set_phonon_c(dm,
     svecs, multiplicity = dm.get_shortest_vectors()
     masses = np.array(dm.get_primitive().get_masses(), dtype='double')
     rec_lattice = np.array(
-        np.linalg.inv(dm.get_primitive().get_cell()), dtype='double')
+        np.linalg.inv(dm.get_primitive().get_cell()), dtype='double', order='C')
     if dm.is_nac():
         born = dm.get_born_effective_charges()
         nac_factor = dm.get_nac_factor()
@@ -113,13 +113,13 @@ class Interaction:
         self._fc3 = fc3 
         self._supercell = supercell
         self._primitive = primitive
-        self._mesh = np.array(mesh, dtype='intc').copy()
+        self._mesh = np.array(mesh, dtype='intc')
         self._symmetry = symmetry
         num_band = primitive.get_number_of_atoms() * 3
         if band_indices is None:
             self._band_indices = np.arange(num_band, dtype='intc')
         else:
-            self._band_indices = np.array(band_indices, dtype='intc').copy()
+            self._band_indices = np.array(band_indices, dtype='intc')
         self._frequency_factor_to_THz = frequency_factor_to_THz
 
         if cutoff_frequency is None:
@@ -281,7 +281,7 @@ class Interaction:
                             self._fc3,
                             svecs,
                             multiplicity,
-                            np.array(masses, dtype='double'),
+                            masses,
                             p2s,
                             s2p,
                             self._band_indices,

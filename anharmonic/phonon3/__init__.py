@@ -16,7 +16,6 @@ class Phono3py:
                  primitive,
                  mesh,
                  fc3=None,
-                 tetrahedron_method=False,
                  sigmas = [],
                  band_indices=None,
                  cutoff_frequency=1e-4,
@@ -30,18 +29,12 @@ class Phono3py:
         self._supercell = supercell
         self._primitive = primitive
         self._mesh = mesh
+        self._sigmas = sigmas
         if band_indices is None:
             self._band_indices = [
                 np.arange(primitive.get_number_of_atoms() * 3)]
         else:
             self._band_indices = band_indices
-            
-        self._tetrahedron_method = tetrahedron_method
-        if tetrahedron_method:
-            self._sigmas = [None] + list(sigmas)
-        else:
-            self._sigmas = list(sigmas)
-        
         self._frequency_factor_to_THz = frequency_factor_to_THz
         self._is_nosym = is_nosym
         self._symmetrize_fc3_q = symmetrize_fc3_q
@@ -270,7 +263,6 @@ class Phono3pyJointDos:
                  fc2,
                  nac_params=None,
                  sigmas=[],
-                 tetrahedron_method=False,
                  frequency_step=None,
                  frequency_factor_to_THz=VaspToTHz,
                  frequency_scale_factor=None,
@@ -284,7 +276,6 @@ class Phono3pyJointDos:
         self._fc2 = fc2
         self._nac_params = nac_params
         self._sigmas = sigmas
-        self._tetrahedron_method = tetrahedron_method
         self._frequency_step = frequency_step
         self._frequency_factor_to_THz = frequency_factor_to_THz
         self._frequency_scale_factor = frequency_scale_factor
@@ -299,7 +290,6 @@ class Phono3pyJointDos:
             self._supercell,
             self._fc2,
             nac_params=self._nac_params,
-            tetrahedron_method=self._tetrahedron_method,
             frequency_step=self._frequency_step,
             frequency_factor_to_THz=self._frequency_factor_to_THz,
             frequency_scale_factor=self._frequency_scale_factor,
@@ -325,17 +315,15 @@ class Phono3pyJointDos:
                 frequencies = self._jdos.get_phonons()[0]
                 print frequencies[gp]
             
-            if self._tetrahedron_method:
-                print "Tetrahedron method"
-                self._jdos.set_sigma(None)
-                self._jdos.run()
-                self._write(gp, sigma=None)
             if self._sigmas:
                 for sigma in self._sigmas:
-                    print "Sigma:", sigma
+                    if sigma is None:
+                        print "Tetrahedron method"
+                    else:
+                        print "Sigma:", sigma
                     self._jdos.set_sigma(sigma)
                     self._jdos.run()
-                    self._write(gp, sigma)
+                    self._write(gp, sigma=sigma)
             else:
                 print "sigma or tetrahedron method has to be set."
 
