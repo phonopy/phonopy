@@ -1,60 +1,61 @@
 import numpy as np
 from phonopy.structure.symmetry import Symmetry
+from phonopy.structure.cells import get_supercell, get_primitive
 from anharmonic.phonon3.imag_self_energy import get_imag_self_energy, write_imag_self_energy, get_linewidth, write_linewidth
 from anharmonic.phonon3.frequency_shift import FrequencyShift
 from anharmonic.phonon3.interaction import Interaction
 from anharmonic.phonon3.conductivity_RTA import get_thermal_conductivity
 from anharmonic.phonon3.joint_dos import JointDos
 from anharmonic.phonon3.gruneisen import Gruneisen
+from anharmonic.phonon3.displacement_fc3 import get_third_order_displacements, direction_to_displacement
 from anharmonic.file_IO import write_frequency_shift, write_joint_dos
 from anharmonic.other.isotope import Isotope
 from phonopy.units import VaspToTHz
 
 class Phono3py:
     def __init__(self,
-                 supercell,
-                 primitive,
-                 mesh,
-                 fc3=None,
-                 sigmas = [],
+                 unitcell,
+                 supercell_matrix,
+                 primitive_matrix=None,
+                 phonon_supercell_matrix=None,
+                 mesh=None,
                  band_indices=None,
+                 sigmas=[],
                  cutoff_frequency=1e-4,
                  frequency_factor_to_THz=VaspToTHz,
+                 is_symmetry=True,
                  is_nosym=False,
                  symmetrize_fc3_q=False,
                  symprec=1e-5,
                  log_level=0,
                  lapack_zheev_uplo='L'):
-        self._fc3 = fc3
-        self._supercell = supercell
-        self._primitive = primitive
-        self._mesh = mesh
+        self._symprec = symprec
         self._sigmas = sigmas
-        if band_indices is None:
-            self._band_indices = [
-                np.arange(primitive.get_number_of_atoms() * 3)]
-        else:
-            self._band_indices = band_indices
         self._frequency_factor_to_THz = frequency_factor_to_THz
+        self._is_symmetry = is_symmetry
         self._is_nosym = is_nosym
+        self._lapack_zheev_uplo =  lapack_zheev_uplo
         self._symmetrize_fc3_q = symmetrize_fc3_q
         self._cutoff_frequency = cutoff_frequency
         self._log_level = log_level
-        self._band_indices_flatten = np.hstack(self._band_indices).astype('intc')
-        self._symmetry = Symmetry(primitive, symprec)
-        
-        self._interaction = Interaction(
-            supercell,
-            primitive,
-            mesh,
-            self._symmetry,
-            fc3=fc3,
-            band_indices=self._band_indices_flatten,
-            frequency_factor_to_THz=self._frequency_factor_to_THz,
-            cutoff_frequency=self._cutoff_frequency,
-            is_nosym=self._is_nosym,
-            symmetrize_fc3_q=self._symmetrize_fc3_q,
-            lapack_zheev_uplo=lapack_zheev_uplo)
+
+        # Create supercell and primitive cell
+        self._unitcell = unitcell
+        self._supercell_matrix = supercell_matrix
+        self._primitive_matrix = primitive_matrix
+        self._phonon_supercell_matrix = phonon_supercell_matrix # optional
+        self._supercell = None
+        self._primitive = None
+        self._phonon_supercell = None
+        self._build_supercell()
+        self._build_primitive_cell()
+        self._build_phonon_supercell()
+
+        # Set supercell and primitive symmetry
+        self._symmetry = None
+        self._primitive_symmetry = None
+        self._search_symmetry()
+        self._search_primitive_symmetry()
 
         # Thermal conductivity
         self._thermal_conductivity = None # conductivity_RTA object
@@ -68,6 +69,35 @@ class Phono3py:
         self._grid_points = None
         self._frequency_points = None
         self._temperatures = None
+
+        # Setup interaction
+        self._interaction = None
+        self._mesh = None
+        self._band_indices = None
+        self._band_indices_flatten = None
+        if mesh is not None:
+            self.set_phph_interaction(mesh, band_indices=band_indices)
+
+    def set_phph_interaction(self, mesh, band_indices=None):
+        self._mesh = np.array(mesh, dtype='intc')
+        if band_indices is None:
+            num_band = self._primitive.get_number_of_atoms() * 3
+            self._band_indices = [np.arange(num_band)]
+        else:
+            self._band_indices = band_indices
+        self._band_indices_flatten = np.hstack(self._band_indices).astype('intc')
+        self._interaction = Interaction(
+            self._supercell,
+            self._primitive,
+            self._mesh,
+            self._primitive_symmetry,
+            fc3=self._fc3,
+            band_indices=self._band_indices_flatten,
+            frequency_factor_to_THz=self._frequency_factor_to_THz,
+            cutoff_frequency=self._cutoff_frequency,
+            is_nosym=self._is_nosym,
+            symmetrize_fc3_q=self._symmetrize_fc3_q,
+            lapack_zheev_uplo=self._lapack_zheev_uplo)
 
     def get_interaction_strength(self):
         return self._interaction
@@ -86,7 +116,52 @@ class Phono3py:
             nac_params=nac_params,
             frequency_scale_factor=frequency_scale_factor)
         self._interaction.set_nac_q_direction(nac_q_direction=nac_q_direction)
-                           
+
+    def set_fc2(self, fc2):
+        self._fc2 = fc2
+        
+    def set_fc3(self, fc3):
+        self._fc3 = fc3
+
+    def get_primitive(self):
+        return self._primitive
+
+    def get_unitcell(self):
+        return self._unitcell
+
+    def get_supercell(self):
+        return self._supercell
+
+    def get_phonon_supercell(self):
+        return self._phonon_supercell
+
+    def get_symmetry(self):
+        """return symmetry of supercell"""
+        return self._symmetry
+
+    def get_primitive_symmetry(self):
+        """return symmetry of primitive cell"""
+        return self._primitive_symmetry
+        
+    def generate_displacements(self,
+                               distance=0.01,
+                               cutoff_pair_distance=None,
+                               is_plusminus='auto',
+                               is_diagonal=True):
+        self._direction_dataset = get_third_order_displacements(
+            self._supercell,
+            self._symmetry,
+            is_plusminus=is_plusminus,
+            is_diagonal=is_diagonal)
+        self._displacement_dataset = direction_to_displacement(
+            self._direction_dataset,
+            distance,
+            self._supercell,
+            cutoff_distance=cutoff_pair_distance)
+        
+    def get_displacement_dataset(self):
+        return self._displacement_dataset
+        
     def run_imag_self_energy(self,
                              grid_points,
                              frequency_step=0.1,
@@ -152,7 +227,7 @@ class Phono3py:
 
         self._thermal_conductivity = get_thermal_conductivity(
                 self._interaction,
-                self._symmetry,
+                self._primitive_symmetry,
                 temperatures=temperatures,
                 sigmas=self._sigmas,
                 mass_variances=mass_variances,
@@ -207,6 +282,78 @@ class Phono3py:
                                       epsilon=epsilon,
                                       filename=output_filename)
 
+    def _search_symmetry(self):
+        self._symmetry = Symmetry(self._supercell,
+                                  self._symprec,
+                                  self._is_symmetry)
+
+    def _search_primitive_symmetry(self):
+        self._primitive_symmetry = Symmetry(self._primitive,
+                                            self._symprec,
+                                            self._is_symmetry)
+        if (len(self._symmetry.get_pointgroup_operations()) !=
+            len(self._primitive_symmetry.get_pointgroup_operations())):
+            print ("Warning: point group symmetries of supercell and primitive"
+                   "cell are different.")
+        
+
+    def _build_supercell(self):
+        self._supercell = get_supercell(self._unitcell,
+                                        self._supercell_matrix,
+                                        self._symprec)
+
+    def _build_supercells_with_displacements(self):
+        supercells = []
+        for disp in self._displacements:
+            positions = self._supercell.get_positions()
+            positions[disp[0]] += disp[1:4]
+            supercells.append(Atoms(
+                    numbers=self._supercell.get_atomic_numbers(),
+                    masses=self._supercell.get_masses(),
+                    magmoms=self._supercell.get_magnetic_moments(),
+                    positions=positions,
+                    cell=self._supercell.get_cell(),
+                    pbc=True))
+
+        self._supercells_with_displacements = supercells
+
+    def _build_primitive_cell(self):
+        """
+        primitive_matrix:
+          Relative axes of primitive cell to the input unit cell.
+          Relative axes to the supercell is calculated by:
+             supercell_matrix^-1 * primitive_matrix
+          Therefore primitive cell lattice is finally calculated by:
+             (supercell_lattice * (supercell_matrix)^-1 * primitive_matrix)^T
+        """
+
+        inv_supercell_matrix = np.linalg.inv(self._supercell_matrix)
+        if self._primitive_matrix is None:
+            trans_mat = inv_supercell_matrix
+        else:
+            trans_mat = np.dot(inv_supercell_matrix, self._primitive_matrix)
+        self._primitive = get_primitive(
+            self._supercell, trans_mat, self._symprec)
+        num_satom = self._supercell.get_number_of_atoms()
+        num_patom = self._primitive.get_number_of_atoms()
+        if abs(num_satom * np.linalg.det(trans_mat) - num_patom) < 0.1:
+            return True
+        else:
+            return False
+
+    def _build_phonon_supercell(self):
+        """
+        phonon_supercell:
+          This supercell is used for harmonic phonons (frequencies,
+          eigenvectors, group velocities, ...)
+        phonon_supercell_matrix:
+          Different supercell size can be specified.
+        """
+        if self._phonon_supercell_matrix is None:
+            self._phonon_supercell = self._supercell
+        else:
+            self._phonon_supercell = get_supercell(
+                self._unitcell, self._phonon_supercell_matrix, self._symprec)
         
 
 class IsotopeScattering:

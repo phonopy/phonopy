@@ -51,17 +51,16 @@ from anharmonic.phonon3.fc3 import get_fc3, set_permutation_symmetry_fc3, \
     set_translational_invariance_fc3, show_drift_fc3, cutoff_fc3, \
     cutoff_fc3_by_zero
 from anharmonic.file_IO import write_fc2_dat, write_fc3_dat,\
-    parse_disp_fc3_yaml, write_FORCES_THIRD,\
-    parse_DELTA_FORCES, write_supercells_with_displacements,\
+    parse_disp_fc3_yaml, write_FORCES_THIRD, parse_DELTA_FORCES, \
     write_DELTA_FC2_SETS, parse_DELTA_FC2_SETS, parse_FORCES_SECOND, \
     write_fc3_to_hdf5, write_fc2_to_hdf5, read_fc3_from_hdf5, \
-    read_fc2_from_hdf5, write_ir_grid_points, write_grid_address
+    read_fc2_from_hdf5, write_ir_grid_points, write_grid_address, \
+    write_supercells_with_displacements
 from anharmonic.phonon3.triplets import get_coarse_ir_grid_points
-from anharmonic.phonon3.displacement_fc3 import get_third_order_displacements
 from anharmonic.settings import Phono3pyConfParser
 from anharmonic.phonon3 import Phono3py, Phono3pyJointDos, IsotopeScattering, get_gruneisen_parameters
 
-phono3py_version = "0.8.0"
+phono3py_version = "0.8.2"
 
 # AA is created at http://www.network-science.de/ascii/.
 def print_phono3py():
@@ -449,72 +448,47 @@ if options.cell_poscar == None:
 else:
     file_exists(options.cell_poscar, log_level)
     unitcell_filename = options.cell_poscar
-    
-unitcell = read_vasp(unitcell_filename,
-                     settings.get_chemical_symbols())
-
-# Supercell and Symmetry 
-supercell = get_supercell(unitcell, settings.get_supercell_matrix())
-symmetry = Symmetry(supercell, options.symprec)
-
-if settings.get_supercell_matrix_extra() is not None:
-    supercell_extra = get_supercell(unitcell, settings.get_supercell_matrix_extra())
-    symmetry_extra = Symmetry(supercell_extra, options.symprec)
-
-# Log
-if log_level:
-    if options.is_translational_symmetry:
-        print "Translational symmetry:", options.is_translational_symmetry
-    if options.is_symmetrize_fc2:
-        print "FC2 symmetry of index exchange:", options.is_symmetrize_fc2
-    if options.is_symmetrize_fc3_r:
-        print "FC3 symmetry of index exchange in real space:", options.is_symmetrize_fc3_r
-    if options.is_symmetrize_fc3_q:
-        print "FC3 symmetry of index exchange in reciprocal space:", options.is_symmetrize_fc3_q
-    if settings.get_cutoff_fc3_distance() is not None:
-        print "FC3 cutoff distance:",
-        print settings.get_cutoff_fc3_distance()
-    if not options.supercell_dimension_extra == None:
-        print "Extra supercell for fc2 is supplied."
-    if settings.get_is_nac():
-        print "Non-analytical term correction:", settings.get_is_nac()
-    print "Spacegroup: ", symmetry.get_international_table()
+unitcell = read_vasp(unitcell_filename, settings.get_chemical_symbols())
 
 ###############################################################
 # Create supercells with displacements and exit (pre-process) #
 ###############################################################
 if options.is_displacement:
-    dds = get_third_order_displacements(
-        supercell,
-        symmetry,
+    cutoff_pair_distance = settings.get_cutoff_pair_distance()
+    phono3py = Phono3py(unitcell, settings.get_supercell_matrix())
+    supercell = phono3py.get_supercell()
+    phono3py.generate_displacements(
+        distance=settings.get_displacement_distance(),
+        cutoff_pair_distance=cutoff_pair_distance,
         is_plusminus=settings.get_is_plusminus_displacement(),
         is_diagonal=settings.get_is_diagonal_displacement())
-    disp_distance = settings.get_displacement_distance()
-    cutoff_distance = settings.get_cutoff_pair_distance()
+    dds = phono3py.get_displacement_dataset()
+    
     if log_level:
         print
-        print "Displacement distance:", disp_distance
+        print "Displacement distance:", settings.get_displacement_distance()
 
     if output_filename is None:
         filename = 'disp_fc3.yaml'
     else:
         filename = 'disp_fc3.' + output_filename + '.yaml'
+        
     num_disps, num_disp_files = write_supercells_with_displacements(
         supercell,
         dds,
-        distance=disp_distance,
-        cutoff_distance=cutoff_distance,
-        filename=filename,
-        log_level=log_level)
-    
+        filename=filename)
+        
     if log_level:
         print "Total number of displacements:", num_disps
-        if cutoff_distance is not None:
-            print "Cutoff distance for displacements:", cutoff_distance
-            print "Number of displacement supercell",
-            print "files created:", num_disp_files
+        if cutoff_pair_distance is not None:
+            print "Cutoff distance for displacements:", 
+            print cutoff_pair_distance
+            print "Number of displacement supercell files created:",
+            print  num_disp_files
         print_end()
     sys.exit(0)
+
+symmetry = Symmetry(unitcell, options.symprec)
 
 #########################################
 # Calculate third-order force constants #
@@ -537,6 +511,25 @@ if settings.get_supercell_matrix_extra() is not None:
         options.symprec)
 
 if log_level:
+    if options.is_translational_symmetry:
+        print "Translational symmetry:", options.is_translational_symmetry
+    if options.is_symmetrize_fc2:
+        print "FC2 symmetry of index exchange:", options.is_symmetrize_fc2
+    if options.is_symmetrize_fc3_r:
+        print "FC3 symmetry of index exchange in real space:",
+        print options.is_symmetrize_fc3_r
+    if options.is_symmetrize_fc3_q:
+        print "FC3 symmetry of index exchange in reciprocal space:",
+        print options.is_symmetrize_fc3_q
+    if settings.get_cutoff_fc3_distance() is not None:
+        print "FC3 cutoff distance:",
+        print settings.get_cutoff_fc3_distance()
+    if settings.get_supercell_matrix_extra() is not None:
+        print "Extra supercell for fc2 is supplied."
+    if settings.get_is_nac():
+        print "Non-analytical term correction:", settings.get_is_nac()
+    print "Spacegroup: ", symmetry.get_international_table()
+
     print "---------------------------- primitive cell --------------------------------"
     print_cell(primitive)
     print "------------------------------- supercell ----------------------------------"

@@ -3,6 +3,45 @@ from phonopy.harmonic.displacement import get_least_displacements, \
     directions_axis, get_displacement, is_minus_displacement
 from phonopy.harmonic.dynamical_matrix import get_equivalent_smallest_vectors
 
+def direction_to_displacement(dataset,
+                              distance,
+                              supercell,
+                              cutoff_distance=None):
+    lattice = supercell.get_cell()
+    new_dataset = {}
+    new_dataset['natom'] = supercell.get_number_of_atoms()
+    if cutoff_distance is not None:
+        new_dataset['cutoff_distance'] = cutoff_distance
+    new_first_atoms = []
+    for first_atoms in dataset:
+        atom1 = first_atoms['number']
+        disp_cart1 = np.dot(first_atoms['direction'], lattice)
+        disp_cart1 *= distance / np.linalg.norm(disp_cart1)
+        new_second_atoms = []
+        for second_atom in first_atoms['second_atoms']:
+            atom2 = second_atom['number']
+            pair_distance = second_atom['distance']
+            included = (pair_distance < cutoff_distance or
+                        cutoff_distance is None)
+            for disp2 in second_atom['directions']:
+                disp_cart2 = np.dot(disp2, lattice)
+                disp_cart2 *= distance / np.linalg.norm(disp_cart2)
+                if cutoff_distance is None:
+                    new_second_atoms.append({'number': atom2,
+                                             'displacement': disp_cart2,
+                                             'pair_distance': pair_distance})
+                else:
+                    new_second_atoms.append({'number': atom2,
+                                             'displacement': disp_cart2,
+                                             'pair_distance': pair_distance,
+                                             'included': included})
+        new_first_atoms.append({'number': atom1,
+                                'displacement': disp_cart1,
+                                'second_atoms': new_second_atoms})
+    new_dataset['first_atoms'] = new_first_atoms
+    
+    return new_dataset
+
 def get_third_order_displacements(cell,
                                   symmetry,
                                   is_plusminus='auto',
