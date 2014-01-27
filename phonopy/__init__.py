@@ -36,7 +36,7 @@ import sys
 import numpy as np
 from phonopy.structure.atoms import Atoms
 from phonopy.structure.symmetry import Symmetry
-from phonopy.structure.cells import get_supercell, get_primitive, print_cell
+from phonopy.structure.cells import get_supercell, get_primitive
 from phonopy.harmonic.displacement import get_least_displacements
 from phonopy.harmonic.force_constants import get_fc2, symmetrize_force_constants, rotational_invariance, cutoff_force_constants, set_tensor_symmetry
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC
@@ -57,6 +57,7 @@ class Phonopy:
     def __init__(self,
                  unitcell,
                  supercell_matrix,
+                 primitive_matrix=None,
                  distance=0.01,
                  factor=VaspToTHz,
                  is_auto_displacements=True,
@@ -66,32 +67,39 @@ class Phonopy:
         self._symprec = symprec
         self._unitcell = unitcell
         self._supercell_matrix = supercell_matrix
+        self._primitive_matrix = primitive_matrix
         self._factor = factor
         self._is_symmetry = is_symmetry
         self._log_level = log_level
+
+        # Create supercell and primitive cell
         self._supercell = None
-        self._set_supercell()
+        self._primitive = None
+        self._build_supercell()
+        if primitive_matrix is not None:
+            self._build_primitive_cell(primitive_matrix)
+        else:
+            self._build_primitive_cell()
+
+        # Set supercell and primitive symmetry
         self._symmetry = None
-        self._set_symmetry()
+        self._primitive_symmetry = None
+        self._search_symmetry()
+        self._search_primitive_symmetry()
 
         # set_displacements (used only in preprocess)
         self._displacements = None
         self._displacement_directions = None
         self._supercells_with_displacements = None
         if is_auto_displacements:
-            self.generate_displacements(distance)
+            self.generate_displacements(distance=distance)
 
-        # set_post_process
-        self._primitive = None
-        self._dynamical_matrix = None
-        self._is_nac = False
-        self._primitive_symmetry = None
-        self._dynamical_matrix_decimals = None
-        self._force_constants_decimals = None
-        
         # set_force_constants or set_forces
         self._displacement_dataset = None
         self._force_constants = None
+        
+        # set_dynamical_matrix
+        self._dynamical_matrix = None
 
         # set_band_structure
         self._band_structure = None
@@ -126,6 +134,45 @@ class Phonopy:
         # set_group_velocity
         self._group_velocity = None
 
+    def set_post_process(self,
+                         primitive_matrix=None,
+                         sets_of_forces=None,
+                         displacement_dataset=None,
+                         force_constants=None):
+        print 
+        print ("********************************** Warning"
+               "**********************************")
+        print "set_post_process will be obsolete."
+        print ("  produce_force_constants is used instead of set_post_process"
+               " for producing")
+        print ("  force constants from forces."
+               " Then set_dynamical_matrix has to be called.")
+        if primitive_matrix is not None:
+            print ("  primitive_matrix has to be given at Phonopy::__init__"
+                   " object creation.")
+        print ("******************************************"
+               "**********************************")
+        print 
+
+        if primitive_matrix is not None:
+            self._build_primitive_cell(primitive_matrix)
+            self._search_primitive_symmetry()
+        
+        if sets_of_forces is not None:
+            self.set_forces(sets_of_forces)
+        elif displacement_dataset is not None:
+            self._displacement_dataset = displacement_dataset
+        elif force_constants is not None:
+            self.set_force_constants(force_constants)
+            
+        if self._displacement_dataset is not None:
+            self.produce_force_constants()
+
+        if self._force_constants is not None and self._primitive is not None:
+            self.set_dynamical_matrix()
+        else:
+            print "Dynamical matrix was not created."
+
     def set_masses(self, masses):
         p_masses = np.array(masses)
         self._primitive.set_masses(p_masses)
@@ -140,20 +187,6 @@ class Phonopy:
     def get_primitive(self):
         return self._primitive
     primitive = property(get_primitive)
-
-    def set_primitive_matrix(self, primitive_matrix=np.eye(3)):
-        inv_supercell_matrix = np.linalg.inv(self._supercell_matrix)
-        trans_mat = np.dot(inv_supercell_matrix, primitive_matrix)
-        self._primitive = get_primitive(
-            self._supercell,
-            trans_mat,
-            self._symprec)
-        num_satom = self._supercell.get_number_of_atoms()
-        num_patom = self._primitive.get_number_of_atoms()
-        if abs(num_satom * np.linalg.det(trans_mat) - num_patom) < 0.1:
-            return True
-        else:
-            return False
 
     def get_unitcell(self):
         return self._unitcell
@@ -218,7 +251,7 @@ class Phonopy:
                                        disp_cartesian[0],
                                        disp_cartesian[1],
                                        disp_cartesian[2]])
-        self._set_supercells_with_displacements()
+        self._build_supercells_with_displacements()
 
     def set_displacements(self, displacements):
         """Set displacements manually
@@ -232,7 +265,7 @@ class Phonopy:
         """
 
         self._displacements = displacements
-        self._set_supercells_with_displacements()
+        self._build_supercells_with_displacements()
 
     def get_displacements(self):
         return self._displacements
@@ -245,102 +278,35 @@ class Phonopy:
     def get_supercells_with_displacements(self):
         return self._supercells_with_displacements
 
-    def set_post_process(self,
-                         primitive_matrix=None,
-                         sets_of_forces=None,
-                         displacement_dataset=None,
-                         force_constants=None,
-                         calculate_full_force_constants=False,
-                         force_constants_decimals=None,
-                         dynamical_matrix_decimals=None):
-        """
-        Set forces or force constants to prepare phonon calculations.
-        The order of 'sets_of_forces' has to correspond to that of
-        'displacements' that should be already stored.
-
-        primitive_matrix:
-          Relative axes of primitive cell to the input unit cell.
-          Relative axes to the supercell is calculated by:
-             supercell_matrix^-1 * primitive_matrix
-          Therefore primitive cell lattice is finally calculated by:
-             (supercell_lattice * (supercell_matrix)^-1 * primitive_matrix)^T
-
-        sets_of_forces:
-          This requires that self._displacements is set in advance.
-           [[[f_1x, f_1y, f_1z], [f_2x, f_2y, f_2z], ...], # first supercell
-             [[f_1x, f_1y, f_1z], [f_2x, f_2y, f_2z], ...], # second supercell
-             ...                                                  ]
-
-        displacement_dataset:
-           {'natom': number_of_atoms_in_supercell,
-            'first_atoms': [
-              {'number': atom index of displaced atom,
-               'displacement': displacement in Cartesian coordinates,
-               'forces': forces on atoms in supercell},
-              {...}, ...]}
-        """
-        self._dynamical_matrix_decimals = dynamical_matrix_decimals
-        self._force_constants_decimals = force_constants_decimals
-
-        # Primitive cell
-        if primitive_matrix is not None:
-            self.set_primitive_matrix(primitive_matrix)
-        elif self._primitive is None:
-            self.set_primitive_matrix()
-        self._set_primitive_symmetry()
-
-        # Set set of FORCES objects or force constants
-        if sets_of_forces is not None:
-            self.set_forces(sets_of_forces)
-        elif displacement_dataset is not None:
-            self._displacement_dataset = displacement_dataset
-        elif force_constants is not None:
-            self.set_force_constants(force_constants)
-
-        # Calculate force cosntants from forces (full or symmetry reduced)
-        if self._displacement_dataset is not None:
-            if calculate_full_force_constants:
-                self.set_force_constants_from_forces()
-            else:
-                p2s_map = self._primitive.get_primitive_to_supercell_map()
-                self.set_force_constants_from_forces(
-                    distributed_atom_list=p2s_map)
-
-        if self._force_constants is None:
-            print "In set_post_process, sets_of_forces or force_constants"
-            print "has to be set."
-            return False
-            
-        # Dynamical Matrix
-        self.set_dynamical_matrix()
-        
-    def set_nac_params(self, nac_params, method='wang'):
-        if self._dynamical_matrix is None:
-            print "set_post_process has to be called before this is called."
-            return False
+    def produce_force_constants(self,
+                                calculate_full_force_constants=True,
+                                decimals=None):
+        if calculate_full_force_constants:
+            self._run_force_constants_from_forces(decimals=decimals)
         else:
-            if not self._is_nac:
-                self._is_nac = True
-                self.set_dynamical_matrix()
-            self._dynamical_matrix.set_nac_params(nac_params, method)
+            p2s_map = self._primitive.get_primitive_to_supercell_map()
+            self._run_force_constants_from_forces(
+                distributed_atom_list=p2s_map,
+                decimals=decimals)
+                
+    def set_nac_params(self, nac_params, method='wang', decimals=None):
+        self.set_dynamical_matrix(is_nac=True, decimals=decimals) 
+        self._dynamical_matrix.set_nac_params(nac_params, method=method)
 
-    def set_dynamical_matrix(self, dynamical_matrix_decimals=None):
-        if dynamical_matrix_decimals is not None:
-            self._dynamical_matrix_decimals = dynamical_matrix_decimals
-        
-        if self._is_nac:
+    def set_dynamical_matrix(self, is_nac=False, decimals=None):
+        if is_nac:
             self._dynamical_matrix = DynamicalMatrixNAC(
                 self._supercell,
                 self._primitive,
                 self._force_constants,
-                decimals=self._dynamical_matrix_decimals,
+                decimals=decimals,
                 symprec=self._symprec)
         else:
             self._dynamical_matrix = DynamicalMatrix(
                 self._supercell,
                 self._primitive,
                 self._force_constants,
-                decimals=self._dynamical_matrix_decimals,
+                decimals=decimals,
                 symprec=self._symprec)
 
     def get_dynamical_matrix(self):
@@ -348,23 +314,17 @@ class Phonopy:
     dynamical_matrix = property(get_dynamical_matrix)
 
     def set_forces(self, sets_of_forces):
+        """
+        sets_of_forces:
+          This requires that self._displacements is set in advance.
+           [[[f_1x, f_1y, f_1z], [f_2x, f_2y, f_2z], ...], # first supercell
+             [[f_1x, f_1y, f_1z], [f_2x, f_2y, f_2z], ...], # second supercell
+             ...                                                  ]
+        """
         disps = [{'number': disp[0], 'displacement': disp[1:4], 'forces': forces}
                  for forces, disp in zip(sets_of_forces, self._displacements)]
         self._displacement_dataset = {'natom': len(disps[0]['forces']),
                                       'first_atoms': disps}
-
-    def set_force_constants_from_forces(self,
-                                        distributed_atom_list=None,
-                                        force_constants_decimals=None):
-        if force_constants_decimals is not None:
-            self._force_constants_decimals = force_constants_decimals
-            
-        self._force_constants = get_fc2(
-            self._supercell,
-            self._symmetry,
-            self._displacement_dataset,
-            atom_list=distributed_atom_list,
-            decimals=self._force_constants_decimals)
 
     def set_force_constants_zero_with_radius(self, cutoff_radius):
         cutoff_force_constants(self._force_constants,
@@ -376,6 +336,15 @@ class Phonopy:
         self._force_constants = force_constants
 
     def set_force_sets(self, force_sets):
+        """
+        displacement_dataset:
+           {'natom': number_of_atoms_in_supercell,
+            'first_atoms': [
+              {'number': atom index of displaced atom,
+               'displacement': displacement in Cartesian coordinates,
+               'forces': forces on atoms in supercell},
+              {...}, ...]}
+        """
         self._displacement_dataset = force_sets
         
     def symmetrize_force_constants(self, iteration=3):
@@ -475,7 +444,7 @@ class Phonopy:
                  mesh,
                  shift=None,
                  is_time_reversal=True,
-                 is_symmetry=True,
+                 is_mesh_symmetry=True,
                  is_eigenvectors=False,
                  is_gamma_center=False):
 
@@ -484,7 +453,7 @@ class Phonopy:
             mesh,
             shift=shift,
             is_time_reversal=is_time_reversal,
-            is_symmetry=is_symmetry,
+            is_mesh_symmetry=is_mesh_symmetry,
             is_eigenvectors=is_eigenvectors,
             is_gamma_center=is_gamma_center,
             group_velocity=self._group_velocity,
@@ -934,22 +903,38 @@ class Phonopy:
         self._group_velocity.set_q_points([q_point])
         return self._group_velocity.get_group_velocity()[0]
 
-    def _set_supercell(self):
-        self._supercell = get_supercell(self._unitcell,
-                                        self._supercell_matrix,
-                                        self._symprec)
+    def _run_force_constants_from_forces(self,
+                                         distributed_atom_list=None,
+                                         decimals=None):
+        if self._displacement_dataset is not None:
+            self._force_constants = get_fc2(
+                self._supercell,
+                self._symmetry,
+                self._displacement_dataset,
+                atom_list=distributed_atom_list,
+                decimals=decimals)
 
-    def _set_symmetry(self):
+    def _search_symmetry(self):
         self._symmetry = Symmetry(self._supercell,
                                   self._symprec,
                                   self._is_symmetry)
 
-    def _set_primitive_symmetry(self):
+    def _search_primitive_symmetry(self):
         self._primitive_symmetry = Symmetry(self._primitive,
                                             self._symprec,
                                             self._is_symmetry)
+        
+        if (len(self._symmetry.get_pointgroup_operations()) !=
+            len(self._primitive_symmetry.get_pointgroup_operations())):
+            print ("Warning: point group symmetries of supercell and primitive"
+                   "cell are different.")
 
-    def _set_supercells_with_displacements(self):
+    def _build_supercell(self):
+        self._supercell = get_supercell(self._unitcell,
+                                        self._supercell_matrix,
+                                        self._symprec)
+
+    def _build_supercells_with_displacements(self):
         supercells = []
         for disp in self._displacements:
             positions = self._supercell.get_positions()
@@ -963,6 +948,29 @@ class Phonopy:
                     pbc=True))
 
         self._supercells_with_displacements = supercells
+
+    def _build_primitive_cell(self, primitive_matrix=np.eye(3)):
+        """
+        primitive_matrix:
+          Relative axes of primitive cell to the input unit cell.
+          Relative axes to the supercell is calculated by:
+             supercell_matrix^-1 * primitive_matrix
+          Therefore primitive cell lattice is finally calculated by:
+             (supercell_lattice * (supercell_matrix)^-1 * primitive_matrix)^T
+        """
+        
+        inv_supercell_matrix = np.linalg.inv(self._supercell_matrix)
+        trans_mat = np.dot(inv_supercell_matrix, primitive_matrix)
+        self._primitive = get_primitive(
+            self._supercell,
+            trans_mat,
+            self._symprec)
+        num_satom = self._supercell.get_number_of_atoms()
+        num_patom = self._primitive.get_number_of_atoms()
+        if abs(num_satom * np.linalg.det(trans_mat) - num_patom) < 0.1:
+            return True
+        else:
+            return False
 
 
 

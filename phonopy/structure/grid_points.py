@@ -44,7 +44,7 @@ def get_qpoints(mesh_numbers,
                 is_time_reversal=True,
                 fit_in_BZ=True,
                 rotations=None, # Point group operations in real space
-                is_symmetry=True):
+                is_mesh_symmetry=True):
     gp = GridPoints(mesh_numbers,
                     reciprocal_lattice,
                     q_mesh_shift=q_mesh_shift,
@@ -52,7 +52,7 @@ def get_qpoints(mesh_numbers,
                     is_time_reversal=is_time_reversal,
                     fit_in_BZ=fit_in_BZ,
                     rotations=rotations,
-                    is_symmetry=is_symmetry)
+                    is_mesh_symmetry=is_mesh_symmetry)
 
     return gp.get_ir_qpoints(), gp.get_ir_grid_weights()
     
@@ -65,7 +65,7 @@ class GridPoints:
                  is_time_reversal=True,
                  fit_in_BZ=True,
                  rotations=None, # Point group operations in real space
-                 is_symmetry=True):
+                 is_mesh_symmetry=True):
         self._mesh = np.array(mesh_numbers, dtype='intc')
         self._rec_lat = reciprocal_lattice
         self._is_shift = self._shift2boolean(q_mesh_shift,
@@ -73,7 +73,7 @@ class GridPoints:
         self._is_time_reversal = is_time_reversal
         self._fit_in_BZ = fit_in_BZ
         self._rotations = rotations
-        self._is_symmetry = is_symmetry
+        self._is_mesh_symmetry = is_mesh_symmetry
 
         self._ir_qpoints = None
         self._grid_address = None
@@ -82,7 +82,7 @@ class GridPoints:
         self._grid_mapping_table = None
         
         if self._is_shift is None:
-            self._is_symmetry = False
+            self._is_mesh_symmetry = False
             self._is_shift = self._shift2boolean(None)
             self._set_grid_points()
             self._ir_qpoints += q_mesh_shift / self._mesh
@@ -106,7 +106,7 @@ class GridPoints:
         return self._grid_mapping_table
         
     def _set_grid_points(self):
-        if self._is_symmetry and self._has_mesh_symmetry():
+        if self._is_mesh_symmetry and self._has_mesh_symmetry():
             self._set_ir_qpoints(self._rotations,
                                  is_time_reversal=self._is_time_reversal)
         else:

@@ -42,7 +42,7 @@ class Mesh:
                  mesh,
                  shift=None,
                  is_time_reversal=True,
-                 is_symmetry=True,
+                 is_mesh_symmetry=True,
                  is_eigenvectors=False,
                  is_gamma_center=False,
                  group_velocity=None,
@@ -60,7 +60,7 @@ class Mesh:
                               is_gamma_center=is_gamma_center,
                               is_time_reversal=is_time_reversal,
                               rotations=rotations,
-                              is_symmetry=is_symmetry)
+                              is_mesh_symmetry=is_mesh_symmetry)
         self._qpoints = self._gp.get_ir_qpoints()
         self._weights = self._gp.get_ir_grid_weights()
 

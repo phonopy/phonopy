@@ -46,6 +46,8 @@ from phonopy.cui.settings import Settings, PhonopyConfParser
 from phonopy.cui.show_symmetry import check_symmetry
 from phonopy.units import *
 from phonopy.version import phonopy_version
+from phonopy.structure.cells import print_cell
+
 
 # AA is created at http://www.network-science.de/ascii/.
 def print_phononpy():
@@ -570,26 +572,13 @@ if run_mode == 'displacements':
 else:
     phonon = Phonopy(unitcell,
                      settings.get_supercell_matrix(),
+                     primitive_matrix=settings.get_primitive_matrix(),
                      factor=factor,
                      is_auto_displacements=False,
                      symprec=options.symprec,
                      is_symmetry=settings.get_is_symmetry(),
                      log_level=log_level)
-        
-
 supercell = phonon.get_supercell()
-primitive_matrix = settings.get_primitive_matrix()
-if primitive_matrix is None:
-    created = phonon.set_primitive_matrix()
-else:
-    created = phonon.set_primitive_matrix(primitive_matrix)
-if not created:
-    error_text = "Invalid PRIMITIVE_AXIS setting"
-    print_error_message(error_text)
-    if log_level > 0:
-        print_end()
-    sys.exit(1)
-    
 primitive = phonon.get_primitive()
 
 # Set atomic masses of primitive cell
@@ -660,9 +649,9 @@ if log_level > 0:
             print "    ", v
     else:
         print "  Supercell: ", np.diag(settings.get_supercell_matrix())
-    if primitive_matrix is not None:
+    if settings.get_primitive_matrix() is not None:
         print "  Primitive axis:"
-        for v in primitive_matrix:
+        for v in settings.get_primitive_matrix():
             print "    ", v
 
     if magmoms == None:
@@ -677,7 +666,7 @@ if log_level > 1:
         dtype='intc')
     s_indep_atoms = phonon.get_symmetry().get_independent_atoms()
     p_indep_atoms = mapping[s_indep_atoms]
-    if primitive_matrix is None:
+    if settings.get_primitive_matrix() is None:
         print "------------------------------ unit cell ----------------------------------"
         print_cell(primitive, stars=p_indep_atoms)
     else:
@@ -769,18 +758,15 @@ if (settings.get_is_force_constants() == "write" or
     settings.get_fc_symmetry_iteration() > 0 or
     settings.get_fc_spg_symmetry()):
     # Need to calculate full force constant tensors
-    phonon.set_post_process(calculate_full_force_constants=True,
-                            force_constants_decimals=settings.get_fc_decimals(),
-                            dynamical_matrix_decimals=settings.get_dm_decimals())
+    phonon.produce_force_constants(decimals=settings.get_fc_decimals())
 else: # Only force constants between atoms in primitive cell and in supercell
-    phonon.set_post_process(force_constants_decimals=settings.get_fc_decimals(),
-                            dynamical_matrix_decimals=settings.get_dm_decimals())
+    phonon.produce_force_constants(calculate_full_force_constants=False,
+                                   decimals=settings.get_fc_decimals())
 
 # Impose cutoff radius on force constants
 cutoff_radius = settings.get_cutoff_radius()
 if cutoff_radius:
     phonon.set_force_constants_zero_with_radius(cutoff_radius)
-    phonon.set_dynamical_matrix()
 
 # Enforce space group symmetry to force constants
 if settings.get_fc_spg_symmetry():
@@ -793,13 +779,26 @@ if settings.get_fc_spg_symmetry():
                                   filename='FORCE_CONSTANTS_SPG')
     if log_level > 0:
         print "Symmetrized force constants are written into FORCE_CONSTANTS_SPG."
-    phonon.set_dynamical_matrix()
-
+        
 # Imporse translational invariance and index permulation symmetry to
 # force constants
 if settings.get_fc_symmetry_iteration() > 0:
     phonon.symmetrize_force_constants(settings.get_fc_symmetry_iteration())
-    phonon.set_dynamical_matrix()
+
+# Build dynamical matrix
+phonon.set_dynamical_matrix(decimals=settings.get_dm_decimals())
+
+# Non-analytical term correction (LO-TO splitting)
+if settings.get_is_nac():
+    if file_exists("BORN", log_level):
+        nac_params = file_IO.parse_BORN(primitive, settings.get_is_symmetry())
+        if not nac_params:
+            error_text = "BORN file could not be read correctly."
+            print_error_message(error_text)
+            if log_level > 0:
+                print_end()
+            sys.exit(1)
+    phonon.set_nac_params(nac_params)
 
 # Write FORCE_CONSTANTS
 if settings.get_is_force_constants() == "write":
@@ -830,18 +829,6 @@ if len(symbols_with_no_mass) > 0:
     if log_level > 0:
         print_end()
     sys.exit(1)
-
-# Non-analytical term correction (LO-TO splitting)
-if settings.get_is_nac():
-    if file_exists("BORN", log_level):
-        nac_params = file_IO.parse_BORN(primitive, settings.get_is_symmetry())
-        if not nac_params:
-            error_text = "BORN file could not be read correctly."
-            print_error_message(error_text)
-            if log_level > 0:
-                print_end()
-            sys.exit(1)
-    phonon.set_nac_params(nac_params)
 
 # Group velocity
 if settings.get_is_group_velocity():
@@ -955,7 +942,7 @@ elif run_mode == 'mesh':
     phonon.set_mesh(mesh,
                     mesh_shift,
                     is_time_reversal=t_symmetry,
-                    is_symmetry=q_symmetry,
+                    is_mesh_symmetry=q_symmetry,
                     is_eigenvectors=settings.get_is_eigenvectors(),
                     is_gamma_center=settings.get_is_gamma_center())
     weights = phonon.get_mesh()[1]
