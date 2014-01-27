@@ -450,12 +450,14 @@ else:
     unitcell_filename = options.cell_poscar
 unitcell = read_vasp(unitcell_filename, settings.get_chemical_symbols())
 
-###############################################################
-# Create supercells with displacements and exit (pre-process) #
-###############################################################
+#################################################
+# Create supercells with displacements and exit #
+#################################################
 if options.is_displacement:
     cutoff_pair_distance = settings.get_cutoff_pair_distance()
-    phono3py = Phono3py(unitcell, settings.get_supercell_matrix())
+    phono3py = Phono3py(unitcell,
+                        settings.get_supercell_matrix(),
+                        symprec=options.symprec)
     supercell = phono3py.get_supercell()
     phono3py.generate_displacements(
         distance=settings.get_displacement_distance(),
@@ -488,28 +490,27 @@ if options.is_displacement:
         print_end()
     sys.exit(0)
 
-symmetry = Symmetry(unitcell, options.symprec)
+##############
+# Initialize #
+##############
+phono3py = Phono3py(
+    unitcell,
+    settings.get_supercell_matrix(),
+    primitive_matrix=settings.get_primitive_matrix(),
+    phonon_supercell_matrix=settings.get_phonon_supercell_matrix(),
+    symprec=options.symprec)
 
-#########################################
-# Calculate third-order force constants #
-#########################################
-if settings.get_primitive_matrix() is None:
-    primitive_matrix = np.eye(3, dtype='double')
-else:
-    primitive_matrix = np.array(settings.get_primitive_matrix(), dtype='double')
-    
-primitive = get_primitive(
-    supercell,
-    np.dot(np.linalg.inv(settings.get_supercell_matrix()), primitive_matrix),
-    options.symprec)
+supercell = phono3py.get_supercell()
+primitive = phono3py.get_primitive()
+phonon_supercell = phono3py.get_phonon_supercell()
+phonon_primitive = phono3py.get_phonon_primitive()
+symmetry = phono3py.get_symmetry()
+mesh = settings.get_mesh_numbers()
+mesh_divs = settings.get_mesh_divisors()
 
-if settings.get_supercell_matrix_extra() is not None:
-    primitive_extra = get_primitive(
-        supercell_extra,
-        np.dot(np.linalg.inv(settings.get_supercell_matrix_extra()),
-               primitive_matrix),
-        options.symprec)
-
+#################
+# Show settings #
+#################
 if log_level:
     if options.is_translational_symmetry:
         print "Translational symmetry:", options.is_translational_symmetry
@@ -524,8 +525,8 @@ if log_level:
     if settings.get_cutoff_fc3_distance() is not None:
         print "FC3 cutoff distance:",
         print settings.get_cutoff_fc3_distance()
-    if settings.get_supercell_matrix_extra() is not None:
-        print "Extra supercell for fc2 is supplied."
+    if settings.get_phonon_supercell_matrix() is not None:
+        print "Supercell for harmonic phonon is introduced."
     if settings.get_is_nac():
         print "Non-analytical term correction:", settings.get_is_nac()
     print "Spacegroup: ", symmetry.get_international_table()
@@ -537,24 +538,24 @@ if log_level:
     print "------------------ ratio (supercell for fc)/(primitive) --------------------"
     for vec in np.dot(supercell.get_cell(), np.linalg.inv(primitive.get_cell())):
         print "%5.2f"*3 % tuple(vec)
-if log_level and (settings.get_supercell_matrix_extra() is not None):
-    print "-------------------------- primitive cell extra -----------------------------"
-    print_cell(primitive_extra)
-    print "---------------------------- supercell extra --------------------------------"
-    print_cell(supercell_extra, mapping=primitive_extra.get_supercell_to_primitive_map())
-    print "---------------- ratio (supercell extra)/(primitive  extra) -----------------"
-    for vec in np.dot(supercell_extra.get_cell(),
-                       np.linalg.inv(primitive_extra.get_cell())):
-        print "%5.2f"*3 % tuple(vec)
+    if settings.get_phonon_supercell_matrix() is not None:
+        print "-------------------- primitive cell for harmonic phonon ---------------------"
+        print_cell(phonon_primitive)
+        print "---------------------- supercell for harmonic phonon ------------------------"
+        print_cell(phonon_supercell, mapping=phonon_primitive.get_supercell_to_primitive_map())
+        print "--------------- ratio (phonon supercell)/(phonon primitive) -----------------"
+        for vec in np.dot(phonon_supercell.get_cell(),
+                          np.linalg.inv(phonon_primitive.get_cell())):
+            print "%5.2f"*3 % tuple(vec)
 
-# Write ir-grid points and grid addresses
+#####################################################  
+# Write ir-grid points and grid addresses, and exit #
+#####################################################
 if options.write_grid_points:
     print "---------------------------------------------------------------------------"
-    mesh = settings.get_mesh_numbers()
     if mesh is None:
-        print "To write grid points, mesh numbers have to be set."
+        print "To write grid points, mesh numbers have to be specified."
     else:
-        mesh_divs = settings.get_mesh_divisors()
         (grid_points,
          coarse_grid_weights,
          grid_address) = get_coarse_ir_grid_points(
@@ -578,8 +579,10 @@ if options.write_grid_points:
     if log_level:
         print_end()
     sys.exit(0)
-        
-# fc2
+
+#######
+# fc2 #
+#######
 if log_level:
     print "------------------------------ fc2 ------------------------------"
     sys.stdout.flush()
@@ -621,15 +624,14 @@ if not options.read_fc2:
         print "Writing fc2 to %s..." % filename
     write_fc2_to_hdf5(fc2_with_dim, filename=filename)
 
-if settings.get_supercell_matrix_extra()==None:
+if settings.get_phonon_supercell_matrix()==None:
     fc2 = fc2_with_dim
 else:
     if log_level:
         print "--------------------------- fc2 extra ---------------------------"
         sys.stdout.flush()
-    # fc2 extra (FORCE_SETS_EXTRA)
+    # phonon fc2 (FORCE_SETS_EXTRA)
     if options.read_fc2_extra:
-
         if input_filename is None:
             filename = 'fc2_extra.hdf5'
         else:
@@ -642,7 +644,9 @@ else:
         if log_level:
             print "Solving fc2 extra..."
         forces_second_extra = parse_FORCE_SETS(filename="FORCE_SETS_EXTRA")
-        fc2 = get_fc2(supercell_extra, symmetry_extra, forces_second_extra)
+        fc2 = get_fc2(phonon_supercell,
+                      phono3py.get_phonon_supercell_symmetry(),
+                      forces_second_extra)
         
     if options.is_symmetrize_fc2:
         set_permutation_symmetry(fc2)
@@ -663,10 +667,10 @@ else:
 
 if settings.get_is_nac():
     file_exists('BORN', log_level)
-    if settings.get_supercell_matrix_extra()==None:
+    if settings.get_phonon_supercell_matrix()==None:
         nac_params = parse_BORN(primitive)
     else:
-        nac_params = parse_BORN(primitive_extra)
+        nac_params = parse_BORN(phonon_primitive)
     nac_q_direction = settings.get_nac_q_direction()
 else:
     nac_params = None
@@ -852,12 +856,12 @@ elif settings.get_mesh_numbers() is not None:
     else:
         freq_scale = options.freq_scale
 
-    if settings.get_supercell_matrix_extra() is None:
+    if settings.get_phonon_supercell_matrix() is None:
         supercell_dm = supercell
         primitive_dm = primitive
     else:
-        supercell_dm = supercell_extra
-        primitive_dm = primitive_extra
+        supercell_dm = phonon_supercell
+        primitive_dm = phonon_primitive
 
 
     if log_level:

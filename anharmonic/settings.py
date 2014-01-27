@@ -23,7 +23,7 @@ class Phono3pySettings(Settings):
         self._no_kappa_stars = False
         self._read_amplitude = False
         self._read_gamma = False
-        self._supercell_matrix_extra = None
+        self._phonon_supercell_matrix = None
         self._temperatures = None
         self._write_amplitude = False
         self._write_gamma = False
@@ -136,11 +136,11 @@ class Phono3pySettings(Settings):
     def get_read_amplitude(self):
         return self._read_amplitude
 
-    def set_supercell_matrix_extra(self, matrix):
-        self._supercell_matrix_extra = matrix
+    def set_phonon_supercell_matrix(self, matrix):
+        self._phonon_supercell_matrix = matrix
 
-    def get_supercell_matrix_extra(self):
-        return self._supercell_matrix_extra
+    def get_phonon_supercell_matrix(self):
+        return self._phonon_supercell_matrix
 
     def set_temperatures(self, temperatures):
         self._temperatures = temperatures
@@ -394,7 +394,7 @@ class Phono3pyConfParser(ConfParser):
 
         # Supercell size for fc2
         if params.has_key('dim_extra'):
-            self._settings.set_supercell_matrix_extra(params['dim_extra'])
+            self._settings.set_phonon_supercell_matrix(params['dim_extra'])
 
         # Sets of band indices that are summed
         if params.has_key('band_indices'):

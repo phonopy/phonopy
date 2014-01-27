@@ -47,15 +47,19 @@ class Phono3py:
         self._supercell = None
         self._primitive = None
         self._phonon_supercell = None
+        self._phonon_primitive = None
         self._build_supercell()
         self._build_primitive_cell()
         self._build_phonon_supercell()
+        self._build_phonon_primitive_cell()
 
-        # Set supercell and primitive symmetry
+        # Set supercell, primitive, and phonon supercell symmetries
         self._symmetry = None
         self._primitive_symmetry = None
+        self._phonon_supercell_symmetry = None
         self._search_symmetry()
         self._search_primitive_symmetry()
+        self._search_phonon_supercell_symmetry()
 
         # Thermal conductivity
         self._thermal_conductivity = None # conductivity_RTA object
@@ -135,29 +139,37 @@ class Phono3py:
     def get_phonon_supercell(self):
         return self._phonon_supercell
 
+    def get_phonon_primitive(self):
+        return self._phonon_primitive
+
     def get_symmetry(self):
         """return symmetry of supercell"""
         return self._symmetry
 
     def get_primitive_symmetry(self):
-        """return symmetry of primitive cell"""
         return self._primitive_symmetry
+
+    def get_phonon_supercell_symmetry(self):
+        return self._phonon_supercell_symmetry
         
     def generate_displacements(self,
                                distance=0.01,
                                cutoff_pair_distance=None,
                                is_plusminus='auto',
                                is_diagonal=True):
-        self._direction_dataset = get_third_order_displacements(
+        direction_dataset = get_third_order_displacements(
             self._supercell,
             self._symmetry,
             is_plusminus=is_plusminus,
             is_diagonal=is_diagonal)
         self._displacement_dataset = direction_to_displacement(
-            self._direction_dataset,
+            direction_dataset,
             distance,
             self._supercell,
             cutoff_distance=cutoff_pair_distance)
+
+    def set_displacement_dataset(self, dataset):
+        self._displacement_dataset = dataset
         
     def get_displacement_dataset(self):
         return self._displacement_dataset
@@ -296,6 +308,13 @@ class Phono3py:
             print ("Warning: point group symmetries of supercell and primitive"
                    "cell are different.")
         
+    def _search_phonon_supercell_symmetry(self):
+        if self._phonon_supercell_matrix is None:
+            self._phonon_supercell_symmetry = self._symmetry
+        else:
+            self._phonon_supercell_symmetry = Symmetry(self._phonon_supercell,
+                                                       self._symprec,
+                                                       self._is_symmetry)
 
     def _build_supercell(self):
         self._supercell = get_supercell(self._unitcell,
@@ -326,20 +345,8 @@ class Phono3py:
           Therefore primitive cell lattice is finally calculated by:
              (supercell_lattice * (supercell_matrix)^-1 * primitive_matrix)^T
         """
-
-        inv_supercell_matrix = np.linalg.inv(self._supercell_matrix)
-        if self._primitive_matrix is None:
-            trans_mat = inv_supercell_matrix
-        else:
-            trans_mat = np.dot(inv_supercell_matrix, self._primitive_matrix)
-        self._primitive = get_primitive(
-            self._supercell, trans_mat, self._symprec)
-        num_satom = self._supercell.get_number_of_atoms()
-        num_patom = self._primitive.get_number_of_atoms()
-        if abs(num_satom * np.linalg.det(trans_mat) - num_patom) < 0.1:
-            return True
-        else:
-            return False
+        self._primitive = self._get_primitive_cell(
+            self._supercell, self._supercell_matrix, self._primitive_matrix)
 
     def _build_phonon_supercell(self):
         """
@@ -354,6 +361,25 @@ class Phono3py:
         else:
             self._phonon_supercell = get_supercell(
                 self._unitcell, self._phonon_supercell_matrix, self._symprec)
+
+    def _build_phonon_primitive_cell(self):
+        self._phonon_primitive = self._get_primitive_cell(
+            self._phonon_supercell,
+            self._phonon_supercell_matrix,
+            self._primitive_matrix)
+
+    def _get_primitive_cell(self, supercell, supercell_matrix, primitive_matrix):
+        if supercell_matrix is None:
+            inv_supercell_matrix = np.eye(3)
+        else:
+            inv_supercell_matrix = np.linalg.inv(supercell_matrix)
+        if primitive_matrix is None:
+            t_mat = inv_supercell_matrix
+        else:
+            t_mat = np.dot(inv_supercell_matrix, primitive_matrix)
+            
+        return get_primitive(supercell, t_mat, self._symprec)
+        
         
 
 class IsotopeScattering:
