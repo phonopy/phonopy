@@ -65,21 +65,18 @@ class Phonopy:
                  is_symmetry=True,
                  log_level=0):
         self._symprec = symprec
-        self._unitcell = unitcell
-        self._supercell_matrix = supercell_matrix
-        self._primitive_matrix = primitive_matrix
         self._factor = factor
         self._is_symmetry = is_symmetry
         self._log_level = log_level
 
         # Create supercell and primitive cell
+        self._unitcell = unitcell
+        self._supercell_matrix = supercell_matrix
+        self._primitive_matrix = primitive_matrix
         self._supercell = None
         self._primitive = None
         self._build_supercell()
-        if primitive_matrix is not None:
-            self._build_primitive_cell(primitive_matrix)
-        else:
-            self._build_primitive_cell()
+        self._build_primitive_cell()
 
         # Set supercell and primitive symmetry
         self._symmetry = None
@@ -155,7 +152,8 @@ class Phonopy:
         print 
 
         if primitive_matrix is not None:
-            self._build_primitive_cell(primitive_matrix)
+            self._primitive_matrix = primitive_matrix
+            self._build_primitive_cell()
             self._search_primitive_symmetry()
         
         if sets_of_forces is not None:
@@ -949,7 +947,7 @@ class Phonopy:
 
         self._supercells_with_displacements = supercells
 
-    def _build_primitive_cell(self, primitive_matrix=np.eye(3)):
+    def _build_primitive_cell(self):
         """
         primitive_matrix:
           Relative axes of primitive cell to the input unit cell.
@@ -958,13 +956,14 @@ class Phonopy:
           Therefore primitive cell lattice is finally calculated by:
              (supercell_lattice * (supercell_matrix)^-1 * primitive_matrix)^T
         """
-        
+
         inv_supercell_matrix = np.linalg.inv(self._supercell_matrix)
-        trans_mat = np.dot(inv_supercell_matrix, primitive_matrix)
+        if self._primitive_matrix is None:
+            trans_mat = inv_supercell_matrix
+        else:
+            trans_mat = np.dot(inv_supercell_matrix, self._primitive_matrix)
         self._primitive = get_primitive(
-            self._supercell,
-            trans_mat,
-            self._symprec)
+            self._supercell, trans_mat, self._symprec)
         num_satom = self._supercell.get_number_of_atoms()
         num_patom = self._primitive.get_number_of_atoms()
         if abs(num_satom * np.linalg.det(trans_mat) - num_patom) < 0.1:
