@@ -82,6 +82,10 @@ class Phono3py:
         if mesh is not None:
             self.set_phph_interaction(mesh, band_indices=band_indices)
 
+        # Other variables
+        self._fc2 = None
+        self._fc3 = None
+
     def set_phph_interaction(self, mesh, band_indices=None):
         self._mesh = np.array(mesh, dtype='intc')
         if band_indices is None:
@@ -107,16 +111,13 @@ class Phono3py:
         return self._interaction
         
     def set_dynamical_matrix(self,
-                             fc2,
-                             supercell,
-                             primitive,
                              nac_params=None,
                              nac_q_direction=None,
                              frequency_scale_factor=None):
         self._interaction.set_dynamical_matrix(
-            fc2,
-            supercell,
-            primitive,
+            self._fc2,
+            self._phonon_supercell,
+            self._phonon_primitive,
             nac_params=nac_params,
             frequency_scale_factor=frequency_scale_factor)
         self._interaction.set_nac_q_direction(nac_q_direction=nac_q_direction)

@@ -401,7 +401,9 @@ if log_level:
     print_phono3py()
     print_version(phono3py_version)
 
-# Create FORCES_THIRD
+#########################################
+# Create FORCES_THIRD and FORCES_SECOND #
+#########################################
 if options.forces_third_mode:
     if input_filename is None:
         filename = 'disp_fc3.yaml'
@@ -415,7 +417,10 @@ if options.forces_third_mode:
     print_end()
     exit(0)
 
-# Create DELTA_FC2_SETS
+#########################    
+# Create DELTA_FC2_SETS #
+#########################
+# This may not work.
 if options.delta_fc2_sets_mode:
     if input_filename is None:
         filename = 'disp_fc3.yaml'
@@ -429,7 +434,9 @@ if options.delta_fc2_sets_mode:
     print_end()
     exit(0)
 
-# Import input files
+##################
+# Parse settings #
+##################
 if len(args) > 0:
     phono3py_conf = Phono3pyConfParser(filename=args[0],
                                        options=options,
@@ -441,7 +448,9 @@ else:
                                        option_list=option_list)
     settings = phono3py_conf.get_settings()
 
-# Read POSCAR
+###################################
+# Read crystal structure (POSCAR) #
+###################################
 if options.cell_poscar == None:
     file_exists('POSCAR', log_level)
     unitcell_filename = 'POSCAR'
@@ -676,7 +685,9 @@ else:
     nac_params = None
     nac_q_direction = None
 
-# fc3
+#######
+# fc3 #
+#######
 if (options.is_joint_dos or
     options.is_isotope or
     settings.get_read_gamma() or

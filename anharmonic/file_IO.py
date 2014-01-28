@@ -363,7 +363,6 @@ def write_FORCES_THIRD(vaspruns,
                        forces_second='FORCES_SECOND'):
     natom = disp_dataset['natom']
     num_disp1 = len(disp_dataset['first_atoms'])
-    disp_datasets = []
     set_of_forces = get_forces_from_vasprun_xmls(vaspruns, natom)
     w3 = open(forces_third, 'w')
     w2 = open(forces_second, 'w')
@@ -376,8 +375,6 @@ def write_FORCES_THIRD(vaspruns,
         for forces in set_of_forces[i]:
             w2.write("%15.10f %15.10f %15.10f\n" % (tuple(forces)))
         
-        disp_datasets.append([disp1['number'], disp1['displacement']])
-
     count = num_disp1
     file_count = num_disp1
     for i, disp1 in enumerate(disp_dataset['first_atoms']):
