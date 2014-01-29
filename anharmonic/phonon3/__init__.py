@@ -466,6 +466,7 @@ class IsotopeScattering:
     def __init__(self,
                  mesh,
                  mass_variances, # length of list is num_atom.
+                 band_indices=None,
                  sigma=0.1,
                  frequency_factor_to_THz=VaspToTHz,
                  symprec=1e-5,
@@ -473,18 +474,15 @@ class IsotopeScattering:
                  lapack_zheev_uplo='L'):
         self._iso = Isotope(mesh,
                             mass_variances,
+                            band_indices=band_indices,
                             sigma=sigma,
                             frequency_factor_to_THz=frequency_factor_to_THz,
                             symprec=symprec,
                             cutoff_frequency=cutoff_frequency,
                             lapack_zheev_uplo=lapack_zheev_uplo)
 
-    def run(self, grid_point, band_indices=None):
-        if band_indices is None:
-            bi = [np.arange(self._primitive.get_number_of_atoms() * 3)]
-        else:
-            bi = band_indices
-        self._iso.run(grid_point, bi)
+    def run(self, grid_point):
+        self._iso.run(grid_point)
         g_iso = self._iso.get_gamma()
         return g_iso
     

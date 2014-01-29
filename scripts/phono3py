@@ -780,6 +780,7 @@ if options.is_gruneisen:
 
     if log_level:
         print_end()
+    sys.exit(0)
 
 #######################
 # Show ph-ph settings #
@@ -839,10 +840,10 @@ if log_level:
 #############
 if options.is_joint_dos:
     joint_dos = Phono3pyJointDos(
-        supercell_dm,
-        primitive_dm,
+        phonon_supercell,
+        phonon_primitive,
         mesh,
-        fc2,
+        phono3py.get_fc2(),
         nac_params=nac_params,
         sigmas=sigmas,
         frequency_step=frequency_step,
@@ -855,38 +856,37 @@ if options.is_joint_dos:
     joint_dos.run(grid_points)
     if log_level:
         print_end()
+    sys.exit(0)
     
 ######################
 # Isotope scattering #
 ######################
 if options.is_isotope:
-    if log_level:
-        print "Cutoff frequency:", settings.get_cutoff_frequency()
     mass_variances = settings.get_mass_variances()
+    if band_indices is not None:
+        band_indices = np.hstack(band_indices).astype('intc')
     iso = IsotopeScattering(
         mesh,
         mass_variances,
+        band_indices=band_indices,
         frequency_factor_to_THz=frequency_factor_to_THz,
         symprec=options.symprec,
         cutoff_frequency=settings.get_cutoff_frequency(),
         lapack_zheev_uplo=options.uplo)
-    iso.set_dynamical_matrix(fc2,
-                             supercell,
-                             primitive,
+    iso.set_dynamical_matrix(phono3py.get_fc2(),
+                             phonon_supercell,
+                             phonon_primitive,
                              nac_params=nac_params,
                              frequency_scale_factor=frequency_scale_factor)
-    if settings.get_band_indices() is None:
-        band_indices = None
-    else:
-        band_indices = np.hstack(self._band_indices).astype('intc')
-        
-        for sigma in sigmas:
-            if log_level:
-                print "Sigma:", sigma
-            iso.set_sigma(sigma)
-            print iso.run(gp, band_indices)
+    for sigma in sigmas:
+        if log_level:
+            print "Sigma:", sigma
+        iso.set_sigma(sigma)
+        print iso.run(gp)
+            
     if log_level:
         print_end()
+    sys.exit(0)
             
 #########
 # Ph-ph #
