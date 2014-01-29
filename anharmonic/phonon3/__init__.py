@@ -13,7 +13,7 @@ from anharmonic.other.isotope import Isotope
 from phonopy.harmonic.force_constants import get_fc2, set_permutation_symmetry, \
      set_translational_invariance
 from anharmonic.phonon3.fc3 import get_fc3, set_permutation_symmetry_fc3, \
-     set_translational_invariance_fc3, cutoff_fc3, cutoff_fc3_by_zero
+     set_translational_invariance_fc3, cutoff_fc3_by_zero
 from phonopy.units import VaspToTHz
 
 class Phono3py:
@@ -166,29 +166,12 @@ class Phono3py:
             is_permutation_symmetry=is_permutation_symmetry,
             verbose=self._log_level)
 
-        # Reduction of number of supercell-force calculations
-        if 'cutoff_distance' in disp_dataset:
-            if self._log_level:
-                print ("Cutting-off fc3 (cut-off distance: %f)" %
-                       disp_dataset['cutoff_distance'])
-            cutoff_fc3(self._fc3,
-                       self._supercell,
-                       disp_dataset,
-                       self._symmetry,
-                       verbose=self._log_level)
-
         # Set fc3 elements zero beyond cutoff_distance
         if cutoff_distance:
             if self._log_level:
                 print ("Cutting-off fc3 by zero (cut-off distance: %f)" %
                        cutoff_distance)
             self.cutoff_fc3_by_zero(cutoff_distance)
-
-        # Symmetrize fc3_r
-        if is_permutation_symmetry:
-            if self._log_level:
-                print "Symmetrizing fc3 in real space index exchange..."
-            set_permutation_symmetry_fc3(self._fc3)
 
     def cutoff_fc3_by_zero(self, cutoff_distance):
         cutoff_fc3_by_zero(self._fc3,

@@ -782,6 +782,9 @@ if options.is_gruneisen:
     if log_level:
         print_end()
 
+#######################
+# Show ph-ph settings #
+#######################
 if log_level:
     print "--------------------------- Settings ----------------------------"
     print "Mesh sampling: [ %d %d %d ]" % tuple(mesh)

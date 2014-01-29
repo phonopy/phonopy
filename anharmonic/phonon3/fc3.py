@@ -14,18 +14,30 @@ def get_fc3(supercell,
             verbose=False):
     num_atom = supercell.get_number_of_atoms()
     fc3 = np.zeros((num_atom, num_atom, num_atom, 3, 3, 3), dtype='double')
-    _get_fc3_least_atoms(fc3,
-                         supercell,
-                         disp_dataset,
-                         fc2,
-                         symmetry,
-                         is_translational_symmetry,
-                         is_permutation_symmetry,
-                         verbose)
 
+    
+    if 'cutoff_distance' in disp_dataset:
+        _get_fc3_least_atoms(fc3,
+                             supercell,
+                             disp_dataset,
+                             fc2,
+                             symmetry,
+                             False,
+                             False,
+                             verbose)
+    else:
+        _get_fc3_least_atoms(fc3,
+                             supercell,
+                             disp_dataset,
+                             fc2,
+                             symmetry,
+                             is_translational_symmetry,
+                             is_permutation_symmetry,
+                             verbose)
+    
     if verbose:
-        print "Copying fc3..."
-
+        print "Copying fc3"
+        
     first_disp_atoms = np.unique(
         [x['number'] for x in disp_dataset['first_atoms']])
     rotations = symmetry.get_symmetry_operations()['rotations']
@@ -42,10 +54,34 @@ def get_fc3(supercell,
                    translations,
                    symprec,
                    verbose)
-
-    if is_translational_symmetry:
-        set_translational_invariance_fc3_per_index(fc3)
-
+    
+    if 'cutoff_distance' in disp_dataset:
+        if verbose:
+            print ("Cutting-off fc3 (cut-off distance: %f)" %
+                   disp_dataset['cutoff_distance'])
+        cutoff_fc3(fc3,
+                   supercell,
+                   disp_dataset,
+                   symmetry,
+                   verbose=verbose)
+        if is_translational_symmetry:
+            if verbose:
+                print "Imposing translational invariance symmetry to fc3"
+            set_translational_invariance_fc3(fc3)
+        if is_permutation_symmetry:
+            if verbose:
+                print "Imposing index permulation symmetry to fc3"
+            set_permutation_symmetry_fc3(fc3)
+    else:
+        if is_translational_symmetry:
+            if verbose:
+                print "Imposing translational invariance symmetry to fc3"
+            set_translational_invariance_fc3_per_index(fc3)
+        if is_permutation_symmetry:
+            if verbose:
+                print "Imposing index permulation symmetry to fc3"
+            set_permutation_symmetry_fc3(fc3)
+        
     return fc3
 
 
