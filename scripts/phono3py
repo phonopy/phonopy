@@ -40,25 +40,20 @@ import numpy as np
 from optparse import OptionParser
 
 from phonopy.interface.vasp import read_vasp
-from phonopy.structure.cells import get_supercell, get_primitive, print_cell
-from phonopy.structure.symmetry import Symmetry
-from phonopy.harmonic.force_constants import get_fc2, get_force_constants, \
-    set_permutation_symmetry, symmetrize_force_constants, \
-    set_translational_invariance, show_drift_force_constants
+from phonopy.structure.cells import print_cell
+from phonopy.harmonic.force_constants import show_drift_force_constants
 from phonopy.file_IO import parse_BORN, parse_FORCE_SETS
 from phonopy.units import VaspToTHz
-from anharmonic.phonon3.fc3 import get_fc3, set_permutation_symmetry_fc3, \
-    set_translational_invariance_fc3, show_drift_fc3, cutoff_fc3, \
-    cutoff_fc3_by_zero
-from anharmonic.file_IO import write_fc2_dat, write_fc3_dat,\
-    parse_disp_fc3_yaml, write_FORCES_THIRD, parse_DELTA_FORCES, \
-    write_DELTA_FC2_SETS, parse_DELTA_FC2_SETS, parse_FORCES_SECOND, \
-    write_fc3_to_hdf5, write_fc2_to_hdf5, read_fc3_from_hdf5, \
-    read_fc2_from_hdf5, write_ir_grid_points, write_grid_address, \
-    write_supercells_with_displacements
+from anharmonic.phonon3.fc3 import show_drift_fc3
+from anharmonic.file_IO import parse_disp_fc2_yaml, parse_disp_fc3_yaml, \
+     parse_FORCES_FC2, parse_FORCES_FC3, write_FORCES_FC3, \
+     write_fc3_to_hdf5, write_fc2_to_hdf5, read_fc3_from_hdf5, \
+     read_fc2_from_hdf5, write_ir_grid_points, write_grid_address, \
+     write_supercells_with_displacements
 from anharmonic.phonon3.triplets import get_coarse_ir_grid_points
 from anharmonic.settings import Phono3pyConfParser
-from anharmonic.phonon3 import Phono3py, Phono3pyJointDos, IsotopeScattering, get_gruneisen_parameters
+from anharmonic.phonon3 import Phono3py, Phono3pyJointDos, IsotopeScattering, \
+     get_gruneisen_parameters
 
 phono3py_version = "0.8.2"
 
@@ -413,24 +408,7 @@ if options.forces_third_mode:
     if log_level:
         print "Displacement dataset is read from %s." % filename
     disp_dataset = parse_disp_fc3_yaml()
-    write_FORCES_THIRD(args, disp_dataset)
-    print_end()
-    exit(0)
-
-#########################    
-# Create DELTA_FC2_SETS #
-#########################
-# This may not work.
-if options.delta_fc2_sets_mode:
-    if input_filename is None:
-        filename = 'disp_fc3.yaml'
-    else:
-        filename = 'disp_fc3.' + input_filename + '.yaml'
-    file_exists(filename, log_level)
-    if log_level:
-        print "Displacement dataset is read from %s." % filename
-    disp_dataset = parse_disp_fc3_yaml()
-    write_DELTA_FC2_SETS(args, disp_dataset)
+    write_FORCES_FC3(args, disp_dataset)
     print_end()
     exit(0)
 
@@ -502,25 +480,88 @@ if options.is_displacement:
 ##############
 # Initialize #
 ##############
+mesh = settings.get_mesh_numbers()
+mesh_divs = settings.get_mesh_divisors()
+grid_points = settings.get_grid_points()
+band_indices = settings.get_band_indices()
+cutoff_frequency = settings.get_cutoff_frequency()
+if settings.get_multiple_sigmas() is None:
+    if settings.get_sigma():
+        sigmas = [settings.get_sigma()]
+    else:
+        sigmas = []
+else:
+    sigmas = settings.get_multiple_sigmas()
+if settings.get_is_tetrahedron_method():
+    sigmas = [None] + sigmas
+if settings.get_temperatures() is None:
+    t_max=settings.get_max_temperature()
+    t_min=settings.get_min_temperature()
+    t_step=settings.get_temperature_step()
+    temperature_points = [0.0, 300.0] # For spectra
+    temperatures = np.arange(t_min, t_max + float(t_step) / 10, t_step)
+else:
+    temperature_points = settings.get_temperatures() # For spectra
+    temperatures = settings.get_temperatures() # For others
+if options.factor is None:
+    frequency_factor_to_THz = VaspToTHz
+else:
+    frequency_factor_to_THz = options.factor
+if settings.get_frequency_pitch() is None:
+    frequency_step = 0.1
+else:
+    frequency_step = settings.get_frequency_pitch()
+if options.freq_scale is None:
+    frequency_scale_factor = 1.0
+else:
+    frequency_scale_factor = options.freq_scale
+
 phono3py = Phono3py(
     unitcell,
     settings.get_supercell_matrix(),
     primitive_matrix=settings.get_primitive_matrix(),
     phonon_supercell_matrix=settings.get_phonon_supercell_matrix(),
-    symprec=options.symprec)
+    mesh=mesh,
+    band_indices=band_indices,
+    sigmas=sigmas,
+    cutoff_frequency=cutoff_frequency,
+    frequency_factor_to_THz=frequency_factor_to_THz,
+    is_symmetry=True,
+    is_nosym=options.is_nosym,
+    symmetrize_fc3_q=options.is_symmetrize_fc3_q,
+    symprec=options.symprec,
+    log_level=log_level,
+    lapack_zheev_uplo=options.uplo)
 
 supercell = phono3py.get_supercell()
 primitive = phono3py.get_primitive()
 phonon_supercell = phono3py.get_phonon_supercell()
 phonon_primitive = phono3py.get_phonon_primitive()
 symmetry = phono3py.get_symmetry()
-mesh = settings.get_mesh_numbers()
-mesh_divs = settings.get_mesh_divisors()
 
 #################
 # Show settings #
 #################
 if log_level:
+    print "Spacegroup: ", symmetry.get_international_table()
+    print "---------------------------- primitive cell --------------------------------"
+    print_cell(primitive)
+    print "------------------------------- supercell ----------------------------------"
+    print_cell(supercell, mapping=primitive.get_supercell_to_primitive_map())
+    print "------------------ ratio (supercell for fc)/(primitive) --------------------"
+    for vec in np.dot(supercell.get_cell(), np.linalg.inv(primitive.get_cell())):
+        print "%5.2f"*3 % tuple(vec)
+    if settings.get_phonon_supercell_matrix() is not None:
+        print "-------------------- primitive cell for harmonic phonon ---------------------"
+        print_cell(phonon_primitive)
+        print "---------------------- supercell for harmonic phonon ------------------------"
+        print_cell(phonon_supercell, mapping=phonon_primitive.get_supercell_to_primitive_map())
+        print "--------------- ratio (phonon supercell)/(phonon primitive) -----------------"
+        for vec in np.dot(phonon_supercell.get_cell(),
+                          np.linalg.inv(phonon_primitive.get_cell())):
+            print "%5.2f"*3 % tuple(vec)
+            
+    print "----------------------------------------------------------------------------"
     if options.is_translational_symmetry:
         print "Translational symmetry:", options.is_translational_symmetry
     if options.is_symmetrize_fc2:
@@ -538,24 +579,6 @@ if log_level:
         print "Supercell for harmonic phonon is introduced."
     if settings.get_is_nac():
         print "Non-analytical term correction:", settings.get_is_nac()
-    print "Spacegroup: ", symmetry.get_international_table()
-
-    print "---------------------------- primitive cell --------------------------------"
-    print_cell(primitive)
-    print "------------------------------- supercell ----------------------------------"
-    print_cell(supercell, mapping=primitive.get_supercell_to_primitive_map())
-    print "------------------ ratio (supercell for fc)/(primitive) --------------------"
-    for vec in np.dot(supercell.get_cell(), np.linalg.inv(primitive.get_cell())):
-        print "%5.2f"*3 % tuple(vec)
-    if settings.get_phonon_supercell_matrix() is not None:
-        print "-------------------- primitive cell for harmonic phonon ---------------------"
-        print_cell(phonon_primitive)
-        print "---------------------- supercell for harmonic phonon ------------------------"
-        print_cell(phonon_supercell, mapping=phonon_primitive.get_supercell_to_primitive_map())
-        print "--------------- ratio (phonon supercell)/(phonon primitive) -----------------"
-        for vec in np.dot(phonon_supercell.get_cell(),
-                          np.linalg.inv(phonon_primitive.get_cell())):
-            print "%5.2f"*3 % tuple(vec)
 
 #####################################################  
 # Write ir-grid points and grid addresses, and exit #
@@ -565,7 +588,7 @@ if options.write_grid_points:
     if mesh is None:
         print "To write grid points, mesh numbers have to be specified."
     else:
-        (grid_points,
+        (ir_grid_points,
          coarse_grid_weights,
          grid_address) = get_coarse_ir_grid_points(
              primitive,
@@ -576,7 +599,7 @@ if options.write_grid_points:
              symprec=options.symprec)
         write_ir_grid_points(mesh,
                              mesh_divs,
-                             grid_points,
+                             ir_grid_points,
                              coarse_grid_weights,
                              grid_address,
                              np.linalg.inv(primitive.get_cell()))
@@ -590,114 +613,14 @@ if options.write_grid_points:
     sys.exit(0)
 
 #######
-# fc2 #
-#######
-if log_level:
-    print "------------------------------ fc2 ------------------------------"
-    sys.stdout.flush()
-if options.read_fc2 or options.read_delta_fc2:
-    if input_filename is None:
-        filename = 'fc2.hdf5'
-    else:
-        filename = 'fc2.' + input_filename + '.hdf5'
-    file_exists(filename, log_level)
-    if log_level:
-        print "Reading fc2 from %s..." % filename
-    fc2_with_dim = read_fc2_from_hdf5(filename=filename)
-else:
-    if input_filename is None:
-        filename = 'disp_fc3.yaml'
-    else:
-        filename = 'disp_fc3.' + input_filename + '.yaml'
-    file_exists(filename, log_level)
-    if log_level:
-        print "Displacement dataset is read from %s." % filename
-        print "Solving fc2..."
-    disp_dataset = parse_disp_fc3_yaml(filename=filename)
-    parse_FORCES_SECOND(disp_dataset)
-    fc2_with_dim = get_fc2(supercell, symmetry, disp_dataset)
-
-if options.is_symmetrize_fc2:
-    set_permutation_symmetry(fc2_with_dim)
-if options.is_translational_symmetry:
-    set_translational_invariance(fc2_with_dim)
-
-show_drift_force_constants(fc2_with_dim, name='fc2')
-
-if not options.read_fc2:
-    if output_filename is None:
-        filename = 'fc2.hdf5'
-    else:
-        filename = 'fc2.' + output_filename + '.hdf5'
-    if log_level:
-        print "Writing fc2 to %s..." % filename
-    write_fc2_to_hdf5(fc2_with_dim, filename=filename)
-
-if settings.get_phonon_supercell_matrix()==None:
-    fc2 = fc2_with_dim
-else:
-    if log_level:
-        print "--------------------------- fc2 extra ---------------------------"
-        sys.stdout.flush()
-    # phonon fc2 (FORCE_SETS_EXTRA)
-    if options.read_fc2_extra:
-        if input_filename is None:
-            filename = 'fc2_extra.hdf5'
-        else:
-            filename = 'fc2_extra.' + input_filename + '.hdf5'
-        file_exists(filename, log_level)
-        if log_level:
-            print "Reading fc2-extra from %s..." % filename
-        fc2 = read_fc2_from_hdf5(filename=filename)
-    else:                
-        if log_level:
-            print "Solving fc2 extra..."
-        forces_second_extra = parse_FORCE_SETS(filename="FORCE_SETS_EXTRA")
-        fc2 = get_fc2(phonon_supercell,
-                      phono3py.get_phonon_supercell_symmetry(),
-                      forces_second_extra)
-        
-    if options.is_symmetrize_fc2:
-        set_permutation_symmetry(fc2)
-
-    if options.is_translational_symmetry:
-        set_translational_invariance(fc2)
-
-    show_drift_force_constants(fc2, 'fc2-extra')
-        
-    if not options.read_fc2_extra:
-        if output_filename is None:
-            filename = 'fc2_extra.hdf5'
-        else:
-            filename = 'fc2_extra.' + output_filename + '.hdf5'
-        if log_level:
-            print "Writing fc2-extra to %s..." % filename
-        write_fc2_to_hdf5(fc2, filename=filename)
-
-if settings.get_is_nac():
-    file_exists('BORN', log_level)
-    if settings.get_phonon_supercell_matrix()==None:
-        nac_params = parse_BORN(primitive)
-    else:
-        nac_params = parse_BORN(phonon_primitive)
-    nac_q_direction = settings.get_nac_q_direction()
-else:
-    nac_params = None
-    nac_q_direction = None
-
-#######
 # fc3 #
 #######
 if (options.is_joint_dos or
     options.is_isotope or
     settings.get_read_gamma() or
     settings.get_read_amplitude()):
-    fc3 = None
+    pass
 else:
-    if log_level:
-        print "------------------------------ fc3 ------------------------------"
-        sys.stdout.flush()
-
     if options.read_fc3: # Read fc3.hdf5
         if input_filename is None:
             filename = 'fc3.hdf5'
@@ -707,8 +630,7 @@ else:
         if log_level:
             print "Reading fc3 from %s..." % filename
         fc3 = read_fc3_from_hdf5(filename=filename)
-        if options.is_translational_symmetry:
-            set_translational_invariance_fc3(fc3)
+        phono3py.set_fc3(fc3)
     else: # fc3 from FORCES_THIRD and FORCES_SECOND
         if input_filename is None:
             filename = 'disp_fc3.yaml'
@@ -719,66 +641,93 @@ else:
             print "Displacement dataset is read from %s." % filename
             print "Solving fc3:"
         disp_dataset = parse_disp_fc3_yaml(filename=filename)
-
-        if options.read_delta_fc2:
-            parse_DELTA_FC2_SETS(disp_dataset)
-        else:
-            parse_DELTA_FORCES(disp_dataset)
-
-        if 'cutoff_distance' in disp_dataset:
-            fc3 = get_fc3(
-                supercell,
-                disp_dataset,
-                fc2_with_dim,
-                symmetry,
-                verbose=log_level)
-            if log_level:
-                print "Cutting-off fc3 (cut-off distance: %f)" % disp_dataset['cutoff_distance']
-            cutoff_fc3(fc3,
-                       supercell,
-                       disp_dataset,
-                       symmetry,
-                       verbose=log_level)
-        else:
-            fc3 = get_fc3(
-                supercell,
-                disp_dataset,
-                fc2_with_dim,
-                symmetry,
-                is_translational_symmetry=options.is_translational_symmetry,
-                is_permutation_symmetry=options.is_symmetrize_fc3_r,
-                verbose=log_level)
-
-    # fc3 is cut-off by the distances among atoms and replaced by zero.
-    if settings.get_cutoff_fc3_distance() is not None:
-        cutoff_distance = settings.get_cutoff_fc3_distance()
-        if log_level:
-            print "Cutting-off fc3 by zero (cut-off distance: %f)" % cutoff_distance
-        cutoff_fc3_by_zero(fc3, supercell, cutoff_distance, options.symprec)
-
-    # Symmetrize fc3_r
-    if options.is_symmetrize_fc3_r:
-        if log_level:
-            print "Symmetrizing fc3 in real space index exchange..."
-        set_permutation_symmetry_fc3(fc3)
-
-    show_drift_fc3(fc3)
-
-    # Write fc3
-    if not options.read_fc3:
+        forces_fc3 = parse_FORCES_FC3(disp_dataset)
+        phono3py.produce_fc3(
+            forces_fc3,
+            disp_dataset,
+            cutoff_distance=settings.get_cutoff_fc3_distance(),
+            is_translational_symmetry=options.is_translational_symmetry,
+            is_permutation_symmetry=options.is_symmetrize_fc3_r)
         if output_filename is None:
             filename = 'fc3.hdf5'
         else:
             filename = 'fc3.' + output_filename + '.hdf5'
         if log_level:
             print "Writing fc3 to %s" % filename
-        write_fc3_to_hdf5(fc3, filename=filename)
+        write_fc3_to_hdf5(phono3py.get_fc3(), filename=filename)
 
-#============================
-# Phonon Gruneisen parameter
-#============================
+    show_drift_fc3(phono3py.get_fc3())
+
+##############
+# phonon fc2 #
+##############
+if options.read_fc2:
+    if input_filename is None:
+        filename = 'fc2.hdf5'
+    else:
+        filename = 'fc2.' + input_filename + '.hdf5'
+    file_exists(filename, log_level)
+    if log_level:
+        print "Reading fc2 from %s..." % filename
+    phonon_fc2 = read_fc2_from_hdf5(filename=filename)
+    phono3py.set_fc2(phonon_fc2)
+else:
+    if settings.get_phonon_supercell_matrix() is None:
+        if phono3py.get_fc2() is None:
+            if input_filename is None:
+                filename = 'disp_fc3.yaml'
+            else:
+                filename = 'disp_fc3.' + input_filename + '.yaml'
+            if log_level:
+                print "Displacement dataset is read from %s." % filename
+                print "Solving fc2:"
+            file_exists(filename, log_level)
+            disp_dataset = parse_disp_fc3_yaml(filename=filename)
+            forces_fc3 = parse_FORCES_FC3(disp_dataset)
+            phono3py.produce_fc2(forces_fc3, disp_dataset)
+    else:
+        if input_filename is None:
+            filename = 'disp_fc2.yaml'
+        else:
+            filename = 'disp_fc2.' + input_filename + '.yaml'
+        if log_level:
+            print "Displacement dataset is read from %s." % filename
+            print "Solving fc2:"
+        file_exists(filename, log_level)
+        disp_dataset = parse_disp_fc2_yaml(filename=filename)
+        forces_fc2 = parse_FORCES_FC2(disp_dataset)
+        phono3py.produce_fc2(forces_fc2, disp_dataset)
+
+    if output_filename is None:
+        filename = 'fc2.hdf5'
+    else:
+        filename = 'fc2.' + output_filename + '.hdf5'
+    if log_level:
+        print "Writing fc2 to %s..." % filename
+    write_fc2_to_hdf5(phono3py.get_fc2(), filename=filename)
+    
+show_drift_force_constants(phono3py.get_fc2(), name='fc2')
+
+if settings.get_is_nac():
+    file_exists('BORN', log_level)
+    nac_params = parse_BORN(phonon_primitive)
+    nac_q_direction = settings.get_nac_q_direction()
+else:
+    nac_params = None
+    nac_q_direction = None
+
+##############################
+# Phonon Gruneisen parameter #
+##############################
 if options.is_gruneisen:
-    mesh = settings.get_mesh_numbers()
+    fc2 = phono3py.get_fc2()
+    fc3 = phono3py.get_fc3()
+    if len(fc2) != len(fc3):
+        print_error_message("Supercells used for fc2 and fc3 have to be same.")
+        if log_level:
+            print_error()
+        sys.exit(1)
+    
     band_paths = settings.get_bands()
     qpoints = settings.get_qpoints()
     ion_clamped = settings.get_ion_clamped()
@@ -786,10 +735,12 @@ if options.is_gruneisen:
     if (mesh is None and
         band_paths is None and
         qpoints is None):
+
+        print_error_message("An option of --mesh, --band, or --qpoints "
+                            "has to be specified.")
         if log_level:
-            print "An option of --mesh, --band, or --qpoints has to be specified."
-            print_end()
-            sys.exit(1)
+            print_error()
+        sys.exit(1)
 
     if log_level:
         print "------ Phonon Gruneisen parameter ------"
@@ -828,185 +779,154 @@ if options.is_gruneisen:
         filename = 'gruneisen3.' + output_filename + '.yaml'
     gr.write_yaml(filename=filename)
 
-#===========================
-# phonon-phonon interaction
-#===========================
-elif settings.get_mesh_numbers() is not None:
-    mesh = settings.get_mesh_numbers()
-    grid_points = settings.get_grid_points()
-    if grid_points is not None:
-        grid_points = np.array(grid_points)
-    if options.factor is None:
-        factor = VaspToTHz
-    else:
-        factor = options.factor
-
-    if settings.get_sigma() is None:
-        sigma = None
-    else:
-        sigma = settings.get_sigma()
-
-    if settings.get_multiple_sigmas() is None:
-        if sigma:
-            multiple_sigmas = [sigma]
-        else:
-            multiple_sigmas = []
-    else:
-        multiple_sigmas = settings.get_multiple_sigmas()
-
-    if settings.get_is_tetrahedron_method():
-        multiple_sigmas = [None] + multiple_sigmas
-
-    if settings.get_frequency_pitch() is None:
-        freq_step = 0.1
-    else:
-        freq_step = settings.get_frequency_pitch()
-
-    if options.freq_scale is None:
-        freq_scale = 1.0
-    else:
-        freq_scale = options.freq_scale
-
-    if settings.get_phonon_supercell_matrix() is None:
-        supercell_dm = supercell
-        primitive_dm = primitive
-    else:
-        supercell_dm = phonon_supercell
-        primitive_dm = phonon_primitive
-
-
     if log_level:
-        print "--------------------------- Settings ----------------------------"
-        print "Mesh sampling: [ %d %d %d ]" % tuple(mesh)
-        if grid_points is not None:
-            print "Grid points to be calculated:",
-            if len(grid_points) > 8:
-                for i, gp in enumerate(grid_points):
-                    if i % 10 == 0:
-                        print
-                        print " ",
-                    print gp,
-                print
+        print_end()
+
+if log_level:
+    print "--------------------------- Settings ----------------------------"
+    print "Mesh sampling: [ %d %d %d ]" % tuple(mesh)
+    if mesh_divs is not None and settings.get_is_bterta():
+        print "Mesh divisors: [ %d %d %d ]" % tuple(mesh_divs)
+    if band_indices is not None and not settings.get_is_bterta():
+        print "Band indices:", band_indices
+    if sigmas:
+        print "Sigma:",
+        for sigma in sigmas:
+            if sigma:
+                print sigma,
             else:
-                for gp in grid_points:
-                    print gp,
-                print
-        sys.stdout.flush()
-
-    if options.is_joint_dos:
-        joint_dos = Phono3pyJointDos(
-            supercell_dm,
-            primitive_dm,
-            mesh,
-            fc2,
-            nac_params=nac_params,
-            sigmas=multiple_sigmas,
-            frequency_step=freq_step,
-            frequency_factor_to_THz=factor,
-            frequency_scale_factor=freq_scale,
-            is_nosym=options.is_nosym,
-            symprec=options.symprec,
-            output_filename=output_filename,
-            log_level=log_level)
-        joint_dos.run(grid_points)
-        
-    elif options.is_isotope:
-        if log_level:
-            print "Cutoff frequency:", settings.get_cutoff_frequency()
-        mass_variances = settings.get_mass_variances()
-        iso = IsotopeScattering(
-            mesh,
-            mass_variances,
-            frequency_factor_to_THz=factor,
-            symprec=options.symprec,
-            cutoff_frequency=settings.get_cutoff_frequency(),
-            lapack_zheev_uplo=options.uplo)
-        iso.set_dynamical_matrix(fc2,
-                                 supercell_dm,
-                                 primitive_dm,
-                                 nac_params=nac_params,
-                                 frequency_scale_factor=freq_scale)
-        if settings.get_band_indices() is None:
-            band_indices = None
+                print "Tetrahedron-method",
+        print
+    if (settings.get_is_linewidth() or
+        settings.get_is_frequency_shift() or
+        settings.get_is_bterta()):
+        print "Temperature:",
+        if len(temperatures) > 5:
+            print ((" %.1f " * 5) % tuple(temperatures[:5])), "...",
+            print " %.1f" % temperatures[-1]
         else:
-            band_indices = np.hstack(self._band_indices).astype('intc')
-            
-            for sigma in multiple_sigmas:
-                if log_level:
-                    print "Sigma:", sigma
-                iso.set_sigma(sigma)
-                print iso.run(gp, band_indices)
+            print ("%.1f  " * len(temperatures)) % tuple(temperatures)
+    elif options.is_isotope or options.is_joint_dos:
+        pass
     else:
-        if log_level:
-            print "Cutoff frequency:", settings.get_cutoff_frequency()
+        print "Temperatures:",
+        print ("%.1f  " * len(temperature_points)) % tuple(temperature_points)
+    if grid_points is not None:
+        print "Grid point to be calculated:",
+        if len(grid_points) > 8:
+            for i, gp in enumerate(grid_points):
+                if i % 10 == 0:
+                    print
+                    print " ",
+                print gp,
+            print
+        else:
+            for gp in grid_points:
+                print gp,
+            print
+    if cutoff_frequency:
+        print "Cutoff frequency:", cutoff_frequency
+    if log_level > 1:
+        print "Frequency factor to THz:", frequency_factor_to_THz
+        print "Frequency step for spectrum:", frequency_step
+        print "Frequency scale factor:", frequency_scale_factor
+    sys.stdout.flush()
+    
+#############
+# Joint DOS #
+#############
+if options.is_joint_dos:
+    joint_dos = Phono3pyJointDos(
+        supercell_dm,
+        primitive_dm,
+        mesh,
+        fc2,
+        nac_params=nac_params,
+        sigmas=sigmas,
+        frequency_step=frequency_step,
+        frequency_factor_to_THz=frequency_factor_to_THz,
+        frequency_scale_factor=frequency_scale_factor,
+        is_nosym=options.is_nosym,
+        symprec=options.symprec,
+        output_filename=output_filename,
+        log_level=log_level)
+    joint_dos.run(grid_points)
+    if log_level:
+        print_end()
+    
+######################
+# Isotope scattering #
+######################
+if options.is_isotope:
+    if log_level:
+        print "Cutoff frequency:", settings.get_cutoff_frequency()
+    mass_variances = settings.get_mass_variances()
+    iso = IsotopeScattering(
+        mesh,
+        mass_variances,
+        frequency_factor_to_THz=frequency_factor_to_THz,
+        symprec=options.symprec,
+        cutoff_frequency=settings.get_cutoff_frequency(),
+        lapack_zheev_uplo=options.uplo)
+    iso.set_dynamical_matrix(fc2,
+                             supercell,
+                             primitive,
+                             nac_params=nac_params,
+                             frequency_scale_factor=frequency_scale_factor)
+    if settings.get_band_indices() is None:
+        band_indices = None
+    else:
+        band_indices = np.hstack(self._band_indices).astype('intc')
         
-        phono3py = Phono3py(
-            supercell,
-            primitive,
-            mesh,
-            fc3=fc3,
-            sigmas=multiple_sigmas,
-            band_indices=settings.get_band_indices(),
-            cutoff_frequency=settings.get_cutoff_frequency(),
-            frequency_factor_to_THz=factor,
-            is_nosym=options.is_nosym,
-            symmetrize_fc3_q=options.is_symmetrize_fc3_q,
-            symprec=options.symprec,
-            log_level=log_level,
-            lapack_zheev_uplo=options.uplo)
-
-        phono3py.set_dynamical_matrix(fc2,
-                                      supercell_dm,
-                                      primitive_dm,
-                                      nac_params=nac_params,
-                                      nac_q_direction=nac_q_direction,
-                                      frequency_scale_factor=freq_scale)
-
-        if settings.get_temperatures() is None:
-            t_max=settings.get_max_temperature()
-            t_min=settings.get_min_temperature()
-            t_step=settings.get_temperature_step()
-            temperatures = np.arange(t_min, t_max + float(t_step) / 10,
-                                     t_step)
-        else:
-            temperatures = settings.get_temperatures()
+        for sigma in sigmas:
+            if log_level:
+                print "Sigma:", sigma
+            iso.set_sigma(sigma)
+            print iso.run(gp, band_indices)
+    if log_level:
+        print_end()
             
-        if settings.get_is_linewidth():
-            phono3py.run_linewidth(
-                grid_points,
-                temperatures=temperatures)
-            phono3py.write_linewidth(filename=output_filename)
-        elif settings.get_is_frequency_shift():
-            phono3py.get_frequency_shift(
-                grid_points,
-                epsilon=sigma,
-                temperatures=temperatures,
-                output_filename=output_filename)
-        elif settings.get_is_bterta():
-            phono3py.run_thermal_conductivity(
-                temperatures=temperatures,
-                sigmas=multiple_sigmas,
-                mass_variances=settings.get_mass_variances(),
-                grid_points=grid_points,
-                mesh_divisors=settings.get_mesh_divisors(),
-                coarse_mesh_shifts=settings.get_coarse_mesh_shifts(),
-                cutoff_lifetime=settings.get_cutoff_lifetime(),
-                no_kappa_stars=settings.get_no_kappa_stars(),
-                gv_delta_q=settings.get_group_velocity_delta_q(),
-                write_gamma=settings.get_write_gamma(),
-                read_gamma=settings.get_read_gamma(),
-                write_amplitude=settings.get_write_amplitude(),
-                read_amplitude=settings.get_read_amplitude(),
-                input_filename=input_filename,
-                output_filename=output_filename)
-        else:
-            phono3py.run_imag_self_energy(
-                grid_points,
-                frequency_step=freq_step,
-                temperatures=settings.get_temperatures())
-            phono3py.write_imag_self_energy(filename=output_filename)
+#########
+# Ph-ph #
+#########
+phono3py.set_phph_interaction(nac_params=nac_params,
+                              nac_q_direction=nac_q_direction,
+                              frequency_scale_factor=frequency_scale_factor)
+
+if settings.get_is_linewidth():
+    phono3py.run_linewidth(
+        grid_points,
+        temperatures=temperatures)
+    phono3py.write_linewidth(filename=output_filename)
+elif settings.get_is_frequency_shift():
+    phono3py.get_frequency_shift(
+        grid_points,
+        epsilon=sigma,
+        temperatures=temperatures,
+        output_filename=output_filename)
+elif settings.get_is_bterta():
+    phono3py.run_thermal_conductivity(
+        temperatures=temperatures,
+        sigmas=sigmas,
+        mass_variances=settings.get_mass_variances(),
+        grid_points=grid_points,
+        mesh_divisors=mesh_divs,
+        coarse_mesh_shifts=settings.get_coarse_mesh_shifts(),
+        cutoff_lifetime=settings.get_cutoff_lifetime(),
+        no_kappa_stars=settings.get_no_kappa_stars(),
+        gv_delta_q=settings.get_group_velocity_delta_q(),
+        write_gamma=settings.get_write_gamma(),
+        read_gamma=settings.get_read_gamma(),
+        write_amplitude=settings.get_write_amplitude(),
+        read_amplitude=settings.get_read_amplitude(),
+        input_filename=input_filename,
+        output_filename=output_filename)
 else:
-    pass
+    phono3py.run_imag_self_energy(
+        grid_points,
+        frequency_step=frequency_step,
+        temperatures=temperature_points)
+    phono3py.write_imag_self_energy(filename=output_filename)
 
 if log_level:
     print_end()

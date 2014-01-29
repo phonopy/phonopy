@@ -357,6 +357,47 @@ def write_supercells_with_three_displacements(supercell,
     w3.close()
     w4.close()
 
+def write_FORCES_FC3(vaspruns,
+                     disp_dataset,
+                     forces_fc3='FORCES_FC3'):
+    natom = disp_dataset['natom']
+    num_disp1 = len(disp_dataset['first_atoms'])
+    set_of_forces = get_forces_from_vasprun_xmls(vaspruns, natom)
+    w3 = open(forces_fc3, 'w')
+
+    for i, disp1 in enumerate(disp_dataset['first_atoms']):
+        w3.write("# File: %-5d\n" % (i + 1))
+        w3.write("# %-5d " % (disp1['number'] + 1))
+        w3.write("%20.16f %20.16f %20.16f\n" %
+                         tuple(disp1['displacement']))
+        for forces in set_of_forces[i]:
+            w3.write("%15.10f %15.10f %15.10f\n" % (tuple(forces)))
+        
+    count = num_disp1
+    file_count = num_disp1
+    for i, disp1 in enumerate(disp_dataset['first_atoms']):
+        atom1 = disp1['number']
+        for disp2 in disp1['second_atoms']:
+            atom2 = disp2['number']
+            w3.write("# File: %-5d\n" % (count + 1))
+            w3.write("# %-5d " % (atom1 + 1))
+            w3.write("%20.16f %20.16f %20.16f\n" % tuple(disp1['displacement']))
+            w3.write("# %-5d " % (atom2 + 1))
+            w3.write("%20.16f %20.16f %20.16f\n" % tuple(disp2['displacement']))
+
+            # For supercell calculation reduction
+            if disp2['included']:
+                for forces in set_of_forces[file_count]:
+                    w3.write("%15.10f %15.10f %15.10f\n" % tuple(forces))
+                file_count += 1
+            else:
+                # for forces in set_of_forces[i]:
+                #     w3.write("%15.10f %15.10f %15.10f\n" % (tuple(forces)))
+                for j in range(natom):
+                    w3.write("%15.10f %15.10f %15.10f\n" % (0, 0, 0))
+            count += 1
+    w3.close()
+            
 def write_FORCES_THIRD(vaspruns,
                        disp_dataset,
                        forces_third='FORCES_THIRD',
@@ -1147,6 +1188,21 @@ def parse_disp_yaml_to_disp_dataset(filename="disp.yaml"):
     new_dataset['first_atoms'] = new_first_atoms
     return new_dataset
                        
+def parse_disp_fc2_yaml(filename="disp_fc2.yaml"):
+    dataset = parse_yaml(filename)
+    natom = dataset['natom']
+    new_dataset = {}
+    new_dataset['natom'] = natom
+    new_first_atoms = []
+    for first_atoms in dataset['first_atoms']:
+        first_atoms['number'] -= 1
+        atom1 = first_atoms['number']
+        disp1 = first_atoms['displacement']
+        new_first_atoms.append({'number': atom1, 'displacement': disp1})
+    new_dataset['first_atoms'] = new_first_atoms
+
+    return new_dataset
+        
 def parse_disp_fc3_yaml(filename="disp_fc3.yaml"):
     dataset = parse_yaml(filename)
     natom = dataset['natom']
@@ -1277,16 +1333,32 @@ def parse_FORCES_THIRD(disp_dataset,
             third_forces = parse_force_lines(f3, num_atom)
             disp2['forces'] = third_forces
 
-def parse_FORCES_SECOND(disp_dataset,
-                        filename="FORCES_SECOND"):
+def parse_FORCES_SECOND(disp_dataset, filename="FORCES_SECOND"):
     f2 = open(filename, 'r')
     num_atom = disp_dataset['natom']
     for disp1 in disp_dataset['first_atoms']:
         second_forces = parse_force_lines(f2, num_atom)
         disp1['forces'] = second_forces
 
-def parse_FORCE_SETS_with_disp_dataset(disp_dataset,
-                                       filename="FORCE_SETS"):
+def parse_FORCES_FC2(disp_dataset, filename="FORCES_FC2"):
+    num_atom = disp_dataset['natom']
+    num_disp = len(disp_dataset['first_atoms'])
+    f2 = open(filename, 'r')
+    forces_fc2 = [parse_force_lines(f2, num_atom) for i in range(num_disp)]
+    f2.close()
+    return forces_fc2
+
+def parse_FORCES_FC3(disp_dataset, filename="FORCES_FC3"):
+    num_atom = disp_dataset['natom']
+    num_disp = len(disp_dataset['first_atoms'])
+    for disp1 in disp_dataset['first_atoms']:
+        num_disp += len(disp1['second_atoms'])
+    f3 = open(filename, 'r')
+    forces_fc3 = [parse_force_lines(f3, num_atom) for i in range(num_disp)]
+    f3.close()
+    return forces_fc3
+
+def parse_FORCE_SETS_with_disp_dataset(disp_dataset, filename="FORCE_SETS"):
     f2 = open(filename, 'r')
     num_atom = disp_dataset['natom']
     force_sets = parse_FORCE_SETS(num_atom)
@@ -1299,8 +1371,7 @@ def parse_DELTA_FC2_SETS(disp_dataset,
     delta_fc2s = []
     num_atom = disp_dataset['natom']
     for first_disp in disp_dataset['first_atoms']:
-        first_disp['delta_fc2'] = parse_force_constants_lines(fc2_file,
-                                                              num_atom)
+        first_disp['delta_fc2'] = parse_force_constants_lines(fc2_file, num_atom)
 
 def parse_DELTA_FC2_FOURTH_SETS(disp_dataset,
                                 filename='DELTA_FC2_FOURTH_SETS'):

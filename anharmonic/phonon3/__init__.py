@@ -10,6 +10,10 @@ from anharmonic.phonon3.gruneisen import Gruneisen
 from anharmonic.phonon3.displacement_fc3 import get_third_order_displacements, direction_to_displacement
 from anharmonic.file_IO import write_frequency_shift, write_joint_dos
 from anharmonic.other.isotope import Isotope
+from phonopy.harmonic.force_constants import get_fc2, set_permutation_symmetry, \
+     set_translational_invariance
+from anharmonic.phonon3.fc3 import get_fc3, set_permutation_symmetry_fc3, \
+     set_translational_invariance_fc3, cutoff_fc3, cutoff_fc3_by_zero
 from phonopy.units import VaspToTHz
 
 class Phono3py:
@@ -74,26 +78,28 @@ class Phono3py:
         self._frequency_points = None
         self._temperatures = None
 
+        # Other variables
+        self._fc2 = None
+        self._fc3 = None
+        
         # Setup interaction
         self._interaction = None
         self._mesh = None
         self._band_indices = None
         self._band_indices_flatten = None
         if mesh is not None:
-            self.set_phph_interaction(mesh, band_indices=band_indices)
-
-        # Other variables
-        self._fc2 = None
-        self._fc3 = None
-
-    def set_phph_interaction(self, mesh, band_indices=None):
-        self._mesh = np.array(mesh, dtype='intc')
+            self._mesh = np.array(mesh, dtype='intc')
         if band_indices is None:
             num_band = self._primitive.get_number_of_atoms() * 3
             self._band_indices = [np.arange(num_band)]
         else:
             self._band_indices = band_indices
         self._band_indices_flatten = np.hstack(self._band_indices).astype('intc')
+
+    def set_phph_interaction(self,
+                             nac_params=None,
+                             nac_q_direction=None,
+                             frequency_scale_factor=None):
         self._interaction = Interaction(
             self._supercell,
             self._primitive,
@@ -106,14 +112,6 @@ class Phono3py:
             is_nosym=self._is_nosym,
             symmetrize_fc3_q=self._symmetrize_fc3_q,
             lapack_zheev_uplo=self._lapack_zheev_uplo)
-
-    def get_interaction_strength(self):
-        return self._interaction
-        
-    def set_dynamical_matrix(self,
-                             nac_params=None,
-                             nac_q_direction=None,
-                             frequency_scale_factor=None):
         self._interaction.set_dynamical_matrix(
             self._fc2,
             self._phonon_supercell,
@@ -122,9 +120,103 @@ class Phono3py:
             frequency_scale_factor=frequency_scale_factor)
         self._interaction.set_nac_q_direction(nac_q_direction=nac_q_direction)
 
+    def get_interaction_strength(self):
+        return self._interaction
+        
+    def produce_fc2(self,
+                    forces_fc2,
+                    disp_dataset,
+                    is_permutation_symmetry=False,
+                    is_translational_symmetry=False):
+        for forces, disp1 in zip(forces_fc2, disp_dataset['first_atoms']):
+            disp1['forces'] = forces
+        self._fc2 = get_fc2(self._phonon_supercell,
+                            self._phonon_supercell_symmetry,
+                            disp_dataset)
+        if is_permutation_symmetry:
+            set_permutation_symmetry(self._fc2)
+        if is_translational_symmetry:
+            set_translational_invariance(self._fc2)
+
+    def produce_fc3(self,
+                    forces_fc3,
+                    disp_dataset,
+                    cutoff_distance=None, # set fc3 zero
+                    is_translational_symmetry=False,
+                    is_permutation_symmetry=False):
+        for forces, disp1 in zip(forces_fc3, disp_dataset['first_atoms']):
+            disp1['forces'] = forces
+        self._fc2 = get_fc2(self._supercell, self._symmetry, disp_dataset)
+        if is_permutation_symmetry:
+            set_permutation_symmetry(self._fc2)
+        if is_translational_symmetry:
+            set_translational_invariance(self._fc2)
+        
+        count = len(disp_dataset['first_atoms'])
+        for disp1 in disp_dataset['first_atoms']:
+            for disp2 in disp1['second_atoms']:
+                disp2['delta_forces'] = forces_fc3[count] - disp1['forces']
+                count += 1
+        self._fc3 = get_fc3(
+            self._supercell,
+            disp_dataset,
+            self._fc2,
+            self._symmetry,
+            is_translational_symmetry=is_translational_symmetry,
+            is_permutation_symmetry=is_permutation_symmetry,
+            verbose=self._log_level)
+
+        # Reduction of number of supercell-force calculations
+        if 'cutoff_distance' in disp_dataset:
+            if self._log_level:
+                print ("Cutting-off fc3 (cut-off distance: %f)" %
+                       disp_dataset['cutoff_distance'])
+            cutoff_fc3(self._fc3,
+                       self._supercell,
+                       disp_dataset,
+                       self._symmetry,
+                       verbose=self._log_level)
+
+        # Set fc3 elements zero beyond cutoff_distance
+        if cutoff_distance:
+            if self._log_level:
+                print ("Cutting-off fc3 by zero (cut-off distance: %f)" %
+                       cutoff_distance)
+            self.cutoff_fc3_by_zero(cutoff_distance)
+
+        # Symmetrize fc3_r
+        if is_permutation_symmetry:
+            if self._log_level:
+                print "Symmetrizing fc3 in real space index exchange..."
+            set_permutation_symmetry_fc3(self._fc3)
+
+    def cutoff_fc3_by_zero(self, cutoff_distance):
+        cutoff_fc3_by_zero(self._fc3,
+                           self._supercell,
+                           cutoff_distance,
+                           self._symprec)
+            
+    def set_permutation_symmetry(self):
+        if self._fc2 is not None:
+            set_permutation_symmetry(self._fc2)
+        if self._fc3 is not None:
+            set_permutation_symmetry_fc3(self._fc3)
+
+    def set_translational_invariance(self):
+        if self._fc2 is not None:
+            set_translational_invariance(self._fc2)
+        if self._fc3 is not None:
+            set_translational_invariance_fc3(self._fc3)
+        
+    def get_fc2(self):
+        return self._fc2
+
     def set_fc2(self, fc2):
         self._fc2 = fc2
-        
+
+    def get_fc3(self):
+        return self._fc3
+
     def set_fc3(self, fc3):
         self._fc3 = fc3
 
@@ -178,8 +270,7 @@ class Phono3py:
     def run_imag_self_energy(self,
                              grid_points,
                              frequency_step=0.1,
-                             temperatures=[0.0, 300.0],
-                             output_filename=None):
+                             temperatures=[0.0, 300.0]):
         self._grid_points = grid_points
         self._temperatures = temperatures
         self._imag_self_energy, self._frequency_points = get_imag_self_energy(
@@ -364,16 +455,16 @@ class Phono3py:
                 self._unitcell, self._phonon_supercell_matrix, self._symprec)
 
     def _build_phonon_primitive_cell(self):
-        self._phonon_primitive = self._get_primitive_cell(
-            self._phonon_supercell,
-            self._phonon_supercell_matrix,
-            self._primitive_matrix)
+        if self._phonon_supercell_matrix is None:
+            self._phonon_primitive = self._primitive
+        else:
+            self._phonon_primitive = self._get_primitive_cell(
+                self._phonon_supercell,
+                self._phonon_supercell_matrix,
+                self._primitive_matrix)
 
     def _get_primitive_cell(self, supercell, supercell_matrix, primitive_matrix):
-        if supercell_matrix is None:
-            inv_supercell_matrix = np.eye(3)
-        else:
-            inv_supercell_matrix = np.linalg.inv(supercell_matrix)
+        inv_supercell_matrix = np.linalg.inv(supercell_matrix)
         if primitive_matrix is None:
             t_mat = inv_supercell_matrix
         else:
