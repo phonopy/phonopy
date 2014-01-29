@@ -639,7 +639,6 @@ else:
         file_exists(filename, log_level)
         if log_level:
             print "Displacement dataset is read from %s." % filename
-            print "Solving fc3:"
         disp_dataset = parse_disp_fc3_yaml(filename=filename)
         forces_fc3 = parse_FORCES_FC3(disp_dataset)
         phono3py.produce_fc3(

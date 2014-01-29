@@ -15,7 +15,6 @@ def get_fc3(supercell,
     num_atom = supercell.get_number_of_atoms()
     fc3 = np.zeros((num_atom, num_atom, num_atom, 3, 3, 3), dtype='double')
 
-    
     if 'cutoff_distance' in disp_dataset:
         _get_fc3_least_atoms(fc3,
                              supercell,

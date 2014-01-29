@@ -144,6 +144,9 @@ class Phono3py:
                     cutoff_distance=None, # set fc3 zero
                     is_translational_symmetry=False,
                     is_permutation_symmetry=False):
+
+        if self._log_level:
+            print "Solving fc2"
         for forces, disp1 in zip(forces_fc3, disp_dataset['first_atoms']):
             disp1['forces'] = forces
         self._fc2 = get_fc2(self._supercell, self._symmetry, disp_dataset)
@@ -152,6 +155,8 @@ class Phono3py:
         if is_translational_symmetry:
             set_translational_invariance(self._fc2)
         
+        if self._log_level:
+            print "Solving fc3:"
         count = len(disp_dataset['first_atoms'])
         for disp1 in disp_dataset['first_atoms']:
             for disp2 in disp1['second_atoms']:
