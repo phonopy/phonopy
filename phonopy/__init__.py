@@ -45,7 +45,8 @@ from phonopy.phonon.thermal_properties import ThermalProperties
 from phonopy.phonon.mesh import Mesh
 from phonopy.units import VaspToTHz
 from phonopy.phonon.dos import TotalDos, PartialDos
-from phonopy.phonon.thermal_displacement import ThermalDisplacements, ThermalDistances, ThermalDisplacementMatrices
+from phonopy.phonon.thermal_displacement import ThermalDisplacements, \
+     ThermalDistances, ThermalDisplacementMatrices
 from phonopy.phonon.animation import Animation
 from phonopy.phonon.modulation import Modulation
 from phonopy.phonon.qpoints_mode import write_yaml as write_yaml_qpoints
@@ -58,9 +59,12 @@ class Phonopy:
                  unitcell,
                  supercell_matrix,
                  primitive_matrix=None,
+                 nac_params=None,
                  distance=0.01,
                  factor=VaspToTHz,
                  is_auto_displacements=True,
+                 dynamical_matrix_decimals=None,
+                 force_constants_decimals=None,
                  symprec=1e-5,
                  is_symmetry=True,
                  log_level=0):
@@ -94,9 +98,12 @@ class Phonopy:
         # set_force_constants or set_forces
         self._displacement_dataset = None
         self._force_constants = None
+        self._force_constants_decimals = force_constants_decimals
         
         # set_dynamical_matrix
         self._dynamical_matrix = None
+        self._nac_params = nac_params
+        self._dynamical_matrix_decimals = dynamical_matrix_decimals
 
         # set_band_structure
         self._band_structure = None
@@ -135,15 +142,15 @@ class Phonopy:
                          primitive_matrix=None,
                          sets_of_forces=None,
                          displacement_dataset=None,
-                         force_constants=None):
+                         force_constants=None,
+                         is_nac=None):
         print 
         print ("********************************** Warning"
                "**********************************")
         print "set_post_process will be obsolete."
         print ("  produce_force_constants is used instead of set_post_process"
                " for producing")
-        print ("  force constants from forces."
-               " Then set_dynamical_matrix has to be called.")
+        print ("  force constants from forces.")
         if primitive_matrix is not None:
             print ("  primitive_matrix has to be given at Phonopy::__init__"
                    " object creation.")
@@ -165,11 +172,6 @@ class Phonopy:
             
         if self._displacement_dataset is not None:
             self.produce_force_constants()
-
-        if self._force_constants is not None and self._primitive is not None:
-            self.set_dynamical_matrix()
-        else:
-            print "Dynamical matrix was not created."
 
     def set_masses(self, masses):
         p_masses = np.array(masses)
@@ -210,47 +212,21 @@ class Phonopy:
         return self._factor
     unit_conversion_factor = property(get_unit_conversion_factor)
 
-    def produce_force_constants(self,
-                                calculate_full_force_constants=True,
-                                decimals=None):
+    def produce_force_constants(self, calculate_full_force_constants=True):
         if calculate_full_force_constants:
-            self._run_force_constants_from_forces(decimals=decimals)
+            self._run_force_constants_from_forces(
+                decimals=self._force_constants_decimals)
         else:
             p2s_map = self._primitive.get_primitive_to_supercell_map()
             self._run_force_constants_from_forces(
                 distributed_atom_list=p2s_map,
-                decimals=decimals)
-                
-    def set_dynamical_matrix(self, nac_params=None, decimals=None):
-        if nac_params is None:
-            self._dynamical_matrix = DynamicalMatrix(
-                self._supercell,
-                self._primitive,
-                self._force_constants,
-                decimals=decimals,
-                symprec=self._symprec)
-        else:
-            self._dynamical_matrix = DynamicalMatrixNAC(
-                self._supercell,
-                self._primitive,
-                self._force_constants,
-                nac_params=nac_params,
-                decimals=decimals,
-                symprec=self._symprec)
+                decimals=self._force_constants_decimals)
 
-    def set_nac_params(self, nac_params=None, method=None, decimals=None):
-        print 
-        print ("********************************** Warning"
-               "**********************************")
-        print "set_nac_params will be obsolete."
-        print ("  set_dynamical_matrix(nac_params=xxx) is used instead of"
-               " set_nac_params.")
+    def set_nac_params(self, nac_params=None, method=None):
         if method is not None:
-            print ("  Keyword argument of \"method\" is no more suppored.")
-        print ("******************************************"
-               "**********************************")
-        print 
-        self.set_dynamical_matrix(nac_params=nac_params, decimals=decimals)
+            print "set_nac_params:"
+            print "  Keyword argument of \"method\" is not more supported."
+        self._nac_params = nac_params
         
     def generate_displacements(self,
                                distance=0.01,
@@ -380,6 +356,7 @@ class Phonopy:
                                      self._symprec)
 
     def get_dynamical_matrix_at_q(self, q):
+        self._set_dynamical_matrix()
         self._dynamical_matrix.set_dynamical_matrix(q)
         return self._dynamical_matrix.get_dynamical_matrix()
 
@@ -390,6 +367,7 @@ class Phonopy:
         
         q: q-vector in reduced coordinates of primitive cell
         """
+        self._set_dynamical_matrix()
         self._dynamical_matrix.set_dynamical_matrix(q)
         dm = self._dynamical_matrix.get_dynamical_matrix()
         frequencies = []
@@ -408,6 +386,7 @@ class Phonopy:
         
         q: q-vector in reduced coordinates of primitive cell
         """
+        self._set_dynamical_matrix()
         self._dynamical_matrix.set_dynamical_matrix(q)
         dm = self._dynamical_matrix.get_dynamical_matrix()
         frequencies = []
@@ -426,7 +405,7 @@ class Phonopy:
                            bands,
                            is_eigenvectors=False,
                            is_band_connection=False):
-
+        self._set_dynamical_matrix()
         self._band_structure = BandStructure(
             bands,
             self._dynamical_matrix,
@@ -456,7 +435,7 @@ class Phonopy:
                  is_mesh_symmetry=True,
                  is_eigenvectors=False,
                  is_gamma_center=False):
-
+        self._set_dynamical_matrix()
         self._mesh = Mesh(
             self._dynamical_matrix,
             mesh,
@@ -741,7 +720,7 @@ class Phonopy:
                            is_eigenvectors=False,
                            write_dynamical_matrices=False,
                            factor=VaspToTHz):
-        
+        self._set_dynamical_matrix()
         write_yaml_qpoints(q_points,
                            self._dynamical_matrix,
                            nac_q_direction=nac_q_direction,
@@ -759,6 +738,7 @@ class Phonopy:
                         num_div=None,
                         shift=None,
                         filename=None):
+        self._set_dynamical_matrix()
         if q_point==None:
             animation = Animation([0, 0, 0],
                                   self._dynamical_matrix,
@@ -842,6 +822,7 @@ class Phonopy:
                         delta_q=None,
                         derivative_order=None,
                         nac_q_direction=None):
+        self._set_dynamical_matrix()
         self._modulation = Modulation(self._dynamical_matrix,
                                       dimension=dimension,
                                       phonon_modes=phonon_modes,
@@ -876,6 +857,7 @@ class Phonopy:
 
     # Characters of irreducible representations
     def set_irreps(self, q, degeneracy_tolerance=1e-4):
+        self._set_dynamical_matrix()
         self._irreps = IrReps(
             self._dynamical_matrix,
             q,
@@ -899,6 +881,7 @@ class Phonopy:
     def set_group_velocity(self,
                            q_points=None,
                            q_length=1e-4):
+        self._set_dynamical_matrix()
         self._group_velocity = GroupVelocity(
             self._dynamical_matrix,
             q_length=q_length,
@@ -922,6 +905,23 @@ class Phonopy:
                 self._displacement_dataset,
                 atom_list=distributed_atom_list,
                 decimals=decimals)
+
+    def _set_dynamical_matrix(self):
+        if self._nac_params is None:
+            self._dynamical_matrix = DynamicalMatrix(
+                self._supercell,
+                self._primitive,
+                self._force_constants,
+                decimals=self._dynamical_matrix_decimals,
+                symprec=self._symprec)
+        else:
+            self._dynamical_matrix = DynamicalMatrixNAC(
+                self._supercell,
+                self._primitive,
+                self._force_constants,
+                nac_params=self._nac_params,
+                decimals=self._dynamical_matrix_decimals,
+                symprec=self._symprec)
 
     def _search_symmetry(self):
         self._symmetry = Symmetry(self._supercell,

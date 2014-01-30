@@ -575,6 +575,8 @@ else:
                      primitive_matrix=settings.get_primitive_matrix(),
                      factor=factor,
                      is_auto_displacements=False,
+                     dynamical_matrix_decimals=settings.get_dm_decimals(),
+                     force_constants_decimals=settings.get_fc_decimals(),
                      symprec=options.symprec,
                      is_symmetry=settings.get_is_symmetry(),
                      log_level=log_level)
@@ -758,10 +760,9 @@ if (settings.get_is_force_constants() == "write" or
     settings.get_fc_symmetry_iteration() > 0 or
     settings.get_fc_spg_symmetry()):
     # Need to calculate full force constant tensors
-    phonon.produce_force_constants(decimals=settings.get_fc_decimals())
+    phonon.produce_force_constants()
 else: # Only force constants between atoms in primitive cell and in supercell
-    phonon.produce_force_constants(calculate_full_force_constants=False,
-                                   decimals=settings.get_fc_decimals())
+    phonon.produce_force_constants(calculate_full_force_constants=False)
 
 # Impose cutoff radius on force constants
 cutoff_radius = settings.get_cutoff_radius()
@@ -796,10 +797,7 @@ if settings.get_is_nac():
             if log_level > 0:
                 print_end()
             sys.exit(1)
-        phonon.set_dynamical_matrix(nac_params=nac_params,
-                                    decimals=settings.get_dm_decimals())
-else:
-    phonon.set_dynamical_matrix(decimals=settings.get_dm_decimals())
+        phonon.set_nac_params(nac_params=nac_params)
 
 # Write FORCE_CONSTANTS
 if settings.get_is_force_constants() == "write":
