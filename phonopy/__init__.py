@@ -210,6 +210,48 @@ class Phonopy:
         return self._factor
     unit_conversion_factor = property(get_unit_conversion_factor)
 
+    def produce_force_constants(self,
+                                calculate_full_force_constants=True,
+                                decimals=None):
+        if calculate_full_force_constants:
+            self._run_force_constants_from_forces(decimals=decimals)
+        else:
+            p2s_map = self._primitive.get_primitive_to_supercell_map()
+            self._run_force_constants_from_forces(
+                distributed_atom_list=p2s_map,
+                decimals=decimals)
+                
+    def set_dynamical_matrix(self, nac_params=None, decimals=None):
+        if nac_params is None:
+            self._dynamical_matrix = DynamicalMatrix(
+                self._supercell,
+                self._primitive,
+                self._force_constants,
+                decimals=decimals,
+                symprec=self._symprec)
+        else:
+            self._dynamical_matrix = DynamicalMatrixNAC(
+                self._supercell,
+                self._primitive,
+                self._force_constants,
+                nac_params=nac_params,
+                decimals=decimals,
+                symprec=self._symprec)
+
+    def set_nac_params(self, nac_params=None, method=None, decimals=None):
+        print 
+        print ("********************************** Warning"
+               "**********************************")
+        print "set_nac_params will be obsolete."
+        print ("  set_dynamical_matrix(nac_params=xxx) is used instead of"
+               " set_nac_params.")
+        if method is not None:
+            print ("  Keyword argument of \"method\" is no more suppored.")
+        print ("******************************************"
+               "**********************************")
+        print 
+        self.set_dynamical_matrix(nac_params=nac_params, decimals=decimals)
+        
     def generate_displacements(self,
                                distance=0.01,
                                is_plusminus='auto',
@@ -275,37 +317,6 @@ class Phonopy:
 
     def get_supercells_with_displacements(self):
         return self._supercells_with_displacements
-
-    def produce_force_constants(self,
-                                calculate_full_force_constants=True,
-                                decimals=None):
-        if calculate_full_force_constants:
-            self._run_force_constants_from_forces(decimals=decimals)
-        else:
-            p2s_map = self._primitive.get_primitive_to_supercell_map()
-            self._run_force_constants_from_forces(
-                distributed_atom_list=p2s_map,
-                decimals=decimals)
-                
-    def set_nac_params(self, nac_params, method='wang', decimals=None):
-        self.set_dynamical_matrix(is_nac=True, decimals=decimals) 
-        self._dynamical_matrix.set_nac_params(nac_params, method=method)
-
-    def set_dynamical_matrix(self, is_nac=False, decimals=None):
-        if is_nac:
-            self._dynamical_matrix = DynamicalMatrixNAC(
-                self._supercell,
-                self._primitive,
-                self._force_constants,
-                decimals=decimals,
-                symprec=self._symprec)
-        else:
-            self._dynamical_matrix = DynamicalMatrix(
-                self._supercell,
-                self._primitive,
-                self._force_constants,
-                decimals=decimals,
-                symprec=self._symprec)
 
     def get_dynamical_matrix(self):
         return self._dynamical_matrix

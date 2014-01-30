@@ -62,7 +62,8 @@ class DynamicalMatrix:
                  symprec=1e-5):
         self._scell = supercell
         self._pcell = primitive
-        self._force_constants = force_constants
+        self._force_constants = np.array(force_constants,
+                                         dtype='double', order='C')
         self._freq_scale = frequency_scale_factor
         self._decimals = decimals
         self._symprec = symprec
@@ -218,6 +219,8 @@ class DynamicalMatrixNAC(DynamicalMatrix):
                  supercell,
                  primitive,
                  force_constants,
+                 nac_params=None,
+                 method='wang',
                  frequency_scale_factor=None,
                  decimals=None,
                  symprec=1e-5):
@@ -230,9 +233,11 @@ class DynamicalMatrixNAC(DynamicalMatrix):
                                  decimals=decimals,
                                  symprec=1e-5)
         self._bare_force_constants = self._force_constants.copy()
-        self._method = None
-        self._nac_params = None
+
         self._nac = True
+        self._method = None
+        if nac_params is not None:
+            self.set_nac_params(nac_params, method=method)
 
     def get_born_effective_charges(self):
         return self._born
@@ -244,12 +249,9 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         return self._dielectric
     
     def set_nac_params(self, nac_params, method='wang'):
-        self._nac_params = nac_params
         self._method = method
-
-        self._born = np.array(self._nac_params['born'],
-                              dtype='double', order='C')
-        factor = self._nac_params['factor']
+        self._born = np.array(nac_params['born'], dtype='double', order='C')
+        factor = nac_params['factor']
         if (isinstance(factor, list) or
             isinstance(factor, tuple)):
             self._unit_conversion = factor[0]
@@ -257,7 +259,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         else:
             self._unit_conversion = factor
             self._damping_factor = DAMPING_FACTOR
-        self._dielectric = np.array(self._nac_params['dielectric'],
+        self._dielectric = np.array(nac_params['dielectric'],
                                     dtype='double', order='C')
 
     def set_dynamical_matrix(self, q_red, q_direction=None, verbose=False):
@@ -280,7 +282,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             / np.dot(q, np.dot(self._dielectric, q))
 
         # Parlinski method
-        if self._method=='parlinski':
+        if self._method == 'parlinski':
             charge_sum = self._get_charge_sum(num_atom, q)
             nac_q = np.zeros((num_atom * 3, num_atom * 3), dtype='double')
             m = self._pcell.get_masses()
