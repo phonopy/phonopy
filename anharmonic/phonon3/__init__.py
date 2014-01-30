@@ -1,13 +1,15 @@
 import numpy as np
 from phonopy.structure.symmetry import Symmetry
 from phonopy.structure.cells import get_supercell, get_primitive
-from anharmonic.phonon3.imag_self_energy import get_imag_self_energy, write_imag_self_energy, get_linewidth, write_linewidth
+from anharmonic.phonon3.imag_self_energy import get_imag_self_energy, \
+     write_imag_self_energy, get_linewidth, write_linewidth
 from anharmonic.phonon3.frequency_shift import FrequencyShift
 from anharmonic.phonon3.interaction import Interaction
 from anharmonic.phonon3.conductivity_RTA import get_thermal_conductivity
 from anharmonic.phonon3.joint_dos import JointDos
 from anharmonic.phonon3.gruneisen import Gruneisen
-from anharmonic.phonon3.displacement_fc3 import get_third_order_displacements, direction_to_displacement
+from anharmonic.phonon3.displacement_fc3 import get_third_order_displacements, \
+     direction_to_displacement
 from anharmonic.file_IO import write_frequency_shift, write_joint_dos
 from anharmonic.other.isotope import Isotope
 from phonopy.harmonic.force_constants import get_fc2, set_permutation_symmetry, \
@@ -120,14 +122,13 @@ class Phono3py:
             frequency_scale_factor=frequency_scale_factor)
         self._interaction.set_nac_q_direction(nac_q_direction=nac_q_direction)
 
-    def get_interaction_strength(self):
-        return self._interaction
-        
     def produce_fc2(self,
                     forces_fc2,
                     disp_dataset,
                     is_permutation_symmetry=False,
                     is_translational_symmetry=False):
+        if self._log_level:
+            print "Solving fc2"
         for forces, disp1 in zip(forces_fc2, disp_dataset['first_atoms']):
             disp1['forces'] = forces
         self._fc2 = get_fc2(self._phonon_supercell,
@@ -144,16 +145,15 @@ class Phono3py:
                     cutoff_distance=None, # set fc3 zero
                     is_translational_symmetry=False,
                     is_permutation_symmetry=False):
-
         if self._log_level:
             print "Solving fc2"
         for forces, disp1 in zip(forces_fc3, disp_dataset['first_atoms']):
             disp1['forces'] = forces
-        self._fc2 = get_fc2(self._supercell, self._symmetry, disp_dataset)
+        fc2 = get_fc2(self._supercell, self._symmetry, disp_dataset)
         if is_permutation_symmetry:
-            set_permutation_symmetry(self._fc2)
+            set_permutation_symmetry(fc2)
         if is_translational_symmetry:
-            set_translational_invariance(self._fc2)
+            set_translational_invariance(fc2)
         
         if self._log_level:
             print "Solving fc3:"
@@ -165,7 +165,7 @@ class Phono3py:
         self._fc3 = get_fc3(
             self._supercell,
             disp_dataset,
-            self._fc2,
+            fc2,
             self._symmetry,
             is_translational_symmetry=is_translational_symmetry,
             is_permutation_symmetry=is_permutation_symmetry,
@@ -177,6 +177,10 @@ class Phono3py:
                 print ("Cutting-off fc3 by zero (cut-off distance: %f)" %
                        cutoff_distance)
             self.cutoff_fc3_by_zero(cutoff_distance)
+
+        # Set fc2
+        if self._fc2 is None:
+            self._fc2 = fc2
 
     def cutoff_fc3_by_zero(self, cutoff_distance):
         cutoff_fc3_by_zero(self._fc3,
@@ -195,6 +199,25 @@ class Phono3py:
             set_translational_invariance(self._fc2)
         if self._fc3 is not None:
             set_translational_invariance_fc3(self._fc3)
+        
+    def generate_displacements(self,
+                               distance=0.01,
+                               cutoff_pair_distance=None,
+                               is_plusminus='auto',
+                               is_diagonal=True):
+        direction_dataset = get_third_order_displacements(
+            self._supercell,
+            self._symmetry,
+            is_plusminus=is_plusminus,
+            is_diagonal=is_diagonal)
+        self._displacement_dataset = direction_to_displacement(
+            direction_dataset,
+            distance,
+            self._supercell,
+            cutoff_distance=cutoff_pair_distance)
+
+    def get_interaction_strength(self):
+        return self._interaction
         
     def get_fc2(self):
         return self._fc2
@@ -233,22 +256,6 @@ class Phono3py:
     def get_phonon_supercell_symmetry(self):
         return self._phonon_supercell_symmetry
         
-    def generate_displacements(self,
-                               distance=0.01,
-                               cutoff_pair_distance=None,
-                               is_plusminus='auto',
-                               is_diagonal=True):
-        direction_dataset = get_third_order_displacements(
-            self._supercell,
-            self._symmetry,
-            is_plusminus=is_plusminus,
-            is_diagonal=is_diagonal)
-        self._displacement_dataset = direction_to_displacement(
-            direction_dataset,
-            distance,
-            self._supercell,
-            cutoff_distance=cutoff_pair_distance)
-
     def set_displacement_dataset(self, dataset):
         self._displacement_dataset = dataset
         

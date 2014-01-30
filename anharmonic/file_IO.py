@@ -14,6 +14,7 @@ from phonopy.file_IO import write_FORCE_SETS_vasp, read_force_constant_vasprun_x
 
 def write_supercells_with_displacements(supercell,
                                         dataset,
+                                        create_POSCARs=True,
                                         filename='disp_fc3.yaml'):
     lattice = supercell.get_cell()
     
@@ -46,14 +47,15 @@ def write_supercells_with_displacements(supercell,
     count2 = num_first + 1
     for disp1 in dataset['first_atoms']:
         disp_cart1 = disp1['displacement']
-        positions = supercell.get_positions()
-        positions[disp1['number']] += disp_cart1
-        atoms = Atoms(numbers=supercell.get_atomic_numbers(),
-                      masses=supercell.get_masses(),
-                      positions=positions,
-                      cell=lattice,
-                      pbc=True)
-        vasp.write_vasp('POSCAR-%05d' % count1, atoms, direct=True)
+        if create_POSCARs:
+            positions = supercell.get_positions()
+            positions[disp1['number']] += disp_cart1
+            atoms = Atoms(numbers=supercell.get_atomic_numbers(),
+                          masses=supercell.get_masses(),
+                          positions=positions,
+                          cell=lattice,
+                          pbc=True)
+            vasp.write_vasp('POSCAR-%05d' % count1, atoms, direct=True)
 
         # YAML
         w.write("- number: %5d\n" % (disp1['number'] + 1))
@@ -87,21 +89,20 @@ def write_supercells_with_displacements(supercell,
  
             w.write("    displacements:\n")
             for disp_cart2 in displacements:
-                positions = supercell.get_positions()
-                positions[disp1['number']] += disp_cart1
-                positions[atom2] += disp_cart2
-                atoms = Atoms(numbers=supercell.get_atomic_numbers(),
-                              masses=supercell.get_masses(),
-                              positions=positions,
-                              cell=lattice,
-                              pbc=True)
-                if included or included is None:
+                if create_POSCARs and (included or included is None):
+                    positions = supercell.get_positions()
+                    positions[disp1['number']] += disp_cart1
+                    positions[atom2] += disp_cart2
+                    atoms = Atoms(numbers=supercell.get_atomic_numbers(),
+                                  masses=supercell.get_masses(),
+                                  positions=positions,
+                                  cell=lattice,
+                                  pbc=True)
                     vasp.write_vasp('POSCAR-%05d' % count2, atoms, direct=True)
 
                 # YAML
                 w.write("    - [%20.16f,%20.16f,%20.16f ] # %05d\n" %
-                           (disp_cart2[0], disp_cart2[1], disp_cart2[2],
-                            count2))
+                        (disp_cart2[0], disp_cart2[1], disp_cart2[2], count2))
                 count2 += 1
 
     w.write("lattice:\n")

@@ -42,7 +42,7 @@ from optparse import OptionParser
 from phonopy.interface.vasp import read_vasp
 from phonopy.structure.cells import print_cell
 from phonopy.harmonic.force_constants import show_drift_force_constants
-from phonopy.file_IO import parse_BORN, parse_FORCE_SETS
+from phonopy.file_IO import parse_BORN
 from phonopy.units import VaspToTHz
 from anharmonic.phonon3.fc3 import show_drift_fc3
 from anharmonic.file_IO import parse_disp_fc2_yaml, parse_disp_fc3_yaml, \
@@ -679,7 +679,6 @@ else:
                 filename = 'disp_fc3.' + input_filename + '.yaml'
             if log_level:
                 print "Displacement dataset is read from %s." % filename
-                print "Solving fc2:"
             file_exists(filename, log_level)
             disp_dataset = parse_disp_fc3_yaml(filename=filename)
             forces_fc3 = parse_FORCES_FC3(disp_dataset)
@@ -691,7 +690,6 @@ else:
             filename = 'disp_fc2.' + input_filename + '.yaml'
         if log_level:
             print "Displacement dataset is read from %s." % filename
-            print "Solving fc2:"
         file_exists(filename, log_level)
         disp_dataset = parse_disp_fc2_yaml(filename=filename)
         forces_fc2 = parse_FORCES_FC2(disp_dataset)
