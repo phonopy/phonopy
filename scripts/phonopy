@@ -798,8 +798,8 @@ if settings.get_is_nac():
             sys.exit(1)
         phonon.set_dynamical_matrix(nac_params=nac_params,
                                     decimals=settings.get_dm_decimals())
-    else:
-        phonon.set_dynamical_matrix(decimals=settings.get_dm_decimals())
+else:
+    phonon.set_dynamical_matrix(decimals=settings.get_dm_decimals())
 
 # Write FORCE_CONSTANTS
 if settings.get_is_force_constants() == "write":
