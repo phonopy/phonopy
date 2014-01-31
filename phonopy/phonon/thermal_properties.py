@@ -49,18 +49,36 @@ def mode_S(temp, freqs):
 
 
 class ThermalPropertiesBase:
-    def __init__(self, frequencies, weights=None, eigenvectors=None):
-        self._frequencies = frequencies
-        self._eigenvectors = eigenvectors
+    def __init__(self,
+                 frequencies,
+                 weights=None,
+                 eigenvectors=None,
+                 is_projection=False,
+                 band_indices=None,
+                 cutoff_frequency=None):
+        if band_indices is not None:
+            bi = np.hstack(band_indices).astype('intc')
+            self._frequencies = np.array(frequencies[:, bi],
+                                         dtype='double', order='C')
+            if eigenvectors is not None:
+                self._eigenvectors = np.array(eigenvectors[:, :, bi],
+                                              dtype='double', order='C')
+        else:
+            self._frequencies = frequencies
+            self._eigenvectors = eigenvectors
+
+        if cutoff_frequency is not None:
+            self._frequencies = np.where(self._frequencies > cutoff_frequency,
+                                         self._frequencies, -1)
+        self._frequencies = np.array(self._frequencies,
+                                     dtype='double', order='C') * THzToEv
+
         if weights == None:
             self._weights = np.ones(frequencies.shape[0], dtype='int32')
         else:
             self._weights = weights
-        self._projection = False
+        self._is_projection = is_projection
 
-    def set_projection(self, projection):
-        self._projection = projection
-        
     def get_free_energy(self, t):
         free_energy = self._calculate_thermal_property(mode_F, t)
         return free_energy / np.sum(self._weights) * EvTokJmol
@@ -74,7 +92,7 @@ class ThermalPropertiesBase:
         return entropy / np.sum(self._weights) * EvTokJmol
 
     def _calculate_thermal_property(self, func, t):
-        if not self._projection:
+        if not self._is_projection:
             t_property = 0.0
             if t > 0:
                 for freqs, w in zip(self._frequencies, self._weights):
@@ -100,16 +118,16 @@ class ThermalProperties(ThermalPropertiesBase):
                  weights=None,
                  eigenvectors=None,
                  is_projection=False,
+                 band_indices=None,
                  cutoff_frequency=None):
-        ThermalPropertiesBase.__init__(self, frequencies, weights, eigenvectors)
-        if cutoff_frequency is not None:
-            self._frequencies = np.where(frequencies > cutoff_frequency,
-                                         frequencies, -1)
-        else:
-            self._frequencies = np.array(frequencies,
-                                         dtype='double', order='C') * THzToEv
+        ThermalPropertiesBase.__init__(self,
+                                       frequencies,
+                                       weights=weights,
+                                       eigenvectors=eigenvectors,
+                                       is_projection=is_projection,
+                                       band_indices=band_indices,
+                                       cutoff_frequency=cutoff_frequency)
         self._set_high_T_entropy_and_zero_point_energy()
-        self._is_projection = is_projection
         
     def get_zero_point_energy(self):
         return self._zero_point_energy
@@ -136,7 +154,6 @@ class ThermalProperties(ThermalPropertiesBase):
     def set_thermal_properties(self, t_step=10, t_max=1000, t_min=0):
         temperatures = np.arange(t_min, t_max + t_step / 2.0, t_step,
                                  dtype='double')
-
         fe = []
         entropy = []
         cv = []
@@ -149,7 +166,6 @@ class ThermalProperties(ThermalPropertiesBase):
                 entropy.append(props[1] * EvTokJmol * 1000)
                 cv.append(props[2] * EvTokJmol * 1000)
         except ImportError:
-            self.set_projection(False)
             for t in temperatures:
                 props = self._get_py_thermal_properties(t)
                 fe.append(props[0])
@@ -166,7 +182,6 @@ class ThermalProperties(ThermalPropertiesBase):
             entropy = []
             cv = []
             energy = []
-            self.set_projection(True)
             for t in temperatures:
                 fe.append(self.get_free_energy(t))
                 entropy.append(self.get_entropy(t) * 1000,)

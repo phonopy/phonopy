@@ -106,6 +106,7 @@ parser = OptionParser()
 parser.set_defaults(
     displacement_distance=None,
     anime=None,
+    band_indices=None,
     band_paths=None,
     band_points=None,
     cutoff_frequency=None,
@@ -178,6 +179,8 @@ parser.add_option("--band_connection", dest="is_band_connection",
                   help="Treat band crossings")
 parser.add_option("--band_points", dest="band_points",
                   type="int", help="Number of points calculated on a band segment in the band structure mode")
+parser.add_option("--bi", "--band_indices", dest="band_indices", type="string",
+                  help="Band indices where life time is calculated")
 parser.add_option("-c", "--cell", dest="cell_poscar",
                   action="store", type="string",
                   help="Read unit cell", metavar="FILE")
@@ -966,6 +969,7 @@ elif run_mode == 'mesh':
             tmax,
             tmin,
             is_projection=settings.get_is_projected_thermal_properties(),
+            band_indices=settings.get_band_indices(),
             cutoff_frequency=settings.get_cutoff_frequency())
         phonon.write_yaml_thermal_properties()
 

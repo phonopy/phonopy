@@ -38,7 +38,9 @@ from phonopy.structure.atoms import Atoms
 from phonopy.structure.symmetry import Symmetry
 from phonopy.structure.cells import get_supercell, get_primitive
 from phonopy.harmonic.displacement import get_least_displacements
-from phonopy.harmonic.force_constants import get_fc2, symmetrize_force_constants, rotational_invariance, cutoff_force_constants, set_tensor_symmetry
+from phonopy.harmonic.force_constants import get_fc2, \
+     symmetrize_force_constants, rotational_invariance, \
+     cutoff_force_constants, set_tensor_symmetry
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC
 from phonopy.phonon.band_structure import BandStructure
 from phonopy.phonon.thermal_properties import ThermalProperties
@@ -471,6 +473,7 @@ class Phonopy:
                                t_max=1000,
                                t_min=0,
                                is_projection=False,
+                               band_indices=None,
                                cutoff_frequency=None):
         if self._mesh is None:
             print "set_mesh has to be done before set_thermal_properties"
@@ -480,8 +483,11 @@ class Phonopy:
                                    weights=self._mesh.get_weights(),
                                    eigenvectors=self._mesh.get_eigenvectors(),
                                    is_projection=is_projection,
+                                   band_indices=band_indices,
                                    cutoff_frequency=cutoff_frequency)
-            tp.set_thermal_properties(t_step, t_max, t_min)
+            tp.set_thermal_properties(t_step=t_step,
+                                      t_max=t_max,
+                                      t_min=t_min)
             self._thermal_properties = tp
 
     def get_thermal_properties(self):
