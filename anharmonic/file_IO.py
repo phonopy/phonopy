@@ -12,13 +12,7 @@ from phonopy.file_IO import write_FORCE_SETS_vasp, read_force_constant_vasprun_x
 #
 ###########
 
-def write_supercells_with_displacements(supercell,
-                                        dataset,
-                                        create_POSCARs=True,
-                                        filename='disp_fc3.yaml'):
-    lattice = supercell.get_cell()
-    
-    # YAML
+def write_disp_fc3_yaml(supercell, dataset, filename='disp_fc3.yaml'):
     w = open(filename, 'w')
     w.write("natom: %d\n" %  dataset['natom'])
 
@@ -47,17 +41,6 @@ def write_supercells_with_displacements(supercell,
     count2 = num_first + 1
     for disp1 in dataset['first_atoms']:
         disp_cart1 = disp1['displacement']
-        if create_POSCARs:
-            positions = supercell.get_positions()
-            positions[disp1['number']] += disp_cart1
-            atoms = Atoms(numbers=supercell.get_atomic_numbers(),
-                          masses=supercell.get_masses(),
-                          positions=positions,
-                          cell=lattice,
-                          pbc=True)
-            vasp.write_vasp('POSCAR-%05d' % count1, atoms, direct=True)
-
-        # YAML
         w.write("- number: %5d\n" % (disp1['number'] + 1))
         w.write("  displacement:\n")
         w.write("    [%20.16f,%20.16f,%20.16f ] # %05d\n" %
@@ -65,45 +48,29 @@ def write_supercells_with_displacements(supercell,
         w.write("  second_atoms:\n")
         count1 += 1
 
-        atom_indices = np.unique(
-            [disp2['number'] for disp2 in disp1['second_atoms']])
-
-        for atom2 in atom_indices:
-            included = None
-            distance = 0.0
-            displacements = []
-            for disp2 in disp1['second_atoms']:
-                if disp2['number'] == atom2:
-                    displacements.append(disp2['displacement'])
-                    if 'included' in disp2:
-                        included = disp2['included']
-                    pair_distance = disp2['pair_distance']
-                    
-            w.write("  - number: %5d\n" % (atom2 + 1))
-            w.write("    distance: %f\n" % pair_distance)
-            if included is not None:
-                if included:
-                    w.write("    included: %s\n" % "true")
-                else:
-                    w.write("    included: %s\n" % "false")
- 
-            w.write("    displacements:\n")
-            for disp_cart2 in displacements:
-                if create_POSCARs and (included or included is None):
-                    positions = supercell.get_positions()
-                    positions[disp1['number']] += disp_cart1
-                    positions[atom2] += disp_cart2
-                    atoms = Atoms(numbers=supercell.get_atomic_numbers(),
-                                  masses=supercell.get_masses(),
-                                  positions=positions,
-                                  cell=lattice,
-                                  pbc=True)
-                    vasp.write_vasp('POSCAR-%05d' % count2, atoms, direct=True)
-
-                # YAML
-                w.write("    - [%20.16f,%20.16f,%20.16f ] # %05d\n" %
-                        (disp_cart2[0], disp_cart2[1], disp_cart2[2], count2))
-                count2 += 1
+        included = None
+        distance = 0.0
+        atom2 = -1
+        displacements = []
+        for disp2 in disp1['second_atoms']:
+            if atom2 != disp2['number']:
+                atom2 = disp2['number']
+                if 'included' in disp2:
+                    included = disp2['included']
+                pair_distance = disp2['pair_distance']
+                w.write("  - number: %5d\n" % (atom2 + 1))
+                w.write("    distance: %f\n" % pair_distance)
+                if included is not None:
+                    if included:
+                        w.write("    included: %s\n" % "true")
+                    else:
+                        w.write("    included: %s\n" % "false")
+                w.write("    displacements:\n")
+                
+            disp_cart2 = disp2['displacement']
+            w.write("    - [%20.16f,%20.16f,%20.16f ] # %05d\n" %
+                    (disp_cart2[0], disp_cart2[1], disp_cart2[2], count2))
+            count2 += 1
 
     w.write("lattice:\n")
     for axis in supercell.get_cell():
@@ -125,7 +92,7 @@ def write_supercells_with_displacements_from_direction_dataset(
         cutoff_distance=None,
         filename='disp_fc3.yaml'):
     """
-    This is the disp_fc3.yaml write previously used (version < 0.8.2).
+    This is the disp_fc3.yaml writer previously used (version < 0.8.2).
     """
     # YAML
     w = open(filename, 'w')

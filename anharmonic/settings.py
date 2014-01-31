@@ -5,7 +5,6 @@ class Phono3pySettings(Settings):
     def __init__(self):
         Settings.__init__(self)
 
-        self._band_indices = None
         self._coarse_mesh_shifts = None
         self._cutoff_fc3_distance = None
         self._cutoff_pair_distance = None
@@ -19,7 +18,6 @@ class Phono3pySettings(Settings):
         self._mass_variances = None
         self._max_freepath = None
         self._mesh_divisors = None
-        self._multiple_sigmas = None
         self._no_kappa_stars = False
         self._read_amplitude = False
         self._read_gamma = False
@@ -28,12 +26,6 @@ class Phono3pySettings(Settings):
         self._write_amplitude = False
         self._write_gamma = False
         
-    def set_band_indices(self, band_indices):
-        self._band_indices = band_indices
-
-    def get_band_indices(self):
-        return self._band_indices
-
     def set_coarse_mesh_shifts(self, coarse_mesh_shifts):
         self._coarse_mesh_shifts = coarse_mesh_shifts
 
@@ -112,12 +104,6 @@ class Phono3pySettings(Settings):
     def get_mesh_divisors(self):
         return self._mesh_divisors
 
-    def set_multiple_sigmas(self, multiple_sigmas):
-        self._multiple_sigmas = multiple_sigmas
-
-    def get_multiple_sigmas(self):
-        return self._multiple_sigmas
-
     def set_no_kappa_stars(self, no_kappa_stars):
         self._no_kappa_stars = no_kappa_stars
 
@@ -177,10 +163,6 @@ class Phono3pyConfParser(ConfParser):
                     self._confs['dim_extra'] = \
                         self._options.supercell_dimension_extra
 
-            if opt.dest == 'band_indices':
-                if self._options.band_indices is not None:
-                    self._confs['band_indices'] = self._options.band_indices
-
             if opt.dest == 'cutoff_fc3_distance':
                 if self._options.cutoff_fc3_distance is not None:
                     self._confs['cutoff_fc3_distance'] = \
@@ -233,10 +215,6 @@ class Phono3pyConfParser(ConfParser):
                 if self._options.mesh_divisors is not None:
                     self._confs['mesh_divisors'] = self._options.mesh_divisors
 
-            if opt.dest == 'multiple_sigmas':
-                if self._options.multiple_sigmas is not None:
-                    self._confs['multiple_sigmas'] = self._options.multiple_sigmas
-
             if opt.dest == 'no_kappa_stars':
                 if self._options.no_kappa_stars:
                     self._confs['no_kappa_stars'] = '.true.'
@@ -282,12 +260,6 @@ class Phono3pyConfParser(ConfParser):
                             "to be positive.")
                     else:
                         self.set_parameter('dim_extra', matrix)
-
-            if conf_key == 'band_indices':
-                vals = []
-                for sum_set in confs['band_indices'].split(','):
-                    vals.append([int(x) - 1 for x in sum_set.split()])
-                self.set_parameter('band_indices', vals)
 
             if conf_key == 'cutoff_fc3_distance':
                 self.set_parameter('cutoff_fc3_distance',
@@ -353,13 +325,6 @@ class Phono3pyConfParser(ConfParser):
                 else:
                     self.setting_error("Mesh divisors are incorrectly set.")
 
-            if conf_key == 'multiple_sigmas':
-                vals = [fracval(x) for x in confs['multiple_sigmas'].split()]
-                if len(vals) < 1:
-                    self.setting_error("Mutiple sigmas are incorrectly set.")
-                else:
-                    self.set_parameter('multiple_sigmas', vals)
-
             if conf_key == 'no_kappa_stars':
                 if confs['no_kappa_stars'] == '.true.':
                     self.set_parameter('no_kappa_stars', True)
@@ -395,10 +360,6 @@ class Phono3pyConfParser(ConfParser):
         # Supercell size for fc2
         if params.has_key('dim_extra'):
             self._settings.set_phonon_supercell_matrix(params['dim_extra'])
-
-        # Sets of band indices that are summed
-        if params.has_key('band_indices'):
-            self._settings.set_band_indices(params['band_indices'])
 
         # Cutoff distance of third-order force constants. Elements where any 
         # pair of atoms has larger distance than cut-off distance are set zero.
@@ -453,10 +414,6 @@ class Phono3pyConfParser(ConfParser):
             if len(params['mesh_divisors']) > 3:
                 self._settings.set_coarse_mesh_shifts(
                     params['mesh_divisors'][3:])
-
-        # Multiple sigmas
-        if params.has_key('multiple_sigmas'):
-            self._settings.set_multiple_sigmas(params['multiple_sigmas'])
 
         # Read phonon-phonon interaction amplitudes from hdf5
         if params.has_key('read_amplitude'):

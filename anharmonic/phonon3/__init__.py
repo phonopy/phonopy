@@ -1,6 +1,8 @@
 import numpy as np
 from phonopy.structure.symmetry import Symmetry
 from phonopy.structure.cells import get_supercell, get_primitive
+from phonopy.structure.atoms import Atoms
+from phonopy.units import VaspToTHz
 from anharmonic.phonon3.imag_self_energy import get_imag_self_energy, \
      write_imag_self_energy, get_linewidth, write_linewidth
 from anharmonic.phonon3.frequency_shift import FrequencyShift
@@ -16,7 +18,6 @@ from phonopy.harmonic.force_constants import get_fc2, set_permutation_symmetry, 
      set_translational_invariance
 from anharmonic.phonon3.fc3 import get_fc3, set_permutation_symmetry_fc3, \
      set_translational_invariance_fc3, cutoff_fc3_by_zero
-from phonopy.units import VaspToTHz
 
 class Phono3py:
     def __init__(self,
@@ -67,6 +68,10 @@ class Phono3py:
         self._search_primitive_symmetry()
         self._search_phonon_supercell_symmetry()
 
+        # Displacements and supercells
+        self._supercells_with_displacements = None
+        self._displacement_dataset = None
+        
         # Thermal conductivity
         self._thermal_conductivity = None # conductivity_RTA object
 
@@ -121,6 +126,22 @@ class Phono3py:
             nac_params=nac_params,
             frequency_scale_factor=frequency_scale_factor)
         self._interaction.set_nac_q_direction(nac_q_direction=nac_q_direction)
+
+    def generate_displacements(self,
+                               distance=0.01,
+                               cutoff_pair_distance=None,
+                               is_plusminus='auto',
+                               is_diagonal=True):
+        direction_dataset = get_third_order_displacements(
+            self._supercell,
+            self._symmetry,
+            is_plusminus=is_plusminus,
+            is_diagonal=is_diagonal)
+        self._displacement_dataset = direction_to_displacement(
+            direction_dataset,
+            distance,
+            self._supercell,
+            cutoff_distance=cutoff_pair_distance)
 
     def produce_fc2(self,
                     forces_fc2,
@@ -200,22 +221,6 @@ class Phono3py:
         if self._fc3 is not None:
             set_translational_invariance_fc3(self._fc3)
         
-    def generate_displacements(self,
-                               distance=0.01,
-                               cutoff_pair_distance=None,
-                               is_plusminus='auto',
-                               is_diagonal=True):
-        direction_dataset = get_third_order_displacements(
-            self._supercell,
-            self._symmetry,
-            is_plusminus=is_plusminus,
-            is_diagonal=is_diagonal)
-        self._displacement_dataset = direction_to_displacement(
-            direction_dataset,
-            distance,
-            self._supercell,
-            cutoff_distance=cutoff_pair_distance)
-
     def get_interaction_strength(self):
         return self._interaction
         
@@ -261,6 +266,11 @@ class Phono3py:
         
     def get_displacement_dataset(self):
         return self._displacement_dataset
+
+    def get_supercells_with_displacements(self):
+        if self._supercells_with_displacements is None:
+            self._build_supercells_with_displacements()
+        return self._supercells_with_displacements
         
     def run_imag_self_energy(self,
                              grid_points,
@@ -408,21 +418,6 @@ class Phono3py:
                                         self._supercell_matrix,
                                         self._symprec)
 
-    def _build_supercells_with_displacements(self):
-        supercells = []
-        for disp in self._displacements:
-            positions = self._supercell.get_positions()
-            positions[disp[0]] += disp[1:4]
-            supercells.append(Atoms(
-                    numbers=self._supercell.get_atomic_numbers(),
-                    masses=self._supercell.get_masses(),
-                    magmoms=self._supercell.get_magnetic_moments(),
-                    positions=positions,
-                    cell=self._supercell.get_cell(),
-                    pbc=True))
-
-        self._supercells_with_displacements = supercells
-
     def _build_primitive_cell(self):
         """
         primitive_matrix:
@@ -458,6 +453,46 @@ class Phono3py:
                 self._phonon_supercell_matrix,
                 self._primitive_matrix)
 
+    def _build_supercells_with_displacements(self):
+        supercells = []
+        magmoms = self._supercell.get_magnetic_moments()
+        masses = self._supercell.get_masses()
+        numbers = self._supercell.get_atomic_numbers()
+        lattice = self._supercell.get_cell()
+        
+        for disp1 in self._displacement_dataset['first_atoms']:
+            disp_cart1 = disp1['displacement']
+            positions = self._supercell.get_positions()
+            positions[disp1['number']] += disp_cart1
+            supercells.append(
+                Atoms(numbers=numbers,
+                      masses=masses,
+                      magmoms=magmoms,
+                      positions=positions,
+                      cell=lattice,
+                      pbc=True))
+
+        for disp1 in self._displacement_dataset['first_atoms']:
+            for disp2 in disp1['second_atoms']:
+                if 'included' in disp2:
+                    included = disp2['included']
+                else:
+                    included = True
+                if included:
+                    positions = self._supercell.get_positions()
+                    positions[disp1['number']] += disp_cart1
+                    positions[disp2['number']] += disp2['displacement']
+                    supercells.append(Atoms(numbers=numbers,
+                                            masses=masses,
+                                            magmoms=magmoms,
+                                            positions=positions,
+                                            cell=lattice,
+                                            pbc=True))
+                else:
+                    supercells.append(None)
+
+        self._supercells_with_displacements = supercells
+            
     def _get_primitive_cell(self, supercell, supercell_matrix, primitive_matrix):
         inv_supercell_matrix = np.linalg.inv(supercell_matrix)
         if primitive_matrix is None:

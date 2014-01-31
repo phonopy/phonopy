@@ -39,7 +39,7 @@ import sys
 import numpy as np
 from optparse import OptionParser
 
-from phonopy.interface.vasp import read_vasp
+from phonopy.interface.vasp import read_vasp, write_vasp
 from phonopy.structure.cells import print_cell
 from phonopy.harmonic.force_constants import show_drift_force_constants
 from phonopy.file_IO import parse_BORN
@@ -49,7 +49,7 @@ from anharmonic.file_IO import parse_disp_fc2_yaml, parse_disp_fc3_yaml, \
      parse_FORCES_FC2, parse_FORCES_FC3, write_FORCES_FC3, \
      write_fc3_to_hdf5, write_fc2_to_hdf5, read_fc3_from_hdf5, \
      read_fc2_from_hdf5, write_ir_grid_points, write_grid_address, \
-     write_supercells_with_displacements
+     write_disp_fc3_yaml
 from anharmonic.phonon3.triplets import get_coarse_ir_grid_points
 from anharmonic.settings import Phono3pyConfParser
 from anharmonic.phonon3 import Phono3py, Phono3pyJointDos, IsotopeScattering, \
@@ -141,7 +141,6 @@ parser.set_defaults(band_indices=None,
                     mass_variances=None,
                     mesh_numbers=None,
                     mesh_divisors=None,
-                    multiple_sigmas=None,
                     no_kappa_stars=False,
                     q_direction=None,
                     primitive_axis=None,
@@ -169,24 +168,18 @@ parser.set_defaults(band_indices=None,
                     write_grid_points=False)
 parser.add_option("--amplitude", dest="displacement_distance", type="float",
                   help="Distance of displacements")
-parser.add_option("--bi", "--band_indices", dest="band_indices",
-                  type="string",
+parser.add_option("--bi", "--band_indices", dest="band_indices", type="string",
                   help="Band indices where life time is calculated")
-parser.add_option("--band", dest="band_paths",
-                  action="store", type="string",
+parser.add_option("--band", dest="band_paths", action="store", type="string",
                   help="Band structure paths calculated for Gruneisen parameter")
-parser.add_option("--band_points", dest="band_points",
-                  type="int",
+parser.add_option("--band_points", dest="band_points", type="int",
                   help="Number of points calculated on a band segment in the band structure Gruneisen parameter calculation")
-parser.add_option("--br", "--bterta", dest="is_bterta",
-                  action="store_true",
+parser.add_option("--br", "--bterta", dest="is_bterta", action="store_true",
                   help="Calculate thermal conductivity in BTE-RTA")
-parser.add_option("-c", "--cell", dest="cell_poscar",
-                  action="store", type="string",
-                  help="Read unit cell", metavar="FILE")
+parser.add_option("-c", "--cell", dest="cell_poscar", action="store",
+                  type="string", help="Read unit cell", metavar="FILE")
 parser.add_option("--cutfc3", "--cutoff_fc3_distance",
-                  dest="cutoff_fc3_distance",
-                  type="float",
+                  dest="cutoff_fc3_distance", type="float",
                   help="Cutoff distance of third-order force constants. Elements where any pair of atoms has larger distance than cut-off distance are set zero.")
 parser.add_option("--cutfreq", "--cutoff_frequency", dest="cutoff_frequency",
                   type="float",
@@ -195,47 +188,29 @@ parser.add_option("--cutlt", "--cutoff_lifetime", dest="cutoff_lifetime",
                   type="float",
                   help="Cutoff lifetime in second used for thermal conductivity calculation")
 parser.add_option("--cutpair", "--cutoff_pair_distance",
-                  dest="cutoff_pair_distance",
-                  type="float",
+                  dest="cutoff_pair_distance", type="float",
                   help="Cutoff distance between pairs of displaced atoms used for supercell creation with displacements and making third-order force constants")
-parser.add_option("-d", "--disp", dest="is_displacement",
-                  action="store_true",
+parser.add_option("-d", "--disp", dest="is_displacement", action="store_true",
                   help="As first stage, get least displacements")
 parser.add_option("--decay", dest="is_decay_channel",
                   action="store_true", help="Calculate decay channels")
-parser.add_option("--dim",
-                  dest="supercell_dimension",
-                  type="string",
+parser.add_option("--dim", dest="supercell_dimension", type="string",
                   help="Supercell dimension")
-parser.add_option("--dim2",
-                  dest="supercell_dimension_extra",
-                  type="string",
-                  help="Supercell dimension for extra fc2")
-parser.add_option("--cf3", "--create_f3",
-                  dest="forces_third_mode",
-                  action="store_true",
-                  help="Create FORCES_THIRD")
-parser.add_option("--cdfc2", "--create_delta_fc2",
-                  dest="delta_fc2_sets_mode",
-                  action="store_true",
-                  help="Create DELTA_FC2_SETS")
-parser.add_option("--dfc2", "--delta_fc2",
-                  dest="read_delta_fc2",
-                  action="store_true",
-                  help="Read DELTA_FC2_SETS")
+parser.add_option("--dim2", dest="supercell_dimension_extra",
+                  type="string", help="Supercell dimension for extra fc2")
+parser.add_option("--cf3", "--create_f3", dest="forces_third_mode",
+                  action="store_true", help="Create FORCES_THIRD")
+parser.add_option("--cdfc2", "--create_delta_fc2", dest="delta_fc2_sets_mode",
+                  action="store_true", help="Create DELTA_FC2_SETS")
+parser.add_option("--dfc2", "--delta_fc2", dest="read_delta_fc2",
+                  action="store_true", help="Read DELTA_FC2_SETS")
 parser.add_option("--factor", dest="factor", type="float",
                   help="Conversion factor to favorite frequency unit")
-parser.add_option("--fc2",
-                  dest="read_fc2",
-                  action="store_true",
+parser.add_option("--fc2", dest="read_fc2", action="store_true",
                   help="Read second order force constants")
-parser.add_option("--fc2_extra",
-                  dest="read_fc2_extra",
-                  action="store_true",
+parser.add_option("--fc2_extra", dest="read_fc2_extra", action="store_true",
                   help="Read extra second order force constants")
-parser.add_option("--fc3",
-                  dest="read_fc3",
-                  action="store_true",
+parser.add_option("--fc3", dest="read_fc3", action="store_true",
                   help="Read third order force constants")
 parser.add_option("--freepath", dest="max_freepath", type="float",
                   help="Maximum mean free path of phonon in meter")
@@ -245,98 +220,66 @@ parser.add_option("--freq_pitch", dest="frequency_pitch", type="float",
                   help="Pitch in frequency for spectrum")
 parser.add_option("--gamma_option", dest="gamma_option", type="int",
                   help="Option for the test of imaginary part of self energy")
-parser.add_option("--gp", "--grid_points",
-                  dest="grid_points", type="string",
+parser.add_option("--gp", "--grid_points", dest="grid_points", type="string",
                   help="Fixed grid points where damping functions are calculated ")
-parser.add_option("--gruneisen", dest="is_gruneisen",
-                  action="store_true",
+parser.add_option("--gruneisen", dest="is_gruneisen", action="store_true",
                   help="Calculate phonon Gruneisen parameter")
 parser.add_option("--gv_delta_q", dest="gv_delta_q", type="float",
                   help="Delta-q distance used for group velocity calculation")
-parser.add_option("-i", dest="input_filename",
-                  type="string",
+parser.add_option("-i", dest="input_filename", type="string",
                   help="Input filename extension")
-parser.add_option("--io", dest="input_output_filename",
-                  type="string",
+parser.add_option("--io", dest="input_output_filename", type="string",
                   help="Input and output filename extension")
-parser.add_option("--ion_clamped", dest="ion_clamped",
-                  action="store_true",
+parser.add_option("--ion_clamped", dest="ion_clamped", action="store_true",
                   help="Atoms are clamped under applied strain in Gruneisen parameter calculation")
-parser.add_option("--isotope", dest="is_isotope",
-                  action="store_true",
+parser.add_option("--isotope", dest="is_isotope", action="store_true",
                   help="Isotope scattering lifetime")
-parser.add_option("--jdos",
-                  dest="is_joint_dos",
-                  action="store_true",
+parser.add_option("--jdos", dest="is_joint_dos", action="store_true",
                   help="Calculate joint density of states")
-parser.add_option("--lw", "--linewidth",
-                  dest="is_linewidth",
-                  action="store_true",
-                  help="Calculate linewidths")
-parser.add_option("--fst", "--frequency_shift",
-                  dest="is_frequency_shift",
-                  action="store_true",
-                  help="Calculate frequency shifts")
-parser.add_option("--md", "--mesh_divisors",
-                  dest="mesh_divisors",
-                  type="string",
+parser.add_option("--lw", "--linewidth", dest="is_linewidth",
+                  action="store_true", help="Calculate linewidths")
+parser.add_option("--fst", "--frequency_shift", dest="is_frequency_shift",
+                  action="store_true", help="Calculate frequency shifts")
+parser.add_option("--md", "--mesh_divisors", dest="mesh_divisors", type="string",
                   help="Divisors for mesh numbers")
-parser.add_option("--mesh",
-                  dest="mesh_numbers",
-                  type="string",
+parser.add_option("--mesh", dest="mesh_numbers", type="string",
                   help="Mesh numbers")
-parser.add_option("--multiple_sigmas", dest="multiple_sigmas",
-                  type="string",
-                  help="Multiple sigmas for smearing width used for limited functions")
+parser.add_option("--sigma", dest="sigma", type="string",
+                  help="A sigma value or multiple sigma values (separated by space) for smearing width used for limited functions")
 parser.add_option("--mv", "--mass_variances", dest="mass_variances",
                   type="string",
                   help="Mass variance parameters for isotope scattering")
-parser.add_option("--nac", dest="is_nac",
-                  action="store_true",
+parser.add_option("--nac", dest="is_nac", action="store_true",
                   help="Non-analytical term correction")
-parser.add_option("--nodiag", dest="is_nodiag",
-                  action="store_true",
+parser.add_option("--nodiag", dest="is_nodiag", action="store_true",
                   help="Set displacements parallel to axes")
 parser.add_option("--noks", "--no_kappa_stars", dest="no_kappa_stars",
                   action="store_true",
                   help="Deactivate summation of partial kappa at q-stars"),
-parser.add_option("--nosym", dest="is_nosym",
-                  action="store_true",
+parser.add_option("--nosym", dest="is_nosym", action="store_true",
                   help="No symmetrization of triplets")
-parser.add_option("-o", dest="output_filename",
-                  type="string",
+parser.add_option("-o", dest="output_filename", type="string",
                   help="Output filename extension")
 parser.add_option("--pa", "--primitive_axis", dest="primitive_axis",
                   action="store", type="string",
                   help="Same as PRIMITIVE_AXIS tags")
-parser.add_option("--pm", dest="is_plusminus_displacements",
-                  action="store_true",
+parser.add_option("--pm", dest="is_plusminus_displacements", action="store_true",
                   help="Set plus minus displacements")
 parser.add_option("--qpoints", dest="qpoints", type="string",
                   help="Calculate at specified q-points")
-parser.add_option("--q_direction",
-                  dest="q_direction",
-                  type="string",
+parser.add_option("--q_direction", dest="q_direction", type="string",
                   help="q-vector direction at q->0 for non-analytical term correction")
-parser.add_option("-q", "--quiet", dest="quiet",
-                  action="store_true",
+parser.add_option("-q", "--quiet", dest="quiet", action="store_true",
                   help="Print out smallest information")
-parser.add_option("--read_amplitude", dest="read_amplitude",
-                  action="store_true",
+parser.add_option("--read_amplitude", dest="read_amplitude", action="store_true",
                   help="Read phonon-phonon interaction amplitudes")
-parser.add_option("--read_gamma", dest="read_gamma",
-                  action="store_true",
+parser.add_option("--read_gamma", dest="read_gamma", action="store_true",
                   help="Read Gammas from files")
-parser.add_option("--sigma", dest="sigma", type="float",
-                  help="Smearing width for DOS")
-parser.add_option("--sym_fc2", dest="is_symmetrize_fc2",
-                  action="store_true",
+parser.add_option("--sym_fc2", dest="is_symmetrize_fc2", action="store_true",
                   help="Symmetrize fc2 by index exchange")
-parser.add_option("--sym_fc3r", dest="is_symmetrize_fc3_r",
-                  action="store_true",
+parser.add_option("--sym_fc3r", dest="is_symmetrize_fc3_r", action="store_true",
                   help="Symmetrize fc3 in real space by index exchange")
-parser.add_option("--sym_fc3q", dest="is_symmetrize_fc3_q",
-                  action="store_true",
+parser.add_option("--sym_fc3q", dest="is_symmetrize_fc3_q", action="store_true",
                   help="Symmetrize fc3 in reciprocal space by index exchange")
 parser.add_option("--tmax", dest="tmax", type="string",
                   help="Maximum calculated temperature")
@@ -349,28 +292,21 @@ parser.add_option("--tsym", dest="is_translational_symmetry",
                   help="Impose translational invariance condition")
 parser.add_option("--tolerance", dest="symprec", type="float",
                   help="Symmetry tolerance to search")
-parser.add_option("-v", "--verbose", dest="verbose",
-                  action="store_true",
+parser.add_option("-v", "--verbose", dest="verbose", action="store_true",
                   help="Detailed run-time information is displayed")
-parser.add_option("--loglevel", dest="log_level", type="int",
-                  help="Log level")
+parser.add_option("--loglevel", dest="log_level", type="int", help="Log level")
 parser.add_option("--thm", "--tetrahedron_method", dest="is_tetrahedron_method",
-                  action="store_true",
-                  help="Use tetrahedron method")
-parser.add_option("--ts", dest="temperatures", 
-                  type="string", help="Temperatures for damping functions")
-parser.add_option("--uplo",
-                  dest="uplo",
-                  type="string",
-                  help="Lapack zheev UPLO")
+                  action="store_true", help="Use tetrahedron method")
+parser.add_option("--ts", dest="temperatures", type="string",
+                  help="Temperatures for damping functions")
+parser.add_option("--uplo", dest="uplo", type="string", help="Lapack zheev UPLO")
 parser.add_option("--wgp", "--write_grid_points", dest="write_grid_points",
                   action="store_true",
                   help="Write grid address of irreducible grid points for specified mesh numbers to ir_grid_address.yaml")
 parser.add_option("--write_amplitude", dest="write_amplitude",
                   action="store_true",
                   help="Write phonon-phonon interaction amplitudes")
-parser.add_option("--write_gamma", dest="write_gamma",
-                  action="store_true",
+parser.add_option("--write_gamma", dest="write_gamma", action="store_true",
                   help="Write gamma")
 (options, args) = parser.parse_args()
 option_list = parser.option_list
@@ -462,10 +398,12 @@ if options.is_displacement:
     else:
         filename = 'disp_fc3.' + output_filename + '.yaml'
         
-    num_disps, num_disp_files = write_supercells_with_displacements(
-        supercell,
-        dds,
-        filename=filename)
+    num_disps, num_disp_files = write_disp_fc3_yaml(supercell,
+                                                    dds,
+                                                    filename=filename)
+    for i, dcell in enumerate(phono3py.get_supercells_with_displacements()):
+        if dcell is not None:
+            write_vasp('POSCAR-%05d' % (i + 1), dcell, direct=True)
         
     if log_level:
         print "Total number of displacements:", num_disps
@@ -485,13 +423,13 @@ mesh_divs = settings.get_mesh_divisors()
 grid_points = settings.get_grid_points()
 band_indices = settings.get_band_indices()
 cutoff_frequency = settings.get_cutoff_frequency()
-if settings.get_multiple_sigmas() is None:
-    if settings.get_sigma():
-        sigmas = [settings.get_sigma()]
-    else:
-        sigmas = []
+sigma = settings.get_sigma()
+if sigma is None:
+    sigmas = []
+elif isinstance(sigma, float):
+    sigmas = [sigma]
 else:
-    sigmas = settings.get_multiple_sigmas()
+    sigmas = sigma
 if settings.get_is_tetrahedron_method():
     sigmas = [None] + sigmas
 if settings.get_temperatures() is None:
