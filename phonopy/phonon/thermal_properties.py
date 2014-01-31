@@ -56,8 +56,16 @@ class ThermalPropertiesBase:
                  is_projection=False,
                  band_indices=None,
                  cutoff_frequency=None):
+        self._band_indices = None
+        self._frequencies = None
+        self._eigenvectors = None
+        self._weights = None
+        self._is_projection = is_projection
+        self._cutoff_frequency = cutoff_frequency
+        
         if band_indices is not None:
             bi = np.hstack(band_indices).astype('intc')
+            self._band_indices = bi
             self._frequencies = np.array(frequencies[:, bi],
                                          dtype='double', order='C')
             if eigenvectors is not None:
@@ -73,11 +81,10 @@ class ThermalPropertiesBase:
         self._frequencies = np.array(self._frequencies,
                                      dtype='double', order='C') * THzToEv
 
-        if weights == None:
+        if weights is None:
             self._weights = np.ones(frequencies.shape[0], dtype='int32')
         else:
             self._weights = weights
-        self._is_projection = is_projection
 
     def get_free_energy(self, t):
         free_energy = self._calculate_thermal_property(mode_F, t)
@@ -212,6 +219,14 @@ class ThermalProperties(ThermalPropertiesBase):
         f.write("  entropy:       J/K/mol\n")
         f.write("  heat_capacity: J/K/mol\n")
         f.write("\n")
+        if self._cutoff_frequency:
+            f.write("cutoff_frequency: %8.3f\n" % self._cutoff_frequency)
+        if self._band_indices is not None:
+            bi = self._band_indices + 1
+            f.write("band_index: [ " + ("%d, " * (len(bi) - 1)) %
+                    tuple(bi[:-1]) + ("%d ]\n" % bi[-1]))
+        if self._cutoff_frequency or self._band_indices is not None:
+            f.write("\n")
         f.write("natom: %5d\n" % ((self._frequencies[0].shape)[0]/3))
         f.write("zero_point_energy: %15.7f\n" % self._zero_point_energy)
         f.write("high_T_entropy:    %15.7f\n" % (self._high_T_entropy * 1000))
