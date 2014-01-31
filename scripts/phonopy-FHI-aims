@@ -33,7 +33,9 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 #
-# 2014/1/9 togo : Follow the changes of Mesh, BandStructure, and Animation
+# 2014/01/31 togo: Follow the changes of Phonopy and Mesh classes (phonopy-1.8.2)
+#
+# 2014/01/09 togo: Follow the changes of Mesh, BandStructure, and Animation
 #                 classes (phonopy-1.8.0)
 #
 # 2011/11/13 jm : included support for initial magnetic moments -
@@ -448,7 +450,7 @@ def post_process_dos(phonopy_obj, mesh_obj, parameters, do_matplotlib=False):
     fmax = parameters["fend"] 
     fstep = ( fmax - fmin ) / parameters["fpoints"]
     dos_obj.set_draw_area(fmin, fmax, fstep)
-    dos_obj.calculate()
+    dos_obj.run()
     for (unit, factor) in AimsFrequencyUnitFactors.iteritems():
         if (factor == frequency_unit_factor):
             frequency_unit = unit
@@ -697,7 +699,9 @@ if __name__ == "__main__":
     # (always unit matrix here), i.e. supercell_matrix inversion (as required for Primitive()) is done 
     # in Phonopy.set_post_process() directly.
     print "# preparing calculation of dynamical matrix"
-    phonopy_obj.set_post_process(numpy.eye(3), set_of_forces)
+    # phonopy_obj.set_post_process(numpy.eye(3), set_of_forces)
+    phonopy_obj.set_forces(set_of_forces)
+    phonopy_obj.produce_force_constants()
     if requested_nac:
         from phonopy.hphonopy.file_IO import parse_BORN
         nac_file = control.phonon["nac"]["file"]
@@ -753,7 +757,7 @@ if __name__ == "__main__":
         mesh_obj = Mesh(phonopy_obj.dynamical_matrix,
                         mesh, shift=mesh_shift,
                         is_time_reversal=mesh_time_reversal,
-                        is_symmetry=mesh_symmetry,
+                        is_mesh_symmetry=mesh_symmetry,
                         is_eigenvectors=mesh_eigenvectors,
                         factor=frequency_unit_factor)
         if options.yaml:
