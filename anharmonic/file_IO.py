@@ -12,7 +12,7 @@ from phonopy.file_IO import write_FORCE_SETS_vasp, read_force_constant_vasprun_x
 #
 ###########
 
-def write_disp_fc3_yaml(supercell, dataset, filename='disp_fc3.yaml'):
+def write_disp_fc3_yaml(dataset, supercell, filename='disp_fc3.yaml'):
     w = open(filename, 'w')
     w.write("natom: %d\n" %  dataset['natom'])
 

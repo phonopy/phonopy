@@ -398,8 +398,7 @@ if options.is_displacement:
     else:
         filename = 'disp_fc3.' + output_filename + '.yaml'
         
-    num_disps, num_disp_files = write_disp_fc3_yaml(supercell,
-                                                    dds,
+    num_disps, num_disp_files = write_disp_fc3_yaml(dds, supercell,
                                                     filename=filename)
     for i, dcell in enumerate(phono3py.get_supercells_with_displacements()):
         if dcell is not None:
