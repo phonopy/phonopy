@@ -158,9 +158,13 @@ def write_FORCE_SETS_vasp(forces_filenames,
 
     if is_zero_point:
         force_files = forces_filenames[1:]
-        zero_forces = vasp.get_forces_vasprun_xml(etree.iterparse(
-                vasp.VasprunWrapper(forces_filenames[0]),
-                tag='varray'))
+        if vasp.is_version528(forces_filenames[0]):
+            zero_forces = vasp.get_forces_vasprun_xml(etree.iterparse(
+                vasp.VasprunWrapper(forces_filenames[0]), tag='varray'))
+        else:
+            zero_forces = vasp.get_forces_vasprun_xml(
+                etree.iterparse(forces_filenames[0], tag='varray'))
+                
     else:
         force_files = forces_filenames
         zero_forces = None
@@ -169,9 +173,12 @@ def write_FORCE_SETS_vasp(forces_filenames,
 
     # Show progress 
     for i in range(len(displacements)):
-        forces.append(vasp.get_forces_vasprun_xml(etree.iterparse(
-                    vasp.VasprunWrapper(force_files[i]),
-                    tag='varray')))
+        if vasp.is_version528(force_files[i]):
+            forces.append(vasp.get_forces_vasprun_xml(etree.iterparse(
+                vasp.VasprunWrapper(force_files[i]), tag='varray')))
+        else:
+            forces.append(vasp.get_forces_vasprun_xml(
+                etree.iterparse(force_files[i], tag='varray')))
 
     if is_zero_point:
         dummy_forces = [zero_forces] + forces
@@ -369,7 +376,10 @@ def read_force_constant_vasprun_xml(filename):
         print "You need to install python-lxml."
         sys.exit(1)
 
-    vasprun = etree.iterparse(vasp.VasprunWrapper(filename))
+    if vasp.is_version528(filename):
+        vasprun = etree.iterparse(vasp.VasprunWrapper(filename))
+    else:
+        vasprun = etree.iterparse(filename)
     return vasp.get_force_constants_vasprun_xml(vasprun)
 
 def read_force_constant_OUTCAR(filename):

@@ -55,6 +55,14 @@ class VasprunWrapper(object):
         else:
             return "<i type=\"string\" name=\"PRECFOCK\"></i>"
 
+def is_version528(filename):
+    for line in open(filename):
+        if '\"version\"' in line:
+            if '5.2.8' in line:
+                return True
+            else:
+                return False
+
 def write_supercells_with_displacements(supercell,
                                         cells_with_displacements):
     write_vasp("SPOSCAR", supercell, direct=True)
