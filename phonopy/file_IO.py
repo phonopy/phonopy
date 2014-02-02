@@ -205,7 +205,19 @@ def is_forces_read(force_sets, num_atom, filenames):
             print "\'%s\' does not contain necessary information." % filenames[i]
 
     return is_read
-        
+
+def write_FORCE_SETS_from_dataset(dataset,
+                                  filename='FORCE_SETS',
+                                  verbose=False):
+    displacements = [[x['number'], x['displacement']]
+                     for x in dataset['first_atoms']]
+    forces = [x['forces'] for x in dataset['first_atoms']]
+    write_FORCE_SETS(filename,
+                     dataset['natom'],
+                     displacements,
+                     forces,
+                     verbose=verbose)
+
 def write_FORCE_SETS(filename,
                      natom,
                      displacements,

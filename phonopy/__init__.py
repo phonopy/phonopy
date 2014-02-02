@@ -214,7 +214,12 @@ class Phonopy:
         return self._factor
     unit_conversion_factor = property(get_unit_conversion_factor)
 
-    def produce_force_constants(self, calculate_full_force_constants=True):
+    def produce_force_constants(self,
+                                forces=None,
+                                calculate_full_force_constants=True):
+        if forces is not None:
+            self.set_forces(forces)
+        
         if calculate_full_force_constants:
             self._run_force_constants_from_forces(
                 decimals=self._force_constants_decimals)
@@ -269,7 +274,10 @@ class Phonopy:
                                        disp_cartesian[0],
                                        disp_cartesian[1],
                                        disp_cartesian[2]])
-        self._build_supercells_with_displacements()
+        self._displacement_dataset = {
+            'natom': self._supercell.get_number_of_atoms(),
+            'first_atoms': [{'number': disp[0], 'displacement': disp[1:4]}
+                            for disp in self._displacements]}
 
     def set_displacements(self, displacements):
         """Set displacements manually
@@ -283,7 +291,6 @@ class Phonopy:
         """
 
         self._displacements = displacements
-        self._build_supercells_with_displacements()
 
     def get_displacements(self):
         return self._displacements
@@ -293,8 +300,15 @@ class Phonopy:
         return self._displacement_directions
     displacement_directions = property(get_displacement_directions)
 
+    def get_displacement_dataset(self):
+        return self._displacement_dataset
+
     def get_supercells_with_displacements(self):
-        return self._supercells_with_displacements
+        if self._displacement_dataset is None:
+            return None
+        else:
+            self._build_supercells_with_displacements()
+            return self._supercells_with_displacements
 
     def get_dynamical_matrix(self):
         return self._dynamical_matrix
@@ -303,15 +317,13 @@ class Phonopy:
     def set_forces(self, sets_of_forces):
         """
         sets_of_forces:
-          This requires that self._displacements is set in advance.
            [[[f_1x, f_1y, f_1z], [f_2x, f_2y, f_2z], ...], # first supercell
              [[f_1x, f_1y, f_1z], [f_2x, f_2y, f_2z], ...], # second supercell
              ...                                                  ]
         """
-        disps = [{'number': disp[0], 'displacement': disp[1:4], 'forces': forces}
-                 for forces, disp in zip(sets_of_forces, self._displacements)]
-        self._displacement_dataset = {'natom': len(disps[0]['forces']),
-                                      'first_atoms': disps}
+        for disp, forces in zip(
+                self._displacement_dataset['first_atoms'], sets_of_forces):
+            disp['forces'] = forces
 
     def set_force_constants_zero_with_radius(self, cutoff_radius):
         cutoff_force_constants(self._force_constants,
@@ -323,6 +335,17 @@ class Phonopy:
         self._force_constants = force_constants
 
     def set_force_sets(self, force_sets):
+        print 
+        print ("********************************** Warning"
+               "**********************************")
+        print "set_force_sets will be obsolete."
+        print ("   The method name is changed to set_displacement_dataset.")
+        print ("******************************************"
+               "**********************************")
+        print 
+        self._displacement_dataset = force_sets
+
+    def set_displacement_dataset(self, displacement_dataset):
         """
         displacement_dataset:
            {'natom': number_of_atoms_in_supercell,
@@ -332,7 +355,7 @@ class Phonopy:
                'forces': forces on atoms in supercell},
               {...}, ...]}
         """
-        self._displacement_dataset = force_sets
+        self._displacement_dataset = displacement_dataset
         
     def symmetrize_force_constants(self, iteration=3):
         symmetrize_force_constants(self._force_constants, iteration)
@@ -951,9 +974,9 @@ class Phonopy:
 
     def _build_supercells_with_displacements(self):
         supercells = []
-        for disp in self._displacements:
+        for disp in self._displacement_dataset['first_atoms']:
             positions = self._supercell.get_positions()
-            positions[disp[0]] += disp[1:4]
+            positions[disp['number']] += disp['displacement']
             supercells.append(Atoms(
                     numbers=self._supercell.get_atomic_numbers(),
                     masses=self._supercell.get_masses(),

@@ -145,9 +145,14 @@ class Phono3py:
 
     def produce_fc2(self,
                     forces_fc2,
-                    disp_dataset,
+                    displacement_dataset=None,
                     is_permutation_symmetry=False,
                     is_translational_symmetry=False):
+        if displacement_dataset is None:
+            disp_dataset = self._displacement_dataset
+        else:
+            disp_dataset = displacement_dataset
+            
         if self._log_level:
             print "Solving fc2"
         for forces, disp1 in zip(forces_fc2, disp_dataset['first_atoms']):
@@ -162,10 +167,15 @@ class Phono3py:
 
     def produce_fc3(self,
                     forces_fc3,
-                    disp_dataset,
+                    displacement_dataset=None,
                     cutoff_distance=None, # set fc3 zero
                     is_translational_symmetry=False,
                     is_permutation_symmetry=False):
+        if displacement_dataset is None:
+            disp_dataset = self._displacement_dataset
+        else:
+            disp_dataset = displacement_dataset
+        
         if self._log_level:
             print "Solving fc2"
         for forces, disp1 in zip(forces_fc3, disp_dataset['first_atoms']):

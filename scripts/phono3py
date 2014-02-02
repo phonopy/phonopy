@@ -580,7 +580,7 @@ else:
         forces_fc3 = parse_FORCES_FC3(disp_dataset)
         phono3py.produce_fc3(
             forces_fc3,
-            disp_dataset,
+            displacement_dataset=disp_dataset,
             cutoff_distance=settings.get_cutoff_fc3_distance(),
             is_translational_symmetry=options.is_translational_symmetry,
             is_permutation_symmetry=options.is_symmetrize_fc3_r)
@@ -619,7 +619,8 @@ else:
             file_exists(filename, log_level)
             disp_dataset = parse_disp_fc3_yaml(filename=filename)
             forces_fc3 = parse_FORCES_FC3(disp_dataset)
-            phono3py.produce_fc2(forces_fc3, disp_dataset)
+            phono3py.produce_fc2(forces_fc3,
+                                 displacement_dataset=disp_dataset)
     else:
         if input_filename is None:
             filename = 'disp_fc2.yaml'
@@ -630,7 +631,8 @@ else:
         file_exists(filename, log_level)
         disp_dataset = parse_disp_fc2_yaml(filename=filename)
         forces_fc2 = parse_FORCES_FC2(disp_dataset)
-        phono3py.produce_fc2(forces_fc2, disp_dataset)
+        phono3py.produce_fc2(forces_fc2,
+                             displacement_dataset=disp_dataset)
 
     if output_filename is None:
         filename = 'fc2.hdf5'
