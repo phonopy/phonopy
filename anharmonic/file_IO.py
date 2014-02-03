@@ -360,7 +360,10 @@ def write_FORCES_FC3(disp_dataset,
             w3.write("%20.16f %20.16f %20.16f\n" % tuple(disp2['displacement']))
 
             # For supercell calculation reduction
-            if disp2['included']:
+            included = True
+            if 'included' in disp2:
+                included = disp2['included']
+            if included:
                 for forces in forces_fc3[file_count]:
                     w3.write("%15.10f %15.10f %15.10f\n" % tuple(forces))
                 file_count += 1
