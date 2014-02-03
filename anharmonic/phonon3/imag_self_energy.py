@@ -44,7 +44,12 @@ def get_imag_self_energy(interaction,
             q = adrs.astype('double') / mesh
             print "q-point:", q
             print "Phonon frequency:"
-            print frequencies[gp]
+            print "[",
+            for i, freq in enumerate(frequencies[gp]):
+                if i % 6 == 0 and i != 0:
+                    print
+                print "%8.4f" % freq,
+            print "]"
 
         ise_sigmas = []
         fp_sigmas = []

@@ -46,7 +46,7 @@ from phonopy.file_IO import parse_BORN
 from phonopy.units import VaspToTHz
 from anharmonic.phonon3.fc3 import show_drift_fc3
 from anharmonic.file_IO import parse_disp_fc2_yaml, parse_disp_fc3_yaml, \
-     parse_FORCES_FC2, parse_FORCES_FC3, write_FORCES_FC3, \
+     parse_FORCES_FC2, parse_FORCES_FC3, write_FORCES_FC3_vasp, \
      write_fc3_to_hdf5, write_fc2_to_hdf5, read_fc3_from_hdf5, \
      read_fc2_from_hdf5, write_ir_grid_points, write_grid_address, \
      write_disp_fc3_yaml
@@ -332,9 +332,9 @@ if log_level:
     print_phono3py()
     print_version(phono3py_version)
 
-#########################################
-# Create FORCES_THIRD and FORCES_SECOND #
-#########################################
+#####################
+# Create FORCES_FC3 #
+#####################
 if options.forces_third_mode:
     if input_filename is None:
         filename = 'disp_fc3.yaml'
@@ -344,7 +344,7 @@ if options.forces_third_mode:
     if log_level:
         print "Displacement dataset is read from %s." % filename
     disp_dataset = parse_disp_fc3_yaml()
-    write_FORCES_FC3(args, disp_dataset)
+    write_FORCES_FC3_vasp(args, disp_dataset)
     print_end()
     exit(0)
 
@@ -728,7 +728,10 @@ if log_level:
     if mesh_divs is not None and settings.get_is_bterta():
         print "Mesh divisors: [ %d %d %d ]" % tuple(mesh_divs)
     if band_indices is not None and not settings.get_is_bterta():
-        print "Band indices:", band_indices
+        print "Band indices: [",
+        for bi in (np.array(band_indices) + 1):
+            print bi,
+        print "]"
     if sigmas:
         print "Sigma:",
         for sigma in sigmas:

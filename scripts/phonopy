@@ -748,7 +748,7 @@ elif os.path.exists("FORCE_SETS"):
         if log_level > 0:
             print_end()
         sys.exit(1)
-    phonon.set_force_sets(force_sets)
+    phonon.set_displacement_dataset(force_sets)
     if log_level > 0:
         print "Calculating force constants..."
 else:
