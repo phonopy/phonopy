@@ -424,8 +424,9 @@ class ImagSelfEnergy:
             self._ise_thm_with_band_indices_0K()
 
     def _ise_thm_with_band_indices(self):
-        n = occupation(self._frequencies[self._triplets_at_q[:, [1, 2]]],
-                       self._temperature)
+        freqs = self._frequencies[self._triplets_at_q[:, [1, 2]]]
+        freqs = np.where(freqs > self._cutoff_frequency, freqs, 1)
+        n = occupation(freqs, self._temperature)
         for i, (tp, w, interaction) in enumerate(zip(self._triplets_at_q,
                                                      self._weights_at_q,
                                                      self._fc3_normal_squared)):
