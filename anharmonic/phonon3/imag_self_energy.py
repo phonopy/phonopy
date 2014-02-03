@@ -574,6 +574,16 @@ class ImagSelfEnergy:
             self._frequencies,
             grid_address,
             bz_map)
+
+        # for i, g in enumerate(self._g):
+        #     if np.isnan(g).any():
+        #         for j, g2 in enumerate(g):
+        #             if np.isnan(g2).any():
+        #                 for k, g3 in enumerate(g2):
+        #                     if np.isnan(g3).any():
+        #                         print self._frequencies[self._triplets_at_q[i]]
+        #                         print i, j, k, g3
+                    
         
     def _set_triplets_integration_weights_py(self, thm, grid_address, bz_map):
         tetrahedra_vertices = get_tetrahedra_vertices(thm.get_tetrahedra(),
