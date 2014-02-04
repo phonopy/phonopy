@@ -327,7 +327,7 @@ def write_disp_yaml(displacements, supercell, directions=None,
     file.write("displacements:\n")
     for i, disp in enumerate(displacements):
         file.write("- atom: %4d\n" % (disp[0] + 1))
-        if not directions==None:
+        if directions is not None:
             file.write("  direction:\n")
             file.write("    [ %20.16f,%20.16f,%20.16f ]\n" % tuple(directions[i][1:4]))
         file.write("  displacement:\n")

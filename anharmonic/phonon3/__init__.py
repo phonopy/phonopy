@@ -128,7 +128,7 @@ class Phono3py:
         self._interaction.set_nac_q_direction(nac_q_direction=nac_q_direction)
 
     def generate_displacements(self,
-                               distance=0.01,
+                               distance=0.03,
                                cutoff_pair_distance=None,
                                is_plusminus='auto',
                                is_diagonal=True):

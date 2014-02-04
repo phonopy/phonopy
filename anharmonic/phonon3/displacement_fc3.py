@@ -15,7 +15,8 @@ def direction_to_displacement(dataset,
     new_first_atoms = []
     for first_atoms in dataset:
         atom1 = first_atoms['number']
-        disp_cart1 = np.dot(first_atoms['direction'], lattice)
+        direction1 = first_atoms['direction']
+        disp_cart1 = np.dot(direction1, lattice)
         disp_cart1 *= distance / np.linalg.norm(disp_cart1)
         new_second_atoms = []
         for second_atom in first_atoms['second_atoms']:
@@ -23,19 +24,22 @@ def direction_to_displacement(dataset,
             pair_distance = second_atom['distance']
             included = (pair_distance < cutoff_distance or
                         cutoff_distance is None)
-            for disp2 in second_atom['directions']:
-                disp_cart2 = np.dot(disp2, lattice)
+            for direction2 in second_atom['directions']:
+                disp_cart2 = np.dot(direction2, lattice)
                 disp_cart2 *= distance / np.linalg.norm(disp_cart2)
                 if cutoff_distance is None:
                     new_second_atoms.append({'number': atom2,
+                                             'direction': direction2,
                                              'displacement': disp_cart2,
                                              'pair_distance': pair_distance})
                 else:
                     new_second_atoms.append({'number': atom2,
+                                             'direction': direction2,
                                              'displacement': disp_cart2,
                                              'pair_distance': pair_distance,
                                              'included': included})
         new_first_atoms.append({'number': atom1,
+                                'direction': direction1,
                                 'displacement': disp_cart1,
                                 'second_atoms': new_second_atoms})
     new_dataset['first_atoms'] = new_first_atoms

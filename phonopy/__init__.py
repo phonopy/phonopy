@@ -242,9 +242,11 @@ class Phonopy:
                                is_trigonal=False):
         """Generate displacements automatically
 
-        displacements:
-          List of displacements in Cartesian coordinates.
-          See 'set_displacements'
+        displacemsts: List of displacements in Cartesian coordinates.
+           [[0, 0.01, 0.00, 0.00], ...]
+        where each set of elements is defined by:
+           First value:      Atom index in supercell starting with 0
+           Second to fourth: Displacement in Cartesian coordinates
         
         displacement_directions:
           List of directions with respect to axes. This gives only the
@@ -276,21 +278,21 @@ class Phonopy:
                                        disp_cartesian[2]])
         self._displacement_dataset = {
             'natom': self._supercell.get_number_of_atoms(),
-            'first_atoms': [{'number': disp[0], 'displacement': disp[1:4]}
-                            for disp in self._displacements]}
+            'first_atoms': [
+                {'number': disp[0],
+                 'displacement': disp[1:4],
+                 'direction': direction[1:4]}
+                 for disp, direction in
+                 zip(self._displacements, self._displacement_directions)]}
 
     def set_displacements(self, displacements):
-        """Set displacements manually
-
-        displacemsts: List of disctionaries
-           [[0, 0.01, 0.00, 0.00], ...]
-        where each set of elements is defined by:
-           First value:      Atom index in supercell starting with 0
-           Second to fourth: Displacement in Cartesian coordinates
-           
-        """
-
-        self._displacements = displacements
+        print 
+        print ("********************************** Warning"
+               "**********************************")
+        print "set_displacements is obsolete. Do nothing."
+        print ("******************************************"
+               "**********************************")
+        print 
 
     def get_displacements(self):
         return self._displacements
@@ -342,8 +344,8 @@ class Phonopy:
         print ("   The method name is changed to set_displacement_dataset.")
         print ("******************************************"
                "**********************************")
-        print 
-        self._displacement_dataset = force_sets
+        print
+        self.set_displacement_dataset(force_sets)
 
     def set_displacement_dataset(self, displacement_dataset):
         """
@@ -352,10 +354,23 @@ class Phonopy:
             'first_atoms': [
               {'number': atom index of displaced atom,
                'displacement': displacement in Cartesian coordinates,
+               'direction': displacement direction with respect to axes
                'forces': forces on atoms in supercell},
               {...}, ...]}
         """
         self._displacement_dataset = displacement_dataset
+
+        self._displacements = []
+        self._displacement_directions = []
+        for disp in self._displacement_dataset['first_atoms']:
+            x = disp['displacement']
+            self._displacements.append([disp['number'], x[0], x[1], x[2]])
+            if 'direction' in disp:
+                y = disp['direction']
+                self._displacement_directions.append(
+                    [disp['number'], y[0], y[1], y[2]])
+        if not self._displacement_directions:
+            self._displacement_directions = None
         
     def symmetrize_force_constants(self, iteration=3):
         symmetrize_force_constants(self._force_constants, iteration)
