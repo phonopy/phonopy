@@ -850,7 +850,7 @@ if run_mode == 'qpoints':
             print "Frequencies at q-points given by QPOINTS:"
     phonon.write_yaml_qpoints(
         q_points,
-        nac_q_direction=settings.get_q_direction(),
+        nac_q_direction=settings.get_nac_q_direction(),
         is_eigenvectors=settings.get_is_eigenvectors(),
         write_dynamical_matrices=settings.get_write_dynamical_matrices(),
         factor=factor)
@@ -922,7 +922,7 @@ elif run_mode=='modulation':
                            phonon_modes,
                            delta_q=delta_q,
                            derivative_order=derivative_order,
-                           nac_q_direction=settings.get_q_direction())
+                           nac_q_direction=settings.get_nac_q_direction())
     phonon.write_modulations()
     phonon.write_yaml_modulations()
 

@@ -36,109 +36,124 @@ import numpy as np
 import cmath
 from phonopy.units import VaspToTHz
 
-def write_yaml(qpoints,
-               dynamical_matrix, 
-               nac_q_direction=None,
-               is_eigenvectors=False,
-               group_velocity=None,
-               write_dynamical_matrices=False,
-               factor=VaspToTHz):
-    cell = dynamical_matrix.get_primitive()
-    num_atom = cell.get_number_of_atoms()
-    m = cell.get_masses()
-    names = cell.get_chemical_symbols()
-    positions = cell.get_scaled_positions()
-    lattice = cell.get_cell()
+class QpointsPhonon:
+    def __init__(self,
+                 qpoints,
+                 dynamical_matrix, 
+                 nac_q_direction=None,
+                 is_eigenvectors=False,
+                 group_velocity=None,
+                 write_dynamical_matrices=False,
+                 factor=VaspToTHz):
+        cell = dynamical_matrix.get_primitive()
+        self._natom = cell.get_number_of_atoms()
+        self._masses = cell.get_masses()
+        self._symbols = cell.get_chemical_symbols()
+        self._positions = cell.get_scaled_positions()
+        self._lattice = cell.get_cell()
+        
+        self._qpoints = qpoints
+        self._dynamical_matrix = dynamical_matrix
+        self._nac_q_direction = nac_q_direction
+        self._is_eigenvectors = is_eigenvectors
+        self._group_velocity = group_velocity
+        self._write_dynamical_matrix = write_dynamical_matrices
+        self._factor = factor
 
-    if group_velocity is not None:
-        group_velocity.set_q_points(qpoints, perturbation=nac_q_direction)
-        group_velocities = group_velocity.get_group_velocity()
+        self._gv = None
+        self._dm = None
+        self._eigenvectors = None
+        self._frequencies = None
 
-    w = open('qpoints.yaml', 'w')
-    w.write("nqpoint: %-7d\n" % len(qpoints))
-    w.write("natom:   %-7d\n" % num_atom)
-    w.write("atom-info:\n")
-    for mass, name in zip(m, names):
-        w.write("- { name: %2s, mass: %10.5f }\n" % (name, mass))
+        self._run()
+
+    def write_yaml(self):
+        w = open('qpoints.yaml', 'w')
+        w.write("nqpoint: %-7d\n" % len(self._qpoints))
+        w.write("natom:   %-7d\n" % self._natom)
+        w.write("atom-info:\n")
+        for mass, name in zip(self._masses, self._symbols):
+            w.write("- { name: %2s, mass: %10.5f }\n" % (name, mass))
+        
+        w.write("real-basis:\n")
+        for vec in self._lattice:
+            w.write("- [ %20.15f, %20.15f, %20.15f ]\n" % tuple(vec))
     
-    w.write("real-basis:\n")
-    w.write("- [ %20.15f, %20.15f, %20.15f ]\n" % (tuple(lattice[0])))
-    w.write("- [ %20.15f, %20.15f, %20.15f ]\n" % (tuple(lattice[1])))
-    w.write("- [ %20.15f, %20.15f, %20.15f ]\n" % (tuple(lattice[2])))
-
-    rec_lattice = np.linalg.inv(lattice).T
-    w.write("reciprocal-basis: # q point is multiplied from rhs.\n")
-    w.write("- [ %20.15f, %20.15f, %20.15f ]\n" % (tuple(rec_lattice[0])))
-    w.write("- [ %20.15f, %20.15f, %20.15f ]\n" % (tuple(rec_lattice[1])))
-    w.write("- [ %20.15f, %20.15f, %20.15f ]\n" % (tuple(rec_lattice[2])))
-
-    w.write("position:\n")
-    for pos in positions:
-        w.write("- [ %20.15f, %20.15f, %20.15f ]\n" % (tuple(pos)))
-        
-
-    w.write("phonon:\n")
-
-    for i, q in enumerate(qpoints):
-        if nac_q_direction is not None and (np.abs(q) < 1e-5).all():
-            dynamical_matrix.set_dynamical_matrix(q, q_direction=nac_q_direction)
-        else:
-            dynamical_matrix.set_dynamical_matrix(q)
-        dm = dynamical_matrix.get_dynamical_matrix()
-
-        w.write("- q-position: [ %12.7f, %12.7f, %12.7f ]\n" % tuple(q))
-        if write_dynamical_matrices:
-            w.write("  dynamical_matrix:\n")
-            for row in dm:
-                w.write("  - [ ")
-                for j, elem in enumerate(row):
-                    w.write("%15.10f, %15.10f" % (elem.real, elem.imag))
-                    if j == len(row) - 1:
-                        w.write(" ]\n")
-                    else:
-                        w.write(", ")
-        
-        w.write("  band:\n")
+        rec_lattice = np.linalg.inv(self._lattice).T
+        w.write("reciprocal-basis: # column vectors\n")
+        for vec in rec_lattice:
+            w.write("- [ %20.15f, %20.15f, %20.15f ]\n" % tuple(vec))
+    
+        w.write("position:\n")
+        for pos in self._positions:
+            w.write("- [ %20.15f, %20.15f, %20.15f ]\n" % tuple(pos))
             
-        if is_eigenvectors:
-            eigenvalues, eigenvectors = np.linalg.eigh(dm)
-        else:
-            eigenvalues = np.linalg.eigvalsh(dm)
+        w.write("phonon:\n")
+    
+        for i, q in enumerate(self._qpoints):
+            w.write("- q-position: [ %12.7f, %12.7f, %12.7f ]\n" % tuple(q))
+            if self._write_dynamical_matrix:
+                w.write("  dynamical_matrix:\n")
+                for row in self._dm[i]:
+                    w.write("  - [ ")
+                    for j, elem in enumerate(row):
+                        w.write("%15.10f, %15.10f" % (elem.real, elem.imag))
+                        if j == len(row) - 1:
+                            w.write(" ]\n")
+                        else:
+                            w.write(", ")
+            
+            w.write("  band:\n")
+            for j, freq in enumerate(self._frequencies[i]):
+                w.write("  - # %d\n" % (j + 1))
+                w.write("    frequency: %15.10f\n" % freq)
+    
+                if self._gv is not None:
+                    w.write("    group_velocity: [ %13.7f, %13.7f, %13.7f ]\n" %
+                            tuple(self._gv[i, j]))
+    
+                if self._is_eigenvectors:
+                    w.write("    eigenvector:\n")
+                    for k in range(self._natom):
+                        w.write("    - # atom %d\n" % (k + 1))
+                        for l in (0, 1, 2):
+                            w.write("      - [ %17.14f, %17.14f ]\n" %
+                                    (self._eigenvectors[i][k * 3 + l, j].real,
+                                     self._eigenvectors[i][k * 3 + l, j].imag))
+            w.write("\n")
 
-        for j, eig in enumerate(eigenvalues.real):
-            if eig < 0:
-                freq = -np.sqrt(-eig)
+    def _run(self):
+        if self._group_velocity is not None:
+            self._group_velocity.set_q_points(
+                self._qpoints, perturbation=self._nac_q_direction)
+            self._gv = self._group_velocity.get_group_velocity()
+
+        if self._write_dynamical_matrix:
+            self._dm = []
+
+        self._frequencies = []
+        if self._is_eigenvectors:
+            self._eigenvectors = []
+            
+        for q in self._qpoints:
+            dm = self._get_dynamical_matrix(q)
+            if self._write_dynamical_matrix:
+                self._dm.append(dm)
+            if self._is_eigenvectors:
+                eigvals, eigvecs = np.linalg.eigh(dm)
+                self._eigenvectors.append(eigvecs)
             else:
-                freq = np.sqrt(eig)
-            w.write("  - # %d\n" % (j+1))
-            w.write("    frequency: %15.10f\n" % (freq * factor))
-
-            if group_velocity is not None:
-                w.write("    group_velocity: ")
-                w.write("[ %13.7f, %13.7f, %13.7f ]\n" %
-                        tuple(group_velocities[i, j]))
-
-
-            if is_eigenvectors:
-                w.write("    eigenvector:\n")
-                for k in range(num_atom):
-                    w.write("    - # atom %d\n" % (k+1))
-                    for l in (0,1,2):
-                        w.write("      - [ %17.14f, %17.14f ]\n" %
-                                   (eigenvectors[k*3+l,j].real,
-                                    eigenvectors[k*3+l,j].imag))
-
-                w.write("    eigenvector_time_aligned:\n")
-                for k in range(num_atom):
-                    w.write("    - # atom %d, freq*sqrt(m) %f, [%f %f %f]\n" %
-                            ((k+1, freq * factor * np.sqrt(m[k])) +
-                             tuple(positions[k])))
-                    phase_shift = np.exp(2j * np.pi * np.dot(positions[k], q))
-                    eig_aligned = eigenvectors[k*3:(k+1)*3, j] * phase_shift
-                    for l in (0, 1, 2):
-                        w.write(
-                            "      - [ %17.14f, %17.14f ] # %7.2f, %7.4f\n" %
-                            (eig_aligned[l].real, eig_aligned[l].imag,
-                             np.angle(eig_aligned[l], deg=True),
-                             abs(eig_aligned[l])))
-        w.write("\n")
+                eigvals = np.linalg.eigvalsh(dm)
+            eigvals = eigvals.real
+            self._frequencies.append(np.sqrt(np.abs(eigvals)) *
+                                     np.sign(eigvals) * self._factor)
+                
+    def _get_dynamical_matrix(self, q):
+        if self._nac_q_direction is not None and (np.abs(q) < 1e-5).all():
+            self._dynamical_matrix.set_dynamical_matrix(
+                q, q_direction=self._nac_q_direction)
+        else:
+            self._dynamical_matrix.set_dynamical_matrix(q)
+        return self._dynamical_matrix.get_dynamical_matrix()
+        
+            

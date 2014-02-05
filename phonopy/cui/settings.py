@@ -1424,7 +1424,7 @@ class PhonopyConfParser(ConfParser):
                 
         # q-vector direction at q->0 for non-analytical term correction
         if params.has_key('q_direction'):
-            self._settings.set_q_direction(params['q_direction'])
+            self._settings.set_nac_q_direction(params['q_direction'])
             
         # Anime mode
         if params.has_key('anime_type'):

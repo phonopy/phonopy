@@ -51,7 +51,7 @@ from phonopy.phonon.thermal_displacement import ThermalDisplacements, \
      ThermalDistances, ThermalDisplacementMatrices
 from phonopy.phonon.animation import Animation
 from phonopy.phonon.modulation import Modulation
-from phonopy.phonon.qpoints_mode import write_yaml as write_yaml_qpoints
+from phonopy.phonon.qpoints_mode import QpointsPhonon
 from phonopy.phonon.irreps import IrReps
 from phonopy.phonon.group_velocity import GroupVelocity
 from phonopy.phonon.tetrahedron_mesh import TetrahedronMesh
@@ -765,13 +765,16 @@ class Phonopy:
                            write_dynamical_matrices=False,
                            factor=VaspToTHz):
         self._set_dynamical_matrix()
-        write_yaml_qpoints(q_points,
-                           self._dynamical_matrix,
-                           nac_q_direction=nac_q_direction,
-                           is_eigenvectors=is_eigenvectors,
-                           group_velocity=self._group_velocity,
-                           write_dynamical_matrices=write_dynamical_matrices,
-                           factor=self._factor)
+
+        self._qpoints_phonon = QpointsPhonon(
+            q_points,
+            self._dynamical_matrix,
+            nac_q_direction=nac_q_direction,
+            is_eigenvectors=is_eigenvectors,
+            group_velocity=self._group_velocity,
+            write_dynamical_matrices=write_dynamical_matrices,
+            factor=self._factor)
+        self._qpoints_phonon.write_yaml()
 
     # Animation
     def write_animation(self,
