@@ -54,7 +54,6 @@ from anharmonic.file_IO import \
     write_FORCES_FOURTH, parse_FORCES_SECOND, \
     read_fc4_from_hdf5, read_fc3_from_hdf5, read_fc2_from_hdf5, \
     write_fc4_to_hdf5, write_fc3_to_hdf5, write_fc2_to_hdf5, \
-    write_supercells_with_displacements, \
     write_supercells_with_three_displacements, \
     write_freq_shifts_to_hdf5
 from anharmonic.phonon3.displacement_fc3 import get_third_order_displacements
