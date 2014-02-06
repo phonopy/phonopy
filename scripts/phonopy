@@ -848,12 +848,13 @@ if run_mode == 'qpoints':
         q_points = file_IO.parse_QPOINTS()
         if log_level > 0:
             print "Frequencies at q-points given by QPOINTS:"
-    phonon.write_yaml_qpoints(
+    phonon.set_qpoints_phonon(
         q_points,
         nac_q_direction=settings.get_nac_q_direction(),
         is_eigenvectors=settings.get_is_eigenvectors(),
         write_dynamical_matrices=settings.get_write_dynamical_matrices(),
         factor=factor)
+    phonon.write_yaml_qpoints_phonon()
 
 # Band plot
 elif run_mode == 'band':

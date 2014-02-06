@@ -758,14 +758,13 @@ class Phonopy:
 
 
     # Q-points mode
-    def write_yaml_qpoints(self,
+    def set_qpoints_phonon(self,
                            q_points,
                            nac_q_direction=None,
                            is_eigenvectors=False,
                            write_dynamical_matrices=False,
                            factor=VaspToTHz):
         self._set_dynamical_matrix()
-
         self._qpoints_phonon = QpointsPhonon(
             q_points,
             self._dynamical_matrix,
@@ -774,6 +773,12 @@ class Phonopy:
             group_velocity=self._group_velocity,
             write_dynamical_matrices=write_dynamical_matrices,
             factor=self._factor)
+        
+    def get_qpoints_phonon(self):
+        return (self._qpoints_phonon.get_frequencies(),
+                self._qpoints_phonon.get_eigenvectors())
+    
+    def write_yaml_qpoints_phonon(self):
         self._qpoints_phonon.write_yaml()
 
     # Animation

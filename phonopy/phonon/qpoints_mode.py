@@ -67,6 +67,12 @@ class QpointsPhonon:
 
         self._run()
 
+    def get_frequencies(self):
+        return self._frequencies
+
+    def get_eigenvectors(self):
+        return self._eigenvectors
+        
     def write_yaml(self):
         w = open('qpoints.yaml', 'w')
         w.write("nqpoint: %-7d\n" % len(self._qpoints))
@@ -147,6 +153,11 @@ class QpointsPhonon:
             eigvals = eigvals.real
             self._frequencies.append(np.sqrt(np.abs(eigvals)) *
                                      np.sign(eigvals) * self._factor)
+            
+        self._frequencies = np.array(self._frequencies,
+                                     dtype='double', order='C')
+        self._eigenvectors = np.array(self._eigenvectors,
+                                      dtype='complex128', order='C')
                 
     def _get_dynamical_matrix(self, q):
         if self._nac_q_direction is not None and (np.abs(q) < 1e-5).all():
