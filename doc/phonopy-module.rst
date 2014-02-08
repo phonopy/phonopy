@@ -46,7 +46,12 @@ Import ``phonopy`` and create Phonopy object with
                                          (0.75, 0.25, 0.75),
                                          (0.75, 0.75, 0.25)] )
    bulk.set_cell(np.diag((a, a, a)))
-   phonon = Phonopy(bulk, [[1,0,0],[0,1,0],[0,0,1]], distance=0.01)
+   phonon = Phonopy(bulk,
+                    [[1,0,0],[0,1,0],[0,0,1]],
+		    primitive_matrix=[[0, 0.5, 0.5],
+		                      [0.5, 0, 0.5],
+				      [0.5, 0.5, 0]],
+		    distance=0.01)
 
 Obtain supercells containing respective displacements by
 ``get_supercells_with_displacements``, which are given by a list of
@@ -80,15 +85,19 @@ has to be given in nested list (``sets_of_forces``) as::
 Post process
 ^^^^^^^^^^^^^^^^^
 
-Prepare dynamical matrix internally (``set_post_process``)  with
-
-- primitive matrix (3x3 matrix, see :ref:`variable_primitive_matrix`)
-- sets of forces
+Prepare force constants internally with calculated suuprcell sets of
+forces by
 
 ::
 
-   phonon.set_post_process([[0, 0.5, 0.5], [0.5, 0, 0.5], [0.5, 0.5, 0]],
-                           sets_of_forces)
+   phonon.produce_force_constants(forces=sets_of_forces)
+
+Alternatively, the following is equivalent,
+
+::
+   
+   phonon.set_forces(sets_of_forces)
+   phonon.produce_force_constants()
 
 
 Band structure

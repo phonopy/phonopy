@@ -3,6 +3,15 @@
 Change Log
 ==========
 
+Feb-8-2014: Version 1.8.2
+---------------------------
+
+* ``vasprun.xml`` of VASP 5.2.8 is only specially parsed to treat
+  special wrong character.
+* Python module interface is updated and modified. ``set_post_process``,
+  ``set_force_sets`` will be obsolete. ``set_displacements`` is
+  obsolete.
+
 Jan-9-2014: Version 1.8.0
 ---------------------------
 
