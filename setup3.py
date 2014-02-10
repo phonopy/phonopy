@@ -10,7 +10,7 @@ extension = Extension(
                    'c/anharmonic_h',
                    'c/spglib_h'] +
                    include_dirs_numpy +
-                  include_dirs_lapacke),
+                   include_dirs_lapacke),
     extra_compile_args=['-fopenmp'],
     extra_link_args=['-lgomp',
                      '../lapacke/liblapacke.a',
