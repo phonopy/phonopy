@@ -52,7 +52,7 @@ from anharmonic.file_IO import parse_disp_fc2_yaml, parse_disp_fc3_yaml, \
      write_disp_fc3_yaml
 from anharmonic.phonon3.triplets import get_coarse_ir_grid_points
 from anharmonic.settings import Phono3pyConfParser
-from anharmonic.phonon3 import Phono3py, Phono3pyJointDos, IsotopeScattering, \
+from anharmonic.phonon3 import Phono3py, Phono3pyJointDos, Phono3pyIsotope, \
      get_gruneisen_parameters
 
 phono3py_version = "0.8.2"
@@ -805,10 +805,11 @@ if options.is_isotope:
     mass_variances = settings.get_mass_variances()
     if band_indices is not None:
         band_indices = np.hstack(band_indices).astype('intc')
-    iso = IsotopeScattering(
+    iso = Phono3pyIsotope(
         mesh,
         mass_variances,
         band_indices=band_indices,
+        sigmas=sigmas,
         frequency_factor_to_THz=frequency_factor_to_THz,
         symprec=options.symprec,
         cutoff_frequency=settings.get_cutoff_frequency(),
@@ -818,12 +819,7 @@ if options.is_isotope:
                              phonon_primitive,
                              nac_params=nac_params,
                              frequency_scale_factor=frequency_scale_factor)
-    for sigma in sigmas:
-        if log_level:
-            print "Sigma:", sigma
-        iso.set_sigma(sigma)
-        print iso.run(gp)
-            
+    iso.run(grid_points)
     if log_level:
         print_end()
     sys.exit(0)

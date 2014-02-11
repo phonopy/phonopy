@@ -36,6 +36,20 @@ import sys
 import numpy as np
 from phonopy.structure.tetrahedron_method import TetrahedronMethod
 
+def get_tetrahedra_frequencies(gp,
+                               mesh,
+                               grid_order,
+                               grid_address,
+                               relative_grid_address,
+                               gp_ir_index,
+                               frequencies):
+    t_frequencies = np.zeros((frequencies.shape[1], 24, 4), dtype='double')
+    for i, t in enumerate(relative_grid_address):
+        address = t + grid_address[gp]
+        neighbors = np.dot(address % mesh, grid_order)
+        t_frequencies[:, i, :] = frequencies[gp_ir_index[neighbors]].T
+    return t_frequencies
+        
 class TetrahedronMesh:
     def __init__(self, mesh_object):
         self._mesh_object = mesh_object
@@ -53,6 +67,7 @@ class TetrahedronMesh:
         self._tm = None
         self._tetrahedra_frequencies = None
         self._integration_weights = None
+        self._relative_grid_address = None
 
         self._total_dos = None
         self._partial_dos = None
@@ -92,10 +107,10 @@ class TetrahedronMesh:
 
         reciprocal_lattice = np.linalg.inv(self._cell.get_cell())
         self._tm = TetrahedronMethod(reciprocal_lattice, mesh=self._mesh)
-        relative_grid_address = self._tm.get_tetrahedra()
+        self._relative_grid_address = self._tm.get_tetrahedra()
 
         for i, gp in enumerate(self._ir_grid_points):
-            self._set_tetrahedra_frequencies(gp, relative_grid_address)
+            self._set_tetrahedra_frequencies(gp)
             for ib, frequencies in enumerate(self._tetrahedra_frequencies):
                 self._tm.set_tetrahedra_omegas(frequencies)
                 self._tm.run(self._frequency_points, value=value)
@@ -126,12 +141,12 @@ class TetrahedronMesh:
         self._frequencies = mo.get_frequencies()
         self._eigenvectors = mo.get_eigenvectors()
 
-    def _set_tetrahedra_frequencies(self, gp, relative_grid_address):
-        frequencies = np.zeros(
-            (self._frequencies.shape[1], 24, 4), dtype='double')
-        for i, t in enumerate(relative_grid_address):
-            address = t + self._grid_address[gp]
-            neighbors = np.dot(address % self._mesh, self._grid_order)
-            frequencies[:, i, :] = self._frequencies[
-                self._gp_ir_index[neighbors]].T
-        self._tetrahedra_frequencies = frequencies
+    def _set_tetrahedra_frequencies(self, gp):
+        self._tetrahedra_frequencies = get_tetrahedra_frequencies(
+            gp,
+            self._mesh,
+            self._grid_order,
+            self._grid_address,
+            self._relative_grid_address,
+            self._gp_ir_index,
+            self._frequencies)

@@ -514,30 +514,53 @@ class Phono3py:
         
         
 
-class IsotopeScattering:
+class Phono3pyIsotope:
     def __init__(self,
                  mesh,
                  mass_variances, # length of list is num_atom.
                  band_indices=None,
-                 sigma=0.1,
+                 sigmas=[],
                  frequency_factor_to_THz=VaspToTHz,
                  symprec=1e-5,
                  cutoff_frequency=None,
+                 log_level=0,
                  lapack_zheev_uplo='L'):
+        self._sigmas = sigmas
+        self._log_level = log_level
         self._iso = Isotope(mesh,
                             mass_variances,
                             band_indices=band_indices,
-                            sigma=sigma,
                             frequency_factor_to_THz=frequency_factor_to_THz,
                             symprec=symprec,
                             cutoff_frequency=cutoff_frequency,
                             lapack_zheev_uplo=lapack_zheev_uplo)
 
-    def run(self, grid_point):
-        self._iso.run(grid_point)
-        g_iso = self._iso.get_gamma()
-        return g_iso
-    
+    def run(self, grid_points):
+        for gp in grid_points:
+            self._iso.set_grid_point(gp)
+            
+            if self._log_level:
+                print "------ Isotope scattering ------"
+                print "Grid point: %d" % gp
+                adrs = self._iso.get_grid_address()[gp]
+                q = adrs.astype('double') / self._mesh
+                print "q-point:", q
+                print "Phonon frequency:"
+                frequencies = self._iso.get_phonons()[0]
+                print frequencies[gp]
+            
+            if self._sigmas:
+                for sigma in self._sigmas:
+                    if sigma is None:
+                        print "Tetrahedron method"
+                    else:
+                        print "Sigma:", sigma
+                    self._iso.set_sigma(sigma)
+                    self._iso.run()
+                    print self._iso.get_gamma()
+            else:
+                print "sigma or tetrahedron method has to be set."
+                
     def set_dynamical_matrix(self,
                              fc2,
                              supercell,

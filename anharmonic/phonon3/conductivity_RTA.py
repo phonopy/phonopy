@@ -176,7 +176,6 @@ class conductivity_RTA:
                  symmetry,
                  temperatures=np.arange(0, 1001, 10, dtype='double'),
                  sigmas=[],
-                 tetrahedron_method=True,
                  mass_variances=None,
                  mesh_divisors=None,
                  coarse_mesh_shifts=None,
@@ -185,7 +184,6 @@ class conductivity_RTA:
                  gv_delta_q=None, # finite difference for group veolocity
                  log_level=0):
         self._pp = interaction
-        self._tetrahedron_method = tetrahedron_method
         self._ise = ImagSelfEnergy(self._pp)
         self._temperatures = temperatures
         self._sigmas = sigmas
@@ -425,11 +423,13 @@ class conductivity_RTA:
             if self._log_level:
                 print "Calculating Gamma of ph-isotope with sigma=%s" % sigma
             pp_freqs, pp_eigvecs, pp_phonon_done = self._pp.get_phonons()
+            self._isotope.set_sigma(sigma)
             self._isotope.set_phonons(pp_freqs,
                                       pp_eigvecs,
                                       pp_phonon_done,
                                       dm=self._dm)
-            self._isotope.run(i)
+            self._isotope.set_grid_point(i)
+            self._isotope.run()
             self._gamma_iso[j, i] = self._isotope.get_gamma()
     
     def _set_kappa_at_sigmas(self, i):
@@ -602,6 +602,7 @@ class conductivity_RTA:
         self._isotope = Isotope(
             self._mesh,
             mass_variances,
+            primitive=self._primitive,
             frequency_factor_to_THz=self._frequency_factor_to_THz,
             symprec=self._symmetry.get_symmetry_tolerance(),
             cutoff_frequency=self._cutoff_frequency,
