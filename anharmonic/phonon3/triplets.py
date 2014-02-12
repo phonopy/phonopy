@@ -69,7 +69,7 @@ def get_bz_grid_address(mesh, primitive_lattice, with_boundary=False):
                                                            mesh,
                                                            primitive_lattice)
     if with_boundary:
-        return bz_grid_address
+        return bz_grid_address, bz_map
     else:
         return bz_grid_address[:np.prod(mesh)]
 

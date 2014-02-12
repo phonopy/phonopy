@@ -421,7 +421,11 @@ class conductivity_RTA:
     def _set_gamma_isotope_at_sigmas(self, i):
         for j, sigma in enumerate(self._sigmas):
             if self._log_level:
-                print "Calculating Gamma of ph-isotope with sigma=%s" % sigma
+                print "Calculating Gamma of ph-isotope with",
+                if sigma is None:
+                    print "tetrahedron method"
+                else:
+                    print "sigma=%s" % sigma
             pp_freqs, pp_eigvecs, pp_phonon_done = self._pp.get_phonons()
             self._isotope.set_sigma(sigma)
             self._isotope.set_phonons(pp_freqs,

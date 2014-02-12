@@ -335,7 +335,7 @@ class Interaction:
 
     def _allocate_phonon(self):
         primitive_lattice = np.linalg.inv(self._primitive.get_cell())
-        self._grid_address = get_bz_grid_address(
+        self._grid_address, self._bz_map = get_bz_grid_address(
             self._mesh, primitive_lattice, with_boundary=True)
         num_band = self._primitive.get_number_of_atoms() * 3
         num_grid = len(self._grid_address)

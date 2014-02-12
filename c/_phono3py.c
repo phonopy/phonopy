@@ -29,9 +29,11 @@ static PyObject * py_get_phonon(PyObject *self, PyObject *args);
 static PyObject * py_distribute_fc3(PyObject *self, PyObject *args);
 static PyObject * py_phonopy_zheev(PyObject *self, PyObject *args);
 static PyObject * py_get_isotope_strength(PyObject *self, PyObject *args);
+static PyObject * py_get_thm_isotope_strength(PyObject *self, PyObject *args);
 static PyObject * py_set_permutation_symmetry_fc3(PyObject *self,
 						  PyObject *args);
 static PyObject *py_get_neighboring_gird_points(PyObject *self, PyObject *args);
+static PyObject * py_set_integration_weights(PyObject *self, PyObject *args);
 static PyObject *
 py_set_triplets_integration_weights(PyObject *self, PyObject *args);
 static void get_triplet_tetrahedra_vertices
@@ -53,8 +55,10 @@ static PyMethodDef functions[] = {
   {"distribute_fc3", py_distribute_fc3, METH_VARARGS, "Distribute least fc3 to full fc3"},
   {"zheev", py_phonopy_zheev, METH_VARARGS, "Lapack zheev wrapper"},
   {"isotope_strength", py_get_isotope_strength, METH_VARARGS, "Isotope scattering strength"},
+  {"thm_isotope_strength", py_get_thm_isotope_strength, METH_VARARGS, "Isotope scattering strength for tetrahedron_method"},
   {"permutation_symmetry_fc3", py_set_permutation_symmetry_fc3, METH_VARARGS, "Set permutation symmetry for fc3"},
   {"neighboring_grid_points", py_get_neighboring_gird_points, METH_VARARGS, "Neighboring grid points by relative grid addresses"},
+  {"integration_weights", py_set_integration_weights, METH_VARARGS, "Integration weights of tetrahedron method"},
   {"triplets_integration_weights", py_set_triplets_integration_weights, METH_VARARGS, "Integration weights of tetrahedron metod for triplets"},
   {NULL, NULL, 0, NULL}
 };
@@ -499,7 +503,7 @@ static PyObject * py_get_isotope_strength(PyObject *self, PyObject *args)
   PyArrayObject* gamma_py;
   PyArrayObject* frequencies_py;
   PyArrayObject* eigenvectors_py;
-  PyArrayObject* band_indicies_py;
+  PyArrayObject* band_indices_py;
   PyArrayObject* mass_variances_py;
   int grid_point;
   int num_grid_points;
@@ -512,7 +516,7 @@ static PyObject * py_get_isotope_strength(PyObject *self, PyObject *args)
 			&mass_variances_py,
 			&frequencies_py,
 			&eigenvectors_py,
-			&band_indicies_py,
+			&band_indices_py,
 			&num_grid_points,
 			&sigma,
 			&cutoff_frequency)) {
@@ -524,22 +528,122 @@ static PyObject * py_get_isotope_strength(PyObject *self, PyObject *args)
   const double* frequencies = (double*)frequencies_py->data;
   const lapack_complex_double* eigenvectors =
     (lapack_complex_double*)eigenvectors_py->data;
-  const int* band_indicies = (int*)band_indicies_py->data;
+  const int* band_indices = (int*)band_indices_py->data;
   const double* mass_variances = (double*)mass_variances_py->data;
   const int num_band = (int)frequencies_py->dimensions[1];
-  const int num_band0 = (int)band_indicies_py->dimensions[0];
+  const int num_band0 = (int)band_indices_py->dimensions[0];
 
-  get_isotope_scattering_strength(gamma,
-				  grid_point,
-				  mass_variances,
-				  frequencies,
-				  eigenvectors,
-				  num_grid_points,
-				  band_indicies,
-				  num_band,
-				  num_band0,
-				  sigma,
-				  cutoff_frequency);
+  int i, j, k;
+  double f, f0;
+  int *weights, *ir_grid_points;
+  double *integration_weights;
+
+  ir_grid_points = (int*)malloc(sizeof(int) * num_grid_points);
+  weights = (int*)malloc(sizeof(int) * num_grid_points);
+  integration_weights = (double*)malloc(sizeof(double) *
+  					num_grid_points * num_band0 * num_band);
+
+  for (i = 0; i < num_grid_points; i++) {
+    ir_grid_points[i] = i;
+    weights[i] = 1;
+    for (j = 0; j < num_band0; j++) {
+      f0 = frequencies[grid_point * num_band + band_indices[j]];
+      for (k = 0; k < num_band; k++) {
+  	f = frequencies[i * num_band + k];
+  	integration_weights[i * num_band0 * num_band +
+  			    j * num_band + k] = gaussian(f - f0, sigma);
+      }
+    }
+  }
+
+  get_thm_isotope_scattering_strength(gamma,
+  				      grid_point,
+  				      ir_grid_points,
+  				      weights,
+  				      mass_variances,
+  				      frequencies,
+  				      eigenvectors,
+  				      num_grid_points,
+  				      band_indices,
+  				      num_band,
+  				      num_band0,
+  				      integration_weights,
+  				      cutoff_frequency);
+      
+  free(ir_grid_points);
+  free(weights);
+  free(integration_weights);
+  
+  /* get_isotope_scattering_strength(gamma, */
+  /* 				  grid_point, */
+  /* 				  mass_variances, */
+  /* 				  frequencies, */
+  /* 				  eigenvectors, */
+  /* 				  num_grid_points, */
+  /* 				  band_indices, */
+  /* 				  num_band, */
+  /* 				  num_band0, */
+  /* 				  sigma, */
+  /* 				  cutoff_frequency); */
+  
+  Py_RETURN_NONE;
+}
+
+static PyObject * py_get_thm_isotope_strength(PyObject *self, PyObject *args)
+{
+  PyArrayObject* gamma_py;
+  PyArrayObject* frequencies_py;
+  PyArrayObject* eigenvectors_py;
+  PyArrayObject* band_indices_py;
+  PyArrayObject* mass_variances_py;
+  PyArrayObject* ir_grid_points_py;
+  PyArrayObject* weights_py;
+  int grid_point;
+  double cutoff_frequency;
+  PyArrayObject* integration_weights_py;
+
+
+  if (!PyArg_ParseTuple(args, "OiOOOOOOOd",
+			&gamma_py,
+			&grid_point,
+			&ir_grid_points_py,
+			&weights_py,
+			&mass_variances_py,
+			&frequencies_py,
+			&eigenvectors_py,
+			&band_indices_py,
+			&integration_weights_py,
+			&cutoff_frequency)) {
+    return NULL;
+  }
+
+
+  double* gamma = (double*)gamma_py->data;
+  const double* frequencies = (double*)frequencies_py->data;
+  const int* ir_grid_points = (int*)ir_grid_points_py->data;
+  const int* weights = (int*)weights_py->data;
+  const lapack_complex_double* eigenvectors =
+    (lapack_complex_double*)eigenvectors_py->data;
+  const int* band_indices = (int*)band_indices_py->data;
+  const double* mass_variances = (double*)mass_variances_py->data;
+  const int num_band = (int)frequencies_py->dimensions[1];
+  const int num_band0 = (int)band_indices_py->dimensions[0];
+  const double* integration_weights = (double*)integration_weights_py->data;
+  const int num_ir_grid_points = (int)ir_grid_points_py->dimensions[0];
+    
+  get_thm_isotope_scattering_strength(gamma,
+				      grid_point,
+				      ir_grid_points,
+				      weights,
+				      mass_variances,
+				      frequencies,
+				      eigenvectors,
+				      num_ir_grid_points,
+				      band_indices,
+				      num_band,
+				      num_band0,
+				      integration_weights,
+				      cutoff_frequency);
   
   Py_RETURN_NONE;
 }
@@ -673,6 +777,72 @@ static PyObject * py_get_neighboring_gird_points(PyObject *self, PyObject *args)
   Py_RETURN_NONE;
 }
 
+static PyObject * py_set_integration_weights(PyObject *self, PyObject *args)
+{
+  PyArrayObject* iw_py;
+  PyArrayObject* frequency_points_py;
+  PyArrayObject* relative_grid_address_py;
+  PyArrayObject* mesh_py;
+  PyArrayObject* grid_points_py;
+  PyArrayObject* frequencies_py;
+  PyArrayObject* bz_grid_address_py;
+  PyArrayObject* bz_map_py;
+  if (!PyArg_ParseTuple(args, "OOOOOOOO",
+			&iw_py,
+			&frequency_points_py,
+			&relative_grid_address_py,
+			&mesh_py,
+			&grid_points_py,
+			&frequencies_py,
+			&bz_grid_address_py,
+			&bz_map_py)) {
+    return NULL;
+  }
+
+  double *iw = (double*)iw_py->data;
+  const double *frequency_points = (double*)frequency_points_py->data;
+  const int num_band0 = frequency_points_py->dimensions[0];
+  SPGCONST int (*relative_grid_address)[4][3] =
+    (int(*)[4][3])relative_grid_address_py->data;
+  const int *mesh = (int*)mesh_py->data;
+  SPGCONST int *grid_points = (int*)grid_points_py->data;
+  const int num_gp = (int)grid_points_py->dimensions[0];
+  SPGCONST int (*bz_grid_address)[3] = (int(*)[3])bz_grid_address_py->data;
+  const int *bz_map = (int*)bz_map_py->data;
+  const double *frequencies = (double*)frequencies_py->data;
+  const int num_band = (int)frequencies_py->dimensions[1];
+
+  int i, j, k, bi;
+  int vertices[24][4];
+  double freq_vertices[24][4];
+    
+#pragma omp parallel for private(j, k, bi, vertices, freq_vertices)
+  for (i = 0; i < num_gp; i++) {
+    for (j = 0; j < 24; j++) {
+      kpt_get_neighboring_grid_points(vertices[j],
+				      grid_points[i],
+				      relative_grid_address[j],
+				      4,
+				      mesh,
+				      bz_grid_address,
+				      bz_map);
+    }
+    for (bi = 0; bi < num_band; bi++) {
+      for (j = 0; j < 24; j++) {
+	for (k = 0; k < 4; k++) {
+	  freq_vertices[j][k] = frequencies[vertices[j][k] * num_band + bi];
+	}
+      }
+      for (j = 0; j < num_band0; j++) {
+	iw[i * num_band0 * num_band + j * num_band + bi] =
+	  thm_get_integration_weight(frequency_points[j], freq_vertices, 'I');
+      }
+    }
+  }
+	    
+  Py_RETURN_NONE;
+}
+
 static PyObject *
 py_set_triplets_integration_weights(PyObject *self, PyObject *args)
 {
@@ -728,7 +898,7 @@ py_set_triplets_integration_weights(PyObject *self, PyObject *args)
     }
   }
 
-#pragma omp parallel for private(j, k, l, b1, b2, sign, vertices, adrs_shift, f0, f1, f2, freq_vertices)
+#pragma omp parallel for private(j, k, b1, b2, sign, vertices, adrs_shift, f0, f1, f2, freq_vertices)
   for (i = 0; i < num_triplets; i++) {
     get_triplet_tetrahedra_vertices(vertices,
 				    tp_relative_grid_address,
@@ -747,10 +917,10 @@ py_set_triplets_integration_weights(PyObject *self, PyObject *args)
 	    freq_vertices[2][j][k] = f1 - f2;
 	  }
 	}
-	for (l = 0; l < num_band0; l++) {
-	  f0 = frequency_points[l];
+	for (j = 0; j < num_band0; j++) {
+	  f0 = frequency_points[j];
 	  adrs_shift = (i * num_band0 * num_band * num_band +
-			l * num_band * num_band + b1 * num_band + b2) * 2;
+			j * num_band * num_band + b1 * num_band + b2) * 2;
 	  iw[adrs_shift] =
 	    thm_get_integration_weight(f0, freq_vertices[0], 'I');
 	  iw[adrs_shift + 1] =

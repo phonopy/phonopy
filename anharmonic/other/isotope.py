@@ -19,7 +19,7 @@ class Isotope:
                  symprec=1e-5,
                  cutoff_frequency=None,
                  lapack_zheev_uplo='L'):
-        self._mesh = mesh
+        self._mesh = np.array(mesh, dtype='intc')
         self._mass_variances = np.array(mass_variances, dtype='double')
         self._primitive = primitive
         self._band_indices = band_indices
@@ -34,6 +34,7 @@ class Isotope:
         self._nac_q_direction = None
         
         self._grid_address = None
+        self._bz_map = None
         self._grid_points = None
 
         self._frequencies = None
@@ -47,25 +48,21 @@ class Isotope:
         
     def set_grid_point(self, grid_point):
         self._grid_point = grid_point
-        self._reciprocal_lattice = np.linalg.inv(self._primitive.get_cell())
         num_band = self._primitive.get_number_of_atoms() * 3
         if self._band_indices is None:
             self._band_indices = np.arange(num_band, dtype='intc')
         else:
             self._band_indices = np.array(self._band_indices, dtype='intc')
-        num_grid = np.prod(self._mesh)
-        self._grid_points = np.arange(num_grid, dtype='intc')
+            
+        self._grid_points = np.arange(np.prod(self._mesh), dtype='intc')
         
-        if self._phonon_done is None:
-            self._phonon_done = np.zeros(num_grid, dtype='byte')
-            self._frequencies = np.zeros((num_grid, num_band), dtype='double')
-            self._eigenvectors = np.zeros((num_grid, num_band, num_band),
-                                          dtype='complex128')
-
         if self._grid_address is None:
             primitive_lattice = np.linalg.inv(self._primitive.get_cell())
-            self._grid_address = get_bz_grid_address(self._mesh,
-                                                     primitive_lattice)
+            self._grid_address, self._bz_map = get_bz_grid_address(
+                self._mesh, primitive_lattice, with_boundary=True)
+        
+        if self._phonon_done is None:
+            self._allocate_phonon()
 
     def set_sigma(self, sigma):
         if sigma is None:
@@ -114,27 +111,71 @@ class Isotope:
             self._nac_q_direction = np.array(nac_q_direction, dtype='double')
 
     def _run_c(self):
-        self._set_phonon_c()
+        self._set_phonon_c(self._grid_points)
         import anharmonic._phono3py as phono3c
         gamma = np.zeros(len(self._band_indices), dtype='double')
-        phono3c.isotope_strength(gamma,
-                                 self._grid_point,
-                                 self._mass_variances,
-                                 self._frequencies,
-                                 self._eigenvectors,
-                                 self._band_indices,
-                                 np.prod(self._mesh),
-                                 self._sigma,
-                                 self._cutoff_frequency)
+        if self._sigma is None:
+            self._set_integration_weights()
+            weights = np.ones(len(self._grid_points), dtype='intc')
+            phono3c.thm_isotope_strength(gamma,
+                                         self._grid_point,
+                                         self._grid_points,
+                                         weights,
+                                         self._mass_variances,
+                                         self._frequencies,
+                                         self._eigenvectors,
+                                         self._band_indices,
+                                         self._integration_weights,
+                                         self._cutoff_frequency)
+        else:
+            phono3c.isotope_strength(gamma,
+                                     self._grid_point,
+                                     self._mass_variances,
+                                     self._frequencies,
+                                     self._eigenvectors,
+                                     self._band_indices,
+                                     np.prod(self._mesh),
+                                     self._sigma,
+                                     self._cutoff_frequency)
+            
         self._gamma = np.pi ** 2 / np.prod(self._mesh) * gamma
 
     def _set_integration_weights(self):
-        thm = TetrahedronMethod(self._reciprocal_lattice, mesh=self._mesh)
+        primitive_lattice = np.linalg.inv(self._primitive.get_cell())
+        thm = TetrahedronMethod(primitive_lattice, mesh=self._mesh)
         num_grid_points = len(self._grid_points)
         num_band = self._primitive.get_number_of_atoms() * 3
         self._integration_weights = np.zeros(
-            (len(self._band_indices), num_band, num_grid_points), dtype='double')
+            (num_grid_points, len(self._band_indices), num_band), dtype='double')
+        self._set_integration_weights_c(thm)
 
+    def _set_integration_weights_c(self, thm):
+        import anharmonic._phono3py as phono3c
+        unique_vertices = thm.get_unique_tetrahedra_vertices()
+        neighboring_grid_points = np.zeros(
+            len(unique_vertices) * len(self._grid_points), dtype='intc')
+        phono3c.neighboring_grid_points(
+            neighboring_grid_points,
+            self._grid_points,
+            unique_vertices,
+            self._mesh,
+            self._grid_address,
+            self._bz_map)
+        self._set_phonon_c(np.unique(neighboring_grid_points))
+        freq_points = np.array(
+            self._frequencies[self._grid_point, self._band_indices],
+            dtype='double', order='C')
+        phono3c.integration_weights(
+            self._integration_weights,
+            freq_points,
+            thm.get_tetrahedra(),
+            self._mesh,
+            self._grid_points,
+            self._frequencies,
+            self._grid_address,
+            self._bz_map)
+        
+    def _set_integration_weights_py(self, thm):
         for i, gp in enumerate(self._grid_points):
             tfreqs = get_tetrahedra_frequencies(
                 gp,
@@ -149,7 +190,7 @@ class Isotope:
                 thm.set_tetrahedra_omegas(frequencies)
                 thm.run(self._frequencies[self._grid_point, self._band_indices])
                 iw = thm.get_integration_weight()
-                self._integration_weights[:, bi, i] = iw
+                self._integration_weights[i, :, bi] = iw
                 
     def _run_py(self):
         for gp in self._grid_points:
@@ -173,19 +214,19 @@ class Isotope:
                     ti_sum_band = np.sum(np.abs(vec * vec0) ** 2 * mass_v)
                     if self._sigma is None:
                         ti_sum += ti_sum_band * self._integration_weights[
-                            bi, j, i]
+                            i, bi, j]
                     else:
                         ti_sum += ti_sum_band * gaussian(f0 - f, self._sigma)
             t_inv.append(np.pi ** 2 / np.prod(self._mesh) * f0 ** 2 * ti_sum)
 
         self._gamma = np.array(t_inv, dtype='double') / 2
             
-    def _set_phonon_c(self):
+    def _set_phonon_c(self, grid_points):
         set_phonon_c(self._dm,
                      self._frequencies,
                      self._eigenvectors,
                      self._phonon_done,
-                     self._grid_points,
+                     grid_points,
                      self._grid_address,
                      self._mesh,
                      self._frequency_factor_to_THz,
@@ -202,3 +243,12 @@ class Isotope:
                       self._dm,
                       self._frequency_factor_to_THz,                  
                       self._lapack_zheev_uplo)
+
+    def _allocate_phonon(self):
+        num_band = self._primitive.get_number_of_atoms() * 3
+        num_grid = len(self._grid_address)
+        self._phonon_done = np.zeros(num_grid, dtype='byte')
+        self._frequencies = np.zeros((num_grid, num_band), dtype='double')
+        self._eigenvectors = np.zeros((num_grid, num_band, num_band),
+                                      dtype='complex128')
+        

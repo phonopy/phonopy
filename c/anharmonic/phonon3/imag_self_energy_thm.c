@@ -29,7 +29,7 @@ void get_thm_imag_self_energy_at_bands(double *imag_self_energy,
 				       const double cutoff_frequency)
 {
   int i, j, num_triplets, num_band0, num_band, gp1, gp2;
-  double sum_g, f1, f2;
+  double f1, f2;
   double *n1, *n2, *ise;
 
   num_triplets = fc3_normal_sqared->dims[0];
@@ -38,7 +38,7 @@ void get_thm_imag_self_energy_at_bands(double *imag_self_energy,
 
   ise = (double*)malloc(sizeof(double) * num_triplets * num_band0);
   
-#pragma omp parallel for private(j, gp1, gp2, sum_g, n1, n2, f1, f2)
+#pragma omp parallel for private(j, gp1, gp2, n1, n2, f1, f2)
   for (i = 0; i < num_triplets; i++) {
     gp1 = triplets[i * 3 + 1];
     gp2 = triplets[i * 3 + 2];
@@ -140,4 +140,3 @@ sum_thm_imag_self_energy_at_band_0K(const int num_band,
   }
   return sum_g;
 }
-
