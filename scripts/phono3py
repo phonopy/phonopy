@@ -652,6 +652,11 @@ else:
     nac_params = None
     nac_q_direction = None
 
+if mesh is None:
+    if log_level:
+        print_end()
+    sys.exit(0)
+    
 ##############################
 # Phonon Gruneisen parameter #
 ##############################
@@ -724,7 +729,8 @@ if options.is_gruneisen:
 #######################
 if log_level:
     print "--------------------------- Settings ----------------------------"
-    print "Mesh sampling: [ %d %d %d ]" % tuple(mesh)
+    if mesh is not None:
+        print "Mesh sampling: [ %d %d %d ]" % tuple(mesh)
     if mesh_divs is not None and settings.get_is_bterta():
         print "Mesh divisors: [ %d %d %d ]" % tuple(mesh_divs)
     if band_indices is not None and not settings.get_is_bterta():
