@@ -13,6 +13,7 @@
 #include "primitive.h"
 #include "refinement.h"
 #include "spacegroup.h"
+#include "spg_database.h"
 #include "spin.h"
 #include "symmetry.h"
 #include "tetrahedron_method.h"
@@ -420,6 +421,22 @@ int spg_get_pointgroup(char symbol[6],
   return ptg_num + 1;
 }
 
+SpglibSpacegroupType spg_get_spacegroup_type(int hall_number)
+{
+  SpglibSpacegroupType spglibtype;
+  SpacegroupType spgtype;
+
+  spgtype = spgdb_get_spacegroup_type(hall_number);
+  spglibtype.number = spgtype.number;
+  strcpy(spglibtype.schoenflies, spgtype.schoenflies);
+  strcpy(spglibtype.hall_symbol, spgtype.hall_symbol);
+  strcpy(spglibtype.international, spgtype.international);
+  strcpy(spglibtype.international_full, spgtype.international_full);
+  strcpy(spglibtype.international_short, spgtype.international_short);
+  
+  return spglibtype;
+}
+
 int spg_refine_cell(double lattice[3][3],
 		    double position[][3],
 		    int types[],
@@ -695,8 +712,10 @@ static SpglibDataset * get_dataset(SPGCONST double lattice[3][3],
 						   primitive,
 						   &spacegroup,
 						   tolerance);
-    dataset->rotations = (int (*)[3][3]) malloc(sizeof(int[3][3]) * symmetry->size);
-    dataset->translations = (double (*)[3]) malloc(sizeof(double[3]) * symmetry->size);
+    dataset->rotations = (int (*)[3][3])
+      malloc(sizeof(int[3][3]) * symmetry->size);
+    dataset->translations = (double (*)[3])
+      malloc(sizeof(double[3]) * symmetry->size);
     dataset->n_operations = symmetry->size;
     for (i = 0; i < symmetry->size; i++) {
       mat_copy_matrix_i3(dataset->rotations[i], symmetry->rot[i]);

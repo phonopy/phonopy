@@ -74,6 +74,16 @@ typedef struct {
   int *equivalent_atoms;
 } SpglibDataset;
 
+/* This is a copy from spg_database.h except for holohedry. */
+typedef struct {
+  int number;
+  char schoenflies[7];
+  char hall_symbol[17];
+  char international[32];
+  char international_full[20];
+  char international_short[11];
+} SpglibSpacegroupType;
+
 SpglibDataset * spg_get_dataset(SPGCONST double lattice[3][3],
 				SPGCONST double position[][3],
 				const int types[],
@@ -219,6 +229,10 @@ int spg_get_pointgroup(char symbol[6],
 		       SPGCONST int rotations[][3][3],
 		       const int num_rotations);
 
+/* Space-group type information is accessed by index of hall symbol. */
+/* The index is defined from 1 to 530. */
+SpglibSpacegroupType spg_get_spacegroup_type(int hall_number);
+
 /* Bravais lattice with internal atomic points are returned. */
 /* The arrays are require to have 4 times larger memory space */
 /* those of input cell. */
@@ -236,6 +250,7 @@ int spgat_refine_cell(double lattice[3][3],
 		      const int num_atom,
 		      const double symprec,
 		      const double angle_tolerance);
+
 
 /* Irreducible reciprocal grid points are searched from uniform */
 /* mesh grid points specified by ``mesh`` and ``is_shift``. */
