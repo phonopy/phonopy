@@ -112,6 +112,8 @@ parser.set_defaults(band_indices=None,
                     displacement_distance=0.03,
                     delta_fc2_sets_mode=False,
                     factor=None,
+                    forces_fc3_mode=False,
+                    force_sets_mode=False,
                     freq_scale=None,
                     gamma_option=0,
                     grid_points=None,
@@ -192,18 +194,20 @@ parser.add_option("--cutpair", "--cutoff_pair_distance",
                   help="Cutoff distance between pairs of displaced atoms used for supercell creation with displacements and making third-order force constants")
 parser.add_option("-d", "--disp", dest="is_displacement", action="store_true",
                   help="As first stage, get least displacements")
-parser.add_option("--decay", dest="is_decay_channel",
-                  action="store_true", help="Calculate decay channels")
+# parser.add_option("--decay", dest="is_decay_channel",
+#                   action="store_true", help="Calculate decay channels")
 parser.add_option("--dim", dest="supercell_dimension", type="string",
                   help="Supercell dimension")
 parser.add_option("--dim2", dest="supercell_dimension_extra",
                   type="string", help="Supercell dimension for extra fc2")
-parser.add_option("--cf3", "--create_f3", dest="forces_third_mode",
-                  action="store_true", help="Create FORCES_THIRD")
-parser.add_option("--cdfc2", "--create_delta_fc2", dest="delta_fc2_sets_mode",
-                  action="store_true", help="Create DELTA_FC2_SETS")
-parser.add_option("--dfc2", "--delta_fc2", dest="read_delta_fc2",
-                  action="store_true", help="Read DELTA_FC2_SETS")
+parser.add_option("--cf3", "--create_f3", dest="forces_fc3_mode",
+                  action="store_true", help="Create FORCES_FC3")
+parser.add_option("--cfs", "--create_force_sets", dest="force_sets_mode",
+                  action="store_true", help="Create phonopy FORCE_SETS")
+# parser.add_option("--cdfc2", "--create_delta_fc2", dest="delta_fc2_sets_mode",
+#                   action="store_true", help="Create DELTA_FC2_SETS")
+# parser.add_option("--dfc2", "--delta_fc2", dest="read_delta_fc2",
+#                   action="store_true", help="Read DELTA_FC2_SETS")
 parser.add_option("--factor", dest="factor", type="float",
                   help="Conversion factor to favorite frequency unit")
 parser.add_option("--fc2", dest="read_fc2", action="store_true",
@@ -212,8 +216,8 @@ parser.add_option("--fc2_extra", dest="read_fc2_extra", action="store_true",
                   help="Read extra second order force constants")
 parser.add_option("--fc3", dest="read_fc3", action="store_true",
                   help="Read third order force constants")
-parser.add_option("--freepath", dest="max_freepath", type="float",
-                  help="Maximum mean free path of phonon in meter")
+# parser.add_option("--freepath", dest="max_freepath", type="float",
+#                   help="Maximum mean free path of phonon in meter")
 parser.add_option("--freq_scale", dest="freq_scale", type="float",
                   help="Scale factor is multiplied to frequencies only, i.e., changes frequencies but assumed not to change the physical unit")
 parser.add_option("--freq_pitch", dest="frequency_pitch", type="float",
@@ -271,8 +275,8 @@ parser.add_option("--q_direction", dest="q_direction", type="string",
                   help="q-vector direction at q->0 for non-analytical term correction")
 parser.add_option("-q", "--quiet", dest="quiet", action="store_true",
                   help="Print out smallest information")
-parser.add_option("--read_amplitude", dest="read_amplitude", action="store_true",
-                  help="Read phonon-phonon interaction amplitudes")
+# parser.add_option("--read_amplitude", dest="read_amplitude", action="store_true",
+#                   help="Read phonon-phonon interaction amplitudes")
 parser.add_option("--read_gamma", dest="read_gamma", action="store_true",
                   help="Read Gammas from files")
 parser.add_option("--sym_fc2", dest="is_symmetrize_fc2", action="store_true",
@@ -335,7 +339,7 @@ if log_level:
 #####################
 # Create FORCES_FC3 #
 #####################
-if options.forces_third_mode:
+if options.forces_fc3_mode:
     if input_filename is None:
         filename = 'disp_fc3.yaml'
     else:
@@ -348,6 +352,22 @@ if options.forces_third_mode:
     print_end()
     exit(0)
 
+#####################
+# Create FORCE_SETS #
+#####################
+if options.force_sets_mode:
+    if input_filename is None:
+        filename = 'disp_fc3.yaml'
+    else:
+        filename = 'disp_fc3.' + input_filename + '.yaml'
+    file_exists(filename, log_level)
+    if log_level:
+        print "Displacement dataset is read from %s." % filename
+    disp_dataset = parse_disp_fc3_yaml()
+    write_FORCES_FC3_vasp(args, disp_dataset)
+    print_end()
+    exit(0)
+    
 ##################
 # Parse settings #
 ##################
