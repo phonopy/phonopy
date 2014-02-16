@@ -109,25 +109,26 @@ def write_FORCE_SETS_wien2k(forces_filenames,
                             is_distribute=True,
                             symprec=1e-5):
 
-    forces = []
     natom = supercell.get_number_of_atoms()
     lattice = supercell.get_cell()
 
-    for wien2k_filename, disp in zip(forces_filenames, displacements):
+    for wien2k_filename, disp in zip(forces_filenames,
+                                     displacements['first_atoms']):
         # Parse wien2k case.scf file
         wien2k_forces = wien2k.get_forces_wien2k(wien2k_filename, lattice)
         if is_distribute:
-            force_set = wien2k.distribute_forces(supercell,
-                                                 disp,
-                                                 wien2k_forces,
-                                                 wien2k_filename,
-                                                 symprec)
+            force_set = wien2k.distribute_forces(
+                supercell,
+                [disp['number'], disp['displacement']],
+                wien2k_forces,
+                wien2k_filename,
+                symprec)
             if not force_set:
                 return False
         else:
             if not (natom == len(wien2k_forces)):
-                print "%s contains only forces of %d atoms" % (wien2k_filename,
-                                                               len(wien2k_forces))
+                print "%s contains only forces of %d atoms" % (
+                    wien2k_filename, len(wien2k_forces))
                 return False
             else:
                 force_set = wien2k_forces
@@ -136,26 +137,31 @@ def write_FORCE_SETS_wien2k(forces_filenames,
         print "Drift force of %s" % wien2k_filename
         print "%12.8f %12.8f %12.8f" % tuple(drift_force)
         print "This drift force was subtracted from forces."
-        print 
+        print
 
-        forces.append(np.array(force_set) - drift_force)
+        disp['forces'] = np.array(force_set) - drift_force
                 
-    write_FORCE_SETS(filename, natom, displacements, forces)
+    write_FORCE_SETS(displacements, filename=filename)
     return True
 
 def write_FORCE_SETS_vasp(forces_filenames,
                           displacements,
-                          num_atom,
                           filename='FORCE_SETS',
                           is_zero_point=False,
                           verbose=True):
-
     try:
         from lxml import etree
     except ImportError:
         print "You need to install python-lxml."
         sys.exit(1)
 
+    if verbose:
+        print "counter (file index):",
+        
+    num_atom = displacements['natom']
+    count = 0
+    are_files_correct = True
+        
     if is_zero_point:
         force_files = forces_filenames[1:]
         if vasp.is_version528(forces_filenames[0]):
@@ -164,103 +170,72 @@ def write_FORCE_SETS_vasp(forces_filenames,
         else:
             zero_forces = vasp.get_forces_vasprun_xml(
                 etree.iterparse(forces_filenames[0], tag='varray'))
-                
+
+        if verbose:
+            print "%d" % (count + 1),
+        count += 1
+            
+        if not check_forces(zero_forces, num_atom, forces_filenames[0]):
+            are_files_correct = False
     else:
         force_files = forces_filenames
         zero_forces = None
 
-    forces = []
-
-    # Show progress 
-    for i in range(len(displacements)):
+    for i, disp in enumerate(displacements['first_atoms']):
         if vasp.is_version528(force_files[i]):
-            forces.append(vasp.get_forces_vasprun_xml(etree.iterparse(
-                vasp.VasprunWrapper(force_files[i]), tag='varray')))
+            disp['forces'] = vasp.get_forces_vasprun_xml(etree.iterparse(
+                vasp.VasprunWrapper(force_files[i]), tag='varray'))
         else:
-            forces.append(vasp.get_forces_vasprun_xml(
-                etree.iterparse(force_files[i], tag='varray')))
+            disp['forces'] = vasp.get_forces_vasprun_xml(
+                etree.iterparse(force_files[i], tag='varray'))
 
-    if is_zero_point:
-        dummy_forces = [zero_forces] + forces
-    else:
-        dummy_forces = forces
-    if is_forces_read(dummy_forces, num_atom, forces_filenames):
         if verbose:
-            print >> sys.stderr, "counter (file index):",
-        write_FORCE_SETS(filename,
-                         num_atom,
-                         displacements,
-                         forces,
-                         zero_forces,
-                         verbose)
-        return True
-    else:
+            print "%d" % (count + 1),
+        count += 1
+        
+        if not check_forces(disp['forces'], num_atom, force_files[i]):
+            are_files_correct = False
+
+    if verbose:
+        print
+        
+    write_FORCE_SETS(displacements,
+                     filename=filename,
+                     zero_forces=zero_forces)
+
+    return are_files_correct
+
+def check_forces(forces, num_atom, filename):
+    if len(forces) != num_atom:
+        print " \"%s\" does not contain necessary information." % filename,
         return False
+    else:
+        return True
 
-def is_forces_read(force_sets, num_atom, filenames):
-    is_read = True
-    for i, forces in enumerate(force_sets):
-        if not len(forces)==num_atom:
-            is_read = False
-            print "\'%s\' does not contain necessary information." % filenames[i]
-
-    return is_read
-
-def write_FORCE_SETS_from_dataset(dataset,
-                                  filename='FORCE_SETS',
-                                  verbose=False):
-    displacements = [[x['number'], x['displacement']]
-                     for x in dataset['first_atoms']]
+def write_FORCE_SETS(dataset, filename='FORCE_SETS', zero_forces=None):
+    num_atom = dataset['natom']
+    displacements = dataset['first_atoms']
     forces = [x['forces'] for x in dataset['first_atoms']]
-    write_FORCE_SETS(filename,
-                     dataset['natom'],
-                     displacements,
-                     forces,
-                     verbose=verbose)
-
-def write_FORCE_SETS(filename,
-                     natom,
-                     displacements,
-                     forces,
-                     zero_forces=None,
-                     verbose=True):
-
-    disps = sort_displacements(displacements)
-
+    
     # Write FORCE_SETS
-    file = open(filename, 'w')
-    file.write("%-5d\n" % natom)
-    file.write("%-5d\n" % len(disps))
-    for count, disp in enumerate(disps):
-        # Show progress
-        if verbose:
-            print >> sys.stderr, "%d (%d) " % (count+1, disp[2] + 1),
-        file.write("\n%-5d\n" % (disp[0] + 1))
-        file.write("%20.16f %20.16f %20.16f\n" % (tuple(disp[1])))
+    fp = open(filename, 'w')
+    fp.write("%-5d\n" % num_atom)
+    fp.write("%-5d\n" % len(displacements))
+    for count, disp in enumerate(displacements):
+        fp.write("\n%-5d\n" % (disp['number'] + 1))
+        fp.write("%20.16f %20.16f %20.16f\n" % (tuple(disp['displacement'])))
 
         # Subtract residual forces
-        if not zero_forces==None:
-            forces[disp[2]] -= zero_forces
+        if zero_forces is not None:
+            forces[count] -= zero_forces
 
-        for f in forces[disp[2]]:
-            file.write("%15.10f %15.10f %15.10f\n" % (tuple(f)))
-
-    # Show progress
-    if verbose:
-        print >> sys.stderr, "\n"
+        for f in forces[count]:
+            fp.write("%15.10f %15.10f %15.10f\n" % (tuple(f)))
 
 def mycmp(x, y):
     return cmp(x[0], y[0])
 
-# Sort by the atom numbering
-# To remember the original order, the original index is added at 5th element.
-def sort_displacements(displacements):
-    for i, disp in enumerate(displacements):
-        disp.append(i)
-    displacements.sort(mycmp)
-    return displacements
-
-def parse_disp_yaml_with_supercell(filename='disp.yaml'):
+def parse_disp_yaml(filename="disp.yaml", return_cell=False):
     try:
         import yaml
     except ImportError:
@@ -269,45 +244,38 @@ def parse_disp_yaml_with_supercell(filename='disp.yaml'):
         
     try:
         from yaml import CLoader as Loader
-        from yaml import CDumper as Dumper
     except ImportError:
-        from yaml import Loader, Dumper
+        from yaml import Loader
 
-    data = yaml.load(open(filename).read(), Loader=Loader)
-    lattice = data['lattice']
-    displacements = []
-    for x in data['displacements']:
-        displacements.append([x['atom']-1, x['displacement']])
-    positions = [x['position'] for x in data['atoms']]
-    symbols = [x['symbol'] for x in data['atoms']]
-    cell = Atoms(cell=lattice,
-                 scaled_positions=positions,
-                 symbols=symbols,
-                 pbc=True)
+    dataset = yaml.load(open(filename), Loader=Loader)
+    natom = dataset['natom']
+    new_dataset = {}
+    new_dataset['natom'] = natom
+    new_first_atoms = []
+    for first_atoms in dataset['displacements']:
+        first_atoms['atom'] -= 1
+        atom1 = first_atoms['atom']
+        disp1 = first_atoms['displacement']
+        if 'direction' in first_atoms:
+            direct1 = first_atoms['direction']
+            new_first_atoms.append({'number': atom1,
+                                    'displacement': disp1,
+                                    'direction':direct1})
+        else:
+            new_first_atoms.append({'number': atom1, 'displacement': disp1})
+    new_dataset['first_atoms'] = new_first_atoms
     
-    return displacements, cell
-
-def parse_disp_yaml(filename='disp.yaml'):
-    try:
-        import yaml
-    except ImportError:
-        print "You need to install python-yaml."
-        exit(1)
-        
-    try:
-        from yaml import CLoader as Loader
-        from yaml import CDumper as Dumper
-    except ImportError:
-        from yaml import Loader, Dumper
-
-    data = yaml.load(open(filename).read(), Loader=Loader)
-    natom = data['natom']
-    lattice = data['lattice']
-    displacements = []
-    for x in data['displacements']:
-        displacements.append([x['atom']-1, x['displacement']])
-    
-    return displacements, natom
+    if return_cell:
+        lattice = dataset['lattice']
+        positions = [x['position'] for x in dataset['atoms']]
+        symbols = [x['symbol'] for x in dataset['atoms']]
+        cell = Atoms(cell=lattice,
+                     scaled_positions=positions,
+                     symbols=symbols,
+                     pbc=True)
+        return new_dataset, cell
+    else:
+        return new_dataset
 
 def parse_DISP(filename='DISP'):
     disp = open(filename)
