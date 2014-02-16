@@ -42,7 +42,7 @@ from optparse import OptionParser
 from phonopy.interface.vasp import read_vasp, write_vasp
 from phonopy.structure.cells import print_cell
 from phonopy.harmonic.force_constants import show_drift_force_constants
-from phonopy.file_IO import parse_BORN
+from phonopy.file_IO import parse_BORN, write_FORCE_SETS_vasp
 from phonopy.units import VaspToTHz
 from anharmonic.phonon3.fc3 import show_drift_fc3
 from anharmonic.file_IO import parse_disp_fc2_yaml, parse_disp_fc3_yaml, \
@@ -364,7 +364,7 @@ if options.force_sets_mode:
     if log_level:
         print "Displacement dataset is read from %s." % filename
     disp_dataset = parse_disp_fc3_yaml()
-    write_FORCES_FC3_vasp(args, disp_dataset)
+    write_FORCE_SETS_vasp(args, disp_dataset)
     print_end()
     exit(0)
     
