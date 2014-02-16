@@ -33,6 +33,7 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 #
+# 2014/02/16 togo: Minor fix to follow the change of parse_BORN
 # 2014/01/31 togo: Follow the changes of Phonopy and Mesh classes (phonopy-1.8.2)
 #
 # 2014/01/09 togo: Follow the changes of Mesh, BandStructure, and Animation
@@ -707,7 +708,7 @@ if __name__ == "__main__":
         nac_file = control.phonon["nac"]["file"]
         nac_method = control.phonon["nac"]["method"]
         print "# | reading polarizabilities from %s" % nac_file
-        nac_params = parse_BORN(phonopy_obj.primitive, nac_file)
+        nac_params = parse_BORN(phonopy_obj.primitive, filename=nac_file)
         print "# | setting method for non-analytical terms in dynamical matrix to \'%s\'" % nac_method
         phonopy_obj.set_nac_params(nac_params, method=nac_method)
         print "#"
