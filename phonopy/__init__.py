@@ -91,6 +91,7 @@ class Phonopy:
         self._search_primitive_symmetry()
 
         # set_displacements (used only in preprocess)
+        self._displacement_dataset = None
         self._displacements = None
         self._displacement_directions = None
         self._supercells_with_displacements = None
@@ -98,7 +99,6 @@ class Phonopy:
             self.generate_displacements(distance=distance)
 
         # set_force_constants or set_forces
-        self._displacement_dataset = None
         self._force_constants = None
         self._force_constants_decimals = force_constants_decimals
         
