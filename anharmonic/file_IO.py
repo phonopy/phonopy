@@ -1151,20 +1151,6 @@ def parse_force_constants_lines(fcthird_file, num_atom):
     else:
         return np.array(fc2).reshape(num_atom, num_atom, 3, 3)
 
-def parse_disp_yaml_to_disp_dataset(filename="disp.yaml"):
-    dataset = parse_yaml(filename)
-    natom = dataset['natom']
-    new_dataset = {}
-    new_dataset['natom'] = natom
-    new_first_atoms = []
-    for first_atoms in dataset['displacements']:
-        first_atoms['atom'] -= 1
-        atom1 = first_atoms['atom']
-        disp1 = first_atoms['displacement']
-        new_first_atoms.append({'number': atom1, 'displacement': disp1})
-    new_dataset['first_atoms'] = new_first_atoms
-    return new_dataset
-                       
 def parse_disp_fc2_yaml(filename="disp_fc2.yaml"):
     dataset = parse_yaml(filename)
     natom = dataset['natom']
