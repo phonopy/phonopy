@@ -530,12 +530,18 @@ def show_drift_force_constants(force_constants, name="force constants"):
     num_atom = force_constants.shape[0]
     maxval1 = 0
     maxval2 = 0
+    jk1 = [0, 0]
+    jk2 = [0, 0]
     for i, j, k in list(np.ndindex((num_atom, 3, 3))):
         val1 = force_constants[:, i, j, k].sum()
         val2 = force_constants[i, :, j, k].sum()
         if abs(val1) > abs(maxval1):
             maxval1 = val1
+            jk1 = [j, k]
         if abs(val2) > abs(maxval2):
             maxval2 = val2
-    print ("max drift of %s:" % name), maxval1, maxval2
+            jk2 = [j, k]
+    print "max drift of %s:" % name,
+    print "%f (%s%s)" % (maxval1, "xyz"[jk1[0]], "xyz"[jk1[1]]),
+    print "%f (%s%s)" % (maxval2, "xyz"[jk2[0]], "xyz"[jk2[1]])
         
