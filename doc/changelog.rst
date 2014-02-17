@@ -3,6 +3,13 @@
 Change Log
 ==========
 
+Feb-17-2014: Version 1.8.3
+---------------------------
+
+* A collection of small fixes in interface.
+* Spglib update (spglib-1.6.0)
+* Change in ``phonopy/file_IO/write_FORCE_SETS_*``.
+
 Feb-8-2014: Version 1.8.2
 ---------------------------
 
