@@ -54,18 +54,17 @@ def get_phonon(cell_filename,
                primitive_axis=np.eye(3),
                born_filename=None):
     cell = read_vasp(cell_filename)
-    phonon = Phonopy(cell, dim, is_auto_displacements=False)
-    phonon.set_force_sets(parse_FORCE_SETS(filename=force_sets_filename))
-    
-    if born_filename is None:
-        is_nac = False
-    else:
-        is_nac = True
-        
-    phonon.set_post_process(primitive_axis)
+    phonon = Phonopy(cell,
+                     dim,
+                     primitive_matrix=primitive_axis,
+                     is_auto_displacements=False)
+    force_sets = parse_FORCE_SETS(filename=force_sets_filename)
+    phonon.set_displacement_dataset(force_sets)
+    phonon.produce_force_constants()
     if born_filename:
-        phonon.set_nac_params(parse_BORN(phonon.get_primitive(),
-                                         filename=born_filename))
+        nac_params = parse_BORN(phonon.get_primitive(), filename=born_filename)
+        phonon.set_nac_params(nac_params)
+    phonon.set_dynamical_matrix()
     return phonon
 
 def get_phonon_from_force_constants(cell_filename,
@@ -74,17 +73,16 @@ def get_phonon_from_force_constants(cell_filename,
                                     primitive_axis=np.eye(3),
                                     born_filename=None):
     cell = read_vasp(cell_filename)
-    phonon = Phonopy(cell, dim, is_auto_displacements=False)
+    phonon = Phonopy(cell,
+                     dim,
+                     primitive_matrix=np.eye(3),
+                     is_auto_displacements=False)
     force_constants = parse_FORCE_CONSTANTS(force_constants_filename)
-    is_nac = False
+    phonon.set_force_constants(force_constants)
     if born_filename:
-        is_nac = True
-    phonon.set_post_process(primitive_axis,
-                            force_constants=force_constants,
-                            is_nac=is_nac)
-    if born_filename:
-        phonon.set_nac_params(parse_BORN(phonon.get_primitive(),
-                                         filename=born_filename))
+        nac_params = parse_BORN(phonon.get_primitive(), filename=born_filename)
+        phonon.set_nac_params(nac_params)
+    phonon.set_dynamical_matrix()
     return phonon
 
 from optparse import OptionParser

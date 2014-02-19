@@ -395,6 +395,9 @@ class Phonopy:
                                      self._primitive,
                                      self._symprec)
 
+    def set_dynamical_matrix(self):
+        self._set_dynamical_matrix()
+        
     def get_dynamical_matrix_at_q(self, q):
         self._set_dynamical_matrix()
         self._dynamical_matrix.set_dynamical_matrix(q)
