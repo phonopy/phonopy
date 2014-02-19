@@ -412,17 +412,29 @@ def show_drift_fc3(fc3, name="fc3"):
     maxval1 = 0
     maxval2 = 0
     maxval3 = 0
+    klm1 = [0, 0, 0]
+    klm2 = [0, 0, 0]
+    klm3 = [0, 0, 0]
     for i, j, k, l, m in list(np.ndindex((num_atom, num_atom, 3, 3, 3))):
         val1 = fc3[:, i, j, k, l, m].sum()
         val2 = fc3[i, :, j, k, l, m].sum()
         val3 = fc3[i, j, :, k, l, m].sum()
         if abs(val1) > abs(maxval1):
             maxval1 = val1
+            klm1 = [k, l, m]
         if abs(val2) > abs(maxval2):
             maxval2 = val2
+            klm2 = [k, l, m]
         if abs(val3) > abs(maxval3):
             maxval3 = val3
-    print ("max drift of %s:" % name), maxval1, maxval2, maxval3 
+            klm3 = [k, l, m]
+    print "max drift of %s:" % name,
+    print "%f (%s%s%s)" % (maxval1,
+                           "xyz"[klm1[0]], "xyz"[klm1[1]], "xyz"[klm1[2]]),
+    print "%f (%s%s%s)" % (maxval2,
+                           "xyz"[klm2[0]], "xyz"[klm2[1]], "xyz"[klm2[2]]),
+    print "%f (%s%s%s)" % (maxval3,
+                           "xyz"[klm3[0]], "xyz"[klm3[1]], "xyz"[klm3[2]])
 
 def _get_fc3_least_atoms(fc3,
                          supercell,

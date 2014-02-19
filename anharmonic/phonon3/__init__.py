@@ -177,7 +177,7 @@ class Phono3py:
             disp_dataset = displacement_dataset
         
         if self._log_level:
-            print "Solving fc2"
+            print "Solving fc2,",
         for forces, disp1 in zip(forces_fc3, disp_dataset['first_atoms']):
             disp1['forces'] = forces
         fc2 = get_fc2(self._supercell, self._symmetry, disp_dataset)
@@ -187,7 +187,7 @@ class Phono3py:
             set_translational_invariance(fc2)
         
         if self._log_level:
-            print "Solving fc3:"
+            print "fc3:"
         count = len(disp_dataset['first_atoms'])
         for disp1 in disp_dataset['first_atoms']:
             for disp2 in disp1['second_atoms']:
