@@ -1087,8 +1087,13 @@ def get_forces_from_vasprun_xmls(vaspruns, num_atom, index_shift=0):
     forces = []
     for i, vasprun in enumerate(vaspruns):
         print >> sys.stderr, "%d" % (i + 1 + index_shift),
-        force_set = vasp.get_forces_vasprun_xml(
-            etree.iterparse(vasp.VasprunWrapper(vasprun), tag='varray'))
+
+        if vasp.is_version528(vasprun):
+            force_set = vasp.get_forces_vasprun_xml(
+                etree.iterparse(vasp.VasprunWrapper(vasprun), tag='varray'))
+        else:
+            force_set = vasp.get_forces_vasprun_xml(
+                etree.iterparse(vasprun, tag='varray'))
         if force_set.shape[0] == num_atom:
             forces.append(force_set)
         else:
