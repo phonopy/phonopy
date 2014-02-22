@@ -37,7 +37,8 @@ import numpy as np
 from phonopy.structure.atoms import Atoms
 from phonopy.structure.symmetry import Symmetry
 from phonopy.structure.cells import get_supercell, get_primitive
-from phonopy.harmonic.displacement import get_least_displacements
+from phonopy.harmonic.displacement import get_least_displacements, \
+     direction_to_displacement
 from phonopy.harmonic.force_constants import get_fc2, \
      symmetrize_force_constants, rotational_invariance, \
      cutoff_force_constants, set_tensor_symmetry
@@ -259,31 +260,17 @@ class Phonopy:
                                with respect to the axes.
                                
         """
-
-        lattice = self._supercell.get_cell()
-        self._displacement_directions = get_least_displacements(
+        displacement_directions = get_least_displacements(
             self._symmetry, 
             is_plusminus=is_plusminus,
             is_diagonal=is_diagonal,
             is_trigonal=is_trigonal,
             log_level=self._log_level)
-        self._displacements = []
-        for disp in self._displacement_directions:
-            atom_num = disp[0]
-            disp_cartesian = np.dot(disp[1:], lattice)
-            disp_cartesian *= distance / np.linalg.norm(disp_cartesian)
-            self._displacements.append([atom_num,
-                                       disp_cartesian[0],
-                                       disp_cartesian[1],
-                                       disp_cartesian[2]])
-        self._displacement_dataset = {
-            'natom': self._supercell.get_number_of_atoms(),
-            'first_atoms': [
-                {'number': disp[0],
-                 'displacement': disp[1:4],
-                 'direction': direction[1:4]}
-                 for disp, direction in
-                 zip(self._displacements, self._displacement_directions)]}
+        displacement_dataset = direction_to_displacement(
+            displacement_directions,
+            distance,
+            self._supercell)
+        self.set_displacement_dataset(displacement_dataset)
 
     def set_displacements(self, displacements):
         print 

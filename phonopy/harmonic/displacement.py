@@ -52,6 +52,24 @@ directions_diag = np.array([[ 1, 0, 0 ],
                             [ 1,-1, 1 ],
                             [-1, 1, 1 ]])
 
+def direction_to_displacement(displacement_directions,
+                              distance,
+                              supercell):
+    lattice = supercell.get_cell()
+    first_atoms = []
+    for disp in displacement_directions:
+        direction = disp[1:]
+        disp_cartesian = np.dot(direction, lattice)
+        disp_cartesian *= distance / np.linalg.norm(disp_cartesian)
+        first_atoms.append({'number': disp[0],
+                            'displacement': disp_cartesian,
+                            'direction': direction})
+    displacement_dataset = {
+        'natom': supercell.get_number_of_atoms(),
+        'first_atoms': first_atoms}
+    
+    return displacement_dataset
+
 def get_least_displacements(symmetry,
                             is_plusminus='auto',
                             is_diagonal=True,
