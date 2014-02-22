@@ -12,6 +12,17 @@ from phonopy.file_IO import read_force_constant_vasprun_xml, parse_FORCE_SETS
 #
 ###########
 
+def write_cell_yaml(w, supercell):
+    w.write("lattice:\n")
+    for axis in supercell.get_cell():
+        w.write("- [ %20.15f,%20.15f,%20.15f ]\n" % tuple(axis))
+    symbols = supercell.get_chemical_symbols()
+    positions = supercell.get_scaled_positions()
+    w.write("atoms:\n")
+    for i, (s, v) in enumerate(zip(symbols, positions)):
+        w.write("- symbol: %-2s # %d\n" % (s, i+1))
+        w.write("  position: [ %18.14f,%18.14f,%18.14f ]\n" % tuple(v))
+
 def write_disp_fc3_yaml(dataset, supercell, filename='disp_fc3.yaml'):
     w = open(filename, 'w')
     w.write("natom: %d\n" %  dataset['natom'])
@@ -72,18 +83,31 @@ def write_disp_fc3_yaml(dataset, supercell, filename='disp_fc3.yaml'):
                     (disp_cart2[0], disp_cart2[1], disp_cart2[2], count2))
             count2 += 1
 
-    w.write("lattice:\n")
-    for axis in supercell.get_cell():
-        w.write("- [ %20.15f,%20.15f,%20.15f ]\n" % tuple(axis))
-    symbols = supercell.get_chemical_symbols()
-    positions = supercell.get_scaled_positions()
-    w.write("atoms:\n")
-    for i, (s, v) in enumerate(zip(symbols, positions)):
-        w.write("- symbol: %-2s # %d\n" % (s, i+1))
-        w.write("  position: [ %18.14f,%18.14f,%18.14f ]\n" % tuple(v))
+    write_cell_yaml(w, supercell)
+
     w.close()
 
     return num_first + num_second, num_disp_files
+
+def write_disp_fc2_yaml(dataset, supercell, filename='disp_fc2.yaml'):
+    w = open(filename, 'w')
+    w.write("natom: %d\n" %  dataset['natom'])
+
+    num_first = len(dataset['first_atoms'])
+    w.write("num_first_displacements: %d\n" %  num_first)
+    w.write("first_atoms:\n")
+    for i, disp1 in enumerate(dataset['first_atoms']):
+        disp_cart1 = disp1['displacement']
+        w.write("- number: %5d\n" % (disp1['number'] + 1))
+        w.write("  displacement:\n")
+        w.write("    [%20.16f,%20.16f,%20.16f ] # %05d\n" %
+                (disp_cart1[0], disp_cart1[1], disp_cart1[2], i + 1))
+
+    write_cell_yaml(w, supercell)
+
+    w.close()
+    
+    return num_first
 
 def write_supercells_with_displacements_from_direction_dataset(
         supercell,

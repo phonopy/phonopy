@@ -49,7 +49,7 @@ from anharmonic.file_IO import parse_disp_fc2_yaml, parse_disp_fc3_yaml, \
      parse_FORCES_FC2, parse_FORCES_FC3, write_FORCES_FC3_vasp, \
      write_fc3_to_hdf5, write_fc2_to_hdf5, read_fc3_from_hdf5, \
      read_fc2_from_hdf5, write_ir_grid_points, write_grid_address, \
-     write_disp_fc3_yaml
+     write_disp_fc3_yaml, write_disp_fc2_yaml
 from anharmonic.phonon3.triplets import get_coarse_ir_grid_points
 from anharmonic.settings import Phono3pyConfParser
 from anharmonic.phonon3 import Phono3py, Phono3pyJointDos, Phono3pyIsotope, \
@@ -398,9 +398,11 @@ unitcell = read_vasp(unitcell_filename, settings.get_chemical_symbols())
 #################################################
 if options.is_displacement:
     cutoff_pair_distance = settings.get_cutoff_pair_distance()
-    phono3py = Phono3py(unitcell,
-                        settings.get_supercell_matrix(),
-                        symprec=options.symprec)
+    phono3py = Phono3py(
+        unitcell,
+        settings.get_supercell_matrix(),
+        phonon_supercell_matrix=settings.get_phonon_supercell_matrix(),
+        symprec=options.symprec)
     supercell = phono3py.get_supercell()
     phono3py.generate_displacements(
         distance=settings.get_displacement_distance(),
@@ -423,7 +425,7 @@ if options.is_displacement:
     for i, dcell in enumerate(phono3py.get_supercells_with_displacements()):
         if dcell is not None:
             write_vasp('POSCAR-%05d' % (i + 1), dcell, direct=True)
-        
+
     if log_level:
         print "Total number of displacements:", num_disps
         if cutoff_pair_distance is not None:
@@ -431,6 +433,26 @@ if options.is_displacement:
             print cutoff_pair_distance
             print "Number of displacement supercell files created:",
             print  num_disp_files
+            
+    if settings.get_phonon_supercell_matrix() is not None:
+        phonon_dds = phono3py.get_phonon_displacement_dataset()
+        phonon_supercell = phono3py.get_phonon_supercell()
+        if output_filename is None:
+            filename = 'disp_fc2.yaml'
+        else:
+            filename = 'disp_fc2.' + output_filename + '.yaml'
+            
+        num_disps = write_disp_fc2_yaml(phonon_dds,
+                                        phonon_supercell,
+                                        filename=filename)
+        for i, dcell in enumerate(
+                phono3py.get_phonon_supercells_with_displacements()):
+            write_vasp('POSCAR_FC2-%05d' % (i + 1), dcell, direct=True)
+
+        if log_level:
+            print "Number of displacements for special fc2:", num_disps
+        
+    if log_level:
         print_end()
     sys.exit(0)
 
