@@ -563,7 +563,8 @@ if log_level:
             print "%5.2f"*3 % tuple(vec)
             
     print "----------------------------- General settings ------------------------------"
-    print "Imposing translational symmetry:", options.is_translational_symmetry
+    print "Imposing translational symmetry to fc3 and fc2:",
+    print options.is_translational_symmetry
     print "Imposing symmetry of index exchange to fc2:",
     print options.is_symmetrize_fc2
     print "Imposing symmetry of index exchange to fc3 in real space:",
