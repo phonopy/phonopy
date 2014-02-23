@@ -31,6 +31,8 @@ def get_thermal_conductivity(
         output_filename=None,
         log_level=0):
 
+    if log_level:
+        print "-------------------- Lattice thermal conducitivity (RTA) --------------------"
     br = conductivity_RTA(interaction,
                           symmetry,
                           temperatures=temperatures,
@@ -369,8 +371,8 @@ class conductivity_RTA:
     def _show_log_header(self, i):
         if self._log_level:
             gp = self._grid_points[i]
-            print ("===================== Grid point %d (%d/%d) "
-                   "=====================" %
+            print ("======================= Grid point %d (%d/%d) "
+                   "=======================" %
                    (gp, i + 1, len(self._grid_points)))
             print "q-point: (%5.2f %5.2f %5.2f)" % tuple(self._qpoints[i])
             print "Lifetime cutoff (sec): %-10.3e" % self._cutoff_lifetime

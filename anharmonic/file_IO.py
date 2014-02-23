@@ -353,35 +353,45 @@ def write_FORCES_FC3_vasp(vaspruns,
                           disp_dataset,
                           filename='FORCES_FC3'):
     natom = disp_dataset['natom']
-    forces_fc3 = get_forces_from_vasprun_xmls(vaspruns, natom)
-    write_FORCES_FC3(disp_dataset, forces_fc3, filename=filename)
+    forces = get_forces_from_vasprun_xmls(vaspruns, natom)
+    w = open(filename, 'w')
+    write_FORCES_FC3(disp_dataset, forces, w)
+    w.close()
     
-def write_FORCES_FC3(disp_dataset,
-                     forces_fc3,
-                     filename='FORCES_FC3'):
+def write_FORCES_FC2_vasp(vaspruns,
+                          disp_dataset,
+                          filename='FORCES_FC2'):
+    natom = disp_dataset['natom']
+    forces_fc2 = get_forces_from_vasprun_xmls(vaspruns, natom)
+    w = open(filename, 'w')
+    write_FORCES_FC2(disp_dataset, forces_fc2, w)
+    w.close()
+
+def write_FORCES_FC2(disp_dataset, forces_fc2, w):
+    for i, disp1 in enumerate(disp_dataset['first_atoms']):
+        w.write("# File: %-5d\n" % (i + 1))
+        w.write("# %-5d " % (disp1['number'] + 1))
+        w.write("%20.16f %20.16f %20.16f\n" % tuple(disp1['displacement']))
+        for forces in forces_fc2[i]:
+            w.write("%15.10f %15.10f %15.10f\n" % (tuple(forces)))
+    
+def write_FORCES_FC3(disp_dataset, forces_fc3, w):
     natom = disp_dataset['natom']
     num_disp1 = len(disp_dataset['first_atoms'])
-    w3 = open(filename, 'w')
-
-    for i, disp1 in enumerate(disp_dataset['first_atoms']):
-        w3.write("# File: %-5d\n" % (i + 1))
-        w3.write("# %-5d " % (disp1['number'] + 1))
-        w3.write("%20.16f %20.16f %20.16f\n" %
-                         tuple(disp1['displacement']))
-        for forces in forces_fc3[i]:
-            w3.write("%15.10f %15.10f %15.10f\n" % (tuple(forces)))
-        
     count = num_disp1
     file_count = num_disp1
+
+    write_FORCES_FC2(disp_dataset, forces_fc3, w)
+    
     for i, disp1 in enumerate(disp_dataset['first_atoms']):
         atom1 = disp1['number']
         for disp2 in disp1['second_atoms']:
             atom2 = disp2['number']
-            w3.write("# File: %-5d\n" % (count + 1))
-            w3.write("# %-5d " % (atom1 + 1))
-            w3.write("%20.16f %20.16f %20.16f\n" % tuple(disp1['displacement']))
-            w3.write("# %-5d " % (atom2 + 1))
-            w3.write("%20.16f %20.16f %20.16f\n" % tuple(disp2['displacement']))
+            w.write("# File: %-5d\n" % (count + 1))
+            w.write("# %-5d " % (atom1 + 1))
+            w.write("%20.16f %20.16f %20.16f\n" % tuple(disp1['displacement']))
+            w.write("# %-5d " % (atom2 + 1))
+            w.write("%20.16f %20.16f %20.16f\n" % tuple(disp2['displacement']))
 
             # For supercell calculation reduction
             included = True
@@ -389,15 +399,14 @@ def write_FORCES_FC3(disp_dataset,
                 included = disp2['included']
             if included:
                 for forces in forces_fc3[file_count]:
-                    w3.write("%15.10f %15.10f %15.10f\n" % tuple(forces))
+                    w.write("%15.10f %15.10f %15.10f\n" % tuple(forces))
                 file_count += 1
             else:
                 # for forces in forces_fc3[i]:
-                #     w3.write("%15.10f %15.10f %15.10f\n" % (tuple(forces)))
+                #     w.write("%15.10f %15.10f %15.10f\n" % (tuple(forces)))
                 for j in range(natom):
-                    w3.write("%15.10f %15.10f %15.10f\n" % (0, 0, 0))
+                    w.write("%15.10f %15.10f %15.10f\n" % (0, 0, 0))
             count += 1
-    w3.close()
             
 def write_FORCES_THIRD(vaspruns,
                        disp_dataset,

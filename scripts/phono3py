@@ -46,7 +46,8 @@ from phonopy.file_IO import parse_BORN, write_FORCE_SETS_vasp
 from phonopy.units import VaspToTHz
 from anharmonic.phonon3.fc3 import show_drift_fc3
 from anharmonic.file_IO import parse_disp_fc2_yaml, parse_disp_fc3_yaml, \
-     parse_FORCES_FC2, parse_FORCES_FC3, write_FORCES_FC3_vasp, \
+     parse_FORCES_FC2, parse_FORCES_FC3, \
+     write_FORCES_FC3_vasp, write_FORCES_FC2_vasp, \
      write_fc3_to_hdf5, write_fc2_to_hdf5, read_fc3_from_hdf5, \
      read_fc2_from_hdf5, write_ir_grid_points, write_grid_address, \
      write_disp_fc3_yaml, write_disp_fc2_yaml
@@ -113,6 +114,7 @@ parser.set_defaults(band_indices=None,
                     delta_fc2_sets_mode=False,
                     factor=None,
                     forces_fc3_mode=False,
+                    forces_fc2_mode=False,
                     force_sets_mode=False,
                     freq_scale=None,
                     gamma_option=0,
@@ -148,7 +150,6 @@ parser.set_defaults(band_indices=None,
                     primitive_axis=None,
                     read_amplitude=False,
                     read_fc2=False,
-                    read_fc2_extra=False,
                     read_fc3=False,
                     read_gamma=False,
                     frequency_pitch=None,
@@ -198,10 +199,12 @@ parser.add_option("-d", "--disp", dest="is_displacement", action="store_true",
 #                   action="store_true", help="Calculate decay channels")
 parser.add_option("--dim", dest="supercell_dimension", type="string",
                   help="Supercell dimension")
-parser.add_option("--dim2", dest="supercell_dimension_extra",
+parser.add_option("--dim_fc2", dest="supercell_dimension_extra",
                   type="string", help="Supercell dimension for extra fc2")
 parser.add_option("--cf3", "--create_f3", dest="forces_fc3_mode",
                   action="store_true", help="Create FORCES_FC3")
+parser.add_option("--cf2", "--create_f2", dest="forces_fc2_mode",
+                  action="store_true", help="Create FORCES_FC2")
 parser.add_option("--cfs", "--create_force_sets", dest="force_sets_mode",
                   action="store_true", help="Create phonopy FORCE_SETS")
 # parser.add_option("--cdfc2", "--create_delta_fc2", dest="delta_fc2_sets_mode",
@@ -212,8 +215,6 @@ parser.add_option("--factor", dest="factor", type="float",
                   help="Conversion factor to favorite frequency unit")
 parser.add_option("--fc2", dest="read_fc2", action="store_true",
                   help="Read second order force constants")
-parser.add_option("--fc2_extra", dest="read_fc2_extra", action="store_true",
-                  help="Read extra second order force constants")
 parser.add_option("--fc3", dest="read_fc3", action="store_true",
                   help="Read third order force constants")
 # parser.add_option("--freepath", dest="max_freepath", type="float",
@@ -349,9 +350,30 @@ if options.forces_fc3_mode:
         print "Displacement dataset is read from %s." % filename
     disp_dataset = parse_disp_fc3_yaml()
     write_FORCES_FC3_vasp(args, disp_dataset)
-    print_end()
+    
+    if log_level:
+        print "FORCES_FC3 has been created."
+        print_end()
     exit(0)
 
+#####################
+# Create FORCES_FC2 #
+#####################
+if options.forces_fc2_mode:
+    if input_filename is None:
+        filename = 'disp_fc2.yaml'
+    else:
+        filename = 'disp_fc2.' + input_filename + '.yaml'
+    file_exists(filename, log_level)
+    if log_level:
+        print "Displacement dataset is read from %s." % filename
+    disp_dataset = parse_disp_fc2_yaml()
+    write_FORCES_FC2_vasp(args, disp_dataset)
+    if log_level:
+        print "FORCES_FC2 has been created."
+        print_end()
+    exit(0)
+    
 #####################
 # Create FORCE_SETS #
 #####################
@@ -540,22 +562,17 @@ if log_level:
                           np.linalg.inv(phonon_primitive.get_cell())):
             print "%5.2f"*3 % tuple(vec)
             
-    print "----------------------------------------------------------------------------"
-    if options.is_translational_symmetry:
-        print "Translational symmetry:", options.is_translational_symmetry
-    if options.is_symmetrize_fc2:
-        print "FC2 symmetry of index exchange:", options.is_symmetrize_fc2
-    if options.is_symmetrize_fc3_r:
-        print "FC3 symmetry of index exchange in real space:",
-        print options.is_symmetrize_fc3_r
-    if options.is_symmetrize_fc3_q:
-        print "FC3 symmetry of index exchange in reciprocal space:",
-        print options.is_symmetrize_fc3_q
+    print "----------------------------- General settings ------------------------------"
+    print "Imposing translational symmetry:", options.is_translational_symmetry
+    print "Imposing symmetry of index exchange to fc2:",
+    print options.is_symmetrize_fc2
+    print "Imposing symmetry of index exchange to fc3 in real space:",
+    print options.is_symmetrize_fc3_r
+    print "Imposing symmetry of index exchange to fc3 in reciprocal space:",
+    print options.is_symmetrize_fc3_q
     if settings.get_cutoff_fc3_distance() is not None:
         print "FC3 cutoff distance:",
         print settings.get_cutoff_fc3_distance()
-    if settings.get_phonon_supercell_matrix() is not None:
-        print "Supercell for harmonic phonon is introduced."
     if settings.get_is_nac():
         print "Non-analytical term correction:", settings.get_is_nac()
 
@@ -563,7 +580,7 @@ if log_level:
 # Write ir-grid points and grid addresses, and exit #
 #####################################################
 if options.write_grid_points:
-    print "---------------------------------------------------------------------------"
+    print "-----------------------------------------------------------------------------"
     if mesh is None:
         print "To write grid points, mesh numbers have to be specified."
     else:
@@ -600,6 +617,8 @@ if (options.is_joint_dos or
     settings.get_read_amplitude()):
     pass
 else:
+    if log_level:
+        print "----------------------------------- fc3 -------------------------------------"
     if options.read_fc3: # Read fc3.hdf5
         if input_filename is None:
             filename = 'fc3.hdf5'
@@ -607,10 +626,12 @@ else:
             filename = 'fc3.' + input_filename + '.hdf5'
         file_exists(filename, log_level)
         if log_level:
-            print "Reading fc3 from %s..." % filename
+            print "Reading fc3 from %s" % filename
         fc3 = read_fc3_from_hdf5(filename=filename)
         phono3py.set_fc3(fc3)
     else: # fc3 from FORCES_THIRD and FORCES_SECOND
+        if log_level:
+            print "Solving fc3"
         if input_filename is None:
             filename = 'disp_fc3.yaml'
         else:
@@ -619,6 +640,9 @@ else:
         if log_level:
             print "Displacement dataset is read from %s." % filename
         disp_dataset = parse_disp_fc3_yaml(filename=filename)
+        file_exists("FORCES_FC3", log_level)
+        if log_level:
+            print "Sets of supercell forces are read from %s." % "FORCES_FC3"
         forces_fc3 = parse_FORCES_FC3(disp_dataset)
         phono3py.produce_fc3(
             forces_fc3,
@@ -639,6 +663,8 @@ else:
 ##############
 # phonon fc2 #
 ##############
+if log_level:
+    print "----------------------------------- fc2 -------------------------------------"
 if options.read_fc2:
     if input_filename is None:
         filename = 'fc2.hdf5'
@@ -646,10 +672,19 @@ if options.read_fc2:
         filename = 'fc2.' + input_filename + '.hdf5'
     file_exists(filename, log_level)
     if log_level:
-        print "Reading fc2 from %s..." % filename
+        print "Reading fc2 from %s" % filename
     phonon_fc2 = read_fc2_from_hdf5(filename=filename)
+    if phonon_fc2.shape[0] != phonon_supercell.get_number_of_atoms():
+        print_error_message("Matrix shape of fc2 doesn't agree with supercell.")
+        if log_level:
+            print_error()
+        sys.exit(1)
+    
     phono3py.set_fc2(phonon_fc2)
 else:
+    if log_level:
+        print "Solving fc2"
+        
     if settings.get_phonon_supercell_matrix() is None:
         if phono3py.get_fc2() is None:
             if input_filename is None:
@@ -660,9 +695,15 @@ else:
                 print "Displacement dataset is read from %s." % filename
             file_exists(filename, log_level)
             disp_dataset = parse_disp_fc3_yaml(filename=filename)
+            if log_level:
+                print "Sets of supercell forces are read from %s." % "FORCES_FC3"
+            file_exists("FORCES_FC3", log_level)
             forces_fc3 = parse_FORCES_FC3(disp_dataset)
-            phono3py.produce_fc2(forces_fc3,
-                                 displacement_dataset=disp_dataset)
+            phono3py.produce_fc2(
+                forces_fc3,
+                displacement_dataset=disp_dataset,
+                is_translational_symmetry=options.is_translational_symmetry,
+                is_permutation_symmetry=options.is_symmetrize_fc2)
     else:
         if input_filename is None:
             filename = 'disp_fc2.yaml'
@@ -672,16 +713,22 @@ else:
             print "Displacement dataset is read from %s." % filename
         file_exists(filename, log_level)
         disp_dataset = parse_disp_fc2_yaml(filename=filename)
+        if log_level:
+            print "Sets of supercell forces are read from %s." % "FORCES_FC2"
+        file_exists("FORCES_FC2", log_level)
         forces_fc2 = parse_FORCES_FC2(disp_dataset)
-        phono3py.produce_fc2(forces_fc2,
-                             displacement_dataset=disp_dataset)
+        phono3py.produce_fc2(
+            forces_fc2,
+            displacement_dataset=disp_dataset,
+            is_translational_symmetry=options.is_translational_symmetry,
+            is_permutation_symmetry=options.is_symmetrize_fc2)
 
     if output_filename is None:
         filename = 'fc2.hdf5'
     else:
         filename = 'fc2.' + output_filename + '.hdf5'
     if log_level:
-        print "Writing fc2 to %s..." % filename
+        print "Writing fc2 to %s" % filename
     write_fc2_to_hdf5(phono3py.get_fc2(), filename=filename)
     
 show_drift_force_constants(phono3py.get_fc2(), name='fc2')
@@ -770,7 +817,7 @@ if options.is_gruneisen:
 # Show ph-ph settings #
 #######################
 if log_level:
-    print "--------------------------- Settings ----------------------------"
+    print "------------------------ Ph-ph interaction settings -------------------------"
     if mesh is not None:
         print "Mesh sampling: [ %d %d %d ]" % tuple(mesh)
     if mesh_divs is not None and settings.get_is_bterta():
