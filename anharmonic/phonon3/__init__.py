@@ -152,7 +152,7 @@ class Phono3py:
             phonon_displacement_directions = get_least_displacements(
                 self._phonon_supercell_symmetry,
                 is_plusminus=is_plusminus,
-                is_diagonal=is_diagonal)
+                is_diagonal=False)
             self._phonon_displacement_dataset = direction_to_displacement_fc2(
                 phonon_displacement_directions,
                 distance,
