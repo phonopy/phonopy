@@ -662,6 +662,7 @@ class QHA:
         self._gruneisen_parameters = gamma
 
     def _get_max_t_index(self, t_max):
+        max_t_index = 0
         for i, t in enumerate(self._temperatures): 
             if t_max + 1e-5 < t:
                 max_t_index = i

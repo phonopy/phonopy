@@ -51,7 +51,7 @@ EQUIVALENCE_TOLERANCE = 1e-5
 def parse_data(filename):
     data = []
     for line in open(filename):
-        if line.strip()[0] == '#' or line.strip()[0] == '':
+        if line.strip() == '' or line.strip()[0] == '#':
             continue
         if '#' in line:
             data.append([ float(x) for x in line.split('#')[0].split() ])
