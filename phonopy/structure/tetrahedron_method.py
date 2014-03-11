@@ -106,10 +106,17 @@ class TetrahedronMethod:
         else:
             iw = np.zeros(len(omegas), dtype='double')
             for i, omega in enumerate(omegas):
-                iw = self._get_integration_weight_py(omega, value=value)
+                iw[i] = self._get_integration_weight_py(omega, value=value)
         self._integration_weight = iw
 
     def _get_integration_weight_py(self, omega, value='I'):
+        if value == 'I':
+            IJ = self._I
+            gn = self._g
+        else:
+            IJ = self._J
+            gn = self._n
+                
         self._sort_indices = np.argsort(self._tetrahedra_omegas, axis=1)
         sum_value = 0.0
         self._omega = omega
@@ -117,18 +124,22 @@ class TetrahedronMethod:
                                        self._sort_indices,
                                        self._central_indices):
             self._vertices_omegas = omegas[indices]
-            i_where = np.where(self._omega < self._vertices_omegas)[0]
-            if len(i_where):
-                i = i_where[0]
-            else:
-                i = 4
-
-            if value == 'I':
-                sum_value += self._I(i, np.where(indices==ci)[0][0]) * self._g(i)
-            elif value == 'J':
-                sum_value += self._J(i, np.where(indices==ci)[0][0]) * self._n(i)
-            else:
-                assert False
+            # i_where = np.where(omega < self._vertices_omegas)[0]
+            # if len(i_where):
+            #     i = i_where[0]
+            # else:
+            #     i = 4
+            v = self._vertices_omegas
+            if (omega < v[0]):
+                sum_value += IJ(0, np.where(indices==ci)[0][0]) * gn(0)
+            elif (v[0] < omega and omega < v[1]):
+                sum_value += IJ(1, np.where(indices==ci)[0][0]) * gn(1)
+            elif (v[1] < omega and omega < v[2]):
+                sum_value += IJ(2, np.where(indices==ci)[0][0]) * gn(2)
+            elif (v[2] < omega and omega < v[3]):
+                sum_value += IJ(3, np.where(indices==ci)[0][0]) * gn(3)
+            elif (v[3] < omega):
+                sum_value += IJ(4, np.where(indices==ci)[0][0]) * gn(4)
 
         return sum_value / 6
 

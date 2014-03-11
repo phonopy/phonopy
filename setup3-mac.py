@@ -12,10 +12,11 @@ extension = Extension(
                    include_dirs_numpy +
                    include_dirs_lapacke),
     extra_compile_args=['-fopenmp'],
-    extra_link_args=['-lgomp',
-                     '../lapack-3.5.0/liblapacke.a'],
+    extra_link_args=['../lapack-3.5.0/liblapacke.a',
+                     '-lgomp',
                      # '-llapack',
                      # '-lblas'],
+                     ],
     sources=['c/_phono3py.c',
              'c/harmonic/dynmat.c',
              'c/harmonic/lapack_wrapper.c',
