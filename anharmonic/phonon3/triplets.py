@@ -1,6 +1,7 @@
 import numpy as np
 import phonopy.structure.spglib as spg
 from phonopy.structure.symmetry import Symmetry
+from phonopy.structure.tetrahedron_method import TetrahedronMethod
 
 def get_triplets_at_q(grid_point,
                       mesh,
@@ -188,35 +189,6 @@ def get_coarse_ir_grid_points(primitive,
 
     return grid_points, coarse_grid_weights, grid_address
 
-search_space = np.array([
-        [0, 0, 0],
-        [0, 0, 1],
-        [0, 1, -1],
-        [0, 1, 0],
-        [0, 1, 1],
-        [1, -1, -1],
-        [1, -1, 0],
-        [1, -1, 1],
-        [1, 0, -1],
-        [1, 0, 0],
-        [1, 0, 1],
-        [1, 1, -1],
-        [1, 1, 0],
-        [1, 1, 1],
-        [-1, -1, -1],
-        [-1, -1, 0],
-        [-1, -1, 1],
-        [-1, 0, -1],
-        [-1, 0, 0],
-        [-1, 0, 1],
-        [-1, 1, -1],
-        [-1, 1, 0],
-        [-1, 1, 1],
-        [0, -1, -1],
-        [0, -1, 0],
-        [0, -1, 1],
-        [0, 0, -1]], dtype='intc', order='C')
-
 def get_grid_points_in_Brillouin_zone(primitive_vectors, # column vectors
                                       mesh,
                                       grid_address,
@@ -228,6 +200,19 @@ def get_grid_points_in_Brillouin_zone(primitive_vectors, # column vectors
                             with_boundary=with_boundary)
     gbz.run(grid_points)
     return gbz.get_shortest_addresses()
+
+def get_triplets_integration_weights(interaction, frequency_points, lang='C'):
+    num_triplets = len(interaction.get_triplets_at_q()[0])
+    num_band = interaction.get_phonons()[0].shape[1]
+    g = np.zeros((2, num_triplets, len(frequency_points), num_band, num_band),
+                 dtype='double')
+
+    if lang == 'C':
+        _set_triplets_integration_weights_c(g, interaction, frequency_points)
+    else:
+        _set_triplets_integration_weights_py(g, interaction, frequency_points)
+
+    return g
 
 def get_tetrahedra_vertices(relative_address,
                             mesh,
@@ -249,7 +234,104 @@ def get_tetrahedra_vertices(relative_address,
             vertices[i, j] = vgp + (vgp == -1) * (gp + 1)
     return vertices
 
+def _set_triplets_integration_weights_c(g, interaction, frequency_points):
+    import anharmonic._phono3py as phono3c
+
+    reciprocal_lattice = np.linalg.inv(interaction.get_primitive().get_cell())
+    mesh = interaction.get_mesh_numbers()
+    thm = TetrahedronMethod(reciprocal_lattice, mesh=mesh)
+    grid_address = interaction.get_grid_address()
+    bz_map = interaction.get_bz_map()
+    triplets_at_q = interaction.get_triplets_at_q()[0]
+    unique_vertices = thm.get_unique_tetrahedra_vertices()
+    
+    for i, j in zip((1, 2), (1, -1)):
+        neighboring_grid_points = np.zeros(
+            len(unique_vertices) * len(triplets_at_q), dtype='intc')
+        phono3c.neighboring_grid_points(
+            neighboring_grid_points,
+            triplets_at_q[:, i].flatten(),
+            j * unique_vertices,
+            mesh,
+            grid_address,
+            bz_map)
+        interaction.set_phonon(np.unique(neighboring_grid_points))
+
+    phono3c.triplets_integration_weights(
+        g,
+        np.array(frequency_points, dtype='double'),
+        thm.get_tetrahedra(),
+        mesh,
+        triplets_at_q,
+        interaction.get_phonons()[0],
+        grid_address,
+        bz_map)
+
+def _set_triplets_integration_weights_py(g, interaction, frequency_points):
+    reciprocal_lattice = np.linalg.inv(interaction.get_primitive().get_cell())
+    mesh = interaction.get_mesh_numbers()
+    thm = TetrahedronMethod(reciprocal_lattice, mesh=mesh)
+    grid_address = interaction.get_grid_address()
+    bz_map = interaction.get_bz_map()
+    triplets_at_q = interaction.get_triplets_at_q()[0]
+    unique_vertices = thm.get_unique_tetrahedra_vertices()
+    
+    tetrahedra_vertices = get_tetrahedra_vertices(thm.get_tetrahedra(),
+                                                  mesh,
+                                                  triplets_at_q,
+                                                  grid_address,
+                                                  bz_map)
+    interaction.set_phonon(np.unique(tetrahedra_vertices))
+    frequencies = interaction.get_phonons()[0]
+    num_band = frequencies.shape[1]
+    for i, vertices in enumerate(tetrahedra_vertices):
+        for j, k in list(np.ndindex((num_band, num_band))):
+            f1_v = frequencies[vertices[0], j]
+            f2_v = frequencies[vertices[1], k]
+            thm.set_tetrahedra_omegas(f1_v + f2_v)
+            thm.run(frequency_points)
+            g[0, i, :, j, k] = thm.get_integration_weight()
+            thm.set_tetrahedra_omegas(-f1_v + f2_v)
+            thm.run(frequency_points)
+            g1 = thm.get_integration_weight()
+            thm.set_tetrahedra_omegas(f1_v - f2_v)
+            thm.run(frequency_points)
+            g2 = thm.get_integration_weight()
+            g[1, i, :, j, k] = g1 - g2
+            if len(g) == 3:
+                g[2, i, :, j, k] = g[0, i, :, j, k] + g1 + g2
+    
+
 class GridBrillouinZone:
+    search_space = np.array([
+            [0, 0, 0],
+            [0, 0, 1],
+            [0, 1, -1],
+            [0, 1, 0],
+            [0, 1, 1],
+            [1, -1, -1],
+            [1, -1, 0],
+            [1, -1, 1],
+            [1, 0, -1],
+            [1, 0, 0],
+            [1, 0, 1],
+            [1, 1, -1],
+            [1, 1, 0],
+            [1, 1, 1],
+            [-1, -1, -1],
+            [-1, -1, 0],
+            [-1, -1, 1],
+            [-1, 0, -1],
+            [-1, 0, 0],
+            [-1, 0, 1],
+            [-1, 1, -1],
+            [-1, 1, 0],
+            [-1, 1, 1],
+            [0, -1, -1],
+            [0, -1, 0],
+            [0, -1, 1],
+            [0, 0, -1]], dtype='intc', order='C')
+    
     def __init__(self,
                  primitive_vectors,
                  mesh,

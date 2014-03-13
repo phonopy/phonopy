@@ -10,7 +10,8 @@ sum_thm_imag_self_energy_at_band(const int num_band,
 				 const double *fc3_normal_sqared,
 				 const double *n1,
 				 const double *n2,
-				 const double *g);
+				 const double *g1,
+				 const double *g2_3);
 static double
 sum_thm_imag_self_energy_at_band_0K(const int num_band,
 				    const double *fc3_normal_sqared,
@@ -68,8 +69,9 @@ void get_thm_imag_self_energy_at_bands(double *imag_self_energy,
 	   i * num_band0 * num_band * num_band + j * num_band * num_band,
 	   n1,
 	   n2,
-	   g + (i * num_band0 * num_band * num_band +
-		j * num_band * num_band) * 2);
+	   g + i * num_band0 * num_band * num_band + j * num_band * num_band,
+	   g + (i + num_triplets) * num_band0 * num_band * num_band +
+	   j * num_band * num_band);
       } else {
 	ise[i * num_band0 + j] =
 	  sum_thm_imag_self_energy_at_band_0K
@@ -78,8 +80,7 @@ void get_thm_imag_self_energy_at_bands(double *imag_self_energy,
 	   i * num_band0 * num_band * num_band + j * num_band * num_band,
 	   n1,
 	   n2,
-	   g + (i * num_band0 * num_band * num_band +
-		j * num_band * num_band) * 2);
+	   g + i * num_band0 * num_band * num_band + j * num_band * num_band);
       }
     }
     free(n1);
@@ -101,19 +102,19 @@ sum_thm_imag_self_energy_at_band(const int num_band,
 				 const double *fc3_normal_sqared,
 				 const double *n1,
 				 const double *n2,
-				 const double *g)
+				 const double *g1,
+				 const double *g2_3)
 {
   int i, j;
-  double g1, g2_3, sum_g;
+  double sum_g;
 
   sum_g = 0;
   for (i = 0; i < num_band; i++) {
     if (n1[i] < 0) {continue;}
     for (j = 0; j < num_band; j++) {
       if (n2[j] < 0) {continue;}
-      g1 = g[i * num_band * 2 + j * 2];
-      g2_3 = g[i * num_band * 2 + j * 2 + 1];
-      sum_g += ((n1[i] + n2[j] + 1) * g1 + (n1[i] - n2[j]) * (g2_3)) *
+      sum_g += ((n1[i] + n2[j] + 1) * g1[i * num_band + j] +
+		(n1[i] - n2[j]) * g2_3[i * num_band + j]) *
 	fc3_normal_sqared[i * num_band + j];
     }
   }
@@ -125,7 +126,7 @@ sum_thm_imag_self_energy_at_band_0K(const int num_band,
 				    const double *fc3_normal_sqared,
 				    const double *n1,
 				    const double *n2,
-				    const double *g)
+				    const double *g1)
 {
   int i, j;
   double sum_g;
@@ -135,7 +136,7 @@ sum_thm_imag_self_energy_at_band_0K(const int num_band,
     if (n1[i] < 0) {continue;}
     for (j = 0; j < num_band; j++) {
       if (n2[j] < 0) {continue;}
-      sum_g += g[i * num_band * 2 + j * 2] * fc3_normal_sqared[i * num_band + j];
+      sum_g += g1[i * num_band + j] * fc3_normal_sqared[i * num_band + j];
     }
   }
   return sum_g;

@@ -878,13 +878,13 @@ py_set_triplets_integration_weights(PyObject *self, PyObject *args)
   const int *bz_map = (int*)bz_map_py->data;
   const double *frequencies = (double*)frequencies_py->data;
   const int num_band = (int)frequencies_py->dimensions[1];
-  const int num_iw = (int)iw_py->dimensions[4];
+  const int num_iw = (int)iw_py->dimensions[0];
 
   int i, j, k, l, b1, b2, sign;
   int tp_relative_grid_address[2][24][4][3];
   int vertices[2][24][4];
   int adrs_shift;
-  double f0, f1, f2;
+  double f0, f1, f2, g0, g1, g2;
   double freq_vertices[3][24][4];
     
   for (i = 0; i < 2; i++) {
@@ -899,7 +899,7 @@ py_set_triplets_integration_weights(PyObject *self, PyObject *args)
     }
   }
 
-#pragma omp parallel for private(j, k, b1, b2, sign, vertices, adrs_shift, f0, f1, f2, freq_vertices)
+#pragma omp parallel for private(j, k, b1, b2, sign, vertices, adrs_shift, f0, f1, f2, g0, g1, g2, freq_vertices)
   for (i = 0; i < num_triplets; i++) {
     get_triplet_tetrahedra_vertices(vertices,
 				    tp_relative_grid_address,
@@ -920,18 +920,17 @@ py_set_triplets_integration_weights(PyObject *self, PyObject *args)
 	}
 	for (j = 0; j < num_band0; j++) {
 	  f0 = frequency_points[j];
-	  adrs_shift = (i * num_band0 * num_band * num_band +
-			j * num_band * num_band + b1 * num_band + b2) * num_iw;
-	  iw[adrs_shift] =
-	    thm_get_integration_weight(f0, freq_vertices[0], 'I');
-	  iw[adrs_shift + 1] =
-	    thm_get_integration_weight(f0, freq_vertices[1], 'I');
-	  if (num_iw == 2) {
-	    iw[adrs_shift + 1] -=
-	      thm_get_integration_weight(f0, freq_vertices[2], 'I');
-	  } else {
-	    iw[adrs_shift + 2] =
-	      thm_get_integration_weight(f0, freq_vertices[2], 'I');
+	  g0 = thm_get_integration_weight(f0, freq_vertices[0], 'I');
+	  g1 = thm_get_integration_weight(f0, freq_vertices[1], 'I');
+	  g2 = thm_get_integration_weight(f0, freq_vertices[2], 'I');
+	  adrs_shift = i * num_band0 * num_band * num_band +
+	    j * num_band * num_band + b1 * num_band + b2;
+	  iw[adrs_shift] = g0;
+	  adrs_shift += num_triplets * num_band0 * num_band * num_band;
+	  iw[adrs_shift] = g1 - g2;
+	  if (num_iw == 3) {
+	    adrs_shift += num_triplets * num_band0 * num_band * num_band;
+	    iw[adrs_shift] = g0 + g1 + g2;
 	  }
 	}
       }	

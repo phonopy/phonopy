@@ -1,9 +1,8 @@
 import numpy as np
 from phonopy.units import THzToEv, Kb, VaspToTHz, Hbar, EV, Angstrom, THz, AMU
 from phonopy.phonon.group_velocity import degenerate_sets
-from phonopy.structure.tetrahedron_method import TetrahedronMethod
 from phonopy.structure.spglib import get_neighboring_grid_points
-from anharmonic.phonon3.triplets import get_tetrahedra_vertices
+from anharmonic.phonon3.triplets import get_triplets_integration_weights
 from anharmonic.phonon3.interaction import set_phonon_c
 import anharmonic.file_IO as file_IO
 
@@ -245,11 +244,7 @@ class ImagSelfEnergy:
         else:
             f_points = self._frequency_points
 
-        num_triplets = len(self._triplets_at_q)
-        num_band = self._frequencies.shape[1]
-        self._g = np.zeros((num_triplets, len(f_points), num_band, num_band, 2),
-                           dtype='double')
-        set_triplets_integration_weights_c(self._g, self._interaction, f_points)
+        self._g = get_triplets_integration_weights(self._interaction, f_points)
         
     def get_imag_self_energy(self):
         if self._cutoff_frequency is None:
@@ -367,11 +362,10 @@ class ImagSelfEnergy:
 
     def _run_thm_c_with_frequency_points(self):
         import anharmonic._phono3py as phono3c
-        g = np.zeros(self._fc3_normal_squared.shape + (2,), dtype='double')
+        g = np.zeros((2,) + self._fc3_normal_squared.shape, dtype='double')
         for i in range(len(self._frequency_points)):
-            shape = self._fc3_normal_squared.shape
-            for j in range(g.shape[1]):
-                g[:, j, :, :, :] = self._g[:, i, :, :, :]
+            for j in range(g.shape[2]):
+                g[:, :, j, :, :] = self._g[:, :, i, :, :]
             phono3c.thm_imag_self_energy_at_bands(self._imag_self_energy[i],
                                                   self._fc3_normal_squared,
                                                   self._triplets_at_q,
@@ -446,8 +440,8 @@ class ImagSelfEnergy:
                     f2 > self._cutoff_frequency):
                     n2 = n[i, 0, j]
                     n3 = n[i, 1, k]
-                    g1 = self._g[i, :, j, k, 0]
-                    g2_g3 = self._g[i, :, j, k, 1] # g2 - g3
+                    g1 = self._g[0, i, :, j, k]
+                    g2_g3 = self._g[1, i, :, j, k] # g2 - g3
                     self._imag_self_energy[:] += (
                         (n2 + n3 + 1) * g1 +
                         (n2 - n3) * (g2_g3)) * interaction[:, j, k] * w
@@ -458,7 +452,7 @@ class ImagSelfEnergy:
         for i, (w, interaction) in enumerate(zip(self._weights_at_q,
                                                  self._fc3_normal_squared)):
             for j, k in list(np.ndindex(interaction.shape[1:])):
-                g1 = self._g[i, :, j, k, 0]
+                g1 = self._g[0, i, :, j, k]
                 self._imag_self_energy[:] += g1 * interaction[:, j, k] * w
 
         self._imag_self_energy *= self._unit_conversion
@@ -522,8 +516,8 @@ class ImagSelfEnergy:
                     f2 > self._cutoff_frequency):
                     n2 = occupation(f1, self._temperature)
                     n3 = occupation(f2, self._temperature)
-                    g1 = self._g[i, :, j, k, 0]
-                    g2_g3 = self._g[i, :, j, k, 1] # g2 - g3
+                    g1 = self._g[0, i, :, j, k]
+                    g2_g3 = self._g[1, i, :, j, k] # g2 - g3
                     for l in range(len(interaction)):
                         self._imag_self_energy[:, l] += (
                             (n2 + n3 + 1) * g1 +
@@ -535,76 +529,10 @@ class ImagSelfEnergy:
         for i, (w, interaction) in enumerate(zip(self._weights_at_q,
                                                  self._fc3_normal_squared)):
             for j, k in list(np.ndindex(interaction.shape[1:])):
-                g1 = self._g[i, :, j, k, 0]
+                g1 = self._g[0, i, :, j, k]
                 for l in range(len(interaction)):
                     self._imag_self_energy[:, l] += g1 * interaction[l, j, k] * w
 
         self._imag_self_energy *= self._unit_conversion
 
 
-def set_triplets_integration_weights_c(g, interaction, frequency_points):
-    import anharmonic._phono3py as phono3c
-
-    reciprocal_lattice = np.linalg.inv(interaction.get_primitive().get_cell())
-    mesh = interaction.get_mesh_numbers()
-    thm = TetrahedronMethod(reciprocal_lattice, mesh=mesh)
-    grid_address = interaction.get_grid_address()
-    bz_map = interaction.get_bz_map()
-    triplets_at_q = interaction.get_triplets_at_q()[0]
-    unique_vertices = thm.get_unique_tetrahedra_vertices()
-    
-    for i, j in zip((1, 2), (1, -1)):
-        neighboring_grid_points = np.zeros(
-            len(unique_vertices) * len(triplets_at_q), dtype='intc')
-        phono3c.neighboring_grid_points(
-            neighboring_grid_points,
-            triplets_at_q[:, i].flatten(),
-            j * unique_vertices,
-            mesh,
-            grid_address,
-            bz_map)
-        interaction.set_phonon(np.unique(neighboring_grid_points))
-
-    phono3c.triplets_integration_weights(
-        g,
-        np.array(frequency_points, dtype='double'),
-        thm.get_tetrahedra(),
-        mesh,
-        triplets_at_q,
-        interaction.get_phonons()[0],
-        grid_address,
-        bz_map)
-
-def set_triplets_integration_weights_py(g, interaction, frequency_points):
-    reciprocal_lattice = np.linalg.inv(interaction.get_primitive().get_cell())
-    mesh = interaction.get_mesh_numbers()
-    thm = TetrahedronMethod(reciprocal_lattice, mesh=mesh)
-    grid_address = interaction.get_grid_address()
-    bz_map = interaction.get_bz_map()
-    triplets_at_q = interaction.get_triplets_at_q()[0]
-    unique_vertices = thm.get_unique_tetrahedra_vertices()
-    
-    tetrahedra_vertices = get_tetrahedra_vertices(thm.get_tetrahedra(),
-                                                  mesh,
-                                                  triplets_at_q,
-                                                  grid_address,
-                                                  bz_map)
-    interaction.set_phonon(np.unique(tetrahedra_vertices))
-    frequencies = interaction.get_phonons()[0]
-    num_band = frequencies.shape[1]
-    for i, vertices in enumerate(tetrahedra_vertices):
-        for j, k in list(np.ndindex((num_band, num_band))):
-            f1_v = frequencies[vertices[0], j]
-            f2_v = frequencies[vertices[1], k]
-            thm.set_tetrahedra_omegas(f1_v + f2_v)
-            thm.run(frequency_points)
-            g[i, :, j, k, 0] = thm.get_integration_weight()
-            thm.set_tetrahedra_omegas(-f1_v + f2_v)
-            thm.run(frequency_points)
-            g[i, :, j, k, 1] = thm.get_integration_weight()
-            thm.set_tetrahedra_omegas(f1_v - f2_v)
-            thm.run(frequency_points)
-            if g.shape[4] == 2:
-                g[i, :, j, k, 1] -= thm.get_integration_weight()
-            else:
-                g[i, :, j, k, 2] = thm.get_integration_weight()
