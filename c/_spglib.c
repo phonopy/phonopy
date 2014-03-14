@@ -21,6 +21,8 @@ static PyObject *get_neighboring_grid_points(PyObject *self, PyObject *args);
 static PyObject *
 get_tetrahedra_relative_grid_address(PyObject *self, PyObject *args);
 static PyObject *
+get_all_tetrahedra_relative_grid_address(PyObject *self, PyObject *args);
+static PyObject *
 get_tetrahedra_integration_weight(PyObject *self, PyObject *args);
 static PyObject *
 get_tetrahedra_integration_weight_at_omegas(PyObject *self, PyObject *args);
@@ -50,6 +52,10 @@ static PyMethodDef functions[] = {
    METH_VARARGS, "Neighboring grid points by relative grid addresses"},
   {"tetrahedra_relative_grid_address", get_tetrahedra_relative_grid_address,
    METH_VARARGS, "Relative grid addresses of vertices of 24 tetrahedra"},
+  {"all_tetrahedra_relative_grid_address",
+   get_all_tetrahedra_relative_grid_address,
+   METH_VARARGS,
+   "4 (all) sets of relative grid addresses of vertices of 24 tetrahedra"},
   {"tetrahedra_integration_weight", get_tetrahedra_integration_weight,
    METH_VARARGS, "Integration weight for tetrahedron method"},
   {"tetrahedra_integration_weight_at_omegas",
@@ -618,6 +624,7 @@ get_tetrahedra_relative_grid_address(PyObject *self, PyObject *args)
 {
   PyArrayObject* relative_grid_address_py;
   PyArrayObject* reciprocal_lattice_py;
+  
   if (!PyArg_ParseTuple(args, "OO",
 			&relative_grid_address_py,
 			&reciprocal_lattice_py)) {
@@ -631,6 +638,24 @@ get_tetrahedra_relative_grid_address(PyObject *self, PyObject *args)
 
   spg_get_tetrahedra_relative_grid_address(relative_grid_address,
 					   reciprocal_lattice);
+
+  Py_RETURN_NONE;
+}
+
+static PyObject *
+get_all_tetrahedra_relative_grid_address(PyObject *self, PyObject *args)
+{
+  PyArrayObject* relative_grid_address_py;
+  
+  if (!PyArg_ParseTuple(args, "O",
+			&relative_grid_address_py)) {
+    return NULL;
+  }
+
+  int (*relative_grid_address)[24][4][3] =
+    (int(*)[24][4][3])relative_grid_address_py->data;
+
+  spg_get_all_tetrahedra_relative_grid_address(relative_grid_address);
 
   Py_RETURN_NONE;
 }

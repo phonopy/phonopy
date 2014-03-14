@@ -594,6 +594,13 @@ spg_get_tetrahedra_relative_grid_address(int relative_grid_address[24][4][3],
   thm_get_relative_grid_address(relative_grid_address, rec_lattice);
 }
 
+void
+spg_get_all_tetrahedra_relative_grid_address
+(int relative_grid_address[4][24][4][3])
+{
+  thm_get_all_relative_grid_address(relative_grid_address);
+}
+
 double
 spg_get_tetrahedra_integration_weight(const double omega,
 				      SPGCONST double tetrahedra_omegas[24][4],

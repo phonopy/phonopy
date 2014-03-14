@@ -365,6 +365,9 @@ void spg_get_neighboring_grid_points(int relative_grid_points[],
 void
 spg_get_tetrahedra_relative_grid_address(int relative_grid_address[24][4][3],
 					 SPGCONST double rec_lattice[3][3]);
+void
+spg_get_all_tetrahedra_relative_grid_address
+(int relative_grid_address[4][24][4][3]);
 double
 spg_get_tetrahedra_integration_weight(const double omega,
 				      SPGCONST double tetrahedra_omegas[24][4],

@@ -275,12 +275,12 @@ def _set_triplets_integration_weights_py(g, interaction, frequency_points):
     bz_map = interaction.get_bz_map()
     triplets_at_q = interaction.get_triplets_at_q()[0]
     unique_vertices = thm.get_unique_tetrahedra_vertices()
-    
-    tetrahedra_vertices = get_tetrahedra_vertices(thm.get_tetrahedra(),
-                                                  mesh,
-                                                  triplets_at_q,
-                                                  grid_address,
-                                                  bz_map)
+    tetrahedra_vertices = get_tetrahedra_vertices(
+        thm.get_tetrahedra(),
+        mesh,
+        triplets_at_q,
+        grid_address,
+        bz_map)
     interaction.set_phonon(np.unique(tetrahedra_vertices))
     frequencies = interaction.get_phonons()[0]
     num_band = frequencies.shape[1]
@@ -290,7 +290,8 @@ def _set_triplets_integration_weights_py(g, interaction, frequency_points):
             f2_v = frequencies[vertices[1], k]
             thm.set_tetrahedra_omegas(f1_v + f2_v)
             thm.run(frequency_points)
-            g[0, i, :, j, k] = thm.get_integration_weight()
+            g0 = thm.get_integration_weight()
+            g[0, i, :, j, k] = g0
             thm.set_tetrahedra_omegas(-f1_v + f2_v)
             thm.run(frequency_points)
             g1 = thm.get_integration_weight()
@@ -299,7 +300,10 @@ def _set_triplets_integration_weights_py(g, interaction, frequency_points):
             g2 = thm.get_integration_weight()
             g[1, i, :, j, k] = g1 - g2
             if len(g) == 3:
-                g[2, i, :, j, k] = g[0, i, :, j, k] + g1 + g2
+                g[2, i, :, j, k] = g0 + g1 + g2
+                    
+    # if len(tetrahedra) == 4:
+    #     g /= 4
     
 
 class GridBrillouinZone:

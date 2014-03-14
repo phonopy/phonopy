@@ -392,6 +392,11 @@ def get_tetrahedra_relative_grid_address(microzone_lattice):
     
     return relative_grid_address
 
+def get_all_tetrahedra_relative_grid_address():
+    relative_grid_address = np.zeros((4, 24, 4, 3), dtype='intc')
+    spg.all_tetrahedra_relative_grid_address(relative_grid_address)
+    
+    return relative_grid_address
     
 def get_tetrahedra_integration_weight(omegas,
                                       tetrahedra_omegas,
