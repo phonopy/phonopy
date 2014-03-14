@@ -193,12 +193,8 @@ class TetrahedronMethod:
         try:
             import phonopy._phonopy as phonoc
 
-            if self._primitive_vectors is None:
-                rga = spg.get_all_tetrahedra_relative_grid_address()
-            else:
-                rga = spg.get_tetrahedra_relative_grid_address(
-                    self._primitive_vectors)
-                
+            rga = spg.get_tetrahedra_relative_grid_address(
+                self._primitive_vectors)
             self._relative_grid_addresses = rga
 
         except ImportError:
