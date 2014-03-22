@@ -36,12 +36,14 @@
 #include <stdio.h>
 #include <numpy/arrayobject.h>
 #include "dynmat.h"
+#include "derivative_dynmat.h"
 
 #define KB 8.6173382568083159E-05
 
 /* Build dynamical matrix */
 static PyObject * py_get_dynamical_matrix(PyObject *self, PyObject *args);
 static PyObject * py_get_nac_dynamical_matrix(PyObject *self, PyObject *args);
+static PyObject * py_get_derivative_dynmat(PyObject *self, PyObject *args);
 static PyObject * py_get_thermal_properties(PyObject *self, PyObject *args);
 static PyObject * py_distribute_fc2(PyObject *self, PyObject *args);
 
@@ -66,6 +68,7 @@ static int nint(const double a);
 static PyMethodDef functions[] = {
   {"dynamical_matrix", py_get_dynamical_matrix, METH_VARARGS, "Dynamical matrix"},
   {"nac_dynamical_matrix", py_get_nac_dynamical_matrix, METH_VARARGS, "NAC dynamical matrix"},
+  {"derivative_dynmat", py_get_derivative_dynmat, METH_VARARGS, "Q derivative of dynamical matrix"},
   {"thermal_properties", py_get_thermal_properties, METH_VARARGS, "Thermal properties"},
   {"distribute_fc2", py_distribute_fc2, METH_VARARGS, "Distribute force constants"},
   {NULL, NULL, 0, NULL}
@@ -195,6 +198,92 @@ static PyObject * py_get_nac_dynamical_matrix(PyObject *self, PyObject *args)
 			    charge_sum);
 
   free(charge_sum);
+
+  Py_RETURN_NONE;
+}
+
+static PyObject * py_get_derivative_dynmat(PyObject *self, PyObject *args)
+{
+  PyArrayObject* derivative_dynmat_real;
+  PyArrayObject* derivative_dynmat_imag;
+  PyArrayObject* force_constants;
+  PyArrayObject* r_vector;
+  PyArrayObject* lattice;
+  PyArrayObject* q_vector;
+  PyArrayObject* multiplicity;
+  PyArrayObject* mass;
+  PyArrayObject* super2prim_map;
+  PyArrayObject* prim2super_map;
+  PyArrayObject* born;
+  PyArrayObject* dielectric;
+  PyArrayObject* q_direction;
+  double nac_factor;
+
+  if (!PyArg_ParseTuple(args, "OOOOOOOOOOdOOO",
+			&derivative_dynmat_real,
+			&derivative_dynmat_imag,
+			&force_constants,
+			&q_vector,
+			&lattice, /* column vectors */
+			&r_vector,
+			&multiplicity,
+			&mass,
+			&super2prim_map,
+			&prim2super_map,
+			&nac_factor,
+			&born,
+			&dielectric,
+			&q_direction)) {
+    return NULL;
+  }
+
+  double* ddm_r = (double*)derivative_dynmat_real->data;
+  double* ddm_i = (double*)derivative_dynmat_imag->data;
+  const double* fc = (double*)force_constants->data;
+  const double* q = (double*)q_vector->data;
+  const double* lat = (double*)lattice->data;
+  const double* r = (double*)r_vector->data;
+  const double* m = (double*)mass->data;
+  const int* multi = (int*)multiplicity->data;
+  const int* s2p_map = (int*)super2prim_map->data;
+  const int* p2s_map = (int*)prim2super_map->data;
+  const int num_patom = prim2super_map->dimensions[0];
+  const int num_satom = super2prim_map->dimensions[0];
+  double *z;
+  double *epsilon;
+  double *q_dir;
+  if ((PyObject*)born == Py_None) {
+    z = NULL;
+  } else {
+    z = (double*)born->data;
+  }
+  if ((PyObject*)dielectric == Py_None) {
+    epsilon = NULL;
+  } else {
+    epsilon = (double*)dielectric->data;
+  }
+  if ((PyObject*)q_direction == Py_None) {
+    q_dir = NULL;
+  } else {
+    q_dir = (double*)q_direction->data;
+  }
+
+  get_derivative_dynmat_at_q(ddm_r,
+			     ddm_i,
+			     num_patom,
+			     num_satom,
+			     fc,
+			     q,
+			     lat,
+			     r,
+			     multi,
+			     m,
+			     s2p_map,
+			     p2s_map,
+			     nac_factor,
+			     z,
+			     epsilon,
+			     q_dir);
 
   Py_RETURN_NONE;
 }

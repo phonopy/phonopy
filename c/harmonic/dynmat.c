@@ -49,9 +49,9 @@ int get_dynamical_matrix_at_q(double *dynamical_matrix_real,
 	for (l = 0; l < 3; l++) {
 	  for (m = 0; m < 3; m++) {
 	    if (charge_sum) {
-	    fc_elem = (fc[p2s_map[i] * num_satom * 9 + k * 9 + l * 3 + m] +
-		       charge_sum[i * num_patom * 9 +
-				  j * 9 + l * 3 + m]) / mass_sqrt;
+	      fc_elem = (fc[p2s_map[i] * num_satom * 9 + k * 9 + l * 3 + m] +
+			 charge_sum[i * num_patom * 9 +
+				    j * 9 + l * 3 + m]) / mass_sqrt;
 	    } else {
 	      fc_elem = fc[p2s_map[i] * num_satom * 9 +
 			   k * 9 + l * 3 + m] / mass_sqrt;

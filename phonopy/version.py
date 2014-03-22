@@ -32,4 +32,4 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-phonopy_version = "1.8.3.2"
+phonopy_version = "1.8.4"

@@ -51,13 +51,59 @@ class DerivativeOfDynamicalMatrix:
         self._ddm = None
 
     def run(self, q, q_direction=None):
-        self._run_py(q, q_direction=q_direction)
+        try:
+            import phonopy._phonopy as phonoc
+            self._run_c(q, q_direction=q_direction)
+        except ImportError:
+            self._run_py(q, q_direction=q_direction)
 
     def set_derivative_order(self, order):
         self._derivative_order = order
         
     def get_derivative_of_dynamical_matrix(self):
         return self._ddm
+
+    def _run_c(self, q, q_direction=None):
+        import phonopy._phonopy as phonoc
+        num_patom = len(self._p2s_map)
+        ddm_real = np.zeros((3, num_patom * 3, num_patom * 3), dtype='double')
+        ddm_imag = np.zeros((3, num_patom * 3, num_patom * 3), dtype='double')
+        mass = self._pcell.get_masses()
+        fc = self._force_constants
+        vectors = self._smallest_vectors
+        multiplicity = self._multiplicity
+        if self._dynmat.is_nac():
+            born = self._dynmat.get_born_effective_charges()
+            dielectric = self._dynmat.get_dielectric_constant()
+            nac_factor = self._dynmat.get_nac_factor()
+            if q_direction is None:
+                q_dir = None
+            else:
+                q_dir = np.array(q_direction, dtype='double', order='C')
+        else:
+            born = None
+            dielectric = None
+            nac_factor = 0
+            q_dir = None
+
+        phonoc.derivative_dynmat(ddm_real,
+                                 ddm_imag,
+                                 fc,
+                                 np.array(q, dtype='double'),
+                                 np.array(self._pcell.get_cell(),
+                                          dtype='double', order='C'),
+                                 vectors,
+                                 multiplicity,
+                                 mass,
+                                 self._s2p_map,
+                                 self._p2s_map,
+                                 nac_factor,
+                                 born,
+                                 dielectric,
+                                 q_dir)
+        self._ddm = np.array([ddm_real[i] + ddm_real[i].T +
+                              1j * (ddm_imag[i] - ddm_imag[i].T)
+                              for i in range(3)]) / 2
         
     def _run_py(self, q, q_direction=None):
         if self._dynmat.is_nac():
@@ -94,17 +140,17 @@ class DerivativeOfDynamicalMatrix:
                 vecs_multi_cart = np.dot(vecs_multi, self._pcell.get_cell())
                 coef = (2j * np.pi * vecs_multi_cart) ** self._derivative_order
 
+                if self._dynmat.is_nac():
+                    fc_elem = fc[s_i, k] + fc_nac[i, j]
+                else:
+                    fc_elem = fc[s_i, k]
+                        
                 for l in range(3):
-                    if self._dynmat.is_nac():
-                        fc_elem = fc[s_i, k] + fc_nac[i, j]
-                    else:
-                        fc_elem = fc[s_i, k]
-
                     ddm_elem = fc_elem * (coef[:, l] * phase_multi).sum()
                     if self._dynmat.is_nac() and self._derivative_order == 1:
                         ddm_elem += d_nac[l, i, j] * phase_multi.sum()
 
-                    ddm_local[l] +=  ddm_elem / multi / mass
+                    ddm_local[l] +=  ddm_elem / mass / multi
                                          
 
             ddm[:, (i * 3):(i * 3 + 3), (j * 3):(j * 3 + 3)] = ddm_local

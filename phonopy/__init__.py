@@ -920,9 +920,7 @@ class Phonopy:
         self._irreps.write_yaml(show_irreps=show_irreps)
 
     # Group velocity
-    def set_group_velocity(self,
-                           q_points=None,
-                           q_length=1e-4):
+    def set_group_velocity(self, q_length=None):
         self._set_dynamical_matrix()
         self._group_velocity = GroupVelocity(
             self._dynamical_matrix,
@@ -930,10 +928,12 @@ class Phonopy:
             symmetry=self._primitive_symmetry,
             frequency_factor_to_THz=self._factor)
 
-        if q_points is not None:
-            self._group_velocity.set_q_points(q_points)
-
-    def get_group_velocity(self, q_point):
+    def get_group_velocity(self):
+        return self._group_velocity.get_group_velocity()
+        
+    def get_group_velocity_at_q(self, q_point):
+        if self._group_velocity is None:
+            self.set_group_velocity()
         self._group_velocity.set_q_points([q_point])
         return self._group_velocity.get_group_velocity()[0]
 

@@ -10,7 +10,8 @@ extension = Extension('phonopy._phonopy',
                       # extra_link_args=['-lgomp'],
                       include_dirs=['c/harmonic_h'] + include_dirs_numpy,
                       sources=['c/_phonopy.c',
-                               'c/harmonic/dynmat.c'])
+                               'c/harmonic/dynmat.c',
+                               'c/harmonic/derivative_dynmat.c'])
 
 extension_spglib = Extension(
     'phonopy._spglib',
@@ -38,7 +39,7 @@ extension_spglib = Extension(
 
 
 setup(name='phonopy',
-      version='1.8.3.2',
+      version='1.8.4',
       description='This is the phonopy module.',
       author='Atsushi Togo',
       author_email='atz.togo@gmail.com',
