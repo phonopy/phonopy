@@ -90,7 +90,7 @@ class DerivativeOfDynamicalMatrix:
                                  ddm_imag,
                                  fc,
                                  np.array(q, dtype='double'),
-                                 np.array(self._pcell.get_cell(),
+                                 np.array(self._pcell.get_cell().T,
                                           dtype='double', order='C'),
                                  vectors,
                                  multiplicity,
