@@ -82,6 +82,27 @@ has to be given in nested list (``sets_of_forces``) as::
      [ [ f_1x, f_1y, f_1z ], [ f_2x, f_2y, f_2z ], ... ], # second supercell
      ...                                                   ]
 
+This is the case when the set of atomic displacements is generated
+internally. The information of displacements is already stored in
+phonopy object. But if you want to input forces together with the
+corresponding set of displacements, ``displacement_dataset`` has to be
+prepared as a python dictionary as follows::
+   
+    displacement_dataset:
+       {'natom': number_of_atoms_in_supercell,
+        'first_atoms': [
+          {'number': atom index of displaced atom,
+           'displacement': displacement in Cartesian coordinates,
+           'forces': forces on atoms in supercell},
+          {...}, ...]}
+
+``first_atoms`` is just a list to contain a set of displacements and
+corresponding forces. Then this is set by
+
+::
+
+   phonopy.set_displacement_dataset(displacement_dataset)
+
 Post process
 ^^^^^^^^^^^^^^^^^
 
@@ -89,17 +110,22 @@ Prepare force constants internally with calculated suuprcell sets of
 forces by
 
 ::
-
-   phonon.produce_force_constants(forces=sets_of_forces)
-
-Alternatively, the following is equivalent,
-
-::
    
    phonon.set_forces(sets_of_forces)
    phonon.produce_force_constants()
 
+If you have force constants and don't need to create force constants
+from forces and displacements, simply set your force constants by
 
+::
+
+   phonon.set_force_constants(force_constants)
+
+The force constants matrix is given in 4 dimensional array
+(better to be a numpy array of ``dtype='double', order='C'``).
+The shape of force constants matrix is ``(N, N, 3, 3)`` where ``N``
+is the number of atoms in the supercell and 3 gives Cartesian axes.
+   
 Band structure
 """""""""""""""
 
@@ -210,9 +236,7 @@ Non-analytical term correction
 To apply non-analytical term correction, Born effective charge tensors
 for all atoms in **primitive** cell, dielectric constant tensor, and
 the unit conversion factor have to be correctly set. The tensors are
-given in Cartesian coordinates. The following example is that can be
-used for NaCl. ``is_nac = True`` has to be set at ``set_post_process``
-older than phonopy version 1.8.0.
+given in Cartesian coordinates.
 
 ::
 
@@ -226,13 +250,32 @@ older than phonopy version 1.8.0.
               [0, 2.43533967, 0],
               [0, 0, 2.43533967]]
    factors = 14.400
-   phonon.set_post_process([[0, 0.5, 0.5], [0.5, 0, 0.5], [0.5, 0.5, 0]],
-                           sets_of_forces)
    phonon.set_nac_params({'born': born,
                           'factor': factors,
                           'dielectric': epsilon})
 
 .. _phonopy_eigenvectors:
+
+Group velocity
+"""""""""""""""""""
+
+A group velocity at a q-point is obtained by::
+
+   phonon.get_group_velocity_at_q(q_point)
+
+Group velocities with mesh sampling, band structure, or q-points
+calculations are given as follows.
+
+First inform phonopy object to calculate group velocity::
+
+   phonon.set_group_velocity()
+
+Then the respective group velocities are obtained by::
+
+   phonon.get_group_velocity()
+
+The shape of group velocity array is to follow those array shapes of
+calculation modes.
 
 Eigenvectors
 ----------------------------

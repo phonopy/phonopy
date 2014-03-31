@@ -3,6 +3,13 @@
 Change Log
 ==========
 
+Mar-31-2014: Version 1.8.4
+---------------------------
+
+* Implementation of analytical derivative of dynamical matrix in C,
+  which improves the performance of group velocity calculation.
+* Minor change of python module for group velocity.
+
 Feb-17-2014: Version 1.8.3
 ---------------------------
 
