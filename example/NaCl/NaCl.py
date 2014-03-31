@@ -11,14 +11,21 @@ def append_band(bands, q_start, q_end):
     bands.append(band)
 
 bulk = read_vasp("POSCAR")
-phonon = Phonopy(bulk, [[2, 0, 0], [0, 2, 0], [0, 0, 2]],
+phonon = Phonopy(bulk,
+                 [[2, 0, 0],
+                  [0, 2, 0],
+                  [0, 0, 2]],
+                 primitive_matrix=[[0, 0.5, 0.5],
+                                   [0.5, 0, 0.5],
+                                   [0.5, 0.5, 0]],
                  is_auto_displacements=False)
 
 symmetry = phonon.get_symmetry()
 print "Space group:", symmetry.get_international_table()
 
 force_sets = parse_FORCE_SETS(phonon.get_supercell().get_number_of_atoms())
-phonon.set_force_sets(force_sets)
+phonon.set_displacement_dataset(force_sets)
+phonon.produce_force_constants()
 
 born = [[[1.08703, 0, 0],
          [0, 1.08703, 0],
@@ -30,7 +37,6 @@ epsilon = [[2.43533967, 0, 0],
            [0, 2.43533967, 0],
            [0, 0, 2.43533967]]
 factors = 14.400
-phonon.set_post_process([[0, 0.5, 0.5], [0.5, 0, 0.5], [0.5, 0.5, 0]])
 phonon.set_nac_params({'born': born,
                        'factor': factors,
                        'dielectric': epsilon})
