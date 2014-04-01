@@ -11,13 +11,9 @@ phonon = Phonopy(cell, np.diag([3, 3, 2]))
 symmetry = phonon.get_symmetry()
 print "Space group:", symmetry.get_international_table()
 
-# Read forces and displacements
 force_sets = parse_FORCE_SETS()
-
-# Sets of forces have to be set before phonon.set_post_process or
-# at phonon.set_post_process(..., sets_of_forces=sets_of_forces, ...).
-phonon.set_force_sets(force_sets)
-phonon.set_post_process()
+phonon.set_displacement_dataset(force_sets)
+phonon.produce_force_constants()
 
 # Character table
 phonon.set_irreps([1./3, 1./3, 0], 1e-4)
