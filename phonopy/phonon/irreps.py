@@ -1016,7 +1016,7 @@ class IrReps:
             if self._ir_labels:
                 w.write("  ir_label: %s\n" % self._ir_labels[i])
             w.write("  characters: ")
-            chars = np.abs(self._characters[i])
+            chars = np.rint(np.abs(self._characters[i]))
             phase = (np.angle(self._characters[i]) / np.pi * 180) % 360
             if len(chars) > 1:
                 w.write("[ [ %2d, %5.1f ]" % (chars[0], phase[0]))
