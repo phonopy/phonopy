@@ -35,7 +35,9 @@
 import numpy as np
 from phonopy.structure.symmetry import Symmetry, get_pointgroup
 from phonopy.harmonic.force_constants import similarity_transformation
+from phonopy.phonon.group_velocity import degenerate_sets as get_degenerate_sets
 from phonopy.units import VaspToTHz
+from phonopy.harmonic.derivative_dynmat import DerivativeOfDynamicalMatrix
 
 # from Wikipedia http://en.wikipedia.org/wiki/List_of_character_tables_for_chemically_important_3D_point_groups
 character_table = { '6/mmm':
@@ -646,10 +648,10 @@ class IrReps:
         self._symprec = symprec
         self._primitive = dynamical_matrix.get_primitive()
         self._dynamical_matrix = dynamical_matrix
+        self._ddm = DerivativeOfDynamicalMatrix(dynamical_matrix)
 
     def run(self):
-        (self._eigvecs,
-         self._freqs) = self._get_eigenvectors(self._dynamical_matrix)
+        self._set_eigenvectors(self._dynamical_matrix)
         self._symmetry_dataset = Symmetry(self._primitive,
                                           self._symprec).get_dataset()
 
@@ -690,6 +692,14 @@ class IrReps:
 
         return True
 
+    def _get_degenerate_sets(self):
+        deg_sets = get_degenerate_sets(self._freqs,
+                                       cutoff=self._degeneracy_tolerance)
+        self._ddm.run(self._q)
+        ddm_q = np.sum([self._ddm.get_derivative_of_dynamical_matrix()[i] *
+                        self._q[i] for i in range(3)], axis=0)
+        return deg_sets
+        
     def get_band_indices(self):
         return self._degenerate_sets
 
@@ -723,11 +733,10 @@ class IrReps:
     def write_yaml(self, show_irreps=False):
         self._write_yaml(show_irreps)
 
-    def _get_eigenvectors(self, dm):
+    def _set_eigenvectors(self, dm):
         dm.set_dynamical_matrix(self._q)
-        eigvals, eigvecs = np.linalg.eigh(dm.get_dynamical_matrix())
-        freqs = np.sqrt(abs(eigvals)) * np.sign(eigvals) * self._factor
-        return eigvecs, freqs
+        eigvals, self._eigvecs = np.linalg.eigh(dm.get_dynamical_matrix())
+        self._freqs = np.sqrt(abs(eigvals)) * np.sign(eigvals) * self._factor
 
     def _get_rotations_at_q(self):
         rotations_at_q = []
@@ -808,21 +817,6 @@ class IrReps:
 
         return matrix
     
-    def _get_degenerate_sets(self):
-        degenerates = []
-        indices_done = []
-        for i, f1 in enumerate(self._freqs):
-            if i in indices_done:
-                continue
-            deg_set = []
-            for j, f2 in enumerate(self._freqs):
-                if abs(f2 - f1) < self._degeneracy_tolerance:
-                    deg_set.append(j)
-                    indices_done.append(j)
-            degenerates.append(deg_set)
-
-        return degenerates
-
     def _get_irreps(self):
         eigvecs = self._eigvecs.T
         irrep = []
@@ -1082,7 +1076,8 @@ def get_rotation_symbol(rotation, mapping_table):
 def print_characters(characters, width=6):
     print "   ",
     for i, c in enumerate(characters):
-        print "(%2d, %5.1f)" % (np.abs(c), (np.angle(c) / np.pi * 180) % 360),
+        print "(%2d, %5.1f)" % (np.rint(np.abs(c)),
+                                (np.angle(c) / np.pi * 180) % 360),
         if (i + 1) % width == 0 and i + 1 < len(characters):
             print
             print "   ",
