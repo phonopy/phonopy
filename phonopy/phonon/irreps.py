@@ -812,12 +812,23 @@ class IrReps:
             for j, p2 in enumerate(pos):
                 diff = p_rot - p2
                 if (abs(diff - np.rint(diff)) < self._symprec).all():
-                    phase_factor = np.dot(p1 - p_rot, self._q)
+                    # For this phase factor, see
+                    # Dynamics of perfect crystals by G. Venkataraman et al.,
+                    # pp133 between Eqs. (3.25) and (3.26)
+                    phase_factor = np.dot(p2 - np.dot(r, p1), self._q)
+                    G = np.dot(r.T, self._q) - self._q
+                    phase_factor += np.dot(p2 - p_rot, G)
                     matrix[j, i] = np.exp(2j * np.pi * phase_factor)
 
         return matrix
     
     def _get_irreps(self):
+        # eigvecs = []
+        # phases = np.kron([np.exp(2j * np.pi * np.dot(self._q, pos))
+        #                   for pos in self._primitive.get_scaled_positions()],
+        #                  [1, 1, 1])
+        # for vec in self._eigvecs.T:
+        #     eigvecs.append(vec * phases)
         eigvecs = self._eigvecs.T
         irrep = []
         for band_indices in self._degenerate_sets:
@@ -1076,8 +1087,17 @@ def get_rotation_symbol(rotation, mapping_table):
 def print_characters(characters, width=6):
     print "   ",
     for i, c in enumerate(characters):
-        print "(%2d, %5.1f)" % (np.rint(np.abs(c)),
-                                (np.angle(c) / np.pi * 180) % 360),
+        angle = np.angle(c) / np.pi * 180
+        if angle < 0:
+            angle += 360
+        angle = np.around(angle, decimals=2) % 360
+        val = abs(c)
+        if val < 1e-5:
+            val = 0
+            angle = 0
+        else:
+            val = np.rint(val)
+        print "(%2d, %5.1f)" % (val, angle),
         if (i + 1) % width == 0 and i + 1 < len(characters):
             print
             print "   ",
