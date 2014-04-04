@@ -51,7 +51,7 @@ def get_thermal_conductivity(
         
     for i in br:
         if write_gamma:
-            _write_gamma(br, interaction, i)
+            _write_gamma(br, interaction, i, filename=output_filename)
         if log_level > 1:
             _write_triplets(interaction)
 
