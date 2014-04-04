@@ -636,10 +636,12 @@ class IrReps:
     def __init__(self,
                  dynamical_matrix,
                  q,
+                 is_little_group=False,
                  factor=VaspToTHz,
                  symprec=1e-5,
                  degeneracy_tolerance=1e-5,
                  log_level=0):
+        self._is_little_group = is_little_group
         self._factor = factor
         self._log_level = log_level
 
@@ -749,6 +751,9 @@ class IrReps:
 
             if (abs(diff - np.rint(diff)) < self._symprec).all():
                 rotations_at_q.append(r)
+                for i in range(3):
+                    if np.abs(t[i] - 1) < self._symprec:
+                        t[i] = 0.0
                 trans_at_q.append(t)
 
         return np.array(rotations_at_q), np.array(trans_at_q)
@@ -803,7 +808,7 @@ class IrReps:
             irrep_dims.append(len(irrep_Rs[0]))
         return np.array(characters), np.array(irrep_dims)
 
-    def _get_modified_permutation_matrix(self, r, t):
+    def _get_modified_permutation_matrix(self, r, t, ):
         num_atom = self._primitive.get_number_of_atoms()
         pos = self._primitive.get_scaled_positions()
         matrix = np.zeros((num_atom, num_atom), dtype=complex)
@@ -815,21 +820,31 @@ class IrReps:
                     # For this phase factor, see
                     # Dynamics of perfect crystals by G. Venkataraman et al.,
                     # pp133 between Eqs. (3.25) and (3.26)
+                    # It is assumed that dynamical matrix is built without
+                    # considering internal atomic positions, so
+                    # the phase factors of eigenvectors are shifted in
+                    # _get_irreps().
                     phase_factor = np.dot(p2 - np.dot(r, p1), self._q)
                     G = np.dot(r.T, self._q) - self._q
                     phase_factor += np.dot(p2 - p_rot, G)
+
+                    # This phase factor comes from non-pure-translation of
+                    # each symmetry opration.
+                    if not self._is_little_group:
+                        phase_factor -= np.dot(t, self._q)
+                        
                     matrix[j, i] = np.exp(2j * np.pi * phase_factor)
 
         return matrix
     
     def _get_irreps(self):
-        # eigvecs = []
-        # phases = np.kron([np.exp(2j * np.pi * np.dot(self._q, pos))
-        #                   for pos in self._primitive.get_scaled_positions()],
-        #                  [1, 1, 1])
-        # for vec in self._eigvecs.T:
-        #     eigvecs.append(vec * phases)
-        eigvecs = self._eigvecs.T
+        eigvecs = []
+        phases = np.kron(
+            [np.exp(2j * np.pi * np.dot(self._q, pos))
+             for pos in self._primitive.get_scaled_positions()], [1, 1, 1])
+        for vec in self._eigvecs.T:
+            eigvecs.append(vec * phases)
+
         irrep = []
         for band_indices in self._degenerate_sets:
             irrep_Rs = []
@@ -928,15 +943,25 @@ class IrReps:
     
     def _show(self, show_irreps):
         print
-        print "-----------------"
-        print " Character table"
-        print "-----------------"
+        print "-------------------------------"
+        print "  Irreducible representations"
+        print "-------------------------------"
         print "q-point:", self._q
         print "Point group:", self._pointgroup_symbol
         print
-        print "Original rotation matrices:"
-        print
-        print_rotations(self._rotations_at_q)
+        
+        if (np.abs(self._q) < self._symprec).all():
+            width = 6
+            print "Original rotation matrices:"
+            print
+            print_rotations(self._rotations_at_q, width=width)
+        else:
+            width = 4
+            print "Original symmetry operations:"
+            print
+            print_rotations(self._rotations_at_q,
+                            translations=self._translations_at_q,
+                            width=width)
 
         print "Transformation matrix:"
         print
@@ -946,7 +971,8 @@ class IrReps:
         print "Rotation matrices by transformation matrix:"
         print
         print_rotations(self._conventional_rotations,
-                        self._rotation_symbols)
+                        rotation_symbols=self._rotation_symbols,
+                        width=width)
         print "Character table:"
         print
         for i, deg_set in enumerate(self._degenerate_sets):
@@ -1103,23 +1129,42 @@ def print_characters(characters, width=6):
             print "   ",
     print
 
-def print_rotations(rotations, rotation_symbols=None, width=6):
+def print_rotations(rotations,
+                    translations=None,
+                    rotation_symbols=None,
+                    width=6):
     for i in range(len(rotations) // width):
-        if rotation_symbols == None:
-            print ("    %2d    " * width) % \
-                tuple(np.arange(i * width, (i + 1) * width) + 1)
+        if rotation_symbols is None:
+            if translations is None:
+                print ("    %2d    " * width) % \
+                    tuple(np.arange(i * width, (i + 1) * width) + 1)
+            else:
+                print ("       %2d       " * width) % \
+                    tuple(np.arange(i * width, (i + 1) * width) + 1)
         else:
             for k in range(width):
                 rot_symbol = rotation_symbols[i * width + k]
-                if len(rot_symbol) < 3:
-                    print "    %2s   " % rot_symbol,
+                if translations is None:
+                    if len(rot_symbol) < 3:
+                        print "    %2s   " % rot_symbol,
+                    else:
+                        print "   %4s  " % rot_symbol,
                 else:
-                    print "   %4s  " % rot_symbol,
+                    if len(rot_symbol) < 3:
+                        print "       %2s       " % rot_symbol,
+                    else:
+                        print "     %4s     " % rot_symbol,
             print
-        print " -------- " * width
+        if translations is None:
+            print " -------- " * width
+        else:
+            print " -------------- " * width
+
         for j in range(3):
             for k in range(width):
                 print (" %2d %2d %2d") % tuple(rotations[i * width + k][j]),
+                if translations is not None:
+                    print "%5.2f" % translations[i * width + k][j],
             print
         print
     

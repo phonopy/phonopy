@@ -898,11 +898,15 @@ class Phonopy:
 
 
     # Characters of irreducible representations
-    def set_irreps(self, q, degeneracy_tolerance=1e-4):
+    def set_irreps(self,
+                   q,
+                   is_little_group=False,
+                   degeneracy_tolerance=1e-4):
         self._set_dynamical_matrix()
         self._irreps = IrReps(
             self._dynamical_matrix,
             q,
+            is_little_group=is_little_group,
             factor=self._factor,
             symprec=self._symprec,
             degeneracy_tolerance=degeneracy_tolerance,
