@@ -636,12 +636,12 @@ class IrReps:
     def __init__(self,
                  dynamical_matrix,
                  q,
-                 is_little_group=False,
+                 is_little_cogroup=False,
                  factor=VaspToTHz,
                  symprec=1e-5,
                  degeneracy_tolerance=1e-5,
                  log_level=0):
-        self._is_little_group = is_little_group
+        self._is_little_cogroup = is_little_cogroup
         self._factor = factor
         self._log_level = log_level
 
@@ -819,19 +819,18 @@ class IrReps:
                 if (abs(diff - np.rint(diff)) < self._symprec).all():
                     # For this phase factor, see
                     # Dynamics of perfect crystals by G. Venkataraman et al.,
-                    # pp133 between Eqs. (3.25) and (3.26)
+                    # pp132 Eq. (3.22).
                     # It is assumed that dynamical matrix is built without
                     # considering internal atomic positions, so
                     # the phase factors of eigenvectors are shifted in
                     # _get_irreps().
-                    phase_factor = np.dot(p2 - np.dot(r, p1), self._q)
-                    G = np.dot(r.T, self._q) - self._q
-                    phase_factor += np.dot(p2 - p_rot, G)
-
+                    phase_factor = np.dot(
+                        self._q, np.dot(np.linalg.inv(r), p2 - p_rot))
+                    
                     # This phase factor comes from non-pure-translation of
                     # each symmetry opration.
-                    if not self._is_little_group:
-                        phase_factor -= np.dot(t, self._q)
+                    if self._is_little_cogroup:
+                        phase_factor += np.dot(t, self._q)
                         
                     matrix[j, i] = np.exp(2j * np.pi * phase_factor)
 

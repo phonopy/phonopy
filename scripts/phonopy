@@ -132,7 +132,7 @@ parser.set_defaults(
     is_group_velocity=False,
     is_hdf5=False,
     is_legend=False,
-    is_little_group=False,
+    is_little_cogroup=False,
     is_nac=False,
     is_nodiag=False,
     is_nomeshsym=False,
@@ -241,9 +241,9 @@ parser.add_option("--hdf5", dest="is_hdf5", action="store_true",
 parser.add_option("--legend", dest="is_legend",
                   action="store_true",
                   help="Legend of plots is shown in thermal displacements")
-parser.add_option("--little_group", dest="is_little_group",
+parser.add_option("--lcg", "--little_cogroup", dest="is_little_cogroup",
                   action="store_true",
-                  help="Show irreps of little group instead of space group")
+                  help="Show irreps of little co-group (or point-group of wave vector q) instead of little group")
 parser.add_option("--loglevel", dest="loglevel", type="int",
                   help="Log level")
 parser.add_option("--mass", dest="masses",
@@ -935,7 +935,7 @@ elif run_mode=='modulation':
 # Ir-representation
 elif run_mode == 'irreps':
     if phonon.set_irreps(settings.get_irreps_q_point(),
-                         is_little_group=settings.get_is_little_group(),
+                         is_little_cogroup=settings.get_is_little_cogroup(),
                          degeneracy_tolerance=settings.get_irreps_tolerance()):
         show_irreps = settings.get_show_irreps()
         phonon.show_irreps(show_irreps)

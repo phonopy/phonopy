@@ -791,7 +791,7 @@ class PhonopySettings(Settings):
         self._is_group_velocity = False
         self._is_gamma_center = False
         self._is_hdf5 = False
-        self._is_little_group = False
+        self._is_little_cogroup = False
         self._is_plusminus_displacement = 'auto'
         self._is_thermal_displacements = False
         self._is_thermal_displacement_matrices = False
@@ -931,11 +931,11 @@ class PhonopySettings(Settings):
     def get_is_group_velocity(self):
         return self._is_group_velocity
 
-    def set_is_little_group(self, is_little_group):
-        self._is_little_group = is_little_group
+    def set_is_little_cogroup(self, is_little_cogroup):
+        self._is_little_cogroup = is_little_cogroup
 
-    def get_is_little_group(self):
-        return self._is_little_group
+    def get_is_little_cogroup(self):
+        return self._is_little_cogroup
 
     def set_is_projected_thermal_properties(self, is_ptp):
         self._is_projected_thermal_properties = is_ptp
@@ -1126,9 +1126,9 @@ class PhonopyConfParser(ConfParser):
                 if self._options.show_irreps:
                     self._confs['show_irreps'] = '.true.'
 
-            if opt.dest == 'is_little_group':
-                if self._options.is_little_group:
-                    self._confs['little_group'] = '.true.'
+            if opt.dest == 'is_little_cogroup':
+                if self._options.is_little_cogroup:
+                    self._confs['little_cogroup'] = '.true.'
 
             if opt.dest == 'is_band_connection':
                 if self._options.is_band_connection:
@@ -1254,9 +1254,9 @@ class PhonopyConfParser(ConfParser):
                 if confs['show_irreps'] == '.true.':
                     self.set_parameter('show_irreps', True)
 
-            if conf_key == 'little_group':
-                if confs['little_group'] == '.true.':
-                    self.set_parameter('little_group', True)
+            if conf_key == 'little_cogroup':
+                if confs['little_cogroup'] == '.true.':
+                    self.set_parameter('little_cogroup', True)
                     
             # DOS
             if conf_key == 'pdos':
@@ -1477,8 +1477,8 @@ class PhonopyConfParser(ConfParser):
             if params.has_key('show_irreps'):
                 self._settings.set_show_irreps(params['show_irreps'])
                 
-            if params.has_key('little_group'):
-                self._settings.set_is_little_group(params['little_group'])
+            if params.has_key('little_cogroup'):
+                self._settings.set_is_little_cogroup(params['little_cogroup'])
                 
         # DOS
         if params.has_key('dos_range'):
