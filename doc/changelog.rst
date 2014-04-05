@@ -3,6 +3,12 @@
 Change Log
 ==========
 
+Apr-5-2014: Version 1.8.4.1
+-----------------------------
+
+* Fix irreps for non-zero q-point of nonsymmorphic case
+
+
 Mar-31-2014: Version 1.8.4
 ---------------------------
 

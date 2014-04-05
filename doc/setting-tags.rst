@@ -890,14 +890,22 @@ the symbols of the IRs and the rotation operations are shown.
 ``SHOW_IRREPS``
 ~~~~~~~~~~~~~~~~
 
-**Experimental**
-
 Irreducible representations are shown along with character table.
 
 ::
 
    IRREPS = 1/3 1/3 0
    SHOW_IRREPS = .TRUE.   
+
+``LITTLE_COGROUP``
+~~~~~~~~~~~~~~~~~~~
+Show irreps of little co-group (point-group of wavevector) instead of
+little group.
+
+::
+
+   IRREPS = 0 0 1/8
+   LITTLE_COGROUP = .TRUE.
 
 
 .. |sflogo| image:: http://sflogo.sourceforge.net/sflogo.php?group_id=161614&type=1
