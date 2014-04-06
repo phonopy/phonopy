@@ -36,6 +36,8 @@ static PyObject *py_get_neighboring_gird_points(PyObject *self, PyObject *args);
 static PyObject * py_set_integration_weights(PyObject *self, PyObject *args);
 static PyObject *
 py_set_triplets_integration_weights(PyObject *self, PyObject *args);
+static PyObject *
+py_set_triplets_integration_weights_with_sigma(PyObject *self, PyObject *args);
 static void get_triplet_tetrahedra_vertices
   (int vertices[2][24][4],
    SPGCONST int relative_grid_address[2][24][4][3],
@@ -59,7 +61,8 @@ static PyMethodDef functions[] = {
   {"permutation_symmetry_fc3", py_set_permutation_symmetry_fc3, METH_VARARGS, "Set permutation symmetry for fc3"},
   {"neighboring_grid_points", py_get_neighboring_gird_points, METH_VARARGS, "Neighboring grid points by relative grid addresses"},
   {"integration_weights", py_set_integration_weights, METH_VARARGS, "Integration weights of tetrahedron method"},
-  {"triplets_integration_weights", py_set_triplets_integration_weights, METH_VARARGS, "Integration weights of tetrahedron metod for triplets"},
+  {"triplets_integration_weights", py_set_triplets_integration_weights, METH_VARARGS, "Integration weights of tetrahedron method for triplets"},
+  {"triplets_integration_weights_with_sigma", py_set_triplets_integration_weights_with_sigma, METH_VARARGS, "Integration weights of smearing method for triplets"},
   {NULL, NULL, 0, NULL}
 };
 
@@ -937,6 +940,64 @@ py_set_triplets_integration_weights(PyObject *self, PyObject *args)
     }
   }
 	    
+  Py_RETURN_NONE;
+}
+
+static PyObject *
+py_set_triplets_integration_weights_with_sigma(PyObject *self, PyObject *args)
+{
+  PyArrayObject* iw_py;
+  PyArrayObject* frequency_points_py;
+  PyArrayObject* triplets_py;
+  PyArrayObject* frequencies_py;
+  double sigma;
+  
+  if (!PyArg_ParseTuple(args, "OOOOd",
+			&iw_py,
+			&frequency_points_py,
+			&triplets_py,
+			&frequencies_py,
+			&sigma)) {
+    return NULL;
+  }
+
+  double *iw = (double*)iw_py->data;
+  const double *frequency_points = (double*)frequency_points_py->data;
+  const int num_band0 = frequency_points_py->dimensions[0];
+  SPGCONST int (*triplets)[3] = (int(*)[3])triplets_py->data;
+  const int num_triplets = (int)triplets_py->dimensions[0];
+  const double *frequencies = (double*)frequencies_py->data;
+  const int num_band = (int)frequencies_py->dimensions[1];
+  const int num_iw = (int)iw_py->dimensions[0];
+
+  int i, j, k, l, adrs_shift;
+  double f0, f1, f2, g0, g1, g2;
+
+#pragma omp parallel for private(j, k, l, adrs_shift, f0, f1, f2, g0, g1, g2)
+  for (i = 0; i < num_triplets; i++) {
+    for (j = 0; j < num_band0; j++) {
+      f0 = frequency_points[j];
+      for (k = 0; k < num_band; k++) {
+	f1 = frequencies[triplets[i][1] * num_band + k];
+	for (l = 0; l < num_band; l++) {
+	  f2 = frequencies[triplets[i][2] * num_band + l];
+	  g0 = gaussian(f0 - f1 - f2, sigma);
+	  g1 = gaussian(f0 + f1 - f2, sigma);
+	  g2 = gaussian(f0 - f1 + f2, sigma);
+	  adrs_shift = i * num_band0 * num_band * num_band +
+	    j * num_band * num_band + k * num_band + l;
+	  iw[adrs_shift] = g0;
+	  adrs_shift += num_triplets * num_band0 * num_band * num_band;
+	  iw[adrs_shift] = g1 - g2;
+	  if (num_iw == 3) {
+	    adrs_shift += num_triplets * num_band0 * num_band * num_band;
+	    iw[adrs_shift] = g0 + g1 + g2;
+	  }
+	}
+      }
+    }
+  }			
+
   Py_RETURN_NONE;
 }
 
