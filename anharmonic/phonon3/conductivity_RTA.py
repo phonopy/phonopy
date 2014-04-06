@@ -215,9 +215,6 @@ class Conductivity_RTA(Conductivity):
 
         self._isotope = None
         self._mass_variances = None
-        if mass_variances is not None:
-            self._set_isotope(mass_variances)
-
         self._grid_point_count = None
 
         Conductivity.__init__(self,
@@ -255,20 +252,7 @@ class Conductivity_RTA(Conductivity):
             self._set_gamma_isotope_at_sigmas(i)
 
         self._set_kappa_at_sigmas(i)
-        
-    def _show_log_header(self, i):
-        if self._log_level:
-            gp = self._grid_points[i]
-            print ("======================= Grid point %d (%d/%d) "
-                   "=======================" %
-                   (gp, i + 1, len(self._grid_points)))
-            print "q-point: (%5.2f %5.2f %5.2f)" % tuple(self._qpoints[i])
-            print "Lifetime cutoff (sec): %-10.3e" % self._cutoff_lifetime
-            if self._isotope is not None:
-                print "Mass variance parameters:",
-                print ("%5.2e " * len(self._mass_variances)) % tuple(
-                    self._mass_variances)
-                        
+
     def _allocate_values(self):
         num_band = self._primitive.get_number_of_atoms() * 3
         num_grid_points = len(self._grid_points)
@@ -423,6 +407,19 @@ class Conductivity_RTA(Conductivity):
                         f * THzToEv), 0)
         return cv
 
+    def _show_log_header(self, i):
+        if self._log_level:
+            gp = self._grid_points[i]
+            print ("======================= Grid point %d (%d/%d) "
+                   "=======================" %
+                   (gp, i + 1, len(self._grid_points)))
+            print "q-point: (%5.2f %5.2f %5.2f)" % tuple(self._qpoints[i])
+            print "Lifetime cutoff (sec): %-10.3e" % self._cutoff_lifetime
+            if self._isotope is not None:
+                print "Mass variance parameters:",
+                print ("%5.2e " * len(self._mass_variances)) % tuple(
+                    self._mass_variances)
+                        
     def _show_log(self,
                   q,
                   frequencies,

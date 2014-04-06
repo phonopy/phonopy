@@ -1,16 +1,10 @@
 import numpy as np
-from phonopy.units import THzToEv, Kb, VaspToTHz, Hbar, EV, Angstrom, THz, AMU
+from phonopy.units import VaspToTHz, Hbar, EV, Angstrom, THz, AMU
 from phonopy.phonon.group_velocity import degenerate_sets
 from phonopy.structure.spglib import get_neighboring_grid_points
-from anharmonic.phonon3.triplets import get_triplets_integration_weights
+from anharmonic.phonon3.triplets import get_triplets_integration_weights, gaussian, occupation
 from anharmonic.phonon3.interaction import set_phonon_c
 import anharmonic.file_IO as file_IO
-
-def gaussian(x, sigma):
-    return 1.0 / np.sqrt(2 * np.pi) / sigma * np.exp(-x**2 / 2 / sigma**2)
-
-def occupation(x, t):
-    return 1.0 / (np.exp(THzToEv * x / (Kb * t)) - 1)
 
 def get_imag_self_energy(interaction,
                          grid_points,
@@ -190,9 +184,13 @@ class ImagSelfEnergy:
                  sigma=None,
                  lang='C'):
         self._interaction = interaction
+        self._sigma = None
         self.set_sigma(sigma)
+        self._temperature = None
         self.set_temperature(temperature)
+        self._frequency_points = None
         self.set_frequency_points(frequency_points)
+        self._grid_point = None
         self.set_grid_point(grid_point=grid_point)
 
         self._lang = lang
@@ -205,7 +203,7 @@ class ImagSelfEnergy:
         self._unit_conversion = None
         self._cutoff_frequency = interaction.get_cutoff_frequency()
 
-        self._g = None # integration weights of tetrahedron method
+        self._g = None # integration weights
         self._mesh = self._interaction.get_mesh_numbers()
 
         # Unit to THz of Gamma
@@ -244,7 +242,9 @@ class ImagSelfEnergy:
         else:
             f_points = self._frequency_points
 
-        self._g = get_triplets_integration_weights(self._interaction, f_points)
+        self._g = get_triplets_integration_weights(self._interaction,
+                                                   f_points,
+                                                   self._sigma)
         
     def get_imag_self_energy(self):
         if self._cutoff_frequency is None:

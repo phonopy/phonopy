@@ -51,7 +51,6 @@ class Conductivity:
         self._gamma = None
         self._read_gamma = False
         self._frequencies = None
-        self._cv = None
         self._gv = None
         self._gamma_iso = None
 
@@ -148,9 +147,6 @@ class Conductivity:
     def get_group_velocities(self):
         return self._gv
 
-    def get_mode_heat_capacities(self):
-        return self._cv
-
     def get_frequencies(self):
         return self._frequencies[self._grid_points]
         
@@ -185,29 +181,14 @@ class Conductivity:
     def get_grid_point_count(self):
         return self._grid_point_count
 
+    def _run_at_grid_point(self):
+        """This has to be implementated in the derived class"""
+        pass
+
     def _allocate_values(self):
-        num_band = self._primitive.get_number_of_atoms() * 3
-        num_grid_points = len(self._grid_points)
-        self._kappa = np.zeros((len(self._sigmas),
-                                num_grid_points,
-                                len(self._temperatures),
-                                num_band,
-                                6), dtype='double')
-        if not self._read_gamma:
-            self._gamma = np.zeros((len(self._sigmas),
-                                    num_grid_points,
-                                    len(self._temperatures),
-                                    num_band), dtype='double')
-        self._gv = np.zeros((num_grid_points,
-                             num_band,
-                             3), dtype='double')
-        self._cv = np.zeros((num_grid_points,
-                             len(self._temperatures),
-                             num_band), dtype='double')
-        self._gamma_iso = np.zeros((len(self._sigmas),
-                                    num_grid_points,
-                                    num_band), dtype='double')
-        
+        """This has to be implementated in the derived class"""
+        pass
+
     def _set_gamma_at_sigmas(self, i):
         for j, sigma in enumerate(self._sigmas):
             if self._log_level:
