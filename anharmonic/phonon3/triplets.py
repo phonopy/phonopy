@@ -1,7 +1,15 @@
 import numpy as np
+from phonopy.units import THzToEv, Kb
 import phonopy.structure.spglib as spg
 from phonopy.structure.symmetry import Symmetry
 from phonopy.structure.tetrahedron_method import TetrahedronMethod
+
+def gaussian(x, sigma):
+    return 1.0 / np.sqrt(2 * np.pi) / sigma * np.exp(-x**2 / 2 / sigma**2)
+
+def occupation(x, t):
+    return 1.0 / (np.exp(THzToEv * x / (Kb * t)) - 1)
+
 
 def get_triplets_at_q(grid_point,
                       mesh,
@@ -201,16 +209,46 @@ def get_grid_points_in_Brillouin_zone(primitive_vectors, # column vectors
     gbz.run(grid_points)
     return gbz.get_shortest_addresses()
 
-def get_triplets_integration_weights(interaction, frequency_points, lang='C'):
-    num_triplets = len(interaction.get_triplets_at_q()[0])
-    num_band = interaction.get_phonons()[0].shape[1]
-    g = np.zeros((2, num_triplets, len(frequency_points), num_band, num_band),
+def get_triplets_integration_weights(interaction,
+                                     frequency_points,
+                                     sigma,
+                                     lang='C'):
+    triplets = interaction.get_triplets_at_q()[0]
+    frequencies = interaction.get_phonons()[0]
+    num_band = frequencies.shape[1]
+    g = np.zeros((2, len(triplets), len(frequency_points), num_band, num_band),
                  dtype='double')
 
-    if lang == 'C':
-        _set_triplets_integration_weights_c(g, interaction, frequency_points)
+    if sigma:
+        if lang == 'C':
+            import anharmonic._phono3py as phono3c
+            phono3c.triplets_integration_weights_with_sigma(
+                g,
+                frequency_points,
+                triplets,
+                frequencies,
+                sigma)
+        else:        
+            for i, tp in enumerate(triplets):
+                f1s = frequencies[tp[1]]
+                f2s = frequencies[tp[2]]
+                for j, k in list(np.ndindex((num_band, num_band))):
+                    f1 = f1s[j]
+                    f2 = f2s[k]
+                    g0 = gaussian(frequency_points - f1 - f2, sigma)
+                    g[0, i, :, j, k] = g0
+                    g1 = gaussian(frequency_points + f1 - f2, sigma)
+                    g2 = gaussian(frequency_points - f1 + f2, sigma)
+                    g[1, i, :, j, k] = g1 - g2
+                    if len(g) == 3:
+                        g[2, i, :, j, k] = g0 + g1 + g2
     else:
-        _set_triplets_integration_weights_py(g, interaction, frequency_points)
+        if lang == 'C':
+            _set_triplets_integration_weights_c(
+                g, interaction, frequency_points)
+        else:
+            _set_triplets_integration_weights_py(
+                g, interaction, frequency_points)
 
     return g
 
