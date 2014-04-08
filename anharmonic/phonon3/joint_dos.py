@@ -237,8 +237,7 @@ class JointDos:
                  self._grid_point,
                  self._mesh,
                  self._symmetry.get_pointgroup_operations(),
-                 self._reciprocal_lattice,
-                 with_bz_map=True)
+                 self._reciprocal_lattice)
 
     def _set_phonon(self, grid_points):
         set_phonon_c(self._dm,

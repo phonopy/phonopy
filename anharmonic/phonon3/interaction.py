@@ -216,8 +216,7 @@ class Interaction:
                 grid_point,
                 self._mesh,
                 self._symmetry.get_pointgroup_operations(),
-                reciprocal_lattice,
-                with_bz_map=True)
+                reciprocal_lattice)
 
         for triplet in triplets_at_q:
             sum_q = (grid_address[triplet]).sum(axis=0)
