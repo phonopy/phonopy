@@ -47,6 +47,8 @@ class Conductivity:
         self._grid_points = None
         self._grid_weights = None
         self._grid_address = None
+        self._ir_grid_points = None
+        self._ir_grid_weights = None
 
         self._gamma = None
         self._read_gamma = False
@@ -95,6 +97,8 @@ class Conductivity:
                 self._grid_address,
                 grid_points,
                 coarse_mesh_shifts=self._coarse_mesh_shifts)
+            (self._ir_grid_points,
+             self._ir_grid_weights) = self._get_ir_grid_points()
         elif self._no_kappa_stars: # All grid points
             coarse_grid_address = get_grid_address(self._coarse_mesh)
             coarse_grid_points = np.arange(np.prod(self._coarse_mesh),
@@ -106,27 +110,12 @@ class Conductivity:
                 coarse_grid_address,
                 coarse_mesh_shifts=self._coarse_mesh_shifts)
             self._grid_weights = np.ones(len(self._grid_points), dtype='intc')
+            self._ir_grid_points = self._grid_points
+            self._ir_grid_weights = self._grid_weights
         else: # Automatic sampling
-            if self._coarse_mesh_shifts is None:
-                mesh_shifts = [False, False, False]
-            else:
-                mesh_shifts = self._coarse_mesh_shifts
-            (coarse_grid_points,
-             coarse_grid_weights,
-             coarse_grid_address) = get_ir_grid_points(
-                self._coarse_mesh,
-                self._symmetry.get_pointgroup_operations(),
-                mesh_shifts=mesh_shifts)
-            self._grid_points = from_coarse_to_dense_grid_points(
-                self._mesh,
-                self._mesh_divisors,
-                coarse_grid_points,
-                coarse_grid_address,
-                coarse_mesh_shifts=self._coarse_mesh_shifts)
-            self._grid_weights = coarse_grid_weights
-
-            assert self._grid_weights.sum() == np.prod(self._mesh /
-                                                       self._mesh_divisors)
+            self._grid_points, self._grid_weights = self._get_ir_grid_points()
+            self._ir_grid_points = self._grid_points
+            self._ir_grid_weights = self._grid_weights
 
         self._qpoints = np.array(self._grid_address[self._grid_points] /
                                  self._mesh.astype('double'),
@@ -257,6 +246,30 @@ class Conductivity:
             print ("Lifetime sampling mesh: [ %d %d %d ]" %
                    tuple(self._mesh / self._mesh_divisors))
 
+    def _get_ir_grid_points(self):
+        if self._coarse_mesh_shifts is None:
+            mesh_shifts = [False, False, False]
+        else:
+            mesh_shifts = self._coarse_mesh_shifts
+        (coarse_grid_points,
+         coarse_grid_weights,
+         coarse_grid_address) = get_ir_grid_points(
+            self._coarse_mesh,
+            self._symmetry.get_pointgroup_operations(),
+            mesh_shifts=mesh_shifts)
+        grid_points = from_coarse_to_dense_grid_points(
+            self._mesh,
+            self._mesh_divisors,
+            coarse_grid_points,
+            coarse_grid_address,
+            coarse_mesh_shifts=self._coarse_mesh_shifts)
+        grid_weights = coarse_grid_weights
+
+        assert grid_weights.sum() == np.prod(self._mesh /
+                                             self._mesh_divisors)
+
+        return grid_points, grid_weights
+            
     def _set_isotope(self, mass_variances):
         self._mass_variances = np.array(mass_variances, dtype='double')
         self._isotope = Isotope(

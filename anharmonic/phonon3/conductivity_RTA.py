@@ -272,9 +272,10 @@ class Conductivity_RTA(Conductivity):
         self._cv = np.zeros((num_grid_points,
                              len(self._temperatures),
                              num_band), dtype='double')
-        self._gamma_iso = np.zeros((len(self._sigmas),
-                                    num_grid_points,
-                                    num_band), dtype='double')
+        if self._isotope is not None:
+            self._gamma_iso = np.zeros((len(self._sigmas),
+                                        num_grid_points,
+                                        num_band), dtype='double')
         
     def _set_kappa_at_sigmas(self, i):
         freqs = self._frequencies[self._grid_points[i]]

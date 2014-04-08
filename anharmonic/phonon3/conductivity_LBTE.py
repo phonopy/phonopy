@@ -2,7 +2,7 @@ import numpy as np
 from phonopy.phonon.group_velocity import get_group_velocity
 from anharmonic.phonon3.conductivity import Conductivity
 
-class Conductivity_RTA(Conductivity):
+class Conductivity_LBTE(Conductivity):
     def __init__(self,
                  interaction,
                  symmetry,
@@ -36,6 +36,8 @@ class Conductivity_RTA(Conductivity):
         self._grid_points = None
         self._grid_weights = None
         self._grid_address = None
+        self._ir_grid_points = None
+        self._ir_grid_weights = None
 
         self._gamma = None
         self._collision_matrix = None
@@ -82,6 +84,7 @@ class Conductivity_RTA(Conductivity):
                 
             self._ise.run_interaction()
             self._set_gamma_at_sigmas(i)
+            self._set_collision_matrix_at_sigmas(i)
 
         if self._isotope is not None:
             self._set_gamma_isotope_at_sigmas(i)
@@ -91,16 +94,20 @@ class Conductivity_RTA(Conductivity):
     def _allocate_values(self):
         num_band = self._primitive.get_number_of_atoms() * 3
         num_grid_points = len(self._grid_points)
-        self._kappa = np.zeros((len(self._sigmas),
-                                num_grid_points,
-                                len(self._temperatures),
-                                num_band,
-                                6), dtype='double')
+        num_ir_grid_points = len(self._ir_grid_points)
         if not self._read_gamma:
             self._gamma = np.zeros((len(self._sigmas),
                                     num_grid_points,
                                     len(self._temperatures),
                                     num_band), dtype='double')
+            self._collision_matrix = np.zeros((len(self._sigmas),
+                                               num_grid_points,
+                                               num_ir_grid_points,
+                                               len(self._temperatures),
+                                               num_band,
+                                               num_band,
+                                               ), dtype='double')
+            
         self._gv = np.zeros((num_grid_points,
                              num_band,
                              3), dtype='double')
