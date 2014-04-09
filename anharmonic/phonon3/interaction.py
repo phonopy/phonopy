@@ -206,8 +206,7 @@ class Interaction:
              bz_map) = get_nosym_triplets_at_q(
                 grid_point,
                 self._mesh,
-                reciprocal_lattice,
-                with_bz_map=True)
+                reciprocal_lattice)
         else:
             (triplets_at_q,
              weights_at_q,

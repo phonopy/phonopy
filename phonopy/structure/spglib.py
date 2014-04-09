@@ -332,19 +332,17 @@ def get_BZ_triplets_at_q(grid_point,
                          map_triplets,
                          mesh):
     """grid_address is overwritten."""
-    num_ir_tripltes = (map_triplets == np.arange(len(map_triplets))).sum()
-    triplets = np.zeros((num_ir_tripltes, 3), dtype='intc')
+    weights = np.zeros_like(map_triplets)
+    for g in map_triplets:
+        weights[g] += 1
+    ir_weights = np.extract(weights > 0, weights)
+    triplets = np.zeros((len(ir_weights), 3), dtype='intc')
     num_ir_ret = spg.BZ_triplets_at_q(triplets,
                                       grid_point,
                                       bz_grid_address,
                                       bz_map,
                                       map_triplets,
                                       np.array(mesh, dtype='intc'))
-
-    weights = np.zeros_like(map_triplets)
-    for g in map_triplets:
-        weights[g] += 1
-    ir_weights = np.extract(weights > 0, weights)
     
     return triplets, ir_weights
 
