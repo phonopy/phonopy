@@ -16,43 +16,41 @@ def get_triplets_at_q(grid_point,
                       point_group, # real space point group of space group
                       primitive_lattice, # column vectors
                       is_time_reversal=True):
-    weights, third_q, grid_address = spg.get_triplets_reciprocal_mesh_at_q(
+    map_triplets, map_q, grid_address = spg.get_triplets_reciprocal_mesh_at_q(
         grid_point,
         mesh,
         point_group,
-        is_time_reversal)
+        is_time_reversal=is_time_reversal)
     bz_grid_address, bz_map = spg.relocate_BZ_grid_address(grid_address,
                                                            mesh,
                                                            primitive_lattice)
-    triplets_at_q = spg.get_BZ_triplets_at_q(
+    triplets_at_q, weights = spg.get_BZ_triplets_at_q(
         grid_point,
         bz_grid_address,
         bz_map,
-        weights,
+        map_triplets,
         mesh)
-    ir_weights = np.extract(weights > 0, weights)
 
-    assert np.prod(mesh) == ir_weights.sum(), \
+    assert np.prod(mesh) == weights.sum(), \
         "Num grid points %d, sum of weight %d" % (
-                    np.prod(mesh), ir_weights.sum())
+                    np.prod(mesh), weights.sum())
 
-    return triplets_at_q, ir_weights, bz_grid_address, bz_map
+    return triplets_at_q, weights, bz_grid_address, bz_map
 
 def get_nosym_triplets_at_q(grid_point,
                             mesh,
                             primitive_lattice,
                             with_bz_map=False):
     grid_address = get_grid_address(mesh)
-    weights = np.ones(len(grid_address), dtype='intc')
-    third_q = np.zeros_like(weights)
+    map_triplets = np.arange(len(grid_address), dtype='intc')
     bz_grid_address, bz_map = spg.relocate_BZ_grid_address(grid_address,
                                                            mesh,
                                                            primitive_lattice)
-    triplets_at_q = spg.get_BZ_triplets_at_q(
+    triplets_at_q, weights = spg.get_BZ_triplets_at_q(
         grid_point,
         bz_grid_address,
         bz_map,
-        weights,
+        map_triplets,
         mesh)
 
     if with_bz_map:

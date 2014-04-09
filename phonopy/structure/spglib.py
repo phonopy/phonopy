@@ -311,36 +311,42 @@ def get_triplets_reciprocal_mesh_at_q(fixed_grid_number,
                                       rotations,
                                       is_time_reversal=True):
 
-    weights = np.zeros(np.prod(mesh), dtype='intc')
-    third_q = np.zeros(np.prod(mesh), dtype='intc')
+    map_triplets = np.zeros(np.prod(mesh), dtype='intc')
+    map_q = np.zeros(np.prod(mesh), dtype='intc')
     mesh_points = np.zeros((np.prod(mesh), 3), dtype='intc')
 
     spg.triplets_reciprocal_mesh_at_q(
-        weights,
+        map_triplets,
+        map_q,
         mesh_points,
-        third_q,
         fixed_grid_number,
         np.array(mesh, dtype='intc'),
         is_time_reversal * 1,
         np.array(rotations, dtype='intc', order='C'))
 
-    return weights, third_q, mesh_points
+    return map_triplets, map_q, mesh_points
         
 def get_BZ_triplets_at_q(grid_point,
                          bz_grid_address,
                          bz_map,
-                         weights,
+                         map_triplets,
                          mesh):
     """grid_address is overwritten."""
-    num_ir_tripltes = (weights > 0).sum()
+    num_ir_tripltes = (map_triplets == np.arange(len(map_triplets))).sum()
     triplets = np.zeros((num_ir_tripltes, 3), dtype='intc')
     num_ir_ret = spg.BZ_triplets_at_q(triplets,
                                       grid_point,
                                       bz_grid_address,
                                       bz_map,
-                                      weights,
+                                      map_triplets,
                                       np.array(mesh, dtype='intc'))
-    return triplets
+
+    weights = np.zeros_like(map_triplets)
+    for g in map_triplets:
+        weights[g] += 1
+    ir_weights = np.extract(weights > 0, weights)
+    
+    return triplets, ir_weights
 
 def get_neighboring_grid_points(grid_point,
                                 relative_grid_address,

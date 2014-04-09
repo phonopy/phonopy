@@ -67,9 +67,9 @@ static int relocate_BZ_grid_address(int bz_grid_address[][3],
 				    SPGCONST double rec_lattice[3][3],
 				    const int is_shift[3]);
 static double get_tolerance_for_BZ_reduction(SPGCONST double rec_lattice[3][3]);
-static int get_ir_triplets_at_q(int weights[],
+static int get_ir_triplets_at_q(int map_triplets[],
+				int map_q[],
 				int grid_address[][3],
-				int third_q[],
 				const int grid_point,
 				const int mesh[3],
 				const MatINT * rot_reciprocal);
@@ -191,9 +191,9 @@ int kpt_relocate_BZ_grid_address(int bz_grid_address[][3],
 				  is_shift);
 }
 
-int kpt_get_ir_triplets_at_q(int weights[],
+int kpt_get_ir_triplets_at_q(int map_triplets[],
+			     int map_q[],
 			     int grid_address[][3],
-			     int third_q[],
 			     const int grid_point,
 			     const int mesh[3],
 			     const int is_time_reversal,
@@ -203,9 +203,9 @@ int kpt_get_ir_triplets_at_q(int weights[],
   MatINT *rot_reciprocal;
 
   rot_reciprocal = get_point_group_reciprocal(rotations, is_time_reversal);
-  num_ir = get_ir_triplets_at_q(weights,
+  num_ir = get_ir_triplets_at_q(map_triplets,
+				map_q,
 				grid_address,
-				third_q,
 				grid_point,
 				mesh,
 				rot_reciprocal);
@@ -604,9 +604,9 @@ static double get_tolerance_for_BZ_reduction(SPGCONST double rec_lattice[3][3])
   return tolerance;
 }
  
-static int get_ir_triplets_at_q(int weights[],
+static int get_ir_triplets_at_q(int map_triplets[],
+				int map_q[],
 				int grid_address[][3],
-				int third_q[],
 				const int grid_point,
 				const int mesh[3],
 				const MatINT * rot_reciprocal)
@@ -614,7 +614,7 @@ static int get_ir_triplets_at_q(int weights[],
   int i, j, num_grid, q_2, num_ir_q, num_ir_triplets, ir_grid_point;
   int mesh_double[3], is_shift[3];
   int grid_double0[3], grid_double1[3], grid_double2[3];
-  int *map_q, *ir_grid_points, *weight_q;
+  int *ir_grid_points, *third_q;
   double tolerance;
   double stabilizer_q[1][3];
   MatINT *rot_reciprocal_q;
@@ -639,8 +639,6 @@ static int get_ir_triplets_at_q(int weights[],
 						       tolerance,
 						       1,
 						       stabilizer_q);
-  map_q = (int*) malloc(sizeof(int) * num_grid);
-
 #ifdef _OPENMP
   num_ir_q = get_ir_reciprocal_mesh_openmp(grid_address,
 					   map_q,
@@ -656,21 +654,15 @@ static int get_ir_triplets_at_q(int weights[],
 #endif
   mat_free_MatINT(rot_reciprocal_q);
 
+  third_q = (int*) malloc(sizeof(int) * num_ir_q);
   ir_grid_points = (int*) malloc(sizeof(int) * num_ir_q);
-  weight_q = (int*) malloc(sizeof(int) * num_grid);
   num_ir_q = 0;
   for (i = 0; i < num_grid; i++) {
     if (map_q[i] == i) {
       ir_grid_points[num_ir_q] = i;
       num_ir_q++;
     }
-    weight_q[i] = 0;
-    third_q[i] = -1;
-    weights[i] = 0;
-  }
-
-  for (i = 0; i < num_grid; i++) {
-    weight_q[map_q[i]]++;
+    map_triplets[i] = -1;
   }
 
 #pragma omp parallel for private(j, grid_double1, grid_double2)
@@ -680,25 +672,28 @@ static int get_ir_triplets_at_q(int weights[],
       grid_double2[j] = - grid_double0[j] - grid_double1[j];
     }
     get_vector_modulo(grid_double2, mesh_double);
-    third_q[ir_grid_points[i]] = get_grid_point(grid_double2, mesh);
+    third_q[i] = get_grid_point(grid_double2, mesh);
   }
 
   num_ir_triplets = 0;
   for (i = 0; i < num_ir_q; i++) {
     ir_grid_point = ir_grid_points[i];
-    q_2 = third_q[ir_grid_point];
-    if (weights[map_q[q_2]]) {
-      weights[map_q[q_2]] += weight_q[ir_grid_point];
+    q_2 = third_q[i];
+    if (map_triplets[map_q[q_2]] > -1) {
+      map_triplets[ir_grid_point] = map_q[q_2];
     } else {
-      weights[ir_grid_point] = weight_q[ir_grid_point];
+      map_triplets[ir_grid_point] = ir_grid_point;
       num_ir_triplets++;
     }
   }
 
-  free(map_q);
-  map_q = NULL;
-  free(weight_q);
-  weight_q = NULL;
+#pragma omp parallel for
+  for (i = 0; i < num_grid; i++) {
+    map_triplets[i] = map_triplets[map_q[i]];
+  }
+  
+  free(third_q);
+  third_q = NULL;
   free(ir_grid_points);
   ir_grid_points = NULL;
 
@@ -724,7 +719,7 @@ static int get_BZ_triplets_at_q(int triplets[][3],
   num_ir = 0;
   ir_grid_points = (int*) malloc(sizeof(int) * mesh[0] * mesh[1] * mesh[2]);
   for (i = 0; i < mesh[0] * mesh[1] * mesh[2]; i++) {
-    if (weights[i] > 0) {
+    if (weights[i] == i) {
       ir_grid_points[num_ir] = i;
       num_ir++;
     }

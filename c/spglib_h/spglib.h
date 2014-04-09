@@ -328,13 +328,13 @@ int spg_relocate_BZ_grid_address(int bz_grid_address[][3],
 
 /* Irreducible triplets of k-points are searched under conservation of */
 /* :math:``\mathbf{k}_1 + \mathbf{k}_2 + \mathbf{k}_3 = \mathbf{G}``. */
-/* Memory spaces of grid_address[prod(mesh)][3], weights[prod(mesh)] */
-/* and third_q[prod(mesh)] are required. rotations are point-group- */
+/* Memory spaces of grid_address[prod(mesh)][3], map_triplets[prod(mesh)] */
+/* and map_q[prod(mesh)] are required. rotations are point-group- */
 /* operations in real space for which duplicate operations are allowed */
 /* in the input. */
-int spg_get_triplets_reciprocal_mesh_at_q(int weights[],
+int spg_get_triplets_reciprocal_mesh_at_q(int map_triplets[],
+					  int map_q[],
 					  int grid_address[][3],
-					  int third_q[],
 					  const int grid_point,
 					  const int mesh[3],
 					  const int is_time_reversal,

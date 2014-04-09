@@ -509,17 +509,17 @@ static PyObject * relocate_BZ_grid_address(PyObject *self, PyObject *args)
 
 static PyObject * get_triplets_reciprocal_mesh_at_q(PyObject *self, PyObject *args)
 {
-  PyArrayObject* weights;
+  PyArrayObject* map_triplets;
   PyArrayObject* grid_address_py;
-  PyArrayObject* third_q;
+  PyArrayObject* map_q;
   int fixed_grid_number;
   PyArrayObject* mesh;
   int is_time_reversal;
   PyArrayObject* rotations;
   if (!PyArg_ParseTuple(args, "OOOiOiO",
-			&weights,
+			&map_triplets,
+			&map_q,
 			&grid_address_py,
-			&third_q,
 			&fixed_grid_number,
 			&mesh,
 			&is_time_reversal,
@@ -528,16 +528,16 @@ static PyObject * get_triplets_reciprocal_mesh_at_q(PyObject *self, PyObject *ar
   }
 
   int (*grid_address)[3] = (int(*)[3])grid_address_py->data;
-  int *weights_int = (int*)weights->data;
-  int *third_q_int = (int*)third_q->data;
+  int *map_triplets_int = (int*)map_triplets->data;
+  int *map_q_int = (int*)map_q->data;
 
   const int* mesh_int = (int*)mesh->data;
   SPGCONST int (*rot)[3][3] = (int(*)[3][3])rotations->data;
   const int num_rot = rotations->dimensions[0];
   const int num_ir = 
-    spg_get_triplets_reciprocal_mesh_at_q(weights_int,
+    spg_get_triplets_reciprocal_mesh_at_q(map_triplets_int,
+					  map_q_int,
 					  grid_address,
-					  third_q_int,
 					  fixed_grid_number,
 					  mesh_int,
 					  is_time_reversal,
@@ -553,7 +553,7 @@ static PyObject * get_BZ_triplets_at_q(PyObject *self, PyObject *args)
   PyArrayObject* triplets_py;
   PyArrayObject* bz_grid_address_py;
   PyArrayObject* bz_map_py;
-  PyArrayObject* weights_py;
+  PyArrayObject* map_triplets_py;
   PyArrayObject* mesh_py;
   int grid_point;
   if (!PyArg_ParseTuple(args, "OiOOOO",
@@ -561,7 +561,7 @@ static PyObject * get_BZ_triplets_at_q(PyObject *self, PyObject *args)
 			&grid_point,
 			&bz_grid_address_py,
 			&bz_map_py,
-			&weights_py,
+			&map_triplets_py,
 			&mesh_py)) {
     return NULL;
   }
@@ -569,7 +569,7 @@ static PyObject * get_BZ_triplets_at_q(PyObject *self, PyObject *args)
   int (*triplets)[3] = (int(*)[3])triplets_py->data;
   SPGCONST int (*bz_grid_address)[3] = (int(*)[3])bz_grid_address_py->data;
   const int *bz_map = (int*)bz_map_py->data;
-  const int *weights = (int*)weights_py->data;
+  const int *map_triplets = (int*)map_triplets_py->data;
   const int *mesh = (int*)mesh_py->data;
   int num_ir;
   
@@ -577,7 +577,7 @@ static PyObject * get_BZ_triplets_at_q(PyObject *self, PyObject *args)
 				    grid_point,
 				    bz_grid_address,
 				    bz_map,
-				    weights,
+				    map_triplets,
 				    mesh);
 
   return PyInt_FromLong((long) num_ir);
