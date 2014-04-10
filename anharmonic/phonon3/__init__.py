@@ -12,7 +12,8 @@ from anharmonic.phonon3.imag_self_energy import get_imag_self_energy, \
      write_imag_self_energy, get_linewidth, write_linewidth
 from anharmonic.phonon3.frequency_shift import FrequencyShift
 from anharmonic.phonon3.interaction import Interaction
-from anharmonic.phonon3.conductivity_RTA import get_thermal_conductivity
+from anharmonic.phonon3.conductivity_RTA import get_thermal_conductivity_RTA
+from anharmonic.phonon3.conductivity_LBTE import get_thermal_conductivity_LBTE
 from anharmonic.phonon3.joint_dos import JointDos
 from anharmonic.phonon3.gruneisen import Gruneisen
 from anharmonic.phonon3.displacement_fc3 import get_third_order_displacements, \
@@ -349,6 +350,7 @@ class Phono3py:
 
     def run_thermal_conductivity(
             self,
+            is_LBTE=False,
             temperatures=np.arange(0, 1001, 10, dtype='double'),
             sigmas=[],
             mass_variances=None,
@@ -365,23 +367,42 @@ class Phono3py:
             input_filename=None,
             output_filename=None):
 
-        self._thermal_conductivity = get_thermal_conductivity(
-                self._interaction,
-                self._primitive_symmetry,
-                temperatures=temperatures,
-                sigmas=self._sigmas,
-                mass_variances=mass_variances,
-                grid_points=grid_points,
-                mesh_divisors=mesh_divisors,
-                coarse_mesh_shifts=coarse_mesh_shifts,
-                cutoff_lifetime=cutoff_lifetime,
-                no_kappa_stars=no_kappa_stars,
-                gv_delta_q=gv_delta_q,
-                write_gamma=write_gamma,
-                read_gamma=read_gamma,
-                input_filename=input_filename,
-                output_filename=output_filename,
-                log_level=self._log_level)
+        if is_LBTE:
+            self._thermal_conductivity = get_thermal_conductivity_LBTE(
+                    self._interaction,
+                    self._primitive_symmetry,
+                    temperatures=temperatures,
+                    sigmas=self._sigmas,
+                    mass_variances=mass_variances,
+                    grid_points=grid_points,
+                    mesh_divisors=mesh_divisors,
+                    coarse_mesh_shifts=coarse_mesh_shifts,
+                    cutoff_lifetime=cutoff_lifetime,
+                    no_kappa_stars=no_kappa_stars,
+                    gv_delta_q=gv_delta_q,
+                    write_gamma=write_gamma,
+                    read_gamma=read_gamma,
+                    input_filename=input_filename,
+                    output_filename=output_filename,
+                    log_level=self._log_level)
+        else:
+            self._thermal_conductivity = get_thermal_conductivity_RTA(
+                    self._interaction,
+                    self._primitive_symmetry,
+                    temperatures=temperatures,
+                    sigmas=self._sigmas,
+                    mass_variances=mass_variances,
+                    grid_points=grid_points,
+                    mesh_divisors=mesh_divisors,
+                    coarse_mesh_shifts=coarse_mesh_shifts,
+                    cutoff_lifetime=cutoff_lifetime,
+                    no_kappa_stars=no_kappa_stars,
+                    gv_delta_q=gv_delta_q,
+                    write_gamma=write_gamma,
+                    read_gamma=read_gamma,
+                    input_filename=input_filename,
+                    output_filename=output_filename,
+                    log_level=self._log_level)
 
     def get_thermal_conductivity(self):
         return self._thermal_conductivity

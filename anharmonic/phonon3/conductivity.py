@@ -2,7 +2,6 @@ import numpy as np
 from phonopy.harmonic.force_constants import similarity_transformation
 from phonopy.units import EV, THz, Angstrom
 from anharmonic.phonon3.triplets import get_grid_address, reduce_grid_points, get_ir_grid_points, from_coarse_to_dense_grid_points
-from anharmonic.phonon3.imag_self_energy import ImagSelfEnergy
 from anharmonic.phonon3.interaction import set_phonon_c
 from anharmonic.other.isotope import Isotope
 
@@ -23,7 +22,8 @@ class Conductivity:
                  gv_delta_q=None, # finite difference for group veolocity
                  log_level=0):
         self._pp = interaction
-        self._ise = ImagSelfEnergy(self._pp)
+        self._collision = None # has to be set derived class
+        
         self._temperatures = temperatures
         self._sigmas = sigmas
         self._no_kappa_stars = no_kappa_stars
@@ -186,13 +186,13 @@ class Conductivity:
                     print "tetrahedron method"
                 else:
                     print "sigma=%s" % sigma
-            self._ise.set_sigma(sigma)
+            self._collision.set_sigma(sigma)
             if not sigma:
-                self._ise.set_integration_weights()
+                self._collision.set_integration_weights()
             for k, t in enumerate(self._temperatures):
-                self._ise.set_temperature(t)
-                self._ise.run()
-                self._gamma[j, i, k] = self._ise.get_imag_self_energy()
+                self._collision.set_temperature(t)
+                self._collision.run()
+                self._gamma[j, i, k] = self._collision.get_imag_self_energy()
                 
     def _set_gamma_isotope_at_sigmas(self, i):
         for j, sigma in enumerate(self._sigmas):

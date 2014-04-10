@@ -21,6 +21,7 @@ class CollisionMatrix(ImagSelfEnergy):
         self._fc3_normal_squared = None
         self._frequencies = None
         self._triplets_at_q = None
+        self._triplets_map_at_q = None
         self._weights_at_q = None
         self._band_indices = None
         self._unit_conversion = None
@@ -50,6 +51,18 @@ class CollisionMatrix(ImagSelfEnergy):
                                           dtype='double')
         self._run_collision_matrix()
 
+    def set_grid_point(self, grid_point=None):
+        if grid_point is None:
+            self._grid_point = None
+        else:
+            self._interaction.set_grid_point(grid_point,
+                                             stores_triplets_map=True)
+            self._fc3_normal_squared = None
+            (self._triplets_at_q,
+             self._weights_at_q,
+             self._triplets_map_at_q) = self._interaction.get_triplets_at_q()
+            self._grid_point = grid_point
+            
     def _run_collision_matrix(self):
         self._run_with_band_indices()
         self._run_py_collision_matrix()

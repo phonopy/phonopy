@@ -4,8 +4,9 @@ from phonopy.units import THzToEv, THz
 from phonopy.phonon.thermal_properties import mode_cv as get_mode_cv
 from anharmonic.file_IO import write_kappa_to_hdf5, write_triplets, read_gamma_from_hdf5, write_grid_address
 from anharmonic.phonon3.conductivity import Conductivity
+from anharmonic.phonon3.imag_self_energy import ImagSelfEnergy
 
-def get_thermal_conductivity(
+def get_thermal_conductivity_RTA(
         interaction,
         symmetry,
         temperatures=np.arange(0, 1001, 10, dtype='double'),
@@ -179,7 +180,6 @@ class Conductivity_RTA(Conductivity):
                  log_level=0):
 
         self._pp = None
-        self._ise = None
         self._temperatures = None
         self._sigmas = None
         self._no_kappa_stars = None
@@ -230,6 +230,8 @@ class Conductivity_RTA(Conductivity):
                  gv_delta_q=gv_delta_q,
                  log_level=log_level)
 
+        self._collision = ImagSelfEnergy(self._pp)
+
     def get_mode_heat_capacities(self):
         return self._cv
 
@@ -238,14 +240,14 @@ class Conductivity_RTA(Conductivity):
         self._show_log_header(i)
         grid_point = self._grid_points[i]
         if not self._read_gamma:
-            self._ise.set_grid_point(grid_point)
+            self._collision.set_grid_point(grid_point)
             
             if self._log_level:
                 print "Number of triplets:",
                 print len(self._pp.get_triplets_at_q()[0])
                 print "Calculating interaction..."
                 
-            self._ise.run_interaction()
+            self._collision.run_interaction()
             self._set_gamma_at_sigmas(i)
 
         if self._isotope is not None:

@@ -134,6 +134,7 @@ class Interaction:
 
         self._triplets_at_q = None
         self._weights_at_q = None
+        self._triplets_map_at_q = None
         self._grid_address = None
         self._bz_map = None
         self._interaction_strength = None
@@ -174,7 +175,10 @@ class Interaction:
         return self._primitive
 
     def get_triplets_at_q(self):
-        return self._triplets_at_q, self._weights_at_q
+        if self._triplets_map_at_q is None:
+            return self._triplets_at_q, self._weights_at_q
+        else:
+            return self._triplets_at_q, self._weights_at_q, self._triplets_map_at_q
 
     def get_grid_address(self):
         return self._grid_address
@@ -197,25 +201,29 @@ class Interaction:
     def get_cutoff_frequency(self):
         return self._cutoff_frequency
         
-    def set_grid_point(self, grid_point):
+    def set_grid_point(self, grid_point, stores_triplets_map=False):
         reciprocal_lattice = np.linalg.inv(self._primitive.get_cell())
         if self._is_nosym:
             (triplets_at_q,
              weights_at_q,
              grid_address,
-             bz_map) = get_nosym_triplets_at_q(
-                grid_point,
-                self._mesh,
-                reciprocal_lattice)
+             bz_map,
+             triplets_map_at_q) = get_nosym_triplets_at_q(
+                 grid_point,
+                 self._mesh,
+                 reciprocal_lattice,
+                 stores_triplets_map=stores_triplets_map)
         else:
             (triplets_at_q,
              weights_at_q,
              grid_address,
-             bz_map)= get_triplets_at_q(
-                grid_point,
-                self._mesh,
-                self._symmetry.get_pointgroup_operations(),
-                reciprocal_lattice)
+             bz_map,
+             triplets_map_at_q)= get_triplets_at_q(
+                 grid_point,
+                 self._mesh,
+                 self._symmetry.get_pointgroup_operations(),
+                 reciprocal_lattice,
+                 stores_triplets_map=stores_triplets_map)
 
         for triplet in triplets_at_q:
             sum_q = (grid_address[triplet]).sum(axis=0)
@@ -227,6 +235,7 @@ class Interaction:
 
         self._triplets_at_q = triplets_at_q
         self._weights_at_q = weights_at_q
+        self._triplets_map_at_q = triplets_map_at_q
         self._grid_address = grid_address
         self._bz_map = bz_map
 

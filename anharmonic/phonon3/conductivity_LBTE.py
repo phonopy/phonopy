@@ -1,6 +1,45 @@
 import numpy as np
 from phonopy.phonon.group_velocity import get_group_velocity
 from anharmonic.phonon3.conductivity import Conductivity
+from anharmonic.phonon3.collision_matrix import CollisionMatrix
+
+def get_thermal_conductivity_LBTE(
+        interaction,
+        symmetry,
+        temperatures=np.arange(0, 1001, 10, dtype='double'),
+        sigmas=[],
+        mass_variances=None,
+        grid_points=None,
+        mesh_divisors=None,
+        coarse_mesh_shifts=None,
+        cutoff_lifetime=1e-4, # in second
+        no_kappa_stars=False,
+        gv_delta_q=1e-4, # for group velocity
+        write_gamma=False,
+        read_gamma=False,
+        input_filename=None,
+        output_filename=None,
+        log_level=0):
+
+    if log_level:
+        print "-------------------- Lattice thermal conducitivity (LBTE) --------------------"
+    br = Conductivity_LBTE(interaction,
+                           symmetry,
+                           temperatures=temperatures,
+                           sigmas=sigmas,
+                           mass_variances=mass_variances,
+                           mesh_divisors=mesh_divisors,
+                           coarse_mesh_shifts=coarse_mesh_shifts,
+                           cutoff_lifetime=cutoff_lifetime,
+                           no_kappa_stars=no_kappa_stars,
+                           gv_delta_q=gv_delta_q,
+                           log_level=log_level)
+    br.initialize(grid_points)
+
+    for i in br:
+        pass
+
+    return br
 
 class Conductivity_LBTE(Conductivity):
     def __init__(self,
@@ -17,7 +56,6 @@ class Conductivity_LBTE(Conductivity):
                  log_level=0):
 
         self._pp = None
-        self._ise = None
         self._temperatures = None
         self._sigmas = None
         self._no_kappa_stars = None
@@ -70,19 +108,21 @@ class Conductivity_LBTE(Conductivity):
                  gv_delta_q=gv_delta_q,
                  log_level=log_level)
 
+        self._collision = CollisionMatrix(self._pp)
+        
     def _run_at_grid_point(self):
         i = self._grid_point_count
         self._show_log_header(i)
         grid_point = self._grid_points[i]
         if not self._read_gamma:
-            self._ise.set_grid_point(grid_point)
+            self._collision.set_grid_point(grid_point)
             
             if self._log_level:
                 print "Number of triplets:",
                 print len(self._pp.get_triplets_at_q()[0])
                 print "Calculating interaction..."
                 
-            self._ise.run_interaction()
+            self._collision.run_interaction()
             self._set_gamma_at_sigmas(i)
             self._set_collision_matrix_at_sigmas(i)
 
