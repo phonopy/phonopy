@@ -47,18 +47,24 @@ class DerivativeOfDynamicalMatrix:
         self._s2p_map = self._dynmat.get_supercell_to_primitive_map()
         self._mass = self._pcell.get_masses()
 
-        self._derivative_order = 1
         self._ddm = None
 
-    def run(self, q, q_direction=None):
-        try:
-            import phonopy._phonopy as phonoc
-            self._run_c(q, q_direction=q_direction)
-        except ImportError:
+        # Derivative order=2 can work only within the following conditions:
+        # 1. Second derivative of NAC is not considered.
+        # 2. Python implementation
+        self._derivative_order = None
+
+    def run(self, q, q_direction=None, lang='C'):
+        if self._derivative_order is not None or lang != 'C':
             self._run_py(q, q_direction=q_direction)
+        else:
+            self._run_c(q, q_direction=q_direction)
 
     def set_derivative_order(self, order):
-        self._derivative_order = order
+        if order == 1 or order == 2:
+            self._derivative_order = order
+        else:
+            print "Error: derivative order has to be 1 or 2"
         
     def get_derivative_of_dynamical_matrix(self):
         return self._ddm
@@ -120,14 +126,18 @@ class DerivativeOfDynamicalMatrix:
         num_patom = len(self._p2s_map)
         num_satom = len(self._s2p_map)
 
-        # The first "3" used for Catesian index of a vector
-        ddm = np.zeros((3, 3 * num_patom, 3 * num_patom), dtype=complex)
+        if self._derivative_order == 2:
+            num_elem = 6
+        else:
+            num_elem = 3
 
+        ddm = np.zeros((num_elem, 3 * num_patom, 3 * num_patom), dtype=complex)
+        
         for i, j in list(np.ndindex(num_patom, num_patom)):
             s_i = self._p2s_map[i]
             s_j = self._p2s_map[j]
             mass = np.sqrt(self._mass[i] * self._mass[j])
-            ddm_local = np.zeros((3, 3, 3), dtype='complex128')
+            ddm_local = np.zeros((num_elem, 3, 3), dtype='complex128')
 
             for k in range(num_satom):
                 if s_j != self._s2p_map[k]:
@@ -138,16 +148,23 @@ class DerivativeOfDynamicalMatrix:
                 phase_multi = np.exp([np.vdot(vec, q) * 2j * np.pi
                                       for vec in vecs_multi])
                 vecs_multi_cart = np.dot(vecs_multi, self._pcell.get_cell())
-                coef = (2j * np.pi * vecs_multi_cart) ** self._derivative_order
+                coef_order1 = 2j * np.pi * vecs_multi_cart
+                if self._derivative_order == 2:
+                    coef_order2 = [np.outer(co1, co1) for co1 in coef_order1]
+                    coef = np.array([co2.ravel()[[0, 4, 8, 5, 2, 1]]
+                                     for co2 in coef_order2])
+                else:
+                    coef = coef_order1
 
                 if self._dynmat.is_nac():
                     fc_elem = fc[s_i, k] + fc_nac[i, j]
                 else:
                     fc_elem = fc[s_i, k]
                         
-                for l in range(3):
+                for l in range(num_elem):
                     ddm_elem = fc_elem * (coef[:, l] * phase_multi).sum()
-                    if self._dynmat.is_nac() and self._derivative_order == 1:
+                    if (self._dynmat.is_nac() and
+                        not self._derivative_order == 2):
                         ddm_elem += d_nac[l, i, j] * phase_multi.sum()
 
                     ddm_local[l] +=  ddm_elem / mass / multi
@@ -156,7 +173,8 @@ class DerivativeOfDynamicalMatrix:
             ddm[:, (i * 3):(i * 3 + 3), (j * 3):(j * 3 + 3)] = ddm_local
 
         # Impose Hermite condition
-        self._ddm = np.array([(ddm[i] + ddm[i].conj().T) / 2 for i in range(3)])
+        self._ddm = np.array([(ddm[i] + ddm[i].conj().T) / 2
+                              for i in range(num_elem)])
 
     def _nac(self, q_direction):
         """nac_term = (A1 (x) A2) / B * coef.

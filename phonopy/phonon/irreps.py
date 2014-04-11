@@ -35,7 +35,7 @@
 import numpy as np
 from phonopy.structure.symmetry import Symmetry, get_pointgroup
 from phonopy.harmonic.force_constants import similarity_transformation
-from phonopy.phonon.group_velocity import degenerate_sets as get_degenerate_sets
+from phonopy.phonon.degeneracy import degenerate_sets as get_degenerate_sets
 from phonopy.units import VaspToTHz
 from phonopy.harmonic.derivative_dynmat import DerivativeOfDynamicalMatrix
 

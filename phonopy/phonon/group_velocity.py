@@ -36,6 +36,7 @@ import numpy as np
 from phonopy.units import VaspToTHz
 from phonopy.harmonic.derivative_dynmat import DerivativeOfDynamicalMatrix
 from phonopy.harmonic.force_constants import similarity_transformation
+from phonopy.phonon.degeneracy import degenerate_sets
 
 def get_group_velocity(q, # q-point
                        dynamical_matrix,
@@ -58,23 +59,6 @@ def get_group_velocity(q, # q-point
                        frequency_factor_to_THz=frequency_factor_to_THz)
     gv.set_q_points([q])
     return gv.get_group_velocity()[0]
-
-def degenerate_sets(freqs, cutoff=1e-4):
-    indices = []
-    done = []
-    for i in range(len(freqs)):
-        if i in done:
-            continue
-        else:
-            f_set = [i]
-            done.append(i)
-        for j in range(i + 1, len(freqs)):
-            if (np.abs(freqs[f_set] - freqs[j]) < cutoff).any():
-                f_set.append(j)
-                done.append(j)
-        indices.append(f_set[:])
-
-    return indices
 
 def delta_dynamical_matrix(q,
                            delta_q,

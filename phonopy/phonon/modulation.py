@@ -37,9 +37,64 @@ import sys
 from phonopy.structure.atoms import Atoms
 from phonopy.interface.vasp import write_vasp
 from phonopy.units import VaspToTHz
-from phonopy.phonon.group_velocity import degenerate_sets, delta_dynamical_matrix
+from phonopy.phonon.degeneracy import degenerate_sets
 from phonopy.harmonic.derivative_dynmat import DerivativeOfDynamicalMatrix
 
+def get_eigenvectors(q,
+                     dm,
+                     ddm,
+                     perturbation=None,
+                     derivative_order=None,
+                     nac_q_direction=None):
+    if nac_q_direction is not None and (np.abs(q) < 1e-5).all():
+        dm.set_dynamical_matrix(q, q_direction=nac_q_direction)
+    else:        
+        dm.set_dynamical_matrix(q)
+    eigvals, eigvecs = np.linalg.eigh(dm.get_dynamical_matrix())
+    eigvals = eigvals.real
+    if perturbation is None:
+        return eigvals, eigvecs
+
+    eigvecs_new = np.zeros_like(eigvecs)
+    deg_sets = degenerate_sets(eigvals)
+
+    if derivative_order is not None:
+        ddm.set_derivative_order(derivative_order)
+    dD = _get_dD(q, ddm, perturbation)
+
+    for deg in deg_sets:
+        if len(deg) == 1:
+            continue
+        
+        eigvecs_arranged = _rearrange_eigenvectors(dD, eigvecs[:, deg])
+
+        if eigvecs_arranged is not None:
+            eigvecs[:, deg] = eigvecs_arranged
+
+    return eigvals, eigvecs
+
+def _get_dD(q, ddm, perturbation):
+    ddm.run(q)
+    ddm_vals = ddm.get_derivative_of_dynamical_matrix()
+    dD = np.zeros(ddm_vals.shape[1:], dtype='complex128')
+    if len(ddm_vals) == 3:
+        for i in range(3):
+            dD += perturbation[i] * ddm_vals[i]
+        return dD / np.linalg.norm(perturbation)
+    else:
+        dD += perturbation[0] * perturbation[0] * ddm_vals[0]
+        dD += perturbation[1] * perturbation[1] * ddm_vals[1]
+        dD += perturbation[2] * perturbation[2] * ddm_vals[2]
+        dD += 2 * perturbation[0] * perturbation[1] * ddm_vals[5]
+        dD += 2 * perturbation[0] * perturbation[2] * ddm_vals[4]
+        dD += 2 * perturbation[1] * perturbation[2] * ddm_vals[3]
+        return dD / np.linalg.norm(perturbation) ** 2
+
+def _rearrange_eigenvectors(dD, eigvecs_deg):
+    dD_part = np.dot(eigvecs_deg.T.conj(), np.dot(dD, eigvecs_deg))
+    p_eigvals, p_eigvecs = np.linalg.eigh(dD_part)
+    return np.dot(eigvecs_deg, p_eigvecs)
+    
 class Modulation:
     def __init__(self,
                  dynamical_matrix,
@@ -74,7 +129,13 @@ class Modulation:
     def run(self):
         for ph_mode in self._phonon_modes:
             q, band_index, amplitude, argument = ph_mode
-            eigvals, eigvecs = self._get_eigenvectors(q)
+            eigvals, eigvecs = get_eigenvectors(
+                q,
+                self._dm,
+                self._ddm,
+                perturbation=self._delta_q,
+                derivative_order=self._derivative_order,
+                nac_q_direction=self._nac_q_direction)
             u = self._get_delta(eigvecs[:, band_index], q)
             self._eigvecs.append(eigvecs[:, band_index])
             self._eigvals.append(eigvals[band_index])
@@ -170,45 +231,6 @@ class Modulation:
                      symbols=symbols,
                      pbc=True)
 
-    def _get_eigenvectors(self, q):
-        if self._nac_q_direction is not None and (np.abs(q) < 1e-5).all():
-            self._dm.set_dynamical_matrix(q, q_direction=self._nac_q_direction)
-        else:        
-            self._dm.set_dynamical_matrix(q)
-        eigvals, eigvecs = np.linalg.eigh(self._dm.get_dynamical_matrix())
-        eigvals = eigvals.real
-        if self._delta_q is None:
-            return eigvals, eigvecs
-
-        eigvecs_new = np.zeros_like(eigvecs)
-        deg_sets = degenerate_sets(eigvals)
-
-        if self._derivative_order is None:
-            self._ddm.set_derivative_order(1)
-            dD1 = self._get_dD(q)
-            self._ddm.set_derivative_order(2)
-            dD2 = self._get_dD(q)
-        else:
-            self._ddm.set_derivative_order(self._derivative_order)
-            dD = self._get_dD(q)
-
-        for deg in deg_sets:
-            if len(deg) == 1:
-                continue
-            
-            if self._derivative_order is not None:
-                eigvecs_new = self._rearrange_eigenvectors(dD, eigvecs[:, deg])
-            else:
-                eigvecs_new = self._rearrange_eigenvectors(dD1, eigvecs[:, deg])
-                if eigvecs_new is None:
-                    eigvecs_new = self._rearrange_eigenvectors(
-                        dD2, eigvecs[:, deg])
-
-            if eigvecs_new is not None:
-                eigvecs[:, deg] = eigvecs_new
-
-        return eigvals, eigvecs
-
     def _check_eigvecs(self, eigvals, eigvecs, dynmat):
         modified = np.diag(np.dot(eigvecs.conj().T, np.dot(dynmat, eigvecs)))
         print self._eigvals_to_frequencies(eigvals)
@@ -219,23 +241,6 @@ class Modulation:
         e = np.array(eigvals).real
         return np.sqrt(np.abs(e)) * np.sign(e) * self._factor
             
-    def _get_dD(self, q):
-        self._ddm.run(q)
-        ddm = self._ddm.get_derivative_of_dynamical_matrix()
-        dD = np.zeros(ddm.shape[1:], dtype='complex128')
-        for i in range(3):
-            dD += self._delta_q[i] * ddm[i]
-        return dD / np.linalg.norm(self._delta_q)
-
-    def _rearrange_eigenvectors(self, dD, eigvecs_deg):
-        dD_part = np.dot(eigvecs_deg.T.conj(), np.dot(dD, eigvecs_deg))
-        p_eigvals, p_eigvecs = np.linalg.eigh(dD_part)
-        
-        if (np.abs(p_eigvals - p_eigvals[0]) < 1e-5).all():
-            return None
-        else:
-            return np.dot(eigvecs_deg, p_eigvecs)
-    
     def write_yaml(self):
         file = open('modulation.yaml', 'w')
         dim = self._dimension
