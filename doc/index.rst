@@ -26,16 +26,17 @@ supercell approach.
 - Graphical plots
 
 .. |i0| image:: band.png
-        :scale: 30
+        :width: 20%
 
 .. |i1| image:: pdos.png
-        :scale: 30
+        :width: 20%
 
 .. |i2| image:: thermalprop.png
-        :scale: 30
+        :width: 20%
 
 .. |i3| image:: QHA.png
-        :scale: 30
+        :width: 20%
+
 
 |i0| |i1|
 
