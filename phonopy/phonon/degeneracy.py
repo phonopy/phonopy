@@ -51,3 +51,57 @@ def degenerate_sets(freqs, cutoff=1e-4):
 
     return indices
 
+def get_eigenvectors(q,
+                     dm,
+                     ddm,
+                     perturbation=None,
+                     derivative_order=None,
+                     nac_q_direction=None):
+    if nac_q_direction is not None and (np.abs(q) < 1e-5).all():
+        dm.set_dynamical_matrix(q, q_direction=nac_q_direction)
+    else:        
+        dm.set_dynamical_matrix(q)
+    eigvals, eigvecs = np.linalg.eigh(dm.get_dynamical_matrix())
+    eigvals = eigvals.real
+    if perturbation is None:
+        return eigvals, eigvecs
+
+    eigvecs_new = np.zeros_like(eigvecs)
+    deg_sets = degenerate_sets(eigvals)
+
+    if derivative_order is not None:
+        ddm.set_derivative_order(derivative_order)
+    dD = _get_dD(q, ddm, perturbation)
+
+    for deg in deg_sets:
+        if len(deg) == 1:
+            continue
+        
+        eigvecs_arranged = _rearrange_eigenvectors(dD, eigvecs[:, deg])
+
+        if eigvecs_arranged is not None:
+            eigvecs[:, deg] = eigvecs_arranged
+
+    return eigvals, eigvecs
+
+def _get_dD(q, ddm, perturbation):
+    ddm.run(q)
+    ddm_vals = ddm.get_derivative_of_dynamical_matrix()
+    dD = np.zeros(ddm_vals.shape[1:], dtype='complex128')
+    if len(ddm_vals) == 3:
+        for i in range(3):
+            dD += perturbation[i] * ddm_vals[i]
+        return dD / np.linalg.norm(perturbation)
+    else:
+        dD += perturbation[0] * perturbation[0] * ddm_vals[0]
+        dD += perturbation[1] * perturbation[1] * ddm_vals[1]
+        dD += perturbation[2] * perturbation[2] * ddm_vals[2]
+        dD += 2 * perturbation[0] * perturbation[1] * ddm_vals[5]
+        dD += 2 * perturbation[0] * perturbation[2] * ddm_vals[4]
+        dD += 2 * perturbation[1] * perturbation[2] * ddm_vals[3]
+        return dD / np.linalg.norm(perturbation) ** 2
+
+def _rearrange_eigenvectors(dD, eigvecs_deg):
+    dD_part = np.dot(eigvecs_deg.T.conj(), np.dot(dD, eigvecs_deg))
+    p_eigvals, p_eigvecs = np.linalg.eigh(dD_part)
+    return np.dot(eigvecs_deg, p_eigvecs)
