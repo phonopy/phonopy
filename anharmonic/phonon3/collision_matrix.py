@@ -1,9 +1,12 @@
 import numpy as np
+import phonopy.structure.spglib as spg
 from anharmonic.phonon3.imag_self_energy import ImagSelfEnergy
+from anharmonic.phonon3.triplets import get_triplets_integration_weights, gaussian
 
 class CollisionMatrix(ImagSelfEnergy):
     def __init__(self,
                  interaction,
+                 symmetry,
                  grid_point=None,
                  frequency_points=None,
                  temperature=None,
@@ -37,6 +40,8 @@ class CollisionMatrix(ImagSelfEnergy):
                                 temperature=None,
                                 sigma=None,
                                 lang='C')
+
+        self._symmetry = symmetry
         
     def run(self):
         if self._fc3_normal_squared is None:        
@@ -62,13 +67,20 @@ class CollisionMatrix(ImagSelfEnergy):
              self._weights_at_q,
              self._triplets_map_at_q) = self._interaction.get_triplets_at_q()
             self._grid_point = grid_point
+
+            qpoint = (self._interaction.get_grid_address()[grid_points] /
+                      self._mesh.astype('double'))
+            grid_mapping_table, grid_address = spg.get_stabilized_reciprocal_mesh(
+                self._mesh,
+                self._symmetry.get_pointgroup_operations(),
+                qpoints=qpoint)
             
     def _run_collision_matrix(self):
-        self._run_with_band_indices()
-        self._run_py_collision_matrix()
+        self._run_with_band_indices() # for Gamma
+        self._run_py_collision_matrix() # for Omega
 
     def _run_py_collision_matrix(self):
-        g = np.zeros((2,) + self._fc3_normal_squared.shape, dtype='double')
+        g = np.zeros((3,) + self._fc3_normal_squared.shape, dtype='double')
         if self._temperature > 0:
             self._set_collision_matrix()
         else:

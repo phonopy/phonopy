@@ -108,7 +108,7 @@ class Conductivity_LBTE(Conductivity):
                  gv_delta_q=gv_delta_q,
                  log_level=log_level)
 
-        self._collision = CollisionMatrix(self._pp)
+        self._collision = CollisionMatrix(self._pp, self._symmetry)
         
     def _run_at_grid_point(self):
         i = self._grid_point_count
