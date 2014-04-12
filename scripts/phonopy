@@ -353,6 +353,10 @@ parser.add_option("--writedm", dest="write_dynamical_matrices",
 (options, args) = parser.parse_args()
 option_list = parser.option_list
 
+if options.is_graph_save:
+    import matplotlib
+    matplotlib.use('Agg')            
+
 # Set log level
 log_level = 1
 if options.verbose:
