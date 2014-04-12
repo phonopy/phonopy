@@ -940,6 +940,7 @@ elif run_mode=='modulation':
 elif run_mode == 'irreps':
     if phonon.set_irreps(settings.get_irreps_q_point(),
                          is_little_cogroup=settings.get_is_little_cogroup(),
+                         nac_q_direction=settings.get_nac_q_direction(),
                          degeneracy_tolerance=settings.get_irreps_tolerance()):
         show_irreps = settings.get_show_irreps()
         phonon.show_irreps(show_irreps)

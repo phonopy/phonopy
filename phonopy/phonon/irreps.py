@@ -637,11 +637,13 @@ class IrReps:
                  dynamical_matrix,
                  q,
                  is_little_cogroup=False,
+                 nac_q_direction=None,
                  factor=VaspToTHz,
                  symprec=1e-5,
                  degeneracy_tolerance=1e-5,
                  log_level=0):
         self._is_little_cogroup = is_little_cogroup
+        self._nac_q_direction = nac_q_direction
         self._factor = factor
         self._log_level = log_level
 
@@ -736,7 +738,10 @@ class IrReps:
         self._write_yaml(show_irreps)
 
     def _set_eigenvectors(self, dm):
-        dm.set_dynamical_matrix(self._q)
+        if self._nac_q_direction is not None and (np.abs(self._q) < 1e-5).all():
+            dm.set_dynamical_matrix(self._q, q_direction=self._nac_q_direction)
+        else:        
+            dm.set_dynamical_matrix(self._q)
         eigvals, self._eigvecs = np.linalg.eigh(dm.get_dynamical_matrix())
         self._freqs = np.sqrt(abs(eigvals)) * np.sign(eigvals) * self._factor
 

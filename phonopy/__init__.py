@@ -901,12 +901,14 @@ class Phonopy:
     def set_irreps(self,
                    q,
                    is_little_cogroup=False,
+                   nac_q_direction=None,
                    degeneracy_tolerance=1e-4):
         self._set_dynamical_matrix()
         self._irreps = IrReps(
             self._dynamical_matrix,
             q,
             is_little_cogroup=is_little_cogroup,
+            nac_q_direction=nac_q_direction,
             factor=self._factor,
             symprec=self._symprec,
             degeneracy_tolerance=degeneracy_tolerance,
