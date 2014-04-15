@@ -205,6 +205,7 @@ class ImagSelfEnergy:
 
         self._g = None # integration weights
         self._mesh = self._interaction.get_mesh_numbers()
+        self._is_collision_matrix = True
 
         # Unit to THz of Gamma
         num_grid = np.prod(self._mesh)
@@ -242,9 +243,11 @@ class ImagSelfEnergy:
         else:
             f_points = self._frequency_points
 
-        self._g = get_triplets_integration_weights(self._interaction,
-                                                   f_points,
-                                                   self._sigma)
+        self._g = get_triplets_integration_weights(
+            self._interaction,
+            f_points,
+            self._sigma,
+            is_collision_matrix=self._is_collision_matrix)
         
     def get_imag_self_energy(self):
         if self._cutoff_frequency is None:

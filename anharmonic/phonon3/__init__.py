@@ -350,7 +350,7 @@ class Phono3py:
 
     def run_thermal_conductivity(
             self,
-            is_LBTE=False,
+            is_LBTE=True,
             temperatures=np.arange(0, 1001, 10, dtype='double'),
             sigmas=[],
             mass_variances=None,

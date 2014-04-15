@@ -1,7 +1,9 @@
 import numpy as np
 import phonopy.structure.spglib as spg
+from phonopy.units import Hbar, THz, Kb
+from phonopy.harmonic.force_constants import similarity_transformation
 from anharmonic.phonon3.imag_self_energy import ImagSelfEnergy
-from anharmonic.phonon3.triplets import get_triplets_integration_weights, gaussian
+from anharmonic.phonon3.triplets import get_triplets_integration_weights, get_grid_point_from_address
 
 class CollisionMatrix(ImagSelfEnergy):
     def __init__(self,
@@ -12,7 +14,6 @@ class CollisionMatrix(ImagSelfEnergy):
                  temperature=None,
                  sigma=None,
                  lang='C'):
-
         self._interaction = None
         self._sigma = None
         self._frequency_points = None
@@ -31,19 +32,26 @@ class CollisionMatrix(ImagSelfEnergy):
         self._cutoff_frequency = None
         self._g = None
         self._mesh = None
+        self._is_collision_matrix = None
         self._unit_conversion = None
         
         ImagSelfEnergy.__init__(self,
                                 interaction,
-                                grid_point=None,
-                                frequency_points=None,
-                                temperature=None,
-                                sigma=None,
-                                lang='C')
+                                grid_point=grid_point,
+                                frequency_points=frequency_points,
+                                temperature=temperature,
+                                sigma=sigma,
+                                lang=lang)
 
+        self._is_collision_matrix = True
         self._symmetry = symmetry
+        self._point_operations = symmetry.get_reciprocal_operations()
+        self._primitive = self._interaction.get_primitive()
+        rec_lat = np.linalg.inv(self._primitive.get_cell())
+        self._rotations_cartesian = [similarity_transformation(rec_lat, r)
+                                     for r in self._point_operations]
         
-    def run(self):
+    def run_collision_matrix(self):
         if self._fc3_normal_squared is None:        
             self.run_interaction()
 
@@ -66,53 +74,50 @@ class CollisionMatrix(ImagSelfEnergy):
             (self._triplets_at_q,
              self._weights_at_q,
              self._triplets_map_at_q) = self._interaction.get_triplets_at_q()
+            self._grid_address = self._interaction.get_grid_address()
             self._grid_point = grid_point
 
-            qpoint = (self._interaction.get_grid_address()[grid_points] /
-                      self._mesh.astype('double'))
-            grid_mapping_table, grid_address = spg.get_stabilized_reciprocal_mesh(
-                self._mesh,
-                self._symmetry.get_pointgroup_operations(),
-                qpoints=qpoint)
+            self._gp2tpindex = {}
+            for i, j in enumerate(np.unique(self._triplets_map_at_q)):
+                self._gp2tpindex[j] = i
             
     def _run_collision_matrix(self):
         self._run_with_band_indices() # for Gamma
         self._run_py_collision_matrix() # for Omega
 
     def _run_py_collision_matrix(self):
-        g = np.zeros((3,) + self._fc3_normal_squared.shape, dtype='double')
         if self._temperature > 0:
             self._set_collision_matrix()
         else:
             self._set_collision_matrix_0K()
         
     def _set_collision_matrix(self):
-        freqs = self._frequencies[self._triplets_at_q[:, [1, 2]]]
-        freqs = np.where(freqs > self._cutoff_frequency, freqs, 1)
-        n = occupation(freqs, self._temperature)
-        for i, (tp, w, interaction) in enumerate(zip(self._triplets_at_q,
-                                                     self._weights_at_q,
-                                                     self._fc3_normal_squared)):
-            for j, k in list(np.ndindex(interaction.shape[1:])):
-                f1 = self._frequencies[tp[1]][j]
-                f2 = self._frequencies[tp[2]][k]
-                if (f1 > self._cutoff_frequency and
-                    f2 > self._cutoff_frequency):
-                    n2 = n[i, 0, j]
-                    n3 = n[i, 1, k]
-                    g1 = self._g[0, i, :, j, k]
-                    g2_g3 = self._g[1, i, :, j, k] # g2 - g3
-                    self._imag_self_energy[:] += (
-                        (n2 + n3 + 1) * g1 +
-                        (n2 - n3) * (g2_g3)) * interaction[:, j, k] * w
+        ir_address = self._grid_address[self._grid_point]
+        r_address = np.dot(self._point_operations.reshape(-1, 3),
+                           ir_address).reshape(-1, 3)
+        r_gps = get_grid_point_from_address(r_address.T, self._mesh)
+        unique_gps = np.unique(r_gps)
+        col_mat = np.zeros(self._fc3_normal_squared.shape[:3], dtype='double')
+        for i, gp in enumerate(unique_gps):
+            ti = self._gp2tpindex[self._triplets_map_at_q[gp]]
+            tp = self._triplets_at_q[ti]
+            for j, k in list(np.ndindex(col_mat.shape[1:])):
+                col_mat[i, j, k] = (
+                    self._fc3_normal_squared[ti, j, k]
+                    / np.sinc(THz * Hbar * self._frequencies[tp[2]]
+                              / (2 * Kb * self._temperature))
+                    * self._g[2, ti, j, k]).sum()
 
-        self._imag_self_energy *= self._unit_conversion
+        sum_rots = np.zeros((len(unique_gps), 3, 3), dtype='double')
+        count = 0
+        for i, gp in enumerate(unique_gps):
+            for r, r_gp in zip(self._rotations_cartesian, r_gps):
+                if gp == r_gp:
+                    sum_rots[i] += r
+                    print count
+                    count += 1
+                    
+                
 
     def _set_collision_matrix_0K(self):
-        for i, (w, interaction) in enumerate(zip(self._weights_at_q,
-                                                 self._fc3_normal_squared)):
-            for j, k in list(np.ndindex(interaction.shape[1:])):
-                g1 = self._g[0, i, :, j, k]
-                self._imag_self_energy[:] += g1 * interaction[:, j, k] * w
-
-        self._imag_self_energy *= self._unit_conversion
+        pass

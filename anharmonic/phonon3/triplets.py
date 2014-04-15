@@ -211,12 +211,20 @@ def get_grid_points_in_Brillouin_zone(primitive_vectors, # column vectors
 def get_triplets_integration_weights(interaction,
                                      frequency_points,
                                      sigma,
+                                     is_collision_matrix=False,
                                      lang='C'):
     triplets = interaction.get_triplets_at_q()[0]
     frequencies = interaction.get_phonons()[0]
     num_band = frequencies.shape[1]
-    g = np.zeros((2, len(triplets), len(frequency_points), num_band, num_band),
-                 dtype='double')
+
+    if is_collision_matrix:
+        g = np.zeros(
+            (3, len(triplets), len(frequency_points), num_band, num_band),
+            dtype='double')
+    else:
+        g = np.zeros(
+            (2, len(triplets), len(frequency_points), num_band, num_band),
+            dtype='double')
 
     if sigma:
         if lang == 'C':

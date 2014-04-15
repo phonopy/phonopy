@@ -123,13 +123,11 @@ class Conductivity_LBTE(Conductivity):
                 print "Calculating interaction..."
                 
             self._collision.run_interaction()
-            self._set_gamma_at_sigmas(i)
-            self._set_collision_matrix_at_sigmas(i)
+            self._set_gamma_at_sigmas()
+            self._set_collision_matrix_at_sigmas()
 
         if self._isotope is not None:
-            self._set_gamma_isotope_at_sigmas(i)
-
-        self._set_kappa_at_sigmas(i)
+            self._set_gamma_isotope_at_sigmas()
 
     def _allocate_values(self):
         num_band = self._primitive.get_number_of_atoms() * 3
@@ -155,3 +153,21 @@ class Conductivity_LBTE(Conductivity):
                                     num_grid_points,
                                     num_band), dtype='double')
         
+
+
+    def _set_collision_matrix_at_sigmas(self):
+        i = self._grid_point_count
+        for j, sigma in enumerate(self._sigmas):
+            if self._log_level:
+                print "Calculating collision matrix with",
+                if sigma is None:
+                    print "tetrahedron method"
+                else:
+                    print "sigma=%s" % sigma
+            self._collision.set_sigma(sigma)
+            if not sigma:
+                self._collision.set_integration_weights()
+            for k, t in enumerate(self._temperatures):
+                self._collision.set_temperature(t)
+                self._collision.run_collision_matrix()
+                self._gamma[j, i, k] = self._collision.get_imag_self_energy()

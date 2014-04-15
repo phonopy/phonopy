@@ -178,7 +178,8 @@ class Conductivity:
         """This has to be implementated in the derived class"""
         pass
 
-    def _set_gamma_at_sigmas(self, i):
+    def _set_gamma_at_sigmas(self):
+        i = self._grid_point_count
         for j, sigma in enumerate(self._sigmas):
             if self._log_level:
                 print "Calculating Gamma of ph-ph with",
@@ -194,7 +195,8 @@ class Conductivity:
                 self._collision.run()
                 self._gamma[j, i, k] = self._collision.get_imag_self_energy()
                 
-    def _set_gamma_isotope_at_sigmas(self, i):
+    def _set_gamma_isotope_at_sigmas(self):
+        i = self._grid_point_count
         for j, sigma in enumerate(self._sigmas):
             if self._log_level:
                 print "Calculating Gamma of ph-isotope with",
@@ -280,3 +282,17 @@ class Conductivity:
             symprec=self._symmetry.get_symmetry_tolerance(),
             cutoff_frequency=self._cutoff_frequency,
             lapack_zheev_uplo=self._pp.get_lapack_zheev_uplo())
+        
+    def _show_log_header(self, i):
+        if self._log_level:
+            gp = self._grid_points[i]
+            print ("======================= Grid point %d (%d/%d) "
+                   "=======================" %
+                   (gp, i + 1, len(self._grid_points)))
+            print "q-point: (%5.2f %5.2f %5.2f)" % tuple(self._qpoints[i])
+            print "Lifetime cutoff (sec): %-10.3e" % self._cutoff_lifetime
+            if self._isotope is not None:
+                print "Mass variance parameters:",
+                print ("%5.2e " * len(self._mass_variances)) % tuple(
+                    self._mass_variances)
+                        
