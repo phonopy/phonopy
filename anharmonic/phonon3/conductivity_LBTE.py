@@ -1,5 +1,4 @@
 import numpy as np
-from phonopy.phonon.group_velocity import get_group_velocity
 from anharmonic.phonon3.conductivity import Conductivity
 from anharmonic.phonon3.collision_matrix import CollisionMatrix
 
@@ -21,6 +20,11 @@ def get_thermal_conductivity_LBTE(
         output_filename=None,
         log_level=0):
 
+    if read_gamma:
+        print "The option --read_gamma is not yet implemented."
+        import sys
+        sys.exit(1)
+
     if log_level:
         print "-------------------- Lattice thermal conducitivity (LBTE) --------------------"
     br = Conductivity_LBTE(interaction,
@@ -35,10 +39,11 @@ def get_thermal_conductivity_LBTE(
                            gv_delta_q=gv_delta_q,
                            log_level=log_level)
     br.initialize(grid_points)
-
+        
     for i in br:
         pass
 
+    br.run_pinv()
     return br
 
 class Conductivity_LBTE(Conductivity):
@@ -54,7 +59,6 @@ class Conductivity_LBTE(Conductivity):
                  no_kappa_stars=False,
                  gv_delta_q=None, # finite difference for group veolocity
                  log_level=0):
-
         self._pp = None
         self._temperatures = None
         self._sigmas = None
@@ -107,13 +111,14 @@ class Conductivity_LBTE(Conductivity):
                  no_kappa_stars=no_kappa_stars,
                  gv_delta_q=gv_delta_q,
                  log_level=log_level)
-
+        
         self._collision = CollisionMatrix(self._pp, self._symmetry)
         
     def _run_at_grid_point(self):
         i = self._grid_point_count
         self._show_log_header(i)
         grid_point = self._grid_points[i]
+
         if not self._read_gamma:
             self._collision.set_grid_point(grid_point)
             
@@ -123,8 +128,9 @@ class Conductivity_LBTE(Conductivity):
                 print "Calculating interaction..."
                 
             self._collision.run_interaction()
-            self._set_gamma_at_sigmas()
             self._set_collision_matrix_at_sigmas()
+            self._set_gv()
+            self._show_log()
 
         if self._isotope is not None:
             self._set_gamma_isotope_at_sigmas()
@@ -135,25 +141,22 @@ class Conductivity_LBTE(Conductivity):
         num_ir_grid_points = len(self._ir_grid_points)
         if not self._read_gamma:
             self._gamma = np.zeros((len(self._sigmas),
-                                    num_grid_points,
                                     len(self._temperatures),
+                                    num_grid_points,
                                     num_band), dtype='double')
-            self._collision_matrix = np.zeros((len(self._sigmas),
-                                               num_grid_points,
-                                               num_ir_grid_points,
-                                               len(self._temperatures),
-                                               num_band,
-                                               num_band,
-                                               ), dtype='double')
             
+        self._collision_matrix = np.zeros(
+            (len(self._sigmas),
+             len(self._temperatures),
+             num_grid_points, num_band, 3,
+             num_ir_grid_points, num_band, 3),
+            dtype='double')
         self._gv = np.zeros((num_grid_points,
                              num_band,
                              3), dtype='double')
         self._gamma_iso = np.zeros((len(self._sigmas),
                                     num_grid_points,
                                     num_band), dtype='double')
-        
-
 
     def _set_collision_matrix_at_sigmas(self):
         i = self._grid_point_count
@@ -169,5 +172,52 @@ class Conductivity_LBTE(Conductivity):
                 self._collision.set_integration_weights()
             for k, t in enumerate(self._temperatures):
                 self._collision.set_temperature(t)
-                self._collision.run_collision_matrix()
-                self._gamma[j, i, k] = self._collision.get_imag_self_energy()
+                self._collision.run()
+                self._gamma[j, k, i] = self._collision.get_imag_self_energy()
+                self._collision_matrix[j, k, i] = (
+                    self._collision.get_collision_matrix())
+
+    def _create_X(self):
+        pass
+
+    def run_pinv(self):
+        num_band = self._primitive.get_number_of_atoms() * 3
+        num_ir_grid_points = len(self._ir_grid_points)
+        
+        print "PINV start"
+        for i, j in list(np.ndindex(self._collision_matrix.shape[:2])):
+            print i, j
+            inv_col = np.linalg.pinv(self._collision_matrix[i, j].reshape(
+                num_ir_grid_points * num_band * 3,
+                num_ir_grid_points * num_band * 3))
+        print "PINV end"
+        
+    def _show_log(self):
+        i = self._grid_point_count
+        q = self._qpoints[i]
+        gp = self._grid_points[i]
+        frequencies = self._frequencies[gp]
+        gv = self._gv[i]
+
+        print "Frequency, projected group velocity (x, y, z), group velocity norm",
+        if self._gv_delta_q is None:
+            print
+        else:
+            print " (dq=%3.1e)" % self._gv_delta_q
+        print "at (%5.2f %5.2f %5.2f)" % tuple(q)
+        for f, v in zip(frequencies, gv):
+            print "%8.3f   (%8.3f %8.3f %8.3f) %8.3f" % (
+                f, v[0], v[1], v[2], np.linalg.norm(v))
+
+
+
+
+
+
+
+
+
+
+
+
+

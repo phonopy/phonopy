@@ -1,4 +1,5 @@
 import numpy as np
+from phonopy.phonon.group_velocity import get_group_velocity
 from phonopy.harmonic.force_constants import similarity_transformation
 from phonopy.units import EV, THz, Angstrom
 from anharmonic.phonon3.triplets import get_grid_address, reduce_grid_points, get_ir_grid_points, from_coarse_to_dense_grid_points
@@ -193,7 +194,7 @@ class Conductivity:
             for k, t in enumerate(self._temperatures):
                 self._collision.set_temperature(t)
                 self._collision.run()
-                self._gamma[j, i, k] = self._collision.get_imag_self_energy()
+                self._gamma[j, k, i] = self._collision.get_imag_self_energy()
                 
     def _set_gamma_isotope_at_sigmas(self):
         i = self._grid_point_count
@@ -283,6 +284,16 @@ class Conductivity:
             cutoff_frequency=self._cutoff_frequency,
             lapack_zheev_uplo=self._pp.get_lapack_zheev_uplo())
         
+    def _set_gv(self):
+        # Group velocity [num_freqs, 3]
+        i = self._grid_point_count
+        self._gv[i] = get_group_velocity(
+            self._qpoints[i],
+            self._dm,
+            q_length=self._gv_delta_q,
+            symmetry=self._symmetry,
+            frequency_factor_to_THz=self._frequency_factor_to_THz)
+                
     def _show_log_header(self, i):
         if self._log_level:
             gp = self._grid_points[i]

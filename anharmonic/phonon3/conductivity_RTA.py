@@ -70,7 +70,7 @@ def _write_gamma(br, interaction, i, filename=None):
     # kappa = br.get_kappa()
     
     for j, sigma in enumerate(sigmas):
-        write_kappa_to_hdf5(gamma[j, i],
+        write_kappa_to_hdf5(gamma[j, :, i],
                             temperatures,
                             mesh,
                             frequency=frequencies,
@@ -142,16 +142,21 @@ def _set_gamma_from_file(br, filename=None):
     mesh = br.get_mesh_numbers()
     mesh_divisors = br.get_mesh_divisors()
     grid_points = br.get_grid_points()
-    
-    gamma = []
-    for sigma in sigmas:
+    temperatures = br.get_temperatures()
+    num_band = br.get_frequencies().shape[1]
+
+    gamma = np.zeros((len(sigmas),
+                      len(temperatures),
+                      len(grid_points),
+                      num_band), dtype='double')
+
+    for j, sigma in enumerate(sigmas):
         gamma_at_sigma = read_gamma_from_hdf5(
             mesh,
             mesh_divisors=mesh_divisors,
             sigma=sigma,
             filename=filename)
         if gamma_at_sigma is False:
-            gamma_at_sigma = []
             for i, gp in enumerate(grid_points):
                 gamma_gp = read_gamma_from_hdf5(
                     mesh,
@@ -161,9 +166,12 @@ def _set_gamma_from_file(br, filename=None):
                     filename=filename)
                 if gamma_gp is False:
                     print "Gamma at grid point %d doesn't exist." % gp
-                gamma_at_sigma.append(gamma_gp)
-        gamma.append(gamma_at_sigma)
-    br.set_gamma(np.array(gamma, dtype='double', order='C'))
+                else:
+                    gamma[j, :, i] = gamma_gp
+        else:
+            gamma[j] = gamma_at_sigma
+        
+    br.set_gamma(gamma)
 
 class Conductivity_RTA(Conductivity):
     def __init__(self,
@@ -202,7 +210,6 @@ class Conductivity_RTA(Conductivity):
         self._gamma = None
         self._read_gamma = False
         self._frequencies = None
-        self._cv = None
         self._gv = None
         self._gamma_iso = None
 
@@ -230,6 +237,7 @@ class Conductivity_RTA(Conductivity):
                  gv_delta_q=gv_delta_q,
                  log_level=log_level)
 
+        self._cv = None
         self._collision = ImagSelfEnergy(self._pp)
 
     def get_mode_heat_capacities(self):
@@ -265,8 +273,8 @@ class Conductivity_RTA(Conductivity):
                                 6), dtype='double')
         if not self._read_gamma:
             self._gamma = np.zeros((len(self._sigmas),
-                                    num_grid_points,
                                     len(self._temperatures),
+                                    num_grid_points,
                                     num_band), dtype='double')
         self._gv = np.zeros((num_grid_points,
                              num_band,
@@ -288,7 +296,7 @@ class Conductivity_RTA(Conductivity):
         self._cv[i] = cv
 
         # Outer product of group velocities (v x v) [num_k*, num_freqs, 3, 3]
-        gv_by_gv_tensor = self._get_gv_by_gv(i)
+        gv_by_gv_tensor = self._get_gv_by_gv()
 
         # Sum all vxv at k*
         gv_sum2 = np.zeros((6, len(freqs)), dtype='double')
@@ -299,7 +307,7 @@ class Conductivity_RTA(Conductivity):
         # Kappa
         for j in range(len(self._sigmas)):
             for k, l in list(np.ndindex(len(self._temperatures), len(freqs))):
-                g_phph = self._gamma[j, i, k, l]
+                g_phph = self._gamma[j, k, i, l]
                 if g_phph < 0.5 / self._cutoff_lifetime / THz:
                     continue
                 if self._isotope is None:
@@ -311,7 +319,9 @@ class Conductivity_RTA(Conductivity):
                     gv_sum2[:, l] * cv[k, l] / (g_sum * 2) *
                     self._conversion_factor)
 
-    def _get_gv_by_gv(self, i):
+    def _get_gv_by_gv(self):
+        self._set_gv()
+        i = self._grid_point_count
         gp = self._grid_points[i]
         grid_address = self._grid_address[gp]
         if self._no_kappa_stars:
@@ -338,22 +348,12 @@ class Conductivity_RTA(Conductivity):
 
             gv_by_gv = [np.sum(gv_by_gv_tmp, axis=0) / len(gv_by_gv_tmp)]
         else:
-            # Group velocity [num_freqs, 3]
-            gv = get_group_velocity(
-                self._qpoints[i],
-                self._dm,
-                q_length=self._gv_delta_q,
-                symmetry=self._symmetry,
-                frequency_factor_to_THz=self._frequency_factor_to_THz)
-            self._gv[i] = gv
+            gv = self._gv[i]
             rotation_map = self._get_rotation_map_for_star(grid_address)
             gv_by_gv = self._get_gv_by_gv_on_star(gv, rotation_map)
 
             if self._log_level:
-                self._show_log(self._qpoints[i],
-                               self._frequencies[gp],
-                               gv,
-                               rotation_map)
+                self._show_log(self._qpoints[i], rotation_map)
 
         # check if the number of rotations is correct.
         if self._grid_weights is not None:
@@ -411,11 +411,11 @@ class Conductivity_RTA(Conductivity):
                         f * THzToEv), 0)
         return cv
 
-    def _show_log(self,
-                  q,
-                  frequencies,
-                  group_velocity,
-                  rotation_map):
+    def _show_log(self, q, rotation_map):
+        gp = self._grid_points[self._grid_point_count]
+        frequencies = self._frequencies[gp]
+        gv = self._gv[self._grid_point_count]
+        
         print "Frequency, projected group velocity (x, y, z), group velocity norm",
         if self._gv_delta_q is None:
             print
@@ -432,7 +432,7 @@ class Conductivity_RTA(Conductivity):
                     print " k*%-2d (%5.2f %5.2f %5.2f)" % ((i + 1,) +
                                                            tuple(np.dot(rot, q)))
                     for f, v in zip(frequencies,
-                                    np.dot(rot_c, group_velocity.T).T):
+                                    np.dot(rot_c, gv.T).T):
                         print "%8.3f   (%8.3f %8.3f %8.3f) %8.3f" % (
                             f, v[0], v[1], v[2], np.linalg.norm(v))
             print
@@ -443,7 +443,7 @@ class Conductivity_RTA(Conductivity):
             else:
                 print " %d orbits" % num_ks,
             print "of k* at (%5.2f %5.2f %5.2f)" % tuple(q)
-            for f, v in zip(frequencies, group_velocity):
+            for f, v in zip(frequencies, gv):
                 print "%8.3f   (%8.3f %8.3f %8.3f) %8.3f" % (
                     f, v[0], v[1], v[2], np.linalg.norm(v))
     
