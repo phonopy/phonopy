@@ -1,6 +1,7 @@
 import numpy as np
 from anharmonic.phonon3.conductivity import Conductivity
 from anharmonic.phonon3.collision_matrix import CollisionMatrix
+from phonopy.units import Hbar, THz, Kb
 
 def get_thermal_conductivity_LBTE(
         interaction,
@@ -177,12 +178,19 @@ class Conductivity_LBTE(Conductivity):
                 self._collision_matrix[j, k, i] = (
                     self._collision.get_collision_matrix())
 
-    def _create_X(self):
-        pass
+    def _get_X(self, t):
+        freqs = self._frequencies[self._ir_grid_points] * Hbar * THz
+        print "Creating X vector"
+        if t > 0:
+            return np.zeros_like(self._gv)
+        else:
+            X  = np.transpose(freqs / (4 * Kb * t ** 2) / np.sinc(freqs / (2 * Kb * t)) * self._gv[i].T, dtype='double', order='C')
+
 
     def run_pinv(self):
         num_band = self._primitive.get_number_of_atoms() * 3
         num_ir_grid_points = len(self._ir_grid_points)
+        self._get_X(300)
         
         print "PINV start"
         for i, j in list(np.ndindex(self._collision_matrix.shape[:2])):
