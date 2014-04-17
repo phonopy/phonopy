@@ -1,7 +1,8 @@
 import numpy as np
 from anharmonic.phonon3.conductivity import Conductivity
 from anharmonic.phonon3.collision_matrix import CollisionMatrix
-from phonopy.units import Hbar, THz, Kb
+from anharmonic.phonon3.triplets import get_grid_point_from_address
+from phonopy.units import THzToEv, Kb
 
 def get_thermal_conductivity_LBTE(
         interaction,
@@ -179,26 +180,60 @@ class Conductivity_LBTE(Conductivity):
                     self._collision.get_collision_matrix())
 
     def _get_X(self, t):
-        freqs = self._frequencies[self._ir_grid_points] * Hbar * THz
-        print "Creating X vector"
+        freqs = (self._frequencies[self._ir_grid_points] * THzToEv).ravel()
         if t > 0:
-            return np.zeros_like(self._gv)
+            return (freqs / (4 * Kb * t ** 2) / np.sinh(freqs / (2 * Kb * t))
+                    * self._gv.reshape(-1, 3).T).T
         else:
-            X  = np.transpose(freqs / (4 * Kb * t ** 2) / np.sinc(freqs / (2 * Kb * t)) * self._gv[i].T, dtype='double', order='C')
-
+            return np.zeros_like(self._gv.reshape(-1, 3))
 
     def run_pinv(self):
+        if len(self._grid_points) != len(self._ir_grid_points):
+            print "Collision matrix is not well created."
+            import sys
+            sys.exit(1)
+            
         num_band = self._primitive.get_number_of_atoms() * 3
         num_ir_grid_points = len(self._ir_grid_points)
-        self._get_X(300)
-        
-        print "PINV start"
-        for i, j in list(np.ndindex(self._collision_matrix.shape[:2])):
-            print i, j
-            inv_col = np.linalg.pinv(self._collision_matrix[i, j].reshape(
-                num_ir_grid_points * num_band * 3,
-                num_ir_grid_points * num_band * 3))
-        print "PINV end"
+        orders = self._get_order_of_star()
+        rot_order = len(self._rotations_cartesian)
+
+        for j in self._sigmas:
+            for k, t in enumerate(self._temperatures):
+                X = self._get_X(t)
+                inv_col = np.linalg.pinv(self._collision_matrix[j, k].reshape(
+                    num_ir_grid_points * num_band * 3,
+                    num_ir_grid_points * num_band * 3))
+                Y = np.dot(inv_col, X.ravel()).reshape(-1, 3)
+                RX = np.dot(self._rotations_cartesian.reshape(-1, 3), X.T).T
+                RY = np.dot(self._rotations_cartesian.reshape(-1, 3), Y.T).T
+
+                sum_outer = np.zeros((3, 3), dtype='double')
+                for order, irX, irY in zip(
+                        orders,
+                        RX.reshape(num_ir_grid_points, num_band, rot_order, 3),
+                        RY.reshape(num_ir_grid_points, num_band, rot_order, 3)):
+                    sum_outer_kp = np.zeros((3, 3), dtype='double')
+                    for X_band, Y_band in zip(irX, irY):
+                        for RX_band, RY_band in zip(X_band, Y_band):
+                            sum_outer_kp += np.outer(RX_band, RY_band)
+                    sum_outer += sum_outer_kp * order / rot_order
+                    
+                sum_outer *= self._conversion_factor * 2 * Kb * t ** 2 / np.prod(self._mesh)
+
+                print sum_outer
+
+    def _get_order_of_star(self):
+        orders = []
+        num_band = self._primitive.get_number_of_atoms() * 3
+        for i, ir_gp in enumerate(self._ir_grid_points):
+            ir_address = self._grid_address[ir_gp]
+            r_address = np.dot(self._point_operations.reshape(-1, 3),
+                               ir_address).reshape(-1, 3)
+            r_gps = get_grid_point_from_address(r_address.T, self._mesh)
+            orders.append(len(np.unique(r_gps)))
+            
+        return np.array(orders, dtype='intc')
         
     def _show_log(self):
         i = self._grid_point_count
@@ -216,16 +251,4 @@ class Conductivity_LBTE(Conductivity):
         for f, v in zip(frequencies, gv):
             print "%8.3f   (%8.3f %8.3f %8.3f) %8.3f" % (
                 f, v[0], v[1], v[2], np.linalg.norm(v))
-
-
-
-
-
-
-
-
-
-
-
-
 
