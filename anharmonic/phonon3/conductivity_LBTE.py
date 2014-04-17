@@ -113,13 +113,17 @@ class Conductivity_LBTE(Conductivity):
                  no_kappa_stars=no_kappa_stars,
                  gv_delta_q=gv_delta_q,
                  log_level=log_level)
-        
-        self._collision = CollisionMatrix(self._pp, self._symmetry)
+
+        self._collision = CollisionMatrix(self._pp,
+                                          self._symmetry)
         
     def _run_at_grid_point(self):
         i = self._grid_point_count
         self._show_log_header(i)
         grid_point = self._grid_points[i]
+
+        if self._isotope is not None:
+            self._set_gamma_isotope_at_sigmas()
 
         if not self._read_gamma:
             self._collision.set_grid_point(grid_point)
@@ -133,9 +137,6 @@ class Conductivity_LBTE(Conductivity):
             self._set_collision_matrix_at_sigmas()
             self._set_gv()
             self._show_log()
-
-        if self._isotope is not None:
-            self._set_gamma_isotope_at_sigmas()
 
     def _allocate_values(self):
         num_band = self._primitive.get_number_of_atoms() * 3
@@ -174,7 +175,10 @@ class Conductivity_LBTE(Conductivity):
                 self._collision.set_integration_weights()
             for k, t in enumerate(self._temperatures):
                 self._collision.set_temperature(t)
-                self._collision.run()
+                if self._isotope is not None:
+                    self._collision.run(self._gamma_iso[j, i])
+                else:
+                    self._collision.run()
                 self._gamma[j, k, i] = self._collision.get_imag_self_energy()
                 self._collision_matrix[j, k, i] = (
                     self._collision.get_collision_matrix())

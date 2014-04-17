@@ -13,6 +13,7 @@ class Phono3pySettings(Settings):
         self._grid_points = None
         self._ion_clamped = False
         self._is_bterta = False
+        self._is_lbte = False
         self._is_linewidth = False
         self._is_frequency_shift = False
         self._mass_variances = None
@@ -73,6 +74,12 @@ class Phono3pySettings(Settings):
 
     def get_is_bterta(self):
         return self._is_bterta
+
+    def set_is_lbte(self, is_lbte):
+        self._is_lbte = is_lbte
+
+    def get_is_lbte(self):
+        return self._is_lbte
 
     def set_is_linewidth(self, is_linewidth):
         self._is_linewidth = is_linewidth
@@ -195,6 +202,10 @@ class Phono3pyConfParser(ConfParser):
                 if self._options.is_bterta:
                     self._confs['bterta'] = '.true.'
 
+            if opt.dest == 'is_lbte':
+                if self._options.is_lbte:
+                    self._confs['lbte'] = '.true.'
+
             if opt.dest == 'is_linewidth':
                 if self._options.is_linewidth:
                     self._confs['linewidth'] = '.true.'
@@ -289,6 +300,10 @@ class Phono3pyConfParser(ConfParser):
             if conf_key == 'bterta':
                 if confs['bterta'] == '.true.':
                     self.set_parameter('is_bterta', True)
+
+            if conf_key == 'lbte':
+                if confs['lbte'] == '.true.':
+                    self.set_parameter('is_lbte', True)
 
             if conf_key == 'linewidth':
                 if confs['linewidth'] == '.true.':
@@ -391,6 +406,10 @@ class Phono3pyConfParser(ConfParser):
         # Calculate thermal conductivity in BTE-RTA
         if params.has_key('is_bterta'):
             self._settings.set_is_bterta(params['is_bterta'])
+
+        # Calculate thermal conductivity in LBTE with Chaput's method
+        if params.has_key('is_lbte'):
+            self._settings.set_is_lbte(params['is_lbte'])
 
         # Calculate linewidths
         if params.has_key('is_linewidth'):

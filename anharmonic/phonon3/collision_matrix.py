@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 import phonopy.structure.spglib as spg
 from phonopy.units import THzToEv, Kb
@@ -45,6 +46,7 @@ class CollisionMatrix(ImagSelfEnergy):
 
         self._ir_grid_points = None
         self._is_collision_matrix = True
+        self._gamma_iso = None
         self._symmetry = symmetry
         self._point_operations = symmetry.get_reciprocal_operations()
         self._primitive = self._interaction.get_primitive()
@@ -53,17 +55,24 @@ class CollisionMatrix(ImagSelfEnergy):
             [similarity_transformation(rec_lat, r)
              for r in self._point_operations], dtype='double')
         
-    def run(self):
+    def run(self, gamma_iso=None):
+        self._gamma_iso = gamma_iso
+        
         if self._fc3_normal_squared is None:        
             self.run_interaction()
 
         # num_band0 is supposed to be equal to num_band.
         num_band0 = self._fc3_normal_squared.shape[1]
         num_band = self._fc3_normal_squared.shape[2]
+
+        if num_band0 != num_band:
+            print "--bi option is not allowed to use with collision matrix."
+            sys.exit(1)
+        
         num_triplets = len(self._triplets_at_q)
-        self._imag_self_energy = np.zeros(num_band0, dtype='double')
+        self._imag_self_energy = np.zeros(num_band, dtype='double')
         self._collision_matrix = np.zeros(
-            (num_band0, 3, len(self._ir_grid_points), num_band, 3),
+            (num_band, 3, len(self._ir_grid_points), num_band, 3),
             dtype='double')
         self._run_with_band_indices()
         self._run_collision_matrix()
@@ -101,8 +110,7 @@ class CollisionMatrix(ImagSelfEnergy):
             self._set_collision_matrix_0K()
         
     def _set_collision_matrix(self):
-        num_band0 = self._fc3_normal_squared.shape[1]
-        num_band = self._fc3_normal_squared.shape[2]
+        num_band = self._fc3_normal_squared.shape[1]
 
         for i, ir_gp in enumerate(self._ir_grid_points):
             ir_address = self._grid_address[ir_gp]
@@ -120,7 +128,7 @@ class CollisionMatrix(ImagSelfEnergy):
                 tp = self._triplets_at_q[ti]
                 sinh = np.sinh(THzToEv * self._frequencies[tp[2]]
                                / (2 * Kb * self._temperature))
-                for j, k in list(np.ndindex((num_band0, num_band))):
+                for j, k in list(np.ndindex((num_band, num_band))):
                     collision = (self._fc3_normal_squared[ti, j, k]
                                  / sinh
                                  * self._g[2, ti, j, k]
@@ -132,8 +140,11 @@ class CollisionMatrix(ImagSelfEnergy):
 
             if ir_gp == self._grid_point:
                 for j in range(num_band):
-                    collision = self._imag_self_energy[j] * np.eye(3)
-                    self._collision_matrix[j, :, i, j, :] += collision
+                    collision = self._imag_self_energy[j]
+                    if self._gamma_iso is not None:
+                        collision += self._gamma_iso[j]
+                    
+                    self._collision_matrix[j, :, i, j, :] += collision * np.eye(3)
 
     def _set_collision_matrix_0K(self):
         """Collision matrix is zero."""

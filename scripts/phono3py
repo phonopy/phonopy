@@ -123,6 +123,7 @@ parser.set_defaults(band_indices=None,
                     input_filename=None,
                     input_output_filename=None,
                     ion_clamped=False,
+                    is_bterta=False,
                     is_decay_channel=False,
                     is_nodiag=False,
                     is_displacement=False,
@@ -131,8 +132,8 @@ parser.set_defaults(band_indices=None,
                     is_isotope=False,
                     is_joint_dos=False,
                     is_linewidth=False,
+                    is_lbte=False,
                     is_frequency_shift=False,
-                    is_bterta=False,
                     is_nac=False,
                     is_plusminus_displacements=False,
                     is_translational_symmetry=False,
@@ -241,6 +242,8 @@ parser.add_option("--isotope", dest="is_isotope", action="store_true",
                   help="Isotope scattering lifetime")
 parser.add_option("--jdos", dest="is_joint_dos", action="store_true",
                   help="Calculate joint density of states")
+parser.add_option("--lbte", dest="is_lbte", action="store_true",
+                  help="Calculate thermal conductivity LBTE with Chaput's method")
 parser.add_option("--lw", "--linewidth", dest="is_linewidth",
                   action="store_true", help="Calculate linewidths")
 parser.add_option("--fst", "--frequency_shift", dest="is_frequency_shift",
@@ -938,8 +941,9 @@ elif settings.get_is_frequency_shift():
         epsilon=sigma,
         temperatures=temperatures,
         output_filename=output_filename)
-elif settings.get_is_bterta():
+elif settings.get_is_bterta() or settings.get_is_lbte():
     phono3py.run_thermal_conductivity(
+        is_LBTE=settings.get_is_lbte(),
         temperatures=temperatures,
         sigmas=sigmas,
         mass_variances=settings.get_mass_variances(),
