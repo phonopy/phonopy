@@ -25,11 +25,21 @@ def get_triplets_at_q(grid_point,
     bz_grid_address, bz_map = spg.relocate_BZ_grid_address(grid_address,
                                                            mesh,
                                                            primitive_lattice)
+    # triplets_at_q, weights = spg.get_BZ_triplets_at_q(
+    #     grid_point,
+    #     bz_grid_address,
+    #     bz_map,
+    #     map_triplets,
+    #     mesh)
+
+    map_triplets = map_q.copy()
+    
+    # Exchange of q1 and q2 is not considered.
     triplets_at_q, weights = spg.get_BZ_triplets_at_q(
         grid_point,
         bz_grid_address,
         bz_map,
-        map_triplets,
+        map_q,
         mesh)
 
     assert np.prod(mesh) == weights.sum(), \
@@ -39,7 +49,7 @@ def get_triplets_at_q(grid_point,
     if not stores_triplets_map:
         map_triplets = None
         
-    return triplets_at_q, weights, bz_grid_address, bz_map, map_triplets
+    return triplets_at_q, weights, bz_grid_address, bz_map, map_triplets, map_q
 
 def get_nosym_triplets_at_q(grid_point,
                             mesh,

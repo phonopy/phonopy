@@ -135,6 +135,7 @@ class Interaction:
         self._triplets_at_q = None
         self._weights_at_q = None
         self._triplets_map_at_q = None
+        self._ir_map_at_q = None
         self._grid_address = None
         self._bz_map = None
         self._interaction_strength = None
@@ -178,7 +179,10 @@ class Interaction:
         if self._triplets_map_at_q is None:
             return self._triplets_at_q, self._weights_at_q
         else:
-            return self._triplets_at_q, self._weights_at_q, self._triplets_map_at_q
+            return (self._triplets_at_q,
+                    self._weights_at_q,
+                    self._triplets_map_at_q,
+                    self._ir_map_at_q)
 
     def get_grid_address(self):
         return self._grid_address
@@ -218,7 +222,8 @@ class Interaction:
              weights_at_q,
              grid_address,
              bz_map,
-             triplets_map_at_q)= get_triplets_at_q(
+             triplets_map_at_q,
+             ir_map_at_q)= get_triplets_at_q(
                  grid_point,
                  self._mesh,
                  self._symmetry.get_pointgroup_operations(),
@@ -238,6 +243,7 @@ class Interaction:
         self._triplets_map_at_q = triplets_map_at_q
         self._grid_address = grid_address
         self._bz_map = bz_map
+        self._ir_map_at_q = ir_map_at_q
 
     def set_dynamical_matrix(self,
                              fc2,

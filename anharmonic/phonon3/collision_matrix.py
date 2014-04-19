@@ -89,7 +89,8 @@ class CollisionMatrix(ImagSelfEnergy):
             self._fc3_normal_squared = None
             (self._triplets_at_q,
              self._weights_at_q,
-             self._triplets_map_at_q) = self._interaction.get_triplets_at_q()
+             self._triplets_map_at_q,
+             self._ir_map_at_q) = self._interaction.get_triplets_at_q()
             self._grid_address = self._interaction.get_grid_address()
             self._grid_point = grid_point
             self._ir_grid_points = get_ir_grid_points(
@@ -118,22 +119,25 @@ class CollisionMatrix(ImagSelfEnergy):
                                ir_address).reshape(-1, 3)
             r_gps = get_grid_point_from_address(r_address.T, self._mesh)
 
-            for gp in np.unique(self._triplets_map_at_q[r_gps]):
-                sum_rots = np.zeros((3, 3), dtype='double')
-                for r, r_gp in zip(self._rotations_cartesian, r_gps):
-                    if gp == self._triplets_map_at_q[r_gp]:
-                        sum_rots += r
-
-                ti = self._gp2tpindex[self._triplets_map_at_q[gp]]
+            for r, r_gp in zip(self._rotations_cartesian, r_gps):
+                ti = self._gp2tpindex[self._triplets_map_at_q[r_gp]]
                 tp = self._triplets_at_q[ti]
-                sinh = np.sinh(THzToEv * self._frequencies[tp[2]]
+
+                # if self._ir_map_at_q[r_gp] == self._triplets_map_at_q[r_gp]:
+                #     gp2 = tp[2]
+                # else:
+                #     gp2 = tp[1]
+                gp2 = tp[2]
+
+                sinh = np.sinh(THzToEv * self._frequencies[gp2]
                                / (2 * Kb * self._temperature))
+                
                 for j, k in list(np.ndindex((num_band, num_band))):
-                    collision = (self._fc3_normal_squared[ti, j, k]
-                                 / sinh
-                                 * self._g[2, ti, j, k]
-                                 * self._unit_conversion).sum()
-                    self._collision_matrix[j, :, i, k, :] += collision * sum_rots
+                    collision = (
+                        self._fc3_normal_squared[ti, j, k]
+                        / sinh
+                        * self._g[2, ti, j, k]).sum() * self._unit_conversion / 2
+                    self._collision_matrix[j, :, i, k, :] += collision * r
 
             self._collision_matrix[:, :, i, :, :] /= (
                 len(self._point_operations) / len(np.unique(r_gps)))
