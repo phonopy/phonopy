@@ -4,12 +4,13 @@ import phonopy.structure.spglib as spg
 from phonopy.units import THzToEv, Kb
 from phonopy.harmonic.force_constants import similarity_transformation
 from anharmonic.phonon3.imag_self_energy import ImagSelfEnergy
-from anharmonic.phonon3.triplets import get_triplets_integration_weights, get_grid_point_from_address, get_ir_grid_points
+from anharmonic.phonon3.triplets import get_grid_point_from_address, get_ir_grid_points
 
 class CollisionMatrix(ImagSelfEnergy):
     def __init__(self,
                  interaction,
                  symmetry,
+                 ir_grid_points,
                  grid_point=None,
                  frequency_points=None,
                  temperature=None,
@@ -44,7 +45,7 @@ class CollisionMatrix(ImagSelfEnergy):
                                 sigma=sigma,
                                 lang=lang)
 
-        self._ir_grid_points = None
+        self._ir_grid_points = ir_grid_points
         self._is_collision_matrix = True
         self._gamma_iso = None
         self._symmetry = symmetry
@@ -93,9 +94,6 @@ class CollisionMatrix(ImagSelfEnergy):
              self._ir_map_at_q) = self._interaction.get_triplets_at_q()
             self._grid_address = self._interaction.get_grid_address()
             self._grid_point = grid_point
-            self._ir_grid_points = get_ir_grid_points(
-                self._mesh,
-                self._symmetry.get_pointgroup_operations())[0]
             self._gp2tpindex = {}
             for i, j in enumerate(np.unique(self._triplets_map_at_q)):
                 self._gp2tpindex[j] = i
@@ -112,13 +110,12 @@ class CollisionMatrix(ImagSelfEnergy):
         
     def _set_collision_matrix(self):
         num_band = self._fc3_normal_squared.shape[1]
-
         for i, ir_gp in enumerate(self._ir_grid_points):
             ir_address = self._grid_address[ir_gp]
             r_address = np.dot(self._point_operations.reshape(-1, 3),
                                ir_address).reshape(-1, 3)
             r_gps = get_grid_point_from_address(r_address.T, self._mesh)
-
+                             
             for r, r_gp in zip(self._rotations_cartesian, r_gps):
                 ti = self._gp2tpindex[self._triplets_map_at_q[r_gp]]
                 tp = self._triplets_at_q[ti]
@@ -131,24 +128,32 @@ class CollisionMatrix(ImagSelfEnergy):
 
                 sinh = np.sinh(THzToEv * self._frequencies[gp2]
                                / (2 * Kb * self._temperature))
-                
                 for j, k in list(np.ndindex((num_band, num_band))):
                     collision = (
                         self._fc3_normal_squared[ti, j, k]
                         / sinh
-                        * self._g[2, ti, j, k]).sum() * self._unit_conversion / 2
+                        * self._g[2, ti, j, k]).sum()
                     self._collision_matrix[j, :, i, k, :] += collision * r
 
-            self._collision_matrix[:, :, i, :, :] /= (
-                len(self._point_operations) / len(np.unique(r_gps)))
+            order_r_gp = len(r_gps) / len(np.unique(r_gps))
+            self._collision_matrix[:, :, i, :, :] *= (
+                self._unit_conversion / 2 / order_r_gp)
 
-            if ir_gp == self._grid_point:
+            multi = 0
+            collision_r = np.zeros((num_band, 3, 3), dtype='double')
+            for r, r_gp in zip(self._rotations_cartesian, r_gps):
+                if r_gp == self._grid_point:
+                    multi += 1
+                    for j in range(num_band):
+                        collision = self._imag_self_energy[j]
+                        if self._gamma_iso is not None:
+                            collision += self._gamma_iso[j]
+    
+                        collision_r[j] += collision * r
+
+            if multi > 0:
                 for j in range(num_band):
-                    collision = self._imag_self_energy[j]
-                    if self._gamma_iso is not None:
-                        collision += self._gamma_iso[j]
-                    
-                    self._collision_matrix[j, :, i, j, :] += collision * np.eye(3)
+                    self._collision_matrix[j, :, i, j, :] += collision_r[j] / order_r_gp
 
     def _set_collision_matrix_0K(self):
         """Collision matrix is zero."""

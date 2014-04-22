@@ -77,7 +77,7 @@ static int get_BZ_triplets_at_q(int triplets[][3],
 				const int grid_point,
 				SPGCONST int bz_grid_address[][3],
 				const int bz_map[],
-				const int weights[],
+				const int map_q[],
 				const int mesh[3]);
 static void get_third_q_of_triplets_at_q(int address[3][3],
 					 const int bz_map[],
@@ -217,14 +217,14 @@ int kpt_get_BZ_triplets_at_q(int triplets[][3],
 			     const int grid_point,
 			     SPGCONST int bz_grid_address[][3],
 			     const int bz_map[],
-			     const int weights[],
+			     const int map_q[],
 			     const int mesh[3])
 {
   return get_BZ_triplets_at_q(triplets,
 			      grid_point,
 			      bz_grid_address,
 			      bz_map,
-			      weights,
+			      map_q,
 			      mesh);
 }
 
@@ -704,7 +704,7 @@ static int get_BZ_triplets_at_q(int triplets[][3],
 				const int grid_point,
 				SPGCONST int bz_grid_address[][3],
 				const int bz_map[],
-				const int weights[],
+				const int map_q[],
 				const int mesh[3])
 {
   int i, j, k, num_ir;
@@ -719,7 +719,7 @@ static int get_BZ_triplets_at_q(int triplets[][3],
   num_ir = 0;
   ir_grid_points = (int*) malloc(sizeof(int) * mesh[0] * mesh[1] * mesh[2]);
   for (i = 0; i < mesh[0] * mesh[1] * mesh[2]; i++) {
-    if (weights[i] == i) {
+    if (map_q[i] == i) {
       ir_grid_points[num_ir] = i;
       num_ir++;
     }

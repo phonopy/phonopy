@@ -39,7 +39,7 @@ def get_triplets_at_q(grid_point,
         grid_point,
         bz_grid_address,
         bz_map,
-        map_q,
+        map_triplets,
         mesh)
 
     assert np.prod(mesh) == weights.sum(), \

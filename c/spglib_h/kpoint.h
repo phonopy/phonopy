@@ -37,7 +37,7 @@ int kpt_get_BZ_triplets_at_q(int triplets[][3],
 			     const int grid_point,
 			     SPGCONST int bz_grid_address[][3],
 			     const int bz_map[],
-			     const int weights[],
+			     const int map_q[],
 			     const int mesh[3]);
 void kpt_get_neighboring_grid_points(int neighboring_grid_points[],
 				     const int grid_point,

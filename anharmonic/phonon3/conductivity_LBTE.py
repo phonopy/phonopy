@@ -114,8 +114,11 @@ class Conductivity_LBTE(Conductivity):
                  gv_delta_q=gv_delta_q,
                  log_level=log_level)
 
+    def initialize(self, grid_points=None):
+        Conductivity.initialize(self, grid_points=grid_points)
         self._collision = CollisionMatrix(self._pp,
-                                          self._symmetry)
+                                          self._symmetry,
+                                          self._ir_grid_points)
         
     def _run_at_grid_point(self):
         i = self._grid_point_count
@@ -171,8 +174,7 @@ class Conductivity_LBTE(Conductivity):
                 else:
                     print "sigma=%s" % sigma
             self._collision.set_sigma(sigma)
-            if not sigma:
-                self._collision.set_integration_weights()
+            self._collision.set_integration_weights()
             for k, t in enumerate(self._temperatures):
                 self._collision.set_temperature(t)
                 if self._isotope is not None:
@@ -184,7 +186,7 @@ class Conductivity_LBTE(Conductivity):
                     self._collision.get_collision_matrix())
 
     def _get_X(self, t):
-        freqs = (self._frequencies[self._ir_grid_points] * THzToEv).ravel()
+        freqs = self._frequencies[self._ir_grid_points].ravel() * THzToEv
         if t > 0:
             return (freqs / (4 * Kb * t ** 2) / np.sinh(freqs / (2 * Kb * t))
                     * self._gv.reshape(-1, 3).T).T
@@ -202,12 +204,14 @@ class Conductivity_LBTE(Conductivity):
         orders = self._get_order_of_star()
         rot_order = len(self._rotations_cartesian)
 
-        for j in self._sigmas:
+        for j, sigma in enumerate(self._sigmas):
             for k, t in enumerate(self._temperatures):
                 X = self._get_X(t)
-                inv_col = np.linalg.pinv(self._collision_matrix[j, k].reshape(
+                col_mat = self._collision_matrix[j, k].reshape(
                     num_ir_grid_points * num_band * 3,
-                    num_ir_grid_points * num_band * 3))
+                    num_ir_grid_points * num_band * 3)
+                inv_col = np.linalg.pinv(col_mat)
+
                 Y = np.dot(inv_col, X.ravel()).reshape(-1, 3)
                 RX = np.dot(self._rotations_cartesian.reshape(-1, 3), X.T).T
                 RY = np.dot(self._rotations_cartesian.reshape(-1, 3), Y.T).T

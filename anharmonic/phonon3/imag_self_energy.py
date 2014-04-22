@@ -191,7 +191,7 @@ class ImagSelfEnergy:
         self._frequency_points = None
         self.set_frequency_points(frequency_points)
         self._grid_point = None
-        self.set_grid_point(grid_point=grid_point)
+        self.set_grid_point(grid_point)
 
         self._lang = lang
         self._imag_self_energy = None
