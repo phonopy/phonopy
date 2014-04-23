@@ -138,7 +138,7 @@ class CollisionMatrix(ImagSelfEnergy):
 
             order_r_gp = np.sqrt(len(r_gps) / len(np.unique(r_gps)))
             self._collision_matrix[:, :, i, :, :] *= (
-                self._unit_conversion / 2 / order_r_gp)
+                self._unit_conversion / order_r_gp)
 
             multi = 0
             collision_r = np.zeros((num_band, 3, 3), dtype='double')
