@@ -166,6 +166,13 @@ class Conductivity_LBTE(Conductivity):
 
     def _set_collision_matrix_at_sigmas(self):
         i = self._grid_point_count
+        ir_gp = self._grid_points[i]
+        ir_address = self._grid_address[ir_gp]
+        r_address = np.dot(self._point_operations.reshape(-1, 3),
+                           ir_address).reshape(-1, 3)
+        r_gps = get_grid_point_from_address(r_address.T, self._mesh)
+        order_r_gp = np.sqrt(len(r_gps) / len(np.unique(r_gps)))
+        
         for j, sigma in enumerate(self._sigmas):
             if self._log_level:
                 print "Calculating collision matrix with",
@@ -183,13 +190,28 @@ class Conductivity_LBTE(Conductivity):
                     self._collision.run()
                 self._gamma[j, k, i] = self._collision.get_imag_self_energy()
                 self._collision_matrix[j, k, i] = (
-                    self._collision.get_collision_matrix())
+                    self._collision.get_collision_matrix() / order_r_gp)
 
     def _get_X(self, t):
-        freqs = self._frequencies[self._ir_grid_points].ravel() * THzToEv
+        X = self._gv.copy()
+        freqs = self._frequencies[self._ir_grid_points] * THzToEv
+        freqs_sinh = freqs / np.sinh(freqs / (2 * Kb * t))
+        num_band = self._primitive.get_number_of_atoms() * 3
+                
+        for i, (ir_gp, f) in enumerate(zip(self._grid_points, freqs_sinh)):
+            ir_address = self._grid_address[ir_gp]
+            r_address = np.dot(self._point_operations.reshape(-1, 3),
+                               ir_address).reshape(-1, 3)
+            r_gps = get_grid_point_from_address(r_address.T, self._mesh)
+            order_r_gp = np.sqrt(len(r_gps) / len(np.unique(r_gps)))
+            X[i] *= 1.0 / (4 * Kb * t ** 2) / order_r_gp
+            for j in range(num_band):
+                X[i, j] *= f[j]
+        
         if t > 0:
-            return (freqs / (4 * Kb * t ** 2) / np.sinh(freqs / (2 * Kb * t))
-                    * self._gv.reshape(-1, 3).T).T
+            # return (freqs / (4 * Kb * t ** 2) / np.sinh(freqs / (2 * Kb * t))
+            #         * self._gv.reshape(-1, 3).T).T
+            return X.reshape(-1, 3)
         else:
             return np.zeros_like(self._gv.reshape(-1, 3))
 
@@ -211,11 +233,14 @@ class Conductivity_LBTE(Conductivity):
                     num_ir_grid_points * num_band * 3,
                     num_ir_grid_points * num_band * 3)
                 inv_col = np.linalg.pinv(col_mat)
+                # inv_col = np.zeros_like(col_mat)
+                # import anharmonic._forcefit as forcefit
+                # forcefit.pinv(col_mat, inv_col, 1e-5)
 
                 Y = np.dot(inv_col, X.ravel()).reshape(-1, 3)
                 RX = np.dot(self._rotations_cartesian.reshape(-1, 3), X.T).T
                 RY = np.dot(self._rotations_cartesian.reshape(-1, 3), Y.T).T
-
+                
                 sum_outer = np.zeros((3, 3), dtype='double')
                 for order, irX, irY in zip(
                         orders,
@@ -225,7 +250,8 @@ class Conductivity_LBTE(Conductivity):
                     for X_band, Y_band in zip(irX, irY):
                         for RX_band, RY_band in zip(X_band, Y_band):
                             sum_outer_kp += np.outer(RX_band, RY_band)
-                    sum_outer += sum_outer_kp * order / rot_order
+                    # sum_outer += sum_outer_kp * order / rot_order
+                    sum_outer += sum_outer_kp
                     
                 sum_outer *= self._conversion_factor * 2 * Kb * t ** 2 / np.prod(self._mesh)
 

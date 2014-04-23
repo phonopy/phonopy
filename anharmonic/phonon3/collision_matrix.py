@@ -110,12 +110,13 @@ class CollisionMatrix(ImagSelfEnergy):
         
     def _set_collision_matrix(self):
         num_band = self._fc3_normal_squared.shape[1]
+        
         for i, ir_gp in enumerate(self._ir_grid_points):
             ir_address = self._grid_address[ir_gp]
             r_address = np.dot(self._point_operations.reshape(-1, 3),
                                ir_address).reshape(-1, 3)
             r_gps = get_grid_point_from_address(r_address.T, self._mesh)
-                             
+
             for r, r_gp in zip(self._rotations_cartesian, r_gps):
                 ti = self._gp2tpindex[self._triplets_map_at_q[r_gp]]
                 tp = self._triplets_at_q[ti]
@@ -135,7 +136,7 @@ class CollisionMatrix(ImagSelfEnergy):
                         * self._g[2, ti, j, k]).sum()
                     self._collision_matrix[j, :, i, k, :] += collision * r
 
-            order_r_gp = len(r_gps) / len(np.unique(r_gps))
+            order_r_gp = np.sqrt(len(r_gps) / len(np.unique(r_gps)))
             self._collision_matrix[:, :, i, :, :] *= (
                 self._unit_conversion / 2 / order_r_gp)
 
