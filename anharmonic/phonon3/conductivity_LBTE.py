@@ -232,30 +232,33 @@ class Conductivity_LBTE(Conductivity):
                 col_mat = self._collision_matrix[j, k].reshape(
                     num_ir_grid_points * num_band * 3,
                     num_ir_grid_points * num_band * 3)
-                # inv_col = np.linalg.pinv((col_mat + col_mat.T) / 2)
-                inv_col = np.zeros_like(col_mat)
-                import anharmonic._forcefit as forcefit
-                forcefit.pinv(((col_mat + col_mat.T) / 2).copy(), inv_col, 1e-5)
 
-                Y = np.dot(inv_col, X.ravel()).reshape(-1, 3)
-                RX = np.dot(self._rotations_cartesian.reshape(-1, 3), X.T).T
-                RY = np.dot(self._rotations_cartesian.reshape(-1, 3), Y.T).T
-                
-                sum_outer = np.zeros((3, 3), dtype='double')
-                for order, irX, irY in zip(
-                        orders,
-                        RX.reshape(num_ir_grid_points, num_band, rot_order, 3),
-                        RY.reshape(num_ir_grid_points, num_band, rot_order, 3)):
-                    sum_outer_kp = np.zeros((3, 3), dtype='double')
-                    for X_band, Y_band in zip(irX, irY):
-                        for RX_band, RY_band in zip(X_band, Y_band):
-                            sum_outer_kp += np.outer(RX_band, RY_band)
-                    # sum_outer += sum_outer_kp * order / rot_order
-                    sum_outer += sum_outer_kp
+                for cutoff in (1e-5, 1e-6, 1e-7, 1e-8, 1e-9, 1e-10):
+                    print cutoff
+                    # inv_col = np.linalg.pinv((col_mat + col_mat.T) / 2)
+                    inv_col = np.zeros_like(col_mat)
+                    import anharmonic._forcefit as forcefit
+                    forcefit.pinv(((col_mat + col_mat.T) / 2).copy(), inv_col, cutoff)
+    
+                    Y = np.dot(inv_col, X.ravel()).reshape(-1, 3)
+                    RX = np.dot(self._rotations_cartesian.reshape(-1, 3), X.T).T
+                    RY = np.dot(self._rotations_cartesian.reshape(-1, 3), Y.T).T
                     
-                sum_outer *= self._conversion_factor * 2 * Kb * t ** 2 / np.prod(self._mesh)
-
-                print sum_outer
+                    sum_outer = np.zeros((3, 3), dtype='double')
+                    for order, irX, irY in zip(
+                            orders,
+                            RX.reshape(num_ir_grid_points, num_band, rot_order, 3),
+                            RY.reshape(num_ir_grid_points, num_band, rot_order, 3)):
+                        sum_outer_kp = np.zeros((3, 3), dtype='double')
+                        for X_band, Y_band in zip(irX, irY):
+                            for RX_band, RY_band in zip(X_band, Y_band):
+                                sum_outer_kp += np.outer(RX_band, RY_band)
+                        # sum_outer += sum_outer_kp * order / rot_order
+                        sum_outer += sum_outer_kp
+                        
+                    sum_outer *= self._conversion_factor * 2 * Kb * t ** 2 / np.prod(self._mesh)
+    
+                    print sum_outer
 
     def _get_order_of_star(self):
         orders = []
