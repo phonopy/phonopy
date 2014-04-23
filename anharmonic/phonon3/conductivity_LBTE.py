@@ -232,7 +232,7 @@ class Conductivity_LBTE(Conductivity):
                 col_mat = self._collision_matrix[j, k].reshape(
                     num_ir_grid_points * num_band * 3,
                     num_ir_grid_points * num_band * 3)
-                inv_col = np.linalg.pinv(col_mat)
+                inv_col = np.linalg.pinv((col_mat + col_mat.T) / 2)
                 # inv_col = np.zeros_like(col_mat)
                 # import anharmonic._forcefit as forcefit
                 # forcefit.pinv(col_mat, inv_col, 1e-5)
