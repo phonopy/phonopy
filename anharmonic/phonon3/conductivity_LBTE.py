@@ -233,7 +233,7 @@ class Conductivity_LBTE(Conductivity):
                     num_ir_grid_points * num_band * 3,
                     num_ir_grid_points * num_band * 3)
 
-                for cutoff in (1e-5, 1e-6, 1e-7, 1e-8, 1e-9, 1e-10):
+                for cutoff in (1e-3, 1e-5, 1e-7, 1e-9, 1e-11):
                     print cutoff
                     # inv_col = np.linalg.pinv((col_mat + col_mat.T) / 2)
                     inv_col = np.zeros_like(col_mat)
@@ -284,7 +284,6 @@ class Conductivity_LBTE(Conductivity):
             print
         else:
             print " (dq=%3.1e)" % self._gv_delta_q
-        print "at (%5.2f %5.2f %5.2f)" % tuple(q)
         for f, v in zip(frequencies, gv):
             print "%8.3f   (%8.3f %8.3f %8.3f) %8.3f" % (
                 f, v[0], v[1], v[2], np.linalg.norm(v))
