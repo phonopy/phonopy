@@ -116,8 +116,6 @@ class CollisionMatrix(ImagSelfEnergy):
                                ir_address).reshape(-1, 3)
             r_gps = get_grid_point_from_address(r_address.T, self._mesh)
             
-            order_r_gp = np.sqrt(len(r_gps) / len(np.unique(r_gps)))
-            
             for r, r_gp in zip(self._rotations_cartesian, r_gps):
                 ti = self._gp2tpindex[self._triplets_map_at_q[r_gp]]
                 tp = self._triplets_at_q[ti]
@@ -125,37 +123,29 @@ class CollisionMatrix(ImagSelfEnergy):
                     gp2 = tp[2]
                 else:
                     gp2 = tp[1]
-
-                freqs = self._frequencies[gp2] * THzToEv
+                freqs = self._frequencies[gp2]
                 sinh = np.where(
-                    freqs > 1e-5,
-                    np.sinh(freqs / (2 * Kb * self._temperature)),
+                    freqs > self._cutoff_frequency,
+                    np.sinh(freqs * THzToEv / (2 * Kb * self._temperature)),
                     -1)
                 inv_sinh = np.where(sinh > 0, 1 / sinh, 0)
                 for j, k in list(np.ndindex((num_band, num_band))):
                     collision = (self._fc3_normal_squared[ti, j, k]
                                  * inv_sinh
                                  * self._g[2, ti, j, k]).sum()
+                    collision *= self._unit_conversion
                     self._collision_matrix[j, :, i, k, :] += collision * r
 
-            self._collision_matrix[:, :, i, :, :] *= (
-                self._unit_conversion * 1.5 / order_r_gp)
-
-            multi = 0
-            collision_r = np.zeros((num_band, 3, 3), dtype='double')
-            for r, r_gp in zip(self._rotations_cartesian, r_gps):
                 if r_gp == self._grid_point:
-                    multi += 1
                     for j in range(num_band):
                         collision = self._imag_self_energy[j]
                         if self._gamma_iso is not None:
                             collision += self._gamma_iso[j]
-    
-                        collision_r[j] += collision * r
+                        self._collision_matrix[j, :, i, j, :] += collision * r
 
-            if multi > 0:
-                for j in range(num_band):
-                    self._collision_matrix[j, :, i, j, :] += collision_r[j] / order_r_gp
+            order_r_gp = np.sqrt(len(np.unique(r_gps))) / np.sqrt(len(r_gps))
+            self._collision_matrix[:, :, i, :, :] *= order_r_gp
+
 
     def _set_collision_matrix_0K(self):
         """Collision matrix is zero."""

@@ -194,11 +194,12 @@ class Conductivity_LBTE(Conductivity):
 
     def _get_X(self, t):
         X = self._gv.copy()
-        freqs = self._frequencies[self._ir_grid_points] * THzToEv
-        sinh = np.where(
-            freqs > 1e-5, np.sinh(freqs / (2 * Kb * t)), -1)
+        freqs = self._frequencies[self._ir_grid_points]
+        sinh = np.where(freqs > self._cutoff_frequency,
+                        np.sinh(freqs * THzToEv / (2 * Kb * t)),
+                        -1)
         inv_sinh = np.where(sinh > 0, 1 / sinh, 0)
-        freqs_sinh = freqs * inv_sinh
+        freqs_sinh = freqs * THzToEv * inv_sinh
         num_band = self._primitive.get_number_of_atoms() * 3
                 
         for i, (ir_gp, f) in enumerate(zip(self._grid_points, freqs_sinh)):
@@ -236,13 +237,17 @@ class Conductivity_LBTE(Conductivity):
                     num_ir_grid_points * num_band * 3,
                     num_ir_grid_points * num_band * 3)
 
+                w, v = np.linalg.eigh((col_mat + col_mat.T) / 2)
+                print w
+                
                 for cutoff in (1e-3, 1e-5, 1e-7, 1e-9, 1e-11):
                     print cutoff
-                    # inv_col = np.linalg.pinv((col_mat + col_mat.T) / 2)
-                    inv_col = np.zeros_like(col_mat)
-                    import anharmonic._forcefit as forcefit
-                    forcefit.pinv(((col_mat + col_mat.T) / 2).copy(), inv_col, cutoff)
-    
+                    e = np.zeros(len(w), dtype='double')
+                    for l, val in enumerate(w):
+                        if val > cutoff:
+                            e[l] = 1 / val
+                    inv_col = np.dot(v, np.dot(np.diag(e), v.T))
+                    
                     Y = np.dot(inv_col, X.ravel()).reshape(-1, 3)
                     RX = np.dot(self._rotations_cartesian.reshape(-1, 3), X.T).T
                     RY = np.dot(self._rotations_cartesian.reshape(-1, 3), Y.T).T
