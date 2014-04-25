@@ -125,17 +125,21 @@ class CollisionMatrix(ImagSelfEnergy):
                     gp2 = tp[2]
                 else:
                     gp2 = tp[1]
-                sinh = np.sinh(THzToEv * self._frequencies[gp2]
-                               / (2 * Kb * self._temperature))
+
+                freqs = self._frequencies[gp2] * THzToEv
+                sinh = np.where(
+                    freqs > 1e-5,
+                    np.sinh(freqs / (2 * Kb * self._temperature)),
+                    -1)
+                inv_sinh = np.where(sinh > 0, 1 / sinh, 0)
                 for j, k in list(np.ndindex((num_band, num_band))):
-                    collision = (
-                        self._fc3_normal_squared[ti, j, k]
-                        / sinh
-                        * self._g[2, ti, j, k]).sum()
+                    collision = (self._fc3_normal_squared[ti, j, k]
+                                 * inv_sinh
+                                 * self._g[2, ti, j, k]).sum()
                     self._collision_matrix[j, :, i, k, :] += collision * r
 
             self._collision_matrix[:, :, i, :, :] *= (
-                self._unit_conversion / order_r_gp)
+                self._unit_conversion * 1.5 / order_r_gp)
 
             multi = 0
             collision_r = np.zeros((num_band, 3, 3), dtype='double')

@@ -195,7 +195,10 @@ class Conductivity_LBTE(Conductivity):
     def _get_X(self, t):
         X = self._gv.copy()
         freqs = self._frequencies[self._ir_grid_points] * THzToEv
-        freqs_sinh = freqs / np.sinh(freqs / (2 * Kb * t))
+        sinh = np.where(
+            freqs > 1e-5, np.sinh(freqs / (2 * Kb * t)), -1)
+        inv_sinh = np.where(sinh > 0, 1 / sinh, 0)
+        freqs_sinh = freqs * inv_sinh
         num_band = self._primitive.get_number_of_atoms() * 3
                 
         for i, (ir_gp, f) in enumerate(zip(self._grid_points, freqs_sinh)):
