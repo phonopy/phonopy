@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <lapacke.h>
 #include "phonoc_utils.h"
+#include "phonoc_math.h"
 
 void get_isotope_scattering_strength(double *gamma,
 				     const int grid_point,
@@ -67,7 +68,10 @@ void get_isotope_scattering_strength(double *gamma,
   }
 
   for (i = 0; i < num_band0; i++) {
-    gamma[i] *= f0[i] * f0[i] / 2; /* gamma = 1/2t */
+    /* Frequency unit to ang-freq: *(2pi)**2/(2pi) */
+    /* Ang-freq to freq unit (for lifetime): /2pi */
+    /* gamma = 1/2t */
+    gamma[i] *= M_2PI / 4 * f0[i] * f0[i] / 2;
   }
   
   free(f0);
@@ -152,9 +156,12 @@ get_thm_isotope_scattering_strength(double *gamma,
   }
   
   for (i = 0; i < num_band0; i++) {
-    gamma[i] *= f0[i] * f0[i] / 2; /* gamma = 1/2t */
+    /* Frequency unit to ang-freq: *(2pi)**2/(2pi) */
+    /* Ang-freq to freq unit (for lifetime): /2pi */
+    /* gamma = 1/2t */
+    gamma[i] *= M_2PI / 4 * f0[i] * f0[i] / 2;
   }
-
+  
   free(gamma_ij);
   free(f0);
   free(e0_r);

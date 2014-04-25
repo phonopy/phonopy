@@ -171,7 +171,7 @@ class Conductivity_LBTE(Conductivity):
         r_address = np.dot(self._point_operations.reshape(-1, 3),
                            ir_address).reshape(-1, 3)
         r_gps = get_grid_point_from_address(r_address.T, self._mesh)
-        order_r_gp = np.sqrt(len(r_gps) / len(np.unique(r_gps)))
+        order_r_gp = np.sqrt(len(np.unique(r_gps))) / np.sqrt(len(r_gps))
         
         for j, sigma in enumerate(self._sigmas):
             if self._log_level:
@@ -190,7 +190,7 @@ class Conductivity_LBTE(Conductivity):
                     self._collision.run()
                 self._gamma[j, k, i] = self._collision.get_imag_self_energy()
                 self._collision_matrix[j, k, i] = (
-                    self._collision.get_collision_matrix() / order_r_gp)
+                    self._collision.get_collision_matrix() * order_r_gp)
 
     def _get_X(self, t):
         X = self._gv.copy()
@@ -199,7 +199,7 @@ class Conductivity_LBTE(Conductivity):
                         np.sinh(freqs * THzToEv / (2 * Kb * t)),
                         -1)
         inv_sinh = np.where(sinh > 0, 1 / sinh, 0)
-        freqs_sinh = freqs * THzToEv * inv_sinh
+        freqs_sinh = freqs * THzToEv * inv_sinh / (4 * Kb * t ** 2)
         num_band = self._primitive.get_number_of_atoms() * 3
                 
         for i, (ir_gp, f) in enumerate(zip(self._grid_points, freqs_sinh)):
@@ -207,14 +207,12 @@ class Conductivity_LBTE(Conductivity):
             r_address = np.dot(self._point_operations.reshape(-1, 3),
                                ir_address).reshape(-1, 3)
             r_gps = get_grid_point_from_address(r_address.T, self._mesh)
-            order_r_gp = np.sqrt(len(r_gps) / len(np.unique(r_gps)))
-            X[i] *= 1.0 / (4 * Kb * t ** 2) / order_r_gp
+            order_r_gp = np.sqrt(len(np.unique(r_gps))) / np.sqrt(len(r_gps))
+            X[i] *= order_r_gp
             for j in range(num_band):
                 X[i, j] *= f[j]
         
         if t > 0:
-            # return (freqs / (4 * Kb * t ** 2) / np.sinh(freqs / (2 * Kb * t))
-            #         * self._gv.reshape(-1, 3).T).T
             return X.reshape(-1, 3)
         else:
             return np.zeros_like(self._gv.reshape(-1, 3))

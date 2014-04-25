@@ -119,7 +119,7 @@ class CollisionMatrix(ImagSelfEnergy):
             for r, r_gp in zip(self._rotations_cartesian, r_gps):
                 ti = self._gp2tpindex[self._triplets_map_at_q[r_gp]]
                 tp = self._triplets_at_q[ti]
-                if self._triplets_map_at_q[ir_gp] == self._ir_map_at_q[ir_gp]:
+                if self._triplets_map_at_q[r_gp] == self._ir_map_at_q[r_gp]:
                     gp2 = tp[2]
                 else:
                     gp2 = tp[1]

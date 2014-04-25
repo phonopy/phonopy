@@ -138,7 +138,7 @@ class Isotope:
                                      self._sigma,
                                      self._cutoff_frequency)
             
-        self._gamma = np.pi ** 2 / np.prod(self._mesh) * gamma
+        self._gamma = gamma / np.prod(self._mesh)
 
     def _set_integration_weights(self):
         primitive_lattice = np.linalg.inv(self._primitive.get_cell())
@@ -217,7 +217,7 @@ class Isotope:
                             i, bi, j]
                     else:
                         ti_sum += ti_sum_band * gaussian(f0 - f, self._sigma)
-            t_inv.append(np.pi ** 2 / np.prod(self._mesh) * f0 ** 2 * ti_sum)
+            t_inv.append(np.pi / 2 / np.prod(self._mesh) * f0 ** 2 * ti_sum)
 
         self._gamma = np.array(t_inv, dtype='double') / 2
             
