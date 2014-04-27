@@ -8,11 +8,6 @@
 
 #include "debug.h"
 
-/* #define GRID_ORDER_XYZ */
-/* The addressing order of mesh grid is defined as running left */
-/* element first. But when GRID_ORDER_XYZ is defined, it is changed to right */ 
-/* element first. */
-
 static int search_space[][3] = {
   {0, 0, 0},
   {0, 0, 1},
@@ -84,16 +79,16 @@ static void get_third_q_of_triplets_at_q(int address[3][3],
 					 const int mesh[3],
 					 const int bzmesh[3],
 					 const int bzmesh_double[3]);
+static int get_grid_point(const int grid_double[3],
+			  const int mesh[3]);
 static void grid_point_to_grid_double(int grid_double[3],
-				      const int address,
+				      const int grid_point,
 				      const int mesh[3],
 				      const int is_shift[3]);
-static void get_grid_address(int grid_address[3],
-			     const int grid[3],
+static void get_grid_address(int address[3],
+			     const int grid_double[3],
 			     const int mesh[3]);
 static void get_vector_modulo(int v[3], const int m[3]);
-static int get_grid_point(const int grid[3],
-			  const int mesh[3]);
 
 /* grid_address (e.g. 4x4x4 mesh, unless GRID_ORDER_XYZ is defined) */
 /*    [[ 0  0  0]                                                   */

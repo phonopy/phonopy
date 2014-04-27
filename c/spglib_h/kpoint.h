@@ -6,6 +6,11 @@
 
 #include "mathfunc.h"
 
+/* #define GRID_ORDER_XYZ */
+/* The addressing order of mesh grid is defined as running left */
+/* element first. But when GRID_ORDER_XYZ is defined, it is changed to right */ 
+/* element first. */
+
 int kpt_get_irreducible_reciprocal_mesh(int grid_address[][3],
 					int map[],
 					const int mesh[3],
