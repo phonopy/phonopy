@@ -171,6 +171,28 @@ int kpt_get_stabilized_reciprocal_mesh(int grid_address[][3],
   return num_ir;
 }
 
+void kpt_get_grid_points_by_rotations(int rot_grid_points[],
+				      const int grid_point,
+				      const MatINT * rot_reciprocal,
+				      const int mesh[3],
+				      const int is_shift[3])
+{
+  int i;
+  int grid_double_orig[3], grid_double[3], mesh_double[3];
+
+  mesh_double[0] = mesh[0] * 2;
+  mesh_double[1] = mesh[1] * 2;
+  mesh_double[2] = mesh[2] * 2;
+  grid_point_to_grid_double(grid_double_orig, grid_point, mesh, is_shift);
+  for (i = 0; i < rot_reciprocal->size; i++) {
+    mat_multiply_matrix_vector_i3(grid_double,
+				  rot_reciprocal->mat[i],
+				  grid_double_orig);
+    get_vector_modulo(grid_double, mesh_double);
+    rot_grid_points[i] = get_grid_point(grid_double, mesh);
+  }
+}
+
 int kpt_relocate_BZ_grid_address(int bz_grid_address[][3],
 				 int bz_map[],
 				 SPGCONST int grid_address[][3],

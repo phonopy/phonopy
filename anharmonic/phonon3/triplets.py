@@ -117,6 +117,16 @@ def get_ir_grid_points(mesh, rotations, mesh_shifts=[False, False, False]):
 
     return ir_grid_points, ir_grid_weights, grid_address
 
+def get_grid_points_by_rotations(grid_point,
+                                 reciprocal_rotations,
+                                 mesh,
+                                 mesh_shifts=[False, False, False]):
+    return spg.get_grid_points_by_rotations(
+        grid_point,
+        reciprocal_rotations,
+        mesh,
+        is_shift=np.where(mesh_shifts, 1, 0))
+    
 def reduce_grid_points(mesh_divisors,
                        grid_address,
                        dense_grid_points,

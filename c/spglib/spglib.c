@@ -517,6 +517,29 @@ int spg_get_stabilized_reciprocal_mesh(int grid_address[][3],
 					qpoints);
 }
 
+void spg_get_grid_points_by_rotations(int rot_grid_points[],
+				      const int grid_point,
+				      const int num_rot,
+				      SPGCONST int rot_reciprocal[][3][3],
+				      const int mesh[3],
+				      const int is_shift[3])
+{
+  int i;
+  MatINT *rot;
+
+  rot = mat_alloc_MatINT(num_rot);
+  for (i = 0; i < num_rot; i++) {
+    mat_copy_matrix_i3(rot->mat[i], rot_reciprocal[i]);
+  }
+  kpt_get_grid_points_by_rotations(rot_grid_points,
+				   grid_point,
+				   rot,
+				   mesh,
+				   is_shift);
+  mat_free_MatINT(rot);
+}
+
+
 int spg_relocate_BZ_grid_address(int bz_grid_address[][3],
 				 int bz_map[],
 				 SPGCONST int grid_address[][3],

@@ -25,6 +25,11 @@ int kpt_get_stabilized_reciprocal_mesh(int grid_address[][3],
 				       const MatINT * rotations,
 				       const int num_q,
 				       SPGCONST double qpoints[][3]);
+void kpt_get_grid_points_by_rotations(int rot_grid_points[],
+				      const int grid_point,
+				      const MatINT * rot_reciprocal,
+				      const int mesh[3],
+				      const int is_shift[3]);
 int kpt_relocate_BZ_grid_address(int bz_grid_address[][3],
 				 int bz_map[],
 				 SPGCONST int grid_address[][3],

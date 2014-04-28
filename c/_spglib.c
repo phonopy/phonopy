@@ -13,6 +13,7 @@ get_symmetry_with_collinear_spin(PyObject *self, PyObject *args);
 static PyObject * find_primitive(PyObject *self, PyObject *args);
 static PyObject * get_ir_reciprocal_mesh(PyObject *self, PyObject *args);
 static PyObject * get_stabilized_reciprocal_mesh(PyObject *self, PyObject *args);
+static PyObject * get_grid_points_by_rotations(PyObject *self, PyObject *args);
 static PyObject * relocate_BZ_grid_address(PyObject *self, PyObject *args);
 static PyObject *
 get_triplets_reciprocal_mesh_at_q(PyObject *self, PyObject *args);
@@ -42,6 +43,8 @@ static PyMethodDef functions[] = {
    "Reciprocal mesh points with map"},
   {"stabilized_reciprocal_mesh", get_stabilized_reciprocal_mesh, METH_VARARGS,
    "Reciprocal mesh points with map"},
+  {"grid_points_by_rotations", get_grid_points_by_rotations, METH_VARARGS,
+   "Rotated grid points are returned"},
   {"BZ_grid_address", relocate_BZ_grid_address, METH_VARARGS,
    "Relocate grid addresses inside Brillouin zone"},
   {"triplets_reciprocal_mesh_at_q", get_triplets_reciprocal_mesh_at_q,
@@ -468,6 +471,37 @@ static PyObject * get_stabilized_reciprocal_mesh(PyObject *self, PyObject *args)
 							q);
   
   return PyInt_FromLong((long) num_ir);
+}
+
+static PyObject * get_grid_points_by_rotations(PyObject *self, PyObject *args)
+{
+  PyArrayObject* rot_grid_points_py;
+  PyArrayObject* rot_reciprocal_py;
+  PyArrayObject* mesh_py;
+  PyArrayObject* is_shift_py;
+  int grid_point;
+  if (!PyArg_ParseTuple(args, "OiOOO",
+			&rot_grid_points_py,
+			&grid_point,
+			&rot_reciprocal_py,
+			&mesh_py,
+			&is_shift_py)) {
+    return NULL;
+  }
+
+  int *rot_grid_points = (int*)rot_grid_points_py->data;
+  SPGCONST int (*rot_reciprocal)[3][3] = (int(*)[3][3])rot_reciprocal_py->data;
+  const int num_rot = rot_reciprocal_py->dimensions[0];
+  const int* mesh = (int*)mesh_py->data;
+  const int* is_shift = (int*)is_shift_py->data;
+  
+  spg_get_grid_points_by_rotations(rot_grid_points,
+				   grid_point,
+				   num_rot,
+				   rot_reciprocal,
+				   mesh,
+				   is_shift);
+  Py_RETURN_NONE;
 }
 
 static PyObject * relocate_BZ_grid_address(PyObject *self, PyObject *args)

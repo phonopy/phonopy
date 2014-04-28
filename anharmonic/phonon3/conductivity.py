@@ -13,6 +13,7 @@ class Conductivity:
     def __init__(self,
                  interaction,
                  symmetry,
+                 grid_points=None,
                  temperatures=np.arange(0, 1001, 10, dtype='double'),
                  sigmas=[],
                  mass_variances=None,
@@ -45,7 +46,7 @@ class Conductivity:
         self._rotations_cartesian = np.array(
             [similarity_transformation(rec_lat, r)
              for r in self._point_operations], dtype='double')
-        
+
         self._grid_points = None
         self._grid_weights = None
         self._grid_address = None
@@ -74,6 +75,7 @@ class Conductivity:
             self._set_isotope(mass_variances)
 
         self._grid_point_count = None
+        self._set_grid_properties(grid_points)
 
     def __iter__(self):
         return self
@@ -90,7 +92,7 @@ class Conductivity:
             self._grid_point_count += 1
             return self._grid_point_count - 1
 
-    def initialize(self, grid_points=None):
+    def _set_grid_properties(self, grid_points):
         self._grid_address = self._pp.get_grid_address()
 
         if grid_points is not None: # Specify grid points
@@ -125,7 +127,6 @@ class Conductivity:
 
         self._sum_num_kstar = 0
         self._grid_point_count = 0
-        self._allocate_values()
         self._pp.set_phonon(self._grid_points)
         self._frequencies = self._pp.get_phonons()[0]
 

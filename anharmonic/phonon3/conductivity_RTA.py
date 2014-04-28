@@ -28,6 +28,7 @@ def get_thermal_conductivity_RTA(
         print "-------------------- Lattice thermal conducitivity (RTA) --------------------"
     br = Conductivity_RTA(interaction,
                           symmetry,
+                          grid_points=grid_points,
                           temperatures=temperatures,
                           sigmas=sigmas,
                           mass_variances=mass_variances,
@@ -37,7 +38,6 @@ def get_thermal_conductivity_RTA(
                           no_kappa_stars=no_kappa_stars,
                           gv_delta_q=gv_delta_q,
                           log_level=log_level)
-    br.initialize(grid_points)
 
     if read_gamma:
         _set_gamma_from_file(br, filename=input_filename)
@@ -177,6 +177,7 @@ class Conductivity_RTA(Conductivity):
     def __init__(self,
                  interaction,
                  symmetry,
+                 grid_points=None,
                  temperatures=np.arange(0, 1001, 10, dtype='double'),
                  sigmas=[],
                  mass_variances=None,
@@ -225,20 +226,21 @@ class Conductivity_RTA(Conductivity):
         self._grid_point_count = None
 
         Conductivity.__init__(self,
-                 interaction,
-                 symmetry,
-                 temperatures=temperatures,
-                 sigmas=sigmas,
-                 mass_variances=mass_variances,
-                 mesh_divisors=mesh_divisors,
-                 coarse_mesh_shifts=coarse_mesh_shifts,
-                 cutoff_lifetime=cutoff_lifetime,
-                 no_kappa_stars=no_kappa_stars,
-                 gv_delta_q=gv_delta_q,
-                 log_level=log_level)
+                              interaction,
+                              symmetry,
+                              grid_points=grid_points,
+                              temperatures=temperatures,
+                              sigmas=sigmas,
+                              mass_variances=mass_variances,
+                              mesh_divisors=mesh_divisors,
+                              coarse_mesh_shifts=coarse_mesh_shifts,
+                              cutoff_lifetime=cutoff_lifetime,
+                              no_kappa_stars=no_kappa_stars,
+                              gv_delta_q=gv_delta_q,
+                              log_level=log_level)
 
         self._cv = None
-        self._collision = ImagSelfEnergy(self._pp)
+        self._allocate_values()
 
     def get_mode_heat_capacities(self):
         return self._cv
@@ -286,6 +288,7 @@ class Conductivity_RTA(Conductivity):
             self._gamma_iso = np.zeros((len(self._sigmas),
                                         num_grid_points,
                                         num_band), dtype='double')
+        self._collision = ImagSelfEnergy(self._pp)
         
     def _set_kappa_at_sigmas(self):
         i = self._grid_point_count

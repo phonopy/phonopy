@@ -1,7 +1,7 @@
 import numpy as np
 from anharmonic.phonon3.conductivity import Conductivity
 from anharmonic.phonon3.collision_matrix import CollisionMatrix
-from anharmonic.phonon3.triplets import get_grid_point_from_address
+from anharmonic.phonon3.triplets import get_grid_points_by_rotations
 from phonopy.units import THzToEv, Kb
 
 def get_thermal_conductivity_LBTE(
@@ -31,6 +31,7 @@ def get_thermal_conductivity_LBTE(
         print "-------------------- Lattice thermal conducitivity (LBTE) --------------------"
     br = Conductivity_LBTE(interaction,
                            symmetry,
+                           grid_points=grid_points,
                            temperatures=temperatures,
                            sigmas=sigmas,
                            mass_variances=mass_variances,
@@ -40,18 +41,18 @@ def get_thermal_conductivity_LBTE(
                            no_kappa_stars=no_kappa_stars,
                            gv_delta_q=gv_delta_q,
                            log_level=log_level)
-    br.initialize(grid_points)
         
     for i in br:
         pass
 
-    br.run_pinv()
+    br.run()
     return br
 
 class Conductivity_LBTE(Conductivity):
     def __init__(self,
                  interaction,
                  symmetry,
+                 grid_points=None,
                  temperatures=np.arange(0, 1001, 10, dtype='double'),
                  sigmas=[],
                  mass_variances=None,
@@ -102,23 +103,20 @@ class Conductivity_LBTE(Conductivity):
         self._grid_point_count = None
 
         Conductivity.__init__(self,
-                 interaction,
-                 symmetry,
-                 temperatures=temperatures,
-                 sigmas=sigmas,
-                 mass_variances=mass_variances,
-                 mesh_divisors=mesh_divisors,
-                 coarse_mesh_shifts=coarse_mesh_shifts,
-                 cutoff_lifetime=cutoff_lifetime,
-                 no_kappa_stars=no_kappa_stars,
-                 gv_delta_q=gv_delta_q,
-                 log_level=log_level)
+                              interaction,
+                              symmetry,
+                              grid_points=grid_points,
+                              temperatures=temperatures,
+                              sigmas=sigmas,
+                              mass_variances=mass_variances,
+                              mesh_divisors=mesh_divisors,
+                              coarse_mesh_shifts=coarse_mesh_shifts,
+                              cutoff_lifetime=cutoff_lifetime,
+                              no_kappa_stars=no_kappa_stars,
+                              gv_delta_q=gv_delta_q,
+                              log_level=log_level)
 
-    def initialize(self, grid_points=None):
-        Conductivity.initialize(self, grid_points=grid_points)
-        self._collision = CollisionMatrix(self._pp,
-                                          self._symmetry,
-                                          self._ir_grid_points)
+        self._allocate_values()
         
     def _run_at_grid_point(self):
         i = self._grid_point_count
@@ -145,12 +143,6 @@ class Conductivity_LBTE(Conductivity):
         num_band = self._primitive.get_number_of_atoms() * 3
         num_grid_points = len(self._grid_points)
         num_ir_grid_points = len(self._ir_grid_points)
-        if not self._read_gamma:
-            self._gamma = np.zeros((len(self._sigmas),
-                                    len(self._temperatures),
-                                    num_grid_points,
-                                    num_band), dtype='double')
-            
         self._collision_matrix = np.zeros(
             (len(self._sigmas),
              len(self._temperatures),
@@ -160,19 +152,28 @@ class Conductivity_LBTE(Conductivity):
         self._gv = np.zeros((num_grid_points,
                              num_band,
                              3), dtype='double')
+        self._gamma = np.zeros((len(self._sigmas),
+                                len(self._temperatures),
+                                num_grid_points,
+                                num_band), dtype='double')
         self._gamma_iso = np.zeros((len(self._sigmas),
                                     num_grid_points,
                                     num_band), dtype='double')
+        self._rot_grid_points = np.zeros(
+            (len(self._ir_grid_points), len(self._point_operations)),
+            dtype='intc')
+        for i, ir_gp in enumerate(self._ir_grid_points):
+            self._rot_grid_points[i] = get_grid_points_by_rotations(
+                ir_gp,
+                self._point_operations,
+                self._mesh)
+        self._collision = CollisionMatrix(self._pp,
+                                          self._point_operations,
+                                          self._ir_grid_points,
+                                          self._rot_grid_points)
 
     def _set_collision_matrix_at_sigmas(self):
         i = self._grid_point_count
-        ir_gp = self._grid_points[i]
-        ir_address = self._grid_address[ir_gp]
-        r_address = np.dot(self._point_operations.reshape(-1, 3),
-                           ir_address).reshape(-1, 3)
-        r_gps = get_grid_point_from_address(r_address.T, self._mesh)
-        order_r_gp = np.sqrt(len(np.unique(r_gps))) / np.sqrt(len(r_gps))
-        
         for j, sigma in enumerate(self._sigmas):
             if self._log_level:
                 print "Calculating collision matrix with",
@@ -190,9 +191,9 @@ class Conductivity_LBTE(Conductivity):
                     self._collision.run()
                 self._gamma[j, k, i] = self._collision.get_imag_self_energy()
                 self._collision_matrix[j, k, i] = (
-                    self._collision.get_collision_matrix() * order_r_gp)
+                    self._collision.get_collision_matrix())
 
-    def _get_X(self, t):
+    def _get_X(self, t, coefs):
         X = self._gv.copy()
         freqs = self._frequencies[self._ir_grid_points]
         sinh = np.where(freqs > self._cutoff_frequency,
@@ -202,13 +203,8 @@ class Conductivity_LBTE(Conductivity):
         freqs_sinh = freqs * THzToEv * inv_sinh / (4 * Kb * t ** 2)
         num_band = self._primitive.get_number_of_atoms() * 3
                 
-        for i, (ir_gp, f) in enumerate(zip(self._grid_points, freqs_sinh)):
-            ir_address = self._grid_address[ir_gp]
-            r_address = np.dot(self._point_operations.reshape(-1, 3),
-                               ir_address).reshape(-1, 3)
-            r_gps = get_grid_point_from_address(r_address.T, self._mesh)
-            order_r_gp = np.sqrt(len(np.unique(r_gps))) / np.sqrt(len(r_gps))
-            X[i] *= order_r_gp
+        for i, f in enumerate(freqs_sinh):
+            X[i] *= coefs[i]
             for j in range(num_band):
                 X[i, j] *= f[j]
         
@@ -217,7 +213,7 @@ class Conductivity_LBTE(Conductivity):
         else:
             return np.zeros_like(self._gv.reshape(-1, 3))
 
-    def run_pinv(self):
+    def run(self):
         if len(self._grid_points) != len(self._ir_grid_points):
             print "Collision matrix is not well created."
             import sys
@@ -228,9 +224,16 @@ class Conductivity_LBTE(Conductivity):
         orders = self._get_order_of_star()
         rot_order = len(self._rotations_cartesian)
 
+        coefs = []
+        for r_gps in self._rot_grid_points:
+            coefs.append(np.sqrt(len(np.unique(r_gps))) / np.sqrt(len(r_gps)))
+
+        for i, j in list(np.ndindex((len(coefs), len(coefs)))):
+            self._collision_matrix[:, :, i, :, :, j, :, :] *= coefs[i] * coefs[j]
+        
         for j, sigma in enumerate(self._sigmas):
             for k, t in enumerate(self._temperatures):
-                X = self._get_X(t)
+                X = self._get_X(t, coefs)
                 col_mat = self._collision_matrix[j, k].reshape(
                     num_ir_grid_points * num_band * 3,
                     num_ir_grid_points * num_band * 3)
@@ -255,12 +258,9 @@ class Conductivity_LBTE(Conductivity):
                             orders,
                             RX.reshape(num_ir_grid_points, num_band, rot_order, 3),
                             RY.reshape(num_ir_grid_points, num_band, rot_order, 3)):
-                        sum_outer_kp = np.zeros((3, 3), dtype='double')
                         for X_band, Y_band in zip(irX, irY):
                             for RX_band, RY_band in zip(X_band, Y_band):
-                                sum_outer_kp += np.outer(RX_band, RY_band)
-                        # sum_outer += sum_outer_kp * order / rot_order
-                        sum_outer += sum_outer_kp
+                                sum_outer += np.outer(RX_band, RY_band)
                         
                     sum_outer *= self._conversion_factor * 2 * Kb * t ** 2 / np.prod(self._mesh)
     
@@ -268,14 +268,8 @@ class Conductivity_LBTE(Conductivity):
 
     def _get_order_of_star(self):
         orders = []
-        num_band = self._primitive.get_number_of_atoms() * 3
-        for i, ir_gp in enumerate(self._ir_grid_points):
-            ir_address = self._grid_address[ir_gp]
-            r_address = np.dot(self._point_operations.reshape(-1, 3),
-                               ir_address).reshape(-1, 3)
-            r_gps = get_grid_point_from_address(r_address.T, self._mesh)
+        for r_gps in self._rot_grid_points:
             orders.append(len(np.unique(r_gps)))
-            
         return np.array(orders, dtype='intc')
         
     def _show_log(self):

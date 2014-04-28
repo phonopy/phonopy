@@ -4,15 +4,14 @@ import phonopy.structure.spglib as spg
 from phonopy.units import THzToEv, Kb
 from phonopy.harmonic.force_constants import similarity_transformation
 from anharmonic.phonon3.imag_self_energy import ImagSelfEnergy
-from anharmonic.phonon3.triplets import get_grid_point_from_address, get_ir_grid_points
+from anharmonic.phonon3.triplets import get_grid_point_from_address, get_ir_grid_points, get_grid_points_by_rotations
 
 class CollisionMatrix(ImagSelfEnergy):
     def __init__(self,
                  interaction,
-                 symmetry,
+                 point_operations,
                  ir_grid_points,
-                 grid_point=None,
-                 frequency_points=None,
+                 rotated_grid_points,
                  temperature=None,
                  sigma=None,
                  lang='C'):
@@ -39,17 +38,15 @@ class CollisionMatrix(ImagSelfEnergy):
         
         ImagSelfEnergy.__init__(self,
                                 interaction,
-                                grid_point=grid_point,
-                                frequency_points=frequency_points,
                                 temperature=temperature,
                                 sigma=sigma,
                                 lang=lang)
 
         self._ir_grid_points = ir_grid_points
+        self._rot_grid_points = rotated_grid_points
         self._is_collision_matrix = True
         self._gamma_iso = None
-        self._symmetry = symmetry
-        self._point_operations = symmetry.get_reciprocal_operations()
+        self._point_operations = point_operations
         self._primitive = self._interaction.get_primitive()
         rec_lat = np.linalg.inv(self._primitive.get_cell())
         self._rotations_cartesian = np.array(
@@ -103,50 +100,35 @@ class CollisionMatrix(ImagSelfEnergy):
         self._run_py_collision_matrix() # for Omega
 
     def _run_py_collision_matrix(self):
-        if self._temperature > 0:
-            self._set_collision_matrix()
-        else:
-            self._set_collision_matrix_0K()
-        
-    def _set_collision_matrix(self):
         num_band = self._fc3_normal_squared.shape[1]
         for i, ir_gp in enumerate(self._ir_grid_points):
-            ir_address = self._grid_address[ir_gp]
-            r_address = np.dot(self._point_operations.reshape(-1, 3),
-                               ir_address).reshape(-1, 3)
-            r_gps = get_grid_point_from_address(r_address.T, self._mesh)
-            
+            r_gps = self._rot_grid_points[i]
             for r, r_gp in zip(self._rotations_cartesian, r_gps):
-                ti = self._gp2tpindex[self._triplets_map_at_q[r_gp]]
-                tp = self._triplets_at_q[ti]
-                if self._triplets_map_at_q[r_gp] == self._ir_map_at_q[r_gp]:
-                    gp2 = tp[2]
-                else:
-                    gp2 = tp[1]
-                freqs = self._frequencies[gp2]
-                sinh = np.where(
-                    freqs > self._cutoff_frequency,
-                    np.sinh(freqs * THzToEv / (2 * Kb * self._temperature)),
-                    -1)
-                inv_sinh = np.where(sinh > 0, 1 / sinh, 0)
-                for j, k in list(np.ndindex((num_band, num_band))):
-                    collision = (self._fc3_normal_squared[ti, j, k]
-                                 * inv_sinh
-                                 * self._g[2, ti, j, k]).sum()
-                    collision *= self._unit_conversion
-                    self._collision_matrix[j, :, i, k, :] += collision * r
+                if self._temperature > 0:
+                    ti = self._gp2tpindex[self._triplets_map_at_q[r_gp]]
+                    tp = self._triplets_at_q[ti]
+                    if self._triplets_map_at_q[r_gp] == self._ir_map_at_q[r_gp]:
+                        gp2 = tp[2]
+                    else:
+                        gp2 = tp[1]
+                    freqs = self._frequencies[gp2]
+                    sinh = np.where(
+                        freqs > self._cutoff_frequency,
+                        np.sinh(freqs * THzToEv / (2 * Kb * self._temperature)),
+                        -1)
+                    inv_sinh = np.where(sinh > 0, 1 / sinh, 0)
+                    for j, k in list(np.ndindex((num_band, num_band))):
+                        collision = (self._fc3_normal_squared[ti, j, k]
+                                     * inv_sinh
+                                     * self._g[2, ti, j, k]).sum()
+                        collision *= self._unit_conversion
+                        self._collision_matrix[j, :, i, k, :] += collision * r
 
                 if r_gp == self._grid_point:
+                    imag_self_energy = self.get_imag_self_energy()
                     for j in range(num_band):
-                        collision = self._imag_self_energy[j]
+                        collision = imag_self_energy[j]
                         if self._gamma_iso is not None:
                             collision += self._gamma_iso[j]
                         self._collision_matrix[j, :, i, j, :] += collision * r
 
-            order_r_gp = np.sqrt(len(np.unique(r_gps))) / np.sqrt(len(r_gps))
-            self._collision_matrix[:, :, i, :, :] *= order_r_gp
-
-
-    def _set_collision_matrix_0K(self):
-        """Collision matrix is zero."""
-        pass
