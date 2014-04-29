@@ -290,7 +290,12 @@ double bose_einstein(const double x, const double t)
 double gaussian(const double x, const double sigma)
 {
   return INVSQRT2PI / sigma * exp(-x * x / 2 / sigma / sigma);
-}  
+}
+
+double inv_sinh_occupation(const double x, const double t)
+{
+  return 1.0 / sinh(x * THZTOEVPARKB / 2 / t);
+}
 
 static int collect_undone_grid_points(int *undone,
 				      char *phonon_done,
