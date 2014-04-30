@@ -15,8 +15,8 @@ void get_isotope_scattering_strength(double *gamma,
 				     const double sigma,
 				     const double cutoff_frequency)
 {
-  int i, j, k, l;
-  double *e0_r, *e0_i, e1_r, e1_i, a, b, f, *f0, dist, sum_g, sum_g_local;
+  int i, j, k, l, m;
+  double *e0_r, *e0_i, e1_r, e1_i, a, b, f, *f0, dist, sum_g, sum_g_k;
 
   e0_r = (double*)malloc(sizeof(double) * num_band * num_band0);
   e0_i = (double*)malloc(sizeof(double) * num_band * num_band0);
@@ -43,26 +43,34 @@ void get_isotope_scattering_strength(double *gamma,
       continue;
     }
     sum_g = 0;
-#pragma omp parallel for private(k, l, f, e1_r, e1_i, a, b, dist, sum_g_local) reduction(+:sum_g)
+#pragma omp parallel for private(k, l, m, f, e1_r, e1_i, a, b, dist, sum_g_k) reduction(+:sum_g)
     for (j = 0; j < num_grid_points; j++) {
-      sum_g_local = 0;
+      sum_g_k = 0;
       for (k = 0; k < num_band; k++) { /* band index */
 	f = frequencies[j * num_band + k];
 	if (f < cutoff_frequency) {
 	  continue;
 	}
 	dist = gaussian(f - f0[i], sigma);
-	for (l = 0; l < num_band; l++) { /* elements */
-	  e1_r = lapack_complex_double_real
-	    (eigenvectors[j * num_band * num_band + l * num_band + k]);
-	  e1_i = lapack_complex_double_imag
-	    (eigenvectors[j * num_band * num_band + l * num_band + k]);
-	  a = e0_r[i * num_band + l] * e1_r + e0_i[i * num_band + l] * e1_i;
-	  b = e0_i[i * num_band + l] * e1_r - e0_r[i * num_band + l] * e1_i;
-	  sum_g_local += (a * a + b * b) * mass_variances[l / 3] * dist;
+	for (l = 0; l < num_band / 3; l++) { /* elements */
+	  a = 0;
+	  b = 0;
+	  for (m = 0; m < 3; m++) {
+	    e1_r = lapack_complex_double_real
+	      (eigenvectors[j * num_band * num_band +
+			    (l * 3 + m) * num_band + k]);
+	    e1_i = lapack_complex_double_imag
+	      (eigenvectors[j * num_band * num_band +
+			    (l * 3 + m) * num_band + k]);
+	    a += (e0_r[i * num_band + l * 3 + m] * e1_r +
+		  e0_i[i * num_band + l * 3 + m] * e1_i);
+	    b += (e0_i[i * num_band + l * 3 + m] * e1_r -
+		  e0_r[i * num_band + l * 3 + m] * e1_i);
+	  }
+	  sum_g_k += (a * a + b * b) * mass_variances[l] * dist;
 	}
       }
-      sum_g += sum_g_local;
+      sum_g += sum_g_k;
     }
     gamma[i] = sum_g;
   }
@@ -94,7 +102,7 @@ get_thm_isotope_scattering_strength(double *gamma,
 				    const double *integration_weights,
 				    const double cutoff_frequency)
 {
-  int i, j, k, l, gp;
+  int i, j, k, l, m, gp;
   double *e0_r, *e0_i, *f0, *gamma_ij;
   double e1_r, e1_i, a, b, f, dist, sum_g_k;
 
@@ -116,7 +124,7 @@ get_thm_isotope_scattering_strength(double *gamma,
   
   gamma_ij = (double*)malloc(sizeof(double) * num_grid_points * num_band0);
   
-#pragma omp parallel for private(j, k, l, f, gp, e1_r, e1_i, a, b, dist, sum_g_k)
+#pragma omp parallel for private(j, k, l, m, f, gp, e1_r, e1_i, a, b, dist, sum_g_k)
   for (i = 0; i < num_grid_points; i++) {
     gp = ir_grid_points[i];
     for (j = 0; j < num_band0; j++) { /* band index0 */
@@ -129,15 +137,24 @@ get_thm_isotope_scattering_strength(double *gamma,
 	if (f < cutoff_frequency) {
 	  continue;
 	}
-	dist = integration_weights[gp * num_band0 * num_band + j * num_band + k];
-	for (l = 0; l < num_band; l++) { /* elements */
-	  e1_r = lapack_complex_double_real
-	    (eigenvectors[gp * num_band * num_band + l * num_band + k]);
-	  e1_i = lapack_complex_double_imag
-	    (eigenvectors[gp * num_band * num_band + l * num_band + k]);
-	  a = e0_r[j * num_band + l] * e1_r + e0_i[j * num_band + l] * e1_i;
-	  b = e0_i[j * num_band + l] * e1_r - e0_r[j * num_band + l] * e1_i;
-	  sum_g_k += (a * a + b * b) * mass_variances[l / 3] * dist;
+	dist = integration_weights[gp * num_band0 * num_band +
+				   j * num_band + k];
+	for (l = 0; l < num_band / 3; l++) { /* elements */
+	  a = 0;
+	  b = 0;
+	  for (m = 0; m < 3; m++) {
+	    e1_r = lapack_complex_double_real
+	      (eigenvectors
+	       [gp * num_band * num_band + (l * 3 + m) * num_band + k]);
+	    e1_i = lapack_complex_double_imag
+	      (eigenvectors
+	       [gp * num_band * num_band + (l * 3 + m) * num_band + k]);
+	    a += (e0_r[j * num_band + l * 3 + m] * e1_r +
+		  e0_i[j * num_band + l * 3 + m] * e1_i);
+	    b += (e0_i[j * num_band + l * 3 + m] * e1_r -
+		  e0_r[j * num_band + l * 3 + m] * e1_i);
+	  }
+	  sum_g_k += (a * a + b * b) * mass_variances[l] * dist;
 	}
       }
       gamma_ij[gp * num_band0 + j] = sum_g_k * weights[gp];

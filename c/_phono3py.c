@@ -600,58 +600,58 @@ static PyObject * py_get_isotope_strength(PyObject *self, PyObject *args)
   const int num_band = (int)frequencies_py->dimensions[1];
   const int num_band0 = (int)band_indices_py->dimensions[0];
 
-  int i, j, k;
-  double f, f0;
-  int *weights, *ir_grid_points;
-  double *integration_weights;
+  /* int i, j, k; */
+  /* double f, f0; */
+  /* int *weights, *ir_grid_points; */
+  /* double *integration_weights; */
 
-  ir_grid_points = (int*)malloc(sizeof(int) * num_grid_points);
-  weights = (int*)malloc(sizeof(int) * num_grid_points);
-  integration_weights = (double*)malloc(sizeof(double) *
-  					num_grid_points * num_band0 * num_band);
+  /* ir_grid_points = (int*)malloc(sizeof(int) * num_grid_points); */
+  /* weights = (int*)malloc(sizeof(int) * num_grid_points); */
+  /* integration_weights = (double*)malloc(sizeof(double) * */
+  /* 					num_grid_points * num_band0 * num_band); */
 
-  for (i = 0; i < num_grid_points; i++) {
-    ir_grid_points[i] = i;
-    weights[i] = 1;
-    for (j = 0; j < num_band0; j++) {
-      f0 = frequencies[grid_point * num_band + band_indices[j]];
-      for (k = 0; k < num_band; k++) {
-  	f = frequencies[i * num_band + k];
-  	integration_weights[i * num_band0 * num_band +
-  			    j * num_band + k] = gaussian(f - f0, sigma);
-      }
-    }
-  }
+  /* for (i = 0; i < num_grid_points; i++) { */
+  /*   ir_grid_points[i] = i; */
+  /*   weights[i] = 1; */
+  /*   for (j = 0; j < num_band0; j++) { */
+  /*     f0 = frequencies[grid_point * num_band + band_indices[j]]; */
+  /*     for (k = 0; k < num_band; k++) { */
+  /* 	f = frequencies[i * num_band + k]; */
+  /* 	integration_weights[i * num_band0 * num_band + */
+  /* 			    j * num_band + k] = gaussian(f - f0, sigma); */
+  /*     } */
+  /*   } */
+  /* } */
 
-  get_thm_isotope_scattering_strength(gamma,
-  				      grid_point,
-  				      ir_grid_points,
-  				      weights,
-  				      mass_variances,
-  				      frequencies,
-  				      eigenvectors,
-  				      num_grid_points,
-  				      band_indices,
-  				      num_band,
-  				      num_band0,
-  				      integration_weights,
-  				      cutoff_frequency);
+  /* get_thm_isotope_scattering_strength(gamma, */
+  /* 				      grid_point, */
+  /* 				      ir_grid_points, */
+  /* 				      weights, */
+  /* 				      mass_variances, */
+  /* 				      frequencies, */
+  /* 				      eigenvectors, */
+  /* 				      num_grid_points, */
+  /* 				      band_indices, */
+  /* 				      num_band, */
+  /* 				      num_band0, */
+  /* 				      integration_weights, */
+  /* 				      cutoff_frequency); */
       
-  free(ir_grid_points);
-  free(weights);
-  free(integration_weights);
+  /* free(ir_grid_points); */
+  /* free(weights); */
+  /* free(integration_weights); */
   
-  /* get_isotope_scattering_strength(gamma, */
-  /* 				  grid_point, */
-  /* 				  mass_variances, */
-  /* 				  frequencies, */
-  /* 				  eigenvectors, */
-  /* 				  num_grid_points, */
-  /* 				  band_indices, */
-  /* 				  num_band, */
-  /* 				  num_band0, */
-  /* 				  sigma, */
-  /* 				  cutoff_frequency); */
+  get_isotope_scattering_strength(gamma,
+  				  grid_point,
+  				  mass_variances,
+  				  frequencies,
+  				  eigenvectors,
+  				  num_grid_points,
+  				  band_indices,
+  				  num_band,
+  				  num_band0,
+  				  sigma,
+  				  cutoff_frequency);
   
   Py_RETURN_NONE;
 }

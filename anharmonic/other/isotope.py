@@ -199,8 +199,6 @@ class Isotope:
         if self._sigma is None:
             self._set_integration_weights()
             
-        mass_v = np.array([[m] * 3 for m in self._mass_variances],
-                          dtype='double').flatten()
         t_inv = []
         for bi in self._band_indices:
             vec0 = self._eigenvectors[self._grid_point][:, bi].conj()
@@ -211,7 +209,9 @@ class Isotope:
                         zip(self._frequencies[i], self._eigenvectors[i].T)):
                     if f < self._cutoff_frequency:
                         continue
-                    ti_sum_band = np.sum(np.abs(vec * vec0) ** 2 * mass_v)
+                    ti_sum_band = np.sum(
+                        np.abs((vec * vec0).reshape(-1, 3).sum(axis=1)) ** 2
+                        * self._mass_variances)
                     if self._sigma is None:
                         ti_sum += ti_sum_band * self._integration_weights[
                             i, bi, j]
