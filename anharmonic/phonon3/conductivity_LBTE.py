@@ -118,6 +118,61 @@ class Conductivity_LBTE(Conductivity):
 
         self._allocate_values()
         
+    def run(self):
+        if len(self._grid_points) != len(self._ir_grid_points):
+            print "Collision matrix is not well created."
+            import sys
+            sys.exit(1)
+
+        self._combine_collisions()
+            
+        num_band = self._primitive.get_number_of_atoms() * 3
+        num_ir_grid_points = len(self._ir_grid_points)
+        orders = self._get_order_of_star()
+        rot_order = len(self._rotations_cartesian)
+
+        coefs = []
+        for r_gps in self._rot_grid_points:
+            coefs.append(np.sqrt(len(np.unique(r_gps))) / np.sqrt(len(r_gps)))
+
+        for i, j in list(np.ndindex((len(coefs), len(coefs)))):
+            self._full_collision_matrix[:, :, i, :, :, j, :, :] *= coefs[i] * coefs[j]
+        
+        for j, sigma in enumerate(self._sigmas):
+            for k, t in enumerate(self._temperatures):
+                X = self._get_X(t, coefs)
+                col_mat = self._full_collision_matrix[j, k].reshape(
+                    num_ir_grid_points * num_band * 3,
+                    num_ir_grid_points * num_band * 3)
+
+                w, v = np.linalg.eigh((col_mat + col_mat.T) / 2)
+                print w
+                
+                for cutoff in (1e-3, 1e-5, 1e-7, 1e-9, 1e-11):
+                    print cutoff
+                    e = np.zeros(len(w), dtype='double')
+                    for l, val in enumerate(w):
+                        if val > cutoff:
+                            e[l] = 1 / val
+                    inv_col = np.dot(v, np.dot(np.diag(e), v.T))
+                    
+                    Y = np.dot(inv_col, X.ravel()).reshape(-1, 3)
+                    RX = np.dot(self._rotations_cartesian.reshape(-1, 3), X.T).T
+                    RY = np.dot(self._rotations_cartesian.reshape(-1, 3), Y.T).T
+                    
+                    sum_outer = np.zeros((3, 3), dtype='double')
+                    for order, irX, irY in zip(
+                            orders,
+                            RX.reshape(num_ir_grid_points, num_band, rot_order, 3),
+                            RY.reshape(num_ir_grid_points, num_band, rot_order, 3)):
+                        for X_band, Y_band in zip(irX, irY):
+                            for RX_band, RY_band in zip(X_band, Y_band):
+                                sum_outer += np.outer(RX_band, RY_band)
+                        
+                    sum_outer *= self._conversion_factor * 2 * Kb * t ** 2 / np.prod(self._mesh)
+    
+                    print sum_outer
+
     def _run_at_grid_point(self):
         i = self._grid_point_count
         self._show_log_header(i)
@@ -185,14 +240,32 @@ class Conductivity_LBTE(Conductivity):
             self._collision.set_integration_weights()
             for k, t in enumerate(self._temperatures):
                 self._collision.set_temperature(t)
-                if self._isotope is not None:
-                    self._collision.run(self._gamma_iso[j, i])
-                else:
-                    self._collision.run()
+                self._collision.run()
                 self._gamma[j, k, i] = self._collision.get_imag_self_energy()
                 self._collision_matrix[j, k, i] = (
                     self._collision.get_collision_matrix())
 
+    def _combine_collisions(self):
+        # Include main diagonal part
+        num_band = self._primitive.get_number_of_atoms() * 3
+        self._full_collision_matrix = self._collision_matrix.copy()
+
+        for j, k in list(np.ndindex((len(self._sigmas),
+                                     len(self._temperatures)))):
+            for i, ir_gp in enumerate(self._ir_grid_points):
+                r_gps = self._rot_grid_points[i]
+                for r, r_gp in zip(self._rotations_cartesian, r_gps):
+                    if r_gp != ir_gp:
+                        continue
+
+                    main_diagonal = self._gamma[j, k, i].copy()
+                    if self._gamma_iso is not None:
+                        main_diagonal += self._gamma_iso[j, i]
+                        
+                    for l in range(num_band):
+                        self._full_collision_matrix[
+                            j, k, i, l, :, i, l, :] += main_diagonal[l] * r
+                
     def _get_X(self, t, coefs):
         X = self._gv.copy()
         freqs = self._frequencies[self._ir_grid_points]
@@ -212,59 +285,6 @@ class Conductivity_LBTE(Conductivity):
             return X.reshape(-1, 3)
         else:
             return np.zeros_like(self._gv.reshape(-1, 3))
-
-    def run(self):
-        if len(self._grid_points) != len(self._ir_grid_points):
-            print "Collision matrix is not well created."
-            import sys
-            sys.exit(1)
-            
-        num_band = self._primitive.get_number_of_atoms() * 3
-        num_ir_grid_points = len(self._ir_grid_points)
-        orders = self._get_order_of_star()
-        rot_order = len(self._rotations_cartesian)
-
-        coefs = []
-        for r_gps in self._rot_grid_points:
-            coefs.append(np.sqrt(len(np.unique(r_gps))) / np.sqrt(len(r_gps)))
-
-        for i, j in list(np.ndindex((len(coefs), len(coefs)))):
-            self._collision_matrix[:, :, i, :, :, j, :, :] *= coefs[i] * coefs[j]
-        
-        for j, sigma in enumerate(self._sigmas):
-            for k, t in enumerate(self._temperatures):
-                X = self._get_X(t, coefs)
-                col_mat = self._collision_matrix[j, k].reshape(
-                    num_ir_grid_points * num_band * 3,
-                    num_ir_grid_points * num_band * 3)
-
-                w, v = np.linalg.eigh((col_mat + col_mat.T) / 2)
-                print w
-                
-                for cutoff in (1e-3, 1e-5, 1e-7, 1e-9, 1e-11):
-                    print cutoff
-                    e = np.zeros(len(w), dtype='double')
-                    for l, val in enumerate(w):
-                        if val > cutoff:
-                            e[l] = 1 / val
-                    inv_col = np.dot(v, np.dot(np.diag(e), v.T))
-                    
-                    Y = np.dot(inv_col, X.ravel()).reshape(-1, 3)
-                    RX = np.dot(self._rotations_cartesian.reshape(-1, 3), X.T).T
-                    RY = np.dot(self._rotations_cartesian.reshape(-1, 3), Y.T).T
-                    
-                    sum_outer = np.zeros((3, 3), dtype='double')
-                    for order, irX, irY in zip(
-                            orders,
-                            RX.reshape(num_ir_grid_points, num_band, rot_order, 3),
-                            RY.reshape(num_ir_grid_points, num_band, rot_order, 3)):
-                        for X_band, Y_band in zip(irX, irY):
-                            for RX_band, RY_band in zip(X_band, Y_band):
-                                sum_outer += np.outer(RX_band, RY_band)
-                        
-                    sum_outer *= self._conversion_factor * 2 * Kb * t ** 2 / np.prod(self._mesh)
-    
-                    print sum_outer
 
     def _get_order_of_star(self):
         orders = []

@@ -7,6 +7,10 @@ from anharmonic.phonon3.imag_self_energy import ImagSelfEnergy
 from anharmonic.phonon3.triplets import get_grid_point_from_address, get_ir_grid_points, get_grid_points_by_rotations
 
 class CollisionMatrix(ImagSelfEnergy):
+    """
+    Main diagonal part (imag-self-energy) and
+    the other part are separately stored.
+    """
     def __init__(self,
                  interaction,
                  point_operations,
@@ -45,7 +49,6 @@ class CollisionMatrix(ImagSelfEnergy):
         self._ir_grid_points = ir_grid_points
         self._rot_grid_points = rotated_grid_points
         self._is_collision_matrix = True
-        self._gamma_iso = None
         self._point_operations = point_operations
         self._primitive = self._interaction.get_primitive()
         rec_lat = np.linalg.inv(self._primitive.get_cell())
@@ -53,9 +56,7 @@ class CollisionMatrix(ImagSelfEnergy):
             [similarity_transformation(rec_lat, r)
              for r in self._point_operations], dtype='double', order='C')
         
-    def run(self, gamma_iso=None):
-        self._gamma_iso = gamma_iso
-        
+    def run(self):
         if self._fc3_normal_squared is None:        
             self.run_interaction()
 
@@ -94,8 +95,10 @@ class CollisionMatrix(ImagSelfEnergy):
             
     def _run_collision_matrix(self):
         self._run_with_band_indices() # for Gamma
-        self._run_c_collision_matrix() # for Omega
-        # self._run_py_collision_matrix() # for Omega
+        if self._lang == 'C':
+            self._run_c_collision_matrix() # for Omega
+        else:
+            self._run_py_collision_matrix() # for Omega
 
     def _run_c_collision_matrix(self):
         import anharmonic._phono3py as phono3c
@@ -113,18 +116,6 @@ class CollisionMatrix(ImagSelfEnergy):
                                  self._unit_conversion,
                                  self._cutoff_frequency)
 
-        num_band = self._fc3_normal_squared.shape[1]
-        for i, ir_gp in enumerate(self._ir_grid_points):
-            r_gps = self._rot_grid_points[i]
-            for r, r_gp in zip(self._rotations_cartesian, r_gps):
-                if r_gp == self._grid_point:
-                    imag_self_energy = self.get_imag_self_energy()
-                    for j in range(num_band):
-                        collision = imag_self_energy[j]
-                        if self._gamma_iso is not None:
-                            collision += self._gamma_iso[j]
-                        self._collision_matrix[j, :, i, j, :] += collision * r
-                        
     def _run_py_collision_matrix(self):
         gp2tp_map = {}
         for i, j in enumerate(self._triplets_at_q[:, 1]):
@@ -154,11 +145,4 @@ class CollisionMatrix(ImagSelfEnergy):
                         collision *= self._unit_conversion
                         self._collision_matrix[j, :, i, k, :] += collision * r
 
-                if r_gp == self._grid_point:
-                    imag_self_energy = self.get_imag_self_energy()
-                    for j in range(num_band):
-                        collision = imag_self_energy[j]
-                        if self._gamma_iso is not None:
-                            collision += self._gamma_iso[j]
-                        self._collision_matrix[j, :, i, j, :] += collision * r
 
