@@ -123,7 +123,11 @@ get_thm_isotope_scattering_strength(double *gamma,
   }
   
   gamma_ij = (double*)malloc(sizeof(double) * num_grid_points * num_band0);
-  
+#pragma omp parallel for
+  for (i = 0; i < num_grid_points * num_band0; i++) {
+    gamma_ij[i] = 0;
+  }
+
 #pragma omp parallel for private(j, k, l, m, f, gp, e1_r, e1_i, a, b, dist, sum_g_k)
   for (i = 0; i < num_grid_points; i++) {
     gp = ir_grid_points[i];
