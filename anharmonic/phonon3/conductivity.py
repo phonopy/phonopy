@@ -208,7 +208,8 @@ class Conductivity:
                                       pp_eigvecs,
                                       pp_phonon_done,
                                       dm=self._dm)
-            self._isotope.set_grid_point(i)
+            gp = self._grid_points[i]
+            self._isotope.set_grid_point(gp)
             self._isotope.run()
             self._gamma_iso[j, i] = self._isotope.get_gamma()
 
