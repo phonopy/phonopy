@@ -38,10 +38,7 @@ class Conductivity:
         self._cutoff_lifetime = cutoff_lifetime
 
         self._symmetry = symmetry
-        if self._no_kappa_stars:
-            self._point_operations = [np.identity(3, dtype='intc')]
-        else:
-            self._point_operations = symmetry.get_reciprocal_operations()
+        self._point_operations = symmetry.get_reciprocal_operations()
         rec_lat = np.linalg.inv(self._primitive.get_cell())
         self._rotations_cartesian = np.array(
             [similarity_transformation(rec_lat, r)
@@ -181,8 +178,7 @@ class Conductivity:
         """This has to be implementated in the derived class"""
         pass
 
-    def _set_gamma_at_sigmas(self):
-        i = self._grid_point_count
+    def _set_gamma_at_sigmas(self, i):
         for j, sigma in enumerate(self._sigmas):
             if self._log_level:
                 print "Calculating Gamma of ph-ph with",
@@ -198,8 +194,7 @@ class Conductivity:
                 self._collision.run()
                 self._gamma[j, k, i] = self._collision.get_imag_self_energy()
                 
-    def _set_gamma_isotope_at_sigmas(self):
-        i = self._grid_point_count
+    def _set_gamma_isotope_at_sigmas(self, i):
         for j, sigma in enumerate(self._sigmas):
             if self._log_level:
                 print "Calculating Gamma of ph-isotope with",
@@ -286,9 +281,8 @@ class Conductivity:
             cutoff_frequency=self._cutoff_frequency,
             lapack_zheev_uplo=self._pp.get_lapack_zheev_uplo())
         
-    def _set_gv(self):
+    def _set_gv(self, i):
         # Group velocity [num_freqs, 3]
-        i = self._grid_point_count
         self._gv[i] = get_group_velocity(
             self._qpoints[i],
             self._dm,

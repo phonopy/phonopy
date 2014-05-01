@@ -212,7 +212,8 @@ class Interaction:
              weights_at_q,
              grid_address,
              bz_map,
-             triplets_map_at_q) = get_nosym_triplets_at_q(
+             triplets_map_at_q,
+             ir_map_at_q) = get_nosym_triplets_at_q(
                  grid_point,
                  self._mesh,
                  reciprocal_lattice,

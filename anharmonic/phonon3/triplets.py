@@ -62,8 +62,11 @@ def get_nosym_triplets_at_q(grid_point,
 
     if not stores_triplets_map:
         map_triplets = None
+        map_q = None
+    else:
+        map_q = map_triplets.copy()
 
-    return triplets_at_q, weights, bz_grid_address, bz_map, map_triplets
+    return triplets_at_q, weights, bz_grid_address, bz_map, map_triplets, map_q
         
 
 def get_grid_address(mesh):
