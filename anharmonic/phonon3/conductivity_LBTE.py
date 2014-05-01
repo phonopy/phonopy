@@ -46,6 +46,8 @@ def get_thermal_conductivity_LBTE(
         pass
 
     br.run()
+
+    print br.get_kappa()
     return br
 
 class Conductivity_LBTE(Conductivity):
@@ -127,7 +129,7 @@ class Conductivity_LBTE(Conductivity):
         grid_point = self._grid_points[i]
 
         if self._isotope is not None:
-            self._set_gamma_isotope_at_sigmas()
+            self._set_gamma_isotope_at_sigmas(i)
 
         if not self._read_gamma:
             self._collision.set_grid_point(grid_point)
@@ -138,9 +140,9 @@ class Conductivity_LBTE(Conductivity):
                 print "Calculating interaction..."
                 
             self._collision.run_interaction()
-            self._set_collision_matrix_at_sigmas()
-            self._set_gv()
-            self._show_log()
+            self._set_collision_matrix_at_sigmas(i)
+            self._set_gv(i)
+            self._show_log(i)
 
     def _allocate_values(self):
         num_band = self._primitive.get_number_of_atoms() * 3
@@ -179,8 +181,7 @@ class Conductivity_LBTE(Conductivity):
                                           self._ir_grid_points,
                                           self._rot_grid_points)
 
-    def _set_collision_matrix_at_sigmas(self):
-        i = self._grid_point_count
+    def _set_collision_matrix_at_sigmas(self, i):
         for j, sigma in enumerate(self._sigmas):
             if self._log_level:
                 print "Calculating collision matrix with",
@@ -220,11 +221,14 @@ class Conductivity_LBTE(Conductivity):
         for j, sigma in enumerate(self._sigmas):
             for k, t in enumerate(self._temperatures):
                 X = self._get_X(t, weights)
-                self._get_kappa(
+                kappa = self._get_kappa(
                     self._collision_matrix[j, k].reshape(
                         num_ir_grid_points * num_band * 3,
                         num_ir_grid_points * num_band * 3),
                     X, t)
+                self._kappa[j, k] = [
+                    kappa[0, 0], kappa[1, 1], kappa[2, 2],
+                    kappa[1, 2], kappa[0, 2], kappa[0, 1]]
 
     def _combine_collisions(self):
         # Include main diagonal part
@@ -292,8 +296,7 @@ class Conductivity_LBTE(Conductivity):
         return (sum_outer * self._conversion_factor * 2 * Kb * t ** 2 /
                 np.prod(self._mesh))
                     
-    def _show_log(self):
-        i = self._grid_point_count
+    def _show_log(self, i):
         q = self._qpoints[i]
         gp = self._grid_points[i]
         frequencies = self._frequencies[gp]
