@@ -97,23 +97,11 @@ def _write_kappa(lbte, filename=None, log_level=0):
     kappa = lbte.get_kappa()
     
     for i, sigma in enumerate(sigmas):
-        kappa_at_sigma = kappa[i]
-        if log_level:
-            print "----------- Thermal conductivity (W/m-k)",
-            if sigma:
-                print "for sigma=%s -----------" % sigma
-            else:
-                print "with tetrahedron method -----------"
-            print ("#%6s     " + " %-9s" * 6) % ("T(K)", "xx", "yy", "zz",
-                                                "yz", "xz", "xy")
-            for t, k in zip(temperatures, kappa_at_sigma):
-                print ("%7.1f" + " %9.3f" * 6) % ((t,) + tuple(k))
-            print
         write_kappa_to_hdf5(temperatures,
                             mesh,
                             frequency=frequencies,
                             group_velocity=gv,
-                            kappa=kappa_at_sigma,
+                            kappa=kappa[i],
                             gamma=gamma[i],
                             qpoint=qpoints,
                             sigma=sigma,
@@ -267,10 +255,15 @@ class Conductivity_LBTE(Conductivity):
                 weights[i] * weights[j])
 
         for j, sigma in enumerate(self._sigmas):
+            if self._log_level:
+                print "----------- Thermal conductivity (W/m-k)",
+                if sigma:
+                    print "for sigma=%s -----------" % sigma
+                else:
+                    print "with tetrahedron method -----------"
+                print ("#%6s     " + " %-9s" * 6) % ("T(K)", "xx", "yy", "zz",
+                                                    "yz", "xz", "xy")
             for k, t in enumerate(self._temperatures):
-                if self._log_level:
-                    print "Calculating kappa at %.1f K" % t
-                
                 if t > 0:
                     X = self._get_X(t, weights)
                     kappa = self._get_kappa(
@@ -281,6 +274,13 @@ class Conductivity_LBTE(Conductivity):
                     self._kappa[j, k] = [
                         kappa[0, 0], kappa[1, 1], kappa[2, 2],
                         kappa[1, 2], kappa[0, 2], kappa[0, 1]]
+
+                if self._log_level:
+                    print ("%7.1f" + " %9.3f" * 6) % ((t,) +
+                                                      tuple(self._kappa[j, k]))
+
+        if self._log_level:
+            print 
 
     def set_collision_matrix(self, collision_matrix):
         self._collision_matrix = collision_matrix
