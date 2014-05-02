@@ -89,6 +89,7 @@ def _write_collision(lbte, i=None, filename=None):
 def _write_kappa(lbte, filename=None, log_level=0):
     temperatures = lbte.get_temperatures()
     sigmas = lbte.get_sigmas()
+    gamma = lbte.get_gamma()
     mesh = lbte.get_mesh_numbers()
     frequencies = lbte.get_frequencies()
     gv = lbte.get_group_velocities()
@@ -113,6 +114,7 @@ def _write_kappa(lbte, filename=None, log_level=0):
                             frequency=frequencies,
                             group_velocity=gv,
                             kappa=kappa_at_sigma,
+                            gamma=gamma[i],
                             qpoint=qpoints,
                             sigma=sigma,
                             filename=filename)
