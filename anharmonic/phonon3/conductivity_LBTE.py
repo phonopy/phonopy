@@ -144,7 +144,6 @@ def _set_collision_from_file(lbte, filename=None):
                                               sigma=sigma,
                                               filename=filename)
         if collisions is False:
-            gamma_iso_gps
             for i, gp in enumerate(grid_points):
                 collision_gp = read_collision_from_hdf5(
                     mesh,
@@ -157,12 +156,12 @@ def _set_collision_from_file(lbte, filename=None):
                 else:
                     (collision_matrix_at_sigma,
                      gamma_at_sigma,
-                     gamma_isotope_at_sigma) = collisions_gp
+                     gamma_isotope_at_sigma) = collision_gp
                     collision_matrix[j, :, i] = collision_matrix_at_sigma
                     gamma[j, :, i] = gamma_at_sigma
                     if gamma_isotope_at_sigma is not None:
                         is_isotope = True
-                        gamma_iso[j, :, i] = gamma_isotope_at_sigma
+                        gamma_iso[j, i] = gamma_isotope_at_sigma
         else:            
             (collision_matrix_at_sigma,
              gamma_at_sigma,
