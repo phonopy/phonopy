@@ -988,11 +988,15 @@ def read_gamma_from_hdf5(mesh,
         return False
         
     f = h5py.File("kappa" + suffix + ".hdf5", 'r')
-    gammas = f['gamma'][:]
+    gamma = f['gamma'][:]
+    if 'gamma_isotope' in f.keys():
+        gamma_isotope = f['gamma_isotope'][:]
+    else:
+        gamma_isotope = None
     f.close()
     
     if verbose:
-        print "Gamma",
+        print "Gammas",
         if grid_point is not None:
             print "at grid adress %d" % grid_point,
         if sigma is not None:
@@ -1006,7 +1010,50 @@ def read_gamma_from_hdf5(mesh,
             print ""
         print "%s" % ("kappa" + suffix + ".hdf5")
     
-    return gammas
+    return gamma, gamma_isotope
+
+def read_collision_from_hdf5(mesh,
+                             grid_point=None,
+                             sigma=None,
+                             filename=None,
+                             verbose=True):
+    suffix = "-m%d%d%d" % tuple(mesh)
+    if grid_point is not None:
+        suffix += ("-g%d" % grid_point)
+    if sigma is not None:
+        sigma_str = ("%f" % sigma).rstrip('0').rstrip('\.')
+        suffix += "-s" + sigma_str
+    if filename is not None:
+        suffix += "." + filename
+
+    if not os.path.exists("collision" + suffix + ".hdf5"):
+        return False
+        
+    f = h5py.File("collision" + suffix + ".hdf5", 'r')
+    gamma = f['gamma'][:]
+    collision_matrix = f['collision_matrix'][:]
+    if 'gamma_isotope' in f.keys():
+        gamma_isotope = f['gamma_isotope'][:]
+    else:
+        gamma_isotope = None
+    f.close()
+    
+    if verbose:
+        print "Collisions",
+        if grid_point is not None:
+            print "at grid adress %d" % grid_point,
+        if sigma is not None:
+            if grid_point is not None:
+                print "and",
+            else:
+                print "at",
+            print "sigma %s" % sigma_str,
+        print "were read from",
+        if grid_point is not None:
+            print ""
+        print "%s" % ("collision" + suffix + ".hdf5")
+    
+    return collision_matrix, gamma, gamma_isotope
 
 def write_amplitude_to_hdf5(amplitude,
                             mesh,

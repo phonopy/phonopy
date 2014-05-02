@@ -41,7 +41,9 @@ def get_thermal_conductivity_RTA(
                           log_level=log_level)
 
     if read_gamma:
-        _set_gamma_from_file(br, filename=input_filename)
+        if not _set_gamma_from_file(br, filename=input_filename):
+            print "Reading collisions failed."
+            return False
         
     for i in br:
         if write_gamma:
@@ -160,29 +162,46 @@ def _set_gamma_from_file(br, filename=None):
                       len(temperatures),
                       len(grid_points),
                       num_band), dtype='double')
+    gamma_iso = np.zeros((len(sigmas),
+                          len(grid_points),
+                          num_band), dtype='double')
+    is_isotope = False
 
     for j, sigma in enumerate(sigmas):
-        gamma_at_sigma = read_gamma_from_hdf5(
+        collisions = read_gamma_from_hdf5(
             mesh,
             mesh_divisors=mesh_divisors,
             sigma=sigma,
             filename=filename)
-        if gamma_at_sigma is False:
+        if collisions is False:
             for i, gp in enumerate(grid_points):
-                gamma_gp = read_gamma_from_hdf5(
+                collisions_gp = read_gamma_from_hdf5(
                     mesh,
                     mesh_divisors=mesh_divisors,
                     grid_point=gp,
                     sigma=sigma,
                     filename=filename)
-                if gamma_gp is False:
+                if collisions_gp is False:
                     print "Gamma at grid point %d doesn't exist." % gp
+                    return False
                 else:
+                    gamma_gp, gamma_iso_gp = collisions_gp
                     gamma[j, :, i] = gamma_gp
+                    if gamma_iso_gp is not None:
+                        is_isotope = True
+                        gamma_iso[j, i] = gamma_iso_gp
         else:
+            gamma_at_sigma, gamma_iso_at_sigma = collisions
             gamma[j] = gamma_at_sigma
+            if gamma_iso_at_sigma is not None:
+                is_isotope = True
+                gamma_iso[j] = gamma_iso_at_sigma
         
     br.set_gamma(gamma)
+    # if is_isotope:
+    #     br.set_gamma_isotope(gamma_iso)
+
+    return True
 
 class Conductivity_RTA(Conductivity):
     def __init__(self,
@@ -221,6 +240,7 @@ class Conductivity_RTA(Conductivity):
 
         self._gamma = None
         self._read_gamma = False
+        self._read_gamma_iso = False
         self._frequencies = None
         self._gv = None
         self._gamma_iso = None
@@ -305,7 +325,7 @@ class Conductivity_RTA(Conductivity):
             self._collision.run_interaction()
             self._set_gamma_at_sigmas(i)
 
-        if self._isotope is not None:
+        if self._isotope is not None and not self._read_gamma_iso:
             self._set_gamma_isotope_at_sigmas(i)
 
         self._cv[i] = self._get_cv(self._frequencies[grid_point])

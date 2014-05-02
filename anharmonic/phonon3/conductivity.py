@@ -52,6 +52,7 @@ class Conductivity:
 
         self._gamma = None
         self._read_gamma = False
+        self._read_gamma_iso = False
         self._frequencies = None
         self._gv = None
         self._gamma_iso = None
@@ -111,6 +112,10 @@ class Conductivity:
     def set_gamma(self, gamma):
         self._gamma = gamma
         self._read_gamma = True
+        
+    def set_gamma_isotope(self, gamma_iso):
+        self._gamma_iso = gamma_iso
+        self._read_gamma_iso = True
 
     def get_gamma(self):
         return self._gamma

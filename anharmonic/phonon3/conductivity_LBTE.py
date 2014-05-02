@@ -2,7 +2,7 @@ import numpy as np
 from anharmonic.phonon3.conductivity import Conductivity
 from anharmonic.phonon3.collision_matrix import CollisionMatrix
 from anharmonic.phonon3.triplets import get_grid_points_by_rotations
-from anharmonic.file_IO import write_kappa_to_hdf5, write_collision_to_hdf5
+from anharmonic.file_IO import write_kappa_to_hdf5, write_collision_to_hdf5, read_collision_from_hdf5
 from phonopy.units import THzToEv, Kb
 
 def get_thermal_conductivity_LBTE(
@@ -20,11 +20,6 @@ def get_thermal_conductivity_LBTE(
         output_filename=None,
         log_level=0):
 
-    if read_gamma:
-        print "The option --read_gamma is not yet implemented."
-        import sys
-        sys.exit(1)
-
     if log_level:
         print "-------------------- Lattice thermal conducitivity (LBTE) --------------------"
         lbte = Conductivity_LBTE(interaction,
@@ -36,6 +31,11 @@ def get_thermal_conductivity_LBTE(
                                  cutoff_lifetime=cutoff_lifetime,
                                  gv_delta_q=gv_delta_q,
                                  log_level=log_level)
+
+    if read_gamma:
+        if not _set_collision_from_file(lbte, filename=input_filename):
+            print "Reading collisions failed."
+            return False
         
     for i in lbte:
         if write_gamma:
@@ -116,7 +116,71 @@ def _write_kappa(lbte, filename=None, log_level=0):
                             qpoint=qpoints,
                             sigma=sigma,
                             filename=filename)
-    
+
+def _set_collision_from_file(lbte, filename=None):
+    sigmas = lbte.get_sigmas()
+    mesh = lbte.get_mesh_numbers()
+    grid_points = lbte.get_grid_points()
+    temperatures = lbte.get_temperatures()
+    num_band = lbte.get_frequencies().shape[1]
+
+    gamma = np.zeros((len(sigmas),
+                      len(temperatures),
+                      len(grid_points),
+                      num_band), dtype='double')
+    collision_matrix = np.zeros(
+            (len(sigmas),
+             len(temperatures),
+             len(grid_points), num_band, 3,
+             len(grid_points), num_band, 3),
+            dtype='double')
+    gamma_iso = np.zeros((len(sigmas),
+                          len(grid_points),
+                          num_band), dtype='double')
+    is_isotope = False
+
+    for j, sigma in enumerate(sigmas):
+        collisions = read_collision_from_hdf5(mesh,
+                                              sigma=sigma,
+                                              filename=filename)
+        if collisions is False:
+            gamma_iso_gps
+            for i, gp in enumerate(grid_points):
+                collision_gp = read_collision_from_hdf5(
+                    mesh,
+                    grid_point=gp,
+                    sigma=sigma,
+                    filename=filename)
+                if collision_gp is False:
+                    print "Gamma at grid point %d doesn't exist." % gp
+                    return False
+                else:
+                    (collision_matrix_at_sigma,
+                     gamma_at_sigma,
+                     gamma_isotope_at_sigma) = collisions_gp
+                    collision_matrix[j, :, i] = collision_matrix_at_sigma
+                    gamma[j, :, i] = gamma_at_sigma
+                    if gamma_isotope_at_sigma is not None:
+                        is_isotope = True
+                        gamma_iso[j, :, i] = gamma_isotope_at_sigma
+        else:            
+            (collision_matrix_at_sigma,
+             gamma_at_sigma,
+             gamma_isotope_at_sigma) = collisions
+            collision_matrix[j] = collision_matrix_at_sigma
+            gamma[j] = gamma_at_sigma
+            if gamma_isotope_at_sigma is not None:
+                is_isotope = True
+                gamma_iso[j] = gamma_isotope_at_sigma
+        
+    lbte.set_gamma(gamma)
+    lbte.set_collision_matrix(collision_matrix)
+    # if is_isotope:
+    #     lbte.set_gamma_isotope(gamma_iso)
+
+    return True
+
+        
 class Conductivity_LBTE(Conductivity):
     def __init__(self,
                  interaction,
@@ -153,6 +217,8 @@ class Conductivity_LBTE(Conductivity):
         self._gamma = None
         self._collision_matrix = None
         self._read_gamma = False
+        self._read_gamma_iso = False
+        self._read_collision_matrix = False
         self._frequencies = None
         self._gv = None
         self._gamma_iso = None
@@ -212,6 +278,10 @@ class Conductivity_LBTE(Conductivity):
                         kappa[0, 0], kappa[1, 1], kappa[2, 2],
                         kappa[1, 2], kappa[0, 2], kappa[0, 1]]
 
+    def set_collision_matrix(self, collision_matrix):
+        self._collision_matrix = collision_matrix
+        self._read_collision_matrix = True
+        
     def get_collision_matrix(self):
         return self._collision_matrix
                 
@@ -219,9 +289,6 @@ class Conductivity_LBTE(Conductivity):
         i = self._grid_point_count
         self._show_log_header(i)
         grid_point = self._grid_points[i]
-
-        if self._isotope is not None:
-            self._set_gamma_isotope_at_sigmas(i)
 
         if not self._read_gamma:
             self._collision.set_grid_point(grid_point)
@@ -233,8 +300,12 @@ class Conductivity_LBTE(Conductivity):
                 
             self._collision.run_interaction()
             self._set_collision_matrix_at_sigmas(i)
-            self._set_gv(i)
-            self._show_log(i)
+            
+        if self._isotope is not None:
+            self._set_gamma_isotope_at_sigmas(i)
+
+        self._set_gv(i)
+        self._show_log(i)
 
     def _allocate_values(self):
         num_band = self._primitive.get_number_of_atoms() * 3
