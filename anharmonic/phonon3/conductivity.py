@@ -64,7 +64,6 @@ class Conductivity:
                                coarse_mesh_shifts=coarse_mesh_shifts)
         volume = self._primitive.get_volume()
         self._conversion_factor = unit_to_WmK / volume
-        self._sum_num_kstar = None
 
         self._isotope = None
         self._mass_variances = None
@@ -77,10 +76,6 @@ class Conductivity:
     def __iter__(self):
         return self
             
-    def run(self):
-        for i in self:
-            pass
-
     def next(self):
         if self._grid_point_count == len(self._grid_points):
             raise StopIteration
@@ -88,6 +83,60 @@ class Conductivity:
             self._run_at_grid_point()
             self._grid_point_count += 1
             return self._grid_point_count - 1
+
+    def get_mesh_divisors(self):
+        return self._mesh_divisors
+
+    def get_mesh_numbers(self):
+        return self._mesh
+
+    def get_group_velocities(self):
+        return self._gv
+
+    def get_frequencies(self):
+        return self._frequencies[self._grid_points]
+        
+    def get_qpoints(self):
+        return self._qpoints
+            
+    def get_grid_points(self):
+        return self._grid_points
+
+    def get_grid_weights(self):
+        return self._grid_weights
+            
+    def get_temperatures(self):
+        return self._temperatures
+
+    def set_gamma(self, gamma):
+        self._gamma = gamma
+        self._read_gamma = True
+
+    def get_gamma(self):
+        return self._gamma
+        
+    def get_gamma_isotope(self):
+        return self._gamma_iso
+        
+    def get_collision_matrix(self):
+        return self._collision_matrix
+        
+    def get_kappa(self):
+        return self._kappa
+
+    def get_sigmas(self):
+        return self._sigmas
+
+    def get_grid_point_count(self):
+        return self._grid_point_count
+
+    def _run_at_grid_point(self):
+        """This has to be implementated in the derived class"""
+        pass
+
+    def _allocate_values(self):
+        """This has to be implementated in the derived class"""
+        pass
 
     def _set_grid_properties(self, grid_points):
         self._grid_address = self._pp.get_grid_address()
@@ -122,61 +171,9 @@ class Conductivity:
                                  self._mesh.astype('double'),
                                  dtype='double', order='C')
 
-        self._sum_num_kstar = 0
         self._grid_point_count = 0
         self._pp.set_phonon(self._grid_points)
         self._frequencies = self._pp.get_phonons()[0]
-
-    def get_mesh_divisors(self):
-        return self._mesh_divisors
-
-    def get_mesh_numbers(self):
-        return self._mesh
-
-    def get_group_velocities(self):
-        return self._gv
-
-    def get_frequencies(self):
-        return self._frequencies[self._grid_points]
-        
-    def get_qpoints(self):
-        return self._qpoints
-            
-    def get_grid_points(self):
-        return self._grid_points
-
-    def get_grid_weights(self):
-        return self._grid_weights
-            
-    def get_temperatures(self):
-        return self._temperatures
-
-    def set_gamma(self, gamma):
-        self._gamma = gamma
-        self._read_gamma = True
-
-    def get_gamma(self):
-        return self._gamma
-        
-    def get_kappa(self):
-        return self._kappa
-
-    def get_sigmas(self):
-        return self._sigmas
-
-    def get_number_of_sampling_points(self):
-        return self._sum_num_kstar
-
-    def get_grid_point_count(self):
-        return self._grid_point_count
-
-    def _run_at_grid_point(self):
-        """This has to be implementated in the derived class"""
-        pass
-
-    def _allocate_values(self):
-        """This has to be implementated in the derived class"""
-        pass
 
     def _set_gamma_at_sigmas(self, i):
         for j, sigma in enumerate(self._sigmas):

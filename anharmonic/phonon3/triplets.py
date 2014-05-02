@@ -39,8 +39,10 @@ def get_triplets_at_q(grid_point,
         "Num grid points %d, sum of weight %d" % (
                     np.prod(mesh), weights.sum())
 
-    if not stores_triplets_map:
+    # These maps are required for collision matrix calculation.
+    if not stores_triplets_map: 
         map_triplets = None
+        map_q = None
         
     return triplets_at_q, weights, bz_grid_address, bz_map, map_triplets, map_q
 

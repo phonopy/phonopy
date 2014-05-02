@@ -864,13 +864,53 @@ def write_kappa(kappa,
         w.write("%6.1f %.5f\n" % (t, k))
     w.close()
 
-def write_kappa_to_hdf5(gamma,
-                        temperature,
+def write_collision_to_hdf5(temperature,
+                            mesh,
+                            gamma=None,
+                            gamma_isotope=None,
+                            collision_matrix=None,
+                            grid_point=None,
+                            sigma=None,
+                            filename=None):
+    suffix = "-m%d%d%d" % tuple(mesh)
+    if grid_point is not None:
+        suffix += ("-g%d" % grid_point)
+    if sigma is not None:
+        sigma_str = ("%f" % sigma).rstrip('0').rstrip('\.')
+        suffix += "-s" + sigma_str
+    if filename is not None:
+        suffix += "." + filename
+    w = h5py.File("collision" + suffix + ".hdf5", 'w')
+    w.create_dataset('temperature', data=temperature)
+    if gamma is not None:
+        w.create_dataset('gamma', data=gamma)
+    if gamma_isotope is not None:
+        w.create_dataset('gamma_isotope', data=gamma_isotope)
+    if collision_matrix is not None:
+        w.create_dataset('collision_matrix', data=collision_matrix)
+    w.close()
+
+    print "Collisions",
+    if grid_point is not None:
+        print "at grid adress %d" % grid_point,
+    if sigma is not None:
+        if grid_point is not None:
+            print "and",
+        else:
+            print "at",
+        print "sigma %s" % sigma_str, 
+    print "were written into"
+    print "\"%s\"" % ("collision" + suffix + ".hdf5")
+    print
+
+def write_kappa_to_hdf5(temperature,
                         mesh,
                         frequency=None,
                         group_velocity=None,
                         heat_capacity=None,
                         kappa=None,
+                        gamma=None,
+                        gamma_isotope=None,
                         qpoint=None,
                         weight=None,
                         mesh_divisors=None,
@@ -889,30 +929,40 @@ def write_kappa_to_hdf5(gamma,
     if filename is not None:
         suffix += "." + filename
     w = h5py.File("kappa" + suffix + ".hdf5", 'w')
-    w.create_dataset('gamma', data=gamma)
-    w.create_dataset('frequency', data=frequency)
     w.create_dataset('temperature', data=temperature)
-    w.create_dataset('group_velocity', data=group_velocity)
+    if frequency is not None:
+        w.create_dataset('frequency', data=frequency)
+    if group_velocity is not None:
+        w.create_dataset('group_velocity', data=group_velocity)
     if heat_capacity is not None:
         w.create_dataset('heat_capacity', data=heat_capacity)
     if kappa is not None:
         w.create_dataset('kappa', data=kappa)
+    if gamma is not None:
+        w.create_dataset('gamma', data=gamma)
+    if gamma_isotope is not None:
+        w.create_dataset('gamma_isotope', data=gamma_isotope)
     if qpoint is not None:
         w.create_dataset('qpoint', data=qpoint)
     if weight is not None:
         w.create_dataset('weight', data=weight)
     w.close()
 
-    print "Values to calculate kappa",
+    if kappa is not None:
+        print "Thermal conductivity and related properties",
+    else:
+        print "Thermal conductivity related properties",
     if grid_point is not None:
-        print "at grid adress %d" % grid_point,
+        print "at gp-%d" % grid_point,
     if sigma is not None:
         if grid_point is not None:
             print "and",
         else:
             print "at",
         print "sigma %s" % sigma_str
-    print "were written into"
+        print "were written into",
+    else:
+        print "were written into"
     print "\"%s\"" % ("kappa" + suffix + ".hdf5")
     print
 
