@@ -268,6 +268,9 @@ class Conductivity_LBTE(Conductivity):
 
         for j, sigma in enumerate(self._sigmas):
             for k, t in enumerate(self._temperatures):
+                if self._log_level:
+                    print "Calculating kappa at %.1f K" % t
+                
                 if t > 0:
                     X = self._get_X(t, weights)
                     kappa = self._get_kappa(
@@ -306,7 +309,8 @@ class Conductivity_LBTE(Conductivity):
             self._set_gamma_isotope_at_sigmas(i)
 
         self._set_gv(i)
-        self._show_log(i)
+        if self._log_level:
+            self._show_log(i)
 
     def _allocate_values(self):
         num_band = self._primitive.get_number_of_atoms() * 3

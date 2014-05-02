@@ -79,6 +79,9 @@ class Conductivity:
             
     def next(self):
         if self._grid_point_count == len(self._grid_points):
+            if self._log_level:
+                print ("=================== End of collection of collisions "
+                       "===================")
             raise StopIteration
         else:
             self._run_at_grid_point()
