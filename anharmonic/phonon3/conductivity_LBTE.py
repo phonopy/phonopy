@@ -439,7 +439,7 @@ class Conductivity_LBTE(Conductivity):
         frequencies = self._frequencies[gp]
         gv = self._gv[i]
 
-        print "Frequency, projected group velocity (x, y, z), group velocity norm",
+        print "Frequency     group velocity (x, y, z)     |gv|",
         if self._gv_delta_q is None:
             print
         else:
