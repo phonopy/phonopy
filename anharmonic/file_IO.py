@@ -1032,10 +1032,7 @@ def read_collision_from_hdf5(mesh,
     f = h5py.File("collision" + suffix + ".hdf5", 'r')
     gamma = f['gamma'][:]
     collision_matrix = f['collision_matrix'][:]
-    if 'gamma_isotope' in f.keys():
-        gamma_isotope = f['gamma_isotope'][:]
-    else:
-        gamma_isotope = None
+    temperatures = f['temperature'][:]
     f.close()
     
     if verbose:
@@ -1053,7 +1050,7 @@ def read_collision_from_hdf5(mesh,
             print ""
         print "%s" % ("collision" + suffix + ".hdf5")
     
-    return collision_matrix, gamma, gamma_isotope
+    return collision_matrix, gamma, temperatures
 
 def write_amplitude_to_hdf5(amplitude,
                             mesh,

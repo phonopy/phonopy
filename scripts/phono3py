@@ -150,6 +150,7 @@ parser.set_defaults(band_indices=None,
                     q_direction=None,
                     primitive_axis=None,
                     read_amplitude=False,
+                    read_collision=None,
                     read_fc2=False,
                     read_fc3=False,
                     read_gamma=False,
@@ -168,6 +169,7 @@ parser.set_defaults(band_indices=None,
                     verbose=False,
                     uplo='L',
                     write_amplitude=False,
+                    write_collision=False,
                     write_gamma=False,
                     write_grid_points=False)
 parser.add_option("--amplitude", dest="displacement_distance", type="float",
@@ -281,6 +283,8 @@ parser.add_option("-q", "--quiet", dest="quiet", action="store_true",
                   help="Print out smallest information")
 # parser.add_option("--read_amplitude", dest="read_amplitude", action="store_true",
 #                   help="Read phonon-phonon interaction amplitudes")
+parser.add_option("--read_collision", dest="read_collision", type="string",
+                  help="Read collision matrix and Gammas from files")
 parser.add_option("--read_gamma", dest="read_gamma", action="store_true",
                   help="Read Gammas from files")
 parser.add_option("--sym_fc2", dest="is_symmetrize_fc2", action="store_true",
@@ -314,8 +318,10 @@ parser.add_option("--wgp", "--write_grid_points", dest="write_grid_points",
 parser.add_option("--write_amplitude", dest="write_amplitude",
                   action="store_true",
                   help="Write phonon-phonon interaction amplitudes")
+parser.add_option("--write_collision", dest="write_collision", action="store_true",
+                  help="Write collision matrix and Gammas to files")
 parser.add_option("--write_gamma", dest="write_gamma", action="store_true",
-                  help="Write gamma")
+                  help="Write Gammas to files")
 (options, args) = parser.parse_args()
 option_list = parser.option_list
 
@@ -955,8 +961,8 @@ elif settings.get_is_bterta() or settings.get_is_lbte():
         gv_delta_q=settings.get_group_velocity_delta_q(),
         write_gamma=settings.get_write_gamma(),
         read_gamma=settings.get_read_gamma(),
-        write_amplitude=settings.get_write_amplitude(),
-        read_amplitude=settings.get_read_amplitude(),
+        write_collision=settings.get_write_collision(),
+        read_collision=settings.get_read_collision(),
         input_filename=input_filename,
         output_filename=output_filename)
 else:

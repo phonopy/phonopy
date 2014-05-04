@@ -362,6 +362,8 @@ class Phono3py:
             gv_delta_q=None, # for group velocity
             write_gamma=False,
             read_gamma=False,
+            write_collision=False,
+            read_collision=False,
             write_amplitude=False,
             read_amplitude=False,
             input_filename=None,
@@ -377,8 +379,8 @@ class Phono3py:
                     grid_points=grid_points,
                     cutoff_lifetime=cutoff_lifetime,
                     gv_delta_q=gv_delta_q,
-                    write_gamma=write_gamma,
-                    read_gamma=read_gamma,
+                    write_collision=write_collision,
+                    read_collision=read_collision,
                     input_filename=input_filename,
                     output_filename=output_filename,
                     log_level=self._log_level)

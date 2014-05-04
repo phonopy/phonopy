@@ -27,6 +27,7 @@ def get_thermal_conductivity_RTA(
 
     if log_level:
         print "-------------------- Lattice thermal conducitivity (RTA) --------------------"
+        
     br = Conductivity_RTA(interaction,
                           symmetry,
                           grid_points=grid_points,
@@ -271,7 +272,9 @@ class Conductivity_RTA(Conductivity):
                               log_level=log_level)
 
         self._cv = None
-        self._allocate_values()
+
+        if self._temperatures is not None:
+            self._allocate_values()
 
     def set_kappa_at_sigmas(self):
         num_band = self._primitive.get_number_of_atoms() * 3
@@ -357,6 +360,22 @@ class Conductivity_RTA(Conductivity):
                                         num_band), dtype='double')
         self._collision = ImagSelfEnergy(self._pp)
         
+    def _set_gamma_at_sigmas(self, i):
+        for j, sigma in enumerate(self._sigmas):
+            if self._log_level:
+                print "Calculating Gamma of ph-ph with",
+                if sigma is None:
+                    print "tetrahedron method"
+                else:
+                    print "sigma=%s" % sigma
+            self._collision.set_sigma(sigma)
+            if not sigma:
+                self._collision.set_integration_weights()
+            for k, t in enumerate(self._temperatures):
+                self._collision.set_temperature(t)
+                self._collision.run()
+                self._gamma[j, k, i] = self._collision.get_imag_self_energy()
+                
     def _get_gv_by_gv(self, i):
         rotation_map = get_grid_points_by_rotations(
             self._grid_points[i], self._point_operations, self._mesh)

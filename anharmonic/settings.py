@@ -21,10 +21,12 @@ class Phono3pySettings(Settings):
         self._mesh_divisors = None
         self._no_kappa_stars = False
         self._read_amplitude = False
+        self._read_collision = None
         self._read_gamma = False
         self._phonon_supercell_matrix = None
         self._temperatures = None
         self._write_amplitude = False
+        self._write_collision = False
         self._write_gamma = False
         
     def set_coarse_mesh_shifts(self, coarse_mesh_shifts):
@@ -123,6 +125,12 @@ class Phono3pySettings(Settings):
     def get_read_gamma(self):
         return self._read_gamma
 
+    def set_read_collision(self, read_collision):
+        self._read_collision = read_collision
+
+    def get_read_collision(self):
+        return self._read_collision
+
     def set_read_amplitude(self, read_amplitude):
         self._read_amplitude = read_amplitude
 
@@ -152,6 +160,12 @@ class Phono3pySettings(Settings):
 
     def get_write_gamma(self):
         return self._write_gamma
+
+    def set_write_collision(self, write_collision):
+        self._write_collision = write_collision
+
+    def get_write_collision(self):
+        return self._write_collision
 
 
 
@@ -238,6 +252,10 @@ class Phono3pyConfParser(ConfParser):
                 if self._options.read_gamma:
                     self._confs['read_gamma'] = '.true.'
 
+            if opt.dest == 'read_collision':
+                if self._options.read_collision is not None:
+                    self._confs['read_collision'] = self._options.read_collision
+
             if opt.dest == 'temperatures':
                 if self._options.temperatures is not None:
                     self._confs['temperatures'] = self._options.temperatures
@@ -249,6 +267,10 @@ class Phono3pyConfParser(ConfParser):
             if opt.dest == 'write_gamma':
                 if self._options.write_gamma:
                     self._confs['write_gamma'] = '.true.'
+
+            if opt.dest == 'write_collision':
+                if self._options.write_collision:
+                    self._confs['write_collision'] = '.true.'
 
     def _parse_conf(self):
         confs = self._confs
@@ -352,6 +374,13 @@ class Phono3pyConfParser(ConfParser):
                 if confs['read_gamma'] == '.true.':
                     self.set_parameter('read_gamma', True)
 
+            if conf_key == 'read_collision':
+                if confs['read_collision'] == 'all':
+                    self.set_parameter('read_collision', 'all')
+                else:
+                    vals = [int(x) for x in confs['read_collision'].split()]
+                    self.set_parameter('read_collision', vals)
+
             if conf_key == 'temperatures':
                 vals = [fracval(x) for x in confs['temperatures'].split()]
                 if len(vals) < 1:
@@ -367,6 +396,10 @@ class Phono3pyConfParser(ConfParser):
                 if confs['write_gamma'] == '.true.':
                     self.set_parameter('write_gamma', True)
 
+            if conf_key == 'write_collision':
+                if confs['write_collision'] == '.true.':
+                    self.set_parameter('write_collision', True)
+                    
 
     def _set_settings(self):
         ConfParser.set_settings(self)
@@ -442,6 +475,10 @@ class Phono3pyConfParser(ConfParser):
         if params.has_key('read_gamma'):
             self._settings.set_read_gamma(params['read_gamma'])
             
+        # Read collision matrix and gammas from hdf5
+        if params.has_key('read_collision'):
+            self._settings.set_read_collision(params['read_collision'])
+            
         # Sum partial kappa at q-stars
         if params.has_key('no_kappa_stars'):
             self._settings.set_no_kappa_stars(params['no_kappa_stars'])
@@ -454,10 +491,14 @@ class Phono3pyConfParser(ConfParser):
         if params.has_key('write_amplitude'):
             self._settings.set_write_amplitude(params['write_amplitude'])
 
-        # Write gamma to hdf5
+        # Write gammas to hdf5
         if params.has_key('write_gamma'):
             self._settings.set_write_gamma(params['write_gamma'])
 
+        # Write collision matrix and gammas to hdf5
+        if params.has_key('write_collision'):
+            self._settings.set_write_collision(params['write_collision'])
+            
 
         
 

@@ -14,7 +14,7 @@ class Conductivity:
                  interaction,
                  symmetry,
                  grid_points=None,
-                 temperatures=np.arange(0, 1001, 10, dtype='double'),
+                 temperatures=None,
                  sigmas=[],
                  mass_variances=None,
                  mesh_divisors=None,
@@ -112,6 +112,10 @@ class Conductivity:
     def get_temperatures(self):
         return self._temperatures
 
+    def set_temperatures(self, temperatures):
+        self._temperatures = temperatures
+        self._allocate_values()
+
     def set_gamma(self, gamma):
         self._gamma = gamma
         self._read_gamma = True
@@ -183,22 +187,6 @@ class Conductivity:
         self._pp.set_phonon(self._grid_points)
         self._frequencies = self._pp.get_phonons()[0]
 
-    def _set_gamma_at_sigmas(self, i):
-        for j, sigma in enumerate(self._sigmas):
-            if self._log_level:
-                print "Calculating Gamma of ph-ph with",
-                if sigma is None:
-                    print "tetrahedron method"
-                else:
-                    print "sigma=%s" % sigma
-            self._collision.set_sigma(sigma)
-            if not sigma:
-                self._collision.set_integration_weights()
-            for k, t in enumerate(self._temperatures):
-                self._collision.set_temperature(t)
-                self._collision.run()
-                self._gamma[j, k, i] = self._collision.get_imag_self_energy()
-                
     def _set_gamma_isotope_at_sigmas(self, i):
         for j, sigma in enumerate(self._sigmas):
             if self._log_level:
