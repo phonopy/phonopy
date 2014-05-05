@@ -445,13 +445,16 @@ class Conductivity_LBTE(Conductivity):
     def _symmetrize_collision_matrix(self, write_to_hdf5=False):
         num_band = self._primitive.get_number_of_atoms() * 3
         num_ir_grid_points = len(self._ir_grid_points)
-        for i, j, k, l, m, n in list(np.ndindex(
-                (num_ir_grid_points, num_band, 3,
-                 num_ir_grid_points, num_band, 3))):
-            sym_val = (self._collision_matrix[:, :, i, j, k, l, m, n] +
-                       self._collision_matrix[:, :, l, m, n, i, j, k]) / 2
-            self._collision_matrix[:, :, i, j, k, l, m, n] = sym_val
-            self._collision_matrix[:, :, l, m, n, i, j, k] = sym_val
+        for i in range(num_ir_grid_points):
+            for j in range(num_band):
+                for k in range(3):
+                    for l in range(num_ir_grid_points):
+                        for m in range(num_band):
+                            for n in range(3):
+                                sym_val = (self._collision_matrix[:, :, i, j, k, l, m, n] +
+                                           self._collision_matrix[:, :, l, m, n, i, j, k]) / 2
+                                self._collision_matrix[:, :, i, j, k, l, m, n] = sym_val
+                                self._collision_matrix[:, :, l, m, n, i, j, k] = sym_val
 
         if write_to_hdf5:
             write_full_collision_matrix(self._collision_matrix)
