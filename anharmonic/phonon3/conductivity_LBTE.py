@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 from anharmonic.phonon3.conductivity import Conductivity
 from anharmonic.phonon3.collision_matrix import CollisionMatrix
@@ -282,6 +283,11 @@ class Conductivity_LBTE(Conductivity):
             sys.exit(1)
 
         # self._collision_matrix is overwritten to save memory space
+        if self._log_level:
+            print "Combining collisions..."
+            import sys
+            sys.stdout.flush()
+            
         self._combine_collisions()
             
         num_band = self._primitive.get_number_of_atoms() * 3
@@ -291,10 +297,16 @@ class Conductivity_LBTE(Conductivity):
         for r_gps in self._rot_grid_points:
             weights.append(np.sqrt(len(np.unique(r_gps))) / np.sqrt(len(r_gps)))
 
+        if self._log_level:
+            print "Weighting collision matrix..."
+            sys.stdout.flush()
         for i, j in list(np.ndindex((len(weights), len(weights)))):
             self._collision_matrix[:, :, i, :, :, j, :, :] *= (
                 weights[i] * weights[j])
 
+        if self._log_level:
+            print "Symmetrizing collision matrix..."
+            sys.stdout.flush()
         self._symmetrize_collision_matrix(write_to_hdf5=True)
             
         for j, sigma in enumerate(self._sigmas):
@@ -506,3 +518,4 @@ class Conductivity_LBTE(Conductivity):
             print "%8.3f   (%8.3f %8.3f %8.3f) %8.3f" % (
                 f, v[0], v[1], v[2], np.linalg.norm(v))
 
+        sys.stdout.flush()
