@@ -2,7 +2,7 @@ import numpy as np
 from anharmonic.phonon3.conductivity import Conductivity
 from anharmonic.phonon3.collision_matrix import CollisionMatrix
 from anharmonic.phonon3.triplets import get_grid_points_by_rotations
-from anharmonic.file_IO import write_kappa_to_hdf5, write_collision_to_hdf5, read_collision_from_hdf5
+from anharmonic.file_IO import write_kappa_to_hdf5, write_collision_to_hdf5, read_collision_from_hdf5, write_full_collision_matrix
 from phonopy.units import THzToEv, Kb
 
 def get_thermal_conductivity_LBTE(
@@ -295,7 +295,7 @@ class Conductivity_LBTE(Conductivity):
             self._collision_matrix[:, :, i, :, :, j, :, :] *= (
                 weights[i] * weights[j])
 
-        self._symmetrize_collision_matrix()
+        self._symmetrize_collision_matrix(write_to_hdf5=True)
             
         for j, sigma in enumerate(self._sigmas):
             if self._log_level:
@@ -430,7 +430,7 @@ class Conductivity_LBTE(Conductivity):
                         self._collision_matrix[
                             j, k, i, l, :, i, l, :] += main_diagonal[l] * r
                 
-    def _symmetrize_collision_matrix(self):
+    def _symmetrize_collision_matrix(self, write_to_hdf5=False):
         num_band = self._primitive.get_number_of_atoms() * 3
         num_ir_grid_points = len(self._ir_grid_points)
         for i, j, k, l, m, n in list(np.ndindex(
@@ -440,6 +440,9 @@ class Conductivity_LBTE(Conductivity):
                        self._collision_matrix[:, :, l, m, n, i, j, k]) / 2
             self._collision_matrix[:, :, i, j, k, l, m, n] = sym_val
             self._collision_matrix[:, :, l, m, n, i, j, k] = sym_val
+
+        if write_to_hdf5:
+            write_full_collision_matrix(self._collision_matrix)
             
     def _get_X(self, t, weights):
         X = self._gv.copy()
@@ -470,9 +473,10 @@ class Conductivity_LBTE(Conductivity):
         e = np.zeros(len(w), dtype='double')
         for l, val in enumerate(w):
             if val > pinv_cutoff:
-                e[l] = 1 / val
-        inv_col = np.dot(v, (e * v).T)
-        Y = np.dot(inv_col, X.ravel()).reshape(-1, 3)
+                e[l] = 1 / np.sqrt(val)
+        v[:] = e * v
+        v[:] = np.dot(v, v.T) # inv_col
+        Y = np.dot(v, X.ravel()).reshape(-1, 3)
         RX = np.dot(self._rotations_cartesian.reshape(-1, 3), X.T).T
         RY = np.dot(self._rotations_cartesian.reshape(-1, 3), Y.T).T
         

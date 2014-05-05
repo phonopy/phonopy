@@ -903,6 +903,11 @@ def write_collision_to_hdf5(temperature,
     print "\"%s\"" % ("collision" + suffix + ".hdf5")
     print
 
+def write_full_collision_matrix(collision_matrix, filename='fcm.hdf5'):
+    w = h5py.File(filename, 'w')
+    w.create_dataset('collision_matrix', data=collision_matrix)
+    w.close()
+    
 def write_kappa_to_hdf5(temperature,
                         mesh,
                         frequency=None,
