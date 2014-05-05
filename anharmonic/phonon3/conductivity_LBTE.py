@@ -274,7 +274,7 @@ class Conductivity_LBTE(Conductivity):
 
         if self._temperatures is not None:
             self._allocate_values()
-        
+
     def set_kappa_at_sigmas(self):
         if len(self._grid_points) != len(self._ir_grid_points):
             print "Collision matrix is not well created."
@@ -295,6 +295,8 @@ class Conductivity_LBTE(Conductivity):
             self._collision_matrix[:, :, i, :, :, j, :, :] *= (
                 weights[i] * weights[j])
 
+        self._symmetrize_collision_matrix()
+            
         for j, sigma in enumerate(self._sigmas):
             if self._log_level:
                 print "----------- Thermal conductivity (W/m-k)",
@@ -428,6 +430,17 @@ class Conductivity_LBTE(Conductivity):
                         self._collision_matrix[
                             j, k, i, l, :, i, l, :] += main_diagonal[l] * r
                 
+    def _symmetrize_collision_matrix(self):
+        num_band = self._primitive.get_number_of_atoms() * 3
+        num_ir_grid_points = len(self._ir_grid_points)
+        for i, j, k, l, m, n in list(np.ndindex(
+                (num_ir_grid_points, num_band, 3,
+                 num_ir_grid_points, num_band, 3))):
+            sym_val = (self._collision_matrix[:, :, i, j, k, l, m, n] +
+                       self._collision_matrix[:, :, l, m, n, i, j, k]) / 2
+            self._collision_matrix[:, :, i, j, k, l, m, n] = sym_val
+            self._collision_matrix[:, :, l, m, n, i, j, k] = sym_val
+            
     def _get_X(self, t, weights):
         X = self._gv.copy()
         freqs = self._frequencies[self._ir_grid_points]
@@ -452,14 +465,13 @@ class Conductivity_LBTE(Conductivity):
         num_ir_grid_points = len(self._ir_grid_points)
         num_band = self._primitive.get_number_of_atoms() * 3
         rot_order = len(self._rotations_cartesian)
-        w, v = np.linalg.eigh((col_mat + col_mat.T) / 2)
+        w, col_mat[:] = np.linalg.eigh(col_mat)
+        v = col_mat
         e = np.zeros(len(w), dtype='double')
         for l, val in enumerate(w):
             if val > pinv_cutoff:
                 e[l] = 1 / val
         inv_col = np.dot(v, (e * v).T)
-        # inv_col = np.dot(v, np.dot(np.diag(e), v.T))
-        
         Y = np.dot(inv_col, X.ravel()).reshape(-1, 3)
         RX = np.dot(self._rotations_cartesian.reshape(-1, 3), X.T).T
         RY = np.dot(self._rotations_cartesian.reshape(-1, 3), Y.T).T
