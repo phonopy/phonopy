@@ -18,7 +18,7 @@ extension = Extension(
                      '-lblas'],
     sources=['c/_phono3py.c',
              'c/harmonic/dynmat.c',
-             'c/harmonic/lapack_wrapper.c',
+             'c/anharmonic/lapack_wrapper.c',
              'c/anharmonic/phonoc_array.c',
              'c/anharmonic/phonoc_math.c',
              'c/anharmonic/phonoc_utils.c',

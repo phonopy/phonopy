@@ -3,23 +3,27 @@ from distutils.core import setup, Extension
 import numpy
 include_dirs_numpy = [numpy.get_include()]
 include_dirs_lapacke = ['../lapack-3.5.0/lapacke/include']
+include_dirs_libflame = ['../libflame-bin/include']
 
 extension = Extension(
     'anharmonic._phono3py',
     include_dirs=(['c/harmonic_h',
                    'c/anharmonic_h',
                    'c/spglib_h'] +
-                   include_dirs_numpy +
-                   include_dirs_lapacke),
+                  include_dirs_numpy +
+                  include_dirs_lapacke +
+                  include_dirs_libflame),
     extra_compile_args=['-fopenmp'],
     extra_link_args=['../lapack-3.5.0/liblapacke.a',
+                     '../libflame-bin/lib/libflame.a',
                      '-lgomp',
                      # '-llapack',
                      # '-lblas'],
                      ],
     sources=['c/_phono3py.c',
              'c/harmonic/dynmat.c',
-             'c/harmonic/lapack_wrapper.c',
+             'c/anharmonic/flame_wrapper.c',
+             'c/anharmonic/lapack_wrapper.c',
              'c/anharmonic/phonoc_array.c',
              'c/anharmonic/phonoc_math.c',
              'c/anharmonic/phonoc_utils.c',
