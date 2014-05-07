@@ -14,7 +14,6 @@ int flame_Hevd(void)
   FLA_Hevd(FLA_EVD_WITH_VECTORS, FLA_LOWER_TRIANGULAR, A, l);
   FLA_Obj_free(&A);
   FLA_Obj_free(&l);
-  free_matrix(buffer);
   FLA_Finalize();
   return 0;
 }
