@@ -362,7 +362,8 @@ int spg_get_BZ_triplets_at_q(int triplets[][3],
 			     const int grid_point,
 			     SPGCONST int bz_grid_address[][3],
 			     const int bz_map[],
-			     const int triplet_weights[],
+			     const int map_triplets[],
+			     const int num_map_triplets,
 			     const int mesh[3]);
 
 void spg_get_neighboring_grid_points(int relative_grid_points[],

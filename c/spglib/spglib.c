@@ -580,15 +580,16 @@ int spg_get_BZ_triplets_at_q(int triplets[][3],
 			     const int grid_point,
 			     SPGCONST int bz_grid_address[][3],
 			     const int bz_map[],
-			     const int triplet_weights[],
+			     const int map_triplets[],
+			     const int num_map_triplets,
 			     const int mesh[3])
-
 {
   return kpt_get_BZ_triplets_at_q(triplets,
 				  grid_point,
 				  bz_grid_address,
 				  bz_map,
-				  triplet_weights,
+				  map_triplets,
+				  num_map_triplets,
 				  mesh);
 }
 

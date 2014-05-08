@@ -609,6 +609,7 @@ static PyObject * get_BZ_triplets_at_q(PyObject *self, PyObject *args)
   SPGCONST int (*bz_grid_address)[3] = (int(*)[3])bz_grid_address_py->data;
   const int *bz_map = (int*)bz_map_py->data;
   const int *map_triplets = (int*)map_triplets_py->data;
+  const int num_map_triplets = (int)map_triplets_py->dimensions[0];
   const int *mesh = (int*)mesh_py->data;
   int num_ir;
   
@@ -617,6 +618,7 @@ static PyObject * get_BZ_triplets_at_q(PyObject *self, PyObject *args)
 				    bz_grid_address,
 				    bz_map,
 				    map_triplets,
+				    num_map_triplets,
 				    mesh);
 
   return PyInt_FromLong((long) num_ir);
