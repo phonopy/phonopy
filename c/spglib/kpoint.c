@@ -172,26 +172,35 @@ int kpt_get_stabilized_reciprocal_mesh(int grid_address[][3],
 }
 
 void kpt_get_grid_points_by_rotations(int rot_grid_points[],
-				      const int grid_point,
+				      const int address_orig[3],
 				      const MatINT * rot_reciprocal,
 				      const int mesh[3],
-				      const int is_shift[3])
+				      const int is_shift[3],
+				      const int bz_map[])
 {
-  int i;
-  int grid_double_orig[3], grid_double[3], mesh_double[3];
+  int i, j;
+  int address_double_orig[3], address_double[3], mesh_double[3], bzmesh_double[3];
 
-  mesh_double[0] = mesh[0] * 2;
-  mesh_double[1] = mesh[1] * 2;
-  mesh_double[2] = mesh[2] * 2;
-  grid_point_to_grid_double(grid_double_orig, grid_point, mesh, is_shift);
+  for (i = 0; i < 3; i++) {
+    mesh_double[i] = mesh[i] * 2;
+    bzmesh_double[i] = mesh[i] * 4;
+    address_double_orig[i] = address_orig[i] * 2 + is_shift[i];
+  }
   for (i = 0; i < rot_reciprocal->size; i++) {
-    mat_multiply_matrix_vector_i3(grid_double,
+    mat_multiply_matrix_vector_i3(address_double,
 				  rot_reciprocal->mat[i],
-				  grid_double_orig);
-    get_vector_modulo(grid_double, mesh_double);
-    rot_grid_points[i] = get_grid_point(grid_double, mesh);
+				  address_double_orig);
+    get_vector_modulo(address_double, mesh_double);
+    rot_grid_points[i] = get_grid_point(address_double, mesh);
+    /* for (j = 0; j < 3; j++) { */
+    /*   if (address_double[j] < 0) { */
+    /* 	address_double[j] += bzmesh_double[j]; */
+    /*   } */
+    /* } */
+    /* rot_grid_points[i] = bz_map[get_grid_point(address_double, mesh_double)]; */
   }
 }
+
 
 int kpt_relocate_BZ_grid_address(int bz_grid_address[][3],
 				 int bz_map[],

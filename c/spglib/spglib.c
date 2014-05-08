@@ -518,11 +518,12 @@ int spg_get_stabilized_reciprocal_mesh(int grid_address[][3],
 }
 
 void spg_get_grid_points_by_rotations(int rot_grid_points[],
-				      const int grid_point,
+				      const int address_orig[3],
 				      const int num_rot,
 				      SPGCONST int rot_reciprocal[][3][3],
 				      const int mesh[3],
-				      const int is_shift[3])
+				      const int is_shift[3],
+				      const int bz_map[])
 {
   int i;
   MatINT *rot;
@@ -532,10 +533,11 @@ void spg_get_grid_points_by_rotations(int rot_grid_points[],
     mat_copy_matrix_i3(rot->mat[i], rot_reciprocal[i]);
   }
   kpt_get_grid_points_by_rotations(rot_grid_points,
-				   grid_point,
+				   address_orig,
 				   rot,
 				   mesh,
-				   is_shift);
+				   is_shift,
+				   bz_map);
   mat_free_MatINT(rot);
 }
 

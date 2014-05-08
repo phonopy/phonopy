@@ -2,7 +2,7 @@ import sys
 import numpy as np
 from anharmonic.phonon3.conductivity import Conductivity
 from anharmonic.phonon3.collision_matrix import CollisionMatrix
-from anharmonic.phonon3.triplets import get_grid_points_by_rotations
+from anharmonic.phonon3.triplets import get_grid_points_by_rotations, get_grid_point_from_address
 from anharmonic.file_IO import write_kappa_to_hdf5, write_collision_to_hdf5, read_collision_from_hdf5, write_full_collision_matrix
 from phonopy.units import THzToEv, Kb
 
@@ -397,9 +397,10 @@ class Conductivity_LBTE(Conductivity):
             dtype='intc')
         for i, ir_gp in enumerate(self._ir_grid_points):
             self._rot_grid_points[i] = get_grid_points_by_rotations(
-                ir_gp,
+                self._grid_address[ir_gp],
                 self._point_operations,
-                self._mesh)
+                self._mesh,
+                self._pp.get_bz_map())
         self._collision = CollisionMatrix(self._pp,
                                           self._point_operations,
                                           self._ir_grid_points,

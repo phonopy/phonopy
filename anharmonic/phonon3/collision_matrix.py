@@ -4,7 +4,6 @@ import phonopy.structure.spglib as spg
 from phonopy.units import THzToEv, Kb
 from phonopy.harmonic.force_constants import similarity_transformation
 from anharmonic.phonon3.imag_self_energy import ImagSelfEnergy
-from anharmonic.phonon3.triplets import get_grid_point_from_address, get_ir_grid_points, get_grid_points_by_rotations
 
 class CollisionMatrix(ImagSelfEnergy):
     """

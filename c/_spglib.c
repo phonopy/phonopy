@@ -476,31 +476,36 @@ static PyObject * get_stabilized_reciprocal_mesh(PyObject *self, PyObject *args)
 static PyObject * get_grid_points_by_rotations(PyObject *self, PyObject *args)
 {
   PyArrayObject* rot_grid_points_py;
+  PyArrayObject* address_orig_py;
   PyArrayObject* rot_reciprocal_py;
   PyArrayObject* mesh_py;
   PyArrayObject* is_shift_py;
-  int grid_point;
-  if (!PyArg_ParseTuple(args, "OiOOO",
+  PyArrayObject* bz_map_py;
+  if (!PyArg_ParseTuple(args, "OOOOOO",
 			&rot_grid_points_py,
-			&grid_point,
+			&address_orig_py,
 			&rot_reciprocal_py,
 			&mesh_py,
-			&is_shift_py)) {
+			&is_shift_py,
+			&bz_map_py)) {
     return NULL;
   }
 
   int *rot_grid_points = (int*)rot_grid_points_py->data;
+  const int *address_orig = (int*)address_orig_py->data;
   SPGCONST int (*rot_reciprocal)[3][3] = (int(*)[3][3])rot_reciprocal_py->data;
   const int num_rot = rot_reciprocal_py->dimensions[0];
   const int* mesh = (int*)mesh_py->data;
   const int* is_shift = (int*)is_shift_py->data;
+  const int* bz_map = (int*)bz_map_py->data;
   
   spg_get_grid_points_by_rotations(rot_grid_points,
-				   grid_point,
+				   address_orig,
 				   num_rot,
 				   rot_reciprocal,
 				   mesh,
-				   is_shift);
+				   is_shift,
+				   bz_map);
   Py_RETURN_NONE;
 }
 

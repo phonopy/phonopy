@@ -301,12 +301,12 @@ int spg_get_stabilized_reciprocal_mesh(int grid_address[][3],
 /* to a grid point ``grid_point`` and resulting grid points are stored in */
 /* ``rot_grid_points``. */
 void spg_get_grid_points_by_rotations(int rot_grid_points[],
-				      const int grid_point,
+				      const int address_orig[3],
 				      const int num_rot,
 				      SPGCONST int rot_reciprocal[][3][3],
 				      const int mesh[3],
-				      const int is_shift[3]);
-
+				      const int is_shift[3],
+				      const int bz_map[]);
 
 /* Grid addresses are relocated inside Brillouin zone. */
 /* Number of ir-grid-points inside Brillouin zone is returned. */
