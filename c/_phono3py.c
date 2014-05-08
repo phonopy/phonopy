@@ -26,6 +26,7 @@ static PyObject * py_get_imag_self_energy_at_bands(PyObject *self,
 static PyObject * py_get_thm_imag_self_energy_at_bands(PyObject *self,
 						       PyObject *args);
 static PyObject * py_get_collision_matrix(PyObject *self, PyObject *args);
+static PyObject * py_symmetrize_collision_matrix(PyObject *self, PyObject *args);
 static PyObject * py_set_phonons_at_gridpoints(PyObject *self, PyObject *args);
 static PyObject * py_get_phonon(PyObject *self, PyObject *args);
 static PyObject * py_distribute_fc3(PyObject *self, PyObject *args);
@@ -55,6 +56,7 @@ static PyMethodDef functions[] = {
   {"imag_self_energy_at_bands", py_get_imag_self_energy_at_bands, METH_VARARGS, "Imaginary part of self energy at phonon frequencies of bands"},
   {"thm_imag_self_energy_at_bands", py_get_thm_imag_self_energy_at_bands, METH_VARARGS, "Imaginary part of self energy at phonon frequencies of bands for tetrahedron method"},
   {"collision_matrix", py_get_collision_matrix, METH_VARARGS, "Collision matrix with g"},
+  {"symmetrize_collision_matrix", py_symmetrize_collision_matrix, METH_VARARGS, "Symmetrize collision matrix"},
   {"phonons_at_gridpoints", py_set_phonons_at_gridpoints, METH_VARARGS, "Set phonons at grid points"},
   {"phonon", py_get_phonon, METH_VARARGS, "Get phonon"},
   {"distribute_fc3", py_distribute_fc3, METH_VARARGS, "Distribute least fc3 to full fc3"},
@@ -562,6 +564,44 @@ static PyObject * py_get_collision_matrix(PyObject *self, PyObject *args)
   free(fc3_normal_squared);
   free(rotated_grid_points);
   
+  Py_RETURN_NONE;
+}
+
+static PyObject * py_symmetrize_collision_matrix(PyObject *self, PyObject *args)
+{
+  PyArrayObject* collision_matrix_py;
+  
+  if (!PyArg_ParseTuple(args, "O",
+			&collision_matrix_py)) {
+    return NULL;
+  }
+
+  double* collision_matrix = (double*)collision_matrix_py->data;
+  const int num_sigma = (int)collision_matrix_py->dimensions[0];
+  const int num_temp = (int)collision_matrix_py->dimensions[1];
+  const int num_ir_grid_points = (int)collision_matrix_py->dimensions[2];
+  const int num_band = (int)collision_matrix_py->dimensions[3];
+  int i, j, k, l, num_column, adrs_shift;
+  double val;
+
+  num_column = num_ir_grid_points * num_band * 3;
+  
+  for (i = 0; i < num_sigma; i++) {
+    for (j = 0; j < num_temp; j++) {
+      adrs_shift = (i * num_column * num_column * num_temp +
+		    j * num_column * num_column);
+#pragma omp parallel for private(l, val)
+      for (k = 1; k < num_column; k++) {
+	for (l = k + 1; l < num_column; l++) {
+	  val = (collision_matrix[adrs_shift + k * num_column + l] +
+		 collision_matrix[adrs_shift + l * num_column + k]) / 2;
+	  collision_matrix[adrs_shift + k * num_column + l] = val;
+	  collision_matrix[adrs_shift + l * num_column + k] = val;
+	}
+      }
+    }
+  }
+    
   Py_RETURN_NONE;
 }
 

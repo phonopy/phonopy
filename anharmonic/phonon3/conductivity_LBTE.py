@@ -443,6 +443,14 @@ class Conductivity_LBTE(Conductivity):
                             j, k, i, l, :, i, l, :] += main_diagonal[l] * r
                 
     def _symmetrize_collision_matrix(self, write_to_hdf5=False):
+        import anharmonic._phono3py as phono3c
+        phono3c.symmetrize_collision_matrix(self._collision_matrix)
+        # self._py_symmetrize_collision_matrix()
+        
+        if write_to_hdf5:
+            write_full_collision_matrix(self._collision_matrix)
+        
+    def _py_symmetrize_collision_matrix(self):
         num_band = self._primitive.get_number_of_atoms() * 3
         num_ir_grid_points = len(self._ir_grid_points)
         for i in range(num_ir_grid_points):
@@ -456,9 +464,6 @@ class Conductivity_LBTE(Conductivity):
                                 self._collision_matrix[:, :, i, j, k, l, m, n] = sym_val
                                 self._collision_matrix[:, :, l, m, n, i, j, k] = sym_val
 
-        if write_to_hdf5:
-            write_full_collision_matrix(self._collision_matrix)
-            
     def _get_X(self, t, weights):
         X = self._gv.copy()
         freqs = self._frequencies[self._ir_grid_points]
