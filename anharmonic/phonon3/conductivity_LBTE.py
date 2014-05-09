@@ -281,61 +281,8 @@ class Conductivity_LBTE(Conductivity):
             print "Collision matrix is not well created."
             import sys
             sys.exit(1)
-
-        # self._collision_matrix is overwritten to save memory space
-        if self._log_level:
-            print "Combining collisions..."
-            import sys
-            sys.stdout.flush()
-            
-        self._combine_collisions()
-            
-        num_band = self._primitive.get_number_of_atoms() * 3
-        num_ir_grid_points = len(self._ir_grid_points)
-
-        weights = []
-        for r_gps in self._rot_grid_points:
-            weights.append(np.sqrt(len(np.unique(r_gps))) / np.sqrt(len(r_gps)))
-
-        if self._log_level:
-            print "Weighting collision matrix..."
-            sys.stdout.flush()
-        for i, j in list(np.ndindex((len(weights), len(weights)))):
-            self._collision_matrix[:, :, i, :, :, j, :, :] *= (
-                weights[i] * weights[j])
-
-        if self._log_level:
-            print "Symmetrizing collision matrix..."
-            sys.stdout.flush()
-        self._symmetrize_collision_matrix(write_to_hdf5=True)
-            
-        for j, sigma in enumerate(self._sigmas):
-            if self._log_level:
-                print "----------- Thermal conductivity (W/m-k)",
-                if sigma:
-                    print "for sigma=%s -----------" % sigma
-                else:
-                    print "with tetrahedron method -----------"
-                print ("#%6s     " + " %-9s" * 6) % ("T(K)", "xx", "yy", "zz",
-                                                    "yz", "xz", "xy")
-            for k, t in enumerate(self._temperatures):
-                if t > 0:
-                    X = self._get_X(t, weights)
-                    kappa = self._get_kappa(
-                        self._collision_matrix[j, k].reshape(
-                            num_ir_grid_points * num_band * 3,
-                            num_ir_grid_points * num_band * 3),
-                        X, t)
-                    self._kappa[j, k] = [
-                        kappa[0, 0], kappa[1, 1], kappa[2, 2],
-                        kappa[1, 2], kappa[0, 2], kappa[0, 1]]
-
-                if self._log_level:
-                    print ("%7.1f" + " %9.3f" * 6) % ((t,) +
-                                                      tuple(self._kappa[j, k]))
-
-        if self._log_level:
-            print 
+        else:
+            self._set_kappa_at_sigmas()
 
     def set_collision_matrix(self, collision_matrix):
         self._collision_matrix = collision_matrix
@@ -423,6 +370,48 @@ class Conductivity_LBTE(Conductivity):
                 self._collision_matrix[j, k, i] = (
                     self._collision.get_collision_matrix())
 
+    def _set_kappa_at_sigmas(self):
+        self._combine_collisions()
+        weights = self._get_weights()
+        for i, j in list(np.ndindex((len(weights), len(weights)))):
+            self._collision_matrix[:, :, i, :, :, j, :, :] *= (
+                weights[i] * weights[j])
+
+        if self._log_level:
+            print "Symmetrizing collision matrix..."
+            sys.stdout.flush()
+        self._symmetrize_collision_matrix(write_to_hdf5=True)
+            
+        num_band = self._primitive.get_number_of_atoms() * 3
+        num_ir_grid_points = len(self._ir_grid_points)
+
+        for j, sigma in enumerate(self._sigmas):
+            if self._log_level:
+                print "----------- Thermal conductivity (W/m-k)",
+                if sigma:
+                    print "for sigma=%s -----------" % sigma
+                else:
+                    print "with tetrahedron method -----------"
+                print ("#%6s     " + " %-9s" * 6) % ("T(K)", "xx", "yy", "zz",
+                                                    "yz", "xz", "xy")
+            for k, t in enumerate(self._temperatures):
+                if t > 0:
+                    X = self._get_X(t, weights)
+                    kappa = self._get_kappa(
+                        self._collision_matrix[j, k].reshape(
+                            num_ir_grid_points * num_band * 3,
+                            num_ir_grid_points * num_band * 3), X, t)
+                    self._kappa[j, k] = [
+                        kappa[0, 0], kappa[1, 1], kappa[2, 2],
+                        kappa[1, 2], kappa[0, 2], kappa[0, 1]]
+
+                if self._log_level:
+                    print ("%7.1f" + " %9.3f" * 6) % (
+                        (t,) + tuple(self._kappa[j, k]))
+
+        if self._log_level:
+            print 
+
     def _combine_collisions(self):
         # Include main diagonal part
         num_band = self._primitive.get_number_of_atoms() * 3
@@ -431,8 +420,10 @@ class Conductivity_LBTE(Conductivity):
                                      len(self._temperatures)))):
             for i, ir_gp in enumerate(self._ir_grid_points):
                 r_gps = self._rot_grid_points[i]
-                for r, r_gp in zip(self._rotations_cartesian, r_gps):
-                    if r_gp != ir_gp:
+                diffs = (self._grid_address[r_gps] -
+                         self._grid_address[ir_gp]) % self._mesh
+                for r, diff in zip(self._rotations_cartesian, diffs):
+                    if (diff != [0, 0, 0]).any():
                         continue
 
                     main_diagonal = self._gamma[j, k, i].copy()
@@ -443,6 +434,14 @@ class Conductivity_LBTE(Conductivity):
                         self._collision_matrix[
                             j, k, i, l, :, i, l, :] += main_diagonal[l] * r
                 
+    def _get_weights(self):
+        weights = []
+        for r_gps in self._rot_grid_points:
+            multi = ((self._grid_address[r_gps] - self._grid_address[r_gps[0]])
+                     % self._mesh == [0, 0, 0]).all(axis=1).sum()
+            weights.append(np.sqrt(multi) / np.sqrt(len(r_gps)))
+        return weights
+
     def _symmetrize_collision_matrix(self, write_to_hdf5=False):
         import anharmonic._phono3py as phono3c
         phono3c.symmetrize_collision_matrix(self._collision_matrix)

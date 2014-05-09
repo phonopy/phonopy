@@ -96,6 +96,7 @@ class CollisionMatrix(ImagSelfEnergy):
                 self._grid_address,
                 self._interaction.get_bz_map(),
                 self._mesh)
+            self._bz_map = self._interaction.get_bz_map()
             
     def _run_collision_matrix(self):
         self._run_with_band_indices() # for Gamma
