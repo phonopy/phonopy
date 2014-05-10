@@ -396,10 +396,12 @@ class Conductivity_LBTE(Conductivity):
             for k, t in enumerate(self._temperatures):
                 if t > 0:
                     X = self._get_X(t, weights)
-                    kappa = self._get_kappa(
-                        self._collision_matrix[j, k].reshape(
-                            num_ir_grid_points * num_band * 3,
-                            num_ir_grid_points * num_band * 3), X, t)
+                    # kappa = self._get_kappa(
+                    #     self._collision_matrix[j, k].reshape(
+                    #         num_ir_grid_points * num_band * 3,
+                    #         num_ir_grid_points * num_band * 3), X, t)
+                    kappa = self._get_kappa_libflame(j, k, X)
+                    
                     self._kappa[j, k] = [
                         kappa[0, 0], kappa[1, 1], kappa[2, 2],
                         kappa[1, 2], kappa[0, 2], kappa[0, 1]]
@@ -479,13 +481,54 @@ class Conductivity_LBTE(Conductivity):
         else:
             return np.zeros_like(self._gv.reshape(-1, 3))
 
+    def _get_kappa_libflame(self,
+                            i_sigma,
+                            i_temp,
+                            X,
+                            pinv_cutoff=1e-11):
+        t = self._temperatures[i_temp]
+        num_ir_grid_points = len(self._ir_grid_points)
+        num_band = self._primitive.get_number_of_atoms() * 3
+        rot_order = len(self._rotations_cartesian)
+        
+        import anharmonic._phono3py as phono3c
+        w = np.zeros(num_ir_grid_points * num_band * 3, dtype='double')
+        phono3c.libflame(self._collision_matrix, w, i_sigma, i_temp)
+        v = self._collision_matrix[i_sigma, i_temp].reshape(
+            (num_ir_grid_points * num_band * 3,
+             num_ir_grid_points * num_band * 3)).T
+        e = np.zeros(len(w), dtype='double')
+        
+        for l, val in enumerate(w):
+            if val > pinv_cutoff:
+                e[l] = 1 / np.sqrt(val)
+        v[:] = e * v
+        v[:] = np.dot(v, v.T) # inv_col
+        Y = np.dot(v, X.ravel()).reshape(-1, 3)
+        RX = np.dot(self._rotations_cartesian.reshape(-1, 3), X.T).T
+        RY = np.dot(self._rotations_cartesian.reshape(-1, 3), Y.T).T
+        
+        sum_outer = np.zeros((3, 3), dtype='double')
+        for irX, irY in zip(
+                RX.reshape(num_ir_grid_points, num_band, rot_order, 3),
+                RY.reshape(num_ir_grid_points, num_band, rot_order, 3)):
+            for X_band, Y_band in zip(irX, irY):
+                for RX_band, RY_band in zip(X_band, Y_band):
+                    sum_outer += np.outer(RX_band, RY_band)
+        
+        return (sum_outer * self._conversion_factor * 2 * Kb * t ** 2 /
+                np.prod(self._mesh))
+        
+            
     def _get_kappa(self, col_mat, X, t, pinv_cutoff=1e-11):
         num_ir_grid_points = len(self._ir_grid_points)
         num_band = self._primitive.get_number_of_atoms() * 3
         rot_order = len(self._rotations_cartesian)
+
         w, col_mat[:] = np.linalg.eigh(col_mat)
         v = col_mat
         e = np.zeros(len(w), dtype='double')
+        
         for l, val in enumerate(w):
             if val > pinv_cutoff:
                 e[l] = 1 / np.sqrt(val)

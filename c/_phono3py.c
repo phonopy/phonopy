@@ -5,6 +5,7 @@
 #include <numpy/arrayobject.h>
 #include <lapacke.h>
 #include "lapack_wrapper.h"
+#include "flame_wrapper.h"
 #include "phonoc_array.h"
 #include "phonoc_utils.h"
 #include "phonon3_h/fc3.h"
@@ -30,7 +31,6 @@ static PyObject * py_symmetrize_collision_matrix(PyObject *self, PyObject *args)
 static PyObject * py_set_phonons_at_gridpoints(PyObject *self, PyObject *args);
 static PyObject * py_get_phonon(PyObject *self, PyObject *args);
 static PyObject * py_distribute_fc3(PyObject *self, PyObject *args);
-static PyObject * py_phonopy_zheev(PyObject *self, PyObject *args);
 static PyObject * py_get_isotope_strength(PyObject *self, PyObject *args);
 static PyObject * py_get_thm_isotope_strength(PyObject *self, PyObject *args);
 static PyObject * py_set_permutation_symmetry_fc3(PyObject *self,
@@ -41,6 +41,9 @@ static PyObject *
 py_set_triplets_integration_weights(PyObject *self, PyObject *args);
 static PyObject *
 py_set_triplets_integration_weights_with_sigma(PyObject *self, PyObject *args);
+static PyObject * py_phonopy_zheev(PyObject *self, PyObject *args);
+static PyObject * py_libflame(PyObject *self, PyObject *args);
+
 static void get_triplet_tetrahedra_vertices
   (int vertices[2][24][4],
    SPGCONST int relative_grid_address[2][24][4][3],
@@ -60,7 +63,6 @@ static PyMethodDef functions[] = {
   {"phonons_at_gridpoints", py_set_phonons_at_gridpoints, METH_VARARGS, "Set phonons at grid points"},
   {"phonon", py_get_phonon, METH_VARARGS, "Get phonon"},
   {"distribute_fc3", py_distribute_fc3, METH_VARARGS, "Distribute least fc3 to full fc3"},
-  {"zheev", py_phonopy_zheev, METH_VARARGS, "Lapack zheev wrapper"},
   {"isotope_strength", py_get_isotope_strength, METH_VARARGS, "Isotope scattering strength"},
   {"thm_isotope_strength", py_get_thm_isotope_strength, METH_VARARGS, "Isotope scattering strength for tetrahedron_method"},
   {"permutation_symmetry_fc3", py_set_permutation_symmetry_fc3, METH_VARARGS, "Set permutation symmetry for fc3"},
@@ -68,6 +70,8 @@ static PyMethodDef functions[] = {
   {"integration_weights", py_set_integration_weights, METH_VARARGS, "Integration weights of tetrahedron method"},
   {"triplets_integration_weights", py_set_triplets_integration_weights, METH_VARARGS, "Integration weights of tetrahedron method for triplets"},
   {"triplets_integration_weights_with_sigma", py_set_triplets_integration_weights_with_sigma, METH_VARARGS, "Integration weights of smearing method for triplets"},
+  {"zheev", py_phonopy_zheev, METH_VARARGS, "Lapack zheev wrapper"},
+  {"libflame", py_libflame, METH_VARARGS, "Libflame test"},
   {NULL, NULL, 0, NULL}
 };
 
@@ -1142,8 +1146,37 @@ static PyObject * py_phonopy_zheev(PyObject *self, PyObject *args)
   return PyInt_FromLong((long) info);
 }
 
+static PyObject * py_libflame(PyObject *self, PyObject *args)
+{
+  PyArrayObject* collision_matrix_py;
+  PyArrayObject* eigvals_py;
+  int i_sigma, i_temp;
 
+  if (!PyArg_ParseTuple(args, "OOii",
+			&collision_matrix_py,
+			&eigvals_py,
+			&i_sigma,
+			&i_temp)) {
+    return NULL;
+  }
 
+  
+  double *eigvals = (double*)eigvals_py->data;
+
+  double* collision_matrix = (double*)collision_matrix_py->data;
+  const int num_temp = (int)collision_matrix_py->dimensions[1];
+  const int num_ir_grid_points = (int)collision_matrix_py->dimensions[2];
+  const int num_band = (int)collision_matrix_py->dimensions[3];
+  int num_column, adrs_shift;
+  num_column = num_ir_grid_points * num_band * 3;
+
+  adrs_shift = (i_sigma * num_column * num_column * num_temp +
+		i_temp * num_column * num_column);
+  
+  flame_Hevd(collision_matrix + adrs_shift, eigvals, num_column);
+  
+  Py_RETURN_NONE;
+}
 
 static void get_triplet_tetrahedra_vertices
   (int vertices[2][24][4],
