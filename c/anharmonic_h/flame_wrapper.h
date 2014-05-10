@@ -3,6 +3,7 @@
 
 int flame_Hevd(double *matrix,
 	       double *eigvals,
-	       const int size);
+	       const int size,
+	       const double cutoff);
 
 #endif

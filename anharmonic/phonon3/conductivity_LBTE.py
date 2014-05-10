@@ -493,17 +493,10 @@ class Conductivity_LBTE(Conductivity):
         
         import anharmonic._phono3py as phono3c
         w = np.zeros(num_ir_grid_points * num_band * 3, dtype='double')
-        phono3c.libflame(self._collision_matrix, w, i_sigma, i_temp)
+        phono3c.libflame(self._collision_matrix, w, i_sigma, i_temp, pinv_cutoff)
         v = self._collision_matrix[i_sigma, i_temp].reshape(
             (num_ir_grid_points * num_band * 3,
-             num_ir_grid_points * num_band * 3)).T
-        e = np.zeros(len(w), dtype='double')
-        
-        for l, val in enumerate(w):
-            if val > pinv_cutoff:
-                e[l] = 1 / np.sqrt(val)
-        v[:] = e * v
-        v[:] = np.dot(v, v.T) # inv_col
+             num_ir_grid_points * num_band * 3))
         Y = np.dot(v, X.ravel()).reshape(-1, 3)
         RX = np.dot(self._rotations_cartesian.reshape(-1, 3), X.T).T
         RY = np.dot(self._rotations_cartesian.reshape(-1, 3), Y.T).T

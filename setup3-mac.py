@@ -4,7 +4,7 @@ import numpy
 include_dirs_numpy = [numpy.get_include()]
 include_dirs_lapacke = ['../lapack-3.5.0/lapacke/include']
 include_dirs_libflame = ['../libflame-bin/include']
-libs_libflame = ['-L/opt/local/lib/gcc48/gcc/x86_64-apple-darwin13/4.8.2 -L/opt/local/lib/gcc48/gcc/x86_64-apple-darwin13/4.8.2/../../.. -lgfortran -lquadmath -lm']
+# libs_libflame = ['-L/opt/local/lib/gcc48/gcc/x86_64-apple-darwin13/4.8.2 -L/opt/local/lib/gcc48/gcc/x86_64-apple-darwin13/4.8.2/../../.. -lgfortran -lquadmath -lm']
 
 extension = Extension(
     'anharmonic._phono3py',
@@ -17,11 +17,11 @@ extension = Extension(
     extra_compile_args=['-fopenmp'],
     extra_link_args=['../lapack-3.5.0/liblapacke.a',
                      '../libflame-bin/lib/libflame.a',
-                     '-lgomp',
-                     '/opt/local/lib/libopenblas.a',
+                     '-lgomp'],
+                     # '/opt/local/lib/libopenblas.a',
                      # '-llapack',
                      # '-lblas'],
-                     ] + libs_libflame,
+                     # ] + libs_libflame,
     sources=['c/_phono3py.c',
              'c/harmonic/dynmat.c',
              'c/anharmonic/flame_wrapper.c',

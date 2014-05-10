@@ -1151,12 +1151,14 @@ static PyObject * py_libflame(PyObject *self, PyObject *args)
   PyArrayObject* collision_matrix_py;
   PyArrayObject* eigvals_py;
   int i_sigma, i_temp;
+  double cutoff;
 
-  if (!PyArg_ParseTuple(args, "OOii",
+  if (!PyArg_ParseTuple(args, "OOiid",
 			&collision_matrix_py,
 			&eigvals_py,
 			&i_sigma,
-			&i_temp)) {
+			&i_temp,
+			&cutoff)) {
     return NULL;
   }
 
@@ -1173,7 +1175,7 @@ static PyObject * py_libflame(PyObject *self, PyObject *args)
   adrs_shift = (i_sigma * num_column * num_column * num_temp +
 		i_temp * num_column * num_column);
   
-  flame_Hevd(collision_matrix + adrs_shift, eigvals, num_column);
+  flame_Hevd(collision_matrix + adrs_shift, eigvals, num_column, cutoff);
   
   Py_RETURN_NONE;
 }
