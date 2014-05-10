@@ -29,8 +29,7 @@ void kpt_get_grid_points_by_rotations(int rot_grid_points[],
 				      const int address_orig[3],
 				      const MatINT * rot_reciprocal,
 				      const int mesh[3],
-				      const int is_shift[3],
-				      const int bz_map[]);
+				      const int is_shift[3]);
 int kpt_relocate_BZ_grid_address(int bz_grid_address[][3],
 				 int bz_map[],
 				 SPGCONST int grid_address[][3],

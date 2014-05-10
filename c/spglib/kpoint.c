@@ -75,11 +75,12 @@ static int get_BZ_triplets_at_q(int triplets[][3],
 				const int map_triplets[],
 				const int num_map_triplets,
 				const int mesh[3]);
-static void get_third_q_of_triplets_at_q(int address[3][3],
-					 const int bz_map[],
-					 const int mesh[3],
-					 const int bzmesh[3],
-					 const int bzmesh_double[3]);
+static int get_third_q_of_triplets_at_q(int address[3][3],
+					const int q_index,
+					const int bz_map[],
+					const int mesh[3],
+					const int bzmesh[3],
+					const int bzmesh_double[3]);
 static int get_grid_point(const int grid_double[3],
 			  const int mesh[3]);
 static void grid_point_to_grid_double(int grid_double[3],
@@ -176,15 +177,13 @@ void kpt_get_grid_points_by_rotations(int rot_grid_points[],
 				      const int address_orig[3],
 				      const MatINT * rot_reciprocal,
 				      const int mesh[3],
-				      const int is_shift[3],
-				      const int bz_map[])
+				      const int is_shift[3])
 {
-  int i, j;
-  int address_double_orig[3], address_double[3], mesh_double[3], bzmesh_double[3];
+  int i;
+  int address_double_orig[3], address_double[3], mesh_double[3];
 
   for (i = 0; i < 3; i++) {
     mesh_double[i] = mesh[i] * 2;
-    bzmesh_double[i] = mesh[i] * 4;
     address_double_orig[i] = address_orig[i] * 2 + is_shift[i];
   }
   for (i = 0; i < rot_reciprocal->size; i++) {
@@ -193,12 +192,6 @@ void kpt_get_grid_points_by_rotations(int rot_grid_points[],
 				  address_double_orig);
     get_vector_modulo(address_double, mesh_double);
     rot_grid_points[i] = get_grid_point(address_double, mesh);
-    /* for (j = 0; j < 3; j++) { */
-    /*   if (address_double[j] < 0) { */
-    /* 	address_double[j] += bzmesh_double[j]; */
-    /*   } */
-    /* } */
-    /* rot_grid_points[i] = bz_map[get_grid_point(address_double, mesh_double)]; */
   }
 }
 
@@ -762,11 +755,16 @@ static int get_BZ_triplets_at_q(int triplets[][3],
       address[1][j] = bz_grid_address[ir_grid_points[i]][j];
       address[2][j] = - address[0][j] - address[1][j];
     }
-    get_third_q_of_triplets_at_q(address,
-				 bz_map,
-				 mesh,
-				 bzmesh,
-				 bzmesh_double);
+    for (j = 2; j > -1; j--) {
+      if (get_third_q_of_triplets_at_q(address,
+				       j,
+				       bz_map,
+				       mesh,
+				       bzmesh,
+				       bzmesh_double) == 0) {
+	break;
+      }
+    }
     for (j = 0; j < 3; j++) {
       for (k = 0; k < 3; k++) {
 	address_double[k] = address[j][k] * 2;
@@ -783,16 +781,17 @@ static int get_BZ_triplets_at_q(int triplets[][3],
   return num_ir;
 }
 
-static void get_third_q_of_triplets_at_q(int address[3][3],
-					 const int bz_map[],
-					 const int mesh[3],
-					 const int bzmesh[3],
-					 const int bzmesh_double[3])
+static int get_third_q_of_triplets_at_q(int address[3][3],
+					const int q_index,
+					const int bz_map[],
+					const int mesh[3],
+					const int bzmesh[3],
+					const int bzmesh_double[3])
 {
   int i, j, smallest_g, smallest_index, sum_g, delta_g[3];
   int bzgp[27], address_double[3];
 
-  get_vector_modulo(address[2], mesh);
+  get_vector_modulo(address[q_index], mesh);
   for (i = 0; i < 3; i++) {
     delta_g[i] = 0;
     for (j = 0; j < 3; j++) {
@@ -803,7 +802,8 @@ static void get_third_q_of_triplets_at_q(int address[3][3],
   
   for (i = 0; i < 27; i++) {
     for (j = 0; j < 3; j++) {
-      address_double[j] = (address[2][j] + search_space[i][j] * mesh[j]) * 2;
+      address_double[j] = (address[q_index][j] +
+			   search_space[i][j] * mesh[j]) * 2;
     }
     if ((address_double[0] < bzmesh[0]) &&
 	(address_double[1] < bzmesh[1]) &&
@@ -848,8 +848,10 @@ static void get_third_q_of_triplets_at_q(int address[3][3],
   }
   
   for (i = 0; i < 3; i++) {
-    address[2][i] += search_space[smallest_index][i] * mesh[i];
+    address[q_index][i] += search_space[smallest_index][i] * mesh[i];
   }
+
+  return smallest_g;
 }
 
 static int get_grid_point(const int grid_double[3],

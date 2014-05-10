@@ -380,8 +380,7 @@ class Conductivity_RTA(Conductivity):
         rotation_map = get_grid_points_by_rotations(
             self._grid_address[self._grid_points[i]],
             self._point_operations,
-            self._mesh,
-            self._pp.get_bz_map())
+            self._mesh)
         gv_by_gv = np.zeros((len(self._gv[i]), 3, 3), dtype='double')
         
         if self._no_kappa_stars:
@@ -441,8 +440,7 @@ class Conductivity_RTA(Conductivity):
             rotation_map = get_grid_points_by_rotations(
                 self._grid_address[gp],
                 self._point_operations,
-                self._mesh,
-                self._pp.get_bz_map())
+                self._mesh)
             for i, j in enumerate(np.unique(rotation_map)):
                 for k, (rot, rot_c) in enumerate(zip(self._point_operations,
                                                      self._rotations_cartesian)):

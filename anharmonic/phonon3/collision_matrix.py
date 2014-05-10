@@ -124,8 +124,11 @@ class CollisionMatrix(ImagSelfEnergy):
 
     def _run_py_collision_matrix(self):
         gp2tp_map = {}
-        for i, j in enumerate(self._triplets_at_q[:, 1]):
-            gp2tp_map[j] = i
+        count = 0
+        for i, j in enumerate(self._triplets_map_at_q):
+            if i == j:
+                gp2tp_map[i] = count
+                count += 1
 
         num_band = self._fc3_normal_squared.shape[1]
         for i, ir_gp in enumerate(self._ir_grid_points):

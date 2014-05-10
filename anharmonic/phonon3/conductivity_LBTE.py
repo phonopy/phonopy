@@ -346,8 +346,7 @@ class Conductivity_LBTE(Conductivity):
             self._rot_grid_points[i] = get_grid_points_by_rotations(
                 self._grid_address[ir_gp],
                 self._point_operations,
-                self._mesh,
-                self._pp.get_bz_map())
+                self._mesh)
         self._collision = CollisionMatrix(self._pp,
                                           self._point_operations,
                                           self._ir_grid_points,
@@ -419,11 +418,9 @@ class Conductivity_LBTE(Conductivity):
         for j, k in list(np.ndindex((len(self._sigmas),
                                      len(self._temperatures)))):
             for i, ir_gp in enumerate(self._ir_grid_points):
-                r_gps = self._rot_grid_points[i]
-                diffs = (self._grid_address[r_gps] -
-                         self._grid_address[ir_gp]) % self._mesh
-                for r, diff in zip(self._rotations_cartesian, diffs):
-                    if (diff != [0, 0, 0]).any():
+                for r, r_gp in zip(self._rotations_cartesian,
+                                   self._rot_grid_points[i]):
+                    if ir_gp != r_gp:
                         continue
 
                     main_diagonal = self._gamma[j, k, i].copy()
@@ -437,9 +434,7 @@ class Conductivity_LBTE(Conductivity):
     def _get_weights(self):
         weights = []
         for r_gps in self._rot_grid_points:
-            multi = ((self._grid_address[r_gps] - self._grid_address[r_gps[0]])
-                     % self._mesh == [0, 0, 0]).all(axis=1).sum()
-            weights.append(np.sqrt(multi) / np.sqrt(len(r_gps)))
+            weights.append(np.sqrt(len(np.unique(r_gps))) / np.sqrt(len(r_gps)))
         return weights
 
     def _symmetrize_collision_matrix(self, write_to_hdf5=False):

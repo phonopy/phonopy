@@ -541,7 +541,7 @@ static PyObject * py_get_collision_matrix(PyObject *self, PyObject *args)
   const double* g = (double*)g_py->data;
   const double* frequencies = (double*)frequencies_py->data;
   const int* triplets = (int*)triplets_py->data;
-  const int* triplets_map = (int*)triplets_map_py->data;
+  Iarray* triplets_map = convert_to_iarray(triplets_map_py);
   const int* stabilized_gp_map = (int*)stabilized_gp_map_py->data;
   const int* ir_grid_points = (int*)ir_grid_points_py->data;
   Iarray* rotated_grid_points = convert_to_iarray(rotated_grid_points_py);
@@ -562,6 +562,7 @@ static PyObject * py_get_collision_matrix(PyObject *self, PyObject *args)
   		       cutoff_frequency);
   
   free(fc3_normal_squared);
+  free(triplets_map);
   free(rotated_grid_points);
   
   Py_RETURN_NONE;

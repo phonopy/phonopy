@@ -233,7 +233,6 @@ def get_ir_reciprocal_mesh(mesh,
 def get_grid_points_by_rotations(address_orig,
                                  reciprocal_rotations,
                                  mesh,
-                                 bz_map,
                                  is_shift=np.zeros(3, dtype='intc')):
     """
     Rotation operations in reciprocal space ``reciprocal_rotations`` are applied
@@ -246,8 +245,7 @@ def get_grid_points_by_rotations(address_orig,
         np.array(address_orig, dtype='intc'),
         np.array(reciprocal_rotations, dtype='intc', order='C'),
         np.array(mesh, dtype='intc'),
-        np.array(is_shift, dtype='intc'),
-        bz_map)
+        np.array(is_shift, dtype='intc'))
     
     return rot_grid_points
     

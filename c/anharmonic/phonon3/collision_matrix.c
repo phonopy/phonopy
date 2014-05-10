@@ -5,14 +5,13 @@
 #include "phonoc_utils.h"
 #include "phonon3_h/collision_matrix.h"
 
-static int *create_gp2tp_map(const int num_triplets,
-			     const int *triplets);
+static int *create_gp2tp_map(const Iarray *triplets);
   
 void get_collision_matrix(double *collision_matrix,
 			  const Darray *fc3_normal_squared,
 			  const double *frequencies,
 			  const int *triplets,
-			  const int *triplets_map,
+			  const Iarray *triplets_map,
 			  const int *stabilized_gp_map,
 			  const int *ir_grid_points,
 			  const Iarray *rotated_grid_points,
@@ -32,15 +31,15 @@ void get_collision_matrix(double *collision_matrix,
   num_ir_gp = rotated_grid_points->dims[0];
   num_rot = rotated_grid_points->dims[1];
 
-  gp2tp_map = create_gp2tp_map(num_triplets, triplets);
+  gp2tp_map = create_gp2tp_map(triplets_map);
 
 #pragma omp parallel for private(j, k, l, m, n, ti, gp2, r_gp, f, collision, inv_sinh)
   for (i = 0; i < num_ir_gp; i++) {
     inv_sinh = (double*)malloc(sizeof(double) * num_band);
     for (j = 0; j < num_rot; j++) {
       r_gp = rotated_grid_points->data[i * num_rot + j];
-      ti = gp2tp_map[triplets_map[r_gp]];
-      if (triplets_map[r_gp] == stabilized_gp_map[r_gp]) {
+      ti = gp2tp_map[triplets_map->data[r_gp]];
+      if (triplets_map->data[r_gp] == stabilized_gp_map[r_gp]) {
 	gp2 = triplets[ti * 3 + 2];
       } else {
 	gp2 = triplets[ti * 3 + 1];
@@ -87,23 +86,29 @@ void get_collision_matrix(double *collision_matrix,
   gp2tp_map = NULL;
 }
 
-static int *create_gp2tp_map(const int num_triplets,
-			     const int *triplets)
+static int *create_gp2tp_map(const Iarray *triplets_map)
 {
-  int i, max_i;
+  int i, max_i, count;
   int *gp2tp_map;
   
   max_i = 0;
-  for (i = 0; i < num_triplets; i++) {
-    if (max_i < triplets[3 * i + 1]) {
-      max_i = triplets[3 * i + 1];
+  for (i = 0; i < triplets_map->dims[0]; i++) {
+    if (max_i < triplets_map->data[i]) {
+      max_i = triplets_map->data[i];
     }
   }
 
   gp2tp_map = (int*)malloc(sizeof(int) * (max_i + 1));
+  for (i = 0; i < max_i + 1; i++) {
+    gp2tp_map[i] = 0;
+  }
 
-  for (i = 0; i < num_triplets; i++) {
-    gp2tp_map[triplets[3 * i + 1]] = i;
+  count = 0;
+  for (i = 0; i < triplets_map->dims[0]; i++) {
+    if (triplets_map->data[i] == i) {
+      gp2tp_map[i] = count;
+      count++;
+    }
   }
   
   return gp2tp_map;
