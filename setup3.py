@@ -5,7 +5,7 @@ include_dirs_numpy = [numpy.get_include()]
 include_dirs_lapacke = ['../lapacke/include']
 include_dirs_libflame = ['../libflame-bin/include']
 
-libs_libflame = ['-L/usr/lib/gcc/x86_64-linux-gnu/4.6 -L/usr/lib/gcc/x86_64-linux-gnu/4.6/../../../x86_64-linux-gnu -L/usr/lib/gcc/x86_64-linux-gnu/4.6/../../../../lib -L/lib/x86_64-linux-gnu -L/lib/../lib -L/usr/lib/x86_64-linux-gnu -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-linux-gnu/4.6/../../.. -lgfortran -lm -lquadmath']
+# libs_libflame = ['-L/usr/lib/gcc/x86_64-linux-gnu/4.6 -L/usr/lib/gcc/x86_64-linux-gnu/4.6/../../../x86_64-linux-gnu -L/usr/lib/gcc/x86_64-linux-gnu/4.6/../../../../lib -L/lib/x86_64-linux-gnu -L/lib/../lib -L/usr/lib/x86_64-linux-gnu -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-linux-gnu/4.6/../../.. -lgfortran -lm -lquadmath']
 
 extension = Extension(
     'anharmonic._phono3py',
@@ -20,7 +20,7 @@ extension = Extension(
                      '../lapacke/liblapacke.a',
                      '../libflame-bin/lib/libflame.a',
                      '-llapack',
-                     '-lblas'] + libs_libflame,
+                     '-lblas'],
     sources=['c/_phono3py.c',
              'c/harmonic/dynmat.c',
              'c/anharmonic/lapack_wrapper.c',
