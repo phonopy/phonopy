@@ -7,18 +7,23 @@ int flame_Hevd(double *matrix,
 	       const int size,
 	       const double cutoff)
 {
-  FLA_Obj A, B, l;
+  FLA_Obj A, B, C, l;
   int i;
   
   FLA_Init();
   FLA_Obj_create_without_buffer(FLA_DOUBLE, size, size, &A);
   FLA_Obj_attach_buffer(matrix, 0, 0, &A);
   
-  FLA_Obj_create_copy_of(FLA_NO_TRANSPOSE, A, &B);
-  FLA_Obj_create_without_buffer(FLA_DOUBLE, 1, size, &l);
+  FLA_Obj_create_without_buffer(FLA_DOUBLE, size, 1, &l);
   FLA_Obj_attach_buffer(eigvals, 0, 0, &l);
-  
-  FLA_Hevd(FLA_EVD_WITH_VECTORS, FLA_LOWER_TRIANGULAR, B, l);
+
+  /* Eigensolver */
+  /* FLA_Obj_create_copy_of(FLA_NO_TRANSPOSE, A, &B); */
+  /* FLA_Hevd(FLA_EVD_WITH_VECTORS, FLA_LOWER_TRIANGULAR, B, l); */
+
+  /* SVD */
+  FLA_Obj_create(FLA_DOUBLE, size, size, 0, 0, &B);
+  FLA_Svd(FLA_SVD_VECTORS_ALL, FLA_SVD_VECTORS_NONE, A, l, B, C);  
   
   FLA_Obj_free_without_buffer(&l);
   
@@ -30,7 +35,7 @@ int flame_Hevd(double *matrix,
     }
   }
   
-  FLA_Obj_create_without_buffer(FLA_DOUBLE, 1, size, &l);
+  FLA_Obj_create_without_buffer(FLA_DOUBLE, size, 1, &l);
   FLA_Obj_attach_buffer(eigvals, 0, 0, &l);
   
   FLA_Apply_diag_matrix(FLA_RIGHT, FLA_NO_CONJUGATE, l, B);

@@ -396,11 +396,11 @@ class Conductivity_LBTE(Conductivity):
             for k, t in enumerate(self._temperatures):
                 if t > 0:
                     X = self._get_X(t, weights)
-                    kappa = self._get_kappa(
-                        self._collision_matrix[j, k].reshape(
-                            num_ir_grid_points * num_band * 3,
-                            num_ir_grid_points * num_band * 3), X, t)
-                    # kappa = self._get_kappa_libflame(j, k, X)
+                    # kappa = self._get_kappa(
+                    #     self._collision_matrix[j, k].reshape(
+                    #         num_ir_grid_points * num_band * 3,
+                    #         num_ir_grid_points * num_band * 3), X, t)
+                    kappa = self._get_kappa_libflame(j, k, X)
                     
                     self._kappa[j, k] = [
                         kappa[0, 0], kappa[1, 1], kappa[2, 2],
