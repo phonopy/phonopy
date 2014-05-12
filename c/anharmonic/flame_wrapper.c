@@ -23,7 +23,10 @@ int flame_Hevd(double *matrix,
 
   /* SVD */
   FLA_Obj_create(FLA_DOUBLE, size, size, 0, 0, &B);
-  FLA_Svd(FLA_SVD_VECTORS_ALL, FLA_SVD_VECTORS_NONE, A, l, B, C);  
+  /* use U */
+  FLA_Svd(FLA_SVD_VECTORS_ALL, FLA_SVD_VECTORS_NONE, A, l, B, C);
+  /* use V */
+  /* FLA_Svd(FLA_SVD_VECTORS_NONE, FLA_SVD_VECTORS_ALL, A, l, C, B); */
   
   FLA_Obj_free_without_buffer(&l);
   
