@@ -396,11 +396,11 @@ class Conductivity_LBTE(Conductivity):
             for k, t in enumerate(self._temperatures):
                 if t > 0:
                     X = self._get_X(t, weights)
-                    # kappa = self._get_kappa(
-                    #     self._collision_matrix[j, k].reshape(
-                    #         num_ir_grid_points * num_band * 3,
-                    #         num_ir_grid_points * num_band * 3), X, t)
-                    kappa = self._get_kappa_libflame(j, k, X)
+                    kappa = self._get_kappa(
+                        self._collision_matrix[j, k].reshape(
+                            num_ir_grid_points * num_band * 3,
+                            num_ir_grid_points * num_band * 3), X, t)
+                    # kappa = self._get_kappa_libflame(j, k, X)
                     
                     self._kappa[j, k] = [
                         kappa[0, 0], kappa[1, 1], kappa[2, 2],
@@ -521,12 +521,14 @@ class Conductivity_LBTE(Conductivity):
         w, col_mat[:] = np.linalg.eigh(col_mat)
         v = col_mat
         e = np.zeros(len(w), dtype='double')
-        
         for l, val in enumerate(w):
             if val > pinv_cutoff:
                 e[l] = 1 / np.sqrt(val)
         v[:] = e * v
         v[:] = np.dot(v, v.T) # inv_col
+        # import scipy.linalg
+        # v = scipy.linalg.pinvh(col_mat)
+        # v = np.linalg.pinv(col_mat)
         Y = np.dot(v, X.ravel()).reshape(-1, 3)
         RX = np.dot(self._rotations_cartesian.reshape(-1, 3), X.T).T
         RY = np.dot(self._rotations_cartesian.reshape(-1, 3), Y.T).T
