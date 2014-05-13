@@ -19,5 +19,8 @@ void phonopy_pinv_mt(double *data_out,
 		     const int max_row_num,
 		     const int column_num,
 		     const double cutoff);
+int phonopy_pinvs(double *data,
+		  const int size,
+		  const double cutoff);
 
 #endif

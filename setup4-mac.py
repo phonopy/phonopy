@@ -17,7 +17,7 @@ extension_phono4py = Extension(
                      #'-lblas'],
     sources=['c/_phono4py.c',
              'c/harmonic/dynmat.c',
-             'c/harmonic/lapack_wrapper.c',
+             'c/anharmonic/lapack_wrapper.c',
              'c/anharmonic/phonoc_array.c',
              'c/anharmonic/phonoc_math.c',
              'c/anharmonic/phonoc_utils.c',
@@ -28,7 +28,7 @@ extension_phono4py = Extension(
 
 extension_forcefit = Extension(
     'anharmonic._forcefit',
-    include_dirs=(['c/harmonic_h'] +
+    include_dirs=(['c/anharmonic_h'] +
                   include_dirs_numpy +
                   include_dirs_lapacke),
     extra_compile_args=['-fopenmp'],
@@ -37,7 +37,7 @@ extension_forcefit = Extension(
                      #'-llapack',
                      #'-lblas'],
     sources=['c/_forcefit.c',
-             'c/harmonic/lapack_wrapper.c'])
+             'c/anharmonic/lapack_wrapper.c'])
 
 setup(name='phono4py',
       version='0.8.0',

@@ -43,6 +43,7 @@ static PyObject *
 py_set_triplets_integration_weights_with_sigma(PyObject *self, PyObject *args);
 static PyObject * py_phonopy_zheev(PyObject *self, PyObject *args);
 static PyObject * py_libflame(PyObject *self, PyObject *args);
+static PyObject * py_inverse_collision_matrix(PyObject *self, PyObject *args);
 
 static void get_triplet_tetrahedra_vertices
   (int vertices[2][24][4],
@@ -72,6 +73,7 @@ static PyMethodDef functions[] = {
   {"triplets_integration_weights_with_sigma", py_set_triplets_integration_weights_with_sigma, METH_VARARGS, "Integration weights of smearing method for triplets"},
   {"zheev", py_phonopy_zheev, METH_VARARGS, "Lapack zheev wrapper"},
   {"libflame", py_libflame, METH_VARARGS, "Libflame test"},
+  {"inverse_collision_matrix", py_inverse_collision_matrix, METH_VARARGS, "Pseudo-inverse using Lapack dsyev"},
   {NULL, NULL, 0, NULL}
 };
 
@@ -1178,6 +1180,35 @@ static PyObject * py_libflame(PyObject *self, PyObject *args)
   flame_Hevd(collision_matrix + adrs_shift, eigvals, num_column, cutoff);
   
   Py_RETURN_NONE;
+}
+
+static PyObject * py_inverse_collision_matrix(PyObject *self, PyObject *args)
+{
+  PyArrayObject* collision_matrix_py;
+  double cutoff;
+  int i_sigma, i_temp;
+
+  if (!PyArg_ParseTuple(args, "Oiid",
+			&collision_matrix_py,
+			&i_sigma,
+			&i_temp,
+			&cutoff)) {
+    return NULL;
+  }
+
+  double* collision_matrix = (double*)collision_matrix_py->data;
+  const int num_temp = (int)collision_matrix_py->dimensions[1];
+  const int num_ir_grid_points = (int)collision_matrix_py->dimensions[2];
+  const int num_band = (int)collision_matrix_py->dimensions[3];
+  
+  int num_column, adrs_shift, info;
+  num_column = num_ir_grid_points * num_band * 3;
+  adrs_shift = (i_sigma * num_column * num_column * num_temp +
+		i_temp * num_column * num_column);
+  
+  info = phonopy_pinvs(collision_matrix + adrs_shift, num_column, cutoff);
+
+  return PyInt_FromLong((long) info);
 }
 
 static void get_triplet_tetrahedra_vertices

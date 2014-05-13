@@ -91,3 +91,43 @@ void phonopy_pinv_mt(double *data_out,
 			       cutoff);
   }
 }
+
+int phonopy_pinvs(double *data,
+		  const int size,
+		  const double cutoff)
+{
+  int i, j, k;
+  lapack_int info;
+  double *w, *tmp_data;
+
+  w = (double*)malloc(sizeof(double) * size);
+  tmp_data = (double*)malloc(sizeof(double) * size * size);
+
+  for (i = 0; i < size * size; i++) {
+    tmp_data[i] = data[i];
+  }
+
+  info = LAPACKE_dsyev(LAPACK_ROW_MAJOR,
+		       'V',
+		       'U',
+		       (lapack_int)size,
+		       tmp_data,
+		       (lapack_int)size,
+		       w);
+
+  for (i = 0; i < size; i++) {
+    for (j = 0; j < size; j++) {
+      for (k = 0; k < size; k++) {
+	if (w[k] > cutoff) {
+	  data[j * size + i] +=
+	    tmp_data[i * size + k] / w[k] * tmp_data[j * size + k];
+	}
+      }
+    }
+  }
+
+  free(w);
+  free(tmp_data);
+
+  return (int)info;
+}
