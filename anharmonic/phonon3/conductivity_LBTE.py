@@ -522,14 +522,15 @@ class Conductivity_LBTE(Conductivity):
         num_band = self._primitive.get_number_of_atoms() * 3
         rot_order = len(self._rotations_cartesian)
 
-        # w, col_mat[:] = np.linalg.eigh(col_mat)
-        # v = col_mat
-        # e = np.zeros(len(w), dtype='double')
-        # for l, val in enumerate(w):
-        #     if val > pinv_cutoff:
-        #         e[l] = 1 / np.sqrt(val)
-        # v[:] = e * v
-        # v[:] = np.dot(v, v.T) # inv_col
+        w, col_mat[:] = np.linalg.eigh(col_mat)
+        v = col_mat
+        e = np.zeros(len(w), dtype='double')
+        for l, val in enumerate(w):
+            if val > pinv_cutoff:
+                e[l] = 1 / np.sqrt(val)
+        v[:] = e * v
+        v[:] = np.dot(v, v.T) # inv_col
+        
         # import scipy.linalg
         # v = scipy.linalg.pinvh(col_mat)
         # v = np.linalg.pinv(col_mat)
