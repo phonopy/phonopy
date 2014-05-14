@@ -1,5 +1,6 @@
 import sys
 import numpy as np
+from phonopy.phonon.degeneracy import degenerate_sets
 from anharmonic.phonon3.conductivity import Conductivity
 from anharmonic.phonon3.collision_matrix import CollisionMatrix
 from anharmonic.phonon3.triplets import get_grid_points_by_rotations, get_grid_point_from_address
@@ -379,7 +380,7 @@ class Conductivity_LBTE(Conductivity):
         if self._log_level:
             print "Symmetrizing collision matrix..."
             sys.stdout.flush()
-        self._symmetrize_collision_matrix(write_to_hdf5=True)
+        self._symmetrize_collision_matrix()
             
         num_band = self._primitive.get_number_of_atoms() * 3
         num_ir_grid_points = len(self._ir_grid_points)
@@ -396,11 +397,9 @@ class Conductivity_LBTE(Conductivity):
             for k, t in enumerate(self._temperatures):
                 if t > 0:
                     X = self._get_X(t, weights)
-                    # kappa = self._get_kappa(
-                    #     self._collision_matrix[j, k].reshape(
-                    #         num_ir_grid_points * num_band * 3,
-                    #         num_ir_grid_points * num_band * 3), X, t)
-                    kappa = self._get_kappa_external(j, k, X)
+                    self._set_inv_collision_matrix_external(j, k)
+                    # self._set_inv_collision_matrix(j, k)
+                    kappa = self._get_kappa(j, k, X)
                     
                     self._kappa[j, k] = [
                         kappa[0, 0], kappa[1, 1], kappa[2, 2],
@@ -439,13 +438,39 @@ class Conductivity_LBTE(Conductivity):
             weights.append(np.sqrt(len(np.unique(r_gps))) / np.sqrt(len(r_gps)))
         return weights
 
-    def _symmetrize_collision_matrix(self, write_to_hdf5=False):
+    def _symmetrize_collision_matrix(self):
+        col_mat = self._collision_matrix
+        
         import anharmonic._phono3py as phono3c
         phono3c.symmetrize_collision_matrix(self._collision_matrix)
-        # self._py_symmetrize_collision_matrix()
         
-        if write_to_hdf5:
-            write_full_collision_matrix(self._collision_matrix)
+        for i, gp in enumerate(self._ir_grid_points):
+            freqs = self._frequencies[gp]
+            deg_sets = degenerate_sets(freqs)
+            for dset in deg_sets:
+                bi_set = []
+                for j in range(len(freqs)):
+                    if j in dset:
+                        bi_set.append(j)
+                sum_col = (col_mat[:, :, i, bi_set, :, :, :, :].sum(axis=2) /
+                           len(bi_set))
+                for j in bi_set:
+                    col_mat[:, :, i, j, :, :, :, :] = sum_col
+
+        for i, gp in enumerate(self._ir_grid_points):
+            freqs = self._frequencies[gp]
+            deg_sets = degenerate_sets(freqs)
+            for dset in deg_sets:
+                bi_set = []
+                for j in range(len(freqs)):
+                    if j in dset:
+                        bi_set.append(j)
+                sum_col = (col_mat[:, :, :, :, :, i, bi_set, :].sum(axis=5) /
+                           len(bi_set))
+                for j in bi_set:
+                    col_mat[:, :, :, :, :, i, j, :] = sum_col
+        
+        # self._py_symmetrize_collision_matrix()
         
     def _py_symmetrize_collision_matrix(self):
         num_band = self._primitive.get_number_of_atoms() * 3
@@ -481,46 +506,13 @@ class Conductivity_LBTE(Conductivity):
         else:
             return np.zeros_like(self._gv.reshape(-1, 3))
 
-    def _get_kappa_external(self,
-                            i_sigma,
-                            i_temp,
-                            X,
-                            pinv_cutoff=1e-11):
+    def _set_inv_collision_matrix(self, i_sigma, i_temp, pinv_cutoff=1e-11):
         t = self._temperatures[i_temp]
         num_ir_grid_points = len(self._ir_grid_points)
         num_band = self._primitive.get_number_of_atoms() * 3
-        rot_order = len(self._rotations_cartesian)
-        
-        import anharmonic._phono3py as phono3c
-        w = np.zeros(num_ir_grid_points * num_band * 3, dtype='double')
-        phono3c.inverse_collision_matrix(
-            self._collision_matrix, i_sigma, i_temp, pinv_cutoff)
-        
-        # phono3c.libflame(self._collision_matrix, w, i_sigma, i_temp, pinv_cutoff)
-            
-        v = self._collision_matrix[i_sigma, i_temp].reshape(
-            (num_ir_grid_points * num_band * 3,
-             num_ir_grid_points * num_band * 3))
-        Y = np.dot(v, X.ravel()).reshape(-1, 3)
-        RX = np.dot(self._rotations_cartesian.reshape(-1, 3), X.T).T
-        RY = np.dot(self._rotations_cartesian.reshape(-1, 3), Y.T).T
-        
-        sum_outer = np.zeros((3, 3), dtype='double')
-        for irX, irY in zip(
-                RX.reshape(num_ir_grid_points, num_band, rot_order, 3),
-                RY.reshape(num_ir_grid_points, num_band, rot_order, 3)):
-            for X_band, Y_band in zip(irX, irY):
-                for RX_band, RY_band in zip(X_band, Y_band):
-                    sum_outer += np.outer(RX_band, RY_band)
-        
-        return (sum_outer * self._conversion_factor * 2 * Kb * t ** 2 /
-                np.prod(self._mesh))
-        
-            
-    def _get_kappa(self, col_mat, X, t, pinv_cutoff=1e-11):
-        num_ir_grid_points = len(self._ir_grid_points)
-        num_band = self._primitive.get_number_of_atoms() * 3
-        rot_order = len(self._rotations_cartesian)
+        col_mat = self._collision_matrix[i_sigma, i_temp].reshape(
+            num_ir_grid_points * num_band * 3,
+            num_ir_grid_points * num_band * 3)        
 
         w, col_mat[:] = np.linalg.eigh(col_mat)
         v = col_mat
@@ -530,12 +522,29 @@ class Conductivity_LBTE(Conductivity):
                 e[l] = 1 / np.sqrt(val)
         v[:] = e * v
         v[:] = np.dot(v, v.T) # inv_col
-        
-        # import scipy.linalg
-        # v = scipy.linalg.pinvh(col_mat)
-        # v = np.linalg.pinv(col_mat)
 
-        Y = np.dot(v, X.ravel()).reshape(-1, 3)
+        # v[:] = np.linalg.pinv(col_mat)
+
+        
+    def _set_inv_collision_matrix_external(self, i_sigma, i_temp, pinv_cutoff=1e-11):
+        num_ir_grid_points = len(self._ir_grid_points)
+        num_band = self._primitive.get_number_of_atoms() * 3
+        
+        import anharmonic._phono3py as phono3c
+        phono3c.inverse_collision_matrix(
+            self._collision_matrix, i_sigma, i_temp, pinv_cutoff)
+        # w = np.zeros(num_ir_grid_points * num_band * 3, dtype='double')
+        # phono3c.libflame(self._collision_matrix, w, i_sigma, i_temp, pinv_cutoff)
+            
+    def _get_kappa(self, i_sigma, i_temp, X):
+        num_ir_grid_points = len(self._ir_grid_points)
+        num_band = self._primitive.get_number_of_atoms() * 3
+        rot_order = len(self._rotations_cartesian)
+        t = self._temperatures[i_temp]
+        inv_col_mat = self._collision_matrix[i_sigma, i_temp].reshape(
+            num_ir_grid_points * num_band * 3,
+            num_ir_grid_points * num_band * 3)        
+        Y = np.dot(inv_col_mat, X.ravel()).reshape(-1, 3)
         RX = np.dot(self._rotations_cartesian.reshape(-1, 3), X.T).T
         RY = np.dot(self._rotations_cartesian.reshape(-1, 3), Y.T).T
         
@@ -546,9 +555,9 @@ class Conductivity_LBTE(Conductivity):
             for X_band, Y_band in zip(irX, irY):
                 for RX_band, RY_band in zip(X_band, Y_band):
                     sum_outer += np.outer(RX_band, RY_band)
-        
-        return (sum_outer * self._conversion_factor * 2 * Kb * t ** 2 /
-                np.prod(self._mesh))
+
+        return ((sum_outer + sum_outer.T) * self._conversion_factor *
+                Kb * t ** 2 / np.prod(self._mesh))
                     
     def _show_log(self, i):
         q = self._qpoints[i]

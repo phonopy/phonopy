@@ -8,6 +8,7 @@ int flame_Hevd(double *matrix,
 	       const double cutoff)
 {
   FLA_Obj A, B, C, l;
+  /* FLA_Obj C; */
   int i;
   
   FLA_Init();
@@ -18,13 +19,13 @@ int flame_Hevd(double *matrix,
   FLA_Obj_attach_buffer(eigvals, 0, 0, &l);
 
   /* Eigensolver */
-  /* FLA_Obj_create_copy_of(FLA_NO_TRANSPOSE, A, &B); */
-  /* FLA_Hevd(FLA_EVD_WITH_VECTORS, FLA_LOWER_TRIANGULAR, B, l); */
+  FLA_Obj_create_copy_of(FLA_NO_TRANSPOSE, A, &B);
+  FLA_Hevd(FLA_EVD_WITH_VECTORS, FLA_LOWER_TRIANGULAR, B, l);
 
   /* SVD */
-  FLA_Obj_create(FLA_DOUBLE, size, size, 0, 0, &B);
+  /* FLA_Obj_create(FLA_DOUBLE, size, size, 0, 0, &B); */
   /* use U */
-  FLA_Svd(FLA_SVD_VECTORS_ALL, FLA_SVD_VECTORS_NONE, A, l, B, C);
+  /* FLA_Svd(FLA_SVD_VECTORS_ALL, FLA_SVD_VECTORS_NONE, A, l, B, C); */
   /* use V */
   /* FLA_Svd(FLA_SVD_VECTORS_NONE, FLA_SVD_VECTORS_ALL, A, l, C, B); */
   

@@ -105,27 +105,47 @@ int phonopy_pinvs(double *data,
 
   for (i = 0; i < size * size; i++) {
     tmp_data[i] = data[i];
+    data[i] = 0;
   }
 
   info = LAPACKE_dsyev(LAPACK_ROW_MAJOR,
-		       'V',
-		       'U',
-		       (lapack_int)size,
-		       tmp_data,
-		       (lapack_int)size,
-		       w);
+  		       'V',
+  		       'U',
+  		       (lapack_int)size,
+  		       tmp_data,
+  		       (lapack_int)size,
+  		       w);
 
   for (i = 0; i < size; i++) {
     for (j = 0; j < size; j++) {
       for (k = 0; k < size; k++) {
-	if (w[k] > cutoff) {
-	  data[j * size + i] +=
-	    tmp_data[i * size + k] / w[k] * tmp_data[j * size + k];
-	}
+  	if (w[k] > cutoff) {
+  	  data[i * size + j] +=
+  	    tmp_data[i * size + k] / w[k] * tmp_data[j * size + k];
+  	}
       }
     }
   }
 
+  /* info = LAPACKE_dsyev(LAPACK_COL_MAJOR, */
+  /* 		       'V', */
+  /* 		       'U', */
+  /* 		       (lapack_int)size, */
+  /* 		       tmp_data, */
+  /* 		       (lapack_int)size, */
+  /* 		       w); */
+
+  /* for (i = 0; i < size; i++) { */
+  /*   for (j = 0; j < size; j++) { */
+  /*     for (k = 0; k < size; k++) { */
+  /* 	if (w[k] > cutoff) { */
+  /* 	  data[i * size + j] += */
+  /* 	    tmp_data[k * size + i] / w[k] * tmp_data[k * size + j]; */
+  /* 	} */
+  /*     } */
+  /*   } */
+  /* } */
+  
   free(w);
   free(tmp_data);
 
