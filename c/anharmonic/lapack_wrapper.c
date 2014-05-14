@@ -103,6 +103,7 @@ int phonopy_pinvs(double *data,
   w = (double*)malloc(sizeof(double) * size);
   tmp_data = (double*)malloc(sizeof(double) * size * size);
 
+#pragma omp parallel for
   for (i = 0; i < size * size; i++) {
     tmp_data[i] = data[i];
     data[i] = 0;
@@ -116,6 +117,7 @@ int phonopy_pinvs(double *data,
   		       (lapack_int)size,
   		       w);
 
+#pragma omp parallel for private(j, k)
   for (i = 0; i < size; i++) {
     for (j = 0; j < size; j++) {
       for (k = 0; k < size; k++) {
@@ -127,24 +129,25 @@ int phonopy_pinvs(double *data,
     }
   }
 
-  /* info = LAPACKE_dsyev(LAPACK_COL_MAJOR, */
-  /* 		       'V', */
-  /* 		       'U', */
-  /* 		       (lapack_int)size, */
-  /* 		       tmp_data, */
-  /* 		       (lapack_int)size, */
-  /* 		       w); */
+/*   info = LAPACKE_dsyev(LAPACK_COL_MAJOR, */
+/*   		       'V', */
+/*   		       'U', */
+/*   		       (lapack_int)size, */
+/*   		       tmp_data, */
+/*   		       (lapack_int)size, */
+/*   		       w); */
 
-  /* for (i = 0; i < size; i++) { */
-  /*   for (j = 0; j < size; j++) { */
-  /*     for (k = 0; k < size; k++) { */
-  /* 	if (w[k] > cutoff) { */
-  /* 	  data[i * size + j] += */
-  /* 	    tmp_data[k * size + i] / w[k] * tmp_data[k * size + j]; */
-  /* 	} */
-  /*     } */
-  /*   } */
-  /* } */
+/* #pragma omp parallel for private(j, k) */
+/*   for (i = 0; i < size; i++) { */
+/*     for (j = 0; j < size; j++) { */
+/*       for (k = 0; k < size; k++) { */
+/*   	if (w[k] > cutoff) { */
+/*   	  data[i * size + j] += */
+/*   	    tmp_data[k * size + i] / w[k] * tmp_data[k * size + j]; */
+/*   	} */
+/*       } */
+/*     } */
+/*   } */
   
   free(w);
   free(tmp_data);

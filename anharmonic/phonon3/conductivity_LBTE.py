@@ -513,7 +513,6 @@ class Conductivity_LBTE(Conductivity):
         col_mat = self._collision_matrix[i_sigma, i_temp].reshape(
             num_ir_grid_points * num_band * 3,
             num_ir_grid_points * num_band * 3)        
-
         w, col_mat[:] = np.linalg.eigh(col_mat)
         v = col_mat
         e = np.zeros(len(w), dtype='double')
@@ -539,23 +538,16 @@ class Conductivity_LBTE(Conductivity):
     def _get_kappa(self, i_sigma, i_temp, X):
         num_ir_grid_points = len(self._ir_grid_points)
         num_band = self._primitive.get_number_of_atoms() * 3
-        rot_order = len(self._rotations_cartesian)
-        t = self._temperatures[i_temp]
         inv_col_mat = self._collision_matrix[i_sigma, i_temp].reshape(
             num_ir_grid_points * num_band * 3,
             num_ir_grid_points * num_band * 3)        
         Y = np.dot(inv_col_mat, X.ravel()).reshape(-1, 3)
-        RX = np.dot(self._rotations_cartesian.reshape(-1, 3), X.T).T
-        RY = np.dot(self._rotations_cartesian.reshape(-1, 3), Y.T).T
-        
+        RX = np.dot(X, self._rotations_cartesian.reshape(-1, 3).T)
+        RY = np.dot(Y, self._rotations_cartesian.reshape(-1, 3).T)
         sum_outer = np.zeros((3, 3), dtype='double')
-        for irX, irY in zip(
-                RX.reshape(num_ir_grid_points, num_band, rot_order, 3),
-                RY.reshape(num_ir_grid_points, num_band, rot_order, 3)):
-            for X_band, Y_band in zip(irX, irY):
-                for RX_band, RY_band in zip(X_band, Y_band):
-                    sum_outer += np.outer(RX_band, RY_band)
-
+        for v, f in zip(RX.reshape(-1, 3), RY.reshape(-1, 3)):
+            sum_outer += np.outer(v, f)
+        t = self._temperatures[i_temp]
         return ((sum_outer + sum_outer.T) * self._conversion_factor *
                 Kb * t ** 2 / np.prod(self._mesh))
                     
