@@ -44,8 +44,6 @@ class Conductivity:
                                               dtype='intc')
         else:
             self._point_operations = symmetry.get_reciprocal_operations()
-
-        print self._point_operations
         rec_lat = np.linalg.inv(self._primitive.get_cell())
         self._rotations_cartesian = np.array(
             [similarity_transformation(rec_lat, r)

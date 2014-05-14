@@ -383,32 +383,18 @@ class Conductivity_RTA(Conductivity):
             self._mesh)
         gv_by_gv = np.zeros((len(self._gv[i]), 3, 3), dtype='double')
         
-        if self._no_kappa_stars:
-            count = 0
-            for r, r_gp in zip(self._rotations_cartesian, rotation_map):
-                if r_gp == rotation_map[0]:
-                    gvs_rot = np.dot(r, self._gv[i].T).T
-                    gv_by_gv += [np.outer(r_gv, r_gv) for r_gv in gvs_rot]
-                    count += 1
-            gv_by_gv /= count
-            order_kstar = 1
-        else:
-            for r in self._rotations_cartesian:
-                gvs_rot = np.dot(r, self._gv[i].T).T
-                gv_by_gv += [np.outer(r_gv, r_gv) for r_gv in gvs_rot]
-            gv_by_gv /= len(rotation_map) / len(np.unique(rotation_map))
-            order_kstar = len(np.unique(rotation_map))
-            # check if the number of rotations is correct.
-            if self._grid_weights is not None:
-                if len(set(rotation_map)) != self._grid_weights[i]:
-                    if self._log_level:
-                        print "*" * 33  + "Warning" + "*" * 33
-                        print (" Number of elements in k* is unequal "
-                               "to number of equivalent grid-points.")
-                        print "*" * 73
-                # assert len(rotations) == self._grid_weights[i], \
-                #     "Num rotations %d, weight %d" % (
-                #     len(rotations), self._grid_weights[i])
+        for r in self._rotations_cartesian:
+            gvs_rot = np.dot(self._gv[i], r.T)
+            gv_by_gv += [np.outer(r_gv, r_gv) for r_gv in gvs_rot]
+        gv_by_gv /= len(rotation_map) / len(np.unique(rotation_map))
+        order_kstar = len(np.unique(rotation_map))
+
+        if order_kstar != self._grid_weights[i]:
+            if self._log_level:
+                print "*" * 33  + "Warning" + "*" * 33
+                print (" Number of elements in k* is unequal "
+                       "to number of equivalent grid-points.")
+                print "*" * 73
 
         return gv_by_gv, order_kstar
 
