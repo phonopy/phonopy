@@ -378,6 +378,7 @@ class Phono3py:
                     mass_variances=mass_variances,
                     grid_points=grid_points,
                     cutoff_lifetime=cutoff_lifetime,
+                    no_kappa_stars=no_kappa_stars,
                     gv_delta_q=gv_delta_q,
                     write_collision=write_collision,
                     read_collision=read_collision,

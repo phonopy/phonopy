@@ -15,6 +15,7 @@ def get_thermal_conductivity_LBTE(
         mass_variances=None,
         grid_points=None,
         cutoff_lifetime=1e-4, # in second
+        no_kappa_stars=False,
         gv_delta_q=1e-4, # for group velocity
         write_collision=False,
         read_collision=False,
@@ -37,6 +38,7 @@ def get_thermal_conductivity_LBTE(
                              sigmas=sigmas,
                              mass_variances=mass_variances,
                              cutoff_lifetime=cutoff_lifetime,
+                             no_kappa_stars=no_kappa_stars,
                              gv_delta_q=gv_delta_q,
                              log_level=log_level)
     
@@ -221,6 +223,7 @@ class Conductivity_LBTE(Conductivity):
                  sigmas=[],
                  mass_variances=None,
                  cutoff_lifetime=1e-4, # in second
+                 no_kappa_stars=False,
                  gv_delta_q=None, # finite difference for group veolocity
                  log_level=0):
         self._pp = None
@@ -271,6 +274,7 @@ class Conductivity_LBTE(Conductivity):
                               sigmas=sigmas,
                               mass_variances=mass_variances,
                               cutoff_lifetime=cutoff_lifetime,
+                              no_kappa_stars=no_kappa_stars,
                               gv_delta_q=gv_delta_q,
                               log_level=log_level)
 
