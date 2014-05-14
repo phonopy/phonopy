@@ -2,14 +2,16 @@
 #include "FLAME.h"
 #include "math.h"
 
-int flame_Hevd(double *matrix,
-	       double *eigvals,
-	       const int size,
-	       const double cutoff)
+int phonopy_pinvs_libflame(double *matrix,
+			   const int size,
+			   const double cutoff)
 {
-  FLA_Obj A, B, C, l;
+  FLA_Obj A, B, l;
   /* FLA_Obj C; */
+  double *eigvals;
   int i;
+
+  eigvals = (double*)malloc(sizeof(double) * size);
   
   FLA_Init();
   FLA_Obj_create_without_buffer(FLA_DOUBLE, size, size, &A);
@@ -49,8 +51,10 @@ int flame_Hevd(double *matrix,
   FLA_Obj_free_without_buffer(&A);
   FLA_Obj_free_without_buffer(&l);
   FLA_Obj_free(&B);
-  
+
   FLA_Finalize();
+
+  free(eigvals);
   
   return 0;
 }

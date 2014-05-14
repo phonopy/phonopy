@@ -382,9 +382,6 @@ class Conductivity_LBTE(Conductivity):
             sys.stdout.flush()
         self._symmetrize_collision_matrix()
             
-        num_band = self._primitive.get_number_of_atoms() * 3
-        num_ir_grid_points = len(self._ir_grid_points)
-
         for j, sigma in enumerate(self._sigmas):
             if self._log_level:
                 print "----------- Thermal conductivity (W/m-k)",
@@ -443,7 +440,8 @@ class Conductivity_LBTE(Conductivity):
         
         import anharmonic._phono3py as phono3c
         phono3c.symmetrize_collision_matrix(self._collision_matrix)
-        
+
+        # Average matrix elements belonging to degenerate bands
         for i, gp in enumerate(self._ir_grid_points):
             freqs = self._frequencies[gp]
             deg_sets = degenerate_sets(freqs)
@@ -470,22 +468,6 @@ class Conductivity_LBTE(Conductivity):
                 for j in bi_set:
                     col_mat[:, :, :, :, :, i, j, :] = sum_col
         
-        # self._py_symmetrize_collision_matrix()
-        
-    def _py_symmetrize_collision_matrix(self):
-        num_band = self._primitive.get_number_of_atoms() * 3
-        num_ir_grid_points = len(self._ir_grid_points)
-        for i in range(num_ir_grid_points):
-            for j in range(num_band):
-                for k in range(3):
-                    for l in range(num_ir_grid_points):
-                        for m in range(num_band):
-                            for n in range(3):
-                                sym_val = (self._collision_matrix[:, :, i, j, k, l, m, n] +
-                                           self._collision_matrix[:, :, l, m, n, i, j, k]) / 2
-                                self._collision_matrix[:, :, i, j, k, l, m, n] = sym_val
-                                self._collision_matrix[:, :, l, m, n, i, j, k] = sym_val
-
     def _get_X(self, t, weights):
         X = self._gv.copy()
         freqs = self._frequencies[self._ir_grid_points]
@@ -532,8 +514,8 @@ class Conductivity_LBTE(Conductivity):
         import anharmonic._phono3py as phono3c
         phono3c.inverse_collision_matrix(
             self._collision_matrix, i_sigma, i_temp, pinv_cutoff)
-        # w = np.zeros(num_ir_grid_points * num_band * 3, dtype='double')
-        # phono3c.libflame(self._collision_matrix, w, i_sigma, i_temp, pinv_cutoff)
+        # phono3c.inverse_collision_matrix_libflame(
+        #     self._collision_matrix, i_sigma, i_temp, pinv_cutoff)
             
     def _get_kappa(self, i_sigma, i_temp, X):
         num_ir_grid_points = len(self._ir_grid_points)
@@ -567,3 +549,22 @@ class Conductivity_LBTE(Conductivity):
                 f, v[0], v[1], v[2], np.linalg.norm(v))
 
         sys.stdout.flush()
+
+    def _py_symmetrize_collision_matrix(self):
+        num_band = self._primitive.get_number_of_atoms() * 3
+        num_ir_grid_points = len(self._ir_grid_points)
+        for i in range(num_ir_grid_points):
+            for j in range(num_band):
+                for k in range(3):
+                    for l in range(num_ir_grid_points):
+                        for m in range(num_band):
+                            for n in range(3):
+                                self._py_set_symmetrized_element(
+                                    i, j, k, l, m, n)
+
+    def _py_set_symmetrized_element(self, i, j, k, l, m, n):
+        sym_val = (self._collision_matrix[:, :, i, j, k, l, m, n] +
+                   self._collision_matrix[:, :, l, m, n, i, j, k]) / 2
+        self._collision_matrix[:, :, i, j, k, l, m, n] = sym_val
+        self._collision_matrix[:, :, l, m, n, i, j, k] = sym_val
+                                
