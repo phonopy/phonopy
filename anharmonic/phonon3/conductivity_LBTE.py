@@ -377,9 +377,9 @@ class Conductivity_LBTE(Conductivity):
     def _set_kappa_at_sigmas(self):
         self._combine_collisions()
         weights = self._get_weights()
-        for i, j in list(np.ndindex((len(weights), len(weights)))):
-            self._collision_matrix[:, :, i, :, :, j, :, :] *= (
-                weights[i] * weights[j])
+        for i, w_i in enumerate(weights):
+            for j, w_j in enumerate(weights):
+                self._collision_matrix[:, :, i, :, :, j, :, :] *= w_i * w_j
 
         if self._log_level:
             print "Symmetrizing collision matrix..."
@@ -398,8 +398,8 @@ class Conductivity_LBTE(Conductivity):
             for k, t in enumerate(self._temperatures):
                 if t > 0:
                     X = self._get_X(t, weights)
-                    self._set_inv_collision_matrix_external(j, k)
-                    # self._set_inv_collision_matrix(j, k)
+                    # self._set_inv_collision_matrix_external(j, k)
+                    self._set_inv_collision_matrix(j, k)
                     kappa = self._get_kappa(j, k, X)
                     
                     self._kappa[j, k] = [
