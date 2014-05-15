@@ -195,6 +195,29 @@ void kpt_get_grid_points_by_rotations(int rot_grid_points[],
   }
 }
 
+void kpt_get_BZ_grid_points_by_rotations(int rot_grid_points[],
+					 const int address_orig[3],
+					 const MatINT * rot_reciprocal,
+					 const int mesh[3],
+					 const int is_shift[3],
+					 const int bz_map[])
+{
+  int i;
+  int address_double_orig[3], address_double[3], mesh_double[3], bzmesh_double[3];
+
+  for (i = 0; i < 3; i++) {
+    mesh_double[i] = mesh[i] * 2;
+    bzmesh_double[i] = mesh[i] * 4;
+    address_double_orig[i] = address_orig[i] * 2 + is_shift[i];
+  }
+  for (i = 0; i < rot_reciprocal->size; i++) {
+    mat_multiply_matrix_vector_i3(address_double,
+				  rot_reciprocal->mat[i],
+				  address_double_orig);
+    get_vector_modulo(address_double, bzmesh_double);
+    rot_grid_points[i] = bz_map[get_grid_point(address_double, mesh_double)];
+  }
+}
 
 int kpt_relocate_BZ_grid_address(int bz_grid_address[][3],
 				 int bz_map[],

@@ -3,7 +3,7 @@ import numpy as np
 from phonopy.phonon.degeneracy import degenerate_sets
 from anharmonic.phonon3.conductivity import Conductivity
 from anharmonic.phonon3.collision_matrix import CollisionMatrix
-from anharmonic.phonon3.triplets import get_grid_points_by_rotations, get_grid_point_from_address
+from anharmonic.phonon3.triplets import get_grid_points_by_rotations, get_BZ_grid_points_by_rotations
 from anharmonic.file_IO import write_kappa_to_hdf5, write_collision_to_hdf5, read_collision_from_hdf5, write_full_collision_matrix
 from phonopy.units import THzToEv, Kb
 
@@ -341,16 +341,24 @@ class Conductivity_LBTE(Conductivity):
         self._rot_grid_points = np.zeros(
             (len(self._ir_grid_points), len(self._point_operations)),
             dtype='intc')
+        self._rot_BZ_grid_points = np.zeros(
+            (len(self._ir_grid_points), len(self._point_operations)),
+            dtype='intc')
         for i, ir_gp in enumerate(self._ir_grid_points):
             self._rot_grid_points[i] = get_grid_points_by_rotations(
                 self._grid_address[ir_gp],
                 self._point_operations,
                 self._mesh)
-
+            self._rot_BZ_grid_points[i] = get_BZ_grid_points_by_rotations(
+                self._grid_address[ir_gp],
+                self._point_operations,
+                self._mesh,
+                self._pp.get_bz_map())
+            
         self._collision = CollisionMatrix(self._pp,
                                           self._point_operations,
                                           self._ir_grid_points,
-                                          self._rot_grid_points,
+                                          self._rot_BZ_grid_points,
                                           no_kappa_stars=self._no_kappa_stars)
         
         if self._no_kappa_stars:
@@ -439,14 +447,18 @@ class Conductivity_LBTE(Conductivity):
         for j, k in list(np.ndindex((len(self._sigmas),
                                      len(self._temperatures)))):
             for i, ir_gp in enumerate(self._ir_grid_points):
-                for r, r_gp in zip(self._rotations_cartesian,
-                                   self._rot_grid_points[i]):
-                    if ir_gp != r_gp:
+                multi = ((self._rot_grid_points == ir_gp).sum() /
+                         (self._rot_BZ_grid_points == ir_gp).sum())
+                for r, r_BZ_gp in zip(self._rotations_cartesian,
+                                      self._rot_BZ_grid_points[i]):
+                    if ir_gp != r_BZ_gp:
                         continue
 
                     main_diagonal = self._gamma[j, k, i].copy()
                     if self._gamma_iso is not None:
                         main_diagonal += self._gamma_iso[j, i]
+
+                    main_diagonal *= multi
                         
                     for l in range(num_band):
                         if self._no_kappa_stars:
@@ -455,7 +467,7 @@ class Conductivity_LBTE(Conductivity):
                         else:
                             self._collision_matrix[
                                 j, k, i, l, :, i, l, :] += main_diagonal[l] * r
-                
+
     def _get_weights(self):
         weights = []
         for r_gps in self._rot_grid_points:

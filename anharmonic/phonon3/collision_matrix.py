@@ -147,6 +147,7 @@ class CollisionMatrix(ImagSelfEnergy):
                                       self._cutoff_frequency)
 
     def _run_py_collision_matrix(self):
+        num_gp = np.prod(self._mesh)
         gp2tp_map = {}
         count = 0
         for i, j in enumerate(self._triplets_map_at_q):
@@ -157,7 +158,12 @@ class CollisionMatrix(ImagSelfEnergy):
         num_band = self._fc3_normal_squared.shape[1]
         for i, ir_gp in enumerate(self._ir_grid_points):
             r_gps = self._rot_grid_points[i]
+            multi = len(r_gps) / (r_gps < num_gp).sum()
+            
             for r, r_gp in zip(self._rotations_cartesian, r_gps):
+                if r_gp > num_gp - 1:
+                    continue
+                    
                 ti = gp2tp_map[self._triplets_map_at_q[r_gp]]
                 tp = self._triplets_at_q[ti]
                 if self._triplets_map_at_q[r_gp] == self._ir_map_at_q[r_gp]:
@@ -174,7 +180,7 @@ class CollisionMatrix(ImagSelfEnergy):
                     collision = (self._fc3_normal_squared[ti, j, k]
                                  * inv_sinh
                                  * self._g[2, ti, j, k]).sum()
-                    collision *= self._unit_conversion
+                    collision *= self._unit_conversion * multi
                     if self._no_kappa_stars:
                         self._collision_matrix[j, i, k] += collision
                     else:

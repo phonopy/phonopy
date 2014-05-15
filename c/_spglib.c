@@ -14,11 +14,12 @@ static PyObject * find_primitive(PyObject *self, PyObject *args);
 static PyObject * get_ir_reciprocal_mesh(PyObject *self, PyObject *args);
 static PyObject * get_stabilized_reciprocal_mesh(PyObject *self, PyObject *args);
 static PyObject * get_grid_points_by_rotations(PyObject *self, PyObject *args);
+static PyObject * get_BZ_grid_points_by_rotations(PyObject *self, PyObject *args);
 static PyObject * relocate_BZ_grid_address(PyObject *self, PyObject *args);
 static PyObject *
 get_triplets_reciprocal_mesh_at_q(PyObject *self, PyObject *args);
 static PyObject * get_BZ_triplets_at_q(PyObject *self, PyObject *args);
-static PyObject *get_neighboring_grid_points(PyObject *self, PyObject *args);
+static PyObject * get_neighboring_grid_points(PyObject *self, PyObject *args);
 static PyObject *
 get_tetrahedra_relative_grid_address(PyObject *self, PyObject *args);
 static PyObject *
@@ -45,6 +46,8 @@ static PyMethodDef functions[] = {
    "Reciprocal mesh points with map"},
   {"grid_points_by_rotations", get_grid_points_by_rotations, METH_VARARGS,
    "Rotated grid points are returned"},
+  {"BZ_grid_points_by_rotations", get_BZ_grid_points_by_rotations, METH_VARARGS,
+   "Rotated grid points in BZ are returned"},
   {"BZ_grid_address", relocate_BZ_grid_address, METH_VARARGS,
    "Relocate grid addresses inside Brillouin zone"},
   {"triplets_reciprocal_mesh_at_q", get_triplets_reciprocal_mesh_at_q,
@@ -502,6 +505,42 @@ static PyObject * get_grid_points_by_rotations(PyObject *self, PyObject *args)
 				   rot_reciprocal,
 				   mesh,
 				   is_shift);
+  Py_RETURN_NONE;
+}
+
+static PyObject * get_BZ_grid_points_by_rotations(PyObject *self, PyObject *args)
+{
+  PyArrayObject* rot_grid_points_py;
+  PyArrayObject* address_orig_py;
+  PyArrayObject* rot_reciprocal_py;
+  PyArrayObject* mesh_py;
+  PyArrayObject* is_shift_py;
+  PyArrayObject* bz_map_py;
+  if (!PyArg_ParseTuple(args, "OOOOOO",
+			&rot_grid_points_py,
+			&address_orig_py,
+			&rot_reciprocal_py,
+			&mesh_py,
+			&is_shift_py,
+			&bz_map_py)) {
+    return NULL;
+  }
+
+  int *rot_grid_points = (int*)rot_grid_points_py->data;
+  const int *address_orig = (int*)address_orig_py->data;
+  SPGCONST int (*rot_reciprocal)[3][3] = (int(*)[3][3])rot_reciprocal_py->data;
+  const int num_rot = rot_reciprocal_py->dimensions[0];
+  const int* mesh = (int*)mesh_py->data;
+  const int* is_shift = (int*)is_shift_py->data;
+  const int* bz_map = (int*)bz_map_py->data;
+  
+  spg_get_BZ_grid_points_by_rotations(rot_grid_points,
+				      address_orig,
+				      num_rot,
+				      rot_reciprocal,
+				      mesh,
+				      is_shift,
+				      bz_map);
   Py_RETURN_NONE;
 }
 

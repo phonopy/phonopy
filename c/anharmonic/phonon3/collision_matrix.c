@@ -21,7 +21,7 @@ void get_collision_matrix(double *collision_matrix,
 			  const double unit_conversion_factor,
 			  const double cutoff_frequency)
 {
-  int i, j, k, l, m, n, ti, gp2, r_gp, num_triplets, num_band, num_ir_gp, num_rot;
+  int i, j, k, l, m, n, ti, gp2, r_gp, num_triplets, num_band, num_ir_gp, num_gp, num_rot, multi;
   int *gp2tp_map;
   double f, collision;
   double *inv_sinh;
@@ -30,14 +30,26 @@ void get_collision_matrix(double *collision_matrix,
   num_band = fc3_normal_squared->dims[2];
   num_ir_gp = rotated_grid_points->dims[0];
   num_rot = rotated_grid_points->dims[1];
+  num_gp = triplets_map->dims[0];
 
   gp2tp_map = create_gp2tp_map(triplets_map);
 
-#pragma omp parallel for private(j, k, l, m, n, ti, gp2, r_gp, f, collision, inv_sinh)
+#pragma omp parallel for private(j, k, l, m, n, ti, gp2, r_gp, f, collision, inv_sinh, multi)
   for (i = 0; i < num_ir_gp; i++) {
     inv_sinh = (double*)malloc(sizeof(double) * num_band);
+    multi = 0;
+    for (j = 0; j < num_rot; j++) {
+      if (rotated_grid_points->data[i * num_rot + j] < num_gp) {
+	multi++;
+      }
+    }
+    multi = num_rot / multi;
     for (j = 0; j < num_rot; j++) {
       r_gp = rotated_grid_points->data[i * num_rot + j];
+      if (r_gp > num_gp - 1) {
+	continue;
+      }
+      
       ti = gp2tp_map[triplets_map->data[r_gp]];
       if (triplets_map->data[r_gp] == stabilized_gp_map[r_gp]) {
 	gp2 = triplets[ti * 3 + 2];
@@ -67,6 +79,7 @@ void get_collision_matrix(double *collision_matrix,
 		l * num_band + m] *
 	      inv_sinh[m] * unit_conversion_factor;
 	  }
+	  collision *= multi;
 	  for (m = 0; m < 3; m++) {
 	    for (n = 0; n < 3; n++) {
 	      collision_matrix[k * 3 * num_ir_gp * num_band * 3 +

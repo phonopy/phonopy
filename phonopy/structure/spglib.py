@@ -248,6 +248,27 @@ def get_grid_points_by_rotations(address_orig,
         np.array(is_shift, dtype='intc'))
     
     return rot_grid_points
+
+def get_BZ_grid_points_by_rotations(address_orig,
+                                    reciprocal_rotations,
+                                    mesh,
+                                    bz_map,
+                                    is_shift=np.zeros(3, dtype='intc')):
+    """
+    Rotation operations in reciprocal space ``reciprocal_rotations`` are applied
+    to a grid point ``grid_point`` and resulting grid points are returned.
+    """
+    
+    rot_grid_points = np.zeros(len(reciprocal_rotations), dtype='intc')
+    spg.BZ_grid_points_by_rotations(
+        rot_grid_points,
+        np.array(address_orig, dtype='intc'),
+        np.array(reciprocal_rotations, dtype='intc', order='C'),
+        np.array(mesh, dtype='intc'),
+        np.array(is_shift, dtype='intc'),
+        bz_map)
+    
+    return rot_grid_points
     
 def relocate_BZ_grid_address(grid_address,
                              mesh,
