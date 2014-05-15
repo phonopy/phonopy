@@ -327,12 +327,6 @@ class Conductivity_LBTE(Conductivity):
         self._kappa = np.zeros((len(self._sigmas),
                                 len(self._temperatures),
                                 6), dtype='double')
-        self._collision_matrix = np.zeros(
-            (len(self._sigmas),
-             len(self._temperatures),
-             num_grid_points, num_band, 3,
-             num_ir_grid_points, num_band, 3),
-            dtype='double')
         self._gv = np.zeros((num_grid_points,
                              num_band,
                              3), dtype='double')
@@ -352,10 +346,26 @@ class Conductivity_LBTE(Conductivity):
                 self._grid_address[ir_gp],
                 self._point_operations,
                 self._mesh)
+
         self._collision = CollisionMatrix(self._pp,
                                           self._point_operations,
                                           self._ir_grid_points,
-                                          self._rot_grid_points)
+                                          self._rot_grid_points,
+                                          no_kappa_stars=self._no_kappa_stars)
+        
+        if self._no_kappa_stars:
+            self._collision_matrix = np.zeros(
+                (len(self._sigmas),
+                 len(self._temperatures),
+                 num_grid_points, num_band, num_ir_grid_points, num_band),
+                dtype='double')
+        else:
+            self._collision_matrix = np.zeros(
+                (len(self._sigmas),
+                 len(self._temperatures),
+                 num_grid_points, num_band, 3,
+                 num_ir_grid_points, num_band, 3),
+                dtype='double')
 
     def _set_collision_matrix_at_sigmas(self, i):
         for j, sigma in enumerate(self._sigmas):
@@ -379,12 +389,15 @@ class Conductivity_LBTE(Conductivity):
         weights = self._get_weights()
         for i, w_i in enumerate(weights):
             for j, w_j in enumerate(weights):
-                self._collision_matrix[:, :, i, :, :, j, :, :] *= w_i * w_j
+                if self._no_kappa_stars:
+                    self._collision_matrix[:, :, i, :, j, :] *= w_i * w_j
+                else:
+                    self._collision_matrix[:, :, i, :, :, j, :, :] *= w_i * w_j
 
-        if self._log_level:
-            print "Symmetrizing collision matrix..."
-            sys.stdout.flush()
-        self._symmetrize_collision_matrix()
+        # if self._log_level:
+        #     print "Symmetrizing collision matrix..."
+        #     sys.stdout.flush()
+        # self._symmetrize_collision_matrix()
             
         for j, sigma in enumerate(self._sigmas):
             if self._log_level:
@@ -397,9 +410,12 @@ class Conductivity_LBTE(Conductivity):
                                                     "yz", "xz", "xy")
             for k, t in enumerate(self._temperatures):
                 if t > 0:
+                    if self._no_kappa_stars:
+                        self._set_inv_collision_matrix_no_kappa_stars(j, k)
+                    else:                        
+                        self._set_inv_collision_matrix_external(j, k)
+                        # self._set_inv_collision_matrix(j, k)
                     X = self._get_X(t, weights)
-                    # self._set_inv_collision_matrix_external(j, k)
-                    self._set_inv_collision_matrix(j, k)
                     kappa = self._get_kappa(j, k, X)
                     
                     self._kappa[j, k] = [
@@ -430,8 +446,12 @@ class Conductivity_LBTE(Conductivity):
                         main_diagonal += self._gamma_iso[j, i]
                         
                     for l in range(num_band):
-                        self._collision_matrix[
-                            j, k, i, l, :, i, l, :] += main_diagonal[l] * r
+                        if self._no_kappa_stars:
+                            self._collision_matrix[
+                                j, k, i, l, i, l] += main_diagonal[l]
+                        else:
+                            self._collision_matrix[
+                                j, k, i, l, :, i, l, :] += main_diagonal[l] * r
                 
     def _get_weights(self):
         weights = []
@@ -509,7 +529,6 @@ class Conductivity_LBTE(Conductivity):
         v[:] = np.dot(v, v.T) # inv_col
 
         # v[:] = np.linalg.pinv(col_mat)
-
         
     def _set_inv_collision_matrix_external(self, i_sigma, i_temp, pinv_cutoff=1e-11):
         num_ir_grid_points = len(self._ir_grid_points)
@@ -520,13 +539,38 @@ class Conductivity_LBTE(Conductivity):
             self._collision_matrix, i_sigma, i_temp, pinv_cutoff)
         # phono3c.inverse_collision_matrix_libflame(
         #     self._collision_matrix, i_sigma, i_temp, pinv_cutoff)
-            
+
+    def _set_inv_collision_matrix_no_kappa_stars(self,
+                                                 i_sigma,
+                                                 i_temp,
+                                                 pinv_cutoff=1e-11):
+        t = self._temperatures[i_temp]
+        num_ir_grid_points = len(self._ir_grid_points)
+        num_band = self._primitive.get_number_of_atoms() * 3
+        col_mat = self._collision_matrix[i_sigma, i_temp].reshape(
+            num_ir_grid_points * num_band, num_ir_grid_points * num_band)
+        w, col_mat[:] = np.linalg.eigh(col_mat)
+        v = col_mat
+        e = np.zeros(len(w), dtype='double')
+        for l, val in enumerate(w):
+            if val > pinv_cutoff:
+                e[l] = 1 / np.sqrt(val)
+        v[:] = e * v
+        v[:] = np.dot(v, v.T) # inv_col
+        
     def _get_kappa(self, i_sigma, i_temp, X):
         num_ir_grid_points = len(self._ir_grid_points)
         num_band = self._primitive.get_number_of_atoms() * 3
-        inv_col_mat = self._collision_matrix[i_sigma, i_temp].reshape(
-            num_ir_grid_points * num_band * 3,
-            num_ir_grid_points * num_band * 3)        
+
+        if self._no_kappa_stars:
+            inv_col_mat = np.kron(
+                self._collision_matrix[i_sigma, i_temp].reshape(
+                    num_ir_grid_points * num_band,
+                    num_ir_grid_points * num_band), np.eye(3))
+        else:
+            inv_col_mat = self._collision_matrix[i_sigma, i_temp].reshape(
+                num_ir_grid_points * num_band * 3,
+                num_ir_grid_points * num_band * 3)
         Y = np.dot(inv_col_mat, X.ravel()).reshape(-1, 3)
         RX = np.dot(X, self._rotations_cartesian.reshape(-1, 3).T)
         RY = np.dot(Y, self._rotations_cartesian.reshape(-1, 3).T)
