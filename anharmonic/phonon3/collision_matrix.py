@@ -109,10 +109,13 @@ class CollisionMatrix(ImagSelfEnergy):
     def _run_collision_matrix(self):
         self._run_with_band_indices() # for Gamma
         if self._temperature > 0:
-            # if self._lang == 'C':
-            #     self._run_c_collision_matrix() # for Omega
-            # else:
-            self._run_py_collision_matrix() # for Omega
+            if self._no_kappa_stars:
+                self._run_py_collision_matrix() # for Omega
+            else:
+                if self._lang == 'C':
+                    self._run_c_collision_matrix() # for Omega
+                else:
+                    self._run_py_collision_matrix() # for Omega
 
     def _run_c_collision_matrix(self):
         import anharmonic._phono3py as phono3c
