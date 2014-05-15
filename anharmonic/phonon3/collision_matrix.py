@@ -107,15 +107,15 @@ class CollisionMatrix(ImagSelfEnergy):
             self._bz_map = self._interaction.get_bz_map()
             
     def _run_collision_matrix(self):
-        self._run_with_band_indices() # for Gamma
+        self._run_with_band_indices()
         if self._temperature > 0:
-            if self._no_kappa_stars:
-                self._run_py_collision_matrix() # for Omega
-            else:
-                if self._lang == 'C':
-                    self._run_c_collision_matrix() # for Omega
+            if self._lang == 'C':
+                if self._no_kappa_stars:
+                    self._run_c_collision_matrix_full()
                 else:
-                    self._run_py_collision_matrix() # for Omega
+                    self._run_c_collision_matrix()
+            else:
+                self._run_py_collision_matrix()
 
     def _run_c_collision_matrix(self):
         import anharmonic._phono3py as phono3c
@@ -132,6 +132,19 @@ class CollisionMatrix(ImagSelfEnergy):
                                  self._temperature,
                                  self._unit_conversion,
                                  self._cutoff_frequency)
+
+    def _run_c_collision_matrix_full(self):
+        import anharmonic._phono3py as phono3c
+        phono3c.collision_matrix_full(self._collision_matrix,
+                                      self._fc3_normal_squared,
+                                      self._frequencies,
+                                      self._g,
+                                      self._triplets_at_q,
+                                      self._triplets_map_at_q,
+                                      self._ir_map_at_q,
+                                      self._temperature,
+                                      self._unit_conversion,
+                                      self._cutoff_frequency)
 
     def _run_py_collision_matrix(self):
         gp2tp_map = {}

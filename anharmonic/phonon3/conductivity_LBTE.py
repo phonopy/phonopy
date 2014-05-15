@@ -495,7 +495,8 @@ class Conductivity_LBTE(Conductivity):
                     col_mat[:, :, :, :, :, i, j, :] = sum_col
         
     def _symmetrize_collision_matrix_no_kappa_stars(self):
-        self._py_symmetrize_collision_matrix_no_kappa_stars()
+        import anharmonic._phono3py as phono3c
+        phono3c.symmetrize_collision_matrix(self._collision_matrix)
         
         # Average matrix elements belonging to degenerate bands
         col_mat = self._collision_matrix

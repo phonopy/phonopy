@@ -27,6 +27,7 @@ static PyObject * py_get_imag_self_energy_at_bands(PyObject *self,
 static PyObject * py_get_thm_imag_self_energy_at_bands(PyObject *self,
 						       PyObject *args);
 static PyObject * py_get_collision_matrix(PyObject *self, PyObject *args);
+static PyObject * py_get_collision_matrix_full(PyObject *self, PyObject *args);
 static PyObject * py_symmetrize_collision_matrix(PyObject *self, PyObject *args);
 static PyObject * py_set_phonons_at_gridpoints(PyObject *self, PyObject *args);
 static PyObject * py_get_phonon(PyObject *self, PyObject *args);
@@ -60,6 +61,7 @@ static PyMethodDef functions[] = {
   {"imag_self_energy_at_bands", py_get_imag_self_energy_at_bands, METH_VARARGS, "Imaginary part of self energy at phonon frequencies of bands"},
   {"thm_imag_self_energy_at_bands", py_get_thm_imag_self_energy_at_bands, METH_VARARGS, "Imaginary part of self energy at phonon frequencies of bands for tetrahedron method"},
   {"collision_matrix", py_get_collision_matrix, METH_VARARGS, "Collision matrix with g"},
+  {"collision_matrix_full", py_get_collision_matrix_full, METH_VARARGS, "Collision matrix with g for reducible grid points"},
   {"symmetrize_collision_matrix", py_symmetrize_collision_matrix, METH_VARARGS, "Symmetrize collision matrix"},
   {"phonons_at_gridpoints", py_set_phonons_at_gridpoints, METH_VARARGS, "Set phonons at grid points"},
   {"phonon", py_get_phonon, METH_VARARGS, "Get phonon"},
@@ -574,6 +576,56 @@ static PyObject * py_get_collision_matrix(PyObject *self, PyObject *args)
   Py_RETURN_NONE;
 }
 
+static PyObject * py_get_collision_matrix_full(PyObject *self, PyObject *args)
+{
+  PyArrayObject* collision_matrix_py;
+  PyArrayObject* fc3_normal_squared_py;
+  PyArrayObject* frequencies_py;
+  PyArrayObject* triplets_py;
+  PyArrayObject* triplets_map_py;
+  PyArrayObject* stabilized_gp_map_py;
+  PyArrayObject* g_py;
+  double temperature, unit_conversion_factor, cutoff_frequency;
+
+  if (!PyArg_ParseTuple(args, "OOOOOOOddd",
+			&collision_matrix_py,
+			&fc3_normal_squared_py,
+			&frequencies_py,
+			&g_py,
+			&triplets_py,
+			&triplets_map_py,
+			&stabilized_gp_map_py,
+			&temperature,
+			&unit_conversion_factor,
+			&cutoff_frequency)) {
+    return NULL;
+  }
+
+  Darray* fc3_normal_squared = convert_to_darray(fc3_normal_squared_py);
+  double* collision_matrix = (double*)collision_matrix_py->data;
+  const double* g = (double*)g_py->data;
+  const double* frequencies = (double*)frequencies_py->data;
+  const int* triplets = (int*)triplets_py->data;
+  Iarray* triplets_map = convert_to_iarray(triplets_map_py);
+  const int* stabilized_gp_map = (int*)stabilized_gp_map_py->data;
+
+  get_collision_matrix_full(collision_matrix,
+			    fc3_normal_squared,
+			    frequencies,
+			    triplets,
+			    triplets_map,
+			    stabilized_gp_map,
+			    g,
+			    temperature,
+			    unit_conversion_factor,
+			    cutoff_frequency);
+  
+  free(fc3_normal_squared);
+  free(triplets_map);
+  
+  Py_RETURN_NONE;
+}
+
 static PyObject * py_symmetrize_collision_matrix(PyObject *self, PyObject *args)
 {
   PyArrayObject* collision_matrix_py;
@@ -586,12 +638,16 @@ static PyObject * py_symmetrize_collision_matrix(PyObject *self, PyObject *args)
   double* collision_matrix = (double*)collision_matrix_py->data;
   const int num_sigma = (int)collision_matrix_py->dimensions[0];
   const int num_temp = (int)collision_matrix_py->dimensions[1];
-  const int num_ir_grid_points = (int)collision_matrix_py->dimensions[2];
+  const int num_grid_points = (int)collision_matrix_py->dimensions[2];
   const int num_band = (int)collision_matrix_py->dimensions[3];
   int i, j, k, l, num_column, adrs_shift;
   double val;
 
-  num_column = num_ir_grid_points * num_band * 3;
+  if (collision_matrix_py->nd == 8) {
+    num_column = num_grid_points * num_band * 3;
+  } else {
+    num_column = num_grid_points * num_band;
+  }
   
   for (i = 0; i < num_sigma; i++) {
     for (j = 0; j < num_temp; j++) {

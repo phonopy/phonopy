@@ -86,6 +86,73 @@ void get_collision_matrix(double *collision_matrix,
   gp2tp_map = NULL;
 }
 
+void get_collision_matrix_full(double *collision_matrix,
+			       const Darray *fc3_normal_squared,
+			       const double *frequencies,
+			       const int *triplets,
+			       const Iarray *triplets_map,
+			       const int *stabilized_gp_map,
+			       const double *g,
+			       const double temperature,
+			       const double unit_conversion_factor,
+			       const double cutoff_frequency)
+{
+  int i, j, k, l, ti, gp2, num_triplets, num_band, num_gp;
+  int *gp2tp_map;
+  double f, collision;
+  double *inv_sinh;
+
+  num_triplets = fc3_normal_squared->dims[0];
+  num_band = fc3_normal_squared->dims[2];
+  num_gp = triplets_map->dims[0];
+
+  gp2tp_map = create_gp2tp_map(triplets_map);
+
+#pragma omp parallel for private(j, k, l, ti, gp2, f, collision, inv_sinh)
+  for (i = 0; i < num_gp; i++) {
+    inv_sinh = (double*)malloc(sizeof(double) * num_band);
+    ti = gp2tp_map[triplets_map->data[i]];
+    if (triplets_map->data[i] == stabilized_gp_map[i]) {
+      gp2 = triplets[ti * 3 + 2];
+    } else {
+      gp2 = triplets[ti * 3 + 1];
+    }
+    for (j = 0; j < num_band; j++) {
+      f = frequencies[gp2 * num_band + j];
+      if (f > cutoff_frequency) {
+	inv_sinh[j] = inv_sinh_occupation(f, temperature);
+      } else {
+	inv_sinh[j] = 0;
+      }
+    }
+
+    for (j = 0; j < num_band; j++) {
+      for (k = 0; k < num_band; k++) {
+	collision = 0;
+	for (l = 0; l < num_band; l++) {
+	  collision +=
+	    fc3_normal_squared->data[ti * num_band * num_band * num_band +
+				     j * num_band * num_band +
+				     k * num_band + l] *
+	    g[2 * num_triplets * num_band * num_band * num_band +
+	      ti * num_band * num_band * num_band +
+	      j * num_band * num_band +
+	      k * num_band + l] *
+	    inv_sinh[l] * unit_conversion_factor;
+	}
+	collision_matrix[j * num_gp * num_band +
+			 i * num_band + k] += collision;
+      }
+    }
+    
+    free(inv_sinh);
+    inv_sinh = NULL;
+  }
+
+  free(gp2tp_map);
+  gp2tp_map = NULL;
+}
+
 static int *create_gp2tp_map(const Iarray *triplets_map)
 {
   int i, max_i, count;
