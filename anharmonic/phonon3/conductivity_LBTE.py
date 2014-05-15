@@ -394,10 +394,13 @@ class Conductivity_LBTE(Conductivity):
                 else:
                     self._collision_matrix[:, :, i, :, :, j, :, :] *= w_i * w_j
 
-        # if self._log_level:
-        #     print "Symmetrizing collision matrix..."
-        #     sys.stdout.flush()
-        # self._symmetrize_collision_matrix()
+        if self._log_level:
+            print "Symmetrizing collision matrix..."
+            sys.stdout.flush()
+        if self._no_kappa_stars:
+            self._symmetrize_collision_matrix_no_kappa_stars()
+        else:
+            self._symmetrize_collision_matrix()
             
         for j, sigma in enumerate(self._sigmas):
             if self._log_level:
@@ -460,12 +463,11 @@ class Conductivity_LBTE(Conductivity):
         return weights
 
     def _symmetrize_collision_matrix(self):
-        col_mat = self._collision_matrix
-        
         import anharmonic._phono3py as phono3c
         phono3c.symmetrize_collision_matrix(self._collision_matrix)
 
         # Average matrix elements belonging to degenerate bands
+        col_mat = self._collision_matrix
         for i, gp in enumerate(self._ir_grid_points):
             freqs = self._frequencies[gp]
             deg_sets = degenerate_sets(freqs)
@@ -491,6 +493,37 @@ class Conductivity_LBTE(Conductivity):
                            len(bi_set))
                 for j in bi_set:
                     col_mat[:, :, :, :, :, i, j, :] = sum_col
+        
+    def _symmetrize_collision_matrix_no_kappa_stars(self):
+        self._py_symmetrize_collision_matrix_no_kappa_stars()
+        
+        # Average matrix elements belonging to degenerate bands
+        col_mat = self._collision_matrix
+        for i, gp in enumerate(self._ir_grid_points):
+            freqs = self._frequencies[gp]
+            deg_sets = degenerate_sets(freqs)
+            for dset in deg_sets:
+                bi_set = []
+                for j in range(len(freqs)):
+                    if j in dset:
+                        bi_set.append(j)
+                sum_col = (col_mat[:, :, i, bi_set, :, :].sum(axis=2) /
+                           len(bi_set))
+                for j in bi_set:
+                    col_mat[:, :, i, j, :, :] = sum_col
+
+        for i, gp in enumerate(self._ir_grid_points):
+            freqs = self._frequencies[gp]
+            deg_sets = degenerate_sets(freqs)
+            for dset in deg_sets:
+                bi_set = []
+                for j in range(len(freqs)):
+                    if j in dset:
+                        bi_set.append(j)
+                sum_col = (col_mat[:, :, :, :, i, bi_set].sum(axis=4) /
+                           len(bi_set))
+                for j in bi_set:
+                    col_mat[:, :, :, :, i, j] = sum_col
         
     def _get_X(self, t, weights):
         X = self._gv.copy()
@@ -572,14 +605,31 @@ class Conductivity_LBTE(Conductivity):
                 num_ir_grid_points * num_band * 3,
                 num_ir_grid_points * num_band * 3)
         Y = np.dot(inv_col_mat, X.ravel()).reshape(-1, 3)
-        RX = np.dot(X, self._rotations_cartesian.reshape(-1, 3).T)
-        RY = np.dot(Y, self._rotations_cartesian.reshape(-1, 3).T)
-        sum_outer = np.zeros((3, 3), dtype='double')
-        for v, f in zip(RX.reshape(-1, 3), RY.reshape(-1, 3)):
-            sum_outer += np.outer(v, f)
-        t = self._temperatures[i_temp]
-        return ((sum_outer + sum_outer.T) * self._conversion_factor *
-                Kb * t ** 2 / np.prod(self._mesh))
+
+        if self._no_kappa_stars:
+            from phonopy.harmonic.force_constants import similarity_transformation
+            point_operations = self._symmetry.get_reciprocal_operations()
+            rec_lat = np.linalg.inv(self._primitive.get_cell())
+            rotations_cartesian = np.array(
+                [similarity_transformation(rec_lat, r)
+                 for r in point_operations], dtype='double')
+            RX = np.dot(X, rotations_cartesian.reshape(-1, 3).T)
+            RY = np.dot(Y, rotations_cartesian.reshape(-1, 3).T)
+            sum_outer = np.zeros((3, 3), dtype='double')
+            for v, f in zip(RX.reshape(-1, 3), RY.reshape(-1, 3)):
+                sum_outer += np.outer(v, f)
+            t = self._temperatures[i_temp]
+            return ((sum_outer + sum_outer.T) * self._conversion_factor *
+                    Kb * t ** 2 / np.prod(self._mesh) / len(point_operations))
+        else:
+            RX = np.dot(X, self._rotations_cartesian.reshape(-1, 3).T)
+            RY = np.dot(Y, self._rotations_cartesian.reshape(-1, 3).T)
+            sum_outer = np.zeros((3, 3), dtype='double')
+            for v, f in zip(RX.reshape(-1, 3), RY.reshape(-1, 3)):
+                sum_outer += np.outer(v, f)
+            t = self._temperatures[i_temp]
+            return ((sum_outer + sum_outer.T) * self._conversion_factor *
+                    Kb * t ** 2 / np.prod(self._mesh))
                     
     def _show_log(self, i):
         q = self._qpoints[i]
@@ -615,4 +665,20 @@ class Conductivity_LBTE(Conductivity):
                    self._collision_matrix[:, :, l, m, n, i, j, k]) / 2
         self._collision_matrix[:, :, i, j, k, l, m, n] = sym_val
         self._collision_matrix[:, :, l, m, n, i, j, k] = sym_val
-                                
+
+    def _py_symmetrize_collision_matrix_no_kappa_stars(self):
+        num_band = self._primitive.get_number_of_atoms() * 3
+        num_ir_grid_points = len(self._ir_grid_points)
+        for i in range(num_ir_grid_points):
+            for j in range(num_band):
+                for k in range(num_ir_grid_points):
+                    for l in range(num_band):
+                        self._py_set_symmetrized_element_no_kappa_stars(
+                            i, j, k, l)
+
+    def _py_set_symmetrized_element_no_kappa_stars(self, i, j, k, l):
+        sym_val = (self._collision_matrix[:, :, i, j, k, l] +
+                   self._collision_matrix[:, :, k, l, i, j]) / 2
+        self._collision_matrix[:, :, i, j, k, l] = sym_val
+        self._collision_matrix[:, :, k, l, i, j] = sym_val
+        
