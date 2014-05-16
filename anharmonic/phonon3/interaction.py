@@ -235,6 +235,7 @@ class Interaction:
             sum_q = (grid_address[triplet]).sum(axis=0)
             if (sum_q % self._mesh != 0).any():
                 print "============= Warning =================="
+                print triplet
                 print grid_address[triplet]
                 print sum_q
                 print "============= Warning =================="

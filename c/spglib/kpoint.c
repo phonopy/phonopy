@@ -780,12 +780,12 @@ static int get_BZ_triplets_at_q(int triplets[][3],
     }
     for (j = 2; j > -1; j--) {
       if (get_third_q_of_triplets_at_q(address,
-				       j,
-				       bz_map,
-				       mesh,
-				       bzmesh,
-				       bzmesh_double) == 0) {
-	break;
+    				       j,
+    				       bz_map,
+    				       mesh,
+    				       bzmesh,
+    				       bzmesh_double) == 0) {
+    	break;
       }
     }
     for (j = 0; j < 3; j++) {
@@ -814,6 +814,8 @@ static int get_third_q_of_triplets_at_q(int address[3][3],
   int i, j, smallest_g, smallest_index, sum_g, delta_g[3];
   int bzgp[27], address_double[3];
 
+  int tmp_d;
+  
   get_vector_modulo(address[q_index], mesh);
   for (i = 0; i < 3; i++) {
     delta_g[i] = 0;
@@ -828,21 +830,12 @@ static int get_third_q_of_triplets_at_q(int address[3][3],
       address_double[j] = (address[q_index][j] +
 			   search_space[i][j] * mesh[j]) * 2;
     }
-    if ((address_double[0] < bzmesh[0]) &&
-	(address_double[1] < bzmesh[1]) &&
-	(address_double[2] < bzmesh[2]) &&
-	(address_double[0] > -bzmesh[0]) &&
-	(address_double[1] > -bzmesh[1]) &&
-	(address_double[2] > -bzmesh[2])) { /* inside extended zone */
-      for (j = 0; j < 3; j++) {
-	if (address_double[j] < 0) {
-	  address_double[j] += bzmesh_double[j];
-	}
+    for (j = 0; j < 3; j++) {
+      if (address_double[j] < 0) {
+	address_double[j] += bzmesh_double[j];
       }
-      bzgp[i] = bz_map[get_grid_point(address_double, bzmesh)];
-    } else {
-      bzgp[i] = -1;
     }
+    bzgp[i] = bz_map[get_grid_point(address_double, bzmesh)];
   }
 
   for (i = 0; i < 27; i++) {
@@ -858,6 +851,7 @@ static int get_third_q_of_triplets_at_q(int address[3][3],
 
   smallest_g = 4;
   smallest_index = 0;
+
   for (i = 0; i < 27; i++) {
     if (bzgp[i] > -1) { /* q'' is in BZ */
       sum_g = (abs(delta_g[0] + search_space[i][0]) +
@@ -869,7 +863,7 @@ static int get_third_q_of_triplets_at_q(int address[3][3],
       }
     }
   }
-  
+
   for (i = 0; i < 3; i++) {
     address[q_index][i] += search_space[smallest_index][i] * mesh[i];
   }
