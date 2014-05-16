@@ -17,7 +17,7 @@ void get_collision_matrix(double *collision_matrix,
 			  const double unit_conversion_factor,
 			  const double cutoff_frequency);
 
-void get_collision_matrix_full(double *collision_matrix,
+void get_collision_matrix_full(Darray *collision_matrix,
 			       const Darray *fc3_normal_squared,
 			       const double *frequencies,
 			       const int *triplets,

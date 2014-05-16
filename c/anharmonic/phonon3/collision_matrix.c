@@ -99,7 +99,7 @@ void get_collision_matrix(double *collision_matrix,
   gp2tp_map = NULL;
 }
 
-void get_collision_matrix_full(double *collision_matrix,
+void get_collision_matrix_full(Darray *collision_matrix,
 			       const Darray *fc3_normal_squared,
 			       const double *frequencies,
 			       const int *triplets,
@@ -110,19 +110,19 @@ void get_collision_matrix_full(double *collision_matrix,
 			       const double unit_conversion_factor,
 			       const double cutoff_frequency)
 {
-  int i, j, k, l, ti, gp2, num_triplets, num_band, num_gp;
+  int i, j, k, l, ti, gp2, num_triplets, num_band, num_ir_gp;
   int *gp2tp_map;
   double f, collision;
   double *inv_sinh;
 
   num_triplets = fc3_normal_squared->dims[0];
   num_band = fc3_normal_squared->dims[2];
-  num_gp = triplets_map->dims[0];
+  num_ir_gp = collision_matrix->dims[1];
 
   gp2tp_map = create_gp2tp_map(triplets_map);
 
 #pragma omp parallel for private(j, k, l, ti, gp2, f, collision, inv_sinh)
-  for (i = 0; i < num_gp; i++) {
+  for (i = 0; i < num_ir_gp; i++) {
     inv_sinh = (double*)malloc(sizeof(double) * num_band);
     ti = gp2tp_map[triplets_map->data[i]];
     if (triplets_map->data[i] == stabilized_gp_map[i]) {
@@ -153,8 +153,8 @@ void get_collision_matrix_full(double *collision_matrix,
 	      k * num_band + l] *
 	    inv_sinh[l] * unit_conversion_factor;
 	}
-	collision_matrix[j * num_gp * num_band +
-			 i * num_band + k] += collision;
+	collision_matrix->data[j * num_ir_gp * num_band +
+			       i * num_band + k] += collision;
       }
     }
     

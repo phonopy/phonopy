@@ -119,6 +119,7 @@ class CollisionMatrix(ImagSelfEnergy):
 
     def _run_c_collision_matrix(self):
         import anharmonic._phono3py as phono3c
+        print "hoge"
         phono3c.collision_matrix(self._collision_matrix,
                                  self._fc3_normal_squared,
                                  self._frequencies,
@@ -132,6 +133,7 @@ class CollisionMatrix(ImagSelfEnergy):
                                  self._temperature,
                                  self._unit_conversion,
                                  self._cutoff_frequency)
+        print "moge"
 
     def _run_c_collision_matrix_full(self):
         import anharmonic._phono3py as phono3c

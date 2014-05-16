@@ -602,7 +602,7 @@ static PyObject * py_get_collision_matrix_full(PyObject *self, PyObject *args)
   }
 
   Darray* fc3_normal_squared = convert_to_darray(fc3_normal_squared_py);
-  double* collision_matrix = (double*)collision_matrix_py->data;
+  Darray* collision_matrix = convert_to_darray(collision_matrix_py);
   const double* g = (double*)g_py->data;
   const double* frequencies = (double*)frequencies_py->data;
   const int* triplets = (int*)triplets_py->data;
@@ -622,6 +622,7 @@ static PyObject * py_get_collision_matrix_full(PyObject *self, PyObject *args)
   
   free(fc3_normal_squared);
   free(triplets_map);
+  free(collision_matrix);
   
   Py_RETURN_NONE;
 }

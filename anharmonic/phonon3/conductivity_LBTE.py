@@ -15,7 +15,7 @@ def get_thermal_conductivity_LBTE(
         sigmas=[],
         mass_variances=None,
         grid_points=None,
-        cutoff_lifetime=1e-4, # in second
+        cutoff_lifetime=1e-6, # in second
         no_kappa_stars=False,
         gv_delta_q=1e-4, # for group velocity
         write_collision=False,
