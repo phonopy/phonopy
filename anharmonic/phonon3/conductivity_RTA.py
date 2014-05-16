@@ -297,7 +297,8 @@ class Conductivity_RTA(Conductivity):
             for j in range(len(self._sigmas)):
                 for k, l in list(np.ndindex(len(self._temperatures), num_band)):
                     g_phph = self._gamma[j, k, i, l]
-                    if g_phph < 0.5 / self._cutoff_lifetime / THz:
+                    cutoff_gamma = 1.0 / 4 / np.pi / self._cutoff_lifetime / THz
+                    if g_phph < cutoff_gamma:
                         continue
                     if self._isotope is None:
                         g_sum = g_phph

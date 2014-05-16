@@ -1,6 +1,7 @@
 import sys
 import numpy as np
 from phonopy.phonon.degeneracy import degenerate_sets
+from phonopy.units import THz
 from anharmonic.phonon3.conductivity import Conductivity
 from anharmonic.phonon3.collision_matrix import CollisionMatrix
 from anharmonic.phonon3.triplets import get_grid_points_by_rotations, get_BZ_grid_points_by_rotations
@@ -457,6 +458,10 @@ class Conductivity_LBTE(Conductivity):
                     main_diagonal = self._gamma[j, k, i].copy()
                     if self._gamma_iso is not None:
                         main_diagonal += self._gamma_iso[j, i]
+
+                    cutoff_gamma = 1.0 / 4 / np.pi / self._cutoff_lifetime / THz
+                    main_diagonal = np.where(main_diagonal > cutoff_gamma,
+                                             main_diagonal, cutoff_gamma)
 
                     main_diagonal *= multi
                         
