@@ -17,7 +17,7 @@ class CollisionMatrix(ImagSelfEnergy):
                  rotated_grid_points,
                  temperature=None,
                  sigma=None,
-                 no_kappa_stars=False,
+                 is_reducible_collision_matrix=False,
                  lang='C'):
         self._interaction = None
         self._sigma = None
@@ -48,7 +48,7 @@ class CollisionMatrix(ImagSelfEnergy):
 
         self._ir_grid_points = ir_grid_points
         self._rot_grid_points = rotated_grid_points
-        self._no_kappa_stars = no_kappa_stars
+        self._is_reducible_collision_matrix = is_reducible_collision_matrix
         self._is_collision_matrix = True
         self._point_operations = point_operations
         self._primitive = self._interaction.get_primitive()
@@ -72,7 +72,7 @@ class CollisionMatrix(ImagSelfEnergy):
         num_triplets = len(self._triplets_at_q)
         self._imag_self_energy = np.zeros(num_band, dtype='double')
 
-        if self._no_kappa_stars:
+        if self._is_reducible_collision_matrix:
             self._collision_matrix = np.zeros(
                 (num_band, len(self._ir_grid_points), num_band),
                 dtype='double')
@@ -110,7 +110,7 @@ class CollisionMatrix(ImagSelfEnergy):
         self._run_with_band_indices()
         if self._temperature > 0:
             if self._lang == 'C':
-                if self._no_kappa_stars:
+                if self._is_reducible_collision_matrix:
                     self._run_c_collision_matrix_full()
                 else:
                     self._run_c_collision_matrix()
@@ -181,7 +181,7 @@ class CollisionMatrix(ImagSelfEnergy):
                                  * inv_sinh
                                  * self._g[2, ti, j, k]).sum()
                     collision *= self._unit_conversion * multi
-                    if self._no_kappa_stars:
+                    if self._is_reducible_collision_matrix:
                         self._collision_matrix[j, i, k] += collision
                     else:
                         self._collision_matrix[j, :, i, k, :] += collision * r

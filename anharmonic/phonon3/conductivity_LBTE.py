@@ -356,11 +356,12 @@ class Conductivity_LBTE(Conductivity):
                 self._mesh,
                 self._pp.get_bz_map())
             
-        self._collision = CollisionMatrix(self._pp,
-                                          self._point_operations,
-                                          self._ir_grid_points,
-                                          self._rot_BZ_grid_points,
-                                          no_kappa_stars=self._no_kappa_stars)
+        self._collision = CollisionMatrix(
+            self._pp,
+            self._point_operations,
+            self._ir_grid_points,
+            self._rot_BZ_grid_points,
+            is_reducible_collision_matrix=self._no_kappa_stars)
         
         if self._no_kappa_stars:
             self._collision_matrix = np.zeros(
@@ -444,6 +445,7 @@ class Conductivity_LBTE(Conductivity):
     def _combine_collisions(self):
         # Include main diagonal part
         num_band = self._primitive.get_number_of_atoms() * 3
+        cutoff_gamma = 1.0 / 4 / np.pi / self._cutoff_lifetime / THz
 
         for j, k in list(np.ndindex((len(self._sigmas),
                                      len(self._temperatures)))):
@@ -459,7 +461,6 @@ class Conductivity_LBTE(Conductivity):
                     if self._gamma_iso is not None:
                         main_diagonal += self._gamma_iso[j, i]
 
-                    cutoff_gamma = 1.0 / 4 / np.pi / self._cutoff_lifetime / THz
                     main_diagonal = np.where(main_diagonal > cutoff_gamma,
                                              main_diagonal, cutoff_gamma)
 
@@ -473,6 +474,9 @@ class Conductivity_LBTE(Conductivity):
                             self._collision_matrix[
                                 j, k, i, l, :, i, l, :] += main_diagonal[l] * r
 
+        # self._collision_matrix[:] = np.where(
+        #     np.abs(self._collision_matrix) < cutoff_gamma, 0, self._collision_matrix)
+                            
     def _get_weights(self):
         weights = []
         for r_gps in self._rot_grid_points:
