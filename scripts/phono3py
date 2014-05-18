@@ -136,6 +136,7 @@ parser.set_defaults(band_indices=None,
                     is_frequency_shift=False,
                     is_nac=False,
                     is_plusminus_displacements=False,
+                    is_reducible_collision_matrix=False,
                     is_translational_symmetry=False,
                     is_symmetrize_fc2=False,
                     is_symmetrize_fc3_r=False,
@@ -287,6 +288,8 @@ parser.add_option("--read_collision", dest="read_collision", type="string",
                   help="Read collision matrix and Gammas from files")
 parser.add_option("--read_gamma", dest="read_gamma", action="store_true",
                   help="Read Gammas from files")
+parser.add_option("--reducible_colmat", dest="is_reducible_collision_matrix",
+                  action="store_true", help="Solve reducible collision matrix")
 parser.add_option("--sym_fc2", dest="is_symmetrize_fc2", action="store_true",
                   help="Symmetrize fc2 by index exchange")
 parser.add_option("--sym_fc3r", dest="is_symmetrize_fc3_r", action="store_true",
@@ -957,6 +960,7 @@ elif settings.get_is_bterta() or settings.get_is_lbte():
         mesh_divisors=mesh_divs,
         coarse_mesh_shifts=settings.get_coarse_mesh_shifts(),
         cutoff_lifetime=settings.get_cutoff_lifetime(),
+        is_reducible_collision_matrix=options.is_reducible_collision_matrix,
         no_kappa_stars=settings.get_no_kappa_stars(),
         gv_delta_q=settings.get_group_velocity_delta_q(),
         write_gamma=settings.get_write_gamma(),

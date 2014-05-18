@@ -251,7 +251,6 @@ class Conductivity_RTA(Conductivity):
         self._coarse_mesh = None
         self._coarse_mesh_shifts = None
         self._conversion_factor = None
-        self._sum_num_kstar = None
 
         self._isotope = None
         self._mass_variances = None

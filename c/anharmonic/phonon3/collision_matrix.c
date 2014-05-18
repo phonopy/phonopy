@@ -99,16 +99,16 @@ void get_collision_matrix(double *collision_matrix,
   gp2tp_map = NULL;
 }
 
-void get_collision_matrix_full(Darray *collision_matrix,
-			       const Darray *fc3_normal_squared,
-			       const double *frequencies,
-			       const int *triplets,
-			       const Iarray *triplets_map,
-			       const int *stabilized_gp_map,
-			       const double *g,
-			       const double temperature,
-			       const double unit_conversion_factor,
-			       const double cutoff_frequency)
+void get_reducible_collision_matrix(Darray *collision_matrix,
+				    const Darray *fc3_normal_squared,
+				    const double *frequencies,
+				    const int *triplets,
+				    const Iarray *triplets_map,
+				    const int *stabilized_gp_map,
+				    const double *g,
+				    const double temperature,
+				    const double unit_conversion_factor,
+				    const double cutoff_frequency)
 {
   int i, j, k, l, ti, gp2, num_triplets, num_band, num_ir_gp;
   int *gp2tp_map;

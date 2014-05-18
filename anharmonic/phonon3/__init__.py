@@ -358,6 +358,7 @@ class Phono3py:
             mesh_divisors=None,
             coarse_mesh_shifts=None,
             cutoff_lifetime=1e-6, # in second
+            is_reducible_collision_matrix=False,
             no_kappa_stars=False,
             gv_delta_q=None, # for group velocity
             write_gamma=False,
@@ -371,38 +372,39 @@ class Phono3py:
 
         if is_LBTE:
             self._thermal_conductivity = get_thermal_conductivity_LBTE(
-                    self._interaction,
-                    self._primitive_symmetry,
-                    temperatures=temperatures,
-                    sigmas=self._sigmas,
-                    mass_variances=mass_variances,
-                    grid_points=grid_points,
-                    cutoff_lifetime=cutoff_lifetime,
-                    no_kappa_stars=no_kappa_stars,
-                    gv_delta_q=gv_delta_q,
-                    write_collision=write_collision,
-                    read_collision=read_collision,
-                    input_filename=input_filename,
-                    output_filename=output_filename,
-                    log_level=self._log_level)
+                self._interaction,
+                self._primitive_symmetry,
+                temperatures=temperatures,
+                sigmas=self._sigmas,
+                mass_variances=mass_variances,
+                grid_points=grid_points,
+                cutoff_lifetime=cutoff_lifetime,
+                is_reducible_collision_matrix=is_reducible_collision_matrix,
+                no_kappa_stars=no_kappa_stars,
+                gv_delta_q=gv_delta_q,
+                write_collision=write_collision,
+                read_collision=read_collision,
+                input_filename=input_filename,
+                output_filename=output_filename,
+                log_level=self._log_level)
         else:
             self._thermal_conductivity = get_thermal_conductivity_RTA(
-                    self._interaction,
-                    self._primitive_symmetry,
-                    temperatures=temperatures,
-                    sigmas=self._sigmas,
-                    mass_variances=mass_variances,
-                    grid_points=grid_points,
-                    mesh_divisors=mesh_divisors,
-                    coarse_mesh_shifts=coarse_mesh_shifts,
-                    cutoff_lifetime=cutoff_lifetime,
-                    no_kappa_stars=no_kappa_stars,
-                    gv_delta_q=gv_delta_q,
-                    write_gamma=write_gamma,
-                    read_gamma=read_gamma,
-                    input_filename=input_filename,
-                    output_filename=output_filename,
-                    log_level=self._log_level)
+                self._interaction,
+                self._primitive_symmetry,
+                temperatures=temperatures,
+                sigmas=self._sigmas,
+                mass_variances=mass_variances,
+                grid_points=grid_points,
+                mesh_divisors=mesh_divisors,
+                coarse_mesh_shifts=coarse_mesh_shifts,
+                cutoff_lifetime=cutoff_lifetime,
+                no_kappa_stars=no_kappa_stars,
+                gv_delta_q=gv_delta_q,
+                write_gamma=write_gamma,
+                read_gamma=read_gamma,
+                input_filename=input_filename,
+                output_filename=output_filename,
+                log_level=self._log_level)
 
     def get_thermal_conductivity(self):
         return self._thermal_conductivity

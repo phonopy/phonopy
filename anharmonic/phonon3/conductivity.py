@@ -282,8 +282,11 @@ class Conductivity:
         
     def _set_gv(self, i):
         # Group velocity [num_freqs, 3]
-        self._gv[i] = get_group_velocity(
-            self._qpoints[i],
+        self._gv[i] = self._get_gv(self._qpoints[i])
+
+    def _get_gv(self, q):
+        return get_group_velocity(
+            q,
             self._dm,
             q_length=self._gv_delta_q,
             symmetry=self._symmetry,

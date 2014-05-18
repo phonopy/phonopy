@@ -16,6 +16,7 @@ def get_thermal_conductivity_LBTE(
         mass_variances=None,
         grid_points=None,
         cutoff_lifetime=1e-6, # in second
+        is_reducible_collision_matrix=False,
         no_kappa_stars=False,
         gv_delta_q=1e-4, # for group velocity
         write_collision=False,
@@ -32,16 +33,18 @@ def get_thermal_conductivity_LBTE(
     else:
         temps = temperatures
         
-    lbte = Conductivity_LBTE(interaction,
-                             symmetry,
-                             grid_points=grid_points,
-                             temperatures=temps,
-                             sigmas=sigmas,
-                             mass_variances=mass_variances,
-                             cutoff_lifetime=cutoff_lifetime,
-                             no_kappa_stars=no_kappa_stars,
-                             gv_delta_q=gv_delta_q,
-                             log_level=log_level)
+    lbte = Conductivity_LBTE(
+        interaction,
+        symmetry,
+        grid_points=grid_points,
+        temperatures=temps,
+        sigmas=sigmas,
+        mass_variances=mass_variances,
+        cutoff_lifetime=cutoff_lifetime,
+        is_reducible_collision_matrix=is_reducible_collision_matrix,
+        no_kappa_stars=no_kappa_stars,
+        gv_delta_q=gv_delta_q,
+        log_level=log_level)
     
     if read_collision:
         read_from = _set_collision_from_file(
@@ -224,6 +227,7 @@ class Conductivity_LBTE(Conductivity):
                  sigmas=[],
                  mass_variances=None,
                  cutoff_lifetime=1e-4, # in second
+                 is_reducible_collision_matrix=False,
                  no_kappa_stars=False,
                  gv_delta_q=None, # finite difference for group veolocity
                  log_level=0):
@@ -250,10 +254,8 @@ class Conductivity_LBTE(Conductivity):
         self._ir_grid_weights = None
 
         self._gamma = None
-        self._collision_matrix = None
         self._read_gamma = False
         self._read_gamma_iso = False
-        self._read_collision_matrix = False
         self._frequencies = None
         self._gv = None
         self._gamma_iso = None
@@ -279,6 +281,11 @@ class Conductivity_LBTE(Conductivity):
                               gv_delta_q=gv_delta_q,
                               log_level=log_level)
 
+        self._is_reducible_collision_matrix = is_reducible_collision_matrix
+        if self._no_kappa_stars:
+            self._is_reducible_collision_matrix = True
+        self._collision_matrix = None
+        
         if self._temperatures is not None:
             self._allocate_values()
 
@@ -292,7 +299,6 @@ class Conductivity_LBTE(Conductivity):
 
     def set_collision_matrix(self, collision_matrix):
         self._collision_matrix = collision_matrix
-        self._read_collision_matrix = True
         
     def get_collision_matrix(self):
         return self._collision_matrix
@@ -355,21 +361,26 @@ class Conductivity_LBTE(Conductivity):
                 self._point_operations,
                 self._mesh,
                 self._pp.get_bz_map())
-            
-        self._collision = CollisionMatrix(
-            self._pp,
-            self._point_operations,
-            self._ir_grid_points,
-            self._rot_BZ_grid_points,
-            is_reducible_collision_matrix=self._no_kappa_stars)
-        
-        if self._no_kappa_stars:
+
+        if self._is_reducible_collision_matrix:
+            num_mesh_points = np.prod(self._mesh)
+            self._collision = CollisionMatrix(
+                self._pp,
+                self._point_operations,
+                np.arange(num_mesh_points, dtype='intc'),
+                self._rot_BZ_grid_points,
+                is_reducible_collision_matrix=True)
             self._collision_matrix = np.zeros(
                 (len(self._sigmas),
                  len(self._temperatures),
-                 num_grid_points, num_band, num_ir_grid_points, num_band),
+                 num_grid_points, num_band, num_mesh_points, num_band),
                 dtype='double')
         else:
+            self._collision = CollisionMatrix(
+                self._pp,
+                self._point_operations,
+                self._ir_grid_points,
+                self._rot_BZ_grid_points)
             self._collision_matrix = np.zeros(
                 (len(self._sigmas),
                  len(self._temperatures),
@@ -395,21 +406,22 @@ class Conductivity_LBTE(Conductivity):
                     self._collision.get_collision_matrix())
 
     def _set_kappa_at_sigmas(self):
-        self._combine_collisions()
-        weights = self._get_weights()
-        for i, w_i in enumerate(weights):
-            for j, w_j in enumerate(weights):
-                if self._no_kappa_stars:
-                    self._collision_matrix[:, :, i, :, j, :] *= w_i * w_j
-                else:
-                    self._collision_matrix[:, :, i, :, :, j, :, :] *= w_i * w_j
-
         if self._log_level:
             print "Symmetrizing collision matrix..."
             sys.stdout.flush()
-        if self._no_kappa_stars:
-            self._symmetrize_collision_matrix_no_kappa_stars()
+            
+        if self._is_reducible_collision_matrix:
+            if not self._no_kappa_stars:
+                self._expand_collisions()
+            self._combine_reducible_collisions()
+            weights = np.ones(np.prod(self._mesh), dtype='intc')
+            self._symmetrize_reducible_collision_matrix()
         else:
+            self._combine_collisions()
+            weights = self._get_weights()
+            for i, w_i in enumerate(weights):
+                for j, w_j in enumerate(weights):
+                    self._collision_matrix[:, :, i, :, :, j, :, :] *= w_i * w_j
             self._symmetrize_collision_matrix()
             
         for j, sigma in enumerate(self._sigmas):
@@ -423,14 +435,13 @@ class Conductivity_LBTE(Conductivity):
                                                     "yz", "xz", "xy")
             for k, t in enumerate(self._temperatures):
                 if t > 0:
-                    if self._no_kappa_stars:
-                        self._set_inv_collision_matrix_no_kappa_stars(j, k)
-                    else:                        
+                    if self._is_reducible_collision_matrix:
+                        self._set_inv_reducible_collision_matrix(j, k)
+                    else:
                         self._set_inv_collision_matrix_external(j, k)
                         # self._set_inv_collision_matrix(j, k)
                     X = self._get_X(t, weights)
                     kappa = self._get_kappa(j, k, X)
-                    
                     self._kappa[j, k] = [
                         kappa[0, 0], kappa[1, 1], kappa[2, 2],
                         kappa[1, 2], kappa[0, 2], kappa[0, 1]]
@@ -443,7 +454,6 @@ class Conductivity_LBTE(Conductivity):
             print 
 
     def _combine_collisions(self):
-        # Include main diagonal part
         num_band = self._primitive.get_number_of_atoms() * 3
         cutoff_gamma = 1.0 / 4 / np.pi / self._cutoff_lifetime / THz
 
@@ -463,19 +473,74 @@ class Conductivity_LBTE(Conductivity):
 
                     main_diagonal = np.where(main_diagonal > cutoff_gamma,
                                              main_diagonal, cutoff_gamma)
-
                     main_diagonal *= multi
-                        
                     for l in range(num_band):
-                        if self._no_kappa_stars:
-                            self._collision_matrix[
-                                j, k, i, l, i, l] += main_diagonal[l]
-                        else:
-                            self._collision_matrix[
-                                j, k, i, l, :, i, l, :] += main_diagonal[l] * r
+                        self._collision_matrix[
+                            j, k, i, l, :, i, l, :] += main_diagonal[l] * r
 
-        # self._collision_matrix[:] = np.where(
-        #     np.abs(self._collision_matrix) < cutoff_gamma, 0, self._collision_matrix)
+    def _combine_reducible_collisions(self):
+        num_band = self._primitive.get_number_of_atoms() * 3
+        num_mesh_points = np.prod(self._mesh)
+        cutoff_gamma = 1.0 / 4 / np.pi / self._cutoff_lifetime / THz
+
+        for j, k in list(
+                np.ndindex((len(self._sigmas), len(self._temperatures)))):
+            for i in range(num_mesh_points):
+                main_diagonal = self._gamma[j, k, i].copy()
+                if self._gamma_iso is not None:
+                    main_diagonal += self._gamma_iso[j, i]
+                main_diagonal = np.where(main_diagonal > cutoff_gamma,
+                                         main_diagonal, cutoff_gamma)
+                for l in range(num_band):
+                    self._collision_matrix[
+                        j, k, i, l, i, l] += main_diagonal[l]
+
+    def _expand_collisions(self):
+        num_mesh_points = np.prod(self._mesh)
+        num_rot = len(self._point_operations)
+        num_band = self._primitive.get_number_of_atoms() * 3
+        rot_grid_points = np.zeros(
+            (num_rot, num_mesh_points), dtype='intc')
+        collision_matrix = np.zeros(
+            (len(self._sigmas),
+             len(self._temperatures),
+             num_mesh_points, num_band, num_mesh_points, num_band),
+            dtype='double')
+        gamma = np.zeros((len(self._sigmas),
+                          len(self._temperatures),
+                          num_mesh_points,
+                          num_band), dtype='double')
+        if self._gamma_iso is not None:
+            gamma_iso = np.zeros((len(self._sigmas),
+                                  num_mesh_points,
+                                  num_band), dtype='double')
+        
+        for i in range(num_mesh_points):
+            rot_grid_points[:, i] = get_grid_points_by_rotations(
+                self._grid_address[i],
+                self._point_operations,
+                self._mesh)
+            
+        for i, ir_gp in enumerate(self._ir_grid_points):
+            multi = (rot_grid_points[:, ir_gp] == ir_gp).sum()
+            g_elem = self._gamma[:, :, i, :] / multi
+            if self._gamma_iso is not None:
+                giso_elem = self._gamma_iso[:, i, :] / multi
+            for j in range(num_rot):
+                gp_r = rot_grid_points[j, ir_gp]
+                gamma[:, :, gp_r, :] += g_elem
+                if self._gamma_iso is not None:
+                    gamma_iso[:, gp_r, :] += giso_elem
+                for k in range(num_mesh_points):
+                    colmat_elem = self._collision_matrix[:, :, i, :, k, :]
+                    colmat_elem = colmat_elem.copy() / multi
+                    gp_c = rot_grid_points[j, k]
+                    collision_matrix[:, :, gp_r, :, gp_c, :] += colmat_elem
+
+        self._gamma = gamma
+        self._collision_matrix = collision_matrix
+        if self._gamma_iso is not None:
+            self._gamma_iso = gamma_iso
                             
     def _get_weights(self):
         weights = []
@@ -515,7 +580,7 @@ class Conductivity_LBTE(Conductivity):
                 for j in bi_set:
                     col_mat[:, :, :, :, :, i, j, :] = sum_col
         
-    def _symmetrize_collision_matrix_no_kappa_stars(self):
+    def _symmetrize_reducible_collision_matrix(self):
         import anharmonic._phono3py as phono3c
         phono3c.symmetrize_collision_matrix(self._collision_matrix)
         
@@ -548,14 +613,28 @@ class Conductivity_LBTE(Conductivity):
                     col_mat[:, :, :, :, i, j] = sum_col
         
     def _get_X(self, t, weights):
-        X = self._gv.copy()
-        freqs = self._frequencies[self._ir_grid_points]
+        num_band = self._primitive.get_number_of_atoms() * 3
+        if self._is_reducible_collision_matrix:
+            num_mesh_points = np.prod(self._mesh)
+            if self._no_kappa_stars:
+                X = self._gv.copy()
+            else:
+                self._pp.set_phonon(np.arange(num_mesh_points, dtype='intc'))
+                X = np.zeros((num_mesh_points, num_band, 3), dtype='double')
+                for i in range(num_mesh_points):
+                    q = self._grid_address[i] / self._mesh.astype('double')
+                    X[i] = self._get_gv(q)
+                
+            freqs = self._frequencies[:num_mesh_points]
+        else:
+            X = self._gv.copy()
+            freqs = self._frequencies[self._ir_grid_points]
+            
         sinh = np.where(freqs > self._cutoff_frequency,
                         np.sinh(freqs * THzToEv / (2 * Kb * t)),
                         -1)
         inv_sinh = np.where(sinh > 0, 1 / sinh, 0)
         freqs_sinh = freqs * THzToEv * inv_sinh / (4 * Kb * t ** 2)
-        num_band = self._primitive.get_number_of_atoms() * 3
                 
         for i, f in enumerate(freqs_sinh):
             X[i] *= weights[i]
@@ -565,7 +644,7 @@ class Conductivity_LBTE(Conductivity):
         if t > 0:
             return X.reshape(-1, 3)
         else:
-            return np.zeros_like(self._gv.reshape(-1, 3))
+            return np.zeros_like(X.reshape(-1, 3))
 
     def _set_inv_collision_matrix(self, i_sigma, i_temp, pinv_cutoff=1e-11):
         t = self._temperatures[i_temp]
@@ -585,25 +664,25 @@ class Conductivity_LBTE(Conductivity):
 
         # v[:] = np.linalg.pinv(col_mat)
         
-    def _set_inv_collision_matrix_external(self, i_sigma, i_temp, pinv_cutoff=1e-11):
-        num_ir_grid_points = len(self._ir_grid_points)
-        num_band = self._primitive.get_number_of_atoms() * 3
-        
+    def _set_inv_collision_matrix_external(self,
+                                           i_sigma,
+                                           i_temp,
+                                           pinv_cutoff=1e-11):
         import anharmonic._phono3py as phono3c
         phono3c.inverse_collision_matrix(
             self._collision_matrix, i_sigma, i_temp, pinv_cutoff)
         # phono3c.inverse_collision_matrix_libflame(
         #     self._collision_matrix, i_sigma, i_temp, pinv_cutoff)
 
-    def _set_inv_collision_matrix_no_kappa_stars(self,
-                                                 i_sigma,
-                                                 i_temp,
-                                                 pinv_cutoff=1e-11):
+    def _set_inv_reducible_collision_matrix(self,
+                                            i_sigma,
+                                            i_temp,
+                                            pinv_cutoff=1e-11):
         t = self._temperatures[i_temp]
-        num_ir_grid_points = len(self._ir_grid_points)
+        num_mesh_points = np.prod(self._mesh)
         num_band = self._primitive.get_number_of_atoms() * 3
         col_mat = self._collision_matrix[i_sigma, i_temp].reshape(
-            num_ir_grid_points * num_band, num_ir_grid_points * num_band)
+            num_mesh_points * num_band, num_mesh_points * num_band)
         w, col_mat[:] = np.linalg.eigh(col_mat)
         v = col_mat
         e = np.zeros(len(w), dtype='double')
@@ -617,39 +696,39 @@ class Conductivity_LBTE(Conductivity):
         num_ir_grid_points = len(self._ir_grid_points)
         num_band = self._primitive.get_number_of_atoms() * 3
 
-        if self._no_kappa_stars:
+        if self._is_reducible_collision_matrix:
+            num_mesh_points = np.prod(self._mesh)
             inv_col_mat = np.kron(
                 self._collision_matrix[i_sigma, i_temp].reshape(
-                    num_ir_grid_points * num_band,
-                    num_ir_grid_points * num_band), np.eye(3))
+                    num_mesh_points * num_band,
+                    num_mesh_points * num_band), np.eye(3))
         else:
             inv_col_mat = self._collision_matrix[i_sigma, i_temp].reshape(
                 num_ir_grid_points * num_band * 3,
                 num_ir_grid_points * num_band * 3)
         Y = np.dot(inv_col_mat, X.ravel()).reshape(-1, 3)
 
-        if self._no_kappa_stars:
+        if self._is_reducible_collision_matrix:
             from phonopy.harmonic.force_constants import similarity_transformation
             point_operations = self._symmetry.get_reciprocal_operations()
             rec_lat = np.linalg.inv(self._primitive.get_cell())
             rotations_cartesian = np.array(
                 [similarity_transformation(rec_lat, r)
                  for r in point_operations], dtype='double')
-            RX = np.dot(X, rotations_cartesian.reshape(-1, 3).T)
-            RY = np.dot(Y, rotations_cartesian.reshape(-1, 3).T)
-            sum_outer = np.zeros((3, 3), dtype='double')
-            for v, f in zip(RX.reshape(-1, 3), RY.reshape(-1, 3)):
-                sum_outer += np.outer(v, f)
-            t = self._temperatures[i_temp]
+        else:
+            rotations_cartesian = self._rotations_cartesian
+            
+        RX = np.dot(X, rotations_cartesian.reshape(-1, 3).T)
+        RY = np.dot(Y, rotations_cartesian.reshape(-1, 3).T)
+        sum_outer = np.zeros((3, 3), dtype='double')
+        for v, f in zip(RX.reshape(-1, 3), RY.reshape(-1, 3)):
+            sum_outer += np.outer(v, f)
+        t = self._temperatures[i_temp]
+
+        if self._is_reducible_collision_matrix:
             return ((sum_outer + sum_outer.T) * self._conversion_factor *
                     Kb * t ** 2 / np.prod(self._mesh) / len(point_operations))
         else:
-            RX = np.dot(X, self._rotations_cartesian.reshape(-1, 3).T)
-            RY = np.dot(Y, self._rotations_cartesian.reshape(-1, 3).T)
-            sum_outer = np.zeros((3, 3), dtype='double')
-            for v, f in zip(RX.reshape(-1, 3), RY.reshape(-1, 3)):
-                sum_outer += np.outer(v, f)
-            t = self._temperatures[i_temp]
             return ((sum_outer + sum_outer.T) * self._conversion_factor *
                     Kb * t ** 2 / np.prod(self._mesh))
                     

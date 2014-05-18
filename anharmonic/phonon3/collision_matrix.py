@@ -111,7 +111,7 @@ class CollisionMatrix(ImagSelfEnergy):
         if self._temperature > 0:
             if self._lang == 'C':
                 if self._is_reducible_collision_matrix:
-                    self._run_c_collision_matrix_full()
+                    self._run_c_reducible_collision_matrix()
                 else:
                     self._run_c_collision_matrix()
             else:
@@ -133,18 +133,18 @@ class CollisionMatrix(ImagSelfEnergy):
                                  self._unit_conversion,
                                  self._cutoff_frequency)
 
-    def _run_c_collision_matrix_full(self):
+    def _run_c_reducible_collision_matrix(self):
         import anharmonic._phono3py as phono3c
-        phono3c.collision_matrix_full(self._collision_matrix,
-                                      self._fc3_normal_squared,
-                                      self._frequencies,
-                                      self._g,
-                                      self._triplets_at_q,
-                                      self._triplets_map_at_q,
-                                      self._ir_map_at_q,
-                                      self._temperature,
-                                      self._unit_conversion,
-                                      self._cutoff_frequency)
+        phono3c.reducible_collision_matrix(self._collision_matrix,
+                                           self._fc3_normal_squared,
+                                           self._frequencies,
+                                           self._g,
+                                           self._triplets_at_q,
+                                           self._triplets_map_at_q,
+                                           self._ir_map_at_q,
+                                           self._temperature,
+                                           self._unit_conversion,
+                                           self._cutoff_frequency)
 
     def _run_py_collision_matrix(self):
         num_gp = np.prod(self._mesh)
