@@ -12,9 +12,9 @@ class CollisionMatrix(ImagSelfEnergy):
     """
     def __init__(self,
                  interaction,
-                 point_operations,
-                 ir_grid_points,
-                 rotated_grid_points,
+                 point_operations=None,
+                 ir_grid_points=None,
+                 rotated_grid_points=None,
                  temperature=None,
                  sigma=None,
                  is_reducible_collision_matrix=False,
@@ -46,16 +46,18 @@ class CollisionMatrix(ImagSelfEnergy):
                                 sigma=sigma,
                                 lang=lang)
 
-        self._ir_grid_points = ir_grid_points
-        self._rot_grid_points = rotated_grid_points
         self._is_reducible_collision_matrix = is_reducible_collision_matrix
         self._is_collision_matrix = True
-        self._point_operations = point_operations
-        self._primitive = self._interaction.get_primitive()
-        rec_lat = np.linalg.inv(self._primitive.get_cell())
-        self._rotations_cartesian = np.array(
-            [similarity_transformation(rec_lat, r)
-             for r in self._point_operations], dtype='double', order='C')
+
+        if not self._is_reducible_collision_matrix:
+            self._ir_grid_points = ir_grid_points
+            self._rot_grid_points = rotated_grid_points
+            self._point_operations = point_operations
+            self._primitive = self._interaction.get_primitive()
+            rec_lat = np.linalg.inv(self._primitive.get_cell())
+            self._rotations_cartesian = np.array(
+                [similarity_transformation(rec_lat, r)
+                 for r in self._point_operations], dtype='double', order='C')
         
     def run(self):
         if self._fc3_normal_squared is None:        
@@ -73,9 +75,9 @@ class CollisionMatrix(ImagSelfEnergy):
         self._imag_self_energy = np.zeros(num_band, dtype='double')
 
         if self._is_reducible_collision_matrix:
+            num_mesh_points = np.prod(self._mesh)
             self._collision_matrix = np.zeros(
-                (num_band, len(self._ir_grid_points), num_band),
-                dtype='double')
+                (num_band, num_mesh_points, num_band), dtype='double')
         else:        
             self._collision_matrix = np.zeros(
                 (num_band, 3, len(self._ir_grid_points), num_band, 3),
@@ -115,7 +117,10 @@ class CollisionMatrix(ImagSelfEnergy):
                 else:
                     self._run_c_collision_matrix()
             else:
-                self._run_py_collision_matrix()
+                if self._is_reducible_collision_matrix:
+                    self._run_py_reducible_collision_matrix()
+                else:
+                    self._run_py_collision_matrix()
 
     def _run_c_collision_matrix(self):
         import anharmonic._phono3py as phono3c
@@ -147,7 +152,44 @@ class CollisionMatrix(ImagSelfEnergy):
                                            self._cutoff_frequency)
 
     def _run_py_collision_matrix(self):
-        num_gp = np.prod(self._mesh)
+        num_mesh_points = np.prod(self._mesh)
+        num_band = self._fc3_normal_squared.shape[1]
+        gp2tp_map = self._get_gp2tp_map()
+
+        for i, ir_gp in enumerate(self._ir_grid_points):
+            r_gps = self._rot_grid_points[i]
+            multi = len(r_gps) / (r_gps < num_mesh_points).sum()
+            
+            for r, r_gp in zip(self._rotations_cartesian, r_gps):
+                if r_gp > num_mesh_points - 1:
+                    continue
+                    
+                ti = gp2tp_map[self._triplets_map_at_q[r_gp]]
+                inv_sinh = self._get_inv_sinh(r_gp, gp2tp_map)
+                
+                for j, k in list(np.ndindex((num_band, num_band))):
+                    collision = (self._fc3_normal_squared[ti, j, k]
+                                 * inv_sinh
+                                 * self._g[2, ti, j, k]).sum()
+                    collision *= self._unit_conversion * multi
+                    self._collision_matrix[j, :, i, k, :] += collision * r
+
+    def _run_py_reducible_collision_matrix(self):
+        num_mesh_points = np.prod(self._mesh)
+        num_band = self._fc3_normal_squared.shape[1]
+        gp2tp_map = self._get_gp2tp_map()
+        
+        for i in range(num_mesh_points):
+            ti = gp2tp_map[self._triplets_map_at_q[i]]
+            inv_sinh = self._get_inv_sinh(i, gp2tp_map)
+            for j, k in list(np.ndindex((num_band, num_band))):
+                collision = (self._fc3_normal_squared[ti, j, k]
+                             * inv_sinh
+                             * self._g[2, ti, j, k]).sum()
+                collision *= self._unit_conversion
+                self._collision_matrix[j, i, k] += collision
+
+    def _get_gp2tp_map(self):
         gp2tp_map = {}
         count = 0
         for i, j in enumerate(self._triplets_map_at_q):
@@ -155,33 +197,21 @@ class CollisionMatrix(ImagSelfEnergy):
                 gp2tp_map[i] = count
                 count += 1
 
-        num_band = self._fc3_normal_squared.shape[1]
-        for i, ir_gp in enumerate(self._ir_grid_points):
-            r_gps = self._rot_grid_points[i]
-            multi = len(r_gps) / (r_gps < num_gp).sum()
-            
-            for r, r_gp in zip(self._rotations_cartesian, r_gps):
-                if r_gp > num_gp - 1:
-                    continue
-                    
-                ti = gp2tp_map[self._triplets_map_at_q[r_gp]]
-                tp = self._triplets_at_q[ti]
-                if self._triplets_map_at_q[r_gp] == self._ir_map_at_q[r_gp]:
-                    gp2 = tp[2]
-                else:
-                    gp2 = tp[1]
-                freqs = self._frequencies[gp2]
-                sinh = np.where(
-                    freqs > self._cutoff_frequency,
-                    np.sinh(freqs * THzToEv / (2 * Kb * self._temperature)),
-                    -1)
-                inv_sinh = np.where(sinh > 0, 1 / sinh, 0)
-                for j, k in list(np.ndindex((num_band, num_band))):
-                    collision = (self._fc3_normal_squared[ti, j, k]
-                                 * inv_sinh
-                                 * self._g[2, ti, j, k]).sum()
-                    collision *= self._unit_conversion * multi
-                    if self._is_reducible_collision_matrix:
-                        self._collision_matrix[j, i, k] += collision
-                    else:
-                        self._collision_matrix[j, :, i, k, :] += collision * r
+        return gp2tp_map
+                
+    def _get_inv_sinh(self, gp, gp2tp_map):
+        ti = gp2tp_map[self._triplets_map_at_q[gp]]
+        tp = self._triplets_at_q[ti]
+        if self._triplets_map_at_q[gp] == self._ir_map_at_q[gp]:
+            gp2 = tp[2]
+        else:
+            gp2 = tp[1]
+        freqs = self._frequencies[gp2]
+        sinh = np.where(
+            freqs > self._cutoff_frequency,
+            np.sinh(freqs * THzToEv / (2 * Kb * self._temperature)),
+            -1)
+        inv_sinh = np.where(sinh > 0, 1 / sinh, 0)
+
+        return inv_sinh
+        

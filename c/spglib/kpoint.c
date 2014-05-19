@@ -814,8 +814,6 @@ static int get_third_q_of_triplets_at_q(int address[3][3],
   int i, j, smallest_g, smallest_index, sum_g, delta_g[3];
   int bzgp[27], address_double[3];
 
-  int tmp_d;
-  
   get_vector_modulo(address[q_index], mesh);
   for (i = 0; i < 3; i++) {
     delta_g[i] = 0;

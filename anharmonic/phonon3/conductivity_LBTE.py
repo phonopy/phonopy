@@ -345,30 +345,11 @@ class Conductivity_LBTE(Conductivity):
             self._gamma_iso = np.zeros((len(self._sigmas),
                                         num_grid_points,
                                         num_band), dtype='double')
-        self._rot_grid_points = np.zeros(
-            (len(self._ir_grid_points), len(self._point_operations)),
-            dtype='intc')
-        self._rot_BZ_grid_points = np.zeros(
-            (len(self._ir_grid_points), len(self._point_operations)),
-            dtype='intc')
-        for i, ir_gp in enumerate(self._ir_grid_points):
-            self._rot_grid_points[i] = get_grid_points_by_rotations(
-                self._grid_address[ir_gp],
-                self._point_operations,
-                self._mesh)
-            self._rot_BZ_grid_points[i] = get_BZ_grid_points_by_rotations(
-                self._grid_address[ir_gp],
-                self._point_operations,
-                self._mesh,
-                self._pp.get_bz_map())
 
         if self._is_reducible_collision_matrix:
             num_mesh_points = np.prod(self._mesh)
             self._collision = CollisionMatrix(
                 self._pp,
-                self._point_operations,
-                np.arange(num_mesh_points, dtype='intc'),
-                self._rot_BZ_grid_points,
                 is_reducible_collision_matrix=True)
             self._collision_matrix = np.zeros(
                 (len(self._sigmas),
@@ -376,11 +357,27 @@ class Conductivity_LBTE(Conductivity):
                  num_grid_points, num_band, num_mesh_points, num_band),
                 dtype='double')
         else:
+            self._rot_grid_points = np.zeros(
+                (len(self._ir_grid_points), len(self._point_operations)),
+                dtype='intc')
+            self._rot_BZ_grid_points = np.zeros(
+                (len(self._ir_grid_points), len(self._point_operations)),
+                dtype='intc')
+            for i, ir_gp in enumerate(self._ir_grid_points):
+                self._rot_grid_points[i] = get_grid_points_by_rotations(
+                    self._grid_address[ir_gp],
+                    self._point_operations,
+                    self._mesh)
+                self._rot_BZ_grid_points[i] = get_BZ_grid_points_by_rotations(
+                    self._grid_address[ir_gp],
+                    self._point_operations,
+                    self._mesh,
+                    self._pp.get_bz_map())
             self._collision = CollisionMatrix(
                 self._pp,
-                self._point_operations,
-                self._ir_grid_points,
-                self._rot_BZ_grid_points)
+                point_operations=self._point_operations,
+                ir_grid_points=self._ir_grid_points,
+                rotated_grid_points=self._rot_BZ_grid_points)
             self._collision_matrix = np.zeros(
                 (len(self._sigmas),
                  len(self._temperatures),
