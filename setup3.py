@@ -3,7 +3,7 @@ from distutils.core import setup, Extension
 import numpy
 include_dirs_numpy = [numpy.get_include()]
 include_dirs_lapacke = ['../lapacke/include']
-include_dirs_libflame = ['../libflame-bin/include']
+# include_dirs_libflame = ['../libflame-bin/include']
 
 # libs_libflame = ['-L/usr/lib/gcc/x86_64-linux-gnu/4.6 -L/usr/lib/gcc/x86_64-linux-gnu/4.6/../../../x86_64-linux-gnu -L/usr/lib/gcc/x86_64-linux-gnu/4.6/../../../../lib -L/lib/x86_64-linux-gnu -L/lib/../lib -L/usr/lib/x86_64-linux-gnu -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-linux-gnu/4.6/../../.. -lgfortran -lm -lquadmath']
 
@@ -13,18 +13,18 @@ extension = Extension(
                    'c/anharmonic_h',
                    'c/spglib_h'] +
                   include_dirs_numpy +
-                  include_dirs_lapacke +
-                  include_dirs_libflame),
+                  # include_dirs_libflame +
+                  include_dirs_lapacke),
     extra_compile_args=['-fopenmp'],
     extra_link_args=['-lgomp',
                      '../lapacke/liblapacke.a',
-                     '../libflame-bin/lib/libflame.a',
+                     # '../libflame-bin/lib/libflame.a',
                      '-llapack',
                      '-lblas'],
     sources=['c/_phono3py.c',
              'c/harmonic/dynmat.c',
              'c/anharmonic/lapack_wrapper.c',
-             'c/anharmonic/flame_wrapper.c',
+             # 'c/anharmonic/flame_wrapper.c',
              'c/anharmonic/phonoc_array.c',
              'c/anharmonic/phonoc_math.c',
              'c/anharmonic/phonoc_utils.c',
