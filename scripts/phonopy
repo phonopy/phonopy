@@ -181,7 +181,7 @@ parser.add_option("--band_connection", dest="is_band_connection",
 parser.add_option("--band_points", dest="band_points",
                   type="int", help="Number of points calculated on a band segment in the band structure mode")
 parser.add_option("--bi", "--band_indices", dest="band_indices", type="string",
-                  help="Band indices to be included to calcualte thermal properties"
+                  help="Band indices to be included to calcualte thermal properties")
 parser.add_option("-c", "--cell", dest="cell_poscar",
                   action="store", type="string",
                   help="Read unit cell", metavar="FILE")
