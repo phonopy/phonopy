@@ -13,6 +13,7 @@ def get_thermal_conductivity_LBTE(
         symmetry,
         temperatures=np.arange(0, 1001, 10, dtype='double'),
         sigmas=[],
+        is_isotope=False,
         mass_variances=None,
         grid_points=None,
         cutoff_lifetime=1e-6, # in second
@@ -39,6 +40,7 @@ def get_thermal_conductivity_LBTE(
         grid_points=grid_points,
         temperatures=temps,
         sigmas=sigmas,
+        is_isotope=is_isotope,
         mass_variances=mass_variances,
         cutoff_lifetime=cutoff_lifetime,
         is_reducible_collision_matrix=is_reducible_collision_matrix,
@@ -225,6 +227,7 @@ class Conductivity_LBTE(Conductivity):
                  grid_points=None,
                  temperatures=None,
                  sigmas=[],
+                 is_isotope=False,
                  mass_variances=None,
                  cutoff_lifetime=1e-4, # in second
                  is_reducible_collision_matrix=False,
@@ -265,6 +268,7 @@ class Conductivity_LBTE(Conductivity):
         self._coarse_mesh_shifts = None
         self._conversion_factor = None
         
+        self._is_isotope = None
         self._isotope = None
         self._mass_variances = None
         self._grid_point_count = None
@@ -275,6 +279,7 @@ class Conductivity_LBTE(Conductivity):
                               grid_points=grid_points,
                               temperatures=temperatures,
                               sigmas=sigmas,
+                              is_isotope=is_isotope,
                               mass_variances=mass_variances,
                               cutoff_lifetime=cutoff_lifetime,
                               no_kappa_stars=no_kappa_stars,

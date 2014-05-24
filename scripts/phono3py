@@ -625,7 +625,8 @@ if options.write_grid_points:
 # fc3 #
 #######
 if (options.is_joint_dos or
-    options.is_isotope or
+    (settings.get_is_isotope() and
+     not (settings.get_is_bterta() or settings.get_is_lbte())) or
     settings.get_read_gamma() or
     settings.get_read_amplitude()):
     pass
@@ -850,14 +851,15 @@ if log_level:
         print
     if (settings.get_is_linewidth() or
         settings.get_is_frequency_shift() or
-        settings.get_is_bterta()):
+        settings.get_is_bterta() or
+        settings.get_is_lbte()):
         print "Temperature:",
         if len(temperatures) > 5:
             print ((" %.1f " * 5) % tuple(temperatures[:5])), "...",
             print " %.1f" % temperatures[-1]
         else:
             print ("%.1f  " * len(temperatures)) % tuple(temperatures)
-    elif options.is_isotope or options.is_joint_dos:
+    elif settings.get_is_isotope() or options.is_joint_dos:
         pass
     else:
         print "Temperatures:",
@@ -909,13 +911,30 @@ if options.is_joint_dos:
 ######################
 # Isotope scattering #
 ######################
-if options.is_isotope:
+if settings.get_is_isotope() and settings.get_mass_variances() is None:
+    from phonopy.structure.atoms import isotope_data
+    symbols = phonon_primitive.get_chemical_symbols()
+    in_database = True
+    for s in set(symbols):
+        if not s in isotope_data:
+            print "%s is not in the list of isotope databese" % s,
+            print "(not implemented)."
+            print "Use --mass_variances option."
+            in_database = False
+    if not in_database:
+        if log_level:
+            print_end()
+        sys.exit(0)
+
+if (settings.get_is_isotope() and
+    not (settings.get_is_bterta() or settings.get_is_lbte())):
     mass_variances = settings.get_mass_variances()
     if band_indices is not None:
         band_indices = np.hstack(band_indices).astype('intc')
     iso = Phono3pyIsotope(
         mesh,
-        mass_variances,
+        phonon_primitive,
+        mass_variances=mass_variances,
         band_indices=band_indices,
         sigmas=sigmas,
         frequency_factor_to_THz=frequency_factor_to_THz,
@@ -955,6 +974,7 @@ elif settings.get_is_bterta() or settings.get_is_lbte():
         is_LBTE=settings.get_is_lbte(),
         temperatures=temperatures,
         sigmas=sigmas,
+        is_isotope=settings.get_is_isotope(),
         mass_variances=settings.get_mass_variances(),
         grid_points=grid_points,
         mesh_divisors=mesh_divs,

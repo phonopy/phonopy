@@ -13,6 +13,7 @@ class Phono3pySettings(Settings):
         self._grid_points = None
         self._ion_clamped = False
         self._is_bterta = False
+        self._is_isotope = False
         self._is_lbte = False
         self._is_linewidth = False
         self._is_frequency_shift = False
@@ -76,6 +77,12 @@ class Phono3pySettings(Settings):
 
     def get_is_bterta(self):
         return self._is_bterta
+
+    def set_is_isotope(self, is_isotope):
+        self._is_isotope = is_isotope
+
+    def get_is_isotope(self):
+        return self._is_isotope
 
     def set_is_lbte(self, is_lbte):
         self._is_lbte = is_lbte
@@ -216,6 +223,10 @@ class Phono3pyConfParser(ConfParser):
                 if self._options.is_bterta:
                     self._confs['bterta'] = '.true.'
 
+            if opt.dest == 'is_isotope':
+                if self._options.is_isotope:
+                    self._confs['isotope'] = '.true.'
+
             if opt.dest == 'is_lbte':
                 if self._options.is_lbte:
                     self._confs['lbte'] = '.true.'
@@ -323,6 +334,10 @@ class Phono3pyConfParser(ConfParser):
                 if confs['bterta'] == '.true.':
                     self.set_parameter('is_bterta', True)
 
+            if conf_key == 'isotope':
+                if confs['isotope'] == '.true.':
+                    self.set_parameter('is_isotope', True)
+                    
             if conf_key == 'lbte':
                 if confs['lbte'] == '.true.':
                     self.set_parameter('is_lbte', True)
@@ -439,6 +454,10 @@ class Phono3pyConfParser(ConfParser):
         # Calculate thermal conductivity in BTE-RTA
         if params.has_key('is_bterta'):
             self._settings.set_is_bterta(params['is_bterta'])
+
+        # Calculate lifetime due to isotope scattering
+        if params.has_key('is_isotope'):
+            self._settings.set_is_isotope(params['is_isotope'])
 
         # Calculate thermal conductivity in LBTE with Chaput's method
         if params.has_key('is_lbte'):

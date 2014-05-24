@@ -7,12 +7,25 @@ from phonopy.phonon.tetrahedron_mesh import get_tetrahedra_frequencies
 from phonopy.structure.grid_points import GridPoints
 import phonopy.structure.spglib as spg
 from phonopy.units import VaspToTHz
+from phonopy.structure.atoms import isotope_data
+
+def get_mass_variances(primitive):
+    symbols = primitive.get_chemical_symbols()
+    mass_variances = []
+    for s in symbols:
+        masses = np.array([x[0] for x in isotope_data[s]])
+        fractions = np.array([x[1] for x in isotope_data[s]])
+        m_ave = np.dot(masses, fractions)
+        g = np.dot(fractions, (1 - masses / m_ave) ** 2)
+        mass_variances.append(g)
+
+    return np.array(mass_variances, dtype='double')
 
 class Isotope:
     def __init__(self,
                  mesh,
-                 mass_variances, # length of list is num_atom.
-                 primitive=None,
+                 primitive,
+                 mass_variances=None, # length of list is num_atom.
                  band_indices=None,
                  sigma=None,
                  frequency_factor_to_THz=VaspToTHz,
@@ -20,7 +33,11 @@ class Isotope:
                  cutoff_frequency=None,
                  lapack_zheev_uplo='L'):
         self._mesh = np.array(mesh, dtype='intc')
-        self._mass_variances = np.array(mass_variances, dtype='double')
+
+        if mass_variances is None:
+            self._mass_variances = get_mass_variances(primitive)
+        else:
+            self._mass_variances = np.array(mass_variances, dtype='double')
         self._primitive = primitive
         self._band_indices = band_indices
         self._sigma = sigma
@@ -79,6 +96,9 @@ class Isotope:
     def get_grid_address(self):
         return self._grid_address
 
+    def get_mass_variances(self):
+        return self._mass_variances
+        
     def get_phonons(self):
         return self._frequencies, self._eigenvectors, self._phonon_done
     

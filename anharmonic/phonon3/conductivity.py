@@ -16,6 +16,7 @@ class Conductivity:
                  grid_points=None,
                  temperatures=None,
                  sigmas=[],
+                 is_isotope=False,
                  mass_variances=None,
                  mesh_divisors=None,
                  coarse_mesh_shifts=None,
@@ -73,7 +74,10 @@ class Conductivity:
 
         self._isotope = None
         self._mass_variances = None
+        self._is_isotope = is_isotope
         if mass_variances is not None:
+            self._is_isotope = True
+        if self._is_isotope:
             self._set_isotope(mass_variances)
 
         self._grid_point_count = None
@@ -270,15 +274,19 @@ class Conductivity:
         return grid_points, grid_weights
             
     def _set_isotope(self, mass_variances):
-        self._mass_variances = np.array(mass_variances, dtype='double')
+        if mass_variances is True:
+            mv = None
+        else:
+            mv = mass_variances
         self._isotope = Isotope(
             self._mesh,
-            mass_variances,
-            primitive=self._primitive,
+            self._primitive,
+            mass_variances=mv,
             frequency_factor_to_THz=self._frequency_factor_to_THz,
             symprec=self._symmetry.get_symmetry_tolerance(),
             cutoff_frequency=self._cutoff_frequency,
             lapack_zheev_uplo=self._pp.get_lapack_zheev_uplo())
+        self._mass_variances = self._isotope.get_mass_variances()
         
     def _set_gv(self, i):
         # Group velocity [num_freqs, 3]
@@ -300,7 +308,7 @@ class Conductivity:
                    (gp, i + 1, len(self._grid_points)))
             print "q-point: (%5.2f %5.2f %5.2f)" % tuple(self._qpoints[i])
             print "Lifetime cutoff (sec): %-10.3e" % self._cutoff_lifetime
-            if self._isotope is not None:
+            if self._is_isotope:
                 print "Mass variance parameters:",
                 print ("%5.2e " * len(self._mass_variances)) % tuple(
                     self._mass_variances)

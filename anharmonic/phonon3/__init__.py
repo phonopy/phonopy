@@ -353,6 +353,7 @@ class Phono3py:
             is_LBTE=True,
             temperatures=np.arange(0, 1001, 10, dtype='double'),
             sigmas=[],
+            is_isotope=False,
             mass_variances=None,
             grid_points=None,
             mesh_divisors=None,
@@ -376,6 +377,7 @@ class Phono3py:
                 self._primitive_symmetry,
                 temperatures=temperatures,
                 sigmas=self._sigmas,
+                is_isotope=is_isotope,
                 mass_variances=mass_variances,
                 grid_points=grid_points,
                 cutoff_lifetime=cutoff_lifetime,
@@ -393,6 +395,7 @@ class Phono3py:
                 self._primitive_symmetry,
                 temperatures=temperatures,
                 sigmas=self._sigmas,
+                is_isotope=is_isotope,
                 mass_variances=mass_variances,
                 grid_points=grid_points,
                 mesh_divisors=mesh_divisors,
@@ -577,7 +580,8 @@ class Phono3py:
 class Phono3pyIsotope:
     def __init__(self,
                  mesh,
-                 mass_variances, # length of list is num_atom.
+                 primitive,
+                 mass_variances=None, # length of list is num_atom.
                  band_indices=None,
                  sigmas=[],
                  frequency_factor_to_THz=VaspToTHz,
@@ -588,7 +592,8 @@ class Phono3pyIsotope:
         self._sigmas = sigmas
         self._log_level = log_level
         self._iso = Isotope(mesh,
-                            mass_variances,
+                            primitive,
+                            mass_variances=mass_variances,
                             band_indices=band_indices,
                             frequency_factor_to_THz=frequency_factor_to_THz,
                             symprec=symprec,

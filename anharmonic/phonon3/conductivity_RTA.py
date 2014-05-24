@@ -14,6 +14,7 @@ def get_thermal_conductivity_RTA(
         sigmas=[],
         mass_variances=None,
         grid_points=None,
+        is_isotope=False,
         mesh_divisors=None,
         coarse_mesh_shifts=None,
         cutoff_lifetime=1e-6, # in second
@@ -27,12 +28,13 @@ def get_thermal_conductivity_RTA(
 
     if log_level:
         print "-------------------- Lattice thermal conducitivity (RTA) --------------------"
-        
+
     br = Conductivity_RTA(interaction,
                           symmetry,
                           grid_points=grid_points,
                           temperatures=temperatures,
                           sigmas=sigmas,
+                          is_isotope=is_isotope,
                           mass_variances=mass_variances,
                           mesh_divisors=mesh_divisors,
                           coarse_mesh_shifts=coarse_mesh_shifts,
@@ -211,6 +213,7 @@ class Conductivity_RTA(Conductivity):
                  grid_points=None,
                  temperatures=np.arange(0, 1001, 10, dtype='double'),
                  sigmas=[],
+                 is_isotope=False,
                  mass_variances=None,
                  mesh_divisors=None,
                  coarse_mesh_shifts=None,
@@ -252,6 +255,7 @@ class Conductivity_RTA(Conductivity):
         self._coarse_mesh_shifts = None
         self._conversion_factor = None
 
+        self._is_isotope = None
         self._isotope = None
         self._mass_variances = None
         self._grid_point_count = None
@@ -262,6 +266,7 @@ class Conductivity_RTA(Conductivity):
                               grid_points=grid_points,
                               temperatures=temperatures,
                               sigmas=sigmas,
+                              is_isotope=is_isotope,
                               mass_variances=mass_variances,
                               mesh_divisors=mesh_divisors,
                               coarse_mesh_shifts=coarse_mesh_shifts,
