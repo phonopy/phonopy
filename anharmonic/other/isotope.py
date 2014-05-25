@@ -1,11 +1,8 @@
 import numpy as np
-from anharmonic.phonon3.interaction import get_dynamical_matrix, set_phonon_c, set_phonon_py
-from anharmonic.phonon3.triplets import get_bz_grid_address
-from anharmonic.phonon3.imag_self_energy import gaussian
+from anharmonic.other.phonon import get_dynamical_matrix, set_phonon_c, set_phonon_py
+from anharmonic.phonon3.triplets import get_bz_grid_address, gaussian
 from phonopy.structure.tetrahedron_method import TetrahedronMethod
 from phonopy.phonon.tetrahedron_mesh import get_tetrahedra_frequencies
-from phonopy.structure.grid_points import GridPoints
-import phonopy.structure.spglib as spg
 from phonopy.units import VaspToTHz
 from phonopy.structure.atoms import isotope_data
 

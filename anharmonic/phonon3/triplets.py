@@ -25,9 +25,6 @@ def get_triplets_at_q(grid_point,
     bz_grid_address, bz_map = spg.relocate_BZ_grid_address(grid_address,
                                                            mesh,
                                                            primitive_lattice)
-    # map_triplets = map_q.copy()
-    # map_triplets = np.arange(np.prod(mesh), dtype='intc')
-        
     triplets_at_q, weights = spg.get_BZ_triplets_at_q(
         grid_point,
         bz_grid_address,

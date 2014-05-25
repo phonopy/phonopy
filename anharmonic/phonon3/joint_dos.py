@@ -1,11 +1,9 @@
 import sys
 import numpy as np
 from phonopy.structure.symmetry import Symmetry
-from phonopy.file_IO import parse_BORN
-from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC
 from phonopy.units import VaspToTHz
 from anharmonic.phonon3.triplets import get_triplets_at_q, get_nosym_triplets_at_q, get_tetrahedra_vertices
-from anharmonic.phonon3.interaction import get_dynamical_matrix, set_phonon_c
+from anharmonic.other.phonon import get_dynamical_matrix, set_phonon_c
 from phonopy.structure.tetrahedron_method import TetrahedronMethod
 
 class JointDos:
