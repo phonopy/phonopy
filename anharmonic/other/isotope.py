@@ -10,8 +10,8 @@ def get_mass_variances(primitive):
     symbols = primitive.get_chemical_symbols()
     mass_variances = []
     for s in symbols:
-        masses = np.array([x[0] for x in isotope_data[s]])
-        fractions = np.array([x[1] for x in isotope_data[s]])
+        masses = np.array([x[1] for x in isotope_data[s]])
+        fractions = np.array([x[2] for x in isotope_data[s]])
         m_ave = np.dot(masses, fractions)
         g = np.dot(fractions, (1 - masses / m_ave) ** 2)
         mass_variances.append(g)
