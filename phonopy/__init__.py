@@ -606,7 +606,8 @@ class Phonopy:
 
     def set_Debye_frequency(self, freq_max_fit=None):
         self._total_dos.set_Debye_frequency(
-            self._primitive.get_number_of_atoms(), freq_max_fit)
+            self._primitive.get_number_of_atoms(),
+            freq_max_fit=freq_max_fit)
 
     def get_Debye_frequency(self):
         return self._total_dos.get_Debye_frequency()

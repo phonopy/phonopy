@@ -232,7 +232,7 @@ class TotalDos(Dos):
             N_fit = len(self._frequency_points) / 4 # Hard coded
         else:
             N_fit = int(freq_max_fit / (freq_max - freq_min) *
-                        len(self._frequency_points.size))
+                        len(self._frequency_points))
         popt, pcov = curve_fit(Debye_dos,
                                self._frequency_points[0:N_fit],
                                self._dos[0:N_fit])
