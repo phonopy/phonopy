@@ -130,6 +130,22 @@ def plot_mesh(data, is_fg, cutoff_frequency=None):
 
     return plt
 
+def get_thermodynamic_Gruneisen_parameter(data, cutoff_frequency=None):
+    x = []
+    y = []
+    m = []
+    for qpt in data['phonon']:
+        m.append(qpt['multiplicity'])
+        x.append([band['frequency'] for band in qpt['band']])
+        y.append([band['gruneisen'] for band in qpt['band']])
+    freqs = np.where(x > cutoff_frequency, x, 0)
+    gammas = np.array(y)
+    
+    from phonopy.gruneisen.mesh import get_thermodynamic_Gruneisen_parameter as tgp
+
+    print "Thermodynamic gruneisen parameter at 300K:", tgp(gammas, freqs, m, 300)
+    
+
 
 # Parse options
 from optparse import OptionParser
@@ -195,6 +211,9 @@ elif 'mesh' in data:
         if options.g_min is not None:
             plt.ylim(ymin=options.g_min)
 
+        get_thermodynamic_Gruneisen_parameter(
+            data, cutoff_frequency=options.cutoff_frequency)
+            
         plt.show()
         
 

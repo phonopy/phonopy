@@ -132,9 +132,17 @@ class Mesh:
         return plt      
 
 
-def get_thermodynamic_Gruneisen_parameter(gammas, frequencies, t):
+def get_thermodynamic_Gruneisen_parameter(gammas,
+                                          frequencies,
+                                          multiplicities,
+                                          t):
     if t > 0:
-        cv = mode_cv(t, frequencies * THzToEv)
-        return np.sum(gammas * cv) / np.sum(cv)
+        sum_cv = 0
+        sum_gcv = 0
+        for g, f, m in zip(gammas, frequencies, multiplicities):
+            cv = mode_cv(t, f * THzToEv)
+            sum_cv += np.sum(cv) * m
+            sum_gcv += np.sum(g * cv) * m
+        return sum_gcv / sum_cv
     else:
         return 0.
