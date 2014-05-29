@@ -146,3 +146,13 @@ def get_thermodynamic_Gruneisen_parameter(gammas,
         return sum_gcv / sum_cv
     else:
         return 0.
+
+def get_thermal_expansion_coefficient(gammas,
+                                      frequencies,
+                                      multiplicities,
+                                      t):
+    if t > 0:
+        return np.dot(multiplicities,
+                      mode_cv(t, frequencies * THzToEv) * gammas)
+    else:
+        return 0.
