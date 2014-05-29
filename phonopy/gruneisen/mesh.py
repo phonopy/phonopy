@@ -137,13 +137,9 @@ def get_thermodynamic_Gruneisen_parameter(gammas,
                                           multiplicities,
                                           t):
     if t > 0:
-        sum_cv = 0
-        sum_gcv = 0
-        for g, f, m in zip(gammas, frequencies, multiplicities):
-            cv = mode_cv(t, f * THzToEv)
-            sum_cv += np.sum(cv) * m
-            sum_gcv += np.sum(g * cv) * m
-        return sum_gcv / sum_cv
+        cv = mode_cv(t, frequencies * THzToEv)
+        return (np.dot(multiplicities, cv * gammas).sum() /
+                np.dot(multiplicities, cv).sum())
     else:
         return 0.
 
@@ -153,6 +149,6 @@ def get_thermal_expansion_coefficient(gammas,
                                       t):
     if t > 0:
         return np.dot(multiplicities,
-                      mode_cv(t, frequencies * THzToEv) * gammas)
+                      mode_cv(t, frequencies * THzToEv) * gammas).sum()
     else:
         return 0.
