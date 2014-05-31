@@ -44,7 +44,7 @@ extension = Extension(
              'c/spglib/tetrahedron_method.c'])
 
 setup(name='phono3py',
-      version='0.8.9',
+      version='0.8.10',
       description='This is the phono3py module.',
       author='Atsushi Togo',
       author_email='atz.togo@gmail.com',
