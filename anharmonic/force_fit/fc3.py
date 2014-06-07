@@ -4,7 +4,6 @@ from phonopy.harmonic.force_constants import similarity_transformation, get_posi
 from anharmonic.phonon3.displacement_fc3 import get_reduced_site_symmetry
 from anharmonic.phonon3.fc3 import distribute_fc3
 
-
 class FC3Fit:
     def __init__(self,
                  supercell,
@@ -108,7 +107,7 @@ class FC3Fit:
                         force_matrix_atom.append(np.dot(sym,
                                                         forces[map_sym[i]]))
                 force_matrix.append(force_matrix_atom)
-        return np.double(force_matrix)
+        return np.array(force_matrix, dtype='double')
         
     def _create_displacement_matrix(self,
                                     disp_pairs,
@@ -136,8 +135,6 @@ class FC3Fit:
 
         return np.hstack((ones, rot_disp1s, rot_disp2s,
                           rot_pair12, rot_pair11, rot_pair22))
-               
-               
 
     def _collect_disp_pairs_and_forces(self, dataset_1st):
         second_atom_nums = [x['number'] for x in dataset_1st['second_atoms']]

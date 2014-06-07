@@ -151,8 +151,7 @@ class FC2Fit:
                                                      self._symprec)
         site_sym_cart = [similarity_transformation(self._lattice, sym)
                          for sym in site_symmetry]
-        rot_disps = self._create_displacement_matrix(disps,
-                                                     site_sym_cart)
+        rot_disps = self._create_displacement_matrix(disps, site_sym_cart)
         rot_forces = self._create_force_matrix(sets_of_forces,
                                                site_sym_cart,
                                                rot_map_syms)
@@ -203,9 +202,7 @@ class FC2Fit:
             import anharmonic._forcefit as forcefit
             mat_shape = matrix.shape
             inv_matrix = np.zeros((mat_shape[1], mat_shape[0]), dtype='double')
-            forcefit.pinv(matrix,
-                          inv_matrix,
-                          self._pinv_cutoff)
+            forcefit.pinv(matrix, inv_matrix, self._pinv_cutoff)
         except ImportError:
             inv_matrix = np.linalg.pinv(matrix, rcond=self._pinv_cutoff)
 
@@ -217,7 +214,7 @@ class FC2Fit:
             import anharmonic._forcefit as forcefit
 
             multi = len(matrices)
-            row_nums = np.intc([m.shape[0] for m in matrices])
+            row_nums = np.array([m.shape[0] for m in matrices], dtype='intc')
             info = np.zeros(len(row_nums), dtype='intc')
             max_row_num = max(row_nums)
             column_num = matrices[0].shape[1]
@@ -241,5 +238,3 @@ class FC2Fit:
                 inv_mat = np.linalg.pinv(mat)
                 inv_matrices.append(inv_mat)
         return inv_matrices
-            
-    

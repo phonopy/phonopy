@@ -1468,13 +1468,6 @@ def parse_FORCES_FC3(disp_dataset, filename="FORCES_FC3"):
     f3.close()
     return forces_fc3
 
-def parse_FORCE_SETS_with_disp_dataset(disp_dataset, filename="FORCE_SETS"):
-    f2 = open(filename, 'r')
-    num_atom = disp_dataset['natom']
-    force_sets = parse_FORCE_SETS(num_atom)
-    for disp1, force_set in zip(disp_dataset['first_atoms'], force_sets):
-        disp1['forces'] = force_set.get_forces()
-
 def parse_DELTA_FC2_SETS(disp_dataset,
                          filename='DELTA_FC2_SETS'):
     fc2_file = open(filename, 'r')
