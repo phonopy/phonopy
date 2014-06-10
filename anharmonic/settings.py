@@ -439,7 +439,7 @@ class Phono3pyConfParser(ConfParser):
         if params.has_key('cutoff_frequency'):
             self._settings.set_cutoff_frequency(params['cutoff_frequency'])
 
-        # Cutoff mean free path for thermal conductivity calculation
+        # Boundary mean free path for thermal conductivity calculation
         if params.has_key('cutoff_mfp'):
             self._settings.set_cutoff_mfp(params['cutoff_mfp'])
 

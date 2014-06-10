@@ -193,7 +193,7 @@ parser.add_option("--cutfreq", "--cutoff_frequency", dest="cutoff_frequency",
                   help="Phonon modes below this frequency are ignored.")
 parser.add_option("--cutmfp", "--cutoff_mfp", dest="cutoff_mfp",
                   type="float",
-                  help="Cutoff mean free path in micrometre for thermal conductivity calculation")
+                  help="Boundary mean free path in micrometre for thermal conductivity calculation")
 parser.add_option("--cutpair", "--cutoff_pair_distance",
                   dest="cutoff_pair_distance", type="float",
                   help="Cutoff distance between pairs of displaced atoms used for supercell creation with displacements and making third-order force constants")
