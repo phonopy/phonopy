@@ -1,6 +1,6 @@
 import numpy as np
 from phonopy.phonon.group_velocity import get_group_velocity
-from phonopy.units import THzToEv, THz
+from phonopy.units import THzToEv, THz, Angstrom
 from phonopy.phonon.thermal_properties import mode_cv as get_mode_cv
 from anharmonic.file_IO import write_kappa_to_hdf5, write_triplets, read_gamma_from_hdf5, write_grid_address
 from anharmonic.phonon3.conductivity import Conductivity
@@ -17,7 +17,7 @@ def get_thermal_conductivity_RTA(
         is_isotope=False,
         mesh_divisors=None,
         coarse_mesh_shifts=None,
-        cutoff_lifetime=1e-6, # in second
+        cutoff_mfp=None, # in micrometre
         no_kappa_stars=False,
         gv_delta_q=1e-4, # for group velocity
         write_gamma=False,
@@ -38,7 +38,7 @@ def get_thermal_conductivity_RTA(
                           mass_variances=mass_variances,
                           mesh_divisors=mesh_divisors,
                           coarse_mesh_shifts=coarse_mesh_shifts,
-                          cutoff_lifetime=cutoff_lifetime,
+                          cutoff_mfp=cutoff_mfp,
                           no_kappa_stars=no_kappa_stars,
                           gv_delta_q=gv_delta_q,
                           log_level=log_level)
@@ -217,7 +217,7 @@ class Conductivity_RTA(Conductivity):
                  mass_variances=None,
                  mesh_divisors=None,
                  coarse_mesh_shifts=None,
-                 cutoff_lifetime=1e-4, # in second
+                 cutoff_mfp=None, # in micrometre
                  no_kappa_stars=False,
                  gv_delta_q=None, # finite difference for group veolocity
                  log_level=0):
@@ -232,7 +232,7 @@ class Conductivity_RTA(Conductivity):
         self._dm = None
         self._frequency_factor_to_THz = None
         self._cutoff_frequency = None
-        self._cutoff_lifetime = None
+        self._cutoff_mfp = None
 
         self._symmetry = None
         self._point_operations = None
@@ -270,7 +270,7 @@ class Conductivity_RTA(Conductivity):
                               mass_variances=mass_variances,
                               mesh_divisors=mesh_divisors,
                               coarse_mesh_shifts=coarse_mesh_shifts,
-                              cutoff_lifetime=cutoff_lifetime,
+                              cutoff_mfp=cutoff_mfp,
                               no_kappa_stars=no_kappa_stars,
                               gv_delta_q=gv_delta_q,
                               log_level=log_level)
@@ -296,22 +296,21 @@ class Conductivity_RTA(Conductivity):
             for j, vxv in enumerate(
                 ([0, 0], [1, 1], [2, 2], [1, 2], [0, 2], [0, 1])):
                 gv_sum2[j] = gv_by_gv_tensor[:, vxv[0], vxv[1]]
-    
+
+            # Boundary scattering
+            if self._cutoff_mfp is not None:
+                g_boundary = self._get_boundary_scattering(i)
+                
             # Kappa
             for j in range(len(self._sigmas)):
-                for k, l in list(np.ndindex(len(self._temperatures), num_band)):
-                    g_phph = self._gamma[j, k, i, l]
-                    cutoff_gamma = 1.0 / 4 / np.pi / self._cutoff_lifetime / THz
-                    if g_phph < cutoff_gamma:
-                        continue
-                    if self._isotope is None:
-                        g_sum = g_phph
-                    else:
-                        g_iso = self._gamma_iso[j, i, l]
-                        g_sum = g_phph + g_iso
-                    self._kappa[j, k] += (
-                        gv_sum2[:, l] * cv[k, l] / (g_sum * 2) *
-                        self._conversion_factor)
+                for k in range(len(self._temperatures)):
+                    g_sum = self._get_main_diagonal(i, j, k)
+                    for l in range(num_band):
+                        if i == 0 and l < 3: # Acoustic mode at Gamma (singular)
+                            continue
+                        self._kappa[j, k] += (
+                            gv_sum2[:, l] * cv[k, l] / (g_sum[l] * 2) *
+                            self._conversion_factor)
 
         self._kappa /= num_sampling_points
 

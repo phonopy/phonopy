@@ -1,7 +1,7 @@
 import sys
 import numpy as np
 from phonopy.phonon.degeneracy import degenerate_sets
-from phonopy.units import THz
+from phonopy.units import THz, Angstrom
 from anharmonic.phonon3.conductivity import Conductivity
 from anharmonic.phonon3.collision_matrix import CollisionMatrix
 from anharmonic.phonon3.triplets import get_grid_points_by_rotations, get_BZ_grid_points_by_rotations
@@ -16,7 +16,7 @@ def get_thermal_conductivity_LBTE(
         is_isotope=False,
         mass_variances=None,
         grid_points=None,
-        cutoff_lifetime=1e-6, # in second
+        cutoff_mfp=None, # in micrometre
         is_reducible_collision_matrix=False,
         no_kappa_stars=False,
         gv_delta_q=1e-4, # for group velocity
@@ -42,7 +42,7 @@ def get_thermal_conductivity_LBTE(
         sigmas=sigmas,
         is_isotope=is_isotope,
         mass_variances=mass_variances,
-        cutoff_lifetime=cutoff_lifetime,
+        cutoff_mfp=cutoff_mfp,
         is_reducible_collision_matrix=is_reducible_collision_matrix,
         no_kappa_stars=no_kappa_stars,
         gv_delta_q=gv_delta_q,
@@ -229,7 +229,7 @@ class Conductivity_LBTE(Conductivity):
                  sigmas=[],
                  is_isotope=False,
                  mass_variances=None,
-                 cutoff_lifetime=1e-4, # in second
+                 cutoff_mfp=None, # in micrometre
                  is_reducible_collision_matrix=False,
                  no_kappa_stars=False,
                  gv_delta_q=None, # finite difference for group veolocity
@@ -244,7 +244,7 @@ class Conductivity_LBTE(Conductivity):
         self._dm = None
         self._frequency_factor_to_THz = None
         self._cutoff_frequency = None
-        self._cutoff_lifetime = None
+        self._cutoff_mfp = None
 
         self._symmetry = None
         self._point_operations = None
@@ -281,7 +281,7 @@ class Conductivity_LBTE(Conductivity):
                               sigmas=sigmas,
                               is_isotope=is_isotope,
                               mass_variances=mass_variances,
-                              cutoff_lifetime=cutoff_lifetime,
+                              cutoff_mfp=cutoff_mfp,
                               no_kappa_stars=no_kappa_stars,
                               gv_delta_q=gv_delta_q,
                               log_level=log_level)
@@ -457,8 +457,6 @@ class Conductivity_LBTE(Conductivity):
 
     def _combine_collisions(self):
         num_band = self._primitive.get_number_of_atoms() * 3
-        cutoff_gamma = 1.0 / 4 / np.pi / self._cutoff_lifetime / THz
-
         for j, k in list(np.ndindex((len(self._sigmas),
                                      len(self._temperatures)))):
             for i, ir_gp in enumerate(self._ir_grid_points):
@@ -469,12 +467,7 @@ class Conductivity_LBTE(Conductivity):
                     if ir_gp != r_BZ_gp:
                         continue
 
-                    main_diagonal = self._gamma[j, k, i].copy()
-                    if self._gamma_iso is not None:
-                        main_diagonal += self._gamma_iso[j, i]
-
-                    main_diagonal = np.where(main_diagonal > cutoff_gamma,
-                                             main_diagonal, cutoff_gamma)
+                    main_diagonal = self._get_main_diagonal(i, j, k)
                     main_diagonal *= multi
                     for l in range(num_band):
                         self._collision_matrix[
@@ -483,16 +476,11 @@ class Conductivity_LBTE(Conductivity):
     def _combine_reducible_collisions(self):
         num_band = self._primitive.get_number_of_atoms() * 3
         num_mesh_points = np.prod(self._mesh)
-        cutoff_gamma = 1.0 / 4 / np.pi / self._cutoff_lifetime / THz
 
         for j, k in list(
                 np.ndindex((len(self._sigmas), len(self._temperatures)))):
             for i in range(num_mesh_points):
-                main_diagonal = self._gamma[j, k, i].copy()
-                if self._gamma_iso is not None:
-                    main_diagonal += self._gamma_iso[j, i]
-                main_diagonal = np.where(main_diagonal > cutoff_gamma,
-                                         main_diagonal, cutoff_gamma)
+                main_diagonal = self._get_main_diagonal(i, j, k)
                 for l in range(num_band):
                     self._collision_matrix[
                         j, k, i, l, i, l] += main_diagonal[l]
@@ -512,6 +500,10 @@ class Conductivity_LBTE(Conductivity):
                           len(self._temperatures),
                           num_mesh_points,
                           num_band), dtype='double')
+        gv = np.zeros((num_mesh_points,
+                       num_band,
+                       3), dtype='double')
+        
         if self._gamma_iso is not None:
             gamma_iso = np.zeros((len(self._sigmas),
                                   num_mesh_points,
@@ -528,7 +520,7 @@ class Conductivity_LBTE(Conductivity):
             g_elem = self._gamma[:, :, i, :] / multi
             if self._gamma_iso is not None:
                 giso_elem = self._gamma_iso[:, i, :] / multi
-            for j in range(num_rot):
+            for j, r in enumerate(self._rotations_cartesian):
                 gp_r = rot_grid_points[j, ir_gp]
                 gamma[:, :, gp_r, :] += g_elem
                 if self._gamma_iso is not None:
@@ -538,11 +530,14 @@ class Conductivity_LBTE(Conductivity):
                     colmat_elem = colmat_elem.copy() / multi
                     gp_c = rot_grid_points[j, k]
                     collision_matrix[:, :, gp_r, :, gp_c, :] += colmat_elem
+                    
+                gv[gp_r] += np.dot(self._gv[i], r.T) / multi
 
         self._gamma = gamma
         self._collision_matrix = collision_matrix
         if self._gamma_iso is not None:
             self._gamma_iso = gamma_iso
+        self._gv = gv
                             
     def _get_weights(self):
         weights = []
@@ -616,20 +611,11 @@ class Conductivity_LBTE(Conductivity):
         
     def _get_X(self, t, weights):
         num_band = self._primitive.get_number_of_atoms() * 3
+        X = self._gv.copy()
         if self._is_reducible_collision_matrix:
             num_mesh_points = np.prod(self._mesh)
-            if self._no_kappa_stars:
-                X = self._gv.copy()
-            else:
-                self._pp.set_phonon(np.arange(num_mesh_points, dtype='intc'))
-                X = np.zeros((num_mesh_points, num_band, 3), dtype='double')
-                for i in range(num_mesh_points):
-                    q = self._grid_address[i] / self._mesh.astype('double')
-                    X[i] = self._get_gv(q)
-                
             freqs = self._frequencies[:num_mesh_points]
         else:
-            X = self._gv.copy()
             freqs = self._frequencies[self._ir_grid_points]
             
         sinh = np.where(freqs > self._cutoff_frequency,

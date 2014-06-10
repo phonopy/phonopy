@@ -9,7 +9,7 @@ class Phono3pySettings(Settings):
         self._cutoff_fc3_distance = None
         self._cutoff_pair_distance = None
         self._cutoff_frequency = 1e-4
-        self._cutoff_lifetime = 1e-4 # in second
+        self._cutoff_mfp = None # in micrometre
         self._grid_points = None
         self._ion_clamped = False
         self._is_bterta = False
@@ -54,11 +54,11 @@ class Phono3pySettings(Settings):
     def get_cutoff_frequency(self):
         return self._cutoff_frequency
 
-    def set_cutoff_lifetime(self, cutoff_lifetime):
-        self._cutoff_lifetime = cutoff_lifetime
+    def set_cutoff_mfp(self, cutoff_mfp):
+        self._cutoff_mfp = cutoff_mfp
 
-    def get_cutoff_lifetime(self):
-        return self._cutoff_lifetime
+    def get_cutoff_mfp(self):
+        return self._cutoff_mfp
 
     def set_grid_points(self, grid_points):
         self._grid_points = grid_points
@@ -206,10 +206,10 @@ class Phono3pyConfParser(ConfParser):
                     self._confs['cutoff_frequency'] = \
                         self._options.cutoff_frequency
 
-            if opt.dest == 'cutoff_lifetime':
-                if self._options.cutoff_lifetime is not None:
-                    self._confs['cutoff_lifetime'] = \
-                        self._options.cutoff_lifetime
+            if opt.dest == 'cutoff_mfp':
+                if self._options.cutoff_mfp is not None:
+                    self._confs['cutoff_mfp'] = \
+                        self._options.cutoff_mfp
 
             if opt.dest == 'grid_points':
                 if self._options.grid_points is not None:
@@ -317,9 +317,9 @@ class Phono3pyConfParser(ConfParser):
                 self.set_parameter('cutoff_frequency',
                                    float(confs['cutoff_frequency']))
 
-            if conf_key == 'cutoff_lifetime':
-                self.set_parameter('cutoff_lifetime',
-                                   float(confs['cutoff_lifetime']))
+            if conf_key == 'cutoff_mfp':
+                self.set_parameter('cutoff_mfp',
+                                   float(confs['cutoff_mfp']))
 
             if conf_key == 'grid_points':
                 vals = [int(x) for x in
@@ -439,9 +439,9 @@ class Phono3pyConfParser(ConfParser):
         if params.has_key('cutoff_frequency'):
             self._settings.set_cutoff_frequency(params['cutoff_frequency'])
 
-        # Cutoff lifetime used for thermal conductivity calculation
-        if params.has_key('cutoff_lifetime'):
-            self._settings.set_cutoff_lifetime(params['cutoff_lifetime'])
+        # Cutoff mean free path for thermal conductivity calculation
+        if params.has_key('cutoff_mfp'):
+            self._settings.set_cutoff_mfp(params['cutoff_mfp'])
 
         # Grid points
         if params.has_key('grid_points'):
