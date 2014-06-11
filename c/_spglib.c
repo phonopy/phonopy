@@ -174,8 +174,9 @@ static PyObject * get_dataset(PyObject *self, PyObject *args)
 
 static PyObject * get_spacegroup(PyObject *self, PyObject *args)
 {
+  int i;
   double symprec, angle_tolerance;
-  char symbol[26];
+  char symbol_with_number[17], spg_symbol[11];
   PyArrayObject* lattice;
   PyArrayObject* position;
   PyArrayObject* atom_type;
@@ -193,16 +194,20 @@ static PyObject * get_spacegroup(PyObject *self, PyObject *args)
   const int num_atom = position->dimensions[0];
   const int* typat = (int*)atom_type->data;
 
-  const int num_spg = spgat_get_international(symbol,
+  const int num_spg = spgat_get_international(spg_symbol,
 					      lat,
 					      pos,
 					      typat,
 					      num_atom,
 					      symprec,
 					      angle_tolerance);
-  sprintf(symbol, "%s (%d)", symbol, num_spg);
+  for (i = 9; i > 0; i--) {
+    if (! isspace(spg_symbol[i])) { break; }
+  }
+  spg_symbol[i + 1] = 0;
+  sprintf(symbol_with_number, "%s (%d)", spg_symbol, num_spg);
 
-  return PyString_FromString(symbol);
+  return PyString_FromString(symbol_with_number);
 }
 
 static PyObject * get_pointgroup(PyObject *self, PyObject *args)
