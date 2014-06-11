@@ -705,9 +705,10 @@ class Conductivity_LBTE(Conductivity):
                  for r in point_operations], dtype='double')
         else:
             rotations_cartesian = self._rotations_cartesian
-            
-        RX = np.dot(X, rotations_cartesian.reshape(-1, 3).T)
-        RY = np.dot(Y, rotations_cartesian.reshape(-1, 3).T)
+
+        # Acoustic mode at Gamma is not summed.
+        RX = np.dot(X[3:], rotations_cartesian.reshape(-1, 3).T)
+        RY = np.dot(Y[3:], rotations_cartesian.reshape(-1, 3).T)
         sum_outer = np.zeros((3, 3), dtype='double')
         for v, f in zip(RX.reshape(-1, 3), RY.reshape(-1, 3)):
             sum_outer += np.outer(v, f)
