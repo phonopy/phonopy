@@ -188,6 +188,7 @@ def set_permutation_symmetry_fc3_elem(fc3, a, b, c, divisor=6):
 def set_translational_invariance_fc3(fc3):
     for i in range(3):
         set_translational_invariance_fc3_per_index(fc3, index=i)
+        # set_translational_invariance_fc3_per_index_weighted(fc3, index=i)
 
 def set_translational_invariance_fc3_per_index(fc3, index=0):
     for i in range(fc3.shape[(1 + index) % 3]):
@@ -204,6 +205,31 @@ def set_translational_invariance_fc3_per_index(fc3, index=0):
                         elif index == 2:
                             fc3[i, j, :, k, l, m] -= np.sum(
                                 fc3[i, j, :, k, l, m]) / fc3.shape[2]
+
+def set_translational_invariance_fc3_per_index_weighted(fc3, index=0):
+    for i in range(fc3.shape[(1 + index) % 3]):
+        for j in range(fc3.shape[(2 + index) % 3]):
+            for k in range(fc3.shape[3]):
+                for l in range(fc3.shape[4]):
+                    for m in range(fc3.shape[5]):
+                        if index == 0:
+                            fc_abs = np.abs(fc3[:, i, j, k, l, m])
+                            fc_sum = np.sum(fc3[:, i, j, k, l, m])
+                            fc_abs_sum = np.sum(fc_abs)
+                            fc3[:, i, j, k, l, m] -= (
+                                fc_sum / fc_abs_sum * fc_abs)
+                        elif index == 1:
+                            fc_abs = np.abs(fc3[i, :, j, k, l, m])
+                            fc_sum = np.sum(fc3[i, :, j, k, l, m])
+                            fc_abs_sum = np.sum(fc_abs)
+                            fc3[i, :, j, k, l, m] -= (
+                                fc_sum / fc_abs_sum * fc_abs)
+                        elif index == 2:
+                            fc_abs = np.abs(fc3[i, j, :, k, l, m])
+                            fc_sum = np.sum(fc3[i, j, :, k, l, m])
+                            fc_abs_sum = np.sum(fc_abs)
+                            fc3[i, j, :, k, l, m] -= (
+                                fc_sum / fc_abs_sum * fc_abs)
     
 def third_rank_tensor_rotation(rot_cart, tensor):
     rot_tensor = np.zeros((3,3,3), dtype='double')

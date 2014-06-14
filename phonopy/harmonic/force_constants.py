@@ -448,7 +448,9 @@ def set_translational_invariance(force_constants):
     """
     set_translational_invariance_per_index(force_constants, index=0)
     set_translational_invariance_per_index(force_constants, index=1)
-
+    # set_translational_invariance_per_index_weighted(force_constants, index=0)
+    # set_translational_invariance_per_index_weighted(force_constants, index=1)
+    
 def set_translational_invariance_per_index(force_constants, index=0):
     if index == 0:
         for i in range(force_constants.shape[1]):
@@ -463,6 +465,23 @@ def set_translational_invariance_per_index(force_constants, index=0):
                     force_constants[i, :, j, k] -= np.sum(
                         force_constants[i, :, j, k]) / force_constants.shape[1]
 
+def set_translational_invariance_per_index_weighted(force_constants, index=0):
+    if index == 0:
+        for i in range(force_constants.shape[1]):
+            for j in range(force_constants.shape[2]):
+                for k in range(force_constants.shape[3]):
+                    fc_abs = np.abs(force_constants[:, i, j, k])
+                    fc_sum = np.sum(force_constants[:, i, j, k])
+                    fc_abs_sum = np.sum(fc_abs)
+                    force_constants[:, i, j, k] -= fc_sum / fc_abs_sum * fc_abs
+    elif index == 1:
+        for i in range(force_constants.shape[0]):
+            for j in range(force_constants.shape[2]):
+                for k in range(force_constants.shape[3]):
+                    fc_abs = np.abs(force_constants[i, :, j, k])
+                    fc_sum = np.sum(force_constants[i, :, j, k])
+                    fc_abs_sum = np.sum(fc_abs)
+                    force_constants[i, :, j, k] -= fc_sum / fc_abs_sum * fc_abs
 
 def set_permutation_symmetry(force_constants):
     """
