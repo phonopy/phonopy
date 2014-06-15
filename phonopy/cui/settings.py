@@ -47,6 +47,7 @@ class Settings:
         self._band_paths = None
         self._band_indices = None
         self._chemical_symbols = None
+        self._cutoff_frequency = None
         self._displacement_distance = None
         self._dm_decimals = None
         self._gv_delta_q = None
@@ -94,6 +95,12 @@ class Settings:
 
     def get_chemical_symbols(self):
         return self._chemical_symbols
+
+    def set_cutoff_frequency(self, cutoff_frequency):
+        self._cutoff_frequency = cutoff_frequency
+
+    def get_cutoff_frequency(self):
+        return self._cutoff_frequency
 
     def set_dm_decimals(self, decimals):
         self._dm_decimals = decimals
@@ -427,6 +434,10 @@ class ConfParser:
         if params.has_key('sigma'):
             self._settings.set_sigma(params['sigma'])
 
+        # Cutoff frequency
+        if params.has_key('cutoff_frequency'):
+            self._settings.set_cutoff_frequency(params['cutoff_frequency'])
+    
         # Tetrahedron method
         if params.has_key('is_tetrahedron_method'):
             self._settings.set_is_tetrahedron_method(
@@ -484,6 +495,10 @@ class ConfParser:
             if opt.dest == 'band_points':
                 if self._options.band_points is not None:
                     self._confs['band_points'] = self._options.band_points
+
+            if opt.dest == 'cutoff_frequency':
+                if self._options.cutoff_frequency:
+                    self._confs['cutoff_frequency'] = self._options.cutoff_frequency
 
             if opt.dest == 'displacement_distance':
                 if self._options.displacement_distance:
@@ -745,6 +760,10 @@ class ConfParser:
                 val = float(confs['frequency_pitch'])
                 self.set_parameter('frequency_pitch', val)
 
+            if conf_key == 'cutoff_frequency':
+                val = float(confs['cutoff_frequency'])
+                self.set_parameter('cutoff_frequency', val)
+
             if conf_key == 'sigma':
                 vals = [float(x) for x in str(confs['sigma']).split()]
                 if len(vals) == 1:
@@ -794,7 +813,6 @@ class PhonopySettings(Settings):
         self._anime_type = 'v_sim'
         self._band_labels = None
         self._band_connection = False
-        self._cutoff_frequency = None
         self._cutoff_radius = None
         self._dos = None
         self._dos_range = { 'min':  None,
@@ -864,12 +882,6 @@ class PhonopySettings(Settings):
 
     def get_band_labels(self):
         return self._band_labels
-
-    def set_cutoff_frequency(self, cutoff_frequency):
-        self._cutoff_frequency = cutoff_frequency
-
-    def get_cutoff_frequency(self):
-        return self._cutoff_frequency
 
     def set_cutoff_radius(self, cutoff_radius):
         self._cutoff_radius = cutoff_radius
@@ -1151,10 +1163,6 @@ class PhonopyConfParser(ConfParser):
                 if self._options.is_band_connection:
                     self._confs['band_connection'] = '.true.'
 
-            if opt.dest == 'cutoff_frequency':
-                if self._options.cutoff_frequency:
-                    self._confs['cutoff_frequency'] = self._options.cutoff_frequency
-
             if opt.dest == 'cutoff_radius':
                 if self._options.cutoff_radius:
                     self._confs['cutoff_radius'] = self._options.cutoff_radius
@@ -1195,10 +1203,6 @@ class PhonopyConfParser(ConfParser):
             if conf_key == 'force_constants':
                 self.set_parameter('force_constants',
                                    confs['force_constants'])
-
-            if conf_key == 'cutoff_frequency':
-                val = float(confs['cutoff_frequency'])
-                self.set_parameter('cutoff_frequency', val)
 
             if conf_key == 'cutoff_radius':
                 val = float(confs['cutoff_radius'])
@@ -1399,10 +1403,6 @@ class PhonopyConfParser(ConfParser):
         if params.has_key('hdf5'):
             self._settings.set_is_hdf5(params['hdf5'])
 
-        # Cutoff frequency
-        if params.has_key('cutoff_frequency'):
-            self._settings.set_cutoff_frequency(params['cutoff_frequency'])
-    
         # Cutoff radius of force constants
         if params.has_key('cutoff_radius'):
             self._settings.set_cutoff_radius(params['cutoff_radius'])

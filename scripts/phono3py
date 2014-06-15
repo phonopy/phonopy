@@ -106,11 +106,11 @@ parser.set_defaults(band_indices=None,
                     band_points=None,
                     cell_poscar=None,
                     cutoff_fc3_distance=None,
-                    cutoff_frequency=1e-2,
+                    cutoff_frequency=None,
                     cutoff_mfp=None,
                     cutoff_pair_distance=None,
                     delta_fc2=False,
-                    displacement_distance=0.03,
+                    displacement_distance=None,
                     delta_fc2_sets_mode=False,
                     factor=None,
                     forces_fc3_mode=False,
@@ -185,16 +185,16 @@ parser.add_option("--br", "--bterta", dest="is_bterta", action="store_true",
                   help="Calculate thermal conductivity in BTE-RTA")
 parser.add_option("-c", "--cell", dest="cell_poscar", action="store",
                   type="string", help="Read unit cell", metavar="FILE")
-parser.add_option("--cutfc3", "--cutoff_fc3_distance",
+parser.add_option("--cutoff_fc3", "--cutoff_fc3_distance",
                   dest="cutoff_fc3_distance", type="float",
                   help="Cutoff distance of third-order force constants. Elements where any pair of atoms has larger distance than cut-off distance are set zero.")
-parser.add_option("--cutfreq", "--cutoff_frequency", dest="cutoff_frequency",
+parser.add_option("--cutoff_freq", "--cutoff_frequency", dest="cutoff_frequency",
                   type="float",
                   help="Phonon modes below this frequency are ignored.")
-parser.add_option("--cutmfp", "--cutoff_mfp", dest="cutoff_mfp",
+parser.add_option("--cutoff_mfp", dest="cutoff_mfp",
                   type="float",
                   help="Boundary mean free path in micrometre for thermal conductivity calculation")
-parser.add_option("--cutpair", "--cutoff_pair_distance",
+parser.add_option("--cutoff_pair", "--cutoff_pair_distance",
                   dest="cutoff_pair_distance", type="float",
                   help="Cutoff distance between pairs of displaced atoms used for supercell creation with displacements and making third-order force constants")
 parser.add_option("-d", "--disp", dest="is_displacement", action="store_true",
@@ -431,6 +431,10 @@ unitcell = read_vasp(unitcell_filename, settings.get_chemical_symbols())
 # Create supercells with displacements and exit #
 #################################################
 if options.is_displacement:
+    if settings.get_displacement_distance() is None:
+        displacement_distance = 0.03
+    else:
+        displacement_distance = settings.get_displacement_distance()
     cutoff_pair_distance = settings.get_cutoff_pair_distance()
     phono3py = Phono3py(
         unitcell,
@@ -439,7 +443,7 @@ if options.is_displacement:
         symprec=options.symprec)
     supercell = phono3py.get_supercell()
     phono3py.generate_displacements(
-        distance=settings.get_displacement_distance(),
+        distance=displacement_distance,
         cutoff_pair_distance=cutoff_pair_distance,
         is_plusminus=settings.get_is_plusminus_displacement(),
         is_diagonal=settings.get_is_diagonal_displacement())
@@ -447,7 +451,7 @@ if options.is_displacement:
     
     if log_level:
         print
-        print "Displacement distance:", settings.get_displacement_distance()
+        print "Displacement distance:", displacement_distance
 
     if output_filename is None:
         filename = 'disp_fc3.yaml'
@@ -497,7 +501,6 @@ mesh = settings.get_mesh_numbers()
 mesh_divs = settings.get_mesh_divisors()
 grid_points = settings.get_grid_points()
 band_indices = settings.get_band_indices()
-cutoff_frequency = settings.get_cutoff_frequency()
 sigma = settings.get_sigma()
 if sigma is None:
     sigmas = []
@@ -528,7 +531,11 @@ if options.freq_scale is None:
     frequency_scale_factor = 1.0
 else:
     frequency_scale_factor = options.freq_scale
-
+if settings.get_cutoff_frequency() is None:
+    cutoff_frequency = 1e-2
+else:
+    cutoff_frequency = settings.get_cutoff_frequency()
+    
 phono3py = Phono3py(
     unitcell,
     settings.get_supercell_matrix(),

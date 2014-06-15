@@ -8,7 +8,6 @@ class Phono3pySettings(Settings):
         self._coarse_mesh_shifts = None
         self._cutoff_fc3_distance = None
         self._cutoff_pair_distance = None
-        self._cutoff_frequency = 1e-2
         self._cutoff_mfp = None # in micrometre
         self._grid_points = None
         self._ion_clamped = False
@@ -47,12 +46,6 @@ class Phono3pySettings(Settings):
 
     def get_cutoff_pair_distance(self):
         return self._cutoff_pair_distance
-
-    def set_cutoff_frequency(self, cutoff_frequency):
-        self._cutoff_frequency = cutoff_frequency
-
-    def get_cutoff_frequency(self):
-        return self._cutoff_frequency
 
     def set_cutoff_mfp(self, cutoff_mfp):
         self._cutoff_mfp = cutoff_mfp
@@ -201,11 +194,6 @@ class Phono3pyConfParser(ConfParser):
                     self._confs['cutoff_pair_distance'] = \
                         self._options.cutoff_pair_distance
 
-            if opt.dest == 'cutoff_frequency':
-                if self._options.cutoff_frequency is not None:
-                    self._confs['cutoff_frequency'] = \
-                        self._options.cutoff_frequency
-
             if opt.dest == 'cutoff_mfp':
                 if self._options.cutoff_mfp is not None:
                     self._confs['cutoff_mfp'] = \
@@ -312,10 +300,6 @@ class Phono3pyConfParser(ConfParser):
             if conf_key == 'cutoff_pair_distance':
                 self.set_parameter('cutoff_pair_distance',
                                    float(confs['cutoff_pair_distance']))
-
-            if conf_key == 'cutoff_frequency':
-                self.set_parameter('cutoff_frequency',
-                                   float(confs['cutoff_frequency']))
 
             if conf_key == 'cutoff_mfp':
                 self.set_parameter('cutoff_mfp',
@@ -434,10 +418,6 @@ class Phono3pyConfParser(ConfParser):
         if params.has_key('cutoff_pair_distance'):
             self._settings.set_cutoff_pair_distance(
                 params['cutoff_pair_distance'])
-
-        # Phonon modes below this frequency are ignored.
-        if params.has_key('cutoff_frequency'):
-            self._settings.set_cutoff_frequency(params['cutoff_frequency'])
 
         # Boundary mean free path for thermal conductivity calculation
         if params.has_key('cutoff_mfp'):
