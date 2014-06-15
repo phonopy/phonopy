@@ -117,7 +117,6 @@ parser.set_defaults(band_indices=None,
                     forces_fc2_mode=False,
                     force_sets_mode=False,
                     freq_scale=None,
-                    gamma_option=0,
                     grid_points=None,
                     gv_delta_q=None,
                     input_filename=None,
@@ -148,8 +147,8 @@ parser.set_defaults(band_indices=None,
                     mesh_numbers=None,
                     mesh_divisors=None,
                     no_kappa_stars=False,
-                    q_direction=None,
                     primitive_axis=None,
+                    q_direction=None,
                     read_amplitude=False,
                     read_collision=None,
                     read_fc2=False,
@@ -163,10 +162,11 @@ parser.set_defaults(band_indices=None,
                     supercell_dimension=None,
                     supercell_dimension_extra=None,
                     symprec=1e-5,
+                    temperatures=None,
                     tmax=None,
                     tmin=None,
                     tstep=None,
-                    temperatures=None,
+                    tsym_type=None,
                     verbose=False,
                     uplo='L',
                     write_amplitude=False,
@@ -227,8 +227,6 @@ parser.add_option("--freq_scale", dest="freq_scale", type="float",
                   help="Scale factor is multiplied to frequencies only, i.e., changes frequencies but assumed not to change the physical unit")
 parser.add_option("--freq_pitch", dest="frequency_pitch", type="float",
                   help="Pitch in frequency for spectrum")
-parser.add_option("--gamma_option", dest="gamma_option", type="int",
-                  help="Option for the test of imaginary part of self energy")
 parser.add_option("--gp", "--grid_points", dest="grid_points", type="string",
                   help="Fixed grid points where damping functions are calculated ")
 parser.add_option("--gruneisen", dest="is_gruneisen", action="store_true",
@@ -305,6 +303,8 @@ parser.add_option("--tstep", dest="tstep", type="string",
 parser.add_option("--tsym", dest="is_translational_symmetry",
                   action="store_true",
                   help="Impose translational invariance condition")
+parser.add_option("--tsym_type", dest="tsym_type", type="int",
+                  help="Imposing type of translational invariance")
 parser.add_option("--tolerance", dest="symprec", type="float",
                   help="Symmetry tolerance to search")
 parser.add_option("-v", "--verbose", dest="verbose", action="store_true",
@@ -318,9 +318,9 @@ parser.add_option("--uplo", dest="uplo", type="string", help="Lapack zheev UPLO"
 parser.add_option("--wgp", "--write_grid_points", dest="write_grid_points",
                   action="store_true",
                   help="Write grid address of irreducible grid points for specified mesh numbers to ir_grid_address.yaml")
-parser.add_option("--write_amplitude", dest="write_amplitude",
-                  action="store_true",
-                  help="Write phonon-phonon interaction amplitudes")
+# parser.add_option("--write_amplitude", dest="write_amplitude",
+#                   action="store_true",
+#                   help="Write phonon-phonon interaction amplitudes")
 parser.add_option("--write_collision", dest="write_collision", action="store_true",
                   help="Write collision matrix and Gammas to files")
 parser.add_option("--write_gamma", dest="write_gamma", action="store_true",

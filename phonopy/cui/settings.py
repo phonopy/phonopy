@@ -75,6 +75,7 @@ class Settings:
         self._tmax = 1000
         self._tmin = 0
         self._tstep = 10
+        self._tsym_type = 0
 
     def set_bands(self, bands):
         self._band_paths = bands
@@ -268,6 +269,12 @@ class Settings:
     def get_time_symmetry(self):
         return self._is_time_symmetry
 
+    def set_tsym_type(self, tsym_type):
+        self._tsym_type = tsym_type
+
+    def get_tsym_type(self):
+        return self._tsym_type
+    
 
 # Parse phonopy setting filen
 class ConfParser:
@@ -361,6 +368,9 @@ class ConfParser:
         if params.has_key('is_translation'):
             self._settings.set_is_translational_invariance(
                 params['is_translation'])
+            
+        if params.has_key('tsym_type'):
+            self._settings.set_tsym_type(params['tsym_type'])
     
         # Is rotational invariance ?
         if params.has_key('is_rotational'):
@@ -519,6 +529,10 @@ class ConfParser:
                     self._confs['symmetry'] = '.false.'
                     self._confs['mesh_symmetry'] = '.false.'
 
+            if opt.dest == 'tsym_type':
+                if self._options.tsym_type:
+                    self._confs['tsym_type'] = self._options.tsym_type
+                    
             if opt.dest == 'is_plusminus_displacements':
                 if self._options.is_plusminus_displacements:
                     self._confs['pm'] = '.true.'
@@ -672,6 +686,9 @@ class ConfParser:
             if conf_key == 'translation':
                 if confs['translation'] == '.true.':
                     self.set_parameter('is_translation', True)
+
+            if conf_key == 'tsym_type':
+                self.set_parameter('tsym_type', confs['tsym_type'])
 
             if conf_key == 'rotational':
                 if confs['rotational'] == '.true.':

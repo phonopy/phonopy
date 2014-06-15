@@ -8,7 +8,7 @@ class Phono3pySettings(Settings):
         self._coarse_mesh_shifts = None
         self._cutoff_fc3_distance = None
         self._cutoff_pair_distance = None
-        self._cutoff_frequency = 1e-4
+        self._cutoff_frequency = 1e-2
         self._cutoff_mfp = None # in micrometre
         self._grid_points = None
         self._ion_clamped = False
