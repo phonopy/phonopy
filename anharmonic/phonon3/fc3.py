@@ -9,7 +9,7 @@ def get_fc3(supercell,
             disp_dataset,
             fc2,
             symmetry,
-            is_translational_symmetry=False,
+            translational_symmetry_type=0,
             is_permutation_symmetry=False,
             verbose=False):
     num_atom = supercell.get_number_of_atoms()
@@ -30,7 +30,7 @@ def get_fc3(supercell,
                              disp_dataset,
                              fc2,
                              symmetry,
-                             is_translational_symmetry,
+                             translational_symmetry_type,
                              is_permutation_symmetry,
                              verbose)
     
@@ -63,19 +63,21 @@ def get_fc3(supercell,
                    disp_dataset,
                    symmetry,
                    verbose=verbose)
-        if is_translational_symmetry:
+        if translational_symmetry_type:
             if verbose:
                 print "Imposing translational invariance symmetry to fc3"
-            set_translational_invariance_fc3(fc3)
+            set_translational_invariance_fc3(
+                fc3, translational_symmetry_type=translational_symmetry_type)
         if is_permutation_symmetry:
             if verbose:
                 print "Imposing index permulation symmetry to fc3"
             set_permutation_symmetry_fc3(fc3)
     else:
-        if is_translational_symmetry:
+        if translational_symmetry_type:
             if verbose:
                 print "Imposing translational invariance symmetry to fc3"
-            set_translational_invariance_fc3_per_index(fc3)
+            set_translational_invariance_fc3_per_index(
+                fc3, translational_symmetry_type=translational_symmetry_type)
         if is_permutation_symmetry:
             if verbose:
                 print "Imposing index permulation symmetry to fc3"
@@ -185,51 +187,49 @@ def set_permutation_symmetry_fc3_elem(fc3, a, b, c, divisor=6):
                             fc3[c, b, a, k, j, i]) / divisor
     return tensor3
 
-def set_translational_invariance_fc3(fc3):
+def set_translational_invariance_fc3(fc3,
+                                     translational_symmetry_type=1):
     for i in range(3):
-        set_translational_invariance_fc3_per_index(fc3, index=i)
-        # set_translational_invariance_fc3_per_index_weighted(fc3, index=i)
+        set_translational_invariance_fc3_per_index(
+            fc3,
+            index=i,
+            translational_symmetry_type=translational_symmetry_type)
 
-def set_translational_invariance_fc3_per_index(fc3, index=0):
+def set_translational_invariance_fc3_per_index(fc3,
+                                               index=0,
+                                               translational_symmetry_type=1):
     for i in range(fc3.shape[(1 + index) % 3]):
         for j in range(fc3.shape[(2 + index) % 3]):
-            for k in range(fc3.shape[3]):
-                for l in range(fc3.shape[4]):
-                    for m in range(fc3.shape[5]):
-                        if index == 0:
-                            fc3[:, i, j, k, l, m] -= np.sum(
-                                fc3[:, i, j, k, l, m]) / fc3.shape[0]
-                        elif index == 1:
-                            fc3[j, :, i, k, l, m] -= np.sum(
-                                fc3[j, :, i, k, l, m]) / fc3.shape[1]
-                        elif index == 2:
-                            fc3[i, j, :, k, l, m] -= np.sum(
-                                fc3[i, j, :, k, l, m]) / fc3.shape[2]
-
-def set_translational_invariance_fc3_per_index_weighted(fc3, index=0):
-    for i in range(fc3.shape[(1 + index) % 3]):
-        for j in range(fc3.shape[(2 + index) % 3]):
-            for k in range(fc3.shape[3]):
-                for l in range(fc3.shape[4]):
-                    for m in range(fc3.shape[5]):
-                        if index == 0:
-                            fc_abs = np.abs(fc3[:, i, j, k, l, m])
-                            fc_sum = np.sum(fc3[:, i, j, k, l, m])
-                            fc_abs_sum = np.sum(fc_abs)
-                            fc3[:, i, j, k, l, m] -= (
-                                fc_sum / fc_abs_sum * fc_abs)
-                        elif index == 1:
-                            fc_abs = np.abs(fc3[i, :, j, k, l, m])
-                            fc_sum = np.sum(fc3[i, :, j, k, l, m])
-                            fc_abs_sum = np.sum(fc_abs)
-                            fc3[i, :, j, k, l, m] -= (
-                                fc_sum / fc_abs_sum * fc_abs)
-                        elif index == 2:
-                            fc_abs = np.abs(fc3[i, j, :, k, l, m])
-                            fc_sum = np.sum(fc3[i, j, :, k, l, m])
-                            fc_abs_sum = np.sum(fc_abs)
-                            fc3[i, j, :, k, l, m] -= (
-                                fc_sum / fc_abs_sum * fc_abs)
+            for k, l, m in list(np.ndindex(3, 3, 3)):
+                if translational_symmetry_type == 2: # Type 2
+                    if index == 0:
+                        fc_abs = np.abs(fc3[:, i, j, k, l, m])
+                        fc_sum = np.sum(fc3[:, i, j, k, l, m])
+                        fc_abs_sum = np.sum(fc_abs)
+                        fc3[:, i, j, k, l, m] -= (
+                            fc_sum / fc_abs_sum * fc_abs)
+                    elif index == 1:
+                        fc_abs = np.abs(fc3[i, :, j, k, l, m])
+                        fc_sum = np.sum(fc3[i, :, j, k, l, m])
+                        fc_abs_sum = np.sum(fc_abs)
+                        fc3[i, :, j, k, l, m] -= (
+                            fc_sum / fc_abs_sum * fc_abs)
+                    elif index == 2:
+                        fc_abs = np.abs(fc3[i, j, :, k, l, m])
+                        fc_sum = np.sum(fc3[i, j, :, k, l, m])
+                        fc_abs_sum = np.sum(fc_abs)
+                        fc3[i, j, :, k, l, m] -= (
+                            fc_sum / fc_abs_sum * fc_abs)
+                else: # Type 1          
+                    if index == 0:
+                        fc3[:, i, j, k, l, m] -= np.sum(
+                            fc3[:, i, j, k, l, m]) / fc3.shape[0]
+                    elif index == 1:
+                        fc3[j, :, i, k, l, m] -= np.sum(
+                            fc3[j, :, i, k, l, m]) / fc3.shape[1]
+                    elif index == 2:
+                        fc3[i, j, :, k, l, m] -= np.sum(
+                            fc3[i, j, :, k, l, m]) / fc3.shape[2]
     
 def third_rank_tensor_rotation(rot_cart, tensor):
     rot_tensor = np.zeros((3,3,3), dtype='double')
@@ -278,14 +278,14 @@ def get_delta_fc2(dataset_second_atoms,
                   fc2,
                   supercell,
                   reduced_site_sym,
-                  is_translational_symmetry,
+                  translational_symmetry_type,
                   is_permutation_symmetry,
                   symprec):
     disp_fc2 = get_constrained_fc2(supercell,
                                    dataset_second_atoms,
                                    atom1,
                                    reduced_site_sym,
-                                   is_translational_symmetry,
+                                   translational_symmetry_type,
                                    is_permutation_symmetry,
                                    symprec)
     return disp_fc2 - fc2
@@ -294,7 +294,7 @@ def get_constrained_fc2(supercell,
                         dataset_second_atoms,
                         atom1,
                         reduced_site_sym,
-                        is_translational_symmetry,
+                        translational_symmetry_type,
                         is_permutation_symmetry,
                         symprec):
     """
@@ -346,8 +346,10 @@ def get_constrained_fc2(supercell,
                                         dtype='double'),
                                symprec)
 
-    if is_translational_symmetry:
-        set_translational_invariance(fc2)
+    if translational_symmetry_type:
+        set_translational_invariance(
+            fc2,
+            translational_symmetry_type=translational_symmetry_type)
 
     if is_permutation_symmetry:
         set_permutation_symmetry(fc2)
@@ -467,7 +469,7 @@ def _get_fc3_least_atoms(fc3,
                          disp_dataset,
                          fc2,
                          symmetry,
-                         is_translational_symmetry,
+                         translational_symmetry_type,
                          is_permutation_symmetry,
                          verbose):
     symprec = symmetry.get_symmetry_tolerance()
@@ -480,7 +482,7 @@ def _get_fc3_least_atoms(fc3,
                           fc2,
                           first_atom_num,
                           symmetry.get_site_symmetry(first_atom_num),
-                          is_translational_symmetry,
+                          translational_symmetry_type,
                           is_permutation_symmetry,
                           symprec,
                           verbose)
@@ -491,7 +493,7 @@ def _get_fc3_one_atom(fc3,
                       fc2,
                       first_atom_num,
                       site_symmetry,
-                      is_translational_symmetry,
+                      translational_symmetry_type,
                       is_permutation_symmetry,
                       symprec,
                       verbose):
@@ -515,7 +517,7 @@ def _get_fc3_one_atom(fc3,
                     fc2,
                     supercell,
                     reduced_site_sym,
-                    is_translational_symmetry,
+                    translational_symmetry_type,
                     is_permutation_symmetry,
                     symprec))
 

@@ -553,6 +553,12 @@ if settings.get_cutoff_frequency() is None:
     cutoff_frequency = 1e-2
 else:
     cutoff_frequency = settings.get_cutoff_frequency()
+if settings.get_is_translational_symmetry():
+    tsym_type = 1
+elif settings.get_tsym_type() > 0:
+    tsym_type = settings.get_tsym_type()
+else:
+    tsym_type = 0
     
 phono3py = Phono3py(
     unitcell,
@@ -601,7 +607,7 @@ if log_level:
             
     print "----------------------------- General settings ------------------------------"
     print "Imposing translational symmetry to fc3 and fc2:",
-    print settings.get_is_translational_symmetry()
+    print (tsym_type > 0)
     print "Imposing symmetry of index exchange to fc2:",
     print options.is_symmetrize_fc2
     print "Imposing symmetry of index exchange to fc3 in real space:",
@@ -687,7 +693,7 @@ else:
             forces_fc3,
             displacement_dataset=disp_dataset,
             cutoff_distance=settings.get_cutoff_fc3_distance(),
-            is_translational_symmetry=settings.get_is_translational_symmetry(),
+            translational_symmetry_type=tsym_type,
             is_permutation_symmetry=options.is_symmetrize_fc3_r)
         if output_filename is None:
             filename = 'fc3.hdf5'
@@ -741,7 +747,7 @@ else:
             phono3py.produce_fc2(
                 forces_fc3,
                 displacement_dataset=disp_dataset,
-                is_translational_symmetry=settings.is_translational_symmetry(),
+                translational_symmetry_type=tsym_type,
                 is_permutation_symmetry=options.is_symmetrize_fc2)
     else:
         if input_filename is None:
@@ -759,7 +765,7 @@ else:
         phono3py.produce_fc2(
             forces_fc2,
             displacement_dataset=disp_dataset,
-            is_translational_symmetry=settings.get_is_translational_symmetry(),
+            translational_symmetry_type=tsym_type,
             is_permutation_symmetry=options.is_symmetrize_fc2)
 
     if output_filename is None:

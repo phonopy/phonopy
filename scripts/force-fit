@@ -46,7 +46,7 @@ from phonopy.file_IO import parse_FORCE_SETS
 from anharmonic.force_fit.fc2 import FC2Fit
 from anharmonic.force_fit.fc3 import FC3Fit
 from anharmonic.force_fit.fc4 import FC4Fit
-from anharmonic.file_IO import parse_disp_fc4_yaml, parse_FORCES_FOURTH, parse_disp_fc3_yaml, parse_FORCES_THIRD, parse_FORCES_SECOND
+from anharmonic.file_IO import parse_disp_fc4_yaml, parse_FORCES_FOURTH, parse_disp_fc3_yaml, parse_FORCES_FC3, parse_disp_fc2_yaml, parse_FORCES_FC2
 from anharmonic.file_IO import write_fc3_dat, write_fc4_dat, write_fc4_to_hdf5, write_fc3_to_hdf5, write_fc2_to_hdf5
 from anharmonic.phonon3.fc3 import show_drift_fc3
 from anharmonic.phonon4.fc4 import show_drift_fc4
@@ -136,9 +136,11 @@ if options.fc2:
         disp_dataset = parse_FORCE_SETS("FORCE_SETS")
     else:
         file_exists("disp_fc3.yaml")
-        file_exists("FORCES_SECOND")
-        disp_dataset = parse_disp_fc3_yaml()
-        parse_FORCES_THIRD(disp_dataset)
+        file_exists("FORCES_FC2")
+        disp_dataset = parse_disp_fc2_yaml()
+        forces_fc2 = parse_FORCES_FC2(disp_dataset)
+        for forces, disp1 in zip(forces_fc2, disp_dataset['first_atoms']):
+            disp1['forces'] = forces
     if options.coef_invariants is not None:
         print "Adjustment parameter: %e" % options.coef_invariants
     if options.pinv_cutoff is not None:
@@ -153,21 +155,28 @@ if options.fc2:
     fc2fit.run()
     fc2 = fc2fit.get_fc2()
     print "Writing fc2..."
-    write_fc2_to_hdf5(fc2, 'fc2-fit.hdf5')
+    write_fc2_to_hdf5(fc2, 'fc2.fit.hdf5')
 
 if options.fc3:
     file_exists("disp_fc3.yaml")
-    file_exists("FORCES_SECOND")
-    file_exists("FORCES_THIRD")
+    file_exists("FORCES_FC3")
     disp_dataset = parse_disp_fc3_yaml()
-    parse_FORCES_THIRD(disp_dataset)
+    forces_fc3 = parse_FORCES_FC3(disp_dataset)
+    for forces, disp1 in zip(forces_fc3, disp_dataset['first_atoms']):
+        disp1['forces'] = forces
+    count = len(disp_dataset['first_atoms'])
+    for disp1 in disp_dataset['first_atoms']:
+        for disp2 in disp1['second_atoms']:
+            disp2['forces'] = forces_fc3[count]
+            count += 1
+    
     fc3fit = FC3Fit(supercell, disp_dataset, symmetry)
     fc3fit.run()
     fc3 = fc3fit.get_fc3()
     print "Calculating drift fc3..."
     show_drift_fc3(fc3)
     print "Writing fc3..."
-    write_fc3_to_hdf5(fc3, 'fc3-fit.hdf5')
+    write_fc3_to_hdf5(fc3, 'fc3.fit.hdf5')
 
 if options.fc4:
     file_exists("disp_fc4.yaml")
@@ -182,15 +191,15 @@ if options.fc4:
     print "Calculating drift fc4..."
     show_drift_fc4(fc4)
     print "Writing fc4..."
-    write_fc4_to_hdf5(fc4, 'fc4-fit.hdf5')
+    write_fc4_to_hdf5(fc4, 'fc4.fit.hdf5')
     
     fc3 = fc4fit.get_fc3()
     print "Calculating drift of fc3..."
     show_drift_fc3(fc3)
     print "Writing fc3..."
-    write_fc3_to_hdf5(fc3, 'fc3-fit.hdf5')
+    write_fc3_to_hdf5(fc3, 'fc3.fit.hdf5')
 
     fc2 = fc4fit.get_fc2()
     show_drift_force_constants(fc2, name="fc2")
     print "Writing fc2..."
-    write_fc2_to_hdf5(fc2, 'fc2-fit.hdf5')
+    write_fc2_to_hdf5(fc2, 'fc2.fit.hdf5')

@@ -438,50 +438,44 @@ def set_tensor_symmetry(force_constants,
             # Take average and set to new force cosntants
             force_constants[i, j] = tmp_fc / len(rotations)
 
-def set_translational_invariance(force_constants):
+def set_translational_invariance(force_constants,
+                                 translational_symmetry_type=1):
     """
-    Translational invariance is imposed.  This is quite simple
+    Translational invariance is imposed. The type1 is quite simple
     implementation, which is just taking sum of the force constants in
     an axis and an atom index. The sum has to be zero due to the
     translational invariance. If the sum is not zero, this error is
     uniformly subtracted from force constants.
     """
-    set_translational_invariance_per_index(force_constants, index=0)
-    set_translational_invariance_per_index(force_constants, index=1)
-    # set_translational_invariance_per_index_weighted(force_constants, index=0)
-    # set_translational_invariance_per_index_weighted(force_constants, index=1)
+    for i in range(2):
+       set_translational_invariance_per_index(
+           force_constants,
+           index=i,
+           translational_symmetry_type=translational_symmetry_type)
     
-def set_translational_invariance_per_index(force_constants, index=0):
-    if index == 0:
-        for i in range(force_constants.shape[1]):
-            for j in range(force_constants.shape[2]):
-                for k in range(force_constants.shape[3]):
-                    force_constants[:, i, j, k] -= np.sum(
-                        force_constants[:, i, j, k]) / force_constants.shape[0]
-    elif index == 1:
-        for i in range(force_constants.shape[0]):
-            for j in range(force_constants.shape[2]):
-                for k in range(force_constants.shape[3]):
-                    force_constants[i, :, j, k] -= np.sum(
-                        force_constants[i, :, j, k]) / force_constants.shape[1]
-
-def set_translational_invariance_per_index_weighted(force_constants, index=0):
-    if index == 0:
-        for i in range(force_constants.shape[1]):
-            for j in range(force_constants.shape[2]):
-                for k in range(force_constants.shape[3]):
-                    fc_abs = np.abs(force_constants[:, i, j, k])
-                    fc_sum = np.sum(force_constants[:, i, j, k])
-                    fc_abs_sum = np.sum(fc_abs)
-                    force_constants[:, i, j, k] -= fc_sum / fc_abs_sum * fc_abs
-    elif index == 1:
-        for i in range(force_constants.shape[0]):
-            for j in range(force_constants.shape[2]):
-                for k in range(force_constants.shape[3]):
-                    fc_abs = np.abs(force_constants[i, :, j, k])
-                    fc_sum = np.sum(force_constants[i, :, j, k])
-                    fc_abs_sum = np.sum(fc_abs)
-                    force_constants[i, :, j, k] -= fc_sum / fc_abs_sum * fc_abs
+def set_translational_invariance_per_index(fc2,
+                                           index=0,
+                                           translational_symmetry_type=1):
+        for i in range(fc2.shape[1 - index]):
+            for j, k in list(np.ndindex(3, 3)):
+                if translational_symmetry_type == 2: # Type 2
+                    if index == 0:
+                        fc_abs = np.abs(fc2[:, i, j, k])
+                        fc_sum = np.sum(fc2[:, i, j, k])
+                        fc_abs_sum = np.sum(fc_abs)
+                        fc2[:, i, j, k] -= fc_sum / fc_abs_sum * fc_abs
+                    else:
+                        fc_abs = np.abs(fc2[i, :, j, k])
+                        fc_sum = np.sum(fc2[i, :, j, k])
+                        fc_abs_sum = np.sum(fc_abs)
+                        fc2[i, :, j, k] -= fc_sum / fc_abs_sum * fc_abs
+                else: # Type 1
+                    if index == 0:
+                        fc2[:, i, j, k] -= np.sum(
+                            fc2[:, i, j, k]) / fc2.shape[0]
+                    else:
+                        fc2[i, :, j, k] -= np.sum(
+                            fc2[i, :, j, k]) / fc2.shape[1]
 
 def set_permutation_symmetry(force_constants):
     """

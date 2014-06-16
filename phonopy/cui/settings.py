@@ -59,7 +59,7 @@ class Settings:
         self._is_plusminus_displacement = 'auto'
         self._is_symmetry = True
         self._is_tetrahedron_method = False
-        self._is_time_symmetry = True
+        self._is_time_reversal_symmetry = True
         self._is_translational_symmetry = False
         self._is_trigonal_displacement = False
         self._fc_decimals = None
@@ -270,12 +270,16 @@ class Settings:
     def get_temperature_step(self):
         return self._tstep
     
-    def set_time_symmetry(self, time_symmetry=True):
-        self._is_time_symmetry = time_symmetry
+    def set_time_reversal_symmetry(self, time_reversal_symmetry=True):
+        self._is_time_reversal_symmetry = time_reversal_symmetry
 
-    def get_time_symmetry(self):
-        return self._is_time_symmetry
+    def get_time_reversal_symmetry(self):
+        return self._is_time_reversal_symmetry
 
+    # Translational symmetry type
+    # 0: No imposition
+    # 1: Simple sum, sum(fc) / N
+    # 2: Weighted sum, sum(fc) * abs(fc) / sum(abs(fc))
     def set_tsym_type(self, tsym_type):
         self._tsym_type = tsym_type
 
@@ -1003,19 +1007,19 @@ class PhonopySettings(Settings):
     def set_mesh(self,
                  mesh,
                  mesh_shift=[0.,0.,0.],
-                 is_time_symmetry=True,
+                 is_time_reversal_symmetry=True,
                  is_mesh_symmetry=True,
                  is_gamma_center=False):
         self._mesh = mesh
         self._mesh_shift = mesh_shift
-        self._is_time_symmetry = is_time_symmetry
+        self._is_time_reversal_symmetry = is_time_reversal_symmetry
         self._is_mesh_symmetry = is_mesh_symmetry
         self._is_gamma_center = is_gamma_center
 
     def get_mesh(self):
         return (self._mesh,
                 self._mesh_shift,
-                self._is_time_symmetry,
+                self._is_time_reversal_symmetry,
                 self._is_mesh_symmetry,
                 self._is_gamma_center)
 
@@ -1232,9 +1236,9 @@ class PhonopyConfParser(ConfParser):
                     self.setting_error("MP_SHIFT is incorrectly set.")
                 self.set_parameter('mp_shift', vals[:3])
                 
-            if conf_key == 'time_symmetry':
-                if confs['time_symmetry'] == '.false.':
-                    self.set_parameter('is_time_symmetry', False)
+            if conf_key == 'time_reversal_symmetry':
+                if confs['time_reversal_symmetry'] == '.false.':
+                    self.set_parameter('is_time_reversal_symmetry', False)
 
             if conf_key == 'gamma_center':
                 if confs['gamma_center'] == '.true.':
@@ -1419,10 +1423,10 @@ class PhonopyConfParser(ConfParser):
             else:
                 shift = [0.,0.,0.]
     
-            time_symmetry = True
-            if params.has_key('is_time_symmetry'):
-                if not params['is_time_symmetry']:
-                    time_symmetry = False
+            time_reversal_symmetry = True
+            if params.has_key('is_time_reversal_symmetry'):
+                if not params['is_time_reversal_symmetry']:
+                    time_reversal_symmetry = False
     
             mesh_symmetry = True
             if params.has_key('is_mesh_symmetry'):
@@ -1434,11 +1438,12 @@ class PhonopyConfParser(ConfParser):
                 if params['is_gamma_center']:
                     gamma_center = True
     
-            self._settings.set_mesh(params['mesh_numbers'],
-                                    mesh_shift=shift,
-                                    is_time_symmetry=time_symmetry,
-                                    is_mesh_symmetry=mesh_symmetry,
-                                    is_gamma_center=gamma_center)
+            self._settings.set_mesh(
+                params['mesh_numbers'],
+                mesh_shift=shift,
+                is_time_reversal_symmetry=time_reversal_symmetry,
+                is_mesh_symmetry=mesh_symmetry,
+                is_gamma_center=gamma_center)
     
         # band mode
         if params.has_key('band_paths'):

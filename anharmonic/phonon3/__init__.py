@@ -163,7 +163,7 @@ class Phono3py:
                     forces_fc2,
                     displacement_dataset=None,
                     is_permutation_symmetry=False,
-                    is_translational_symmetry=False):
+                    translational_symmetry_type=0):
         if displacement_dataset is None:
             disp_dataset = self._displacement_dataset
         else:
@@ -176,14 +176,16 @@ class Phono3py:
                             disp_dataset)
         if is_permutation_symmetry:
             set_permutation_symmetry(self._fc2)
-        if is_translational_symmetry:
-            set_translational_invariance(self._fc2)
+        if translational_symmetry_type:
+            set_translational_invariance(
+                self._fc2,
+                translational_symmetry_type=translational_symmetry_type)
 
     def produce_fc3(self,
                     forces_fc3,
                     displacement_dataset=None,
                     cutoff_distance=None, # set fc3 zero
-                    is_translational_symmetry=False,
+                    translational_symmetry_type=0,
                     is_permutation_symmetry=False):
         if displacement_dataset is None:
             disp_dataset = self._displacement_dataset
@@ -195,8 +197,10 @@ class Phono3py:
         fc2 = get_fc2(self._supercell, self._symmetry, disp_dataset)
         if is_permutation_symmetry:
             set_permutation_symmetry(fc2)
-        if is_translational_symmetry:
-            set_translational_invariance(fc2)
+        if translational_symmetry_type:
+            set_translational_invariance(
+                fc2,
+                translational_symmetry_type=translational_symmetry_type)
         
         count = len(disp_dataset['first_atoms'])
         for disp1 in disp_dataset['first_atoms']:
@@ -208,7 +212,7 @@ class Phono3py:
             disp_dataset,
             fc2,
             self._symmetry,
-            is_translational_symmetry=is_translational_symmetry,
+            translational_symmetry_type=translational_symmetry_type,
             is_permutation_symmetry=is_permutation_symmetry,
             verbose=self._log_level)
 
@@ -235,11 +239,16 @@ class Phono3py:
         if self._fc3 is not None:
             set_permutation_symmetry_fc3(self._fc3)
 
-    def set_translational_invariance(self):
+    def set_translational_invariance(self,
+                                     translational_symmetry_type=1):
         if self._fc2 is not None:
-            set_translational_invariance(self._fc2)
+            set_translational_invariance(
+                self._fc2,
+                translational_symmetry_type=translational_symmetry_type)
         if self._fc3 is not None:
-            set_translational_invariance_fc3(self._fc3)
+            set_translational_invariance_fc3(
+                self._fc3,
+                translational_symmetry_type=translational_symmetry_type)
         
     def get_interaction_strength(self):
         return self._interaction
