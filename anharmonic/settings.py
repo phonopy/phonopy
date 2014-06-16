@@ -179,10 +179,10 @@ class Phono3pyConfParser(ConfParser):
 
     def _read_options(self):
         for opt in self._option_list:
-            if opt.dest == 'supercell_dimension_extra':
-                if self._options.supercell_dimension_extra is not None:
-                    self._confs['dim_extra'] = \
-                        self._options.supercell_dimension_extra
+            if opt.dest == 'phonon_supercell_dimension':
+                if self._options.phonon_supercell_dimension is not None:
+                    self._confs['dim_fc2'] = \
+                        self._options.phonon_supercell_dimension
 
             if opt.dest == 'cutoff_fc3_distance':
                 if self._options.cutoff_fc3_distance is not None:
@@ -275,8 +275,8 @@ class Phono3pyConfParser(ConfParser):
         confs = self._confs
 
         for conf_key in confs.keys():
-            if conf_key == 'dim_extra':
-                matrix = [ int(x) for x in confs['dim_extra'].split() ]
+            if conf_key == 'dim_fc2':
+                matrix = [ int(x) for x in confs['dim_fc2'].split() ]
                 if len(matrix) == 9:
                     matrix = np.array(matrix).reshape(3, 3)
                 elif len(matrix) == 3:
@@ -291,7 +291,7 @@ class Phono3pyConfParser(ConfParser):
                             "Determinant of supercell matrix has " +
                             "to be positive.")
                     else:
-                        self.set_parameter('dim_extra', matrix)
+                        self.set_parameter('dim_fc2', matrix)
 
             if conf_key == 'cutoff_fc3_distance':
                 self.set_parameter('cutoff_fc3_distance',
@@ -404,9 +404,9 @@ class Phono3pyConfParser(ConfParser):
         ConfParser.set_settings(self)
         params = self._parameters
 
-        # Supercell size for fc2
-        if params.has_key('dim_extra'):
-            self._settings.set_phonon_supercell_matrix(params['dim_extra'])
+        # Supercell dimension for fc2
+        if params.has_key('dim_fc2'):
+            self._settings.set_phonon_supercell_matrix(params['dim_fc2'])
 
         # Cutoff distance of third-order force constants. Elements where any 
         # pair of atoms has larger distance than cut-off distance are set zero.

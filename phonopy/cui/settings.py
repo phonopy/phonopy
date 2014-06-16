@@ -60,7 +60,7 @@ class Settings:
         self._is_symmetry = True
         self._is_tetrahedron_method = False
         self._is_time_symmetry = True
-        self._is_translational_invariance = False
+        self._is_translational_symmetry = False
         self._is_trigonal_displacement = False
         self._fc_decimals = None
         self._fc_symmetry_iteration = 0
@@ -192,11 +192,11 @@ class Settings:
     def get_is_symmetry(self):
         return self._is_symmetry
 
-    def set_is_translational_invariance(self, is_translational_invariance):
-        self._is_translational_invariance = is_translational_invariance
+    def set_is_translational_symmetry(self, is_translational_symmetry):
+        self._is_translational_symmetry = is_translational_symmetry
 
-    def get_is_translational_invariance(self):
-        return self._is_translational_invariance
+    def get_is_translational_symmetry(self):
+        return self._is_translational_symmetry
 
     def set_magnetic_moments(self, magmoms):
         self._magmoms = magmoms
@@ -373,7 +373,7 @@ class ConfParser:
     
         # Is translational invariance ?
         if params.has_key('is_translation'):
-            self._settings.set_is_translational_invariance(
+            self._settings.set_is_translational_symmetry(
                 params['is_translation'])
             
         if params.has_key('tsym_type'):
@@ -544,10 +544,14 @@ class ConfParser:
                     self._confs['symmetry'] = '.false.'
                     self._confs['mesh_symmetry'] = '.false.'
 
+            if opt.dest == 'is_translational_symmetry':
+                if self._options.is_translational_symmetry:
+                    self._confs['translation'] = '.true.'
+                    
             if opt.dest == 'tsym_type':
                 if self._options.tsym_type:
                     self._confs['tsym_type'] = self._options.tsym_type
-                    
+
             if opt.dest == 'is_plusminus_displacements':
                 if self._options.is_plusminus_displacements:
                     self._confs['pm'] = '.true.'
