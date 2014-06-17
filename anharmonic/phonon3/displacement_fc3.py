@@ -159,7 +159,7 @@ def get_reduced_site_symmetry(site_sym, direction, symprec=1e-5):
     for rot in site_sym:
         if (abs(direction - np.dot(direction, rot.T)) < symprec).all():
             reduced_site_sym.append(rot)
-    return np.intc(reduced_site_sym)
+    return np.array(reduced_site_sym, dtype='intc')
 
 def get_bond_symmetry(site_symmetry,
                       positions,

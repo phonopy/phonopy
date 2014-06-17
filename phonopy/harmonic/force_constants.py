@@ -154,67 +154,40 @@ def distribute_force_constants(force_constants,
                                positions,
                                rotations,
                                trans,
-                               symprec,
-                               is_symmetrize=False):
+                               symprec):
     for atom_disp in atom_list:
         if atom_disp in atom_list_done:
             continue
             
-        if is_symmetrize:
-            map_atom_disps, map_syms = get_all_atom_mappings_by_symmetry(
-                atom_list_done,
-                atom_disp,
-                rotations, 
-                trans,
-                positions,
-                symprec)
-        
-            for i, pos_i in enumerate(positions):
-                for map_atom_disp, map_sym in zip(map_atom_disps, map_syms):
-                    # L R L^-1
-                    rot_cartesian = np.array(similarity_transformation(
-                        lattice, rotations[map_sym]), dtype='double')
-                    distribute_fc2_part(force_constants,
-                                        positions,
-                                        atom_disp,
-                                        map_atom_disp,
-                                        i,
-                                        rot_cartesian,
-                                        rotations[map_sym],
-                                        trans[map_sym],
-                                        symprec)
-        
-                force_constants[atom_disp, i] /= len(map_atom_disps)
-        else:
-            map_atom_disp, map_sym = get_atom_mapping_by_symmetry(
-                atom_list_done,
-                atom_disp,
-                rotations, 
-                trans,
-                positions,
-                symprec)
-    
-            # L R L^-1
-            rot_cartesian = np.array(similarity_transformation(
-                    lattice, rotations[map_sym]), dtype='double')
-    
-            _distribute_fc2_part(force_constants,
-                                 positions,
-                                 atom_disp,
-                                 map_atom_disp,
-                                 rot_cartesian,
-                                 rotations[map_sym],
-                                 trans[map_sym],
-                                 symprec)
+        map_atom_disp, map_sym = get_atom_mapping_by_symmetry(
+            atom_list_done,
+            atom_disp,
+            rotations, 
+            trans,
+            positions,
+            symprec)
+
+        _distribute_fc2_part(force_constants,
+                             positions,
+                             atom_disp,
+                             map_atom_disp,
+                             lattice,
+                             rotations[map_sym],
+                             trans[map_sym],
+                             symprec)
 
 def _distribute_fc2_part(force_constants,
                          positions,
                          atom_disp,
                          map_atom_disp,
-                         rot_cartesian,
+                         lattice,
                          r,
                          t,
                          symprec):
+
+    # L R L^-1
+    rot_cartesian = np.array(
+        similarity_transformation(lattice, r), dtype='double', order='C')
 
     try:
         import phonopy._phonopy as phonoc
@@ -223,8 +196,8 @@ def _distribute_fc2_part(force_constants,
                               atom_disp,
                               map_atom_disp,
                               rot_cartesian,
-                              r,
-                              t,
+                              np.array(r, dtype='intc', order='C'),
+                              np.array(t, dtype='double'),
                               symprec)
     except ImportError:
         for i, pos_i in enumerate(positions):
@@ -244,8 +217,7 @@ def _distribute_fc2_part(force_constants,
             # R^-1 P R (inverse transformation)
             force_constants[atom_disp, i] += similarity_transformation(
                 rot_cartesian.T,
-                force_constants[map_atom_disp,
-                                rot_atom])
+                force_constants[map_atom_disp, rot_atom])
     
     
 def get_atom_mapping_by_symmetry(atom_list_done,
@@ -268,34 +240,6 @@ def get_atom_mapping_by_symmetry(atom_list_done,
     print 'Input forces are not enough to calculate force constants,'
     print 'or something wrong (e.g. crystal structure does not match).'
     raise ValueError
-
-def get_all_atom_mappings_by_symmetry(atom_list_done,
-                                      atom_number,
-                                      rotations,
-                                      translations,
-                                      positions,
-                                      symprec=1e-5):
-    """
-    Find mappings from an atom to atoms in the atom list done.
-    """
-
-    map_atoms = []
-    map_syms = []
-    for i, (r, t) in enumerate(zip(rotations, translations)):
-        rot_pos = np.dot(positions[atom_number], r.T) + t
-        for j in atom_list_done:
-            diff = positions[j] - rot_pos
-            if (abs(diff - np.rint(diff)) < symprec).all():
-                map_atoms.append(j)
-                map_syms.append(i)
-                break
-
-    if len(map_atoms) == 0:
-        print 'Input forces are not enough to calculate force constants,'
-        print 'or something wrong (e.g. crystal structure does not match).'
-        raise ValueError
-
-    return map_atoms, map_syms
 
 def _get_force_constants_disps(force_constants,
                                supercell,
@@ -359,9 +303,7 @@ def solve_force_constants(force_constants,
         force_constants[disp_atom_number, i] = -np.dot(
             inv_displacements, combined_forces)
 
-def get_positions_sent_by_rot_inv(positions,
-                                  site_symmetry,
-                                  symprec):
+def get_positions_sent_by_rot_inv(positions, site_symmetry, symprec):
     rot_map_syms = []
     for sym in site_symmetry:
         rot_map = np.zeros(len(positions), dtype='intc')
@@ -375,7 +317,7 @@ def get_positions_sent_by_rot_inv(positions,
 
         rot_map_syms.append(rot_map)
 
-    return np.array(rot_map_syms, dtype='intc')
+    return np.array(rot_map_syms, dtype='intc', order='C')
 
 def get_rotated_displacement(displacements, site_sym_cart):
     rot_disps = []
@@ -514,7 +456,7 @@ def rotational_invariance(force_constants,
             mat = np.zeros((3, 3), dtype='double')
             for s in range(supercell.get_number_of_atoms()):
                 vecs = np.array(get_equivalent_smallest_vectors(
-                        s, p, supercell, primitive.get_cell(), symprec))
+                    s, p, supercell, primitive.get_cell(), symprec))
                 m = len(vecs)
                 v = np.dot(vecs[:,:].sum(axis=0) / m, primitive.get_cell())
                 for j in range(3):

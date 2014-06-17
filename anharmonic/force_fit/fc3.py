@@ -79,8 +79,12 @@ class FC3Fit:
                                                    rot_map_syms)
             fc = self._solve(rot_disps, rot_forces)
             fc2 = fc[:, 1:4, :].reshape((self._num_atom, 3, 3))
+            fc2_2 = fc[:, 5:8, :].reshape((self._num_atom, 3, 3))
             fc3 = fc[:, 7:16, :].reshape((self._num_atom, 3, 3, 3))
-            self._fc3[first_atom_num, second_atom_num] = fc3
+            fc3_21 = fc[:, 16:25, :].reshape((self._num_atom, 3, 3, 3))
+            for i, j in list(np.ndindex(3, 3)):
+                self._fc3[first_atom_num, second_atom_num, :, i, j, :] = (
+                    fc3[:, i, j, :] + fc3_21[:, j, i, :]) / 2
 
     def _solve(self, rot_disps, rot_forces):
         fc = []
@@ -104,10 +108,10 @@ class FC3Fit:
                 for map_sym, rot_atom_num, sym in zip(
                     rot_map_syms, rot_atom_map, site_syms_cart):
                     for forces in sets_of_forces_u1[rot_atom_num]:
-                        force_matrix_atom.append(np.dot(sym,
-                                                        forces[map_sym[i]]))
+                        force_matrix_atom.append(
+                            np.dot(sym, forces[map_sym[i]]))
                 force_matrix.append(force_matrix_atom)
-        return np.array(force_matrix, dtype='double')
+        return np.array(force_matrix, dtype='double', order='C')
         
     def _create_displacement_matrix(self,
                                     disp_pairs,
@@ -116,6 +120,7 @@ class FC3Fit:
         rot_disp1s = []
         rot_disp2s = []
         rot_pair12 = []
+        rot_pair21 = []
         rot_pair11 = []
         rot_pair22 = []
 
@@ -127,18 +132,19 @@ class FC3Fit:
                     Su2 = np.dot(ssym_c, u2)
                     rot_disp1s.append(Su1)
                     rot_disp2s.append(Su2)
-                    rot_pair12.append(np.outer(Su1, Su2).flatten())
-                    rot_pair11.append(np.outer(Su1, Su1).flatten())
-                    rot_pair22.append(np.outer(Su2, Su2).flatten())
+                    rot_pair12.append(np.outer(Su1, Su2).flatten() / 2)
+                    rot_pair21.append(np.outer(Su2, Su1).flatten() / 2)
+                    rot_pair11.append(np.outer(Su1, Su1).flatten() / 2)
+                    rot_pair22.append(np.outer(Su2, Su2).flatten() / 2)
     
         ones = np.ones(len(rot_disp1s)).reshape((-1, 1))
 
         return np.hstack((ones, rot_disp1s, rot_disp2s,
-                          rot_pair12, rot_pair11, rot_pair22))
+                          rot_pair12, rot_pair21, rot_pair11, rot_pair22))
 
     def _collect_disp_pairs_and_forces(self, dataset_1st):
         second_atom_nums = [x['number'] for x in dataset_1st['second_atoms']]
-        unique_second_atom_nums = np.unique(np.array(second_atom_nums))
+        unique_second_atom_nums = np.unique(second_atom_nums)
 
         set_of_disps = []
         sets_of_forces = []
@@ -181,10 +187,7 @@ class FC3Fit:
 
         disp_pairs = []
         for second_atom_num in range(self._num_atom):
-            if set_of_disps[second_atom_num] is not None:
-                disp_pairs.append(
-                    [[disp1, d] for d in set_of_disps[second_atom_num]])
-            else:
+            if set_of_disps[second_atom_num] is None:
                 (sets_of_forces_atom2,
                  set_of_disps_atom2) = self._copy_dataset_2nd(
                     second_atom_num,
@@ -193,10 +196,12 @@ class FC3Fit:
                     unique_second_atom_nums,
                     reduced_site_sym,
                     rot_map_syms)
-
                 disp_pairs.append(
                     [[disp1, d] for d in set_of_disps_atom2])
                 sets_of_forces[second_atom_num] = sets_of_forces_atom2
+            else:
+                disp_pairs.append(
+                    [[disp1, d] for d in set_of_disps[second_atom_num]])
 
         return disp_pairs, sets_of_forces
 
