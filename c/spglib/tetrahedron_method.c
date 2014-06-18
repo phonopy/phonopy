@@ -3,7 +3,6 @@
 
 #include "mathfunc.h"
 #include "debug.h"
-#include <stdio.h>
 
 
 /*      6-------7             */
@@ -482,16 +481,8 @@ static double _f(const int n,
 		 const double omega,
 		 const double vertices_omegas[4])
 {
-  double val;
-
-  val = vertices_omegas[n] - vertices_omegas[m];
-  if (mat_Dabs(val) < 1e-2) {
-    return 1;
-  }
-  else {
-    return ((omega - vertices_omegas[m]) /
-	    (vertices_omegas[n] - vertices_omegas[m]));
-  }
+  return ((omega - vertices_omegas[m]) /
+	  (vertices_omegas[n] - vertices_omegas[m]));
 }
 
 static double _J(const int i,
