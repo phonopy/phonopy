@@ -164,7 +164,8 @@ class Isotope:
         num_band = self._primitive.get_number_of_atoms() * 3
         self._integration_weights = np.zeros(
             (num_grid_points, len(self._band_indices), num_band), dtype='double')
-        self._set_integration_weights_c(thm)
+        # self._set_integration_weights_c(thm)
+        self._set_integration_weights_py(thm)
 
     def _set_integration_weights_c(self, thm):
         import anharmonic._phono3py as phono3c
