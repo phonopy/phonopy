@@ -482,12 +482,11 @@ static double _f(const int n,
 		 const double omega,
 		 const double vertices_omegas[4])
 {
-  double val, val2;
+  double val;
 
   val = vertices_omegas[n] - vertices_omegas[m];
   if (mat_Dabs(val) < 1e-2) {
-    val2 = omega - vertices_omegas[m];
-    return ((val > 0) - (val < 0)) * ((val2 > 0) - (val2 < 0));
+    return 1;
   }
   else {
     return ((omega - vertices_omegas[m]) /
