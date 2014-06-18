@@ -1069,7 +1069,7 @@ py_set_triplets_integration_weights(PyObject *self, PyObject *args)
     }
   }
 
-#pragma omp parallel for private(j, k, b1, b2, sign, vertices, adrs_shift, f0, f1, f2, g0, g1, g2, freq_vertices)
+#pragma omp parallel for private(j, k, b1, b2, vertices, adrs_shift, f0, f1, f2, g0, g1, g2, freq_vertices)
   for (i = 0; i < num_triplets; i++) {
     get_triplet_tetrahedra_vertices(vertices,
 				    tp_relative_grid_address,
