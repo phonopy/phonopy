@@ -63,11 +63,11 @@ class TetrahedronMethod:
         self._integration_weight = None
 
     def run(self, omegas, value='I'):
-        # try:
-        #     import phonopy._phonopy as phonoc
-        #     self._run_c(omegas, value=value)
-        # except ImportError:
-        self._run_py(omegas, value=value)
+        try:
+            import phonopy._phonopy as phonoc
+            self._run_c(omegas, value=value)
+        except ImportError:
+            self._run_py(omegas, value=value)
 
     def get_tetrahedra(self):
         """
@@ -190,28 +190,28 @@ class TetrahedronMethod:
         self._vertices = tetras
 
     def _set_relative_grid_addresses(self):
-        # try:
-        #     import phonopy._phonopy as phonoc
+        try:
+            import phonopy._phonopy as phonoc
 
-        #     rga = spg.get_tetrahedra_relative_grid_address(
-        #         self._primitive_vectors)
-        #     self._relative_grid_addresses = rga
+            rga = spg.get_tetrahedra_relative_grid_address(
+                self._primitive_vectors)
+            self._relative_grid_addresses = rga
 
-        # except ImportError:
-        self._create_tetrahedra()
-        relative_grid_addresses = np.zeros((24, 4, 3), dtype='intc')
-        central_indices = np.zeros(24, dtype='intc')
-        pos = 0
-        for i in range(8):
-            ppd_shifted = (parallelepiped_vertices -
-                           parallelepiped_vertices[i])
-            for tetra in self._vertices:
-                if i in tetra:
-                    central_indices[pos] = np.where(tetra==i)[0][0]
-                    relative_grid_addresses[pos, :, :] = ppd_shifted[tetra]
-                    pos += 1
-        self._relative_grid_addresses = relative_grid_addresses
-        self._central_indices = central_indices
+        except ImportError:
+            self._create_tetrahedra()
+            relative_grid_addresses = np.zeros((24, 4, 3), dtype='intc')
+            central_indices = np.zeros(24, dtype='intc')
+            pos = 0
+            for i in range(8):
+                ppd_shifted = (parallelepiped_vertices -
+                               parallelepiped_vertices[i])
+                for tetra in self._vertices:
+                    if i in tetra:
+                        central_indices[pos] = np.where(tetra==i)[0][0]
+                        relative_grid_addresses[pos, :, :] = ppd_shifted[tetra]
+                        pos += 1
+            self._relative_grid_addresses = relative_grid_addresses
+            self._central_indices = central_indices
 
     def _f(self, n, m):
         return ((self._omega - self._vertices_omegas[m]) /
