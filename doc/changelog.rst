@@ -3,11 +3,19 @@
 Change Log
 ==========
 
+June-23-2014: Version 1.8.4.2
+-----------------------------
+
+* Symmetrization of Born effective charge of ``outcar-born`` is
+  improved.
+* ``-v`` option shows Born effective charges and dielectric constants
+  when NAC is set.
+
+
 Apr-5-2014: Version 1.8.4.1
 -----------------------------
 
 * Fix irreps for non-zero q-point of nonsymmorphic case
-
 
 Mar-31-2014: Version 1.8.4
 ---------------------------
