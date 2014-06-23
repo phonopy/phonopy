@@ -142,7 +142,7 @@ class Symmetry:
                         break
                 if is_found:
                     break
-        self._map_atoms = np.array(map_atoms, dtype=int)
+        self._map_atoms = np.array(map_atoms, dtype='intc')
 
     def _set_symmetry_dataset(self):
         self._dataset = spg.get_symmetry_dataset(self._cell, self._symprec)
@@ -227,7 +227,7 @@ class Symmetry:
 
             self._map_atoms = s2u_map
         else:
-            rotations.append(np.eye(3, dtype=int))
+            rotations.append(np.eye(3, dtype='intc'))
             translations.append(np.zeros(3, dtype='double'))
             self._map_atoms = range(self._cell.get_number_of_atoms())
 
