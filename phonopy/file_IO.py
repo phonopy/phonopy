@@ -37,7 +37,6 @@ import StringIO
 import numpy as np
 import phonopy.interface.vasp as vasp
 import phonopy.interface.wien2k as wien2k
-from phonopy.harmonic.displacement import directions_axis, get_least_displacements
 from phonopy.structure.symmetry import Symmetry
 from phonopy.harmonic.force_constants import similarity_transformation
 from phonopy.structure.atoms import Atoms
