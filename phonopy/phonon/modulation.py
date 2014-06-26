@@ -199,11 +199,11 @@ class Modulation:
         masses = cell.get_masses()
         symbols = cell.get_chemical_symbols()
         file.write("unitcell:\n")
-        file.write("  atom-info:\n")
+        file.write("  atom_info:\n")
         for m, s in zip( masses, symbols ):
             file.write("  - { name: %2s, mass: %10.5f }\n" % (s, m))
         
-        file.write("  lattice-vectors:\n")
+        file.write("  real_lattice:\n")
         file.write("  - [ %20.15f, %20.15f, %20.15f ]\n" % (tuple(lattice[0])))
         file.write("  - [ %20.15f, %20.15f, %20.15f ]\n" % (tuple(lattice[1])))
         file.write("  - [ %20.15f, %20.15f, %20.15f ]\n" % (tuple(lattice[2])))
@@ -218,11 +218,11 @@ class Modulation:
         symbols = supercell.get_chemical_symbols()
         file.write("supercell:\n")
         file.write("  dimension: [ %d, %d, %d ]\n" % tuple(dim))
-        file.write("  atom-info:\n")
+        file.write("  atom_info:\n")
         for m, s in zip( masses, symbols ):
             file.write("  - { name: %2s, mass: %10.5f }\n" % (s, m))
         
-        file.write("  lattice-vectors:\n")
+        file.write("  real_lattice:\n")
         file.write("  - [ %20.15f, %20.15f, %20.15f ]\n" % (tuple(lattice[0])))
         file.write("  - [ %20.15f, %20.15f, %20.15f ]\n" % (tuple(lattice[1])))
         file.write("  - [ %20.15f, %20.15f, %20.15f ]\n" % (tuple(lattice[2])))

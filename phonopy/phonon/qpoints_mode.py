@@ -77,23 +77,11 @@ class QpointsPhonon:
         w = open('qpoints.yaml', 'w')
         w.write("nqpoint: %-7d\n" % len(self._qpoints))
         w.write("natom:   %-7d\n" % self._natom)
-        w.write("atom-info:\n")
-        for mass, name in zip(self._masses, self._symbols):
-            w.write("- { name: %2s, mass: %10.5f }\n" % (name, mass))
-        
-        w.write("real-basis:\n")
-        for vec in self._lattice:
-            w.write("- [ %20.15f, %20.15f, %20.15f ]\n" % tuple(vec))
-    
-        rec_lattice = np.linalg.inv(self._lattice).T
-        w.write("reciprocal-basis: # column vectors\n")
-        for vec in rec_lattice:
-            w.write("- [ %20.15f, %20.15f, %20.15f ]\n" % tuple(vec))
-    
-        w.write("position:\n")
-        for pos in self._positions:
-            w.write("- [ %20.15f, %20.15f, %20.15f ]\n" % tuple(pos))
-            
+        rec_lattice = np.linalg.inv(self._lattice) # column vectors
+        w.write("reciprocal_lattice:\n")
+        for vec, axis in zip(rec_lattice.T, ('a*', 'b*', 'c*')):
+            w.write("- [ %12.8f, %12.8f, %12.8f ] # %2s\n" %
+                    (tuple(vec) + (axis,)))
         w.write("phonon:\n")
     
         for i, q in enumerate(self._qpoints):

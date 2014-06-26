@@ -129,44 +129,49 @@ class BandStructure:
         return plt
 
     def write_yaml(self):
-        f = open('band.yaml', 'w')
+        w = open('band.yaml', 'w')
         natom = self._cell.get_number_of_atoms()
+        lattice = np.linalg.inv(self._cell.get_cell()) # column vectors
         nqpoint = 0
         for qpoints in self._paths:
             nqpoint += len(qpoints)
-        f.write("nqpoint: %-7d\n" % nqpoint)
-        f.write("npath: %-7d\n" % len(self._paths))
-        f.write("natom: %-7d\n" % (natom))
-        f.write("phonon:\n")
+        w.write("nqpoint: %-7d\n" % nqpoint)
+        w.write("npath: %-7d\n" % len(self._paths))
+        w.write("natom: %-7d\n" % (natom))
+        w.write("reciprocal_lattice:\n")
+        for vec, axis in zip(lattice.T, ('a*', 'b*', 'c*')):
+            w.write("- [ %12.8f, %12.8f, %12.8f ] # %2s\n" %
+                    (tuple(vec) + (axis,)))
+        w.write("phonon:\n")
         for i, (qpoints, distances, frequencies) in enumerate(zip(
             self._paths,
             self._distances,
             self._frequencies)):
              for j, q in enumerate(qpoints):
-                f.write("- q-position: [ %12.7f, %12.7f, %12.7f ]\n" % tuple(q))
-                f.write("  distance: %12.7f\n" % distances[j])
-                f.write("  band:\n")
+                w.write("- q-position: [ %12.7f, %12.7f, %12.7f ]\n" % tuple(q))
+                w.write("  distance: %12.7f\n" % distances[j])
+                w.write("  band:\n")
                 for k, freq in enumerate(frequencies[j]):
-                    f.write("  - # %d\n" % (k + 1))
-                    f.write("    frequency: %15.10f\n" % freq)
+                    w.write("  - # %d\n" % (k + 1))
+                    w.write("    frequency: %15.10f\n" % freq)
     
                     if self._group_velocity is not None:
                         gv = self._group_velocities[i][j, k]
-                        f.write("    group_velocity: ")
-                        f.write("[ %13.7f, %13.7f, %13.7f ]\n" % tuple(gv))
+                        w.write("    group_velocity: ")
+                        w.write("[ %13.7f, %13.7f, %13.7f ]\n" % tuple(gv))
                         
                     if self._is_eigenvectors:
                         eigenvectors = self._eigenvectors[i]
-                        f.write("    eigenvector:\n")
+                        w.write("    eigenvector:\n")
                         for l in range(natom):
-                            f.write("    - # atom %d\n" % (l + 1))
+                            w.write("    - # atom %d\n" % (l + 1))
                             for m in (0, 1, 2):
-                                f.write("      - [ %17.14f, %17.14f ]\n" %
+                                w.write("      - [ %17.14f, %17.14f ]\n" %
                                         (eigenvectors[j, l * 3 + m, k].real,
                                          eigenvectors[j, l * 3 + m, k].imag))
 
                         
-                f.write("\n")
+                w.write("\n")
 
     def _set_initial_point(self, qpoint):
         self._lastq = qpoint.copy()
