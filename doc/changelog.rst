@@ -10,8 +10,10 @@ June-23-2014: Version 1.8.4.2
   improved.
 * ``-v`` option shows Born effective charges and dielectric constants
   when NAC is set.
-* Bug fix to include cutoff frequency to the displacement distance matrix.
-
+* Bug fix to include cutoff frequency to the displacement distance
+  matrix.
+* Yaml output formats for band, mesh, q-points, modulation modes were
+  slightly modified.
 
 Apr-5-2014: Version 1.8.4.1
 -----------------------------
