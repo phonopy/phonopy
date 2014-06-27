@@ -926,6 +926,7 @@ if options.is_joint_dos:
         mesh,
         phono3py.get_fc2(),
         nac_params=nac_params,
+        nac_q_direction=nac_q_direction,
         sigmas=sigmas,
         frequency_step=frequency_step,
         frequency_factor_to_THz=frequency_factor_to_THz,

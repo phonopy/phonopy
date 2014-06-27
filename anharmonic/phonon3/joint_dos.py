@@ -13,6 +13,7 @@ class JointDos:
                  supercell,
                  fc2,
                  nac_params=None,
+                 nac_q_direction=None,
                  sigma=None,
                  frequency_step=0.1,
                  frequency_factor_to_THz=VaspToTHz,
@@ -29,6 +30,9 @@ class JointDos:
         self._supercell = supercell
         self._fc2 = fc2
         self._nac_params = nac_params
+        self._nac_q_direction = None
+        self.set_nac_q_direction(nac_q_direction)
+        self._sigma = None
         self.set_sigma(sigma)
 
         self._frequency_step = frequency_step
@@ -49,7 +53,6 @@ class JointDos:
         self._phonon_done = None
         self._frequencies = None
         self._eigenvectors = None
-        self._nac_q_direction = None
             
         self._joint_dos = None
         self._frequency_points = None
@@ -222,7 +225,9 @@ class JointDos:
             (self._triplets_at_q,
              self._weights_at_q,
              self._grid_address,
-             self._bz_map) = get_nosym_triplets_at_q(
+             self._bz_map,
+             map_triplets,
+             map_q) = get_nosym_triplets_at_q(
                  self._grid_point,
                  self._mesh,
                  self._reciprocal_lattice,
@@ -231,7 +236,9 @@ class JointDos:
             (self._triplets_at_q,
              self._weights_at_q,
              self._grid_address,
-             self._bz_map) = get_triplets_at_q(
+             self._bz_map,
+             map_triplets,
+             map_q) = get_triplets_at_q(
                  self._grid_point,
                  self._mesh,
                  self._symmetry.get_pointgroup_operations(),

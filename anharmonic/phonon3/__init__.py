@@ -662,6 +662,7 @@ class Phono3pyJointDos:
                  mesh,
                  fc2,
                  nac_params=None,
+                 nac_q_direction=None,
                  sigmas=[],
                  frequency_step=None,
                  frequency_factor_to_THz=VaspToTHz,
@@ -675,6 +676,7 @@ class Phono3pyJointDos:
         self._mesh = mesh
         self._fc2 = fc2
         self._nac_params = nac_params
+        self._nac_q_direction = nac_q_direction
         self._sigmas = sigmas
         self._frequency_step = frequency_step
         self._frequency_factor_to_THz = frequency_factor_to_THz
@@ -690,6 +692,7 @@ class Phono3pyJointDos:
             self._supercell,
             self._fc2,
             nac_params=self._nac_params,
+            nac_q_direction=self._nac_q_direction,
             frequency_step=self._frequency_step,
             frequency_factor_to_THz=self._frequency_factor_to_THz,
             frequency_scale_factor=self._frequency_scale_factor,
