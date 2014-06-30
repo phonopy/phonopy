@@ -152,7 +152,9 @@ class Symmetry:
         self._international_table = "%s (%d)" % (self._dataset['international'],
                                                  self._dataset['number'])
         self._wyckoff_letters = self._dataset['wyckoffs']
-        self._map_atoms = self._dataset['equivalent_atoms']
+        
+        # self._map_atoms = self._dataset['equivalent_atoms']
+        self._set_map_atoms()
 
     def _set_symmetry_operations(self):
         self._symmetry_operations = spg.get_symmetry(self._cell,
