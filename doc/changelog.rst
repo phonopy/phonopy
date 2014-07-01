@@ -14,6 +14,8 @@ June-23-2014: Version 1.8.4.2
   matrix.
 * Yaml output formats for band, mesh, q-points, modulation modes were
   slightly modified.
+* Bug fix in finding equivalent atoms in supercell that has lower
+  symmetry than the original unit cell.
 
 Apr-5-2014: Version 1.8.4.1
 -----------------------------
