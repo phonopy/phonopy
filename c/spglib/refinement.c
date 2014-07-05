@@ -45,10 +45,14 @@ static void set_trigo(double lattice[3][3],
 static void set_cubic(double lattice[3][3],
 		      SPGCONST double metric[3][3]);
 
-static Symmetry * get_refined_symmetry_operations(SPGCONST Cell * cell,
-						  SPGCONST Cell * primitive,
-						  SPGCONST Spacegroup * spacegroup,
-						  const double symprec);
+static Symmetry *
+get_refined_symmetry_operations(int * equiv_atoms_cell,
+				SPGCONST Cell * cell,
+				SPGCONST Cell * primitive,
+				SPGCONST Spacegroup * spacegroup,
+				const int * equiv_atoms_prim,
+				const int * mapping_table,
+				const double symprec);
 static void set_translation_with_origin_shift(Symmetry *conv_sym,
 					      const double origin_shift[3]);
 static Symmetry * get_primitive_db_symmetry(SPGCONST double t_mat[3][3],
@@ -67,7 +71,20 @@ static Symmetry * reduce_symmetry_in_frame(const int frame[3],
 static VecDBL * reduce_lattice_points(SPGCONST double lattice[3][3],
 				      const VecDBL *lattice_trans,
 				      const double symprec);
-
+static void set_equivalent_atoms(int * equiv_atoms_cell,
+				 SPGCONST Cell * cell,
+				 SPGCONST Cell * primitive,
+				 const int * equiv_atoms_prim,
+				 const int * mapping_table);
+static void set_equivalent_atoms_broken_symmetry(int * equiv_atoms_cell,
+						 SPGCONST Cell * cell,
+						 const Symmetry *symmetry,
+						 const int * mapping_table,
+						 const double symprec);
+static int search_equivalent_atom(const int atom_index,
+				  SPGCONST Cell * cell,
+				  const Symmetry *symmetry,
+				  const double symprec);
 
 static SPGCONST int identity[3][3] = {
   { 1, 0, 0},
@@ -83,12 +100,22 @@ Cell * ref_refine_cell(SPGCONST Cell * cell,
 }
 
 /* symmetry->size = 0 is returned when it failed. */
-Symmetry * ref_get_refined_symmetry_operations(SPGCONST Cell * cell,
-					       SPGCONST Cell * primitive,
-					       SPGCONST Spacegroup * spacegroup,
-					       const double symprec)
+Symmetry *
+ref_get_refined_symmetry_operations(int * equiv_atoms_cell,
+				    SPGCONST Cell * cell,
+				    SPGCONST Cell * primitive,
+				    SPGCONST Spacegroup * spacegroup,
+				    const int * equiv_atoms_prim,
+				    const int * mapping_table,
+				    const double symprec)
 {
-  return get_refined_symmetry_operations(cell, primitive, spacegroup, symprec);
+  return get_refined_symmetry_operations(equiv_atoms_cell,
+					 cell,
+					 primitive,
+					 spacegroup,
+					 equiv_atoms_prim,
+					 mapping_table,
+					 symprec);
 }
 
 void ref_get_Wyckoff_positions(int * wyckoffs,
@@ -459,14 +486,14 @@ static void set_cubic(double lattice[3][3],
   lattice[2][2] = (a + b + c) / 3;
 }
 
-
-
-
-
-static Symmetry * get_refined_symmetry_operations(SPGCONST Cell * cell,
-						  SPGCONST Cell * primitive,
-						  SPGCONST Spacegroup * spacegroup,
-						  const double symprec)
+static Symmetry *
+get_refined_symmetry_operations(int * equiv_atoms_cell,
+				SPGCONST Cell * cell,
+				SPGCONST Cell * primitive,
+				SPGCONST Spacegroup * spacegroup,
+				const int * equiv_atoms_prim,
+				const int * mapping_table,
+				const double symprec)
 {
   int t_mat_int[3][3];
   int frame[3];
@@ -479,6 +506,7 @@ static Symmetry * get_refined_symmetry_operations(SPGCONST Cell * cell,
   mat_inverse_matrix_d3(inv_mat, primitive->lattice, symprec);
   mat_multiply_matrix_d3(t_mat, inv_mat, spacegroup->bravais_lattice);
   prim_sym = get_primitive_db_symmetry(t_mat, conv_sym, symprec);
+  sym_free_symmetry(conv_sym);
 
   /* Input cell symmetry from primitive symmetry */
   mat_inverse_matrix_d3(inv_mat, primitive->lattice, symprec);
@@ -492,12 +520,102 @@ static Symmetry * get_refined_symmetry_operations(SPGCONST Cell * cell,
 				      cell->size / primitive->size,
 				      symprec);
 
-  /* sym_free_symmetry(f_sym); */
+  /* Set equivalent atom table */
+  if (cell->size / primitive->size == symmetry->size / prim_sym->size) {
+    set_equivalent_atoms(equiv_atoms_cell,
+			 cell,
+			 primitive,
+			 equiv_atoms_prim,
+			 mapping_table);
+  } else {
+    set_equivalent_atoms_broken_symmetry(equiv_atoms_cell,
+					 cell,
+					 symmetry,
+					 mapping_table,
+					 symprec);
+  }
+  
   sym_free_symmetry(prim_sym);
-  sym_free_symmetry(conv_sym);
 
   return symmetry;
 }
+
+static void set_equivalent_atoms(int * equiv_atoms_cell,
+				 SPGCONST Cell * cell,
+				 SPGCONST Cell * primitive,
+				 const int * equiv_atoms_prim,
+				 const int * mapping_table)
+{
+  int i, j;
+  int *equiv_atoms;
+
+  equiv_atoms = (int*) malloc(sizeof(int) * primitive->size);
+  for (i = 0; i < primitive->size; i++) {
+    for (j = 0; j < cell->size; j++) {
+      if (mapping_table[j] == equiv_atoms_prim[i]) {
+	equiv_atoms[i] = j;
+	break;
+      }
+    }
+  }
+  for (i = 0; i < cell->size; i++) {
+    equiv_atoms_cell[i] = equiv_atoms[mapping_table[i]];
+  }
+  free(equiv_atoms);
+  equiv_atoms = NULL;
+}
+
+static void set_equivalent_atoms_broken_symmetry(int * equiv_atoms_cell,
+						 SPGCONST Cell * cell,
+						 const Symmetry *symmetry,
+						 const int * mapping_table,
+						 const double symprec)
+{
+  int i, j;
+
+  for (i = 0; i < cell->size; i++) {
+    equiv_atoms_cell[i] = i;
+    for (j = 0; j < cell->size; j++) {
+      if (mapping_table[i] == mapping_table[j]) {
+	if (i == j) {
+	  equiv_atoms_cell[i] =
+	    equiv_atoms_cell[search_equivalent_atom(i,
+						    cell,
+						    symmetry,
+						    symprec)];
+	} else {
+	  equiv_atoms_cell[i] = equiv_atoms_cell[j];
+	}
+	break;
+      }
+    }
+  }
+}
+
+static int search_equivalent_atom(const int atom_index,
+				  SPGCONST Cell * cell,
+				  const Symmetry *symmetry,
+				  const double symprec)
+{
+  int i, j;
+  double pos_rot[3];
+
+  for (i = 0; i < symmetry->size; i++) {
+    mat_multiply_matrix_vector_id3(pos_rot,
+				   symmetry->rot[i],
+				   cell->position[atom_index]);
+    for (j = 0; j < 3; j++) {
+      pos_rot[j] += symmetry->trans[i][j];
+    }
+    for (j = 0; j < atom_index; j++) {
+      if (cel_is_overlap(cell->position[j], pos_rot, cell->lattice, symprec)) {
+	return j;
+      }
+    }
+  }
+  return atom_index;
+}
+
 
 static void set_translation_with_origin_shift(Symmetry *conv_sym,
 					      const double origin_shift[3])
@@ -548,9 +666,9 @@ static Symmetry * get_primitive_db_symmetry(SPGCONST double t_mat[3][3],
     mat_multiply_matrix_d3(tmp_mat, tmp_mat, inv_mat);
     mat_cast_matrix_3d_to_3i(r_prim->mat[ num_op ], tmp_mat);
     /* t' = T*t */
-    mat_multiply_matrix_vector_d3(t_prim->vec[ num_op ],
+    mat_multiply_matrix_vector_d3(t_prim->vec[num_op],
 				  t_mat,
-				  conv_sym->trans[ i ]);
+				  conv_sym->trans[i]);
     num_op++;
 
   pass:
@@ -673,6 +791,11 @@ static Symmetry * reduce_symmetry_in_frame(const int frame[3],
     mat_cast_matrix_3d_to_3i(tmp_rot_i, tmp_rot_d);
     mat_multiply_matrix_di3(tmp_lat_i, lattice, tmp_rot_i);
     mat_multiply_matrix_d3(tmp_lat_d, lattice, tmp_rot_d);
+    /* In spglib, symmetry of supercell is defined by the set of symmetry */
+    /* operations that are searched among supercell lattice point group */
+    /* operations. The supercell lattice may be made by breaking the */
+    /* unit cell lattice symmetry. In this case, a part of symmetry */
+    /* operations is discarded. */
     if (mat_check_identity_matrix_d3(tmp_lat_i, tmp_lat_d, symprec)) {
       mat_copy_matrix_i3(t_sym->rot[size_sym_orig], tmp_rot_i);
       /* t' = T^-1*t */
@@ -702,7 +825,7 @@ static Symmetry * reduce_symmetry_in_frame(const int frame[3],
 			 t_sym->trans[j]);
       for (k = 0; k < 3; k++) {
 	symmetry->trans[size_sym_orig * i + j][k] += pure_trans->vec[i][k];
-	symmetry->trans[size_sym_orig * i + j][k] = \
+	symmetry->trans[size_sym_orig * i + j][k] =
 	  mat_Dmod1(symmetry->trans[size_sym_orig * i + j][k]);
       }
     }

@@ -204,7 +204,7 @@ class ImagSelfEnergy:
 
         self._g = None # integration weights
         self._mesh = self._interaction.get_mesh_numbers()
-        self._is_collision_matrix = True
+        self._is_collision_matrix = False
 
         # Unit to THz of Gamma
         num_grid = np.prod(self._mesh)
