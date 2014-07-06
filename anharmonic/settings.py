@@ -9,6 +9,7 @@ class Phono3pySettings(Settings):
         self._cutoff_fc3_distance = None
         self._cutoff_pair_distance = None
         self._cutoff_mfp = None # in micrometre
+        self._grid_addresses = None
         self._grid_points = None
         self._ion_clamped = False
         self._is_bterta = False
@@ -52,6 +53,12 @@ class Phono3pySettings(Settings):
 
     def get_cutoff_mfp(self):
         return self._cutoff_mfp
+
+    def set_grid_addresses(self, grid_addresses):
+        self._grid_addresses = grid_addresses
+
+    def get_grid_addresses(self):
+        return self._grid_addresses
 
     def set_grid_points(self, grid_points):
         self._grid_points = grid_points
@@ -199,6 +206,10 @@ class Phono3pyConfParser(ConfParser):
                     self._confs['cutoff_mfp'] = \
                         self._options.cutoff_mfp
 
+            if opt.dest == 'grid_addresses':
+                if self._options.grid_addresses is not None:
+                    self._confs['grid_addresses'] = self._options.grid_addresses
+
             if opt.dest == 'grid_points':
                 if self._options.grid_points is not None:
                     self._confs['grid_points'] = self._options.grid_points
@@ -304,6 +315,16 @@ class Phono3pyConfParser(ConfParser):
             if conf_key == 'cutoff_mfp':
                 self.set_parameter('cutoff_mfp',
                                    float(confs['cutoff_mfp']))
+
+            if conf_key == 'grid_addresses':
+                vals = [int(x) for x in
+                        confs['grid_addresses'].replace(',', ' ').split()]
+                if len(vals) % 3 == 0 and len(vals) > 0:
+                    self.set_parameter('grid_addresses',
+                                       np.reshape(vals, (-1, 3)))
+                else:
+                    self.setting_error("Grid addresses are incorrectly set.")
+
 
             if conf_key == 'grid_points':
                 vals = [int(x) for x in
@@ -422,6 +443,10 @@ class Phono3pyConfParser(ConfParser):
         # Boundary mean free path for thermal conductivity calculation
         if params.has_key('cutoff_mfp'):
             self._settings.set_cutoff_mfp(params['cutoff_mfp'])
+
+        # Grid addresses (sets of three integer values)
+        if params.has_key('grid_addresses'):
+            self._settings.set_grid_addresses(params['grid_addresses'])
 
         # Grid points
         if params.has_key('grid_points'):
