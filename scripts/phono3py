@@ -117,6 +117,7 @@ parser.set_defaults(band_indices=None,
                     forces_fc2_mode=False,
                     force_sets_mode=False,
                     freq_scale=None,
+                    grid_addresses=None,
                     grid_points=None,
                     gv_delta_q=None,
                     input_filename=None,
@@ -228,7 +229,9 @@ parser.add_option("--freq_scale", dest="freq_scale", type="float",
 parser.add_option("--freq_pitch", dest="frequency_pitch", type="float",
                   help="Pitch in frequency for spectrum")
 parser.add_option("--gp", "--grid_points", dest="grid_points", type="string",
-                  help="Fixed grid points where damping functions are calculated ")
+                  help="Fixed grid points where anharmonic properties are calculated")
+parser.add_option("--ga", "--grid_addresses", dest="grid_addresses", type="string",
+                  help="Fixed grid addresses where anharmonic properties are calculated")
 parser.add_option("--gruneisen", dest="is_gruneisen", action="store_true",
                   help="Calculate phonon Gruneisen parameter")
 parser.add_option("--gv_delta_q", dest="gv_delta_q", type="float",
@@ -433,7 +436,7 @@ else:
     phono3py_conf = Phono3pyConfParser(options=options,
                                        option_list=option_list)
     settings = phono3py_conf.get_settings()
-
+    
 ###################################
 # Read crystal structure (POSCAR) #
 ###################################
