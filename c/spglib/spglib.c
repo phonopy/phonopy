@@ -471,6 +471,12 @@ int spgat_refine_cell(double lattice[3][3],
 /*---------*/
 /* kpoints */
 /*---------*/
+int spg_get_grid_point(const int grid_address[3],
+		       const int mesh[3])
+{
+  return kpt_get_grid_point(grid_address, mesh);
+}
+
 int spg_get_ir_reciprocal_mesh(int grid_address[][3],
 			       int map[],
 			       const int mesh[3],

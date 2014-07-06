@@ -251,6 +251,16 @@ int spgat_refine_cell(double lattice[3][3],
 		      const double symprec,
 		      const double angle_tolerance);
 
+/* Translate grid address to grid point index. */
+/* A q-point in fractional coordinates is given as */
+/* ((address * 2 + shift) / (mesh * 2)). */
+/* Each element of shift[] is 0 or 1. */
+/* Grid address is given in terms of mesh, 0 <= address[i] < mesh[i]. */
+/* [0, 0, 0] without mesh shift gives Gamma point. */
+/* [mesh[0] / 2, mesh[1] / 2, mesh[2] / 2] without mesh shift and */
+/* with even mesh numbers gives boundary of reciprocal primitive lattice. */
+int spg_get_grid_point(const int grid_address[3],
+		       const int mesh[3]);
 
 /* Irreducible reciprocal grid points are searched from uniform */
 /* mesh grid points specified by ``mesh`` and ``is_shift``. */
