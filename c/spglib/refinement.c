@@ -23,8 +23,12 @@ static Cell * get_bravais_exact_positions_and_lattice(int * wyckoffs,
 						      SPGCONST Spacegroup * spacegroup,
 						      SPGCONST Cell * primitive,
 						      const double symprec);
-static Cell * expand_positions(SPGCONST Cell * conv_prim,
-			       SPGCONST Symmetry * conv_sym);
+static Cell * expand_positions(int * wyckoffs,
+			       int * equiv_atoms,
+			       SPGCONST Cell * conv_prim,
+			       SPGCONST Symmetry * conv_sym,
+			       const int * wyckoffs_prim,
+			       const int * equiv_atoms_prim);
 static Cell * get_conventional_primitive(SPGCONST Spacegroup * spacegroup,
 					 SPGCONST Cell * primitive);
 static Symmetry * get_db_symmetry(const int hall_number);
@@ -46,12 +50,9 @@ static void set_cubic(double lattice[3][3],
 		      SPGCONST double metric[3][3]);
 
 static Symmetry *
-get_refined_symmetry_operations(int * equiv_atoms_cell,
-				SPGCONST Cell * cell,
+get_refined_symmetry_operations(SPGCONST Cell * cell,
 				SPGCONST Cell * primitive,
 				SPGCONST Spacegroup * spacegroup,
-				const int * equiv_atoms_prim,
-				const int * mapping_table,
 				const double symprec);
 static void set_translation_with_origin_shift(Symmetry *conv_sym,
 					      const double origin_shift[3]);
@@ -72,8 +73,8 @@ static VecDBL * reduce_lattice_points(SPGCONST double lattice[3][3],
 				      const VecDBL *lattice_trans,
 				      const double symprec);
 static void set_equivalent_atoms(int * equiv_atoms_cell,
-				 SPGCONST Cell * cell,
 				 SPGCONST Cell * primitive,
+				 SPGCONST Cell * cell,
 				 const int * equiv_atoms_prim,
 				 const int * mapping_table);
 static void set_equivalent_atoms_broken_symmetry(int * equiv_atoms_cell,
@@ -101,46 +102,76 @@ Cell * ref_refine_cell(SPGCONST Cell * cell,
 
 /* symmetry->size = 0 is returned when it failed. */
 Symmetry *
-ref_get_refined_symmetry_operations(int * equiv_atoms_cell,
-				    SPGCONST Cell * cell,
+ref_get_refined_symmetry_operations(SPGCONST Cell * cell,
 				    SPGCONST Cell * primitive,
 				    SPGCONST Spacegroup * spacegroup,
-				    const int * equiv_atoms_prim,
-				    const int * mapping_table,
 				    const double symprec)
 {
-  return get_refined_symmetry_operations(equiv_atoms_cell,
-					 cell,
+  return get_refined_symmetry_operations(cell,
 					 primitive,
 					 spacegroup,
-					 equiv_atoms_prim,
-					 mapping_table,
 					 symprec);
 }
 
-void ref_get_Wyckoff_positions(int * wyckoffs,
-			       int * equiv_atoms,
-			       SPGCONST Cell * primitive,
-			       SPGCONST Spacegroup * spacegroup,
-			       const double symprec)
+Cell * ref_get_Wyckoff_positions(int * wyckoffs,
+				 int * equiv_atoms,
+				 SPGCONST Cell * primitive,
+				 SPGCONST Cell * cell,
+				 SPGCONST Spacegroup * spacegroup,
+				 SPGCONST Symmetry * symmetry,
+				 const int * mapping_table,
+				 const double symprec)
 {
-  Cell *conv_prim;
+  Cell *bravais;
+  int i, num_prim_sym;
+  int *wyckoffs_bravais, *equiv_atoms_bravais;
+  int operation_index[2];
 
-  conv_prim = get_bravais_exact_positions_and_lattice(wyckoffs,
-						      equiv_atoms,
-						      spacegroup,
-						      primitive,
-						      symprec);
-  cel_free_cell(conv_prim);
+  wyckoffs_bravais = (int*)malloc(sizeof(int) * primitive->size * 4);
+  equiv_atoms_bravais = (int*)malloc(sizeof(int) * primitive->size * 4);
+  
+  bravais = get_bravais_exact_positions_and_lattice(wyckoffs_bravais,
+						    equiv_atoms_bravais,
+						    spacegroup,
+						    primitive,
+						    symprec);
+
+  for (i = 0; i < cell->size; i++) {
+    wyckoffs[i] = wyckoffs_bravais[mapping_table[i]];
+  }
+  
+  spgdb_get_operation_index(operation_index, spacegroup->hall_number);
+  num_prim_sym = operation_index[0] / (bravais->size / primitive->size);
+
+  /* Check symmetry breaking by unusual multiplicity of primitive cell. */
+  if (cell->size * num_prim_sym != symmetry->size * primitive->size) {
+    set_equivalent_atoms_broken_symmetry(equiv_atoms,
+					 cell,
+					 symmetry,
+					 mapping_table,
+					 symprec);
+  } else {
+    set_equivalent_atoms(equiv_atoms,
+			 primitive,
+			 cell,
+			 equiv_atoms_bravais,
+			 mapping_table);
+  }
+  
+  free(equiv_atoms_bravais);
+  equiv_atoms_bravais = NULL;
+  free(wyckoffs_bravais);
+  wyckoffs_bravais = NULL;
+  
+  return bravais;
 }
 
 static Cell * refine_cell(SPGCONST Cell * cell,
 			  const double symprec)
 {
-  int *wyckoffs, *equiv_atoms;
+  int *wyckoffs_bravais, *equiv_atoms_bravais;
   double tolerance;
-  Cell *primitive, *bravais, *conv_prim;
-  Symmetry *conv_sym;
+  Cell *primitive, *bravais;
   Spacegroup spacegroup;
 
   debug_print("refine_cell:\n");
@@ -150,39 +181,32 @@ static Cell * refine_cell(SPGCONST Cell * cell,
   if (primitive->size == 0) {
     cel_free_cell(primitive);
     bravais = cel_alloc_cell(0);
-    goto end;
+    goto ret;
   }
 
   tolerance = prm_get_current_tolerance();
   spacegroup = spa_get_spacegroup_with_primitive(primitive, tolerance);
 
-  wyckoffs = (int*)malloc(sizeof(int) * primitive->size);
-  equiv_atoms = (int*)malloc(sizeof(int) * primitive->size);
-  conv_prim = get_bravais_exact_positions_and_lattice(wyckoffs,
-						      equiv_atoms,
-						      &spacegroup,
-						      primitive,
-						      tolerance);
-  free(equiv_atoms);
-  equiv_atoms = NULL;
-  free(wyckoffs);
-  wyckoffs = NULL;
-
-  conv_sym = get_db_symmetry(spacegroup.hall_number);
-  bravais = expand_positions(conv_prim, conv_sym);
+  wyckoffs_bravais = (int*)malloc(sizeof(int) * primitive->size * 4);
+  equiv_atoms_bravais = (int*)malloc(sizeof(int) * primitive->size * 4);
+  bravais = get_bravais_exact_positions_and_lattice(wyckoffs_bravais,
+						    equiv_atoms_bravais,
+						    &spacegroup,
+						    primitive,
+						    tolerance);
+  free(equiv_atoms_bravais);
+  equiv_atoms_bravais = NULL;
+  free(wyckoffs_bravais);
+  wyckoffs_bravais = NULL;
 
   debug_print("primitive cell in refine_cell:\n");
   debug_print_matrix_d3(primitive->lattice);
-  debug_print("conventional lattice in refine_cell:\n");
-  debug_print_matrix_d3(conv_prim->lattice);
   debug_print("bravais lattice in refine_cell:\n");
   debug_print_matrix_d3(bravais->lattice);
   
-  cel_free_cell(conv_prim);
-  sym_free_symmetry(conv_sym);
   cel_free_cell(primitive);
 
- end:  /* Return bravais->size = 0, if the bravais could not be found. */
+ ret:  /* Return bravais->size = 0, if the bravais could not be found. */
   return bravais;
 }
 
@@ -194,44 +218,62 @@ static Cell * get_bravais_exact_positions_and_lattice(int * wyckoffs,
 						      const double symprec)
 {
   int i;
+  int *wyckoffs_prim, *equiv_atoms_prim;
   Symmetry *conv_sym;
-  Cell *bravais;
+  Cell *bravais, *conv_prim;
   VecDBL *exact_positions;
 
   /* Positions of primitive atoms are represented wrt Bravais lattice */
-  bravais = get_conventional_primitive(spacegroup, primitive);
+  conv_prim = get_conventional_primitive(spacegroup, primitive);
   /* Symmetries in database (wrt Bravais lattice) */
   conv_sym = get_db_symmetry(spacegroup->hall_number);
   /* Lattice vectors are set. */
-  get_conventional_lattice(bravais->lattice,
+  get_conventional_lattice(conv_prim->lattice,
 			   spacegroup->holohedry,
 			   spacegroup->bravais_lattice);
 
   /* Symmetrize atomic positions of conventional unit cell */
-  exact_positions = ssm_get_exact_positions(wyckoffs,
-					    equiv_atoms,
-					    bravais,
+  wyckoffs_prim = (int*)malloc(sizeof(int) * primitive->size);
+  equiv_atoms_prim = (int*)malloc(sizeof(int) * primitive->size);
+  exact_positions = ssm_get_exact_positions(wyckoffs_prim,
+					    equiv_atoms_prim,
+					    conv_prim,
 					    conv_sym,
 					    spacegroup->hall_number,
 					    symprec);
-  sym_free_symmetry(conv_sym);
-
   if (exact_positions->size > 0) {
-    for (i = 0; i < bravais->size; i++) {
-      mat_copy_vector_d3(bravais->position[i], exact_positions->vec[i]);
+    for (i = 0; i < conv_prim->size; i++) {
+      mat_copy_vector_d3(conv_prim->position[i], exact_positions->vec[i]);
     }
   } else {
-    cel_free_cell(bravais);
     bravais = cel_alloc_cell(0);
+    goto ret;
   }
 
-  mat_free_VecDBL(exact_positions);
+  bravais = expand_positions(wyckoffs,
+			     equiv_atoms,
+			     conv_prim,
+			     conv_sym,
+			     wyckoffs_prim,
+			     equiv_atoms_prim);
 
+ ret:
+  free(wyckoffs_prim);
+  wyckoffs_prim = NULL;
+  free(equiv_atoms_prim);
+  equiv_atoms_prim = NULL;
+  mat_free_VecDBL(exact_positions);
+  cel_free_cell(conv_prim);
+  sym_free_symmetry(conv_sym);
   return bravais;
 }
 
-static Cell * expand_positions(SPGCONST Cell * conv_prim,
-			       SPGCONST Symmetry * conv_sym)
+static Cell * expand_positions(int * wyckoffs,
+			       int * equiv_atoms,
+			       SPGCONST Cell * conv_prim,
+			       SPGCONST Symmetry * conv_sym,
+			       const int * wyckoffs_prim,
+			       const int * equiv_atoms_prim)
 {
   int i, j, k, num_pure_trans;
   int num_atom;
@@ -253,6 +295,8 @@ static Cell * expand_positions(SPGCONST Cell * conv_prim,
 	  bravais->position[num_atom][k] = 
 	    mat_Dmod1(bravais->position[num_atom][k]);
 	}
+	wyckoffs[num_atom] = wyckoffs_prim[j];
+	equiv_atoms[num_atom] = equiv_atoms_prim[j];
 	num_atom++;
       }
     }
@@ -487,12 +531,9 @@ static void set_cubic(double lattice[3][3],
 }
 
 static Symmetry *
-get_refined_symmetry_operations(int * equiv_atoms_cell,
-				SPGCONST Cell * cell,
+get_refined_symmetry_operations(SPGCONST Cell * cell,
 				SPGCONST Cell * primitive,
 				SPGCONST Spacegroup * spacegroup,
-				const int * equiv_atoms_prim,
-				const int * mapping_table,
 				const double symprec)
 {
   int t_mat_int[3][3];
@@ -519,30 +560,14 @@ get_refined_symmetry_operations(int * equiv_atoms_cell,
 				      cell->lattice,
 				      cell->size / primitive->size,
 				      symprec);
-
-  /* Set equivalent atom table */
-  if (cell->size / primitive->size == symmetry->size / prim_sym->size) {
-    set_equivalent_atoms(equiv_atoms_cell,
-			 cell,
-			 primitive,
-			 equiv_atoms_prim,
-			 mapping_table);
-  } else {
-    set_equivalent_atoms_broken_symmetry(equiv_atoms_cell,
-					 cell,
-					 symmetry,
-					 mapping_table,
-					 symprec);
-  }
-  
   sym_free_symmetry(prim_sym);
 
   return symmetry;
 }
 
 static void set_equivalent_atoms(int * equiv_atoms_cell,
-				 SPGCONST Cell * cell,
 				 SPGCONST Cell * primitive,
+				 SPGCONST Cell * cell,
 				 const int * equiv_atoms_prim,
 				 const int * mapping_table)
 {
