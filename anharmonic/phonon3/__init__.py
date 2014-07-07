@@ -315,7 +315,8 @@ class Phono3py:
         
     def run_imag_self_energy(self,
                              grid_points,
-                             frequency_step=0.1,
+                             frequency_step=None,
+                             num_frequency_points=None,
                              temperatures=[0.0, 300.0]):
         self._grid_points = grid_points
         self._temperatures = temperatures
@@ -324,6 +325,7 @@ class Phono3py:
             grid_points,
             self._sigmas,
             frequency_step=frequency_step,
+            num_frequency_points=num_frequency_points,
             temperatures=temperatures,
             log_level=self._log_level)
             
@@ -665,6 +667,7 @@ class Phono3pyJointDos:
                  nac_q_direction=None,
                  sigmas=[],
                  frequency_step=None,
+                 num_frequency_points=None,
                  frequency_factor_to_THz=VaspToTHz,
                  frequency_scale_factor=None,
                  is_nosym=False,
@@ -679,6 +682,7 @@ class Phono3pyJointDos:
         self._nac_q_direction = nac_q_direction
         self._sigmas = sigmas
         self._frequency_step = frequency_step
+        self._num_frequency_points = num_frequency_points
         self._frequency_factor_to_THz = frequency_factor_to_THz
         self._frequency_scale_factor = frequency_scale_factor
         self._is_nosym = is_nosym
@@ -694,6 +698,7 @@ class Phono3pyJointDos:
             nac_params=self._nac_params,
             nac_q_direction=self._nac_q_direction,
             frequency_step=self._frequency_step,
+            num_frequency_points=self._num_frequency_points,
             frequency_factor_to_THz=self._frequency_factor_to_THz,
             frequency_scale_factor=self._frequency_scale_factor,
             is_nosym=self._is_nosym,

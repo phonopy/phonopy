@@ -68,6 +68,7 @@ class Settings:
         self._masses = None
         self._mesh = None
         self._frequency_pitch = None
+        self._frequency_points = None
         self._primitive_matrix = None
         self._qpoints = None
         self._q_direction = None
@@ -131,6 +132,12 @@ class Settings:
 
     def get_frequency_pitch(self):
         return self._frequency_pitch
+
+    def set_frequency_points(self, frequency_points):
+        self._frequency_points = frequency_points
+
+    def get_frequency_points(self):
+        return self._frequency_points
 
     def set_group_velocity_delta_q(self, gv_delta_q):
         self._gv_delta_q = gv_delta_q
@@ -434,6 +441,10 @@ class ConfParser:
         if params.has_key('frequency_pitch'):
             self._settings.set_frequency_pitch(params['frequency_pitch'])
 
+        # Number of sampling points for spectram drawing 
+        if params.has_key('frequency_points'):
+            self._settings.set_frequency_points(params['frequency_points'])
+
         # Smearing width
         if params.has_key('sigma'):
             self._settings.set_sigma(params['sigma'])
@@ -579,6 +590,10 @@ class ConfParser:
             if opt.dest == 'frequency_pitch':
                 if self._options.frequency_pitch:
                     self._confs['frequency_pitch'] = self._options.frequency_pitch
+
+            if opt.dest == 'frequency_points':
+                if self._options.frequency_points:
+                    self._confs['frequency_points'] = self._options.frequency_points
 
             if opt.dest == 'primitive_axis':
                 if self._options.primitive_axis:
@@ -767,6 +782,10 @@ class ConfParser:
             if conf_key == 'frequency_pitch':
                 val = float(confs['frequency_pitch'])
                 self.set_parameter('frequency_pitch', val)
+
+            if conf_key == 'frequency_points':
+                val = int(confs['frequency_points'])
+                self.set_parameter('frequency_points', val)
 
             if conf_key == 'cutoff_frequency':
                 val = float(confs['cutoff_frequency'])

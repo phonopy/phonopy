@@ -8,7 +8,8 @@ import anharmonic.file_IO as file_IO
 def get_imag_self_energy(interaction,
                          grid_points,
                          sigmas,
-                         frequency_step=0.1,
+                         frequency_step=None,
+                         num_frequency_points=None,
                          temperatures=[0.0, 300.0],
                          log_level=0):
     if temperatures is None:
@@ -53,32 +54,55 @@ def get_imag_self_energy(interaction,
                     print "Tetrahedron method"
             ise.set_sigma(sigma)
             if sigma:
-                fmax = max_phonon_freq * 2 + sigma * 4 + frequency_step / 10
+                fmax = max_phonon_freq * 2 + sigma * 4
             else:
-                fmax = max_phonon_freq * 2 + frequency_step / 10
+                fmax = max_phonon_freq * 2
+            fmax *= 1.005
             fmin = 0
-            frequency_points_at_sigma = np.arange(fmin, fmax, frequency_step)
-            ise.set_frequency_points(frequency_points_at_sigma)
+            frequency_points_at_sigma = get_frequency_points(
+                fmin,
+                fmax,
+                frequency_step=frequency_step,
+                num_frequency_points=num_frequency_points)
             fp_sigmas.append(frequency_points_at_sigma)
-
-            if not sigma:
-                ise.set_integration_weights()
-
-            ise_temperatures = []
-            for k, t in enumerate(temperatures):
-                if log_level:
-                    print "Temperature:", t
-                ise.set_temperature(t)
-                ise.run()
-                ise_temperatures.append(ise.get_imag_self_energy())
-                
-            ise_sigmas.append(ise_temperatures)
+            ise_temperatures = np.zeros(
+                (len(temperatures), len(frequency_points_at_sigma),
+                 len(interaction.get_band_indices())), dtype='double')
+                 
+            for k, freq_point in enumerate(frequency_points_at_sigma):
+                ise.set_frequency_points([freq_point])
+                if not sigma:
+                    ise.set_integration_weights()
+    
+                for l, t in enumerate(temperatures):
+                    ise.set_temperature(t)
+                    ise.run()
+                    ise_temperatures[l, k] = ise.get_imag_self_energy()[0]
+                    
+                ise_sigmas.append(ise_temperatures)
             
         imag_self_energy.append(ise_sigmas)
         frequency_points.append(fp_sigmas)
                 
     return imag_self_energy, frequency_points
 
+def get_frequency_points(f_min,
+                         f_max,
+                         frequency_step=None,
+                         num_frequency_points=None):
+    if num_frequency_points is None:
+        if frequency_step is not None:
+            frequency_points = np.arange(
+                f_min, f_max, frequency_step, dtype='double')
+        else:
+            frequency_points = np.array(np.linspace(
+                f_min, f_max, 201), dtype='double')
+    else:
+        frequency_points = np.array(np.linspace(
+            f_min, f_max, num_frequency_points), dtype='double')
+        
+    return frequency_points
+    
 def get_linewidth(interaction,
                   grid_points,
                   sigmas,
@@ -291,7 +315,7 @@ class ImagSelfEnergy:
         if frequency_points is None:
             self._frequency_points = None
         else:
-            self._frequency_points = np.double(frequency_points)
+            self._frequency_points = np.array(frequency_points, dtype='double')
 
     def set_temperature(self, temperature):
         if temperature is None:
