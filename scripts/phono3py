@@ -43,6 +43,7 @@ from phonopy.interface.vasp import read_vasp, write_vasp
 from phonopy.structure.cells import print_cell
 from phonopy.harmonic.force_constants import show_drift_force_constants
 from phonopy.file_IO import parse_BORN, write_FORCE_SETS
+from phonopy.structure.spglib import get_grid_point_from_address
 from phonopy.units import VaspToTHz
 from anharmonic.phonon3.fc3 import show_drift_fc3
 from anharmonic.file_IO import parse_disp_fc2_yaml, parse_disp_fc3_yaml, \
@@ -436,7 +437,7 @@ else:
     phono3py_conf = Phono3pyConfParser(options=options,
                                        option_list=option_list)
     settings = phono3py_conf.get_settings()
-    
+
 ###################################
 # Read crystal structure (POSCAR) #
 ###################################
@@ -521,6 +522,10 @@ if options.is_displacement:
 mesh = settings.get_mesh_numbers()
 mesh_divs = settings.get_mesh_divisors()
 grid_points = settings.get_grid_points()
+grid_addresses = settings.get_grid_addresses()
+if grid_addresses is not None:
+    grid_points = [get_grid_point_from_address(ga, mesh)
+                   for ga in grid_addresses]
 band_indices = settings.get_band_indices()
 sigma = settings.get_sigma()
 if sigma is None:
