@@ -554,7 +554,7 @@ else:
     frequency_factor_to_THz = options.factor
 if settings.get_frequency_points() is None:
     if settings.get_frequency_pitch() is None:
-        num_frequency_points = 200
+        num_frequency_points = 201
         frequency_step = None
     else:
         num_frequency_points = None
