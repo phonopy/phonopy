@@ -97,7 +97,10 @@ static void get_vector_modulo(int v[3], const int m[3]);
 int kpt_get_grid_point(const int grid_address[3],
 		       const int mesh[3])
 {
-  return get_grid_point_single_mesh(grid_address, mesh);
+  int grid_address_modulo[3];
+  mat_copy_vector_i3(grid_address_modulo, grid_address);
+  get_vector_modulo(grid_address_modulo, mesh);
+  return get_grid_point_single_mesh(grid_address_modulo, mesh);
 }
 
 /* grid_address (e.g. 4x4x4 mesh, unless GRID_ORDER_XYZ is defined) */
