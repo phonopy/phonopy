@@ -621,21 +621,6 @@ if log_level:
         for vec in np.dot(phonon_supercell.get_cell(),
                           np.linalg.inv(phonon_primitive.get_cell())):
             print "%5.2f"*3 % tuple(vec)
-            
-    print "----------------------------- General settings ------------------------------"
-    print "Imposing translational symmetry to fc3 and fc2:",
-    print (tsym_type > 0)
-    print "Imposing symmetry of index exchange to fc2:",
-    print options.is_symmetrize_fc2
-    print "Imposing symmetry of index exchange to fc3 in real space:",
-    print options.is_symmetrize_fc3_r
-    print "Imposing symmetry of index exchange to fc3 in reciprocal space:",
-    print options.is_symmetrize_fc3_q
-    if settings.get_cutoff_fc3_distance() is not None:
-        print "FC3 cutoff distance:",
-        print settings.get_cutoff_fc3_distance()
-    if settings.get_is_nac():
-        print "Non-analytical term correction:", settings.get_is_nac()
 
 #####################################################  
 # Write ir-grid points and grid addresses, and exit #
@@ -669,6 +654,30 @@ if options.write_grid_points:
         print_end()
     sys.exit(0)
 
+
+###################
+# Force constants #
+###################
+if log_level:
+    print "----------------------------- Force constants -------------------------------"
+    if not options.read_fc2:
+        print "Imposing translational symmetry to fc2:",
+        print (tsym_type > 0)
+        print "Imposing symmetry of index exchange to fc2:",
+        print options.is_symmetrize_fc2
+        
+    if not options.read_fc3:
+        print "Imposing translational symmetry to fc3:",
+        print (tsym_type > 0)
+        print "Imposing symmetry of index exchange to fc3 in real space:",
+        print options.is_symmetrize_fc3_r
+        print "Imposing symmetry of index exchange to fc3 in reciprocal space:",
+        print options.is_symmetrize_fc3_q
+        
+    if settings.get_cutoff_fc3_distance() is not None:
+        print "FC3 cutoff distance:",
+        print settings.get_cutoff_fc3_distance()
+        
 #######
 # fc3 #
 #######
@@ -680,7 +689,7 @@ if (options.is_joint_dos or
     pass
 else:
     if log_level:
-        print "----------------------------------- fc3 -------------------------------------"
+        print "                                   [fc3]                                     "
     if options.read_fc3: # Read fc3.hdf5
         if input_filename is None:
             filename = 'fc3.hdf5'
@@ -720,13 +729,14 @@ else:
             print "Writing fc3 to %s" % filename
         write_fc3_to_hdf5(phono3py.get_fc3(), filename=filename)
 
-    show_drift_fc3(phono3py.get_fc3())
+    if log_level:
+        show_drift_fc3(phono3py.get_fc3())
 
 ##############
 # phonon fc2 #
 ##############
 if log_level:
-    print "----------------------------------- fc2 -------------------------------------"
+    print "                                   [fc2]                                     "
 if options.read_fc2:
     if input_filename is None:
         filename = 'fc2.hdf5'
@@ -792,8 +802,9 @@ else:
     if log_level:
         print "Writing fc2 to %s" % filename
     write_fc2_to_hdf5(phono3py.get_fc2(), filename=filename)
-    
-show_drift_force_constants(phono3py.get_fc2(), name='fc2')
+
+if log_level:    
+    show_drift_force_constants(phono3py.get_fc2(), name='fc2')
 
 if settings.get_is_nac():
     file_exists('BORN', log_level)
@@ -875,11 +886,13 @@ if options.is_gruneisen:
         print_end()
     sys.exit(0)
 
-#######################
-# Show ph-ph settings #
-#######################
+#################
+# Show settings #
+#################
 if log_level:
-    print "------------------------ Ph-ph interaction settings -------------------------"
+    print "---------------------------------- Settings ----------------------------------"
+    if settings.get_is_nac():
+        print "Non-analytical term correction:", settings.get_is_nac()
     if mesh is not None:
         print "Mesh sampling: [ %d %d %d ]" % tuple(mesh)
     if mesh_divs is not None and settings.get_is_bterta():
