@@ -1,7 +1,6 @@
 import numpy as np
 from phonopy.units import VaspToTHz, Hbar, EV, Angstrom, THz, AMU
 from phonopy.phonon.degeneracy import degenerate_sets
-from phonopy.structure.spglib import get_neighboring_grid_points
 from anharmonic.phonon3.triplets import get_triplets_integration_weights, gaussian, occupation
 import anharmonic.file_IO as file_IO
 

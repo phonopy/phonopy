@@ -107,7 +107,7 @@ class JointDos:
     def get_triplets_at_q(self):
         return self._triplets_at_q, self._weights_at_q
         
-    def _run_c(self, lang='Py'):
+    def _run_c(self, lang='C'):
         if self._sigma is None:
             self._tetrahedron_method = TetrahedronMethod(
                 self._reciprocal_lattice, mesh=self._mesh)
@@ -146,22 +146,27 @@ class JointDos:
         num_band = self._num_band
         num_triplets = len(self._triplets_at_q)
         num_freq_points = len(self._frequency_points)
-        g = np.zeros((num_triplets, num_freq_points, num_band, num_band, 2),
-                     dtype='double')
+        num_mesh = np.prod(self._mesh)
+        jdos = np.zeros(num_freq_points, dtype='double')
+        
+        for i, freq_point in enumerate(self._frequency_points):
+            g = np.zeros(
+                (2, num_triplets, 1, num_band, num_band), dtype='double')
+            phono3c.triplets_integration_weights(
+                g,
+                np.array([freq_point], dtype='double'),
+                thm.get_tetrahedra(),
+                self._mesh,
+                self._triplets_at_q,
+                self._frequencies,
+                self._grid_address,
+                self._bz_map)
+            jdos[i] = np.sum(
+                np.tensordot(g[0, :, 0], self._weights_at_q, axes=(0, 0)))
+            if self._log_level > 1:
+                print "%4d %f %e" % (i + 1, freq_point, jdos[i] / num_mesh)
 
-        phono3c.triplets_integration_weights(
-            g,
-            self._frequency_points,
-            thm.get_tetrahedra(),
-            self._mesh,
-            self._triplets_at_q,
-            self._frequencies,
-            self._grid_address,
-            self._bz_map)
-
-        jdos = np.tensordot(g, self._weights_at_q, axes=([0, 0]))
-        jdos = jdos.sum(axis=1).sum(axis=1)[:, 0]
-        self._joint_dos = jdos / np.prod(self._mesh)
+        self._joint_dos = jdos / num_mesh
     
     def _run_py_tetrahedron_method(self):
         self._vertices = get_tetrahedra_vertices(

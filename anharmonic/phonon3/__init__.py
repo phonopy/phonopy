@@ -712,7 +712,7 @@ class Phono3pyJointDos:
             
             if self._log_level:
                 weights = self._jdos.get_triplets_at_q()[1]
-                print "------ Joint DOS ------"
+                print "--------------------------------- Joint DOS ---------------------------------"
                 print "Grid point: %d" % gp
                 print "Number of ir-triplets:",
                 print "%d / %d" % (len(weights), weights.sum())
