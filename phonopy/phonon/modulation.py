@@ -61,9 +61,7 @@ class Modulation:
         self._dimension = dimension
         self._delta_q = delta_q # 1st/2nd order perturbation direction
         self._nac_q_direction = nac_q_direction
-
         self._ddm = DerivativeOfDynamicalMatrix(dynamical_matrix)
-
         self._derivative_order = derivative_order
 
         self._factor = factor
@@ -187,7 +185,7 @@ class Modulation:
         return np.sqrt(np.abs(e)) * np.sign(e) * self._factor
             
     def write_yaml(self):
-        file = open('modulation.yaml', 'w')
+        w = open('modulation.yaml', 'w')
         dim = self._dimension
         factor = self._factor
         cell = self._cell
@@ -198,71 +196,75 @@ class Modulation:
         positions = cell.get_scaled_positions()
         masses = cell.get_masses()
         symbols = cell.get_chemical_symbols()
-        file.write("unitcell:\n")
-        file.write("  atom_info:\n")
+        w.write("unitcell:\n")
+        w.write("  atom_info:\n")
         for m, s in zip( masses, symbols ):
-            file.write("  - { name: %2s, mass: %10.5f }\n" % (s, m))
+            w.write("  - { name: %2s, mass: %10.5f }\n" % (s, m))
         
-        file.write("  real_lattice:\n")
-        file.write("  - [ %20.15f, %20.15f, %20.15f ]\n" % (tuple(lattice[0])))
-        file.write("  - [ %20.15f, %20.15f, %20.15f ]\n" % (tuple(lattice[1])))
-        file.write("  - [ %20.15f, %20.15f, %20.15f ]\n" % (tuple(lattice[2])))
-        file.write("  positions:\n")
+        w.write("  reciprocal_lattice:\n")
+        for vec, axis in zip(np.linalg.inv(lattice), ('a*', 'b*', 'c*')):
+            w.write("  - [ %12.8f, %12.8f, %12.8f ] # %2s\n" %
+                    (tuple(vec) + (axis,)))
+        w.write("  real_lattice:\n")
+        w.write("  - [ %20.15f, %20.15f, %20.15f ]\n" % (tuple(lattice[0])))
+        w.write("  - [ %20.15f, %20.15f, %20.15f ]\n" % (tuple(lattice[1])))
+        w.write("  - [ %20.15f, %20.15f, %20.15f ]\n" % (tuple(lattice[2])))
+        w.write("  positions:\n")
         for p in positions:
-            file.write("  - [ %20.15f, %20.15f, %20.15f ]\n" % (tuple(p)))
+            w.write("  - [ %20.15f, %20.15f, %20.15f ]\n" % (tuple(p)))
 
         supercell = self._get_supercell()
         lattice = supercell.get_cell()
         positions = supercell.get_scaled_positions()
         masses = supercell.get_masses()
         symbols = supercell.get_chemical_symbols()
-        file.write("supercell:\n")
-        file.write("  dimension: [ %d, %d, %d ]\n" % tuple(dim))
-        file.write("  atom_info:\n")
+        w.write("supercell:\n")
+        w.write("  dimension: [ %d, %d, %d ]\n" % tuple(dim))
+        w.write("  atom_info:\n")
         for m, s in zip( masses, symbols ):
-            file.write("  - { name: %2s, mass: %10.5f }\n" % (s, m))
+            w.write("  - { name: %2s, mass: %10.5f }\n" % (s, m))
         
-        file.write("  real_lattice:\n")
-        file.write("  - [ %20.15f, %20.15f, %20.15f ]\n" % (tuple(lattice[0])))
-        file.write("  - [ %20.15f, %20.15f, %20.15f ]\n" % (tuple(lattice[1])))
-        file.write("  - [ %20.15f, %20.15f, %20.15f ]\n" % (tuple(lattice[2])))
-        file.write("  positions:\n")
+        w.write("  real_lattice:\n")
+        w.write("  - [ %20.15f, %20.15f, %20.15f ]\n" % (tuple(lattice[0])))
+        w.write("  - [ %20.15f, %20.15f, %20.15f ]\n" % (tuple(lattice[1])))
+        w.write("  - [ %20.15f, %20.15f, %20.15f ]\n" % (tuple(lattice[2])))
+        w.write("  positions:\n")
         for p in positions:
-            file.write("  - [ %20.15f, %20.15f, %20.15f ]\n" % (tuple(p)))
+            w.write("  - [ %20.15f, %20.15f, %20.15f ]\n" % (tuple(p)))
 
-        file.write("modulations:\n")
+        w.write("modulations:\n")
         for deltas, mode in zip(self._delta_modulations,
                                 self._phonon_modes):
             q = mode[0]
-            file.write("- q-position: [ %12.7f, %12.7f, %12.7f ]\n" %
+            w.write("- q-position: [ %12.7f, %12.7f, %12.7f ]\n" %
                        tuple(q))
-            file.write("  band: %d\n" % (mode[1] + 1))
-            file.write("  amplitude: %f\n" % mode[2])
-            file.write("  phase: %f\n" % mode[3])
-            file.write("  displacements:\n")
+            w.write("  band: %d\n" % (mode[1] + 1))
+            w.write("  amplitude: %f\n" % mode[2])
+            w.write("  phase: %f\n" % mode[3])
+            w.write("  displacements:\n")
             for i, p in enumerate(deltas):
-                file.write("  - [ %20.15f, %20.15f ] # %d x (%f)\n" %
+                w.write("  - [ %20.15f, %20.15f ] # %d x (%f)\n" %
                            (p[0].real, p[0].imag, i + 1, abs(p[0])))
-                file.write("  - [ %20.15f, %20.15f ] # %d y (%f)\n" %
+                w.write("  - [ %20.15f, %20.15f ] # %d y (%f)\n" %
                            (p[1].real, p[1].imag, i + 1, abs(p[1])))
-                file.write("  - [ %20.15f, %20.15f ] # %d z (%f)\n" %
+                w.write("  - [ %20.15f, %20.15f ] # %d z (%f)\n" %
                            (p[2].real, p[2].imag, i + 1, abs(p[2])))
 
-        file.write("phonon:\n")
+        w.write("phonon:\n")
         freqs = self._eigvals_to_frequencies(self._eigvals)
         for eigvec, freq, mode in zip(self._eigvecs,
                                       freqs,
                                       self._phonon_modes):
-            file.write("- q-position: [ %12.7f, %12.7f, %12.7f ]\n" %
+            w.write("- q-position: [ %12.7f, %12.7f, %12.7f ]\n" %
                        tuple(mode[0]))
-            file.write("  band: %d\n" % (mode[1] + 1))
-            file.write("  amplitude: %f\n" % mode[2])
-            file.write("  phase: %f\n" % mode[3])
-            file.write("  frequency: %15.10f\n" % freq)
-            file.write("  eigenvector:\n")
+            w.write("  band: %d\n" % (mode[1] + 1))
+            w.write("  amplitude: %f\n" % mode[2])
+            w.write("  phase: %f\n" % mode[3])
+            w.write("  frequency: %15.10f\n" % freq)
+            w.write("  eigenvector:\n")
             for j in range(num_atom):
-                file.write("  - # atom %d\n" % (j + 1))
+                w.write("  - # atom %d\n" % (j + 1))
                 for k in (0, 1, 2):
                     val = eigvec[j * 3 + k]
-                    file.write("    - [ %17.14f, %17.14f ] # %f\n" %
+                    w.write("    - [ %17.14f, %17.14f ] # %f\n" %
                                (val.real, val.imag, np.angle(val, deg=True)))
