@@ -688,8 +688,6 @@ if (options.is_joint_dos or
     settings.get_read_amplitude()):
     pass
 else:
-    if log_level:
-        print "                                   [fc3]                                     "
     if options.read_fc3: # Read fc3.hdf5
         if input_filename is None:
             filename = 'fc3.hdf5'
@@ -735,8 +733,6 @@ else:
 ##############
 # phonon fc2 #
 ##############
-if log_level:
-    print "                                   [fc2]                                     "
 if options.read_fc2:
     if input_filename is None:
         filename = 'fc2.hdf5'

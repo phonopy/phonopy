@@ -23,7 +23,7 @@ def get_imag_self_energy(interaction,
         ise.set_grid_point(gp)
         if log_level:
             weights = interaction.get_triplets_at_q()[1]
-            print "------ Imaginary part of self energy ------"
+            print "----------------------- Imaginary part of self energy -----------------------"
             print "Grid point: %d" % gp
             print "Number of ir-triplets:",
             print "%d / %d" % (len(weights), weights.sum())
