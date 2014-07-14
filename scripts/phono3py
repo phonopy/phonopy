@@ -666,7 +666,7 @@ if log_level:
         print "Imposing symmetry of index exchange to fc2:",
         print options.is_symmetrize_fc2
         
-    if not options.read_fc3:
+    if not (options.read_fc3 or settings.get_is_isotope() or options.is_joint_dos):
         print "Imposing translational symmetry to fc3:",
         print (tsym_type > 0)
         print "Imposing symmetry of index exchange to fc3 in real space:",
