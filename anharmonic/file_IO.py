@@ -766,8 +766,10 @@ def write_joint_dos(gp,
     jdos_filename += ".dat" 
         
     w = open(jdos_filename, 'w')
-    for omega, val in zip(frequencies, jdos):
-        w.write("%15.7f %20.15e\n" % (omega, val))
+    for omega, vals in zip(frequencies, jdos):
+        w.write("%15.7f" % omega)
+        w.write((" %20.15e" * len(vals)) % tuple(vals))
+        w.write("\n")
     w.close()
 
 def write_linewidth(gp,
