@@ -34,6 +34,8 @@
 
 import numpy as np
 import sys
+import math  # KL(m). Used for errors statistics.
+from scipy import stats # KL(m). Used for errors statistics.
 from phonopy.structure.cells import get_reduced_bases
 from phonopy.harmonic.dynamical_matrix import get_equivalent_smallest_vectors
 
@@ -249,6 +251,18 @@ def _get_force_constants_disps(force_constants,
     Phi = -F / d
     """
     
+    """
+    KL(m) 'improvement'
+    The goal is to monitor the quality of computed force constants (FC). 
+    For that the FC spread is calculated, more precisely its standard
+    deviation, i.e. sqrt(variance). Every displacement results in slightly
+    different FC (due to numerical errors) -- that is why the FCs are spread.
+    Such an FC 'error' is calculated separately for every tensor element.
+    At the end we report their average value. We also report a maximum
+    value among these tensor-elements-errors.
+    """
+    fc_errors = np.zeros((3,3))
+    
     symprec = symmetry.get_symmetry_tolerance()
     disp_atom_list = np.unique([x['number'] for x in dataset['first_atoms']])
     for disp_atom_number in disp_atom_list:
@@ -262,13 +276,32 @@ def _get_force_constants_disps(force_constants,
             sets_of_forces.append(x['forces'])
 
         site_symmetry = symmetry.get_site_symmetry(disp_atom_number)
-        solve_force_constants(force_constants,
-                              disp_atom_number,
-                              disps,
-                              sets_of_forces,
-                              supercell,
-                              site_symmetry,
-                              symprec)
+        # KL(m)
+        #solve_force_constants(force_constants,
+        solve_force_constants_KL(force_constants,
+                                 disp_atom_number,
+                                 disps,
+                                 sets_of_forces,
+                                 supercell,
+                                 site_symmetry,
+                                 symprec,
+                                 fc_errors)
+
+    # KL(m)
+    print " Errors of the force constants"
+    print " Full table:"
+    # We report maximal (###) or average (##) errors
+    print "", fc_errors/(len(disp_atom_list)*supercell.get_number_of_atoms())
+    ###print "", fc_errors
+    print "  ** Maximal value", fc_errors.max()/(len(disp_atom_list)*supercell.get_number_of_atoms()), "**"
+    ###print "  ** Maximal value", fc_errors.max(), "**"
+    fc_avg = np.zeros((3,3))
+    for x in range(3):
+        for y in range(3):
+            tmp = np.array(force_constants[disp_atom_list,:,x,y])
+            fc_avg[x,y] = np.average(abs(tmp))
+    ##print "  Just for your knowledge, average(abs) of the force constants:"
+    ##print "", fc_avg
 
     return disp_atom_list
 
@@ -302,6 +335,60 @@ def solve_force_constants(force_constants,
         combined_forces = np.reshape(combined_forces, (-1, 3))
         force_constants[disp_atom_number, i] = -np.dot(
             inv_displacements, combined_forces)
+
+# KL(m).
+# This is very similar, but instead of using inverse displacement
+# and later multiplying it by the force a linear regression is used.
+# Force is "plotted" versus displacement and the slope is 
+# calculated, together with its standard deviation.
+def solve_force_constants_KL(force_constants,
+                             disp_atom_number,
+                             displacements,
+                             sets_of_forces,
+                             supercell,
+                             site_symmetry,
+                             symprec,
+                             fc_errors):
+    lat = supercell.get_cell().T
+    positions = supercell.get_scaled_positions()
+    pos_center = positions[disp_atom_number].copy()
+    positions -= pos_center
+    rot_map_syms = get_positions_sent_by_rot_inv(positions,
+                                                 site_symmetry,
+                                                 symprec)
+    site_sym_cart = [similarity_transformation(lat, sym)
+                     for sym in site_symmetry]
+    rot_disps = get_rotated_displacement(displacements, site_sym_cart)
+    inv_displacements = np.linalg.pinv(rot_disps)
+
+    for i in range(supercell.get_number_of_atoms()):
+        combined_forces = []
+        for forces in sets_of_forces:
+            combined_forces.append(
+                get_rotated_forces(forces[rot_map_syms[:, i]],
+                                   site_sym_cart))
+
+        combined_forces = np.reshape(combined_forces, (-1, 3))
+        # KL(m). 
+        # We measure the Fi-Xj slope (linear regression), see:
+# stackoverflow.com/questions/9990789/how-to-force-zero-interception-in-linear-regression
+# en.wikipedia.org/wiki/Simple_linear_regression#Linear_regression_without_the_intercept_term
+# http://courses.washington.edu/qsci483/Lectures/20.pdf 
+        for x in range(3):
+            for y in range(3):
+                xLin = rot_disps.T[x]
+                yLin = combined_forces.T[y]
+                force_constants[disp_atom_number,i,x,y] = \
+                      -np.dot(xLin,yLin) / np.dot(xLin,xLin) 
+                err = np.sqrt(np.dot(yLin,yLin)/np.dot(xLin,xLin) - 
+                              force_constants[disp_atom_number,i,x,y]**2
+                             )/( len(xLin)-1 )
+                fc_errors[x,y] += err
+        # Other methods of implementing linear regresion:
+        # tmp = np.array([ rot_disps.T[0], np.ones( len(rot_disps.T[0]) )])
+        # print "fitLstsq", -np.linalg.lstsq( tmp.T, combined_forces.T[0] )[0]
+        # print "fitLinre", "-!", stats.linregress( rot_disps.T[0], combined_forces.T[0] )
+        # print "fitPolyf", "-!", np.polyfit( rot_disps.T[0], combined_forces.T[0], 1, full=True )
 
 def get_positions_sent_by_rot_inv(positions, site_symmetry, symprec):
     rot_map_syms = []
