@@ -81,6 +81,8 @@ mailing list:
 
 https://lists.sourceforge.net/lists/listinfo/phonopy-users
 
+Message body including attached files has to be smaller than 300 KB.
+
 License
 =======
 
