@@ -34,8 +34,6 @@
 
 import numpy as np
 import sys
-import math  # KL(m). Used for errors statistics.
-from scipy import stats # KL(m). Used for errors statistics.
 from phonopy.structure.cells import get_reduced_bases
 from phonopy.harmonic.dynamical_matrix import get_equivalent_smallest_vectors
 
@@ -246,83 +244,6 @@ def get_atom_mapping_by_symmetry(atom_list_done,
     print 'or something wrong (e.g. crystal structure does not match).'
     raise ValueError
 
-def _get_force_constants_disps(force_constants,
-                               supercell,
-                               dataset,
-                               symmetry,
-                               fitting_algorithm="svd"):
-    """
-    Phi = -F / d
-    """
-    
-    """
-    Force constants are obtained by one of the following algorithm.
-
-    svd: Singlar value decomposition is used, which is equivalent to
-         least square fitting.
-    
-    KL(m): The goal is to monitor the quality of computed force constants (FC). 
-           For that the FC spread is calculated, more precisely its standard
-           deviation, i.e. sqrt(variance). Every displacement results in
-           slightly different FC (due to numerical errors) -- that is why the
-           FCs are spread. Such an FC 'error' is calculated separately for every
-           tensor element. At the end we report their average value. We also
-           report a maximum value among these tensor-elements-errors.
-    """
-    symprec = symmetry.get_symmetry_tolerance()
-    disp_atom_list = np.unique([x['number'] for x in dataset['first_atoms']])
-    for disp_atom_number in disp_atom_list:
-        disps = []
-        sets_of_forces = []
-
-        for x in dataset['first_atoms']:
-            if x['number'] != disp_atom_number:
-                continue
-            disps.append(x['displacement'])
-            sets_of_forces.append(x['forces'])
-
-        site_symmetry = symmetry.get_site_symmetry(disp_atom_number)
-        
-        if fitting_algorithm == "KL":
-            fc_errors = np.zeros((3,3))
-            solve_force_constants_KL(force_constants,
-                                     disp_atom_number,
-                                     disps,
-                                     sets_of_forces,
-                                     supercell,
-                                     site_symmetry,
-                                     symprec,
-                                     fc_errors)
-            # KL(m)
-            print " Errors of the force constants"
-            print " Full table:"
-            # We report maximal (###) or average (##) errors
-            print "", fc_errors / (len(disp_atom_list) *
-                                   supercell.get_number_of_atoms())
-            ###print "", fc_errors
-            print "  ** Maximal value",
-            print fc_errors.max() / (len(disp_atom_list) *
-                                     supercell.get_number_of_atoms()), "**"
-            ###print "  ** Maximal value", fc_errors.max(), "**"
-            fc_avg = np.zeros((3,3))
-            for x in range(3):
-                for y in range(3):
-                    tmp = np.array(force_constants[disp_atom_list,:,x,y])
-                    fc_avg[x,y] = np.average(abs(tmp))
-            ##print "  Just for your knowledge, average(abs) of the force constants:"
-            ##print "", fc_avg
-        else:
-            solve_force_constants(force_constants,
-                                  disp_atom_number,
-                                  disps,
-                                  sets_of_forces,
-                                  supercell,
-                                  site_symmetry,
-                                  symprec)
-
-    return disp_atom_list
-
-
 def solve_force_constants(force_constants,
                           disp_atom_number,
                           displacements,
@@ -404,8 +325,85 @@ def solve_force_constants_KL(force_constants,
         # Other methods of implementing linear regresion:
         # tmp = np.array([ rot_disps.T[0], np.ones( len(rot_disps.T[0]) )])
         # print "fitLstsq", -np.linalg.lstsq( tmp.T, combined_forces.T[0] )[0]
+        # from scipy import stats # KL(m). Used for errors statistics.
         # print "fitLinre", "-!", stats.linregress( rot_disps.T[0], combined_forces.T[0] )
         # print "fitPolyf", "-!", np.polyfit( rot_disps.T[0], combined_forces.T[0], 1, full=True )
+
+def _get_force_constants_disps(force_constants,
+                               supercell,
+                               dataset,
+                               symmetry,
+                               fitting_algorithm="svd"):
+    """
+    Phi = -F / d
+    """
+    
+    """
+    Force constants are obtained by one of the following algorithm.
+
+    svd: Singlar value decomposition is used, which is equivalent to
+         least square fitting.
+    
+    KL(m): The goal is to monitor the quality of computed force constants (FC). 
+           For that the FC spread is calculated, more precisely its standard
+           deviation, i.e. sqrt(variance). Every displacement results in
+           slightly different FC (due to numerical errors) -- that is why the
+           FCs are spread. Such an FC 'error' is calculated separately for every
+           tensor element. At the end we report their average value. We also
+           report a maximum value among these tensor-elements-errors.
+    """
+    symprec = symmetry.get_symmetry_tolerance()
+    disp_atom_list = np.unique([x['number'] for x in dataset['first_atoms']])
+    for disp_atom_number in disp_atom_list:
+        disps = []
+        sets_of_forces = []
+
+        for x in dataset['first_atoms']:
+            if x['number'] != disp_atom_number:
+                continue
+            disps.append(x['displacement'])
+            sets_of_forces.append(x['forces'])
+
+        site_symmetry = symmetry.get_site_symmetry(disp_atom_number)
+        
+        if fitting_algorithm == "KL":
+            fc_errors = np.zeros((3,3))
+            solve_force_constants_KL(force_constants,
+                                     disp_atom_number,
+                                     disps,
+                                     sets_of_forces,
+                                     supercell,
+                                     site_symmetry,
+                                     symprec,
+                                     fc_errors)
+            # KL(m)
+            print " Errors of the force constants"
+            print " Full table:"
+            # We report maximal (###) or average (##) errors
+            print "", fc_errors / (len(disp_atom_list) *
+                                   supercell.get_number_of_atoms())
+            ###print "", fc_errors
+            print "  ** Maximal value",
+            print fc_errors.max() / (len(disp_atom_list) *
+                                     supercell.get_number_of_atoms()), "**"
+            ###print "  ** Maximal value", fc_errors.max(), "**"
+            fc_avg = np.zeros((3,3))
+            for x in range(3):
+                for y in range(3):
+                    tmp = np.array(force_constants[disp_atom_list,:,x,y])
+                    fc_avg[x,y] = np.average(abs(tmp))
+            ##print "  Just for your knowledge, average(abs) of the force constants:"
+            ##print "", fc_avg
+        else:
+            solve_force_constants(force_constants,
+                                  disp_atom_number,
+                                  disps,
+                                  sets_of_forces,
+                                  supercell,
+                                  site_symmetry,
+                                  symprec)
+
+    return disp_atom_list
 
 def get_positions_sent_by_rot_inv(positions, site_symmetry, symprec):
     rot_map_syms = []
