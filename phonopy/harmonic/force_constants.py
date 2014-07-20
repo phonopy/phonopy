@@ -59,7 +59,8 @@ def get_fc2(supercell,
             symmetry,
             dataset,
             atom_list=None,
-            decimals=None):
+            decimals=None,
+            fitting_algorithm="svd"):
     """
     Bare force_constants is returned.
 
@@ -80,10 +81,12 @@ def get_fc2(supercell,
                                 3, 3), dtype='double')
 
     # Fill force_constants[ displaced_atoms, all_atoms_in_supercell ]
-    atom_list_done = _get_force_constants_disps(force_constants,
-                                                supercell,
-                                                dataset,
-                                                symmetry)
+    atom_list_done = _get_force_constants_disps(
+        force_constants,
+        supercell,
+        dataset,
+        symmetry,
+        fitting_algorithm=fitting_algorithm)
 
     # Distribute non-equivalent force constants to those equivalent
     symprec = symmetry.get_symmetry_tolerance()
@@ -246,23 +249,26 @@ def get_atom_mapping_by_symmetry(atom_list_done,
 def _get_force_constants_disps(force_constants,
                                supercell,
                                dataset,
-                               symmetry):
+                               symmetry,
+                               fitting_algorithm="svd"):
     """
     Phi = -F / d
     """
     
     """
-    KL(m) 'improvement'
-    The goal is to monitor the quality of computed force constants (FC). 
-    For that the FC spread is calculated, more precisely its standard
-    deviation, i.e. sqrt(variance). Every displacement results in slightly
-    different FC (due to numerical errors) -- that is why the FCs are spread.
-    Such an FC 'error' is calculated separately for every tensor element.
-    At the end we report their average value. We also report a maximum
-    value among these tensor-elements-errors.
-    """
-    fc_errors = np.zeros((3,3))
+    Force constants are obtained by one of the following algorithm.
+
+    svd: Singlar value decomposition is used, which is equivalent to
+         least square fitting.
     
+    KL(m): The goal is to monitor the quality of computed force constants (FC). 
+           For that the FC spread is calculated, more precisely its standard
+           deviation, i.e. sqrt(variance). Every displacement results in
+           slightly different FC (due to numerical errors) -- that is why the
+           FCs are spread. Such an FC 'error' is calculated separately for every
+           tensor element. At the end we report their average value. We also
+           report a maximum value among these tensor-elements-errors.
+    """
     symprec = symmetry.get_symmetry_tolerance()
     disp_atom_list = np.unique([x['number'] for x in dataset['first_atoms']])
     for disp_atom_number in disp_atom_list:
@@ -276,32 +282,43 @@ def _get_force_constants_disps(force_constants,
             sets_of_forces.append(x['forces'])
 
         site_symmetry = symmetry.get_site_symmetry(disp_atom_number)
-        # KL(m)
-        #solve_force_constants(force_constants,
-        solve_force_constants_KL(force_constants,
-                                 disp_atom_number,
-                                 disps,
-                                 sets_of_forces,
-                                 supercell,
-                                 site_symmetry,
-                                 symprec,
-                                 fc_errors)
-
-    # KL(m)
-    print " Errors of the force constants"
-    print " Full table:"
-    # We report maximal (###) or average (##) errors
-    print "", fc_errors/(len(disp_atom_list)*supercell.get_number_of_atoms())
-    ###print "", fc_errors
-    print "  ** Maximal value", fc_errors.max()/(len(disp_atom_list)*supercell.get_number_of_atoms()), "**"
-    ###print "  ** Maximal value", fc_errors.max(), "**"
-    fc_avg = np.zeros((3,3))
-    for x in range(3):
-        for y in range(3):
-            tmp = np.array(force_constants[disp_atom_list,:,x,y])
-            fc_avg[x,y] = np.average(abs(tmp))
-    ##print "  Just for your knowledge, average(abs) of the force constants:"
-    ##print "", fc_avg
+        
+        if fitting_algorithm == "KL":
+            fc_errors = np.zeros((3,3))
+            solve_force_constants_KL(force_constants,
+                                     disp_atom_number,
+                                     disps,
+                                     sets_of_forces,
+                                     supercell,
+                                     site_symmetry,
+                                     symprec,
+                                     fc_errors)
+            # KL(m)
+            print " Errors of the force constants"
+            print " Full table:"
+            # We report maximal (###) or average (##) errors
+            print "", fc_errors / (len(disp_atom_list) *
+                                   supercell.get_number_of_atoms())
+            ###print "", fc_errors
+            print "  ** Maximal value",
+            print fc_errors.max() / (len(disp_atom_list) *
+                                     supercell.get_number_of_atoms()), "**"
+            ###print "  ** Maximal value", fc_errors.max(), "**"
+            fc_avg = np.zeros((3,3))
+            for x in range(3):
+                for y in range(3):
+                    tmp = np.array(force_constants[disp_atom_list,:,x,y])
+                    fc_avg[x,y] = np.average(abs(tmp))
+            ##print "  Just for your knowledge, average(abs) of the force constants:"
+            ##print "", fc_avg
+        else:
+            solve_force_constants(force_constants,
+                                  disp_atom_number,
+                                  disps,
+                                  sets_of_forces,
+                                  supercell,
+                                  site_symmetry,
+                                  symprec)
 
     return disp_atom_list
 

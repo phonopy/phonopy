@@ -217,18 +217,21 @@ class Phonopy:
 
     def produce_force_constants(self,
                                 forces=None,
-                                calculate_full_force_constants=True):
+                                calculate_full_force_constants=True,
+                                fitting_algorithm="svd"):
         if forces is not None:
             self.set_forces(forces)
         
         if calculate_full_force_constants:
             self._run_force_constants_from_forces(
-                decimals=self._force_constants_decimals)
+                decimals=self._force_constants_decimals,
+                fitting_algorithm=fitting_algorithm)
         else:
             p2s_map = self._primitive.get_primitive_to_supercell_map()
             self._run_force_constants_from_forces(
                 distributed_atom_list=p2s_map,
-                decimals=self._force_constants_decimals)
+                decimals=self._force_constants_decimals,
+                fitting_algorithm=fitting_algorithm)
 
     def set_nac_params(self, nac_params=None, method=None):
         if method is not None:
@@ -946,14 +949,16 @@ class Phonopy:
 
     def _run_force_constants_from_forces(self,
                                          distributed_atom_list=None,
-                                         decimals=None):
+                                         decimals=None,
+                                         fitting_algorithm="svd"):
         if self._displacement_dataset is not None:
             self._force_constants = get_fc2(
                 self._supercell,
                 self._symmetry,
                 self._displacement_dataset,
                 atom_list=distributed_atom_list,
-                decimals=decimals)
+                decimals=decimals,
+                fitting_algorithm=fitting_algorithm)
 
     def _set_dynamical_matrix(self):
         if self._nac_params is None:
