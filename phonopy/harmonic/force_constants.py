@@ -318,16 +318,18 @@ def solve_force_constants_KL(force_constants,
                 yLin = combined_forces.T[y]
                 force_constants[disp_atom_number,i,x,y] = \
                       -np.dot(xLin,yLin) / np.dot(xLin,xLin) 
-                err = np.sqrt(np.dot(yLin,yLin)/np.dot(xLin,xLin) - 
-                              force_constants[disp_atom_number,i,x,y]**2
-                             )/( len(xLin)-1 )
+                if len(xLin)<=1:
+                    # no chances for a fitting error, we have just one value
+                    err = 0
+                else:
+                    variance = np.dot(yLin,yLin)/np.dot(xLin,xLin) - \
+                                  force_constants[disp_atom_number,i,x,y]**2
+                    if variance<0 and variance>-1e-10:
+                       # in numerics, it happens. This is "numerical zero" 
+                       err = 0
+                    else:
+                       err = np.sqrt(variance) / ( len(xLin)-1 )
                 fc_errors[x,y] += err
-        # Other methods of implementing linear regresion:
-        # tmp = np.array([ rot_disps.T[0], np.ones( len(rot_disps.T[0]) )])
-        # print "fitLstsq", -np.linalg.lstsq( tmp.T, combined_forces.T[0] )[0]
-        # from scipy import stats # KL(m). Used for errors statistics.
-        # print "fitLinre", "-!", stats.linregress( rot_disps.T[0], combined_forces.T[0] )
-        # print "fitPolyf", "-!", np.polyfit( rot_disps.T[0], combined_forces.T[0], 1, full=True )
 
 def _get_force_constants_disps(force_constants,
                                supercell,
@@ -341,7 +343,7 @@ def _get_force_constants_disps(force_constants,
     """
     Force constants are obtained by one of the following algorithm.
 
-    svd: Singlar value decomposition is used, which is equivalent to
+    svd: Singular value decomposition is used, which is equivalent to
          least square fitting.
     
     KL(m): The goal is to monitor the quality of computed force constants (FC). 
@@ -377,23 +379,13 @@ def _get_force_constants_disps(force_constants,
                                      symprec,
                                      fc_errors)
             # KL(m)
-            print " Errors of the force constants"
-            print " Full table:"
-            # We report maximal (###) or average (##) errors
-            print "", fc_errors / (len(disp_atom_list) *
-                                   supercell.get_number_of_atoms())
-            ###print "", fc_errors
-            print "  ** Maximal value",
-            print fc_errors.max() / (len(disp_atom_list) *
-                                     supercell.get_number_of_atoms()), "**"
-            ###print "  ** Maximal value", fc_errors.max(), "**"
-            fc_avg = np.zeros((3,3))
-            for x in range(3):
-                for y in range(3):
-                    tmp = np.array(force_constants[disp_atom_list,:,x,y])
-                    fc_avg[x,y] = np.average(abs(tmp))
-            ##print "  Just for your knowledge, average(abs) of the force constants:"
-            ##print "", fc_avg
+            avg_len = len(disp_atom_list)*supercell.get_number_of_atoms()
+            if avg_len <= 0:
+               print " (Standard deviation of the force constants not available)"
+            else:
+            print " Standard deviation of the force constants, full table:"
+            print "", fc_errors/avg_len
+            print " Maximal table element is", fc_errors.max()/avg_len
         else:
             solve_force_constants(force_constants,
                                   disp_atom_number,
