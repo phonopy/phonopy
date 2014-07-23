@@ -844,7 +844,7 @@ class PhonopySettings(Settings):
         self._dos = None
         self._dos_range = { 'min':  None,
                             'max':  None }
-        self._fc_fitting_algorithm = "svd"
+        self._fc_computation_algorithm = "svd"
         self._fc_spg_symmetry = False
         self._fits_Debye_model = False
         self._irreps_q_point = None
@@ -928,11 +928,11 @@ class PhonopySettings(Settings):
                      'step': self._frequency_pitch}
         return dos_range
 
-    def set_fc_fitting_algorithm(self, fc_fitting_algorithm):
-        self._fc_fitting_algorithm = fc_fitting_algorithm
+    def set_fc_computation_algorithm(self, fc_computation_algorithm):
+        self._fc_computation_algorithm = fc_computation_algorithm
 
-    def get_fc_fitting_algorithm(self):
-        return self._fc_fitting_algorithm
+    def get_fc_computation_algorithm(self):
+        return self._fc_computation_algorithm
 
     def set_fc_spg_symmetry(self, fc_spg_symmetry):
         self._fc_spg_symmetry = fc_spg_symmetry
@@ -1137,9 +1137,9 @@ class PhonopyConfParser(ConfParser):
                 if self._options.pdos:
                     self._confs['pdos'] = self._options.pdos
 
-            if opt.dest == 'fc_fitting_algorithm':
-                if self._options.fc_fitting_algorithm is not None:
-                    self._confs['fc_fitting_algorithm'] = self._options.fc_fitting_algorithm
+            if opt.dest == 'fc_computation_algorithm':
+                if self._options.fc_computation_algorithm is not None:
+                    self._confs['fc_computation_algorithm'] = self._options.fc_computation_algorithm
 
             if opt.dest == 'fc_spg_symmetry':
                 if self._options.fc_spg_symmetry:
@@ -1274,9 +1274,9 @@ class PhonopyConfParser(ConfParser):
                 if confs['gamma_center'] == '.true.':
                     self.set_parameter('is_gamma_center', True)
 
-            if conf_key == 'fc_fitting_algorithm':
-                self.set_parameter('fc_fitting_algorithm',
-                                   confs['fc_fitting_algorithm'])
+            if conf_key == 'fc_computation_algorithm':
+                self.set_parameter('fc_computation_algorithm',
+                                   confs['fc_computation_algorithm'])
 
             if conf_key == 'fc_spg_symmetry':
                 if confs['fc_spg_symmetry'] == '.true.':
@@ -1437,10 +1437,10 @@ class PhonopyConfParser(ConfParser):
             elif params['force_constants'] == 'read':
                 self._settings.set_is_force_constants("read")
 
-        # Switch fitting algorithm of force constants
-        if params.has_key('fc_fitting_algorithm'):
-            self._settings.set_fc_fitting_algorithm(
-                params['fc_fitting_algorithm'])
+        # Switch computation algorithm of force constants
+        if params.has_key('fc_computation_algorithm'):
+            self._settings.set_fc_computation_algorithm(
+                params['fc_computation_algorithm'])
 
         # Enforce space group symmetyr to force constants?
         if params.has_key('fc_spg_symmetry'):

@@ -115,7 +115,7 @@ parser.set_defaults(
     is_dos_mode=False,
     factor=None,
     fc_symmetry=None,
-    fc_fitting_algorithm=None,
+    fc_computation_algorithm=None,
     fc_spg_symmetry=False,
     fits_debye_model=False,
     force_constants_decimals=None,
@@ -218,9 +218,9 @@ parser.add_option("--fc", "--force_constants", dest="force_constants_mode",
                   help="Create FORCE_CONSTANTS from vaspurn.xml. vasprun.xml has to be passed as argument.")
 parser.add_option("--fc_decimals", dest="force_constants_decimals",
                   type="int", help="Decimals of values of force constants")
-parser.add_option("--fc_fitting_algorithm", dest="fc_fitting_algorithm",
+parser.add_option("--fc_computation_algorithm", dest="fc_computation_algorithm",
                   action="store", type="string",
-                  help="Switch fitting algorithm of force constants")
+                  help="Switch computation algorithm of force constants")
 parser.add_option("--fc_spg_symmetry", dest="fc_spg_symmetry",
                   action="store_true",
                   help="Enforce space group symmetry to force constants")
@@ -817,11 +817,11 @@ if (settings.get_is_force_constants() == "write" or
     settings.get_fc_spg_symmetry()):
     # Need to calculate full force constant tensors
     phonon.produce_force_constants(
-        fitting_algorithm=settings.get_fc_fitting_algorithm())
+        computation_algorithm=settings.get_fc_computation_algorithm())
 else: # Only force constants between atoms in primitive cell and in supercell
     phonon.produce_force_constants(
         calculate_full_force_constants=False,
-        fitting_algorithm=settings.get_fc_fitting_algorithm())
+        computation_algorithm=settings.get_fc_computation_algorithm())
 
 # Impose cutoff radius on force constants
 cutoff_radius = settings.get_cutoff_radius()
