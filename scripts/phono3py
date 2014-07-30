@@ -895,7 +895,7 @@ if log_level:
         print "Mesh divisors: [ %d %d %d ]" % tuple(mesh_divs)
     if band_indices is not None and not settings.get_is_bterta():
         print "Band indices: [",
-        for bi in (np.array(band_indices) + 1):
+        for bi in [np.array(bi) + 1 for bi in band_indices]:
             print bi,
         print "]"
     if sigmas:
