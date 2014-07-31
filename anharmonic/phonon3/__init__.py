@@ -83,6 +83,7 @@ class Phono3py:
 
         # Imaginary part of self energy at frequency points
         self._imag_self_energy = None
+        self._scattering_event_class = None
 
         # Linewidth (Imaginary part of self energy x 2) at temperatures
         self._linewidth = None
@@ -317,9 +318,11 @@ class Phono3py:
                              grid_points,
                              frequency_step=None,
                              num_frequency_points=None,
-                             temperatures=[0.0, 300.0]):
+                             temperatures=[0.0, 300.0],
+                             scattering_event_class=None):
         self._grid_points = grid_points
         self._temperatures = temperatures
+        self._scattering_event_class = scattering_event_class
         self._imag_self_energy, self._frequency_points = get_imag_self_energy(
             self._interaction,
             grid_points,
@@ -327,17 +330,20 @@ class Phono3py:
             frequency_step=frequency_step,
             num_frequency_points=num_frequency_points,
             temperatures=temperatures,
+            scattering_event_class=scattering_event_class,
             log_level=self._log_level)
             
     def write_imag_self_energy(self, filename=None):
-        write_imag_self_energy(self._imag_self_energy,
-                               self._mesh,
-                               self._grid_points,
-                               self._band_indices,
-                               self._frequency_points,
-                               self._temperatures,
-                               self._sigmas,
-                               filename=filename)
+        write_imag_self_energy(
+            self._imag_self_energy,
+            self._mesh,
+            self._grid_points,
+            self._band_indices,
+            self._frequency_points,
+            self._temperatures,
+            self._sigmas,
+            scattering_event_class=self._scattering_event_class,
+            filename=filename)
         
     def run_linewidth(self,
                       grid_points,

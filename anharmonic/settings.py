@@ -25,6 +25,7 @@ class Phono3pySettings(Settings):
         self._read_collision = None
         self._read_gamma = False
         self._phonon_supercell_matrix = None
+        self._scattering_event_class = None # scattering event class 1 or 2
         self._temperatures = None
         self._write_amplitude = False
         self._write_collision = False
@@ -150,6 +151,12 @@ class Phono3pySettings(Settings):
     def get_phonon_supercell_matrix(self):
         return self._phonon_supercell_matrix
 
+    def set_scattering_event_class(self, scattering_event_class):
+        self._scattering_event_class = scattering_event_class
+
+    def get_scattering_event_class(self):
+        return self._scattering_event_class
+
     def set_temperatures(self, temperatures):
         self._temperatures = temperatures
 
@@ -265,6 +272,11 @@ class Phono3pyConfParser(ConfParser):
             if opt.dest == 'read_collision':
                 if self._options.read_collision is not None:
                     self._confs['read_collision'] = self._options.read_collision
+
+            if opt.dest == 'scattering_event_class':
+                if self._options.scattering_event_class is not None:
+                    self._confs['scattering_event_class'] = \
+                        self._options.scattering_event_class
 
             if opt.dest == 'temperatures':
                 if self._options.temperatures is not None:
@@ -401,6 +413,10 @@ class Phono3pyConfParser(ConfParser):
                     vals = [int(x) for x in confs['read_collision'].split()]
                     self.set_parameter('read_collision', vals)
 
+            if conf_key == 'scattering_event_class':
+                self.set_parameter('scattering_event_class',
+                                   confs['scattering_event_class'])
+
             if conf_key == 'temperatures':
                 vals = [fracval(x) for x in confs['temperatures'].split()]
                 if len(vals) < 1:
@@ -506,6 +522,11 @@ class Phono3pyConfParser(ConfParser):
         # Sum partial kappa at q-stars
         if params.has_key('no_kappa_stars'):
             self._settings.set_no_kappa_stars(params['no_kappa_stars'])
+
+        # Scattering event class 1 or 2
+        if params.has_key('scattering_event_class'):
+            self._settings.set_scattering_event_class(
+                params['scattering_event_class'])
 
         # Temperatures
         if params.has_key('temperatures'):

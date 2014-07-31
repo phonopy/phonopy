@@ -162,6 +162,7 @@ parser.set_defaults(band_indices=None,
                     output_filename=None,
                     qpoints=None,
                     quiet=False,
+                    scattering_event_class=None,
                     sigma=None,
                     supercell_dimension=None,
                     symprec=1e-5,
@@ -314,6 +315,10 @@ parser.add_option("--tsym_type", dest="tsym_type", type="int",
                   help="Imposing type of translational invariance")
 parser.add_option("--tolerance", dest="symprec", type="float",
                   help="Symmetry tolerance to search")
+parser.add_option("--scattering_event_class", dest="scattering_event_class",
+                  type="int",
+                  help=("Scattering event class 1 or 2 to draw "
+                        "imaginary part of self energy"))
 parser.add_option("-v", "--verbose", dest="verbose", action="store_true",
                   help="Detailed run-time information is displayed")
 parser.add_option("--loglevel", dest="log_level", type="int", help="Log level")
@@ -921,6 +926,9 @@ if log_level:
     else:
         print "Temperatures:",
         print ("%.1f  " * len(temperature_points)) % tuple(temperature_points)
+        if settings.get_scattering_event_class() is not None:
+            print "Scattering event class:",
+            print settings.get_scattering_event_class()
     if grid_points is not None:
         print "Grid point to be calculated:",
         if len(grid_points) > 8:
@@ -1055,7 +1063,8 @@ else:
         grid_points,
         frequency_step=frequency_step,
         num_frequency_points=num_frequency_points,
-        temperatures=temperature_points)
+        temperatures=temperature_points,
+        scattering_event_class=settings.get_scattering_event_class())
     phono3py.write_imag_self_energy(filename=output_filename)
 
 if log_level:

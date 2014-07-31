@@ -720,6 +720,7 @@ def write_damping_functions(gp,
                             gammas,
                             sigma=None,
                             temperature=None,
+                            scattering_event_class=None,
                             filename=None,
                             is_nosym=False):
 
@@ -736,6 +737,9 @@ def write_damping_functions(gp,
 
     for i in band_indices:
         gammas_filename += "b%d" % (i + 1)
+
+    if scattering_event_class is not None:
+        gammas_filename += "-c%d" % scattering_event_class
 
     if not filename == None:
         gammas_filename += ".%s" % filename

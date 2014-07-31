@@ -10,6 +10,7 @@ def get_imag_self_energy(interaction,
                          frequency_step=None,
                          num_frequency_points=None,
                          temperatures=[0.0, 300.0],
+                         scattering_event_class=None, # class 1 or 2 
                          log_level=0):
     if temperatures is None:
         print "Temperatures have to be set."
@@ -70,15 +71,16 @@ def get_imag_self_energy(interaction,
                  
             for k, freq_point in enumerate(frequency_points_at_sigma):
                 ise.set_frequency_points([freq_point])
-                if not sigma:
-                    ise.set_integration_weights()
+                if (sigma is None) or (scattering_event_class is not None):
+                    ise.set_integration_weights(
+                        scattering_event_class=scattering_event_class)
     
                 for l, t in enumerate(temperatures):
                     ise.set_temperature(t)
                     ise.run()
                     ise_temperatures[l, k] = ise.get_imag_self_energy()[0]
                     
-                ise_sigmas.append(ise_temperatures)
+            ise_sigmas.append(ise_temperatures)
             
         imag_self_energy.append(ise_sigmas)
         frequency_points.append(fp_sigmas)
@@ -177,6 +179,7 @@ def write_imag_self_energy(imag_self_energy,
                            frequency_points,
                            temperatures,
                            sigmas,
+                           scattering_event_class=None,
                            filename=None):
     for gp, ise_sigmas, fp_sigmas in zip(grid_points,
                                          imag_self_energy,
@@ -195,6 +198,7 @@ def write_imag_self_energy(imag_self_energy,
                          ise[:, pos:(pos + len(bi))].sum(axis=1) / len(bi),
                          sigma=sigma,
                          temperature=t,
+                         scattering_event_class=scattering_event_class,
                          filename=filename)
     
 class ImagSelfEnergy:
@@ -259,7 +263,7 @@ class ImagSelfEnergy:
          self._eigenvectors) = self._interaction.get_phonons()[:2]
         self._band_indices = self._interaction.get_band_indices()
 
-    def set_integration_weights(self):
+    def set_integration_weights(self, scattering_event_class=None):
         if self._frequency_points is None:
             f_points = self._frequencies[self._grid_point][self._band_indices]
         else:
@@ -270,6 +274,9 @@ class ImagSelfEnergy:
             f_points,
             self._sigma,
             is_collision_matrix=self._is_collision_matrix)
+
+        if scattering_event_class == 1 or scattering_event_class == 2:
+            self._g[scattering_event_class - 1] = 0
         
     def get_imag_self_energy(self):
         if self._cutoff_frequency is None:
@@ -310,6 +317,8 @@ class ImagSelfEnergy:
         else:
             self._sigma = float(sigma)
 
+        self._g = None
+
     def set_frequency_points(self, frequency_points):
         if frequency_points is None:
             self._frequency_points = None
@@ -323,7 +332,7 @@ class ImagSelfEnergy:
             self._temperature = float(temperature)
         
     def _run_with_band_indices(self):
-        if self._sigma is None:
+        if self._g is not None:
             if self._lang == 'C':
                 self._run_thm_c_with_band_indices()
             else:
@@ -335,7 +344,7 @@ class ImagSelfEnergy:
                 self._run_py_with_band_indices()
     
     def _run_with_frequency_points(self):
-        if self._sigma is None:
+        if self._g is not None:
             if self._lang == 'C':
                 self._run_thm_c_with_frequency_points()
             else:
