@@ -870,8 +870,8 @@ class Phonopy:
                         nac_q_direction=None):
         self._set_dynamical_matrix()
         self._modulation = Modulation(self._dynamical_matrix,
-                                      dimension=dimension,
-                                      phonon_modes=phonon_modes,
+                                      dimension,
+                                      phonon_modes,
                                       delta_q=delta_q,
                                       derivative_order=derivative_order,
                                       nac_q_direction=nac_q_direction,
