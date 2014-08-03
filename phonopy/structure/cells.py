@@ -143,6 +143,9 @@ class Supercell(Atoms):
         self._supercell_matrix = np.array(supercell_matrix, dtype='intc')
         self._create_supercell(unitcell, symprec)
 
+    def get_supercell_matrix(self):
+        return self._supercell_matrix
+        
     def get_supercell_to_unitcell_map(self):
         return self._s2u_map
 
@@ -235,37 +238,37 @@ class Supercell(Atoms):
         return simple_supercell, atom_map
 
 class Primitive(Atoms):
-    def __init__(self, supercell, primitive_frame, symprec=1e-5):
+    def __init__(self, supercell, primitive_matrix, symprec=1e-5):
         """
-        primitive_frame (3x3 matrix):
-        Primitive lattice is given by
-           np.dot(primitive_frame.T, supercell.get_cell())
+        primitive_matrix (3x3 matrix):
+        Primitive lattice is given with respect to supercell by
+           np.dot(primitive_matrix.T, supercell.get_cell())
         """
-        self.frame = np.array(primitive_frame)
-        self.symprec = symprec
-        self.p2s_map = None
-        self.s2p_map = None
-        self.p2p_map = None
+        self._primitive_matrix = np.array(primitive_matrix)
+        self._symprec = symprec
+        self._p2s_map = None
+        self._s2p_map = None
+        self._p2p_map = None
         self._primitive_cell(supercell)
         self._supercell_to_primitive_map(supercell.get_scaled_positions())
         self._primitive_to_primitive_map()
 
+    def get_primitive_matrix(self):
+        return self._primitive_matrix
+        
     def get_primitive_to_supercell_map(self):
-        return self.p2s_map
-
-    def get_frame(self):
-        return self.frame
+        return self._p2s_map
 
     def get_supercell_to_primitive_map(self):
-        return self.s2p_map
+        return self._s2p_map
 
     def get_primitive_to_primitive_map(self):
-        return self.p2p_map
+        return self._p2p_map
 
     def _primitive_cell(self, supercell):
-        trimed_cell, p2s_map = trim_cell(self.frame,
+        trimed_cell, p2s_map = trim_cell(self._primitive_matrix,
                                          supercell,
-                                         self.symprec)
+                                         self._symprec)
         Atoms.__init__(self,
                        numbers=trimed_cell.get_atomic_numbers(),
                        masses=trimed_cell.get_masses(),
@@ -274,28 +277,28 @@ class Primitive(Atoms):
                        cell=trimed_cell.get_cell(),
                        pbc=True)
 
-        self.p2s_map = p2s_map
+        self._p2s_map = p2s_map
 
     def _supercell_to_primitive_map(self, pos):
-        inv_F = np.linalg.inv(self.frame)
+        inv_F = np.linalg.inv(self._primitive_matrix)
         s2p_map = []
         for i in range(pos.shape[0]):
             s_pos = np.dot(pos[i], inv_F.T)
-            for j in self.p2s_map:
+            for j in self._p2s_map:
                 p_pos = np.dot(pos[j], inv_F.T)
                 diff = p_pos - s_pos
                 diff -= np.rint(diff)
-                if (abs(diff) < self.symprec).all():
+                if (abs(diff) < self._symprec).all():
                     s2p_map.append(j)
                     break
-        self.s2p_map = s2p_map
+        self._s2p_map = s2p_map
 
     def _primitive_to_primitive_map(self):
         """
         Mapping table from supercell index to primitive index
         in primitive cell
         """
-        self.p2p_map = dict([(j, i) for i, j in enumerate(self.p2s_map)])
+        self._p2p_map = dict([(j, i) for i, j in enumerate(self._p2s_map)])
 
 #
 # Get distance between a pair of atoms
