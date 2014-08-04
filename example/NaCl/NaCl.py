@@ -23,7 +23,7 @@ phonon = Phonopy(bulk,
 symmetry = phonon.get_symmetry()
 print "Space group:", symmetry.get_international_table()
 
-force_sets = parse_FORCE_SETS(phonon.get_supercell().get_number_of_atoms())
+force_sets = parse_FORCE_SETS()
 phonon.set_displacement_dataset(force_sets)
 phonon.produce_force_constants()
 
