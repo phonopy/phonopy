@@ -1013,7 +1013,7 @@ static int laue_one_axis(int axes[3],
 			 SPGCONST PointSymmetry * pointsym,
 			 const int rot_order)
 {
-  int i, j, num_ortho_axis, det, min_det, is_found, tmpval;
+  int i, j, num_ortho_axis, det, is_found, tmpval;
   int axis_vec[3], tmp_axes[3];
   int prop_rot[3][3], t_mat[3][3];
   int ortho_axes[NUM_ROT_AXES];
@@ -1048,7 +1048,6 @@ static int laue_one_axis(int axes[3],
 
   tmp_axes[1] = -1;
   tmp_axes[2] = axes[2];
-  min_det = 4;
   for (i = 0; i < num_ortho_axis; i++) {
     is_found = 0;
     tmp_axes[0] = ortho_axes[i];
@@ -1071,10 +1070,7 @@ static int laue_one_axis(int axes[3],
     
     get_transformation_matrix(t_mat, tmp_axes);
     det = abs(mat_get_determinant_i3(t_mat));
-    if (det == 4) { continue; } /* to avoid F-center choice */
-    
-    if (det < min_det) {
-      min_det = det;
+    if (det < 4) { /* to avoid F-center choice det=4 */
       axes[0] = tmp_axes[0];
       axes[1] = tmp_axes[1];
       goto end;
