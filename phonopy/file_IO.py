@@ -370,15 +370,21 @@ def read_force_constants_hdf5(filename="force_constants.hdf5"):
     return f[f.keys()[0]][:]
 
 # Read BORN
-def parse_BORN(primitive, is_symmetry=True, filename="BORN"):
+def parse_BORN(primitive, symprec=1e-5, is_symmetry=True, filename="BORN"):
     f = open(filename, 'r')
-    return get_born_parameters(f, primitive, is_symmetry)
+    return get_born_parameters(f,
+                               primitive,
+                               symprec=symprec,
+                               is_symmetry=is_symmetry)
 
-def parse_BORN_from_strings(strings, primitive, is_symmetry=True):
+def parse_BORN_from_strings(strings, primitive, symprec=1e-5, is_symmetry=True):
     f = StringIO.StringIO(strings)
-    return get_born_parameters(f, primitive, is_symmetry)
+    return get_born_parameters(f,
+                               primitive,
+                               symprec=symprec,
+                               is_symmetry=is_symmetry)
 
-def get_born_parameters(f, primitive, is_symmetry):
+def get_born_parameters(f, primitive, symprec=1e-5, is_symmetry=True):
     # Read unit conversion factor, damping factor, ...
     factors = [float(x) for x in f.readline().split()]
     if len(factors) < 1:
@@ -393,9 +399,9 @@ def get_born_parameters(f, primitive, is_symmetry):
         print "BORN file format of line 2 is incorrect"
         return False
     dielectric = np.reshape([float(x) for x in line], (3, 3))
-
+    
     # Read Born effective charge
-    symmetry = Symmetry(primitive, is_symmetry=is_symmetry)
+    symmetry = Symmetry(primitive, symprec=symprec, is_symmetry=is_symmetry)
     independent_atoms = symmetry.get_independent_atoms()
     born = np.zeros((primitive.get_number_of_atoms(), 3, 3), dtype=float)
 

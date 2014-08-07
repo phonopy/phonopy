@@ -727,7 +727,9 @@ if run_mode == 'displacements':
 # Non-analytical term correction (LO-TO splitting)
 if settings.get_is_nac():
     if file_exists("BORN", log_level):
-        nac_params = file_IO.parse_BORN(primitive, settings.get_is_symmetry())
+        nac_params = file_IO.parse_BORN(primitive,
+                                        symprec=options.symprec,
+                                        is_symmetry=settings.get_is_symmetry())
         if not nac_params:
             error_text = "BORN file could not be read correctly."
             print_error_message(error_text)
