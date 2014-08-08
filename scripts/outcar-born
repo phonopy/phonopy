@@ -51,7 +51,8 @@ parser.set_defaults(num_atoms=None,
                     primitive_axis =None,
                     primitive_atoms=None,
                     supercell_matrix=None,
-                    symmetrize_tensors=False)
+                    symmetrize_tensors=False,
+                    symprec=1e-5)
 parser.add_option("-a", "--atoms", dest="primitive_atoms",
                   action="store", type="string",
                   help="Atom indices in primitive cell")
@@ -64,6 +65,8 @@ parser.add_option("--pa", "--primitive_axis", dest="primitive_axis",
 parser.add_option("--st", "--symmetrize_tensors", dest="symmetrize_tensors",
                   action="store_true",
                   help="Symmetrize tensors")
+parser.add_option("--tolerance", dest="symprec", type="float",
+                  help="Symmetry tolerance to search")
 (options, args) = parser.parse_args()
 
 if args:
@@ -102,7 +105,8 @@ borns, epsilon = get_born_OUTCAR(poscar_filename=poscar_filename,
                                  outcar_filename=outcar_filename,
                                  primitive_axis=primitive_axis,
                                  supercell_matrix=supercell_matrix,
-                                 symmetrize_tensors=options.symmetrize_tensors)
+                                 symmetrize_tensors=options.symmetrize_tensors,
+                                 symprec=options.symprec)
 
 print "14.400"
 print ("%12.7f" * 9) %  tuple(epsilon.flatten())
