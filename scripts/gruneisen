@@ -52,17 +52,21 @@ def get_phonon(cell_filename,
                force_sets_filename,
                dim,
                primitive_axis=np.eye(3),
-               born_filename=None):
+               born_filename=None,
+               symprec=1e-5):
     cell = read_vasp(cell_filename)
     phonon = Phonopy(cell,
                      dim,
                      primitive_matrix=primitive_axis,
-                     is_auto_displacements=False)
+                     is_auto_displacements=False,
+                     symprec=symprec)
     force_sets = parse_FORCE_SETS(filename=force_sets_filename)
     phonon.set_displacement_dataset(force_sets)
     phonon.produce_force_constants()
     if born_filename:
-        nac_params = parse_BORN(phonon.get_primitive(), filename=born_filename)
+        nac_params = parse_BORN(phonon.get_primitive(),
+                                filename=born_filename,
+                                symprec=symprec)
         phonon.set_nac_params(nac_params)
     phonon.set_dynamical_matrix()
     return phonon
@@ -71,16 +75,20 @@ def get_phonon_from_force_constants(cell_filename,
                                     force_constants_filename,
                                     dim,
                                     primitive_axis=np.eye(3),
-                                    born_filename=None):
+                                    born_filename=None,
+                                    symprec=1e-5):
     cell = read_vasp(cell_filename)
     phonon = Phonopy(cell,
                      dim,
                      primitive_matrix=np.eye(3),
-                     is_auto_displacements=False)
+                     is_auto_displacements=False,
+                     symprec=symprec)
     force_constants = parse_FORCE_CONSTANTS(force_constants_filename)
     phonon.set_force_constants(force_constants)
     if born_filename:
-        nac_params = parse_BORN(phonon.get_primitive(), filename=born_filename)
+        nac_params = parse_BORN(phonon.get_primitive(),
+                                filename=born_filename,
+                                symprec=symprec)
         phonon.set_nac_params(nac_params)
     phonon.set_dynamical_matrix()
     return phonon
@@ -102,6 +110,7 @@ parser.set_defaults(band_paths=None,
                     sampling_mesh=None,
                     save_graph=False,
                     supercell_dimension=None,
+                    symprec=1e-5,
                     title=None)
 parser.add_option("--band_points", dest="band_points", type="int",
                    help="Number of sampling points in a segment of band path")
@@ -149,6 +158,8 @@ parser.add_option("-o", "--output", dest="output_filename",
                   help="Output filename of PDF plot")
 parser.add_option("-t", "--title", dest="title", action="store",
                   type="string", help="Title of plot")
+parser.add_option("--tolerance", dest="symprec", type="float",
+                  help="Symmetry tolerance to search")
 (options, args) = parser.parse_args()
 
 if len(args) is not 3:
@@ -193,17 +204,19 @@ for i in range(3):
     
     if options.reads_force_constants:
         phonons.append(get_phonon_from_force_constants(
-                "%s/%s" % (directory, cell_filename),
-                "%s/FORCE_CONSTANTS" % directory,
-                dim,
-                primitive_axis=primitive_axis,
-                born_filename=born_filename))
+            "%s/%s" % (directory, cell_filename),
+            "%s/FORCE_CONSTANTS" % directory,
+            dim,
+            primitive_axis=primitive_axis,
+            born_filename=born_filename,
+            symprec=options.symprec))
     else:
         phonons.append(get_phonon("%s/%s" % (directory, cell_filename),
                                   "%s/FORCE_SETS" % directory,
                                   dim,
                                   primitive_axis=primitive_axis,
-                                  born_filename=born_filename))
+                                  born_filename=born_filename,
+                                  symprec=options.symprec))
 
 gruneisen = PhonopyGruneisen(phonons[0], # equilibrium
                              phonons[1], # plus
