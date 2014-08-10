@@ -702,17 +702,15 @@ static SpglibDataset * get_dataset(SPGCONST double lattice[3][3],
 				   const int num_atom,
 				   const double symprec)
 {
-  int i, attempt;
+  int attempt;
   int *mapping_table;
   double tolerance, tolerance_orig;
   Spacegroup spacegroup;
   SpglibDataset *dataset;
-  Cell *cell, *primitive, *bravais;
-  double inv_mat[3][3];
-  Symmetry *symmetry;
+  Cell *cell, *primitive;
 
   dataset = (SpglibDataset*) malloc(sizeof(SpglibDataset));
-  mapping_table = (int*) malloc(sizeof(int) * cell->size);
+  mapping_table = (int*) malloc(sizeof(int) * num_atom);
 
   cell = cel_alloc_cell(num_atom);
   cel_set_cell(cell, lattice, position, types);
