@@ -231,7 +231,7 @@ int spg_get_pointgroup(char symbol[6],
 
 /* Space-group type information is accessed by index of hall symbol. */
 /* The index is defined from 1 to 530. */
-SpglibSpacegroupType spg_get_spacegroup_type(int hall_number);
+SpglibSpacegroupType spg_get_spacegroup_type(const int hall_number);
 
 /* Bravais lattice with internal atomic points are returned. */
 /* The arrays are require to have 4 times larger memory space */

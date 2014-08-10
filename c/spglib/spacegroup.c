@@ -111,6 +111,7 @@ static Spacegroup get_spacegroup(SPGCONST Cell * primitive,
 
   if (hall_number == 0) {
     spacegroup.number = 0;
+    warning_print("spglib: Find Hall symbol failed.\n");
     warning_print("spglib: Space group could not be found ");
     warning_print("(line %d, %s).\n", __LINE__, __FILE__);
     goto ret;

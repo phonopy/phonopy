@@ -25,6 +25,7 @@ void dbg_print_vectors_with_label(double a[][3], int b[], int size);
 #endif
 
 #ifdef SPGWARNING
+#include <stdio.h>
 #define warning_print(...) fprintf(stderr,__VA_ARGS__)
 #else
 #define warning_print(...)

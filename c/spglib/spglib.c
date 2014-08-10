@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "cell.h"
+#include "debug.h"
 #include "kpoint.h"
 #include "lattice.h"
 #include "mathfunc.h"
@@ -18,6 +19,8 @@
 #include "symmetry.h"
 #include "tetrahedron_method.h"
 
+#define REDUCE_RATE 0.95
+
 /*---------*/
 /* general */
 /*---------*/
@@ -26,6 +29,12 @@ static SpglibDataset * get_dataset(SPGCONST double lattice[3][3],
 				   const int types[],
 				   const int num_atom,
 				   const double symprec);
+static void set_dataset(SpglibDataset * dataset,
+			SPGCONST Cell * cell,
+			SPGCONST Cell * primitive,
+			SPGCONST Spacegroup * spacegroup,
+			const int * mapping_table,
+			const double tolerance);
 static int get_symmetry(int rotation[][3][3],
 			double translation[][3],
 			const int max_size,
@@ -421,7 +430,7 @@ int spg_get_pointgroup(char symbol[6],
   return ptg_num + 1;
 }
 
-SpglibSpacegroupType spg_get_spacegroup_type(int hall_number)
+SpglibSpacegroupType spg_get_spacegroup_type(const int hall_number)
 {
   SpglibSpacegroupType spglibtype;
   SpacegroupType spgtype;
@@ -693,9 +702,9 @@ static SpglibDataset * get_dataset(SPGCONST double lattice[3][3],
 				   const int num_atom,
 				   const double symprec)
 {
-  int i;
+  int i, attempt;
   int *mapping_table;
-  double tolerance;
+  double tolerance, tolerance_orig;
   Spacegroup spacegroup;
   SpglibDataset *dataset;
   Cell *cell, *primitive, *bravais;
@@ -703,68 +712,38 @@ static SpglibDataset * get_dataset(SPGCONST double lattice[3][3],
   Symmetry *symmetry;
 
   dataset = (SpglibDataset*) malloc(sizeof(SpglibDataset));
+  mapping_table = (int*) malloc(sizeof(int) * cell->size);
 
   cell = cel_alloc_cell(num_atom);
   cel_set_cell(cell, lattice, position, types);
 
-  mapping_table = (int*) malloc(sizeof(int) * cell->size);
-  primitive = prm_get_primitive_and_mapping_table(mapping_table,
-						  cell,
-						  symprec);
-  tolerance = prm_get_current_tolerance();
-  spacegroup = spa_get_spacegroup_with_primitive(primitive, tolerance);
-
-  if (spacegroup.number > 0) {
-    /* Spacegroup type, transformation matrix, origin shift */
-    dataset->n_atoms = cell->size;
-    dataset->spacegroup_number = spacegroup.number;
-    dataset->hall_number = spacegroup.hall_number;
-    strcpy(dataset->international_symbol, spacegroup.international_short);
-    strcpy(dataset->hall_symbol, spacegroup.hall_symbol);
-    mat_inverse_matrix_d3(inv_mat, lattice, tolerance);
-    mat_multiply_matrix_d3(dataset->transformation_matrix,
-			   inv_mat,
-			   spacegroup.bravais_lattice);
-    mat_copy_vector_d3(dataset->origin_shift, spacegroup.origin_shift);
-
-    /* Symmetry operations */
-    symmetry = ref_get_refined_symmetry_operations(cell,
-						   primitive,
-						   &spacegroup,
-						   tolerance);
-    dataset->rotations =
-      (int (*)[3][3])malloc(sizeof(int[3][3]) * symmetry->size);
-    dataset->translations =
-      (double (*)[3])malloc(sizeof(double[3]) * symmetry->size);
-    dataset->n_operations = symmetry->size;
-    for (i = 0; i < symmetry->size; i++) {
-      mat_copy_matrix_i3(dataset->rotations[i], symmetry->rot[i]);
-      mat_copy_vector_d3(dataset->translations[i], symmetry->trans[i]);
+  tolerance_orig = symprec;
+  for (attempt = 0; attempt < 100; attempt++) {
+    primitive = prm_get_primitive_and_mapping_table(mapping_table,
+						    cell,
+						    tolerance_orig);
+    if (primitive->size > 0) {
+      tolerance = prm_get_current_tolerance();
+      spacegroup = spa_get_spacegroup_with_primitive(primitive, tolerance);
+      if (spacegroup.number > 0) {
+	break;
+      }
     }
+    tolerance_orig *= REDUCE_RATE;
 
-    /* Wyckoff positions */
-    dataset->wyckoffs = (int*) malloc(sizeof(int) * cell->size); 
-    dataset->equivalent_atoms = (int*) malloc(sizeof(int) * cell->size);
-    bravais = ref_get_Wyckoff_positions(dataset->wyckoffs, 
-					dataset->equivalent_atoms,
-					primitive,
-					cell,
-					&spacegroup,
-					symmetry,
-					mapping_table,
-					tolerance);
-    cel_free_cell(bravais);
-    sym_free_symmetry(symmetry);
-  } else {
-    dataset->spacegroup_number = 0;
+    warning_print("  Attempt %d tolerance = %f failed.", attempt, tolerance_orig);
+    warning_print(" (line %d, %s).\n", __LINE__, __FILE__);
   }
 
-  free(mapping_table);
-  mapping_table = NULL;
-  cel_free_cell(primitive);
-  cel_free_cell(cell);
-
-  if (dataset->spacegroup_number == 0) {
+  if (spacegroup.number > 0) {
+    set_dataset(dataset,
+		cell,
+		primitive,
+		&spacegroup,
+		mapping_table,
+		tolerance);
+  } else {
+    dataset->spacegroup_number = 0;
     strcpy(dataset->international_symbol, "");
     strcpy(dataset->hall_symbol, "");
     dataset->origin_shift[0] = 0;
@@ -777,8 +756,67 @@ static SpglibDataset * get_dataset(SPGCONST double lattice[3][3],
     dataset->rotations = NULL;
     dataset->translations = NULL;
   }
+
+  free(mapping_table);
+  mapping_table = NULL;
+  cel_free_cell(primitive);
+  cel_free_cell(cell);
   
   return dataset;
+}
+
+static void set_dataset(SpglibDataset * dataset,
+			SPGCONST Cell * cell,
+			SPGCONST Cell * primitive,
+			SPGCONST Spacegroup * spacegroup,
+			const int * mapping_table,
+			const double tolerance)
+{
+  int i;
+  double inv_mat[3][3];
+  Cell *bravais;
+  Symmetry *symmetry;
+  
+  /* Spacegroup type, transformation matrix, origin shift */
+  dataset->n_atoms = cell->size;
+  dataset->spacegroup_number = spacegroup->number;
+  dataset->hall_number = spacegroup->hall_number;
+  strcpy(dataset->international_symbol, spacegroup->international_short);
+  strcpy(dataset->hall_symbol, spacegroup->hall_symbol);
+  mat_inverse_matrix_d3(inv_mat, cell->lattice, tolerance);
+  mat_multiply_matrix_d3(dataset->transformation_matrix,
+			 inv_mat,
+			 spacegroup->bravais_lattice);
+  mat_copy_vector_d3(dataset->origin_shift, spacegroup->origin_shift);
+
+  /* Symmetry operations */
+  symmetry = ref_get_refined_symmetry_operations(cell,
+						 primitive,
+						 spacegroup,
+						 tolerance);
+  dataset->rotations =
+    (int (*)[3][3])malloc(sizeof(int[3][3]) * symmetry->size);
+  dataset->translations =
+    (double (*)[3])malloc(sizeof(double[3]) * symmetry->size);
+  dataset->n_operations = symmetry->size;
+  for (i = 0; i < symmetry->size; i++) {
+    mat_copy_matrix_i3(dataset->rotations[i], symmetry->rot[i]);
+    mat_copy_vector_d3(dataset->translations[i], symmetry->trans[i]);
+  }
+
+  /* Wyckoff positions */
+  dataset->wyckoffs = (int*) malloc(sizeof(int) * cell->size); 
+  dataset->equivalent_atoms = (int*) malloc(sizeof(int) * cell->size);
+  bravais = ref_get_Wyckoff_positions(dataset->wyckoffs, 
+				      dataset->equivalent_atoms,
+				      primitive,
+				      cell,
+				      spacegroup,
+				      symmetry,
+				      mapping_table,
+				      tolerance);
+  cel_free_cell(bravais);
+  sym_free_symmetry(symmetry);
 }
 
 static int get_symmetry(int rotation[][3][3],
