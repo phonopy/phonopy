@@ -710,6 +710,19 @@ static SpglibDataset * get_dataset(SPGCONST double lattice[3][3],
   Cell *cell, *primitive;
 
   dataset = (SpglibDataset*) malloc(sizeof(SpglibDataset));
+  dataset->spacegroup_number = 0;
+  strcpy(dataset->international_symbol, "");
+  strcpy(dataset->hall_symbol, "");
+  dataset->origin_shift[0] = 0;
+  dataset->origin_shift[1] = 0;
+  dataset->origin_shift[2] = 0;
+  dataset->n_atoms = 0;
+  dataset->wyckoffs = NULL;
+  dataset->equivalent_atoms = NULL;
+  dataset->n_operations = 0;
+  dataset->rotations = NULL;
+  dataset->translations = NULL;
+
   mapping_table = (int*) malloc(sizeof(int) * num_atom);
 
   cell = cel_alloc_cell(num_atom);
@@ -724,42 +737,28 @@ static SpglibDataset * get_dataset(SPGCONST double lattice[3][3],
       tolerance = prm_get_current_tolerance();
       spacegroup = spa_get_spacegroup_with_primitive(primitive, tolerance);
       if (spacegroup.number > 0) {
+	set_dataset(dataset,
+		    cell,
+		    primitive,
+		    &spacegroup,
+		    mapping_table,
+		    tolerance);
+	cel_free_cell(primitive);
 	break;
       }
     }
+    
     tolerance_orig *= REDUCE_RATE;
-
+    cel_free_cell(primitive);
+    
     warning_print("  Attempt %d tolerance = %f failed.", attempt, tolerance_orig);
     warning_print(" (line %d, %s).\n", __LINE__, __FILE__);
   }
 
-  if (spacegroup.number > 0) {
-    set_dataset(dataset,
-		cell,
-		primitive,
-		&spacegroup,
-		mapping_table,
-		tolerance);
-  } else {
-    dataset->spacegroup_number = 0;
-    strcpy(dataset->international_symbol, "");
-    strcpy(dataset->hall_symbol, "");
-    dataset->origin_shift[0] = 0;
-    dataset->origin_shift[1] = 0;
-    dataset->origin_shift[2] = 0;
-    dataset->n_atoms = 0;
-    dataset->wyckoffs = NULL;
-    dataset->equivalent_atoms = NULL;
-    dataset->n_operations = 0;
-    dataset->rotations = NULL;
-    dataset->translations = NULL;
-  }
-
   free(mapping_table);
   mapping_table = NULL;
-  cel_free_cell(primitive);
   cel_free_cell(cell);
-  
+
   return dataset;
 }
 
