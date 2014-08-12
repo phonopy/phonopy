@@ -167,18 +167,23 @@ class Supercell(Atoms):
         supercell, sur2s_map = trim_cell(trim_frame,
                                          sur_cell,
                                          symprec)
-        Atoms.__init__(self,
-                       numbers=supercell.get_atomic_numbers(),
-                       masses=supercell.get_masses(),
-                       magmoms=supercell.get_magnetic_moments(),
-                       scaled_positions=supercell.get_scaled_positions(),
-                       cell=supercell.get_cell(),
-                       pbc=True)
 
-        multi = supercell.get_number_of_atoms() / unitcell.get_number_of_atoms() 
-        self._u2s_map = np.arange(unitcell.get_number_of_atoms()) * multi
-        self._u2u_map = dict([(j, i) for i, j in enumerate(self._u2s_map)])
-        self._s2u_map = np.array(u2sur_map)[sur2s_map] * multi
+        multi = supercell.get_number_of_atoms() / unitcell.get_number_of_atoms()
+        
+        if multi != determinant(self._supercell_matrix):
+            print "Supercell creation failed."
+            Atoms.__init__(self)
+        else:            
+            Atoms.__init__(self,
+                           numbers=supercell.get_atomic_numbers(),
+                           masses=supercell.get_masses(),
+                           magmoms=supercell.get_magnetic_moments(),
+                           scaled_positions=supercell.get_scaled_positions(),
+                           cell=supercell.get_cell(),
+                           pbc=True)
+            self._u2s_map = np.arange(unitcell.get_number_of_atoms()) * multi
+            self._u2u_map = dict([(j, i) for i, j in enumerate(self._u2s_map)])
+            self._s2u_map = np.array(u2sur_map)[sur2s_map] * multi
 
     def _get_surrounding_frame(self, supercell_matrix):
         # Build a frame surrounding supercell lattice
@@ -424,3 +429,13 @@ def get_cell_matrix(a, b, c, alpha, beta, gamma):
     lattice[1] = np.array([b1, b2, b3]) * b
     lattice[2] = np.array([c1, c2, c3]) * c
     return lattice
+
+def determinant(m):
+    return (m[0][0] * m[1][1] * m[2][2] -
+            m[0][0] * m[1][2] * m[2][1] +
+            m[0][1] * m[1][2] * m[2][0] -
+            m[0][1] * m[1][0] * m[2][2] +
+            m[0][2] * m[1][0] * m[2][1] -
+            m[0][2] * m[1][1] * m[2][0])
+
+
