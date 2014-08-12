@@ -3,6 +3,17 @@
 Change Log
 ==========
 
+Aug-12-2014: Version 1.8.5
+-----------------------------
+
+* Supercell creation behavior may change due to the change of
+  algorithm. Though it used its own independent routine, now it uses
+  the ``Supercell`` class to build supercell
+* Spglib update (1.6.1-alpha)
+* Experimental option ``--fc_computation_algorithm="regression"`` to
+  compute force constants from forces and displacements using linear
+  regression with displaying standard deviation, by KL(m).
+
 June-23-2014: Version 1.8.4.2
 -----------------------------
 
