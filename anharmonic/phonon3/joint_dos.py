@@ -2,7 +2,7 @@ import sys
 import numpy as np
 from phonopy.structure.symmetry import Symmetry
 from phonopy.units import VaspToTHz
-from anharmonic.phonon3.triplets import get_triplets_at_q, get_nosym_triplets_at_q, get_tetrahedra_vertices
+from anharmonic.phonon3.triplets import get_triplets_at_q, get_nosym_triplets_at_q, get_tetrahedra_vertices, get_triplets_integration_weights
 from anharmonic.other.phonon import get_dynamical_matrix, set_phonon_c
 from phonopy.structure.tetrahedron_method import TetrahedronMethod
 
@@ -75,7 +75,13 @@ class JointDos:
 
     def get_phonons(self):
         return self._frequencies, self._eigenvectors, self._phonon_done
-    
+
+    def get_primitive(self):
+        return self._primitive
+
+    def get_mesh_numbers(self):
+        return self._mesh
+        
     def set_nac_q_direction(self, nac_q_direction=None):
         if nac_q_direction is not None:
             self._nac_q_direction = np.array(nac_q_direction, dtype='double')
@@ -99,18 +105,19 @@ class JointDos:
             
         self._joint_dos = None
         self._frequency_points = None
-        self._set_phonon(np.array([grid_point], dtype='intc'))
-
-    def get_grid_address(self):
-        return self._grid_address
+        self.set_phonon(np.array([grid_point], dtype='intc'))
 
     def get_triplets_at_q(self):
         return self._triplets_at_q, self._weights_at_q
         
-    def _run_c(self, lang='C'):
+    def get_grid_address(self):
+        return self._grid_address
+
+    def get_bz_map(self):
+        return self._bz_map
+    
+    def _run_c(self, lang='Py'):
         if self._sigma is None:
-            self._tetrahedron_method = TetrahedronMethod(
-                self._reciprocal_lattice, mesh=self._mesh)
             if lang == 'C':
                 self._run_c_tetrahedron_method()
             else:
@@ -123,24 +130,11 @@ class JointDos:
         This is not very faster than _run_c_tetrahedron_method and
         use much more memory space. So this function is not set as default.
         """
-        import anharmonic._phono3py as phono3c
-        thm = self._tetrahedron_method 
-        unique_vertices = thm.get_unique_tetrahedra_vertices()
-        for i, j in zip((1, 2), (1, -1)):
-            neighboring_grid_points = np.zeros(
-                len(unique_vertices) * len(self._triplets_at_q), dtype='intc')
-            phono3c.neighboring_grid_points(
-                neighboring_grid_points,
-                self._triplets_at_q[:, i].flatten(),
-                j * unique_vertices,
-                self._mesh,
-                self._grid_address,
-                self._bz_map)
-            self._set_phonon(np.unique(neighboring_grid_points))
 
+        self.set_phonon(self._triplets_at_q.ravel())
         f_max = np.max(self._frequencies) * 2
         f_max *= 1.005
-        f_min = np.min(self._frequencies) * 2
+        f_min = 0
         self._set_frequency_points(f_min, f_max)
 
         num_band = self._num_band
@@ -150,21 +144,14 @@ class JointDos:
         jdos = np.zeros((num_freq_points, 2), dtype='double')
         
         for i, freq_point in enumerate(self._frequency_points):
-            g = np.zeros(
-                (3, num_triplets, 1, num_band, num_band), dtype='double')
-            phono3c.triplets_integration_weights(
-                g,
-                np.array([freq_point], dtype='double'),
-                thm.get_tetrahedra(),
-                self._mesh,
-                self._triplets_at_q,
-                self._frequencies,
-                self._grid_address,
-                self._bz_map)
-            
+            g = get_triplets_integration_weights(self,
+                                                 [freq_point],
+                                                 None,
+                                                 is_collision_matrix=True,
+                                                 neighboring_phonons=(i == 0))
             jdos[i, 0] = np.sum(
                 np.tensordot(g[0, :, 0], self._weights_at_q, axes=(0, 0)))
-            gx = (g[2] - g[0]) / 2
+            gx = g[2] - g[0]
             jdos[i, 1] = np.sum(
                 np.tensordot(gx[:, 0], self._weights_at_q, axes=(0, 0)))
             if self._log_level > 1:
@@ -174,14 +161,14 @@ class JointDos:
         self._joint_dos = jdos / num_mesh
     
     def _run_py_tetrahedron_method(self):
+        thm = TetrahedronMethod(self._reciprocal_lattice, mesh=self._mesh)
         self._vertices = get_tetrahedra_vertices(
-            self._tetrahedron_method.get_tetrahedra(),
+            thm.get_tetrahedra(),
             self._mesh,
             self._triplets_at_q,
             self._grid_address,
             self._bz_map)
-        self._set_phonon(self._vertices.ravel())
-        thm = self._tetrahedron_method
+        self.set_phonon(self._vertices.ravel())
         f_max = np.max(self._frequencies) * 2
         f_max *= 1.005
         f_min = np.min(self._frequencies) * 2
@@ -201,19 +188,19 @@ class JointDos:
                 thm.set_tetrahedra_omegas(f1 - f2)
                 thm.run(self._frequency_points)
                 iw = thm.get_integration_weight()
-                jdos[:, 1] += iw * w / 2
+                jdos[:, 1] += iw * w
 
                 thm.set_tetrahedra_omegas(-f1 + f2)
                 thm.run(self._frequency_points)
                 iw = thm.get_integration_weight()
-                jdos[:, 1] += iw * w / 2
+                jdos[:, 1] += iw * w
 
         self._joint_dos = jdos / np.prod(self._mesh)
 
     def _run_smearing_method(self):
         import anharmonic._phono3py as phono3c
 
-        self._set_phonon(self._triplets_at_q.ravel())
+        self.set_phonon(self._triplets_at_q.ravel())
         f_max = np.max(self._frequencies) * 2 + self._sigma * 4
         f_min = np.min(self._frequencies) * 2 - self._sigma * 4
         self._set_frequency_points(f_min, f_max)
@@ -264,7 +251,7 @@ class JointDos:
                  self._symmetry.get_pointgroup_operations(),
                  self._reciprocal_lattice)
 
-    def _set_phonon(self, grid_points):
+    def set_phonon(self, grid_points):
         set_phonon_c(self._dm,
                      self._frequencies,
                      self._eigenvectors,

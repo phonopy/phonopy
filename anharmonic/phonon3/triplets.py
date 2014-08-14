@@ -252,6 +252,7 @@ def get_triplets_integration_weights(interaction,
                                      frequency_points,
                                      sigma,
                                      is_collision_matrix=False,
+                                     neighboring_phonons=True,
                                      lang='C'):
     triplets = interaction.get_triplets_at_q()[0]
     frequencies = interaction.get_phonons()[0]
@@ -292,7 +293,10 @@ def get_triplets_integration_weights(interaction,
     else:
         if lang == 'C':
             _set_triplets_integration_weights_c(
-                g, interaction, frequency_points)
+                g,
+                interaction,
+                frequency_points,
+                neighboring_phonons=neighboring_phonons)
         else:
             _set_triplets_integration_weights_py(
                 g, interaction, frequency_points)
@@ -319,7 +323,10 @@ def get_tetrahedra_vertices(relative_address,
             vertices[i, j] = vgp + (vgp == -1) * (gp + 1)
     return vertices
 
-def _set_triplets_integration_weights_c(g, interaction, frequency_points):
+def _set_triplets_integration_weights_c(g,
+                                        interaction,
+                                        frequency_points,
+                                        neighboring_phonons=True):
     import anharmonic._phono3py as phono3c
 
     reciprocal_lattice = np.linalg.inv(interaction.get_primitive().get_cell())
@@ -328,19 +335,20 @@ def _set_triplets_integration_weights_c(g, interaction, frequency_points):
     grid_address = interaction.get_grid_address()
     bz_map = interaction.get_bz_map()
     triplets_at_q = interaction.get_triplets_at_q()[0]
-    unique_vertices = thm.get_unique_tetrahedra_vertices()
-    
-    for i, j in zip((1, 2), (1, -1)):
-        neighboring_grid_points = np.zeros(
-            len(unique_vertices) * len(triplets_at_q), dtype='intc')
-        phono3c.neighboring_grid_points(
-            neighboring_grid_points,
-            triplets_at_q[:, i].flatten(),
-            j * unique_vertices,
-            mesh,
-            grid_address,
-            bz_map)
-        interaction.set_phonon(np.unique(neighboring_grid_points))
+
+    if neighboring_phonons:
+        unique_vertices = thm.get_unique_tetrahedra_vertices()
+        for i, j in zip((1, 2), (1, -1)):
+            neighboring_grid_points = np.zeros(
+                len(unique_vertices) * len(triplets_at_q), dtype='intc')
+            phono3c.neighboring_grid_points(
+                neighboring_grid_points,
+                triplets_at_q[:, i].flatten(),
+                j * unique_vertices,
+                mesh,
+                grid_address,
+                bz_map)
+            interaction.set_phonon(np.unique(neighboring_grid_points))
 
     phono3c.triplets_integration_weights(
         g,
@@ -386,10 +394,6 @@ def _set_triplets_integration_weights_py(g, interaction, frequency_points):
             g[1, i, :, j, k] = g1 - g2
             if len(g) == 3:
                 g[2, i, :, j, k] = g0 + g1 + g2
-                    
-    # if len(tetrahedra) == 4:
-    #     g /= 4
-    
 
 class GridBrillouinZone:
     search_space = np.array([

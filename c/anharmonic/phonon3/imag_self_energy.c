@@ -128,7 +128,7 @@ int get_jointDOS(double *jdos,
 	    gaussian(f1 + f2 - frequency_points[i], sigma) * weights[j];
 	  jdos[i * 2 + 1] +=
 	    (gaussian(f1 - f2 - frequency_points[i], sigma) +
-	     gaussian(- f1 + f2 - frequency_points[i], sigma)) * weights[j] / 2;
+	     gaussian(- f1 + f2 - frequency_points[i], sigma)) * weights[j];
 	}
       }
     }
