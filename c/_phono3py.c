@@ -24,8 +24,7 @@ static PyObject * py_get_interaction(PyObject *self, PyObject *args);
 static PyObject * py_get_imag_self_energy(PyObject *self, PyObject *args);
 static PyObject * py_get_imag_self_energy_at_bands(PyObject *self,
 						   PyObject *args);
-static PyObject * py_get_thm_imag_self_energy_at_bands(PyObject *self,
-						       PyObject *args);
+static PyObject * py_get_thm_imag_self_energy(PyObject *self, PyObject *args);
 static PyObject * py_get_collision_matrix(PyObject *self, PyObject *args);
 static PyObject * py_get_reducible_collision_matrix(PyObject *self, PyObject *args);
 static PyObject * py_symmetrize_collision_matrix(PyObject *self, PyObject *args);
@@ -59,7 +58,7 @@ static PyMethodDef functions[] = {
   {"interaction", py_get_interaction, METH_VARARGS, "Interaction of triplets"},
   {"imag_self_energy", py_get_imag_self_energy, METH_VARARGS, "Imaginary part of self energy"},
   {"imag_self_energy_at_bands", py_get_imag_self_energy_at_bands, METH_VARARGS, "Imaginary part of self energy at phonon frequencies of bands"},
-  {"thm_imag_self_energy_at_bands", py_get_thm_imag_self_energy_at_bands, METH_VARARGS, "Imaginary part of self energy at phonon frequencies of bands for tetrahedron method"},
+  {"thm_imag_self_energy", py_get_thm_imag_self_energy, METH_VARARGS, "Imaginary part of self energy at phonon frequencies of bands for tetrahedron method"},
   {"collision_matrix", py_get_collision_matrix, METH_VARARGS, "Collision matrix with g"},
   {"reducible_collision_matrix", py_get_reducible_collision_matrix, METH_VARARGS, "Collision matrix with g for reducible grid points"},
   {"symmetrize_collision_matrix", py_symmetrize_collision_matrix, METH_VARARGS, "Symmetrize collision matrix"},
@@ -467,8 +466,7 @@ static PyObject * py_get_imag_self_energy_at_bands(PyObject *self,
   Py_RETURN_NONE;
 }
 
-static PyObject * py_get_thm_imag_self_energy_at_bands(PyObject *self,
-						       PyObject *args)
+static PyObject * py_get_thm_imag_self_energy(PyObject *self, PyObject *args)
 {
   PyArrayObject* gamma_py;
   PyArrayObject* fc3_normal_squared_py;
