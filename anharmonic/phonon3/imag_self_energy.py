@@ -28,6 +28,7 @@ def get_imag_self_energy(interaction,
             print "Grid point: %d" % gp
             print "Number of ir-triplets:",
             print "%d / %d" % (len(weights), weights.sum())
+        # ise.run_interaction_Peierls(option=1)
         ise.run_interaction()
         frequencies = interaction.get_phonons()[0]
         max_phonon_freq = np.amax(frequencies)
@@ -263,6 +264,21 @@ class ImagSelfEnergy:
          self._eigenvectors) = self._interaction.get_phonons()[:2]
         self._band_indices = self._interaction.get_band_indices()
 
+    def run_interaction_Peierls(self, option=0):
+        self._interaction.run(lang=self._lang)
+        v = self._interaction.get_interaction_strength()
+        divisor = np.prod(self._mesh)
+        self._fc3_normal_squared = np.ones_like(v)        
+        if option == 0:
+            self._fc3_normal_squared /= divisor
+        else:
+            v_sum = v.sum(axis=1).sum(axis=1).sum(axis=1)
+            self._fc3_normal_squared *= np.dot(self._weights_at_q,
+                                               v_sum) / divisor
+        (self._frequencies,
+         self._eigenvectors) = self._interaction.get_phonons()[:2]
+        self._band_indices = self._interaction.get_band_indices()
+        
     def set_integration_weights(self, scattering_event_class=None):
         if self._frequency_points is None:
             f_points = self._frequencies[self._grid_point][self._band_indices]
@@ -370,15 +386,15 @@ class ImagSelfEnergy:
 
     def _run_thm_c_with_band_indices(self):
         import anharmonic._phono3py as phono3c
-        phono3c.thm_imag_self_energy_at_bands(self._imag_self_energy,
-                                              self._fc3_normal_squared,
-                                              self._triplets_at_q,
-                                              self._weights_at_q,
-                                              self._frequencies,
-                                              self._temperature,
-                                              self._g,
-                                              self._unit_conversion,
-                                              self._cutoff_frequency)
+        phono3c.thm_imag_self_energy(self._imag_self_energy,
+                                     self._fc3_normal_squared,
+                                     self._triplets_at_q,
+                                     self._weights_at_q,
+                                     self._frequencies,
+                                     self._temperature,
+                                     self._g,
+                                     self._unit_conversion,
+                                     self._cutoff_frequency)
         
     def _run_c_with_frequency_points(self):
         import anharmonic._phono3py as phono3c
@@ -400,15 +416,15 @@ class ImagSelfEnergy:
         for i in range(len(self._frequency_points)):
             for j in range(g.shape[2]):
                 g[:, :, j, :, :] = self._g[:, :, i, :, :]
-            phono3c.thm_imag_self_energy_at_bands(self._imag_self_energy[i],
-                                                  self._fc3_normal_squared,
-                                                  self._triplets_at_q,
-                                                  self._weights_at_q,
-                                                  self._frequencies,
-                                                  self._temperature,
-                                                  g,
-                                                  self._unit_conversion,
-                                                  self._cutoff_frequency)
+            phono3c.thm_imag_self_energy(self._imag_self_energy[i],
+                                         self._fc3_normal_squared,
+                                         self._triplets_at_q,
+                                         self._weights_at_q,
+                                         self._frequencies,
+                                         self._temperature,
+                                         g,
+                                         self._unit_conversion,
+                                         self._cutoff_frequency)
         
     def _run_py_with_band_indices(self):
         for i, (triplet, w, interaction) in enumerate(
