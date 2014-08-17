@@ -116,7 +116,7 @@ class JointDos:
     def get_bz_map(self):
         return self._bz_map
     
-    def _run_c(self, lang='Py'):
+    def _run_c(self, lang='C'):
         if self._sigma is None:
             if lang == 'C':
                 self._run_c_tetrahedron_method()
