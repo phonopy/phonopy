@@ -577,60 +577,61 @@ if not magmoms == None:
 ######################################
 # Read FORCE_CONSTANTS or FORCE_SETS #
 ######################################
-num_atom = unitcell.get_number_of_atoms()
-num_satom = determinant(settings.get_supercell_matrix()) * num_atom
-if settings.get_is_force_constants() == 'read':
-    if settings.get_is_hdf5():
-        try:
-            import h5py
-        except ImportError:
-            print_error_message("You need to install python-h5py.")
+if run_mode != 'displacements':
+    num_atom = unitcell.get_number_of_atoms()
+    num_satom = determinant(settings.get_supercell_matrix()) * num_atom
+    if settings.get_is_force_constants() == 'read':
+        if settings.get_is_hdf5():
+            try:
+                import h5py
+            except ImportError:
+                print_error_message("You need to install python-h5py.")
+                if log_level > 0:
+                    print_end()
+                sys.exit(1)
+    
+            if file_exists("force_constants.hdf5", log_level):
+                fc = file_IO.read_force_constants_hdf5("force_constants.hdf5")
+                fc_filename = "force_constants.hdf5"
+        
+        elif file_exists("FORCE_CONSTANTS", log_level):
+            fc = file_IO.parse_FORCE_CONSTANTS("FORCE_CONSTANTS")
+            fc_filename = "FORCE_CONSTANTS"
+    
+        if log_level > 0:
+            print "Force constants are read from %s." % fc_filename
+    
+        if fc.shape[0] != num_satom:
+            error_text = ("Number of atoms in supercell is not consistent with "
+                          "the matrix shape of\nforce constants read from ")
+            if settings.get_is_hdf5():
+                error_text += "force_constants.hdf5.\n"
+            else:
+                error_text += "FORCE_CONSTANTS.\n"
+            error_text += ("Please carefully check DIM, FORCE_CONSTANTS, "
+                           "and %s.") % unitcell_filename
+            print_error_message(error_text)
             if log_level > 0:
                 print_end()
             sys.exit(1)
-
-        if file_exists("force_constants.hdf5", log_level):
-            fc = file_IO.read_force_constants_hdf5("force_constants.hdf5")
-            fc_filename = "force_constants.hdf5"
     
-    elif file_exists("FORCE_CONSTANTS", log_level):
-        fc = file_IO.parse_FORCE_CONSTANTS("FORCE_CONSTANTS")
-        fc_filename = "FORCE_CONSTANTS"
-
-    if log_level > 0:
-        print "Force constants are read from %s." % fc_filename
-
-    if fc.shape[0] != num_satom:
-        error_text = ("Number of atoms in supercell is not consistent with "
-                      "the matrix shape of\nforce constants read from ")
-        if settings.get_is_hdf5():
-            error_text += "force_constants.hdf5.\n"
-        else:
-            error_text += "FORCE_CONSTANTS.\n"
-        error_text += ("Please carefully check DIM, FORCE_CONSTANTS, "
-                       "and %s.") % unitcell_filename
-        print_error_message(error_text)
-        if log_level > 0:
-            print_end()
-        sys.exit(1)
-
-elif os.path.exists("FORCE_SETS"):
-    force_sets = file_IO.parse_FORCE_SETS()
-    if force_sets['natom'] != num_satom:
-        error_text = "Number of atoms in supercell is not consistent with "
-        error_text += "the data in FORCE_SETS.\n"
-        error_text += ("Please carefully check DIM, FORCE_SETS,"
-                       " and %s") % unitcell_filename
-        print_error_message(error_text)
-        if log_level > 0:
-            print_end()
-        sys.exit(1)
-else:
-    if log_level > 1:
-        print_end()
-        sys.exit(1)
+    elif os.path.exists("FORCE_SETS"):
+        force_sets = file_IO.parse_FORCE_SETS()
+        if force_sets['natom'] != num_satom:
+            error_text = "Number of atoms in supercell is not consistent with "
+            error_text += "the data in FORCE_SETS.\n"
+            error_text += ("Please carefully check DIM, FORCE_SETS,"
+                           " and %s") % unitcell_filename
+            print_error_message(error_text)
+            if log_level > 0:
+                print_end()
+            sys.exit(1)
     else:
-        file_exists("FORCE_SETS", log_level)
+        if log_level > 1:
+            print_end()
+            sys.exit(1)
+        else:
+            file_exists("FORCE_SETS", log_level)
         
 ##################
 # Initialization #
