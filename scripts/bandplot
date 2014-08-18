@@ -109,6 +109,10 @@ parser.add_option("-t", "--title", dest="title", action="store",
                   type="string", help="Title of plot")
 (options, args) = parser.parse_args()
 
+if options.output_filename:
+    import matplotlib
+    matplotlib.use('Agg')            
+
 if not options.is_gnuplot:
     import matplotlib.pyplot as plt
     if options.labels:
