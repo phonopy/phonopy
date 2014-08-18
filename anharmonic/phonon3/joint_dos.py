@@ -2,7 +2,7 @@ import sys
 import numpy as np
 from phonopy.structure.symmetry import Symmetry
 from phonopy.units import VaspToTHz
-from anharmonic.phonon3.triplets import get_triplets_at_q, get_nosym_triplets_at_q, get_tetrahedra_vertices, get_triplets_integration_weights
+from anharmonic.phonon3.triplets import get_triplets_at_q, get_nosym_triplets_at_q, get_tetrahedra_vertices, get_triplets_integration_weights, occupation
 from anharmonic.other.phonon import get_dynamical_matrix, set_phonon_c
 from phonopy.structure.tetrahedron_method import TetrahedronMethod
 
@@ -119,36 +119,38 @@ class JointDos:
     def _run_c(self, lang='C'):
         if self._sigma is None:
             if lang == 'C':
-                self._run_c_tetrahedron_method()
+                self._run_c_with_g()
             else:
                 self._run_py_tetrahedron_method()
         else:
-            self._run_smearing_method()
-
-    def _run_c_tetrahedron_method(self):
-        """
-        This is not very faster than _run_c_tetrahedron_method and
-        use much more memory space. So this function is not set as default.
-        """
-
+            self._run_c_with_g()
+            # self._run_smearing_method() is an older and direct implementation.
+            # This requies less memory space. self._run_c_with_g can be used
+            # for smearing method and can share same code with tetrahedron 
+            # method. Therefore maintainance cost of code can be reduced by
+            # without using self._run_smearing_method().
+                
+    def _run_c_with_g(self):
         self.set_phonon(self._triplets_at_q.ravel())
-        f_max = np.max(self._frequencies) * 2
+        if self._sigma is None:
+            f_max = np.max(self._frequencies) * 2
+        else:
+            f_max = np.max(self._frequencies) * 2 + self._sigma * 4
         f_max *= 1.005
         f_min = 0
         self._set_frequency_points(f_min, f_max)
 
-        num_band = self._num_band
-        num_triplets = len(self._triplets_at_q)
         num_freq_points = len(self._frequency_points)
         num_mesh = np.prod(self._mesh)
         jdos = np.zeros((num_freq_points, 2), dtype='double')
         
         for i, freq_point in enumerate(self._frequency_points):
-            g = get_triplets_integration_weights(self,
-                                                 [freq_point],
-                                                 None,
-                                                 is_collision_matrix=True,
-                                                 neighboring_phonons=(i == 0))
+            g = get_triplets_integration_weights(
+                self,
+                np.array([freq_point], dtype='double'),
+                self._sigma,
+                is_collision_matrix=True,
+                neighboring_phonons=(i == 0))
             jdos[i, 0] = np.sum(
                 np.tensordot(g[0, :, 0], self._weights_at_q, axes=(0, 0)))
             gx = g[2] - g[0]
@@ -171,7 +173,7 @@ class JointDos:
         self.set_phonon(self._vertices.ravel())
         f_max = np.max(self._frequencies) * 2
         f_max *= 1.005
-        f_min = np.min(self._frequencies) * 2
+        f_min = 0
         self._set_frequency_points(f_min, f_max)
 
         num_freq_points = len(self._frequency_points)

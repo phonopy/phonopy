@@ -352,7 +352,7 @@ def _set_triplets_integration_weights_c(g,
 
     phono3c.triplets_integration_weights(
         g,
-        np.array(frequency_points, dtype='double'),
+        frequency_points,
         thm.get_tetrahedra(),
         mesh,
         triplets_at_q,

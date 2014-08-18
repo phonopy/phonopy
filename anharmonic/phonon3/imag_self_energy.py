@@ -287,7 +287,7 @@ class ImagSelfEnergy:
 
         self._g = get_triplets_integration_weights(
             self._interaction,
-            f_points,
+            np.array(f_points, dtype='double'),
             self._sigma,
             is_collision_matrix=self._is_collision_matrix)
 
