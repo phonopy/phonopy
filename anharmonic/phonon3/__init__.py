@@ -672,8 +672,10 @@ class Phono3pyJointDos:
                  nac_params=None,
                  nac_q_direction=None,
                  sigmas=[],
+                 cutoff_frequency=1e-4,
                  frequency_step=None,
                  num_frequency_points=None,
+                 temperatures=None,
                  frequency_factor_to_THz=VaspToTHz,
                  frequency_scale_factor=None,
                  is_nosym=False,
@@ -687,8 +689,10 @@ class Phono3pyJointDos:
         self._nac_params = nac_params
         self._nac_q_direction = nac_q_direction
         self._sigmas = sigmas
+        self._cutoff_frequency = cutoff_frequency
         self._frequency_step = frequency_step
         self._num_frequency_points = num_frequency_points
+        self._temperatures = temperatures
         self._frequency_factor_to_THz = frequency_factor_to_THz
         self._frequency_scale_factor = frequency_scale_factor
         self._is_nosym = is_nosym
@@ -703,8 +707,10 @@ class Phono3pyJointDos:
             self._fc2,
             nac_params=self._nac_params,
             nac_q_direction=self._nac_q_direction,
+            cutoff_frequency=self._cutoff_frequency,
             frequency_step=self._frequency_step,
             num_frequency_points=self._num_frequency_points,
+            temperatures=self._temperatures,
             frequency_factor_to_THz=self._frequency_factor_to_THz,
             frequency_scale_factor=self._frequency_scale_factor,
             is_nosym=self._is_nosym,
@@ -747,6 +753,7 @@ class Phono3pyJointDos:
                         self._jdos.get_frequency_points(),
                         self._jdos.get_joint_dos(),
                         sigma=sigma,
+                        temperatures=self._temperatures,
                         filename=self._filename,
                         is_nosym=self._is_nosym)
         

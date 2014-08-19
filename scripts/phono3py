@@ -545,11 +545,14 @@ else:
 if settings.get_is_tetrahedron_method():
     sigmas = [None] + sigmas
 if settings.get_temperatures() is None:
-    t_max=settings.get_max_temperature()
-    t_min=settings.get_min_temperature()
-    t_step=settings.get_temperature_step()
-    temperature_points = [0.0, 300.0] # For spectra
-    temperatures = np.arange(t_min, t_max + float(t_step) / 10, t_step)
+    if options.is_joint_dos:
+        temperature_points = None
+    else:
+        t_max=settings.get_max_temperature()
+        t_min=settings.get_min_temperature()
+        t_step=settings.get_temperature_step()
+        temperature_points = [0.0, 300.0] # For spectra
+        temperatures = np.arange(t_min, t_max + float(t_step) / 10, t_step)
 else:
     temperature_points = settings.get_temperatures() # For spectra
     temperatures = settings.get_temperatures() # For others
@@ -921,9 +924,9 @@ if log_level:
             print " %.1f" % temperatures[-1]
         else:
             print ("%.1f  " * len(temperatures)) % tuple(temperatures)
-    elif settings.get_is_isotope() or options.is_joint_dos:
+    elif settings.get_is_isotope():
         pass
-    else:
+    elif temperature_points is not None:
         print "Temperatures:",
         print ("%.1f  " * len(temperature_points)) % tuple(temperature_points)
         if settings.get_scattering_event_class() is not None:
@@ -964,8 +967,10 @@ if options.is_joint_dos:
         nac_params=nac_params,
         nac_q_direction=nac_q_direction,
         sigmas=sigmas,
+        cutoff_frequency=cutoff_frequency,
         frequency_step=frequency_step,
         num_frequency_points=num_frequency_points,
+        temperatures=temperature_points,
         frequency_factor_to_THz=frequency_factor_to_THz,
         frequency_scale_factor=frequency_scale_factor,
         is_nosym=options.is_nosym,

@@ -757,12 +757,42 @@ def write_joint_dos(gp,
                     frequencies,
                     jdos,
                     sigma=None,
+                    temperatures=None,
                     filename=None,
                     is_nosym=False):
+    if temperatures is None:
+        _write_joint_dos_at_t(gp,
+                              mesh,
+                              frequencies,
+                              jdos,
+                              sigma=sigma,
+                              temperature=None,
+                              filename=filename,
+                              is_nosym=is_nosym)
+    else:
+        for jdos_at_t, t in zip(jdos, temperatures):
+            _write_joint_dos_at_t(gp,
+                                  mesh,
+                                  frequencies,
+                                  jdos_at_t,
+                                  sigma=sigma,
+                                  temperature=t,
+                                  filename=filename,
+                                  is_nosym=is_nosym)
 
+def _write_joint_dos_at_t(gp,
+                          mesh,
+                          frequencies,
+                          jdos,
+                          sigma=None,
+                          temperature=None,
+                          filename=None,
+                          is_nosym=False):
     jdos_filename = "jdos-m%d%d%d-g%d" % (mesh[0], mesh[1], mesh[2], gp)
     if sigma is not None:
         jdos_filename += ("-s%f" % sigma).rstrip('0').rstrip('\.')
+    if temperature is not None:
+        jdos_filename += ("-t%f" % temperature).rstrip('0').rstrip('\.')
     if is_nosym:
         jdos_filename += ".nosym"
     if filename is not None:

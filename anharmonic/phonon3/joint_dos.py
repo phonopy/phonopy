@@ -15,8 +15,10 @@ class JointDos:
                  nac_params=None,
                  nac_q_direction=None,
                  sigma=None,
+                 cutoff_frequency=None,
                  frequency_step=None,
                  num_frequency_points=None,
+                 temperatures=None,
                  frequency_factor_to_THz=VaspToTHz,
                  frequency_scale_factor=1.0,
                  is_nosym=False,
@@ -36,8 +38,13 @@ class JointDos:
         self._sigma = None
         self.set_sigma(sigma)
 
+        if cutoff_frequency is None:
+            self._cutoff_frequency = 0
+        else:
+            self._cutoff_frequency = cutoff_frequency
         self._frequency_step = frequency_step
         self._num_frequency_points = num_frequency_points
+        self._temperatures = temperatures
         self._frequency_factor_to_THz = frequency_factor_to_THz
         self._frequency_scale_factor = frequency_scale_factor
         self._is_nosym = is_nosym
@@ -142,7 +149,17 @@ class JointDos:
 
         num_freq_points = len(self._frequency_points)
         num_mesh = np.prod(self._mesh)
-        jdos = np.zeros((num_freq_points, 2), dtype='double')
+
+        if self._temperatures is None:
+            jdos = np.zeros((num_freq_points, 2), dtype='double')
+        else:
+            num_temps = len(self._temperatures)
+            jdos = np.zeros((num_temps, num_freq_points, 2), dtype='double')
+            occ_phonons = []
+            for t in self._temperatures:
+                freqs = self._frequencies[self._triplets_at_q[:, 1:]]
+                occ_phonons.append(np.where(freqs > self._cutoff_frequency,
+                                            occupation(freqs, t), 0))
         
         for i, freq_point in enumerate(self._frequency_points):
             g = get_triplets_integration_weights(
@@ -151,14 +168,22 @@ class JointDos:
                 self._sigma,
                 is_collision_matrix=True,
                 neighboring_phonons=(i == 0))
-            jdos[i, 0] = np.sum(
-                np.tensordot(g[0, :, 0], self._weights_at_q, axes=(0, 0)))
-            gx = g[2] - g[0]
-            jdos[i, 1] = np.sum(
-                np.tensordot(gx[:, 0], self._weights_at_q, axes=(0, 0)))
-            if self._log_level > 1:
-                print "%4d %f %e %e" % ((i + 1, freq_point,) +
-                                        tuple(jdos[i] / num_mesh))
+
+            if self._temperatures is None:
+                jdos[i, 0] = np.sum(
+                    np.tensordot(g[0, :, 0], self._weights_at_q, axes=(0, 0)))
+                gx = g[2] - g[0]
+                jdos[i, 1] = np.sum(
+                    np.tensordot(gx[:, 0], self._weights_at_q, axes=(0, 0)))
+            else:
+                for j, n in enumerate(occ_phonons):
+                    for k, l in list(np.ndindex(g.shape[3:])):
+                        jdos[j, i, 0] += np.dot(
+                            (n[:, 0, k] + n[:, 1, l] + 1) *
+                            g[0, :, 0, k, l], self._weights_at_q)
+                        jdos[j, i, 1] += np.dot((n[:, 0, k] - n[:, 1, l]) *
+                                                g[1, :, 0, k, l],
+                                                self._weights_at_q)
 
         self._joint_dos = jdos / num_mesh
     
