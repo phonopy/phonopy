@@ -128,6 +128,9 @@ class JointDos:
             if lang == 'C':
                 self._run_c_with_g()
             else:
+                if self._temperatures is not None:
+                    print "JDOS with phonon occupation numbers doesn't work",
+                    print "in this option."
                 self._run_py_tetrahedron_method()
         else:
             self._run_c_with_g()
