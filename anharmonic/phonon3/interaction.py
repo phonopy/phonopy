@@ -1,7 +1,7 @@
 import numpy as np
 from anharmonic.other.phonon import get_dynamical_matrix, set_phonon_c, set_phonon_py
 from phonopy.harmonic.dynamical_matrix import get_smallest_vectors
-from phonopy.units import VaspToTHz
+from phonopy.units import VaspToTHz, Hbar, EV, Angstrom, THz, AMU, THzToEv
 from anharmonic.phonon3.real_to_reciprocal import RealToReciprocal
 from anharmonic.phonon3.reciprocal_to_normal import ReciprocalToNormal
 from anharmonic.phonon3.triplets import get_triplets_at_q, get_nosym_triplets_at_q, get_bz_grid_address
@@ -54,7 +54,7 @@ class Interaction:
         self._eigenvectors = None
         self._dm = None
         self._nac_q_direction = None
-
+        
         self._allocate_phonon()
         
     def run(self, lang='C'):
@@ -181,6 +181,17 @@ class Interaction:
         #     for gp in grid_triplet:
         #         self._set_phonon_py(gp)
         self._set_phonon_c(grid_points)
+
+    def get_mean_square_strength(self):
+        unit_conversion = (
+            (Hbar * EV) ** 3 / 36 / 8
+            * EV ** 2 / Angstrom ** 6
+            / (2 * np.pi * THz) ** 3
+            / AMU ** 3 / np.prod(self._mesh)) / (THzToEv * EV) ** 2
+        v = self._interaction_strength
+        w = self._weights_at_q
+        v_sum = v.sum(axis=2).sum(axis=2)
+        return np.dot(w, v_sum) * unit_conversion
             
     def _run_c(self):
         import anharmonic._phono3py as phono3c

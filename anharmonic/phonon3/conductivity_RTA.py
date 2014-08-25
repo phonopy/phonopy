@@ -64,6 +64,7 @@ def _write_gamma(br, interaction, i, filename=None):
     grid_points = br.get_grid_points()
     group_velocities = br.get_group_velocities()
     mode_heat_capacities = br.get_mode_heat_capacities()
+    mspp = br.get_mean_square_pp_strength()
     mesh = br.get_mesh_numbers()
     mesh_divisors = br.get_mesh_divisors()
     temperatures = br.get_temperatures()
@@ -72,8 +73,6 @@ def _write_gamma(br, interaction, i, filename=None):
     sigmas = br.get_sigmas()
     
     gp = grid_points[i]
-    gv = group_velocities[i]
-    mode_cv = mode_heat_capacities[i]
     frequencies = interaction.get_phonons()[0][gp]
     
     for j, sigma in enumerate(sigmas):
@@ -84,11 +83,12 @@ def _write_gamma(br, interaction, i, filename=None):
         write_kappa_to_hdf5(temperatures,
                             mesh,
                             frequency=frequencies,
-                            group_velocity=gv,
-                            heat_capacity=mode_cv,
+                            group_velocity=group_velocities[i],
+                            heat_capacity=mode_heat_capacities[i],
                             kappa=None,
                             gamma=gamma[j, :, i],
                             gamma_isotope=gamma_isotope_at_sigma,
+                            mspp=mspp[i],
                             mesh_divisors=mesh_divisors,
                             grid_point=gp,
                             sigma=sigma,
@@ -116,6 +116,7 @@ def _write_kappa(br, filename=None, log_level=0):
     frequencies = br.get_frequencies()
     gv = br.get_group_velocities()
     mode_cv = br.get_mode_heat_capacities()
+    mspp = br.get_mean_square_pp_strength()
     qpoints = br.get_qpoints()
     weights = br.get_grid_weights()
     # num_sampling_points = br.get_number_of_sampling_points()
@@ -147,6 +148,7 @@ def _write_kappa(br, filename=None, log_level=0):
                             kappa=kappa_at_sigma,
                             gamma=gamma[i],
                             gamma_isotope=gamma_isotope_at_sigma,
+                            mspp=mspp,
                             qpoint=qpoints,
                             weight=weights,
                             mesh_divisors=mesh_divisors,
@@ -248,7 +250,8 @@ class Conductivity_RTA(Conductivity):
         self._frequencies = None
         self._gv = None
         self._gamma_iso = None
-
+        self._mean_square_pp_strength = None
+        
         self._mesh = None
         self._mesh_divisors = None
         self._coarse_mesh = None
@@ -337,6 +340,7 @@ class Conductivity_RTA(Conductivity):
 
         self._cv[i] = self._get_cv(self._frequencies[grid_point])
         self._set_gv(i)
+        self._mean_square_pp_strength[i] = self._pp.get_mean_square_strength()
         
         if self._log_level:
             self._show_log(self._qpoints[i], i)
@@ -362,6 +366,8 @@ class Conductivity_RTA(Conductivity):
             self._gamma_iso = np.zeros((len(self._sigmas),
                                         num_grid_points,
                                         num_band), dtype='double')
+        self._mean_square_pp_strength = np.zeros((num_grid_points, num_band),
+                                                 dtype='double')
         self._collision = ImagSelfEnergy(self._pp)
         
     def _set_gamma_at_sigmas(self, i):
@@ -419,8 +425,9 @@ class Conductivity_RTA(Conductivity):
         gp = self._grid_points[i]
         frequencies = self._frequencies[gp]
         gv = self._gv[i]
+        mspp = self._mean_square_pp_strength[i]
         
-        print "Frequency     group velocity (x, y, z)     |gv|",
+        print "Frequency     group velocity (x, y, z)     |gv|     |mspp|",
         if self._gv_delta_q is None:
             print
         else:
@@ -432,20 +439,21 @@ class Conductivity_RTA(Conductivity):
                 self._point_operations,
                 self._mesh)
             for i, j in enumerate(np.unique(rotation_map)):
-                for k, (rot, rot_c) in enumerate(zip(self._point_operations,
-                                                     self._rotations_cartesian)):
+                for k, (rot, rot_c) in enumerate(zip(
+                        self._point_operations, self._rotations_cartesian)):
                     if rotation_map[k] != j:
                         continue
     
-                    print " k*%-2d (%5.2f %5.2f %5.2f)" % ((i + 1,) +
-                                                           tuple(np.dot(rot, q)))
-                    for f, v in zip(frequencies,
-                                    np.dot(rot_c, gv.T).T):
-                        print "%8.3f   (%8.3f %8.3f %8.3f) %8.3f" % (
-                            f, v[0], v[1], v[2], np.linalg.norm(v))
+                    print " k*%-2d (%5.2f %5.2f %5.2f)" % (
+                        (i + 1,) + tuple(np.dot(rot, q)))
+                    for f, v, pp in zip(frequencies,
+                                    np.dot(rot_c, gv.T).T,
+                                    mspp):
+                        print "%8.3f   (%8.3f %8.3f %8.3f) %8.3f %11.3e" % (
+                            f, v[0], v[1], v[2], np.linalg.norm(v), pp)
             print
         else:
-            for f, v in zip(frequencies, gv):
-                print "%8.3f   (%8.3f %8.3f %8.3f) %8.3f" % (
-                    f, v[0], v[1], v[2], np.linalg.norm(v))
+            for f, v, pp in zip(frequencies, gv, mspp):
+                print "%8.3f   (%8.3f %8.3f %8.3f) %8.3f %11.3e" % (
+                    f, v[0], v[1], v[2], np.linalg.norm(v), pp)
     
