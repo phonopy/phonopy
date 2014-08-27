@@ -68,6 +68,7 @@ class Settings:
         self._masses = None
         self._mesh = None
         self._frequency_pitch = None
+        self._frequency_points = None
         self._primitive_matrix = None
         self._qpoints = None
         self._q_direction = None
@@ -131,6 +132,12 @@ class Settings:
 
     def get_frequency_pitch(self):
         return self._frequency_pitch
+
+    def set_frequency_points(self, frequency_points):
+        self._frequency_points = frequency_points
+
+    def get_frequency_points(self):
+        return self._frequency_points
 
     def set_group_velocity_delta_q(self, gv_delta_q):
         self._gv_delta_q = gv_delta_q
@@ -434,6 +441,10 @@ class ConfParser:
         if params.has_key('frequency_pitch'):
             self._settings.set_frequency_pitch(params['frequency_pitch'])
 
+        # Number of sampling points for spectram drawing 
+        if params.has_key('frequency_points'):
+            self._settings.set_frequency_points(params['frequency_points'])
+
         # Smearing width
         if params.has_key('sigma'):
             self._settings.set_sigma(params['sigma'])
@@ -579,6 +590,10 @@ class ConfParser:
             if opt.dest == 'frequency_pitch':
                 if self._options.frequency_pitch:
                     self._confs['frequency_pitch'] = self._options.frequency_pitch
+
+            if opt.dest == 'frequency_points':
+                if self._options.frequency_points:
+                    self._confs['frequency_points'] = self._options.frequency_points
 
             if opt.dest == 'primitive_axis':
                 if self._options.primitive_axis:
@@ -768,6 +783,10 @@ class ConfParser:
                 val = float(confs['frequency_pitch'])
                 self.set_parameter('frequency_pitch', val)
 
+            if conf_key == 'frequency_points':
+                val = int(confs['frequency_points'])
+                self.set_parameter('frequency_points', val)
+
             if conf_key == 'cutoff_frequency':
                 val = float(confs['cutoff_frequency'])
                 self.set_parameter('cutoff_frequency', val)
@@ -825,6 +844,7 @@ class PhonopySettings(Settings):
         self._dos = None
         self._dos_range = { 'min':  None,
                             'max':  None }
+        self._fc_computation_algorithm = "svd"
         self._fc_spg_symmetry = False
         self._fits_Debye_model = False
         self._irreps_q_point = None
@@ -907,6 +927,12 @@ class PhonopySettings(Settings):
                      'max': self._dos_range['max'],
                      'step': self._frequency_pitch}
         return dos_range
+
+    def set_fc_computation_algorithm(self, fc_computation_algorithm):
+        self._fc_computation_algorithm = fc_computation_algorithm
+
+    def get_fc_computation_algorithm(self):
+        return self._fc_computation_algorithm
 
     def set_fc_spg_symmetry(self, fc_spg_symmetry):
         self._fc_spg_symmetry = fc_spg_symmetry
@@ -1111,6 +1137,10 @@ class PhonopyConfParser(ConfParser):
                 if self._options.pdos:
                     self._confs['pdos'] = self._options.pdos
 
+            if opt.dest == 'fc_computation_algorithm':
+                if self._options.fc_computation_algorithm is not None:
+                    self._confs['fc_computation_algorithm'] = self._options.fc_computation_algorithm
+
             if opt.dest == 'fc_spg_symmetry':
                 if self._options.fc_spg_symmetry:
                     self._confs['fc_spg_symmetry'] = '.true.'
@@ -1243,6 +1273,10 @@ class PhonopyConfParser(ConfParser):
             if conf_key == 'gamma_center':
                 if confs['gamma_center'] == '.true.':
                     self.set_parameter('is_gamma_center', True)
+
+            if conf_key == 'fc_computation_algorithm':
+                self.set_parameter('fc_computation_algorithm',
+                                   confs['fc_computation_algorithm'])
 
             if conf_key == 'fc_spg_symmetry':
                 if confs['fc_spg_symmetry'] == '.true.':
@@ -1402,6 +1436,11 @@ class PhonopyConfParser(ConfParser):
                 self._settings.set_is_force_constants("write")
             elif params['force_constants'] == 'read':
                 self._settings.set_is_force_constants("read")
+
+        # Switch computation algorithm of force constants
+        if params.has_key('fc_computation_algorithm'):
+            self._settings.set_fc_computation_algorithm(
+                params['fc_computation_algorithm'])
 
         # Enforce space group symmetyr to force constants?
         if params.has_key('fc_spg_symmetry'):

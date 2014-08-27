@@ -156,6 +156,15 @@ class Atoms:
     def get_volume(self):
         return np.linalg.det(self.cell)
 
+    def copy(self):
+        return Atoms(cell=self.cell,
+                     scaled_positions=self.scaled_positions,
+                     masses=self.masses,
+                     magmoms=self.magmoms,
+                     symbols=self.symbols,
+                     pbc=True)
+        
+
 atom_data = [ 
     [  0, "X", "X", 0], # 0
     [  1, "H", "Hydrogen", 1.00794], # 1

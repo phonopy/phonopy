@@ -9,6 +9,7 @@ class Phono3pySettings(Settings):
         self._cutoff_fc3_distance = None
         self._cutoff_pair_distance = None
         self._cutoff_mfp = None # in micrometre
+        self._grid_addresses = None
         self._grid_points = None
         self._ion_clamped = False
         self._is_bterta = False
@@ -24,6 +25,7 @@ class Phono3pySettings(Settings):
         self._read_collision = None
         self._read_gamma = False
         self._phonon_supercell_matrix = None
+        self._scattering_event_class = None # scattering event class 1 or 2
         self._temperatures = None
         self._write_amplitude = False
         self._write_collision = False
@@ -52,6 +54,12 @@ class Phono3pySettings(Settings):
 
     def get_cutoff_mfp(self):
         return self._cutoff_mfp
+
+    def set_grid_addresses(self, grid_addresses):
+        self._grid_addresses = grid_addresses
+
+    def get_grid_addresses(self):
+        return self._grid_addresses
 
     def set_grid_points(self, grid_points):
         self._grid_points = grid_points
@@ -143,6 +151,12 @@ class Phono3pySettings(Settings):
     def get_phonon_supercell_matrix(self):
         return self._phonon_supercell_matrix
 
+    def set_scattering_event_class(self, scattering_event_class):
+        self._scattering_event_class = scattering_event_class
+
+    def get_scattering_event_class(self):
+        return self._scattering_event_class
+
     def set_temperatures(self, temperatures):
         self._temperatures = temperatures
 
@@ -198,6 +212,10 @@ class Phono3pyConfParser(ConfParser):
                 if self._options.cutoff_mfp is not None:
                     self._confs['cutoff_mfp'] = \
                         self._options.cutoff_mfp
+
+            if opt.dest == 'grid_addresses':
+                if self._options.grid_addresses is not None:
+                    self._confs['grid_addresses'] = self._options.grid_addresses
 
             if opt.dest == 'grid_points':
                 if self._options.grid_points is not None:
@@ -255,6 +273,11 @@ class Phono3pyConfParser(ConfParser):
                 if self._options.read_collision is not None:
                     self._confs['read_collision'] = self._options.read_collision
 
+            if opt.dest == 'scattering_event_class':
+                if self._options.scattering_event_class is not None:
+                    self._confs['scattering_event_class'] = \
+                        self._options.scattering_event_class
+
             if opt.dest == 'temperatures':
                 if self._options.temperatures is not None:
                     self._confs['temperatures'] = self._options.temperatures
@@ -304,6 +327,16 @@ class Phono3pyConfParser(ConfParser):
             if conf_key == 'cutoff_mfp':
                 self.set_parameter('cutoff_mfp',
                                    float(confs['cutoff_mfp']))
+
+            if conf_key == 'grid_addresses':
+                vals = [int(x) for x in
+                        confs['grid_addresses'].replace(',', ' ').split()]
+                if len(vals) % 3 == 0 and len(vals) > 0:
+                    self.set_parameter('grid_addresses',
+                                       np.reshape(vals, (-1, 3)))
+                else:
+                    self.setting_error("Grid addresses are incorrectly set.")
+
 
             if conf_key == 'grid_points':
                 vals = [int(x) for x in
@@ -380,6 +413,10 @@ class Phono3pyConfParser(ConfParser):
                     vals = [int(x) for x in confs['read_collision'].split()]
                     self.set_parameter('read_collision', vals)
 
+            if conf_key == 'scattering_event_class':
+                self.set_parameter('scattering_event_class',
+                                   confs['scattering_event_class'])
+
             if conf_key == 'temperatures':
                 vals = [fracval(x) for x in confs['temperatures'].split()]
                 if len(vals) < 1:
@@ -422,6 +459,10 @@ class Phono3pyConfParser(ConfParser):
         # Boundary mean free path for thermal conductivity calculation
         if params.has_key('cutoff_mfp'):
             self._settings.set_cutoff_mfp(params['cutoff_mfp'])
+
+        # Grid addresses (sets of three integer values)
+        if params.has_key('grid_addresses'):
+            self._settings.set_grid_addresses(params['grid_addresses'])
 
         # Grid points
         if params.has_key('grid_points'):
@@ -481,6 +522,11 @@ class Phono3pyConfParser(ConfParser):
         # Sum partial kappa at q-stars
         if params.has_key('no_kappa_stars'):
             self._settings.set_no_kappa_stars(params['no_kappa_stars'])
+
+        # Scattering event class 1 or 2
+        if params.has_key('scattering_event_class'):
+            self._settings.set_scattering_event_class(
+                params['scattering_event_class'])
 
         # Temperatures
         if params.has_key('temperatures'):

@@ -100,6 +100,15 @@ modulus (without considering phonons). This is made by::
 
    phonopy-qha -b e-v.dat
 
+``--eos``
+~~~~~~~~~~~
+
+EOS is chosen among ``vinet``, ``birch_murnaghan``, and
+``murnaghan``. The default EOS is ``vinet``.
+
+::
+
+   phonopy-qha --eos='birch_murnaghan' -b e-v.dat
 
 .. _phonopy_qha_output_files:
 

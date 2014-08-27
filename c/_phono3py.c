@@ -602,7 +602,7 @@ static PyObject * py_get_reducible_collision_matrix(PyObject *self, PyObject *ar
   }
 
   Darray* fc3_normal_squared = convert_to_darray(fc3_normal_squared_py);
-  const double* collision_matrix = collision_matrix_py->data;
+  double* collision_matrix = (double*)collision_matrix_py->data;
   const double* g = (double*)g_py->data;
   const double* frequencies = (double*)frequencies_py->data;
   const int* triplets = (int*)triplets_py->data;

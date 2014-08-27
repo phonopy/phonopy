@@ -11,6 +11,8 @@
 /* element first. But when GRID_ORDER_XYZ is defined, it is changed to right */ 
 /* element first. */
 
+int kpt_get_grid_point(const int grid_address[3],
+		       const int mesh[3]);
 int kpt_get_irreducible_reciprocal_mesh(int grid_address[][3],
 					int map[],
 					const int mesh[3],

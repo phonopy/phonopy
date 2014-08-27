@@ -117,41 +117,46 @@ class Mesh:
 
 
     def write_yaml(self):
-        f = open('mesh.yaml', 'w')
+        w = open('mesh.yaml', 'w')
         eigenvalues = self._eigenvalues
         natom = self._cell.get_number_of_atoms()
-        f.write("mesh: [ %5d, %5d, %5d ]\n" % tuple(self._mesh))
-        f.write("nqpoint: %-7d\n" % self._qpoints.shape[0])
-        f.write("natom:   %-7d\n" % natom)
-        f.write("phonon:\n")
+        lattice = np.linalg.inv(self._cell.get_cell()) # column vectors
+        w.write("mesh: [ %5d, %5d, %5d ]\n" % tuple(self._mesh))
+        w.write("nqpoint: %-7d\n" % self._qpoints.shape[0])
+        w.write("natom:   %-7d\n" % natom)
+        w.write("reciprocal_lattice:\n")
+        for vec, axis in zip(lattice.T, ('a*', 'b*', 'c*')):
+            w.write("- [ %12.8f, %12.8f, %12.8f ] # %2s\n" %
+                    (tuple(vec) + (axis,)))
+        w.write("phonon:\n")
 
         for i, q in enumerate(self._qpoints):
-            f.write("- q-position: [ %12.7f, %12.7f, %12.7f ]\n" % tuple(q))
-            f.write("  weight: %-5d\n" % self._weights[i])
-            f.write("  band:\n")
+            w.write("- q-position: [ %12.7f, %12.7f, %12.7f ]\n" % tuple(q))
+            w.write("  weight: %-5d\n" % self._weights[i])
+            w.write("  band:\n")
 
             for j, eig in enumerate(eigenvalues[i]):
-                f.write("  - # %d\n" % (j+1))
+                w.write("  - # %d\n" % (j+1))
                 if eig < 0:
                     freq = -np.sqrt(-eig)
                 else:
                     freq = np.sqrt(eig)
-                f.write("    frequency:  %15.10f\n" % (freq * self._factor))
+                w.write("    frequency:  %15.10f\n" % (freq * self._factor))
 
                 if self._group_velocities is not None:
-                    f.write("    group_velocity: ")
-                    f.write("[ %13.7f, %13.7f, %13.7f ]\n" %
+                    w.write("    group_velocity: ")
+                    w.write("[ %13.7f, %13.7f, %13.7f ]\n" %
                             tuple(self._group_velocities[i, j]))
 
                 if self._is_eigenvectors:
-                    f.write("    eigenvector:\n")
+                    w.write("    eigenvector:\n")
                     for k in range(natom):
-                        f.write("    - # atom %d\n" % (k+1))
+                        w.write("    - # atom %d\n" % (k+1))
                         for l in (0,1,2):
-                            f.write("      - [ %17.14f, %17.14f ]\n" %
+                            w.write("      - [ %17.14f, %17.14f ]\n" %
                                     (self._eigenvectors[i,k*3+l,j].real,
                                      self._eigenvectors[i,k*3+l,j].imag))
-            f.write("\n")
+            w.write("\n")
 
     def _set_phonon(self):
         num_band = self._cell.get_number_of_atoms() * 3

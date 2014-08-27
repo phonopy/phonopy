@@ -11,6 +11,7 @@ static PyObject * get_symmetry(PyObject *self, PyObject *args);
 static PyObject *
 get_symmetry_with_collinear_spin(PyObject *self, PyObject *args);
 static PyObject * find_primitive(PyObject *self, PyObject *args);
+static PyObject * get_grid_point_from_address(PyObject *self, PyObject *args);
 static PyObject * get_ir_reciprocal_mesh(PyObject *self, PyObject *args);
 static PyObject * get_stabilized_reciprocal_mesh(PyObject *self, PyObject *args);
 static PyObject * get_grid_points_by_rotations(PyObject *self, PyObject *args);
@@ -40,6 +41,8 @@ static PyMethodDef functions[] = {
    METH_VARARGS, "Symmetry operations with collinear spin magnetic moments"},
   {"primitive", find_primitive, METH_VARARGS,
    "Find primitive cell in the input cell"},
+  {"grid_point_from_address", get_grid_point_from_address, METH_VARARGS,
+   "Translate grid adress to grid point index"},
   {"ir_reciprocal_mesh", get_ir_reciprocal_mesh, METH_VARARGS,
    "Reciprocal mesh points with map"},
   {"stabilized_reciprocal_mesh", get_stabilized_reciprocal_mesh, METH_VARARGS,
@@ -392,6 +395,25 @@ static PyObject * get_symmetry_with_collinear_spin(PyObject *self,
   return PyInt_FromLong((long) num_sym);
 }
 
+static PyObject * get_grid_point_from_address(PyObject *self, PyObject *args)
+{
+  PyArrayObject* grid_address_py;
+  PyArrayObject* mesh_py;
+  if (!PyArg_ParseTuple(args, "OO",
+			&grid_address_py,
+			&mesh_py)) {
+    return NULL;
+  }
+
+  const int* grid_address = (int*)grid_address_py->data;
+  const int* mesh = (int*)mesh_py->data;
+
+  /* num_sym has to be larger than num_sym_from_array_size. */
+  const int gp = spg_get_grid_point(grid_address, mesh);
+  
+  return PyInt_FromLong((long) gp);
+}
+
 static PyObject * get_ir_reciprocal_mesh(PyObject *self, PyObject *args)
 {
   double symprec;
@@ -412,8 +434,9 @@ static PyObject * get_ir_reciprocal_mesh(PyObject *self, PyObject *args)
 			&lattice,
 			&position,
 			&atom_type,
-			&symprec))
+			&symprec)) {
     return NULL;
+  }
 
   SPGCONST double (*lat)[3] = (double(*)[3])lattice->data;
   SPGCONST double (*pos)[3] = (double(*)[3])position->data;

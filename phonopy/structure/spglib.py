@@ -203,7 +203,21 @@ def find_primitive(bulk, symprec=1e-5, angle_tolerance=-1.0):
                 np.array(numbers[:num_atom_prim], dtype='intc'))
     else:
         return None, None, None
-  
+
+
+        
+############
+# k-points #
+############
+def get_grid_point_from_address(grid_address, mesh):
+    """
+    Return grid point index by tranlating grid address
+    """
+
+    return spg.grid_point_from_address(np.array(grid_address, dtype='intc'),
+                                       np.array(mesh, dtype='intc'))
+    
+
 def get_ir_reciprocal_mesh(mesh,
                            bulk,
                            is_shift=np.zeros(3, dtype='intc'),
@@ -401,6 +415,10 @@ def get_neighboring_grid_points(grid_point,
     return relative_grid_points
     
 
+    
+######################
+# Tetrahedron method #
+######################
 def get_triplets_tetrahedra_vertices(relative_grid_address,
                                      mesh,
                                      triplets,

@@ -13,8 +13,10 @@ class JointDos:
                  supercell,
                  fc2,
                  nac_params=None,
+                 nac_q_direction=None,
                  sigma=None,
-                 frequency_step=0.1,
+                 frequency_step=None,
+                 num_frequency_points=None,
                  frequency_factor_to_THz=VaspToTHz,
                  frequency_scale_factor=1.0,
                  is_nosym=False,
@@ -29,9 +31,13 @@ class JointDos:
         self._supercell = supercell
         self._fc2 = fc2
         self._nac_params = nac_params
+        self._nac_q_direction = None
+        self.set_nac_q_direction(nac_q_direction)
+        self._sigma = None
         self.set_sigma(sigma)
 
         self._frequency_step = frequency_step
+        self._num_frequency_points = num_frequency_points
         self._frequency_factor_to_THz = frequency_factor_to_THz
         self._frequency_scale_factor = frequency_scale_factor
         self._is_nosym = is_nosym
@@ -49,7 +55,6 @@ class JointDos:
         self._phonon_done = None
         self._frequencies = None
         self._eigenvectors = None
-        self._nac_q_direction = None
             
         self._joint_dos = None
         self._frequency_points = None
@@ -92,8 +97,8 @@ class JointDos:
             self._eigenvectors = np.zeros((num_grid, num_band, num_band),
                                           dtype='complex128')
             
-        self._joint_dos = []
-        self._frequency_points = []
+        self._joint_dos = None
+        self._frequency_points = None
         self._set_phonon(np.array([grid_point], dtype='intc'))
 
     def get_grid_address(self):
@@ -102,7 +107,7 @@ class JointDos:
     def get_triplets_at_q(self):
         return self._triplets_at_q, self._weights_at_q
         
-    def _run_c(self, lang='Py'):
+    def _run_c(self, lang='C'):
         if self._sigma is None:
             self._tetrahedron_method = TetrahedronMethod(
                 self._reciprocal_lattice, mesh=self._mesh)
@@ -133,31 +138,40 @@ class JointDos:
                 self._bz_map)
             self._set_phonon(np.unique(neighboring_grid_points))
 
-        f_max = np.max(self._frequencies) * 2 + self._frequency_step / 10
+        f_max = np.max(self._frequencies) * 2
+        f_max *= 1.005
         f_min = np.min(self._frequencies) * 2
-        frequency_points = np.arange(f_min, f_max, self._frequency_step,
-                                     dtype='double')
+        self._set_frequency_points(f_min, f_max)
 
         num_band = self._num_band
         num_triplets = len(self._triplets_at_q)
-        num_freq_points = len(frequency_points)
-        g = np.zeros((num_triplets, num_freq_points, num_band, num_band, 2),
-                     dtype='double')
+        num_freq_points = len(self._frequency_points)
+        num_mesh = np.prod(self._mesh)
+        jdos = np.zeros((num_freq_points, 2), dtype='double')
+        
+        for i, freq_point in enumerate(self._frequency_points):
+            g = np.zeros(
+                (3, num_triplets, 1, num_band, num_band), dtype='double')
+            phono3c.triplets_integration_weights(
+                g,
+                np.array([freq_point], dtype='double'),
+                thm.get_tetrahedra(),
+                self._mesh,
+                self._triplets_at_q,
+                self._frequencies,
+                self._grid_address,
+                self._bz_map)
+            
+            jdos[i, 0] = np.sum(
+                np.tensordot(g[0, :, 0], self._weights_at_q, axes=(0, 0)))
+            gx = (g[2] - g[0]) / 2
+            jdos[i, 1] = np.sum(
+                np.tensordot(gx[:, 0], self._weights_at_q, axes=(0, 0)))
+            if self._log_level > 1:
+                print "%4d %f %e %e" % ((i + 1, freq_point,) +
+                                        tuple(jdos[i] / num_mesh))
 
-        phono3c.triplets_integration_weights(
-            g,
-            frequency_points,
-            thm.get_tetrahedra(),
-            self._mesh,
-            self._triplets_at_q,
-            self._frequencies,
-            self._grid_address,
-            self._bz_map)
-
-        jdos = np.tensordot(g, self._weights_at_q, axes=([0, 0]))
-        jdos = jdos.sum(axis=1).sum(axis=1)[:, 0]
-        self._joint_dos = jdos / np.prod(self._mesh)
-        self._frequency_points = frequency_points
+        self._joint_dos = jdos / num_mesh
     
     def _run_py_tetrahedron_method(self):
         self._vertices = get_tetrahedra_vertices(
@@ -168,22 +182,33 @@ class JointDos:
             self._bz_map)
         self._set_phonon(self._vertices.ravel())
         thm = self._tetrahedron_method
-        f_max = np.max(self._frequencies) * 2 + self._frequency_step / 10
+        f_max = np.max(self._frequencies) * 2
+        f_max *= 1.005
         f_min = np.min(self._frequencies) * 2
-        freq_points = np.arange(f_min, f_max, self._frequency_step,
-                                dtype='double')
-        jdos = np.zeros_like(freq_points)
+        self._set_frequency_points(f_min, f_max)
+
+        num_freq_points = len(self._frequency_points)
+        jdos = np.zeros((num_freq_points, 2), dtype='double')
         for vertices, w in zip(self._vertices, self._weights_at_q):
             for i, j in list(np.ndindex(self._num_band, self._num_band)):
                 f1 = self._frequencies[vertices[0], i]
                 f2 = self._frequencies[vertices[1], j]
                 thm.set_tetrahedra_omegas(f1 + f2)
-                thm.run(freq_points)
+                thm.run(self._frequency_points)
                 iw = thm.get_integration_weight()
-                jdos += iw * w
+                jdos[:, 0] += iw * w
+
+                thm.set_tetrahedra_omegas(f1 - f2)
+                thm.run(self._frequency_points)
+                iw = thm.get_integration_weight()
+                jdos[:, 1] += iw * w / 2
+
+                thm.set_tetrahedra_omegas(-f1 + f2)
+                thm.run(self._frequency_points)
+                iw = thm.get_integration_weight()
+                jdos[:, 1] += iw * w / 2
 
         self._joint_dos = jdos / np.prod(self._mesh)
-        self._frequency_points = freq_points
 
     def _run_smearing_method(self):
         import anharmonic._phono3py as phono3c
@@ -191,18 +216,16 @@ class JointDos:
         self._set_phonon(self._triplets_at_q.ravel())
         f_max = np.max(self._frequencies) * 2 + self._sigma * 4
         f_min = np.min(self._frequencies) * 2 - self._sigma * 4
-        freq_points = np.arange(f_min, f_max, self._frequency_step,
-                                dtype='double')
-        jdos = np.zeros_like(freq_points)
+        self._set_frequency_points(f_min, f_max)
+        jdos = np.zeros((len(self._frequency_points), 2), dtype='double')
         phono3c.joint_dos(jdos,
-                          freq_points,
+                          self._frequency_points,
                           self._triplets_at_q,
                           self._weights_at_q,
                           self._frequencies,
                           self._sigma)
         jdos /= np.prod(self._mesh)
         self._joint_dos = jdos
-        self._frequency_points = freq_points
         
     def _set_dynamical_matrix(self):
         self._dm = get_dynamical_matrix(
@@ -222,7 +245,9 @@ class JointDos:
             (self._triplets_at_q,
              self._weights_at_q,
              self._grid_address,
-             self._bz_map) = get_nosym_triplets_at_q(
+             self._bz_map,
+             map_triplets,
+             map_q) = get_nosym_triplets_at_q(
                  self._grid_point,
                  self._mesh,
                  self._reciprocal_lattice,
@@ -231,7 +256,9 @@ class JointDos:
             (self._triplets_at_q,
              self._weights_at_q,
              self._grid_address,
-             self._bz_map) = get_triplets_at_q(
+             self._bz_map,
+             map_triplets,
+             map_q) = get_triplets_at_q(
                  self._grid_point,
                  self._mesh,
                  self._symmetry.get_pointgroup_operations(),
@@ -248,3 +275,15 @@ class JointDos:
                      self._frequency_factor_to_THz,
                      self._nac_q_direction,
                      self._lapack_zheev_uplo)
+
+    def _set_frequency_points(self, f_min, f_max):
+        if self._num_frequency_points is None:
+            if self._frequency_step is not None:
+                self._frequency_points = np.arange(
+                    f_min, f_max, self._frequency_step, dtype='double')
+            else:
+                self._frequency_points = np.array(np.linspace(
+                    f_min, f_max, 201), dtype='double')
+        else:
+            self._frequency_points = np.array(np.linspace(
+                f_min, f_max, self._num_frequency_points), dtype='double')

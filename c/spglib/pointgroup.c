@@ -3,6 +3,7 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "lattice.h"
 #include "pointgroup.h"
 #include "symmetry.h"
@@ -1012,7 +1013,7 @@ static int laue_one_axis(int axes[3],
 			 SPGCONST PointSymmetry * pointsym,
 			 const int rot_order)
 {
-  int i, j, num_ortho_axis, det, min_det, is_found, tmpval;
+  int i, j, num_ortho_axis, det, is_found, tmpval;
   int axis_vec[3], tmp_axes[3];
   int prop_rot[3][3], t_mat[3][3];
   int ortho_axes[NUM_ROT_AXES];
@@ -1047,9 +1048,8 @@ static int laue_one_axis(int axes[3],
 
   tmp_axes[1] = -1;
   tmp_axes[2] = axes[2];
-  min_det = 4;
-  is_found = 0;
   for (i = 0; i < num_ortho_axis; i++) {
+    is_found = 0;
     tmp_axes[0] = ortho_axes[i];
     mat_multiply_matrix_vector_i3(axis_vec,
 				  prop_rot,
@@ -1066,16 +1066,15 @@ static int laue_one_axis(int axes[3],
       }
     }
 
+    if (!is_found) { continue; }
+    
     get_transformation_matrix(t_mat, tmp_axes);
-    det = mat_get_determinant_i3(t_mat);
-    if (det < 0) { det = -det; }
-    if (det < min_det) {
-      min_det = det;
+    det = abs(mat_get_determinant_i3(t_mat));
+    if (det < 4) { /* to avoid F-center choice det=4 */
       axes[0] = tmp_axes[0];
       axes[1] = tmp_axes[1];
+      goto end;
     }
-
-    if (is_found) { goto end; }
   }
 
  err: /* axes are not correctly found. */

@@ -18,9 +18,9 @@ static double current_tolerance;
 
 static Primitive get_primitive_and_pure_translation(SPGCONST Cell * cell,
 						    const double symprec);
-static Cell * get_primitive_with_mapping_table(int * mapping_table,
-					       SPGCONST Cell * cell,
-					       const double symprec);
+static Cell * get_primitive_and_mapping_table(int * mapping_table,
+					      SPGCONST Cell * cell,
+					      const double symprec);
 static int set_primitive_positions(Cell * primitive_cell,
 				   const VecDBL * position,
 				   const Cell * cell,
@@ -65,9 +65,9 @@ Cell * prm_get_primitive(SPGCONST Cell * cell,
   Cell *primitive_cell;
 
   mapping_table = (int*) malloc(sizeof(int) * cell->size);
-  primitive_cell = prm_get_primitive_with_mapping_table(mapping_table,
-							cell,
-							symprec);
+  primitive_cell = prm_get_primitive_and_mapping_table(mapping_table,
+						       cell,
+						       symprec);
   free(mapping_table);
   return primitive_cell;
 }
@@ -78,13 +78,13 @@ Primitive prm_get_primitive_and_pure_translations(SPGCONST Cell * cell,
   return get_primitive_and_pure_translation(cell, symprec);
 }
 
-Cell * prm_get_primitive_with_mapping_table(int * mapping_table,
-					    SPGCONST Cell * cell,
-					    const double symprec)
+Cell * prm_get_primitive_and_mapping_table(int * mapping_table,
+					   SPGCONST Cell * cell,
+					   const double symprec)
 {
-  return get_primitive_with_mapping_table(mapping_table,
-					  cell,
-					  symprec);
+  return get_primitive_and_mapping_table(mapping_table,
+					 cell,
+					 symprec);
 }
 
 double prm_get_current_tolerance(void)
@@ -146,9 +146,9 @@ static Primitive get_primitive_and_pure_translation(SPGCONST Cell * cell,
 
 /* If cell is already primitive cell, */
 /* primitive cell with smallest lattice is returned. */
-static Cell * get_primitive_with_mapping_table(int * mapping_table,
-					       SPGCONST Cell * cell,
-					       const double symprec)
+static Cell * get_primitive_and_mapping_table(int * mapping_table,
+					      SPGCONST Cell * cell,
+					      const double symprec)
 {
   int i, attempt;
   double tolerance;

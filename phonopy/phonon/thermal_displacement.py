@@ -147,6 +147,7 @@ class ThermalDisplacements(ThermalMotion):
         f = open('thermal_displacements.yaml', 'w')
         f.write("# Thermal displacements\n")
         f.write("natom: %5d\n" % (natom))
+        f.write("cutoff_frequency: %f\n" % self._cutoff_frequency)
 
         f.write("thermal_displacements:\n")
         for t, u in zip(self._temperatures, self._displacements):
@@ -185,7 +186,7 @@ class ThermalDisplacementMatrices(ThermalMotion):
                                frequencies,
                                eigenvectors,
                                masses,
-                               cutoff_frequency=None)
+                               cutoff_frequency=cutoff_frequency)
 
         self._disp_matrices = None
 
@@ -211,6 +212,7 @@ class ThermalDisplacementMatrices(ThermalMotion):
         f = open('thermal_displacement_matrices.yaml', 'w')
         f.write("# Thermal displacement_matrices\n")
         f.write("natom: %5d\n" % (natom))
+        f.write("cutoff_frequency: %f\n" % self._cutoff_frequency)
         f.write("thermal_displacement_matrices:\n")
         for t, matrices in zip(self._temperatures, self._disp_matrices):
             f.write("- temperature:   %15.7f\n" % t)
@@ -245,7 +247,7 @@ class ThermalDistances(ThermalMotion):
                                frequencies,
                                eigenvectors,
                                primitive.get_masses(),
-                               cutoff_frequency=None)
+                               cutoff_frequency=cutoff_frequency)
 
     def _get_cross(self, v, delta_r, q, atom1, atom2):
         phase = np.exp(2j * np.pi * np.dot(delta_r, q))
@@ -290,6 +292,7 @@ class ThermalDistances(ThermalMotion):
         natom = len(self._masses)
         f = open('thermal_distances.yaml', 'w')
         f.write("natom: %5d\n" % (natom))
+        f.write("cutoff_frequency: %f\n" % self._cutoff_frequency)
 
         f.write("thermal_distances:\n")
         for t, u in zip(self._temperatures, self._distances):

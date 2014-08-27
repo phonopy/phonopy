@@ -11,14 +11,18 @@
 
 Cell * ref_refine_cell(SPGCONST Cell * cell,
 		       const double symprec);
-Symmetry * ref_get_refined_symmetry_operations(SPGCONST Cell * cell,
-					       SPGCONST Cell * primitive,
-					       SPGCONST Spacegroup * spacegroup,
-					       const double symprec);
-void ref_get_Wyckoff_positions(int * wyckoffs,
-			       int * equiv_atoms,
-			       SPGCONST Cell * primitive,
-			       SPGCONST Spacegroup * spacegroup,
-			       const double symprec);
+Symmetry *
+ref_get_refined_symmetry_operations(SPGCONST Cell * cell,
+				    SPGCONST Cell * primitive,
+				    SPGCONST Spacegroup * spacegroup,
+				    const double symprec);
+Cell * ref_get_Wyckoff_positions(int * wyckoffs,
+				 int * equiv_atoms,
+				 SPGCONST Cell * primitive,
+				 SPGCONST Cell * cell,
+				 SPGCONST Spacegroup * spacegroup,
+				 SPGCONST Symmetry * symmetry,
+				 const int * mapping_table,
+				 const double symprec);
 
 #endif

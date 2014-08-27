@@ -185,14 +185,35 @@ def get_born_OUTCAR(poscar_filename="POSCAR",
                     is_symmetry=True,
                     symmetrize_tensors=False):
     ucell = read_vasp(poscar_filename)
-    scell = get_supercell(ucell, supercell_matrix)
-    inv_smat = np.linalg.inv(supercell_matrix)
-    pcell = get_primitive(scell, np.dot(inv_smat, primitive_axis))
-    u_sym = Symmetry(ucell, is_symmetry=is_symmetry)
-    p_sym = Symmetry(pcell, is_symmetry=is_symmetry)
-    lattice = ucell.get_cell().T
     outcar = open(outcar_filename)
+
+    borns, epsilon = read_born_and_epsilon(outcar)
+    num_atom = len(borns)
+    assert num_atom == ucell.get_number_of_atoms()
     
+    if symmetrize_tensors:
+        lattice = ucell.get_cell().T
+        positions = ucell.get_scaled_positions()
+        u_sym = Symmetry(ucell, is_symmetry=is_symmetry)
+        symprec = u_sym.get_symmetry_tolerance()
+        point_sym = [similarity_transformation(lattice, r)
+                     for r in u_sym.get_pointgroup_operations()]
+        epsilon = symmetrize_tensor(epsilon, point_sym)
+        borns = symmetrize_borns(borns, u_sym, lattice, positions, symprec)
+        
+    inv_smat = np.linalg.inv(supercell_matrix)
+    scell = get_supercell(ucell, supercell_matrix)
+    pcell = get_primitive(scell, np.dot(inv_smat, primitive_axis))
+    p2s = np.array(pcell.get_primitive_to_supercell_map(), dtype='intc')
+    p_sym = Symmetry(pcell, is_symmetry=is_symmetry)
+    s_indep_atoms = p2s[p_sym.get_independent_atoms()]
+    u2u = scell.get_unitcell_to_unitcell_map()
+    u_indep_atoms = [u2u[x] for x in s_indep_atoms]
+    reduced_borns = borns[u_indep_atoms].copy()
+
+    return reduced_borns, epsilon
+
+def read_born_and_epsilon(outcar):
     borns = []
     while True:
         line = outcar.readline()
@@ -226,50 +247,46 @@ def get_born_OUTCAR(poscar_filename="POSCAR",
 
     borns = np.array(borns, dtype='double')
     epsilon = np.array(epsilon, dtype='double')
-    if symmetrize_tensors:
-        borns_orig = borns.copy()
-        point_sym = [similarity_transformation(lattice, r)
-                     for r in u_sym.get_pointgroup_operations()]
-        epsilon = symmetrize_tensor(epsilon, point_sym)
-        for i in range(num_atom):
-            z = borns[i]
-            site_sym = [similarity_transformation(lattice, r)
-                        for r in u_sym.get_site_symmetry(i)]
-            borns[i] = symmetrize_tensor(z, site_sym)
 
-        rotations = u_sym.get_symmetry_operations()['rotations']
-        map_atoms = u_sym.get_map_atoms()
-        borns_copy = np.zeros_like(borns)
-        for i, m_i in enumerate(map_atoms):
-            count = 0
-            for j, r_j in enumerate(u_sym.get_map_operations()):
-                if map_atoms[j] == m_i:
-                    count += 1
-                    r_cart = similarity_transformation(lattice, rotations[r_j])
-                    borns_copy[i] += similarity_transformation(r_cart, borns[j])
-            borns_copy[i] /= count
+    return borns, epsilon
 
-        borns = borns_copy
-        sum_born = borns.sum(axis=0) / len(borns)
-        borns -= sum_born
+def symmetrize_borns(borns, u_sym, lattice, positions, symprec):
+    borns_orig = borns.copy()
+    for i, Z in enumerate(borns):
+        site_sym = [similarity_transformation(lattice, r)
+                    for r in u_sym.get_site_symmetry(i)]
+        Z = symmetrize_tensor(Z, site_sym)
 
-        if (np.abs(borns_orig - borns) > 0.1).any():
-            sys.stderr.write(
-                "Born effective charge symmetrization might go wrong.\n")
-        
-    p2s = np.array(pcell.get_primitive_to_supercell_map(), dtype='intc')
-    s_indep_atoms = p2s[p_sym.get_independent_atoms()]
-    u2u = scell.get_unitcell_to_unitcell_map()
-    u_indep_atoms = [u2u[x] for x in s_indep_atoms]
-    reduced_borns = borns[u_indep_atoms].copy()
+    rotations = u_sym.get_symmetry_operations()['rotations']
+    translations = u_sym.get_symmetry_operations()['translations']
+    map_atoms = u_sym.get_map_atoms()
+    borns_copy = np.zeros_like(borns)
+    for i in range(len(borns)):
+        count = 0
+        for r, t in zip(rotations, translations):
+            count += 1
+            diff = np.dot(positions, r.T) + t - positions[i]
+            diff -= np.rint(diff)
+            j = np.nonzero((np.abs(diff) < symprec).all(axis=1))[0][0]
+            r_cart = similarity_transformation(lattice, r)
+            borns_copy[i] += similarity_transformation(r_cart, borns[j])
+        borns_copy[i] /= count
 
-    return reduced_borns, epsilon
+    borns = borns_copy
+    sum_born = borns.sum(axis=0) / len(borns)
+    borns -= sum_born
+
+    if (np.abs(borns_orig - borns) > 0.1).any():
+        sys.stderr.write(
+            "Born effective charge symmetrization might go wrong.\n")
+
+    return borns
     
 def symmetrize_tensor(tensor, symmetry_operations):
-    tensors = np.zeros_like(tensor)
+    sum_tensor = np.zeros_like(tensor)
     for sym in symmetry_operations:
-        tensors += similarity_transformation(sym, tensor)
-    return tensors / len(symmetry_operations)
+        sum_tensor += similarity_transformation(sym, tensor)
+    return sum_tensor / len(symmetry_operations)
 
 #
 # read VASP POSCAR

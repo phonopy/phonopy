@@ -142,7 +142,7 @@ class Symmetry:
                         break
                 if is_found:
                     break
-        self._map_atoms = np.array(map_atoms, dtype=int)
+        self._map_atoms = np.array(map_atoms, dtype='intc')
 
     def _set_symmetry_dataset(self):
         self._dataset = spg.get_symmetry_dataset(self._cell, self._symprec)
@@ -152,7 +152,9 @@ class Symmetry:
         self._international_table = "%s (%d)" % (self._dataset['international'],
                                                  self._dataset['number'])
         self._wyckoff_letters = self._dataset['wyckoffs']
+        
         self._map_atoms = self._dataset['equivalent_atoms']
+        # self._set_map_atoms()
 
     def _set_symmetry_operations(self):
         self._symmetry_operations = spg.get_symmetry(self._cell,
@@ -227,7 +229,7 @@ class Symmetry:
 
             self._map_atoms = s2u_map
         else:
-            rotations.append(np.eye(3, dtype=int))
+            rotations.append(np.eye(3, dtype='intc'))
             translations.append(np.zeros(3, dtype='double'))
             self._map_atoms = range(self._cell.get_number_of_atoms())
 

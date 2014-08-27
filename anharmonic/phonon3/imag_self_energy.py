@@ -1,15 +1,16 @@
 import numpy as np
 from phonopy.units import VaspToTHz, Hbar, EV, Angstrom, THz, AMU
 from phonopy.phonon.degeneracy import degenerate_sets
-from phonopy.structure.spglib import get_neighboring_grid_points
 from anharmonic.phonon3.triplets import get_triplets_integration_weights, gaussian, occupation
 import anharmonic.file_IO as file_IO
 
 def get_imag_self_energy(interaction,
                          grid_points,
                          sigmas,
-                         frequency_step=0.1,
+                         frequency_step=None,
+                         num_frequency_points=None,
                          temperatures=[0.0, 300.0],
+                         scattering_event_class=None, # class 1 or 2 
                          log_level=0):
     if temperatures is None:
         print "Temperatures have to be set."
@@ -23,7 +24,7 @@ def get_imag_self_energy(interaction,
         ise.set_grid_point(gp)
         if log_level:
             weights = interaction.get_triplets_at_q()[1]
-            print "------ Imaginary part of self energy ------"
+            print "------------------- Imaginary part of self energy (%d/%d) -------------------" % (i + 1, len(grid_points))
             print "Grid point: %d" % gp
             print "Number of ir-triplets:",
             print "%d / %d" % (len(weights), weights.sum())
@@ -53,25 +54,32 @@ def get_imag_self_energy(interaction,
                     print "Tetrahedron method"
             ise.set_sigma(sigma)
             if sigma:
-                fmax = max_phonon_freq * 2 + sigma * 4 + frequency_step / 10
+                fmax = max_phonon_freq * 2 + sigma * 4
             else:
-                fmax = max_phonon_freq * 2 + frequency_step / 10
+                fmax = max_phonon_freq * 2
+            fmax *= 1.005
             fmin = 0
-            frequency_points_at_sigma = np.arange(fmin, fmax, frequency_step)
-            ise.set_frequency_points(frequency_points_at_sigma)
+            frequency_points_at_sigma = get_frequency_points(
+                fmin,
+                fmax,
+                frequency_step=frequency_step,
+                num_frequency_points=num_frequency_points)
             fp_sigmas.append(frequency_points_at_sigma)
-
-            if not sigma:
-                ise.set_integration_weights()
-
-            ise_temperatures = []
-            for k, t in enumerate(temperatures):
-                if log_level:
-                    print "Temperature:", t
-                ise.set_temperature(t)
-                ise.run()
-                ise_temperatures.append(ise.get_imag_self_energy())
-                
+            ise_temperatures = np.zeros(
+                (len(temperatures), len(frequency_points_at_sigma),
+                 len(interaction.get_band_indices())), dtype='double')
+                 
+            for k, freq_point in enumerate(frequency_points_at_sigma):
+                ise.set_frequency_points([freq_point])
+                if (sigma is None) or (scattering_event_class is not None):
+                    ise.set_integration_weights(
+                        scattering_event_class=scattering_event_class)
+    
+                for l, t in enumerate(temperatures):
+                    ise.set_temperature(t)
+                    ise.run()
+                    ise_temperatures[l, k] = ise.get_imag_self_energy()[0]
+                    
             ise_sigmas.append(ise_temperatures)
             
         imag_self_energy.append(ise_sigmas)
@@ -79,6 +87,23 @@ def get_imag_self_energy(interaction,
                 
     return imag_self_energy, frequency_points
 
+def get_frequency_points(f_min,
+                         f_max,
+                         frequency_step=None,
+                         num_frequency_points=None):
+    if num_frequency_points is None:
+        if frequency_step is not None:
+            frequency_points = np.arange(
+                f_min, f_max, frequency_step, dtype='double')
+        else:
+            frequency_points = np.array(np.linspace(
+                f_min, f_max, 201), dtype='double')
+    else:
+        frequency_points = np.array(np.linspace(
+            f_min, f_max, num_frequency_points), dtype='double')
+        
+    return frequency_points
+    
 def get_linewidth(interaction,
                   grid_points,
                   sigmas,
@@ -154,6 +179,7 @@ def write_imag_self_energy(imag_self_energy,
                            frequency_points,
                            temperatures,
                            sigmas,
+                           scattering_event_class=None,
                            filename=None):
     for gp, ise_sigmas, fp_sigmas in zip(grid_points,
                                          imag_self_energy,
@@ -172,6 +198,7 @@ def write_imag_self_energy(imag_self_energy,
                          ise[:, pos:(pos + len(bi))].sum(axis=1) / len(bi),
                          sigma=sigma,
                          temperature=t,
+                         scattering_event_class=scattering_event_class,
                          filename=filename)
     
 class ImagSelfEnergy:
@@ -204,7 +231,7 @@ class ImagSelfEnergy:
 
         self._g = None # integration weights
         self._mesh = self._interaction.get_mesh_numbers()
-        self._is_collision_matrix = True
+        self._is_collision_matrix = False
 
         # Unit to THz of Gamma
         num_grid = np.prod(self._mesh)
@@ -236,7 +263,7 @@ class ImagSelfEnergy:
          self._eigenvectors) = self._interaction.get_phonons()[:2]
         self._band_indices = self._interaction.get_band_indices()
 
-    def set_integration_weights(self):
+    def set_integration_weights(self, scattering_event_class=None):
         if self._frequency_points is None:
             f_points = self._frequencies[self._grid_point][self._band_indices]
         else:
@@ -247,6 +274,9 @@ class ImagSelfEnergy:
             f_points,
             self._sigma,
             is_collision_matrix=self._is_collision_matrix)
+
+        if scattering_event_class == 1 or scattering_event_class == 2:
+            self._g[scattering_event_class - 1] = 0
         
     def get_imag_self_energy(self):
         if self._cutoff_frequency is None:
@@ -287,11 +317,13 @@ class ImagSelfEnergy:
         else:
             self._sigma = float(sigma)
 
+        self._g = None
+
     def set_frequency_points(self, frequency_points):
         if frequency_points is None:
             self._frequency_points = None
         else:
-            self._frequency_points = np.double(frequency_points)
+            self._frequency_points = np.array(frequency_points, dtype='double')
 
     def set_temperature(self, temperature):
         if temperature is None:
@@ -300,7 +332,7 @@ class ImagSelfEnergy:
             self._temperature = float(temperature)
         
     def _run_with_band_indices(self):
-        if self._sigma is None:
+        if self._g is not None:
             if self._lang == 'C':
                 self._run_thm_c_with_band_indices()
             else:
@@ -312,7 +344,7 @@ class ImagSelfEnergy:
                 self._run_py_with_band_indices()
     
     def _run_with_frequency_points(self):
-        if self._sigma is None:
+        if self._g is not None:
             if self._lang == 'C':
                 self._run_thm_c_with_frequency_points()
             else:

@@ -83,6 +83,7 @@ class Phono3py:
 
         # Imaginary part of self energy at frequency points
         self._imag_self_energy = None
+        self._scattering_event_class = None
 
         # Linewidth (Imaginary part of self energy x 2) at temperatures
         self._linewidth = None
@@ -315,27 +316,34 @@ class Phono3py:
         
     def run_imag_self_energy(self,
                              grid_points,
-                             frequency_step=0.1,
-                             temperatures=[0.0, 300.0]):
+                             frequency_step=None,
+                             num_frequency_points=None,
+                             temperatures=[0.0, 300.0],
+                             scattering_event_class=None):
         self._grid_points = grid_points
         self._temperatures = temperatures
+        self._scattering_event_class = scattering_event_class
         self._imag_self_energy, self._frequency_points = get_imag_self_energy(
             self._interaction,
             grid_points,
             self._sigmas,
             frequency_step=frequency_step,
+            num_frequency_points=num_frequency_points,
             temperatures=temperatures,
+            scattering_event_class=scattering_event_class,
             log_level=self._log_level)
             
     def write_imag_self_energy(self, filename=None):
-        write_imag_self_energy(self._imag_self_energy,
-                               self._mesh,
-                               self._grid_points,
-                               self._band_indices,
-                               self._frequency_points,
-                               self._temperatures,
-                               self._sigmas,
-                               filename=filename)
+        write_imag_self_energy(
+            self._imag_self_energy,
+            self._mesh,
+            self._grid_points,
+            self._band_indices,
+            self._frequency_points,
+            self._temperatures,
+            self._sigmas,
+            scattering_event_class=self._scattering_event_class,
+            filename=filename)
         
     def run_linewidth(self,
                       grid_points,
@@ -662,8 +670,10 @@ class Phono3pyJointDos:
                  mesh,
                  fc2,
                  nac_params=None,
+                 nac_q_direction=None,
                  sigmas=[],
                  frequency_step=None,
+                 num_frequency_points=None,
                  frequency_factor_to_THz=VaspToTHz,
                  frequency_scale_factor=None,
                  is_nosym=False,
@@ -675,8 +685,10 @@ class Phono3pyJointDos:
         self._mesh = mesh
         self._fc2 = fc2
         self._nac_params = nac_params
+        self._nac_q_direction = nac_q_direction
         self._sigmas = sigmas
         self._frequency_step = frequency_step
+        self._num_frequency_points = num_frequency_points
         self._frequency_factor_to_THz = frequency_factor_to_THz
         self._frequency_scale_factor = frequency_scale_factor
         self._is_nosym = is_nosym
@@ -690,7 +702,9 @@ class Phono3pyJointDos:
             self._supercell,
             self._fc2,
             nac_params=self._nac_params,
+            nac_q_direction=self._nac_q_direction,
             frequency_step=self._frequency_step,
+            num_frequency_points=self._num_frequency_points,
             frequency_factor_to_THz=self._frequency_factor_to_THz,
             frequency_scale_factor=self._frequency_scale_factor,
             is_nosym=self._is_nosym,
@@ -704,7 +718,7 @@ class Phono3pyJointDos:
             
             if self._log_level:
                 weights = self._jdos.get_triplets_at_q()[1]
-                print "------ Joint DOS ------"
+                print "--------------------------------- Joint DOS ---------------------------------"
                 print "Grid point: %d" % gp
                 print "Number of ir-triplets:",
                 print "%d / %d" % (len(weights), weights.sum())

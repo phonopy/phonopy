@@ -3,11 +3,24 @@
 Change Log
 ==========
 
+June-23-2014: Version 1.8.4.2
+-----------------------------
+
+* Symmetrization of Born effective charge of ``outcar-born`` is
+  improved.
+* ``-v`` option shows Born effective charges and dielectric constants
+  when NAC is set.
+* Bug fix to include cutoff frequency to the displacement distance
+  matrix.
+* Yaml output formats for band, mesh, q-points, modulation modes were
+  slightly modified.
+* Bug fix in finding equivalent atoms in supercell that has lower
+  symmetry than the original unit cell.
+
 Apr-5-2014: Version 1.8.4.1
 -----------------------------
 
 * Fix irreps for non-zero q-point of nonsymmorphic case
-
 
 Mar-31-2014: Version 1.8.4
 ---------------------------
