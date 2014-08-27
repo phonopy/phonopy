@@ -152,8 +152,13 @@ def write_FORCE_SETS_vasp(forces_filenames,
     try:
         from lxml import etree
     except ImportError:
-        print "You need to install python-lxml."
-        sys.exit(1)
+        try:
+            import xml.etree.cElementTree as etree
+            print("running with cElementTree")
+        except ImportError:
+            print "You need to install python-lxml or Python has to support " \
+                  "cElementTree."
+            sys.exit(-1)
 
     if verbose:
         print "counter (file index):",
@@ -353,8 +358,13 @@ def read_force_constant_vasprun_xml(filename):
     try:
         from lxml import etree
     except ImportError:
-        print "You need to install python-lxml."
-        sys.exit(1)
+        try:
+            import xml.etree.cElementTree as etree
+            print("running with cElementTree")
+        except ImportError:
+            print "You need to install python-lxml or Python has to support " \
+                  "cElementTree."
+            sys.exit(1)
 
     if vasp.is_version528(filename):
         vasprun = etree.iterparse(vasp.VasprunWrapper(filename))
