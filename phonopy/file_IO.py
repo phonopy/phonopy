@@ -153,11 +153,11 @@ def iterparse(fname, tag=None):
         if tag is None:
             return ET.iterparse(fname)
         else:
-            def _iter(fname):
+            def _iter(fname, t):
                 for event, elem in ET.iterparse(fname):
-                    if elem.tag == tag:
+                    if elem.tag == t:
                         yield event, elem
-            return _iter(fname)
+            return _iter(fname, tag)
 
 
 def write_FORCE_SETS_vasp(forces_filenames,
