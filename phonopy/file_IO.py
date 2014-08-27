@@ -150,9 +150,20 @@ def write_FORCE_SETS_vasp(forces_filenames,
                           verbose=True):
     try:
         from lxml import etree
+        iterparse = etree.iterparse
     except ImportError:
         try:
-            import xml.etree.cElementTree as etree
+            import xml.etree.cElementTree as ET
+            def iterparse(fname, tag=None):
+                if tag is None:
+                    return ET.iterparse(fname)
+                else:
+                    def _iter(fname):
+                        for event, elem in ET.iterparse(fname):
+                            if elem.tag == tag:
+                                yield event, elem
+                    return _iter(fname)
+
             print("running with cElementTree")
         except ImportError:
             print "You need to install python-lxml or Python has to support " \
@@ -169,11 +180,11 @@ def write_FORCE_SETS_vasp(forces_filenames,
     if is_zero_point:
         force_files = forces_filenames[1:]
         if vasp.is_version528(forces_filenames[0]):
-            zero_forces = vasp.get_forces_vasprun_xml(etree.iterparse(
+            zero_forces = vasp.get_forces_vasprun_xml(iterparse(
                 vasp.VasprunWrapper(forces_filenames[0]), tag='varray'))
         else:
             zero_forces = vasp.get_forces_vasprun_xml(
-                etree.iterparse(forces_filenames[0], tag='varray'))
+                iterparse(forces_filenames[0], tag='varray'))
 
         if verbose:
             print "%d" % (count + 1),
@@ -187,11 +198,11 @@ def write_FORCE_SETS_vasp(forces_filenames,
 
     for i, disp in enumerate(displacements['first_atoms']):
         if vasp.is_version528(force_files[i]):
-            disp['forces'] = vasp.get_forces_vasprun_xml(etree.iterparse(
+            disp['forces'] = vasp.get_forces_vasprun_xml(iterparse(
                 vasp.VasprunWrapper(force_files[i]), tag='varray'))
         else:
             disp['forces'] = vasp.get_forces_vasprun_xml(
-                etree.iterparse(force_files[i], tag='varray'))
+                iterparse(force_files[i], tag='varray'))
 
         if verbose:
             print "%d" % (count + 1),
@@ -351,14 +362,14 @@ def parse_FORCE_CONSTANTS(filename):
 
     return force_constants
 
-def read_force_constant_vasprun_xml(filename):
 
-    import sys
+def read_force_constant_vasprun_xml(filename):
     try:
         from lxml import etree
     except ImportError:
         try:
             import xml.etree.cElementTree as etree
+
             print("running with cElementTree")
         except ImportError:
             print "You need to install python-lxml or Python has to support " \
