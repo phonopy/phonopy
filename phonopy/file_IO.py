@@ -143,32 +143,28 @@ def write_FORCE_SETS_wien2k(forces_filenames,
     write_FORCE_SETS(displacements, filename=filename)
     return True
 
+
+def iterparse(fname, tag=None):
+    try:
+        from lxml import etree
+        return etree.iterparse(fname, tag=tag)
+    except ImportError:
+        import xml.etree.cElementTree as ET
+        if tag is None:
+            return ET.iterparse(fname)
+        else:
+            def _iter(fname):
+                for event, elem in ET.iterparse(fname):
+                    if elem.tag == tag:
+                        yield event, elem
+            return _iter(fname)
+
+
 def write_FORCE_SETS_vasp(forces_filenames,
                           displacements,
                           filename='FORCE_SETS',
                           is_zero_point=False,
                           verbose=True):
-    try:
-        from lxml import etree
-        iterparse = etree.iterparse
-    except ImportError:
-        try:
-            import xml.etree.cElementTree as ET
-            def iterparse(fname, tag=None):
-                if tag is None:
-                    return ET.iterparse(fname)
-                else:
-                    def _iter(fname):
-                        for event, elem in ET.iterparse(fname):
-                            if elem.tag == tag:
-                                yield event, elem
-                    return _iter(fname)
-
-            print("running with cElementTree")
-        except ImportError:
-            print "You need to install python-lxml or Python has to support " \
-                  "cElementTree."
-            sys.exit(-1)
 
     if verbose:
         print "counter (file index):",
@@ -364,22 +360,10 @@ def parse_FORCE_CONSTANTS(filename):
 
 
 def read_force_constant_vasprun_xml(filename):
-    try:
-        from lxml import etree
-    except ImportError:
-        try:
-            import xml.etree.cElementTree as etree
-
-            print("running with cElementTree")
-        except ImportError:
-            print "You need to install python-lxml or Python has to support " \
-                  "cElementTree."
-            sys.exit(1)
-
     if vasp.is_version528(filename):
-        vasprun = etree.iterparse(vasp.VasprunWrapper(filename))
+        vasprun = iterparse(vasp.VasprunWrapper(filename))
     else:
-        vasprun = etree.iterparse(filename)
+        vasprun = iterparse(filename)
     return vasp.get_force_constants_vasprun_xml(vasprun)
 
 def read_force_constant_OUTCAR(filename):
