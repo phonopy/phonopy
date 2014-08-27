@@ -149,9 +149,9 @@ def iterparse(fname, tag=None):
         from lxml import etree
         return etree.iterparse(fname, tag=tag)
     except ImportError:
-        import xml.etree.cElementTree as ET
+        import xml.etree.cElementTree as etree
         def _iter(fname, t):
-            for event, elem in ET.iterparse(fname):
+            for event, elem in etree.iterparse(fname):
                 if t is None or elem.tag == t:
                     yield event, elem
         return _iter(fname, tag)
