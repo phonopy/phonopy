@@ -110,7 +110,7 @@ def get_force_constants_vasprun_xml(vasprun):
         if element.tag == 'varray':
             if element.attrib['name'] == 'hessian':
                 fc_tmp = []
-                for v in element.xpath('./v'):
+                for v in element.findall('./v'):
                     fc_tmp.append([float(x) for x in v.text.strip().split()])
 
     if fc_tmp is None:
@@ -141,8 +141,8 @@ def get_atom_types_from_vasprun_xml(element):
     if element.tag == 'array':
         if 'name' in element.attrib:
             if element.attrib['name'] == 'atomtypes':
-                for rc in element.xpath('./set/rc'):
-                    atom_info = [x.text for x in rc.xpath('./c')]
+                for rc in element.findall('./set/rc'):
+                    atom_info = [x.text for x in rc.findall('./c')]
                     num_atom += int(atom_info[0])
                     atom_types.append(atom_info[1].strip())
                     masses += ([float(atom_info[2])] * int(atom_info[0]))
