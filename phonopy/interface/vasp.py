@@ -91,12 +91,10 @@ def get_forces_vasprun_xml(vasprun):
     vasprun = etree.iterparse(filename, tag='varray')
     """
     forces = []
-    num_atom = 0
     for event, element in vasprun:
         if element.attrib['name'] == 'forces':
-            for v in element.xpath('./v'):
+            for v in element:
                 forces.append([float(x) for x in v.text.split()])
-                
     return np.array(forces)
 
 def get_force_constants_vasprun_xml(vasprun):
