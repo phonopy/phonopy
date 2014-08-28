@@ -3,6 +3,14 @@
 Change Log
 ==========
 
+Aug-28-2014: Version 1.9.0
+-----------------------------
+
+* Use a native cElementTree of Python as VASP XML parser and stop
+  using lxml. The native cElementTree is built in after Python 2.5. So 
+  Python 2.4 or before will not be suppored from this phonopy
+  version. This migration to cElementTree was made by shyuep.
+
 Aug-12-2014: Version 1.8.5
 -----------------------------
 
