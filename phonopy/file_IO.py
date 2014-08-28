@@ -147,14 +147,13 @@ def write_FORCE_SETS_wien2k(forces_filenames,
 def iterparse(fname, tag=None):
     try:
         import xml.etree.cElementTree as etree
-        def _iter(fname, t):
-            for event, elem in etree.iterparse(fname):
-                if t is None or elem.tag == t:
-                    yield event, elem
-        return _iter(fname, tag)
+        for event, elem in etree.iterparse(fname):
+            if tag is None or elem.tag == tag:
+                yield event, elem
     except ImportError:
         print "Python 2.5 or later is needed."
-        print "For creating FORCE_SETS file, you can use phonopy 1.8.5.1."
+        print "For creating FORCE_SETS file with Python 2.4, you can use",
+        print "phonopy 1.8.5.1 with python-lxml ."
         sys.exit(1)        
 
 def write_FORCE_SETS_vasp(forces_filenames,
