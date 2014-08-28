@@ -4,7 +4,7 @@ import numpy as np
 import h5py
 from phonopy.structure.atoms import Atoms
 from phonopy.interface import vasp
-from phonopy.file_IO import read_force_constant_vasprun_xml
+from phonopy.file_IO import read_force_constant_vasprun_xml, iterparse
 
 ###########
 #
@@ -1259,22 +1259,16 @@ def write_ir_grid_points(mesh,
                 tuple(grid_address[g].astype('double') / mesh))
 
 def get_forces_from_vasprun_xmls(vaspruns, num_atom, index_shift=0):
-    try:
-        from lxml import etree
-    except ImportError:
-        print "You need to install python-lxml."
-        sys.exit(1)
-
     forces = []
     for i, vasprun in enumerate(vaspruns):
         print >> sys.stderr, "%d" % (i + 1 + index_shift),
 
         if vasp.is_version528(vasprun):
             force_set = vasp.get_forces_vasprun_xml(
-                etree.iterparse(vasp.VasprunWrapper(vasprun), tag='varray'))
+                iterparse(vasp.VasprunWrapper(vasprun), tag='varray'))
         else:
             force_set = vasp.get_forces_vasprun_xml(
-                etree.iterparse(vasprun, tag='varray'))
+                iterparse(vasprun, tag='varray'))
         if force_set.shape[0] == num_atom:
             forces.append(force_set)
         else:
