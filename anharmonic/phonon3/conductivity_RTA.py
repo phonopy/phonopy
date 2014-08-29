@@ -332,7 +332,7 @@ class Conductivity_RTA(Conductivity):
                 print len(self._pp.get_triplets_at_q()[0])
                 print "Calculating interaction..."
                 
-            self._collision.run_interaction()
+            self._collision.run_interaction(use_Peierls_model=True)
             self._set_gamma_at_sigmas(i)
 
         if self._isotope is not None and not self._read_gamma_iso:

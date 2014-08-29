@@ -10,7 +10,8 @@ def get_imag_self_energy(interaction,
                          frequency_step=None,
                          num_frequency_points=None,
                          temperatures=[0.0, 300.0],
-                         scattering_event_class=None, # class 1 or 2 
+                         scattering_event_class=None, # class 1 or 2
+                         use_Peierls_model=False,
                          log_level=0):
     if temperatures is None:
         print "Temperatures have to be set."
@@ -28,8 +29,7 @@ def get_imag_self_energy(interaction,
             print "Grid point: %d" % gp
             print "Number of ir-triplets:",
             print "%d / %d" % (len(weights), weights.sum())
-        # ise.run_interaction_Peierls(option=1)
-        ise.run_interaction()
+        ise.run_interaction(use_Peierls_model=use_Peierls_model)
         frequencies = interaction.get_phonons()[0]
         max_phonon_freq = np.amax(frequencies)
 
@@ -109,6 +109,7 @@ def get_linewidth(interaction,
                   grid_points,
                   sigmas,
                   temperatures=np.arange(0, 1001, 10, dtype='double'),
+                  use_Peierls_model=False,
                   log_level=0):
     ise = ImagSelfEnergy(interaction)
     band_indices = interaction.get_band_indices()
@@ -125,7 +126,7 @@ def get_linewidth(interaction,
             print "Grid point: %d" % gp
             print "Number of ir-triplets:",
             print "%d / %d" % (len(weights), weights.sum())
-        ise.run_interaction()
+        ise.run_interaction(use_Peierls_model=use_Peierls_model)
         frequencies = interaction.get_phonons()[0]
         if log_level:
             adrs = interaction.get_grid_address()[gp]
@@ -257,31 +258,16 @@ class ImagSelfEnergy:
                 (len(self._frequency_points), num_band0), dtype='double')
             self._run_with_frequency_points()
 
-    def run_interaction(self):
+    def run_interaction(self, use_Peierls_model=False):
         self._interaction.run(lang=self._lang)
-        self._fc3_normal_squared = self._interaction.get_interaction_strength()
-        (self._frequencies,
-         self._eigenvectors) = self._interaction.get_phonons()[:2]
-        self._band_indices = self._interaction.get_band_indices()
-
-    def run_interaction_Peierls(self, option=1):
-        self._interaction.run(lang=self._lang)
-        v = self._interaction.get_interaction_strength()
-        divisor = np.prod(self._mesh)
-        if option == 0:
-            self._fc3_normal_squared = np.ones_like(v)        
-            self._fc3_normal_squared /= divisor / np.prod(v.shape[1:])
+        if use_Peierls_model:
+            self._set_Peierls_model_interaction()            
         else:
-            v_sum = np.dot(self._weights_at_q, v.sum(axis=2).sum(axis=2))
-            v_ave = v_sum / divisor / np.prod(v.shape[2:])
-            self._fc3_normal_squared = np.zeros_like(v)        
-            for i in range(v.shape[1]):
-                self._fc3_normal_squared[:, i, :, :] = v_ave[i]
-
+            self._fc3_normal_squared = self._interaction.get_interaction_strength()
         (self._frequencies,
          self._eigenvectors) = self._interaction.get_phonons()[:2]
         self._band_indices = self._interaction.get_band_indices()
-        
+
     def set_integration_weights(self, scattering_event_class=None):
         if self._frequency_points is None:
             f_points = self._frequencies[self._grid_point][self._band_indices]
@@ -349,6 +335,17 @@ class ImagSelfEnergy:
             self._temperature = None
         else:
             self._temperature = float(temperature)
+        
+    def _set_Peierls_model_interaction(self):
+        """This gives averaged ph-ph interaction strength for each band. """
+        
+        v = self._interaction.get_interaction_strength()
+        divisor = np.prod(self._mesh)
+        v_sum = np.dot(self._weights_at_q, v.sum(axis=2).sum(axis=2))
+        v_ave = v_sum / divisor / np.prod(v.shape[2:])
+        self._fc3_normal_squared = np.zeros_like(v)        
+        for i in range(v.shape[1]):
+            self._fc3_normal_squared[:, i, :, :] = v_ave[i]
         
     def _run_with_band_indices(self):
         if self._g is not None:
