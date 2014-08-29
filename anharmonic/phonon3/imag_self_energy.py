@@ -264,17 +264,20 @@ class ImagSelfEnergy:
          self._eigenvectors) = self._interaction.get_phonons()[:2]
         self._band_indices = self._interaction.get_band_indices()
 
-    def run_interaction_Peierls(self, option=0):
+    def run_interaction_Peierls(self, option=1):
         self._interaction.run(lang=self._lang)
         v = self._interaction.get_interaction_strength()
         divisor = np.prod(self._mesh)
-        self._fc3_normal_squared = np.ones_like(v)        
         if option == 0:
-            self._fc3_normal_squared /= divisor
+            self._fc3_normal_squared = np.ones_like(v)        
+            self._fc3_normal_squared /= divisor / np.prod(v.shape[1:])
         else:
-            v_sum = v.sum(axis=1).sum(axis=1).sum(axis=1)
-            self._fc3_normal_squared *= np.dot(self._weights_at_q,
-                                               v_sum) / divisor
+            v_sum = np.dot(self._weights_at_q, v.sum(axis=2).sum(axis=2))
+            v_ave = v_sum / divisor / np.prod(v.shape[2:])
+            self._fc3_normal_squared = np.zeros_like(v)        
+            for i in range(v.shape[1]):
+                self._fc3_normal_squared[:, i, :, :] = v_ave[i]
+
         (self._frequencies,
          self._eigenvectors) = self._interaction.get_phonons()[:2]
         self._band_indices = self._interaction.get_band_indices()
