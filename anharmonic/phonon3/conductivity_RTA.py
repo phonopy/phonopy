@@ -332,15 +332,16 @@ class Conductivity_RTA(Conductivity):
                 print len(self._pp.get_triplets_at_q()[0])
                 print "Calculating interaction..."
                 
-            self._collision.run_interaction(use_Peierls_model=True)
+            self._collision.run_interaction(use_Peierls_model=False)
             self._set_gamma_at_sigmas(i)
-
+            self._mean_square_pp_strength[i] = (
+                self._pp.get_mean_square_strength())
+            
         if self._isotope is not None and not self._read_gamma_iso:
             self._set_gamma_isotope_at_sigmas(i)
 
         self._cv[i] = self._get_cv(self._frequencies[grid_point])
         self._set_gv(i)
-        self._mean_square_pp_strength[i] = self._pp.get_mean_square_strength()
         
         if self._log_level:
             self._show_log(self._qpoints[i], i)

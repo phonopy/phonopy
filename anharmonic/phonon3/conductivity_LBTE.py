@@ -328,12 +328,13 @@ class Conductivity_LBTE(Conductivity):
                 
             self._collision.run_interaction()
             self._set_collision_matrix_at_sigmas(i)
+            self._mean_square_pp_strength[i] = (
+                self._pp.get_mean_square_strength())
             
         if self._isotope is not None:
             self._set_gamma_isotope_at_sigmas(i)
 
         self._set_gv(i)
-        self._mean_square_pp_strength[i] = self._pp.get_mean_square_strength()
         if self._log_level:
             self._show_log(i)
 
