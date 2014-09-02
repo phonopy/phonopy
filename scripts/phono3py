@@ -57,7 +57,7 @@ from anharmonic.settings import Phono3pyConfParser
 from anharmonic.phonon3 import Phono3py, Phono3pyJointDos, Phono3pyIsotope, \
      get_gruneisen_parameters
 
-phono3py_version = "0.8.11"
+phono3py_version = "0.9.0"
 
 # AA is created at http://www.network-science.de/ascii/.
 def print_phono3py():
@@ -172,6 +172,7 @@ parser.set_defaults(band_indices=None,
                     tstep=None,
                     tsym_type=None,
                     uplo='L',
+                    use_Peierls_model=False,
                     verbose=False,
                     write_amplitude=False,
                     write_collision=False,
@@ -253,6 +254,7 @@ parser.add_option("--jdos", dest="is_joint_dos", action="store_true",
                   help="Calculate joint density of states")
 parser.add_option("--lbte", dest="is_lbte", action="store_true",
                   help="Calculate thermal conductivity LBTE with Chaput's method")
+parser.add_option("--loglevel", dest="log_level", type="int", help="Log level")
 parser.add_option("--lw", "--linewidth", dest="is_linewidth",
                   action="store_true", help="Calculate linewidths")
 parser.add_option("--fst", "--frequency_shift", dest="is_frequency_shift",
@@ -302,10 +304,14 @@ parser.add_option("--sym_fc3r", dest="is_symmetrize_fc3_r", action="store_true",
                   help="Symmetrize fc3 in real space by index exchange")
 parser.add_option("--sym_fc3q", dest="is_symmetrize_fc3_q", action="store_true",
                   help="Symmetrize fc3 in reciprocal space by index exchange")
+parser.add_option("--thm", "--tetrahedron_method", dest="is_tetrahedron_method",
+                  action="store_true", help="Use tetrahedron method")
 parser.add_option("--tmax", dest="tmax", type="string",
                   help="Maximum calculated temperature")
 parser.add_option("--tmin", dest="tmin", type="string",
                   help="Minimum calculated temperature")
+parser.add_option("--ts", dest="temperatures", type="string",
+                  help="Temperatures for damping functions")
 parser.add_option("--tstep", dest="tstep", type="string",
                   help="Calculated temperature step")
 parser.add_option("--tsym", dest="is_translational_symmetry",
@@ -319,14 +325,11 @@ parser.add_option("--scattering_event_class", dest="scattering_event_class",
                   type="int",
                   help=("Scattering event class 1 or 2 to draw "
                         "imaginary part of self energy"))
+parser.add_option("--uplo", dest="uplo", type="string", help="Lapack zheev UPLO")
 parser.add_option("-v", "--verbose", dest="verbose", action="store_true",
                   help="Detailed run-time information is displayed")
-parser.add_option("--loglevel", dest="log_level", type="int", help="Log level")
-parser.add_option("--thm", "--tetrahedron_method", dest="is_tetrahedron_method",
-                  action="store_true", help="Use tetrahedron method")
-parser.add_option("--ts", dest="temperatures", type="string",
-                  help="Temperatures for damping functions")
-parser.add_option("--uplo", dest="uplo", type="string", help="Lapack zheev UPLO")
+parser.add_option("--peierls", dest="use_Peierls_model", action="store_true",
+                  help="Use Peierls model for ph-ph interaction strength")
 parser.add_option("--wgp", "--write_grid_points", dest="write_grid_points",
                   action="store_true",
                   help="Write grid address of irreducible grid points for specified mesh numbers to ir_grid_address.yaml")
@@ -914,7 +917,10 @@ if log_level:
             else:
                 print "Tetrahedron-method",
         print
-    if (settings.get_is_linewidth() or
+        
+    if settings.get_is_isotope():
+        pass
+    elif (settings.get_is_linewidth() or
         settings.get_is_frequency_shift() or
         settings.get_is_bterta() or
         settings.get_is_lbte()):
@@ -924,14 +930,13 @@ if log_level:
             print " %.1f" % temperatures[-1]
         else:
             print ("%.1f  " * len(temperatures)) % tuple(temperatures)
-    elif settings.get_is_isotope():
-        pass
     elif temperature_points is not None:
         print "Temperatures:",
         print ("%.1f  " * len(temperature_points)) % tuple(temperature_points)
         if settings.get_scattering_event_class() is not None:
             print "Scattering event class:",
             print settings.get_scattering_event_class()
+            
     if grid_points is not None:
         print "Grid point to be calculated:",
         if len(grid_points) > 8:
@@ -945,8 +950,14 @@ if log_level:
             for gp in grid_points:
                 print gp,
             print
+            
     if cutoff_frequency:
         print "Cutoff frequency:", cutoff_frequency
+
+    if not (settings.get_is_isotope() or options.is_joint_dos):
+        if settings.get_use_Peierls_model():
+            print "Use Peierls mode for ph-ph interaction"
+        
     if log_level > 1:
         print "Frequency factor to THz:", frequency_factor_to_THz
         if frequency_step is not None:
@@ -1028,9 +1039,11 @@ if (settings.get_is_isotope() and
 #########
 # Ph-ph #
 #########
-phono3py.set_phph_interaction(nac_params=nac_params,
-                              nac_q_direction=nac_q_direction,
-                              frequency_scale_factor=frequency_scale_factor)
+phono3py.set_phph_interaction(
+    nac_params=nac_params,
+    nac_q_direction=nac_q_direction,
+    use_Peierls_model=settings.get_use_Peierls_model(),
+    frequency_scale_factor=frequency_scale_factor)
 
 if settings.get_is_linewidth():
     phono3py.run_linewidth(

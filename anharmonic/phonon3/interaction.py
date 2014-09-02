@@ -14,6 +14,7 @@ class Interaction:
                  symmetry,
                  fc3=None,
                  band_indices=None,
+                 use_Peierls_model=False,
                  frequency_factor_to_THz=VaspToTHz,
                  is_nosym=False,
                  symmetrize_fc3_q=False,
@@ -29,6 +30,7 @@ class Interaction:
             self._band_indices = np.arange(num_band, dtype='intc')
         else:
             self._band_indices = np.array(band_indices, dtype='intc')
+        self._use_Peierls_model = use_Peierls_model
         self._frequency_factor_to_THz = frequency_factor_to_THz
 
         if cutoff_frequency is None:
@@ -68,6 +70,9 @@ class Interaction:
             self._run_c()
         else:
             self._run_py()
+
+        if self._use_Peierls_model:
+            self._set_Peierls_model_interaction()
 
     def get_interaction_strength(self):
         return self._interaction_strength
@@ -278,3 +283,14 @@ class Interaction:
         self._frequencies = np.zeros((num_grid, num_band), dtype='double')
         self._eigenvectors = np.zeros((num_grid, num_band, num_band),
                                       dtype='complex128')
+        
+    def _set_Peierls_model_interaction(self):
+        """This gives averaged ph-ph interaction strength for each band. """
+        
+        v = self._interaction_strength.copy()
+        divisor = np.prod(self._mesh)
+        v_sum = np.dot(self._weights_at_q, v.sum(axis=2).sum(axis=2))
+        v_ave = v_sum / divisor / np.prod(v.shape[2:])
+        for i in range(v.shape[1]):
+            self._interaction_strength[:, i, :, :] = v_ave[i]
+        

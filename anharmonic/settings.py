@@ -27,6 +27,7 @@ class Phono3pySettings(Settings):
         self._phonon_supercell_matrix = None
         self._scattering_event_class = None # scattering event class 1 or 2
         self._temperatures = None
+        self._use_Peierls_model = False
         self._write_amplitude = False
         self._write_collision = False
         self._write_gamma = False
@@ -163,6 +164,12 @@ class Phono3pySettings(Settings):
     def get_temperatures(self):
         return self._temperatures
 
+    def set_use_Peierls_model(self, use_Peierls_model):
+        self._use_Peierls_model = use_Peierls_model
+
+    def get_use_Peierls_model(self):
+        return self._use_Peierls_model
+
     def set_write_amplitude(self, write_amplitude):
         self._write_amplitude = write_amplitude
 
@@ -281,6 +288,10 @@ class Phono3pyConfParser(ConfParser):
             if opt.dest == 'temperatures':
                 if self._options.temperatures is not None:
                     self._confs['temperatures'] = self._options.temperatures
+
+            if opt.dest == 'use_Peierls_model':
+                if self._options.use_Peierls_model:
+                    self._confs['use_Peierls_model'] = '.true.'
 
             if opt.dest == 'write_amplitude':
                 if self._options.write_amplitude:
@@ -424,6 +435,10 @@ class Phono3pyConfParser(ConfParser):
                 else:
                     self.set_parameter('temperatures', vals)
 
+            if conf_key == 'use_Peierls_model':
+                if confs['use_Peierls_model'] == '.true.':
+                    self.set_parameter('use_Peierls_model', True)
+
             if conf_key == 'write_amplitude':
                 if confs['write_amplitude'] == '.true.':
                     self.set_parameter('write_amplitude', True)
@@ -531,6 +546,10 @@ class Phono3pyConfParser(ConfParser):
         # Temperatures
         if params.has_key('temperatures'):
             self._settings.set_temperatures(params['temperatures'])
+
+        # Peierls model for imaginary part of self energy
+        if params.has_key('use_Peierls_model'):
+            self._settings.set_use_Peierls_model(params['use_Peierls_model'])
 
         # Write phonon-phonon interaction amplitudes to hdf5
         if params.has_key('write_amplitude'):

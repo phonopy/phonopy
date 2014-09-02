@@ -332,7 +332,7 @@ class Conductivity_RTA(Conductivity):
                 print len(self._pp.get_triplets_at_q()[0])
                 print "Calculating interaction..."
                 
-            self._collision.run_interaction(use_Peierls_model=False)
+            self._collision.run_interaction()
             self._set_gamma_at_sigmas(i)
             self._mean_square_pp_strength[i] = (
                 self._pp.get_mean_square_strength())
