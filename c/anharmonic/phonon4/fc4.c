@@ -59,17 +59,14 @@ int rotate_delta_fc3s_elem(double *rotated_delta_fc3s,
   for (i = 0; i < num_delta_fc3s; i++) {
     for (j = 0; j < num_rot; j++) {
       rot_tensor = rotated_delta_fc3s + i * num_rot * 27 + j * 27;
-      tensor3_roation(rot_tensor,
-		      delta_fc3s +
-		      i * num_atom * num_atom * num_atom * 27,
-		      atom1,
-		      atom2,
-		      atom3,
-		      rot_map_syms[num_atom * j + atom1],
-		      rot_map_syms[num_atom * j + atom2],
-		      rot_map_syms[num_atom * j + atom3],
-		      num_atom,
-		      site_sym_cart + j * 9);
+      tensor3_rotation(rot_tensor,
+		       delta_fc3s +
+		       i * num_atom * num_atom * num_atom * 27 +
+		       27 * num_atom * num_atom *
+		       rot_map_syms[num_atom * j + atom1] +
+		       27 * num_atom * rot_map_syms[num_atom * j + atom2] +
+		       27 * rot_map_syms[num_atom * j + atom3],
+		       site_sym_cart + j * 9);
     }
   }
   return 0;
