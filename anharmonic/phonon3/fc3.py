@@ -13,10 +13,11 @@ def get_fc3(supercell,
             is_permutation_symmetry=False,
             verbose=False):
     num_atom = supercell.get_number_of_atoms()
-    fc3 = np.zeros((num_atom, num_atom, num_atom, 3, 3, 3), dtype='double')
+    fc3_least_atoms = np.zeros((num_atom, num_atom, num_atom, 3, 3, 3),
+                               dtype='double')
 
     if 'cutoff_distance' in disp_dataset:
-        _get_fc3_least_atoms(fc3,
+        _get_fc3_least_atoms(fc3_least_atoms,
                              supercell,
                              disp_dataset,
                              fc2,
@@ -25,7 +26,7 @@ def get_fc3(supercell,
                              False,
                              verbose)
     else:
-        _get_fc3_least_atoms(fc3,
+        _get_fc3_least_atoms(fc3_least_atoms,
                              supercell,
                              disp_dataset,
                              fc2,
@@ -45,14 +46,14 @@ def get_fc3(supercell,
     lattice = supercell.get_cell().T
     positions = supercell.get_scaled_positions()
 
-    distribute_fc3(fc3,
-                   first_disp_atoms,
-                   lattice,
-                   positions,
-                   rotations,
-                   translations,
-                   symprec,
-                   verbose)
+    fc3 = distribute_fc3(fc3_least_atoms,
+                         first_disp_atoms,
+                         lattice,
+                         positions,
+                         rotations,
+                         translations,
+                         symprec,
+                         verbose)
     
     if 'cutoff_distance' in disp_dataset:
         if verbose:
@@ -86,7 +87,7 @@ def get_fc3(supercell,
     return fc3
 
 
-def distribute_fc3(fc3,
+def distribute_fc3(fc3_least_atoms,
                    first_disp_atoms,
                    lattice,
                    positions,
@@ -95,10 +96,12 @@ def distribute_fc3(fc3,
                    symprec,
                    verbose):
     num_atom = len(positions)
+    atom_mapping = np.zeros(num_atom, dtype='intc')
+    fc3 = np.zeros((num_atom, num_atom, num_atom, 3, 3, 3), dtype='double')
 
     for i in range(num_atom):
-        if i in first_disp_atoms:
-            continue
+        # if i in first_disp_atoms:
+        #     continue
 
         for atom_index_done in first_disp_atoms:
             rot_num = get_atom_mapping_by_symmetry(positions,
@@ -121,20 +124,20 @@ def distribute_fc3(fc3,
             print "    [ %d, x, x ] to [ %d, x, x ]" % (i_rot + 1, i + 1)
             sys.stdout.flush()
 
-        atom_mapping = np.zeros(num_atom, dtype='intc')
         for j in range(num_atom):
             atom_mapping[j] = get_atom_by_symmetry(positions,
                                                    rot,
                                                    trans,
                                                    j,
                                                    symprec)
-            
-        rot_cart_inv = np.double(
-            similarity_transformation(lattice, rot).T.copy())
+
+        rot_cart_inv = np.array(similarity_transformation(lattice, rot).T,
+                                dtype='double', order='C')
 
         try:
             import anharmonic._phono3py as phono3c
             phono3c.distribute_fc3(fc3,
+                                   fc3_least_atoms,
                                    i,
                                    atom_mapping,
                                    rot_cart_inv)
@@ -145,7 +148,9 @@ def distribute_fc3(fc3,
                 for k in range(num_atom):
                     k_rot = atom_mapping[k]
                     fc3[i, j, k] = third_rank_tensor_rotation(
-                        rot_cart_inv, fc3[i_rot, j_rot, k_rot])
+                        rot_cart_inv, fc3_least_atoms[i_rot, j_rot, k_rot])
+
+    return fc3
 
 def set_permutation_symmetry_fc3(fc3):
     try:

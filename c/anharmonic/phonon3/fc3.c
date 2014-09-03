@@ -1,10 +1,8 @@
 #include "phonon3_h/fc3.h"
 
-static double tensor3_rotation_elem(const double tensor[27],
+static double tensor3_rotation_elem(const double *tensor,
 				    const double *r,
-				    const int l,
-				    const int m,
-				    const int n);
+				    const int pos);
 static void copy_permutation_symmetry_fc3_elem(double *fc3,
 					       const double fc3_elem[27],
 					       const int a,
@@ -18,74 +16,39 @@ static void set_permutation_symmetry_fc3_elem(double *fc3_elem,
 					      const int c,
 					      const int num_atom);
 
-int distribute_fc3(double *fc3,
-		   const int third_atom,
-		   const int *atom_mapping,
-		   const int num_atom,
-		   const double *rot_cart)
+void distribute_fc3(double *fc3_copy,
+		    const double *fc3,
+		    const int third_atom,
+		    const int *atom_mapping,
+		    const int num_atom,
+		    const double *rot_cart)
 {
-  int i, j, atom_rot_i, atom_rot_j, third_atom_rot;
-  double *tensor;
+  int i, j;
 
-  third_atom_rot = atom_mapping[third_atom];
-  
-#pragma omp parallel for private(j, atom_rot_i, atom_rot_j, tensor)
   for (i = 0; i < num_atom; i++) {
-    atom_rot_i = atom_mapping[i];
-
     for (j = 0; j < num_atom; j++) {
-      atom_rot_j = atom_mapping[j];
-      tensor = (fc3 +
-		27 * num_atom * num_atom * third_atom +
-		27 * num_atom * i +
-		27 * j);
-      tensor3_roation(tensor,
-		      fc3,
-		      third_atom,
-		      i,
-		      j,
-		      third_atom_rot,
-		      atom_rot_i,
-		      atom_rot_j,
-		      num_atom,
-		      rot_cart);
+      tensor3_rotation(fc3_copy +
+		       27 * num_atom * num_atom * third_atom +
+		       27 * num_atom * i +
+		       27 * j,
+		       fc3 +
+		       27 * num_atom * num_atom * atom_mapping[third_atom] +
+		       27 * num_atom * atom_mapping[i] +
+		       27 * atom_mapping[j],
+		       rot_cart);
     }
   }
   return 1;
 }
 
-void tensor3_roation(double *rot_tensor,
-		     const double *fc3,
-		     const int atom_i,
-		     const int atom_j,
-		     const int atom_k,
-		     const int atom_rot_i,
-		     const int atom_rot_j,
-		     const int atom_rot_k,
-		     const int num_atom,
-		     const double *rot_cartesian)
+void tensor3_rotation(double *rot_tensor,
+		      const double *tensor,
+		      const double *rot_cartesian)
 {
-  int i, j, k;
-  double tensor[27];
+  int l;
 
-  for (i = 0; i < 3; i++) {
-    for (j = 0; j < 3; j++) {
-      for (k = 0; k < 3; k++) {
-	tensor[i * 9 + j * 3 + k] = fc3[27 * num_atom * num_atom * atom_rot_i +
-					27 * num_atom * atom_rot_j +
-					27 * atom_rot_k +
-					9 * i + 3 * j + k];
-      }
-    }
-  }
-
-  for (i = 0; i < 3; i++) {
-    for (j = 0; j < 3; j++) {
-      for (k = 0; k < 3; k++) {
-	rot_tensor[i * 9 + j * 3 + k] = 
-	  tensor3_rotation_elem(tensor, rot_cartesian, i, j, k);
-      }
-    }
+  for (l = 0; l < 27; l++) {
+    rot_tensor[l] = tensor3_rotation_elem(tensor, rot_cartesian, l);
   }
 }
 
@@ -106,14 +69,16 @@ void set_permutation_symmetry_fc3(double *fc3, const int num_atom)
   }
 }
 
-static double tensor3_rotation_elem(const double tensor[27],
+static double tensor3_rotation_elem(const double *tensor,
 				    const double *r,
-				    const int l,
-				    const int m,
-				    const int n) 
+				    const int pos)
 {
-  int i, j, k;
+  int i, j, k, l, m, n;
   double sum;
+
+  l = pos / 9;
+  m = (pos % 9) / 3;
+  n = pos % 3;
 
   sum = 0.0;
   for (i = 0; i < 3; i++) {

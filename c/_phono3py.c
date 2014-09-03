@@ -859,12 +859,14 @@ static PyObject * py_get_jointDOS(PyObject *self, PyObject *args)
 
 static PyObject * py_distribute_fc3(PyObject *self, PyObject *args)
 {
+  PyArrayObject* force_constants_third_copy;
   PyArrayObject* force_constants_third;
   int third_atom;
   PyArrayObject* rotation_cart_inv;
   PyArrayObject* atom_mapping_py;
 
-  if (!PyArg_ParseTuple(args, "OiOO",
+  if (!PyArg_ParseTuple(args, "OOiOO",
+			&force_constants_third_copy,
 			&force_constants_third,
 			&third_atom,
 			&atom_mapping_py,
@@ -872,16 +874,20 @@ static PyObject * py_distribute_fc3(PyObject *self, PyObject *args)
     return NULL;
   }
 
-  double* fc3 = (double*)force_constants_third->data;
+  double* fc3_copy = (double*)force_constants_third_copy->data;
+  const double* fc3 = (double*)force_constants_third->data;
   const double* rot_cart_inv = (double*)rotation_cart_inv->data;
   const int* atom_mapping = (int*)atom_mapping_py->data;
   const int num_atom = (int)atom_mapping_py->dimensions[0];
 
-  return PyInt_FromLong((long) distribute_fc3(fc3,
-					      third_atom,
-					      atom_mapping,
-					      num_atom,
-					      rot_cart_inv));
+  distribute_fc3(fc3_copy,
+		 fc3,
+		 third_atom,
+		 atom_mapping,
+		 num_atom,
+		 rot_cart_inv);
+  
+  Py_RETURN_NONE;
 }
 
 static PyObject * py_set_permutation_symmetry_fc3(PyObject *self, PyObject *args)
