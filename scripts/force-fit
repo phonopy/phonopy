@@ -73,7 +73,8 @@ parser.set_defaults(cell_poscar=None,
                     rot_inv=False,
                     supercell_dimension=None,
                     symprec=1e-5,
-                    trans_inv=False)
+                    trans_inv=False,
+                    verbose=False)
 parser.add_option("-c", "--cell", dest="cell_poscar",
                   action="store", type="string",
                   help="Read unit cell", metavar="FILE")
@@ -103,6 +104,8 @@ parser.add_option("--tolerance", dest="symprec", type="float",
 parser.add_option("--ti", dest="trans_inv",
                   action="store_true",
                   help="Enforce translational invariance")
+parser.add_option("-v", "--verbose", dest="verbose", action="store_true",
+                  help="Detailed run-time information is displayed")
 (options, args) = parser.parse_args()
 
 if options.supercell_dimension is None:
@@ -170,7 +173,7 @@ if options.fc3:
             disp2['forces'] = forces_fc3[count]
             count += 1
     
-    fc3fit = FC3Fit(supercell, disp_dataset, symmetry)
+    fc3fit = FC3Fit(supercell, disp_dataset, symmetry, verbose=options.verbose)
     fc3fit.run()
     fc3 = fc3fit.get_fc3()
     print "Calculating drift fc3..."

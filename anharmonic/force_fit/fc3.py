@@ -52,14 +52,15 @@ class FC3Fit:
         translations = self._symmetry.get_symmetry_operations()['translations']
 
         print "ditributing fc3..."
-        distribute_fc3(self._fc3,
-                       unique_first_atom_nums,
-                       self._lattice,
-                       self._positions,
-                       rotations,
-                       translations,
-                       self._symprec,
-                       self._verbose)
+        fc3 = distribute_fc3(self._fc3,
+                             unique_first_atom_nums,
+                             self._lattice,
+                             self._positions,
+                             rotations,
+                             translations,
+                             self._symprec,
+                             self._verbose)
+        self._fc3 = fc3
 
     def _fit(self, first_atom_num, disp_pairs, sets_of_forces):
         site_symmetry = self._symmetry.get_site_symmetry(first_atom_num)
@@ -103,14 +104,14 @@ class FC3Fit:
                           for sym in site_symmetry]
         force_matrix = []
         for i in range(self._num_atom):
+            force_matrix_atom = []
             for sets_of_forces_u1 in sets_of_forces:
-                force_matrix_atom = []
                 for map_sym, rot_atom_num, sym in zip(
                     rot_map_syms, rot_atom_map, site_syms_cart):
                     for forces in sets_of_forces_u1[rot_atom_num]:
                         force_matrix_atom.append(
                             np.dot(sym, forces[map_sym[i]]))
-                force_matrix.append(force_matrix_atom)
+            force_matrix.append(force_matrix_atom)
         return np.array(force_matrix, dtype='double', order='C')
         
     def _create_displacement_matrix(self,
