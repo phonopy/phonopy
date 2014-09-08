@@ -170,9 +170,9 @@ static PyObject * get_dataset(PyObject *self, PyObject *args)
   array = PyList_New(9);
 
   /* Space group number, international symbol, hall symbol */
-  PyList_SetItem(array, 0, PyInt_FromLong((long) dataset->spacegroup_number));
-  PyList_SetItem(array, 1, PyString_FromString(dataset->international_symbol));
-  PyList_SetItem(array, 2, PyString_FromString(dataset->hall_symbol));
+  PyList_SetItem(array, 0, PyLong_FromLong((long) dataset->spacegroup_number));
+  PyList_SetItem(array, 1, PyUnicode_FromString(dataset->international_symbol));
+  PyList_SetItem(array, 2, PyUnicode_FromString(dataset->hall_symbol));
 
   /* Transformation matrix */
   mat = PyList_New(3);
@@ -199,7 +199,7 @@ static PyObject * get_dataset(PyObject *self, PyObject *args)
     for (j = 0; j < 3; j++) {
       vec = PyList_New(3);
       for (k = 0; k < 3; k++) {
-	PyList_SetItem(vec, k, PyInt_FromLong((long) dataset->rotations[i][j][k]));
+	PyList_SetItem(vec, k, PyLong_FromLong((long) dataset->rotations[i][j][k]));
       }
       PyList_SetItem(mat, j, vec);
     }
@@ -222,8 +222,8 @@ static PyObject * get_dataset(PyObject *self, PyObject *args)
   wyckoffs = PyList_New(dataset->n_atoms);
   equiv_atoms = PyList_New(dataset->n_atoms);
   for (i = 0; i < dataset->n_atoms; i++) {
-    PyList_SetItem(wyckoffs, i, PyInt_FromLong((long) dataset->wyckoffs[i]));
-    PyList_SetItem(equiv_atoms, i, PyInt_FromLong((long) dataset->equivalent_atoms[i]));
+    PyList_SetItem(wyckoffs, i, PyLong_FromLong((long) dataset->wyckoffs[i]));
+    PyList_SetItem(equiv_atoms, i, PyLong_FromLong((long) dataset->equivalent_atoms[i]));
   }
   PyList_SetItem(array, 7, wyckoffs);
   PyList_SetItem(array, 8, equiv_atoms);
@@ -267,7 +267,7 @@ static PyObject * get_spacegroup(PyObject *self, PyObject *args)
   spg_symbol[i + 1] = 0;
   sprintf(symbol_with_number, "%s (%d)", spg_symbol, num_spg);
 
-  return PyString_FromString(symbol_with_number);
+  return PyUnicode_FromString(symbol_with_number);
 }
 
 static PyObject * get_pointgroup(PyObject *self, PyObject *args)
@@ -291,14 +291,14 @@ static PyObject * get_pointgroup(PyObject *self, PyObject *args)
   for (i = 0; i < 3; i++) {
     vec = PyList_New(3);
     for (j = 0; j < 3; j++) {
-      PyList_SetItem(vec, j, PyInt_FromLong((long)trans_mat[i][j]));
+      PyList_SetItem(vec, j, PyLong_FromLong((long)trans_mat[i][j]));
     }
     PyList_SetItem(mat, i, vec);
   }
 
   array = PyList_New(3);
-  PyList_SetItem(array, 0, PyString_FromString(symbol));
-  PyList_SetItem(array, 1, PyInt_FromLong((long) ptg_num));
+  PyList_SetItem(array, 0, PyUnicode_FromString(symbol));
+  PyList_SetItem(array, 1, PyLong_FromLong((long) ptg_num));
   PyList_SetItem(array, 2, mat);
 
   return array;
@@ -332,7 +332,7 @@ static PyObject * refine_cell(PyObject *self, PyObject *args)
 				       symprec,
 				       angle_tolerance);
 
-  return PyInt_FromLong((long) num_atom_brv);
+  return PyLong_FromLong((long) num_atom_brv);
 }
 
 
@@ -363,7 +363,7 @@ static PyObject * find_primitive(PyObject *self, PyObject *args)
 					   symprec,
 					   angle_tolerance);
 
-  return PyInt_FromLong((long) num_atom_prim);
+  return PyLong_FromLong((long) num_atom_prim);
 }
 
 static PyObject * get_symmetry(PyObject *self, PyObject *args)
@@ -403,7 +403,7 @@ static PyObject * get_symmetry(PyObject *self, PyObject *args)
 					 num_atom,
 					 symprec,
 					 angle_tolerance);
-  return PyInt_FromLong((long) num_sym);
+  return PyLong_FromLong((long) num_sym);
 }
 
 static PyObject * get_symmetry_with_collinear_spin(PyObject *self,
@@ -449,7 +449,7 @@ static PyObject * get_symmetry_with_collinear_spin(PyObject *self,
 					   num_atom,
 					   symprec,
 					   angle_tolerance);
-  return PyInt_FromLong((long) num_sym);
+  return PyLong_FromLong((long) num_sym);
 }
 
 static PyObject * get_grid_point_from_address(PyObject *self, PyObject *args)
@@ -468,7 +468,7 @@ static PyObject * get_grid_point_from_address(PyObject *self, PyObject *args)
   /* num_sym has to be larger than num_sym_from_array_size. */
   const int gp = spg_get_grid_point(grid_address, mesh);
 
-  return PyInt_FromLong((long) gp);
+  return PyLong_FromLong((long) gp);
 }
 
 static PyObject * get_ir_reciprocal_mesh(PyObject *self, PyObject *args)
@@ -516,7 +516,7 @@ static PyObject * get_ir_reciprocal_mesh(PyObject *self, PyObject *args)
 						num_atom,
 						symprec);
 
-  return PyInt_FromLong((long) num_ir);
+  return PyLong_FromLong((long) num_ir);
 }
 
 static PyObject * get_stabilized_reciprocal_mesh(PyObject *self, PyObject *args)
@@ -558,7 +558,7 @@ static PyObject * get_stabilized_reciprocal_mesh(PyObject *self, PyObject *args)
 							num_q,
 							q);
 
-  return PyInt_FromLong((long) num_ir);
+  return PyLong_FromLong((long) num_ir);
 }
 
 static PyObject * get_grid_points_by_rotations(PyObject *self, PyObject *args)
@@ -663,7 +663,7 @@ static PyObject * relocate_BZ_grid_address(PyObject *self, PyObject *args)
 					   reciprocal_lattice,
 					   is_shift);
 
-  return PyInt_FromLong((long) num_ir_gp);
+  return PyLong_FromLong((long) num_ir_gp);
 }
 
 static PyObject * get_triplets_reciprocal_mesh_at_q(PyObject *self, PyObject *args)
@@ -703,7 +703,7 @@ static PyObject * get_triplets_reciprocal_mesh_at_q(PyObject *self, PyObject *ar
 					  num_rot,
 					  rot);
 
-  return PyInt_FromLong((long) num_ir);
+  return PyLong_FromLong((long) num_ir);
 }
 
 
@@ -741,7 +741,7 @@ static PyObject * get_BZ_triplets_at_q(PyObject *self, PyObject *args)
 				    num_map_triplets,
 				    mesh);
 
-  return PyInt_FromLong((long) num_ir);
+  return PyLong_FromLong((long) num_ir);
 }
 
 static PyObject *get_neighboring_grid_points(PyObject *self, PyObject *args)
