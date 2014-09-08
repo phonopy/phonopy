@@ -73,10 +73,67 @@ static PyMethodDef functions[] = {
   {NULL, NULL, 0, NULL}
 };
 
-PyMODINIT_FUNC init_spglib(void)
+
+struct module_state {
+    PyObject *error;
+};
+
+#if PY_MAJOR_VERSION >= 3
+#define GETSTATE(m) ((struct module_state*)PyModule_GetState(m))
+#else
+#define GETSTATE(m) (&_state)
+static struct module_state _state;
+#endif
+
+static PyObject *
+error_out(PyObject *m) {
+    struct module_state *st = GETSTATE(m);
+    PyErr_SetString(st->error, "something bad happened");
+    return NULL;
+}
+
+#if PY_MAJOR_VERSION >= 3
+
+static int _spglib_traverse(PyObject *m, visitproc visit, void *arg) {
+    Py_VISIT(GETSTATE(m)->error);
+    return 0;
+}
+
+static int _spglib_clear(PyObject *m) {
+    Py_CLEAR(GETSTATE(m)->error);
+    return 0;
+}
+
+
+static struct PyModuleDef moduledef = {
+        PyModuleDef_HEAD_INIT,
+        "_spglib",
+        NULL,
+        sizeof(struct module_state),
+        functions,
+        NULL,
+        _spglib_traverse,
+        _spglib_clear,
+        NULL
+};
+
+#define INITERROR return NULL
+
+PyMODINIT_FUNC PyInit__spglib(void)
+
+#else
+#define INITERROR return
+
+void init_spglib(void)
+#endif
 {
-  Py_InitModule3("_spglib", functions, "C-extension for spglib\n\n...\n");
-  return;
+#if PY_MAJOR_VERSION >= 3
+    PyObject *module = PyModule_Create(&moduledef);
+    return module;
+#else
+    (void) Py_InitModule("_spglib", functions);
+#endif
+
 }
 
 static PyObject * get_dataset(PyObject *self, PyObject *args)
@@ -88,7 +145,7 @@ static PyObject * get_dataset(PyObject *self, PyObject *args)
   PyArrayObject* position;
   PyArrayObject* atom_type;
   PyObject* array, *vec, *mat, *rot, *trans, *wyckoffs, *equiv_atoms;
-  
+
   if (!PyArg_ParseTuple(args, "OOOdd",
 			&lattice,
 			&position,
@@ -335,7 +392,7 @@ static PyObject * get_symmetry(PyObject *self, PyObject *args)
   int (*rot)[3][3] = (int(*)[3][3])rotation->data;
   double (*trans)[3] = (double(*)[3])translation->data;
   const int num_sym_from_array_size = rotation->dimensions[0];
-  
+
   /* num_sym has to be larger than num_sym_from_array_size. */
   const int num_sym = spgat_get_symmetry(rot,
 					 trans,
@@ -381,7 +438,7 @@ static PyObject * get_symmetry_with_collinear_spin(PyObject *self,
   const int num_sym_from_array_size = rotation->dimensions[0];
 
   /* num_sym has to be larger than num_sym_from_array_size. */
-  const int num_sym = 
+  const int num_sym =
     spgat_get_symmetry_with_collinear_spin(rot,
 					   trans,
 					   num_sym_from_array_size,
@@ -410,7 +467,7 @@ static PyObject * get_grid_point_from_address(PyObject *self, PyObject *args)
 
   /* num_sym has to be larger than num_sym_from_array_size. */
   const int gp = spg_get_grid_point(grid_address, mesh);
-  
+
   return PyInt_FromLong((long) gp);
 }
 
@@ -458,7 +515,7 @@ static PyObject * get_ir_reciprocal_mesh(PyObject *self, PyObject *args)
 						types,
 						num_atom,
 						symprec);
-  
+
   return PyInt_FromLong((long) num_ir);
 }
 
@@ -500,7 +557,7 @@ static PyObject * get_stabilized_reciprocal_mesh(PyObject *self, PyObject *args)
 							rot,
 							num_q,
 							q);
-  
+
   return PyInt_FromLong((long) num_ir);
 }
 
@@ -526,7 +583,7 @@ static PyObject * get_grid_points_by_rotations(PyObject *self, PyObject *args)
   const int num_rot = rot_reciprocal_py->dimensions[0];
   const int* mesh = (int*)mesh_py->data;
   const int* is_shift = (int*)is_shift_py->data;
-  
+
   spg_get_grid_points_by_rotations(rot_grid_points,
 				   address_orig,
 				   num_rot,
@@ -561,7 +618,7 @@ static PyObject * get_BZ_grid_points_by_rotations(PyObject *self, PyObject *args
   const int* mesh = (int*)mesh_py->data;
   const int* is_shift = (int*)is_shift_py->data;
   const int* bz_map = (int*)bz_map_py->data;
-  
+
   spg_get_BZ_grid_points_by_rotations(rot_grid_points,
 				      address_orig,
 				      num_rot,
@@ -598,7 +655,7 @@ static PyObject * relocate_BZ_grid_address(PyObject *self, PyObject *args)
   SPGCONST double (*reciprocal_lattice)[3]  =
     (double(*)[3])reciprocal_lattice_py->data;
   int num_ir_gp;
-  
+
   num_ir_gp = spg_relocate_BZ_grid_address(bz_grid_address,
 					   bz_map,
 					   grid_address,
@@ -636,7 +693,7 @@ static PyObject * get_triplets_reciprocal_mesh_at_q(PyObject *self, PyObject *ar
   const int* mesh_int = (int*)mesh->data;
   SPGCONST int (*rot)[3][3] = (int(*)[3][3])rotations->data;
   const int num_rot = rotations->dimensions[0];
-  const int num_ir = 
+  const int num_ir =
     spg_get_triplets_reciprocal_mesh_at_q(map_triplets_int,
 					  map_q_int,
 					  grid_address,
@@ -675,7 +732,7 @@ static PyObject * get_BZ_triplets_at_q(PyObject *self, PyObject *args)
   const int num_map_triplets = (int)map_triplets_py->dimensions[0];
   const int *mesh = (int*)mesh_py->data;
   int num_ir;
-  
+
   num_ir = spg_get_BZ_triplets_at_q(triplets,
 				    grid_point,
 				    bz_grid_address,
@@ -712,7 +769,7 @@ static PyObject *get_neighboring_grid_points(PyObject *self, PyObject *args)
   const int *mesh = (int*)mesh_py->data;
   SPGCONST int (*bz_grid_address)[3] = (int(*)[3])bz_grid_address_py->data;
   const int *bz_map = (int*)bz_map_py->data;
-  
+
   spg_get_neighboring_grid_points(relative_grid_points,
 				  grid_point,
 				  relative_grid_address,
@@ -728,7 +785,7 @@ get_tetrahedra_relative_grid_address(PyObject *self, PyObject *args)
 {
   PyArrayObject* relative_grid_address_py;
   PyArrayObject* reciprocal_lattice_py;
-  
+
   if (!PyArg_ParseTuple(args, "OO",
 			&relative_grid_address_py,
 			&reciprocal_lattice_py)) {
@@ -750,7 +807,7 @@ static PyObject *
 get_all_tetrahedra_relative_grid_address(PyObject *self, PyObject *args)
 {
   PyArrayObject* relative_grid_address_py;
-  
+
   if (!PyArg_ParseTuple(args, "O",
 			&relative_grid_address_py)) {
     return NULL;
@@ -779,7 +836,7 @@ get_tetrahedra_integration_weight(PyObject *self, PyObject *args)
 
   SPGCONST double (*tetrahedra_omegas)[4] =
     (double(*)[4])tetrahedra_omegas_py->data;
-  
+
   double iw = spg_get_tetrahedra_integration_weight(omega,
 						    tetrahedra_omegas,
 						    function);
@@ -807,7 +864,7 @@ get_tetrahedra_integration_weight_at_omegas(PyObject *self, PyObject *args)
   const int num_omegas = (int)omegas_py->dimensions[0];
   SPGCONST double (*tetrahedra_omegas)[4] =
     (double(*)[4])tetrahedra_omegas_py->data;
-  
+
   spg_get_tetrahedra_integration_weight_at_omegas(iw,
 						  num_omegas,
 						  omegas,
