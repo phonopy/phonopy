@@ -3,6 +3,12 @@
 #include <numpy/arrayobject.h>
 #include <spglib.h>
 
+#if (PY_MAJOR_VERSION < 3) && (PY_MINOR_VERSION < 6)
+#define PYUNICODE_FROMSTRING PyUnicode_FromString
+#else
+#define PYUNICODE_FROMSTRING PyString_FromString
+#endif
+
 static PyObject * get_dataset(PyObject *self, PyObject *args);
 static PyObject * get_spacegroup(PyObject *self, PyObject *args);
 static PyObject * get_pointgroup(PyObject *self, PyObject *args);
@@ -171,8 +177,8 @@ static PyObject * get_dataset(PyObject *self, PyObject *args)
 
   /* Space group number, international symbol, hall symbol */
   PyList_SetItem(array, 0, PyLong_FromLong((long) dataset->spacegroup_number));
-  PyList_SetItem(array, 1, PyUnicode_FromString(dataset->international_symbol));
-  PyList_SetItem(array, 2, PyUnicode_FromString(dataset->hall_symbol));
+  PyList_SetItem(array, 1, PYUNICODE_FROMSTRING(dataset->international_symbol));
+  PyList_SetItem(array, 2, PYUNICODE_FROMSTRING(dataset->hall_symbol));
 
   /* Transformation matrix */
   mat = PyList_New(3);
@@ -267,7 +273,7 @@ static PyObject * get_spacegroup(PyObject *self, PyObject *args)
   spg_symbol[i + 1] = 0;
   sprintf(symbol_with_number, "%s (%d)", spg_symbol, num_spg);
 
-  return PyUnicode_FromString(symbol_with_number);
+  return PYUNICODE_FROMSTRING(symbol_with_number);
 }
 
 static PyObject * get_pointgroup(PyObject *self, PyObject *args)
@@ -297,7 +303,7 @@ static PyObject * get_pointgroup(PyObject *self, PyObject *args)
   }
 
   array = PyList_New(3);
-  PyList_SetItem(array, 0, PyUnicode_FromString(symbol));
+  PyList_SetItem(array, 0, PYUNICODE_FROMSTRING(symbol));
   PyList_SetItem(array, 1, PyLong_FromLong((long) ptg_num));
   PyList_SetItem(array, 2, mat);
 
