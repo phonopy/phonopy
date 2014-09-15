@@ -62,21 +62,24 @@ def trim_cell(relative_axes, cell, symprec):
     else:
         trimed_magmoms = []
     atom_map = []
-    for i, pos in enumerate(positions):
+
+    positions_in_new_lattice = np.dot(positions, np.linalg.inv(relative_axes).T)
+    positions_in_new_lattice -= np.floor(positions_in_new_lattice)
+    trimed_positions = np.zeros_like(positions_in_new_lattice)
+    num_atom = 0
+    
+    for i, pos in enumerate(positions_in_new_lattice):
         is_overlap = False
-        # tmp_pos is the position with respect to the relative axes
-        tmp_pos = np.dot(pos, np.linalg.inv(relative_axes).T)
-        # Positions are folded into trimed cell and
-        # overlap positions are removed.
-        for t_pos in trimed_positions:
-            diff = t_pos - tmp_pos
+        if num_atom > 0:
+            diff = trimed_positions[:num_atom] - pos
             diff -= np.rint(diff)
-            if np.linalg.norm(np.dot(diff, trimed_lattice)) < symprec:
+            distances = np.linalg.norm(np.dot(diff, trimed_lattice), axis=1)
+            if (distances < symprec).any():
                 is_overlap = True
-                break
 
         if not is_overlap:
-            trimed_positions.append(tmp_pos - np.floor(tmp_pos))
+            trimed_positions[num_atom] = pos
+            num_atom += 1
             trimed_numbers.append(numbers[i])
             trimed_masses.append(masses[i])
             if magmoms is not None:
@@ -86,7 +89,7 @@ def trim_cell(relative_axes, cell, symprec):
     trimed_cell = Atoms(numbers=trimed_numbers,
                         masses=trimed_masses,
                         magmoms=trimed_magmoms,
-                        scaled_positions=trimed_positions,
+                        scaled_positions=trimed_positions[:num_atom],
                         cell=trimed_lattice,
                         pbc=True)
 
