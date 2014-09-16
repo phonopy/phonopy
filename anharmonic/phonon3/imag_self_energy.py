@@ -163,14 +163,14 @@ def write_linewidth(linewidth,
                 pos = 0
                 for l in range(k):
                     pos += len(band_indices[l])
-            file_IO.write_linewidth(
-                gp,
-                bi,
-                temperatures,
-                linewidth[i, j, :, pos:(pos+len(bi))],
-                mesh,
-                sigma=sigma,
-                filename=filename)
+                file_IO.write_linewidth(
+                    gp,
+                    bi,
+                    temperatures,
+                    linewidth[i, j, :, pos:(pos+len(bi))],
+                    mesh,
+                    sigma=sigma,
+                    filename=filename)
 
 def write_imag_self_energy(imag_self_energy,
                            mesh,
