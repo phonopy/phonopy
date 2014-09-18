@@ -34,3 +34,9 @@
 
 import numpy as np
 
+class DynmatToForceConstants:
+    def __init__(self,
+                 frequencies,
+                 eigenvalues):
+        pass
+        
