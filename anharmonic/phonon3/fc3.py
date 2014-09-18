@@ -382,7 +382,13 @@ def solve_fc3(fc3,
                                                  symprec)
     
     rot_disps = get_rotated_displacement(displacements_first, site_sym_cart)
-    inv_U = np.linalg.pinv(rot_disps)
+    try:
+        import anharmonic._phono3py as phono3c
+        inv_U = np.zeros((rot_disps.shape[1], rot_disps.shape[0]),
+                         dtype='double')
+        phono3c.pinv(inv_U, rot_disps, 1e-13)
+    except ImportError:
+        inv_U = np.linalg.pinv(rot_disps)
     for (i, j) in list(np.ndindex(num_atom, num_atom)):
         fc3[first_atom_num, i, j] = np.dot(inv_U, _get_rotated_fc2s(
                 i, j, delta_fc2s, rot_map_syms, site_sym_cart)).reshape(3, 3, 3)
