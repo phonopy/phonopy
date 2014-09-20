@@ -2,7 +2,6 @@
 #include <numpy/arrayobject.h>
 #include "lapack_wrapper.h"
 
-static PyObject * py_phonopy_pinv(PyObject *self, PyObject *args);
 static PyObject * py_phonopy_pinv_mt(PyObject *self, PyObject *args);
 static PyObject * py_displacement_matrix_fc4(PyObject *self, PyObject *args);
 void get_tensor1(double sym_u[9], const double *u, const double *sym);
@@ -10,7 +9,6 @@ int set_tensor2(double *disp_matrix, const double u[9]);
 int set_tensor3(double *disp_matrix, const double u[9]);
 
 static PyMethodDef functions[] = {
-  {"pinv", py_phonopy_pinv, METH_VARARGS, "Pseudo-inverse using Lapack dgesvd"},
   {"pinv_mt", py_phonopy_pinv_mt, METH_VARARGS, "Multi-threading pseudo-inverse using Lapack dgesvd"},
   {"displacement_matrix_fc4", py_displacement_matrix_fc4, METH_VARARGS, "Create displacement matrix for fc4"},
   {NULL, NULL, 0, NULL}
@@ -22,30 +20,6 @@ PyMODINIT_FUNC init_forcefit(void)
   return;
 }
 
-
-static PyObject * py_phonopy_pinv(PyObject *self, PyObject *args)
-{
-  PyArrayObject* data_in_py;
-  PyArrayObject* data_out_py;
-  double cutoff;
-
-  if (!PyArg_ParseTuple(args, "OOd",
-			&data_in_py,
-			&data_out_py,
-			&cutoff)) {
-    return NULL;
-  }
-
-  const int m = (int)data_in_py->dimensions[0];
-  const int n = (int)data_in_py->dimensions[1];
-  const double *data_in = (double*)data_in_py->data;
-  double *data_out = (double*)data_out_py->data;
-  int info;
-  
-  info = phonopy_pinv(data_out, data_in, m, n, cutoff);
-
-  return PyInt_FromLong((long) info);
-}
 
 static PyObject * py_phonopy_pinv_mt(PyObject *self, PyObject *args)
 {

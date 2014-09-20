@@ -43,6 +43,7 @@ static PyObject *
 py_set_triplets_integration_weights_with_sigma(PyObject *self, PyObject *args);
 static PyObject * py_phonopy_zheev(PyObject *self, PyObject *args);
 static PyObject * py_inverse_collision_matrix(PyObject *self, PyObject *args);
+static PyObject * py_phonopy_pinv(PyObject *self, PyObject *args);
 /* static PyObject * py_inverse_collision_matrix_libflame(PyObject *self, PyObject *args); */
 
 static void get_triplet_tetrahedra_vertices
@@ -74,6 +75,7 @@ static PyMethodDef functions[] = {
   {"triplets_integration_weights_with_sigma", py_set_triplets_integration_weights_with_sigma, METH_VARARGS, "Integration weights of smearing method for triplets"},
   {"zheev", py_phonopy_zheev, METH_VARARGS, "Lapack zheev wrapper"},
   {"inverse_collision_matrix", py_inverse_collision_matrix, METH_VARARGS, "Pseudo-inverse using Lapack dsyev"},
+  {"pinv", py_phonopy_pinv, METH_VARARGS, "Pseudo-inverse using Lapack dgesvd"},
   /* {"inverse_collision_matrix_libflame", py_inverse_collision_matrix_libflame, METH_VARARGS, "Pseudo-inverse using libflame hevd"}, */
   {NULL, NULL, 0, NULL}
 };
@@ -1205,6 +1207,30 @@ static PyObject * py_phonopy_zheev(PyObject *self, PyObject *args)
 
   free(a);
   
+  return PyInt_FromLong((long) info);
+}
+
+static PyObject * py_phonopy_pinv(PyObject *self, PyObject *args)
+{
+  PyArrayObject* data_in_py;
+  PyArrayObject* data_out_py;
+  double cutoff;
+
+  if (!PyArg_ParseTuple(args, "OOd",
+			&data_out_py,
+			&data_in_py,
+			&cutoff)) {
+    return NULL;
+  }
+
+  const int m = (int)data_in_py->dimensions[0];
+  const int n = (int)data_in_py->dimensions[1];
+  const double *data_in = (double*)data_in_py->data;
+  double *data_out = (double*)data_out_py->data;
+  int info;
+  
+  info = phonopy_pinv(data_out, data_in, m, n, cutoff);
+
   return PyInt_FromLong((long) info);
 }
 
