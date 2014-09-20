@@ -33,10 +33,25 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
+from phonopy.structure.atoms import Atoms
+from phonopy.structure.cells import get_supercell
+
+def get_commensurate_points(primitive, supercell):
+    supercell_matrix = np.linalg.inv(primitive.get_primitive_matrix()).T
+    rec_primitive = Atoms(numbers=[1],
+                          scaled_positions=[[0, 0, 0]],
+                          cell=np.diag([1, 1, 1]),
+                          pbc=True)
+    rec_supercell = get_supercell(rec_primitive, supercell_matrix)
+    return rec_supercell.get_scaled_positions()
 
 class DynmatToForceConstants:
     def __init__(self,
+                 primitive,
+                 supercell,
                  frequencies,
-                 eigenvalues):
-        pass
+                 eigenvectors):
         
+        eigvals = frequencies ** 2 * np.sign(frequencies)
+        dynmat = np.dot(np.dot(eigenvectors, np.diag(eigvals)),
+                        eigenvectors.T.conj())
