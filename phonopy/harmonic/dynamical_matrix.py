@@ -68,10 +68,8 @@ class DynamicalMatrix:
         self._decimals = decimals
         self._symprec = symprec
 
-        self._p2s_map = np.array(primitive.get_primitive_to_supercell_map(),
-                                 dtype='intc')
-        self._s2p_map = np.array(primitive.get_supercell_to_primitive_map(),
-                                 dtype='intc')
+        self._p2s_map = primitive.get_primitive_to_supercell_map()
+        self._s2p_map = primitive.get_supercell_to_primitive_map()
         p2p_map = primitive.get_primitive_to_primitive_map()
         self._p2p_map = [p2p_map[self._s2p_map[i]]
                          for i in range(len(self._s2p_map))]

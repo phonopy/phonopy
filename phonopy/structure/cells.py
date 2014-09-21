@@ -285,7 +285,7 @@ class Primitive(Atoms):
                        cell=trimed_cell.get_cell(),
                        pbc=True)
 
-        self._p2s_map = p2s_map
+        self._p2s_map = np.array(p2s_map, dtype='intc')
 
     def _supercell_to_primitive_map(self, pos):
         inv_F = np.linalg.inv(self._primitive_matrix)
@@ -299,7 +299,7 @@ class Primitive(Atoms):
                 if (abs(diff) < self._symprec).all():
                     s2p_map.append(j)
                     break
-        self._s2p_map = s2p_map
+        self._s2p_map = np.array(s2p_map, dtype='intc')
 
     def _primitive_to_primitive_map(self):
         """

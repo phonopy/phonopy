@@ -207,10 +207,8 @@ class Interaction:
                                                    self._primitive,
                                                    self._symprec)
         masses = np.array(self._primitive.get_masses(), dtype='double')
-        p2s = np.array(self._primitive.get_primitive_to_supercell_map(),
-                       dtype='intc')
-        s2p = np.array(self._primitive.get_supercell_to_primitive_map(),
-                       dtype='intc')
+        p2s = self._primitive.get_primitive_to_supercell_map()
+        s2p = self._primitive.get_supercell_to_primitive_map()
 
         phono3c.interaction(self._interaction_strength,
                             self._frequencies,

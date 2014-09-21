@@ -168,8 +168,8 @@ class FrequencyShift:
         svecs, multiplicity = get_smallest_vectors(self._supercell,
                                                    self._primitive,
                                                    self._symprec)
-        p2s = np.intc(self._primitive.get_primitive_to_supercell_map())
-        s2p = np.intc(self._primitive.get_supercell_to_primitive_map())
+        p2s = self._primitive.get_primitive_to_supercell_map()
+        s2p = self._primitive.get_supercell_to_primitive_map()
         gp = self._grid_point
         self._set_phonon_c([gp])
         self._set_phonon_c(self._quartets_at_q)

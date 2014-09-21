@@ -15,8 +15,8 @@ class RealToReciprocal:
         self._symprec = symprec
         
         num_satom = supercell.get_number_of_atoms()
-        self._p2s_map = np.intc(primitive.get_primitive_to_supercell_map())
-        self._s2p_map = np.intc(primitive.get_supercell_to_primitive_map())
+        self._p2s_map = primitive.get_primitive_to_supercell_map()
+        self._s2p_map = primitive.get_supercell_to_primitive_map()
         # Reduce supercell atom index to primitive index
         (self._smallest_vectors,
          self._multiplicity) = get_smallest_vectors(supercell,
