@@ -73,7 +73,10 @@ def trim_cell(relative_axes, cell, symprec):
         if num_atom > 0:
             diff = trimed_positions[:num_atom] - pos
             diff -= np.rint(diff)
-            distances = np.linalg.norm(np.dot(diff, trimed_lattice), axis=1)
+
+            # axis argument in linalg.norm is relatively new?
+            # distances = np.linalg.norm(np.dot(diff, trimed_lattice), axis=1)
+            distances = np.sqrt(np.sum(np.dot(diff, trimed_lattice) ** 2, axis=1))
             if (distances < symprec).any():
                 is_overlap = True
 
