@@ -61,8 +61,8 @@ append_band(bands, [0.0, 0.0, 0.0], [0.5, 0.5, 0.5])
 phonon2.set_band_structure(bands)
 phonon2.plot_band_structure().show()
 
- # Artificially increase phonon frequency of a highest band at Gamma
-frequencies[0, 5] = 7.5
+ # Artificially increase phonon frequency of the highest band(s) at Gamma
+frequencies[0, 3:] = 7.5
 dynmat2fc.set_dynamical_matrices(frequencies / VaspToTHz, eigenvectors)
 dynmat2fc.run()
 fc = dynmat2fc.get_force_constants()
