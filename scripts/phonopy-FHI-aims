@@ -269,7 +269,7 @@ def write_Hessian(phonopy_obj, supercell_matrix_inv, set_of_forces):
             f.write("#   atom %4d   %11.6f %11.6f %11.6f   %s \n" % (n+1,r[0],r[1],r[2],sym)) 
         f.write("# \n")
     f.write("# force constant matrix elements in eV/(Angstrom)^2 \n")	
-    for (j_atom_count,j_atom) in enumerate(primitive.p2s_map):
+    for (j_atom_count,j_atom) in enumerate(primitive.get_primitive_to_supercell_map()):
         for j_coord in range(3):
             for i_atom in range(phonopy_obj.supercell.get_number_of_atoms()):
                 for i_coord in range(3):
