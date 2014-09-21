@@ -33,7 +33,6 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
-from phonopy.units import VaspToTHz
 from phonopy.structure.atoms import Atoms
 from phonopy.structure.symmetry import Symmetry
 from phonopy.structure.cells import get_supercell, get_primitive
@@ -72,10 +71,11 @@ class DynmatToForceConstants:
             self.set_dynamical_matrices(frequencies, eigenvectors)
 
     def run(self):
-        self._run()
-            
+        self._inverse_transformation()
+        self._distribute_force_constants()
+
     def get_force_constants(self):
-        return self._force_constants / VaspToTHz ** 2
+        return self._force_constants
             
     def get_commensurate_points(self):
         return self._commensurate_points
@@ -95,10 +95,6 @@ class DynmatToForceConstants:
             
         self._dynmat = np.array(dynmat, dtype='complex128', order='C')
         
-    def _run(self):
-        self._inverse_transformation()
-        self._distribute_force_constants()
-
     def _inverse_transformation(self):
         s2p = self._primitive.get_supercell_to_primitive_map()
         p2s = self._primitive.get_primitive_to_supercell_map()
@@ -134,10 +130,12 @@ class DynmatToForceConstants:
                                    1e-5)
 
     def _sum_q(self, p_i, s_j, p_j):
-        pos = self._shortest_vectors[s_j, p_i, 0]
+        multi = self._multiplicity[s_j, p_i]
+        pos = self._shortest_vectors[s_j, p_i, :multi]
         sum_q = np.zeros((3, 3), dtype='complex128')
-        phases = np.exp(-2j * np.pi * np.dot(self._commensurate_points, pos))
-        for i, coef in enumerate(phases):
+        phases = -2j * np.pi * np.dot(self._commensurate_points, pos.T)
+        phase_factors = np.exp(phases).sum(axis=1) / multi
+        for i, coef in enumerate(phase_factors):
             sum_q += self._dynmat[i,
                                   (p_i * 3):(p_i * 3 + 3),
                                   (p_j * 3):(p_j * 3 + 3)] * coef
