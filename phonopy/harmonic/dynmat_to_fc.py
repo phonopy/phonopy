@@ -33,8 +33,12 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
+from phonopy.units import VaspToTHz
 from phonopy.structure.atoms import Atoms
-from phonopy.structure.cells import get_supercell
+from phonopy.structure.symmetry import Symmetry
+from phonopy.structure.cells import get_supercell, get_primitive
+from phonopy.harmonic.dynamical_matrix import get_smallest_vectors
+from phonopy.harmonic.force_constants import distribute_force_constants
 
 def get_commensurate_points(primitive, supercell):
     supercell_matrix = np.linalg.inv(primitive.get_primitive_matrix()).T
@@ -49,9 +53,93 @@ class DynmatToForceConstants:
     def __init__(self,
                  primitive,
                  supercell,
-                 frequencies,
-                 eigenvectors):
+                 frequencies=None,
+                 eigenvectors=None,
+                 symprec=1e-5):
+        self._primitive = primitive
+        self._supercell = supercell
+        self._commensurate_points = get_commensurate_points(primitive,
+                                                            supercell)
+        (self._shortest_vectors,
+         self._multiplicity) = get_smallest_vectors(supercell,
+                                                    primitive,
+                                                    symprec)
+        self._dynmat = None
+        n = self._supercell.get_number_of_atoms()
+        self._force_constants = np.zeros((n, n, 3, 3), dtype='double')
         
-        eigvals = frequencies ** 2 * np.sign(frequencies)
-        dynmat = np.dot(np.dot(eigenvectors, np.diag(eigvals)),
-                        eigenvectors.T.conj())
+        if frequencies is not None and eigenvectors is not None:
+            self.set_dynamical_matrices(frequencies, eigenvectors)
+
+    def run(self):
+        self._run()
+            
+    def get_force_constants(self):
+        return self._force_constants / VaspToTHz ** 2
+            
+    def get_commensurate_points(self):
+        return self._commensurate_points
+            
+    def get_dynamical_matrices(self):
+        return self._dynmat
+            
+    def set_dynamical_matrices(self,
+                               frequencies_at_qpoints,
+                               eigenvectors_at_qpoints):
+        dynmat = []
+        for frequencies, eigvecs in zip(frequencies_at_qpoints,
+                                        eigenvectors_at_qpoints):
+            eigvals = frequencies ** 2 * np.sign(frequencies)
+            dynmat.append(
+                np.dot(np.dot(eigvecs, np.diag(eigvals)), eigvecs.T.conj()))
+            
+        self._dynmat = np.array(dynmat, dtype='complex128', order='C')
+        
+    def _run(self):
+        self._inverse_transformation()
+        self._distribute_force_constants()
+
+    def _inverse_transformation(self):
+        s2p = self._primitive.get_supercell_to_primitive_map()
+        p2s = self._primitive.get_primitive_to_supercell_map()
+        p2p = self._primitive.get_primitive_to_primitive_map()
+
+        fc = self._force_constants
+        m = self._primitive.get_masses()
+        N = (self._supercell.get_number_of_atoms() /
+             self._primitive.get_number_of_atoms())
+
+        for p_i, s_i in enumerate(p2s):
+            for s_j, p_j in enumerate([p2p[i] for i in s2p]):
+                coef = np.sqrt(m[p_i] * m[p_j]) / N
+                fc[s_i, s_j] = self._sum_q(p_i, s_j, p_j) * coef
+
+    def _distribute_force_constants(self):
+        s2p = self._primitive.get_supercell_to_primitive_map()
+        p2s = self._primitive.get_primitive_to_supercell_map()
+        positions = self._supercell.get_scaled_positions()
+        lattice = self._supercell.get_cell().T
+        diff = positions - positions[p2s[0]]
+        trans = np.array(diff[np.where(s2p == p2s[0])[0]],
+                         dtype='double', order='C')
+        rotations = np.array([np.eye(3, dtype='intc')] * len(trans),
+                             dtype='intc', order='C')
+        distribute_force_constants(self._force_constants,
+                                   range(self._supercell.get_number_of_atoms()),
+                                   p2s,
+                                   lattice,
+                                   positions,
+                                   rotations,
+                                   trans,
+                                   1e-5)
+
+    def _sum_q(self, p_i, s_j, p_j):
+        pos = self._shortest_vectors[s_j, p_i, 0]
+        sum_q = np.zeros((3, 3), dtype='complex128')
+        phases = np.exp(-2j * np.pi * np.dot(self._commensurate_points, pos))
+        for i, coef in enumerate(phases):
+            sum_q += self._dynmat[i,
+                                  (p_i * 3):(p_i * 3 + 3),
+                                  (p_j * 3):(p_j * 3 + 3)] * coef
+        return sum_q.real
+        
