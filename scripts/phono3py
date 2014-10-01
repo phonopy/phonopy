@@ -116,6 +116,7 @@ parser.set_defaults(band_indices=None,
                     factor=None,
                     force_sets_to_forces_fc2_mode=None,
                     forces_fc3_mode=False,
+                    forces_fc3_file_mode=False,
                     forces_fc2_mode=False,
                     force_sets_mode=False,
                     frequency_pitch=None,
@@ -213,6 +214,8 @@ parser.add_option("--dim_fc2", dest="phonon_supercell_dimension",
                   type="string", help="Supercell dimension for extra fc2")
 parser.add_option("--cf3", "--create_f3", dest="forces_fc3_mode",
                   action="store_true", help="Create FORCES_FC3")
+parser.add_option("--cf3_file", "--create_f3_from_file", dest="forces_fc3_file_mode",
+                  action="store_true", help="Create FORCES_FC3 from file name list")
 parser.add_option("--cf2", "--create_f2", dest="forces_fc2_mode",
                   action="store_true", help="Create FORCES_FC2")
 parser.add_option("--cfs", "--create_force_sets", dest="force_sets_mode",
@@ -370,7 +373,7 @@ if log_level:
 #####################
 # Create FORCES_FC3 #
 #####################
-if options.forces_fc3_mode:
+if options.forces_fc3_mode or options.forces_fc3_file_mode:
     if input_filename is None:
         filename = 'disp_fc3.yaml'
     else:
@@ -379,7 +382,13 @@ if options.forces_fc3_mode:
     if log_level:
         print "Displacement dataset is read from %s." % filename
     disp_dataset = parse_disp_fc3_yaml()
-    write_FORCES_FC3_vasp(args, disp_dataset)
+
+    if options.forces_fc3_file_mode:
+        file_exists(args[0], log_level)
+        filenames = [x.strip() for x in open(args[0])]
+    else:
+        filenames = args
+    write_FORCES_FC3_vasp(filenames, disp_dataset)
     
     if log_level:
         print "FORCES_FC3 has been created."
