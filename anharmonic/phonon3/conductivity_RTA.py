@@ -300,16 +300,12 @@ class Conductivity_RTA(Conductivity):
                 ([0, 0], [1, 1], [2, 2], [1, 2], [0, 2], [0, 1])):
                 gv_sum2[j] = gv_by_gv_tensor[:, vxv[0], vxv[1]]
 
-            # Boundary scattering
-            if self._cutoff_mfp is not None:
-                g_boundary = self._get_boundary_scattering(i)
-                
             # Kappa
             for j in range(len(self._sigmas)):
                 for k in range(len(self._temperatures)):
                     g_sum = self._get_main_diagonal(i, j, k)
                     for l in range(num_band):
-                        if i == 0 and l < 3: # Acoustic mode at Gamma (singular)
+                        if i == 0 and l < 3: # Exclude acoustic modes at Gamma
                             continue
                         self._kappa[j, k] += (
                             gv_sum2[:, l] * cv[k, l] / (g_sum[l] * 2) *

@@ -255,7 +255,8 @@ def get_atom_by_symmetry(positions,
     rot_pos = np.dot(positions[atom_number], rotation.T) + trans
     for i, pos in enumerate(positions):
         diff = pos - rot_pos
-        if (abs(diff -diff.round()) < symprec).all():
+        diff -= np.rint(diff)
+        if (abs(diff) < symprec).all():
             return i
 
     print "Position or symmetry is wrong."
@@ -272,7 +273,8 @@ def get_atom_mapping_by_symmetry(positions,
     for i, (r, t) in enumerate(zip(rotations, translations)):
         rot_pos = np.dot(positions[atom_search], r.T) + t
         diff = rot_pos - positions[atom_target]
-        if (abs(diff -diff.round()) < symprec).all():
+        diff -= np.rint(diff)
+        if (abs(diff) < symprec).all():
             map_sym = i
             break
 
