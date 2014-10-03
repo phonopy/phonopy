@@ -393,7 +393,6 @@ class Phonopy:
         self._dynamical_matrix.set_dynamical_matrix(q)
         return self._dynamical_matrix.get_dynamical_matrix()
 
-    # Frequency at a q-point
     def get_frequencies(self, q):
         """
         Calculate phonon frequencies at q
@@ -412,7 +411,6 @@ class Phonopy:
             
         return np.array(frequencies) * self._factor
 
-    # Frequency and eigenvector at a q-point
     def get_frequencies_with_eigenvectors(self, q):
         """
         Calculate phonon frequencies and eigenvectors at q
@@ -433,7 +431,6 @@ class Phonopy:
 
         return np.array(frequencies) * self._factor, eigenvectors
 
-    # Band structure
     def set_band_structure(self,
                            bands,
                            is_eigenvectors=False,
@@ -460,7 +457,6 @@ class Phonopy:
     def write_yaml_band_structure(self):
         self._band_structure.write_yaml()
 
-    # Mesh sampling
     def set_mesh(self,
                  mesh,
                  shift=None,
@@ -490,15 +486,6 @@ class Phonopy:
     def write_yaml_mesh(self):
         self._mesh.write_yaml()
 
-    # Tetrahedron mesh
-    def set_tetrahedron_mesh(self):
-        if self._mesh is None:
-            print "set_mesh has to be done before set_tetrahedron_mesh"
-            return False
-    
-        self._tetrahedron_mesh = TetrahedronMesh(self._mesh)
-
-    # Thermal property
     def set_thermal_properties(self,
                                t_step=10,
                                t_max=1000,
@@ -532,7 +519,6 @@ class Phonopy:
     def write_yaml_thermal_properties(self, filename='thermal_properties.yaml'):
         self._thermal_properties.write_yaml(filename=filename)
 
-    # Partial DOS
     def set_partial_DOS(self,
                         sigma=None,
                         freq_min=None,
@@ -578,7 +564,6 @@ class Phonopy:
     def write_partial_DOS(self):
         self._pdos.write()
 
-    # Total DOS
     def set_total_DOS(self,
                       sigma=None,
                       freq_min=None,
@@ -621,7 +606,6 @@ class Phonopy:
     def write_total_DOS(self):
         self._total_dos.write()
 
-    # Thermal displacement
     def set_thermal_displacements(self,
                                   t_step=10,
                                   t_max=1000,
@@ -673,7 +657,6 @@ class Phonopy:
     def write_yaml_thermal_displacements(self):
         self._thermal_displacements.write_yaml()
 
-    # Thermal displacement matrices
     def set_thermal_displacement_matrices(self,
                                            t_step=10,
                                            t_max=1000,
@@ -719,7 +702,6 @@ class Phonopy:
     def write_yaml_thermal_displacement_matrices(self):
         self._thermal_displacement_matrices.write_yaml()
         
-    # Thermal displacement
     def set_thermal_distances(self,
                               atom_pairs,
                               t_step=10,
@@ -750,8 +732,6 @@ class Phonopy:
     def write_yaml_thermal_distances(self):
         self._thermal_distances.write_yaml()
 
-
-    # Q-points mode
     def set_qpoints_phonon(self,
                            q_points,
                            nac_q_direction=None,
@@ -775,7 +755,6 @@ class Phonopy:
     def write_yaml_qpoints_phonon(self):
         self._qpoints_phonon.write_yaml()
 
-    # Animation
     def write_animation(self,
                         q_point=None,
                         anime_type='v_sim',
@@ -860,8 +839,6 @@ class Phonopy:
                                            amplitude,
                                            num_div)
                     
-
-    # Modulation
     def set_modulations(self,
                         dimension,
                         phonon_modes,
@@ -900,8 +877,6 @@ class Phonopy:
     def write_yaml_modulations(self):
         self._modulation.write_yaml()
 
-
-    # Characters of irreducible representations
     def set_irreps(self,
                    q,
                    is_little_cogroup=False,
@@ -929,7 +904,6 @@ class Phonopy:
     def write_yaml_irreps(self, show_irreps=False):
         self._irreps.write_yaml(show_irreps=show_irreps)
 
-    # Group velocity
     def set_group_velocity(self, q_length=None):
         self._set_dynamical_matrix()
         self._group_velocity = GroupVelocity(
