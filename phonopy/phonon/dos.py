@@ -138,7 +138,6 @@ class Dos:
                 self._frequencies,
                 mesh_object.get_mesh_numbers(),
                 mesh_object.get_grid_address(),
-                mesh_object.get_ir_grid_points(),
                 mesh_object.get_grid_mapping_table())
         else:
             self._tetrahedron_mesh = None

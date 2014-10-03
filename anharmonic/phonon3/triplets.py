@@ -3,6 +3,7 @@ from phonopy.units import THzToEv, Kb
 import phonopy.structure.spglib as spg
 from phonopy.structure.symmetry import Symmetry
 from phonopy.structure.tetrahedron_method import TetrahedronMethod
+from phonopy.structure.grid_points import extract_ir_grid_points
 
 def gaussian(x, sigma):
     return 1.0 / np.sqrt(2 * np.pi) / sigma * np.exp(-x**2 / 2 / sigma**2)
@@ -124,11 +125,8 @@ def get_ir_grid_points(mesh, rotations, mesh_shifts=[False, False, False]):
         mesh,
         rotations,
         is_shift=np.where(mesh_shifts, 1, 0))
-    ir_grid_points = np.unique(grid_mapping_table)
-    weights = np.zeros_like(grid_mapping_table)
-    for g in grid_mapping_table:
-        weights[g] += 1
-    ir_grid_weights = weights[ir_grid_points]
+    (ir_grid_points,
+     ir_grid_weights) = extract_ir_grid_points(grid_mapping_table)
 
     return ir_grid_points, ir_grid_weights, grid_address
 

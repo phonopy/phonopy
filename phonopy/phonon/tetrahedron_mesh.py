@@ -53,20 +53,19 @@ def get_tetrahedra_frequencies(gp,
 class TetrahedronMesh:
     def __init__(self,
                  cell,
-                 frequencies,
+                 frequencies, # only at ir-grid-points
                  mesh,
                  grid_address,
-                 ir_grid_points,
                  grid_mapping_table,
                  grid_order=None):
         self._cell = cell
         self._frequencies = frequencies
         self._mesh = mesh
         self._grid_address = grid_address
-        self._ir_grid_points = ir_grid_points
         self._grid_mapping_table = grid_mapping_table
         self._grid_order = grid_order
              
+        self._ir_grid_points = None
         self._gp_ir_index = None
 
         self._tm = None
@@ -121,13 +120,16 @@ class TetrahedronMesh:
 
         g_map = self._grid_mapping_table
         self._gp_ir_index = np.zeros_like(g_map)
+        ir_gp = []
         count = 0
         for i, gp in enumerate(g_map):
             if i == gp:
                 self._gp_ir_index[i] = count
+                ir_gp.append(i)
                 count += 1
             else:
                 self._gp_ir_index[i] = self._gp_ir_index[g_map[i]]
+        self._ir_grid_points = np.array(ir_gp, dtype='intc')
 
     def _set_tetrahedra_frequencies(self, gp):
         self._tetrahedra_frequencies = get_tetrahedra_frequencies(
