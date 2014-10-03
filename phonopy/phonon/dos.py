@@ -133,7 +133,13 @@ class Dos:
         self._frequencies = mesh_object.get_frequencies()
         self._weights = mesh_object.get_weights()
         if tetrahedron_method:
-            self._tetrahedron_mesh = TetrahedronMesh(self._mesh_object)
+            self._tetrahedron_mesh = TetrahedronMesh(
+                mesh_object.get_dynamical_matrix().get_primitive(),
+                self._frequencies,
+                mesh_object.get_mesh_numbers(),
+                mesh_object.get_grid_address(),
+                mesh_object.get_ir_grid_points(),
+                mesh_object.get_grid_mapping_table())
         else:
             self._tetrahedron_mesh = None
 

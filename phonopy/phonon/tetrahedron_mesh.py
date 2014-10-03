@@ -50,44 +50,32 @@ def get_tetrahedra_frequencies(gp,
         t_frequencies[:, i, :] = frequencies[gp_ir_index[neighbors]].T
     return t_frequencies
 
-# def __init__(self,
-#              cell,
-#              mesh,
-#              grid_address,
-#              ir_grid_points,
-#              grid_mapping_table,
-#              grid_order,
-#              frequencies
-             
 class TetrahedronMesh:
-    def __init__(self, mesh_object):
-        self._mesh_object = mesh_object
-        self._grid_address = None
-        self._grid_order = None
-        self._ir_grid_points = None
-        self._ir_grid_weights = None
+    def __init__(self,
+                 cell,
+                 frequencies,
+                 mesh,
+                 grid_address,
+                 ir_grid_points,
+                 grid_mapping_table,
+                 grid_order=None):
+        self._cell = cell
+        self._frequencies = frequencies
+        self._mesh = mesh
+        self._grid_address = grid_address
+        self._ir_grid_points = ir_grid_points
+        self._grid_mapping_table = grid_mapping_table
+        self._grid_order = grid_order
+             
         self._gp_ir_index = None
-
-        self._cell = None
-        self._frequencies = None
-        self._eigenvalues = None
 
         self._tm = None
         self._tetrahedra_frequencies = None
         self._integration_weights = None
         self._relative_grid_address = None
 
-        self._total_dos = None
-        self._partial_dos = None
-
         self._prepare()
         
-    def get_total_dos(self):
-        return self._total_dos
-
-    def get_partial_dos(self):
-        return self._partial_dos
-
     def get_integration_weights(self):
         return self._integration_weights
 
@@ -128,24 +116,18 @@ class TetrahedronMesh:
         self._integration_weights /= np.prod(self._mesh)
 
     def _prepare(self):
-        mo = self._mesh_object
-        self._cell = mo.get_dynamical_matrix().get_primitive()
-        self._mesh = mo.get_mesh_numbers()
-        self._grid_address = mo.get_grid_address()
-        self._ir_grid_points = mo.get_ir_grid_points()
-        self._grid_order = [1, self._mesh[0], self._mesh[0] * self._mesh[1]]
+        if self._grid_order is None:
+            self._grid_order = [1, self._mesh[0], self._mesh[0] * self._mesh[1]]
 
-        grid_mapping_table = mo.get_grid_mapping_table()
-        self._gp_ir_index = np.zeros_like(grid_mapping_table)
+        g_map = self._grid_mapping_table
+        self._gp_ir_index = np.zeros_like(g_map)
         count = 0
-        for i, gp in enumerate(grid_mapping_table):
+        for i, gp in enumerate(g_map):
             if i == gp:
                 self._gp_ir_index[i] = count
                 count += 1
             else:
-                self._gp_ir_index[i] = self._gp_ir_index[grid_mapping_table[i]]
-
-        self._frequencies = mo.get_frequencies()
+                self._gp_ir_index[i] = self._gp_ir_index[g_map[i]]
 
     def _set_tetrahedra_frequencies(self, gp):
         self._tetrahedra_frequencies = get_tetrahedra_frequencies(
