@@ -35,6 +35,7 @@
 import sys
 import numpy as np
 from phonopy.structure.tetrahedron_method import TetrahedronMethod
+from phonopy.structure.grid_points import extract_ir_grid_points
 
 def get_tetrahedra_frequencies(gp,
                                mesh,
@@ -63,7 +64,10 @@ class TetrahedronMesh:
         self._mesh = mesh
         self._grid_address = grid_address
         self._grid_mapping_table = grid_mapping_table
-        self._grid_order = grid_order
+        if grid_order is None:
+            self._grid_order = [1, mesh[0], mesh[0] * mesh[1]]
+        else:
+            self._grid_order = grid_order
              
         self._ir_grid_points = None
         self._gp_ir_index = None
@@ -115,22 +119,17 @@ class TetrahedronMesh:
         self._integration_weights /= np.prod(self._mesh)
 
     def _prepare(self):
-        if self._grid_order is None:
-            self._grid_order = [1, self._mesh[0], self._mesh[0] * self._mesh[1]]
+        (self._ir_grid_points,
+         ir_grid_weights) = extract_ir_grid_points(self._grid_mapping_table)
 
-        g_map = self._grid_mapping_table
-        self._gp_ir_index = np.zeros_like(g_map)
-        ir_gp = []
-        count = 0
-        for i, gp in enumerate(g_map):
-            if i == gp:
-                self._gp_ir_index[i] = count
-                ir_gp.append(i)
-                count += 1
-            else:
-                self._gp_ir_index[i] = self._gp_ir_index[g_map[i]]
-        self._ir_grid_points = np.array(ir_gp, dtype='intc')
+        ir_gp_indices = {}
+        for i, gp in enumerate(self._ir_grid_points):
+            ir_gp_indices[gp] = i
 
+        self._gp_ir_index = np.zeros_like(self._grid_mapping_table)
+        for i, gp in enumerate(self._grid_mapping_table):
+            self._gp_ir_index[i] = ir_gp_indices[gp]
+        
     def _set_tetrahedra_frequencies(self, gp):
         self._tetrahedra_frequencies = get_tetrahedra_frequencies(
             gp,
