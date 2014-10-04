@@ -737,7 +737,7 @@ class Conductivity_LBTE(Conductivity):
         gv = self._gv[i]
         mspp = self._mean_square_pp_strength[i]
 
-        print "Frequency     group velocity (x, y, z)     |gv|     |mspp|",
+        print "Frequency     group velocity (x, y, z)     |gv|      mspp",
         if self._gv_delta_q is None:
             print
         else:
