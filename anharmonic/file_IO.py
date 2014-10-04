@@ -957,6 +957,7 @@ def write_kappa_to_hdf5(temperature,
                         group_velocity=None,
                         heat_capacity=None,
                         kappa=None,
+                        mode_kappa=None,
                         gamma=None,
                         gamma_isotope=None,
                         mspp=None,
@@ -987,6 +988,8 @@ def write_kappa_to_hdf5(temperature,
         w.create_dataset('heat_capacity', data=heat_capacity)
     if kappa is not None:
         w.create_dataset('kappa', data=kappa)
+    if mode_kappa is not None:
+        w.create_dataset('mode_kappa', data=mode_kappa)
     if gamma is not None:
         w.create_dataset('gamma', data=gamma)
     if gamma_isotope is not None:

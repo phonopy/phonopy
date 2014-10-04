@@ -122,6 +122,7 @@ def _write_kappa(br, filename=None, log_level=0):
     # num_sampling_points = br.get_number_of_sampling_points()
     
     kappa = br.get_kappa()
+    mode_kappa = br.get_mode_kappa()
     
     for i, sigma in enumerate(sigmas):
         kappa_at_sigma = kappa[i]
@@ -146,6 +147,7 @@ def _write_kappa(br, filename=None, log_level=0):
                             group_velocity=gv,
                             heat_capacity=mode_cv,
                             kappa=kappa_at_sigma,
+                            mode_kappa=mode_kappa[i],
                             gamma=gamma[i],
                             gamma_isotope=gamma_isotope_at_sigma,
                             mspp=mspp,
@@ -244,6 +246,7 @@ class Conductivity_RTA(Conductivity):
         self._grid_weights = None
         self._grid_address = None
 
+        self._mode_kappa = None
         self._gamma = None
         self._read_gamma = False
         self._read_gamma_iso = False
@@ -307,14 +310,18 @@ class Conductivity_RTA(Conductivity):
                     for l in range(num_band):
                         if i == 0 and l < 3: # Exclude acoustic modes at Gamma
                             continue
-                        self._kappa[j, k] += (
+                        self._mode_kappa[j, k, i, l] = (
                             gv_sum2[:, l] * cv[k, l] / (g_sum[l] * 2) *
                             self._conversion_factor)
 
-        self._kappa /= num_sampling_points
+        self._mode_kappa /= num_sampling_points
+        self._kappa = self._mode_kappa.sum(axis=2).sum(axis=2)
 
     def get_mode_heat_capacities(self):
         return self._cv
+
+    def get_mode_kappa(self):
+        return self._mode_kappa
 
     def _run_at_grid_point(self):
         i = self._grid_point_count
@@ -348,6 +355,11 @@ class Conductivity_RTA(Conductivity):
         self._kappa = np.zeros((len(self._sigmas),
                                 len(self._temperatures),
                                 6), dtype='double')
+        self._mode_kappa = np.zeros((len(self._sigmas),
+                                     len(self._temperatures),
+                                     num_grid_points,
+                                     num_band,
+                                     6), dtype='double')
         if not self._read_gamma:
             self._gamma = np.zeros((len(self._sigmas),
                                     len(self._temperatures),
@@ -424,7 +436,7 @@ class Conductivity_RTA(Conductivity):
         gv = self._gv[i]
         mspp = self._mean_square_pp_strength[i]
         
-        print "Frequency     group velocity (x, y, z)     |gv|     |mspp|",
+        print "Frequency     group velocity (x, y, z)     |gv|      mspp",
         if self._gv_delta_q is None:
             print
         else:
