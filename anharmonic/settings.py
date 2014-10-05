@@ -8,8 +8,8 @@ class Phono3pySettings(Settings):
         self._coarse_mesh_shifts = None
         self._cutoff_fc3_distance = None
         self._cutoff_pair_distance = None
-        self._cutoff_mfp = 10000.0 # in micrometre, the value is just
-                                   # set to avoid divergence
+        self._cutoff_mfp = 1.0e6 # In micrometre. The default value is
+                                 # just set to avoid divergence.
         self._grid_addresses = None
         self._grid_points = None
         self._ion_clamped = False
