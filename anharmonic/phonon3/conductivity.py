@@ -340,7 +340,11 @@ class Conductivity:
                    (gp, i + 1, len(self._grid_points)))
             print "q-point: (%5.2f %5.2f %5.2f)" % tuple(self._qpoints[i])
             if self._cutoff_mfp is not None:
-                print ("Boundary mean free path (micrometre): %f" %
+                if self._cutoff_mfp > 1000:
+                    print ("Boundary mean free path (millimetre): %.3f" %
+                           (self._cutoff_mfp / 1000.0))
+                else:
+                    print ("Boundary mean free path (micrometre): %.5f" %
                        self._cutoff_mfp)
             if self._is_isotope:
                 print "Mass variance parameters:",
