@@ -55,6 +55,8 @@ class Conductivity:
         self._ir_grid_points = None
         self._ir_grid_weights = None
 
+        self._kappa = None
+        self._mode_kappa = None
         self._gamma = None
         self._read_gamma = False
         self._read_gamma_iso = False
@@ -141,11 +143,11 @@ class Conductivity:
     def get_gamma_isotope(self):
         return self._gamma_iso
         
-    def get_collision_matrix(self):
-        return self._collision_matrix
-        
     def get_kappa(self):
         return self._kappa
+
+    def get_mode_kappa(self):
+        return self._mode_kappa
 
     def get_sigmas(self):
         return self._sigmas
