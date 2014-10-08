@@ -119,6 +119,7 @@ def _write_kappa(lbte, filename=None, log_level=0):
     mspp = lbte.get_mean_square_pp_strength()
     qpoints = lbte.get_qpoints()
     kappa = lbte.get_kappa()
+    mode_kappa = lbte.get_mode_kappa()
     
     for i, sigma in enumerate(sigmas):
         write_kappa_to_hdf5(temperatures,
@@ -126,6 +127,7 @@ def _write_kappa(lbte, filename=None, log_level=0):
                             frequency=frequencies,
                             group_velocity=gv,
                             kappa=kappa[i],
+                            mode_kappa=mode_kappa[i],
                             gamma=gamma[i],
                             mspp=mspp,
                             qpoint=qpoints,
@@ -362,6 +364,11 @@ class Conductivity_LBTE(Conductivity):
 
         if self._is_reducible_collision_matrix:
             num_mesh_points = np.prod(self._mesh)
+            self._mode_kappa = np.zeros((len(self._sigmas),
+                                         len(self._temperatures),
+                                         num_mesh_points,
+                                         num_band,
+                                         6), dtype='double')
             self._collision = CollisionMatrix(
                 self._pp,
                 is_reducible_collision_matrix=True)
@@ -371,6 +378,11 @@ class Conductivity_LBTE(Conductivity):
                  num_grid_points, num_band, num_mesh_points, num_band),
                 dtype='double')
         else:
+            self._mode_kappa = np.zeros((len(self._sigmas),
+                                         len(self._temperatures),
+                                         num_grid_points,
+                                         num_band,
+                                         6), dtype='double')
             self._rot_grid_points = np.zeros(
                 (len(self._ir_grid_points), len(self._point_operations)),
                 dtype='intc')
@@ -449,13 +461,9 @@ class Conductivity_LBTE(Conductivity):
                     if self._is_reducible_collision_matrix:
                         self._set_inv_reducible_collision_matrix(j, k)
                     else:
-                        self._set_inv_collision_matrix_external(j, k)
-                        # self._set_inv_collision_matrix(j, k)
+                        self._set_inv_collision_matrix(j, k)
                     X = self._get_X(t, weights)
-                    kappa = self._get_kappa(j, k, X)
-                    self._kappa[j, k] = [
-                        kappa[0, 0], kappa[1, 1], kappa[2, 2],
-                        kappa[1, 2], kappa[0, 2], kappa[0, 1]]
+                    self._set_kappa(j, k, X)
 
                 if self._log_level:
                     print ("%7.1f" + " %9.3f" * 6) % (
@@ -643,33 +651,35 @@ class Conductivity_LBTE(Conductivity):
         else:
             return np.zeros_like(X.reshape(-1, 3))
 
-    def _set_inv_collision_matrix(self, i_sigma, i_temp, pinv_cutoff=1e-11):
-        t = self._temperatures[i_temp]
-        num_ir_grid_points = len(self._ir_grid_points)
-        num_band = self._primitive.get_number_of_atoms() * 3
-        col_mat = self._collision_matrix[i_sigma, i_temp].reshape(
-            num_ir_grid_points * num_band * 3,
-            num_ir_grid_points * num_band * 3)        
-        w, col_mat[:] = np.linalg.eigh(col_mat)
-        v = col_mat
-        e = np.zeros(len(w), dtype='double')
-        for l, val in enumerate(w):
-            if val > pinv_cutoff:
-                e[l] = 1 / np.sqrt(val)
-        v[:] = e * v
-        v[:] = np.dot(v, v.T) # inv_col
-
-        # v[:] = np.linalg.pinv(col_mat)
-        
-    def _set_inv_collision_matrix_external(self,
-                                           i_sigma,
-                                           i_temp,
-                                           pinv_cutoff=1e-11):
-        import anharmonic._phono3py as phono3c
-        phono3c.inverse_collision_matrix(
-            self._collision_matrix, i_sigma, i_temp, pinv_cutoff)
-        # phono3c.inverse_collision_matrix_libflame(
-        #     self._collision_matrix, i_sigma, i_temp, pinv_cutoff)
+    def _set_inv_collision_matrix(self,
+                                  i_sigma,
+                                  i_temp,
+                                  pinv_cutoff=1e-8,
+                                  method=0):
+        if method == 0:
+            num_ir_grid_points = len(self._ir_grid_points)
+            num_band = self._primitive.get_number_of_atoms() * 3
+            col_mat = self._collision_matrix[i_sigma, i_temp].reshape(
+                num_ir_grid_points * num_band * 3,
+                num_ir_grid_points * num_band * 3)
+            w, col_mat[:] = np.linalg.eigh(col_mat)
+            v = col_mat
+            e = np.zeros(len(w), dtype='double')
+            for i, val in enumerate(w):
+                print i, val
+            for l, val in enumerate(w):
+                if val > pinv_cutoff:
+                    e[l] = 1 / np.sqrt(val)
+            v[:] = e * v
+            v[:] = np.dot(v, v.T) # inv_col
+        elif method == 1:
+            import anharmonic._phono3py as phono3c
+            phono3c.inverse_collision_matrix(
+                self._collision_matrix, i_sigma, i_temp, pinv_cutoff)
+        elif method == 2:
+            import anharmonic._phono3py as phono3c
+            phono3c.inverse_collision_matrix_libflame(
+                self._collision_matrix, i_sigma, i_temp, pinv_cutoff)
 
     def _set_inv_reducible_collision_matrix(self,
                                             i_sigma,
@@ -689,46 +699,54 @@ class Conductivity_LBTE(Conductivity):
         v[:] = e * v
         v[:] = np.dot(v, v.T) # inv_col
         
-    def _get_kappa(self, i_sigma, i_temp, X):
-        num_ir_grid_points = len(self._ir_grid_points)
+    def _set_kappa(self, i_sigma, i_temp, X):
         num_band = self._primitive.get_number_of_atoms() * 3
 
         if self._is_reducible_collision_matrix:
             num_mesh_points = np.prod(self._mesh)
-            inv_col_mat = np.kron(
-                self._collision_matrix[i_sigma, i_temp].reshape(
-                    num_mesh_points * num_band,
-                    num_mesh_points * num_band), np.eye(3))
-        else:
-            inv_col_mat = self._collision_matrix[i_sigma, i_temp].reshape(
-                num_ir_grid_points * num_band * 3,
-                num_ir_grid_points * num_band * 3)
-        Y = np.dot(inv_col_mat, X.ravel()).reshape(-1, 3)
-
-        if self._is_reducible_collision_matrix:
+            num_grid_points = num_mesh_points
             from phonopy.harmonic.force_constants import similarity_transformation
             point_operations = self._symmetry.get_reciprocal_operations()
             rec_lat = np.linalg.inv(self._primitive.get_cell())
             rotations_cartesian = np.array(
                 [similarity_transformation(rec_lat, r)
                  for r in point_operations], dtype='double')
+            inv_col_mat = np.kron(
+                self._collision_matrix[i_sigma, i_temp].reshape(
+                    num_mesh_points * num_band,
+                    num_mesh_points * num_band), np.eye(3))
         else:
+            num_ir_grid_points = len(self._ir_grid_points)
+            num_grid_points = num_ir_grid_points
             rotations_cartesian = self._rotations_cartesian
+            inv_col_mat = self._collision_matrix[i_sigma, i_temp].reshape(
+                num_ir_grid_points * num_band * 3,
+                num_ir_grid_points * num_band * 3)
 
-        # Acoustic mode at Gamma is not summed.
-        RX = np.dot(X[3:], rotations_cartesian.reshape(-1, 3).T)
-        RY = np.dot(Y[3:], rotations_cartesian.reshape(-1, 3).T)
-        sum_outer = np.zeros((3, 3), dtype='double')
-        for v, f in zip(RX.reshape(-1, 3), RY.reshape(-1, 3)):
-            sum_outer += np.outer(v, f)
+        Y = np.dot(inv_col_mat, X.ravel()).reshape(-1, 3)
+
+        for i, (v_gp, f_gp) in enumerate(zip(X.reshape(num_grid_points,
+                                                       num_band, 3),
+                                             Y.reshape(num_grid_points,
+                                                       num_band, 3))):
+            for j, (v, f) in enumerate(zip(v_gp, f_gp)):
+                sum_k = np.zeros((3, 3), dtype='double')
+                for r in rotations_cartesian:
+                    sum_k += np.outer(np.dot(r, v), np.dot(r, f))
+                sum_k = sum_k + sum_k.T
+                for k, vxf in enumerate(
+                        ((0, 0), (1, 1), (2, 2), (1, 2), (0, 2), (0, 1))):
+                    self._mode_kappa[i_sigma, i_temp, i, j, k] = sum_k[vxf]
+
         t = self._temperatures[i_temp]
-
+        self._mode_kappa *= (self._conversion_factor * Kb * t ** 2
+                             / np.prod(self._mesh))
+        
         if self._is_reducible_collision_matrix:
-            return ((sum_outer + sum_outer.T) * self._conversion_factor *
-                    Kb * t ** 2 / np.prod(self._mesh) / len(point_operations))
-        else:
-            return ((sum_outer + sum_outer.T) * self._conversion_factor *
-                    Kb * t ** 2 / np.prod(self._mesh))
+            self._mode_kappa /= len(point_operations)
+        
+        self._kappa[i_sigma, i_temp] = (
+            self._mode_kappa[i_sigma, i_temp].sum(axis=0).sum(axis=0))
                     
     def _show_log(self, i):
         q = self._qpoints[i]
