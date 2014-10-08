@@ -246,7 +246,6 @@ class Conductivity_RTA(Conductivity):
         self._grid_weights = None
         self._grid_address = None
 
-        self._mode_kappa = None
         self._gamma = None
         self._read_gamma = False
         self._read_gamma_iso = False
@@ -319,9 +318,6 @@ class Conductivity_RTA(Conductivity):
 
     def get_mode_heat_capacities(self):
         return self._cv
-
-    def get_mode_kappa(self):
-        return self._mode_kappa
 
     def _run_at_grid_point(self):
         i = self._grid_point_count
