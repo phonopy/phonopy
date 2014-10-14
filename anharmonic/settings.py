@@ -26,6 +26,7 @@ class Phono3pySettings(Settings):
         self._read_collision = None
         self._read_gamma = False
         self._phonon_supercell_matrix = None
+        self._pinv_cutoff = 1.0e-8
         self._scattering_event_class = None # scattering event class 1 or 2
         self._temperatures = None
         self._use_Peierls_model = False
@@ -129,6 +130,18 @@ class Phono3pySettings(Settings):
     def get_no_kappa_stars(self):
         return self._no_kappa_stars
 
+    def set_phonon_supercell_matrix(self, matrix):
+        self._phonon_supercell_matrix = matrix
+
+    def get_phonon_supercell_matrix(self):
+        return self._phonon_supercell_matrix
+
+    def set_pinv_cutoff(self, pinv_cutoff):
+        self._pinv_cutoff = pinv_cutoff
+
+    def get_pinv_cutoff(self):
+        return self._pinv_cutoff
+
     def set_read_gamma(self, read_gamma):
         self._read_gamma = read_gamma
 
@@ -146,12 +159,6 @@ class Phono3pySettings(Settings):
 
     def get_read_amplitude(self):
         return self._read_amplitude
-
-    def set_phonon_supercell_matrix(self, matrix):
-        self._phonon_supercell_matrix = matrix
-
-    def get_phonon_supercell_matrix(self):
-        return self._phonon_supercell_matrix
 
     def set_scattering_event_class(self, scattering_event_class):
         self._scattering_event_class = scattering_event_class
@@ -268,6 +275,10 @@ class Phono3pyConfParser(ConfParser):
             if opt.dest == 'no_kappa_stars':
                 if self._options.no_kappa_stars:
                     self._confs['no_kappa_stars'] = '.true.'
+
+            if opt.dest == 'pinv_cutoff':
+                if self._options.pinv_cutoff is not None:
+                    self._confs['pinv_cutoff'] = self._options.pinv_cutoff
 
             if opt.dest == 'read_amplitude':
                 if self._options.read_amplitude:
@@ -410,6 +421,9 @@ class Phono3pyConfParser(ConfParser):
                 if confs['no_kappa_stars'] == '.true.':
                     self.set_parameter('no_kappa_stars', True)
 
+            if conf_key == 'pinv_cutoff':
+                self.set_parameter('pinv_cutoff', float(confs['pinv_cutoff']))
+
             if conf_key == 'read_amplitude':
                 if confs['read_amplitude'] == '.true.':
                     self.set_parameter('read_amplitude', True)
@@ -522,6 +536,10 @@ class Phono3pyConfParser(ConfParser):
             if len(params['mesh_divisors']) > 3:
                 self._settings.set_coarse_mesh_shifts(
                     params['mesh_divisors'][3:])
+
+        # Cutoff frequency for pseudo inversion of collision matrix
+        if params.has_key('pinv_cutoff'):
+            self._settings.set_pinv_cutoff(params['pinv_cutoff'])
 
         # Read phonon-phonon interaction amplitudes from hdf5
         if params.has_key('read_amplitude'):

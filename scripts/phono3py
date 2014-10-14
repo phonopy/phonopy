@@ -57,7 +57,7 @@ from anharmonic.settings import Phono3pyConfParser
 from anharmonic.phonon3 import Phono3py, Phono3pyJointDos, Phono3pyIsotope, \
      get_gruneisen_parameters
 
-phono3py_version = "0.9.1"
+phono3py_version = "0.9.2"
 
 # AA is created at http://www.network-science.de/ascii/.
 def print_phono3py():
@@ -154,6 +154,7 @@ parser.set_defaults(band_indices=None,
                     mesh_divisors=None,
                     no_kappa_stars=False,
                     phonon_supercell_dimension=None,
+                    pinv_cutoff=1.0e-8,
                     primitive_axis=None,
                     q_direction=None,
                     read_amplitude=False,
@@ -288,6 +289,8 @@ parser.add_option("-o", dest="output_filename", type="string",
 parser.add_option("--pa", "--primitive_axis", dest="primitive_axis",
                   action="store", type="string",
                   help="Same as PRIMITIVE_AXIS tags")
+parser.add_option("--pinv_cutoff", dest="pinv_cutoff", type="float",
+                  help="Cutoff frequency (THz) for pseudo inversion of collision matrix")
 parser.add_option("--pm", dest="is_plusminus_displacements", action="store_true",
                   help="Set plus minus displacements")
 parser.add_option("--qpoints", dest="qpoints", type="string",
@@ -1093,6 +1096,7 @@ elif settings.get_is_bterta() or settings.get_is_lbte():
         is_reducible_collision_matrix=options.is_reducible_collision_matrix,
         no_kappa_stars=settings.get_no_kappa_stars(),
         gv_delta_q=settings.get_group_velocity_delta_q(),
+        pinv_cutoff=settings.get_pinv_cutoff(),
         write_gamma=settings.get_write_gamma(),
         read_gamma=settings.get_read_gamma(),
         write_collision=settings.get_write_collision(),

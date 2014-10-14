@@ -20,6 +20,7 @@ def get_thermal_conductivity_LBTE(
         is_reducible_collision_matrix=False,
         no_kappa_stars=False,
         gv_delta_q=1e-4, # for group velocity
+        pinv_cutoff=1.0e-8,
         write_collision=False,
         read_collision=False,
         input_filename=None,
@@ -28,6 +29,9 @@ def get_thermal_conductivity_LBTE(
 
     if log_level:
         print "-------------------- Lattice thermal conducitivity (LBTE) --------------------"
+        print "Cutoff frequency of pseudo inversion of collision matrix:",
+        print pinv_cutoff
+        
 
     if read_collision:
         temps = None
@@ -46,6 +50,7 @@ def get_thermal_conductivity_LBTE(
         is_reducible_collision_matrix=is_reducible_collision_matrix,
         no_kappa_stars=no_kappa_stars,
         gv_delta_q=gv_delta_q,
+        pinv_cutoff=pinv_cutoff,
         log_level=log_level)
     
     if read_collision:
@@ -239,6 +244,7 @@ class Conductivity_LBTE(Conductivity):
                  is_reducible_collision_matrix=False,
                  no_kappa_stars=False,
                  gv_delta_q=None, # finite difference for group veolocity
+                 pinv_cutoff=1.0e-8,
                  log_level=0):
         self._pp = None
         self._temperatures = None
@@ -297,6 +303,7 @@ class Conductivity_LBTE(Conductivity):
         if self._no_kappa_stars:
             self._is_reducible_collision_matrix = True
         self._collision_matrix = None
+        self._pinv_cutoff = pinv_cutoff
         
         if self._temperatures is not None:
             self._allocate_values()
@@ -654,7 +661,6 @@ class Conductivity_LBTE(Conductivity):
     def _set_inv_collision_matrix(self,
                                   i_sigma,
                                   i_temp,
-                                  pinv_cutoff=1e-8,
                                   method=0):
         if method == 0:
             num_ir_grid_points = len(self._ir_grid_points)
@@ -668,23 +674,20 @@ class Conductivity_LBTE(Conductivity):
             for i, val in enumerate(w):
                 print i, val
             for l, val in enumerate(w):
-                if val > pinv_cutoff:
+                if val > self._pinv_cutoff:
                     e[l] = 1 / np.sqrt(val)
             v[:] = e * v
             v[:] = np.dot(v, v.T) # inv_col
         elif method == 1:
             import anharmonic._phono3py as phono3c
             phono3c.inverse_collision_matrix(
-                self._collision_matrix, i_sigma, i_temp, pinv_cutoff)
+                self._collision_matrix, i_sigma, i_temp, self._pinv_cutoff)
         elif method == 2:
             import anharmonic._phono3py as phono3c
             phono3c.inverse_collision_matrix_libflame(
-                self._collision_matrix, i_sigma, i_temp, pinv_cutoff)
+                self._collision_matrix, i_sigma, i_temp, self._pinv_cutoff)
 
-    def _set_inv_reducible_collision_matrix(self,
-                                            i_sigma,
-                                            i_temp,
-                                            pinv_cutoff=1e-11):
+    def _set_inv_reducible_collision_matrix(self, i_sigma, i_temp):
         t = self._temperatures[i_temp]
         num_mesh_points = np.prod(self._mesh)
         num_band = self._primitive.get_number_of_atoms() * 3
@@ -694,7 +697,7 @@ class Conductivity_LBTE(Conductivity):
         v = col_mat
         e = np.zeros(len(w), dtype='double')
         for l, val in enumerate(w):
-            if val > pinv_cutoff:
+            if val > self._pinv_cutoff:
                 e[l] = 1 / np.sqrt(val)
         v[:] = e * v
         v[:] = np.dot(v, v.T) # inv_col

@@ -381,6 +381,7 @@ class Phono3py:
             is_reducible_collision_matrix=False,
             no_kappa_stars=False,
             gv_delta_q=None, # for group velocity
+            pinv_cutoff=1.0e-8, # for pseudo-inversion of collision matrix
             write_gamma=False,
             read_gamma=False,
             write_collision=False,
@@ -403,6 +404,7 @@ class Phono3py:
                 is_reducible_collision_matrix=is_reducible_collision_matrix,
                 no_kappa_stars=no_kappa_stars,
                 gv_delta_q=gv_delta_q,
+                pinv_cutoff=pinv_cutoff,
                 write_collision=write_collision,
                 read_collision=read_collision,
                 input_filename=input_filename,
