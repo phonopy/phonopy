@@ -1386,13 +1386,22 @@ class PhonopyConfParser(ConfParser):
         mod_list = confs['modulation'].split(',')
         header = mod_list[0].split()
         if len(header) > 2 and len(mod_list) > 1:
-            dimension = [int(x) for x in header[:3]]
-            modulation['dimension'] = dimension
-            if len(header) > 5:
-                delta_q = [float(x) for x in header[3:]]
-                modulation['delta_q'] = delta_q
-            if len(header) == 7:
-                modulation['order'] = int(header[6])
+            if len(header) > 8:
+                dimension = [int(x) for x in header[:9]]
+                modulation['dimension'] = dimension
+                if len(header) > 11:
+                    delta_q = [float(x) for x in header[3:]]
+                    modulation['delta_q'] = delta_q
+                if len(header) == 13:
+                    modulation['order'] = int(header[6])
+            else:
+                dimension = [int(x) for x in header[:3]]
+                modulation['dimension'] = dimension
+                if len(header) > 5:
+                    delta_q = [float(x) for x in header[3:]]
+                    modulation['delta_q'] = delta_q
+                if len(header) == 7:
+                    modulation['order'] = int(header[6])
                 
             vals = []
             for phonon_mode in mod_list[1:]:
