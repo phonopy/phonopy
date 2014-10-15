@@ -1,8 +1,9 @@
 #ifndef __flame_wrapper_H__
 #define __flame_wrapper_H__
 
-int phonopy_pinvs_libflame(double *matrix,
-			   const int size,
-			   const double cutoff);
+int phonopy_pinv_libflame(double *matrix,
+			  double *eigvals,
+			  const int size,
+			  const double cutoff);
 
 #endif

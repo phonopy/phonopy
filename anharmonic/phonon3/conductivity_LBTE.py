@@ -662,17 +662,15 @@ class Conductivity_LBTE(Conductivity):
                                   i_sigma,
                                   i_temp,
                                   method=0):
+        num_ir_grid_points = len(self._ir_grid_points)
+        num_band = self._primitive.get_number_of_atoms() * 3
+        
         if method == 0:
-            num_ir_grid_points = len(self._ir_grid_points)
-            num_band = self._primitive.get_number_of_atoms() * 3
             col_mat = self._collision_matrix[i_sigma, i_temp].reshape(
                 num_ir_grid_points * num_band * 3,
                 num_ir_grid_points * num_band * 3)
             w, col_mat[:] = np.linalg.eigh(col_mat)
             v = col_mat
-            e = np.zeros(len(w), dtype='double')
-            for i, val in enumerate(w):
-                print i, val
             for l, val in enumerate(w):
                 if val > self._pinv_cutoff:
                     e[l] = 1 / np.sqrt(val)
@@ -680,12 +678,17 @@ class Conductivity_LBTE(Conductivity):
             v[:] = np.dot(v, v.T) # inv_col
         elif method == 1:
             import anharmonic._phono3py as phono3c
+            w = np.zeros(num_ir_grid_points * num_band * 3, dtype='double')
             phono3c.inverse_collision_matrix(
-                self._collision_matrix, i_sigma, i_temp, self._pinv_cutoff)
+                self._collision_matrix, w, i_sigma, i_temp, self._pinv_cutoff)
         elif method == 2:
             import anharmonic._phono3py as phono3c
+            w = np.zeros(num_ir_grid_points * num_band * 3, dtype='double')
             phono3c.inverse_collision_matrix_libflame(
-                self._collision_matrix, i_sigma, i_temp, self._pinv_cutoff)
+                self._collision_matrix, w, i_sigma, i_temp, self._pinv_cutoff)
+
+        for i, val in enumerate(w):
+            print i, val
 
     def _set_inv_reducible_collision_matrix(self, i_sigma, i_temp):
         t = self._temperatures[i_temp]

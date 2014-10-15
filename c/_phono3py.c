@@ -5,7 +5,6 @@
 #include <numpy/arrayobject.h>
 #include <lapacke.h>
 #include "lapack_wrapper.h"
-/* #include "flame_wrapper.h" */
 #include "phonoc_array.h"
 #include "phonoc_utils.h"
 #include "phonon3_h/fc3.h"
@@ -17,6 +16,10 @@
 #include "spglib_h/kpoint.h"
 #include "spglib_h/tetrahedron_method.h"
 
+/* #define LIBFLAME */
+#ifdef LIBFLAME
+#include "flame_wrapper.h"
+#endif
 
 static PyObject * py_get_jointDOS(PyObject *self, PyObject *args);
 
@@ -44,7 +47,7 @@ py_set_triplets_integration_weights_with_sigma(PyObject *self, PyObject *args);
 static PyObject * py_phonopy_zheev(PyObject *self, PyObject *args);
 static PyObject * py_inverse_collision_matrix(PyObject *self, PyObject *args);
 static PyObject * py_phonopy_pinv(PyObject *self, PyObject *args);
-/* static PyObject * py_inverse_collision_matrix_libflame(PyObject *self, PyObject *args); */
+static PyObject * py_inverse_collision_matrix_libflame(PyObject *self, PyObject *args);
 
 static void get_triplet_tetrahedra_vertices
   (int vertices[2][24][4],
@@ -76,7 +79,9 @@ static PyMethodDef functions[] = {
   {"zheev", py_phonopy_zheev, METH_VARARGS, "Lapack zheev wrapper"},
   {"inverse_collision_matrix", py_inverse_collision_matrix, METH_VARARGS, "Pseudo-inverse using Lapack dsyev"},
   {"pinv", py_phonopy_pinv, METH_VARARGS, "Pseudo-inverse using Lapack dgesvd"},
-  /* {"inverse_collision_matrix_libflame", py_inverse_collision_matrix_libflame, METH_VARARGS, "Pseudo-inverse using libflame hevd"}, */
+#ifdef LIBFLAME
+  {"inverse_collision_matrix_libflame", py_inverse_collision_matrix_libflame, METH_VARARGS, "Pseudo-inverse using libflame hevd"},
+#endif
   {NULL, NULL, 0, NULL}
 };
 
@@ -1234,44 +1239,52 @@ static PyObject * py_phonopy_pinv(PyObject *self, PyObject *args)
   return PyInt_FromLong((long) info);
 }
 
-/* static PyObject * py_inverse_collision_matrix_libflame(PyObject *self, PyObject *args) */
-/* { */
-/*   PyArrayObject* collision_matrix_py; */
-/*   int i_sigma, i_temp; */
-/*   double cutoff; */
+#ifdef LIBFLAME
+static PyObject * py_inverse_collision_matrix_libflame(PyObject *self, PyObject *args)
+{
+  PyArrayObject* collision_matrix_py;
+  PyArrayObject* eigenvalues_py;
+  int i_sigma, i_temp;
+  double cutoff;
 
-/*   if (!PyArg_ParseTuple(args, "Oiid", */
-/* 			&collision_matrix_py, */
-/* 			&i_sigma, */
-/* 			&i_temp, */
-/* 			&cutoff)) { */
-/*     return NULL; */
-/*   } */
+  if (!PyArg_ParseTuple(args, "OOiid",
+			&collision_matrix_py,
+			&eigenvalues_py,
+			&i_sigma,
+			&i_temp,
+			&cutoff)) {
+    return NULL;
+  }
 
   
-/*   double* collision_matrix = (double*)collision_matrix_py->data; */
-/*   const int num_temp = (int)collision_matrix_py->dimensions[1]; */
-/*   const int num_ir_grid_points = (int)collision_matrix_py->dimensions[2]; */
-/*   const int num_band = (int)collision_matrix_py->dimensions[3]; */
-/*   int num_column, adrs_shift; */
-/*   num_column = num_ir_grid_points * num_band * 3; */
+  double* collision_matrix = (double*)collision_matrix_py->data;
+  double* eigvals = (double*)eigenvalues_py->data;
+  const int num_temp = (int)collision_matrix_py->dimensions[1];
+  const int num_ir_grid_points = (int)collision_matrix_py->dimensions[2];
+  const int num_band = (int)collision_matrix_py->dimensions[3];
+  int num_column, adrs_shift;
+  num_column = num_ir_grid_points * num_band * 3;
 
-/*   adrs_shift = (i_sigma * num_column * num_column * num_temp + */
-/* 		i_temp * num_column * num_column); */
+  adrs_shift = (i_sigma * num_column * num_column * num_temp +
+		i_temp * num_column * num_column);
   
-/*   phonopy_pinvs_libflame(collision_matrix + adrs_shift, num_column, cutoff); */
+  phonopy_pinv_libflame(collision_matrix + adrs_shift,
+			eigvals, num_column, cutoff);
   
-/*   Py_RETURN_NONE; */
-/* } */
+  Py_RETURN_NONE;
+}
+#endif
 
 static PyObject * py_inverse_collision_matrix(PyObject *self, PyObject *args)
 {
   PyArrayObject* collision_matrix_py;
+  PyArrayObject* eigenvalues_py;
   double cutoff;
   int i_sigma, i_temp;
 
-  if (!PyArg_ParseTuple(args, "Oiid",
+  if (!PyArg_ParseTuple(args, "OOiid",
 			&collision_matrix_py,
+			&eigenvalues_py,
 			&i_sigma,
 			&i_temp,
 			&cutoff)) {
@@ -1279,6 +1292,7 @@ static PyObject * py_inverse_collision_matrix(PyObject *self, PyObject *args)
   }
 
   double* collision_matrix = (double*)collision_matrix_py->data;
+  double* eigvals = (double*)eigenvalues_py->data;
   const int num_temp = (int)collision_matrix_py->dimensions[1];
   const int num_ir_grid_points = (int)collision_matrix_py->dimensions[2];
   const int num_band = (int)collision_matrix_py->dimensions[3];
@@ -1288,7 +1302,8 @@ static PyObject * py_inverse_collision_matrix(PyObject *self, PyObject *args)
   adrs_shift = (i_sigma * num_column * num_column * num_temp +
 		i_temp * num_column * num_column);
   
-  info = phonopy_pinvs(collision_matrix + adrs_shift, num_column, cutoff);
+  info = phonopy_pinv_dsyev(collision_matrix + adrs_shift,
+			    eigvals, num_column, cutoff);
 
   return PyInt_FromLong((long) info);
 }

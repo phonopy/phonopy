@@ -2,16 +2,17 @@
 #include "FLAME.h"
 #include "math.h"
 
-int phonopy_pinvs_libflame(double *matrix,
-			   const int size,
-			   const double cutoff)
+int phonopy_pinv_libflame(double *matrix,
+			  double *eigvals,
+			  const int size,
+			  const double cutoff)
 {
   FLA_Obj A, B, l;
   /* FLA_Obj C; */
-  double *eigvals;
+  double *inv_eigvals;
   int i;
 
-  eigvals = (double*)malloc(sizeof(double) * size);
+  inv_eigvals = (double*)malloc(sizeof(double) * size);
   
   FLA_Init();
   FLA_Obj_create_without_buffer(FLA_DOUBLE, size, size, &A);
@@ -35,14 +36,14 @@ int phonopy_pinvs_libflame(double *matrix,
   
   for (i = 0; i < size; i++) {
     if (eigvals[i] < cutoff) {
-      eigvals[i] = 0;
+      inv_eigvals[i] = 0;
     } else {
-      eigvals[i] = 1.0 / sqrt(eigvals[i]);
+      inv_eigvals[i] = 1.0 / sqrt(eigvals[i]);
     }
   }
   
   FLA_Obj_create_without_buffer(FLA_DOUBLE, size, 1, &l);
-  FLA_Obj_attach_buffer(eigvals, 0, 0, &l);
+  FLA_Obj_attach_buffer(inv_eigvals, 0, 0, &l);
   
   FLA_Apply_diag_matrix(FLA_RIGHT, FLA_NO_CONJUGATE, l, B);
   FLA_Syrk(FLA_LOWER_TRIANGULAR, FLA_NO_TRANSPOSE, FLA_ONE, B, FLA_ZERO, A);
@@ -54,7 +55,7 @@ int phonopy_pinvs_libflame(double *matrix,
 
   FLA_Finalize();
 
-  free(eigvals);
+  free(inv_eigvals);
   
   return 0;
 }
