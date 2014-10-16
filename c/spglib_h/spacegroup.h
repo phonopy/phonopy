@@ -18,6 +18,7 @@ typedef struct {
   char international[32];
   char international_long[20];
   char international_short[11];
+  char setting[6];
   Holohedry holohedry;
   double bravais_lattice[3][3];
   double origin_shift[3];

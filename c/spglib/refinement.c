@@ -31,7 +31,6 @@ static Cell * expand_positions(int * wyckoffs,
 			       const int * equiv_atoms_prim);
 static Cell * get_conventional_primitive(SPGCONST Spacegroup * spacegroup,
 					 SPGCONST Cell * primitive);
-static Symmetry * get_db_symmetry(const int hall_number);
 static int get_number_of_pure_translation(SPGCONST Symmetry * conv_sym);
 static int get_conventional_lattice(double lattice[3][3],
 				    const Holohedry holohedry,
@@ -169,44 +168,57 @@ Cell * ref_get_Wyckoff_positions(int * wyckoffs,
 static Cell * refine_cell(SPGCONST Cell * cell,
 			  const double symprec)
 {
+  int attempt, found;
   int *wyckoffs_bravais, *equiv_atoms_bravais;
-  double tolerance;
+  double tolerance, tolerance_from_prim;
   Cell *primitive, *bravais;
   Spacegroup spacegroup;
 
   debug_print("refine_cell:\n");
-  
-  primitive = prm_get_primitive(cell, symprec);
-  
-  if (primitive->size == 0) {
+
+  tolerance = symprec;
+  found = 0;
+  for (attempt = 0; attempt < 100; attempt++) {
+    primitive = prm_get_primitive(cell, tolerance);
+    if (primitive->size > 0) {  
+      tolerance_from_prim = prm_get_current_tolerance();
+      spacegroup = spa_get_spacegroup_with_primitive(primitive,
+						     tolerance_from_prim);
+      if (spacegroup.number > 0) {
+	wyckoffs_bravais = (int*)malloc(sizeof(int) * primitive->size * 4);
+	equiv_atoms_bravais = (int*)malloc(sizeof(int) * primitive->size * 4);
+	bravais = get_bravais_exact_positions_and_lattice(wyckoffs_bravais,
+							  equiv_atoms_bravais,
+							  &spacegroup,
+							  primitive,
+							  tolerance_from_prim);
+	free(equiv_atoms_bravais);
+	equiv_atoms_bravais = NULL;
+	free(wyckoffs_bravais);
+	wyckoffs_bravais = NULL;
+	cel_free_cell(primitive);
+	
+	debug_print("primitive cell in refine_cell:\n");
+	debug_print_matrix_d3(primitive->lattice);
+	debug_print("bravais lattice in refine_cell:\n");
+	debug_print_matrix_d3(bravais->lattice);
+
+	found = 1;
+	break;
+      }
+    }
+    tolerance *= REDUCE_RATE;
     cel_free_cell(primitive);
+
+    warning_print("  Attempt %d tolerance = %f failed.", attempt, tolerance);
+    warning_print(" (line %d, %s).\n", __LINE__, __FILE__);
+  }
+  
+  /* Return bravais->size = 0, if the bravais could not be found. */
+  if (! found) {
     bravais = cel_alloc_cell(0);
-    goto ret;
   }
 
-  tolerance = prm_get_current_tolerance();
-  spacegroup = spa_get_spacegroup_with_primitive(primitive, tolerance);
-
-  wyckoffs_bravais = (int*)malloc(sizeof(int) * primitive->size * 4);
-  equiv_atoms_bravais = (int*)malloc(sizeof(int) * primitive->size * 4);
-  bravais = get_bravais_exact_positions_and_lattice(wyckoffs_bravais,
-						    equiv_atoms_bravais,
-						    &spacegroup,
-						    primitive,
-						    tolerance);
-  free(equiv_atoms_bravais);
-  equiv_atoms_bravais = NULL;
-  free(wyckoffs_bravais);
-  wyckoffs_bravais = NULL;
-
-  debug_print("primitive cell in refine_cell:\n");
-  debug_print_matrix_d3(primitive->lattice);
-  debug_print("bravais lattice in refine_cell:\n");
-  debug_print_matrix_d3(bravais->lattice);
-  
-  cel_free_cell(primitive);
-
- ret:  /* Return bravais->size = 0, if the bravais could not be found. */
   return bravais;
 }
 
@@ -226,7 +238,7 @@ static Cell * get_bravais_exact_positions_and_lattice(int * wyckoffs,
   /* Positions of primitive atoms are represented wrt Bravais lattice */
   conv_prim = get_conventional_primitive(spacegroup, primitive);
   /* Symmetries in database (wrt Bravais lattice) */
-  conv_sym = get_db_symmetry(spacegroup->hall_number);
+  conv_sym = spgdb_get_spacegroup_operations(spacegroup->hall_number);
   /* Lattice vectors are set. */
   get_conventional_lattice(conv_prim->lattice,
 			   spacegroup->holohedry,
@@ -345,27 +357,6 @@ static Cell * get_conventional_primitive(SPGCONST Spacegroup * spacegroup,
   }
 
   return conv_prim;
-}
-
-static Symmetry * get_db_symmetry(const int hall_number)
-{
-  int i;
-  int operation_index[2];
-  int rot[3][3];
-  double trans[3];
-  Symmetry *symmetry;
-
-  spgdb_get_operation_index(operation_index, hall_number);
-  symmetry = sym_alloc_symmetry(operation_index[0]);
-
-  for (i = 0; i < operation_index[0]; i++) {
-    /* rotation matrix matching and set difference of translations */
-    spgdb_get_operation(rot, trans, operation_index[1] + i);
-    mat_copy_matrix_i3(symmetry->rot[i], rot);
-    mat_copy_vector_d3(symmetry->trans[i], trans);
-  }
-
-  return symmetry;
 }
 
 static int get_conventional_lattice(double lattice[3][3],
@@ -542,7 +533,7 @@ get_refined_symmetry_operations(SPGCONST Cell * cell,
   Symmetry *conv_sym, *prim_sym, *symmetry;
 
   /* Primitive symmetry from database */
-  conv_sym = get_db_symmetry(spacegroup->hall_number);
+  conv_sym = spgdb_get_spacegroup_operations(spacegroup->hall_number);
   set_translation_with_origin_shift(conv_sym, spacegroup->origin_shift);
   mat_inverse_matrix_d3(inv_mat, primitive->lattice, symprec);
   mat_multiply_matrix_d3(t_mat, inv_mat, spacegroup->bravais_lattice);

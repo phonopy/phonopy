@@ -135,6 +135,8 @@ static Spacegroup get_spacegroup(SPGCONST Cell * primitive,
 	   spacegroup_type.international_full);
     strcpy(spacegroup.international_short,
 	   spacegroup_type.international_short);
+    strcpy(spacegroup.setting,
+	   spacegroup_type.setting);
   } else {
     spacegroup.number = 0;
     warning_print("spglib: Space group could not be found ");

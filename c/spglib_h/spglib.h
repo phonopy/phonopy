@@ -1,4 +1,4 @@
-/* spglib.h version 1.5.1 */
+/* spglib.h version 1.6.4 */
 /* Copyright (C) 2008 Atsushi Togo */
 
 #ifndef __spglib_H__
@@ -64,6 +64,7 @@ typedef struct {
   int hall_number;
   char international_symbol[11];
   char hall_symbol[17];
+  char setting[6];
   double transformation_matrix[3][3]; /* bravais_lattice = T * original_lattice */
   double origin_shift[3]; /* Origin shift in Bravais lattice */
   int n_operations; /* Symmetry operations from database */
@@ -229,8 +230,15 @@ int spg_get_pointgroup(char symbol[6],
 		       SPGCONST int rotations[][3][3],
 		       const int num_rotations);
 
+/* Space-group operations in built-in database are accessed by index */
+/* of hall symbol. The index is defined as number from 1 to 530. */
+/* The muximum number of symmetry operations is 192. */
+int spg_get_symmetry_from_database(int rotations[192][3][3],
+				   double translations[192][3],
+				   const int hall_number);
+
 /* Space-group type information is accessed by index of hall symbol. */
-/* The index is defined from 1 to 530. */
+/* The index is defined as number from 1 to 530. */
 SpglibSpacegroupType spg_get_spacegroup_type(const int hall_number);
 
 /* Bravais lattice with internal atomic points are returned. */

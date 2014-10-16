@@ -8505,6 +8505,27 @@ void spgdb_get_operation_index(int indices[2], const int hall_number)
   indices[1] = symmetry_operation_index[hall_number][1];
 }
 
+Symmetry * spgdb_get_spacegroup_operations(const int hall_number)
+{
+  int i;
+  int operation_index[2];
+  int rot[3][3];
+  double trans[3];
+  Symmetry *symmetry;
+
+  spgdb_get_operation_index(operation_index, hall_number);
+  symmetry = sym_alloc_symmetry(operation_index[0]);
+
+  for (i = 0; i < operation_index[0]; i++) {
+    /* rotation matrix matching and set difference of translations */
+    spgdb_get_operation(rot, trans, operation_index[1] + i);
+    mat_copy_matrix_i3(symmetry->rot[i], rot);
+    mat_copy_vector_d3(symmetry->trans[i], trans);
+  }
+
+  return symmetry;
+}
+
 SpacegroupType spgdb_get_spacegroup_type(const int hall_number)
 {
   int position; 

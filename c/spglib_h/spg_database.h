@@ -20,6 +20,7 @@ typedef struct {
 
 int spgdb_get_operation(int rot[3][3], double trans[3], const int hall_number);
 void spgdb_get_operation_index(int indices[2], const int hall_number);
+Symmetry * spgdb_get_spacegroup_operations(const int hall_number);
 SpacegroupType spgdb_get_spacegroup_type(const int hall_number);
 
 #endif

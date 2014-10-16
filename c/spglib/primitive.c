@@ -28,9 +28,9 @@ static int set_primitive_positions(Cell * primitive_cell,
 static VecDBL * get_positions_primitive(SPGCONST Cell * cell,
 					SPGCONST double prim_lat[3][3]);
 static int get_overlap_table(int ** table,
-			     const int cell_size,
 			     SPGCONST Cell *primitive_cell,
 			     const VecDBL * position,
+			     const int *types,
 			     const double symprec);
 static int check_overlap_table(SPGCONST int **overlap_table,
 			       const int cell_size,
@@ -285,19 +285,14 @@ static int trim_cell(Cell * primitive_cell,
   int **overlap_table;
 
   overlap_table = allocate_overlap_table(cell->size);
-
-  /* Get reduced positions of atoms in original cell with respect to */
-  /* primitive lattice */
   position = get_positions_primitive(cell, primitive_cell->lattice);
 
-  /* Create overlapping table */
   if (! get_overlap_table(overlap_table,
-			  cell->size,
 			  primitive_cell,
 			  position,
+			  cell->types,
 			  symprec)) {goto err;}
 
-  /* Create original cell to primitive cell mapping table */
   index_prim_atom = 0;
   for (i = 0; i < cell->size; i++) {
     if (overlap_table[i][0] == i) {
@@ -308,7 +303,6 @@ static int trim_cell(Cell * primitive_cell,
     }
   }
 
-  /* Copy positions. Positions of overlapped atoms are averaged. */
   if (! set_primitive_positions(primitive_cell,
 				position,
 				cell,
@@ -430,17 +424,18 @@ static VecDBL * get_positions_primitive(SPGCONST Cell * cell,
 /* If overlap_table is correctly obtained, */
 /* shape of overlap_table will be (cell->size, cell->size / primitive->size). */
 static int get_overlap_table(int **overlap_table,
-			     const int cell_size,
 			     SPGCONST Cell *primitive_cell,
 			     const VecDBL * position,
+			     const int *types,
 			     const double symprec)
 {
-  int i, j, attempt, num_overlap, ratio;
+  int i, j, attempt, num_overlap, ratio, cell_size;
   double trim_tolerance;
 
+  cell_size = position->size;
   ratio = cell_size / primitive_cell->size;
   trim_tolerance = symprec;
-
+  
   for (attempt = 0; attempt < 100; attempt++) {
     /* Each value of -1 has to be overwritten by 0 or positive numbers. */
     for (i = 0; i < cell_size; i++) {
@@ -452,13 +447,15 @@ static int get_overlap_table(int **overlap_table,
     for (i = 0; i < cell_size; i++) {
       num_overlap = 0;
       for (j = 0; j < cell_size; j++) {
-        if (cel_is_overlap(position->vec[i],
-			   position->vec[j],
-			   primitive_cell->lattice,
-			   trim_tolerance)) {
-          overlap_table[i][num_overlap] = j;
-          num_overlap++;
-        }
+	if (types[i] == types[j]) {
+	  if (cel_is_overlap(position->vec[i],
+			     position->vec[j],
+			     primitive_cell->lattice,
+			     trim_tolerance)) {
+	    overlap_table[i][num_overlap] = j;
+	    num_overlap++;
+	  }
+	}
       }
     }
 
