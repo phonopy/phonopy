@@ -3,6 +3,13 @@
 Change Log
 ==========
 
+Oct-17-2014: Version 1.9.1.1
+-----------------------------
+
+* Supercell matrix support (9 elements) for the ``MODULATION`` tag.
+* Improve the speed to create supercell.
+* Many minor changes to clean-up code badly written.
+
 Aug-28-2014: Version 1.9.0
 -----------------------------
 

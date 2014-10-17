@@ -832,14 +832,14 @@ Some information is written into ``modulation.yaml``.
 Usage
 ^^^^^^^^^^^^^
 
-The first three values correspond to the supercell dimension.  The
-following values are used to describe how the atoms are
-modulated. Multiple sets of modulations can be specified by separating
-by comma ``,``. In each set, the first three values give a Q-point in
-the reduced coordinates in reciprocal space. Then the next three
-values are the band index from the bottom with ascending order,
-amplitude, and phase factor in degrees. The phase factor is
-optional. If it is not specified, 0 is used.
+The first three (nine) values correspond to supercell dimension
+(supercell matrix) like the :ref:`dimension_tag` tag. The following values are used
+to describe how the atoms are modulated. Multiple sets of modulations
+can be specified by separating by comma ``,``. In each set, the first
+three values give a Q-point in the reduced coordinates in reciprocal
+space. Then the next three values are the band index from the bottom
+with ascending order, amplitude, and phase factor in degrees. The
+phase factor is optional. If it is not specified, 0 is used.
 
 Before multiplying user specified phase factor, the phase of
 the modulation vector is adjusted as the largest absolute value,
@@ -858,7 +858,11 @@ vector is shown in ``modulation.yaml``.
 ::
 
    MODULATION = 3 3 1, 1/3 1/3 0 1 1 0, 1/3 1/3 0 1 1 90
-   
+
+::
+
+   MODULATION = -1 1 1 1 -1 1 1 1 -1, 1/2 1/2 0 1 2
+
 
 Characters of irreducible representations of phonon modes
 ----------------------------------------------------------
