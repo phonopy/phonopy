@@ -119,64 +119,64 @@ elif options.is_entropy:
 elif options.is_free_energy:
     prop_target = 'free_energy'
 
-thermal_properties_0 = yaml.load( open( filenames[0] ).read(),
-                                  Loader=Loader )['thermal_properties']
-temperatures = [ v['temperature'] for v in thermal_properties_0 ]
+thermal_properties_0 = yaml.load(open(filenames[0]).read(),
+                                 Loader=Loader)['thermal_properties']
+temperatures = [v['temperature'] for v in thermal_properties_0]
 
 tmin_index = 0
-tmax_index = len( temperatures )
-if not options.tmin == None:
-    for i, t in enumerate( temperatures ):
-        if t > options.tmin - ( temperatures[1] - temperatures[0] ) * 0.1:
+tmax_index = len(temperatures)
+if options.tmin is not None:
+    for i, t in enumerate(temperatures):
+        if t > options.tmin - (temperatures[1] - temperatures[0]) * 0.1:
             tmin_index = i
             break
 
-if not options.tmax == None:
-    for i, t in enumerate( temperatures ):
-        if t > options.tmax + ( temperatures[1] - temperatures[0] ) * 0.1:
+if options.tmax is not None:
+    for i, t in enumerate(temperatures):
+        if t > options.tmax + (temperatures[1] - temperatures[0]) * 0.1:
             tmax_index = i
             break
 
 if options.is_diff:
-    props_0 = [ v[prop_target] for v in thermal_properties_0 ]
-    props_0 = np.array( props_0 ) * options.factor
+    props_0 = [v[prop_target] for v in thermal_properties_0]
+    props_0 = np.array(props_0) * options.factor
 
 for filename in filenames:
-    thermal_properties = yaml.load( open( filename ).read(),
-                                    Loader=Loader )['thermal_properties']
+    thermal_properties = yaml.load(open(filename).read(),
+                                   Loader=Loader)['thermal_properties']
 
     if options.is_gnuplot:
         props = []
         for name in ('temperature', 'free_energy', 'entropy', 'heat_capacity'):
-            props.append([ v[name] for v in thermal_properties ])
+            props.append([v[name] for v in thermal_properties])
             
-        for t, f, e, h in zip( props[0][tmin_index:tmax_index],
-                               props[1][tmin_index:tmax_index],
-                               props[2][tmin_index:tmax_index],
-                               props[3][tmin_index:tmax_index] ):
+        for t, f, e, h in zip(props[0][tmin_index:tmax_index],
+                              props[1][tmin_index:tmax_index],
+                              props[2][tmin_index:tmax_index],
+                              props[3][tmin_index:tmax_index]):
             print t, f, e, h, f+e*t/1000
         print
         print
     else:
-        temperatures = [ v['temperature'] for v in thermal_properties ]
-        props = [ v[prop_target] for v in thermal_properties ]
-        props = np.array( props ) * options.factor
+        temperatures = [v['temperature'] for v in thermal_properties]
+        props = [v[prop_target] for v in thermal_properties]
+        props = np.array(props) * options.factor
         if options.is_diff:
             props -= props_0
-        plt.plot( temperatures[tmin_index:tmax_index],
-                  props[tmin_index:tmax_index] )
+        plt.plot(temperatures[tmin_index:tmax_index],
+                 props[tmin_index:tmax_index])
 
         
 
 if not options.is_gnuplot:
-    if ( not options.ymin == None ) and ( not options.ymax == None ):
-        plt.ylim( options.ymin, options.ymax )
-    elif options.ymin == None and ( not options.ymax == None ):
-        plt.ylim( ymax=options.ymax )
-    elif ( not options.ymin == None ) and options.ymax == None:
-        plt.ylim( ymin=options.ymin )
+    if (options.ymin is not None) and (options.ymax is not None):
+        plt.ylim(options.ymin, options.ymax)
+    elif (options.ymin is None) and (options.ymax is not None):
+        plt.ylim(ymax=options.ymax)
+    elif (options.ymin is not None) and (options.ymax is None):
+        plt.ylim(ymin=options.ymin)
     
-    if not options.output_filename == None:
+    if options.output_filename is not None:
         plt.rcParams['pdf.fonttype'] = 42
         plt.rcParams['font.family'] = 'serif'
         plt.savefig(options.output_filename)

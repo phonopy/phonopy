@@ -526,10 +526,10 @@ class Phonopy:
                         freq_pitch=None,
                         tetrahedron_method=False,
                         direction=None):
-        if self._mesh==None:
+        if self._mesh is None:
             print "set_mesh has to be done before set_thermal_properties"
             sys.exit(1)
-        if self._mesh.get_eigenvectors() == None:
+        if self._mesh.get_eigenvectors() is None:
             print "Eigenvectors have to be calculated."
             sys.exit(1)
         if direction is not None:
@@ -571,7 +571,7 @@ class Phonopy:
                       freq_pitch=None,
                       tetrahedron_method=False):
 
-        if self._mesh==None:
+        if self._mesh is None:
             print "set_mesh has to be done before set_thermal_properties"
             sys.exit(1)
 
@@ -620,7 +620,7 @@ class Phonopy:
         direction:
           Projection direction in reduced coordinates
         """
-        if self._mesh==None:
+        if self._mesh is None:
             print "set_mesh has to be done before set_thermal_properties"
             sys.exit(1)
 
@@ -670,7 +670,7 @@ class Phonopy:
         direction:
           Projection direction in reduced coordinates
         """
-        if self._mesh==None:
+        if self._mesh is None:
             print "set_mesh has to be done before set_thermal_properties"
             sys.exit(1)
 
@@ -764,7 +764,7 @@ class Phonopy:
                         shift=None,
                         filename=None):
         self._set_dynamical_matrix()
-        if q_point==None:
+        if q_point is None:
             animation = Animation([0, 0, 0],
                                   self._dynamical_matrix,
                                   shift=shift)
@@ -772,7 +772,7 @@ class Phonopy:
             animation = Animation(q_point,
                                   self._dynamical_matrix,
                                   shift=shift)
-        if anime_type=='v_sim':
+        if anime_type == 'v_sim':
             if amplitude:
                 amplitude_ = amplitude
             else:
@@ -787,15 +787,15 @@ class Phonopy:
                                       factor=self._factor)
 
             
-        if (anime_type=='arc' or
-            anime_type=='xyz' or
-            anime_type=='jmol' or
-            anime_type=='poscar'):
-            if band_index==None or amplitude==None or num_div==None:
+        if (anime_type == 'arc' or
+            anime_type == 'xyz' or
+            anime_type == 'jmol' or
+            anime_type == 'poscar'):
+            if band_index is None or amplitude is None or num_div is None:
                 print "Parameters are not correctly set for animation."
                 sys.exit(1)
 
-            if anime_type=='arc' or anime_type==None:
+            if anime_type == 'arc' or anime_type is None:
                 if filename:
                     animation.write_arc(band_index,
                                         amplitude,
@@ -806,7 +806,7 @@ class Phonopy:
                                         amplitude,
                                         num_div)
     
-            if anime_type=='xyz':
+            if anime_type == 'xyz':
                 if filename:
                     animation.write_xyz(band_index,
                                         amplitude,
@@ -819,7 +819,7 @@ class Phonopy:
                                         num_div,
                                         self._factor)
     
-            if anime_type=='jmol':
+            if anime_type == 'jmol':
                 if filename:
                     animation.write_xyz_jmol(amplitude=amplitude,
                                              factor=self._factor,
@@ -828,7 +828,7 @@ class Phonopy:
                     animation.write_xyz_jmol(amplitude=amplitude,
                                              factor=self._factor)
     
-            if anime_type=='poscar':
+            if anime_type == 'poscar':
                 if filename:
                     animation.write_POSCAR(band_index,
                                            amplitude,

@@ -50,7 +50,7 @@ def get_symmetry_yaml(cell, symmetry, phonopy_version=None):
 
     yaml = ""
 
-    if not phonopy_version==None:
+    if phonopy_version is not None:
         yaml += "phonopy_version: %s\n" % phonopy_version
 
     yaml += "space_group_type: " + symmetry.get_international_table() + "\n"
@@ -103,9 +103,9 @@ def check_symmetry(input_cell,
     symmetry = Symmetry(cell, symprec)
     print get_symmetry_yaml(cell, symmetry, phonopy_version),
 
-    if input_cell.get_magnetic_moments() == None:
+    if input_cell.get_magnetic_moments() is None:
         primitive = find_primitive(cell, symprec)
-        if not primitive==None:
+        if primitive is not None:
             print "# Primitive cell was found. It is written into PPOSCAR."
             write_vasp('PPOSCAR', primitive)
             

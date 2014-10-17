@@ -85,7 +85,7 @@ def read_v_e(filename, factor, volume_factor, pressure=0.0):
 
 def is_temperatures_match(temperatures):
     for t in temperatures:
-        if not len(t) == len(temperatures[0]):
+        if len(t) != len(temperatures[0]):
             return False
         if (abs(t[0] - temperatures[0][0]) > EQUIVALENCE_TOLERANCE or
             abs(t[-1] - temperatures[0][-1]) > EQUIVALENCE_TOLERANCE):
@@ -263,7 +263,7 @@ if options.is_bulk_modulus_only:
     sys.exit(0)
 
 # Check number of files
-if not len(volumes) == len(args[1:]):
+if len(volumes) != len(args[1:]):
     print ("The umber of thermal_properites.yaml files (%d) "
            "is inconsisten with" % len(args[1:]))
     print "the number of e-v data (%d)." % len(volumes)
@@ -294,7 +294,7 @@ if options.is_graph_plot:
     # - Volume vs Helmholtz free energy
     # - Volume vs Temperature
     # - Thermal expansion coefficient
-    if options.ve_filename == None:
+    if options.ve_filename is None:
         exp_data = None
     else:
         exp_data = parse_ve(options.ve_filename)
@@ -307,7 +307,7 @@ if options.is_graph_save:
     phonopy_qha.plot_pdf_helmholtz_volume(thin_number=options.thin_number)
 
     # Volume vs Temperature
-    if options.ve_filename == None:
+    if options.ve_filename is None:
         exp_data = None
     else:
         exp_data = parse_ve(options.ve_filename)
@@ -317,7 +317,7 @@ if options.is_graph_save:
     phonopy_qha.plot_pdf_thermal_expansion()
 
     # Volume expansion
-    if options.ve_filename == None:
+    if options.ve_filename is None:
         exp_data = None
     else:
         exp_data = parse_ve(options.ve_filename)
@@ -331,14 +331,14 @@ if options.is_graph_save:
     phonopy_qha.plot_pdf_bulk_modulus_temperature()
 
     # C_P vs Temperature
-    if options.cp_filename == None:
+    if options.cp_filename is None:
         exp_data = None
     else:
         exp_data = parse_cp(options.cp_filename)
     phonopy_qha.plot_pdf_heat_capacity_P_numerical(exp_data=exp_data)
 
     # C_P vs Temperature (poly fit)
-    if options.cp_filename == None:
+    if options.cp_filename is None:
         exp_data = None
     else:
         exp_data = parse_cp(options.cp_filename)

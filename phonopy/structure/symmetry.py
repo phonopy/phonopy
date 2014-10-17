@@ -250,7 +250,7 @@ def find_primitive(cell, symprec=1e-5):
     returned. When not, None is returned.
     """
     lattice, positions, numbers = spg.find_primitive(cell, symprec)
-    if lattice == None:
+    if lattice is None:
         return None
     else:
         return Atoms(numbers=numbers,

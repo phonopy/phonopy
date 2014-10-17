@@ -107,91 +107,92 @@ dos = []
 filename = "partial_dos.dat"
 if len(args) > 0 :
     filename = args[0]
-for line in open( filename ):
+for line in open(filename):
     if line.strip().split()[0] == '#' or line.strip().split() == '':
         continue
 
-    tmp_array = [ float(x) for x in line.split() ]
-    frequencies.append( tmp_array.pop(0) )
-    dos.append( tmp_array )
+    tmp_array = [float(x) for x in line.split()]
+    frequencies.append(tmp_array.pop(0))
+    dos.append(tmp_array)
 
 frequencies = np.array(frequencies)
 dos = np.array(dos).transpose()
 
 # Extract indices
 indices = []
-if options.pdos_indices == None:
-    indices.append( range( 1, dos.shape[0]+1 ) )
+if options.pdos_indices is None:
+    indices.append(range(1, dos.shape[0] + 1))
 else:
     for v in options.pdos_indices.split(','):
-        indices.append([ int(x) for x in v.split() ])
+        indices.append([int(x) for x in v.split()])
 
 # Set plot range in frequency axis
-if options.f_max == None:
-    max_freq = max( frequencies )
+if options.f_max is None:
+    max_freq = max(frequencies)
 else:
     max_freq = options.f_max
-if options.f_min == None:
-    min_freq = min( frequencies )
+if options.f_min is None:
+    min_freq = min(frequencies)
 else:
     min_freq = options.f_min
 
 min_i = 0
-max_i = len( frequencies )
+max_i = len(frequencies)
 
-for i, f in enumerate( frequencies ):
-    if f > max_freq + ( frequencies[1] - frequencies[0] ) / 10:
+for i, f in enumerate(frequencies):
+    if f > max_freq + (frequencies[1] - frequencies[0]) / 10:
         max_i = i + 1
         break
 
-for i, f in enumerate( frequencies ):
-    if f > min_freq - ( frequencies[1] - frequencies[0] ) / 10:
+for i, f in enumerate(frequencies):
+    if f > min_freq - (frequencies[1] - frequencies[0]) / 10:
         min_i = i
         break
 
 # Plot
 plots = []
 for nums in indices:
-    pdos = np.zeros( frequencies.shape[0], dtype=float )
+    pdos = np.zeros(frequencies.shape[0], dtype='double')
     for v in nums:
-        pdos += dos[v-1]
-    plots.append( plt.plot( frequencies[min_i:max_i], pdos[min_i:max_i] * options.factor ) )
+        pdos += dos[v - 1]
+    plots.append(plt.plot(
+        frequencies[min_i:max_i], pdos[min_i:max_i] * options.factor))
 
 plt.grid(True)
 
-plt.xlim( min_freq, max_freq )
+plt.xlim(min_freq, max_freq)
 
-if ( not options.ymin == None ) and ( not options.ymax == None ):
-    plt.ylim( options.ymin, options.ymax )
-elif options.ymin == None and ( not options.ymax == None ):
-    plt.ylim( ymax=options.ymax )
-elif ( not options.ymin == None ) and options.ymax == None:
-    plt.ylim( ymin=options.ymin )
+if (options.ymin is not None) and (options.ymax is not None):
+    plt.ylim(options.ymin, options.ymax)
+elif (options.ymin is not None) and (options.ymax is not None):
+    plt.ylim(ymax=options.ymax)
+elif (options.ymin is not None) and (options.ymax is None):
+    plt.ylim(ymin=options.ymin)
 
-if options.xlabel == None:
+if options.xlabel is None:
     plt.xlabel('Frequency')
 else:
-    plt.xlabel( options.xlabel )
-if options.ylabel == None:
+    plt.xlabel(options.xlabel)
+if options.ylabel is None:
     plt.ylabel('Partial density of states')
 else:    
-    plt.ylabel( options.ylabel )
+    plt.ylabel(options.ylabel)
 
 if options.show_legend:
-    if not options.legend_labels == None:
-        if len( options.legend_labels.split() ) == len( plots ):
+    if options.legend_labels is not None:
+        if len(options.legend_labels.split()) == len(plots):
             labels = options.legend_labels.split()
         else:
             print "Number of labels is not same as number of plots."
             labels = indices
     else:
         labels = indices
-    plt.legend(labels, loc='upper left' )
+    plt.legend(labels, loc='upper left')
 
-if not options.title == None:
-    plt.title( options.title )
+if options.title is not None:
+    plt.title(options.title)
 
-if not options.output_filename == None:
+if options.output_filename is not None:
     plt.rcParams['pdf.fonttype'] = 42
     plt.rcParams['font.family'] = 'serif'
     plt.savefig(options.output_filename)

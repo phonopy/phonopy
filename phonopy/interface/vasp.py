@@ -74,7 +74,7 @@ def write_supercells_with_displacements(supercell,
 
 def write_magnetic_moments(cell):
     magmoms = cell.get_magnetic_moments() 
-    if not magmoms == None:
+    if magmoms is not  None:
         w = open("MAGMOM", 'w')
         num_atoms, symbols, scaled_positions, sort_list = \
             sort_positions_by_symbols(cell.get_chemical_symbols(),
@@ -101,7 +101,7 @@ def get_force_constants_vasprun_xml(vasprun):
     fc_tmp = None
     num_atom = 0
     for event, element in vasprun:
-        if num_atom==0:
+        if num_atom == 0:
             (atom_types,
              masses,
              num_atom) = get_atom_types_from_vasprun_xml(element)
@@ -296,10 +296,10 @@ def symmetrize_tensor(tensor, symmetry_operations):
 def expand_symbols(num_atoms, symbols=None):
     expanded_symbols = []
     is_symbols = True
-    if symbols == None:
+    if symbols is None:
         is_symbols = False
     else:
-        if not len(symbols) == len(num_atoms):
+        if len(symbols) != len(num_atoms):
             is_symbols = False
         else:
             for s in symbols:
@@ -395,7 +395,7 @@ def sort_positions_by_symbols(symbols, positions):
     num_atoms = np.zeros(len(reduced_symbols), dtype=int)
     for i, rs in enumerate(reduced_symbols):
         for j, (s, p) in enumerate(zip(symbols, positions)):
-            if rs==s:
+            if rs == s:
                 sorted_positions.append(p)
                 sort_list.append(j)
                 num_atoms[i] += 1

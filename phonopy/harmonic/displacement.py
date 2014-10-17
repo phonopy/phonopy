@@ -113,7 +113,7 @@ def get_least_displacements(symmetry,
                 if is_minus_displacement(disp, site_symmetry):
                     displacements.append([atom_num,
                                           -disp[0], -disp[1], -disp[2]])
-            elif is_plusminus == True:
+            elif is_plusminus is True:
                 displacements.append([atom_num,
                                       -disp[0], -disp[1], -disp[2]])
 
@@ -126,7 +126,7 @@ def get_displacement(site_symmetry,
     # One
     sitesym_num, disp = get_displacement_one(site_symmetry,
                                              directions)
-    if not disp == None:
+    if disp is not None:
         if log_level > 2:
             print "Site symmetry used to expand a direction", disp[0]
             print site_symmetry[sitesym_num]
@@ -134,7 +134,7 @@ def get_displacement(site_symmetry,
     # Two
     sitesym_num, disps = get_displacement_two(site_symmetry,
                                               directions)
-    if not disps == None:
+    if disps is not None:
         if log_level > 2:
             print "Site symmetry used to expand directions", disps[0], disps[1]
             print site_symmetry[sitesym_num]
@@ -167,7 +167,7 @@ def get_displacement_one(site_symmetry,
                 det = determinant(direction,
                                   rot_directions[i],
                                   rot_directions[j])
-                if not det == 0:
+                if det != 0:
                     return i, [direction]
     return None, None
 
@@ -183,7 +183,7 @@ def get_displacement_two(site_symmetry,
                 det = determinant(direction,
                                   rot_directions[i],
                                   second_direction)
-                if not det == 0:
+                if det != 0:
                     return i, [direction, second_direction]
     return None, None
     

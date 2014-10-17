@@ -50,23 +50,23 @@ class Atoms:
                  pbc=None):
 
         # cell
-        if cell == None:
-            self.cell=None
+        if cell is None:
+            self.cell = None
         else:
             self.cell = np.array(cell, dtype='double', order='C')
 
         # position
         self.scaled_positions = None
-        if (not self.cell == None) and  (not positions == None):
+        if (not self.cell is None) and  (not positions is None):
             self.set_positions(positions)
-        if (not scaled_positions == None):
+        if (not scaled_positions is None):
             self.set_scaled_positions(scaled_positions)
 
         # Atom symbols
         self.symbols = symbols
 
         # Atomic numbers
-        if numbers==None:
+        if numbers is None:
             self.numbers = None
         else:
             self.numbers = np.array(numbers, dtype='intc')
@@ -78,15 +78,15 @@ class Atoms:
         self.set_magnetic_moments(magmoms)
 
         # number --> symbol
-        if not self.numbers == None:
+        if not self.numbers is None:
             self.numbers_to_symbols()
 
         # symbol --> number
-        elif not self.symbols == None:
+        elif not self.symbols is None:
             self.symbols_to_numbers()
 
         # symbol --> mass
-        if self.symbols and (self.masses == None):
+        if self.symbols and (self.masses is None):
             self.symbols_to_masses()
 
 
@@ -111,7 +111,7 @@ class Atoms:
         return self.scaled_positions.copy()
 
     def set_masses(self, masses):
-        if masses == None:
+        if masses is None:
             self.masses = None
         else:
             self.masses = np.array(masses, dtype='double')
@@ -120,13 +120,13 @@ class Atoms:
         return self.masses.copy()
 
     def set_magnetic_moments(self, magmoms):
-        if magmoms == None:
+        if magmoms is None:
             self.magmoms = None
         else:
             self.magmoms = np.array(magmoms, dtype='double')
 
     def get_magnetic_moments(self):
-        if self.magmoms == None:
+        if self.magmoms is None:
             return None
         else:
             return self.magmoms.copy()

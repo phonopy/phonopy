@@ -358,7 +358,7 @@ if options.verbose:
     log_level = 2
 if options.quiet:
     log_level = 0
-if not options.log_level==None:
+if options.log_level is not None:
     log_level=options.log_level
 
 # Input and output filename extension
@@ -478,7 +478,7 @@ else:
 ###################################
 # Read crystal structure (POSCAR) #
 ###################################
-if options.cell_poscar == None:
+if options.cell_poscar is None:
     file_exists('POSCAR', log_level)
     unitcell_filename = 'POSCAR'
 else:

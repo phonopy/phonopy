@@ -44,7 +44,7 @@ class ThermalMotion:
                  masses,
                  cutoff_frequency=None):
 
-        if cutoff_frequency==None:
+        if cutoff_frequency is None:
             self._cutoff_frequency = 0
         else:
             self._cutoff_frequency = cutoff_frequency

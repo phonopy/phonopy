@@ -92,7 +92,7 @@ def plot_partial_dos(frequency_points,
 
     num_atom = len(partial_dos)
 
-    if indices == None:
+    if indices is None:
         indices = []
         for i in range(num_atom):
             indices.append([i])
@@ -106,7 +106,7 @@ def plot_partial_dos(frequency_points,
             pdos_sum += partial_dos[i]
         plots.append(plt.plot(frequency_points, pdos_sum))
 
-    if not legend==None:
+    if legend is not None:
         plt.legend(legend)
 
     return plt

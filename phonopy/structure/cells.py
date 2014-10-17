@@ -57,7 +57,7 @@ def trim_cell(relative_axes, cell, symprec):
     trimed_positions = []
     trimed_numbers = []
     trimed_masses = []
-    if magmoms == None:
+    if magmoms is None:
         trimed_magmoms = None
     else:
         trimed_magmoms = []
@@ -114,7 +114,7 @@ def print_cell(cell, mapping=None, stars=None):
             if i in stars:
                 num = "*"
         num += "%d" % (i + 1)
-        if magmoms == None:
+        if magmoms is None:
             print "%5s %-2s%18.14f%18.14f%18.14f %7.3f" % \
                 (num, symbols[i], v[0], v[1], v[2], masses[i]),
         else:
@@ -222,7 +222,7 @@ class Supercell(Atoms):
         positions_multi = []
         numbers_multi = []
         masses_multi = []
-        if magmoms == None:
+        if magmoms is None:
             magmoms_multi = None
         else:
             magmoms_multi = []
@@ -236,7 +236,7 @@ class Supercell(Atoms):
                         numbers_multi.append(numbers[l])
                         masses_multi.append(masses[l])
                         atom_map.append(l)
-                        if not magmoms == None:
+                        if not magmoms is None:
                             magmoms_multi.append(magmoms[l])
 
         simple_supercell = Atoms(numbers=numbers_multi,

@@ -281,7 +281,7 @@ class Modulation:
         scaled_positions = []
         masses = []
         magmoms_prim = self._primitive.get_magnetic_moments()
-        if magmoms_prim == None:
+        if magmoms_prim is None:
             magmoms = None
         else:
             magmoms = []
@@ -292,7 +292,7 @@ class Modulation:
                 scaled_positions.append(p + np.array([a,b,c]))
                 masses.append(self._primitive.get_masses()[i])
                 symbols.append(self._primitive.get_chemical_symbols()[i])
-                if not magmoms_prim == None:
+                if magmoms_prim is not None:
                     magmoms.append(magmoms_prim[i])
 
         lattice = np.dot(np.diag(dim), self._primitive.get_cell())

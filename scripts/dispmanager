@@ -137,12 +137,12 @@ if options.is_create_structure_file:
 ######################
 if options.is_compatibility:
     directions_DISP = file_IO.parse_DISP()
-    if not len( directions_DISP ) == len( directions ):
+    if len( directions_DISP ) != len( directions ):
         print "disp.yaml and DISP are inconsistent."
         sys.exit(1)
     print "     DISP               disp.yaml"
     for d_DISP, d in zip( directions_DISP, directions ):
-        if not d_DISP[0] == d[0]:
+        if d_DISP[0] != d[0]:
             print "disp.yaml and DISP are inconsistent."
             sys.exit(1)
         if ( abs( np.array( d_DISP[1:4] ) - np.array( d[1:4] ) ) < 0.0001 ).all():
@@ -185,9 +185,9 @@ else:
     output_filename=options.output_filename
 
 # Add displacements
-if not options.add_disp == None:
+if options.add_disp is not None:
 
-    if output_filename==None:
+    if output_filename is None:
         print "Output filename (-o or --overwrite) is required."
         sys.exit(1)
         
@@ -204,9 +204,9 @@ if not options.add_disp == None:
     sys.exit(0)
 
 # Select displacements
-if not options.select_disp == None:
+if options.select_disp is not None:
 
-    if output_filename==None:
+    if output_filename is None:
         print "Output filename (-o or --overwrite) is required."
         sys.exit(1)
         

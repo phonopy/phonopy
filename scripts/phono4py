@@ -236,7 +236,7 @@ else:
     settings = phono3py_conf.get_settings()
 
 # Read POSCAR
-if options.cell_poscar == None:
+if options.cell_poscar is None:
     if os.path.exists('POSCAR'):
         unitcell_filename = 'POSCAR'
     else:

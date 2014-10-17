@@ -156,7 +156,7 @@ for i, filename in enumerate(filenames):
                 print d,f
             print
         else:
-            if j==0:
+            if j == 0:
                 plt.plot(distances, freqs * options.factor, colors[i],
                          label=filename)
             else:
@@ -170,16 +170,16 @@ if not options.is_gnuplot:
     plt.ylabel('Frequency')
     plt.xlabel('Wave vector')
     plt.xlim(distances[0], distances[-1])
-    if not options.f_max == None:
+    if options.f_max is not None:
         plt.ylim(ymax = options.f_max)
-    if not options.f_min == None:
+    if options.f_min is not None:
         plt.ylim(ymin = options.f_min)
     plt.axhline(y=0, linestyle=':', linewidth=0.5, color='b')
     if len(filenames) == 1:
         xticks = segment_positions + [distances[-1]]
         if options.labels:
             labels = [x for x in options.labels.split()]
-            if len(labels)==len(xticks):
+            if len(labels) == len(xticks):
                 plt.xticks(xticks, labels)
             else:
                 print "Numbers of labels and band segments don't match."
@@ -189,13 +189,13 @@ if not options.is_gnuplot:
     else:
         plt.xticks([])
     
-    if not options.title == None:
+    if options.title is not None:
         plt.title(options.title)
 
     if options.show_legend:
         plt.legend()
     
-    if not options.output_filename == None:
+    if options.output_filename is not None:
         plt.rcParams['pdf.fonttype'] = 42
         plt.rcParams['font.family'] = 'serif'
         plt.savefig(options.output_filename)

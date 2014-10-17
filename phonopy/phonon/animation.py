@@ -53,7 +53,7 @@ class Animation:
         self._symbols = primitive.get_chemical_symbols()
         self._masses = primitive.get_masses()
         self._lattice = primitive.get_cell()
-        if not shift==None:
+        if shift is not None:
             self._positions = (self._positions + shift) % 1
             
     def _set_cell_oriented(self):

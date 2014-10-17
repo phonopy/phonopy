@@ -70,16 +70,16 @@ except ImportError:
 # Parse options
 from optparse import OptionParser
 parser = OptionParser()
-parser.set_defaults( output_filename = None,
-                     factor = 1.0,
-                     td_indices = None,
-                     show_legend = False,
-                     is_distance = False,
-                     is_gnuplot = False,
-                     ymax = None,
-                     ymin = None,
-                     tmax = None,
-                     tmin = None )
+parser.set_defaults(output_filename=None,
+                    factor=1.0,
+                    td_indices=None,
+                    show_legend=False,
+                    is_distance=False,
+                    is_gnuplot=False,
+                    ymax=None,
+                    ymin=None,
+                    tmax=None,
+                    tmin=None)
 parser.add_option("-i", "--indices", dest="td_indices",
                   action="store", type="string",
                   help="Indices like 1 2, 3 4 5 6...")
@@ -106,27 +106,27 @@ parser.add_option("--distance", dest="is_distance",
 
 
 if not options.is_distance:
-    if len( args ) == 0:
+    if len(args) == 0:
         filename = 'thermal_displacements.yaml'
     else:
         filename = args[0]
-    yamldata = yaml.load( open( filename ).read(), Loader=Loader )
+    yamldata = yaml.load(open(filename).read(), Loader=Loader)
 
     td = yamldata['thermal_displacements']
-    temperatures = [ v['temperature'] for v in td ]
-    displacements = [ v['displacements'] for v in td ]
-    displacements = np.array( displacements ).reshape( len( temperatures ), -1 )
+    temperatures = [v['temperature'] for v in td]
+    displacements = [v['displacements'] for v in td]
+    displacements = np.array(displacements).reshape(len(temperatures), -1)
 else:
-    if len( args ) == 0:
+    if len(args) == 0:
         filename = 'thermal_distances.yaml'
     else:
         filename = args[0]
-    yamldata = yaml.load( open( filename ).read(), Loader=Loader )
+    yamldata = yaml.load(open(filename).read(), Loader=Loader)
 
     td = yamldata['thermal_distances']
-    temperatures = [ v['temperature'] for v in td ]
-    distances = [ v['distance'] for v in td ]
-    for t, dists in zip( temperatures, distances ):
+    temperatures = [v['temperature'] for v in td]
+    distances = [v['distance'] for v in td]
+    for t, dists in zip(temperatures, distances):
         print t,
         for d in dists:
             print d,
@@ -139,51 +139,51 @@ else:
 
 # Set temperature range
 tmin_index = 0
-tmax_index = len( temperatures )
-if not options.tmin == None:
-    for i, t in enumerate( temperatures ):
-        if t > options.tmin - ( temperatures[1] - temperatures[0] ) * 0.1:
+tmax_index = len(temperatures)
+if options.tmin is not None:
+    for i, t in enumerate(temperatures):
+        if t > options.tmin - (temperatures[1] - temperatures[0]) * 0.1:
             tmin_index = i
             break
 
-if not options.tmax == None:
-    for i, t in enumerate( temperatures ):
-        if t > options.tmax + ( temperatures[1] - temperatures[0] ) * 0.1:
+if options.tmax is not None:
+    for i, t in enumerate(temperatures):
+        if t > options.tmax + (temperatures[1] - temperatures[0]) * 0.1:
             tmax_index = i
             break
 
 # Extract indices
 set_of_indices = []
-if options.td_indices == None:
-    set_of_indices.append( range( 1, displacements.shape[1]+1 ) )
+if options.td_indices is None:
+    set_of_indices.append(range(1, displacements.shape[1] + 1))
 else:
     for v in options.td_indices.split(','):
-        set_of_indices.append([ int(x) for x in v.split() ])
+        set_of_indices.append([int(x) for x in v.split()])
 
 print set_of_indices
 
 # Plot
 plots = []
 for indices in set_of_indices:
-    d = np.zeros( len( temperatures ), dtype=float )
+    d = np.zeros(len(temperatures), dtype='double')
     for i in indices:
         d += displacements[:, i-1]
-    plots.append( plt.plot( temperatures[tmin_index:tmax_index],
-                            d[tmin_index:tmax_index] / len( indices ) ) )
+    plots.append(plt.plot(temperatures[tmin_index:tmax_index],
+                          d[tmin_index:tmax_index] / len(indices)))
 
 # Set y range
-if ( not options.ymin == None ) and ( not options.ymax == None ):
-    plt.ylim( options.ymin, options.ymax )
-elif options.ymin == None and ( not options.ymax == None ):
-    plt.ylim( ymax=options.ymax )
-elif ( not options.ymin == None ) and options.ymax == None:
-    plt.ylim( ymin=options.ymin )
+if (options.ymin is not None) and (options.ymax is not None):
+    plt.ylim(options.ymin, options.ymax)
+elif (options.ymin is None) and (options.ymax is not None):
+    plt.ylim(ymax=options.ymax)
+elif (options.ymin is not None) and (options.ymax is None):
+    plt.ylim(ymin=options.ymin)
 
 if options.show_legend:
-    plt.legend( plots, set_of_indices, loc='upper left' )
+    plt.legend(plots, set_of_indices, loc='upper left')
 
 # Set output device and show
-if not options.output_filename == None:
+if options.output_filename is not None:
     plt.rcParams['pdf.fonttype'] = 42
     plt.rcParams['font.family'] = 'serif'
     plt.savefig(options.output_filename)

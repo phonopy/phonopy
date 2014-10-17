@@ -321,7 +321,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             # In contructing dynamical matrix in phonopy
             # fc of left indices with s1 == self._s2p_map[ s1 ] are
             # only used.
-            if not (s1==self._s2p_map[s1]):
+            if s1 != self._s2p_map[s1]:
                 continue
             p1 = self._p2p_map[s1]
             for s2 in range(self._scell.get_number_of_atoms()):            

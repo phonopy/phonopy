@@ -752,7 +752,7 @@ class IrReps:
         return self._conventional_rotations
 
     def get_projection_operators(self, idx_irrep, i=None, j=None):
-        if i == None or j == None:
+        if i is None or j is None:
             return self._get_character_projection_operators(idx_irrep)
         else:
             return self._get_projection_operators(idx_irrep, i, j)
@@ -1012,7 +1012,7 @@ class IrReps:
         print
         for i, deg_set in enumerate(self._degenerate_sets):
             print "%3d (%8.3f):" % (deg_set[0] + 1, self._freqs[deg_set[0]]),
-            if self._ir_labels==None:
+            if self._ir_labels is None:
                 print
             else:
                 print self._ir_labels[i]
@@ -1206,7 +1206,7 @@ def print_rotations(rotations,
     num_rest = len(rotations) % width
     if num_rest > 0:
         i = len(rotations) // width
-        if rotation_symbols == None:
+        if rotation_symbols is None:
             print ("    %2d    " * num_rest) % \
                 tuple(np.arange(i * width, i * width + num_rest) + 1)
         else:
