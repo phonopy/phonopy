@@ -80,7 +80,6 @@ def _write_collision(lbte, i=None, filename=None):
     sigmas = lbte.get_sigmas()
     gamma = lbte.get_gamma()
     gamma_isotope = lbte.get_gamma_isotope()
-    mspp = lbte.get_mean_square_pp_strength()
     collision_matrix = lbte.get_collision_matrix()
     mesh = lbte.get_mesh_numbers()
     
@@ -95,7 +94,6 @@ def _write_collision(lbte, i=None, filename=None):
                                     mesh,
                                     gamma=gamma[j, :, i],
                                     gamma_isotope=gamma_isotope_at_sigma,
-                                    mspp=mspp[i],
                                     collision_matrix=collision_matrix[j, :, i],
                                     grid_point=gp,
                                     sigma=sigma,
@@ -670,6 +668,7 @@ class Conductivity_LBTE(Conductivity):
                 num_ir_grid_points * num_band * 3,
                 num_ir_grid_points * num_band * 3)
             w, col_mat[:] = np.linalg.eigh(col_mat)
+            e = np.zeros_like(w)
             v = col_mat
             for l, val in enumerate(w):
                 if val > self._pinv_cutoff:
