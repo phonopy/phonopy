@@ -32,6 +32,13 @@
 # LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
+
+#
+# 2014/09/23  christian.carbogno && shanghui: adding write_eigenfrequencies_and_eigenvectors_at_gamma 
+#                                            (both non-nac and nac)                      
+#
+# 2014/09/22 shanghui: adding support for modulation output 
+#                      (modulation setting in control.in)                      
 #
 # 2014/02/16 togo: Minor fix to follow the change of parse_BORN
 # 2014/01/31 togo: Follow the changes of Phonopy and Mesh classes (phonopy-1.8.2)
@@ -118,6 +125,7 @@ class Control:
         self.phonon["dos"] = {}
         self.phonon["free_energy"] = {}
         self.phonon["animation"] = []
+        self.phonon["modulations"] = {}
         if file is None:
             self.file = "control.in"
         else:
@@ -198,6 +206,12 @@ class Control:
                                        "shift" : map(float, fields[8:11]),
                                        "files" : fields[11:] }
                         self.phonon["animation"].append(parameters)
+                    if (fields[1] == "modulations") :
+                        parameters = { "q" : map(float, fields[2:5]),
+                                       "supercell" : map(int,fields[5:8]), 
+                                       "delta" : float(fields[8]) }
+                        self.phonon["modulations"].update(parameters)
+
         except Exception:
             print line,
             print "|-> line triggered exception: " + str(Exception)
@@ -524,6 +538,102 @@ def post_process_free_energy(phonopy_obj, mesh_obj, parameters, frequency_unit_t
         plt.xlabel("Temperature (K)")
         plt.savefig("phonopy-FHI-aims-free_energy.pdf")
 
+
+
+#------------------begin for aims_modulation----------------------------
+from phonopy.phonon.modulation import Modulation
+from phonopy.phonon.degeneracy import get_eigenvectors
+from phonopy.structure.cells import get_supercell
+def run_aims_modulation(phonopy_obj):
+        f_freq = open("freq.dat", 'w')
+        f_norm = open("norm.dat", 'w')
+        frequencies = []
+        for ph_mode in phonopy_obj._phonon_modes:
+            q, band_index, amplitude, argument = ph_mode
+            eigvals, eigvecs = get_eigenvectors(
+                q,
+                phonopy_obj._dm,
+                phonopy_obj._ddm,
+                perturbation=phonopy_obj._delta_q,
+                derivative_order=phonopy_obj._derivative_order,
+                nac_q_direction=phonopy_obj._nac_q_direction)
+            #print '---------------(1)d(q)----------------------'
+            #print eigvecs[:, band_index]
+            #print '---------------(2)d(q) expt(iqR)/sqrt(M)----------------------'
+            u = phonopy_obj._get_delta(eigvecs[:, band_index], q)
+            #print u
+            phonopy_obj._eigvecs.append(eigvecs[:, band_index])
+            phonopy_obj._eigvals.append(eigvals[band_index])
+            #---------shanghui begin freq-------------------------------------
+            if eigvals[band_index]  < 0:
+                # Safety check for imaginary frequencies:
+                neg_value = -numpy.sqrt(-eigvals[band_index])*AimsToCm
+                if neg_value < -0.1:
+                   print "* WARNING:"
+                   print "* Imaginary Eigenfrequencies unphysical in modulation_aims.py"
+                frequencies.append(neg_value)
+            else:
+                frequencies.append(numpy.sqrt(eigvals[band_index])*AimsToCm)  
+            #---------shanghui end freq-------------------------------------
+
+            #---------shanghui begin norm-------------------------------------
+            norm =  numpy.linalg.norm(numpy.array(u).real)
+            u = u/norm 
+            f_norm.write("%d%18.12f \n" %(band_index+1, norm*norm))
+            #----------shanghui end norm--------------------------------------
+            phonopy_obj._delta_modulations.append(u * amplitude)
+
+       
+        for freq in frequencies:
+            f_freq.write(" %11.6f" %freq)
+        f_freq.close()
+        f_norm.close()
+
+def write_aims_modulation(self, filename="output_geometry"):
+        deltas = []
+        for i, delta_positions in enumerate(self._delta_modulations):
+            cell = self._get_cell_with_modulation(delta_positions)
+            write_aims((filename+"-%03d") % (i+1), cell)
+            deltas.append(delta_positions)
+    
+        sum_of_deltas = numpy.sum(deltas, axis=0)
+        no_modulations = numpy.zeros(sum_of_deltas.shape, dtype=complex)
+        cell = self._get_cell_with_modulation(no_modulations)
+        write_aims(filename+"-orig", cell)
+
+def post_process_write_modulations(phonopy_obj,parameters):
+        setting =  {}
+        #-----set by reading contrin.in--------
+        q = parameters['q']
+        setting['dimension'] = parameters['supercell'] 
+        amplitude = parameters['delta']
+
+        #-----set to default values------------
+        setting['order'] = None # This is derivtive of density matrix for group velocity
+        argument=float(0.0) # This is phase factor, we set 0 here
+
+        # add to phonon_modes
+        vals=[]
+        for band_index in range(3*cell.get_number_of_atoms()): 
+            vals.append([q, band_index, amplitude,argument])
+
+        setting['phonon_modes'] = vals 
+
+        phonopy_obj._modulation = Modulation(phonopy_obj._dynamical_matrix,
+                                      dimension=setting['dimension'],
+                                      phonon_modes=setting['phonon_modes'],
+                                      delta_q=None,
+                                      derivative_order=None,
+                                      nac_q_direction=None,
+                                      factor=phonopy_obj._factor)
+
+        run_aims_modulation(phonopy_obj._modulation)
+
+        """Create output_geometry"""
+        write_aims_modulation(phonopy_obj._modulation,"output_geometry")
+#------------------end for aims_modulation----------------------------
+
+
 from phonopy.phonon.animation import Animation
 def post_process_animation(phonopy_obj, parameters, frequency_unit_factor):
     for anim in parameters:
@@ -542,7 +652,86 @@ def post_process_animation(phonopy_obj, parameters, frequency_unit_factor):
                 anim_obj.write_xyz(band_index=anim["band"], amplitude=anim["amp"], 
                                    num_div=anim["div"], 
                                    factor=frequency_unit_factor, filename=file)
-        
+
+from phonopy.units import VaspToEv as AimsToEv
+from phonopy.units import VaspToCm as AimsToCm
+def write_eigenfrequencies_and_eigenvectors_at_gamma(phonopy_obj):
+    # Only Gamma point is of interest
+    q = numpy.zeros(3)
+
+
+    # Check for unit cell == supercell
+    # FIXME: CC an unfolding of the gamma frequencies
+    #        and eigenvectors might be added later on 
+    n_atoms =  phonopy_obj.unitcell.get_number_of_atoms() 
+    if  n_atoms !=  phonopy_obj.supercell.get_number_of_atoms():
+	print " * WARNING:"
+	print " * The unitcell and the supercell are not identical."
+
+    # Open file and write reference equilibrium geometry
+    f = open("phonopy-FHI-aims-eigen-frequencies-and-vectors-at-Gamma.dat", 'w')
+    f.write("### Eigenfrequencies and Eigenvectors at Gamma from phonopy-FHI-aims \n")
+    f.write("# \n")
+    f.write("# Equilibrium geometry\n")
+    cell = phonopy_obj.unitcell
+    for i in range(3):
+        v = cell.get_cell()[i]
+        f.write("lattice_vector %20.10f %20.10f %20.10f   \n" % (v[0],v[1],v[2]))
+    for n in range(n_atoms):
+        r = cell.get_positions()[n]
+        sym = cell.get_chemical_symbols()[n]
+        f.write("atom           %20.10f %20.10f %20.10f   %3s   %4d \n" % (r[0],r[1],r[2],sym,n+1)) 
+
+    # Calculate Eigenvalues and Eigenfrequencies at Gamma
+    f.write("\n# \n# Eigenfrequencies at Gamma in cm^-1 (ascending order) \n")
+
+
+#------------------ shanghui-add for nac_gamma-------------------------------------------
+#------------using referenc of phonopy/phonon/band_structure.py (set_band)------------------        
+    q_direction= numpy.array([0.5,0.5,0.5]) 
+ 
+    if requested_nac: # at gamma point, you need give a q_dirction, then the nac can be added.
+       phonopy_obj.dynamical_matrix.set_dynamical_matrix(q,q_direction)
+       dm = phonopy_obj.dynamical_matrix.get_dynamical_matrix()
+    else :
+       phonopy_obj.dynamical_matrix.set_dynamical_matrix(q)
+       dm = phonopy_obj.dynamical_matrix.get_dynamical_matrix()
+
+    frequencies = []
+    eigfreq, eigvec =  numpy.linalg.eigh(dm)
+#--------------------shanghui-end-add for nac_gamma----------------------------------------------
+
+
+    # Write eigenvalues to file
+    for eig in eigfreq:
+            if eig < 0:
+    		# Safety check for imaginary frequencies:
+		neg_value = -numpy.sqrt(-eig)*AimsToEv*1000
+		if neg_value < -0.1:
+	           print "* WARNING:"  
+	           print "* Imaginary Eigenfrequencies at the Gamma point are highly unphysical."
+                frequencies.append(neg_value)
+            else:
+                frequencies.append(numpy.sqrt(eig)*AimsToCm)  #AimsToEv*1000)
+    for i, freq in enumerate(frequencies):
+        f.write("frequency %20.10f \t %4d \n" %  ( freq,i+1))
+
+    # Write eigenvectors to file
+    f.write("\n#\n# Eigenvectors at Gamma (orthonormalized) \n")
+    for i, freq in enumerate(frequencies):
+        eigvec_band_i = eigvec[:,i]
+    	# Safety check for imaginary eigenvector components:
+	if (abs(eigvec_band_i.imag) > 1E-7).any():
+	   print "* WARNING:"
+	   print "* Imaginary Eigenvectors at the Gamma point are highly unphysical."
+			
+    	f.write("#\n# Mode %4d  - Atoms 1 to %4d  - Eigenfrequency  %20.10f\n" % (i+1,n_atoms,frequencies[i]))
+    	for n in range(n_atoms):
+    		f.write("eigenvector %4d %4d  %20.15f %20.15f %20.15f \n" \
+		% (i+1,n+1,eigvec_band_i[3*n],eigvec_band_i[3*n+1],eigvec_band_i[3*n+2]))
+    f.close()
+
+   
 
 if __name__ == "__main__":
 
@@ -595,6 +784,9 @@ if __name__ == "__main__":
     parser.add_option("-s", "--no-symmetry",
                       action="store_false", dest="symmetry", default=True,
                       help="turn off symmetry wherever possible (at the moment only for q-point grid)")
+    parser.add_option("-G", "--EigVecGamma",
+                      action="store_true", dest="EigVecGamma", default=False,
+                      help="output Eigenvalues and Eigenvectors at the Gamma point")
     parser.add_option("-y", "--yaml",
                       action="store_true", dest="yaml", default=False,
                       help="write .yaml data files for 'native' phonopy post-processing tools")
@@ -779,5 +971,13 @@ if __name__ == "__main__":
         post_process_animation(phonopy_obj, control.phonon["animation"], frequency_unit_factor)
         print "#"
 
+    
+    if (control.phonon["modulations"] != {}):
+        print "# post-processing modulations output"
+        post_process_write_modulations(phonopy_obj,control.phonon["modulations"])
+        print "#"
+
+    if options.EigVecGamma:
+        write_eigenfrequencies_and_eigenvectors_at_gamma(phonopy_obj)
     print "# finished successfully"
     

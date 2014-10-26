@@ -1,0 +1,44 @@
+### Eigenfrequencies and Eigenvectors at Gamma from phonopy-FHI-aims 
+# 
+# Equilibrium geometry
+lattice_vector         0.0000000000         2.7100000000         2.7100000000   
+lattice_vector         2.7100000000         0.0000000000         2.7100000000   
+lattice_vector         2.7100000000         2.7100000000         0.0000000000   
+atom                   0.0000000000         0.0000000000         0.0000000000    Si      1 
+atom                   1.3550000000         1.3550000000         1.3550000000    Si      2 
+
+# 
+# Eigenfrequencies at Gamma in cm^-1 (ascending order) 
+frequency        -0.0000007720 	    1 
+frequency         0.0000061336 	    2 
+frequency         0.0000087538 	    3 
+frequency       516.3876469329 	    4 
+frequency       516.3876469329 	    5 
+frequency       516.3876469329 	    6 
+
+#
+# Eigenvectors at Gamma (orthonormalized) 
+#
+# Mode    1  - Atoms 1 to    2  - Eigenfrequency         -0.0000007720
+eigenvector    1    1    -0.066380497914780   -0.702905081118426   -0.038962500362338 
+eigenvector    1    2    -0.066380497914780   -0.702905081118426   -0.038962500362337 
+#
+# Mode    2  - Atoms 1 to    2  - Eigenfrequency          0.0000061336
+eigenvector    2    1    -0.682019856068138    0.073910299153527   -0.171423987842521 
+eigenvector    2    2    -0.682019856068138    0.073910299153527   -0.171423987842521 
+#
+# Mode    3  - Atoms 1 to    2  - Eigenfrequency          0.0000087538
+eigenvector    3    1    -0.174477922458352   -0.021487545623812    0.684905643105444 
+eigenvector    3    2    -0.174477922458352   -0.021487545623812    0.684905643105444 
+#
+# Mode    4  - Atoms 1 to    2  - Eigenfrequency        516.3876469329
+eigenvector    4    1     0.707106781186547   -0.000000000000000   -0.000000000000000 
+eigenvector    4    2    -0.707106781186548    0.000000000000000    0.000000000000000 
+#
+# Mode    5  - Atoms 1 to    2  - Eigenfrequency        516.3876469329
+eigenvector    5    1    -0.000000000000000   -0.630953982390059   -0.319213207913026 
+eigenvector    5    2     0.000000000000000    0.630953982390059    0.319213207913026 
+#
+# Mode    6  - Atoms 1 to    2  - Eigenfrequency        516.3876469329
+eigenvector    6    1     0.000000000000000   -0.319213207913026    0.630953982390060 
+eigenvector    6    2    -0.000000000000000    0.319213207913026   -0.630953982390059 

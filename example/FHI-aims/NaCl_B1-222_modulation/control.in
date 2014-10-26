@@ -1,0 +1,198 @@
+#########################################################################################
+#
+#Species-independent part of control.in-file
+# NaCl T1_590 ZPE phonons
+#########################################################################################
+#
+#  Physical model
+#
+  xc                 pbe
+  spin               none
+  relativistic       atomic_zora scalar 1e-9
+  charge             0.
+  k_grid             2 2 2
+#
+#  SCF convergence
+#
+  occupation_type    gaussian 0.01
+  mixer              pulay
+    n_max_pulay        10
+#JM#    charge_mix_param   0.2
+#JM#    spin_mix_param     0.2
+  sc_accuracy_rho    1E-5
+  sc_accuracy_eev    1E-2	#JM#  sc_accuracy_eev    1E-3
+  sc_accuracy_etot   1E-6
+  sc_accuracy_forces 1E-4
+  sc_iter_limit      100
+#
+#  Eigenvalue solution
+#
+    KS_method          scalapack_fast 	#JM#    KS_method          scalapack
+    empty_states       3
+    basis_threshold    1.e-4
+#
+#  Relaxation
+#
+#  relax_geometry   bfgs 1.d-2
+#
+#  phonon calculation
+#
+phonon supercell 2 2 2
+phonon displacement 0.01
+phonon frequency_units cm^-1
+phonon hessian phono-perl TDI
+#phonon nac BORN Wang
+
+
+#------output modulations at (gamma point) with  (1 1 1) supercells and (delta=0.01)------
+phonon modulations       0.0  0.0  0.0       1           1           1  0.01
+
+
+################################################################################
+#
+#  FHI-aims code project
+#  VB, Fritz-Haber Institut, 2007
+#
+#  Suggested "coarse" defaults for Na atom (to be pasted into control.in file)
+#  Be sure to double-check any results obtained with these settings for post-processing,
+#  e.g., with the "aims_standard" defaults and larger basis sets.
+#
+################################################################################
+  species        Na
+#     global species definitions
+    nucleus             11
+    mass                22.98976928
+#
+    l_hartree           4
+#
+    cut_pot             4.0          2.0  1.0
+    basis_dep_cutoff    1e-4
+#
+    radial_base         40 7.0
+    radial_multiplier   2
+    angular_grids       specified
+      division   0.5925  110
+      division   0.7843  194
+      division   1.0201  302
+      division   1.1879  434
+      division   1.3799  590
+#      division   1.4503  770
+#      division   7.0005  974
+#      outer_grid  974
+      outer_grid  590 
+################################################################################
+#
+#  Definition of "minimal" basis
+#
+################################################################################
+#     valence basis states
+    valence      3  s   1.
+    valence      2  p   6.
+#     ion occupancy
+    ion_occ      2  s   2.
+    ion_occ      2  p   6.
+################################################################################
+#
+#  Suggested additional basis functions. For production calculations, 
+#  uncomment them one after another (the most important basis functions are
+#  listed first).
+#
+#  Constructed for dimers: 2.0 A, 2.5 A, 3.0 A, 3.75 A, 4.5 A
+#
+################################################################################
+#  "First tier" - improvements: -60.09 meV to -10.02 meV
+     hydro 2 p 1.2
+     hydro 3 s 1.8
+     hydro 3 d 3.8
+#  "Second tier" - improvements: -2.94 meV to -1.27 meV
+#     hydro 4 p 3.1
+#     hydro 3 s 10
+#     hydro 4 f 6.2
+#     hydro 4 d 1.3
+#  "Third tier" - improvements: -0.83 meV to -0.07 meV
+#     hydro 3 d 7.8
+#     hydro 3 p 2.3
+#     hydro 5 g 9.6
+#     hydro 4 p 0.85
+#     hydro 5 f 1.8
+#     hydro 2 s 0.6
+#  Further basis functions that fell out of the optimization - noise level...
+#     hydro 5 g 0.1
+#     hydro 4 d 3.4
+#     hydro 4 s 0.1
+
+################################################################################
+#
+#  FHI-aims code project
+#  VB, Fritz-Haber Institut, 2007
+#
+#  Suggested "coarse" defaults for Cl atom (to be pasted into control.in file)
+#  Be sure to double-check any results obtained with these settings for post-processing,
+#  e.g., with the "aims_standard" defaults and larger basis sets.
+#
+################################################################################
+  species        Cl
+#     global species definitions
+    nucleus             17
+    mass                35.453
+#
+    l_hartree           4
+#
+    cut_pot             4.0          2.0  1.0
+    basis_dep_cutoff    1e-4
+#
+    radial_base         45 7.0
+    radial_multiplier   2
+    angular_grids       specified
+      division   0.4412  110
+      division   0.5489  194
+      division   0.6734  302
+      division   0.7794  434
+      division   0.9402  590
+#      division   1.0779  770
+#      division   1.1792  974
+#      outer_grid  974
+      outer_grid  590 
+################################################################################
+#
+#  Definition of "minimal" basis
+#
+################################################################################
+#     valence basis states
+    valence      3  s   2.
+    valence      3  p   5.
+#     ion occupancy
+    ion_occ      3  s   1.
+    ion_occ      3  p   4.
+################################################################################
+#
+#  Suggested additional basis functions. For production calculations, 
+#  uncomment them one after another (the most important basis functions are
+#  listed first).
+#
+#  Constructed for dimers: 1.65 A, 2.0 A, 2.5 A, 3.25 A, 4.0 A
+#
+################################################################################
+#  "First tier" - improvements: -429.57 meV to -15.03 meV
+     ionic 3 d auto
+     hydro 2 p 1.9
+     hydro 4 f 7.4
+     ionic 3 s auto
+     hydro 5 g 10.4
+#  "Second tier" - improvements: -7.84 meV to -0.48 meV
+#     hydro 3 d 3.3
+#     hydro 5 f 9.8
+#     hydro 1 s 0.75
+#     hydro 5 g 11.2
+#     hydro 4 p 10.4
+#  "Third tier" - improvements: -1.00 meV to -0.12 meV
+#     hydro 4 d 12.8
+#     hydro 4 f 4.6
+#     hydro 4 d 10.8
+#     hydro 2 s 1.8
+#     hydro 3 p 3
+#  Further functions that fell out - improvements: -0.10 meV and below
+#     hydro 5 f 14.4
+#     hydro 4 s 12.8
+#     hydro 3 d 11.6
+#     hydro 4 s 4.1
