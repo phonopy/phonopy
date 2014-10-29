@@ -67,7 +67,7 @@ def write_supercells_with_displacements(supercell,
                                         cells_with_displacements):
     write_vasp("SPOSCAR", supercell, direct=True)
     for i, cell in enumerate(cells_with_displacements):
-        write_vasp('POSCAR-%03d' % (i+1), cell, direct=True)
+        write_vasp('POSCAR-%03d' % (i + 1), cell, direct=True)
 
     write_magnetic_moments(supercell)
 
