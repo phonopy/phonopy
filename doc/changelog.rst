@@ -3,10 +3,12 @@
 Change Log
 ==========
 
-Oct-17-2014: Version 1.9.1.2
+Oct-29-2014: Version 1.9.1.2
 -----------------------------
 
-* Abinit support. See :ref:`abinit_mode` and :ref:`abinit_force_sets_option`.
+* Experimental support for Abinit. See :ref:`abinit_mode` and
+  :ref:`abinit_force_sets_option`.
+* FHI-aims modulation output. Some more examples for ``phonopy-FHI-aims``.
 
 Oct-17-2014: Version 1.9.1.1
 -----------------------------
