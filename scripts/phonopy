@@ -40,8 +40,6 @@ import numpy as np
 from phonopy import *
 from optparse import OptionParser
 import phonopy.file_IO as file_IO
-import phonopy.interface.wien2k as wien2k
-import phonopy.interface.vasp as vasp
 from phonopy.cui.settings import Settings, PhonopyConfParser
 from phonopy.cui.show_symmetry import check_symmetry
 from phonopy.units import *
@@ -104,15 +102,15 @@ def file_exists(filename, log_level):
 
 parser = OptionParser()
 parser.set_defaults(
-    displacement_distance=None,
+    abinit_struct_file=None,
     anime=None,
     band_indices=None,
     band_paths=None,
     band_points=None,
     cutoff_frequency=None,
     cutoff_radius=None,
+    displacement_distance=None,
     dynamical_matrix_decimals=None,
-    is_dos_mode=False,
     factor=None,
     fc_symmetry=None,
     fc_computation_algorithm=None,
@@ -126,6 +124,7 @@ parser.set_defaults(
     is_band_connection=False,
     is_check_symmetry=False,
     is_displacement=False,
+    is_dos_mode=False,
     is_eigenvectors=False,
     is_gamma_center=False,
     is_graph_plot=False,
@@ -166,8 +165,11 @@ parser.set_defaults(
     tstep=None,
     cell_poscar=None,
     verbose=False,
-    wien2k_struct_file=None )
+    wien2k_struct_file=None)
 
+parser.add_option("--abinit", dest="abinit_struct_file",
+                  action="store", type="string",
+                  help="Read Abinit structure from .in file", metavar="FILE")
 parser.add_option("--amplitude", dest="displacement_distance", type="float",
                   help="Distance of displacements")
 parser.add_option("--anime", dest="anime",
@@ -378,8 +380,13 @@ if log_level > 0:
 # Phonopy interface mode
 if options.wien2k_struct_file:
     interface_mode = 'wien2k'
+    import phonopy.interface.wien2k as wien2k
+elif options.abinit_struct_file:
+    interface_mode = 'abinit'
+    import phonopy.interface.abinit as abinit
 else:
     interface_mode = 'vasp'
+    import phonopy.interface.vasp as vasp
 
 ######################################################
 # Create FORCE_CONSTANTS (--fc or --force_constants) #
@@ -424,7 +431,7 @@ if options.force_sets_mode or options.force_sets_zero_mode:
     if file_exists('disp.yaml', log_level):
         if interface_mode == 'vasp':
             displacements = file_IO.parse_disp_yaml('disp.yaml')
-        if interface_mode == 'wien2k':
+        if interface_mode == 'wien2k' or interface_mode == 'abinit':
             displacements, supercell = file_IO.parse_disp_yaml(
                 'disp.yaml', return_cell=True)
             
@@ -445,9 +452,21 @@ if options.force_sets_mode or options.force_sets_zero_mode:
         is_created = file_IO.write_FORCE_SETS_vasp(
             args,
             displacements,
-            'FORCE_SETS',
+            filename='FORCE_SETS',
             is_zero_point=options.force_sets_zero_mode)
 
+    if interface_mode == 'abinit':
+        print "**********************************************************"
+        print "****    Abinit FORCE_SETS support is experimental.    ****"
+        print "****        Your feedback would be appreciated.       ****"
+        print "**********************************************************"
+        is_created = file_IO.write_FORCE_SETS_abinit(
+            args,
+            displacements,
+            supercell.get_number_of_atoms(),
+            filename='FORCE_SETS')
+        
+        
     if interface_mode == 'wien2k':
         print "**********************************************************"
         print "****    Wien2k FORCE_SETS support is experimental.    ****"
@@ -457,8 +476,7 @@ if options.force_sets_mode or options.force_sets_zero_mode:
             args,
             displacements,
             supercell,
-            'FORCE_SETS',
-            is_zero_point=options.force_sets_zero_mode,
+            filename='FORCE_SETS',
             is_distribute=(not options.is_wien2k_p1),
             symprec=options.symprec)
 
@@ -473,7 +491,6 @@ if options.force_sets_mode or options.force_sets_zero_mode:
 ##########################
 # Read crystal structure #
 ##########################
-# Parse VASP-type crystal structure 
 if interface_mode == 'vasp':
     if options.cell_poscar is None:
         if file_exists("POSCAR", log_level):
@@ -484,7 +501,10 @@ if interface_mode == 'vasp':
 
     unitcell = vasp.read_vasp(unitcell_filename)
 
-# Parse Wien2k-type crystal structure 
+if interface_mode == 'abinit':
+    if file_exists(options.abinit_struct_file, log_level):
+        unitcell = abinit.read_abinit(options.abinit_struct_file)
+
 if interface_mode == 'wien2k':
     if file_exists(options.wien2k_struct_file, log_level):
         unitcell, npts, r0s, rmts = wien2k.parse_wien2k_struct(
@@ -529,13 +549,16 @@ else:
 
 run_mode = settings.get_run_mode()
     
-# Physical units: energy, distance, atomic mass
-# vasp          : eV,     Angstrom, AMU
-# wien2k        : Ry,     au,       AMU
+# Physical units: energy,  distance,  atomic mass, force
+# vasp          : eV,      Angstrom,  AMU,         eV/Angstrom
+# wien2k        : Ry,      au,        AMU,         Ry/au
+# abinit        : hartree, au(=bohr), AMU,         eV/Angstrom
 # --factor: Frequency conversion factor
 if options.factor is None:
     if interface_mode == 'wien2k':
         factor = Wien2kToTHz
+    elif interface_mode == 'abinit':
+        factor = AbinitToTHz
     else:
         factor = VaspToTHz
 else:
@@ -543,7 +566,7 @@ else:
 
 # --amplitude
 if settings.get_displacement_distance() is None:
-    if interface_mode == 'wien2k':
+    if interface_mode == 'wien2k' or interface_mode == 'abinit':
         displacement_distance = 0.02
     else:
         displacement_distance = 0.01
@@ -775,7 +798,9 @@ if run_mode == 'displacements':
             rmts,
             settings.get_supercell_matrix(),
             filename=options.wien2k_struct_file)
-    else:
+    elif interface_mode == 'abinit':
+        abinit.write_supercells_with_displacements(supercell, cells_with_disps)
+    else:        
         vasp.write_supercells_with_displacements(supercell, cells_with_disps)
 
     if log_level > 0:

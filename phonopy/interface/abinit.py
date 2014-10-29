@@ -58,6 +58,31 @@ def write_abinit(filename, cell):
     f = open(filename, 'w')
     f.write(get_abinit_structure(cell))
 
+def write_supercells_with_displacements(supercell,
+                                        cells_with_displacements):
+    write_abinit("supercell.in", supercell)
+    for i, cell in enumerate(cells_with_displacements):
+        write_abinit("supercell-%03d.in" % (i + 1), cell)
+
+def get_forces_abinit(filename, num_atom):
+    f = open(filename)
+    for line in f:
+        if 'cartesian forces (eV/Angstrom)' in line:
+            break
+
+    forces = []
+    for line in f:
+        elems = line.split()
+        if len(elems) > 3:
+            forces.append([float(x) for x in elems[1:4]])
+        else:
+            return False
+
+        if len(forces) == num_atom:
+            break
+            
+    return forces
+
 def get_abinit_structure(cell):
     znucl = []
     numbers = cell.get_atomic_numbers()

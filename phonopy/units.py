@@ -62,4 +62,5 @@ VaspToTHz = sqrt(EV/AMU)/Angstrom/(2*pi)/1e12 # [THz] 15.633302
 VaspToCm =  VaspToTHz * THzToCm # [cm^-1] 521.47083
 EvTokJmol = EV / 1000 * Avogadro # [kJ/mol] 96.4853910
 Wien2kToTHz = sqrt(Rydberg/1000*EV/AMU)/(Bohr*1e-10)/(2*pi)/1e12 # [THz] 3.44595837
+AbinitToTHz = sqrt(EV/(AMU*Bohr))/Angstrom/(2*pi)/1e12 # [THz] 15.633302
 EVAngstromToGPa = EV * 1e21

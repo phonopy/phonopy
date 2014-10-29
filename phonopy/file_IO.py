@@ -36,44 +36,38 @@ import sys
 import StringIO
 import numpy as np
 import phonopy.interface.vasp as vasp
-import phonopy.interface.wien2k as wien2k
 from phonopy.structure.symmetry import Symmetry
 from phonopy.harmonic.force_constants import similarity_transformation
 from phonopy.structure.atoms import Atoms
 from phonopy.cui.settings import fracval
 
-# Constant
-Damping_Factor = 0.25
-
-# Utility to read file with ignoring blank lines
-def get_line_ignore_blank(f):
+def _get_line_ignore_blank(f):
     line = f.readline().strip()
     if line == '':
-        line = get_line_ignore_blank(f)
+        line = _get_line_ignore_blank(f)
     return line
 
-# Parse FORCE_SETS
 def parse_FORCE_SETS(is_translational_invariance=False, filename="FORCE_SETS"):
     f = open(filename, 'r')
-    return get_set_of_forces(f, is_translational_invariance)
+    return _get_set_of_forces(f, is_translational_invariance)
 
 def parse_FORCE_SETS_from_strings(strings, is_translational_invariance=False):
-    return get_set_of_forces(StringIO.StringIO(strings),
+    return _get_set_of_forces(StringIO.StringIO(strings),
                              is_translational_invariance)
 
-def get_set_of_forces(f, is_translational_invariance):
+def _get_set_of_forces(f, is_translational_invariance):
     set_of_forces = []
-    num_atom = int(get_line_ignore_blank(f))
-    num_displacements = int(get_line_ignore_blank(f))
+    num_atom = int(_get_line_ignore_blank(f))
+    num_displacements = int(_get_line_ignore_blank(f))
 
     for i in range(num_displacements):
-        line = get_line_ignore_blank(f)
+        line = _get_line_ignore_blank(f)
         atom_number = int(line)
-        line = get_line_ignore_blank(f).split()
+        line = _get_line_ignore_blank(f).split()
         displacement = np.array([float(x) for x in line])
         forces_tmp = []
         for j in range(num_atom):
-            line = get_line_ignore_blank(f).split()
+            line = _get_line_ignore_blank(f).split()
             forces_tmp.append(np.array([float(x) for x in line]))
         forces_tmp = np.array(forces_tmp, dtype='double')
 
@@ -90,7 +84,6 @@ def get_set_of_forces(f, is_translational_invariance):
     
     return dataset
 
-# Parse QPOINTS
 def parse_QPOINTS(filename="QPOINTS"):
     f = open(filename, 'r')
     num_qpoints = int(f.readline().strip())
@@ -99,14 +92,42 @@ def parse_QPOINTS(filename="QPOINTS"):
         qpoints.append([fracval(x) for x in f.readline().strip().split()])
     return np.array(qpoints)
 
-# Write FORCE_SETS for VASP
+def _get_drift_forces(forces, filename=None):
+    drift_force = np.sum(forces, axis=0) / len(forces)
+    if filename is None:
+        print "Drift force"
+    else:
+        print "Drift force of %s" % filename
+    print "%12.8f %12.8f %12.8f" % tuple(drift_force)
+    print "This drift force was subtracted from forces."
+
+    return drift_force
+    
+def write_FORCE_SETS_abinit(forces_filenames,
+                            displacements,
+                            num_atom,
+                            filename='FORCE_SETS'):
+    import phonopy.interface.abinit as abinit
+    for abinit_filename, disp in zip(forces_filenames,
+                                     displacements['first_atoms']):
+        abinit_forces = abinit.get_forces_abinit(abinit_filename, num_atom)
+        if abinit_forces is False:
+            return False
+            
+        drift_force = _get_drift_forces(abinit_forces)
+        disp['forces'] = np.array(abinit_forces) - drift_force
+
+    write_FORCE_SETS(displacements, filename=filename)
+    
+    return True
+    
 def write_FORCE_SETS_wien2k(forces_filenames,
                             displacements,
                             supercell,
                             filename='FORCE_SETS',
-                            is_zero_point=False,
                             is_distribute=True,
                             symprec=1e-5):
+    import phonopy.interface.wien2k as wien2k
 
     natom = supercell.get_number_of_atoms()
     lattice = supercell.get_cell()
@@ -131,13 +152,8 @@ def write_FORCE_SETS_wien2k(forces_filenames,
                 return False
             else:
                 force_set = wien2k_forces
-        
-        drift_force = np.sum(force_set, axis=0) / len(force_set)
-        print "Drift force of %s" % wien2k_filename
-        print "%12.8f %12.8f %12.8f" % tuple(drift_force)
-        print "This drift force was subtracted from forces."
-        print
 
+        drift_force = _get_drift_forces(force_set, filename=wien2k_filename)
         disp['forces'] = np.array(force_set) - drift_force
                 
     write_FORCE_SETS(displacements, filename=filename)
@@ -182,7 +198,7 @@ def write_FORCE_SETS_vasp(forces_filenames,
             print "%d" % (count + 1),
         count += 1
             
-        if not check_forces(zero_forces, num_atom, forces_filenames[0]):
+        if not _check_forces(zero_forces, num_atom, forces_filenames[0]):
             are_files_correct = False
     else:
         force_files = forces_filenames
@@ -200,7 +216,7 @@ def write_FORCE_SETS_vasp(forces_filenames,
             print "%d" % (count + 1),
         count += 1
         
-        if not check_forces(disp['forces'], num_atom, force_files[i]):
+        if not _check_forces(disp['forces'], num_atom, force_files[i]):
             are_files_correct = False
 
     if verbose:
@@ -212,7 +228,7 @@ def write_FORCE_SETS_vasp(forces_filenames,
 
     return are_files_correct
 
-def check_forces(forces, num_atom, filename):
+def _check_forces(forces, num_atom, filename):
     if len(forces) != num_atom:
         print " \"%s\" does not contain necessary information." % filename,
         return False
@@ -238,9 +254,6 @@ def write_FORCE_SETS(dataset, filename='FORCE_SETS', zero_forces=None):
 
         for f in forces[count]:
             fp.write("%15.10f %15.10f %15.10f\n" % (tuple(f)))
-
-def mycmp(x, y):
-    return cmp(x[0], y[0])
 
 def parse_disp_yaml(filename="disp.yaml", return_cell=False):
     try:
