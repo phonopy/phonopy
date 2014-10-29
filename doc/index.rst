@@ -46,6 +46,7 @@ Interfaces for calculators
 ===========================
 
 - :ref:`VASP interface <tutorial>` (:ref:`finite displacement method <reference_plk>`)
+- :ref:`Abinit interface <abinit_interface>` (:ref:`finite displacement method <reference_plk>`)
 - :ref:`Wien2k interface <wien2k_interface>` (:ref:`finite displacement method <reference_plk>`)
 - :ref:`VASP DFPT interface <vasp_dfpt_interface>` (force constants)
 - :ref:`FHI-aims interface <FHI_aims_interface>` (:ref:`finite displacement method <reference_plk>`)

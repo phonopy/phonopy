@@ -91,6 +91,21 @@ supercell.
 
 Usually the ``-f`` option is preferable to ``--fz``.
 
+.. _abinit_force_sets_option:
+
+Abinit interface
+^^^^^^^^^^^^^^^^
+
+``FORCE_SETS`` file is created from ``disp.yaml`` and Abinit output
+files (``*.out``). In the reading of forces in Abinit output files,
+forces in eV/Angstrom are read. The unit conversion factor is
+determined with this unit.
+
+::
+
+   % phonopy --abinit=unitcell.in -f disp-001/supercell.out disp-002/supercell.out  ...
+
+
 .. _wien2k_force_sets_option:
 
 WIEN2k interface
@@ -122,7 +137,6 @@ For more information, :ref:`wien2k_interface`.
 .. ::
 
 ..    % phonopy --wien2k=case.struct --fz case_000/case_000.scf case_001/case_001.scf ...
-
 
 
 Create ``FORCE_CONSTANTS``
@@ -209,7 +223,8 @@ calculated by
 :math:`\sqrt{\text{eV/AMU}}`/(:math:`\text{\AA}\cdot2\pi\cdot10^{12}`)
 (=15.633302) in SI base unit. When the ``wien2k`` option is specified,
 the default value is changed to 3.44595, which is the factor to
-convert from Wien2k to THz.
+convert from Wien2k to THz. In case that ``abinit`` option is invoked,
+the default value is changed to 21.49068 .
 
 When calculating thermal property, the factor to THz is
 required. Otherwise the calculated thermal properties have wrong
@@ -256,8 +271,8 @@ printed out and phonopy stops without going to phonon analysis.
 
    % phonopy --symmetry
 
-This tag can be used together with the ``--cell``, ``--wien2k``, or
-``--primitive_axis`` option.
+This tag can be used together with the ``--cell``, ``--abinit``,
+``--wien2k``, or ``--primitive_axis`` option.
 
 
 Input cell
@@ -272,7 +287,20 @@ input unit cell.
 
 ::
 
-   % phonopy --cell=UPOSCAR
+   % phonopy --cell=UPOSCAR band.conf
+
+.. _abinit_mode:
+
+``--abinit``
+~~~~~~~~~~~~
+
+Abinit mode is invoked with this option. This option has a variable of 
+a name of Abinit main input file, e.g.,
+
+::
+
+   % phonopy --abinit=unitcell.in band.conf
+
 
 .. _wien2k_mode:
 
@@ -289,7 +317,7 @@ the P lattice is supported**.  See more information
 
 ::
 
-   % phonopy --wien2k=case.struct
+   % phonopy --wien2k=case.struct band.conf
 
 
 .. |sflogo| image:: http://sflogo.sourceforge.net/sflogo.php?group_id=161614&type=1

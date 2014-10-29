@@ -7,7 +7,7 @@ The Wien2k-phonopy calculation works as follows:
 
 1) Read a Wien2k struct file with the P lattice format and create
    supercells with the Wien2k struct format of P lattice using
-   ``--wien2k option`` (:ref:`wien2k_mode`)::
+   ``--wien2k`` option (:ref:`wien2k_mode`)::
 
    % phonopy -d --dim="2 2 2" --wien2k=case.struct
 
@@ -55,7 +55,7 @@ The Wien2k-phonopy calculation works as follows:
 4) Run post-process of phonopy with the Wien2k unit cell struct file
    used in the step 1::
 
-   % phonopy --wien2k=case.struct [other-OPTIONS] [setting-file]
+   % phonopy --wien2k=case.struct --dim="2 2 2" [other-OPTIONS] [setting-file]
 
 Phonopy can read only the **P lattice format**. Therefore you have to
 convert your struct file to that with the P lattice format. This may

@@ -3,6 +3,11 @@
 Change Log
 ==========
 
+Oct-17-2014: Version 1.9.1.2
+-----------------------------
+
+* Abinit support. See :ref:`abinit_mode` and :ref:`abinit_force_sets_option`.
+
 Oct-17-2014: Version 1.9.1.1
 -----------------------------
 

@@ -171,8 +171,8 @@ post process of phonon calculation.
 
 Finite atomic displacement distance is set as specified value when
 creating supercells with displacements. The default displacement
-amplitude is 0.01 :math:`\textrm{\AA}`. When the ``wien2k`` option is
-specified, the default value is changed to 0.02 Bohr.
+amplitude is 0.01 :math:`\textrm{\AA}`, but when the ``wien2k`` or
+``abinit`` option is specified, the default value is 0.02 Bohr.
 
 ``DIAG``
 ~~~~~~~~~
