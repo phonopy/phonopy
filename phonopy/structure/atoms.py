@@ -79,15 +79,15 @@ class Atoms:
 
         # number --> symbol
         if not self.numbers is None:
-            self.numbers_to_symbols()
+            self._numbers_to_symbols()
 
         # symbol --> number
         elif not self.symbols is None:
-            self.symbols_to_numbers()
+            self._symbols_to_numbers()
 
         # symbol --> mass
         if self.symbols and (self.masses is None):
-            self.symbols_to_masses()
+            self._symbols_to_masses()
 
 
     def set_cell(self, cell):
@@ -97,8 +97,9 @@ class Atoms:
         return self.cell.copy()
 
     def set_positions(self, cart_positions):
-        self.scaled_positions = np.dot(cart_positions,
-                                        np.linalg.inv(self.cell))
+        self.scaled_positions = np.array(
+            np.dot(cart_positions, np.linalg.inv(self.cell)),
+            dtype='double', order='C')
 
     def get_positions(self):
         return np.dot(self.scaled_positions, self.cell)
@@ -143,17 +144,6 @@ class Atoms:
     def get_atomic_numbers(self):
         return self.numbers.copy()
 
-    def numbers_to_symbols(self):
-        self.symbols = [atom_data[n][1] for n in self.numbers]
-        
-    def symbols_to_numbers(self):
-        self.numbers = np.array([symbol_map[s]
-                                 for s in self.symbols])
-        
-    def symbols_to_masses(self):
-        self.masses = np.array([atom_data[symbol_map[s]][3]
-                                for s in self.symbols])
-
     def get_volume(self):
         return np.linalg.det(self.cell)
 
@@ -165,6 +155,17 @@ class Atoms:
                      symbols=self.symbols,
                      pbc=True)
         
+    def _numbers_to_symbols(self):
+        self.symbols = [atom_data[n][1] for n in self.numbers]
+        
+    def _symbols_to_numbers(self):
+        self.numbers = np.array([symbol_map[s]
+                                 for s in self.symbols])
+        
+    def _symbols_to_masses(self):
+        self.masses = np.array([atom_data[symbol_map[s]][3]
+                                for s in self.symbols])
+
 
 atom_data = [ 
     [  0, "X", "X", 0], # 0

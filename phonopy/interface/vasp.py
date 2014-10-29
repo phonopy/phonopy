@@ -186,7 +186,7 @@ def get_born_OUTCAR(poscar_filename="POSCAR",
     ucell = read_vasp(poscar_filename)
     outcar = open(outcar_filename)
 
-    borns, epsilon = read_born_and_epsilon(outcar)
+    borns, epsilon = _read_born_and_epsilon(outcar)
     num_atom = len(borns)
     assert num_atom == ucell.get_number_of_atoms()
     
@@ -196,8 +196,8 @@ def get_born_OUTCAR(poscar_filename="POSCAR",
         u_sym = Symmetry(ucell, is_symmetry=is_symmetry, symprec=symprec)
         point_sym = [similarity_transformation(lattice, r)
                      for r in u_sym.get_pointgroup_operations()]
-        epsilon = symmetrize_tensor(epsilon, point_sym)
-        borns = symmetrize_borns(borns, u_sym, lattice, positions, symprec)
+        epsilon = _symmetrize_tensor(epsilon, point_sym)
+        borns = _symmetrize_borns(borns, u_sym, lattice, positions, symprec)
         
     inv_smat = np.linalg.inv(supercell_matrix)
     scell = get_supercell(ucell,
@@ -215,7 +215,7 @@ def get_born_OUTCAR(poscar_filename="POSCAR",
     
     return reduced_borns, epsilon
 
-def read_born_and_epsilon(outcar):
+def _read_born_and_epsilon(outcar):
     borns = []
     while True:
         line = outcar.readline()
@@ -252,12 +252,12 @@ def read_born_and_epsilon(outcar):
 
     return borns, epsilon
 
-def symmetrize_borns(borns, u_sym, lattice, positions, symprec):
+def _symmetrize_borns(borns, u_sym, lattice, positions, symprec):
     borns_orig = borns.copy()
     for i, Z in enumerate(borns):
         site_sym = [similarity_transformation(lattice, r)
                     for r in u_sym.get_site_symmetry(i)]
-        Z = symmetrize_tensor(Z, site_sym)
+        Z = _symmetrize_tensor(Z, site_sym)
 
     rotations = u_sym.get_symmetry_operations()['rotations']
     translations = u_sym.get_symmetry_operations()['translations']
@@ -284,7 +284,7 @@ def symmetrize_borns(borns, u_sym, lattice, positions, symprec):
 
     return borns
     
-def symmetrize_tensor(tensor, symmetry_operations):
+def _symmetrize_tensor(tensor, symmetry_operations):
     sum_tensor = np.zeros_like(tensor)
     for sym in symmetry_operations:
         sum_tensor += similarity_transformation(sym, tensor)
@@ -293,47 +293,17 @@ def symmetrize_tensor(tensor, symmetry_operations):
 #
 # read VASP POSCAR
 #
-def expand_symbols(num_atoms, symbols=None):
-    expanded_symbols = []
-    is_symbols = True
-    if symbols is None:
-        is_symbols = False
-    else:
-        if len(symbols) != len(num_atoms):
-            is_symbols = False
-        else:
-            for s in symbols:
-                if not s in symbol_map:
-                    is_symbols = False
-                    break
-    
-    if is_symbols:
-        for s, num in zip(symbols, num_atoms):
-            expanded_symbols += [s] * num
-    else:
-        for i, num in enumerate(num_atoms):
-            expanded_symbols += [atom_data[i+1][1]] * num
-
-    return expanded_symbols
-
-def is_exist_symbols(symbols):
-    for s in symbols:
-        if not (s in symbol_map):
-            return False
-    return True
-
 def read_vasp(filename, symbols=None):
-    f = open(filename)
-    return get_atoms_from_poscar(f, symbols)
+    lines = open(filename).readlines()
+    return _get_atoms_from_poscar(lines, symbols)
 
 def read_vasp_from_strings(strings, symbols=None):
-    return get_atoms_from_poscar(StringIO.StringIO(strings), symbols)
+    return _get_atoms_from_poscar(
+        StringIO.StringIO(strings).readlines(), symbols)
 
-def get_atoms_from_poscar(f, symbols):
-    lines = f.readlines()
-
+def _get_atoms_from_poscar(lines, symbols):
     line1 = [x for x in lines[0].split()]
-    if is_exist_symbols(line1):
+    if _is_exist_symbols(line1):
         symbols = line1
 
     scale = float(lines[1])
@@ -351,7 +321,7 @@ def get_atoms_from_poscar(f, symbols):
         num_atoms = np.array([int(x) for x in lines[6].split()])
         line_at = 7
     
-    expaned_symbols = expand_symbols(num_atoms, symbols)
+    expaned_symbols = _expand_symbols(num_atoms, symbols)
 
     if lines[line_at][0].lower() == 's':
         line_at += 1
@@ -378,34 +348,58 @@ def get_atoms_from_poscar(f, symbols):
         
     return atoms
                    
+def _is_exist_symbols(symbols):
+    for s in symbols:
+        if not (s in symbol_map):
+            return False
+    return True
+
+def _expand_symbols(num_atoms, symbols=None):
+    expanded_symbols = []
+    is_symbols = True
+    if symbols is None:
+        is_symbols = False
+    else:
+        if len(symbols) != len(num_atoms):
+            is_symbols = False
+        else:
+            for s in symbols:
+                if not s in symbol_map:
+                    is_symbols = False
+                    break
+    
+    if is_symbols:
+        for s, num in zip(symbols, num_atoms):
+            expanded_symbols += [s] * num
+    else:
+        for i, num in enumerate(num_atoms):
+            expanded_symbols += [atom_data[i+1][1]] * num
+
+    return expanded_symbols
+
 #
 # write vasp POSCAR
 #
-def get_reduced_symbols(symbols):
-    reduced_symbols = []
-    for s in symbols:
-        if not (s in reduced_symbols):
-            reduced_symbols.append(s)
-    return reduced_symbols
 
-def sort_positions_by_symbols(symbols, positions):
-    reduced_symbols = get_reduced_symbols(symbols)
-    sorted_positions = []
-    sort_list = []
-    num_atoms = np.zeros(len(reduced_symbols), dtype=int)
-    for i, rs in enumerate(reduced_symbols):
-        for j, (s, p) in enumerate(zip(symbols, positions)):
-            if rs == s:
-                sorted_positions.append(p)
-                sort_list.append(j)
-                num_atoms[i] += 1
-    return num_atoms, reduced_symbols, np.array(sorted_positions), sort_list
+def get_scaled_positions_lines(scaled_positions):
+    lines = ""
+    for i, vec in enumerate(scaled_positions):
+        for x in (vec - np.rint(vec)):
+            if float('%20.16f' % x) < 0.0:
+                lines += "%20.16f" % (x + 1.0)
+            else:
+                lines += "%20.16f" % (x)
+        if i < len(scaled_positions) - 1:
+            lines += "\n"
 
+    return lines
+    
 def write_vasp(filename, atoms, direct=True):
-
-    num_atoms, symbols, scaled_positions, sort_list = \
-        sort_positions_by_symbols(atoms.get_chemical_symbols(),
-                                  atoms.get_scaled_positions())
+    (num_atoms,
+     symbols,
+     scaled_positions,
+     sort_list) = _sort_positions_by_symbols(atoms.get_chemical_symbols(),
+                                             atoms.get_scaled_positions())
     lines = ""     
     for s in symbols:
         lines += "%s " % s
@@ -416,16 +410,30 @@ def write_vasp(filename, atoms, direct=True):
     lines += ("%4d" * len(num_atoms)) % tuple(num_atoms)
     lines += "\n"
     lines += "Direct\n"
-    for vec in scaled_positions:
-        for x in (vec - np.rint(vec)):
-            if float('%20.16f' % x) < 0.0:
-                lines += "%20.16f" % (x + 1.0)
-            else:
-                lines += "%20.16f" % (x)
-        lines += "\n"
+    lines += get_scaled_positions_lines(scaled_positions)
 
     f = open(filename, 'w')
     f.write(lines)
+
+def _get_reduced_symbols(symbols):
+    reduced_symbols = []
+    for s in symbols:
+        if not (s in reduced_symbols):
+            reduced_symbols.append(s)
+    return reduced_symbols
+
+def _sort_positions_by_symbols(symbols, positions):
+    reduced_symbols = _get_reduced_symbols(symbols)
+    sorted_positions = []
+    sort_list = []
+    num_atoms = np.zeros(len(reduced_symbols), dtype=int)
+    for i, rs in enumerate(reduced_symbols):
+        for j, (s, p) in enumerate(zip(symbols, positions)):
+            if rs == s:
+                sorted_positions.append(p)
+                sort_list.append(j)
+                num_atoms[i] += 1
+    return num_atoms, reduced_symbols, np.array(sorted_positions), sort_list
 
 if __name__ == '__main__':
     import sys
