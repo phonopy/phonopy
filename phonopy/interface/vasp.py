@@ -393,8 +393,8 @@ def get_scaled_positions_lines(scaled_positions):
             lines += "\n"
 
     return lines
-    
-def write_vasp(filename, atoms, direct=True):
+
+def get_vasp_structure(atoms, direct=True):
     (num_atoms,
      symbols,
      scaled_positions,
@@ -412,6 +412,10 @@ def write_vasp(filename, atoms, direct=True):
     lines += "Direct\n"
     lines += get_scaled_positions_lines(scaled_positions)
 
+    return lines
+    
+def write_vasp(filename, atoms, direct=True):
+    lines = get_vasp_structure(atoms, direct=direct)
     f = open(filename, 'w')
     f.write(lines)
 
