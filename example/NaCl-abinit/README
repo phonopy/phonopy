@@ -1,0 +1,20 @@
+This is an example of Abinit interface.
+
+To create supercells with displacements:
+
+% phonopy --abinit=NaCl.in -d --dim="2 2 2"
+
+A perfect 2x2x2 supercell (supercell.in) and two 2x2x2 supercells
+(supercell-xxx.in) of the conventional unit cell written in NaCl.in
+are created. In addition, disp.yaml file is created. After force
+calculations with the crystal structures in supercell-xxx.in, it is
+needed to create FORCE_SETS file by
+
+% phonopy --abinit=NaCl.in -f supercell-001.out supercell-002.out
+
+Here .out files are supposed to contain the forces on atoms calculated
+by Abinit and filenames can be chosen freely. The disp.yaml file has
+to be put in the current directory. Now you can run phonon
+calculation, e.g.,
+
+% phonopy --abinit=NaCl.in -p band.conf
