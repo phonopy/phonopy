@@ -125,9 +125,8 @@ def get_pwscf_structure(cell, pp_filenames=None):
             atomic_species.append((symbol, m))
     
     lines = ""
-    lines += ("    ibrav = 0, nat = %d, ntyp = %d\n" %
+    lines += ("!    ibrav = 0, nat = %d, ntyp = %d\n" %
               (len(positions), len(unique_symbols)))
-    lines += "\n"
     lines += "CELL_PARAMETERS bohr\n"
     lines += ((" %20.16f" * 3 + "\n") * 3) % tuple(lattice.ravel())
     lines += "ATOMIC_SPECIES\n"
@@ -170,27 +169,22 @@ class PwscfIn:
     def _collect(self, lines):
         elements = {}
         tag = None
-        prevent_lowercase = False
-        for line in lines:
+        for line_tmp in lines:
+            line = line_tmp.split('!')[0]
             if ('atomic_positions' in line.lower() or
                 'cell_parameters' in line.lower()):
                 if len(line.split()) == 1:
-                    words = [line.lower().split(), 'alat']
+                    words = [line.lower().strip(), 'alat']
                 else:
                     words = line.lower().split()[:2]
             elif 'atomic_species' in line.lower():
                 words = line.lower().split()
-                prevent_lowercase = True
             else:
                 line_replaced = line.replace('=', ' ').replace(',', ' ')
-                if prevent_lowercase:
-                    words = line_replaced.split()
-                    prevent_lowercase = False
-                else:
-                    words = line_replaced.lower().split()
+                words = line_replaced.split()
             for val in words:
-                if val in self._set_methods:
-                    tag = val
+                if val.lower() in self._set_methods:
+                    tag = val.lower()
                     elements[tag] = []
                 elif tag is not None:
                     elements[tag].append(val)
@@ -202,7 +196,6 @@ class PwscfIn:
                     
         for tag, self._values in elements.iteritems():
             if tag == 'ibrav' or tag == 'nat' or tag == 'ntyp':
-                self._values = elements[tag]
                 self._set_methods[tag]()
 
         for tag, self._values in elements.iteritems():
@@ -256,7 +249,7 @@ class PwscfIn:
         positions = []
         for i in range(natom):
             positions.append(
-                [pos_vals[i * 4].capitalize(),
+                [pos_vals[i * 4],
                  [float(x) for x in pos_vals[i * 4 + 1:i * 4 + 4]]])
             
         self._tags['atomic_positions'] = positions
@@ -271,7 +264,7 @@ class PwscfIn:
         
         for i in range(num_types):
             species.append(
-                [self._values[i * 3].capitalize(),
+                [self._values[i * 3],
                  float(self._values[i * 3 + 1]),
                  self._values[i * 3 + 2]])
             

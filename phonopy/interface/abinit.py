@@ -113,7 +113,8 @@ class AbinitIn:
     def _collect(self, lines):
         elements = {}
         tag = None
-        for line in lines:
+        for line_tmp in lines:
+            line = line_tmp.replace('!', '#').split('#')[0]
             for val in [x.lower() for x in line.split()]:
                 if val in self._set_methods:
                     tag = val
@@ -128,7 +129,6 @@ class AbinitIn:
                     
         for tag, self._values in elements.iteritems():
             if tag == 'natom' or tag == 'ntypat':
-                self._values = elements[tag]
                 self._set_methods[tag]()
 
         for tag, self._values in elements.iteritems():
