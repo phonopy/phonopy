@@ -34,9 +34,10 @@ A procedure of Abinit-phonopy calculation is as follows:
 
 2) Calculate forces on atoms in the supercells with
    displacements. Calculation specification variables have to be added
-   to supercell-xxx.in files. Crystal structure is not allowed to
-   relaxed, because atomic forces induced by a small atomic
-   displacement are what we need for phonon calculation.
+   to ``supercell-xxx.in`` files. Crystal structure is not allowed to
+   relaxed in the force calculations, because atomic forces induced by
+   a small atomic displacement are what we need for phonon
+   calculation.
 
 3) Create ``FORCE_SETS`` by
 
@@ -45,7 +46,7 @@ A procedure of Abinit-phonopy calculation is as follows:
      % phonopy --abinit=unitcell.in -f disp-001/supercell-001.out disp-002/supercell-002.out  ...
 
    To run this command, ``disp.yaml`` has to be located in the current
-   directory because atomic displacements are written into the
+   directory because the atomic displacements are written into the
    FORCE_SETS file. See some more detail at
    :ref:`abinit_force_sets_option`. An example is found in
    ``example/NaCl-abinit``.

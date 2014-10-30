@@ -3,6 +3,12 @@
 Change Log
 ==========
 
+Oct-31-2014: Version 1.9.1.3
+-----------------------------
+
+* Experimental support for Abinit. See :ref:`pwscf_mode` and
+  :ref:`pwscf_force_sets_option`.
+
 Oct-29-2014: Version 1.9.1.2
 -----------------------------
 

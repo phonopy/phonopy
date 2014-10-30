@@ -106,6 +106,20 @@ determined with this unit.
    % phonopy --abinit=unitcell.in -f disp-001/supercell.out disp-002/supercell.out  ...
 
 
+.. _pwscf_force_sets_option:
+
+Pwscf interface
+^^^^^^^^^^^^^^^^
+
+``FORCE_SETS`` file is created from ``disp.yaml`` and Pwscf output
+files.
+
+::
+
+   % phonopy --pwscf=unitcell.in -f disp-001/supercell.out disp-002/supercell.out  ...
+
+Here ``*.out`` files are the saved texts of standard outputs of Pwscf calculations.
+   
 .. _wien2k_force_sets_option:
 
 WIEN2k interface
@@ -218,14 +232,22 @@ Unit conversion factor
 ~~~~~~~~~~~~
 
 Unit conversion factor of frequency from input values to your favorite
-unit is specified. The default value is that of VASP to THz, which is
-calculated by
+unit is specified. Default value is used to convert to THz. In the
+case of VASP mode, it is calculated by
 :math:`\sqrt{\text{eV/AMU}}`/(:math:`\text{\AA}\cdot2\pi\cdot10^{12}`)
-(=15.633302) in SI base unit. When the ``wien2k`` option is specified,
-the default value is changed to 3.44595, which is the factor to
-convert from Wien2k to THz. In case that ``abinit`` option is invoked,
-the default value is changed to 21.49068 .
+(=15.633302) in SI base unit. The default conversion factors for
+``wien2k``, ``abinit``, and ``pwscf`` are 3.44595, 21.49068 and
+108.9708, respectively. These are determined by the unit systems as
+follows:
 
+::
+
+    Physical units: energy,  distance,  atomic mass, force
+    vasp          : eV,      Angstrom,  AMU,         eV/Angstrom
+    wien2k        : Ry,      au,        AMU,         mRy/au
+    pwscf         : Ry,      au,        AMU,         Ry/au
+    abinit        : hartree, au(=bohr), AMU,         eV/Angstrom
+   
 When calculating thermal property, the factor to THz is
 required. Otherwise the calculated thermal properties have wrong
 units. In the case of band structure plot, any factor can be used,
@@ -272,7 +294,7 @@ printed out and phonopy stops without going to phonon analysis.
    % phonopy --symmetry
 
 This tag can be used together with the ``--cell``, ``--abinit``,
-``--wien2k``, or ``--primitive_axis`` option.
+``--pwscf``, ``--wien2k``, or ``--primitive_axis`` option.
 
 
 Input cell
@@ -294,13 +316,26 @@ input unit cell.
 ``--abinit``
 ~~~~~~~~~~~~
 
-Abinit mode is invoked with this option. This option has a variable of 
-a name of Abinit main input file, e.g.,
+Abinit mode is invoked with this option. This option is used with an
+Abinit main input file name that contains the unit cell crystal
+structure, e.g.,
 
 ::
 
    % phonopy --abinit=unitcell.in band.conf
 
+.. _pwscf_mode:
+
+``--pwscf``
+~~~~~~~~~~~~
+
+Pwscf mode is invoked with this option. This option is used with a
+Pwscf input file name that contains the unit cell crystal structure,
+e.g.,
+
+::
+
+   % phonopy --pwscf=unitcell.in band.conf
 
 .. _wien2k_mode:
 
