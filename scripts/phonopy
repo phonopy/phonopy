@@ -386,7 +386,8 @@ if log_level > 0:
 #
 # Physical units: energy,  distance,  atomic mass, force
 # vasp          : eV,      Angstrom,  AMU,         eV/Angstrom
-# wien2k        : Ry,      au,        AMU,         Ry/au
+# wien2k        : Ry,      au,        AMU,         mRy/au
+# pwscf         : Ry,      au,        AMU,         Ry/au
 # abinit        : hartree, au(=bohr), AMU,         eV/Angstrom
 # --factor: Frequency conversion factor
 #
@@ -401,7 +402,7 @@ elif options.abinit_struct_file:
 elif options.pwscf_struct_file:
     interface_mode = 'pwscf'
     import phonopy.interface.pwscf as pwscf
-    factor = Wien2kToTHz
+    factor = PwscfToTHz
 else:
     interface_mode = 'vasp'
     import phonopy.interface.vasp as vasp
@@ -450,7 +451,9 @@ if options.force_sets_mode or options.force_sets_zero_mode:
     if file_exists('disp.yaml', log_level):
         if interface_mode == 'vasp':
             displacements = file_IO.parse_disp_yaml('disp.yaml')
-        if interface_mode == 'wien2k' or interface_mode == 'abinit':
+        if (interface_mode == 'wien2k' or
+            interface_mode == 'abinit' or
+            interface_mode == 'pwscf'):
             displacements, supercell = file_IO.parse_disp_yaml(
                 'disp.yaml', return_cell=True)
             

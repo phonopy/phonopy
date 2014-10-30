@@ -110,7 +110,8 @@ def write_FORCE_SETS_abinit(forces_filenames,
     hook = 'cartesian forces (eV/Angstrom)'
     for abinit_filename, disp in zip(forces_filenames,
                                      displacements['first_atoms']):
-        abinit_forces = _collect_forces(abinit_filename, num_atom, hook)
+        f = open(abinit_filename)
+        abinit_forces = _collect_forces(f, num_atom, hook, [1, 2, 3])
         if not abinit_forces:
             return False
             
@@ -128,7 +129,10 @@ def write_FORCE_SETS_pwscf(forces_filenames,
     hook = 'Forces acting on atoms'
     for pwscf_filename, disp in zip(forces_filenames,
                                     displacements['first_atoms']):
-        pwscf_forces = _iter_collect_forces(pwscf_filename, num_atom, hook)
+        pwscf_forces = _iter_collect_forces(pwscf_filename,
+                                            num_atom,
+                                            hook,
+                                            [6, 7, 8])
         drift_force = _get_drift_forces(pwscf_forces)
         disp['forces'] = np.array(pwscf_forces) - drift_force
 
@@ -136,32 +140,39 @@ def write_FORCE_SETS_pwscf(forces_filenames,
     
     return True
 
-def _collect_forces(filename, num_atom, hook):
-    f = open(filename)
+def _collect_forces(f, num_atom, hook, force_pos):
     for line in f:
         if hook in line:
             break
 
     forces = []
     for line in f:
+        if line.strip() == '':
+            continue
+            
         elems = line.split()
-        if len(elems) > 3:
-            forces.append([float(x) for x in elems[1:4]])
+        if len(elems) > force_pos[2]:
+            forces.append([float(elems[i]) for i in force_pos])
+            # calculation = 'scf'
+            # forces.append([float(x) for x in elems[6:9]])
         else:
             return False
 
         if len(forces) == num_atom:
             break
-            
+
     return forces
 
-def _iter_collect_forces(filename, num_atom, hook, max_iter=1000):
+def _iter_collect_forces(filename, num_atom, hook, force_pos, max_iter=1000):
+    f = open(filename)
     forces = []
     prev_forces = []
+
     for i in range(max_iter):
-        forces = _collect_forces(filename, num_atom, hook)
+        forces = _collect_forces(f, num_atom, hook, force_pos)
         if not forces:
             forces = prev_forces[:]
+            break
         else:
             prev_forces = forces[:]
 
