@@ -107,11 +107,11 @@ def write_FORCE_SETS_abinit(forces_filenames,
                             displacements,
                             num_atom,
                             filename='FORCE_SETS'):
-    import phonopy.interface.abinit as abinit
+    hook = 'cartesian forces (eV/Angstrom)'
     for abinit_filename, disp in zip(forces_filenames,
                                      displacements['first_atoms']):
-        abinit_forces = abinit.get_forces_abinit(abinit_filename, num_atom)
-        if abinit_forces is False:
+        abinit_forces = _collect_forces(abinit_filename, num_atom, hook)
+        if not abinit_forces:
             return False
             
         drift_force = _get_drift_forces(abinit_forces)
@@ -120,6 +120,55 @@ def write_FORCE_SETS_abinit(forces_filenames,
     write_FORCE_SETS(displacements, filename=filename)
     
     return True
+
+def write_FORCE_SETS_pwscf(forces_filenames,
+                           displacements,
+                           num_atom,
+                           filename='FORCE_SETS'):
+    hook = 'Forces acting on atoms'
+    for pwscf_filename, disp in zip(forces_filenames,
+                                    displacements['first_atoms']):
+        pwscf_forces = _iter_collect_forces(pwscf_filename, num_atom, hook)
+        drift_force = _get_drift_forces(pwscf_forces)
+        disp['forces'] = np.array(pwscf_forces) - drift_force
+
+    write_FORCE_SETS(displacements, filename=filename)
+    
+    return True
+
+def _collect_forces(filename, num_atom, hook):
+    f = open(filename)
+    for line in f:
+        if hook in line:
+            break
+
+    forces = []
+    for line in f:
+        elems = line.split()
+        if len(elems) > 3:
+            forces.append([float(x) for x in elems[1:4]])
+        else:
+            return False
+
+        if len(forces) == num_atom:
+            break
+            
+    return forces
+
+def _iter_collect_forces(filename, num_atom, hook, max_iter=1000):
+    forces = []
+    prev_forces = []
+    for i in range(max_iter):
+        forces = _collect_forces(filename, num_atom, hook)
+        if not forces:
+            forces = prev_forces[:]
+        else:
+            prev_forces = forces[:]
+
+    if i == max_iter - 1:
+        print "Reached to max number of iterations (%d)." % max_iter
+        
+    return forces
     
 def write_FORCE_SETS_wien2k(forces_filenames,
                             displacements,

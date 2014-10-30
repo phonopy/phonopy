@@ -152,6 +152,7 @@ parser.set_defaults(
     modulation=None,
     primitive_axis=None,
     projection_direction=None,
+    pwscf_struct_file=None,
     qpoints=None,
     q_direction=None,
     quiet=False,
@@ -292,6 +293,9 @@ parser.add_option("--pt", "--projected_thermal_property",
                   dest="is_projected_thermal_properties",
                   action="store_true",
                   help="Output projected thermal properties")
+parser.add_option("--pwscf", dest="pwscf_struct_file",
+                  action="store", type="string",
+                  help="Read Pwscf structure from .in file", metavar="FILE")
 parser.add_option("-q", "--quiet", dest="quiet",
                   action="store_true",
                   help="Print out smallest information")
@@ -377,16 +381,31 @@ if log_level > 0:
     print_phononpy()
     print_version(phonopy_version)
 
+#
 # Phonopy interface mode
+#
+# Physical units: energy,  distance,  atomic mass, force
+# vasp          : eV,      Angstrom,  AMU,         eV/Angstrom
+# wien2k        : Ry,      au,        AMU,         Ry/au
+# abinit        : hartree, au(=bohr), AMU,         eV/Angstrom
+# --factor: Frequency conversion factor
+#
 if options.wien2k_struct_file:
     interface_mode = 'wien2k'
     import phonopy.interface.wien2k as wien2k
+    factor = Wien2kToTHz
 elif options.abinit_struct_file:
     interface_mode = 'abinit'
     import phonopy.interface.abinit as abinit
+    factor = AbinitToTHz
+elif options.pwscf_struct_file:
+    interface_mode = 'pwscf'
+    import phonopy.interface.pwscf as pwscf
+    factor = Wien2kToTHz
 else:
     interface_mode = 'vasp'
     import phonopy.interface.vasp as vasp
+    factor = VaspToTHz
 
 ######################################################
 # Create FORCE_CONSTANTS (--fc or --force_constants) #
@@ -466,6 +485,16 @@ if options.force_sets_mode or options.force_sets_zero_mode:
             supercell.get_number_of_atoms(),
             filename='FORCE_SETS')
         
+    if interface_mode == 'pwscf':
+        print "**********************************************************"
+        print "****     Pwscf FORCE_SETS support is experimental.    ****"
+        print "****        Your feedback would be appreciated.       ****"
+        print "**********************************************************"
+        is_created = file_IO.write_FORCE_SETS_pwscf(
+            args,
+            displacements,
+            supercell.get_number_of_atoms(),
+            filename='FORCE_SETS')
         
     if interface_mode == 'wien2k':
         print "**********************************************************"
@@ -504,6 +533,10 @@ if interface_mode == 'vasp':
 if interface_mode == 'abinit':
     if file_exists(options.abinit_struct_file, log_level):
         unitcell = abinit.read_abinit(options.abinit_struct_file)
+
+if interface_mode == 'pwscf':
+    if file_exists(options.pwscf_struct_file, log_level):
+        unitcell, pp_filenames = pwscf.read_pwscf(options.pwscf_struct_file)
 
 if interface_mode == 'wien2k':
     if file_exists(options.wien2k_struct_file, log_level):
@@ -548,25 +581,16 @@ else:
     settings = phonopy_conf.get_settings()
 
 run_mode = settings.get_run_mode()
-    
-# Physical units: energy,  distance,  atomic mass, force
-# vasp          : eV,      Angstrom,  AMU,         eV/Angstrom
-# wien2k        : Ry,      au,        AMU,         Ry/au
-# abinit        : hartree, au(=bohr), AMU,         eV/Angstrom
-# --factor: Frequency conversion factor
-if options.factor is None:
-    if interface_mode == 'wien2k':
-        factor = Wien2kToTHz
-    elif interface_mode == 'abinit':
-        factor = AbinitToTHz
-    else:
-        factor = VaspToTHz
-else:
+
+# --factor (overwrite default factor for calculators)
+if options.factor is not None:
     factor = options.factor
 
 # --amplitude
 if settings.get_displacement_distance() is None:
-    if interface_mode == 'wien2k' or interface_mode == 'abinit':
+    if (interface_mode == 'wien2k' or
+        interface_mode == 'abinit' or
+        interface_mode == 'pwscf'):
         displacement_distance = 0.02
     else:
         displacement_distance = 0.01
@@ -800,6 +824,10 @@ if run_mode == 'displacements':
             filename=options.wien2k_struct_file)
     elif interface_mode == 'abinit':
         abinit.write_supercells_with_displacements(supercell, cells_with_disps)
+    elif interface_mode == 'pwscf':
+        pwscf.write_supercells_with_displacements(supercell,
+                                                  cells_with_disps,
+                                                  pp_filenames)
     else:        
         vasp.write_supercells_with_displacements(supercell, cells_with_disps)
 
