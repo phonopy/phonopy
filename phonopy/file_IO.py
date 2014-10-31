@@ -33,6 +33,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import sys
+import os
 import StringIO
 import numpy as np
 import phonopy.interface.vasp as vasp
@@ -41,6 +42,105 @@ from phonopy.harmonic.force_constants import similarity_transformation
 from phonopy.structure.atoms import Atoms
 from phonopy.cui.settings import fracval
 
+def create_FORCE_CONSTANTS(filename, options, log_level):
+    fc_and_atom_types = read_force_constant_vasprun_xml(filename)
+    if not fc_and_atom_types:
+        print
+        print "\'%s\' dones not contain necessary information." % filename
+        return 1
+
+    force_constants, atom_types = fc_and_atom_types
+    if options.is_hdf5:
+        try:
+            import h5py
+        except ImportError:
+            print
+            print "You need to install python-h5py."
+            return 1
+    
+        write_force_constants_to_hdf5(force_constants)
+        if log_level > 0:
+            print "force_constants.hdf5 has been created from vasprun.xml."
+    else:
+        write_FORCE_CONSTANTS(force_constants)
+        if log_level > 0:
+            print "FORCE_CONSTANTS has been created from vasprun.xml."
+
+    if log_level > 0:
+        print "Atom types:", atom_types
+    return 0
+
+def create_FORCE_SETS(interface_mode,
+                      force_filenames,
+                      options,
+                      log_level):
+    if interface_mode == 'vasp':
+        displacements = parse_disp_yaml('disp.yaml')
+    if (interface_mode == 'wien2k' or
+        interface_mode == 'abinit' or
+        interface_mode == 'pwscf'):
+        displacements, supercell = parse_disp_yaml(
+            'disp.yaml', return_cell=True)
+            
+    num_disp_files = len(force_filenames)
+    if options.force_sets_zero_mode:
+        num_disp_files -= 1
+    if len(displacements['first_atoms']) != num_disp_files:
+        print
+        print ("Number of files to be read don't match "
+               "to number of displacements in disp.yaml.")
+        return 1
+
+    if interface_mode == 'vasp':
+        is_created = write_FORCE_SETS_vasp(
+            force_filenames,
+            displacements,
+            filename='FORCE_SETS',
+            is_zero_point=options.force_sets_zero_mode)
+
+    if interface_mode == 'abinit':
+        print "**********************************************************"
+        print "****    Abinit FORCE_SETS support is experimental.    ****"
+        print "****        Your feedback would be appreciated.       ****"
+        print "**********************************************************"
+        is_created = write_FORCE_SETS_abinit(
+            force_filenames,
+            displacements,
+            supercell.get_number_of_atoms(),
+            filename='FORCE_SETS')
+        
+    if interface_mode == 'pwscf':
+        print "**********************************************************"
+        print "****     Pwscf FORCE_SETS support is experimental.    ****"
+        print "****        Your feedback would be appreciated.       ****"
+        print "**********************************************************"
+        is_created = write_FORCE_SETS_pwscf(
+            force_filenames,
+            displacements,
+            supercell.get_number_of_atoms(),
+            filename='FORCE_SETS')
+        
+    if interface_mode == 'wien2k':
+        print "**********************************************************"
+        print "****    Wien2k FORCE_SETS support is experimental.    ****"
+        print "****        Your feedback would be appreciated.       ****"
+        print "**********************************************************"
+        is_created = write_FORCE_SETS_wien2k(
+            force_filenames,
+            displacements,
+            supercell,
+            filename='FORCE_SETS',
+            is_distribute=(not options.is_wien2k_p1),
+            symprec=options.symprec)
+
+    if log_level > 0:
+        if is_created:
+            print "FORCE_SETS has been created."
+        else:
+            print "FORCE_SETS could not be created."
+
+    return 0
+            
 def _get_line_ignore_blank(f):
     line = f.readline().strip()
     if line == '':

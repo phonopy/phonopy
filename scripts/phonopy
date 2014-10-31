@@ -95,14 +95,100 @@ def file_exists(filename, log_level):
         if log_level > 0:
             print_error()
         sys.exit(1)
+    
+def print_cells(phonon):
+    supercell = phonon.get_supercell()
+    unitcell = phonon.get_unitcell()
+    primitive = phonon.get_primitive()
+    p2p_map = primitive.get_primitive_to_primitive_map()
+    mapping = np.array(
+        [p2p_map[x] for x in primitive.get_supercell_to_primitive_map()],
+        dtype='intc')
+    s_indep_atoms = phonon.get_symmetry().get_independent_atoms()
+    p_indep_atoms = mapping[s_indep_atoms]
+    if unitcell.get_number_of_atoms() == primitive.get_number_of_atoms():
+        print "------------------------------ unit cell ----------------------------------"
+        print_cell(primitive, stars=p_indep_atoms)
+    else:
+        u2s_map = supercell.get_unitcell_to_supercell_map()
+        print "---------------------------- primitive cell -------------------------------"
+        print_cell(primitive, stars=p_indep_atoms)
+        print "------------------------------ unit cell ----------------------------------"
+        u2u_map = supercell.get_unitcell_to_unitcell_map()
+        u_indep_atoms = [u2u_map[x] for x in s_indep_atoms]
+        print_cell(unitcell, mapping=mapping[u2s_map], stars=u_indep_atoms)
+    print "------------------------------ supercell ----------------------------------"
+    print_cell(supercell, mapping=mapping, stars=s_indep_atoms)
+    print "---------------------------------------------------------------------------"
 
+def print_settings(settings):
+    run_mode = settings.get_run_mode()
+    if run_mode== 'band':
+        print "Band structure mode"
+    if run_mode == 'mesh':
+        print "Mesh sampling mode"
+    if run_mode == 'anime':
+        print "Animation mode"
+    if run_mode == 'modulation':
+        print "Modulation mode"
+    if run_mode == 'irreps':
+        print "Ir-representation mode"
+    if run_mode == 'qpoints':
+        print "QPOINTS mode",
+        if settings.get_write_dynamical_matrices():
+            print "(dynamical matrices written out)"
+        else:
+            print
+    if (run_mode == 'band' or
+        run_mode == 'mesh' or
+        run_mode == 'qpoints') and settings.get_is_group_velocity():
+        print "  With group velocity calculation",
+        gv_delta_q = settings.get_group_velocity_delta_q()
+        if gv_delta_q is not None:
+            print "(dq=%3.1e)" % gv_delta_q
+        else:
+            print
+    if run_mode == 'displacements':
+        print "Creating displacements"
+        if not settings.get_is_plusminus_displacement() == 'auto':
+            print "  Plus Minus displacement: ",
+            if settings.get_is_plusminus_displacement():
+                print "full plus minus directions"
+            else:
+                print "only one direction"
+        if not settings.get_is_diagonal_displacement():
+            print "  Diagonal displacement: off"
+
+    print "Settings:"
+    if settings.get_is_nac():
+        print "  Non-analytical term correction: on"
+    if settings.get_fc_spg_symmetry():
+        print "  Enforce space group symmetry to force constants: on"
+    if settings.get_fc_symmetry_iteration() > 0:
+        print ("  Force constants symmetrization: %d times" %
+               settings.get_fc_symmetry_iteration())
+    if run_mode == 'mesh':
+        print "  Sampling mesh: ", np.array(settings.get_mesh()[0])
+
+    if (np.diag(np.diag(settings.get_supercell_matrix())) \
+            - settings.get_supercell_matrix()).any():
+        print "  Supercell matrix:"
+        for v in settings.get_supercell_matrix():
+            print "    ", v
+    else:
+        print "  Supercell: ", np.diag(settings.get_supercell_matrix())
+    if settings.get_primitive_matrix() is not None:
+        print "  Primitive axis:"
+        for v in settings.get_primitive_matrix():
+            print "    ", v
+            
 #################
 # Parse options #
 #################
 
 parser = OptionParser()
 parser.set_defaults(
-    abinit_struct_file=None,
+    abinit_mode=False,
     anime=None,
     band_indices=None,
     band_paths=None,
@@ -152,7 +238,7 @@ parser.set_defaults(
     modulation=None,
     primitive_axis=None,
     projection_direction=None,
-    pwscf_struct_file=None,
+    pwscf_mode=False,
     qpoints=None,
     q_direction=None,
     quiet=False,
@@ -164,13 +250,12 @@ parser.set_defaults(
     tmax=None,
     tmin=None,
     tstep=None,
-    cell_poscar=None,
+    cell_filename=None,
     verbose=False,
-    wien2k_struct_file=None)
+    wien2k_mode=False)
 
-parser.add_option("--abinit", dest="abinit_struct_file",
-                  action="store", type="string",
-                  help="Read Abinit structure from .in file", metavar="FILE")
+parser.add_option("--abinit", dest="abinit_mode",
+                  action="store_true", help="Invoke Abinit mode")
 parser.add_option("--amplitude", dest="displacement_distance", type="float",
                   help="Distance of displacements")
 parser.add_option("--anime", dest="anime",
@@ -180,13 +265,12 @@ parser.add_option("--band", dest="band_paths",
                   action="store", type="string",
                   help="Same behavior as BAND tag")
 parser.add_option("--band_connection", dest="is_band_connection",
-                  action="store_true",
-                  help="Treat band crossings")
+                  action="store_true", help="Treat band crossings")
 parser.add_option("--band_points", dest="band_points",
                   type="int", help="Number of points calculated on a band segment in the band structure mode")
 parser.add_option("--bi", "--band_indices", dest="band_indices", type="string",
                   help="Band indices to be included to calcualte thermal properties")
-parser.add_option("-c", "--cell", dest="cell_poscar",
+parser.add_option("-c", "--cell", dest="cell_filename",
                   action="store", type="string",
                   help="Read unit cell", metavar="FILE")
 parser.add_option("--irreps", "--irreps_qpoint", dest="irreps_qpoint",
@@ -293,9 +377,8 @@ parser.add_option("--pt", "--projected_thermal_property",
                   dest="is_projected_thermal_properties",
                   action="store_true",
                   help="Output projected thermal properties")
-parser.add_option("--pwscf", dest="pwscf_struct_file",
-                  action="store", type="string",
-                  help="Read Pwscf structure from .in file", metavar="FILE")
+parser.add_option("--pwscf", dest="pwscf_mode",
+                  action="store_true", help="Invoke Pwscf mode")
 parser.add_option("-q", "--quiet", dest="quiet",
                   action="store_true",
                   help="Print out smallest information")
@@ -347,9 +430,8 @@ parser.add_option("--tolerance", dest="symprec", type="float",
 parser.add_option("-v", "--verbose", dest="verbose",
                   action="store_true",
                   help="Detailed information is shown.")
-parser.add_option("--wien2k", dest="wien2k_struct_file",
-                  action="store", type="string",
-                  help="Read Wien2k struct file", metavar="FILE")
+parser.add_option("--wien2k", dest="wien2k_mode",
+                  action="store_true", help="Invoke Wien2k mode")
 parser.add_option("--wien2k_p1", dest="is_wien2k_p1",
                   action="store_true",
                   help="Assume Wien2k structs with displacements are P1")
@@ -363,10 +445,6 @@ parser.add_option("--writedm", dest="write_dynamical_matrices",
 (options, args) = parser.parse_args()
 option_list = parser.option_list
 
-if options.is_graph_save:
-    import matplotlib
-    matplotlib.use('Agg')            
-
 # Set log level
 log_level = 1
 if options.verbose:
@@ -376,11 +454,6 @@ if options.quiet or options.is_check_symmetry:
 if options.loglevel is not None:
     log_level=options.loglevel
 
-# Show title
-if log_level > 0:
-    print_phononpy()
-    print_version(phonopy_version)
-
 #
 # Phonopy interface mode
 #
@@ -389,17 +462,16 @@ if log_level > 0:
 # wien2k        : Ry,      au,        AMU,         mRy/au
 # pwscf         : Ry,      au,        AMU,         Ry/au
 # abinit        : hartree, au(=bohr), AMU,         eV/Angstrom
-# --factor: Frequency conversion factor
 #
-if options.wien2k_struct_file:
+if options.wien2k_mode:
     interface_mode = 'wien2k'
     import phonopy.interface.wien2k as wien2k
     factor = Wien2kToTHz
-elif options.abinit_struct_file:
+elif options.abinit_mode:
     interface_mode = 'abinit'
     import phonopy.interface.abinit as abinit
     factor = AbinitToTHz
-elif options.pwscf_struct_file:
+elif options.pwscf_mode:
     interface_mode = 'pwscf'
     import phonopy.interface.pwscf as pwscf
     factor = PwscfToTHz
@@ -408,170 +480,52 @@ else:
     import phonopy.interface.vasp as vasp
     factor = VaspToTHz
 
-######################################################
-# Create FORCE_CONSTANTS (--fc or --force_constants) #
-######################################################
-if options.force_constants_mode:
-    fc_and_atom_types = file_IO.read_force_constant_vasprun_xml(args[0])
-    if not fc_and_atom_types:
-        print_error_message(
-            "\'%s\' dones not contain necessary information." % args[0])
-        if log_level > 0:
-            print_end()
-        sys.exit(0)
+# Show title
+if log_level > 0:
+    print_phononpy()
+    print_version(phonopy_version)
 
-    force_constants, atom_types = fc_and_atom_types
-    if options.is_hdf5:
-        try:
-            import h5py
-        except ImportError:
-            print_error_message("You need to install python-h5py.")
-            if log_level > 0:
-                print_end()
-            sys.exit(1)
+# Attention
+if (interface_mode == 'wien2k' or
+    interface_mode == 'abinit' or
+    interface_mode == 'pwscf'):
+    print "The way to specify --%s option is changed." % interface_mode
+    print "Previously:"
+    print "%% phonopy --%s=unitcell_filename ..." % interface_mode
+    print "Currently:"
+    print "%% phonopy --%s -c unitcell_filename ..." % interface_mode
+    print "See more detain in the phonopy manual."
     
-        file_IO.write_force_constants_to_hdf5(force_constants)
-        if log_level > 0:
-            print "force_constants.hdf5 has been created from vasprun.xml."
-    else:
-        file_IO.write_FORCE_CONSTANTS(force_constants)
-        if log_level > 0:
-            print "FORCE_CONSTANTS has been created from vasprun.xml."
-
-    if log_level > 0:
-        print "Atom types:", atom_types
-        print_end()
-    sys.exit(0)
-
-###################################################
-# Create FORCE_SETS for VASP (-f or --force_sets) #
-###################################################
+    
+# Create FORCE_SETS for VASP (-f or --force_sets)
 if options.force_sets_mode or options.force_sets_zero_mode:
-
-    if file_exists('disp.yaml', log_level):
-        if interface_mode == 'vasp':
-            displacements = file_IO.parse_disp_yaml('disp.yaml')
-        if (interface_mode == 'wien2k' or
-            interface_mode == 'abinit' or
-            interface_mode == 'pwscf'):
-            displacements, supercell = file_IO.parse_disp_yaml(
-                'disp.yaml', return_cell=True)
-            
+    file_exists('disp.yaml', log_level)
     for filename in args:
         file_exists(filename, log_level)
-
-    num_disp_files = len(args)
-    if options.force_sets_zero_mode:
-        num_disp_files -= 1
-    if len(displacements['first_atoms']) != num_disp_files:
-        print_error_message("Number of files to be read don't match "
-                            "to number of displacements in disp.yaml.")
-        if log_level > 0:
-            print_end()
-        sys.exit(1)
-
-    if interface_mode == 'vasp':
-        is_created = file_IO.write_FORCE_SETS_vasp(
-            args,
-            displacements,
-            filename='FORCE_SETS',
-            is_zero_point=options.force_sets_zero_mode)
-
-    if interface_mode == 'abinit':
-        print "**********************************************************"
-        print "****    Abinit FORCE_SETS support is experimental.    ****"
-        print "****        Your feedback would be appreciated.       ****"
-        print "**********************************************************"
-        is_created = file_IO.write_FORCE_SETS_abinit(
-            args,
-            displacements,
-            supercell.get_number_of_atoms(),
-            filename='FORCE_SETS')
-        
-    if interface_mode == 'pwscf':
-        print "**********************************************************"
-        print "****     Pwscf FORCE_SETS support is experimental.    ****"
-        print "****        Your feedback would be appreciated.       ****"
-        print "**********************************************************"
-        is_created = file_IO.write_FORCE_SETS_pwscf(
-            args,
-            displacements,
-            supercell.get_number_of_atoms(),
-            filename='FORCE_SETS')
-        
-    if interface_mode == 'wien2k':
-        print "**********************************************************"
-        print "****    Wien2k FORCE_SETS support is experimental.    ****"
-        print "****        Your feedback would be appreciated.       ****"
-        print "**********************************************************"
-        is_created = file_IO.write_FORCE_SETS_wien2k(
-            args,
-            displacements,
-            supercell,
-            filename='FORCE_SETS',
-            is_distribute=(not options.is_wien2k_p1),
-            symprec=options.symprec)
-
+    error_num = file_IO.create_FORCE_SETS(interface_mode,
+                                          args,
+                                          options,
+                                          log_level)
     if log_level > 0:
-        if is_created:
-            print "FORCE_SETS has been created."
-        else:
-            print "FORCE_SETS could not be created."
-            print_end()
-    sys.exit(0)
+        print_end()
+    sys.exit(error_num)
 
-##########################
-# Read crystal structure #
-##########################
-if interface_mode == 'vasp':
-    if options.cell_poscar is None:
-        if file_exists("POSCAR", log_level):
-            unitcell_filename = 'POSCAR'
+# Create FORCE_CONSTANTS (--fc or --force_constants)
+if options.force_constants_mode:
+    if len(args) > 0:
+        file_exists(args[0], log_level)
+        error_num = file_IO.create_FORCE_CONSTANTS(args[0],
+                                                   options,
+                                                   log_level)
     else:
-        if file_exists(options.cell_poscar, log_level):
-            unitcell_filename = options.cell_poscar
-
-    unitcell = vasp.read_vasp(unitcell_filename)
-
-if interface_mode == 'abinit':
-    if file_exists(options.abinit_struct_file, log_level):
-        unitcell = abinit.read_abinit(options.abinit_struct_file)
-
-if interface_mode == 'pwscf':
-    if file_exists(options.pwscf_struct_file, log_level):
-        unitcell, pp_filenames = pwscf.read_pwscf(options.pwscf_struct_file)
-
-if interface_mode == 'wien2k':
-    if file_exists(options.wien2k_struct_file, log_level):
-        unitcell, npts, r0s, rmts = wien2k.parse_wien2k_struct(
-            options.wien2k_struct_file)
-
-# Quick check of the structure
-if np.linalg.det(unitcell.get_cell()) < 0.0:
-    print_error_message("Determinant of the lattice vector matrix "
-                        "has to be positive.")
+        print_error_message("Please specify vasprun.xml.")
+        error_num = 1
+        
     if log_level > 0:
         print_end()
-    sys.exit(0)
-
-################################################
-# Check crystal symmetry and exit (--symmetry) #
-################################################
-if options.is_check_symmetry:
-    phonopy_conf = PhonopyConfParser(options=options,
-                                     option_list=option_list)
-    settings = phonopy_conf.get_settings()
-    check_symmetry(unitcell,
-                   primitive_axis=settings.get_primitive_matrix(),
-                   symprec=options.symprec,
-                   phonopy_version=phonopy_version)
-    if log_level > 0:
-        print_end()
-    sys.exit(0)
-
-##########################
-# Parse the setting file #
-##########################
+    sys.exit(error_num)
+    
+# Parse the setting file
 if len(args) > 0:
     if file_exists(args[0], log_level):
         phonopy_conf = PhonopyConfParser(filename=args[0],
@@ -583,6 +537,59 @@ else:
                                      option_list=option_list)
     settings = phonopy_conf.get_settings()
 
+if options.is_graph_save:
+    import matplotlib
+    matplotlib.use('Agg')            
+
+##################
+# Initialization #
+##################
+
+# Read crystal structure
+if interface_mode == 'vasp':
+    default_cell_filename = "POSCAR"
+if interface_mode == 'abinit':
+    default_cell_filename = "unitcell.in"
+if interface_mode == 'pwscf':
+    default_cell_filename = "unitcell.in"
+if interface_mode == 'wien2k':
+    default_cell_filename = "case.struct"
+
+if settings.get_cell_filename() is None:
+    if file_exists(default_cell_filename, log_level):
+        unitcell_filename = default_cell_filename
+else:
+    if file_exists(settings.get_cell_filename(), log_level):
+        unitcell_filename = settings.get_cell_filename()
+
+if interface_mode == 'vasp':
+    unitcell = vasp.read_vasp(unitcell_filename)
+if interface_mode == 'abinit':
+    unitcell = abinit.read_abinit(unitcell_filename)
+if interface_mode == 'pwscf':
+    unitcell, pp_filenames = pwscf.read_pwscf(unitcell_filename)
+if interface_mode == 'wien2k':
+    unitcell, npts, r0s, rmts = wien2k.parse_wien2k_struct(unitcell_filename)
+
+# Check unit cell
+if np.linalg.det(unitcell.get_cell()) < 0.0:
+    print_error_message("Determinant of the lattice vector matrix "
+                        "has to be positive.")
+    if log_level > 0:
+        print_end()
+    sys.exit(0)
+
+# Check crystal symmetry and exit (--symmetry)
+if options.is_check_symmetry:
+    check_symmetry(unitcell,
+                   primitive_axis=settings.get_primitive_matrix(),
+                   symprec=options.symprec,
+                   phonopy_version=phonopy_version)
+    if log_level > 0:
+        print_end()
+    sys.exit(0)
+    
+# Phonon calculation mode: Band, mesh, qpoints, etc
 run_mode = settings.get_run_mode()
 
 # --factor (overwrite default factor for calculators)
@@ -624,10 +631,16 @@ if magmoms is not None:
             print_end()
         sys.exit(1)
 
-######################################
-# Read FORCE_CONSTANTS or FORCE_SETS #
-######################################
-if run_mode != 'displacements':
+if run_mode == 'displacements':
+    phonon = Phonopy(unitcell, 
+                     settings.get_supercell_matrix(),
+                     primitive_matrix=settings.get_primitive_matrix(),
+                     factor=factor,
+                     is_auto_displacements=False,
+                     symprec=options.symprec,
+                     is_symmetry=settings.get_is_symmetry(),
+                     log_level=log_level)
+else: # Read FORCE_CONSTANTS or FORCE_SETS
     num_atom = unitcell.get_number_of_atoms()
     num_satom = determinant(settings.get_supercell_matrix()) * num_atom
     if settings.get_is_force_constants() == 'read':
@@ -682,20 +695,7 @@ if run_mode != 'displacements':
             sys.exit(1)
         else:
             file_exists("FORCE_SETS", log_level)
-        
-##################
-# Initialization #
-##################
-if run_mode == 'displacements':
-    phonon = Phonopy(unitcell, 
-                     settings.get_supercell_matrix(),
-                     primitive_matrix=settings.get_primitive_matrix(),
-                     factor=factor,
-                     is_auto_displacements=False,
-                     symprec=options.symprec,
-                     is_symmetry=settings.get_is_symmetry(),
-                     log_level=log_level)
-else:
+            
     phonon = Phonopy(unitcell,
                      settings.get_supercell_matrix(),
                      primitive_matrix=settings.get_primitive_matrix(),
@@ -706,6 +706,7 @@ else:
                      symprec=options.symprec,
                      is_symmetry=settings.get_is_symmetry(),
                      log_level=log_level)
+    
 supercell = phonon.get_supercell()
 primitive = phonon.get_primitive()
 
@@ -715,90 +716,14 @@ if settings.get_masses() is not None:
 
 # Log of phonopy settings
 if log_level > 0:
-    if run_mode== 'band':
-        print "Band structure mode"
-    if run_mode == 'mesh':
-        print "Mesh sampling mode"
-    if run_mode == 'anime':
-        print "Animation mode"
-    if run_mode == 'modulation':
-        print "Modulation mode"
-    if run_mode == 'irreps':
-        print "Ir-representation mode"
-    if run_mode == 'qpoints':
-        print "QPOINTS mode",
-        if settings.get_write_dynamical_matrices():
-            print "(dynamical matrices written out)"
-        else:
-            print
-    if (run_mode == 'band' or
-        run_mode == 'mesh' or
-        run_mode == 'qpoints') and settings.get_is_group_velocity():
-        print "  With group velocity calculation",
-        gv_delta_q = settings.get_group_velocity_delta_q()
-        if gv_delta_q is not None:
-            print "(dq=%3.1e)" % gv_delta_q
-        else:
-            print
-    if run_mode == 'displacements':
-        print "Creating displacements"
-        if not settings.get_is_plusminus_displacement() == 'auto':
-            print "  Plus Minus displacement: ",
-            if settings.get_is_plusminus_displacement():
-                print "full plus minus directions"
-            else:
-                print "only one direction"
-        if not settings.get_is_diagonal_displacement():
-            print "  Diagonal displacement: off"
-
-    print "Settings:"
-    if settings.get_is_nac():
-        print "  Non-analytical term correction: on"
-    if settings.get_fc_spg_symmetry():
-        print "  Enforce space group symmetry to force constants: on"
-    if settings.get_fc_symmetry_iteration() > 0:
-        print "  Force constants symmetrization: %d times" % settings.get_fc_symmetry_iteration()
-    if run_mode == 'mesh':
-        print "  Sampling mesh: ", np.array(settings.get_mesh()[0])
-
-    if (np.diag(np.diag(settings.get_supercell_matrix())) \
-            - settings.get_supercell_matrix()).any():
-        print "  Supercell matrix:"
-        for v in settings.get_supercell_matrix():
-            print "    ", v
-    else:
-        print "  Supercell: ", np.diag(settings.get_supercell_matrix())
-    if settings.get_primitive_matrix() is not None:
-        print "  Primitive axis:"
-        for v in settings.get_primitive_matrix():
-            print "    ", v
-
+    print_settings(settings)
     if magmoms is None:
-        print "Spacegroup: ", \
-            phonon.get_symmetry().get_international_table()
+        print "Spacegroup: ",
+        print phonon.get_symmetry().get_international_table()
 
 # Print cells
 if log_level > 1:
-    p2p_map = primitive.get_primitive_to_primitive_map()
-    mapping = np.array(
-        [p2p_map[x] for x in primitive.get_supercell_to_primitive_map()],
-        dtype='intc')
-    s_indep_atoms = phonon.get_symmetry().get_independent_atoms()
-    p_indep_atoms = mapping[s_indep_atoms]
-    if settings.get_primitive_matrix() is None:
-        print "------------------------------ unit cell ----------------------------------"
-        print_cell(primitive, stars=p_indep_atoms)
-    else:
-        u2s_map = supercell.get_unitcell_to_supercell_map()
-        print "---------------------------- primitive cell -------------------------------"
-        print_cell(primitive, stars=p_indep_atoms)
-        print "------------------------------ unit cell ----------------------------------"
-        u2u_map = supercell.get_unitcell_to_unitcell_map()
-        u_indep_atoms = [u2u_map[x] for x in s_indep_atoms]
-        print_cell(unitcell, mapping=mapping[u2s_map], stars=u_indep_atoms)
-    print "------------------------------ supercell ----------------------------------"
-    print_cell(supercell, mapping=mapping, stars=s_indep_atoms)
-    print "---------------------------------------------------------------------------"
+    print_cells(phonon)
 
 # Least displacements (write disp.yaml and SPOSCAR)
 if run_mode == 'displacements':
@@ -824,7 +749,7 @@ if run_mode == 'displacements':
             r0s,
             rmts,
             settings.get_supercell_matrix(),
-            filename=options.wien2k_struct_file)
+            filename=unitcell_filename)
     elif interface_mode == 'abinit':
         abinit.write_supercells_with_displacements(supercell, cells_with_disps)
     elif interface_mode == 'pwscf':
@@ -944,8 +869,6 @@ if len(symbols_with_no_mass) > 0:
 # Group velocity
 if settings.get_is_group_velocity():
     phonon.set_group_velocity(q_length=settings.get_group_velocity_delta_q())
-
-
 
 ##########################
 # Solve dynamical matrix #
