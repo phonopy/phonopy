@@ -8,6 +8,7 @@ tags:
 
 * ``--amplitude`` (``DISPLACEMENT_DISTANCE``)
 * ``--anime`` (``ANIME``)
+* ``-c``, ``--cell`` (``CELL_FILENAME``)
 * ``-d``  (``CREATE_DISPLACEMENTS = .TRUE.``
 * ``--dim`` (``DIM``)
 * ``--mp``, ``--mesh`` (``MP``)
@@ -46,10 +47,89 @@ When both of command-line option and setting tag for the same purpose
 are set simultaneously, the command-line options overide the setting
 tags.
 
-Help (``-h`` or ``--help``)
----------------------------
+Force calculator
+----------------
 
-Review of options is shown.
+If none of the following calculators are specified, VASP mode is invoked.
+
+The physical unit system used for the calculators are shown below.
+
+::
+
+            : energy,  distance,  atomic mass, force
+    -------------------------------------------------------	    
+    VASP    : eV,      Angstrom,  AMU,         eV/Angstrom
+    Wien2k  : Ry,      au,        AMU,         mRy/au
+    Pwscf   : Ry,      au,        AMU,         Ry/au
+    Abinit  : hartree, au(=bohr), AMU,         eV/Angstrom
+   
+
+.. _wien2k_mode:
+
+``--wien2k``
+~~~~~~~~~~~~
+
+This option invokes the WIEN2k mode.In this mode. Usually this option
+is used with ``--cell`` (``-c``) option or ``CELL_FILENAME`` tag to
+read Pwscf input file that contains the unit cell crystal structure,
+e.g.,
+
+::
+
+   % phonopy --wien2k -c case.struct band.conf
+
+**Only the WIEN2k struct with the P lattice is supported**.  See more
+information :ref:`wien2k_interface`.
+
+.. _abinit_mode:
+
+``--abinit``
+~~~~~~~~~~~~
+
+Abinit mode is invoked with this option. Usually this option is used
+with ``--cell`` (``-c``) option or ``CELL_FILENAME`` tag to read
+Abinit main input file that contains the unit cell crystal structure,
+e.g.,
+
+::
+
+   % phonopy --abinit -c unitcell.in band.conf
+
+.. _pwscf_mode:
+
+``--pwscf``
+~~~~~~~~~~~~
+
+Pwscf mode is invoked with this option. Usually this option is used
+with ``--cell`` (``-c``) option or ``CELL_FILENAME`` tag to read Pwscf
+input file that contains the unit cell crystal structure, e.g.,
+
+::
+
+   % phonopy --pwscf -c unitcell.in band.conf
+
+  
+.. _cell_filename_option:
+
+Input cell
+----------
+
+``-c`` or ``--cell``
+~~~~~~~~~~~~~~~~~~~~
+
+Unit cell crystal structure file is specified with this tag.
+
+::
+
+   % phonopy --cell=UPOSCAR band.conf
+
+Without specifying this tag, default file name is searched in current
+directory. The default file names for the calculators are as follows::
+
+   VASP    POSCAR
+   Wien2k  case.struct
+   Abinit  unitcell.in
+   Pwscf   unitcell.in
 
 Create ``FORCE_SETS``
 ----------------------
@@ -237,17 +317,9 @@ case of VASP mode, it is calculated by
 :math:`\sqrt{\text{eV/AMU}}`/(:math:`\text{\AA}\cdot2\pi\cdot10^{12}`)
 (=15.633302) in SI base unit. The default conversion factors for
 ``wien2k``, ``abinit``, and ``pwscf`` are 3.44595, 21.49068 and
-108.9708, respectively. These are determined by the unit systems as
-follows:
+108.9708, respectively. These are determined following the physical
+unit systems of the calculators.
 
-::
-
-    Physical units: energy,  distance,  atomic mass, force
-    vasp          : eV,      Angstrom,  AMU,         eV/Angstrom
-    wien2k        : Ry,      au,        AMU,         mRy/au
-    pwscf         : Ry,      au,        AMU,         Ry/au
-    abinit        : hartree, au(=bohr), AMU,         eV/Angstrom
-   
 When calculating thermal property, the factor to THz is
 required. Otherwise the calculated thermal properties have wrong
 units. In the case of band structure plot, any factor can be used,
@@ -296,63 +368,6 @@ printed out and phonopy stops without going to phonon analysis.
 This tag can be used together with the ``--cell``, ``--abinit``,
 ``--pwscf``, ``--wien2k``, or ``--primitive_axis`` option.
 
-
-Input cell
-----------
-
-``-c`` or ``--cell``
-~~~~~~~~~~~~~~~~~~~~
- 
-Phonopy searches the ``POSCAR`` file in the current directory. Using
-this tag, you can specify another filename than ``POSCAR`` as the
-input unit cell.
-
-::
-
-   % phonopy --cell=UPOSCAR band.conf
-
-.. _abinit_mode:
-
-``--abinit``
-~~~~~~~~~~~~
-
-Abinit mode is invoked with this option. This option is used with an
-Abinit main input file name that contains the unit cell crystal
-structure, e.g.,
-
-::
-
-   % phonopy --abinit=unitcell.in band.conf
-
-.. _pwscf_mode:
-
-``--pwscf``
-~~~~~~~~~~~~
-
-Pwscf mode is invoked with this option. This option is used with a
-Pwscf input file name that contains the unit cell crystal structure,
-e.g.,
-
-::
-
-   % phonopy --pwscf=unitcell.in band.conf
-
-.. _wien2k_mode:
-
-``--wien2k``
-~~~~~~~~~~~~
-
-This option with WIEN2k struct file, phonopy runs with the WIEN2k
-mode. In this mode, you don't need to prepare ``POSCAR``. The
-supercells with displacements in WIEN2k struct format are created
-using ``-d`` option.  The physical
-unit is changed to mRydberg and Bohr. **Only the WIEN2k struct with
-the P lattice is supported**.  See more information
-:ref:`wien2k_interface`.
-
-::
-
-   % phonopy --wien2k=case.struct band.conf
 
 
 .. |sflogo| image:: http://sflogo.sourceforge.net/sflogo.php?group_id=161614&type=1

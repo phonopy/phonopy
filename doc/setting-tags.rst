@@ -13,47 +13,6 @@ have space among characters (e.g. ``1 / 3``) are not allowed.
 Basic tags
 ----------
 
-``ATOM_NAME``
-~~~~~~~~~~~~~
-
-Chemical symbols ::
-
-   ATOM_NAME = Si O
-
-The number of chemical symbols have to be same as that of the numbers
-in the sixth line of ``POSCAR``.
-
-Chemical symbols read by phonopy are overwritten by those written in
-``POSCAR``. See ``POSCAR`` examples. In WIEN2k mode,
-you don't need to set this tag, i.e., chemical symbols are read from
-the structure file.
-
-``EIGENVECTORS``
-~~~~~~~~~~~~~~~~
-
-When this tag is '.TRUE.', eigenvectors are calculated. With ``-p``
-option, partial density of states are calculated.
-
-.. _mass_tag:
-
-``MASS``
-~~~~~~~~
-
-This tag is not necessary to use usually, because atomic masses are
-automatically set from the chemical symbols.
-
-Atomic masses of a **primitive cell** are overwritten by the values
-specified. The order of atoms in the primitive cell that is defined by
-``PRIMITIVE_AXIS`` tag can be shown using ``-v`` option. It must be
-noted that this tag does not affect to the symmetry search.
-
-For example, when there are six atoms in a primitive cell, ``MASS`` is
-set as follows ::
-
-   MASS =   28.085 28.085 16.000 16.000 16.000 16.000
-
-.. _dimension_tag:
-
 ``DIM``
 ~~~~~~~~~~
 
@@ -149,6 +108,57 @@ determined by,
 Be careful that the axes in ``POSCAR`` is defined by three row
 vectors, i.e., :math:`( \mathbf{a}_\mathrm{u} \; \mathbf{b}_\mathrm{u}
 \; \mathbf{c}_\mathrm{u} )^T`.
+
+``ATOM_NAME``
+~~~~~~~~~~~~~
+
+Chemical symbols ::
+
+   ATOM_NAME = Si O
+
+The number of chemical symbols have to be same as that of the numbers
+in the sixth line of ``POSCAR``.
+
+Chemical symbols read by phonopy are overwritten by those written in
+``POSCAR``. See ``POSCAR`` examples. In WIEN2k mode,
+you don't need to set this tag, i.e., chemical symbols are read from
+the structure file.
+
+``EIGENVECTORS``
+~~~~~~~~~~~~~~~~
+
+When this tag is '.TRUE.', eigenvectors are calculated. With ``-p``
+option, partial density of states are calculated.
+
+.. _mass_tag:
+
+``MASS``
+~~~~~~~~
+
+This tag is not necessary to use usually, because atomic masses are
+automatically set from the chemical symbols.
+
+Atomic masses of a **primitive cell** are overwritten by the values
+specified. The order of atoms in the primitive cell that is defined by
+``PRIMITIVE_AXIS`` tag can be shown using ``-v`` option. It must be
+noted that this tag does not affect to the symmetry search.
+
+For example, when there are six atoms in a primitive cell, ``MASS`` is
+set as follows ::
+
+   MASS =   28.085 28.085 16.000 16.000 16.000 16.000
+
+.. _dimension_tag:
+
+``CELL_FILENAME``
+------------------
+
+::
+
+   CELL_FILENAME = UPOSCAR
+
+See :ref:`cell_filename_option`.
+    
 
 Displacement creation tags
 --------------------------

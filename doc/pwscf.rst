@@ -22,7 +22,7 @@ A procedure of Pwscf-phonopy calculation is as follows:
 1) Read an Pwscf input file and create supercells with
    :ref:`pwscf_mode` option::
 
-   % phonopy -d --dim="2 2 2" --pwscf=NaCl.in
+   % phonopy --pwscf -d --dim="2 2 2" -c NaCl.in
 
    In this example, 2x2x2 supercells are created. ``supercell.in`` and
    ``supercell-xxx.in`` (``xxx`` are numbers) give the perfect
@@ -43,7 +43,7 @@ A procedure of Pwscf-phonopy calculation is as follows:
 
    ::
    
-     % phonopy --pwscf=unitcell.in -f disp-001/supercell-001.out disp-002/supercell-002.out  ...
+     % phonopy --pwscf -f disp-001/supercell-001.out disp-002/supercell-002.out  ...
 
    Here ``*.out`` files are the saved texts of standard outputs of
    Pwscf calculations. To run this command, ``disp.yaml`` has to be
@@ -55,11 +55,11 @@ A procedure of Pwscf-phonopy calculation is as follows:
 4) Run post-process of phonopy with the Pwscf input file for the
    unit cell used in the step 1::
 
-   % phonopy --pwscf=NaCl.in -p band.conf
+   % phonopy --pwscf -c NaCl.in -p band.conf
 
    or::
    
-   % phonopy --pwscf=NaCl.in --dim="2 2 2" [other-OPTIONS] [setting-file]
+   % phonopy --pwscf -c NaCl.in --dim="2 2 2" [other-OPTIONS] [setting-file]
 
 .. |sflogo| image:: http://sflogo.sourceforge.net/sflogo.php?group_id=161614&type=1
             :target: http://sourceforge.net

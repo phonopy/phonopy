@@ -9,7 +9,7 @@ The Wien2k-phonopy calculation works as follows:
    supercells with the Wien2k struct format of P lattice using
    ``--wien2k`` option (:ref:`wien2k_mode`)::
 
-   % phonopy -d --dim="2 2 2" --wien2k=case.struct
+   % phonopy --wien2k -d --dim="2 2 2" -c case.struct
 
    In this example, 2x2x2 supercells are created. ``case.structS`` and
    ``case.structS-xxx`` (``xxx`` are numbers) are the perfect
@@ -32,7 +32,7 @@ The Wien2k-phonopy calculation works as follows:
      http://www.wien2k.at/reg_user/unsupported/.
    * Or try experimetal support of ``-f`` option::
 
-     % phonopy --wien2k=case.struct -f case-001.scf case-002.scf ...
+     % phonopy --wien2k -f case-001.scf case-002.scf ...
 
      where ``case-xxx.scf`` are the Wien2k results for the
      supercells. ``case-xxx.scf`` has to contain ``FGLxxx`` lines with
@@ -55,7 +55,7 @@ The Wien2k-phonopy calculation works as follows:
 4) Run post-process of phonopy with the Wien2k unit cell struct file
    used in the step 1::
 
-   % phonopy --wien2k=case.struct --dim="2 2 2" [other-OPTIONS] [setting-file]
+   % phonopy --wien2k -c case.struct --dim="2 2 2" [other-OPTIONS] [setting-file]
 
 Phonopy can read only the **P lattice format**. Therefore you have to
 convert your struct file to that with the P lattice format. This may
