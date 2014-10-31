@@ -3,7 +3,17 @@
 Change Log
 ==========
 
-Oct-31-2014: Version 1.9.1.3
+Oct-31-2014: Version 1.9.2
+-----------------------------
+
+* Behaviors of ``--wien2k``, ``--abinit``, ``--pwscf`` options have
+  been changed. Now they are just to invoke those calculator modes
+  without a unit cell structure file. The unit cell structure file is
+  specified using ``--cell`` (``-c``) option or ``CELL_FILENAME``
+  tag. See :ref:`force_calculators`, :ref:`wien2k_interface`,
+  :ref:`abinit_interface`, and :ref:`pwscf_interface`.
+
+Oct-30-2014: Version 1.9.1.3
 -----------------------------
 
 * Experimental support for Abinit. See :ref:`pwscf_mode` and

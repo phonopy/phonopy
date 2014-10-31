@@ -47,8 +47,10 @@ When both of command-line option and setting tag for the same purpose
 are set simultaneously, the command-line options overide the setting
 tags.
 
-Force calculator
-----------------
+.. _force_calculators:
+
+Force calculators
+------------------
 
 If none of the following calculators are specified, VASP mode is invoked.
 
@@ -56,18 +58,28 @@ The physical unit system used for the calculators are shown below.
 
 ::
 
-            : energy,  distance,  atomic mass, force
-    -------------------------------------------------------	    
-    VASP    : eV,      Angstrom,  AMU,         eV/Angstrom
-    Wien2k  : Ry,      au,        AMU,         mRy/au
-    Pwscf   : Ry,      au,        AMU,         Ry/au
-    Abinit  : hartree, au(=bohr), AMU,         eV/Angstrom
-   
+           | Distance   Atomic mass   Force      
+   -----------------------------------------------
+   VASP    | Angstrom   AMU           eV/Angstrom
+   Wien2k  | au         AMU           mRy/au	  
+   Pwscf   | au         AMU           Ry/au	  
+   Abinit  | au         AMU           eV/Angstrom
+
+
+Default unit cell file names are as follows::
+    
+   VASP    | POSCAR     
+   Wien2k  | case.struct
+   Abinit  | unitcell.in
+   Pwscf   | unitcell.in
+
 
 .. _wien2k_mode:
 
 ``--wien2k``
 ~~~~~~~~~~~~
+
+**Behavior is changed at phonopy 1.9.2.**
 
 This option invokes the WIEN2k mode.In this mode. Usually this option
 is used with ``--cell`` (``-c``) option or ``CELL_FILENAME`` tag to
@@ -76,10 +88,17 @@ e.g.,
 
 ::
 
-   % phonopy --wien2k -c case.struct band.conf
+   % phonopy --wien2k -c NaCl.struct band.conf
 
 **Only the WIEN2k struct with the P lattice is supported**.  See more
 information :ref:`wien2k_interface`.
+
+For previous versions than 1.9.1.3, this option is used as
+
+::
+
+   % phonopy --wien2k=NaCl.struct band.conf   (version <= 1.9.1.3)
+   
 
 .. _abinit_mode:
 
@@ -93,7 +112,7 @@ e.g.,
 
 ::
 
-   % phonopy --abinit -c unitcell.in band.conf
+   % phonopy --abinit -c NaCl.in band.conf
 
 .. _pwscf_mode:
 
@@ -106,7 +125,7 @@ input file that contains the unit cell crystal structure, e.g.,
 
 ::
 
-   % phonopy --pwscf -c unitcell.in band.conf
+   % phonopy --pwscf -c NaCl.in band.conf
 
   
 .. _cell_filename_option:
@@ -126,10 +145,10 @@ Unit cell crystal structure file is specified with this tag.
 Without specifying this tag, default file name is searched in current
 directory. The default file names for the calculators are as follows::
 
-   VASP    POSCAR
-   Wien2k  case.struct
-   Abinit  unitcell.in
-   Pwscf   unitcell.in
+   VASP   | POSCAR     
+   Wien2k | case.struct
+   Abinit | unitcell.in
+   Pwscf  | unitcell.in
 
 Create ``FORCE_SETS``
 ----------------------
