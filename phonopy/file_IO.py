@@ -232,7 +232,8 @@ def write_FORCE_SETS_pwscf(forces_filenames,
         pwscf_forces = _iter_collect_forces(pwscf_filename,
                                             num_atom,
                                             hook,
-                                            [6, 7, 8])
+                                            [6, 7, 8],
+                                            word='force')
         drift_force = _get_drift_forces(pwscf_forces)
         disp['forces'] = np.array(pwscf_forces) - drift_force
 
@@ -240,7 +241,7 @@ def write_FORCE_SETS_pwscf(forces_filenames,
     
     return True
 
-def _collect_forces(f, num_atom, hook, force_pos):
+def _collect_forces(f, num_atom, hook, force_pos, word=None):
     for line in f:
         if hook in line:
             break
@@ -249,6 +250,9 @@ def _collect_forces(f, num_atom, hook, force_pos):
     for line in f:
         if line.strip() == '':
             continue
+        if word is not None:
+            if word not in line:
+                continue
             
         elems = line.split()
         if len(elems) > force_pos[2]:
@@ -263,13 +267,18 @@ def _collect_forces(f, num_atom, hook, force_pos):
 
     return forces
 
-def _iter_collect_forces(filename, num_atom, hook, force_pos, max_iter=1000):
+def _iter_collect_forces(filename,
+                         num_atom,
+                         hook,
+                         force_pos,
+                         word=None,
+                         max_iter=1000):
     f = open(filename)
     forces = []
     prev_forces = []
 
     for i in range(max_iter):
-        forces = _collect_forces(f, num_atom, hook, force_pos)
+        forces = _collect_forces(f, num_atom, hook, force_pos, word=word)
         if not forces:
             forces = prev_forces[:]
             break
