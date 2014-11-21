@@ -15,7 +15,7 @@ typedef struct {
   char international_full[20];
   char international_short[11];
   char setting[6];
-  Holohedry holohedry;
+  int pointgroup_number;
 } SpacegroupType;
 
 int spgdb_get_operation(int rot[3][3], double trans[3], const int hall_number);

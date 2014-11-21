@@ -18,6 +18,7 @@ typedef enum {
 } Centering;
 
 typedef enum {
+  LAUE_NONE,
   LAUE1,
   LAUE2M,
   LAUEMMM,

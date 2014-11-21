@@ -28,6 +28,7 @@ static SpglibDataset * get_dataset(SPGCONST double lattice[3][3],
 				   SPGCONST double position[][3],
 				   const int types[],
 				   const int num_atom,
+				   const int hall_number,
 				   const double symprec);
 static void set_dataset(SpglibDataset * dataset,
 			SPGCONST Cell * cell,
@@ -81,6 +82,8 @@ static int get_schoenflies(char symbol[10],
 			   SPGCONST double position[][3],
 			   const int types[], const int num_atom,
 			   const double symprec);
+static Spacegroup get_spacegroup(SPGCONST Cell * cell,
+				 const double symprec);
 static int refine_cell(double lattice[3][3],
 		       double position[][3],
 		       int types[],
@@ -139,6 +142,7 @@ SpglibDataset * spg_get_dataset(SPGCONST double lattice[3][3],
 		     position,
 		     types,
 		     num_atom,
+		     0,
 		     symprec);
 }
 
@@ -155,6 +159,43 @@ SpglibDataset * spgat_get_dataset(SPGCONST double lattice[3][3],
 		     position,
 		     types,
 		     num_atom,
+		     0,
+		     symprec);
+}
+
+SpglibDataset * spg_get_dataset_with_hall_number(SPGCONST double lattice[3][3],
+						 SPGCONST double position[][3],
+						 const int types[],
+						 const int num_atom,
+						 const int hall_number,
+						 const double symprec)
+{
+  sym_set_angle_tolerance(-1.0);
+
+  return get_dataset(lattice,
+		     position,
+		     types,
+		     num_atom,
+		     hall_number,
+		     symprec);
+}
+
+SpglibDataset *
+spgat_get_dataset_with_hall_number(SPGCONST double lattice[3][3],
+				   SPGCONST double position[][3],
+				   const int types[],
+				   const int num_atom,
+				   const int hall_number,
+				   const double symprec,
+				   const double angle_tolerance)
+{
+  sym_set_angle_tolerance(angle_tolerance);
+
+  return get_dataset(lattice,
+		     position,
+		     types,
+		     num_atom,
+		     hall_number,
 		     symprec);
 }
 
@@ -165,18 +206,31 @@ void spg_free_dataset(SpglibDataset *dataset)
     dataset->rotations = NULL;
     free(dataset->translations);
     dataset->translations = NULL;
-  }
-  
-  if (! (dataset->wyckoffs == NULL)) {
-    free(dataset->wyckoffs);
-    dataset->wyckoffs = NULL;
-  }
-  
-  if (! (dataset->equivalent_atoms == NULL)) {
-    free(dataset->equivalent_atoms);
-    dataset->equivalent_atoms = NULL;
+    dataset->n_operations = 0;
   }
 
+  if (dataset->n_atoms > 0) {
+    free(dataset->wyckoffs);
+    dataset->wyckoffs = NULL;
+    free(dataset->equivalent_atoms);
+    dataset->equivalent_atoms = NULL;
+    dataset->n_atoms = 0;
+  }
+
+  if (dataset->n_brv_atoms > 0) {
+    free(dataset->brv_positions);
+    dataset->brv_positions = NULL;
+    free(dataset->brv_types);
+    dataset->brv_types = NULL;
+    dataset->n_brv_atoms = 0;
+  }
+
+  dataset->spacegroup_number = 0;
+  dataset->hall_number = 0;
+  strcpy(dataset->international_symbol, "");
+  strcpy(dataset->hall_symbol, "");
+  strcpy(dataset->setting, "");
+  
   free(dataset);
   dataset = NULL;
 }
@@ -411,23 +465,26 @@ int spgat_get_schoenflies(char symbol[10],
 }
 
 int spg_get_pointgroup(char symbol[6],
-		       int trans_mat[3][3],
+		       int transform_mat[3][3],
 		       SPGCONST int rotations[][3][3],
 		       const int num_rotations)
 {
-  int ptg_num;
-  double tmp_trans_mat[3][3];
-  Pointgroup ptgroup;
+  int tmp_transform_mat[3][3];
+  double correction_mat[3][3], transform_mat_double[3][3];
+  Pointgroup pointgroup;
 
-  ptg_num = ptg_get_pointgroup_number_by_rotations(rotations,
-						   num_rotations);
-  ptgroup = ptg_get_pointgroup(ptg_num);
-  strcpy(symbol, ptgroup.symbol);
-  ptg_get_transformation_matrix(tmp_trans_mat,
-				rotations,
-				num_rotations);
-  mat_cast_matrix_3d_to_3i(trans_mat, tmp_trans_mat);
-  return ptg_num + 1;
+  pointgroup = ptg_get_transformation_matrix(tmp_transform_mat,
+					     rotations,
+					     num_rotations);
+  strcpy(symbol, pointgroup.symbol);
+  lat_get_centering(correction_mat,
+		    tmp_transform_mat,
+		    pointgroup.laue);
+  mat_multiply_matrix_id3(transform_mat_double,
+			  tmp_transform_mat,
+			  correction_mat);
+  mat_cast_matrix_3d_to_3i(transform_mat, transform_mat_double);
+  return pointgroup.number;
 }
 
 int spg_get_symmetry_from_database(int rotations[192][3][3],
@@ -715,12 +772,14 @@ static SpglibDataset * get_dataset(SPGCONST double lattice[3][3],
 				   SPGCONST double position[][3],
 				   const int types[],
 				   const int num_atom,
+				   const int hall_number,
 				   const double symprec)
 {
   int attempt;
   int *mapping_table;
   double tolerance, tolerance_from_prim;
   Spacegroup spacegroup;
+  SpacegroupType spacegroup_type;
   SpglibDataset *dataset;
   Cell *cell, *primitive;
 
@@ -738,6 +797,9 @@ static SpglibDataset * get_dataset(SPGCONST double lattice[3][3],
   dataset->n_operations = 0;
   dataset->rotations = NULL;
   dataset->translations = NULL;
+  dataset->n_brv_atoms = 0;
+  dataset->brv_positions = NULL;
+  dataset->brv_types = NULL;
 
   mapping_table = (int*) malloc(sizeof(int) * num_atom);
 
@@ -751,16 +813,8 @@ static SpglibDataset * get_dataset(SPGCONST double lattice[3][3],
 						    tolerance);
     if (primitive->size > 0) {
       tolerance_from_prim = prm_get_current_tolerance();
-      spacegroup = spa_get_spacegroup_with_primitive(primitive,
-						     tolerance_from_prim);
+      spacegroup = spa_get_spacegroup(primitive, tolerance_from_prim);
       if (spacegroup.number > 0) {
-	set_dataset(dataset,
-		    cell,
-		    primitive,
-		    &spacegroup,
-		    mapping_table,
-		    tolerance_from_prim);
-	cel_free_cell(primitive);
 	break;
       }
     }
@@ -771,6 +825,29 @@ static SpglibDataset * get_dataset(SPGCONST double lattice[3][3],
     warning_print("  Attempt %d tolerance = %f failed.", attempt, tolerance);
     warning_print(" (line %d, %s).\n", __LINE__, __FILE__);
   }
+
+  if (spacegroup.number > 0) {
+    if (hall_number > 0) {
+      spacegroup_type = spgdb_get_spacegroup_type(hall_number);
+      if (spacegroup.number == spacegroup_type.number) {
+	spacegroup = spa_get_spacegroup_with_hall_number(primitive,
+							 hall_number,
+							 tolerance_from_prim);
+      } else {
+	spacegroup.number = 0;
+      }
+    }
+    if (spacegroup.number > 0) {
+      set_dataset(dataset,
+		  cell,
+		  primitive,
+		  &spacegroup,
+		  mapping_table,
+		  tolerance_from_prim);
+    }
+    cel_free_cell(primitive);
+  }
+  
 
   free(mapping_table);
   mapping_table = NULL;
@@ -809,19 +886,19 @@ static void set_dataset(SpglibDataset * dataset,
 						 primitive,
 						 spacegroup,
 						 tolerance);
-  dataset->rotations =
-    (int (*)[3][3])malloc(sizeof(int[3][3]) * symmetry->size);
-  dataset->translations =
-    (double (*)[3])malloc(sizeof(double[3]) * symmetry->size);
   dataset->n_operations = symmetry->size;
+  dataset->rotations =
+    (int (*)[3][3])malloc(sizeof(int[3][3]) * dataset->n_operations);
+  dataset->translations =
+    (double (*)[3])malloc(sizeof(double[3]) * dataset->n_operations);
   for (i = 0; i < symmetry->size; i++) {
     mat_copy_matrix_i3(dataset->rotations[i], symmetry->rot[i]);
     mat_copy_vector_d3(dataset->translations[i], symmetry->trans[i]);
   }
 
   /* Wyckoff positions */
-  dataset->wyckoffs = (int*) malloc(sizeof(int) * cell->size); 
-  dataset->equivalent_atoms = (int*) malloc(sizeof(int) * cell->size);
+  dataset->wyckoffs = (int*) malloc(sizeof(int) * dataset->n_atoms); 
+  dataset->equivalent_atoms = (int*) malloc(sizeof(int) * dataset->n_atoms);
   bravais = ref_get_Wyckoff_positions(dataset->wyckoffs, 
 				      dataset->equivalent_atoms,
 				      primitive,
@@ -830,6 +907,17 @@ static void set_dataset(SpglibDataset * dataset,
 				      symmetry,
 				      mapping_table,
 				      tolerance);
+  dataset->n_brv_atoms = bravais->size;
+  mat_copy_matrix_d3(dataset->brv_lattice, bravais->lattice);
+  dataset->brv_positions =
+    (double (*)[3])malloc(sizeof(double[3]) * dataset->n_brv_atoms);
+  dataset->brv_types =
+    (int*)malloc(sizeof(int) * dataset->n_brv_atoms);
+  for (i = 0; i < dataset->n_brv_atoms; i++) {
+    mat_copy_vector_d3(dataset->brv_positions[i], bravais->position[i]);
+    dataset->brv_types[i] = bravais->types[i];
+  }
+  
   cel_free_cell(bravais);
   sym_free_symmetry(symmetry);
 }
@@ -887,6 +975,7 @@ static int get_symmetry_from_dataset(int rotation[][3][3],
 			position,
 			types,
 			num_atom,
+			0,
 			symprec);
   
   if (dataset->n_operations > max_size) {
@@ -953,18 +1042,17 @@ static int get_multiplicity(SPGCONST double lattice[3][3],
 			    const int num_atom,
 			    const double symprec)
 {
-  Symmetry *symmetry;
-  Cell *cell;
   int size;
+  SpglibDataset *dataset;
 
-  cell = cel_alloc_cell(num_atom);
-  cel_set_cell(cell, lattice, position, types);
-  symmetry = sym_get_operation(cell, symprec);
-
-  size = symmetry->size;
-
-  cel_free_cell(cell);
-  sym_free_symmetry(symmetry);
+  dataset = get_dataset(lattice,
+			position,
+			types,
+			num_atom,
+			0,
+			symprec);
+  size = dataset->n_operations;
+  spg_free_dataset(dataset);
 
   return size;
 }
@@ -1014,7 +1102,7 @@ static int get_international(char symbol[11],
 
   cell = cel_alloc_cell(num_atom);
   cel_set_cell(cell, lattice, position, types);
-  spacegroup = spa_get_spacegroup(cell, symprec);
+  spacegroup = get_spacegroup(cell, symprec);
   if (spacegroup.number > 0) {
     strcpy(symbol, spacegroup.international_short);
   }
@@ -1037,7 +1125,7 @@ static int get_schoenflies(char symbol[10],
   cell = cel_alloc_cell(num_atom);
   cel_set_cell(cell, lattice, position, types);
 
-  spacegroup = spa_get_spacegroup(cell, symprec);
+  spacegroup = get_spacegroup(cell, symprec);
   if (spacegroup.number > 0) {
     strcpy(symbol, spacegroup.schoenflies);
   }
@@ -1053,30 +1141,45 @@ static int refine_cell(double lattice[3][3],
 		       const int num_atom,
 		       const double symprec)
 {
-  int i, num_atom_bravais;
-  Cell *cell, *bravais;
+  int i, n_brv_atoms;
+  SpglibDataset *dataset;
 
-  cell = cel_alloc_cell(num_atom);
-  cel_set_cell(cell, lattice, position, types);
+  dataset = get_dataset(lattice,
+			position,
+			types,
+			num_atom,
+			0,
+			symprec);
 
-  bravais = ref_refine_cell(cell, symprec);
-  cel_free_cell(cell);
-
-  if (bravais->size > 0) {
-    mat_copy_matrix_d3(lattice, bravais->lattice);
-    num_atom_bravais = bravais->size;
-    for (i = 0; i < bravais->size; i++) {
-      types[i] = bravais->types[i];
-      mat_copy_vector_d3(position[i], bravais->position[i]);
+  n_brv_atoms = dataset->n_brv_atoms;
+  if (dataset->n_brv_atoms > 0) {
+    mat_copy_matrix_d3(lattice, dataset->brv_lattice);
+    for (i = 0; i < dataset->n_brv_atoms; i++) {
+      types[i] = dataset->brv_types[i];
+      mat_copy_vector_d3(position[i], dataset->brv_positions[i]);
     }
-  } else {
-    num_atom_bravais = 0;
   }
 
-  cel_free_cell(bravais);
+  spg_free_dataset(dataset);
   
-  return num_atom_bravais;
+  return n_brv_atoms;
 }
+
+static Spacegroup get_spacegroup(SPGCONST Cell * cell,
+				 const double symprec)
+{
+  double tolerance;
+  Cell *primitive;
+  Spacegroup spacegroup;
+
+  primitive = prm_get_primitive(cell, symprec);
+  tolerance = prm_get_current_tolerance();
+  spacegroup = spa_get_spacegroup(primitive, tolerance);
+  cel_free_cell(primitive);
+
+  return spacegroup;
+}
+
 
 /*---------*/
 /* kpoints */
@@ -1100,6 +1203,7 @@ static int get_ir_reciprocal_mesh(int grid_address[][3],
 			position,
 			types,
 			num_atom,
+			0,
 			symprec);
   rotations = mat_alloc_MatINT(dataset->n_operations);
   for (i = 0; i < dataset->n_operations; i++) {

@@ -1,4 +1,4 @@
-/* spglib.h version 1.6.4 */
+/* spglib.h version 1.7 */
 /* Copyright (C) 2008 Atsushi Togo */
 
 #ifndef __spglib_H__
@@ -16,15 +16,15 @@
   lattice: Lattice vectors (in Cartesian)
 
   [ [ a_x, b_x, c_x ],
-  [ a_y, b_y, c_y ],
-  [ a_z, b_z, c_z ] ]
+    [ a_y, b_y, c_y ],
+    [ a_z, b_z, c_z ] ]
 
   position: Atomic positions (in fractional coordinates)
   
   [ [ x1_a, x1_b, x1_c ], 
-  [ x2_a, x2_b, x2_c ], 
-  [ x3_a, x3_b, x3_c ], 
-  ...                   ]
+    [ x2_a, x2_b, x2_c ], 
+    [ x3_a, x3_b, x3_c ], 
+    ...                   ]
 
   types: Atom types, i.e., species identified by number
 
@@ -34,8 +34,8 @@
 
   each rotation is:
   [ [ r_aa, r_ab, r_ac ],
-  [ r_ba, r_bb, r_bc ],
-  [ r_ca, r_cb, r_cc ] ]
+    [ r_ba, r_bb, r_bc ],
+    [ r_ca, r_cb, r_cc ] ]
 
   translation: Translation vectors of symmetry operations
 
@@ -73,9 +73,12 @@ typedef struct {
   int n_atoms;
   int *wyckoffs; /* Wyckoff letters */
   int *equivalent_atoms;
+  int n_brv_atoms;
+  double brv_lattice[3][3];
+  int *brv_types;
+  double (*brv_positions)[3];
 } SpglibDataset;
 
-/* This is a copy from spg_database.h except for holohedry. */
 typedef struct {
   int number;
   char schoenflies[7];
@@ -97,6 +100,24 @@ SpglibDataset * spgat_get_dataset(SPGCONST double lattice[3][3],
 				  const int num_atom,
 				  const double symprec,
 				  const double angle_tolerance);
+
+/* hall_number = 0 gives the same as spg_get_dataset. */
+SpglibDataset * spg_get_dataset_with_hall_number(SPGCONST double lattice[3][3],
+						 SPGCONST double position[][3],
+						 const int types[],
+						 const int num_atom,
+						 const int hall_number,
+						 const double symprec);
+
+/* hall_number = 0 gives the same as spgat_get_dataset. */
+SpglibDataset *
+spgat_get_dataset_with_hall_number(SPGCONST double lattice[3][3],
+				   SPGCONST double position[][3],
+				   const int types[],
+				   const int num_atom,
+				   const int hall_number,
+				   const double symprec,
+				   const double angle_tolerance);
 
 void spg_free_dataset(SpglibDataset *dataset);
 
@@ -149,10 +170,7 @@ int spgat_get_symmetry_with_collinear_spin(int rotation[][3][3],
 
 /* Return exact number of symmetry operations. This function may */
 /* be used in advance to allocate memoery space for symmetry */
-/* operations. Only upper bound is required, */
-/* ``spg_get_max_multiplicity`` can be used instead of this */
-/* function and ``spg_get_max_multiplicity`` is faster than this */
-/* function. */
+/* operations. */
 int spg_get_multiplicity(SPGCONST double lattice[3][3],
 			 SPGCONST double position[][3],
 			 const int types[],

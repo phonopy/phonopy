@@ -8,29 +8,25 @@
 #include "lattice.h"
 
 typedef enum {
-  NONE,
+  HOLOHEDRY_NONE,
   TRICLI,
   MONOCLI,
   ORTHO,
   TETRA,
-  RHOMB,
   TRIGO,
   HEXA,
   CUBIC,
 } Holohedry;
 
 typedef struct {
+  int number;
   char symbol[6];
   Holohedry holohedry;
   Laue laue;
-  int transform_mat[3][3];
 } Pointgroup;
 
-int ptg_get_pointgroup_number( const Symmetry * symmetry );
-int ptg_get_pointgroup_number_by_rotations( SPGCONST int rotations[][3][3],
-					    const int num_rotations );
-Pointgroup ptg_get_pointgroup( const int pointgroup_number );
-Centering ptg_get_transformation_matrix( double trans_mat[3][3],
+Pointgroup ptg_get_transformation_matrix(int transform_mat[3][3],
 					 SPGCONST int rotations[][3][3],
-					 const int num_rotations );
+					 const int num_rotations);
+Pointgroup ptg_get_pointgroup(const int pointgroup_number);
 #endif

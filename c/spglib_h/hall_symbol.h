@@ -8,9 +8,11 @@
 #include "symmetry.h"
 #include "mathfunc.h"
 
-int hal_get_hall_symbol( double origin_shift[3],
-			 const Centering centering,
-			 double bravais_lattice[3][3],
-			 SPGCONST Symmetry *symmetry,
-			 const double symprec );
+int hal_match_hall_symbol_db(double origin_shift[3],
+			     SPGCONST double bravais_lattice[3][3],
+			     const int hall_number,
+			     const Centering centering,
+			     SPGCONST Symmetry *symmetry,
+			     const double symprec);
+
 #endif

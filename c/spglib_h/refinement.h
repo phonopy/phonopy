@@ -9,8 +9,6 @@
 #include "spacegroup.h"
 #include "symmetry.h"
 
-Cell * ref_refine_cell(SPGCONST Cell * cell,
-		       const double symprec);
 Symmetry *
 ref_get_refined_symmetry_operations(SPGCONST Cell * cell,
 				    SPGCONST Cell * primitive,

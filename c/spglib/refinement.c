@@ -7,6 +7,7 @@
 #include "refinement.h"
 #include "cell.h"
 #include "mathfunc.h"
+#include "pointgroup.h"
 #include "primitive.h"
 #include "spg_database.h"
 #include "site_symmetry.h"
@@ -16,8 +17,6 @@
 
 #define REDUCE_RATE 0.95
 
-static Cell * refine_cell(SPGCONST Cell * cell,
-			  const double symprec);
 static Cell * get_bravais_exact_positions_and_lattice(int * wyckoffs,
 						      int * equiv_atoms,
 						      SPGCONST Spacegroup * spacegroup,
@@ -33,17 +32,16 @@ static Cell * get_conventional_primitive(SPGCONST Spacegroup * spacegroup,
 					 SPGCONST Cell * primitive);
 static int get_number_of_pure_translation(SPGCONST Symmetry * conv_sym);
 static int get_conventional_lattice(double lattice[3][3],
-				    const Holohedry holohedry,
-				    SPGCONST double bravais_lattice[3][3]);
+				    SPGCONST Spacegroup *spacegroup);
 static void set_monocli(double lattice[3][3],
 			SPGCONST double metric[3][3]);
 static void set_ortho(double lattice[3][3],
 		      SPGCONST double metric[3][3]);
 static void set_tetra(double lattice[3][3],
 		      SPGCONST double metric[3][3]);
-static void set_rhomb(double lattice[3][3],
-		      SPGCONST double metric[3][3]);
 static void set_trigo(double lattice[3][3],
+		      SPGCONST double metric[3][3]);
+static void set_rhomb(double lattice[3][3],
 		      SPGCONST double metric[3][3]);
 static void set_cubic(double lattice[3][3],
 		      SPGCONST double metric[3][3]);
@@ -92,12 +90,6 @@ static SPGCONST int identity[3][3] = {
   { 0, 0, 1},
 };
 
-
-Cell * ref_refine_cell(SPGCONST Cell * cell,
-		       const double symprec)
-{
-  return refine_cell(cell, symprec);
-}
 
 /* symmetry->size = 0 is returned when it failed. */
 Symmetry *
@@ -165,63 +157,6 @@ Cell * ref_get_Wyckoff_positions(int * wyckoffs,
   return bravais;
 }
 
-static Cell * refine_cell(SPGCONST Cell * cell,
-			  const double symprec)
-{
-  int attempt, found;
-  int *wyckoffs_bravais, *equiv_atoms_bravais;
-  double tolerance, tolerance_from_prim;
-  Cell *primitive, *bravais;
-  Spacegroup spacegroup;
-
-  debug_print("refine_cell:\n");
-
-  tolerance = symprec;
-  found = 0;
-  for (attempt = 0; attempt < 100; attempt++) {
-    primitive = prm_get_primitive(cell, tolerance);
-    if (primitive->size > 0) {  
-      tolerance_from_prim = prm_get_current_tolerance();
-      spacegroup = spa_get_spacegroup_with_primitive(primitive,
-						     tolerance_from_prim);
-      if (spacegroup.number > 0) {
-	wyckoffs_bravais = (int*)malloc(sizeof(int) * primitive->size * 4);
-	equiv_atoms_bravais = (int*)malloc(sizeof(int) * primitive->size * 4);
-	bravais = get_bravais_exact_positions_and_lattice(wyckoffs_bravais,
-							  equiv_atoms_bravais,
-							  &spacegroup,
-							  primitive,
-							  tolerance_from_prim);
-	free(equiv_atoms_bravais);
-	equiv_atoms_bravais = NULL;
-	free(wyckoffs_bravais);
-	wyckoffs_bravais = NULL;
-	cel_free_cell(primitive);
-	
-	debug_print("primitive cell in refine_cell:\n");
-	debug_print_matrix_d3(primitive->lattice);
-	debug_print("bravais lattice in refine_cell:\n");
-	debug_print_matrix_d3(bravais->lattice);
-
-	found = 1;
-	break;
-      }
-    }
-    tolerance *= REDUCE_RATE;
-    cel_free_cell(primitive);
-
-    warning_print("  Attempt %d tolerance = %f failed.", attempt, tolerance);
-    warning_print(" (line %d, %s).\n", __LINE__, __FILE__);
-  }
-  
-  /* Return bravais->size = 0, if the bravais could not be found. */
-  if (! found) {
-    bravais = cel_alloc_cell(0);
-  }
-
-  return bravais;
-}
-
 /* Only the atoms corresponding to those in primitive are returned. */
 static Cell * get_bravais_exact_positions_and_lattice(int * wyckoffs,
 						      int * equiv_atoms,
@@ -240,9 +175,7 @@ static Cell * get_bravais_exact_positions_and_lattice(int * wyckoffs,
   /* Symmetries in database (wrt Bravais lattice) */
   conv_sym = spgdb_get_spacegroup_operations(spacegroup->hall_number);
   /* Lattice vectors are set. */
-  get_conventional_lattice(conv_prim->lattice,
-			   spacegroup->holohedry,
-			   spacegroup->bravais_lattice);
+  get_conventional_lattice(conv_prim->lattice, spacegroup);
 
   /* Symmetrize atomic positions of conventional unit cell */
   wyckoffs_prim = (int*)malloc(sizeof(int) * primitive->size);
@@ -360,23 +293,25 @@ static Cell * get_conventional_primitive(SPGCONST Spacegroup * spacegroup,
 }
 
 static int get_conventional_lattice(double lattice[3][3],
-				    const Holohedry holohedry,
-				    SPGCONST double bravais_lattice[3][3])
+				    SPGCONST Spacegroup *spacegroup)
 {
   int i, j;
   double metric[3][3];
+  Pointgroup pointgroup;
 
+  pointgroup = ptg_get_pointgroup(spacegroup->pointgroup_number);
+  
   for (i = 0; i < 3; i++) {
     for (j = 0; j < 3; j++) {
       lattice[i][j] = 0;
     }
   }
 
-  mat_get_metric(metric, bravais_lattice);
+  mat_get_metric(metric, spacegroup->bravais_lattice);
 
-  switch (holohedry) {
+  switch (pointgroup.holohedry) {
   case TRICLI:
-    mat_copy_matrix_d3(lattice, bravais_lattice);
+    mat_copy_matrix_d3(lattice, spacegroup->bravais_lattice);
     break;
   case MONOCLI: /* b-axis is the unique axis. */
     set_monocli(lattice, metric);
@@ -387,11 +322,12 @@ static int get_conventional_lattice(double lattice[3][3],
   case TETRA:
     set_tetra(lattice, metric);
     break;
-  case RHOMB:
-    set_rhomb(lattice, metric);
-    break;
   case TRIGO:
-    set_trigo(lattice, metric);
+    if (spacegroup->setting[0] == 'R') {
+      set_rhomb(lattice, metric);
+    } else {
+      set_trigo(lattice, metric);
+    }
     break;
   case HEXA:
     set_trigo(lattice, metric);
@@ -399,7 +335,7 @@ static int get_conventional_lattice(double lattice[3][3],
   case CUBIC:
     set_cubic(lattice, metric);
     break;
-  case NONE:
+  case HOLOHEDRY_NONE:
     break;
   }
 

@@ -18,14 +18,6 @@ static double monocli_i2c[3][3] = {{ 1, 0, 0 },
 static double monocli_a2c[3][3] = {{ 0, 0, 1 },
 				   { 0,-1, 0 },
 				   { 1, 0, 0 }};
-#ifdef DEBUG
-static double tetra_f2i_c2p[3][3] = {{ 0.5,-0.5, 0.0 },
-				     { 0.5, 0.5, 0.0 },
-				     { 0.0, 0.0, 1.0 }};
-static double hexa_h2p[3][3] = {{ 2./3,-1./3, 0.0 },
-				{ 1./3, 1./3, 0.0 },
-				{  0.0,  0.0, 1.0 }};
-#endif
 static double rhombo_obverse[3][3] = {{ 2./3,-1./3,-1./3 },
 				      { 1./3, 1./3,-2./3 },
 				      { 1./3, 1./3, 1./3 }};
@@ -105,16 +97,15 @@ static Centering get_centering(double correction_mat[3][3],
     }
   }
   if (det == 3) {
-    centering = NO_CENTER;
-    mat_multiply_matrix_id3(trans_corr_mat,
-			    transform_mat, rhombo_obverse);
+    /* pR but not hR */
+    centering = R_CENTER;
+    mat_multiply_matrix_id3(trans_corr_mat, transform_mat, rhombo_obverse);
     if (mat_is_int_matrix(trans_corr_mat, INT_PREC)) {
       mat_copy_matrix_d3(correction_mat, rhombo_obverse);
       debug_print("R-center observe setting\n");
       debug_print_matrix_d3(trans_corr_mat);
     }
-    mat_multiply_matrix_id3(trans_corr_mat,
-			    transform_mat, rhomb_reverse);
+    mat_multiply_matrix_id3(trans_corr_mat, transform_mat, rhomb_reverse);
     if (mat_is_int_matrix(trans_corr_mat, INT_PREC)) {
       mat_copy_matrix_d3(correction_mat, rhomb_reverse);
       debug_print("R-center reverse setting\n");
