@@ -1030,13 +1030,17 @@ class PhonopyGruneisen:
     def set_mesh(self,
                  mesh,
                  shift=None,
-                 is_gamma_center=False):
+                 is_time_reversal=True,
+                 is_gamma_center=False,
+                 is_mesh_symmetry=True):
         self._mesh = GruneisenMesh(self._phonon,
                                    self._phonon_plus,
                                    self._phonon_minus,
                                    mesh,
                                    shift=shift,
-                                   is_gamma_center=is_gamma_center)
+                                   is_time_reversal=is_time_reversal,
+                                   is_gamma_center=is_gamma_center,
+                                   is_mesh_symmetry=is_mesh_symmetry)
 
     def write_yaml_mesh(self):
         self._mesh.write_yaml()

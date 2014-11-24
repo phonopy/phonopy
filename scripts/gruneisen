@@ -101,6 +101,7 @@ parser.set_defaults(band_paths=None,
                     cutoff_frequency=None,
                     cutoff_wave_vector=1e-4,
                     is_nac=False,
+                    is_mesh_symmetry=True,
                     plot_graph=False,
                     reads_force_constants=False,                    
                     band_points=51,
@@ -158,6 +159,9 @@ parser.add_option("-o", "--output", dest="output_filename",
                   help="Output filename of PDF plot")
 parser.add_option("-t", "--title", dest="title", action="store",
                   type="string", help="Title of plot")
+parser.add_option("--nomeshsym", dest="is_mesh_symmetry",
+                  action="store_false",
+                  help="Symmetry is not imposed for mesh sampling.")
 parser.add_option("--tolerance", dest="symprec", type="float",
                   help="Symmetry tolerance to search")
 (options, args) = parser.parse_args()
@@ -247,7 +251,8 @@ if options.band_paths:
 
 elif options.sampling_mesh:
     mesh_numbers = np.array([int(x) for x in options.sampling_mesh.split()])
-    gruneisen.set_mesh(mesh_numbers)
+    gruneisen.set_mesh(mesh_numbers,
+                       is_mesh_symmetry=options.is_mesh_symmetry)
     gruneisen.write_yaml_mesh()
     
     if options.plot_graph:

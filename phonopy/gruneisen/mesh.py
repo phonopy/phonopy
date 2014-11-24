@@ -45,7 +45,9 @@ class Mesh:
                  phonon_minus,
                  mesh,
                  shift=None,
-                 is_gamma_center=False):
+                 is_time_reversal=True,
+                 is_gamma_center=False,
+                 is_mesh_symmetry=True):
         self._mesh = mesh
         self._factor = phonon.get_unit_conversion_factor(),
         primitive = phonon.get_primitive()
@@ -60,8 +62,10 @@ class Mesh:
             self._mesh,
             np.linalg.inv(primitive.get_cell()),
             q_mesh_shift=shift,
+            is_time_reversal=is_time_reversal,
             is_gamma_center=is_gamma_center,
-            rotations=primitive_symmetry.get_pointgroup_operations())
+            rotations=primitive_symmetry.get_pointgroup_operations(),
+            is_mesh_symmetry=is_mesh_symmetry)
         gruneisen.set_qpoints(self._qpoints)
         self._gamma = gruneisen.get_gruneisen()
         self._eigenvalues = gruneisen.get_eigenvalues()
