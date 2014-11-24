@@ -252,25 +252,6 @@ class Modulation:
         for p in positions:
             w.write("  - [ %20.15f, %20.15f, %20.15f ]\n" % (tuple(p)))
 
-    def _get_delta_old(self, eigvec, q):
-        """Attention
-
-        This method will be removed after new method is well checked.
-        """
-        dim = self._dimension
-        m = self._primitive.get_masses()
-        r = self._primitive.get_scaled_positions()
-        u = []
-        for a, b, c in list(np.ndindex(tuple(dim))):
-            for i, e in enumerate(eigvec):
-                phase = 2j * np.pi * (
-                    np.dot(r[i//3] + np.array([a,b,c]), q))
-                u.append(e / np.sqrt(m[i//3]) * np.exp(phase)) 
-
-        self._supercell = self._get_supercell()
-    
-        return np.reshape(u, (-1, 3))
-
     def _get_supercell(self):
         """Attention
 
