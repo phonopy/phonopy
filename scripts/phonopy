@@ -485,18 +485,6 @@ if log_level > 0:
     print_phononpy()
     print_version(phonopy_version)
 
-# Attention
-if (interface_mode == 'wien2k' or
-    interface_mode == 'abinit' or
-    interface_mode == 'pwscf'):
-    print "The way to specify --%s option is changed." % interface_mode
-    print "Previously:"
-    print "%% phonopy --%s=unitcell_filename ..." % interface_mode
-    print "Currently:"
-    print "%% phonopy --%s -c unitcell_filename ..." % interface_mode
-    print "See more detain in the phonopy manual."
-    
-    
 # Create FORCE_SETS for VASP (-f or --force_sets)
 if options.force_sets_mode or options.force_sets_zero_mode:
     file_exists('disp.yaml', log_level)
@@ -545,31 +533,18 @@ if options.is_graph_save:
 # Initialization #
 ##################
 
-# Read crystal structure
-if interface_mode == 'vasp':
-    default_cell_filename = "POSCAR"
-if interface_mode == 'abinit':
-    default_cell_filename = "unitcell.in"
-if interface_mode == 'pwscf':
-    default_cell_filename = "unitcell.in"
-if interface_mode == 'wien2k':
-    default_cell_filename = "case.struct"
+unitcell, optional_structure_file_information = file_IO.read_crystal_structure(
+    filename=settings.get_cell_filename(),
+    interface_mode=interface_mode,
+    chemical_symbols=settings.get_chemical_symbols())
+unitcell_filename = optional_structure_file_information[0]
 
-if settings.get_cell_filename() is None:
-    if file_exists(default_cell_filename, log_level):
-        unitcell_filename = default_cell_filename
-else:
-    if file_exists(settings.get_cell_filename(), log_level):
-        unitcell_filename = settings.get_cell_filename()
-
-if interface_mode == 'vasp':
-    unitcell = vasp.read_vasp(unitcell_filename)
-if interface_mode == 'abinit':
-    unitcell = abinit.read_abinit(unitcell_filename)
-if interface_mode == 'pwscf':
-    unitcell, pp_filenames = pwscf.read_pwscf(unitcell_filename)
-if interface_mode == 'wien2k':
-    unitcell, npts, r0s, rmts = wien2k.parse_wien2k_struct(unitcell_filename)
+if unitcell is None:
+    print_error_message("Crystal structure file of %s could not be found." %
+                        unitcell_filename)
+    if log_level > 0:
+        print_error()
+    sys.exit(1)
 
 # Check unit cell
 if np.linalg.det(unitcell.get_cell()) < 0.0:
@@ -613,11 +588,6 @@ if settings.get_supercell_matrix() is None:
     if log_level > 0:
         print_end()
     sys.exit(1)
-
-# Set chemical symbols into unit cell
-chemical_symbols = settings.get_chemical_symbols()
-if interface_mode == 'vasp' and (chemical_symbols is not None):
-    unitcell = vasp.read_vasp(unitcell_filename, chemical_symbols)
 
 # Set magnetic moments
 magmoms = settings.get_magnetic_moments()
@@ -742,6 +712,7 @@ if run_mode == 'displacements':
     cells_with_disps = phonon.get_supercells_with_displacements()
     
     if interface_mode == 'wien2k':
+        npts, r0s, rmts = optional_structure_file_information[1:4]
         wien2k.write_supercells_with_displacements(
             supercell,
             cells_with_disps,
@@ -753,6 +724,7 @@ if run_mode == 'displacements':
     elif interface_mode == 'abinit':
         abinit.write_supercells_with_displacements(supercell, cells_with_disps)
     elif interface_mode == 'pwscf':
+        pp_filenames = optional_structure_file_information[1]
         pwscf.write_supercells_with_displacements(supercell,
                                                   cells_with_disps,
                                                   pp_filenames)

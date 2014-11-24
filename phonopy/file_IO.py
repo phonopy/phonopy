@@ -42,6 +42,47 @@ from phonopy.harmonic.force_constants import similarity_transformation
 from phonopy.structure.atoms import Atoms
 from phonopy.cui.settings import fracval
 
+def read_crystal_structure(filename=None,
+                           interface_mode='vasp',
+                           chemical_symbols=None):
+    if filename is None:
+        if interface_mode == 'vasp':
+            unitcell_filename = "POSCAR"
+        if interface_mode == 'abinit':
+            unitcell_filename = "unitcell.in"
+        if interface_mode == 'pwscf':
+            unitcell_filename = "unitcell.in"
+        if interface_mode == 'wien2k':
+            unitcell_filename = "case.struct"
+    else:
+        unitcell_filename = filename
+
+    if not os.path.exists(unitcell_filename):
+        if filename is None:
+            return None, (unitcell_filename + " (default file name)",)
+        else:
+            return None, (unitcell_filename,)
+    
+    if interface_mode == 'vasp':
+        from phonopy.interface.vasp import read_vasp
+        if chemical_symbols is None:
+            unitcell = read_vasp(unitcell_filename)
+        else:
+            unitcell = read_vasp(unitcell_filename, symbols=chemical_symbols)
+        return unitcell, (unitcell_filename,)
+    if interface_mode == 'abinit':
+        from phonopy.interface.abinit import read_abinit
+        unitcell = read_abinit(unitcell_filename)
+        return unitcell, (unitcell_filename,)
+    if interface_mode == 'pwscf':
+        from phonopy.interface.pwscf import read_pwscf
+        unitcell, pp_filenames = read_pwscf(unitcell_filename)
+        return unitcell, (unitcell_filename, pp_filenames)
+    if interface_mode == 'wien2k':
+        from phonopy.interface.wien2k import parse_wien2k_struct
+        unitcell, npts, r0s, rmts = parse_wien2k_struct(unitcell_filename)
+        return unitcell, (unitcell_filename, npts, r0s, rmts)
+        
 def create_FORCE_CONSTANTS(filename, options, log_level):
     fc_and_atom_types = read_force_constant_vasprun_xml(filename)
     if not fc_and_atom_types:
