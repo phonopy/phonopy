@@ -3,8 +3,7 @@ import os
 import numpy as np
 import h5py
 from phonopy.structure.atoms import Atoms
-from phonopy.interface import vasp
-from phonopy.file_IO import read_force_constant_vasprun_xml, iterparse
+from phonopy.interface.vasp import get_forces_from_vasprun_xmls, get_force_constants_from_vasprun_xmls, write_vasp
 
 ###########
 #
@@ -155,7 +154,7 @@ def write_supercells_with_displacements_from_direction_dataset(
                       positions=positions,
                       cell=lattice,
                       pbc=True)
-        vasp.write_vasp('POSCAR-%05d' % count1, atoms, direct=True)
+        write_vasp('POSCAR-%05d' % count1, atoms, direct=True)
 
         # YAML
         w.write("- number: %5d\n" % (disp1['number'] + 1))
@@ -192,7 +191,7 @@ def write_supercells_with_displacements_from_direction_dataset(
                                cell=lattice,
                                pbc=True)
                 if included:
-                    vasp.write_vasp('POSCAR-%05d' % count2, atoms, direct=True)
+                    write_vasp('POSCAR-%05d' % count2, atoms, direct=True)
 
                 # YAML
                 w.write("    - [%20.16f,%20.16f,%20.16f ] # %05d\n" %
@@ -261,7 +260,7 @@ def write_supercells_with_three_displacements(supercell,
                       positions=positions,
                       cell=lattice,
                       pbc=True)
-        vasp.write_vasp('POSCAR-%05d' % count1, atoms, direct=True)
+        write_vasp('POSCAR-%05d' % count1, atoms, direct=True)
 
         # YAML
         w3.write("- number: %5d\n" % (disp1['number'] + 1))
@@ -287,7 +286,7 @@ def write_supercells_with_three_displacements(supercell,
                           positions=positions,
                           cell=lattice,
                           pbc=True)
-            vasp.write_vasp('POSCAR-%05d' % count2, atoms, direct=True)
+            write_vasp('POSCAR-%05d' % count2, atoms, direct=True)
 
             # YAML
             if second_atom_num != disp2['number']:
@@ -321,7 +320,7 @@ def write_supercells_with_three_displacements(supercell,
                                   positions=positions,
                                   cell=lattice,
                                   pbc=True)
-                    vasp.write_vasp('POSCAR-%05d' % count3, atoms, direct=True)
+                    write_vasp('POSCAR-%05d' % count3, atoms, direct=True)
     
                     # YAML
                     w4.write("      - [ %20.16f,%20.16f,%20.16f ] # %d \n" %
@@ -1267,35 +1266,6 @@ def write_ir_grid_points(mesh,
                 tuple(grid_address[g]))
         w.write("  q-point:      [ %12.7f, %12.7f, %12.7f ]\n" %
                 tuple(grid_address[g].astype('double') / mesh))
-
-def get_forces_from_vasprun_xmls(vaspruns, num_atom, index_shift=0):
-    forces = []
-    for i, vasprun in enumerate(vaspruns):
-        print >> sys.stderr, "%d" % (i + 1 + index_shift),
-
-        if vasp.is_version528(vasprun):
-            force_set = vasp.get_forces_vasprun_xml(
-                iterparse(vasp.VasprunWrapper(vasprun), tag='varray'))
-        else:
-            force_set = vasp.get_forces_vasprun_xml(
-                iterparse(vasprun, tag='varray'))
-        if force_set.shape[0] == num_atom:
-            forces.append(force_set)
-        else:
-            print "\nNumber of forces in vasprun.xml #%d is wrong." % (i + 1)
-            sys.exit(1)
-            
-    print >> sys.stderr
-    return np.array(forces)
-
-def get_force_constants_from_vasprun_xmls(vasprun_filenames):
-    force_constants_set = []
-    for i, filename in enumerate(vasprun_filenames):
-        print >> sys.stderr, "%d: %s\n" % (i + 1, filename),
-        force_constants_set.append(
-            read_force_constant_vasprun_xml(filename)[0])
-    print >> sys.stderr
-    return force_constants_set
 
 def parse_yaml(file_yaml):
     import yaml

@@ -45,6 +45,7 @@ from phonopy.cui.show_symmetry import check_symmetry
 from phonopy.units import *
 from phonopy.version import phonopy_version
 from phonopy.structure.cells import print_cell, determinant
+from phonopy.interface import create_FORCE_SETS, read_crystal_structure
 
 
 # AA is created at http://www.network-science.de/ascii/.
@@ -465,19 +466,20 @@ if options.loglevel is not None:
 #
 if options.wien2k_mode:
     interface_mode = 'wien2k'
-    import phonopy.interface.wien2k as wien2k
+    from phonopy.interface.wien2k import write_supercells_with_displacements
     factor = Wien2kToTHz
 elif options.abinit_mode:
     interface_mode = 'abinit'
-    import phonopy.interface.abinit as abinit
+    from phonopy.interface.abinit import write_supercells_with_displacements
     factor = AbinitToTHz
 elif options.pwscf_mode:
     interface_mode = 'pwscf'
-    import phonopy.interface.pwscf as pwscf
+    from phonopy.interface.pwscf import write_supercells_with_displacements
     factor = PwscfToTHz
 else:
     interface_mode = 'vasp'
-    import phonopy.interface.vasp as vasp
+    from phonopy.interface.vasp import write_supercells_with_displacements
+    from phonopy.interface.vasp import create_FORCE_CONSTANTS
     factor = VaspToTHz
 
 # Show title
@@ -490,10 +492,10 @@ if options.force_sets_mode or options.force_sets_zero_mode:
     file_exists('disp.yaml', log_level)
     for filename in args:
         file_exists(filename, log_level)
-    error_num = file_IO.create_FORCE_SETS(interface_mode,
-                                          args,
-                                          options,
-                                          log_level)
+    error_num = create_FORCE_SETS(interface_mode,
+                                  args,
+                                  options,
+                                  log_level)
     if log_level > 0:
         print_end()
     sys.exit(error_num)
@@ -502,9 +504,9 @@ if options.force_sets_mode or options.force_sets_zero_mode:
 if options.force_constants_mode:
     if len(args) > 0:
         file_exists(args[0], log_level)
-        error_num = file_IO.create_FORCE_CONSTANTS(args[0],
-                                                   options,
-                                                   log_level)
+        error_num = create_FORCE_CONSTANTS(args[0],
+                                           options,
+                                           log_level)
     else:
         print_error_message("Please specify vasprun.xml.")
         error_num = 1
@@ -533,7 +535,7 @@ if options.is_graph_save:
 # Initialization #
 ##################
 
-unitcell, optional_structure_file_information = file_IO.read_crystal_structure(
+unitcell, optional_structure_file_information = read_crystal_structure(
     filename=settings.get_cell_filename(),
     interface_mode=interface_mode,
     chemical_symbols=settings.get_chemical_symbols())
@@ -713,7 +715,7 @@ if run_mode == 'displacements':
     
     if interface_mode == 'wien2k':
         npts, r0s, rmts = optional_structure_file_information[1:4]
-        wien2k.write_supercells_with_displacements(
+        write_supercells_with_displacements(
             supercell,
             cells_with_disps,
             npts,
@@ -722,14 +724,14 @@ if run_mode == 'displacements':
             settings.get_supercell_matrix(),
             filename=unitcell_filename)
     elif interface_mode == 'abinit':
-        abinit.write_supercells_with_displacements(supercell, cells_with_disps)
+        write_supercells_with_displacements(supercell, cells_with_disps)
     elif interface_mode == 'pwscf':
         pp_filenames = optional_structure_file_information[1]
-        pwscf.write_supercells_with_displacements(supercell,
-                                                  cells_with_disps,
-                                                  pp_filenames)
+        write_supercells_with_displacements(supercell,
+                                            cells_with_disps,
+                                            pp_filenames)
     else:        
-        vasp.write_supercells_with_displacements(supercell, cells_with_disps)
+        write_supercells_with_displacements(supercell, cells_with_disps)
 
     if log_level > 0:
         print

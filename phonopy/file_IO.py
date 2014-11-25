@@ -36,157 +36,29 @@ import sys
 import os
 import StringIO
 import numpy as np
-import phonopy.interface.vasp as vasp
 from phonopy.structure.symmetry import Symmetry
 from phonopy.harmonic.force_constants import similarity_transformation
 from phonopy.structure.atoms import Atoms
 from phonopy.cui.settings import fracval
 
-def read_crystal_structure(filename=None,
-                           interface_mode='vasp',
-                           chemical_symbols=None):
-    if filename is None:
-        if interface_mode == 'vasp':
-            unitcell_filename = "POSCAR"
-        if interface_mode == 'abinit':
-            unitcell_filename = "unitcell.in"
-        if interface_mode == 'pwscf':
-            unitcell_filename = "unitcell.in"
-        if interface_mode == 'wien2k':
-            unitcell_filename = "case.struct"
-    else:
-        unitcell_filename = filename
-
-    if not os.path.exists(unitcell_filename):
-        if filename is None:
-            return None, (unitcell_filename + " (default file name)",)
-        else:
-            return None, (unitcell_filename,)
+#
+# FORCE_SETS
+#
+def write_FORCE_SETS(dataset, filename='FORCE_SETS'):
+    num_atom = dataset['natom']
+    displacements = dataset['first_atoms']
+    forces = [x['forces'] for x in dataset['first_atoms']]
     
-    if interface_mode == 'vasp':
-        from phonopy.interface.vasp import read_vasp
-        if chemical_symbols is None:
-            unitcell = read_vasp(unitcell_filename)
-        else:
-            unitcell = read_vasp(unitcell_filename, symbols=chemical_symbols)
-        return unitcell, (unitcell_filename,)
-    if interface_mode == 'abinit':
-        from phonopy.interface.abinit import read_abinit
-        unitcell = read_abinit(unitcell_filename)
-        return unitcell, (unitcell_filename,)
-    if interface_mode == 'pwscf':
-        from phonopy.interface.pwscf import read_pwscf
-        unitcell, pp_filenames = read_pwscf(unitcell_filename)
-        return unitcell, (unitcell_filename, pp_filenames)
-    if interface_mode == 'wien2k':
-        from phonopy.interface.wien2k import parse_wien2k_struct
-        unitcell, npts, r0s, rmts = parse_wien2k_struct(unitcell_filename)
-        return unitcell, (unitcell_filename, npts, r0s, rmts)
-        
-def create_FORCE_CONSTANTS(filename, options, log_level):
-    fc_and_atom_types = read_force_constant_vasprun_xml(filename)
-    if not fc_and_atom_types:
-        print
-        print "\'%s\' dones not contain necessary information." % filename
-        return 1
+    # Write FORCE_SETS
+    fp = open(filename, 'w')
+    fp.write("%-5d\n" % num_atom)
+    fp.write("%-5d\n" % len(displacements))
+    for count, disp in enumerate(displacements):
+        fp.write("\n%-5d\n" % (disp['number'] + 1))
+        fp.write("%20.16f %20.16f %20.16f\n" % (tuple(disp['displacement'])))
 
-    force_constants, atom_types = fc_and_atom_types
-    if options.is_hdf5:
-        try:
-            import h5py
-        except ImportError:
-            print
-            print "You need to install python-h5py."
-            return 1
-    
-        write_force_constants_to_hdf5(force_constants)
-        if log_level > 0:
-            print "force_constants.hdf5 has been created from vasprun.xml."
-    else:
-        write_FORCE_CONSTANTS(force_constants)
-        if log_level > 0:
-            print "FORCE_CONSTANTS has been created from vasprun.xml."
-
-    if log_level > 0:
-        print "Atom types:", atom_types
-    return 0
-
-def create_FORCE_SETS(interface_mode,
-                      force_filenames,
-                      options,
-                      log_level):
-    if interface_mode == 'vasp':
-        displacements = parse_disp_yaml('disp.yaml')
-    if (interface_mode == 'wien2k' or
-        interface_mode == 'abinit' or
-        interface_mode == 'pwscf'):
-        displacements, supercell = parse_disp_yaml(
-            'disp.yaml', return_cell=True)
-            
-    num_disp_files = len(force_filenames)
-    if options.force_sets_zero_mode:
-        num_disp_files -= 1
-    if len(displacements['first_atoms']) != num_disp_files:
-        print
-        print ("Number of files to be read don't match "
-               "to number of displacements in disp.yaml.")
-        return 1
-
-    if interface_mode == 'vasp':
-        is_created = write_FORCE_SETS_vasp(
-            force_filenames,
-            displacements,
-            filename='FORCE_SETS',
-            is_zero_point=options.force_sets_zero_mode)
-
-    if interface_mode == 'abinit':
-        print "**********************************************************"
-        print "****    Abinit FORCE_SETS support is experimental.    ****"
-        print "****        Your feedback would be appreciated.       ****"
-        print "**********************************************************"
-        is_created = write_FORCE_SETS_abinit(
-            force_filenames,
-            displacements,
-            supercell.get_number_of_atoms(),
-            filename='FORCE_SETS')
-        
-    if interface_mode == 'pwscf':
-        print "**********************************************************"
-        print "****     Pwscf FORCE_SETS support is experimental.    ****"
-        print "****        Your feedback would be appreciated.       ****"
-        print "**********************************************************"
-        is_created = write_FORCE_SETS_pwscf(
-            force_filenames,
-            displacements,
-            supercell.get_number_of_atoms(),
-            filename='FORCE_SETS')
-        
-    if interface_mode == 'wien2k':
-        print "**********************************************************"
-        print "****    Wien2k FORCE_SETS support is experimental.    ****"
-        print "****        Your feedback would be appreciated.       ****"
-        print "**********************************************************"
-        is_created = write_FORCE_SETS_wien2k(
-            force_filenames,
-            displacements,
-            supercell,
-            filename='FORCE_SETS',
-            is_distribute=(not options.is_wien2k_p1),
-            symprec=options.symprec)
-
-    if log_level > 0:
-        if is_created:
-            print "FORCE_SETS has been created."
-        else:
-            print "FORCE_SETS could not be created."
-
-    return 0
-            
-def _get_line_ignore_blank(f):
-    line = f.readline().strip()
-    if line == '':
-        line = _get_line_ignore_blank(f)
-    return line
+        for f in forces[count]:
+            fp.write("%15.10f %15.10f %15.10f\n" % (tuple(f)))
 
 def parse_FORCE_SETS(is_translational_invariance=False, filename="FORCE_SETS"):
     f = open(filename, 'r')
@@ -225,15 +97,13 @@ def _get_set_of_forces(f, is_translational_invariance):
     
     return dataset
 
-def parse_QPOINTS(filename="QPOINTS"):
-    f = open(filename, 'r')
-    num_qpoints = int(f.readline().strip())
-    qpoints = []
-    for i in range(num_qpoints):
-        qpoints.append([fracval(x) for x in f.readline().strip().split()])
-    return np.array(qpoints)
+def _get_line_ignore_blank(f):
+    line = f.readline().strip()
+    if line == '':
+        line = _get_line_ignore_blank(f)
+    return line
 
-def _get_drift_forces(forces, filename=None):
+def get_drift_forces(forces, filename=None):
     drift_force = np.sum(forces, axis=0) / len(forces)
     if filename is None:
         print "Drift force"
@@ -244,45 +114,7 @@ def _get_drift_forces(forces, filename=None):
 
     return drift_force
     
-def write_FORCE_SETS_abinit(forces_filenames,
-                            displacements,
-                            num_atom,
-                            filename='FORCE_SETS'):
-    hook = 'cartesian forces (eV/Angstrom)'
-    for abinit_filename, disp in zip(forces_filenames,
-                                     displacements['first_atoms']):
-        f = open(abinit_filename)
-        abinit_forces = _collect_forces(f, num_atom, hook, [1, 2, 3])
-        if not abinit_forces:
-            return False
-            
-        drift_force = _get_drift_forces(abinit_forces)
-        disp['forces'] = np.array(abinit_forces) - drift_force
-
-    write_FORCE_SETS(displacements, filename=filename)
-    
-    return True
-
-def write_FORCE_SETS_pwscf(forces_filenames,
-                           displacements,
-                           num_atom,
-                           filename='FORCE_SETS'):
-    hook = 'Forces acting on atoms'
-    for pwscf_filename, disp in zip(forces_filenames,
-                                    displacements['first_atoms']):
-        pwscf_forces = _iter_collect_forces(pwscf_filename,
-                                            num_atom,
-                                            hook,
-                                            [6, 7, 8],
-                                            word='force')
-        drift_force = _get_drift_forces(pwscf_forces)
-        disp['forces'] = np.array(pwscf_forces) - drift_force
-
-    write_FORCE_SETS(displacements, filename=filename)
-    
-    return True
-
-def _collect_forces(f, num_atom, hook, force_pos, word=None):
+def collect_forces(f, num_atom, hook, force_pos, word=None):
     for line in f:
         if hook in line:
             break
@@ -308,18 +140,18 @@ def _collect_forces(f, num_atom, hook, force_pos, word=None):
 
     return forces
 
-def _iter_collect_forces(filename,
-                         num_atom,
-                         hook,
-                         force_pos,
-                         word=None,
-                         max_iter=1000):
+def iter_collect_forces(filename,
+                        num_atom,
+                        hook,
+                        force_pos,
+                        word=None,
+                        max_iter=1000):
     f = open(filename)
     forces = []
     prev_forces = []
 
     for i in range(max_iter):
-        forces = _collect_forces(f, num_atom, hook, force_pos, word=word)
+        forces = collect_forces(f, num_atom, hook, force_pos, word=word)
         if not forces:
             forces = prev_forces[:]
             break
@@ -331,140 +163,49 @@ def _iter_collect_forces(filename,
         
     return forces
     
-def write_FORCE_SETS_wien2k(forces_filenames,
-                            displacements,
-                            supercell,
-                            filename='FORCE_SETS',
-                            is_distribute=True,
-                            symprec=1e-5):
-    import phonopy.interface.wien2k as wien2k
+#
+# FORCE_CONSTANTS, force_constants.hdf5
+#
+def write_FORCE_CONSTANTS(force_constants, filename='FORCE_CONSTANTS'):
+    w = open(filename, 'w')
+    fc_shape = force_constants.shape
+    w.write("%4d\n" % (fc_shape[0]))
+    for i in range(fc_shape[0]):
+        for j in range(fc_shape[1]):
+            w.write("%4d%4d\n" % (i+1, j+1))
+            for vec in force_constants[i][j]:
+                w.write(("%22.15f"*3 + "\n") % tuple(vec))
+    w.close()
 
-    natom = supercell.get_number_of_atoms()
-    lattice = supercell.get_cell()
+def write_force_constants_to_hdf5(force_constants,
+                                  filename='force_constants.hdf5'):
+    import h5py
+    w = h5py.File(filename, 'w')
+    w.create_dataset('force_constants', data=force_constants)
+    w.close()
 
-    for wien2k_filename, disp in zip(forces_filenames,
-                                     displacements['first_atoms']):
-        # Parse wien2k case.scf file
-        wien2k_forces = wien2k.get_forces_wien2k(wien2k_filename, lattice)
-        if is_distribute:
-            force_set = wien2k.distribute_forces(
-                supercell,
-                [disp['number'], disp['displacement']],
-                wien2k_forces,
-                wien2k_filename,
-                symprec)
-            if not force_set:
-                return False
-        else:
-            if not (natom == len(wien2k_forces)):
-                print "%s contains only forces of %d atoms" % (
-                    wien2k_filename, len(wien2k_forces))
-                return False
-            else:
-                force_set = wien2k_forces
+def parse_FORCE_CONSTANTS(filename):
+    fcfile = open(filename)
+    num = int((fcfile.readline().strip().split())[0])
+    force_constants = np.zeros((num, num, 3, 3), dtype=float)
+    for i in range(num):
+        for j in range(num):
+            fcfile.readline()
+            tensor = []
+            for k in range(3):
+                tensor.append([float(x) for x in fcfile.readline().strip().split()])
+            force_constants[i, j] = np.array(tensor)
 
-        drift_force = _get_drift_forces(force_set, filename=wien2k_filename)
-        disp['forces'] = np.array(force_set) - drift_force
-                
-    write_FORCE_SETS(displacements, filename=filename)
-    return True
+    return force_constants
 
+def read_force_constants_hdf5(filename="force_constants.hdf5"):
+    import h5py
+    f = h5py.File(filename)
+    return f[f.keys()[0]][:]
 
-def iterparse(fname, tag=None):
-    try:
-        import xml.etree.cElementTree as etree
-        for event, elem in etree.iterparse(fname):
-            if tag is None or elem.tag == tag:
-                yield event, elem
-    except ImportError:
-        print "Python 2.5 or later is needed."
-        print "For creating FORCE_SETS file with Python 2.4, you can use",
-        print "phonopy 1.8.5.1 with python-lxml ."
-        sys.exit(1)        
-
-def write_FORCE_SETS_vasp(forces_filenames,
-                          displacements,
-                          filename='FORCE_SETS',
-                          is_zero_point=False,
-                          verbose=True):
-
-    if verbose:
-        print "counter (file index):",
-        
-    num_atom = displacements['natom']
-    count = 0
-    are_files_correct = True
-        
-    if is_zero_point:
-        force_files = forces_filenames[1:]
-        if vasp.is_version528(forces_filenames[0]):
-            zero_forces = vasp.get_forces_vasprun_xml(iterparse(
-                vasp.VasprunWrapper(forces_filenames[0]), tag='varray'))
-        else:
-            zero_forces = vasp.get_forces_vasprun_xml(
-                iterparse(forces_filenames[0], tag='varray'))
-
-        if verbose:
-            print "%d" % (count + 1),
-        count += 1
-            
-        if not _check_forces(zero_forces, num_atom, forces_filenames[0]):
-            are_files_correct = False
-    else:
-        force_files = forces_filenames
-        zero_forces = None
-
-    for i, disp in enumerate(displacements['first_atoms']):
-        if vasp.is_version528(force_files[i]):
-            disp['forces'] = vasp.get_forces_vasprun_xml(iterparse(
-                vasp.VasprunWrapper(force_files[i]), tag='varray'))
-        else:
-            disp['forces'] = vasp.get_forces_vasprun_xml(
-                iterparse(force_files[i], tag='varray'))
-
-        if verbose:
-            print "%d" % (count + 1),
-        count += 1
-        
-        if not _check_forces(disp['forces'], num_atom, force_files[i]):
-            are_files_correct = False
-
-    if verbose:
-        print
-        
-    write_FORCE_SETS(displacements,
-                     filename=filename,
-                     zero_forces=zero_forces)
-
-    return are_files_correct
-
-def _check_forces(forces, num_atom, filename):
-    if len(forces) != num_atom:
-        print " \"%s\" does not contain necessary information." % filename,
-        return False
-    else:
-        return True
-
-def write_FORCE_SETS(dataset, filename='FORCE_SETS', zero_forces=None):
-    num_atom = dataset['natom']
-    displacements = dataset['first_atoms']
-    forces = [x['forces'] for x in dataset['first_atoms']]
-    
-    # Write FORCE_SETS
-    fp = open(filename, 'w')
-    fp.write("%-5d\n" % num_atom)
-    fp.write("%-5d\n" % len(displacements))
-    for count, disp in enumerate(displacements):
-        fp.write("\n%-5d\n" % (disp['number'] + 1))
-        fp.write("%20.16f %20.16f %20.16f\n" % (tuple(disp['displacement'])))
-
-        # Subtract residual forces
-        if zero_forces is not None:
-            forces[count] -= zero_forces
-
-        for f in forces[count]:
-            fp.write("%15.10f %15.10f %15.10f\n" % (tuple(f)))
-
+#
+# disp.yaml
+#
 def parse_disp_yaml(filename="disp.yaml", return_cell=False):
     try:
         import yaml
@@ -507,17 +248,6 @@ def parse_disp_yaml(filename="disp.yaml", return_cell=False):
     else:
         return new_dataset
 
-def parse_DISP(filename='DISP'):
-    disp = open(filename)
-    displacements = []
-    for line in disp:
-        if line.strip() != '':
-            a = line.split()
-            displacements.append(
-                [int(a[0])-1, float(a[1]), float(a[2]), float(a[3])])
-    return displacements
-
-# Write disp.yaml
 def write_disp_yaml(displacements, supercell, directions=None,
                     filename='disp.yaml'):
     file = open(filename, 'w')
@@ -543,57 +273,33 @@ def write_disp_yaml(displacements, supercell, directions=None,
                        (v[0], v[1], v[2]))
     file.close()
 
-# Write FORCE_CONSTANTS
-def write_FORCE_CONSTANTS(force_constants, filename='FORCE_CONSTANTS'):
-    w = open(filename, 'w')
-    fc_shape = force_constants.shape
-    w.write("%4d\n" % (fc_shape[0]))
-    for i in range(fc_shape[0]):
-        for j in range(fc_shape[1]):
-            w.write("%4d%4d\n" % (i+1, j+1))
-            for vec in force_constants[i][j]:
-                w.write(("%22.15f"*3 + "\n") % tuple(vec))
-    w.close()
+#
+# DISP (old phonopy displacement format)
+#
+def parse_DISP(filename='DISP'):
+    disp = open(filename)
+    displacements = []
+    for line in disp:
+        if line.strip() != '':
+            a = line.split()
+            displacements.append(
+                [int(a[0])-1, float(a[1]), float(a[2]), float(a[3])])
+    return displacements
 
-def write_force_constants_to_hdf5(force_constants,
-                                  filename='force_constants.hdf5'):
-    import h5py
-    w = h5py.File(filename, 'w')
-    w.create_dataset('force_constants', data=force_constants)
-    w.close()
+#
+# QPOINTS
+#
+def parse_QPOINTS(filename="QPOINTS"):
+    f = open(filename, 'r')
+    num_qpoints = int(f.readline().strip())
+    qpoints = []
+    for i in range(num_qpoints):
+        qpoints.append([fracval(x) for x in f.readline().strip().split()])
+    return np.array(qpoints)
 
-# Read FORCE_CONSTANTS
-def parse_FORCE_CONSTANTS(filename):
-    fcfile = open(filename)
-    num = int((fcfile.readline().strip().split())[0])
-    force_constants = np.zeros((num, num, 3, 3), dtype=float)
-    for i in range(num):
-        for j in range(num):
-            fcfile.readline()
-            tensor = []
-            for k in range(3):
-                tensor.append([float(x) for x in fcfile.readline().strip().split()])
-            force_constants[i, j] = np.array(tensor)
-
-    return force_constants
-
-
-def read_force_constant_vasprun_xml(filename):
-    if vasp.is_version528(filename):
-        vasprun = iterparse(vasp.VasprunWrapper(filename))
-    else:
-        vasprun = iterparse(filename)
-    return vasp.get_force_constants_vasprun_xml(vasprun)
-
-def read_force_constant_OUTCAR(filename):
-    return vasp.get_force_constants_OUTCAR(filename)
-
-def read_force_constants_hdf5(filename="force_constants.hdf5"):
-    import h5py
-    f = h5py.File(filename)
-    return f[f.keys()[0]][:]
-
-# Read BORN
+#
+# BORN
+#
 def parse_BORN(primitive, symprec=1e-5, is_symmetry=True, filename="BORN"):
     f = open(filename, 'r')
     symmetry = Symmetry(primitive, symprec=symprec, is_symmetry=is_symmetry)

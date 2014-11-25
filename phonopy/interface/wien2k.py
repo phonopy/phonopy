@@ -33,10 +33,81 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
+from phonopy.file_IO import write_FORCE_SETS, get_drift_forces
 from phonopy.structure.atoms import Atoms
 from phonopy.structure.symmetry import Symmetry
 from phonopy.structure.cells import get_angles, get_cell_parameters
 from phonopy.harmonic.force_constants import similarity_transformation
+
+def parse_set_of_forces(displacements,
+                        forces_filenames,
+                        supercell,
+                        is_distribute=True,
+                        symprec=1e-5):
+    natom = supercell.get_number_of_atoms()
+    lattice = supercell.get_cell()
+
+    for wien2k_filename, disp in zip(forces_filenames,
+                                     displacements['first_atoms']):
+        # Parse wien2k case.scf file
+        wien2k_forces = get_forces_wien2k(wien2k_filename, lattice)
+        if is_distribute:
+            force_set = distribute_forces(
+                supercell,
+                [disp['number'], disp['displacement']],
+                wien2k_forces,
+                wien2k_filename,
+                symprec)
+            if not force_set:
+                return False
+        else:
+            if not (natom == len(wien2k_forces)):
+                print "%s contains only forces of %d atoms" % (
+                    wien2k_filename, len(wien2k_forces))
+                return False
+            else:
+                force_set = wien2k_forces
+
+        drift_force = get_drift_forces(force_set, filename=wien2k_filename)
+        disp['forces'] = np.array(force_set) - drift_force
+                
+    return True
+
+def create_FORCE_SETS(forces_filenames,
+                      displacements,
+                      supercell,
+                      filename='FORCE_SETS',
+                      is_distribute=True,
+                      symprec=1e-5):
+    natom = supercell.get_number_of_atoms()
+    lattice = supercell.get_cell()
+
+    for wien2k_filename, disp in zip(forces_filenames,
+                                     displacements['first_atoms']):
+        # Parse wien2k case.scf file
+        wien2k_forces = get_forces_wien2k(wien2k_filename, lattice)
+        if is_distribute:
+            force_set = distribute_forces(
+                supercell,
+                [disp['number'], disp['displacement']],
+                wien2k_forces,
+                wien2k_filename,
+                symprec)
+            if not force_set:
+                return False
+        else:
+            if not (natom == len(wien2k_forces)):
+                print "%s contains only forces of %d atoms" % (
+                    wien2k_filename, len(wien2k_forces))
+                return False
+            else:
+                force_set = wien2k_forces
+
+        drift_force = get_drift_forces(force_set, filename=wien2k_filename)
+        disp['forces'] = np.array(force_set) - drift_force
+                
+    write_FORCE_SETS(displacements, filename=filename)
+    return True
 
 def get_wien2k_struct(cell, npts, r0s, rmts):
 
