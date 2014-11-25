@@ -3,7 +3,7 @@
 Change Log
 ==========
 
-Oct-31-2014: Version 1.9.2
+Nov-25-2014: Version 1.9.2
 -----------------------------
 
 * Behaviors of ``--wien2k``, ``--abinit``, ``--pwscf`` options have
@@ -12,6 +12,10 @@ Oct-31-2014: Version 1.9.2
   specified using ``--cell`` (``-c``) option or ``CELL_FILENAME``
   tag. See :ref:`force_calculators`, :ref:`wien2k_interface`,
   :ref:`abinit_interface`, and :ref:`pwscf_interface`.
+* For the ``gruneisen`` command, ``--factor``, ``--nomeshsym``,
+  ``--wien2k``, ``--abinit``, and ``--pwscf`` options are
+  implemented. See :ref:`gruneisen_calculators` and
+  :ref:`gruneisen_command_options`.
 
 Oct-30-2014: Version 1.9.1.3
 -----------------------------

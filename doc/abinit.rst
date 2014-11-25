@@ -11,10 +11,10 @@ variables may be supported on request.
 
 ::
 
-   acell, natom, ntypat, rprim, typat, xred, znucl
+   acell, natom, ntypat, rprim, scalecart, typat, xangst, xcart, xred, znucl
 
-Procedure
-----------
+How to run
+-----------
 
 A procedure of Abinit-phonopy calculation is as follows:
 

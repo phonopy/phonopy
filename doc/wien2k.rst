@@ -3,6 +3,9 @@
 Wien2k & phonopy calculation
 =========================================
 
+How to run
+-----------
+
 The Wien2k-phonopy calculation works as follows:
 
 1) Read a Wien2k struct file with the P lattice format and create

@@ -10,6 +10,9 @@ Please follow the page :ref:`tutorial` and :ref:`examples_link`.
 VASP-DFPT & phonopy calculation
 ===========================================
 
+How to run
+-----------
+
 VASP can calculate force constants in real space using DFPT. The
 procedure to calculate phonon properties may be as follows:
 

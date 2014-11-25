@@ -3,10 +3,8 @@
 Calculation of mode Grüneisen parameters
 ========================================
 
-**Experimental**
-
-Usage of ``gruneisen``
-----------------------
+How to run
+-----------
 
 It is necessary to run three phonon calculations. One is calculated at
 the equilibrium volume and the remaining two are calculated at the
@@ -14,9 +12,9 @@ slightly larger volume and smaller volume than the equilibrium
 volume. The unitcells at these volumes have to be fully relaxed under 
 the constraint of each volume.
 
-The files named ``POSCAR``, ``FORCE_SETS`` (or ``FORCE_CONSTANTS``
+Let files named ``POSCAR-unitcell``, ``FORCE_SETS`` (or ``FORCE_CONSTANTS``
 with ``--readfc`` option),
-and optionally ``BORN`` are stored in three different directories
+and optionally ``BORN`` stored in three different directories
 named, e.g., ``equiv``, ``plus``, and ``minus``.
 
 The calculated results are written into the file ``gruneisen.yaml``.
@@ -59,11 +57,32 @@ calculated at :math:`\Gamma`-point, but ``gruneisen`` script avoids
 showing the values on the plot. Instead the values at the neighboring
 **q**-points of :math:`\Gamma`-point are used for the plot.
 
-Command options
-^^^^^^^^^^^^^^^^
+.. _gruneisen_calculators:
 
-The following command options can be used. They work similarly to
-those for ``phonopy`` script.
+Abinit, Pwscf, and Wien2k interfaces
+-------------------------------------
+
+``--abinit``, ``--pwscf``, or ``--wien2k`` options can be specified
+for corresponding calculators and the crystal structure file format
+should be different from that of the VASP format. An Abinit example is
+as follows::
+
+   % gruneisen orig plus minus --abinit --dim="2 2 2" --pa="0 1/2 1/2 1/2 0 1/2 1/2 1/2 0" --band="1/2 1/4 3/4 0 0 0 1/2 1/2 1/2 1/2 0.0 1/2" -p -c Si.in
+
+
+.. _gruneisen_command_options:
+
+Command options
+----------------
+
+If one of ``--abinit``, ``--pwscf``, or ``--wien2k`` options is
+specified, the interface mode is changed to it. The unit conversion
+factor to THz is appropriately selected and its crystal structure file
+format is accepted. If none of them is specified, as the VASP
+interface mode is invoked as the default interface.
+
+The following command options can be used for all interface
+modes. They work similarly to those for ``phonopy`` script.
 
 * ``--dim``
 * ``--mp``, ``--mesh``
@@ -72,6 +91,8 @@ those for ``phonopy`` script.
 * ``--readfc``
 * ``--band_points``
 * ``--nac``
+* ``--factor``
+* ``--nomeshsym``
 * ``-p``
 * ``-c``
 * ``-s``, ``--save``

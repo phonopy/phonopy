@@ -14,7 +14,7 @@ More tags may be supported on request.
 
    nat, ntyp, ATOMIC_SPECIES, ATOMIC_POSITIONS, CELL_PARAMETERS
 
-Procedure
+How to run
 ----------
 
 A procedure of Pwscf-phonopy calculation is as follows:
