@@ -62,8 +62,21 @@ def read_abinit(filename):
     tags = abinit_in.get_variables()
     acell = tags['acell']
     rprim = tags['rprim']
+    scalecart = tags['scalecart']
     lattice = np.array(rprim) * acell
-    positions = tags['xred']
+    if scalecart is not None:
+        for i in range(3):
+            lattice[i] *= scalecart[i]
+
+    if tags['xcart'] is not None:
+        pos_bohr = np.transpose(tags['xcart'])        
+        positions = np.dot(np.linalg.inv(lattice), pos_bohr).T
+    elif tags['xangst'] is not None:
+        pos_bohr = np.transpose(tags['xangst']) / Bohr
+        positions = np.dot(np.linalg.inv(lattice), pos_bohr).T
+    elif tags['xred'] is not None:
+        positions = tags['xred']
+        
     numbers = [tags['znucl'][x - 1] for x in tags['typat']]
     
     return Atoms(numbers=numbers,
@@ -106,20 +119,26 @@ def get_abinit_structure(cell):
     
 class AbinitIn:
     def __init__(self, lines):
-        self._set_methods = {'acell':   self._set_acell,
-                             'natom':   self._set_natom,
-                             'ntypat':  self._set_ntypat,
-                             'rprim':   self._set_rprim,
-                             'typat':   self._set_typat,
-                             'xred':    self._set_xred,
-                             'znucl':   self._set_znucl}
-        self._tags = {'acell':   None,
-                      'natom':   None,
-                      'ntypat':  None,
-                      'rprim':   None,
-                      'typat':   None,
-                      'xred':    None,
-                      'znucl':   None}
+        self._set_methods = {'acell':     self._set_acell,
+                             'natom':     self._set_natom,
+                             'ntypat':    self._set_ntypat,
+                             'rprim':     self._set_rprim,
+                             'typat':     self._set_typat,
+                             'scalecart': self._set_scalecart,
+                             'xangst':    self._set_xangst,
+                             'xcart':     self._set_xcart,
+                             'xred':      self._set_xred,
+                             'znucl':     self._set_znucl}
+        self._tags = {'acell':     None,
+                      'natom':     None,
+                      'ntypat':    None,
+                      'rprim':     None,
+                      'typat':     None,
+                      'scalecart': None,
+                      'xangst':    None,
+                      'xcart':     None,
+                      'xred':      None,
+                      'znucl':     None}
 
         self._values = None
         self._collect(lines)
@@ -198,6 +217,15 @@ class AbinitIn:
                 break
 
         self._tags['rprim'] = np.reshape(rprim[:9], (3, 3))
+
+    def _set_scalecart(self):
+        scalecart = []
+        for val in self._values:
+            scalecart += self._get_numerical_values(val)
+            if len(scalecart) >= 3:
+                break
+
+        self._tags['scalecart'] = np.array(scalecart[:3])
         
     def _set_typat(self):
         typat = []
@@ -209,15 +237,24 @@ class AbinitIn:
 
         self._tags['typat'] = typat[:natom]
 
+    def _set_xangst(self):
+        self._set_x_tags('xangst')
+
+    def _set_xcart(self):
+        self._set_x_tags('xcart')
+
     def _set_xred(self):
-        xred = []
+        self._set_x_tags('xred')
+        
+    def _set_x_tags(self, tagname):
+        xtag = []
         natom = self._tags['natom']
         for val in self._values:
-            xred += self._get_numerical_values(val)
-            if len(xred) >= natom * 3:
+            xtag += self._get_numerical_values(val)
+            if len(xtag) >= natom * 3:
                 break
 
-        self._tags['xred'] = np.reshape(xred[:natom * 3], (-1, 3))
+        self._tags[tagname] = np.reshape(xtag[:natom * 3], (-1, 3))
         
     def _set_znucl(self):
         znucl = []
