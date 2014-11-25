@@ -37,8 +37,9 @@
 import sys
 from phonopy import Phonopy
 from phonopy import PhonopyGruneisen
-from phonopy.interface.vasp import read_vasp
+from phonopy.interface import read_crystal_structure, get_default_cell_filename
 from phonopy.file_IO import parse_FORCE_SETS, parse_BORN, parse_FORCE_CONSTANTS
+from phonopy.units import VaspToTHz, Wien2kToTHz, AbinitToTHz, PwscfToTHz
 import numpy as np
 
 def fracval(frac):
@@ -48,16 +49,31 @@ def fracval(frac):
         x = frac.split('/')
         return float(x[0]) / float(x[1])
 
+def get_cell(cell_filename,
+             interface_mode):
+    cell, optional_structure_file_information = read_crystal_structure(
+        filename=cell_filename,
+        interface_mode=interface_mode)
+    if cell is None:
+        print ("Crystal structure file of %s could not be found." %
+               optional_structure_file_information[0])
+        sys.exit(1)
+
+    return cell
+        
 def get_phonon(cell_filename,
                force_sets_filename,
                dim,
                primitive_axis=np.eye(3),
                born_filename=None,
+               factor=VaspToTHz,
+               interface_mode='vasp',
                symprec=1e-5):
-    cell = read_vasp(cell_filename)
+    cell = get_cell(cell_filename, interface_mode)
     phonon = Phonopy(cell,
                      dim,
                      primitive_matrix=primitive_axis,
+                     factor=factor,
                      is_auto_displacements=False,
                      symprec=symprec)
     force_sets = parse_FORCE_SETS(filename=force_sets_filename)
@@ -76,11 +92,14 @@ def get_phonon_from_force_constants(cell_filename,
                                     dim,
                                     primitive_axis=np.eye(3),
                                     born_filename=None,
+                                    factor=VaspToTHz,
+                                    interface_mode='vasp',
                                     symprec=1e-5):
-    cell = read_vasp(cell_filename)
+    cell = get_cell(cell_filename, interface_mode)
     phonon = Phonopy(cell,
                      dim,
                      primitive_matrix=np.eye(3),
+                     factor=factor,
                      is_auto_displacements=False,
                      symprec=symprec)
     force_constants = parse_FORCE_CONSTANTS(force_constants_filename)
@@ -95,75 +114,88 @@ def get_phonon_from_force_constants(cell_filename,
 
 from optparse import OptionParser
 parser = OptionParser()
-parser.set_defaults(band_paths=None,
-                    cell_poscar=None,
-                    color_scheme=None,
-                    cutoff_frequency=None,
-                    cutoff_wave_vector=1e-4,
-                    is_nac=False,
-                    is_mesh_symmetry=True,
-                    plot_graph=False,
-                    reads_force_constants=False,                    
-                    band_points=51,
-                    marker='o',
-                    markersize=None,
-                    primitive_axis=None,
-                    sampling_mesh=None,
-                    save_graph=False,
-                    supercell_dimension=None,
-                    symprec=1e-5,
-                    title=None)
-parser.add_option("--band_points", dest="band_points", type="int",
-                   help="Number of sampling points in a segment of band path")
-parser.add_option("--pa", "--primitive_axis", dest="primitive_axis",
-                  action="store", type="string",
-                  help="Same as PRIMITIVE_AXIS tags")
+parser.set_defaults(
+    abinit_mode=False,
+    band_paths=None,
+    cell_filename=None,
+    color_scheme=None,
+    cutoff_frequency=None,
+    cutoff_wave_vector=1e-4,
+    factor=None,
+    is_nac=False,
+    is_mesh_symmetry=True,
+    plot_graph=False,
+    reads_force_constants=False,                    
+    band_points=51,
+    marker='o',
+    markersize=None,
+    primitive_axis=None,
+    pwscf_mode=False,
+    sampling_mesh=None,
+    save_graph=False,
+    supercell_dimension=None,
+    symprec=1e-5,
+    title=None,
+    wien2k_mode=False)
+parser.add_option("--abinit", dest="abinit_mode",
+                  action="store_true", help="Invoke Abinit mode")
 parser.add_option("--band", dest="band_paths",
                   action="store", type="string",
                   help="Band paths in reduced coordinates")
-parser.add_option("--mp", "--mesh", dest="sampling_mesh",
-                  action="store", type="string",
-                  help="Sampling mesh")
-parser.add_option("--dim", dest="supercell_dimension",
-                  action="store", type="string",
-                  help="Same behavior as DIM tag")
-parser.add_option("--nac", dest="is_nac",
-                  action="store_true",
-                  help="Non-analytical term correction")
-parser.add_option("-p", "--plot", dest="plot_graph",
-                  action="store_true",
-                  help="Plot data")
-parser.add_option("--readfc", dest="reads_force_constants",
-                  action="store_true",
-                  help="Read FORCE_CONSTANTS")
-parser.add_option("-c", "--cell", dest="cell_poscar",
+parser.add_option("--band_points", dest="band_points", type="int",
+                   help="Number of sampling points in a segment of band path")
+parser.add_option("-c", "--cell", dest="cell_filename",
                   action="store", type="string",
                   help="Read unit cell", metavar="FILE")
-parser.add_option("-s", "--save", dest="save_graph",
-                  action="store_true",
-                  help="Save plot data in pdf")
 parser.add_option("--color", dest="color_scheme",
                   action="store", type="string",
                   help="Color scheme")
-parser.add_option("--q_cutoff", dest="cutoff_wave_vector", type="float",
-                  help="Acoustic modes inside cutoff wave vector is treated.")
 parser.add_option("--cutoff", dest="cutoff_frequency", type="float",
                   help="Plot above this cutoff frequency for mesh sampling mode.")
+parser.add_option("--dim", dest="supercell_dimension",
+                  action="store", type="string",
+                  help="Same behavior as DIM tag")
+parser.add_option("--factor", dest="factor", type="float",
+                  help="Conversion factor to favorite frequency unit")
 parser.add_option("--marker", dest="marker",
                   action="store", type="string",
                   help="Marker for plot (matplotlib)")
 parser.add_option("--markersize", dest="markersize", type="float",
                   help="Markersize for plot in points (matplotlib)")
-parser.add_option("-o", "--output", dest="output_filename",
+parser.add_option("--mp", "--mesh", dest="sampling_mesh",
                   action="store", type="string",
-                  help="Output filename of PDF plot")
-parser.add_option("-t", "--title", dest="title", action="store",
-                  type="string", help="Title of plot")
+                  help="Sampling mesh")
+parser.add_option("--nac", dest="is_nac",
+                  action="store_true",
+                  help="Non-analytical term correction")
 parser.add_option("--nomeshsym", dest="is_mesh_symmetry",
                   action="store_false",
                   help="Symmetry is not imposed for mesh sampling.")
+parser.add_option("-o", "--output", dest="output_filename",
+                  action="store", type="string",
+                  help="Output filename of PDF plot")
+parser.add_option("-p", "--plot", dest="plot_graph",
+                  action="store_true",
+                  help="Plot data")
+parser.add_option("--pa", "--primitive_axis", dest="primitive_axis",
+                  action="store", type="string",
+                  help="Same as PRIMITIVE_AXIS tags")
+parser.add_option("--pwscf", dest="pwscf_mode",
+                  action="store_true", help="Invoke Pwscf mode")
+parser.add_option("--q_cutoff", dest="cutoff_wave_vector", type="float",
+                  help="Acoustic modes inside cutoff wave vector is treated.")
+parser.add_option("--readfc", dest="reads_force_constants",
+                  action="store_true",
+                  help="Read FORCE_CONSTANTS")
+parser.add_option("-s", "--save", dest="save_graph",
+                  action="store_true",
+                  help="Save plot data in pdf")
+parser.add_option("-t", "--title", dest="title", action="store",
+                  type="string", help="Title of plot")
 parser.add_option("--tolerance", dest="symprec", type="float",
                   help="Symmetry tolerance to search")
+parser.add_option("--wien2k", dest="wien2k_mode",
+                  action="store_true", help="Invoke Wien2k mode")
 (options, args) = parser.parse_args()
 
 if len(args) is not 3:
@@ -193,10 +225,37 @@ else:
     print "--dim option has to be specified."
     sys.exit(1)
 
-if options.cell_poscar:
-    cell_filename = options.cell_poscar
+
+#
+# Phonopy interface mode
+#
+# Physical units: energy,  distance,  atomic mass, force
+# vasp          : eV,      Angstrom,  AMU,         eV/Angstrom
+# wien2k        : Ry,      au,        AMU,         mRy/au
+# pwscf         : Ry,      au,        AMU,         Ry/au
+# abinit        : hartree, au(=bohr), AMU,         eV/Angstrom
+#
+if options.wien2k_mode:
+    interface_mode = 'wien2k'
+    factor = Wien2kToTHz
+elif options.abinit_mode:
+    interface_mode = 'abinit'
+    factor = AbinitToTHz
+elif options.pwscf_mode:
+    interface_mode = 'pwscf'
+    factor = PwscfToTHz
 else:
-    cell_filename = "POSCAR"
+    interface_mode = 'vasp'
+    factor = VaspToTHz
+
+if options.factor is not None:
+    factor = options.factor
+    
+if options.cell_filename:
+    cell_filename = options.cell_filename
+else:
+    cell_filename = get_default_cell_filename(interface_mode)
+    
     
 phonons = []
 for i in range(3):
@@ -207,20 +266,26 @@ for i in range(3):
         born_filename = None
     
     if options.reads_force_constants:
-        phonons.append(get_phonon_from_force_constants(
+        phonon = get_phonon_from_force_constants(
             "%s/%s" % (directory, cell_filename),
             "%s/FORCE_CONSTANTS" % directory,
             dim,
             primitive_axis=primitive_axis,
             born_filename=born_filename,
-            symprec=options.symprec))
+            factor=factor,
+            interface_mode=interface_mode,
+            symprec=options.symprec)
+        phonons.append(phonon)
     else:
-        phonons.append(get_phonon("%s/%s" % (directory, cell_filename),
-                                  "%s/FORCE_SETS" % directory,
-                                  dim,
-                                  primitive_axis=primitive_axis,
-                                  born_filename=born_filename,
-                                  symprec=options.symprec))
+        phonon = get_phonon("%s/%s" % (directory, cell_filename),
+                            "%s/FORCE_SETS" % directory,
+                            dim,
+                            primitive_axis=primitive_axis,
+                            born_filename=born_filename,
+                            factor=factor,
+                            interface_mode=interface_mode,
+                            symprec=options.symprec)
+        phonons.append(phonon)
 
 gruneisen = PhonopyGruneisen(phonons[0], # equilibrium
                              phonons[1], # plus

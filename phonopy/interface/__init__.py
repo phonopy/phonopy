@@ -39,14 +39,7 @@ def read_crystal_structure(filename=None,
                            interface_mode='vasp',
                            chemical_symbols=None):
     if filename is None:
-        if interface_mode == 'vasp':
-            unitcell_filename = "POSCAR"
-        if interface_mode == 'abinit':
-            unitcell_filename = "unitcell.in"
-        if interface_mode == 'pwscf':
-            unitcell_filename = "unitcell.in"
-        if interface_mode == 'wien2k':
-            unitcell_filename = "case.struct"
+        unitcell_filename = get_default_cell_filename(interface_mode)
     else:
         unitcell_filename = filename
 
@@ -79,6 +72,18 @@ def read_crystal_structure(filename=None,
         unitcell, npts, r0s, rmts = parse_wien2k_struct(unitcell_filename)
         return unitcell, (unitcell_filename, npts, r0s, rmts)
 
+def get_default_cell_filename(interface_mode):
+    if interface_mode == 'vasp':
+        unitcell_filename = "POSCAR"
+    if interface_mode == 'abinit':
+        unitcell_filename = "unitcell.in"
+    if interface_mode == 'pwscf':
+        unitcell_filename = "unitcell.in"
+    if interface_mode == 'wien2k':
+        unitcell_filename = "case.struct"
+
+    return unitcell_filename
+        
 def create_FORCE_SETS(interface_mode,
                       force_filenames,
                       options,
