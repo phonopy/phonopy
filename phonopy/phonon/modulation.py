@@ -193,10 +193,11 @@ class Modulation:
         for v in dim:
             w.write("  - [ %d, %d, %d ]\n" % tuple(v))
         self._write_cell_yaml(self._supercell, w)
+        inv_lattice = np.linalg.inv(self._supercell.get_cell().T)
 
         w.write("modulations:\n")
-        for deltas, mode in zip(self._u,
-                                self._phonon_modes):
+        for u, mode in zip(self._u,
+                           self._phonon_modes):
             q = mode[0]
             w.write("- q-position: [ %12.7f, %12.7f, %12.7f ]\n" %
                        tuple(q))
@@ -204,13 +205,21 @@ class Modulation:
             w.write("  amplitude: %f\n" % mode[2])
             w.write("  phase: %f\n" % mode[3])
             w.write("  displacements:\n")
-            for i, p in enumerate(deltas):
+            for i, p in enumerate(u):
                 w.write("  - [ %20.15f, %20.15f ] # %d x (%f)\n" %
-                           (p[0].real, p[0].imag, i + 1, abs(p[0])))
+                        (p[0].real, p[0].imag, i + 1, abs(p[0])))
                 w.write("  - [ %20.15f, %20.15f ] # %d y (%f)\n" %
-                           (p[1].real, p[1].imag, i + 1, abs(p[1])))
+                        (p[1].real, p[1].imag, i + 1, abs(p[1])))
                 w.write("  - [ %20.15f, %20.15f ] # %d z (%f)\n" %
-                           (p[2].real, p[2].imag, i + 1, abs(p[2])))
+                        (p[2].real, p[2].imag, i + 1, abs(p[2])))
+            w.write("  fractional_displacements:\n")
+            for i, p in enumerate(np.dot(u, inv_lattice.T)):
+                w.write("  - [ %20.15f, %20.15f ] # %d a\n" %
+                        (p[0].real, p[0].imag, i + 1))
+                w.write("  - [ %20.15f, %20.15f ] # %d b\n" %
+                        (p[1].real, p[1].imag, i + 1))
+                w.write("  - [ %20.15f, %20.15f ] # %d c\n" %
+                        (p[2].real, p[2].imag, i + 1))
 
         w.write("phonon:\n")
         freqs = self._eigvals_to_frequencies(self._eigvals)
