@@ -65,10 +65,13 @@ class Modulation:
         self._derivative_order = derivative_order
 
         self._factor = factor
-        self._delta_modulations = []
+        self._u = []
         self._eigvecs = []
         self._eigvals = []
         self._supercell = None
+
+        dim = self._get_dimension_3x3()
+        self._supercell = get_supercell(self._primitive, dim)
 
     def run(self):
         for ph_mode in self._phonon_modes:
@@ -80,20 +83,29 @@ class Modulation:
                 perturbation=self._delta_q,
                 derivative_order=self._derivative_order,
                 nac_q_direction=self._nac_q_direction)
-            u = self._get_delta(eigvecs[:, band_index], q)
+            u = self._get_displacements(eigvecs[:, band_index],
+                                        q,
+                                        amplitude,
+                                        argument)
+            self._u.append(u)
             self._eigvecs.append(eigvecs[:, band_index])
             self._eigvals.append(eigvals[band_index])
-            # Set phase of modulation so that phase of the element
-            # that has maximum absolute value becomes 0.
-            self._set_phase_of_modulation(u, argument)
-            self._delta_modulations.append(u * amplitude)
+            
+    def get_modulated_supercells(self):
+        modulations = []
+        for u in self._u:
+            modulations.append(self._get_cell_with_modulation(u))
+        return modulations
+
+    def get_modulations_and_supercell(self):
+        return self._u, self._supercell
 
     def write(self, filename="MPOSCAR"):
         deltas = []
-        for i, delta_positions in enumerate(self._delta_modulations):
-            cell = self._get_cell_with_modulation(delta_positions)
+        for i, u in enumerate(self._u):
+            cell = self._get_cell_with_modulation(u)
             write_vasp((filename+"-%03d") % (i+1), cell, direct=True)
-            deltas.append(delta_positions)
+            deltas.append(u)
     
         sum_of_deltas = np.sum(deltas, axis=0)
         cell = self._get_cell_with_modulation(sum_of_deltas)
@@ -101,15 +113,6 @@ class Modulation:
         no_modulations = np.zeros(sum_of_deltas.shape, dtype=complex)
         cell = self._get_cell_with_modulation(no_modulations)
         write_vasp(filename+"-orig", cell, direct=True)
-
-    def get_modulations(self):
-        modulations = []
-        for delta_positions in self._delta_modulations:
-            modulations.append(self._get_cell_with_modulation(delta_positions))
-        return modulations
-
-    def get_delta_modulations(self):
-        return self._delta_modulations, self._supercell
 
     def write_yaml(self):
         self._write_yaml()
@@ -144,37 +147,34 @@ class Modulation:
 
         return dim
         
-    def _get_delta(self, eigvec, q):
-        dim = self._get_dimension_3x3()
-        supercell = get_supercell(self._primitive, dim)
-        m = supercell.get_masses()
-        s2u_map = supercell.get_supercell_to_unitcell_map()
-        u2u_map = supercell.get_unitcell_to_unitcell_map()
+    def _get_displacements(self, eigvec, q, amplitude, argument):
+        m = self._supercell.get_masses()
+        s2u_map = self._supercell.get_supercell_to_unitcell_map()
+        u2u_map = self._supercell.get_unitcell_to_unitcell_map()
         s2uu_map = [u2u_map[x] for x in s2u_map]
-        spos = supercell.get_scaled_positions()
+        spos = self._supercell.get_scaled_positions()
+        dim = self._supercell.get_supercell_matrix()
         coefs = np.exp(2j * np.pi * np.dot(np.dot(spos, dim.T), q)) / np.sqrt(m)
         u = []
         for i, coef in enumerate(coefs):
             eig_index = s2uu_map[i] * 3
             u.append(eigvec[eig_index:eig_index + 3] * coef)
-
-        self._supercell = supercell
         
-        return np.array(u)
+        u = np.array(u) * amplitude / np.sqrt(len(m))
+        phase_factor = self._get_phase_factor(u, argument)
+        u *= phase_factor
         
-    def _set_phase_of_modulation(self, modulation, argument):
+        return u
+        
+    def _get_phase_factor(self, modulation, argument):
         u = np.ravel(modulation)
         index_max_elem = np.argmax(abs(u))
         max_elem = u[index_max_elem]
         phase_for_zero = max_elem / abs(max_elem)
         phase_factor = np.exp(1j * np.pi * argument / 180) / phase_for_zero
-        modulation *= phase_factor
 
-    def _check_eigvecs(self, eigvals, eigvecs, dynmat):
-        modified = np.diag(np.dot(eigvecs.conj().T, np.dot(dynmat, eigvecs)))
-        print self._eigvals_to_frequencies(eigvals)
-        print self._eigvals_to_frequencies(modified)
-        print
+        return phase_factor
+        modulation *= phase_factor
 
     def _eigvals_to_frequencies(self, eigvals):
         e = np.array(eigvals).real
@@ -195,7 +195,7 @@ class Modulation:
         self._write_cell_yaml(self._supercell, w)
 
         w.write("modulations:\n")
-        for deltas, mode in zip(self._delta_modulations,
+        for deltas, mode in zip(self._u,
                                 self._phonon_modes):
             q = mode[0]
             w.write("- q-position: [ %12.7f, %12.7f, %12.7f ]\n" %
@@ -251,39 +251,3 @@ class Modulation:
         w.write("  positions:\n")
         for p in positions:
             w.write("  - [ %20.15f, %20.15f, %20.15f ]\n" % (tuple(p)))
-
-    def _get_supercell(self):
-        """Attention
-
-        This method will be removed after
-        new get_delta method is well checked.
-        """
-        dim = self._dimension
-        scaled_positions = []
-        masses = []
-        magmoms_prim = self._primitive.get_magnetic_moments()
-        if magmoms_prim is None:
-            magmoms = None
-        else:
-            magmoms = []
-        symbols = []
-        for a, b, c in list(np.ndindex(tuple(dim))):
-            for i in range(self._primitive.get_number_of_atoms()):
-                p = self._primitive.get_scaled_positions()[i]
-                scaled_positions.append(p + np.array([a,b,c]))
-                masses.append(self._primitive.get_masses()[i])
-                symbols.append(self._primitive.get_chemical_symbols()[i])
-                if magmoms_prim is not None:
-                    magmoms.append(magmoms_prim[i])
-
-        lattice = np.dot(np.diag(dim), self._primitive.get_cell())
-        positions = np.dot(scaled_positions, self._primitive.get_cell())
-
-        from phonopy.structure.atoms import Atoms
-        return Atoms(cell=lattice,
-                     positions=positions,
-                     masses=masses,
-                     magmoms=magmoms,
-                     symbols=symbols,
-                     pbc=True)
-

@@ -61,9 +61,9 @@ def read_abinit(filename):
     abinit_in = AbinitIn(open(filename).readlines())
     tags = abinit_in.get_variables()
     acell = tags['acell']
-    rprim = tags['rprim']
+    rprim = tags['rprim'].T
     scalecart = tags['scalecart']
-    lattice = np.array(rprim) * acell
+    lattice = rprim * acell
     if scalecart is not None:
         for i in range(3):
             lattice[i] *= scalecart[i]
@@ -111,7 +111,7 @@ def get_abinit_structure(cell):
     lines += ("znucl" + " %d" * len(znucl) + "\n") % tuple(znucl)
     lines += "acell 1 1 1\n"
     lines += "rprim\n"
-    lines += (("%20.16f" * 3 + "\n") * 3) % tuple(cell.get_cell().T.ravel())
+    lines += (("%20.16f" * 3 + "\n") * 3) % tuple(cell.get_cell().ravel())
     lines += "xred\n"
     lines += get_scaled_positions_lines(cell.get_scaled_positions())
 

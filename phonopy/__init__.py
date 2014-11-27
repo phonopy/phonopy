@@ -855,12 +855,12 @@ class Phonopy:
                                       factor=self._factor)
         self._modulation.run()
                     
-    def get_modulations(self):
+    def get_modulated_supercells(self):
         """Returns cells with modulations as Atoms objects"""
-        return self._modulation.get_modulations()
+        return self._modulation.get_modulated_supercells()
                 
-    def get_delta_modulations(self):
-        """Return modulations relative to equilibrium supercell
+    def get_modulations_and_supercell(self):
+        """Return modulations and supercell
 
         (modulations, supercell)
 
@@ -868,7 +868,7 @@ class Phonopy:
         supercell: Supercell as an Atoms object.
         
         """
-        return self._modulation.get_delta_modulations()
+        return self._modulation.get_modulations_and_supercell()
                 
     def write_modulations(self):
         """Create MPOSCAR's"""
