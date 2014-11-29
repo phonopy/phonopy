@@ -150,7 +150,11 @@ class Interaction:
             if (sum_q % self._mesh != 0).any():
                 print "============= Warning =================="
                 print triplet
-                print grid_address[triplet]
+                for tp in triplet:
+                    print grid_address[tp],
+                    print np.linalg.norm(
+                        np.dot(reciprocal_lattice,
+                               grid_address[tp] / self._mesh))
                 print sum_q
                 print "============= Warning =================="
 
