@@ -236,11 +236,9 @@ def _write_magnetic_moments(cell):
     magmoms = cell.get_magnetic_moments() 
     if magmoms is not  None:
         w = open("MAGMOM", 'w')
-        (num_atoms,
-         symbols,
-         scaled_positions,
-         sort_list) = _sort_positions_by_symbols(cell.get_chemical_symbols(),
-                                                 cell.get_scaled_positions())
+        num_atoms, symbols, scaled_positions, sort_list = \
+            sort_positions_by_symbols(cell.get_chemical_symbols(),
+                                      cell.get_scaled_positions())
         w.write(" MAGMOM = ")
         for i in sort_list:
             w.write("%f " % magmoms[i])
