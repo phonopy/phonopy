@@ -1,0 +1,13 @@
+This is an example to create supercell MAGMOM values of VASP INCAR from corresponding unit cell MAGMOM values in conjunction with creating supercells with displacements. By running the following command:
+
+% phonopy -d --dim="2 2 2" -c POSCAR-unitcell magmom.conf
+
+A file MAGMOM is created with supercell POSCARs. In the MAGMOM file, a line of MAGMOM for VASP INCAR is written and it will be copied to the INCAR used for supercell calculations. After creating FORCE_SETS by
+
+% phonopy -f vasprun.xml
+
+phonon calculation is achieved by, e.g.,
+
+% phonopy --dim="2 2 2" --pa="-1/2 1/2 1/2 1/2 -1/2 1/2 1/2 1/2 -1/2" -c POSCAR-unitcell --band="1/2 -1/2 1/2 0 0 0 1/4 1/4 1/4" magmom.conf -p
+
+In the phonon calculation, magmom.conf has to be told because magnetic moments projected onto atomic sites may break crystal symmetry and it is considered in phonopy.
