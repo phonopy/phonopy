@@ -377,7 +377,7 @@ class Phono3py:
             grid_points=None,
             mesh_divisors=None,
             coarse_mesh_shifts=None,
-            cutoff_mfp=None, # in micrometre
+            boundary_mfp=None, # in micrometre
             is_reducible_collision_matrix=False,
             no_kappa_stars=False,
             gv_delta_q=None, # for group velocity
@@ -400,7 +400,7 @@ class Phono3py:
                 is_isotope=is_isotope,
                 mass_variances=mass_variances,
                 grid_points=grid_points,
-                cutoff_mfp=cutoff_mfp,
+                boundary_mfp=boundary_mfp,
                 is_reducible_collision_matrix=is_reducible_collision_matrix,
                 no_kappa_stars=no_kappa_stars,
                 gv_delta_q=gv_delta_q,
@@ -421,7 +421,7 @@ class Phono3py:
                 grid_points=grid_points,
                 mesh_divisors=mesh_divisors,
                 coarse_mesh_shifts=coarse_mesh_shifts,
-                cutoff_mfp=cutoff_mfp,
+                boundary_mfp=boundary_mfp,
                 no_kappa_stars=no_kappa_stars,
                 gv_delta_q=gv_delta_q,
                 write_gamma=write_gamma,

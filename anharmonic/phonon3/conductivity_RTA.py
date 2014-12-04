@@ -17,7 +17,7 @@ def get_thermal_conductivity_RTA(
         is_isotope=False,
         mesh_divisors=None,
         coarse_mesh_shifts=None,
-        cutoff_mfp=None, # in micrometre
+        boundary_mfp=None, # in micrometre
         no_kappa_stars=False,
         gv_delta_q=1e-4, # for group velocity
         write_gamma=False,
@@ -38,7 +38,7 @@ def get_thermal_conductivity_RTA(
                           mass_variances=mass_variances,
                           mesh_divisors=mesh_divisors,
                           coarse_mesh_shifts=coarse_mesh_shifts,
-                          cutoff_mfp=cutoff_mfp,
+                          boundary_mfp=boundary_mfp,
                           no_kappa_stars=no_kappa_stars,
                           gv_delta_q=gv_delta_q,
                           log_level=log_level)
@@ -221,7 +221,7 @@ class Conductivity_RTA(Conductivity):
                  mass_variances=None,
                  mesh_divisors=None,
                  coarse_mesh_shifts=None,
-                 cutoff_mfp=None, # in micrometre
+                 boundary_mfp=None, # in micrometre
                  no_kappa_stars=False,
                  gv_delta_q=None, # finite difference for group veolocity
                  log_level=0):
@@ -236,7 +236,7 @@ class Conductivity_RTA(Conductivity):
         self._dm = None
         self._frequency_factor_to_THz = None
         self._cutoff_frequency = None
-        self._cutoff_mfp = None
+        self._boundary_mfp = None
 
         self._symmetry = None
         self._point_operations = None
@@ -275,7 +275,7 @@ class Conductivity_RTA(Conductivity):
                               mass_variances=mass_variances,
                               mesh_divisors=mesh_divisors,
                               coarse_mesh_shifts=coarse_mesh_shifts,
-                              cutoff_mfp=cutoff_mfp,
+                              boundary_mfp=boundary_mfp,
                               no_kappa_stars=no_kappa_stars,
                               gv_delta_q=gv_delta_q,
                               log_level=log_level)

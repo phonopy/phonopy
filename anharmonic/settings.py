@@ -8,8 +8,8 @@ class Phono3pySettings(Settings):
         self._coarse_mesh_shifts = None
         self._cutoff_fc3_distance = None
         self._cutoff_pair_distance = None
-        self._cutoff_mfp = 1.0e6 # In micrometre. The default value is
-                                 # just set to avoid divergence.
+        self._boundary_mfp = 1.0e6 # In micrometre. The default value is
+                                   # just set to avoid divergence.
         self._grid_addresses = None
         self._grid_points = None
         self._ion_clamped = False
@@ -52,11 +52,11 @@ class Phono3pySettings(Settings):
     def get_cutoff_pair_distance(self):
         return self._cutoff_pair_distance
 
-    def set_cutoff_mfp(self, cutoff_mfp):
-        self._cutoff_mfp = cutoff_mfp
+    def set_boundary_mfp(self, boundary_mfp):
+        self._boundary_mfp = boundary_mfp
 
-    def get_cutoff_mfp(self):
-        return self._cutoff_mfp
+    def get_boundary_mfp(self):
+        return self._boundary_mfp
 
     def set_grid_addresses(self, grid_addresses):
         self._grid_addresses = grid_addresses
@@ -223,10 +223,10 @@ class Phono3pyConfParser(ConfParser):
                     self._confs['cutoff_pair_distance'] = \
                         self._options.cutoff_pair_distance
 
-            if opt.dest == 'cutoff_mfp':
-                if self._options.cutoff_mfp is not None:
-                    self._confs['cutoff_mfp'] = \
-                        self._options.cutoff_mfp
+            if opt.dest == 'boundary_mfp':
+                if self._options.boundary_mfp is not None:
+                    self._confs['boundary_mfp'] = \
+                        self._options.boundary_mfp
 
             if opt.dest == 'grid_addresses':
                 if self._options.grid_addresses is not None:
@@ -347,9 +347,9 @@ class Phono3pyConfParser(ConfParser):
                 self.set_parameter('cutoff_pair_distance',
                                    float(confs['cutoff_pair_distance']))
 
-            if conf_key == 'cutoff_mfp':
-                self.set_parameter('cutoff_mfp',
-                                   float(confs['cutoff_mfp']))
+            if conf_key == 'boundary_mfp':
+                self.set_parameter('boundary_mfp',
+                                   float(confs['boundary_mfp']))
 
             if conf_key == 'grid_addresses':
                 vals = [int(x) for x in
@@ -487,8 +487,8 @@ class Phono3pyConfParser(ConfParser):
                 params['cutoff_pair_distance'])
 
         # Boundary mean free path for thermal conductivity calculation
-        if params.has_key('cutoff_mfp'):
-            self._settings.set_cutoff_mfp(params['cutoff_mfp'])
+        if params.has_key('boundary_mfp'):
+            self._settings.set_boundary_mfp(params['boundary_mfp'])
 
         # Grid addresses (sets of three integer values)
         if params.has_key('grid_addresses'):

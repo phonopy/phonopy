@@ -16,7 +16,7 @@ def get_thermal_conductivity_LBTE(
         is_isotope=False,
         mass_variances=None,
         grid_points=None,
-        cutoff_mfp=None, # in micrometre
+        boundary_mfp=None, # in micrometre
         is_reducible_collision_matrix=False,
         no_kappa_stars=False,
         gv_delta_q=1e-4, # for group velocity
@@ -46,7 +46,7 @@ def get_thermal_conductivity_LBTE(
         sigmas=sigmas,
         is_isotope=is_isotope,
         mass_variances=mass_variances,
-        cutoff_mfp=cutoff_mfp,
+        boundary_mfp=boundary_mfp,
         is_reducible_collision_matrix=is_reducible_collision_matrix,
         no_kappa_stars=no_kappa_stars,
         gv_delta_q=gv_delta_q,
@@ -238,7 +238,7 @@ class Conductivity_LBTE(Conductivity):
                  sigmas=[],
                  is_isotope=False,
                  mass_variances=None,
-                 cutoff_mfp=None, # in micrometre
+                 boundary_mfp=None, # in micrometre
                  is_reducible_collision_matrix=False,
                  no_kappa_stars=False,
                  gv_delta_q=None, # finite difference for group veolocity
@@ -254,7 +254,7 @@ class Conductivity_LBTE(Conductivity):
         self._dm = None
         self._frequency_factor_to_THz = None
         self._cutoff_frequency = None
-        self._cutoff_mfp = None
+        self._boundary_mfp = None
 
         self._symmetry = None
         self._point_operations = None
@@ -292,7 +292,7 @@ class Conductivity_LBTE(Conductivity):
                               sigmas=sigmas,
                               is_isotope=is_isotope,
                               mass_variances=mass_variances,
-                              cutoff_mfp=cutoff_mfp,
+                              boundary_mfp=boundary_mfp,
                               no_kappa_stars=no_kappa_stars,
                               gv_delta_q=gv_delta_q,
                               log_level=log_level)

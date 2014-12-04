@@ -19,7 +19,7 @@ class Conductivity:
                  mass_variances=None,
                  mesh_divisors=None,
                  coarse_mesh_shifts=None,
-                 cutoff_mfp=None, # in micrometre
+                 boundary_mfp=None, # in micrometre
                  no_kappa_stars=False,
                  gv_delta_q=None, # finite difference for group veolocity
                  log_level=0):
@@ -35,7 +35,7 @@ class Conductivity:
         self._dm = self._pp.get_dynamical_matrix()
         self._frequency_factor_to_THz = self._pp.get_frequency_factor_to_THz()
         self._cutoff_frequency = self._pp.get_cutoff_frequency()
-        self._cutoff_mfp = cutoff_mfp
+        self._boundary_mfp = boundary_mfp
 
         self._symmetry = symmetry
 
@@ -309,10 +309,10 @@ class Conductivity:
         main_diagonal = self._gamma[j, k, i].copy()
         if self._gamma_iso is not None:
             main_diagonal += self._gamma_iso[j, i]
-        if self._cutoff_mfp is not None:
+        if self._boundary_mfp is not None:
             main_diagonal += self._get_boundary_scattering(i)
 
-        # if self._cutoff_mfp is not None:
+        # if self._boundary_mfp is not None:
         #     for l in range(num_band):
         #         # Acoustic modes at Gamma are avoided.
         #         if i == 0 and l < 3:
@@ -320,9 +320,9 @@ class Conductivity:
         #         gv_norm = np.linalg.norm(self._gv[i, l])
         #         mean_free_path = (gv_norm * Angstrom * 1e6 /
         #                           (4 * np.pi * main_diagonal[l]))
-        #         if mean_free_path > self._cutoff_mfp:
+        #         if mean_free_path > self._boundary_mfp:
         #             main_diagonal[l] = (
-        #                 gv_norm / (4 * np.pi * self._cutoff_mfp))
+        #                 gv_norm / (4 * np.pi * self._boundary_mfp))
                     
         return main_diagonal
                         
@@ -331,7 +331,7 @@ class Conductivity:
         g_boundary = np.zeros(num_band, dtype='double')
         for l in range(num_band):
             g_boundary[l] = (np.linalg.norm(self._gv[i, l]) * Angstrom * 1e6 /
-                             (4 * np.pi * self._cutoff_mfp))
+                             (4 * np.pi * self._boundary_mfp))
         return g_boundary
         
     def _show_log_header(self, i):
@@ -341,13 +341,13 @@ class Conductivity:
                    "=======================" %
                    (gp, i + 1, len(self._grid_points)))
             print "q-point: (%5.2f %5.2f %5.2f)" % tuple(self._qpoints[i])
-            if self._cutoff_mfp is not None:
-                if self._cutoff_mfp > 1000:
+            if self._boundary_mfp is not None:
+                if self._boundary_mfp > 1000:
                     print ("Boundary mean free path (millimetre): %.3f" %
-                           (self._cutoff_mfp / 1000.0))
+                           (self._boundary_mfp / 1000.0))
                 else:
                     print ("Boundary mean free path (micrometre): %.5f" %
-                       self._cutoff_mfp)
+                       self._boundary_mfp)
             if self._is_isotope:
                 print "Mass variance parameters:",
                 print ("%5.2e " * len(self._mass_variances)) % tuple(
