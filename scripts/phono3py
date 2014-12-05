@@ -199,7 +199,7 @@ parser.add_option("--cutoff_fc3", "--cutoff_fc3_distance",
 parser.add_option("--cutoff_freq", "--cutoff_frequency", dest="cutoff_frequency",
                   type="float",
                   help="Phonon modes below this frequency are ignored.")
-parser.add_option("--boundary_mfp", dest="boundary_mfp",
+parser.add_option("--boundary_mfp", "--bmfp", dest="boundary_mfp",
                   type="float",
                   help="Boundary mean free path in micrometre for thermal conductivity calculation")
 parser.add_option("--cutoff_pair", "--cutoff_pair_distance",
