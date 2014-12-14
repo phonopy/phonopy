@@ -1139,6 +1139,10 @@ class PhonopyConfParser(ConfParser):
 
     def _read_options(self):
         for opt in self._option_list:
+            if opt.dest == 'band_labels':
+                if self._options.band_labels:
+                    self._confs['band_labels'] = self._options.band_labels
+
             if opt.dest == 'is_displacement':
                 if self._options.is_displacement:
                     self._confs['create_displacements'] = '.true.'
