@@ -580,6 +580,21 @@ matrix. ``BORN`` file has to be prepared in the current directory. See
 
    NAC = .TRUE.
 
+``Q_DIRECTION``
+~~~~~~~~~~~~~~~~
+
+This tag is used to activate NAC at
+:math:`\mathbf{q}\rightarrow\mathbf{0}`, i.e. practically
+:math:`\Gamma`-point. Away from :math:`\Gamma`-point, this setting is
+ignored and the specified **q**-point is used as the **q**-direction.
+
+::
+
+   MP = 1 1 1
+   NAC = .TRUE.
+   Q_DIRECTION = 1 0 0
+
+
 .. _group_velocity_tag:
 
 Group velocity

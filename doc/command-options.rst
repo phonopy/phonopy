@@ -31,6 +31,7 @@ tags:
 * ``--pa``, ``--primitive_axis`` (``PRIMITIVE_AXIS``)
 * ``--pd``, ``--projection_direction`` (``PROJECTION_DIRECTION``)
 * ``--pdos`` (``PDOS``)
+* ``--q_direction`` (``Q_DIRECTION``)
 * ``--readfc`` (``FORCE_CONSTANTS = READ``)
 * ``--show_irreps`` (``SHOW_IRREPS``)
 * ``--sigma`` (``SIGMA``)
