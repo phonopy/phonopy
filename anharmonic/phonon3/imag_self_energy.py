@@ -308,7 +308,7 @@ class ImagSelfEnergy:
             self._interaction.set_grid_point(grid_point)
             self._fc3_normal_squared = None
             (self._triplets_at_q,
-             self._weights_at_q) = self._interaction.get_triplets_at_q()
+             self._weights_at_q) = self._interaction.get_triplets_at_q()[:2]
             self._grid_point = grid_point
             
     def set_sigma(self, sigma):

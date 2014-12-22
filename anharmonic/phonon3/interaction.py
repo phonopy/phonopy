@@ -90,13 +90,10 @@ class Interaction:
         return self._primitive
 
     def get_triplets_at_q(self):
-        if self._triplets_map_at_q is None:
-            return self._triplets_at_q, self._weights_at_q
-        else:
-            return (self._triplets_at_q,
-                    self._weights_at_q,
-                    self._triplets_map_at_q,
-                    self._ir_map_at_q)
+        return (self._triplets_at_q,
+                self._weights_at_q,
+                self._triplets_map_at_q,
+                self._ir_map_at_q)
 
     def get_grid_address(self):
         return self._grid_address

@@ -41,7 +41,7 @@ class FrequencyShift:
         (self._frequencies,
          self._eigenvectors) = self._interaction.get_phonons()[:2]
         (self._grid_point_triplets,
-         self._triplet_weights) = self._interaction.get_triplets_at_q()
+         self._triplet_weights) = self._interaction.get_triplets_at_q()[:2]
         self._band_indices = self._interaction.get_band_indices()
         
         mesh = self._interaction.get_mesh_numbers()
@@ -81,7 +81,7 @@ class FrequencyShift:
             self._interaction.set_grid_point(grid_point)
             self._fc3_normal_squared = None
             (self._grid_point_triplets,
-             self._triplet_weights) = self._interaction.get_triplets_at_q()
+             self._triplet_weights) = self._interaction.get_triplets_at_q()[:2]
             self._grid_point = self._grid_point_triplets[0, 0]
         
     def set_epsilon(self, epsilon):

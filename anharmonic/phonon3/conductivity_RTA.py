@@ -51,7 +51,7 @@ def get_thermal_conductivity_RTA(
     for i in br:
         if write_gamma:
             _write_gamma(br, interaction, i, filename=output_filename)
-        if log_level > 1:
+        if log_level > 1 and read_gamma is False:
             _write_triplets(interaction)
 
     if grid_points is None:
@@ -95,7 +95,7 @@ def _write_gamma(br, interaction, i, filename=None):
                             filename=filename)
 
 def _write_triplets(interaction, filename=None):
-    triplets, weights = interaction.get_triplets_at_q()
+    triplets, weights = interaction.get_triplets_at_q()[:2]
     grid_address = interaction.get_grid_address()
     mesh = interaction.get_mesh_numbers()
     write_triplets(triplets,
@@ -119,10 +119,11 @@ def _write_kappa(br, filename=None, log_level=0):
     mspp = br.get_mean_square_pp_strength()
     qpoints = br.get_qpoints()
     weights = br.get_grid_weights()
-    # num_sampling_points = br.get_number_of_sampling_points()
-    
     kappa = br.get_kappa()
     mode_kappa = br.get_mode_kappa()
+    num_ignored_phonon_modes = br.get_number_of_ignored_phonon_modes()
+    num_band = br.get_frequencies().shape[1]
+    num_phonon_modes = br.get_number_of_sampling_grid_points() * num_band
     
     for i, sigma in enumerate(sigmas):
         kappa_at_sigma = kappa[i]
@@ -136,11 +137,20 @@ def _write_kappa(br, filename=None, log_level=0):
                 print "for sigma=%s -----------" % sigma
             else:
                 print "with tetrahedron method -----------"
-            print ("#%6s     " + " %-9s" * 6) % ("T(K)", "xx", "yy", "zz",
-                                                "yz", "xz", "xy")
-            for t, k in zip(temperatures, kappa_at_sigma):
-                print ("%7.1f" + " %9.3f" * 6) % ((t,) + tuple(k))
+            if log_level > 1:
+                print ("#%6s     " + " %-9s" * 6 + "#ipm") % (
+                    "T(K)", "xx", "yy", "zz", "yz", "xz", "xy")
+                for j, (t, k) in enumerate(zip(temperatures, kappa_at_sigma)):
+                    print ("%7.1f" + " %9.3f" * 6 + " %d/%d") % (
+                        (t,) + tuple(k) + 
+                        (num_ignored_phonon_modes[i, j], num_phonon_modes))
+            else:
+                print ("#%6s     " + " %-9s" * 6) % ("T(K)", "xx", "yy", "zz",
+                                                     "yz", "xz", "xy")
+                for j, (t, k) in enumerate(zip(temperatures, kappa_at_sigma)):
+                    print ("%7.1f" + " %9.3f" * 6) % ((t,) + tuple(k))
             print
+
         write_kappa_to_hdf5(temperatures,
                             mesh,
                             frequency=frequencies,
@@ -253,6 +263,8 @@ class Conductivity_RTA(Conductivity):
         self._gv = None
         self._gamma_iso = None
         self._mean_square_pp_strength = None
+        self._num_ignored_phonon_modes = None
+        self._num_sampling_grid_points = None
         
         self._mesh = None
         self._mesh_divisors = None
@@ -287,14 +299,16 @@ class Conductivity_RTA(Conductivity):
 
     def set_kappa_at_sigmas(self):
         num_band = self._primitive.get_number_of_atoms() * 3
-        num_sampling_points = 0
+        self._num_sampling_grid_points = 0
         
         for i, grid_point in enumerate(self._grid_points):
             cv = self._cv[i]
+            gp = self._grid_points[i]
+            frequencies = self._frequencies[gp]
             
             # Outer product of group velocities (v x v) [num_k*, num_freqs, 3, 3]
             gv_by_gv_tensor, order_kstar = self._get_gv_by_gv(i)
-            num_sampling_points += order_kstar
+            self._num_sampling_grid_points += order_kstar
     
             # Sum all vxv at k*
             gv_sum2 = np.zeros((6, num_band), dtype='double')
@@ -307,17 +321,25 @@ class Conductivity_RTA(Conductivity):
                 for k in range(len(self._temperatures)):
                     g_sum = self._get_main_diagonal(i, j, k)
                     for l in range(num_band):
-                        if i == 0 and l < 3: # Exclude acoustic modes at Gamma
+                        if frequencies[l] < self._cutoff_frequency:
+                            self._num_ignored_phonon_modes[j, k] += 1
                             continue
+
                         self._mode_kappa[j, k, i, l] = (
                             gv_sum2[:, l] * cv[k, l] / (g_sum[l] * 2) *
                             self._conversion_factor)
 
-        self._mode_kappa /= num_sampling_points
+        self._mode_kappa /= self._num_sampling_grid_points
         self._kappa = self._mode_kappa.sum(axis=2).sum(axis=2)
 
     def get_mode_heat_capacities(self):
         return self._cv
+
+    def get_number_of_ignored_phonon_modes(self):
+        return self._num_ignored_phonon_modes
+
+    def get_number_of_sampling_grid_points(self):
+        return self._num_sampling_grid_points
 
     def _run_at_grid_point(self):
         i = self._grid_point_count
@@ -373,6 +395,9 @@ class Conductivity_RTA(Conductivity):
                                         num_band), dtype='double')
         self._mean_square_pp_strength = np.zeros((num_grid_points, num_band),
                                                  dtype='double')
+        self._num_ignored_phonon_modes = np.zeros((len(self._sigmas),
+                                                   len(self._temperatures)),
+                                                  dtype='intc')
         self._collision = ImagSelfEnergy(self._pp)
         
     def _set_gamma_at_sigmas(self, i):
