@@ -124,10 +124,12 @@ def print_cells(phonon):
 
 def print_settings(settings):
     run_mode = settings.get_run_mode()
-    if run_mode== 'band':
+    if run_mode == 'band':
         print "Band structure mode"
     if run_mode == 'mesh':
         print "Mesh sampling mode"
+    if run_mode == 'band_mesh':
+        print "Band structure and mesh sampling mode"
     if run_mode == 'anime':
         print "Animation mode"
     if run_mode == 'modulation':
@@ -168,7 +170,7 @@ def print_settings(settings):
     if settings.get_fc_symmetry_iteration() > 0:
         print ("  Force constants symmetrization: %d times" %
                settings.get_fc_symmetry_iteration())
-    if run_mode == 'mesh':
+    if run_mode == 'mesh' or run_mode == 'band_mesh':
         print "  Sampling mesh: ", np.array(settings.get_mesh()[0])
 
     if (np.diag(np.diag(settings.get_supercell_matrix())) \
@@ -871,27 +873,209 @@ if run_mode == 'qpoints':
         factor=factor)
     phonon.write_yaml_qpoints_phonon()
 
-# Band plot
-elif run_mode == 'band':
-    bands = settings.get_bands()
-    if log_level > 0:
-        print "Paths in reciprocal reduced coordinates:"
-        for band in bands:
-            print("[%5.2f %5.2f %5.2f] --> [%5.2f %5.2f %5.2f]" % 
-                  (tuple(band[0]) + tuple(band[-1])))
+# Band structure and mesh sampling
+elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
+    if run_mode == 'band' or run_mode == 'band_mesh':
+        bands = settings.get_bands()
+        if log_level > 0:
+            print "Paths in reciprocal reduced coordinates:"
+            for band in bands:
+                print("[%5.2f %5.2f %5.2f] --> [%5.2f %5.2f %5.2f]" % 
+                      (tuple(band[0]) + tuple(band[-1])))
+    
+        phonon.set_band_structure(
+            bands,
+            is_eigenvectors=settings.get_is_eigenvectors(),
+            is_band_connection=settings.get_is_band_connection())
+        phonon.write_yaml_band_structure()
+    
+        if options.is_graph_plot and run_mode != 'band_mesh':
+            plot = phonon.plot_band_structure(symbols=settings.get_band_labels())
+            if options.is_graph_save:
+                plot.savefig('band.pdf')
+            else:
+                plot.show()
 
-    phonon.set_band_structure(
-        bands,
-        is_eigenvectors=settings.get_is_eigenvectors(),
-        is_band_connection=settings.get_is_band_connection())
-    phonon.write_yaml_band_structure()
+    if run_mode == 'mesh' or run_mode == 'band_mesh':
+        (mesh,
+         mesh_shift,
+         t_symmetry,
+         q_symmetry,
+         is_gamma_center) =  settings.get_mesh()
+        phonon.set_mesh(mesh,
+                        mesh_shift,
+                        is_time_reversal=t_symmetry,
+                        is_mesh_symmetry=q_symmetry,
+                        is_eigenvectors=settings.get_is_eigenvectors(),
+                        is_gamma_center=settings.get_is_gamma_center())
+        weights = phonon.get_mesh()[1]
+        if log_level > 0:
+            if q_symmetry:
+                print "Number of irreducible q-points: ", weights.shape[0]
+            else:
+                print "Number of q-points: ", weights.shape[0]
+    
+        phonon.write_yaml_mesh()
+    
+        # Thermal property
+        if settings.get_is_thermal_properties():
+            if log_level > 0:
+                print "Calculating thermal properties..."
+            tprop_range = settings.get_thermal_property_range()
+            tstep = tprop_range['step']
+            tmax = tprop_range['max']
+            tmin = tprop_range['min']
+            phonon.set_thermal_properties(
+                tstep,
+                tmax,
+                tmin,
+                is_projection=settings.get_is_projected_thermal_properties(),
+                band_indices=settings.get_band_indices(),
+                cutoff_frequency=settings.get_cutoff_frequency())
+            phonon.write_yaml_thermal_properties()
+    
+            if log_level > 0:
+                print "#%11s %15s%15s%15s%15s" % ('T [K]',
+                                                  'F [kJ/mol]',
+                                                  'S [J/K/mol]',
+                                                  'C_v [J/K/mol]',
+                                                  'E [kJ/mol]')
+                temps, fe, entropy, heat_capacity = phonon.get_thermal_properties()
+                for T, F, S, CV in zip(temps, fe, entropy, heat_capacity):
+                    print ("%12.3f " + "%15.7f" * 4) % (T, F, S, CV,
+                                                        F + T * S / 1000)
+    
+            if options.is_graph_plot:
+                plot = phonon.plot_thermal_properties()
+                if options.is_graph_save:
+                    plot.savefig('thermal_properties.pdf')
+                else:
+                    plot.show()
+    
+        # Thermal displacements
+        elif settings.get_is_thermal_displacements():
+            p_direction = settings.get_projection_direction()
+            if log_level > 0:
+                if p_direction is not None:
+                    print "Projection direction:", np.array(p_direction)
+                print "Calculating thermal displacements..."
+            tprop_range = settings.get_thermal_property_range()
+            tstep = tprop_range['step']
+            tmax = tprop_range['max']
+            tmin = tprop_range['min']
+            phonon.set_thermal_displacements(
+                tstep,
+                tmax,
+                tmin,
+                direction=p_direction,
+                cutoff_frequency=settings.get_cutoff_frequency())
+            phonon.write_yaml_thermal_displacements()
+    
+            if options.is_graph_plot:
+                plot = phonon.plot_thermal_displacements(options.is_legend)
+                if options.is_graph_save:
+                    plot.savefig('thermal_displacement.pdf')
+                else:
+                    plot.show()
+    
+        # Thermal displacement matrices
+        elif settings.get_is_thermal_displacement_matrices():
+            if log_level > 0:
+                print "Calculating thermal displacement matrices..."
+            tprop_range = settings.get_thermal_property_range()
+            tstep = tprop_range['step']
+            tmax = tprop_range['max']
+            tmin = tprop_range['min']
+            phonon.set_thermal_displacement_matrices(
+                tstep,
+                tmax,
+                tmin,
+                cutoff_frequency=settings.get_cutoff_frequency())
+            phonon.write_yaml_thermal_displacement_matrices()
+    
+        # Thermal distances
+        elif settings.get_is_thermal_distances():
+            if log_level > 0:
+                print "Calculating thermal distances..."
+            tprop_range = settings.get_thermal_property_range()
+            tstep = tprop_range['step']
+            tmax = tprop_range['max']
+            tmin = tprop_range['min']
+            phonon.set_thermal_distances(
+                settings.get_thermal_atom_pairs(),
+                tstep,
+                tmax,
+                tmin,
+                cutoff_frequency=settings.get_cutoff_frequency())
+            phonon.write_yaml_thermal_distances()
+    
+        # Partial DOS
+        elif (settings.get_is_eigenvectors() and
+              (options.is_graph_plot or settings.get_is_dos_mode()) and
+              (not settings.get_is_thermal_properties())):
+            p_direction = settings.get_projection_direction()
+            if log_level > 0:
+                if p_direction is not None:
+                    print "Projection direction:", np.array(p_direction)
+                print "Calculating PDOS..."
+            dos_range = settings.get_dos_range()
+            phonon.set_partial_DOS(
+                sigma=settings.get_sigma(),
+                freq_min=dos_range['min'],
+                freq_max=dos_range['max'],
+                freq_pitch=dos_range['step'],
+                tetrahedron_method=settings.get_is_tetrahedron_method(),
+                direction=p_direction)
+            phonon.write_partial_DOS()
+    
+            if options.is_graph_plot:
+                pdos_indices = settings.get_pdos_indices()
+                if pdos_indices is None:
+                    pdos_indices = [range(primitive.get_number_of_atoms())]
+                plot = phonon.plot_partial_DOS(
+                    pdos_indices=pdos_indices,
+                    legend=([np.array(x) + 1 for x in pdos_indices]))
+                if options.is_graph_save:
+                    plot.savefig('partial_dos.pdf')
+                else:
+                    plot.show()
+    
+        # Total DOS
+        elif (options.is_graph_plot or settings.get_is_dos_mode()):
+            dos_range = settings.get_dos_range()
+            
+            phonon.set_total_DOS(
+                sigma=settings.get_sigma(),
+                freq_min=dos_range['min'],
+                freq_max=dos_range['max'],
+                freq_pitch=dos_range['step'],
+                tetrahedron_method=settings.get_is_tetrahedron_method())
+    
+            if log_level > 0:
+                print "Calculating DOS..."
+    
+            if settings.get_fits_Debye_model():
+                phonon.set_Debye_frequency()
+                if log_level > 0:
+                    debye_freq = phonon.get_Debye_frequency()
+                    print "Debye frequency: %10.5f" % debye_freq
+            phonon.write_total_DOS()
+    
+            if options.is_graph_plot and run_mode != 'band_mesh':
+                plot = phonon.plot_total_DOS()
+                if options.is_graph_save:
+                    plot.savefig('total_dos.pdf')
+                else:
+                    plot.show()
 
-    if options.is_graph_plot:
-        plot = phonon.plot_band_structure(settings.get_band_labels())
-        if options.is_graph_save:
-            plot.savefig('band.pdf')
-        else:
-            plot.show()
+        if options.is_graph_plot and run_mode == 'band_mesh':
+            plot = phonon.plot_band_structure_and_dos(
+                symbols=settings.get_band_labels())
+            if options.is_graph_save:
+                plot.savefig('band_dos.pdf')
+            else:
+                plot.show()
+
 
 # Animation        
 elif run_mode == 'anime':
@@ -952,177 +1136,6 @@ elif run_mode == 'irreps':
         phonon.show_irreps(show_irreps)
         phonon.write_yaml_irreps(show_irreps)
 
-# Mesh
-elif run_mode == 'mesh':
-    (mesh,
-     mesh_shift,
-     t_symmetry,
-     q_symmetry,
-     is_gamma_center) =  settings.get_mesh()
-    phonon.set_mesh(mesh,
-                    mesh_shift,
-                    is_time_reversal=t_symmetry,
-                    is_mesh_symmetry=q_symmetry,
-                    is_eigenvectors=settings.get_is_eigenvectors(),
-                    is_gamma_center=settings.get_is_gamma_center())
-    weights = phonon.get_mesh()[1]
-    if log_level > 0:
-        if q_symmetry:
-            print "Number of irreducible q-points: ", weights.shape[0]
-        else:
-            print "Number of q-points: ", weights.shape[0]
-
-    phonon.write_yaml_mesh()
-
-    # Thermal property
-    if settings.get_is_thermal_properties():
-        if log_level > 0:
-            print "Calculating thermal properties..."
-        tprop_range = settings.get_thermal_property_range()
-        tstep = tprop_range['step']
-        tmax = tprop_range['max']
-        tmin = tprop_range['min']
-        phonon.set_thermal_properties(
-            tstep,
-            tmax,
-            tmin,
-            is_projection=settings.get_is_projected_thermal_properties(),
-            band_indices=settings.get_band_indices(),
-            cutoff_frequency=settings.get_cutoff_frequency())
-        phonon.write_yaml_thermal_properties()
-
-        if log_level > 0:
-            print "#%11s %15s%15s%15s%15s" % ('T [K]',
-                                              'F [kJ/mol]',
-                                              'S [J/K/mol]',
-                                              'C_v [J/K/mol]',
-                                              'E [kJ/mol]')
-            temps, fe, entropy, heat_capacity = phonon.get_thermal_properties()
-            for T, F, S, CV in zip(temps, fe, entropy, heat_capacity):
-                print ("%12.3f " + "%15.7f" * 4) % (T, F, S, CV,
-                                                    F + T * S / 1000)
-
-        if options.is_graph_plot:
-            plot = phonon.plot_thermal_properties()
-            if options.is_graph_save:
-                plot.savefig('thermal_properties.pdf')
-            else:
-                plot.show()
-
-    # Thermal displacements
-    elif settings.get_is_thermal_displacements():
-        p_direction = settings.get_projection_direction()
-        if log_level > 0:
-            if p_direction is not None:
-                print "Projection direction:", np.array(p_direction)
-            print "Calculating thermal displacements..."
-        tprop_range = settings.get_thermal_property_range()
-        tstep = tprop_range['step']
-        tmax = tprop_range['max']
-        tmin = tprop_range['min']
-        phonon.set_thermal_displacements(
-            tstep,
-            tmax,
-            tmin,
-            direction=p_direction,
-            cutoff_frequency=settings.get_cutoff_frequency())
-        phonon.write_yaml_thermal_displacements()
-
-        if options.is_graph_plot:
-            plot = phonon.plot_thermal_displacements(options.is_legend)
-            if options.is_graph_save:
-                plot.savefig('thermal_displacement.pdf')
-            else:
-                plot.show()
-
-    # Thermal displacement matrices
-    elif settings.get_is_thermal_displacement_matrices():
-        if log_level > 0:
-            print "Calculating thermal displacement matrices..."
-        tprop_range = settings.get_thermal_property_range()
-        tstep = tprop_range['step']
-        tmax = tprop_range['max']
-        tmin = tprop_range['min']
-        phonon.set_thermal_displacement_matrices(
-            tstep,
-            tmax,
-            tmin,
-            cutoff_frequency=settings.get_cutoff_frequency())
-        phonon.write_yaml_thermal_displacement_matrices()
-
-    # Thermal distances
-    elif settings.get_is_thermal_distances():
-        if log_level > 0:
-            print "Calculating thermal distances..."
-        tprop_range = settings.get_thermal_property_range()
-        tstep = tprop_range['step']
-        tmax = tprop_range['max']
-        tmin = tprop_range['min']
-        phonon.set_thermal_distances(
-            settings.get_thermal_atom_pairs(),
-            tstep,
-            tmax,
-            tmin,
-            cutoff_frequency=settings.get_cutoff_frequency())
-        phonon.write_yaml_thermal_distances()
-
-    # Partial DOS
-    elif (settings.get_is_eigenvectors() and
-          (options.is_graph_plot or settings.get_is_dos_mode()) and
-          (not settings.get_is_thermal_properties())):
-        p_direction = settings.get_projection_direction()
-        if log_level > 0:
-            if p_direction is not None:
-                print "Projection direction:", np.array(p_direction)
-            print "Calculating PDOS..."
-        dos_range = settings.get_dos_range()
-        phonon.set_partial_DOS(
-            sigma=settings.get_sigma(),
-            freq_min=dos_range['min'],
-            freq_max=dos_range['max'],
-            freq_pitch=dos_range['step'],
-            tetrahedron_method=settings.get_is_tetrahedron_method(),
-            direction=p_direction)
-        phonon.write_partial_DOS()
-
-        if options.is_graph_plot:
-            pdos_indices = settings.get_pdos_indices()
-            if pdos_indices is None:
-                pdos_indices = [range(primitive.get_number_of_atoms())]
-            plot = phonon.plot_partial_DOS(
-                pdos_indices=pdos_indices,
-                legend=([np.array(x) + 1 for x in pdos_indices]))
-            if options.is_graph_save:
-                plot.savefig('partial_dos.pdf')
-            else:
-                plot.show()
-
-    # Total DOS
-    elif (options.is_graph_plot or settings.get_is_dos_mode()):
-        dos_range = settings.get_dos_range()
-        
-        phonon.set_total_DOS(
-            sigma=settings.get_sigma(),
-            freq_min=dos_range['min'],
-            freq_max=dos_range['max'],
-            freq_pitch=dos_range['step'],
-            tetrahedron_method=settings.get_is_tetrahedron_method())
-
-        if log_level > 0:
-            print "Calculating DOS..."
-
-        if settings.get_fits_Debye_model():
-            phonon.set_Debye_frequency()
-            if log_level > 0:
-                print "Debye frequency: %10.5f" % phonon.get_Debye_frequency()
-        phonon.write_total_DOS()
-
-        if options.is_graph_plot:
-            plot = phonon.plot_total_DOS()
-            if options.is_graph_save:
-                plot.savefig('total_dos.pdf')
-            else:
-                plot.show()
 else:
     print "--------------------------------------------------------------------------"
     print " One of the following run modes may be specified for phonon calculations."

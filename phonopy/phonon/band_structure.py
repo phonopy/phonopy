@@ -104,11 +104,14 @@ class BandStructure:
     def get_unit_conversion_factor(self):
         return self._factor
     
-    def plot_band(self, symbols=None):
-        import matplotlib.pyplot as plt
-        if symbols:
-            from matplotlib import rc
-            rc('text', usetex=True)
+    def plot_band(self, symbols=None, pyplot=None):
+        if pyplot is None:
+            import matplotlib.pyplot as plt
+            if symbols:
+                from matplotlib import rc
+                rc('text', usetex=True)
+        else:
+            plt = pyplot
 
         for distances, frequencies in zip(self._distances,
                                           self._frequencies):
@@ -126,7 +129,9 @@ class BandStructure:
             plt.xticks(self._special_point, [''] * len(self._special_point))
         plt.xlim(0, self._distance)
         plt.axhline(y=0, linestyle=':', linewidth=0.5, color='b')
-        return plt
+
+        if pyplot is None:
+            return plt
 
     def write_yaml(self):
         w = open('band.yaml', 'w')

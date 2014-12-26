@@ -1089,6 +1089,7 @@ class PhonopySettings(Settings):
         modes = ['qpoints',
                  'mesh',
                  'band',
+                 'band_mesh',
                  'anime',
                  'modulation',
                  'displacements',
@@ -1524,6 +1525,10 @@ class PhonopyConfParser(ConfParser):
 
         if params.has_key('band_connection'):
             self._settings.set_is_band_connection(params['band_connection'])
+
+        # band & mesh mode
+        if params.has_key('mesh_numbers') and params.has_key('band_paths'):
+            self._settings.set_run_mode('band_mesh')
     
         # Q-points mode
         if params.has_key('qpoints'):

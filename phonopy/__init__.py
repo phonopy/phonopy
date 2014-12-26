@@ -452,7 +452,7 @@ class Phonopy:
                 band.get_eigenvectors())
 
     def plot_band_structure(self, symbols=None):
-        return self._band_structure.plot_band(symbols)
+        return self._band_structure.plot_band(symbols=symbols)
 
     def write_yaml_band_structure(self):
         self._band_structure.write_yaml()
@@ -485,6 +485,26 @@ class Phonopy:
 
     def write_yaml_mesh(self):
         self._mesh.write_yaml()
+
+    def plot_band_structure_and_dos(self, symbols=None):
+        import matplotlib.pyplot as plt
+        import matplotlib.gridspec as gridspec
+        if symbols:
+            from matplotlib import rc
+            rc('text', usetex=True)
+
+        gs = gridspec.GridSpec(1, 2, width_ratios=[3, 1])
+        ax1 = plt.subplot(gs[0, 0])
+        self._band_structure.plot_band(symbols=symbols, pyplot=plt)
+        ax2 = plt.subplot(gs[0, 1], sharey=ax1)
+        plt.subplots_adjust(wspace=0.03)
+        plt.setp(ax2.get_yticklabels(), visible=False)
+        self._total_dos.plot_dos(ylabel="",
+                                 draw_grid=False,
+                                 flip_xy=True,
+                                 pyplot=plt)
+
+        return plt
 
     def set_thermal_properties(self,
                                t_step=10,
