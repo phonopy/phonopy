@@ -492,7 +492,7 @@ class Phonopy:
     def write_yaml_mesh(self):
         self._mesh.write_yaml()
 
-    def plot_band_structure_and_dos(self, symbols=None):
+    def plot_band_structure_and_dos(self, pdos_indices=None, symbols=None):
         import matplotlib.pyplot as plt
         import matplotlib.gridspec as gridspec
         if symbols:
@@ -506,10 +506,18 @@ class Phonopy:
         ax2 = plt.subplot(gs[0, 1], sharey=ax1)
         plt.subplots_adjust(wspace=0.03)
         plt.setp(ax2.get_yticklabels(), visible=False)
-        self._total_dos.plot(plt,
-                             ylabel="",
-                             draw_grid=False,
-                             flip_xy=True)
+
+        if pdos_indices is None:
+            self._total_dos.plot(plt,
+                                 ylabel="",
+                                 draw_grid=False,
+                                 flip_xy=True)
+        else:
+            self._pdos.plot(plt,
+                            indices=pdos_indices,
+                            ylabel="",
+                            draw_grid=False,
+                            flip_xy=True)
 
         return plt
 

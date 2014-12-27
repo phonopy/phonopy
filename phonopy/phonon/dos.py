@@ -100,9 +100,6 @@ def plot_partial_dos(pyplot,
                      ylabel=None,
                      draw_grid=True,
                      flip_xy=False):
-    pyplot.grid(draw_grid)
-    pyplot.xlabel('Frequency')
-    pyplot.ylabel('Partial density of states')
     plots = []
 
     num_atom = len(partial_dos)
@@ -119,10 +116,20 @@ def plot_partial_dos(pyplot,
                 print "Your specified atom number is out of range."
                 raise ValueError
             pdos_sum += partial_dos[i]
-        plots.append(pyplot.plot(frequency_points, pdos_sum))
+        if flip_xy:
+            plots.append(pyplot.plot(pdos_sum, frequency_points))
+        else:
+            plots.append(pyplot.plot(frequency_points, pdos_sum))
 
     if legend is not None:
         pyplot.legend(legend)
+
+    if xlabel:
+        pyplot.xlabel(xlabel)
+    if ylabel:
+        pyplot.ylabel(ylabel)
+
+    pyplot.grid(draw_grid)
     
 class NormalDistribution:
     def __init__(self, sigma):
@@ -366,12 +373,36 @@ class PartialDos(Dos):
         """
         return self._frequency_points, self._partial_dos
 
-    def plot(self, pyplot, indices=None, legend=None):
+    def plot(self,
+             pyplot,
+             indices=None,
+             legend=None,
+             xlabel=None,
+             ylabel=None,
+             draw_grid=True,
+             flip_xy=False):
+
+        if flip_xy:
+            _xlabel = 'Partial density of states'
+            _ylabel = 'Frequency'
+        else:
+            _xlabel = 'Frequency'
+            _ylabel = 'Partial density of states'
+
+        if xlabel is not None:
+            _xlabel = xlabel
+        if ylabel is not None:
+            _ylabel = ylabel
+
         plot_partial_dos(pyplot,
                          self._frequency_points,
                          self._partial_dos,
                          indices=indices,
-                         legend=legend)
+                         legend=legend,
+                         xlabel=_xlabel,
+                         ylabel=_ylabel,
+                         draw_grid=draw_grid,
+                         flip_xy=flip_xy)
     
     def write(self):
         if self._tetrahedron_mesh is None:

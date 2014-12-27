@@ -221,9 +221,9 @@ if not options.is_gnuplot:
     
     plt.xlim(distances[0], distances[-1])
     if options.f_max is not None:
-        plt.ylim(ymax = options.f_max)
+        plt.ylim(ymax=options.f_max)
     if options.f_min is not None:
-        plt.ylim(ymin = options.f_min)
+        plt.ylim(ymin=options.f_min)
     plt.axhline(y=0, linestyle=':', linewidth=0.5, color='b')
     if len(filenames) == 1:
         xticks = segment_positions + [distances[-1]]
@@ -251,6 +251,10 @@ if not options.is_gnuplot:
         plt.setp(ax2.get_yticklabels(), visible=False)
         plt.plot(dos, dos_frequencies)
         plt.xlabel('DOS')
+        if options.f_max is not None:
+            plt.ylim(ymax=options.f_max)
+        if options.f_min is not None:
+            plt.ylim(ymin=options.f_min)
     
     if options.output_filename is not None:
         plt.rcParams['pdf.fonttype'] = 42

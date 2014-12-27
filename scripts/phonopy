@@ -1012,13 +1012,12 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
     
         # Partial DOS
         elif (settings.get_is_eigenvectors() and
-              (options.is_graph_plot or settings.get_is_dos_mode()) and
-              (not settings.get_is_thermal_properties())):
+            (options.is_graph_plot or settings.get_is_dos_mode())):
             p_direction = settings.get_projection_direction()
             if log_level > 0:
                 if p_direction is not None:
                     print "Projection direction:", np.array(p_direction)
-                print "Calculating PDOS..."
+                print "Calculating partial DOS..."
             dos_range = settings.get_dos_range()
             phonon.set_partial_DOS(
                 sigma=settings.get_sigma(),
@@ -1032,7 +1031,10 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
             if options.is_graph_plot:
                 pdos_indices = settings.get_pdos_indices()
                 if pdos_indices is None:
-                    pdos_indices = [range(primitive.get_number_of_atoms())]
+                    pdos_indices = [[x] for x in
+                                    range(primitive.get_number_of_atoms())]
+
+            if options.is_graph_plot and run_mode != 'band_mesh':
                 plot = phonon.plot_partial_DOS(
                     pdos_indices=pdos_indices,
                     legend=([np.array(x) + 1 for x in pdos_indices]))
@@ -1069,13 +1071,23 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
                 else:
                     plot.show()
 
-        if options.is_graph_plot and run_mode == 'band_mesh':
+    if (run_mode == 'band_mesh' and
+        options.is_graph_plot and
+        not settings.get_is_thermal_properties() and
+        not settings.get_is_thermal_displacements() and
+        not settings.get_is_thermal_displacement_matrices() and
+        not settings.get_is_thermal_distances()):
+        if settings.get_is_eigenvectors():
+            plot = phonon.plot_band_structure_and_dos(
+                pdos_indices=pdos_indices,
+                symbols=settings.get_band_labels())
+        else:
             plot = phonon.plot_band_structure_and_dos(
                 symbols=settings.get_band_labels())
-            if options.is_graph_save:
-                plot.savefig('band_dos.pdf')
-            else:
-                plot.show()
+        if options.is_graph_save:
+            plot.savefig('band_dos.pdf')
+        else:
+            plot.show()
 
 
 # Animation        
