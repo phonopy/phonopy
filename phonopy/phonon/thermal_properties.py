@@ -142,21 +142,17 @@ class ThermalProperties(ThermalPropertiesBase):
     def get_high_T_entropy(self):
         return self._high_T_entropy
 
-    def plot_thermal_properties(self):
-        import matplotlib.pyplot as plt
-        
+    def plot(self, pyplot):
         temps, fe, entropy, cv = self._thermal_properties
 
-        plt.plot(temps, fe, 'r-')
-        plt.plot(temps, entropy, 'b-')
-        plt.plot(temps, cv, 'g-')
-        plt.legend(('Free energy [kJ/mol]', 'Entropy [J/K/mol]',
-                    r'C$_\mathrm{V}$ [J/K/mol]'),
-                   'best', shadow=True)
-        plt.grid(True)
-        plt.xlabel('Temperature [K]')
-
-        return plt
+        pyplot.plot(temps, fe, 'r-')
+        pyplot.plot(temps, entropy, 'b-')
+        pyplot.plot(temps, cv, 'g-')
+        pyplot.legend(('Free energy [kJ/mol]', 'Entropy [J/K/mol]',
+                       r'C$_\mathrm{V}$ [J/K/mol]'),
+                      loc='best')
+        pyplot.grid(True)
+        pyplot.xlabel('Temperature [K]')
 
     def set_thermal_properties(self, t_step=10, t_max=1000, t_min=0):
         temperatures = np.arange(t_min, t_max + t_step / 2.0, t_step,

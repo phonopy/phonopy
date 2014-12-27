@@ -104,34 +104,23 @@ class BandStructure:
     def get_unit_conversion_factor(self):
         return self._factor
     
-    def plot_band(self, symbols=None, pyplot=None):
-        if pyplot is None:
-            import matplotlib.pyplot as plt
-            if symbols:
-                from matplotlib import rc
-                rc('text', usetex=True)
-        else:
-            plt = pyplot
-
+    def plot(self, pyplot, symbols=None):
         for distances, frequencies in zip(self._distances,
                                           self._frequencies):
             for freqs in frequencies.T:
                 if self._is_band_connection:
-                    plt.plot(distances, freqs, '-')
+                    pyplot.plot(distances, freqs, '-')
                 else:
-                    plt.plot(distances, freqs, 'r-')
+                    pyplot.plot(distances, freqs, 'r-')
 
-        plt.ylabel('Frequency')
-        plt.xlabel('Wave vector')
+        pyplot.ylabel('Frequency')
+        pyplot.xlabel('Wave vector')
         if symbols and len(symbols)==len(self._special_point):
-            plt.xticks(self._special_point, symbols)
+            pyplot.xticks(self._special_point, symbols)
         else:
-            plt.xticks(self._special_point, [''] * len(self._special_point))
-        plt.xlim(0, self._distance)
-        plt.axhline(y=0, linestyle=':', linewidth=0.5, color='b')
-
-        if pyplot is None:
-            return plt
+            pyplot.xticks(self._special_point, [''] * len(self._special_point))
+        pyplot.xlim(0, self._distance)
+        pyplot.axhline(y=0, linestyle=':', linewidth=0.5, color='b')
 
     def write_yaml(self):
         w = open('band.yaml', 'w')

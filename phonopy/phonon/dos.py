@@ -59,57 +59,50 @@ def write_partial_dos(frequency_points,
         fp.write("\n")
 
 
-def plot_total_dos(frequency_points,
+def plot_total_dos(pyplot,
+                   frequency_points,
                    total_dos,
                    freq_Debye=None,
                    Debye_fit_coef=None,
                    xlabel=None,
                    ylabel=None,
                    draw_grid=True,
-                   flip_xy=False,
-                   pyplot=None):
-    if pyplot is None:
-        import matplotlib.pyplot as plt
-    else:
-        plt = pyplot
-
+                   flip_xy=False):
     if freq_Debye is not None:
         freq_pitch = frequency_points[1] - frequency_points[0]
         num_points = int(freq_Debye / freq_pitch)
         freqs = np.linspace(0, freq_Debye, num_points + 1)
 
     if flip_xy:
-        plt.plot(total_dos, frequency_points, 'r-')
+        pyplot.plot(total_dos, frequency_points, 'r-')
         if freq_Debye:
-            plt.plot(np.append(Debye_fit_coef * freqs**2, 0),
-                     np.append(freqs, freq_Debye), 'b-')
-        plt.ylim(min(frequency_points), max(frequency_points))
+            pyplot.plot(np.append(Debye_fit_coef * freqs**2, 0),
+                        np.append(freqs, freq_Debye), 'b-')
     else:
-        plt.plot(frequency_points, total_dos, 'r-')
+        pyplot.plot(frequency_points, total_dos, 'r-')
         if freq_Debye:
-            plt.plot(np.append(freqs, freq_Debye),
-                     np.append(Debye_fit_coef * freqs**2, 0), 'b-')
-        plt.xlim(min(frequency_points), max(frequency_points))
+            pyplot.plot(np.append(freqs, freq_Debye),
+                        np.append(Debye_fit_coef * freqs**2, 0), 'b-')
 
     if xlabel:
-        plt.xlabel(xlabel)
+        pyplot.xlabel(xlabel)
     if ylabel:
-        plt.ylabel(ylabel)
+        pyplot.ylabel(ylabel)
 
-    plt.grid(draw_grid)
-    
-    if pyplot is None:
-        return plt
+    pyplot.grid(draw_grid)
 
-def plot_partial_dos(frequency_points,
+def plot_partial_dos(pyplot,
+                     frequency_points,
                      partial_dos,
                      indices=None,
-                     legend=None):
-    import matplotlib.pyplot as plt
-    plt.grid(True)
-    plt.xlim(min(frequency_points), max(frequency_points))
-    plt.xlabel('Frequency')
-    plt.ylabel('Partial density of states')
+                     legend=None,
+                     xlabel=None,
+                     ylabel=None,
+                     draw_grid=True,
+                     flip_xy=False):
+    pyplot.grid(draw_grid)
+    pyplot.xlabel('Frequency')
+    pyplot.ylabel('Partial density of states')
     plots = []
 
     num_atom = len(partial_dos)
@@ -126,12 +119,10 @@ def plot_partial_dos(frequency_points,
                 print "Your specified atom number is out of range."
                 raise ValueError
             pdos_sum += partial_dos[i]
-        plots.append(plt.plot(frequency_points, pdos_sum))
+        plots.append(pyplot.plot(frequency_points, pdos_sum))
 
     if legend is not None:
-        plt.legend(legend)
-
-    return plt
+        pyplot.legend(legend)
     
 class NormalDistribution:
     def __init__(self, sigma):
@@ -267,12 +258,12 @@ class TotalDos(Dos):
         self._freq_Debye = (3 * 3 * num_atoms / a2)**(1.0 / 3)
         self._Debye_fit_coef = a2
 
-    def plot_dos(self,
-                 xlabel=None,
-                 ylabel=None,
-                 draw_grid=True,
-                 flip_xy=False,
-                 pyplot=None):
+    def plot(self,
+             pyplot,
+             xlabel=None,
+             ylabel=None,
+             draw_grid=True,
+             flip_xy=False):
         if flip_xy:
             _xlabel = 'Density of states'
             _ylabel = 'Frequency'
@@ -285,15 +276,15 @@ class TotalDos(Dos):
         if ylabel is not None:
             _ylabel = ylabel
 
-        return plot_total_dos(self._frequency_points,
-                              self._dos,
-                              freq_Debye=self._freq_Debye,
-                              Debye_fit_coef=self._Debye_fit_coef,
-                              xlabel=_xlabel,
-                              ylabel=_ylabel,
-                              draw_grid=draw_grid,
-                              flip_xy=flip_xy,
-                              pyplot=pyplot)
+        plot_total_dos(pyplot,
+                       self._frequency_points,
+                       self._dos,
+                       freq_Debye=self._freq_Debye,
+                       Debye_fit_coef=self._Debye_fit_coef,
+                       xlabel=_xlabel,
+                       ylabel=_ylabel,
+                       draw_grid=draw_grid,
+                       flip_xy=flip_xy)
 
     def write(self):
         if self._tetrahedron_mesh is None:
@@ -375,11 +366,12 @@ class PartialDos(Dos):
         """
         return self._frequency_points, self._partial_dos
 
-    def plot_pdos(self, indices=None, legend=None):
-        return plot_partial_dos(self._frequency_points,
-                                self._partial_dos,
-                                indices=indices,
-                                legend=legend)
+    def plot(self, pyplot, indices=None, legend=None):
+        plot_partial_dos(pyplot,
+                         self._frequency_points,
+                         self._partial_dos,
+                         indices=indices,
+                         legend=legend)
     
     def write(self):
         if self._tetrahedron_mesh is None:

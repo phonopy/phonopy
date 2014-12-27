@@ -159,21 +159,16 @@ class ThermalDisplacements(ThermalMotion):
                     f.write(", %10.7f" % elems[j + 1])
                 f.write(" ] # atom %d\n" % (i + 1))
         
-    def plot(self, is_legend=False):
-        import matplotlib.pyplot as plt
-
+    def plot(self, pyplot, is_legend=False):
         plots = []
         labels = []
         xyz = ['x', 'y', 'z']
         for i, u in enumerate(self._displacements.transpose()):
-            plots.append(plt.plot(self._temperatures, u ))
+            plots.append(pyplot.plot(self._temperatures, u ))
             labels.append("%d-%s" % ( i//3 + 1, xyz[i % 3]))
         
         if is_legend:
-            plt.legend(plots, labels, loc='upper left')
-            
-        return plt
-
+            pyplot.legend(plots, labels, loc='upper left')
 
 class ThermalDisplacementMatrices(ThermalMotion):
     def __init__(self,

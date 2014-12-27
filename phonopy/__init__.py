@@ -452,7 +452,13 @@ class Phonopy:
                 band.get_eigenvectors())
 
     def plot_band_structure(self, symbols=None):
-        return self._band_structure.plot_band(symbols=symbols)
+        import matplotlib.pyplot as plt
+        if symbols:
+            from matplotlib import rc
+            rc('text', usetex=True)
+
+        self._band_structure.plot(plt, symbols=symbols)
+        return plt
 
     def write_yaml_band_structure(self):
         self._band_structure.write_yaml()
@@ -493,16 +499,17 @@ class Phonopy:
             from matplotlib import rc
             rc('text', usetex=True)
 
+        plt.figure(figsize=(10, 6))
         gs = gridspec.GridSpec(1, 2, width_ratios=[3, 1])
         ax1 = plt.subplot(gs[0, 0])
-        self._band_structure.plot_band(symbols=symbols, pyplot=plt)
+        self._band_structure.plot(plt, symbols=symbols)
         ax2 = plt.subplot(gs[0, 1], sharey=ax1)
         plt.subplots_adjust(wspace=0.03)
         plt.setp(ax2.get_yticklabels(), visible=False)
-        self._total_dos.plot_dos(ylabel="",
-                                 draw_grid=False,
-                                 flip_xy=True,
-                                 pyplot=plt)
+        self._total_dos.plot(plt,
+                             ylabel="",
+                             draw_grid=False,
+                             flip_xy=True)
 
         return plt
 
@@ -534,7 +541,9 @@ class Phonopy:
         return temps, fe, entropy, cv
 
     def plot_thermal_properties(self):
-        return self._thermal_properties.plot_thermal_properties()
+        import matplotlib.pyplot as plt
+        self._thermal_properties.plot(plt)
+        return plt
 
     def write_yaml_thermal_properties(self, filename='thermal_properties.yaml'):
         self._thermal_properties.write_yaml(filename=filename)
@@ -578,8 +587,11 @@ class Phonopy:
         return self._pdos.get_partial_dos()
 
     def plot_partial_DOS(self, pdos_indices=None, legend=None):
-        return self._pdos.plot_pdos(indices=pdos_indices,
-                                    legend=legend)
+        import matplotlib.pyplot as plt
+        self._pdos.plot(plt,
+                        indices=pdos_indices,
+                        legend=legend)
+        return plt
 
     def write_partial_DOS(self):
         self._pdos.write()
@@ -621,7 +633,9 @@ class Phonopy:
         return self._total_dos.get_Debye_frequency()
 
     def plot_total_DOS(self):
-        return self._total_dos.plot_dos()
+        import matplotlib.pyplot as plt
+        self._total_dos.plot(plt)
+        return plt
 
     def write_total_DOS(self):
         self._total_dos.write()
@@ -672,7 +686,9 @@ class Phonopy:
             return self._thermal_displacements.get_thermal_displacements()
         
     def plot_thermal_displacements(self, is_legend=False):
-        return self._thermal_displacements.plot(is_legend)
+        import matplotlib.pyplot as plt
+        self._thermal_displacements.plot(plt, is_legend=is_legend)
+        return plt
 
     def write_yaml_thermal_displacements(self):
         self._thermal_displacements.write_yaml()
