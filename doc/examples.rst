@@ -262,6 +262,50 @@ because it mainly affects to the density of states only around
 
 |NaCl-PDOS-nac|
 
+Band structure and DOS or PDOS can be plotted on one figure together by
+
+::
+
+   % phonopy band-pdos.conf --nac -p
+           _
+     _ __ | |__   ___  _ __   ___   _ __  _   _
+    | '_ \| '_ \ / _ \| '_ \ / _ \ | '_ \| | | |
+    | |_) | | | | (_) | | | | (_) || |_) | |_| |
+    | .__/|_| |_|\___/|_| |_|\___(_) .__/ \__, |
+    |_|                            |_|    |___/
+   
+                                        1.9.2
+   
+   Band structure and mesh sampling mode
+   Settings:
+     Non-analytical term correction: on
+     Sampling mesh:  [41 41 41]
+     Supercell:  [2 2 2]
+     Primitive axis:
+        [ 0.   0.5  0.5]
+        [ 0.5  0.   0.5]
+        [ 0.5  0.5  0. ]
+   Spacegroup:  Fm-3m (225)
+   Dynamical matrix was not created.
+   Force constants are not created.
+   Computing force constants...
+   Reciprocal space paths in reduced coordinates:
+   [ 0.00  0.00  0.00] --> [ 0.50  0.00  0.00]
+   [ 0.50  0.00  0.00] --> [ 0.50  0.50  0.00]
+   [ 0.50  0.50  0.00] --> [-0.00 -0.00  0.00]
+   [ 0.00  0.00  0.00] --> [ 0.50  0.50  0.50]
+   Number of irreducible q-points on sampling mesh: 1771/68921
+   Calculating partial DOS...
+                    _
+      ___ _ __   __| |
+     / _ \ '_ \ / _` |
+    |  __/ | | | (_| |
+     \___|_| |_|\__,_|   
+
+.. |NaCl-band-PDOS-NAC| image:: NaCl-band-PDOS-NAC.png
+                        :scale: 50
+
+|NaCl-band-PDOS-NAC|
 
 MgB2 characters of ireducible representations
 ----------------------------------------------

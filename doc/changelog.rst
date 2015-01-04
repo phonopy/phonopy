@@ -3,7 +3,7 @@
 Change Log
 ==========
 
-Nov-25-2014: Version 1.9.2
+Jan-4-2014: Version 1.9.2
 -----------------------------
 
 * Behaviors of ``--wien2k``, ``--abinit``, ``--pwscf`` options have
@@ -16,6 +16,10 @@ Nov-25-2014: Version 1.9.2
   ``--wien2k``, ``--abinit``, and ``--pwscf`` options are
   implemented. See :ref:`gruneisen_calculators` and
   :ref:`gruneisen_command_options`.
+* In phonopy-API, timing to call Phonopy._set_dynamical_matrix is
+  changed to reduce the number of calls of this function. This may
+  raise timing issue to phonopy-API users.
+* Band-DOS (band-PDOS) plot is implemented.
 
 Oct-30-2014: Version 1.9.1.3
 -----------------------------
