@@ -969,14 +969,7 @@ class Phonopy:
         if (self._supercell is None or
             self._primitive is None or
             self._force_constants is None):
-            print "Dynamical matrix was not created."
-            if self._supercell is None:
-                print "Supercell is not created."
-            if self._primitive is None:
-                print "Primitive cell is not created."
-            if self._force_constants is None:
-                print "Force constants are not created."
-
+            return False
         else:
             if self._nac_params is None:
                 self._dynamical_matrix = DynamicalMatrix(
@@ -993,6 +986,7 @@ class Phonopy:
                     nac_params=self._nac_params,
                     decimals=self._dynamical_matrix_decimals,
                     symprec=self._symprec)
+            return True
 
     def _search_symmetry(self):
         self._symmetry = Symmetry(self._supercell,
