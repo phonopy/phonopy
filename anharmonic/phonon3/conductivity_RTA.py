@@ -302,7 +302,7 @@ class Conductivity_RTA(Conductivity):
         self._num_sampling_grid_points = 0
         
         for i, grid_point in enumerate(self._grid_points):
-            cv = self._cv[i]
+            cv = self._cv[:, i, :]
             gp = self._grid_points[i]
             frequencies = self._frequencies[gp]
             
@@ -361,7 +361,7 @@ class Conductivity_RTA(Conductivity):
         if self._isotope is not None and not self._read_gamma_iso:
             self._set_gamma_isotope_at_sigmas(i)
 
-        self._cv[i] = self._get_cv(self._frequencies[grid_point])
+        self._cv[:, i, :] = self._get_cv(self._frequencies[grid_point])
         self._set_gv(i)
         
         if self._log_level:
@@ -386,8 +386,8 @@ class Conductivity_RTA(Conductivity):
         self._gv = np.zeros((num_grid_points,
                              num_band,
                              3), dtype='double')
-        self._cv = np.zeros((num_grid_points,
-                             len(self._temperatures),
+        self._cv = np.zeros((len(self._temperatures),
+                             num_grid_points,
                              num_band), dtype='double')
         if self._isotope is not None:
             self._gamma_iso = np.zeros((len(self._sigmas),
