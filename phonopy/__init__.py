@@ -408,6 +408,50 @@ class Phonopy:
     # Phonon properties #
     #####################
 
+    # Single q-point
+    def get_dynamical_matrix_at_q(self, q):
+        self._set_dynamical_matrix()
+        self._dynamical_matrix.set_dynamical_matrix(q)
+        return self._dynamical_matrix.get_dynamical_matrix()
+
+    def get_frequencies(self, q):
+        """
+        Calculate phonon frequencies at q
+        
+        q: q-vector in reduced coordinates of primitive cell
+        """
+        self._set_dynamical_matrix()
+        self._dynamical_matrix.set_dynamical_matrix(q)
+        dm = self._dynamical_matrix.get_dynamical_matrix()
+        frequencies = []
+        for eig in np.linalg.eigvalsh(dm).real:
+            if eig < 0:
+                frequencies.append(-np.sqrt(-eig))
+            else:
+                frequencies.append(np.sqrt(eig))
+            
+        return np.array(frequencies) * self._factor
+
+    def get_frequencies_with_eigenvectors(self, q):
+        """
+        Calculate phonon frequencies and eigenvectors at q
+        
+        q: q-vector in reduced coordinates of primitive cell
+        """
+        self._set_dynamical_matrix()
+        self._dynamical_matrix.set_dynamical_matrix(q)
+        dm = self._dynamical_matrix.get_dynamical_matrix()
+        frequencies = []
+        eigvals, eigenvectors = np.linalg.eigh(dm)
+        frequencies = []
+        for eig in eigvals:
+            if eig < 0:
+                frequencies.append(-np.sqrt(-eig))
+            else:
+                frequencies.append(np.sqrt(eig))
+
+        return np.array(frequencies) * self._factor, eigenvectors
+
     # Band structure
     def set_band_structure(self,
                            bands,
