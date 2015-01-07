@@ -21,8 +21,6 @@
 #include "flame_wrapper.h"
 #endif
 
-static PyObject * py_get_jointDOS(PyObject *self, PyObject *args);
-
 static PyObject * py_get_interaction(PyObject *self, PyObject *args);
 static PyObject * py_get_imag_self_energy(PyObject *self, PyObject *args);
 static PyObject * py_get_imag_self_energy_at_bands(PyObject *self,
@@ -58,7 +56,6 @@ static void get_triplet_tetrahedra_vertices
    const int bz_map[]);
 
 static PyMethodDef functions[] = {
-  {"joint_dos", py_get_jointDOS, METH_VARARGS, "Calculate joint density of states"},
   {"interaction", py_get_interaction, METH_VARARGS, "Interaction of triplets"},
   {"imag_self_energy", py_get_imag_self_energy, METH_VARARGS, "Imaginary part of self energy"},
   {"imag_self_energy_at_bands", py_get_imag_self_energy_at_bands, METH_VARARGS, "Imaginary part of self energy at phonon frequencies of bands"},
@@ -819,47 +816,6 @@ static PyObject * py_get_thm_isotope_strength(PyObject *self, PyObject *args)
 				      num_band0,
 				      integration_weights,
 				      cutoff_frequency);
-  
-  Py_RETURN_NONE;
-}
-
-static PyObject * py_get_jointDOS(PyObject *self, PyObject *args)
-{
-  PyArrayObject* jointdos;
-  PyArrayObject* frequency_points_py;
-  PyArrayObject* triplets_py;
-  PyArrayObject* triplets_weights_py;
-  PyArrayObject* frequencies_py;
-  double sigma;
-
-  if (!PyArg_ParseTuple(args, "OOOOOd",
-			&jointdos,
-			&frequency_points_py,
-			&triplets_py,
-			&triplets_weights_py,
-			&frequencies_py,
-			&sigma)) {
-    return NULL;
-  }
-  
-  double* jdos = (double*)jointdos->data;
-  const double* freq_points = (double*)frequency_points_py->data;
-  const int* triplets = (int*)triplets_py->data;
-  const int* weights = (int*)triplets_weights_py->data;
-  const double* frequencies = (double*)frequencies_py->data;
-  const int num_band = (int)frequencies_py->dimensions[1];
-  const int num_fpoints = (int)frequency_points_py->dimensions[0];
-  const int num_triplet = (int)triplets_weights_py->dimensions[0];
-
-  get_jointDOS(jdos,
-	       num_fpoints,
-	       num_triplet,
-	       num_band,
-	       freq_points,
-	       frequencies,
-	       triplets,
-	       weights,
-	       sigma);
   
   Py_RETURN_NONE;
 }

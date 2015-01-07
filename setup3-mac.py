@@ -1,5 +1,4 @@
 from distutils.core import setup, Extension
-#from setuptools import setup, Extension
 import numpy
 include_dirs_numpy = [numpy.get_include()]
 include_dirs_lapacke = ['../lapack-3.5.0/lapacke/include']
@@ -44,7 +43,7 @@ extension = Extension(
              'c/spglib/tetrahedron_method.c'])
 
 setup(name='phono3py',
-      version='0.9.5',
+      version='0.9.6',
       description='This is the phono3py module.',
       author='Atsushi Togo',
       author_email='atz.togo@gmail.com',
@@ -52,5 +51,6 @@ setup(name='phono3py',
       packages=['anharmonic',
                 'anharmonic.other',
                 'anharmonic.phonon3'],
-      scripts=['scripts/phono3py'],
+      scripts=['scripts/phono3py',
+               'scripts/kaccum'],
       ext_modules=[extension])

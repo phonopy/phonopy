@@ -134,11 +134,6 @@ class JointDos:
                 self._run_py_tetrahedron_method()
         else:
             self._run_c_with_g()
-            # self._run_smearing_method() is an older and direct implementation.
-            # This requies less memory space. self._run_c_with_g can be used
-            # for smearing method and can share same code with tetrahedron 
-            # method. Therefore maintainance cost of code can be reduced by
-            # without using self._run_smearing_method().
                 
     def _run_c_with_g(self):
         self.set_phonon(self._triplets_at_q.ravel())
@@ -173,18 +168,18 @@ class JointDos:
                 neighboring_phonons=(i == 0))
 
             if self._temperatures is None:
-                jdos[i, 0] = np.sum(
+                jdos[i, 1] = np.sum(
                     np.tensordot(g[0, :, 0], self._weights_at_q, axes=(0, 0)))
                 gx = g[2] - g[0]
-                jdos[i, 1] = np.sum(
+                jdos[i, 0] = np.sum(
                     np.tensordot(gx[:, 0], self._weights_at_q, axes=(0, 0)))
             else:
                 for j, n in enumerate(occ_phonons):
                     for k, l in list(np.ndindex(g.shape[3:])):
-                        jdos[j, i, 0] += np.dot(
+                        jdos[j, i, 1] += np.dot(
                             (n[:, 0, k] + n[:, 1, l] + 1) *
                             g[0, :, 0, k, l], self._weights_at_q)
-                        jdos[j, i, 1] += np.dot((n[:, 0, k] - n[:, 1, l]) *
+                        jdos[j, i, 0] += np.dot((n[:, 0, k] - n[:, 1, l]) *
                                                 g[1, :, 0, k, l],
                                                 self._weights_at_q)
 
@@ -213,37 +208,20 @@ class JointDos:
                 thm.set_tetrahedra_omegas(f1 + f2)
                 thm.run(self._frequency_points)
                 iw = thm.get_integration_weight()
-                jdos[:, 0] += iw * w
+                jdos[:, 1] += iw * w
 
                 thm.set_tetrahedra_omegas(f1 - f2)
                 thm.run(self._frequency_points)
                 iw = thm.get_integration_weight()
-                jdos[:, 1] += iw * w
+                jdos[:, 0] += iw * w
 
                 thm.set_tetrahedra_omegas(-f1 + f2)
                 thm.run(self._frequency_points)
                 iw = thm.get_integration_weight()
-                jdos[:, 1] += iw * w
+                jdos[:, 0] += iw * w
 
         self._joint_dos = jdos / np.prod(self._mesh)
 
-    def _run_smearing_method(self):
-        import anharmonic._phono3py as phono3c
-
-        self.set_phonon(self._triplets_at_q.ravel())
-        f_max = np.max(self._frequencies) * 2 + self._sigma * 4
-        f_min = np.min(self._frequencies) * 2 - self._sigma * 4
-        self._set_frequency_points(f_min, f_max)
-        jdos = np.zeros((len(self._frequency_points), 2), dtype='double')
-        phono3c.joint_dos(jdos,
-                          self._frequency_points,
-                          self._triplets_at_q,
-                          self._weights_at_q,
-                          self._frequencies,
-                          self._sigma)
-        jdos /= np.prod(self._mesh)
-        self._joint_dos = jdos
-        
     def _set_dynamical_matrix(self):
         self._dm = get_dynamical_matrix(
             self._fc2,
