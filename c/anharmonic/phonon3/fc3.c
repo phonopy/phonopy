@@ -38,7 +38,6 @@ void distribute_fc3(double *fc3_copy,
 		       rot_cart);
     }
   }
-  return 1;
 }
 
 void tensor3_rotation(double *rot_tensor,
