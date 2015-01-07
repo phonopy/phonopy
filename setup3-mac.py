@@ -51,5 +51,6 @@ setup(name='phono3py',
       packages=['anharmonic',
                 'anharmonic.other',
                 'anharmonic.phonon3'],
-      scripts=['scripts/phono3py'],
+      scripts=['scripts/phono3py',
+               'scripts/kaccum'],
       ext_modules=[extension])
