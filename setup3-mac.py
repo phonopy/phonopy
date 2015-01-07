@@ -1,5 +1,4 @@
 from distutils.core import setup, Extension
-#from setuptools import setup, Extension
 import numpy
 include_dirs_numpy = [numpy.get_include()]
 include_dirs_lapacke = ['../lapack-3.5.0/lapacke/include']

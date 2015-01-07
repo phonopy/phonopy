@@ -1,7 +1,8 @@
 from distutils.core import setup, Extension
-#from setuptools import setup, Extension
 import numpy
 include_dirs_numpy = [numpy.get_include()]
+
+# unnecessary if lapacke is installed in the system.
 include_dirs_lapacke = ['../lapacke/include']
 
 use_libflame = False
@@ -26,14 +27,14 @@ sources = ['c/_phono3py.c',
            'c/spglib/mathfunc.c',
            'c/spglib/tetrahedron_method.c']
 extra_link_args=['-lgomp',
-                 '../lapacke/liblapacke.a',
+                 '../lapacke/liblapacke.a', # unnecessary when lapacke in system
                  '-llapack',
                  '-lblas']
 include_dirs = (['c/harmonic_h',
                  'c/anharmonic_h',
                  'c/spglib_h'] +
-                include_dirs_numpy +
-                include_dirs_lapacke)
+                include_dirs_lapacke + # unnecessary when lapacke in system
+                include_dirs_numpy)
 
 if use_libflame:
     sources.append('c/anharmonic/flame_wrapper.c')
