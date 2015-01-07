@@ -1,0 +1,106 @@
+#!/usr/bin/env python
+
+import numpy as np
+from phonopy.phonon.tetrahedron_mesh import TetrahedronMesh
+
+def fracval(frac):
+    if frac.find('/') == -1:
+        return float(frac)
+    else:
+        x = frac.split('/')
+        return float(x[0]) / float(x[1])
+
+class KappaDOS:
+    def __init__(self,
+                 mode_kappa,
+                 cell,
+                 frequencies,
+                 mesh,
+                 grid_address,
+                 grid_mapping_table,
+                 grid_order=None):
+        self._mode_kappa = mode_kappa
+        self._tetrahedron_mesh = TetrahedronMesh(
+            cell,
+            frequencies,
+            mesh,
+            grid_address,
+            grid_mapping_table)
+
+        min_freq = min(frequencies.ravel())
+        max_freq = max(frequencies.ravel())
+        self._frequency_points = np.linspace(min_freq, max_freq, 100)
+        self._kdos = np.zeros(
+            (len(mode_kappa), len(self._frequency_points), 2, 6),
+            dtype='double')
+        self._run_tetrahedron_method()
+
+    def get_kdos(self):
+        return self._frequency_points, self._kdos
+        
+    def _run_tetrahedron_method(self):
+        num_freqs = len(self._frequency_points)
+        thm = self._tetrahedron_mesh
+        for j, value in enumerate(('J', 'I')):
+            thm.run_at_frequencies(value=value,
+                                   frequency_points=self._frequency_points)
+            iw = thm.get_integration_weights()
+            for k in range(num_freqs):
+                for l in range(len(self._mode_kappa)): # at temperatures
+                    for i, mk in enumerate(self._mode_kappa[l]):
+                        for ib in range(self._mode_kappa.shape[2]):
+                            self._kdos[l, k, j] += iw[k, ib, i] * mk[ib]
+        self._kdos *= np.prod(mesh)
+
+if __name__ == '__main__':
+    """Incremental kappa with respect to frequency and the derivative"""
+
+    import h5py
+    import sys
+    from phonopy.interface.vasp import read_vasp
+    from phonopy.structure.cells import get_primitive
+    from phonopy.structure.symmetry import Symmetry
+    from phonopy.structure.grid_points import GridPoints
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Show unit cell volume")
+    parser.add_argument("--pa", dest="primitive_axis",
+                        default="1 0 0 0 1 0 0 0 1", help="Primitive matrix")
+    parser.add_argument("--mesh", dest="mesh", default="1 1 1",
+                         help="Mesh numbers")
+    parser.add_argument('filenames', nargs='*')
+    args = parser.parse_args()
+    
+    cell = read_vasp(args.filenames[0])
+    primitive = get_primitive(cell, np.reshape(
+        [fracval(x) for x in args.primitive_axis.split()], (3, 3)))
+
+    f = h5py.File(args.filenames[1])
+    mesh = np.array([int(x) for x in args.mesh.split()], dtype='intc')
+    mode_kappa = f['mode_kappa']
+    frequencies = f['frequency'][:]
+    temperatures = f['temperature'][:]
+
+    symmetry = Symmetry(cell)
+    rotations = symmetry.get_pointgroup_operations()
+    gp = GridPoints(mesh,
+                    np.linalg.inv(cell.get_cell()),
+                    rotations=rotations)
+    grid_address = gp.get_grid_address()
+    grid_mapping_table = gp.get_grid_mapping_table()
+    
+    kappa_dos = KappaDOS(mode_kappa,
+                         cell,
+                         frequencies,
+                         mesh,
+                         grid_address,
+                         grid_mapping_table)
+                         
+    freq_points, kdos = kappa_dos.get_kdos()
+
+    for i, kdos_t in enumerate(kdos):
+        print "# %d K" % temperatures[i], mode_kappa[i].sum(axis=0).sum(axis=0)
+        for f, k in zip(freq_points, kdos_t): # show kappa_xx
+            print ("%f " * 13) % ((f,) + tuple(k[0]) + tuple(k[1]))
+        print
+        print
