@@ -1,7 +1,7 @@
 import numpy as np
 from anharmonic.other.phonon import get_dynamical_matrix, set_phonon_c, set_phonon_py
 from phonopy.harmonic.dynamical_matrix import get_smallest_vectors
-from phonopy.units import VaspToTHz, Hbar, EV, Angstrom, THz, AMU, THzToEv
+from phonopy.units import VaspToTHz
 from anharmonic.phonon3.real_to_reciprocal import RealToReciprocal
 from anharmonic.phonon3.reciprocal_to_normal import ReciprocalToNormal
 from anharmonic.phonon3.triplets import get_triplets_at_q, get_nosym_triplets_at_q, get_bz_grid_address
@@ -14,7 +14,6 @@ class Interaction:
                  symmetry,
                  fc3=None,
                  band_indices=None,
-                 use_Peierls_model=False,
                  frequency_factor_to_THz=VaspToTHz,
                  is_nosym=False,
                  symmetrize_fc3_q=False,
@@ -30,7 +29,6 @@ class Interaction:
             self._band_indices = np.arange(num_band, dtype='intc')
         else:
             self._band_indices = np.array(band_indices, dtype='intc')
-        self._use_Peierls_model = use_Peierls_model
         self._frequency_factor_to_THz = frequency_factor_to_THz
 
         if cutoff_frequency is None:
@@ -70,9 +68,6 @@ class Interaction:
             self._run_c()
         else:
             self._run_py()
-
-        if self._use_Peierls_model:
-            self._set_Peierls_model_interaction()
 
     def get_interaction_strength(self):
         return self._interaction_strength
@@ -189,15 +184,12 @@ class Interaction:
         self._set_phonon_c(grid_points)
 
     def get_mean_square_strength(self):
-        unit_conversion = (
-            (Hbar * EV) ** 3 / 36 / 8
-            * EV ** 2 / Angstrom ** 6
-            / (2 * np.pi * THz) ** 3
-            / AMU ** 3 / np.prod(self._mesh)) / (THzToEv * EV) ** 2
         v = self._interaction_strength
         w = self._weights_at_q
         v_sum = v.sum(axis=2).sum(axis=2)
-        return np.dot(w, v_sum) * unit_conversion
+        num_band = self._primitive.get_number_of_atoms() * 3
+        num_grid = np.prod(self._mesh)
+        return np.dot(w, v_sum) / num_band ** 2 / num_grid
             
     def _run_c(self):
         import anharmonic._phono3py as phono3c
@@ -282,14 +274,4 @@ class Interaction:
         self._frequencies = np.zeros((num_grid, num_band), dtype='double')
         self._eigenvectors = np.zeros((num_grid, num_band, num_band),
                                       dtype='complex128')
-        
-    def _set_Peierls_model_interaction(self):
-        """This gives averaged ph-ph interaction strength for each band. """
-        
-        v = self._interaction_strength.copy()
-        divisor = np.prod(self._mesh)
-        v_sum = np.dot(self._weights_at_q, v.sum(axis=2).sum(axis=2))
-        v_ave = v_sum / divisor / np.prod(v.shape[2:])
-        for i in range(v.shape[1]):
-            self._interaction_strength[:, i, :, :] = v_ave[i]
         

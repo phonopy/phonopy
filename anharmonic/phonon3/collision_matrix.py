@@ -19,7 +19,7 @@ class CollisionMatrix(ImagSelfEnergy):
                  sigma=None,
                  is_reducible_collision_matrix=False,
                  lang='C'):
-        self._interaction = None
+        self._pp = None
         self._sigma = None
         self._frequency_points = None
         self._temperature = None
@@ -27,7 +27,7 @@ class CollisionMatrix(ImagSelfEnergy):
         self._lang = None
         self._imag_self_energy = None
         self._collision_matrix = None
-        self._fc3_normal_squared = None
+        self._pp_strength = None
         self._frequencies = None
         self._triplets_at_q = None
         self._triplets_map_at_q = None
@@ -53,19 +53,19 @@ class CollisionMatrix(ImagSelfEnergy):
             self._ir_grid_points = ir_grid_points
             self._rot_grid_points = rotated_grid_points
             self._point_operations = point_operations
-            self._primitive = self._interaction.get_primitive()
+            self._primitive = self._pp.get_primitive()
             rec_lat = np.linalg.inv(self._primitive.get_cell())
             self._rotations_cartesian = np.array(
                 [similarity_transformation(rec_lat, r)
                  for r in self._point_operations], dtype='double', order='C')
         
     def run(self):
-        if self._fc3_normal_squared is None:        
+        if self._pp_strength is None:        
             self.run_interaction()
 
         # num_band0 is supposed to be equal to num_band.
-        num_band0 = self._fc3_normal_squared.shape[1]
-        num_band = self._fc3_normal_squared.shape[2]
+        num_band0 = self._pp_strength.shape[1]
+        num_band = self._pp_strength.shape[2]
 
         if num_band0 != num_band:
             print "--bi option is not allowed to use with collision matrix."
@@ -92,21 +92,21 @@ class CollisionMatrix(ImagSelfEnergy):
         if grid_point is None:
             self._grid_point = None
         else:
-            self._interaction.set_grid_point(grid_point,
+            self._pp.set_grid_point(grid_point,
                                              stores_triplets_map=True)
-            self._fc3_normal_squared = None
+            self._pp_strength = None
             (self._triplets_at_q,
              self._weights_at_q,
              self._triplets_map_at_q,
-             self._ir_map_at_q) = self._interaction.get_triplets_at_q()
-            self._grid_address = self._interaction.get_grid_address()
+             self._ir_map_at_q) = self._pp.get_triplets_at_q()
+            self._grid_address = self._pp.get_grid_address()
             self._grid_point = grid_point
             self._third_q_list = get_triplets_third_q_list(
                 grid_point,
                 self._grid_address,
-                self._interaction.get_bz_map(),
+                self._pp.get_bz_map(),
                 self._mesh)
-            self._bz_map = self._interaction.get_bz_map()
+            self._bz_map = self._pp.get_bz_map()
             
     def _run_collision_matrix(self):
         self._run_with_band_indices()
@@ -125,7 +125,7 @@ class CollisionMatrix(ImagSelfEnergy):
     def _run_c_collision_matrix(self):
         import anharmonic._phono3py as phono3c
         phono3c.collision_matrix(self._collision_matrix,
-                                 self._fc3_normal_squared,
+                                 self._pp_strength,
                                  self._frequencies,
                                  self._g,
                                  self._triplets_at_q,
@@ -141,7 +141,7 @@ class CollisionMatrix(ImagSelfEnergy):
     def _run_c_reducible_collision_matrix(self):
         import anharmonic._phono3py as phono3c
         phono3c.reducible_collision_matrix(self._collision_matrix,
-                                           self._fc3_normal_squared,
+                                           self._pp_strength,
                                            self._frequencies,
                                            self._g,
                                            self._triplets_at_q,
@@ -153,7 +153,7 @@ class CollisionMatrix(ImagSelfEnergy):
 
     def _run_py_collision_matrix(self):
         num_mesh_points = np.prod(self._mesh)
-        num_band = self._fc3_normal_squared.shape[1]
+        num_band = self._pp_strength.shape[1]
         gp2tp_map = self._get_gp2tp_map()
 
         for i, ir_gp in enumerate(self._ir_grid_points):
@@ -168,7 +168,7 @@ class CollisionMatrix(ImagSelfEnergy):
                 inv_sinh = self._get_inv_sinh(r_gp, gp2tp_map)
                 
                 for j, k in list(np.ndindex((num_band, num_band))):
-                    collision = (self._fc3_normal_squared[ti, j, k]
+                    collision = (self._pp_strength[ti, j, k]
                                  * inv_sinh
                                  * self._g[2, ti, j, k]).sum()
                     collision *= self._unit_conversion * multi
@@ -176,14 +176,14 @@ class CollisionMatrix(ImagSelfEnergy):
 
     def _run_py_reducible_collision_matrix(self):
         num_mesh_points = np.prod(self._mesh)
-        num_band = self._fc3_normal_squared.shape[1]
+        num_band = self._pp_strength.shape[1]
         gp2tp_map = self._get_gp2tp_map()
         
         for i in range(num_mesh_points):
             ti = gp2tp_map[self._triplets_map_at_q[i]]
             inv_sinh = self._get_inv_sinh(i, gp2tp_map)
             for j, k in list(np.ndindex((num_band, num_band))):
-                collision = (self._fc3_normal_squared[ti, j, k]
+                collision = (self._pp_strength[ti, j, k]
                              * inv_sinh
                              * self._g[2, ti, j, k]).sum()
                 collision *= self._unit_conversion

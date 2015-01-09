@@ -113,7 +113,6 @@ class Phono3py:
     def set_phph_interaction(self,
                              nac_params=None,
                              nac_q_direction=None,
-                             use_Peierls_model=False,
                              frequency_scale_factor=None):
         self._interaction = Interaction(
             self._supercell,
@@ -122,7 +121,6 @@ class Phono3py:
             self._primitive_symmetry,
             fc3=self._fc3,
             band_indices=self._band_indices_flatten,
-            use_Peierls_model=use_Peierls_model,
             frequency_factor_to_THz=self._frequency_factor_to_THz,
             cutoff_frequency=self._cutoff_frequency,
             is_nosym=self._is_nosym,
@@ -375,9 +373,10 @@ class Phono3py:
             is_isotope=False,
             mass_variances=None,
             grid_points=None,
+            boundary_mfp=None, # in micrometre
+            average_pp_interaction=False,
             mesh_divisors=None,
             coarse_mesh_shifts=None,
-            boundary_mfp=None, # in micrometre
             is_reducible_collision_matrix=False,
             no_kappa_stars=False,
             gv_delta_q=None, # for group velocity
@@ -419,9 +418,10 @@ class Phono3py:
                 is_isotope=is_isotope,
                 mass_variances=mass_variances,
                 grid_points=grid_points,
+                boundary_mfp=boundary_mfp,
+                average_pp_interaction=average_pp_interaction,
                 mesh_divisors=mesh_divisors,
                 coarse_mesh_shifts=coarse_mesh_shifts,
-                boundary_mfp=boundary_mfp,
                 no_kappa_stars=no_kappa_stars,
                 gv_delta_q=gv_delta_q,
                 write_gamma=write_gamma,
@@ -608,10 +608,9 @@ class Phono3pyIsotope:
                  frequency_factor_to_THz=VaspToTHz,
                  symprec=1e-5,
                  cutoff_frequency=None,
-                 log_level=0,
                  lapack_zheev_uplo='L'):
+        self._mesh = mesh
         self._sigmas = sigmas
-        self._log_level = log_level
         self._iso = Isotope(mesh,
                             primitive,
                             mass_variances=mass_variances,
@@ -624,16 +623,12 @@ class Phono3pyIsotope:
     def run(self, grid_points):
         for gp in grid_points:
             self._iso.set_grid_point(gp)
-            
-            if self._log_level:
-                print "------ Isotope scattering ------"
-                print "Grid point: %d" % gp
-                adrs = self._iso.get_grid_address()[gp]
-                q = adrs.astype('double') / self._mesh
-                print "q-point:", q
-                print "Phonon frequency:"
-                frequencies = self._iso.get_phonons()[0]
-                print frequencies[gp]
+
+            print "--------------- Isotope scattering ---------------"
+            print "Grid point: %d" % gp
+            adrs = self._iso.get_grid_address()[gp]
+            q = adrs.astype('double') / self._mesh
+            print "q-point:", q
             
             if self._sigmas:
                 for sigma in self._sigmas:
@@ -643,10 +638,17 @@ class Phono3pyIsotope:
                         print "Sigma:", sigma
                     self._iso.set_sigma(sigma)
                     self._iso.run()
-                    print self._iso.get_gamma()
+
+                    frequencies = self._iso.get_phonons()[0]
+                    print
+                    print "Phonon-isotope scattering rate in THz (1/4pi-tau)"
+                    print " Frequency     Rate"
+                    for g, f in zip(self._iso.get_gamma(), frequencies[gp]):
+                        print "%8.3f     %5.3e" % (f, g)
             else:
                 print "sigma or tetrahedron method has to be set."
-                
+
+                    
     def set_dynamical_matrix(self,
                              fc2,
                              supercell,

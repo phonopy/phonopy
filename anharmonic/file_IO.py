@@ -1046,6 +1046,10 @@ def read_gamma_from_hdf5(mesh,
         gamma_isotope = f['gamma_isotope'][:]
     else:
         gamma_isotope = None
+    if 'mspp' in f.keys():
+        mspp = f['mspp'][:]
+    else:
+        mspp = None
     f.close()
     
     if verbose:
@@ -1063,7 +1067,7 @@ def read_gamma_from_hdf5(mesh,
             print ""
         print "%s" % ("kappa" + suffix + ".hdf5")
     
-    return gamma, gamma_isotope
+    return gamma, gamma_isotope, mspp
 
 def read_collision_from_hdf5(mesh,
                              grid_point=None,
