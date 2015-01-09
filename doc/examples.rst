@@ -223,8 +223,8 @@ PDOS
 |NaCl-PDOS|
 
 With non-analytical term correction, the PDOS may not change very much
-because it mainly affects to the density of states only around
-:math:`\Gamma` point.
+because it mainly affects phonon modes in the reciprocal
+region close to :math:`\Gamma` point.
      
 ::
 
@@ -261,6 +261,50 @@ because it mainly affects to the density of states only around
                    :scale: 50
 
 |NaCl-PDOS-nac|
+
+The above examples use a smearing method to calculate DOS. A linear
+tetrahedron method can be also chosen. The obtained DOS shows sharper
+profile than that given by the smearing method.
+
+::
+
+   % phonopy pdos.conf --nac --thm -p
+           _
+     _ __ | |__   ___  _ __   ___   _ __  _   _
+    | '_ \| '_ \ / _ \| '_ \ / _ \ | '_ \| | | |
+    | |_) | | | | (_) | | | | (_) || |_) | |_| |
+    | .__/|_| |_|\___/|_| |_|\___(_) .__/ \__, |
+    |_|                            |_|    |___/
+   
+                                        1.9.2.1
+   
+   Mesh sampling mode
+   Settings:
+     Non-analytical term correction: on
+     Sampling mesh:  [41 41 41]
+     Supercell:  [2 2 2]
+     Primitive axis:
+        [ 0.   0.5  0.5]
+        [ 0.5  0.   0.5]
+        [ 0.5  0.5  0. ]
+   Spacegroup:  Fm-3m (225)
+   Computing force constants...
+   Number of irreducible q-points on sampling mesh: 1771/68921
+   Calculating partial DOS...
+                    _
+      ___ _ __   __| |
+     / _ \ '_ \ / _` |
+    |  __/ | | | (_| |
+     \___|_| |_|\__,_|
+
+.. |NaCl-PDOS-thm-nac| image:: NaCl-PDOS-thm-nac.png
+                       :scale: 50
+
+|NaCl-PDOS-thm-nac|
+
+
+Plot band structure and DOS at once
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Band structure and DOS or PDOS can be plotted on one figure together by
 
