@@ -57,7 +57,7 @@ from anharmonic.settings import Phono3pyConfParser
 from anharmonic.phonon3 import Phono3py, Phono3pyJointDos, Phono3pyIsotope, \
      get_gruneisen_parameters
 
-phono3py_version = "0.9.6"
+phono3py_version = "0.9.7"
 
 # AA is created at http://www.network-science.de/ascii/.
 def print_phono3py():
@@ -175,7 +175,7 @@ parser.set_defaults(band_indices=None,
                     tstep=None,
                     tsym_type=None,
                     uplo='L',
-                    use_Peierls_model=False,
+                    average_pp_interaction=False,
                     verbose=False,
                     write_amplitude=False,
                     write_collision=False,
@@ -183,6 +183,8 @@ parser.set_defaults(band_indices=None,
                     write_grid_points=False)
 parser.add_option("--amplitude", dest="displacement_distance", type="float",
                   help="Distance of displacements")
+parser.add_option("--ave_pp", dest="average_pp_interaction", action="store_true",
+                  help="Use averaged ph-ph interaction strength")
 parser.add_option("--bi", "--band_indices", dest="band_indices", type="string",
                   help="Band indices where life time is calculated")
 parser.add_option("--band", dest="band_paths", action="store", type="string",
@@ -337,8 +339,6 @@ parser.add_option("--scattering_event_class", dest="scattering_event_class",
 parser.add_option("--uplo", dest="uplo", type="string", help="Lapack zheev UPLO")
 parser.add_option("-v", "--verbose", dest="verbose", action="store_true",
                   help="Detailed run-time information is displayed")
-parser.add_option("--peierls", dest="use_Peierls_model", action="store_true",
-                  help="Use Peierls model for ph-ph interaction strength")
 parser.add_option("--wgp", "--write_grid_points", dest="write_grid_points",
                   action="store_true",
                   help="Write grid address of irreducible grid points for specified mesh numbers to ir_grid_address.yaml")
@@ -692,6 +692,13 @@ if options.write_grid_points:
     sys.exit(0)
 
 
+run_mode = None
+if (settings.get_is_isotope() and
+    not (settings.get_is_bterta() or settings.get_is_lbte())):
+    run_mode = "isotope"
+if settings.get_is_bterta() or settings.get_is_lbte():
+    run_mode = "conductivity"
+
 ###################
 # Force constants #
 ###################
@@ -703,7 +710,9 @@ if log_level:
         print "Imposing symmetry of index exchange to fc2:",
         print options.is_symmetrize_fc2
         
-    if not (options.read_fc3 or settings.get_is_isotope() or options.is_joint_dos):
+    if not (options.read_fc3 or
+            settings.get_is_isotope() or
+            options.is_joint_dos):
         print "Imposing translational symmetry to fc3:",
         print (tsym_type > 0)
         print "Imposing symmetry of index exchange to fc3 in real space:",
@@ -944,9 +953,7 @@ if log_level:
                 print "Tetrahedron-method",
         print
         
-    if settings.get_is_isotope():
-        pass
-    elif (settings.get_is_linewidth() or
+    if (settings.get_is_linewidth() or
         settings.get_is_frequency_shift() or
         settings.get_is_bterta() or
         settings.get_is_lbte()):
@@ -980,9 +987,8 @@ if log_level:
     if cutoff_frequency:
         print "Cutoff frequency:", cutoff_frequency
 
-    if not (settings.get_is_isotope() or options.is_joint_dos):
-        if settings.get_use_Peierls_model():
-            print "Use Peierls mode for ph-ph interaction"
+    if settings.get_average_pp_interaction() and run_mode == "conductivity":
+        print "Use averaged ph-ph interaction"
         
     if log_level > 1:
         print "Frequency factor to THz:", frequency_factor_to_THz
@@ -1037,8 +1043,7 @@ if settings.get_is_isotope() and settings.get_mass_variances() is None:
             print_end()
         sys.exit(0)
 
-if (settings.get_is_isotope() and
-    not (settings.get_is_bterta() or settings.get_is_lbte())):
+if run_mode == "isotope":
     mass_variances = settings.get_mass_variances()
     if band_indices is not None:
         band_indices = np.hstack(band_indices).astype('intc')
@@ -1068,7 +1073,6 @@ if (settings.get_is_isotope() and
 phono3py.set_phph_interaction(
     nac_params=nac_params,
     nac_q_direction=nac_q_direction,
-    use_Peierls_model=settings.get_use_Peierls_model(),
     frequency_scale_factor=frequency_scale_factor)
 
 if settings.get_is_linewidth():
@@ -1090,9 +1094,10 @@ elif settings.get_is_bterta() or settings.get_is_lbte():
         is_isotope=settings.get_is_isotope(),
         mass_variances=settings.get_mass_variances(),
         grid_points=grid_points,
+        boundary_mfp=settings.get_boundary_mfp(),
+        average_pp_interaction=settings.get_average_pp_interaction(),
         mesh_divisors=mesh_divs,
         coarse_mesh_shifts=settings.get_coarse_mesh_shifts(),
-        boundary_mfp=settings.get_boundary_mfp(),
         is_reducible_collision_matrix=options.is_reducible_collision_matrix,
         no_kappa_stars=settings.get_no_kappa_stars(),
         gv_delta_q=settings.get_group_velocity_delta_q(),

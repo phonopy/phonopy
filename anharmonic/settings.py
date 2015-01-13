@@ -29,7 +29,7 @@ class Phono3pySettings(Settings):
         self._pinv_cutoff = 1.0e-8
         self._scattering_event_class = None # scattering event class 1 or 2
         self._temperatures = None
-        self._use_Peierls_model = False
+        self._average_pp_interaction = False
         self._write_amplitude = False
         self._write_collision = False
         self._write_gamma = False
@@ -172,11 +172,11 @@ class Phono3pySettings(Settings):
     def get_temperatures(self):
         return self._temperatures
 
-    def set_use_Peierls_model(self, use_Peierls_model):
-        self._use_Peierls_model = use_Peierls_model
+    def set_average_pp_interaction(self, average_pp_interaction):
+        self._average_pp_interaction = average_pp_interaction
 
-    def get_use_Peierls_model(self):
-        return self._use_Peierls_model
+    def get_average_pp_interaction(self):
+        return self._average_pp_interaction
 
     def set_write_amplitude(self, write_amplitude):
         self._write_amplitude = write_amplitude
@@ -301,9 +301,9 @@ class Phono3pyConfParser(ConfParser):
                 if self._options.temperatures is not None:
                     self._confs['temperatures'] = self._options.temperatures
 
-            if opt.dest == 'use_Peierls_model':
-                if self._options.use_Peierls_model:
-                    self._confs['use_Peierls_model'] = '.true.'
+            if opt.dest == 'average_pp_interaction':
+                if self._options.average_pp_interaction:
+                    self._confs['average_pp_interaction'] = '.true.'
 
             if opt.dest == 'write_amplitude':
                 if self._options.write_amplitude:
@@ -450,9 +450,9 @@ class Phono3pyConfParser(ConfParser):
                 else:
                     self.set_parameter('temperatures', vals)
 
-            if conf_key == 'use_Peierls_model':
-                if confs['use_Peierls_model'] == '.true.':
-                    self.set_parameter('use_Peierls_model', True)
+            if conf_key == 'average_pp_interaction':
+                if confs['average_pp_interaction'] == '.true.':
+                    self.set_parameter('average_pp_interaction', True)
 
             if conf_key == 'write_amplitude':
                 if confs['write_amplitude'] == '.true.':
@@ -566,9 +566,10 @@ class Phono3pyConfParser(ConfParser):
         if params.has_key('temperatures'):
             self._settings.set_temperatures(params['temperatures'])
 
-        # Peierls model for imaginary part of self energy
-        if params.has_key('use_Peierls_model'):
-            self._settings.set_use_Peierls_model(params['use_Peierls_model'])
+        # Use averaged ph-ph interaction
+        if params.has_key('average_pp_interaction'):
+            self._settings.set_average_pp_interaction(
+                params['average_pp_interaction'])
 
         # Write phonon-phonon interaction amplitudes to hdf5
         if params.has_key('write_amplitude'):
