@@ -85,7 +85,7 @@ def _write_gamma(br, interaction, i, filename=None):
                             mesh,
                             frequency=frequencies,
                             group_velocity=group_velocities[i],
-                            heat_capacity=mode_heat_capacities[i],
+                            heat_capacity=mode_heat_capacities[:, i],
                             kappa=None,
                             gamma=gamma[j, :, i],
                             gamma_isotope=gamma_isotope_at_sigma,
