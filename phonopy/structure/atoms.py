@@ -160,11 +160,11 @@ class Atoms:
         
     def _symbols_to_numbers(self):
         self.numbers = np.array([symbol_map[s]
-                                 for s in self.symbols])
+                                 for s in self.symbols], dtype='intc')
         
     def _symbols_to_masses(self):
         self.masses = np.array([atom_data[symbol_map[s]][3]
-                                for s in self.symbols])
+                                for s in self.symbols], dtype='double')
 
 
 atom_data = [ 
