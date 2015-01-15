@@ -149,6 +149,7 @@ parser.set_defaults(band_indices=None,
                     is_tetrahedron_method=False,
                     log_level=None,
                     max_freepath=None,
+                    masses=None,
                     mass_variances=None,
                     mesh_numbers=None,
                     mesh_divisors=None,
@@ -268,6 +269,8 @@ parser.add_option("--lw", "--linewidth", dest="is_linewidth",
                   action="store_true", help="Calculate linewidths")
 parser.add_option("--fst", "--frequency_shift", dest="is_frequency_shift",
                   action="store_true", help="Calculate frequency shifts")
+parser.add_option("--mass", dest="masses", action="store", type="string",
+                  help="Same as MASS tag")
 parser.add_option("--md", "--mesh_divisors", dest="mesh_divisors", type="string",
                   help="Divisors for mesh numbers")
 parser.add_option("--mesh", dest="mesh_numbers", type="string",
@@ -619,6 +622,7 @@ phono3py = Phono3py(
     settings.get_supercell_matrix(),
     primitive_matrix=settings.get_primitive_matrix(),
     phonon_supercell_matrix=settings.get_phonon_supercell_matrix(),
+    masses=settings.get_masses(),
     mesh=mesh,
     band_indices=band_indices,
     sigmas=sigmas,

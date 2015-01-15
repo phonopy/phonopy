@@ -29,6 +29,7 @@ class Phono3py:
                  supercell_matrix,
                  primitive_matrix=None,
                  phonon_supercell_matrix=None,
+                 masses=None,
                  mesh=None,
                  band_indices=None,
                  sigmas=[],
@@ -63,6 +64,9 @@ class Phono3py:
         self._build_primitive_cell()
         self._build_phonon_supercell()
         self._build_phonon_primitive_cell()
+
+        if masses is not None:
+            self._set_masses(masses)
 
         # Set supercell, primitive, and phonon supercell symmetries
         self._symmetry = None
@@ -530,6 +534,13 @@ class Phono3py:
                 self._phonon_supercell,
                 self._phonon_supercell_matrix,
                 self._primitive_matrix)
+            if self._primitive is not None:
+                if (self._primitive.get_atomic_numbers() !=
+                    self._phonon_primitive.get_atomic_numbers()).any():
+                    print "********************* Warning *********************"
+                    print " Primitive cells for fc2 and fc3 can be different."
+                    print "********************* Warning *********************"
+
 
     def _build_phonon_supercells_with_displacements(self,
                                                     supercell,
@@ -595,8 +606,24 @@ class Phono3py:
             t_mat = np.dot(inv_supercell_matrix, primitive_matrix)
             
         return get_primitive(supercell, t_mat, self._symprec)
-        
-        
+
+    def _set_masses(self, masses):
+        p_masses = np.array(masses)
+        self._primitive.set_masses(p_masses)
+        p2p_map = self._primitive.get_primitive_to_primitive_map()
+        s_masses = p_masses[[p2p_map[x] for x in
+                             self._primitive.get_supercell_to_primitive_map()]]
+        self._supercell.set_masses(s_masses)
+        u2s_map = self._supercell.get_unitcell_to_supercell_map()
+        u_masses = s_masses[u2s_map]
+        self._unitcell.set_masses(u_masses)
+
+        self._phonon_primitive.set_masses(p_masses)
+        p2p_map = self._phonon_primitive.get_primitive_to_primitive_map()
+        s_masses = p_masses[
+            [p2p_map[x] for x in
+             self._phonon_primitive.get_supercell_to_primitive_map()]]
+        self._phonon_supercell.set_masses(s_masses)
 
 class Phono3pyIsotope:
     def __init__(self,
