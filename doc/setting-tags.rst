@@ -440,10 +440,10 @@ temperature range to be calculated. The default values of them are 0,
    TMAX = 2000
 
 
+.. _thermal_atomic_displacements_tags:
+
 Thermal displacements
 ---------------------
-
-**Experimental**
 
 .. _thermal_displacements_tag:
 
@@ -890,8 +890,10 @@ vector is shown in ``modulation.yaml``.
    MODULATION = -1 1 1 1 -1 1 1 1 -1, 1/2 1/2 0 1 2
 
 
-Characters of irreducible representations of phonon modes
-----------------------------------------------------------
+.. _irreducible_representation_related_tags:
+
+Characters of irreducible representations
+------------------------------------------
 
 .. _irreps_tag:
 

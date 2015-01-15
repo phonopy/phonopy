@@ -56,7 +56,7 @@ Ubuntu linux as a virtual machine. See :ref:`virtualmachine`
 
 
 Special cases on installation
-==============================
+------------------------------
    
 .. toctree::
    :maxdepth: 1
