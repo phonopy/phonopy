@@ -42,7 +42,7 @@ from optparse import OptionParser
 from phonopy.interface.vasp import read_vasp
 from phonopy.structure.cells import get_supercell, get_primitive, print_cell
 from phonopy.structure.symmetry import Symmetry
-from phonopy.harmonic.force_constants import set_translational_invariance, set_permutation_symmetry, get_force_constants
+from phonopy.harmonic.force_constants import set_translational_invariance, set_permutation_symmetry, get_fc2
 from phonopy.harmonic.dynamical_matrix import DynamicalMatrix
 from phonopy.units import VaspToTHz
 from anharmonic.phonon3.fc3 import set_permutation_symmetry_fc3, set_translational_invariance_fc3, show_drift_fc3, get_fc3
@@ -281,6 +281,9 @@ if options.is_displacement:
 # Calculate fourth-order force constants #
 ##########################################
 else:
+    primitive_matrix = settings.get_primitive_matrix()
+    if primitive_matrix is None:
+        primitive_matrix = np.eye(3, dtype='intc')
     primitive = get_primitive(
         supercell,
         np.dot(np.linalg.inv(settings.get_supercell_matrix()),
@@ -314,10 +317,8 @@ else:
             sys.stdout.flush()
 
         disp_dataset = parse_disp_fc4_yaml()
-        forces_second = parse_FORCES_SECOND(disp_dataset)
-        fc2 = get_force_constants(forces_second,
-                                  symmetry,
-                                  supercell)
+        parse_FORCES_SECOND(disp_dataset)
+        fc2 = get_fc2(supercell, symmetry, disp_dataset)
 
     if options.is_symmetrize_fc2:
         set_permutation_symmetry(fc2)
@@ -349,12 +350,17 @@ else:
         else: # fc3 from DELTA_FORCES
             displacements = parse_disp_fc3_yaml()
             parse_DELTA_FORCES(displacements)
+
+        if options.is_translational_symmetry:
+            translational_symmetry_type = 1
+        else:
+            translational_symmetry_type = 0
         fc3 = get_fc3(
             supercell,
             displacements,
             fc2,
             symmetry,
-            is_translational_symmetry=options.is_translational_symmetry,
+            translational_symmetry_type=translational_symmetry_type,
             is_permutation_symmetry=options.is_symmetrize_fc3_r,          
             verbose=log_level)
 
