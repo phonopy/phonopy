@@ -283,11 +283,11 @@ if options.is_displacement:
 else:
     primitive_matrix = settings.get_primitive_matrix()
     if primitive_matrix is None:
-        primitive_matrix = np.eye(3, dtype='intc')
+        primitive_matrix = np.eye(3, dtype='double')
     primitive = get_primitive(
         supercell,
         np.dot(np.linalg.inv(settings.get_supercell_matrix()),
-               settings.get_primitive_matrix()),
+               primitive_matrix),
         options.symprec)
 
     if log_level:

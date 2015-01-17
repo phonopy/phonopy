@@ -80,7 +80,7 @@ class FC3Fit:
                                                    rot_map_syms)
             fc = self._solve(rot_disps, rot_forces)
             fc2 = fc[:, 1:4, :].reshape((self._num_atom, 3, 3))
-            fc2_2 = fc[:, 5:8, :].reshape((self._num_atom, 3, 3))
+            fc2_2 = fc[:, 4:7, :].reshape((self._num_atom, 3, 3))
             fc3 = fc[:, 7:16, :].reshape((self._num_atom, 3, 3, 3))
             fc3_21 = fc[:, 16:25, :].reshape((self._num_atom, 3, 3, 3))
             for i, j in list(np.ndindex(3, 3)):

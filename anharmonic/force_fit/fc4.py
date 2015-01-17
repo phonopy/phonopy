@@ -98,8 +98,9 @@ class FC4Fit:
         rot_map_syms = get_positions_sent_by_rot_inv(positions,
                                                      site_symmetry,
                                                      self._symprec)
-        site_syms_cart = np.double([similarity_transformation(self._lattice, sym)
-                                    for sym in site_symmetry])
+        site_syms_cart = np.array([similarity_transformation(self._lattice, sym)
+                                   for sym in site_symmetry],
+                                  dtype='double')
 
         (disp_triplets_rearranged,
          num_triplets) = self._create_displacement_triplets_for_c(disp_triplets)
@@ -152,7 +153,8 @@ class FC4Fit:
     def _invert_displacements(self, rot_disps_set):
         try:
             import anharmonic._forcefit as forcefit
-            row_nums = np.intc([x.shape[0] for x in rot_disps_set])
+            row_nums = np.array([x.shape[0] for x in rot_disps_set],
+                                dtype='intc')
             info = np.zeros(len(row_nums), dtype='intc')
             max_row_num = max(row_nums)
             column_num = rot_disps_set[0].shape[1]
@@ -205,7 +207,7 @@ class FC4Fit:
 
             force_matrix.append(force_matrix_atom)
 
-        return np.double(force_matrix)
+        return np.array(force_matrix, dtype='double')
 
     def _create_displacement_matrix(self,
                                     second_atom_num,
@@ -227,7 +229,7 @@ class FC4Fit:
                              self._get_pair_tensor(Su1, Su2, Su3),
                              self._get_triplet_tensor(Su1, Su2, Su3))))
 
-        return np.double(rot_disps)
+        return np.array(rot_disps, dtype='double')
                     
     def _create_displacement_triplets_for_c(self, disp_triplets):
         num_disps = np.zeros(
@@ -243,7 +245,7 @@ class FC4Fit:
                     count += num_disp
                     triplets += disp_triplets[i][j][k]
 
-        return np.double(triplets), num_disps
+        return np.array(triplets, dtype='double'), num_disps
 
     def _create_displacement_matrix_c(self,
                                       second_atom_num,
