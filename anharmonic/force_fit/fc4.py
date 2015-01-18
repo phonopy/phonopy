@@ -72,25 +72,25 @@ class FC4Fit:
                        self._symprec,
                        self._verbose)
 
-        print "ditributing fc3..."
-        distribute_fc3(self._fc3,
-                       unique_first_atom_nums,
-                       self._lattice,
-                       self._positions,
-                       rotations,
-                       translations,
-                       self._symprec,
-                       self._verbose)
+        # print "ditributing fc3..."
+        # distribute_fc3(self._fc3,
+        #                unique_first_atom_nums,
+        #                self._lattice,
+        #                self._positions,
+        #                rotations,
+        #                translations,
+        #                self._symprec,
+        #                self._verbose)
 
-        print "ditributing fc2..."
-        distribute_force_constants(self._fc2,
-                                   range(self._num_atom),
-                                   unique_first_atom_nums,
-                                   self._lattice,
-                                   self._positions,
-                                   rotations,
-                                   translations,
-                                   self._symprec)
+        # print "ditributing fc2..."
+        # distribute_force_constants(self._fc2,
+        #                            range(self._num_atom),
+        #                            unique_first_atom_nums,
+        #                            self._lattice,
+        #                            self._positions,
+        #                            rotations,
+        #                            translations,
+        #                            self._symprec)
 
     def _fit(self, first_atom_num, disp_triplets, sets_of_forces):
         site_symmetry = self._symmetry.get_site_symmetry(first_atom_num)
@@ -105,7 +105,7 @@ class FC4Fit:
         (disp_triplets_rearranged,
          num_triplets) = self._create_displacement_triplets_for_c(disp_triplets)
         max_num_disp = np.amax(num_triplets[:, :, :, 1])
-        
+
         for second_atom_num in range(self._num_atom):
             print second_atom_num + 1
 
@@ -142,13 +142,23 @@ class FC4Fit:
                     rot_map_syms)
 
                 fc = self._solve(inv_disps_set[third_atom_num], rot_forces)
-                fc2 = fc[:, 1:4, :].reshape((self._num_atom, 3, 3))
-                fc3 = fc[:, 19:28, :].reshape((self._num_atom, 3, 3, 3))
-                fc4 = fc[:, 172:199, :].reshape((self._num_atom, 3, 3, 3, 3))
 
-                self._fc2[first_atom_num] = fc2
-                self._fc3[first_atom_num, second_atom_num] = fc3
+                # For elements with index exchange symmetry 
+                fc2 = fc[:, 7:10, :].reshape((self._num_atom, 3, 3))
+                fc3 = fc[:, 46:55, :].reshape((self._num_atom, 3, 3, 3))
+                fc4 = fc[:, 172:199, :].reshape((self._num_atom, 3, 3, 3, 3))
+                self._fc2[third_atom_num] = fc2
+                self._fc3[second_atom_num, third_atom_num] = fc3
                 self._fc4[first_atom_num, second_atom_num, third_atom_num] = fc4
+
+                # # For all elements
+                # fc2 = fc[:, 7:10, :].reshape((self._num_atom, 3, 3))
+                # fc3 = fc[:, 55:64, :].reshape((self._num_atom, 3, 3, 3))
+                # fc4 = fc[:, 226:253, :].reshape((self._num_atom, 3, 3, 3, 3))
+                # self._fc2[third_atom_num] = fc2
+                # self._fc3[second_atom_num, third_atom_num] = fc3 * 2
+                # self._fc4[first_atom_num, second_atom_num, third_atom_num] = fc4 * 6
+
 
     def _invert_displacements(self, rot_disps_set):
         try:
@@ -257,6 +267,7 @@ class FC4Fit:
                                       max_num_disp):
         import anharmonic._forcefit as forcefit
         num_row_elem = 27 * 10 + 9 * 6 + 3 * 3 + 1
+        # num_row_elem = 27 * 27 + 9 * 9 + 3 * 3 + 1
         disp_matrix_tmp = np.zeros(
             (len(num_disps) * max_num_disp * len(site_syms_cart), num_row_elem),
             dtype='double')
