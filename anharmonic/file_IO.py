@@ -1395,19 +1395,6 @@ def parse_disp_fc4_yaml(filename="disp_fc4.yaml"):
 
     return new_dataset
     
-def parse_DELTA_FORCES(disp_dataset,
-                       filethird='FORCES_THIRD',
-                       filesecond='FORCES_SECOND'):
-    forces_third = open(filethird, 'r')
-    forces_second = open(filesecond, 'r')
-    num_atom = disp_dataset['natom']
-
-    for disp1 in disp_dataset['first_atoms']:
-        second_forces = parse_force_lines(forces_second, num_atom)
-        for disp2 in disp1['second_atoms']:
-            third_forces = parse_force_lines(forces_third, num_atom)
-            disp2['delta_forces'] = third_forces - second_forces
-
 def parse_DELTA_FORCES_FOURTH(disp_dataset,
                               file4='FORCES_FOURTH',
                               file3='FORCES_THIRD',

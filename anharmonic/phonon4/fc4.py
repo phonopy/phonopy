@@ -51,6 +51,9 @@ def get_fc4(supercell,
     if is_translational_symmetry:
         set_translational_invariance_fc4_per_index(fc4)
 
+    if is_permutation_symmetry:
+        set_permutation_symmetry_fc4(fc4)
+
     return fc4
     
 def set_translational_invariance_fc4(fc4):

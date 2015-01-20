@@ -48,9 +48,6 @@ from phonopy.units import VaspToTHz
 from anharmonic.phonon3.fc3 import set_permutation_symmetry_fc3, set_translational_invariance_fc3, show_drift_fc3, get_fc3
 from anharmonic.file_IO import \
     parse_disp_fc3_yaml, parse_disp_fc4_yaml,\
-    parse_DELTA_FORCES, parse_DELTA_FORCES_FOURTH,\
-    write_DELTA_FC2_SETS, parse_DELTA_FC2_SETS, \
-    write_DELTA_FC2_FOURTH_SETS, parse_DELTA_FC2_FOURTH_SETS,\
     write_FORCES_FOURTH, parse_FORCES_SECOND, \
     read_fc4_from_hdf5, read_fc3_from_hdf5, read_fc2_from_hdf5, \
     write_fc4_to_hdf5, write_fc3_to_hdf5, write_fc2_to_hdf5, \
@@ -89,7 +86,6 @@ parser.set_defaults(amplitude=None,
                     band_indices=None,
                     cell_poscar=None,
                     factor=None,
-                    fc2_fourth_sets_mode=False,
                     forces_fourth_mode=False,
                     grid_points=None,
                     is_nodiag=False,
@@ -103,7 +99,6 @@ parser.set_defaults(amplitude=None,
                     log_level=None,
                     mesh_numbers=None,
                     primitive_axis=None,
-                    read_fc2_fourth=False,
                     read_fc2=False,
                     read_fc3=False,
                     read_fc4=False,
@@ -120,10 +115,6 @@ parser.add_option("--bi", "--band_indices", dest="band_indices",
 parser.add_option("-c", "--cell", dest="cell_poscar",
                   action="store", type="string",
                   help="Read unit cell", metavar="FILE")
-parser.add_option("--create_fc2_fourth",
-                  dest="fc2_fourth_sets_mode",
-                  action="store_true",
-                  help="Create DELTA_FC2_FOURTH_SETS, DELTA_FC2_SETS, and fc2.hdf")
 parser.add_option("--cf4", "--create_f4",
                   dest="forces_fourth_mode",
                   action="store_true",
@@ -141,10 +132,6 @@ parser.add_option("--fc2",
                   dest="read_fc2",
                   action="store_true",
                   help="Read second order force constants")
-parser.add_option("--fc2_fourth",
-                  dest="read_fc2_fourth",
-                  action="store_true",
-                  help="Read DELTA_FC2_FOURTH_SETS, DELTA_FC2_SETS, and fc2.hdf")
 parser.add_option("--fc3",
                   dest="read_fc3",
                   action="store_true",
@@ -207,13 +194,6 @@ else:
     log_level = options.log_level
     
 # Create FC2_FOURTH_SETS
-if options.fc2_fourth_sets_mode:
-    displacements = parse_disp_fc3_yaml()
-    write_DELTA_FC2_FOURTH_SETS(args, displacements)
-    print_end()
-    exit(0)
-
-# Create FC2_FOURTH_SETS
 if options.forces_fourth_mode:
     displacements = parse_disp_fc4_yaml()
     write_FORCES_FOURTH(args, displacements)
@@ -258,11 +238,6 @@ unitcell = read_vasp(unitcell_filename,
 
 # Supercell and Symmetry 
 supercell = get_supercell(unitcell, settings.get_supercell_matrix())
-symmetry = Symmetry(supercell, options.symprec)
-
-# Log
-if log_level:
-    print "Spacegroup: ", symmetry.get_international_table()
 
 ###############################################################
 # Create supercells with displacements and exit (pre-process) #
@@ -299,116 +274,69 @@ else:
         for vec in np.dot(supercell.get_cell(), np.linalg.inv(primitive.get_cell())):
             print "%5.2f"*3 % tuple(vec)
 
-    # fc2
+
+    if options.factor is None:
+        factor = VaspToTHz
+    else:
+        factor = options.factor
+
+    mesh = settings.get_mesh_numbers()
+
+    phono4py = Phono4py(fc4,
+                        supercell,
+                        primitive,
+                        mesh,
+                        band_indices=settings.get_band_indices(),
+                        frequency_factor_to_THz=factor,
+                        cutoff_frequency=1e-2,
+                        is_nosym=options.is_nosym,
+                        symprec=options.symprec,
+                        log_level=log_level)
+
+    if not options.read_fc4: # Read fc4.hdf
+        displacements = parse_disp_fc4_yaml()
+        forces_fc4 = parse_FORCES_FC4(displacements)
+        translational_symmetry_type = is_translational_symmetry * 1
+        phono4py.produce_fc4(
+            forces_fc4,
+            displacements,
+            translational_symmetry_type=translational_symmetry_type,
+            is_permutation_symmetry=is_symmetrize_fc4_r,
+            is_permutation_symmetry_fc3=is_symmetrize_fc3_r,
+            is_permutation_symmetry_fc2=is_symmetrize_fc2)
+
     if options.read_fc2:
         if log_level:
             print  "----- Read fc2 -----"
             sys.stdout.flush()
-        if os.path.exists('fc2.hdf5'):
-            fc2 = read_fc2_from_hdf5()
-        else:
-            print "fc2.hdf5 not found"
-            if log_level:
-                print_end()
-            sys.exit(0)
+        phono4py.set_fc2(read_fc2_from_hdf5())
     else:
         if log_level:
-            print "----- Solve fc2 -----"
-            sys.stdout.flush()
-
-        disp_dataset = parse_disp_fc4_yaml()
-        parse_FORCES_SECOND(disp_dataset)
-        fc2 = get_fc2(supercell, symmetry, disp_dataset)
-
-    if options.is_symmetrize_fc2:
-        set_permutation_symmetry(fc2)
-
-    if options.is_translational_symmetry:
-        set_translational_invariance(fc2)
-
-    if not options.read_fc2:
-        if log_level:
             print "----- Write fc2.hdf5 -----"
-        write_fc2_to_hdf5(fc2)
-            
-    # fc3
-    if options.read_fc3: # Read fc3.hdf5
+        write_fc2_to_hdf5(phono4py.get_fc2())
+    show_drift_force_constants(phono4py.get_fc2(), name='fc2')
+
+    if options.read_fc3:
         if log_level:
             print  "----- Read fc3 -----"
             sys.stdout.flush()
-        fc3 = read_fc3_from_hdf5()
-        if options.is_translational_symmetry:
-            set_translational_invariance_fc3(fc3)
+        phono4py.set_fc3(read_fc3_from_hdf5())
     else:
         if log_level:
-            print  "----- Solve fc3 -----"
-            sys.stdout.flush()
-
-        if options.read_fc2_fourth: # fc3 from DELTA_FC2_SETS
-            displacements = parse_disp_fc3_yaml()
-            parse_DELTA_FC2_SETS(displacements)
-        else: # fc3 from DELTA_FORCES
-            displacements = parse_disp_fc3_yaml()
-            parse_DELTA_FORCES(displacements)
-
-        if options.is_translational_symmetry:
-            translational_symmetry_type = 1
-        else:
-            translational_symmetry_type = 0
-        fc3 = get_fc3(
-            supercell,
-            displacements,
-            fc2,
-            symmetry,
-            translational_symmetry_type=translational_symmetry_type,
-            is_permutation_symmetry=options.is_symmetrize_fc3_r,          
-            verbose=log_level)
-
-    if options.is_symmetrize_fc3_r:
-        if log_level:
-            print "----- Symmetrize fc3 by index exchange in real space  -----"
-        set_permutation_symmetry_fc3(fc3)
-
-    show_drift_fc3(fc3)
-
-    if not options.read_fc3:
-        if log_level:
             print "----- Write fc3.hdf5 -----"
-        write_fc3_to_hdf5(fc3)
+        write_fc3_to_hdf5(phono4py.get_fc3())
+    show_drift_fc3(phono4py.get_fc3())
 
-    # fc4
-    if options.read_fc4: # Read fc4.hdf
+    if options.read_fc4:
         if log_level:
             print  "----- Read fc4 -----"
             sys.stdout.flush()
-        fc4 = read_fc4_from_hdf5()
-        if options.is_translational_symmetry:
-            if log_level:
-                print "----- Impose translational invariance "
-                print "condition to fc4 -----"
-            set_translational_invariance_fc4(fc4)
+        phono4py.set_fc4(read_fc4_from_hdf5())
     else:
-        if options.read_fc2_fourth:
-            displacements = parse_disp_fc4_yaml()
-            parse_DELTA_FC2_FOURTH_SETS(displacements)
-        else: # fc4 from FORCES_FOURTH, FORCES_THIRD and FORCES_SECOND
-            displacements = parse_disp_fc4_yaml()
-            parse_DELTA_FORCES_FOURTH(displacements)
-        fc4 = get_fc4(
-            supercell,
-            displacements,
-            fc3,
-            symmetry,
-            is_translational_symmetry=options.is_translational_symmetry,
-            is_permutation_symmetry=options.is_symmetrize_fc4_r,
-            verbose=log_level)
+        write_fc4_to_hdf5(phono4py.get_fc4())
+    show_drift_fc4(phono4py.get_fc4())
 
-    if options.is_symmetrize_fc4_r:
-        if log_level:
-            print "----- Symmetrize fc4 by index exchange in real space -----"
-        set_permutation_symmetry_fc4(fc4)
 
-        
     if log_level:
         print "(Calculating fc4 drift...)"
     show_drift_fc4(fc4)
@@ -418,24 +346,9 @@ else:
             print "----- Write fc4.hdf5 -----"
         write_fc4_to_hdf5(fc4)
 
-    if options.factor is None:
-        factor = VaspToTHz
-    else:
-        factor = options.factor
 
-    mesh = settings.get_mesh_numbers()
-
+    # Frequency shift
     if mesh is not None:
-        phono4py = Phono4py(fc4,
-                            supercell,
-                            primitive,
-                            mesh,
-                            band_indices=settings.get_band_indices(),
-                            frequency_factor_to_THz=factor,
-                            cutoff_frequency=1e-2,
-                            is_nosym=options.is_nosym,
-                            symprec=options.symprec,
-                            log_level=log_level)
         phono4py.set_frequency_shift(temperatures=settings.get_temperatures())
         phono4py.set_dynamical_matrix(fc2,
                                       supercell,
