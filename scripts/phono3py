@@ -768,7 +768,8 @@ else:
             displacement_dataset=disp_dataset,
             cutoff_distance=settings.get_cutoff_fc3_distance(),
             translational_symmetry_type=tsym_type,
-            is_permutation_symmetry=options.is_symmetrize_fc3_r)
+            is_permutation_symmetry=options.is_symmetrize_fc3_r,
+            is_permutation_symmetry_fc2=options.is_symmetrize_fc2)
         if output_filename is None:
             filename = 'fc3.hdf5'
         else:

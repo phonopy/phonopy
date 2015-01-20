@@ -191,7 +191,8 @@ class Phono3py:
                     displacement_dataset=None,
                     cutoff_distance=None, # set fc3 zero
                     translational_symmetry_type=0,
-                    is_permutation_symmetry=False):
+                    is_permutation_symmetry=False,
+                    is_permutation_symmetry_fc2=False):
         if displacement_dataset is None:
             disp_dataset = self._displacement_dataset
         else:
@@ -200,7 +201,7 @@ class Phono3py:
         for forces, disp1 in zip(forces_fc3, disp_dataset['first_atoms']):
             disp1['forces'] = forces
         fc2 = get_fc2(self._supercell, self._symmetry, disp_dataset)
-        if is_permutation_symmetry:
+        if is_permutation_symmetry_fc2:
             set_permutation_symmetry(fc2)
         if translational_symmetry_type:
             set_translational_invariance(
