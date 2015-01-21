@@ -363,7 +363,8 @@ def _get_constrained_fc3(supercell,
     num_atom = supercell.get_number_of_atoms()
     atom1 = displacements['number']
     disp1 = displacements['displacement']
-    fc3 = np.zeros((num_atom, num_atom, num_atom, 3, 3, 3), dtype='double')
+    delta_fc3 = np.zeros((num_atom, num_atom, num_atom, 3, 3, 3),
+                         dtype='double')
 
     if 'delta_forces' in displacements['second_atoms'][0]:
         fc2_with_one_disp = get_constrained_fc2(supercell,
@@ -373,21 +374,20 @@ def _get_constrained_fc3(supercell,
                                                 translational_symmetry_type,
                                                 is_permutation_symmetry,
                                                 symprec)
-        show_drift_force_constants(fc2_with_one_disp, name="fc2_1")
     
     atom_list = np.unique([x['number'] for x in displacements['second_atoms']])
     for atom2 in atom_list:
+        bond_sym = get_bond_symmetry(
+            reduced_site_sym,
+            supercell.get_scaled_positions(),
+            atom1,
+            atom2,
+            symprec)
         disps2 = []
         delta_fc2s = []
         for disps_second in displacements['second_atoms']:
             if atom2 != disps_second['number']:
                 continue
-            bond_sym = get_bond_symmetry(
-                reduced_site_sym,
-                supercell.get_scaled_positions(),
-                atom1,
-                atom2,
-                symprec)
             disps2.append(disps_second['displacement'])
 
             if 'delta_fc2' in disps_second:
@@ -399,14 +399,14 @@ def _get_constrained_fc3(supercell,
                     bond_sym, direction, symprec)
 
                 delta_fc2s.append(get_delta_fc2(
-                        disps_second['third_atoms'],
-                        atom2,
-                        fc2_with_one_disp,
-                        supercell,
-                        reduced_bond_sym,
-                        translational_symmetry_type,
-                        is_permutation_symmetry,
-                        symprec))
+                    disps_second['third_atoms'],
+                    atom2,
+                    fc2_with_one_disp,
+                    supercell,
+                    reduced_bond_sym,
+                    translational_symmetry_type,
+                    is_permutation_symmetry,
+                    symprec))
     
             if verbose > 1:
                 print ("Second displacements for fc4[ %d, %d, x, x ]" %
@@ -414,10 +414,7 @@ def _get_constrained_fc3(supercell,
                 for i, v in enumerate(disps2):
                     print "  [%7.4f %7.4f %7.4f]" % tuple(v)
 
-            for d_fc2 in delta_fc2s:
-                show_drift_force_constants(d_fc2, name="d_fc2")
-
-        solve_fc3(fc3,
+        solve_fc3(delta_fc3,
                   atom2,
                   supercell,
                   bond_sym,
@@ -433,14 +430,15 @@ def _get_constrained_fc3(supercell,
 
     if verbose:
         print "(Copying delta fc3...)"
-    distribute_fc3(fc3,
-                   atom_list,
-                   lattice,
-                   positions,
-                   np.array(reduced_site_sym, dtype='intc', order='C'),
-                   np.zeros((len(reduced_site_sym), 3), dtype='double'),
-                   symprec,
-                   verbose)
+
+    fc3 = distribute_fc3(delta_fc3,
+                         atom_list,
+                         lattice,
+                         positions,
+                         np.array(reduced_site_sym, dtype='intc', order='C'),
+                         np.zeros((len(reduced_site_sym), 3), dtype='double'),
+                         symprec,
+                         verbose)
 
     if translational_symmetry_type > 0:
         set_translational_invariance_fc3_per_index(fc3)
