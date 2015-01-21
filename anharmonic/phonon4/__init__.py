@@ -2,11 +2,13 @@ import numpy as np
 from anharmonic.phonon4.frequency_shift import FrequencyShift
 from phonopy.units import VaspToTHz
 from phonopy.harmonic.force_constants import set_translational_invariance, set_permutation_symmetry, get_fc2
+from anharmonic.phonon3.fc3 import get_fc3
+from anharmonic.phonon4.fc4 import get_fc4
 from phonopy.structure.symmetry import Symmetry
 
 class Phono4py:
     def __init__(self,
-                 fc4,
+                 unitcell,
                  supercell,
                  primitive,
                  mesh=None,
@@ -18,7 +20,7 @@ class Phono4py:
                  cutoff_frequency=1e-4,
                  log_level=False,
                  lapack_zheev_uplo='L'):
-        self._fc4 = fc4
+        self._unitcell = unitcell
         self._supercell = supercell
         self._primitive = primitive
         
@@ -78,9 +80,10 @@ class Phono4py:
                     is_permutation_symmetry=False,
                     is_permutation_symmetry_fc3=False,
                     is_permutation_symmetry_fc2=False):
+        disp_dataset = displacement_dataset
         file_count = 0
-        for forces, disp1 in zip(forces_fc2, disp_dataset['first_atoms']):
-            disp1['forces'] = forces
+        for disp1 in disp_dataset['first_atoms']:
+            disp1['forces'] = forces_fc4[file_count]
             file_count += 1
         self._fc2 = get_fc2(self._supercell, self._symmetry, disp_dataset)
         if is_permutation_symmetry_fc2:
@@ -98,7 +101,7 @@ class Phono4py:
 
         self._fc3 = get_fc3(
             self._supercell,
-            displacement_dataset,
+            disp_dataset,
             self._fc2,
             self._symmetry,
             translational_symmetry_type=translational_symmetry_type,
@@ -107,17 +110,17 @@ class Phono4py:
 
         for disp1 in disp_dataset['first_atoms']:
             for disp2 in disp1['second_atoms']:
-                for disp3 in disp1['third_atoms']:
+                for disp3 in disp2['third_atoms']:
                     disp3['delta_forces'] = (forces_fc4[file_count] -
                                              disp2['forces'])
                     file_count += 1
         
         self._fc4 = get_fc4(
             self._supercell,
-            displacement_dataset,
+            disp_dataset,
             self._fc3,
             self._symmetry,
-            is_translational_symmetry=(translational_symmetry_type > 0),
+            translational_symmetry_type=translational_symmetry_type,
             is_permutation_symmetry=is_permutation_symmetry,
             verbose=self._log_level)
 
@@ -165,7 +168,7 @@ class Phono4py:
             self._interaction.run()
             freq_shifts.append(self._interaction.get_frequency_shifts())
 
-        self._frequency_shifts = np.double(freq_shifts)
+        self._frequency_shifts = np.array(freq_shifts, dtype='double')
         print self._frequency_shifts
 
     def get_frequency_shift(self):

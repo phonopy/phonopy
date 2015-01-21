@@ -1,4 +1,3 @@
-import sys
 import os
 import numpy as np
 import h5py
@@ -1393,6 +1392,10 @@ def parse_disp_fc4_yaml(filename="disp_fc4.yaml"):
              'second_atoms': new_second_atoms})
     new_dataset['first_atoms'] = new_first_atoms
 
+    new_dataset['num_first_displacements'] = dataset['num_first_displacements']
+    new_dataset['num_second_displacements'] = dataset['num_second_displacements']
+    new_dataset['num_third_displacements'] = dataset['num_third_displacements']
+
     return new_dataset
     
 def parse_DELTA_FORCES_FOURTH(disp_dataset,
@@ -1471,6 +1474,24 @@ def parse_FORCES_FC3(disp_dataset, filename="FORCES_FC3"):
     forces_fc3 = [parse_force_lines(f3, num_atom) for i in range(num_disp)]
     f3.close()
     return forces_fc3
+
+def parse_FORCES_FC4(disp_dataset, filename="FORCES_FC4"):
+    num_atom = disp_dataset['natom']
+    num_disp = len(disp_dataset['first_atoms'])
+    for disp1 in disp_dataset['first_atoms']:
+        num_disp += len(disp1['second_atoms'])
+        for disp2 in disp1['second_atoms']:
+            num_disp += len(disp2['third_atoms'])
+
+    assert num_disp == (disp_dataset['num_first_displacements'] +
+                        disp_dataset['num_second_displacements'] +
+                        disp_dataset['num_third_displacements'])
+        
+
+    f4 = open(filename, 'r')
+    forces_fc4 = [parse_force_lines(f4, num_atom) for i in range(num_disp)]
+    f4.close()
+    return forces_fc4
 
 def parse_DELTA_FC2_SETS(disp_dataset,
                          filename='DELTA_FC2_SETS'):

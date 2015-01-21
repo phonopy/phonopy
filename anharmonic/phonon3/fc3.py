@@ -312,14 +312,12 @@ def get_constrained_fc2(supercell,
     num_atom = supercell.get_number_of_atoms()
     fc2 = np.zeros((num_atom, num_atom, 3, 3), dtype='double')
     atom_list = np.unique([x['number'] for x in dataset_second_atoms])
-    atom_list_done = []
     for atom2 in atom_list:
         disps2 = []
         sets_of_forces = []
         for disps_second in dataset_second_atoms:
             if atom2 != disps_second['number']:
                 continue
-            atom_list_done.append(atom2)
             bond_sym = get_bond_symmetry(
                 reduced_site_sym,
                 supercell.get_scaled_positions(),
@@ -345,7 +343,7 @@ def get_constrained_fc2(supercell,
     positions -= pos_center
     distribute_force_constants(fc2,
                                range(num_atom),
-                               atom_list_done,
+                               atom_list,
                                lattice,
                                positions,
                                np.array(reduced_site_sym,

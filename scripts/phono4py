@@ -41,14 +41,12 @@ from optparse import OptionParser
 
 from phonopy.interface.vasp import read_vasp
 from phonopy.structure.cells import get_supercell, get_primitive, print_cell
-from phonopy.structure.symmetry import Symmetry
-from phonopy.harmonic.force_constants import set_translational_invariance, set_permutation_symmetry, get_fc2
-from phonopy.harmonic.dynamical_matrix import DynamicalMatrix
 from phonopy.units import VaspToTHz
-from anharmonic.phonon3.fc3 import set_permutation_symmetry_fc3, set_translational_invariance_fc3, show_drift_fc3, get_fc3
+from phonopy.harmonic.force_constants import show_drift_force_constants
+from anharmonic.phonon3.fc3 import show_drift_fc3
 from anharmonic.file_IO import \
     parse_disp_fc3_yaml, parse_disp_fc4_yaml,\
-    write_FORCES_FOURTH, parse_FORCES_SECOND, \
+    write_FORCES_FOURTH, parse_FORCES_FC4, \
     read_fc4_from_hdf5, read_fc3_from_hdf5, read_fc2_from_hdf5, \
     write_fc4_to_hdf5, write_fc3_to_hdf5, write_fc2_to_hdf5, \
     write_supercells_with_three_displacements, \
@@ -56,7 +54,7 @@ from anharmonic.file_IO import \
 from anharmonic.phonon3.displacement_fc3 import get_third_order_displacements
 from anharmonic.phonon4.displacement_fc4 import get_fourth_order_displacements
 from anharmonic.settings import Phono3pyConfParser
-from anharmonic.phonon4.fc4 import get_fc4, show_drift_fc4, set_translational_invariance_fc4, set_permutation_symmetry_fc4
+from anharmonic.phonon4.fc4 import show_drift_fc4
 from anharmonic.phonon4 import Phono4py
 
 # AA is created at http://www.network-science.de/ascii/.
@@ -282,7 +280,7 @@ else:
 
     mesh = settings.get_mesh_numbers()
 
-    phono4py = Phono4py(fc4,
+    phono4py = Phono4py(unitcell,
                         supercell,
                         primitive,
                         mesh,
@@ -296,14 +294,14 @@ else:
     if not options.read_fc4: # Read fc4.hdf
         displacements = parse_disp_fc4_yaml()
         forces_fc4 = parse_FORCES_FC4(displacements)
-        translational_symmetry_type = is_translational_symmetry * 1
+        translational_symmetry_type = options.is_translational_symmetry * 1
         phono4py.produce_fc4(
             forces_fc4,
             displacements,
             translational_symmetry_type=translational_symmetry_type,
-            is_permutation_symmetry=is_symmetrize_fc4_r,
-            is_permutation_symmetry_fc3=is_symmetrize_fc3_r,
-            is_permutation_symmetry_fc2=is_symmetrize_fc2)
+            is_permutation_symmetry=options.is_symmetrize_fc4_r,
+            is_permutation_symmetry_fc3=options.is_symmetrize_fc3_r,
+            is_permutation_symmetry_fc2=options.is_symmetrize_fc2)
 
     if options.read_fc2:
         if log_level:
@@ -314,7 +312,8 @@ else:
         if log_level:
             print "----- Write fc2.hdf5 -----"
         write_fc2_to_hdf5(phono4py.get_fc2())
-    show_drift_force_constants(phono4py.get_fc2(), name='fc2')
+    fc2 = phono4py.get_fc2()
+    show_drift_force_constants(fc2, name='fc2')
 
     if options.read_fc3:
         if log_level:
@@ -325,7 +324,8 @@ else:
         if log_level:
             print "----- Write fc3.hdf5 -----"
         write_fc3_to_hdf5(phono4py.get_fc3())
-    show_drift_fc3(phono4py.get_fc3())
+    fc3 = phono4py.get_fc3()
+    show_drift_fc3(fc3)
 
     if options.read_fc4:
         if log_level:
@@ -333,19 +333,11 @@ else:
             sys.stdout.flush()
         phono4py.set_fc4(read_fc4_from_hdf5())
     else:
-        write_fc4_to_hdf5(phono4py.get_fc4())
-    show_drift_fc4(phono4py.get_fc4())
-
-
-    if log_level:
-        print "(Calculating fc4 drift...)"
-    show_drift_fc4(fc4)
-
-    if not options.read_fc4:
         if log_level:
             print "----- Write fc4.hdf5 -----"
-        write_fc4_to_hdf5(fc4)
-
+        write_fc4_to_hdf5(phono4py.get_fc4())
+    fc4 = phono4py.get_fc4()
+    show_drift_fc4(fc4)
 
     # Frequency shift
     if mesh is not None:

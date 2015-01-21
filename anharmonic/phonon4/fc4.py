@@ -1,6 +1,7 @@
 import sys
 import numpy as np
 from phonopy.harmonic.force_constants import similarity_transformation, get_positions_sent_by_rot_inv, get_rotated_displacement
+from phonopy.harmonic.force_constants import show_drift_force_constants
 from anharmonic.phonon3.fc3 import set_translational_invariance_fc3_per_index, solve_fc3, distribute_fc3, third_rank_tensor_rotation, get_atom_mapping_by_symmetry, get_atom_by_symmetry, show_drift_fc3, set_permutation_symmetry_fc3, get_delta_fc2, get_constrained_fc2
 from anharmonic.phonon3.displacement_fc3 import get_reduced_site_symmetry, get_bond_symmetry
 from phonopy.structure.symmetry import Symmetry
@@ -9,7 +10,7 @@ def get_fc4(supercell,
             disp_dataset,
             fc3,
             symmetry,
-            is_translational_symmetry=False,
+            translational_symmetry_type=0,
             is_permutation_symmetry=False,
             verbose=False):
 
@@ -25,7 +26,7 @@ def get_fc4(supercell,
                          disp_dataset,
                          fc3,
                          symmetry,
-                         is_translational_symmetry,
+                         translational_symmetry_type,
                          is_permutation_symmetry,
                          verbose)
 
@@ -48,7 +49,7 @@ def get_fc4(supercell,
                    symprec,
                    verbose)
 
-    if is_translational_symmetry:
+    if translational_symmetry_type > 0:
         set_translational_invariance_fc4_per_index(fc4)
 
     if is_permutation_symmetry:
@@ -210,8 +211,9 @@ def distribute_fc4(fc4,
                                                    j,
                                                    symprec)
             
-        rot_cart_inv = np.double(
-            similarity_transformation(lattice, rot).T.copy())
+        rot_cart_inv = np.array(
+            similarity_transformation(lattice, rot).T,
+            order='C', dtype='double')
 
         try:
             import anharmonic._phono4py as phono4c
@@ -235,7 +237,7 @@ def _get_fc4_least_atoms(fc4,
                          disp_dataset,
                          fc3,
                          symmetry,
-                         is_translational_symmetry,
+                         translational_symmetry_type,
                          is_permutation_symmetry,
                          verbose):
     symprec = symmetry.get_symmetry_tolerance()
@@ -248,7 +250,7 @@ def _get_fc4_least_atoms(fc4,
                           fc3,
                           first_atom_num,
                           symmetry.get_site_symmetry(first_atom_num),
-                          is_translational_symmetry,
+                          translational_symmetry_type,
                           is_permutation_symmetry,
                           symprec,
                           verbose)
@@ -259,7 +261,7 @@ def _get_fc4_one_atom(fc4,
                       fc3,
                       first_atom_num,
                       site_symmetry,
-                      is_translational_symmetry,
+                      translational_symmetry_type,
                       is_permutation_symmetry,
                       symprec,
                       verbose):
@@ -288,7 +290,7 @@ def _get_fc4_one_atom(fc4,
                 fc3,
                 supercell,
                 reduced_site_sym,
-                is_translational_symmetry,
+                translational_symmetry_type,
                 is_permutation_symmetry,
                 symprec,
                 verbose))
@@ -298,7 +300,7 @@ def _get_fc4_one_atom(fc4,
                supercell,
                site_symmetry,
                displacements_first,
-               np.double(delta_fc3s),
+               np.array(delta_fc3s, dtype='double', order='C'),
                symprec)
 
     if verbose > 2:
@@ -313,14 +315,14 @@ def _get_delta_fc3(dataset_first_atom,
                    fc3,
                    supercell,
                    reduced_site_sym,
-                   is_translational_symmetry,
+                   translational_symmetry_type,
                    is_permutation_symmetry,
                    symprec,
                    verbose):
     disp_fc3 = _get_constrained_fc3(supercell,
                                     dataset_first_atom,
                                     reduced_site_sym,
-                                    is_translational_symmetry,
+                                    translational_symmetry_type,
                                     is_permutation_symmetry,
                                     symprec,
                                     verbose)
@@ -333,7 +335,7 @@ def _get_delta_fc3(dataset_first_atom,
 def _get_constrained_fc3(supercell,
                          displacements,
                          reduced_site_sym,
-                         is_translational_symmetry,
+                         translational_symmetry_type,
                          is_permutation_symmetry,
                          symprec,
                          verbose):
@@ -362,16 +364,16 @@ def _get_constrained_fc3(supercell,
     atom1 = displacements['number']
     disp1 = displacements['displacement']
     fc3 = np.zeros((num_atom, num_atom, num_atom, 3, 3, 3), dtype='double')
-    atom_list_done = []
 
     if 'delta_forces' in displacements['second_atoms'][0]:
         fc2_with_one_disp = get_constrained_fc2(supercell,
                                                 displacements['second_atoms'],
                                                 atom1,
                                                 reduced_site_sym,
-                                                is_translational_symmetry,
+                                                translational_symmetry_type,
                                                 is_permutation_symmetry,
                                                 symprec)
+        show_drift_force_constants(fc2_with_one_disp, name="fc2_1")
     
     atom_list = np.unique([x['number'] for x in displacements['second_atoms']])
     for atom2 in atom_list:
@@ -380,7 +382,6 @@ def _get_constrained_fc3(supercell,
         for disps_second in displacements['second_atoms']:
             if atom2 != disps_second['number']:
                 continue
-            atom_list_done.append(atom2)
             bond_sym = get_bond_symmetry(
                 reduced_site_sym,
                 supercell.get_scaled_positions(),
@@ -403,7 +404,7 @@ def _get_constrained_fc3(supercell,
                         fc2_with_one_disp,
                         supercell,
                         reduced_bond_sym,
-                        is_translational_symmetry,
+                        translational_symmetry_type,
                         is_permutation_symmetry,
                         symprec))
     
@@ -413,13 +414,16 @@ def _get_constrained_fc3(supercell,
                 for i, v in enumerate(disps2):
                     print "  [%7.4f %7.4f %7.4f]" % tuple(v)
 
-            solve_fc3(fc3,
-                      atom2,
-                      supercell,
-                      bond_sym,
-                      disps2,
-                      delta_fc2s,
-                      symprec=symprec)
+            for d_fc2 in delta_fc2s:
+                show_drift_force_constants(d_fc2, name="d_fc2")
+
+        solve_fc3(fc3,
+                  atom2,
+                  supercell,
+                  bond_sym,
+                  disps2,
+                  delta_fc2s,
+                  symprec=symprec)
 
     # Shift positions according to set atom1 is at origin
     lattice = supercell.get_cell().T
@@ -430,15 +434,15 @@ def _get_constrained_fc3(supercell,
     if verbose:
         print "(Copying delta fc3...)"
     distribute_fc3(fc3,
-                   atom_list_done,
+                   atom_list,
                    lattice,
                    positions,
-                   np.intc(reduced_site_sym).copy(),
+                   np.array(reduced_site_sym, dtype='intc', order='C'),
                    np.zeros((len(reduced_site_sym), 3), dtype='double'),
                    symprec,
                    verbose)
 
-    if is_translational_symmetry:
+    if translational_symmetry_type > 0:
         set_translational_invariance_fc3_per_index(fc3)
 
     if is_permutation_symmetry:
@@ -454,8 +458,9 @@ def _solve_fc4(fc4,
                delta_fc3s,
                symprec):
     lattice = supercell.get_cell().T
-    site_sym_cart = np.double([similarity_transformation(lattice, sym)
-                               for sym in site_symmetry])
+    site_sym_cart = np.array([similarity_transformation(lattice, sym)
+                              for sym in site_symmetry],
+                             dtype='double', order='C')
     num_atom = supercell.get_number_of_atoms()
     positions = supercell.get_scaled_positions()
     pos_center = positions[first_atom_num].copy()
