@@ -73,7 +73,8 @@ int rotate_delta_fc3s_elem(double *rotated_delta_fc3s,
 }
 
 
-int distribute_fc4(double *fc4,
+int distribute_fc4(double *fc4_copy,
+		   const double *fc4,
 		   const int fourth_atom,
 		   const int *atom_mapping,
 		   const int num_atom,
@@ -94,7 +95,7 @@ int distribute_fc4(double *fc4,
       for (k = 0; k < num_atom; k++) {
 	atom_rot_k = atom_mapping[k];
 
-	tensor = (fc4 +
+	tensor = (fc4_copy +
 		  81 * num_atom * num_atom * num_atom * fourth_atom +
 		  81 * num_atom * num_atom * i +
 		  81 * num_atom * j +

@@ -70,7 +70,7 @@ class FC4Fit:
                        rotations,
                        translations,
                        self._symprec,
-                       self._verbose)
+                       verbose=self._verbose)
 
         # print "ditributing fc3..."
         # distribute_fc3(self._fc3,
@@ -80,7 +80,7 @@ class FC4Fit:
         #                rotations,
         #                translations,
         #                self._symprec,
-        #                self._verbose)
+        #                verbose=self._verbose)
 
         # print "ditributing fc2..."
         # distribute_force_constants(self._fc2,
