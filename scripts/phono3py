@@ -749,8 +749,6 @@ else:
         fc3 = read_fc3_from_hdf5(filename=filename)
         phono3py.set_fc3(fc3)
     else: # fc3 from FORCES_THIRD and FORCES_SECOND
-        if log_level:
-            print "Solving fc3"
         if input_filename is None:
             filename = 'disp_fc3.yaml'
         else:

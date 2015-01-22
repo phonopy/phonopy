@@ -53,7 +53,8 @@ def get_fc3(supercell,
                          rotations,
                          translations,
                          symprec,
-                         verbose)
+                         overwrite=False,
+                         verbose=verbose)
     
     if 'cutoff_distance' in disp_dataset:
         if verbose:
@@ -94,10 +95,15 @@ def distribute_fc3(fc3_least_atoms,
                    rotations,
                    translations,
                    symprec,
-                   verbose):
+                   overwrite=True,
+                   verbose=False):
     num_atom = len(positions)
     atom_mapping = np.zeros(num_atom, dtype='intc')
-    fc3 = np.zeros((num_atom, num_atom, num_atom, 3, 3, 3), dtype='double')
+
+    if overwrite:
+        fc3 = fc3_least_atoms
+    else:
+        fc3 = np.zeros((num_atom, num_atom, num_atom, 3, 3, 3), dtype='double')
 
     for i in range(num_atom):
         # if i in first_disp_atoms:
@@ -120,10 +126,6 @@ def distribute_fc3(fc3_least_atoms,
             print "Position or symmetry may be wrong."
             raise ValueError
 
-        if verbose > 2:
-            print "    [ %d, x, x ] to [ %d, x, x ]" % (i_rot + 1, i + 1)
-            sys.stdout.flush()
-
         for j in range(num_atom):
             atom_mapping[j] = get_atom_by_symmetry(positions,
                                                    rot,
@@ -134,23 +136,29 @@ def distribute_fc3(fc3_least_atoms,
         rot_cart_inv = np.array(similarity_transformation(lattice, rot).T,
                                 dtype='double', order='C')
 
-        try:
-            import anharmonic._phono3py as phono3c
-            phono3c.distribute_fc3(fc3,
-                                   fc3_least_atoms,
-                                   i,
-                                   atom_mapping,
-                                   rot_cart_inv)
-        
-        except ImportError:
-            for j in range(num_atom):
-                j_rot = atom_mapping[j]
-                for k in range(num_atom):
-                    k_rot = atom_mapping[k]
-                    fc3[i, j, k] = third_rank_tensor_rotation(
-                        rot_cart_inv, fc3_least_atoms[i_rot, j_rot, k_rot])
+        if not (overwrite and i == i_rot):
+            if verbose > 2:
+                print "    [ %d, x, x ] to [ %d, x, x ]" % (i_rot + 1, i + 1)
+                sys.stdout.flush()
 
-    return fc3
+            try:
+                import anharmonic._phono3py as phono3c
+                phono3c.distribute_fc3(fc3,
+                                       fc3_least_atoms,
+                                       i,
+                                       atom_mapping,
+                                       rot_cart_inv)
+            
+            except ImportError:
+                for j in range(num_atom):
+                    j_rot = atom_mapping[j]
+                    for k in range(num_atom):
+                        k_rot = atom_mapping[k]
+                        fc3[i, j, k] = third_rank_tensor_rotation(
+                            rot_cart_inv, fc3_least_atoms[i_rot, j_rot, k_rot])
+
+    if not overwrite:
+        return fc3
 
 def set_permutation_symmetry_fc3(fc3):
     try:
@@ -370,7 +378,27 @@ def solve_fc3(fc3,
               displacements_first,
               delta_fc2s,
               symprec,
-              pinv="numpy"):
+              pinv="numpy",
+              verbose=False):
+
+    if verbose:
+        print "Solving fc3[ %d, x, x ] with" % (first_atom_num + 1),
+        if len(displacements_first) > 1:
+            print "displacements:"
+        else:
+            print "a displacement:"
+        for i, v in enumerate(displacements_first):
+            print "    [%7.4f %7.4f %7.4f]" % tuple(v)
+            sys.stdout.flush()
+        if verbose > 2:
+            print "  Site symmetry:"
+            for i, v in enumerate(site_symmetry):
+                print "    [%2d %2d %2d] #%2d" % tuple(list(v[0])+[i+1])
+                print "    [%2d %2d %2d]" % tuple(v[1])
+                print "    [%2d %2d %2d]\n" % tuple(v[2])
+                sys.stdout.flush()
+
+
     lattice = supercell.get_cell().T
     site_sym_cart = [similarity_transformation(lattice, sym)
                      for sym in site_symmetry]
@@ -545,20 +573,10 @@ def _get_fc3_one_atom(fc3,
               site_symmetry,
               displacements_first,
               delta_fc2s,
-              symprec)
+              symprec,
+              verbose=verbose)
 
-    if verbose:
-        print "- Displacements for fc3[ %d, x, x ]" % (first_atom_num + 1)
-        for i, v in enumerate(displacements_first):
-            print "    [%7.4f %7.4f %7.4f]" % tuple(v)
-            sys.stdout.flush()
-        if verbose > 2:
-            print "  Site symmetry:"
-            for i, v in enumerate(site_symmetry):
-                print "    [%2d %2d %2d] #%2d" % tuple(list(v[0])+[i+1])
-                print "    [%2d %2d %2d]" % tuple(v[1])
-                print "    [%2d %2d %2d]\n" % tuple(v[2])
-                sys.stdout.flush()
+
 
 def _get_rotated_fc2s(i, j, fc2s, rot_map_syms, site_sym_cart):
     num_sym = len(site_sym_cart)
