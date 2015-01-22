@@ -138,6 +138,9 @@ class Phono4py:
             cutoff_frequency=self._cutoff_frequency,
             log_level=self._log_level,
             lapack_zheev_uplo=self._lapack_zheev_uplo)
+        self._grid_address = self._interaction.get_grid_address()
+        self._frequencies = self._interaction.get_phonons()[0]
+        self._temperatures = temperatures
 
     def set_dynamical_matrix(self,
                              fc2,
@@ -156,20 +159,34 @@ class Phono4py:
 
     def run_frequency_shift(self, grid_points):
         if self._log_level:
-            print "----- Frequency shifts of fc4 -----"
+            print "------------------------",
+            print "Frequency shifts of fc4 ",
+            print "------------------------"
         
         freq_shifts = []
+        num_band = len(self._band_indices_flatten)
         for i, gp in enumerate(grid_points):
+            qpoint = self._grid_address[gp].astype(float) / self._mesh
             if self._log_level:
-                print "=====================",
+                print "=========================",
                 print "Grid point %d (%d/%d)" % (gp, i + 1, len(grid_points)),
-                print "====================="
+                print "========================="
+                print "q-point:", qpoint
             self._interaction.set_grid_point(gp)
             self._interaction.run()
-            freq_shifts.append(self._interaction.get_frequency_shifts())
+            f_shifts_at_temps = self._interaction.get_frequency_shifts()
+            if self._log_level:
+                print "Harmonic phonon frequencies:"
+                freqs = self._frequencies[gp][self._band_indices_flatten]
+                print "%7s " % "",
+                print ("%8.4f " * num_band) % tuple(freqs)
+                print "Frequency shifts:" 
+                for t, f_shift in zip(self._temperatures, f_shifts_at_temps):
+                    print "%7.1f " % t,
+                    print ("%8.4f " * num_band) % tuple(f_shift)
+            freq_shifts.append(f_shift)
 
         self._frequency_shifts = np.array(freq_shifts, dtype='double')
-        print self._frequency_shifts
 
     def get_frequency_shift(self):
         return self._frequency_shifts

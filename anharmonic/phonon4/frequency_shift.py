@@ -69,17 +69,9 @@ class FrequencyShift:
                                  * Hbar * EV / (2 * np.pi * THz) / 8
                                  / np.prod(self._mesh))
 
+        self._allocate_phonon()
+
     def run(self, lang='C'):
-        num_band = self._primitive.get_number_of_atoms() * 3
-        mesh_with_boundary = self._mesh + 1
-        num_grid = np.prod(mesh_with_boundary)
-        self._phonon_done = np.zeros(num_grid, dtype='byte')
-        self._frequencies = np.zeros((num_grid, num_band), dtype='double')
-        self._eigenvectors = np.zeros((num_grid, num_band, num_band),
-                                      dtype='complex128')
-        self._frequency_shifts = np.zeros((len(self._temperatures),
-                                           len(self._band_indices)),
-                                           dtype='double')
         if lang=='C':
             self._run_c()
         else:
@@ -134,6 +126,15 @@ class FrequencyShift:
 
     def get_frequency_shifts(self):
         return self._frequency_shifts
+
+    def get_grid_address(self):
+        return self._grid_address
+
+    def get_phonons(self):
+        return self._frequencies, self._eigenvectors, self._phonon_done
+
+    def get_temperatures(self):
+        return self._temperatures
 
     def _set_grid_address(self):
         grid_address = get_grid_address(self._mesh)
@@ -307,7 +308,19 @@ class FrequencyShift:
                                     nac_factor,
                                     self._lapack_zheev_uplo)
         
+    def _allocate_phonon(self):
+        num_band = self._primitive.get_number_of_atoms() * 3
+        mesh_with_boundary = self._mesh + 1
+        num_grid = np.prod(mesh_with_boundary)
+        self._phonon_done = np.zeros(num_grid, dtype='byte')
+        self._frequencies = np.zeros((num_grid, num_band), dtype='double')
+        self._eigenvectors = np.zeros((num_grid, num_band, num_band),
+                                      dtype='complex128')
+        self._frequency_shifts = np.zeros((len(self._temperatures),
+                                           len(self._band_indices)),
+                                           dtype='double')
 
+        
 class ReciprocalToNormal:
     def __init__(self,
                  primitive,
