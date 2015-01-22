@@ -1,16 +1,20 @@
 import numpy as np
 from anharmonic.phonon4.frequency_shift import FrequencyShift
+from phonopy.structure.atoms import Atoms
 from phonopy.units import VaspToTHz
 from phonopy.harmonic.force_constants import set_translational_invariance, set_permutation_symmetry, get_fc2
 from anharmonic.phonon3.fc3 import get_fc3
 from anharmonic.phonon4.fc4 import get_fc4
 from phonopy.structure.symmetry import Symmetry
+from phonopy.structure.cells import get_supercell, get_primitive
+from anharmonic.phonon4.displacement_fc4 import get_fourth_order_displacements
+from anharmonic.phonon4.displacement_fc4 import direction_to_displacement
 
 class Phono4py:
     def __init__(self,
                  unitcell,
-                 supercell,
-                 primitive,
+                 supercell_matrix,
+                 primitive_matrix=None,
                  mesh=None,
                  band_indices=None,
                  frequency_factor_to_THz=VaspToTHz,
@@ -21,19 +25,12 @@ class Phono4py:
                  log_level=False,
                  lapack_zheev_uplo='L'):
         self._unitcell = unitcell
-        self._supercell = supercell
-        self._primitive = primitive
-        
-        self._mesh = None
-        if mesh is not None:
-            self._mesh = np.array(mesh, dtype='intc')
-
-        if band_indices is None:
-            self._band_indices = [
-                np.arange(primitive.get_number_of_atoms() * 3,
-                          dtype='intc')]
+        self._supercell_matrix = supercell_matrix
+        self._primitive_matrix = primitive_matrix
+        if mesh is None:
+            self._mesh = None
         else:
-            self._band_indices = band_indices
+            self._mesh = np.array(mesh, dtype='intc')
         self._frequency_factor_to_THz = frequency_factor_to_THz
         self._is_symmetry = is_symmetry
         self._is_nosym = is_nosym
@@ -42,15 +39,25 @@ class Phono4py:
         self._log_level = log_level
         self._lapack_zheev_uplo = lapack_zheev_uplo
 
+        self._supercell = None
+        self._primitive = None
+        self._build_supercell()
+        self._build_primitive_cell()
+        self._supercells_with_displacements = None
+        self._displacement_dataset = None
+
+        if band_indices is None:
+            num_band = self._primitive.get_number_of_atoms() * 3
+            self._band_indices = [np.arange(num_band, dtype='intc')]
+        else:
+            self._band_indices = band_indices
         self._band_indices_flatten = np.array(
             [x for bi in self._band_indices for x in bi],
             dtype='intc')
-
-        self._frequency_shifts = None
-
         self._symmetry = Symmetry(self._supercell,
                                   self._symprec,
                                   self._is_symmetry)
+        self._frequency_shifts = None
 
     def get_fc2(self):
         return self._fc2
@@ -70,8 +77,39 @@ class Phono4py:
     def set_fc4(self, fc4):
         self._fc4 = fc4
 
+    def get_primitive(self):
+        return self._primitive
+
+    def get_unitcell(self):
+        return self._unitcell
+
+    def get_supercell(self):
+        return self._supercell
+
     def get_symmetry(self):
         return self._symmetry
+
+    def get_displacement_dataset(self):
+        return self._displacement_dataset
+
+    def get_supercells_with_displacements(self):
+        if self._supercells_with_displacements is None:
+            self._build_supercells_with_displacements()
+        return self._supercells_with_displacements
+
+    def generate_displacements(self,
+                               distance=0.03,
+                               is_plusminus='auto',
+                               is_diagonal=True):
+        direction_dataset = get_fourth_order_displacements(
+            self._supercell,
+            self._symmetry,
+            is_plusminus=is_plusminus,
+            is_diagonal=is_diagonal)
+        self._displacement_dataset = direction_to_displacement(
+            direction_dataset,
+            distance,
+            self._supercell)
 
     def produce_fc4(self,
                     forces_fc4,
@@ -191,3 +229,74 @@ class Phono4py:
     def get_frequency_shift(self):
         return self._frequency_shifts
         
+    def _build_supercells_with_displacements(self):
+        supercells = []
+        magmoms = self._supercell.get_magnetic_moments()
+        masses = self._supercell.get_masses()
+        numbers = self._supercell.get_atomic_numbers()
+        lattice = self._supercell.get_cell()
+        
+        for disp1 in self._displacement_dataset['first_atoms']:
+            disp_cart1 = disp1['displacement']
+            positions = self._supercell.get_positions()
+            positions[disp1['number']] += disp_cart1
+            supercells.append(Atoms(numbers=numbers,
+                                    masses=masses,
+                                    magmoms=magmoms,
+                                    positions=positions,
+                                    cell=lattice,
+                                    pbc=True))
+
+        for disp1 in self._displacement_dataset['first_atoms']:
+            for disp2 in disp1['second_atoms']:
+                positions = self._supercell.get_positions()
+                positions[disp1['number']] += disp_cart1
+                positions[disp2['number']] += disp2['displacement']
+                supercells.append(Atoms(numbers=numbers,
+                                        masses=masses,
+                                        magmoms=magmoms,
+                                        positions=positions,
+                                        cell=lattice,
+                                        pbc=True))
+
+        for disp1 in self._displacement_dataset['first_atoms']:
+            for disp2 in disp1['second_atoms']:
+                for disp3 in disp2['third_atoms']:
+                    positions = self._supercell.get_positions()
+                    positions[disp1['number']] += disp_cart1
+                    positions[disp2['number']] += disp2['displacement']
+                    positions[disp3['number']] += disp3['displacement']
+                    supercells.append(Atoms(numbers=numbers,
+                                            masses=masses,
+                                            magmoms=magmoms,
+                                            positions=positions,
+                                            cell=lattice,
+                                            pbc=True))
+                
+        self._supercells_with_displacements = supercells
+            
+    def _build_supercell(self):
+        self._supercell = get_supercell(self._unitcell,
+                                        self._supercell_matrix,
+                                        self._symprec)
+
+    def _build_primitive_cell(self):
+        """
+        primitive_matrix:
+          Relative axes of primitive cell to the input unit cell.
+          Relative axes to the supercell is calculated by:
+             supercell_matrix^-1 * primitive_matrix
+          Therefore primitive cell lattice is finally calculated by:
+             (supercell_lattice * (supercell_matrix)^-1 * primitive_matrix)^T
+        """
+        self._primitive = self._get_primitive_cell(
+            self._supercell, self._supercell_matrix, self._primitive_matrix)
+
+    def _get_primitive_cell(self, supercell, supercell_matrix, primitive_matrix):
+        inv_supercell_matrix = np.linalg.inv(supercell_matrix)
+        if primitive_matrix is None:
+            t_mat = inv_supercell_matrix
+        else:
+            t_mat = np.dot(inv_supercell_matrix, primitive_matrix)
+            
+        return get_primitive(supercell, t_mat, self._symprec)

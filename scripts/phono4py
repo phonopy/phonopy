@@ -39,7 +39,7 @@ import sys
 import numpy as np
 from optparse import OptionParser
 
-from phonopy.interface.vasp import read_vasp
+from phonopy.interface.vasp import read_vasp, write_vasp
 from phonopy.structure.cells import get_supercell, get_primitive, print_cell
 from phonopy.structure.spglib import get_grid_point_from_address
 from phonopy.units import VaspToTHz
@@ -49,9 +49,7 @@ from anharmonic.file_IO import parse_disp_fc4_yaml,\
     write_FORCES_FOURTH, parse_FORCES_FC4, \
     read_fc4_from_hdf5, read_fc3_from_hdf5, read_fc2_from_hdf5, \
     write_fc4_to_hdf5, write_fc3_to_hdf5, write_fc2_to_hdf5, \
-    write_supercells_with_three_displacements, \
-    write_freq_shifts_to_hdf5
-from anharmonic.phonon4.displacement_fc4 import get_fourth_order_displacements
+    write_freq_shifts_to_hdf5, write_disp_fc4_yaml
 from anharmonic.settings import Phono3pyConfParser
 from anharmonic.phonon4.fc4 import show_drift_fc4
 from anharmonic.phonon4 import Phono4py
@@ -79,9 +77,9 @@ def print_error(message):
 
 # Parse options
 parser = OptionParser()
-parser.set_defaults(amplitude=None,
-                    band_indices=None,
+parser.set_defaults(band_indices=None,
                     cell_poscar=None,
+                    displacement_distance=None,
                     factor=None,
                     forces_fourth_mode=False,
                     grid_points=None,
@@ -107,7 +105,7 @@ parser.set_defaults(amplitude=None,
                     symprec=1e-5,
                     temperatures=None,
                     verbose=False)
-parser.add_option("--amplitude", dest="amplitude", type="float",
+parser.add_option("--amplitude", dest="displacement_distance", type="float",
                   help="Distance of displacements")
 parser.add_option("--bi", "--band_indices", dest="band_indices",
                   type="string",
@@ -256,44 +254,42 @@ else:
 unitcell = read_vasp(unitcell_filename,
                      settings.get_chemical_symbols())
 
-# Supercell and Symmetry 
-supercell = get_supercell(unitcell, settings.get_supercell_matrix())
-
 #################################################
 # Create supercells with displacements and exit #
 #################################################
 if options.is_displacement:
-    dds = get_fourth_order_displacements(
-        supercell,
-        symmetry,
+    if settings.get_displacement_distance() is None:
+        displacement_distance = 0.03
+    else:
+        displacement_distance = settings.get_displacement_distance()
+    phono4py = Phono4py(unitcell,
+                        settings.get_supercell_matrix(),
+                        symprec=options.symprec)
+    phono4py.generate_displacements(
+        distance=displacement_distance,
         is_plusminus=settings.get_is_plusminus_displacement(),
         is_diagonal=settings.get_is_diagonal_displacement())
-    write_supercells_with_three_displacements(supercell,
-                                              dds,
-                                              options.amplitude)
+    dds = phono4py.get_displacement_dataset()
+
     if log_level:
+        print
+        print "Displacement distance:", displacement_distance
+
+    if output_filename is None:
+        filename = 'disp_fc4.yaml'
+    else:
+        filename = 'disp_fc4.' + output_filename + '.yaml'
+        
+    supercell = phono4py.get_supercell()
+    num_disps = write_disp_fc4_yaml(dds, supercell, filename=filename)
+    for i, dcell in enumerate(phono4py.get_supercells_with_displacements()):
+        write_vasp('POSCAR-%05d' % (i + 1), dcell, direct=True)
+
+    if log_level:
+        print "Total number of displacements:", num_disps
         print_end()
     sys.exit(0)
     
-primitive_matrix = settings.get_primitive_matrix()
-if primitive_matrix is None:
-    primitive_matrix = np.eye(3, dtype='double')
-primitive = get_primitive(
-    supercell,
-    np.dot(np.linalg.inv(settings.get_supercell_matrix()),
-           primitive_matrix),
-    options.symprec)
-
-if log_level:
-    print "------------------------ primitive cell for fc ---------------------------"
-    print_cell(primitive)
-    print "-------------------------- supercell for fc ------------------------------"
-    print_cell(supercell, mapping=primitive.get_supercell_to_primitive_map())
-    print "----------------- ratio (supercell for fc)/(primitive) -------------------"
-    for vec in np.dot(supercell.get_cell(), np.linalg.inv(primitive.get_cell())):
-        print "%5.2f"*3 % tuple(vec)
-
-
 ##############
 # Initialize #
 ##############
@@ -313,15 +309,28 @@ else:
 mesh = settings.get_mesh_numbers()
 
 phono4py = Phono4py(unitcell,
-                    supercell,
-                    primitive,
-                    mesh,
+                    settings.get_supercell_matrix(),
+                    primitive_matrix=settings.get_primitive_matrix(),
+                    mesh=mesh,
                     band_indices=settings.get_band_indices(),
                     frequency_factor_to_THz=factor,
                     cutoff_frequency=1e-2,
                     is_nosym=options.is_nosym,
                     symprec=options.symprec,
                     log_level=log_level)
+
+primitive = phono4py.get_primitive()
+supercell = phono4py.get_supercell()
+
+if log_level:
+    print "------------------------ primitive cell for fc ---------------------------"
+    print_cell(primitive)
+    print "-------------------------- supercell for fc ------------------------------"
+    print_cell(supercell, mapping=primitive.get_supercell_to_primitive_map())
+    print "----------------- ratio (supercell for fc)/(primitive) -------------------"
+    for vec in np.dot(supercell.get_cell(), np.linalg.inv(primitive.get_cell())):
+        print "%5.2f"*3 % tuple(vec)
+
 
 #############################
 # Calculate force constants #
