@@ -46,7 +46,7 @@ from phonopy.units import VaspToTHz
 from phonopy.harmonic.force_constants import show_drift_force_constants
 from anharmonic.phonon3.fc3 import show_drift_fc3
 from anharmonic.file_IO import parse_disp_fc4_yaml,\
-    write_FORCES_FOURTH, parse_FORCES_FC4, \
+    write_FORCES_FC4_vasp, parse_FORCES_FC4, \
     read_fc4_from_hdf5, read_fc3_from_hdf5, read_fc2_from_hdf5, \
     write_fc4_to_hdf5, write_fc3_to_hdf5, write_fc2_to_hdf5, \
     write_freq_shifts_to_hdf5, write_disp_fc4_yaml
@@ -72,8 +72,25 @@ def print_end():
   \___|_| |_|\__,_|
 """
 
+def print_error():
+    print """  ___ _ __ _ __ ___  _ __ 
+ / _ \ '__| '__/ _ \| '__|
+|  __/ |  | | | (_) | |   
+ \___|_|  |_|  \___/|_|
+"""
+
 def print_error(message):
     print message
+
+def file_exists(filename, log_level):
+    if os.path.exists(filename):
+        return True
+    else:
+        error_text = "%s not found." % filename
+        print_error_message(error_text)
+        if log_level > 0:
+            print_error()
+        sys.exit(1)
 
 # Parse options
 parser = OptionParser()
@@ -81,7 +98,7 @@ parser.set_defaults(band_indices=None,
                     cell_poscar=None,
                     displacement_distance=None,
                     factor=None,
-                    forces_fourth_mode=False,
+                    forces_fc4_mode=False,
                     grid_points=None,
                     input_filename=None,
                     input_output_filename=None,
@@ -114,9 +131,9 @@ parser.add_option("-c", "--cell", dest="cell_poscar",
                   action="store", type="string",
                   help="Read unit cell", metavar="FILE")
 parser.add_option("--cf4", "--create_f4",
-                  dest="forces_fourth_mode",
+                  dest="forces_fc4_mode",
                   action="store_true",
-                  help="Create FORCES_FOURTH")
+                  help="Create FORCES_FC4")
 parser.add_option("-d", "--disp", dest="is_displacement",
                   action="store_true",
                   help="As first stage, get least displacements")
@@ -211,17 +228,33 @@ if options.input_output_filename is not None:
     input_filename = options.input_output_filename
     output_filename = options.input_output_filename
     
-# Create FC2_FOURTH_SETS
-if options.forces_fourth_mode:
-    displacements = parse_disp_fc4_yaml()
-    write_FORCES_FOURTH(args, displacements)
-    print_end()
-    exit(0)
-
 # Title
 if log_level:
     print_phono4py()
 
+#####################
+# Create FORCES_FC4 #
+#####################
+if options.forces_fc4_mode:
+    if input_filename is None:
+        filename = 'disp_fc4.yaml'
+    else:
+        filename = 'disp_fc4.' + input_filename + '.yaml'
+    file_exists(filename, log_level)
+    if log_level:
+        print "Displacement dataset is read from %s." % filename
+    disp_dataset = parse_disp_fc4_yaml()
+
+    write_FORCES_FC4_vasp(args, disp_dataset)
+    
+    if log_level:
+        print "FORCES_FC4 has been created."
+        print_end()
+    exit(0)
+
+##################
+# Parse settings #
+##################
 if len(args) > 0:
     phono3py_conf = Phono3pyConfParser(filename=args[0],
                                        options=options,
@@ -233,26 +266,16 @@ else:
                                        option_list=option_list)
     settings = phono3py_conf.get_settings()
 
-# Read POSCAR
+###################################
+# Read crystal structure (POSCAR) #
+###################################
 if options.cell_poscar is None:
-    if os.path.exists('POSCAR'):
-        unitcell_filename = 'POSCAR'
-    else:
-        print_error("POSCAR could not be found.")
-        if log_level:
-            print_end()
-        sys.exit(1)
+    file_exists('POSCAR', log_level)
+    unitcell_filename = 'POSCAR'
 else:
-    if os.path.exists(options.cell_poscar):
-        unitcell_filename = options.cell_poscar
-    else:
-        print_error("%s not found" % options.cell_poscar)
-        if log_level:
-            print_end()
-        sys.exit(1)
-    
-unitcell = read_vasp(unitcell_filename,
-                     settings.get_chemical_symbols())
+    file_exists(options.cell_poscar, log_level)
+    unitcell_filename = options.cell_poscar
+unitcell = read_vasp(unitcell_filename, settings.get_chemical_symbols())
 
 #################################################
 # Create supercells with displacements and exit #
