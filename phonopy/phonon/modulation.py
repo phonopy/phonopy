@@ -160,9 +160,9 @@ class Modulation:
             eig_index = s2uu_map[i] * 3
             u.append(eigvec[eig_index:eig_index + 3] * coef)
         
-        u = np.array(u) * amplitude / np.sqrt(len(m))
+        u = np.array(u) / np.sqrt(len(m))
         phase_factor = self._get_phase_factor(u, argument)
-        u *= phase_factor
+        u *= phase_factor * amplitude
         
         return u
         
