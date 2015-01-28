@@ -46,7 +46,7 @@ from phonopy.file_IO import parse_FORCE_SETS
 from anharmonic.force_fit.fc2 import FC2Fit
 from anharmonic.force_fit.fc3 import FC3Fit
 from anharmonic.force_fit.fc4 import FC4Fit
-from anharmonic.file_IO import parse_disp_fc4_yaml, parse_FORCES_FOURTH, parse_disp_fc3_yaml, parse_FORCES_FC3, parse_disp_fc2_yaml, parse_FORCES_FC2
+from anharmonic.file_IO import parse_disp_fc4_yaml, parse_FORCES_FC4, parse_disp_fc3_yaml, parse_FORCES_FC3, parse_disp_fc2_yaml, parse_FORCES_FC2
 from anharmonic.file_IO import write_fc3_dat, write_fc4_dat, write_fc4_to_hdf5, write_fc3_to_hdf5, write_fc2_to_hdf5
 from anharmonic.phonon3.fc3 import show_drift_fc3
 from anharmonic.phonon4.fc4 import show_drift_fc4
@@ -183,11 +183,22 @@ if options.fc3:
 
 if options.fc4:
     file_exists("disp_fc4.yaml")
-    file_exists("FORCES_SECOND")
-    file_exists("FORCES_THIRD")
-    file_exists("FORCES_FOURTH")
+    file_exists("FORCES_FC4")
     disp_dataset = parse_disp_fc4_yaml()
-    parse_FORCES_FOURTH(disp_dataset)
+    forces_fc4 = parse_FORCES_FC4(disp_dataset)
+    count = 0
+    for disp1 in disp_dataset['first_atoms']:
+        disp1['forces'] = forces_fc4[count]
+        count += 1
+    for disp1 in disp_dataset['first_atoms']:
+        for disp2 in disp1['second_atoms']:
+            disp2['forces'] = forces_fc4[count]
+            count += 1
+    for disp1 in disp_dataset['first_atoms']:
+        for disp2 in disp1['second_atoms']:
+            for disp3 in disp2['third_atoms']:
+                disp3['forces'] = forces_fc4[count]
+                count += 1
     fc4fit = FC4Fit(supercell, disp_dataset, symmetry)
     fc4fit.run()
     fc4 = fc4fit.get_fc4()
