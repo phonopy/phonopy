@@ -509,6 +509,11 @@ Dynamical matrices :math:`D` are written into ``qpoints.yaml``
 in the following :math:`6N\times3N` format, where *N* is the number of atoms in
 the primitive cell.
 
+The physical unit of dynamical matrix is ``[unit of force] / ([unit of
+displacement] * [unit of mass])``, i.e., square of the unit of phonon
+frequency before multiplying the unit conversion factor
+(see :ref:`unit_conversion_factor_option`).
+
 .. math::
 
    D =
@@ -875,7 +880,7 @@ vector is shown in ``modulation.yaml``.
 
 ::
 
-   MODULATION = 3 3 1, 1/3 1/3 0 1 2, 1/3 1/3 2 3.5
+   MODULATION = 3 3 1, 1/3 1/3 0 1 2, 1/3 1/3 0 2 3.5
 
 ::
 
