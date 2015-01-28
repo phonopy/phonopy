@@ -9,6 +9,7 @@ from phonopy.structure.symmetry import Symmetry
 from phonopy.structure.cells import get_supercell, get_primitive
 from anharmonic.phonon4.displacement_fc4 import get_fourth_order_displacements
 from anharmonic.phonon4.displacement_fc4 import direction_to_displacement
+from anharmonic.file_IO import write_frequency_shift
 
 class Phono4py:
     def __init__(self,
@@ -222,9 +223,21 @@ class Phono4py:
                 for t, f_shift in zip(self._temperatures, f_shifts_at_temps):
                     print "%7.1f " % t,
                     print ("%8.4f " * num_band) % tuple(f_shift)
-            freq_shifts.append(f_shift)
+            freq_shifts.append(f_shifts_at_temps)
 
         self._frequency_shifts = np.array(freq_shifts, dtype='double')
+
+        for i, gp in enumerate(grid_points):
+            for j, bi in enumerate(self._band_indices):
+                pos = 0
+                for k in range(j):
+                    pos += len(self._band_indices[k])
+
+                write_frequency_shift(gp,
+                                      bi,
+                                      self._temperatures,
+                                      freq_shifts[i][:, pos:(pos+len(bi))],
+                                      self._mesh)
 
     def get_frequency_shift(self):
         return self._frequency_shifts

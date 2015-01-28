@@ -121,6 +121,9 @@ parser.set_defaults(band_indices=None,
                     supercell_dimension=None,
                     symprec=1e-5,
                     temperatures=None,
+                    tmax=None,
+                    tmin=None,
+                    tstep=None,
                     verbose=False)
 parser.add_option("--amplitude", dest="displacement_distance", type="float",
                   help="Distance of displacements")
@@ -197,8 +200,14 @@ parser.add_option("--sym_fc3r", dest="is_symmetrize_fc3_r",
 parser.add_option("--sym_fc4r", dest="is_symmetrize_fc4_r",
                   action="store_true",
                   help="Symmetrize fc4 in real space by index exchange")
+parser.add_option("--tmax", dest="tmax", type="string",
+                  help="Maximum calculated temperature")
+parser.add_option("--tmin", dest="tmin", type="string",
+                  help="Minimum calculated temperature")
 parser.add_option("--ts", dest="temperatures", 
                   type="string", help="Temperatures for damping functions")
+parser.add_option("--tstep", dest="tstep", type="string",
+                  help="Calculated temperature step")
 parser.add_option("--tsym", dest="is_translational_symmetry",
                   action="store_true",
                   help="Impose translational invariance condition")

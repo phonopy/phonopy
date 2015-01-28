@@ -26,6 +26,7 @@ class FrequencyShift:
         self._cutoff_frequency = interaction.get_cutoff_frequency()
 
         self._frequency_shifts = None
+        self.set_epsilon(epsilon)
 
     def run(self):
         if self._fc3_normal_squared is None:        
