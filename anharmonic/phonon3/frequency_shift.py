@@ -1,7 +1,7 @@
 import numpy as np
 from phonopy.units import THzToEv, Kb, VaspToTHz, Hbar, EV, Angstrom, THz, AMU
 from phonopy.phonon.degeneracy import degenerate_sets
-from anharmonic.phonon3.imag_self_energy import occupation
+from anharmonic.phonon3.triplets import occupation
 
 class FrequencyShift:
     def __init__(self,

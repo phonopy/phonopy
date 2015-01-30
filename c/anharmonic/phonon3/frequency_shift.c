@@ -6,16 +6,18 @@
 #include "phonon3_h/frequency_shift.h"
 #include "phonon3_h/real_to_reciprocal.h"
 
-/*
-void get_fc4_frequency_shifts(double *frequency_shifts,
-			      const double *fc3_normal_real,
+/* frequency_shifts[num_band0] */
+/* fc3_normal_squared[num_triplets, num_band0, num_band, num_band] */
+void get_fc3_frequency_shifts(double *frequency_shifts,
+			      const double *fc3_normal_squared,
 			      const double *frequencies,
-			      const Iarray *grid_points1,
-			      const Darray *temperatures,
+			      const int *grid_point_triplets,
+			      const int *triplet_weights,
 			      const int *band_indicies,
-			      const int num_band0,
-			      const int num_band,
-			      const double unit_conversion_factor)
+			      const double epsilon,
+			      const Darray *temperatures,
+			      const double unit_conversion_factor,
+			      const double cutoff_frequency)
 {
   int i, j, k, l;
   double shift, num_phonon;
@@ -34,7 +36,7 @@ void get_fc4_frequency_shifts(double *frequency_shifts,
 	  } else {
 	    num_phonon = 1;
 	  }
-	  shift += unit_conversion_factor * fc4_normal_real
+	  shift += unit_conversion_factor * fc4_normal_squared
 	    [k * num_band0 * num_band + j * num_band + l] * num_phonon;
 	}
       }
@@ -43,8 +45,9 @@ void get_fc4_frequency_shifts(double *frequency_shifts,
   }
 }
 
+/*
 void
-get_fc4_normal_for_frequency_shift(double *fc4_normal_real,
+get_fc4_normal_for_frequency_shift(double *fc4_normal_squared,
 				   const double *frequencies,
 				   const lapack_complex_double *eigenvectors,
 				   const int grid_point0,
@@ -68,7 +71,7 @@ get_fc4_normal_for_frequency_shift(double *fc4_normal_real,
 
 #pragma omp parallel for private(i)
   for (i = 0; i < grid_points1->dims[0]; i++) {
-    get_fc4_normal_for_frequency_shift_at_gp(fc4_normal_real +
+    get_fc4_normal_for_frequency_shift_at_gp(fc4_normal_squared +
 					     i * num_band0 * num_band,
 					     frequencies,
 					     eigenvectors,
