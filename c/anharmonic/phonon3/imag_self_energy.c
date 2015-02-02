@@ -5,8 +5,7 @@
 #include "phonoc_utils.h"
 #include "phonon3_h/imag_self_energy.h"
 
-static double get_imag_self_energy_at_band(double *imag_self_energy,
-					   const int band_index,
+static double get_imag_self_energy_at_band(const int band_index,
 					   const Darray *fc3_normal_squared,
 					   const double fpoint,
 					   const double *frequencies,
@@ -50,8 +49,7 @@ void get_imag_self_energy(double *imag_self_energy,
   
   for (i = 0; i < num_band0; i++) {
     imag_self_energy[i] =
-      get_imag_self_energy_at_band(imag_self_energy,
-				   i,
+      get_imag_self_energy_at_band(i,
 				   fc3_normal_squared,
 				   fpoint,
 				   frequencies,
@@ -86,8 +84,7 @@ void get_imag_self_energy_at_bands(double *imag_self_energy,
   for (i = 0; i < num_band0; i++) {
     fpoint = frequencies[gp0 * num_band + band_indices[i]];
     imag_self_energy[i] =
-      get_imag_self_energy_at_band(imag_self_energy,
-				   i,
+      get_imag_self_energy_at_band(i,
 				   fc3_normal_squared,
 				   fpoint,
 				   frequencies,
@@ -100,8 +97,7 @@ void get_imag_self_energy_at_bands(double *imag_self_energy,
   }
 }
 
-static double get_imag_self_energy_at_band(double *imag_self_energy,
-					   const int band_index,
+static double get_imag_self_energy_at_band(const int band_index,
 					   const Darray *fc3_normal_squared,
 					   const double fpoint,
 					   const double *frequencies,
