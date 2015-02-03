@@ -57,14 +57,12 @@ class DynamicalMatrix:
                  supercell,
                  primitive,
                  force_constants,
-                 frequency_scale_factor=None,
                  decimals=None,
                  symprec=1e-5):
         self._scell = supercell
         self._pcell = primitive
         self._force_constants = np.array(force_constants,
                                          dtype='double', order='C')
-        self._freq_scale = frequency_scale_factor
         self._decimals = decimals
         self._symprec = symprec
 
@@ -107,10 +105,7 @@ class DynamicalMatrix:
         return self._s2p_map
 
     def get_dynamical_matrix(self):
-        if self._freq_scale is not None:
-            dm = self._dynamical_matrix * self._freq_scale ** 2
-        else:
-            dm = self._dynamical_matrix
+        dm = self._dynamical_matrix
 
         if self._decimals is None:
             return dm
@@ -219,7 +214,6 @@ class DynamicalMatrixNAC(DynamicalMatrix):
                  force_constants,
                  nac_params=None,
                  method='wang',
-                 frequency_scale_factor=None,
                  decimals=None,
                  symprec=1e-5):
 
@@ -227,7 +221,6 @@ class DynamicalMatrixNAC(DynamicalMatrix):
                                  supercell,
                                  primitive,
                                  force_constants,
-                                 frequency_scale_factor=frequency_scale_factor,
                                  decimals=decimals,
                                  symprec=1e-5)
         self._bare_force_constants = self._force_constants.copy()

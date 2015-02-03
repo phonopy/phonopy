@@ -371,25 +371,29 @@ static PyObject * py_set_phonons_grid_points(PyObject *self, PyObject *args)
 
 static PyObject * py_distribute_fc4(PyObject *self, PyObject *args)
 {
-  PyArrayObject* force_constants_fourth;
+  PyArrayObject* fc4_copy_py;
+  PyArrayObject* fc4_py;
   int fourth_atom;
   PyArrayObject* rotation_cart_inv;
   PyArrayObject* atom_mapping_py;
 
-  if (!PyArg_ParseTuple(args, "OiOO",
-			&force_constants_fourth,
+  if (!PyArg_ParseTuple(args, "OOiOO",
+			&fc4_copy_py,
+			&fc4_py,
 			&fourth_atom,
 			&atom_mapping_py,
 			&rotation_cart_inv)) {
     return NULL;
   }
 
-  double* fc4 = (double*)force_constants_fourth->data;
+  double* fc4_copy = (double*)fc4_copy_py->data;
+  const double* fc4 = (double*)fc4_py->data;
   const double* rot_cart_inv = (double*)rotation_cart_inv->data;
   const int* atom_mapping = (int*)atom_mapping_py->data;
   const int num_atom = (int)atom_mapping_py->dimensions[0];
 
-  return PyInt_FromLong((long) distribute_fc4(fc4,
+  return PyInt_FromLong((long) distribute_fc4(fc4_copy,
+					      fc4,
 					      fourth_atom,
 					      atom_mapping,
 					      num_atom,

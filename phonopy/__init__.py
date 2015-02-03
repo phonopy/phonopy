@@ -72,7 +72,9 @@ class Phonopy:
                  is_symmetry=True,
                  log_level=0):
         self._symprec = symprec
+        self._distance = distance
         self._factor = factor
+        self._is_auto_displacements = is_auto_displacements
         self._is_symmetry = is_symmetry
         self._log_level = log_level
 
@@ -96,8 +98,8 @@ class Phonopy:
         self._displacements = None
         self._displacement_directions = None
         self._supercells_with_displacements = None
-        if is_auto_displacements:
-            self.generate_displacements(distance=distance)
+        if self._is_auto_displacements:
+            self.generate_displacements(distance=self._distance)
 
         # set_force_constants or set_forces
         self._force_constants = None
@@ -205,9 +207,12 @@ class Phonopy:
         return self._dynamical_matrix
     dynamical_matrix = property(get_dynamical_matrix)
 
-    def set_supercell(self, supercell):
-        self._supercell = supercell
-        self._set_dynamical_matrix()
+    def set_unitcell(self, unitcell):
+        self._unitcell = unitcell
+        self._build_supercell()
+        self._build_primitive_cell()
+        if self._is_auto_displacements:
+            self.generate_displacements(distance=self._distance)
 
     def set_masses(self, masses):
         p_masses = np.array(masses)

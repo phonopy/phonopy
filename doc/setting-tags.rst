@@ -440,10 +440,10 @@ temperature range to be calculated. The default values of them are 0,
    TMAX = 2000
 
 
+.. _thermal_atomic_displacements_tags:
+
 Thermal displacements
 ---------------------
-
-**Experimental**
 
 .. _thermal_displacements_tag:
 
@@ -508,6 +508,11 @@ is read, and the q-points written in this file are calculated.
 Dynamical matrices :math:`D` are written into ``qpoints.yaml``
 in the following :math:`6N\times3N` format, where *N* is the number of atoms in
 the primitive cell.
+
+The physical unit of dynamical matrix is ``[unit of force] / ([unit of
+displacement] * [unit of mass])``, i.e., square of the unit of phonon
+frequency before multiplying the unit conversion factor
+(see :ref:`unit_conversion_factor_option`).
 
 .. math::
 
@@ -875,7 +880,7 @@ vector is shown in ``modulation.yaml``.
 
 ::
 
-   MODULATION = 3 3 1, 1/3 1/3 0 1 2, 1/3 1/3 2 3.5
+   MODULATION = 3 3 1, 1/3 1/3 0 1 2, 1/3 1/3 0 2 3.5
 
 ::
 
@@ -890,8 +895,10 @@ vector is shown in ``modulation.yaml``.
    MODULATION = -1 1 1 1 -1 1 1 1 -1, 1/2 1/2 0 1 2
 
 
-Characters of irreducible representations of phonon modes
-----------------------------------------------------------
+.. _irreducible_representation_related_tags:
+
+Characters of irreducible representations
+------------------------------------------
 
 .. _irreps_tag:
 

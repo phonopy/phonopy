@@ -10,7 +10,7 @@ from phonopy.harmonic.displacement import direction_to_displacement as \
      direction_to_displacement_fc2
 from anharmonic.phonon3.imag_self_energy import get_imag_self_energy, \
      write_imag_self_energy, get_linewidth, write_linewidth
-from anharmonic.phonon3.frequency_shift import FrequencyShift
+from anharmonic.phonon3.frequency_shift import get_frequency_shift
 from anharmonic.phonon3.interaction import Interaction
 from anharmonic.phonon3.conductivity_RTA import get_thermal_conductivity_RTA
 from anharmonic.phonon3.conductivity_LBTE import get_thermal_conductivity_LBTE
@@ -18,7 +18,7 @@ from anharmonic.phonon3.joint_dos import JointDos
 from anharmonic.phonon3.gruneisen import Gruneisen
 from anharmonic.phonon3.displacement_fc3 import get_third_order_displacements, \
      direction_to_displacement
-from anharmonic.file_IO import write_frequency_shift, write_joint_dos
+from anharmonic.file_IO import write_joint_dos
 from anharmonic.other.isotope import Isotope
 from anharmonic.phonon3.fc3 import get_fc3, set_permutation_symmetry_fc3, \
      set_translational_invariance_fc3, cutoff_fc3_by_zero
@@ -29,6 +29,7 @@ class Phono3py:
                  supercell_matrix,
                  primitive_matrix=None,
                  phonon_supercell_matrix=None,
+                 masses=None,
                  mesh=None,
                  band_indices=None,
                  sigmas=[],
@@ -63,6 +64,9 @@ class Phono3py:
         self._build_primitive_cell()
         self._build_phonon_supercell()
         self._build_phonon_primitive_cell()
+
+        if masses is not None:
+            self._set_masses(masses)
 
         # Set supercell, primitive, and phonon supercell symmetries
         self._symmetry = None
@@ -105,7 +109,7 @@ class Phono3py:
             self._mesh = np.array(mesh, dtype='intc')
         if band_indices is None:
             num_band = self._primitive.get_number_of_atoms() * 3
-            self._band_indices = [np.arange(num_band)]
+            self._band_indices = [np.arange(num_band, dtype='intc')]
         else:
             self._band_indices = band_indices
         self._band_indices_flatten = np.hstack(self._band_indices).astype('intc')
@@ -187,7 +191,8 @@ class Phono3py:
                     displacement_dataset=None,
                     cutoff_distance=None, # set fc3 zero
                     translational_symmetry_type=0,
-                    is_permutation_symmetry=False):
+                    is_permutation_symmetry=False,
+                    is_permutation_symmetry_fc2=False):
         if displacement_dataset is None:
             disp_dataset = self._displacement_dataset
         else:
@@ -196,7 +201,7 @@ class Phono3py:
         for forces, disp1 in zip(forces_fc3, disp_dataset['first_atoms']):
             disp1['forces'] = forces
         fc2 = get_fc2(self._supercell, self._symmetry, disp_dataset)
-        if is_permutation_symmetry:
+        if is_permutation_symmetry_fc2:
             set_permutation_symmetry(fc2)
         if translational_symmetry_type:
             set_translational_invariance(
@@ -435,39 +440,17 @@ class Phono3py:
 
     def get_frequency_shift(self,
                             grid_points,
-                            epsilon=0.1,
+                            epsilons=[0.1],
                             temperatures=np.arange(0, 1001, 10, dtype='double'),
                             output_filename=None):
-        fst = FrequencyShift(self._interaction)
-        for gp in grid_points:
-            fst.set_grid_point(gp)
-            if self._log_level:
-                weights = self._interaction.get_triplets_at_q()[1]
-                print "------ Frequency shift -o- ------"
-                print "Number of ir-triplets:",
-                print "%d / %d" % (len(weights), weights.sum())
-            fst.run_interaction()
-            fst.set_epsilon(epsilon)
-            delta = np.zeros((len(temperatures),
-                              len(self._band_indices_flatten)),
-                             dtype='double')
-            for i, t in enumerate(temperatures):
-                fst.set_temperature(t)
-                fst.run()
-                delta[i] = fst.get_frequency_shift()
-
-            for i, bi in enumerate(self._band_indices):
-                pos = 0
-                for j in range(i):
-                    pos += len(self._band_indices[j])
-
-                write_frequency_shift(gp,
-                                      bi,
-                                      temperatures,
-                                      delta[:, pos:(pos+len(bi))],
-                                      self._mesh,
-                                      epsilon=epsilon,
-                                      filename=output_filename)
+        self._grid_points = grid_points
+        get_frequency_shift(self._interaction,
+                            self._grid_points,
+                            self._band_indices,
+                            epsilons,
+                            temperatures,
+                            output_filename=output_filename,
+                            log_level=self._log_level)
 
     def _search_symmetry(self):
         self._symmetry = Symmetry(self._supercell,
@@ -530,6 +513,13 @@ class Phono3py:
                 self._phonon_supercell,
                 self._phonon_supercell_matrix,
                 self._primitive_matrix)
+            if self._primitive is not None:
+                if (self._primitive.get_atomic_numbers() !=
+                    self._phonon_primitive.get_atomic_numbers()).any():
+                    print "********************* Warning *********************"
+                    print " Primitive cells for fc2 and fc3 can be different."
+                    print "********************* Warning *********************"
+
 
     def _build_phonon_supercells_with_displacements(self,
                                                     supercell,
@@ -595,8 +585,24 @@ class Phono3py:
             t_mat = np.dot(inv_supercell_matrix, primitive_matrix)
             
         return get_primitive(supercell, t_mat, self._symprec)
-        
-        
+
+    def _set_masses(self, masses):
+        p_masses = np.array(masses)
+        self._primitive.set_masses(p_masses)
+        p2p_map = self._primitive.get_primitive_to_primitive_map()
+        s_masses = p_masses[[p2p_map[x] for x in
+                             self._primitive.get_supercell_to_primitive_map()]]
+        self._supercell.set_masses(s_masses)
+        u2s_map = self._supercell.get_unitcell_to_supercell_map()
+        u_masses = s_masses[u2s_map]
+        self._unitcell.set_masses(u_masses)
+
+        self._phonon_primitive.set_masses(p_masses)
+        p2p_map = self._phonon_primitive.get_primitive_to_primitive_map()
+        s_masses = p_masses[
+            [p2p_map[x] for x in
+             self._phonon_primitive.get_supercell_to_primitive_map()]]
+        self._phonon_supercell.set_masses(s_masses)
 
 class Phono3pyIsotope:
     def __init__(self,

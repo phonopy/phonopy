@@ -2,6 +2,15 @@
 #include <numpy/arrayobject.h>
 #include "lapack_wrapper.h"
 
+/* #define ALL_ELEMENTS */
+#ifdef ALL_ELEMENTS
+#define NUM_ELEMENTS2 9
+#define NUM_ELEMENTS3 27
+#else
+#define NUM_ELEMENTS2 6
+#define NUM_ELEMENTS3 10
+#endif
+
 static PyObject * py_phonopy_pinv_mt(PyObject *self, PyObject *args);
 static PyObject * py_displacement_matrix_fc4(PyObject *self, PyObject *args);
 void get_tensor1(double sym_u[9], const double *u, const double *sym);
@@ -137,15 +146,28 @@ void get_tensor1(double sym_u[9], const double *u, const double *sym)
 int set_tensor2(double *disp_matrix, const double u[9])
 {
   int i, j, k, p1, p2, count;
-  static int pairs[6][3] = {{0, 0},
+
+#ifdef ALL_ELEMENTS
+  static int pairs[9][2];
+  count = 0;
+  for (i = 0; i < 3; i++) {
+    for (j = 0; j < 3; j++) {
+      pairs[count][0] = i;
+      pairs[count][1] = j;
+      count++;
+    }
+  }
+#else
+  static int pairs[6][2] = {{0, 0},
 			    {0, 1},
 			    {0, 2},
 			    {1, 1},
 			    {1, 2},
 			    {2, 2}};
+#endif
 
   count = 0;
-  for (i = 0; i < 6; i++) {
+  for (i = 0; i < NUM_ELEMENTS2; i++) {
     p1 = pairs[i][0];
     p2 = pairs[i][1];
     for (j = 0; j < 3; j++) {
@@ -161,6 +183,21 @@ int set_tensor2(double *disp_matrix, const double u[9])
 int set_tensor3(double *disp_matrix, const double u[9])
 {
   int i, j, k, l, t1, t2, t3, count;
+
+#ifdef ALL_ELEMENTS
+  static int triplets[27][3];
+  count = 0;
+  for (i = 0; i < 3; i++) {
+    for (j = 0; j < 3; j++) {
+      for (k = 0; k < 3; k++) {
+	triplets[count][0] = i;
+	triplets[count][1] = j;
+	triplets[count][2] = k;
+	count++;
+      }
+    }
+  }
+#else
   static int triplets[10][3] = {{0, 0, 0},
 				{0, 0, 1},
 				{0, 0, 2},
@@ -171,9 +208,10 @@ int set_tensor3(double *disp_matrix, const double u[9])
 				{1, 1, 2},
 				{1, 2, 2},
 				{2, 2, 2}};
+#endif
 
   count = 0;
-  for (i = 0; i < 10; i++) {
+  for (i = 0; i < NUM_ELEMENTS3; i++) {
     t1 = triplets[i][0];
     t2 = triplets[i][1];
     t3 = triplets[i][2];

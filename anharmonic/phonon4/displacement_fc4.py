@@ -2,7 +2,46 @@ import numpy as np
 from phonopy.harmonic.displacement import get_least_displacements, \
     get_displacement, directions_axis, is_minus_displacement
 from anharmonic.phonon3.displacement_fc3 import get_reduced_site_symmetry, get_least_orbits, get_next_displacements, get_bond_symmetry
-from anharmonic.file_IO import write_supercells_with_three_displacements
+
+def direction_to_displacement(dataset,
+                              distance,
+                              supercell):
+    lattice = supercell.get_cell()
+    new_dataset = {}
+    new_dataset['natom'] = supercell.get_number_of_atoms()
+
+    new_first_atoms = []
+    for first_atoms in dataset:
+        atom1 = first_atoms['number']
+        direction1 = first_atoms['direction']
+        disp_cart1 = np.dot(direction1, lattice)
+        disp_cart1 *= distance / np.linalg.norm(disp_cart1)
+        new_second_atoms = []
+        for second_atom in first_atoms['second_atoms']:
+            atom2 = second_atom['number']
+            direction2 = second_atom['direction']
+            disp_cart2 = np.dot(direction2, lattice)
+            disp_cart2 *= distance / np.linalg.norm(disp_cart2)
+            new_third_atoms = []
+            for third_atom in second_atom['third_atoms']:
+                atom3 = third_atom['number']
+                for direction3 in third_atom['directions']:
+                    disp_cart3 = np.dot(direction3, lattice)
+                    disp_cart3 *= distance / np.linalg.norm(disp_cart3)
+                    new_third_atoms.append({'number': atom3,
+                                            'direction': direction3,
+                                            'displacement': disp_cart3})
+            new_second_atoms.append({'number': atom2,
+                                     'direction': direction2,
+                                     'displacement': disp_cart2,
+                                     'third_atoms': new_third_atoms})
+        new_first_atoms.append({'number': atom1,
+                                'direction': direction1,
+                                'displacement': disp_cart1,
+                                'second_atoms': new_second_atoms})
+    new_dataset['first_atoms'] = new_first_atoms
+    
+    return new_dataset
 
 def get_fourth_order_displacements(cell,
                                    symmetry,
@@ -72,9 +111,6 @@ def get_fourth_order_displacements(cell,
                                                       is_diagonal)
                 dds_atom1['second_atoms'].append(dds_atom2)
         dds.append(dds_atom1)
-
-    write_supercells_with_three_displacements(cell, dds)
-
 
     return dds
 

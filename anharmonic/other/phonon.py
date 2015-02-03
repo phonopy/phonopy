@@ -8,20 +8,23 @@ def get_dynamical_matrix(fc2,
                          frequency_scale_factor=None,
                          decimals=None,
                          symprec=1e-5):
+    if frequency_scale_factor is None:
+        _fc2 = fc2
+    else:
+        _fc2 = fc2 * frequency_scale_factor ** 2
+
     if nac_params is None:
         dm = DynamicalMatrix(
             supercell,
             primitive,
-            fc2,
-            frequency_scale_factor=frequency_scale_factor,
+            _fc2,
             decimals=decimals,
             symprec=symprec)
     else:
         dm = DynamicalMatrixNAC(
             supercell,
             primitive,
-            fc2,
-            frequency_scale_factor=frequency_scale_factor,
+            _fc2,
             decimals=decimals,
             symprec=symprec)
         dm.set_nac_params(nac_params)

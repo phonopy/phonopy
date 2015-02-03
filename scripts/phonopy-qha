@@ -218,6 +218,10 @@ parser.add_option("--vf", "--volume_factor",
                   help="Conversion factor of volume to A^3")
 (options, args) = parser.parse_args()
 
+if options.is_graph_save:
+    import matplotlib
+    matplotlib.use('Agg')            
+
 ####################
 # Create unitcells #
 ####################

@@ -47,9 +47,15 @@ class Symmetry:
         self._dataset = None
         self._wyckoff_letters = None
         self._map_atoms = None
+
+        magmom = cell.get_magnetic_moments()
+        if type(magmom) is np.ndarray:
+            if (magmom < symprec).all():
+                magmom = None
+
         if not is_symmetry:
             self._set_nosym()
-        elif cell.get_magnetic_moments() is None:
+        elif magmom is None:
             self._set_symmetry_dataset()
         else:
             self._set_symmetry_operations_with_magmoms()

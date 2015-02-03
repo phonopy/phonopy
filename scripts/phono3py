@@ -149,6 +149,7 @@ parser.set_defaults(band_indices=None,
                     is_tetrahedron_method=False,
                     log_level=None,
                     max_freepath=None,
+                    masses=None,
                     mass_variances=None,
                     mesh_numbers=None,
                     mesh_divisors=None,
@@ -268,6 +269,8 @@ parser.add_option("--lw", "--linewidth", dest="is_linewidth",
                   action="store_true", help="Calculate linewidths")
 parser.add_option("--fst", "--frequency_shift", dest="is_frequency_shift",
                   action="store_true", help="Calculate frequency shifts")
+parser.add_option("--mass", dest="masses", action="store", type="string",
+                  help="Same as MASS tag")
 parser.add_option("--md", "--mesh_divisors", dest="mesh_divisors", type="string",
                   help="Divisors for mesh numbers")
 parser.add_option("--mesh", dest="mesh_numbers", type="string",
@@ -517,7 +520,8 @@ if options.is_displacement:
     else:
         filename = 'disp_fc3.' + output_filename + '.yaml'
         
-    num_disps, num_disp_files = write_disp_fc3_yaml(dds, supercell,
+    num_disps, num_disp_files = write_disp_fc3_yaml(dds,
+                                                    supercell,
                                                     filename=filename)
     for i, dcell in enumerate(phono3py.get_supercells_with_displacements()):
         if dcell is not None:
@@ -619,6 +623,7 @@ phono3py = Phono3py(
     settings.get_supercell_matrix(),
     primitive_matrix=settings.get_primitive_matrix(),
     phonon_supercell_matrix=settings.get_phonon_supercell_matrix(),
+    masses=settings.get_masses(),
     mesh=mesh,
     band_indices=band_indices,
     sigmas=sigmas,
@@ -745,8 +750,6 @@ else:
         fc3 = read_fc3_from_hdf5(filename=filename)
         phono3py.set_fc3(fc3)
     else: # fc3 from FORCES_THIRD and FORCES_SECOND
-        if log_level:
-            print "Solving fc3"
         if input_filename is None:
             filename = 'disp_fc3.yaml'
         else:
@@ -764,7 +767,8 @@ else:
             displacement_dataset=disp_dataset,
             cutoff_distance=settings.get_cutoff_fc3_distance(),
             translational_symmetry_type=tsym_type,
-            is_permutation_symmetry=options.is_symmetrize_fc3_r)
+            is_permutation_symmetry=options.is_symmetrize_fc3_r,
+            is_permutation_symmetry_fc2=options.is_symmetrize_fc2)
         if output_filename is None:
             filename = 'fc3.hdf5'
         else:
@@ -1083,7 +1087,7 @@ if settings.get_is_linewidth():
 elif settings.get_is_frequency_shift():
     phono3py.get_frequency_shift(
         grid_points,
-        epsilon=sigma,
+        epsilons=sigmas,
         temperatures=temperatures,
         output_filename=output_filename)
 elif settings.get_is_bterta() or settings.get_is_lbte():
