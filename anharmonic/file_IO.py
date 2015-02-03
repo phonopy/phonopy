@@ -709,7 +709,10 @@ def write_frequency_shift(gp,
     fst_filename = "frequency_shift"
     fst_filename += "-m%d%d%d-g%d-" % (mesh[0], mesh[1], mesh[2], gp)
     if epsilon is not None:
-        fst_filename += ("s%f" % epsilon).rstrip('0') + "-"
+        if epsilon > 1e-5:
+            fst_filename += ("s%f" % epsilon).rstrip('0') + "-"
+        else:
+            fst_filename += ("s%.3e" % epsilon) + "-"
     for i in band_indices:
         fst_filename += "b%d" % (i + 1)
     if not filename == None:
