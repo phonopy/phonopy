@@ -10,7 +10,7 @@ from phonopy.harmonic.displacement import direction_to_displacement as \
      direction_to_displacement_fc2
 from anharmonic.phonon3.imag_self_energy import get_imag_self_energy, \
      write_imag_self_energy, get_linewidth, write_linewidth
-from anharmonic.phonon3.frequency_shift import FrequencyShift
+from anharmonic.phonon3.frequency_shift import get_frequency_shift
 from anharmonic.phonon3.interaction import Interaction
 from anharmonic.phonon3.conductivity_RTA import get_thermal_conductivity_RTA
 from anharmonic.phonon3.conductivity_LBTE import get_thermal_conductivity_LBTE
@@ -18,7 +18,7 @@ from anharmonic.phonon3.joint_dos import JointDos
 from anharmonic.phonon3.gruneisen import Gruneisen
 from anharmonic.phonon3.displacement_fc3 import get_third_order_displacements, \
      direction_to_displacement
-from anharmonic.file_IO import write_frequency_shift, write_joint_dos
+from anharmonic.file_IO import write_joint_dos
 from anharmonic.other.isotope import Isotope
 from anharmonic.phonon3.fc3 import get_fc3, set_permutation_symmetry_fc3, \
      set_translational_invariance_fc3, cutoff_fc3_by_zero
@@ -440,39 +440,17 @@ class Phono3py:
 
     def get_frequency_shift(self,
                             grid_points,
-                            epsilon=0.1,
+                            epsilons=[0.1],
                             temperatures=np.arange(0, 1001, 10, dtype='double'),
                             output_filename=None):
-        fst = FrequencyShift(self._interaction)
-        for gp in grid_points:
-            fst.set_grid_point(gp)
-            if self._log_level:
-                weights = self._interaction.get_triplets_at_q()[1]
-                print "------ Frequency shift -o- ------"
-                print "Number of ir-triplets:",
-                print "%d / %d" % (len(weights), weights.sum())
-            fst.run_interaction()
-            fst.set_epsilon(epsilon)
-            delta = np.zeros((len(temperatures),
-                              len(self._band_indices_flatten)),
-                             dtype='double')
-            for i, t in enumerate(temperatures):
-                fst.set_temperature(t)
-                fst.run()
-                delta[i] = fst.get_frequency_shift()
-
-            for i, bi in enumerate(self._band_indices):
-                pos = 0
-                for j in range(i):
-                    pos += len(self._band_indices[j])
-
-                write_frequency_shift(gp,
-                                      bi,
-                                      temperatures,
-                                      delta[:, pos:(pos+len(bi))],
-                                      self._mesh,
-                                      epsilon=epsilon,
-                                      filename=output_filename)
+        self._grid_points = grid_points
+        get_frequency_shift(self._interaction,
+                            self._grid_points,
+                            self._band_indices,
+                            epsilons,
+                            temperatures,
+                            output_filename=output_filename,
+                            log_level=self._log_level)
 
     def _search_symmetry(self):
         self._symmetry = Symmetry(self._supercell,

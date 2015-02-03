@@ -1,4 +1,5 @@
 #include <lapacke.h>
+#include <math.h>
 #include "dynmat.h"
 #include "phonoc_array.h"
 #include "phonoc_math.h"

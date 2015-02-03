@@ -1087,7 +1087,7 @@ if settings.get_is_linewidth():
 elif settings.get_is_frequency_shift():
     phono3py.get_frequency_shift(
         grid_points,
-        epsilon=sigma,
+        epsilons=sigmas,
         temperatures=temperatures,
         output_filename=output_filename)
 elif settings.get_is_bterta() or settings.get_is_lbte():

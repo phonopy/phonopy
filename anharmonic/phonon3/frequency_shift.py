@@ -2,6 +2,49 @@ import numpy as np
 from phonopy.units import THzToEv, Kb, VaspToTHz, Hbar, EV, Angstrom, THz, AMU
 from phonopy.phonon.degeneracy import degenerate_sets
 from anharmonic.phonon3.triplets import occupation
+from anharmonic.file_IO import write_frequency_shift
+
+def get_frequency_shift(interaction,
+                        grid_points,
+                        band_indices,
+                        epsilons,
+                        temperatures=[0.0, 300.0],
+                        output_filename=None,
+                        log_level=0):
+    fst = FrequencyShift(interaction)
+    band_indices_flatten = interaction.get_band_indices()
+    mesh = interaction.get_mesh_numbers()
+    for gp in grid_points:
+        fst.set_grid_point(gp)
+        if log_level:
+            weights = interaction.get_triplets_at_q()[1]
+            print "------ Frequency shift -o- ------"
+            print "Number of ir-triplets:",
+            print "%d / %d" % (len(weights), weights.sum())
+        fst.run_interaction()
+
+        for epsilon in epsilons:
+            fst.set_epsilon(epsilon)
+            delta = np.zeros((len(temperatures),
+                              len(band_indices_flatten)),
+                             dtype='double')
+            for i, t in enumerate(temperatures):
+                fst.set_temperature(t)
+                fst.run()
+                delta[i] = fst.get_frequency_shift()
+    
+            for i, bi in enumerate(band_indices):
+                pos = 0
+                for j in range(i):
+                    pos += len(band_indices[j])
+    
+                write_frequency_shift(gp,
+                                      bi,
+                                      temperatures,
+                                      delta[:, pos:(pos+len(bi))],
+                                      mesh,
+                                      epsilon=epsilon,
+                                      filename=output_filename)
 
 class FrequencyShift:
     def __init__(self,
@@ -10,17 +53,17 @@ class FrequencyShift:
                  temperature=None,
                  epsilon=0.1,
                  lang='C'):
-        self._interaction = interaction
+        self._pp = interaction
         self.set_epsilon(epsilon)
         self.set_temperature(temperature)
         self.set_grid_point(grid_point=grid_point)
 
         self._lang = lang
         self._frequency_ = None
-        self._fc3_normal_squared = None
+        self._pp_strength = None
         self._frequencies = None
-        self._grid_point_triplets = None
-        self._triplet_weights = None
+        self._triplets_at_q = None
+        self._weights_at_q = None
         self._band_indices = None
         self._unit_conversion = None
         self._cutoff_frequency = interaction.get_cutoff_frequency()
@@ -29,23 +72,23 @@ class FrequencyShift:
         self.set_epsilon(epsilon)
 
     def run(self):
-        if self._fc3_normal_squared is None:        
+        if self._pp_strength is None:        
             self.run_interaction()
 
-        num_band0 = self._fc3_normal_squared.shape[1]
+        num_band0 = self._pp_strength.shape[1]
         self._frequency_shifts = np.zeros(num_band0, dtype='double')
-        self._run_py_with_band_indices()
+        self._run_with_band_indices()
 
     def run_interaction(self):
-        self._interaction.run(lang=self._lang)
-        self._fc3_normal_squared = self._interaction.get_interaction_strength()
+        self._pp.run(lang=self._lang)
+        self._pp_strength = self._pp.get_interaction_strength()
         (self._frequencies,
-         self._eigenvectors) = self._interaction.get_phonons()[:2]
-        (self._grid_point_triplets,
-         self._triplet_weights) = self._interaction.get_triplets_at_q()[:2]
-        self._band_indices = self._interaction.get_band_indices()
+         self._eigenvectors) = self._pp.get_phonons()[:2]
+        (self._triplets_at_q,
+         self._weights_at_q) = self._pp.get_triplets_at_q()[:2]
+        self._band_indices = self._pp.get_band_indices()
         
-        mesh = self._interaction.get_mesh_numbers()
+        mesh = self._pp.get_mesh_numbers()
         num_grid = np.prod(mesh)
 
         # Unit to THz of Delta
@@ -79,11 +122,11 @@ class FrequencyShift:
         if grid_point is None:
             self._grid_point = None
         else:
-            self._interaction.set_grid_point(grid_point)
-            self._fc3_normal_squared = None
-            (self._grid_point_triplets,
-             self._triplet_weights) = self._interaction.get_triplets_at_q()[:2]
-            self._grid_point = self._grid_point_triplets[0, 0]
+            self._pp.set_grid_point(grid_point)
+            self._pp_strength = None
+            (self._triplets_at_q,
+             self._weights_at_q) = self._pp.get_triplets_at_q()[:2]
+            self._grid_point = self._triplets_at_q[0, 0]
         
     def set_epsilon(self, epsilon):
         if epsilon is None:
@@ -97,11 +140,30 @@ class FrequencyShift:
         else:
             self._temperature = float(temperature)
         
+    def _run_with_band_indices(self):
+        if self._lang == 'C':
+            self._run_c_with_band_indices()
+        else:
+            self._run_py_with_band_indices()
+    
+    def _run_c_with_band_indices(self):
+        import anharmonic._phono3py as phono3c
+        phono3c.frequency_shift_at_bands(self._frequency_shifts,
+                                         self._pp_strength,
+                                         self._triplets_at_q,
+                                         self._weights_at_q,
+                                         self._frequencies,
+                                         self._band_indices,
+                                         self._temperature,
+                                         self._epsilon,
+                                         self._unit_conversion,
+                                         self._cutoff_frequency)
+
     def _run_py_with_band_indices(self):
         for i, (triplet, w, interaction) in enumerate(
-            zip(self._grid_point_triplets,
-                self._triplet_weights,
-                self._fc3_normal_squared)):
+            zip(self._triplets_at_q,
+                self._weights_at_q,
+                self._pp_strength)):
 
             freqs = self._frequencies[triplet]
             for j, bi in enumerate(self._band_indices):
