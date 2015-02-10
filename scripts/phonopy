@@ -561,6 +561,18 @@ if np.linalg.det(unitcell.get_cell()) < 0.0:
         print_end()
     sys.exit(0)
 
+# Set magnetic moments
+magmoms = settings.get_magnetic_moments()
+if magmoms is not None:
+    if len(magmoms) == unitcell.get_number_of_atoms():
+        unitcell.set_magnetic_moments(magmoms)
+    else:
+        error_text = "Invalid MAGMOM setting"
+        print_error_message(error_text)
+        if log_level > 0:
+            print_end()
+        sys.exit(1)
+
 # Check crystal symmetry and exit (--symmetry)
 if options.is_check_symmetry:
     check_symmetry(unitcell,
@@ -595,18 +607,6 @@ if settings.get_supercell_matrix() is None:
     if log_level > 0:
         print_end()
     sys.exit(1)
-
-# Set magnetic moments
-magmoms = settings.get_magnetic_moments()
-if magmoms is not None:
-    if len(magmoms) == unitcell.get_number_of_atoms():
-        unitcell.set_magnetic_moments(magmoms)
-    else:
-        error_text = "Invalid MAGMOM setting"
-        print_error_message(error_text)
-        if log_level > 0:
-            print_end()
-        sys.exit(1)
 
 if run_mode == 'displacements':
     phonon = Phonopy(unitcell, 
