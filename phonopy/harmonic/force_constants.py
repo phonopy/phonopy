@@ -272,6 +272,38 @@ def set_tensor_symmetry(force_constants,
     Since get_force_constants_disps may include crystal symmetry, this method
     is usually meaningless.
     """
+    N = len(rotations)
+    K = len(positions)
+    
+    rpos = np.dot(positions, np.transpose(rotations, (0, 2, 1))) + translations
+    diff = positions - np.transpose(np.tile(rpos, (K, 1, 1, 1)), (2, 1, 0, 3))
+    m = (abs(diff - diff.round()) < symprec).all(axis=-1)
+    mapa = np.tile(np.arange(K, dtype='intc'), (K,1))
+    mapa = np.array([mapa[mr] for mr in m])
+    cart_rot = np.array([similarity_transformation(lattice, rot).T 
+                         for rot in rotations])
+    cart_rot_inv = np.array([np.linalg.inv(rot) for rot in cart_rot])
+    fcm = np.array([force_constants[mapa[n],:,:,:][:,mapa[n],:,:] 
+                    for n in range(N)])
+    s = np.transpose(np.array([np.dot(cart_rot[n],
+                                      np.dot(fcm[n], cart_rot_inv[n])) 
+                               for n in range(N)]), (0, 2, 3, 1, 4))
+    force_constants = np.array(np.average(s, axis=0), dtype='double', order='C')
+
+def set_tensor_symmetry_old(force_constants,
+                        lattice,
+                        positions,
+                        rotations,
+                        translations,
+                        symprec):
+    """
+    Full force constants are symmetrized using crystal symmetry.
+    This method extracts symmetrically equivalent sets of atomic pairs and
+    take sum of their force constants and average the sum.
+    
+    Since get_force_constants_disps may include crystal symmetry, this method
+    is usually meaningless.
+    """
 
     fc_bak = force_constants.copy()
 
