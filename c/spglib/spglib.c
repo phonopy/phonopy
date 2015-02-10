@@ -36,14 +36,6 @@ static void set_dataset(SpglibDataset * dataset,
 			SPGCONST Spacegroup * spacegroup,
 			const int * mapping_table,
 			const double tolerance);
-static int get_symmetry(int rotation[][3][3],
-			double translation[][3],
-			const int max_size,
-			SPGCONST double lattice[3][3],
-			SPGCONST double position[][3],
-			const int types[],
-			const int num_atom,
-			const double symprec);
 static int get_symmetry_from_dataset(int rotation[][3][3],
 				     double translation[][3],
 				     const int max_size,
@@ -54,6 +46,7 @@ static int get_symmetry_from_dataset(int rotation[][3][3],
 				     const double symprec);
 static int get_symmetry_with_collinear_spin(int rotation[][3][3],
 					    double translation[][3],
+					    int equivalent_atoms[],
 					    const int max_size,
 					    SPGCONST double lattice[3][3],
 					    SPGCONST double position[][3],
@@ -82,8 +75,6 @@ static int get_schoenflies(char symbol[10],
 			   SPGCONST double position[][3],
 			   const int types[], const int num_atom,
 			   const double symprec);
-static Spacegroup get_spacegroup(SPGCONST Cell * cell,
-				 const double symprec);
 static int refine_cell(double lattice[3][3],
 		       double position[][3],
 		       int types[],
@@ -280,6 +271,7 @@ int spgat_get_symmetry(int rotation[][3][3],
 
 int spg_get_symmetry_with_collinear_spin(int rotation[][3][3],
 					 double translation[][3],
+					 int equivalent_atoms[],
 					 const int max_size,
 					 SPGCONST double lattice[3][3],
 					 SPGCONST double position[][3],
@@ -292,6 +284,7 @@ int spg_get_symmetry_with_collinear_spin(int rotation[][3][3],
 
   return get_symmetry_with_collinear_spin(rotation,
 					  translation,
+					  equivalent_atoms,
 					  max_size,
 					  lattice,
 					  position,
@@ -303,6 +296,7 @@ int spg_get_symmetry_with_collinear_spin(int rotation[][3][3],
 
 int spgat_get_symmetry_with_collinear_spin(int rotation[][3][3],
 					   double translation[][3],
+					   int equivalent_atoms[],
 					   const int max_size,
 					   SPGCONST double lattice[3][3],
 					   SPGCONST double position[][3],
@@ -316,6 +310,7 @@ int spgat_get_symmetry_with_collinear_spin(int rotation[][3][3],
 
   return get_symmetry_with_collinear_spin(rotation,
 					  translation,
+					  equivalent_atoms,
 					  max_size,
 					  lattice,
 					  position,
@@ -775,13 +770,11 @@ static SpglibDataset * get_dataset(SPGCONST double lattice[3][3],
 				   const int hall_number,
 				   const double symprec)
 {
-  int attempt;
-  int *mapping_table;
-  double tolerance, tolerance_from_prim;
   Spacegroup spacegroup;
   SpacegroupType spacegroup_type;
   SpglibDataset *dataset;
-  Cell *cell, *primitive;
+  Cell *cell;
+  Primitive *primitive;
 
   dataset = (SpglibDataset*) malloc(sizeof(SpglibDataset));
   dataset->spacegroup_number = 0;
@@ -801,38 +794,18 @@ static SpglibDataset * get_dataset(SPGCONST double lattice[3][3],
   dataset->brv_positions = NULL;
   dataset->brv_types = NULL;
 
-  mapping_table = (int*) malloc(sizeof(int) * num_atom);
-
   cell = cel_alloc_cell(num_atom);
   cel_set_cell(cell, lattice, position, types);
 
-  tolerance = symprec;
-  for (attempt = 0; attempt < 100; attempt++) {
-    primitive = prm_get_primitive_and_mapping_table(mapping_table,
-						    cell,
-						    tolerance);
-    if (primitive->size > 0) {
-      tolerance_from_prim = prm_get_current_tolerance();
-      spacegroup = spa_get_spacegroup(primitive, tolerance_from_prim);
-      if (spacegroup.number > 0) {
-	break;
-      }
-    }
-    
-    tolerance *= REDUCE_RATE;
-    cel_free_cell(primitive);
-    
-    warning_print("  Attempt %d tolerance = %f failed.", attempt, tolerance);
-    warning_print(" (line %d, %s).\n", __LINE__, __FILE__);
-  }
+  primitive = spa_get_spacegroup(&spacegroup, cell, symprec);
 
   if (spacegroup.number > 0) {
     if (hall_number > 0) {
       spacegroup_type = spgdb_get_spacegroup_type(hall_number);
       if (spacegroup.number == spacegroup_type.number) {
-	spacegroup = spa_get_spacegroup_with_hall_number(primitive,
+	spacegroup = spa_get_spacegroup_with_hall_number(primitive->cell,
 							 hall_number,
-							 tolerance_from_prim);
+							 primitive->tolerance);
       } else {
 	spacegroup.number = 0;
       }
@@ -840,18 +813,16 @@ static SpglibDataset * get_dataset(SPGCONST double lattice[3][3],
     if (spacegroup.number > 0) {
       set_dataset(dataset,
 		  cell,
-		  primitive,
+		  primitive->cell,
 		  &spacegroup,
-		  mapping_table,
-		  tolerance_from_prim);
+		  primitive->mapping_table,
+		  primitive->tolerance);
     }
-    cel_free_cell(primitive);
   }
   
-
-  free(mapping_table);
-  mapping_table = NULL;
+  prm_free_primitive(primitive);
   cel_free_cell(cell);
+
 
   return dataset;
 }
@@ -867,7 +838,7 @@ static void set_dataset(SpglibDataset * dataset,
   double inv_mat[3][3];
   Cell *bravais;
   Symmetry *symmetry;
-  
+
   /* Spacegroup type, transformation matrix, origin shift */
   dataset->n_atoms = cell->size;
   dataset->spacegroup_number = spacegroup->number;
@@ -922,43 +893,6 @@ static void set_dataset(SpglibDataset * dataset,
   sym_free_symmetry(symmetry);
 }
 
-static int get_symmetry(int rotation[][3][3],
-			double translation[][3],
-			const int max_size,
-			SPGCONST double lattice[3][3],
-			SPGCONST double position[][3],
-			const int types[],
-			const int num_atom,
-			const double symprec)
-{
-  int i, size;
-  Symmetry *symmetry;
-  Cell *cell;
-
-  cell = cel_alloc_cell(num_atom);
-  cel_set_cell(cell, lattice, position, types);
-  symmetry = sym_get_operation(cell, symprec);
-
-  if (symmetry->size > max_size) {
-    fprintf(stderr, "spglib: Indicated max size(=%d) is less than number ", max_size);
-    fprintf(stderr, "spglib: of symmetry operations(=%d).\n", symmetry->size);
-    sym_free_symmetry(symmetry);
-    return 0;
-  }
-
-  for (i = 0; i < symmetry->size; i++) {
-    mat_copy_matrix_i3(rotation[i], symmetry->rot[i]);
-    mat_copy_vector_d3(translation[i], symmetry->trans[i]);
-  }
-
-  size = symmetry->size;
-
-  cel_free_cell(cell);
-  sym_free_symmetry(symmetry);
-
-  return size;
-}
-
 static int get_symmetry_from_dataset(int rotation[][3][3],
 				     double translation[][3],
 				     const int max_size,
@@ -1000,6 +934,7 @@ static int get_symmetry_from_dataset(int rotation[][3][3],
 
 static int get_symmetry_with_collinear_spin(int rotation[][3][3],
 					    double translation[][3],
+					    int equivalent_atoms[],
 					    const int max_size,
 					    SPGCONST double lattice[3][3],
 					    SPGCONST double position[][3],
@@ -1009,15 +944,37 @@ static int get_symmetry_with_collinear_spin(int rotation[][3][3],
 					    const double symprec)
 {
   int i, size;
-  Symmetry *symmetry;
+  Symmetry *symmetry, *sym_nonspin;
   Cell *cell;
+  SpglibDataset *dataset;
 
   cell = cel_alloc_cell(num_atom);
   cel_set_cell(cell, lattice, position, types);
-  symmetry = spn_get_collinear_operation(cell, spins, symprec);
+
+  dataset = get_dataset(lattice,
+			position,
+			types,
+			num_atom,
+			0,
+			symprec);
+
+  sym_nonspin = sym_alloc_symmetry(dataset->n_operations);
+  for (i = 0; i < dataset->n_operations; i++) {
+    mat_copy_matrix_i3(sym_nonspin->rot[i], dataset->rotations[i]);
+    mat_copy_vector_d3(sym_nonspin->trans[i], dataset->translations[i]);
+  }
+  spg_free_dataset(dataset);
+
+  symmetry = spn_get_collinear_operations(equivalent_atoms,
+					  sym_nonspin,
+					  cell,
+					  spins,
+					  symprec);
+  sym_free_symmetry(sym_nonspin);
   
   if (symmetry->size > max_size) {
-    fprintf(stderr, "spglib: Indicated max size(=%d) is less than number ", max_size);
+    fprintf(stderr, "spglib: Indicated max size(=%d) is less than number ",
+	    max_size);
     fprintf(stderr, "spglib: of symmetry operations(=%d).\n", symmetry->size);
     sym_free_symmetry(symmetry);
     return 0;
@@ -1070,7 +1027,7 @@ static int find_primitive(double lattice[3][3],
   cel_set_cell(cell, lattice, position, types);
 
   /* find primitive cell */
-  primitive = prm_get_primitive(cell, symprec);
+  primitive = prm_get_primitive_cell(cell, symprec);
   if (primitive->size == cell->size) { /* Already primitive */
     num_prim_atom = 0;
   } else { /* Primitive cell was found. */
@@ -1098,17 +1055,20 @@ static int get_international(char symbol[11],
 			     const double symprec)
 {
   Cell *cell;
+  Primitive *primitive;
   Spacegroup spacegroup;
 
   cell = cel_alloc_cell(num_atom);
   cel_set_cell(cell, lattice, position, types);
-  spacegroup = get_spacegroup(cell, symprec);
+
+  primitive = spa_get_spacegroup(&spacegroup, cell, symprec);
+  prm_free_primitive(primitive);
   if (spacegroup.number > 0) {
     strcpy(symbol, spacegroup.international_short);
   }
 
   cel_free_cell(cell);
-  
+
   return spacegroup.number;
 }
 
@@ -1120,12 +1080,14 @@ static int get_schoenflies(char symbol[10],
 			   const double symprec)
 {
   Cell *cell;
+  Primitive *primitive;
   Spacegroup spacegroup;
 
   cell = cel_alloc_cell(num_atom);
   cel_set_cell(cell, lattice, position, types);
 
-  spacegroup = get_spacegroup(cell, symprec);
+  primitive = spa_get_spacegroup(&spacegroup, cell, symprec);
+  prm_free_primitive(primitive);
   if (spacegroup.number > 0) {
     strcpy(symbol, spacegroup.schoenflies);
   }
@@ -1163,21 +1125,6 @@ static int refine_cell(double lattice[3][3],
   spg_free_dataset(dataset);
   
   return n_brv_atoms;
-}
-
-static Spacegroup get_spacegroup(SPGCONST Cell * cell,
-				 const double symprec)
-{
-  double tolerance;
-  Cell *primitive;
-  Spacegroup spacegroup;
-
-  primitive = prm_get_primitive(cell, symprec);
-  tolerance = prm_get_current_tolerance();
-  spacegroup = spa_get_spacegroup(primitive, tolerance);
-  cel_free_cell(primitive);
-
-  return spacegroup;
 }
 
 

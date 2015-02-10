@@ -238,7 +238,7 @@ static Symmetry * get_operations(SPGCONST Cell *cell,
   double tolerance;
   PointSymmetry lattice_sym;
   Symmetry *symmetry, *symmetry_orig, *symmetry_reduced;
-  Primitive primitive;
+  Primitive *primitive;
 
   debug_print("get_operations:\n");
 
@@ -250,13 +250,13 @@ static Symmetry * get_operations(SPGCONST Cell *cell,
     goto end;
   }
 
-  primitive = prm_get_primitive_and_pure_translations(cell, symprec);
-  if (primitive.cell->size == 0) {
+  primitive = prm_get_primitive(cell, symprec);
+  if (primitive->cell->size == 0) {
     goto deallocate_and_end;
   }
 
   lattice_sym = transform_pointsymmetry(&lattice_sym,
-					primitive.cell->lattice,
+					primitive->cell->lattice,
 					cell->lattice);
   if (lattice_sym.size == 0) {
     goto deallocate_and_end;
@@ -264,7 +264,7 @@ static Symmetry * get_operations(SPGCONST Cell *cell,
 
   
   symmetry = get_space_group_operations(&lattice_sym,
-					primitive.cell,
+					primitive->cell,
 					symprec);
   if (symmetry->size > 48) {
     tolerance = symprec;
@@ -272,7 +272,7 @@ static Symmetry * get_operations(SPGCONST Cell *cell,
       tolerance *= REDUCE_RATE;
       warning_print("spglib: number of symmetry operations for primitive cell > 48 was found. (line %d, %s).\n", __LINE__, __FILE__);
       warning_print("tolerance is reduced to %f\n", tolerance);
-      symmetry_reduced = reduce_operation(primitive.cell,
+      symmetry_reduced = reduce_operation(primitive->cell,
 					  symmetry,
 					  tolerance);
       sym_free_symmetry(symmetry);
@@ -286,9 +286,9 @@ static Symmetry * get_operations(SPGCONST Cell *cell,
   }
 
   symmetry_orig = recover_operations_original(symmetry,
-					      primitive.pure_trans,
+					      primitive->pure_trans,
 					      cell,
-					      primitive.cell);
+					      primitive->cell);
   sym_free_symmetry(symmetry);
 
   for (i = 0; i < symmetry_orig->size; i++) {
@@ -298,8 +298,7 @@ static Symmetry * get_operations(SPGCONST Cell *cell,
   }
 
  deallocate_and_end:
-  cel_free_cell(primitive.cell);
-  mat_free_VecDBL(primitive.pure_trans);
+  prm_free_primitive(primitive);
 
  end:
   if (! symmetry_orig) {

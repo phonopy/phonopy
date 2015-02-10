@@ -11,14 +11,13 @@
 typedef struct {
   Cell *cell;
   VecDBL *pure_trans;
+  int * mapping_table;
+  int size;
+  double tolerance;
 } Primitive;
 
-Cell * prm_get_primitive(SPGCONST Cell * cell,
-			 const double symprec);
-Cell * prm_get_primitive_and_mapping_table(int * mapping_table,
-					   SPGCONST Cell * cell,
-					   const double symprec);
-Primitive prm_get_primitive_and_pure_translations(SPGCONST Cell * cell,
-						  const double symprec);
-double prm_get_current_tolerance(void);
+Primitive * prm_alloc_primitive(const int size);
+void prm_free_primitive(Primitive * primitive);
+Cell * prm_get_primitive_cell(SPGCONST Cell * cell, const double symprec);
+Primitive * prm_get_primitive(SPGCONST Cell * cell, const double symprec);
 #endif

@@ -1,4 +1,4 @@
-/* spglib.h version 1.7 */
+/* spglib.h version 1.7.1 */
 /* Copyright (C) 2008 Atsushi Togo */
 
 #ifndef __spglib_H__
@@ -149,6 +149,7 @@ int spgat_get_symmetry(int rotation[][3][3],
 /* Find symmetry operations with collinear spins on atoms. */
 int spg_get_symmetry_with_collinear_spin(int rotation[][3][3],
 					 double translation[][3],
+					 int equivalent_atoms[],
 					 const int max_size,
 					 SPGCONST double lattice[3][3],
 					 SPGCONST double position[][3],
@@ -159,6 +160,7 @@ int spg_get_symmetry_with_collinear_spin(int rotation[][3][3],
 
 int spgat_get_symmetry_with_collinear_spin(int rotation[][3][3],
 					   double translation[][3],
+					   int equivalent_atoms[],
 					   const int max_size,
 					   SPGCONST double lattice[3][3],
 					   SPGCONST double position[][3],
@@ -348,6 +350,14 @@ void spg_get_grid_points_by_rotations(int rot_grid_points[],
 				      SPGCONST int rot_reciprocal[][3][3],
 				      const int mesh[3],
 				      const int is_shift[3]);
+
+void spg_get_BZ_grid_points_by_rotations(int rot_grid_points[],
+					 const int address_orig[3],
+					 const int num_rot,
+					 SPGCONST int rot_reciprocal[][3][3],
+					 const int mesh[3],
+					 const int is_shift[3],
+					 const int bz_map[]);
 
 /* Grid addresses are relocated inside Brillouin zone. */
 /* Number of ir-grid-points inside Brillouin zone is returned. */

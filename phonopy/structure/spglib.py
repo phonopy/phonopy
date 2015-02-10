@@ -28,14 +28,21 @@ def get_symmetry(bulk, use_magmoms=False, symprec=1e-5, angle_tolerance=-1.0):
     # Get symmetry operations
     if use_magmoms:
         magmoms = bulk.get_magnetic_moments()
+        equivalent_atoms = np.zeros(len(magmoms), dtype='intc')
         num_sym = spg.symmetry_with_collinear_spin(rotation,
                                                    translation,
+                                                   equivalent_atoms,
                                                    lattice,
                                                    positions,
                                                    numbers,
                                                    magmoms,
                                                    symprec,
                                                    angle_tolerance)
+        return ({'rotations': np.array(rotation[:num_sym],
+                                       dtype='intc', order='C'),
+                 'translations': np.array(translation[:num_sym],
+                                          dtype='double', order='C')},
+                equivalent_atoms)
     else:
         num_sym = spg.symmetry(rotation,
                                translation,
@@ -45,9 +52,10 @@ def get_symmetry(bulk, use_magmoms=False, symprec=1e-5, angle_tolerance=-1.0):
                                symprec,
                                angle_tolerance)
 
-    return {'rotations': np.array(rotation[:num_sym], dtype='intc', order='C'),
-            'translations': np.array(translation[:num_sym],
-                                     dtype='double', order='C')}
+        return {'rotations': np.array(rotation[:num_sym],
+                                      dtype='intc', order='C'),
+                'translations': np.array(translation[:num_sym],
+                                         dtype='double', order='C')}
 
 def get_symmetry_dataset(bulk, symprec=1e-5, angle_tolerance=-1.0):
     """
