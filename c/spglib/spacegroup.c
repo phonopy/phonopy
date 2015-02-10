@@ -216,22 +216,44 @@ static Symmetry * get_conventional_symmetry(SPGCONST double transform_mat[3][3],
 					    const Centering centering,
 					    const Symmetry *primitive_sym);
 
-Spacegroup spa_get_spacegroup(SPGCONST Cell * primitive,
-			      const double symprec)
+Primitive * spa_get_spacegroup(Spacegroup * spacegroup,
+			       SPGCONST Cell * cell,
+			       const double symprec)
 {
-  Spacegroup spacegroup;
-  
-  if (primitive->size > 0) {
-    spacegroup = search_spacegroup(primitive,
-				   spacegroup_to_hall_number,
-				   230,
-				   symprec);
-  } else {
-    spacegroup.number = 0;
+  int attempt;
+  double tolerance;
+  Primitive *primitive;
+
+  tolerance = symprec;
+
+  for (attempt = 0; attempt < 100; attempt++) {
+    primitive = prm_get_primitive(cell, tolerance);
+    if (primitive->size > 0) {
+      *spacegroup = search_spacegroup(primitive->cell,
+				      spacegroup_to_hall_number,
+				      230,
+				      primitive->tolerance);
+      if (spacegroup->number > 0) {
+	break;
+      }
+    }
+    
+    tolerance *= REDUCE_RATE;
+    prm_free_primitive(primitive);
+    
+    warning_print("  Attempt %d tolerance = %f failed.", attempt, tolerance);
+    warning_print(" (line %d, %s).\n", __LINE__, __FILE__);
+  }
+
+  if (primitive->size == 0) {
     warning_print("spglib: Space group could not be found ");
     warning_print("(line %d, %s).\n", __LINE__, __FILE__);
+    primitive = prm_alloc_primitive(0);
+    primitive->cell = cel_alloc_cell(0);
+    primitive->pure_trans = mat_alloc_VecDBL(0);
   }
-  return spacegroup;
+
+  return primitive;
 }
 
 Spacegroup spa_get_spacegroup_with_hall_number(SPGCONST Cell * primitive,

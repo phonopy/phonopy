@@ -13,14 +13,8 @@
 
 #define INCREASE_RATE 2.0
 #define REDUCE_RATE 0.95
-static double current_tolerance;
 
-
-static Primitive get_primitive_and_pure_translation(SPGCONST Cell * cell,
-						    const double symprec);
-static Cell * get_primitive_and_mapping_table(int * mapping_table,
-					      SPGCONST Cell * cell,
-					      const double symprec);
+static Primitive * get_primitive(SPGCONST Cell * cell, const double symprec);
 static int set_primitive_positions(Cell * primitive_cell,
 				   const VecDBL * position,
 				   const Cell * cell,
@@ -39,10 +33,10 @@ static void free_overlap_table(int ** table, const int size);
 static int ** allocate_overlap_table(const int size);
 static Cell * get_cell_with_smallest_lattice(SPGCONST Cell * cell,
 					     const double symprec);
-static Cell * get_primitive(int * mapping_table,
-			    SPGCONST Cell * cell,
-			    const VecDBL * pure_trans,
-			    const double symprec);
+static Cell * get_primitive_cell(int * mapping_table,
+				 SPGCONST Cell * cell,
+				 const VecDBL * pure_trans,
+				 const double symprec);
 static int trim_cell(Cell * primitive_cell,
 		     int * mapping_table,
 		     SPGCONST Cell * cell,
@@ -56,143 +50,108 @@ static int get_primitive_lattice_vectors(double prim_lattice[3][3],
 					 SPGCONST Cell * cell,
 					 const double symprec);
 static VecDBL * get_translation_candidates(const VecDBL * pure_trans);
-static void set_current_tolerance(const double tolerance);
 
-Cell * prm_get_primitive(SPGCONST Cell * cell,
-			 const double symprec)
+Primitive * prm_alloc_primitive(const int size)
 {
-  int *mapping_table;
-  Cell *primitive_cell;
+  Primitive *primitive;
 
-  mapping_table = (int*) malloc(sizeof(int) * cell->size);
-  primitive_cell = prm_get_primitive_and_mapping_table(mapping_table,
-						       cell,
-						       symprec);
-  free(mapping_table);
+  primitive = (Primitive*) malloc(sizeof(Primitive));
+  primitive->size = size;
+  if (size > 0) {
+    if ((primitive->mapping_table = (int*) malloc(sizeof(int) * size)) == NULL)
+      {
+	warning_print("spglib: Memory could not be allocated ");
+	warning_print("(Primitive, line %d, %s).\n", __LINE__, __FILE__);
+	exit(1);
+      }
+  }
+  primitive->tolerance = 0;
+  primitive->pure_trans = NULL;
+  primitive->cell = NULL;
+
+  return primitive;
+}
+
+void prm_free_primitive(Primitive * primitive)
+{
+  if (primitive->size > 0) {
+    free(primitive->mapping_table);
+    primitive->mapping_table = NULL;
+  }
+  primitive->size = 0;
+  mat_free_VecDBL(primitive->pure_trans);
+  cel_free_cell(primitive->cell);
+  free(primitive);
+  primitive = NULL;
+}
+
+Cell * prm_get_primitive_cell(SPGCONST Cell * cell, const double symprec)
+{
+  Cell *primitive_cell;
+  Primitive *primitive;
+
+  primitive = get_primitive(cell, symprec);
+  primitive_cell = cel_copy_cell(primitive->cell);
+  prm_free_primitive(primitive);
+
   return primitive_cell;
 }
 
-Primitive prm_get_primitive_and_pure_translations(SPGCONST Cell * cell,
-						  const double symprec)
+Primitive * prm_get_primitive(SPGCONST Cell * cell, const double symprec)
 {
-  return get_primitive_and_pure_translation(cell, symprec);
-}
-
-Cell * prm_get_primitive_and_mapping_table(int * mapping_table,
-					   SPGCONST Cell * cell,
-					   const double symprec)
-{
-  return get_primitive_and_mapping_table(mapping_table,
-					 cell,
-					 symprec);
-}
-
-double prm_get_current_tolerance(void)
-{
-  debug_print("prm_get_current_tolerance %f\n", current_tolerance);
-  return current_tolerance;
+  return get_primitive(cell, symprec);
 }
 
 /* If primitive could not be found, primitive->size = 0 is returned. */
-/* If cell is already primitive cell, */
-/* primitive cell with smallest lattice is returned. */
-static Primitive get_primitive_and_pure_translation(SPGCONST Cell * cell,
-						    const double symprec)
+static Primitive * get_primitive(SPGCONST Cell * cell, const double symprec)
 {
-  int attempt, is_found = 0;
+  int i, attempt, is_found = 0;
   double tolerance;
-  int *mapping_table;
-  Primitive primitive;
+  Primitive *primitive;
+
+  primitive = prm_alloc_primitive(cell->size);
 
   tolerance = symprec;
   for (attempt = 0; attempt < 100; attempt++) {
-    primitive.pure_trans = sym_get_pure_translation(cell, tolerance);
-    if (primitive.pure_trans->size == 0) {
-      mat_free_VecDBL(primitive.pure_trans);
+    primitive->pure_trans = sym_get_pure_translation(cell, tolerance);
+    if (primitive->pure_trans->size == 0) {
+      mat_free_VecDBL(primitive->pure_trans);
       continue;
     }
 
-    if (primitive.pure_trans->size == 1) {
-      primitive.cell = get_cell_with_smallest_lattice(cell, tolerance);
+    if (primitive->pure_trans->size == 1) {
+      primitive->cell = get_cell_with_smallest_lattice(cell, tolerance);
+      for (i = 0; i < cell->size; i++) {
+	primitive->mapping_table[i] = i;
+      }
     } else {
-      mapping_table = (int*) malloc(sizeof(int) * cell->size);
-      primitive.cell = get_primitive(mapping_table,
-				     cell,
-				     primitive.pure_trans,
-				     tolerance);
-      free(mapping_table);
-    } 
+      primitive->cell = get_primitive_cell(primitive->mapping_table,
+					   cell,
+					   primitive->pure_trans,
+					   tolerance);
+    }
 
-    if (primitive.cell->size > 0) {
+    if (primitive->cell->size > 0) {
       is_found = 1;
       break;
     }
 
-    cel_free_cell(primitive.cell);
-    mat_free_VecDBL(primitive.pure_trans);
+    cel_free_cell(primitive->cell);
+    mat_free_VecDBL(primitive->pure_trans);
     
     tolerance *= REDUCE_RATE;
     warning_print("spglib: Reduce tolerance to %f ", tolerance);
     warning_print("(line %d, %s).\n", __LINE__, __FILE__);
   }
 
-  if (! is_found) {
-    primitive.cell = cel_alloc_cell(0);
-    primitive.pure_trans = mat_alloc_VecDBL(0);
+  if (is_found) {
+    primitive->tolerance = tolerance;
+  } else {
+    primitive->cell = cel_alloc_cell(0);
+    primitive->pure_trans = mat_alloc_VecDBL(0);
   }
 
   return primitive;
-}
-
-/* If cell is already primitive cell, */
-/* primitive cell with smallest lattice is returned. */
-static Cell * get_primitive_and_mapping_table(int * mapping_table,
-					      SPGCONST Cell * cell,
-					      const double symprec)
-{
-  int i, attempt;
-  double tolerance;
-  Cell *primitive_cell;
-  VecDBL *pure_trans;
-
-  tolerance = symprec;
-  for (attempt = 0; attempt < 100; attempt++) {
-    pure_trans = sym_get_pure_translation(cell, tolerance);
-    if (pure_trans->size == 1) {
-      primitive_cell = get_cell_with_smallest_lattice(cell, symprec);
-      for (i = 0; i < cell->size; i++) {
-	mapping_table[i] = i;
-      }
-      goto ret;
-    }
-    if (pure_trans->size > 1) {
-      primitive_cell = get_primitive(mapping_table, cell, pure_trans, tolerance);
-      if (primitive_cell->size > 0) {
-	goto ret;
-      }
-      cel_free_cell(primitive_cell);
-    }
-
-    tolerance *= REDUCE_RATE;
-    warning_print("spglib: Tolerance is reduced to %f at attempt %d\n", tolerance, attempt);
-    warning_print("(line %d, %s).\n", __LINE__, __FILE__);
-    mat_free_VecDBL(pure_trans);
-  }
-
-  /* not found: I hope this will not happen. */
-  warning_print("spglib: Primitive cell could not be found ");
-  warning_print("(line %d, %s).\n", __LINE__, __FILE__);
-  return cel_alloc_cell(0);
-
- ret:
-  mat_free_VecDBL(pure_trans);
-  set_current_tolerance(tolerance);
-  return primitive_cell;
-}
-
-static void set_current_tolerance(const double tolerance)
-{
-  current_tolerance = tolerance;
 }
 
 static Cell * get_cell_with_smallest_lattice(SPGCONST Cell * cell,
@@ -227,10 +186,10 @@ static Cell * get_cell_with_smallest_lattice(SPGCONST Cell * cell,
 }
 
 /* If primitive could not be found, primitive->size = 0 is returned. */
-static Cell * get_primitive(int * mapping_table,
-			    SPGCONST Cell * cell,
-			    const VecDBL * pure_trans,
-			    const double symprec)
+static Cell * get_primitive_cell(int * mapping_table,
+				 SPGCONST Cell * cell,
+				 const VecDBL * pure_trans,
+				 const double symprec)
 {
   int multi;
   double prim_lattice[3][3];

@@ -422,9 +422,12 @@ static PyObject * get_symmetry_with_collinear_spin(PyObject *self,
   PyArrayObject* translation;
   PyArrayObject* atom_type;
   PyArrayObject* magmom;
-  if (!PyArg_ParseTuple(args, "OOOOOOdd",
+  PyArrayObject* equiv_atoms_py;
+
+  if (!PyArg_ParseTuple(args, "OOOOOOOdd",
 			&rotation,
 			&translation,
+			&equiv_atoms_py,
 			&lattice,
 			&position,
 			&atom_type,
@@ -437,16 +440,18 @@ static PyObject * get_symmetry_with_collinear_spin(PyObject *self,
   SPGCONST double (*lat)[3] = (double(*)[3])lattice->data;
   SPGCONST double (*pos)[3] = (double(*)[3])position->data;
   const double *spins = (double*) magmom->data;
-  const int* types = (int*)atom_type->data;
+  const int *types = (int*)atom_type->data;
   const int num_atom = position->dimensions[0];
   int (*rot)[3][3] = (int(*)[3][3])rotation->data;
   double (*trans)[3] = (double(*)[3])translation->data;
+  int *equiv_atoms = (int*)equiv_atoms_py->data; 
   const int num_sym_from_array_size = rotation->dimensions[0];
 
   /* num_sym has to be larger than num_sym_from_array_size. */
   const int num_sym =
     spgat_get_symmetry_with_collinear_spin(rot,
 					   trans,
+					   equiv_atoms,
 					   num_sym_from_array_size,
 					   lat,
 					   pos,

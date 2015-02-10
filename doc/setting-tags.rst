@@ -148,6 +148,24 @@ set as follows ::
 
    MASS =   28.085 28.085 16.000 16.000 16.000 16.000
 
+.. _magmom_tag:
+
+``MAGMOM``
+~~~~~~~~~~~
+
+Symmetry of spin such as collinear magnetic moments is considered
+using this tag. The number of values has to be equal to the number of
+atoms in the unit cell, not the primitive cell or supercell. If this
+tag is used with ``-d`` option (``CREATE_DISPLACEMENTS`` tag),
+``MAGMOM`` file is created. This file contains the ``MAGMOM``
+information of the supercell used for VASP. Unlike ``MAGMOM`` in VASP,
+``*`` can not be used, i.e., all the values (the same number of times
+to the number of atoms in unit cell) have to be explicitly written.
+
+::
+
+   MAGMOM = 1.0 1.0 -1.0 -1.0
+
 .. _dimension_tag:
 
 ``CELL_FILENAME``

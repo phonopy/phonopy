@@ -7,6 +7,7 @@
 #include "cell.h"
 #include "lattice.h"
 #include "mathfunc.h"
+#include "primitive.h"
 #include "symmetry.h"
 
 typedef struct {
@@ -23,8 +24,9 @@ typedef struct {
   double origin_shift[3];
 } Spacegroup;
 
-Spacegroup spa_get_spacegroup(SPGCONST Cell * primitive,
-			      const double symprec);
+Primitive * spa_get_spacegroup(Spacegroup * spacegroup,
+			       SPGCONST Cell * cell,
+			       const double symprec);
 Spacegroup spa_get_spacegroup_with_hall_number(SPGCONST Cell * primitive,
 					       const int hall_number,
 					       const double symprec);
