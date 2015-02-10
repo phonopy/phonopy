@@ -3,6 +3,12 @@
 Change Log
 ==========
 
+Feb-10-2014: Version 1.9.3
+-----------------------------
+
+* ``MAGMOM`` tag is now available (:ref:`magmom_tag`).
+* Spglib update.
+
 Jan-4-2014: Version 1.9.2
 -----------------------------
 
