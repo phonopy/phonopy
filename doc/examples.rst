@@ -330,8 +330,6 @@ Band structure and DOS or PDOS can be plotted on one figure together by
         [ 0.5  0.   0.5]
         [ 0.5  0.5  0. ]
    Spacegroup:  Fm-3m (225)
-   Dynamical matrix was not created.
-   Force constants are not created.
    Computing force constants...
    Reciprocal space paths in reduced coordinates:
    [ 0.00  0.00  0.00] --> [ 0.50  0.00  0.00]
