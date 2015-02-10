@@ -272,6 +272,85 @@ def set_tensor_symmetry(force_constants,
     Since get_force_constants_disps may include crystal symmetry, this method
     is usually meaningless.
     """
+    # This is much faster version of the procedure using mainly numpy tools
+    # and avoiding explicit for loops as much as possible.
+    # The code was checked against legacy implementation in set_tensor_symmetry_old
+
+    # Create mapping table between an atom and the symmetry operated atom
+    # map[ i, j ]
+    # i: atom index
+    # j: operation index
+
+    # Sizes for convenience
+    N=len(rotations)
+    K=len(positions)
+    
+    # Transform all positions by all symmetry operations
+    rpos=np.dot(positions,np.transpose(rotations,(0,2,1))) + translations
+
+    # Build NxKxKx3 tensor from transformed positions by extending first 
+    # dimension of the rot_pos tensor (KxNx3) and transposing indexes
+    # 0,1,2,3 => 2,1,0,3 (NxKxKx3)
+    # Calculate difference betwean every position and every image 
+    # Position matrix (Kx3) is broadcasted to first two dimensions of rp
+    diff=positions-np.transpose(np.tile(rpos,(K,1,1,1)),(2,1,0,3))
+    
+    # Find all cases where some image coincides with some position
+    m=(abs(diff-diff.round()) < symprec).all(axis=-1)
+
+    # Build the map using numpy extended indexing from the [0,...,K-1] vector
+    # extended to KxK
+    mapa=np.tile(np.arange(K,dtype=np.int),(K,1))
+    
+    # Select only positions where some image coincides with some position
+    mapa=np.array([mapa[mr] for mr in m])
+
+    # Construct all carthesian rotations and inverse rotations and cache
+    # them for efficiency
+    cart_rot=np.array([similarity_transformation(lattice, rot).T 
+                        for rot in rotations])
+    cart_rot_inv=np.array([np.linalg.inv(rot) for rot in cart_rot])
+    
+    # Map first two indexes of force constants according to the map
+    fcm=np.array([force_constants[mapa[n],:,:,:][:,mapa[n],:,:] 
+                    for n in range(N)])
+
+    # For every symmetrically equivalent force constant tensor
+    # Make explicit similarity transformation of force constants:
+    # R_n dot ( F_n dot R_n^-1 )
+    # and build the full array of all of them.
+    # Due to the way numpy orders indexes we need at the end move 
+    # spatial index (1) to its proper position as panultimate index.
+    s=np.transpose(np.array([np.dot(cart_rot[n],
+                                    np.dot(fcm[n],cart_rot_inv[n])) 
+                                for n in range(N)]),(0,2,3,1,4))
+    
+#    # Check identity with the old procedure
+#    fc_bak=force_constants.copy()
+#    set_tensor_symmetry_old(fc_bak,lattice,
+#                                positions, rotations, translations, symprec)
+
+    # Set force_constants to average over all symmetry equivalent variants
+    force_constants=np.average(s,axis=0)
+
+#    # Do the actual correctness check
+#    assert(abs(force_constants-fc_bak) < 1e-6).all()
+
+
+def set_tensor_symmetry_old(force_constants,
+                        lattice,
+                        positions,
+                        rotations,
+                        translations,
+                        symprec):
+    """
+    Full force constants are symmetrized using crystal symmetry.
+    This method extracts symmetrically equivalent sets of atomic pairs and
+    take sum of their force constants and average the sum.
+    
+    Since get_force_constants_disps may include crystal symmetry, this method
+    is usually meaningless.
+    """
 
     fc_bak = force_constants.copy()
 
