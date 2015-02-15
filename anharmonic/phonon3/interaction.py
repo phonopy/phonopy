@@ -14,6 +14,7 @@ class Interaction:
                  symmetry,
                  fc3=None,
                  band_indices=None,
+                 constant_strength=None,
                  frequency_factor_to_THz=VaspToTHz,
                  is_nosym=False,
                  symmetrize_fc3_q=False,
@@ -29,6 +30,7 @@ class Interaction:
             self._band_indices = np.arange(num_band, dtype='intc')
         else:
             self._band_indices = np.array(band_indices, dtype='intc')
+        self._constant_strength = constant_strength
         self._frequency_factor_to_THz = frequency_factor_to_THz
 
         if cutoff_frequency is None:
@@ -60,14 +62,20 @@ class Interaction:
     def run(self, lang='C'):
         num_band = self._primitive.get_number_of_atoms() * 3
         num_triplets = len(self._triplets_at_q)
-        self._interaction_strength = np.zeros(
-            (num_triplets, len(self._band_indices), num_band, num_band),
-            dtype='double')
 
-        if lang == 'C':
-            self._run_c()
+        if self._constant_strength is None:
+            self._interaction_strength = np.zeros(
+                (num_triplets, len(self._band_indices), num_band, num_band),
+                dtype='double')
+            if lang == 'C':
+                self._run_c()
+            else:
+                self._run_py()
         else:
-            self._run_py()
+            self._interaction_strength = np.ones(
+                (num_triplets, len(self._band_indices), num_band, num_band),
+                dtype='double') * self._constant_strength
+            self.set_phonon(self._triplets_at_q.ravel())
 
     def get_interaction_strength(self):
         return self._interaction_strength

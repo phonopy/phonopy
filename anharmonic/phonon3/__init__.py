@@ -117,6 +117,7 @@ class Phono3py:
     def set_phph_interaction(self,
                              nac_params=None,
                              nac_q_direction=None,
+                             constant_strength=None,
                              frequency_scale_factor=None):
         self._interaction = Interaction(
             self._supercell,
@@ -125,6 +126,7 @@ class Phono3py:
             self._primitive_symmetry,
             fc3=self._fc3,
             band_indices=self._band_indices_flatten,
+            constant_strength=constant_strength,
             frequency_factor_to_THz=self._frequency_factor_to_THz,
             cutoff_frequency=self._cutoff_frequency,
             is_nosym=self._is_nosym,

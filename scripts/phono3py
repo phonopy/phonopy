@@ -106,6 +106,7 @@ parser.set_defaults(band_indices=None,
                     band_paths=None,
                     band_points=None,
                     cell_poscar=None,
+                    constant_pp_strength=None,
                     cutoff_fc3_distance=None,
                     cutoff_frequency=None,
                     boundary_mfp=None,
@@ -228,6 +229,9 @@ parser.add_option("--cfs", "--create_force_sets", dest="force_sets_mode",
 #                   action="store_true", help="Create DELTA_FC2_SETS")
 # parser.add_option("--dfc2", "--delta_fc2", dest="read_delta_fc2",
 #                   action="store_true", help="Read DELTA_FC2_SETS")
+parser.add_option("--constant_pp_strength", dest="constant_pp_strength",
+                  type="float",
+                  help="Constant ph-ph strength")
 parser.add_option("--factor", dest="factor", type="float",
                   help="Conversion factor to favorite frequency unit")
 parser.add_option("--fc2", dest="read_fc2", action="store_true",
@@ -1077,6 +1081,7 @@ if run_mode == "isotope":
 phono3py.set_phph_interaction(
     nac_params=nac_params,
     nac_q_direction=nac_q_direction,
+    constant_strength=options.constant_pp_strength,
     frequency_scale_factor=frequency_scale_factor)
 
 if settings.get_is_linewidth():
