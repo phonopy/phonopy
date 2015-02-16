@@ -187,51 +187,51 @@ parser.add_option("--amplitude", dest="displacement_distance", type="float",
                   help="Distance of displacements")
 parser.add_option("--ave_pp", dest="average_pp_interaction", action="store_true",
                   help="Use averaged ph-ph interaction strength")
-parser.add_option("--bi", "--band_indices", dest="band_indices", type="string",
-                  help="Band indices where life time is calculated")
 parser.add_option("--band", dest="band_paths", action="store", type="string",
                   help="Band structure paths calculated for Gruneisen parameter")
 parser.add_option("--band_points", dest="band_points", type="int",
                   help="Number of points calculated on a band segment in the band structure Gruneisen parameter calculation")
+parser.add_option("--bi", "--band_indices", dest="band_indices", type="string",
+                  help="Band indices where life time is calculated")
+parser.add_option("--boundary_mfp", "--bmfp", dest="boundary_mfp",
+                  type="float",
+                  help="Boundary mean free path in micrometre for thermal conductivity calculation")
 parser.add_option("--br", "--bterta", dest="is_bterta", action="store_true",
                   help="Calculate thermal conductivity in BTE-RTA")
 parser.add_option("-c", "--cell", dest="cell_poscar", action="store",
                   type="string", help="Read unit cell", metavar="FILE")
+parser.add_option("--cf2", "--create_f2", dest="forces_fc2_mode",
+                  action="store_true", help="Create FORCES_FC2")
+parser.add_option("--cf3", "--create_f3", dest="forces_fc3_mode",
+                  action="store_true", help="Create FORCES_FC3")
+parser.add_option("--cf3_file", "--create_f3_from_file", dest="forces_fc3_file_mode",
+                  action="store_true", help="Create FORCES_FC3 from file name list")
+parser.add_option("--cfs", "--create_force_sets", dest="force_sets_mode",
+                  action="store_true", help="Create phonopy FORCE_SETS from FORCES_FC2")
+parser.add_option("--constant_pp_strength", dest="constant_pp_strength",
+                  type="float",
+                  help="Constant ph-ph strength")
 parser.add_option("--cutoff_fc3", "--cutoff_fc3_distance",
                   dest="cutoff_fc3_distance", type="float",
                   help="Cutoff distance of third-order force constants. Elements where any pair of atoms has larger distance than cut-off distance are set zero.")
 parser.add_option("--cutoff_freq", "--cutoff_frequency", dest="cutoff_frequency",
                   type="float",
                   help="Phonon modes below this frequency are ignored.")
-parser.add_option("--boundary_mfp", "--bmfp", dest="boundary_mfp",
-                  type="float",
-                  help="Boundary mean free path in micrometre for thermal conductivity calculation")
 parser.add_option("--cutoff_pair", "--cutoff_pair_distance",
                   dest="cutoff_pair_distance", type="float",
                   help="Cutoff distance between pairs of displaced atoms used for supercell creation with displacements and making third-order force constants")
-parser.add_option("-d", "--disp", dest="is_displacement", action="store_true",
-                  help="As first stage, get least displacements")
 # parser.add_option("--decay", dest="is_decay_channel",
 #                   action="store_true", help="Calculate decay channels")
-parser.add_option("--dim", dest="supercell_dimension", type="string",
-                  help="Supercell dimension")
-parser.add_option("--dim_fc2", dest="phonon_supercell_dimension",
-                  type="string", help="Supercell dimension for extra fc2")
-parser.add_option("--cf3", "--create_f3", dest="forces_fc3_mode",
-                  action="store_true", help="Create FORCES_FC3")
-parser.add_option("--cf3_file", "--create_f3_from_file", dest="forces_fc3_file_mode",
-                  action="store_true", help="Create FORCES_FC3 from file name list")
-parser.add_option("--cf2", "--create_f2", dest="forces_fc2_mode",
-                  action="store_true", help="Create FORCES_FC2")
-parser.add_option("--cfs", "--create_force_sets", dest="force_sets_mode",
-                  action="store_true", help="Create phonopy FORCE_SETS from FORCES_FC2")
 # parser.add_option("--cdfc2", "--create_delta_fc2", dest="delta_fc2_sets_mode",
 #                   action="store_true", help="Create DELTA_FC2_SETS")
 # parser.add_option("--dfc2", "--delta_fc2", dest="read_delta_fc2",
 #                   action="store_true", help="Read DELTA_FC2_SETS")
-parser.add_option("--constant_pp_strength", dest="constant_pp_strength",
-                  type="float",
-                  help="Constant ph-ph strength")
+parser.add_option("-d", "--disp", dest="is_displacement", action="store_true",
+                  help="As first stage, get least displacements")
+parser.add_option("--dim", dest="supercell_dimension", type="string",
+                  help="Supercell dimension")
+parser.add_option("--dim_fc2", dest="phonon_supercell_dimension",
+                  type="string", help="Supercell dimension for extra fc2")
 parser.add_option("--factor", dest="factor", type="float",
                   help="Conversion factor to favorite frequency unit")
 parser.add_option("--fc2", dest="read_fc2", action="store_true",
@@ -740,7 +740,8 @@ if (options.is_joint_dos or
     (settings.get_is_isotope() and
      not (settings.get_is_bterta() or settings.get_is_lbte())) or
     settings.get_read_gamma() or
-    settings.get_read_amplitude()):
+    settings.get_read_amplitude() or
+    settings.get_constant_pp_strength() is not None):
     pass
 else:
     if options.read_fc3: # Read fc3.hdf5
@@ -1081,7 +1082,7 @@ if run_mode == "isotope":
 phono3py.set_phph_interaction(
     nac_params=nac_params,
     nac_q_direction=nac_q_direction,
-    constant_strength=options.constant_pp_strength,
+    constant_strength=settings.get_constant_pp_strength(),
     frequency_scale_factor=frequency_scale_factor)
 
 if settings.get_is_linewidth():

@@ -207,6 +207,7 @@ class ImagSelfEnergy:
                  frequency_points=None,
                  temperature=None,
                  sigma=None,
+                 unit_conversion=None,
                  lang='C'):
         self._pp = interaction
         self._sigma = None
@@ -232,14 +233,12 @@ class ImagSelfEnergy:
         self._is_collision_matrix = False
 
         # Unit to THz of Gamma
-        num_grid = np.prod(self._mesh)
-        self._unit_conversion = ((Hbar * EV) ** 3 / 36 / 8
-                                 * EV ** 2 / Angstrom ** 6
-                                 / (2 * np.pi * THz) ** 3
-                                 / AMU ** 3
-                                 * 18 * np.pi / (Hbar * EV) ** 2
-                                 / (2 * np.pi * THz) ** 2
-                                 / num_grid)
+        if unit_conversion is None:
+            self._unit_conversion = (18 * np.pi / (Hbar * EV) ** 2
+                                     / (2 * np.pi * THz) ** 2
+                                     * EV ** 2)
+        else:
+            self._unit_conversion = unit_conversion
 
     def run(self):
         if self._pp_strength is None:        
