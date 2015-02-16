@@ -399,14 +399,15 @@ class Phonopy:
         self._set_dynamical_matrix()
 
     def symmetrize_force_constants_by_space_group(self):
-        rotations = self._symmetry.get_symmetry_operations()['rotations']
-        translations = self._symmetry.get_symmetry_operations()['translations']
-        set_tensor_symmetry(self._force_constants,
-                            self._supercell.get_cell().T,
-                            self._supercell.get_scaled_positions(),
-                            rotations,
-                            translations,
-                            self._symprec)
+        from phonopy.harmonic.force_constants import \
+            set_tensor_symmetry, \
+            set_tensor_symmetry_old, \
+            set_tensor_symmetry_PJ
+        set_tensor_symmetry_PJ(self._force_constants,
+                               self._supercell.get_cell().T,
+                               self._supercell.get_scaled_positions(),
+                               self._symmetry)
+
         self._set_dynamical_matrix()
 
     #####################
