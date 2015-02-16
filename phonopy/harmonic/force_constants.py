@@ -262,14 +262,6 @@ def set_tensor_symmetry(force_constants,
                         lattice,
                         positions,
                         symmetry):
-    """
-    Full force constants are symmetrized using crystal symmetry.
-    This method extracts symmetrically equivalent sets of atomic pairs and
-    take sum of their force constants and average the sum.
-    
-    Since get_force_constants_disps may include crystal symmetry, this method
-    is usually meaningless.
-    """
     rotations = symmetry.get_symmetry_operations()['rotations']
     translations = symmetry.get_symmetry_operations()['translations']
     map_atoms = symmetry.get_map_atoms()
@@ -277,27 +269,27 @@ def set_tensor_symmetry(force_constants,
     cart_rot = np.array([similarity_transformation(lattice, rot)
                          for rot in rotations])
 
-    mapa = get_atom_indices_by_symmetry(positions,
-                                        rotations,
-                                        translations,
-                                        symprec)
+    mapa = _get_atom_indices_by_symmetry(positions,
+                                         rotations,
+                                         translations,
+                                         symprec)
     fc_new = np.zeros_like(force_constants)
     indep_atoms = symmetry.get_independent_atoms()
 
     for i in indep_atoms:
         fc_combined = np.zeros(force_constants.shape[1:], dtype='double')
-        num_equiv_atoms = combine_force_constants_equivalent_atoms(
+        num_equiv_atoms = _combine_force_constants_equivalent_atoms(
             fc_combined,
             force_constants,
             i,
             cart_rot,
             map_atoms,
             mapa)
-        num_sitesym = average_force_constants_by_sitesym(fc_new,
-                                                         fc_combined,
-                                                         i,
-                                                         cart_rot,
-                                                         mapa)
+        num_sitesym = _average_force_constants_by_sitesym(fc_new,
+                                                          fc_combined,
+                                                          i,
+                                                          cart_rot,
+                                                          mapa)
 
         assert num_equiv_atoms * num_sitesym == len(rotations)
 
@@ -311,54 +303,6 @@ def set_tensor_symmetry(force_constants,
                                symprec)
 
     force_constants[:] = fc_new
-
-def combine_force_constants_equivalent_atoms(fc_combined,
-                                             force_constants,
-                                             i,
-                                             cart_rot,
-                                             map_atoms,
-                                             mapa):
-    num_equiv_atoms = 0
-    for j, k in enumerate(map_atoms):
-        if k != i:
-            continue
-
-        num_equiv_atoms += 1
-        r_i = (mapa[:, j] == i).nonzero()[0][0]
-        for k, l in enumerate(mapa[r_i]):
-            fc_combined[l] += similarity_transformation(
-                cart_rot[r_i], force_constants[j, k])
-
-    fc_combined /= num_equiv_atoms
-
-    return num_equiv_atoms
-
-def average_force_constants_by_sitesym(fc_new,
-                                       fc_i,
-                                       i,
-                                       cart_rot,
-                                       mapa):
-    num_sitesym = 0
-    for r_i, mapa_r in enumerate(mapa):
-        if mapa_r[i] != i:
-            continue
-        num_sitesym += 1
-        for j in range(fc_i.shape[0]):
-            fc_new[i, j] += similarity_transformation(
-                cart_rot[r_i].T, fc_i[mapa[r_i, j]])
-
-    fc_new[i] /= num_sitesym
-
-    return num_sitesym
-
-def get_atom_indices_by_symmetry(positions, rotations, translations, symprec):
-    K = len(positions)
-    rpos = np.dot(positions, np.transpose(rotations, (0, 2, 1))) + translations
-    diff = positions - np.transpose(np.tile(rpos, (K, 1, 1, 1)), (2, 1, 0, 3))
-    m = (abs(diff - diff.round()) < symprec).all(axis=-1)
-    mapa = np.tile(np.arange(K, dtype='intc'), (K, 1))
-    mapa = np.array([mapa[mr] for mr in m])
-    return mapa
 
 def set_tensor_symmetry_PJ(force_constants,
                            lattice,
@@ -378,31 +322,11 @@ def set_tensor_symmetry_PJ(force_constants,
     symprec = symmetry.get_symmetry_tolerance()
 
     N = len(rotations)
-    K = len(positions)
-    
-    rpos = np.dot(positions, np.transpose(rotations, (0, 2, 1))) + translations
-    diff = positions - np.transpose(np.tile(rpos, (K, 1, 1, 1)), (2, 1, 0, 3))
-    m = (abs(diff - diff.round()) < symprec).all(axis=-1)
-    mapa = np.tile(np.arange(K, dtype='intc'), (K,1))
-    mapa = np.array([mapa[mr] for mr in m])
-    cart_rot = np.array([similarity_transformation(lattice, rot).T 
-                         for rot in rotations])
-    cart_rot_inv = np.array([np.linalg.inv(rot) for rot in cart_rot])
-    fcm = np.array([force_constants[mapa[n],:,:,:][:,mapa[n],:,:] 
-                    for n in range(N)])
-    s = np.transpose(np.array([np.dot(cart_rot[n],
-                                      np.dot(fcm[n], cart_rot_inv[n])) 
-                               for n in range(N)]), (0, 2, 3, 1, 4))
-    force_constants[:] = np.array(np.average(s, axis=0),
-                                  dtype='double',
-                                  order='C')
 
-def average_force_constants(force_constants,
-                            lattice,
-                            positions,
-                            rotations,
-                            mapa):
-    N = len(rotations)
+    mapa = _get_atom_indices_by_symmetry(positions,
+                                         rotations,
+                                         translations,
+                                         symprec)
     cart_rot = np.array([similarity_transformation(lattice, rot).T 
                          for rot in rotations])
     cart_rot_inv = np.array([np.linalg.inv(rot) for rot in cart_rot])
@@ -782,3 +706,51 @@ def _distribute_fc2_part(force_constants,
                 rot_cartesian.T,
                 force_constants[map_atom_disp, rot_atom])
     
+def _combine_force_constants_equivalent_atoms(fc_combined,
+                                              force_constants,
+                                              i,
+                                              cart_rot,
+                                              map_atoms,
+                                              mapa):
+    num_equiv_atoms = 0
+    for j, k in enumerate(map_atoms):
+        if k != i:
+            continue
+
+        num_equiv_atoms += 1
+        r_i = (mapa[:, j] == i).nonzero()[0][0]
+        for k, l in enumerate(mapa[r_i]):
+            fc_combined[l] += similarity_transformation(
+                cart_rot[r_i], force_constants[j, k])
+
+    fc_combined /= num_equiv_atoms
+
+    return num_equiv_atoms
+
+def _average_force_constants_by_sitesym(fc_new,
+                                        fc_i,
+                                        i,
+                                        cart_rot,
+                                        mapa):
+    num_sitesym = 0
+    for r_i, mapa_r in enumerate(mapa):
+        if mapa_r[i] != i:
+            continue
+        num_sitesym += 1
+        for j in range(fc_i.shape[0]):
+            fc_new[i, j] += similarity_transformation(
+                cart_rot[r_i].T, fc_i[mapa[r_i, j]])
+
+    fc_new[i] /= num_sitesym
+
+    return num_sitesym
+
+def _get_atom_indices_by_symmetry(positions, rotations, translations, symprec):
+    K = len(positions)
+    rpos = np.dot(positions, np.transpose(rotations, (0, 2, 1))) + translations
+    diff = positions - np.transpose(np.tile(rpos, (K, 1, 1, 1)), (2, 1, 0, 3))
+    m = (abs(diff - diff.round()) < symprec).all(axis=-1)
+    mapa = np.tile(np.arange(K, dtype='intc'), (K, 1))
+    mapa = np.array([mapa[mr] for mr in m])
+    return mapa
+
