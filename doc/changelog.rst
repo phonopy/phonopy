@@ -3,6 +3,12 @@
 Change Log
 ==========
 
+Feb-18-2015: Version 1.9.4
+-----------------------------
+
+* Fixed to force setting ``MESH_SYMMETRY = .FALSE.`` (``--nomeshsym``)
+  when PDOS is invoked.
+
 Feb-10-2015: Version 1.9.3
 -----------------------------
 
