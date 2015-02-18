@@ -334,12 +334,13 @@ class ImagSelfEnergy:
 
         num_triplets = len(self._triplets_at_q)
         num_band = self._pp.get_primitive().get_number_of_atoms() * 3
+        num_grid = np.prod(self._mesh)
         self._pp_strength = np.zeros(
             (num_triplets, len(self._band_indices), num_band, num_band),
             dtype='double')
 
         for i, v_ave in enumerate(mspp):
-            self._pp_strength[:, i, :, :] = v_ave
+            self._pp_strength[:, i, :, :] = v_ave / num_grid
         
     def _run_with_band_indices(self):
         if self._g is not None:

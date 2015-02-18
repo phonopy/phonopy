@@ -208,7 +208,7 @@ class Interaction:
         v_sum = v.sum(axis=2).sum(axis=2)
         num_band = self._primitive.get_number_of_atoms() * 3
         num_grid = np.prod(self._mesh)
-        return np.dot(w, v_sum) / num_band ** 2 / num_grid
+        return np.dot(w, v_sum) / num_band ** 2
             
     def _run_c(self):
         import anharmonic._phono3py as phono3c

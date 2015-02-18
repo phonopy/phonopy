@@ -118,7 +118,8 @@ class Phono3py:
                              nac_params=None,
                              nac_q_direction=None,
                              constant_strength=None,
-                             frequency_scale_factor=None):
+                             frequency_scale_factor=None,
+                             unit_conversion=None):
         self._interaction = Interaction(
             self._supercell,
             self._primitive,
@@ -128,6 +129,7 @@ class Phono3py:
             band_indices=self._band_indices_flatten,
             constant_strength=constant_strength,
             frequency_factor_to_THz=self._frequency_factor_to_THz,
+            unit_conversion=unit_conversion,
             cutoff_frequency=self._cutoff_frequency,
             is_nosym=self._is_nosym,
             symmetrize_fc3_q=self._symmetrize_fc3_q,
