@@ -37,7 +37,7 @@ extension_spglib = Extension(
 
 
 setup(name='phonopy',
-      version='1.9.3',
+      version='1.9.4',
       description='This is the phonopy module.',
       author='Atsushi Togo',
       author_email='atz.togo@gmail.com',
