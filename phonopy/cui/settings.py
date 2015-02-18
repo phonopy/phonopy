@@ -68,6 +68,7 @@ class Settings:
         self._magmoms = None
         self._masses = None
         self._mesh = None
+        self._mesh_shift = None
         self._frequency_pitch = None
         self._frequency_points = None
         self._primitive_matrix = None
@@ -572,7 +573,6 @@ class ConfParser:
             if opt.dest == 'is_nosym':
                 if self._options.is_nosym:
                     self._confs['symmetry'] = '.false.'
-                    self._confs['mesh_symmetry'] = '.false.'
 
             if opt.dest == 'is_translational_symmetry':
                 if self._options.is_translational_symmetry:
@@ -1489,32 +1489,21 @@ class PhonopyConfParser(ConfParser):
         # Mesh
         if params.has_key('mesh_numbers'):
             self._settings.set_run_mode('mesh')
+            self._settings.set_mesh_numbers(params['mesh_numbers'])
             if params.has_key('mp_shift'):
                 shift = params['mp_shift']
             else:
                 shift = [0.,0.,0.]
-    
-            time_reversal_symmetry = True
+            self._settings.set_mesh_shift(shift)
             if params.has_key('is_time_reversal_symmetry'):
                 if not params['is_time_reversal_symmetry']:
-                    time_reversal_symmetry = False
-    
-            mesh_symmetry = True
+                    self._settings.set_time_reversal_symmetry(False)
             if params.has_key('is_mesh_symmetry'):
                 if not params['is_mesh_symmetry']:
-                    mesh_symmetry = False
-
-            gamma_center = False
+                    self._settings.set_is_mesh_symmetry(False)
             if params.has_key('is_gamma_center'):
                 if params['is_gamma_center']:
-                    gamma_center = True
-    
-            self._settings.set_mesh(
-                params['mesh_numbers'],
-                mesh_shift=shift,
-                is_time_reversal_symmetry=time_reversal_symmetry,
-                is_mesh_symmetry=mesh_symmetry,
-                is_gamma_center=gamma_center)
+                    self._settings.set_is_gamma_center(True)
     
         # band mode
         if params.has_key('band_paths'):
@@ -1601,6 +1590,7 @@ class PhonopyConfParser(ConfParser):
             self._settings.set_pdos_indices(params['pdos'])
             self._settings.set_is_eigenvectors(True)
             self._settings.set_is_dos_mode(True)
+            self._settings.set_is_mesh_symmetry(False)
     
         # Thermal properties
         if params.has_key('tprop'):
@@ -1636,14 +1626,11 @@ class PhonopyConfParser(ConfParser):
             self._settings.set_is_mesh_symmetry(False)
             self._settings.set_thermal_atom_pairs(params['tdistance'])
     
-        # Projection direction (currently only used for thermal displacements
+        # Projection direction (currently only used for thermal displacements)
         if params.has_key('projection_direction'): 
             self._settings.set_projection_direction(
                 params['projection_direction'])
-
-            if params.has_key('pdos'):
-                self._settings.set_is_mesh_symmetry(False)
-                
+            self._settings.set_is_mesh_symmetry(False)
 
         # Group velocity
         if params.has_key('is_group_velocity'):

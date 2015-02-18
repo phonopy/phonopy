@@ -639,10 +639,14 @@ class Phonopy:
                         tetrahedron_method=False,
                         direction=None):
         if self._mesh is None:
-            print "set_mesh has to be done before set_thermal_properties"
+            print "set_mesh has to be called before set_thermal_properties"
             sys.exit(1)
         if self._mesh.get_eigenvectors() is None:
             print "Eigenvectors have to be calculated."
+            sys.exit(1)
+        num_grid = np.prod(self._mesh.get_mesh_numbers())
+        if num_grid != len(self._mesh.get_ir_grid_points()):
+            print "set_mesh has to be called with is_mesh_symmetry=False"
             sys.exit(1)
         if direction is not None:
             direction_cart = np.dot(direction, self._primitive.get_cell())
