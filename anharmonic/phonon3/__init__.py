@@ -384,6 +384,7 @@ class Phono3py:
             grid_points=None,
             boundary_mfp=None, # in micrometre
             average_pp_interaction=False,
+            gamma_unit_conversion=None,
             mesh_divisors=None,
             coarse_mesh_shifts=None,
             is_reducible_collision_matrix=False,
@@ -429,6 +430,7 @@ class Phono3py:
                 grid_points=grid_points,
                 boundary_mfp=boundary_mfp,
                 average_pp_interaction=average_pp_interaction,
+                gamma_unit_conversion=gamma_unit_conversion,
                 mesh_divisors=mesh_divisors,
                 coarse_mesh_shifts=coarse_mesh_shifts,
                 no_kappa_stars=no_kappa_stars,

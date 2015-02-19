@@ -17,6 +17,7 @@ def get_thermal_conductivity_RTA(
         is_isotope=False,
         boundary_mfp=None, # in micrometre
         average_pp_interaction=False,
+        gamma_unit_conversion=None,
         mesh_divisors=None,
         coarse_mesh_shifts=None,
         no_kappa_stars=False,
@@ -38,6 +39,7 @@ def get_thermal_conductivity_RTA(
                           mass_variances=mass_variances,
                           boundary_mfp=boundary_mfp,
                           average_pp_interaction=average_pp_interaction,
+                          gamma_unit_conversion=gamma_unit_conversion,
                           mesh_divisors=mesh_divisors,
                           coarse_mesh_shifts=coarse_mesh_shifts,
                           no_kappa_stars=no_kappa_stars,
@@ -236,6 +238,7 @@ class Conductivity_RTA(Conductivity):
                  mass_variances=None,
                  boundary_mfp=None, # in micrometre
                  average_pp_interaction=False,
+                 gamma_unit_conversion=None,
                  mesh_divisors=None,
                  coarse_mesh_shifts=None,
                  no_kappa_stars=False,
@@ -269,6 +272,7 @@ class Conductivity_RTA(Conductivity):
         self._gv = None
         self._gamma = None
         self._gamma_iso = None
+        self._gamma_unit_conversion = gamma_unit_conversion
         self._use_mspp = average_pp_interaction
         self._mean_square_pp_strength = None
         self._num_ignored_phonon_modes = None
@@ -411,7 +415,9 @@ class Conductivity_RTA(Conductivity):
         self._num_ignored_phonon_modes = np.zeros((len(self._sigmas),
                                                    len(self._temperatures)),
                                                   dtype='intc')
-        self._collision = ImagSelfEnergy(self._pp)
+        self._collision = ImagSelfEnergy(
+            self._pp,
+            unit_conversion=self._gamma_unit_conversion)
         
     def _set_gamma_at_sigmas(self, i):
         for j, sigma in enumerate(self._sigmas):
