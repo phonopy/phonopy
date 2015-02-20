@@ -327,7 +327,7 @@ class ImagSelfEnergy:
         else:
             self._temperature = float(temperature)
         
-    def set_mean_square_pp_strength(self, mspp):
+    def set_averaged_pp_interaction(self, ave_pp):
         self._pp.set_phonon(self._triplets_at_q.ravel())
         (self._frequencies,
          self._eigenvectors) = self._pp.get_phonons()[:2]
@@ -339,7 +339,7 @@ class ImagSelfEnergy:
             (num_triplets, len(self._band_indices), num_band, num_band),
             dtype='double')
 
-        for i, v_ave in enumerate(mspp):
+        for i, v_ave in enumerate(ave_pp):
             self._pp_strength[:, i, :, :] = v_ave / num_grid
         
     def _run_with_band_indices(self):

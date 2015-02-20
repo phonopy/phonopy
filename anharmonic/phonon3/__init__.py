@@ -117,7 +117,7 @@ class Phono3py:
     def set_phph_interaction(self,
                              nac_params=None,
                              nac_q_direction=None,
-                             constant_strength=None,
+                             constant_averaged_interaction=None,
                              frequency_scale_factor=None,
                              unit_conversion=None):
         self._interaction = Interaction(
@@ -127,7 +127,7 @@ class Phono3py:
             self._primitive_symmetry,
             fc3=self._fc3,
             band_indices=self._band_indices_flatten,
-            constant_strength=constant_strength,
+            constant_averaged_interaction=constant_averaged_interaction,
             frequency_factor_to_THz=self._frequency_factor_to_THz,
             unit_conversion=unit_conversion,
             cutoff_frequency=self._cutoff_frequency,
@@ -383,7 +383,7 @@ class Phono3py:
             mass_variances=None,
             grid_points=None,
             boundary_mfp=None, # in micrometre
-            average_pp_interaction=False,
+            use_averaged_pp_interaction=False,
             gamma_unit_conversion=None,
             mesh_divisors=None,
             coarse_mesh_shifts=None,
@@ -429,7 +429,7 @@ class Phono3py:
                 mass_variances=mass_variances,
                 grid_points=grid_points,
                 boundary_mfp=boundary_mfp,
-                average_pp_interaction=average_pp_interaction,
+                use_averaged_pp_interaction=use_averaged_pp_interaction,
                 gamma_unit_conversion=gamma_unit_conversion,
                 mesh_divisors=mesh_divisors,
                 coarse_mesh_shifts=coarse_mesh_shifts,

@@ -819,7 +819,7 @@ def write_kappa_to_hdf5(temperature,
                         mode_kappa=None,
                         gamma=None,
                         gamma_isotope=None,
-                        mspp=None,
+                        averaged_pp_interaction=None,
                         qpoint=None,
                         weight=None,
                         mesh_divisors=None,
@@ -853,8 +853,8 @@ def write_kappa_to_hdf5(temperature,
         w.create_dataset('gamma', data=gamma)
     if gamma_isotope is not None:
         w.create_dataset('gamma_isotope', data=gamma_isotope)
-    if mspp is not None:
-        w.create_dataset('mspp', data=mspp)
+    if averaged_pp_interaction is not None:
+        w.create_dataset('ave_pp', data=averaged_pp_interaction)
     if qpoint is not None:
         w.create_dataset('qpoint', data=qpoint)
     if weight is not None:
@@ -906,10 +906,10 @@ def read_gamma_from_hdf5(mesh,
         gamma_isotope = f['gamma_isotope'][:]
     else:
         gamma_isotope = None
-    if 'mspp' in f.keys():
-        mspp = f['mspp'][:]
+    if 'ave_pp' in f.keys():
+        averaged_pp_interaction = f['ave_pp'][:]
     else:
-        mspp = None
+        averaged_pp_interaction = None
     f.close()
     
     if verbose:
@@ -927,7 +927,7 @@ def read_gamma_from_hdf5(mesh,
             print ""
         print "%s" % ("kappa" + suffix + ".hdf5")
     
-    return gamma, gamma_isotope, mspp
+    return gamma, gamma_isotope, averaged_pp_interaction
 
 def read_collision_from_hdf5(mesh,
                              grid_point=None,

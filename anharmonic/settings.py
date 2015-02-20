@@ -8,7 +8,7 @@ class Phono3pySettings(Settings):
         self._boundary_mfp = 1.0e6 # In micrometre. The default value is
                                    # just set to avoid divergence.
         self._coarse_mesh_shifts = None
-        self._constant_pp_strength = None
+        self._constant_averaged_pp_interaction = None
         self._cutoff_fc3_distance = None
         self._cutoff_pair_distance = None
         self._grid_addresses = None
@@ -47,11 +47,11 @@ class Phono3pySettings(Settings):
     def get_coarse_mesh_shifts(self):
         return self._coarse_mesh_shifts
 
-    def set_constant_pp_strength(self, constant_pp_strength):
-        self._constant_pp_strength = constant_pp_strength
+    def set_constant_averaged_pp_interaction(self, ave_pp):
+        self._constant_averaged_pp_interaction = ave_pp
 
-    def get_constant_pp_strength(self):
-        return self._constant_pp_strength
+    def get_constant_averaged_pp_interaction(self):
+        return self._constant_averaged_pp_interaction
 
     def set_cutoff_fc3_distance(self, cutoff_fc3_distance):
         self._cutoff_fc3_distance = cutoff_fc3_distance
@@ -225,10 +225,10 @@ class Phono3pyConfParser(ConfParser):
                     self._confs['boundary_mfp'] = \
                         self._options.boundary_mfp
 
-            if opt.dest == 'constant_pp_strength':
-                if self._options.constant_pp_strength is not None:
-                    self._confs['constant_pp_strength'] = \
-                        self._options.constant_pp_strength
+            if opt.dest == 'constant_averaged_pp_interaction':
+                if self._options.constant_averaged_pp_interaction is not None:
+                    self._confs['constant_averaged_pp_interaction'] = \
+                        self._options.constant_averaged_pp_interaction
 
             if opt.dest == 'cutoff_fc3_distance':
                 if self._options.cutoff_fc3_distance is not None:
@@ -355,9 +355,10 @@ class Phono3pyConfParser(ConfParser):
                 self.set_parameter('boundary_mfp',
                                    float(confs['boundary_mfp']))
 
-            if conf_key == 'constant_pp_strength':
-                self.set_parameter('constant_pp_strength',
-                                   float(confs['constant_pp_strength']))
+            if conf_key == 'constant_averaged_pp_interaction':
+                self.set_parameter(
+                    'constant_averaged_pp_interaction',
+                    float(confs['constant_averaged_pp_interaction']))
 
             if conf_key == 'cutoff_fc3_distance':
                 self.set_parameter('cutoff_fc3_distance',
@@ -496,9 +497,9 @@ class Phono3pyConfParser(ConfParser):
             self._settings.set_boundary_mfp(params['boundary_mfp'])
 
         # Peierls type approximation for squared ph-ph interaction strength
-        if params.has_key('constant_pp_strength'):
-            self._settings.set_constant_pp_strength(
-                params['constant_pp_strength'])
+        if params.has_key('constant_averaged_pp_interaction'):
+            self._settings.set_constant_averaged_pp_interaction(
+                params['constant_averaged_pp_interaction'])
 
         # Cutoff distance of third-order force constants. Elements where any 
         # pair of atoms has larger distance than cut-off distance are set zero.

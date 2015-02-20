@@ -14,7 +14,7 @@ class Interaction:
                  symmetry,
                  fc3=None,
                  band_indices=None,
-                 constant_strength=None,
+                 constant_averaged_interaction=None,
                  frequency_factor_to_THz=VaspToTHz,
                  unit_conversion=None,
                  is_nosym=False,
@@ -31,7 +31,7 @@ class Interaction:
             self._band_indices = np.arange(num_band, dtype='intc')
         else:
             self._band_indices = np.array(band_indices, dtype='intc')
-        self._constant_strength = constant_strength
+        self._constant_averaged_interaction = constant_averaged_interaction
         self._frequency_factor_to_THz = frequency_factor_to_THz
 
         # Unit to eV^2
@@ -74,7 +74,7 @@ class Interaction:
         num_band = self._primitive.get_number_of_atoms() * 3
         num_triplets = len(self._triplets_at_q)
 
-        if self._constant_strength is None:
+        if self._constant_averaged_interaction is None:
             self._interaction_strength = np.zeros(
                 (num_triplets, len(self._band_indices), num_band, num_band),
                 dtype='double')
@@ -83,9 +83,10 @@ class Interaction:
             else:
                 self._run_py()
         else:
+            num_grid = np.prod(self._mesh)
             self._interaction_strength = np.ones(
                 (num_triplets, len(self._band_indices), num_band, num_band),
-                dtype='double') * self._constant_strength
+                dtype='double') * self._constant_averaged_interaction / num_grid
             self.set_phonon(self._triplets_at_q.ravel())
 
     def get_interaction_strength(self):
@@ -202,12 +203,11 @@ class Interaction:
         #         self._set_phonon_py(gp)
         self._set_phonon_c(grid_points)
 
-    def get_mean_square_strength(self):
+    def get_averaged_interaction(self):
         v = self._interaction_strength
         w = self._weights_at_q
         v_sum = v.sum(axis=2).sum(axis=2)
         num_band = self._primitive.get_number_of_atoms() * 3
-        num_grid = np.prod(self._mesh)
         return np.dot(w, v_sum) / num_band ** 2
             
     def _run_c(self):
