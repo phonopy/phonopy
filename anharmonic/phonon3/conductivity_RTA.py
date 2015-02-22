@@ -16,7 +16,8 @@ def get_thermal_conductivity_RTA(
         grid_points=None,
         is_isotope=False,
         boundary_mfp=None, # in micrometre
-        average_pp_interaction=False,
+        use_averaged_pp_interaction=False,
+        gamma_unit_conversion=None,
         mesh_divisors=None,
         coarse_mesh_shifts=None,
         no_kappa_stars=False,
@@ -29,20 +30,22 @@ def get_thermal_conductivity_RTA(
 
     if log_level:
         print "-------------------- Lattice thermal conducitivity (RTA) --------------------"
-    br = Conductivity_RTA(interaction,
-                          symmetry,
-                          grid_points=grid_points,
-                          temperatures=temperatures,
-                          sigmas=sigmas,
-                          is_isotope=is_isotope,
-                          mass_variances=mass_variances,
-                          boundary_mfp=boundary_mfp,
-                          average_pp_interaction=average_pp_interaction,
-                          mesh_divisors=mesh_divisors,
-                          coarse_mesh_shifts=coarse_mesh_shifts,
-                          no_kappa_stars=no_kappa_stars,
-                          gv_delta_q=gv_delta_q,
-                          log_level=log_level)
+        br = Conductivity_RTA(
+            interaction,
+            symmetry,
+            grid_points=grid_points,
+            temperatures=temperatures,
+            sigmas=sigmas,
+            is_isotope=is_isotope,
+            mass_variances=mass_variances,
+            boundary_mfp=boundary_mfp,
+            use_averaged_pp_interaction=use_averaged_pp_interaction,
+            gamma_unit_conversion=gamma_unit_conversion,
+            mesh_divisors=mesh_divisors,
+            coarse_mesh_shifts=coarse_mesh_shifts,
+            no_kappa_stars=no_kappa_stars,
+            gv_delta_q=gv_delta_q,
+            log_level=log_level)
 
     if read_gamma:
         if not _set_gamma_from_file(br, filename=input_filename):
@@ -65,7 +68,7 @@ def _write_gamma(br, interaction, i, filename=None):
     grid_points = br.get_grid_points()
     group_velocities = br.get_group_velocities()
     mode_heat_capacities = br.get_mode_heat_capacities()
-    mspp = br.get_mean_square_pp_strength()
+    ave_pp = br.get_averaged_pp_interaction()
     mesh = br.get_mesh_numbers()
     mesh_divisors = br.get_mesh_divisors()
     temperatures = br.get_temperatures()
@@ -89,7 +92,7 @@ def _write_gamma(br, interaction, i, filename=None):
                             kappa=None,
                             gamma=gamma[j, :, i],
                             gamma_isotope=gamma_isotope_at_sigma,
-                            mspp=mspp[i],
+                            ave_pp=ave_pp[i],
                             mesh_divisors=mesh_divisors,
                             grid_point=gp,
                             sigma=sigma,
@@ -117,7 +120,7 @@ def _write_kappa(br, filename=None, log_level=0):
     frequencies = br.get_frequencies()
     gv = br.get_group_velocities()
     mode_cv = br.get_mode_heat_capacities()
-    mspp = br.get_mean_square_pp_strength()
+    ave_pp = br.get_averaged_pp_interaction()
     qpoints = br.get_qpoints()
     weights = br.get_grid_weights()
     kappa = br.get_kappa()
@@ -161,7 +164,7 @@ def _write_kappa(br, filename=None, log_level=0):
                             mode_kappa=mode_kappa[i],
                             gamma=gamma[i],
                             gamma_isotope=gamma_isotope_at_sigma,
-                            mspp=mspp,
+                            averaged_pp_interaction=ave_pp,
                             qpoint=qpoints,
                             weight=weights,
                             mesh_divisors=mesh_divisors,
@@ -183,7 +186,7 @@ def _set_gamma_from_file(br, filename=None):
     gamma_iso = np.zeros((len(sigmas),
                           len(grid_points),
                           num_band), dtype='double')
-    mspp = np.zeros((len(grid_points), num_band), dtype='double')
+    ave_pp = np.zeros((len(grid_points), num_band), dtype='double')
 
     is_isotope = False
 
@@ -205,23 +208,23 @@ def _set_gamma_from_file(br, filename=None):
                     print "Gamma at grid point %d doesn't exist." % gp
                     return False
                 else:
-                    gamma_gp, gamma_iso_gp, mspp_gp = collisions_gp
+                    gamma_gp, gamma_iso_gp, ave_pp_gp = collisions_gp
                     gamma[j, :, i] = gamma_gp
                     if gamma_iso_gp is not None:
                         is_isotope = True
                         gamma_iso[j, i] = gamma_iso_gp
-                    if mspp_gp is not None:
-                        mspp[i] = mspp_gp
+                    if ave_pp_gp is not None:
+                        ave_pp[i] = ave_pp_gp
         else:
-            gamma_at_sigma, gamma_iso_at_sigma, mspp = collisions
+            gamma_at_sigma, gamma_iso_at_sigma, ave_pp = collisions
             gamma[j] = gamma_at_sigma
             if gamma_iso_at_sigma is not None:
                 is_isotope = True
                 gamma_iso[j] = gamma_iso_at_sigma
         
     br.set_gamma(gamma)
-    if mspp is not None:
-        br.set_mean_square_pp_strength(mspp)
+    if ave_pp is not None:
+        br.set_averaged_pp_interaction(ave_pp)
 
     return True
 
@@ -235,7 +238,8 @@ class Conductivity_RTA(Conductivity):
                  is_isotope=False,
                  mass_variances=None,
                  boundary_mfp=None, # in micrometre
-                 average_pp_interaction=False,
+                 use_averaged_pp_interaction=False,
+                 gamma_unit_conversion=None,
                  mesh_divisors=None,
                  coarse_mesh_shifts=None,
                  no_kappa_stars=False,
@@ -269,8 +273,9 @@ class Conductivity_RTA(Conductivity):
         self._gv = None
         self._gamma = None
         self._gamma_iso = None
-        self._use_mspp = average_pp_interaction
-        self._mean_square_pp_strength = None
+        self._gamma_unit_conversion = gamma_unit_conversion
+        self._use_ave_pp = use_averaged_pp_interaction
+        self._averaged_pp_interaction = None
         self._num_ignored_phonon_modes = None
         self._num_sampling_grid_points = None
         
@@ -349,15 +354,21 @@ class Conductivity_RTA(Conductivity):
     def get_number_of_sampling_grid_points(self):
         return self._num_sampling_grid_points
 
+    def get_averaged_pp_interaction(self):
+        return self._averaged_pp_interaction
+
+    def set_averaged_pp_interaction(self, ave_pp):
+        self._averaged_pp_interaction = ave_pp
+        
     def _run_at_grid_point(self):
         i = self._grid_point_count
         self._show_log_header(i)
         grid_point = self._grid_points[i]
         if self._read_gamma:
-            if self._use_mspp:
+            if self._use_ave_pp:
                 self._collision.set_grid_point(grid_point)
-                self._collision.set_mean_square_pp_strength(
-                    self._mean_square_pp_strength[i])
+                self._collision.set_averaged_pp_interaction(
+                    self._averaged_pp_interaction[i])
                 self._set_gamma_at_sigmas(i)
         else:
             self._collision.set_grid_point(grid_point)
@@ -367,8 +378,8 @@ class Conductivity_RTA(Conductivity):
                 print "Calculating interaction..."
                 
             self._collision.run_interaction()
-            self._mean_square_pp_strength[i] = (
-                self._pp.get_mean_square_strength())
+            self._averaged_pp_interaction[i] = (
+                self._pp.get_averaged_interaction())
             self._set_gamma_at_sigmas(i)
             
         if self._isotope is not None and not self._read_gamma_iso:
@@ -406,12 +417,14 @@ class Conductivity_RTA(Conductivity):
             self._gamma_iso = np.zeros((len(self._sigmas),
                                         num_grid_points,
                                         num_band), dtype='double')
-        self._mean_square_pp_strength = np.zeros((num_grid_points, num_band),
+        self._averaged_pp_interaction = np.zeros((num_grid_points, num_band),
                                                  dtype='double')
         self._num_ignored_phonon_modes = np.zeros((len(self._sigmas),
                                                    len(self._temperatures)),
                                                   dtype='intc')
-        self._collision = ImagSelfEnergy(self._pp)
+        self._collision = ImagSelfEnergy(
+            self._pp,
+            unit_conversion=self._gamma_unit_conversion)
         
     def _set_gamma_at_sigmas(self, i):
         for j, sigma in enumerate(self._sigmas):
@@ -468,9 +481,9 @@ class Conductivity_RTA(Conductivity):
         gp = self._grid_points[i]
         frequencies = self._frequencies[gp]
         gv = self._gv[i]
-        mspp = self._mean_square_pp_strength[i]
+        ave_pp = self._averaged_pp_interaction[i]
         
-        print "Frequency     group velocity (x, y, z)     |gv|      mspp",
+        print "Frequency     group velocity (x, y, z)     |gv|       Pqj",
         if self._gv_delta_q is None:
             print
         else:
@@ -491,12 +504,11 @@ class Conductivity_RTA(Conductivity):
                         (i + 1,) + tuple(np.dot(rot, q)))
                     for f, v, pp in zip(frequencies,
                                     np.dot(rot_c, gv.T).T,
-                                    mspp):
+                                    ave_pp):
                         print "%8.3f   (%8.3f %8.3f %8.3f) %8.3f %11.3e" % (
                             f, v[0], v[1], v[2], np.linalg.norm(v), pp)
             print
         else:
-            for f, v, pp in zip(frequencies, gv, mspp):
+            for f, v, pp in zip(frequencies, gv, ave_pp):
                 print "%8.3f   (%8.3f %8.3f %8.3f) %8.3f %11.3e" % (
                     f, v[0], v[1], v[2], np.linalg.norm(v), pp)
-    

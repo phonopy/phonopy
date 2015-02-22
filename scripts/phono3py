@@ -106,6 +106,7 @@ parser.set_defaults(band_indices=None,
                     band_paths=None,
                     band_points=None,
                     cell_poscar=None,
+                    constant_averaged_pp_interaction=None,
                     cutoff_fc3_distance=None,
                     cutoff_frequency=None,
                     boundary_mfp=None,
@@ -122,6 +123,7 @@ parser.set_defaults(band_indices=None,
                     frequency_pitch=None,
                     frequency_points=None,
                     freq_scale=None,
+                    gamma_unit_conversion=None,
                     grid_addresses=None,
                     grid_points=None,
                     gv_delta_q=None,
@@ -164,6 +166,7 @@ parser.set_defaults(band_indices=None,
                     read_fc3=False,
                     read_gamma=False,
                     output_filename=None,
+                    pp_unit_conversion=None,
                     qpoints=None,
                     quiet=False,
                     scattering_event_class=None,
@@ -185,49 +188,56 @@ parser.set_defaults(band_indices=None,
 parser.add_option("--amplitude", dest="displacement_distance", type="float",
                   help="Distance of displacements")
 parser.add_option("--ave_pp", dest="average_pp_interaction", action="store_true",
-                  help="Use averaged ph-ph interaction strength")
-parser.add_option("--bi", "--band_indices", dest="band_indices", type="string",
-                  help="Band indices where life time is calculated")
+                  help="Use averaged ph-ph interaction")
 parser.add_option("--band", dest="band_paths", action="store", type="string",
                   help="Band structure paths calculated for Gruneisen parameter")
 parser.add_option("--band_points", dest="band_points", type="int",
                   help="Number of points calculated on a band segment in the band structure Gruneisen parameter calculation")
+parser.add_option("--bi", "--band_indices", dest="band_indices", type="string",
+                  help="Band indices where life time is calculated")
+parser.add_option("--boundary_mfp", "--bmfp", dest="boundary_mfp",
+                  type="float",
+                  help="Boundary mean free path in micrometre for thermal conductivity calculation")
 parser.add_option("--br", "--bterta", dest="is_bterta", action="store_true",
                   help="Calculate thermal conductivity in BTE-RTA")
 parser.add_option("-c", "--cell", dest="cell_poscar", action="store",
                   type="string", help="Read unit cell", metavar="FILE")
+parser.add_option("--cf2", "--create_f2", dest="forces_fc2_mode",
+                  action="store_true", help="Create FORCES_FC2")
+parser.add_option("--cf3", "--create_f3", dest="forces_fc3_mode",
+                  action="store_true", help="Create FORCES_FC3")
+parser.add_option("--cf3_file", "--create_f3_from_file",
+                  dest="forces_fc3_file_mode",
+                  action="store_true",
+                  help="Create FORCES_FC3 from file name list")
+parser.add_option("--cfs", "--create_force_sets", dest="force_sets_mode",
+                  action="store_true",
+                  help="Create phonopy FORCE_SETS from FORCES_FC2")
+parser.add_option("--const_ave_pp",
+                  dest="constant_averaged_pp_interaction",
+                  type="float",
+                  help="Set constant averaged ph-ph interaction (Pqj)")
 parser.add_option("--cutoff_fc3", "--cutoff_fc3_distance",
                   dest="cutoff_fc3_distance", type="float",
                   help="Cutoff distance of third-order force constants. Elements where any pair of atoms has larger distance than cut-off distance are set zero.")
 parser.add_option("--cutoff_freq", "--cutoff_frequency", dest="cutoff_frequency",
                   type="float",
                   help="Phonon modes below this frequency are ignored.")
-parser.add_option("--boundary_mfp", "--bmfp", dest="boundary_mfp",
-                  type="float",
-                  help="Boundary mean free path in micrometre for thermal conductivity calculation")
 parser.add_option("--cutoff_pair", "--cutoff_pair_distance",
                   dest="cutoff_pair_distance", type="float",
                   help="Cutoff distance between pairs of displaced atoms used for supercell creation with displacements and making third-order force constants")
-parser.add_option("-d", "--disp", dest="is_displacement", action="store_true",
-                  help="As first stage, get least displacements")
 # parser.add_option("--decay", dest="is_decay_channel",
 #                   action="store_true", help="Calculate decay channels")
-parser.add_option("--dim", dest="supercell_dimension", type="string",
-                  help="Supercell dimension")
-parser.add_option("--dim_fc2", dest="phonon_supercell_dimension",
-                  type="string", help="Supercell dimension for extra fc2")
-parser.add_option("--cf3", "--create_f3", dest="forces_fc3_mode",
-                  action="store_true", help="Create FORCES_FC3")
-parser.add_option("--cf3_file", "--create_f3_from_file", dest="forces_fc3_file_mode",
-                  action="store_true", help="Create FORCES_FC3 from file name list")
-parser.add_option("--cf2", "--create_f2", dest="forces_fc2_mode",
-                  action="store_true", help="Create FORCES_FC2")
-parser.add_option("--cfs", "--create_force_sets", dest="force_sets_mode",
-                  action="store_true", help="Create phonopy FORCE_SETS from FORCES_FC2")
 # parser.add_option("--cdfc2", "--create_delta_fc2", dest="delta_fc2_sets_mode",
 #                   action="store_true", help="Create DELTA_FC2_SETS")
 # parser.add_option("--dfc2", "--delta_fc2", dest="read_delta_fc2",
 #                   action="store_true", help="Read DELTA_FC2_SETS")
+parser.add_option("-d", "--disp", dest="is_displacement", action="store_true",
+                  help="As first stage, get least displacements")
+parser.add_option("--dim", dest="supercell_dimension", type="string",
+                  help="Supercell dimension")
+parser.add_option("--dim_fc2", dest="phonon_supercell_dimension",
+                  type="string", help="Supercell dimension for extra fc2")
 parser.add_option("--factor", dest="factor", type="float",
                   help="Conversion factor to favorite frequency unit")
 parser.add_option("--fc2", dest="read_fc2", action="store_true",
@@ -244,6 +254,9 @@ parser.add_option("--freq_pitch", dest="frequency_pitch", type="float",
                   help="Pitch in frequency for spectrum")
 parser.add_option("--freq_points", dest="frequency_points", type="int",
                   help="Number of sampling points for spectrum")
+parser.add_option("--gamma_unit_conversion", dest="gamma_unit_conversion",
+                  type="float",
+                  help="Conversion factor for gamma")
 parser.add_option("--gp", "--grid_points", dest="grid_points", type="string",
                   help="Fixed grid points where anharmonic properties are calculated")
 parser.add_option("--ga", "--grid_addresses", dest="grid_addresses", type="string",
@@ -298,6 +311,9 @@ parser.add_option("--pinv_cutoff", dest="pinv_cutoff", type="float",
                   help="Cutoff frequency (THz) for pseudo inversion of collision matrix")
 parser.add_option("--pm", dest="is_plusminus_displacements", action="store_true",
                   help="Set plus minus displacements")
+parser.add_option("--pp_unit_conversion", dest="pp_unit_conversion",
+                  type="float",
+                  help="Conversion factor for ph-ph interaction")
 parser.add_option("--qpoints", dest="qpoints", type="string",
                   help="Calculate at specified q-points")
 parser.add_option("--q_direction", dest="q_direction", type="string",
@@ -736,7 +752,8 @@ if (options.is_joint_dos or
     (settings.get_is_isotope() and
      not (settings.get_is_bterta() or settings.get_is_lbte())) or
     settings.get_read_gamma() or
-    settings.get_read_amplitude()):
+    settings.get_read_amplitude() or
+    settings.get_constant_averaged_pp_interaction() is not None):
     pass
 else:
     if options.read_fc3: # Read fc3.hdf5
@@ -1074,10 +1091,13 @@ if run_mode == "isotope":
 #########
 # Ph-ph #
 #########
+ave_pp = settings.get_constant_averaged_pp_interaction()
 phono3py.set_phph_interaction(
     nac_params=nac_params,
     nac_q_direction=nac_q_direction,
-    frequency_scale_factor=frequency_scale_factor)
+    constant_averaged_interaction=ave_pp,
+    frequency_scale_factor=frequency_scale_factor,
+    unit_conversion=options.pp_unit_conversion)
 
 if settings.get_is_linewidth():
     phono3py.run_linewidth(
@@ -1099,7 +1119,8 @@ elif settings.get_is_bterta() or settings.get_is_lbte():
         mass_variances=settings.get_mass_variances(),
         grid_points=grid_points,
         boundary_mfp=settings.get_boundary_mfp(),
-        average_pp_interaction=settings.get_average_pp_interaction(),
+        use_averaged_pp_interaction=settings.get_average_pp_interaction(),
+        gamma_unit_conversion=options.gamma_unit_conversion,
         mesh_divisors=mesh_divs,
         coarse_mesh_shifts=settings.get_coarse_mesh_shifts(),
         is_reducible_collision_matrix=options.is_reducible_collision_matrix,

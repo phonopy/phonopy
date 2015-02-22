@@ -207,6 +207,7 @@ class ImagSelfEnergy:
                  frequency_points=None,
                  temperature=None,
                  sigma=None,
+                 unit_conversion=None,
                  lang='C'):
         self._pp = interaction
         self._sigma = None
@@ -232,14 +233,12 @@ class ImagSelfEnergy:
         self._is_collision_matrix = False
 
         # Unit to THz of Gamma
-        num_grid = np.prod(self._mesh)
-        self._unit_conversion = ((Hbar * EV) ** 3 / 36 / 8
-                                 * EV ** 2 / Angstrom ** 6
-                                 / (2 * np.pi * THz) ** 3
-                                 / AMU ** 3
-                                 * 18 * np.pi / (Hbar * EV) ** 2
-                                 / (2 * np.pi * THz) ** 2
-                                 / num_grid)
+        if unit_conversion is None:
+            self._unit_conversion = (18 * np.pi / (Hbar * EV) ** 2
+                                     / (2 * np.pi * THz) ** 2
+                                     * EV ** 2)
+        else:
+            self._unit_conversion = unit_conversion
 
     def run(self):
         if self._pp_strength is None:        
@@ -328,19 +327,20 @@ class ImagSelfEnergy:
         else:
             self._temperature = float(temperature)
         
-    def set_mean_square_pp_strength(self, mspp):
+    def set_averaged_pp_interaction(self, ave_pp):
         self._pp.set_phonon(self._triplets_at_q.ravel())
         (self._frequencies,
          self._eigenvectors) = self._pp.get_phonons()[:2]
 
         num_triplets = len(self._triplets_at_q)
         num_band = self._pp.get_primitive().get_number_of_atoms() * 3
+        num_grid = np.prod(self._mesh)
         self._pp_strength = np.zeros(
             (num_triplets, len(self._band_indices), num_band, num_band),
             dtype='double')
 
-        for i, v_ave in enumerate(mspp):
-            self._pp_strength[:, i, :, :] = v_ave
+        for i, v_ave in enumerate(ave_pp):
+            self._pp_strength[:, i, :, :] = v_ave / num_grid
         
     def _run_with_band_indices(self):
         if self._g is not None:

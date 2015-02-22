@@ -399,14 +399,15 @@ class Phonopy:
         self._set_dynamical_matrix()
 
     def symmetrize_force_constants_by_space_group(self):
-        rotations = self._symmetry.get_symmetry_operations()['rotations']
-        translations = self._symmetry.get_symmetry_operations()['translations']
-        set_tensor_symmetry(self._force_constants,
-                            self._supercell.get_cell().T,
-                            self._supercell.get_scaled_positions(),
-                            rotations,
-                            translations,
-                            self._symprec)
+        from phonopy.harmonic.force_constants import \
+            set_tensor_symmetry, \
+            set_tensor_symmetry_old, \
+            set_tensor_symmetry_PJ
+        set_tensor_symmetry_PJ(self._force_constants,
+                               self._supercell.get_cell().T,
+                               self._supercell.get_scaled_positions(),
+                               self._symmetry)
+
         self._set_dynamical_matrix()
 
     #####################
@@ -638,10 +639,14 @@ class Phonopy:
                         tetrahedron_method=False,
                         direction=None):
         if self._mesh is None:
-            print "set_mesh has to be done before set_thermal_properties"
+            print "set_mesh has to be called before set_thermal_properties"
             sys.exit(1)
         if self._mesh.get_eigenvectors() is None:
             print "Eigenvectors have to be calculated."
+            sys.exit(1)
+        num_grid = np.prod(self._mesh.get_mesh_numbers())
+        if num_grid != len(self._mesh.get_ir_grid_points()):
+            print "set_mesh has to be called with is_mesh_symmetry=False"
             sys.exit(1)
         if direction is not None:
             direction_cart = np.dot(direction, self._primitive.get_cell())

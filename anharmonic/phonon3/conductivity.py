@@ -107,12 +107,6 @@ class Conductivity:
     def get_group_velocities(self):
         return self._gv
 
-    def get_mean_square_pp_strength(self):
-        return self._mean_square_pp_strength
-
-    def set_mean_square_pp_strength(self, mspp):
-        self._mean_square_pp_strength = mspp
-        
     def get_frequencies(self):
         return self._frequencies[self._grid_points]
         

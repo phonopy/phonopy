@@ -360,11 +360,12 @@ with 0.1 pitch.
 
    PDOS = 1 2, 3 4 5 6
 
-By setting this tag, ``EIGENVECTORS = .TRUE.`` is automatically set.
-``PDOS`` tag controls how elements of eigenvectors are added. Each value
-gives the atom index in primitive cell. ``,`` separates the atom
-sets. Therefore in the example, atom 1 and 2 are summarized as one
-curve and atom 3, 4, 5, and, 6 are summarized as the other curve.
+By setting this tag, ``EIGENVECTORS = .TRUE.`` and ``MESH_SYMMETRY =
+.FALSE.`` are automatically set.  ``PDOS`` tag controls how elements
+of eigenvectors are added. Each value gives the atom index in
+primitive cell. ``,`` separates the atom sets. Therefore in the
+example, atom 1 and 2 are summarized as one curve and atom 3, 4, 5,
+and, 6 are summarized as the other curve.
 
 The projection is applied along arbitrary direction using
 ``PROJECTION_DIRECTION`` tag.

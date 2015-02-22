@@ -1,7 +1,7 @@
 import numpy as np
 from anharmonic.other.phonon import get_dynamical_matrix, set_phonon_c, set_phonon_py
 from phonopy.harmonic.dynamical_matrix import get_smallest_vectors
-from phonopy.units import VaspToTHz
+from phonopy.units import VaspToTHz, Hbar, EV, Angstrom, THz, AMU, PlanckConstant
 from anharmonic.phonon3.real_to_reciprocal import RealToReciprocal
 from anharmonic.phonon3.reciprocal_to_normal import ReciprocalToNormal
 from anharmonic.phonon3.triplets import get_triplets_at_q, get_nosym_triplets_at_q, get_bz_grid_address
@@ -14,7 +14,9 @@ class Interaction:
                  symmetry,
                  fc3=None,
                  band_indices=None,
+                 constant_averaged_interaction=None,
                  frequency_factor_to_THz=VaspToTHz,
+                 unit_conversion=None,
                  is_nosym=False,
                  symmetrize_fc3_q=False,
                  cutoff_frequency=None,
@@ -29,8 +31,19 @@ class Interaction:
             self._band_indices = np.arange(num_band, dtype='intc')
         else:
             self._band_indices = np.array(band_indices, dtype='intc')
+        self._constant_averaged_interaction = constant_averaged_interaction
         self._frequency_factor_to_THz = frequency_factor_to_THz
 
+        # Unit to eV^2
+        if unit_conversion is None:
+            num_grid = np.prod(self._mesh)
+            self._unit_conversion = ((Hbar * EV) ** 3 / 36 / 8
+                                     * EV ** 2 / Angstrom ** 6
+                                     / (2 * np.pi * THz) ** 3
+                                     / AMU ** 3 / num_grid
+                                     / EV ** 2)
+        else:
+            self._unit_conversion = unit_conversion
         if cutoff_frequency is None:
             self._cutoff_frequency = 0
         else:
@@ -60,14 +73,21 @@ class Interaction:
     def run(self, lang='C'):
         num_band = self._primitive.get_number_of_atoms() * 3
         num_triplets = len(self._triplets_at_q)
-        self._interaction_strength = np.zeros(
-            (num_triplets, len(self._band_indices), num_band, num_band),
-            dtype='double')
 
-        if lang == 'C':
-            self._run_c()
+        if self._constant_averaged_interaction is None:
+            self._interaction_strength = np.zeros(
+                (num_triplets, len(self._band_indices), num_band, num_band),
+                dtype='double')
+            if lang == 'C':
+                self._run_c()
+            else:
+                self._run_py()
         else:
-            self._run_py()
+            num_grid = np.prod(self._mesh)
+            self._interaction_strength = np.ones(
+                (num_triplets, len(self._band_indices), num_band, num_band),
+                dtype='double') * self._constant_averaged_interaction / num_grid
+            self.set_phonon(self._triplets_at_q.ravel())
 
     def get_interaction_strength(self):
         return self._interaction_strength
@@ -183,13 +203,12 @@ class Interaction:
         #         self._set_phonon_py(gp)
         self._set_phonon_c(grid_points)
 
-    def get_mean_square_strength(self):
+    def get_averaged_interaction(self):
         v = self._interaction_strength
         w = self._weights_at_q
         v_sum = v.sum(axis=2).sum(axis=2)
         num_band = self._primitive.get_number_of_atoms() * 3
-        num_grid = np.prod(self._mesh)
-        return np.dot(w, v_sum) / num_band ** 2 / num_grid
+        return np.dot(w, v_sum) / num_band ** 2
             
     def _run_c(self):
         import anharmonic._phono3py as phono3c
@@ -218,6 +237,7 @@ class Interaction:
                             self._band_indices,
                             self._symmetrize_fc3_q,
                             self._cutoff_frequency)
+        self._interaction_strength *= self._unit_conversion
 
     def _set_phonon_c(self, grid_points):
         set_phonon_c(self._dm,
@@ -251,7 +271,7 @@ class Interaction:
                 self._set_phonon_py(gp)
             r2n.run(fc3_reciprocal, grid_triplet)
             self._interaction_strength[i] = np.abs(
-                r2n.get_reciprocal_to_normal()) ** 2
+                r2n.get_reciprocal_to_normal()) ** 2 * self._unit_conversion
 
     def _set_phonon_py(self, grid_point):
         set_phonon_py(grid_point,
