@@ -197,7 +197,8 @@ static Symmetry * get_symmetry_settings(double conv_lattice[3][3],
 					Pointgroup *pointgroup,
 					Centering *centering,
 					SPGCONST double primitive_lattice[3][3],
-					SPGCONST Symmetry * symmetry);
+					SPGCONST Symmetry * symmetry,
+					const double symprec);
 static int search_hall_number(double origin_shift[3],
 			      double conv_lattice[3][3],
 			      const int candidates[],
@@ -427,7 +428,8 @@ static int search_hall_number(double origin_shift[3],
 					&pointgroup,
 					&centering,
 					primitive_lattice,
-					symmetry);
+					symmetry,
+					symprec);
   if (conv_symmetry->size == 0) {
     hall_number = 0;
     goto ret;
@@ -455,11 +457,11 @@ static Symmetry * get_symmetry_settings(double conv_lattice[3][3],
 					Pointgroup *pointgroup,
 					Centering *centering,
 					SPGCONST double primitive_lattice[3][3],
-					SPGCONST Symmetry * symmetry)
+					SPGCONST Symmetry * symmetry,
+					const double symprec)
 {
   int tmp_transform_mat[3][3];
-  double correction_mat[3][3];
-  double transform_mat[3][3];
+  double correction_mat[3][3], transform_mat[3][3], tmp_lattice[3][3];
   Symmetry * conv_symmetry;
   
   *pointgroup = ptg_get_transformation_matrix(tmp_transform_mat,
@@ -489,6 +491,17 @@ static Symmetry * get_symmetry_settings(double conv_lattice[3][3],
   mat_multiply_matrix_d3(conv_lattice,
 			 primitive_lattice,
 			 transform_mat);
+
+  if (pointgroup->laue == LAUE2M) {
+    if (lat_smallest_lattice_vector_2D(tmp_lattice,
+				       conv_lattice,
+				       1, /* unique axis of b */
+				       symprec)) {
+      mat_copy_matrix_d3(conv_lattice, tmp_lattice);
+      mat_inverse_matrix_d3(tmp_lattice, primitive_lattice, 0);
+      mat_multiply_matrix_d3(transform_mat, tmp_lattice, conv_lattice);
+    }
+  }
 
   if (*centering == R_CENTER) {
     /* hR is handled in match_hall_symbol_db. */
