@@ -47,12 +47,15 @@ parallelepiped_vertices = np.array([[0, 0, 0],
 class TetrahedronMethod:
     def __init__(self,
                  primitive_vectors=None, # column vectors
-                 mesh=[1, 1, 1]):
+                 mesh=[1, 1, 1],
+                 lang='C'):
         if primitive_vectors is None:
             self._primitive_vectors = None
         else:
             self._primitive_vectors = np.array(
                 primitive_vectors, dtype='double', order='C') / mesh
+        self._lang = lang
+
         self._vertices = None
         self._relative_grid_addresses = None
         self._central_indices = None
@@ -63,10 +66,9 @@ class TetrahedronMethod:
         self._integration_weight = None
 
     def run(self, omegas, value='I'):
-        try:
-            import phonopy._phonopy as phonoc
+        if self._lang == 'C':
             self._run_c(omegas, value=value)
-        except ImportError:
+        else:
             self._run_py(omegas, value=value)
 
     def get_tetrahedra(self):
@@ -190,14 +192,11 @@ class TetrahedronMethod:
         self._vertices = tetras
 
     def _set_relative_grid_addresses(self):
-        try:
-            import phonopy._phonopy as phonoc
-
+        if self._lang == 'C':
             rga = spg.get_tetrahedra_relative_grid_address(
                 self._primitive_vectors)
             self._relative_grid_addresses = rga
-
-        except ImportError:
+        else:
             self._create_tetrahedra()
             relative_grid_addresses = np.zeros((24, 4, 3), dtype='intc')
             central_indices = np.zeros(24, dtype='intc')
