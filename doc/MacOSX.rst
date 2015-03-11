@@ -6,53 +6,36 @@ Using phonopy on Mac OS X
 Installation using MacPorts
 ----------------------------
 
+This is one way to install phonopy on Mac OS X. This procedure was
+tested on Yosemite with MacPorts version 2.3.3. In the following case,
+gcc-4.9 and python-2.7 are used as the default C-compiler and python
+and using these numpy and scipy are made.
+
 1) Install MacPorts. Download MacPorts from http://www.macports.org/
    and follow the installation instruction.
 
 2) Install the following packages
 
    ::
-
-      py27-matplotlib
-      py27-lxml
-      py27-yaml
-      py27-scipy
    
-   MacPorts command can be used as follows::
+      % sudo port install gcc49
+      % sudo port select --set gcc mp-gcc49
+      % sudo port install python27
+      % sudo port select --set python python27
+      % sudo port install atlas +gcc49
+      % sudo port install py27-numpy +gcc49 +atlas
+      % sudo port install py27-scipy +gcc49 +atlas
+      % sudo port install py27-matplotlib py27-yaml py27-h5py
    
-      % sudo port install py27-matplotlib
+3) Install phonopy following :ref:`install` (step 1 can be omitted.)
 
-   At the same time, many dependent packages are also installed.
-
-3) Add the following line to ``~/.matplotlib/matplotlibrc``
+   Before running setup.py, gcc can be used as the C-compiler instead
+   of clang for compiling phonopy C-extension as follows,
 
    ::
-
-      backend : MacOSX
-
-4) Set ``/opt/local/bin/python`` to be prior than the Mac OS X default
-   ``python``, e.g.,::
-
-   export PATH=/opt/local/bin:$PATH
-
-   in ``.bashrc`` or ``.zshrc``.
-
-5) Set ``python27`` as the default ``python`` command by::
-
-   % port select python python27
-
-6) Add the path below to ``PYTHONPATH``.
-
-   ::
-
-      /opt/local/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/site-packages/
-
-   This path can be system dependent. ``PYTHONPATH`` setting in step 3
-   of :ref:`install` is also necessary.
-
-7) Install phonopy following :ref:`install` (step 1 can be omitted.)
-
-Make sure that step 6 is done after step 5.
+   
+      % export CC=gcc
+      % python setup.py install --home=.
 
 .. |sflogo| image:: http://sflogo.sourceforge.net/sflogo.php?group_id=161614&type=1
             :target: http://sourceforge.net
