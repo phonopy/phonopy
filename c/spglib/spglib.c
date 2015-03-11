@@ -486,7 +486,7 @@ int spg_get_symmetry_from_database(int rotations[192][3][3],
 				   double translations[192][3],
 				   const int hall_number)
 {
-  int i;
+  int i, size;
   Symmetry *symmetry;
 
   symmetry = spgdb_get_spacegroup_operations(hall_number);
@@ -494,7 +494,11 @@ int spg_get_symmetry_from_database(int rotations[192][3][3],
     mat_copy_matrix_i3(rotations[i], symmetry->rot[i]);
     mat_copy_vector_d3(translations[i], symmetry->trans[i]);
   }
-  return symmetry->size;
+  size = symmetry->size;
+
+  sym_free_symmetry(symmetry);
+
+  return size;
 }
 
 SpglibSpacegroupType spg_get_spacegroup_type(const int hall_number)
