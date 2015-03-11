@@ -71,8 +71,10 @@ for t, free_energy, entropy, cv in np.array(phonon.get_thermal_properties()).T:
 phonon.plot_thermal_properties().show()
 
 # PDOS
-phonon.set_mesh([20, 20, 20], is_eigenvectors=True)
-phonon.set_partial_DOS(sigma=0.1)
+phonon.set_mesh([20, 20, 20],
+                is_mesh_symmetry=False,
+                is_eigenvectors=True)
+phonon.set_partial_DOS(tetrahedron_method=True)
 omegas, pdos = phonon.get_partial_DOS()
 pdos_indices = [[0], [1]]
 phonon.plot_partial_DOS(pdos_indices=pdos_indices,
