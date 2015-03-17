@@ -82,7 +82,7 @@ class ThermalPropertiesBase:
                                      dtype='double', order='C') * THzToEv
 
         if weights is None:
-            self._weights = np.ones(frequencies.shape[0], dtype='int32')
+            self._weights = np.ones(frequencies.shape[0], dtype='intc')
         else:
             self._weights = weights
 
