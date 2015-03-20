@@ -1506,7 +1506,7 @@ static int find_hall_symbol(double origin_shift[3],
 			     primitive_lattice,
 			     symmetry,
 			     centering,
-			     symprec)) {return 1;}
+			     symprec)) {goto found;}
     return 0;
   }
 
@@ -1516,7 +1516,7 @@ static int find_hall_symbol(double origin_shift[3],
 			    hall_number,
 			    primitive_lattice,
 			    symmetry,
-			    symprec)) {return 1;}
+			    symprec)) {goto found;}
     return 0;
   }
 
@@ -1527,13 +1527,13 @@ static int find_hall_symbol(double origin_shift[3],
 				hall_number,
 				primitive_lattice,
 				symmetry,
-				symprec)) {return 1;}
+				symprec)) {goto found;}
     } else {
       if (is_hall_symbol_trigonal(origin_shift,
 				  hall_number,
 				  primitive_lattice,
 				  symmetry,
-				  symprec)) {return 1;}
+				  symprec)) {goto found;}
     }
     return 0;
   }
@@ -1545,7 +1545,7 @@ static int find_hall_symbol(double origin_shift[3],
 			     primitive_lattice,
 			     symmetry,
 			     centering,
-			     symprec)) {return 1;}
+			     symprec)) {goto found;}
     return 0;
   }
   
@@ -1556,7 +1556,7 @@ static int find_hall_symbol(double origin_shift[3],
 			     primitive_lattice,
 			     symmetry,
 			     centering,
-			     symprec)) {return 1;}
+			     symprec)) {goto found;}
     return 0;
   }
 
@@ -1567,7 +1567,7 @@ static int find_hall_symbol(double origin_shift[3],
 			       primitive_lattice,
 			       symmetry,
 			       centering,
-			       symprec)) {return 1;}
+			       symprec)) {goto found;}
     return 0;
   }
 
@@ -1577,11 +1577,38 @@ static int find_hall_symbol(double origin_shift[3],
 			      hall_number,
 			      primitive_lattice,
 			      symmetry,
-			      symprec)) {return 1;}
+			      symprec)) {goto found;}
     return 0;
   }
 
   return 0;
+
+ found:
+  switch (centering) {
+  case NO_CENTER:
+    break;
+  case BODY:
+    mat_multiply_matrix_vector_d3(origin_shift, M_bcc_inv, origin_shift);
+    break;
+  case FACE:
+    mat_multiply_matrix_vector_d3(origin_shift, M_fcc_inv, origin_shift);
+    break;
+  case A_FACE:
+    mat_multiply_matrix_vector_d3(origin_shift, M_ac_inv, origin_shift);
+    break;
+  case B_FACE:
+    mat_multiply_matrix_vector_d3(origin_shift, M_bc_inv, origin_shift);
+    break;
+  case C_FACE:
+    mat_multiply_matrix_vector_d3(origin_shift, M_cc_inv, origin_shift);
+    break;
+  case R_CENTER:
+    mat_multiply_matrix_vector_d3(origin_shift, M_rc_inv, origin_shift);
+    break;
+  default:
+    break;
+  }
+  return 1;
 }
 
 static int is_hall_symbol_cubic(double shift[3],
