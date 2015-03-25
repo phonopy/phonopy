@@ -12,9 +12,9 @@
 static double identity[3][3] = {{ 1, 0, 0 },
 				{ 0, 1, 0 },
 				{ 0, 0, 1 }};
-static double monocli_i2c[3][3] = {{ 1, 0, 0 },
+static double monocli_i2c[3][3] = {{ 1, 0,-1 },
 				   { 0, 1, 0 },
-				   { 1, 0,-1 }};
+				   { 1, 0, 0 }};
 static double monocli_a2c[3][3] = {{ 0, 0, 1 },
 				   { 0,-1, 0 },
 				   { 1, 0, 0 }};
@@ -44,6 +44,17 @@ static void get_Delaunay_shortest_vectors(double basis[4][3],
 					  const double symprec);
 static void get_exteneded_basis(double basis[4][3],
 				SPGCONST double lattice[3][3]);
+static int get_Delaunay_reduction_2D(double red_lattice[3][3], 
+				     SPGCONST double lattice[3][3],
+				     const int unique_axis,
+				     const double symprec);
+static int get_Delaunay_reduction_basis_2D(double basis[3][3],
+					   const double symprec);
+static void get_Delaunay_shortest_vectors_2D(double basis[3][3],
+					     const double unique_vec[3],
+					     const double symprec);
+static void get_exteneded_basis_2D(double basis[3][3],
+				   SPGCONST double lattice[3][2]);
 
 int lat_smallest_lattice_vector(double min_lattice[3][3],
 				SPGCONST double lattice[3][3],
@@ -51,6 +62,15 @@ int lat_smallest_lattice_vector(double min_lattice[3][3],
 {
   debug_print("lat_smallest_lattice_vector:\n");
   return get_Delaunay_reduction(min_lattice, lattice, symprec);
+}
+
+int lat_smallest_lattice_vector_2D(double min_lattice[3][3],
+				   SPGCONST double lattice[3][3],
+				   const int unique_axis,
+				   const double symprec)
+{
+  debug_print("lat_smallest_lattice_vector_2D:\n");
+  return get_Delaunay_reduction_2D(min_lattice, lattice, unique_axis, symprec);
 }
 
 Centering lat_get_centering(double correction_mat[3][3],
@@ -75,8 +95,9 @@ static Centering get_centering(double correction_mat[3][3],
   debug_print("laue class: %d\n", laue);
   debug_print("multiplicity: %d\n", det);
 
-  if (det == 1) { centering = NO_CENTER; }
-  if (det == 2) { centering = get_base_center(transform_mat);
+  if (det == 1) {centering = NO_CENTER;}
+  if (det == 2) {
+    centering = get_base_center(transform_mat);
     if (centering == A_FACE) {
       if (laue == LAUE2M) {
 	debug_print("Monocli A to C\n");
@@ -97,7 +118,7 @@ static Centering get_centering(double correction_mat[3][3],
     }
   }
   if (det == 3) {
-    /* pR but not hR */
+    /* hR (a=b) but not hP (a=b=c) */
     centering = R_CENTER;
     mat_multiply_matrix_id3(trans_corr_mat, transform_mat, rhombo_obverse);
     if (mat_is_int_matrix(trans_corr_mat, INT_PREC)) {
@@ -178,7 +199,7 @@ static int get_Delaunay_reduction(double red_lattice[3][3],
 				  const double symprec)
 {
   int i, j;
-  double volume, sum, red_sum;
+  double volume, sum;
   double basis[4][3];
 
   get_exteneded_basis(basis, lattice);
@@ -198,21 +219,10 @@ static int get_Delaunay_reduction(double red_lattice[3][3],
 
   get_Delaunay_shortest_vectors(basis, symprec);
 
-  red_sum = 0;
-  for (i = 0; i < 4; i++) {
+  for (i = 0; i < 3; i++) {
     for (j = 0; j < 3; j++) {
-      red_sum += basis[i][j] * basis[i][j];
+      red_lattice[i][j] = basis[j][i];
     }
-  }
-
-  if (sum - red_sum > symprec * symprec) {
-    for (i = 0; i < 3; i++) {
-      for (j = 0; j < 3; j++) {
-	red_lattice[i][j] = basis[j][i];
-      }
-    }
-  } else {
-    mat_copy_matrix_d3(red_lattice, lattice);
   }
 
   volume = mat_get_determinant_d3(red_lattice);
@@ -334,3 +344,186 @@ static void get_exteneded_basis(double basis[4][3],
   }
 }
 
+
+static int get_Delaunay_reduction_2D(double red_lattice[3][3], 
+				     SPGCONST double lattice[3][3],
+				     const int unique_axis,
+				     const double symprec)
+{
+  int i, j, k;
+  double volume;
+  double basis[3][3], lattice_2D[3][2], unique_vec[3];
+
+  k = 0;
+  for (i = 0; i < 3; i++) {
+    unique_vec[i] = lattice[i][unique_axis];
+  }
+
+  for (i = 0; i < 3; i++) {
+    if (i != unique_axis) {
+      for (j = 0; j < 3; j++) {
+	lattice_2D[j][k] = lattice[j][i];
+      }
+      k++;
+    }
+  }
+
+  get_exteneded_basis_2D(basis, lattice_2D);
+  
+  while (1) {
+    if (get_Delaunay_reduction_basis_2D(basis, symprec)) {
+      break;
+    }
+  }
+
+  get_Delaunay_shortest_vectors_2D(basis, unique_vec, symprec);
+
+  k = 0;
+  for (i = 0; i < 3; i++) {
+    if (i == unique_axis) {
+      for (j = 0; j < 3; j++) {
+	red_lattice[j][i] = lattice[j][i];
+      }
+    } else {
+      for (j = 0; j < 3; j++) {
+	red_lattice[j][i] = basis[k][j];
+      }
+      k++;
+    }
+  }
+
+  volume = mat_get_determinant_d3(red_lattice);
+  if (mat_Dabs(volume) < symprec) {
+    warning_print("spglib: Minimum lattice has no volume (line %d, %s).\n", __LINE__, __FILE__);
+    warning_print("spglib: basis\n");
+    warning_print("spglib: %f %f %f\n",
+		  basis[0][0], basis[0][1], basis[0][2]);
+    warning_print("spglib: %f %f %f\n",
+		  basis[1][0], basis[1][1], basis[1][2]);
+    warning_print("spglib: %f %f %f\n",
+		  basis[2][0], basis[2][1], basis[2][2]);
+    warning_print("spglib: lattice\n");
+    warning_print("spglib: %f %f %f\n",
+		  lattice[0][0], lattice[0][1], lattice[0][2]);
+    warning_print("spglib: %f %f %f\n",
+		  lattice[1][0], lattice[1][1], lattice[1][2]);
+    warning_print("spglib: %f %f %f\n",
+		  lattice[2][0], lattice[2][1], lattice[2][2]);
+    warning_print("spglib: red_lattice\n");
+    warning_print("spglib: %f %f %f\n",
+		  red_lattice[0][0], red_lattice[0][1], red_lattice[0][2]);
+    warning_print("spglib: %f %f %f\n",
+		  red_lattice[1][0], red_lattice[1][1], red_lattice[1][2]);
+    warning_print("spglib: %f %f %f\n",
+		  red_lattice[2][0], red_lattice[2][1], red_lattice[2][2]);
+    goto err;
+  }
+
+  if (volume  < 0) {
+    for (i = 0; i < 3; i++) {
+      red_lattice[i][unique_axis] = -red_lattice[i][unique_axis];
+    }
+  }
+
+  return 1;
+
+ err:
+  return 0;
+}
+
+static int get_Delaunay_reduction_basis_2D(double basis[3][3],
+					   const double symprec)
+{
+  int i, j, k, l;
+  double dot_product;
+
+  for (i = 0; i < 3; i++) {
+    for (j = i + 1; j < 3; j++) {
+      dot_product = 0.0;
+      for (k = 0; k < 3; k++) {
+	dot_product += basis[i][k] * basis[j][k];
+      }
+      if (dot_product > symprec) {
+	for (k = 0; k < 3; k++) {
+	  if (! (k == i || k == j)) {
+	    for (l = 0; l < 3; l++) {
+	      basis[k][l] += 2 * basis[i][l];
+	    }
+	    break;
+	  }
+	}
+	for (k = 0; k < 3; k++) {
+	  basis[i][k] = -basis[i][k];
+	}
+	return 0;
+      }
+    }
+  }
+
+  return 1;
+}
+
+static void get_Delaunay_shortest_vectors_2D(double basis[3][3],
+					     const double unique_vec[3],
+					     const double symprec)
+{
+  int i, j;
+  double b[4][3], tmpmat[3][3];
+  double tmpvec[3];
+  
+  /* Search in the set {b1, b2, b3, b1+b2} */
+  for (i = 0; i < 3; i++) {
+    for (j = 0; j < 3; j++) {
+      b[i][j] = basis[i][j];
+    }
+  }
+  
+  for (i = 0; i < 3; i++) {
+    b[3][i] = basis[0][i] + basis[1][i];
+  }
+  
+  /* Bubble sort */
+  for (i = 0; i < 3; i++) {
+    for (j = 0; j < 3; j++) {
+      if (mat_norm_squared_d3(b[j]) > mat_norm_squared_d3(b[j + 1])) {
+	mat_copy_vector_d3(tmpvec, b[j]);
+	mat_copy_vector_d3(b[j], b[j + 1]);
+	mat_copy_vector_d3(b[j + 1], tmpvec);
+      }
+    }
+  }
+
+  for (i = 0; i < 3; i++) {
+    tmpmat[i][0] = b[0][i];
+    tmpmat[i][1] = unique_vec[i];
+  }
+  
+  for (i = 1; i < 4; i++) {
+    for (j = 0; j < 3; j++) {
+      tmpmat[j][2] = b[i][j];
+    }
+    if (mat_Dabs(mat_get_determinant_d3(tmpmat)) > symprec) {
+      for (j = 0; j < 3; j++) {
+	basis[0][j] = b[0][j];
+	basis[1][j] = b[i][j];
+      }
+      break;
+    }
+  }
+}
+
+static void get_exteneded_basis_2D(double basis[3][3],
+				   SPGCONST double lattice[3][2])
+{
+  int i, j;
+
+  for (i = 0; i < 2; i++) {
+    for (j = 0; j < 3; j++) {
+      basis[i][j] = lattice[j][i];
+    }
+  }
+
+  for (i = 0; i < 3; i++) {
+    basis[2][i] = -lattice[i][0] -lattice[i][1];
+  }
+}

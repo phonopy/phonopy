@@ -354,11 +354,11 @@ static void set_monocli(double lattice[3][3],
   a = sqrt(metric[0][0]);
   b = sqrt(metric[1][1]);
   c = sqrt(metric[2][2]);
+  lattice[0][0] = a;
   lattice[1][1] = b;
-  lattice[2][2] = c;
   beta = acos(metric[0][2] / a / c);
-  lattice[2][0] = a * cos(beta);
-  lattice[0][0] = a * sin(beta);
+  lattice[0][2] = c * cos(beta);
+  lattice[2][2] = c * sin(beta);
 
   debug_print("beta %f\n", beta);
   debug_print_matrix_d3(lattice);

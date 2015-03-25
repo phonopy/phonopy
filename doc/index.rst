@@ -7,40 +7,58 @@
 Welcome
 =======================================================
 
+.. |i0| image:: band.png
+        :width: 15%
+
+.. |i1| image:: pdos.png
+        :width: 15%
+
+.. |i2| image:: thermalprop.png
+        :width: 15%
+
+.. |i3| image:: QHA.png
+        :width: 15%
+
 **Phonopy** is an open source package of phonon calculations based on the
 supercell approach. 
 
+On anharmonic phonopy
+=======================
+
+We are preparing to release a major update of phonopy with anharmonic
+phonon calculations: phonon lifetime, lattice thermal conductivity,
+etc. Currently the code is under the status of closed-beta. This is
+for the test and optimization of the user interface with the help of
+test users. Although we plan to release an open-beta with the manual
+on the web soon, we are ready to distribute the beta-manual in pdf via
+direct e-mail if we receive contacts from anybody who can be a test
+user. Some more information on the closed-beta release and how to
+contact is found at `this post
+<http://sourceforge.net/p/phonopy/mailman/message/33211361/>`_ in the
+phonopy mailing list.
+
+Selected features
+=======================
+
+Selected features of harmonic and quasi-harmonic phonons are:
+
 - Phonon dispersion relation (band structure)
 - Phonon DOS and partial-DOS
-- Phonon thermal properties, free energy, heat capacity, and entropy
+- Phonon thermal properties, free energy, heat capacity (Cv), and entropy
 - Phonon group velocity
-- Thermal expansion and heat capacity at constant pressure within
+- Thermal expansion and heat capacity at constant pressure (Cp) within
   quasi-harmonic approximation (:ref:`phonopy-qha <phonopy_qha>`)
 - Mode Grüneisen parameters (:ref:`gruneisen <phonopy_gruneisen>`)
 - Non-analytical-term correction, LO-TO splitting (Born effective
   charges and dielectric constant are required.)
-- Animation of normal modes for crystal viewers
+- Creation of atomic modulations of normal modes
 - Characters of irreducible representations of normal modes
 - Crystal symmetry tools
 - :ref:`Python module <phonopy_module>` (Phonopy can be used in python script.)
 - Graphical plots
+  
+|i0| |i1| |i2| |i3|
 
-.. |i0| image:: band.png
-        :width: 20%
-
-.. |i1| image:: pdos.png
-        :width: 20%
-
-.. |i2| image:: thermalprop.png
-        :width: 20%
-
-.. |i3| image:: QHA.png
-        :width: 20%
-
-
-|i0| |i1|
-
-|i2| |i3|
 
 Interfaces for calculators
 ===========================

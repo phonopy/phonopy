@@ -10,7 +10,7 @@
 #endif
 
 static PyObject * get_dataset(PyObject *self, PyObject *args);
-static PyObject * get_spacegroup(PyObject *self, PyObject *args);
+static PyObject * get_spacegroup_type(PyObject *self, PyObject *args);
 static PyObject * get_pointgroup(PyObject *self, PyObject *args);
 static PyObject * refine_cell(PyObject *self, PyObject *args);
 static PyObject * get_symmetry(PyObject *self, PyObject *args);
@@ -38,7 +38,7 @@ get_tetrahedra_integration_weight_at_omegas(PyObject *self, PyObject *args);
 
 static PyMethodDef functions[] = {
   {"dataset", get_dataset, METH_VARARGS, "Dataset for crystal symmetry"},
-  {"spacegroup", get_spacegroup, METH_VARARGS, "International symbol"},
+  {"spacegroup_type", get_spacegroup_type, METH_VARARGS, "Space-group type symbols"},
   {"pointgroup", get_pointgroup, METH_VARARGS,
    "International symbol of pointgroup"},
   {"refine_cell", refine_cell, METH_VARARGS, "Refine cell"},
@@ -144,13 +144,14 @@ void init_spglib(void)
 
 static PyObject * get_dataset(PyObject *self, PyObject *args)
 {
-  int i, j, k;
+  int i, j, k, n;
   double symprec, angle_tolerance;
   SpglibDataset *dataset;
   PyArrayObject* lattice;
   PyArrayObject* position;
   PyArrayObject* atom_type;
-  PyObject* array, *vec, *mat, *rot, *trans, *wyckoffs, *equiv_atoms;
+  PyObject *array, *vec, *mat, *rot, *trans, *wyckoffs, *equiv_atoms;
+  PyObject *brv_lattice, *brv_types, *brv_positions;
 
   if (!PyArg_ParseTuple(args, "OOOdd",
 			&lattice,
@@ -173,12 +174,18 @@ static PyObject * get_dataset(PyObject *self, PyObject *args)
 			      symprec,
 			      angle_tolerance);
 
-  array = PyList_New(9);
+  array = PyList_New(13);
+  n = 0;
 
   /* Space group number, international symbol, hall symbol */
-  PyList_SetItem(array, 0, PyLong_FromLong((long) dataset->spacegroup_number));
-  PyList_SetItem(array, 1, PYUNICODE_FROMSTRING(dataset->international_symbol));
-  PyList_SetItem(array, 2, PYUNICODE_FROMSTRING(dataset->hall_symbol));
+  PyList_SetItem(array, n, PyLong_FromLong((long) dataset->spacegroup_number));
+  n++;
+  PyList_SetItem(array, n, PyLong_FromLong((long) dataset->hall_number));
+  n++;
+  PyList_SetItem(array, n, PYUNICODE_FROMSTRING(dataset->international_symbol));
+  n++;
+  PyList_SetItem(array, n, PYUNICODE_FROMSTRING(dataset->hall_symbol));
+  n++;
 
   /* Transformation matrix */
   mat = PyList_New(3);
@@ -189,14 +196,16 @@ static PyObject * get_dataset(PyObject *self, PyObject *args)
     }
     PyList_SetItem(mat, i, vec);
   }
-  PyList_SetItem(array, 3, mat);
+  PyList_SetItem(array, n, mat);
+  n++;
 
   /* Origin shift */
   vec = PyList_New(3);
   for (i = 0; i < 3; i++) {
     PyList_SetItem(vec, i, PyFloat_FromDouble(dataset->origin_shift[i]));
   }
-  PyList_SetItem(array, 4, vec);
+  PyList_SetItem(array, n, vec);
+  n++;
 
   /* Rotation matrices */
   rot = PyList_New(dataset->n_operations);
@@ -211,7 +220,8 @@ static PyObject * get_dataset(PyObject *self, PyObject *args)
     }
     PyList_SetItem(rot, i, mat);
   }
-  PyList_SetItem(array, 5, rot);
+  PyList_SetItem(array, n, rot);
+  n++;
 
   /* Translation vectors */
   trans = PyList_New(dataset->n_operations);
@@ -222,7 +232,8 @@ static PyObject * get_dataset(PyObject *self, PyObject *args)
     }
     PyList_SetItem(trans, i, vec);
   }
-  PyList_SetItem(array, 6, trans);
+  PyList_SetItem(array, n, trans);
+  n++;
 
   /* Wyckoff letters, Equivalent atoms */
   wyckoffs = PyList_New(dataset->n_atoms);
@@ -231,49 +242,68 @@ static PyObject * get_dataset(PyObject *self, PyObject *args)
     PyList_SetItem(wyckoffs, i, PyLong_FromLong((long) dataset->wyckoffs[i]));
     PyList_SetItem(equiv_atoms, i, PyLong_FromLong((long) dataset->equivalent_atoms[i]));
   }
-  PyList_SetItem(array, 7, wyckoffs);
-  PyList_SetItem(array, 8, equiv_atoms);
+  PyList_SetItem(array, n, wyckoffs);
+  n++;
+  PyList_SetItem(array, n, equiv_atoms);
+  n++;
+
+  brv_lattice = PyList_New(3);
+  for (i = 0; i < 3; i++) {
+    vec = PyList_New(3);
+    for (j = 0; j < 3; j++) {
+      PyList_SetItem(vec, j, PyFloat_FromDouble(dataset->brv_lattice[i][j]));
+    }
+    PyList_SetItem(brv_lattice, i, vec);
+  }
+  PyList_SetItem(array, n, brv_lattice);
+  n++;
+
+  brv_types = PyList_New(dataset->n_brv_atoms);
+  brv_positions = PyList_New(dataset->n_brv_atoms);
+  for (i = 0; i < dataset->n_brv_atoms; i++) {
+    vec = PyList_New(3);
+    for (j = 0; j < 3; j++) {
+      PyList_SetItem(vec, j, PyFloat_FromDouble(dataset->brv_positions[i][j]));
+    }
+    PyList_SetItem(brv_types, i, PyLong_FromLong((long) dataset->brv_types[i]));
+    PyList_SetItem(brv_positions, i, vec);
+  }
+  PyList_SetItem(array, n, brv_types);
+  n++;
+  PyList_SetItem(array, n, brv_positions);
+  n++;
+
   spg_free_dataset(dataset);
 
   return array;
 }
 
-static PyObject * get_spacegroup(PyObject *self, PyObject *args)
+static PyObject * get_spacegroup_type(PyObject *self, PyObject *args)
 {
-  int i;
-  double symprec, angle_tolerance;
-  char symbol_with_number[17], spg_symbol[11];
-  PyArrayObject* lattice;
-  PyArrayObject* position;
-  PyArrayObject* atom_type;
-  if (!PyArg_ParseTuple(args, "OOOdd",
-			&lattice,
-			&position,
-			&atom_type,
-			&symprec,
-			&angle_tolerance)) {
+  int n, hall_number;
+  PyObject *array;
+  SpglibSpacegroupType symbols;
+
+  if (!PyArg_ParseTuple(args, "i",&hall_number)) {
     return NULL;
   }
 
-  SPGCONST double (*lat)[3] = (double(*)[3])lattice->data;
-  SPGCONST double (*pos)[3] = (double(*)[3])position->data;
-  const int num_atom = position->dimensions[0];
-  const int* typat = (int*)atom_type->data;
+  symbols = spg_get_spacegroup_type(hall_number);
 
-  const int num_spg = spgat_get_international(spg_symbol,
-					      lat,
-					      pos,
-					      typat,
-					      num_atom,
-					      symprec,
-					      angle_tolerance);
-  for (i = 9; i > 0; i--) {
-    if (! isspace(spg_symbol[i])) { break; }
-  }
-  spg_symbol[i + 1] = 0;
-  sprintf(symbol_with_number, "%s (%d)", spg_symbol, num_spg);
+  array = PyList_New(5);
+  n = 0;
+  PyList_SetItem(array, n, PYUNICODE_FROMSTRING(symbols.schoenflies));
+  n++;
+  PyList_SetItem(array, n, PYUNICODE_FROMSTRING(symbols.hall_symbol));
+  n++;
+  PyList_SetItem(array, n, PYUNICODE_FROMSTRING(symbols.international));
+  n++;
+  PyList_SetItem(array, n, PYUNICODE_FROMSTRING(symbols.international_full));
+  n++;
+  PyList_SetItem(array, n, PYUNICODE_FROMSTRING(symbols.international_short));
+  n++;
 
-  return PYUNICODE_FROMSTRING(symbol_with_number);
+  return array;
 }
 
 static PyObject * get_pointgroup(PyObject *self, PyObject *args)

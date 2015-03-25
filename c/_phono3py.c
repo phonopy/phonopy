@@ -1242,7 +1242,7 @@ static PyObject * py_phonopy_zheev(PyObject *self, PyObject *args)
 
   free(a);
   
-  return PyInt_FromLong((long) info);
+  return PyLong_FromLong((long) info);
 }
 
 static PyObject * py_phonopy_pinv(PyObject *self, PyObject *args)
@@ -1266,7 +1266,7 @@ static PyObject * py_phonopy_pinv(PyObject *self, PyObject *args)
   
   info = phonopy_pinv(data_out, data_in, m, n, cutoff);
 
-  return PyInt_FromLong((long) info);
+  return PyLong_FromLong((long) info);
 }
 
 #ifdef LIBFLAME
@@ -1335,7 +1335,7 @@ static PyObject * py_inverse_collision_matrix(PyObject *self, PyObject *args)
   info = phonopy_pinv_dsyev(collision_matrix + adrs_shift,
 			    eigvals, num_column, cutoff);
 
-  return PyInt_FromLong((long) info);
+  return PyLong_FromLong((long) info);
 }
 
 static void get_triplet_tetrahedra_vertices
