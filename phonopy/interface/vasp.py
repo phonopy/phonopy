@@ -239,8 +239,8 @@ def _write_magnetic_moments(cell):
         (num_atoms,
          symbols,
          scaled_positions,
-         sort_list) = _sort_positions_by_symbols(cell.get_chemical_symbols(),
-                                                 cell.get_scaled_positions())
+         sort_list) = sort_positions_by_symbols(cell.get_chemical_symbols(),
+                                                cell.get_scaled_positions())
         w.write(" MAGMOM = ")
         for i in sort_list:
             w.write("%f " % magmoms[i])
@@ -260,12 +260,25 @@ def get_scaled_positions_lines(scaled_positions):
 
     return lines
 
+def sort_positions_by_symbols(symbols, positions):
+    reduced_symbols = _get_reduced_symbols(symbols)
+    sorted_positions = []
+    sort_list = []
+    num_atoms = np.zeros(len(reduced_symbols), dtype=int)
+    for i, rs in enumerate(reduced_symbols):
+        for j, (s, p) in enumerate(zip(symbols, positions)):
+            if rs == s:
+                sorted_positions.append(p)
+                sort_list.append(j)
+                num_atoms[i] += 1
+    return num_atoms, reduced_symbols, np.array(sorted_positions), sort_list
+
 def _get_vasp_structure(atoms, direct=True):
     (num_atoms,
      symbols,
      scaled_positions,
-     sort_list) = _sort_positions_by_symbols(atoms.get_chemical_symbols(),
-                                             atoms.get_scaled_positions())
+     sort_list) = sort_positions_by_symbols(atoms.get_chemical_symbols(),
+                                            atoms.get_scaled_positions())
     lines = ""     
     for s in symbols:
         lines += "%s " % s
@@ -286,19 +299,6 @@ def _get_reduced_symbols(symbols):
         if not (s in reduced_symbols):
             reduced_symbols.append(s)
     return reduced_symbols
-
-def _sort_positions_by_symbols(symbols, positions):
-    reduced_symbols = _get_reduced_symbols(symbols)
-    sorted_positions = []
-    sort_list = []
-    num_atoms = np.zeros(len(reduced_symbols), dtype=int)
-    for i, rs in enumerate(reduced_symbols):
-        for j, (s, p) in enumerate(zip(symbols, positions)):
-            if rs == s:
-                sorted_positions.append(p)
-                sort_list.append(j)
-                num_atoms[i] += 1
-    return num_atoms, reduced_symbols, np.array(sorted_positions), sort_list
 
 #
 # Non-analytical term
