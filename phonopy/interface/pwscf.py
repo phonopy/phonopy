@@ -145,7 +145,7 @@ def get_pwscf_structure(cell, pp_filenames=None):
     lines += ("!    ibrav = 0, nat = %d, ntyp = %d\n" %
               (len(positions), len(unique_symbols)))
     lines += "CELL_PARAMETERS bohr\n"
-    lines += ((" %20.16f" * 3 + "\n") * 3) % tuple(lattice.ravel())
+    lines += ((" %21.16f" * 3 + "\n") * 3) % tuple(lattice.ravel())
     lines += "ATOMIC_SPECIES\n"
     for symbol, mass in atomic_species:
         if pp_filenames is None:
