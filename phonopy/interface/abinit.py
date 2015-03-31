@@ -51,7 +51,7 @@ def parse_set_of_forces(displacements,
         abinit_forces = collect_forces(f, num_atom, hook, [1, 2, 3])
         if not abinit_forces:
             return False
-            
+
         drift_force = get_drift_forces(abinit_forces)
         disp['forces'] = np.array(abinit_forces) - drift_force
 
@@ -76,9 +76,9 @@ def read_abinit(filename):
         positions = np.dot(np.linalg.inv(lattice), pos_bohr).T
     elif tags['xred'] is not None:
         positions = tags['xred']
-        
+
     numbers = [tags['znucl'][x - 1] for x in tags['typat']]
-    
+
     return Atoms(numbers=numbers,
                  cell=lattice.T,
                  scaled_positions=positions)
@@ -111,12 +111,12 @@ def get_abinit_structure(cell):
     lines += ("znucl" + " %d" * len(znucl) + "\n") % tuple(znucl)
     lines += "acell 1 1 1\n"
     lines += "rprim\n"
-    lines += (("%20.16f" * 3 + "\n") * 3) % tuple(cell.get_cell().ravel())
+    lines += ((" % 20.16f" * 3 + "\n") * 3) % tuple(cell.get_cell().ravel())
     lines += "xred\n"
     lines += get_scaled_positions_lines(cell.get_scaled_positions())
 
     return lines
-    
+
 class AbinitIn:
     def __init__(self, lines):
         self._set_methods = {'acell':     self._set_acell,
@@ -162,7 +162,7 @@ class AbinitIn:
             if tag not in elements:
                 print "%s is not found in the input file." % tag
                 sys.exit(1)
-                    
+
         for tag, self._values in elements.iteritems():
             if tag == 'natom' or tag == 'ntypat':
                 self._set_methods[tag]()
@@ -174,7 +174,7 @@ class AbinitIn:
     def _get_numerical_values(self, char_string, num_type='float'):
         vals = []
         m = 1
-        
+
         if '*' in char_string:
             m = int(char_string.split('*')[0])
             str_val = char_string.split('*')[1]
@@ -188,7 +188,7 @@ class AbinitIn:
             a = int(str_val)
 
         return [a] * m
-            
+
     def _set_acell(self):
         acell = []
         for val in self._values:
@@ -198,9 +198,9 @@ class AbinitIn:
                         for i in range(3):
                             acell[i] /= Bohr
                 break
-                
+
             acell += self._get_numerical_values(val)
-            
+
         self._tags['acell'] = acell[:3]
 
     def _set_natom(self):
@@ -226,7 +226,7 @@ class AbinitIn:
                 break
 
         self._tags['scalecart'] = np.array(scalecart[:3])
-        
+
     def _set_typat(self):
         typat = []
         natom = self._tags['natom']
@@ -245,7 +245,7 @@ class AbinitIn:
 
     def _set_xred(self):
         self._set_x_tags('xred')
-        
+
     def _set_x_tags(self, tagname):
         xtag = []
         natom = self._tags['natom']
@@ -255,7 +255,7 @@ class AbinitIn:
                 break
 
         self._tags[tagname] = np.reshape(xtag[:natom * 3], (-1, 3))
-        
+
     def _set_znucl(self):
         znucl = []
         ntypat = self._tags['ntypat']
