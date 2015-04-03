@@ -4,9 +4,9 @@
 #include <spglib.h>
 
 #if (PY_MAJOR_VERSION < 3) && (PY_MINOR_VERSION < 6)
-#define PYUNICODE_FROMSTRING PyUnicode_FromString
-#else
 #define PYUNICODE_FROMSTRING PyString_FromString
+#else
+#define PYUNICODE_FROMSTRING PyUnicode_FromString
 #endif
 
 static PyObject * get_dataset(PyObject *self, PyObject *args);
