@@ -808,7 +808,7 @@ static int match_hall_symbol_db_ortho(double origin_shift[3],
     	for (k = 0; k < 3; k++) {vec[k] = changed_lattice[k][j];}
     	norms[j] = mat_norm_squared_d3(vec);
       }
-      if (norms[2] < norms[0] || norms[2] < norms[1]) {continue;}
+      if (norms[0] > norms[1] || norms[0] > norms[2]) {continue;}
     }
 
     if (num_free_axes == 6) {
