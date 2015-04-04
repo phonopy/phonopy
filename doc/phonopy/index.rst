@@ -22,7 +22,7 @@ Welcome to phonopy
 **Phonopy** is an open source package for phonon calculations at
 harmonic and quasi-harmonic levels.
 
-**Phono3py** for phonon-phonon interaction calculations will be
+**Phono3py** for phonon-phonon interaction calculations has been 
 released as an open beta
 version. See the document at http://phonopy.sourceforge.net/phono3py/ .
 
@@ -118,7 +118,7 @@ New BSD from version 1.3.
 Contact
 =======
 
-* Author: `Atsushi Togo <http://atztogo.users.sourceforge.net/>`_
+* Author: `Atsushi Togo <http://atztogo.github.io/>`_
 
 |sflogo|
 

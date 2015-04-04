@@ -28,6 +28,26 @@ Documentation
    citation
    changelog
 
+Mailing list
+============
+
+For questions, bug reports, and comments, please visit following
+mailing list:
+
+https://lists.sourceforge.net/lists/listinfo/phonopy-users
+
+Message body including attached files has to be smaller than 300 KB.
+
+License
+=======
+
+New BSD
+
+Contact
+=======
+
+* Author: `Atsushi Togo <http://atztogo.github.io/>`_
+
 |sflogo|
 
 .. |sflogo| image:: http://sflogo.sourceforge.net/sflogo.php?group_id=161614&type=1
