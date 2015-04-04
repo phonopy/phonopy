@@ -2,4 +2,5 @@ graft c/harmonic_h
 graft c/anharmonic_h
 graft c/spglib_h
 graft example
+graft example-phono3py
 include setup.py
