@@ -32,14 +32,14 @@ include_dirs = (['c/harmonic_h',
                  'c/spglib_h'] +
                 include_dirs_numpy)
 ##
-## If lapacke is prepared manually,
+## Uncomment and modify below if lapacke is prepared in a special location
 ##
 include_dirs += ['../lapack-3.5.0/lapacke/include']
 extra_link_args=['-lgomp',
                  '../lapack-3.5.0/liblapacke.a']
 
 ##
-## Libflame test
+## This is for the test of libflame
 ##
 # use_libflame = False
 # if use_libflame:
@@ -62,7 +62,7 @@ scripts_phono3py = ['scripts/phono3py',
                     'scripts/kaccum']
 
 setup(name='phono3py',
-      version='0.9.9',
+      version='0.9.9.1',
       description='This is the phono3py module.',
       author='Atsushi Togo',
       author_email='atz.togo@gmail.com',
