@@ -18,6 +18,7 @@ class KappaDOS:
                  mesh,
                  grid_address,
                  grid_mapping_table,
+                 ir_grid_points,
                  grid_order=None):
         self._mode_kappa = mode_kappa
         self._tetrahedron_mesh = TetrahedronMesh(
@@ -25,7 +26,8 @@ class KappaDOS:
             frequencies,
             mesh,
             grid_address,
-            grid_mapping_table)
+            grid_mapping_table,
+            ir_grid_points)
 
         min_freq = min(frequencies.ravel())
         max_freq = max(frequencies.ravel())
@@ -42,14 +44,14 @@ class KappaDOS:
         num_freqs = len(self._frequency_points)
         thm = self._tetrahedron_mesh
         for j, value in enumerate(('J', 'I')):
-            thm.run_at_frequencies(value=value,
-                                   frequency_points=self._frequency_points)
-            iw = thm.get_integration_weights()
-            for k in range(num_freqs):
-                for l in range(len(self._mode_kappa)): # at temperatures
-                    for i, mk in enumerate(self._mode_kappa[l]):
+            thm.set(value=value,
+                    frequency_points=self._frequency_points)
+            for i, iw in enumerate(thm): 
+                for k in range(num_freqs):
+                    for l in range(len(self._mode_kappa)): # at temperatures
+                        mk = self._mode_kappa[l, i]
                         for ib in range(self._mode_kappa.shape[2]):
-                            self._kdos[l, k, j] += iw[k, ib, i] * mk[ib]
+                            self._kdos[l, k, j] += iw[k, ib] * mk[ib]
         self._kdos *= np.prod(mesh)
 
 if __name__ == '__main__':
@@ -88,13 +90,15 @@ if __name__ == '__main__':
                     rotations=rotations)
     grid_address = gp.get_grid_address()
     grid_mapping_table = gp.get_grid_mapping_table()
+    ir_grid_points = gp.get_ir_grid_points()
     
     kappa_dos = KappaDOS(mode_kappa,
                          cell,
                          frequencies,
                          mesh,
                          grid_address,
-                         grid_mapping_table)
+                         grid_mapping_table,
+                         ir_grid_points)
                          
     freq_points, kdos = kappa_dos.get_kdos()
 

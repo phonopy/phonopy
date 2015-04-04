@@ -113,6 +113,7 @@ class TetrahedronMesh:
             value='I',
             division_number=201,
             frequency_points=None):
+        self._grid_point_count = 0
         self._value = value
         if frequency_points is None:
             max_frequency = np.amax(self._frequencies)
