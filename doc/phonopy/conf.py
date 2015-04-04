@@ -118,10 +118,10 @@ html_theme_options = {
     #     ("Examples", "examples"),
     #     ("Link", "http://example.com", True),
     #     ],
-    'navbar_links': [
-        ("Tags", "setting-tags"),
-        ("Options", "command-options"),
-        ],
+    # 'navbar_links': [
+    #     ("Tags", "setting-tags"),
+    #     ("Options", "command-options"),
+    #     ],
         
     # Render the next and previous page links in navbar. (Default: true)
     'navbar_sidebarrel': True,

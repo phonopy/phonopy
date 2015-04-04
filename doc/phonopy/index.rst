@@ -4,7 +4,7 @@
    contain the root `toctree` directive.
 
 =======================================================
-Welcome
+Welcome to phonopy
 =======================================================
 
 .. |i0| image:: band.png
@@ -19,23 +19,12 @@ Welcome
 .. |i3| image:: QHA.png
         :width: 15%
 
-**Phonopy** is an open source package of phonon calculations based on the
-supercell approach. 
+**Phonopy** is an open source package for phonon calculations at
+harmonic and quasi-harmonic levels.
 
-On anharmonic phonopy
-=======================
-
-We are preparing to release a major update of phonopy with anharmonic
-phonon calculations: phonon lifetime, lattice thermal conductivity,
-etc. Currently the code is under the status of closed-beta. This is
-for the test and optimization of the user interface with the help of
-test users. Although we plan to release an open-beta with the manual
-on the web soon, we are ready to distribute the beta-manual in pdf via
-direct e-mail if we receive contacts from anybody who can be a test
-user. Some more information on the closed-beta release and how to
-contact is found at `this post
-<http://sourceforge.net/p/phonopy/mailman/message/33211361/>`_ in the
-phonopy mailing list.
+**Phono3py** for phonon-phonon interaction calculations will be
+released as an open beta
+version. See the document at http://phonopy.sourceforge.net/phono3py/ .
 
 Selected features
 =======================
@@ -80,9 +69,25 @@ Documentation
 =============
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
-   contents
+   examples
+   Tutorial <procedure>
+   workflow
+   install
+   features
+   input-files
+   output-files
+   setting-tags
+   command-options
+   auxiliary-tools
+   qha
+   Mode Grüneisen parameters <gruneisen>
+   interfaces
+   theory
+   citation
+   reference
+   changelog
 
 
 - `Manual in PDF <https://sourceforge.net/projects/phonopy/files/phonopy%20documentation/phonopy-manual.pdf/download>`_
