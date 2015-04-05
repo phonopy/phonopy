@@ -9,8 +9,6 @@
 #include "symmetry.h"
 #include "mathfunc.h"
 
-#include "debug.h"
-
 static int M_bcc[3][3] = {
   { 0, 1, 1 },
   { 1, 0, 1 },

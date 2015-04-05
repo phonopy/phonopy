@@ -2,8 +2,13 @@
 /* Copyright (C) 2014 Atsushi Togo */
 
 #include "mathfunc.h"
-#include "debug.h"
 
+#ifdef THMWARNING
+#include <stdio.h>
+#define warning_print(...) fprintf(stderr,__VA_ARGS__)
+#else
+#define warning_print(...)
+#endif
 
 /*      6-------7             */
 /*     /|      /|             */

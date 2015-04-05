@@ -4,7 +4,7 @@
 #ifndef __debug_H__
 #define __debug_H__
 
-#ifdef DEBUG
+#ifdef SPGDEBUG
 #define debug_print(...) printf(__VA_ARGS__)
 #define debug_print_matrix_d3( a ) dbg_print_matrix_d3( a )
 #define debug_print_matrix_i3( a ) dbg_print_matrix_i3( a )

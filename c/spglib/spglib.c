@@ -5,7 +5,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "cell.h"
-#include "debug.h"
 #include "kpoint.h"
 #include "lattice.h"
 #include "mathfunc.h"
@@ -18,6 +17,7 @@
 #include "spin.h"
 #include "symmetry.h"
 #include "tetrahedron_method.h"
+#include "triplet_kpoint.h"
 
 #define REDUCE_RATE 0.95
 
@@ -1148,7 +1148,8 @@ static int get_ir_reciprocal_mesh(int grid_address[][3],
 {
   SpglibDataset *dataset;
   int num_ir, i;
-  MatINT *rotations;
+  MatINT *rotations, *rot_reciprocal;
+
 
   dataset = get_dataset(lattice,
 			position,
@@ -1160,12 +1161,13 @@ static int get_ir_reciprocal_mesh(int grid_address[][3],
   for (i = 0; i < dataset->n_operations; i++) {
     mat_copy_matrix_i3(rotations->mat[i], dataset->rotations[i]);
   }
+  rot_reciprocal = kpt_get_point_group_reciprocal(rotations, is_time_reversal);
   num_ir = kpt_get_irreducible_reciprocal_mesh(grid_address,
 					       map,
 					       mesh,
 					       is_shift,
-					       is_time_reversal,
-					       rotations);
+					       rot_reciprocal);
+  mat_free_MatINT(rot_reciprocal);
   mat_free_MatINT(rotations);
   spg_free_dataset(dataset);
   return num_ir;
