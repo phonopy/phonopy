@@ -6,14 +6,14 @@
 
 #include "mathfunc.h"
 
-int kpt_get_ir_triplets_at_q(int map_triplets[],
+int tpk_get_ir_triplets_at_q(int map_triplets[],
 			     int map_q[],
 			     int grid_address[][3],
 			     const int grid_point,
 			     const int mesh[3],
 			     const int is_time_reversal,
 			     const MatINT * rotations);
-int kpt_get_BZ_triplets_at_q(int triplets[][3],
+int tpk_get_BZ_triplets_at_q(int triplets[][3],
 			     const int grid_point,
 			     SPGCONST int bz_grid_address[][3],
 			     const int bz_map[],

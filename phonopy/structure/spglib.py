@@ -229,13 +229,16 @@ def find_primitive(bulk, symprec=1e-5, angle_tolerance=-1.0):
 ############
 # k-points #
 ############
-def get_grid_point_from_address(grid_address, mesh):
+def get_grid_point_from_address(grid_address,
+                                mesh,
+                                is_shift=np.zeros(3, dtype='intc')):
     """
     Return grid point index by tranlating grid address
     """
 
     return spg.grid_point_from_address(np.array(grid_address, dtype='intc'),
-                                       np.array(mesh, dtype='intc'))
+                                       np.array(mesh, dtype='intc'),
+                                       np.array(is_shift, dtype='inct'))
     
 
 def get_ir_reciprocal_mesh(mesh,

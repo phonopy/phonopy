@@ -19,7 +19,6 @@ sources = ['c/_phono3py.c',
            'c/anharmonic/phonon3/imag_self_energy_with_g.c',
            'c/anharmonic/phonon3/collision_matrix.c',
            'c/anharmonic/other/isotope.c',
-           'c/spglib/debug.c',
            'c/spglib/kpoint.c',
            'c/spglib/mathfunc.c',
            'c/spglib/tetrahedron_method.c']
@@ -33,7 +32,7 @@ include_dirs = (['c/harmonic_h',
                 include_dirs_numpy)
 ##
 ## Uncomment and modify below if lapacke is prepared in a special location
-##
+
 include_dirs += ['../lapack-3.5.0/lapacke/include']
 extra_link_args=['-lgomp',
                  '../lapack-3.5.0/liblapacke.a']

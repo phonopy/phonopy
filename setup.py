@@ -18,7 +18,6 @@ extension_spglib = Extension(
     # extra_link_args=['-lgomp'],
     sources=['c/_spglib.c',
              'c/spglib/cell.c',
-             'c/spglib/debug.c',
              'c/spglib/hall_symbol.c',
              'c/spglib/kpoint.c',
              'c/spglib/lattice.c',

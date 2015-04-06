@@ -11,10 +11,9 @@
 /* element first. But when GRID_ORDER_XYZ is defined, it is changed to right */ 
 /* element first. */
 
-#define NUM_BZ_SEARCH_SPACE 125
+#define KPT_NUM_BZ_SEARCH_SPACE 125
+extern const int kpt_bz_search_space[KPT_NUM_BZ_SEARCH_SPACE][3];
 
-int kpt_get_grid_point(const int grid_address[3],
-		       const int mesh[3]);
 int kpt_get_grid_point_double_mesh(const int address_double[3],
 				   const int mesh[3]);
 int kpt_get_irreducible_reciprocal_mesh(int grid_address[][3],
@@ -47,19 +46,11 @@ int kpt_relocate_BZ_grid_address(int bz_grid_address[][3],
 				 const int mesh[3],
 				 SPGCONST double rec_lattice[3][3],
 				 const int is_shift[3]);
-void kpt_get_BZ_search_space(int (*g_search_space)[3]);
 MatINT *kpt_get_point_group_reciprocal(const MatINT * rotations,
 				       const int is_time_reversal);
 MatINT *kpt_get_point_group_reciprocal_with_q(const MatINT * rot_reciprocal,
 					      const double symprec,
 					      const int num_q,
 					      SPGCONST double qpoints[][3]);
-void kpt_get_neighboring_grid_points(int neighboring_grid_points[],
-				     const int grid_point,
-				     SPGCONST int relative_grid_address[][3],
-				     const int num_relative_grid_address,
-				     const int mesh[3],
-				     SPGCONST int bz_grid_address[][3],
-				     const int bz_map[]);
 
 #endif

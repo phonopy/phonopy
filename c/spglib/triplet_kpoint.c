@@ -31,7 +31,7 @@ static int get_third_q_of_triplets_at_q(int bz_address[3][3],
 					const int mesh[3],
 					const int bzmesh[3]);
 
-int kpt_get_ir_triplets_at_q(int map_triplets[],
+int tpk_get_ir_triplets_at_q(int map_triplets[],
 			     int map_q[],
 			     int grid_address[][3],
 			     const int grid_point,
@@ -53,7 +53,7 @@ int kpt_get_ir_triplets_at_q(int map_triplets[],
   return num_ir;
 }
 
-int kpt_get_BZ_triplets_at_q(int triplets[][3],
+int tpk_get_BZ_triplets_at_q(int triplets[][3],
 			     const int grid_point,
 			     SPGCONST int bz_grid_address[][3],
 			     const int bz_map[],
@@ -223,11 +223,7 @@ static int get_third_q_of_triplets_at_q(int bz_address[3][3],
 					const int bzmesh[3])
 {
   int i, j, smallest_g, smallest_index, sum_g, delta_g[3];
-  int (*g_search_space)[3];
-  int bzgp[NUM_BZ_SEARCH_SPACE], bz_address_double[3];
-
-  g_search_space = (int (*)[3]) malloc(sizeof(int[3]) * NUM_BZ_SEARCH_SPACE);
-  kpt_get_BZ_search_space(g_search_space);
+  int bzgp[KPT_NUM_BZ_SEARCH_SPACE], bz_address_double[3];
 
   mat_modulo_i3(bz_address[q_index], mesh);
   for (i = 0; i < 3; i++) {
@@ -238,15 +234,15 @@ static int get_third_q_of_triplets_at_q(int bz_address[3][3],
     delta_g[i] /= mesh[i];
   }
   
-  for (i = 0; i < NUM_BZ_SEARCH_SPACE; i++) {
+  for (i = 0; i < KPT_NUM_BZ_SEARCH_SPACE; i++) {
     for (j = 0; j < 3; j++) {
       bz_address_double[j] = (bz_address[q_index][j] +
-			      g_search_space[i][j] * mesh[j]) * 2;
+			      kpt_bz_search_space[i][j] * mesh[j]) * 2;
     }
     bzgp[i] = bz_map[kpt_get_grid_point_double_mesh(bz_address_double, bzmesh)];
   }
 
-  for (i = 0; i < NUM_BZ_SEARCH_SPACE; i++) {
+  for (i = 0; i < KPT_NUM_BZ_SEARCH_SPACE; i++) {
     if (bzgp[i] != -1) {
       goto escape;
     }
@@ -257,11 +253,11 @@ static int get_third_q_of_triplets_at_q(int bz_address[3][3],
   smallest_g = 4;
   smallest_index = 0;
 
-  for (i = 0; i < NUM_BZ_SEARCH_SPACE; i++) {
+  for (i = 0; i < KPT_NUM_BZ_SEARCH_SPACE; i++) {
     if (bzgp[i] > -1) { /* q'' is in BZ */
-      sum_g = (abs(delta_g[0] + g_search_space[i][0]) +
-	       abs(delta_g[1] + g_search_space[i][1]) +
-	       abs(delta_g[2] + g_search_space[i][2]));
+      sum_g = (abs(delta_g[0] + kpt_bz_search_space[i][0]) +
+	       abs(delta_g[1] + kpt_bz_search_space[i][1]) +
+	       abs(delta_g[2] + kpt_bz_search_space[i][2]));
       if (sum_g < smallest_g) {
 	smallest_index = i;
 	smallest_g = sum_g;
@@ -270,10 +266,8 @@ static int get_third_q_of_triplets_at_q(int bz_address[3][3],
   }
 
   for (i = 0; i < 3; i++) {
-    bz_address[q_index][i] += g_search_space[smallest_index][i] * mesh[i];
+    bz_address[q_index][i] += kpt_bz_search_space[smallest_index][i] * mesh[i];
   }
-
-  free(g_search_space);
 
   return smallest_g;
 }

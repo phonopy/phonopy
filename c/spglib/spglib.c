@@ -551,10 +551,17 @@ int spgat_refine_cell(double lattice[3][3],
 /*---------*/
 /* kpoints */
 /*---------*/
-int spg_get_grid_point(const int grid_address[3],
-		       const int mesh[3])
+int spg_get_grid_point_from_address(const int grid_address[3],
+				    const int mesh[3],
+				    const int is_shift[3])
 {
-  return kpt_get_grid_point(grid_address, mesh);
+  int i;
+  int address_double[3];
+  for (i = 0; i < 3; i++) {
+    address_double[i] = grid_address[i] * 2 + is_shift[i];
+  }
+
+  return kpt_get_grid_point_double_mesh(address_double, mesh);
 }
 
 int spg_get_ir_reciprocal_mesh(int grid_address[][3],
@@ -691,7 +698,7 @@ int spg_get_BZ_triplets_at_q(int triplets[][3],
 			     const int num_map_triplets,
 			     const int mesh[3])
 {
-  return kpt_get_BZ_triplets_at_q(triplets,
+  return tpk_get_BZ_triplets_at_q(triplets,
 				  grid_point,
 				  bz_grid_address,
 				  bz_map,
@@ -708,7 +715,7 @@ void spg_get_neighboring_grid_points(int relative_grid_points[],
 				     SPGCONST int bz_grid_address[][3],
 				     const int bz_map[])
 {
-  kpt_get_neighboring_grid_points(relative_grid_points,
+  thm_get_neighboring_grid_points(relative_grid_points,
 				  grid_point,
 				  relative_grid_address,
 				  num_relative_grid_address,
@@ -1222,7 +1229,7 @@ static int get_triplets_reciprocal_mesh_at_q(int map_triplets[],
     mat_copy_matrix_i3(rot_real->mat[i], rotations[i]);
   }
 
-  num_ir = kpt_get_ir_triplets_at_q(map_triplets,
+  num_ir = tpk_get_ir_triplets_at_q(map_triplets,
 				    map_q,
 				    grid_address,
 				    grid_point,

@@ -6,8 +6,7 @@
 #include "mathfunc.h"
 #include "kpoint.h"
 
-#define NUM_BZ_SEARCH_SPACE 125
-static int bz_search_space[NUM_BZ_SEARCH_SPACE][3] = {
+const int kpt_bz_search_space[KPT_NUM_BZ_SEARCH_SPACE][3] = {
   { 0,  0,  0},
   { 0,  0,  1},
   { 0,  0,  2},
@@ -168,15 +167,6 @@ static void reduce_grid_address(int address[3],
 				const int address_double[3],
 				const int mesh[3]);
 
-int kpt_get_grid_point(const int grid_address[3],
-		       const int mesh[3])
-{
-  int grid_address_modulo[3];
-  mat_copy_vector_i3(grid_address_modulo, grid_address);
-  mat_modulo_i3(grid_address_modulo, mesh);
-  return get_grid_point_single_mesh(grid_address_modulo, mesh);
-}
-
 int kpt_get_grid_point_double_mesh(const int address_double[3],
 				   const int mesh[3])
 {
@@ -318,17 +308,6 @@ int kpt_relocate_BZ_grid_address(int bz_grid_address[][3],
 }
 
 
-void kpt_get_BZ_search_space(int (*g_search_space)[3]) 
-{
-  int i, j;
-
-  for (i = 0; i < NUM_BZ_SEARCH_SPACE; i++) {
-    for (j = 0; j < 3; j++) {
-      g_search_space[i][j] = bz_search_space[i][j];
-    }
-  }
-}
-
 MatINT *kpt_get_point_group_reciprocal(const MatINT * rotations,
 				       const int is_time_reversal)
 {
@@ -344,36 +323,6 @@ MatINT *kpt_get_point_group_reciprocal_with_q(const MatINT * rot_reciprocal,
 					   symprec,
 					   num_q,
 					   qpoints);
-}
-
-void kpt_get_neighboring_grid_points(int neighboring_grid_points[],
-				     const int grid_point,
-				     SPGCONST int relative_grid_address[][3],
-				     const int num_relative_grid_address,
-				     const int mesh[3],
-				     SPGCONST int bz_grid_address[][3],
-				     const int bz_map[])
-{
-  int bzmesh[3], address_double[3], bz_address_double[3];
-  int i, j, bz_gp;
-
-  for (i = 0; i < 3; i++) {
-    bzmesh[i] = mesh[i] * 2;
-  }
-  for (i = 0; i < num_relative_grid_address; i++) {
-    for (j = 0; j < 3; j++) {
-      address_double[j] = (bz_grid_address[grid_point][j] +
-			   relative_grid_address[i][j]) * 2;
-      bz_address_double[j] = address_double[j];
-    }
-    bz_gp = bz_map[get_grid_point_double_mesh(bz_address_double, bzmesh)];
-    if (bz_gp == -1) {
-      neighboring_grid_points[i] =
-	get_grid_point_double_mesh(address_double, mesh);
-    } else {
-      neighboring_grid_points[i] = bz_gp;
-    }
-  }
 }
 
 static MatINT *get_point_group_reciprocal(const MatINT * rotations,
@@ -631,7 +580,7 @@ static int relocate_BZ_grid_address(int bz_grid_address[][3],
 				    const int is_shift[3])
 {
   double tolerance, min_distance;
-  double q_vector[3], distance[NUM_BZ_SEARCH_SPACE];
+  double q_vector[3], distance[KPT_NUM_BZ_SEARCH_SPACE];
   int bzmesh[3], bz_address_double[3];
   int i, j, k, min_index, boundary_num_gp, total_num_gp, bzgp, gp;
 
@@ -646,10 +595,10 @@ static int relocate_BZ_grid_address(int bz_grid_address[][3],
   boundary_num_gp = 0;
   total_num_gp = mesh[0] * mesh[1] * mesh[2];
   for (i = 0; i < total_num_gp; i++) {
-    for (j = 0; j < NUM_BZ_SEARCH_SPACE; j++) {
+    for (j = 0; j < KPT_NUM_BZ_SEARCH_SPACE; j++) {
       for (k = 0; k < 3; k++) {
 	q_vector[k] = 
-	  ((grid_address[i][k] + bz_search_space[j][k] * mesh[k]) * 2 +
+	  ((grid_address[i][k] + kpt_bz_search_space[j][k] * mesh[k]) * 2 +
 	   is_shift[k]) / ((double)mesh[k]) / 2;
       }
       mat_multiply_matrix_vector_d3(q_vector, rec_lattice, q_vector);
@@ -657,14 +606,14 @@ static int relocate_BZ_grid_address(int bz_grid_address[][3],
     }
     min_distance = distance[0];
     min_index = 0;
-    for (j = 1; j < NUM_BZ_SEARCH_SPACE; j++) {
+    for (j = 1; j < KPT_NUM_BZ_SEARCH_SPACE; j++) {
       if (distance[j] < min_distance) {
 	min_distance = distance[j];
 	min_index = j;
       }
     }
 
-    for (j = 0; j < NUM_BZ_SEARCH_SPACE; j++) {
+    for (j = 0; j < KPT_NUM_BZ_SEARCH_SPACE; j++) {
       if (distance[j] < min_distance + tolerance) {
 	if (j == min_index) {
 	  gp = i;
@@ -674,7 +623,7 @@ static int relocate_BZ_grid_address(int bz_grid_address[][3],
 	
 	for (k = 0; k < 3; k++) {
 	  bz_grid_address[gp][k] = 
-	    grid_address[i][k] + bz_search_space[j][k] * mesh[k];
+	    grid_address[i][k] + kpt_bz_search_space[j][k] * mesh[k];
 	  bz_address_double[k] = bz_grid_address[gp][k] * 2 + is_shift[k];
 	}
 	bzgp = get_grid_point_double_mesh(bz_address_double, bzmesh);

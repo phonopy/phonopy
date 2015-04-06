@@ -497,17 +497,21 @@ static PyObject * get_grid_point_from_address(PyObject *self, PyObject *args)
 {
   PyArrayObject* grid_address_py;
   PyArrayObject* mesh_py;
-  if (!PyArg_ParseTuple(args, "OO",
+  PyArrayObject* is_shift_py;
+  if (!PyArg_ParseTuple(args, "OOO",
 			&grid_address_py,
-			&mesh_py)) {
+			&mesh_py,
+			&is_shift_py)) {
     return NULL;
   }
 
   const int* grid_address = (int*)grid_address_py->data;
   const int* mesh = (int*)mesh_py->data;
+  const int* is_shift = (int*)is_shift_py->data;
 
-  /* num_sym has to be larger than num_sym_from_array_size. */
-  const int gp = spg_get_grid_point(grid_address, mesh);
+  const int gp = spg_get_grid_point_from_address(grid_address,
+						 mesh,
+						 is_shift);
 
   return PyLong_FromLong((long) gp);
 }
