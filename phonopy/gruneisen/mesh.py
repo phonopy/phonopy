@@ -48,7 +48,7 @@ class Mesh:
                  is_time_reversal=True,
                  is_gamma_center=False,
                  is_mesh_symmetry=True):
-        self._mesh = mesh
+        self._mesh = np.array(mesh, dtype='intc')
         self._factor = phonon.get_unit_conversion_factor(),
         primitive = phonon.get_primitive()
         primitive_symmetry = phonon.get_primitive_symmetry()
@@ -72,8 +72,8 @@ class Mesh:
         self._frequencies = np.sqrt(
             abs(self._eigenvalues)) * np.sign(self._eigenvalues) * self._factor
 
-    def write_yaml(self):
-        f = open("gruneisen.yaml", 'w')
+    def write_yaml(self, filename="gruneisen.yaml"):
+        f = open(filename, 'w')
         f.write("mesh: [ %5d, %5d, %5d ]\n" % tuple(self._mesh))
         f.write("nqpoint: %d\n" % len(self._qpoints))
         f.write("phonon:\n")
@@ -90,6 +90,16 @@ class Mesh:
                 f.write("    frequency: %15.10f\n" % freq)
             f.write("\n")
         f.close()
+
+    def write_hdf5(self, filename="gruneisen.hdf5"):
+        import h5py
+        w = h5py.File(filename, 'w')
+        w.create_dataset('mesh', data=self._mesh)
+        w.create_dataset('gruneisen', data=self._gamma)
+        w.create_dataset('weight', data=self._weights)
+        w.create_dataset('frequency', data=self._frequencies)
+        w.create_dataset('qpoint', data=self._qpoints)
+        w.close()
     
     def plot(self,
              cutoff_frequency=None,
