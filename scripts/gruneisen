@@ -122,6 +122,7 @@ parser.set_defaults(
     cutoff_frequency=None,
     cutoff_wave_vector=1e-4,
     factor=None,
+    is_hdf5=False,
     is_nac=False,
     is_mesh_symmetry=True,
     plot_graph=False,
@@ -157,6 +158,8 @@ parser.add_option("--dim", dest="supercell_dimension",
                   help="Same behavior as DIM tag")
 parser.add_option("--factor", dest="factor", type="float",
                   help="Conversion factor to favorite frequency unit")
+parser.add_option("--hdf5", dest="is_hdf5", action="store_true",
+                  help="Use hdf5 to store results")
 parser.add_option("--marker", dest="marker",
                   action="store", type="string",
                   help="Marker for plot (matplotlib)")
@@ -318,7 +321,19 @@ elif options.sampling_mesh:
     mesh_numbers = np.array([int(x) for x in options.sampling_mesh.split()])
     gruneisen.set_mesh(mesh_numbers,
                        is_mesh_symmetry=options.is_mesh_symmetry)
-    gruneisen.write_yaml_mesh()
+
+    if options.is_hdf5:
+        try:
+            import h5py
+        except ImportError:
+            print_error_message("You need to install python-h5py.")
+            if log_level > 0:
+                print_end()
+            sys.exit(1)
+
+        gruneisen.write_hdf5_mesh()
+    else:
+        gruneisen.write_yaml_mesh()
     
     if options.plot_graph:
         plt = gruneisen.plot_mesh(cutoff_frequency=options.cutoff_frequency,
