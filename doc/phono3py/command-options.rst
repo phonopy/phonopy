@@ -223,6 +223,27 @@ free path. The value is given in micrometre. The default value, 1
 metre, is just used to avoid divergence of phonon lifetime and the
 contribution to the thermal conducitivity is considered negligible.
 
+``--cf3``
+~~~~~~~~~~
+
+This is used to create ``FORCES_FC3``. ``disp_fc3.yaml`` has to be
+located at the current directory.
+
+::
+
+   % phono3py --cf3 disp-{00001..00755}/vasprun.xml
+
+``--cf2``
+~~~~~~~~~~
+
+This is used to create ``FORCES_FC2``. ``disp_fc2.yaml`` has to be
+located at the current directory. This is
+optional. ``FORCES_FC2`` is necessary to run with ``--dim_fc2``. 
+
+::
+
+   % phono3py --cf2 disp_fc2-{00001..00002}/vasprun.xml
+
 ``--cutoff_fc3`` or ``--cutoff_fc3_distance``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
