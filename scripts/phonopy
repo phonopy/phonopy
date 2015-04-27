@@ -635,7 +635,7 @@ else: # Read FORCE_CONSTANTS or FORCE_SETS
                 fc_filename = "force_constants.hdf5"
         
         elif file_exists("FORCE_CONSTANTS", log_level):
-            fc = file_IO.parse_FORCE_CONSTANTS("FORCE_CONSTANTS")
+            fc = file_IO.parse_FORCE_CONSTANTS(filename="FORCE_CONSTANTS")
             fc_filename = "FORCE_CONSTANTS"
     
         if log_level > 0:

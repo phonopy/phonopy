@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include "lattice.h"
 #include "mathfunc.h"
+
 #include "debug.h"
 
 #define INT_PREC 0.1
@@ -395,27 +396,6 @@ static int get_Delaunay_reduction_2D(double red_lattice[3][3],
   volume = mat_get_determinant_d3(red_lattice);
   if (mat_Dabs(volume) < symprec) {
     warning_print("spglib: Minimum lattice has no volume (line %d, %s).\n", __LINE__, __FILE__);
-    warning_print("spglib: basis\n");
-    warning_print("spglib: %f %f %f\n",
-		  basis[0][0], basis[0][1], basis[0][2]);
-    warning_print("spglib: %f %f %f\n",
-		  basis[1][0], basis[1][1], basis[1][2]);
-    warning_print("spglib: %f %f %f\n",
-		  basis[2][0], basis[2][1], basis[2][2]);
-    warning_print("spglib: lattice\n");
-    warning_print("spglib: %f %f %f\n",
-		  lattice[0][0], lattice[0][1], lattice[0][2]);
-    warning_print("spglib: %f %f %f\n",
-		  lattice[1][0], lattice[1][1], lattice[1][2]);
-    warning_print("spglib: %f %f %f\n",
-		  lattice[2][0], lattice[2][1], lattice[2][2]);
-    warning_print("spglib: red_lattice\n");
-    warning_print("spglib: %f %f %f\n",
-		  red_lattice[0][0], red_lattice[0][1], red_lattice[0][2]);
-    warning_print("spglib: %f %f %f\n",
-		  red_lattice[1][0], red_lattice[1][1], red_lattice[1][2]);
-    warning_print("spglib: %f %f %f\n",
-		  red_lattice[2][0], red_lattice[2][1], red_lattice[2][2]);
     goto err;
   }
 

@@ -38,7 +38,7 @@ import sys
 from phonopy import Phonopy
 from phonopy import PhonopyGruneisen
 from phonopy.interface import read_crystal_structure, get_default_cell_filename
-from phonopy.file_IO import parse_FORCE_SETS, parse_BORN, parse_FORCE_CONSTANTS
+from phonopy.file_IO import parse_FORCE_SETS, parse_BORN, parse_FORCE_CONSTANTS, read_force_constants_hdf5
 from phonopy.units import VaspToTHz, Wien2kToTHz, AbinitToTHz, PwscfToTHz
 import numpy as np
 
@@ -64,7 +64,7 @@ def get_cell(cell_filename,
 def get_phonon(cell_filename,
                force_sets_filename,
                dim,
-               primitive_axis=np.eye(3),
+               primitive_matrix=np.eye(3),
                born_filename=None,
                factor=VaspToTHz,
                interface_mode='vasp',
@@ -72,7 +72,7 @@ def get_phonon(cell_filename,
     cell = get_cell(cell_filename, interface_mode)
     phonon = Phonopy(cell,
                      dim,
-                     primitive_matrix=primitive_axis,
+                     primitive_matrix=primitive_matrix,
                      factor=factor,
                      is_auto_displacements=False,
                      symprec=symprec)
@@ -90,19 +90,25 @@ def get_phonon(cell_filename,
 def get_phonon_from_force_constants(cell_filename,
                                     force_constants_filename,
                                     dim,
-                                    primitive_axis=np.eye(3),
+                                    primitive_matrix=np.eye(3),
                                     born_filename=None,
                                     factor=VaspToTHz,
                                     interface_mode='vasp',
-                                    symprec=1e-5):
+                                    symprec=1e-5,
+                                    is_hdf5=False):
     cell = get_cell(cell_filename, interface_mode)
     phonon = Phonopy(cell,
                      dim,
-                     primitive_matrix=np.eye(3),
+                     primitive_matrix=primitive_matrix,
                      factor=factor,
                      is_auto_displacements=False,
                      symprec=symprec)
-    force_constants = parse_FORCE_CONSTANTS(force_constants_filename)
+    if is_hdf5:
+        force_constants = read_force_constants_hdf5(
+            filename=force_constants_filename)
+    else:
+        force_constants = parse_FORCE_CONSTANTS(
+            filename=force_constants_filename)
     phonon.set_force_constants(force_constants)
     if born_filename:
         nac_params = parse_BORN(phonon.get_primitive(),
@@ -122,6 +128,7 @@ parser.set_defaults(
     cutoff_frequency=None,
     cutoff_wave_vector=1e-4,
     factor=None,
+    is_hdf5=False,
     is_nac=False,
     is_mesh_symmetry=True,
     plot_graph=False,
@@ -157,6 +164,8 @@ parser.add_option("--dim", dest="supercell_dimension",
                   help="Same behavior as DIM tag")
 parser.add_option("--factor", dest="factor", type="float",
                   help="Conversion factor to favorite frequency unit")
+parser.add_option("--hdf5", dest="is_hdf5", action="store_true",
+                  help="Use hdf5 to read force constants and store results")
 parser.add_option("--marker", dest="marker",
                   action="store", type="string",
                   help="Marker for plot (matplotlib)")
@@ -197,6 +206,15 @@ parser.add_option("--tolerance", dest="symprec", type="float",
 parser.add_option("--wien2k", dest="wien2k_mode",
                   action="store_true", help="Invoke Wien2k mode")
 (options, args) = parser.parse_args()
+
+if options.is_hdf5:
+    try:
+        import h5py
+    except ImportError:
+        print_error_message("You need to install python-h5py.")
+        if log_level > 0:
+            print_end()
+        sys.exit(1)
 
 if len(args) is not 3:
     sys.stderr.write("Three directory names (original, plus, minus) "
@@ -266,21 +284,33 @@ for i in range(3):
         born_filename = None
     
     if options.reads_force_constants:
-        phonon = get_phonon_from_force_constants(
-            "%s/%s" % (directory, cell_filename),
-            "%s/FORCE_CONSTANTS" % directory,
-            dim,
-            primitive_axis=primitive_axis,
-            born_filename=born_filename,
-            factor=factor,
-            interface_mode=interface_mode,
-            symprec=options.symprec)
+        if options.is_hdf5:
+            phonon = get_phonon_from_force_constants(
+                "%s/%s" % (directory, cell_filename),
+                "%s/force_constants.hdf5" % directory,
+                dim,
+                primitive_matrix=primitive_axis,
+                born_filename=born_filename,
+                factor=factor,
+                interface_mode=interface_mode,
+                symprec=options.symprec,
+                is_hdf5=True)
+        else:
+            phonon = get_phonon_from_force_constants(
+                "%s/%s" % (directory, cell_filename),
+                "%s/FORCE_CONSTANTS" % directory,
+                dim,
+                primitive_matrix=primitive_axis,
+                born_filename=born_filename,
+                factor=factor,
+                interface_mode=interface_mode,
+                symprec=options.symprec)
         phonons.append(phonon)
     else:
         phonon = get_phonon("%s/%s" % (directory, cell_filename),
                             "%s/FORCE_SETS" % directory,
                             dim,
-                            primitive_axis=primitive_axis,
+                            primitive_matrix=primitive_axis,
                             born_filename=born_filename,
                             factor=factor,
                             interface_mode=interface_mode,
@@ -318,7 +348,11 @@ elif options.sampling_mesh:
     mesh_numbers = np.array([int(x) for x in options.sampling_mesh.split()])
     gruneisen.set_mesh(mesh_numbers,
                        is_mesh_symmetry=options.is_mesh_symmetry)
-    gruneisen.write_yaml_mesh()
+
+    if options.is_hdf5:
+        gruneisen.write_hdf5_mesh()
+    else:
+        gruneisen.write_yaml_mesh()
     
     if options.plot_graph:
         plt = gruneisen.plot_mesh(cutoff_frequency=options.cutoff_frequency,

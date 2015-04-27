@@ -109,15 +109,22 @@ def plot_band(data, is_fg, g_max, g_min):
         
     return plt
 
-def plot_mesh(data, is_fg, cutoff_frequency=None):
-    import matplotlib.pyplot as plt
-    
+def plot_yaml_mesh(data, is_fg, cutoff_frequency=None):
     x = []
     y = []
     for qpt in data['phonon']:
         x.append([band['frequency'] for band in qpt['band']])
         y.append([band['gruneisen'] for band in qpt['band']])
 
+    return plot_mesh(x, y, is_fg, cutoff_frequency=cutoff_frequency)
+
+def plot_hdf5_mesh(data, is_fg, cutoff_frequency=None):
+    x = data['frequency']
+    y = data['gruneisen']
+    return plot_mesh(x, y, is_fg, cutoff_frequency=cutoff_frequency)
+
+def plot_mesh(x, y, is_fg, cutoff_frequency=None):
+    import matplotlib.pyplot as plt
     for (g, freqs) in zip(np.transpose(y), np.transpose(x)):
         if cutoff_frequency:
             g = np.extract(freqs > cutoff_frequency, g)
@@ -130,7 +137,7 @@ def plot_mesh(data, is_fg, cutoff_frequency=None):
 
     return plt
 
-def get_thermodynamic_Gruneisen_parameter(data, cutoff_frequency=None):
+def get_thermodynamic_Gruneisen_parameter_yaml(data, cutoff_frequency=None):
     x = []
     y = []
     m = []
@@ -140,9 +147,21 @@ def get_thermodynamic_Gruneisen_parameter(data, cutoff_frequency=None):
         y.append([band['gruneisen'] for band in qpt['band']])
     freqs = np.where(x > cutoff_frequency, x, 0)
     gammas = np.array(y)
+    get_thermodynamic_Gruneisen_parameter(gammas, freqs, m,
+                                          cutoff_frequency=cutoff_frequency)
     
-    from phonopy.gruneisen.mesh import get_thermodynamic_Gruneisen_parameter as tgp
+def get_thermodynamic_Gruneisen_parameter_hdf5(data, cutoff_frequency=None):
+    x = data['frequency']
+    y = data['gruneisen']
+    m = data['weight']
+    freqs = np.where(x > cutoff_frequency, x, 0)
+    gammas = np.array(y)
+    
+    get_thermodynamic_Gruneisen_parameter(gammas, freqs, m,
+                                          cutoff_frequency=cutoff_frequency)
 
+def get_thermodynamic_Gruneisen_parameter(gammas, freqs, m, cutoff_frequency=None):
+    from phonopy.gruneisen.mesh import get_thermodynamic_Gruneisen_parameter as tgp
     print "Thermodynamic gruneisen parameter at 300K:", tgp(gammas, freqs, m, 300)
     
 
@@ -154,6 +173,7 @@ parser.set_defaults(f_max=None,
                     f_min=None,
                     g_max=None,
                     g_min=None,
+                    is_hdf5=False,
                     is_fg=False,
                     is_gnuplot=False,
                     cutoff_frequency=None,
@@ -178,12 +198,25 @@ parser.add_option("--gmax", dest="g_max", type="float",
                   help="Maximum Gruneisen params plotted")
 parser.add_option("--gmin", dest="g_min", type="float",
                   help="Minimum Gruneisen params plotted")
+parser.add_option("--hdf5", dest="is_hdf5", action="store_true",
+                  help="Use hdf5 to read results")
 (options, args) = parser.parse_args()
 
-if len(args) == 0:
-    data = yaml.load(open("gruneisen.yaml").read(), Loader=Loader)
+if options.is_hdf5:
+    try:
+        import h5py
+    except ImportError:
+        print_error_message("You need to install python-h5py.")
+        if log_level > 0:
+            print_end()
+        sys.exit(1)
+
+    data = h5py.File("gruneisen.hdf5")
 else:
-    data = yaml.load(open(args[0]).read(), Loader=Loader)
+    if len(args) == 0:
+        data = yaml.load(open("gruneisen.yaml").read(), Loader=Loader)
+    else:
+        data = yaml.load(open(args[0]).read(), Loader=Loader)
 
 if 'path' in data:
     if options.is_gnuplot:
@@ -193,27 +226,37 @@ if 'path' in data:
         if options.title is not None:
             plt.subtitle(options.title)
         plt.show()
-elif 'mesh' in data:
-    if options.is_gnuplot:
-        print_mesh(data)
+
+if 'mesh' in data:
+    if options.is_hdf5:
+        plt = plot_hdf5_mesh(data,
+                             options.is_fg,
+                             cutoff_frequency=options.cutoff_frequency)
     else:
-        plt = plot_mesh(data, options.is_fg,
-                        cutoff_frequency=options.cutoff_frequency)
-        if options.title is not None:
-            plt.subtitle(options.title)
+        if options.is_gnuplot:
+            print_mesh(data)
+        else:
+            plt = plot_yaml_mesh(data,
+                                 options.is_fg,
+                                 cutoff_frequency=options.cutoff_frequency)
 
-        if options.f_max is not None:
-            plt.xlim(xmax=options.f_max)
-        if options.f_min is not None:
-            plt.xlim(xmin=options.f_min)
-        if options.g_max is not None:
-            plt.ylim(ymax=options.g_max)
-        if options.g_min is not None:
-            plt.ylim(ymin=options.g_min)
+    if options.title is not None:
+        plt.subtitle(options.title)
 
-        get_thermodynamic_Gruneisen_parameter(
+    if options.f_max is not None:
+        plt.xlim(xmax=options.f_max)
+    if options.f_min is not None:
+        plt.xlim(xmin=options.f_min)
+    if options.g_max is not None:
+        plt.ylim(ymax=options.g_max)
+    if options.g_min is not None:
+        plt.ylim(ymin=options.g_min)
+
+    if options.is_hdf5:
+        get_thermodynamic_Gruneisen_parameter_hdf5(
             data, cutoff_frequency=options.cutoff_frequency)
-            
-        plt.show()
+    else:
+        get_thermodynamic_Gruneisen_parameter_yaml(
+            data, cutoff_frequency=options.cutoff_frequency)
         
-
+    plt.show()

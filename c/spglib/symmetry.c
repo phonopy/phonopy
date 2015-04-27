@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "cell.h"
-#include "debug.h"
 #include "lattice.h"
 #include "mathfunc.h"
 #include "pointgroup.h"
@@ -13,6 +12,7 @@
 #include "symmetry.h"
 
 #include "debug.h"
+
 #define NUM_ATOMS_CRITERION_FOR_OPENMP 1000
 #define REDUCE_RATE 0.95
 #define PI 3.14159265358979323846

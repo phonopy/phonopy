@@ -60,12 +60,12 @@ The physical unit system used for the calculators are shown below.
 
 ::
 
-           | Distance   Atomic mass   Force      
-   -----------------------------------------------
-   VASP    | Angstrom   AMU           eV/Angstrom
-   Wien2k  | au         AMU           mRy/au	  
-   Pwscf   | au         AMU           Ry/au	  
-   Abinit  | au         AMU           eV/Angstrom
+           | Distance   Atomic mass   Force         Force constants
+   -----------------------------------------------------------------
+   VASP    | Angstrom   AMU           eV/Angstrom   eV/Angstrom^2
+   Wien2k  | au         AMU           mRy/au        mRy/au^2
+   Pwscf   | au         AMU           Ry/au         Ry/au^2
+   Abinit  | au         AMU           eV/Angstrom   eV/Angstrom.au
 
 
 Default unit cell file names are as follows::

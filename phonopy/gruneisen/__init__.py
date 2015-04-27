@@ -104,8 +104,8 @@ class Gruneisen:
                 eigvals.append(eigvals_at_q)
                 dD.append(dD_at_q)
 
-        dD = np.array(dD)
-        eigvals = np.array(eigvals)
+        dD = np.array(dD, dtype='double', order='C')
+        eigvals = np.array(eigvals, dtype='double', order='C')
             
         self._gruneisen = -dD / eigvals * self._volume  / self._dV / 2
         self._eigenvalues = eigvals

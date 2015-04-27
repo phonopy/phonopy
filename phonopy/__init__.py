@@ -1136,6 +1136,9 @@ class PhonopyGruneisen:
     def write_yaml_mesh(self):
         self._mesh.write_yaml()
 
+    def write_hdf5_mesh(self):
+        self._mesh.write_hdf5()
+
     def plot_mesh(self,
                   cutoff_frequency=None,
                   color_scheme=None,

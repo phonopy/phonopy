@@ -288,7 +288,6 @@ int mat_inverse_matrix_d3(double m[3][3],
   det = mat_get_determinant_d3(a);
   if (mat_Dabs(det) < precision) {
     warning_print("spglib: No inverse matrix (det=%f)\n", det);
-    debug_print("No inverse matrix\n");
     return 0;
   }
 
@@ -314,7 +313,6 @@ int mat_get_similar_matrix_d3(double m[3][3],
   double c[3][3];
   if (!mat_inverse_matrix_d3(c, b, precision)) {
     warning_print("spglib: No similar matrix due to 0 determinant.\n");
-    debug_print("No similar matrix due to 0 determinant.\n");
     return 0;
   }
   mat_multiply_matrix_d3(m, a, b);
@@ -458,4 +456,17 @@ int mat_is_int_matrix(SPGCONST double mat[3][3], const double symprec)
     }
   }
   return 1;
+}
+
+void mat_modulo_i3(int v[3], const int m[3])
+{
+  int i;
+
+  for (i = 0; i < 3; i++) {
+    v[i] = v[i] % m[i];
+
+    if (v[i] < 0) {
+      v[i] += m[i];
+    }
+  }
 }

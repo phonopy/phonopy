@@ -8,6 +8,7 @@
 #include "phonoc_array.h"
 #include "phonoc_utils.h"
 #include "phonon3_h/fc3.h"
+#include "phonon3_h/frequency_shift.h"
 #include "phonon3_h/interaction.h"
 #include "phonon3_h/imag_self_energy.h"
 #include "phonon3_h/imag_self_energy_with_g.h"
@@ -49,7 +50,10 @@ py_set_triplets_integration_weights_with_sigma(PyObject *self, PyObject *args);
 static PyObject * py_phonopy_zheev(PyObject *self, PyObject *args);
 static PyObject * py_inverse_collision_matrix(PyObject *self, PyObject *args);
 static PyObject * py_phonopy_pinv(PyObject *self, PyObject *args);
+
+#ifdef LIBFLAME
 static PyObject * py_inverse_collision_matrix_libflame(PyObject *self, PyObject *args);
+#endif
 
 static void get_triplet_tetrahedra_vertices
   (int vertices[2][24][4],
@@ -975,7 +979,7 @@ static PyObject * py_get_neighboring_gird_points(PyObject *self, PyObject *args)
   int i;
 #pragma omp parallel for
   for (i = 0; i < num_grid_points; i++) {
-    kpt_get_neighboring_grid_points
+    thm_get_neighboring_grid_points
       (relative_grid_points + i * num_relative_grid_address,
        grid_points[i],
        relative_grid_address,
@@ -1030,7 +1034,7 @@ static PyObject * py_set_integration_weights(PyObject *self, PyObject *args)
 #pragma omp parallel for private(j, k, bi, vertices, freq_vertices)
   for (i = 0; i < num_gp; i++) {
     for (j = 0; j < 24; j++) {
-      kpt_get_neighboring_grid_points(vertices[j],
+      thm_get_neighboring_grid_points(vertices[j],
 				      grid_points[i],
 				      relative_grid_address[j],
 				      4,
@@ -1350,7 +1354,7 @@ static void get_triplet_tetrahedra_vertices
 
   for (i = 0; i < 2; i++) {
     for (j = 0; j < 24; j++) {
-      kpt_get_neighboring_grid_points(vertices[i][j],
+      thm_get_neighboring_grid_points(vertices[i][j],
 				      triplet[i + 1],
 				      relative_grid_address[i][j],
 				      4,

@@ -19,7 +19,6 @@ sources = ['c/_phono3py.c',
            'c/anharmonic/phonon3/imag_self_energy_with_g.c',
            'c/anharmonic/phonon3/collision_matrix.c',
            'c/anharmonic/other/isotope.c',
-           'c/spglib/debug.c',
            'c/spglib/kpoint.c',
            'c/spglib/mathfunc.c',
            'c/spglib/tetrahedron_method.c']

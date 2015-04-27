@@ -162,6 +162,7 @@ class QHA:
         self._plot_volume_temperature(plt, exp_data=volume_temp_exp)
         plt.subplot(1, 3, 3)
         self._plot_thermal_expansion(plt)
+        plt.subplots_adjust(wspace=0.35)
         return plt
         
     def get_helmholtz_volume(self):

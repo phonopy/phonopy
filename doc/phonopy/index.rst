@@ -80,10 +80,11 @@ Documentation
    output-files
    setting-tags
    command-options
-   auxiliary-tools
    qha
    Mode Grüneisen parameters <gruneisen>
    interfaces
+   auxiliary-tools
+   external-tools
    theory
    citation
    reference

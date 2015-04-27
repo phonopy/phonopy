@@ -18,7 +18,6 @@ extension_spglib = Extension(
     # extra_link_args=['-lgomp'],
     sources=['c/_spglib.c',
              'c/spglib/cell.c',
-             'c/spglib/debug.c',
              'c/spglib/hall_symbol.c',
              'c/spglib/kpoint.c',
              'c/spglib/lattice.c',
@@ -34,7 +33,8 @@ extension_spglib = Extension(
              'c/spglib/spglib.c',
              'c/spglib/spin.c',
              'c/spglib/symmetry.c',
-             'c/spglib/tetrahedron_method.c'])
+             'c/spglib/tetrahedron_method.c',
+             'c/spglib/triplet_kpoint.c'])
 
 packages_phonopy = ['phonopy',
                     'phonopy.cui',

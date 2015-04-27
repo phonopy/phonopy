@@ -64,7 +64,7 @@ def extract_ir_grid_points(grid_mapping_table):
             ir_gp.append(i)
         weights[gp]  += 1
     ir_grid_points = np.array(ir_gp, dtype='intc')
-    ir_weights = weights[ir_grid_points]
+    ir_weights = np.array(weights[ir_grid_points], dtype='intc')
     
     return ir_grid_points, ir_weights
 
@@ -165,7 +165,7 @@ class GridPoints:
         qpoint_set_in_BZ = get_qpoints_in_Brillouin_zone(self._rec_lat,
                                                          self._ir_qpoints)
         qpoints_in_BZ = np.array([q_set[0] for q_set in qpoint_set_in_BZ],
-                                 dtype='double')
+                                 dtype='double', order='C')
         self._ir_qpoints = qpoints_in_BZ
         
     def _set_ir_qpoints(self,
@@ -190,6 +190,7 @@ class GridPoints:
             self._grid_address = grid_address
         (self._ir_grid_points,
          self._ir_weights) = extract_ir_grid_points(grid_mapping_table)
-        self._ir_qpoints = (self._grid_address[self._ir_grid_points] +
-                            shift) / self._mesh
+        self._ir_qpoints = np.array(
+            (self._grid_address[self._ir_grid_points] + shift) / self._mesh,
+            dtype='double', order='C')
         self._grid_mapping_table = grid_mapping_table
