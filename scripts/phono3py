@@ -57,7 +57,7 @@ from anharmonic.settings import Phono3pyConfParser
 from anharmonic.phonon3 import Phono3py, Phono3pyJointDos, Phono3pyIsotope, \
      get_gruneisen_parameters
 
-phono3py_version = "0.9.9.1"
+phono3py_version = "0.9.9.2"
 
 # AA is created at http://www.network-science.de/ascii/.
 def print_phono3py():
