@@ -293,7 +293,7 @@ phonopy_qha = PhonopyQHA(volumes,
                          t_max=options.t_max,
                          verbose=True)
 
-if options.is_graph_plot:
+if options.is_graph_plot and not options.is_graph_save:
     # Plot on display
     # - Volume vs Helmholtz free energy
     # - Volume vs Temperature
