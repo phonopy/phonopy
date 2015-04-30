@@ -363,9 +363,10 @@ class PartialDos(Dos):
         iw = thm.get_integration_weights()
         for i, iw in enumerate(thm):
             w = self._weights[i]
-            for ib, frac in enumerate(self._eigvecs2[i].T):
-                for j in range(num_freqs):
-                    self._partial_dos[:, j] += iw[j, ib] * frac * w
+            # for ib, frac in enumerate(self._eigvecs2[i].T):
+            #     for j in range(num_freqs):
+            #         self._partial_dos[:, j] += iw[j, ib] * frac * w
+            self._partial_dos += np.dot(iw * w, self._eigvecs2[i].T).T
         
     def get_partial_dos(self):
         """
