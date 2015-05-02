@@ -32,10 +32,48 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import numpy as np
 from phonopy.phonon.thermal_properties import ThermalProperties as PhononThermalProperties
 
 class ThermalProperties:
     def __init__(self,
                  gruneisen_mesh,
-                 volumes):
-        pass
+                 volumes,
+                 t_step=2,
+                 t_max=2004,
+                 t_min=0,
+                 cutoff_frequency=None):
+        phonon = gruneisen_mesh.get_phonon()
+        self._cutoff_frequency = cutoff_frequency
+        self._factor = phonon.get_unit_conversion_factor(),
+        self._V0 = phonon.get_primitive().get_volume()
+        self._gamma = gruneisen_mesh.get_gruneisen()
+        self._weights = gruneisen_mesh.get_weights()
+        self._eigenvalues = gruneisen_mesh.get_eigenvalues()
+        self._thermal_properties = []
+        for V in volumes:
+            tp = self._get_thermal_properties_at_V(V)
+            tp.set_thermal_properties(t_step=t_step,
+                                      t_max=t_max,
+                                      t_min=t_min)
+            self._thermal_properties.append(tp)
+
+    def get_thermal_properties(self):
+        """Return a set of phonopy.phonon::ThermalProperties object"""
+        return self._thermal_properties
+
+    def write_yaml(self, filename='thermal_properties'):
+        for i, tp in enumerate(self._thermal_properties):
+            tp.write_yaml(filename="%s-%02d.yaml" % (filename, i))
+
+    def _get_thermal_properties_at_V(self, V):
+        frequencies = self._get_frequencies_at_V(V)
+        tp = PhononThermalProperties(frequencies,
+                                     weights=self._weights,
+                                     cutoff_frequency=self._cutoff_frequency)
+        return tp
+
+    def _get_frequencies_at_V(self, V):
+        eigvals = self._eigenvalues * np.exp(-2 * self._gamma *
+                                             np.log(V / self._V0))
+        return np.sqrt(abs(eigvals)) * np.sign(eigvals) * self._factor

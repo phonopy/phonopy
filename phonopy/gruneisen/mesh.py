@@ -48,6 +48,7 @@ class Mesh:
                  is_time_reversal=True,
                  is_gamma_center=False,
                  is_mesh_symmetry=True):
+        self._phonon = phonon
         self._mesh = np.array(mesh, dtype='intc')
         self._factor = phonon.get_unit_conversion_factor(),
         primitive = phonon.get_primitive()
@@ -71,6 +72,34 @@ class Mesh:
         self._eigenvalues = gruneisen.get_eigenvalues()
         self._frequencies = np.sqrt(
             abs(self._eigenvalues)) * np.sign(self._eigenvalues) * self._factor
+
+    def get_gruneisen(self):
+        return self._gamma
+
+    def get_mesh_numbers(self):
+        return self._mesh
+        
+    def get_phonon(self):
+        return self._phonon
+
+    def get_qpoints(self):
+        return self._qpoints
+
+    def get_weights(self):
+        return self._weights
+
+    def get_eigenvalues(self):
+        return self._eigenvalues
+
+    def get_frequencies(self):
+        return self._frequencies
+
+    def get_eigenvectors(self):
+        """
+        See the detail of array shape in phonopy.phonon.mesh.
+        """
+        return self._eigenvectors
+
 
     def write_yaml(self, filename="gruneisen.yaml"):
         f = open(filename, 'w')

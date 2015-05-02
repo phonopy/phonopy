@@ -143,6 +143,10 @@ parser.set_defaults(
     supercell_dimension=None,
     symprec=1e-5,
     title=None,
+    tmax=2004,
+    tmin=0,
+    tstep=2,
+    volumes_filename=None,
     wien2k_mode=False)
 parser.add_option("--abinit", dest="abinit_mode",
                   action="store_true", help="Invoke Abinit mode")
@@ -201,8 +205,17 @@ parser.add_option("-s", "--save", dest="save_graph",
                   help="Save plot data in pdf")
 parser.add_option("-t", "--title", dest="title", action="store",
                   type="string", help="Title of plot")
+parser.add_option("--tmax", dest="tmax", type="float",
+                  help="Maximum calculated temperature")
+parser.add_option("--tmin", dest="tmin", type="float",
+                  help="Minimum calculated temperature")
 parser.add_option("--tolerance", dest="symprec", type="float",
                   help="Symmetry tolerance to search")
+parser.add_option("--tstep", dest="tstep", type="float",
+                  help="Calculated temperature step")
+parser.add_option("--vf", "--volumes_filename", dest="volumes_filename",
+                  action="store", type="string",
+                  help="Filename of volume is contained.")
 parser.add_option("--wien2k", dest="wien2k_mode",
                   action="store_true", help="Invoke Wien2k mode")
 (options, args) = parser.parse_args()
@@ -361,6 +374,14 @@ elif options.sampling_mesh:
                                   markersize=options.markersize)
         if options.title is not None:
             plt.suptitle(options.title)
+
+    if options.volumes_filename is not None:
+        f = open(options.volumes_filename)
+        volumes = [float(x.split()[0]) for x in f]
+        gruneisen.write_yaml_thermal_properties(volumes,
+                                                t_step=options.tstep,
+                                                t_max=options.tmax,
+                                                t_min=options.tmin)
 else:
     pass
 
