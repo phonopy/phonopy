@@ -360,7 +360,6 @@ class PartialDos(Dos):
         self._partial_dos = np.zeros((num_atom, num_freqs), dtype='double')
         thm = self._tetrahedron_mesh
         thm.set(value='I', frequency_points=self._frequency_points)
-        iw = thm.get_integration_weights()
         for i, iw in enumerate(thm):
             w = self._weights[i]
             # for ib, frac in enumerate(self._eigvecs2[i].T):
