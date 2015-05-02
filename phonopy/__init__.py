@@ -1105,6 +1105,7 @@ class Phonopy:
 
 from phonopy.gruneisen.mesh import Mesh as GruneisenMesh
 from phonopy.gruneisen.band_structure import BandStructure as GruneisenBand
+from phonopy.gruneisen.thermal_properties import ThermalProperties as GruneisenThermalProperties
 
 class PhonopyGruneisen:
     def __init__(self,
