@@ -48,8 +48,10 @@ class ThermalProperties:
         self._factor = phonon.get_unit_conversion_factor(),
         self._V0 = phonon.get_primitive().get_volume()
         self._gamma = gruneisen_mesh.get_gruneisen()
+        self._gamma_prime = gruneisen_mesh.get_gamma_prime()
         self._weights = gruneisen_mesh.get_weights()
         self._eigenvalues = gruneisen_mesh.get_eigenvalues()
+        self._frequencies = gruneisen_mesh.get_frequencies()
         self._thermal_properties = []
         for V in volumes:
             tp = self._get_thermal_properties_at_V(V)
@@ -74,6 +76,28 @@ class ThermalProperties:
         return tp
 
     def _get_frequencies_at_V(self, V):
+        return self._get_frequencies_at_V_Taylor_expansion_to_2nd_order(V)
+
+    def _get_frequencies_at_V_analytical_solution(self, V):
         eigvals = self._eigenvalues * np.exp(-2 * self._gamma *
                                              np.log(V / self._V0))
         return np.sqrt(abs(eigvals)) * np.sign(eigvals) * self._factor
+
+    def _get_frequencies_at_V_analytical_solution_with_1st_correction(self, V):
+        V0 = self._V0
+        g_prime = self._gamma_prime / V0
+        eigvals = self._eigenvalues * np.exp(
+            -2 * ((self._gamma - g_prime * V0) * np.log(V / V0)
+                  + g_prime * (V - V0)))
+        return np.sqrt(abs(eigvals)) * np.sign(eigvals) * self._factor
+                                    
+    def _get_frequencies_at_V_Taylor_expansion_to_1st_order(self, V):
+        return self._frequencies * (
+            1.0
+            - self._gamma * (V - self._V0) / self._V0)
+
+    def _get_frequencies_at_V_Taylor_expansion_to_2nd_order(self, V):
+        return self._frequencies * (
+            1.0
+            - self._gamma * (V - self._V0) / self._V0
+            - self._gamma_prime * ((V - self._V0) / self._V0) ** 2 / 2)
