@@ -76,7 +76,7 @@ class ThermalProperties:
         return tp
 
     def _get_frequencies_at_V(self, V):
-        return self._get_frequencies_at_V_Taylor_expansion_to_2nd_order(V)
+        return self._get_frequencies_at_V_analytical_solution(V)
 
     def _get_frequencies_at_V_analytical_solution(self, V):
         eigvals = self._eigenvalues * np.exp(-2 * self._gamma *
