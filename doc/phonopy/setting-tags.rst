@@ -858,16 +858,17 @@ of the eigenvectors with amplitudes and phase factors as
 
 .. math::
 
-   \frac{A} { \sqrt{m_j} } \operatorname{Re} \left[ \exp(i\phi)
+   \frac{A} { \sqrt{N_\mathrm{a}m_j} } \operatorname{Re} \left[ \exp(i\phi)
    \mathbf{e}_j \exp( \mathbf{q} \cdot \mathbf{r}_j ) \right],
 
-
-where :math:`A` is the amplitude, :math:`\phi` is the phase, and
-:math:`m_j` is the mass of the *j*-th atom, :math:`\mathbf{q}` is the
-q-point specified, :math:`\mathbf{r}_{jl}` is the position of the
-*j*-th atom and in the *l*-th unit cell, and :math:`\mathbf{e}_j` is
-the *j*-th part of eigenvector. Convention of eigenvector or dynamical
-matrix employed in phonopy is shown in :ref:`dynacmial_matrix_theory`.
+where :math:`A` is the amplitude, :math:`\phi` is the phase,
+:math:`N_\mathrm{a}` is the number of atoms in the supercell specified
+in this tag and :math:`m_j` is the mass of the *j*-th atom,
+:math:`\mathbf{q}` is the q-point specified, :math:`\mathbf{r}_{jl}`
+is the position of the *j*-th atom and in the *l*-th unit cell, and
+:math:`\mathbf{e}_j` is the *j*-th part of eigenvector. Convention of
+eigenvector or dynamical matrix employed in phonopy is shown in
+:ref:`dynacmial_matrix_theory`.
 
 If several modes are specified as shown in the example above, they are
 overlapped on the structure. The output filenames are
