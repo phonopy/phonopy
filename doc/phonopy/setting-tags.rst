@@ -169,7 +169,7 @@ to the number of atoms in unit cell) have to be explicitly written.
 .. _dimension_tag:
 
 ``CELL_FILENAME``
-------------------
+~~~~~~~~~~~~~~~~~~
 
 ::
 
@@ -227,7 +227,7 @@ are written.
 
 .. _band_structure_related_tags:
 
-Band structure related tags
+Band structure tags
 ----------------------------
 
 ``BAND``, ``BAND_POINTS``
@@ -297,10 +297,11 @@ number of points calculated in band segments by the ``BAND_POINTS`` tag.
 |bandconnection|
 
 
-.. _dos_related_tags:
+Mesh sampling tags
+-------------------
 
-DOS related tags
-----------------
+Mesh sampling tags are used commonly for calculations of thermal
+properties and density of states.
 
 .. _mp_tag:
 
@@ -342,6 +343,31 @@ Instead of employing the Monkhorst-Pack scheme for the mesh sampling,
 ::
 
    GAMMA_CENTER = .TRUE.
+
+
+Density of states (DOS) tags
+-----------------------------
+
+Density of states (DOS) is calcualted either with smearing method
+(default) or tetrahedron method. The physical unit of horizontal axis
+is that of frequency that the user employs, e.g., THz, and that of
+vertial axis is states/(unit cell x the unit of the horizontal
+axis). If the DOS is integrated over the frequency range, it will be
+:math:`3N_\mathrm{a}` states, where :math:`N_\mathrm{a}` is the number
+of atoms in the unit cell.
+
+.. _dos_related_tags:
+
+``DOS``
+~~~~~~~~
+
+This tag enables to calculate DOS. This tag is automatically set when
+``PDOS`` tag or ``-p`` option.
+
+::
+
+   DOS = .TRUE.
+
 
    
 ``DOS_RANGE``

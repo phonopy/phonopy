@@ -16,6 +16,7 @@ tags:
 * ``-c``, ``--cell`` (``CELL_FILENAME``)
 * ``-d``  (``CREATE_DISPLACEMENTS = .TRUE.``
 * ``--dim`` (``DIM``)
+* ``--dos`` (``DOS = .TRUE.``)
 * ``--eigvecs``, ``--eigenvectors`` (``EIGENVECTORS = .TRUE.``)
 * ``--fits_debye_model`` (``DEBYE_MODEL = .TRUE.``)
 * ``--gc``, ``--gamma_center`` (``GAMMA_CENTER``)
@@ -312,17 +313,6 @@ Result is plotted (saved) to PDF file.
 
    % phonopy -p -s
 
-
-Calculate DOS
--------------
-
-``--dos``
-~~~~~~~~~
-
-Density of states are calculated using this option with ``MP``
-tag. When ``-p`` option with ``MP`` tag is set, ``--dos`` is
-automatically set. Therefore this tag is used when you want to
-calculate DOS, but you don't need to plot.
 
 Unit conversion factor
 ----------------------
