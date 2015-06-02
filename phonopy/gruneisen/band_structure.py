@@ -48,9 +48,6 @@ class BandStructure:
         gruneisen = Gruneisen(phonon.get_dynamical_matrix(),
                               phonon_plus.get_dynamical_matrix(),
                               phonon_minus.get_dynamical_matrix(),
-                              primitive.get_volume(),
-                              phonon_plus.get_primitive().get_volume(),
-                              phonon_minus.get_primitive().get_volume(),
                               is_band_connection=True)
         rec_vectors = np.linalg.inv(primitive.get_cell())
         factor = phonon.get_unit_conversion_factor(),

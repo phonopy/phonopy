@@ -176,9 +176,9 @@ class ThermalProperties(ThermalPropertiesBase):
                 cv.append(props[2] * 1000)
 
         self._thermal_properties = [temperatures,
-                                    np.array(fe, dtype='double'),
-                                    np.array(entropy, dtype='double'),
-                                    np.array(cv, dtype='double')]
+                                    np.array(fe, dtype='double', order='C'),
+                                    np.array(entropy, dtype='double', order='C'),
+                                    np.array(cv, dtype='double', order='C')]
 
         if self._is_projection:
             fe = []
@@ -196,7 +196,7 @@ class ThermalProperties(ThermalPropertiesBase):
                 np.array(entropy, dtype='double'),
                 np.array(cv, dtype='double')]
 
-    def get_thermal_properties( self ):
+    def get_thermal_properties(self):
         return self._thermal_properties
 
     def write_yaml(self, filename='thermal_properties.yaml'):

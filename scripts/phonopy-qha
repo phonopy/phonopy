@@ -151,6 +151,7 @@ parser.set_defaults(create_unitcells_range=None,
                     is_graph_save=False,
                     is_bulk_modulus_only=False,
                     eos="vinet",
+                    energy_shift=None,
                     symbol='o',
                     cp_filename=None,
                     ve_filename=None,
@@ -182,6 +183,11 @@ parser.add_option("--eos",
                   action="store",
                   type="string",
                   help="Choise of EOS among vinet, birch_murnaghan, and murnaghan")
+parser.add_option("--es", "--energy_shift",
+                  dest="energy_shift",
+                  action="store",
+                  type="float",
+                  help="Energy shift that is subtracted from Helmholtz free energy")
 parser.add_option("-p", "--plot",
                   dest="is_graph_plot",
                   action="store_true",
@@ -242,6 +248,8 @@ volumes, electronic_energies = read_v_e(args[0],
                                         options.factor,
                                         options.volume_factor,
                                         options.pressure)
+if options.energy_shift is not None:
+    electronic_energies -= options.energy_shift
 
 # Choose EOS
 if options.eos == "birch_murnaghan":
@@ -293,7 +301,7 @@ phonopy_qha = PhonopyQHA(volumes,
                          t_max=options.t_max,
                          verbose=True)
 
-if options.is_graph_plot:
+if options.is_graph_plot and not options.is_graph_save:
     # Plot on display
     # - Volume vs Helmholtz free energy
     # - Volume vs Temperature

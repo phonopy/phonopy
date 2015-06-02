@@ -1105,6 +1105,7 @@ class Phonopy:
 
 from phonopy.gruneisen.mesh import Mesh as GruneisenMesh
 from phonopy.gruneisen.band_structure import BandStructure as GruneisenBand
+from phonopy.gruneisen.thermal_properties import ThermalProperties as GruneisenThermalProperties
 
 class PhonopyGruneisen:
     def __init__(self,
@@ -1167,7 +1168,19 @@ class PhonopyGruneisen:
         return self._band_structure.plot(epsilon=epsilon,
                                          color_scheme=color_scheme)
         
-
+    def write_yaml_thermal_properties(self,
+                                      volumes,
+                                      t_step=2,
+                                      t_max=2004,
+                                      t_min=0,
+                                      cutoff_frequency=None):
+        gtp = GruneisenThermalProperties(self._mesh,
+                                         volumes,
+                                         t_step=t_step,
+                                         t_max=t_max,
+                                         t_min=t_min,
+                                         cutoff_frequency=cutoff_frequency)
+        gtp.write_yaml()
 
 from phonopy.qha import *
 from phonopy.units import EvTokJmol, EVAngstromToGPa

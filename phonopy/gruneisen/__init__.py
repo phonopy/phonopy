@@ -40,20 +40,19 @@ class Gruneisen:
                  dynmat,
                  dynmat_plus,
                  dynmat_minus,
-                 volume,
-                 volume_plus,
-                 volume_minus,
                  qpoints=None,
                  is_band_connection=False):
         self._dynmat = dynmat
         self._dynmat_plus = dynmat_plus
         self._dynmat_minus = dynmat_minus
-        self._volume = volume
-        self._dV = volume_plus - volume_minus
+        self._volume = dynmat.get_primitive().get_volume()
+        self._volume_plus = dynmat_plus.get_primitive().get_volume()
+        self._volume_minus = dynmat_minus.get_primitive().get_volume()
         self._is_band_connection = is_band_connection
         self._qpoints = qpoints
 
         self._gruneisen = None
+        self._gamma_prime = None
         self._eigenvalues = None
         if qpoints is not None:
             self._set_gruneisen()
@@ -69,13 +68,22 @@ class Gruneisen:
     def get_gruneisen(self):
         return self._gruneisen
 
+    def get_gamma_prime(self):
+        return self._gamma_prime
+
     def get_eigenvalues(self):
         return self._eigenvalues
 
     def _set_gruneisen(self):
+        dV = self._volume_plus - self._volume_minus
+        # dV1 = self._volume - self._volume_minus
+        # dV2 = self._volume_plus - self._volume
+
         if self._is_band_connection:
             self._q_direction = self._qpoints[0] - self._qpoints[-1]
+
         dD = []
+        # ddD = [] # For dg/dV
         eigvals = []
         for i, q in enumerate(self._qpoints):
             if (self._is_band_connection and
@@ -88,8 +96,16 @@ class Gruneisen:
             dm = self._dynmat.get_dynamical_matrix()
             eigvals_at_q, eigvecs = np.linalg.eigh(dm)
             eigvals_at_q = eigvals_at_q.real
-            dD_at_q = [np.vdot(eig, np.dot(self._get_dD(q), eig)).real
-                       for eig in eigvecs.T]
+
+            dD_at_q = [np.vdot(eig, np.dot(
+                self._get_dD(q, self._dynmat_minus, self._dynmat_plus), eig)
+                           ).real for eig in eigvecs.T]
+
+            # dD_minus = self._get_dD(q, self._dynmat_minus, self._dynmat)
+            # dD_plus = self._get_dD(q, self._dynmat, self._dynmat_plus)
+            # ddD_at_q = [
+            #     np.vdot(eig, np.dot(dD_plus / dV2 - dD_minus / dV1 , eig)).real
+            #     for eig in eigvecs.T]
 
             if self._is_band_connection:
                 if self._prev_eigvecs is not None:
@@ -99,30 +115,28 @@ class Gruneisen:
                         self._band_order)
                 eigvals.append([eigvals_at_q[b] for b in self._band_order])
                 dD.append([dD_at_q[b] for b in self._band_order])
+                # ddD.append([ddD_at_q[b] for b in self._band_order])
                 self._prev_eigvecs = eigvecs
             else:
                 eigvals.append(eigvals_at_q)
                 dD.append(dD_at_q)
+                # ddD.append(ddD_at_q)
 
         dD = np.array(dD, dtype='double', order='C')
+        # ddD = np.array(ddD, dtype='double', order='C')
         eigvals = np.array(eigvals, dtype='double', order='C')
-            
-        self._gruneisen = -dD / eigvals * self._volume  / self._dV / 2
+        
+        self._gruneisen = -dD / dV / eigvals * self._volume / 2
+        # self._gamma_prime = -ddD / (dV / 2) / eigvals * self._volume ** 2 / 2
         self._eigenvalues = eigvals
 
-    def _get_dD(self, q):
-        if (self._is_band_connection and
-            self._dynmat_plus.is_nac() and 
-            self._dynmat_minus.is_nac()):
-            self._dynmat_plus.set_dynamical_matrix(
-                q, q_direction=self._q_direction)
-            self._dynmat_minus.set_dynamical_matrix(
-                q, q_direction=self._q_direction)
+    def _get_dD(self, q, d_a, d_b):
+        if (self._is_band_connection and d_a.is_nac() and d_b.is_nac()):
+            d_a.set_dynamical_matrix(q, q_direction=self._q_direction)
+            d_b.set_dynamical_matrix(q, q_direction=self._q_direction)
         else:
-            self._dynmat_plus.set_dynamical_matrix(q)
-            self._dynmat_minus.set_dynamical_matrix(q)
-        dm_plus = self._dynmat_plus.get_dynamical_matrix()
-        dm_minus = self._dynmat_minus.get_dynamical_matrix()
-        return dm_plus - dm_minus
-
-
+            d_a.set_dynamical_matrix(q)
+            d_b.set_dynamical_matrix(q)
+        dm_a = d_a.get_dynamical_matrix()
+        dm_b = d_b.get_dynamical_matrix()
+        return (dm_b - dm_a)
