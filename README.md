@@ -10,5 +10,6 @@ Phonon code
 For the details, see http://phonopy.sourceforge.net/
 
 **Warning** This is an experimental branch of phonopy. 
-For release version of conda packages of phonopy see: https://binstar.org/jochym/phonopy
+For release version of conda packages of phonopy see: 
+[![Binstar Badge](https://binstar.org/jochym/phonopy/badges/version.svg)](https://binstar.org/jochym/phonopy)
 
