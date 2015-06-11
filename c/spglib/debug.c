@@ -1,7 +1,7 @@
 /* debug.c */
 /* Copyright (C) 2008 Atsushi Togo */
 
-#ifdef DEBUG
+#ifdef SPGDEBUG
 #include <stdio.h>
 #include "debug.h"
 

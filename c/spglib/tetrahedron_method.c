@@ -2,8 +2,14 @@
 /* Copyright (C) 2014 Atsushi Togo */
 
 #include "mathfunc.h"
-#include "debug.h"
+#include "kpoint.h"
 
+#ifdef THMWARNING
+#include <stdio.h>
+#define warning_print(...) fprintf(stderr,__VA_ARGS__)
+#else
+#define warning_print(...)
+#endif
 
 /*      6-------7             */
 /*     /|      /|             */
@@ -316,6 +322,36 @@ thm_get_integration_weight_at_omegas(double *integration_weights,
 				     omegas,
 				     tetrahedra_omegas,
 				     _n, _J);
+  }
+}
+
+void thm_get_neighboring_grid_points(int neighboring_grid_points[],
+				     const int grid_point,
+				     SPGCONST int relative_grid_address[][3],
+				     const int num_relative_grid_address,
+				     const int mesh[3],
+				     SPGCONST int bz_grid_address[][3],
+				     const int bz_map[])
+{
+  int bzmesh[3], address_double[3], bz_address_double[3];
+  int i, j, bz_gp;
+
+  for (i = 0; i < 3; i++) {
+    bzmesh[i] = mesh[i] * 2;
+  }
+  for (i = 0; i < num_relative_grid_address; i++) {
+    for (j = 0; j < 3; j++) {
+      address_double[j] = (bz_grid_address[grid_point][j] +
+			   relative_grid_address[i][j]) * 2;
+      bz_address_double[j] = address_double[j];
+    }
+    bz_gp = bz_map[kpt_get_grid_point_double_mesh(bz_address_double, bzmesh)];
+    if (bz_gp == -1) {
+      neighboring_grid_points[i] =
+	kpt_get_grid_point_double_mesh(address_double, mesh);
+    } else {
+      neighboring_grid_points[i] = bz_gp;
+    }
   }
 }
 

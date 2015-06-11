@@ -78,6 +78,7 @@ def get_symmetry_dataset(bulk, symprec=1e-5, angle_tolerance=-1.0):
     numbers = np.array(bulk.get_atomic_numbers(), dtype='intc')
     
     keys = ('number',
+            'hall_number',
             'international',
             'hall',
             'transformation_matrix',
@@ -85,7 +86,10 @@ def get_symmetry_dataset(bulk, symprec=1e-5, angle_tolerance=-1.0):
             'rotations',
             'translations',
             'wyckoffs',
-            'equivalent_atoms')
+            'equivalent_atoms',
+            'brv_lattice',
+            'brv_types',
+            'brv_positions')
     dataset = {}
     for key, data in zip(keys, spg.dataset(lattice,
                                            positions,
@@ -107,21 +111,29 @@ def get_symmetry_dataset(bulk, symprec=1e-5, angle_tolerance=-1.0):
     dataset['wyckoffs'] = [letters[x] for x in dataset['wyckoffs']]
     dataset['equivalent_atoms'] = np.array(dataset['equivalent_atoms'],
                                            dtype='intc')
+    dataset['brv_lattice'] = np.array(np.transpose(dataset['brv_lattice']),
+                                      dtype='double', order='C')
+    dataset['brv_types'] = np.array(dataset['brv_types'], dtype='intc')
+    dataset['brv_positions'] = np.array(dataset['brv_positions'],
+                                        dtype='double', order='C')
 
     return dataset
 
-def get_spacegroup(bulk, symprec=1e-5, angle_tolerance=-1.0):
+def get_spacegroup(bulk, symprec=1e-5, angle_tolerance=-1.0, symbol_type=0):
     """
     Return space group in international table symbol and number
     as a string.
     """
-    # Atomic positions have to be specified by scaled positions for spglib.
-    return spg.spacegroup(
-        np.array(bulk.get_cell().T, dtype='double', order='C'),
-        np.array(bulk.get_scaled_positions(), dtype='double', order='C'),
-        np.array(bulk.get_atomic_numbers(), dtype='intc'),
-        symprec,
-        angle_tolerance)
+
+    dataset = get_symmetry_dataset(bulk,
+                                   symprec=symprec,
+                                   angle_tolerance=angle_tolerance)
+    symbols = spg.spacegroup_type(dataset['hall_number'])
+
+    if symbol_type == 1:
+        return "%s (%d)" % (symbols[0], dataset['number'])
+    else:
+        return "%s (%d)" % (symbols[4], dataset['number'])
 
 def get_pointgroup(rotations):
     """
@@ -217,13 +229,16 @@ def find_primitive(bulk, symprec=1e-5, angle_tolerance=-1.0):
 ############
 # k-points #
 ############
-def get_grid_point_from_address(grid_address, mesh):
+def get_grid_point_from_address(grid_address,
+                                mesh,
+                                is_shift=np.zeros(3, dtype='intc')):
     """
     Return grid point index by tranlating grid address
     """
 
     return spg.grid_point_from_address(np.array(grid_address, dtype='intc'),
-                                       np.array(mesh, dtype='intc'))
+                                       np.array(mesh, dtype='intc'),
+                                       np.array(is_shift, dtype='inct'))
     
 
 def get_ir_reciprocal_mesh(mesh,

@@ -1,11 +1,8 @@
 from distutils.core import setup, Extension
 import numpy
+from setup import extension_spglib, extension_phonopy, packages_phonopy, scripts_phonopy
+
 include_dirs_numpy = [numpy.get_include()]
-
-# unnecessary if lapacke is installed in the system.
-include_dirs_lapacke = ['../lapacke/include']
-
-use_libflame = False
 
 sources = ['c/_phono3py.c',
            'c/harmonic/dynmat.c',
@@ -22,42 +19,53 @@ sources = ['c/_phono3py.c',
            'c/anharmonic/phonon3/imag_self_energy_with_g.c',
            'c/anharmonic/phonon3/collision_matrix.c',
            'c/anharmonic/other/isotope.c',
-           'c/spglib/debug.c',
            'c/spglib/kpoint.c',
            'c/spglib/mathfunc.c',
            'c/spglib/tetrahedron_method.c']
 extra_link_args=['-lgomp',
-                 '../lapacke/liblapacke.a', # unnecessary when lapacke in system
+                 '-llapacke', # this is when lapacke is installed on system
                  '-llapack',
                  '-lblas']
 include_dirs = (['c/harmonic_h',
                  'c/anharmonic_h',
                  'c/spglib_h'] +
-                include_dirs_lapacke + # unnecessary when lapacke in system
                 include_dirs_numpy)
+##
+## Uncomment and modify below if lapacke is prepared in a special location
+##
+# include_dirs += ['../lapack-3.5.0/lapacke/include']
+# extra_link_args=['-lgomp',
+#                  '../lapack-3.5.0/liblapacke.a']
 
-if use_libflame:
-    sources.append('c/anharmonic/flame_wrapper.c')
-    extra_link_args.append('../libflame-bin/lib/libflame.a')
-    include_dirs_libflame = ['../libflame-bin/include']
-    include_dirs += include_dirs_libflame
+##
+## This is for the test of libflame
+##
+# use_libflame = False
+# if use_libflame:
+#     sources.append('c/anharmonic/flame_wrapper.c')
+#     extra_link_args.append('../libflame-bin/lib/libflame.a')
+#     include_dirs_libflame = ['../libflame-bin/include']
+#     include_dirs += include_dirs_libflame
     
-extension = Extension(
+extension_phono3py = Extension(
     'anharmonic._phono3py',
     include_dirs=include_dirs,
     extra_compile_args=['-fopenmp'],
     extra_link_args=extra_link_args,
     sources=sources)
 
+packages_phono3py = ['anharmonic',
+                     'anharmonic.other',
+                     'anharmonic.phonon3']
+scripts_phono3py = ['scripts/phono3py',
+                    'scripts/kaccum']
+
 setup(name='phono3py',
-      version='0.9.7',
+      version='0.9.9.2',
       description='This is the phono3py module.',
       author='Atsushi Togo',
       author_email='atz.togo@gmail.com',
       url='http://phonopy.sourceforge.net/',
-      packages=['anharmonic',
-                'anharmonic.other',
-                'anharmonic.phonon3'],
-      scripts=['scripts/phono3py',
-               'scripts/kaccum'],
-      ext_modules=[extension])
+      packages=(packages_phonopy + packages_phono3py),
+      scripts=(scripts_phonopy + scripts_phono3py),
+      ext_modules=[extension_spglib, extension_phonopy, extension_phono3py])

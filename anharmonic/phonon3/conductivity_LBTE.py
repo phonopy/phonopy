@@ -119,7 +119,7 @@ def _write_kappa(lbte, filename=None, log_level=0):
     mesh = lbte.get_mesh_numbers()
     frequencies = lbte.get_frequencies()
     gv = lbte.get_group_velocities()
-    mspp = lbte.get_mean_square_pp_strength()
+    ave_pp = lbte.get_averaged_pp_interaction()
     qpoints = lbte.get_qpoints()
     kappa = lbte.get_kappa()
     mode_kappa = lbte.get_mode_kappa()
@@ -132,7 +132,7 @@ def _write_kappa(lbte, filename=None, log_level=0):
                             kappa=kappa[i],
                             mode_kappa=mode_kappa[i],
                             gamma=gamma[i],
-                            mspp=mspp,
+                            averaged_pp_interaction=ave_pp,
                             qpoint=qpoints,
                             sigma=sigma,
                             filename=filename)
@@ -272,7 +272,7 @@ class Conductivity_LBTE(Conductivity):
         self._frequencies = None
         self._gv = None
         self._gamma_iso = None
-        self._mean_square_pp_strength = None
+        self._averaged_pp_interaction = None
         
         self._mesh = None
         self._coarse_mesh = None
@@ -320,6 +320,9 @@ class Conductivity_LBTE(Conductivity):
     def get_collision_matrix(self):
         return self._collision_matrix
                 
+    def get_averaged_pp_interaction(self):
+        return self._averaged_pp_interaction
+
     def _run_at_grid_point(self):
         i = self._grid_point_count
         self._show_log_header(i)
@@ -335,8 +338,8 @@ class Conductivity_LBTE(Conductivity):
                 
             self._collision.run_interaction()
             self._set_collision_matrix_at_sigmas(i)
-            self._mean_square_pp_strength[i] = (
-                self._pp.get_mean_square_strength())
+            self._averaged_pp_interaction[i] = (
+                self._pp.get_averaged_interaction())
             
         if self._isotope is not None:
             self._set_gamma_isotope_at_sigmas(i)
@@ -356,7 +359,7 @@ class Conductivity_LBTE(Conductivity):
         self._gv = np.zeros((num_grid_points,
                              num_band,
                              3), dtype='double')
-        self._mean_square_pp_strength = np.zeros((num_grid_points, num_band),
+        self._averaged_pp_interaction = np.zeros((num_grid_points, num_band),
                                                  dtype='double')
         self._gamma = np.zeros((len(self._sigmas),
                                 len(self._temperatures),
@@ -758,14 +761,14 @@ class Conductivity_LBTE(Conductivity):
         gp = self._grid_points[i]
         frequencies = self._frequencies[gp]
         gv = self._gv[i]
-        mspp = self._mean_square_pp_strength[i]
+        ave_pp = self._averaged_pp_interaction[i]
 
-        print "Frequency     group velocity (x, y, z)     |gv|      mspp",
+        print "Frequency     group velocity (x, y, z)     |gv|       Pqj",
         if self._gv_delta_q is None:
             print
         else:
             print " (dq=%3.1e)" % self._gv_delta_q
-        for f, v, pp in zip(frequencies, gv, mspp):
+        for f, v, pp in zip(frequencies, gv, ave_pp):
             print "%8.3f   (%8.3f %8.3f %8.3f) %8.3f %11.3e" % (
                 f, v[0], v[1], v[2], np.linalg.norm(v), pp)
 

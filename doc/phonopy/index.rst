@@ -4,43 +4,50 @@
    contain the root `toctree` directive.
 
 =======================================================
-Welcome
+Welcome to phonopy
 =======================================================
 
-**Phonopy** is an open source package of phonon calculations based on the
-supercell approach. 
+.. |i0| image:: band.png
+        :width: 15%
+
+.. |i1| image:: pdos.png
+        :width: 15%
+
+.. |i2| image:: thermalprop.png
+        :width: 15%
+
+.. |i3| image:: QHA.png
+        :width: 15%
+
+**Phonopy** is an open source package for phonon calculations at
+harmonic and quasi-harmonic levels.
+
+**Phono3py** for phonon-phonon interaction calculations has been 
+released as an open beta
+version. See the document at http://phonopy.sourceforge.net/phono3py/ .
+
+Selected features
+=======================
+
+Selected features of harmonic and quasi-harmonic phonons are:
 
 - Phonon dispersion relation (band structure)
 - Phonon DOS and partial-DOS
-- Phonon thermal properties, free energy, heat capacity, and entropy
+- Phonon thermal properties, free energy, heat capacity (Cv), and entropy
 - Phonon group velocity
-- Thermal expansion and heat capacity at constant pressure within
+- Thermal expansion and heat capacity at constant pressure (Cp) within
   quasi-harmonic approximation (:ref:`phonopy-qha <phonopy_qha>`)
 - Mode Grüneisen parameters (:ref:`gruneisen <phonopy_gruneisen>`)
 - Non-analytical-term correction, LO-TO splitting (Born effective
   charges and dielectric constant are required.)
-- Animation of normal modes for crystal viewers
+- Creation of atomic modulations of normal modes
 - Characters of irreducible representations of normal modes
 - Crystal symmetry tools
 - :ref:`Python module <phonopy_module>` (Phonopy can be used in python script.)
 - Graphical plots
+  
+|i0| |i1| |i2| |i3|
 
-.. |i0| image:: band.png
-        :width: 20%
-
-.. |i1| image:: pdos.png
-        :width: 20%
-
-.. |i2| image:: thermalprop.png
-        :width: 20%
-
-.. |i3| image:: QHA.png
-        :width: 20%
-
-
-|i0| |i1|
-
-|i2| |i3|
 
 Interfaces for calculators
 ===========================
@@ -62,9 +69,26 @@ Documentation
 =============
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
-   contents
+   examples
+   Tutorial <procedure>
+   workflow
+   install
+   features
+   input-files
+   output-files
+   setting-tags
+   command-options
+   qha
+   Mode Grüneisen parameters <gruneisen>
+   interfaces
+   auxiliary-tools
+   external-tools
+   theory
+   citation
+   reference
+   changelog
 
 
 - `Manual in PDF <https://sourceforge.net/projects/phonopy/files/phonopy%20documentation/phonopy-manual.pdf/download>`_
@@ -95,7 +119,7 @@ New BSD from version 1.3.
 Contact
 =======
 
-* Author: `Atsushi Togo <http://atztogo.users.sourceforge.net/>`_
+* Author: `Atsushi Togo <http://atztogo.github.io/>`_
 
 |sflogo|
 

@@ -184,7 +184,7 @@ def write_force_constants_to_hdf5(force_constants,
     w.create_dataset('force_constants', data=force_constants)
     w.close()
 
-def parse_FORCE_CONSTANTS(filename):
+def parse_FORCE_CONSTANTS(filename="FORCE_CONSTANTS"):
     fcfile = open(filename)
     num = int((fcfile.readline().strip().split())[0])
     force_constants = np.zeros((num, num, 3, 3), dtype=float)

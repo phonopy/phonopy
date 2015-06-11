@@ -1,4 +1,4 @@
-/* spglib.h version 1.7.1 */
+/* spglib.h version 1.7.3-pre3 */
 /* Copyright (C) 2008 Atsushi Togo */
 
 #ifndef __spglib_H__
@@ -284,17 +284,17 @@ int spgat_refine_cell(double lattice[3][3],
 /* kpoints */
 /*---------*/
 
-/* Translate grid address to grid point index. */
+/* Translate grid address to grid point index in the spglib definition */
+/* (see the comment in kpoint.h.) */
 /* A q-point in fractional coordinates is given as */
-/* ((address * 2 + shift) / (mesh * 2)). */
+/* ((grid_address * 2 + shift) / (mesh * 2)). */
 /* Each element of shift[] is 0 or 1. */
-/* Grid address is given in terms of mesh, 0 <= address[i] < mesh[i]. */
-/* If not, address[i] (mod mesh[i]) is calculated and used. */
+/* Internally grid address is reduced in the range, */
+/* 0 <= grid_address[i] < mesh[i]. */
 /* [0, 0, 0] without mesh shift gives Gamma point. */
-/* [mesh[0] / 2, mesh[1] / 2, mesh[2] / 2] without mesh shift and */
-/* with even mesh numbers gives boundary of reciprocal primitive lattice. */
-int spg_get_grid_point(const int grid_address[3],
-		       const int mesh[3]);
+int spg_get_grid_point_from_address(const int grid_address[3],
+				    const int mesh[3],
+				    const int is_shift[3]);
 
 /* Irreducible reciprocal grid points are searched from uniform */
 /* mesh grid points specified by ``mesh`` and ``is_shift``. */

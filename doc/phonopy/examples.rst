@@ -58,7 +58,7 @@ DOS
    ...
 
 .. |Si-DOS| image:: Si-DOS.png
-            :scale: 50
+            :width: 50%
 
 |Si-DOS|
 
@@ -100,7 +100,7 @@ Thermal properties
 
 
 .. |Si-props| image:: Si-props.png
-              :scale: 50
+              :width: 50%
 
 |Si-props|
    
@@ -137,7 +137,7 @@ Band structure
    ...
 
 .. |NaCl-band| image:: NaCl-band.png
-               :scale: 50
+               :width: 50%
 
 |NaCl-band|
 
@@ -177,7 +177,7 @@ This requires to prepare BORN file.
 
 
 .. |NaCl-band-NAC| image:: NaCl-band-NAC.png
-                   :scale: 50
+                   :width: 50%
 
 |NaCl-band-NAC|
 
@@ -218,7 +218,7 @@ PDOS
    
 
 .. |NaCl-PDOS| image:: NaCl-PDOS.png
-               :scale: 50
+               :width: 50%
 
 |NaCl-PDOS|
 
@@ -258,7 +258,7 @@ region close to :math:`\Gamma` point.
 
 
 .. |NaCl-PDOS-nac| image:: NaCl-PDOS-nac.png
-                   :scale: 50
+                   :width: 50%
 
 |NaCl-PDOS-nac|
 
@@ -298,7 +298,7 @@ profile than that given by the smearing method.
      \___|_| |_|\__,_|
 
 .. |NaCl-PDOS-thm-nac| image:: NaCl-PDOS-thm-nac.png
-                       :scale: 50
+                       :width: 50%
 
 |NaCl-PDOS-thm-nac|
 
@@ -345,7 +345,7 @@ Band structure and DOS or PDOS can be plotted on one figure together by
      \___|_| |_|\__,_|   
 
 .. |NaCl-band-PDOS-NAC| image:: NaCl-band-PDOS-NAC.png
-                        :scale: 50
+                        :width: 50%
 
 |NaCl-band-PDOS-NAC|
 
@@ -493,7 +493,7 @@ Al-QHA
    ...
 
 .. |Al-QHA| image:: Al-QHA.png
-            :scale: 50
+            :width: 50%
 
 |Al-QHA|
 

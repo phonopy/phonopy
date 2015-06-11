@@ -158,7 +158,8 @@ class Dos:
                 self._frequencies,
                 mesh_object.get_mesh_numbers(),
                 mesh_object.get_grid_address(),
-                mesh_object.get_grid_mapping_table())
+                mesh_object.get_grid_mapping_table(),
+                mesh_object.get_ir_grid_points())
         else:
             self._tetrahedron_mesh = None
 
@@ -225,11 +226,11 @@ class TotalDos(Dos):
             self._dos = np.array([self._get_density_of_states_at_freq(f)
                                   for f in self._frequency_points])
         else:
+            self._dos = np.zeros_like(self._frequency_points)
             thm = self._tetrahedron_mesh
-            thm.run_at_frequencies(value='I',
-                                   frequency_points=self._frequency_points)
-            iw = thm.get_integration_weights()
-            self._dos = np.sum(np.dot(iw, self._weights), axis=1)
+            thm.set(value='I', frequency_points=self._frequency_points)
+            for i, iw in enumerate(thm):
+                self._dos += np.sum(iw * self._weights[i], axis=1)
 
     def get_dos(self):
         """
@@ -358,13 +359,13 @@ class PartialDos(Dos):
         num_atom = self._eigvecs2.shape[1]
         self._partial_dos = np.zeros((num_atom, num_freqs), dtype='double')
         thm = self._tetrahedron_mesh
-        thm.run_at_frequencies(value='I',
-                               frequency_points=self._frequency_points)
-        iw = thm.get_integration_weights()
-        for j in range(num_freqs):
-            for i, w in enumerate(self._weights):
-                for ib, frac in enumerate(self._eigvecs2[i].T):
-                    self._partial_dos[:, j] += iw[j, ib, i] * frac * w
+        thm.set(value='I', frequency_points=self._frequency_points)
+        for i, iw in enumerate(thm):
+            w = self._weights[i]
+            # for ib, frac in enumerate(self._eigvecs2[i].T):
+            #     for j in range(num_freqs):
+            #         self._partial_dos[:, j] += iw[j, ib] * frac * w
+            self._partial_dos += np.dot(iw * w, self._eigvecs2[i].T).T
         
     def get_partial_dos(self):
         """

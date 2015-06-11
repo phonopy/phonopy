@@ -16,6 +16,7 @@ tags:
 * ``-c``, ``--cell`` (``CELL_FILENAME``)
 * ``-d``  (``CREATE_DISPLACEMENTS = .TRUE.``
 * ``--dim`` (``DIM``)
+* ``--dos`` (``DOS = .TRUE.``)
 * ``--eigvecs``, ``--eigenvectors`` (``EIGENVECTORS = .TRUE.``)
 * ``--fits_debye_model`` (``DEBYE_MODEL = .TRUE.``)
 * ``--gc``, ``--gamma_center`` (``GAMMA_CENTER``)
@@ -60,12 +61,12 @@ The physical unit system used for the calculators are shown below.
 
 ::
 
-           | Distance   Atomic mass   Force      
-   -----------------------------------------------
-   VASP    | Angstrom   AMU           eV/Angstrom
-   Wien2k  | au         AMU           mRy/au	  
-   Pwscf   | au         AMU           Ry/au	  
-   Abinit  | au         AMU           eV/Angstrom
+           | Distance   Atomic mass   Force         Force constants
+   -----------------------------------------------------------------
+   VASP    | Angstrom   AMU           eV/Angstrom   eV/Angstrom^2
+   Wien2k  | au         AMU           mRy/au        mRy/au^2
+   Pwscf   | au         AMU           Ry/au         Ry/au^2
+   Abinit  | au         AMU           eV/Angstrom   eV/Angstrom.au
 
 
 Default unit cell file names are as follows::
@@ -312,17 +313,6 @@ Result is plotted (saved) to PDF file.
 
    % phonopy -p -s
 
-
-Calculate DOS
--------------
-
-``--dos``
-~~~~~~~~~
-
-Density of states are calculated using this option with ``MP``
-tag. When ``-p`` option with ``MP`` tag is set, ``--dos`` is
-automatically set. Therefore this tag is used when you want to
-calculate DOS, but you don't need to plot.
 
 Unit conversion factor
 ----------------------
