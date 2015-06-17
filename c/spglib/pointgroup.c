@@ -358,7 +358,7 @@ static int get_orthogonal_axis(int ortho_axes[],
 static int laue2m(int axes[3],
 		  SPGCONST PointSymmetry * pointsym);
 
-#ifdef DEBUG
+#ifdef SPGDEBUG
 static int lauemmm(int axes[3],
 		   SPGCONST PointSymmetry * pointsym);
 static int laue4m(int axes[3],
@@ -414,10 +414,9 @@ Pointgroup ptg_get_transformation_matrix(int transform_mat[3][3],
     pointsym = get_pointsymmetry(rotations, num_rotations);
     get_axes(axes, pointgroup.laue, &pointsym);
     set_transformation_matrix(transform_mat, axes);
-  }
-
-  debug_print("transformation matrix:\n");
-  debug_print_matrix_i3(tmp_transform_mat);
+  } else {
+    pointgroup = ptg_get_pointgroup(0);
+  }    
 
   return pointgroup;
 }
@@ -705,7 +704,7 @@ static int laue2m(int axes[3],
   return 0;
 }
 
-#ifdef DEBUG
+#ifdef SPGDEBUG
 static int lauemmm(int axes[3],
 		   SPGCONST PointSymmetry * pointsym)
 {
@@ -1163,7 +1162,7 @@ static int get_rotation_axis(SPGCONST int proper_rot[3][3])
   }
   
  end:
-#ifdef DEBUG
+#ifdef SPGDEBUG
   if (axis == -1) {
     printf("rotation axis cound not found.\n");
   }

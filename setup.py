@@ -33,8 +33,7 @@ extension_spglib = Extension(
              'c/spglib/spglib.c',
              'c/spglib/spin.c',
              'c/spglib/symmetry.c',
-             'c/spglib/tetrahedron_method.c',
-             'c/spglib/triplet_kpoint.c'])
+             'c/spglib/tetrahedron_method.c'])
 
 packages_phonopy = ['phonopy',
                     'phonopy.cui',
