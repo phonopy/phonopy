@@ -34,7 +34,7 @@
 /* ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE */
 /* POSSIBILITY OF SUCH DAMAGE. */
 
-#include "spglib_h/mathfunc.h"
+#include "mathfunc.h"
 #include "triplet_h/triplet.h"
 #include "triplet_h/triplet_kpoint.h"
 

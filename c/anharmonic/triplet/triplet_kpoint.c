@@ -36,8 +36,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "spglib_h/mathfunc.h"
-#include "spglib_h/kpoint.h"
+#include "mathfunc.h"
+#include "kpoint.h"
 #include "triplet_h/triplet_kpoint.h"
 
 
