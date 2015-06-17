@@ -5,6 +5,7 @@
 #define __debug_H__
 
 #ifdef SPGDEBUG
+#define NIGGLI_DEBUG
 #define debug_print(...) printf(__VA_ARGS__)
 #define debug_print_matrix_d3( a ) dbg_print_matrix_d3( a )
 #define debug_print_matrix_i3( a ) dbg_print_matrix_i3( a )
@@ -25,10 +26,10 @@ void dbg_print_vectors_with_label(double a[][3], int b[], int size);
 #endif
 
 #ifdef SPGWARNING
+#define NIGGLI_WARNING
 #include <stdio.h>
 #define warning_print(...) fprintf(stderr,__VA_ARGS__)
 #else
 #define warning_print(...)
 #endif
-
 #endif

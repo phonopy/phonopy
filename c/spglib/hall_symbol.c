@@ -1,4 +1,4 @@
- /* hall_symbol.c */
+/* hall_symbol.c */
 /* Copyright (C) 2010 Atsushi Togo */
 
 #include <stdio.h>
@@ -1424,9 +1424,6 @@ static void transform_translation(double trans_reduced[3],
 static void transform_rotation(double rot_reduced[3][3],
 			       const Centering centering,
 			       SPGCONST int rot[3][3]);
-/* static void transform_translation_inverse(double trans[3], */
-/* 					  const Centering centering, */
-/* 					  const double trans_reduced[3]); */
 static int get_origin_shift(double shift[3],
 			    const int hall_number,
 			    SPGCONST int rot[3][3][3],
@@ -2116,43 +2113,6 @@ static void transform_rotation(double rot_reduced[3][3],
   }
 }
 
-/* static void transform_translation_inverse(double trans[3], */
-/* 					  const Centering centering, */
-/* 					  const double trans_reduced[3]) */
-/* { */
-/*   int i; */
-
-/*   switch (centering) { */
-/*   case NO_CENTER: */
-/*     mat_copy_vector_d3(trans, trans_reduced); */
-/*     break; */
-/*   case BODY: */
-/*     mat_multiply_matrix_vector_d3(trans, M_bcc_inv, trans_reduced); */
-/*     break; */
-/*   case FACE: */
-/*     mat_multiply_matrix_vector_d3(trans, M_fcc_inv, trans_reduced); */
-/*     break; */
-/*   case A_FACE: */
-/*     mat_multiply_matrix_vector_d3(trans, M_ac_inv, trans_reduced); */
-/*     break; */
-/*   case B_FACE: */
-/*     mat_multiply_matrix_vector_d3(trans, M_bc_inv, trans_reduced); */
-/*     break; */
-/*   case C_FACE: */
-/*     mat_multiply_matrix_vector_d3(trans, M_cc_inv, trans_reduced); */
-/*     break; */
-/*   case R_CENTER: */
-/*     mat_multiply_matrix_vector_d3(trans, M_rc_inv, trans_reduced); */
-/*     break; */
-/*   default: */
-/*     break; */
-/*   } */
-
-/*   for (i = 0; i < 3; i++) { */
-/*     trans[i] -= mat_Nint(trans[i]); */
-/*   } */
-/* } */
-
 static int get_origin_shift(double shift[3],
 			    const int hall_number,
 			    SPGCONST int rot[3][3][3],
@@ -2244,10 +2204,6 @@ static int is_match_database(const int hall_number,
   double rot_prim[3][3];
 
   spgdb_get_operation_index(operation_index, hall_number);
-
-  /* if (hall_number == 335) { */
-  /*   printf("%f %f %f\n", origin_shift[0], origin_shift[1], origin_shift[2]); */
-  /* } */
 
   for (i = 0; i < symmetry->size; i++) {found_list[i] = 0;}
   for (i = 0; i < symmetry->size; i++) {

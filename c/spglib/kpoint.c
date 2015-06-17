@@ -6,6 +6,13 @@
 #include "mathfunc.h"
 #include "kpoint.h"
 
+#ifdef KPTWARNING
+#include <stdio.h>
+#define warning_print(...) fprintf(stderr,__VA_ARGS__)
+#else
+#define warning_print(...)
+#endif
+
 const int kpt_bz_search_space[KPT_NUM_BZ_SEARCH_SPACE][3] = {
   { 0,  0,  0},
   { 0,  0,  1},
@@ -223,6 +230,9 @@ int kpt_get_stabilized_reciprocal_mesh(int grid_address[][3],
   int num_ir;
   MatINT *rot_reciprocal, *rot_reciprocal_q;
   double tolerance;
+
+  rot_reciprocal = NULL;
+  rot_reciprocal_q = NULL;
   
   rot_reciprocal = get_point_group_reciprocal(rotations, is_time_reversal);
   tolerance = 0.01 / (mesh[0] + mesh[1] + mesh[2]);
@@ -325,6 +335,7 @@ MatINT *kpt_get_point_group_reciprocal_with_q(const MatINT * rot_reciprocal,
 					   qpoints);
 }
 
+/* Return NULL if failed */
 static MatINT *get_point_group_reciprocal(const MatINT * rotations,
 					  const int is_time_reversal)
 {
@@ -336,13 +347,27 @@ static MatINT *get_point_group_reciprocal(const MatINT * rotations,
     { 0,-1, 0 },
     { 0, 0,-1 }
   };
+
+  rot_reciprocal = NULL;
+  rot_return = NULL;
+  unique_rot = NULL;
   
   if (is_time_reversal) {
-    rot_reciprocal = mat_alloc_MatINT(rotations->size * 2);
+    if ((rot_reciprocal = mat_alloc_MatINT(rotations->size * 2)) == NULL) {
+      return NULL;
+    }
   } else {
-    rot_reciprocal = mat_alloc_MatINT(rotations->size);
+    if ((rot_reciprocal = mat_alloc_MatINT(rotations->size)) == NULL) {
+      return NULL;
+    }
   }
-  unique_rot = (int*)malloc(sizeof(int) * rot_reciprocal->size);
+
+  if ((unique_rot = (int*)malloc(sizeof(int) * rot_reciprocal->size)) == NULL) {
+    warning_print("spglib: Memory of unique_rot could not be allocated.");
+    mat_free_MatINT(rot_reciprocal);
+    return NULL;
+  }
+
   for (i = 0; i < rot_reciprocal->size; i++) {
     unique_rot[i] = -1;
   }
@@ -371,15 +396,21 @@ static MatINT *get_point_group_reciprocal(const MatINT * rotations,
     ;
   }
 
-  rot_return = mat_alloc_MatINT(num_rot);
-  for (i = 0; i < num_rot; i++) {
-    mat_copy_matrix_i3(rot_return->mat[i], rot_reciprocal->mat[unique_rot[i]]);    }
+  if ((rot_return = mat_alloc_MatINT(num_rot)) != NULL) {
+    for (i = 0; i < num_rot; i++) {
+      mat_copy_matrix_i3(rot_return->mat[i], rot_reciprocal->mat[unique_rot[i]]);
+    }
+  }
+
   free(unique_rot);
+  unique_rot = NULL;
   mat_free_MatINT(rot_reciprocal);
+  rot_reciprocal = NULL;
 
   return rot_return;
 }
 
+/* Return NULL if failed */
 static MatINT *get_point_group_reciprocal_with_q(const MatINT * rot_reciprocal,
 						 const double symprec,
 						 const int num_q,
@@ -390,9 +421,16 @@ static MatINT *get_point_group_reciprocal_with_q(const MatINT * rot_reciprocal,
   double q_rot[3], diff[3];
   MatINT * rot_reciprocal_q;
 
+  ir_rot = NULL;
+  rot_reciprocal_q = NULL;
   is_all_ok = 0;
   num_rot = 0;
-  ir_rot = (int*)malloc(sizeof(int) * rot_reciprocal->size);
+
+  if ((ir_rot = (int*)malloc(sizeof(int) * rot_reciprocal->size)) == NULL) {
+    warning_print("spglib: Memory of ir_rot could not be allocated.");
+    return NULL;
+  }
+
   for (i = 0; i < rot_reciprocal->size; i++) {
     ir_rot[i] = -1;
   }
@@ -428,13 +466,15 @@ static MatINT *get_point_group_reciprocal_with_q(const MatINT * rot_reciprocal,
     }
   }
 
-  rot_reciprocal_q = mat_alloc_MatINT(num_rot);
-  for (i = 0; i < num_rot; i++) {
-    mat_copy_matrix_i3(rot_reciprocal_q->mat[i],
-		       rot_reciprocal->mat[ir_rot[i]]);  
+  if ((rot_reciprocal_q = mat_alloc_MatINT(num_rot)) != NULL) {
+    for (i = 0; i < num_rot; i++) {
+      mat_copy_matrix_i3(rot_reciprocal_q->mat[i],
+			 rot_reciprocal->mat[ir_rot[i]]);  
+    }
   }
 
   free(ir_rot);
+  ir_rot = NULL;
 
   return rot_reciprocal_q;
 }

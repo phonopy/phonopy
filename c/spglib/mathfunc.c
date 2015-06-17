@@ -395,14 +395,23 @@ double mat_Dmod1(const double a)
 MatINT * mat_alloc_MatINT(const int size)
 {
   MatINT *matint;
-  matint = (MatINT*) malloc( sizeof( MatINT ) );
+
+  matint = NULL;
+  
+  if ((matint = (MatINT*) malloc(sizeof(MatINT))) == NULL) {
+    warning_print("spglib: Memory could not be allocated.");
+    return NULL;
+  }
+
   matint->size = size;
-  if ( size > 0 ) {
-    if ( ( matint->mat = (int (*)[3][3]) malloc( sizeof(int[3][3]) * size) )
-	 == NULL ) {
+  if (size > 0) {
+    if ((matint->mat = (int (*)[3][3]) malloc(sizeof(int[3][3]) * size))
+	== NULL) {
       warning_print("spglib: Memory could not be allocated ");
       warning_print("(MatINT, line %d, %s).\n", __LINE__, __FILE__);
-      exit(1);
+      free(matint);
+      matint = NULL;
+      return NULL;
     }
   }
   return matint;
@@ -410,25 +419,34 @@ MatINT * mat_alloc_MatINT(const int size)
 
 void mat_free_MatINT(MatINT * matint)
 {
-  if ( matint->size > 0 ) {
-    free( matint->mat );
+  if (matint->size > 0) {
+    free(matint->mat);
     matint->mat = NULL;
   }
-  free( matint );
+  free(matint);
   matint = NULL;
 }
 
 VecDBL * mat_alloc_VecDBL(const int size)
 {
   VecDBL *vecdbl;
-  vecdbl = (VecDBL*) malloc( sizeof( VecDBL ) );
+
+  vecdbl = NULL;
+
+  if ((vecdbl = (VecDBL*) malloc(sizeof(VecDBL))) == NULL) {
+    warning_print("spglib: Memory could not be allocated.");
+    return NULL;
+  }
+
   vecdbl->size = size;
-  if ( size > 0 ) {
-    if ( ( vecdbl->vec = (double (*)[3]) malloc( sizeof(double[3]) * size) )
-	 == NULL ) {
+  if (size > 0) {
+    if ((vecdbl->vec = (double (*)[3]) malloc(sizeof(double[3]) * size))
+	== NULL) {
       warning_print("spglib: Memory could not be allocated ");
       warning_print("(VecDBL, line %d, %s).\n", __LINE__, __FILE__);
-      exit(1);
+      free(vecdbl);
+      vecdbl = NULL;
+      return NULL;
     }
   }
   return vecdbl;
@@ -436,21 +454,21 @@ VecDBL * mat_alloc_VecDBL(const int size)
 
 void mat_free_VecDBL(VecDBL * vecdbl)
 {
-  if ( vecdbl->size > 0 ) {
-    free( vecdbl->vec );
+  if (vecdbl->size > 0) {
+    free(vecdbl->vec);
     vecdbl->vec = NULL;
   }
-  free( vecdbl );
+  free(vecdbl);
   vecdbl = NULL;
 }
 
 
 int mat_is_int_matrix(SPGCONST double mat[3][3], const double symprec)
 {
-  int i,j ;
-  for ( i = 0; i < 3; i++ ) {
-    for ( j = 0; j < 3; j++ ) {
-      if ( mat_Dabs( mat_Nint( mat[i][j] ) - mat[i][j] ) > symprec ) {
+  int i, j;
+  for (i = 0; i < 3; i++) {
+    for (j = 0; j < 3; j++) {
+      if (mat_Dabs(mat_Nint(mat[i][j]) - mat[i][j]) > symprec) {
 	return 0;
       }
     }

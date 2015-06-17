@@ -51,109 +51,123 @@ static int get_primitive_lattice_vectors(double prim_lattice[3][3],
 					 const double symprec);
 static VecDBL * get_translation_candidates(const VecDBL * pure_trans);
 
+/* return NULL if failed */
 Primitive * prm_alloc_primitive(const int size)
 {
   Primitive *primitive;
 
-  primitive = (Primitive*) malloc(sizeof(Primitive));
-  primitive->size = size;
-  if (size > 0) {
-    if ((primitive->mapping_table = (int*) malloc(sizeof(int) * size)) == NULL)
-      {
-	warning_print("spglib: Memory could not be allocated ");
-	warning_print("(Primitive, line %d, %s).\n", __LINE__, __FILE__);
-	exit(1);
-      }
+  primitive = NULL;
+
+  if ((primitive = (Primitive*) malloc(sizeof(Primitive))) == NULL) {
+    warning_print("spglib: Memory could not be allocated ");
+    return NULL;
   }
-  primitive->tolerance = 0;
-  primitive->pure_trans = NULL;
+
   primitive->cell = NULL;
+  primitive->mapping_table = NULL;
+  primitive->size = size;
+  primitive->tolerance = 0;
+
+  if (size > 0) {
+    if ((primitive->mapping_table = (int*) malloc(sizeof(int) * size)) == NULL) {
+      warning_print("spglib: Memory could not be allocated ");
+      warning_print("(Primitive, line %d, %s).\n", __LINE__, __FILE__);
+      free(primitive);
+      primitive = NULL;
+      return NULL;
+    }
+  }
 
   return primitive;
 }
 
 void prm_free_primitive(Primitive * primitive)
 {
-  if (primitive->size > 0) {
-    free(primitive->mapping_table);
-    primitive->mapping_table = NULL;
+  if (primitive != NULL) {
+    if (primitive->mapping_table != NULL) {
+      free(primitive->mapping_table);
+      primitive->mapping_table = NULL;
+    }
+
+    if (primitive->cell != NULL) {
+      cel_free_cell(primitive->cell);
+    }
+    free(primitive);
+    primitive = NULL;
   }
-  primitive->size = 0;
-  mat_free_VecDBL(primitive->pure_trans);
-  cel_free_cell(primitive->cell);
-  free(primitive);
-  primitive = NULL;
 }
 
-Cell * prm_get_primitive_cell(SPGCONST Cell * cell, const double symprec)
-{
-  Cell *primitive_cell;
-  Primitive *primitive;
-
-  primitive = get_primitive(cell, symprec);
-  primitive_cell = cel_copy_cell(primitive->cell);
-  prm_free_primitive(primitive);
-
-  return primitive_cell;
-}
-
+/* Return NULL if failed */
 Primitive * prm_get_primitive(SPGCONST Cell * cell, const double symprec)
 {
   return get_primitive(cell, symprec);
 }
 
-/* If primitive could not be found, primitive->size = 0 is returned. */
+/* Return NULL if failed */
 static Primitive * get_primitive(SPGCONST Cell * cell, const double symprec)
 {
   int i, attempt, is_found = 0;
   double tolerance;
   Primitive *primitive;
+  VecDBL * pure_trans;
 
-  primitive = prm_alloc_primitive(cell->size);
+  debug_print("get_primitive (tolerance = %f):\n", symprec);
+
+  primitive = NULL;
+  pure_trans = NULL;
+
+  if ((primitive = prm_alloc_primitive(cell->size)) == NULL) {
+    return NULL;
+  }
 
   tolerance = symprec;
   for (attempt = 0; attempt < 100; attempt++) {
-    primitive->pure_trans = sym_get_pure_translation(cell, tolerance);
-    if (primitive->pure_trans->size == 0) {
-      mat_free_VecDBL(primitive->pure_trans);
-      continue;
+    if ((pure_trans = sym_get_pure_translation(cell, tolerance)) == NULL) {
+      printf("***** hoge ******\n");
+      goto cont;
     }
 
-    if (primitive->pure_trans->size == 1) {
-      primitive->cell = get_cell_with_smallest_lattice(cell, tolerance);
+    if (pure_trans->size == 1) {
+      if ((primitive->cell = get_cell_with_smallest_lattice(cell, tolerance))
+	  == NULL) {
+	mat_free_VecDBL(pure_trans);
+	goto cont;
+      }
+
       for (i = 0; i < cell->size; i++) {
 	primitive->mapping_table[i] = i;
       }
     } else {
-      primitive->cell = get_primitive_cell(primitive->mapping_table,
-					   cell,
-					   primitive->pure_trans,
-					   tolerance);
+      if ((primitive->cell = get_primitive_cell(primitive->mapping_table,
+						cell,
+						pure_trans,
+						tolerance)) == NULL) {
+	mat_free_VecDBL(pure_trans);
+	goto cont;
+      }
     }
 
-    if (primitive->cell->size > 0) {
-      is_found = 1;
-      break;
-    }
+    is_found = 1;
+    break;
 
-    cel_free_cell(primitive->cell);
-    mat_free_VecDBL(primitive->pure_trans);
-    
+  cont:
     tolerance *= REDUCE_RATE;
     warning_print("spglib: Reduce tolerance to %f ", tolerance);
     warning_print("(line %d, %s).\n", __LINE__, __FILE__);
   }
 
+  mat_free_VecDBL(pure_trans);
+
   if (is_found) {
     primitive->tolerance = tolerance;
   } else {
-    primitive->cell = cel_alloc_cell(0);
-    primitive->pure_trans = mat_alloc_VecDBL(0);
+    prm_free_primitive(primitive);
   }
 
   return primitive;
 }
 
+/* Return NULL if failed */
 static Cell * get_cell_with_smallest_lattice(SPGCONST Cell * cell,
 					     const double symprec)
 {
@@ -163,29 +177,38 @@ static Cell * get_cell_with_smallest_lattice(SPGCONST Cell * cell,
 
   debug_print("get_cell_with_smallest_lattice:\n");
   
-  if (lat_smallest_lattice_vector(min_lat,
-				  cell->lattice,
-				  symprec)) {
-    mat_inverse_matrix_d3(inv_lat, min_lat, 0);
-    mat_multiply_matrix_d3(trans_mat, inv_lat, cell->lattice);
-    smallest_cell = cel_alloc_cell(cell->size);
-    mat_copy_matrix_d3(smallest_cell->lattice, min_lat);
-    for (i = 0; i < cell->size; i++) {
-      smallest_cell->types[i] = cell->types[i];
-      mat_multiply_matrix_vector_d3(smallest_cell->position[i],
-				    trans_mat, cell->position[i]);
-      for (j = 0; j < 3; j++) {
-	cell->position[i][j] -= mat_Nint(cell->position[i][j]);
-      }
+  smallest_cell = NULL;
+
+  if (!lat_smallest_lattice_vector(min_lat,
+				   cell->lattice,
+				   symprec)) {
+    goto err;
+  }
+
+  mat_inverse_matrix_d3(inv_lat, min_lat, 0);
+  mat_multiply_matrix_d3(trans_mat, inv_lat, cell->lattice);
+
+  if ((smallest_cell = cel_alloc_cell(cell->size)) == NULL) {
+    goto err;
+  }
+
+  mat_copy_matrix_d3(smallest_cell->lattice, min_lat);
+  for (i = 0; i < cell->size; i++) {
+    smallest_cell->types[i] = cell->types[i];
+    mat_multiply_matrix_vector_d3(smallest_cell->position[i],
+				  trans_mat, cell->position[i]);
+    for (j = 0; j < 3; j++) {
+      cell->position[i][j] -= mat_Nint(cell->position[i][j]);
     }
-  } else {
-    smallest_cell = cel_alloc_cell(0);
   }
 
   return smallest_cell;
+
+ err:
+  return NULL;
 }
 
-/* If primitive could not be found, primitive->size = 0 is returned. */
+/* Return NULL if failed */
 static Cell * get_primitive_cell(int * mapping_table,
 				 SPGCONST Cell * cell,
 				 const VecDBL * pure_trans,
@@ -196,6 +219,8 @@ static Cell * get_primitive_cell(int * mapping_table,
   Cell * primitive_cell;
 
   debug_print("get_primitive:\n");
+
+  primitive_cell = NULL;
 
   /* Primitive lattice vectors are searched. */
   /* To be consistent, sometimes tolerance is decreased iteratively. */
@@ -208,18 +233,22 @@ static Cell * get_primitive_cell(int * mapping_table,
     goto not_found;
   }
 
-  primitive_cell = cel_alloc_cell(cell->size / multi);
+  if ((primitive_cell = cel_alloc_cell(cell->size / multi)) == NULL) {
+    goto not_found;
+  }
 
   if (! lat_smallest_lattice_vector(primitive_cell->lattice,
 				    prim_lattice,
 				    symprec)) {
     cel_free_cell(primitive_cell);
+    primitive_cell = NULL;
     goto not_found;
   }
 
   /* Fit atoms into new primitive cell */
   if (! trim_cell(primitive_cell, mapping_table, cell, symprec)) {
     cel_free_cell(primitive_cell);
+    primitive_cell = NULL;
     goto not_found;
   }
 
@@ -227,13 +256,12 @@ static Cell * get_primitive_cell(int * mapping_table,
   return primitive_cell;
 
  not_found:
-  primitive_cell = cel_alloc_cell(0);
   warning_print("spglib: Primitive cell could not be found ");
   warning_print("(line %d, %s).\n", __LINE__, __FILE__);
-  return primitive_cell;
+  return NULL;
 }
 
-
+/* Return 0 if failed */
 static int trim_cell(Cell * primitive_cell,
 		     int * mapping_table,
 		     SPGCONST Cell * cell,
@@ -243,14 +271,24 @@ static int trim_cell(Cell * primitive_cell,
   VecDBL * position;
   int **overlap_table;
 
-  overlap_table = allocate_overlap_table(cell->size);
-  position = get_positions_primitive(cell, primitive_cell->lattice);
+  position = NULL;
+  overlap_table = NULL;
+
+  if ((overlap_table = allocate_overlap_table(cell->size)) == NULL) {
+    goto err;
+  }
+
+  if ((position = get_positions_primitive(cell, primitive_cell->lattice))
+      == NULL) {
+    free_overlap_table(overlap_table, cell->size);
+    goto err;
+  }
 
   if (! get_overlap_table(overlap_table,
 			  primitive_cell,
 			  position,
 			  cell->types,
-			  symprec)) {goto err;}
+			  symprec)) {goto err_with_free;}
 
   index_prim_atom = 0;
   for (i = 0; i < cell->size; i++) {
@@ -265,18 +303,20 @@ static int trim_cell(Cell * primitive_cell,
   if (! set_primitive_positions(primitive_cell,
 				position,
 				cell,
-				overlap_table)) {goto err;}
+				overlap_table)) {goto err_with_free;}
 
   mat_free_VecDBL(position);
   free_overlap_table(overlap_table, cell->size);
   return 1;
 
- err:
+ err_with_free:
   mat_free_VecDBL(position);
   free_overlap_table(overlap_table, cell->size);
+ err:
   return 0;
 }
 
+/* Return 0 if failed */
 static int set_primitive_positions(Cell * primitive_cell,
 				   const VecDBL * position,
 				   const Cell * cell,
@@ -285,7 +325,13 @@ static int set_primitive_positions(Cell * primitive_cell,
   int i, j, k, ratio, index_prim_atom;
   int *is_equivalent;
 
-  is_equivalent = (int*)malloc(cell->size * sizeof(int));
+  is_equivalent = NULL;
+
+  if ((is_equivalent = (int*) malloc(cell->size * sizeof(int))) == NULL) {
+    warning_print("spglib: Memory could not be allocated ");
+    goto err;
+  }
+
   for (i = 0; i < cell->size; i++) {
     is_equivalent[i] = 0;
   }
@@ -355,6 +401,7 @@ static int set_primitive_positions(Cell * primitive_cell,
   return 0;
 }
 
+/* Return NULL if failed */
 static VecDBL * get_positions_primitive(SPGCONST Cell * cell,
 					SPGCONST double prim_lat[3][3])
 {
@@ -362,7 +409,11 @@ static VecDBL * get_positions_primitive(SPGCONST Cell * cell,
   double tmp_matrix[3][3], axis_inv[3][3];
   VecDBL * position;
 
-  position = mat_alloc_VecDBL(cell->size);
+  position = NULL;
+
+  if ((position = mat_alloc_VecDBL(cell->size)) == NULL) {
+    return NULL;
+  }
 
   mat_inverse_matrix_d3(tmp_matrix, prim_lat, 0);
   mat_multiply_matrix_d3(axis_inv, tmp_matrix, cell->lattice);
@@ -370,7 +421,8 @@ static VecDBL * get_positions_primitive(SPGCONST Cell * cell,
   /* Send atoms into the primitive cell */
   for (i = 0; i < cell->size; i++) {
     mat_multiply_matrix_vector_d3(position->vec[i],
-				  axis_inv, cell->position[i]);
+				  axis_inv,
+				  cell->position[i]);
     for (j = 0; j < 3; j++) {
       position->vec[i][j] -= mat_Nint(position->vec[i][j]);
     }
@@ -382,6 +434,7 @@ static VecDBL * get_positions_primitive(SPGCONST Cell * cell,
 
 /* If overlap_table is correctly obtained, */
 /* shape of overlap_table will be (cell->size, cell->size / primitive->size). */
+/* Return 0 if failed */
 static int get_overlap_table(int **overlap_table,
 			     SPGCONST Cell *primitive_cell,
 			     const VecDBL * position,
@@ -441,7 +494,7 @@ static int get_overlap_table(int **overlap_table,
 
 }
 
-
+/* Retrun 0 if failed */
 static int check_overlap_table(SPGCONST int **overlap_table,
 			       const int cell_size,
 			       const int ratio) {
@@ -477,6 +530,7 @@ static int check_overlap_table(SPGCONST int **overlap_table,
 static void free_overlap_table(int **table, const int size)
 {
   int i;
+
   for (i = 0; i < size; i++) {
     free(table[i]);
     table[i] = NULL;
@@ -487,15 +541,32 @@ static void free_overlap_table(int **table, const int size)
 
 static int ** allocate_overlap_table(const int size)
 {
-  int i;
-  int **table = (int**)malloc(size * sizeof(int*));
+  int i, j;
+  int **table;
+
+  table = NULL;
+
+  if ((table = (int**)malloc(size * sizeof(int*))) == NULL) {
+    warning_print("spglib: Memory could not be allocated ");
+    return NULL;
+  }
+
   for (i = 0; i < size; i++) {
-    table[i] = (int*)malloc(size * sizeof(int));
+    if ((table[i] = (int*)malloc(size * sizeof(int))) == NULL) {
+      warning_print("spglib: Memory could not be allocated ");
+      for (j = 0; j < i; j++) {
+	free(table[j]);
+	table[j] = NULL;
+      }
+      free(table);
+      table = NULL;
+      return NULL;
+    }
   }
   return table;
 }
 
-
+/* Return 0 if failed */
 static int get_primitive_lattice_vectors_iterative(double prim_lattice[3][3],
 						   SPGCONST Cell * cell,
 						   const VecDBL * pure_trans,
@@ -505,15 +576,27 @@ static int get_primitive_lattice_vectors_iterative(double prim_lattice[3][3],
   double tolerance;
   VecDBL * vectors, * pure_trans_reduced, *tmp_vec;
 
+  vectors = NULL;
+  pure_trans_reduced = NULL;
+  tmp_vec = NULL;
+
   tolerance = symprec;
-  pure_trans_reduced = mat_alloc_VecDBL(pure_trans->size);
+
+  if ((pure_trans_reduced = mat_alloc_VecDBL(pure_trans->size)) == NULL) {
+    goto fail;
+  }
+
   for (i = 0; i < pure_trans->size; i++) {
     mat_copy_vector_d3(pure_trans_reduced->vec[i], pure_trans->vec[i]);
   }
   
   for (attempt = 0; attempt < 100; attempt++) {
     multi = pure_trans_reduced->size;
-    vectors = get_translation_candidates(pure_trans_reduced);
+
+    if ((vectors = get_translation_candidates(pure_trans_reduced)) == NULL) {
+      mat_free_VecDBL(pure_trans_reduced);
+      goto fail;
+    }
 
     /* Lattice of primitive cell is found among pure translation vectors */
     if (get_primitive_lattice_vectors(prim_lattice,
@@ -525,38 +608,48 @@ static int get_primitive_lattice_vectors_iterative(double prim_lattice[3][3],
       mat_free_VecDBL(pure_trans_reduced);
 
       goto found;
+
     } else {
 
-      tmp_vec = mat_alloc_VecDBL(multi);
+      if ((tmp_vec = mat_alloc_VecDBL(multi)) == NULL) {
+	mat_free_VecDBL(vectors);
+	mat_free_VecDBL(pure_trans_reduced);
+	goto fail;
+      }
+
       for (i = 0; i < multi; i++) {
 	mat_copy_vector_d3(tmp_vec->vec[i], pure_trans_reduced->vec[i]);
       }
       mat_free_VecDBL(pure_trans_reduced);
+
       pure_trans_reduced = sym_reduce_pure_translation(cell,
 						       tmp_vec,
 						       tolerance);
-      warning_print("Tolerance is reduced to %f (%d), size = %d\n",
-		    tolerance, attempt, pure_trans_reduced->size);
 
       mat_free_VecDBL(tmp_vec);
       mat_free_VecDBL(vectors);
+
+      if (pure_trans_reduced == NULL) {
+	goto fail;
+      }
+
+      warning_print("Tolerance is reduced to %f (%d), size = %d\n",
+		    tolerance, attempt, pure_trans_reduced->size);
 
       tolerance *= REDUCE_RATE;
     }
   }
 
-  /* Not found */
+  mat_free_VecDBL(pure_trans_reduced);
+
+ fail:
   return 0;
 
  found:
-#ifdef SPGWARNING
-  if (attempt > 0) {
-    printf("spglib: Tolerance to find primitive lattice vectors was changed to %f\n", tolerance);
-  }
-#endif
   return multi;
 }
 
+/* Return 0 if failed */
 static int get_primitive_lattice_vectors(double prim_lattice[3][3],
 					 const VecDBL * vectors,
 					 SPGCONST Cell * cell,
@@ -631,8 +724,12 @@ static VecDBL * get_translation_candidates(const VecDBL * pure_trans)
   int i, j, multi;
   VecDBL * vectors;
 
+  vectors = NULL;
   multi = pure_trans->size;
-  vectors = mat_alloc_VecDBL(multi+2);
+
+  if ((vectors = mat_alloc_VecDBL(multi + 2)) == NULL) {
+    return NULL;
+  }
 
   /* store pure translations in original cell */ 
   /* as trial primitive lattice vectors */

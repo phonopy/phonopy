@@ -27,7 +27,6 @@ typedef struct {
 Primitive * spa_get_spacegroup(Spacegroup * spacegroup,
 			       SPGCONST Cell * cell,
 			       const double symprec);
-Spacegroup spa_get_spacegroup_with_hall_number(SPGCONST Cell * primitive,
-					       const int hall_number,
-					       const double symprec);
+Spacegroup spa_get_spacegroup_with_hall_number(SPGCONST Primitive * primitive,
+					       const int hall_number);
 #endif
