@@ -3,6 +3,15 @@
 Change Log
 ==========
 
+Jun-17-2015: version 0.9.10
+----------------------------
+
+- Fix bug in ``kaccum``. When using with ``--pa`` option, irreducible
+  q-points were incorrectly indexed.
+- ``gaccum`` is implemented. ``gaccum`` is very similar to ``kaccum``,
+  but for :math:`\Gamma_\lambda(\omega_\lambda)`.
+- spglib update.
+
 Changes in version 0.9.7
 -------------------------
 
