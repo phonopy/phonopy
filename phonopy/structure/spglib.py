@@ -402,26 +402,6 @@ def get_neighboring_grid_points(grid_point,
 ######################
 # Tetrahedron method #
 ######################
-def get_triplets_tetrahedra_vertices(relative_grid_address,
-                                     mesh,
-                                     triplets,
-                                     bz_grid_address,
-                                     bz_map):
-    num_tripltes = len(triplets)
-    vertices = np.zeros((num_tripltes, 2, 24, 4), dtype='intc')
-    for i, tp in enumerate(triplets):
-        vertices_at_tp = np.zeros((2, 24, 4), dtype='intc')
-        spg.triplet_tetrahedra_vertices(
-            vertices_at_tp,
-            relative_grid_address,
-            np.array(mesh, dtype='intc'),
-            tp,
-            bz_grid_address,
-            bz_map)
-        vertices[i] = vertices_at_tp
-
-    return vertices
-
 def get_tetrahedra_relative_grid_address(microzone_lattice):
     """
     reciprocal_lattice:
