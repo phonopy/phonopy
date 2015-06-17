@@ -200,20 +200,19 @@ int kpt_get_irreducible_reciprocal_mesh(int grid_address[][3],
 {
   int num_ir;
 
-/* #ifdef _OPENMP */
-/*   num_ir = get_ir_reciprocal_mesh_openmp(grid_address, */
-/* 					 map, */
-/* 					 mesh, */
-/* 					 is_shift, */
-/* 					 rot_reciprocal); */
-  
-/* #else */
+#ifdef _OPENMP
+  num_ir = get_ir_reciprocal_mesh_openmp(grid_address,
+					 map,
+					 mesh,
+					 is_shift,
+					 rot_reciprocal);
+#else
   num_ir = get_ir_reciprocal_mesh(grid_address,
 				  map,
 				  mesh,
 				  is_shift,
 				  rot_reciprocal);
-/* #endif */
+#endif
   
   return num_ir;
 }
@@ -241,19 +240,19 @@ int kpt_get_stabilized_reciprocal_mesh(int grid_address[][3],
 						       num_q,
 						       qpoints);
 
-/* #ifdef _OPENMP */
-/*   num_ir = get_ir_reciprocal_mesh_openmp(grid_address, */
-/* 					 map, */
-/* 					 mesh, */
-/* 					 is_shift, */
-/* 					 rot_reciprocal_q); */
-/* #else */
+#ifdef _OPENMP
+  num_ir = get_ir_reciprocal_mesh_openmp(grid_address,
+					 map,
+					 mesh,
+					 is_shift,
+					 rot_reciprocal_q);
+#else
   num_ir = get_ir_reciprocal_mesh(grid_address,
 				  map,
 				  mesh,
 				  is_shift,
 				  rot_reciprocal_q);
-/* #endif */
+#endif
   mat_free_MatINT(rot_reciprocal_q);
   mat_free_MatINT(rot_reciprocal);
   return num_ir;
@@ -553,45 +552,39 @@ get_ir_reciprocal_mesh_openmp(int grid_address[][3],
 			      const int is_shift[3],
 			      const MatINT * rot_reciprocal)
 {
-  int i, j, k, l, grid_point, grid_point_rot, num_ir;
+  int i, j, grid_point, grid_point_rot, num_ir;
   int address[3], address_double[3], address_double_rot[3];
 
+#pragma omp parallel for private(j, grid_point, grid_point_rot, address, address_double, address_double_rot)
+  for (i = 0; i < mesh[0] * mesh[1] * mesh[2]; i++) {
 #ifndef GRID_ORDER_XYZ
-#pragma omp parallel for private(j, k, l, grid_point, grid_point_rot, address, address_double, address_double_rot)
-  for (i = 0; i < mesh[2]; i++) {
-    for (j = 0; j < mesh[1]; j++) {
-      for (k = 0; k < mesh[0]; k++) {
-	address[0] = k;
-	address[1] = j;
-	address[2] = i;
+    /* address[2] * mesh[0] * mesh[1] + address[1] * mesh[0] + address[0]; */
+    address[0] = i % mesh[0];
+    address[2] = i / (mesh[0] * mesh[1]);
+    address[1] = (i - address[2] * mesh[0] * mesh[1]) / mesh[0];
 #else
-#pragma omp parallel for private(j, k, l, grid_point, grid_point_rot, address, address_double, address_double_rot)
-  for (i = 0; i < mesh[0]; i++) {
-    for (j = 0; j < mesh[1]; j++) {
-      for (k = 0; k < mesh[2]; k++) {
-	address[0] = i;
-	address[1] = j;
-	address[2] = k;
+    /* address[0] * mesh[1] * mesh[2] + address[1] * mesh[2] + address[2]; */
+    address[2] = i % mesh[2];
+    address[0] = i / (mesh[1] * mesh[2]);
+    address[1] = (i - address[0] * mesh[1] * mesh[2]) / mesh[2];
 #endif	
-	for (l = 0; l < 3; l++) {
-	  address_double[l] = address[l] * 2 + is_shift[l];
-	}
+    for (j = 0; j < 3; j++) {
+      address_double[j] = address[j] * 2 + is_shift[j];
+    }
 
-	grid_point = get_grid_point_double_mesh(address_double, mesh);
-	map[grid_point] = grid_point;
-	reduce_grid_address(grid_address[grid_point], address, mesh);
+    grid_point = get_grid_point_double_mesh(address_double, mesh);
+    map[grid_point] = grid_point;
+    reduce_grid_address(grid_address[grid_point], address, mesh);
 
-	for (l = 0; l < rot_reciprocal->size; l++) {
-	  mat_multiply_matrix_vector_i3(address_double_rot,
-					rot_reciprocal->mat[l],
-					address_double);
-	  grid_point_rot = get_grid_point_double_mesh(address_double_rot, mesh);
+    for (j = 0; j < rot_reciprocal->size; j++) {
+      mat_multiply_matrix_vector_i3(address_double_rot,
+				    rot_reciprocal->mat[j],
+				    address_double);
+      grid_point_rot = get_grid_point_double_mesh(address_double_rot, mesh);
 
-	  if (grid_point_rot > -1) { /* Invalid if even --> odd or odd --> even */
-	    if (grid_point_rot < map[grid_point]) {
-	      map[grid_point] = grid_point_rot;
-	    }
-	  }
+      if (grid_point_rot > -1) { /* Invalid if even --> odd or odd --> even */
+	if (grid_point_rot < map[grid_point]) {
+	  map[grid_point] = grid_point_rot;
 	}
       }
     }
