@@ -11,11 +11,19 @@ extension_phonopy = Extension(
              'c/harmonic/dynmat.c',
              'c/harmonic/derivative_dynmat.c'])
 
+
+if __name__ == '__main__':
+    extra_compile_args_spglib=[]
+    extra_link_args_spglib=[]
+else:
+    extra_compile_args_spglib=['-fopenmp']
+    extra_link_args_spglib=['-lgomp']
+
 extension_spglib = Extension(
     'phonopy._spglib',
     include_dirs=['c/spglib_h'] + include_dirs_numpy,
-    # extra_compile_args=['-fopenmp'],
-    # extra_link_args=['-lgomp'],
+    extra_compile_args=extra_compile_args_spglib,
+    extra_link_args=extra_link_args_spglib,
     sources=['c/_spglib.c',
              'c/spglib/cell.c',
              'c/spglib/hall_symbol.c',
