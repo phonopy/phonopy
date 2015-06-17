@@ -200,20 +200,20 @@ int kpt_get_irreducible_reciprocal_mesh(int grid_address[][3],
 {
   int num_ir;
 
-#ifdef _OPENMP
-  num_ir = get_ir_reciprocal_mesh_openmp(grid_address,
-					 map,
-					 mesh,
-					 is_shift,
-					 rot_reciprocal);
+/* #ifdef _OPENMP */
+/*   num_ir = get_ir_reciprocal_mesh_openmp(grid_address, */
+/* 					 map, */
+/* 					 mesh, */
+/* 					 is_shift, */
+/* 					 rot_reciprocal); */
   
-#else
+/* #else */
   num_ir = get_ir_reciprocal_mesh(grid_address,
 				  map,
 				  mesh,
 				  is_shift,
 				  rot_reciprocal);
-#endif
+/* #endif */
   
   return num_ir;
 }
@@ -241,19 +241,19 @@ int kpt_get_stabilized_reciprocal_mesh(int grid_address[][3],
 						       num_q,
 						       qpoints);
 
-#ifdef _OPENMP
-  num_ir = get_ir_reciprocal_mesh_openmp(grid_address,
-					 map,
-					 mesh,
-					 is_shift,
-					 rot_reciprocal_q);
-#else
+/* #ifdef _OPENMP */
+/*   num_ir = get_ir_reciprocal_mesh_openmp(grid_address, */
+/* 					 map, */
+/* 					 mesh, */
+/* 					 is_shift, */
+/* 					 rot_reciprocal_q); */
+/* #else */
   num_ir = get_ir_reciprocal_mesh(grid_address,
 				  map,
 				  mesh,
 				  is_shift,
 				  rot_reciprocal_q);
-#endif
+/* #endif */
   mat_free_MatINT(rot_reciprocal_q);
   mat_free_MatINT(rot_reciprocal);
   return num_ir;
@@ -557,7 +557,7 @@ get_ir_reciprocal_mesh_openmp(int grid_address[][3],
   int address[3], address_double[3], address_double_rot[3];
 
 #ifndef GRID_ORDER_XYZ
-#pragma omp parallel for private(j, k, l, grid_point, grid_point_rot, address_double, address_double_rot)
+#pragma omp parallel for private(j, k, l, grid_point, grid_point_rot, address, address_double, address_double_rot)
   for (i = 0; i < mesh[2]; i++) {
     for (j = 0; j < mesh[1]; j++) {
       for (k = 0; k < mesh[0]; k++) {
@@ -565,7 +565,7 @@ get_ir_reciprocal_mesh_openmp(int grid_address[][3],
 	address[1] = j;
 	address[2] = i;
 #else
-#pragma omp parallel for private(j, k, l, grid_point, grid_point_rot, address_double, address_double_rot)
+#pragma omp parallel for private(j, k, l, grid_point, grid_point_rot, address, address_double, address_double_rot)
   for (i = 0; i < mesh[0]; i++) {
     for (j = 0; j < mesh[1]; j++) {
       for (k = 0; k < mesh[2]; k++) {

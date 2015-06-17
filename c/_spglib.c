@@ -57,9 +57,6 @@ static PyObject * get_stabilized_reciprocal_mesh(PyObject *self, PyObject *args)
 static PyObject * get_grid_points_by_rotations(PyObject *self, PyObject *args);
 static PyObject * get_BZ_grid_points_by_rotations(PyObject *self, PyObject *args);
 static PyObject * relocate_BZ_grid_address(PyObject *self, PyObject *args);
-static PyObject *
-get_triplets_reciprocal_mesh_at_q(PyObject *self, PyObject *args);
-static PyObject * get_BZ_triplets_at_q(PyObject *self, PyObject *args);
 static PyObject * get_neighboring_grid_points(PyObject *self, PyObject *args);
 static PyObject *
 get_tetrahedra_relative_grid_address(PyObject *self, PyObject *args);
@@ -93,10 +90,6 @@ static PyMethodDef functions[] = {
    "Rotated grid points in BZ are returned"},
   {"BZ_grid_address", relocate_BZ_grid_address, METH_VARARGS,
    "Relocate grid addresses inside Brillouin zone"},
-  {"triplets_reciprocal_mesh_at_q", get_triplets_reciprocal_mesh_at_q,
-   METH_VARARGS, "Triplets on reciprocal mesh points at a specific q-point"},
-  {"BZ_triplets_at_q", get_BZ_triplets_at_q,
-   METH_VARARGS, "Triplets in reciprocal primitive lattice are transformed to those in BZ."},
   {"neighboring_grid_points", get_neighboring_grid_points,
    METH_VARARGS, "Neighboring grid points by relative grid addresses"},
   {"tetrahedra_relative_grid_address", get_tetrahedra_relative_grid_address,
@@ -743,84 +736,6 @@ static PyObject * relocate_BZ_grid_address(PyObject *self, PyObject *args)
 					   is_shift);
 
   return PyLong_FromLong((long) num_ir_gp);
-}
-
-static PyObject * get_triplets_reciprocal_mesh_at_q(PyObject *self, PyObject *args)
-{
-  PyArrayObject* map_triplets;
-  PyArrayObject* grid_address_py;
-  PyArrayObject* map_q;
-  int fixed_grid_number;
-  PyArrayObject* mesh;
-  int is_time_reversal;
-  PyArrayObject* rotations;
-  if (!PyArg_ParseTuple(args, "OOOiOiO",
-			&map_triplets,
-			&map_q,
-			&grid_address_py,
-			&fixed_grid_number,
-			&mesh,
-			&is_time_reversal,
-			&rotations)) {
-    return NULL;
-  }
-
-  int (*grid_address)[3] = (int(*)[3])grid_address_py->data;
-  int *map_triplets_int = (int*)map_triplets->data;
-  int *map_q_int = (int*)map_q->data;
-
-  const int* mesh_int = (int*)mesh->data;
-  SPGCONST int (*rot)[3][3] = (int(*)[3][3])rotations->data;
-  const int num_rot = rotations->dimensions[0];
-  const int num_ir =
-    spg_get_triplets_reciprocal_mesh_at_q(map_triplets_int,
-					  map_q_int,
-					  grid_address,
-					  fixed_grid_number,
-					  mesh_int,
-					  is_time_reversal,
-					  num_rot,
-					  rot);
-
-  return PyLong_FromLong((long) num_ir);
-}
-
-
-static PyObject * get_BZ_triplets_at_q(PyObject *self, PyObject *args)
-{
-  PyArrayObject* triplets_py;
-  PyArrayObject* bz_grid_address_py;
-  PyArrayObject* bz_map_py;
-  PyArrayObject* map_triplets_py;
-  PyArrayObject* mesh_py;
-  int grid_point;
-  if (!PyArg_ParseTuple(args, "OiOOOO",
-			&triplets_py,
-			&grid_point,
-			&bz_grid_address_py,
-			&bz_map_py,
-			&map_triplets_py,
-			&mesh_py)) {
-    return NULL;
-  }
-
-  int (*triplets)[3] = (int(*)[3])triplets_py->data;
-  SPGCONST int (*bz_grid_address)[3] = (int(*)[3])bz_grid_address_py->data;
-  const int *bz_map = (int*)bz_map_py->data;
-  const int *map_triplets = (int*)map_triplets_py->data;
-  const int num_map_triplets = (int)map_triplets_py->dimensions[0];
-  const int *mesh = (int*)mesh_py->data;
-  int num_ir;
-
-  num_ir = spg_get_BZ_triplets_at_q(triplets,
-				    grid_point,
-				    bz_grid_address,
-				    bz_map,
-				    map_triplets,
-				    num_map_triplets,
-				    mesh);
-
-  return PyLong_FromLong((long) num_ir);
 }
 
 static PyObject *get_neighboring_grid_points(PyObject *self, PyObject *args)
