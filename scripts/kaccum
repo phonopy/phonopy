@@ -82,6 +82,7 @@ if __name__ == '__main__':
     mode_kappa = f['mode_kappa']
     frequencies = f['frequency'][:]
     temperatures = f['temperature'][:]
+    weights = f['weight'][:]
 
     symmetry = Symmetry(primitive)
     rotations = symmetry.get_pointgroup_operations()
@@ -91,6 +92,9 @@ if __name__ == '__main__':
     grid_address = gp.get_grid_address()
     grid_mapping_table = gp.get_grid_mapping_table()
     ir_grid_points = gp.get_ir_grid_points()
+    weights_for_check = gp.get_ir_grid_weights()
+
+    assert (weights == weights_for_check).all()
     
     kappa_dos = KappaDOS(mode_kappa,
                          primitive,
