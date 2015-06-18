@@ -64,7 +64,7 @@ scripts_phono3py = ['scripts/phono3py',
                     'scripts/gaccum']
 
 setup(name='phono3py',
-      version='0.9.10',
+      version='0.9.10.1',
       description='This is the phono3py module.',
       author='Atsushi Togo',
       author_email='atz.togo@gmail.com',
