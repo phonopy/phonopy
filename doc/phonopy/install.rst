@@ -33,7 +33,7 @@ Ubuntu linux as a virtual machine. See :ref:`virtualmachine`
 
 2. Download the source code from:
 
-   https://sourceforge.net/projects/phonopy/ .
+   https://sourceforge.net/projects/phonopy/files/phonopy/phonopy-1.9/ .
 
    and extract it::
 
