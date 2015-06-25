@@ -1,5 +1,36 @@
-/* spglib.c */
 /* Copyright (C) 2008 Atsushi Togo */
+/* All rights reserved. */
+
+/* This file is part of spglib. */
+
+/* Redistribution and use in source and binary forms, with or without */
+/* modification, are permitted provided that the following conditions */
+/* are met: */
+
+/* * Redistributions of source code must retain the above copyright */
+/*   notice, this list of conditions and the following disclaimer. */
+
+/* * Redistributions in binary form must reproduce the above copyright */
+/*   notice, this list of conditions and the following disclaimer in */
+/*   the documentation and/or other materials provided with the */
+/*   distribution. */
+
+/* * Neither the name of the phonopy project nor the names of its */
+/*   contributors may be used to endorse or promote products derived */
+/*   from this software without specific prior written permission. */
+
+/* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS */
+/* "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT */
+/* LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS */
+/* FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE */
+/* COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, */
+/* INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, */
+/* BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; */
+/* LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER */
+/* CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT */
+/* LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN */
+/* ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE */
+/* POSSIBILITY OF SUCH DAMAGE. */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -64,6 +95,15 @@ static int find_primitive(double lattice[3][3],
 			  int types[],
 			  const int num_atom,
 			  const double symprec);
+static int find_standardized_primitive(double lattice[3][3],
+				       double position[][3],
+				       int types[],
+				       const int num_atom,
+				       const double symprec);
+static void set_primitive(double lattice[3][3],
+			  double position[][3],
+			  int types[],
+			  Primitive * primitive);
 static int get_international(char symbol[11],
 			     SPGCONST double lattice[3][3],
 			     SPGCONST double position[][3],
@@ -394,6 +434,39 @@ int spgat_find_primitive(double lattice[3][3],
 }
 
 /* Return 0 if failed */
+int spg_find_standardized_primitive(double lattice[3][3],
+				    double position[][3],
+				    int types[],
+				    const int num_atom,
+				    const double symprec)
+{
+  sym_set_angle_tolerance(-1.0);
+
+  return find_standardized_primitive(lattice,
+				     position,
+				     types,
+				     num_atom,
+				     symprec);
+}
+
+/* Return 0 if failed */
+int spgat_find_standardized_primitive(double lattice[3][3],
+				      double position[][3],
+				      int types[],
+				      const int num_atom,
+				      const double symprec,
+				      const double angle_tolerance)
+{
+  sym_set_angle_tolerance(angle_tolerance);
+
+  return find_standardized_primitive(lattice,
+				     position,
+				     types,
+				     num_atom,
+				     symprec);
+}
+
+/* Return 0 if failed */
 int spg_get_international(char symbol[11],
 			  SPGCONST double lattice[3][3],
 			  SPGCONST double position[][3],
@@ -628,17 +701,22 @@ int spg_get_stabilized_reciprocal_mesh(int grid_address[][3],
 					qpoints);
 }
 
-void spg_get_grid_points_by_rotations(int rot_grid_points[],
-				      const int address_orig[3],
-				      const int num_rot,
-				      SPGCONST int rot_reciprocal[][3][3],
-				      const int mesh[3],
-				      const int is_shift[3])
+int spg_get_grid_points_by_rotations(int rot_grid_points[],
+				     const int address_orig[3],
+				     const int num_rot,
+				     SPGCONST int rot_reciprocal[][3][3],
+				     const int mesh[3],
+				     const int is_shift[3])
 {
   int i;
   MatINT *rot;
 
-  rot = mat_alloc_MatINT(num_rot);
+  rot = NULL;
+
+  if ((rot = mat_alloc_MatINT(num_rot)) == NULL) {
+    return 0;
+  }
+
   for (i = 0; i < num_rot; i++) {
     mat_copy_matrix_i3(rot->mat[i], rot_reciprocal[i]);
   }
@@ -648,20 +726,27 @@ void spg_get_grid_points_by_rotations(int rot_grid_points[],
 				   mesh,
 				   is_shift);
   mat_free_MatINT(rot);
+
+  return 1;
 }
 
-void spg_get_BZ_grid_points_by_rotations(int rot_grid_points[],
-					 const int address_orig[3],
-					 const int num_rot,
-					 SPGCONST int rot_reciprocal[][3][3],
-					 const int mesh[3],
-					 const int is_shift[3],
-					 const int bz_map[])
+int spg_get_BZ_grid_points_by_rotations(int rot_grid_points[],
+					const int address_orig[3],
+					const int num_rot,
+					SPGCONST int rot_reciprocal[][3][3],
+					const int mesh[3],
+					const int is_shift[3],
+					const int bz_map[])
 {
   int i;
   MatINT *rot;
 
-  rot = mat_alloc_MatINT(num_rot);
+  rot = NULL;
+
+  if ((rot = mat_alloc_MatINT(num_rot)) == NULL) {
+    return 0;
+  }
+
   for (i = 0; i < num_rot; i++) {
     mat_copy_matrix_i3(rot->mat[i], rot_reciprocal[i]);
   }
@@ -672,6 +757,8 @@ void spg_get_BZ_grid_points_by_rotations(int rot_grid_points[],
 				      is_shift,
 				      bz_map);
   mat_free_MatINT(rot);
+
+  return 1;
 }
 
 int spg_relocate_BZ_grid_address(int bz_grid_address[][3],
@@ -1154,7 +1241,7 @@ static int find_primitive(double lattice[3][3],
 			  const int num_atom,
 			  const double symprec)
 {
-  int i, num_prim_atom;
+  int num_prim_atom;
   Cell *cell;
   Primitive *primitive;
 
@@ -1175,18 +1262,112 @@ static int find_primitive(double lattice[3][3],
   }
 
   num_prim_atom = primitive->cell->size;
-  if (num_prim_atom < num_atom && num_prim_atom > 0 ) {
-    mat_copy_matrix_d3(lattice, primitive->cell->lattice);
-    for (i = 0; i < primitive->cell->size; i++) {
-      types[i] = primitive->cell->types[i];
-      mat_copy_vector_d3(position[i], primitive->cell->position[i]);
-    }
+  if (num_prim_atom < num_atom) {
+    set_primitive(lattice, position, types, primitive);
   }
 
   prm_free_primitive(primitive);
   cel_free_cell(cell);
     
   return num_prim_atom;
+}
+
+static int find_standardized_primitive(double lattice[3][3],
+				       double position[][3],
+				       int types[],
+				       const int num_atom,
+				       const double symprec)
+{
+  int num_prim_atom;
+  Centering centering;
+  SpglibDataset *dataset;
+  SpacegroupType spgtype;
+  Primitive *primitive;
+  Cell *cell;
+
+  num_prim_atom = 0;
+  dataset = NULL;
+  primitive = NULL;
+  cell = NULL;
+
+  if ((cell = cel_alloc_cell(num_atom)) == NULL) {
+    return 0;
+  }
+
+  cel_set_cell(cell, lattice, position, types);
+
+  if ((dataset = get_dataset(lattice,
+			     position,
+			     types,
+			     num_atom,
+			     0,
+			     symprec)) == NULL) {
+    cel_free_cell(cell);
+    return 0;
+  }
+
+  spgtype = spgdb_get_spacegroup_type(dataset->hall_number);
+
+  switch (spgtype.international_full[0]) {
+  case 'P':
+    centering = NO_CENTER;
+    break;
+  case 'A':
+    centering = A_FACE;
+    break;
+  case 'C':
+    centering = C_FACE;
+    break;
+  case 'F':
+    centering = FACE;
+    break;
+  case 'I':
+    centering = BODY;
+    break;
+  case 'R':
+    if (spgtype.setting[0] == 'H') {
+      centering = R_CENTER;
+    } else {
+      centering = NO_CENTER;
+    }
+    break;
+  default:
+    spg_free_dataset(dataset);
+    cel_free_cell(cell);
+    return 0;
+  }
+
+  if ((primitive = prm_transform_to_primitive(cell,
+					      dataset->transformation_matrix,
+					      centering,
+					      symprec)) == NULL) {
+    spg_free_dataset(dataset);
+    cel_free_cell(cell);
+    return 0;
+  }
+
+  set_primitive(lattice, position, types, primitive);
+  num_prim_atom = primitive->cell->size;
+
+  prm_free_primitive(primitive);
+  spg_free_dataset(dataset);
+  cel_free_cell(cell);
+
+  return num_prim_atom;
+}
+
+static void set_primitive(double lattice[3][3],
+			  double position[][3],
+			  int types[],
+			  Primitive * primitive)
+{
+  int i;
+
+  mat_copy_matrix_d3(lattice, primitive->cell->lattice);
+  for (i = 0; i < primitive->cell->size; i++) {
+    types[i] = primitive->cell->types[i];
+    mat_copy_vector_d3(position[i], primitive->cell->position[i]);
+  }
 }
 
 static int get_international(char symbol[11],
@@ -1204,7 +1385,10 @@ static int get_international(char symbol[11],
   primitive = NULL;
   spacegroup.number = 0;
 
-  cell = cel_alloc_cell(num_atom);
+  if ((cell = cel_alloc_cell(num_atom)) == NULL) {
+    return 0;
+  }
+
   cel_set_cell(cell, lattice, position, types);
 
   if ((primitive = spa_get_spacegroup(&spacegroup, cell, symprec)) != NULL) {
@@ -1234,7 +1418,10 @@ static int get_schoenflies(char symbol[10],
   primitive = NULL;
   spacegroup.number = 0;
 
-  cell = cel_alloc_cell(num_atom);
+  if ((cell = cel_alloc_cell(num_atom)) == NULL) {
+    return 0;
+  }
+
   cel_set_cell(cell, lattice, position, types);
 
   if ((primitive = spa_get_spacegroup(&spacegroup, cell, symprec)) != NULL) {
@@ -1308,7 +1495,12 @@ static int get_ir_reciprocal_mesh(int grid_address[][3],
 			num_atom,
 			0,
 			symprec);
-  rotations = mat_alloc_MatINT(dataset->n_operations);
+
+  if ((rotations = mat_alloc_MatINT(dataset->n_operations)) == NULL) {
+    spg_free_dataset(dataset);
+    return 0;
+  }
+
   for (i = 0; i < dataset->n_operations; i++) {
     mat_copy_matrix_i3(rotations->mat[i], dataset->rotations[i]);
   }
@@ -1337,7 +1529,12 @@ static int get_stabilized_reciprocal_mesh(int grid_address[][3],
   MatINT *rot_real;
   int i, num_ir;
   
-  rot_real = mat_alloc_MatINT(num_rot);
+  rot_real = NULL;
+
+  if ((rot_real = mat_alloc_MatINT(num_rot)) == NULL) {
+    return 0;
+  }
+
   for (i = 0; i < num_rot; i++) {
     mat_copy_matrix_i3(rot_real->mat[i], rotations[i]);
   }

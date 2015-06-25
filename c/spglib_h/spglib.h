@@ -1,5 +1,38 @@
-/* spglib.h version 1.8 */
+/* version 1.8 */
+
 /* Copyright (C) 2008 Atsushi Togo */
+/* All rights reserved. */
+
+/* This file is part of spglib. */
+
+/* Redistribution and use in source and binary forms, with or without */
+/* modification, are permitted provided that the following conditions */
+/* are met: */
+
+/* * Redistributions of source code must retain the above copyright */
+/*   notice, this list of conditions and the following disclaimer. */
+
+/* * Redistributions in binary form must reproduce the above copyright */
+/*   notice, this list of conditions and the following disclaimer in */
+/*   the documentation and/or other materials provided with the */
+/*   distribution. */
+
+/* * Neither the name of the phonopy project nor the names of its */
+/*   contributors may be used to endorse or promote products derived */
+/*   from this software without specific prior written permission. */
+
+/* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS */
+/* "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT */
+/* LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS */
+/* FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE */
+/* COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, */
+/* INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, */
+/* BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; */
+/* LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER */
+/* CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT */
+/* LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN */
+/* ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE */
+/* POSSIBILITY OF SUCH DAMAGE. */
 
 #ifndef __spglib_H__
 #define __spglib_H__
@@ -209,6 +242,19 @@ int spgat_find_primitive(double lattice[3][3],
 			 const double symprec,
 			 const double angle_tolerance);
 
+int spg_find_standardized_primitive(double lattice[3][3],
+				    double position[][3],
+				    int types[],
+				    const int num_atom,
+				    const double symprec);
+
+int spgat_find_standardized_primitive(double lattice[3][3],
+				      double position[][3],
+				      int types[],
+				      const int num_atom,
+				      const double symprec,
+				      const double angle_tolerance);
+
 /* Space group is found in international table symbol (``symbol``) and */
 /* number (return value). 0 is returned when it fails. */
 int spg_get_international(char symbol[11],
@@ -343,21 +389,21 @@ int spg_get_stabilized_reciprocal_mesh(int grid_address[][3],
 
 /* Rotation operations in reciprocal space ``rot_reciprocal`` are applied */
 /* to a grid address ``address_orig`` and resulting grid points are stored in */
-/* ``rot_grid_points``. */
-void spg_get_grid_points_by_rotations(int rot_grid_points[],
-				      const int address_orig[3],
-				      const int num_rot,
-				      SPGCONST int rot_reciprocal[][3][3],
-				      const int mesh[3],
-				      const int is_shift[3]);
+/* ``rot_grid_points``. Return 0 if failed. */
+int spg_get_grid_points_by_rotations(int rot_grid_points[],
+				     const int address_orig[3],
+				     const int num_rot,
+				     SPGCONST int rot_reciprocal[][3][3],
+				     const int mesh[3],
+				     const int is_shift[3]);
 
-void spg_get_BZ_grid_points_by_rotations(int rot_grid_points[],
-					 const int address_orig[3],
-					 const int num_rot,
-					 SPGCONST int rot_reciprocal[][3][3],
-					 const int mesh[3],
-					 const int is_shift[3],
-					 const int bz_map[]);
+int spg_get_BZ_grid_points_by_rotations(int rot_grid_points[],
+					const int address_orig[3],
+					const int num_rot,
+					SPGCONST int rot_reciprocal[][3][3],
+					const int mesh[3],
+					const int is_shift[3],
+					const int bz_map[]);
 
 /* Grid addresses are relocated inside Brillouin zone. */
 /* Number of ir-grid-points inside Brillouin zone is returned. */
