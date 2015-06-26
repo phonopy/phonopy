@@ -43,13 +43,30 @@ from phonopy.structure.atoms import Atoms, symbol_map
 def parse_set_of_forces(displacements,
                         forces_filenames,
                         num_atom):
+    hook = 'Forces :'
+    for elk_filename, disp in zip(forces_filenames,
+                                  displacements['first_atoms']):
+        f = open(elk_filename)
+        elk_forces = collect_forces(f,
+                                    num_atom,
+                                    hook,
+                                    [3, 4, 5],
+                                    word='total force')
+        if not elk_forces:
+            return False
+
+        drift_force = get_drift_forces(elk_forces)
+        disp['forces'] = np.array(elk_forces) - drift_force
+
     return True
+
 
 def read_elk(filename):
     elk_in = ElkIn(open(filename).readlines())
     tags = elk_in.get_variables()
     avec = [tags['scale'][i] * np.array(tags['avec'][i]) for i in range(3)]
-    symbols = [x.split('.')[0] for x in tags['atoms']['spfnames']]
+    spfnames = tags['atoms']['spfnames']
+    symbols = [x.split('.')[0] for x in spfnames]
     numbers = []
     for s in symbols:
         if s in symbols:
@@ -71,33 +88,40 @@ def read_elk(filename):
 
     return Atoms(numbers=num_all,
                  cell=avec,
-                 scaled_positions=pos_all)
+                 scaled_positions=pos_all), spfnames
 
-def write_elk(filename, cell):
+def write_elk(filename, cell, sp_filenames):
     f = open(filename, 'w')
-    f.write(get_elk_structure(cell))
+    f.write(get_elk_structure(cell, sp_filenames))
 
 def write_supercells_with_displacements(supercell,
-                                        cells_with_displacements):
-    write_elk("supercell.in", supercell)
+                                        cells_with_displacements,
+                                        sp_filenames):
+    write_elk("supercell.in", supercell, sp_filenames)
     for i, cell in enumerate(cells_with_displacements):
-        write_elk("supercell-%03d.in" % (i + 1), cell)
+        write_elk("supercell-%03d.in" % (i + 1), cell, sp_filenames)
 
-def get_elk_structure(cell):
+def get_elk_structure(cell, sp_filenames=None):
     lattice = cell.get_cell()
     (num_atoms,
      symbols,
      scaled_positions,
      sort_list) = sort_positions_by_symbols(cell.get_chemical_symbols(),
                                             cell.get_scaled_positions())
+
+    if sp_filenames is None:
+        spfnames = [s + ".in" for s in symbols]
+    else:
+        spfnames = sp_filenames
+
     lines = ""
     lines += "avec\n"
     lines += ((" %21.16f" * 3 + "\n") * 3) % tuple(lattice.ravel())
     lines += "atoms\n"
     n_pos = 0
     lines += " %d\n" % len(num_atoms)
-    for i, (n, s) in enumerate(zip(num_atoms, symbols)):
-        lines += " \'%s.in\'\n" % s
+    for i, (n, s) in enumerate(zip(num_atoms, spfnames)):
+        lines += " \'%s\'\n" % s
         lines += " %d\n" % n
         lines += get_scaled_positions_lines(scaled_positions[n_pos:(n_pos + n)])
         if i < len(num_atoms) - 1:
@@ -179,8 +203,7 @@ class ElkIn:
 if __name__ == '__main__':
     import sys
     from phonopy.structure.symmetry import Symmetry
-    cell = read_elk(sys.argv[1])
+    cell, sp_filenames = read_elk(sys.argv[1])
     symmetry = Symmetry(cell)
     print "#", symmetry.get_international_table()
-    print get_elk_structure(cell)
-    
+    print get_elk_structure(cell, sp_filenames=sp_filenames)

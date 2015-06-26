@@ -201,6 +201,7 @@ parser.set_defaults(
     cutoff_radius=None,
     displacement_distance=None,
     dynamical_matrix_decimals=None,
+    elk_mode=False,
     factor=None,
     fc_symmetry=None,
     fc_computation_algorithm=None,
@@ -301,6 +302,8 @@ parser.add_option("--dos", dest="is_dos_mode",
 parser.add_option("--eigvecs", "--eigenvectors", dest="is_eigenvectors",
                   action="store_true",
                   help="Output eigenvectors")
+parser.add_option("--elk", dest="elk_mode",
+                  action="store_true", help="Invoke elk mode")
 parser.add_option("-f", "--force_sets", dest="force_sets_mode",
                   action="store_true",
                   help="Create FORCE_SETS. disp.yaml in the current directory and vapsrun.xml's for VASP or case.scf(m) for Wien2k as arguments are required.")
@@ -465,9 +468,10 @@ if options.loglevel is not None:
 #
 # Physical units: energy,  distance,  atomic mass, force
 # vasp          : eV,      Angstrom,  AMU,         eV/Angstrom
-# wien2k        : Ry,      au,        AMU,         mRy/au
+# wien2k        : Ry,      au(=borh), AMU,         mRy/au
+# abinit        : hartree, au,        AMU,         eV/Angstrom
+# elk           : hartree, au,        AMU,         hartree/au
 # pwscf         : Ry,      au,        AMU,         Ry/au
-# abinit        : hartree, au(=bohr), AMU,         eV/Angstrom
 #
 if options.wien2k_mode:
     interface_mode = 'wien2k'
@@ -481,6 +485,10 @@ elif options.pwscf_mode:
     interface_mode = 'pwscf'
     from phonopy.interface.pwscf import write_supercells_with_displacements
     factor = PwscfToTHz
+elif options.elk_mode:
+    interface_mode = 'elk'
+    from phonopy.interface.elk import write_supercells_with_displacements
+    factor = ElkToTHz
 else:
     interface_mode = 'vasp'
     from phonopy.interface.vasp import write_supercells_with_displacements
@@ -594,6 +602,7 @@ if options.factor is not None:
 if settings.get_displacement_distance() is None:
     if (interface_mode == 'wien2k' or
         interface_mode == 'abinit' or
+        interface_mode == 'elk' or
         interface_mode == 'pwscf'):
         displacement_distance = 0.02
     else:
@@ -735,6 +744,11 @@ if run_mode == 'displacements':
         write_supercells_with_displacements(supercell,
                                             cells_with_disps,
                                             pp_filenames)
+    elif interface_mode == 'elk':
+        sp_filenames = optional_structure_file_information[1]
+        write_supercells_with_displacements(supercell,
+                                            cells_with_disps,
+                                            sp_filenames)
     else:        
         write_supercells_with_displacements(supercell, cells_with_disps)
 

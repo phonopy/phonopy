@@ -72,6 +72,11 @@ def read_crystal_structure(filename=None,
         unitcell, npts, r0s, rmts = parse_wien2k_struct(unitcell_filename)
         return unitcell, (unitcell_filename, npts, r0s, rmts)
 
+    if interface_mode == 'elk':
+        from phonopy.interface.elk import read_elk
+        unitcell, sp_filenames = read_elk(unitcell_filename)
+        return unitcell, (unitcell_filename, sp_filenames)
+
 def get_default_cell_filename(interface_mode):
     if interface_mode == 'vasp':
         unitcell_filename = "POSCAR"
@@ -81,6 +86,8 @@ def get_default_cell_filename(interface_mode):
         unitcell_filename = "unitcell.in"
     if interface_mode == 'wien2k':
         unitcell_filename = "case.struct"
+    if interface_mode == 'elk':
+        unitcell_filename = "elk.in"
 
     return unitcell_filename
         
@@ -147,9 +154,19 @@ def create_FORCE_SETS(interface_mode,
             is_distribute=(not options.is_wien2k_p1),
             symprec=options.symprec)
 
+    if interface_mode == 'elk':
+        from phonopy.interface.elk import parse_set_of_forces
+        print "**********************************************************"
+        print "****      Elk FORCE_SETS support is experimental.     ****"
+        print "****        Your feedback would be appreciated.       ****"
+        print "**********************************************************"
+        is_parsed = parse_set_of_forces(
+            displacements,
+            force_filenames,
+            supercell.get_number_of_atoms())
+
     if is_parsed:
-        write_FORCE_SETS(displacements,
-                         filename='FORCE_SETS')
+        write_FORCE_SETS(displacements, filename='FORCE_SETS')
         
     if log_level > 0:
         if is_parsed:
