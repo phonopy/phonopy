@@ -99,6 +99,7 @@ def create_FORCE_SETS(interface_mode,
         displacements = parse_disp_yaml(filename='disp.yaml')
     if (interface_mode == 'wien2k' or
         interface_mode == 'abinit' or
+        interface_mode == 'elk' or
         interface_mode == 'pwscf'):
         displacements, supercell = parse_disp_yaml(filename='disp.yaml',
                                                    return_cell=True)
