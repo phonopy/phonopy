@@ -64,9 +64,10 @@ The physical unit system used for the calculators are shown below.
            | Distance   Atomic mass   Force         Force constants
    -----------------------------------------------------------------
    VASP    | Angstrom   AMU           eV/Angstrom   eV/Angstrom^2
-   Wien2k  | au         AMU           mRy/au        mRy/au^2
-   Pwscf   | au         AMU           Ry/au         Ry/au^2
-   Abinit  | au         AMU           eV/Angstrom   eV/Angstrom.au
+   Wien2k  | au (bohr)  AMU           mRy/au        mRy/au^2
+   Pwscf   | au (bohr)  AMU           Ry/au         Ry/au^2
+   Abinit  | au (bohr)  AMU           eV/Angstrom   eV/Angstrom.au
+   elk     : au (bohr)  AMU           hartree/au    hartree/au^2
 
 
 Default unit cell file names are as follows::
@@ -75,6 +76,7 @@ Default unit cell file names are as follows::
    Wien2k  | case.struct
    Abinit  | unitcell.in
    Pwscf   | unitcell.in
+   Pwscf   | elk.in
 
 
 .. _wien2k_mode:
@@ -130,6 +132,19 @@ input file that contains the unit cell crystal structure, e.g.,
 
    % phonopy --pwscf -c NaCl.in band.conf
 
+.. _elk_mode:
+
+``--elk``
+~~~~~~~~~~~~
+
+Pwscf mode is invoked with this option. Usually this option is used
+with ``--cell`` (``-c``) option or ``CELL_FILENAME`` tag to read Elk
+input file that contains the unit cell crystal structure, e.g.,
+
+::
+
+   % phonopy --elk -c elk-unitcell.in band.conf
+
   
 .. _cell_filename_option:
 
@@ -152,6 +167,7 @@ directory. The default file names for the calculators are as follows::
    Wien2k | case.struct
    Abinit | unitcell.in
    Pwscf  | unitcell.in
+   Elk    | elk.in
 
 Create ``FORCE_SETS``
 ----------------------
@@ -205,7 +221,7 @@ determined with this unit.
 
 ::
 
-   % phonopy --abinit=unitcell.in -f disp-001/supercell.out disp-002/supercell.out  ...
+   % phonopy --abinit -f disp-001/supercell.out disp-002/supercell.out  ...
 
 
 .. _pwscf_force_sets_option:
@@ -218,7 +234,7 @@ files.
 
 ::
 
-   % phonopy --pwscf=unitcell.in -f disp-001/supercell.out disp-002/supercell.out  ...
+   % phonopy --pwscf -f disp-001/supercell.out disp-002/supercell.out  ...
 
 Here ``*.out`` files are the saved texts of standard outputs of Pwscf calculations.
    
@@ -242,9 +258,21 @@ with the P lattice format is supported.**
 
 ::
 
-   % phonopy --wien2k=case.struct -f case_001/case_001.scf case_002/case_002.scf ...
+   % phonopy --wien2k -f case_001/case_001.scf case_002/case_002.scf ...
 
 For more information, :ref:`wien2k_interface`.
+
+.. _elk_force_sets_option:
+
+Elk interface
+^^^^^^^^^^^^^^^^
+
+``FORCE_SETS`` file is created from ``disp.yaml`` and Elk output
+files.
+
+::
+
+   % phonopy --elk -f disp-001/INFO.OUT disp-002/INFO.OUT  ...
 
 
 .. Though the ``--fz`` option is supported as well as the VASP interface,

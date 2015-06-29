@@ -8,6 +8,7 @@ Interfaces
    abinit
    pwscf
    wien2k
+   elk
    FHI-aims
    phonopy-module
 
