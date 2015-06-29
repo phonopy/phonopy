@@ -64,7 +64,7 @@ scripts_phonopy = ['scripts/phonopy',
 
 if __name__ == '__main__':
     setup(name='phonopy',
-          version='1.9.4',
+          version='1.9.5',
           description='This is the phonopy module.',
           author='Atsushi Togo',
           author_email='atz.togo@gmail.com',
