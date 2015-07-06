@@ -86,11 +86,15 @@ static void debug_show(void)
 #define warning_print(...)
 #endif
 
-void niggli_reduce(double *lattice_, const double eps_)
+/* return 0 if failed */
+int niggli_reduce(double *lattice_, const double eps_)
 {
   int i;
 
-  initialize(lattice_, eps_);
+  if (! initialize(lattice_, eps_)) {
+    return 0;
+  }
+
   step0();
   
   for (i = 0; i < 10; i++) {
@@ -151,6 +155,7 @@ void niggli_reduce(double *lattice_, const double eps_)
   }
 
   finalize(lattice_);
+  return 1;
 }
 
 static int initialize(const double *lattice_, const double eps_)

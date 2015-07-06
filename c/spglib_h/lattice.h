@@ -37,32 +37,6 @@
 
 #include "mathfunc.h"
 
-typedef enum {
-  NO_CENTER,
-  BODY,
-  FACE,
-  A_FACE,
-  B_FACE,
-  C_FACE,
-  BASE,
-  R_CENTER,
-} Centering;
-
-typedef enum {
-  LAUE_NONE,
-  LAUE1,
-  LAUE2M,
-  LAUEMMM,
-  LAUE4M,
-  LAUE4MMM,
-  LAUE3,
-  LAUE3M,
-  LAUE6M,
-  LAUE6MMM,
-  LAUEM3,
-  LAUEM3M,
-} Laue;
-
 int lat_smallest_lattice_vector(double lattice_new[3][3],
 				SPGCONST double lattice[3][3],
 				const double symprec);
@@ -70,8 +44,5 @@ int lat_smallest_lattice_vector_2D(double min_lattice[3][3],
 				   SPGCONST double lattice[3][3],
 				   const int unique_axis,
 				   const double symprec);
-Centering lat_get_centering(double correction_mat[3][3],
-			    SPGCONST int transform_mat[3][3],
-			    const Laue laue);
 
 #endif

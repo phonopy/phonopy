@@ -35,8 +35,7 @@
 #ifndef __pointgroup_H__
 #define __pointgroup_H__
 
-#include "symmetry.h"
-#include "lattice.h"
+#include "mathfunc.h"
 
 typedef enum {
   HOLOHEDRY_NONE,
@@ -48,6 +47,21 @@ typedef enum {
   HEXA,
   CUBIC,
 } Holohedry;
+
+typedef enum {
+  LAUE_NONE,
+  LAUE1,
+  LAUE2M,
+  LAUEMMM,
+  LAUE4M,
+  LAUE4MMM,
+  LAUE3,
+  LAUE3M,
+  LAUE6M,
+  LAUE6MMM,
+  LAUEM3,
+  LAUEM3M,
+} Laue;
 
 typedef struct {
   int number;

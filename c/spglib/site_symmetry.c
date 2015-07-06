@@ -120,9 +120,8 @@ static VecDBL * get_exact_positions(int * wyckoffs,
 			   symprec)) {
 	  /* Equivalent atom was found. */
 	  for (l = 0; l < 3; l++) {
-	    pos[l] -= mat_Nint(pos[l]);
+	    positions->vec[i][l] = mat_Dmod1(pos[l]);
 	  }
-	  mat_copy_vector_d3(positions->vec[i], pos);
 	  wyckoffs[i] = wyckoffs[indep_atoms[j]];
 	  equiv_atoms[i] = indep_atoms[j];
 	  goto escape;

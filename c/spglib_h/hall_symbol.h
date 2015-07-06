@@ -35,7 +35,7 @@
 #ifndef __hall_symbol_H__
 #define __hall_symbol_H__
 
-#include "lattice.h"
+#include "spacegroup.h"
 #include "symmetry.h"
 #include "mathfunc.h"
 

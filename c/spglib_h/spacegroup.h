@@ -36,10 +36,8 @@
 #define __spacegroup_H__
 
 #include "cell.h"
-#include "lattice.h"
 #include "mathfunc.h"
 #include "primitive.h"
-#include "symmetry.h"
 
 typedef struct {
   int number;
@@ -55,9 +53,27 @@ typedef struct {
   double origin_shift[3];
 } Spacegroup;
 
+typedef enum {
+  CENTERING_ERROR,
+  PRIMITIVE,
+  BODY,
+  FACE,
+  A_FACE,
+  B_FACE,
+  C_FACE,
+  BASE,
+  R_CENTER,
+} Centering;
+
 Primitive * spa_get_spacegroup(Spacegroup * spacegroup,
 			       SPGCONST Cell * cell,
 			       const double symprec);
 Spacegroup spa_get_spacegroup_with_hall_number(SPGCONST Primitive * primitive,
 					       const int hall_number);
+Cell * spa_transform_to_primitive(SPGCONST Cell * cell,
+				  SPGCONST double trans_mat[3][3],
+				  const Centering centering,
+				  const double symprec);
+
+
 #endif

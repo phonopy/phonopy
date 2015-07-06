@@ -35,8 +35,8 @@
 #ifndef __spg_database_H__
 #define __spg_database_H__
 
-#include "lattice.h"
-#include "pointgroup.h"
+#include "spacegroup.h"
+#include "symmetry.h"
 
 typedef struct {
   int number;
@@ -46,6 +46,7 @@ typedef struct {
   char international_full[20];
   char international_short[11];
   char setting[6];
+  Centering centering;
   int pointgroup_number;
 } SpacegroupType;
 

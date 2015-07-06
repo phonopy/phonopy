@@ -39,37 +39,9 @@
 
 #include "debug.h"
 
-#define INT_PREC 0.1
-
-static double identity[3][3] = {{ 1, 0, 0 },
-				{ 0, 1, 0 },
-				{ 0, 0, 1 }};
-static double monocli_i2c[3][3] = {{ 1, 0,-1 },
-				   { 0, 1, 0 },
-				   { 1, 0, 0 }};
-static double monocli_a2c[3][3] = {{ 0, 0, 1 },
-				   { 0,-1, 0 },
-				   { 1, 0, 0 }};
-static double rhombo_obverse[3][3] = {{ 2./3,-1./3,-1./3 },
-				      { 1./3, 1./3,-2./3 },
-				      { 1./3, 1./3, 1./3 }};
-static double rhomb_reverse[3][3] = {{ 1./3,-2./3, 1./3 },
-				     { 2./3,-1./3,-1./3 },
-				     { 1./3, 1./3, 1./3 }};
-static double a2c[3][3] = {{ 0, 0, 1 },
-			   { 1, 0, 0 },
-			   { 0, 1, 0 }};
-static double b2c[3][3] = {{ 0, 1, 0 },
-			   { 0, 0, 1 },
-			   { 1, 0, 0 }};
-
-static Centering get_centering(double correction_mat[3][3],
-			       SPGCONST int transform_mat[3][3],
-			       const Laue laue);
 static int get_Delaunay_reduction(double red_lattice[3][3], 
 				  SPGCONST double lattice[3][3],
 				  SPGCONST double symprec);
-static Centering get_base_center(SPGCONST int transform_mat[3][3]);
 static int get_Delaunay_reduction_basis(double basis[4][3],
 					const double symprec);
 static void get_Delaunay_shortest_vectors(double basis[4][3],
@@ -105,125 +77,6 @@ int lat_smallest_lattice_vector_2D(double min_lattice[3][3],
 {
   debug_print("lat_smallest_lattice_vector_2D:\n");
   return get_Delaunay_reduction_2D(min_lattice, lattice, unique_axis, symprec);
-}
-
-Centering lat_get_centering(double correction_mat[3][3],
-			    SPGCONST int transform_mat[3][3],
-			    const Laue laue)
-{
-  return get_centering(correction_mat,
-		       transform_mat,
-		       laue);
-}
-
-static Centering get_centering(double correction_mat[3][3],
-			       SPGCONST int transform_mat[3][3],
-			       const Laue laue)
-{
-  int det;
-  double trans_corr_mat[3][3];
-  Centering centering;
-
-  mat_copy_matrix_d3(correction_mat, identity);
-  det = abs(mat_get_determinant_i3(transform_mat));
-  debug_print("laue class: %d\n", laue);
-  debug_print("multiplicity: %d\n", det);
-
-  if (det == 1) {centering = NO_CENTER;}
-  if (det == 2) {
-    centering = get_base_center(transform_mat);
-    if (centering == A_FACE) {
-      if (laue == LAUE2M) {
-	debug_print("Monocli A to C\n");
-	mat_copy_matrix_d3(correction_mat, monocli_a2c);
-      } else {
-	mat_copy_matrix_d3(correction_mat, a2c);
-      }
-      centering = C_FACE;
-    }
-    if (centering == B_FACE) {
-      mat_copy_matrix_d3(correction_mat, b2c);
-      centering = C_FACE;
-    }
-    if (laue == LAUE2M && centering == BODY) {
-      debug_print("Monocli I to C\n");
-      mat_copy_matrix_d3(correction_mat, monocli_i2c);
-      centering = C_FACE;
-    }
-  }
-  if (det == 3) {
-    /* hP (a=b) but not hR (a=b=c) */
-    centering = R_CENTER;
-    mat_multiply_matrix_id3(trans_corr_mat, transform_mat, rhombo_obverse);
-    if (mat_is_int_matrix(trans_corr_mat, INT_PREC)) {
-      mat_copy_matrix_d3(correction_mat, rhombo_obverse);
-      debug_print("R-center observe setting\n");
-      debug_print_matrix_d3(trans_corr_mat);
-    }
-    mat_multiply_matrix_id3(trans_corr_mat, transform_mat, rhomb_reverse);
-    if (mat_is_int_matrix(trans_corr_mat, INT_PREC)) {
-      mat_copy_matrix_d3(correction_mat, rhomb_reverse);
-      debug_print("R-center reverse setting\n");
-      debug_print_matrix_d3(trans_corr_mat);
-    }
-  }
-  if (det == 4) { centering = FACE; }
-
-  return centering;
-}
-
-static Centering get_base_center(SPGCONST int transform_mat[3][3])
-{
-  int i;
-  Centering centering = NO_CENTER;
-
-  debug_print("lat_get_base_center\n");
-
-  /* C center */
-  for (i = 0; i < 3; i++) {
-    if (transform_mat[i][0] == 0 &&
-	transform_mat[i][1] == 0 &&
-	abs(transform_mat[i][2]) == 1) {
-      centering = C_FACE;
-      goto end;
-    }
-  }
-
-  /* A center */
-  for (i = 0; i < 3; i++) {
-    if (abs(transform_mat[i][0]) == 1 && 
-	transform_mat[i][1] == 0 &&
-	transform_mat[i][2] == 0) {
-      centering = A_FACE;
-      goto end;
-    }
-  }
-
-  /* B center */
-  for (i = 0; i < 3; i++) {
-    if (transform_mat[i][0] == 0 &&
-	abs(transform_mat[i][1]) == 1 && 
-	transform_mat[i][2] == 0) {
-      centering = B_FACE;
-      goto end;
-    }
-  }
-
-  /* body center */
-  if (abs(transform_mat[0][0]) +
-      abs(transform_mat[0][1]) + 
-      abs(transform_mat[0][2]) == 2) {
-    centering = BODY;
-    goto end;
-  }
-
-  /* This should not happen. */
-  warning_print("spglib: No centring was found (line %d, %s).\n", __LINE__, __FILE__);
-  return NO_CENTER;
-
- end:
-  debug_print("centering: %d\n", centering);
-  return centering;
 }
 
 /* Delaunay reduction */

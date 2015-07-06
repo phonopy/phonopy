@@ -543,9 +543,9 @@ static int is_overlap_all_atoms(const double trans[3],
 {
   int i, j, k, is_found;
   double symprec2;
-  double pos_rot[3], d[3];
+  double pos_rot[3], d_frac[3], d[3];
 
-  symprec2 = symprec*symprec;
+  symprec2 = symprec * symprec;
   
   for (i = 0; i < cell->size; i++) {
     if (is_identity) { /* Identity matrix is treated as special for speed-up. */
@@ -567,10 +567,10 @@ static int is_overlap_all_atoms(const double trans[3],
 	/* here cel_is_overlap can be used, but for the tuning */
 	/* purpose, write it again */
 	for (k = 0; k < 3; k++) {
-	  d[k] = pos_rot[k] - cell->position[j][k];
-	  d[k] -= mat_Nint(d[k]);
+	  d_frac[k] = pos_rot[k] - cell->position[j][k];
+	  d_frac[k] -= mat_Nint(d_frac[k]);
 	}
-	mat_multiply_matrix_vector_d3(d, cell->lattice, d);
+	mat_multiply_matrix_vector_d3(d, cell->lattice, d_frac);
 	if (d[0] * d[0] + d[1] * d[1] + d[2] * d[2] < symprec2) {
 	  is_found = 1;
 	  break;

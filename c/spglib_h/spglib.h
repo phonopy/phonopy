@@ -98,18 +98,20 @@ typedef struct {
   char international_symbol[11];
   char hall_symbol[17];
   char setting[6];
-  double transformation_matrix[3][3]; /* bravais_lattice = T * original_lattice */
-  double origin_shift[3]; /* Origin shift in Bravais lattice */
-  int n_operations; /* Symmetry operations from database */
+  double transformation_matrix[3][3];
+  double origin_shift[3];
+  int n_operations;
   int (*rotations)[3][3];
   double (*translations)[3];
   int n_atoms;
-  int *wyckoffs; /* Wyckoff letters */
+  int *wyckoffs;
   int *equivalent_atoms;
-  int n_brv_atoms;
-  double brv_lattice[3][3];
-  int *brv_types;
-  double (*brv_positions)[3];
+  int n_std_atoms;
+  double std_lattice[3][3];
+  int *std_types;
+  double (*std_positions)[3];
+  int pointgroup_number;
+  char pointgroup_symbol[6];
 } SpglibDataset;
 
 typedef struct {
@@ -119,6 +121,7 @@ typedef struct {
   char international[32];
   char international_full[20];
   char international_short[11];
+  int pointgroup_number;
 } SpglibSpacegroupType;
 
 SpglibDataset * spg_get_dataset(SPGCONST double lattice[3][3],
@@ -179,6 +182,27 @@ int spgat_get_symmetry(int rotation[][3][3],
 		       const double symprec,
 		       const double angle_tolerance);
 
+/* This is only used to check consistensy with spg_get_symmetry. */
+int spg_get_symmetry_numerical(int rotation[][3][3],
+			       double translation[][3],
+			       const int max_size,
+			       SPGCONST double lattice[3][3],
+			       SPGCONST double position[][3],
+			       const int types[],
+			       const int num_atom,
+			       const double symprec);
+
+int spgat_get_symmetry_numerical(int rotation[][3][3],
+				 double translation[][3],
+				 const int max_size,
+				 SPGCONST double lattice[3][3],
+				 SPGCONST double position[][3],
+				 const int types[],
+				 const int num_atom,
+				 const double symprec,
+				 const double angle_tolerance);
+
+
 /* Find symmetry operations with collinear spins on atoms. */
 int spg_get_symmetry_with_collinear_spin(int rotation[][3][3],
 					 double translation[][3],
@@ -224,36 +248,6 @@ int spgat_get_multiplicity(SPGCONST double lattice[3][3],
 int spg_get_smallest_lattice(double smallest_lattice[3][3],
 			     SPGCONST double lattice[3][3],
 			     const double symprec);
-
-/* A primitive cell is found from an input cell. Be careful that  */
-/* ``lattice``, ``position``, and ``types`` are overwritten. */
-/* ``num_atom`` is returned as return value. */
-/* When any primitive cell is not found, 0 is returned. */
-int spg_find_primitive(double lattice[3][3],
-		       double position[][3],
-		       int types[],
-		       const int num_atom,
-		       const double symprec);
-
-int spgat_find_primitive(double lattice[3][3],
-			 double position[][3],
-			 int types[],
-			 const int num_atom,
-			 const double symprec,
-			 const double angle_tolerance);
-
-int spg_find_standardized_primitive(double lattice[3][3],
-				    double position[][3],
-				    int types[],
-				    const int num_atom,
-				    const double symprec);
-
-int spgat_find_standardized_primitive(double lattice[3][3],
-				      double position[][3],
-				      int types[],
-				      const int num_atom,
-				      const double symprec,
-				      const double angle_tolerance);
 
 /* Space group is found in international table symbol (``symbol``) and */
 /* number (return value). 0 is returned when it fails. */
@@ -307,6 +301,47 @@ int spg_get_symmetry_from_database(int rotations[192][3][3],
 /* The index is defined as number from 1 to 530. */
 SpglibSpacegroupType spg_get_spacegroup_type(const int hall_number);
 
+
+int spg_standardize_cell(double lattice[3][3],
+			 double position[][3],
+			 int types[],
+			 const int num_atom,
+			 const int to_primitive,
+			 const int leave_distortion,
+			 const double symprec);
+
+int spgat_standardize_cell(double lattice[3][3],
+			   double position[][3],
+			   int types[],
+			   const int num_atom,
+			   const int to_primitive,
+			   const int leave_distortion,
+			   const double symprec,
+			   const double angle_tolerance);
+
+/************/
+/* Obsolete */
+/************/
+/* A primitive cell is found from an input cell. Be careful that  */
+/* ``lattice``, ``position``, and ``types`` are overwritten. */
+/* ``num_atom`` is returned as return value. */
+/* When any primitive cell is not found, 0 is returned. */
+int spg_find_primitive(double lattice[3][3],
+		       double position[][3],
+		       int types[],
+		       const int num_atom,
+		       const double symprec);
+
+int spgat_find_primitive(double lattice[3][3],
+			 double position[][3],
+			 int types[],
+			 const int num_atom,
+			 const double symprec,
+			 const double angle_tolerance);
+
+/************/
+/* Obsolete */
+/************/
 /* Bravais lattice with internal atomic points are returned. */
 /* The arrays are require to have 4 times larger memory space */
 /* those of input cell. */
