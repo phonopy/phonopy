@@ -65,7 +65,26 @@ static int distribute_fc2(double * fc2,
 			  const double symprec);
 static int nint(const double a);
 
-static PyMethodDef functions[] = {
+struct module_state {
+  PyObject *error;
+};
+
+#if PY_MAJOR_VERSION >= 3
+#define GETSTATE(m) ((struct module_state*)PyModule_GetState(m))
+#else
+#define GETSTATE(m) (&_state)
+static struct module_state _state;
+#endif
+
+static PyObject *
+error_out(PyObject *m) {
+  struct module_state *st = GETSTATE(m);
+  PyErr_SetString(st->error, "something bad happened");
+  return NULL;
+}
+
+static PyMethodDef _phonopy_methods[] = {
+  {"error_out", (PyCFunction)error_out, METH_NOARGS, NULL},
   {"dynamical_matrix", py_get_dynamical_matrix, METH_VARARGS, "Dynamical matrix"},
   {"nac_dynamical_matrix", py_get_nac_dynamical_matrix, METH_VARARGS, "NAC dynamical matrix"},
   {"derivative_dynmat", py_get_derivative_dynmat, METH_VARARGS, "Q derivative of dynamical matrix"},
@@ -74,11 +93,63 @@ static PyMethodDef functions[] = {
   {NULL, NULL, 0, NULL}
 };
 
-PyMODINIT_FUNC init_phonopy(void)
-{
-  Py_InitModule3("_phonopy", functions, "C-extension for phonopy\n\n...\n");
-  return;
+#if PY_MAJOR_VERSION >= 3
+
+static int _phonopy_traverse(PyObject *m, visitproc visit, void *arg) {
+  Py_VISIT(GETSTATE(m)->error);
+  return 0;
 }
+
+static int _phonopy_clear(PyObject *m) {
+  Py_CLEAR(GETSTATE(m)->error);
+  return 0;
+}
+
+static struct PyModuleDef moduledef = {
+  PyModuleDef_HEAD_INIT,
+  "_phonopy",
+  NULL,
+  sizeof(struct module_state),
+  _phonopy_methods,
+  NULL,
+  _phonopy_traverse,
+  _phonopy_clear,
+  NULL
+};
+
+#define INITERROR return NULL
+
+PyObject *
+PyInit__phonopy(void)
+
+#else
+#define INITERROR return
+
+  void
+  init_phonopy(void)
+#endif
+{
+#if PY_MAJOR_VERSION >= 3
+  PyObject *module = PyModule_Create(&moduledef);
+#else
+  PyObject *module = Py_InitModule("_phonopy", _phonopy_methods);
+#endif
+
+  if (module == NULL)
+    INITERROR;
+  struct module_state *st = GETSTATE(module);
+
+  st->error = PyErr_NewException("_phonopy.Error", NULL, NULL);
+  if (st->error == NULL) {
+    Py_DECREF(module);
+    INITERROR;
+  }
+
+#if PY_MAJOR_VERSION >= 3
+  return module;
+#endif
+}
+
 
 static PyObject * py_get_dynamical_matrix(PyObject *self, PyObject *args)
 {
@@ -104,17 +175,17 @@ static PyObject * py_get_dynamical_matrix(PyObject *self, PyObject *args)
 			&prim2super_map))
     return NULL;
 
-  double* dm_r = (double*)dynamical_matrix_real->data;
-  double* dm_i = (double*)dynamical_matrix_imag->data;
-  const double* fc = (double*)force_constants->data;
-  const double* q = (double*)q_vector->data;
-  const double* r = (double*)r_vector->data;
-  const double* m = (double*)mass->data;
-  const int* multi = (int*)multiplicity->data;
-  const int* s2p_map = (int*)super2prim_map->data;
-  const int* p2s_map = (int*)prim2super_map->data;
-  const int num_patom = prim2super_map->dimensions[0];
-  const int num_satom = super2prim_map->dimensions[0];
+  double* dm_r = (double*)PyArray_DATA(dynamical_matrix_real);
+  double* dm_i = (double*)PyArray_DATA(dynamical_matrix_imag);
+  const double* fc = (double*)PyArray_DATA(force_constants);
+  const double* q = (double*)PyArray_DATA(q_vector);
+  const double* r = (double*)PyArray_DATA(r_vector);
+  const double* m = (double*)PyArray_DATA(mass);
+  const int* multi = (int*)PyArray_DATA(multiplicity);
+  const int* s2p_map = (int*)PyArray_DATA(super2prim_map);
+  const int* p2s_map = (int*)PyArray_DATA(prim2super_map);
+  const int num_patom = PyArray_DIMS(prim2super_map)[0];
+  const int num_satom = PyArray_DIMS(super2prim_map)[0];
 
   get_dynamical_matrix_at_q(dm_r,
 			    dm_i,
@@ -163,19 +234,19 @@ static PyObject * py_get_nac_dynamical_matrix(PyObject *self, PyObject *args)
 			&factor))
     return NULL;
 
-  double* dm_r = (double*)dynamical_matrix_real->data;
-  double* dm_i = (double*)dynamical_matrix_imag->data;
-  const double* fc = (double*)force_constants->data;
-  const double* q_cart = (double*)q_cart_vector->data;
-  const double* q = (double*)q_vector->data;
-  const double* r = (double*)r_vector->data;
-  const double* m = (double*)mass->data;
-  const double* z = (double*)born->data;
-  const int* multi = (int*)multiplicity->data;
-  const int* s2p_map = (int*)super2prim_map->data;
-  const int* p2s_map = (int*)prim2super_map->data;
-  const int num_patom = prim2super_map->dimensions[0];
-  const int num_satom = super2prim_map->dimensions[0];
+  double* dm_r = (double*)PyArray_DATA(dynamical_matrix_real);
+  double* dm_i = (double*)PyArray_DATA(dynamical_matrix_imag);
+  const double* fc = (double*)PyArray_DATA(force_constants);
+  const double* q_cart = (double*)PyArray_DATA(q_cart_vector);
+  const double* q = (double*)PyArray_DATA(q_vector);
+  const double* r = (double*)PyArray_DATA(r_vector);
+  const double* m = (double*)PyArray_DATA(mass);
+  const double* z = (double*)PyArray_DATA(born);
+  const int* multi = (int*)PyArray_DATA(multiplicity);
+  const int* s2p_map = (int*)PyArray_DATA(super2prim_map);
+  const int* p2s_map = (int*)PyArray_DATA(prim2super_map);
+  const int num_patom = PyArray_DIMS(prim2super_map)[0];
+  const int num_satom = PyArray_DIMS(super2prim_map)[0];
 
   int n;
   double *charge_sum;
@@ -237,35 +308,35 @@ static PyObject * py_get_derivative_dynmat(PyObject *self, PyObject *args)
     return NULL;
   }
 
-  double* ddm_r = (double*)derivative_dynmat_real->data;
-  double* ddm_i = (double*)derivative_dynmat_imag->data;
-  const double* fc = (double*)force_constants->data;
-  const double* q = (double*)q_vector->data;
-  const double* lat = (double*)lattice->data;
-  const double* r = (double*)r_vector->data;
-  const double* m = (double*)mass->data;
-  const int* multi = (int*)multiplicity->data;
-  const int* s2p_map = (int*)super2prim_map->data;
-  const int* p2s_map = (int*)prim2super_map->data;
-  const int num_patom = prim2super_map->dimensions[0];
-  const int num_satom = super2prim_map->dimensions[0];
+  double* ddm_r = (double*)PyArray_DATA(derivative_dynmat_real);
+  double* ddm_i = (double*)PyArray_DATA(derivative_dynmat_imag);
+  const double* fc = (double*)PyArray_DATA(force_constants);
+  const double* q = (double*)PyArray_DATA(q_vector);
+  const double* lat = (double*)PyArray_DATA(lattice);
+  const double* r = (double*)PyArray_DATA(r_vector);
+  const double* m = (double*)PyArray_DATA(mass);
+  const int* multi = (int*)PyArray_DATA(multiplicity);
+  const int* s2p_map = (int*)PyArray_DATA(super2prim_map);
+  const int* p2s_map = (int*)PyArray_DATA(prim2super_map);
+  const int num_patom = PyArray_DIMS(prim2super_map)[0];
+  const int num_satom = PyArray_DIMS(super2prim_map)[0];
   double *z;
   double *epsilon;
   double *q_dir;
   if ((PyObject*)born == Py_None) {
     z = NULL;
   } else {
-    z = (double*)born->data;
+    z = (double*)PyArray_DATA(born);
   }
   if ((PyObject*)dielectric == Py_None) {
     epsilon = NULL;
   } else {
-    epsilon = (double*)dielectric->data;
+    epsilon = (double*)PyArray_DATA(dielectric);
   }
   if ((PyObject*)q_direction == Py_None) {
     q_dir = NULL;
   } else {
-    q_dir = (double*)q_direction->data;
+    q_dir = (double*)PyArray_DATA(q_direction);
   }
 
   get_derivative_dynmat_at_q(ddm_r,
@@ -302,10 +373,10 @@ static PyObject * py_get_thermal_properties(PyObject *self, PyObject *args)
     return NULL;
   }
 
-  const double* freqs = (double*)frequencies->data;
-  const int* w = (int*)weights->data;
-  const int num_qpoints = frequencies->dimensions[0];
-  const int num_bands = frequencies->dimensions[1];
+  const double* freqs = (double*)PyArray_DATA(frequencies);
+  const int* w = (int*)PyArray_DATA(weights);
+  const int num_qpoints = PyArray_DIMS(frequencies)[0];
+  const int num_bands = PyArray_DIMS(frequencies)[1];
 
   int i, j;
   long sum_weights = 0;
@@ -394,12 +465,12 @@ static PyObject * py_distribute_fc2(PyObject *self, PyObject *args)
     return NULL;
   }
 
-  const int* r = (int*)rotation->data;
-  const double* r_cart = (double*)rotation_cart->data;
-  double* fc2 = (double*)force_constants->data;
-  const double* t = (double*)translation->data;
-  const double* pos = (double*)positions->data;
-  const int num_pos = positions->dimensions[0];
+  const int* r = (int*)PyArray_DATA(rotation);
+  const double* r_cart = (double*)PyArray_DATA(rotation_cart);
+  double* fc2 = (double*)PyArray_DATA(force_constants);
+  const double* t = (double*)PyArray_DATA(translation);
+  const double* pos = (double*)PyArray_DATA(positions);
+  const int num_pos = PyArray_DIMS(positions)[0];
 
   distribute_fc2(fc2,
 		 pos,
