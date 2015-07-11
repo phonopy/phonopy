@@ -1,4 +1,4 @@
-/* version 1.8 */
+/* version 1.8.1 */
 
 /* Copyright (C) 2008 Atsushi Togo */
 /* All rights reserved. */
@@ -307,7 +307,7 @@ int spg_standardize_cell(double lattice[3][3],
 			 int types[],
 			 const int num_atom,
 			 const int to_primitive,
-			 const int leave_distortion,
+			 const int no_idealize,
 			 const double symprec);
 
 int spgat_standardize_cell(double lattice[3][3],
@@ -315,7 +315,7 @@ int spgat_standardize_cell(double lattice[3][3],
 			   int types[],
 			   const int num_atom,
 			   const int to_primitive,
-			   const int leave_distortion,
+			   const int no_idealize,
 			   const double symprec,
 			   const double angle_tolerance);
 
