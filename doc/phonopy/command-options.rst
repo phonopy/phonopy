@@ -67,7 +67,7 @@ The physical unit system used for the calculators are shown below.
    Wien2k  | au (bohr)  AMU           mRy/au        mRy/au^2
    Pwscf   | au (bohr)  AMU           Ry/au         Ry/au^2
    Abinit  | au (bohr)  AMU           eV/Angstrom   eV/Angstrom.au
-   elk     : au (bohr)  AMU           hartree/au    hartree/au^2
+   elk     | au (bohr)  AMU           hartree/au    hartree/au^2
 
 
 Default unit cell file names are as follows::
@@ -76,7 +76,7 @@ Default unit cell file names are as follows::
    Wien2k  | case.struct
    Abinit  | unitcell.in
    Pwscf   | unitcell.in
-   Pwscf   | elk.in
+   Elk     | elk.in
 
 
 .. _wien2k_mode:
@@ -88,8 +88,7 @@ Default unit cell file names are as follows::
 
 This option invokes the WIEN2k mode.In this mode. Usually this option
 is used with ``--cell`` (``-c``) option or ``CELL_FILENAME`` tag to
-read Pwscf input file that contains the unit cell crystal structure,
-e.g.,
+read WIEN2k crystal structure file.
 
 ::
 
@@ -158,7 +157,7 @@ Unit cell crystal structure file is specified with this tag.
 
 ::
 
-   % phonopy --cell=UPOSCAR band.conf
+   % phonopy --cell=POSCAR-unitcell band.conf
 
 Without specifying this tag, default file name is searched in current
 directory. The default file names for the calculators are as follows::
@@ -275,14 +274,6 @@ files.
    % phonopy --elk -f disp-001/INFO.OUT disp-002/INFO.OUT  ...
 
 
-.. Though the ``--fz`` option is supported as well as the VASP interface,
-.. usually the ``-f`` option is preferable to ``--fz``.
-
-.. ::
-
-..    % phonopy --wien2k=case.struct --fz case_000/case_000.scf case_001/case_001.scf ...
-
-
 Create ``FORCE_CONSTANTS``
 --------------------------
 
@@ -302,19 +293,6 @@ VASP output of force constants is imported from
 
 This ``FORCE_CONSTANTS`` can be used instead of ``FORCE_SETS``. For
 more details, please refer :ref:`vasp_dfpt_interface`.
-
-.. ``--fco``
-.. ~~~~~~~~~~
-
-.. Force constants are read from VASP ``OUTCAR`` file, instead of
-.. ``vasprun.xml``. This option can be used as well as ``--fc`` tag.
-.. ``--fc`` is recommended than ``--fco`` because ``vasprun.xml`` has
-.. more digits than ``OUTCAR``.
-
-.. ::
-
-..    % phonopy --fco OUTCAR
-
 
 .. _graph_option:
 
@@ -355,9 +333,9 @@ unit is specified. Default value is used to convert to THz. In the
 case of VASP mode, it is calculated by
 :math:`\sqrt{\text{eV/AMU}}`/(:math:`\text{\AA}\cdot2\pi\cdot10^{12}`)
 (=15.633302) in SI base unit. The default conversion factors for
-``wien2k``, ``abinit``, and ``pwscf`` are 3.44595, 21.49068 and
-108.9708, respectively. These are determined following the physical
-unit systems of the calculators.
+``wien2k``, ``abinit``, ``pwscf``, and ``elk`` are 3.44595, 21.49068,
+108.9708, and 154.1079 respectively. These are determined following
+the physical unit systems of the calculators.
 
 When calculating thermal property, the factor to THz is
 required. Otherwise the calculated thermal properties have wrong
@@ -404,8 +382,9 @@ printed out and phonopy stops without going to phonon analysis.
 
    % phonopy --symmetry
 
-This tag can be used together with the ``--cell``, ``--abinit``,
-``--pwscf``, ``--wien2k``, or ``--primitive_axis`` option.
+This tag can be used together with the ``--cell`` (``-c``),
+``--abinit``, ``--pwscf``, ``--elk``, ``--wien2k``, or
+``--primitive_axis`` option.
 
 
 

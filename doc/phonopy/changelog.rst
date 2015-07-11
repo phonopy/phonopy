@@ -3,11 +3,12 @@
 Change Log
 ==========
 
-June-29-2015: Version 1.9.5
+July-11-2015: Version 1.9.5
 -----------------------------
 
 * Elk interface (``--elk`` option) was added (:ref:`elk_interface`).
-* Spglib update to version 1.8.
+* Spglib update to version 1.8.1. 
+
 
 Feb-18-2015: Version 1.9.4
 -----------------------------
