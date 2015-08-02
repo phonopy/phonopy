@@ -1,7 +1,7 @@
 /* Copyright (C) 2015 Atsushi Togo */
 /* All rights reserved. */
 
-/* This file is part of spglib. */
+/* This file is part of niggli. */
 
 /* Redistribution and use in source and binary forms, with or without */
 /* modification, are permitted provided that the following conditions */

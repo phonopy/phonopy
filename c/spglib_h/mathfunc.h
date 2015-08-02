@@ -118,6 +118,5 @@ void mat_free_MatINT(MatINT * matint);
 VecDBL * mat_alloc_VecDBL(const int size);
 void mat_free_VecDBL(VecDBL * vecdbl);
 int mat_is_int_matrix(SPGCONST double mat[3][3], const double symprec);
-void mat_modulo_i3(int v[3], const int m[3]);
 
 #endif

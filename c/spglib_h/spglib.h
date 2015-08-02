@@ -1,4 +1,4 @@
-/* version 1.8.1 */
+/* version 1.8.2 */
 
 /* Copyright (C) 2008 Atsushi Togo */
 /* All rights reserved. */
@@ -365,17 +365,13 @@ int spgat_refine_cell(double lattice[3][3],
 /* kpoints */
 /*---------*/
 
-/* Translate grid address to grid point index in the spglib definition */
-/* (see the comment in kpoint.h.) */
+/* Translate grid address to grid point index in the kspclib definition */
+/* (see the comment in kgrid.h.) */
 /* A q-point in fractional coordinates is given as */
-/* ((grid_address * 2 + shift) / (mesh * 2)). */
-/* Each element of shift[] is 0 or 1. */
-/* Internally grid address is reduced in the range, */
-/* 0 <= grid_address[i] < mesh[i]. */
-/* [0, 0, 0] without mesh shift gives Gamma point. */
+/* ((grid_address * 2 + (shift != 0)) / (mesh * 2)). */
+/* Each element of shift[] is 0 or non-zero. */
 int spg_get_grid_point_from_address(const int grid_address[3],
-				    const int mesh[3],
-				    const int is_shift[3]);
+				    const int mesh[3]);
 
 /* Irreducible reciprocal grid points are searched from uniform */
 /* mesh grid points specified by ``mesh`` and ``is_shift``. */
@@ -477,25 +473,26 @@ void spg_get_neighboring_grid_points(int relative_grid_points[],
 				     SPGCONST int bz_grid_address[][3],
 				     const int bz_map[]);
 
-/*--------------------*/
-/* tetrahedron method */
-/*--------------------*/
-void
-spg_get_tetrahedra_relative_grid_address(int relative_grid_address[24][4][3],
-					 SPGCONST double rec_lattice[3][3]);
-void
-spg_get_all_tetrahedra_relative_grid_address
-(int relative_grid_address[4][24][4][3]);
-double
-spg_get_tetrahedra_integration_weight(const double omega,
-				      SPGCONST double tetrahedra_omegas[24][4],
-				      const char function);
-void
-spg_get_tetrahedra_integration_weight_at_omegas
-(double integration_weights[],
- const int num_omegas,
- const double omegas[],
- SPGCONST double tetrahedra_omegas[24][4],
- const char function);
+/* /\*--------------------*\/ */
+/* /\* tetrahedron method *\/ */
+/* /\*--------------------*\/ */
+/* void */
+/* spg_get_tetrahedra_relative_grid_address(int relative_grid_address[24][4][3], */
+/* 					 SPGCONST double rec_lattice[3][3]); */
+/* void */
+/* spg_get_all_tetrahedra_relative_grid_address */
+/* (int relative_grid_address[4][24][4][3]); */
+/* double */
+/* spg_get_tetrahedra_integration_weight(const double omega, */
+/* 				      SPGCONST double tetrahedra_omegas[24][4], */
+/* 				      const char function); */
+/* void */
+/* spg_get_tetrahedra_integration_weight_at_omegas */
+/* (double integration_weights[], */
+/*  const int num_omegas, */
+/*  const double omegas[], */
+/*  SPGCONST double tetrahedra_omegas[24][4], */
+/*  const char function); */
+
 #endif
 

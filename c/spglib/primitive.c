@@ -65,6 +65,7 @@ static VecDBL * get_translation_candidates(const VecDBL * pure_trans);
 Primitive * prm_alloc_primitive(const int size)
 {
   Primitive *primitive;
+  int i, j;
 
   primitive = NULL;
 
@@ -77,6 +78,11 @@ Primitive * prm_alloc_primitive(const int size)
   primitive->mapping_table = NULL;
   primitive->size = size;
   primitive->tolerance = 0;
+  for (i = 0; i < 3; i++) {
+    for (j = 0; j < 3; j++) {
+      primitive->t_mat[i][j] = 0;
+    }
+  }
 
   if (size > 0) {
     if ((primitive->mapping_table = (int*) malloc(sizeof(int) * size)) == NULL) {
@@ -118,6 +124,7 @@ static Primitive * get_primitive(SPGCONST Cell * cell, const double symprec)
 {
   int i, attempt;
   double tolerance;
+  double inv_lat[3][3];
   Primitive *primitive;
   VecDBL * pure_trans;
 
@@ -166,6 +173,8 @@ static Primitive * get_primitive(SPGCONST Cell * cell, const double symprec)
 
  found:
   primitive->tolerance = tolerance;
+  mat_inverse_matrix_d3(inv_lat, cell->lattice, 0);
+  mat_multiply_matrix_d3(primitive->t_mat, primitive->cell->lattice, inv_lat);
   mat_free_VecDBL(pure_trans);
   return primitive;
 }
@@ -236,9 +245,7 @@ static Cell * get_primitive_cell(int * mapping_table,
     goto not_found;
   }
 
-  if (! lat_smallest_lattice_vector(smallest_lat,
-				    prim_lat,
-				    symprec)) {
+  if (! lat_smallest_lattice_vector(smallest_lat, prim_lat, symprec)) {
     goto not_found;
   }
 
