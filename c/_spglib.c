@@ -57,15 +57,6 @@ static PyObject * get_stabilized_reciprocal_mesh(PyObject *self, PyObject *args)
 static PyObject * get_grid_points_by_rotations(PyObject *self, PyObject *args);
 static PyObject * get_BZ_grid_points_by_rotations(PyObject *self, PyObject *args);
 static PyObject * relocate_BZ_grid_address(PyObject *self, PyObject *args);
-static PyObject * get_neighboring_grid_points(PyObject *self, PyObject *args);
-static PyObject *
-get_tetrahedra_relative_grid_address(PyObject *self, PyObject *args);
-static PyObject *
-get_all_tetrahedra_relative_grid_address(PyObject *self, PyObject *args);
-static PyObject *
-get_tetrahedra_integration_weight(PyObject *self, PyObject *args);
-static PyObject *
-get_tetrahedra_integration_weight_at_omegas(PyObject *self, PyObject *args);
 
 struct module_state {
   PyObject *error;
@@ -109,19 +100,6 @@ static PyMethodDef _spglib_methods[] = {
    "Rotated grid points in BZ are returned"},
   {"BZ_grid_address", relocate_BZ_grid_address, METH_VARARGS,
    "Relocate grid addresses inside Brillouin zone"},
-  {"neighboring_grid_points", get_neighboring_grid_points,
-   METH_VARARGS, "Neighboring grid points by relative grid addresses"},
-  {"tetrahedra_relative_grid_address", get_tetrahedra_relative_grid_address,
-   METH_VARARGS, "Relative grid addresses of vertices of 24 tetrahedra"},
-  {"all_tetrahedra_relative_grid_address",
-   get_all_tetrahedra_relative_grid_address,
-   METH_VARARGS,
-   "4 (all) sets of relative grid addresses of vertices of 24 tetrahedra"},
-  {"tetrahedra_integration_weight", get_tetrahedra_integration_weight,
-   METH_VARARGS, "Integration weight for tetrahedron method"},
-  {"tetrahedra_integration_weight_at_omegas",
-   get_tetrahedra_integration_weight_at_omegas,
-   METH_VARARGS, "Integration weight for tetrahedron method at omegas"},
   {NULL, NULL, 0, NULL}
 };
 
@@ -549,11 +527,8 @@ static PyObject * get_grid_point_from_address(PyObject *self, PyObject *args)
 
   const int* grid_address = (int*)PyArray_DATA(grid_address_py);
   const int* mesh = (int*)PyArray_DATA(mesh_py);
-  const int* is_shift = (int*)PyArray_DATA(is_shift_py);
 
-  const int gp = spg_get_grid_point_from_address(grid_address,
-						 mesh,
-						 is_shift);
+  const int gp = spg_get_grid_point_from_address(grid_address, mesh);
 
   return PyLong_FromLong((long) gp);
 }
@@ -753,132 +728,3 @@ static PyObject * relocate_BZ_grid_address(PyObject *self, PyObject *args)
   return PyLong_FromLong((long) num_ir_gp);
 }
 
-static PyObject *get_neighboring_grid_points(PyObject *self, PyObject *args)
-{
-  PyArrayObject* relative_grid_points_py;
-  PyArrayObject* relative_grid_address_py;
-  PyArrayObject* mesh_py;
-  PyArrayObject* bz_grid_address_py;
-  PyArrayObject* bz_map_py;
-  int grid_point;
-  if (!PyArg_ParseTuple(args, "OiOOOO",
-			&relative_grid_points_py,
-			&grid_point,
-			&relative_grid_address_py,
-			&mesh_py,
-			&bz_grid_address_py,
-			&bz_map_py)) {
-    return NULL;
-  }
-
-  int* relative_grid_points = (int*)PyArray_DATA(relative_grid_points_py);
-  SPGCONST int (*relative_grid_address)[3] =
-    (int(*)[3])PyArray_DATA(relative_grid_address_py);
-  const int num_relative_grid_address = PyArray_DIMS(relative_grid_address_py)[0];
-  const int *mesh = (int*)PyArray_DATA(mesh_py);
-  SPGCONST int (*bz_grid_address)[3] = (int(*)[3])PyArray_DATA(bz_grid_address_py);
-  const int *bz_map = (int*)PyArray_DATA(bz_map_py);
-
-  spg_get_neighboring_grid_points(relative_grid_points,
-				  grid_point,
-				  relative_grid_address,
-				  num_relative_grid_address,
-				  mesh,
-				  bz_grid_address,
-				  bz_map);
-  Py_RETURN_NONE;
-}
-
-static PyObject *
-get_tetrahedra_relative_grid_address(PyObject *self, PyObject *args)
-{
-  PyArrayObject* relative_grid_address_py;
-  PyArrayObject* reciprocal_lattice_py;
-
-  if (!PyArg_ParseTuple(args, "OO",
-			&relative_grid_address_py,
-			&reciprocal_lattice_py)) {
-    return NULL;
-  }
-
-  int (*relative_grid_address)[4][3] =
-    (int(*)[4][3])PyArray_DATA(relative_grid_address_py);
-  SPGCONST double (*reciprocal_lattice)[3] =
-    (double(*)[3])PyArray_DATA(reciprocal_lattice_py);
-
-  spg_get_tetrahedra_relative_grid_address(relative_grid_address,
-					   reciprocal_lattice);
-
-  Py_RETURN_NONE;
-}
-
-static PyObject *
-get_all_tetrahedra_relative_grid_address(PyObject *self, PyObject *args)
-{
-  PyArrayObject* relative_grid_address_py;
-
-  if (!PyArg_ParseTuple(args, "O",
-			&relative_grid_address_py)) {
-    return NULL;
-  }
-
-  int (*relative_grid_address)[24][4][3] =
-    (int(*)[24][4][3])PyArray_DATA(relative_grid_address_py);
-
-  spg_get_all_tetrahedra_relative_grid_address(relative_grid_address);
-
-  Py_RETURN_NONE;
-}
-
-static PyObject *
-get_tetrahedra_integration_weight(PyObject *self, PyObject *args)
-{
-  double omega;
-  PyArrayObject* tetrahedra_omegas_py;
-  char function;
-  if (!PyArg_ParseTuple(args, "dOc",
-			&omega,
-			&tetrahedra_omegas_py,
-			&function)) {
-    return NULL;
-  }
-
-  SPGCONST double (*tetrahedra_omegas)[4] =
-    (double(*)[4])PyArray_DATA(tetrahedra_omegas_py);
-
-  double iw = spg_get_tetrahedra_integration_weight(omega,
-						    tetrahedra_omegas,
-						    function);
-
-  return PyFloat_FromDouble(iw);
-}
-
-static PyObject *
-get_tetrahedra_integration_weight_at_omegas(PyObject *self, PyObject *args)
-{
-  PyArrayObject* integration_weights_py;
-  PyArrayObject* omegas_py;
-  PyArrayObject* tetrahedra_omegas_py;
-  char function;
-  if (!PyArg_ParseTuple(args, "OOOc",
-			&integration_weights_py,
-			&omegas_py,
-			&tetrahedra_omegas_py,
-			&function)) {
-    return NULL;
-  }
-
-  const double *omegas = (double*)PyArray_DATA(omegas_py);
-  double *iw = (double*)PyArray_DATA(integration_weights_py);
-  const int num_omegas = (int)PyArray_DIMS(omegas_py)[0];
-  SPGCONST double (*tetrahedra_omegas)[4] =
-    (double(*)[4])PyArray_DATA(tetrahedra_omegas_py);
-
-  spg_get_tetrahedra_integration_weight_at_omegas(iw,
-						  num_omegas,
-						  omegas,
-						  tetrahedra_omegas,
-						  function);
-
-  Py_RETURN_NONE;
-}

@@ -36,10 +36,10 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "mathfunc.h"
-#include "kpoint.h"
-#include "triplet_h/triplet_kpoint.h"
-
+#include <mathfunc.h>
+#include <kpoint.h>
+#include <kgrid.h>
+#include <triplet_h/triplet_kpoint.h>
 
 static void grid_point_to_address_double(int address_double[3],
 					 const int grid_point,
@@ -63,6 +63,7 @@ static int get_third_q_of_triplets_at_q(int bz_address[3][3],
 					const int bz_map[],
 					const int mesh[3],
 					const int bzmesh[3]);
+static void modulo_i3(int v[3], const int m[3]);
 
 int tpk_get_ir_triplets_at_q(int map_triplets[],
 			     int map_q[],
@@ -166,7 +167,7 @@ static int get_ir_triplets_at_q(int map_triplets[],
     for (j = 0; j < 3; j++) { /* q'' */
       address_double2[j] = - address_double0[j] - address_double1[j];
     }
-    third_q[i] = kpt_get_grid_point_double_mesh(address_double2, mesh);
+    third_q[i] = kgd_get_grid_point_double_mesh(address_double2, mesh);
   }
 
   num_ir_triplets = 0;
@@ -240,7 +241,7 @@ static int get_BZ_triplets_at_q(int triplets[][3],
 	bz_address_double[k] = bz_address[j][k] * 2;
       }
       triplets[i][j] =
-	bz_map[kpt_get_grid_point_double_mesh(bz_address_double, bzmesh)];
+	bz_map[kgd_get_grid_point_double_mesh(bz_address_double, bzmesh)];
     }
   }
 
@@ -258,7 +259,7 @@ static int get_third_q_of_triplets_at_q(int bz_address[3][3],
   int i, j, smallest_g, smallest_index, sum_g, delta_g[3];
   int bzgp[KPT_NUM_BZ_SEARCH_SPACE], bz_address_double[3];
 
-  mat_modulo_i3(bz_address[q_index], mesh);
+  modulo_i3(bz_address[q_index], mesh);
   for (i = 0; i < 3; i++) {
     delta_g[i] = 0;
     for (j = 0; j < 3; j++) {
@@ -272,7 +273,7 @@ static int get_third_q_of_triplets_at_q(int bz_address[3][3],
       bz_address_double[j] = (bz_address[q_index][j] +
 			      kpt_bz_search_space[i][j] * mesh[j]) * 2;
     }
-    bzgp[i] = bz_map[kpt_get_grid_point_double_mesh(bz_address_double, bzmesh)];
+    bzgp[i] = bz_map[kgd_get_grid_point_double_mesh(bz_address_double, bzmesh)];
   }
 
   for (i = 0; i < KPT_NUM_BZ_SEARCH_SPACE; i++) {
@@ -328,3 +329,15 @@ static void grid_point_to_address_double(int address_double[3],
   }
 }
 
+static void modulo_i3(int v[3], const int m[3])
+{
+  int i;
+
+  for (i = 0; i < 3; i++) {
+    v[i] = v[i] % m[i];
+
+    if (v[i] < 0) {
+      v[i] += m[i];
+    }
+  }
+}

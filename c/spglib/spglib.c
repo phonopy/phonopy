@@ -49,7 +49,6 @@
 #include "spg_database.h"
 #include "spin.h"
 #include "symmetry.h"
-#include "tetrahedron_method.h"
 
 #define REDUCE_RATE 0.95
 
@@ -729,7 +728,6 @@ int spgat_refine_cell(double lattice[3][3],
 int spg_get_grid_point_from_address(const int grid_address[3],
 				    const int mesh[3])
 {
-  int i;
   int address_double[3];
   int is_shift[3];
 
@@ -864,26 +862,26 @@ int spg_relocate_BZ_grid_address(int bz_grid_address[][3],
 				      is_shift);
 }
 
-void spg_get_neighboring_grid_points(int relative_grid_points[],
-				     const int grid_point,
-				     SPGCONST int relative_grid_address[][3],
-				     const int num_relative_grid_address,
-				     const int mesh[3],
-				     SPGCONST int bz_grid_address[][3],
-				     const int bz_map[])
-{
-  thm_get_neighboring_grid_points(relative_grid_points,
-				  grid_point,
-				  relative_grid_address,
-				  num_relative_grid_address,
-				  mesh,
-				  bz_grid_address,
-				  bz_map);
-}
-
 /* /\*--------------------*\/ */
 /* /\* tetrahedron method *\/ */
 /* /\*--------------------*\/ */
+/* void spg_get_neighboring_grid_points(int relative_grid_points[], */
+/* 				     const int grid_point, */
+/* 				     SPGCONST int relative_grid_address[][3], */
+/* 				     const int num_relative_grid_address, */
+/* 				     const int mesh[3], */
+/* 				     SPGCONST int bz_grid_address[][3], */
+/* 				     const int bz_map[]) */
+/* { */
+/*   thm_get_neighboring_grid_points(relative_grid_points, */
+/* 				  grid_point, */
+/* 				  relative_grid_address, */
+/* 				  num_relative_grid_address, */
+/* 				  mesh, */
+/* 				  bz_grid_address, */
+/* 				  bz_map); */
+/* } */
+
 /* void */
 /* spg_get_tetrahedra_relative_grid_address(int relative_grid_address[24][4][3], */
 /* 					 SPGCONST double rec_lattice[3][3]) */

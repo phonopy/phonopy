@@ -33,7 +33,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
-import phonopy.structure.spglib as spg
+import phonopy._phonopy as phonoc
 
 parallelepiped_vertices = np.array([[0, 0, 0],
                                     [1, 0, 0],
@@ -43,6 +43,58 @@ parallelepiped_vertices = np.array([[0, 0, 0],
                                     [1, 0, 1],
                                     [0, 1, 1],
                                     [1, 1, 1]], dtype='intc', order='C')
+
+def get_neighboring_grid_points(grid_point,
+                                relative_grid_address,
+                                mesh,
+                                bz_grid_address,
+                                bz_map):
+    relative_grid_points = np.zeros(len(relative_grid_address), dtype='intc')
+    phonoc.neighboring_grid_points(relative_grid_points,
+                                grid_point,
+                                relative_grid_address,
+                                mesh,
+                                bz_grid_address,
+                                bz_map)
+    return relative_grid_points
+    
+def get_tetrahedra_relative_grid_address(microzone_lattice):
+    """
+    reciprocal_lattice:
+      column vectors of parallel piped microzone lattice
+      which can be obtained by:
+      microzone_lattice = np.linalg.inv(bulk.get_cell()) / mesh
+    """
+    
+    relative_grid_address = np.zeros((24, 4, 3), dtype='intc')
+    phonoc.tetrahedra_relative_grid_address(
+        relative_grid_address,
+        np.array(microzone_lattice, dtype='double', order='C'))
+    
+    return relative_grid_address
+
+def get_all_tetrahedra_relative_grid_address():
+    relative_grid_address = np.zeros((4, 24, 4, 3), dtype='intc')
+    phonoc.all_tetrahedra_relative_grid_address(relative_grid_address)
+    
+    return relative_grid_address
+    
+def get_tetrahedra_integration_weight(omegas,
+                                      tetrahedra_omegas,
+                                      function='I'):
+    if isinstance(omegas, float):
+        return phonoc.tetrahedra_integration_weight(
+            omegas,
+            np.array(tetrahedra_omegas, dtype='double', order='C'),
+            function)
+    else:
+        integration_weights = np.zeros(len(omegas), dtype='double')
+        phonoc.tetrahedra_integration_weight_at_omegas(
+            integration_weights,
+            np.array(omegas, dtype='double'),
+            np.array(tetrahedra_omegas, dtype='double', order='C'),
+            function)
+        return integration_weights
 
 class TetrahedronMethod:
     def __init__(self,
@@ -99,7 +151,7 @@ class TetrahedronMethod:
         return self._integration_weight
 
     def _run_c(self, omegas, value='I'):
-        self._integration_weight = spg.get_tetrahedra_integration_weight(
+        self._integration_weight = get_tetrahedra_integration_weight(
             omegas,
             self._tetrahedra_omegas,
             function=value)
@@ -193,7 +245,7 @@ class TetrahedronMethod:
 
     def _set_relative_grid_addresses(self):
         if self._lang == 'C':
-            rga = spg.get_tetrahedra_relative_grid_address(
+            rga = get_tetrahedra_relative_grid_address(
                 self._primitive_vectors)
             self._relative_grid_addresses = rga
         else:

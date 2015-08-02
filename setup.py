@@ -6,11 +6,13 @@ extension_phonopy = Extension(
     'phonopy._phonopy',
     # extra_compile_args=['-fopenmp'],
     # extra_link_args=['-lgomp'],
-    include_dirs=['c/harmonic_h'] + include_dirs_numpy,
+    include_dirs=['c/harmonic_h',
+                  'c/kspclib_h'] + include_dirs_numpy,
     sources=['c/_phonopy.c',
              'c/harmonic/dynmat.c',
-             'c/harmonic/derivative_dynmat.c'])
-
+             'c/harmonic/derivative_dynmat.c',
+             'c/kspclib/kgrid.c',
+             'c/kspclib/tetrahedron_method.c'])
 
 if __name__ == '__main__':
     extra_compile_args_spglib=[]
@@ -27,6 +29,7 @@ extension_spglib = Extension(
     sources=['c/_spglib.c',
              'c/spglib/cell.c',
              'c/spglib/hall_symbol.c',
+             'c/spglib/kgrid.c',
              'c/spglib/kpoint.c',
              'c/spglib/lattice.c',
              'c/spglib/mathfunc.c',
@@ -40,8 +43,7 @@ extension_spglib = Extension(
              'c/spglib/spg_database.c',
              'c/spglib/spglib.c',
              'c/spglib/spin.c',
-             'c/spglib/symmetry.c',
-             'c/spglib/tetrahedron_method.c'])
+             'c/spglib/symmetry.c'])
 
 packages_phonopy = ['phonopy',
                     'phonopy.cui',

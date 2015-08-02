@@ -21,16 +21,18 @@ sources = ['c/_phono3py.c',
            'c/anharmonic/other/isotope.c',
            'c/anharmonic/triplet/triplet.c',
            'c/anharmonic/triplet/triplet_kpoint.c',
-           'c/spglib/kpoint.c',
            'c/spglib/mathfunc.c',
-           'c/spglib/tetrahedron_method.c']
+           'c/spglib/kpoint.c',
+           'c/kspclib/kgrid.c',
+           'c/kspclib/tetrahedron_method.c']
 extra_link_args=['-lgomp',
                  '-llapacke', # this is when lapacke is installed on system
                  '-llapack',
                  '-lblas']
 include_dirs = (['c/harmonic_h',
                  'c/anharmonic_h',
-                 'c/spglib_h'] +
+                 'c/spglib_h',
+                 'c/kspclib_h'] +
                 include_dirs_numpy)
 ##
 ## Uncomment and modify below if lapacke is prepared in a special location

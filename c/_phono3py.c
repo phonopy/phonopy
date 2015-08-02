@@ -38,24 +38,22 @@
 #include <math.h>
 #include <numpy/arrayobject.h>
 #include <lapacke.h>
-#include "lapack_wrapper.h"
-#include "phonoc_array.h"
-#include "phonoc_utils.h"
-#include "phonon3_h/fc3.h"
-#include "phonon3_h/frequency_shift.h"
-#include "phonon3_h/interaction.h"
-#include "phonon3_h/imag_self_energy.h"
-#include "phonon3_h/imag_self_energy_with_g.h"
-#include "phonon3_h/collision_matrix.h"
-#include "other_h/isotope.h"
-#include "triplet_h/triplet.h"
-#include "kpoint.h"
-#include "mathfunc.h"
-#include "tetrahedron_method.h"
+#include <lapack_wrapper.h>
+#include <phonoc_array.h>
+#include <phonoc_utils.h>
+#include <phonon3_h/fc3.h>
+#include <phonon3_h/frequency_shift.h>
+#include <phonon3_h/interaction.h>
+#include <phonon3_h/imag_self_energy.h>
+#include <phonon3_h/imag_self_energy_with_g.h>
+#include <phonon3_h/collision_matrix.h>
+#include <other_h/isotope.h>
+#include <triplet_h/triplet.h>
+#include <tetrahedron_method.h>
 
 /* #define LIBFLAME */
 #ifdef LIBFLAME
-#include "flame_wrapper.h"
+#include <flame_wrapper.h>
 #endif
 
 static PyObject * py_get_interaction(PyObject *self, PyObject *args);
