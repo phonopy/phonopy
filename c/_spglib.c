@@ -46,6 +46,7 @@
 static PyObject * get_dataset(PyObject *self, PyObject *args);
 static PyObject * get_spacegroup_type(PyObject *self, PyObject *args);
 static PyObject * get_pointgroup(PyObject *self, PyObject *args);
+static PyObject * standardize_cell(PyObject *self, PyObject *args);
 static PyObject * refine_cell(PyObject *self, PyObject *args);
 static PyObject * get_symmetry(PyObject *self, PyObject *args);
 static PyObject *
@@ -57,6 +58,7 @@ static PyObject * get_stabilized_reciprocal_mesh(PyObject *self, PyObject *args)
 static PyObject * get_grid_points_by_rotations(PyObject *self, PyObject *args);
 static PyObject * get_BZ_grid_points_by_rotations(PyObject *self, PyObject *args);
 static PyObject * relocate_BZ_grid_address(PyObject *self, PyObject *args);
+static PyObject * get_symmetry_from_database(PyObject *self, PyObject *args);
 
 struct module_state {
   PyObject *error;
@@ -80,8 +82,11 @@ static PyMethodDef _spglib_methods[] = {
   {"error_out", (PyCFunction)error_out, METH_NOARGS, NULL},
   {"dataset", get_dataset, METH_VARARGS, "Dataset for crystal symmetry"},
   {"spacegroup_type", get_spacegroup_type, METH_VARARGS, "Space-group type symbols"},
+  {"symmetry_from_database", get_symmetry_from_database, METH_VARARGS,
+   "Get symmetry operations from database"},
   {"pointgroup", get_pointgroup, METH_VARARGS,
    "International symbol of pointgroup"},
+  {"standardize_cell", standardize_cell, METH_VARARGS, "Standardize cell"},
   {"refine_cell", refine_cell, METH_VARARGS, "Refine cell"},
   {"symmetry", get_symmetry, METH_VARARGS, "Symmetry operations"},
   {"symmetry_with_collinear_spin", get_symmetry_with_collinear_spin,
@@ -194,7 +199,7 @@ static PyObject * get_dataset(PyObject *self, PyObject *args)
 			      symprec,
 			      angle_tolerance);
 
-  array = PyList_New(13);
+  array = PyList_New(15);
   n = 0;
 
   /* Space group number, international symbol, hall symbol */
@@ -278,6 +283,7 @@ static PyObject * get_dataset(PyObject *self, PyObject *args)
   PyList_SetItem(array, n, std_lattice);
   n++;
 
+  /* Standardized unit cell */
   std_types = PyList_New(dataset->n_std_atoms);
   std_positions = PyList_New(dataset->n_std_atoms);
   for (i = 0; i < dataset->n_std_atoms; i++) {
@@ -293,9 +299,40 @@ static PyObject * get_dataset(PyObject *self, PyObject *args)
   PyList_SetItem(array, n, std_positions);
   n++;
 
+  /* Point group */
+  PyList_SetItem(array, n, PyLong_FromLong((long) dataset->pointgroup_number));
+  n++;
+  PyList_SetItem(array, n, PYUNICODE_FROMSTRING(dataset->pointgroup_symbol));
+  n++;
+
   spg_free_dataset(dataset);
 
   return array;
+}
+
+static PyObject * get_symmetry_from_database(PyObject *self, PyObject *args)
+{
+  int hall_number;
+  PyArrayObject* rotation;
+  PyArrayObject* translation;
+  if (!PyArg_ParseTuple(args, "OOi",
+			&rotation,
+			&translation,
+			&hall_number)) {
+    return NULL;
+  }
+
+  if (PyArray_DIMS(rotation)[0] < 192 || PyArray_DIMS(translation)[0] < 192) {
+    Py_RETURN_NONE;
+  }
+
+  int (*rot)[3][3] = (int(*)[3][3])PyArray_DATA(rotation);
+  double (*trans)[3] = (double(*)[3])PyArray_DATA(translation);
+
+
+  const int num_sym = spg_get_symmetry_from_database(rot, trans, hall_number);
+
+  return PyLong_FromLong((long) num_sym);
 }
 
 static PyObject * get_spacegroup_type(PyObject *self, PyObject *args)
@@ -358,6 +395,41 @@ static PyObject * get_pointgroup(PyObject *self, PyObject *args)
   PyList_SetItem(array, 2, mat);
 
   return array;
+}
+
+static PyObject * standardize_cell(PyObject *self, PyObject *args)
+{
+  int num_atom, to_primitive, no_idealize;
+  double symprec, angle_tolerance;
+  PyArrayObject* lattice;
+  PyArrayObject* position;
+  PyArrayObject* atom_type;
+  if (!PyArg_ParseTuple(args, "OOOiiidd",
+			&lattice,
+			&position,
+			&atom_type,
+			&num_atom,
+			&to_primitive,
+			&no_idealize,
+			&symprec,
+			&angle_tolerance)) {
+    return NULL;
+  }
+
+  double (*lat)[3] = (double(*)[3])PyArray_DATA(lattice);
+  SPGCONST double (*pos)[3] = (double(*)[3])PyArray_DATA(position);
+  int* typat = (int*)PyArray_DATA(atom_type);
+
+  int num_atom_std = spgat_standardize_cell(lat,
+					    pos,
+					    typat,
+					    num_atom,
+					    to_primitive,
+					    no_idealize,
+					    symprec,
+					    angle_tolerance);
+
+  return PyLong_FromLong((long) num_atom_std);
 }
 
 static PyObject * refine_cell(PyObject *self, PyObject *args)
@@ -517,11 +589,9 @@ static PyObject * get_grid_point_from_address(PyObject *self, PyObject *args)
 {
   PyArrayObject* grid_address_py;
   PyArrayObject* mesh_py;
-  PyArrayObject* is_shift_py;
-  if (!PyArg_ParseTuple(args, "OOO",
+  if (!PyArg_ParseTuple(args, "OO",
 			&grid_address_py,
-			&mesh_py,
-			&is_shift_py)) {
+			&mesh_py)) {
     return NULL;
   }
 
@@ -727,4 +797,3 @@ static PyObject * relocate_BZ_grid_address(PyObject *self, PyObject *args)
 
   return PyLong_FromLong((long) num_ir_gp);
 }
-
