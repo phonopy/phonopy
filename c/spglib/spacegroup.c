@@ -411,7 +411,7 @@ Cell * spa_transform_to_primitive(SPGCONST Cell * cell,
     goto err;
   }
 
-  mat_multiply_matrix_d3(prim_lat, tmat, cell->lattice);
+  mat_multiply_matrix_d3(prim_lat, cell->lattice, tmat);
   primitive = cel_trim_cell(mapping_table, prim_lat, cell, symprec);
 
   free(mapping_table);

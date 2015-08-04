@@ -74,6 +74,8 @@ static Cell * get_conventional_primitive(SPGCONST Spacegroup * spacegroup,
 static int get_number_of_pure_translation(SPGCONST Symmetry * conv_sym);
 static void get_conventional_lattice(double lattice[3][3],
 				     SPGCONST Spacegroup *spacegroup);
+static void set_tricli(double lattice[3][3],
+		       SPGCONST double metric[3][3]);
 static void set_monocli(double lattice[3][3],
 			SPGCONST double metric[3][3]);
 static void set_ortho(double lattice[3][3],
@@ -95,8 +97,7 @@ get_refined_symmetry_operations(SPGCONST Cell * cell,
 static void set_translation_with_origin_shift(Symmetry *conv_sym,
 					      const double origin_shift[3]);
 static Symmetry * get_primitive_db_symmetry(SPGCONST double t_mat[3][3],
-					    const Symmetry *conv_sym,
-					    const double symprec);
+					    const Symmetry *conv_sym);
 static void get_corners(int corners[3][8],
 			SPGCONST int t_mat[3][3]);
 static void get_surrounding_frame(int frame[3],
@@ -460,7 +461,7 @@ static void get_conventional_lattice(double lattice[3][3],
 
   switch (pointgroup.holohedry) {
   case TRICLI:
-    mat_copy_matrix_d3(lattice, spacegroup->bravais_lattice);
+    set_tricli(lattice, metric);
     break;
   case MONOCLI: /* b-axis is the unique axis. */
     set_monocli(lattice, metric);
@@ -487,6 +488,34 @@ static void get_conventional_lattice(double lattice[3][3],
   case HOLOHEDRY_NONE:
     break;
   }
+}
+
+/* The conversion refers the wikipedia, */
+/* http://en.wikipedia.org/wiki/Fractional_coordinates */
+static void set_tricli(double lattice[3][3],
+		       SPGCONST double metric[3][3])
+{
+  double a, b, c, alpha, beta, gamma, cg, cb, ca, sg;
+
+  a = sqrt(metric[0][0]);
+  b = sqrt(metric[1][1]);
+  c = sqrt(metric[2][2]);
+  alpha = acos(metric[1][2] / b / c);
+  beta = acos(metric[0][2] / a / c);
+  gamma = acos(metric[0][1] / a / b);
+
+  cg = cos(gamma);
+  cb = cos(beta);
+  ca = cos(alpha);
+  sg = sin(gamma);
+
+  lattice[0][0] = a;
+  lattice[0][1] = b * cg;
+  lattice[0][2] = c * cb;
+  lattice[1][1] = b * sg;
+  lattice[1][2] = c * (ca - cb * cg) / sg;
+  lattice[2][2] = c * sqrt(1 - ca * ca - cb * cb - cg * cg +
+			   2 * ca * cb * cg) / sg;
 }
 
 static void set_monocli(double lattice[3][3],
@@ -632,7 +661,7 @@ get_refined_symmetry_operations(SPGCONST Cell * cell,
 
   set_translation_with_origin_shift(conv_sym, spacegroup->origin_shift);
 
-  if ((prim_sym = get_primitive_db_symmetry(t_mat, conv_sym, symprec)) == NULL) {
+  if ((prim_sym = get_primitive_db_symmetry(t_mat, conv_sym)) == NULL) {
     sym_free_symmetry(conv_sym);
     return NULL;
   }
@@ -762,8 +791,7 @@ static void set_translation_with_origin_shift(Symmetry *conv_sym,
 }
 
 static Symmetry * get_primitive_db_symmetry(SPGCONST double t_mat[3][3],
-					    const Symmetry *conv_sym,
-					    const double symprec)
+					    const Symmetry *conv_sym)
 {
   int i, j, num_op;
   double inv_mat[3][3], tmp_mat[3][3];
