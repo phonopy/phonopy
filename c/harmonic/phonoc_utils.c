@@ -34,11 +34,11 @@
 
 #include <lapacke.h>
 #include <math.h>
-#include "dynmat.h"
-#include "phonoc_array.h"
-#include "phonoc_math.h"
-#include "phonoc_utils.h"
-#include "lapack_wrapper.h"
+#include <dynmat.h>
+#include <phonoc_array.h>
+#include <phonoc_math.h>
+#include <phonoc_utils.h>
+#include <lapack_wrapper.h>
 
 #define THZTOEVPARKB 47.992398658977166
 #define INVSQRT2PI 0.3989422804014327

@@ -6,10 +6,10 @@ include_dirs_numpy = [numpy.get_include()]
 
 sources = ['c/_phono3py.c',
            'c/harmonic/dynmat.c',
-           'c/anharmonic/lapack_wrapper.c',
-           'c/anharmonic/phonoc_array.c',
-           'c/anharmonic/phonoc_math.c',
-           'c/anharmonic/phonoc_utils.c',
+           'c/harmonic/phonoc_array.c',
+           'c/harmonic/phonoc_math.c',
+           'c/harmonic/phonoc_utils.c',
+           'c/harmonic/lapack_wrapper.c',
            'c/anharmonic/phonon3/fc3.c',
            'c/anharmonic/phonon3/frequency_shift.c',
            'c/anharmonic/phonon3/interaction.c',
@@ -38,8 +38,8 @@ include_dirs = (['c/harmonic_h',
 ## Uncomment and modify below if lapacke is prepared in a special location
 
 include_dirs += ['../lapack-3.5.0/lapacke/include']
-extra_link_args=['-lgomp',
-                 '../lapack-3.5.0/liblapacke.a']
+extra_link_args = ['-lgomp',
+                   '../lapack-3.5.0/liblapacke.a']
 
 ##
 ## This is for the test of libflame

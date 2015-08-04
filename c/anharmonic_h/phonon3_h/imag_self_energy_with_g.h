@@ -35,7 +35,7 @@
 #ifndef __imag_self_energy_with_g_H__
 #define __imag_self_energy_with_g_H__
 
-#include "phonoc_array.h"
+#include <phonoc_array.h>
 
 void get_thm_imag_self_energy_at_bands(double *imag_self_energy,
 				       const Darray *fc3_normal_sqared,

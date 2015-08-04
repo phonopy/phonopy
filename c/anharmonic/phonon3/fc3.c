@@ -32,7 +32,7 @@
 /* ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE */
 /* POSSIBILITY OF SUCH DAMAGE. */
 
-#include "phonon3_h/fc3.h"
+#include <phonon3_h/fc3.h>
 
 static double tensor3_rotation_elem(const double *tensor,
 				    const double *r,

@@ -35,9 +35,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include "phonoc_array.h"
-#include "phonoc_utils.h"
-#include "phonon3_h/imag_self_energy_with_g.h"
+#include <phonoc_array.h>
+#include <phonoc_utils.h>
+#include <phonon3_h/imag_self_energy_with_g.h>
 
 static double
 sum_thm_imag_self_energy_at_band(const int num_band,

@@ -32,18 +32,46 @@
 /* ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE */
 /* POSSIBILITY OF SUCH DAMAGE. */
 
+#include <Python.h>
+#include <numpy/arrayobject.h>
 #include <lapacke.h>
-#include "phonoc_math.h"
+#include <phonoc_array.h>
 
-lapack_complex_double
-phonoc_complex_prod(const lapack_complex_double a,
-		    const lapack_complex_double b)
+Iarray* convert_to_iarray(const PyArrayObject* npyary)
 {
-  lapack_complex_double c;
-  c = lapack_make_complex_double
-    (lapack_complex_double_real(a) * lapack_complex_double_real(b) -
-     lapack_complex_double_imag(a) * lapack_complex_double_imag(b),
-     lapack_complex_double_imag(a) * lapack_complex_double_real(b) +
-     lapack_complex_double_real(a) * lapack_complex_double_imag(b));
-  return c;
+  int i;
+  Iarray *ary;
+
+  ary = (Iarray*) malloc(sizeof(Iarray));
+  for (i = 0; i < PyArray_NDIM(npyary); i++) {
+    ary->dims[i] = PyArray_DIMS(npyary)[i];
+  }
+  ary->data = (int*)PyArray_DATA(npyary);
+  return ary;
+}
+
+Darray* convert_to_darray(const PyArrayObject* npyary)
+{
+  int i;
+  Darray *ary;
+
+  ary = (Darray*) malloc(sizeof(Darray));
+  for (i = 0; i < PyArray_NDIM(npyary); i++) {
+    ary->dims[i] = PyArray_DIMS(npyary)[i];
+  }
+  ary->data = (double*)PyArray_DATA(npyary);
+  return ary;
+}
+
+Carray* convert_to_carray(const PyArrayObject* npyary)
+{
+  int i;
+  Carray *ary;
+
+  ary = (Carray*) malloc(sizeof(Carray));
+  for (i = 0; i < PyArray_NDIM(npyary); i++) {
+    ary->dims[i] = PyArray_DIMS(npyary)[i];
+  }
+  ary->data = (lapack_complex_double*)PyArray_DATA(npyary);
+  return ary;
 }

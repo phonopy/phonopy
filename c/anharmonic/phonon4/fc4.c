@@ -34,8 +34,8 @@
 
 #include <math.h>
 #include <stdlib.h>
-#include "phonon3_h/fc3.h"
-#include "phonon4_h/fc4.h"
+#include <phonon3_h/fc3.h>
+#include <phonon4_h/fc4.h>
 
 static void tensor4_roation(double *rot_tensor,
 			    const double *fc4,

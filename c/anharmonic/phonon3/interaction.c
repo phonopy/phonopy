@@ -35,11 +35,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <lapacke.h>
-#include "phonoc_array.h"
-#include "phonoc_utils.h"
-#include "phonon3_h/interaction.h"
-#include "phonon3_h/real_to_reciprocal.h"
-#include "phonon3_h/reciprocal_to_normal.h"
+#include <phonoc_array.h>
+#include <phonoc_utils.h>
+#include <phonon3_h/interaction.h>
+#include <phonon3_h/real_to_reciprocal.h>
+#include <phonon3_h/reciprocal_to_normal.h>
 
 static const int index_exchange[6][3] = {{0, 1, 2},
 					 {2, 0, 1},

@@ -36,7 +36,7 @@
 #define __phonoc_utils_H__
 
 #include <lapacke.h>
-#include "phonoc_array.h"
+#include <phonoc_array.h>
 
 void set_phonons_at_gridpoints(Darray *frequencies,
 			       Carray *eigenvectors,

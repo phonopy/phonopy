@@ -1,18 +1,37 @@
 from distutils.core import setup, Extension
 import numpy
 include_dirs_numpy = [numpy.get_include()]
+include_dirs_phonopy = ['c/harmonic_h','c/kspclib_h'] + include_dirs_numpy
+
+sources_phonopy = ['c/_phonopy.c',
+                   'c/harmonic/dynmat.c',
+                   'c/harmonic/derivative_dynmat.c',
+                   'c/kspclib/kgrid.c',
+                   'c/kspclib/tetrahedron_method.c']
+extra_compile_args_phonopy = []
+extra_link_args_phonopy = []
+
+## Uncomment below if openmp multithreading is to be used.
+# extra_compile_args_phonopy += ['-fopenmp',]
+# extra_link_args_phonopy += ['-lgomp',]
+
+## Uncomment below if lapack zheev is used instead of numpy.linalg.eigh.
+sources_phonopy += ['c/harmonic/phonoc_array.c',
+                    'c/harmonic/phonoc_math.c',
+                    'c/harmonic/phonoc_utils.c',
+                    'c/harmonic/lapack_wrapper.c']
+## With lapacke installed in the system library path
+# extra_link_args_phonopy += ['-llapacke', '-llapack', '-lblas']
+## Without lapacke installed in the system library path
+extra_link_args_phonopy += ['../lapack-3.5.0/liblapacke.a',]
+include_dirs_phonopy += ['../lapack-3.5.0/lapacke/include',]
 
 extension_phonopy = Extension(
     'phonopy._phonopy',
-    # extra_compile_args=['-fopenmp'],
-    # extra_link_args=['-lgomp'],
-    include_dirs=['c/harmonic_h',
-                  'c/kspclib_h'] + include_dirs_numpy,
-    sources=['c/_phonopy.c',
-             'c/harmonic/dynmat.c',
-             'c/harmonic/derivative_dynmat.c',
-             'c/kspclib/kgrid.c',
-             'c/kspclib/tetrahedron_method.c'])
+    extra_compile_args=extra_compile_args_phonopy,
+    extra_link_args=extra_link_args_phonopy,
+    include_dirs=include_dirs_phonopy,
+    sources=sources_phonopy)
 
 if __name__ == '__main__':
     extra_compile_args_spglib=[]

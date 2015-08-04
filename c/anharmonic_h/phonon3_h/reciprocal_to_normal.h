@@ -36,7 +36,7 @@
 #define __reciprocal_to_normal_H__
 
 #include <lapacke.h>
-#include "phonoc_array.h"
+#include <phonoc_array.h>
 
 void reciprocal_to_normal_squared
 (double *fc3_normal_squared,

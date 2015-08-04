@@ -34,9 +34,9 @@
 
 #include <lapacke.h>
 #include <math.h>
-#include "phonoc_array.h"
-#include "phonoc_math.h"
-#include "phonon3_h/reciprocal_to_normal.h"
+#include <phonoc_array.h>
+#include <phonoc_math.h>
+#include <phonon3_h/reciprocal_to_normal.h>
 
 void reciprocal_to_normal_squared
 (double *fc3_normal_squared,
