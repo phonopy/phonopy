@@ -1,8 +1,12 @@
 from distutils.core import setup, Extension
 import numpy
-include_dirs_numpy = [numpy.get_include()]
-include_dirs_phonopy = ['c/harmonic_h','c/kspclib_h'] + include_dirs_numpy
 
+include_dirs_numpy = [numpy.get_include()]
+
+######################
+# _phonopy extension #
+######################
+include_dirs_phonopy = ['c/harmonic_h', 'c/kspclib_h'] + include_dirs_numpy
 sources_phonopy = ['c/_phonopy.c',
                    'c/harmonic/dynmat.c',
                    'c/harmonic/derivative_dynmat.c',
@@ -15,17 +19,6 @@ extra_link_args_phonopy = []
 # extra_compile_args_phonopy += ['-fopenmp',]
 # extra_link_args_phonopy += ['-lgomp',]
 
-## Uncomment below if lapack zheev is used instead of numpy.linalg.eigh.
-sources_phonopy += ['c/harmonic/phonoc_array.c',
-                    'c/harmonic/phonoc_math.c',
-                    'c/harmonic/phonoc_utils.c',
-                    'c/harmonic/lapack_wrapper.c']
-## With lapacke installed in the system library path
-# extra_link_args_phonopy += ['-llapacke', '-llapack', '-lblas']
-## Without lapacke installed in the system library path
-extra_link_args_phonopy += ['../lapack-3.5.0/liblapacke.a',]
-include_dirs_phonopy += ['../lapack-3.5.0/lapacke/include',]
-
 extension_phonopy = Extension(
     'phonopy._phonopy',
     extra_compile_args=extra_compile_args_phonopy,
@@ -33,6 +26,10 @@ extension_phonopy = Extension(
     include_dirs=include_dirs_phonopy,
     sources=sources_phonopy)
 
+
+#####################
+# _spglib extension #
+#####################
 if __name__ == '__main__':
     extra_compile_args_spglib=[]
     extra_link_args_spglib=[]
@@ -64,6 +61,7 @@ extension_spglib = Extension(
              'c/spglib/spin.c',
              'c/spglib/symmetry.c'])
 
+ext_modules_phonopy = [extension_phonopy, extension_spglib]
 packages_phonopy = ['phonopy',
                     'phonopy.cui',
                     'phonopy.gruneisen',
@@ -92,4 +90,4 @@ if __name__ == '__main__':
           url='http://phonopy.sourceforge.net/',
           packages=packages_phonopy,
           scripts=scripts_phonopy,
-          ext_modules=[extension_phonopy, extension_spglib])
+          ext_modules=ext_modules_phonopy)

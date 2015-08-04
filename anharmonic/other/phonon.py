@@ -40,7 +40,7 @@ def set_phonon_c(dm,
                  frequency_factor_to_THz,
                  nac_q_direction,
                  lapack_zheev_uplo):
-    import phonopy._phonopy as phonoc
+    import phonopy._lapackepy as lapackepy
     svecs, multiplicity = dm.get_shortest_vectors()
     masses = np.array(dm.get_primitive().get_masses(), dtype='double')
     rec_lattice = np.array(
@@ -54,7 +54,7 @@ def set_phonon_c(dm,
         nac_factor = 0
         dielectric = None
 
-    phonoc.phonons_at_gridpoints(
+    lapackepy.phonons_at_gridpoints(
         frequencies,
         eigenvectors,
         phonon_done,
