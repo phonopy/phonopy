@@ -70,6 +70,7 @@ scripts_phono3py = ['scripts/phono3py',
 ########################
 include_dirs_lapackepy = ['c/harmonic_h',] + include_dirs_numpy
 sources_lapackepy = ['c/_lapackepy.c',
+                     'c/harmonic/dynmat.c',
                      'c/harmonic/phonoc_array.c',
                      'c/harmonic/phonoc_math.c',
                      'c/harmonic/phonoc_utils.c',
