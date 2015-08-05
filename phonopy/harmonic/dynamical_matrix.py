@@ -36,6 +36,35 @@ import numpy as np
 from phonopy.structure.cells import get_reduced_bases
 DAMPING_FACTOR = 0.25
 
+def get_dynamical_matrix(fc2,
+                         supercell,
+                         primitive,
+                         nac_params=None,
+                         frequency_scale_factor=None,
+                         decimals=None,
+                         symprec=1e-5):
+    if frequency_scale_factor is None:
+        _fc2 = fc2
+    else:
+        _fc2 = fc2 * frequency_scale_factor ** 2
+
+    if nac_params is None:
+        dm = DynamicalMatrix(
+            supercell,
+            primitive,
+            _fc2,
+            decimals=decimals,
+            symprec=symprec)
+    else:
+        dm = DynamicalMatrixNAC(
+            supercell,
+            primitive,
+            _fc2,
+            decimals=decimals,
+            symprec=symprec)
+        dm.set_nac_params(nac_params)
+    return dm
+
 class DynamicalMatrix:
     """Dynamical matrix class
     

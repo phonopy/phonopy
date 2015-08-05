@@ -1,34 +1,4 @@
 import numpy as np
-from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC
-
-def get_dynamical_matrix(fc2,
-                         supercell,
-                         primitive,
-                         nac_params=None,
-                         frequency_scale_factor=None,
-                         decimals=None,
-                         symprec=1e-5):
-    if frequency_scale_factor is None:
-        _fc2 = fc2
-    else:
-        _fc2 = fc2 * frequency_scale_factor ** 2
-
-    if nac_params is None:
-        dm = DynamicalMatrix(
-            supercell,
-            primitive,
-            _fc2,
-            decimals=decimals,
-            symprec=symprec)
-    else:
-        dm = DynamicalMatrixNAC(
-            supercell,
-            primitive,
-            _fc2,
-            decimals=decimals,
-            symprec=symprec)
-        dm.set_nac_params(nac_params)
-    return dm
 
 def set_phonon_c(dm,
                  frequencies,
@@ -95,4 +65,3 @@ def set_phonon_py(grid_point,
         frequencies[gp] = (np.sqrt(np.abs(eigvals)) * np.sign(eigvals)
                            * frequency_factor_to_THz)
         eigenvectors[gp] = eigvecs
-

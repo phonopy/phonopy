@@ -1,6 +1,6 @@
 import numpy as np
-from anharmonic.other.phonon import get_dynamical_matrix, set_phonon_c, set_phonon_py
-from phonopy.harmonic.dynamical_matrix import get_smallest_vectors
+from anharmonic.other.phonon import set_phonon_c, set_phonon_py
+from phonopy.harmonic.dynamical_matrix import get_smallest_vectors, get_dynamical_matrix
 from phonopy.units import VaspToTHz, Hbar, EV, Angstrom, THz, AMU, PlanckConstant
 from anharmonic.phonon3.real_to_reciprocal import RealToReciprocal
 from anharmonic.phonon3.reciprocal_to_normal import ReciprocalToNormal
