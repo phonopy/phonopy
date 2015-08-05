@@ -8,7 +8,6 @@ sources = ['c/_phono3py.c',
            'c/harmonic/dynmat.c',
            'c/harmonic/lapack_wrapper.c',
            'c/harmonic/phonoc_array.c',
-           'c/harmonic/phonoc_math.c',
            'c/harmonic/phonoc_utils.c',
            'c/anharmonic/phonon3/fc3.c',
            'c/anharmonic/phonon3/frequency_shift.c',
@@ -71,8 +70,8 @@ scripts_phono3py = ['scripts/phono3py',
 include_dirs_lapackepy = ['c/harmonic_h',] + include_dirs_numpy
 sources_lapackepy = ['c/_lapackepy.c',
                      'c/harmonic/dynmat.c',
+                     'c/harmonic/phonon.c',
                      'c/harmonic/phonoc_array.c',
-                     'c/harmonic/phonoc_math.c',
                      'c/harmonic/phonoc_utils.c',
                      'c/harmonic/lapack_wrapper.c']
 extension_lapackepy = Extension(
@@ -83,7 +82,7 @@ extension_lapackepy = Extension(
     sources=sources_lapackepy)
 
 setup(name='phono3py',
-      version='0.9.10.1',
+      version='0.9.11',
       description='This is the phono3py module.',
       author='Atsushi Togo',
       author_email='atz.togo@gmail.com',
