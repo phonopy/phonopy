@@ -554,6 +554,8 @@ static int relocate_BZ_grid_address(int bz_grid_address[][3],
   
   boundary_num_gp = 0;
   total_num_gp = mesh[0] * mesh[1] * mesh[2];
+
+#pragma omp parallel for private(j, k, q_vector, distance, min_distance, min_index, gp, bzgp, bz_address_double) reduction(+:boundary_num_gp)
   for (i = 0; i < total_num_gp; i++) {
     for (j = 0; j < KPT_NUM_BZ_SEARCH_SPACE; j++) {
       for (k = 0; k < 3; k++) {
