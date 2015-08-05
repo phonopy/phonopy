@@ -37,8 +37,8 @@
 #include <numpy/arrayobject.h>
 #include <lapacke.h>
 #include <lapack_wrapper.h>
+#include <phonon.h>
 #include <phonoc_array.h>
-#include <phonoc_utils.h>
 
 static PyObject * py_set_phonons_at_gridpoints(PyObject *self, PyObject *args);
 static PyObject * py_get_phonon(PyObject *self, PyObject *args);
