@@ -48,6 +48,7 @@ class Mesh:
                  group_velocity=None,
                  rotations=None, # Point group operations in real space
                  factor=VaspToTHz):
+
         self._mesh = np.array(mesh, dtype='intc')
         self._is_eigenvectors = is_eigenvectors
         self._factor = factor
@@ -61,6 +62,7 @@ class Mesh:
                               is_time_reversal=is_time_reversal,
                               rotations=rotations,
                               is_mesh_symmetry=is_mesh_symmetry)
+
         self._qpoints = self._gp.get_ir_qpoints()
         self._weights = self._gp.get_ir_grid_weights()
 
@@ -158,27 +160,43 @@ class Mesh:
                                      self._eigenvectors[i,k*3+l,j].imag))
             w.write("\n")
 
-    def _set_phonon(self):
+    def _set_phonon(self, lang='Py'):
         num_band = self._cell.get_number_of_atoms() * 3
         num_qpoints = len(self._qpoints)
 
         self._eigenvalues = np.zeros((num_qpoints, num_band), dtype='double')
         self._frequencies = np.zeros_like(self._eigenvalues)
-        if self._is_eigenvectors:
+        if self._is_eigenvectors or lang == 'C':
             self._eigenvectors = np.zeros(
                 (num_qpoints, num_band, num_band,), dtype='complex128')
-            
-        for i, q in enumerate(self._qpoints):
-            self._dynamical_matrix.set_dynamical_matrix(q)
-            dm = self._dynamical_matrix.get_dynamical_matrix()
-            if self._is_eigenvectors:
-                eigvals, self._eigenvectors[i] = np.linalg.eigh(dm)
-                self._eigenvalues[i] = eigvals.real
-            else:
-                self._eigenvalues[i] = np.linalg.eigvalsh(dm).real
 
-        self._frequencies = np.array(np.sqrt(abs(self._eigenvalues)) *
-                                     np.sign(self._eigenvalues)) * self._factor
+        if lang == 'C':
+            from phonopy.phonon.solver import get_phonons_at_qpoints
+            get_phonons_at_qpoints(self._frequencies,
+                                   self._eigenvectors,
+                                   self._dynamical_matrix,
+                                   self._qpoints,
+                                   self._factor,
+                                   nac_q_direction=None,
+                                   lapack_zheev_uplo='L')
+            self._eigenvalues = np.array(self._frequencies ** 2 *
+                                         np.sign(self._frequencies),
+                                         dtype='double',
+                                         order='C') / self._factor ** 2
+        else:
+            for i, q in enumerate(self._qpoints):
+                self._dynamical_matrix.set_dynamical_matrix(q)
+                dm = self._dynamical_matrix.get_dynamical_matrix()
+                if self._is_eigenvectors:
+                    eigvals, self._eigenvectors[i] = np.linalg.eigh(dm)
+                    self._eigenvalues[i] = eigvals.real
+                else:
+                    self._eigenvalues[i] = np.linalg.eigvalsh(dm).real
+            self._frequencies = np.array(np.sqrt(abs(self._eigenvalues)) *
+                                         np.sign(self._eigenvalues),
+                                         dtype='double',
+                                         order='C') * self._factor
+
 
     def _set_group_velocities(self, group_velocity):
         group_velocity.set_q_points(self._qpoints)

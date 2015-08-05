@@ -34,6 +34,7 @@
 
 #include <Python.h>
 #include <stdio.h>
+#include <assert.h>
 #include <numpy/arrayobject.h>
 #include <lapacke.h>
 #include <lapack_wrapper.h>
@@ -41,7 +42,7 @@
 #include <phonoc_array.h>
 
 static PyObject * py_set_phonons_at_gridpoints(PyObject *self, PyObject *args);
-static PyObject * py_get_phonon(PyObject *self, PyObject *args);
+static PyObject * py_get_phonons_at_qpoints(PyObject *self, PyObject *args);
 static PyObject * py_phonopy_pinv(PyObject *self, PyObject *args);
 static PyObject * py_phonopy_zheev(PyObject *self, PyObject *args);
 
@@ -67,7 +68,8 @@ static PyMethodDef _lapackepy_methods[] = {
   {"error_out", (PyCFunction)error_out, METH_NOARGS, NULL},
   {"phonons_at_gridpoints", py_set_phonons_at_gridpoints, METH_VARARGS,
    "Set phonons at grid points"},
-  {"phonon", py_get_phonon, METH_VARARGS, "Get phonon"},
+  {"phonons_at_qpoints", py_get_phonons_at_qpoints, METH_VARARGS,
+   "Get phonons at a q-point"},
   {"pinv", py_phonopy_pinv, METH_VARARGS, "Pseudo-inverse using Lapack dgesvd"},
   {"zheev", py_phonopy_zheev, METH_VARARGS, "Lapack zheev wrapper"},
   {NULL, NULL, 0, NULL}
@@ -239,11 +241,11 @@ static PyObject * py_set_phonons_at_gridpoints(PyObject *self, PyObject *args)
 }
 
 
-static PyObject * py_get_phonon(PyObject *self, PyObject *args)
+static PyObject * py_get_phonons_at_qpoints(PyObject *self, PyObject *args)
 {
   PyArrayObject* frequencies_py;
   PyArrayObject* eigenvectors_py;
-  PyArrayObject* q_py;
+  PyArrayObject* qpoints_py;
   PyArrayObject* shortest_vectors_py;
   PyArrayObject* multiplicity_py;
   PyArrayObject* fc2_py;
@@ -257,10 +259,18 @@ static PyObject * py_get_phonon(PyObject *self, PyObject *args)
   double nac_factor, unit_conversion_factor;
   char uplo;
 
+  if (sizeof(lapack_complex_double) != sizeof(npy_complex128)) {
+    printf("***********************************************************\n");
+    printf("* sizeof(lapack_complex_double) != sizeof(npy_complex128) *\n");
+    printf("* Please report this problem to atz.togo@gmail.com        *\n");
+    printf("***********************************************************\n");
+    return NULL;
+  }
+
   if (!PyArg_ParseTuple(args, "OOOOOOOOOdOOOOdc",
 			&frequencies_py,
 			&eigenvectors_py,
-			&q_py,
+			&qpoints_py,
 			&fc2_py,
 			&shortest_vectors_py,
 			&multiplicity_py,
@@ -277,15 +287,16 @@ static PyObject * py_get_phonon(PyObject *self, PyObject *args)
     return NULL;
   }
 
+  int i;
   double* born;
   double* dielectric;
   double *q_dir;
   double* freqs = (double*)frequencies_py->data;
-  /* npy_cdouble and lapack_complex_double may not be compatible. */
-  /* So eigenvectors should not be used in Python side */
+  const int num_band = PyArray_DIMS(frequencies_py)[1];
   lapack_complex_double* eigvecs =
     (lapack_complex_double*)eigenvectors_py->data;
-  const double* q = (double*) q_py->data;
+  double (*qpoints)[3] = (double(*)[3]) qpoints_py->data;
+  const int num_q = PyArray_DIMS(qpoints_py)[0];
   Darray* fc2 = convert_to_darray(fc2_py);
   Darray* svecs = convert_to_darray(shortest_vectors_py);
   Iarray* multi = convert_to_iarray(multiplicity_py);
@@ -310,22 +321,25 @@ static PyObject * py_get_phonon(PyObject *self, PyObject *args)
     q_dir = (double*)q_direction_py->data;
   }
 
-  get_phonons(eigvecs,
-	      freqs,
-	      q,
-	      fc2,
-	      masses,
-	      p2s,
-	      s2p,
-	      multi,
-	      svecs,
-	      born,
-	      dielectric,
-	      rec_lat,
-	      q_dir,
-	      nac_factor,
-	      unit_conversion_factor,
-	      uplo);
+#pragma omp parallel for
+  for (i = 0; i < num_q; i++) {
+    get_phonons(eigvecs + num_band * num_band * i,
+		freqs + num_band * i,
+		qpoints[i],
+		fc2,
+		masses,
+		p2s,
+		s2p,
+		multi,
+		svecs,
+		born,
+		dielectric,
+		rec_lat,
+		q_dir,
+		nac_factor,
+		unit_conversion_factor,
+		uplo);
+  }
 
   free(fc2);
   free(svecs);

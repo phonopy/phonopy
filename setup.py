@@ -12,12 +12,13 @@ sources_phonopy = ['c/_phonopy.c',
                    'c/harmonic/derivative_dynmat.c',
                    'c/kspclib/kgrid.c',
                    'c/kspclib/tetrahedron_method.c']
-extra_compile_args_phonopy = []
-extra_link_args_phonopy = []
 
-## Uncomment below if openmp multithreading is to be used.
-# extra_compile_args_phonopy += ['-fopenmp',]
-# extra_link_args_phonopy += ['-lgomp',]
+if __name__ == '__main__':
+    extra_compile_args_phonopy = []
+    extra_link_args_phonopy = []
+else:
+    extra_compile_args_phonopy = ['-fopenmp',]
+    extra_link_args_phonopy = ['-lgomp',]
 
 extension_phonopy = Extension(
     'phonopy._phonopy',
@@ -34,8 +35,8 @@ if __name__ == '__main__':
     extra_compile_args_spglib=[]
     extra_link_args_spglib=[]
 else:
-    extra_compile_args_spglib=['-fopenmp']
-    extra_link_args_spglib=['-lgomp']
+    extra_compile_args_spglib=['-fopenmp',]
+    extra_link_args_spglib=['-lgomp',]
 
 extension_spglib = Extension(
     'phonopy._spglib',

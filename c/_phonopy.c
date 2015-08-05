@@ -409,8 +409,8 @@ static PyObject * py_get_thermal_properties(PyObject *self, PyObject *args)
   double heat_capacity = 0;
   double omega = 0;
 
+#pragma omp parallel for private(j, omega) reduction(+:free_energy, entropy, heat_capacity)
   for (i = 0; i < num_qpoints; i++){
-    sum_weights += w[i];
     for (j = 0; j < num_bands; j++){
       omega = freqs[i * num_bands + j];
       if (omega > 0.0) {
@@ -419,6 +419,11 @@ static PyObject * py_get_thermal_properties(PyObject *self, PyObject *args)
 	heat_capacity += get_heat_capacity_omega(temperature, omega)* w[i];
       }
     }
+  }
+
+#pragma omp parallel for reduction(+:sum_weights)
+  for (i = 0; i < num_qpoints; i++){
+    sum_weights += w[i];
   }
 
   return PyTuple_Pack(3,
@@ -523,7 +528,6 @@ static int distribute_fc2(double * fc2,
   int is_found, rot_atom;
   double rot_pos[3], diff[3];
 
-#pragma omp parallel for private(j, k, l, m, rot_pos, diff, is_found, rot_atom, address_new, address)
   for (i = 0; i < num_pos; i++) {
     for (j = 0; j < 3; j++) {
       rot_pos[j] = t[j];

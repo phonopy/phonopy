@@ -56,14 +56,23 @@ def get_qpoints(mesh_numbers,
 
     return gp.get_ir_qpoints(), gp.get_ir_grid_weights()
     
+# def extract_ir_grid_points(grid_mapping_table):
+#     ir_gp = []
+#     weights = np.zeros_like(grid_mapping_table)
+#     for i, gp in enumerate(grid_mapping_table):
+#         if i == gp:
+#             ir_gp.append(i)
+#         weights[gp]  += 1
+#     ir_grid_points = np.array(ir_gp, dtype='intc')
+#     ir_weights = np.array(weights[ir_grid_points], dtype='intc')
+    
+#     return ir_grid_points, ir_weights
+
 def extract_ir_grid_points(grid_mapping_table):
-    ir_gp = []
+    ir_grid_points = np.array(np.unique(grid_mapping_table), dtype='intc')
     weights = np.zeros_like(grid_mapping_table)
     for i, gp in enumerate(grid_mapping_table):
-        if i == gp:
-            ir_gp.append(i)
         weights[gp]  += 1
-    ir_grid_points = np.array(ir_gp, dtype='intc')
     ir_weights = np.array(weights[ir_grid_points], dtype='intc')
     
     return ir_grid_points, ir_weights
@@ -188,8 +197,10 @@ class GridPoints:
                 is_shift=self._is_shift)[0][:np.prod(self._mesh)]
         else:
             self._grid_address = grid_address
+
         (self._ir_grid_points,
          self._ir_weights) = extract_ir_grid_points(grid_mapping_table)
+
         self._ir_qpoints = np.array(
             (self._grid_address[self._ir_grid_points] + shift) / self._mesh,
             dtype='double', order='C')
