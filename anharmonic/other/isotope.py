@@ -1,5 +1,5 @@
 import numpy as np
-from anharmonic.other.phonon import set_phonon_c, set_phonon_py
+from phonopy.phonon.solver import set_phonon_c, set_phonon_py
 from anharmonic.phonon3.triplets import get_bz_grid_address, gaussian
 from phonopy.harmonic.dynamical_matrix import get_dynamical_matrix
 from phonopy.structure.tetrahedron_method import TetrahedronMethod

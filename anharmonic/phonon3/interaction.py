@@ -1,5 +1,5 @@
 import numpy as np
-from anharmonic.other.phonon import set_phonon_c, set_phonon_py
+from phonopy.phonon.solver import set_phonon_c, set_phonon_py
 from phonopy.harmonic.dynamical_matrix import get_smallest_vectors, get_dynamical_matrix
 from phonopy.units import VaspToTHz, Hbar, EV, Angstrom, THz, AMU, PlanckConstant
 from anharmonic.phonon3.real_to_reciprocal import RealToReciprocal
