@@ -183,31 +183,31 @@ static PyObject * py_set_phonons_at_gridpoints(PyObject *self, PyObject *args)
   /* npy_cdouble and lapack_complex_double may not be compatible. */
   /* So eigenvectors should not be used in Python side */
   Carray* eigvecs = convert_to_carray(eigenvectors);
-  char* phonon_done = (char*)phonon_done_py->data;
+  char* phonon_done = (char*)PyArray_DATA(phonon_done_py);
   Iarray* grid_points = convert_to_iarray(grid_points_py);
-  const int* grid_address = (int*)grid_address_py->data;
-  const int* mesh = (int*)mesh_py->data;
+  const int* grid_address = (int*)PyArray_DATA(grid_address_py);
+  const int* mesh = (int*)PyArray_DATA(mesh_py);
   Darray* fc2 = convert_to_darray(fc2_py);
   Darray* svecs_fc2 = convert_to_darray(shortest_vectors_fc2);
   Iarray* multi_fc2 = convert_to_iarray(multiplicity_fc2);
-  const double* masses_fc2 = (double*)atomic_masses_fc2->data;
-  const int* p2s_fc2 = (int*)p2s_map_fc2->data;
-  const int* s2p_fc2 = (int*)s2p_map_fc2->data;
-  const double* rec_lat = (double*)reciprocal_lattice->data;
+  const double* masses_fc2 = (double*)PyArray_DATA(atomic_masses_fc2);
+  const int* p2s_fc2 = (int*)PyArray_DATA(p2s_map_fc2);
+  const int* s2p_fc2 = (int*)PyArray_DATA(s2p_map_fc2);
+  const double* rec_lat = (double*)PyArray_DATA(reciprocal_lattice);
   if ((PyObject*)born_effective_charge == Py_None) {
     born = NULL;
   } else {
-    born = (double*)born_effective_charge->data;
+    born = (double*)PyArray_DATA(born_effective_charge);
   }
   if ((PyObject*)dielectric_constant == Py_None) {
     dielectric = NULL;
   } else {
-    dielectric = (double*)dielectric_constant->data;
+    dielectric = (double*)PyArray_DATA(dielectric_constant);
   }
   if ((PyObject*)q_direction == Py_None) {
     q_dir = NULL;
   } else {
-    q_dir = (double*)q_direction->data;
+    q_dir = (double*)PyArray_DATA(q_direction);
   }
 
   set_phonons_at_gridpoints(freqs,
@@ -291,34 +291,34 @@ static PyObject * py_get_phonons_at_qpoints(PyObject *self, PyObject *args)
   double* born;
   double* dielectric;
   double *q_dir;
-  double* freqs = (double*)frequencies_py->data;
+  double* freqs = (double*)PyArray_DATA(frequencies_py);
   const int num_band = PyArray_DIMS(frequencies_py)[1];
   lapack_complex_double* eigvecs =
-    (lapack_complex_double*)eigenvectors_py->data;
-  double (*qpoints)[3] = (double(*)[3]) qpoints_py->data;
+    (lapack_complex_double*)PyArray_DATA(eigenvectors_py);
+  double (*qpoints)[3] = (double(*)[3])PyArray_DATA(qpoints_py);
   const int num_q = PyArray_DIMS(qpoints_py)[0];
   Darray* fc2 = convert_to_darray(fc2_py);
   Darray* svecs = convert_to_darray(shortest_vectors_py);
   Iarray* multi = convert_to_iarray(multiplicity_py);
-  const double* masses = (double*)atomic_masses_py->data;
-  const int* p2s = (int*)p2s_map_py->data;
-  const int* s2p = (int*)s2p_map_py->data;
-  const double* rec_lat = (double*)reciprocal_lattice_py->data;
+  const double* masses = (double*)PyArray_DATA(atomic_masses_py);
+  const int* p2s = (int*)PyArray_DATA(p2s_map_py);
+  const int* s2p = (int*)PyArray_DATA(s2p_map_py);
+  const double* rec_lat = (double*)PyArray_DATA(reciprocal_lattice_py);
 
   if ((PyObject*)born_effective_charge_py == Py_None) {
     born = NULL;
   } else {
-    born = (double*)born_effective_charge_py->data;
+    born = (double*)PyArray_DATA(born_effective_charge_py);
   }
   if ((PyObject*)dielectric_constant_py == Py_None) {
     dielectric = NULL;
   } else {
-    dielectric = (double*)dielectric_constant_py->data;
+    dielectric = (double*)PyArray_DATA(dielectric_constant_py);
   }
   if ((PyObject*)q_direction_py == Py_None) {
     q_dir = NULL;
   } else {
-    q_dir = (double*)q_direction_py->data;
+    q_dir = (double*)PyArray_DATA(q_direction_py);
   }
 
 #pragma omp parallel for
