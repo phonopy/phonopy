@@ -47,13 +47,15 @@ class Mesh:
                  is_gamma_center=False,
                  group_velocity=None,
                  rotations=None, # Point group operations in real space
-                 factor=VaspToTHz):
+                 factor=VaspToTHz,
+                 use_lapack_solver=False):
 
         self._mesh = np.array(mesh, dtype='intc')
         self._is_eigenvectors = is_eigenvectors
         self._factor = factor
         self._cell = dynamical_matrix.get_primitive()
         self._dynamical_matrix = dynamical_matrix
+        self._use_lapack_solver = use_lapack_solver
 
         self._gp = GridPoints(self._mesh,
                               np.linalg.inv(self._cell.get_cell()),
@@ -117,6 +119,17 @@ class Mesh:
         """
         return self._eigenvectors
 
+    def write_hdf5(self):
+        import h5py
+        w = h5py.File('mesh.hdf5', 'w')
+        w.create_dataset('mesh', data=self._mesh)
+        w.create_dataset('qpoint', data=self._qpoints)
+        w.create_dataset('weight', data=self._weights)
+        w.create_dataset('frequency', data=self._frequencies)
+        w.create_dataset('eigenvector', data=self._eigenvectors)
+        if self._group_velocities is not None:
+            w.create_dataset('group_velocity', data=self._group_velocities)
+        w.close()
 
     def write_yaml(self):
         w = open('mesh.yaml', 'w')
@@ -137,13 +150,9 @@ class Mesh:
             w.write("  weight: %-5d\n" % self._weights[i])
             w.write("  band:\n")
 
-            for j, eig in enumerate(eigenvalues[i]):
-                w.write("  - # %d\n" % (j+1))
-                if eig < 0:
-                    freq = -np.sqrt(-eig)
-                else:
-                    freq = np.sqrt(eig)
-                w.write("    frequency:  %15.10f\n" % (freq * self._factor))
+            for j, freq in enumerate(self._frequencies[i]):
+                w.write("  - # %d\n" % (j + 1))
+                w.write("    frequency:  %15.10f\n" % freq)
 
                 if self._group_velocities is not None:
                     w.write("    group_velocity: ")
@@ -160,17 +169,18 @@ class Mesh:
                                      self._eigenvectors[i,k*3+l,j].imag))
             w.write("\n")
 
-    def _set_phonon(self, lang='Py'):
+    def _set_phonon(self):
         num_band = self._cell.get_number_of_atoms() * 3
         num_qpoints = len(self._qpoints)
 
         self._eigenvalues = np.zeros((num_qpoints, num_band), dtype='double')
         self._frequencies = np.zeros_like(self._eigenvalues)
-        if self._is_eigenvectors or lang == 'C':
+        if self._is_eigenvectors or self._use_lapack_solver:
             self._eigenvectors = np.zeros(
                 (num_qpoints, num_band, num_band,), dtype='complex128')
 
-        if lang == 'C':
+        if self._use_lapack_solver:
+            print "lapack solver"
             from phonopy.phonon.solver import get_phonons_at_qpoints
             get_phonons_at_qpoints(self._frequencies,
                                    self._eigenvectors,
@@ -183,6 +193,9 @@ class Mesh:
                                          np.sign(self._frequencies),
                                          dtype='double',
                                          order='C') / self._factor ** 2
+            if not self._is_eigenvectors:
+                self._eigenvalues = None
+            print "lapack solver done"
         else:
             for i, q in enumerate(self._qpoints):
                 self._dynamical_matrix.set_dynamical_matrix(q)
