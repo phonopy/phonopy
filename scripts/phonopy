@@ -170,6 +170,8 @@ def print_settings(settings):
     if settings.get_fc_symmetry_iteration() > 0:
         print ("  Force constants symmetrization: %d times" %
                settings.get_fc_symmetry_iteration())
+    if settings.get_lapack_solver():
+        print "  Use Lapack solver via Lapacke: on"
     if run_mode == 'mesh' or run_mode == 'band_mesh':
         print "  Sampling mesh: ", np.array(settings.get_mesh()[0])
 
@@ -237,6 +239,7 @@ parser.set_defaults(
     is_projected_thermal_properties=False,
     is_trigonal_displacements=False,
     is_wien2k_p1=False,
+    lapack_solver=False,
     loglevel=None,
     masses=None,
     mesh_numbers=None,
@@ -280,9 +283,6 @@ parser.add_option("--bi", "--band_indices", dest="band_indices", type="string",
 parser.add_option("-c", "--cell", dest="cell_filename",
                   action="store", type="string",
                   help="Read unit cell", metavar="FILE")
-parser.add_option("--irreps", "--irreps_qpoint", dest="irreps_qpoint",
-                  action="store", type="string",
-                  help="A q-point where characters of irreps are calculated")
 parser.add_option("--cutoff_freq", "--cutoff_frequency",
                   dest="cutoff_frequency", type="float",
                   help="Thermal properties are not calculated below this cutoff frequency.")
@@ -338,8 +338,13 @@ parser.add_option("--gv_delta_q", dest="gv_delta_q", type="float",
                   help="Delta-q distance used for group velocity calculation")
 parser.add_option("--hdf5", dest="is_hdf5", action="store_true",
                   help="Use hdf5 for force constants")
-parser.add_option("--legend", dest="is_legend",
-                  action="store_true",
+parser.add_option("--irreps", "--irreps_qpoint", dest="irreps_qpoint",
+                  action="store", type="string",
+                  help="A q-point where characters of irreps are calculated")
+parser.add_option("--lapack_solver", dest="lapack_solver", action="store_true",
+                  help=("Use Lapack via Lapacke for solving phonons. This option"
+                        " can be used only when phonopy is compiled specially."))
+parser.add_option("--legend", dest="is_legend", action="store_true",
                   help="Legend of plots is shown in thermal displacements")
 parser.add_option("--lcg", "--little_cogroup", dest="is_little_cogroup",
                   action="store_true",
@@ -681,7 +686,7 @@ else: # Read FORCE_CONSTANTS or FORCE_SETS
             sys.exit(1)
         else:
             file_exists("FORCE_SETS", log_level)
-            
+
     phonon = Phonopy(unitcell,
                      settings.get_supercell_matrix(),
                      primitive_matrix=settings.get_primitive_matrix(),
@@ -691,6 +696,7 @@ else: # Read FORCE_CONSTANTS or FORCE_SETS
                      force_constants_decimals=settings.get_fc_decimals(),
                      symprec=options.symprec,
                      is_symmetry=settings.get_is_symmetry(),
+                     use_lapack_solver=settings.get_lapack_solver(),
                      log_level=log_level)
     
 supercell = phonon.get_supercell()
@@ -930,7 +936,10 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
             else:
                 print "Number of q-points on sampling mesh:", weights.shape[0]
     
-        phonon.write_yaml_mesh()
+        if settings.get_is_hdf5():
+            phonon.write_hdf5_mesh()
+        else:
+            phonon.write_yaml_mesh()
     
         # Thermal property
         if settings.get_is_thermal_properties():

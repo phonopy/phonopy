@@ -51,6 +51,8 @@ class Settings:
         self._cutoff_frequency = None
         self._displacement_distance = None
         self._dm_decimals = None
+        self._fc_decimals = None
+        self._fc_symmetry_iteration = 0
         self._gv_delta_q = None
         self._is_diagonal_displacement = True
         self._is_eigenvectors = False
@@ -63,8 +65,6 @@ class Settings:
         self._is_time_reversal_symmetry = True
         self._is_translational_symmetry = False
         self._is_trigonal_displacement = False
-        self._fc_decimals = None
-        self._fc_symmetry_iteration = 0
         self._magmoms = None
         self._masses = None
         self._mesh = None
@@ -879,6 +879,7 @@ class PhonopySettings(Settings):
         self._is_thermal_distances = False
         self._is_thermal_properties = False
         self._is_projected_thermal_properties = False
+        self._lapack_solver = False
         self._modulation = None
         self._pdos_indices = None
         self._projection_direction = None
@@ -1047,6 +1048,12 @@ class PhonopySettings(Settings):
 
     def get_is_thermal_properties(self):
         return self._is_thermal_properties
+
+    def set_lapack_solver(self, lapack_solver):
+        self._lapack_solver = lapack_solver
+
+    def get_lapack_solver(self):
+        return self._lapack_solver
 
     def set_mesh(self,
                  mesh,
@@ -1245,6 +1252,10 @@ class PhonopyConfParser(ConfParser):
                 if self._options.is_check_symmetry: # Dummy 'dim' setting for sym-check
                     self._confs['dim'] = '1 1 1'
 
+            if opt.dest == 'lapack_solver':
+                if self._options.lapack_solver:
+                    self._confs['lapack_solver'] = '.true.'
+
     def _parse_conf(self):
         confs = self._confs
 
@@ -1401,6 +1412,11 @@ class PhonopyConfParser(ConfParser):
             # Group velocity
             if conf_key == 'group_velocity':
                 self.set_parameter('is_group_velocity', confs['group_velocity'])
+
+            # Use Lapack solver via Lapacke
+            if conf_key == 'lapack_solver':
+                if confs['lapack_solver'] == '.true.':
+                    self.set_parameter('lapack_solver', True)
 
     def _parse_conf_modulation(self, confs):
         modulation = {}
@@ -1637,3 +1653,7 @@ class PhonopyConfParser(ConfParser):
             if params['is_group_velocity'] == '.true.':
                 self._settings.set_is_group_velocity(True)
 
+        # Use Lapack solver via Lapacke
+        if params.has_key('lapack_solver'):
+            self._settings.set_lapack_solver(params['lapack_solver'])
+    

@@ -70,12 +70,14 @@ class Phonopy:
                  force_constants_decimals=None,
                  symprec=1e-5,
                  is_symmetry=True,
+                 use_lapack_solver=False,
                  log_level=0):
         self._symprec = symprec
         self._distance = distance
         self._factor = factor
         self._is_auto_displacements = is_auto_displacements
         self._is_symmetry = is_symmetry
+        self._use_lapack_solver = use_lapack_solver
         self._log_level = log_level
 
         # Create supercell and primitive cell
@@ -508,13 +510,17 @@ class Phonopy:
             is_gamma_center=is_gamma_center,
             group_velocity=self._group_velocity,
             rotations=self._primitive_symmetry.get_pointgroup_operations(),
-            factor=self._factor)
+            factor=self._factor,
+            use_lapack_solver=self._use_lapack_solver)
 
     def get_mesh(self):
         return (self._mesh.get_qpoints(),
                 self._mesh.get_weights(),
                 self._mesh.get_frequencies(),
                 self._mesh.get_eigenvectors())
+
+    def write_hdf5_mesh(self):
+        self._mesh.write_hdf5()
 
     def write_yaml_mesh(self):
         self._mesh.write_yaml()
