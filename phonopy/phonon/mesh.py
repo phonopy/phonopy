@@ -180,7 +180,6 @@ class Mesh:
                 (num_qpoints, num_band, num_band,), dtype='complex128')
 
         if self._use_lapack_solver:
-            print "lapack solver"
             from phonopy.phonon.solver import get_phonons_at_qpoints
             get_phonons_at_qpoints(self._frequencies,
                                    self._eigenvectors,
@@ -195,7 +194,6 @@ class Mesh:
                                          order='C') / self._factor ** 2
             if not self._is_eigenvectors:
                 self._eigenvalues = None
-            print "lapack solver done"
         else:
             for i, q in enumerate(self._qpoints):
                 self._dynamical_matrix.set_dynamical_matrix(q)
