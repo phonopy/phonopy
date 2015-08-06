@@ -57,15 +57,16 @@ static int distribute_fc2(double * fc2,
 			  const int * r,
 			  const double * t,
 			  const double symprec);
-static PyObject * py_get_neighboring_grid_points(PyObject *self, PyObject *args);
+static PyObject * py_thm_neighboring_grid_points(PyObject *self, PyObject *args);
 static PyObject *
-py_get_tetrahedra_relative_grid_address(PyObject *self, PyObject *args);
+py_thm_relative_grid_address(PyObject *self, PyObject *args);
 static PyObject *
-py_get_all_tetrahedra_relative_grid_address(PyObject *self, PyObject *args);
+py_thm_all_relative_grid_address(PyObject *self, PyObject *args);
 static PyObject *
-py_get_tetrahedra_integration_weight(PyObject *self, PyObject *args);
+py_thm_integration_weight(PyObject *self, PyObject *args);
 static PyObject *
-py_get_tetrahedra_integration_weight_at_omegas(PyObject *self, PyObject *args);
+py_thm_integration_weight_at_omegas(PyObject *self, PyObject *args);
+static PyObject * py_run_tetrahedron_method(PyObject *self, PyObject *args);
 
 static double get_free_energy_omega(const double temperature,
 				    const double omega);
@@ -101,19 +102,20 @@ static PyMethodDef _phonopy_methods[] = {
   {"derivative_dynmat", py_get_derivative_dynmat, METH_VARARGS, "Q derivative of dynamical matrix"},
   {"thermal_properties", py_get_thermal_properties, METH_VARARGS, "Thermal properties"},
   {"distribute_fc2", py_distribute_fc2, METH_VARARGS, "Distribute force constants"},
-  {"neighboring_grid_points", py_get_neighboring_grid_points,
+  {"neighboring_grid_points", py_thm_neighboring_grid_points,
    METH_VARARGS, "Neighboring grid points by relative grid addresses"},
-  {"tetrahedra_relative_grid_address", py_get_tetrahedra_relative_grid_address,
+  {"tetrahedra_relative_grid_address", py_thm_relative_grid_address,
    METH_VARARGS, "Relative grid addresses of vertices of 24 tetrahedra"},
   {"all_tetrahedra_relative_grid_address",
-   py_get_all_tetrahedra_relative_grid_address,
-   METH_VARARGS,
+   py_thm_all_relative_grid_address, METH_VARARGS,
    "4 (all) sets of relative grid addresses of vertices of 24 tetrahedra"},
-  {"tetrahedra_integration_weight", py_get_tetrahedra_integration_weight,
+  {"tetrahedra_integration_weight", py_thm_integration_weight,
    METH_VARARGS, "Integration weight for tetrahedron method"},
   {"tetrahedra_integration_weight_at_omegas",
-   py_get_tetrahedra_integration_weight_at_omegas,
+   py_thm_integration_weight_at_omegas,
    METH_VARARGS, "Integration weight for tetrahedron method at omegas"},
+  {"run_tetrahedron_method", py_run_tetrahedron_method,
+   METH_VARARGS, "Run tetrahedron method"},
   {NULL, NULL, 0, NULL}
 };
 
@@ -578,7 +580,7 @@ static int distribute_fc2(double * fc2,
   return is_found;
 }
 
-static PyObject *py_get_neighboring_grid_points(PyObject *self, PyObject *args)
+static PyObject *py_thm_neighboring_grid_points(PyObject *self, PyObject *args)
 {
   PyArrayObject* relative_grid_points_py;
   PyArrayObject* relative_grid_address_py;
@@ -615,7 +617,7 @@ static PyObject *py_get_neighboring_grid_points(PyObject *self, PyObject *args)
 }
 
 static PyObject *
-py_get_tetrahedra_relative_grid_address(PyObject *self, PyObject *args)
+py_thm_relative_grid_address(PyObject *self, PyObject *args)
 {
   PyArrayObject* relative_grid_address_py;
   PyArrayObject* reciprocal_lattice_py;
@@ -637,7 +639,7 @@ py_get_tetrahedra_relative_grid_address(PyObject *self, PyObject *args)
 }
 
 static PyObject *
-py_get_all_tetrahedra_relative_grid_address(PyObject *self, PyObject *args)
+py_thm_all_relative_grid_address(PyObject *self, PyObject *args)
 {
   PyArrayObject* relative_grid_address_py;
 
@@ -655,7 +657,7 @@ py_get_all_tetrahedra_relative_grid_address(PyObject *self, PyObject *args)
 }
 
 static PyObject *
-py_get_tetrahedra_integration_weight(PyObject *self, PyObject *args)
+py_thm_integration_weight(PyObject *self, PyObject *args)
 {
   double omega;
   PyArrayObject* tetrahedra_omegas_py;
@@ -678,7 +680,7 @@ py_get_tetrahedra_integration_weight(PyObject *self, PyObject *args)
 }
 
 static PyObject *
-py_get_tetrahedra_integration_weight_at_omegas(PyObject *self, PyObject *args)
+py_thm_integration_weight_at_omegas(PyObject *self, PyObject *args)
 {
   PyArrayObject* integration_weights_py;
   PyArrayObject* omegas_py;
@@ -703,6 +705,100 @@ py_get_tetrahedra_integration_weight_at_omegas(PyObject *self, PyObject *args)
 				       omegas,
 				       tetrahedra_omegas,
 				       function);
+
+  Py_RETURN_NONE;
+}
+
+static PyObject * py_run_tetrahedron_method(PyObject *self, PyObject *args)
+{
+  PyArrayObject* data_out_py;
+  PyArrayObject* data_in_py;
+  PyArrayObject* freq_points_py;
+  PyArrayObject* frequencies_py;
+  PyArrayObject* weights_py;
+  PyArrayObject* grid_address_py;
+  PyArrayObject* grid_mapping_table_py;
+  PyArrayObject* ir_gridpoints_py;
+  PyArrayObject* relative_grid_address_py;
+  char function;
+  if (!PyArg_ParseTuple(args, "OOOOOOOOOc",
+			&data_out_py,
+			&data_in_py,
+			&freq_points_py,
+			&frequencies_py,
+			&weights_py,
+			&grid_address_py,
+			&grid_mapping_table_py,
+			&ir_gridpoints_py,
+			&relative_grid_address_py,
+			&function)) {
+    return NULL;
+  }
+
+  /* data_out[num_freq_points][num_kind][2] */
+  double (*data_out)[2] = (double(*)[2])PyArray_DATA(data_out_py);
+  /* data_in[num_ir_gp][num_band][num_kind] */
+  const double* data_in = (double*)PyArray_DATA(data_in_py);
+  const int num_kind = (int)PyArray_DIMS(data_in_py)[2];
+  const double* freq_points = (double*)PyArray_DATA(freq_points_py);
+  const int num_freq_points = (int)PyArray_DIMS(frequencies_py)[0];
+  const double* frequencies = (double*)PyArray_DATA(frequencies_py);
+  const int num_band = (int)PyArray_DIMS(frequencies_py)[1];
+  const int* weights = (int*)PyArray_DATA(weights_py);
+  const int (*grid_address)[3] = (int(*)[3])PyArray_DATA(grid_address_py);
+  const in num_gp = (int)PyArray_DIMS()[0];
+  const int* grid_mapping_table = (int*)PyArray_DATA(grid_mapping_table_py);
+  const double* ir_gp = (double*)PyArray_DATA(ir_gridpoints_py);
+  const int num_ir_gp = (int)PyArray_DIMS(ir_gridpoints_py)[0];
+  THMCONST int (*relative_grid_address)[4][3] =
+    (int(*)[4][3])PyArray_DATA(relative_grid_address_py);
+
+  int i, j, k, l, q, r, gp;
+  int g_addr[3];
+  double iw;
+  double tetrahedra[24][4];
+  int *gp_ir_index;
+
+  gp_ir_index = (int*)malloc(sizeof(int) * num_gp);
+
+  j = 0;
+  for (i = 0; i < num_gp; i++) {
+    if (grid_mapping_table[i] == i) {
+      gp_ir_index[i] = j;
+      j++;
+    } else {
+      gp_ir_index[i] = gp_ir_index[grid_mapping_table[i]];
+    }
+  }
+
+  for (i = 0; i < num_freq_points * num_kind; i++) {
+    data_out[i][0] = 0;
+    data_out[i][1] = 0;
+  }
+
+#pragma omp parallel for private(j, k, l, q, r, g_addr, gp, tetrahedra, iw)
+  for (i = 0; i < num_freq_points; i++) {
+    for (j = 0; j < num_ir;  j++) {
+      for (k = 0; k < num_band; k++) {
+	for (l = 0; l < 24; l++) {
+	  for (q = 0; q < 4; q++) {
+	    for (r = 0; r < 3; r++) {
+	      g_addr[r] = grid_address[ir_gp[j]][r] +
+		relative_grid_address[l][q][r];
+	    }
+	    gp = spg_get_grid_point_from_address(g_addr, mesh);
+	    tetrahedra[l][q] = frequency[gp_ir_index[gp] * num_band + k];
+	  }
+	}
+	iw = thm_get_integration_weight(freq_points[i], tetrahedra, 'J');
+	data_out[i][0] += iw * ir_weights[j] / num_gp;
+	iw = thm_get_integration_weight(freq_points[i], tetrahedra, 'I');
+	data_out[i][0] += iw * ir_weights[j] / num_gp;
+      }
+    }
+  }
+
+  free(gp_ir_index);
 
   Py_RETURN_NONE;
 }
