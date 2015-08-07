@@ -37,13 +37,41 @@ import numpy as np
 from phonopy.structure.tetrahedron_method import TetrahedronMethod
 from phonopy.structure.grid_points import extract_ir_grid_points
 
-def get_tetrahedra_frequencies(gp,
-                               mesh,
-                               grid_order,
-                               grid_address,
-                               relative_grid_address,
-                               gp_ir_index,
-                               frequencies):
+def run_tetrahedron_method(data_out,
+                           data_in,
+                           mesh,
+                           frequency_points,
+                           frequencies,
+                           weights,
+                           grid_address,
+                           grid_mapping_table,
+                           ir_grid_points,
+                           relative_grid_address):
+    try:
+        import phonopy._phonopy as phonoc
+    except ImportError:
+        import sys
+        print "Phonopy C-extension has to be built properly."
+        sys.exit(0)
+
+    phonoc.run_tetrahedron_method(data_out,
+                                  data_in,
+                                  np.array(mesh, dtype='intc'),
+                                  frequency_points,
+                                  frequencies,
+                                  weights,
+                                  grid_address,
+                                  grid_mapping_table,
+                                  ir_grid_points,
+                                  relative_grid_address)
+
+def _get_tetrahedra_frequencies(gp,
+                                mesh,
+                                grid_order,
+                                grid_address,
+                                relative_grid_address,
+                                gp_ir_index,
+                                frequencies):
     t_frequencies = np.zeros((frequencies.shape[1], 24, 4), dtype='double')
     for i, t in enumerate(relative_grid_address):
         address = t + grid_address[gp]
@@ -143,7 +171,7 @@ class TetrahedronMesh:
             self._gp_ir_index[i] = ir_gp_indices[gp]
         
     def _set_tetrahedra_frequencies(self, gp):
-        self._tetrahedra_frequencies = get_tetrahedra_frequencies(
+        self._tetrahedra_frequencies = _get_tetrahedra_frequencies(
             gp,
             self._mesh,
             self._grid_order,

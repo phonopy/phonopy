@@ -33,7 +33,12 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
-import phonopy._phonopy as phonoc
+try:
+    import phonopy._phonopy as phonoc
+except ImportError:
+    import sys
+    print "Phonopy C-extension has to be built properly."
+    sys.exit(0)
 
 parallelepiped_vertices = np.array([[0, 0, 0],
                                     [1, 0, 0],

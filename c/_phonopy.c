@@ -37,6 +37,7 @@
 #include <numpy/arrayobject.h>
 #include <dynmat.h>
 #include <derivative_dynmat.h>
+#include <kgrid.h>
 #include <tetrahedron_method.h>
 
 #define KB 8.6173382568083159E-05
@@ -66,6 +67,7 @@ static PyObject *
 py_thm_integration_weight(PyObject *self, PyObject *args);
 static PyObject *
 py_thm_integration_weight_at_omegas(PyObject *self, PyObject *args);
+static PyObject * py_get_tetrahedra_frequenies(PyObject *self, PyObject *args);
 static PyObject * py_run_tetrahedron_method(PyObject *self, PyObject *args);
 
 static double get_free_energy_omega(const double temperature,
@@ -114,6 +116,8 @@ static PyMethodDef _phonopy_methods[] = {
   {"tetrahedra_integration_weight_at_omegas",
    py_thm_integration_weight_at_omegas,
    METH_VARARGS, "Integration weight for tetrahedron method at omegas"},
+  {"get_tetrahedra_frequencies", py_get_tetrahedra_frequenies,
+   METH_VARARGS, "Run tetrahedron method"},
   {"run_tetrahedron_method", py_run_tetrahedron_method,
    METH_VARARGS, "Run tetrahedron method"},
   {NULL, NULL, 0, NULL}
@@ -709,29 +713,91 @@ py_thm_integration_weight_at_omegas(PyObject *self, PyObject *args)
   Py_RETURN_NONE;
 }
 
+static PyObject * py_get_tetrahedra_frequenies(PyObject *self, PyObject *args)
+{
+  PyArrayObject* freq_tetras_py;
+  PyArrayObject* grid_points_py;
+  PyArrayObject* mesh_py;
+  PyArrayObject* grid_address_py;
+  PyArrayObject* gp_ir_index_py;
+  PyArrayObject* relative_grid_address_py;
+  PyArrayObject* frequencies_py;
+
+  if (!PyArg_ParseTuple(args, "OOOOOOO",
+			&freq_tetras_py,
+			&grid_points_py,
+			&mesh_py,
+			&grid_address_py,
+			&gp_ir_index_py,
+			&relative_grid_address_py,
+			&frequencies_py)) {
+    return NULL;
+  }
+
+  double* freq_tetras = (double*)PyArray_DATA(freq_tetras_py);
+  const int* grid_points = (int*)PyArray_DATA(grid_points_py);
+  const int num_gp_in = (int)PyArray_DIMS(grid_points_py)[0];
+  const int* mesh = (int*)PyArray_DATA(mesh_py);
+  THMCONST int (*grid_address)[3] = (int(*)[3])PyArray_DATA(grid_address_py);
+  const int* gp_ir_index = (int*)PyArray_DATA(gp_ir_index_py);
+  THMCONST int (*relative_grid_address)[4][3] =
+    (int(*)[4][3])PyArray_DATA(relative_grid_address_py);
+  const double* frequencies = (double*)PyArray_DATA(frequencies_py);
+  const int num_band = (int)PyArray_DIMS(frequencies_py)[1];
+  const int is_shift[3] = {0, 0, 0};
+
+  int i, j, k, l, q, gp;
+  int g_addr[3];
+  int address_double[3];
+
+#pragma omp parallel for private(j, k, l, q, g_addr, gp, address_double)
+  for (i = 0; i < num_gp_in;  i++) {
+    for (j = 0; j < num_band; j++) {
+      for (k = 0; k < 24; k++) {
+	for (l = 0; l < 4; l++) {
+	  for (q = 0; q < 3; q++) {
+	    g_addr[q] = grid_address[grid_points[i]][q] +
+	      relative_grid_address[k][l][q];
+	  }
+	  kgd_get_grid_address_double_mesh(address_double,
+					   g_addr,
+					   mesh,
+					   is_shift);
+	  gp = kgd_get_grid_point_double_mesh(address_double, mesh);
+	  freq_tetras[i * num_band * 96 + j * 96 + k * 4 + l] =
+	    frequencies[gp_ir_index[gp] * num_band + j];
+	}
+      }
+    }
+  }
+
+  Py_RETURN_NONE;
+}
+
 static PyObject * py_run_tetrahedron_method(PyObject *self, PyObject *args)
 {
   PyArrayObject* data_out_py;
   PyArrayObject* data_in_py;
+  PyArrayObject* mesh_py;
   PyArrayObject* freq_points_py;
   PyArrayObject* frequencies_py;
   PyArrayObject* weights_py;
   PyArrayObject* grid_address_py;
   PyArrayObject* grid_mapping_table_py;
-  PyArrayObject* ir_gridpoints_py;
+  PyArrayObject* ir_grid_points_py;
   PyArrayObject* relative_grid_address_py;
-  char function;
-  if (!PyArg_ParseTuple(args, "OOOOOOOOOc",
+
+  if (!PyArg_ParseTuple(args, "OOOOOOOOOO",
 			&data_out_py,
 			&data_in_py,
+			&mesh_py,
 			&freq_points_py,
 			&frequencies_py,
 			&weights_py,
 			&grid_address_py,
 			&grid_mapping_table_py,
-			&ir_gridpoints_py,
-			&relative_grid_address_py,
-			&function)) {
+			&ir_grid_points_py,
+			&relative_grid_address_py)) {
     return NULL;
   }
 
@@ -739,25 +805,29 @@ static PyObject * py_run_tetrahedron_method(PyObject *self, PyObject *args)
   double (*data_out)[2] = (double(*)[2])PyArray_DATA(data_out_py);
   /* data_in[num_ir_gp][num_band][num_kind] */
   const double* data_in = (double*)PyArray_DATA(data_in_py);
+  const int* mesh = (int*)PyArray_DATA(mesh_py);
   const int num_kind = (int)PyArray_DIMS(data_in_py)[2];
   const double* freq_points = (double*)PyArray_DATA(freq_points_py);
   const int num_freq_points = (int)PyArray_DIMS(frequencies_py)[0];
   const double* frequencies = (double*)PyArray_DATA(frequencies_py);
   const int num_band = (int)PyArray_DIMS(frequencies_py)[1];
   const int* weights = (int*)PyArray_DATA(weights_py);
-  const int (*grid_address)[3] = (int(*)[3])PyArray_DATA(grid_address_py);
-  const in num_gp = (int)PyArray_DIMS()[0];
+  THMCONST int (*grid_address)[3] = (int(*)[3])PyArray_DATA(grid_address_py);
+  const int num_gp = (int)PyArray_DIMS(grid_address_py)[0];
   const int* grid_mapping_table = (int*)PyArray_DATA(grid_mapping_table_py);
-  const double* ir_gp = (double*)PyArray_DATA(ir_gridpoints_py);
-  const int num_ir_gp = (int)PyArray_DIMS(ir_gridpoints_py)[0];
+  const int* ir_gp = (int*)PyArray_DATA(ir_grid_points_py);
+  const int num_ir_gp = (int)PyArray_DIMS(ir_grid_points_py)[0];
   THMCONST int (*relative_grid_address)[4][3] =
     (int(*)[4][3])PyArray_DATA(relative_grid_address_py);
+  const int is_shift[3] = {0, 0, 0};
 
   int i, j, k, l, q, r, gp;
   int g_addr[3];
   double iw;
   double tetrahedra[24][4];
   int *gp_ir_index;
+  int address_double[3];
+  int data_adrs;
 
   gp_ir_index = (int*)malloc(sizeof(int) * num_gp);
 
@@ -776,9 +846,9 @@ static PyObject * py_run_tetrahedron_method(PyObject *self, PyObject *args)
     data_out[i][1] = 0;
   }
 
-#pragma omp parallel for private(j, k, l, q, r, g_addr, gp, tetrahedra, iw)
+#pragma omp parallel for private(j, k, l, q, r, g_addr, gp, tetrahedra, iw, address_double)
   for (i = 0; i < num_freq_points; i++) {
-    for (j = 0; j < num_ir;  j++) {
+    for (j = 0; j < num_ir_gp;  j++) {
       for (k = 0; k < num_band; k++) {
 	for (l = 0; l < 24; l++) {
 	  for (q = 0; q < 4; q++) {
@@ -786,14 +856,21 @@ static PyObject * py_run_tetrahedron_method(PyObject *self, PyObject *args)
 	      g_addr[r] = grid_address[ir_gp[j]][r] +
 		relative_grid_address[l][q][r];
 	    }
-	    gp = spg_get_grid_point_from_address(g_addr, mesh);
-	    tetrahedra[l][q] = frequency[gp_ir_index[gp] * num_band + k];
+	    kgd_get_grid_address_double_mesh(address_double,
+					     g_addr,
+					     mesh,
+					     is_shift);
+	    gp = kgd_get_grid_point_double_mesh(address_double, mesh);
+	    tetrahedra[l][q] = frequencies[gp_ir_index[gp] * num_band + k];
 	  }
 	}
-	iw = thm_get_integration_weight(freq_points[i], tetrahedra, 'J');
-	data_out[i][0] += iw * ir_weights[j] / num_gp;
-	iw = thm_get_integration_weight(freq_points[i], tetrahedra, 'I');
-	data_out[i][0] += iw * ir_weights[j] / num_gp;
+	data_adrs = j * num_band * num_kind + k * num_kind;
+	for (l = 0; l < num_kind; i++) {
+	  iw = thm_get_integration_weight(freq_points[i], tetrahedra, 'J');
+	  data_out[i][0] += iw * weights[j] * data_in[data_adrs + l] / num_gp;
+	  iw = thm_get_integration_weight(freq_points[i], tetrahedra, 'I');
+	  data_out[i][1] += iw * weights[j] * data_in[data_adrs + l] / num_gp;
+	}
       }
     }
   }
