@@ -740,34 +740,30 @@ static PyObject * py_get_tetrahedra_frequenies(PyObject *self, PyObject *args)
   const int* mesh = (int*)PyArray_DATA(mesh_py);
   THMCONST int (*grid_address)[3] = (int(*)[3])PyArray_DATA(grid_address_py);
   const int* gp_ir_index = (int*)PyArray_DATA(gp_ir_index_py);
-  THMCONST int (*relative_grid_address)[4][3] =
-    (int(*)[4][3])PyArray_DATA(relative_grid_address_py);
+  THMCONST int (*relative_grid_address)[3] =
+    (int(*)[3])PyArray_DATA(relative_grid_address_py);
   const double* frequencies = (double*)PyArray_DATA(frequencies_py);
   const int num_band = (int)PyArray_DIMS(frequencies_py)[1];
   const int is_shift[3] = {0, 0, 0};
 
-  int i, j, k, l, q, gp;
+  int i, j, k, gp;
   int g_addr[3];
   int address_double[3];
 
-#pragma omp parallel for private(j, k, l, q, g_addr, gp, address_double)
   for (i = 0; i < num_gp_in;  i++) {
-    for (j = 0; j < num_band; j++) {
-      for (k = 0; k < 24; k++) {
-	for (l = 0; l < 4; l++) {
-	  for (q = 0; q < 3; q++) {
-	    g_addr[q] = grid_address[grid_points[i]][q] +
-	      relative_grid_address[k][l][q];
-	  }
-	  kgd_get_grid_address_double_mesh(address_double,
-					   g_addr,
-					   mesh,
-					   is_shift);
-	  gp = kgd_get_grid_point_double_mesh(address_double, mesh);
-	  freq_tetras[i * num_band * 96 + j * 96 + k * 4 + l] =
-	    frequencies[gp_ir_index[gp] * num_band + j];
-	}
+#pragma omp parallel for private(k, g_addr, gp, address_double)
+    for (j = 0; j < num_band * 96; j++) {
+      for (k = 0; k < 3; k++) {
+	g_addr[k] = grid_address[grid_points[i]][k] +
+	  relative_grid_address[j % 96][k];
       }
+      kgd_get_grid_address_double_mesh(address_double,
+				       g_addr,
+				       mesh,
+				       is_shift);
+      gp = kgd_get_grid_point_double_mesh(address_double, mesh);
+      freq_tetras[i * num_band * 96 + j] =
+	frequencies[gp_ir_index[gp] * num_band + j / 96];
     }
   }
 
