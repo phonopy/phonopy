@@ -44,14 +44,13 @@ class KappaDOS:
         num_freqs = len(self._frequency_points)
         thm = self._tetrahedron_mesh
         for j, value in enumerate(('J', 'I')):
-            thm.set(value=value,
-                    frequency_points=self._frequency_points)
-            for i, iw in enumerate(thm): 
-                for k in range(num_freqs):
-                    for l in range(len(self._mode_kappa)): # at temperatures
-                        mk = self._mode_kappa[l, i]
-                        for ib in range(self._mode_kappa.shape[2]):
-                            self._kdos[l, k, j] += iw[k, ib] * mk[ib]
+            thm.set(value=value, frequency_points=self._frequency_points)
+            for i, iw in enumerate(thm):
+                # kdos[temp, freq_points, IJ, tensor_elem]
+                # iw[freq_points, band]
+                # mode_kappa[temp, ir_gp, band, tensor_elem]
+                self._kdos[:, :, j] += np.transpose(
+                    np.dot(iw, self._mode_kappa[:, i]), axes=(1, 0, 2))
         self._kdos *= np.prod(mesh)
 
 if __name__ == '__main__':

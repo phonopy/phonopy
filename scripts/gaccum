@@ -98,11 +98,11 @@ class GammaDOStetrahedron(GammaDOS):
         for j, value in enumerate(('J', 'I')):
             thm.set(value=value, frequency_points=self._frequency_points)
             for i, iw in enumerate(thm): 
-                for k in range(num_freqs):
-                    for l in range(len(self._gamma)): # at temperatures
-                        mk = self._gamma[l, i] * self._ir_grid_weights[i]
-                        for ib in range(self._gamma.shape[2]):
-                            self._gdos[l, k, j] += iw[k, ib] * mk[ib]
+                # gdos[temp, freq_points, IJ]
+                # iw[freq_points, band]
+                # gamma[temp, ir_gp, band]
+                self._gdos[:, :, j] += np.dot(
+                    self._gamma[:, i] * self._ir_grid_weights[i], iw.T)
 
 if __name__ == '__main__':
     """Incremental kappa with respect to frequency and the derivative"""
