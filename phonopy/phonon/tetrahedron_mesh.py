@@ -65,14 +65,14 @@ def run_tetrahedron_method(data_out,
                                   ir_grid_points,
                                   relative_grid_address)
 
-def _get_tetrahedra_frequencies(gp,
-                                mesh,
-                                grid_address,
-                                relative_grid_address,
-                                gp_ir_index,
-                                frequencies,
-                                grid_order=None,
-                                lang='C'):
+def get_tetrahedra_frequencies(gp,
+                               mesh,
+                               grid_address,
+                               relative_grid_address,
+                               gp_ir_index,
+                               frequencies,
+                               grid_order=None,
+                               lang='C'):
     if lang == 'C':
         try:
             import phonopy._phonopy as phonoc
@@ -229,7 +229,7 @@ class TetrahedronMesh:
             self._gp_ir_index[i] = ir_gp_indices[gp]
         
     def _set_tetrahedra_frequencies(self, gp):
-        self._tetrahedra_frequencies = _get_tetrahedra_frequencies(
+        self._tetrahedra_frequencies = get_tetrahedra_frequencies(
             gp,
             self._mesh,
             self._grid_address,
