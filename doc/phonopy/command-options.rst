@@ -386,19 +386,30 @@ This tag can be used together with the ``--cell`` (``-c``),
 ``--abinit``, ``--pwscf``, ``--elk``, ``--wien2k``, or
 ``--primitive_axis`` option.
 
-Output file control
----------------------
+Input/Output file control
+-------------------------
 
 .. _hdf5_option:
 
 ``--hdf5``
 ~~~~~~~~~~~
 
-The following output files are written in hdf5 format instead of their
-original formats (in parenthesis).
+The following input/output files are read/written in hdf5 format
+instead of their original formats (in parenthesis).
 
 * ``force_constants.hdf5`` (``FORCE_CONSTANTS``)
 * ``mesh.hdf5`` (``mesh.yaml``)
+
+``force_constants.hdf5``
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+With ``--hdf5`` option and ``FORCE_CONSTANTS = WRITE``
+(``--writefc``), ``force_constants.hdf5`` is written.
+With ``--hdf5`` option and ``FORCE_CONSTANTS = READ`` (``--readfc``),
+``force_constants.hdf5`` is read.
+
+``mesh.hdf5``
+^^^^^^^^^^^^^^
 
 In the mesh sampling calculations (see :ref:`mesh_sampling_tags`),
 calculation results are written into ``mesh.hdf5`` but not into
