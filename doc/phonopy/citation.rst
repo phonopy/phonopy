@@ -7,7 +7,7 @@ Citation of phonopy
 If you have used phonopy, please cite the following article:
 
 "First principles phonon calculations in materials science",
-Atsushi Togo and Isao Tanaka, Scr. Mater., 108, 1-5 (2015)
+Atsushi Togo and Isao Tanaka, Scr. Mater., **108**, 1-5 (2015)
 
 ::
 
