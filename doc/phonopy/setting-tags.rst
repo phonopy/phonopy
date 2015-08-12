@@ -297,6 +297,8 @@ number of points calculated in band segments by the ``BAND_POINTS`` tag.
 |bandconnection|
 
 
+.. _mesh_sampling_tags:
+
 Mesh sampling tags
 -------------------
 
@@ -305,8 +307,8 @@ properties and density of states.
 
 .. _mp_tag:
 
-``MP``
-~~~~~~
+``MP``, ``MESH``
+~~~~~~~~~~~~~~~~~
 
 ``MP`` numbers give uniform meshes in each axis. As the default
 behavior, the center of mesh is determined by the Monkhorst-Pack
@@ -351,10 +353,10 @@ Density of states (DOS) tags
 Density of states (DOS) is calcualted either with smearing method
 (default) or tetrahedron method. The physical unit of horizontal axis
 is that of frequency that the user employs, e.g., THz, and that of
-vertial axis is states/(unit cell x the unit of the horizontal
-axis). If the DOS is integrated over the frequency range, it will be
-:math:`3N_\mathrm{a}` states, where :math:`N_\mathrm{a}` is the number
-of atoms in the unit cell.
+vertical axis is {no. of states}/({unit cell} x {unit of the
+horizontal axis}). If the DOS is integrated over the frequency range,
+it will be :math:`3N_\mathrm{a}` states, where :math:`N_\mathrm{a}` is
+the number of atoms in the unit cell.
 
 .. _dos_related_tags:
 

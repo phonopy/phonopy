@@ -3,6 +3,12 @@
 Change Log
 ==========
 
+Aug-12-2015: version 0.9.12
+------------------------------
+
+- Spglib update to version 1.8.2.1.
+- Improve computational performance of ``kaccum`` and ``gaccum``.
+
 Jun-18-2015: version 0.9.10.1
 ------------------------------
 

@@ -3,6 +3,16 @@
 Change Log
 ==========
 
+Aug-12-2015: Version 1.9.6
+-----------------------------
+
+* ``--hdf5`` option. Some output files can be written in hdf5
+  format. See :ref:`hdf5_option`.
+* Improve tetrahedron method performance in the calculation of DOS and
+  PDOS.
+* Spglib update to version 1.8.2.1.
+
+
 July-11-2015: Version 1.9.5
 -----------------------------
 

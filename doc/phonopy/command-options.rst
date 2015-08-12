@@ -386,7 +386,25 @@ This tag can be used together with the ``--cell`` (``-c``),
 ``--abinit``, ``--pwscf``, ``--elk``, ``--wien2k``, or
 ``--primitive_axis`` option.
 
+Output file control
+---------------------
 
+.. _hdf5_option:
+
+``--hdf5``
+~~~~~~~~~~~
+
+The following output files are written in hdf5 format instead of their
+original formats (in parenthesis).
+
+* ``force_constants.hdf5`` (``FORCE_CONSTANTS``)
+* ``mesh.hdf5`` (``mesh.yaml``)
+
+In the mesh sampling calculations (see :ref:`mesh_sampling_tags`),
+calculation results are written into ``mesh.hdf5`` but not into
+``mesh.yaml``. Using this option may reduce the data output size and
+thus writing time when ``mesh.yaml`` is huge, e.g., eigenvectors are
+written on a dense sampling mesh.
 
 .. |sflogo| image:: http://sflogo.sourceforge.net/sflogo.php?group_id=161614&type=1
             :target: http://sourceforge.net
