@@ -6,8 +6,10 @@ Citation of phonopy
 
 If you have used phonopy, please cite the following article:
 
-- "First principles phonon calculations in materials science",
-  Atsushi Togo and Isao Tanaka, Scr. Mater., **108**, 1-5 (2015)
+* "First principles phonon calculations in materials science",
+    Atsushi Togo and Isao Tanaka, Scr. Mater., **108**, 1-5 (2015)
+
+    http://dx.doi.org/10.1016/j.scriptamat.2015.07.021
 
   ::
   
@@ -24,8 +26,10 @@ If you have used phonopy, please cite the following article:
 The following article is not necessarily cited, but the citation may
 help phonopy project to live longer.
 
-- "First-principles calculations of the ferroelastic transition between rutile-type and CaCl2-type SiO2 at high pressures",
-  Atsushi Togo, Fumiyasu Oba, and Isao Tanaka, Phys. Rev. B, **78**, 134106 (2008)
+* "First-principles calculations of the ferroelastic transition between rutile-type and CaCl2-type SiO2 at high pressures",
+    Atsushi Togo, Fumiyasu Oba, and Isao Tanaka, Phys. Rev. B, **78**, 134106 (2008)
+
+    http://dx.doi.org/10.1103/PhysRevB.78.134106
 
   ::
   
