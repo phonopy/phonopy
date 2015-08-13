@@ -435,31 +435,16 @@ class VasprunWrapper(object):
         else:
             return "<i type=\"string\" name=\"PRECFOCK\"></i>"
 
-def _iterparse(fname, tag=None):
-    try:
-        import xml.etree.cElementTree as etree
-        for event, elem in etree.iterparse(fname):
-            if tag is None or elem.tag == tag:
-                yield event, elem
-    except ImportError:
-        print "Python 2.5 or later is needed."
-        print "For creating FORCE_SETS file with Python 2.4, you can use",
-        print "phonopy 1.8.5.1 with python-lxml ."
-        sys.exit(1)        
-
-def _is_version528(filename):
-    for line in open(filename):
-        if '\"version\"' in line:
-            if '5.2.8' in line:
-                return True
-            else:
-                return False
+def read_atomtypes_vasprun_xml(filename):
+    vasprun = _parse_vasprun_xml(filename)
+    for event, element in vasprun:
+        atomtypes = _get_atomtypes_from_vasprun_xml(element)
+        if atomtypes:
+            return atomtypes
+    return None
 
 def read_force_constant_vasprun_xml(filename):
-    if _is_version528(filename):
-        vasprun = _iterparse(VasprunWrapper(filename))
-    else:
-        vasprun = _iterparse(filename)
+    vasprun = _parse_vasprun_xml(filename)
     return get_force_constants_vasprun_xml(vasprun)
 
 def get_force_constants_vasprun_xml(vasprun):
@@ -467,9 +452,13 @@ def get_force_constants_vasprun_xml(vasprun):
     num_atom = 0
     for event, element in vasprun:
         if num_atom == 0:
-            (atom_types,
-             masses,
-             num_atom) = _get_atom_types_from_vasprun_xml(element)
+            atomtypes = _get_atomtypes_from_vasprun_xml(element)
+            if atomtypes:
+                num_atoms, elements, elem_masses = atomtypes[:3]
+                num_atom = np.sum(num_atoms)
+                masses = []
+                for n, m in zip(num_atoms, elem_masses):
+                    masses += [m] * n
 
         # Get Hessian matrix (normalized by masses)
         if element.tag == 'varray':
@@ -496,7 +485,7 @@ def get_force_constants_vasprun_xml(vasprun):
             for j in range(num_atom):
                 force_constants[i, j] *= -np.sqrt(masses[i] * masses[j])
 
-        return force_constants, atom_types
+        return force_constants, elements
     
 def get_forces_from_vasprun_xmls(vaspruns, num_atom, index_shift=0):
     forces = []
@@ -527,6 +516,32 @@ def get_force_constants_from_vasprun_xmls(vasprun_filenames):
     print >> sys.stderr
     return force_constants_set
 
+def _parse_vasprun_xml(filename):
+    if _is_version528(filename):
+        return _iterparse(VasprunWrapper(filename))
+    else:
+        return _iterparse(filename)
+
+def _iterparse(fname, tag=None):
+    try:
+        import xml.etree.cElementTree as etree
+        for event, elem in etree.iterparse(fname):
+            if tag is None or elem.tag == tag:
+                yield event, elem
+    except ImportError:
+        print "Python 2.5 or later is needed."
+        print "For creating FORCE_SETS file with Python 2.4, you can use",
+        print "phonopy 1.8.5.1 with python-lxml ."
+        sys.exit(1)        
+
+def _is_version528(filename):
+    for line in open(filename):
+        if '\"version\"' in line:
+            if '5.2.8' in line:
+                return True
+            else:
+                return False
+
 def _get_forces_vasprun_xml(vasprun):
     """
     vasprun = etree.iterparse(filename, tag='varray')
@@ -538,21 +553,24 @@ def _get_forces_vasprun_xml(vasprun):
                 forces.append([float(x) for x in v.text.split()])
     return np.array(forces)
 
-def _get_atom_types_from_vasprun_xml(element):
+def _get_atomtypes_from_vasprun_xml(element):
     atom_types = []
     masses = []
-    num_atom = 0
+    valences = []
+    num_atoms = []
     
     if element.tag == 'array':
         if 'name' in element.attrib:
             if element.attrib['name'] == 'atomtypes':
                 for rc in element.findall('./set/rc'):
                     atom_info = [x.text for x in rc.findall('./c')]
-                    num_atom += int(atom_info[0])
+                    num_atoms.append(int(atom_info[0]))
                     atom_types.append(atom_info[1].strip())
-                    masses += ([float(atom_info[2])] * int(atom_info[0]))
+                    masses.append(float(atom_info[2]))
+                    valences.append(float(atom_info[3]))
+                return num_atoms, atom_types, masses, valences
 
-    return atom_types, masses, num_atom
+    return None
 
 #
 # OUTCAR handling (obsolete)
