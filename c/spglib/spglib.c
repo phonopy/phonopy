@@ -1360,6 +1360,16 @@ static int standardize_primitive(double lattice[3][3],
     goto err;
   }
 
+  if (dataset->hall_number == 433 ||
+      dataset->hall_number == 436 ||
+      dataset->hall_number == 444 ||
+      dataset->hall_number == 450 ||
+      dataset->hall_number == 452 ||
+      dataset->hall_number == 458 ||
+      dataset->hall_number == 460) {
+    centering = R_CENTER;
+  }
+
   if ((bravais = cel_alloc_cell(dataset->n_std_atoms)) == NULL) {
     spg_free_dataset(dataset);
     return 0;
@@ -1456,6 +1466,15 @@ static int get_standardized_cell(double lattice[3][3],
   if (to_primitive) {
     if ((centering = get_centering(dataset->hall_number)) == CENTERING_ERROR) {
       goto err;
+    }
+    if (dataset->hall_number == 433 ||
+	dataset->hall_number == 436 ||
+	dataset->hall_number == 444 ||
+	dataset->hall_number == 450 ||
+	dataset->hall_number == 452 ||
+	dataset->hall_number == 458 ||
+	dataset->hall_number == 460) {
+      centering = R_CENTER;
     }
   } else {
     centering = PRIMITIVE;
