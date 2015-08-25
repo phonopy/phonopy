@@ -15,7 +15,20 @@ their tools, please contact via the phonopy mailing list.
 LADYtools
 ----------
 
+A set of helpful tolls for ab initio calculation software packages like
+ABINIT VASP CRYSTAL etc.
+
 https://github.com/ladyteam/ladytools/wiki
+
+SNAXS interface
+----------------
+
+Simulating Neutron And X-ray Scans; a tool for condensed-matter
+scientists studying phonons using neutron scattering.
+
+https://github.com/danparshall/snaxs
+
+
 
 .. |sflogo| image:: http://sflogo.sourceforge.net/sflogo.php?group_id=161614&type=1
             :target: http://sourceforge.net
