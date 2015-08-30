@@ -97,7 +97,8 @@ def file_exists(filename, log_level):
             print_error()
         sys.exit(1)
     
-def print_cells(phonon):
+def print_cells(phonon, unitcell_filename):
+    print "Crsytal structure is read from \'%s\'." % unitcell_filename
     supercell = phonon.get_supercell()
     unitcell = phonon.get_unitcell()
     primitive = phonon.get_primitive()
@@ -199,6 +200,7 @@ parser.set_defaults(
     band_labels=None,
     band_paths=None,
     band_points=None,
+    cell_filename=None,
     cutoff_frequency=None,
     cutoff_radius=None,
     displacement_distance=None,
@@ -239,6 +241,7 @@ parser.set_defaults(
     is_projected_thermal_properties=False,
     is_trigonal_displacements=False,
     is_wien2k_p1=False,
+    irreps_qpoint=None,
     lapack_solver=False,
     loglevel=None,
     masses=None,
@@ -248,19 +251,18 @@ parser.set_defaults(
     projection_direction=None,
     pwscf_mode=False,
     qpoints=None,
-    q_direction=None,
     quiet=False,
-    irreps_qpoint=None,
-    sigma=None,
+    q_direction=None,
     show_irreps=False,
+    sigma=None,
     supercell_dimension=None,
     symprec=1e-5,
     tmax=None,
     tmin=None,
     tstep=None,
-    cell_filename=None,
     verbose=False,
-    wien2k_mode=False)
+    wien2k_mode=False,
+    yaml_mode=False)
 
 parser.add_option("--abinit", dest="abinit_mode",
                   action="store_true", help="Invoke Abinit mode")
@@ -456,6 +458,8 @@ parser.add_option("--writedm", dest="write_dynamical_matrices",
                   action="store_true",
                   help=("Write dynamical matrices. This has to be used "
                         "with QPOINTS setting (or --qpoints)"))
+parser.add_option("--yaml", dest="yaml_mode",
+                  action="store_true", help="Activate phonopy YAML mode")
 (options, args) = parser.parse_args()
 option_list = parser.option_list
 
@@ -552,11 +556,11 @@ if options.is_graph_save:
 ##################
 # Initialization #
 ##################
-
 unitcell, optional_structure_file_information = read_crystal_structure(
     filename=settings.get_cell_filename(),
     interface_mode=interface_mode,
-    chemical_symbols=settings.get_chemical_symbols())
+    chemical_symbols=settings.get_chemical_symbols(),
+    yaml_mode=settings.get_yaml_mode())
 unitcell_filename = optional_structure_file_information[0]
 
 if unitcell is None:
@@ -715,7 +719,7 @@ if log_level > 0:
 
 # Print cells
 if log_level > 1:
-    print_cells(phonon)
+    print_cells(phonon, unitcell_filename)
 
 # Least displacements (write disp.yaml and SPOSCAR)
 if run_mode == 'displacements':

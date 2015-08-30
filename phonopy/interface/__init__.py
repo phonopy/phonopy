@@ -37,9 +37,10 @@ from phonopy.file_IO import parse_disp_yaml, write_FORCE_SETS
 
 def read_crystal_structure(filename=None,
                            interface_mode='vasp',
-                           chemical_symbols=None):
+                           chemical_symbols=None,
+                           yaml_mode=False):
     if filename is None:
-        unitcell_filename = get_default_cell_filename(interface_mode)
+        unitcell_filename = get_default_cell_filename(interface_mode, yaml_mode)
     else:
         unitcell_filename = filename
 
@@ -49,6 +50,11 @@ def read_crystal_structure(filename=None,
         else:
             return None, (unitcell_filename,)
     
+    if yaml_mode:
+        from phonopy.interface.phonopy_yaml import phonopyYaml
+        unitcell = phonopyYaml(unitcell_filename).get_atoms()
+        return unitcell, (unitcell_filename,)
+        
     if interface_mode == 'vasp':
         from phonopy.interface.vasp import read_vasp
         if chemical_symbols is None:
@@ -77,19 +83,20 @@ def read_crystal_structure(filename=None,
         unitcell, sp_filenames = read_elk(unitcell_filename)
         return unitcell, (unitcell_filename, sp_filenames)
 
-def get_default_cell_filename(interface_mode):
-    if interface_mode == 'vasp':
-        unitcell_filename = "POSCAR"
-    if interface_mode == 'abinit':
-        unitcell_filename = "unitcell.in"
-    if interface_mode == 'pwscf':
-        unitcell_filename = "unitcell.in"
-    if interface_mode == 'wien2k':
-        unitcell_filename = "case.struct"
-    if interface_mode == 'elk':
-        unitcell_filename = "elk.in"
 
-    return unitcell_filename
+def get_default_cell_filename(interface_mode, yaml_mode):
+    if yaml_mode:
+        return "POSCAR.yaml"
+    if interface_mode == 'vasp':
+        return "POSCAR"
+    if interface_mode == 'abinit':
+        return "unitcell.in"
+    if interface_mode == 'pwscf':
+        return "unitcell.in"
+    if interface_mode == 'wien2k':
+        return "case.struct"
+    if interface_mode == 'elk':
+        return "elk.in"
         
 def create_FORCE_SETS(interface_mode,
                       force_filenames,

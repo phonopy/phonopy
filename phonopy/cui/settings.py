@@ -887,6 +887,7 @@ class PhonopySettings(Settings):
         self._show_irreps = False
         self._thermal_atom_pairs = None
         self._write_dynamical_matrices = False
+        self._yaml_mode = False
 
     def set_anime_band_index(self, band_index):
         self._anime_band_index = band_index
@@ -1136,6 +1137,13 @@ class PhonopySettings(Settings):
     def get_write_dynamical_matrices(self):
         return self._write_dynamical_matrices
 
+    def set_yaml_mode(self, yaml_mode):
+        self._yaml_mode = yaml_mode
+        
+    def get_yaml_mode(self):
+        return self._yaml_mode
+
+
         
 class PhonopyConfParser(ConfParser):
     def __init__(self, filename=None, options=None, option_list=None):
@@ -1255,6 +1263,11 @@ class PhonopyConfParser(ConfParser):
             if opt.dest == 'lapack_solver':
                 if self._options.lapack_solver:
                     self._confs['lapack_solver'] = '.true.'
+
+            if opt.dest == 'yaml_mode':
+                if self._options.yaml_mode:
+                    self._confs['yaml_mode'] = '.true.'
+
 
     def _parse_conf(self):
         confs = self._confs
@@ -1417,6 +1430,12 @@ class PhonopyConfParser(ConfParser):
             if conf_key == 'lapack_solver':
                 if confs['lapack_solver'] == '.true.':
                     self.set_parameter('lapack_solver', True)
+
+            # Phonopy YAML mode
+            if conf_key == 'yaml_mode':
+                if confs['yaml_mode'] == '.true.':
+                    self.set_parameter('yaml_mode', True)
+
 
     def _parse_conf_modulation(self, confs):
         modulation = {}
@@ -1657,3 +1676,7 @@ class PhonopyConfParser(ConfParser):
         if params.has_key('lapack_solver'):
             self._settings.set_lapack_solver(params['lapack_solver'])
     
+        # Activate phonopy YAML mode
+        if params.has_key('yaml_mode'):
+            self._settings.set_yaml_mode(params['yaml_mode'])
+                

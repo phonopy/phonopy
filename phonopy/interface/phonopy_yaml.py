@@ -47,17 +47,19 @@ try:
 except ImportError:
     from yaml import Loader, Dumper
 
-from phonopy.structure.atoms import PhonopyAtoms
+from phonopy.structure.atoms import Atoms, PhonopyAtoms
 
 class phonopyYaml:
     def __init__(self, filename):
         self._data = yaml.load(open(filename), Loader=Loader)
+        self._lattice = self._data['lattice']
+        self._points = [x['coordinates'] for x in self._data['points']]
+        self._symbols = [x['symbol'] for x in self._data['points']]
 
-    def get_cell(self):
-       lattice = self._data['lattice']
-       points = [x['coordinates'] for x in self._data['points']]
-       symbols = [x['symbol'] for x in self._data['points']]
-    
-       return PhonopyAtoms(symbols=symbols,
-                           cell=lattice,
-                           scaled_positions=points)
+    def get_atoms(self):
+        return Atoms(symbols=self._symbols,
+                     cell=self._lattice,
+                     scaled_positions=self._points)
+
+    def __str__(self):
+        return str(PhonopyAtoms(atoms=self.get_atoms()))
