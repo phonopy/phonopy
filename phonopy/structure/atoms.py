@@ -166,6 +166,45 @@ class Atoms:
         self.masses = np.array([atom_data[symbol_map[s]][3]
                                 for s in self.symbols], dtype='double')
 
+class PhonopyAtoms(Atoms):
+    def __init__(self,
+                 symbols=None,
+                 numbers=None, 
+                 masses=None,
+                 magmoms=None,
+                 scaled_positions=None,
+                 cell=None,
+                 atoms=None):
+        if atoms:
+            Atoms.__init__(self,
+                           numbers=atoms.get_atomic_numbers(),
+                           masses=atoms.get_masses(),
+                           magmoms=atoms.get_magnetic_moments(),
+                           scaled_positions=atoms.get_scaled_positions(),
+                           cell=atoms.get_cell(),
+                           pbc=True)
+        else:
+            Atoms.__init__(self,
+                           symbols=symbols,
+                           numbers=numbers,
+                           masses=masses,
+                           magmoms=magmoms,
+                           scaled_positions=scaled_positions,
+                           cell=cell,
+                           pbc=True)
+
+    def __str__(self):
+        lines = []
+        lines.append("lattice:")
+        for v, a in zip(self.cell, ('a', 'b', 'c')):
+            lines.append("- [ %22.16f, %22.16f, %22.16f ] # %s" %
+                         (v[0], v[1], v[2], a))
+        lines.append("points:")
+        for i, (s, v) in enumerate(zip(self.symbols, self.scaled_positions)):
+            lines.append("- symbol: %-2s # %d" % (s, i + 1))
+            lines.append("  coordinates: [ %19.16f, %19.16f, %19.16f ]" %
+                         tuple(v))
+        return "\n".join(lines)
 
 atom_data = [ 
     [  0, "X", "X", 0], # 0
