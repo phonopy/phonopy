@@ -419,8 +419,13 @@ class Phonopy:
     # Single q-point
     def get_dynamical_matrix_at_q(self, q):
         self._set_dynamical_matrix()
+        if self._dynamical_matrix is None:
+            print "Warning: Dynamical matrix has not yet built."
+            return None
+
         self._dynamical_matrix.set_dynamical_matrix(q)
         return self._dynamical_matrix.get_dynamical_matrix()
+
 
     def get_frequencies(self, q):
         """
@@ -429,6 +434,10 @@ class Phonopy:
         q: q-vector in reduced coordinates of primitive cell
         """
         self._set_dynamical_matrix()
+        if self._dynamical_matrix is None:
+            print "Warning: Dynamical matrix has not yet built."
+            return None
+
         self._dynamical_matrix.set_dynamical_matrix(q)
         dm = self._dynamical_matrix.get_dynamical_matrix()
         frequencies = []
@@ -447,6 +456,10 @@ class Phonopy:
         q: q-vector in reduced coordinates of primitive cell
         """
         self._set_dynamical_matrix()
+        if self._dynamical_matrix is None:
+            print "Warning: Dynamical matrix has not yet built."
+            return None
+
         self._dynamical_matrix.set_dynamical_matrix(q)
         dm = self._dynamical_matrix.get_dynamical_matrix()
         frequencies = []
@@ -465,6 +478,11 @@ class Phonopy:
                            bands,
                            is_eigenvectors=False,
                            is_band_connection=False):
+        if self._dynamical_matrix is None:
+            print "Warning: Dynamical matrix has not yet built."
+            self._band_structure = None
+            return False
+
         self._band_structure = BandStructure(
             bands,
             self._dynamical_matrix,
@@ -472,6 +490,7 @@ class Phonopy:
             is_band_connection=is_band_connection,
             group_velocity=self._group_velocity,
             factor=self._factor)
+        return True
 
     def get_band_structure(self):
         band = self._band_structure
@@ -500,6 +519,11 @@ class Phonopy:
                  is_mesh_symmetry=True,
                  is_eigenvectors=False,
                  is_gamma_center=False):
+        if self._dynamical_matrix is None:
+            print "Warning: Dynamical matrix has not yet built."
+            self._mesh = None
+            return False
+
         self._mesh = Mesh(
             self._dynamical_matrix,
             mesh,
@@ -512,6 +536,7 @@ class Phonopy:
             rotations=self._primitive_symmetry.get_pointgroup_operations(),
             factor=self._factor,
             use_lapack_solver=self._use_lapack_solver)
+        return True
 
     def get_mesh(self):
         return (self._mesh.get_qpoints(),
@@ -827,6 +852,11 @@ class Phonopy:
                            is_eigenvectors=False,
                            write_dynamical_matrices=False,
                            factor=VaspToTHz):
+        if self._dynamical_matrix is None:
+            print "Warning: Dynamical matrix has not yet built."
+            self._qpoints_phonon = None
+            return False
+
         self._qpoints_phonon = QpointsPhonon(
             q_points,
             self._dynamical_matrix,
@@ -835,6 +865,7 @@ class Phonopy:
             group_velocity=self._group_velocity,
             write_dynamical_matrices=write_dynamical_matrices,
             factor=self._factor)
+        return True
         
     def get_qpoints_phonon(self):
         return (self._qpoints_phonon.get_frequencies(),
@@ -852,6 +883,10 @@ class Phonopy:
                         num_div=None,
                         shift=None,
                         filename=None):
+        if self._dynamical_matrix is None:
+            print "Warning: Dynamical matrix has not yet built."
+            return False
+
         if q_point is None:
             animation = Animation([0, 0, 0],
                                   self._dynamical_matrix,
@@ -926,6 +961,9 @@ class Phonopy:
                     animation.write_POSCAR(band_index,
                                            amplitude,
                                            num_div)
+
+        return True
+
     # Atomic modulation of normal mode
     def set_modulations(self,
                         dimension,
@@ -933,6 +971,11 @@ class Phonopy:
                         delta_q=None,
                         derivative_order=None,
                         nac_q_direction=None):
+        if self._dynamical_matrix is None:
+            print "Warning: Dynamical matrix has not yet built."
+            self._modulation = None
+            return False
+        
         self._modulation = Modulation(self._dynamical_matrix,
                                       dimension,
                                       phonon_modes,
@@ -941,6 +984,7 @@ class Phonopy:
                                       nac_q_direction=nac_q_direction,
                                       factor=self._factor)
         self._modulation.run()
+        return True
                     
     def get_modulated_supercells(self):
         """Returns cells with modulations as Atoms objects"""
@@ -970,6 +1014,11 @@ class Phonopy:
                    is_little_cogroup=False,
                    nac_q_direction=None,
                    degeneracy_tolerance=1e-4):
+        if self._dynamical_matrix is None:
+            print "Warning: Dynamical matrix has not yet built."
+            self._irreps = None
+            return None
+
         self._irreps = IrReps(
             self._dynamical_matrix,
             q,
@@ -993,11 +1042,17 @@ class Phonopy:
 
     # Group velocity
     def set_group_velocity(self, q_length=None):
+        if self._dynamical_matrix is None:
+            print "Warning: Dynamical matrix has not yet built."
+            self._group_velocity = None
+            return False
+
         self._group_velocity = GroupVelocity(
             self._dynamical_matrix,
             q_length=q_length,
             symmetry=self._primitive_symmetry,
             frequency_factor_to_THz=self._factor)
+        return True
 
     def get_group_velocity(self):
         return self._group_velocity.get_group_velocity()
@@ -1026,10 +1081,15 @@ class Phonopy:
                 computation_algorithm=computation_algorithm)
 
     def _set_dynamical_matrix(self):
-        if (self._supercell is None or
-            self._primitive is None or
-            self._force_constants is None):
-            return False
+        if (self._supercell is None or self._primitive is None):
+            print "Bug: Supercell or primitive is not created."
+            sys.exit(1)
+        elif self._force_constants is None:
+            print "Warning: Force constants are prepared."
+            self._dynamical_matrix = None
+        elif self._primitive.get_masses() is None:
+            print "Warning: Atomic masses are not correctly set."
+            self._dynamical_matrix = None
         else:
             if self._nac_params is None:
                 self._dynamical_matrix = DynamicalMatrix(
@@ -1046,7 +1106,6 @@ class Phonopy:
                     nac_params=self._nac_params,
                     decimals=self._dynamical_matrix_decimals,
                     symprec=self._symprec)
-            return True
 
     def _search_symmetry(self):
         self._symmetry = Symmetry(self._supercell,

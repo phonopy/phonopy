@@ -45,6 +45,7 @@ from phonopy.cui.show_symmetry import check_symmetry
 from phonopy.units import *
 from phonopy.version import phonopy_version
 from phonopy.structure.cells import print_cell, determinant
+from phonopy.structure.atoms import atom_data, symbol_map
 from phonopy.interface import create_FORCE_SETS, read_crystal_structure
 
 
@@ -856,12 +857,13 @@ if settings.get_is_rotational_invariance():
 
 # Atomic species without mass case
 symbols_with_no_mass = []
-for m, s in zip(primitive.get_masses(), 
-                primitive.get_chemical_symbols()):
-    if m < 0.1:
-        if symbols_with_no_mass.count(s) == 0:
+if primitive.get_masses() is None:
+    for s in primitive.get_chemical_symbols():
+        if (atom_data[symbol_map[s]][3] is None and
+            s not in symbols_with_no_mass):
             symbols_with_no_mass.append(s)
-            print_error_message("Atomic mass of \'%s\' is not implemented." % s)
+            print_error_message(
+                "Atomic mass of \'%s\' is not implemented in phonopy." % s)
             print_error_message("MASS tag can be used to set atomic masses.")
 
 if len(symbols_with_no_mass) > 0:

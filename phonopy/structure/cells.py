@@ -56,7 +56,10 @@ def trim_cell(relative_axes, cell, symprec):
 
     trimed_positions = []
     trimed_numbers = []
-    trimed_masses = []
+    if masses is None:
+        trimed_masses = None
+    else:
+        trimed_masses = []
     if magmoms is None:
         trimed_magmoms = None
     else:
@@ -84,7 +87,8 @@ def trim_cell(relative_axes, cell, symprec):
             trimed_positions[num_atom] = pos
             num_atom += 1
             trimed_numbers.append(numbers[i])
-            trimed_masses.append(masses[i])
+            if masses is not None:
+                trimed_masses.append(masses[i])
             if magmoms is not None:
                 trimed_magmoms.append(magmoms[i])
             atom_map.append(i)
@@ -114,17 +118,16 @@ def print_cell(cell, mapping=None, stars=None):
             if i in stars:
                 num = "*"
         num += "%d" % (i + 1)
-        if magmoms is None:
-            print "%5s %-2s%18.14f%18.14f%18.14f %7.3f" % \
-                (num, symbols[i], v[0], v[1], v[2], masses[i]),
-        else:
-            print "%5s %-2s%18.14f%18.14f%18.14f %7.3f  %5.3f" % \
-                (num, symbols[i], v[0], v[1], v[2], masses[i], magmoms[i]),
-
+        line = ("%5s %-2s%18.14f%18.14f%18.14f" % 
+                (num, symbols[i], v[0], v[1], v[2]))
+        if masses is not None:
+            line += " %7.3f" % masses[i]
+        if magmoms is not None:
+            line += "  %5.3f" % magmoms[i]
         if mapping is None:
-            print
+            print line
         else:
-            print ">", mapping[i]+1
+            print line + " >", mapping[i]+1
 
 class Supercell(Atoms):
     """Build supercell from supercell matrix
@@ -221,7 +224,10 @@ class Supercell(Atoms):
         atom_map = []
         positions_multi = []
         numbers_multi = []
-        masses_multi = []
+        if masses is None:
+            masses_multi = None
+        else:
+            masses_multi = []
         if magmoms is None:
             magmoms_multi = None
         else:
@@ -234,9 +240,10 @@ class Supercell(Atoms):
                                                 (pos[1] + j) / multi[1],
                                                 (pos[2] + i) / multi[2]])
                         numbers_multi.append(numbers[l])
-                        masses_multi.append(masses[l])
+                        if masses is not None:
+                            masses_multi.append(masses[l])
                         atom_map.append(l)
-                        if not magmoms is None:
+                        if magmoms is not None:
                             magmoms_multi.append(magmoms[l])
 
         simple_supercell = Atoms(numbers=numbers_multi,

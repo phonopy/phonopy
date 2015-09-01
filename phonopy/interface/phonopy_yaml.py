@@ -53,12 +53,32 @@ class phonopyYaml:
     def __init__(self, filename):
         self._data = yaml.load(open(filename), Loader=Loader)
         self._lattice = self._data['lattice']
-        self._points = [x['coordinates'] for x in self._data['points']]
-        self._symbols = [x['symbol'] for x in self._data['points']]
+
+        self._points = None
+        self._symbols = None
+        self._masses = None
+
+        points = []
+        symbols = []
+        masses = []
+        for x in self._data['points']:
+            if 'coordinates' in x:
+                points.append(x['coordinates'])
+            if 'symbol' in x:
+                symbols.append(x['symbol'])
+            if 'mass' in x:
+                masses.append(x['mass'])
+        if points:
+            self._points = points
+        if symbols:
+            self._symbols = symbols
+        if masses:
+            self._masses = masses
 
     def get_atoms(self):
         return Atoms(symbols=self._symbols,
                      cell=self._lattice,
+                     masses=self._masses,
                      scaled_positions=self._points)
 
     def __str__(self):
