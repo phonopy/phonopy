@@ -625,8 +625,10 @@ class Phonopy:
                       tetrahedron_method=False):
 
         if self._mesh is None:
-            print "set_mesh has to be done before set_thermal_properties"
-            sys.exit(1)
+            print ("Warning: \'set_mesh\' has to finish correctly "
+                   "before DOS calculation.")
+            self._total_dos = None
+            return False
 
         total_dos = TotalDos(self._mesh,
                              sigma=sigma,
@@ -634,6 +636,7 @@ class Phonopy:
         total_dos.set_draw_area(freq_min, freq_max, freq_pitch)
         total_dos.run()
         self._total_dos = total_dos
+        return True
 
     def get_total_DOS(self):
         """
@@ -669,16 +672,23 @@ class Phonopy:
                         freq_pitch=None,
                         tetrahedron_method=False,
                         direction=None):
+        self._pdos = None
+
         if self._mesh is None:
-            print "set_mesh has to be called before set_thermal_properties"
-            sys.exit(1)
+            print ("Warning: \'set_mesh\' has to be called before "
+                   "PDOS calculation.")
+            return False
+
         if self._mesh.get_eigenvectors() is None:
-            print "Eigenvectors have to be calculated."
-            sys.exit(1)
+            print "Warning: Eigenvectors have to be calculated."
+            return False
+
         num_grid = np.prod(self._mesh.get_mesh_numbers())
         if num_grid != len(self._mesh.get_ir_grid_points()):
-            print "set_mesh has to be called with is_mesh_symmetry=False"
-            sys.exit(1)
+            print ("Warning: \'set_mesh\' has to be called with "
+                   "is_mesh_symmetry=False.")
+            return False
+
         if direction is not None:
             direction_cart = np.dot(direction, self._primitive.get_cell())
         else:
@@ -690,6 +700,7 @@ class Phonopy:
         pdos.set_draw_area(freq_min, freq_max, freq_pitch)
         pdos.run()
         self._pdos = pdos
+        return True
 
     def get_partial_DOS(self):
         """
@@ -729,21 +740,24 @@ class Phonopy:
         direction:
           Projection direction in reduced coordinates
         """
+        self._thermal_displacements = None
+
         if self._mesh is None:
-            print "set_mesh has to be done before set_thermal_properties"
-            sys.exit(1)
+            print ("Warning: \'set_mesh\' has to finish correctly "
+                   "before \'set_thermal_displacements\'.")
+            return False
 
         eigvecs = self._mesh.get_eigenvectors()
         frequencies = self._mesh.get_frequencies()
         mesh_nums = self._mesh.get_mesh_numbers() 
 
         if self._mesh.get_eigenvectors() is None:
-            print "Eigenvectors have to be calculated."
-            sys.exit(1)
+            print "Warning: Eigenvectors have to be calculated."
+            return False
             
         if np.prod(mesh_nums) != len(eigvecs):
-            print "Sampling mesh must not be symmetrized."
-            sys.exit(1)
+            print "Warning: Sampling mesh must not be symmetrized."
+            return False
 
         td = ThermalDisplacements(frequencies,
                                   eigvecs,
@@ -755,6 +769,7 @@ class Phonopy:
         td.run()
         
         self._thermal_displacements = td
+        return True
 
     def get_thermal_displacements(self):
         if self._thermal_displacements is not None:
@@ -782,21 +797,24 @@ class Phonopy:
         direction:
           Projection direction in reduced coordinates
         """
+        self._thermal_displacement_matrices = None
+
         if self._mesh is None:
-            print "set_mesh has to be done before set_thermal_properties"
-            sys.exit(1)
+            print ("\'set_mesh\' has to finish correctly "
+                   "before \'set_thermal_displacement_matrices\'.")
+            return False
 
         eigvecs = self._mesh.get_eigenvectors()
         frequencies = self._mesh.get_frequencies()
         mesh_nums = self._mesh.get_mesh_numbers() 
 
         if self._mesh.get_eigenvectors() is None:
-            print "Eigenvectors have to be calculated."
-            sys.exit(1)
+            print "Warning: Eigenvectors have to be calculated."
+            return False
             
         if np.prod(mesh_nums) != len(eigvecs):
-            print "Sampling mesh must not be symmetrized."
-            sys.exit(1)
+            print "Warning: Sampling mesh must not be symmetrized."
+            return False
 
         tdm = ThermalDisplacementMatrices(frequencies,
                                            eigvecs,
@@ -806,6 +824,7 @@ class Phonopy:
         tdm.run()
         
         self._thermal_displacement_matrices = tdm
+        return True
 
     def get_thermal_displacement_matrices(self):
         if self._thermal_displacement_matrices is not None:
@@ -908,15 +927,13 @@ class Phonopy:
             else:
                 animation.write_v_sim(amplitude=amplitude_,
                                       factor=self._factor)
-
-            
         if (anime_type == 'arc' or
             anime_type == 'xyz' or
             anime_type == 'jmol' or
             anime_type == 'poscar'):
             if band_index is None or amplitude is None or num_div is None:
-                print "Parameters are not correctly set for animation."
-                sys.exit(1)
+                print "Warning: Parameters are not correctly set for animation."
+                return False
 
             if anime_type == 'arc' or anime_type is None:
                 if filename:
@@ -1081,15 +1098,17 @@ class Phonopy:
                 computation_algorithm=computation_algorithm)
 
     def _set_dynamical_matrix(self):
+        self._dynamical_matrix = None
+
         if (self._supercell is None or self._primitive is None):
             print "Bug: Supercell or primitive is not created."
-            sys.exit(1)
+            return False
         elif self._force_constants is None:
             print "Warning: Force constants are prepared."
-            self._dynamical_matrix = None
+            return False
         elif self._primitive.get_masses() is None:
             print "Warning: Atomic masses are not correctly set."
-            self._dynamical_matrix = None
+            return False
         else:
             if self._nac_params is None:
                 self._dynamical_matrix = DynamicalMatrix(
@@ -1106,6 +1125,7 @@ class Phonopy:
                     nac_params=self._nac_params,
                     decimals=self._dynamical_matrix_decimals,
                     symprec=self._symprec)
+            return True
 
     def _search_symmetry(self):
         self._symmetry = Symmetry(self._supercell,
@@ -1119,7 +1139,7 @@ class Phonopy:
         
         if (len(self._symmetry.get_pointgroup_operations()) !=
             len(self._primitive_symmetry.get_pointgroup_operations())):
-            print ("Warning: point group symmetries of supercell and primitive"
+            print ("Warning: Point group symmetries of supercell and primitive"
                    "cell are different.")
 
     def _build_supercell(self):
