@@ -47,13 +47,21 @@ class PhonopyGruneisen:
 
         self._mesh = None
         self._band_structure = None
-        
+
+    def get_phonon(self):
+        return self._phonon
+
     def set_mesh(self,
                  mesh,
                  shift=None,
                  is_time_reversal=True,
                  is_gamma_center=False,
                  is_mesh_symmetry=True):
+        for phonon in (self._phonon, self._phonon_plus, self._phonon_minus):
+            if phonon.get_dynamical_matrix() is None:
+                print "Warning: Dynamical matrix has not yet built."
+                return False
+
         self._mesh = GruneisenMesh(self._phonon,
                                    self._phonon_plus,
                                    self._phonon_minus,
@@ -62,6 +70,10 @@ class PhonopyGruneisen:
                                    is_time_reversal=is_time_reversal,
                                    is_gamma_center=is_gamma_center,
                                    is_mesh_symmetry=is_mesh_symmetry)
+        return True
+
+    def get_mesh(self):
+        return self._mesh
 
     def write_yaml_mesh(self):
         self._mesh.write_yaml()
@@ -87,6 +99,9 @@ class PhonopyGruneisen:
                                              self._phonon_minus,
                                              paths,
                                              num_points)
+
+    def get_band_structure(self):
+        return self._band_structure
 
     def write_yaml_band_structure(self):
         self._band_structure.write_yaml()
