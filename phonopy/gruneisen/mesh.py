@@ -148,7 +148,7 @@ class Mesh:
                 color = (1. / n * i, 0, 1./ n * (n - i))
                 if markersize:
                     plt.plot(freqs, g, marker,
-                                 color=color, markersize=markersize)
+                             color=color, markersize=markersize)
                 else:
                     plt.plot(freqs, g, marker, color=color)
             elif color_scheme == 'RG':
