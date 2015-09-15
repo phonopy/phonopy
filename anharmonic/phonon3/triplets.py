@@ -145,7 +145,7 @@ def get_BZ_grid_points_by_rotations(grid_point,
                                     mesh,
                                     bz_map,
                                     mesh_shifts=[False, False, False]):
-    return _get_BZ_grid_points_by_rotations(
+    return spg.get_BZ_grid_points_by_rotations(
         grid_point,
         reciprocal_rotations,
         mesh,
