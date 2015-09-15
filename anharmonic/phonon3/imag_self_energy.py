@@ -381,15 +381,15 @@ class ImagSelfEnergy:
 
     def _run_thm_c_with_band_indices(self):
         import anharmonic._phono3py as phono3c
-        phono3c.thm_imag_self_energy(self._imag_self_energy,
-                                     self._pp_strength,
-                                     self._triplets_at_q,
-                                     self._weights_at_q,
-                                     self._frequencies,
-                                     self._temperature,
-                                     self._g,
-                                     self._unit_conversion,
-                                     self._cutoff_frequency)
+        phono3c.imag_self_energy_with_g(self._imag_self_energy,
+                                        self._pp_strength,
+                                        self._triplets_at_q,
+                                        self._weights_at_q,
+                                        self._frequencies,
+                                        self._temperature,
+                                        self._g,
+                                        self._unit_conversion,
+                                        self._cutoff_frequency)
         
     def _run_c_with_frequency_points(self):
         import anharmonic._phono3py as phono3c
@@ -414,15 +414,15 @@ class ImagSelfEnergy:
         for i in range(len(self._frequency_points)):
             for j in range(g.shape[2]):
                 g[:, :, j, :, :] = self._g[:, :, i, :, :]
-            phono3c.thm_imag_self_energy(ise_at_f,
-                                         self._pp_strength,
-                                         self._triplets_at_q,
-                                         self._weights_at_q,
-                                         self._frequencies,
-                                         self._temperature,
-                                         g,
-                                         self._unit_conversion,
-                                         self._cutoff_frequency)
+            phono3c.imag_self_energy_with_g(ise_at_f,
+                                            self._pp_strength,
+                                            self._triplets_at_q,
+                                            self._weights_at_q,
+                                            self._frequencies,
+                                            self._temperature,
+                                            g,
+                                            self._unit_conversion,
+                                            self._cutoff_frequency)
             self._imag_self_energy[i] = ise_at_f
         
     def _run_py_with_band_indices(self):
