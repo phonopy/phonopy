@@ -61,6 +61,8 @@ static PyObject * py_get_imag_self_energy(PyObject *self, PyObject *args);
 static PyObject * py_get_imag_self_energy_at_bands(PyObject *self,
 						   PyObject *args);
 static PyObject * py_get_imag_self_energy_with_g(PyObject *self, PyObject *args);
+static PyObject *
+py_get_individual_imag_self_energy_with_g(PyObject *self, PyObject *args);
 static PyObject * py_get_frequency_shift_at_bands(PyObject *self,
 						  PyObject *args);
 static PyObject * py_get_collision_matrix(PyObject *self, PyObject *args);
@@ -99,13 +101,16 @@ static void get_triplet_tetrahedra_vertices
 static PyMethodDef functions[] = {
   {"interaction", py_get_interaction, METH_VARARGS, "Interaction of triplets"},
   {"imag_self_energy", py_get_imag_self_energy, METH_VARARGS,
-   "Imaginary part of self energy"},
+   "Imaginary part of self energy at arbitrary frequency points"},
   {"imag_self_energy_at_bands", py_get_imag_self_energy_at_bands, METH_VARARGS,
-   "Imaginary part of self energy at phonon frequencies of bands"},
+   "Imaginary part of self energy at bands"},
   {"imag_self_energy_with_g", py_get_imag_self_energy_with_g, METH_VARARGS,
-   "Imaginary part of self energy at phonon frequencies of bands for tetrahedron method"},
+   "Imaginary part of self energy at frequency points with g"},
+  {"individual_imag_self_energy_with_g",
+   py_get_individual_imag_self_energy_with_g, METH_VARARGS,
+   "Individual contribution to imaginary part of self energy at frequency points with g"},
   {"frequency_shift_at_bands", py_get_frequency_shift_at_bands, METH_VARARGS,
-   "Imaginary part of self energy at phonon frequencies of bands"},
+   "Phonon frequency shift from third order force constants"},
   {"collision_matrix", py_get_collision_matrix, METH_VARARGS,
    "Collision matrix with g"},
   {"reducible_collision_matrix", py_get_reducible_collision_matrix, METH_VARARGS,
@@ -365,6 +370,52 @@ static PyObject * py_get_imag_self_energy_with_g(PyObject *self, PyObject *args)
 				       temperature,
 				       unit_conversion_factor,
 				       cutoff_frequency);
+
+  free(fc3_normal_squared);
+  
+  Py_RETURN_NONE;
+}
+
+static PyObject *
+py_get_individual_imag_self_energy_with_g(PyObject *self, PyObject *args)
+{
+  PyArrayObject* gamma_py;
+  PyArrayObject* fc3_normal_squared_py;
+  PyArrayObject* frequencies_py;
+  PyArrayObject* grid_point_triplets_py;
+  PyArrayObject* triplet_weights_py;
+  PyArrayObject* g_py;
+  double unit_conversion_factor, cutoff_frequency, temperature;
+
+  if (!PyArg_ParseTuple(args, "OOOOOdOdd",
+			&gamma_py,
+			&fc3_normal_squared_py,
+			&grid_point_triplets_py,
+			&triplet_weights_py,
+			&frequencies_py,
+			&temperature,
+			&g_py,
+			&unit_conversion_factor,
+			&cutoff_frequency)) {
+    return NULL;
+  }
+
+  Darray* fc3_normal_squared = convert_to_darray(fc3_normal_squared_py);
+  double* gamma = (double*)gamma_py->data;
+  const double* g = (double*)g_py->data;
+  const double* frequencies = (double*)frequencies_py->data;
+  const int* grid_point_triplets = (int*)grid_point_triplets_py->data;
+  const int* triplet_weights = (int*)triplet_weights_py->data;
+
+  get_individual_imag_self_energy_at_bands_with_g(gamma,
+						  fc3_normal_squared,
+						  frequencies,
+						  grid_point_triplets,
+						  triplet_weights,
+						  g,
+						  temperature,
+						  unit_conversion_factor,
+						  cutoff_frequency);
 
   free(fc3_normal_squared);
   

@@ -77,12 +77,12 @@ void get_imag_self_energy_at_bands_with_g(double *imag_self_energy,
 
   ise = (double*)malloc(sizeof(double) * num_triplets * num_band0);
   individual_imag_self_energy_at_bands(ise,
-					   fc3_normal_squared,
-					   frequencies,
-					   triplets,
-					   g,
-					   temperature,
-					   cutoff_frequency);
+				       fc3_normal_squared,
+				       frequencies,
+				       triplets,
+				       g,
+				       temperature,
+				       cutoff_frequency);
   
   for (i = 0; i < num_band0; i++) {
     imag_self_energy[i] = 0;
@@ -111,12 +111,12 @@ void get_individual_imag_self_energy_at_bands_with_g
   num_band0 = fc3_normal_squared->dims[1];
 
   individual_imag_self_energy_at_bands(imag_self_energy,
-					   fc3_normal_squared,
-					   frequencies,
-					   triplets,
-					   g,
-					   temperature,
-					   cutoff_frequency);
+				       fc3_normal_squared,
+				       frequencies,
+				       triplets,
+				       g,
+				       temperature,
+				       cutoff_frequency);
   
   for (i = 0; i < num_triplets; i++) {
     for (j = 0; j < num_band0; j++) {
