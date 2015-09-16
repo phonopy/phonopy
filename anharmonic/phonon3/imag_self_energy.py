@@ -31,9 +31,9 @@ def get_imag_self_energy(interaction,
             Extract scattering event class 1 or 2. This can be enabled only when
             run_with_g is True.
         run_with_g:
-            Integration weigths are also used for smearing method. More memory
-            space is required, but a consistent routine can be used both in
-            tetrahedron method and smearing method.
+            Integration weigths are calculated from gaussian smearing function.
+            More memory space is required, but a consistent routine can be used
+            both in tetrahedron method and smearing method.
         log_level: Log level. 0 or non 0 in this method.
 
     Returns:

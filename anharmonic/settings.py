@@ -590,8 +590,8 @@ class Phono3pyConfParser(ConfParser):
         if params.has_key('read_gamma'):
             self._settings.set_read_gamma(params['read_gamma'])
             
-        # Calculate imag-part self energy with integration weights even for
-        # smearing method
+        # Calculate imag-part self energy with integration weights from gaussian
+        # smearing function
         if params.has_key('run_with_g'):
             self._settings.set_run_with_g(params['run_with_g'])
             

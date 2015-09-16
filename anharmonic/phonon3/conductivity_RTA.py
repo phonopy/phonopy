@@ -21,7 +21,8 @@ def get_thermal_conductivity_RTA(
         mesh_divisors=None,
         coarse_mesh_shifts=None,
         no_kappa_stars=False,
-        gv_delta_q=1e-4, # for group velocity
+        gv_delta_q=1e-4,
+        run_with_g=True, # integration weights from gaussian smearing function
         write_gamma=False,
         read_gamma=False,
         input_filename=None,
@@ -45,6 +46,7 @@ def get_thermal_conductivity_RTA(
             coarse_mesh_shifts=coarse_mesh_shifts,
             no_kappa_stars=no_kappa_stars,
             gv_delta_q=gv_delta_q,
+            run_with_g=run_with_g,
             log_level=log_level)
 
     if read_gamma:
@@ -243,7 +245,8 @@ class Conductivity_RTA(Conductivity):
                  mesh_divisors=None,
                  coarse_mesh_shifts=None,
                  no_kappa_stars=False,
-                 gv_delta_q=None, # finite difference for group veolocity
+                 gv_delta_q=None,
+                 run_with_g=True,
                  log_level=0):
 
         self._pp = None
@@ -251,6 +254,7 @@ class Conductivity_RTA(Conductivity):
         self._sigmas = None
         self._no_kappa_stars = None
         self._gv_delta_q = None
+        self._run_with_g = run_with_g
         self._log_level = None
         self._primitive = None
         self._dm = None
@@ -435,7 +439,7 @@ class Conductivity_RTA(Conductivity):
                 else:
                     print "sigma=%s" % sigma
             self._collision.set_sigma(sigma)
-            if not sigma:
+            if not sigma or self._run_with_g:
                 self._collision.set_integration_weights()
             for k, t in enumerate(self._temperatures):
                 self._collision.set_temperature(t)

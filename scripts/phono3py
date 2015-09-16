@@ -331,7 +331,7 @@ parser.add_option("--reducible_colmat", dest="is_reducible_collision_matrix",
                   action="store_true", help="Solve reducible collision matrix")
 parser.add_option("--run_without_g", dest="run_with_g", action="store_false",
                   help=("Calculate imag-part self energy without using "
-                        "integration weights even for smearing method"))
+                        "integration weights from gaussian smearing function"))
 parser.add_option("--scattering_event_class", dest="scattering_event_class",
                   type="int",
                   help=("Scattering event class 1 or 2 to draw imaginary part "
@@ -1131,6 +1131,7 @@ elif settings.get_is_bterta() or settings.get_is_lbte():
         is_reducible_collision_matrix=options.is_reducible_collision_matrix,
         no_kappa_stars=settings.get_no_kappa_stars(),
         gv_delta_q=settings.get_group_velocity_delta_q(),
+        run_with_g=settings.get_run_with_g(),
         pinv_cutoff=settings.get_pinv_cutoff(),
         write_gamma=settings.get_write_gamma(),
         read_gamma=settings.get_read_gamma(),
