@@ -328,7 +328,8 @@ class Phono3py:
                              frequency_step=None,
                              num_frequency_points=None,
                              temperatures=[0.0, 300.0],
-                             scattering_event_class=None):
+                             scattering_event_class=None,
+                             run_with_g=True):
         self._grid_points = grid_points
         self._temperatures = temperatures
         self._scattering_event_class = scattering_event_class
@@ -340,6 +341,7 @@ class Phono3py:
             num_frequency_points=num_frequency_points,
             temperatures=temperatures,
             scattering_event_class=scattering_event_class,
+            run_with_g=run_with_g,
             log_level=self._log_level)
             
     def write_imag_self_energy(self, filename=None):
@@ -356,13 +358,15 @@ class Phono3py:
         
     def run_linewidth(self,
                       grid_points,
-                      temperatures=np.arange(0, 1001, 10, dtype='double')):
+                      temperatures=np.arange(0, 1001, 10, dtype='double'),
+                      run_with_g=True):
         self._grid_points = grid_points
         self._temperatures = temperatures
         self._linewidth = get_linewidth(self._interaction,
                                         grid_points,
                                         self._sigmas,
                                         temperatures=temperatures,
+                                        run_with_g=run_with_g,
                                         log_level=self._log_level)
 
     def write_linewidth(self, filename=None):

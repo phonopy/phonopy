@@ -11,7 +11,36 @@ def get_imag_self_energy(interaction,
                          num_frequency_points=None,
                          temperatures=[0.0, 300.0],
                          scattering_event_class=None, # class 1 or 2
+                         run_with_g=True,
                          log_level=0):
+    """Imaginary part of self energy at frequency points
+
+    Band indices to be calculated at are kept in Interaction instance.
+
+    Args:
+        interaction: Ph-ph interaction
+        grid_points: Grid-point indices to be caclculated on
+        sigmas:
+            A set of sigmas. simga=None means to use tetrahedron method,
+            otherwise smearing method with real positive value of sigma.
+        frequency_step: Pitch of frequency to be sampled.
+        num_frequency_points: Number of sampling sampling points to be used
+            instead of frequency_step.
+        temperatures: Temperatures to be calculated at.
+        scattering_event_class:
+            Extract scattering event class 1 or 2. This can be enabled only when
+            run_with_g is True.
+        run_with_g:
+            Integration weigths are also used for smearing method. More memory
+            space is required, but a consistent routine can be used both in
+            tetrahedron method and smearing method.
+        log_level: Log level. 0 or non 0 in this method.
+
+    Returns:
+        Tuple: (Imaginary part of self energy, sampling frequency points)
+
+    """
+
     if temperatures is None:
         print "Temperatures have to be set."
         return False
@@ -71,10 +100,10 @@ def get_imag_self_energy(interaction,
                  
             for k, freq_point in enumerate(frequency_points_at_sigma):
                 ise.set_frequency_points([freq_point])
-                if (sigma is None) or (scattering_event_class is not None):
+                if sigma is None or run_with_g:
                     ise.set_integration_weights(
                         scattering_event_class=scattering_event_class)
-    
+
                 for l, t in enumerate(temperatures):
                     ise.set_temperature(t)
                     ise.run()
@@ -108,6 +137,7 @@ def get_linewidth(interaction,
                   grid_points,
                   sigmas,
                   temperatures=np.arange(0, 1001, 10, dtype='double'),
+                  run_with_g=True,
                   log_level=0):
     ise = ImagSelfEnergy(interaction)
     band_indices = interaction.get_band_indices()
@@ -140,9 +170,8 @@ def get_linewidth(interaction,
                 else:
                     print "Tetrahedron method"
             ise.set_sigma(sigma)
-            if not sigma:
+            if sigma is None or run_with_g:
                 ise.set_integration_weights()
-            
             for k, t in enumerate(temperatures):
                 ise.set_temperature(t)
                 ise.run()

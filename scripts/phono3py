@@ -165,6 +165,7 @@ parser.set_defaults(band_indices=None,
                     read_fc2=False,
                     read_fc3=False,
                     read_gamma=False,
+                    run_with_g=True,
                     output_filename=None,
                     pp_unit_conversion=None,
                     qpoints=None,
@@ -328,6 +329,13 @@ parser.add_option("--read_gamma", dest="read_gamma", action="store_true",
                   help="Read Gammas from files")
 parser.add_option("--reducible_colmat", dest="is_reducible_collision_matrix",
                   action="store_true", help="Solve reducible collision matrix")
+parser.add_option("--run_without_g", dest="run_with_g", action="store_false",
+                  help=("Calculate imag-part self energy without using "
+                        "integration weights even for smearing method"))
+parser.add_option("--scattering_event_class", dest="scattering_event_class",
+                  type="int",
+                  help=("Scattering event class 1 or 2 to draw imaginary part "
+                        "of self energy"))
 parser.add_option("--sym_fc2", dest="is_symmetrize_fc2", action="store_true",
                   help="Symmetrize fc2 by index exchange")
 parser.add_option("--sym_fc3r", dest="is_symmetrize_fc3_r", action="store_true",
@@ -351,10 +359,6 @@ parser.add_option("--tsym_type", dest="tsym_type", type="int",
                   help="Imposing type of translational invariance")
 parser.add_option("--tolerance", dest="symprec", type="float",
                   help="Symmetry tolerance to search")
-parser.add_option("--scattering_event_class", dest="scattering_event_class",
-                  type="int",
-                  help=("Scattering event class 1 or 2 to draw "
-                        "imaginary part of self energy"))
 parser.add_option("--uplo", dest="uplo", type="string", help="Lapack zheev UPLO")
 parser.add_option("-v", "--verbose", dest="verbose", action="store_true",
                   help="Detailed run-time information is displayed")
@@ -1102,7 +1106,8 @@ phono3py.set_phph_interaction(
 if settings.get_is_linewidth():
     phono3py.run_linewidth(
         grid_points,
-        temperatures=temperatures)
+        temperatures=temperatures,
+        run_with_g=settings.get_run_with_g())
     phono3py.write_linewidth(filename=output_filename)
 elif settings.get_is_frequency_shift():
     phono3py.get_frequency_shift(
@@ -1134,12 +1139,19 @@ elif settings.get_is_bterta() or settings.get_is_lbte():
         input_filename=input_filename,
         output_filename=output_filename)
 else:
+    if not settings.get_run_with_g() and settings.get_scattering_event_class():
+        print_error_message("--run_without_g and --scattering_event_class can "
+                            "not used together.")
+        if log_level:
+            print_error()
+        sys.exit(1)
     phono3py.run_imag_self_energy(
         grid_points,
         frequency_step=frequency_step,
         num_frequency_points=num_frequency_points,
         temperatures=temperature_points,
-        scattering_event_class=settings.get_scattering_event_class())
+        scattering_event_class=settings.get_scattering_event_class(),
+        run_with_g=settings.get_run_with_g())
     phono3py.write_imag_self_energy(filename=output_filename)
 
 if log_level:

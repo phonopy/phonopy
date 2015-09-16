@@ -26,6 +26,7 @@ class Phono3pySettings(Settings):
         self._read_amplitude = False
         self._read_collision = None
         self._read_gamma = False
+        self._run_with_g = True
         self._phonon_supercell_matrix = None
         self._pinv_cutoff = 1.0e-8
         self._scattering_event_class = None # scattering event class 1 or 2
@@ -149,11 +150,11 @@ class Phono3pySettings(Settings):
     def get_pinv_cutoff(self):
         return self._pinv_cutoff
 
-    def set_read_gamma(self, read_gamma):
-        self._read_gamma = read_gamma
+    def set_read_amplitude(self, read_amplitude):
+        self._read_amplitude = read_amplitude
 
-    def get_read_gamma(self):
-        return self._read_gamma
+    def get_read_amplitude(self):
+        return self._read_amplitude
 
     def set_read_collision(self, read_collision):
         self._read_collision = read_collision
@@ -161,11 +162,17 @@ class Phono3pySettings(Settings):
     def get_read_collision(self):
         return self._read_collision
 
-    def set_read_amplitude(self, read_amplitude):
-        self._read_amplitude = read_amplitude
+    def set_read_gamma(self, read_gamma):
+        self._read_gamma = read_gamma
 
-    def get_read_amplitude(self):
-        return self._read_amplitude
+    def get_read_gamma(self):
+        return self._read_gamma
+
+    def set_run_with_g(self, run_with_g):
+        self._run_with_g = run_with_g
+
+    def get_run_with_g(self):
+        return self._run_with_g
 
     def set_scattering_event_class(self, scattering_event_class):
         self._scattering_event_class = scattering_event_class
@@ -299,6 +306,10 @@ class Phono3pyConfParser(ConfParser):
             if opt.dest == 'read_gamma':
                 if self._options.read_gamma:
                     self._confs['read_gamma'] = '.true.'
+
+            if opt.dest == 'run_with_g':
+                if not self._options.run_with_g:
+                    self._confs['run_with_g'] = '.false.'
 
             if opt.dest == 'read_collision':
                 if self._options.read_collision is not None:
@@ -445,16 +456,20 @@ class Phono3pyConfParser(ConfParser):
                 if confs['read_amplitude'] == '.true.':
                     self.set_parameter('read_amplitude', True)
 
-            if conf_key == 'read_gamma':
-                if confs['read_gamma'] == '.true.':
-                    self.set_parameter('read_gamma', True)
-
             if conf_key == 'read_collision':
                 if confs['read_collision'] == 'all':
                     self.set_parameter('read_collision', 'all')
                 else:
                     vals = [int(x) for x in confs['read_collision'].split()]
                     self.set_parameter('read_collision', vals)
+
+            if conf_key == 'read_gamma':
+                if confs['read_gamma'] == '.true.':
+                    self.set_parameter('read_gamma', True)
+
+            if conf_key == 'run_with_g':
+                if confs['run_with_g'] == '.false.':
+                    self.set_parameter('run_with_g', False)
 
             if conf_key == 'scattering_event_class':
                 self.set_parameter('scattering_event_class',
@@ -567,13 +582,18 @@ class Phono3pyConfParser(ConfParser):
         if params.has_key('read_amplitude'):
             self._settings.set_read_amplitude(params['read_amplitude'])
 
+        # Read collision matrix and gammas from hdf5
+        if params.has_key('read_collision'):
+            self._settings.set_read_collision(params['read_collision'])
+
         # Read gammas from hdf5
         if params.has_key('read_gamma'):
             self._settings.set_read_gamma(params['read_gamma'])
             
-        # Read collision matrix and gammas from hdf5
-        if params.has_key('read_collision'):
-            self._settings.set_read_collision(params['read_collision'])
+        # Calculate imag-part self energy with integration weights even for
+        # smearing method
+        if params.has_key('run_with_g'):
+            self._settings.set_run_with_g(params['run_with_g'])
             
         # Sum partial kappa at q-stars
         if params.has_key('no_kappa_stars'):
