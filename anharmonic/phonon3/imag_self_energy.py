@@ -1,7 +1,8 @@
 import numpy as np
 from phonopy.units import VaspToTHz, Hbar, EV, Angstrom, THz, AMU
 from phonopy.phonon.degeneracy import degenerate_sets
-from anharmonic.phonon3.triplets import get_triplets_integration_weights, gaussian, occupation
+from anharmonic.phonon3.triplets import (get_triplets_integration_weights,
+                                         gaussian, occupation)
 import anharmonic.file_IO as file_IO
 
 def get_imag_self_energy(interaction,
@@ -12,6 +13,7 @@ def get_imag_self_energy(interaction,
                          temperatures=[0.0, 300.0],
                          scattering_event_class=None, # class 1 or 2
                          run_with_g=True,
+                         in_details=False,
                          log_level=0):
     """Imaginary part of self energy at frequency points
 
@@ -46,7 +48,7 @@ def get_imag_self_energy(interaction,
         return False
 
     mesh = interaction.get_mesh_numbers()
-    ise = ImagSelfEnergy(interaction)
+    ise = ImagSelfEnergy(interaction, in_details=in_details)
     imag_self_energy = []
     frequency_points = []
     for i, gp in enumerate(grid_points):
@@ -73,8 +75,12 @@ def get_imag_self_energy(interaction,
                 print "%8.4f" % freq,
             print "]"
 
-        ise_sigmas = []
+        gamma_sigmas = []
         fp_sigmas = []
+        if in_details:
+            triplets, weights, _, _ = interaction.get_triplets_at_q()
+            grid_address = interaction.get_grid_address()
+
         for j, sigma in enumerate(sigmas):
             if log_level:
                 if sigma:
@@ -94,9 +100,15 @@ def get_imag_self_energy(interaction,
                 frequency_step=frequency_step,
                 num_frequency_points=num_frequency_points)
             fp_sigmas.append(frequency_points_at_sigma)
-            ise_temperatures = np.zeros(
+            gamma = np.zeros(
                 (len(temperatures), len(frequency_points_at_sigma),
                  len(interaction.get_band_indices())), dtype='double')
+
+            if in_details:
+                detailed_gamma = np.zeros(
+                    (len(temperatures), len(frequency_points_at_sigma),
+                     len(weights), len(interaction.get_band_indices())),
+                    dtype='double')
                  
             for k, freq_point in enumerate(frequency_points_at_sigma):
                 ise.set_frequency_points([freq_point])
@@ -107,11 +119,25 @@ def get_imag_self_energy(interaction,
                 for l, t in enumerate(temperatures):
                     ise.set_temperature(t)
                     ise.run()
-                    ise_temperatures[l, k] = ise.get_imag_self_energy()[0]
-                    
-            ise_sigmas.append(ise_temperatures)
+                    gamma[l, k] = ise.get_imag_self_energy()[0]
+                    if in_details:
+                        detailed_gamma[l, k] = (
+                            ise.get_detailed_imag_self_energy()[0])
+
+            file_IO.write_detailed_gamma(
+                detailed_gamma,
+                temperatures,
+                mesh,
+                gp,
+                sigma,
+                triplets,
+                weights,
+                grid_address,
+                frequency_points=frequency_points_at_sigma)
+
+            gamma_sigmas.append(gamma)
             
-        imag_self_energy.append(ise_sigmas)
+        imag_self_energy.append(gamma_sigmas)
         frequency_points.append(fp_sigmas)
                 
     return imag_self_energy, frequency_points
@@ -236,6 +262,7 @@ class ImagSelfEnergy:
                  frequency_points=None,
                  temperature=None,
                  sigma=None,
+                 in_details=True,
                  unit_conversion=None,
                  lang='C'):
         self._pp = interaction
@@ -249,10 +276,12 @@ class ImagSelfEnergy:
 
         self._lang = lang
         self._imag_self_energy = None
+        self._detailed_imag_self_energy = None
         self._pp_strength = None
         self._frequencies = None
         self._triplets_at_q = None
         self._weights_at_q = None
+        self._in_details = in_details
         self._unit_conversion = None
         self._cutoff_frequency = interaction.get_cutoff_frequency()
 
@@ -260,6 +289,8 @@ class ImagSelfEnergy:
         self._mesh = self._pp.get_mesh_numbers()
         self._band_indices = self._pp.get_band_indices()
         self._is_collision_matrix = False
+
+        print "Detailed imag-part of self energy:", self._in_details
 
         # Unit to THz of Gamma
         if unit_conversion is None:
@@ -276,10 +307,17 @@ class ImagSelfEnergy:
         num_band0 = self._pp_strength.shape[1]
         if self._frequency_points is None:
             self._imag_self_energy = np.zeros(num_band0, dtype='double')
+            if self._in_details:
+                self._detailed_imag_self_energy = np.zeros(
+                    (len(self._triplets_at_q), num_band0), dtype='double')
             self._run_with_band_indices()
         else:
             self._imag_self_energy = np.zeros(
                 (len(self._frequency_points), num_band0), dtype='double')
+            if self._in_details:
+                self._detailed_imag_self_energy = np.zeros(
+                    (len(self._frequency_points),
+                     len(self._triplets_at_q), num_band0), dtype='double')
             self._run_with_frequency_points()
 
     def run_interaction(self):
@@ -325,6 +363,9 @@ class ImagSelfEnergy:
                         self._imag_self_energy[:, bi_set].sum(axis=1) /
                         len(bi_set))
         return imag_se
+
+    def get_detailed_imag_self_energy(self):
+        return self._detailed_imag_self_energy
             
     def set_grid_point(self, grid_point=None):
         if grid_point is None:
@@ -374,9 +415,11 @@ class ImagSelfEnergy:
     def _run_with_band_indices(self):
         if self._g is not None:
             if self._lang == 'C':
-                self._run_thm_c_with_band_indices()
+                self._run_c_with_band_indices_with_g()
+                if self._in_details:
+                    self._run_c_detailed_with_band_indices_with_g()
             else:
-                self._run_thm_py_with_band_indices()
+                self._run_py_with_band_indices_with_g()
         else:
             if self._lang == 'C':
                 self._run_c_with_band_indices()
@@ -386,9 +429,11 @@ class ImagSelfEnergy:
     def _run_with_frequency_points(self):
         if self._g is not None:
             if self._lang == 'C':
-                self._run_thm_c_with_frequency_points()
+                self._run_c_with_frequency_points_with_g()
+                if self._in_details:
+                    self._run_c_detailed_with_frequency_points_with_g()
             else:
-                self._run_thm_py_with_frequency_points()
+                self._run_py_with_frequency_points_with_g()
         else:
             if self._lang == 'C':
                 self._run_c_with_frequency_points()
@@ -408,7 +453,7 @@ class ImagSelfEnergy:
                                           self._unit_conversion,
                                           self._cutoff_frequency)
 
-    def _run_thm_c_with_band_indices(self):
+    def _run_c_with_band_indices_with_g(self):
         import anharmonic._phono3py as phono3c
         phono3c.imag_self_energy_with_g(self._imag_self_energy,
                                         self._pp_strength,
@@ -419,6 +464,19 @@ class ImagSelfEnergy:
                                         self._g,
                                         self._unit_conversion,
                                         self._cutoff_frequency)
+        
+    def _run_c_detailed_with_band_indices_with_g(self):
+        import anharmonic._phono3py as phono3c
+        phono3c.detailed_imag_self_energy_with_g(
+            self._detailed_imag_self_energy,
+            self._pp_strength,
+            self._triplets_at_q,
+            self._weights_at_q,
+            self._frequencies,
+            self._temperature,
+            self._g,
+            self._unit_conversion,
+            self._cutoff_frequency)
         
     def _run_c_with_frequency_points(self):
         import anharmonic._phono3py as phono3c
@@ -436,7 +494,7 @@ class ImagSelfEnergy:
                                      self._cutoff_frequency)
             self._imag_self_energy[i] = ise_at_f
 
-    def _run_thm_c_with_frequency_points(self):
+    def _run_c_with_frequency_points_with_g(self):
         import anharmonic._phono3py as phono3c
         g = np.zeros((2,) + self._pp_strength.shape, dtype='double')
         ise_at_f = np.zeros(self._imag_self_energy.shape[1], dtype='double')
@@ -454,6 +512,25 @@ class ImagSelfEnergy:
                                             self._cutoff_frequency)
             self._imag_self_energy[i] = ise_at_f
         
+    def _run_c_detailed_with_frequency_points_with_g(self):
+        import anharmonic._phono3py as phono3c
+        g = np.zeros((2,) + self._pp_strength.shape, dtype='double')
+        detailed_ise_at_f = np.zeros(self._detailed_imag_self_energy.shape[1:3],
+                                     dtype='double')
+        for i in range(len(self._frequency_points)):
+            for j in range(g.shape[2]):
+                g[:, :, j, :, :] = self._g[:, :, i, :, :]
+            phono3c.detailed_imag_self_energy_with_g(detailed_ise_at_f,
+                                                     self._pp_strength,
+                                                     self._triplets_at_q,
+                                                     self._weights_at_q,
+                                                     self._frequencies,
+                                                     self._temperature,
+                                                     g,
+                                                     self._unit_conversion,
+                                                     self._cutoff_frequency)
+            self._detailed_imag_self_energy[i] = detailed_ise_at_f
+            
     def _run_py_with_band_indices(self):
         for i, (triplet, w, interaction) in enumerate(
             zip(self._triplets_at_q,
@@ -498,7 +575,7 @@ class ImagSelfEnergy:
 
         return sum_g
 
-    def _run_thm_py_with_band_indices(self):
+    def _run_py_with_band_indices_with_g(self):
         if self._temperature > 0:
             self._ise_thm_with_band_indices()
         else:
@@ -577,7 +654,7 @@ class ImagSelfEnergy:
                           self._sigma)
             self._imag_self_energy[:, i] += g1 * interaction[i, j, k] * weight
         
-    def _run_thm_py_with_frequency_points(self):
+    def _run_py_with_frequency_points_with_g(self):
         if self._temperature > 0:
             self._ise_thm_with_frequency_points()
         else:

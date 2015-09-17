@@ -35,6 +35,7 @@ class Phono3pySettings(Settings):
         self._write_amplitude = False
         self._write_collision = False
         self._write_gamma = False
+        self._write_detailed_gamma = False
         
     def set_boundary_mfp(self, boundary_mfp):
         self._boundary_mfp = boundary_mfp
@@ -198,18 +199,23 @@ class Phono3pySettings(Settings):
     def get_write_amplitude(self):
         return self._write_amplitude
 
-    def set_write_gamma(self, write_gamma):
-        self._write_gamma = write_gamma
-
-    def get_write_gamma(self):
-        return self._write_gamma
-
     def set_write_collision(self, write_collision):
         self._write_collision = write_collision
 
     def get_write_collision(self):
         return self._write_collision
 
+    def set_write_detailed_gamma(self, write_detailed_gamma):
+        self._write_detailed_gamma = write_detailed_gamma
+
+    def get_write_detailed_gamma(self):
+        return self._write_detailed_gamma
+
+    def set_write_gamma(self, write_gamma):
+        self._write_gamma = write_gamma
+
+    def get_write_gamma(self):
+        return self._write_gamma
 
 
 class Phono3pyConfParser(ConfParser):
@@ -331,6 +337,10 @@ class Phono3pyConfParser(ConfParser):
             if opt.dest == 'write_amplitude':
                 if self._options.write_amplitude:
                     self._confs['write_amplitude'] = '.true.'
+
+            if opt.dest == 'write_detailed_gamma':
+                if self._options.write_detailed_gamma:
+                    self._confs['write_detailed_gamma'] = '.true.'
 
             if opt.dest == 'write_gamma':
                 if self._options.write_gamma:
@@ -490,6 +500,10 @@ class Phono3pyConfParser(ConfParser):
                 if confs['write_amplitude'] == '.true.':
                     self.set_parameter('write_amplitude', True)
 
+            if conf_key == 'write_detailed_gamma':
+                if confs['write_detailed_gamma'] == '.true.':
+                    self.set_parameter('write_detailed_gamma', True)
+                    
             if conf_key == 'write_gamma':
                 if confs['write_gamma'] == '.true.':
                     self.set_parameter('write_gamma', True)
@@ -617,7 +631,12 @@ class Phono3pyConfParser(ConfParser):
         if params.has_key('write_amplitude'):
             self._settings.set_write_amplitude(params['write_amplitude'])
 
-        # Write gammas to hdf5
+        # Write detailed imag-part of self energy to hdf5
+        if params.has_key('write_detailed_gamma'):
+            self._settings.set_write_detailed_gamma(
+                params['write_detailed_gamma'])
+
+        # Write imag-part of self energy to hdf5
         if params.has_key('write_gamma'):
             self._settings.set_write_gamma(params['write_gamma'])
 

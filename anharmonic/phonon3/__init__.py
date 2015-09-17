@@ -329,7 +329,8 @@ class Phono3py:
                              num_frequency_points=None,
                              temperatures=[0.0, 300.0],
                              scattering_event_class=None,
-                             run_with_g=True):
+                             run_with_g=True,
+                             in_details=False):
         self._grid_points = grid_points
         self._temperatures = temperatures
         self._scattering_event_class = scattering_event_class
@@ -342,6 +343,7 @@ class Phono3py:
             temperatures=temperatures,
             scattering_event_class=scattering_event_class,
             run_with_g=run_with_g,
+            in_details=in_details,
             log_level=self._log_level)
             
     def write_imag_self_energy(self, filename=None):

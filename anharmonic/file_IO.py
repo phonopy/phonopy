@@ -997,6 +997,36 @@ def read_amplitude_from_hdf5(amplitudes_at_q,
     suffix += ("-g%d" % grid_point)
     f = h5py.File("amplitude" + suffix + ".hdf5", 'r')
     amplitudes_at_q[:] = f['amplitudes'][:]
+
+def write_detailed_gamma(detailed_gamma,
+                         temperature,
+                         mesh,
+                         grid_point,
+                         sigma,
+                         triplets,
+                         weights,
+                         grid_address,
+                         frequency_points=None,
+                         filename=None):
+    suffix = "-m%d%d%d" % tuple(mesh)
+    if grid_point is not None:
+        suffix += ("-g%d" % grid_point)
+    if sigma is not None:
+        sigma_str = ("%f" % sigma).rstrip('0').rstrip('\.')
+        suffix += "-s" + sigma_str
+    if filename is not None:
+        suffix += "." + filename
+
+    w = h5py.File("gamma_detail" + suffix + ".hdf5", 'w')
+    w.create_dataset('gamma_detail', data=detailed_gamma)
+    w.create_dataset('temperature', data=temperature)
+    w.create_dataset('mesh', data=mesh)
+    w.create_dataset('triplet', data=triplets)
+    w.create_dataset('weight', data=weights)
+    w.create_dataset('grid_address', data=grid_address)
+    if frequency_points is not None:
+        w.create_dataset('frequency_point', data=frequency_points)
+    w.close()
         
 def write_decay_channels(decay_channels,
                          amplitudes_at_q,

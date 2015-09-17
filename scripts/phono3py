@@ -112,8 +112,8 @@ parser.set_defaults(band_indices=None,
                     boundary_mfp=None,
                     cutoff_pair_distance=None,
                     delta_fc2=False,
-                    displacement_distance=None,
                     delta_fc2_sets_mode=False,
+                    displacement_distance=None,
                     factor=None,
                     force_sets_to_forces_fc2_mode=None,
                     forces_fc3_mode=False,
@@ -184,6 +184,7 @@ parser.set_defaults(band_indices=None,
                     verbose=False,
                     write_amplitude=False,
                     write_collision=False,
+                    write_detailed_gamma=False,
                     write_gamma=False,
                     write_grid_points=False)
 parser.add_option("--amplitude", dest="displacement_distance", type="float",
@@ -370,8 +371,10 @@ parser.add_option("--wgp", "--write_grid_points", dest="write_grid_points",
 #                   help="Write phonon-phonon interaction amplitudes")
 parser.add_option("--write_collision", dest="write_collision", action="store_true",
                   help="Write collision matrix and Gammas to files")
+parser.add_option("--write_detailed_gamma", dest="write_detailed_gamma",
+                  action="store_true", help="Write out detailed imag-part of self energy")
 parser.add_option("--write_gamma", dest="write_gamma", action="store_true",
-                  help="Write Gammas to files")
+                  help="Write imag-part of self energy to files")
 (options, args) = parser.parse_args()
 option_list = parser.option_list
 
@@ -1014,6 +1017,8 @@ if log_level:
 
     if settings.get_average_pp_interaction() and run_mode == "conductivity":
         print "Use averaged ph-ph interaction"
+
+    
         
     if log_level > 1:
         print "Frequency factor to THz:", frequency_factor_to_THz
@@ -1152,7 +1157,8 @@ else:
         num_frequency_points=num_frequency_points,
         temperatures=temperature_points,
         scattering_event_class=settings.get_scattering_event_class(),
-        run_with_g=settings.get_run_with_g())
+        run_with_g=settings.get_run_with_g(),
+        in_details=settings.get_write_detailed_gamma())
     phono3py.write_imag_self_energy(filename=output_filename)
 
 if log_level:

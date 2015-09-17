@@ -39,14 +39,13 @@
 #include <phonoc_utils.h>
 #include <phonon3_h/imag_self_energy_with_g.h>
 
-static void
-individual_imag_self_energy_at_bands(double *imag_self_energy,
-				     const Darray *fc3_normal_squared,
-				     const double *frequencies,
-				     const int *triplets,
-				     const double *g,
-				     const double temperature,
-				     const double cutoff_frequency);
+static void detailed_imag_self_energy_at_bands(double *imag_self_energy,
+					       const Darray *fc3_normal_squared,
+					       const double *frequencies,
+					       const int *triplets,
+					       const double *g,
+					       const double temperature,
+					       const double cutoff_frequency);
 static double sum_imag_self_energy_at_band(const int num_band,
 					   const double *fc3_normal_squared,
 					   const double *n1,
@@ -76,13 +75,13 @@ void get_imag_self_energy_at_bands_with_g(double *imag_self_energy,
   num_band0 = fc3_normal_squared->dims[1];
 
   ise = (double*)malloc(sizeof(double) * num_triplets * num_band0);
-  individual_imag_self_energy_at_bands(ise,
-				       fc3_normal_squared,
-				       frequencies,
-				       triplets,
-				       g,
-				       temperature,
-				       cutoff_frequency);
+  detailed_imag_self_energy_at_bands(ise,
+				     fc3_normal_squared,
+				     frequencies,
+				     triplets,
+				     g,
+				     temperature,
+				     cutoff_frequency);
   
   for (i = 0; i < num_band0; i++) {
     imag_self_energy[i] = 0;
@@ -94,7 +93,7 @@ void get_imag_self_energy_at_bands_with_g(double *imag_self_energy,
   free(ise);
 }
 
-void get_individual_imag_self_energy_at_bands_with_g
+void get_detailed_imag_self_energy_at_bands_with_g
 (double *imag_self_energy,
  const Darray *fc3_normal_squared,
  const double *frequencies,
@@ -110,13 +109,13 @@ void get_individual_imag_self_energy_at_bands_with_g
   num_triplets = fc3_normal_squared->dims[0];
   num_band0 = fc3_normal_squared->dims[1];
 
-  individual_imag_self_energy_at_bands(imag_self_energy,
-				       fc3_normal_squared,
-				       frequencies,
-				       triplets,
-				       g,
-				       temperature,
-				       cutoff_frequency);
+  detailed_imag_self_energy_at_bands(imag_self_energy,
+				     fc3_normal_squared,
+				     frequencies,
+				     triplets,
+				     g,
+				     temperature,
+				     cutoff_frequency);
   
   for (i = 0; i < num_triplets; i++) {
     for (j = 0; j < num_band0; j++) {
@@ -126,14 +125,13 @@ void get_individual_imag_self_energy_at_bands_with_g
   }
 }
 
-static void
-individual_imag_self_energy_at_bands(double *imag_self_energy,
-				     const Darray *fc3_normal_squared,
-				     const double *frequencies,
-				     const int *triplets,
-				     const double *g,
-				     const double temperature,
-				     const double cutoff_frequency)
+static void detailed_imag_self_energy_at_bands(double *imag_self_energy,
+					       const Darray *fc3_normal_squared,
+					       const double *frequencies,
+					       const int *triplets,
+					       const double *g,
+					       const double temperature,
+					       const double cutoff_frequency)
 {
   int i, j, num_triplets, num_band0, num_band, gp1, gp2;
   double f1, f2;

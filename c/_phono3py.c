@@ -62,7 +62,7 @@ static PyObject * py_get_imag_self_energy_at_bands(PyObject *self,
 						   PyObject *args);
 static PyObject * py_get_imag_self_energy_with_g(PyObject *self, PyObject *args);
 static PyObject *
-py_get_individual_imag_self_energy_with_g(PyObject *self, PyObject *args);
+py_get_detailed_imag_self_energy_with_g(PyObject *self, PyObject *args);
 static PyObject * py_get_frequency_shift_at_bands(PyObject *self,
 						  PyObject *args);
 static PyObject * py_get_collision_matrix(PyObject *self, PyObject *args);
@@ -106,9 +106,9 @@ static PyMethodDef functions[] = {
    "Imaginary part of self energy at bands"},
   {"imag_self_energy_with_g", py_get_imag_self_energy_with_g, METH_VARARGS,
    "Imaginary part of self energy at frequency points with g"},
-  {"individual_imag_self_energy_with_g",
-   py_get_individual_imag_self_energy_with_g, METH_VARARGS,
-   "Individual contribution to imaginary part of self energy at frequency points with g"},
+  {"detailed_imag_self_energy_with_g",
+   py_get_detailed_imag_self_energy_with_g, METH_VARARGS,
+   "Detailed contribution to imaginary part of self energy at frequency points with g"},
   {"frequency_shift_at_bands", py_get_frequency_shift_at_bands, METH_VARARGS,
    "Phonon frequency shift from third order force constants"},
   {"collision_matrix", py_get_collision_matrix, METH_VARARGS,
@@ -377,7 +377,7 @@ static PyObject * py_get_imag_self_energy_with_g(PyObject *self, PyObject *args)
 }
 
 static PyObject *
-py_get_individual_imag_self_energy_with_g(PyObject *self, PyObject *args)
+py_get_detailed_imag_self_energy_with_g(PyObject *self, PyObject *args)
 {
   PyArrayObject* gamma_py;
   PyArrayObject* fc3_normal_squared_py;
@@ -407,15 +407,15 @@ py_get_individual_imag_self_energy_with_g(PyObject *self, PyObject *args)
   const int* grid_point_triplets = (int*)grid_point_triplets_py->data;
   const int* triplet_weights = (int*)triplet_weights_py->data;
 
-  get_individual_imag_self_energy_at_bands_with_g(gamma,
-						  fc3_normal_squared,
-						  frequencies,
-						  grid_point_triplets,
-						  triplet_weights,
-						  g,
-						  temperature,
-						  unit_conversion_factor,
-						  cutoff_frequency);
+  get_detailed_imag_self_energy_at_bands_with_g(gamma,
+						fc3_normal_squared,
+						frequencies,
+						grid_point_triplets,
+						triplet_weights,
+						g,
+						temperature,
+						unit_conversion_factor,
+						cutoff_frequency);
 
   free(fc3_normal_squared);
   
