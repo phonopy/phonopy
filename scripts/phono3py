@@ -591,6 +591,8 @@ if grid_addresses is not None:
     grid_points = [get_grid_point_from_address(ga, mesh)
                    for ga in grid_addresses]
 band_indices = settings.get_band_indices()
+
+# Brillouin zone integration: Tetrahedron (default) or smearing method
 sigma = settings.get_sigma()
 if sigma is None:
     sigmas = []
@@ -600,6 +602,9 @@ else:
     sigmas = sigma
 if settings.get_is_tetrahedron_method():
     sigmas = [None] + sigmas
+if len(sigmas) == 0:
+    sigmas = [None]
+
 if settings.get_temperatures() is None:
     if options.is_joint_dos:
         temperature_points = None
