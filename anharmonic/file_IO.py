@@ -1017,7 +1017,9 @@ def write_detailed_gamma(detailed_gamma,
     if filename is not None:
         suffix += "." + filename
 
-    w = h5py.File("gamma_detail" + suffix + ".hdf5", 'w')
+    full_filename = "gamma_detail" + suffix + ".hdf5"
+
+    w = h5py.File(full_filename, 'w')
     w.create_dataset('gamma_detail', data=detailed_gamma)
     w.create_dataset('temperature', data=temperature)
     w.create_dataset('mesh', data=mesh)
@@ -1027,6 +1029,8 @@ def write_detailed_gamma(detailed_gamma,
     if frequency_points is not None:
         w.create_dataset('frequency_point', data=frequency_points)
     w.close()
+
+    return full_filename
         
 def write_decay_channels(decay_channels,
                          amplitudes_at_q,

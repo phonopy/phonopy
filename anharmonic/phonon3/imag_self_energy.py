@@ -87,6 +87,7 @@ def get_imag_self_energy(interaction,
                     print "Sigma:", sigma
                 else:
                     print "Tetrahedron method"
+
             ise.set_sigma(sigma)
             if sigma:
                 fmax = max_phonon_freq * 2 + sigma * 4
@@ -124,18 +125,23 @@ def get_imag_self_energy(interaction,
                         detailed_gamma[l, k] = (
                             ise.get_detailed_imag_self_energy()[0])
 
-            file_IO.write_detailed_gamma(
-                detailed_gamma,
-                temperatures,
-                mesh,
-                gp,
-                sigma,
-                triplets,
-                weights,
-                grid_address,
-                frequency_points=frequency_points_at_sigma)
-
             gamma_sigmas.append(gamma)
+
+            if in_details:
+                filename = file_IO.write_detailed_gamma(
+                    detailed_gamma,
+                    temperatures,
+                    mesh,
+                    gp,
+                    sigma,
+                    triplets,
+                    weights,
+                    grid_address,
+                    frequency_points=frequency_points_at_sigma)
+
+                if log_level:
+                    print ("Contribution of each triplet to imaginary part of "
+                           "self energy is written in\n\"%s\"." % filename)
             
         imag_self_energy.append(gamma_sigmas)
         frequency_points.append(fp_sigmas)
@@ -289,8 +295,6 @@ class ImagSelfEnergy:
         self._mesh = self._pp.get_mesh_numbers()
         self._band_indices = self._pp.get_band_indices()
         self._is_collision_matrix = False
-
-        print "Detailed imag-part of self energy:", self._in_details
 
         # Unit to THz of Gamma
         if unit_conversion is None:
