@@ -376,12 +376,17 @@ elif options.sampling_mesh:
             plt.suptitle(options.title)
 
     if options.volumes_filename is not None:
-        f = open(options.volumes_filename)
-        volumes = [float(x.split()[0]) for x in f]
-        gruneisen.write_yaml_thermal_properties(volumes,
-                                                t_step=options.tstep,
-                                                t_max=options.tmax,
-                                                t_min=options.tmin)
+        volumes = []
+        with open(options.volumes_filename) as f:
+            for line in f:
+                if line.strip()[0] == '#':
+                    continue
+                volumes.append(float(line.split()[0]))
+        if volumes:
+            gruneisen.write_yaml_thermal_properties(volumes,
+                                                    t_step=options.tstep,
+                                                    t_max=options.tmax,
+                                                    t_min=options.tmin)
 else:
     pass
 
