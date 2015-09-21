@@ -47,6 +47,7 @@ class PhonopyGruneisen:
 
         self._mesh = None
         self._band_structure = None
+        self._thermal_properties = None
 
     def get_phonon(self):
         return self._phonon
@@ -111,17 +112,23 @@ class PhonopyGruneisen:
                             color_scheme=None):
         return self._band_structure.plot(epsilon=epsilon,
                                          color_scheme=color_scheme)
+
+    def set_thermal_properties(self,
+                               volumes,
+                               t_step=2,
+                               t_max=2004,
+                               t_min=0,
+                               cutoff_frequency=None):
+        self._thermal_properties  = GruneisenThermalProperties(
+            self._mesh,
+            volumes,
+            t_step=t_step,
+            t_max=t_max,
+            t_min=t_min,
+            cutoff_frequency=cutoff_frequency)
+
+    def get_thermal_properties(self):
+        return self._thermal_properties
         
-    def write_yaml_thermal_properties(self,
-                                      volumes,
-                                      t_step=2,
-                                      t_max=2004,
-                                      t_min=0,
-                                      cutoff_frequency=None):
-        gtp = GruneisenThermalProperties(self._mesh,
-                                         volumes,
-                                         t_step=t_step,
-                                         t_max=t_max,
-                                         t_min=t_min,
-                                         cutoff_frequency=cutoff_frequency)
-        gtp.write_yaml()
+    def write_yaml_thermal_properties(self, filename='thermal_properties'):
+        self._thermal_properties.write_yaml(filename=filename)
