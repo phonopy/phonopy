@@ -53,7 +53,8 @@ def get_cell(cell_filename,
              interface_mode):
     cell, optional_structure_file_information = read_crystal_structure(
         filename=cell_filename,
-        interface_mode=interface_mode)
+        interface_mode=interface_mode,
+        yaml_mode=options.yaml_mode)
     if cell is None:
         print ("Crystal structure file of %s could not be found." %
                optional_structure_file_information[0])
@@ -147,7 +148,8 @@ parser.set_defaults(
     tmin=0,
     tstep=2,
     volumes_filename=None,
-    wien2k_mode=False)
+    wien2k_mode=False,
+    yaml_mode=False)
 parser.add_option("--abinit", dest="abinit_mode",
                   action="store_true", help="Invoke Abinit mode")
 parser.add_option("--band", dest="band_paths",
@@ -218,6 +220,8 @@ parser.add_option("--vf", "--volumes_filename", dest="volumes_filename",
                   help="Filename of volume is contained.")
 parser.add_option("--wien2k", dest="wien2k_mode",
                   action="store_true", help="Invoke Wien2k mode")
+parser.add_option("--yaml", dest="yaml_mode",
+                  action="store_true", help="Activate phonopy YAML mode")
 (options, args) = parser.parse_args()
 
 if options.is_hdf5:
@@ -383,10 +387,11 @@ elif options.sampling_mesh:
                     continue
                 volumes.append(float(line.split()[0]))
         if volumes:
-            gruneisen.write_yaml_thermal_properties(volumes,
-                                                    t_step=options.tstep,
-                                                    t_max=options.tmax,
-                                                    t_min=options.tmin)
+            gruneisen.set_thermal_properties(volumes,
+                                             t_step=options.tstep,
+                                             t_max=options.tmax,
+                                             t_min=options.tmin)
+            gruneisen.write_yaml_thermal_properties()
 else:
     pass
 
