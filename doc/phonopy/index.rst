@@ -56,7 +56,7 @@ Selected features of harmonic and quasi-harmonic phonons are:
 |i0| |i1| |i2| |i3|
 
 
-Interfaces for calculators
+Interfaces to calculators
 ===========================
 
 - :ref:`VASP interface <tutorial>` (:ref:`finite displacement method <reference_plk>`)

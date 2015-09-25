@@ -205,6 +205,8 @@ Example
 
 This file is used with the ``--nac`` option or ``NAC`` tag.
 
+The formula implemented is refered to :ref:`non_analytical_term_correction_theory`.
+
 .. ``--nac_old`` option
 .. ~~~~~~~~~~~~~~~~~~~~~
 

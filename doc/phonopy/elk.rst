@@ -3,7 +3,7 @@
 Elk & phonopy calculation
 =========================================
 
-Supported Pwscf tags
+Supported Elk tags
 ---------------------------
 
 Currently Elk tags that phonopy can read are shown below.

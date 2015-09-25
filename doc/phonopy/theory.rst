@@ -1,8 +1,8 @@
 .. _formulations:
 
-==============================
-Formulations
-==============================
+==============
+ Formulations
+==============
 
 Second-order force constants
 ============================
@@ -163,7 +163,7 @@ site-symmetry operations. This is solved by pseudo inverse.
 .. _dynacmial_matrix_theory:
 
 Dynamical matrix
-=================
+================
 
 In phonopy, a phase convention of dynamical matrix is used as follows:
 
@@ -210,7 +210,7 @@ constant, and :math:`t` is the time.
 .. _non_analytical_term_correction_theory:
 
 Non-analytical term correction
-===============================
+==============================
 
 To correct long range interaction of macroscopic electric field
 induced by polarization of collective ionic motions near the
@@ -222,8 +222,8 @@ non-analytical term is given by,
 .. math::
 
    D_{\alpha\beta}(jj',\mathbf{q}\to \mathbf{0}) =
-    D_{\alpha\beta}^{\mathrm{N}}(jj',\mathbf{q}\to \mathbf{0})
-    + \frac{4\pi}{\sqrt{m_j m_j}\Omega_0}
+    D_{\alpha\beta}(jj',\mathbf{q}=\mathbf{0})
+    + \frac{1}{\sqrt{m_j m_j}} \frac{4\pi}{\Omega_0}
     \frac{[\sum_{\gamma}q_{\gamma}Z^{*}_{j,\gamma\alpha}][\sum_{\gamma'}q_{\gamma'}Z^{*}_{j',\gamma'\beta}]}
     {\sum_{\alpha\beta}q_{\alpha}\epsilon_{\alpha\beta}^{\infty} q_{\beta}}.
 
@@ -235,17 +235,17 @@ method of Wang *et al.* (:ref:`reference_wang_NAC`).
 .. _thermal_properties_expressions:
 
 Thermodynamic properties
-=========================
+========================
 
 Phonon number
---------------
+-------------
 
 .. math::
 
    n = \frac{1}{\exp(\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B} T)-1}
 
 Harmonic phonon energy
------------------------
+----------------------
 
 .. math::
 
@@ -254,7 +254,7 @@ Harmonic phonon energy
 
 
 Constant volume heat capacity
--------------------------------
+-----------------------------
 
 .. math::
 
@@ -265,7 +265,7 @@ Constant volume heat capacity
     T)}{[\exp(\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B} T)-1]^2} 
 
 Partition function
--------------------
+------------------
 
 .. math::
 
@@ -274,7 +274,7 @@ Partition function
     T)}{1-\exp(-\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B} T)} 
 
 Helmholtz free energy
-----------------------
+---------------------
 
 .. math::
 
@@ -284,7 +284,7 @@ Helmholtz free energy
     \bigl[1 -\exp(-\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B} T) \bigr] 
 
 Entropy
----------
+-------
 
 .. math::
 
@@ -292,18 +292,65 @@ Entropy
       &= \frac{1}{2T}\sum_{\mathbf{q}\nu}\hbar\omega(\mathbf{q}\nu)\coth(\hbar\omega(\mathbf{q}\nu)/2k_\mathrm{B}T)-k_\mathrm{B} \sum_{\mathbf{q}\nu}\ln\left[2\sinh(\hbar\omega(\mathbf{q}\nu)/2k_\mathrm{B}T)\right]
 
 Thermal displacement
-======================
+====================
 
 .. toctree::
 
    thermal-displacement
 
 Group velocity
-================
+==============
 
 .. toctree::
 
    group-velocity
+
+.. _physical_unit_conversion:
+
+About physical unit conversion
+==============================
+
+Phonopy calculates phonon frequencies based on input values from
+users. In the default case, the physical units of distance, atomic
+mass, force, and force constants are supposed to be
+:math:`\text{\AA}`, :math:`\text{AMU}`, :math:`\text{eV/\AA}`, and
+:math:`\text{eV/\AA}^2`, respectively, and the physical unit of the
+phonon frequency is converted to THz. This conversion is made as
+follows:
+
+Internally phonon frequency has the physical unit of
+:math:`\sqrt{\text{eV/}(\text{\AA}^2\cdot \text{AMU})}` in angular
+frequency. To convert this unit to THz (not angular frequency), the
+calculation of ``sqrt(EV/AMU)/Angstrom/(2*pi)/1e12`` is made. ``EV``,
+``AMU``, ``Angstrom`` are the values to convert them to those in the
+SI base unit, i.e., to Joule, kg, and metre, respectively. These values
+implemented in phonopy are found at `a phonopy github page
+<https://github.com/atztogo/phonopy/blob/master/phonopy/units.py>`_. This
+unit conversion factor can be manually specified. See
+:ref:`unit_conversion_factor_option`.
+
+The unit conversion factor in the ``BORN`` file is multiplied with the second
+term of the right hand side of the equation in
+:ref:`non_analytical_term_correction_theory` where this equation is written
+with atomic units (:ref:`Gonze and Lee, 1997 <reference_NAC>`).
+The physical unit of the part of the equation corresponding to force
+constants:
+
+.. math::
+    \frac{4\pi}{\Omega_0}
+    \frac{[\sum_{\gamma}q_{\gamma}Z^{*}_{j,\gamma\alpha}]
+    [\sum_{\gamma'}q_{\gamma'}Z^{*}_{j',\gamma'\beta}]}
+    {\sum_{\alpha\beta}q_{\alpha}\epsilon_{\alpha\beta}^{\infty} q_{\beta}}.
+
+is :math:`[\text{hartree}/\text{bohr}^2]`. In the default case for the
+VASP interface, internally :math:`\Omega_0` is given in
+:math:`\text{\AA}^3`. In total, the necessary unit conversion is
+:math:`(\text{hartree} \rightarrow \text{eV}) \times (\text{bohr}
+\rightarrow \text{\AA})=14.4`. In the default case of the Wien2k
+interface, the conversion factor is :math:`(\text{hartree}
+\rightarrow \text{mRy})=2000`. For the other interfaces, the
+conversion factors are similarly calculated following the unit
+systems employed in phonopy (:ref:`calculator_interfaces`).
       
 .. |sflogo| image:: http://sflogo.sourceforge.net/sflogo.php?group_id=161614&type=1
             :target: http://sourceforge.net

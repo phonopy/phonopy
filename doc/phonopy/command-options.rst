@@ -55,29 +55,12 @@ tags.
 Force calculators
 ------------------
 
-If none of the following calculators are specified, VASP mode is invoked.
+Currently interfaces for VASP, Wien2k, Pwscf, Abinit, and Elk are
+prepared. Wien2k, Pwscf, Abinit and Elk interfaces are invoked with
+``--wienk2``, ``--pwscf``, ``--abinit``, and ``--elk`` options,
+respectively, and if none of these options is specified, VASP mode is invoked.
 
-The physical unit system used for the calculators are shown below.
-
-::
-
-           | Distance   Atomic mass   Force         Force constants
-   -----------------------------------------------------------------
-   VASP    | Angstrom   AMU           eV/Angstrom   eV/Angstrom^2
-   Wien2k  | au (bohr)  AMU           mRy/au        mRy/au^2
-   Pwscf   | au (bohr)  AMU           Ry/au         Ry/au^2
-   Abinit  | au (bohr)  AMU           eV/Angstrom   eV/Angstrom.au
-   elk     | au (bohr)  AMU           hartree/au    hartree/au^2
-
-
-Default unit cell file names are as follows::
-    
-   VASP    | POSCAR     
-   Wien2k  | case.struct
-   Abinit  | unitcell.in
-   Pwscf   | unitcell.in
-   Elk     | elk.in
-
+The details about these interfaces are found at :ref:`calculator_interfaces`.
 
 .. _wien2k_mode:
 
@@ -329,13 +312,12 @@ Unit conversion factor
 ~~~~~~~~~~~~
 
 Unit conversion factor of frequency from input values to your favorite
-unit is specified. Default value is used to convert to THz. In the
-case of VASP mode, it is calculated by
-:math:`\sqrt{\text{eV/AMU}}`/(:math:`\text{\AA}\cdot2\pi\cdot10^{12}`)
-(=15.633302) in SI base unit. The default conversion factors for
-``wien2k``, ``abinit``, ``pwscf``, and ``elk`` are 3.44595, 21.49068,
-108.9708, and 154.1079 respectively. These are determined following
-the physical unit systems of the calculators.
+unit is specified. The default value is that to convert to THz. The
+default conversion factors for ``wien2k``, ``abinit``, ``pwscf``, and
+``elk`` are 3.44595, 21.49068, 108.9708, and 154.1079
+respectively. These are determined following the physical unit systems
+of the calculators. How to calcualte these conversion factors is
+explained at :ref:`physical_unit_conversion`.
 
 When calculating thermal property, the factor to THz is
 required. Otherwise the calculated thermal properties have wrong
@@ -345,6 +327,8 @@ where the frequency is simply shown in the unit you specified.
 ::
 
    % phonopy --factor=521.471
+
+
 
 Log level
 ----------
