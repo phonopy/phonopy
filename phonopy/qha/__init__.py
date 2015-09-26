@@ -618,8 +618,6 @@ class QHA:
     def _set_heat_capacity_P_polyfit(self):
         cp = [0.0]
         dsdv = [0.0]
-        wve = open('entropy-volume.dat', 'w')
-        wvcv = open('Cv-volume.dat', 'w')
         self._volume_entropy_parameters = []
         self._volume_cv_parameters = []
         self._volume_entropy = []
