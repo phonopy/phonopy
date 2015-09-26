@@ -129,6 +129,7 @@ parser.set_defaults(
     cutoff_frequency=None,
     cutoff_wave_vector=1e-4,
     factor=None,
+    is_gamma_center=False,
     is_hdf5=False,
     is_nac=False,
     is_mesh_symmetry=True,
@@ -172,6 +173,9 @@ parser.add_option("--factor", dest="factor", type="float",
                   help="Conversion factor to favorite frequency unit")
 parser.add_option("--hdf5", dest="is_hdf5", action="store_true",
                   help="Use hdf5 to read force constants and store results")
+parser.add_option("--gc", "--gamma_center", dest="is_gamma_center",
+                  action="store_true",
+                  help="Set mesh as Gamma center")
 parser.add_option("--marker", dest="marker",
                   action="store", type="string",
                   help="Marker for plot (matplotlib)")
@@ -364,6 +368,7 @@ if options.band_paths:
 elif options.sampling_mesh:
     mesh_numbers = np.array([int(x) for x in options.sampling_mesh.split()])
     gruneisen.set_mesh(mesh_numbers,
+                       is_gamma_center=options.is_gamma_center,
                        is_mesh_symmetry=options.is_mesh_symmetry)
 
     if options.is_hdf5:
