@@ -383,15 +383,13 @@ py_get_detailed_imag_self_energy_with_g(PyObject *self, PyObject *args)
   PyArrayObject* fc3_normal_squared_py;
   PyArrayObject* frequencies_py;
   PyArrayObject* grid_point_triplets_py;
-  PyArrayObject* triplet_weights_py;
   PyArrayObject* g_py;
   double unit_conversion_factor, cutoff_frequency, temperature;
 
-  if (!PyArg_ParseTuple(args, "OOOOOdOdd",
+  if (!PyArg_ParseTuple(args, "OOOOdOdd",
 			&gamma_py,
 			&fc3_normal_squared_py,
 			&grid_point_triplets_py,
-			&triplet_weights_py,
 			&frequencies_py,
 			&temperature,
 			&g_py,
@@ -405,13 +403,11 @@ py_get_detailed_imag_self_energy_with_g(PyObject *self, PyObject *args)
   const double* g = (double*)g_py->data;
   const double* frequencies = (double*)frequencies_py->data;
   const int* grid_point_triplets = (int*)grid_point_triplets_py->data;
-  const int* triplet_weights = (int*)triplet_weights_py->data;
 
   get_detailed_imag_self_energy_at_bands_with_g(gamma,
 						fc3_normal_squared,
 						frequencies,
 						grid_point_triplets,
-						triplet_weights,
 						g,
 						temperature,
 						unit_conversion_factor,

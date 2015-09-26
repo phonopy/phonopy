@@ -51,7 +51,6 @@ void get_individual_imag_self_energy_at_bands_with_g
  const Darray *fc3_normal_squared,
  const double *frequencies,
  const int *triplets,
- const int *weights,
  const double *g,
  const double temperature,
  const double unit_conversion_factor,

@@ -571,21 +571,30 @@ def write_grid_address(grid_address, mesh, filename=None):
 
     return grid_address_filename
 
+def write_grid_address_to_hdf5(grid_address, mesh, filename=None):
+    suffix = _get_filename_suffix(mesh, filename=filename)
+    full_filename = "grid_address" + suffix + ".hdf5"
+    w = h5py.File(full_filename, 'w')
+    w.create_dataset('mesh', data=mesh)
+    w.create_dataset('grid_address', data=grid_address)
+
+    return full_filename
+
 def write_freq_shifts_to_hdf5(freq_shifts, filename='freq_shifts.hdf5'):
     w = h5py.File(filename, 'w')
     w.create_dataset('shift', data=freq_shifts)
     w.close()
 
-def write_damping_functions(gp,
-                            band_indices,
-                            mesh,
-                            frequencies,
-                            gammas,
-                            sigma=None,
-                            temperature=None,
-                            scattering_event_class=None,
-                            filename=None,
-                            is_nosym=False):
+def write_imag_self_energy_at_grid_point(gp,
+                                         band_indices,
+                                         mesh,
+                                         frequencies,
+                                         gammas,
+                                         sigma=None,
+                                         temperature=None,
+                                         scattering_event_class=None,
+                                         filename=None,
+                                         is_nosym=False):
 
     gammas_filename = "gammas"
     gammas_filename += "-m%d%d%d-g%d-" % (mesh[0],
@@ -669,14 +678,14 @@ def _write_joint_dos_at_t(gp,
         w.write("\n")
     w.close()
 
-def write_linewidth(gp,
-                    band_indices,
-                    temperatures,
-                    gamma,
-                    mesh,
-                    sigma=None,
-                    is_nosym=False,
-                    filename=None):
+def write_linewidth_at_grid_point(gp,
+                                  band_indices,
+                                  temperatures,
+                                  gamma,
+                                  mesh,
+                                  sigma=None,
+                                  is_nosym=False,
+                                  filename=None):
 
     lw_filename = "linewidth"
     lw_filename += "-m%d%d%d-g%d-" % (mesh[0], mesh[1], mesh[2], gp)
@@ -998,25 +1007,19 @@ def read_amplitude_from_hdf5(amplitudes_at_q,
     f = h5py.File("amplitude" + suffix + ".hdf5", 'r')
     amplitudes_at_q[:] = f['amplitudes'][:]
 
-def write_detailed_gamma(detailed_gamma,
-                         temperature,
-                         mesh,
-                         grid_point,
-                         sigma,
-                         triplets,
-                         weights,
-                         grid_address,
-                         frequency_points=None,
-                         filename=None):
-    suffix = "-m%d%d%d" % tuple(mesh)
-    if grid_point is not None:
-        suffix += ("-g%d" % grid_point)
-    if sigma is not None:
-        sigma_str = ("%f" % sigma).rstrip('0').rstrip('\.')
-        suffix += "-s" + sigma_str
-    if filename is not None:
-        suffix += "." + filename
-
+def write_detailed_gamma_to_hdf5(detailed_gamma,
+                                 temperature,
+                                 mesh,
+                                 grid_point,
+                                 sigma,
+                                 triplets,
+                                 weights,
+                                 frequency_points=None,
+                                 filename=None):
+    suffix = _get_filename_suffix(mesh,
+                                  grid_point=grid_point,
+                                  sigma=sigma,
+                                  filename=filename)
     full_filename = "gamma_detail" + suffix + ".hdf5"
 
     w = h5py.File(full_filename, 'w')
@@ -1025,7 +1028,6 @@ def write_detailed_gamma(detailed_gamma,
     w.create_dataset('mesh', data=mesh)
     w.create_dataset('triplet', data=triplets)
     w.create_dataset('weight', data=weights)
-    w.create_dataset('grid_address', data=grid_address)
     if frequency_points is not None:
         w.create_dataset('frequency_point', data=frequency_points)
     w.close()
@@ -1421,6 +1423,21 @@ def parse_grid_address(filename):
 
     return np.array(grid_address)
 
+def _get_filename_suffix(mesh,
+                         grid_point=None,
+                         sigma=None,
+                         filename=None):
+    suffix = "-m%d%d%d" % tuple(mesh)
+    if grid_point is not None:
+        suffix += ("-g%d" % grid_point)
+    if sigma is not None:
+        sigma_str = ("%f" % sigma).rstrip('0').rstrip('\.')
+        suffix += "-s" + sigma_str
+    if filename is not None:
+        suffix += "." + filename
+
+    return suffix
+
 if __name__ == '__main__':
     import numpy as np
     import sys
@@ -1473,3 +1490,4 @@ if __name__ == '__main__':
         print "OK"
     else:
         print fc3_count
+

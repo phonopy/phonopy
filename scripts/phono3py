@@ -46,18 +46,20 @@ from phonopy.file_IO import parse_BORN, write_FORCE_SETS, parse_FORCE_SETS
 from phonopy.structure.spglib import get_grid_point_from_address
 from phonopy.units import VaspToTHz
 from anharmonic.phonon3.fc3 import show_drift_fc3
-from anharmonic.file_IO import parse_disp_fc2_yaml, parse_disp_fc3_yaml, \
-     parse_FORCES_FC2, parse_FORCES_FC3, \
-     write_FORCES_FC3_vasp, write_FORCES_FC2_vasp, write_FORCES_FC2, \
-     write_fc3_to_hdf5, write_fc2_to_hdf5, read_fc3_from_hdf5, \
-     read_fc2_from_hdf5, write_ir_grid_points, write_grid_address, \
-     write_disp_fc3_yaml, write_disp_fc2_yaml
+from anharmonic.file_IO import (parse_disp_fc2_yaml, parse_disp_fc3_yaml,
+                                parse_FORCES_FC2, parse_FORCES_FC3,
+                                write_FORCES_FC3_vasp, write_FORCES_FC2_vasp,
+                                write_FORCES_FC2, write_fc3_to_hdf5,
+                                write_fc2_to_hdf5, read_fc3_from_hdf5,
+                                read_fc2_from_hdf5, write_ir_grid_points,
+                                write_grid_address, write_grid_address_to_hdf5,
+                                write_disp_fc3_yaml, write_disp_fc2_yaml)
 from anharmonic.phonon3.triplets import get_coarse_ir_grid_points
 from anharmonic.settings import Phono3pyConfParser
-from anharmonic.phonon3 import Phono3py, Phono3pyJointDos, Phono3pyIsotope, \
-     get_gruneisen_parameters
+from anharmonic.phonon3 import (Phono3py, Phono3pyJointDos, Phono3pyIsotope,
+                                get_gruneisen_parameters)
 
-phono3py_version = "0.9.12.1"
+phono3py_version = "0.9.13"
 
 # AA is created at http://www.network-science.de/ascii/.
 def print_phono3py():
@@ -121,7 +123,7 @@ parser.set_defaults(band_indices=None,
                     forces_fc2_mode=False,
                     force_sets_mode=False,
                     frequency_pitch=None,
-                    frequency_points=None,
+                    num_frequency_points=None,
                     freq_scale=None,
                     gamma_unit_conversion=None,
                     grid_addresses=None,
@@ -254,8 +256,6 @@ parser.add_option("--freq_scale", dest="freq_scale", type="float",
                   help="Scale factor is multiplied to frequencies only, i.e., changes frequencies but assumed not to change the physical unit")
 parser.add_option("--freq_pitch", dest="frequency_pitch", type="float",
                   help="Pitch in frequency for spectrum")
-parser.add_option("--freq_points", dest="frequency_points", type="int",
-                  help="Number of sampling points for spectrum")
 parser.add_option("--gamma_unit_conversion", dest="gamma_unit_conversion",
                   type="float",
                   help="Conversion factor for gamma")
@@ -273,6 +273,8 @@ parser.add_option("--io", dest="input_output_filename", type="string",
                   help="Input and output filename extension")
 parser.add_option("--ion_clamped", dest="ion_clamped", action="store_true",
                   help="Atoms are clamped under applied strain in Gruneisen parameter calculation")
+parser.add_option("--ise", dest="is_imag_self_energy",
+                  action="store_true", help="Calculate imaginary part of self energy")
 parser.add_option("--isotope", dest="is_isotope", action="store_true",
                   help="Isotope scattering lifetime")
 parser.add_option("--jdos", dest="is_joint_dos", action="store_true",
@@ -290,8 +292,6 @@ parser.add_option("--md", "--mesh_divisors", dest="mesh_divisors", type="string"
                   help="Divisors for mesh numbers")
 parser.add_option("--mesh", dest="mesh_numbers", type="string",
                   help="Mesh numbers")
-parser.add_option("--sigma", dest="sigma", type="string",
-                  help="A sigma value or multiple sigma values (separated by space) for smearing width used for limited functions")
 parser.add_option("--mv", "--mass_variances", dest="mass_variances",
                   type="string",
                   help="Mass variance parameters for isotope scattering")
@@ -304,6 +304,8 @@ parser.add_option("--noks", "--no_kappa_stars", dest="no_kappa_stars",
                   help="Deactivate summation of partial kappa at q-stars"),
 parser.add_option("--nosym", dest="is_nosym", action="store_true",
                   help="No symmetrization of triplets")
+parser.add_option("--num_freq_points", dest="num_frequency_points", type="int",
+                  help="Number of sampling points for spectrum")
 parser.add_option("-o", dest="output_filename", type="string",
                   help="Output filename extension")
 parser.add_option("--pa", "--primitive_axis", dest="primitive_axis",
@@ -337,6 +339,8 @@ parser.add_option("--scattering_event_class", dest="scattering_event_class",
                   type="int",
                   help=("Scattering event class 1 or 2 to draw imaginary part "
                         "of self energy"))
+parser.add_option("--sigma", dest="sigma", type="string",
+                  help="A sigma value or multiple sigma values (separated by space) for smearing width used for limited functions")
 parser.add_option("--sym_fc2", dest="is_symmetrize_fc2", action="store_true",
                   help="Symmetrize fc2 by index exchange")
 parser.add_option("--sym_fc3r", dest="is_symmetrize_fc3_r", action="store_true",
@@ -621,7 +625,7 @@ if options.factor is None:
     frequency_factor_to_THz = VaspToTHz
 else:
     frequency_factor_to_THz = options.factor
-if settings.get_frequency_points() is None:
+if settings.get_num_frequency_points() is None:
     if settings.get_frequency_pitch() is None:
         num_frequency_points = 201
         frequency_step = None
@@ -629,7 +633,7 @@ if settings.get_frequency_points() is None:
         num_frequency_points = None
         frequency_step = settings.get_frequency_pitch()
 else:
-    num_frequency_points = settings.get_frequency_points()
+    num_frequency_points = settings.get_num_frequency_points()
     frequency_step = None
 if options.freq_scale is None:
     frequency_scale_factor = 1.0
@@ -715,10 +719,10 @@ if options.write_grid_points:
                              coarse_grid_weights,
                              grid_address,
                              np.linalg.inv(primitive.get_cell()))
-        gadrs_fname = write_grid_address(grid_address, mesh)
+        gadrs_hdf5_fname = write_grid_address_to_hdf5(grid_address, mesh)
 
         print "Ir-grid points are written into \"ir_grid_points.yaml\"."
-        print "Grid address are written into \"%s\"." % gadrs_fname
+        print "Grid addresses are written into \"%s\"." % gadrs_hdf5_fname
 
     if log_level:
         print_end()
@@ -1117,8 +1121,25 @@ if settings.get_is_linewidth():
     phono3py.run_linewidth(
         grid_points,
         temperatures=temperatures,
-        run_with_g=settings.get_run_with_g())
+        run_with_g=settings.get_run_with_g(),
+        write_details=settings.get_write_detailed_gamma())
     phono3py.write_linewidth(filename=output_filename)
+elif settings.get_is_imag_self_energy():
+    if not settings.get_run_with_g() and settings.get_scattering_event_class():
+        print_error_message("--run_without_g and --scattering_event_class can "
+                            "not used together.")
+        if log_level:
+            print_error()
+        sys.exit(1)
+    phono3py.run_imag_self_energy(
+        grid_points,
+        frequency_step=frequency_step,
+        num_frequency_points=num_frequency_points,
+        temperatures=temperature_points,
+        scattering_event_class=settings.get_scattering_event_class(),
+        run_with_g=settings.get_run_with_g(),
+        write_details=settings.get_write_detailed_gamma())
+    phono3py.write_imag_self_energy(filename=output_filename)
 elif settings.get_is_frequency_shift():
     phono3py.get_frequency_shift(
         grid_points,
@@ -1150,21 +1171,8 @@ elif settings.get_is_bterta() or settings.get_is_lbte():
         input_filename=input_filename,
         output_filename=output_filename)
 else:
-    if not settings.get_run_with_g() and settings.get_scattering_event_class():
-        print_error_message("--run_without_g and --scattering_event_class can "
-                            "not used together.")
-        if log_level:
-            print_error()
-        sys.exit(1)
-    phono3py.run_imag_self_energy(
-        grid_points,
-        frequency_step=frequency_step,
-        num_frequency_points=num_frequency_points,
-        temperatures=temperature_points,
-        scattering_event_class=settings.get_scattering_event_class(),
-        run_with_g=settings.get_run_with_g(),
-        in_details=settings.get_write_detailed_gamma())
-    phono3py.write_imag_self_energy(filename=output_filename)
+    if log_level:
+        print "** None of anharmonic properties were calculated. **"
 
 if log_level:
     print_end()

@@ -3,7 +3,9 @@ from phonopy.units import VaspToTHz, Hbar, EV, Angstrom, THz, AMU
 from phonopy.phonon.degeneracy import degenerate_sets
 from anharmonic.phonon3.triplets import (get_triplets_integration_weights,
                                          gaussian, occupation)
-import anharmonic.file_IO as file_IO
+from anharmonic.file_IO import (write_detailed_gamma_to_hdf5,
+                                write_linewidth_at_grid_point,
+                                write_imag_self_energy_at_grid_point)
 
 def get_imag_self_energy(interaction,
                          grid_points,
@@ -13,7 +15,7 @@ def get_imag_self_energy(interaction,
                          temperatures=[0.0, 300.0],
                          scattering_event_class=None, # class 1 or 2
                          run_with_g=True,
-                         in_details=False,
+                         write_details=False,
                          log_level=0):
     """Imaginary part of self energy at frequency points
 
@@ -48,7 +50,7 @@ def get_imag_self_energy(interaction,
         return False
 
     mesh = interaction.get_mesh_numbers()
-    ise = ImagSelfEnergy(interaction, in_details=in_details)
+    ise = ImagSelfEnergy(interaction, in_details=write_details)
     imag_self_energy = []
     frequency_points = []
     for i, gp in enumerate(grid_points):
@@ -77,9 +79,8 @@ def get_imag_self_energy(interaction,
 
         gamma_sigmas = []
         fp_sigmas = []
-        if in_details:
+        if write_details:
             triplets, weights, _, _ = interaction.get_triplets_at_q()
-            grid_address = interaction.get_grid_address()
 
         for j, sigma in enumerate(sigmas):
             if log_level:
@@ -105,10 +106,12 @@ def get_imag_self_energy(interaction,
                 (len(temperatures), len(frequency_points_at_sigma),
                  len(interaction.get_band_indices())), dtype='double')
 
-            if in_details:
+            if write_details:
+                num_band0 = len(interaction.get_band_indices())
+                num_band = frequencies.shape[1]
                 detailed_gamma = np.zeros(
                     (len(temperatures), len(frequency_points_at_sigma),
-                     len(weights), len(interaction.get_band_indices())),
+                     num_band0, num_band, num_band, len(weights)),
                     dtype='double')
                  
             for k, freq_point in enumerate(frequency_points_at_sigma):
@@ -121,14 +124,15 @@ def get_imag_self_energy(interaction,
                     ise.set_temperature(t)
                     ise.run()
                     gamma[l, k] = ise.get_imag_self_energy()[0]
-                    if in_details:
-                        detailed_gamma[l, k] = (
-                            ise.get_detailed_imag_self_energy()[0])
+                    if write_details:
+                        detailed_gamma[l, k] = np.transpose(
+                            ise.get_detailed_imag_self_energy()[0],
+                            axes=(1, 2, 3, 0))
 
             gamma_sigmas.append(gamma)
 
-            if in_details:
-                filename = file_IO.write_detailed_gamma(
+            if write_details:
+                filename = write_detailed_gamma_to_hdf5(
                     detailed_gamma,
                     temperatures,
                     mesh,
@@ -136,7 +140,6 @@ def get_imag_self_energy(interaction,
                     sigma,
                     triplets,
                     weights,
-                    grid_address,
                     frequency_points=frequency_points_at_sigma)
 
                 if log_level:
@@ -170,8 +173,9 @@ def get_linewidth(interaction,
                   sigmas,
                   temperatures=np.arange(0, 1001, 10, dtype='double'),
                   run_with_g=True,
+                  write_details=False,
                   log_level=0):
-    ise = ImagSelfEnergy(interaction)
+    ise = ImagSelfEnergy(interaction, in_details=write_details)
     band_indices = interaction.get_band_indices()
     mesh = interaction.get_mesh_numbers()
     gamma = np.zeros(
@@ -194,6 +198,9 @@ def get_linewidth(interaction,
             print "q-point:", q
             print "Phonon frequency:"
             print frequencies[gp]
+
+        if write_details:
+            triplets, weights, _, _ = interaction.get_triplets_at_q()
         
         for j, sigma in enumerate(sigmas):
             if log_level:
@@ -204,10 +211,38 @@ def get_linewidth(interaction,
             ise.set_sigma(sigma)
             if sigma is None or run_with_g:
                 ise.set_integration_weights()
+
+            if write_details:
+                num_band0 = len(interaction.get_band_indices())
+                num_band = frequencies.shape[1]
+                num_temp = len(temperatures)
+                detailed_gamma = np.zeros(
+                    (num_temp, num_band0, num_band, num_band, len(weights)),
+                    dtype='double')
+
             for k, t in enumerate(temperatures):
                 ise.set_temperature(t)
                 ise.run()
                 gamma[i, j, k] = ise.get_imag_self_energy()
+                if write_details:
+                    detailed_gamma[k] = np.transpose(
+                        ise.get_detailed_imag_self_energy(),
+                        axes=(1, 2, 3, 0))
+
+            if write_details:
+                filename = write_detailed_gamma_to_hdf5(
+                    detailed_gamma,
+                    temperatures,
+                    mesh,
+                    gp,
+                    sigma,
+                    triplets,
+                    weights)
+
+                if log_level:
+                    print ("Contribution of each triplet to imaginary part of "
+                           "self energy is written in\n\"%s\"." % filename)
+
 
     return gamma
 
@@ -224,7 +259,7 @@ def write_linewidth(linewidth,
                 pos = 0
                 for l in range(k):
                     pos += len(band_indices[l])
-                file_IO.write_linewidth(
+                write_linewidth_at_grid_point(
                     gp,
                     bi,
                     temperatures,
@@ -251,7 +286,7 @@ def write_imag_self_energy(imag_self_energy,
                      pos = 0
                      for j in range(i):
                          pos += len(band_indices[j])
-                     file_IO.write_damping_functions(
+                     write_imag_self_energy_at_grid_point(
                          gp,
                          bi,
                          mesh,
@@ -312,16 +347,16 @@ class ImagSelfEnergy:
         if self._frequency_points is None:
             self._imag_self_energy = np.zeros(num_band0, dtype='double')
             if self._in_details:
-                self._detailed_imag_self_energy = np.zeros(
-                    (len(self._triplets_at_q), num_band0), dtype='double')
+                self._detailed_imag_self_energy = np.zeros_like(
+                    self._pp_strength)
             self._run_with_band_indices()
         else:
             self._imag_self_energy = np.zeros(
                 (len(self._frequency_points), num_band0), dtype='double')
             if self._in_details:
                 self._detailed_imag_self_energy = np.zeros(
-                    (len(self._frequency_points),
-                     len(self._triplets_at_q), num_band0), dtype='double')
+                    (len(self._frequency_points),) + self._pp_strength.shape,
+                    dtype='double')
             self._run_with_frequency_points()
 
     def run_interaction(self):
@@ -475,7 +510,6 @@ class ImagSelfEnergy:
             self._detailed_imag_self_energy,
             self._pp_strength,
             self._triplets_at_q,
-            self._weights_at_q,
             self._frequencies,
             self._temperature,
             self._g,
@@ -519,7 +553,7 @@ class ImagSelfEnergy:
     def _run_c_detailed_with_frequency_points_with_g(self):
         import anharmonic._phono3py as phono3c
         g = np.zeros((2,) + self._pp_strength.shape, dtype='double')
-        detailed_ise_at_f = np.zeros(self._detailed_imag_self_energy.shape[1:3],
+        detailed_ise_at_f = np.zeros(self._detailed_imag_self_energy.shape[1:5],
                                      dtype='double')
         for i in range(len(self._frequency_points)):
             for j in range(g.shape[2]):
@@ -527,7 +561,6 @@ class ImagSelfEnergy:
             phono3c.detailed_imag_self_energy_with_g(detailed_ise_at_f,
                                                      self._pp_strength,
                                                      self._triplets_at_q,
-                                                     self._weights_at_q,
                                                      self._frequencies,
                                                      self._temperature,
                                                      g,

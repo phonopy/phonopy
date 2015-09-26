@@ -15,6 +15,7 @@ class Phono3pySettings(Settings):
         self._grid_points = None
         self._ion_clamped = False
         self._is_bterta = False
+        self._is_imag_self_energy = False
         self._is_isotope = False
         self._is_lbte = False
         self._is_linewidth = False
@@ -90,6 +91,12 @@ class Phono3pySettings(Settings):
 
     def get_is_bterta(self):
         return self._is_bterta
+
+    def set_is_imag_self_energy(self, is_imag_self_energy):
+        self._is_imag_self_energy = is_imag_self_energy
+
+    def get_is_imag_self_energy(self):
+        return self._is_imag_self_energy
 
     def set_is_isotope(self, is_isotope):
         self._is_isotope = is_isotope
@@ -269,6 +276,10 @@ class Phono3pyConfParser(ConfParser):
                 if self._options.is_bterta:
                     self._confs['bterta'] = '.true.'
 
+            if opt.dest == 'is_imag_self_energy':
+                if self._options.is_imag_self_energy:
+                    self._confs['imag_self_energy'] = '.true.'
+
             if opt.dest == 'is_isotope':
                 if self._options.is_isotope:
                     self._confs['isotope'] = '.true.'
@@ -412,6 +423,10 @@ class Phono3pyConfParser(ConfParser):
                 if confs['bterta'] == '.true.':
                     self.set_parameter('is_bterta', True)
 
+            if conf_key == 'imag_self_energy':
+                if confs['imag_self_energy'] == '.true.':
+                    self.set_parameter('is_imag_self_energy', True)
+                    
             if conf_key == 'isotope':
                 if confs['isotope'] == '.true.':
                     self.set_parameter('is_isotope', True)
@@ -556,6 +571,10 @@ class Phono3pyConfParser(ConfParser):
         # Calculate thermal conductivity in BTE-RTA
         if params.has_key('is_bterta'):
             self._settings.set_is_bterta(params['is_bterta'])
+
+        # Calculate imaginary part of self energy
+        if params.has_key('is_imag_self_energy'):
+            self._settings.set_is_imag_self_energy(params['is_imag_self_energy'])
 
         # Calculate lifetime due to isotope scattering
         if params.has_key('is_isotope'):

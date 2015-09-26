@@ -228,11 +228,11 @@ def get_coarse_ir_grid_points(primitive,
         coarse_mesh_shifts=coarse_mesh_shifts)
     grid_address = get_grid_address(mesh)
     primitive_lattice = np.linalg.inv(primitive.get_cell())
-    spg.relocate_BZ_grid_address(grid_address,
-                                 mesh,
-                                 primitive_lattice)
+    bz_grid_address, _ = spg.relocate_BZ_grid_address(grid_address,
+                                                      mesh,
+                                                      primitive_lattice)
 
-    return grid_points, coarse_grid_weights, grid_address
+    return grid_points, coarse_grid_weights, bz_grid_address
 
 def get_grid_points_in_Brillouin_zone(primitive_vectors, # column vectors
                                       mesh,

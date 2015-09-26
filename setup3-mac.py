@@ -82,7 +82,7 @@ extension_lapackepy = Extension(
     sources=sources_lapackepy)
 
 setup(name='phono3py',
-      version='0.9.12.1',
+      version='0.9.13',
       description='This is the phono3py module.',
       author='Atsushi Togo',
       author_email='atz.togo@gmail.com',

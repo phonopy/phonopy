@@ -70,7 +70,7 @@ class Settings:
         self._mesh = None
         self._mesh_shift = None
         self._frequency_pitch = None
-        self._frequency_points = None
+        self._num_frequency_points = None
         self._primitive_matrix = None
         self._qpoints = None
         self._q_direction = None
@@ -141,11 +141,11 @@ class Settings:
     def get_frequency_pitch(self):
         return self._frequency_pitch
 
-    def set_frequency_points(self, frequency_points):
-        self._frequency_points = frequency_points
+    def set_num_frequency_points(self, num_frequency_points):
+        self._num_frequency_points = num_frequency_points
 
-    def get_frequency_points(self):
-        return self._frequency_points
+    def get_num_frequency_points(self):
+        return self._num_frequency_points
 
     def set_group_velocity_delta_q(self, gv_delta_q):
         self._gv_delta_q = gv_delta_q
@@ -370,8 +370,8 @@ class ConfParser:
             self._settings.set_frequency_pitch(params['frequency_pitch'])
 
         # Number of sampling points for spectram drawing 
-        if params.has_key('frequency_points'):
-            self._settings.set_frequency_points(params['frequency_points'])
+        if params.has_key('num_frequency_points'):
+            self._settings.set_num_frequency_points(params['num_frequency_points'])
 
         # Group velocity finite difference
         if params.has_key('gv_delta_q'): 
@@ -606,9 +606,9 @@ class ConfParser:
                 if self._options.frequency_pitch:
                     self._confs['frequency_pitch'] = self._options.frequency_pitch
 
-            if opt.dest == 'frequency_points':
-                if self._options.frequency_points:
-                    self._confs['frequency_points'] = self._options.frequency_points
+            if opt.dest == 'num_frequency_points':
+                if self._options.num_frequency_points:
+                    self._confs['num_frequency_points'] = self._options.num_frequency_points
 
             if opt.dest == 'primitive_axis':
                 if self._options.primitive_axis:
@@ -801,9 +801,9 @@ class ConfParser:
                 val = float(confs['frequency_pitch'])
                 self.set_parameter('frequency_pitch', val)
 
-            if conf_key == 'frequency_points':
-                val = int(confs['frequency_points'])
-                self.set_parameter('frequency_points', val)
+            if conf_key == 'num_frequency_points':
+                val = int(confs['num_frequency_points'])
+                self.set_parameter('num_frequency_points', val)
 
             if conf_key == 'cutoff_frequency':
                 val = float(confs['cutoff_frequency'])

@@ -2,8 +2,13 @@ import sys
 import numpy as np
 from phonopy.structure.symmetry import Symmetry
 from phonopy.units import VaspToTHz
-from anharmonic.phonon3.triplets import get_triplets_at_q, get_nosym_triplets_at_q, get_tetrahedra_vertices, get_triplets_integration_weights, occupation
+from anharmonic.phonon3.triplets import (get_triplets_at_q,
+                                         get_nosym_triplets_at_q,
+                                         get_tetrahedra_vertices,
+                                         get_triplets_integration_weights,
+                                         occupation)
 from anharmonic.phonon3.interaction import set_phonon_c
+from anharmonic.phonon3.imag_self_energy import get_frequency_points
 from phonopy.harmonic.dynamical_matrix import get_dynamical_matrix
 from phonopy.structure.tetrahedron_method import TetrahedronMethod
 
@@ -144,7 +149,7 @@ class JointDos:
             f_max = np.max(self._frequencies) * 2 + self._sigma * 4
         f_max *= 1.005
         f_min = 0
-        self._set_frequency_points(f_min, f_max)
+        self._set_uniform_frequency_points(f_min, f_max)
 
         num_freq_points = len(self._frequency_points)
         num_mesh = np.prod(self._mesh)
@@ -198,7 +203,7 @@ class JointDos:
         f_max = np.max(self._frequencies) * 2
         f_max *= 1.005
         f_min = 0
-        self._set_frequency_points(f_min, f_max)
+        self._set_uniform_frequency_points(f_min, f_max)
 
         num_freq_points = len(self._frequency_points)
         jdos = np.zeros((num_freq_points, 2), dtype='double')
@@ -272,14 +277,13 @@ class JointDos:
                      self._nac_q_direction,
                      self._lapack_zheev_uplo)
 
-    def _set_frequency_points(self, f_min, f_max):
-        if self._num_frequency_points is None:
-            if self._frequency_step is not None:
-                self._frequency_points = np.arange(
-                    f_min, f_max, self._frequency_step, dtype='double')
-            else:
-                self._frequency_points = np.array(np.linspace(
-                    f_min, f_max, 201), dtype='double')
-        else:
-            self._frequency_points = np.array(np.linspace(
-                f_min, f_max, self._num_frequency_points), dtype='double')
+    def set_frequency_points(self, frequency_points):
+        self._frequency_points = np.array(frequency_points, dtype='double')
+
+    def _set_uniform_frequency_points(self, f_min, f_max):
+        if self._frequency_points is None:
+            self._frequency_points = get_frequency_points(
+                f_min,
+                f_max,
+                frequency_step=self._frequency_step,
+                num_frequency_points=self._num_frequency_points)
