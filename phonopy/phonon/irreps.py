@@ -712,17 +712,6 @@ character_table = {
 }
 
 
-r2h_observe_R3 = [[-1, 1, 1],
-                  [ 0,-1, 1],
-                  [ 1, 0, 1]]
-r2h_reverse_R3 = [[ 1,-1, 1],
-                  [ 0, 1, 1],
-                  [-1, 0, 1]]
-r2h = r2h_observe_R3
-b2c = [[-1, 0, 0],
-       [ 0, 0, 1],
-       [ 0, 1, 0]]
-
 class IrReps:
     def __init__(self,
                  dynamical_matrix,
@@ -862,15 +851,6 @@ class IrReps:
         pointgroup_symbol = pointgroup[0]
         transformation_matrix = pointgroup[1]
 
-        # Set transfomration matrix pR --> hR
-        if spacegroup_symbol == 'R':
-            transformation_matrix = np.dot(transformation_matrix, r2h)
-
-        # Set transformation matrix monoclinic unique-b --> unique-c
-        if 3 <= spacegroup_number and spacegroup_number <= 15:
-            transformation_matrix = np.dot(transformation_matrix, b2c)
-
-        # Rotation matrices for the conventional lattice vectors
         conventional_rotations = self._transform_rotations(
             transformation_matrix, rotations)
 
