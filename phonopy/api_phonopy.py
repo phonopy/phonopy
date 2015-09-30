@@ -383,6 +383,11 @@ class Phonopy:
         if forces is not None:
             self.set_forces(forces)
         
+        # A primitive check if 'forces' key is in displacement_dataset.
+        for disp in self._displacement_dataset['first_atoms']:
+            if 'forces' not in disp:
+                return False
+
         if calculate_full_force_constants:
             self._run_force_constants_from_forces(
                 decimals=self._force_constants_decimals,
@@ -395,6 +400,8 @@ class Phonopy:
                 computation_algorithm=computation_algorithm)
 
         self._set_dynamical_matrix()
+
+        return True
 
     def symmetrize_force_constants(self, iteration=3):
         symmetrize_force_constants(self._force_constants, iteration)
