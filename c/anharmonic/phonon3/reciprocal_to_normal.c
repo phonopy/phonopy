@@ -88,7 +88,7 @@ void reciprocal_to_normal_squared
 	}
       }
     } else {
-      for (j = 0; j < num_band * num_band; j++) {
+      for (j = 0; j < num_band * num_band; j++)	{
 	fc3_normal_squared[i * num_band * num_band + j] = 0;
       }
     }
@@ -106,72 +106,49 @@ lapack_complex_double fc3_sum_in_reciprocal_to_normal
  const double *masses,
  const int num_atom)
 {
-  int i, j, k, l, m, n;
-  double sum_real, sum_imag, mmm;
-  /* double sum_real_cart, sum_imag_cart; */
+  int i, j, k, l, m, n, index_l, index_lm, baseIndex;
+  double sum_real, sum_imag, mmm, mass_l, mass_lm;
   lapack_complex_double eig_prod, eig_prod1;
 
   sum_real = 0;
   sum_imag = 0;
 
-  /* A slight tune-up with respect to the second one for many atomic case */
-  for (i = 0; i < 3; i++) {
-    for (j = 0; j < 3; j++) {
-      for (k = 0; k < 3; k++) {
-  	for (l = 0; l < num_atom; l++) {
-  	  for (m = 0; m < num_atom; m++) {
-	    eig_prod1 = phonoc_complex_prod
-	      (eigvecs0[(l * 3 + i) * num_atom * 3 + bi0],
-	       eigvecs1[(m * 3 + j) * num_atom * 3 + bi1]);
-  	    for (n = 0; n < num_atom; n++) {
-	      mmm = 1.0 / sqrt(masses[l] * masses[m] * masses[n]);
+  for (l = 0; l < num_atom; l++) {
+    mass_l = masses[l];
+    index_l = l * num_atom * num_atom * 27;
+        
+    for (m = 0; m < num_atom; m++) {
+      mass_lm = mass_l * masses[m];
+      index_lm = index_l + m * num_atom * 27;
+            
+      for (i = 0; i < 3; i++) {
+	for (j = 0; j < 3; j++) {
+	  eig_prod1 = phonoc_complex_prod
+	    (eigvecs0[(l * 3 + i) * num_atom * 3 + bi0],
+	     eigvecs1[(m * 3 + j) * num_atom * 3 + bi1]);
+
+	  for (n = 0; n < num_atom; n++) {
+	    mmm = 1.0 / sqrt(mass_lm * masses[n]);
+                        
+	    baseIndex = index_lm + n * 27 + i * 9 + j * 3;
+                        
+	    for (k = 0; k < 3; k++) {
 	      eig_prod = phonoc_complex_prod
-		(eig_prod1, eigvecs2[(n * 3 + k) * num_atom * 3 + bi2]);
+		(eig_prod1,
+		 eigvecs2[(n * 3 + k) * num_atom * 3 + bi2]);
+                        
 	      eig_prod = phonoc_complex_prod
 		(eig_prod,
-		 fc3_reciprocal[l * num_atom * num_atom * 27 +
-				m * num_atom * 27 +
-				n * 27 +
-				i * 9 +
-				j * 3 +
-				k]);
-  	      sum_real += lapack_complex_double_real(eig_prod) * mmm;
-  	      sum_imag += lapack_complex_double_imag(eig_prod) * mmm;
-  	    }
-  	  }
-  	}
+		 fc3_reciprocal[baseIndex + k]);
+
+	      sum_real += lapack_complex_double_real(eig_prod) * mmm;
+	      sum_imag += lapack_complex_double_imag(eig_prod) * mmm;
+	    }
+	  }
+	}
       }
     }
   }
 
-  /* for (i = 0; i < num_atom; i++) { */
-  /*   for (j = 0; j < num_atom; j++) { */
-  /*     for (k = 0; k < num_atom; k++) { */
-  /* 	sum_real_cart = 0; */
-  /* 	sum_imag_cart = 0; */
-  /* 	mmm = sqrt(masses[i] * masses[j] * masses[k]); */
-  /* 	for (l = 0; l < 3; l++) { */
-  /* 	  for (m = 0; m < 3; m++) { */
-  /* 	    for (n = 0; n < 3; n++) { */
-  /* 	      eig_prod = */
-  /* 		phonoc_complex_prod(eigvecs0[(i * 3 + l) * num_atom * 3 + bi0], */
-  /*               phonoc_complex_prod(eigvecs1[(j * 3 + m) * num_atom * 3 + bi1], */
-  /* 		phonoc_complex_prod(eigvecs2[(k * 3 + n) * num_atom * 3 + bi2], */
-  /*               fc3_reciprocal[i * num_atom * num_atom * 27 + */
-  /* 			       j * num_atom * 27 + */
-  /* 			       k * 27 + */
-  /* 			       l * 9 + */
-  /* 			       m * 3 + */
-  /* 			       n]))); */
-  /* 	      sum_real_cart += lapack_complex_double_real(eig_prod); */
-  /* 	      sum_imag_cart += lapack_complex_double_imag(eig_prod); */
-  /* 	    } */
-  /* 	  } */
-  /* 	} */
-  /* 	sum_real += sum_real_cart / mmm; */
-  /* 	sum_imag += sum_imag_cart / mmm; */
-  /*     } */
-  /*   } */
-  /* } */
   return lapack_make_complex_double(sum_real, sum_imag);
 }
