@@ -46,7 +46,7 @@ void get_imag_self_energy_at_bands_with_g(double *imag_self_energy,
 					  const double temperature,
 					  const double unit_conversion_factor,
 					  const double cutoff_frequency);
-void get_individual_imag_self_energy_at_bands_with_g
+void get_detailed_imag_self_energy_at_bands_with_g
 (double *imag_self_energy,
  const Darray *fc3_normal_squared,
  const double *frequencies,
