@@ -1231,9 +1231,7 @@ class PhonopyConfParser(ConfParser):
                     self._confs['writedm'] = '.true.'
     
             if opt.dest == 'write_mesh':
-                if self._options.write_mesh:
-                    self._confs['write_mesh'] = '.true.'
-                else:
+                if not self._options.write_mesh:
                     self._confs['write_mesh'] = '.false.'
     
             if opt.dest == 'irreps_qpoint':
@@ -1311,9 +1309,7 @@ class PhonopyConfParser(ConfParser):
                     self.set_parameter('write_dynamical_matrices', True)
 
             if conf_key == 'write_mesh':
-                if confs['write_mesh'] == '.true.':
-                    self.set_parameter('write_mesh', True)
-                elif confs['write_mesh'] == '.false.':
+                if confs['write_mesh'] == '.false.':
                     self.set_parameter('write_mesh', False)
 
             if conf_key == 'hdf5':
@@ -1584,10 +1580,7 @@ class PhonopyConfParser(ConfParser):
 
         # Whether write out mesh.yaml or mesh.hdf5
         if params.has_key('write_mesh'):
-            if params['write_mesh']:
-                self._settings.set_write_mesh(True)
-            else:
-                self._settings.set_write_mesh(False)
+            self._settings.set_write_mesh(params['write_mesh'])
                 
         # q-vector direction at q->0 for non-analytical term correction
         if params.has_key('q_direction'):
