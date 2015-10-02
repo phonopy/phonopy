@@ -263,6 +263,8 @@ parser.set_defaults(
     tstep=None,
     verbose=False,
     wien2k_mode=False,
+    write_dynamical_matrices=False,
+    write_mesh=True,
     yaml_mode=False)
 
 parser.add_option("--abinit", dest="abinit_mode",
@@ -372,6 +374,9 @@ parser.add_option("--nodiag", dest="is_nodiag",
 parser.add_option("--nomeshsym", dest="is_nomeshsym",
                   action="store_true",
                   help="Symmetry is not imposed for mesh sampling.")
+parser.add_option("--nowritemesh", dest="write_mesh",
+                  action="store_false",
+                  help="Do not write mesh.yaml or mesh.hdf5")
 parser.add_option("--nosym", dest="is_nosym",
                   action="store_true",
                   help="Symmetry is not imposed.")
@@ -434,7 +439,9 @@ parser.add_option("--qpoints", dest="qpoints", type="string",
 parser.add_option("--q_direction",
                   dest="q_direction",
                   type="string",
-                  help="Direction of q-vector perturbation used for NAC at q->0, and group velocity for degenerate phonon mode in q-points mode")
+                  help=("Direction of q-vector perturbation used for NAC at "
+                        "q->0, and group velocity for degenerate phonon mode "
+                        "in q-points mode"))
 parser.add_option("--tmin", dest="tmin", type="string",
                   help="Minimum calculated temperature")
 parser.add_option("--trigonal", dest="is_trigonal_displacements",
@@ -942,10 +949,11 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
             else:
                 print "Number of q-points on sampling mesh:", weights.shape[0]
     
-        if settings.get_is_hdf5():
-            phonon.write_hdf5_mesh()
-        else:
-            phonon.write_yaml_mesh()
+        if settings.get_write_mesh():
+            if settings.get_is_hdf5():
+                phonon.write_hdf5_mesh()
+            else:
+                phonon.write_yaml_mesh()
     
         # Thermal property
         if settings.get_is_thermal_properties():

@@ -887,6 +887,7 @@ class PhonopySettings(Settings):
         self._show_irreps = False
         self._thermal_atom_pairs = None
         self._write_dynamical_matrices = False
+        self._write_mesh = True
         self._yaml_mode = False
 
     def set_anime_band_index(self, band_index):
@@ -1137,6 +1138,12 @@ class PhonopySettings(Settings):
     def get_write_dynamical_matrices(self):
         return self._write_dynamical_matrices
 
+    def set_write_mesh(self, write_mesh):
+        self._write_mesh = write_mesh
+
+    def get_write_mesh(self):
+        return self._write_mesh
+
     def set_yaml_mode(self, yaml_mode):
         self._yaml_mode = yaml_mode
         
@@ -1223,6 +1230,12 @@ class PhonopyConfParser(ConfParser):
                 if self._options.write_dynamical_matrices:
                     self._confs['writedm'] = '.true.'
     
+            if opt.dest == 'write_mesh':
+                if self._options.write_mesh:
+                    self._confs['write_mesh'] = '.true.'
+                else:
+                    self._confs['write_mesh'] = '.false.'
+    
             if opt.dest == 'irreps_qpoint':
                 if self._options.irreps_qpoint is not None:
                     self._confs['irreps'] = self._options.irreps_qpoint
@@ -1296,6 +1309,12 @@ class PhonopyConfParser(ConfParser):
             if conf_key == 'writedm':
                 if confs['writedm'] == '.true.':
                     self.set_parameter('write_dynamical_matrices', True)
+
+            if conf_key == 'write_mesh':
+                if confs['write_mesh'] == '.true.':
+                    self.set_parameter('write_mesh', True)
+                elif confs['write_mesh'] == '.false.':
+                    self.set_parameter('write_mesh', False)
 
             if conf_key == 'hdf5':
                 if confs['hdf5'] == '.true.':
@@ -1558,9 +1577,17 @@ class PhonopyConfParser(ConfParser):
         if params.has_key('qpoints'):
             self._settings.set_run_mode('qpoints')
 
+        # Whether write out dynamical matrices or not
         if params.has_key('write_dynamical_matrices'):
             if params['write_dynamical_matrices']:
                 self._settings.set_write_dynamical_matrices(True)
+
+        # Whether write out mesh.yaml or mesh.hdf5
+        if params.has_key('write_mesh'):
+            if params['write_mesh']:
+                self._settings.set_write_mesh(True)
+            else:
+                self._settings.set_write_mesh(False)
                 
         # q-vector direction at q->0 for non-analytical term correction
         if params.has_key('q_direction'):

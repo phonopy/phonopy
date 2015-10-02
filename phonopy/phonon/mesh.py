@@ -121,15 +121,15 @@ class Mesh:
 
     def write_hdf5(self):
         import h5py
-        w = h5py.File('mesh.hdf5', 'w')
-        w.create_dataset('mesh', data=self._mesh)
-        w.create_dataset('qpoint', data=self._qpoints)
-        w.create_dataset('weight', data=self._weights)
-        w.create_dataset('frequency', data=self._frequencies)
-        w.create_dataset('eigenvector', data=self._eigenvectors)
-        if self._group_velocities is not None:
-            w.create_dataset('group_velocity', data=self._group_velocities)
-        w.close()
+        with h5py.File('mesh.hdf5', 'w') as w:
+            w.create_dataset('mesh', data=self._mesh)
+            w.create_dataset('qpoint', data=self._qpoints)
+            w.create_dataset('weight', data=self._weights)
+            w.create_dataset('frequency', data=self._frequencies)
+            if self._eigenvectors is not None:
+                w.create_dataset('eigenvector', data=self._eigenvectors)
+            if self._group_velocities is not None:
+                w.create_dataset('group_velocity', data=self._group_velocities)
 
     def write_yaml(self):
         w = open('mesh.yaml', 'w')
