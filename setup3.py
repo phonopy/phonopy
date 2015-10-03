@@ -34,6 +34,7 @@ include_dirs = (['c/harmonic_h',
                  'c/spglib_h',
                  'c/kspclib_h'] +
                 include_dirs_numpy)
+define_macros = []
 ##
 ## Uncomment and modify below if lapacke is prepared in a special location
 #
