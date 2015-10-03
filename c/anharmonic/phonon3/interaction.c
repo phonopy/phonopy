@@ -47,24 +47,24 @@ static const int index_exchange[6][3] = {{0, 1, 2},
 					 {2, 1, 0},
 					 {0, 2, 1},
 					 {1, 0, 2}};
-static void get_interaction_at_triplet
-(Darray *fc3_normal_squared,
- const int i,
- const Darray *frequencies,
- const Carray *eigenvectors,
- const Iarray *triplets,
- const int *grid_address,
- const int *mesh,
- const Darray *fc3,
- const Darray *shortest_vectors,
- const Iarray *multiplicity,
- const double *masses,
- const int *p2s_map,
- const int *s2p_map,
- const int *band_indices,
- const int symmetrize_fc3_q,
- const double cutoff_frequency,
- const int openmp_at_bands);
+static void get_interaction_at_triplet(Darray *fc3_normal_squared,
+				       const int i,
+				       const Darray *frequencies,
+				       const Carray *eigenvectors,
+				       const Iarray *triplets,
+				       const int *grid_address,
+				       const int *mesh,
+				       const Darray *fc3,
+				       const Darray *shortest_vectors,
+				       const Iarray *multiplicity,
+				       const double *masses,
+				       const int *p2s_map,
+				       const int *s2p_map,
+				       const int *band_indices,
+				       const int symmetrize_fc3_q,
+				       const double cutoff_frequency,
+				       const int num_triplets,
+				       const int openmp_at_bands);
 static void real_to_normal(double *fc3_normal_squared,
 			   const double *freqs0,
 			   const double *freqs1,
@@ -83,6 +83,8 @@ static void real_to_normal(double *fc3_normal_squared,
 			   const int num_band0,
 			   const int num_band,
 			   const double cutoff_frequency,
+			   const int triplet_index,
+			   const int num_triplets,
 			   const int openmp_at_bands);
 static void real_to_normal_sym_q(double *fc3_normal_squared,
 				 double *freqs[3],
@@ -98,6 +100,8 @@ static void real_to_normal_sym_q(double *fc3_normal_squared,
 				 const int num_band0,
 				 const int num_band,
 				 const double cutoff_frequency,
+				 const int triplet_index,
+				 const int num_triplets,
 				 const int openmp_at_bands);
 
 /* fc3_normal_squared[num_triplets, num_band0, num_band, num_band] */
@@ -140,6 +144,7 @@ void get_interaction(Darray *fc3_normal_squared,
 				 band_indices,
 				 symmetrize_fc3_q,
 				 cutoff_frequency,
+				 triplets->dims[0],
 				 0);
     }
   } else {
@@ -160,29 +165,30 @@ void get_interaction(Darray *fc3_normal_squared,
 				 band_indices,
 				 symmetrize_fc3_q,
 				 cutoff_frequency,
+				 triplets->dims[0],
 				 1);
     }
   }
 }
 
-static void get_interaction_at_triplet
-(Darray *fc3_normal_squared,
- const int i,
- const Darray *frequencies,
- const Carray *eigenvectors,
- const Iarray *triplets,
- const int *grid_address,
- const int *mesh,
- const Darray *fc3,
- const Darray *shortest_vectors,
- const Iarray *multiplicity,
- const double *masses,
- const int *p2s_map,
- const int *s2p_map,
- const int *band_indices,
- const int symmetrize_fc3_q,
- const double cutoff_frequency,
- const int openmp_at_bands)
+static void get_interaction_at_triplet(Darray *fc3_normal_squared,
+				       const int i,
+				       const Darray *frequencies,
+				       const Carray *eigenvectors,
+				       const Iarray *triplets,
+				       const int *grid_address,
+				       const int *mesh,
+				       const Darray *fc3,
+				       const Darray *shortest_vectors,
+				       const Iarray *multiplicity,
+				       const double *masses,
+				       const int *p2s_map,
+				       const int *s2p_map,
+				       const int *band_indices,
+				       const int symmetrize_fc3_q,
+				       const double cutoff_frequency,
+				       const int num_triplets,
+				       const int openmp_at_bands)
 {
   int j, k, gp, num_band, num_band0;
   double *freqs[3];
@@ -217,6 +223,8 @@ static void get_interaction_at_triplet
 			 num_band0,
 			 num_band,
 			 cutoff_frequency,
+			 i,
+			 num_triplets,
 			 openmp_at_bands);
   } else {
     real_to_normal((fc3_normal_squared->data +
@@ -238,6 +246,8 @@ static void get_interaction_at_triplet
 		   num_band0,
 		   num_band,
 		   cutoff_frequency,
+		   i,
+		   num_triplets,
 		   openmp_at_bands);
   }
 }
@@ -260,6 +270,8 @@ static void real_to_normal(double *fc3_normal_squared,
 			   const int num_band0,
 			   const int num_band,
 			   const double cutoff_frequency,
+			   const int triplet_index,
+			   const int num_triplets,
 			   const int openmp_at_bands)
 {
   int num_patom;
@@ -280,6 +292,10 @@ static void real_to_normal(double *fc3_normal_squared,
 		     s2p_map);
 
   if (openmp_at_bands) {
+#ifdef MEASURE_R2N
+    printf("At triplet %d/%d (# of bands=%d):\n",
+	   triplet_index, num_triplets, num_band0);
+#endif
     reciprocal_to_normal_squared_openmp(fc3_normal_squared,
 					fc3_reciprocal,
 					freqs0,
@@ -326,6 +342,8 @@ static void real_to_normal_sym_q(double *fc3_normal_squared,
 				 const int num_band0,
 				 const int num_band,
 				 const double cutoff_frequency,
+				 const int triplet_index,
+				 const int num_triplets,
 				 const int openmp_at_bands)
 {
   int i, j, k, l;
@@ -364,6 +382,8 @@ static void real_to_normal_sym_q(double *fc3_normal_squared,
 		   num_band,
 		   num_band,
 		   cutoff_frequency,
+		   triplet_index,
+		   num_triplets,
 		   openmp_at_bands);
     for (j = 0; j < num_band0; j++) {
       for (k = 0; k < num_band; k++) {

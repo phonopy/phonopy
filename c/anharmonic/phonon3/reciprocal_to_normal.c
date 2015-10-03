@@ -38,6 +38,9 @@
 #include <phonoc_array.h>
 #include <phonon3_h/reciprocal_to_normal.h>
 
+#ifdef MEASURE_R2N
+#include <time.h>
+#endif
 
 static lapack_complex_double fc3_sum_in_reciprocal_to_normal
 (const int bi0,
@@ -128,11 +131,23 @@ void reciprocal_to_normal_squared_openmp
 {
   int i, j, k, jk, bi, num_atom;
 
+#ifdef MEASURE_R2N
+  double loopTotalCPUTime, loopTotalWallTime;
+  time_t loopStartWallTime;
+  clock_t loopStartCPUTime;
+#endif
+
   num_atom = num_band / 3;
 
   for (i = 0; i < num_band0; i++) {
     bi = band_indices[i];
     if (freqs0[bi] > cutoff_frequency) {
+
+#ifdef MEASURE_R2N
+      loopStartWallTime = time(NULL);
+      loopStartCPUTime = clock();
+#endif
+
 #pragma omp parallel for private(j, k)
       for (jk = 0; jk < num_band * num_band; jk++) {
 	j = jk / num_band;
@@ -147,10 +162,32 @@ void reciprocal_to_normal_squared_openmp
 		    num_band,
 		    cutoff_frequency);
       }
+
+#ifdef MEASURE_R2N
+      loopTotalCPUTime = (double)(clock() - loopStartCPUTime) / CLOCKS_PER_SEC;
+      loopTotalWallTime = difftime(time(NULL), loopStartWallTime);
+      printf("  Band index %d/%d %1.3fs (%1.3fs CPU)\n",
+	     i + 1, num_band0, loopTotalWallTime, loopTotalCPUTime);
+/* #else */
+/*       printf("*"); */
+/*       if (i == (num_band0 - 1)) { */
+/* 	printf("\n"); */
+/*       } */
+/*       if ((i % 20) == 0 && i != 0) { */
+/* 	printf("\n"); */
+/*       } */
+#endif
+
     } else {
       for (j = 0; j < num_band * num_band; j++) {
 	fc3_normal_squared[i * num_band * num_band + j] = 0;
       }
+
+#ifdef MEASURE_R2N
+      printf("  Band index %d/%d skipped due to frequency cutoff...\n",
+	     i + 1, num_band0);
+#endif
+
     }
   }
 }
@@ -173,30 +210,23 @@ static void set_fc3_sum
  const int num_band,
  const double cutoff_frequency)
 {
-  int l;
   double fff, sum_real, sum_imag;
   lapack_complex_double fc3_sum;
 
-  if (freqs1[j] > cutoff_frequency) {
-    if (freqs2[k] > cutoff_frequency) {
-      fff = freqs0[bi] * freqs1[j] * freqs2[k];
-      fc3_sum = fc3_sum_in_reciprocal_to_normal
-	(bi, j, k,
-	 eigvecs0, eigvecs1, eigvecs2,
-	 fc3_reciprocal,
-	 masses,
-	 num_atom);
-      sum_real = lapack_complex_double_real(fc3_sum);
-      sum_imag = lapack_complex_double_imag(fc3_sum);
-      fc3_normal_squared[i * num_band * num_band + j * num_band + k] =
-	(sum_real * sum_real + sum_imag * sum_imag) / fff;
-    } else {
-      fc3_normal_squared[i * num_band * num_band + j * num_band + k] = 0;
-    }
+  if (freqs1[j] > cutoff_frequency && freqs2[k] > cutoff_frequency) {
+    fff = freqs0[bi] * freqs1[j] * freqs2[k];
+    fc3_sum = fc3_sum_in_reciprocal_to_normal
+      (bi, j, k,
+       eigvecs0, eigvecs1, eigvecs2,
+       fc3_reciprocal,
+       masses,
+       num_atom);
+    sum_real = lapack_complex_double_real(fc3_sum);
+    sum_imag = lapack_complex_double_imag(fc3_sum);
+    fc3_normal_squared[i * num_band * num_band + j * num_band + k] =
+      (sum_real * sum_real + sum_imag * sum_imag) / fff;
   } else {
-    for (l = 0; l < num_band; l++) {
-      fc3_normal_squared[i * num_band * num_band + j * num_band + l] = 0;
-    }
+    fc3_normal_squared[i * num_band * num_band + j * num_band + k] = 0;
   }
 }
 

@@ -40,6 +40,9 @@ include_dirs = (['c/harmonic_h',
 # include_dirs += ['../lapack-3.5.0/lapacke/include']
 # extra_link_args = ['-lgomp', '../lapack-3.5.0/liblapacke.a']
 
+## Uncomment below to measure reciprocal_to_normal_squared_openmp performance
+# define_macros = [('MEASURE_R2N', None)]
+
 ##
 ## This is for the test of libflame
 ##
@@ -55,6 +58,7 @@ extension_phono3py = Extension(
     include_dirs=include_dirs,
     extra_compile_args=extra_compile_args,
     extra_link_args=extra_link_args,
+    define_macros=define_macros,
     sources=sources)
 
 packages_phono3py = ['anharmonic',
