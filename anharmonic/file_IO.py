@@ -833,9 +833,14 @@ def write_kappa_to_hdf5(temperature,
                         weight=None,
                         mesh_divisors=None,
                         grid_point=None,
-                        band_indices=None,
+                        band_index=None,
                         sigma=None,
-                        filename=None):
+                        filename=None,
+                        verbose=True):
+    if band_index is None:
+        band_indices = None
+    else:
+        band_indices = [band_index]
     suffix = _get_filename_suffix(mesh,
                                   mesh_divisors=mesh_divisors,
                                   grid_point=grid_point,
@@ -866,71 +871,73 @@ def write_kappa_to_hdf5(temperature,
         w.create_dataset('weight', data=weight)
     w.close()
 
-    if kappa is not None:
-        print "Thermal conductivity and related properties",
-    else:
-        print "Thermal conductivity related properties",
-    if grid_point is not None:
-        print "at gp-%d" % grid_point,
-    if sigma is not None:
-        if grid_point is not None:
-            print "and",
-        else:
-            print "at",
-        print "sigma %s" % sigma_str
-        print "were written into",
-    else:
-        print "were written into"
-    print "\"%s\"" % ("kappa" + suffix + ".hdf5")
-    print
-
-def read_gamma_from_hdf5(mesh,
-                         mesh_divisors=None,
-                         grid_point=None,
-                         sigma=None,
-                         filename=None,
-                         verbose=True):
-    suffix = "-m%d%d%d" % tuple(mesh)
-    if mesh_divisors is not None:
-        if (mesh_divisors != 1).any():
-            suffix += "-d%d%d%d" % tuple(mesh_divisors)
-    if grid_point is not None:
-        suffix += ("-g%d" % grid_point)
-    if sigma is not None:
-        sigma_str = ("%f" % sigma).rstrip('0').rstrip('\.')
-        suffix += "-s" + sigma_str
-    if filename is not None:
-        suffix += "." + filename
-
-    if not os.path.exists("kappa" + suffix + ".hdf5"):
-        return False
-        
-    f = h5py.File("kappa" + suffix + ".hdf5", 'r')
-    gamma = f['gamma'][:]
-    if 'gamma_isotope' in f.keys():
-        gamma_isotope = f['gamma_isotope'][:]
-    else:
-        gamma_isotope = None
-    if 'ave_pp' in f.keys():
-        averaged_pp_interaction = f['ave_pp'][:]
-    else:
-        averaged_pp_interaction = None
-    f.close()
-    
     if verbose:
-        print "Gammas",
+        if kappa is not None:
+            print "Thermal conductivity and related properties",
+        else:
+            print "Thermal conductivity related properties",
         if grid_point is not None:
-            print "at grid adress %d" % grid_point,
+            print "at gp-%d" % grid_point,
+            if band_index is not None:
+                print "and band_index-%d" % (band_index + 1)
         if sigma is not None:
             if grid_point is not None:
                 print "and",
             else:
                 print "at",
-            print "sigma %s" % sigma_str,
-        print "were read from",
-        if grid_point is not None:
-            print ""
-        print "%s" % ("kappa" + suffix + ".hdf5")
+            print "sigma %s" % sigma_str
+            print "were written into",
+        else:
+            print "were written into",
+            if band_index is None:
+                print
+        print "\"%s\"" % ("kappa" + suffix + ".hdf5")
+        print
+
+def read_gamma_from_hdf5(mesh,
+                         mesh_divisors=None,
+                         grid_point=None,
+                         band_index=None,
+                         sigma=None,
+                         filename=None,
+                         verbose=True):
+    if band_index is None:
+        band_indices = None
+    else:
+        band_indices = [band_index]
+    suffix = _get_filename_suffix(mesh,
+                                  mesh_divisors=mesh_divisors,
+                                  grid_point=grid_point,
+                                  band_indices=band_indices,
+                                  sigma=sigma,
+                                  filename=filename)
+    if not os.path.exists("kappa" + suffix + ".hdf5"):
+        if verbose:
+            print "%s not found." % ("kappa" + suffix + ".hdf5")
+            return False
+        
+    with h5py.File("kappa" + suffix + ".hdf5", 'r') as f:
+        if len(f['gamma'].shape) > 0:
+            gamma = f['gamma'][:]
+        else:
+            gamma = f['gamma'][()]
+        if 'gamma_isotope' in f.keys():
+            if len(f['gamma_isotope'].shape) > 0:
+                gamma_isotope = f['gamma_isotope'][:]
+            else:
+                gamma_isotope = f['gamma_isotope'][()]
+        else:
+            gamma_isotope = None
+        if 'ave_pp' in f.keys():
+            if len(f['ave_pp'].shape) > 0:
+                averaged_pp_interaction = f['ave_pp'][:]
+            else:
+                averaged_pp_interaction = f['ave_pp'][()]
+        else:
+            averaged_pp_interaction = None
+    
+    if verbose:
+        print "Read data from %s." % ("kappa" + suffix + ".hdf5")
     
     return gamma, gamma_isotope, averaged_pp_interaction
 
