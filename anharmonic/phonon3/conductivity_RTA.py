@@ -60,12 +60,12 @@ def get_thermal_conductivity_RTA(
         if log_level > 1 and read_gamma is False:
             _write_triplets(interaction)
 
-    if grid_points is None:
+    if (grid_points is None and _all_bands_exist(interaction)):
         br.set_kappa_at_sigmas()
         _write_kappa(br, filename=output_filename, log_level=log_level)
 
     return br
-        
+
 def _write_gamma(br, interaction, i, filename=None):
     grid_points = br.get_grid_points()
     group_velocities = br.get_group_velocities()
@@ -77,10 +77,15 @@ def _write_gamma(br, interaction, i, filename=None):
     gamma = br.get_gamma()
     gamma_isotope = br.get_gamma_isotope()
     sigmas = br.get_sigmas()
-    
+
     gp = grid_points[i]
-    frequencies = interaction.get_phonons()[0][gp]
-    
+    if _all_bands_exist(interaction):
+        band_indices = None
+        frequencies = interaction.get_phonons()[0][gp]
+    else:
+        band_indices = interaction.get_band_indices()
+        frequencies = interaction.get_phonons()[0][gp][band_indices]
+
     for j, sigma in enumerate(sigmas):
         if gamma_isotope is not None:
             gamma_isotope_at_sigma = gamma_isotope[j, i]
@@ -97,8 +102,17 @@ def _write_gamma(br, interaction, i, filename=None):
                             averaged_pp_interaction=ave_pp[i],
                             mesh_divisors=mesh_divisors,
                             grid_point=gp,
+                            band_indices=band_indices,
                             sigma=sigma,
                             filename=filename)
+
+def _all_bands_exist(interaction):
+    band_indices = interaction.get_band_indices()
+    num_band = interaction.get_primitive().get_number_of_atoms() * 3
+    if len(band_indices) == num_band:
+        if (band_indices - np.arange(num_band) == 0).all():
+            return True
+    return False
 
 def _write_triplets(interaction, filename=None):
     triplets, weights = interaction.get_triplets_at_q()[:2]
@@ -368,6 +382,7 @@ class Conductivity_RTA(Conductivity):
         i = self._grid_point_count
         self._show_log_header(i)
         grid_point = self._grid_points[i]
+
         if self._read_gamma:
             if self._use_ave_pp:
                 self._collision.set_grid_point(grid_point)
@@ -389,13 +404,15 @@ class Conductivity_RTA(Conductivity):
         if self._isotope is not None and not self._read_gamma_iso:
             self._set_gamma_isotope_at_sigmas(i)
 
-        self._cv[:, i, :] = self._get_cv(self._frequencies[grid_point])
+        freqs = self._frequencies[grid_point][self._pp.get_band_indices()]
+        self._cv[:, i, :] = self._get_cv(freqs)
         self._set_gv(i)
         
         if self._log_level:
             self._show_log(self._qpoints[i], i)
 
     def _allocate_values(self):
+        num_band0 = len(self._pp.get_band_indices())
         num_band = self._primitive.get_number_of_atoms() * 3
         num_grid_points = len(self._grid_points)
         self._kappa = np.zeros((len(self._sigmas),
@@ -404,28 +421,23 @@ class Conductivity_RTA(Conductivity):
         self._mode_kappa = np.zeros((len(self._sigmas),
                                      len(self._temperatures),
                                      num_grid_points,
-                                     num_band,
+                                     num_band0,
                                      6), dtype='double')
         if not self._read_gamma:
             self._gamma = np.zeros((len(self._sigmas),
                                     len(self._temperatures),
                                     num_grid_points,
-                                    num_band), dtype='double')
-        self._gv = np.zeros((num_grid_points,
-                             num_band,
-                             3), dtype='double')
-        self._cv = np.zeros((len(self._temperatures),
-                             num_grid_points,
-                             num_band), dtype='double')
+                                    num_band0), dtype='double')
+        self._gv = np.zeros((num_grid_points, num_band0, 3), dtype='double')
+        self._cv = np.zeros(
+            (len(self._temperatures), num_grid_points, num_band0), dtype='double')
         if self._isotope is not None:
-            self._gamma_iso = np.zeros((len(self._sigmas),
-                                        num_grid_points,
-                                        num_band), dtype='double')
-        self._averaged_pp_interaction = np.zeros((num_grid_points, num_band),
-                                                 dtype='double')
-        self._num_ignored_phonon_modes = np.zeros((len(self._sigmas),
-                                                   len(self._temperatures)),
-                                                  dtype='intc')
+            self._gamma_iso = np.zeros(
+                (len(self._sigmas), num_grid_points, num_band0), dtype='double')
+        self._averaged_pp_interaction = np.zeros(
+            (num_grid_points, num_band0), dtype='double')
+        self._num_ignored_phonon_modes = np.zeros(
+            (len(self._sigmas), len(self._temperatures)), dtype='intc')
         self._collision = ImagSelfEnergy(
             self._pp,
             unit_conversion=self._gamma_unit_conversion)
@@ -483,7 +495,7 @@ class Conductivity_RTA(Conductivity):
 
     def _show_log(self, q, i):
         gp = self._grid_points[i]
-        frequencies = self._frequencies[gp]
+        frequencies = self._frequencies[gp][self._pp.get_band_indices()]
         gv = self._gv[i]
         ave_pp = self._averaged_pp_interaction[i]
         

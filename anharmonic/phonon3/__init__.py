@@ -107,6 +107,9 @@ class Phono3py:
         self._band_indices_flatten = None
         if mesh is not None:
             self._mesh = np.array(mesh, dtype='intc')
+        self.set_band_indices(band_indices)
+
+    def set_band_indices(self, band_indices):
         if band_indices is None:
             num_band = self._primitive.get_number_of_atoms() * 3
             self._band_indices = [np.arange(num_band, dtype='intc')]

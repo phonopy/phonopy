@@ -26,11 +26,9 @@ class Interaction:
         self._primitive = primitive
         self._mesh = np.array(mesh, dtype='intc')
         self._symmetry = symmetry
-        num_band = primitive.get_number_of_atoms() * 3
-        if band_indices is None:
-            self._band_indices = np.arange(num_band, dtype='intc')
-        else:
-            self._band_indices = np.array(band_indices, dtype='intc')
+
+        self._band_indices = None
+        self.set_band_indices(band_indices)
         self._constant_averaged_interaction = constant_averaged_interaction
         self._frequency_factor_to_THz = frequency_factor_to_THz
 
@@ -118,6 +116,13 @@ class Interaction:
     
     def get_band_indices(self):
         return self._band_indices
+
+    def set_band_indices(self, band_indices):
+        num_band = self._primitive.get_number_of_atoms() * 3
+        if band_indices is None:
+            self._band_indices = np.arange(num_band, dtype='intc')
+        else:
+            self._band_indices = np.array(band_indices, dtype='intc')
 
     def get_frequency_factor_to_THz(self):
         return self._frequency_factor_to_THz

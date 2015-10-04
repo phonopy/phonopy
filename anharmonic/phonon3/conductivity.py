@@ -291,7 +291,8 @@ class Conductivity:
         
     def _set_gv(self, i):
         # Group velocity [num_freqs, 3]
-        self._gv[i] = self._get_gv(self._qpoints[i])
+        gv = self._get_gv(self._qpoints[i])
+        self._gv[i] = gv[self._pp.get_band_indices(), :]
 
     def _get_gv(self, q):
         return get_group_velocity(

@@ -833,19 +833,15 @@ def write_kappa_to_hdf5(temperature,
                         weight=None,
                         mesh_divisors=None,
                         grid_point=None,
+                        band_indices=None,
                         sigma=None,
                         filename=None):
-    suffix = "-m%d%d%d" % tuple(mesh)
-    if mesh_divisors is not None:
-        if (np.array(mesh_divisors, dtype=int) != 1).any():
-            suffix += "-d%d%d%d" % tuple(mesh_divisors)
-    if grid_point is not None:
-        suffix += ("-g%d" % grid_point)
-    if sigma is not None:
-        sigma_str = ("%f" % sigma).rstrip('0').rstrip('\.')
-        suffix += "-s" + sigma_str
-    if filename is not None:
-        suffix += "." + filename
+    suffix = _get_filename_suffix(mesh,
+                                  mesh_divisors=mesh_divisors,
+                                  grid_point=grid_point,
+                                  band_indices=band_indices,
+                                  sigma=sigma,
+                                  filename=filename)
     w = h5py.File("kappa" + suffix + ".hdf5", 'w')
     w.create_dataset('temperature', data=temperature)
     if frequency is not None:
@@ -1424,12 +1420,21 @@ def parse_grid_address(filename):
     return np.array(grid_address)
 
 def _get_filename_suffix(mesh,
+                         mesh_divisors=None,
                          grid_point=None,
+                         band_indices=None,
                          sigma=None,
                          filename=None):
     suffix = "-m%d%d%d" % tuple(mesh)
+    if mesh_divisors is not None:
+        if (np.array(mesh_divisors, dtype=int) != 1).any():
+            suffix += "-d%d%d%d" % tuple(mesh_divisors)
     if grid_point is not None:
         suffix += ("-g%d" % grid_point)
+    if band_indices is not None:
+        suffix += "-"
+        for bi in band_indices:
+            suffix += "b%d" % (bi + 1)
     if sigma is not None:
         sigma_str = ("%f" % sigma).rstrip('0').rstrip('\.')
         suffix += "-s" + sigma_str
