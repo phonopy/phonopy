@@ -54,7 +54,8 @@ from anharmonic.file_IO import (parse_disp_fc2_yaml, parse_disp_fc3_yaml,
                                 read_fc2_from_hdf5, write_ir_grid_points,
                                 write_grid_address, write_grid_address_to_hdf5,
                                 write_disp_fc3_yaml, write_disp_fc2_yaml)
-from anharmonic.phonon3.triplets import get_coarse_ir_grid_points
+from anharmonic.phonon3.triplets import (get_coarse_ir_grid_points,
+                                         get_number_of_triplets)
 from anharmonic.settings import Phono3pyConfParser
 from anharmonic.phonon3 import (Phono3py, Phono3pyJointDos, Phono3pyIsotope,
                                 get_gruneisen_parameters)
@@ -173,6 +174,7 @@ parser.set_defaults(band_indices=None,
                     qpoints=None,
                     quiet=False,
                     scattering_event_class=None,
+                    show_num_triplets=False,
                     sigma=None,
                     supercell_dimension=None,
                     symprec=1e-5,
@@ -339,6 +341,10 @@ parser.add_option("--scattering_event_class", dest="scattering_event_class",
                   type="int",
                   help=("Scattering event class 1 or 2 to draw imaginary part "
                         "of self energy"))
+parser.add_option("--stp", "--show_num_triplets", dest="show_num_triplets",
+                  action="store_true",
+                  help=("Show reduced number of triplets to be calculated at "
+                        "specified grid points"))
 parser.add_option("--sigma", dest="sigma", type="string",
                   help="A sigma value or multiple sigma values (separated by space) for smearing width used for limited functions")
 parser.add_option("--sym_fc2", dest="is_symmetrize_fc2", action="store_true",
@@ -724,6 +730,36 @@ if options.write_grid_points:
         print "Ir-grid points are written into \"ir_grid_points.yaml\"."
         print "Grid addresses are written into \"%s\"." % gadrs_hdf5_fname
 
+    if log_level:
+        print_end()
+    sys.exit(0)
+
+if options.show_num_triplets:
+    print "-----------------------------------------------------------------------------"
+
+    ir_grid_points, _, grid_address = get_coarse_ir_grid_points(
+        primitive,
+        mesh,
+        mesh_divs,
+        settings.get_coarse_mesh_shifts(),
+        is_nosym=options.no_kappa_stars,
+        symprec=options.symprec)
+
+    if grid_points:
+        _grid_points = grid_points
+    else:
+        _grid_points = ir_grid_points
+
+    print "Grid point        q-point        No. of triplets"
+    for gp in _grid_points:
+        num_triplets =  get_number_of_triplets(primitive,
+                                               mesh,
+                                               gp,
+                                               symprec=options.symprec)
+        q = grid_address[gp] / np.array(mesh, dtype='double')
+        print ("  %5d     (%5.2f %5.2f %5.2f)  %8d" %
+               (gp, q[0], q[1], q[2], num_triplets))
+    
     if log_level:
         print_end()
     sys.exit(0)
