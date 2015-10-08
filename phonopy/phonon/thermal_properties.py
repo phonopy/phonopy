@@ -80,7 +80,6 @@ class ThermalPropertiesBase:
                                          self._frequencies, -1)
         self._frequencies = np.array(self._frequencies,
                                      dtype='double', order='C') * THzToEv
-
         if weights is None:
             self._weights = np.ones(frequencies.shape[0], dtype='intc')
         else:
@@ -200,80 +199,88 @@ class ThermalProperties(ThermalPropertiesBase):
         return self._thermal_properties
 
     def write_yaml(self, filename='thermal_properties.yaml'):
-        f = open(filename, 'w')
-        self._write_tp_yaml(f)
+        lines = self._get_tp_yaml_lines()
         if self._is_projection:
-            self._write_projected_tp_yaml(f)
-        f.close()
+            lines += self._get_projected_tp_yaml_lines()
+        with open(filename, 'w') as f:
+            f.write("\n".join(lines))
         
-    def _write_tp_yaml(self, f):
-        f.write("# Thermal properties / unit cell (natom)\n")
-        f.write("\n")
-        f.write("unit:\n")
-        f.write("  temperature:   K\n")
-        f.write("  free_energy:   kJ/mol\n")
-        f.write("  entropy:       J/K/mol\n")
-        f.write("  heat_capacity: J/K/mol\n")
-        f.write("\n")
+    def _get_tp_yaml_lines(self):
+        num_modes = self._frequencies.shape[1] * self._weights.sum()
+        num_integrated_modes = np.sum(
+            self._weights * (self._frequencies > 0).sum(axis=1))
+
+        lines = []
+        lines.append("# Thermal properties / unit cell (natom)")
+        lines.append("")
+        lines.append("unit:")
+        lines.append("  temperature:   K")
+        lines.append("  free_energy:   kJ/mol")
+        lines.append("  entropy:       J/K/mol")
+        lines.append("  heat_capacity: J/K/mol")
+        lines.append("")
+        lines.append("natom: %5d" % ((self._frequencies[0].shape)[0]/3))
         if self._cutoff_frequency:
-            f.write("cutoff_frequency: %8.3f\n" % self._cutoff_frequency)
+            lines.append("cutoff_frequency: %8.3f" % self._cutoff_frequency)
+        lines.append("num_modes: %d" % num_modes)
+        lines.append("num_integrated_modes: %d" % num_integrated_modes)
         if self._band_indices is not None:
             bi = self._band_indices + 1
-            f.write("band_index: [ " + ("%d, " * (len(bi) - 1)) %
-                    tuple(bi[:-1]) + ("%d ]\n" % bi[-1]))
-        if self._cutoff_frequency or self._band_indices is not None:
-            f.write("\n")
-        f.write("natom: %5d\n" % ((self._frequencies[0].shape)[0]/3))
-        f.write("zero_point_energy: %15.7f\n" % self._zero_point_energy)
-        f.write("high_T_entropy:    %15.7f\n" % (self._high_T_entropy * 1000))
-        f.write("\n")
-        f.write("thermal_properties:\n")
+            lines.append("band_index: [ " + ("%d, " * (len(bi) - 1)) %
+                    tuple(bi[:-1]) + ("%d ]" % bi[-1]))
+        lines.append("")
+        lines.append("zero_point_energy: %15.7f" % self._zero_point_energy)
+        lines.append("high_T_entropy:    %15.7f" % (self._high_T_entropy * 1000))
+        lines.append("")
+        lines.append("thermal_properties:")
         temperatures, fe, entropy, cv = self._thermal_properties
         for i, t in enumerate(temperatures):
-            f.write("- temperature:   %15.7f\n" % t)
-            f.write("  free_energy:   %15.7f\n" % fe[i])
-            f.write("  entropy:       %15.7f\n" % entropy[i])
+            lines.append("- temperature:   %15.7f" % t)
+            lines.append("  free_energy:   %15.7f" % fe[i])
+            lines.append("  entropy:       %15.7f" % entropy[i])
             # Sometimes 'nan' of C_V is returned at low temperature.
             if np.isnan(cv[i]):
-                f.write("  heat_capacity: %15.7f\n" % 0 )
+                lines.append("  heat_capacity: %15.7f" % 0 )
             else:
-                f.write("  heat_capacity: %15.7f\n" % cv[i])
-            f.write("  energy:        %15.7f\n" % (fe[i]+entropy[i]*t/1000))
-            f.write("\n")
+                lines.append("  heat_capacity: %15.7f" % cv[i])
+            lines.append("  energy:        %15.7f" % (fe[i]+entropy[i]*t/1000))
+            lines.append("")
+        return lines
 
-    def _write_projected_tp_yaml(self, f):
-        f.write("projected_thermal_properties:\n")
+    def _get_projected_tp_yaml_lines(self):
+        lines = []
+        lines.append("projected_thermal_properties:")
         temperatures, fe, entropy, cv = self._projected_thermal_properties
         for i, t in enumerate(temperatures):
-            f.write("- temperature:   %13.7f\n" % t)
-            f.write(
+            lines.append("- temperature:   %13.7f" % t)
+            lines.append(
                 ("  free_energy:   [ " + "%13.7f, " *
                  (len(fe[i]) - 1) + "%13.7f ]") % tuple(fe[i]))
-            f.write(" # %13.7f\n" % np.sum(fe[i]))
-            f.write(
+            lines.append(" # %13.7f" % np.sum(fe[i]))
+            lines.append(
                 ("  entropy:       [ " + "%13.7f, " *
                  (len(entropy[i]) - 1) + "%13.7f ]") % tuple(entropy[i]))
-            f.write(" # %13.7f\n" % np.sum(entropy[i]))
+            lines.append(" # %13.7f" % np.sum(entropy[i]))
             # Sometimes 'nan' of C_V is returned at low temperature.
-            f.write("  heat_capacity: [ ")
+            lines.append("  heat_capacity: [ ")
             sum_cv = 0.0
             for j, cv_i in enumerate(cv[i]):
                 if np.isnan(cv_i):
-                    f.write("%13.7f" % 0)
+                    lines.append("%13.7f" % 0)
                 else:
                     sum_cv += cv_i
-                    f.write("%13.7f" % cv_i)
+                    lines.append("%13.7f" % cv_i)
                 if j < len(cv[i]) - 1:
-                    f.write(", ")
+                    lines.append(", ")
                 else:
-                    f.write(" ]")
-            f.write(" # %13.7f\n" % sum_cv)
+                    lines.append(" ]")
+            lines.append(" # %13.7f" % sum_cv)
             energy = fe[i] + entropy[i] * t / 1000
-            f.write(
+            lines.append(
                 ("  energy:        [ " + "%13.7f, " *
                  (len(energy) - 1) + "%13.7f ]") % tuple(energy))
-            f.write(" # %13.7f\n" % np.sum(energy))
-            f.write("\n")
+            lines.append(" # %13.7f" % np.sum(energy))
+            lines.append("")
             
     def _get_c_thermal_properties(self, t):
         import phonopy._phonopy as phonoc
