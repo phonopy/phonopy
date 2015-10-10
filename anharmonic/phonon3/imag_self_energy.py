@@ -303,7 +303,7 @@ class ImagSelfEnergy:
                  frequency_points=None,
                  temperature=None,
                  sigma=None,
-                 in_details=True,
+                 in_details=False,
                  unit_conversion=None,
                  lang='C'):
         self._pp = interaction

@@ -892,7 +892,27 @@ def write_kappa_to_hdf5(temperature,
             if band_index is None:
                 print
         print "\"%s\"" % ("kappa" + suffix + ".hdf5")
-        print
+
+def write_collision_eigenvalues_to_hdf5(temperatures,
+                                        mesh,
+                                        collision_eigenvalues,
+                                        sigma=None,
+                                        filename=None,
+                                        verbose=True):
+    suffix = _get_filename_suffix(mesh,
+                                  sigma=sigma,
+                                  filename=filename)
+    w = h5py.File("coleigs" + suffix + ".hdf5", 'w')
+    w.create_dataset('temperature', data=temperatures)
+    w.create_dataset('collision_eigenvalues', data=collision_eigenvalues)
+    w.close()
+
+    if verbose:
+        print "Eigenvalues of collision matrix",
+        if sigma is not None:
+            print "with sigma %s" % sigma_str,
+        print "were written into"
+        print "\"%s\"" % ("coleigs" + suffix + ".hdf5")
 
 def read_gamma_from_hdf5(mesh,
                          mesh_divisors=None,
