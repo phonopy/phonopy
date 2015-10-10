@@ -885,7 +885,7 @@ def write_kappa_to_hdf5(temperature,
                 print "and",
             else:
                 print "at",
-            print "sigma %s" % sigma_str
+            print "sigma %s" % ("%f" % sigma).rstrip('0').rstrip('\.')
             print "were written into",
         else:
             print "were written into",
@@ -910,7 +910,7 @@ def write_collision_eigenvalues_to_hdf5(temperatures,
     if verbose:
         print "Eigenvalues of collision matrix",
         if sigma is not None:
-            print "with sigma %s" % sigma_str,
+            print "with sigma %s" % ("%f" % sigma).rstrip('0').rstrip('\.')
         print "were written into"
         print "\"%s\"" % ("coleigs" + suffix + ".hdf5")
 
