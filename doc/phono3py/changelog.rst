@@ -3,6 +3,30 @@
 Change Log
 ==========
 
+Oct-10-2015: version 0.9.14
+------------------------------
+
+- Computational performance tuning for phonon-phonon interaction
+  strength calculation was made by Jonathan Skelton. Depending on
+  systems, but 10-20% performance improvement may be possible.
+- ``--stp`` option is created to show numbers of q-point triplets to
+  be calculated. See :ref:`command_options`.
+- ``--write_gamma`` and ``--read_gamma`` support using with ``--bi``
+  option. Therefore a thermal conductivity calculation can be
+  distributed over band index, too. This may be useful for the system
+  whose unit cell is large.
+
+Sep-26-2015: version 0.9.13
+------------------------------
+
+- Changed so that ``--wgp`` option writes ``grid_address-mxxx.hdf5``
+  instead of ``grid_address-mxxx.dat``.
+- ``--write_detailed_gamma`` is implemented. See :ref:`command_options`.
+- When running without setting ``--thm`` and ``--sigma`` options,
+  linear tetrahedron method corresponding to ``--thm`` is used as the
+  default behavior.
+- ``--ise`` options is created.
+
 Aug-12-2015: version 0.9.12
 ------------------------------
 
