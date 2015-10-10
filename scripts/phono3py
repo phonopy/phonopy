@@ -1154,6 +1154,12 @@ phono3py.set_phph_interaction(
     unit_conversion=options.pp_unit_conversion)
 
 if settings.get_is_linewidth():
+    if grid_points is None:
+        print_error_message("Grid point(s) has to be specified with --gp or "
+                            "--ga option.")
+        if log_level:
+            print_error()
+        sys.exit(1)
     phono3py.run_linewidth(
         grid_points,
         temperatures=temperatures,
@@ -1164,6 +1170,12 @@ elif settings.get_is_imag_self_energy():
     if not settings.get_run_with_g() and settings.get_scattering_event_class():
         print_error_message("--run_without_g and --scattering_event_class can "
                             "not used together.")
+        if log_level:
+            print_error()
+        sys.exit(1)
+    if grid_points is None:
+        print_error_message("Grid point(s) has to be specified with --gp or "
+                            "--ga option.")
         if log_level:
             print_error()
         sys.exit(1)
