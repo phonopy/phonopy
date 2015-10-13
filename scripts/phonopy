@@ -207,6 +207,7 @@ parser.set_defaults(
     displacement_distance=None,
     dynamical_matrix_decimals=None,
     elk_mode=False,
+    siesta_mode=False,
     factor=None,
     fc_symmetry=None,
     fc_computation_algorithm=None,
@@ -401,6 +402,8 @@ parser.add_option("--pt", "--projected_thermal_property",
                   help="Output projected thermal properties")
 parser.add_option("--pwscf", dest="pwscf_mode",
                   action="store_true", help="Invoke Pwscf mode")
+parser.add_option("--siesta", dest="siesta_mode",
+                  action="store_true", help="Invoke Siesta mode")
 parser.add_option("-q", "--quiet", dest="quiet",
                   action="store_true",
                   help="Print out smallest information")
@@ -489,6 +492,7 @@ if options.loglevel is not None:
 # abinit        : hartree, au,        AMU,         eV/Angstrom
 # elk           : hartree, au,        AMU,         hartree/au
 # pwscf         : Ry,      au,        AMU,         Ry/au
+# siesta        : eV,      au,        AMU,         eV/Angstroem
 #
 if options.wien2k_mode:
     interface_mode = 'wien2k'
@@ -506,6 +510,10 @@ elif options.elk_mode:
     interface_mode = 'elk'
     from phonopy.interface.elk import write_supercells_with_displacements
     factor = ElkToTHz
+elif options.siesta_mode:
+    interface_mode = 'siesta'
+    from phonopy.interface.siesta import write_supercells_with_displacements
+    factor = SiestaToTHz
 else:
     interface_mode = 'vasp'
     from phonopy.interface.vasp import write_supercells_with_displacements
@@ -620,7 +628,8 @@ if settings.get_displacement_distance() is None:
     if (interface_mode == 'wien2k' or
         interface_mode == 'abinit' or
         interface_mode == 'elk' or
-        interface_mode == 'pwscf'):
+        interface_mode == 'pwscf' or
+        interface_mode == 'siesta'):
         displacement_distance = 0.02
     else:
         displacement_distance = 0.01
@@ -767,6 +776,11 @@ if run_mode == 'displacements':
         write_supercells_with_displacements(supercell,
                                             cells_with_disps,
                                             sp_filenames)
+    elif interface_mode == 'siesta':
+        atypes = optional_structure_file_information[1]
+        write_supercells_with_displacements(supercell,
+                                            cells_with_disps,
+                                            atypes)
     else:        
         write_supercells_with_displacements(supercell, cells_with_disps)
 

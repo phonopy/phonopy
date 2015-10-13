@@ -1,0 +1,49 @@
+
+SystemName          silicon
+SystemLabel         Si
+
+NumberOfSpecies     1
+
+%block ChemicalSpeciesLabel
+ 1  14  Si
+%endblock ChemicalSpeciesLabel
+
+PAO.BasisSize       sz
+
+MeshCutoff         400.0 Ry
+
+MaxSCFIterations    50
+DM.MixingWeight      0.2
+DM.NumberPulay       3
+DM.Tolerance         1.d-4
+DM.UseSaveDM
+
+SolutionMethod       diagon
+
+WriteForces          .true.
+
+ElectronicTemperature  100 K
+
+AtomicCoordinatesFormat  Fractional
+
+
+%block kgrid_Monkhorst_Pack
+   8   0   0  0.0
+   0   8   0  0.0
+   0   0   8  0.0
+%endblock Kgrid_Monkhorst_Pack
+
+
+NumberOfAtoms       2
+LatticeConstant     5.430 Ang
+%block LatticeVectors
+  0.000  0.500  0.500
+  0.500  0.000  0.500
+  0.500  0.500  0.000
+%endblock LatticeVectors
+
+%block AtomicCoordinatesAndAtomicSpecies
+    0.00    0.00    0.00   1 #  Si  1
+    0.25    0.25    0.25   1 #  Si  2
+%endblock AtomicCoordinatesAndAtomicSpecies
+

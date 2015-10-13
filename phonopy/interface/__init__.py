@@ -83,6 +83,10 @@ def read_crystal_structure(filename=None,
         unitcell, sp_filenames = read_elk(unitcell_filename)
         return unitcell, (unitcell_filename, sp_filenames)
 
+    if interface_mode == 'siesta':
+        from phonopy.interface.siesta import read_siesta
+        unitcell, atypes = read_siesta(unitcell_filename)
+        return unitcell, (unitcell_filename, atypes)
 
 def get_default_cell_filename(interface_mode, yaml_mode):
     if yaml_mode:
@@ -97,7 +101,9 @@ def get_default_cell_filename(interface_mode, yaml_mode):
         return "case.struct"
     if interface_mode == 'elk':
         return "elk.in"
-        
+    if interface_mode == 'siesta':
+        return "input.fdf" 
+
 def create_FORCE_SETS(interface_mode,
                       force_filenames,
                       options,
@@ -107,7 +113,8 @@ def create_FORCE_SETS(interface_mode,
     if (interface_mode == 'wien2k' or
         interface_mode == 'abinit' or
         interface_mode == 'elk' or
-        interface_mode == 'pwscf'):
+        interface_mode == 'pwscf' or
+        interface_mode == 'siesta'):
         displacements, supercell = parse_disp_yaml(filename='disp.yaml',
                                                    return_cell=True)
             
@@ -166,6 +173,17 @@ def create_FORCE_SETS(interface_mode,
         from phonopy.interface.elk import parse_set_of_forces
         print "**********************************************************"
         print "****      Elk FORCE_SETS support is experimental.     ****"
+        print "****        Your feedback would be appreciated.       ****"
+        print "**********************************************************"
+        is_parsed = parse_set_of_forces(
+            displacements,
+            force_filenames,
+            supercell.get_number_of_atoms())
+
+    if interface_mode == 'siesta':
+        from phonopy.interface.siesta import parse_set_of_forces
+        print "**********************************************************"
+        print "****   Siesta FORCE_SETS support is experimental.     ****"
         print "****        Your feedback would be appreciated.       ****"
         print "**********************************************************"
         is_parsed = parse_set_of_forces(

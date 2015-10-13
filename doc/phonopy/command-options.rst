@@ -114,6 +114,19 @@ input file that contains the unit cell crystal structure, e.g.,
 
    % phonopy --pwscf -c NaCl.in band.conf
 
+.. _siesta_mode:
+
+``--siesta``
+~~~~~~~~~~~~
+
+Siesta mode is invoked with this option. Usually this option is used
+with ``--cell`` (``-c``) option or ``CELL_FILENAME`` tag to read a Siesta
+input file that contains the unit cell crystal structure, e.g.,
+
+::
+
+   % phonopy --siesta -c Si.fdf band.conf
+
 .. _elk_mode:
 
 ``--elk``
