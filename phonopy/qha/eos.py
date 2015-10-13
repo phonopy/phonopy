@@ -44,9 +44,9 @@ def get_eos(eos):
         p[2] = B'_0
         p[3] = V_0
         """
-        return p[0]+9.0/16*p[3]*p[1]*(((p[3]/v)**(2.0/3)-1)**3*p[2]+
-                                       ((p[3]/v)**(2.0/3)-1)**2*
-                                       (6-4*(p[3]/v)**(2.0/3)))
+        return p[0] + 9.0 / 16 * p[3] * p[1] * (
+            ((p[3] / v)**(2.0 / 3) - 1)**3 * p[2] +
+            ((p[3] / v)**(2.0 / 3) - 1)**2 * (6 - 4 * (p[3] / v)**(2.0 / 3)))
     
     # Murnaghan EOS
     def murnaghan(p, v):
@@ -56,7 +56,9 @@ def get_eos(eos):
         p[2] = B'_0
         p[3] = V_0
         """
-        return p[0]+p[1]*v/p[2]*((p[3]/v)**p[2]/(p[2]-1)+1)-p[1]*p[3]/(p[2]-1)
+        return (p[0]
+                + p[1] * v / p[2] *((p[3] / v)**p[2] / (p[2] - 1) + 1)
+                - p[1] * p[3] / (p[2] - 1))
     
     # Vinet EOS
     def vinet(p, v):
@@ -68,7 +70,8 @@ def get_eos(eos):
         """
         x = (v / p[3]) ** (1.0 / 3)
         xi = 3.0 / 2 * (p[2] - 1)
-        return p[0] + 9 * p[1] * p[3] / (xi**2) * (1 + (xi * (1 - x) - 1) * np.exp(xi * (1 - x)))
+        return p[0] + (9 * p[1] * p[3] / (xi**2)
+                       * (1 + (xi * (1 - x) - 1) * np.exp(xi * (1 - x))))
     
     if eos=='murnaghan':
         return murnaghan
