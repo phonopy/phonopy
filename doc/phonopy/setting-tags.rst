@@ -346,6 +346,22 @@ Instead of employing the Monkhorst-Pack scheme for the mesh sampling,
 
    GAMMA_CENTER = .TRUE.
 
+.. _write_mesh_tag:
+
+``WRITE_MESH``
+~~~~~~~~~~~~~~~~~
+
+With a dense mesh, with eigenvectors, without mesh symmetry, sometimes
+its output file ``mesh.yaml`` or ``mesh.hdf5`` can be huge. However
+when those files are not needed, e.g., in (P)DOS calculation,
+``WRITE_MESH = .FALSE.`` can disable to write out those files. With
+(P)DOS calculation, DOS output files are obtained even with
+``WRITE_MESH = .FALSE.``. The default setting is ``.TRUE.``.
+
+::
+
+   WRITE_MESH = .FALSE.
+
 
 Density of states (DOS) tags
 -----------------------------

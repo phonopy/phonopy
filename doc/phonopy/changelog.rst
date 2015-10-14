@@ -3,6 +3,15 @@
 Change Log
 ==========
 
+(plan): Version 1.9.7 
+-----------------------------
+
+* Siesta interface (``--elk`` option) was added (:ref:`siesta_interface`)
+  by Henrique Pereira Coutada Miranda.
+* ``WRITE_MESH = .FALSE.`` (``--nowritemesh``) tag was added
+  (:ref:`write_mesh_tag`).
+
+
 Aug-12-2015: Version 1.9.6
 -----------------------------
 
