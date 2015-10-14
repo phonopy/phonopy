@@ -95,17 +95,15 @@ class QHA:
         self._volumes = np.array(volumes)
         self._electronic_energies = np.array(electronic_energies)
 
-        self._temperatures = np.array(temperatures)
+        self._all_temperatures = np.array(temperatures)
         self._cv = np.array(cv)
         self._entropy = np.array(entropy)
         self._fe_phonon = np.array(fe_phonon) / EvTokJmol
 
-        if t_max:
-            self._max_t_index = self._get_max_t_index(t_max)
-        else:
-            self._max_t_index = len(temperatures) - 3
-
         self._eos = get_eos(eos)
+        self._t_max = t_max
+
+        self._temperatures = []
         self._equiv_volumes = []
         self._equiv_energies = []
         self._equiv_bulk_modulus = []
@@ -127,27 +125,31 @@ class QHA:
         if verbose:
             print ("#%11s" + "%14s"*4) % ("T", "E_0", "B_0", "B'_0", "V_0")
 
-        for i in range(self._max_t_index + 2):
-            t = self._temperatures[i]
+        max_t_index = self._get_max_t_index(self._all_temperatures)
+
+        for i in range(max_t_index + 2):
+            t = self._all_temperatures[i]
             fe = []
             for j, e in enumerate(self._electronic_energies):
                 fe.append(e + self._fe_phonon[i][j])
             self._free_energies.append(fe)
     
             ee, eb, ebp, ev = fit_to_eos(self._volumes, fe, self._eos)
-            ep = [ee, eb, ebp, ev]
-            self._equiv_volumes.append(ev)
-            self._equiv_energies.append(ee)
-            self._equiv_bulk_modulus.append(eb * EVAngstromToGPa)
-            self._equiv_parameters.append(ep)
+            if ee is None:
+                continue
+            else:
+                ep = [ee, eb, ebp, ev]
+                self._temperatures.append(t)
+                self._equiv_volumes.append(ev)
+                self._equiv_energies.append(ee)
+                self._equiv_bulk_modulus.append(eb * EVAngstromToGPa)
+                self._equiv_parameters.append(ep)
 
-            if verbose:
-                print "%14.6f"*5 % (t,
-                                    ep[0],
-                                    ep[1] * EVAngstromToGPa,
-                                    ep[2],
-                                    ep[3])
+                if verbose:
+                    print "%14.6f"*5 % (
+                        t, ep[0], ep[1] * EVAngstromToGPa, ep[2], ep[3])
 
+        self._max_t_index = self._get_max_t_index(self._temperatures)
         self._set_volume_expansion()
         self._set_thermal_expansion() # len = len(t) - 1
         self._set_heat_capacity_P_numerical() # len = len(t) - 2
@@ -632,7 +634,8 @@ class QHA:
             self._volume_cv_parameters.append(parameters)
     
             parameters = np.polyfit(self._volumes, self._entropy[j], 4)
-            dsdv_t = np.dot(parameters[:4], np.array([4*x**3, 3*x**2, 2*x, 1]))
+            dsdv_t = np.dot(parameters[:4], np.array(
+                [4 * x**3, 3 * x**2, 2 * x, 1]))
             self._volume_entropy_parameters.append(parameters)
     
             dvdt = (self._equiv_volumes[j + 1] -
@@ -642,7 +645,8 @@ class QHA:
             dsdv.append(dsdv_t)
     
             self._volume_cv.append(np.array([self._volumes, self._cv[j]]).T)
-            self._volume_entropy.append(np.array([self._volumes, self._entropy[j]]).T)
+            self._volume_entropy.append(np.array([self._volumes,
+                                                  self._entropy[j]]).T)
 
         self._cp_polyfit = cp
         self._dsdv = dsdv
@@ -659,15 +663,18 @@ class QHA:
             gamma.append(beta * kt / cv)
         self._gruneisen_parameters = gamma
 
-    def _get_max_t_index(self, t_max):
-        max_t_index = 0
-        for i, t in enumerate(self._temperatures): 
-            if t_max + 1e-5 < t:
-                max_t_index = i
-                break
-
-        if (max_t_index > len(self._temperatures) - 3 or
-            max_t_index < 2):
-            max_t_index = len(self._temperatures) - 3
-                
-        return max_t_index
+    def _get_max_t_index(self, temperatures):
+        if self._t_max is None:
+            return len(self._all_temperatures) - 3
+        else:
+            max_t_index = 0
+            for i, t in enumerate(temperatures): 
+                if self._t_max + 1e-5 < t:
+                    max_t_index = i
+                    break
+    
+            if (max_t_index > len(temperatures) - 3 or
+                max_t_index < 2):
+                max_t_index = len(temperatures) - 3
+                    
+            return max_t_index

@@ -98,29 +98,54 @@ class EOSFit:
         self._eos = eos
 
     def run(self, initial_parameter):
+        import sys
+        import logging
+        import warnings
+        warnings.filterwarnings('error')
 
         try:
             from scipy.optimize import curve_fit
+            import scipy
         except ImportError:
             print "You need to install python-scipy."
             exit(1)
 
-        result = curve_fit(self._eos, self._volume, self._energy,
-                           p0=initial_parameter[:])
-
-        self._parameters = result[0]
+        try:
+            result = curve_fit(self._eos, self._volume, self._energy,
+                               p0=initial_parameter[:])
+        except (RuntimeError,
+                RuntimeWarning,
+                scipy.optimize.optimize.OptimizeWarning):
+            logging.exception('')
+            self._parameters = None
+            return sys.exc_info()
+        else:
+            self._parameters = result[0]
+            return True
 
     def get_energy(self):
-        return self._parameters[0]
+        if self._parameters is None:
+            return None
+        else:
+            return self._parameters[0]
 
     def get_volume(self):
-        return self._parameters[3]
+        if self._parameters is None:
+            return None
+        else:
+            return self._parameters[3]
 
     def get_bulk_modulus(self):
-        return self._parameters[1]
+        if self._parameters is None:
+            return None
+        else:
+            return self._parameters[1]
 
     def get_b_prime(self):
-        return self._parameters[2]
+        if self._parameters is None:
+            return None
+        else:
+            return self._parameters[2]
 
     def get_parameters(self):
         return self._parameters
