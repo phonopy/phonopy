@@ -668,13 +668,13 @@ class QHA:
             return len(self._all_temperatures) - 3
         else:
             max_t_index = 0
-            for i, t in enumerate(temperatures): 
+            for i, t in enumerate(temperatures):
                 if self._t_max + 1e-5 < t:
                     max_t_index = i
                     break
-    
+
             if (max_t_index > len(temperatures) - 3 or
                 max_t_index < 2):
                 max_t_index = len(temperatures) - 3
-                    
+
             return max_t_index
