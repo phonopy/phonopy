@@ -392,10 +392,12 @@ elif options.sampling_mesh:
                     continue
                 volumes.append(float(line.split()[0]))
         if volumes:
-            gruneisen.set_thermal_properties(volumes,
-                                             t_step=options.tstep,
-                                             t_max=options.tmax,
-                                             t_min=options.tmin)
+            gruneisen.set_thermal_properties(
+                volumes,
+                t_step=options.tstep,
+                t_max=options.tmax,
+                t_min=options.tmin,
+                cutoff_frequency=options.cutoff_frequency)
             gruneisen.write_yaml_thermal_properties()
 else:
     pass
