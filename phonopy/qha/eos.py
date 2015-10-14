@@ -37,7 +37,7 @@ import numpy as np
 def get_eos(eos):
 
     # Third-order Birch-Murnaghan EOS
-    def birch_murnaghan(p, v):
+    def birch_murnaghan(v, *p):
         """
         p[0] = E_0
         p[1] = B_0
@@ -49,7 +49,7 @@ def get_eos(eos):
             ((p[3] / v)**(2.0 / 3) - 1)**2 * (6 - 4 * (p[3] / v)**(2.0 / 3)))
     
     # Murnaghan EOS
-    def murnaghan(p, v):
+    def murnaghan(v, *p):
         """
         p[0] = E_0
         p[1] = B_0
@@ -61,13 +61,14 @@ def get_eos(eos):
                 - p[1] * p[3] / (p[2] - 1))
     
     # Vinet EOS
-    def vinet(p, v):
+    def vinet(v, *p):
         """
         p[0] = E_0
         p[1] = B_0
         p[2] = B'_0
         p[3] = V_0
         """
+
         x = (v / p[3]) ** (1.0 / 3)
         xi = 3.0 / 2 * (p[2] - 1)
         return p[0] + (9 * p[1] * p[3] / (xi**2)
@@ -98,29 +99,16 @@ class EOSFit:
 
     def run(self, initial_parameter):
 
-        def residuals(p, eos, v, e):
-            return eos(p, v) - e
-        
         try:
-            from scipy.optimize import leastsq
+            from scipy.optimize import curve_fit
         except ImportError:
             print "You need to install python-scipy."
             exit(1)
 
-        result = leastsq(residuals,
-                         initial_parameter[:],
-                         args=(self._eos, self._volume, self._energy),
-                         full_output=1)
-        self._parameters = result[0]
+        result = curve_fit(self._eos, self._volume, self._energy,
+                           p0=initial_parameter[:])
 
-        # self._parameters = [result[0][0],                         # Energy
-        #                    result[0][1] * self._pressure_factor,  # Bulk modulus
-        #                    result[0][2],                         # Pressure derivative of Bulk modules
-        #                    result[0][3]]                        # Volume
-        # covar = result[1]
-        # print np.sum(self._residuals(result[0], self._volume, self._energy) ** 2)/self._volume.shape[0]
-        # print ("%14.6f"*4) % tuple(result[0])
-        # print "error              :", ("%14.6f"*4) % tuple(np.sqrt(np.diag(covar)))
+        self._parameters = result[0]
 
     def get_energy(self):
         return self._parameters[0]

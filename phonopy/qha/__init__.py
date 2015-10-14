@@ -78,7 +78,7 @@ class BulkModulus:
         vols = self._volumes
         plt.plot(vols, self._electronic_energies, 'bo', markersize=4)
         volume_points = np.linspace(min(vols), max(vols), 201)
-        plt.plot(volume_points, self._eos(ep, volume_points), 'b-')
+        plt.plot(volume_points, self._eos(volume_points, *ep), 'b-')
         return plt
 
 
@@ -498,9 +498,8 @@ class QHA:
                          self._free_energies[i],
                          'bo', markersize=4)
                 plt.plot(volume_points,
-                         self._eos(self._equiv_parameters[i],
-                                   volume_points),
-                         'b-')
+                         self._eos(volume_points,
+                                   *self._equiv_parameters[i]), 'b-')
 
         plt.plot(selected_volumes,
                  selected_energies,
