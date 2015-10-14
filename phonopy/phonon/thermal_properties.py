@@ -154,6 +154,12 @@ class ThermalProperties(ThermalPropertiesBase):
         pyplot.xlabel('Temperature [K]')
 
     def set_thermal_properties(self, t_step=10, t_max=1000, t_min=0):
+        import warnings
+        warnings.warn("\'set_thermal_properties\' method is depreciated. "
+                      "Use \'run\' method instead.")
+        self.run(t_step=t_step, t_max=t_max, t_min=t_min)
+
+    def run(self, t_step=10, t_max=1000, t_min=0):
         temperatures = np.arange(t_min, t_max + t_step / 2.0, t_step,
                                  dtype='double')
         fe = []

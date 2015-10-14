@@ -500,7 +500,7 @@ def post_process_free_energy(phonopy_obj, mesh_obj, parameters, frequency_unit_t
     Tmin = parameters["Tstart"]
     Tmax = parameters["Tend"]
     Tstep = ( Tmax - Tmin) / parameters["Tpoints"]
-    tp_obj.set_thermal_properties(Tstep, Tmax, Tmin)
+    tp_obj.run(Tstep, Tmax, Tmin)
     T, F, S, cv = tp_obj.get_thermal_properties()
     kJmolToEv = 1.0 / EvTokJmol
     JmolToEv = kJmolToEv / 1000
