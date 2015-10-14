@@ -104,15 +104,28 @@ class EOSFit:
         warnings.filterwarnings('error')
 
         try:
-            from scipy.optimize import curve_fit
+            from scipy.optimize import leastsq
             import scipy
         except ImportError:
             print "You need to install python-scipy."
             exit(1)
 
+        def residuals(p, eos, v, e):
+            return eos(v, *p) - e
+
         try:
-            result = curve_fit(self._eos, self._volume, self._energy,
-                               p0=initial_parameter[:])
+            result = leastsq(residuals,
+                             initial_parameter,
+                             args=(self._eos, self._volume, self._energy),
+                             full_output=1)
+            #
+            # leastsq is more stable than curve_fit.
+            # The reason is unclear, maybe the default parameters used for
+            # leastsq are different though curve_fit seems to call curve_fit.
+            #
+            # result = curve_fit(self._eos, self._volume, self._energy,
+            #                    p0=initial_parameter)
+
         except (RuntimeError,
                 RuntimeWarning,
                 scipy.optimize.optimize.OptimizeWarning):
