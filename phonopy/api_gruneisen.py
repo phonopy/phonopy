@@ -60,7 +60,7 @@ class PhonopyGruneisen:
                  is_mesh_symmetry=True):
         for phonon in (self._phonon, self._phonon_plus, self._phonon_minus):
             if phonon.get_dynamical_matrix() is None:
-                print "Warning: Dynamical matrix has not yet built."
+                print("Warning: Dynamical matrix has not yet built.")
                 return False
 
         self._mesh = GruneisenMesh(self._phonon,

@@ -48,7 +48,7 @@ import phonopy.file_IO as file_IO
 try:
     import yaml
 except ImportError:
-    print "You need to install python-yaml."
+    print("You need to install python-yaml.")
     exit(1)
     
 try:
@@ -97,7 +97,7 @@ else:
 if os.path.exists(filename):
     disp = yaml.load(open(filename).read(), Loader=Loader)
 else:
-    print "%s could not be found." % filename
+    print("%s could not be found." % filename)
     sys.exit(1)
     
 natom = disp['natom']
@@ -138,19 +138,19 @@ if options.is_create_structure_file:
 if options.is_compatibility:
     directions_DISP = file_IO.parse_DISP()
     if len(directions_DISP) != len(directions):
-        print "disp.yaml and DISP are inconsistent."
+        print("disp.yaml and DISP are inconsistent.")
         sys.exit(1)
-    print "     DISP               disp.yaml"
+    print("     DISP               disp.yaml")
     for d_DISP, d in zip(directions_DISP, directions):
         if d_DISP[0] != d[0]:
-            print "disp.yaml and DISP are inconsistent."
+            print("disp.yaml and DISP are inconsistent.")
             sys.exit(1)
         if (abs(np.array(d_DISP[1:4]) - np.array(d[1:4])) < 0.0001).all():
             print d_DISP, d
         else:
-            print "disp.yaml and DISP are inconsistent."
+            print("disp.yaml and DISP are inconsistent.")
             sys.exit(1)
-    print "diap.yaml and DISP are equivalent!"
+    print("diap.yaml and DISP are equivalent!")
     sys.exit(0)
 
 #######################################
@@ -170,11 +170,11 @@ if options.is_d2d:
                 is_found = True
                 break
         if not is_found:
-            print "disp.yaml and DISP are inconsistent."
+            print("disp.yaml and DISP are inconsistent.")
             sys.exit(1)
 
-    print numbers
-    print count
+    print("%s" % numbers)
+    print("%d" % count)
     sys.exit(0)
 
 ####################
@@ -189,10 +189,10 @@ else:
 if options.add_disp is not None:
 
     if output_filename is None:
-        print "Output filename (-o or --overwrite) is required."
+        print("Output filename (-o or --overwrite) is required.")
         sys.exit(1)
         
-    print options.add_disp.split()[1:4]
+    print("%s" % options.add_disp.split()[1:4])
     v = np.array([float(x) for x in options.add_disp.split()[1:4]])
     v = np.dot(v, cell.get_cell())
     v = v / np.linalg.norm(v) * options.amplitude
@@ -210,7 +210,7 @@ if options.add_disp is not None:
 if options.select_disp is not None:
 
     if output_filename is None:
-        print "Output filename (-o or --overwrite) is required."
+        print("Output filename (-o or --overwrite) is required.")
         sys.exit(1)
         
     disp_selected = []
@@ -224,4 +224,4 @@ if options.select_disp is not None:
                             filename=output_filename)
     sys.exit(0)
 
-print "Nothing has been done."
+print("Nothing has been done.")

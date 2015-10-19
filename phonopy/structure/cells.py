@@ -107,11 +107,11 @@ def print_cell(cell, mapping=None, stars=None):
     masses = cell.get_masses()
     magmoms = cell.get_magnetic_moments()
     lattice = cell.get_cell()
-    print "Lattice vectors:"
-    print "  a %20.15f %20.15f %20.15f" % tuple(lattice[0])
-    print "  b %20.15f %20.15f %20.15f" % tuple(lattice[1])
-    print "  c %20.15f %20.15f %20.15f" % tuple(lattice[2])
-    print "Atomic positions (fractional):"
+    print("Lattice vectors:")
+    print("  a %20.15f %20.15f %20.15f" % tuple(lattice[0]))
+    print("  b %20.15f %20.15f %20.15f" % tuple(lattice[1]))
+    print("  c %20.15f %20.15f %20.15f" % tuple(lattice[2]))
+    print("Atomic positions (fractional):")
     for i, v in enumerate(cell.get_scaled_positions()):
         num = " "
         if stars is not None:
@@ -125,9 +125,9 @@ def print_cell(cell, mapping=None, stars=None):
         if magmoms is not None:
             line += "  %5.3f" % magmoms[i]
         if mapping is None:
-            print line
+            print(line)
         else:
-            print line + " >", mapping[i]+1
+            print(line + " > %d" % (mapping[i] + 1))
 
 class Supercell(Atoms):
     """Build supercell from supercell matrix
@@ -180,7 +180,7 @@ class Supercell(Atoms):
         multi = supercell.get_number_of_atoms() / unitcell.get_number_of_atoms()
         
         if multi != determinant(self._supercell_matrix):
-            print "Supercell creation failed."
+            print("Supercell creation failed.")
             Atoms.__init__(self)
         else:            
             Atoms.__init__(self,
@@ -363,7 +363,7 @@ def get_Delaunay_reduction(lattice, tolerance):
         if reduce_bases(extended_bases, tolerance):
             break
     if i == 99:
-        print "Delaunary reduction is failed."
+        print("Delaunary reduction is failed.")
 
     shortest = get_shortest_bases_from_extented_bases(extended_bases, tolerance)
 
@@ -407,7 +407,7 @@ def get_shortest_bases_from_extented_bases(extended_bases, tolerance):
                         [basis[i], basis[j], basis[k]])) > tolerance:
                     return np.array([basis[i], basis[j], basis[k]])
 
-    print "Delaunary reduction is failed."
+    print("Delaunary reduction is failed.")
     return np.array(basis[:3], dtype='double')
 
 #

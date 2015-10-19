@@ -230,8 +230,8 @@ class Phonopy:
         
     def set_nac_params(self, nac_params=None, method=None):
         if method is not None:
-            print "set_nac_params:"
-            print "  Keyword argument of \"method\" is not more supported."
+            print("set_nac_params:")
+            print("  Keyword argument of \"method\" is not more supported.")
         self._nac_params = nac_params
         self._set_dynamical_matrix()
 
@@ -286,23 +286,23 @@ class Phonopy:
         self._set_dynamical_matrix()
 
     def set_displacements(self, displacements):
-        print 
-        print ("********************************** Warning"
-               "**********************************")
-        print "set_displacements is obsolete. Do nothing."
-        print ("******************************************"
-               "**********************************")
-        print 
+        print('')
+        print("********************************** Warning"
+              "**********************************")
+        print("set_displacements is obsolete. Do nothing.")
+        print("******************************************"
+              "**********************************")
+        print('')
 
     def set_force_sets(self, force_sets):
-        print 
-        print ("********************************** Warning"
-               "**********************************")
-        print "set_force_sets will be obsolete."
-        print ("   The method name is changed to set_displacement_dataset.")
-        print ("******************************************"
-               "**********************************")
-        print
+        print('') 
+        print("********************************** Warning"
+              "**********************************")
+        print("set_force_sets will be obsolete.")
+        print("   The method name is changed to set_displacement_dataset.")
+        print("******************************************"
+              "**********************************")
+        print('')
         self.set_displacement_dataset(force_sets)
 
     def set_post_process(self,
@@ -311,19 +311,19 @@ class Phonopy:
                          displacement_dataset=None,
                          force_constants=None,
                          is_nac=None):
-        print 
-        print ("********************************** Warning"
-               "**********************************")
-        print "set_post_process will be obsolete."
-        print ("  produce_force_constants is used instead of set_post_process"
-               " for producing")
-        print ("  force constants from forces.")
+        print('')
+        print("********************************** Warning"
+              "**********************************")
+        print("set_post_process will be obsolete.")
+        print("  produce_force_constants is used instead of set_post_process"
+              " for producing")
+        print("  force constants from forces.")
         if primitive_matrix is not None:
-            print ("  primitive_matrix has to be given at Phonopy::__init__"
-                   " object creation.")
+            print("  primitive_matrix has to be given at Phonopy::__init__"
+                  " object creation.")
         print ("******************************************"
                "**********************************")
-        print 
+        print('')
 
         if primitive_matrix is not None:
             self._primitive_matrix = primitive_matrix
@@ -427,7 +427,7 @@ class Phonopy:
     def get_dynamical_matrix_at_q(self, q):
         self._set_dynamical_matrix()
         if self._dynamical_matrix is None:
-            print "Warning: Dynamical matrix has not yet built."
+            print("Warning: Dynamical matrix has not yet built.")
             return None
 
         self._dynamical_matrix.set_dynamical_matrix(q)
@@ -442,7 +442,7 @@ class Phonopy:
         """
         self._set_dynamical_matrix()
         if self._dynamical_matrix is None:
-            print "Warning: Dynamical matrix has not yet built."
+            print("Warning: Dynamical matrix has not yet built.")
             return None
 
         self._dynamical_matrix.set_dynamical_matrix(q)
@@ -464,7 +464,7 @@ class Phonopy:
         """
         self._set_dynamical_matrix()
         if self._dynamical_matrix is None:
-            print "Warning: Dynamical matrix has not yet built."
+            print("Warning: Dynamical matrix has not yet built.")
             return None
 
         self._dynamical_matrix.set_dynamical_matrix(q)
@@ -486,7 +486,7 @@ class Phonopy:
                            is_eigenvectors=False,
                            is_band_connection=False):
         if self._dynamical_matrix is None:
-            print "Warning: Dynamical matrix has not yet built."
+            print("Warning: Dynamical matrix has not yet built.")
             self._band_structure = None
             return False
 
@@ -527,7 +527,7 @@ class Phonopy:
                  is_eigenvectors=False,
                  is_gamma_center=False):
         if self._dynamical_matrix is None:
-            print "Warning: Dynamical matrix has not yet built."
+            print("Warning: Dynamical matrix has not yet built.")
             self._mesh = None
             return False
 
@@ -596,7 +596,7 @@ class Phonopy:
                                band_indices=None,
                                cutoff_frequency=None):
         if self._mesh is None:
-            print "set_mesh has to be done before set_thermal_properties"
+            print("set_mesh has to be done before set_thermal_properties")
             return False
         else:
             tp = ThermalProperties(self._mesh.get_frequencies(),
@@ -630,8 +630,8 @@ class Phonopy:
                       tetrahedron_method=False):
 
         if self._mesh is None:
-            print ("Warning: \'set_mesh\' has to finish correctly "
-                   "before DOS calculation.")
+            print("Warning: \'set_mesh\' has to finish correctly "
+                  "before DOS calculation.")
             self._total_dos = None
             return False
 
@@ -680,18 +680,18 @@ class Phonopy:
         self._pdos = None
 
         if self._mesh is None:
-            print ("Warning: \'set_mesh\' has to be called before "
-                   "PDOS calculation.")
+            print("Warning: \'set_mesh\' has to be called before "
+                  "PDOS calculation.")
             return False
 
         if self._mesh.get_eigenvectors() is None:
-            print "Warning: Eigenvectors have to be calculated."
+            print("Warning: Eigenvectors have to be calculated.")
             return False
 
         num_grid = np.prod(self._mesh.get_mesh_numbers())
         if num_grid != len(self._mesh.get_ir_grid_points()):
-            print ("Warning: \'set_mesh\' has to be called with "
-                   "is_mesh_symmetry=False.")
+            print("Warning: \'set_mesh\' has to be called with "
+                  "is_mesh_symmetry=False.")
             return False
 
         if direction is not None:
@@ -748,8 +748,8 @@ class Phonopy:
         self._thermal_displacements = None
 
         if self._mesh is None:
-            print ("Warning: \'set_mesh\' has to finish correctly "
-                   "before \'set_thermal_displacements\'.")
+            print("Warning: \'set_mesh\' has to finish correctly "
+                  "before \'set_thermal_displacements\'.")
             return False
 
         eigvecs = self._mesh.get_eigenvectors()
@@ -757,11 +757,11 @@ class Phonopy:
         mesh_nums = self._mesh.get_mesh_numbers() 
 
         if self._mesh.get_eigenvectors() is None:
-            print "Warning: Eigenvectors have to be calculated."
+            print("Warning: Eigenvectors have to be calculated.")
             return False
             
         if np.prod(mesh_nums) != len(eigvecs):
-            print "Warning: Sampling mesh must not be symmetrized."
+            print("Warning: Sampling mesh must not be symmetrized.")
             return False
 
         td = ThermalDisplacements(frequencies,
@@ -805,8 +805,8 @@ class Phonopy:
         self._thermal_displacement_matrices = None
 
         if self._mesh is None:
-            print ("\'set_mesh\' has to finish correctly "
-                   "before \'set_thermal_displacement_matrices\'.")
+            print("\'set_mesh\' has to finish correctly "
+                  "before \'set_thermal_displacement_matrices\'.")
             return False
 
         eigvecs = self._mesh.get_eigenvectors()
@@ -814,11 +814,11 @@ class Phonopy:
         mesh_nums = self._mesh.get_mesh_numbers() 
 
         if self._mesh.get_eigenvectors() is None:
-            print "Warning: Eigenvectors have to be calculated."
+            print("Warning: Eigenvectors have to be calculated.")
             return False
             
         if np.prod(mesh_nums) != len(eigvecs):
-            print "Warning: Sampling mesh must not be symmetrized."
+            print("Warning: Sampling mesh must not be symmetrized.")
             return False
 
         tdm = ThermalDisplacementMatrices(frequencies,
@@ -877,7 +877,7 @@ class Phonopy:
                            write_dynamical_matrices=False,
                            factor=VaspToTHz):
         if self._dynamical_matrix is None:
-            print "Warning: Dynamical matrix has not yet built."
+            print("Warning: Dynamical matrix has not yet built.")
             self._qpoints_phonon = None
             return False
 
@@ -908,7 +908,7 @@ class Phonopy:
                         shift=None,
                         filename=None):
         if self._dynamical_matrix is None:
-            print "Warning: Dynamical matrix has not yet built."
+            print("Warning: Dynamical matrix has not yet built.")
             return False
 
         if q_point is None:
@@ -937,7 +937,8 @@ class Phonopy:
             anime_type == 'jmol' or
             anime_type == 'poscar'):
             if band_index is None or amplitude is None or num_div is None:
-                print "Warning: Parameters are not correctly set for animation."
+                print("Warning: Parameters are not correctly set for "
+                      "animation.")
                 return False
 
             if anime_type == 'arc' or anime_type is None:
@@ -994,7 +995,7 @@ class Phonopy:
                         derivative_order=None,
                         nac_q_direction=None):
         if self._dynamical_matrix is None:
-            print "Warning: Dynamical matrix has not yet built."
+            print("Warning: Dynamical matrix has not yet built.")
             self._modulation = None
             return False
         
@@ -1037,7 +1038,7 @@ class Phonopy:
                    nac_q_direction=None,
                    degeneracy_tolerance=1e-4):
         if self._dynamical_matrix is None:
-            print "Warning: Dynamical matrix has not yet built."
+            print("Warning: Dynamical matrix has not yet built.")
             self._irreps = None
             return None
 
@@ -1065,7 +1066,7 @@ class Phonopy:
     # Group velocity
     def set_group_velocity(self, q_length=None):
         if self._dynamical_matrix is None:
-            print "Warning: Dynamical matrix has not yet built."
+            print("Warning: Dynamical matrix has not yet built.")
             self._group_velocity = None
             return False
 
@@ -1106,13 +1107,13 @@ class Phonopy:
         self._dynamical_matrix = None
 
         if (self._supercell is None or self._primitive is None):
-            print "Bug: Supercell or primitive is not created."
+            print("Bug: Supercell or primitive is not created.")
             return False
         elif self._force_constants is None:
-            print "Warning: Force constants are prepared."
+            print("Warning: Force constants are not prepared.")
             return False
         elif self._primitive.get_masses() is None:
-            print "Warning: Atomic masses are not correctly set."
+            print("Warning: Atomic masses are not correctly set.")
             return False
         else:
             if self._nac_params is None:
@@ -1144,8 +1145,8 @@ class Phonopy:
         
         if (len(self._symmetry.get_pointgroup_operations()) !=
             len(self._primitive_symmetry.get_pointgroup_operations())):
-            print ("Warning: Point group symmetries of supercell and primitive"
-                   "cell are different.")
+            print("Warning: Point group symmetries of supercell and primitive"
+                  "cell are different.")
 
     def _build_supercell(self):
         self._supercell = get_supercell(self._unitcell,

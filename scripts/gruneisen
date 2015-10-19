@@ -56,8 +56,8 @@ def get_cell(cell_filename,
         interface_mode=interface_mode,
         yaml_mode=options.yaml_mode)
     if cell is None:
-        print ("Crystal structure file of %s could not be found." %
-               optional_structure_file_information[0])
+        print("Crystal structure file of %s could not be found." %
+              optional_structure_file_information[0])
         sys.exit(1)
 
     return cell
@@ -255,13 +255,13 @@ if options.supercell_dimension:
     elif len(dim) == 3:
         dim = np.diag(dim)
     else:
-        print "Number of elements of --dim option has to be 3 or 9."
+        print("Number of elements of --dim option has to be 3 or 9.")
         sys.exit(1)
     if np.linalg.det(dim) < 1:
-        print "Determinant of supercell matrix has to be positive."
+        print("Determinant of supercell matrix has to be positive.")
         sys.exit(1)
 else:
-    print "--dim option has to be specified."
+    print("--dim option has to be specified.")
     sys.exit(1)
 
 

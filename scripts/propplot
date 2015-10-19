@@ -44,7 +44,7 @@ import numpy as np
 try:
     import yaml
 except ImportError:
-    print "You need to install python-yaml."
+    print("You need to install python-yaml.")
     exit(1)
     
 try:
@@ -98,13 +98,14 @@ parser.add_option("--gnuplot", dest="is_gnuplot",
 (options, args) = parser.parse_args()
 
 if options.is_gnuplot:
-    print "# temperature[K] Free energy [kJ/mol] Entropy [J/K/mol] Heat capacity [J/K/mol] Energy [kJ/mol]"
+    print("# temperature[K] Free energy [kJ/mol] Entropy [J/K/mol] "
+          "Heat capacity [J/K/mol] Energy [kJ/mol]")
 else:
     import matplotlib.pyplot as plt
     if ( ( not options.is_heat_capacity ) and 
          ( not options.is_entropy ) and 
          ( not options.is_free_energy ) ):
-        print "Set --cv, --entropy or --fe"
+        print("Set --cv, --entropy or --fe")
         exit(0)
 
 if len( args ) == 0:
@@ -154,9 +155,9 @@ for filename in filenames:
                               props[1][tmin_index:tmax_index],
                               props[2][tmin_index:tmax_index],
                               props[3][tmin_index:tmax_index]):
-            print t, f, e, h, f+e*t/1000
-        print
-        print
+            print(("%14.7f " * 5) % (t, f, e, h, f + e * t / 1000))
+        print('')
+        print('')
     else:
         temperatures = [v['temperature'] for v in thermal_properties]
         props = [v[prop_target] for v in thermal_properties]

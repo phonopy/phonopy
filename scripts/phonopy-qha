@@ -113,13 +113,14 @@ def read_data_from_thermal_properties(filenames,
         entropy = np.array(entropy).T * factor
         fe_phonon = np.array(fe_phonon).T * factor
     else:
-        print
-        print "Check your input files"
-        print "Disagreement of temperature range or step"
+        print('')
+        print("Check your input files")
+        print("Disagreement of temperature range or step")
         for t, fname in zip(temp, filenames):
-            print "%s: Range [ %d, %d ], Step %f" % (fname, int(t[0]), int(t[-1]), t[1] - t[0])
-        print
-        print "Stop phonopy-qha"
+            print("%s: Range [ %d, %d ], Step %f" %
+                  (fname, int(t[0]), int(t[-1]), t[1] - t[0]))
+        print('')
+        print("Stop phonopy-qha")
         sys.exit(1)
 
     return temperatures, cv, entropy, fe_phonon
@@ -130,13 +131,13 @@ def create_unitcells(unitcell_filename,
                      number_of_unitcells=10):
     cell = read_vasp(unitcell_filename)
     lattice = cell.get_cell()
-    print "# Volumes of unit cells"
+    print("# Volumes of unit cells")
     for i, percent in enumerate(np.linspace(minus_percent,
                                             plus_percent,
                                             number_of_unitcells)):
         lattice_qha = lattice * (1 + percent / 100) ** (1.0 / 3)
         cell.set_cell(lattice_qha)
-        print np.linalg.det(lattice_qha)
+        print("%f" % np.linalg.det(lattice_qha))
         write_vasp("QHAPOSCAR-%02d" % (i + 1), cell, direct=True)
 
 # Parse options
@@ -253,11 +254,11 @@ if options.energy_shift is not None:
 
 # Choose EOS
 if options.eos == "birch_murnaghan":
-    print "# Third-order Birch-Murnaghan EOS"
+    print("# Third-order Birch-Murnaghan EOS")
 elif options.eos == "murnaghan":
-    print "# Murnaghan EOS"
+    print("# Murnaghan EOS")
 else:
-    print "# Vinet EOS"
+    print("# Vinet EOS")
 
 # Show bulk modulus of v-e data
 if options.is_bulk_modulus_only:
@@ -266,19 +267,19 @@ if options.is_bulk_modulus_only:
                               electronic_energies,
                               eos=options.eos)
     parameters = bulk_modulus.get_bulk_modulus_parameters()
-    print "Volume: ", parameters[3]
-    print "Energy: ", parameters[0]
-    print "Bulk modulus: ", parameters[1] * EVAngstromToGPa
-    print "Parameters: %f %f %f %f" % tuple(parameters)
+    print("Volume: %f" % parameters[3])
+    print("Energy: %f" % parameters[0])
+    print("Bulk modulus: %f" % (parameters[1] * EVAngstromToGPa))
+    print("Parameters: %f %f %f %f" % tuple(parameters))
     if options.is_graph_plot:
         bulk_modulus.plot_bulk_modulus().show()
     sys.exit(0)
 
 # Check number of files
 if len(volumes) != len(args[1:]):
-    print ("The umber of thermal_properites.yaml files (%d) "
-           "is inconsisten with" % len(args[1:]))
-    print "the number of e-v data (%d)." % len(volumes)
+    print("The umber of thermal_properites.yaml files (%d) "
+          "is inconsisten with" % len(args[1:]))
+    print("the number of e-v data (%d)." % len(volumes))
     sys.exit(1)
 
 # read data from thermal_properties
