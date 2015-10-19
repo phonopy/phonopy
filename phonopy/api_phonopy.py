@@ -605,9 +605,7 @@ class Phonopy:
                                    is_projection=is_projection,
                                    band_indices=band_indices,
                                    cutoff_frequency=cutoff_frequency)
-            tp.set_thermal_properties(t_step=t_step,
-                                      t_max=t_max,
-                                      t_min=t_min)
+            tp.run(t_step=t_step, t_max=t_max, t_min=t_min)
             self._thermal_properties = tp
 
     def get_thermal_properties(self):

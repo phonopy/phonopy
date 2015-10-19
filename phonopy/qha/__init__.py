@@ -67,7 +67,7 @@ class BulkModulus:
         return (self._energy,
                 self._bulk_modulus,
                 self._b_prime,
-                self._volume)       
+                self._volume)
 
     def get_eos(self):
         return self._eos
@@ -120,7 +120,7 @@ class QHA:
         self._cp_polyfit = None
         self._dsdv = None
         self._gruneisen_parameters = None
-    
+
     def run(self, verbose=False):
         if verbose:
             print ("#%11s" + "%14s"*4) % ("T", "E_0", "B_0", "B'_0", "V_0")
@@ -133,7 +133,7 @@ class QHA:
             for j, e in enumerate(self._electronic_energies):
                 fe.append(e + self._fe_phonon[i][j])
             self._free_energies.append(fe)
-    
+
             ee, eb, ebp, ev = fit_to_eos(self._volumes, fe, self._eos)
             if ee is None:
                 continue
@@ -166,7 +166,7 @@ class QHA:
         self._plot_thermal_expansion(plt)
         plt.subplots_adjust(wspace=0.35)
         return plt
-        
+
     def get_helmholtz_volume(self):
         return self._free_energies[:self._max_t_index]
 
@@ -174,7 +174,7 @@ class QHA:
         import matplotlib.pyplot as plt
         self._plot_helmholtz_volume(plt, thin_number=thin_number)
         return plt
-    
+
     def plot_pdf_helmholtz_volume(self,
                                   thin_number=10,
                                   filename='helmholtz-volume.pdf'):
@@ -190,7 +190,7 @@ class QHA:
         self._plot_helmholtz_volume(plt, thin_number=thin_number)
         plt.savefig(filename)
         plt.close()
-        
+
     def write_helmholtz_volume(self, filename='helmholtz-volume.dat'):
         w = open(filename, 'w')
         for i in range(self._max_t_index):
@@ -232,10 +232,10 @@ class QHA:
             w.write("%25.15f %25.15f\n" % (self._temperatures[i],
                                            self._equiv_volumes[i]))
         w.close()
-    
+
     def get_thermal_expansion(self):
         return self._thermal_expansions[:self._max_t_index]
-        
+
     def plot_thermal_expansion(self):
         import matplotlib.pyplot as plt
         self._plot_thermal_expansion(plt)
@@ -274,7 +274,7 @@ class QHA:
             return plt
         else:
             return None
-        
+
     def plot_pdf_volume_expansion(self,
                                   exp_data=None,
                                   symbol='o',
@@ -288,13 +288,13 @@ class QHA:
             plt.rcParams['figure.subplot.left'] = 0.15
             plt.rcParams['figure.subplot.bottom'] = 0.15
             plt.rcParams['figure.figsize'] = 8, 6
-    
+
             self._plot_volume_expansion(plt,
                                         exp_data=exp_data,
                                         symbol=symbol)
             plt.savefig(filename)
             plt.close()
-        
+
     def write_volume_expansion(self, filename='volume_expansion.dat'):
         if self._temperatures[self._max_t_index] > 300:
             w = open(filename, 'w')
@@ -324,7 +324,7 @@ class QHA:
         self._plot_gibbs_temperature(plt)
         plt.savefig(filename)
         plt.close()
-        
+
     def write_gibbs_temperature(self, filename='gibbs-temperature.dat'):
         w = open(filename, 'w')
         for i in range(self._max_t_index):
@@ -340,8 +340,9 @@ class QHA:
         self._plot_bulk_modulus_temperature(plt)
         return plt
 
-    def plot_pdf_bulk_modulus_temperature(self,
-                                          filename='bulk_modulus-temperature.pdf'):
+    def plot_pdf_bulk_modulus_temperature(
+            self,
+            filename='bulk_modulus-temperature.pdf'):
         import matplotlib.pyplot as plt
         plt.rcParams['backend'] = 'PDF'
         plt.rcParams['pdf.fonttype'] = 42
@@ -362,7 +363,7 @@ class QHA:
             w.write("%20.15f %25.15f\n" % (self._temperatures[i],
                                            self._equiv_bulk_modulus[i]))
         w.close()
-    
+
     def get_heat_capacity_P_numerical(self, exp_data=None):
         return self._cp_numerical[:self._max_t_index]
 
@@ -442,19 +443,19 @@ class QHA:
             wvcv.write("\n\n")
         wve.close()
         wvcv.close()
-    
+
         w = open(filename, 'w')
         for i in range(self._max_t_index):
             w.write("%20.15f %20.15f\n" % (self._temperatures[i],
                                            self._cp_polyfit[i]))
         w.close()
-    
+
         w = open(filename_dsdvt, 'w') # GPa
         for i in range(self._max_t_index):
             w.write("%20.15f %20.15f\n" % (self._temperatures[i],
                                            self._dsdv[i] * 1e21 / Avogadro))
         w.close()
-    
+
     def get_gruneisen_temperature(self):
         return self._gruneisen_parameters[:self._max_t_index]
 
@@ -484,14 +485,14 @@ class QHA:
             w.write("%20.15f %25.15f\n" % (self._temperatures[i],
                                            self._gruneisen_parameters[i]))
         w.close()
-    
+
     def _plot_helmholtz_volume(self, plt, thin_number=10):
         volume_points = np.linspace(min(self._volumes),
                                     max(self._volumes),
                                     201)
         selected_volumes = []
         selected_energies = []
-    
+
         for i, t in enumerate(self._temperatures[:self._max_t_index]):
             if i % thin_number == 0:
                 selected_volumes.append(self._equiv_volumes[i])
@@ -518,9 +519,9 @@ class QHA:
         # exp
         if exp_data:
             plt.plot(exp_data[0], exp_data[1], 'ro')
-    
+
     def _plot_thermal_expansion(self, plt):
-    
+
         beta = np.array(self._thermal_expansions) * 1e6
         plt.plot(self._temperatures[:self._max_t_index],
                  beta[:self._max_t_index],
@@ -542,7 +543,7 @@ class QHA:
         plt.ylabel(r'Volume expansion $\Delta L/L_0 \, (L=V^{\,1/3})$')
         plt.xlim(self._temperatures[0],
                  self._temperatures[self._max_t_index])
-    
+
     def _plot_gibbs_temperature(self, plt):
         plt.xlabel('Temperature [K]')
         plt.ylabel('Gibbs free energy')
@@ -556,7 +557,7 @@ class QHA:
         plt.plot(self._temperatures[:self._max_t_index],
                  self._equiv_bulk_modulus[:self._max_t_index],
                  'b-')
-        
+
     def _plot_heat_capacity_P_numerical(self, plt, exp_data=None):
         plt.xlabel('Temperature [K]')
         plt.ylabel(r'$\mathrm{C_P [J/mol\cdot K]}$')
@@ -573,7 +574,7 @@ class QHA:
         plt.ylabel(r'$\mathrm{C_P [J/mol\cdot K]}$')
         plt.plot(self._temperatures[:self._max_t_index],
                  self._cp_polyfit[:self._max_t_index])
-                
+
         # exp
         if exp_data:
             plt.plot(exp_data[0], exp_data[1], 'ro')
@@ -584,7 +585,7 @@ class QHA:
         plt.plot(self._temperatures[:self._max_t_index],
                  self._gruneisen_parameters[:self._max_t_index],
                  'b-')
-        
+
     def _set_thermal_expansion(self):
         beta = [0.]
         dt = self._temperatures[1] - self._temperatures[0]
@@ -599,10 +600,11 @@ class QHA:
             l = np.array(self._equiv_volumes) ** (1.0 / 3)
             for i in range(self._max_t_index):
                 t = self._temperatures[i]
-                if abs(t - 300) < (self._temperatures[1] - self._temperatures[0]) / 10:
+                if (abs(t - 300) <
+                    (self._temperatures[1] - self._temperatures[0]) / 10):
                     l_0 = (self._equiv_volumes[i]) ** (1.0 / 3)
                     break
-        
+
             self._volume_expansions = l / l_0 - 1
 
     def _set_heat_capacity_P_numerical(self):
@@ -615,7 +617,7 @@ class QHA:
             cp.append(-(g[i + 2] - 2 * g[i] + g[i - 2]) /
                        (dt ** 2) / 4 * self._temperatures[i])
         self._cp_numerical = cp
-    
+
     def _set_heat_capacity_P_polyfit(self):
         cp = [0.0]
         dsdv = [0.0]
@@ -623,27 +625,27 @@ class QHA:
         self._volume_cv_parameters = []
         self._volume_entropy = []
         self._volume_cv = []
-        
+
         dt = self._temperatures[1] - self._temperatures[0]
         for j in range(1, self._max_t_index):
             t = self._temperatures[j]
             x = self._equiv_volumes[j]
-    
+
             parameters = np.polyfit(self._volumes, self._cv[j], 4)
             cv_p = np.dot(parameters, np.array([x**4, x**3, x**2, x, 1]))
             self._volume_cv_parameters.append(parameters)
-    
+
             parameters = np.polyfit(self._volumes, self._entropy[j], 4)
             dsdv_t = np.dot(parameters[:4], np.array(
                 [4 * x**3, 3 * x**2, 2 * x, 1]))
             self._volume_entropy_parameters.append(parameters)
-    
+
             dvdt = (self._equiv_volumes[j + 1] -
                     self._equiv_volumes[j - 1]) / dt / 2
-    
+
             cp.append(cv_p + t * dvdt * dsdv_t)
             dsdv.append(dsdv_t)
-    
+
             self._volume_cv.append(np.array([self._volumes, self._cv[j]]).T)
             self._volume_entropy.append(np.array([self._volumes,
                                                   self._entropy[j]]).T)
@@ -668,6 +670,7 @@ class QHA:
             return len(self._all_temperatures) - 3
         else:
             max_t_index = 0
+
             for i, t in enumerate(temperatures):
                 if self._t_max + 1e-5 < t:
                     max_t_index = i

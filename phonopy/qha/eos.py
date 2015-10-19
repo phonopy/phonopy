@@ -47,7 +47,7 @@ def get_eos(eos):
         return p[0] + 9.0 / 16 * p[3] * p[1] * (
             ((p[3] / v)**(2.0 / 3) - 1)**3 * p[2] +
             ((p[3] / v)**(2.0 / 3) - 1)**2 * (6 - 4 * (p[3] / v)**(2.0 / 3)))
-    
+
     # Murnaghan EOS
     def murnaghan(v, *p):
         """
@@ -59,7 +59,7 @@ def get_eos(eos):
         return (p[0]
                 + p[1] * v / p[2] *((p[3] / v)**p[2] / (p[2] - 1) + 1)
                 - p[1] * p[3] / (p[2] - 1))
-    
+
     # Vinet EOS
     def vinet(v, *p):
         """
@@ -73,7 +73,7 @@ def get_eos(eos):
         xi = 3.0 / 2 * (p[2] - 1)
         return p[0] + (9 * p[1] * p[3] / (xi**2)
                        * (1 + (xi * (1 - x) - 1) * np.exp(xi * (1 - x))))
-    
+
     if eos=='murnaghan':
         return murnaghan
     elif eos=='birch_murnaghan':
@@ -90,7 +90,7 @@ def fit_to_eos(volumes, fe, eos):
     eb = fit.get_bulk_modulus()
     ebp = fit.get_b_prime()
     return ee, eb, ebp, ev
-    
+
 class EOSFit:
     def __init__(self, volume, energy, eos):
         self._energy = np.array(energy)
@@ -104,15 +104,27 @@ class EOSFit:
         warnings.filterwarnings('error')
 
         try:
-            from scipy.optimize import curve_fit
+            from scipy.optimize import leastsq
             import scipy
         except ImportError:
             print "You need to install python-scipy."
             exit(1)
 
+        residuals = lambda p, eos, v, e: eos(v, *p) - e
+
         try:
-            result = curve_fit(self._eos, self._volume, self._energy,
-                               p0=initial_parameter[:])
+            result = leastsq(residuals,
+                             initial_parameter,
+                             args=(self._eos, self._volume, self._energy),
+                             full_output=1)
+            #
+            # leastsq is more stable than curve_fit.
+            # The reason is unclear, maybe the default parameters used for
+            # leastsq are different though curve_fit seems to call curve_fit.
+            #
+            # result = curve_fit(self._eos, self._volume, self._energy,
+            #                    p0=initial_parameter)
+
         except (RuntimeError,
                 RuntimeWarning,
                 scipy.optimize.optimize.OptimizeWarning):
@@ -149,4 +161,3 @@ class EOSFit:
 
     def get_parameters(self):
         return self._parameters
-

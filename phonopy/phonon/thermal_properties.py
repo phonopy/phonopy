@@ -85,6 +85,10 @@ class ThermalPropertiesBase:
         else:
             self._weights = weights
 
+        self._num_modes = self._frequencies.shape[1] * self._weights.sum()
+        self._num_integrated_modes = np.sum(
+            self._weights * (self._frequencies > 0).sum(axis=1))
+
     def get_free_energy(self, t):
         free_energy = self._calculate_thermal_property(mode_F, t)
         return free_energy / np.sum(self._weights) * EvTokJmol
@@ -134,6 +138,14 @@ class ThermalProperties(ThermalPropertiesBase):
                                        band_indices=band_indices,
                                        cutoff_frequency=cutoff_frequency)
         self._set_high_T_entropy_and_zero_point_energy()
+
+    def get_number_of_integrated_modes(self):
+        """Number of phonon modes used for integration on sampling mesh"""
+        return self._num_integrated_modes
+
+    def get_number_of_modes(self):
+        """Number of phonon modes on sampling mesh"""
+        return self._num_modes
         
     def get_zero_point_energy(self):
         return self._zero_point_energy
@@ -154,6 +166,12 @@ class ThermalProperties(ThermalPropertiesBase):
         pyplot.xlabel('Temperature [K]')
 
     def set_thermal_properties(self, t_step=10, t_max=1000, t_min=0):
+        import warnings
+        warnings.warn("\'set_thermal_properties\' method is depreciated. "
+                      "Use \'run\' method instead.")
+        self.run(t_step=t_step, t_max=t_max, t_min=t_min)
+
+    def run(self, t_step=10, t_max=1000, t_min=0):
         temperatures = np.arange(t_min, t_max + t_step / 2.0, t_step,
                                  dtype='double')
         fe = []
@@ -206,10 +224,6 @@ class ThermalProperties(ThermalPropertiesBase):
             f.write("\n".join(lines))
         
     def _get_tp_yaml_lines(self):
-        num_modes = self._frequencies.shape[1] * self._weights.sum()
-        num_integrated_modes = np.sum(
-            self._weights * (self._frequencies > 0).sum(axis=1))
-
         lines = []
         lines.append("# Thermal properties / unit cell (natom)")
         lines.append("")
@@ -222,8 +236,8 @@ class ThermalProperties(ThermalPropertiesBase):
         lines.append("natom: %5d" % ((self._frequencies[0].shape)[0]/3))
         if self._cutoff_frequency:
             lines.append("cutoff_frequency: %8.3f" % self._cutoff_frequency)
-        lines.append("num_modes: %d" % num_modes)
-        lines.append("num_integrated_modes: %d" % num_integrated_modes)
+        lines.append("num_modes: %d" % self._num_modes)
+        lines.append("num_integrated_modes: %d" % self._num_integrated_modes)
         if self._band_indices is not None:
             bi = self._band_indices + 1
             lines.append("band_index: [ " + ("%d, " * (len(bi) - 1)) %
