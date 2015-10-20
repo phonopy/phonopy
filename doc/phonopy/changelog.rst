@@ -3,7 +3,13 @@
 Change Log
 ==========
 
-(plan): Version 1.9.7 
+Oct-20-2015: Version 1.10.0 (release for testing)
+--------------------------------------------------
+
+* An experimental release for testing python 3 support. Bug reports
+  are very appreciated.
+
+Oct-20-2015: Version 1.9.7 
 -----------------------------
 
 * Siesta interface (``--elk`` option) was added (:ref:`siesta_interface`)

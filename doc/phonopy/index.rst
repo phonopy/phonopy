@@ -22,6 +22,9 @@ Welcome to phonopy
 **Phonopy** is an open source package for phonon calculations at
 harmonic and quasi-harmonic levels.
 
+Phonopy-1.9.7 is the stable version and 1.10.0 is an experimental
+release toward python 3 support.
+
 **Phono3py** for phonon-phonon interaction calculations has been 
 released as an open beta
 version. See the document at http://phonopy.sourceforge.net/phono3py/
