@@ -1063,7 +1063,6 @@ class IrReps:
             else:
                 print(text + self._ir_labels[i])
             print_characters(self._characters[i])
-
             print('')
 
         if show_irreps:
@@ -1192,7 +1191,7 @@ def get_rotation_symbol(rotation, mapping_table):
     return False
 
 def print_characters(characters, width=6):
-    text = "    "
+    text = ""
     for i, c in enumerate(characters):
         angle = np.angle(c) / np.pi * 180
         if angle < 0:
@@ -1205,10 +1204,9 @@ def print_characters(characters, width=6):
         else:
             val = np.rint(val)
         text += "(%2d, %5.1f) " % (val, angle)
-        if (i + 1) % width == 0 and i + 1 < len(characters):
-            print(text)
-            text = "    "
-    print('')
+        if (i + 1) % width == 0 and i != 0:
+            print("    " + text)
+            text = ""
 
 def print_rotations(rotations,
                     translations=None,
