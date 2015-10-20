@@ -182,33 +182,33 @@ class DynamicalMatrix:
 
     def _dynamical_matrix_log(self):
         dm = self._dynamical_matrix
-        for i in range(dm.shape[0]/3):
-            for j in range(dm.shape[0]/3):
+        for i in range(dm.shape[0] // 3):
+            for j in range(dm.shape[0] // 3):
                 dm_local = dm[(i*3):(i*3+3), (j*3):(j*3+3)]
                 for vec in dm_local:
                     re = vec.real
                     im = vec.imag
-                    print "dynamical matrix(%3d - %3d) " \
-                        "%10.5f %10.5f %10.5f %10.5f %10.5f %10.5f" % \
-                        (i+1, j+1, re[0], im[0], re[1], im[1], re[2], im[2])
-                print
+                    print("dynamical matrix(%3d - %3d) "
+                          "%10.5f %10.5f %10.5f %10.5f %10.5f %10.5f" % 
+                          (i+1, j+1, re[0], im[0], re[1], im[1], re[2], im[2]))
+                print('')
 
     def _smallest_vectors_log(self):
         r = self._smallest_vectors
         m = self._multiplicity
 
-        print "#%4s %4s %4s %4s %4s %10s" % \
-            ("p_i", "p_j", "s_i", "s_j", "mult", "dist")
+        print("#%4s %4s %4s %4s %4s %10s" % 
+              ("p_i", "p_j", "s_i", "s_j", "mult", "dist"))
         for p_i, s_i in enumerate(self._p2s_map): # run in primitive
             for s_j in range(r.shape[0]): # run in supercell
                 for tmp_p_j, tmp_s_j in enumerate(self._p2s_map):
                     if self._s2p_map[s_j] == tmp_s_j:
                         p_j = tmp_p_j
                 for k in range(m[s_j][p_i]):
-                    print " %4d %4d %4d %4d %4d %10.5f" % \
-                        (p_i+1, p_j+1, s_i+1, s_j+1, m[s_j][p_i],
-                          np.linalg.norm(np.dot(r[s_j][p_i][k],
-                                                self._pcell.get_cell())))
+                    print(" %4d %4d %4d %4d %4d %10.5f" %
+                          (p_i+1, p_j+1, s_i+1, s_j+1, m[s_j][p_i],
+                           np.linalg.norm(np.dot(r[s_j][p_i][k],
+                                                 self._pcell.get_cell()))))
 
     def _set_c_dynamical_matrix(self, q):
         import phonopy._phonopy as phonoc
@@ -298,8 +298,8 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             return False
     
         volume = self._pcell.get_volume()
-        constant = self._unit_conversion * 4.0 * np.pi / volume \
-            / np.dot(q, np.dot(self._dielectric, q))
+        constant = (self._unit_conversion * 4.0 * np.pi / volume
+                    / np.dot(q, np.dot(self._dielectric, q)))
 
         # Parlinski method
         if self._method == 'parlinski':
@@ -307,12 +307,12 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             nac_q = np.zeros((num_atom * 3, num_atom * 3), dtype='double')
             m = self._pcell.get_masses()
             q_distance = np.array(q_red) - np.rint(q_red)
-            constant *= np.exp(- np.dot(q_distance, q_distance) /
-                                 self._damping_factor ** 2)
+            constant *= np.exp(-np.dot(q_distance, q_distance) /
+                               self._damping_factor ** 2)
             for i in range(num_atom):
                 for j in range(num_atom):
-                    nac_q[i*3:(i+1)*3, j*3:(j+1)*3] = \
-                        charge_sum[i, j] * constant / np.sqrt(m[i] * m[j])
+                    nac_q[i*3:(i+1)*3, j*3:(j+1)*3] = (
+                        charge_sum[i, j] * constant / np.sqrt(m[i] * m[j]))
 
             DynamicalMatrix.set_dynamical_matrix(self, q_red, verbose)
             self._dynamical_matrix += nac_q
@@ -336,7 +336,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
                 DynamicalMatrix.set_dynamical_matrix(self, q_red, verbose)
 
     def _set_NAC_force_constants(self, fc, nac_q):
-        N = (self._scell.get_number_of_atoms() /
+        N = (self._scell.get_number_of_atoms() //
              self._pcell.get_number_of_atoms())
         for s1 in range(self._scell.get_number_of_atoms()):
             # This if-statement is the trick.

@@ -124,6 +124,7 @@ def print_cells(phonon, unitcell_filename):
     print("-" * 76)
 
 def print_settings(settings):
+    print("Python version %d.%d.%d" % sys.version_info[:3])
     run_mode = settings.get_run_mode()
     if run_mode == 'band':
         print("Band structure mode")

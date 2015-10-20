@@ -45,7 +45,8 @@ def mode_F(temp, freqs):
 
 def mode_S(temp, freqs):
     val = freqs / (2 * Kb * temp)
-    return 1. / (2 * temp) * freqs * np.cosh(val) / np.sinh(val) - Kb * np.log(2 * np.sinh(val))
+    return (1 / (2 * temp) * freqs * np.cosh(val) / np.sinh(val) -
+            Kb * np.log(2 * np.sinh(val)))
 
 
 class ThermalPropertiesBase:
@@ -233,7 +234,7 @@ class ThermalProperties(ThermalPropertiesBase):
         lines.append("  entropy:       J/K/mol")
         lines.append("  heat_capacity: J/K/mol")
         lines.append("")
-        lines.append("natom: %5d" % ((self._frequencies[0].shape)[0]/3))
+        lines.append("natom: %5d" % (self._frequencies[0].shape[0] // 3))
         if self._cutoff_frequency:
             lines.append("cutoff_frequency: %8.3f" % self._cutoff_frequency)
         lines.append("num_modes: %d" % self._num_modes)
@@ -257,7 +258,8 @@ class ThermalProperties(ThermalPropertiesBase):
                 lines.append("  heat_capacity: %15.7f" % 0 )
             else:
                 lines.append("  heat_capacity: %15.7f" % cv[i])
-            lines.append("  energy:        %15.7f" % (fe[i]+entropy[i]*t/1000))
+            lines.append("  energy:        %15.7f" %
+                         (fe[i] + entropy[i] * t / 1000))
             lines.append("")
         return lines
 

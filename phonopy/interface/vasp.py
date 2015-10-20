@@ -33,8 +33,11 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import sys
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 import numpy as np
-import StringIO
 from phonopy.structure.atoms import Atoms, symbol_map, atom_data
 from phonopy.structure.cells import get_primitive, get_supercell
 from phonopy.structure.symmetry import Symmetry
@@ -47,7 +50,7 @@ def parse_set_of_forces(displacements,
                         verbose=True):
 
     if verbose:
-        print "counter (file index):",
+        sys.stdout.write("counter (file index): ")
         
     num_atom = displacements['natom']
     count = 0
@@ -63,7 +66,7 @@ def parse_set_of_forces(displacements,
                 _iterparse(forces_filenames[0], tag='varray'))
 
         if verbose:
-            print "%d" % (count + 1),
+            sys.stdout.write("%d " % (count + 1))
         count += 1
             
         if not _check_forces(zero_forces, num_atom, forces_filenames[0]):
@@ -83,20 +86,21 @@ def parse_set_of_forces(displacements,
             disp['forces'] -= zero_forces
 
         if verbose:
-            print "%d" % (count + 1),
+            sys.stdout.write("%d " % (count + 1))
         count += 1
         
         if not _check_forces(disp['forces'], num_atom, force_files[i]):
             is_parsed = False
 
     if verbose:
-        print
+        print('')
         
     return is_parsed
 
 def _check_forces(forces, num_atom, filename):
     if len(forces) != num_atom:
-        print " \"%s\" does not contain necessary information." % filename,
+        sys.stdout.write(" \"%s\" does not contain necessary information. " %
+                         filename)
         return False
     else:
         return True
@@ -104,8 +108,8 @@ def _check_forces(forces, num_atom, filename):
 def create_FORCE_CONSTANTS(filename, options, log_level):
     fc_and_atom_types = read_force_constant_vasprun_xml(filename)
     if not fc_and_atom_types:
-        print
-        print "\'%s\' dones not contain necessary information." % filename
+        print('')
+        print("\'%s\' dones not contain necessary information." % filename)
         return 1
 
     force_constants, atom_types = fc_and_atom_types
@@ -113,20 +117,20 @@ def create_FORCE_CONSTANTS(filename, options, log_level):
         try:
             import h5py
         except ImportError:
-            print
-            print "You need to install python-h5py."
+            print('')
+            print("You need to install python-h5py.")
             return 1
     
         write_force_constants_to_hdf5(force_constants)
         if log_level > 0:
-            print "force_constants.hdf5 has been created from vasprun.xml."
+            print("force_constants.hdf5 has been created from vasprun.xml.")
     else:
         write_FORCE_CONSTANTS(force_constants)
         if log_level > 0:
-            print "FORCE_CONSTANTS has been created from vasprun.xml."
+            print("FORCE_CONSTANTS has been created from vasprun.xml.")
 
     if log_level > 0:
-        print "Atom types:", atom_types
+        print("Atom types:", atom_types)
     return 0
         
 #
@@ -490,7 +494,7 @@ def get_force_constants_vasprun_xml(vasprun):
 def get_forces_from_vasprun_xmls(vaspruns, num_atom, index_shift=0):
     forces = []
     for i, vasprun in enumerate(vaspruns):
-        print >> sys.stderr, "%d" % (i + 1 + index_shift),
+        sys.stderr.write("%d " % (i + 1 + index_shift))
 
         if _is_version528(vasprun):
             force_set = _get_forces_vasprun_xml(
@@ -501,19 +505,19 @@ def get_forces_from_vasprun_xmls(vaspruns, num_atom, index_shift=0):
         if force_set.shape[0] == num_atom:
             forces.append(force_set)
         else:
-            print "\nNumber of forces in vasprun.xml #%d is wrong." % (i + 1)
+            print("\nNumber of forces in vasprun.xml #%d is wrong." % (i + 1))
             sys.exit(1)
             
-    print >> sys.stderr
+    sys.stderr.wrong("\n")
     return np.array(forces)
     
 def get_force_constants_from_vasprun_xmls(vasprun_filenames):
     force_constants_set = []
     for i, filename in enumerate(vasprun_filenames):
-        print >> sys.stderr, "%d: %s\n" % (i + 1, filename),
+        sys.stderr.write("%d: %s\n" % (i + 1, filename))
         force_constants_set.append(
             read_force_constant_vasprun_xml(filename)[0])
-    print >> sys.stderr
+    sys.stderr.write("\n")
     return force_constants_set
 
 def _parse_vasprun_xml(filename):
@@ -529,9 +533,9 @@ def _iterparse(fname, tag=None):
             if tag is None or elem.tag == tag:
                 yield event, elem
     except ImportError:
-        print "Python 2.5 or later is needed."
-        print "For creating FORCE_SETS file with Python 2.4, you can use",
-        print "phonopy 1.8.5.1 with python-lxml ."
+        print("Python 2.5 or later is needed.")
+        print("For creating FORCE_SETS file with Python 2.4, you can use "
+              "phonopy 1.8.5.1 with python-lxml .")
         sys.exit(1)        
 
 def _is_version528(filename):
@@ -583,7 +587,7 @@ def get_force_constants_OUTCAR(filename):
     while 1:
         line = file.readline()
         if line == '':
-            print "Force constants could not be found."
+            print("Force constants could not be found.")
             return 0
 
         if line[:19] == " SECOND DERIVATIVES":

@@ -84,7 +84,7 @@ def get_eos(eos):
 
 def fit_to_eos(volumes, fe, eos):
     fit = EOSFit(volumes, fe, eos)
-    fit.run([fe[len(fe) / 2], 1.0, 4.0, volumes[len(volumes) / 2]])
+    fit.run([fe[len(fe) // 2], 1.0, 4.0, volumes[len(volumes) // 2]])
     ev = fit.get_volume()
     ee = fit.get_energy()
     eb = fit.get_bulk_modulus()
@@ -101,14 +101,15 @@ class EOSFit:
         import sys
         import logging
         import warnings
-        warnings.filterwarnings('error')
 
         try:
             from scipy.optimize import leastsq
             import scipy
         except ImportError:
-            print "You need to install python-scipy."
+            print("You need to install python-scipy.")
             exit(1)
+
+        warnings.filterwarnings('error')
 
         residuals = lambda p, eos, v, e: eos(v, *p) - e
 

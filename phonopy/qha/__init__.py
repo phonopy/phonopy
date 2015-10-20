@@ -123,7 +123,7 @@ class QHA:
 
     def run(self, verbose=False):
         if verbose:
-            print ("#%11s" + "%14s"*4) % ("T", "E_0", "B_0", "B'_0", "V_0")
+            print(("#%11s" + "%14s" * 4) % ("T", "E_0", "B_0", "B'_0", "V_0"))
 
         max_t_index = self._get_max_t_index(self._all_temperatures)
 
@@ -146,8 +146,8 @@ class QHA:
                 self._equiv_parameters.append(ep)
 
                 if verbose:
-                    print "%14.6f"*5 % (
-                        t, ep[0], ep[1] * EVAngstromToGPa, ep[2], ep[3])
+                    print(("%14.6f" * 5) %
+                          (t, ep[0], ep[1] * EVAngstromToGPa, ep[2], ep[3]))
 
         self._max_t_index = self._get_max_t_index(self._temperatures)
         self._set_volume_expansion()

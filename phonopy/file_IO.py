@@ -34,13 +34,15 @@
 
 import sys
 import os
-import StringIO
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 import numpy as np
 from phonopy.structure.symmetry import Symmetry
 from phonopy.harmonic.force_constants import similarity_transformation
 from phonopy.structure.atoms import Atoms
 from phonopy.cui.settings import fracval
-
 #
 # FORCE_SETS
 #
@@ -106,11 +108,11 @@ def _get_line_ignore_blank(f):
 def get_drift_forces(forces, filename=None):
     drift_force = np.sum(forces, axis=0) / len(forces)
     if filename is None:
-        print "Drift force"
+        print("Drift force")
     else:
-        print "Drift force of %s" % filename
-    print "%12.8f %12.8f %12.8f" % tuple(drift_force)
-    print "This drift force was subtracted from forces."
+        print("Drift force of %s" % filename)
+    print("%12.8f %12.8f %12.8f" % tuple(drift_force))
+    print("This drift force was subtracted from forces.")
 
     return drift_force
     
@@ -159,7 +161,7 @@ def iter_collect_forces(filename,
             prev_forces = forces[:]
 
     if i == max_iter - 1:
-        print "Reached to max number of iterations (%d)." % max_iter
+        print("Reached to max number of iterations (%d)." % max_iter)
         
     return forces
     
@@ -210,7 +212,7 @@ def parse_disp_yaml(filename="disp.yaml", return_cell=False):
     try:
         import yaml
     except ImportError:
-        print "You need to install python-yaml."
+        print("You need to install python-yaml.")
         exit(1)
         
     try:
@@ -314,7 +316,7 @@ def get_born_parameters(f, primitive, symmetry):
     # Read unit conversion factor, damping factor, ...
     factors = [float(x) for x in f.readline().split()]
     if len(factors) < 1:
-        print "BORN file format of line 1 is incorrect"
+        print("BORN file format of line 1 is incorrect")
         return False
     if len(factors) < 2:
         factors = factors[0]
@@ -322,7 +324,7 @@ def get_born_parameters(f, primitive, symmetry):
     # Read dielectric constant
     line = f.readline().split()
     if not len(line) == 9:
-        print "BORN file format of line 2 is incorrect"
+        print("BORN file format of line 2 is incorrect")
         return False
     dielectric = np.reshape([float(x) for x in line], (3, 3))
     
@@ -333,10 +335,10 @@ def get_born_parameters(f, primitive, symmetry):
     for i in independent_atoms:
         line = f.readline().split()
         if len(line) == 0:
-            print "Number of lines for Born effect charge is not enough."
+            print("Number of lines for Born effect charge is not enough.")
             return False
         if not len(line) == 9:
-            print "BORN file format of line %d is incorrect" % (i + 3)
+            print("BORN file format of line %d is incorrect" % (i + 3))
             return False
         born[i] = np.reshape([float(x) for x in line], (3, 3))
 

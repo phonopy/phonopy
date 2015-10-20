@@ -51,7 +51,7 @@ def run_tetrahedron_method(data_out,
         import phonopy._phonopy as phonoc
     except ImportError:
         import sys
-        print "Phonopy C-extension has to be built properly."
+        print("Phonopy C-extension has to be built properly.")
         sys.exit(0)
 
     phonoc.run_tetrahedron_method(data_out,

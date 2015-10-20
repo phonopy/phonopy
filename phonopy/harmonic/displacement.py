@@ -91,17 +91,17 @@ def get_least_displacements(symmetry,
         directions = directions_axis
 
     if log_level > 2:
-        print "Site point symmetry:"
+        print("Site point symmetry:")
 
     for atom_num in symmetry.get_independent_atoms():
         site_symmetry = symmetry.get_site_symmetry(atom_num)
 
         if log_level > 2:
-            print "Atom %d" % (atom_num + 1)
+            print("Atom %d" % (atom_num + 1))
             for i, rot in enumerate(site_symmetry):
-                print "----%d----" % (i + 1)
+                print("----%d----" % (i + 1))
                 for v in rot:
-                    print "%2d %2d %2d" % tuple(v)
+                    print("%2d %2d %2d" % tuple(v))
         
         for disp in get_displacement(site_symmetry,
                                      directions,
@@ -128,22 +128,23 @@ def get_displacement(site_symmetry,
                                              directions)
     if disp is not None:
         if log_level > 2:
-            print "Site symmetry used to expand a direction", disp[0]
-            print site_symmetry[sitesym_num]
+            print("Site symmetry used to expand a direction %s" % disp[0])
+            print(site_symmetry[sitesym_num])
         return disp
     # Two
     sitesym_num, disps = get_displacement_two(site_symmetry,
                                               directions)
     if disps is not None:
         if log_level > 2:
-            print "Site symmetry used to expand directions", disps[0], disps[1]
-            print site_symmetry[sitesym_num]
+            print("Site symmetry used to expand directions %s %s" %
+                  (disps[0], disps[1]))
+            print(site_symmetry[sitesym_num])
 
         if is_trigonal:
             disps_new = [disps[0]]
             if is_trigonal_axis(site_symmetry[sitesym_num]):
                 if log_level > 2:
-                    print "Trigonal axis is found."
+                    print("Trigonal axis is found.")
                 disps_new.append(np.dot(disps[0],
                                         site_symmetry[sitesym_num].T))
                 disps_new.append(np.dot(disps_new[1],
@@ -215,12 +216,9 @@ def determinant(a, b, c):
 def print_displacements(symmetry,
                         directions=directions_diag):
     displacements = get_least_displacements(symmetry, directions)
-    print "Least displacements:"
-    print "Atom       Directions"
-    print "----------------------------"
+    print("Least displacements:")
+    print("Atom       Directions")
+    print("----------------------------")
     for key in displacements:
-        print "%4d  " % (key+1),
-        for x in displacements[key]:
-            print x,
-        print
+        print("%4d  %s" % (key + 1, displacements[key]))
 

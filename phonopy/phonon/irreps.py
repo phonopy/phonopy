@@ -740,10 +740,10 @@ class IrReps:
                                           self._symprec).get_dataset()
 
         if not self._is_primitive_cell():
-            print
-            print "Non-primitve cell is used."
-            print "Your unit cell may be transformed to a primitive cell",
-            print "by PRIMITIVE_AXIS tag."
+            print('')
+            print("Non-primitve cell is used.")
+            print("Your unit cell may be transformed to a primitive cell "
+                  "by PRIMITIVE_AXIS tag.")
             return False
         
         (self._rotations_at_q,
@@ -767,10 +767,10 @@ class IrReps:
                 self._ir_labels = self._get_ir_labels()
             elif (abs(self._q) < self._symprec).all():
                 if self._log_level > 0:
-                    print "Database for this point group is not preprared."
+                    print("Database for this point group is not preprared.")
             else:
                 if self._log_level > 0:
-                    print "Database for non-Gamma point is not prepared."
+                    print("Database for non-Gamma point is not prepared.")
         else:
             self._rotation_symbols = None
 
@@ -1002,12 +1002,13 @@ class IrReps:
                 ir_labels.append(None)
 
             if self._log_level > 1:
+                text = ""
                 for v in chars_ordered:
-                    print "%5.2f" % v,
+                    text += "%5.2f " % abs(v)
                 if found:
-                    print ct_label
+                    print("%s %s" % (text, ct_label))
                 else:
-                    print "Not found"
+                    print("%s Not found" % text)
                 
         return ir_labels
 
@@ -1022,63 +1023,63 @@ class IrReps:
             return True
     
     def _show(self, show_irreps):
-        print
-        print "-------------------------------"
-        print "  Irreducible representations"
-        print "-------------------------------"
-        print "q-point:", self._q
-        print "Point group:", self._pointgroup_symbol
-        print
+        print('')
+        print("-------------------------------")
+        print("  Irreducible representations")
+        print("-------------------------------")
+        print("q-point: %s" % self._q)
+        print("Point group: %s" % self._pointgroup_symbol)
+        print('')
         
         if (np.abs(self._q) < self._symprec).all():
             width = 6
-            print "Original rotation matrices:"
-            print
+            print("Original rotation matrices:")
+            print('')
             print_rotations(self._rotations_at_q, width=width)
         else:
             width = 4
-            print "Original symmetry operations:"
-            print
+            print("Original symmetry operations:")
+            print('')
             print_rotations(self._rotations_at_q,
                             translations=self._translations_at_q,
                             width=width)
 
-        print "Transformation matrix:"
-        print
+        print("Transformation matrix:")
+        print('')
         for v in self._transformation_matrix:
-            print "%6.3f %6.3f %6.3f" % tuple(v)
-        print
-        print "Rotation matrices by transformation matrix:"
-        print
+            print("%6.3f %6.3f %6.3f" % tuple(v))
+        print('')
+        print("Rotation matrices by transformation matrix:")
+        print('')
         print_rotations(self._conventional_rotations,
                         rotation_symbols=self._rotation_symbols,
                         width=width)
-        print "Character table:"
-        print
+        print("Character table:")
+        print('')
         for i, deg_set in enumerate(self._degenerate_sets):
-            print "%3d (%8.3f):" % (deg_set[0] + 1, self._freqs[deg_set[0]]),
+            text = "%3d (%8.3f): " % (deg_set[0] + 1, self._freqs[deg_set[0]])
             if self._ir_labels is None:
-                print
+                print(text)
             else:
-                print self._ir_labels[i]
+                print(text + self._ir_labels[i])
             print_characters(self._characters[i])
 
-            print
+            print('')
 
         if show_irreps:
             self._show_irreps()
     
     def _show_irreps(self):
-        print "IR representations:"
-        print
+        print("IR representations:")
+        print('')
         
         for i, (deg_set, irrep_Rs) in enumerate(zip(self._degenerate_sets,
                                                     self._irreps)):
-            print "%3d (%8.3f):" % (deg_set[0] + 1, self._freqs[deg_set[0]])
-            print
+            print("%3d (%8.3f):" % (deg_set[0] + 1, self._freqs[deg_set[0]]))
+            print('')
             for j, irrep_R in enumerate(irrep_Rs):
                 for k in range(len(irrep_R)):
-                    print "    ",
+                    text = "     "
                     for l in range(len(irrep_R)):
                         if irrep_R[k][l].real > 0:
                             sign_r = " "
@@ -1098,15 +1099,15 @@ class IrReps:
                         if l > 0:
                             str_index = ''
 
-                        print "%s (%s%5.3f %s%5.3fi)" % (
+                        text += "%s (%s%5.3f %s%5.3fi) " % (
                             str_index,
                             sign_r, abs(irrep_R[k][l].real),
-                            sign_i, abs(irrep_R[k][l].imag)),
-                    print
+                            sign_i, abs(irrep_R[k][l].imag))
+                    print(text)
                 if len(irrep_R) > 1:
-                    print
+                    print('')
             if len(irrep_R) == 1:
-                print
+                print('')
 
     def _write_yaml(self, show_irreps):
         w = open("irreps.yaml", 'w')
@@ -1191,7 +1192,7 @@ def get_rotation_symbol(rotation, mapping_table):
     return False
 
 def print_characters(characters, width=6):
-    print "   ",
+    text = "    "
     for i, c in enumerate(characters):
         angle = np.angle(c) / np.pi * 180
         if angle < 0:
@@ -1203,11 +1204,11 @@ def print_characters(characters, width=6):
             angle = 0
         else:
             val = np.rint(val)
-        print "(%2d, %5.1f)" % (val, angle),
+        text += "(%2d, %5.1f) " % (val, angle)
         if (i + 1) % width == 0 and i + 1 < len(characters):
-            print
-            print "   ",
-    print
+            print(text)
+            text = "    "
+    print('')
 
 def print_rotations(rotations,
                     translations=None,
@@ -1216,56 +1217,60 @@ def print_rotations(rotations,
     for i in range(len(rotations) // width):
         if rotation_symbols is None:
             if translations is None:
-                print ("    %2d    " * width) % \
-                    tuple(np.arange(i * width, (i + 1) * width) + 1)
+                print(("    %2d    " * width) %
+                      tuple(np.arange(i * width, (i + 1) * width) + 1))
             else:
-                print ("       %2d       " * width) % \
-                    tuple(np.arange(i * width, (i + 1) * width) + 1)
+                print(("       %2d       " * width) %
+                      tuple(np.arange(i * width, (i + 1) * width) + 1))
         else:
+            text = ""
             for k in range(width):
                 rot_symbol = rotation_symbols[i * width + k]
                 if translations is None:
                     if len(rot_symbol) < 3:
-                        print "    %2s   " % rot_symbol,
+                        text += "    %2s    " % rot_symbol
                     else:
-                        print "   %4s  " % rot_symbol,
+                        text += "   %4s   " % rot_symbol
                 else:
                     if len(rot_symbol) < 3:
-                        print "       %2s       " % rot_symbol,
+                        text += "       %2s        " % rot_symbol
                     else:
-                        print "     %4s     " % rot_symbol,
-            print
+                        text += "     %4s      " % rot_symbol
+            print(text)
         if translations is None:
-            print " -------- " * width
+            print(" -------- " * width)
         else:
-            print " -------------- " * width
+            print(" -------------- " * width)
 
         for j in range(3):
+            text = ""
             for k in range(width):
-                print (" %2d %2d %2d") % tuple(rotations[i * width + k][j]),
+                text += " %2d %2d %2d " % tuple(rotations[i * width + k][j])
                 if translations is not None:
-                    print "%5.2f" % translations[i * width + k][j],
-            print
-        print
+                    text += "%5.2f " % translations[i * width + k][j]
+            print(text)
+        print('')
     
     num_rest = len(rotations) % width
     if num_rest > 0:
         i = len(rotations) // width
         if rotation_symbols is None:
-            print ("    %2d    " * num_rest) % \
-                tuple(np.arange(i * width, i * width + num_rest) + 1)
+            print(("    %2d    " * num_rest) %
+                  tuple(np.arange(i * width, i * width + num_rest) + 1))
         else:
+            text = ""
             for k in range(num_rest):
                 rot_symbol = rotation_symbols[i * width + k]
                 if len(rot_symbol) < 3:
-                    print "    %2s   " % rot_symbol,
+                    text += "    %2s    " % rot_symbol
                 else:
-                    print "   %4s  " % rot_symbol,
-            print
-        print " -------- " * num_rest
+                    text += "   %4s   " % rot_symbol
+            print(text)
+        print(" -------- " * num_rest)
         for j in range(3):
+            text = ""
             for k in range(num_rest):
-                print (" %2d %2d %2d") % tuple(rotations[i * width + k][j]),
-            print
-        print
+                text += (" %2d %2d %2d ") % tuple(rotations[i * width + k][j])
+            print(text)
+        print('')
 

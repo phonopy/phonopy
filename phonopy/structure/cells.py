@@ -177,7 +177,7 @@ class Supercell(Atoms):
                                          sur_cell,
                                          symprec)
 
-        multi = supercell.get_number_of_atoms() / unitcell.get_number_of_atoms()
+        multi = supercell.get_number_of_atoms() // unitcell.get_number_of_atoms()
         
         if multi != determinant(self._supercell_matrix):
             print("Supercell creation failed.")
@@ -363,7 +363,7 @@ def get_Delaunay_reduction(lattice, tolerance):
         if reduce_bases(extended_bases, tolerance):
             break
     if i == 99:
-        print("Delaunary reduction is failed.")
+        print("Delaunary reduction was failed.")
 
     shortest = get_shortest_bases_from_extented_bases(extended_bases, tolerance)
 
@@ -396,7 +396,7 @@ def get_shortest_bases_from_extented_bases(extended_bases, tolerance):
     basis[5]  = extended_bases[1] + extended_bases[2]
     basis[6]  = extended_bases[2] + extended_bases[0]
     # Sort bases by the lengthes (shorter is earlier)
-    basis = sorted(basis, cmp=mycmp)
+    basis = sorted(basis, key=lambda vec: (vec ** 2).sum())
     
     # Choose shortest and linearly independent three bases
     # This algorithm may not be perfect.

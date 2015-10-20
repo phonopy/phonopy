@@ -122,9 +122,9 @@ def create_FORCE_SETS(interface_mode,
     if options.force_sets_zero_mode:
         num_disp_files -= 1
     if len(displacements['first_atoms']) != num_disp_files:
-        print
-        print ("Number of files to be read don't match "
-               "to number of displacements in disp.yaml.")
+        print('')
+        print("Number of files to be read don't match "
+              "to number of displacements in disp.yaml.")
         return 1
 
     if interface_mode == 'vasp':
@@ -136,10 +136,10 @@ def create_FORCE_SETS(interface_mode,
 
     if interface_mode == 'abinit':
         from phonopy.interface.abinit import parse_set_of_forces
-        print "**********************************************************"
-        print "****    Abinit FORCE_SETS support is experimental.    ****"
-        print "****        Your feedback would be appreciated.       ****"
-        print "**********************************************************"
+        print("**********************************************************")
+        print("****    Abinit FORCE_SETS support is experimental.    ****")
+        print("****        Your feedback would be appreciated.       ****")
+        print("**********************************************************")
         is_parsed = parse_set_of_forces(
             displacements,
             force_filenames,
@@ -147,10 +147,10 @@ def create_FORCE_SETS(interface_mode,
         
     if interface_mode == 'pwscf':
         from phonopy.interface.pwscf import parse_set_of_forces
-        print "**********************************************************"
-        print "****     Pwscf FORCE_SETS support is experimental.    ****"
-        print "****        Your feedback would be appreciated.       ****"
-        print "**********************************************************"
+        print("**********************************************************")
+        print("****     Pwscf FORCE_SETS support is experimental.    ****")
+        print("****        Your feedback would be appreciated.       ****")
+        print("**********************************************************")
         is_parsed = parse_set_of_forces(
             displacements,
             force_filenames,
@@ -158,10 +158,10 @@ def create_FORCE_SETS(interface_mode,
         
     if interface_mode == 'wien2k':
         from phonopy.interface.wien2k import parse_set_of_forces
-        print "**********************************************************"
-        print "****    Wien2k FORCE_SETS support is experimental.    ****"
-        print "****        Your feedback would be appreciated.       ****"
-        print "**********************************************************"
+        print("**********************************************************")
+        print("****    Wien2k FORCE_SETS support is experimental.    ****")
+        print("****        Your feedback would be appreciated.       ****")
+        print("**********************************************************")
         is_parsed = parse_set_of_forces(
             displacements,
             force_filenames,
@@ -171,10 +171,10 @@ def create_FORCE_SETS(interface_mode,
 
     if interface_mode == 'elk':
         from phonopy.interface.elk import parse_set_of_forces
-        print "**********************************************************"
-        print "****      Elk FORCE_SETS support is experimental.     ****"
-        print "****        Your feedback would be appreciated.       ****"
-        print "**********************************************************"
+        print("**********************************************************")
+        print("****      Elk FORCE_SETS support is experimental.     ****")
+        print("****        Your feedback would be appreciated.       ****")
+        print("**********************************************************")
         is_parsed = parse_set_of_forces(
             displacements,
             force_filenames,
@@ -182,10 +182,10 @@ def create_FORCE_SETS(interface_mode,
 
     if interface_mode == 'siesta':
         from phonopy.interface.siesta import parse_set_of_forces
-        print "**********************************************************"
-        print "****   Siesta FORCE_SETS support is experimental.     ****"
-        print "****        Your feedback would be appreciated.       ****"
-        print "**********************************************************"
+        print("**********************************************************")
+        print("****   Siesta FORCE_SETS support is experimental.     ****")
+        print("****        Your feedback would be appreciated.       ****")
+        print("**********************************************************")
         is_parsed = parse_set_of_forces(
             displacements,
             force_filenames,
@@ -196,9 +196,9 @@ def create_FORCE_SETS(interface_mode,
         
     if log_level > 0:
         if is_parsed:
-            print "FORCE_SETS has been created."
+            print("FORCE_SETS has been created.")
         else:
-            print "FORCE_SETS could not be created."
+            print("FORCE_SETS could not be created.")
 
     return 0
             
