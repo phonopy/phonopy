@@ -65,7 +65,8 @@ extension_phono3py = Extension(
 
 packages_phono3py = ['anharmonic',
                      'anharmonic.other',
-                     'anharmonic.phonon3']
+                     'anharmonic.phonon3',
+                     'anharmonic.cui']
 scripts_phono3py = ['scripts/phono3py',
                     'scripts/kaccum',
                     'scripts/gaccum']
