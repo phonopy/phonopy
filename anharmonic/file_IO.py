@@ -10,6 +10,16 @@ from phonopy.interface.vasp import get_forces_from_vasprun_xmls, get_force_const
 #
 ###########
 
+def file_exists(filename, log_level):
+    if os.path.exists(filename):
+        return True
+    else:
+        error_text = "%s not found." % filename
+        print_error_message(error_text)
+        if log_level > 0:
+            print_error()
+        sys.exit(1)
+
 def write_cell_yaml(w, supercell):
     w.write("lattice:\n")
     for axis in supercell.get_cell():

@@ -94,23 +94,29 @@ def show_phono3py_cells(symmetry,
                           np.linalg.inv(phonon_primitive.get_cell())):
             print(("%5.2f" * 3) % tuple(vec))
 
-def show_phono3py_force_constants(settings, options, tsym_type):
+def show_phono3py_force_constants_settings(read_fc2,
+                                           is_symmetrize_fc2,
+                                           read_fc3,
+                                           is_symmetrize_fc3_r,
+                                           is_symmetrize_fc3_q,
+                                           tsym_type,
+                                           settings):
     print("-" * 29 + " Force constants " + "-" * 30)
-    if not options.read_fc2:
+    if not read_fc2:
         print("Imposing translational symmetry to fc2: %s" % 
               (tsym_type > 0))
         print("Imposing symmetry of index exchange to fc2: %s" %
-              options.is_symmetrize_fc2)
+              is_symmetrize_fc2)
         
-    if not (options.read_fc3 or
+    if not (read_fc3 or
             settings.get_is_isotope() or
-            options.is_joint_dos):
+            settings.get_is_joint_dos()):
         print("Imposing translational symmetry to fc3: %s" %
               (tsym_type > 0))
         print("Imposing symmetry of index exchange to fc3 in real space: %s" %
-              options.is_symmetrize_fc3_r)
+              is_symmetrize_fc3_r)
         print(("Imposing symmetry of index exchange to fc3 in reciprocal space: "
-              "%s") % options.is_symmetrize_fc3_q)
+              "%s") % is_symmetrize_fc3_q)
         
     if settings.get_cutoff_fc3_distance() is not None:
         print("FC3 cutoff distance: %s" % settings.get_cutoff_fc3_distance())
