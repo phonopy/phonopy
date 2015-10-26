@@ -16,8 +16,10 @@ class Phono3pySettings(Settings):
         self._grid_points = None
         self._ion_clamped = False
         self._is_bterta = False
+        self._is_gruneisen = False
         self._is_imag_self_energy = False
         self._is_isotope = False
+        self._is_joint_dos = False
         self._is_lbte = False
         self._is_linewidth = False
         self._is_frequency_shift = False
@@ -99,6 +101,12 @@ class Phono3pySettings(Settings):
     def get_is_bterta(self):
         return self._is_bterta
 
+    def set_is_gruneisen(self, is_gruneisen):
+        self._is_gruneisen = is_gruneisen
+
+    def get_is_gruneisen(self):
+        return self._is_gruneisen
+
     def set_is_imag_self_energy(self, is_imag_self_energy):
         self._is_imag_self_energy = is_imag_self_energy
 
@@ -110,6 +118,12 @@ class Phono3pySettings(Settings):
 
     def get_is_isotope(self):
         return self._is_isotope
+
+    def set_is_joint_dos(self, is_joint_dos):
+        self._is_joint_dos = is_joint_dos
+
+    def get_is_joint_dos(self):
+        return self._is_joint_dos
 
     def set_is_lbte(self, is_lbte):
         self._is_lbte = is_lbte
@@ -283,6 +297,10 @@ class Phono3pyConfParser(ConfParser):
                 if self._options.is_bterta:
                     self._confs['bterta'] = '.true.'
 
+            if opt.dest == 'is_gruneisen':
+                if self._options.is_gruneisen:
+                    self._confs['gruneisen'] = '.true.'
+
             if opt.dest == 'is_displacement':
                 if self._options.is_displacement:
                     self._confs['create_displacements'] = '.true.'
@@ -294,6 +312,10 @@ class Phono3pyConfParser(ConfParser):
             if opt.dest == 'is_isotope':
                 if self._options.is_isotope:
                     self._confs['isotope'] = '.true.'
+
+            if opt.dest == 'is_joint_dos':
+                if self._options.is_joint_dos:
+                    self._confs['joint_dos'] = '.true.'
 
             if opt.dest == 'is_lbte':
                 if self._options.is_lbte:
@@ -438,6 +460,10 @@ class Phono3pyConfParser(ConfParser):
                 if confs['bterta'] == '.true.':
                     self.set_parameter('is_bterta', True)
 
+            if conf_key == 'gruneisen':
+                if confs['gruneisen'] == '.true.':
+                    self.set_parameter('is_gruneisen', True)
+
             if conf_key == 'imag_self_energy':
                 if confs['imag_self_energy'] == '.true.':
                     self.set_parameter('is_imag_self_energy', True)
@@ -446,6 +472,10 @@ class Phono3pyConfParser(ConfParser):
                 if confs['isotope'] == '.true.':
                     self.set_parameter('is_isotope', True)
                     
+            if conf_key == 'joint_dos':
+                if confs['joint_dos'] == '.true.':
+                    self.set_parameter('is_joint_dos', True)
+
             if conf_key == 'lbte':
                 if confs['lbte'] == '.true.':
                     self.set_parameter('is_lbte', True)
@@ -592,6 +622,10 @@ class Phono3pyConfParser(ConfParser):
         if params.has_key('is_bterta'):
             self._settings.set_is_bterta(params['is_bterta'])
 
+        # Calculate phonon-Gruneisen parameters
+        if params.has_key('is_gruneisen'):
+            self._settings.set_is_gruneisen(params['is_gruneisen'])
+
         # Calculate imaginary part of self energy
         if params.has_key('is_imag_self_energy'):
             self._settings.set_is_imag_self_energy(params['is_imag_self_energy'])
@@ -599,6 +633,10 @@ class Phono3pyConfParser(ConfParser):
         # Calculate lifetime due to isotope scattering
         if params.has_key('is_isotope'):
             self._settings.set_is_isotope(params['is_isotope'])
+
+        # Calculate joint-DOS
+        if params.has_key('is_joint_dos'):
+            self._settings.set_is_joint_dos(params['is_joint_dos'])
 
         # Calculate thermal conductivity in LBTE with Chaput's method
         if params.has_key('is_lbte'):
