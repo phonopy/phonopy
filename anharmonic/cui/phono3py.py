@@ -44,9 +44,9 @@ from anharmonic.phonon3.fc3 import show_drift_fc3
 from anharmonic.file_IO import (parse_disp_fc2_yaml, parse_disp_fc3_yaml,
                                 parse_FORCES_FC2, parse_FORCES_FC3,
                                 write_FORCES_FC3_vasp, write_FORCES_FC2_vasp,
-                                write_FORCES_FC2, write_fc3_to_hdf5,
+                                write_FORCES_FC2,
                                 write_fc2_to_hdf5, read_fc3_from_hdf5,
-                                read_fc2_from_hdf5)
+                                read_fc2_from_hdf5, file_exists)
 from anharmonic.cui.settings import Phono3pyConfParser
 from anharmonic.phonon3 import (Phono3py, Phono3pyJointDos, Phono3pyIsotope,
                                 get_gruneisen_parameters)
@@ -55,22 +55,14 @@ from anharmonic.cui.show_log import (print_phono3py, print_version, print_end,
                                      print_error, print_error_message,
                                      show_phono3py_settings,
                                      show_phono3py_cells,
-                                     show_phono3py_force_constants)
+                                     show_phono3py_force_constants_settings)
 from anharmonic.cui.triplets_info import write_grid_points, show_num_triplets
 from anharmonic.cui.translate_settings import get_phono3py_configurations
-from anharmonic.cui.create_supercells import create_supercells
-
+from anharmonic.cui.create_supercells import create_phono3py_supercells
+from anharmonic.cui.create_force_constants import (create_phono3py_fc3,
+                                                   create_phono3py_fc2,
+                                                   create_phono3py_phonon_fc2)
 phono3py_version = "0.9.14"
-
-def file_exists(filename, log_level):
-    if os.path.exists(filename):
-        return True
-    else:
-        error_text = "%s not found." % filename
-        print_error_message(error_text)
-        if log_level > 0:
-            print_error()
-        sys.exit(1)
 
 # Parse arguments
 parser = get_parser()
@@ -336,7 +328,13 @@ if options.show_num_triplets:
 # Force constants #
 ###################
 if log_level:
-    show_phono3py_force_constants(settings, options, tsym_type)
+    show_phono3py_force_constants_settings(options.read_fc2,
+                                           options.is_symmetrize_fc2,
+                                           options.read_fc3,
+                                           options.is_symmetrize_fc3_r,
+                                           options.is_symmetrize_fc3_q,
+                                           tsym_type,
+                                           settings)
         
 # fc3
 if (settings.get_is_joint_dos() or
@@ -358,33 +356,14 @@ else:
         fc3 = read_fc3_from_hdf5(filename=filename)
         phono3py.set_fc3(fc3)
     else: # fc3 from FORCES_THIRD and FORCES_SECOND
-        if input_filename is None:
-            filename = 'disp_fc3.yaml'
-        else:
-            filename = 'disp_fc3.' + input_filename + '.yaml'
-        file_exists(filename, log_level)
-        if log_level:
-            print("Displacement dataset is read from %s." % filename)
-        disp_dataset = parse_disp_fc3_yaml(filename=filename)
-        file_exists("FORCES_FC3", log_level)
-        if log_level:
-            print("Sets of supercell forces are read from %s." % "FORCES_FC3")
-        forces_fc3 = parse_FORCES_FC3(disp_dataset)
-        phono3py.produce_fc3(
-            forces_fc3,
-            displacement_dataset=disp_dataset,
-            cutoff_distance=settings.get_cutoff_fc3_distance(),
-            translational_symmetry_type=tsym_type,
-            is_permutation_symmetry=options.is_symmetrize_fc3_r,
-            is_permutation_symmetry_fc2=options.is_symmetrize_fc2)
-        if output_filename is None:
-            filename = 'fc3.hdf5'
-        else:
-            filename = 'fc3.' + output_filename + '.hdf5'
-        if log_level:
-            print("Writing fc3 to %s" % filename)
-        write_fc3_to_hdf5(phono3py.get_fc3(), filename=filename)
-
+        create_phono3py_fc3(phono3py,
+                            tsym_type,
+                            options.is_symmetrize_fc3_r,
+                            options.is_symmetrize_fc2,
+                            settings.get_cutoff_fc3_distance(),
+                            input_filename,
+                            output_filename,
+                            log_level)
     if log_level:
         show_drift_fc3(phono3py.get_fc3())
 
@@ -411,44 +390,17 @@ else:
         
     if phonon_supercell_matrix is None:
         if phono3py.get_fc2() is None:
-            if input_filename is None:
-                filename = 'disp_fc3.yaml'
-            else:
-                filename = 'disp_fc3.' + input_filename + '.yaml'
-            if log_level:
-                print("Displacement dataset is read from %s." % filename)
-            file_exists(filename, log_level)
-            disp_dataset = parse_disp_fc3_yaml(filename=filename)
-            if log_level:
-                print("Sets of supercell forces are read from %s." %
-                      "FORCES_FC3")
-            file_exists("FORCES_FC3", log_level)
-            forces_fc3 = parse_FORCES_FC3(disp_dataset)
-            phono3py.produce_fc2(
-                forces_fc3,
-                displacement_dataset=disp_dataset,
-                translational_symmetry_type=tsym_type,
-                is_permutation_symmetry=options.is_symmetrize_fc2)
+            create_phono3py_fc2(phono3py,
+                                tsym_type,
+                                options.is_symmetrize_fc2,
+                                input_filename,
+                                log_level)
     else:
-        if input_filename is None:
-            filename = 'disp_fc2.yaml'
-        else:
-            filename = 'disp_fc2.' + input_filename + '.yaml'
-        if log_level:
-            print("Displacement dataset is read from %s." % filename)
-        file_exists(filename, log_level)
-        disp_dataset = parse_disp_fc2_yaml(filename=filename)
-        if log_level:
-            print("Sets of supercell forces are read from %s." %
-                  "FORCES_FC2")
-        file_exists("FORCES_FC2", log_level)
-        forces_fc2 = parse_FORCES_FC2(disp_dataset)
-        phono3py.produce_fc2(
-            forces_fc2,
-            displacement_dataset=disp_dataset,
-            translational_symmetry_type=tsym_type,
-            is_permutation_symmetry=options.is_symmetrize_fc2)
-
+        create_phono3py_phonon_fc2(phono3py,
+                                   tsym_type,
+                                   options.is_symmetrize_fc2,
+                                   input_filename,
+                                   log_level)
     if output_filename is None:
         filename = 'fc2.hdf5'
     else:
