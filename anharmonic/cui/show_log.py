@@ -42,7 +42,7 @@ def file_exists(filename, log_level):
         return True
     else:
         error_text = "%s not found." % filename
-        print_error_message(error_text)
+        print(error_text)
         if log_level > 0:
             print_error()
         sys.exit(1)

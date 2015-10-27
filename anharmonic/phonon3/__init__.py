@@ -15,7 +15,6 @@ from anharmonic.phonon3.interaction import Interaction
 from anharmonic.phonon3.conductivity_RTA import get_thermal_conductivity_RTA
 from anharmonic.phonon3.conductivity_LBTE import get_thermal_conductivity_LBTE
 from anharmonic.phonon3.joint_dos import JointDos
-from anharmonic.phonon3.gruneisen import Gruneisen
 from anharmonic.phonon3.displacement_fc3 import get_third_order_displacements, \
      direction_to_displacement
 from anharmonic.file_IO import write_joint_dos
