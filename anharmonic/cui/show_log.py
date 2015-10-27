@@ -32,9 +32,20 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import os
 import sys
 import numpy as np
 from phonopy.structure.cells import print_cell
+
+def file_exists(filename, log_level):
+    if os.path.exists(filename):
+        return True
+    else:
+        error_text = "%s not found." % filename
+        print_error_message(error_text)
+        if log_level > 0:
+            print_error()
+        sys.exit(1)
 
 # AA is created at http://www.network-science.de/ascii/.
 def print_phono3py():
@@ -94,12 +105,12 @@ def show_phono3py_cells(symmetry,
                           np.linalg.inv(phonon_primitive.get_cell())):
             print(("%5.2f" * 3) % tuple(vec))
 
-def show_phono3py_force_constants_settings(read_fc2,
-                                           is_symmetrize_fc2,
-                                           read_fc3,
+def show_phono3py_force_constants_settings(read_fc3,
+                                           read_fc2,
+                                           tsym_type,
                                            is_symmetrize_fc3_r,
                                            is_symmetrize_fc3_q,
-                                           tsym_type,
+                                           is_symmetrize_fc2,
                                            settings):
     print("-" * 29 + " Force constants " + "-" * 30)
     if not read_fc2:
