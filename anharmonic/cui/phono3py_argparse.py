@@ -184,12 +184,6 @@ def get_parser():
         help=("Cutoff distance between pairs of displaced atoms used for "
               "supercell creation with displacements and making third-order "
               "force constants"))
-    # parser.add_option("--decay", dest="is_decay_channel",
-    #                   action="store_true", help="Calculate decay channels")
-    # parser.add_option("--cdfc2", "--create_delta_fc2", dest="delta_fc2_sets_mode",
-    #                   action="store_true", help="Create DELTA_FC2_SETS")
-    # parser.add_option("--dfc2", "--delta_fc2", dest="read_delta_fc2",
-    #                   action="store_true", help="Read DELTA_FC2_SETS")
     parser.add_option(
         "-d", "--disp", dest="is_displacement", action="store_true",
         help="As first stage, get least displacements")
@@ -212,8 +206,6 @@ def get_parser():
         "--fs2f2", "--force_sets_to_forces_fc2",
         dest="force_sets_to_forces_fc2_mode",
         action="store_true", help="Create FORCES_FC2 from FORCE_SETS")
-    # parser.add_option("--freepath", dest="max_freepath", type="float",
-    #                   help="Maximum mean free path of phonon in meter")
     parser.add_option(
         "--freq_scale", dest="freq_scale", type="float",
         help=("Scale factor is multiplied to frequencies only, i.e., changes "
