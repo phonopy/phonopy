@@ -36,7 +36,6 @@ import sys
 from phonopy.interface.vasp import write_vasp
 from anharmonic.phonon3 import Phono3py
 from anharmonic.file_IO import write_disp_fc3_yaml, write_disp_fc2_yaml
-from anharmonic.cui.show_log import print_end
 
 def create_phono3py_supercells(unitcell,
                                supercell_matrix,
@@ -104,7 +103,3 @@ def create_phono3py_supercells(unitcell,
 
         if log_level:
             print("Number of displacements for special fc2: %d" % num_disps)
-        
-    if log_level:
-        print_end()
-    sys.exit(0)

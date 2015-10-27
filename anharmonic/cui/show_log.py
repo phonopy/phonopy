@@ -75,9 +75,6 @@ def print_error():
  \___|_|  |_|  \___/|_|
 """)
 
-def print_error_message(message):
-    print(message)
-
 def show_phono3py_cells(symmetry,
                         primitive,
                         supercell,
