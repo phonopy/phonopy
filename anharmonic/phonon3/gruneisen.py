@@ -6,6 +6,25 @@ from anharmonic.file_IO import write_fc3_dat, write_fc2_dat
 from phonopy.units import VaspToTHz
 from phonopy.structure.grid_points import get_qpoints
 
+def get_gruneisen_parameters(fc2,
+                             fc3,
+                             supercell,
+                             primitive,
+                             nac_params=None,
+                             nac_q_direction=None,
+                             ion_clamped=False,
+                             factor=None,
+                             symprec=1e-5):
+    return Gruneisen(fc2,
+                     fc3,
+                     supercell,
+                     primitive,
+                     nac_params=nac_params,
+                     nac_q_direction=nac_q_direction,
+                     ion_clamped=ion_clamped,
+                     factor=factor,
+                     symprec=symprec)
+
 class Gruneisen:
     def __init__(self,
                  fc2,
