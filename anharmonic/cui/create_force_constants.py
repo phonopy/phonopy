@@ -38,14 +38,14 @@ from anharmonic.file_IO import (parse_disp_fc3_yaml,
                                 parse_disp_fc2_yaml,
                                 parse_FORCES_FC2,
                                 parse_FORCES_FC3,
+                                read_fc3_from_hdf5,
+                                read_fc2_from_hdf5,
                                 write_fc3_to_hdf5,
                                 write_fc2_to_hdf5)
 from anharmonic.cui.show_log import (show_phono3py_force_constants_settings,
-                                     print_error_message, print_error,
-                                     file_exists)
+                                     print_error, file_exists)
 
 def create_phono3py_force_constants(phono3py,
-                                    phonon_supercell_matrix,
                                     settings,
                                     read_fc3,
                                     read_fc2,
@@ -56,7 +56,6 @@ def create_phono3py_force_constants(phono3py,
                                     input_filename,
                                     output_filename,
                                     log_level):
-
     if log_level:
         show_phono3py_force_constants_settings(read_fc3,
                                                read_fc2,
@@ -98,6 +97,9 @@ def create_phono3py_force_constants(phono3py,
             show_drift_fc3(phono3py.get_fc3())
     
     # fc2
+    phonon_supercell = phono3py.get_phonon_supercell()
+    phonon_supercell_matrix = phonon_supercell.get_supercell_matrix()
+
     if read_fc2:
         if input_filename is None:
             filename = 'fc2.hdf5'
@@ -108,8 +110,7 @@ def create_phono3py_force_constants(phono3py,
             print("Reading fc2 from %s" % filename)
         phonon_fc2 = read_fc2_from_hdf5(filename=filename)
         if phonon_fc2.shape[0] != phonon_supercell.get_number_of_atoms():
-            print_error_message("Matrix shape of fc2 doesn't agree with "
-                                "supercell.")
+            print("Matrix shape of fc2 doesn't agree with supercell.")
             if log_level:
                 print_error()
             sys.exit(1)
@@ -142,15 +143,6 @@ def create_phono3py_force_constants(phono3py,
     
     if log_level:    
         show_drift_force_constants(phono3py.get_fc2(), name='fc2')
-    
-    if settings.get_is_nac():
-        file_exists('BORN', log_level)
-        nac_params = parse_BORN(phonon_primitive)
-        nac_q_direction = settings.get_nac_q_direction()
-    else:
-        nac_params = None
-        nac_q_direction = None
-
 
 def _create_phono3py_fc3(phono3py,
                          tsym_type,

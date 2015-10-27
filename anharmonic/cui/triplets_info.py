@@ -38,7 +38,6 @@ from anharmonic.file_IO import (write_ir_grid_points,
                                 write_grid_address_to_hdf5)
 from anharmonic.phonon3.triplets import (get_coarse_ir_grid_points,
                                          get_number_of_triplets)
-from anharmonic.cui.show_log import print_end
 
 def write_grid_points(primitive,
                       mesh,
@@ -69,10 +68,6 @@ def write_grid_points(primitive,
 
         print("Ir-grid points are written into \"ir_grid_points.yaml\".")
         print("Grid addresses are written into \"%s\"." % gadrs_hdf5_fname)
-
-    if log_level:
-        print_end()
-    sys.exit(0)
 
 def show_num_triplets(primitive,
                       mesh,
@@ -105,7 +100,3 @@ def show_num_triplets(primitive,
         q = grid_address[gp] / np.array(mesh, dtype='double')
         print("  %5d     (%5.2f %5.2f %5.2f)  %8d" %
               (gp, q[0], q[1], q[2], num_triplets))
-    
-    if log_level:
-        print_end()
-    sys.exit(0)
