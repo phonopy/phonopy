@@ -10,20 +10,53 @@ def get_gruneisen_parameters(fc2,
                              fc3,
                              supercell,
                              primitive,
+                             band_paths,
+                             mesh,
+                             qpoints,
                              nac_params=None,
                              nac_q_direction=None,
                              ion_clamped=False,
                              factor=None,
-                             symprec=1e-5):
-    return Gruneisen(fc2,
-                     fc3,
-                     supercell,
-                     primitive,
-                     nac_params=nac_params,
-                     nac_q_direction=nac_q_direction,
-                     ion_clamped=ion_clamped,
-                     factor=factor,
-                     symprec=symprec)
+                             symprec=1e-5,
+                             output_filename=None,
+                             log_level=True):
+    if log_level:
+        print("-" * 23 + " Phonon Gruneisen parameter " + "-" * 23)
+        if mesh is not None:
+            print("Mesh sampling: [ %d %d %d ]" % tuple(mesh))
+        elif band_paths is not None:
+            print("Paths in reciprocal reduced coordinates:")
+            for path in band_paths:
+                print("[%5.2f %5.2f %5.2f] --> [%5.2f %5.2f %5.2f]" %
+                      (tuple(path[0]) + tuple(path[-1])))
+        if ion_clamped:
+            print("To be calculated with ion clamped.")
+            
+        sys.stdout.flush()
+
+    gruneisen = Gruneisen(fc2,
+                          fc3,
+                          supercell,
+                          primitive,
+                          nac_params=nac_params,
+                          nac_q_direction=nac_q_direction,
+                          ion_clamped=ion_clamped,
+                          factor=factor,
+                          symprec=symprec)
+
+    if mesh is not None:
+        gruneisen.set_sampling_mesh(mesh, is_gamma_center=True)
+    elif band_paths is not None:
+        gruneisen.set_band_structure(band_paths)
+    elif qpoints is not None:
+        gruneisen.set_qpoints(qpoints)
+    gruneisen.run()
+
+    if output_filename is None:
+        filename = 'gruneisen3.yaml'
+    else:
+        filename = 'gruneisen3.' + output_filename + '.yaml'
+    gruneisen.write_yaml(filename=filename)
 
 class Gruneisen:
     def __init__(self,
