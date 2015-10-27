@@ -356,63 +356,34 @@ else:
 # Phonon Gruneisen parameter #
 ##############################
 if settings.get_is_gruneisen():
-    fc2 = phono3py.get_fc2()
-    fc3 = phono3py.get_fc3()
-    if len(fc2) != len(fc3):
-        print("Supercells used for fc2 and fc3 have to be same.")
-        if log_level:
-            print_error()
-        sys.exit(1)
-    
-    band_paths = settings.get_bands()
-    qpoints = settings.get_qpoints()
-    ion_clamped = settings.get_ion_clamped()
-
     if (mesh is None and
-        band_paths is None and
-        qpoints is None):
-
+        settings.get_bands() is None and
+        settings.get_qpoints() is None):
         print("An option of --mesh, --band, or --qpoints has to be specified.")
         if log_level:
             print_error()
         sys.exit(1)
 
-    if log_level:
-        print("-" * 23 + " Phonon Gruneisen parameter " + "-" * 23)
-        if mesh is not None:
-            print("Mesh sampling: [ %d %d %d ]" % tuple(mesh))
-        elif band_paths is not None:
-            print("Paths in reciprocal reduced coordinates:")
-            for path in band_paths:
-                print("[%5.2f %5.2f %5.2f] --> [%5.2f %5.2f %5.2f]" %
-                      (tuple(path[0]) + tuple(path[-1])))
-        if ion_clamped:
-            print("To be calculated with ion clamped.")
-            
-        sys.stdout.flush()
+    if len(phono3py.get_fc2()) != len(phono3py.get_fc3()):
+        print("Supercells used for fc2 and fc3 have to be same.")
+        if log_level:
+            print_error()
+        sys.exit(1)
 
-    gr = get_gruneisen_parameters(fc2,
-                                  fc3,
-                                  supercell,
-                                  primitive,
-                                  nac_params=nac_params,
-                                  nac_q_direction=nac_q_direction,
-                                  ion_clamped=ion_clamped,
-                                  factor=VaspToTHz,
-                                  symprec=symprec)
-    if mesh is not None:
-        gr.set_sampling_mesh(mesh, is_gamma_center=True)
-    elif band_paths is not None:
-        gr.set_band_structure(band_paths)
-    elif qpoints is not None:
-        gr.set_qpoints(qpoints)
-    gr.run()
-
-    if output_filename is None:
-        filename = 'gruneisen3.yaml'
-    else:
-        filename = 'gruneisen3.' + output_filename + '.yaml'
-    gr.write_yaml(filename=filename)
+    gruneisen = get_gruneisen_parameters(phono3py.get_fc2(),
+                                         phono3py.get_fc3(),
+                                         supercell,
+                                         primitive,
+                                         settings.get_bands(),
+                                         mesh,
+                                         settings.get_qpoints(),
+                                         nac_params=nac_params,
+                                         nac_q_direction=nac_q_direction,
+                                         ion_clamped=settings.get_ion_clamped(),
+                                         factor=VaspToTHz,
+                                         symprec=symprec,
+                                         output_filename=output_filename,
+                                         log_level=log_level)
 
     if log_level:
         print_end()
@@ -463,9 +434,9 @@ if run_mode == "jdos":
         print_end()
     sys.exit(0)
     
-######################
-# Isotope scattering #
-######################
+#############################
+# Phonon-isotope scattering #
+#############################
 if settings.get_is_isotope() and settings.get_mass_variances() is None:
     from phonopy.structure.atoms import isotope_data
     symbols = phonon_primitive.get_chemical_symbols()
@@ -481,6 +452,9 @@ if settings.get_is_isotope() and settings.get_mass_variances() is None:
             print_end()
         sys.exit(0)
 
+###########################
+# Phonon-isotope lifetime #
+###########################
 if run_mode == "isotope":
     mass_variances = settings.get_mass_variances()
     if band_indices is not None:
@@ -505,9 +479,9 @@ if run_mode == "isotope":
         print_end()
     sys.exit(0)
             
-#########
-# Ph-ph #
-#########
+#############################
+# Phonon-phonon interaction #
+#############################
 if run_mode is not None:
     ave_pp = settings.get_constant_averaged_pp_interaction()
     phono3py.set_phph_interaction(
