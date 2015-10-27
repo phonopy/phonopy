@@ -787,22 +787,3 @@ class Phono3pyJointDos:
                         temperatures=self._temperatures,
                         filename=self._filename,
                         is_nosym=self._is_nosym)
-        
-def get_gruneisen_parameters(fc2,
-                             fc3,
-                             supercell,
-                             primitive,
-                             nac_params=None,
-                             nac_q_direction=None,
-                             ion_clamped=False,
-                             factor=None,
-                             symprec=1e-5):
-    return Gruneisen(fc2,
-                     fc3,
-                     supercell,
-                     primitive,
-                     nac_params=nac_params,
-                     nac_q_direction=nac_q_direction,
-                     ion_clamped=ion_clamped,
-                     factor=factor,
-                     symprec=symprec)
