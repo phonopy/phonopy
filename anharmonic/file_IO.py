@@ -1,14 +1,7 @@
 import os
 import numpy as np
 import h5py
-from phonopy.structure.atoms import Atoms
-from phonopy.interface.vasp import get_forces_from_vasprun_xmls, get_force_constants_from_vasprun_xmls, write_vasp
-
-###########
-#
-# File I/O
-#
-###########
+from phonopy.interface.vasp import get_forces_from_vasprun_xmls
 
 def write_cell_yaml(w, supercell):
     w.write("lattice:\n")
@@ -281,159 +274,6 @@ def write_FORCES_FC4(disp_dataset, forces_fc4, fp=None, filename="FORCES_FC4"):
                     w.write("%15.10f %15.10f %15.10f\n" % tuple(forces))
                 count += 1
             
-def write_FORCES_THIRD(vaspruns,
-                       disp_dataset,
-                       forces_third='FORCES_THIRD',
-                       forces_second='FORCES_SECOND'):
-    natom = disp_dataset['natom']
-    num_disp1 = len(disp_dataset['first_atoms'])
-    set_of_forces = get_forces_from_vasprun_xmls(vaspruns, natom)
-    w3 = open(forces_third, 'w')
-    w2 = open(forces_second, 'w')
-
-    for i, disp1 in enumerate(disp_dataset['first_atoms']):
-        w2.write("# File: %-5d\n" % (i + 1))
-        w2.write("# %-5d " % (disp1['number'] + 1))
-        w2.write("%20.16f %20.16f %20.16f\n" %
-                         tuple(disp1['displacement']))
-        for forces in set_of_forces[i]:
-            w2.write("%15.10f %15.10f %15.10f\n" % (tuple(forces)))
-        
-    count = num_disp1
-    file_count = num_disp1
-    for i, disp1 in enumerate(disp_dataset['first_atoms']):
-        atom1 = disp1['number']
-        for disp2 in disp1['second_atoms']:
-            atom2 = disp2['number']
-            w3.write("# File: %-5d\n" % (count + 1))
-            w3.write("# %-5d " % (atom1 + 1))
-            w3.write("%20.16f %20.16f %20.16f\n" % tuple(disp1['displacement']))
-            w3.write("# %-5d " % (atom2 + 1))
-            w3.write("%20.16f %20.16f %20.16f\n" % tuple(disp2['displacement']))
-
-            # For supercell calculation reduction
-            if disp2['included']:
-                for forces in set_of_forces[file_count]:
-                    w3.write("%15.10f %15.10f %15.10f\n" % tuple(forces))
-                file_count += 1
-            else:
-                # for forces in set_of_forces[i]:
-                #     w3.write("%15.10f %15.10f %15.10f\n" % (tuple(forces)))
-                for j in range(natom):
-                    w3.write("%15.10f %15.10f %15.10f\n" % (0, 0, 0))
-            count += 1
-            
-
-def write_FORCES_FOURTH(vaspruns,
-                        disp_dataset,
-                        forces_fourth='FORCES_FOURTH',
-                        forces_third='FORCES_THIRD',
-                        forces_second='FORCES_SECOND'):
-
-    count = 0
-    for disp1 in disp_dataset['first_atoms']:
-        count += 1
-        for disp2 in disp1['second_atoms']:
-            count += 1
-    write_FORCES_THIRD(vaspruns[:count],
-                       disp_dataset,
-                       forces_third=forces_third,
-                       forces_second=forces_second)
-    natom = disp_dataset['natom']
-    set_of_forces = get_forces_from_vasprun_xmls(vaspruns[count:],
-                                                 natom,
-                                                 index_shift=count)
-    count_begin = count
-    w4 = open(forces_fourth, 'w')
-    for disp1 in disp_dataset['first_atoms']:
-        atom1 = disp1['number']
-        for disp2 in disp1['second_atoms']:
-            atom2 = disp2['number']
-            for disp3 in disp2['third_atoms']:
-                atom3 = disp3['number']
-                d = disp3['displacement']
-                w4.write("# File: %-5d\n" % (count + 1))
-                w4.write("# %-5d " % (atom1 + 1))
-                w4.write("%20.16f %20.16f %20.16f\n" %
-                         tuple(disp1['displacement']))
-                w4.write("# %-5d " % (atom2 + 1))
-                w4.write("%20.16f %20.16f %20.16f\n" %
-                         tuple(disp2['displacement']))
-                w4.write("# %-5d " % (atom3 + 1))
-                w4.write("%20.16f %20.16f %20.16f\n" % tuple(d))
-                for forces in set_of_forces[count - count_begin]:
-                    w4.write("%15.10f %15.10f %15.10f\n" % tuple(forces))
-                count += 1
-                
-def write_DELTA_FC2_SETS(vaspruns,
-                         disp_dataset,
-                         dfc2_file='DELTA_FC2_SETS'):
-    fc2_set = get_force_constants_from_vasprun_xmls(vaspruns)
-    perfect_fc2 = fc2_set.pop(0)
-    write_fc2_to_hdf5(perfect_fc2)
-    delta_fc2s = [fc2 - perfect_fc2 for fc2 in fc2_set]
-    write_DELTA_FC2_SETS_from_delta_fc2s(delta_fc2s,
-                                         disp_dataset,
-                                         dfc2_file=dfc2_file)
-
-def write_DELTA_FC2_SETS_from_delta_fc2s(delta_fc2s,
-                                         disp_dataset,
-                                         dfc2_file='DELTA_FC2_SETS'):
-    w = open(dfc2_file, 'w')
-    for i, (dfc2, first_disp) in enumerate(zip(delta_fc2s,
-                                               disp_dataset['first_atoms'])):
-        w.write("# File: %d\n" % (i + 1))
-        w.write("# %-5d " % (first_disp['number'] + 1))
-        w.write("%20.16f %20.16f %20.16f\n" %
-                tuple(first_disp['displacement']))
-        for j in range(dfc2.shape[0]):
-            for k in range(dfc2.shape[1]):
-                w.write("# %d - %d\n" % (j + 1, k + 1))
-                for vec in dfc2[j, k]:
-                    w.write("%20.14f %20.14f %20.14f\n" % tuple(vec))
-    w.close()
-
-# From 0000 to the end of the numbers
-def write_DELTA_FC2_FOURTH_SETS(vaspruns,
-                                disp_dataset,
-                                dfc2_file='DELTA_FC2_FOURTH_SETS'):
-    """Write displaced fc2 for fc4 from vasprun.xml's"""
-    
-    fc2_set = get_force_constants_from_vasprun_xmls(vaspruns)
-    fc2s_first = []
-    count = 0
-    w = open(dfc2_file, 'w')
-
-    # fc2
-    perfect_fc2 = fc2_set.pop(0)
-    write_fc2_to_hdf5(perfect_fc2)
-
-    # fc3
-    for i, first_disp in enumerate(disp_dataset['first_atoms']):
-        count += 1
-        fc2s_first.append(fc2_set.pop(0))
-    delta_fc2s = [fc2 - perfect_fc2 for fc2 in fc2s_first]
-    write_DELTA_FC2_SETS_from_delta_fc2s(delta_fc2s, disp_dataset)
-        
-    # fc4
-    for i, first_disp in enumerate(disp_dataset['first_atoms']):
-        for second_disp in first_disp['second_atoms']:
-            disp = second_disp['displacement']
-            count += 1
-            dfc2 = fc2_set.pop(0) - fc2s_first[i]
-            w.write("# File: %d\n" % count)
-            w.write("# %-5d" % (first_disp['number'] + 1))
-            w.write("%20.16f %20.16f %20.16f\n" %
-                    tuple(first_disp['displacement']))
-            w.write("# %-5d" % (second_disp['number'] + 1))
-            w.write("%20.16f %20.16f %20.16f\n" % tuple(disp))
-        
-            for j in range(dfc2.shape[0]):
-                for k in range(dfc2.shape[1]):
-                    w.write("# %d - %d\n" % (j + 1, k + 1))
-                    for vec in dfc2[j, k]:
-                        w.write("%20.14f %20.14f %20.14f\n" % tuple(vec))
-
 def write_fc3_yaml(force_constants_third,
                    filename='fc3.yaml',
                    is_symmetrize=False):
@@ -461,7 +301,8 @@ def write_fc3_dat(force_constants_third, filename='fc3.dat'):
         for j in range(force_constants_third.shape[1]):
             for k in range(force_constants_third.shape[2]):
                 tensor3 = force_constants_third[i, j, k]
-                w.write(" %d - %d - %d  (%f)\n" % (i+1, j+1, k+1, np.abs(tensor3).sum()))
+                w.write(" %d - %d - %d  (%f)\n" % (i + 1, j + 1, k + 1,
+                                                   np.abs(tensor3).sum()))
                 for tensor2 in tensor3:
                     for vec in tensor2:
                         w.write("%20.14f %20.14f %20.14f\n" % tuple(vec))
@@ -471,7 +312,8 @@ def write_fc4_dat(fc4, filename='fc4.dat'):
     w = open(filename, 'w')
     for (i, j, k, l) in list(np.ndindex(fc4.shape[:4])):
         tensor4 = fc4[i, j, k, l]
-        w.write(" %d - %d - %d - %d (%f)\n" % (i+1, j+1, k+1, l+1, np.abs(tensor4).sum()))
+        w.write(" %d - %d - %d - %d (%f)\n" % (i + 1, j + 1, k + 1, l + 1,
+                                               np.abs(tensor4).sum()))
         for tensor3 in tensor4:
             for tensor2 in tensor3:
                 for vec in tensor2:
@@ -735,46 +577,6 @@ def write_frequency_shift(gp,
         w.write("%15.7f %20.15e\n" % (t, v))
     w.close()
     
-def write_kappa(kappa,
-                temperatures,
-                mesh,
-                mesh_divisors=None,
-                grid_point=None,
-                sigma=None,
-                filename=None):
-    kappa_filename = "kappa"
-    suffix = "-m%d%d%d" % tuple(mesh)
-    if mesh_divisors is not None:
-        if (np.array(mesh_divisors, dtype=int) != 1).any():
-            suffix += "-d%d%d%d" % tuple(mesh_divisors)
-    sigma_str = ("%f" % sigma).rstrip('0').rstrip('\.')
-    if grid_point is not None:
-        suffix += ("-g%d" % grid_point)
-    if sigma is not None:
-        suffix += "-s" + sigma_str
-    if filename is not None:
-        suffix += "." + filename
-    suffix += ".dat"
-    kappa_filename += suffix
-    print "Kappa",
-    if grid_point is not None:
-        print "at grid adress %d" % grid_point,
-    if sigma is not None:
-        if grid_point is not None:
-            print "and",
-        else:
-            print "at",
-        print "sigma %s" % sigma_str,
-    print "were written into",
-    if grid_point is not None:
-        print ""
-    print "\"%s\"" % kappa_filename
-    w = open(kappa_filename, 'w')
-    w.write("# temp   kappa\n")
-    for t, k in zip(temperatures, kappa):
-        w.write("%6.1f %.5f\n" % (t, k))
-    w.close()
-
 def write_collision_to_hdf5(temperature,
                             mesh,
                             gamma=None,
@@ -801,18 +603,19 @@ def write_collision_to_hdf5(temperature,
         w.create_dataset('collision_matrix', data=collision_matrix)
     w.close()
 
-    print "Collisions",
+    text = "Collisions "
     if grid_point is not None:
-        print "at grid adress %d" % grid_point,
+        text += "at grid adress %d " % grid_point
     if sigma is not None:
         if grid_point is not None:
-            print "and",
+            text += "and "
         else:
-            print "at",
-        print "sigma %s" % sigma_str, 
-    print "were written into"
-    print "\"%s\"" % ("collision" + suffix + ".hdf5")
-    print
+            text += "at "
+        text += "sigma %s " % sigma_str
+    text += "were written into \n"
+    text += "\"%s\"" % ("collision" + suffix + ".hdf5")
+    print(text)
+    print('')
 
 def write_full_collision_matrix(collision_matrix, filename='fcm.hdf5'):
     w = h5py.File(filename, 'w')
@@ -872,26 +675,28 @@ def write_kappa_to_hdf5(temperature,
     w.close()
 
     if verbose:
+        text = ""
         if kappa is not None:
-            print "Thermal conductivity and related properties",
+            text += "Thermal conductivity and related properties "
         else:
-            print "Thermal conductivity related properties",
+            text += "Thermal conductivity related properties "
         if grid_point is not None:
-            print "at gp-%d" % grid_point,
+            text += "at gp-%d " % grid_point
             if band_index is not None:
-                print "and band_index-%d" % (band_index + 1)
+                text += "and band_index-%d\n" % (band_index + 1)
         if sigma is not None:
             if grid_point is not None:
-                print "and",
+                text += "and "
             else:
-                print "at",
-            print "sigma %s" % ("%f" % sigma).rstrip('0').rstrip('\.')
-            print "were written into",
+                text += "at "
+            text += "sigma %s\n" % sigma
+            text += "were written into "
         else:
-            print "were written into",
+            text += "were written into "
             if band_index is None:
-                print
-        print "\"%s\"" % ("kappa" + suffix + ".hdf5")
+                text += "\n"
+        text += "\"%s\"" % ("kappa" + suffix + ".hdf5")
+        print(text)
 
 def write_collision_eigenvalues_to_hdf5(temperatures,
                                         mesh,
@@ -908,11 +713,12 @@ def write_collision_eigenvalues_to_hdf5(temperatures,
     w.close()
 
     if verbose:
-        print "Eigenvalues of collision matrix",
+        text = "Eigenvalues of collision matrix "
         if sigma is not None:
-            print "with sigma %s" % ("%f" % sigma).rstrip('0').rstrip('\.')
-        print "were written into"
-        print "\"%s\"" % ("coleigs" + suffix + ".hdf5")
+            text += "with sigma %s\n" % sigma
+        text += "were written into "
+        text += "\"%s\"" % ("coleigs" + suffix + ".hdf5")
+        print(text)
 
 def read_gamma_from_hdf5(mesh,
                          mesh_divisors=None,
@@ -933,7 +739,7 @@ def read_gamma_from_hdf5(mesh,
                                   filename=filename)
     if not os.path.exists("kappa" + suffix + ".hdf5"):
         if verbose:
-            print "%s not found." % ("kappa" + suffix + ".hdf5")
+            print("%s not found." % ("kappa" + suffix + ".hdf5"))
             return False
         
     with h5py.File("kappa" + suffix + ".hdf5", 'r') as f:
@@ -957,7 +763,7 @@ def read_gamma_from_hdf5(mesh,
             averaged_pp_interaction = None
     
     if verbose:
-        print "Read data from %s." % ("kappa" + suffix + ".hdf5")
+        print("Read data from %s." % ("kappa" + suffix + ".hdf5"))
     
     return gamma, gamma_isotope, averaged_pp_interaction
 
@@ -985,19 +791,20 @@ def read_collision_from_hdf5(mesh,
     f.close()
     
     if verbose:
-        print "Collisions",
+        text = "Collisions "
         if grid_point is not None:
-            print "at grid adress %d" % grid_point,
+            text += "at grid adress %d " % grid_point
         if sigma is not None:
             if grid_point is not None:
-                print "and",
+                text += "and "
             else:
-                print "at",
-            print "sigma %s" % sigma_str,
-        print "were read from",
+                text += "at "
+            text += "sigma %s " % sigma_str
+        text += "were read from "
         if grid_point is not None:
-            print ""
-        print "%s" % ("collision" + suffix + ".hdf5")
+            text += "\n"
+        text += "%s" % ("collision" + suffix + ".hdf5")
+        print(text)
     
     return collision_matrix, gamma, temperatures
 
@@ -1057,115 +864,6 @@ def write_detailed_gamma_to_hdf5(detailed_gamma,
 
     return full_filename
         
-def write_decay_channels(decay_channels,
-                         amplitudes_at_q,
-                         frequencies_at_q,
-                         triplets_at_q,
-                         weights_at_q,
-                         grid_address,
-                         mesh,
-                         band_indices,
-                         frequencies,
-                         grid_point,
-                         filename = None,
-                         is_nosym = False):
-
-    if filename == None:
-        decay_filename = "decay"
-    else:
-        decay_filename = "decay%s" % filename
-    decay_filename += "-m%d%d%d-" % tuple(mesh)
-    decay_filename += "g%d-" % grid_point
-    for i in band_indices:
-        decay_filename += "b%d" % (i+1)
-    if not filename == None:
-        decay_filename += ".%s.dat" % filename
-    elif is_nosym:
-        decay_filename += ".nosym.dat"
-    else:
-        decay_filename += ".dat"
-    w = open(decay_filename, 'w')
-
-    w.write("%10d                            "
-            "# Number of triplets\n" % len(triplets_at_q))
-    w.write("%10d                            "
-            "# Degeneracy\n" % len(band_indices))
-    
-    for i, j in enumerate(band_indices):
-        w.write("%10d %20.10e       # band  freq \n" % (j + 1, frequencies[i]))
-    w.write("\n")
-
-    decay_rate_triplets = []
-    decay_channels_sum = np.array(
-        [d.sum() * weight for d, weight in zip(decay_channels, weights_at_q)]).sum()
-
-    w.write("# %5s %5s %-15s\n" % ("band'", "band''", "decay sum in BZ"))
-    decay_rate_bands = []
-    pure_sum = 0.0
-    for i in range(amplitudes_at_q.shape[2]):
-        for j in range(amplitudes_at_q.shape[2]):
-            decay_bands_sum = np.dot(decay_channels[:,i,j], weights_at_q)
-            decay_rate_bands.append(
-                [decay_bands_sum / decay_channels_sum, i, j])
-            pure_sum += decay_bands_sum / decay_channels_sum
-            w.write("%5d %5d %17.7e %10.5f %%\n" %
-                       (i + 1, j + 1, decay_bands_sum,
-                        decay_bands_sum * 100 / decay_channels_sum))
-
-    w.write("# Sum       %17.7e %10.5f %%\n\n" %
-               (decay_channels_sum, pure_sum*100))
-
-    for i, (d, a, f, tp, weight) in enumerate(zip(decay_channels,
-                                                  amplitudes_at_q,
-                                                  frequencies_at_q,
-                                                  triplets_at_q,
-                                                  weights_at_q)):
-        sum_d = d.sum()
-        decay_rate_triplets.append([sum_d / decay_channels_sum, i])
-
-        w.write("# Triplet %d (%f%%)\n" %
-                (i+1, decay_rate_triplets[i][0] * 100))
-        w.write(" %4d                                 # weight\n" % weight)
-        q0 = grid_address[tp[0]]
-        q1 = grid_address[tp[1]]
-        q2 = grid_address[tp[2]]
-        w.write(" %4d / %-4d %4d / %-4d %4d / %-4d  # q\n" %
-                (q0[0], mesh[0], q0[1], mesh[1], q0[2], mesh[2]))
-        w.write(" %4d / %-4d %4d / %-4d %4d / %-4d  # q'\n" %
-                (q1[0], mesh[0], q1[1], mesh[1], q1[2], mesh[2]))
-        w.write(" %4d / %-4d %4d / %-4d %4d / %-4d  # q''\n" %
-                (q2[0], mesh[0], q2[1], mesh[1], q2[2], mesh[2]))
-        w.write("# %5s %5s    %-15s %-15s %-15s %-5s\n" %
-                ("band'", "band''", "freq'", "freq''", "decay", "phi"))
-
-        decay_rate_bands = []
-        for j in range(amplitudes_at_q.shape[2]):
-            for k in range(amplitudes_at_q.shape[2]):
-                decay_rate_bands.append([d[j,k] / sum_d, j, k])
-
-                w.write("%5d %5d %15.7e %15.7e %15.7e %15.7e\n" %
-                        (j + 1, k + 1, f[1, j], f[2, k],
-                         d[j, k], a[:, j, k].sum() / a.shape[0]))
-
-        if len(decay_rate_bands) > 9:
-            w.write("# Top 10 in bands\n")
-            decay_rate_bands.sort(mycmp)
-            for dr, i, j in decay_rate_bands[:10]:
-                w.write("%5d %5d %15.7f%%\n" % (i + 1, j + 1, dr * 100))
-        
-        w.write("\n")
-
-    if len(decay_rate_triplets) > 9:
-        w.write("# Top 10 in triplets\n")
-        decay_rate_triplets.sort(mycmp)
-        for dr, i in decay_rate_triplets[:10]:
-            w.write("%5d %15.7f%%\n" % (i + 1, dr * 100))
-
-    return decay_filename
-
-def mycmp(a, b):
-    return cmp(b[0], a[0])
-
 def write_ir_grid_points(mesh,
                          mesh_divs,
                          grid_points,
@@ -1190,52 +888,8 @@ def write_ir_grid_points(mesh,
         w.write("  q-point:      [ %12.7f, %12.7f, %12.7f ]\n" %
                 tuple(grid_address[g].astype('double') / mesh))
 
-def parse_yaml(file_yaml):
-    import yaml
-    try:
-        from yaml import CLoader as Loader
-        from yaml import CDumper as Dumper
-    except ImportError:
-        from yaml import Loader, Dumper
-
-    string = open(file_yaml).read()
-    data = yaml.load(string, Loader=Loader)
-    return data
-
-def parse_force_lines(forcefile, num_atom):
-    forces = []
-    for line in forcefile:
-        if line.strip() == '':
-            continue
-        if line.strip()[0] == '#':
-            continue
-        forces.append([float(x) for x in line.strip().split()])
-        if len(forces) == num_atom:
-            break
-
-    if not len(forces) == num_atom:
-        return None
-    else:
-        return np.array(forces)
-
-def parse_force_constants_lines(fcthird_file, num_atom):
-    fc2 = []
-    for line in fcthird_file:
-        if line.strip() == '':
-            continue
-        if line.strip()[0] == '#':
-            continue
-        fc2.append([float(x) for x in line.strip().split()])
-        if len(fc2) == num_atom ** 2 * 3:
-            break
-
-    if not len(fc2) == num_atom ** 2 * 3:
-        return None
-    else:
-        return np.array(fc2).reshape(num_atom, num_atom, 3, 3)
-
 def parse_disp_fc2_yaml(filename="disp_fc2.yaml"):
-    dataset = parse_yaml(filename)
+    dataset = _parse_yaml(filename)
     natom = dataset['natom']
     new_dataset = {}
     new_dataset['natom'] = natom
@@ -1250,7 +904,7 @@ def parse_disp_fc2_yaml(filename="disp_fc2.yaml"):
     return new_dataset
         
 def parse_disp_fc3_yaml(filename="disp_fc3.yaml"):
-    dataset = parse_yaml(filename)
+    dataset = _parse_yaml(filename)
     natom = dataset['natom']
     new_dataset = {}
     new_dataset['natom'] = natom
@@ -1281,7 +935,7 @@ def parse_disp_fc3_yaml(filename="disp_fc3.yaml"):
     return new_dataset
     
 def parse_disp_fc4_yaml(filename="disp_fc4.yaml"):
-    dataset = parse_yaml(filename)
+    dataset = _parse_yaml(filename)
     natom = dataset['natom']
     new_dataset = {}
     new_dataset['natom'] = natom
@@ -1322,7 +976,7 @@ def parse_FORCES_FC2(disp_dataset, filename="FORCES_FC2"):
     num_atom = disp_dataset['natom']
     num_disp = len(disp_dataset['first_atoms'])
     f2 = open(filename, 'r')
-    forces_fc2 = [parse_force_lines(f2, num_atom) for i in range(num_disp)]
+    forces_fc2 = [_parse_force_lines(f2, num_atom) for i in range(num_disp)]
     f2.close()
     return forces_fc2
 
@@ -1332,7 +986,7 @@ def parse_FORCES_FC3(disp_dataset, filename="FORCES_FC3"):
     for disp1 in disp_dataset['first_atoms']:
         num_disp += len(disp1['second_atoms'])
     f3 = open(filename, 'r')
-    forces_fc3 = [parse_force_lines(f3, num_atom) for i in range(num_disp)]
+    forces_fc3 = [_parse_force_lines(f3, num_atom) for i in range(num_disp)]
     f3.close()
     return forces_fc3
 
@@ -1350,27 +1004,9 @@ def parse_FORCES_FC4(disp_dataset, filename="FORCES_FC4"):
         
 
     f4 = open(filename, 'r')
-    forces_fc4 = [parse_force_lines(f4, num_atom) for i in range(num_disp)]
+    forces_fc4 = [_parse_force_lines(f4, num_atom) for i in range(num_disp)]
     f4.close()
     return forces_fc4
-
-def parse_DELTA_FC2_SETS(disp_dataset,
-                         filename='DELTA_FC2_SETS'):
-    fc2_file = open(filename, 'r')
-    delta_fc2s = []
-    num_atom = disp_dataset['natom']
-    for first_disp in disp_dataset['first_atoms']:
-        first_disp['delta_fc2'] = parse_force_constants_lines(fc2_file, num_atom)
-
-def parse_DELTA_FC2_FOURTH_SETS(disp_dataset,
-                                filename='DELTA_FC2_FOURTH_SETS'):
-    fc2_file = open(filename, 'r')
-    delta_fc2s = []
-    num_atom = disp_dataset['natom']
-    for first_disp in disp_dataset['first_atoms']:
-        for second_disp in first_disp['second_atoms']:
-            second_disp['delta_fc2'] = parse_force_constants_lines(fc2_file,
-                                                                   num_atom)
 
 def parse_QPOINTS3(filename='QPOINTS3'):
     f = open(filename)
@@ -1381,7 +1017,7 @@ def parse_QPOINTS3(filename='QPOINTS3'):
         line_array = [float(x) for x in line.strip().split()]
 
         if len(line_array) < 9:
-            print "QPOINTS3 format is invalid."
+            print("QPOINTS3 format is invalid.")
             raise ValueError
         else:
             qpoints3.append(line_array[0:9])
@@ -1470,56 +1106,46 @@ def _get_filename_suffix(mesh,
 
     return suffix
 
-if __name__ == '__main__':
-    import numpy as np
-    import sys
-    from anharmonic.file_IO import parse_fc3, parse_fc2
-    from optparse import OptionParser
+def _parse_yaml(file_yaml):
+    import yaml
+    try:
+        from yaml import CLoader as Loader
+        from yaml import CDumper as Dumper
+    except ImportError:
+        from yaml import Loader, Dumper
 
-    parser = OptionParser()
-    parser.set_defaults(num_atom = None,
-                        symprec = 1e-3)
-    parser.add_option("-n", dest="num_atom", type="int",
-                      help="number of atoms")
-    parser.add_option("-s", dest="symprec", type="float",
-                      help="torrelance")
-    (options, args) = parser.parse_args()
-    
-    num_atom = options.num_atom
-    
-    fc2_1 = parse_fc2(num_atom, filename=args[0])
-    fc2_2 = parse_fc2(num_atom, filename=args[1])
-    
-    fc3_1 = parse_fc3(num_atom, filename=args[2])
-    fc3_2 = parse_fc3(num_atom, filename=args[3])
-    
-    print "fc2",
-    fc2_count = 0
-    for i in range(num_atom):
-        for j in range(num_atom):
-            if (abs(fc2_1[i, j] - fc2_2[i, j]) > options.symprec).any():
-                print i + 1,j + 1
-                print fc2_1[i, j]
-                print fc2_2[i, j]
-                fc2_count += 1
-    if fc2_count == 0:
-        print "OK"
+    string = open(file_yaml).read()
+    data = yaml.load(string, Loader=Loader)
+    return data
+
+def _parse_force_lines(forcefile, num_atom):
+    forces = []
+    for line in forcefile:
+        if line.strip() == '':
+            continue
+        if line.strip()[0] == '#':
+            continue
+        forces.append([float(x) for x in line.strip().split()])
+        if len(forces) == num_atom:
+            break
+
+    if not len(forces) == num_atom:
+        return None
     else:
-        print fc2_count
+        return np.array(forces)
 
-    print "fc3",
-    fc3_count = 0
-    for i in range(num_atom):
-        for j in range(num_atom):
-            for k in range(num_atom):
-                if (abs(fc3_1[i, j, k] - fc3_2[i, j, k]) > options.symprec).any():
-                    print i + 1, j + 1, k + 1
-                    print fc3_1[i, j, k]
-                    print fc3_2[i, j, k]
-                    print
-                    fc3_count += 1
-    if fc3_count == 0:
-        print "OK"
+def _parse_force_constants_lines(fcthird_file, num_atom):
+    fc2 = []
+    for line in fcthird_file:
+        if line.strip() == '':
+            continue
+        if line.strip()[0] == '#':
+            continue
+        fc2.append([float(x) for x in line.strip().split()])
+        if len(fc2) == num_atom ** 2 * 3:
+            break
+
+    if not len(fc2) == num_atom ** 2 * 3:
+        return None
     else:
-        print fc3_count
-
+        return np.array(fc2).reshape(num_atom, num_atom, 3, 3)
