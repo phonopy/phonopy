@@ -23,8 +23,8 @@ If you have used phonopy, please cite the following article:
           Month = {Nov}
      }
 
-The following article is not necessarily cited, but the citation may
-help phonopy project to live longer.
+The following article is not necessarily cited, but the citation
+encourages running phonopy project.
 
 * "First-principles calculations of the ferroelastic transition between rutile-type and CaCl2-type SiO2 at high pressures",
     Atsushi Togo, Fumiyasu Oba, and Isao Tanaka, Phys. Rev. B, **78**, 134106 (2008)
