@@ -36,9 +36,9 @@ class FC2Fit:
 
         if self._rot_inv or self._trans_inv:
             if self._trans_inv:
-                print "Translational invariance: On"
+                print("Translational invariance: On")
             if self._rot_inv:
-                print "Rotational invariance: On"
+                print("Rotational invariance: On")
             self._set_fc2_displaced_atoms_one_shot()
         else:
             self._set_fc2_each_displaced_atom()
@@ -54,7 +54,7 @@ class FC2Fit:
                                               inv_big_matrices,
                                               force_matrices):
             fc2 = -np.dot(inv_disp_mat, force_mat).flatten()
-            print "  Recidual force (atom %d):" % (i + 1), fc2[:3]
+            print("  Recidual force (atom %d): %s" % (i + 1, fc2[:3]))
             self._fc2[i] = fc2[3:].reshape(-1, 3, 3)
             
     def _get_big_matrices_for_one_shot(self):
