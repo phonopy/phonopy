@@ -77,7 +77,7 @@ class JointDos:
             import anharmonic._phono3py as phono3c
             self._run_c()
         except ImportError:
-            print "Joint density of states in python is not implemented."
+            print("Joint density of states in python is not implemented.")
             return None, None
 
     def get_joint_dos(self):
@@ -135,8 +135,8 @@ class JointDos:
                 self._run_c_with_g()
             else:
                 if self._temperatures is not None:
-                    print "JDOS with phonon occupation numbers doesn't work",
-                    print "in this option."
+                    print("JDOS with phonon occupation numbers doesn't work "
+                          "in this option.")
                 self._run_py_tetrahedron_method()
         else:
             self._run_c_with_g()
@@ -240,7 +240,7 @@ class JointDos:
     def _set_triplets(self):
         if self._is_nosym:
             if self._log_level:
-                print "Triplets at q without considering symmetry"
+                print("Triplets at q without considering symmetry")
                 sys.stdout.flush()
             
             (self._triplets_at_q,

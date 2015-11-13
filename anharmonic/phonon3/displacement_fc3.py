@@ -213,7 +213,7 @@ def _get_orbits(atom_index, cell, site_symmetry, symprec=1e-5):
                     break
 
         if len(mapping) < len(site_symmetry):
-            print "Site symmetry is broken."
+            print("Site symmetry is broken.")
             raise ValueError
         else:
             orbits.append(mapping)

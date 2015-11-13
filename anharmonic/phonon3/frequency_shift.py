@@ -18,9 +18,9 @@ def get_frequency_shift(interaction,
         fst.set_grid_point(gp)
         if log_level:
             weights = interaction.get_triplets_at_q()[1]
-            print "------ Frequency shift -o- ------"
-            print "Number of ir-triplets:",
-            print "%d / %d" % (len(weights), weights.sum())
+            print("------ Frequency shift -o- ------")
+            print("Number of ir-triplets: "
+                  "%d / %d" % (len(weights), weights.sum()))
         fst.run_interaction()
 
         for epsilon in epsilons:

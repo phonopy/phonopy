@@ -30,7 +30,8 @@ def get_thermal_conductivity_RTA(
         log_level=0):
 
     if log_level:
-        print "-------------------- Lattice thermal conducitivity (RTA) --------------------"
+        print("-------------------- Lattice thermal conducitivity (RTA) "
+              "--------------------")
         br = Conductivity_RTA(
             interaction,
             symmetry,
@@ -51,7 +52,7 @@ def get_thermal_conductivity_RTA(
 
     if read_gamma:
         if not _set_gamma_from_file(br, filename=input_filename):
-            print "Reading collisions failed."
+            print("Reading collisions failed.")
             return False
         
     for i in br:
@@ -177,24 +178,25 @@ def _write_kappa(br, filename=None, log_level=0):
         else:
             gamma_isotope_at_sigma = None
         if log_level:
-            print "----------- Thermal conductivity (W/m-k)",
+            text = "----------- Thermal conductivity (W/m-k) "
             if sigma:
-                print "for sigma=%s -----------" % sigma
+                text += "for sigma=%s -----------" % sigma
             else:
-                print "with tetrahedron method -----------"
+                text += "with tetrahedron method -----------"
+            print(text)
             if log_level > 1:
-                print ("#%6s     " + " %-9s" * 6 + "#ipm") % (
-                    "T(K)", "xx", "yy", "zz", "yz", "xz", "xy")
+                print(("#%6s       " + " %-10s" * 6 + "#ipm") %
+                      ("T(K)", "xx", "yy", "zz", "yz", "xz", "xy"))
                 for j, (t, k) in enumerate(zip(temperatures, kappa_at_sigma)):
-                    print ("%7.1f" + " %9.3f" * 6 + " %d/%d") % (
-                        (t,) + tuple(k) + 
-                        (num_ignored_phonon_modes[i, j], num_phonon_modes))
+                    print(("%7.1f" + " %10.3f" * 6 + " %d/%d") %
+                          ((t,) + tuple(k) + 
+                           (num_ignored_phonon_modes[i, j], num_phonon_modes)))
             else:
-                print ("#%6s     " + " %-9s" * 6) % ("T(K)", "xx", "yy", "zz",
-                                                     "yz", "xz", "xy")
+                print(("#%6s       " + " %-10s" * 6) %
+                      ("T(K)", "xx", "yy", "zz", "yz", "xz", "xy"))
                 for j, (t, k) in enumerate(zip(temperatures, kappa_at_sigma)):
-                    print ("%7.1f" + " %9.3f" * 6) % ((t,) + tuple(k))
-            print
+                    print(("%7.1f " + " %10.3f" * 6) % ((t,) + tuple(k)))
+            print('')
 
         write_kappa_to_hdf5(temperatures,
                             mesh,
@@ -439,9 +441,9 @@ class Conductivity_RTA(Conductivity):
         else:
             self._collision.set_grid_point(grid_point)
             if self._log_level:
-                print "Number of triplets:",
-                print len(self._pp.get_triplets_at_q()[0])
-                print "Calculating interaction..."
+                print("Number of triplets: %d" %
+                      len(self._pp.get_triplets_at_q()[0]))
+                print("Calculating interaction...")
                 
             self._collision.run_interaction()
             self._averaged_pp_interaction[i] = (
@@ -492,11 +494,12 @@ class Conductivity_RTA(Conductivity):
     def _set_gamma_at_sigmas(self, i):
         for j, sigma in enumerate(self._sigmas):
             if self._log_level:
-                print "Calculating Gamma of ph-ph with",
+                text = "Calculating Gamma of ph-ph with "
                 if sigma is None:
-                    print "tetrahedron method"
+                    text += "tetrahedron method"
                 else:
-                    print "sigma=%s" % sigma
+                    text += "sigma=%s" % sigma
+                print(text)
             self._collision.set_sigma(sigma)
             if not sigma or self._run_with_g:
                 self._collision.set_integration_weights()
@@ -520,10 +523,10 @@ class Conductivity_RTA(Conductivity):
 
         if order_kstar != self._grid_weights[i]:
             if self._log_level:
-                print "*" * 33  + "Warning" + "*" * 33
-                print (" Number of elements in k* is unequal "
-                       "to number of equivalent grid-points.")
-                print "*" * 73
+                print("*" * 33  + "Warning" + "*" * 33)
+                print(" Number of elements in k* is unequal "
+                      "to number of equivalent grid-points.")
+                print("*" * 73)
 
         return gv_by_gv, order_kstar
 
@@ -546,11 +549,12 @@ class Conductivity_RTA(Conductivity):
         gv = self._gv[i]
         ave_pp = self._averaged_pp_interaction[i]
         
-        print "Frequency     group velocity (x, y, z)     |gv|       Pqj",
+        text = "Frequency     group velocity (x, y, z)     |gv|       Pqj"
         if self._gv_delta_q is None:
-            print
+            pass
         else:
-            print " (dq=%3.1e)" % self._gv_delta_q
+            text += "  (dq=%3.1e)" % self._gv_delta_q
+        print(text)
 
         if self._log_level > 1:
             rotation_map = get_grid_points_by_rotations(
@@ -563,15 +567,15 @@ class Conductivity_RTA(Conductivity):
                     if rotation_map[k] != j:
                         continue
     
-                    print " k*%-2d (%5.2f %5.2f %5.2f)" % (
-                        (i + 1,) + tuple(np.dot(rot, q)))
+                    print(" k*%-2d (%5.2f %5.2f %5.2f)" %
+                          ((i + 1,) + tuple(np.dot(rot, q))))
                     for f, v, pp in zip(frequencies,
                                     np.dot(rot_c, gv.T).T,
                                     ave_pp):
-                        print "%8.3f   (%8.3f %8.3f %8.3f) %8.3f %11.3e" % (
-                            f, v[0], v[1], v[2], np.linalg.norm(v), pp)
-            print
+                        print("%8.3f   (%8.3f %8.3f %8.3f) %8.3f %11.3e" %
+                              (f, v[0], v[1], v[2], np.linalg.norm(v), pp))
+            print('')
         else:
             for f, v, pp in zip(frequencies, gv, ave_pp):
-                print "%8.3f   (%8.3f %8.3f %8.3f) %8.3f %11.3e" % (
-                    f, v[0], v[1], v[2], np.linalg.norm(v), pp)
+                print("%8.3f   (%8.3f %8.3f %8.3f) %8.3f %11.3e" %
+                      (f, v[0], v[1], v[2], np.linalg.norm(v), pp))

@@ -68,7 +68,7 @@ class CollisionMatrix(ImagSelfEnergy):
         num_band = self._pp_strength.shape[2]
 
         if num_band0 != num_band:
-            print "--bi option is not allowed to use with collision matrix."
+            print("--bi option is not allowed to use with collision matrix.")
             sys.exit(1)
         
         num_triplets = len(self._triplets_at_q)
