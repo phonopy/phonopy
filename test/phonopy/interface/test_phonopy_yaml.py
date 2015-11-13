@@ -1,7 +1,6 @@
 import unittest
 
 from phonopy.interface.phonopy_yaml import phonopyYaml
-from phonopy.structure.atoms import PhonopyAtoms
 
 class TestPhonopyYaml(unittest.TestCase):
 

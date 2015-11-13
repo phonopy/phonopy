@@ -24,13 +24,13 @@ class TestCell(unittest.TestCase):
         pass
     
     def test_atoms(self):
-        print self._cell.get_cell()
+        print(self._cell.get_cell())
         for s, p in zip(self._cell.get_chemical_symbols(),
                         self._cell.get_scaled_positions()):
             print s, p
 
     def test_phonopy_atoms(self):
-        print PhonopyAtoms(atoms=self._cell)
+        print(PhonopyAtoms(atoms=self._cell))
 
 if __name__ == '__main__':
     unittest.main()
