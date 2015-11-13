@@ -34,6 +34,7 @@
 
 import numpy as np
 from phonopy.units import VaspToTHz
+from anharmonic.phonon3.triplets import get_grid_point_from_address
 
 def get_phono3py_configurations(settings, options):
     primitive_matrix = settings.get_primitive_matrix()
