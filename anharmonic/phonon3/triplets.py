@@ -100,13 +100,16 @@ def get_bz_grid_address(mesh, primitive_lattice, with_boundary=False):
     else:
         return bz_grid_address[:np.prod(mesh)]
 
-def get_grid_point_from_address(address, mesh):
+def get_grid_point_from_address_py(address, mesh):
     # X runs first in XYZ
     # (*In spglib, Z first is possible with MACRO setting.)
     m = mesh
     return (address[0] % m[0] +
             (address[1] % m[1]) * m[0] +
             (address[2] % m[2]) * m[0] * m[1])
+
+def get_grid_point_from_address(address, mesh):
+    return spg.get_grid_point_from_address(address, mesh)
 
 def get_bz_grid_point_from_address(address, mesh, bz_map):
     # X runs first in XYZ
@@ -514,24 +517,3 @@ class GridBrillouinZone:
 
     def get_shortest_addresses(self):
         return self._shortest_addresses
-    
-
-if __name__ == '__main__':
-    # This checks if ir_grid_points.yaml gives correct dense grid points
-    # that are converted from coase grid points by comparing with 
-    # mesh.yaml.
-    
-    import yaml
-    import sys
-    
-    data1 = yaml.load(open(sys.argv[1]))['ir_grid_points'] # ir_grid_points.yaml
-    data2 = yaml.load(open(sys.argv[2]))['phonon'] # phonpy mesh.yaml
-    
-    weights1 = np.array([x['weight'] for x in data1])
-    weights2 = np.array([x['weight'] for x in data2])
-    print (weights1 == weights2).sum()
-    q1 = np.array([x['q-point'] for x in data1])
-    q2 = np.array([x['q-position'] for x in data2])
-    print (q1 == q2).all(axis=1).sum()
-    for d in (q1 - q2):
-        print d
