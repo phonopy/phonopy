@@ -518,7 +518,7 @@ class Conductivity_RTA(Conductivity):
         for r in self._rotations_cartesian:
             gvs_rot = np.dot(self._gv[i], r.T)
             gv_by_gv += [np.outer(r_gv, r_gv) for r_gv in gvs_rot]
-        gv_by_gv /= len(rotation_map) / len(np.unique(rotation_map))
+        gv_by_gv /= len(rotation_map) // len(np.unique(rotation_map))
         order_kstar = len(np.unique(rotation_map))
 
         if order_kstar != self._grid_weights[i]:

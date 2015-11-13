@@ -172,7 +172,8 @@ class Interaction:
                           (grid_address[tp],
                            np.linalg.norm(
                                np.dot(reciprocal_lattice,
-                                      grid_address[tp] / self._mesh))))
+                                      grid_address[tp] /
+                                      self._mesh.astype('double')))))
                 print("%s" % sum_q)
                 print("============= Warning ==================")
 

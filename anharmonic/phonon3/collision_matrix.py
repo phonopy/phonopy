@@ -158,7 +158,7 @@ class CollisionMatrix(ImagSelfEnergy):
 
         for i, ir_gp in enumerate(self._ir_grid_points):
             r_gps = self._rot_grid_points[i]
-            multi = len(r_gps) / (r_gps < num_mesh_points).sum()
+            multi = len(r_gps) // (r_gps < num_mesh_points).sum()
             
             for r, r_gp in zip(self._rotations_cartesian, r_gps):
                 if r_gp > num_mesh_points - 1:
@@ -210,8 +210,8 @@ class CollisionMatrix(ImagSelfEnergy):
         sinh = np.where(
             freqs > self._cutoff_frequency,
             np.sinh(freqs * THzToEv / (2 * Kb * self._temperature)),
-            -1)
-        inv_sinh = np.where(sinh > 0, 1 / sinh, 0)
+            -1.0)
+        inv_sinh = np.where(sinh > 0, 1.0 / sinh, 0)
 
         return inv_sinh
         

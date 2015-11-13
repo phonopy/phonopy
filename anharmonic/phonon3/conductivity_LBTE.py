@@ -512,7 +512,7 @@ class Conductivity_LBTE(Conductivity):
         for j, k in list(np.ndindex((len(self._sigmas),
                                      len(self._temperatures)))):
             for i, ir_gp in enumerate(self._ir_grid_points):
-                multi = ((self._rot_grid_points == ir_gp).sum() /
+                multi = ((self._rot_grid_points == ir_gp).sum() //
                          (self._rot_BZ_grid_points == ir_gp).sum())
                 for r, r_BZ_gp in zip(self._rotations_cartesian,
                                       self._rot_BZ_grid_points[i]):
@@ -672,8 +672,8 @@ class Conductivity_LBTE(Conductivity):
             
         sinh = np.where(freqs > self._cutoff_frequency,
                         np.sinh(freqs * THzToEv / (2 * Kb * t)),
-                        -1)
-        inv_sinh = np.where(sinh > 0, 1 / sinh, 0)
+                        -1.0)
+        inv_sinh = np.where(sinh > 0, 1.0 / sinh, 0)
         freqs_sinh = freqs * THzToEv * inv_sinh / (4 * Kb * t ** 2)
                 
         for i, f in enumerate(freqs_sinh):

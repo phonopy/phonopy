@@ -245,11 +245,11 @@ class Conductivity:
                           " axis can not be shifted. Set False.")
                     self._coarse_mesh_shifts[i] = False
 
-        self._coarse_mesh = self._mesh / self._mesh_divisors
+        self._coarse_mesh = self._mesh // self._mesh_divisors
 
         if self._log_level:
             print("Lifetime sampling mesh: [ %d %d %d ]" %
-                  tuple(self._mesh / self._mesh_divisors))
+                  tuple(self._mesh // self._mesh_divisors))
 
     def _get_ir_grid_points(self):
         if self._coarse_mesh_shifts is None:
@@ -270,7 +270,7 @@ class Conductivity:
             coarse_mesh_shifts=self._coarse_mesh_shifts)
         grid_weights = coarse_grid_weights
 
-        assert grid_weights.sum() == np.prod(self._mesh /
+        assert grid_weights.sum() == np.prod(self._mesh //
                                              self._mesh_divisors)
 
         return grid_points, grid_weights

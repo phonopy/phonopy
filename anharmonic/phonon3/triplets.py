@@ -170,7 +170,7 @@ def reduce_grid_points(mesh_divisors,
         if coarse_mesh_shifts is None:
             shift = [0, 0, 0]
         else:
-            shift = np.where(coarse_mesh_shifts, divisors / 2, [0, 0, 0])
+            shift = np.where(coarse_mesh_shifts, divisors // 2, [0, 0, 0])
         modulo = grid_address[dense_grid_points] % divisors
         condition = (modulo == shift).all(axis=1)
         coarse_grid_points = np.extract(condition, dense_grid_points)
@@ -190,7 +190,7 @@ def from_coarse_to_dense_grid_points(dense_mesh,
     shifts = np.where(coarse_mesh_shifts, 1, 0)
     dense_grid_points = []
     for cga in coarse_grid_address[coarse_grid_points]:
-        dense_address = cga * mesh_divisors + shifts * (mesh_divisors / 2)
+        dense_address = cga * mesh_divisors + shifts * (mesh_divisors // 2)
         dense_grid_points.append(get_grid_point_from_address(dense_address,
                                                              dense_mesh))
     return np.array(dense_grid_points, dtype='intc')
@@ -207,7 +207,7 @@ def get_coarse_ir_grid_points(primitive,
         mesh_divs = mesh_divisors
     mesh = np.array(mesh, dtype='intc')
     mesh_divs = np.array(mesh_divs, dtype='intc')
-    coarse_mesh = mesh / mesh_divs
+    coarse_mesh = mesh // mesh_divs
     if coarse_mesh_shifts is None:
         coarse_mesh_shifts = [False, False, False]
 

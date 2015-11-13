@@ -265,7 +265,7 @@ class Gruneisen:
                             g[s] += (w[nu * 3 + i, s].conjugate() * 
                                      dDdu[nu, pi, i, j] * w[pi * 3 + j, s]).real
 
-            g[s] *= -1.0/2/omega2[s]
+            g[s] *= -1.0 / 2 / omega2[s]
 
         return g, omega2
 
@@ -379,9 +379,10 @@ class Gruneisen:
                     for i in range(3):
                         # Eigenvectors are real.
                         # 3: means optical modes
-                        G[pi, mu, k, i] = 1.0 / np.sqrt(m[pi] * m[mu]) * \
+                        G[pi, mu, k, i] = (
+                            1.0 / np.sqrt(m[pi] * m[mu]) *
                             (vecs[pi * 3 + k, 3:] * vecs[mu * 3 + i, 3:] /
-                             vals[3:]).sum()
+                             vals[3:]).sum())
         return G
 
             
