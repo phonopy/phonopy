@@ -70,7 +70,8 @@ packages_phonopy = ['phonopy',
                     'phonopy.interface',
                     'phonopy.phonon',
                     'phonopy.qha',
-                    'phonopy.structure']
+                    'phonopy.structure',
+                    'phonopy.unfolding']
 scripts_phonopy = ['scripts/phonopy',
                    'scripts/phonopy-qha',
                    'scripts/phonopy-FHI-aims',
@@ -84,7 +85,7 @@ scripts_phonopy = ['scripts/phonopy',
 
 if __name__ == '__main__':
     setup(name='phonopy',
-          version='1.10.0',
+          version='1.10.1',
           description='This is the phonopy module.',
           author='Atsushi Togo',
           author_email='atz.togo@gmail.com',
