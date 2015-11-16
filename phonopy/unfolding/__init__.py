@@ -40,10 +40,11 @@ from phonopy.structure.cells import get_supercell
 class Unfolding:
     def __init__(self,
                  phonon,
-                 supercell_matrix):
-        self._phonon = phonon
-        self._supercell_matrix = supercell_matrix
-        self._comm_points = get_commensurate_points(supercell_matrix)
+                 primitive):
+        self._phohon = phonon
+        smat = np.linalg.inv(primitive.get_primitive_matrix())
+        self._supercell_matrix = np.rint(smat).astype('intc')
+        self._comm_points = get_commensurate_points(self._supercell_matrix)
         self._translations = None
         self._set_translations()
 

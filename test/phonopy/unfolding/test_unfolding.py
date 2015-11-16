@@ -2,7 +2,7 @@ import unittest
 import numpy as np
 from phonopy.interface.phonopy_yaml import phonopyYaml
 from phonopy.structure.cells import get_supercell
-from phonopy.unfolding.unfolding import Unfolding
+from phonopy.unfolding import Unfolding
 from phonopy import Phonopy
 from phonopy.interface.vasp import read_vasp
 from phonopy.file_IO import parse_FORCE_SETS, parse_BORN
@@ -13,7 +13,6 @@ from phonopy.structure.atoms import PhonopyAtoms
 class TestUnfolding(unittest.TestCase):
 
     def setUp(self):
-        filename = "POSCAR.yaml"
         self._cell = read_vasp("POSCAR")
         print(PhonopyAtoms(atoms=self._cell))
     
@@ -24,12 +23,12 @@ class TestUnfolding(unittest.TestCase):
         smat = np.diag([2, 2, 2])
         pmat = [[0, 0.5, 0.5], [0.5, 0, 0.5], [0.5, 0.5, 0]]
         phonon = self._get_phonon(smat, pmat)
-        supercell_matrix = np.rint(
-            np.dot(np.linalg.inv(pmat), smat)).astype('intc')
-        unfolding = Unfolding(phonon, supercell_matrix)
+        unfolding = Unfolding(phonon, phonon.get_primitive())
 
-        print(unfolding.get_translations())
-        print(unfolding.get_commensurate_points())
+        for i, p in enumerate(unfolding.get_translations()):
+            print("%d %s" % (i + 1, p))
+        for i, p in enumerate(unfolding.get_commensurate_points()):
+            print("%d %s" % (i + 1, p))
 
         ## The following lines are for writing translations into POSCAR.
         # translations = unfolding.get_translations()
