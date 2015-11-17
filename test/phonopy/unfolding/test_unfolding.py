@@ -20,15 +20,20 @@ class TestUnfolding(unittest.TestCase):
         pass
     
     def test_Unfolding(self):
+        band = [np.array([[i, 0, 0] for i in range(21)], dtype='double') / 40]
         smat = np.diag([2, 2, 2])
         pmat = [[0, 0.5, 0.5], [0.5, 0, 0.5], [0.5, 0.5, 0]]
-        phonon = self._get_phonon(smat, pmat)
-        unfolding = Unfolding(phonon, phonon.get_primitive())
+        phonon_ideal = self._get_phonon(smat, pmat, self._cell)
+        supercell = phonon_ideal.get_supercell()
+        phonon = self._get_phonon(np.eye(3, dtype='intc'), np.eye(3), supercell)
+        mapping = range(phonon.get_supercell().get_number_of_atoms())
+        unfolding = Unfolding(phonon, phonon_ideal, mapping, band)
 
         for i, p in enumerate(unfolding.get_translations()):
             print("%d %s" % (i + 1, p))
         for i, p in enumerate(unfolding.get_commensurate_points()):
             print("%d %s" % (i + 1, p))
+        print("%s" % unfolding.get_shifted_index_set())
 
         ## The following lines are for writing translations into POSCAR.
         # translations = unfolding.get_translations()
@@ -38,10 +43,10 @@ class TestUnfolding(unittest.TestCase):
         #              pbc=True)
         # write_vasp("POSCAR", cell)
 
-    def _get_phonon(self, smat, pmat):
+    def _get_phonon(self, smat, pmat, cell):
         print smat
         print pmat
-        phonon = Phonopy(self._cell,
+        phonon = Phonopy(cell,
                          smat,
                          primitive_matrix=pmat,
                          is_auto_displacements=False)

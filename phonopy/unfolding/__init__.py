@@ -40,22 +40,40 @@ from phonopy.structure.cells import get_supercell
 class Unfolding:
     def __init__(self,
                  phonon,
-                 primitive):
-        self._phohon = phonon
+                 phonon_ideal,
+                 atom_mapping,
+                 bands):
+        self._phonon = phonon
+        self._phonon_ideal = phonon_ideal
+        self._atom_mapping = atom_mapping
+        self._bands = bands
+        self._symprec = self._phonon.get_symmetry().get_symmetry_tolerance()
+        primitive = self._phonon_ideal.get_primitive()
         smat = np.linalg.inv(primitive.get_primitive_matrix())
         self._supercell_matrix = np.rint(smat).astype('intc')
         self._comm_points = get_commensurate_points(self._supercell_matrix)
         self._translations = None
         self._set_translations()
+        self._index_set = None
+        self._set_shifted_index_set()
+        self._qpoints = None
+        self._distances = None
+        self._freqs = None
+        self._eigvecs = None
+        self._solve_phonon()
+        self._set_unfolding_weights()
 
-    def operator_P(self):
+    def operator_P(self, K, KG):
         pass
-
+        
     def get_translations(self):
         return self._translations
 
     def get_commensurate_points(self):
         return self._comm_points
+
+    def get_shifted_index_set(self):
+        return self._index_set
 
     def _set_translations(self):
         pcell = Atoms(numbers=[1],
@@ -67,3 +85,33 @@ class Unfolding:
         translations -= np.floor(translations)
         self._translations = translations
 
+    def _set_shifted_index_set(self):
+        index_set = []
+        for shift in self._translations:
+            index_set.append(self._shift_indices(shift))
+        self._index_set = np.array(index_set)
+
+    def _shift_indices(self, shift):
+        positions = self._phonon_ideal.get_supercell().get_scaled_positions()
+        shifted = positions.copy() - shift
+        indices = []
+        for p in positions:
+            diff = shifted - p
+            diff -= np.rint(diff)
+            indices.append(
+                np.nonzero((np.abs(diff) < self._symprec).all(axis=1))[0][0])
+        return indices
+        
+    def _solve_phonon(self):
+        if (self._phonon.set_band_structure(self._bands, is_eigenvectors=True)):
+            (self._qpoints,
+             self._distances,
+             self._freqs,
+             self._eigvecs) = self._phonon.get_band_structure()
+        else:
+            print("Solving phonon failed.")
+            return False
+
+    def _set_unfolding_weights(self):
+        for eigvec in self._eigvecs[0]:
+            print(eigvec.shape)
