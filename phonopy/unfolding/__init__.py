@@ -75,6 +75,12 @@ class Unfolding:
     def get_shifted_index_set(self):
         return self._index_set
 
+    def get_unfolding_weights(self):
+        return self._unfolding_weights
+
+    def get_frequencies(self):
+        return self._freqs[0]
+
     def _set_translations(self):
         pcell = Atoms(numbers=[1],
                       scaled_positions=[[0, 0, 0]],
@@ -113,5 +119,29 @@ class Unfolding:
             return False
 
     def _set_unfolding_weights(self):
-        for eigvec in self._eigvecs[0]:
-            print(eigvec.shape)
+        unfolding_weights = []
+        for eigvecs in self._eigvecs[0]:
+            weights_at_q = []
+            for eigvec in eigvecs.T:
+                weights_at_q.append(self._get_unfolding_weight(eigvec))
+            unfolding_weights.append(weights_at_q)
+        self._unfolding_weights = np.array(unfolding_weights)
+        self._unfolding_weights /= self._unfolding_weights.shape[1]
+
+    def _get_unfolding_weight(self, eigvec):
+        trans = np.dot(self._supercell_matrix, self._translations.T).T
+        weights = []
+        for G in self._comm_points:
+            w_sum = 0.0
+            for shift, indices in zip(trans, self._index_set):
+                phase = np.exp(2j * np.pi * np.dot(G, shift))
+                eigvec_shifted = eigvec.reshape((-1, 3))[indices].ravel()
+                w_sum += np.vdot(eigvec, eigvec_shifted) * phase
+            weights.append(w_sum)
+
+        weights = np.array(weights)
+        if (weights.imag > 1e-5).any():
+            print("Imaginary value encountered.")
+            return [None] * len(weights)
+
+        return weights.real

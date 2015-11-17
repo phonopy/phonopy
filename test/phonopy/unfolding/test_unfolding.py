@@ -1,4 +1,5 @@
 import unittest
+import sys
 import numpy as np
 from phonopy.interface.phonopy_yaml import phonopyYaml
 from phonopy.structure.cells import get_supercell
@@ -20,7 +21,9 @@ class TestUnfolding(unittest.TestCase):
         pass
     
     def test_Unfolding(self):
-        band = [np.array([[i, 0, 0] for i in range(21)], dtype='double') / 40]
+        nd = 10
+        band = [np.array([[i, 0, 0]
+                          for i in range(nd + 1)], dtype='double') / nd / 2]
         smat = np.diag([2, 2, 2])
         pmat = [[0, 0.5, 0.5], [0.5, 0, 0.5], [0.5, 0.5, 0]]
         phonon_ideal = self._get_phonon(smat, pmat, self._cell)
@@ -28,21 +31,25 @@ class TestUnfolding(unittest.TestCase):
         phonon = self._get_phonon(np.eye(3, dtype='intc'), np.eye(3), supercell)
         mapping = range(phonon.get_supercell().get_number_of_atoms())
         unfolding = Unfolding(phonon, phonon_ideal, mapping, band)
+        
+        comm_points = unfolding.get_commensurate_points()
+        # (nd + 1, num_atom_super / num_atom_prim, num_atom_super * 3)
+        weights = unfolding.get_unfolding_weights() 
+        freqs = unfolding.get_frequencies()
 
-        for i, p in enumerate(unfolding.get_translations()):
-            print("%d %s" % (i + 1, p))
-        for i, p in enumerate(unfolding.get_commensurate_points()):
-            print("%d %s" % (i + 1, p))
-        print("%s" % unfolding.get_shifted_index_set())
+        print(weights.shape)
 
-        ## The following lines are for writing translations into POSCAR.
-        # translations = unfolding.get_translations()
-        # cell = Atoms(numbers=[1] * len(translations),
-        #              scaled_positions=translations,
-        #              cell=supercell.get_cell(),
-        #              pbc=True)
-        # write_vasp("POSCAR", cell)
-
+        with open("unfolding.dat", 'w') as w:
+            lines = []
+            for i, q in enumerate(band[0]):
+                for j, f in enumerate(freqs[i]):
+                    for k, G in enumerate(comm_points):
+                        lines.append(
+                            "%f %f %f  %f %f %f  %f  %f" %
+                            (q[0], q[1], q[2], G[0], G[1], G[2], f,
+                             weights[i, j, k]))
+            w.write("\n".join(lines))
+        
     def _get_phonon(self, smat, pmat, cell):
         print smat
         print pmat
@@ -63,9 +70,9 @@ class TestUnfolding(unittest.TestCase):
                    [0, 2.43533967, 0],
                    [0, 0, 2.43533967]]
         factors = 14.400
-        phonon.set_nac_params({'born': born,
-                               'factor': factors,
-                               'dielectric': epsilon})
+        # phonon.set_nac_params({'born': born,
+        #                        'factor': factors,
+        #                        'dielectric': epsilon})
         return phonon
 
 if __name__ == '__main__':
