@@ -36,6 +36,7 @@ import numpy as np
 from phonopy.harmonic.dynmat_to_fc import get_commensurate_points
 from phonopy.structure.atoms import Atoms
 from phonopy.structure.cells import get_supercell
+from phonopy.structure.brillouin_zone import get_qpoints_in_Brillouin_zone
 
 class Unfolding:
     def __init__(self,
@@ -48,24 +49,26 @@ class Unfolding:
         self._atom_mapping = atom_mapping
         self._bands = bands
         self._symprec = self._phonon.get_symmetry().get_symmetry_tolerance()
-        primitive = self._phonon_ideal.get_primitive()
-        smat = np.linalg.inv(primitive.get_primitive_matrix())
+        self._primitive = self._phonon_ideal.get_primitive()
+        smat = np.linalg.inv(self._primitive.get_primitive_matrix())
         self._supercell_matrix = np.rint(smat).astype('intc')
-        self._comm_points = get_commensurate_points(self._supercell_matrix)
         self._translations = None
-        self._set_translations()
         self._index_set = None
-        self._set_shifted_index_set()
         self._qpoints = None
         self._distances = None
         self._freqs = None
         self._eigvecs = None
+
+    def run(self):
+        comm_points = get_commensurate_points(self._supercell_matrix)
+        prim_vecs = np.linalg.inv(self._primitive.get_cell()).T
+        comm_points_bz = get_qpoints_in_Brillouin_zone(prim_vecs, comm_points)
+        self._comm_points = np.array([q[0] for q in comm_points_bz])
+        self._set_translations()
+        self._set_shifted_index_set()
         self._solve_phonon()
         self._set_unfolding_weights()
 
-    def operator_P(self, K, KG):
-        pass
-        
     def get_translations(self):
         return self._translations
 
@@ -101,8 +104,8 @@ class Unfolding:
         positions = self._phonon_ideal.get_supercell().get_scaled_positions()
         shifted = positions.copy() - shift
         indices = []
-        for p in positions:
-            diff = shifted - p
+        for p in shifted:
+            diff = positions - p
             diff -= np.rint(diff)
             indices.append(
                 np.nonzero((np.abs(diff) < self._symprec).all(axis=1))[0][0])
@@ -120,7 +123,8 @@ class Unfolding:
 
     def _set_unfolding_weights(self):
         unfolding_weights = []
-        for eigvecs in self._eigvecs[0]:
+        for i, eigvecs in enumerate(self._eigvecs[0]):
+            print("%d " % i)
             weights_at_q = []
             for eigvec in eigvecs.T:
                 weights_at_q.append(self._get_unfolding_weight(eigvec))
@@ -141,7 +145,7 @@ class Unfolding:
 
         weights = np.array(weights)
         if (weights.imag > 1e-5).any():
-            print("Imaginary value encountered.")
+            print("Phonopy warning: Encountered imaginary values.")
             return [None] * len(weights)
 
         return weights.real
