@@ -1,6 +1,7 @@
 /* spg_database.c */
 /* Copyright (C) 2010 Atsushi Togo */
 
+#include <stdlib.h>
 #include "spg_database.h"
 
 /* In Hall symbols (3rd column), '=' is used instead of '"'. */
@@ -8504,6 +8505,7 @@ void spgdb_get_operation_index(int indices[2], const int hall_number)
   indices[1] = symmetry_operation_index[hall_number][1];
 }
 
+/* Return NULL if failed */
 Symmetry * spgdb_get_spacegroup_operations(const int hall_number)
 {
   int i;
@@ -8512,8 +8514,17 @@ Symmetry * spgdb_get_spacegroup_operations(const int hall_number)
   double trans[3];
   Symmetry *symmetry;
 
+  symmetry = NULL;
+
+  if (hall_number < 1 || 530 < hall_number) {
+    return NULL;
+  }
+
   spgdb_get_operation_index(operation_index, hall_number);
-  symmetry = sym_alloc_symmetry(operation_index[0]);
+
+  if ((symmetry = sym_alloc_symmetry(operation_index[0])) == NULL) {
+    return NULL;
+  }
 
   for (i = 0; i < operation_index[0]; i++) {
     /* rotation matrix matching and set difference of translations */
@@ -8525,12 +8536,20 @@ Symmetry * spgdb_get_spacegroup_operations(const int hall_number)
   return symmetry;
 }
 
+/* Return spgtype.number = 0 if hall_number is out of range. */
 SpacegroupType spgdb_get_spacegroup_type(const int hall_number)
 {
   int position; 
   SpacegroupType spgtype;
+
+  spgtype.number = 0;
   
-  spgtype = spacegroup_types[hall_number];
+  if (0 < hall_number || hall_number < 531) {
+    spgtype = spacegroup_types[hall_number];
+  } else {
+    spgtype = spacegroup_types[0];
+  }
+
   remove_space(spgtype.schoenflies, 7);
   position = remove_space(spgtype.hall_symbol, 17);
   replace_equal_char(spgtype.hall_symbol, position);
@@ -8543,6 +8562,7 @@ SpacegroupType spgdb_get_spacegroup_type(const int hall_number)
 
 static int remove_space(char symbol[], const int num_char) {
   int i;
+
   for (i = num_char - 2; i > -1; i--) {
     if (symbol[i] == ' ') {
       symbol[i] = '\0';
@@ -8555,6 +8575,7 @@ static int remove_space(char symbol[], const int num_char) {
 
 static void replace_equal_char(char symbol[], const int position) {
   int i;
+
   for (i = position; i > -1; i--) {
     if (symbol[i] == '=') { symbol[i] = '\"'; }
   }

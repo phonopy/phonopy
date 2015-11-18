@@ -57,11 +57,13 @@ static void get_Delaunay_shortest_vectors_2D(double basis[3][3],
 static void get_exteneded_basis_2D(double basis[3][3],
 				   SPGCONST double lattice[3][2]);
 
+/* Return 0 if failed */
 int lat_smallest_lattice_vector(double min_lattice[3][3],
 				SPGCONST double lattice[3][3],
 				const double symprec)
 {
-  debug_print("lat_smallest_lattice_vector:\n");
+  debug_print("lat_smallest_lattice_vector (tolerance = %f):\n", symprec);
+
   return get_Delaunay_reduction(min_lattice, lattice, symprec);
 }
 
@@ -195,6 +197,7 @@ static Centering get_base_center(SPGCONST int transform_mat[3][3])
 
 /* Delaunay reduction */
 /* Reference can be found in International table A. */
+/* Return 0 if failed */
 static int get_Delaunay_reduction(double red_lattice[3][3], 
 				  SPGCONST double lattice[3][3],
 				  const double symprec)

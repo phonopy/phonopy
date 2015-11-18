@@ -10,9 +10,9 @@ def fracval(frac):
         x = frac.split('/')
         return float(x[0]) / float(x[1])
 
-class KappaDOS:
+class GammaDOS:
     def __init__(self,
-                 mode_kappa,
+                 gamma,
                  cell,
                  frequencies,
                  mesh,
@@ -20,7 +20,7 @@ class KappaDOS:
                  grid_mapping_table,
                  ir_grid_points,
                  grid_order=None):
-        self._mode_kappa = mode_kappa
+        self._gamma = gamma
         self._tetrahedron_mesh = TetrahedronMesh(
             cell,
             frequencies,
@@ -32,27 +32,25 @@ class KappaDOS:
         min_freq = min(frequencies.ravel())
         max_freq = max(frequencies.ravel())
         self._frequency_points = np.linspace(min_freq, max_freq, 100)
-        self._kdos = np.zeros(
-            (len(mode_kappa), len(self._frequency_points), 2, 6),
-            dtype='double')
+        self._gdos = np.zeros(
+            (len(gamma), len(self._frequency_points), 2), dtype='double')
         self._run_tetrahedron_method()
 
-    def get_kdos(self):
-        return self._frequency_points, self._kdos
+    def get_gdos(self):
+        return self._frequency_points, self._gdos
         
     def _run_tetrahedron_method(self):
         num_freqs = len(self._frequency_points)
         thm = self._tetrahedron_mesh
         for j, value in enumerate(('J', 'I')):
-            thm.set(value=value,
-                    frequency_points=self._frequency_points)
+            thm.set(value=value, frequency_points=self._frequency_points)
             for i, iw in enumerate(thm): 
                 for k in range(num_freqs):
-                    for l in range(len(self._mode_kappa)): # at temperatures
-                        mk = self._mode_kappa[l, i]
-                        for ib in range(self._mode_kappa.shape[2]):
-                            self._kdos[l, k, j] += iw[k, ib] * mk[ib]
-        self._kdos *= np.prod(mesh)
+                    for l in range(len(self._gamma)): # at temperatures
+                        mk = self._gamma[l, i]
+                        for ib in range(self._gamma.shape[2]):
+                            self._gdos[l, k, j] += iw[k, ib] * mk[ib]
+        self._gdos *= np.prod(mesh)
 
 if __name__ == '__main__':
     """Incremental kappa with respect to frequency and the derivative"""
@@ -79,7 +77,7 @@ if __name__ == '__main__':
 
     f = h5py.File(args.filenames[1])
     mesh = np.array([int(x) for x in args.mesh.split()], dtype='intc')
-    mode_kappa = f['mode_kappa']
+    gamma = f['gamma']
     frequencies = f['frequency'][:]
     temperatures = f['temperature'][:]
 
@@ -91,8 +89,8 @@ if __name__ == '__main__':
     grid_address = gp.get_grid_address()
     grid_mapping_table = gp.get_grid_mapping_table()
     ir_grid_points = gp.get_ir_grid_points()
-    
-    kappa_dos = KappaDOS(mode_kappa,
+
+    gamma_dos = GammaDOS(gamma,
                          primitive,
                          frequencies,
                          mesh,
@@ -100,11 +98,11 @@ if __name__ == '__main__':
                          grid_mapping_table,
                          ir_grid_points)
                          
-    freq_points, kdos = kappa_dos.get_kdos()
+    freq_points, gdos = gamma_dos.get_gdos()
 
-    for i, kdos_t in enumerate(kdos):
-        print "# %d K" % temperatures[i], mode_kappa[i].sum(axis=0).sum(axis=0)
-        for f, k in zip(freq_points, kdos_t): # show kappa_xx
-            print ("%f " * 13) % ((f,) + tuple(k[0]) + tuple(k[1]))
+    for i, gdos_t in enumerate(gdos):
+        print "# %d K" % temperatures[i], gamma[i].sum(axis=0).sum(axis=0)
+        for f, g in zip(freq_points, gdos_t): # show kappa_xx
+            print ("%f " * 3) % (f, g[0], g[1])
         print
         print

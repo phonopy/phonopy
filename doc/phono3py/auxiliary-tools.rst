@@ -45,6 +45,11 @@ This is the result of silicon.
 
 |i0|
 
+``gaccum``
+-----------
+
+``gaccum`` is very similar to ``kaccum``, but for
+:math:`\Gamma_\lambda(\omega_\lambda)`.
 
 .. |sflogo| image:: http://sflogo.sourceforge.net/sflogo.php?group_id=161614&type=1
             :target: http://sourceforge.net

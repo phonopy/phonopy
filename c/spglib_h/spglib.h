@@ -1,4 +1,4 @@
-/* spglib.h version 1.7.3-pre3 */
+/* spglib.h version 1.8 */
 /* Copyright (C) 2008 Atsushi Togo */
 
 #ifndef __spglib_H__
@@ -387,35 +387,6 @@ int spg_relocate_BZ_grid_address(int bz_grid_address[][3],
 				 const int mesh[3],
 				 SPGCONST double rec_lattice[3][3],
 				 const int is_shift[3]);
-
-/* Irreducible triplets of k-points are searched under conservation of */
-/* :math:``\mathbf{k}_1 + \mathbf{k}_2 + \mathbf{k}_3 = \mathbf{G}``. */
-/* Memory spaces of grid_address[prod(mesh)][3], map_triplets[prod(mesh)] */
-/* and map_q[prod(mesh)] are required. rotations are point-group- */
-/* operations in real space for which duplicate operations are allowed */
-/* in the input. */
-int spg_get_triplets_reciprocal_mesh_at_q(int map_triplets[],
-					  int map_q[],
-					  int grid_address[][3],
-					  const int grid_point,
-					  const int mesh[3],
-					  const int is_time_reversal,
-					  const int num_rot,
-					  SPGCONST int rotations[][3][3]);
-
-/* Irreducible grid-point-triplets in BZ are stored. */
-/* triplets are recovered from grid_point and triplet_weights. */
-/* BZ boundary is considered in this recovery. Therefore grid addresses */
-/* are given not by grid_address, but by bz_grid_address. */
-/* triplets[num_ir_triplets][3] = number of non-zero triplets weights*/
-/* Number of ir-triplets is returned. */
-int spg_get_BZ_triplets_at_q(int triplets[][3],
-			     const int grid_point,
-			     SPGCONST int bz_grid_address[][3],
-			     const int bz_map[],
-			     const int map_triplets[],
-			     const int num_map_triplets,
-			     const int mesh[3]);
 
 void spg_get_neighboring_grid_points(int relative_grid_points[],
 				     const int grid_point,

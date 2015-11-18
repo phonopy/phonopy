@@ -19,6 +19,8 @@ sources = ['c/_phono3py.c',
            'c/anharmonic/phonon3/imag_self_energy_with_g.c',
            'c/anharmonic/phonon3/collision_matrix.c',
            'c/anharmonic/other/isotope.c',
+           'c/anharmonic/triplet/triplet.c',
+           'c/anharmonic/triplet/triplet_kpoint.c',
            'c/spglib/kpoint.c',
            'c/spglib/mathfunc.c',
            'c/spglib/tetrahedron_method.c']
@@ -58,10 +60,11 @@ packages_phono3py = ['anharmonic',
                      'anharmonic.other',
                      'anharmonic.phonon3']
 scripts_phono3py = ['scripts/phono3py',
-                    'scripts/kaccum']
+                    'scripts/kaccum',
+                    'scripts/gaccum']
 
 setup(name='phono3py',
-      version='0.9.9.2',
+      version='0.9.10',
       description='This is the phono3py module.',
       author='Atsushi Togo',
       author_email='atz.togo@gmail.com',

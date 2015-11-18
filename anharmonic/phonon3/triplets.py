@@ -18,7 +18,7 @@ def get_triplets_at_q(grid_point,
                       primitive_lattice, # column vectors
                       is_time_reversal=True,
                       stores_triplets_map=False):
-    map_triplets, map_q, grid_address = spg.get_triplets_reciprocal_mesh_at_q(
+    map_triplets, map_q, grid_address = _get_triplets_reciprocal_mesh_at_q(
         grid_point,
         mesh,
         point_group,
@@ -26,7 +26,7 @@ def get_triplets_at_q(grid_point,
     bz_grid_address, bz_map = spg.relocate_BZ_grid_address(grid_address,
                                                            mesh,
                                                            primitive_lattice)
-    triplets_at_q, weights = spg.get_BZ_triplets_at_q(
+    triplets_at_q, weights = _get_BZ_triplets_at_q(
         grid_point,
         bz_grid_address,
         bz_map,
@@ -48,7 +48,7 @@ def get_triplets_third_q_list(grid_point,
                               bz_grid_address,
                               bz_map,
                               mesh):
-    triplets_at_q, weights = spg.get_BZ_triplets_at_q(
+    triplets_at_q, weights = _get_BZ_triplets_at_q(
         grid_point,
         bz_grid_address,
         bz_map,
@@ -66,7 +66,7 @@ def get_nosym_triplets_at_q(grid_point,
     bz_grid_address, bz_map = spg.relocate_BZ_grid_address(grid_address,
                                                            mesh,
                                                            primitive_lattice)
-    triplets_at_q, weights = spg.get_BZ_triplets_at_q(
+    triplets_at_q, weights = _get_BZ_triplets_at_q(
         grid_point,
         bz_grid_address,
         bz_map,
@@ -145,7 +145,7 @@ def get_BZ_grid_points_by_rotations(grid_point,
                                     mesh,
                                     bz_map,
                                     mesh_shifts=[False, False, False]):
-    return spg.get_BZ_grid_points_by_rotations(
+    return _get_BZ_grid_points_by_rotations(
         grid_point,
         reciprocal_rotations,
         mesh,
@@ -320,6 +320,51 @@ def get_tetrahedra_vertices(relative_address,
             vgp = bz_map[bz_gp]
             vertices[i, j] = vgp + (vgp == -1) * (gp + 1)
     return vertices
+
+def _get_triplets_reciprocal_mesh_at_q(fixed_grid_number,
+                                       mesh,
+                                       rotations,
+                                       is_time_reversal=True):
+    import anharmonic._phono3py as phono3c
+
+    map_triplets = np.zeros(np.prod(mesh), dtype='intc')
+    map_q = np.zeros(np.prod(mesh), dtype='intc')
+    mesh_points = np.zeros((np.prod(mesh), 3), dtype='intc')
+
+    phono3c.triplets_reciprocal_mesh_at_q(
+        map_triplets,
+        map_q,
+        mesh_points,
+        fixed_grid_number,
+        np.array(mesh, dtype='intc'),
+        is_time_reversal * 1,
+        np.array(rotations, dtype='intc', order='C'))
+
+    return map_triplets, map_q, mesh_points
+        
+def _get_BZ_triplets_at_q(grid_point,
+                          bz_grid_address,
+                          bz_map,
+                          map_triplets,
+                          mesh):
+    """grid_address is overwritten."""
+
+    import anharmonic._phono3py as phono3c
+
+    weights = np.zeros_like(map_triplets)
+    for g in map_triplets:
+        weights[g] += 1
+    ir_weights = np.extract(weights > 0, weights)
+    triplets = np.zeros((len(ir_weights), 3), dtype='intc')
+    num_ir_ret = phono3c.BZ_triplets_at_q(triplets,
+                                          grid_point,
+                                          bz_grid_address,
+                                          bz_map,
+                                          map_triplets,
+                                          np.array(mesh, dtype='intc'))
+    
+    return triplets, ir_weights
+
 
 def _set_triplets_integration_weights_c(g,
                                         interaction,
