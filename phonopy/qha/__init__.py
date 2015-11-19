@@ -167,6 +167,9 @@ class QHA:
         plt.subplots_adjust(wspace=0.35)
         return plt
 
+    def get_eos(self):
+        return self._eos
+
     def get_helmholtz_volume(self):
         return self._free_energies[:self._max_t_index]
 

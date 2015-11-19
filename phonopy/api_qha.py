@@ -94,6 +94,9 @@ class PhonopyQHA:
     def plot_bulk_modulus(self):
         return self._bulk_modulus.plot()
 
+    def get_eos(self):
+        return self._qha.get_eos()
+
     def plot_qha(self, thin_number=10, volume_temp_exp=None):
         return self._qha.plot(thin_number=thin_number,
                               volume_temp_exp=volume_temp_exp)

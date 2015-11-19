@@ -34,96 +34,14 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import yaml
-try:
-    from yaml import CLoader as Loader
-except ImportError:
-    from yaml import Loader
-
 import numpy as np
 import sys
 from phonopy.units import *
 from phonopy.interface.vasp import read_vasp, write_vasp
 from phonopy import PhonopyQHA
-EQUIVALENCE_TOLERANCE = 1e-5
+from phonopy.file_IO import (read_thermal_properties_yaml, read_v_e,
+                             read_cp, read_ve)
 
-# Data parser
-def parse_data(filename):
-    data = []
-    for line in open(filename):
-        if line.strip() == '' or line.strip()[0] == '#':
-            continue
-        if '#' in line:
-            data.append([ float(x) for x in line.split('#')[0].split() ])
-        else:
-            data.append([ float(x) for x in line.split() ])
-    return np.array(data).transpose()
-
-# Parse heat capacity
-def parse_cp(filename):
-    return parse_data(filename)
-
-# Parse volume expansion
-def parse_ve(filename):
-    return parse_data(filename)
-
-# Read 'thermal_properties.yaml'
-def read_thermal_properties_yaml(filenames):
-    thermal_properties = []
-    for filename in filenames:
-        thermal_properties.append(
-            yaml.load(open(filename).read(), Loader=Loader)['thermal_properties'])
-    return thermal_properties
-
-def read_v_e(filename, factor, volume_factor, pressure=0.0):
-    volumes, electronic_energies = [ v for v in parse_data(filename) ]
-    volumes *= volume_factor * factor
-    electronic_energies *= factor
-    electronic_energies += volumes * pressure / EVAngstromToGPa
-    
-    return volumes, electronic_energies
-
-def is_temperatures_match(temperatures):
-    for t in temperatures:
-        if len(t) != len(temperatures[0]):
-            return False
-        if (abs(t[0] - temperatures[0][0]) > EQUIVALENCE_TOLERANCE or
-            abs(t[-1] - temperatures[0][-1]) > EQUIVALENCE_TOLERANCE):
-            return False
-
-    return True
-    
-def read_data_from_thermal_properties(filenames,
-                                      factor):
-    thermal_properties = read_thermal_properties_yaml(filenames)
-    temperatures = [v['temperature'] for v in thermal_properties[0]]
-    temp = []
-    cv = []
-    entropy = []
-    fe_phonon = []
-    for i in range(len(volumes)):
-        temp.append([v['temperature'] for v in thermal_properties[i]])
-        cv.append([v['heat_capacity'] for v in thermal_properties[i]])
-        entropy.append([v['entropy'] for v in thermal_properties[i]])
-        fe_phonon.append([v['free_energy'] for v in thermal_properties[i]])
-
-
-    if is_temperatures_match(temp):
-        cv = np.array(cv).T * factor
-        entropy = np.array(entropy).T * factor
-        fe_phonon = np.array(fe_phonon).T * factor
-    else:
-        print('')
-        print("Check your input files")
-        print("Disagreement of temperature range or step")
-        for t, fname in zip(temp, filenames):
-            print("%s: Range [ %d, %d ], Step %f" %
-                  (fname, int(t[0]), int(t[-1]), t[1] - t[0]))
-        print('')
-        print("Stop phonopy-qha")
-        sys.exit(1)
-
-    return temperatures, cv, entropy, fe_phonon
 
 def create_unitcells(unitcell_filename,
                      plus_percent=10.0,
@@ -232,7 +150,6 @@ if options.is_graph_save:
 ####################
 # Create unitcells #
 ####################
-
 if options.is_create_unitcells:
     if options.create_unitcells_range:
         plus, minus, num_div = options.create_unitcells_range.split()
@@ -241,14 +158,13 @@ if options.is_create_unitcells:
         create_unitcells(args[0])
     sys.exit(0)
 
-####################
-# Data preparation #
-####################
-# read data from files
+########################
+# Read data from files #
+########################
 volumes, electronic_energies = read_v_e(args[0],
-                                        options.factor,
-                                        options.volume_factor,
-                                        options.pressure)
+                                        factor=options.factor,
+                                        volume_factor=options.volume_factor,
+                                        pressure=options.pressure)
 if options.energy_shift is not None:
     electronic_energies -= options.energy_shift
 
@@ -286,8 +202,8 @@ if len(volumes) != len(args[1:]):
 (temperatures,
  cv,
  entropy,
- fe_phonon) = read_data_from_thermal_properties(args[1:(len(volumes)+1)],
-                                                options.factor)
+ fe_phonon) = read_thermal_properties_yaml(args[1:(len(volumes)+1)],
+                                           factor=options.factor)
 
 ##########################
 # Analyzing and plotting #
@@ -347,14 +263,14 @@ if options.is_graph_save:
     if options.cp_filename is None:
         exp_data = None
     else:
-        exp_data = parse_cp(options.cp_filename)
+        exp_data = read_cp(options.cp_filename)
     phonopy_qha.plot_pdf_heat_capacity_P_numerical(exp_data=exp_data)
 
     # C_P vs Temperature (poly fit)
     if options.cp_filename is None:
         exp_data = None
     else:
-        exp_data = parse_cp(options.cp_filename)
+        exp_data = read_cp(options.cp_filename)
     phonopy_qha.plot_pdf_heat_capacity_P_polyfit(exp_data=exp_data)
 
     # Gruneisen parameter vs Temperature
