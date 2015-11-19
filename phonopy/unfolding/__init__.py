@@ -36,22 +36,20 @@ import numpy as np
 from phonopy.harmonic.dynmat_to_fc import get_commensurate_points
 from phonopy.structure.atoms import Atoms
 from phonopy.structure.cells import get_supercell
-from phonopy.structure.brillouin_zone import get_qpoints_in_Brillouin_zone
 
 class Unfolding:
     def __init__(self,
                  phonon,
-                 phonon_ideal,
+                 supercell_matrix,
+                 ideal_positions,
                  atom_mapping,
                  bands):
         self._phonon = phonon
-        self._phonon_ideal = phonon_ideal
+        self._supercell_matrix = supercell_matrix
+        self._ideal_positions = ideal_positions
         self._atom_mapping = atom_mapping
         self._bands = bands
         self._symprec = self._phonon.get_symmetry().get_symmetry_tolerance()
-        self._primitive = self._phonon_ideal.get_primitive()
-        smat = np.linalg.inv(self._primitive.get_primitive_matrix())
-        self._supercell_matrix = np.rint(smat).astype('intc')
         self._translations = None
         self._index_set = None
         self._qpoints = None
@@ -60,10 +58,7 @@ class Unfolding:
         self._eigvecs = None
 
     def run(self):
-        comm_points = get_commensurate_points(self._supercell_matrix)
-        prim_vecs = np.linalg.inv(self._primitive.get_cell()).T
-        comm_points_bz = get_qpoints_in_Brillouin_zone(prim_vecs, comm_points)
-        self._comm_points = np.array([q[0] for q in comm_points_bz])
+        self._comm_points = get_commensurate_points(self._supercell_matrix)
         self._set_translations()
         self._set_shifted_index_set()
         self._solve_phonon()
@@ -90,9 +85,7 @@ class Unfolding:
                       cell=np.diag([1, 1, 1]),
                       pbc=True)
         smat = self._supercell_matrix
-        translations = get_supercell(pcell, smat).get_scaled_positions()
-        translations -= np.floor(translations)
-        self._translations = translations
+        self._translations = get_supercell(pcell, smat).get_scaled_positions()
 
     def _set_shifted_index_set(self):
         index_set = []
@@ -101,14 +94,14 @@ class Unfolding:
         self._index_set = np.array(index_set)
 
     def _shift_indices(self, shift):
-        positions = self._phonon_ideal.get_supercell().get_scaled_positions()
+        positions = self._ideal_positions
         shifted = positions.copy() - shift
-        indices = []
-        for p in shifted:
+        indices = np.zeros(len(positions) * 3, dtype='intc')
+        for i, p in enumerate(shifted):
             diff = positions - p
             diff -= np.rint(diff)
-            indices.append(
-                np.nonzero((np.abs(diff) < self._symprec).all(axis=1))[0][0])
+            j = np.nonzero((np.abs(diff) < self._symprec).all(axis=1))[0][0]
+            indices[i * 3:(i + 1) * 3] = [j * 3 + k for k in range(3)]
         return indices
         
     def _solve_phonon(self):
@@ -122,28 +115,33 @@ class Unfolding:
             return False
 
     def _set_unfolding_weights(self):
-        unfolding_weights = []
-        for i, eigvecs in enumerate(self._eigvecs[0]):
-            print("%d " % i)
-            weights_at_q = []
-            for eigvec in eigvecs.T:
-                weights_at_q.append(self._get_unfolding_weight(eigvec))
-            unfolding_weights.append(weights_at_q)
-        self._unfolding_weights = np.array(unfolding_weights)
-        self._unfolding_weights /= self._unfolding_weights.shape[1]
-
-    def _get_unfolding_weight(self, eigvec):
+        unfolding_weights = np.zeros((len(self._eigvecs[0]),
+                                      self._eigvecs[0][0].shape[0],
+                                      len(self._comm_points)), dtype='double')
         trans = np.dot(self._supercell_matrix, self._translations.T).T
-        weights = []
-        for G in self._comm_points:
-            w_sum = 0.0
+        for i, eigvecs in enumerate(self._eigvecs[0]):
+            unfolding_weights[i] = self._get_unfolding_weight(eigvecs, trans)
+        self._unfolding_weights = unfolding_weights
+
+    def _get_unfolding_weight(self, eigvecs, trans):
+        weights = np.zeros((eigvecs.shape[0], len(self._comm_points)),
+                           dtype='complex128')
+        N = len(self._comm_points)
+        for i, G in enumerate(self._comm_points):
             for shift, indices in zip(trans, self._index_set):
                 phase = np.exp(2j * np.pi * np.dot(G, shift))
-                eigvec_shifted = eigvec.reshape((-1, 3))[indices].ravel()
-                w_sum += np.vdot(eigvec, eigvec_shifted) * phase
-            weights.append(w_sum)
+                eigvecs_shifted = eigvecs[indices, :]
+                weights[:, i] += np.einsum(
+                    'ij,ij->j', eigvecs.conj(), eigvecs_shifted) * phase / N
 
-        weights = np.array(weights)
+            ## Strainghtforward norm calculation (equivalent speed)
+            # eigvecs_shifted = np.zeros_like(eigvecs)
+            # for shift, indices in zip(trans, self._index_set):
+            #     phase = np.exp(2j * np.pi * np.dot(G, shift))
+            #     eigvecs_shifted += eigvecs[indices, :] * phase
+            # weights[:, i] = np.einsum(
+            #         'ij,ij->j', eigvecs_shifted.conj(), eigvecs_shifted) / N**2
+
         if (weights.imag > 1e-5).any():
             print("Phonopy warning: Encountered imaginary values.")
             return [None] * len(weights)

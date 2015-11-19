@@ -30,11 +30,18 @@ class TestUnfolding(unittest.TestCase):
         self._set_nac_params(phonon_ideal)
         supercell = phonon_ideal.get_supercell()
         primitive = phonon_ideal.get_primitive()
+        smat = np.linalg.inv(primitive.get_primitive_matrix())
+        supercell_matrix = np.rint(smat).astype('intc')
+
         phonon = self._get_phonon(np.eye(3, dtype='intc'), np.eye(3), supercell)
         self._set_nac_params(phonon, primitive)
         mapping = range(phonon.get_supercell().get_number_of_atoms())
 
-        unfolding = Unfolding(phonon, phonon_ideal, mapping, band)
+        unfolding = Unfolding(phonon,
+                              supercell_matrix,
+                              supercell.get_scaled_positions(),
+                              mapping,
+                              band)
         unfolding.run()
         comm_points = unfolding.get_commensurate_points()
         print(comm_points)
