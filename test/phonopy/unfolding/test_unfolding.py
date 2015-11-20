@@ -20,36 +20,37 @@ class TestUnfolding(unittest.TestCase):
     def tearDown(self):
         pass
     
-    def test_Unfolding(self):
-        nd = 10
+    # def test_Unfolding_NaCl(self):
+    #     self._run_unfolding()
+
+    def test_Unfolding_SC(self):
+        self._run_unfolding(unfolding_supercell_matrix=np.diag([4, 4, 4]))
+
+    def _run_unfolding(self, unfolding_supercell_matrix=[[-2, 2, 2],
+                                                         [2, -2, 2],
+                                                         [2, 2, -2]]):
+        nd = 50
         band = [np.array([[i - nd, 0, 0] for i in range(2 * nd + 1)],
                          dtype='double') / nd / 2]
         smat = np.diag([2, 2, 2])
         pmat = [[0, 0.5, 0.5], [0.5, 0, 0.5], [0.5, 0.5, 0]]
         phonon_ideal = self._get_phonon(smat, pmat, self._cell)
-        self._set_nac_params(phonon_ideal)
         supercell = phonon_ideal.get_supercell()
-        primitive = phonon_ideal.get_primitive()
-        smat = np.linalg.inv(primitive.get_primitive_matrix())
-        supercell_matrix = np.rint(smat).astype('intc')
-
         phonon = self._get_phonon(np.eye(3, dtype='intc'), np.eye(3), supercell)
-        self._set_nac_params(phonon, primitive)
+        # self._set_nac_params(phonon, primitive)
         mapping = range(phonon.get_supercell().get_number_of_atoms())
-
         unfolding = Unfolding(phonon,
-                              supercell_matrix,
-                              supercell.get_scaled_positions(),
+                              unfolding_supercell_matrix,
+                              supercell.get_scaled_positions(),  
                               mapping,
                               band)
         unfolding.run()
         comm_points = unfolding.get_commensurate_points()
-        print(comm_points)
         # (nd + 1, num_atom_super / num_atom_prim, num_atom_super * 3)
         weights = unfolding.get_unfolding_weights() 
         freqs = unfolding.get_frequencies()
 
-        P = primitive.get_primitive_matrix()
+        P = np.linalg.inv(unfolding_supercell_matrix)
         print(weights.shape)
         self._write_wieghts(band, freqs, comm_points, weights, P)
 
@@ -61,17 +62,25 @@ class TestUnfolding(unittest.TestCase):
                 for j, f in enumerate(freqs[i]):
                     for k, G in enumerate(comm_points_super):
                         q_ext = q + G
-                        if (np.abs(q_ext[1:]) > 1e-5).any():
-                            continue
                         uw = weights[i, j, k]
                         q_k = np.dot(P.T, q_ext)
-                        lines.append("%f %f %f  %f  %f" %
-                                     (q_k[0], q_k[1], q_k[2], f, uw))
+                        q_k -= np.rint(q_k)
+                        q_q = np.dot(P.T, q)
+                        q_g = np.dot(P.T, G)
+                        # if (np.abs(q_k[1] - q_k[2]) > 1e-5 or
+                        #     np.abs(q_k[0]) > 1e-5):
+                        #     continue
+                        if (np.abs(q_k[1]) > 1e-5 or
+                            np.abs(q_k[2]) > 1e-5):
+                            continue
+                        lines.append("%f %f %f  %f %f %f  %f %f %f  %f  %f" %
+                                     (q_k[0], q_k[1], q_k[2],
+                                      q_q[0], q_q[1], q_q[2],
+                                      q_g[0], q_g[1], q_g[2],
+                                      f, uw))
             w.write("\n".join(lines))
-        
+
     def _get_phonon(self, smat, pmat, cell):
-        print smat
-        print pmat
         phonon = Phonopy(cell,
                          smat,
                          primitive_matrix=pmat,

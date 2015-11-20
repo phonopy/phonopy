@@ -45,11 +45,12 @@ class Unfolding:
                  atom_mapping,
                  bands):
         self._phonon = phonon
-        self._supercell_matrix = supercell_matrix
+        self._supercell_matrix = np.array(supercell_matrix, dtype='intc')
         self._ideal_positions = ideal_positions
         self._atom_mapping = atom_mapping
         self._bands = bands
         self._symprec = self._phonon.get_symmetry().get_symmetry_tolerance()
+        
         self._translations = None
         self._index_set = None
         self._qpoints = None
@@ -127,20 +128,21 @@ class Unfolding:
         weights = np.zeros((eigvecs.shape[0], len(self._comm_points)),
                            dtype='complex128')
         N = len(self._comm_points)
-        for i, G in enumerate(self._comm_points):
-            for shift, indices in zip(trans, self._index_set):
+        for shift, indices in zip(trans, self._index_set):
+            dot_eigs = np.einsum(
+                'ij,ij->j', eigvecs.conj(), eigvecs[indices, :]) / N
+            for i, G in enumerate(self._comm_points):
                 phase = np.exp(2j * np.pi * np.dot(G, shift))
-                eigvecs_shifted = eigvecs[indices, :]
-                weights[:, i] += np.einsum(
-                    'ij,ij->j', eigvecs.conj(), eigvecs_shifted) * phase / N
+                weights[:, i] += dot_eigs * phase
 
-            ## Strainghtforward norm calculation (equivalent speed)
-            # eigvecs_shifted = np.zeros_like(eigvecs)
-            # for shift, indices in zip(trans, self._index_set):
-            #     phase = np.exp(2j * np.pi * np.dot(G, shift))
-            #     eigvecs_shifted += eigvecs[indices, :] * phase
-            # weights[:, i] = np.einsum(
-            #         'ij,ij->j', eigvecs_shifted.conj(), eigvecs_shifted) / N**2
+        # # Strainghtforward norm calculation (equivalent speed)
+        # for i, G in enumerate(self._comm_points):
+        #     eigvecs_shifted = np.zeros_like(eigvecs)
+        #     for shift, indices in zip(trans, self._index_set):
+        #         phase = np.exp(2j * np.pi * np.dot(G, shift))
+        #         eigvecs_shifted += eigvecs[indices, :] * phase
+        #     weights[:, i] = np.einsum(
+        #             'ij,ij->j', eigvecs_shifted.conj(), eigvecs_shifted) / N**2
 
         if (weights.imag > 1e-5).any():
             print("Phonopy warning: Encountered imaginary values.")
