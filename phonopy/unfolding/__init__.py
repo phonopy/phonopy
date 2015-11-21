@@ -43,30 +43,54 @@ class Unfolding:
                  supercell_matrix,
                  ideal_positions,
                  atom_mapping,
-                 bands):
+                 qpoints):
         self._phonon = phonon
         self._supercell_matrix = np.array(supercell_matrix, dtype='intc')
         self._ideal_positions = ideal_positions
         self._atom_mapping = atom_mapping
-        self._bands = bands
+        self._qpoints = qpoints
         self._symprec = self._phonon.get_symmetry().get_symmetry_tolerance()
         
-        self._translations = None
+        self._trans_s = None
+        self._trans_p = None
+        self._comm_points = None
         self._index_set = None
-        self._qpoints = None
-        self._distances = None
         self._freqs = None
         self._eigvecs = None
+        self._N = None
 
-    def run(self):
+        self._weights = None
+        self._q_index = None
+
+    def __iter__(self):
+        return self
+
+    def run(self, verbose=False):
+        self.prepare()
+        self._q_index = 0
+        for x in self:
+            if verbose:
+                print(self._q_index)
+
+    def next(self):
+        if self._q_index == len(self._eigvecs):
+            raise StopIteration
+        else:
+            self._weights[self._q_index] = self._get_unfolding_weight()
+            self._q_index += 1
+            return self._weights[self._q_index - 1]
+
+    def prepare(self):
         self._comm_points = get_commensurate_points(self._supercell_matrix)
         self._set_translations()
         self._set_shifted_index_set()
         self._solve_phonon()
-        self._set_unfolding_weights()
+        self._weights = np.zeros(
+            (len(self._eigvecs), self._eigvecs[0].shape[0], self._N),
+            dtype='double')
 
     def get_translations(self):
-        return self._translations
+        return self._trans_s
 
     def get_commensurate_points(self):
         return self._comm_points
@@ -75,10 +99,10 @@ class Unfolding:
         return self._index_set
 
     def get_unfolding_weights(self):
-        return self._unfolding_weights
+        return self._weights
 
     def get_frequencies(self):
-        return self._freqs[0]
+        return self._freqs
 
     def _set_translations(self):
         pcell = Atoms(numbers=[1],
@@ -86,66 +110,51 @@ class Unfolding:
                       cell=np.diag([1, 1, 1]),
                       pbc=True)
         smat = self._supercell_matrix
-        self._translations = get_supercell(pcell, smat).get_scaled_positions()
+        self._trans_s = get_supercell(pcell, smat).get_scaled_positions()
+        self._trans_p = np.dot(self._trans_s, self._supercell_matrix.T)
+        self._N = len(self._trans_s)
 
     def _set_shifted_index_set(self):
-        index_set = []
-        for shift in self._translations:
-            index_set.append(self._shift_indices(shift))
-        self._index_set = np.array(index_set)
+        index_set = np.zeros((self._N, len(self._ideal_positions) * 3),
+                             dtype='intc')
+        for i, shift in enumerate(self._trans_s):
+            for j, p in enumerate(self._ideal_positions - shift):
+                diff = self._ideal_positions - p
+                diff -= np.rint(diff)
+                k = np.nonzero((np.abs(diff) < self._symprec).all(axis=1))[0][0]
+                l = self._atom_mapping[k]
+                index_set[i, j * 3:(j + 1) * 3] = np.arange(l * 3, (l + 1) * 3)
+        self._index_set = index_set
 
-    def _shift_indices(self, shift):
-        positions = self._ideal_positions
-        shifted = positions.copy() - shift
-        indices = np.zeros(len(positions) * 3, dtype='intc')
-        for i, p in enumerate(shifted):
-            diff = positions - p
-            diff -= np.rint(diff)
-            j = np.nonzero((np.abs(diff) < self._symprec).all(axis=1))[0][0]
-            indices[i * 3:(i + 1) * 3] = [j * 3 + k for k in range(3)]
-        return indices
-        
     def _solve_phonon(self):
-        if (self._phonon.set_band_structure(self._bands, is_eigenvectors=True)):
-            (self._qpoints,
-             self._distances,
-             self._freqs,
-             self._eigvecs) = self._phonon.get_band_structure()
+        if (self._phonon.set_qpoints_phonon(self._qpoints, is_eigenvectors=True)):
+            self._freqs, self._eigvecs = self._phonon.get_qpoints_phonon()
         else:
             print("Solving phonon failed.")
             return False
 
-    def _set_unfolding_weights(self):
-        unfolding_weights = np.zeros((len(self._eigvecs[0]),
-                                      self._eigvecs[0][0].shape[0],
-                                      len(self._comm_points)), dtype='double')
-        trans = np.dot(self._supercell_matrix, self._translations.T).T
-        for i, eigvecs in enumerate(self._eigvecs[0]):
-            unfolding_weights[i] = self._get_unfolding_weight(eigvecs, trans)
-        self._unfolding_weights = unfolding_weights
-
-    def _get_unfolding_weight(self, eigvecs, trans):
-        weights = np.zeros((eigvecs.shape[0], len(self._comm_points)),
-                           dtype='complex128')
-        N = len(self._comm_points)
-        for shift, indices in zip(trans, self._index_set):
+    def _get_unfolding_weight(self):
+        eigvecs = self._eigvecs[self._q_index]
+        weights = np.zeros((eigvecs.shape[0], self._N), dtype='complex128')
+        for shift, indices in zip(self._trans_p, self._index_set):
             dot_eigs = np.einsum(
-                'ij,ij->j', eigvecs.conj(), eigvecs[indices, :]) / N
+                'ij,ij->j', eigvecs.conj(), eigvecs[indices, :])
             for i, G in enumerate(self._comm_points):
                 phase = np.exp(2j * np.pi * np.dot(G, shift))
                 weights[:, i] += dot_eigs * phase
+        weights /= self._N
 
         # # Strainghtforward norm calculation (equivalent speed)
         # for i, G in enumerate(self._comm_points):
         #     eigvecs_shifted = np.zeros_like(eigvecs)
-        #     for shift, indices in zip(trans, self._index_set):
+        #     for shift, indices in zip(self._trans_p, self._index_set):
         #         phase = np.exp(2j * np.pi * np.dot(G, shift))
         #         eigvecs_shifted += eigvecs[indices, :] * phase
         #     weights[:, i] = np.einsum(
-        #             'ij,ij->j', eigvecs_shifted.conj(), eigvecs_shifted) / N**2
+        #             'ij,ij->j', eigvecs_shifted.conj(), eigvecs_shifted)
+        # weights /= self._N**2
 
         if (weights.imag > 1e-5).any():
             print("Phonopy warning: Encountered imaginary values.")
-            return [None] * len(weights)
 
         return weights.real
