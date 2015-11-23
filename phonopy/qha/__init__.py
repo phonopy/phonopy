@@ -78,7 +78,7 @@ class BulkModulus:
         vols = self._volumes
         plt.plot(vols, self._electronic_energies, 'bo', markersize=4)
         volume_points = np.linspace(min(vols), max(vols), 201)
-        plt.plot(volume_points, self._eos(volume_points, *ep), 'b-')
+        plt.plot(volume_points, self._eos(volume_points, *ep), 'r-')
         return plt
 
 
@@ -173,10 +173,23 @@ class QHA:
     def get_helmholtz_volume(self):
         return self._free_energies[:self._max_t_index]
 
-    def plot_helmholtz_volume(self, thin_number=10):
-        import matplotlib.pyplot as plt
-        self._plot_helmholtz_volume(plt, thin_number=thin_number)
-        return plt
+    def plot_helmholtz_volume(self,
+                              thin_number=10,
+                              plt=None,
+                              xlabel=r'Volume $(\AA^3)$',
+                              ylabel='Free energy'):
+        if plt is None:
+            import matplotlib.pyplot as _plt
+            self._plot_helmholtz_volume(_plt,
+                                        thin_number=thin_number,
+                                        xlabel=xlabel,
+                                        ylabel=ylabel)
+            return _plt
+        else:
+            self._plot_helmholtz_volume(plt,
+                                        thin_number=thin_number,
+                                        xlabel=xlabel,
+                                        ylabel=ylabel)
 
     def plot_pdf_helmholtz_volume(self,
                                   thin_number=10,
@@ -208,10 +221,13 @@ class QHA:
     def get_volume_temperature(self):
         return self._equiv_volumes[:self._max_t_index]
 
-    def plot_volume_temperature(self, exp_data=None):
-        import matplotlib.pyplot as plt
-        self._plot_volume_temperature(plt, exp_data=exp_data)
-        return plt
+    def plot_volume_temperature(self, exp_data=None, plt=None):
+        if plt is None:
+            import matplotlib.pyplot as _plt
+            self._plot_volume_temperature(_plt, exp_data=exp_data)
+            return _plt
+        else:
+            self._plot_volume_temperature(plt, exp_data=exp_data)
 
     def plot_pdf_volume_temperature(self,
                                     exp_data=None,
@@ -239,10 +255,13 @@ class QHA:
     def get_thermal_expansion(self):
         return self._thermal_expansions[:self._max_t_index]
 
-    def plot_thermal_expansion(self):
-        import matplotlib.pyplot as plt
-        self._plot_thermal_expansion(plt)
-        return plt
+    def plot_thermal_expansion(self, plt=None):
+        if plt is None:
+            import matplotlib.pyplot as _plt
+            self._plot_thermal_expansion(_plt)
+            return _plt
+        else:
+            self._plot_thermal_expansion(plt)
 
     def plot_pdf_thermal_expansion(self, filename='thermal_expansion.pdf'):
         import matplotlib.pyplot as plt
@@ -268,13 +287,18 @@ class QHA:
     def get_volume_expansion(self):
         return self._volume_expansions[:self._max_t_index]
 
-    def plot_volume_expansion(self, exp_data=None, symbol='o'):
+    def plot_volume_expansion(self, exp_data=None, symbol='o', _plt=None):
         if self._temperatures[self._max_t_index] > 300:
-            import matplotlib.pyplot as plt
-            self._plot_volume_expansion(plt,
-                                        exp_data=exp_data,
-                                        symbol=symbol)
-            return plt
+            if plt is None:
+                import matplotlib.pyplot as _plt
+                self._plot_volume_expansion(_plt,
+                                            exp_data=exp_data,
+                                            symbol=symbol)
+                return plt
+            else:
+                self._plot_volume_expansion(plt,
+                                            exp_data=exp_data,
+                                            symbol=symbol)
         else:
             return None
 
@@ -309,10 +333,17 @@ class QHA:
     def get_gibbs_temperature(self):
         return self._equiv_energies[:self._max_t_index]
 
-    def plot_gibbs_temperature(self):
-        import matplotlib.pyplot as plt
-        self._plot_gibbs_temperature(plt)
-        return plt
+    def plot_gibbs_temperature(self,
+                               plt=None,
+                               xlabel='Temperature (K)',
+                               ylabel='Gibbs free energy'):
+
+        if plt is None:
+            import matplotlib.pyplot as _plt
+            self._plot_gibbs_temperature(_plt, xlabel=xlabel, ylabel=ylabel)
+            return _plt
+        else:
+            self._plot_gibbs_temperature(plt, xlabel=xlabel, ylabel=ylabel)
 
     def plot_pdf_gibbs_temperature(self, filename='gibbs-temperature.pdf'):
         import matplotlib.pyplot as plt
@@ -338,10 +369,20 @@ class QHA:
     def get_bulk_modulus_temperature(self):
         return self._equiv_bulk_modulus[:self._max_t_index]
 
-    def plot_bulk_modulus_temperature(self):
-        import matplotlib.pyplot as plt
-        self._plot_bulk_modulus_temperature(plt)
-        return plt
+    def plot_bulk_modulus_temperature(self,
+                                      plt=None,
+                                      xlabel='Temperature (K)',
+                                      ylabel='Bulk modulus'):
+        if plt is None:
+            import matplotlib.pyplot as _plt
+            self._plot_bulk_modulus_temperature(_plt,
+                                                xlabel=xlabel,
+                                                ylabel=ylabel)
+            return _plt
+        else:
+            self._plot_bulk_modulus_temperature(plt,
+                                                xlabel=xlabel,
+                                                ylabel=ylabel)
 
     def plot_pdf_bulk_modulus_temperature(
             self,
@@ -370,10 +411,13 @@ class QHA:
     def get_heat_capacity_P_numerical(self, exp_data=None):
         return self._cp_numerical[:self._max_t_index]
 
-    def plot_heat_capacity_P_numerical(self, exp_data=None):
-        import matplotlib.pyplot as plt
-        self._plot_heat_capacity_P_numerical(plt, exp_data=exp_data)
-        return plt
+    def plot_heat_capacity_P_numerical(self, Z=1, exp_data=None, plt=None):
+        if plt is None:
+            import matplotlib.pyplot as _plt
+            self._plot_heat_capacity_P_numerical(_plt, Z=Z, exp_data=exp_data)
+            return _plt
+        else:
+            import matplotlib.pyplot as plt
 
     def plot_pdf_heat_capacity_P_numerical(self,
                                            exp_data=None,
@@ -401,10 +445,13 @@ class QHA:
     def get_heat_capacity_P_polyfit(self):
         return self._cp_polyfit[:self._max_t_index]
 
-    def plot_heat_capacity_P_polyfit(self, exp_data=None):
-        import matplotlib.pyplot as plt
-        self._plot_heat_capacity_P_polyfit(plt, exp_data=exp_data)
-        return plt
+    def plot_heat_capacity_P_polyfit(self, Z=1, exp_data=None, plt=None):
+        if plt is None:
+            import matplotlib.pyplot as _plt
+            self._plot_heat_capacity_P_polyfit(_plt, Z=Z, exp_data=exp_data)
+            return _plt
+        else:
+            self._plot_heat_capacity_P_polyfit(plt, Z=Z, exp_data=exp_data)
 
     def plot_pdf_heat_capacity_P_polyfit(self,
                                          exp_data=None,
@@ -462,10 +509,13 @@ class QHA:
     def get_gruneisen_temperature(self):
         return self._gruneisen_parameters[:self._max_t_index]
 
-    def plot_gruneisen_temperature(self):
-        import matplotlib.pyplot as plt
-        self._plot_gruneisen_temperature(plt)
-        return plt
+    def plot_gruneisen_temperature(self, plt=None):
+        if plt is None:
+            import matplotlib.pyplot as _plt
+            self._plot_gruneisen_temperature(_plt)
+            return _plt
+        else:
+            self._plot_gruneisen_temperature(plt)
 
     def plot_pdf_gruneisen_temperature(self,
                                        filename='gruneisen-temperature.pdf'):
@@ -489,105 +539,153 @@ class QHA:
                                            self._gruneisen_parameters[i]))
         w.close()
 
-    def _plot_helmholtz_volume(self, plt, thin_number=10):
+    def _plot_helmholtz_volume(self,
+                               plt,
+                               thin_number=10,
+                               xlabel=r'Volume $(\AA^3)$',
+                               ylabel='Free energy'):
         volume_points = np.linspace(min(self._volumes),
                                     max(self._volumes),
                                     201)
         selected_volumes = []
         selected_energies = []
 
+        thin_index = 0
         for i, t in enumerate(self._temperatures[:self._max_t_index]):
             if i % thin_number == 0:
                 selected_volumes.append(self._equiv_volumes[i])
                 selected_energies.append(self._equiv_energies[i])
                 plt.plot(self._volumes,
                          self._free_energies[i],
-                         'bo', markersize=4)
+                         'bo', markeredgecolor='b', markersize=3)
                 plt.plot(volume_points,
                          self._eos(volume_points,
                                    *self._equiv_parameters[i]), 'b-')
+                thin_index = i
+
+        for i, j in enumerate((0, thin_index)):
+            plt.text(self._volumes[-2],
+                     self._free_energies[j][-1] + (1 - i * 2) * 0.1 - 0.05,
+                     "%dK" % int(self._temperatures[j]),
+                     fontsize=8)
 
         plt.plot(selected_volumes,
                  selected_energies,
-                 'rx-', markersize=8)
-        plt.xlabel(r'Volume [$\AA^3$]')
-        plt.ylabel('Free energy')
+                 'ro-', markeredgecolor='r', markersize=3)
+        plt.xlabel(xlabel)
+        plt.ylabel(ylabel)
 
-    def _plot_volume_temperature(self, plt, exp_data=None):
-        plt.xlabel('Temperature [K]')
-        plt.ylabel(r'Volume [$\AA^3$]')
+    def _plot_volume_temperature(self,
+                                 plt,
+                                 exp_data=None,
+                                 xlabel='Temperature (K)',
+                                 ylabel=r'Volume $(\AA^3)$'):
+        plt.xlabel(xlabel)
+        plt.ylabel(ylabel)
         plt.plot(self._temperatures[:self._max_t_index],
                  self._equiv_volumes[:self._max_t_index],
-                 'b-')
+                 'r-')
         # exp
         if exp_data:
             plt.plot(exp_data[0], exp_data[1], 'ro')
 
-    def _plot_thermal_expansion(self, plt):
+    def _plot_thermal_expansion(
+            self,
+            plt,
+            xlabel='Temperature (K)',
+            ylabel=r'Thermal expansion $\times 10^6 (\mathrm{K}^{-1})$'):
 
         beta = np.array(self._thermal_expansions) * 1e6
         plt.plot(self._temperatures[:self._max_t_index],
                  beta[:self._max_t_index],
-                 'b-')
-        plt.xlabel('Temperature [K]')
-        plt.ylabel('Thermal expansion x 1.0e6 [K^-1]')
+                 'r-')
+        plt.xlabel(xlabel)
+        plt.ylabel(ylabel)
 
-    def _plot_volume_expansion(self, plt, exp_data=None, symbol='o'):
+    def _plot_volume_expansion(
+            self,
+            plt,
+            exp_data=None,
+            symbol='o',
+            xlabel='Temperature (K)',
+            ylabel=r'Volume expansion $\Delta L/L_0 \, (L=V^{\,1/3})$'):
         plt.plot(self._temperatures[:self._max_t_index],
                  self._volume_expansions[:self._max_t_index],
-                 'b-')
+                 'r-')
 
         if exp_data:
             plt.plot(exp_data[0],
                      (exp_data[1] / exp_data[1][0]) ** (1.0 / 3) - 1,
                      symbol)
 
-        plt.xlabel('Temperature [K]')
-        plt.ylabel(r'Volume expansion $\Delta L/L_0 \, (L=V^{\,1/3})$')
+        plt.xlabel(xlabel)
+        plt.ylabel(ylabel)
         plt.xlim(self._temperatures[0],
                  self._temperatures[self._max_t_index])
 
-    def _plot_gibbs_temperature(self, plt):
-        plt.xlabel('Temperature [K]')
-        plt.ylabel('Gibbs free energy')
+    def _plot_gibbs_temperature(self,
+                                plt,
+                                xlabel='Temperature (K)',
+                                ylabel='Gibbs free energy'):
+        plt.xlabel(xlabel)
+        plt.ylabel(ylabel)
         plt.plot(self._temperatures[:self._max_t_index],
                  self._equiv_energies[:self._max_t_index],
-                 'b-')
+                 'r-')
 
-    def _plot_bulk_modulus_temperature(self, plt):
-        plt.xlabel('Temperature [K]')
-        plt.ylabel('Bulk modulus')
+    def _plot_bulk_modulus_temperature(self,
+                                       plt,
+                                       xlabel='Temperature (K)',
+                                       ylabel='Bulk modulus'):
+        plt.xlabel(xlabel)
+        plt.ylabel(ylabel)
         plt.plot(self._temperatures[:self._max_t_index],
                  self._equiv_bulk_modulus[:self._max_t_index],
-                 'b-')
+                 'r-')
 
-    def _plot_heat_capacity_P_numerical(self, plt, exp_data=None):
-        plt.xlabel('Temperature [K]')
-        plt.ylabel(r'$\mathrm{C_P [J/mol\cdot K]}$')
+    def _plot_heat_capacity_P_numerical(
+            self,
+            plt,
+            Z=1,
+            exp_data=None,
+            xlabel='Temperature (K)',
+            ylabel=r'$C\mathrm{_P}$ $\mathrm{(J/mol\cdot K)}$'):
+        plt.xlabel(xlabel)
+        plt.ylabel(ylabel)
         plt.plot(self._temperatures[:self._max_t_index],
-                 self._cp_numerical[:self._max_t_index],
-                 'b-')
+                 self._cp_numerical[:self._max_t_index] / Z,
+                 'r-')
 
         # exp
         if exp_data:
             plt.plot(exp_data[0], exp_data[1], 'ro')
 
-    def _plot_heat_capacity_P_polyfit(self, plt, exp_data=None):
-        plt.xlabel('Temperature [K]')
-        plt.ylabel(r'$\mathrm{C_P [J/mol\cdot K]}$')
+    def _plot_heat_capacity_P_polyfit(
+            self,
+            plt,
+            Z=1,
+            exp_data=None,
+            xlabel='Temperature (K)',
+            ylabel=r'$C\mathrm{_P}$ $\mathrm{(J/mol\cdot K)}$'):
+        plt.xlabel(xlabel)
+        plt.ylabel(ylabel)
         plt.plot(self._temperatures[:self._max_t_index],
-                 self._cp_polyfit[:self._max_t_index])
+                 self._cp_polyfit[:self._max_t_index] / Z,
+                 'r-')
 
         # exp
         if exp_data:
             plt.plot(exp_data[0], exp_data[1], 'ro')
 
-    def _plot_gruneisen_temperature(self, plt):
-        plt.xlabel('Temperature [K]')
-        plt.ylabel('Gruneisen parameter')
+    def _plot_gruneisen_temperature(self,
+                                    plt,
+                                    xlabel='Temperature (K)',
+                                    ylabel='Gruneisen parameter'):
+        plt.xlabel(xlabel)
+        plt.ylabel(ylabel)
         plt.plot(self._temperatures[:self._max_t_index],
                  self._gruneisen_parameters[:self._max_t_index],
-                 'b-')
+                 'r-')
 
     def _set_thermal_expansion(self):
         beta = [0.]
@@ -676,7 +774,7 @@ class QHA:
 
             for i, t in enumerate(temperatures):
                 if self._t_max + 1e-5 < t:
-                    max_t_index = i
+                    max_t_index = i + 1
                     break
 
             if (max_t_index > len(temperatures) - 3 or

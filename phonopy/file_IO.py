@@ -379,10 +379,13 @@ def read_thermal_properties_yaml(filenames, factor=1.0):
         from yaml import Loader
 
     thermal_properties = []
+    imag_ratios = []
     for filename in filenames:
-        thermal_properties.append(
-            yaml.load(open(filename).read(),
-                      Loader=Loader)['thermal_properties'])
+        tp_yaml = yaml.load(open(filename).read(), Loader=Loader)
+        thermal_properties.append(tp_yaml['thermal_properties'])
+        if 'num_modes' in tp_yaml:
+            imag_ratios.append(1 - (float(tp_yaml['num_integrated_modes']) /
+                                    tp_yaml['num_modes']))
 
     temperatures = [v['temperature'] for v in thermal_properties[0]]
     temp = []
@@ -411,7 +414,7 @@ def read_thermal_properties_yaml(filenames, factor=1.0):
         print("Stop phonopy-qha")
         sys.exit(1)
 
-    return temperatures, cv, entropy, fe_phonon
+    return temperatures, cv, entropy, fe_phonon, imag_ratios
 
 def read_cp(filename):
     return _parse_QHA_data(filename)
@@ -425,7 +428,7 @@ def read_v_e(filename,
              pressure=0.0):
     from phonopy.units import EVAngstromToGPa
 
-    volumes, electronic_energies = [v for v in _parse_QHA_data(filename)]
+    volumes, electronic_energies = _parse_QHA_data(filename)
     volumes *= volume_factor * factor
     electronic_energies *= factor
     electronic_energies += volumes * pressure / EVAngstromToGPa
@@ -448,9 +451,9 @@ def _parse_QHA_data(filename):
         if line.strip() == '' or line.strip()[0] == '#':
             continue
         if '#' in line:
-            data.append([ float(x) for x in line.split('#')[0].split() ])
+            data.append([float(x) for x in line.split('#')[0].split()])
         else:
-            data.append([ float(x) for x in line.split() ])
+            data.append([float(x) for x in line.split()])
     return np.array(data).transpose()
 
 

@@ -202,8 +202,9 @@ if len(volumes) != len(args[1:]):
 (temperatures,
  cv,
  entropy,
- fe_phonon) = read_thermal_properties_yaml(args[1:(len(volumes)+1)],
-                                           factor=options.factor)
+ fe_phonon,
+ imag_ratios) = read_thermal_properties_yaml(args[1:(len(volumes)+1)],
+                                             factor=options.factor)
 
 ##########################
 # Analyzing and plotting #
@@ -217,6 +218,10 @@ phonopy_qha = PhonopyQHA(volumes,
                          entropy=entropy,
                          t_max=options.t_max,
                          verbose=True)
+
+for filename, r in zip(args[1:(len(volumes)+1)], imag_ratios):
+    if r < 0.01:
+        print("Warning: %s has imaginary modes." % filename)
 
 if options.is_graph_plot and not options.is_graph_save:
     # Plot on display
@@ -285,3 +290,4 @@ phonopy_qha.write_bulk_modulus_temperature()
 phonopy_qha.write_heat_capacity_P_numerical()
 phonopy_qha.write_heat_capacity_P_polyfit()
 phonopy_qha.write_gruneisen_temperature()
+
