@@ -49,7 +49,8 @@ This is the result of silicon.
 -----------
 
 ``gaccum`` is very similar to ``kaccum``, but for
-:math:`\Gamma_\lambda(\omega_\lambda)`.
+:math:`\Gamma_\lambda(\omega_\lambda)`. The intensity is normalized by
+the number of grid points.
 
 .. |sflogo| image:: http://sflogo.sourceforge.net/sflogo.php?group_id=161614&type=1
             :target: http://sourceforge.net

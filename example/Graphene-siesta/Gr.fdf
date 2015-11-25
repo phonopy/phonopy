@@ -1,0 +1,42 @@
+
+PAO.EnergyShift 0.1 eV
+DM.Tolerance 0.0001
+DM.MixingWeight 0.2
+Use.New.Diagk .true.
+SystemLabel Gr
+PAO.BasisSize sz
+SolutionMethod diagon
+MaxSCFIterations 120
+SCF.MixAfterConvergence .false.
+MeshCutoff 400 Ry
+NumberOfSpecies 1
+DM.UseSaveDM False
+ElectronicTemperature 0.02 eV
+%block ChemicalSpeciesLabel
+1 6 C
+%endblock ChemicalSpeciesLabel
+
+
+%block kgrid_Monkhorst_Pack
+  30   0   0  0.0
+   0  30   0  0.0
+   0   0   1  0.0
+%endblock Kgrid_Monkhorst_Pack
+
+
+NumberOfAtoms       2
+LatticeConstant 1.000000 Ang
+AtomicCoordinatesFormat NotScaledCartesianAng
+%block LatticeVectors
+ 2.55000000000000 0.00000000000000 0.00000000000000
+ -1.27500000000000 2.20836477965032 0.00000000000000
+ 0.00000000000000 0.00000000000000 30.00000000000000
+%endblock LatticeVectors
+
+AtomicCoordinatesFormat NotScaledCartesianAng
+
+%block AtomicCoordinatesAndAtomicSpecies
+0.00000000000000     0.00000000000000     0.00000000000000 1 12.011000
+1.27500000000000     0.73612159321677     0.00000000000000 1 12.011000
+%endblock AtomicCoordinatesAndAtomicSpecies
+

@@ -1,7 +1,7 @@
-/* Copyright (C) 2015 Atsushi Togo */
+/* Copyright (C) 2014 Atsushi Togo */
 /* All rights reserved. */
 
-/* This file is part of phonopy. */
+/* This file was originally part of spglib and is part of kspclib. */
 
 /* Redistribution and use in source and binary forms, with or without */
 /* modification, are permitted provided that the following conditions */
@@ -32,18 +32,31 @@
 /* ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE */
 /* POSSIBILITY OF SUCH DAMAGE. */
 
-#include <lapacke.h>
-#include "phonoc_math.h"
+#ifndef __tetrahedron_method_H__
+#define __tetrahedron_method_H__
 
-lapack_complex_double
-phonoc_complex_prod(const lapack_complex_double a,
-		    const lapack_complex_double b)
-{
-  lapack_complex_double c;
-  c = lapack_make_complex_double
-    (lapack_complex_double_real(a) * lapack_complex_double_real(b) -
-     lapack_complex_double_imag(a) * lapack_complex_double_imag(b),
-     lapack_complex_double_imag(a) * lapack_complex_double_real(b) +
-     lapack_complex_double_real(a) * lapack_complex_double_imag(b));
-  return c;
-}
+#ifndef THMCONST
+#define THMCONST
+#endif
+
+void thm_get_relative_grid_address(int relative_grid_address[24][4][3],
+				   THMCONST double rec_lattice[3][3]);
+void thm_get_all_relative_grid_address(int relative_grid_address[4][24][4][3]);
+double thm_get_integration_weight(const double omega,
+				  THMCONST double tetrahedra_omegas[24][4],
+				  const char function);
+void
+thm_get_integration_weight_at_omegas(double *integration_weights,
+				     const int num_omegas,
+				     const double *omegas,
+				     THMCONST double tetrahedra_omegas[24][4],
+				     const char function);
+void thm_get_neighboring_grid_points(int neighboring_grid_points[],
+				     const int grid_point,
+				     THMCONST int relative_grid_address[][3],
+				     const int num_relative_grid_address,
+				     const int mesh[3],
+				     THMCONST int bz_grid_address[][3],
+				     const int bz_map[]);
+
+#endif

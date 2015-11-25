@@ -34,11 +34,10 @@
 
 #include <lapacke.h>
 #include <stdlib.h>
-#include "phonoc_array.h"
-#include "phonoc_math.h"
-#include "phonoc_utils.h"
-#include "phonon4_h/frequency_shift.h"
-#include "phonon4_h/real_to_reciprocal.h"
+#include <phonoc_array.h>
+#include <phonoc_utils.h>
+#include <phonon4_h/frequency_shift.h>
+#include <phonon4_h/real_to_reciprocal.h>
 
 static void get_fc4_normal_for_frequency_shift_at_gp
 (double *fc4_normal_real,

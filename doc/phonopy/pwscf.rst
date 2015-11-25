@@ -19,7 +19,7 @@ How to run
 
 A procedure of Pwscf-phonopy calculation is as follows:
 
-1) Read an Pwscf input file and create supercells with
+1) Read a Pwscf input file and create supercells with
    :ref:`pwscf_mode` option::
 
    % phonopy --pwscf -d --dim="2 2 2" -c NaCl.in

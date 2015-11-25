@@ -118,7 +118,10 @@ class Atoms:
             self.masses = np.array(masses, dtype='double')
 
     def get_masses(self):
-        return self.masses.copy()
+        if self.masses is None:
+            return None
+        else:
+            return self.masses.copy()
 
     def set_magnetic_moments(self, magmoms):
         if magmoms is None:
@@ -163,12 +166,54 @@ class Atoms:
                                  for s in self.symbols], dtype='intc')
         
     def _symbols_to_masses(self):
-        self.masses = np.array([atom_data[symbol_map[s]][3]
-                                for s in self.symbols], dtype='double')
+        masses = [atom_data[symbol_map[s]][3] for s in self.symbols]
+        if None in masses:
+            self.masses = None
+        else:
+            self.masses = np.array(masses, dtype='double')
 
+class PhonopyAtoms(Atoms):
+    def __init__(self,
+                 symbols=None,
+                 numbers=None, 
+                 masses=None,
+                 magmoms=None,
+                 scaled_positions=None,
+                 cell=None,
+                 atoms=None):
+        if atoms:
+            Atoms.__init__(self,
+                           numbers=atoms.get_atomic_numbers(),
+                           masses=atoms.get_masses(),
+                           magmoms=atoms.get_magnetic_moments(),
+                           scaled_positions=atoms.get_scaled_positions(),
+                           cell=atoms.get_cell(),
+                           pbc=True)
+        else:
+            Atoms.__init__(self,
+                           symbols=symbols,
+                           numbers=numbers,
+                           masses=masses,
+                           magmoms=magmoms,
+                           scaled_positions=scaled_positions,
+                           cell=cell,
+                           pbc=True)
+
+    def __str__(self):
+        lines = []
+        lines.append("lattice:")
+        for v, a in zip(self.cell, ('a', 'b', 'c')):
+            lines.append("- [ %22.16f, %22.16f, %22.16f ] # %s" %
+                         (v[0], v[1], v[2], a))
+        lines.append("points:")
+        for i, (s, v) in enumerate(zip(self.symbols, self.scaled_positions)):
+            lines.append("- symbol: %-2s # %d" % (s, i + 1))
+            lines.append("  coordinates: [ %19.16f, %19.16f, %19.16f ]" %
+                         tuple(v))
+        return "\n".join(lines)
 
 atom_data = [ 
-    [  0, "X", "X", 0], # 0
+    [  0, "X", "X", None], # 0
     [  1, "H", "Hydrogen", 1.00794], # 1
     [  2, "He", "Helium", 4.002602], # 2
     [  3, "Li", "Lithium", 6.941], # 3
@@ -211,7 +256,7 @@ atom_data = [
     [ 40, "Zr", "Zirconium", 91.224], # 40
     [ 41, "Nb", "Niobium", 92.90638], # 41
     [ 42, "Mo", "Molybdenum", 95.96], # 42
-    [ 43, "Tc", "Technetium", 0], # 43
+    [ 43, "Tc", "Technetium", None], # 43
     [ 44, "Ru", "Ruthenium", 101.07], # 44
     [ 45, "Rh", "Rhodium", 102.90550], # 45
     [ 46, "Pd", "Palladium", 106.42], # 46
@@ -229,7 +274,7 @@ atom_data = [
     [ 58, "Ce", "Cerium", 140.116], # 58
     [ 59, "Pr", "Praseodymium", 140.90765], # 59
     [ 60, "Nd", "Neodymium", 144.242], # 60
-    [ 61, "Pm", "Promethium", 0], # 61
+    [ 61, "Pm", "Promethium", None], # 61
     [ 62, "Sm", "Samarium", 150.36], # 62
     [ 63, "Eu", "Europium", 151.964], # 63
     [ 64, "Gd", "Gadolinium", 157.25], # 64
@@ -252,41 +297,41 @@ atom_data = [
     [ 81, "Tl", "Thallium", 204.3833], # 81
     [ 82, "Pb", "Lead", 207.2], # 82
     [ 83, "Bi", "Bismuth", 208.98040], # 83
-    [ 84, "Po", "Polonium", 0], # 84
-    [ 85, "At", "Astatine", 0], # 85
-    [ 86, "Rn", "Radon", 0], # 86
-    [ 87, "Fr", "Francium", 0], # 87
-    [ 88, "Ra", "Radium", 0], # 88
-    [ 89, "Ac", "Actinium", 0], # 89
+    [ 84, "Po", "Polonium", None], # 84
+    [ 85, "At", "Astatine", None], # 85
+    [ 86, "Rn", "Radon", None], # 86
+    [ 87, "Fr", "Francium", None], # 87
+    [ 88, "Ra", "Radium", None], # 88
+    [ 89, "Ac", "Actinium", None], # 89
     [ 90, "Th", "Thorium", 232.03806], # 90
     [ 91, "Pa", "Protactinium", 231.03588], # 91
     [ 92, "U", "Uranium", 238.02891], # 92
-    [ 93, "Np", "Neptunium", 0], # 93
-    [ 94, "Pu", "Plutonium", 0], # 94
-    [ 95, "Am", "Americium", 0], # 95
-    [ 96, "Cm", "Curium", 0], # 96
-    [ 97, "Bk", "Berkelium", 0], # 97
-    [ 98, "Cf", "Californium", 0], # 98
-    [ 99, "Es", "Einsteinium", 0], # 99
-    [100, "Fm", "Fermium", 0], # 100
-    [101, "Md", "Mendelevium", 0], # 101
-    [102, "No", "Nobelium", 0], # 102
-    [103, "Lr", "Lawrencium", 0], # 103
-    [104, "Rf", "Rutherfordium", 0], # 104
-    [105, "Db", "Dubnium", 0], # 105
-    [106, "Sg", "Seaborgium", 0], # 106
-    [107, "Bh", "Bohrium", 0], # 107
-    [108, "Hs", "Hassium", 0], # 108
-    [109, "Mt", "Meitnerium", 0], # 109
-    [110, "Ds", "Darmstadtium", 0], # 110
-    [111, "Rg", "Roentgenium", 0], # 111
-    [112, "Cn", "Copernicium", 0], # 112
-    [113, "Uut", "Ununtrium", 0], # 113
-    [114, "Uuq", "Ununquadium", 0], # 114
-    [115, "Uup", "Ununpentium", 0], # 115
-    [116, "Uuh", "Ununhexium", 0], # 116
-    [117, "Uus", "Ununseptium", 0], # 117
-    [118, "Uuo", "Ununoctium", 0], # 118
+    [ 93, "Np", "Neptunium", None], # 93
+    [ 94, "Pu", "Plutonium", None], # 94
+    [ 95, "Am", "Americium", None], # 95
+    [ 96, "Cm", "Curium", None], # 96
+    [ 97, "Bk", "Berkelium", None], # 97
+    [ 98, "Cf", "Californium", None], # 98
+    [ 99, "Es", "Einsteinium", None], # 99
+    [100, "Fm", "Fermium", None], # 100
+    [101, "Md", "Mendelevium", None], # 101
+    [102, "No", "Nobelium", None], # 102
+    [103, "Lr", "Lawrencium", None], # 103
+    [104, "Rf", "Rutherfordium", None], # 104
+    [105, "Db", "Dubnium", None], # 105
+    [106, "Sg", "Seaborgium", None], # 106
+    [107, "Bh", "Bohrium", None], # 107
+    [108, "Hs", "Hassium", None], # 108
+    [109, "Mt", "Meitnerium", None], # 109
+    [110, "Ds", "Darmstadtium", None], # 110
+    [111, "Rg", "Roentgenium", None], # 111
+    [112, "Cn", "Copernicium", None], # 112
+    [113, "Uut", "Ununtrium", None], # 113
+    [114, "Uuq", "Ununquadium", None], # 114
+    [115, "Uup", "Ununpentium", None], # 115
+    [116, "Uuh", "Ununhexium", None], # 116
+    [117, "Uus", "Ununseptium", None], # 117
+    [118, "Uuo", "Ununoctium", None], # 118
     ]
 
 symbol_map = {

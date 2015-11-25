@@ -35,7 +35,7 @@
 #ifndef __interaction_H__
 #define __interaction_H__
 
-#include "phonoc_array.h"
+#include <phonoc_array.h>
 
 void get_interaction(Darray *fc3_normal_squared,
 		     const Darray *frequencies,

@@ -145,7 +145,7 @@ def get_BZ_grid_points_by_rotations(grid_point,
                                     mesh,
                                     bz_map,
                                     mesh_shifts=[False, False, False]):
-    return _get_BZ_grid_points_by_rotations(
+    return spg.get_BZ_grid_points_by_rotations(
         grid_point,
         reciprocal_rotations,
         mesh,
@@ -217,9 +217,9 @@ def get_coarse_ir_grid_points(primitive,
         (coarse_grid_points,
          coarse_grid_weights,
          coarse_grid_address) = get_ir_grid_points(
-            coarse_mesh,
-            symmetry.get_pointgroup_operations(),
-            mesh_shifts=coarse_mesh_shifts)
+             coarse_mesh,
+             symmetry.get_pointgroup_operations(),
+             mesh_shifts=coarse_mesh_shifts)
     grid_points = from_coarse_to_dense_grid_points(
         mesh,
         mesh_divs,
@@ -228,11 +228,27 @@ def get_coarse_ir_grid_points(primitive,
         coarse_mesh_shifts=coarse_mesh_shifts)
     grid_address = get_grid_address(mesh)
     primitive_lattice = np.linalg.inv(primitive.get_cell())
-    spg.relocate_BZ_grid_address(grid_address,
-                                 mesh,
-                                 primitive_lattice)
+    bz_grid_address, _ = spg.relocate_BZ_grid_address(grid_address,
+                                                      mesh,
+                                                      primitive_lattice)
 
-    return grid_points, coarse_grid_weights, grid_address
+    return grid_points, coarse_grid_weights, bz_grid_address
+
+def get_number_of_triplets(primitive,
+                           mesh,
+                           grid_point,
+                           symprec=1e-5):
+    mesh = np.array(mesh, dtype='intc')
+    symmetry = Symmetry(primitive, symprec)
+    point_group = symmetry.get_pointgroup_operations()
+    primitive_lattice = np.linalg.inv(primitive.get_cell())
+    triplets_at_q, _, _, _, _, _ = get_triplets_at_q(
+        grid_point,
+        mesh,
+        point_group,
+        primitive_lattice)
+
+    return len(triplets_at_q)
 
 def get_grid_points_in_Brillouin_zone(primitive_vectors, # column vectors
                                       mesh,

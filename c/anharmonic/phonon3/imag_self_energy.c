@@ -35,9 +35,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include "phonoc_array.h"
-#include "phonoc_utils.h"
-#include "phonon3_h/imag_self_energy.h"
+#include <phonoc_array.h>
+#include <phonoc_utils.h>
+#include <phonon3_h/imag_self_energy.h>
 
 static double get_imag_self_energy_at_band(const int band_index,
 					   const Darray *fc3_normal_squared,

@@ -35,7 +35,7 @@
 #include <Python.h>
 #include <numpy/arrayobject.h>
 #include <lapacke.h>
-#include "phonoc_array.h"
+#include <phonoc_array.h>
 
 Iarray* convert_to_iarray(const PyArrayObject* npyary)
 {
@@ -43,10 +43,10 @@ Iarray* convert_to_iarray(const PyArrayObject* npyary)
   Iarray *ary;
 
   ary = (Iarray*) malloc(sizeof(Iarray));
-  for (i = 0; i < npyary->nd; i++) {
-    ary->dims[i] = npyary->dimensions[i];
+  for (i = 0; i < PyArray_NDIM(npyary); i++) {
+    ary->dims[i] = PyArray_DIMS(npyary)[i];
   }
-  ary->data = (int*)npyary->data;
+  ary->data = (int*)PyArray_DATA(npyary);
   return ary;
 }
 
@@ -56,10 +56,10 @@ Darray* convert_to_darray(const PyArrayObject* npyary)
   Darray *ary;
 
   ary = (Darray*) malloc(sizeof(Darray));
-  for (i = 0; i < npyary->nd; i++) {
-    ary->dims[i] = npyary->dimensions[i];
+  for (i = 0; i < PyArray_NDIM(npyary); i++) {
+    ary->dims[i] = PyArray_DIMS(npyary)[i];
   }
-  ary->data = (double*)npyary->data;
+  ary->data = (double*)PyArray_DATA(npyary);
   return ary;
 }
 
@@ -69,9 +69,9 @@ Carray* convert_to_carray(const PyArrayObject* npyary)
   Carray *ary;
 
   ary = (Carray*) malloc(sizeof(Carray));
-  for (i = 0; i < npyary->nd; i++) {
-    ary->dims[i] = npyary->dimensions[i];
+  for (i = 0; i < PyArray_NDIM(npyary); i++) {
+    ary->dims[i] = PyArray_DIMS(npyary)[i];
   }
-  ary->data = (lapack_complex_double*)npyary->data;
+  ary->data = (lapack_complex_double*)PyArray_DATA(npyary);
   return ary;
 }

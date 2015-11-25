@@ -1,5 +1,36 @@
-/* spacegroup.c */
 /* Copyright (C) 2010 Atsushi Togo */
+/* All rights reserved. */
+
+/* This file is part of spglib. */
+
+/* Redistribution and use in source and binary forms, with or without */
+/* modification, are permitted provided that the following conditions */
+/* are met: */
+
+/* * Redistributions of source code must retain the above copyright */
+/*   notice, this list of conditions and the following disclaimer. */
+
+/* * Redistributions in binary form must reproduce the above copyright */
+/*   notice, this list of conditions and the following disclaimer in */
+/*   the documentation and/or other materials provided with the */
+/*   distribution. */
+
+/* * Neither the name of the phonopy project nor the names of its */
+/*   contributors may be used to endorse or promote products derived */
+/*   from this software without specific prior written permission. */
+
+/* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS */
+/* "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT */
+/* LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS */
+/* FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE */
+/* COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, */
+/* INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, */
+/* BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; */
+/* LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER */
+/* CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT */
+/* LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN */
+/* ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE */
+/* POSSIBILITY OF SUCH DAMAGE. */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -18,6 +49,7 @@
 #include "debug.h"
 
 #define REDUCE_RATE 0.95
+#define INT_PREC 0.1
 
 static double change_of_basis_monocli[18][3][3] = {{{ 1, 0, 0 },
 						    { 0, 1, 0 },
@@ -156,9 +188,48 @@ static int spacegroup_to_hall_number[230] = {
   517, 518, 520, 521, 523, 524, 525, 527, 529, 530,
 };
 
-static Spacegroup search_spacegroup(SPGCONST Primitive * primitive,
+static double identity[3][3] = {{ 1, 0, 0 },
+				{ 0, 1, 0 },
+				{ 0, 0, 1 }};
+static double monocli_i2c[3][3] = {{ 1, 0,-1 },
+				   { 0, 1, 0 },
+				   { 1, 0, 0 }};
+static double monocli_a2c[3][3] = {{ 0, 0, 1 },
+				   { 0,-1, 0 },
+				   { 1, 0, 0 }};
+static double rhombo_obverse[3][3] = {{ 2./3,-1./3,-1./3 },
+				      { 1./3, 1./3,-2./3 },
+				      { 1./3, 1./3, 1./3 }};
+static double rhomb_reverse[3][3] = {{ 1./3,-2./3, 1./3 },
+				     { 2./3,-1./3,-1./3 },
+				     { 1./3, 1./3, 1./3 }};
+static double a2c[3][3] = {{ 0, 0, 1 },
+			   { 1, 0, 0 },
+			   { 0, 1, 0 }};
+static double b2c[3][3] = {{ 0, 1, 0 },
+			   { 0, 0, 1 },
+			   { 1, 0, 0 }};
+
+static double A_mat[3][3] = {{    1,    0,    0},
+			     {    0, 1./2,-1./2},
+			     {    0, 1./2, 1./2}};
+static double C_mat[3][3] = {{ 1./2, 1./2,    0},
+			     {-1./2, 1./2,    0},
+			     {    0,    0,    1}};
+static double R_mat[3][3] = {{ 2./3,-1./3,-1./3 },
+			     { 1./3, 1./3,-2./3 },
+			     { 1./3, 1./3, 1./3 }};
+static double I_mat[3][3] = {{-1./2, 1./2, 1./2 },
+			     { 1./2,-1./2, 1./2 },
+			     { 1./2, 1./2,-1./2 }};
+static double F_mat[3][3] = {{    0, 1./2, 1./2 },
+			     { 1./2,    0, 1./2 },
+			     { 1./2, 1./2,    0 }};
+
+static Spacegroup search_spacegroup(SPGCONST Cell * primitive,
 				    const int candidates[],
-				    const int num_candidates);
+				    const int num_candidates,
+				    const double symprec);
 static Spacegroup get_spacegroup(const int hall_number,
 				 const double origin_shift[3],
 				 SPGCONST double conv_lattice[3][3]);
@@ -169,12 +240,18 @@ static int iterative_search_hall_number(double origin_shift[3],
 					SPGCONST Cell * primitive,
 					SPGCONST Symmetry * symmetry,
 					const double symprec);
-static Symmetry * get_symmetry_settings(double conv_lattice[3][3],
-					Pointgroup *pointgroup,
-					Centering *centering,
-					SPGCONST double primitive_lattice[3][3],
-					SPGCONST Symmetry * symmetry,
-					const double symprec);
+static int change_basis_tricli(int int_transform_mat[3][3],
+			       SPGCONST double conv_lattice[3][3],
+			       SPGCONST double primitive_lattice[3][3],
+			       const double symprec);
+static int change_basis_monocli(int int_transform_mat[3][3],
+				SPGCONST double conv_lattice[3][3],
+				SPGCONST double primitive_lattice[3][3],
+				const double symprec);
+static Symmetry *
+get_initial_conventional_symmetry(const Centering centering,
+				  SPGCONST double transform_mat[3][3],
+				  SPGCONST Symmetry * symmetry);
 static int search_hall_number(double origin_shift[3],
 			      double conv_lattice[3][3],
 			      const int candidates[],
@@ -185,7 +262,8 @@ static int search_hall_number(double origin_shift[3],
 static int match_hall_symbol_db(double origin_shift[3],
 				double lattice[3][3],
 				const int hall_number,
-				const Pointgroup *pointgroup,
+				const int pointgroup_number,
+				const Holohedry holohedry,
 				const Centering centering,
 				SPGCONST Symmetry *symmetry,
 				const double symprec);
@@ -206,6 +284,11 @@ static int match_hall_symbol_db_ortho(double origin_shift[3],
 static Symmetry * get_conventional_symmetry(SPGCONST double transform_mat[3][3],
 					    const Centering centering,
 					    const Symmetry *primitive_sym);
+static Centering get_centering(double correction_mat[3][3],
+			       SPGCONST int transform_mat[3][3],
+			       const Laue laue);
+static Centering get_base_center(SPGCONST int transform_mat[3][3]);
+
 
 /* NULL is returned if failed */
 Primitive * spa_get_spacegroup(Spacegroup * spacegroup,
@@ -227,9 +310,10 @@ Primitive * spa_get_spacegroup(Spacegroup * spacegroup,
       goto cont;
     }
 
-    *spacegroup = search_spacegroup(primitive,
+    *spacegroup = search_spacegroup(primitive->cell,
 				    spacegroup_to_hall_number,
-				    230);
+				    230,
+				    primitive->tolerance);
     if (spacegroup->number > 0) {
       break;
     }
@@ -268,9 +352,10 @@ Spacegroup spa_get_spacegroup_with_hall_number(SPGCONST Primitive * primitive,
   
   num_candidates = 1;
   candidate[0] = hall_number;
-  spacegroup = search_spacegroup(primitive,
+  spacegroup = search_spacegroup(primitive->cell,
 				 candidate,
-				 num_candidates);
+				 num_candidates,
+				 primitive->tolerance);
   if (spacegroup.number > 0) {
     goto ret;
   }
@@ -283,10 +368,66 @@ Spacegroup spa_get_spacegroup_with_hall_number(SPGCONST Primitive * primitive,
   return spacegroup;
 }
 
+/* Return NULL if failed */
+Cell * spa_transform_to_primitive(SPGCONST Cell * cell,
+				  SPGCONST double trans_mat[3][3],
+				  const Centering centering,
+				  const double symprec)
+{
+  int * mapping_table;
+  double tmat[3][3], tmat_inv[3][3], prim_lat[3][3];
+  Cell * primitive;
+
+  mapping_table = NULL;
+  primitive = NULL;
+
+  mat_inverse_matrix_d3(tmat_inv, trans_mat, 0);
+
+  switch (centering) {
+  case PRIMITIVE:
+    mat_copy_matrix_d3(tmat, tmat_inv);
+    break;
+  case A_FACE:
+    mat_multiply_matrix_d3(tmat, tmat_inv, A_mat);
+    break;
+  case C_FACE:
+    mat_multiply_matrix_d3(tmat, tmat_inv, C_mat);
+    break;
+  case FACE:
+    mat_multiply_matrix_d3(tmat, tmat_inv, F_mat);
+    break;
+  case BODY:
+    mat_multiply_matrix_d3(tmat, tmat_inv, I_mat);
+    break;
+  case R_CENTER:
+    mat_multiply_matrix_d3(tmat, tmat_inv, R_mat);
+    break;
+  default:
+    goto err;
+  }
+
+  if ((mapping_table = (int*) malloc(sizeof(int) * cell->size)) == NULL) {
+    warning_print("spglib: Memory could not be allocated ");
+    goto err;
+  }
+
+  mat_multiply_matrix_d3(prim_lat, cell->lattice, tmat);
+  primitive = cel_trim_cell(mapping_table, prim_lat, cell, symprec);
+
+  free(mapping_table);
+  mapping_table = NULL;
+
+  return primitive;
+
+ err:
+  return NULL;
+}
+
 /* Return spacegroup.number = 0 if failed */
-static Spacegroup search_spacegroup(SPGCONST Primitive * primitive,
+static Spacegroup search_spacegroup(SPGCONST Cell * primitive,
 				    const int candidates[],
-				    const int num_candidates)
+				    const int num_candidates,
+				    const double symprec)
 {
   int hall_number;
   double conv_lattice[3][3];
@@ -294,14 +435,13 @@ static Spacegroup search_spacegroup(SPGCONST Primitive * primitive,
   Spacegroup spacegroup;
   Symmetry *symmetry;
 
-  debug_print("search_spacegroup (tolerance = %f):\n", primitive->tolerance);
+  debug_print("search_spacegroup (tolerance = %f):\n", symprec);
 
   symmetry = NULL;
   hall_number = 0;
   spacegroup.number = 0;
 
-  if ((symmetry = sym_get_operation(primitive->cell,
-				    primitive->tolerance)) == NULL) {
+  if ((symmetry = sym_get_operation(primitive, symprec)) == NULL) {
     goto ret;
   }
 
@@ -309,9 +449,9 @@ static Spacegroup search_spacegroup(SPGCONST Primitive * primitive,
 					     conv_lattice,
 					     candidates,
 					     num_candidates,
-					     primitive->cell,
+					     primitive,
 					     symmetry,
-					     primitive->tolerance);
+					     symprec);
   sym_free_symmetry(symmetry);
   spacegroup = get_spacegroup(hall_number, origin_shift, conv_lattice);
 
@@ -422,26 +562,62 @@ static int search_hall_number(double origin_shift[3],
   Centering centering;
   Pointgroup pointgroup;
   Symmetry * conv_symmetry;
+  int int_transform_mat[3][3];
+  double correction_mat[3][3], transform_mat[3][3];
 
   debug_print("search_hall_number:\n");
 
   hall_number = 0;
   conv_symmetry = NULL;
 
-  if ((conv_symmetry = get_symmetry_settings(conv_lattice,
-					     &pointgroup,
-					     &centering,
-					     primitive_lattice,
-					     symmetry,
-					     symprec)) == NULL) {
+  pointgroup = ptg_get_transformation_matrix(int_transform_mat,
+					     symmetry->rot,
+					     symmetry->size);
+  if (pointgroup.number == 0) {
+    goto err;
+  }
+
+  mat_multiply_matrix_di3(conv_lattice, primitive_lattice, int_transform_mat);
+
+  if (pointgroup.laue == LAUE1) {
+    if (! change_basis_tricli(int_transform_mat,
+			      conv_lattice,
+			      primitive_lattice,
+			      symprec)) {
+      goto err;
+    }
+  }
+
+  if (pointgroup.laue == LAUE2M) {
+    if (! change_basis_monocli(int_transform_mat,
+			       conv_lattice,
+			       primitive_lattice,
+			       symprec)) {
+      goto err;
+    }
+  }
+
+  if ((centering = get_centering(correction_mat,
+				 int_transform_mat,
+				 pointgroup.laue)) == CENTERING_ERROR) {
+    goto err;
+  }
+
+  mat_multiply_matrix_id3(transform_mat, int_transform_mat, correction_mat);
+  mat_multiply_matrix_d3(conv_lattice, primitive_lattice, transform_mat);
+
+  if ((conv_symmetry = get_initial_conventional_symmetry(centering,
+							 transform_mat,
+							 symmetry)) == NULL) {
     goto err;
   }
 
   for (i = 0; i < num_candidates; i++) {
     if (match_hall_symbol_db(origin_shift,
-			     conv_lattice,
+			     conv_lattice, /* <-- modified only matched */
 			     candidates[i],
-			     &pointgroup,
+			     pointgroup.number,
+			     pointgroup.holohedry,
 			     centering,
 			     conv_symmetry,
 			     symprec)) {
@@ -458,93 +634,91 @@ static int search_hall_number(double origin_shift[3],
   return 0;
 }
 
-/* Return NULL if failed */
-static Symmetry * get_symmetry_settings(double conv_lattice[3][3],
-					Pointgroup *pointgroup,
-					Centering *centering,
-					SPGCONST double primitive_lattice[3][3],
-					SPGCONST Symmetry * symmetry,
-					const double symprec)
+/* Triclinic: Niggli cell reduction */
+/* Return 0 if failed */
+static int change_basis_tricli(int int_transform_mat[3][3],
+			       SPGCONST double conv_lattice[3][3],
+			       SPGCONST double primitive_lattice[3][3],
+			       const double symprec)
 {
   int i, j;
-  int int_transform_mat[3][3];
-  double correction_mat[3][3], transform_mat[3][3], inv_lattice[3][3], smallest_lattice[3][3];
   double niggli_cell[9];
+  double smallest_lattice[3][3], inv_lattice[3][3], transform_mat[3][3];
+
+  for (i = 0; i < 3; i++) {
+    for (j = 0; j < 3; j++) {
+      niggli_cell[i * 3 + j] = conv_lattice[i][j];
+    }
+  }
+
+  if (! niggli_reduce(niggli_cell, symprec * symprec)) {
+    return 0;
+  }
+
+  for (i = 0; i < 3; i++) {
+    for (j = 0; j < 3; j++) {
+      smallest_lattice[i][j] = niggli_cell[i * 3 + j];
+    }
+  }
+  if (mat_get_determinant_d3(smallest_lattice) < 0) {
+    for (i = 0; i < 3; i++) {
+      for (j = 0; j < 3; j++) {
+	smallest_lattice[i][j] = -smallest_lattice[i][j];
+      }
+    }
+  }
+  mat_inverse_matrix_d3(inv_lattice, primitive_lattice, 0);
+  mat_multiply_matrix_d3(transform_mat, inv_lattice, smallest_lattice);
+  mat_cast_matrix_3d_to_3i(int_transform_mat, transform_mat);
+
+  return 1;
+}
+
+/* Monoclinic: choose shortest a, c lattice vectors (|a| < |c|) */
+/* Return 0 if failed */
+static int change_basis_monocli(int int_transform_mat[3][3],
+				SPGCONST double conv_lattice[3][3],
+				SPGCONST double primitive_lattice[3][3],
+				const double symprec)
+{
+  double smallest_lattice[3][3], inv_lattice[3][3], transform_mat[3][3];
+
+  if (! lat_smallest_lattice_vector_2D(smallest_lattice,
+				     conv_lattice,
+				     1, /* unique axis of b */
+				     symprec)) {
+    return 0;
+  }
+
+  mat_inverse_matrix_d3(inv_lattice, primitive_lattice, 0);
+  mat_multiply_matrix_d3(transform_mat, inv_lattice, smallest_lattice);
+  mat_cast_matrix_3d_to_3i(int_transform_mat, transform_mat);
+  return 1;
+}
+
+/* Return NULL if failed */
+static Symmetry *
+get_initial_conventional_symmetry(const Centering centering,
+				  SPGCONST double transform_mat[3][3],
+				  SPGCONST Symmetry * symmetry)
+{
   Symmetry * conv_symmetry;
 
-  debug_print("get_symmetry_settings (tolerance = %f):\n", symprec);
+  debug_print("get_initial_conventional_symmetry\n");
 
   conv_symmetry = NULL;
   
-  *pointgroup = ptg_get_transformation_matrix(int_transform_mat,
-					      symmetry->rot,
-					      symmetry->size);
-
-  if (pointgroup->number < 1) {
-    *centering = NO_CENTER;
-    goto ret;
-  }
-
-  mat_multiply_matrix_di3(conv_lattice,
-			  primitive_lattice,
-			  int_transform_mat);
-
-  /* Triclinic: Niggli cell reduction */
-  if (pointgroup->laue == LAUE1) {
-    for (i = 0; i < 3; i++) {
-      for (j = 0; j < 3; j++) {
-  	niggli_cell[i * 3 + j] = conv_lattice[i][j];
-      }
-    }
-    niggli_reduce(niggli_cell, symprec * symprec);
-    for (i = 0; i < 3; i++) {
-      for (j = 0; j < 3; j++) {
-  	smallest_lattice[i][j] = niggli_cell[i * 3 + j];
-      }
-    }
-    if (mat_get_determinant_d3(smallest_lattice) < 0) {
-      for (i = 0; i < 3; i++) {
-	for (j = 0; j < 3; j++) {
-	  smallest_lattice[i][j] = -smallest_lattice[i][j];
-	}
-      }
-    }
-    mat_inverse_matrix_d3(inv_lattice, primitive_lattice, 0);
-    mat_multiply_matrix_d3(transform_mat, inv_lattice, smallest_lattice);
-    mat_cast_matrix_3d_to_3i(int_transform_mat, transform_mat);
-  }
-
-  /* Monoclinic: choose shortest a, c lattice vectors (|a| < |c|) */
-  if (pointgroup->laue == LAUE2M) {
-    if (lat_smallest_lattice_vector_2D(smallest_lattice,
-				       conv_lattice,
-				       1, /* unique axis of b */
-				       symprec)) {
-      mat_inverse_matrix_d3(inv_lattice, primitive_lattice, 0);
-      mat_multiply_matrix_d3(transform_mat, inv_lattice, smallest_lattice);
-      mat_cast_matrix_3d_to_3i(int_transform_mat, transform_mat);
-    }
-  }
-
-  *centering = lat_get_centering(correction_mat,
-				 int_transform_mat,
-				 pointgroup->laue);
-  
-  mat_multiply_matrix_id3(transform_mat, int_transform_mat, correction_mat);
-  mat_multiply_matrix_d3(conv_lattice, primitive_lattice, transform_mat);
-
-  if (*centering == R_CENTER) {
+  if (centering == R_CENTER) {
     /* hP for rhombohedral */
     conv_symmetry = get_conventional_symmetry(transform_mat,
-					      NO_CENTER,
+					      PRIMITIVE,
 					      symmetry);
   } else {
     conv_symmetry = get_conventional_symmetry(transform_mat,
-					      *centering,
+					      centering,
 					      symmetry);
   }
 
- ret:
   return conv_symmetry;
 }
 
@@ -552,7 +726,8 @@ static Symmetry * get_symmetry_settings(double conv_lattice[3][3],
 static int match_hall_symbol_db(double origin_shift[3],
 				double lattice[3][3],
 				const int hall_number,
-				const Pointgroup *pointgroup,
+				const int pointgroup_number,
+				const Holohedry holohedry,
 				const Centering centering,
 				SPGCONST Symmetry *symmetry,
 				const double symprec)
@@ -568,11 +743,11 @@ static int match_hall_symbol_db(double origin_shift[3],
   num_hall_types = (spacegroup_to_hall_number[spacegroup_type.number] -
 		    spacegroup_to_hall_number[spacegroup_type.number - 1]);
 
-  if (pointgroup->number != spacegroup_type.pointgroup_number) {
+  if (pointgroup_number != spacegroup_type.pointgroup_number) {
     goto err;
   }
 
-  switch (pointgroup->holohedry) {
+  switch (holohedry) {
   case MONOCLI:
     if (match_hall_symbol_db_monocli(origin_shift,
 				     lattice,
@@ -628,7 +803,7 @@ static int match_hall_symbol_db(double origin_shift[3],
       mat_multiply_matrix_d3(transform_mat, inv_lattice, changed_lattice);
 
       if ((changed_symmetry = get_conventional_symmetry(transform_mat,
-							NO_CENTER,
+							PRIMITIVE,
 							symmetry)) == NULL) {
 	goto err;
       }
@@ -674,7 +849,7 @@ static int match_hall_symbol_db(double origin_shift[3],
 			     lattice,
 			     change_of_basis_501);
       if ((changed_symmetry = get_conventional_symmetry(change_of_basis_501,
-							NO_CENTER,
+							PRIMITIVE,
 							symmetry)) == NULL) {
 	goto err;
       }
@@ -682,7 +857,7 @@ static int match_hall_symbol_db(double origin_shift[3],
       is_found = hal_match_hall_symbol_db(origin_shift,
 					  changed_lattice,
 					  hall_number,
-					  NO_CENTER,
+					  PRIMITIVE,
 					  changed_symmetry,
 					  symprec);
       sym_free_symmetry(changed_symmetry);
@@ -761,7 +936,7 @@ static int match_hall_symbol_db_monocli(double origin_shift[3],
   for (i = 0; i < 18; i++) {
     if (centering == C_FACE) {
       changed_centering = change_of_centering_monocli[i];
-    } else { /* suppose NO_CENTER */
+    } else { /* suppose PRIMITIVE */
       changed_centering = centering;
     }
 
@@ -783,7 +958,7 @@ static int match_hall_symbol_db_monocli(double origin_shift[3],
 
     if ((changed_symmetry =
 	 get_conventional_symmetry(change_of_basis_monocli[i],
-				   NO_CENTER,
+				   PRIMITIVE,
 				   symmetry)) == NULL) {
       goto err;
     }
@@ -861,7 +1036,7 @@ static int match_hall_symbol_db_ortho(double origin_shift[3],
     }
     
     if ((changed_symmetry = get_conventional_symmetry(change_of_basis_ortho[i],
-						      NO_CENTER,
+						      PRIMITIVE,
 						      symmetry)) == NULL) {
       goto err;
     }
@@ -889,8 +1064,7 @@ static Symmetry * get_conventional_symmetry(SPGCONST double transform_mat[3][3],
 					    const Symmetry *primitive_sym)
 {
   int i, j, k, multi, size;
-  double tmp_trans;
-  double tmp_matrix_d3[3][3], shift[4][3];
+  double inv_tmat[3][3], shift[4][3];
   double symmetry_rot_d3[3][3], primitive_sym_rot_d3[3][3];
   Symmetry *symmetry;
 
@@ -935,17 +1109,15 @@ static Symmetry * get_conventional_symmetry(SPGCONST double transform_mat[3][3],
     mat_cast_matrix_3d_to_3i(symmetry->rot[i], symmetry_rot_d3);
 
     /* translation in conventional cell: C = B^-1*P */
-    mat_inverse_matrix_d3(tmp_matrix_d3,
-			  transform_mat,
-			  0);
+    mat_inverse_matrix_d3(inv_tmat, transform_mat, 0);
     mat_multiply_matrix_vector_d3(symmetry->trans[i],
-				  tmp_matrix_d3,
+				  inv_tmat,
 				  primitive_sym->trans[i]);
   }
 
   multi = 1;
 
-  if (centering != NO_CENTER) {
+  if (centering != PRIMITIVE) {
     if (centering != FACE && centering != R_CENTER) {
       for (i = 0; i < 3; i++) {	shift[0][i] = 0.5; } /* BASE */
       if (centering == A_FACE) { shift[0][0] = 0; }
@@ -982,24 +1154,18 @@ static Symmetry * get_conventional_symmetry(SPGCONST double transform_mat[3][3],
 	mat_copy_matrix_i3(symmetry->rot[(i+1) * size + j],
 			   symmetry->rot[j]);
 	for (k = 0; k < 3; k++) {
-	  tmp_trans = symmetry->trans[j][k] + shift[i][k];
-	  symmetry->trans[(i+1) * size + j][k] = tmp_trans;
+	  symmetry->trans[(i+1) * size + j][k] =
+	    symmetry->trans[j][k] + shift[i][k];
 	}
       }
     }
   }
 
-
-  /* Reduce translations into -0 < trans < 1.0 */
   for (i = 0; i < multi; i++) {
     for (j = 0; j < size; j++) {
       for (k = 0; k < 3; k++) {
-  	tmp_trans = symmetry->trans[i * size + j][k];
-  	tmp_trans -= mat_Nint(tmp_trans);
-  	if (tmp_trans < 0) {
-  	  tmp_trans += 1.0;
-  	}
-  	symmetry->trans[i * size + j][k] = tmp_trans;
+  	symmetry->trans[i * size + j][k] =
+	  mat_Dmod1(symmetry->trans[i * size + j][k]);
       }
     }
   }
@@ -1007,3 +1173,126 @@ static Symmetry * get_conventional_symmetry(SPGCONST double transform_mat[3][3],
   return symmetry;
 }
 
+/* Return CENTERING_ERROR if failed */
+static Centering get_centering(double correction_mat[3][3],
+			       SPGCONST int transform_mat[3][3],
+			       const Laue laue)
+{
+  int det;
+  double trans_corr_mat[3][3];
+  Centering centering;
+
+  mat_copy_matrix_d3(correction_mat, identity);
+  det = abs(mat_get_determinant_i3(transform_mat));
+  debug_print("laue class: %d\n", laue);
+  debug_print("multiplicity: %d\n", det);
+
+  switch (det) {
+
+  case 1:
+    centering = PRIMITIVE;
+    break;
+
+  case 2:
+    centering = get_base_center(transform_mat);
+    if (centering == A_FACE) {
+      if (laue == LAUE2M) {
+	debug_print("Monocli A to C\n");
+	mat_copy_matrix_d3(correction_mat, monocli_a2c);
+      } else {
+	mat_copy_matrix_d3(correction_mat, a2c);
+      }
+      centering = C_FACE;
+    }
+    if (centering == B_FACE) {
+      mat_copy_matrix_d3(correction_mat, b2c);
+      centering = C_FACE;
+    }
+    if (laue == LAUE2M && centering == BODY) {
+      debug_print("Monocli I to C\n");
+      mat_copy_matrix_d3(correction_mat, monocli_i2c);
+      centering = C_FACE;
+    }
+    break;
+
+  case 3:
+    /* hP (a=b) but not hR (a=b=c) */
+    centering = R_CENTER;
+    mat_multiply_matrix_id3(trans_corr_mat, transform_mat, rhombo_obverse);
+    if (mat_is_int_matrix(trans_corr_mat, INT_PREC)) {
+      mat_copy_matrix_d3(correction_mat, rhombo_obverse);
+      debug_print("R-center observe setting\n");
+      debug_print_matrix_d3(trans_corr_mat);
+    }
+    mat_multiply_matrix_id3(trans_corr_mat, transform_mat, rhomb_reverse);
+    if (mat_is_int_matrix(trans_corr_mat, INT_PREC)) {
+      mat_copy_matrix_d3(correction_mat, rhomb_reverse);
+      debug_print("R-center reverse setting\n");
+      debug_print_matrix_d3(trans_corr_mat);
+    }
+    break;
+
+  case 4:
+    centering = FACE;
+    break;
+
+  default:
+    centering = CENTERING_ERROR;
+    break;
+  }
+
+  return centering;
+}
+
+static Centering get_base_center(SPGCONST int transform_mat[3][3])
+{
+  int i;
+  Centering centering = PRIMITIVE;
+
+  debug_print("lat_get_base_center\n");
+
+  /* C center */
+  for (i = 0; i < 3; i++) {
+    if (transform_mat[i][0] == 0 &&
+	transform_mat[i][1] == 0 &&
+	abs(transform_mat[i][2]) == 1) {
+      centering = C_FACE;
+      goto end;
+    }
+  }
+
+  /* A center */
+  for (i = 0; i < 3; i++) {
+    if (abs(transform_mat[i][0]) == 1 && 
+	transform_mat[i][1] == 0 &&
+	transform_mat[i][2] == 0) {
+      centering = A_FACE;
+      goto end;
+    }
+  }
+
+  /* B center */
+  for (i = 0; i < 3; i++) {
+    if (transform_mat[i][0] == 0 &&
+	abs(transform_mat[i][1]) == 1 && 
+	transform_mat[i][2] == 0) {
+      centering = B_FACE;
+      goto end;
+    }
+  }
+
+  /* body center */
+  if (abs(transform_mat[0][0]) +
+      abs(transform_mat[0][1]) + 
+      abs(transform_mat[0][2]) == 2) {
+    centering = BODY;
+    goto end;
+  }
+
+  /* This should not happen. */
+  warning_print("spglib: No centring was found (line %d, %s).\n", __LINE__, __FILE__);
+  return PRIMITIVE;
+
+ end:
+  return centering;
+}

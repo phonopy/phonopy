@@ -1,13 +1,13 @@
 import numpy as np
 from phonopy.structure.symmetry import Symmetry
 import phonopy.structure.spglib as spg
-from anharmonic.phonon3.interaction import get_dynamical_matrix, set_phonon_py
+from anharmonic.other.phonon import set_phonon_py
 from anharmonic.phonon3.triplets import get_grid_address, invert_grid_point
 from anharmonic.phonon3.imag_self_energy import occupation as be_func
 from anharmonic.phonon4.real_to_reciprocal import RealToReciprocal
 from phonopy.units import VaspToTHz
 from phonopy.units import Hbar, EV, Angstrom, THz, AMU
-from phonopy.harmonic.dynamical_matrix import DynamicalMatrix, DynamicalMatrixNAC, get_smallest_vectors
+from phonopy.harmonic.dynamical_matrix import get_smallest_vectors, get_dynamical_matrix
 
 class FrequencyShift:
     def __init__(self,

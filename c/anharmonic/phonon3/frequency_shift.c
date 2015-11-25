@@ -35,11 +35,10 @@
 #include <lapacke.h>
 #include <stdlib.h>
 #include <math.h>
-#include "phonoc_array.h"
-#include "phonoc_math.h"
-#include "phonoc_utils.h"
-#include "phonon3_h/frequency_shift.h"
-#include "phonon3_h/real_to_reciprocal.h"
+#include <phonoc_array.h>
+#include <phonoc_utils.h>
+#include <phonon3_h/frequency_shift.h>
+#include <phonon3_h/real_to_reciprocal.h>
 
 static double get_frequency_shift_at_band(const int band_index,
 					  const Darray *fc3_normal_squared,

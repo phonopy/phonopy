@@ -4,8 +4,12 @@ from phonopy.phonon.degeneracy import degenerate_sets
 from phonopy.units import THz, Angstrom
 from anharmonic.phonon3.conductivity import Conductivity
 from anharmonic.phonon3.collision_matrix import CollisionMatrix
-from anharmonic.phonon3.triplets import get_grid_points_by_rotations, get_BZ_grid_points_by_rotations
-from anharmonic.file_IO import write_kappa_to_hdf5, write_collision_to_hdf5, read_collision_from_hdf5, write_full_collision_matrix
+from anharmonic.phonon3.triplets import (get_grid_points_by_rotations,
+                                         get_BZ_grid_points_by_rotations)
+from anharmonic.file_IO import (write_kappa_to_hdf5,
+                                write_collision_to_hdf5,
+                                read_collision_from_hdf5,
+                                write_collision_eigenvalues_to_hdf5)
 from phonopy.units import THzToEv, Kb
 
 def get_thermal_conductivity_LBTE(
@@ -124,6 +128,8 @@ def _write_kappa(lbte, filename=None, log_level=0):
     kappa = lbte.get_kappa()
     mode_kappa = lbte.get_mode_kappa()
     
+    coleigs = lbte.get_collision_eigenvalues()
+
     for i, sigma in enumerate(sigmas):
         write_kappa_to_hdf5(temperatures,
                             mesh,
@@ -135,7 +141,15 @@ def _write_kappa(lbte, filename=None, log_level=0):
                             averaged_pp_interaction=ave_pp,
                             qpoint=qpoints,
                             sigma=sigma,
-                            filename=filename)
+                            filename=filename,
+                            verbose=log_level)
+        write_collision_eigenvalues_to_hdf5(temperatures,
+                                            mesh,
+                                            coleigs[i],
+                                            sigma=sigma,
+                                            filename=filename,
+                                            verbose=log_level)
+                                            
 
 def _set_collision_from_file(lbte,
                              indices='all',
@@ -284,6 +298,8 @@ class Conductivity_LBTE(Conductivity):
         self._mass_variances = None
         self._grid_point_count = None
 
+        self._collision_eigenvalues = None
+
         Conductivity.__init__(self,
                               interaction,
                               symmetry,
@@ -319,7 +335,10 @@ class Conductivity_LBTE(Conductivity):
         
     def get_collision_matrix(self):
         return self._collision_matrix
-                
+
+    def get_collision_eigenvalues(self):
+        return self._collision_eigenvalues
+        
     def get_averaged_pp_interaction(self):
         return self._averaged_pp_interaction
 
@@ -417,6 +436,12 @@ class Conductivity_LBTE(Conductivity):
                  len(self._temperatures),
                  num_grid_points, num_band, 3,
                  num_ir_grid_points, num_band, 3),
+                dtype='double')
+
+            self._collision_eigenvalues = np.zeros(
+                (len(self._sigmas),
+                 len(self._temperatures),
+                 num_ir_grid_points * num_band * 3),
                 dtype='double')
 
     def _set_collision_matrix_at_sigmas(self, i):
@@ -689,8 +714,7 @@ class Conductivity_LBTE(Conductivity):
             phono3c.inverse_collision_matrix_libflame(
                 self._collision_matrix, w, i_sigma, i_temp, self._pinv_cutoff)
 
-        for i, val in enumerate(w):
-            print i, val
+        self._collision_eigenvalues[i_sigma, i_temp] = w
 
     def _set_inv_reducible_collision_matrix(self, i_sigma, i_temp):
         t = self._temperatures[i_temp]

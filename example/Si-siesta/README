@@ -1,0 +1,24 @@
+This is an example of the Siesta interface.
+
+To create supercells with displacements:
+
+% phonopy --siesta -c Si.fdf -d --dim="3 3 3"
+
+A perfect 3x3x3 supercell (supercell.fdf) and one 3x3x3 supercells
+(supercell-xxx.in) of the conventional unit cell written in Si.fdf are
+created. In addition, disp.yaml file is created. After force
+calculation with the crystal structure in supercell-001.fdf, it is
+needed to create FORCE_SETS file by
+
+% phonopy --siesta -f disp-001/Si.FA
+
+Here the .FA file contains the forces on atoms calculated by Siesta. The
+disp.yaml file has to be put in the current directory. Now you can run
+phonon calculation, e.g.,
+
+% phonopy --siesta -c Si.fdf -p --dim="3 3 3" --band="1/2 1/2 1/2  0.0 0.0 0.0  0.0 1/2 1/2  1.0 1.0 1.0"
+
+You can run the run_example.sh bash script to perform all the above commands
+and run the Siesta calculation (need to have Siesta installed).
+Be aware that this calculation is not converged and serves only to show the workflow
+of a siesta-phonopy calculation.

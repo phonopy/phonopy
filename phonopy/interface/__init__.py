@@ -37,9 +37,10 @@ from phonopy.file_IO import parse_disp_yaml, write_FORCE_SETS
 
 def read_crystal_structure(filename=None,
                            interface_mode='vasp',
-                           chemical_symbols=None):
+                           chemical_symbols=None,
+                           yaml_mode=False):
     if filename is None:
-        unitcell_filename = get_default_cell_filename(interface_mode)
+        unitcell_filename = get_default_cell_filename(interface_mode, yaml_mode)
     else:
         unitcell_filename = filename
 
@@ -49,6 +50,11 @@ def read_crystal_structure(filename=None,
         else:
             return None, (unitcell_filename,)
     
+    if yaml_mode:
+        from phonopy.interface.phonopy_yaml import phonopyYaml
+        unitcell = phonopyYaml(unitcell_filename).get_atoms()
+        return unitcell, (unitcell_filename,)
+        
     if interface_mode == 'vasp':
         from phonopy.interface.vasp import read_vasp
         if chemical_symbols is None:
@@ -72,18 +78,32 @@ def read_crystal_structure(filename=None,
         unitcell, npts, r0s, rmts = parse_wien2k_struct(unitcell_filename)
         return unitcell, (unitcell_filename, npts, r0s, rmts)
 
-def get_default_cell_filename(interface_mode):
-    if interface_mode == 'vasp':
-        unitcell_filename = "POSCAR"
-    if interface_mode == 'abinit':
-        unitcell_filename = "unitcell.in"
-    if interface_mode == 'pwscf':
-        unitcell_filename = "unitcell.in"
-    if interface_mode == 'wien2k':
-        unitcell_filename = "case.struct"
+    if interface_mode == 'elk':
+        from phonopy.interface.elk import read_elk
+        unitcell, sp_filenames = read_elk(unitcell_filename)
+        return unitcell, (unitcell_filename, sp_filenames)
 
-    return unitcell_filename
-        
+    if interface_mode == 'siesta':
+        from phonopy.interface.siesta import read_siesta
+        unitcell, atypes = read_siesta(unitcell_filename)
+        return unitcell, (unitcell_filename, atypes)
+
+def get_default_cell_filename(interface_mode, yaml_mode):
+    if yaml_mode:
+        return "POSCAR.yaml"
+    if interface_mode == 'vasp':
+        return "POSCAR"
+    if interface_mode == 'abinit':
+        return "unitcell.in"
+    if interface_mode == 'pwscf':
+        return "unitcell.in"
+    if interface_mode == 'wien2k':
+        return "case.struct"
+    if interface_mode == 'elk':
+        return "elk.in"
+    if interface_mode == 'siesta':
+        return "input.fdf" 
+
 def create_FORCE_SETS(interface_mode,
                       force_filenames,
                       options,
@@ -92,7 +112,9 @@ def create_FORCE_SETS(interface_mode,
         displacements = parse_disp_yaml(filename='disp.yaml')
     if (interface_mode == 'wien2k' or
         interface_mode == 'abinit' or
-        interface_mode == 'pwscf'):
+        interface_mode == 'elk' or
+        interface_mode == 'pwscf' or
+        interface_mode == 'siesta'):
         displacements, supercell = parse_disp_yaml(filename='disp.yaml',
                                                    return_cell=True)
             
@@ -100,9 +122,9 @@ def create_FORCE_SETS(interface_mode,
     if options.force_sets_zero_mode:
         num_disp_files -= 1
     if len(displacements['first_atoms']) != num_disp_files:
-        print
-        print ("Number of files to be read don't match "
-               "to number of displacements in disp.yaml.")
+        print('')
+        print("Number of files to be read don't match "
+              "to number of displacements in disp.yaml.")
         return 1
 
     if interface_mode == 'vasp':
@@ -114,10 +136,10 @@ def create_FORCE_SETS(interface_mode,
 
     if interface_mode == 'abinit':
         from phonopy.interface.abinit import parse_set_of_forces
-        print "**********************************************************"
-        print "****    Abinit FORCE_SETS support is experimental.    ****"
-        print "****        Your feedback would be appreciated.       ****"
-        print "**********************************************************"
+        print("**********************************************************")
+        print("****    Abinit FORCE_SETS support is experimental.    ****")
+        print("****        Your feedback would be appreciated.       ****")
+        print("**********************************************************")
         is_parsed = parse_set_of_forces(
             displacements,
             force_filenames,
@@ -125,10 +147,10 @@ def create_FORCE_SETS(interface_mode,
         
     if interface_mode == 'pwscf':
         from phonopy.interface.pwscf import parse_set_of_forces
-        print "**********************************************************"
-        print "****     Pwscf FORCE_SETS support is experimental.    ****"
-        print "****        Your feedback would be appreciated.       ****"
-        print "**********************************************************"
+        print("**********************************************************")
+        print("****     Pwscf FORCE_SETS support is experimental.    ****")
+        print("****        Your feedback would be appreciated.       ****")
+        print("**********************************************************")
         is_parsed = parse_set_of_forces(
             displacements,
             force_filenames,
@@ -136,10 +158,10 @@ def create_FORCE_SETS(interface_mode,
         
     if interface_mode == 'wien2k':
         from phonopy.interface.wien2k import parse_set_of_forces
-        print "**********************************************************"
-        print "****    Wien2k FORCE_SETS support is experimental.    ****"
-        print "****        Your feedback would be appreciated.       ****"
-        print "**********************************************************"
+        print("**********************************************************")
+        print("****    Wien2k FORCE_SETS support is experimental.    ****")
+        print("****        Your feedback would be appreciated.       ****")
+        print("**********************************************************")
         is_parsed = parse_set_of_forces(
             displacements,
             force_filenames,
@@ -147,15 +169,36 @@ def create_FORCE_SETS(interface_mode,
             is_distribute=(not options.is_wien2k_p1),
             symprec=options.symprec)
 
+    if interface_mode == 'elk':
+        from phonopy.interface.elk import parse_set_of_forces
+        print("**********************************************************")
+        print("****      Elk FORCE_SETS support is experimental.     ****")
+        print("****        Your feedback would be appreciated.       ****")
+        print("**********************************************************")
+        is_parsed = parse_set_of_forces(
+            displacements,
+            force_filenames,
+            supercell.get_number_of_atoms())
+
+    if interface_mode == 'siesta':
+        from phonopy.interface.siesta import parse_set_of_forces
+        print("**********************************************************")
+        print("****   Siesta FORCE_SETS support is experimental.     ****")
+        print("****        Your feedback would be appreciated.       ****")
+        print("**********************************************************")
+        is_parsed = parse_set_of_forces(
+            displacements,
+            force_filenames,
+            supercell.get_number_of_atoms())
+
     if is_parsed:
-        write_FORCE_SETS(displacements,
-                         filename='FORCE_SETS')
+        write_FORCE_SETS(displacements, filename='FORCE_SETS')
         
     if log_level > 0:
         if is_parsed:
-            print "FORCE_SETS has been created."
+            print("FORCE_SETS has been created.")
         else:
-            print "FORCE_SETS could not be created."
+            print("FORCE_SETS could not be created.")
 
     return 0
             

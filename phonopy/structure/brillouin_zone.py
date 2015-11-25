@@ -73,8 +73,7 @@ class BrillouinZone:
     def __init__(self, primitive_vectors):
         self._primitive_vectors = primitive_vectors # column vectors
         self._tolerance = min(np.sum(primitive_vectors ** 2, axis=0)) * 0.01
-        self._reduced_bases = get_reduced_bases(primitive_vectors.T,
-                                                np.sqrt(self._tolerance)).T
+        self._reduced_bases = get_reduced_bases(primitive_vectors.T)
         self._tmat = np.dot(np.linalg.inv(self._primitive_vectors),
                             self._reduced_bases)
         self._tmat_inv = np.linalg.inv(self._tmat)
@@ -124,16 +123,14 @@ if __name__ == '__main__':
     bz = BrillouinZone(primitive_vectors)
     bz.run(qpoints)
     sv = bz.get_shortest_qpoints()
-    print len(bz_points), np.sum(len(x) for x in sv)
+    print("%d %d" % (len(bz_points), np.sum(len(x) for x in sv)))
     for q, vs in zip(qpoints, sv):
-        print q,
         if np.allclose(q, vs[0]):
-            print
+            print(q)
         else:
-            print "*", np.linalg.norm(np.dot(primitive_vectors, q))
+            print("%s * %s" % (q, np.linalg.norm(np.dot(primitive_vectors, q))))
         for v in vs:
-            print v, np.linalg.norm(np.dot(primitive_vectors, v))
+            print("%s %s" % (v, np.linalg.norm(np.dot(primitive_vectors, v))))
 
     rotations = symmetry.get_reciprocal_operations()
-    print get_lattice_vector_equivalence(rotations)
-    
+    print(get_lattice_vector_equivalence(rotations))

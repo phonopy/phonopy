@@ -416,10 +416,10 @@ def solve_fc3(fc3,
         inv_U = np.linalg.pinv(rot_disps)
     else:
         try:
-            import anharmonic._phono3py as phono3c
+            import phonopy._lapackepy as lapackepy
             inv_U = np.zeros((rot_disps.shape[1], rot_disps.shape[0]),
                              dtype='double')
-            phono3c.pinv(inv_U, rot_disps, 1e-13)
+            lapackepy.pinv(inv_U, rot_disps, 1e-13)
         except ImportError:
             inv_U = np.linalg.pinv(rot_disps)
             

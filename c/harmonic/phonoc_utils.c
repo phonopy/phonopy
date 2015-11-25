@@ -32,15 +32,72 @@
 /* ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE */
 /* POSSIBILITY OF SUCH DAMAGE. */
 
-#ifndef __phonoc_math_H__
-#define __phonoc_math_H__
-
 #include <lapacke.h>
+#include <math.h>
+#include <dynmat.h>
+#include <phonoc_array.h>
+#include <phonoc_utils.h>
+#include <lapack_wrapper.h>
 
-#define M_2PI 6.283185307179586
+#define THZTOEVPARKB 47.992398658977166
+#define INVSQRT2PI 0.3989422804014327
+
+lapack_complex_double get_phase_factor(const double q[],
+				       const Darray *shortest_vectors,
+				       const Iarray *multiplicity,
+				       const int pi0,
+				       const int si,
+				       const int qi)
+{
+  int i, j, multi;
+  double *svecs;
+  double sum_real, sum_imag, phase;
+
+  svecs = shortest_vectors->data + (si * shortest_vectors->dims[1] *
+				    shortest_vectors->dims[2] * 3 +
+				    pi0 * shortest_vectors->dims[2] * 3);
+  multi = multiplicity->data[si * multiplicity->dims[1] + pi0];
+
+  sum_real = 0;
+  sum_imag = 0;
+  for (i = 0; i < multi; i++) {
+    phase = 0;
+    for (j = 0; j < 3; j++) {
+      phase += q[qi * 3 + j] * svecs[i * 3 + j];
+    }
+    sum_real += cos(M_2PI * phase);
+    sum_imag += sin(M_2PI * phase);
+  }
+  sum_real /= multi;
+  sum_imag /= multi;
+
+  return lapack_make_complex_double(sum_real, sum_imag);
+}
+
+double bose_einstein(const double x, const double t)
+{
+  return 1.0 / (exp(THZTOEVPARKB * x / t) - 1);
+}
+
+double gaussian(const double x, const double sigma)
+{
+  return INVSQRT2PI / sigma * exp(-x * x / 2 / sigma / sigma);
+}
+
+double inv_sinh_occupation(const double x, const double t)
+{
+  return 1.0 / sinh(x * THZTOEVPARKB / 2 / t);
+}
 
 lapack_complex_double
 phonoc_complex_prod(const lapack_complex_double a,
-		    const lapack_complex_double b);
-
-#endif
+		    const lapack_complex_double b)
+{
+  lapack_complex_double c;
+  c = lapack_make_complex_double
+    (lapack_complex_double_real(a) * lapack_complex_double_real(b) -
+     lapack_complex_double_imag(a) * lapack_complex_double_imag(b),
+     lapack_complex_double_imag(a) * lapack_complex_double_real(b) +
+     lapack_complex_double_real(a) * lapack_complex_double_imag(b));
+  return c;
+}

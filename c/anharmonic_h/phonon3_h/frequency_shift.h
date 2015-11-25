@@ -35,7 +35,7 @@
 #ifndef __frequency_shift3_H__
 #define __frequency_shift3_H__
 
-#include "phonoc_array.h"
+#include <phonoc_array.h>
 
 #endif
 

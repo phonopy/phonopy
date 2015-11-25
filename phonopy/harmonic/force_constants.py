@@ -197,8 +197,8 @@ def get_atom_mapping_by_symmetry(atom_list_done,
             if (abs(diff - np.rint(diff)) < symprec).all():
                 return j, i
 
-    print 'Input forces are not enough to calculate force constants,'
-    print 'or something wrong (e.g. crystal structure does not match).'
+    print("Input forces are not enough to calculate force constants,")
+    print("or something wrong (e.g. crystal structure does not match).")
     raise ValueError
 
 def solve_force_constants(force_constants,
@@ -453,7 +453,7 @@ def rotational_invariance(force_constants,
     *** Under development ***
     Just show how force constant is close to the condition of rotational invariance,
     """
-    print "Check rotational invariance ..."
+    print("Check rotational invariance ...")
 
     fc = force_constants 
     p2s = primitive.get_primitive_to_supercell_map()
@@ -473,17 +473,17 @@ def rotational_invariance(force_constants,
                         mat[j, k] += (fc[p, s, i, j] * v[k] -
                                       fc[p, s, i, k] * v[j])
 
-            print "Atom %d %s" % (p+1, abc[i])
+            print("Atom %d %s" % (p + 1, abc[i]))
             for vec in mat:
-                print "%10.5f %10.5f %10.5f" % tuple(vec)
+                print("%10.5f %10.5f %10.5f" % tuple(vec))
 
 def force_constants_log(force_constants):
     fs = force_constants
     for i, fs_i in enumerate(fs):
         for j, fs_j in enumerate(fs_i):
             for v in fs_j:
-                print "force constant (%d - %d): %10.5f %10.5f %10.5f" % (
-                    i + 1, j + 1, v[0], v[1], v[2])
+                print("force constant (%d - %d): %10.5f %10.5f %10.5f" %
+                      (i + 1, j + 1, v[0], v[1], v[2]))
 
 
 def similarity_transformation(rot, mat):
@@ -505,9 +505,10 @@ def show_drift_force_constants(force_constants, name="force constants"):
         if abs(val2) > abs(maxval2):
             maxval2 = val2
             jk2 = [j, k]
-    print "max drift of %s:" % name,
-    print "%f (%s%s)" % (maxval1, "xyz"[jk1[0]], "xyz"[jk1[1]]),
-    print "%f (%s%s)" % (maxval2, "xyz"[jk2[0]], "xyz"[jk2[1]])
+    print("max drift of %s: %f (%s%s) %f (%s%s)" %
+          (name,
+           maxval1, "xyz"[jk1[0]], "xyz"[jk1[1]],
+           maxval2, "xyz"[jk2[0]], "xyz"[jk2[1]]))
 
 
 #################
@@ -653,13 +654,13 @@ def _get_force_constants_disps(force_constants,
         if fc_info is not None:
             # KL(m)
             fc_errors = fc_info
-            avg_len = len(disp_atom_list)*supercell.get_number_of_atoms()
+            avg_len = len(disp_atom_list) * supercell.get_number_of_atoms()
             if avg_len <= 0:
-                print " (Standard deviation of the force constants not available)"
+                print(" (Standard deviation of the force constants not available)")
             else:
-                print " Standard deviation of the force constants, full table:"
-                print "", fc_errors/avg_len
-                print " Maximal table element is", fc_errors.max()/avg_len
+                print(" Standard deviation of the force constants, full table:")
+                print(fc_errors / avg_len)
+                print(" Maximal table element is %f" % (fc_errors.max() / avg_len))
         
     return disp_atom_list
 
@@ -697,8 +698,8 @@ def _distribute_fc2_part(force_constants,
                     break
         
             if rot_atom < 0:
-                print 'Input forces are not enough to calculate force constants,'
-                print 'or something wrong (e.g. crystal structure does not match).'
+                print("Input forces are not enough to calculate force constants,")
+                print("or something wrong (e.g. crystal structure does not match).")
                 raise ValueError
             
             # R^-1 P R (inverse transformation)

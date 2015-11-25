@@ -35,9 +35,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include "phonoc_array.h"
-#include "phonoc_utils.h"
-#include "phonon3_h/collision_matrix.h"
+#include <phonoc_array.h>
+#include <phonoc_utils.h>
+#include <phonon3_h/collision_matrix.h>
 
 static int get_inv_sinh(double *inv_sinh,
 			const int gp,

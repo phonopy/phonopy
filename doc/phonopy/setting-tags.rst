@@ -297,6 +297,8 @@ number of points calculated in band segments by the ``BAND_POINTS`` tag.
 |bandconnection|
 
 
+.. _mesh_sampling_tags:
+
 Mesh sampling tags
 -------------------
 
@@ -305,8 +307,8 @@ properties and density of states.
 
 .. _mp_tag:
 
-``MP``
-~~~~~~
+``MP``, ``MESH``
+~~~~~~~~~~~~~~~~~
 
 ``MP`` numbers give uniform meshes in each axis. As the default
 behavior, the center of mesh is determined by the Monkhorst-Pack
@@ -344,6 +346,22 @@ Instead of employing the Monkhorst-Pack scheme for the mesh sampling,
 
    GAMMA_CENTER = .TRUE.
 
+.. _write_mesh_tag:
+
+``WRITE_MESH``
+~~~~~~~~~~~~~~~~~
+
+With a dense mesh, with eigenvectors, without mesh symmetry, sometimes
+its output file ``mesh.yaml`` or ``mesh.hdf5`` can be huge. However
+when those files are not needed, e.g., in (P)DOS calculation,
+``WRITE_MESH = .FALSE.`` can disable to write out those files. With
+(P)DOS calculation, DOS output files are obtained even with
+``WRITE_MESH = .FALSE.``. The default setting is ``.TRUE.``.
+
+::
+
+   WRITE_MESH = .FALSE.
+
 
 Density of states (DOS) tags
 -----------------------------
@@ -351,10 +369,10 @@ Density of states (DOS) tags
 Density of states (DOS) is calcualted either with smearing method
 (default) or tetrahedron method. The physical unit of horizontal axis
 is that of frequency that the user employs, e.g., THz, and that of
-vertial axis is states/(unit cell x the unit of the horizontal
-axis). If the DOS is integrated over the frequency range, it will be
-:math:`3N_\mathrm{a}` states, where :math:`N_\mathrm{a}` is the number
-of atoms in the unit cell.
+vertical axis is {no. of states}/({unit cell} x {unit of the
+horizontal axis}). If the DOS is integrated over the frequency range,
+it will be :math:`3N_\mathrm{a}` states, where :math:`N_\mathrm{a}` is
+the number of atoms in the unit cell.
 
 .. _dos_related_tags:
 
@@ -885,14 +903,14 @@ of the eigenvectors with amplitudes and phase factors as
 .. math::
 
    \frac{A} { \sqrt{N_\mathrm{a}m_j} } \operatorname{Re} \left[ \exp(i\phi)
-   \mathbf{e}_j \exp( \mathbf{q} \cdot \mathbf{r}_j ) \right],
+   \mathbf{e}_j \exp( \mathbf{q} \cdot \mathbf{r}_{jl} ) \right],
 
 where :math:`A` is the amplitude, :math:`\phi` is the phase,
 :math:`N_\mathrm{a}` is the number of atoms in the supercell specified
 in this tag and :math:`m_j` is the mass of the *j*-th atom,
 :math:`\mathbf{q}` is the q-point specified, :math:`\mathbf{r}_{jl}`
-is the position of the *j*-th atom and in the *l*-th unit cell, and
-:math:`\mathbf{e}_j` is the *j*-th part of eigenvector. Convention of
+is the position of the *j*-th atom in the *l*-th unit cell, and
+:math:`\mathbf{e}_j` is the *j*-th atom part of eigenvector. Convention of
 eigenvector or dynamical matrix employed in phonopy is shown in
 :ref:`dynacmial_matrix_theory`.
 

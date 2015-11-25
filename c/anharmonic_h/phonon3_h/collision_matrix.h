@@ -35,7 +35,7 @@
 #ifndef __collision_matrix_H__
 #define __collision_matrix_H__
 
-#include "phonoc_array.h"
+#include <phonoc_array.h>
 
 void get_collision_matrix(double *collision_matrix,
 			  const Darray *fc3_normal_squared,

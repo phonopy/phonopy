@@ -107,6 +107,9 @@ class Phono3py:
         self._band_indices_flatten = None
         if mesh is not None:
             self._mesh = np.array(mesh, dtype='intc')
+        self.set_band_indices(band_indices)
+
+    def set_band_indices(self, band_indices):
         if band_indices is None:
             num_band = self._primitive.get_number_of_atoms() * 3
             self._band_indices = [np.arange(num_band, dtype='intc')]
@@ -328,7 +331,9 @@ class Phono3py:
                              frequency_step=None,
                              num_frequency_points=None,
                              temperatures=[0.0, 300.0],
-                             scattering_event_class=None):
+                             scattering_event_class=None,
+                             run_with_g=True,
+                             write_details=False):
         self._grid_points = grid_points
         self._temperatures = temperatures
         self._scattering_event_class = scattering_event_class
@@ -340,6 +345,8 @@ class Phono3py:
             num_frequency_points=num_frequency_points,
             temperatures=temperatures,
             scattering_event_class=scattering_event_class,
+            run_with_g=run_with_g,
+            write_details=write_details,
             log_level=self._log_level)
             
     def write_imag_self_energy(self, filename=None):
@@ -356,13 +363,17 @@ class Phono3py:
         
     def run_linewidth(self,
                       grid_points,
-                      temperatures=np.arange(0, 1001, 10, dtype='double')):
+                      temperatures=np.arange(0, 1001, 10, dtype='double'),
+                      run_with_g=True,
+                      write_details=False):
         self._grid_points = grid_points
         self._temperatures = temperatures
         self._linewidth = get_linewidth(self._interaction,
                                         grid_points,
                                         self._sigmas,
                                         temperatures=temperatures,
+                                        run_with_g=run_with_g,
+                                        write_details=write_details,
                                         log_level=self._log_level)
 
     def write_linewidth(self, filename=None):
@@ -390,6 +401,7 @@ class Phono3py:
             is_reducible_collision_matrix=False,
             no_kappa_stars=False,
             gv_delta_q=None, # for group velocity
+            run_with_g=True, # integration weights for smearing method, too
             pinv_cutoff=1.0e-8, # for pseudo-inversion of collision matrix
             write_gamma=False,
             read_gamma=False,
@@ -435,6 +447,7 @@ class Phono3py:
                 coarse_mesh_shifts=coarse_mesh_shifts,
                 no_kappa_stars=no_kappa_stars,
                 gv_delta_q=gv_delta_q,
+                run_with_g=run_with_g,
                 write_gamma=write_gamma,
                 read_gamma=read_gamma,
                 input_filename=input_filename,

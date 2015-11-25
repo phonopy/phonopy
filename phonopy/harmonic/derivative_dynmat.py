@@ -64,7 +64,7 @@ class DerivativeOfDynamicalMatrix:
         if order == 1 or order == 2:
             self._derivative_order = order
         else:
-            print "Error: derivative order has to be 1 or 2"
+            print("Error: derivative order has to be 1 or 2")
         
     def get_derivative_of_dynamical_matrix(self):
         return self._ddm
@@ -198,7 +198,7 @@ class DerivativeOfDynamicalMatrix:
                 nac_q[i, j] = np.outer(A_i, A_j) / B
 
         num_satom = self._scell.get_number_of_atoms()
-        N = num_satom / num_atom
+        N = num_satom // num_atom
 
         return nac_q * nac_factor / N
     
@@ -228,7 +228,7 @@ class DerivativeOfDynamicalMatrix:
                         np.outer(A_i, A_j) * dB / B ** 2)
 
         num_satom = self._scell.get_number_of_atoms()
-        N = num_satom / num_atom
+        N = num_satom // num_atom
         return d_nac_q * nac_factor / N
 
     def _A(self, q, Z, atom_num):

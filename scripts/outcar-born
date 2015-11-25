@@ -84,7 +84,7 @@ if options.primitive_axis:
     if len(vals) == 9:
         primitive_axis = np.array(vals).reshape(3, 3)
     else:
-        print "Primitive axes are incorrectly set."
+        print("Primitive axes are incorrectly set.")
         sys.exit(1)
 else:
     primitive_axis = np.eye(3)
@@ -96,7 +96,7 @@ if options.supercell_matrix:
     elif len(vals) == 3:
         supercell_matrix = np.diag(np.array(vals, dtype='intc'))
     else:
-        print "Supercell matrix is incorrectly set."
+        print("Supercell matrix is incorrectly set.")
         sys.exit(1)
 else:
     supercell_matrix = np.eye(3, dtype='intc')
@@ -108,8 +108,8 @@ borns, epsilon = get_born_OUTCAR(poscar_filename=poscar_filename,
                                  symmetrize_tensors=options.symmetrize_tensors,
                                  symprec=options.symprec)
 
-print "14.400"
-print ("%12.7f" * 9) %  tuple(epsilon.flatten())
+print("14.400")
+print(("%12.7f" * 9) % tuple(epsilon.flatten()))
 for z in borns:
-    print ("%12.7f" * 9) %  tuple(z.flatten())
+    print(("%12.7f" * 9) % tuple(z.flatten()))
 

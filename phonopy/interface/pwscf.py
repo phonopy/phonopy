@@ -120,7 +120,7 @@ def read_pwscf(filename):
 
 def write_pwscf(filename, cell, pp_filenames):
     f = open(filename, 'w')
-    f.write(get_pwscf_structure(cell, pp_filenames))
+    f.write(get_pwscf_structure(cell, pp_filenames=pp_filenames))
 
 def write_supercells_with_displacements(supercell,
                                         cells_with_displacements,

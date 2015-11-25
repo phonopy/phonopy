@@ -183,7 +183,7 @@ if options.show_legend:
         if len(options.legend_labels.split()) == len(plots):
             labels = options.legend_labels.split()
         else:
-            print "Number of labels is not same as number of plots."
+            print("Number of labels is not same as number of plots.")
             labels = indices
     else:
         labels = indices

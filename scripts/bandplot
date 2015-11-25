@@ -40,7 +40,7 @@ import numpy as np
 try:
     import yaml
 except ImportError:
-    print "You need to install python-yaml."
+    print("You need to install python-yaml.")
     exit(1)
     
 try:
@@ -56,7 +56,7 @@ def read_band_yaml(filename, segment_scales=None):
     segment_positions = []
     frequencies = []
     distances = []
-    npoints = data['nqpoint'] / data['npath']
+    npoints = data['nqpoint'] // data['npath']
     distance_scale = 1.0
     distance = 0.0
     prev_distance = 0.0
@@ -173,7 +173,7 @@ else:
     filenames = args
 
 if options.is_gnuplot:
-    print "# distance  frequency (bands are separated by blank lines)"
+    print("# distance  frequency (bands are separated by blank lines)")
 
 if options.segment_scales:
     segment_scales = [float(x) for x in options.segment_scales.split()]
@@ -190,10 +190,8 @@ for i, filename in enumerate(filenames):
                                          segment_scales=segment_scales)
 
     if options.is_gnuplot:
-        print "# segments:",
-        for v in segment_positions:
-            print "%10.8f" % v,
-        print "%10.8f" % distances[-1]
+        print(("# segments: " + "%10.8f " * (len(segment_positions) + 1)) %
+              (tuple(segment_positions) + (distances[-1],)))
         
     elif options.is_vertial_line and len(filenames) == 1:
         for v in segment_positions[1:]:
@@ -202,8 +200,8 @@ for i, filename in enumerate(filenames):
     for j, freqs in enumerate(np.array(frequencies).T):
         if options.is_gnuplot:
             for d, f in zip(distances, freqs * options.factor):
-                print d,f
-            print
+                print("%f %f" % (d, f))
+            print('')
         else:
             if j == 0:
                 plt.plot(distances, freqs * options.factor, colors[i],
@@ -212,7 +210,7 @@ for i, filename in enumerate(filenames):
                 plt.plot(distances, freqs * options.factor, colors[i])
 
     if options.is_gnuplot:
-        print
+        print('')
 
     
 if not options.is_gnuplot:
@@ -238,7 +236,7 @@ if not options.is_gnuplot:
             if len(band_labels) == len(xticks):
                 plt.xticks(xticks, band_labels)
             else:
-                print "Numbers of labels and band segments don't match."
+                print("Numbers of labels and band segments don't match.")
                 sys.exit(1)
         else:
             plt.xticks(xticks, [''] * len(xticks))

@@ -38,31 +38,31 @@
 #include <math.h>
 #include <numpy/arrayobject.h>
 #include <lapacke.h>
-#include "lapack_wrapper.h"
-#include "phonoc_array.h"
-#include "phonoc_utils.h"
-#include "phonon3_h/fc3.h"
-#include "phonon3_h/frequency_shift.h"
-#include "phonon3_h/interaction.h"
-#include "phonon3_h/imag_self_energy.h"
-#include "phonon3_h/imag_self_energy_with_g.h"
-#include "phonon3_h/collision_matrix.h"
-#include "other_h/isotope.h"
-#include "triplet_h/triplet.h"
-#include "kpoint.h"
-#include "mathfunc.h"
-#include "tetrahedron_method.h"
+#include <lapack_wrapper.h>
+#include <phonoc_array.h>
+#include <phonoc_utils.h>
+#include <phonon3_h/fc3.h>
+#include <phonon3_h/frequency_shift.h>
+#include <phonon3_h/interaction.h>
+#include <phonon3_h/imag_self_energy.h>
+#include <phonon3_h/imag_self_energy_with_g.h>
+#include <phonon3_h/collision_matrix.h>
+#include <other_h/isotope.h>
+#include <triplet_h/triplet.h>
+#include <tetrahedron_method.h>
 
 /* #define LIBFLAME */
 #ifdef LIBFLAME
-#include "flame_wrapper.h"
+#include <flame_wrapper.h>
 #endif
 
 static PyObject * py_get_interaction(PyObject *self, PyObject *args);
 static PyObject * py_get_imag_self_energy(PyObject *self, PyObject *args);
 static PyObject * py_get_imag_self_energy_at_bands(PyObject *self,
 						   PyObject *args);
-static PyObject * py_get_thm_imag_self_energy(PyObject *self, PyObject *args);
+static PyObject * py_get_imag_self_energy_with_g(PyObject *self, PyObject *args);
+static PyObject *
+py_get_detailed_imag_self_energy_with_g(PyObject *self, PyObject *args);
 static PyObject * py_get_frequency_shift_at_bands(PyObject *self,
 						  PyObject *args);
 static PyObject * py_get_collision_matrix(PyObject *self, PyObject *args);
@@ -70,8 +70,6 @@ static PyObject * py_get_reducible_collision_matrix(PyObject *self,
 						    PyObject *args);
 static PyObject * py_symmetrize_collision_matrix(PyObject *self,
 						 PyObject *args);
-static PyObject * py_set_phonons_at_gridpoints(PyObject *self, PyObject *args);
-static PyObject * py_get_phonon(PyObject *self, PyObject *args);
 static PyObject * py_distribute_fc3(PyObject *self, PyObject *args);
 static PyObject * py_get_isotope_strength(PyObject *self, PyObject *args);
 static PyObject * py_get_thm_isotope_strength(PyObject *self, PyObject *args);
@@ -86,9 +84,7 @@ static PyObject *
 py_set_triplets_integration_weights(PyObject *self, PyObject *args);
 static PyObject *
 py_set_triplets_integration_weights_with_sigma(PyObject *self, PyObject *args);
-static PyObject * py_phonopy_zheev(PyObject *self, PyObject *args);
 static PyObject * py_inverse_collision_matrix(PyObject *self, PyObject *args);
-static PyObject * py_phonopy_pinv(PyObject *self, PyObject *args);
 
 #ifdef LIBFLAME
 static PyObject * py_inverse_collision_matrix_libflame(PyObject *self, PyObject *args);
@@ -105,22 +101,22 @@ static void get_triplet_tetrahedra_vertices
 static PyMethodDef functions[] = {
   {"interaction", py_get_interaction, METH_VARARGS, "Interaction of triplets"},
   {"imag_self_energy", py_get_imag_self_energy, METH_VARARGS,
-   "Imaginary part of self energy"},
+   "Imaginary part of self energy at arbitrary frequency points"},
   {"imag_self_energy_at_bands", py_get_imag_self_energy_at_bands, METH_VARARGS,
-   "Imaginary part of self energy at phonon frequencies of bands"},
-  {"thm_imag_self_energy", py_get_thm_imag_self_energy, METH_VARARGS,
-   "Imaginary part of self energy at phonon frequencies of bands for tetrahedron method"},
+   "Imaginary part of self energy at bands"},
+  {"imag_self_energy_with_g", py_get_imag_self_energy_with_g, METH_VARARGS,
+   "Imaginary part of self energy at frequency points with g"},
+  {"detailed_imag_self_energy_with_g",
+   py_get_detailed_imag_self_energy_with_g, METH_VARARGS,
+   "Detailed contribution to imaginary part of self energy at frequency points with g"},
   {"frequency_shift_at_bands", py_get_frequency_shift_at_bands, METH_VARARGS,
-   "Imaginary part of self energy at phonon frequencies of bands"},
+   "Phonon frequency shift from third order force constants"},
   {"collision_matrix", py_get_collision_matrix, METH_VARARGS,
    "Collision matrix with g"},
   {"reducible_collision_matrix", py_get_reducible_collision_matrix, METH_VARARGS,
    "Collision matrix with g for reducible grid points"},
   {"symmetrize_collision_matrix", py_symmetrize_collision_matrix, METH_VARARGS,
    "Symmetrize collision matrix"},
-  {"phonons_at_gridpoints", py_set_phonons_at_gridpoints, METH_VARARGS,
-   "Set phonons at grid points"},
-  {"phonon", py_get_phonon, METH_VARARGS, "Get phonon"},
   {"distribute_fc3", py_distribute_fc3, METH_VARARGS,
    "Distribute least fc3 to full fc3"},
   {"isotope_strength", py_get_isotope_strength, METH_VARARGS,
@@ -135,17 +131,15 @@ static PyMethodDef functions[] = {
    "Integration weights of tetrahedron method"},
   {"triplets_reciprocal_mesh_at_q", py_spg_get_triplets_reciprocal_mesh_at_q,
    METH_VARARGS, "Triplets on reciprocal mesh points at a specific q-point"},
-  {"BZ_triplets_at_q", py_spg_get_BZ_triplets_at_q,
-   METH_VARARGS, "Triplets in reciprocal primitive lattice are transformed to those in BZ."},
+  {"BZ_triplets_at_q", py_spg_get_BZ_triplets_at_q, METH_VARARGS,
+   "Triplets in reciprocal primitive lattice are transformed to those in BZ."},
   {"triplets_integration_weights", py_set_triplets_integration_weights, METH_VARARGS,
    "Integration weights of tetrahedron method for triplets"},
   {"triplets_integration_weights_with_sigma",
    py_set_triplets_integration_weights_with_sigma, METH_VARARGS,
    "Integration weights of smearing method for triplets"},
-  {"zheev", py_phonopy_zheev, METH_VARARGS, "Lapack zheev wrapper"},
   {"inverse_collision_matrix", py_inverse_collision_matrix, METH_VARARGS,
    "Pseudo-inverse using Lapack dsyev"},
-  {"pinv", py_phonopy_pinv, METH_VARARGS, "Pseudo-inverse using Lapack dgesvd"},
 #ifdef LIBFLAME
   {"inverse_collision_matrix_libflame",
    py_inverse_collision_matrix_libflame, METH_VARARGS,
@@ -159,211 +153,6 @@ PyMODINIT_FUNC init_phono3py(void)
   Py_InitModule3("_phono3py", functions, "C-extension for phono3py\n\n...\n");
   return;
 }
-
-static PyObject * py_set_phonons_at_gridpoints(PyObject *self, PyObject *args)
-{
-  PyArrayObject* frequencies;
-  PyArrayObject* eigenvectors;
-  PyArrayObject* phonon_done_py;
-  PyArrayObject* grid_points_py;
-  PyArrayObject* grid_address_py;
-  PyArrayObject* mesh_py;
-  PyArrayObject* shortest_vectors_fc2;
-  PyArrayObject* multiplicity_fc2;
-  PyArrayObject* fc2_py;
-  PyArrayObject* atomic_masses_fc2;
-  PyArrayObject* p2s_map_fc2;
-  PyArrayObject* s2p_map_fc2;
-  PyArrayObject* reciprocal_lattice;
-  PyArrayObject* born_effective_charge;
-  PyArrayObject* q_direction;
-  PyArrayObject* dielectric_constant;
-  double nac_factor, unit_conversion_factor;
-  char uplo;
-
-  if (!PyArg_ParseTuple(args, "OOOOOOOOOOOOdOOOOdc",
-			&frequencies,
-			&eigenvectors,
-			&phonon_done_py,
-			&grid_points_py,
-			&grid_address_py,
-			&mesh_py,
-			&fc2_py,
-			&shortest_vectors_fc2,
-			&multiplicity_fc2,
-			&atomic_masses_fc2,
-			&p2s_map_fc2,
-			&s2p_map_fc2,
-			&unit_conversion_factor,
-			&born_effective_charge,
-			&dielectric_constant,
-			&reciprocal_lattice,
-			&q_direction,
-			&nac_factor,
-			&uplo)) {
-    return NULL;
-  }
-
-  double* born;
-  double* dielectric;
-  double *q_dir;
-  Darray* freqs = convert_to_darray(frequencies);
-  /* npy_cdouble and lapack_complex_double may not be compatible. */
-  /* So eigenvectors should not be used in Python side */
-  Carray* eigvecs = convert_to_carray(eigenvectors);
-  char* phonon_done = (char*)phonon_done_py->data;
-  Iarray* grid_points = convert_to_iarray(grid_points_py);
-  const int* grid_address = (int*)grid_address_py->data;
-  const int* mesh = (int*)mesh_py->data;
-  Darray* fc2 = convert_to_darray(fc2_py);
-  Darray* svecs_fc2 = convert_to_darray(shortest_vectors_fc2);
-  Iarray* multi_fc2 = convert_to_iarray(multiplicity_fc2);
-  const double* masses_fc2 = (double*)atomic_masses_fc2->data;
-  const int* p2s_fc2 = (int*)p2s_map_fc2->data;
-  const int* s2p_fc2 = (int*)s2p_map_fc2->data;
-  const double* rec_lat = (double*)reciprocal_lattice->data;
-  if ((PyObject*)born_effective_charge == Py_None) {
-    born = NULL;
-  } else {
-    born = (double*)born_effective_charge->data;
-  }
-  if ((PyObject*)dielectric_constant == Py_None) {
-    dielectric = NULL;
-  } else {
-    dielectric = (double*)dielectric_constant->data;
-  }
-  if ((PyObject*)q_direction == Py_None) {
-    q_dir = NULL;
-  } else {
-    q_dir = (double*)q_direction->data;
-  }
-
-  set_phonons_at_gridpoints(freqs,
-			    eigvecs,
-			    phonon_done,
-			    grid_points,
-			    grid_address,
-			    mesh,
-			    fc2,
-			    svecs_fc2,
-			    multi_fc2,
-			    masses_fc2,
-			    p2s_fc2,
-			    s2p_fc2,
-			    unit_conversion_factor,
-			    born,
-			    dielectric,
-			    rec_lat,
-			    q_dir,
-			    nac_factor,
-			    uplo);
-
-  free(freqs);
-  free(eigvecs);
-  free(grid_points);
-  free(fc2);
-  free(svecs_fc2);
-  free(multi_fc2);
-  
-  Py_RETURN_NONE;
-}
-
-
-static PyObject * py_get_phonon(PyObject *self, PyObject *args)
-{
-  PyArrayObject* frequencies_py;
-  PyArrayObject* eigenvectors_py;
-  PyArrayObject* q_py;
-  PyArrayObject* shortest_vectors_py;
-  PyArrayObject* multiplicity_py;
-  PyArrayObject* fc2_py;
-  PyArrayObject* atomic_masses_py;
-  PyArrayObject* p2s_map_py;
-  PyArrayObject* s2p_map_py;
-  PyArrayObject* reciprocal_lattice_py;
-  PyArrayObject* born_effective_charge_py;
-  PyArrayObject* q_direction_py;
-  PyArrayObject* dielectric_constant_py;
-  double nac_factor, unit_conversion_factor;
-  char uplo;
-
-  if (!PyArg_ParseTuple(args, "OOOOOOOOOdOOOOdc",
-			&frequencies_py,
-			&eigenvectors_py,
-			&q_py,
-			&fc2_py,
-			&shortest_vectors_py,
-			&multiplicity_py,
-			&atomic_masses_py,
-			&p2s_map_py,
-			&s2p_map_py,
-			&unit_conversion_factor,
-			&born_effective_charge_py,
-			&dielectric_constant_py,
-			&reciprocal_lattice_py,
-			&q_direction_py,
-			&nac_factor,
-			&uplo)) {
-    return NULL;
-  }
-
-  double* born;
-  double* dielectric;
-  double *q_dir;
-  double* freqs = (double*)frequencies_py->data;
-  /* npy_cdouble and lapack_complex_double may not be compatible. */
-  /* So eigenvectors should not be used in Python side */
-  lapack_complex_double* eigvecs =
-    (lapack_complex_double*)eigenvectors_py->data;
-  const double* q = (double*) q_py->data;
-  Darray* fc2 = convert_to_darray(fc2_py);
-  Darray* svecs = convert_to_darray(shortest_vectors_py);
-  Iarray* multi = convert_to_iarray(multiplicity_py);
-  const double* masses = (double*)atomic_masses_py->data;
-  const int* p2s = (int*)p2s_map_py->data;
-  const int* s2p = (int*)s2p_map_py->data;
-  const double* rec_lat = (double*)reciprocal_lattice_py->data;
-
-  if ((PyObject*)born_effective_charge_py == Py_None) {
-    born = NULL;
-  } else {
-    born = (double*)born_effective_charge_py->data;
-  }
-  if ((PyObject*)dielectric_constant_py == Py_None) {
-    dielectric = NULL;
-  } else {
-    dielectric = (double*)dielectric_constant_py->data;
-  }
-  if ((PyObject*)q_direction_py == Py_None) {
-    q_dir = NULL;
-  } else {
-    q_dir = (double*)q_direction_py->data;
-  }
-
-  get_phonons(eigvecs,
-	      freqs,
-	      q,
-	      fc2,
-	      masses,
-	      p2s,
-	      s2p,
-	      multi,
-	      svecs,
-	      born,
-	      dielectric,
-	      rec_lat,
-	      q_dir,
-	      nac_factor,
-	      unit_conversion_factor,
-	      uplo);
-
-  free(fc2);
-  free(svecs);
-  free(multi);
-  
-  Py_RETURN_NONE;
-}
-
 
 static PyObject * py_get_interaction(PyObject *self, PyObject *args)
 {
@@ -542,7 +331,7 @@ static PyObject * py_get_imag_self_energy_at_bands(PyObject *self,
   Py_RETURN_NONE;
 }
 
-static PyObject * py_get_thm_imag_self_energy(PyObject *self, PyObject *args)
+static PyObject * py_get_imag_self_energy_with_g(PyObject *self, PyObject *args)
 {
   PyArrayObject* gamma_py;
   PyArrayObject* fc3_normal_squared_py;
@@ -572,15 +361,57 @@ static PyObject * py_get_thm_imag_self_energy(PyObject *self, PyObject *args)
   const int* grid_point_triplets = (int*)grid_point_triplets_py->data;
   const int* triplet_weights = (int*)triplet_weights_py->data;
 
-  get_thm_imag_self_energy_at_bands(gamma,
-				    fc3_normal_squared,
-				    frequencies,
-				    grid_point_triplets,
-				    triplet_weights,
-				    g,
-				    temperature,
-				    unit_conversion_factor,
-				    cutoff_frequency);
+  get_imag_self_energy_at_bands_with_g(gamma,
+				       fc3_normal_squared,
+				       frequencies,
+				       grid_point_triplets,
+				       triplet_weights,
+				       g,
+				       temperature,
+				       unit_conversion_factor,
+				       cutoff_frequency);
+
+  free(fc3_normal_squared);
+  
+  Py_RETURN_NONE;
+}
+
+static PyObject *
+py_get_detailed_imag_self_energy_with_g(PyObject *self, PyObject *args)
+{
+  PyArrayObject* gamma_py;
+  PyArrayObject* fc3_normal_squared_py;
+  PyArrayObject* frequencies_py;
+  PyArrayObject* grid_point_triplets_py;
+  PyArrayObject* g_py;
+  double unit_conversion_factor, cutoff_frequency, temperature;
+
+  if (!PyArg_ParseTuple(args, "OOOOdOdd",
+			&gamma_py,
+			&fc3_normal_squared_py,
+			&grid_point_triplets_py,
+			&frequencies_py,
+			&temperature,
+			&g_py,
+			&unit_conversion_factor,
+			&cutoff_frequency)) {
+    return NULL;
+  }
+
+  Darray* fc3_normal_squared = convert_to_darray(fc3_normal_squared_py);
+  double* gamma = (double*)gamma_py->data;
+  const double* g = (double*)g_py->data;
+  const double* frequencies = (double*)frequencies_py->data;
+  const int* grid_point_triplets = (int*)grid_point_triplets_py->data;
+
+  get_detailed_imag_self_energy_at_bands_with_g(gamma,
+						fc3_normal_squared,
+						frequencies,
+						grid_point_triplets,
+						g,
+						temperature,
+						unit_conversion_factor,
+						cutoff_frequency);
 
   free(fc3_normal_squared);
   
@@ -1333,66 +1164,6 @@ py_set_triplets_integration_weights_with_sigma(PyObject *self, PyObject *args)
   }			
 
   Py_RETURN_NONE;
-}
-
-static PyObject * py_phonopy_zheev(PyObject *self, PyObject *args)
-{
-  PyArrayObject* dynamical_matrix;
-  PyArrayObject* eigenvalues;
-
-  if (!PyArg_ParseTuple(args, "OO",
-			&dynamical_matrix,
-			&eigenvalues)) {
-    return NULL;
-  }
-
-  const int dimension = (int)dynamical_matrix->dimensions[0];
-  npy_cdouble *dynmat = (npy_cdouble*)dynamical_matrix->data;
-  double *eigvals = (double*)eigenvalues->data;
-
-  lapack_complex_double *a;
-  int i, info;
-
-  a = (lapack_complex_double*) malloc(sizeof(lapack_complex_double) *
-				      dimension * dimension);
-  for (i = 0; i < dimension * dimension; i++) {
-    a[i] = lapack_make_complex_double(dynmat[i].real, dynmat[i].imag);
-  }
-
-  info = phonopy_zheev(eigvals, a, dimension, 'L');
-
-  for (i = 0; i < dimension * dimension; i++) {
-    dynmat[i].real = lapack_complex_double_real(a[i]);
-    dynmat[i].imag = lapack_complex_double_imag(a[i]);
-  }
-
-  free(a);
-  
-  return PyLong_FromLong((long) info);
-}
-
-static PyObject * py_phonopy_pinv(PyObject *self, PyObject *args)
-{
-  PyArrayObject* data_in_py;
-  PyArrayObject* data_out_py;
-  double cutoff;
-
-  if (!PyArg_ParseTuple(args, "OOd",
-			&data_out_py,
-			&data_in_py,
-			&cutoff)) {
-    return NULL;
-  }
-
-  const int m = (int)data_in_py->dimensions[0];
-  const int n = (int)data_in_py->dimensions[1];
-  const double *data_in = (double*)data_in_py->data;
-  double *data_out = (double*)data_out_py->data;
-  int info;
-  
-  info = phonopy_pinv(data_out, data_in, m, n, cutoff);
-
-  return PyLong_FromLong((long) info);
 }
 
 #ifdef LIBFLAME

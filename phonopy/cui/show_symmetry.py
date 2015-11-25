@@ -104,12 +104,12 @@ def check_symmetry(input_cell,
     else:
         cell = get_primitive(input_cell, primitive_axis, symprec=symprec)
     symmetry = Symmetry(cell, symprec)
-    print get_symmetry_yaml(cell, symmetry, phonopy_version),
+    print(get_symmetry_yaml(cell, symmetry, phonopy_version))
 
     if input_cell.get_magnetic_moments() is None:
         primitive = find_primitive(cell, symprec)
         if primitive is not None:
-            print "# Primitive cell was found. It is written into PPOSCAR."
+            print("# Primitive cell was found. It is written into PPOSCAR.")
             write_vasp('PPOSCAR', primitive)
             
             # Overwrite symmetry and cell
@@ -122,7 +122,7 @@ def check_symmetry(input_cell,
                         scaled_positions=bravais_pos,
                         cell=bravais_lattice,
                         pbc=True)
-        print "# Bravais lattice is written into BPOSCAR."
+        print("# Bravais lattice is written into BPOSCAR.")
         write_vasp('BPOSCAR', bravais)
 
 

@@ -3,6 +3,38 @@
 Change Log
 ==========
 
+Oct-20-2015: Version 1.10.0 (release for testing)
+--------------------------------------------------
+
+* An experimental release for testing python 3 support. Bug reports
+  are very appreciated.
+
+Oct-20-2015: Version 1.9.7 
+-----------------------------
+
+* Siesta interface (``--elk`` option) was added (:ref:`siesta_interface`)
+  by Henrique Pereira Coutada Miranda.
+* ``WRITE_MESH = .FALSE.`` (``--nowritemesh``) tag was added
+  (:ref:`write_mesh_tag`).
+
+
+Aug-12-2015: Version 1.9.6
+-----------------------------
+
+* ``--hdf5`` option. Some output files can be written in hdf5
+  format. See :ref:`hdf5_option`.
+* Improve tetrahedron method performance in the calculation of DOS and
+  PDOS.
+* Spglib update to version 1.8.2.1.
+
+
+July-11-2015: Version 1.9.5
+-----------------------------
+
+* Elk interface (``--elk`` option) was added (:ref:`elk_interface`).
+* Spglib update to version 1.8.1. 
+
+
 Feb-18-2015: Version 1.9.4
 -----------------------------
 

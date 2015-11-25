@@ -314,15 +314,17 @@ if __name__ == '__main__':
     cell = read_vasp("POSCAR")
     symmetry = Symmetry(cell, symprec=1e-3)
     map_nonspin = symmetry.get_map_atoms()
-    print "Number of operations w/o spin", len(symmetry.get_symmetry_operations()['rotations'])
+    print("Number of operations w/o spin %d" %
+          len(symmetry.get_symmetry_operations()['rotations']))
     magmoms = parse_incar("INCAR")
     cell.set_magnetic_moments(magmoms)
     symmetry = Symmetry(cell, symprec=1e-3)
-    print "Number of operations w spin", len(symmetry.get_symmetry_operations()['rotations'])
+    print("Number of operations w spin %d" %
+          len(symmetry.get_symmetry_operations()['rotations']))
     map_withspin = symmetry.get_map_atoms()
     if ((map_nonspin - map_withspin) == 0).all():
-        print True
+        print(True)
     else:
-        print False
-        print map_nonspin
-        print map_withspin
+        print(False)
+        print(map_nonspin)
+        print(map_withspin)

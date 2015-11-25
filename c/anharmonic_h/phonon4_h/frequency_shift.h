@@ -36,7 +36,7 @@
 #define __frequency_shift4_H__
 
 #include <lapacke.h>
-#include "phonoc_array.h"
+#include <phonoc_array.h>
 
 void get_fc4_frequency_shifts(double *frequency_shifts,
 			      const double *fc4_normal_real,

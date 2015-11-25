@@ -34,9 +34,9 @@
 /* ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE */
 /* POSSIBILITY OF SUCH DAMAGE. */
 
-#include "mathfunc.h"
-#include "triplet_h/triplet.h"
-#include "triplet_h/triplet_kpoint.h"
+#include <mathfunc.h>
+#include <triplet_h/triplet.h>
+#include <triplet_h/triplet_kpoint.h>
 
 static int get_triplets_reciprocal_mesh_at_q(int map_triplets[],
 					     int map_q[],

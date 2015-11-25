@@ -38,7 +38,8 @@ import sys
 from phonopy import Phonopy
 from phonopy import PhonopyGruneisen
 from phonopy.interface import read_crystal_structure, get_default_cell_filename
-from phonopy.file_IO import parse_FORCE_SETS, parse_BORN, parse_FORCE_CONSTANTS, read_force_constants_hdf5
+from phonopy.file_IO import (parse_FORCE_SETS, parse_BORN,
+                             parse_FORCE_CONSTANTS, read_force_constants_hdf5)
 from phonopy.units import VaspToTHz, Wien2kToTHz, AbinitToTHz, PwscfToTHz
 import numpy as np
 
@@ -53,10 +54,11 @@ def get_cell(cell_filename,
              interface_mode):
     cell, optional_structure_file_information = read_crystal_structure(
         filename=cell_filename,
-        interface_mode=interface_mode)
+        interface_mode=interface_mode,
+        yaml_mode=options.yaml_mode)
     if cell is None:
-        print ("Crystal structure file of %s could not be found." %
-               optional_structure_file_information[0])
+        print("Crystal structure file of %s could not be found." %
+              optional_structure_file_information[0])
         sys.exit(1)
 
     return cell
@@ -128,6 +130,7 @@ parser.set_defaults(
     cutoff_frequency=None,
     cutoff_wave_vector=1e-4,
     factor=None,
+    is_gamma_center=False,
     is_hdf5=False,
     is_nac=False,
     is_mesh_symmetry=True,
@@ -147,7 +150,8 @@ parser.set_defaults(
     tmin=0,
     tstep=2,
     volumes_filename=None,
-    wien2k_mode=False)
+    wien2k_mode=False,
+    yaml_mode=False)
 parser.add_option("--abinit", dest="abinit_mode",
                   action="store_true", help="Invoke Abinit mode")
 parser.add_option("--band", dest="band_paths",
@@ -170,6 +174,9 @@ parser.add_option("--factor", dest="factor", type="float",
                   help="Conversion factor to favorite frequency unit")
 parser.add_option("--hdf5", dest="is_hdf5", action="store_true",
                   help="Use hdf5 to read force constants and store results")
+parser.add_option("--gc", "--gamma_center", dest="is_gamma_center",
+                  action="store_true",
+                  help="Set mesh as Gamma center")
 parser.add_option("--marker", dest="marker",
                   action="store", type="string",
                   help="Marker for plot (matplotlib)")
@@ -218,6 +225,8 @@ parser.add_option("--vf", "--volumes_filename", dest="volumes_filename",
                   help="Filename of volume is contained.")
 parser.add_option("--wien2k", dest="wien2k_mode",
                   action="store_true", help="Invoke Wien2k mode")
+parser.add_option("--yaml", dest="yaml_mode",
+                  action="store_true", help="Activate phonopy YAML mode")
 (options, args) = parser.parse_args()
 
 if options.is_hdf5:
@@ -247,13 +256,13 @@ if options.supercell_dimension:
     elif len(dim) == 3:
         dim = np.diag(dim)
     else:
-        print "Number of elements of --dim option has to be 3 or 9."
+        print("Number of elements of --dim option has to be 3 or 9.")
         sys.exit(1)
     if np.linalg.det(dim) < 1:
-        print "Determinant of supercell matrix has to be positive."
+        print("Determinant of supercell matrix has to be positive.")
         sys.exit(1)
 else:
-    print "--dim option has to be specified."
+    print("--dim option has to be specified.")
     sys.exit(1)
 
 
@@ -360,6 +369,7 @@ if options.band_paths:
 elif options.sampling_mesh:
     mesh_numbers = np.array([int(x) for x in options.sampling_mesh.split()])
     gruneisen.set_mesh(mesh_numbers,
+                       is_gamma_center=options.is_gamma_center,
                        is_mesh_symmetry=options.is_mesh_symmetry)
 
     if options.is_hdf5:
@@ -376,12 +386,20 @@ elif options.sampling_mesh:
             plt.suptitle(options.title)
 
     if options.volumes_filename is not None:
-        f = open(options.volumes_filename)
-        volumes = [float(x.split()[0]) for x in f]
-        gruneisen.write_yaml_thermal_properties(volumes,
-                                                t_step=options.tstep,
-                                                t_max=options.tmax,
-                                                t_min=options.tmin)
+        volumes = []
+        with open(options.volumes_filename) as f:
+            for line in f:
+                if line.strip()[0] == '#':
+                    continue
+                volumes.append(float(line.split()[0]))
+        if volumes:
+            gruneisen.set_thermal_properties(
+                volumes,
+                t_step=options.tstep,
+                t_max=options.tmax,
+                t_min=options.tmin,
+                cutoff_frequency=options.cutoff_frequency)
+            gruneisen.write_yaml_thermal_properties()
 else:
     pass
 

@@ -1,8 +1,38 @@
-/* hall_symbol.c */
 /* Copyright (C) 2010 Atsushi Togo */
+/* All rights reserved. */
+
+/* This file is part of spglib. */
+
+/* Redistribution and use in source and binary forms, with or without */
+/* modification, are permitted provided that the following conditions */
+/* are met: */
+
+/* * Redistributions of source code must retain the above copyright */
+/*   notice, this list of conditions and the following disclaimer. */
+
+/* * Redistributions in binary form must reproduce the above copyright */
+/*   notice, this list of conditions and the following disclaimer in */
+/*   the documentation and/or other materials provided with the */
+/*   distribution. */
+
+/* * Neither the name of the phonopy project nor the names of its */
+/*   contributors may be used to endorse or promote products derived */
+/*   from this software without specific prior written permission. */
+
+/* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS */
+/* "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT */
+/* LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS */
+/* FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE */
+/* COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, */
+/* INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, */
+/* BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; */
+/* LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER */
+/* CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT */
+/* LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN */
+/* ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE */
+/* POSSIBILITY OF SUCH DAMAGE. */
 
 #include <stdio.h>
-#include "lattice.h"
 #include "hall_symbol.h"
 #include "spg_database.h"
 #include "spacegroup.h"
@@ -30,8 +60,8 @@ static int M_bc[3][3] = {
   {-1, 0, 1 },
 };
 static int M_cc[3][3] = {
+  { 1,-1, 0 },
   { 1, 1, 0 },
-  {-1, 1, 0 },
   { 0, 0, 1 },
 };
 static int M_rc[3][3] = {
@@ -61,8 +91,8 @@ static double M_bc_inv[3][3] = {
   { 0.5, 0.0, 0.5},
 };
 static double M_cc_inv[3][3] = {
-  { 0.5,-0.5, 0.0},
   { 0.5, 0.5, 0.0},
+  {-0.5, 0.5, 0.0},
   { 0.0, 0.0, 1.0},
 };
 static double M_rc_inv[3][3] = {
@@ -292,12 +322,12 @@ static double monocli_C_VSpU[][3][9] =
   },
   { /* 7 */
     { 0, 0, 0, -1.0/2, 0, 0,  0,  0,  0, },
-    { -1, 0, 0, 1.0/2, 0, 0,  0,  0,  0, },
+    { 1, 0, 0, -1.0/2, 0, 0,  0,  0,  0, },
     { 0, 0, -1.0/2, 0, 0, 0,  0,  0,  0, },
   },
   { /* 8 */
     { 0, 0, 0, -1.0/2, 0, 0,  0,  0,  0, },
-    { 1, 0, 0, -1.0/2, 0, 0,  0,  0,  0, },
+    { -1, 0, 0, 1.0/2, 0, 0,  0,  0,  0, },
     { 0, 0, -1.0/2, 0, 0, 0,  0,  0,  0, },
   },
   { /* 9 */
@@ -553,12 +583,12 @@ static double ortho_C_VSpU[][3][9] =
 {
   { /* 1 */
     { -1.0/2, 0, 0, 0, 0, 0,  0,  0,  0, },
-    { 1.0/2, 0, 0, -1, 0, 0,  0,  0,  0, },
+    { -1.0/2, 0, 0, 1, 0, 0,  0,  0,  0, },
     { 0, 0, 0, 0, 0, -1.0/2,  0,  0,  0, },
   },
   { /* 2 */
     { -1.0/2, 0, 0, 0, 0, 0,  0,  0,  0, },
-    { -1.0/2, 0, 0, 1, 0, 0,  0,  0,  0, },
+    { 1.0/2, 0, 0, -1, 0, 0,  0,  0,  0, },
     { 0, 0, 0, 0, 0, 0,  0,  0,  0, },
   },
   { /* 3 */
@@ -573,10 +603,11 @@ static double ortho_C_VSpU[][3][9] =
   },
   { /* 5 */
     { 0, 0, 0, 0, 0, 0, -1.0/2, 0, 0, },
-    { 0, 0, 0, -1, 0, 0, 1.0/2, 0, 0, },
+    { 0, 0, 0, 1, 0, 0, -1.0/2, 0, 0, },
     { 0, 0, 0, 0, 0, -1.0/2, 0, 0, 0, },
   },
 };
+
 static int ortho_generators[][3][9] =
 {
   { /* 1 */
@@ -1469,7 +1500,7 @@ static int find_hall_symbol(double origin_shift[3],
   double primitive_lattice[3][3];
 
   switch (centering) {
-  case NO_CENTER:
+  case PRIMITIVE:
     mat_copy_matrix_d3(primitive_lattice, bravais_lattice);
     break;
   case BODY:
@@ -1580,7 +1611,7 @@ static int find_hall_symbol(double origin_shift[3],
 
  found:
   switch (centering) {
-  case NO_CENTER:
+  case PRIMITIVE:
     break;
   case BODY:
     mat_multiply_matrix_vector_d3(origin_shift, M_bcc_inv, origin_shift);
@@ -1616,7 +1647,7 @@ static int is_hall_symbol_cubic(double shift[3],
   int i;
 
   for (i = 0; i < 10; i++) {
-    if (centering == NO_CENTER) {
+    if (centering == PRIMITIVE) {
       if (is_hall_symbol(shift,
 			 hall_number,
 			 primitive_lattice,
@@ -1666,7 +1697,7 @@ static int is_hall_symbol_hexa(double shift[3],
 		       hall_number,
 		       primitive_lattice,
 		       symmetry,
-		       NO_CENTER,
+		       PRIMITIVE,
 		       hexa_generators[i],
 		       hexa_VSpU[i],
 		       symprec)) {return 1;}
@@ -1688,7 +1719,7 @@ static int is_hall_symbol_trigonal(double shift[3],
 		       hall_number,
 		       primitive_lattice,
 		       symmetry,
-		       NO_CENTER,
+		       PRIMITIVE,
 		       trigo_generators[i],
 		       trigo_VSpU[i],
 		       symprec)) {return 1;}
@@ -1730,7 +1761,7 @@ static int is_hall_symbol_rhombo(double shift[3],
 			 hall_number,
 			 primitive_lattice,
 			 symmetry,
-			 NO_CENTER,
+			 PRIMITIVE,
 			 rhombo_p_generators[i],
 			 rhombo_p_VSpU[i],
 			 symprec)) {return 1;}
@@ -1750,7 +1781,7 @@ static int is_hall_symbol_tetra(double shift[3],
   int i;
 
   for (i = 0; i < 8; i++) {
-    if (centering==NO_CENTER) {
+    if (centering==PRIMITIVE) {
       if (is_hall_symbol(shift,
 			 hall_number,
 			 primitive_lattice,
@@ -1786,7 +1817,7 @@ static int is_hall_symbol_ortho(double shift[3],
   int i;
 
   for (i = 0; i < 5; i++) {
-    if (centering == NO_CENTER) {
+    if (centering == PRIMITIVE) {
       if (is_hall_symbol(shift,
 			 hall_number,
 			 primitive_lattice,
@@ -1866,7 +1897,7 @@ static int is_hall_symbol_monocli(double shift[3],
   int i;
 
   for (i = 0; i < 9; i++) {
-    if (centering == NO_CENTER) {
+    if (centering == PRIMITIVE) {
       if (is_hall_symbol(shift,
 			 hall_number,
 			 primitive_lattice,
@@ -1938,7 +1969,7 @@ static int is_hall_symbol_tricli(double shift[3],
 		       hall_number,
 		       primitive_lattice,
 		       symmetry,
-		       NO_CENTER,
+		       PRIMITIVE,
 		       tricli_generators[i],
 		       tricli_VSpU[i],
 		       symprec)) {return 1;}
@@ -2052,7 +2083,7 @@ static void transform_translation(double trans_reduced[3],
   int i;
 
   switch (centering) {
-  case NO_CENTER:
+  case PRIMITIVE:
     mat_copy_vector_d3(trans_reduced, trans);
     break;
   case BODY:
@@ -2078,7 +2109,7 @@ static void transform_translation(double trans_reduced[3],
   }
 
   for (i = 0; i < 3; i++) {
-    trans_reduced[i] -= mat_Nint(trans_reduced[i]);
+    trans_reduced[i] = mat_Dmod1(trans_reduced[i]);
   }
 }
 
@@ -2087,7 +2118,7 @@ static void transform_rotation(double rot_reduced[3][3],
 			       SPGCONST int rot[3][3])
 {
   mat_cast_matrix_3i_to_3d(rot_reduced, rot);
-  if (centering != NO_CENTER) {
+  if (centering != PRIMITIVE) {
     switch (centering) {
     case BODY:
       mat_get_similar_matrix_d3(rot_reduced, rot_reduced, M_bcc_inv, 0);
@@ -2150,7 +2181,7 @@ static int get_origin_shift(double shift[3],
     for (j = 0; j < 9; j++) {
       shift[i] += VSpU[i][j] * dw[j];
     }
-    shift[i] -= mat_Nint(shift[i]);
+    shift[i] = mat_Dmod1(shift[i]);
   }
 
   return 1;
@@ -2175,8 +2206,8 @@ static int set_dw(double dw[3],
     transform_translation(trans_db_prim, centering, trans_db);
     if (mat_check_identity_matrix_i3(rot_db, rot)) {
       for (j = 0; j < 3; j++) {
-	dw[j] = trans_db_prim[j] - trans_prim[j];
-	dw[j] -= mat_Nint(dw[j]);
+	dw[j] = trans_prim[j] - trans_db_prim[j];
+	dw[j] = mat_Dmod1(dw[j]);
       }
       goto found;
     }
@@ -2215,7 +2246,7 @@ static int is_match_database(const int hall_number,
 	transform_translation(trans_prim, centering, symmetry->trans[i]);
 	transform_rotation(rot_prim, centering, rot_db);
 	for (k = 0; k < 3; k++) {
-	  diff[k] = trans_db_prim[k] - trans_prim[k] + origin_shift[k];
+	  diff[k] = trans_prim[k] - trans_db_prim[k] + origin_shift[k];
 	}
 	mat_multiply_matrix_vector_d3(shift_rot, rot_prim, origin_shift);
 	if (cel_is_overlap(diff, shift_rot, primitive_lattice, symprec)) {

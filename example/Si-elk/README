@@ -1,0 +1,20 @@
+This is an example of Elk interface.
+
+To create supercells with displacements:
+
+% phonopy --elk -c elk-unitcell.in -d --dim="2 2 2"
+
+A perfect 2x2x2 supercell (supercell.in) and one 2x2x2 supercells
+(supercell-xxx.in) of the conventional unit cell written in elk-unitcell.in
+are created. In addition, disp.yaml file is created. After force
+calculation with the crystal structure in supercell-001.in, it is
+needed to create FORCE_SETS file by
+
+% phonopy --elk -f INFO.OUT
+
+Here INFO.OUT file is the output of the Elk calculation and is
+supposed to contain the forces on atoms calculated by Elk (tforce = .true.).
+The disp.yaml file has to be put in the current directory. Now you can run
+phonon calculation, e.g.,
+
+% phonopy --elk -c elk-unitcell.in -p --dim="2 2 2" --pa="0 1/2 1/2 1/2 0 1/2 1/2 1/2 0" --band="1/2 1/2 1/2 0 0 0 1/2 0 1/2"

@@ -15,6 +15,7 @@ class Phono3pySettings(Settings):
         self._grid_points = None
         self._ion_clamped = False
         self._is_bterta = False
+        self._is_imag_self_energy = False
         self._is_isotope = False
         self._is_lbte = False
         self._is_linewidth = False
@@ -26,6 +27,7 @@ class Phono3pySettings(Settings):
         self._read_amplitude = False
         self._read_collision = None
         self._read_gamma = False
+        self._run_with_g = True
         self._phonon_supercell_matrix = None
         self._pinv_cutoff = 1.0e-8
         self._scattering_event_class = None # scattering event class 1 or 2
@@ -34,6 +36,7 @@ class Phono3pySettings(Settings):
         self._write_amplitude = False
         self._write_collision = False
         self._write_gamma = False
+        self._write_detailed_gamma = False
         
     def set_boundary_mfp(self, boundary_mfp):
         self._boundary_mfp = boundary_mfp
@@ -88,6 +91,12 @@ class Phono3pySettings(Settings):
 
     def get_is_bterta(self):
         return self._is_bterta
+
+    def set_is_imag_self_energy(self, is_imag_self_energy):
+        self._is_imag_self_energy = is_imag_self_energy
+
+    def get_is_imag_self_energy(self):
+        return self._is_imag_self_energy
 
     def set_is_isotope(self, is_isotope):
         self._is_isotope = is_isotope
@@ -149,11 +158,11 @@ class Phono3pySettings(Settings):
     def get_pinv_cutoff(self):
         return self._pinv_cutoff
 
-    def set_read_gamma(self, read_gamma):
-        self._read_gamma = read_gamma
+    def set_read_amplitude(self, read_amplitude):
+        self._read_amplitude = read_amplitude
 
-    def get_read_gamma(self):
-        return self._read_gamma
+    def get_read_amplitude(self):
+        return self._read_amplitude
 
     def set_read_collision(self, read_collision):
         self._read_collision = read_collision
@@ -161,11 +170,17 @@ class Phono3pySettings(Settings):
     def get_read_collision(self):
         return self._read_collision
 
-    def set_read_amplitude(self, read_amplitude):
-        self._read_amplitude = read_amplitude
+    def set_read_gamma(self, read_gamma):
+        self._read_gamma = read_gamma
 
-    def get_read_amplitude(self):
-        return self._read_amplitude
+    def get_read_gamma(self):
+        return self._read_gamma
+
+    def set_run_with_g(self, run_with_g):
+        self._run_with_g = run_with_g
+
+    def get_run_with_g(self):
+        return self._run_with_g
 
     def set_scattering_event_class(self, scattering_event_class):
         self._scattering_event_class = scattering_event_class
@@ -191,18 +206,23 @@ class Phono3pySettings(Settings):
     def get_write_amplitude(self):
         return self._write_amplitude
 
-    def set_write_gamma(self, write_gamma):
-        self._write_gamma = write_gamma
-
-    def get_write_gamma(self):
-        return self._write_gamma
-
     def set_write_collision(self, write_collision):
         self._write_collision = write_collision
 
     def get_write_collision(self):
         return self._write_collision
 
+    def set_write_detailed_gamma(self, write_detailed_gamma):
+        self._write_detailed_gamma = write_detailed_gamma
+
+    def get_write_detailed_gamma(self):
+        return self._write_detailed_gamma
+
+    def set_write_gamma(self, write_gamma):
+        self._write_gamma = write_gamma
+
+    def get_write_gamma(self):
+        return self._write_gamma
 
 
 class Phono3pyConfParser(ConfParser):
@@ -256,6 +276,10 @@ class Phono3pyConfParser(ConfParser):
                 if self._options.is_bterta:
                     self._confs['bterta'] = '.true.'
 
+            if opt.dest == 'is_imag_self_energy':
+                if self._options.is_imag_self_energy:
+                    self._confs['imag_self_energy'] = '.true.'
+
             if opt.dest == 'is_isotope':
                 if self._options.is_isotope:
                     self._confs['isotope'] = '.true.'
@@ -300,6 +324,10 @@ class Phono3pyConfParser(ConfParser):
                 if self._options.read_gamma:
                     self._confs['read_gamma'] = '.true.'
 
+            if opt.dest == 'run_with_g':
+                if not self._options.run_with_g:
+                    self._confs['run_with_g'] = '.false.'
+
             if opt.dest == 'read_collision':
                 if self._options.read_collision is not None:
                     self._confs['read_collision'] = self._options.read_collision
@@ -320,6 +348,10 @@ class Phono3pyConfParser(ConfParser):
             if opt.dest == 'write_amplitude':
                 if self._options.write_amplitude:
                     self._confs['write_amplitude'] = '.true.'
+
+            if opt.dest == 'write_detailed_gamma':
+                if self._options.write_detailed_gamma:
+                    self._confs['write_detailed_gamma'] = '.true.'
 
             if opt.dest == 'write_gamma':
                 if self._options.write_gamma:
@@ -391,6 +423,10 @@ class Phono3pyConfParser(ConfParser):
                 if confs['bterta'] == '.true.':
                     self.set_parameter('is_bterta', True)
 
+            if conf_key == 'imag_self_energy':
+                if confs['imag_self_energy'] == '.true.':
+                    self.set_parameter('is_imag_self_energy', True)
+                    
             if conf_key == 'isotope':
                 if confs['isotope'] == '.true.':
                     self.set_parameter('is_isotope', True)
@@ -445,16 +481,20 @@ class Phono3pyConfParser(ConfParser):
                 if confs['read_amplitude'] == '.true.':
                     self.set_parameter('read_amplitude', True)
 
-            if conf_key == 'read_gamma':
-                if confs['read_gamma'] == '.true.':
-                    self.set_parameter('read_gamma', True)
-
             if conf_key == 'read_collision':
                 if confs['read_collision'] == 'all':
                     self.set_parameter('read_collision', 'all')
                 else:
                     vals = [int(x) for x in confs['read_collision'].split()]
                     self.set_parameter('read_collision', vals)
+
+            if conf_key == 'read_gamma':
+                if confs['read_gamma'] == '.true.':
+                    self.set_parameter('read_gamma', True)
+
+            if conf_key == 'run_with_g':
+                if confs['run_with_g'] == '.false.':
+                    self.set_parameter('run_with_g', False)
 
             if conf_key == 'scattering_event_class':
                 self.set_parameter('scattering_event_class',
@@ -475,6 +515,10 @@ class Phono3pyConfParser(ConfParser):
                 if confs['write_amplitude'] == '.true.':
                     self.set_parameter('write_amplitude', True)
 
+            if conf_key == 'write_detailed_gamma':
+                if confs['write_detailed_gamma'] == '.true.':
+                    self.set_parameter('write_detailed_gamma', True)
+                    
             if conf_key == 'write_gamma':
                 if confs['write_gamma'] == '.true.':
                     self.set_parameter('write_gamma', True)
@@ -528,6 +572,10 @@ class Phono3pyConfParser(ConfParser):
         if params.has_key('is_bterta'):
             self._settings.set_is_bterta(params['is_bterta'])
 
+        # Calculate imaginary part of self energy
+        if params.has_key('is_imag_self_energy'):
+            self._settings.set_is_imag_self_energy(params['is_imag_self_energy'])
+
         # Calculate lifetime due to isotope scattering
         if params.has_key('is_isotope'):
             self._settings.set_is_isotope(params['is_isotope'])
@@ -567,13 +615,18 @@ class Phono3pyConfParser(ConfParser):
         if params.has_key('read_amplitude'):
             self._settings.set_read_amplitude(params['read_amplitude'])
 
+        # Read collision matrix and gammas from hdf5
+        if params.has_key('read_collision'):
+            self._settings.set_read_collision(params['read_collision'])
+
         # Read gammas from hdf5
         if params.has_key('read_gamma'):
             self._settings.set_read_gamma(params['read_gamma'])
             
-        # Read collision matrix and gammas from hdf5
-        if params.has_key('read_collision'):
-            self._settings.set_read_collision(params['read_collision'])
+        # Calculate imag-part self energy with integration weights from gaussian
+        # smearing function
+        if params.has_key('run_with_g'):
+            self._settings.set_run_with_g(params['run_with_g'])
             
         # Sum partial kappa at q-stars
         if params.has_key('no_kappa_stars'):
@@ -597,7 +650,12 @@ class Phono3pyConfParser(ConfParser):
         if params.has_key('write_amplitude'):
             self._settings.set_write_amplitude(params['write_amplitude'])
 
-        # Write gammas to hdf5
+        # Write detailed imag-part of self energy to hdf5
+        if params.has_key('write_detailed_gamma'):
+            self._settings.set_write_detailed_gamma(
+                params['write_detailed_gamma'])
+
+        # Write imag-part of self energy to hdf5
         if params.has_key('write_gamma'):
             self._settings.set_write_gamma(params['write_gamma'])
 

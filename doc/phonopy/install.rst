@@ -33,16 +33,16 @@ Ubuntu linux as a virtual machine. See :ref:`virtualmachine`
 
 2. Download the source code from:
 
-   https://sourceforge.net/projects/phonopy/ .
+   https://sourceforge.net/projects/phonopy/files/phonopy/phonopy-1.9/ .
 
    and extract it::
 
-   % tar xvfz phonopy-1.8.5.1.tar.gz
+   % tar xvfz phonopy-1.9.7.tar.gz
 
 3. Put your phonopy directory into your ``PYTHONPATH`` in .bashrc etc,
    e.g.::
 
-      export PYTHONPATH=~/phonopy-1.8.5.1/lib/python
+      export PYTHONPATH=~/phonopy-1.9.7/lib/python
 
 4. Set up C-libraries for python C-API and python codes. This can be
    done as follows:

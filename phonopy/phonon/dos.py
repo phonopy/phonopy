@@ -113,7 +113,7 @@ def plot_partial_dos(pyplot,
         pdos_sum = np.zeros(frequency_points.shape, dtype='double')
         for i in set_for_sum:
             if i > num_atom - 1 or i < 0:
-                print "Your specified atom number is out of range."
+                print("Your specified atom number is out of range.")
                 raise ValueError
             pdos_sum += partial_dos[i]
         if flip_xy:
@@ -193,7 +193,7 @@ class Dos:
         if self._tetrahedron_mesh is not None:
             self._sigma = 0
         if self._sigma is None:
-            self._sigma = (f_max - f_min) / 100
+            self._sigma = (f_max - f_min) / 100.0
             
         if freq_min is None:
             f_min -= self._sigma * 10
@@ -206,7 +206,7 @@ class Dos:
             f_max = freq_max
 
         if freq_pitch is None:
-            f_delta = (f_max - f_min) / 200
+            f_delta = (f_max - f_min) / 200.0
         else:
             f_delta = freq_pitch
         self._frequency_points = np.arange(f_min, f_max + f_delta * 0.1, f_delta)
@@ -245,7 +245,7 @@ class TotalDos(Dos):
         try:
             from scipy.optimize import curve_fit
         except ImportError:
-            print "You need to install python-scipy."
+            print("You need to install python-scipy.")
             exit(1)
 
         def Debye_dos(freq, a):
@@ -255,7 +255,7 @@ class TotalDos(Dos):
         freq_max = self._frequency_points.max()
         
         if freq_max_fit is None:
-            N_fit = len(self._frequency_points) / 4 # Hard coded
+            N_fit = len(self._frequency_points) / 4.0 # Hard coded
         else:
             N_fit = int(freq_max_fit / (freq_max - freq_min) *
                         len(self._frequency_points))
@@ -322,7 +322,7 @@ class PartialDos(Dos):
                      tetrahedron_method=tetrahedron_method)
         self._eigenvectors = self._mesh_object.get_eigenvectors()
 
-        num_atom = self._frequencies.shape[1] / 3
+        num_atom = self._frequencies.shape[1] // 3
         i_x = np.arange(num_atom, dtype='int') * 3
         i_y = np.arange(num_atom, dtype='int') * 3 + 1
         i_z = np.arange(num_atom, dtype='int') * 3 + 2
@@ -418,6 +418,6 @@ class PartialDos(Dos):
     def _get_partial_dos_at_freq(self, amplitudes, weights):
         num_band = self._frequencies.shape[1]
         pdos = [(np.dot(weights, self._eigvecs2[:, i, :] * amplitudes)).sum()
-                for i in range(num_band / 3)]
+                for i in range(num_band // 3)]
         return pdos
 

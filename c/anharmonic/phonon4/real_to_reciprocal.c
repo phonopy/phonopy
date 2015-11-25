@@ -33,10 +33,9 @@
 /* POSSIBILITY OF SUCH DAMAGE. */
 
 #include <lapacke.h>
-#include "phonoc_array.h"
-#include "phonoc_math.h"
-#include "phonoc_utils.h"
-#include "phonon4_h/real_to_reciprocal.h"
+#include <phonoc_array.h>
+#include <phonoc_utils.h>
+#include <phonon4_h/real_to_reciprocal.h>
 
 static void real_to_reciprocal_elements(lapack_complex_double *fc4_rec_elem,
 					const double q[12],

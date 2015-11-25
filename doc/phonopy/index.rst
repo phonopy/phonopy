@@ -22,9 +22,19 @@ Welcome to phonopy
 **Phonopy** is an open source package for phonon calculations at
 harmonic and quasi-harmonic levels.
 
+Phonopy-1.9.7 is the stable version and 1.10.0 is an experimental
+release toward python 3 support.
+
 **Phono3py** for phonon-phonon interaction calculations has been 
 released as an open beta
-version. See the document at http://phonopy.sourceforge.net/phono3py/ .
+version. See the document at http://phonopy.sourceforge.net/phono3py/
+.
+
+**Phonon database**: A collection of phonon and mode-Gruneisen
+parameter calculations is available at
+http://phonondb.mtl.kyoto-u.ac.jp/ . The raw data of phonopy & VASP
+results can be downloaed.
+
 
 Selected features
 =======================
@@ -49,13 +59,15 @@ Selected features of harmonic and quasi-harmonic phonons are:
 |i0| |i1| |i2| |i3|
 
 
-Interfaces for calculators
+Interfaces to calculators
 ===========================
 
 - :ref:`VASP interface <tutorial>` (:ref:`finite displacement method <reference_plk>`)
 - :ref:`Wien2k interface <wien2k_interface>` (:ref:`finite displacement method <reference_plk>`)
 - :ref:`Abinit interface <abinit_interface>` (:ref:`finite displacement method <reference_plk>`) 
 - :ref:`Pwscf interface <pwscf_interface>` (:ref:`finite displacement method <reference_plk>`) 
+- :ref:`Siesta interface <siesta_interface>` (:ref:`finite displacement method <reference_plk>`) 
+- :ref:`Elk interface <elk_interface>` (:ref:`finite displacement method <reference_plk>`) 
 - :ref:`VASP DFPT interface <vasp_dfpt_interface>` (force constants)
 - :ref:`FHI-aims interface <FHI_aims_interface>` (:ref:`finite displacement method <reference_plk>`)
 

@@ -1,6 +1,6 @@
 .. _tutorial:
 
-Tutorial using VASP as calculator
+VASP & phonopy calculation
 ==================================
 
 Pre-process

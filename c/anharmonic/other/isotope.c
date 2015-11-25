@@ -34,8 +34,7 @@
 
 #include <stdlib.h>
 #include <lapacke.h>
-#include "phonoc_utils.h"
-#include "phonoc_math.h"
+#include <phonoc_utils.h>
 
 void get_isotope_scattering_strength(double *gamma,
 				     const int grid_point,

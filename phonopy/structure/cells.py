@@ -56,7 +56,10 @@ def trim_cell(relative_axes, cell, symprec):
 
     trimed_positions = []
     trimed_numbers = []
-    trimed_masses = []
+    if masses is None:
+        trimed_masses = None
+    else:
+        trimed_masses = []
     if magmoms is None:
         trimed_magmoms = None
     else:
@@ -84,7 +87,8 @@ def trim_cell(relative_axes, cell, symprec):
             trimed_positions[num_atom] = pos
             num_atom += 1
             trimed_numbers.append(numbers[i])
-            trimed_masses.append(masses[i])
+            if masses is not None:
+                trimed_masses.append(masses[i])
             if magmoms is not None:
                 trimed_magmoms.append(magmoms[i])
             atom_map.append(i)
@@ -103,28 +107,27 @@ def print_cell(cell, mapping=None, stars=None):
     masses = cell.get_masses()
     magmoms = cell.get_magnetic_moments()
     lattice = cell.get_cell()
-    print "Lattice vectors:"
-    print "  a %20.15f %20.15f %20.15f" % tuple(lattice[0])
-    print "  b %20.15f %20.15f %20.15f" % tuple(lattice[1])
-    print "  c %20.15f %20.15f %20.15f" % tuple(lattice[2])
-    print "Atomic positions (fractional):"
+    print("Lattice vectors:")
+    print("  a %20.15f %20.15f %20.15f" % tuple(lattice[0]))
+    print("  b %20.15f %20.15f %20.15f" % tuple(lattice[1]))
+    print("  c %20.15f %20.15f %20.15f" % tuple(lattice[2]))
+    print("Atomic positions (fractional):")
     for i, v in enumerate(cell.get_scaled_positions()):
         num = " "
         if stars is not None:
             if i in stars:
                 num = "*"
         num += "%d" % (i + 1)
-        if magmoms is None:
-            print "%5s %-2s%18.14f%18.14f%18.14f %7.3f" % \
-                (num, symbols[i], v[0], v[1], v[2], masses[i]),
-        else:
-            print "%5s %-2s%18.14f%18.14f%18.14f %7.3f  %5.3f" % \
-                (num, symbols[i], v[0], v[1], v[2], masses[i], magmoms[i]),
-
+        line = ("%5s %-2s%18.14f%18.14f%18.14f" % 
+                (num, symbols[i], v[0], v[1], v[2]))
+        if masses is not None:
+            line += " %7.3f" % masses[i]
+        if magmoms is not None:
+            line += "  %5.3f" % magmoms[i]
         if mapping is None:
-            print
+            print(line)
         else:
-            print ">", mapping[i]+1
+            print(line + " > %d" % (mapping[i] + 1))
 
 class Supercell(Atoms):
     """Build supercell from supercell matrix
@@ -174,10 +177,10 @@ class Supercell(Atoms):
                                          sur_cell,
                                          symprec)
 
-        multi = supercell.get_number_of_atoms() / unitcell.get_number_of_atoms()
+        multi = supercell.get_number_of_atoms() // unitcell.get_number_of_atoms()
         
         if multi != determinant(self._supercell_matrix):
-            print "Supercell creation failed."
+            print("Supercell creation failed.")
             Atoms.__init__(self)
         else:            
             Atoms.__init__(self,
@@ -221,7 +224,10 @@ class Supercell(Atoms):
         atom_map = []
         positions_multi = []
         numbers_multi = []
-        masses_multi = []
+        if masses is None:
+            masses_multi = None
+        else:
+            masses_multi = []
         if magmoms is None:
             magmoms_multi = None
         else:
@@ -234,9 +240,10 @@ class Supercell(Atoms):
                                                 (pos[1] + j) / multi[1],
                                                 (pos[2] + i) / multi[2]])
                         numbers_multi.append(numbers[l])
-                        masses_multi.append(masses[l])
+                        if masses is not None:
+                            masses_multi.append(masses[l])
                         atom_map.append(l)
-                        if not magmoms is None:
+                        if magmoms is not None:
                             magmoms_multi.append(magmoms[l])
 
         simple_supercell = Atoms(numbers=numbers_multi,
@@ -356,7 +363,7 @@ def get_Delaunay_reduction(lattice, tolerance):
         if reduce_bases(extended_bases, tolerance):
             break
     if i == 99:
-        print "Delaunary reduction is failed."
+        print("Delaunary reduction was failed.")
 
     shortest = get_shortest_bases_from_extented_bases(extended_bases, tolerance)
 
@@ -389,7 +396,7 @@ def get_shortest_bases_from_extented_bases(extended_bases, tolerance):
     basis[5]  = extended_bases[1] + extended_bases[2]
     basis[6]  = extended_bases[2] + extended_bases[0]
     # Sort bases by the lengthes (shorter is earlier)
-    basis = sorted(basis, cmp=mycmp)
+    basis = sorted(basis, key=lambda vec: (vec ** 2).sum())
     
     # Choose shortest and linearly independent three bases
     # This algorithm may not be perfect.
@@ -400,7 +407,7 @@ def get_shortest_bases_from_extented_bases(extended_bases, tolerance):
                         [basis[i], basis[j], basis[k]])) > tolerance:
                     return np.array([basis[i], basis[j], basis[k]])
 
-    print "Delaunary reduction is failed."
+    print("Delaunary reduction is failed.")
     return np.array(basis[:3], dtype='double')
 
 #

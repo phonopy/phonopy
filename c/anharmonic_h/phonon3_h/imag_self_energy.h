@@ -35,7 +35,7 @@
 #ifndef __imag_self_energy_H__
 #define __imag_self_energy_H__
 
-#include "phonoc_array.h"
+#include <phonoc_array.h>
 
 void get_imag_self_energy(double *gamma,
 			  const Darray *fc3_normal_squared,

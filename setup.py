@@ -1,23 +1,42 @@
 from distutils.core import setup, Extension
 import numpy
+
 include_dirs_numpy = [numpy.get_include()]
+
+######################
+# _phonopy extension #
+######################
+include_dirs_phonopy = ['c/harmonic_h', 'c/kspclib_h'] + include_dirs_numpy
+sources_phonopy = ['c/_phonopy.c',
+                   'c/harmonic/dynmat.c',
+                   'c/harmonic/derivative_dynmat.c',
+                   'c/kspclib/kgrid.c',
+                   'c/kspclib/tetrahedron_method.c']
+
+if __name__ == '__main__':
+    extra_compile_args_phonopy = []
+    extra_link_args_phonopy = []
+else:
+    extra_compile_args_phonopy = ['-fopenmp',]
+    extra_link_args_phonopy = ['-lgomp',]
 
 extension_phonopy = Extension(
     'phonopy._phonopy',
-    # extra_compile_args=['-fopenmp'],
-    # extra_link_args=['-lgomp'],
-    include_dirs=['c/harmonic_h'] + include_dirs_numpy,
-    sources=['c/_phonopy.c',
-             'c/harmonic/dynmat.c',
-             'c/harmonic/derivative_dynmat.c'])
+    extra_compile_args=extra_compile_args_phonopy,
+    extra_link_args=extra_link_args_phonopy,
+    include_dirs=include_dirs_phonopy,
+    sources=sources_phonopy)
 
 
+#####################
+# _spglib extension #
+#####################
 if __name__ == '__main__':
     extra_compile_args_spglib=[]
     extra_link_args_spglib=[]
 else:
-    extra_compile_args_spglib=['-fopenmp']
-    extra_link_args_spglib=['-lgomp']
+    extra_compile_args_spglib=['-fopenmp',]
+    extra_link_args_spglib=['-lgomp',]
 
 extension_spglib = Extension(
     'phonopy._spglib',
@@ -27,6 +46,7 @@ extension_spglib = Extension(
     sources=['c/_spglib.c',
              'c/spglib/cell.c',
              'c/spglib/hall_symbol.c',
+             'c/spglib/kgrid.c',
              'c/spglib/kpoint.c',
              'c/spglib/lattice.c',
              'c/spglib/mathfunc.c',
@@ -40,9 +60,9 @@ extension_spglib = Extension(
              'c/spglib/spg_database.c',
              'c/spglib/spglib.c',
              'c/spglib/spin.c',
-             'c/spglib/symmetry.c',
-             'c/spglib/tetrahedron_method.c'])
+             'c/spglib/symmetry.c'])
 
+ext_modules_phonopy = [extension_phonopy, extension_spglib]
 packages_phonopy = ['phonopy',
                     'phonopy.cui',
                     'phonopy.gruneisen',
@@ -64,11 +84,11 @@ scripts_phonopy = ['scripts/phonopy',
 
 if __name__ == '__main__':
     setup(name='phonopy',
-          version='1.9.4',
+          version='1.10.0',
           description='This is the phonopy module.',
           author='Atsushi Togo',
           author_email='atz.togo@gmail.com',
           url='http://phonopy.sourceforge.net/',
           packages=packages_phonopy,
           scripts=scripts_phonopy,
-          ext_modules=[extension_phonopy, extension_spglib])
+          ext_modules=ext_modules_phonopy)

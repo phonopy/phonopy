@@ -6,22 +6,43 @@ Citation of phonopy
 
 If you have used phonopy, please cite the following article:
 
-- "First-principles calculations of the ferroelastic transition
-  between rutile-type and CaCl2-type SiO2 at high pressures",
-  Atsushi Togo, Fumiyasu Oba, and Isao Tanaka, Phys. Rev. B, 78, 134106 (2008)
+* "First principles phonon calculations in materials science",
+    Atsushi Togo and Isao Tanaka, Scr. Mater., **108**, 1-5 (2015)
 
-::
+    http://dx.doi.org/10.1016/j.scriptamat.2015.07.021
 
-  @article {phonopy,
-       Journal = {Phys. rev. B},
-       Year = {2008},
-       Title = {First-principles calculations of the ferroelastic transition between rutile-type and CaCl2-type SiO2 at high pressures},
-       Author = {Togo, A and Oba, F and Tanaka, I},
-       Pages = {134106},
-       Volume = {78},
-       Issue = {13},
-       Month = {Oct}
-  }
+  ::
+  
+     @article {phonopy,
+          Journal = {Scr. Mater.},
+          Year = {2015},
+          Title = {First principles phonon calculations in materials science},
+          Author = {Togo, A and Tanaka, I},
+          Pages = {1--5},
+          Volume = {108},
+          Month = {Nov}
+     }
+
+The following article is not necessarily cited, but the citation
+encourages running phonopy project.
+
+* "First-principles calculations of the ferroelastic transition between rutile-type and CaCl2-type SiO2 at high pressures",
+    Atsushi Togo, Fumiyasu Oba, and Isao Tanaka, Phys. Rev. B, **78**, 134106 (2008)
+
+    http://dx.doi.org/10.1103/PhysRevB.78.134106
+
+  ::
+  
+     @article {phonopy,
+  	   Journal = {Phys. rev. B},
+  	   Year = {2008},
+  	   Title = {First-principles calculations of the ferroelastic transition between rutile-type and CaCl$_2$-type SiO$_2$ at high pressures},
+  	   Author = {Togo, A and Oba, F and Tanaka, I},
+  	   Pages = {134106--134114},
+  	   Volume = {78},
+  	   Issue = {13},
+  	   Month = {Oct}
+     }
 
 Some papers where phonopy was used
 -----------------------------------

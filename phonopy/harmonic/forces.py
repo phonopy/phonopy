@@ -62,6 +62,6 @@ class Forces:
         return self.forces
 
     def set_translational_invariance(self):
-        self.forces = self.forces - \
-            np.sum(self.forces, axis=0) / self.forces.shape[0]
+        self.forces = (self.forces - 
+                       np.sum(self.forces, axis=0) / self.forces.shape[0])
         

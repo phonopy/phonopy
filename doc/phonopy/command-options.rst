@@ -29,6 +29,7 @@ tags:
 * ``--nac`` (``NAC = .TRUE.``)
 * ``--nosym`` (``SYMMETRY = .FALSE.``)
 * ``--nomeshsym`` (``MESH_SYMMETRY = .FALSE.``)
+* ``--nowritemesh`` (``WRITE_MESH = .FALSE.``)
 * ``--pa``, ``--primitive_axis`` (``PRIMITIVE_AXIS``)
 * ``--pd``, ``--projection_direction`` (``PROJECTION_DIRECTION``)
 * ``--pdos`` (``PDOS``)
@@ -55,27 +56,12 @@ tags.
 Force calculators
 ------------------
 
-If none of the following calculators are specified, VASP mode is invoked.
+Currently interfaces for VASP, Wien2k, Pwscf, Abinit, and Elk are
+prepared. Wien2k, Pwscf, Abinit and Elk interfaces are invoked with
+``--wienk2``, ``--pwscf``, ``--abinit``, and ``--elk`` options,
+respectively, and if none of these options is specified, VASP mode is invoked.
 
-The physical unit system used for the calculators are shown below.
-
-::
-
-           | Distance   Atomic mass   Force         Force constants
-   -----------------------------------------------------------------
-   VASP    | Angstrom   AMU           eV/Angstrom   eV/Angstrom^2
-   Wien2k  | au         AMU           mRy/au        mRy/au^2
-   Pwscf   | au         AMU           Ry/au         Ry/au^2
-   Abinit  | au         AMU           eV/Angstrom   eV/Angstrom.au
-
-
-Default unit cell file names are as follows::
-    
-   VASP    | POSCAR     
-   Wien2k  | case.struct
-   Abinit  | unitcell.in
-   Pwscf   | unitcell.in
-
+The details about these interfaces are found at :ref:`calculator_interfaces`.
 
 .. _wien2k_mode:
 
@@ -86,8 +72,7 @@ Default unit cell file names are as follows::
 
 This option invokes the WIEN2k mode.In this mode. Usually this option
 is used with ``--cell`` (``-c``) option or ``CELL_FILENAME`` tag to
-read Pwscf input file that contains the unit cell crystal structure,
-e.g.,
+read WIEN2k crystal structure file.
 
 ::
 
@@ -130,6 +115,32 @@ input file that contains the unit cell crystal structure, e.g.,
 
    % phonopy --pwscf -c NaCl.in band.conf
 
+.. _siesta_mode:
+
+``--siesta``
+~~~~~~~~~~~~
+
+Siesta mode is invoked with this option. Usually this option is used
+with ``--cell`` (``-c``) option or ``CELL_FILENAME`` tag to read a Siesta
+input file that contains the unit cell crystal structure, e.g.,
+
+::
+
+   % phonopy --siesta -c Si.fdf band.conf
+
+.. _elk_mode:
+
+``--elk``
+~~~~~~~~~~~~
+
+Pwscf mode is invoked with this option. Usually this option is used
+with ``--cell`` (``-c``) option or ``CELL_FILENAME`` tag to read Elk
+input file that contains the unit cell crystal structure, e.g.,
+
+::
+
+   % phonopy --elk -c elk-unitcell.in band.conf
+
   
 .. _cell_filename_option:
 
@@ -143,7 +154,7 @@ Unit cell crystal structure file is specified with this tag.
 
 ::
 
-   % phonopy --cell=UPOSCAR band.conf
+   % phonopy --cell=POSCAR-unitcell band.conf
 
 Without specifying this tag, default file name is searched in current
 directory. The default file names for the calculators are as follows::
@@ -152,6 +163,7 @@ directory. The default file names for the calculators are as follows::
    Wien2k | case.struct
    Abinit | unitcell.in
    Pwscf  | unitcell.in
+   Elk    | elk.in
 
 Create ``FORCE_SETS``
 ----------------------
@@ -205,7 +217,7 @@ determined with this unit.
 
 ::
 
-   % phonopy --abinit=unitcell.in -f disp-001/supercell.out disp-002/supercell.out  ...
+   % phonopy --abinit -f disp-001/supercell.out disp-002/supercell.out  ...
 
 
 .. _pwscf_force_sets_option:
@@ -218,7 +230,7 @@ files.
 
 ::
 
-   % phonopy --pwscf=unitcell.in -f disp-001/supercell.out disp-002/supercell.out  ...
+   % phonopy --pwscf -f disp-001/supercell.out disp-002/supercell.out  ...
 
 Here ``*.out`` files are the saved texts of standard outputs of Pwscf calculations.
    
@@ -242,17 +254,21 @@ with the P lattice format is supported.**
 
 ::
 
-   % phonopy --wien2k=case.struct -f case_001/case_001.scf case_002/case_002.scf ...
+   % phonopy --wien2k -f case_001/case_001.scf case_002/case_002.scf ...
 
 For more information, :ref:`wien2k_interface`.
 
+.. _elk_force_sets_option:
 
-.. Though the ``--fz`` option is supported as well as the VASP interface,
-.. usually the ``-f`` option is preferable to ``--fz``.
+Elk interface
+^^^^^^^^^^^^^^^^
 
-.. ::
+``FORCE_SETS`` file is created from ``disp.yaml`` and Elk output
+files.
 
-..    % phonopy --wien2k=case.struct --fz case_000/case_000.scf case_001/case_001.scf ...
+::
+
+   % phonopy --elk -f disp-001/INFO.OUT disp-002/INFO.OUT  ...
 
 
 Create ``FORCE_CONSTANTS``
@@ -274,19 +290,6 @@ VASP output of force constants is imported from
 
 This ``FORCE_CONSTANTS`` can be used instead of ``FORCE_SETS``. For
 more details, please refer :ref:`vasp_dfpt_interface`.
-
-.. ``--fco``
-.. ~~~~~~~~~~
-
-.. Force constants are read from VASP ``OUTCAR`` file, instead of
-.. ``vasprun.xml``. This option can be used as well as ``--fc`` tag.
-.. ``--fc`` is recommended than ``--fco`` because ``vasprun.xml`` has
-.. more digits than ``OUTCAR``.
-
-.. ::
-
-..    % phonopy --fco OUTCAR
-
 
 .. _graph_option:
 
@@ -323,13 +326,12 @@ Unit conversion factor
 ~~~~~~~~~~~~
 
 Unit conversion factor of frequency from input values to your favorite
-unit is specified. Default value is used to convert to THz. In the
-case of VASP mode, it is calculated by
-:math:`\sqrt{\text{eV/AMU}}`/(:math:`\text{\AA}\cdot2\pi\cdot10^{12}`)
-(=15.633302) in SI base unit. The default conversion factors for
-``wien2k``, ``abinit``, and ``pwscf`` are 3.44595, 21.49068 and
-108.9708, respectively. These are determined following the physical
-unit systems of the calculators.
+unit is specified. The default value is that to convert to THz. The
+default conversion factors for ``wien2k``, ``abinit``, ``pwscf``, and
+``elk`` are 3.44595, 21.49068, 108.9708, and 154.1079
+respectively. These are determined following the physical unit systems
+of the calculators. How to calcualte these conversion factors is
+explained at :ref:`physical_unit_conversion`.
 
 When calculating thermal property, the factor to THz is
 required. Otherwise the calculated thermal properties have wrong
@@ -339,6 +341,8 @@ where the frequency is simply shown in the unit you specified.
 ::
 
    % phonopy --factor=521.471
+
+
 
 Log level
 ----------
@@ -376,10 +380,40 @@ printed out and phonopy stops without going to phonon analysis.
 
    % phonopy --symmetry
 
-This tag can be used together with the ``--cell``, ``--abinit``,
-``--pwscf``, ``--wien2k``, or ``--primitive_axis`` option.
+This tag can be used together with the ``--cell`` (``-c``),
+``--abinit``, ``--pwscf``, ``--elk``, ``--wien2k``, or
+``--primitive_axis`` option.
 
+Input/Output file control
+-------------------------
 
+.. _hdf5_option:
+
+``--hdf5``
+~~~~~~~~~~~
+
+The following input/output files are read/written in hdf5 format
+instead of their original formats (in parenthesis).
+
+* ``force_constants.hdf5`` (``FORCE_CONSTANTS``)
+* ``mesh.hdf5`` (``mesh.yaml``)
+
+``force_constants.hdf5``
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+With ``--hdf5`` option and ``FORCE_CONSTANTS = WRITE``
+(``--writefc``), ``force_constants.hdf5`` is written.
+With ``--hdf5`` option and ``FORCE_CONSTANTS = READ`` (``--readfc``),
+``force_constants.hdf5`` is read.
+
+``mesh.hdf5``
+^^^^^^^^^^^^^^
+
+In the mesh sampling calculations (see :ref:`mesh_sampling_tags`),
+calculation results are written into ``mesh.hdf5`` but not into
+``mesh.yaml``. Using this option may reduce the data output size and
+thus writing time when ``mesh.yaml`` is huge, e.g., eigenvectors are
+written on a dense sampling mesh.
 
 .. |sflogo| image:: http://sflogo.sourceforge.net/sflogo.php?group_id=161614&type=1
             :target: http://sourceforge.net
