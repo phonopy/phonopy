@@ -43,11 +43,12 @@ import phonopy.file_IO as file_IO
 from phonopy.cui.settings import Settings, PhonopyConfParser
 from phonopy.cui.show_symmetry import check_symmetry
 from phonopy.units import *
-from phonopy.version import phonopy_version
+from phonopy.version import __version__
 from phonopy.structure.cells import print_cell, determinant
 from phonopy.structure.atoms import atom_data, symbol_map
 from phonopy.interface import create_FORCE_SETS, read_crystal_structure
 
+phonopy_version = __version__
 
 # AA is created at http://www.network-science.de/ascii/.
 def print_phononpy():

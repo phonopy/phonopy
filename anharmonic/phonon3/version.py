@@ -1,4 +1,4 @@
-# Copyright (C) 2013 Atsushi Togo
+# Copyright (C) 2015 Atsushi Togo
 # All rights reserved.
 #
 # This file is part of phonopy.
@@ -32,4 +32,4 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-__version__ = "1.10.0"
+__version__ = "0.10.0"
