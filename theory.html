@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Formulations &mdash; Phonopy v.1.9.7</title>
+    
+    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/bootswatch-3.3.4/cosmo/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.9.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
+    <link rel="top" title="Phonopy v.1.9.7" href="index.html" />
+    <link rel="next" title="Mean square displacement" href="thermal-displacement.html" />
+    <link rel="prev" title="External tools" href="external-tools.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body role="document">
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">
+          Phonopy</a>
+        <span class="navbar-text navbar-version pull-left"><b>1.9.7</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="procedure.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">Work flow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Download and install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="input-files.html">Input files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="output-files.html">Output files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setting-tags.html">Setting tags</a></li>
+<li class="toctree-l1"><a class="reference internal" href="command-options.html">Command options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interfaces.html">Interfaces to calculators and phonopy API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="auxiliary-tools.html">Auxiliary tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Formulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Formulations</a><ul>
+<li><a class="reference internal" href="#second-order-force-constants">Second-order force constants</a></li>
+<li><a class="reference internal" href="#modified-parlinski-li-kawazoe-method">Modified Parlinski-Li-Kawazoe method</a></li>
+<li><a class="reference internal" href="#dynamical-matrix">Dynamical matrix</a></li>
+<li><a class="reference internal" href="#non-analytical-term-correction">Non-analytical term correction</a></li>
+<li><a class="reference internal" href="#thermodynamic-properties">Thermodynamic properties</a><ul>
+<li><a class="reference internal" href="#phonon-number">Phonon number</a></li>
+<li><a class="reference internal" href="#harmonic-phonon-energy">Harmonic phonon energy</a></li>
+<li><a class="reference internal" href="#constant-volume-heat-capacity">Constant volume heat capacity</a></li>
+<li><a class="reference internal" href="#partition-function">Partition function</a></li>
+<li><a class="reference internal" href="#helmholtz-free-energy">Helmholtz free energy</a></li>
+<li><a class="reference internal" href="#entropy">Entropy</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#thermal-displacement">Thermal displacement</a></li>
+<li><a class="reference internal" href="#group-velocity">Group velocity</a></li>
+<li><a class="reference internal" href="#about-physical-unit-conversion">About physical unit conversion</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="external-tools.html" title="Previous Chapter: External tools"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; External tools</span>
+    </a>
+  </li>
+  <li>
+    <a href="thermal-displacement.html" title="Next Chapter: Mean square displacement"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">Mean square d... &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <div class="section" id="formulations">
+<span id="id1"></span><h1>Formulations<a class="headerlink" href="#formulations" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="second-order-force-constants">
+<h2>Second-order force constants<a class="headerlink" href="#second-order-force-constants" title="Permalink to this headline">¶</a></h2>
+<p>Potential energy of phonon system is represented as functions of atomic
+positions:</p>
+<div class="math">
+<p><img src="_images/math/e374d3d7d1018966bf1af2a34f3e08eb94751e83.png" alt="V[\mathbf{r}(j_1 l_1),\ldots,\mathbf{r}(j_n l_N)],"/></p>
+</div><p>where <img class="math" src="_images/math/5ca196f8914042430edb98128ff2daad871b4185.png" alt="\mathbf{r}(jl)"/> is the point of the <img class="math" src="_images/math/d32c78b759903e3f4bd4fd2ce0b86358f7500c5d.png" alt="j"/>-th atom in
+the <img class="math" src="_images/math/d99efde75c84ef402a92cd4497530d2366fb112f.png" alt="l"/>-th unit cell and <img class="math" src="_images/math/413f8a8e40062a9090d9d50b88bc7b551b314c26.png" alt="n"/> and <img class="math" src="_images/math/75e27f04188974063be3230dca208cd495b77ce1.png" alt="N"/> are the number
+of atoms in a unit cell and the number of unit cells, respectively.  A
+force and a second-order force constant <img class="math" src="_images/math/109e426253e0f382ee2ef2a0c6e71074842ad660.png" alt="\Phi_{\alpha \beta}"/>
+are given by</p>
+<div class="math">
+<p><img src="_images/math/23fd7614017cd3278082f47001cbbb938e8e0f84.png" alt="F_\alpha(jl) = -\frac{\partial V }{\partial r_\alpha(jl)}"/></p>
+</div><p>and</p>
+<div class="math">
+<p><img src="_images/math/53729765a2d0c91df86283164a14e0c00d6478ca.png" alt="\Phi_{\alpha\beta}(jl, j'l') = \frac{\partial^2
+V}{\partial r_\alpha(jl) \partial r_\beta(j'l')} =
+-\frac{\partial F_\beta(j'l')}{\partial r_\alpha(jl)},"/></p>
+</div><p>respectively, where <img class="math" src="_images/math/ad59b6e24a4a00ac621801f8d7513d68be654ab5.png" alt="\alpha"/>, <img class="math" src="_images/math/8ce03f78ed945f2ef3dac87c8799b55b393527e7.png" alt="\beta"/>, ..., are the
+Cartesian indices, <img class="math" src="_images/math/d32c78b759903e3f4bd4fd2ce0b86358f7500c5d.png" alt="j"/>, <img class="math" src="_images/math/96dfd790883a35eb7b04cfc4ef5a9cd6bcac3cfe.png" alt="j'"/>, ..., are the indices of
+atoms in a unit cell, and <img class="math" src="_images/math/d99efde75c84ef402a92cd4497530d2366fb112f.png" alt="l"/>, <img class="math" src="_images/math/220366b154fb9d45a01498f2a977f43c93837dc2.png" alt="l'"/>, ..., are
+the indices of unit cells. In the finite displacement method, the
+equation for the force constants is approximated as</p>
+<div class="math">
+<p><img src="_images/math/1f7a79730ab6683e507bfec02b5dfda47dd9dfc8.png" alt="\Phi_{\alpha\beta}(jl, j'l') \simeq -\frac{
+F_\beta(j'l';\Delta r_\alpha{(jl)}) - F_\beta(j'l')} {\Delta
+r_\alpha(jl)},"/></p>
+</div><p>where <img class="math" src="_images/math/fd619ffe29f43c85f9d039fb539a362a0b20bc85.png" alt="F_\beta(j'l'; \Delta r_\alpha{(jl)})"/> are the forces on
+atoms with a finite displacement <img class="math" src="_images/math/2b61ea68ed6cf76a0450b8dbf308666ef9763b8c.png" alt="\Delta r_\alpha{(jl)}"/> and
+usually <img class="math" src="_images/math/a08a5309c9830db37da91b743091b46f85437867.png" alt="F_\beta(j'l') \equiv 0"/>.</p>
+</div>
+<div class="section" id="modified-parlinski-li-kawazoe-method">
+<span id="force-constants-solver-theory"></span><h2>Modified Parlinski-Li-Kawazoe method<a class="headerlink" href="#modified-parlinski-li-kawazoe-method" title="Permalink to this headline">¶</a></h2>
+<p>The following is a modified and simplified version of the
+Parlinski-Li-Kawazoe method.</p>
+<p>The last equation above is represented by matrices as</p>
+<div class="math">
+<p><img src="_images/math/bc88425cc05c1c5eec4d82c7aeee394515e991d2.png" alt="\mathbf{F} = - \mathbf{U} \mathbf{P},"/></p>
+</div><p>where <img class="math" src="_images/math/5df8d5a13b4450539445d7b485091c7168a9c2c7.png" alt="\mathbf{F}"/>, <img class="math" src="_images/math/3a4cb165d008ad5162c1a04943256bf0d2f581c6.png" alt="\mathbf{P}"/>, and <img class="math" src="_images/math/1d1d409d6ca22f2875722197110f24ef244c9175.png" alt="\mathbf{U}"/>
+for a pair of atoms, e.g. <img class="math" src="_images/math/e5028e2577808aa421059801f9ae3c9e49e08a02.png" alt="\{jl, j'l'\}"/>, are given by</p>
+<div class="math">
+<p><img src="_images/math/783765a497c952fdf48a0b68d39f1cd0cac83a29.png" alt="\mathbf{F} =
+ \begin{pmatrix}
+  F_{x} &amp; F_{y} &amp; F_{z}
+ \end{pmatrix},"/></p>
+</div><div class="math">
+<p><img src="_images/math/f8c96ccfd24520efb6ea43074dbfcfec9a0d1c44.png" alt="\mathbf{P} =
+  \begin{pmatrix}
+  \Phi_{xx} &amp; \Phi_{xy} &amp; \Phi_{xz} \\
+  \Phi_{yx} &amp; \Phi_{yy} &amp; \Phi_{yz} \\
+  \Phi_{zx} &amp; \Phi_{zy} &amp; \Phi_{zz}
+\end{pmatrix},"/></p>
+</div><div class="math">
+<p><img src="_images/math/0774d0b7a67d688e5a61702ee9edcc2bc841c4a3.png" alt="\mathbf{U} =
+ \begin{pmatrix}
+   \Delta r_{x} &amp; \Delta r_{y} &amp; \Delta r_{z} \\
+ \end{pmatrix}."/></p>
+</div><p>The matrix equation is expanded for number of
+forces and displacements as follows:</p>
+<div class="math">
+<p><img src="_images/math/94c3031f14b935522de51d9b3de2d03f16de385c.png" alt="\begin{pmatrix}
+\mathbf{F}_1 \\
+\mathbf{F}_2 \\
+ \vdots
+\end{pmatrix}
+= -
+\begin{pmatrix}
+\mathbf{U}_1 \\
+\mathbf{U}_2 \\
+ \vdots
+\end{pmatrix}
+\mathbf{P}."/></p>
+</div><p>With sufficient number of atomic displacements, this
+may be solved by pseudo inverse such as</p>
+<div class="math">
+<p><img src="_images/math/62c2b8cb1eebab0f0f3f172ca5ca9d8246c7e075.png" alt="\mathbf{P} = -
+\begin{pmatrix}
+\mathbf{U}_1 \\
+\mathbf{U}_2 \\
+ \vdots
+\end{pmatrix}^{+}
+\begin{pmatrix}
+\mathbf{F}_1 \\
+\mathbf{F}_2 \\
+\vdots
+\end{pmatrix}."/></p>
+</div><p>Required number of atomic displacements to solve the simultaneous
+equations may be reduced using site-point symmetries. The matrix
+equation can be written using a symmetry operation as</p>
+<div class="math">
+<p><img src="_images/math/86be4004cd35008d9bff826eb6c806e5f1c624ec.png" alt="\hat{R}(\mathbf{F}) = -\hat{R}(\mathbf{U})\mathbf{P},"/></p>
+</div><p>where <img class="math" src="_images/math/2177fdad53f194a5187379466272f8c2a154921a.png" alt="\hat{R}"/> is the site symmetry
+operation centring at
+<img class="math" src="_images/math/5ca196f8914042430edb98128ff2daad871b4185.png" alt="\mathbf{r}(jl)"/>. <img class="math" src="_images/math/a28b7e0dd5e8bc183d4cf5243466a014cc1e1dd1.png" alt="\hat{R}(\mathbf{F})"/> and <img class="math" src="_images/math/313cb47fa2bc848053b4028e10a7f717c55810dc.png" alt="\hat{R}(\mathbf{U})"/> are defined as
+<img class="math" src="_images/math/e408cad57fb7a9587cbd8e53e790a0c4234df75c.png" alt="\mathbf{RF}(\hat{R^{-1}}(j'l'))"/> and <img class="math" src="_images/math/cc51d6138f474b04347bcde0337d875e3434e1e0.png" alt="\mathbf{RU}"/>,
+respectively, where <img class="math" src="_images/math/ff6cfab7c0ba183019cdbbfcb00f139e8044cf95.png" alt="\mathbf{R}"/> is the matrix
+representation of the rotation operation. The combined
+simultaneous equations are built such as</p>
+<div class="math">
+<p><img src="_images/math/f61f956dda80e1fc1a5b0564e1a291f64c6effb1.png" alt="\begin{pmatrix}
+\mathbf{F}^{(1)}_1 \\
+\mathbf{F}^{(2)}_1 \\
+\vdots \\
+\mathbf{F}^{(1)}_2 \\
+\mathbf{F}^{(2)}_2 \\
+\vdots \end{pmatrix} = -
+\begin{pmatrix}
+\mathbf{U}^{(1)}_1 \\
+\vdots \\
+\mathbf{U}^{(2)}_1 \\
+\mathbf{U}^{(1)}_2 \\
+\mathbf{U}^{(2)}_2 \\
+\vdots
+\end{pmatrix}
+\mathbf{P}."/></p>
+</div><p>where the superscript with parenthesis gives the index of
+site-symmetry operations. This is solved by pseudo inverse.</p>
+</div>
+<div class="section" id="dynamical-matrix">
+<span id="dynacmial-matrix-theory"></span><h2>Dynamical matrix<a class="headerlink" href="#dynamical-matrix" title="Permalink to this headline">¶</a></h2>
+<p>In phonopy, a phase convention of dynamical matrix is used as follows:</p>
+<div class="math">
+<p><img src="_images/math/50e116d4df99a736363b96f4fb08c46b0f2b4172.png" alt="D_{\alpha\beta}(jj',\mathbf{q}) = \frac{1}{\sqrt{m_j m_{j'}}}
+ \sum_{l'}
+ \Phi_{\alpha\beta}(j0, j'l')
+ \exp(i\mathbf{q}\cdot[\mathbf{r}(j'l')-\mathbf{r}(j0)]),"/></p>
+</div><p>where <img class="math" src="_images/math/c4bb40dd65eae6c11b325989b14e0b8d35e4e3ef.png" alt="m"/> is the atomic mass and <img class="math" src="_images/math/dd9f8e4fa6ad795780215243cbd5a5719b772ad3.png" alt="\mathbf{q}"/> is the wave
+vector. An equation of motion is written as</p>
+<div class="math">
+<p><img src="_images/math/183f5bf949c284230b2917e7e04d1457c0069145.png" alt="\sum_{j'\beta} D_{\alpha\beta}(jj',\mathbf{q}) e_\beta(j', \mathbf{q}\nu) =
+m_j [ \omega(\mathbf{q}\nu) ]^2 e_\alpha(j, \mathbf{q}\nu)."/></p>
+</div><p>where the eigenvector of the band index <img class="math" src="_images/math/d67fb61cfffca2cc069e083d76cb6220b4ca14c8.png" alt="\nu"/> at
+<img class="math" src="_images/math/dd9f8e4fa6ad795780215243cbd5a5719b772ad3.png" alt="\mathbf{q}"/> is obtained by the diagonalization of
+<img class="math" src="_images/math/18f549f1db886be5de4bd52b45fb0fc3bec63dbb.png" alt="\mathbf{D}(\mathbf{q})"/>:</p>
+<div class="math">
+<p><img src="_images/math/cb895e7e39b1a3b539163831c7edbf2912d3e549.png" alt="\sum_{j \alpha j' \beta}e_\alpha(j',\mathbf{q}\nu)^* D_{\alpha\beta}(jj',\mathbf{q})
+e_\beta(j',\mathbf{q}\nu') = [\omega(\mathbf{q}\nu)]^2 \delta_{\nu\nu'}."/></p>
+</div><p>The atomic displacements <img class="math" src="_images/math/a91ae60f68d93eaa007f50348d29e0d3137084fa.png" alt="\mathbf{u}"/> are given as</p>
+<div class="math">
+<p><img src="_images/math/f2ff979b7528023acaf17b604b73e84224954e85.png" alt="u_\alpha(jl,t) = \left(\frac{\hbar}{2Nm_j}\right)^{\frac{1}{2}}
+\sum_{\mathbf{q},\nu}\left[\omega(\mathbf{q}\nu)\right]^{-\frac{1}{2}}
+\left[\hat{a}(\mathbf{q}\nu)\exp(-i\omega(\mathbf{q}\nu)t)+
+\hat{a}^\dagger(\mathbf{-q}\nu)\exp({i\omega(\mathbf{q}\nu)}t)\right]
+\exp({i\mathbf{q}\cdot\mathbf{r}(jl)})
+e_\alpha(j,\mathbf{q}\nu),"/></p>
+</div><p>where <img class="math" src="_images/math/1e618046fcb4f8b705c49012fd2c7e99bb418cf1.png" alt="\hat{a}^\dagger"/> and <img class="math" src="_images/math/b74103745833a2240db713f3a8b2d2c8f256eccb.png" alt="\hat{a}"/> are the creation and
+annihilation operators of phonon, <img class="math" src="_images/math/63bdc1a0e2f9cf07b6b645239fb8f9a9db114a6f.png" alt="\hbar"/> is the reduced Planck
+constant, and <img class="math" src="_images/math/ef9270877405055756d345facd044e4ab297f858.png" alt="t"/> is the time.</p>
+</div>
+<div class="section" id="non-analytical-term-correction">
+<span id="non-analytical-term-correction-theory"></span><h2>Non-analytical term correction<a class="headerlink" href="#non-analytical-term-correction" title="Permalink to this headline">¶</a></h2>
+<p>To correct long range interaction of macroscopic electric field
+induced by polarization of collective ionic motions near the
+<img class="math" src="_images/math/85011adca50d3725af2e048eeb9ec7b02ccdd401.png" alt="\Gamma"/>-point, non-analytical term is added to dynamical matrix
+(<a class="reference internal" href="reference.html#reference-nac"><span>Non-analytical term correction</span></a>).  At
+<img class="math" src="_images/math/9b02239d18a192e500f7d6456d2eec02aa2cc8b1.png" alt="\mathbf{q}\to\mathbf{0}"/>, the dynamical matrix with
+non-analytical term is given by,</p>
+<div class="math">
+<p><img src="_images/math/e00d5cca3d034c6e623d081d31bb19776783fe77.png" alt="D_{\alpha\beta}(jj',\mathbf{q}\to \mathbf{0}) =
+ D_{\alpha\beta}(jj',\mathbf{q}=\mathbf{0})
+ + \frac{1}{\sqrt{m_j m_j}} \frac{4\pi}{\Omega_0}
+ \frac{[\sum_{\gamma}q_{\gamma}Z^{*}_{j,\gamma\alpha}][\sum_{\gamma'}q_{\gamma'}Z^{*}_{j',\gamma'\beta}]}
+ {\sum_{\alpha\beta}q_{\alpha}\epsilon_{\alpha\beta}^{\infty} q_{\beta}}."/></p>
+</div><p>Phonon frequencies at general <strong>q</strong>-points are interpolated by the
+method of Wang <em>et al.</em> (<a class="reference internal" href="reference.html#reference-wang-nac"><span>Interpolation scheme at general q-points with non-analytical term correction</span></a>).</p>
+</div>
+<div class="section" id="thermodynamic-properties">
+<span id="thermal-properties-expressions"></span><h2>Thermodynamic properties<a class="headerlink" href="#thermodynamic-properties" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="phonon-number">
+<h3>Phonon number<a class="headerlink" href="#phonon-number" title="Permalink to this headline">¶</a></h3>
+<div class="math">
+<p><img src="_images/math/2d543723d570eaa6071ef738b67078b037f07f44.png" alt="n = \frac{1}{\exp(\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B} T)-1}"/></p>
+</div></div>
+<div class="section" id="harmonic-phonon-energy">
+<h3>Harmonic phonon energy<a class="headerlink" href="#harmonic-phonon-energy" title="Permalink to this headline">¶</a></h3>
+<div class="math">
+<p><img src="_images/math/02c1c9c0b6f297dd05fbc98460b3731e74dd897b.png" alt="E = \sum_{\mathbf{q}\nu}\hbar\omega(\mathbf{q}\nu)\left[\frac{1}{2} +
+ \frac{1}{\exp(\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B} T)-1}\right]"/></p>
+</div></div>
+<div class="section" id="constant-volume-heat-capacity">
+<h3>Constant volume heat capacity<a class="headerlink" href="#constant-volume-heat-capacity" title="Permalink to this headline">¶</a></h3>
+<div class="math">
+<p><img src="_images/math/893a91320e92bcf817c3dede4dce6abaad97c3cc.png" alt="C_V &amp;= \left(\frac{\partial E}{\partial T} \right)_V \\
+    &amp;= \sum_{\mathbf{q}\nu} k_\mathrm{B}
+ \left(\frac{\hbar\omega(\mathbf{q}\nu)}{k_\mathrm{B} T} \right)^2
+ \frac{\exp(\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B}
+ T)}{[\exp(\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B} T)-1]^2}"/></p>
+</div></div>
+<div class="section" id="partition-function">
+<h3>Partition function<a class="headerlink" href="#partition-function" title="Permalink to this headline">¶</a></h3>
+<div class="math">
+<p><img src="_images/math/73cb9950c2c5cedbaec4c15af90f986be32b2e9a.png" alt="Z = \exp(-\varphi/k_\mathrm{B} T) \prod_{\mathbf{q}\nu}
+ \frac{\exp(-\hbar\omega(\mathbf{q}\nu)/2k_\mathrm{B}
+ T)}{1-\exp(-\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B} T)}"/></p>
+</div></div>
+<div class="section" id="helmholtz-free-energy">
+<h3>Helmholtz free energy<a class="headerlink" href="#helmholtz-free-energy" title="Permalink to this headline">¶</a></h3>
+<div class="math">
+<p><img src="_images/math/7933e30a87533f9e9d410a5cb4861ae9af496143.png" alt="F &amp;= -k_\mathrm{B} T \ln Z \\
+  &amp;= \varphi + \frac{1}{2} \sum_{\mathbf{q}\nu}
+\hbar\omega(\mathbf{q}\nu) + k_\mathrm{B} T \sum_{\mathbf{q}\nu} \ln
+\bigl[1 -\exp(-\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B} T) \bigr]"/></p>
+</div></div>
+<div class="section" id="entropy">
+<h3>Entropy<a class="headerlink" href="#entropy" title="Permalink to this headline">¶</a></h3>
+<div class="math">
+<p><img src="_images/math/29681ee338c731df4f4170aefcb3b1a03984b64d.png" alt="S &amp;= -\frac{\partial F}{\partial T} \\
+  &amp;= \frac{1}{2T}\sum_{\mathbf{q}\nu}\hbar\omega(\mathbf{q}\nu)\coth(\hbar\omega(\mathbf{q}\nu)/2k_\mathrm{B}T)-k_\mathrm{B} \sum_{\mathbf{q}\nu}\ln\left[2\sinh(\hbar\omega(\mathbf{q}\nu)/2k_\mathrm{B}T)\right]"/></p>
+</div></div>
+</div>
+<div class="section" id="thermal-displacement">
+<h2>Thermal displacement<a class="headerlink" href="#thermal-displacement" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="thermal-displacement.html">Mean square displacement</a></li>
+<li class="toctree-l1"><a class="reference internal" href="thermal-displacement.html#mean-square-displacement-matrix">Mean square displacement matrix</a></li>
+<li class="toctree-l1"><a class="reference internal" href="thermal-displacement.html#projection-to-an-arbitrary-axis-from-the-cartesian-axes">Projection to an arbitrary axis from the Cartesian axes</a></li>
+</ul>
+</div>
+</div>
+<div class="section" id="group-velocity">
+<h2>Group velocity<a class="headerlink" href="#group-velocity" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="group-velocity.html">Method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="group-velocity.html#finite-difference-method">Finite difference method</a></li>
+</ul>
+</div>
+</div>
+<div class="section" id="about-physical-unit-conversion">
+<span id="physical-unit-conversion"></span><h2>About physical unit conversion<a class="headerlink" href="#about-physical-unit-conversion" title="Permalink to this headline">¶</a></h2>
+<p>Phonopy calculates phonon frequencies based on input values from
+users. In the default case, the physical units of distance, atomic
+mass, force, and force constants are supposed to be
+<img class="math" src="_images/math/1589dee75c7ec545f11043c4ca3d2c52bdf5f683.png" alt="\text{\AA}"/>, <img class="math" src="_images/math/d9a7e1a4436df1ee560c9f051f308b222795d1b0.png" alt="\text{AMU}"/>, <img class="math" src="_images/math/8186fb0994e80db750cc1d6e2fe38203e98dd010.png" alt="\text{eV/\AA}"/>, and
+<img class="math" src="_images/math/81d65de5e35a29dc4e1bd1c081738513f3730e46.png" alt="\text{eV/\AA}^2"/>, respectively, and the physical unit of the
+phonon frequency is converted to THz. This conversion is made as
+follows:</p>
+<p>Internally phonon frequency has the physical unit of
+<img class="math" src="_images/math/010461e878c3be10e1767ac594f3c2946adefab2.png" alt="\sqrt{\text{eV/}(\text{\AA}^2\cdot \text{AMU})}"/> in angular
+frequency. To convert this unit to THz (not angular frequency), the
+calculation of <code class="docutils literal"><span class="pre">sqrt(EV/AMU)/Angstrom/(2*pi)/1e12</span></code> is made. <code class="docutils literal"><span class="pre">EV</span></code>,
+<code class="docutils literal"><span class="pre">AMU</span></code>, <code class="docutils literal"><span class="pre">Angstrom</span></code> are the values to convert them to those in the
+SI base unit, i.e., to Joule, kg, and metre, respectively. These values
+implemented in phonopy are found at <a class="reference external" href="https://github.com/atztogo/phonopy/blob/master/phonopy/units.py">a phonopy github page</a>. This
+unit conversion factor can be manually specified. See
+<a class="reference internal" href="command-options.html#unit-conversion-factor-option"><span>&#8211;factor</span></a>.</p>
+<p>The unit conversion factor in the <code class="docutils literal"><span class="pre">BORN</span></code> file is multiplied with the second
+term of the right hand side of the equation in
+<a class="reference internal" href="#non-analytical-term-correction-theory"><span>Non-analytical term correction</span></a> where this equation is written
+with atomic units (<a class="reference internal" href="reference.html#reference-nac"><span>Gonze and Lee, 1997</span></a>).
+The physical unit of the part of the equation corresponding to force
+constants:</p>
+<div class="math">
+<p><img src="_images/math/070bd2e88862c719629bfe56edade175467ed939.png" alt="\frac{4\pi}{\Omega_0}
+\frac{[\sum_{\gamma}q_{\gamma}Z^{*}_{j,\gamma\alpha}]
+[\sum_{\gamma'}q_{\gamma'}Z^{*}_{j',\gamma'\beta}]}
+{\sum_{\alpha\beta}q_{\alpha}\epsilon_{\alpha\beta}^{\infty} q_{\beta}}."/></p>
+</div><p>is <img class="math" src="_images/math/c92a7c961050b8dca56de3585886e4fe6a9870c3.png" alt="[\text{hartree}/\text{bohr}^2]"/>. In the default case for the
+VASP interface, internally <img class="math" src="_images/math/751e674d2a53f72a4799ac838930afa271099ec6.png" alt="\Omega_0"/> is given in
+<img class="math" src="_images/math/efc45aef395ec646e2042214c17c8ca08aeb198f.png" alt="\text{\AA}^3"/>. In total, the necessary unit conversion is
+<img class="math" src="_images/math/a118970517cef2dfdfc8c6feee08701169bcf459.png" alt="(\text{hartree} \rightarrow \text{eV}) \times (\text{bohr}
+\rightarrow \text{\AA})=14.4"/>. In the default case of the Wien2k
+interface, the conversion factor is <img class="math" src="_images/math/cbcb4ad697c7ba8b19ff1d4c18fe30d4c9032353.png" alt="(\text{hartree}
+\rightarrow \text{mRy})=2000"/>. For the other interfaces, the
+conversion factors are similarly calculated following the unit
+systems employed in phonopy (<a class="reference internal" href="interfaces.html#calculator-interfaces"><span>Interfaces to force calculators</span></a>).</p>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+        <br/>
+        
+<div id="sourcelink">
+  <a href="_sources/theory.txt"
+     rel="nofollow">Source</a>
+</div>
+      
+    </p>
+    <p>
+        &copy; Copyright 2009, Atsushi Togo.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.3.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

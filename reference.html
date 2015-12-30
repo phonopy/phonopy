@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>References &mdash; Phonopy v.1.9.7</title>
+    
+    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/bootswatch-3.3.4/cosmo/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.9.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
+    <link rel="top" title="Phonopy v.1.9.7" href="index.html" />
+    <link rel="next" title="Change Log" href="changelog.html" />
+    <link rel="prev" title="How to cite phonopy" href="citation.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body role="document">
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">
+          Phonopy</a>
+        <span class="navbar-text navbar-version pull-left"><b>1.9.7</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="procedure.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">Work flow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Download and install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="input-files.html">Input files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="output-files.html">Output files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setting-tags.html">Setting tags</a></li>
+<li class="toctree-l1"><a class="reference internal" href="command-options.html">Command options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interfaces.html">Interfaces to calculators and phonopy API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="auxiliary-tools.html">Auxiliary tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="theory.html">Formulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">References</a><ul>
+<li><a class="reference internal" href="#method-used-in-phonopy">Method used in phonopy</a><ul>
+<li><a class="reference internal" href="#generation-of-force-constants">Generation of force constants</a></li>
+<li><a class="reference internal" href="#parlinski-li-kawazoe-method">Parlinski-Li-Kawazoe method</a></li>
+<li><a class="reference internal" href="#thermal-expansion-using-quasi-harmonic-approximation">Thermal expansion using quasi-harmonic approximation</a></li>
+<li><a class="reference internal" href="#non-analytical-term-correction">Non-analytical term correction</a></li>
+<li><a class="reference internal" href="#interpolation-scheme-at-general-q-points-with-non-analytical-term-correction">Interpolation scheme at general <em>q</em>-points with non-analytical term correction</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#other-methods-and-software-for-calculating-force-constants">Other methods and software for calculating force constants</a><ul>
+<li><a class="reference internal" href="#parlinsk-li-kawazoe-method">Parlinsk-Li-Kawazoe method</a></li>
+<li><a class="reference internal" href="#small-displacement-method">Small displacement method</a></li>
+<li><a class="reference internal" href="#dfpt">DFPT</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#for-the-study-of-basics">For the study of basics</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="citation.html" title="Previous Chapter: How to cite phonopy"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; How to cite p...</span>
+    </a>
+  </li>
+  <li>
+    <a href="changelog.html" title="Next Chapter: Change Log"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">Change Log &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <div class="section" id="references">
+<h1>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="method-used-in-phonopy">
+<h2>Method used in phonopy<a class="headerlink" href="#method-used-in-phonopy" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="generation-of-force-constants">
+<span id="reference-force-constants"></span><h3>Generation of force constants<a class="headerlink" href="#generation-of-force-constants" title="Permalink to this headline">¶</a></h3>
+<p>In phonopy, force constants are generated based on finite displacement
+method. Crystal symmetry is used to reduce the calculation cost and
+numerical noise of the force constants. Firstly a symmetry reduced set
+of atomic displacements is generated. After the atomic force
+calculations, the set of atomic displacements are expanded using the
+symmetry and then all the elements of force constans between atoms in
+a primitive cell and the supercell are fit to the symmetry expanded
+forces of atoms in supercells using Moore–Penrose pseudoinverse. This
+procedure may considered as a variant of <a class="reference internal" href="#reference-plk"><span>Parlinski-Li-Kawazoe method</span></a>. Some of
+the details are found in the appendix of the following paper:</p>
+<ul class="simple">
+<li>L. Chaput, A. Togo, I. Tanaka, and G. Hug, Phys. Rev. B, 84,
+094302 (2011)</li>
+</ul>
+</div>
+<div class="section" id="parlinski-li-kawazoe-method">
+<span id="reference-plk"></span><h3>Parlinski-Li-Kawazoe method<a class="headerlink" href="#parlinski-li-kawazoe-method" title="Permalink to this headline">¶</a></h3>
+<p>Parlinski-Li-Kawazoe method is based on the supercell approach with
+the finite displacement method.</p>
+<p>Force constants are calculated using Moore–Penrose pseudoinverse by
+fitting symmetry reduced elements of force constans to the linear
+relations between atomic forces and atomic displacements. The
+pseudoinverse is easy to handle arbitrary number of displacements
+amplitudes and directions, and can rely on the exisiting library,
+e.g., LAPACK.</p>
+<ul class="simple">
+<li>K. Parlinski, Z. Q. Li, and Y. Kawazoe, Phys. Rev. Lett. 78, 4063 (1997)</li>
+</ul>
+</div>
+<div class="section" id="thermal-expansion-using-quasi-harmonic-approximation">
+<span id="reference-thermal-expansion"></span><h3>Thermal expansion using quasi-harmonic approximation<a class="headerlink" href="#thermal-expansion-using-quasi-harmonic-approximation" title="Permalink to this headline">¶</a></h3>
+<p>In <a class="reference internal" href="qha.html#phonopy-qha"><span>phonopy-qha</span></a>, thermal properties at constant
+pressure is obtained from the thermodynamic definition.  To achieve
+Legendre transformation, volume-energy function is generated from a
+set of Helmholtz free energies and <em>pV</em> terms at volumes by fitting to
+a smooth function for which equations of states are prepared in phonopy-qha.</p>
+<p>The volume dependence of the Helmholtz free energy is included from
+quasi-harmonicity. When using DFT-GGA (-LDA), often we should have
+some amount of error in the absolute value since phonon frequencies
+are underestimated (overestimated). However the value of some ratio
+like thermal expansion coefficient is often very well estimated. An
+example is shown in the following paper:</p>
+<ul class="simple">
+<li>A. Togo, L. Chaput, I. Tanaka, G. Hug, Phys. Rev. B, 81, 174301-1-6 (2010)</li>
+</ul>
+</div>
+<div class="section" id="non-analytical-term-correction">
+<span id="reference-nac"></span><h3>Non-analytical term correction<a class="headerlink" href="#non-analytical-term-correction" title="Permalink to this headline">¶</a></h3>
+<p>Non-metallic crystals are polarized by atomic displacements and the
+generated macroscopic field changes force constants near
+<img class="math" src="_images/math/85011adca50d3725af2e048eeb9ec7b02ccdd401.png" alt="\Gamma"/> point. This contribution is included through
+non-analytical term correction.</p>
+<ul class="simple">
+<li>R. M. Pick, M. H. Cohen, and R. M. Martin, Phys. Rev. B 1, 910, (1970)</li>
+<li>P. Giannozzi, S. Degironcoli, P. Pavone, and S. Baroni,  Phys. Rev. B 43, 7231 (1991)</li>
+<li>X. Gonze, and C. Lee, Phys. Rev. B 55, 10355 (1997)</li>
+</ul>
+</div>
+<div class="section" id="interpolation-scheme-at-general-q-points-with-non-analytical-term-correction">
+<span id="reference-wang-nac"></span><h3>Interpolation scheme at general <em>q</em>-points with non-analytical term correction<a class="headerlink" href="#interpolation-scheme-at-general-q-points-with-non-analytical-term-correction" title="Permalink to this headline">¶</a></h3>
+<p>The above non-anarytical term correction can be applied only at
+<img class="math" src="_images/math/bb40fb8b11b460413f57c8dff936dbf6a9530198.png" alt="\mathbf{q}\rightarrow \mathbf{0}"/>. To connect smoothly to
+general <strong>q</strong> points, the following interpolation scheme is employed
+in phonopy (<a class="reference internal" href="setting-tags.html#nac-tag"><span>Non-analytical term correction</span></a>).</p>
+<ul class="simple">
+<li>Y Wang , J J Wang , W Y Wang , Z G Mei , S L Shang , L Q Chen and
+Z K Liu, J. Phys.: Condens. Matter. 22, 202201 (2010)</li>
+</ul>
+</div>
+</div>
+<div class="section" id="other-methods-and-software-for-calculating-force-constants">
+<h2>Other methods and software for calculating force constants<a class="headerlink" href="#other-methods-and-software-for-calculating-force-constants" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="parlinsk-li-kawazoe-method">
+<span id="reference-small-displacement"></span><h3>Parlinsk-Li-Kawazoe method<a class="headerlink" href="#parlinsk-li-kawazoe-method" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference external" href="http://wolf.ifj.edu.pl/phonon/">PHONON</a> is the original
+implementation of the Parlinsk-Li-Kawazoe method.</p>
+</div>
+<div class="section" id="small-displacement-method">
+<h3>Small displacement method<a class="headerlink" href="#small-displacement-method" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Dario Alfè, Computer Physics Communications, 180, 2622 (2009)</li>
+</ul>
+<p><a class="reference external" href="http://www.homepages.ucl.ac.uk/~ucfbdxa/phon/">PHON</a> is based on the
+small displacement method.</p>
+</div>
+<div class="section" id="dfpt">
+<span id="reference-dfpt"></span><h3>DFPT<a class="headerlink" href="#dfpt" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Xavier Gonze and Changyol Lee, Phys. Rev. B 55, 10355 (1997)</li>
+</ul>
+<p>Currently there are several many implementations such as <a class="reference external" href="http://www.abinit.org/">Abinit</a>, <a class="reference external" href="http://www.quantum-espresso.org/">Quantum espresso</a>, <a class="reference external" href="http://elk.sourceforge.net/">Elk</a>, etc.  VASP can calculate force constants
+using DFPT however only at Gamma-point.</p>
+</div>
+</div>
+<div class="section" id="for-the-study-of-basics">
+<h2>For the study of basics<a class="headerlink" href="#for-the-study-of-basics" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Introduction to Lattice Dynamics, Martin. T. Dove, Cambridge
+university press</li>
+<li>Thermodynamics of Crystals, Duane C. Wallace, Dover Publications</li>
+</ul>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+        <br/>
+        
+<div id="sourcelink">
+  <a href="_sources/reference.txt"
+     rel="nofollow">Source</a>
+</div>
+      
+    </p>
+    <p>
+        &copy; Copyright 2009, Atsushi Togo.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.3.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

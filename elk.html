@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Elk &amp; phonopy calculation &mdash; Phonopy v.1.9.7</title>
+    
+    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/bootswatch-3.3.4/cosmo/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.9.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
+    <link rel="top" title="Phonopy v.1.9.7" href="index.html" />
+    <link rel="up" title="Interfaces to calculators and phonopy API" href="interfaces.html" />
+    <link rel="next" title="VASP &amp; phonopy calculation" href="vasp.html" />
+    <link rel="prev" title="Siesta &amp; phonopy calculation" href="siesta.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body role="document">
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">
+          Phonopy</a>
+        <span class="navbar-text navbar-version pull-left"><b>1.9.7</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="procedure.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">Work flow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Download and install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="input-files.html">Input files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="output-files.html">Output files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setting-tags.html">Setting tags</a></li>
+<li class="toctree-l1"><a class="reference internal" href="command-options.html">Command options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="interfaces.html">Interfaces to calculators and phonopy API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="auxiliary-tools.html">Auxiliary tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="theory.html">Formulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Elk &amp; phonopy calculation</a><ul>
+<li><a class="reference internal" href="#supported-elk-tags">Supported Elk tags</a></li>
+<li><a class="reference internal" href="#how-to-run">How to run</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="siesta.html" title="Previous Chapter: Siesta & phonopy calculation"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; Siesta & phon...</span>
+    </a>
+  </li>
+  <li>
+    <a href="vasp.html" title="Next Chapter: VASP & phonopy calculation"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">VASP & phonop... &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <div class="section" id="elk-phonopy-calculation">
+<span id="elk-interface"></span><h1>Elk &amp; phonopy calculation<a class="headerlink" href="#elk-phonopy-calculation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="supported-elk-tags">
+<h2>Supported Elk tags<a class="headerlink" href="#supported-elk-tags" title="Permalink to this headline">¶</a></h2>
+<p>Currently Elk tags that phonopy can read are shown below.
+More tags may be supported on request.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">atoms</span><span class="p">,</span> <span class="n">avec</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">scale1</span><span class="p">,</span> <span class="n">scale2</span><span class="p">,</span> <span class="n">scale3</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="how-to-run">
+<h2>How to run<a class="headerlink" href="#how-to-run" title="Permalink to this headline">¶</a></h2>
+<p>A procedure of Elk-phonopy calculation is as follows:</p>
+<ol class="arabic">
+<li><p class="first">Read an Elk input file and create supercells with
+<a class="reference internal" href="command-options.html#elk-mode"><span>&#8211;elk</span></a> option:</p>
+<div class="highlight-python"><div class="highlight"><pre>% phonopy --elk -d --dim=&quot;2 2 2&quot; -c elk-unitcell.in
+</pre></div>
+</div>
+<p>In this example, 2x2x2 supercells are created. <code class="docutils literal"><span class="pre">supercell.in</span></code> and
+<code class="docutils literal"><span class="pre">supercell-xxx.in</span></code> (<code class="docutils literal"><span class="pre">xxx</span></code> are numbers) give the perfect
+supercell and supercells with displacements, respectively. In these
+supercell files, lines only relevant to crystal structures are
+generated. <code class="docutils literal"><span class="pre">disp.yaml</span></code> is also created. This file contains
+information on displacements. Perhaps the supercell files of
+<code class="docutils literal"><span class="pre">supercell-xxx.in</span></code> are stored in <code class="docutils literal"><span class="pre">disp-xxx</span></code> directories as
+<code class="docutils literal"><span class="pre">elk.in</span></code>, respectively, then Elk calculations are executed in
+these directories.</p>
+</li>
+<li><p class="first">Calculate forces on atoms in the supercells with
+displacements. Calculation specification tags have to be added to
+each <code class="docutils literal"><span class="pre">elk.in</span></code> file. Crystal structure is not allowed to
+relaxed in the force calculations, because atomic forces induced by
+a small atomic displacement are what we need for phonon
+calculation.</p>
+</li>
+<li><p class="first">Create <code class="docutils literal"><span class="pre">FORCE_SETS</span></code> by</p>
+<div class="highlight-python"><div class="highlight"><pre>% phonopy --elk -f disp-001/INFO.OUT disp-002/INFO.OUT  ...
+</pre></div>
+</div>
+<p>To run this command, <code class="docutils literal"><span class="pre">disp.yaml</span></code> has to be located in the current
+directory because the atomic displacements are written into the
+FORCE_SETS file. See some more detail at
+<a class="reference internal" href="command-options.html#elk-force-sets-option"><span>Elk interface</span></a>. An example is found in
+<code class="docutils literal"><span class="pre">example/Si-elk</span></code>.</p>
+</li>
+<li><p class="first">Run post-process of phonopy with the Elk input file for the
+unit cell used in the step 1:</p>
+<div class="highlight-python"><div class="highlight"><pre>% phonopy --elk -c elk-unitcell.in -p band.conf
+</pre></div>
+</div>
+<p>or:</p>
+<div class="highlight-python"><div class="highlight"><pre>% phonopy --elk -c elk-unitcell.in --dim=&quot;2 2 2&quot; [other-OPTIONS] [setting-file]
+</pre></div>
+</div>
+</li>
+</ol>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+        <br/>
+        
+<div id="sourcelink">
+  <a href="_sources/elk.txt"
+     rel="nofollow">Source</a>
+</div>
+      
+    </p>
+    <p>
+        &copy; Copyright 2009, Atsushi Togo.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.3.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

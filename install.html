@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Download and install &mdash; Phonopy v.1.9.7</title>
+    
+    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/bootswatch-3.3.4/cosmo/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.9.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
+    <link rel="top" title="Phonopy v.1.9.7" href="index.html" />
+    <link rel="next" title="Using phonopy on Mac OS X" href="MacOSX.html" />
+    <link rel="prev" title="Work flow" href="workflow.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body role="document">
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">
+          Phonopy</a>
+        <span class="navbar-text navbar-version pull-left"><b>1.9.7</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="procedure.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">Work flow</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Download and install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="input-files.html">Input files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="output-files.html">Output files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setting-tags.html">Setting tags</a></li>
+<li class="toctree-l1"><a class="reference internal" href="command-options.html">Command options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interfaces.html">Interfaces to calculators and phonopy API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="auxiliary-tools.html">Auxiliary tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="theory.html">Formulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Download and install</a><ul>
+<li><a class="reference internal" href="#special-cases-on-installation">Special cases on installation</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="workflow.html" title="Previous Chapter: Work flow"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; Work flow</span>
+    </a>
+  </li>
+  <li>
+    <a href="MacOSX.html" title="Next Chapter: Using phonopy on Mac OS X"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">Using phonopy... &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <div class="section" id="download-and-install">
+<span id="install"></span><h1>Download and install<a class="headerlink" href="#download-and-install" title="Permalink to this headline">¶</a></h1>
+<p>The procedure of setup phonopy is explained in this section. It is
+supposed that phonopy is installed on the recent linux distribution
+like Ubuntu or Fedora with Python version 2.5 or later. Mac OS X users
+may find some more information on <a class="reference internal" href="MacOSX.html#install-macosx"><span>Using phonopy on Mac OS X</span></a>. If you met
+installation problems, it is recommended to prepare a system with
+Ubuntu linux as a virtual machine. See <a class="reference internal" href="virtualmachine.html#virtualmachine"><span>Set up Ubuntu linux on VirtualBox</span></a></p>
+<ol class="arabic">
+<li><p class="first">Prepare the following Python libraries:</p>
+<ul class="simple">
+<li>Python and its header files</li>
+<li>numpy</li>
+<li>matplotlib</li>
+<li>python-yaml</li>
+</ul>
+<p>In Ubuntu linux, they are installed by:</p>
+<div class="highlight-python"><div class="highlight"><pre>% sudo apt-get install python-dev python-numpy \
+  python-matplotlib python-yaml
+</pre></div>
+</div>
+<p><code class="docutils literal"><span class="pre">python-scipy</span></code> is also required to use <code class="docutils literal"><span class="pre">phonopy-qha</span></code> or
+<code class="docutils literal"><span class="pre">DEBYE_MODEL</span></code> tag..</p>
+<p>The <code class="docutils literal"><span class="pre">texlive-fonts-recommended</span></code> package may be required, if you
+see the following message in ploting results:</p>
+<div class="highlight-python"><div class="highlight"><pre>! I can&#39;t find file `pncr7t&#39;.
+</pre></div>
+</div>
+</li>
+<li><p class="first">Download the source code from:</p>
+<p><a class="reference external" href="https://sourceforge.net/projects/phonopy/files/phonopy/phonopy-1.9/">https://sourceforge.net/projects/phonopy/files/phonopy/phonopy-1.9/</a> .</p>
+<p>and extract it:</p>
+<div class="highlight-python"><div class="highlight"><pre>% tar xvfz phonopy-1.9.7.tar.gz
+</pre></div>
+</div>
+</li>
+<li><p class="first">Put your phonopy directory into your <code class="docutils literal"><span class="pre">PYTHONPATH</span></code> in .bashrc etc,
+e.g.:</p>
+<div class="highlight-python"><div class="highlight"><pre>export PYTHONPATH=~/phonopy-1.9.7/lib/python
+</pre></div>
+</div>
+</li>
+<li><p class="first">Set up C-libraries for python C-API and python codes. This can be
+done as follows:</p>
+<p>Run <code class="docutils literal"><span class="pre">setup.py</span></code> script:</p>
+<div class="highlight-python"><div class="highlight"><pre>% python setup.py install --home=.
+</pre></div>
+</div>
+<p>The command <code class="docutils literal"><span class="pre">phonopy</span></code> is located in the <code class="docutils literal"><span class="pre">bin</span></code> directory. The
+install location can be specified by the option <code class="docutils literal"><span class="pre">--home</span></code>.</p>
+</li>
+</ol>
+<div class="section" id="special-cases-on-installation">
+<h2>Special cases on installation<a class="headerlink" href="#special-cases-on-installation" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="MacOSX.html">Using phonopy on Mac OS X</a></li>
+<li class="toctree-l1"><a class="reference internal" href="virtualmachine.html">Set up Ubuntu linux on VirtualBox</a></li>
+</ul>
+</div>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+        <br/>
+        
+<div id="sourcelink">
+  <a href="_sources/install.txt"
+     rel="nofollow">Source</a>
+</div>
+      
+    </p>
+    <p>
+        &copy; Copyright 2009, Atsushi Togo.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.3.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Interfaces to calculators and phonopy API &mdash; Phonopy v.1.9.7</title>
+    
+    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/bootswatch-3.3.4/cosmo/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.9.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
+    <link rel="top" title="Phonopy v.1.9.7" href="index.html" />
+    <link rel="next" title="VASP &amp; phonopy calculation" href="procedure.html" />
+    <link rel="prev" title="Calculation of mode Grüneisen parameters" href="gruneisen.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body role="document">
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">
+          Phonopy</a>
+        <span class="navbar-text navbar-version pull-left"><b>1.9.7</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="procedure.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">Work flow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Download and install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="input-files.html">Input files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="output-files.html">Output files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setting-tags.html">Setting tags</a></li>
+<li class="toctree-l1"><a class="reference internal" href="command-options.html">Command options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Interfaces to calculators and phonopy API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="auxiliary-tools.html">Auxiliary tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="theory.html">Formulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Interfaces to calculators and phonopy API</a><ul>
+<li><a class="reference internal" href="#interfaces-to-force-calculators">Interfaces to force calculators</a></li>
+<li><a class="reference internal" href="#interface-to-vasp-dfpt-force-constants">Interface to  VASP DFPT force constants</a></li>
+<li><a class="reference internal" href="#interface-to-fhi-aims-forces">Interface to FHI-aims forces</a></li>
+<li><a class="reference internal" href="#phonopy-api">Phonopy API</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="gruneisen.html" title="Previous Chapter: Calculation of mode Grüneisen parameters"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; Calculation o...</span>
+    </a>
+  </li>
+  <li>
+    <a href="procedure.html" title="Next Chapter: VASP & phonopy calculation"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">VASP & phonop... &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <div class="section" id="interfaces-to-calculators-and-phonopy-api">
+<h1>Interfaces to calculators and phonopy API<a class="headerlink" href="#interfaces-to-calculators-and-phonopy-api" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="interfaces-to-force-calculators">
+<span id="calculator-interfaces"></span><h2>Interfaces to force calculators<a class="headerlink" href="#interfaces-to-force-calculators" title="Permalink to this headline">¶</a></h2>
+<p>The interfaces for VASP, Wien2k, Pwscf, Abinit, and Elk are built in
+to the usual phonopy command. See the command options and how to
+invoke each of them at <a class="reference internal" href="command-options.html#force-calculators"><span>Force calculators</span></a>.</p>
+<p>For each calculator, each physical unit system is used. The physical
+unit systems used for the calculators are summarized below.</p>
+<div class="highlight-python"><div class="highlight"><pre>        | Distance   Atomic mass   Force         Force constants
+-----------------------------------------------------------------
+VASP    | Angstrom   AMU           eV/Angstrom   eV/Angstrom^2
+Wien2k  | au (bohr)  AMU           mRy/au        mRy/au^2
+Pwscf   | au (bohr)  AMU           Ry/au         Ry/au^2
+Abinit  | au (bohr)  AMU           eV/Angstrom   eV/Angstrom.au
+Siesta  | au (bohr)  AMU           eV/Angstrom   eV/Angstrom.au
+elk     | au (bohr)  AMU           hartree/au    hartree/au^2
+</pre></div>
+</div>
+<p>Default unit cell file names are also changed according to the calculators:</p>
+<div class="highlight-python"><div class="highlight"><pre>VASP    | POSCAR
+Wien2k  | case.struct
+Abinit  | unitcell.in
+Pwscf   | unitcell.in
+Siesta  | input.fdf
+Elk     | elk.in
+</pre></div>
+</div>
+<p>Default displacement distances created by <code class="docutils literal"><span class="pre">CREATE_DISPLACEMENTS</span> <span class="pre">=</span>
+<span class="pre">.TRUE.</span></code> (or <code class="docutils literal"><span class="pre">-d</span></code> option):</p>
+<div class="highlight-python"><div class="highlight"><pre>VASP    | 0.01 Angstrom
+Wien2k  | 0.02 au (bohr)
+Abinit  | 0.02 au (bohr)
+Pwscf   | 0.02 au (bohr)
+Siesta  | 0.02 au (bohr)
+Elk     | 0.02 au (bohr)
+</pre></div>
+</div>
+<p>Short tutorials for there calculators are found in the following pages.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="procedure.html">VASP &amp; phonopy calculation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="procedure.html#pre-process">Pre-process</a></li>
+<li class="toctree-l2"><a class="reference internal" href="procedure.html#calculation-of-sets-of-forces">Calculation of sets of forces</a></li>
+<li class="toctree-l2"><a class="reference internal" href="procedure.html#post-process">Post-process</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="wien2k.html">Wien2k &amp; phonopy calculation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="wien2k.html#how-to-run">How to run</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pwscf.html">Pwscf &amp; phonopy calculation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pwscf.html#supported-pwscf-tags">Supported Pwscf tags</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pwscf.html#how-to-run">How to run</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="abinit.html">Abinit &amp; phonopy calculation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="abinit.html#supported-abinit-variables">Supported Abinit variables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="abinit.html#how-to-run">How to run</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="siesta.html">Siesta &amp; phonopy calculation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="siesta.html#supported-siesta-tags">Supported Siesta tags</a></li>
+<li class="toctree-l2"><a class="reference internal" href="siesta.html#how-to-run">How to run</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="elk.html">Elk &amp; phonopy calculation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="elk.html#supported-elk-tags">Supported Elk tags</a></li>
+<li class="toctree-l2"><a class="reference internal" href="elk.html#how-to-run">How to run</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="interface-to-vasp-dfpt-force-constants">
+<h2>Interface to  VASP DFPT force constants<a class="headerlink" href="#interface-to-vasp-dfpt-force-constants" title="Permalink to this headline">¶</a></h2>
+<p>Using VASP DFPT feature, force constants are directly
+calculated. Phonopy VASP DFPT interface reads <code class="docutils literal"><span class="pre">vasprun.xml</span></code> and
+creates <code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span></code> file.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="vasp.html">VASP &amp; phonopy calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="vasp.html#vasp-dfpt-phonopy-calculation">VASP-DFPT &amp; phonopy calculation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="vasp.html#how-to-run">How to run</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="interface-to-fhi-aims-forces">
+<h2>Interface to FHI-aims forces<a class="headerlink" href="#interface-to-fhi-aims-forces" title="Permalink to this headline">¶</a></h2>
+<p>For FHI-aims, there is a special command, <code class="docutils literal"><span class="pre">phonopy-FHI-aims</span></code>. This
+tool is maintained by FHI-aims community and questions may be sent to the
+FHI-aims mailing list.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="FHI-aims.html">FHI-aims &amp; phonopy calculations</a></li>
+</ul>
+</div>
+</div>
+<div class="section" id="phonopy-api">
+<h2>Phonopy API<a class="headerlink" href="#phonopy-api" title="Permalink to this headline">¶</a></h2>
+<p>Phonopy can be used as a python module. Phonopy API is explained in
+the following page.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="phonopy-module.html">Using phonopy as a python module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="phonopy-module.html#import">Import</a></li>
+<li class="toctree-l2"><a class="reference internal" href="phonopy-module.html#work-flow">Work flow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="phonopy-module.html#eigenvectors">Eigenvectors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="phonopy-module.html#atoms-class-in-phonopy"><code class="docutils literal"><span class="pre">Atoms</span></code> class in Phonopy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="phonopy-module.html#definitions-of-variables">Definitions of variables</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+        <br/>
+        
+<div id="sourcelink">
+  <a href="_sources/interfaces.txt"
+     rel="nofollow">Source</a>
+</div>
+      
+    </p>
+    <p>
+        &copy; Copyright 2009, Atsushi Togo.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.3.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

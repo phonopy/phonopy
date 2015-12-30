@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>VASP &amp; phonopy calculation &mdash; Phonopy v.1.9.7</title>
+    
+    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/bootswatch-3.3.4/cosmo/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.9.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
+    <link rel="top" title="Phonopy v.1.9.7" href="index.html" />
+    <link rel="up" title="Interfaces to calculators and phonopy API" href="interfaces.html" />
+    <link rel="next" title="Wien2k &amp; phonopy calculation" href="wien2k.html" />
+    <link rel="prev" title="Interfaces to calculators and phonopy API" href="interfaces.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body role="document">
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">
+          Phonopy</a>
+        <span class="navbar-text navbar-version pull-left"><b>1.9.7</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">Work flow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Download and install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="input-files.html">Input files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="output-files.html">Output files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setting-tags.html">Setting tags</a></li>
+<li class="toctree-l1"><a class="reference internal" href="command-options.html">Command options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="interfaces.html">Interfaces to calculators and phonopy API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="auxiliary-tools.html">Auxiliary tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="theory.html">Formulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">VASP &amp; phonopy calculation</a><ul>
+<li><a class="reference internal" href="#pre-process">Pre-process</a></li>
+<li><a class="reference internal" href="#calculation-of-sets-of-forces">Calculation of sets of forces</a></li>
+<li><a class="reference internal" href="#post-process">Post-process</a><ul>
+<li><a class="reference internal" href="#details">Details</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="interfaces.html" title="Previous Chapter: Interfaces to calculators and phonopy API"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; Interfaces to...</span>
+    </a>
+  </li>
+  <li>
+    <a href="wien2k.html" title="Next Chapter: Wien2k & phonopy calculation"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">Wien2k & phon... &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <div class="section" id="vasp-phonopy-calculation">
+<span id="tutorial"></span><h1>VASP &amp; phonopy calculation<a class="headerlink" href="#vasp-phonopy-calculation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="pre-process">
+<h2>Pre-process<a class="headerlink" href="#pre-process" title="Permalink to this headline">¶</a></h2>
+<p>The input stureture of <code class="docutils literal"><span class="pre">POSCAR</span></code> is supposed to be <a class="reference internal" href="input-files.html#example-poscar1"><span>this</span></a>.</p>
+<p>In the pre-process, supercell structures with (or without) displacements are created from a unit cell fully consiering crystal symmetry.</p>
+<p>To obtain supercells (<img class="math" src="_images/math/5365ffdb4a545753460c5417513aae7b22054182.png" alt="2\times 2\times 3"/>) with displacements,
+run phonopy:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">phonopy</span> <span class="o">-</span><span class="n">d</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s">&quot;2 2 3&quot;</span>
+</pre></div>
+</div>
+<p>You should find the files, <code class="docutils literal"><span class="pre">SPOSCAR</span></code>, <code class="docutils literal"><span class="pre">disp.yaml</span></code>, and <code class="docutils literal"><span class="pre">POSCAR-{number}</span></code> as
+follows:</p>
+<div class="highlight-python"><div class="highlight"><pre>% ls
+disp.yaml  POSCAR  POSCAR-001  POSCAR-002  POSCAR-003  SPOSCAR
+</pre></div>
+</div>
+<p><code class="docutils literal"><span class="pre">SPOSCAR</span></code> is the perfect supercell structure, <code class="docutils literal"><span class="pre">disp.yaml</span></code> contains
+the information on displacements, and <code class="docutils literal"><span class="pre">POSCAR-{number}</span></code> are the
+supercells with atomic displacements. <code class="docutils literal"><span class="pre">POSCAR-{number}</span></code> corresponds
+to the different atomic displacements written in <code class="docutils literal"><span class="pre">disp.yaml</span></code>.</p>
+</div>
+<div class="section" id="calculation-of-sets-of-forces">
+<h2>Calculation of sets of forces<a class="headerlink" href="#calculation-of-sets-of-forces" title="Permalink to this headline">¶</a></h2>
+<p>Force constants are calculated using the structure files <code class="docutils literal"><span class="pre">POSCAR-{number}</span></code>
+(from forces on atoms) or using the <code class="docutils literal"><span class="pre">SPOSCAR</span></code> file (direct calculation of force
+constants) by your favorite calculator. See the
+<a class="reference internal" href="#details-of-procedure"><span>details</span></a>.</p>
+<p>In the case of VASP, the calculations for the finite displacement method can be proceeded just using the <code class="docutils literal"><span class="pre">POSCAR-{number}</span></code> files as <code class="docutils literal"><span class="pre">POSCAR</span></code> of VASP calculations. An example of the <code class="docutils literal"><span class="pre">INCAR</span></code> is as follows:</p>
+<div class="highlight-python"><div class="highlight"><pre>   PREC = Accurate
+ IBRION = -1
+  ENCUT = 500
+  EDIFF = 1.0e-08
+ ISMEAR = 0; SIGMA = 0.01
+  IALGO = 38
+  LREAL = .FALSE.
+ADDGRID = .TRUE.
+  LWAVE = .FALSE.
+ LCHARG = .FALSE.
+</pre></div>
+</div>
+<p>Be careful not to relax the structures. Then create <code class="docutils literal"><span class="pre">FORCE_SETS</span></code>
+file using <a class="reference internal" href="command-options.html#vasp-force-sets-option"><span>VASP interface</span></a>:</p>
+<div class="highlight-python"><div class="highlight"><pre>% phonopy -f disp-001/vasprun.xml disp-002/vasprun.xml disp-003/vasprun.xml
+</pre></div>
+</div>
+<p>or</p>
+<div class="highlight-python"><div class="highlight"><pre>% phonopy -f disp-{001..003}/vasprun.xml
+</pre></div>
+</div>
+<p>If you want to calculate force constants by VASP-DFPT directory, see <a class="reference internal" href="vasp.html#vasp-dfpt-interface"><span>VASP-DFPT &amp; phonopy calculation</span></a>.</p>
+</div>
+<div class="section" id="post-process">
+<h2>Post-process<a class="headerlink" href="#post-process" title="Permalink to this headline">¶</a></h2>
+<p>In the post-process,</p>
+<ol class="arabic simple">
+<li>Force constants are calculated from the sets of forces</li>
+<li>A part of dynamical matrix is built from the force constants</li>
+<li>Phonon frequencies and eigenvectors are calculated from the
+dynamical matrices with the specified <em>q</em>-points.</li>
+</ol>
+<p>For mesh sampling calculation, prepare the following setting file named, e.g.,
+<code class="docutils literal"><span class="pre">mesh.conf</span></code>:</p>
+<div class="highlight-python"><div class="highlight"><pre>ATOM_NAME = Si O
+DIM = 2 2 3
+MP = 8 8 8
+</pre></div>
+</div>
+<p>The density of states (DOS) is plotted by:</p>
+<div class="highlight-python"><div class="highlight"><pre>% phonopy -p mesh.conf
+</pre></div>
+</div>
+<p>Thermal properties are calculated with the sampling mesh by:</p>
+<div class="highlight-python"><div class="highlight"><pre>% phonopy -t mesh.conf
+</pre></div>
+</div>
+<p>You should check the convergence with respect to the mesh numbers.
+Thermal properties can be plotted by:</p>
+<div class="highlight-python"><div class="highlight"><pre>% phonopy -t -p mesh.conf
+</pre></div>
+</div>
+<p>Projected DOS is calculated by the following setting file named, e.g., <code class="docutils literal"><span class="pre">pdos.conf</span></code>:</p>
+<div class="highlight-python"><div class="highlight"><pre>ATOM_NAME = Si O
+DIM = 2 2 3
+MP = 8 8 8
+PDOS = 1 2, 3 4 5 6
+</pre></div>
+</div>
+<p>and plotted by:</p>
+<div class="highlight-python"><div class="highlight"><pre>% phonopy -p pdos.conf
+</pre></div>
+</div>
+<p>Band structure is calculated with the following setting file named, e.g., <cite>band.conf</cite> by:</p>
+<div class="highlight-python"><div class="highlight"><pre>ATOM_NAME = Si O
+DIM =  2 2 3
+BAND = 0.5 0.5 0.5  0.0 0.0 0.0  0.5 0.5 0.0  0.0 0.5 0.0
+</pre></div>
+</div>
+<p>The band structure is plotted by:</p>
+<div class="highlight-python"><div class="highlight"><pre>% phonopy -p band.conf
+</pre></div>
+</div>
+<p>In either case, by setting the <code class="docutils literal"><span class="pre">-s</span></code> option, the plot is going to be saved in the PDF
+format. If you don&#8217;t need to plot DOS, the (partial) DOS
+is just calculated using the <code class="docutils literal"><span class="pre">--dos</span></code> option.</p>
+<div class="section" id="details">
+<span id="details-of-procedure"></span><h3>Details<a class="headerlink" href="#details" title="Permalink to this headline">¶</a></h3>
+<p>Following files are required in your working directory.</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">POSCAR</span></code>, and <code class="docutils literal"><span class="pre">FORCE_SETS</span></code> or <code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span></code></li>
+<li><code class="docutils literal"><span class="pre">disp.yaml</span></code> is required to create <code class="docutils literal"><span class="pre">FORCE_SETS</span></code>.</li>
+</ul>
+<p>In the case of finite difference approach, there are three steps.</p>
+<ol class="arabic simple">
+<li>Create supercells and introduce atomic displacements. Each
+supercell contains one atomic displacement. It is done by using
+<code class="docutils literal"><span class="pre">-d</span></code> option with <code class="docutils literal"><span class="pre">--dim</span></code> option that specifies supercell
+dimension.  The files of supercells with atomic displacements like
+as <code class="docutils literal"><span class="pre">POSCAR-001</span></code>, <code class="docutils literal"><span class="pre">POSCAR-002</span></code>, ..., are created in current
+directory (the file format and names are different in <a class="reference internal" href="command-options.html#wien2k-mode"><span>WIEN2k
+mode</span></a>.) by running phonopy. The files <code class="docutils literal"><span class="pre">disp.yaml</span></code>
+and <code class="docutils literal"><span class="pre">SPOSCAR</span></code> are also created. The file <code class="docutils literal"><span class="pre">SPOSCAR</span></code> is the
+perfect supercell that contains no atomic displacement. This file
+is not usually used.</li>
+<li>Calculate forces on atoms of the supercells with atomic
+displacements. Currently phonopy has <a class="reference internal" href="command-options.html#vasp-force-sets-option"><span>VASP</span></a> and <a class="reference internal" href="wien2k.html#wien2k-interface"><span>WIEN2k</span></a>
+interfaces to create <code class="docutils literal"><span class="pre">FORCE_SETS</span></code>. After obtaining forces on
+atoms that calculated by some calculator (it&#8217;s out of phonopy), the
+forces are summarized in <code class="docutils literal"><span class="pre">FORCE_SETS</span></code> file following the
+<a class="reference internal" href="input-files.html#file-forces"><span>format</span></a>.</li>
+<li>Calculate phonon related properties. See <a class="reference internal" href="features.html#analyze-phonon"><span>Features</span></a>.</li>
+</ol>
+<p>If you already have force constants, the first and second steps can be
+omitted. However your force constants have to be converted to the
+<a class="reference internal" href="input-files.html#file-force-constants"><span>format</span></a> that phonopy can read.  The
+<a class="reference internal" href="command-options.html#vasp-force-constants"><span>VASP interface</span></a> to convert force
+constants is prepared in phonopy.</p>
+</div>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+        <br/>
+        
+<div id="sourcelink">
+  <a href="_sources/procedure.txt"
+     rel="nofollow">Source</a>
+</div>
+      
+    </p>
+    <p>
+        &copy; Copyright 2009, Atsushi Togo.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.3.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

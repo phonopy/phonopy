@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Quasi harmonic approximation &mdash; Phonopy v.1.9.7</title>
+    
+    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/bootswatch-3.3.4/cosmo/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.9.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
+    <link rel="top" title="Phonopy v.1.9.7" href="index.html" />
+    <link rel="next" title="Calculation of mode Grüneisen parameters" href="gruneisen.html" />
+    <link rel="prev" title="Command options" href="command-options.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body role="document">
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">
+          Phonopy</a>
+        <span class="navbar-text navbar-version pull-left"><b>1.9.7</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="procedure.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">Work flow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Download and install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="input-files.html">Input files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="output-files.html">Output files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setting-tags.html">Setting tags</a></li>
+<li class="toctree-l1"><a class="reference internal" href="command-options.html">Command options</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Quasi harmonic approximation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interfaces.html">Interfaces to calculators and phonopy API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="auxiliary-tools.html">Auxiliary tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="theory.html">Formulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Quasi harmonic approximation</a><ul>
+<li><a class="reference internal" href="#usage-of-phonopy-qha">Usage of <code class="docutils literal"><span class="pre">phonopy-qha</span></code></a><ul>
+<li><a class="reference internal" href="#options">Options</a><ul>
+<li><a class="reference internal" href="#h"><code class="docutils literal"><span class="pre">-h</span></code></a></li>
+<li><a class="reference internal" href="#tmax"><code class="docutils literal"><span class="pre">--tmax</span></code></a></li>
+<li><a class="reference internal" href="#p"><code class="docutils literal"><span class="pre">-p</span></code></a></li>
+<li><a class="reference internal" href="#sparse"><code class="docutils literal"><span class="pre">--sparse</span></code></a></li>
+<li><a class="reference internal" href="#s"><code class="docutils literal"><span class="pre">-s</span></code></a></li>
+<li><a class="reference internal" href="#pressure"><code class="docutils literal"><span class="pre">--pressure</span></code></a></li>
+<li><a class="reference internal" href="#b"><code class="docutils literal"><span class="pre">-b</span></code></a></li>
+<li><a class="reference internal" href="#eos"><code class="docutils literal"><span class="pre">--eos</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#output-files">Output files</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#theory-of-quasi-harmonic-approximation">Theory of quasi-harmonic approximation</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="command-options.html" title="Previous Chapter: Command options"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; Command options</span>
+    </a>
+  </li>
+  <li>
+    <a href="gruneisen.html" title="Next Chapter: Calculation of mode Grüneisen parameters"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">Calculation o... &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <div class="section" id="quasi-harmonic-approximation">
+<span id="phonopy-qha"></span><h1>Quasi harmonic approximation<a class="headerlink" href="#quasi-harmonic-approximation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="usage-of-phonopy-qha">
+<h2>Usage of <code class="docutils literal"><span class="pre">phonopy-qha</span></code><a class="headerlink" href="#usage-of-phonopy-qha" title="Permalink to this headline">¶</a></h2>
+<p>Using phonopy results of thermal properties, thermal expansion and
+heat capacity at constant pressure can be calculated under the
+quasi-harmonic approximation. <code class="docutils literal"><span class="pre">phonopy-qha</span></code> is the script to
+calculate them. An example of the usage is as follows:</p>
+<div class="highlight-python"><div class="highlight"><pre>phonopy-qha e-v.dat thermal_properties-{1..10}.yaml
+</pre></div>
+</div>
+<p>1st argument is the filename of volume-energy data (in the above
+expample, <code class="docutils literal"><span class="pre">e-v.dat</span></code>). The volume and energy of the cell (default
+units are in <img class="math" src="_images/math/1f2315642658781595c397905f41d3b48de3ccbd.png" alt="\mathrm{\AA}^3"/> and eV, respectively). An example of the
+volume-energy file is:</p>
+<div class="highlight-python"><div class="highlight"><pre>#   cell volume        energy of cell other than phonon
+   156.7387309525      -104.5290025375
+   154.4138492700      -104.6868148175
+   152.2544070150      -104.8064238800
+   150.2790355600      -104.8911768625
+   148.4469296725      -104.9470385875
+   146.7037426750      -104.9783724075
+   145.1182305450      -104.9871878600
+   143.5676103350      -104.9765270775
+   142.1282086200      -104.9485225225
+   139.4989658225      -104.8492814250
+</pre></div>
+</div>
+<p>Lines starting with <code class="docutils literal"><span class="pre">#</span></code> are ignored. The other arguments are the
+filenames of <code class="docutils literal"><span class="pre">thermal_properties.yaml</span></code> calculated at the respective
+volumes given in the 1st argument. The <code class="docutils literal"><span class="pre">thermal_properties.yaml</span></code> at
+volume points have to be calculated with the same temperature ranges
+and same temperature steps. <code class="docutils literal"><span class="pre">thermal_properties.yaml</span></code> can be
+calculated by following <a class="reference internal" href="setting-tags.html#thermal-properties-tag"><span>Thermal properties related tags</span></a>, where the
+physical unit of the Helmholtz free energy is kJ/mol as the default,
+i.e., no need to convert the physical unit in usual cases.</p>
+<p>The example for Aluminum is found in the <code class="docutils literal"><span class="pre">example</span></code> directory.</p>
+<p>If the condition under puressure is expected, <img class="math" src="_images/math/0dfed6bacce2d7a8fcef075bfe60b6abdce343d5.png" alt="PV"/> terms may be
+included in the energies.</p>
+<div class="section" id="options">
+<span id="phonopy-qha-options"></span><h3>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="h">
+<h4><code class="docutils literal"><span class="pre">-h</span></code><a class="headerlink" href="#h" title="Permalink to this headline">¶</a></h4>
+<p>Show help. The available options are shown. Without any option, the
+results are saved into text files in simple data format.</p>
+</div>
+<div class="section" id="tmax">
+<h4><code class="docutils literal"><span class="pre">--tmax</span></code><a class="headerlink" href="#tmax" title="Permalink to this headline">¶</a></h4>
+<p>The maximum temperature calculated is specified. This temperature has
+to be lower than the maximum temperature calculated in
+<code class="docutils literal"><span class="pre">thermal_properties.yaml</span></code> to let at least two temperature points
+fewer. The default value is <code class="docutils literal"><span class="pre">--tmax=1000</span></code>.</p>
+</div>
+<div class="section" id="p">
+<h4><code class="docutils literal"><span class="pre">-p</span></code><a class="headerlink" href="#p" title="Permalink to this headline">¶</a></h4>
+<p>The fitting results, volume-temperature relation, and thermal expansion
+coefficient are plotted on the display.</p>
+</div>
+<div class="section" id="sparse">
+<h4><code class="docutils literal"><span class="pre">--sparse</span></code><a class="headerlink" href="#sparse" title="Permalink to this headline">¶</a></h4>
+<p>This is used with <code class="docutils literal"><span class="pre">-s</span></code> or <code class="docutils literal"><span class="pre">-p</span></code> to thin out the number of plots of
+the fitting results at temperatures. When <code class="docutils literal"><span class="pre">--sparse=10</span></code>, 1/10 is
+only plotted.</p>
+</div>
+<div class="section" id="s">
+<h4><code class="docutils literal"><span class="pre">-s</span></code><a class="headerlink" href="#s" title="Permalink to this headline">¶</a></h4>
+<p>The calculated values are written into files.</p>
+</div>
+<div class="section" id="pressure">
+<h4><code class="docutils literal"><span class="pre">--pressure</span></code><a class="headerlink" href="#pressure" title="Permalink to this headline">¶</a></h4>
+<p><strong>This option is not yet well tested. Please report to the mailing list when you get wrong results.</strong></p>
+<p>Pressure is specified in GPa. This corresponds to the <img class="math" src="_images/math/f9cd47ee828774a5bf1a063755dba74cabb5806a.png" alt="pV"/> term
+described in the following section <a class="reference internal" href="#theory-of-qha"><span>Theory of quasi-harmonic approximation</span></a>.</p>
+</div>
+<div class="section" id="b">
+<h4><code class="docutils literal"><span class="pre">-b</span></code><a class="headerlink" href="#b" title="Permalink to this headline">¶</a></h4>
+<p>Fitting volume-energy data to an EOS, and show bulk
+modulus (without considering phonons). This is made by:</p>
+<div class="highlight-python"><div class="highlight"><pre>phonopy-qha -b e-v.dat
+</pre></div>
+</div>
+</div>
+<div class="section" id="eos">
+<h4><code class="docutils literal"><span class="pre">--eos</span></code><a class="headerlink" href="#eos" title="Permalink to this headline">¶</a></h4>
+<p>EOS is chosen among <code class="docutils literal"><span class="pre">vinet</span></code>, <code class="docutils literal"><span class="pre">birch_murnaghan</span></code>, and
+<code class="docutils literal"><span class="pre">murnaghan</span></code>. The default EOS is <code class="docutils literal"><span class="pre">vinet</span></code>.</p>
+<div class="highlight-python"><div class="highlight"><pre>phonopy-qha --eos=&#39;birch_murnaghan&#39; -b e-v.dat
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="output-files">
+<span id="phonopy-qha-output-files"></span><h3>Output files<a class="headerlink" href="#output-files" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Bulk modulus vs T (<code class="docutils literal"><span class="pre">bulk_modulus-temperature.*</span></code>)</li>
+<li>Gibbs free energy vs T (<code class="docutils literal"><span class="pre">gibbs-temperature.*</span></code>)</li>
+<li>Volume change with respect to the volume at 300 K vs T (<code class="docutils literal"><span class="pre">volume_expansion.*</span></code>)</li>
+<li>Heat capacity at constant pressure vs T derived by
+<img class="math" src="_images/math/64d33695d03414fd1419c6f9656778b054b67bdc.png" alt="-T\frac{\partial^2 G}{\partial T^2}"/>  (<code class="docutils literal"><span class="pre">Cp-temperature.*</span></code>)</li>
+<li>Heat capacity at constant puressure vs T by polynomial fittings of
+Cv and S (<code class="docutils literal"><span class="pre">Cp-temperature_polyfit.*</span></code>)</li>
+<li>Helmholtz free energy vs volume (<code class="docutils literal"><span class="pre">helmholtz-volume.*</span></code>). When
+<code class="docutils literal"><span class="pre">--pressure</span></code> option is specified, energy offset of <img class="math" src="_images/math/f9cd47ee828774a5bf1a063755dba74cabb5806a.png" alt="pV"/> is
+added. See also the following section (<a class="reference internal" href="#theory-of-qha"><span>Theory of quasi-harmonic approximation</span></a>).</li>
+<li>Volume vs T (<code class="docutils literal"><span class="pre">volume-temperature.*</span></code>)</li>
+<li>Thermal expansion coefficient vs T (<code class="docutils literal"><span class="pre">thermal_expansion.*</span></code>)</li>
+</ul>
+</div>
+</div>
+<div class="section" id="theory-of-quasi-harmonic-approximation">
+<span id="theory-of-qha"></span><h2>Theory of quasi-harmonic approximation<a class="headerlink" href="#theory-of-quasi-harmonic-approximation" title="Permalink to this headline">¶</a></h2>
+<p>Here the word &#8216;quasi-harmonic approximation&#8217; is used for an
+approximation that introduces volume dependence of phonon frequencies
+as a part of anharmonic effect.</p>
+<p>A part of temperature effect can be included into total energy of
+electronic structure through phonon (Helmholtz) free energy at
+constant volume. But what we want to know is thermal properties at
+constant pressure. We need some transformation from function of <em>V</em> to
+function of <em>p</em>. Gibbs free energy is defined at a constant pressure by
+the transformation:</p>
+<div class="math">
+<p><img src="_images/math/9e7ee1212534b4628b010ee223d3787feed10517.png" alt="G(T, p) = \min_V \left[ U(V) + F_\mathrm{phonon}(T;\,V) + pV \right],"/></p>
+</div><p>where</p>
+<div class="math">
+<p><img src="_images/math/b043dd2b461044f849c9425589b813467b4ef4ac.png" alt="\min_V[ \text{function of } V ]"/></p>
+</div><p>means to find unique minimum value in the brackets by changing
+volume. Since volume dependencies of energies in electronic and phonon
+structures are different, volume giving the minimum value of the
+energy function in the square brackets shifts from the value
+calculated only from electronic structure even at 0 K. By increasing
+temperature, the volume dependence of phonon free energy changes, then
+the equilibrium volume at temperatures changes. This is considered as
+thermal expansion under this approximation.</p>
+<p><code class="docutils literal"><span class="pre">phonopy-qha</span></code> collects the values at volumes and transforms into the
+thermal properties at constant pressure.</p>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+        <br/>
+        
+<div id="sourcelink">
+  <a href="_sources/qha.txt"
+     rel="nofollow">Source</a>
+</div>
+      
+    </p>
+    <p>
+        &copy; Copyright 2009, Atsushi Togo.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.3.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

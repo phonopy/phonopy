@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Change Log &mdash; Phonopy v.1.9.7</title>
+    
+    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/bootswatch-3.3.4/cosmo/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.9.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
+    <link rel="top" title="Phonopy v.1.9.7" href="index.html" />
+    <link rel="prev" title="References" href="reference.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body role="document">
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">
+          Phonopy</a>
+        <span class="navbar-text navbar-version pull-left"><b>1.9.7</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="procedure.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">Work flow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Download and install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="input-files.html">Input files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="output-files.html">Output files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setting-tags.html">Setting tags</a></li>
+<li class="toctree-l1"><a class="reference internal" href="command-options.html">Command options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interfaces.html">Interfaces to calculators and phonopy API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="auxiliary-tools.html">Auxiliary tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="theory.html">Formulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Change Log</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Change Log</a><ul>
+<li><a class="reference internal" href="#oct-20-2015-version-1-10-0-release-for-testing">Oct-20-2015: Version 1.10.0 (release for testing)</a></li>
+<li><a class="reference internal" href="#oct-20-2015-version-1-9-7">Oct-20-2015: Version 1.9.7</a></li>
+<li><a class="reference internal" href="#aug-12-2015-version-1-9-6">Aug-12-2015: Version 1.9.6</a></li>
+<li><a class="reference internal" href="#july-11-2015-version-1-9-5">July-11-2015: Version 1.9.5</a></li>
+<li><a class="reference internal" href="#feb-18-2015-version-1-9-4">Feb-18-2015: Version 1.9.4</a></li>
+<li><a class="reference internal" href="#feb-10-2015-version-1-9-3">Feb-10-2015: Version 1.9.3</a></li>
+<li><a class="reference internal" href="#jan-4-2015-version-1-9-2">Jan-4-2015: Version 1.9.2</a></li>
+<li><a class="reference internal" href="#oct-30-2014-version-1-9-1-3">Oct-30-2014: Version 1.9.1.3</a></li>
+<li><a class="reference internal" href="#oct-29-2014-version-1-9-1-2">Oct-29-2014: Version 1.9.1.2</a></li>
+<li><a class="reference internal" href="#oct-17-2014-version-1-9-1-1">Oct-17-2014: Version 1.9.1.1</a></li>
+<li><a class="reference internal" href="#aug-28-2014-version-1-9-0">Aug-28-2014: Version 1.9.0</a></li>
+<li><a class="reference internal" href="#aug-12-2014-version-1-8-5">Aug-12-2014: Version 1.8.5</a></li>
+<li><a class="reference internal" href="#june-23-2014-version-1-8-4-2">June-23-2014: Version 1.8.4.2</a></li>
+<li><a class="reference internal" href="#apr-5-2014-version-1-8-4-1">Apr-5-2014: Version 1.8.4.1</a></li>
+<li><a class="reference internal" href="#mar-31-2014-version-1-8-4">Mar-31-2014: Version 1.8.4</a></li>
+<li><a class="reference internal" href="#feb-17-2014-version-1-8-3">Feb-17-2014: Version 1.8.3</a></li>
+<li><a class="reference internal" href="#feb-8-2014-version-1-8-2">Feb-8-2014: Version 1.8.2</a></li>
+<li><a class="reference internal" href="#jan-9-2014-version-1-8-0">Jan-9-2014: Version 1.8.0</a></li>
+<li><a class="reference internal" href="#dec-4-2013-version-1-7-5">Dec-4-2013: Version 1.7.5</a></li>
+<li><a class="reference internal" href="#oct-3-2013-version-1-7-4">Oct-3-2013: Version 1.7.4</a></li>
+<li><a class="reference internal" href="#sep-17-2013-version-1-7-3">Sep-17-2013: Version 1.7.3</a></li>
+<li><a class="reference internal" href="#aug-4-2013-version-1-7-2">Aug-4-2013: Version 1.7.2</a></li>
+<li><a class="reference internal" href="#july-14-2013-version-1-7-1">July-14-2013: Version 1.7.1</a></li>
+<li><a class="reference internal" href="#jun-21-2013-version-1-7">Jun-21-2013: Version 1.7</a></li>
+<li><a class="reference internal" href="#apr-13-2013-version-1-6-4">Apr-13-2013: Version 1.6.4</a></li>
+<li><a class="reference internal" href="#feb-7-2013-version-1-6-3">Feb-7-2013: Version 1.6.3</a></li>
+<li><a class="reference internal" href="#nov-13-2012-version-1-6-2">Nov-13-2012: Version 1.6.2</a></li>
+<li><a class="reference internal" href="#nov-4-2012-version-1-6-1">Nov-4-2012: Version 1.6.1</a></li>
+<li><a class="reference internal" href="#oct-22-2012-version-1-6">Oct-22-2012: Version 1.6</a></li>
+<li><a class="reference internal" href="#june-29-2012-version-1-5">June-29-2012: Version 1.5</a></li>
+<li><a class="reference internal" href="#may-22-2012-version-1-4-2">May-22-2012: Version 1.4.2</a></li>
+<li><a class="reference internal" href="#may-21-2012-version-1-4-1">May-21-2012: Version 1.4.1</a></li>
+<li><a class="reference internal" href="#may-13-2012-version-1-4">May-13-2012: Version 1.4</a></li>
+<li><a class="reference internal" href="#mar-20-2012-version-1-3">Mar-20-2012: Version 1.3</a></li>
+<li><a class="reference internal" href="#oct-13-2011-version-1-2-1">Oct-13-2011: Version 1.2.1</a></li>
+<li><a class="reference internal" href="#oct-12-2011-version-1-2">Oct-12-2011: Version 1.2</a></li>
+<li><a class="reference internal" href="#sep-19-2011-version-1-1">Sep-19-2011: Version 1.1</a></li>
+<li><a class="reference internal" href="#sep-5-2011-version-1-0">Sep-5-2011: Version 1.0</a></li>
+<li><a class="reference internal" href="#aug-8-2011-version-0-9-6">Aug-8-2011: Version 0.9.6</a></li>
+<li><a class="reference internal" href="#jun-7-2011-version-0-9-5-1">Jun-7-2011: Version 0.9.5.1</a></li>
+<li><a class="reference internal" href="#errata-of-document">Errata of document</a></li>
+<li><a class="reference internal" href="#jun-3-2011-version-0-9-5">Jun-3-2011: Version 0.9.5</a></li>
+<li><a class="reference internal" href="#id1">Errata of document</a></li>
+<li><a class="reference internal" href="#apr-18-2011-version-0-9-4-2">Apr-18-2011: Version 0.9.4.2</a></li>
+<li><a class="reference internal" href="#feb-26-2011-version-0-9-4-1">Feb-26-2011: Version 0.9.4.1</a></li>
+<li><a class="reference internal" href="#feb-20-2011-version-0-9-4">Feb-20-2011: Version 0.9.4</a></li>
+<li><a class="reference internal" href="#jan-21-2011-version-0-9-3-3">Jan-21-2011: Version 0.9.3.3</a></li>
+<li><a class="reference internal" href="#jan-12-2011-version-0-9-3-2">Jan-12-2011: Version 0.9.3.2</a></li>
+<li><a class="reference internal" href="#id2">Errata of document</a></li>
+<li><a class="reference internal" href="#dec-30-2010-version-0-9-3-1">Dec-30-2010: Version 0.9.3.1</a></li>
+<li><a class="reference internal" href="#dec-5-2010-version-0-9-3">Dec-5-2010: Version 0.9.3</a></li>
+<li><a class="reference internal" href="#nov-26-2010-version-0-9-2">Nov-26-2010: Version 0.9.2</a></li>
+<li><a class="reference internal" href="#sep-22-2010-version-0-9-1-4">Sep-22-2010: Version 0.9.1.4</a></li>
+<li><a class="reference internal" href="#aug-24-2010-version-0-9-1-3">Aug-24-2010: Version 0.9.1.3</a></li>
+<li><a class="reference internal" href="#june-10-2010-version-0-9-1-2">June-10-2010: Version 0.9.1.2</a></li>
+<li><a class="reference internal" href="#may-11-2010-version-0-9-1-1">May-11-2010: Version 0.9.1.1</a></li>
+<li><a class="reference internal" href="#may-10-2010-version-0-9-1">May-10-2010: Version 0.9.1</a></li>
+<li><a class="reference internal" href="#apr-12-2010-version-0-9-0-2">Apr-12-2010: Version 0.9.0.2</a></li>
+<li><a class="reference internal" href="#apr-12-2010-version-0-9-0-1">Apr-12-2010: Version 0.9.0.1</a></li>
+<li><a class="reference internal" href="#apr-10-2010-version-0-9-0">Apr-10-2010: Version 0.9.0</a></li>
+<li><a class="reference internal" href="#mar-10-2010-version-0-7-4">Mar-10-2010: Version 0.7.4</a></li>
+<li><a class="reference internal" href="#feb-10-2010-version-0-7-3">Feb-10-2010: Version 0.7.3</a></li>
+<li><a class="reference internal" href="#jan-12-2010-version-0-7-2">Jan-12-2010: Version 0.7.2</a></li>
+<li><a class="reference internal" href="#dec-8-2009-version-0-7-1-released">Dec-8-2009: Version 0.7.1 released</a></li>
+<li><a class="reference internal" href="#nov-24-2009-version-0-7-0-released">Nov-24-2009: Version 0.7.0 released</a></li>
+<li><a class="reference internal" href="#oct-14-2009-version-0-6-2-released">Oct-14-2009: Version 0.6.2 released</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="reference.html" title="Previous Chapter: References"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; References</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <div class="section" id="change-log">
+<span id="changelog"></span><h1>Change Log<a class="headerlink" href="#change-log" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="oct-20-2015-version-1-10-0-release-for-testing">
+<h2>Oct-20-2015: Version 1.10.0 (release for testing)<a class="headerlink" href="#oct-20-2015-version-1-10-0-release-for-testing" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>An experimental release for testing python 3 support. Bug reports
+are very appreciated.</li>
+</ul>
+</div>
+<div class="section" id="oct-20-2015-version-1-9-7">
+<h2>Oct-20-2015: Version 1.9.7<a class="headerlink" href="#oct-20-2015-version-1-9-7" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Siesta interface (<code class="docutils literal"><span class="pre">--elk</span></code> option) was added (<a class="reference internal" href="siesta.html#siesta-interface"><span>Siesta &amp; phonopy calculation</span></a>)
+by Henrique Pereira Coutada Miranda.</li>
+<li><code class="docutils literal"><span class="pre">WRITE_MESH</span> <span class="pre">=</span> <span class="pre">.FALSE.</span></code> (<code class="docutils literal"><span class="pre">--nowritemesh</span></code>) tag was added
+(<a class="reference internal" href="setting-tags.html#write-mesh-tag"><span>WRITE_MESH</span></a>).</li>
+</ul>
+</div>
+<div class="section" id="aug-12-2015-version-1-9-6">
+<h2>Aug-12-2015: Version 1.9.6<a class="headerlink" href="#aug-12-2015-version-1-9-6" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">--hdf5</span></code> option. Some output files can be written in hdf5
+format. See <a class="reference internal" href="command-options.html#hdf5-option"><span>&#8211;hdf5</span></a>.</li>
+<li>Improve tetrahedron method performance in the calculation of DOS and
+PDOS.</li>
+<li>Spglib update to version 1.8.2.1.</li>
+</ul>
+</div>
+<div class="section" id="july-11-2015-version-1-9-5">
+<h2>July-11-2015: Version 1.9.5<a class="headerlink" href="#july-11-2015-version-1-9-5" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Elk interface (<code class="docutils literal"><span class="pre">--elk</span></code> option) was added (<a class="reference internal" href="elk.html#elk-interface"><span>Elk &amp; phonopy calculation</span></a>).</li>
+<li>Spglib update to version 1.8.1.</li>
+</ul>
+</div>
+<div class="section" id="feb-18-2015-version-1-9-4">
+<h2>Feb-18-2015: Version 1.9.4<a class="headerlink" href="#feb-18-2015-version-1-9-4" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Fixed to force setting <code class="docutils literal"><span class="pre">MESH_SYMMETRY</span> <span class="pre">=</span> <span class="pre">.FALSE.</span></code> (<code class="docutils literal"><span class="pre">--nomeshsym</span></code>)
+when PDOS is invoked.</li>
+</ul>
+</div>
+<div class="section" id="feb-10-2015-version-1-9-3">
+<h2>Feb-10-2015: Version 1.9.3<a class="headerlink" href="#feb-10-2015-version-1-9-3" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">MAGMOM</span></code> tag is now available (<a class="reference internal" href="setting-tags.html#magmom-tag"><span>MAGMOM</span></a>).</li>
+<li>Spglib update.</li>
+</ul>
+</div>
+<div class="section" id="jan-4-2015-version-1-9-2">
+<h2>Jan-4-2015: Version 1.9.2<a class="headerlink" href="#jan-4-2015-version-1-9-2" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Behaviors of <code class="docutils literal"><span class="pre">--wien2k</span></code>, <code class="docutils literal"><span class="pre">--abinit</span></code>, <code class="docutils literal"><span class="pre">--pwscf</span></code> options have
+been changed. Now they are just to invoke those calculator modes
+without a unit cell structure file. The unit cell structure file is
+specified using <code class="docutils literal"><span class="pre">--cell</span></code> (<code class="docutils literal"><span class="pre">-c</span></code>) option or <code class="docutils literal"><span class="pre">CELL_FILENAME</span></code>
+tag. See <a class="reference internal" href="command-options.html#force-calculators"><span>Force calculators</span></a>, <a class="reference internal" href="wien2k.html#wien2k-interface"><span>Wien2k &amp; phonopy calculation</span></a>,
+<a class="reference internal" href="abinit.html#abinit-interface"><span>Abinit &amp; phonopy calculation</span></a>, and <a class="reference internal" href="pwscf.html#pwscf-interface"><span>Pwscf &amp; phonopy calculation</span></a>.</li>
+<li>For the <code class="docutils literal"><span class="pre">gruneisen</span></code> command, <code class="docutils literal"><span class="pre">--factor</span></code>, <code class="docutils literal"><span class="pre">--nomeshsym</span></code>,
+<code class="docutils literal"><span class="pre">--wien2k</span></code>, <code class="docutils literal"><span class="pre">--abinit</span></code>, and <code class="docutils literal"><span class="pre">--pwscf</span></code> options are
+implemented. See <a class="reference internal" href="gruneisen.html#gruneisen-calculators"><span>Abinit, Pwscf, and Wien2k interfaces</span></a> and
+<a class="reference internal" href="gruneisen.html#gruneisen-command-options"><span>Command options</span></a>.</li>
+<li>In phonopy-API, timing to call Phonopy._set_dynamical_matrix is
+changed to reduce the number of calls of this function. This may
+raise timing issue to phonopy-API users.</li>
+<li>Band-DOS (band-PDOS) plot is implemented.</li>
+</ul>
+</div>
+<div class="section" id="oct-30-2014-version-1-9-1-3">
+<h2>Oct-30-2014: Version 1.9.1.3<a class="headerlink" href="#oct-30-2014-version-1-9-1-3" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Experimental support for Abinit. See <a class="reference internal" href="command-options.html#pwscf-mode"><span>&#8211;pwscf</span></a> and
+<a class="reference internal" href="command-options.html#pwscf-force-sets-option"><span>Pwscf interface</span></a>.</li>
+</ul>
+</div>
+<div class="section" id="oct-29-2014-version-1-9-1-2">
+<h2>Oct-29-2014: Version 1.9.1.2<a class="headerlink" href="#oct-29-2014-version-1-9-1-2" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Experimental support for Abinit. See <a class="reference internal" href="command-options.html#abinit-mode"><span>&#8211;abinit</span></a> and
+<a class="reference internal" href="command-options.html#abinit-force-sets-option"><span>Abinit interface</span></a>.</li>
+<li>FHI-aims modulation output. Some more examples for <code class="docutils literal"><span class="pre">phonopy-FHI-aims</span></code>.</li>
+</ul>
+</div>
+<div class="section" id="oct-17-2014-version-1-9-1-1">
+<h2>Oct-17-2014: Version 1.9.1.1<a class="headerlink" href="#oct-17-2014-version-1-9-1-1" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Supercell matrix support (9 elements) for the <code class="docutils literal"><span class="pre">MODULATION</span></code> tag.</li>
+<li>Improve the speed to create supercell.</li>
+<li>Many minor changes to clean-up code badly written.</li>
+</ul>
+</div>
+<div class="section" id="aug-28-2014-version-1-9-0">
+<h2>Aug-28-2014: Version 1.9.0<a class="headerlink" href="#aug-28-2014-version-1-9-0" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Use a native cElementTree of Python as VASP XML parser and stop
+using lxml. The native cElementTree is built in after Python 2.5. So
+Python 2.4 or before will not be suppored from this phonopy
+version. This migration to cElementTree was made by shyuep.</li>
+</ul>
+</div>
+<div class="section" id="aug-12-2014-version-1-8-5">
+<h2>Aug-12-2014: Version 1.8.5<a class="headerlink" href="#aug-12-2014-version-1-8-5" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Supercell creation behavior may change due to the change of
+algorithm. Though it used its own independent routine, now it uses
+the <code class="docutils literal"><span class="pre">Supercell</span></code> class to build supercell</li>
+<li>Spglib update (1.6.1-alpha)</li>
+<li>Experimental option <code class="docutils literal"><span class="pre">--fc_computation_algorithm=&quot;regression&quot;</span></code> to
+compute force constants from forces and displacements using linear
+regression with displaying standard deviation, by KL(m).</li>
+</ul>
+</div>
+<div class="section" id="june-23-2014-version-1-8-4-2">
+<h2>June-23-2014: Version 1.8.4.2<a class="headerlink" href="#june-23-2014-version-1-8-4-2" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Symmetrization of Born effective charge of <code class="docutils literal"><span class="pre">outcar-born</span></code> is
+improved.</li>
+<li><code class="docutils literal"><span class="pre">-v</span></code> option shows Born effective charges and dielectric constants
+when NAC is set.</li>
+<li>Bug fix to include cutoff frequency to the displacement distance
+matrix.</li>
+<li>Yaml output formats for band, mesh, q-points, modulation modes were
+slightly modified.</li>
+<li>Bug fix in finding equivalent atoms in supercell that has lower
+symmetry than the original unit cell.</li>
+</ul>
+</div>
+<div class="section" id="apr-5-2014-version-1-8-4-1">
+<h2>Apr-5-2014: Version 1.8.4.1<a class="headerlink" href="#apr-5-2014-version-1-8-4-1" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Fix irreps for non-zero q-point of nonsymmorphic case</li>
+</ul>
+</div>
+<div class="section" id="mar-31-2014-version-1-8-4">
+<h2>Mar-31-2014: Version 1.8.4<a class="headerlink" href="#mar-31-2014-version-1-8-4" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Implementation of analytical derivative of dynamical matrix in C,
+which improves the performance of group velocity calculation.</li>
+<li>Minor change of python module for group velocity.</li>
+</ul>
+</div>
+<div class="section" id="feb-17-2014-version-1-8-3">
+<h2>Feb-17-2014: Version 1.8.3<a class="headerlink" href="#feb-17-2014-version-1-8-3" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>A collection of small fixes in interface.</li>
+<li>Spglib update (spglib-1.6.0)</li>
+<li>Change in <code class="docutils literal"><span class="pre">phonopy/file_IO/write_FORCE_SETS_*</span></code>.</li>
+</ul>
+</div>
+<div class="section" id="feb-8-2014-version-1-8-2">
+<h2>Feb-8-2014: Version 1.8.2<a class="headerlink" href="#feb-8-2014-version-1-8-2" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">vasprun.xml</span></code> of VASP 5.2.8 is only specially parsed to treat
+special wrong character.</li>
+<li>Python module interface is updated and modified. <code class="docutils literal"><span class="pre">set_post_process</span></code>,
+<code class="docutils literal"><span class="pre">set_force_sets</span></code> will be obsolete. <code class="docutils literal"><span class="pre">set_displacements</span></code> is
+obsolete.</li>
+</ul>
+</div>
+<div class="section" id="jan-9-2014-version-1-8-0">
+<h2>Jan-9-2014: Version 1.8.0<a class="headerlink" href="#jan-9-2014-version-1-8-0" title="Permalink to this headline">¶</a></h2>
+<p>This version is dangerous. A lot of code is modified internally.</p>
+<ul class="simple">
+<li>Tetrahedron method is implemented for total and partial DOS.
+This is activated by <code class="docutils literal"><span class="pre">--thm</span></code> option.</li>
+<li>The display output with <code class="docutils literal"><span class="pre">-v</span></code> option is enriched.</li>
+<li>Symmetrization for <code class="docutils literal"><span class="pre">outcar-born</span></code> is implemented (Experimental).</li>
+<li>Cutoff-frequency <code class="docutils literal"><span class="pre">CUTOFF_FREQUENCY</span></code> (<code class="docutils literal"><span class="pre">--cutoff_freq</span></code>) is
+implemented to ignore frequencies lower than this cutoff frequency
+to calculate thermal properties and thermal displacements.</li>
+</ul>
+</div>
+<div class="section" id="dec-4-2013-version-1-7-5">
+<h2>Dec-4-2013: Version 1.7.5<a class="headerlink" href="#dec-4-2013-version-1-7-5" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">--mass</span></code> option is created to shortcut of the <code class="docutils literal"><span class="pre">MASS</span></code> tag.</li>
+<li><code class="docutils literal"><span class="pre">--fc_spg_symmetry</span></code> option is created to symmetrize force
+constants.</li>
+<li>Symmetry finder update (spglib version 1.5.2)</li>
+</ul>
+</div>
+<div class="section" id="oct-3-2013-version-1-7-4">
+<h2>Oct-3-2013: Version 1.7.4<a class="headerlink" href="#oct-3-2013-version-1-7-4" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Thermal displacement matrix is implemented. See
+<a class="reference internal" href="setting-tags.html#thermal-displacement-matrices-tag"><span>TDISPMAT, TMAX, TMIN, TSTEP</span></a> and <a class="reference internal" href="thermal-displacement.html#thermal-displacement"><span>Mean square displacement</span></a>.</li>
+<li>PDOS with projection along arbitrary direction was implemented. See
+<a class="reference internal" href="setting-tags.html#projection-direction-tag"><span>PROJECTION_DIRECTION</span></a>.</li>
+<li><code class="docutils literal"><span class="pre">partial_dos.dat</span></code> format was changed. XYZ projected PDOS is not
+output. Instead atom projected PDOS (sum of XYZ projected PDOS)
+is written. See <a class="reference internal" href="output-files.html#output-files"><span>Output files</span></a>.</li>
+<li>DOS and PDOS python interface was modified. The keyword of
+<code class="docutils literal"><span class="pre">omega_something</span></code> is changed to <code class="docutils literal"><span class="pre">freq_something</span></code>.</li>
+<li><code class="docutils literal"><span class="pre">gruneisen</span></code> didn&#8217;t run because it didn&#8217;t follow the move of
+the <code class="docutils literal"><span class="pre">file_IO.py</span></code> file location. This is fixed.</li>
+<li>The formula of non-analytical term correction implemented in phonopy
+is not translational invariant in reciprocal space. This induces
+tiny difference of the choice of equivalent q-points being different
+by reciprocal primitive vectors. Now in the mesh sampling mode
+(<code class="docutils literal"><span class="pre">MP</span></code>), q-points are automatically moved to inside
+first-Brillouin-zone.</li>
+<li>In the mesh sampling mode, consistency of symmetry of mesh numbers
+to crystal symmetry is checked. If the symmetry disagrees with
+crystal symmetry, mesh symmetrization (equivalent to <code class="docutils literal"><span class="pre">MESH_SYMMETRY</span>
+<span class="pre">=</span> <span class="pre">.FALSE.</span></code>) is disabled.</li>
+<li>Wien2k interface is updated to adapt Wien2k-13.</li>
+<li>Fix the problem that only Vinet EOS worked in phonopy-qha.</li>
+</ul>
+</div>
+<div class="section" id="sep-17-2013-version-1-7-3">
+<h2>Sep-17-2013: Version 1.7.3<a class="headerlink" href="#sep-17-2013-version-1-7-3" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Fix. Segmentation fault happens in some specific systems
+(e.g. Kubuntu 12.04 32bit) due to a different behavior of numpy
+array creation.</li>
+<li>Group velocity for degenerate phonon mode is calculated slightly
+different from older version and now it is symmetrized by
+site-symmetry of q-point.</li>
+</ul>
+</div>
+<div class="section" id="aug-4-2013-version-1-7-2">
+<h2>Aug-4-2013: Version 1.7.2<a class="headerlink" href="#aug-4-2013-version-1-7-2" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">group_velocity/__init__.py</span></code> is moved to <code class="docutils literal"><span class="pre">phonon</span></code> directory.</li>
+<li><code class="docutils literal"><span class="pre">hphonopy/file_IO.py</span></code> is moved to top directory.</li>
+<li>New <code class="docutils literal"><span class="pre">harmonic/derivative_dynmat.py</span></code>: Analytical derivatives of
+dynamical matrix</li>
+<li>Group velocity is computed by analytical derivatives of dynamical
+matrix in the default configuration instead of previous finite
+difference method. Group velocity calculation with the finite
+difference method can be still activated by <code class="docutils literal"><span class="pre">--gv_delta_q</span></code> option.</li>
+<li>Force constants solver was partially rewritten. The order and shape
+of matrices in the formula is rearranged
+(<a class="reference internal" href="theory.html#force-constants-solver-theory"><span>Modified Parlinski-Li-Kawazoe method</span></a>).</li>
+</ul>
+</div>
+<div class="section" id="july-14-2013-version-1-7-1">
+<h2>July-14-2013: Version 1.7.1<a class="headerlink" href="#july-14-2013-version-1-7-1" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">--pdos</span></code> option was created. This is same as <code class="docutils literal"><span class="pre">PDOS</span></code> tag.</li>
+<li>Group velocity with degenerate modes was improved.</li>
+</ul>
+</div>
+<div class="section" id="jun-21-2013-version-1-7">
+<h2>Jun-21-2013: Version 1.7<a class="headerlink" href="#jun-21-2013-version-1-7" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>The tag <code class="docutils literal"><span class="pre">CHARACTER_TABLE</span></code> was renamed to <code class="docutils literal"><span class="pre">IRREPS</span></code>
+(<a class="reference internal" href="setting-tags.html#irreps-tag"><span>IRREPS</span></a>), and the option of <code class="docutils literal"><span class="pre">--ct</span></code> was renamed to
+<code class="docutils literal"><span class="pre">--irreps</span></code> as well. To show Ir-representations along with
+characters, <code class="docutils literal"><span class="pre">SHOW_IRREPS</span></code> tag (or <code class="docutils literal"><span class="pre">--show_irreps</span></code> option) is
+used. The output file name was also renamed to <code class="docutils literal"><span class="pre">irreps.yaml</span></code>. In
+the ir-reps calculation, display and file outputs were modified to
+show the arguments of complex value characters.</li>
+<li>Numpy array types of &#8216;double&#8217; and &#8216;intc&#8217; for those arrays
+passed to numpy C-API are used.</li>
+<li><code class="docutils literal"><span class="pre">thermal_displacement.py</span></code> is slightly modified for the preparation
+to include thermal displacement matrix.</li>
+<li>Symmetry finder update (spglib 1.4.2).</li>
+</ul>
+</div>
+<div class="section" id="apr-13-2013-version-1-6-4">
+<h2>Apr-13-2013: Version 1.6.4<a class="headerlink" href="#apr-13-2013-version-1-6-4" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Group velocity can be calculated using <code class="docutils literal"><span class="pre">GROUP_VELOCITY</span></code> tag or
+<code class="docutils literal"><span class="pre">--gv</span></code> option (<a class="reference internal" href="setting-tags.html#group-velocity-tag"><span>Group velocity</span></a>).</li>
+<li>Non-analytical term correction is implemented in C, which
+accelerates the calculation speed.</li>
+</ul>
+</div>
+<div class="section" id="feb-7-2013-version-1-6-3">
+<h2>Feb-7-2013: Version 1.6.3<a class="headerlink" href="#feb-7-2013-version-1-6-3" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Arbitral projection direction is allowed for thermal displacements
+calculation. (<a class="reference internal" href="setting-tags.html#thermal-displacements-tag"><span>TDISP, TMAX, TMIN, TSTEP</span></a>)</li>
+<li>A new tag <cite>WRITEDM</cite> and an option <cite>&#8211;writedm</cite> are
+implemented. Dynamical matrices are written into <code class="docutils literal"><span class="pre">qpoints.yaml</span></code>
+when this is used togather with the <code class="docutils literal"><span class="pre">QPOINTS</span></code> mode. (<a class="reference internal" href="setting-tags.html#writedm-tag"><span>WRITEDM</span></a>)</li>
+</ul>
+</div>
+<div class="section" id="nov-13-2012-version-1-6-2">
+<h2>Nov-13-2012: Version 1.6.2<a class="headerlink" href="#nov-13-2012-version-1-6-2" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>A small fix of FHIaims.py.</li>
+</ul>
+</div>
+<div class="section" id="nov-4-2012-version-1-6-1">
+<h2>Nov-4-2012: Version 1.6.1<a class="headerlink" href="#nov-4-2012-version-1-6-1" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Implementation of database of character table for another type
+of point group -3m.</li>
+<li>A new option <code class="docutils literal"><span class="pre">--irreps</span></code> or <code class="docutils literal"><span class="pre">IRREPS</span></code> tag (Experimental).</li>
+<li><code class="docutils literal"><span class="pre">character_table.yaml</span></code> output.</li>
+<li>Eigenvectors output in``modulation.yaml`` was recovered.</li>
+</ul>
+</div>
+<div class="section" id="oct-22-2012-version-1-6">
+<h2>Oct-22-2012: Version 1.6<a class="headerlink" href="#oct-22-2012-version-1-6" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Experimental support of band connection. (<a class="reference internal" href="setting-tags.html#band-connection-tag"><span>BAND_CONNECTION</span></a>)</li>
+<li>Experimental support of mode Grüneisen parameter calculation. (<a class="reference internal" href="gruneisen.html#phonopy-gruneisen"><span>Calculation of mode Grüneisen parameters</span></a>)</li>
+<li>Format of <code class="docutils literal"><span class="pre">MODULATION</span></code> tag was modified. (<a class="reference internal" href="setting-tags.html#modulation-tag"><span>Create modulated structure</span></a>)</li>
+<li>Phonopy is controlled by command line options more than
+before. <code class="docutils literal"><span class="pre">--qpoints</span></code>, <code class="docutils literal"><span class="pre">--modulation</span></code> and <code class="docutils literal"><span class="pre">--anime</span></code> options are prepared.</li>
+<li>Symmetry finder update.</li>
+<li>Implementation of database of character table for the point
+group 32. Fix -3m database.</li>
+</ul>
+</div>
+<div class="section" id="june-29-2012-version-1-5">
+<h2>June-29-2012: Version 1.5<a class="headerlink" href="#june-29-2012-version-1-5" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Bug fix on plotting PDOS with labels.</li>
+<li>The array structures of qpoints, distances, frequencies, eigenvalues,
+eigenvectors in BandStructure are changed to the lists of those
+values of segments of band paths. For qpoints, frequencies,
+eigenvalues, eigenvectors, the previous array structures are
+recovered by numpy.vstack and for distances, numpy.hstack.</li>
+<li>Experimental support on thermal displacement.</li>
+<li>Experimental support on fitting DOS to a Debye model
+(<a class="reference internal" href="setting-tags.html#debye-model-tag"><span>TETRAHEDRON</span></a>) implemented by Jörg Meyer.</li>
+</ul>
+</div>
+<div class="section" id="may-22-2012-version-1-4-2">
+<h2>May-22-2012: Version 1.4.2<a class="headerlink" href="#may-22-2012-version-1-4-2" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Bug fix on showing the values of thermal properties. No bug in plot
+and yaml.</li>
+</ul>
+</div>
+<div class="section" id="may-21-2012-version-1-4-1">
+<h2>May-21-2012: Version 1.4.1<a class="headerlink" href="#may-21-2012-version-1-4-1" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Avoid list comprehension with else statement, because it is not
+supported in old python versions.</li>
+</ul>
+</div>
+<div class="section" id="may-13-2012-version-1-4">
+<h2>May-13-2012: Version 1.4<a class="headerlink" href="#may-13-2012-version-1-4" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">--writefc</span></code> option is implemented.</li>
+<li>In using <code class="docutils literal"><span class="pre">MODULATION</span></code> tag, phase factor for each mode can be
+specified as the third value of each mode in degrees.</li>
+<li>Arguments of <code class="docutils literal"><span class="pre">get_modulation</span></code> in Phonopy module were modified.
+The phase factor is now included in <code class="docutils literal"><span class="pre">phonon_modes</span></code>.</li>
+<li>Class <code class="docutils literal"><span class="pre">Phonopy</span></code> was refactored. All private variables were renamed
+as those starting with an underscore. Some basic variables are
+obtained with the same variable names without the underscode, which
+was implemented by the function <code class="docutils literal"><span class="pre">property</span></code>.</li>
+<li>The labels of segments of band structure plot are specified by
+<code class="docutils literal"><span class="pre">BAND_LABELS</span></code> (<a class="reference internal" href="setting-tags.html#band-labels-tag"><span>BAND_LABELS</span></a>).</li>
+<li><code class="docutils literal"><span class="pre">--band</span></code> option is implemented.</li>
+<li><code class="docutils literal"><span class="pre">GAMMA_CENTER</span></code> tag and <code class="docutils literal"><span class="pre">--gc</span></code>, <code class="docutils literal"><span class="pre">--gamma_center</span></code> option are
+implemented (<a class="reference internal" href="setting-tags.html#mp-tag"><span>MP, MESH</span></a>).</li>
+<li><code class="docutils literal"><span class="pre">phonopy-qha</span></code> was polished. Most of the code was moved to
+<code class="docutils literal"><span class="pre">phonopy/qha/__init__.py</span></code>.</li>
+<li><code class="docutils literal"><span class="pre">Phonopy::get_mesh</span></code> and <code class="docutils literal"><span class="pre">Phonopy::get_band_structure</span></code> were
+modified. Instead of eigenvalues, frequencies are returned.</li>
+<li>The order of return values of <code class="docutils literal"><span class="pre">Phonopy::get_thermal_properties</span></code>
+was changed as numpy arrays of temperatures, Helmhotlz free
+energies, entropies, and heat capacities at constant volume.</li>
+<li>Arguments of the class <code class="docutils literal"><span class="pre">ThermalProperties</span></code>, <code class="docutils literal"><span class="pre">Dos</span></code>, and
+<code class="docutils literal"><span class="pre">PartialDOS</span></code> were changed. Instead of eigenvalues, frequencies are
+used.</li>
+<li>The default sigma value used for total and partial DOS was changed
+to (max_frequency - min_frequency) / 100.</li>
+<li>Symmetry finder update.</li>
+</ul>
+</div>
+<div class="section" id="mar-20-2012-version-1-3">
+<h2>Mar-20-2012: Version 1.3<a class="headerlink" href="#mar-20-2012-version-1-3" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>C implementations of a few parts of <code class="docutils literal"><span class="pre">force_constants.py</span></code> to speed
+up.</li>
+<li>spglib update.</li>
+<li>Many small modifications.</li>
+<li>License is changed to the new BSD from the LGPL.</li>
+</ul>
+</div>
+<div class="section" id="oct-13-2011-version-1-2-1">
+<h2>Oct-13-2011: Version 1.2.1<a class="headerlink" href="#oct-13-2011-version-1-2-1" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Bug fix of the option <code class="docutils literal"><span class="pre">--dim</span></code> with 9 elements.</li>
+</ul>
+</div>
+<div class="section" id="oct-12-2011-version-1-2">
+<h2>Oct-12-2011: Version 1.2<a class="headerlink" href="#oct-12-2011-version-1-2" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Closing support of the <code class="docutils literal"><span class="pre">--nac_old</span></code> option.</li>
+<li>The option <code class="docutils literal"><span class="pre">--nomeshsym</span></code> is available on the manual.</li>
+<li>Symmetry finder update that includes the bug fix of Wyckoff letter
+assignment.</li>
+<li>Showing site-symmetry symbols with respective orientations in the output of
+<code class="docutils literal"><span class="pre">--symmetry</span></code> option.</li>
+<li>Code cleanings of <code class="docutils literal"><span class="pre">settings.py</span></code>, <code class="docutils literal"><span class="pre">force_constant.py</span></code>, etc.</li>
+<li>Starting implementation of <code class="docutils literal"><span class="pre">character_table.py</span></code> (<a class="reference internal" href="setting-tags.html#irreps-tag"><span>IRREPS</span></a>).</li>
+</ul>
+</div>
+<div class="section" id="sep-19-2011-version-1-1">
+<h2>Sep-19-2011: Version 1.1<a class="headerlink" href="#sep-19-2011-version-1-1" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">--readfc</span></code> option is implemented.</li>
+<li>A bit of clean-up of the code <code class="docutils literal"><span class="pre">dynamical_matrix.py</span></code>,
+<code class="docutils literal"><span class="pre">force_constant.py</span></code> and <code class="docutils literal"><span class="pre">_phonopy.c</span></code> to make implementations
+similar to the formulations often written in text books.</li>
+</ul>
+</div>
+<div class="section" id="sep-5-2011-version-1-0">
+<h2>Sep-5-2011: Version 1.0<a class="headerlink" href="#sep-5-2011-version-1-0" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">settings.py</span></code> is moved to <code class="docutils literal"><span class="pre">phonopy/cui/Phonopy</span></code>. The configure
+parser from a file and options is modified.</li>
+<li>Usage of <code class="docutils literal"><span class="pre">MODULATION</span></code> tag was changed.</li>
+<li>The option <code class="docutils literal"><span class="pre">--nosym</span></code> is available on the manual.</li>
+</ul>
+</div>
+<div class="section" id="aug-8-2011-version-0-9-6">
+<h2>Aug-8-2011: Version 0.9.6<a class="headerlink" href="#aug-8-2011-version-0-9-6" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Symmetry finder update</li>
+<li>Wyckoff positions are shown with <code class="docutils literal"><span class="pre">--symmetry</span></code> option</li>
+</ul>
+</div>
+<div class="section" id="jun-7-2011-version-0-9-5-1">
+<h2>Jun-7-2011: Version 0.9.5.1<a class="headerlink" href="#jun-7-2011-version-0-9-5-1" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Bug fix of <code class="docutils literal"><span class="pre">get_surrounding_frame</span></code> in <code class="docutils literal"><span class="pre">cells.py</span></code> by Jörg Meyer and Christian Carbogno.</li>
+</ul>
+</div>
+<div class="section" id="errata-of-document">
+<h2>Errata of document<a class="headerlink" href="#errata-of-document" title="Permalink to this headline">¶</a></h2>
+<p>The cell matrix definition of <code class="docutils literal"><span class="pre">Atoms</span></code> class was transposed.</p>
+</div>
+<div class="section" id="jun-3-2011-version-0-9-5">
+<h2>Jun-3-2011: Version 0.9.5<a class="headerlink" href="#jun-3-2011-version-0-9-5" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Wien2k interface is updated (<a class="reference internal" href="wien2k.html#wien2k-interface"><span>Wien2k &amp; phonopy calculation</span></a>), but this is
+still quite experimental support.</li>
+<li>More information is involved in <code class="docutils literal"><span class="pre">disp.yaml</span></code>. Along this
+modification, supercells with displacements can be created solely
+from <code class="docutils literal"><span class="pre">disp.yaml</span></code> using <code class="docutils literal"><span class="pre">dispmanager</span></code>.</li>
+<li>Instead of <code class="docutils literal"><span class="pre">TRANSLATION</span></code> tag, <code class="docutils literal"><span class="pre">FC_SYMMETRY</span></code> is created
+(<a class="reference internal" href="setting-tags.html#fc-symmetry-tag"><span>FC_SYMMETRY</span></a>).</li>
+<li>Closing support of <code class="docutils literal"><span class="pre">--fco</span></code> option.</li>
+<li>Add a few more examples in the <code class="docutils literal"><span class="pre">example</span></code> directory.</li>
+<li>Symmetry finder update</li>
+<li><code class="docutils literal"><span class="pre">propplot</span></code> is updated for the <code class="docutils literal"><span class="pre">--gnuplot</span></code> option.</li>
+</ul>
+</div>
+<div class="section" id="id1">
+<h2>Errata of document<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<p>The example of <code class="docutils literal"><span class="pre">FORCE_SETS</span></code> was wrong and was fixed. The explanation
+of the document is correct.</p>
+</div>
+<div class="section" id="apr-18-2011-version-0-9-4-2">
+<h2>Apr-18-2011: Version 0.9.4.2<a class="headerlink" href="#apr-18-2011-version-0-9-4-2" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>In the setting tag <code class="docutils literal"><span class="pre">BAND</span></code>, now comma <code class="docutils literal"><span class="pre">,</span></code> can be used to
+disconnect the sequence of band paths
+(<a class="reference internal" href="setting-tags.html#band-structure-related-tags"><span>Band structure tags</span></a>).</li>
+<li><code class="docutils literal"><span class="pre">dispmanager</span></code>, an auxiliary tool for modifying <code class="docutils literal"><span class="pre">disp.yaml</span></code>, is
+developed (<a class="reference internal" href="auxiliary-tools.html#dispmanager-tool"><span>dispmanager</span></a>).</li>
+<li>Symmetry finder update to spglib-1.0.3.1. Almost perfect casting to
+a Bravais lattice is achieved using <code class="docutils literal"><span class="pre">--symmetry</span></code> option.</li>
+<li>The setting tags <code class="docutils literal"><span class="pre">TRANSLATION</span></code>, <code class="docutils literal"><span class="pre">PERMUTATION</span></code>, and <code class="docutils literal"><span class="pre">MP_REDUCE</span></code>
+are ceased.</li>
+</ul>
+</div>
+<div class="section" id="feb-26-2011-version-0-9-4-1">
+<h2>Feb-26-2011: Version 0.9.4.1<a class="headerlink" href="#feb-26-2011-version-0-9-4-1" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Wien2k interface bug fix</li>
+</ul>
+</div>
+<div class="section" id="feb-20-2011-version-0-9-4">
+<h2>Feb-20-2011: Version 0.9.4<a class="headerlink" href="#feb-20-2011-version-0-9-4" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p class="first">Big phonopy-interface change was imposed. Some of filenames and
+formats of input and output files are modified. <strong>There is no
+default setting filename</strong> like <code class="docutils literal"><span class="pre">INPHON</span></code> (setting file is passed
+as the first argument). Some of tag names and those usage are also
+modified. Please first check <a class="reference internal" href="examples.html#examples-link"><span>Examples</span></a> for the new usage.</p>
+<p>List of changes:</p>
+<ul class="simple">
+<li>Setting file has to be passed to phonopy as the first argunment.</li>
+<li>FORCES is replaced by FORCE_SETS (<a class="reference internal" href="input-files.html#file-forces"><span>Force file (FORCE_SETS)</span></a>).</li>
+<li>DISP is replaced by disp.yaml.</li>
+<li>LSUPER tag is removed. Please use -d option.</li>
+<li>NDIM and MATDIM tags are replaced by DIM tag (<a class="reference internal" href="setting-tags.html#dimension-tag"><span>CELL_FILENAME</span></a>).</li>
+<li>Band structure setting tags are changed to BAND tag
+(<a class="reference internal" href="setting-tags.html#band-structure-related-tags"><span>Band structure tags</span></a>).</li>
+<li>DOS tag is renamed to DOS_RANGE tag (<a class="reference internal" href="setting-tags.html#dos-related-tags"><span>DOS</span></a>).</li>
+</ul>
+<p>These changes are applied only for the phonopy interface. Internal
+simulation code has not been touched, so <strong>physical results would not
+be affected</strong>. If you have any questions, please send e-mail to
+phonopy <a class="reference internal" href="index.html#mailinglist"><span>Mailing list</span></a>.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">phonopy-FHI-aims</span></code> had not worked in some of previous
+versions. Now it works by Jörg Meyer and Christian Carbogno.</p>
+</li>
+<li><p class="first">Directory structure of the code was changed.</p>
+</li>
+<li><p class="first">Symmetry finder update to spglib-1.0.2</p>
+</li>
+<li><p class="first">[<strong>Experimental</strong>]  Finding Bravais lattice using
+<code class="docutils literal"><span class="pre">--symmetry</span></code> option.</p>
+</li>
+<li><p class="first">[<strong>Experimental</strong>] Modulated structure along specified phonon modes
+by <code class="docutils literal"><span class="pre">MODULATION</span></code> tag (<a class="reference internal" href="setting-tags.html#modulation-tag"><span>Create modulated structure</span></a>).</p>
+</li>
+</ul>
+</div>
+<div class="section" id="jan-21-2011-version-0-9-3-3">
+<h2>Jan-21-2011: Version 0.9.3.3<a class="headerlink" href="#jan-21-2011-version-0-9-3-3" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Animation file output update (<a class="reference internal" href="setting-tags.html#animation-tag"><span>Create animation file</span></a>). The <code class="docutils literal"><span class="pre">ANIME</span></code>
+tag format was changed.</li>
+</ul>
+</div>
+<div class="section" id="jan-12-2011-version-0-9-3-2">
+<h2>Jan-12-2011: Version 0.9.3.2<a class="headerlink" href="#jan-12-2011-version-0-9-3-2" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">phonopy-qha</span></code> is updated. A few options are added
+(<a class="reference internal" href="qha.html#phonopy-qha-options"><span>Options</span></a>). Calculation under pressure is
+supported by <code class="docutils literal"><span class="pre">--pressure</span></code> option.</li>
+<li>Primitive cell search and Bravais lattice output are integrated into
+the symmetry search with <code class="docutils literal"><span class="pre">--symmetry</span></code> option.</li>
+</ul>
+</div>
+<div class="section" id="id2">
+<h2>Errata of document<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>There were mistakes in the documents for the <code class="docutils literal"><span class="pre">PRIMITIVE_AXIS</span></code> and
+<code class="docutils literal"><span class="pre">MATDIM</span></code>. The 9 values are read from the first three to
+the last three as respective rows of the matrices defined.</li>
+</ul>
+</div>
+<div class="section" id="dec-30-2010-version-0-9-3-1">
+<h2>Dec-30-2010: Version 0.9.3.1<a class="headerlink" href="#dec-30-2010-version-0-9-3-1" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Bug fix of <code class="docutils literal"><span class="pre">-f</span></code> option.</li>
+<li>The output filenames of <code class="docutils literal"><span class="pre">phonopy-qha</span></code> are modified and summarized
+at <a class="reference internal" href="qha.html#phonopy-qha-output-files"><span>Output files</span></a>.</li>
+</ul>
+</div>
+<div class="section" id="dec-5-2010-version-0-9-3">
+<h2>Dec-5-2010: Version 0.9.3<a class="headerlink" href="#dec-5-2010-version-0-9-3" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>The license is changed to LGPL.</li>
+<li><code class="docutils literal"><span class="pre">MASS</span></code> tag is recreated (<a class="reference internal" href="setting-tags.html#mass-tag"><span>MASS</span></a>).</li>
+<li><code class="docutils literal"><span class="pre">--mp</span></code> option is created. This works like the <code class="docutils literal"><span class="pre">MP</span></code> tag.</li>
+<li>Improvement of <code class="docutils literal"><span class="pre">phonopy-qha</span></code> both in the code and <a class="reference internal" href="qha.html#phonopy-qha"><span>manual</span></a>.</li>
+<li>The bug in <code class="docutils literal"><span class="pre">--fco</span></code> option was fixed.</li>
+</ul>
+</div>
+<div class="section" id="nov-26-2010-version-0-9-2">
+<h2>Nov-26-2010: Version 0.9.2<a class="headerlink" href="#nov-26-2010-version-0-9-2" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>spglib update (ver. 1.0.0)</li>
+<li>ASE.py is removed. Compatible class and functions, Atoms,
+write_vasp, and read_vasp, are implemented.</li>
+<li>A <code class="docutils literal"><span class="pre">vasprun.xml</span></code> parser wrapper is implemened to avoid the broken
+<code class="docutils literal"><span class="pre">PRECFOCK</span></code> in vasprun.xml of VASP 5.2.8.</li>
+</ul>
+</div>
+<div class="section" id="sep-22-2010-version-0-9-1-4">
+<h2>Sep-22-2010: Version 0.9.1.4<a class="headerlink" href="#sep-22-2010-version-0-9-1-4" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>The new tag <code class="docutils literal"><span class="pre">ANIME_TYPE</span></code> supports <code class="docutils literal"><span class="pre">xyz</span></code> and <code class="docutils literal"><span class="pre">xyz_jmol</span></code> formats
+by Jörg Meyer and Christian Carbogno, and also <cite>A set of ``POSCAR`</cite>
+files corresponding to animation frames.</li>
+<li>Fix bugs in <code class="docutils literal"><span class="pre">trim_cell</span></code> and
+<code class="docutils literal"><span class="pre">Primitive.__supercell_to_primitive_map</span></code> in <code class="docutils literal"><span class="pre">cells.py</span></code>. When
+<img class="math" src="_images/math/c1f99e7f7f3e9bdc487f634cfceda01a84884839.png" alt="M_s^{-1}M_p"/> is not symmetric, the supercell was not created
+correctly.</li>
+<li><code class="docutils literal"><span class="pre">phonopy-FHI-aims</span></code> update by jm.</li>
+</ul>
+</div>
+<div class="section" id="aug-24-2010-version-0-9-1-3">
+<h2>Aug-24-2010: Version 0.9.1.3<a class="headerlink" href="#aug-24-2010-version-0-9-1-3" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Update symmetry finder of spglib. Now precision is in Cartesian distance.</li>
+<li>The animation output for <code class="docutils literal"><span class="pre">arc</span></code> didn&#8217;t work. Now it works.</li>
+<li>Qpoint mode didn&#8217;t work with bugs. Now it works.</li>
+<li><code class="docutils literal"><span class="pre">--vasp</span></code> option is renamed to <code class="docutils literal"><span class="pre">--cell</span></code> or <code class="docutils literal"><span class="pre">-c</span></code>.</li>
+<li>The new options <code class="docutils literal"><span class="pre">--symmetry</span></code>, <code class="docutils literal"><span class="pre">--displacement</span></code> or <code class="docutils literal"><span class="pre">-d</span></code>,
+<code class="docutils literal"><span class="pre">--dim</span></code>, <code class="docutils literal"><span class="pre">--primitive_axis</span></code> are implemented.</li>
+<li>The option <code class="docutils literal"><span class="pre">--ndim</span></code> is replaced with <code class="docutils literal"><span class="pre">--dim</span></code> with <code class="docutils literal"><span class="pre">-d</span></code> option.</li>
+</ul>
+</div>
+<div class="section" id="june-10-2010-version-0-9-1-2">
+<h2>June-10-2010: Version 0.9.1.2<a class="headerlink" href="#june-10-2010-version-0-9-1-2" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p class="first">The code on non-analytical term correction is included in the
+<code class="docutils literal"><span class="pre">DynamicalMatrix</span></code> class. Data sets read by <code class="docutils literal"><span class="pre">parse_BORN</span></code> are set
+by <code class="docutils literal"><span class="pre">set_non_analytical_term</span></code> and gotten by
+<code class="docutils literal"><span class="pre">get_non_analytical_term</span></code>. The q-vector direction (only direction
+is used in the non-analytical term correction) is set by
+<code class="docutils literal"><span class="pre">set_q_non_analytical_term</span></code>. However for emprical damping
+function, some distance is used, i.e., when a q-point is getting
+away, non-analytical term is weaken. For this purpose, the second
+argument of <code class="docutils literal"><span class="pre">set_q_non_analytical_term</span></code> is used.</p>
+<p>At the same time, a small problem on the previous implementation was
+found. When a reduced q-point is out of the first Brillouin zone,
+it is not correctly handled. Currently it is fixed so as that when
+absolute values of elements of the reduced q-point are over 0.5, they
+are reduced into -0.5 &lt; q &lt; 0.5.</p>
+<p>[<strong>Attention</strong>] The previous <code class="docutils literal"><span class="pre">--nac</span></code> option is moved to
+<code class="docutils literal"><span class="pre">--nac_old</span></code>. <code class="docutils literal"><span class="pre">--nac</span></code> is used for different method of the
+non-analytical term correction at general q-points. This will be
+documented soon.</p>
+</li>
+<li><p class="first">Bug fix on <code class="docutils literal"><span class="pre">write_FORCES</span></code> in <code class="docutils literal"><span class="pre">file_IO.py</span></code>. When order of
+displacements in <code class="docutils literal"><span class="pre">DISP</span></code> file is not ascending order of atom indices,
+it was not correctly re-ordered. Because the default order of
+phonopy is ascending order, usually there is no problem for the most
+users.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">phonopy-FHI-aims</span></code></p>
+<ul class="simple">
+<li>adapted to extensions of dynamical_matrix with respect to
+non-analytical corrections</li>
+<li>added support for animation infrastructure</li>
+<li>moved several options to control.in</li>
+</ul>
+<p>by Jörg Meyer and Christian Carbogno</p>
+</li>
+</ul>
+</div>
+<div class="section" id="may-11-2010-version-0-9-1-1">
+<h2>May-11-2010: Version 0.9.1.1<a class="headerlink" href="#may-11-2010-version-0-9-1-1" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">phonopy-FHI-aims</span></code> adapted to split of dos array into the two
+seperate omega, dos arrays in TotalDOS class by Jörg Meyer.</li>
+</ul>
+</div>
+<div class="section" id="may-10-2010-version-0-9-1">
+<h2>May-10-2010: Version 0.9.1<a class="headerlink" href="#may-10-2010-version-0-9-1" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>The methods of get_partial_DOS and get_total_DOS are added to the
+Phonopy class.</li>
+</ul>
+</div>
+<div class="section" id="apr-12-2010-version-0-9-0-2">
+<h2>Apr-12-2010: Version 0.9.0.2<a class="headerlink" href="#apr-12-2010-version-0-9-0-2" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>spglib bug was fixed. If the crystal structure has non-standard origin,
+the translation was not correctly handled. This problem happened
+after version 0.9.0.</li>
+</ul>
+</div>
+<div class="section" id="apr-12-2010-version-0-9-0-1">
+<h2>Apr-12-2010: Version 0.9.0.1<a class="headerlink" href="#apr-12-2010-version-0-9-0-1" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>spglib update</li>
+</ul>
+</div>
+<div class="section" id="apr-10-2010-version-0-9-0">
+<h2>Apr-10-2010: Version 0.9.0<a class="headerlink" href="#apr-10-2010-version-0-9-0" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Phonopy module (<code class="docutils literal"><span class="pre">__init.py__</span></code>) is heavily revised and the script
+<code class="docutils literal"><span class="pre">phonopy</span></code> is rewritten using the phonopy module.  Therefore there
+may be bugs. Be careful. Document of the phonopy module will be
+updated gradually.</li>
+<li>A small Wien2k interface document is added (<a class="reference internal" href="wien2k.html#wien2k-interface"><span>Wien2k &amp; phonopy calculation</span></a>).</li>
+<li>A script <code class="docutils literal"><span class="pre">phonopy-FHI-aims</span></code> and its examples are added by
+Jörg Meyer.</li>
+<li>spglib update</li>
+</ul>
+</div>
+<div class="section" id="mar-10-2010-version-0-7-4">
+<h2>Mar-10-2010: Version 0.7.4<a class="headerlink" href="#mar-10-2010-version-0-7-4" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>spglib update</li>
+<li>Animation mode (<a class="reference internal" href="setting-tags.html#animation-tag"><span>Create animation file</span></a>)</li>
+</ul>
+</div>
+<div class="section" id="feb-10-2010-version-0-7-3">
+<h2>Feb-10-2010: Version 0.7.3<a class="headerlink" href="#feb-10-2010-version-0-7-3" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Bug fix for Wien2k mode</li>
+</ul>
+</div>
+<div class="section" id="jan-12-2010-version-0-7-2">
+<h2>Jan-12-2010: Version 0.7.2<a class="headerlink" href="#jan-12-2010-version-0-7-2" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>[<strong>Experimental</strong>] Non-analytical term correction
+was implemented.</li>
+</ul>
+</div>
+<div class="section" id="dec-8-2009-version-0-7-1-released">
+<h2>Dec-8-2009: Version 0.7.1 released<a class="headerlink" href="#dec-8-2009-version-0-7-1-released" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><a class="reference internal" href="auxiliary-tools.html#auxiliary-tools"><span>Auxiliary tools</span></a> <code class="docutils literal"><span class="pre">propplot</span></code> is added.</li>
+<li>Memory consumption is reduced when using <code class="docutils literal"><span class="pre">-f</span></code> option to handle
+large vasprun.xml files.</li>
+</ul>
+</div>
+<div class="section" id="nov-24-2009-version-0-7-0-released">
+<h2>Nov-24-2009: Version 0.7.0 released<a class="headerlink" href="#nov-24-2009-version-0-7-0-released" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><a class="reference internal" href="auxiliary-tools.html#auxiliary-tools"><span>Auxiliary tools</span></a> <code class="docutils literal"><span class="pre">bandplot</span></code> and <code class="docutils literal"><span class="pre">pdosplot</span></code> are prepared.</li>
+<li>Formats of <cite>band.yaml</cite>, <cite>mesh.yaml</cite>, and <cite>qpoints.yaml</cite> are slightly
+modified.</li>
+<li>There was bug in <code class="docutils literal"><span class="pre">PERMUTATION</span></code> tag to calculate symmetrized force
+constants. Now it is fixed. Usually this is not necessary to set
+because this does not affect to result.</li>
+<li>Symmetry finder spglib is updated.</li>
+<li><code class="docutils literal"><span class="pre">PM</span></code> tag is implemented. See <a class="reference internal" href="setting-tags.html#setting-tags"><span>Setting tags</span></a>. Behaviors in
+the previous versions are <code class="docutils literal"><span class="pre">PM</span> <span class="pre">=</span> <span class="pre">AUTO</span></code>.</li>
+</ul>
+</div>
+<div class="section" id="oct-14-2009-version-0-6-2-released">
+<h2>Oct-14-2009: Version 0.6.2 released<a class="headerlink" href="#oct-14-2009-version-0-6-2-released" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Installation process was changed slightly.
+See <a class="reference internal" href="install.html#install"><span>Download and install</span></a>.</li>
+<li>The command <code class="docutils literal"><span class="pre">phonopy</span></code> is stored in the <code class="docutils literal"><span class="pre">bin</span></code>
+directory. <code class="docutils literal"><span class="pre">phonopy.py</span></code> is renamed to <code class="docutils literal"><span class="pre">phonopy</span></code>.</li>
+<li>setup system is improved by Maxim V. Losev.</li>
+<li><code class="docutils literal"><span class="pre">--fz</span></code> tag was implemented experimentally. This is supposed to
+enable to subtract residual forces on atoms in equilibrium structure
+from those in structure with atomic displacements.</li>
+</ul>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+        <br/>
+        
+<div id="sourcelink">
+  <a href="_sources/changelog.txt"
+     rel="nofollow">Source</a>
+</div>
+      
+    </p>
+    <p>
+        &copy; Copyright 2009, Atsushi Togo.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.3.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

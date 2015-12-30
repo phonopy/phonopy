@@ -1,0 +1,36 @@
+digraph phonopy {
+  graph [bgcolor=transparent];
+  "Phonopy pre-process" [shape = box, style = filled];
+  "Phonopy post-process" [shape = box, style = filled];
+  "Force calc." [shape = diamond];
+  "Force-constant calc." [shape = diamond];
+  "Band structure" [shape = box];
+  "Mesh sampling" [shape = box];
+  "Animation" [shape = box];
+  "Thermal properties" [shape = box];
+  "DOS" [shape = box];
+  "PDOS" [shape = box];
+
+  "unit cell" -> "Phonopy pre-process";
+  "supercell size" -> "Phonopy pre-process";
+  "Phonopy pre-process" -> displacements;
+  displacements -> "Force calc." [label = "(1)"];
+  "Phonopy pre-process" -> supercell;
+  supercell -> "Force calc." [label = "(1)"];
+  supercell -> "Force-constant calc." [label = "(2)"];
+  "Force calc." -> "force constants" [label = "(1)"];
+  "Force-constant calc." -> "force constants" [label = "(2)"]; 
+  
+  "unit cell" -> "Phonopy post-process";
+  "supercell size" -> "Phonopy post-process";
+  "force constants" -> "Phonopy post-process";
+  "primitive cell size" -> "Phonopy post-process";
+
+  "Phonopy post-process" -> "Band structure";
+  "Phonopy post-process" -> "Mesh sampling";
+  "Phonopy post-process" -> "Animation" [label = "with eigenvectors"];
+
+  "Mesh sampling" -> "DOS";
+  "Mesh sampling" -> "PDOS" [label = "with eigenvectors"];
+  "Mesh sampling" -> "Thermal properties";
+}

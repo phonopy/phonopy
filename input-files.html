@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Input files &mdash; Phonopy v.1.9.7</title>
+    
+    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/bootswatch-3.3.4/cosmo/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.9.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
+    <link rel="top" title="Phonopy v.1.9.7" href="index.html" />
+    <link rel="next" title="Output files" href="output-files.html" />
+    <link rel="prev" title="Features" href="features.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body role="document">
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">
+          Phonopy</a>
+        <span class="navbar-text navbar-version pull-left"><b>1.9.7</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="procedure.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">Work flow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Download and install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">Features</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Input files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="output-files.html">Output files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setting-tags.html">Setting tags</a></li>
+<li class="toctree-l1"><a class="reference internal" href="command-options.html">Command options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interfaces.html">Interfaces to calculators and phonopy API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="auxiliary-tools.html">Auxiliary tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="theory.html">Formulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Input files</a><ul>
+<li><a class="reference internal" href="#setting-file">Setting file</a></li>
+<li><a class="reference internal" href="#structure-file-poscar">Structure file (<code class="docutils literal"><span class="pre">POSCAR</span></code>)</a><ul>
+<li><a class="reference internal" href="#example-of-rutile-type-silicon-oxide-crystal-structure-1">Example of rutile-type silicon oxide crystal structure (1)</a></li>
+<li><a class="reference internal" href="#example-of-rutile-type-silicon-oxide-crystal-structure-2">Example of rutile-type silicon oxide crystal structure (2)</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#force-file-force-sets">Force file (<cite>FORCE_SETS</cite>)</a><ul>
+<li><a class="reference internal" href="#example">Example</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#force-constants"><code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span></code></a><ul>
+<li><a class="reference internal" href="#format">Format</a></li>
+<li><a class="reference internal" href="#id1">Example</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#qpoints-optional"><code class="docutils literal"><span class="pre">QPOINTS</span></code> (optional)</a><ul>
+<li><a class="reference internal" href="#id2">Example</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#born-optional"><code class="docutils literal"><span class="pre">BORN</span></code> (optional)</a><ul>
+<li><a class="reference internal" href="#id3">Format</a></li>
+<li><a class="reference internal" href="#id4">Example</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="features.html" title="Previous Chapter: Features"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; Features</span>
+    </a>
+  </li>
+  <li>
+    <a href="output-files.html" title="Next Chapter: Output files"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">Output files &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <div class="section" id="input-files">
+<h1>Input files<a class="headerlink" href="#input-files" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="setting-file">
+<h2>Setting file<a class="headerlink" href="#setting-file" title="Permalink to this headline">¶</a></h2>
+<p>A setting file contains phonopy settings which are summarized at
+<a class="reference internal" href="setting-tags.html#setting-tags"><span>Setting tags</span></a>. This file is passed to phonopy as an argument,
+e.g.,</p>
+<div class="highlight-python"><div class="highlight"><pre>% phonopy phonopy.conf
+</pre></div>
+</div>
+<p>where the filename is arbitrary.</p>
+</div>
+<div class="section" id="structure-file-poscar">
+<h2>Structure file (<code class="docutils literal"><span class="pre">POSCAR</span></code>)<a class="headerlink" href="#structure-file-poscar" title="Permalink to this headline">¶</a></h2>
+<p>Crystal structure is written in VASP&#8217;s manner (for Wien2k interface,
+see <a class="reference internal" href="command-options.html#wien2k-mode"><span>WIEN2k mode</span></a>). The format is
+simple. The first line is for your comment, where you can write
+anything you want. The second line is the ratio for lattice
+parameters. You can multiply by this number. The third to fifth lines
+give the lattice parameters, <em>a</em>, <em>b</em>, and <em>c</em> for the respective
+lines. The sixth line contains the number of atoms for each atomic
+species, which have to correspond to the atomic positions in the
+order. The seventh line should be written as <code class="docutils literal"><span class="pre">Direct</span></code>. This means
+that the atomic positions are represented in fractional (reduced)
+coordinates. When you write chemical symbols in the first line, they
+are read and those defined by the <code class="docutils literal"><span class="pre">ATOM_NAME</span></code> tag are overwritten.</p>
+<div class="section" id="example-of-rutile-type-silicon-oxide-crystal-structure-1">
+<span id="example-poscar1"></span><h3>Example of rutile-type silicon oxide crystal structure (1)<a class="headerlink" href="#example-of-rutile-type-silicon-oxide-crystal-structure-1" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre>Si O
+   1.00000000000000
+     4.2266540199664249    0.0000000000000000    0.0000000000000000
+     0.0000000000000000    4.2266540199664249    0.0000000000000000
+     0.0000000000000000    0.0000000000000000    2.6888359272289208
+ 2   4
+Direct
+  0.0000000000000000  0.0000000000000000  0.0000000000000000
+  0.5000000000000000  0.5000000000000000  0.5000000000000000
+  0.3067891334429594  0.3067891334429594  0.0000000000000000
+  0.6932108665570406  0.6932108665570406  0.0000000000000000
+  0.1932108665570406  0.8067891334429594  0.5000000000000000
+  0.8067891334429594  0.1932108665570406  0.5000000000000000
+</pre></div>
+</div>
+<p>The VASP 5.x style is also supported. Chemical symbols are inserted
+just before the line of the numbers of atoms. The chemical symbols in
+this line overwrite those defined by the <code class="docutils literal"><span class="pre">ATOM_NAME</span></code> tag and those
+defined by the first line of <code class="docutils literal"><span class="pre">POSCAR</span></code>.</p>
+</div>
+<div class="section" id="example-of-rutile-type-silicon-oxide-crystal-structure-2">
+<h3>Example of rutile-type silicon oxide crystal structure (2)<a class="headerlink" href="#example-of-rutile-type-silicon-oxide-crystal-structure-2" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre>Stishovite
+   1.00000000000000
+     4.2266540199664249    0.0000000000000000    0.0000000000000000
+     0.0000000000000000    4.2266540199664249    0.0000000000000000
+     0.0000000000000000    0.0000000000000000    2.6888359272289208
+Si   O
+ 2   4
+Direct
+  0.0000000000000000  0.0000000000000000  0.0000000000000000
+  0.5000000000000000  0.5000000000000000  0.5000000000000000
+  0.3067891334429594  0.3067891334429594  0.0000000000000000
+  0.6932108665570406  0.6932108665570406  0.0000000000000000
+  0.1932108665570406  0.8067891334429594  0.5000000000000000
+  0.8067891334429594  0.1932108665570406  0.5000000000000000
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="force-file-force-sets">
+<span id="file-forces"></span><h2>Force file (<cite>FORCE_SETS</cite>)<a class="headerlink" href="#force-file-force-sets" title="Permalink to this headline">¶</a></h2>
+<p>This file gives sets of forces in supercells with finite atomic
+displacements. Each supercell involves one displaced atom.  The first
+line is the number of atoms in supercell. The second line gives number
+of calculated supercells with displacements. Below the lines, sets of
+forces with displacements are written. In each set, firstly the atom
+number in supercell is written. Secondary, the atomic displacement in
+<strong>Cartesian coordinates</strong> is written. Below the displacement line,
+atomic forces in <strong>Cartesian coordinates</strong> are successively
+written. This is repeated for the set of displacements. Blank likes
+are simply ignored.</p>
+<p>In the following example, the third line is the displaced atom number
+that corresponds to the atom number in the supercell created by
+phonopy. The fourth line gives the displacements in <strong>Cartesian
+coordinates</strong>. The lines below, the atomic forces in <strong>Cartesian
+coordinates</strong> are written. Once all the forces for a supercell are
+written, the next set of forces are written. This routine is repeated
+until the forces of all the displacements have been written.</p>
+<p>See also <a class="reference internal" href="command-options.html#vasp-force-sets-option"><span>VASP interface</span></a> and
+<a class="reference internal" href="command-options.html#wien2k-force-sets-option"><span>WIEN2k interface</span></a> for VASP and Wien2k users.</p>
+<div class="section" id="example">
+<h3>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre>48
+2
+
+1
+  0.0050650623043761   0.0000000000000000   0.0086223630086415
+  -0.0347116200   -0.0000026500   -0.0679795200
+   0.0050392400   -0.0015711700   -0.0079514600
+   0.0027380900   -0.0017851900   -0.0069206400
+... (continue until all the forces for this displacement have written)
+
+25
+  0.0050650623043761   0.0000000000000000   0.0086223630086415
+  -0.0017134500   -0.0001539800    0.0017333400
+   0.0013248100    0.0001984300   -0.0001203700
+  -0.0001310200   -0.0007955600    0.0003889300
+... (continue until all the forces for this displacement have written)
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="force-constants">
+<span id="file-force-constants"></span><h2><code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span></code><a class="headerlink" href="#force-constants" title="Permalink to this headline">¶</a></h2>
+<p>If the force constants of a supercell are known, it is not
+necessary to prepared <code class="docutils literal"><span class="pre">FORCES</span></code>. Phonopy has an interface to read and write
+<code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span></code>.  To read and write <code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span></code> are
+controlled by <a class="reference internal" href="setting-tags.html#force-constants-tag"><span>Force constants</span></a>.</p>
+<p>VASP users can use <a class="reference internal" href="command-options.html#vasp-force-constants"><span>VASP DFPT interface</span></a>
+to create <code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span></code> from <code class="docutils literal"><span class="pre">vasprun.xml</span></code>.</p>
+<div class="section" id="format">
+<h3>Format<a class="headerlink" href="#format" title="Permalink to this headline">¶</a></h3>
+<p>First line is for the number of atoms in supercell. Below second line,
+force constants between atoms are written by every four lines. In
+first line of the four lines, anything can be written, i.e., just
+ignored. Second to fourth lines of the four lines are for the second
+rank tensor of force constant in Cartesian coordinates, i.e.::</p>
+<div class="highlight-python"><div class="highlight"><pre>xx xy xz
+yx yy yz
+zx zy zz
+</pre></div>
+</div>
+</div>
+<div class="section" id="id1">
+<h3>Example<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre>32
+1   1
+  4.635786969900131    -0.000000000000000    -0.000000000000000
+ -0.000000000000000     4.635786969900130    -0.000000000000000
+ -0.000000000000000    -0.000000000000000     4.635786969900130
+1   2
+ -0.246720998398056    -0.000000000000000    -0.000000000000000
+ -0.000000000000000     0.018256999881458    -0.000000000000000
+ -0.000000000000000    -0.000000000000000     0.018256999881458
+...
+1  32
+  0.002646999982813     0.018011999883049    -0.000000000000000
+  0.018011999883049     0.002646999982813    -0.000000000000000
+ -0.000000000000000    -0.000000000000000     0.035303999770773
+2   1
+ -0.246720998398056     0.000000000000000     0.000000000000000
+  0.000000000000000     0.018256999881458     0.000000000000000
+  0.000000000000000     0.000000000000000     0.018256999881458
+...
+32  32
+  4.635786969900131     0.000000000000000     0.000000000000000
+  0.000000000000000     4.635786969900130     0.000000000000000
+  0.000000000000000     0.000000000000000     4.635786969900130
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="qpoints-optional">
+<h2><code class="docutils literal"><span class="pre">QPOINTS</span></code> (optional)<a class="headerlink" href="#qpoints-optional" title="Permalink to this headline">¶</a></h2>
+<p>Specific q-points are calculated using <code class="docutils literal"><span class="pre">QPOINTS</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code> tag and
+<code class="docutils literal"><span class="pre">QPOINTS</span></code> file. The file format of <code class="docutils literal"><span class="pre">QPOINTS</span></code> is as follows. The
+first line gives the number of q-points. Then the successive lines
+give q-points in reduced coordinate of reciprocal space of the input
+unit cell.</p>
+<div class="section" id="id2">
+<h3>Example<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre><span class="mi">512</span>
+<span class="o">-</span><span class="mf">0.437500000000000</span>  <span class="o">-</span><span class="mf">0.437500000000000</span>  <span class="o">-</span><span class="mf">0.437500000000000</span>
+<span class="o">-</span><span class="mf">0.312500000000000</span>  <span class="o">-</span><span class="mf">0.437500000000000</span>  <span class="o">-</span><span class="mf">0.437500000000000</span>
+<span class="o">-</span><span class="mf">0.187500000000000</span>  <span class="o">-</span><span class="mf">0.437500000000000</span>  <span class="o">-</span><span class="mf">0.437500000000000</span>
+<span class="o">...</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="born-optional">
+<span id="born"></span><h2><code class="docutils literal"><span class="pre">BORN</span></code> (optional)<a class="headerlink" href="#born-optional" title="Permalink to this headline">¶</a></h2>
+<p>This file is used with the <code class="docutils literal"><span class="pre">--nac</span></code> option or <code class="docutils literal"><span class="pre">NAC</span></code> tag.</p>
+<p>The formula implemented is refered to <a class="reference internal" href="theory.html#non-analytical-term-correction-theory"><span>Non-analytical term correction</span></a>.</p>
+<div class="section" id="id3">
+<h3>Format<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<p>In the first line, the first value is the unit conversion factor. For
+VASP, it may be 27.2116 <img class="math" src="_images/math/c69691d64985442217922c8d34e835a9dea60178.png" alt="\times"/> 0.52918.</p>
+<p>In the second line, dielectric constant <img class="math" src="_images/math/19bc0073dde1bcd1a8e6a32b251e80cced668f04.png" alt="\epsilon"/> is specifed
+in Cartesian coordinates. The nine values correspond to the tensor
+elements of xx, xy, xz, yx, yy, yz, zx, zy, and zz.</p>
+<p>From the third line, Born effective charges <img class="math" src="_images/math/c4563e7ecec2336a3934447a6c10ef8519b0b452.png" alt="Z"/> for the
+independent atoms in the <strong>primitive cell</strong> have to be written in
+Cartesian coordinates. The independent atoms can be found using the
+<code class="docutils literal"><span class="pre">-v</span></code> option. As shown below in the Al2O3 example, the independent
+atoms are marked by <code class="docutils literal"><span class="pre">*</span></code> in front of atomic positions:</p>
+<div class="highlight-python"><div class="highlight"><pre>% phonopy --dim=&quot;2 2 1&quot; --pa=&quot;2/3 -1/3 -1/3  1/3 1/3 -2/3  1/3 1/3 1/3&quot; -v
+        _
+  _ __ | |__   ___  _ __   ___   _ __  _   _
+ | &#39;_ \| &#39;_ \ / _ \| &#39;_ \ / _ \ | &#39;_ \| | | |
+ | |_) | | | | (_) | | | | (_) || |_) | |_| |
+ | .__/|_| |_|\___/|_| |_|\___(_) .__/ \__, |
+ |_|                            |_|    |___/
+
+                                     1.8.4.2
+
+Settings:
+  Supercell:  [2 2 1]
+  Primitive axis:
+     [ 0.66666667 -0.33333333 -0.33333333]
+     [ 0.33333333  0.33333333 -0.66666667]
+     [ 0.33333333  0.33333333  0.33333333]
+Spacegroup:  R-3c (167)
+---------------------------- primitive cell -------------------------------
+Lattice vectors:
+  a    2.403817201137804    1.387844508159565    4.372423306604251
+  b   -2.403817201137804    1.387844508159565    4.372423306604251
+  c    0.000000000000000   -2.775689016319131    4.372423306604251
+Atomic positions (fractional):
+   *1 Al  0.35218509422890  0.35218509422890  0.35218509422890  26.982
+    2 Al  0.64781490577110  0.64781490577110  0.64781490577110  26.982
+    3 Al  0.14781490577110  0.14781490577110  0.14781490577110  26.982
+    4 Al  0.85218509422890  0.85218509422890  0.85218509422890  26.982
+   *5 O   0.55616739064549  0.94383260935451  0.25000000000000  15.999
+    6 O   0.44383260935451  0.05616739064549  0.75000000000000  15.999
+    7 O   0.25000000000000  0.55616739064549  0.94383260935451  15.999
+    8 O   0.75000000000000  0.44383260935451  0.05616739064549  15.999
+    9 O   0.94383260935451  0.25000000000000  0.55616739064549  15.999
+   10 O   0.05616739064549  0.75000000000000  0.44383260935451  15.999
+------------------------------ unit cell ----------------------------------
+Lattice vectors:
+  a    4.807634402275609    0.000000000000000    0.000000000000000
+  b   -2.403817201137805    4.163533524478696    0.000000000000000
+  c    0.000000000000000    0.000000000000000   13.117269919812754
+Atomic positions (fractional):
+   *1 Al  0.00000000000000  0.00000000000000  0.35218509422890  26.982 &gt; 1
+    2 Al  0.66666666666666  0.33333333333334  0.68551842756224  26.982 &gt; 1
+    3 Al  0.33333333333334  0.66666666666666  0.01885176089557  26.982 &gt; 1
+    4 Al  0.00000000000000  0.00000000000000  0.64781490577110  26.982 &gt; 2
+    5 Al  0.66666666666666  0.33333333333334  0.98114823910443  26.982 &gt; 2
+    6 Al  0.33333333333334  0.66666666666666  0.31448157243776  26.982 &gt; 2
+    7 Al  0.00000000000000  0.00000000000000  0.14781490577110  26.982 &gt; 3
+    8 Al  0.66666666666666  0.33333333333334  0.48114823910443  26.982 &gt; 3
+    9 Al  0.33333333333334  0.66666666666666  0.81448157243776  26.982 &gt; 3
+   10 Al  0.00000000000000  0.00000000000000  0.85218509422890  26.982 &gt; 4
+   11 Al  0.66666666666666  0.33333333333334  0.18551842756224  26.982 &gt; 4
+   12 Al  0.33333333333334  0.66666666666666  0.51885176089557  26.982 &gt; 4
+  *13 O   0.30616739064549  0.00000000000000  0.25000000000000  15.999 &gt; 5
+   14 O   0.97283405731215  0.33333333333334  0.58333333333334  15.999 &gt; 5
+   15 O   0.63950072397883  0.66666666666666  0.91666666666666  15.999 &gt; 5
+   16 O   0.69383260935451  0.00000000000000  0.75000000000000  15.999 &gt; 6
+   17 O   0.36049927602117  0.33333333333334  0.08333333333334  15.999 &gt; 6
+   18 O   0.02716594268785  0.66666666666666  0.41666666666666  15.999 &gt; 6
+   19 O   0.00000000000000  0.30616739064549  0.25000000000000  15.999 &gt; 7
+   20 O   0.66666666666666  0.63950072397883  0.58333333333334  15.999 &gt; 7
+   21 O   0.33333333333334  0.97283405731215  0.91666666666666  15.999 &gt; 7
+   22 O   0.00000000000000  0.69383260935451  0.75000000000000  15.999 &gt; 8
+   23 O   0.66666666666666  0.02716594268785  0.08333333333334  15.999 &gt; 8
+   24 O   0.33333333333334  0.36049927602117  0.41666666666666  15.999 &gt; 8
+   25 O   0.69383260935451  0.69383260935451  0.25000000000000  15.999 &gt; 9
+   26 O   0.36049927602117  0.02716594268785  0.58333333333334  15.999 &gt; 9
+   27 O   0.02716594268785  0.36049927602117  0.91666666666666  15.999 &gt; 9
+   28 O   0.30616739064549  0.30616739064549  0.75000000000000  15.999 &gt; 10
+   29 O   0.97283405731215  0.63950072397883  0.08333333333334  15.999 &gt; 10
+   30 O   0.63950072397883  0.97283405731215  0.41666666666666  15.999 &gt; 10
+------------------------------ supercell ----------------------------------
+...
+</pre></div>
+</div>
+<p>If VASP is used as the calculator for Born effective charge, and the
+hexagonal unit cell is used for the calculation, the Born effective
+charge tensors of atoms No. 1 and 13 have to be written in <code class="docutils literal"><span class="pre">BORN</span></code>
+file.</p>
+</div>
+<div class="section" id="id4">
+<h3>Example<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre> 14.400
+ 3.269  0.000  0.000  0.000  3.269  0.000  0.000  0.000  3.234
+ 2.981  0.000  0.000  0.000  2.981  0.000  0.000  0.000  2.952
+-1.935  0.000  0.000  0.000 -2.036 -0.261  0.000 -0.261 -1.968
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+        <br/>
+        
+<div id="sourcelink">
+  <a href="_sources/input-files.txt"
+     rel="nofollow">Source</a>
+</div>
+      
+    </p>
+    <p>
+        &copy; Copyright 2009, Atsushi Togo.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.3.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>VASP &amp; phonopy calculation &mdash; Phonopy v.1.9.7</title>
+    
+    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/bootswatch-3.3.4/cosmo/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.9.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
+    <link rel="top" title="Phonopy v.1.9.7" href="index.html" />
+    <link rel="up" title="Interfaces to calculators and phonopy API" href="interfaces.html" />
+    <link rel="next" title="FHI-aims &amp; phonopy calculations" href="FHI-aims.html" />
+    <link rel="prev" title="Elk &amp; phonopy calculation" href="elk.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body role="document">
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">
+          Phonopy</a>
+        <span class="navbar-text navbar-version pull-left"><b>1.9.7</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="procedure.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">Work flow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Download and install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="input-files.html">Input files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="output-files.html">Output files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setting-tags.html">Setting tags</a></li>
+<li class="toctree-l1"><a class="reference internal" href="command-options.html">Command options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="interfaces.html">Interfaces to calculators and phonopy API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="auxiliary-tools.html">Auxiliary tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="theory.html">Formulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">VASP &amp; phonopy calculation</a></li>
+<li><a class="reference internal" href="#vasp-dfpt-phonopy-calculation">VASP-DFPT &amp; phonopy calculation</a><ul>
+<li><a class="reference internal" href="#how-to-run">How to run</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="elk.html" title="Previous Chapter: Elk & phonopy calculation"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; Elk & phonopy...</span>
+    </a>
+  </li>
+  <li>
+    <a href="FHI-aims.html" title="Next Chapter: FHI-aims & phonopy calculations"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">FHI-aims & ph... &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <div class="section" id="vasp-phonopy-calculation">
+<span id="vasp-fd-interface"></span><h1>VASP &amp; phonopy calculation<a class="headerlink" href="#vasp-phonopy-calculation" title="Permalink to this headline">¶</a></h1>
+<p>Please follow the page <a class="reference internal" href="procedure.html#tutorial"><span>VASP &amp; phonopy calculation</span></a> and <a class="reference internal" href="examples.html#examples-link"><span>Examples</span></a>.</p>
+</div>
+<div class="section" id="vasp-dfpt-phonopy-calculation">
+<span id="vasp-dfpt-interface"></span><h1>VASP-DFPT &amp; phonopy calculation<a class="headerlink" href="#vasp-dfpt-phonopy-calculation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="how-to-run">
+<h2>How to run<a class="headerlink" href="#how-to-run" title="Permalink to this headline">¶</a></h2>
+<p>VASP can calculate force constants in real space using DFPT. The
+procedure to calculate phonon properties may be as follows:</p>
+<ol class="arabic">
+<li><p class="first">Prepare unit cell structure named, e.g., <code class="docutils literal"><span class="pre">POSCAR-unitcell</span></code>. The
+following structure is a conventional unit cell of NaCl.</p>
+<div class="highlight-python"><div class="highlight"><pre>Na Cl
+   1.00000000000000
+     5.6903014761756712    0.0000000000000000    0.0000000000000000
+     0.0000000000000000    5.6903014761756712    0.0000000000000000
+     0.0000000000000000    0.0000000000000000    5.6903014761756712
+   4   4
+Direct
+  0.0000000000000000  0.0000000000000000  0.0000000000000000
+  0.0000000000000000  0.5000000000000000  0.5000000000000000
+  0.5000000000000000  0.0000000000000000  0.5000000000000000
+  0.5000000000000000  0.5000000000000000  0.0000000000000000
+  0.5000000000000000  0.5000000000000000  0.5000000000000000
+  0.5000000000000000  0.0000000000000000  0.0000000000000000
+  0.0000000000000000  0.5000000000000000  0.0000000000000000
+  0.0000000000000000  0.0000000000000000  0.5000000000000000
+</pre></div>
+</div>
+</li>
+<li><p class="first">Prepare a perfect supercell structure from <code class="docutils literal"><span class="pre">POSCAR-unitcell</span></code>,
+e.g.,</p>
+<div class="highlight-python"><div class="highlight"><pre>% phonopy -d --dim=&quot;2 2 2&quot; -c POSCAR-unitcell
+</pre></div>
+</div>
+</li>
+<li><p class="first">Rename <code class="docutils literal"><span class="pre">SPOSCAR</span></code> created in (2) to
+<code class="docutils literal"><span class="pre">POSCAR</span></code> (<code class="docutils literal"><span class="pre">POSCAR-{number}</span></code> and <code class="docutils literal"><span class="pre">disp.yaml</span></code> files will never be used.)</p>
+<div class="highlight-python"><div class="highlight"><pre>% mv SPOSCAR POSCAR
+</pre></div>
+</div>
+</li>
+<li><p class="first">Calculate force constants of the perfect supercell by running VASP
+with <code class="docutils literal"><span class="pre">IBRION</span> <span class="pre">=</span> <span class="pre">8</span></code> and <code class="docutils literal"><span class="pre">NSW</span> <span class="pre">=</span> <span class="pre">1</span></code>. An example of <code class="docutils literal"><span class="pre">INCAR</span></code> for
+insulator may be such like (<strong>just an example!</strong>):</p>
+<div class="highlight-python"><div class="highlight"><pre>   PREC = Accurate
+  ENCUT = 500
+ IBRION = 8
+  EDIFF = 1.0e-08
+  IALGO = 38
+ ISMEAR = 0; SIGMA = 0.1
+  LREAL = .FALSE.
+ADDGRID = .TRUE.
+  LWAVE = .FALSE.
+ LCHARG = .FALSE.
+</pre></div>
+</div>
+</li>
+<li><p class="first">After finishing the VASP calculation, confirm <code class="docutils literal"><span class="pre">vasprun.xml</span></code>
+contains <code class="docutils literal"><span class="pre">hessian</span></code> elements, and then create <code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span></code>:</p>
+<div class="highlight-python"><div class="highlight"><pre>% phonopy --fc vasprun.xml
+</pre></div>
+</div>
+</li>
+<li><p class="first">Run phonopy with the original unit cell <code class="docutils literal"><span class="pre">POSCAR-unitcell</span></code> and
+setting tag <code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span> <span class="pre">=</span> <span class="pre">READ</span></code> or <code class="docutils literal"><span class="pre">--readfc</span></code> option,
+e.g., as found in <code class="docutils literal"><span class="pre">example/NaCl-VASPdfpt</span></code></p>
+<div class="highlight-python"><div class="highlight"><pre>% phonopy --dim=&quot;2 2 2&quot; -c POSCAR-unitcell band.conf
+        _
+  _ __ | |__   ___  _ __   ___   _ __  _   _
+ | &#39;_ \| &#39;_ \ / _ \| &#39;_ \ / _ \ | &#39;_ \| | | |
+ | |_) | | | | (_) | | | | (_) || |_) | |_| |
+ | .__/|_| |_|\___/|_| |_|\___(_) .__/ \__, |
+ |_|                            |_|    |___/
+
+                                     1.1
+
+Band structure mode
+Settings:
+  Force constants: read
+  Supercell:  [2 2 2]
+  Primitive axis:
+     [ 0.   0.5  0.5]
+     [ 0.5  0.   0.5]
+     [ 0.5  0.5  0. ]
+Spacegroup:  Fm-3m (225)
+Paths in reciprocal reduced coordinates:
+[ 0.00  0.00  0.00] --&gt; [ 0.50  0.00  0.00]
+[ 0.50  0.00  0.00] --&gt; [ 0.50  0.50  0.00]
+[ 0.50  0.50  0.00] --&gt; [-0.00 -0.00  0.00]
+[ 0.00  0.00  0.00] --&gt; [ 0.50  0.50  0.50]
+</pre></div>
+</div>
+</li>
+</ol>
+<p><a class="reference internal" href="_images/NaCl-VASPdfpt.png"><img alt="NaCl-VASPdfpt" src="_images/NaCl-VASPdfpt.png" /></a></p>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+        <br/>
+        
+<div id="sourcelink">
+  <a href="_sources/vasp.txt"
+     rel="nofollow">Source</a>
+</div>
+      
+    </p>
+    <p>
+        &copy; Copyright 2009, Atsushi Togo.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.3.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

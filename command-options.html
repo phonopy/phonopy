@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Command options &mdash; Phonopy v.1.9.7</title>
+    
+    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/bootswatch-3.3.4/cosmo/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.9.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
+    <link rel="top" title="Phonopy v.1.9.7" href="index.html" />
+    <link rel="next" title="Quasi harmonic approximation" href="qha.html" />
+    <link rel="prev" title="How to watch animation" href="animation.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body role="document">
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">
+          Phonopy</a>
+        <span class="navbar-text navbar-version pull-left"><b>1.9.7</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="procedure.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">Work flow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Download and install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="input-files.html">Input files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="output-files.html">Output files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setting-tags.html">Setting tags</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Command options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interfaces.html">Interfaces to calculators and phonopy API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="auxiliary-tools.html">Auxiliary tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="theory.html">Formulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Command options</a><ul>
+<li><a class="reference internal" href="#force-calculators">Force calculators</a><ul>
+<li><a class="reference internal" href="#wien2k"><code class="docutils literal"><span class="pre">--wien2k</span></code></a></li>
+<li><a class="reference internal" href="#abinit"><code class="docutils literal"><span class="pre">--abinit</span></code></a></li>
+<li><a class="reference internal" href="#pwscf"><code class="docutils literal"><span class="pre">--pwscf</span></code></a></li>
+<li><a class="reference internal" href="#siesta"><code class="docutils literal"><span class="pre">--siesta</span></code></a></li>
+<li><a class="reference internal" href="#elk"><code class="docutils literal"><span class="pre">--elk</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#input-cell">Input cell</a><ul>
+<li><a class="reference internal" href="#c-or-cell"><code class="docutils literal"><span class="pre">-c</span></code> or <code class="docutils literal"><span class="pre">--cell</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#create-force-sets">Create <code class="docutils literal"><span class="pre">FORCE_SETS</span></code></a><ul>
+<li><a class="reference internal" href="#f-or-forces-and-fz"><code class="docutils literal"><span class="pre">-f</span></code> or <code class="docutils literal"><span class="pre">--forces</span></code> and <code class="docutils literal"><span class="pre">--fz</span></code></a><ul>
+<li><a class="reference internal" href="#vasp-interface">VASP interface</a></li>
+<li><a class="reference internal" href="#abinit-interface">Abinit interface</a></li>
+<li><a class="reference internal" href="#pwscf-interface">Pwscf interface</a></li>
+<li><a class="reference internal" href="#wien2k-interface">WIEN2k interface</a></li>
+<li><a class="reference internal" href="#elk-interface">Elk interface</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#create-force-constants">Create <code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span></code></a><ul>
+<li><a class="reference internal" href="#fc-or-force-constants"><code class="docutils literal"><span class="pre">--fc</span></code> or <code class="docutils literal"><span class="pre">--force_constants</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#graph-plotting">Graph plotting</a><ul>
+<li><a class="reference internal" href="#p"><code class="docutils literal"><span class="pre">-p</span></code></a></li>
+<li><a class="reference internal" href="#p-s"><code class="docutils literal"><span class="pre">-p</span> <span class="pre">-s</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#unit-conversion-factor">Unit conversion factor</a><ul>
+<li><a class="reference internal" href="#factor"><code class="docutils literal"><span class="pre">--factor</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#log-level">Log level</a><ul>
+<li><a class="reference internal" href="#v-or-verbose"><code class="docutils literal"><span class="pre">-v</span></code> or <code class="docutils literal"><span class="pre">--verbose</span></code></a></li>
+<li><a class="reference internal" href="#q-or-quiet"><code class="docutils literal"><span class="pre">-q</span></code> or <code class="docutils literal"><span class="pre">--quiet</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#crystal-symmetry">Crystal symmetry</a><ul>
+<li><a class="reference internal" href="#tolerance"><code class="docutils literal"><span class="pre">--tolerance</span></code></a></li>
+<li><a class="reference internal" href="#symmetry"><code class="docutils literal"><span class="pre">--symmetry</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#input-output-file-control">Input/Output file control</a><ul>
+<li><a class="reference internal" href="#hdf5"><code class="docutils literal"><span class="pre">--hdf5</span></code></a><ul>
+<li><a class="reference internal" href="#force-constants-hdf5"><code class="docutils literal"><span class="pre">force_constants.hdf5</span></code></a></li>
+<li><a class="reference internal" href="#mesh-hdf5"><code class="docutils literal"><span class="pre">mesh.hdf5</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="animation.html" title="Previous Chapter: How to watch animation"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; How to watch ...</span>
+    </a>
+  </li>
+  <li>
+    <a href="qha.html" title="Next Chapter: Quasi harmonic approximation"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">Quasi harmoni... &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <div class="section" id="command-options">
+<span id="id1"></span><h1>Command options<a class="headerlink" href="#command-options" title="Permalink to this headline">¶</a></h1>
+<p>Some of command-line options are equivalent to respective setting
+tags:</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">--amplitude</span></code> (<code class="docutils literal"><span class="pre">DISPLACEMENT_DISTANCE</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--anime</span></code> (<code class="docutils literal"><span class="pre">ANIME</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--band</span></code> (<code class="docutils literal"><span class="pre">BAND</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--band_connection</span></code>  (<code class="docutils literal"><span class="pre">BAND_CONNECTION</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--band_labels</span></code> (<code class="docutils literal"><span class="pre">BAND_LABELS</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--band_points</span></code>  (<code class="docutils literal"><span class="pre">BAND_POINTS</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--cutoff_freq</span></code> (<code class="docutils literal"><span class="pre">CUTOFF_FREQUENCY</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">-c</span></code>, <code class="docutils literal"><span class="pre">--cell</span></code> (<code class="docutils literal"><span class="pre">CELL_FILENAME</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">-d</span></code>  (<code class="docutils literal"><span class="pre">CREATE_DISPLACEMENTS</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code></li>
+<li><code class="docutils literal"><span class="pre">--dim</span></code> (<code class="docutils literal"><span class="pre">DIM</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--dos</span></code> (<code class="docutils literal"><span class="pre">DOS</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--eigvecs</span></code>, <code class="docutils literal"><span class="pre">--eigenvectors</span></code> (<code class="docutils literal"><span class="pre">EIGENVECTORS</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--fits_debye_model</span></code> (<code class="docutils literal"><span class="pre">DEBYE_MODEL</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--gc</span></code>, <code class="docutils literal"><span class="pre">--gamma_center</span></code> (<code class="docutils literal"><span class="pre">GAMMA_CENTER</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--gv</span></code>, <code class="docutils literal"><span class="pre">--group_velocity</span></code> (<code class="docutils literal"><span class="pre">GROUP_VELOCITY</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--gv_delta_q</span></code> (<code class="docutils literal"><span class="pre">GV_DELTA_Q</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--irreps</span></code> (<code class="docutils literal"><span class="pre">IRREPS</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--lcg</span></code>, <code class="docutils literal"><span class="pre">--little_cogroup</span></code> (<code class="docutils literal"><span class="pre">LITTLE_COGROUP</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--modulation</span></code> (<code class="docutils literal"><span class="pre">MODULATION</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--mp</span></code>, <code class="docutils literal"><span class="pre">--mesh</span></code> (<code class="docutils literal"><span class="pre">MP</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--nac</span></code> (<code class="docutils literal"><span class="pre">NAC</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--nosym</span></code> (<code class="docutils literal"><span class="pre">SYMMETRY</span> <span class="pre">=</span> <span class="pre">.FALSE.</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--nomeshsym</span></code> (<code class="docutils literal"><span class="pre">MESH_SYMMETRY</span> <span class="pre">=</span> <span class="pre">.FALSE.</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--nowritemesh</span></code> (<code class="docutils literal"><span class="pre">WRITE_MESH</span> <span class="pre">=</span> <span class="pre">.FALSE.</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--pa</span></code>, <code class="docutils literal"><span class="pre">--primitive_axis</span></code> (<code class="docutils literal"><span class="pre">PRIMITIVE_AXIS</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--pd</span></code>, <code class="docutils literal"><span class="pre">--projection_direction</span></code> (<code class="docutils literal"><span class="pre">PROJECTION_DIRECTION</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--pdos</span></code> (<code class="docutils literal"><span class="pre">PDOS</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--q_direction</span></code> (<code class="docutils literal"><span class="pre">Q_DIRECTION</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--readfc</span></code> (<code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span> <span class="pre">=</span> <span class="pre">READ</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--show_irreps</span></code> (<code class="docutils literal"><span class="pre">SHOW_IRREPS</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--sigma</span></code> (<code class="docutils literal"><span class="pre">SIGMA</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">-t</span></code> (<code class="docutils literal"><span class="pre">TPROP</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--td</span></code> (<code class="docutils literal"><span class="pre">TDISP</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--tdm</span></code> (<code class="docutils literal"><span class="pre">TDISPMAT</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--thm</span></code>, <code class="docutils literal"><span class="pre">--tetrahedron_method</span></code> (<code class="docutils literal"><span class="pre">TETRAHEDRON</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--tmin</span></code> (<code class="docutils literal"><span class="pre">TMIN</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--tmax</span></code> (<code class="docutils literal"><span class="pre">TMAX</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--tstep</span></code> (<code class="docutils literal"><span class="pre">TSTEP</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--writedm</span></code> (<code class="docutils literal"><span class="pre">WRITEDM</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--writefc</span></code> (<code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span> <span class="pre">=</span> <span class="pre">WRITE</span></code>)</li>
+</ul>
+<p>When both of command-line option and setting tag for the same purpose
+are set simultaneously, the command-line options overide the setting
+tags.</p>
+<div class="section" id="force-calculators">
+<span id="id2"></span><h2>Force calculators<a class="headerlink" href="#force-calculators" title="Permalink to this headline">¶</a></h2>
+<p>Currently interfaces for VASP, Wien2k, Pwscf, Abinit, and Elk are
+prepared. Wien2k, Pwscf, Abinit and Elk interfaces are invoked with
+<code class="docutils literal"><span class="pre">--wienk2</span></code>, <code class="docutils literal"><span class="pre">--pwscf</span></code>, <code class="docutils literal"><span class="pre">--abinit</span></code>, and <code class="docutils literal"><span class="pre">--elk</span></code> options,
+respectively, and if none of these options is specified, VASP mode is invoked.</p>
+<p>The details about these interfaces are found at <a class="reference internal" href="interfaces.html#calculator-interfaces"><span>Interfaces to force calculators</span></a>.</p>
+<div class="section" id="wien2k">
+<span id="wien2k-mode"></span><h3><code class="docutils literal"><span class="pre">--wien2k</span></code><a class="headerlink" href="#wien2k" title="Permalink to this headline">¶</a></h3>
+<p><strong>Behavior is changed at phonopy 1.9.2.</strong></p>
+<p>This option invokes the WIEN2k mode.In this mode. Usually this option
+is used with <code class="docutils literal"><span class="pre">--cell</span></code> (<code class="docutils literal"><span class="pre">-c</span></code>) option or <code class="docutils literal"><span class="pre">CELL_FILENAME</span></code> tag to
+read WIEN2k crystal structure file.</p>
+<div class="highlight-python"><div class="highlight"><pre>% phonopy --wien2k -c NaCl.struct band.conf
+</pre></div>
+</div>
+<p><strong>Only the WIEN2k struct with the P lattice is supported</strong>.  See more
+information <a class="reference internal" href="wien2k.html#wien2k-interface"><span>Wien2k &amp; phonopy calculation</span></a>.</p>
+<p>For previous versions than 1.9.1.3, this option is used as</p>
+<div class="highlight-python"><div class="highlight"><pre>% phonopy --wien2k=NaCl.struct band.conf   (version &lt;= 1.9.1.3)
+</pre></div>
+</div>
+</div>
+<div class="section" id="abinit">
+<span id="abinit-mode"></span><h3><code class="docutils literal"><span class="pre">--abinit</span></code><a class="headerlink" href="#abinit" title="Permalink to this headline">¶</a></h3>
+<p>Abinit mode is invoked with this option. Usually this option is used
+with <code class="docutils literal"><span class="pre">--cell</span></code> (<code class="docutils literal"><span class="pre">-c</span></code>) option or <code class="docutils literal"><span class="pre">CELL_FILENAME</span></code> tag to read
+Abinit main input file that contains the unit cell crystal structure,
+e.g.,</p>
+<div class="highlight-python"><div class="highlight"><pre>% phonopy --abinit -c NaCl.in band.conf
+</pre></div>
+</div>
+</div>
+<div class="section" id="pwscf">
+<span id="pwscf-mode"></span><h3><code class="docutils literal"><span class="pre">--pwscf</span></code><a class="headerlink" href="#pwscf" title="Permalink to this headline">¶</a></h3>
+<p>Pwscf mode is invoked with this option. Usually this option is used
+with <code class="docutils literal"><span class="pre">--cell</span></code> (<code class="docutils literal"><span class="pre">-c</span></code>) option or <code class="docutils literal"><span class="pre">CELL_FILENAME</span></code> tag to read Pwscf
+input file that contains the unit cell crystal structure, e.g.,</p>
+<div class="highlight-python"><div class="highlight"><pre>% phonopy --pwscf -c NaCl.in band.conf
+</pre></div>
+</div>
+</div>
+<div class="section" id="siesta">
+<span id="siesta-mode"></span><h3><code class="docutils literal"><span class="pre">--siesta</span></code><a class="headerlink" href="#siesta" title="Permalink to this headline">¶</a></h3>
+<p>Siesta mode is invoked with this option. Usually this option is used
+with <code class="docutils literal"><span class="pre">--cell</span></code> (<code class="docutils literal"><span class="pre">-c</span></code>) option or <code class="docutils literal"><span class="pre">CELL_FILENAME</span></code> tag to read a Siesta
+input file that contains the unit cell crystal structure, e.g.,</p>
+<div class="highlight-python"><div class="highlight"><pre>% phonopy --siesta -c Si.fdf band.conf
+</pre></div>
+</div>
+</div>
+<div class="section" id="elk">
+<span id="elk-mode"></span><h3><code class="docutils literal"><span class="pre">--elk</span></code><a class="headerlink" href="#elk" title="Permalink to this headline">¶</a></h3>
+<p>Pwscf mode is invoked with this option. Usually this option is used
+with <code class="docutils literal"><span class="pre">--cell</span></code> (<code class="docutils literal"><span class="pre">-c</span></code>) option or <code class="docutils literal"><span class="pre">CELL_FILENAME</span></code> tag to read Elk
+input file that contains the unit cell crystal structure, e.g.,</p>
+<div class="highlight-python"><div class="highlight"><pre>% phonopy --elk -c elk-unitcell.in band.conf
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="input-cell">
+<span id="cell-filename-option"></span><h2>Input cell<a class="headerlink" href="#input-cell" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="c-or-cell">
+<h3><code class="docutils literal"><span class="pre">-c</span></code> or <code class="docutils literal"><span class="pre">--cell</span></code><a class="headerlink" href="#c-or-cell" title="Permalink to this headline">¶</a></h3>
+<p>Unit cell crystal structure file is specified with this tag.</p>
+<div class="highlight-python"><div class="highlight"><pre>% phonopy --cell=POSCAR-unitcell band.conf
+</pre></div>
+</div>
+<p>Without specifying this tag, default file name is searched in current
+directory. The default file names for the calculators are as follows:</p>
+<div class="highlight-python"><div class="highlight"><pre>VASP   | POSCAR
+Wien2k | case.struct
+Abinit | unitcell.in
+Pwscf  | unitcell.in
+Elk    | elk.in
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="create-force-sets">
+<h2>Create <code class="docutils literal"><span class="pre">FORCE_SETS</span></code><a class="headerlink" href="#create-force-sets" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="f-or-forces-and-fz">
+<h3><code class="docutils literal"><span class="pre">-f</span></code> or <code class="docutils literal"><span class="pre">--forces</span></code> and <code class="docutils literal"><span class="pre">--fz</span></code><a class="headerlink" href="#f-or-forces-and-fz" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="vasp-interface">
+<span id="vasp-force-sets-option"></span><h4>VASP interface<a class="headerlink" href="#vasp-interface" title="Permalink to this headline">¶</a></h4>
+<p><code class="docutils literal"><span class="pre">FORCE_SETS</span></code> file is created from <code class="docutils literal"><span class="pre">disp.yaml</span></code>, which is an output
+file when creating supercell with displacements, and
+<code class="docutils literal"><span class="pre">vasprun.xml</span></code>&#8216;s, which are the VASP output files. <code class="docutils literal"><span class="pre">disp.yaml</span></code> in
+the current directory is automatically read. The order of
+displacements written in <code class="docutils literal"><span class="pre">disp.yaml</span></code> file has to correpond to that of
+<code class="docutils literal"><span class="pre">vasprun.xml</span></code> files .</p>
+<div class="highlight-python"><div class="highlight"><pre>% phonopy -f disp-001/vasprun.xml disp-002/vasprun.xml ...
+</pre></div>
+</div>
+<p>Attention:</p>
+<ul class="simple">
+<li>Site-projected wave function information (the same information as
+<code class="docutils literal"><span class="pre">PROCAR</span></code>) siginificantly increases the size of <code class="docutils literal"><span class="pre">vasprun.xml</span></code>. So
+parsing xml file uses huge memory space. It is recommended</li>
+<li>to switch off to calculate it.  If there are many displacements, shell
+expansions are useful, e.g., <code class="docutils literal"><span class="pre">disp-*/vasprun.xml</span></code>, or
+<code class="docutils literal"><span class="pre">disp-{001..128}/vasprun.xml</span></code> (for zsh, and recent bash).</li>
+</ul>
+<p><code class="docutils literal"><span class="pre">--fz</span></code> option is used to subtract residual forces in the equilibrium
+supercell.</p>
+<div class="highlight-python"><div class="highlight"><pre>% phonopy --fz sposcar/vasprun.xml disp-001/vasprun.xml ...
+</pre></div>
+</div>
+<p>Usually the <code class="docutils literal"><span class="pre">-f</span></code> option is preferable to <code class="docutils literal"><span class="pre">--fz</span></code>.</p>
+</div>
+<div class="section" id="abinit-interface">
+<span id="abinit-force-sets-option"></span><h4>Abinit interface<a class="headerlink" href="#abinit-interface" title="Permalink to this headline">¶</a></h4>
+<p><code class="docutils literal"><span class="pre">FORCE_SETS</span></code> file is created from <code class="docutils literal"><span class="pre">disp.yaml</span></code> and Abinit output
+files (<code class="docutils literal"><span class="pre">*.out</span></code>). In the reading of forces in Abinit output files,
+forces in eV/Angstrom are read. The unit conversion factor is
+determined with this unit.</p>
+<div class="highlight-python"><div class="highlight"><pre>% phonopy --abinit -f disp-001/supercell.out disp-002/supercell.out  ...
+</pre></div>
+</div>
+</div>
+<div class="section" id="pwscf-interface">
+<span id="pwscf-force-sets-option"></span><h4>Pwscf interface<a class="headerlink" href="#pwscf-interface" title="Permalink to this headline">¶</a></h4>
+<p><code class="docutils literal"><span class="pre">FORCE_SETS</span></code> file is created from <code class="docutils literal"><span class="pre">disp.yaml</span></code> and Pwscf output
+files.</p>
+<div class="highlight-python"><div class="highlight"><pre>% phonopy --pwscf -f disp-001/supercell.out disp-002/supercell.out  ...
+</pre></div>
+</div>
+<p>Here <code class="docutils literal"><span class="pre">*.out</span></code> files are the saved texts of standard outputs of Pwscf calculations.</p>
+</div>
+<div class="section" id="wien2k-interface">
+<span id="wien2k-force-sets-option"></span><h4>WIEN2k interface<a class="headerlink" href="#wien2k-interface" title="Permalink to this headline">¶</a></h4>
+<p>This is experimental support to generage <code class="docutils literal"><span class="pre">FORCE_SETS</span></code>. Insted of
+this, you can use the external tool called <code class="docutils literal"><span class="pre">scf2forces</span></code> to generate
+<code class="docutils literal"><span class="pre">FORCE_SETS</span></code>. <code class="docutils literal"><span class="pre">scf2forces</span></code> is found at
+<a class="reference external" href="http://www.wien2k.at/reg_user/unsupported/">http://www.wien2k.at/reg_user/unsupported/</a>.</p>
+<p><code class="docutils literal"><span class="pre">FORCE_SETS</span></code> file is created from <code class="docutils literal"><span class="pre">disp.yaml</span></code>, which is an output
+file when creating supercell with displacements, and
+<code class="docutils literal"><span class="pre">case.scf</span></code>&#8216;s, which are the WIEN2k output files. The order of
+displacements in <code class="docutils literal"><span class="pre">disp.yaml</span></code> file and the order of <code class="docutils literal"><span class="pre">case.scf</span></code>&#8216;s
+have to be same. <strong>For Wien2k struct file, only negative atom index
+with the P lattice format is supported.</strong></p>
+<div class="highlight-python"><div class="highlight"><pre>% phonopy --wien2k -f case_001/case_001.scf case_002/case_002.scf ...
+</pre></div>
+</div>
+<p>For more information, <a class="reference internal" href="wien2k.html#wien2k-interface"><span>Wien2k &amp; phonopy calculation</span></a>.</p>
+</div>
+<div class="section" id="elk-interface">
+<span id="elk-force-sets-option"></span><h4>Elk interface<a class="headerlink" href="#elk-interface" title="Permalink to this headline">¶</a></h4>
+<p><code class="docutils literal"><span class="pre">FORCE_SETS</span></code> file is created from <code class="docutils literal"><span class="pre">disp.yaml</span></code> and Elk output
+files.</p>
+<div class="highlight-python"><div class="highlight"><pre>% phonopy --elk -f disp-001/INFO.OUT disp-002/INFO.OUT  ...
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="create-force-constants">
+<h2>Create <code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span></code><a class="headerlink" href="#create-force-constants" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="fc-or-force-constants">
+<span id="vasp-force-constants"></span><h3><code class="docutils literal"><span class="pre">--fc</span></code> or <code class="docutils literal"><span class="pre">--force_constants</span></code><a class="headerlink" href="#fc-or-force-constants" title="Permalink to this headline">¶</a></h3>
+<p><strong>Currently this option supports only VASP output.</strong></p>
+<p>VASP output of force constants is imported from
+<code class="docutils literal"><span class="pre">vasprun.xml</span></code> and <code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span></code> is created.</p>
+<div class="highlight-python"><div class="highlight"><pre>% phonopy --fc vasprun.xml
+</pre></div>
+</div>
+<p>This <code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span></code> can be used instead of <code class="docutils literal"><span class="pre">FORCE_SETS</span></code>. For
+more details, please refer <a class="reference internal" href="vasp.html#vasp-dfpt-interface"><span>VASP-DFPT &amp; phonopy calculation</span></a>.</p>
+</div>
+</div>
+<div class="section" id="graph-plotting">
+<span id="graph-option"></span><h2>Graph plotting<a class="headerlink" href="#graph-plotting" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="p">
+<h3><code class="docutils literal"><span class="pre">-p</span></code><a class="headerlink" href="#p" title="Permalink to this headline">¶</a></h3>
+<p>Result is plotted.</p>
+<div class="highlight-python"><div class="highlight"><pre>% phonopy -p
+</pre></div>
+</div>
+</div>
+<div class="section" id="p-s">
+<span id="graph-save-option"></span><h3><code class="docutils literal"><span class="pre">-p</span> <span class="pre">-s</span></code><a class="headerlink" href="#p-s" title="Permalink to this headline">¶</a></h3>
+<p>Result is plotted (saved) to PDF file.</p>
+<div class="highlight-python"><div class="highlight"><pre>% phonopy -p -s
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="unit-conversion-factor">
+<h2>Unit conversion factor<a class="headerlink" href="#unit-conversion-factor" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="factor">
+<span id="unit-conversion-factor-option"></span><h3><code class="docutils literal"><span class="pre">--factor</span></code><a class="headerlink" href="#factor" title="Permalink to this headline">¶</a></h3>
+<p>Unit conversion factor of frequency from input values to your favorite
+unit is specified. The default value is that to convert to THz. The
+default conversion factors for <code class="docutils literal"><span class="pre">wien2k</span></code>, <code class="docutils literal"><span class="pre">abinit</span></code>, <code class="docutils literal"><span class="pre">pwscf</span></code>, and
+<code class="docutils literal"><span class="pre">elk</span></code> are 3.44595, 21.49068, 108.9708, and 154.1079
+respectively. These are determined following the physical unit systems
+of the calculators. How to calcualte these conversion factors is
+explained at <a class="reference internal" href="theory.html#physical-unit-conversion"><span>About physical unit conversion</span></a>.</p>
+<p>When calculating thermal property, the factor to THz is
+required. Otherwise the calculated thermal properties have wrong
+units. In the case of band structure plot, any factor can be used,
+where the frequency is simply shown in the unit you specified.</p>
+<div class="highlight-python"><div class="highlight"><pre>% phonopy --factor=521.471
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="log-level">
+<h2>Log level<a class="headerlink" href="#log-level" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="v-or-verbose">
+<h3><code class="docutils literal"><span class="pre">-v</span></code> or <code class="docutils literal"><span class="pre">--verbose</span></code><a class="headerlink" href="#v-or-verbose" title="Permalink to this headline">¶</a></h3>
+<p>More detailed log are shown</p>
+</div>
+<div class="section" id="q-or-quiet">
+<h3><code class="docutils literal"><span class="pre">-q</span></code> or <code class="docutils literal"><span class="pre">--quiet</span></code><a class="headerlink" href="#q-or-quiet" title="Permalink to this headline">¶</a></h3>
+<p>No log is shown.</p>
+</div>
+</div>
+<div class="section" id="crystal-symmetry">
+<h2>Crystal symmetry<a class="headerlink" href="#crystal-symmetry" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="tolerance">
+<h3><code class="docutils literal"><span class="pre">--tolerance</span></code><a class="headerlink" href="#tolerance" title="Permalink to this headline">¶</a></h3>
+<p>The specified value is used as allowed tolerance to find symmetry of
+crystal structure. The default value is 1e-5.</p>
+<div class="highlight-python"><div class="highlight"><pre>% phonopy --tolerance=1e-3
+</pre></div>
+</div>
+</div>
+<div class="section" id="symmetry">
+<h3><code class="docutils literal"><span class="pre">--symmetry</span></code><a class="headerlink" href="#symmetry" title="Permalink to this headline">¶</a></h3>
+<p>Using this option, various crystal symmetry information is just
+printed out and phonopy stops without going to phonon analysis.</p>
+<div class="highlight-python"><div class="highlight"><pre>% phonopy --symmetry
+</pre></div>
+</div>
+<p>This tag can be used together with the <code class="docutils literal"><span class="pre">--cell</span></code> (<code class="docutils literal"><span class="pre">-c</span></code>),
+<code class="docutils literal"><span class="pre">--abinit</span></code>, <code class="docutils literal"><span class="pre">--pwscf</span></code>, <code class="docutils literal"><span class="pre">--elk</span></code>, <code class="docutils literal"><span class="pre">--wien2k</span></code>, or
+<code class="docutils literal"><span class="pre">--primitive_axis</span></code> option.</p>
+</div>
+</div>
+<div class="section" id="input-output-file-control">
+<h2>Input/Output file control<a class="headerlink" href="#input-output-file-control" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="hdf5">
+<span id="hdf5-option"></span><h3><code class="docutils literal"><span class="pre">--hdf5</span></code><a class="headerlink" href="#hdf5" title="Permalink to this headline">¶</a></h3>
+<p>The following input/output files are read/written in hdf5 format
+instead of their original formats (in parenthesis).</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">force_constants.hdf5</span></code> (<code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">mesh.hdf5</span></code> (<code class="docutils literal"><span class="pre">mesh.yaml</span></code>)</li>
+</ul>
+<div class="section" id="force-constants-hdf5">
+<h4><code class="docutils literal"><span class="pre">force_constants.hdf5</span></code><a class="headerlink" href="#force-constants-hdf5" title="Permalink to this headline">¶</a></h4>
+<p>With <code class="docutils literal"><span class="pre">--hdf5</span></code> option and <code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span> <span class="pre">=</span> <span class="pre">WRITE</span></code>
+(<code class="docutils literal"><span class="pre">--writefc</span></code>), <code class="docutils literal"><span class="pre">force_constants.hdf5</span></code> is written.
+With <code class="docutils literal"><span class="pre">--hdf5</span></code> option and <code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span> <span class="pre">=</span> <span class="pre">READ</span></code> (<code class="docutils literal"><span class="pre">--readfc</span></code>),
+<code class="docutils literal"><span class="pre">force_constants.hdf5</span></code> is read.</p>
+</div>
+<div class="section" id="mesh-hdf5">
+<h4><code class="docutils literal"><span class="pre">mesh.hdf5</span></code><a class="headerlink" href="#mesh-hdf5" title="Permalink to this headline">¶</a></h4>
+<p>In the mesh sampling calculations (see <a class="reference internal" href="setting-tags.html#mesh-sampling-tags"><span>Mesh sampling tags</span></a>),
+calculation results are written into <code class="docutils literal"><span class="pre">mesh.hdf5</span></code> but not into
+<code class="docutils literal"><span class="pre">mesh.yaml</span></code>. Using this option may reduce the data output size and
+thus writing time when <code class="docutils literal"><span class="pre">mesh.yaml</span></code> is huge, e.g., eigenvectors are
+written on a dense sampling mesh.</p>
+</div>
+</div>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+        <br/>
+        
+<div id="sourcelink">
+  <a href="_sources/command-options.txt"
+     rel="nofollow">Source</a>
+</div>
+      
+    </p>
+    <p>
+        &copy; Copyright 2009, Atsushi Togo.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.3.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

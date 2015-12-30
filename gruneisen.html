@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Calculation of mode Grüneisen parameters &mdash; Phonopy v.1.9.7</title>
+    
+    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/bootswatch-3.3.4/cosmo/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.9.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
+    <link rel="top" title="Phonopy v.1.9.7" href="index.html" />
+    <link rel="next" title="Interfaces to calculators and phonopy API" href="interfaces.html" />
+    <link rel="prev" title="Quasi harmonic approximation" href="qha.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body role="document">
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">
+          Phonopy</a>
+        <span class="navbar-text navbar-version pull-left"><b>1.9.7</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="procedure.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">Work flow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Download and install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="input-files.html">Input files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="output-files.html">Output files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setting-tags.html">Setting tags</a></li>
+<li class="toctree-l1"><a class="reference internal" href="command-options.html">Command options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Mode Grüneisen parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interfaces.html">Interfaces to calculators and phonopy API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="auxiliary-tools.html">Auxiliary tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="theory.html">Formulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Calculation of mode Grüneisen parameters</a><ul>
+<li><a class="reference internal" href="#how-to-run">How to run</a></li>
+<li><a class="reference internal" href="#abinit-pwscf-and-wien2k-interfaces">Abinit, Pwscf, and Wien2k interfaces</a></li>
+<li><a class="reference internal" href="#command-options">Command options</a></li>
+<li><a class="reference internal" href="#method-to-calculate-mode-gruneisen-parameters">Method to calculate mode Grüneisen parameters</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="qha.html" title="Previous Chapter: Quasi harmonic approximation"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; Quasi harmoni...</span>
+    </a>
+  </li>
+  <li>
+    <a href="interfaces.html" title="Next Chapter: Interfaces to calculators and phonopy API"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">Interfaces to... &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <div class="section" id="calculation-of-mode-gruneisen-parameters">
+<span id="phonopy-gruneisen"></span><h1>Calculation of mode Grüneisen parameters<a class="headerlink" href="#calculation-of-mode-gruneisen-parameters" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="how-to-run">
+<h2>How to run<a class="headerlink" href="#how-to-run" title="Permalink to this headline">¶</a></h2>
+<p>It is necessary to run three phonon calculations. One is calculated at
+the equilibrium volume and the remaining two are calculated at the
+slightly larger volume and smaller volume than the equilibrium
+volume. The unitcells at these volumes have to be fully relaxed under
+the constraint of each volume.</p>
+<p>Let files named <code class="docutils literal"><span class="pre">POSCAR-unitcell</span></code>, <code class="docutils literal"><span class="pre">FORCE_SETS</span></code> (or <code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span></code>
+with <code class="docutils literal"><span class="pre">--readfc</span></code> option),
+and optionally <code class="docutils literal"><span class="pre">BORN</span></code> stored in three different directories
+named, e.g., <code class="docutils literal"><span class="pre">equiv</span></code>, <code class="docutils literal"><span class="pre">plus</span></code>, and <code class="docutils literal"><span class="pre">minus</span></code>.</p>
+<p>The calculated results are written into the file <code class="docutils literal"><span class="pre">gruneisen.yaml</span></code>.</p>
+<p>In the example directory, an example of silicon (<code class="docutils literal"><span class="pre">Si-gruneisen</span></code>) is
+prepared. A calculation along paths in reciprocal space can be made by</p>
+<div class="highlight-python"><div class="highlight"><pre>% gruneisen orig plus minus --dim=&quot;2 2 2&quot; --pa=&quot;0 1/2 1/2 1/2 0 1/2 1/2 1/2 0&quot; --band=&quot;1/2 1/4 3/4 0 0 0 1/2 1/2 1/2 1/2 0.0 1/2&quot; -p -c POSCAR-unitcell
+</pre></div>
+</div>
+<p><a class="reference internal" href="_images/Si-gruneisen-band.png"><img alt="i0" src="_images/Si-gruneisen-band.png" /></a></p>
+<p>In this calculation, neighboring <strong>q</strong>-points in each band segment are
+connected considering their phonon symmetry to treat band crossing
+correctly. Therefore the phonon frequencies may not be ordered in
+<code class="docutils literal"><span class="pre">gruneisen.yaml</span></code>. In the plot (<code class="docutils literal"><span class="pre">-p</span></code> option), the colors of phonon
+bands correspond to those of mode Grüneinen parameters.</p>
+<p>A calculation on a reciprocal mesh is made by</p>
+<div class="highlight-python"><div class="highlight"><pre>% gruneisen orig plus minus --dim=&quot;2 2 2&quot;  --pa=&quot;0 1/2 1/2 1/2 0 1/2 1/2 1/2 0&quot; --mesh=&quot;20 20 20&quot; -p -c POSCAR-unitcell --color=&quot;RB&quot;
+</pre></div>
+</div>
+<p><a class="reference internal" href="_images/Si-gruneisen-mesh.png"><img alt="i1" src="_images/Si-gruneisen-mesh.png" /></a></p>
+<p>In the plot (<code class="docutils literal"><span class="pre">-p</span></code> option), the colors of mode Grüneinen parameters
+are set for band indices with ascending order of phonon frequencies.</p>
+<p>Mode Grüneinen parameter may diverge around <img class="math" src="_images/math/85011adca50d3725af2e048eeb9ec7b02ccdd401.png" alt="\Gamma"/>-point. In
+the above example for band paths, mode Grüneinen parameters are
+calculated at <img class="math" src="_images/math/85011adca50d3725af2e048eeb9ec7b02ccdd401.png" alt="\Gamma"/>-point, but <code class="docutils literal"><span class="pre">gruneisen</span></code> script avoids
+showing the values on the plot. Instead the values at the neighboring
+<strong>q</strong>-points of <img class="math" src="_images/math/85011adca50d3725af2e048eeb9ec7b02ccdd401.png" alt="\Gamma"/>-point are used for the plot.</p>
+</div>
+<div class="section" id="abinit-pwscf-and-wien2k-interfaces">
+<span id="gruneisen-calculators"></span><h2>Abinit, Pwscf, and Wien2k interfaces<a class="headerlink" href="#abinit-pwscf-and-wien2k-interfaces" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal"><span class="pre">--abinit</span></code>, <code class="docutils literal"><span class="pre">--pwscf</span></code>, or <code class="docutils literal"><span class="pre">--wien2k</span></code> options can be specified
+for corresponding calculators and the crystal structure file format
+should be different from that of the VASP format. An Abinit example is
+as follows:</p>
+<div class="highlight-python"><div class="highlight"><pre>% gruneisen orig plus minus --abinit --dim=&quot;2 2 2&quot; --pa=&quot;0 1/2 1/2 1/2 0 1/2 1/2 1/2 0&quot; --band=&quot;1/2 1/4 3/4 0 0 0 1/2 1/2 1/2 1/2 0.0 1/2&quot; -p -c Si.in
+</pre></div>
+</div>
+</div>
+<div class="section" id="command-options">
+<span id="gruneisen-command-options"></span><h2>Command options<a class="headerlink" href="#command-options" title="Permalink to this headline">¶</a></h2>
+<p>If one of <code class="docutils literal"><span class="pre">--abinit</span></code>, <code class="docutils literal"><span class="pre">--pwscf</span></code>, or <code class="docutils literal"><span class="pre">--wien2k</span></code> options is
+specified, the interface mode is changed to it. The unit conversion
+factor to THz is appropriately selected and its crystal structure file
+format is accepted. If none of them is specified, as the VASP
+interface mode is invoked as the default interface.</p>
+<p>The following command options can be used for all interface
+modes. They work similarly to those for <code class="docutils literal"><span class="pre">phonopy</span></code> script.</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">--dim</span></code></li>
+<li><code class="docutils literal"><span class="pre">--mp</span></code>, <code class="docutils literal"><span class="pre">--mesh</span></code></li>
+<li><code class="docutils literal"><span class="pre">--band</span></code></li>
+<li><code class="docutils literal"><span class="pre">--pa</span></code>, <code class="docutils literal"><span class="pre">--primitive_axis</span></code></li>
+<li><code class="docutils literal"><span class="pre">--readfc</span></code></li>
+<li><code class="docutils literal"><span class="pre">--band_points</span></code></li>
+<li><code class="docutils literal"><span class="pre">--nac</span></code></li>
+<li><code class="docutils literal"><span class="pre">--factor</span></code></li>
+<li><code class="docutils literal"><span class="pre">--nomeshsym</span></code></li>
+<li><code class="docutils literal"><span class="pre">-p</span></code></li>
+<li><code class="docutils literal"><span class="pre">-c</span></code></li>
+<li><code class="docutils literal"><span class="pre">-s</span></code>, <code class="docutils literal"><span class="pre">--save</span></code></li>
+<li><code class="docutils literal"><span class="pre">-o</span></code></li>
+</ul>
+<p>The <code class="docutils literal"><span class="pre">--color</span></code> option (<code class="docutils literal"><span class="pre">RB</span></code>, <code class="docutils literal"><span class="pre">RG</span></code>, <code class="docutils literal"><span class="pre">RGB</span></code>) is used to gradually
+change the marker colors with respect to band indices. For the
+mesh-sampling plot, a few more options to control matplotlib
+parameters are prepared.</p>
+</div>
+<div class="section" id="method-to-calculate-mode-gruneisen-parameters">
+<h2>Method to calculate mode Grüneisen parameters<a class="headerlink" href="#method-to-calculate-mode-gruneisen-parameters" title="Permalink to this headline">¶</a></h2>
+<p>Mode Grüneisen parameter <img class="math" src="_images/math/06a502e7fc92b6330aae76e398e9edde2411c4b9.png" alt="\gamma(\mathbf{q}\nu)"/> at the wave
+vector <img class="math" src="_images/math/dd9f8e4fa6ad795780215243cbd5a5719b772ad3.png" alt="\mathbf{q}"/> and band index <img class="math" src="_images/math/d67fb61cfffca2cc069e083d76cb6220b4ca14c8.png" alt="\nu"/> is given by</p>
+<div class="math">
+<p><img src="_images/math/d611f79cf03a66b53a28a6a8dc7ff6cd459ef222.png" alt="\gamma(\mathbf{q}\nu) =&amp; -\frac{V}{\omega(\mathbf{q}\nu)}\frac{\partial
+\omega(\mathbf{q}\nu)}{\partial V}\\
+=&amp;-\frac{V}{2[\omega(\mathbf{q}\nu)]^2}\left&lt;\mathbf{e}(\mathbf{q}\nu)\biggl|
+\frac{\partial D(\mathbf{q})}
+{\partial V}\biggl|\mathbf{e}(\mathbf{q}\nu)\right&gt;,"/></p>
+</div><p>where <img class="math" src="_images/math/c99df7a209495334da442b1ec998abaabfa320d8.png" alt="V"/> is the volume, <img class="math" src="_images/math/9e6d977146f4037ef24a597ff5a6cb0a6bd40c3b.png" alt="\omega(\mathbf{q}\nu)"/> is the
+phonon frequency, <img class="math" src="_images/math/1d58717d82c7601bb29389fba032abffc102fd71.png" alt="D(\mathbf{q})"/> is the dynamical matrix,
+and <img class="math" src="_images/math/fec4fba29eca65e24d4441035423d76440d3fbf9.png" alt="\mathbf{e}(\mathbf{q}\nu)"/> is the eigenvector. This is
+approximated by the finite difference method:</p>
+<div class="math">
+<p><img src="_images/math/1a712df4477652573a67e31ec147af93f8421952.png" alt="\gamma(\mathbf{q}\nu) \simeq -\frac{V}{2[\omega(\mathbf{q}\nu)]^2}
+\left&lt;\mathbf{e}(\mathbf{q}\nu)\biggl|
+\frac{\Delta D(\mathbf{q})}
+{\Delta V}\biggl|\mathbf{e}(\mathbf{q}\nu)\right&gt;."/></p>
+</div><p>The <code class="docutils literal"><span class="pre">gruneisen</span></code> script requires three phonon calculations
+at corresponding three volume points. One is for eigenvectors at the
+equilibrium volume (<img class="math" src="_images/math/c99df7a209495334da442b1ec998abaabfa320d8.png" alt="V"/>) and the remaining two are for <img class="math" src="_images/math/7966932e1f889d554d3dbe42dff7dafc5b548d83.png" alt="\Delta
+D(\mathbf{q})"/> with slightly larger and smaller volumes than
+<img class="math" src="_images/math/c99df7a209495334da442b1ec998abaabfa320d8.png" alt="V"/>.</p>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+        <br/>
+        
+<div id="sourcelink">
+  <a href="_sources/gruneisen.txt"
+     rel="nofollow">Source</a>
+</div>
+      
+    </p>
+    <p>
+        &copy; Copyright 2009, Atsushi Togo.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.3.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

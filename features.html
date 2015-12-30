@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Features &mdash; Phonopy v.1.9.7</title>
+    
+    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/bootswatch-3.3.4/cosmo/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.9.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
+    <link rel="top" title="Phonopy v.1.9.7" href="index.html" />
+    <link rel="next" title="Input files" href="input-files.html" />
+    <link rel="prev" title="Set up Ubuntu linux on VirtualBox" href="virtualmachine.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body role="document">
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">
+          Phonopy</a>
+        <span class="navbar-text navbar-version pull-left"><b>1.9.7</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="procedure.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">Work flow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Download and install</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="input-files.html">Input files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="output-files.html">Output files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setting-tags.html">Setting tags</a></li>
+<li class="toctree-l1"><a class="reference internal" href="command-options.html">Command options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interfaces.html">Interfaces to calculators and phonopy API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="auxiliary-tools.html">Auxiliary tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="theory.html">Formulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Features</a><ul>
+<li><a class="reference internal" href="#band-structure">Band structure</a></li>
+<li><a class="reference internal" href="#density-of-states">Density of states</a></li>
+<li><a class="reference internal" href="#group-velocity">Group velocity</a></li>
+<li><a class="reference internal" href="#thermal-properties">Thermal properties</a></li>
+<li><a class="reference internal" href="#thermal-properties-at-constant-pressure-and-thermal-expansion">Thermal properties at constant pressure and thermal expansion</a></li>
+<li><a class="reference internal" href="#measure-of-how-far-atoms-move-at-finite-temperature">Measure of how far atoms move at finite temperature</a></li>
+<li><a class="reference internal" href="#calculation-of-mode-gruneisen-parameters">Calculation of mode Grüneisen parameters</a></li>
+<li><a class="reference internal" href="#normal-mode-analysis">Normal mode analysis</a></li>
+<li><a class="reference internal" href="#animation">Animation</a></li>
+<li><a class="reference internal" href="#plot-and-output">Plot and output</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="virtualmachine.html" title="Previous Chapter: Set up Ubuntu linux on VirtualBox"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; Set up Ubuntu...</span>
+    </a>
+  </li>
+  <li>
+    <a href="input-files.html" title="Next Chapter: Input files"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">Input files &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <div class="section" id="features">
+<span id="analyze-phonon"></span><h1>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="band-structure">
+<h2>Band structure<a class="headerlink" href="#band-structure" title="Permalink to this headline">¶</a></h2>
+<p>Phonon band structure is calculated for the specified band paths.
+See <a class="reference internal" href="setting-tags.html#band-structure-related-tags"><span>Band structure tags</span></a>.</p>
+</div>
+<div class="section" id="density-of-states">
+<h2>Density of states<a class="headerlink" href="#density-of-states" title="Permalink to this headline">¶</a></h2>
+<p>Total and partial density of states are calculated based on the
+<em>q</em>-point sampling mesh (<a class="reference internal" href="setting-tags.html#dos-related-tags"><span>DOS</span></a>). Smearing parameter
+is set by <a class="reference internal" href="setting-tags.html#sigma-tag"><span>SIGMA</span></a> tag or <code class="docutils literal"><span class="pre">--sigma</span></code> option.</p>
+</div>
+<div class="section" id="group-velocity">
+<h2>Group velocity<a class="headerlink" href="#group-velocity" title="Permalink to this headline">¶</a></h2>
+<p>Phonon group velocity is calculated from first derivative of dynamical
+matrix. See <a class="reference internal" href="setting-tags.html#group-velocity-tag"><span>Group velocity</span></a>.</p>
+</div>
+<div class="section" id="thermal-properties">
+<h2>Thermal properties<a class="headerlink" href="#thermal-properties" title="Permalink to this headline">¶</a></h2>
+<p>Helmholtz free energy, heat capacity at constant volume, and entropy
+at temperatures are calculated from the phonon frequencies on the
+<em>q</em>-point sampling mesh. See <a class="reference internal" href="setting-tags.html#thermal-properties-tag"><span>Thermal properties related tags</span></a>.</p>
+</div>
+<div class="section" id="thermal-properties-at-constant-pressure-and-thermal-expansion">
+<h2>Thermal properties at constant pressure and thermal expansion<a class="headerlink" href="#thermal-properties-at-constant-pressure-and-thermal-expansion" title="Permalink to this headline">¶</a></h2>
+<p>Gibbs free energy, heat capacity at constant pressure, and thermal
+expansion are calcualted with quasi-harmonic approximation. See
+<a class="reference internal" href="qha.html#phonopy-qha"><span>Quasi harmonic approximation</span></a>.</p>
+</div>
+<div class="section" id="measure-of-how-far-atoms-move-at-finite-temperature">
+<h2>Measure of how far atoms move at finite temperature<a class="headerlink" href="#measure-of-how-far-atoms-move-at-finite-temperature" title="Permalink to this headline">¶</a></h2>
+<p>How far atoms are displaced from their equilibrium positions at
+temperatures is calculated as mean square displacements. See
+<a class="reference internal" href="setting-tags.html#thermal-atomic-displacements-tags"><span>Thermal displacements</span></a>.</p>
+</div>
+<div class="section" id="calculation-of-mode-gruneisen-parameters">
+<h2>Calculation of mode Grüneisen parameters<a class="headerlink" href="#calculation-of-mode-gruneisen-parameters" title="Permalink to this headline">¶</a></h2>
+<p>A script <code class="docutils literal"><span class="pre">gruneisen</span></code> is used for calculating mode Grüneisen
+parameters in band structure style and mesh sampling style. See the
+details at <a class="reference internal" href="gruneisen.html#phonopy-gruneisen"><span>Calculation of mode Grüneisen parameters</span></a>.</p>
+</div>
+<div class="section" id="normal-mode-analysis">
+<h2>Normal mode analysis<a class="headerlink" href="#normal-mode-analysis" title="Permalink to this headline">¶</a></h2>
+<p>Irreducible representations are assigned using polarization vectors of
+phonon normal modes
+(<a class="reference internal" href="setting-tags.html#irreducible-representation-related-tags"><span>Characters of irreducible representations</span></a>). Atomic displacements
+corresponding to the real part of the polarization vectors are
+obtained (<a class="reference internal" href="setting-tags.html#modulation-tag"><span>Create modulated structure</span></a>). This may be
+applied for research of the second-order like structural phase
+transition.</p>
+</div>
+<div class="section" id="animation">
+<h2>Animation<a class="headerlink" href="#animation" title="Permalink to this headline">¶</a></h2>
+<p>Phonon mode is visualized by animation. See <a class="reference internal" href="setting-tags.html#animation-tag"><span>Create animation file</span></a>.</p>
+</div>
+<div class="section" id="plot-and-output">
+<h2>Plot and output<a class="headerlink" href="#plot-and-output" title="Permalink to this headline">¶</a></h2>
+<p>The results of DOS, PDOS, band structure, and thermal properties are
+immediately plotted by specifying <code class="docutils literal"><span class="pre">-p</span></code> option
+(<a class="reference internal" href="command-options.html#graph-option"><span>Graph plotting</span></a>). When <code class="docutils literal"><span class="pre">-s</span></code> option is set together with the
+<code class="docutils literal"><span class="pre">-p</span></code> option, the plot is stored in the PDF file
+(<a class="reference internal" href="command-options.html#graph-save-option"><span>-p -s</span></a>). In addition those results are saved
+in output text files (<a class="reference internal" href="output-files.html#output-files"><span>Output files</span></a>), too.</p>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+        <br/>
+        
+<div id="sourcelink">
+  <a href="_sources/features.txt"
+     rel="nofollow">Source</a>
+</div>
+      
+    </p>
+    <p>
+        &copy; Copyright 2009, Atsushi Togo.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.3.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

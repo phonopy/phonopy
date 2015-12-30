@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Auxiliary tools &mdash; Phonopy v.1.9.7</title>
+    
+    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/bootswatch-3.3.4/cosmo/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.9.7',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
+    <link rel="top" title="Phonopy v.1.9.7" href="index.html" />
+    <link rel="next" title="External tools" href="external-tools.html" />
+    <link rel="prev" title="Using phonopy as a python module" href="phonopy-module.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body role="document">
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">
+          Phonopy</a>
+        <span class="navbar-text navbar-version pull-left"><b>1.9.7</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="procedure.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">Work flow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Download and install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="input-files.html">Input files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="output-files.html">Output files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setting-tags.html">Setting tags</a></li>
+<li class="toctree-l1"><a class="reference internal" href="command-options.html">Command options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interfaces.html">Interfaces to calculators and phonopy API</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Auxiliary tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="theory.html">Formulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Auxiliary tools</a><ul>
+<li><a class="reference internal" href="#bandplot"><code class="docutils literal"><span class="pre">bandplot</span></code></a></li>
+<li><a class="reference internal" href="#pdosplot"><code class="docutils literal"><span class="pre">pdosplot</span></code></a></li>
+<li><a class="reference internal" href="#propplot"><code class="docutils literal"><span class="pre">propplot</span></code></a></li>
+<li><a class="reference internal" href="#dispmanager"><code class="docutils literal"><span class="pre">dispmanager</span></code></a><ul>
+<li><a class="reference internal" href="#a-amplitude-s-o-overwite"><code class="docutils literal"><span class="pre">-a</span></code>, <code class="docutils literal"><span class="pre">--amplitude</span></code>, <code class="docutils literal"><span class="pre">-s</span></code>, <code class="docutils literal"><span class="pre">-o</span></code>, <code class="docutils literal"><span class="pre">--overwite</span></code></a></li>
+<li><a class="reference internal" href="#w"><code class="docutils literal"><span class="pre">-w</span></code></a></li>
+<li><a class="reference internal" href="#compatibility"><code class="docutils literal"><span class="pre">--compatibility</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#outcar-born"><code class="docutils literal"><span class="pre">outcar-born</span></code></a><ul>
+<li><a class="reference internal" href="#pa-primitive-axis"><code class="docutils literal"><span class="pre">--pa</span></code>, <code class="docutils literal"><span class="pre">--primitive_axis</span></code></a></li>
+<li><a class="reference internal" href="#dim"><code class="docutils literal"><span class="pre">--dim</span></code></a></li>
+<li><a class="reference internal" href="#st"><code class="docutils literal"><span class="pre">--st</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="phonopy-module.html" title="Previous Chapter: Using phonopy as a python module"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; Using phonopy...</span>
+    </a>
+  </li>
+  <li>
+    <a href="external-tools.html" title="Next Chapter: External tools"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">External tools &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <div class="section" id="auxiliary-tools">
+<span id="id1"></span><h1>Auxiliary tools<a class="headerlink" href="#auxiliary-tools" title="Permalink to this headline">¶</a></h1>
+<p>A few auxiliary tools are prepared. They are stored in <code class="docutils literal"><span class="pre">bin</span></code>
+directory as well as <code class="docutils literal"><span class="pre">phonopy</span></code>.</p>
+<div class="section" id="bandplot">
+<span id="bandplot-tool"></span><h2><code class="docutils literal"><span class="pre">bandplot</span></code><a class="headerlink" href="#bandplot" title="Permalink to this headline">¶</a></h2>
+<p>Band structure is plotted reading phonopy output in <code class="docutils literal"><span class="pre">band.yaml</span></code>
+format. <code class="docutils literal"><span class="pre">-o</span></code> option with a file name is used to save the plot into a
+file in PDF format. A few more options are prepared and shown by
+<code class="docutils literal"><span class="pre">-h</span></code> option. If you specify more than two yaml files, they are
+plotted together.</p>
+<div class="highlight-python"><div class="highlight"><pre>bandplot band.yaml
+</pre></div>
+</div>
+<p>To obtain a simple text format data:</p>
+<div class="highlight-python"><div class="highlight"><pre>bandplot --gnuplot band.yaml
+</pre></div>
+</div>
+</div>
+<div class="section" id="pdosplot">
+<span id="pdosplot-tool"></span><h2><code class="docutils literal"><span class="pre">pdosplot</span></code><a class="headerlink" href="#pdosplot" title="Permalink to this headline">¶</a></h2>
+<p>Partial density of states (PDOS) are plotted.</p>
+<p><code class="docutils literal"><span class="pre">-i</span></code> option is used as</p>
+<div class="highlight-python"><div class="highlight"><pre>pdosplot -i &#39;1 2 4 5, 3 6&#39; -o &#39;pdos.pdf&#39; partial_dos.dat
+</pre></div>
+</div>
+<p>The indices and comma in &#8216;1 2 3 4, 5 6&#8217; mean as follows. The indices
+are separated into blocks by comma (1 2 4 5 and 3 6). PDOS specified
+by the successive indices separated by space in each block are summed
+up. The PDOS of blocks are drawn simultaneously. Indices usually
+correspond to atoms.  A few more options are prepared and shown by
+<code class="docutils literal"><span class="pre">-h</span></code> option.</p>
+</div>
+<div class="section" id="propplot">
+<span id="propplot-tool"></span><h2><code class="docutils literal"><span class="pre">propplot</span></code><a class="headerlink" href="#propplot" title="Permalink to this headline">¶</a></h2>
+<p>Thermal properties are plotted. Options are prepared and shown by
+<code class="docutils literal"><span class="pre">-h</span></code> option. If you specify more than two yaml files, they are
+plotted together.</p>
+<div class="highlight-python"><div class="highlight"><pre>proplot thermal_properties_A.yaml thermal_properties_B.yaml
+</pre></div>
+</div>
+</div>
+<div class="section" id="dispmanager">
+<span id="dispmanager-tool"></span><h2><code class="docutils literal"><span class="pre">dispmanager</span></code><a class="headerlink" href="#dispmanager" title="Permalink to this headline">¶</a></h2>
+<p>This is used for two purposes.</p>
+<p>The first argument is the displacement file (<code class="docutils literal"><span class="pre">disp.yaml</span></code> type). The
+default file name is <code class="docutils literal"><span class="pre">disp.yaml</span></code>.</p>
+<div class="section" id="a-amplitude-s-o-overwite">
+<h3><code class="docutils literal"><span class="pre">-a</span></code>, <code class="docutils literal"><span class="pre">--amplitude</span></code>, <code class="docutils literal"><span class="pre">-s</span></code>, <code class="docutils literal"><span class="pre">-o</span></code>, <code class="docutils literal"><span class="pre">--overwite</span></code><a class="headerlink" href="#a-amplitude-s-o-overwite" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal"><span class="pre">-o</span></code> is used to specify the output file name of the new displacement
+file and <code class="docutils literal"><span class="pre">--overwrite</span></code> is used to overwrite the displacement file.</p>
+<p><code class="docutils literal"><span class="pre">-a</span></code> is specified with an atom index and a direction of displacement
+as a character string. The first value is the atom index and remaining
+three values are for direction. <code class="docutils literal"><span class="pre">--amplitude</span></code> is used with <code class="docutils literal"><span class="pre">-a</span></code>
+and specify the displacement amplitude. An example is as follows:</p>
+<div class="highlight-python"><div class="highlight"><pre>dispmanager disp.yaml -o disp-new.yaml -a &quot;33 1 1 0&quot; --amplitude 0.05
+</pre></div>
+</div>
+<p><code class="docutils literal"><span class="pre">disp-new.yaml</span></code> is created from <code class="docutils literal"><span class="pre">disp.yaml</span></code> with a new
+displacement of the thirty-third atom (index 33) with the direction of
+(1,1,0) with the amplitude of 0.05. The direction is defined against
+lattice vectors. The amplitude unit is same as the lattice vectors.</p>
+<p><code class="docutils literal"><span class="pre">-s</span></code> is specified with displacement indices. For example when there
+are four dependent displacements and only the first and third
+displacements are needed, <code class="docutils literal"><span class="pre">dispmanager</span></code> is used like</p>
+<div class="highlight-python"><div class="highlight"><pre>dispmanager disp.yaml -o disp-new.yaml -s &quot;1 3&quot;
+</pre></div>
+</div>
+</div>
+<div class="section" id="w">
+<h3><code class="docutils literal"><span class="pre">-w</span></code><a class="headerlink" href="#w" title="Permalink to this headline">¶</a></h3>
+<p>The option is used to create supercells with displacements in
+<code class="docutils literal"><span class="pre">POSCAR</span></code> format from a displacement file. <code class="docutils literal"><span class="pre">DPOSCAR-xxx</span></code> files are
+created.</p>
+</div>
+<div class="section" id="compatibility">
+<h3><code class="docutils literal"><span class="pre">--compatibility</span></code><a class="headerlink" href="#compatibility" title="Permalink to this headline">¶</a></h3>
+<p>The old style displacement file <code class="docutils literal"><span class="pre">DISP</span></code> is compared with
+<code class="docutils literal"><span class="pre">disp.yaml</span></code> whether the directions of the displacements are
+equivalent or not.</p>
+</div>
+</div>
+<div class="section" id="outcar-born">
+<h2><code class="docutils literal"><span class="pre">outcar-born</span></code><a class="headerlink" href="#outcar-born" title="Permalink to this headline">¶</a></h2>
+<p>This script is used to create a <code class="docutils literal"><span class="pre">BORN</span></code> style file from VASP output
+file of <code class="docutils literal"><span class="pre">OUTCAR</span></code>.  The first and second arguments are <code class="docutils literal"><span class="pre">OUTCAR</span></code>
+type file and <code class="docutils literal"><span class="pre">POSCAR</span></code> type file, respectively. If both are omitted,
+<code class="docutils literal"><span class="pre">POSCAR</span></code> and <code class="docutils literal"><span class="pre">OUTCAR</span></code> in current directory are read.</p>
+<div class="section" id="pa-primitive-axis">
+<h3><code class="docutils literal"><span class="pre">--pa</span></code>, <code class="docutils literal"><span class="pre">--primitive_axis</span></code><a class="headerlink" href="#pa-primitive-axis" title="Permalink to this headline">¶</a></h3>
+<p>This is same as <a class="reference internal" href="setting-tags.html#primitive-axis-tag"><span>PRIMITIVE_AXIS</span></a>.</p>
+</div>
+<div class="section" id="dim">
+<h3><code class="docutils literal"><span class="pre">--dim</span></code><a class="headerlink" href="#dim" title="Permalink to this headline">¶</a></h3>
+<p>This is same as <a class="reference internal" href="setting-tags.html#dimension-tag"><span>CELL_FILENAME</span></a>.</p>
+</div>
+<div class="section" id="st">
+<h3><code class="docutils literal"><span class="pre">--st</span></code><a class="headerlink" href="#st" title="Permalink to this headline">¶</a></h3>
+<p><strong>Experimental</strong></p>
+<p>Dielectric constant and Born effective charge tensors are symmetrized.</p>
+</div>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+        <br/>
+        
+<div id="sourcelink">
+  <a href="_sources/auxiliary-tools.txt"
+     rel="nofollow">Source</a>
+</div>
+      
+    </p>
+    <p>
+        &copy; Copyright 2009, Atsushi Togo.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.3.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>
