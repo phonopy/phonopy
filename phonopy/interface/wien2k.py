@@ -42,36 +42,38 @@ from phonopy.harmonic.force_constants import similarity_transformation
 def parse_set_of_forces(displacements,
                         forces_filenames,
                         supercell,
+                        disp_keyword='first_atoms',
                         is_distribute=True,
                         symprec=1e-5):
     natom = supercell.get_number_of_atoms()
     lattice = supercell.get_cell()
+    force_sets = []
 
     for wien2k_filename, disp in zip(forces_filenames,
-                                     displacements['first_atoms']):
+                                     displacements[disp_keyword]):
         # Parse wien2k case.scf file
         wien2k_forces = get_forces_wien2k(wien2k_filename, lattice)
         if is_distribute:
-            force_set = distribute_forces(
+            forces = distribute_forces(
                 supercell,
                 [disp['number'], disp['displacement']],
                 wien2k_forces,
                 wien2k_filename,
                 symprec)
-            if not force_set:
-                return False
+            if not forces:
+                return []
         else:
             if not (natom == len(wien2k_forces)):
                 print "%s contains only forces of %d atoms" % (
                     wien2k_filename, len(wien2k_forces))
-                return False
+                return []
             else:
-                force_set = wien2k_forces
+                forces = wien2k_forces
 
-        drift_force = get_drift_forces(force_set, filename=wien2k_filename)
-        disp['forces'] = np.array(force_set) - drift_force
+        drift_force = get_drift_forces(forces, filename=wien2k_filename)
+        force_sets.append(np.array(forces) - drift_force)
                 
-    return True
+    return force_sets
 
 def create_FORCE_SETS(forces_filenames,
                       displacements,

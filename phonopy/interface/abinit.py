@@ -41,21 +41,21 @@ from phonopy.units import Bohr
 from phonopy.cui.settings import fracval
 from phonopy.structure.atoms import Atoms
 
-def parse_set_of_forces(displacements,
-                        forces_filenames,
-                        num_atom):
+def parse_set_of_forces(num_disps,
+                        num_atoms,
+                        forces_filenames):
     hook = 'cartesian forces (eV/Angstrom)'
-    for abinit_filename, disp in zip(forces_filenames,
-                                     displacements['first_atoms']):
-        f = open(abinit_filename)
-        abinit_forces = collect_forces(f, num_atom, hook, [1, 2, 3])
+    force_sets = []
+    for i in range(num_disps):
+        f = open(forces_filenames[i])
+        abinit_forces = collect_forces(f, num_atoms, hook, [1, 2, 3])
         if not abinit_forces:
-            return False
+            return []
 
         drift_force = get_drift_forces(abinit_forces)
-        disp['forces'] = np.array(abinit_forces) - drift_force
+        force_sets.append(np.array(abinit_forces) - drift_force)
 
-    return True
+    return force_sets
 
 def read_abinit(filename):
     abinit_in = AbinitIn(open(filename).readlines())

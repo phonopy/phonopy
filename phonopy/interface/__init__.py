@@ -127,10 +127,13 @@ def create_FORCE_SETS(interface_mode,
               "to number of displacements in disp.yaml.")
         return 1
 
+    num_atoms = displacements['natom']
+
     if interface_mode == 'vasp':
         from phonopy.interface.vasp import parse_set_of_forces
-        is_parsed = parse_set_of_forces(
-            displacements,
+        force_sets = parse_set_of_forces(
+            num_disp_files,
+            num_atoms,
             force_filenames,
             is_zero_point=options.force_sets_zero_mode)
 
@@ -140,10 +143,9 @@ def create_FORCE_SETS(interface_mode,
         print("****    Abinit FORCE_SETS support is experimental.    ****")
         print("****        Your feedback would be appreciated.       ****")
         print("**********************************************************")
-        is_parsed = parse_set_of_forces(
-            displacements,
-            force_filenames,
-            supercell.get_number_of_atoms())
+        force_sets = parse_set_of_forces(num_disp_files,
+                                         num_atoms,
+                                         force_filenames)
         
     if interface_mode == 'pwscf':
         from phonopy.interface.pwscf import parse_set_of_forces
@@ -151,34 +153,19 @@ def create_FORCE_SETS(interface_mode,
         print("****     Pwscf FORCE_SETS support is experimental.    ****")
         print("****        Your feedback would be appreciated.       ****")
         print("**********************************************************")
-        is_parsed = parse_set_of_forces(
-            displacements,
-            force_filenames,
-            supercell.get_number_of_atoms())
+        force_sets = parse_set_of_forces(num_disp_files,
+                                         num_atoms,
+                                         force_filenames)
         
-    if interface_mode == 'wien2k':
-        from phonopy.interface.wien2k import parse_set_of_forces
-        print("**********************************************************")
-        print("****    Wien2k FORCE_SETS support is experimental.    ****")
-        print("****        Your feedback would be appreciated.       ****")
-        print("**********************************************************")
-        is_parsed = parse_set_of_forces(
-            displacements,
-            force_filenames,
-            supercell,
-            is_distribute=(not options.is_wien2k_p1),
-            symprec=options.symprec)
-
     if interface_mode == 'elk':
         from phonopy.interface.elk import parse_set_of_forces
         print("**********************************************************")
         print("****      Elk FORCE_SETS support is experimental.     ****")
         print("****        Your feedback would be appreciated.       ****")
         print("**********************************************************")
-        is_parsed = parse_set_of_forces(
-            displacements,
-            force_filenames,
-            supercell.get_number_of_atoms())
+        force_sets = parse_set_of_forces(num_disp_files,
+                                         num_atoms,
+                                         force_filenames)
 
     if interface_mode == 'siesta':
         from phonopy.interface.siesta import parse_set_of_forces
@@ -186,16 +173,31 @@ def create_FORCE_SETS(interface_mode,
         print("****   Siesta FORCE_SETS support is experimental.     ****")
         print("****        Your feedback would be appreciated.       ****")
         print("**********************************************************")
-        is_parsed = parse_set_of_forces(
+        force_sets = parse_set_of_forces(num_disp_files,
+                                         num_atoms,
+                                         force_filenames)
+
+    if interface_mode == 'wien2k':
+        from phonopy.interface.wien2k import parse_set_of_forces
+        print("**********************************************************")
+        print("****    Wien2k FORCE_SETS support is experimental.    ****")
+        print("****        Your feedback would be appreciated.       ****")
+        print("**********************************************************")
+        force_sets = parse_set_of_forces(
             displacements,
             force_filenames,
-            supercell.get_number_of_atoms())
+            supercell,
+            disp_keyword='first_atoms',
+            is_distribute=(not options.is_wien2k_p1),
+            symprec=options.symprec)
 
-    if is_parsed:
+    if force_sets:
+        for forces, disp in zip(force_sets, displacements['first_atoms']):
+            disp['forces'] = forces
         write_FORCE_SETS(displacements, filename='FORCE_SETS')
         
     if log_level > 0:
-        if is_parsed:
+        if force_sets:
             print("FORCE_SETS has been created.")
         else:
             print("FORCE_SETS could not be created.")
