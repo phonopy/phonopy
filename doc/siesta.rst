@@ -43,7 +43,7 @@ The procedure of a Siesta-phonopy calculation is the following:
 
    ::
    
-     % phonopy --siesta -f disp-001/si.FA ...
+     % phonopy --siesta -f disp-001/Si.FA ...
 
    Here ``*.FA`` files are the forces files created by Siesta.
    To run this command, ``disp.yaml`` has to be
