@@ -27,7 +27,7 @@ release toward python 3 support.
 
 **Phono3py** for phonon-phonon interaction calculations has been 
 released as an open beta
-version. See the document at http://phonopy.sourceforge.net/phono3py/
+version. See the document at http://atztogo.github.io/phono3py/
 .
 
 **Phonon database**: A collection of phonon and mode-Gruneisen
@@ -101,13 +101,6 @@ Documentation
    citation
    reference
    changelog
-
-
-- `Manual in PDF <https://sourceforge.net/projects/phonopy/files/phonopy%20documentation/phonopy-manual.pdf/download>`_
-
-- `Presentation: Introduction to phonopy <https://sourceforge.net/projects/phonopy/files/phonopy%20documentation/phonopy-workshop.pdf/download>`_
-
-- `Presentation: Introduction to phonons <http://sourceforge.net/projects/phonopy/files/phonopy%20documentation/introduction-phonon-calc.pdf/download>`_
 
 .. _mailinglist:
 
