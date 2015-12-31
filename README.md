@@ -2,4 +2,4 @@ phonopy
 =======
 
 Phonon code
-For the details, see http://phonopy.sourceforge.net/
+For the details, see http://atztogo.github.io/phonopy/
