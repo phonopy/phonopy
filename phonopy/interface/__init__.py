@@ -107,82 +107,30 @@ def get_default_cell_filename(interface_mode, yaml_mode):
 def create_FORCE_SETS(interface_mode,
                       force_filenames,
                       options,
-                      log_level):
-    if interface_mode == 'vasp':
-        displacements = parse_disp_yaml(filename='disp.yaml')
-    if (interface_mode == 'wien2k' or
+                      log_level=0):
+    if (interface_mode == 'vasp' or
         interface_mode == 'abinit' or
         interface_mode == 'elk' or
         interface_mode == 'pwscf' or
         interface_mode == 'siesta'):
+        displacements = parse_disp_yaml(filename='disp.yaml')
+        num_atoms = displacements['natom']
+        if len(displacements['first_atoms']) != len(force_filenames):
+            print('')
+            print("Number of files to be read don't match "
+                  "to number of displacements in disp.yaml.")
+            return 1
+        force_sets = get_force_sets(interface_mode, num_atoms, force_filenames)
+
+    elif interface_mode == 'wien2k':
         displacements, supercell = parse_disp_yaml(filename='disp.yaml',
                                                    return_cell=True)
-            
-    num_disp_files = len(force_filenames)
-    if options.force_sets_zero_mode:
-        num_disp_files -= 1
-    if len(displacements['first_atoms']) != num_disp_files:
-        print('')
-        print("Number of files to be read don't match "
-              "to number of displacements in disp.yaml.")
-        return 1
-
-    num_atoms = displacements['natom']
-
-    if interface_mode == 'vasp':
-        from phonopy.interface.vasp import parse_set_of_forces
-        force_sets = parse_set_of_forces(
-            num_disp_files,
-            num_atoms,
-            force_filenames,
-            is_zero_point=options.force_sets_zero_mode)
-
-    if interface_mode == 'abinit':
-        from phonopy.interface.abinit import parse_set_of_forces
-        print("**********************************************************")
-        print("****    Abinit FORCE_SETS support is experimental.    ****")
-        print("****        Your feedback would be appreciated.       ****")
-        print("**********************************************************")
-        force_sets = parse_set_of_forces(num_disp_files,
-                                         num_atoms,
-                                         force_filenames)
-        
-    if interface_mode == 'pwscf':
-        from phonopy.interface.pwscf import parse_set_of_forces
-        print("**********************************************************")
-        print("****     Pwscf FORCE_SETS support is experimental.    ****")
-        print("****        Your feedback would be appreciated.       ****")
-        print("**********************************************************")
-        force_sets = parse_set_of_forces(num_disp_files,
-                                         num_atoms,
-                                         force_filenames)
-        
-    if interface_mode == 'elk':
-        from phonopy.interface.elk import parse_set_of_forces
-        print("**********************************************************")
-        print("****      Elk FORCE_SETS support is experimental.     ****")
-        print("****        Your feedback would be appreciated.       ****")
-        print("**********************************************************")
-        force_sets = parse_set_of_forces(num_disp_files,
-                                         num_atoms,
-                                         force_filenames)
-
-    if interface_mode == 'siesta':
-        from phonopy.interface.siesta import parse_set_of_forces
-        print("**********************************************************")
-        print("****   Siesta FORCE_SETS support is experimental.     ****")
-        print("****        Your feedback would be appreciated.       ****")
-        print("**********************************************************")
-        force_sets = parse_set_of_forces(num_disp_files,
-                                         num_atoms,
-                                         force_filenames)
-
-    if interface_mode == 'wien2k':
+        if len(displacements['first_atoms']) != len(force_filenames):
+            print('')
+            print("Number of files to be read don't match "
+                  "to number of displacements in disp.yaml.")
+            return 1
         from phonopy.interface.wien2k import parse_set_of_forces
-        print("**********************************************************")
-        print("****    Wien2k FORCE_SETS support is experimental.    ****")
-        print("****        Your feedback would be appreciated.       ****")
-        print("**********************************************************")
         force_sets = parse_set_of_forces(
             displacements,
             force_filenames,
@@ -190,6 +138,8 @@ def create_FORCE_SETS(interface_mode,
             disp_keyword='first_atoms',
             is_distribute=(not options.is_wien2k_p1),
             symprec=options.symprec)
+    else:
+        force_sets = []
 
     if force_sets:
         for forces, disp in zip(force_sets, displacements['first_atoms']):
@@ -204,3 +154,21 @@ def create_FORCE_SETS(interface_mode,
 
     return 0
             
+def get_force_sets(interface_mode, num_atoms, force_filenames):
+    if interface_mode == 'vasp':
+        from phonopy.interface.vasp import parse_set_of_forces
+        force_sets = parse_set_of_forces(num_atoms, force_filenames)
+    elif interface_mode == 'abinit':
+        from phonopy.interface.abinit import parse_set_of_forces
+        force_sets = parse_set_of_forces(num_atoms, force_filenames)
+    elif interface_mode == 'pwscf':
+        from phonopy.interface.pwscf import parse_set_of_forces
+        force_sets = parse_set_of_forces(num_atoms, force_filenames)
+    elif interface_mode == 'elk':
+        from phonopy.interface.elk import parse_set_of_forces
+        force_sets = parse_set_of_forces(num_atoms, force_filenames)
+    elif interface_mode == 'siesta':
+        from phonopy.interface.siesta import parse_set_of_forces
+        force_sets = parse_set_of_forces(num_atoms, force_filenames)
+
+    return force_sets

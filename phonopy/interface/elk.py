@@ -40,13 +40,11 @@ from phonopy.interface.vasp import get_scaled_positions_lines, sort_positions_by
 from phonopy.units import Bohr
 from phonopy.structure.atoms import Atoms, symbol_map
 
-def parse_set_of_forces(num_disps,
-                        num_atoms,
-                        forces_filenames):
+def parse_set_of_forces(num_atoms, forces_filenames):
     hook = 'Forces :'
     force_sets = []
-    for i in range(num_disps):
-        f = open(forces_filenames[i])
+    for filename in forces_filenames:
+        f = open(filename)
         elk_forces = collect_forces(f,
                                     num_atoms,
                                     hook,
