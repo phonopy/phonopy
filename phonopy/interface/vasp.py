@@ -44,8 +44,7 @@ from phonopy.structure.symmetry import Symmetry
 from phonopy.harmonic.force_constants import similarity_transformation
 from phonopy.file_IO import write_FORCE_SETS, write_force_constants_to_hdf5, write_FORCE_CONSTANTS
 
-def parse_set_of_forces(num_disps,
-                        num_atoms,
+def parse_set_of_forces(num_atoms,
                         forces_filenames,
                         is_zero_point=False,
                         verbose=True):
@@ -74,13 +73,13 @@ def parse_set_of_forces(num_disps,
     else:
         force_files = forces_filenames
 
-    for i in range(num_disps):
-        if _is_version528(force_files[i]):
+    for filename in force_files:
+        if _is_version528(filename):
             force_sets.append(_get_forces_vasprun_xml(_iterparse(
-                VasprunWrapper(force_files[i]), tag='varray')))
+                VasprunWrapper(filename), tag='varray')))
         else:
             force_sets.append(_get_forces_vasprun_xml(
-                _iterparse(force_files[i], tag='varray')))
+                _iterparse(filename, tag='varray')))
 
         if is_zero_point:
             force_sets[-1] -= zero_forces
@@ -89,7 +88,7 @@ def parse_set_of_forces(num_disps,
             sys.stdout.write("%d " % (count + 1))
         count += 1
         
-        if not _check_forces(force_sets[-1], num_atoms, force_files[i]):
+        if not _check_forces(force_sets[-1], num_atoms, filename):
             is_parsed = False
 
     if verbose:
