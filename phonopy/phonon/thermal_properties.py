@@ -48,6 +48,11 @@ def mode_S(temp, freqs):
     return (1 / (2 * temp) * freqs * np.cosh(val) / np.sinh(val) -
             Kb * np.log(2 * np.sinh(val)))
 
+def mode_ZPE(temp, freqs):
+    return freqs / 2
+
+def mode_zero(temp, freqs):
+    return 0
 
 class ThermalPropertiesBase:
     def __init__(self,
@@ -91,35 +96,41 @@ class ThermalPropertiesBase:
             self._weights * (self._frequencies > 0).sum(axis=1))
 
     def get_free_energy(self, t):
-        free_energy = self._calculate_thermal_property(mode_F, t)
+        if t > 0:
+            free_energy = self._calculate_thermal_property(mode_F, t)
+        else:
+            free_energy = self._calculate_thermal_property(mode_ZPE, None)
         return free_energy / np.sum(self._weights) * EvTokJmol
 
     def get_heat_capacity_v(self, t):
-        cv = self._calculate_thermal_property(mode_cv, t)
+        if t > 0:
+            cv = self._calculate_thermal_property(mode_cv, t)
+        else:
+            cv = self._calculate_thermal_property(mode_zero, None)
         return cv / np.sum(self._weights) * EvTokJmol
 
     def get_entropy(self, t):
-        entropy = self._calculate_thermal_property(mode_S, t)
+        if t > 0:
+            entropy = self._calculate_thermal_property(mode_S, t)
+        else:
+            entropy = self._calculate_thermal_property(mode_zero, None)
         return entropy / np.sum(self._weights) * EvTokJmol
 
     def _calculate_thermal_property(self, func, t):
         if not self._is_projection:
             t_property = 0.0
-            if t > 0:
-                for freqs, w in zip(self._frequencies, self._weights):
-                    t_property += np.sum(
-                        func(t, np.extract(freqs > 0, freqs))) * w
-    
+            for freqs, w in zip(self._frequencies, self._weights):
+                t_property += np.sum(
+                    func(t, np.extract(freqs > 0, freqs))) * w
             return t_property
         else:
             t_property = np.zeros(len(self._frequencies[0]), dtype='double')
-            if t > 0:
-                for freqs, eigvecs2, w in zip(self._frequencies,
-                                              np.abs(self._eigenvectors) ** 2,
-                                              self._weights):
-                    for f, fracs in zip(freqs, eigvecs2.T):
-                        if f > 0:
-                            t_property += func(t, f) * w * fracs
+            for freqs, eigvecs2, w in zip(self._frequencies,
+                                          np.abs(self._eigenvectors) ** 2,
+                                          self._weights):
+                for f, fracs in zip(freqs, eigvecs2.T):
+                    if f > 0:
+                        t_property += func(t, f) * w * fracs
     
             return t_property
 
@@ -269,34 +280,35 @@ class ThermalProperties(ThermalPropertiesBase):
         temperatures, fe, entropy, cv = self._projected_thermal_properties
         for i, t in enumerate(temperatures):
             lines.append("- temperature:   %13.7f" % t)
-            lines.append(
-                ("  free_energy:   [ " + "%13.7f, " *
-                 (len(fe[i]) - 1) + "%13.7f ]") % tuple(fe[i]))
-            lines.append(" # %13.7f" % np.sum(fe[i]))
-            lines.append(
-                ("  entropy:       [ " + "%13.7f, " *
-                 (len(entropy[i]) - 1) + "%13.7f ]") % tuple(entropy[i]))
-            lines.append(" # %13.7f" % np.sum(entropy[i]))
+            line = "  free_energy:   [ "
+            line += ", ".join(["%13.7f" % x for x in fe[i]])
+            line += " ] # %13.7f" % np.sum(fe[i])
+            lines.append(line)
+            line = "  entropy:       [ "
+            line += ", ".join(["%13.7f" % x for x in entropy[i]])
+            line += " ] # %13.7f" % np.sum(entropy[i])
+            lines.append(line)
             # Sometimes 'nan' of C_V is returned at low temperature.
-            lines.append("  heat_capacity: [ ")
+            line = "  heat_capacity: [ "
             sum_cv = 0.0
             for j, cv_i in enumerate(cv[i]):
                 if np.isnan(cv_i):
-                    lines.append("%13.7f" % 0)
+                    line += "%13.7f" % 0
                 else:
                     sum_cv += cv_i
-                    lines.append("%13.7f" % cv_i)
+                    line += "%13.7f" % cv_i
                 if j < len(cv[i]) - 1:
-                    lines.append(", ")
+                    line += ", "
                 else:
-                    lines.append(" ]")
-            lines.append(" # %13.7f" % sum_cv)
+                    line += " ]"
+            line += " # %13.7f" % sum_cv
+            lines.append(line)
             energy = fe[i] + entropy[i] * t / 1000
-            lines.append(
-                ("  energy:        [ " + "%13.7f, " *
-                 (len(energy) - 1) + "%13.7f ]") % tuple(energy))
-            lines.append(" # %13.7f" % np.sum(energy))
-            lines.append("")
+            line = "  energy:        [ "
+            line += ", ".join(["%13.7f" % x for x in energy])
+            line += " ] # %13.7f" % np.sum(energy)
+            lines.append(line)
+        return lines
             
     def _get_c_thermal_properties(self, t):
         import phonopy._phonopy as phonoc
