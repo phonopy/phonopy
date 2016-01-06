@@ -1,6 +1,6 @@
 package:
-  name: phonopy-dev
-  version: !!str 1.9.4.dev
+  name: phonopy
+  version: {{ environ.get('GIT_DESCRIBE_TAG', '') }}
 
 source:
   git_url: https://github.com/jochym/phonopy.git
@@ -18,7 +18,7 @@ build:
 
   # If this is a new build for the same version, increment the build
   # number. If you do not include this key, it defaults to 0.
-  number: 2
+  number: {{ environ.get('GIT_DESCRIBE_NUMBER', 0) }}
 
 requirements:
   build:
