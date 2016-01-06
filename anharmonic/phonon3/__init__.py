@@ -15,7 +15,6 @@ from anharmonic.phonon3.interaction import Interaction
 from anharmonic.phonon3.conductivity_RTA import get_thermal_conductivity_RTA
 from anharmonic.phonon3.conductivity_LBTE import get_thermal_conductivity_LBTE
 from anharmonic.phonon3.joint_dos import JointDos
-from anharmonic.phonon3.gruneisen import Gruneisen
 from anharmonic.phonon3.displacement_fc3 import get_third_order_displacements, \
      direction_to_displacement
 from anharmonic.file_IO import write_joint_dos
@@ -232,8 +231,8 @@ class Phono3py:
         # Set fc3 elements zero beyond cutoff_distance
         if cutoff_distance:
             if self._log_level:
-                print ("Cutting-off fc3 by zero (cut-off distance: %f)" %
-                       cutoff_distance)
+                print("Cutting-off fc3 by zero (cut-off distance: %f)" %
+                      cutoff_distance)
             self.cutoff_fc3_by_zero(cutoff_distance)
 
         # Set fc2
@@ -482,8 +481,8 @@ class Phono3py:
                                             self._is_symmetry)
         if (len(self._symmetry.get_pointgroup_operations()) !=
             len(self._primitive_symmetry.get_pointgroup_operations())):
-            print ("Warning: point group symmetries of supercell and primitive"
-                   "cell are different.")
+            print("Warning: point group symmetries of supercell and primitive"
+                  "cell are different.")
         
     def _search_phonon_supercell_symmetry(self):
         if self._phonon_supercell_matrix is None:
@@ -535,9 +534,9 @@ class Phono3py:
             if self._primitive is not None:
                 if (self._primitive.get_atomic_numbers() !=
                     self._phonon_primitive.get_atomic_numbers()).any():
-                    print "********************* Warning *********************"
-                    print " Primitive cells for fc2 and fc3 can be different."
-                    print "********************* Warning *********************"
+                    print("********************* Warning *********************")
+                    print(" Primitive cells for fc2 and fc3 can be different.")
+                    print("********************* Warning *********************")
 
 
     def _build_phonon_supercells_with_displacements(self,
@@ -649,29 +648,29 @@ class Phono3pyIsotope:
         for gp in grid_points:
             self._iso.set_grid_point(gp)
 
-            print "--------------- Isotope scattering ---------------"
-            print "Grid point: %d" % gp
+            print("--------------- Isotope scattering ---------------")
+            print("Grid point: %d" % gp)
             adrs = self._iso.get_grid_address()[gp]
             q = adrs.astype('double') / self._mesh
-            print "q-point:", q
+            print("q-point: %s" % q)
             
             if self._sigmas:
                 for sigma in self._sigmas:
                     if sigma is None:
-                        print "Tetrahedron method"
+                        print("Tetrahedron method")
                     else:
-                        print "Sigma:", sigma
+                        print("Sigma: %s" % sigma)
                     self._iso.set_sigma(sigma)
                     self._iso.run()
 
                     frequencies = self._iso.get_phonons()[0]
-                    print
-                    print "Phonon-isotope scattering rate in THz (1/4pi-tau)"
-                    print " Frequency     Rate"
+                    print('')
+                    print("Phonon-isotope scattering rate in THz (1/4pi-tau)")
+                    print(" Frequency     Rate")
                     for g, f in zip(self._iso.get_gamma(), frequencies[gp]):
-                        print "%8.3f     %5.3e" % (f, g)
+                        print("%8.3f     %5.3e" % (f, g))
             else:
-                print "sigma or tetrahedron method has to be set."
+                print("sigma or tetrahedron method has to be set.")
 
                     
     def set_dynamical_matrix(self,
@@ -755,28 +754,29 @@ class Phono3pyJointDos:
             
             if self._log_level:
                 weights = self._jdos.get_triplets_at_q()[1]
-                print "--------------------------------- Joint DOS ---------------------------------"
-                print "Grid point: %d" % gp
-                print "Number of ir-triplets:",
-                print "%d / %d" % (len(weights), weights.sum())
+                print("--------------------------------- Joint DOS "
+                      "---------------------------------")
+                print("Grid point: %d" % gp)
+                print("Number of ir-triplets: "
+                      "%d / %d" % (len(weights), weights.sum()))
                 adrs = self._jdos.get_grid_address()[gp]
                 q = adrs.astype('double') / self._mesh
-                print "q-point:", q
-                print "Phonon frequency:"
+                print("q-point: %s" % q)
+                print("Phonon frequency:")
                 frequencies = self._jdos.get_phonons()[0]
-                print frequencies[gp]
+                print("%s" % frequencies[gp])
             
             if self._sigmas:
                 for sigma in self._sigmas:
                     if sigma is None:
-                        print "Tetrahedron method"
+                        print("Tetrahedron method")
                     else:
-                        print "Sigma:", sigma
+                        print("Sigma: %s" % sigma)
                     self._jdos.set_sigma(sigma)
                     self._jdos.run()
                     self._write(gp, sigma=sigma)
             else:
-                print "sigma or tetrahedron method has to be set."
+                print("sigma or tetrahedron method has to be set.")
 
     def _write(self, gp, sigma=None):
         write_joint_dos(gp,
@@ -787,22 +787,3 @@ class Phono3pyJointDos:
                         temperatures=self._temperatures,
                         filename=self._filename,
                         is_nosym=self._is_nosym)
-        
-def get_gruneisen_parameters(fc2,
-                             fc3,
-                             supercell,
-                             primitive,
-                             nac_params=None,
-                             nac_q_direction=None,
-                             ion_clamped=False,
-                             factor=None,
-                             symprec=1e-5):
-    return Gruneisen(fc2,
-                     fc3,
-                     supercell,
-                     primitive,
-                     nac_params=nac_params,
-                     nac_q_direction=nac_q_direction,
-                     ion_clamped=ion_clamped,
-                     factor=factor,
-                     symprec=symprec)

@@ -32,10 +32,10 @@ def get_thermal_conductivity_LBTE(
         log_level=0):
 
     if log_level:
-        print "-------------------- Lattice thermal conducitivity (LBTE) --------------------"
-        print "Cutoff frequency of pseudo inversion of collision matrix:",
-        print pinv_cutoff
-        
+        print("-------------------- Lattice thermal conducitivity (LBTE) "
+              "--------------------")
+        print("Cutoff frequency of pseudo inversion of collision matrix: %s" %
+              pinv_cutoff)
 
     if read_collision:
         temps = None
@@ -63,7 +63,7 @@ def get_thermal_conductivity_LBTE(
             indices=read_collision,
             filename=input_filename)
         if not read_from:
-            print "Reading collisions failed."
+            print("Reading collisions failed.")
             return False
 
     for i in lbte:
@@ -177,7 +177,7 @@ def _set_collision_from_file(lbte,
                     sigma=sigma,
                     filename=filename)
                 if collision_gp is False:
-                    print "Gamma at grid point %d doesn't exist." % gp
+                    print("Gamma at grid point %d doesn't exist." % gp)
                     return False
                 else:
                     (collision_matrix_at_gp,
@@ -324,7 +324,7 @@ class Conductivity_LBTE(Conductivity):
 
     def set_kappa_at_sigmas(self):
         if len(self._grid_points) != len(self._ir_grid_points):
-            print "Collision matrix is not well created."
+            print("Collision matrix is not well created.")
             import sys
             sys.exit(1)
         else:
@@ -351,9 +351,9 @@ class Conductivity_LBTE(Conductivity):
             self._collision.set_grid_point(grid_point)
             
             if self._log_level:
-                print "Number of triplets:",
-                print len(self._pp.get_triplets_at_q()[0])
-                print "Calculating interaction..."
+                print("Number of triplets: %s" %
+                      len(self._pp.get_triplets_at_q()[0]))
+                print("Calculating interaction...")
                 
             self._collision.run_interaction()
             self._set_collision_matrix_at_sigmas(i)
@@ -447,11 +447,12 @@ class Conductivity_LBTE(Conductivity):
     def _set_collision_matrix_at_sigmas(self, i):
         for j, sigma in enumerate(self._sigmas):
             if self._log_level:
-                print "Calculating collision matrix with",
+                text = "Calculating collision matrix with "
                 if sigma is None:
-                    print "tetrahedron method"
+                    text += "tetrahedron method"
                 else:
-                    print "sigma=%s" % sigma
+                    text += "sigma=%s" % sigma
+                print(text)
             self._collision.set_sigma(sigma)
             self._collision.set_integration_weights()
             for k, t in enumerate(self._temperatures):
@@ -463,7 +464,7 @@ class Conductivity_LBTE(Conductivity):
 
     def _set_kappa_at_sigmas(self):
         if self._log_level:
-            print "Symmetrizing collision matrix..."
+            print("Symmetrizing collision matrix...")
             sys.stdout.flush()
             
         if self._is_reducible_collision_matrix:
@@ -482,13 +483,14 @@ class Conductivity_LBTE(Conductivity):
             
         for j, sigma in enumerate(self._sigmas):
             if self._log_level:
-                print "----------- Thermal conductivity (W/m-k)",
+                text = "----------- Thermal conductivity (W/m-k) "
                 if sigma:
-                    print "for sigma=%s -----------" % sigma
+                    text += "for sigma=%s -----------" % sigma
                 else:
-                    print "with tetrahedron method -----------"
-                print ("#%6s     " + " %-9s" * 6) % ("T(K)", "xx", "yy", "zz",
-                                                    "yz", "xz", "xy")
+                    text += "with tetrahedron method -----------"
+                print text
+                print(("#%6s       " + " %-10s" * 6) %
+                      ("T(K)", "xx", "yy", "zz", "yz", "xz", "xy"))
             for k, t in enumerate(self._temperatures):
                 if t > 0:
                     if self._is_reducible_collision_matrix:
@@ -499,18 +501,18 @@ class Conductivity_LBTE(Conductivity):
                     self._set_kappa(j, k, X)
 
                 if self._log_level:
-                    print ("%7.1f" + " %9.3f" * 6) % (
-                        (t,) + tuple(self._kappa[j, k]))
+                    print(("%7.1f " + " %10.3f" * 6) % 
+                          ((t,) + tuple(self._kappa[j, k])))
 
         if self._log_level:
-            print 
+            print('')
 
     def _combine_collisions(self):
         num_band = self._primitive.get_number_of_atoms() * 3
         for j, k in list(np.ndindex((len(self._sigmas),
                                      len(self._temperatures)))):
             for i, ir_gp in enumerate(self._ir_grid_points):
-                multi = ((self._rot_grid_points == ir_gp).sum() /
+                multi = ((self._rot_grid_points == ir_gp).sum() //
                          (self._rot_BZ_grid_points == ir_gp).sum())
                 for r, r_BZ_gp in zip(self._rotations_cartesian,
                                       self._rot_BZ_grid_points[i]):
@@ -670,8 +672,8 @@ class Conductivity_LBTE(Conductivity):
             
         sinh = np.where(freqs > self._cutoff_frequency,
                         np.sinh(freqs * THzToEv / (2 * Kb * t)),
-                        -1)
-        inv_sinh = np.where(sinh > 0, 1 / sinh, 0)
+                        -1.0)
+        inv_sinh = np.where(sinh > 0, 1.0 / sinh, 0)
         freqs_sinh = freqs * THzToEv * inv_sinh / (4 * Kb * t ** 2)
                 
         for i, f in enumerate(freqs_sinh):
@@ -787,14 +789,15 @@ class Conductivity_LBTE(Conductivity):
         gv = self._gv[i]
         ave_pp = self._averaged_pp_interaction[i]
 
-        print "Frequency     group velocity (x, y, z)     |gv|       Pqj",
+        text = "Frequency     group velocity (x, y, z)     |gv|       Pqj"
         if self._gv_delta_q is None:
-            print
+            pass
         else:
-            print " (dq=%3.1e)" % self._gv_delta_q
+            text += "  (dq=%3.1e)" % self._gv_delta_q
+        print text
         for f, v, pp in zip(frequencies, gv, ave_pp):
-            print "%8.3f   (%8.3f %8.3f %8.3f) %8.3f %11.3e" % (
-                f, v[0], v[1], v[2], np.linalg.norm(v), pp)
+            print("%8.3f   (%8.3f %8.3f %8.3f) %8.3f %11.3e" %
+                  (f, v[0], v[1], v[2], np.linalg.norm(v), pp))
 
         sys.stdout.flush()
 

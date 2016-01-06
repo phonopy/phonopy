@@ -36,7 +36,7 @@ def get_fc3(supercell,
                              verbose)
     
     if verbose:
-        print "Expanding fc3"
+        print("Expanding fc3")
         
     first_disp_atoms = np.unique(
         [x['number'] for x in disp_dataset['first_atoms']])
@@ -58,8 +58,8 @@ def get_fc3(supercell,
     
     if 'cutoff_distance' in disp_dataset:
         if verbose:
-            print ("Cutting-off fc3 (cut-off distance: %f)" %
-                   disp_dataset['cutoff_distance'])
+            print("Cutting-off fc3 (cut-off distance: %f)" %
+                  disp_dataset['cutoff_distance'])
         cutoff_fc3(fc3,
                    supercell,
                    disp_dataset,
@@ -67,22 +67,22 @@ def get_fc3(supercell,
                    verbose=verbose)
         if translational_symmetry_type:
             if verbose:
-                print "Imposing translational invariance symmetry to fc3"
+                print("Imposing translational invariance symmetry to fc3")
             set_translational_invariance_fc3(
                 fc3, translational_symmetry_type=translational_symmetry_type)
         if is_permutation_symmetry:
             if verbose:
-                print "Imposing index permulation symmetry to fc3"
+                print("Imposing index permulation symmetry to fc3")
             set_permutation_symmetry_fc3(fc3)
     else:
         if translational_symmetry_type:
             if verbose:
-                print "Imposing translational invariance symmetry to fc3"
+                print("Imposing translational invariance symmetry to fc3")
             set_translational_invariance_fc3_per_index(
                 fc3, translational_symmetry_type=translational_symmetry_type)
         if is_permutation_symmetry:
             if verbose:
-                print "Imposing index permulation symmetry to fc3"
+                print("Imposing index permulation symmetry to fc3")
             set_permutation_symmetry_fc3(fc3)
         
     return fc3
@@ -123,7 +123,7 @@ def distribute_fc3(fc3_least_atoms,
                 break
 
         if rot_num < 0:
-            print "Position or symmetry may be wrong."
+            print("Position or symmetry may be wrong.")
             raise ValueError
 
         for j in range(num_atom):
@@ -138,7 +138,7 @@ def distribute_fc3(fc3_least_atoms,
 
         if not (overwrite and i == i_rot):
             if verbose > 2:
-                print "    [ %d, x, x ] to [ %d, x, x ]" % (i_rot + 1, i + 1)
+                print("    [ %d, x, x ] to [ %d, x, x ]" % (i_rot + 1, i + 1))
                 sys.stdout.flush()
 
             try:
@@ -267,7 +267,7 @@ def get_atom_by_symmetry(positions,
         if (abs(diff) < symprec).all():
             return i
 
-    print "Position or symmetry is wrong."
+    print("Position or symmetry is wrong.")
     raise ValueError
 
 def get_atom_mapping_by_symmetry(positions,
@@ -382,22 +382,22 @@ def solve_fc3(fc3,
               verbose=False):
 
     if verbose:
-        print "Solving fc3[ %d, x, x ] with" % (first_atom_num + 1),
+        text = "Solving fc3[ %d, x, x ] with " % (first_atom_num + 1)
         if len(displacements_first) > 1:
-            print "displacements:"
+            text += "displacements:"
         else:
-            print "a displacement:"
+            text += "a displacement:"
+        print(text)
         for i, v in enumerate(displacements_first):
-            print "    [%7.4f %7.4f %7.4f]" % tuple(v)
+            print("    [%7.4f %7.4f %7.4f]" % tuple(v))
             sys.stdout.flush()
         if verbose > 2:
-            print "  Site symmetry:"
+            print("  Site symmetry:")
             for i, v in enumerate(site_symmetry):
-                print "    [%2d %2d %2d] #%2d" % tuple(list(v[0])+[i+1])
-                print "    [%2d %2d %2d]" % tuple(v[1])
-                print "    [%2d %2d %2d]\n" % tuple(v[2])
+                print("    [%2d %2d %2d] #%2d" % tuple(list(v[0])+[i + 1]))
+                print("    [%2d %2d %2d]" % tuple(v[1]))
+                print("    [%2d %2d %2d]\n" % tuple(v[2]))
                 sys.stdout.flush()
-
 
     lattice = supercell.get_cell().T
     site_sym_cart = [similarity_transformation(lattice, sym)
@@ -433,11 +433,11 @@ def cutoff_fc3(fc3,
                symmetry,
                verbose=False):
     if verbose:
-        print "Building atom mapping table..."
+        print("Building atom mapping table...")
     fc3_done = _get_fc3_done(supercell, disp_dataset, symmetry)
 
     if verbose:
-        print "Creating contracted fc3..."
+        print("Creating contracted fc3...")
     num_atom = supercell.get_number_of_atoms()
     for i in range(num_atom):
         for j in range(i, num_atom):
@@ -502,13 +502,14 @@ def show_drift_fc3(fc3, name="fc3"):
         if abs(val3) > abs(maxval3):
             maxval3 = val3
             klm3 = [k, l, m]
-    print "max drift of %s:" % name,
-    print "%f (%s%s%s)" % (maxval1,
-                           "xyz"[klm1[0]], "xyz"[klm1[1]], "xyz"[klm1[2]]),
-    print "%f (%s%s%s)" % (maxval2,
-                           "xyz"[klm2[0]], "xyz"[klm2[1]], "xyz"[klm2[2]]),
-    print "%f (%s%s%s)" % (maxval3,
-                           "xyz"[klm3[0]], "xyz"[klm3[1]], "xyz"[klm3[2]])
+    text = "max drift of %s: " % name
+    text += "%f (%s%s%s) " % (maxval1,
+                              "xyz"[klm1[0]], "xyz"[klm1[1]], "xyz"[klm1[2]])
+    text += "%f (%s%s%s) " % (maxval2,
+                              "xyz"[klm2[0]], "xyz"[klm2[1]], "xyz"[klm2[2]])
+    text += "%f (%s%s%s)" % (maxval3,
+                             "xyz"[klm3[0]], "xyz"[klm3[1]], "xyz"[klm3[2]])
+    print(text)
 
 def _get_fc3_least_atoms(fc3,
                          supercell,

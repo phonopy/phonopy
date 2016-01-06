@@ -90,8 +90,8 @@ class Conductivity:
     def next(self):
         if self._grid_point_count == len(self._grid_points):
             if self._log_level:
-                print ("=================== End of collection of collisions "
-                       "===================")
+                print("=================== End of collection of collisions "
+                      "===================")
             raise StopIteration
         else:
             self._run_at_grid_point()
@@ -200,11 +200,12 @@ class Conductivity:
     def _set_gamma_isotope_at_sigmas(self, i):
         for j, sigma in enumerate(self._sigmas):
             if self._log_level:
-                print "Calculating Gamma of ph-isotope with",
+                text = "Calculating Gamma of ph-isotope with "
                 if sigma is None:
-                    print "tetrahedron method"
+                    text += "tetrahedron method"
                 else:
-                    print "sigma=%s" % sigma
+                    text += "sigma=%s" % sigma
+                print(text)
             pp_freqs, pp_eigvecs, pp_phonon_done = self._pp.get_phonons()
             self._isotope.set_sigma(sigma)
             self._isotope.set_phonons(pp_freqs,
@@ -228,9 +229,9 @@ class Conductivity:
                     self._mesh_divisors.append(n)
                 else:
                     self._mesh_divisors.append(1)
-                    print ("Mesh number %d for the " +
+                    print(("Mesh number %d for the " +
                            ["first", "second", "third"][i] + 
-                           " axis is not dividable by divisor %d.") % (m, n)
+                           " axis is not dividable by divisor %d.") % (m, n))
             self._mesh_divisors = np.array(self._mesh_divisors, dtype='intc')
             if coarse_mesh_shifts is None:
                 self._coarse_mesh_shifts = [False, False, False]
@@ -239,16 +240,16 @@ class Conductivity:
             for i in range(3):
                 if (self._coarse_mesh_shifts[i] and
                     (self._mesh_divisors[i] % 2 != 0)):
-                    print ("Coarse grid along " +
-                           ["first", "second", "third"][i] + 
-                           " axis can not be shifted. Set False.")
+                    print("Coarse grid along " +
+                          ["first", "second", "third"][i] + 
+                          " axis can not be shifted. Set False.")
                     self._coarse_mesh_shifts[i] = False
 
-        self._coarse_mesh = self._mesh / self._mesh_divisors
+        self._coarse_mesh = self._mesh // self._mesh_divisors
 
         if self._log_level:
-            print ("Lifetime sampling mesh: [ %d %d %d ]" %
-                   tuple(self._mesh / self._mesh_divisors))
+            print("Lifetime sampling mesh: [ %d %d %d ]" %
+                  tuple(self._mesh // self._mesh_divisors))
 
     def _get_ir_grid_points(self):
         if self._coarse_mesh_shifts is None:
@@ -269,7 +270,7 @@ class Conductivity:
             coarse_mesh_shifts=self._coarse_mesh_shifts)
         grid_weights = coarse_grid_weights
 
-        assert grid_weights.sum() == np.prod(self._mesh /
+        assert grid_weights.sum() == np.prod(self._mesh //
                                              self._mesh_divisors)
 
         return grid_points, grid_weights
@@ -335,19 +336,19 @@ class Conductivity:
     def _show_log_header(self, i):
         if self._log_level:
             gp = self._grid_points[i]
-            print ("======================= Grid point %d (%d/%d) "
-                   "=======================" %
-                   (gp, i + 1, len(self._grid_points)))
-            print "q-point: (%5.2f %5.2f %5.2f)" % tuple(self._qpoints[i])
+            print("======================= Grid point %d (%d/%d) "
+                  "=======================" %
+                  (gp, i + 1, len(self._grid_points)))
+            print("q-point: (%5.2f %5.2f %5.2f)" % tuple(self._qpoints[i]))
             if self._boundary_mfp is not None:
                 if self._boundary_mfp > 1000:
-                    print ("Boundary mean free path (millimetre): %.3f" %
-                           (self._boundary_mfp / 1000.0))
+                    print("Boundary mean free path (millimetre): %.3f" %
+                          (self._boundary_mfp / 1000.0))
                 else:
-                    print ("Boundary mean free path (micrometre): %.5f" %
-                       self._boundary_mfp)
+                    print("Boundary mean free path (micrometre): %.5f" %
+                          self._boundary_mfp)
             if self._is_isotope:
-                print "Mass variance parameters:",
-                print ("%5.2e " * len(self._mass_variances)) % tuple(
-                    self._mass_variances)
+                print(("Mass variance parameters: " +
+                       "%5.2e " * len(self._mass_variances)) %
+                      tuple(self._mass_variances))
                         

@@ -6,6 +6,58 @@ from anharmonic.file_IO import write_fc3_dat, write_fc2_dat
 from phonopy.units import VaspToTHz
 from phonopy.structure.grid_points import get_qpoints
 
+def get_gruneisen_parameters(fc2,
+                             fc3,
+                             supercell,
+                             primitive,
+                             band_paths,
+                             mesh,
+                             qpoints,
+                             nac_params=None,
+                             nac_q_direction=None,
+                             ion_clamped=False,
+                             factor=None,
+                             symprec=1e-5,
+                             output_filename=None,
+                             log_level=True):
+    if log_level:
+        print("-" * 23 + " Phonon Gruneisen parameter " + "-" * 23)
+        if mesh is not None:
+            print("Mesh sampling: [ %d %d %d ]" % tuple(mesh))
+        elif band_paths is not None:
+            print("Paths in reciprocal reduced coordinates:")
+            for path in band_paths:
+                print("[%5.2f %5.2f %5.2f] --> [%5.2f %5.2f %5.2f]" %
+                      (tuple(path[0]) + tuple(path[-1])))
+        if ion_clamped:
+            print("To be calculated with ion clamped.")
+            
+        sys.stdout.flush()
+
+    gruneisen = Gruneisen(fc2,
+                          fc3,
+                          supercell,
+                          primitive,
+                          nac_params=nac_params,
+                          nac_q_direction=nac_q_direction,
+                          ion_clamped=ion_clamped,
+                          factor=factor,
+                          symprec=symprec)
+
+    if mesh is not None:
+        gruneisen.set_sampling_mesh(mesh, is_gamma_center=True)
+    elif band_paths is not None:
+        gruneisen.set_band_structure(band_paths)
+    elif qpoints is not None:
+        gruneisen.set_qpoints(qpoints)
+    gruneisen.run()
+
+    if output_filename is None:
+        filename = 'gruneisen3.yaml'
+    else:
+        filename = 'gruneisen3.' + output_filename + '.yaml'
+    gruneisen.write_yaml(filename=filename)
+
 class Gruneisen:
     def __init__(self,
                  fc2,
@@ -213,7 +265,7 @@ class Gruneisen:
                             g[s] += (w[nu * 3 + i, s].conjugate() * 
                                      dDdu[nu, pi, i, j] * w[pi * 3 + j, s]).real
 
-            g[s] *= -1.0/2/omega2[s]
+            g[s] *= -1.0 / 2 / omega2[s]
 
         return g, omega2
 
@@ -327,9 +379,10 @@ class Gruneisen:
                     for i in range(3):
                         # Eigenvectors are real.
                         # 3: means optical modes
-                        G[pi, mu, k, i] = 1.0 / np.sqrt(m[pi] * m[mu]) * \
+                        G[pi, mu, k, i] = (
+                            1.0 / np.sqrt(m[pi] * m[mu]) *
                             (vecs[pi * 3 + k, 3:] * vecs[mu * 3 + i, 3:] /
-                             vals[3:]).sum()
+                             vals[3:]).sum())
         return G
 
             

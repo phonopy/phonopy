@@ -165,15 +165,17 @@ class Interaction:
         for triplet in triplets_at_q:
             sum_q = (grid_address[triplet]).sum(axis=0)
             if (sum_q % self._mesh != 0).any():
-                print "============= Warning =================="
-                print triplet
+                print("============= Warning ==================")
+                print("%s" % triplet)
                 for tp in triplet:
-                    print grid_address[tp],
-                    print np.linalg.norm(
-                        np.dot(reciprocal_lattice,
-                               grid_address[tp] / self._mesh))
-                print sum_q
-                print "============= Warning =================="
+                    print("%s %s" %
+                          (grid_address[tp],
+                           np.linalg.norm(
+                               np.dot(reciprocal_lattice,
+                                      grid_address[tp] /
+                                      self._mesh.astype('double')))))
+                print("%s" % sum_q)
+                print("============= Warning ==================")
 
         self._triplets_at_q = triplets_at_q
         self._weights_at_q = weights_at_q
@@ -269,7 +271,7 @@ class Interaction:
                                  cutoff_frequency=self._cutoff_frequency)
 
         for i, grid_triplet in enumerate(self._triplets_at_q):
-            print "%d / %d" % (i + 1, len(self._triplets_at_q))
+            print("%d / %d" % (i + 1, len(self._triplets_at_q)))
             r2r.run(self._grid_address[grid_triplet])
             fc3_reciprocal = r2r.get_fc3_reciprocal()
             for gp in grid_triplet:

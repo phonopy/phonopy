@@ -35,17 +35,16 @@
 import numpy as np
 from phonopy.structure.atoms import Atoms
 from phonopy.structure.symmetry import Symmetry
-from phonopy.structure.cells import get_supercell, get_primitive
+from phonopy.structure.cells import get_supercell
 from phonopy.harmonic.dynamical_matrix import get_smallest_vectors
 from phonopy.harmonic.force_constants import distribute_force_constants
 
-def get_commensurate_points(primitive, supercell):
-    supercell_matrix = np.linalg.inv(primitive.get_primitive_matrix()).T
+def get_commensurate_points(supercell_matrix): # wrt primitive cell
     rec_primitive = Atoms(numbers=[1],
                           scaled_positions=[[0, 0, 0]],
                           cell=np.diag([1, 1, 1]),
                           pbc=True)
-    rec_supercell = get_supercell(rec_primitive, supercell_matrix)
+    rec_supercell = get_supercell(rec_primitive, supercell_matrix.T)
     return rec_supercell.get_scaled_positions()
 
 class DynmatToForceConstants:
@@ -57,8 +56,9 @@ class DynmatToForceConstants:
                  symprec=1e-5):
         self._primitive = primitive
         self._supercell = supercell
-        self._commensurate_points = get_commensurate_points(primitive,
-                                                            supercell)
+        supercell_matrix = np.linalg.inv(self._primitive.get_primitive_matrix())
+        supercell_matrix = np.rint(supercell_matrix).astype('intc')
+        self._commensurate_points = get_commensurate_points(supercell_matrix)
         (self._shortest_vectors,
          self._multiplicity) = get_smallest_vectors(supercell,
                                                     primitive,

@@ -1,14 +1,11 @@
-[![Binstar Badge](https://binstar.org/jochym/phonopy-dev/badges/version.svg)](https://binstar.org/jochym/phonopy-dev)
-[![Binstar Badge](https://binstar.org/jochym/phonopy-dev/badges/installer/conda.svg)](https://conda.binstar.org/jochym/phonopy-dev)
-[![Binstar Badge](https://binstar.org/jochym/phonopy-dev/badges/build.svg)](https://binstar.org/jochym/phonopy-dev/builds)
+[![Binstar Badge](https://anaconda.org/jochym/phonopy/badges/version.svg)](https://binstar.org/jochym/phonopy)
+[![Binstar Badge](https://anaconda.org/jochym/phonopy/badges/installer/conda.svg)](https://anaconda.org/jochym/phonopy)
+[![Binstar Badge](https://anaconda.org/jochym/phonopy/badges/build.svg)](https://anaconda.org/jochym/phonopy/builds)
 
 phonopy
 =======
 
 Phonon code
-For the details, see http://phonopy.sourceforge.net/
+For the details, see http://atztogo.github.io/phonopy/
 
-**Warning** This is an experimental branch of phonopy. 
-For release version of conda packages of phonopy see: 
-[![Binstar Badge](https://binstar.org/jochym/phonopy/badges/version.svg)](https://binstar.org/jochym/phonopy)
 

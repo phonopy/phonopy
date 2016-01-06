@@ -39,10 +39,7 @@ try:
 except ImportError:
     from io import StringIO
 import numpy as np
-from phonopy.structure.symmetry import Symmetry
-from phonopy.harmonic.force_constants import similarity_transformation
-from phonopy.structure.atoms import Atoms
-from phonopy.cui.settings import fracval
+
 #
 # FORCE_SETS
 #
@@ -220,6 +217,8 @@ def parse_disp_yaml(filename="disp.yaml", return_cell=False):
     except ImportError:
         from yaml import Loader
 
+    from phonopy.structure.atoms import Atoms
+
     dataset = yaml.load(open(filename), Loader=Loader)
     natom = dataset['natom']
     new_dataset = {}
@@ -292,6 +291,8 @@ def parse_DISP(filename='DISP'):
 # QPOINTS
 #
 def parse_QPOINTS(filename="QPOINTS"):
+    from phonopy.cui.settings import fracval
+
     f = open(filename, 'r')
     num_qpoints = int(f.readline().strip())
     qpoints = []
@@ -304,15 +305,20 @@ def parse_QPOINTS(filename="QPOINTS"):
 #
 def parse_BORN(primitive, symprec=1e-5, is_symmetry=True, filename="BORN"):
     f = open(filename, 'r')
-    symmetry = Symmetry(primitive, symprec=symprec, is_symmetry=is_symmetry)
-    return get_born_parameters(f, primitive, symmetry)
+    return _parse_BORN_from_file_object(f, primitive, symprec, is_symmetry)
 
 def parse_BORN_from_strings(strings, primitive, symprec=1e-5, is_symmetry=True):
     f = StringIO.StringIO(strings)
+    return _parse_BORN_from_file_object(f, primitive, symprec, is_symmetry)
+
+def _parse_BORN_from_file_object(f, primitive, symprec, is_symmetry):
+    from phonopy.structure.symmetry import Symmetry
     symmetry = Symmetry(primitive, symprec=symprec, is_symmetry=is_symmetry)
     return get_born_parameters(f, primitive, symmetry)
 
 def get_born_parameters(f, primitive, symmetry):
+    from phonopy.harmonic.force_constants import similarity_transformation
+
     # Read unit conversion factor, damping factor, ...
     factors = [float(x) for x in f.readline().split()]
     if len(factors) < 1:
@@ -360,4 +366,94 @@ def get_born_parameters(f, primitive, symmetry):
                 'dielectric': dielectric }
 
     return non_anal
+
+#
+# e-v.dat, thermal_properties.yaml 
+#
+EQUIVALENCE_TOLERANCE = 1e-5
+def read_thermal_properties_yaml(filenames, factor=1.0):
+    import yaml
+    try:
+        from yaml import CLoader as Loader
+    except ImportError:
+        from yaml import Loader
+
+    thermal_properties = []
+    imag_ratios = []
+    for filename in filenames:
+        tp_yaml = yaml.load(open(filename).read(), Loader=Loader)
+        thermal_properties.append(tp_yaml['thermal_properties'])
+        if 'num_modes' in tp_yaml:
+            imag_ratios.append(1 - (float(tp_yaml['num_integrated_modes']) /
+                                    tp_yaml['num_modes']))
+
+    temperatures = [v['temperature'] for v in thermal_properties[0]]
+    temp = []
+    cv = []
+    entropy = []
+    fe_phonon = []
+    for i in range(len(filenames)):
+        temp.append([v['temperature'] for v in thermal_properties[i]])
+        cv.append([v['heat_capacity'] for v in thermal_properties[i]])
+        entropy.append([v['entropy'] for v in thermal_properties[i]])
+        fe_phonon.append([v['free_energy'] for v in thermal_properties[i]])
+
+
+    if _is_temperatures_match(temp):
+        cv = np.array(cv).T * factor
+        entropy = np.array(entropy).T * factor
+        fe_phonon = np.array(fe_phonon).T * factor
+    else:
+        print('')
+        print("Check your input files")
+        print("Disagreement of temperature range or step")
+        for t, fname in zip(temp, filenames):
+            print("%s: Range [ %d, %d ], Step %f" %
+                  (fname, int(t[0]), int(t[-1]), t[1] - t[0]))
+        print('')
+        print("Stop phonopy-qha")
+        sys.exit(1)
+
+    return temperatures, cv, entropy, fe_phonon, imag_ratios
+
+def read_cp(filename):
+    return _parse_QHA_data(filename)
+
+def read_ve(filename):
+    return _parse_QHA_data(filename)
+
+def read_v_e(filename,
+             factor=1.0,
+             volume_factor=1.0,
+             pressure=0.0):
+    from phonopy.units import EVAngstromToGPa
+
+    volumes, electronic_energies = _parse_QHA_data(filename)
+    volumes *= volume_factor * factor
+    electronic_energies *= factor
+    electronic_energies += volumes * pressure / EVAngstromToGPa
+    
+    return volumes, electronic_energies
+
+def _is_temperatures_match(temperatures):
+    for t in temperatures:
+        if len(t) != len(temperatures[0]):
+            return False
+        if (abs(t[0] - temperatures[0][0]) > EQUIVALENCE_TOLERANCE or
+            abs(t[-1] - temperatures[0][-1]) > EQUIVALENCE_TOLERANCE):
+            return False
+
+    return True
+
+def _parse_QHA_data(filename):
+    data = []
+    for line in open(filename):
+        if line.strip() == '' or line.strip()[0] == '#':
+            continue
+        if '#' in line:
+            data.append([float(x) for x in line.split('#')[0].split()])
+        else:
+            data.append([float(x) for x in line.split()])
+    return np.array(data).transpose()
+
 

@@ -290,7 +290,7 @@ def _get_vasp_structure(atoms, direct=True):
     lines += "   1.0\n"
     for a in atoms.get_cell():
         lines += "  %21.16f %21.16f %21.16f\n" % tuple(a)
-    lines += ("%4d" * len(num_atoms)) % tuple(num_atoms)
+    lines += ("%4d " * len(num_atoms)) % tuple(num_atoms)
     lines += "\n"
     lines += "Direct\n"
     lines += get_scaled_positions_lines(scaled_positions)
