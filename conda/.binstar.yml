@@ -38,7 +38,7 @@ engine:
 ## Run before the script
 before_script:
   - conda update -n root conda conda-build --yes
-  - conda config --add channels https://anaconda.org/jochym
+  - conda config --add channels jochym
 ## Put your main computations here!  
 script:
   - conda build .
