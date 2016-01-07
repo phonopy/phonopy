@@ -188,7 +188,7 @@ class SiestaIn:
             print "%s not present"%tag
             exit()
  
-    def __str__():
+    def __str__(self):
         return self._tags
 
         
