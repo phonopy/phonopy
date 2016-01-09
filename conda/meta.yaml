@@ -30,7 +30,7 @@ requirements:
     - numpy
     - matplotlib
     - spglib
-    - pyvaml
+    - pyyaml
 
 test:
   # Python imports
