@@ -104,8 +104,10 @@ def get_tetrahedra_integration_weight(omegas,
 class TetrahedronMethod:
     def __init__(self,
                  primitive_vectors=None, # column vectors
-                 mesh=[1, 1, 1],
+                 mesh=None,
                  lang='C'):
+        if mesh is None:
+            mesh = [1, 1, 1]
         if primitive_vectors is None:
             self._primitive_vectors = None
         else:

@@ -123,7 +123,9 @@ def invert_grid_point(grid_point, mesh, grid_address, bz_map):
     address = grid_address[grid_point]
     return get_bz_grid_point_from_address(-address, mesh, bz_map)
 
-def get_ir_grid_points(mesh, rotations, mesh_shifts=[False, False, False]):
+def get_ir_grid_points(mesh, rotations, mesh_shifts=None):
+    if mesh_shifts is None:
+        mesh_shifts = [False, False, False]
     grid_mapping_table, grid_address = spg.get_stabilized_reciprocal_mesh(
         mesh,
         rotations,
@@ -136,7 +138,9 @@ def get_ir_grid_points(mesh, rotations, mesh_shifts=[False, False, False]):
 def get_grid_points_by_rotations(grid_point,
                                  reciprocal_rotations,
                                  mesh,
-                                 mesh_shifts=[False, False, False]):
+                                 mesh_shifts=None):
+    if mesh_shifts is None:
+        mesh_shifts = [False, False, False]
     return spg.get_grid_points_by_rotations(
         grid_point,
         reciprocal_rotations,
@@ -147,7 +151,9 @@ def get_BZ_grid_points_by_rotations(grid_point,
                                     reciprocal_rotations,
                                     mesh,
                                     bz_map,
-                                    mesh_shifts=[False, False, False]):
+                                    mesh_shifts=None):
+    if mesh_shifts is None:
+        mesh_shifts = [False, False, False]
     return spg.get_BZ_grid_points_by_rotations(
         grid_point,
         reciprocal_rotations,
@@ -186,7 +192,9 @@ def from_coarse_to_dense_grid_points(dense_mesh,
                                      mesh_divisors,
                                      coarse_grid_points,
                                      coarse_grid_address,
-                                     coarse_mesh_shifts=[False, False, False]):
+                                     coarse_mesh_shifts=None):
+    if coarse_mesh_shifts is None:
+        coarse_mesh_shifts = [False, False, False]
     shifts = np.where(coarse_mesh_shifts, 1, 0)
     dense_grid_points = []
     for cga in coarse_grid_address[coarse_grid_points]:

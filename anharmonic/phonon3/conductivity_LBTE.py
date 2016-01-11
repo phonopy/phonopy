@@ -16,7 +16,7 @@ def get_thermal_conductivity_LBTE(
         interaction,
         symmetry,
         temperatures=np.arange(0, 1001, 10, dtype='double'),
-        sigmas=[],
+        sigmas=None,
         is_isotope=False,
         mass_variances=None,
         grid_points=None,
@@ -31,6 +31,8 @@ def get_thermal_conductivity_LBTE(
         output_filename=None,
         log_level=0):
 
+    if sigmas is None:
+        sigmas = []
     if log_level:
         print("-------------------- Lattice thermal conducitivity (LBTE) "
               "--------------------")
@@ -249,7 +251,7 @@ class Conductivity_LBTE(Conductivity):
                  symmetry,
                  grid_points=None,
                  temperatures=None,
-                 sigmas=[],
+                 sigmas=None,
                  is_isotope=False,
                  mass_variances=None,
                  boundary_mfp=None, # in micrometre
@@ -258,6 +260,8 @@ class Conductivity_LBTE(Conductivity):
                  gv_delta_q=None, # finite difference for group veolocity
                  pinv_cutoff=1.0e-8,
                  log_level=0):
+        if sigmas is None:
+            sigmas = []
         self._pp = None
         self._temperatures = None
         self._sigmas = None
