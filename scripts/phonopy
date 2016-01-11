@@ -906,7 +906,7 @@ if run_mode == 'qpoints':
         if log_level > 0:
             print("Q-points that will be calculated at:")
             for q in q_points:
-                print("    ", q)
+                print("    %s" % q)
     else:
         q_points = file_IO.parse_QPOINTS()
         if log_level > 0:
