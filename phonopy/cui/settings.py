@@ -1059,10 +1059,12 @@ class PhonopySettings(Settings):
 
     def set_mesh(self,
                  mesh,
-                 mesh_shift=[0.,0.,0.],
+                 mesh_shift=None,
                  is_time_reversal_symmetry=True,
                  is_mesh_symmetry=True,
                  is_gamma_center=False):
+        if mesh_shift is None:
+            mesh_shift = [0.,0.,0.]
         self._mesh = mesh
         self._mesh_shift = mesh_shift
         self._is_time_reversal_symmetry = is_time_reversal_symmetry

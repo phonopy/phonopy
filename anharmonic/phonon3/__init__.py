@@ -31,7 +31,7 @@ class Phono3py:
                  masses=None,
                  mesh=None,
                  band_indices=None,
-                 sigmas=[],
+                 sigmas=None,
                  cutoff_frequency=1e-4,
                  frequency_factor_to_THz=VaspToTHz,
                  is_symmetry=True,
@@ -40,6 +40,8 @@ class Phono3py:
                  symprec=1e-5,
                  log_level=0,
                  lapack_zheev_uplo='L'):
+        if sigmas is None:
+            sigmas = []
         self._symprec = symprec
         self._sigmas = sigmas
         self._frequency_factor_to_THz = frequency_factor_to_THz
@@ -329,10 +331,12 @@ class Phono3py:
                              grid_points,
                              frequency_step=None,
                              num_frequency_points=None,
-                             temperatures=[0.0, 300.0],
+                             temperatures=None,
                              scattering_event_class=None,
                              run_with_g=True,
                              write_details=False):
+        if temperatures is None:
+            temperatures = [0.0, 300.0]
         self._grid_points = grid_points
         self._temperatures = temperatures
         self._scattering_event_class = scattering_event_class
@@ -388,7 +392,7 @@ class Phono3py:
             self,
             is_LBTE=True,
             temperatures=np.arange(0, 1001, 10, dtype='double'),
-            sigmas=[],
+            sigmas=None,
             is_isotope=False,
             mass_variances=None,
             grid_points=None,
@@ -411,6 +415,8 @@ class Phono3py:
             input_filename=None,
             output_filename=None):
 
+        if sigmas is None:
+            sigmas = []
         if is_LBTE:
             self._thermal_conductivity = get_thermal_conductivity_LBTE(
                 self._interaction,
@@ -458,9 +464,11 @@ class Phono3py:
 
     def get_frequency_shift(self,
                             grid_points,
-                            epsilons=[0.1],
+                            epsilons=None,
                             temperatures=np.arange(0, 1001, 10, dtype='double'),
                             output_filename=None):
+        if epsilons is None:
+            epsilons = [0.1]
         self._grid_points = grid_points
         get_frequency_shift(self._interaction,
                             self._grid_points,
@@ -628,11 +636,13 @@ class Phono3pyIsotope:
                  primitive,
                  mass_variances=None, # length of list is num_atom.
                  band_indices=None,
-                 sigmas=[],
+                 sigmas=None,
                  frequency_factor_to_THz=VaspToTHz,
                  symprec=1e-5,
                  cutoff_frequency=None,
                  lapack_zheev_uplo='L'):
+        if sigmas is None:
+            sigmas = []
         self._mesh = mesh
         self._sigmas = sigmas
         self._iso = Isotope(mesh,
@@ -701,7 +711,7 @@ class Phono3pyJointDos:
                  fc2,
                  nac_params=None,
                  nac_q_direction=None,
-                 sigmas=[],
+                 sigmas=None,
                  cutoff_frequency=1e-4,
                  frequency_step=None,
                  num_frequency_points=None,
@@ -712,6 +722,8 @@ class Phono3pyJointDos:
                  symprec=1e-5,
                  output_filename=None,
                  log_level=0):
+        if sigmas is None:
+            sigmas = []
         self._supercell = supercell
         self._primitive = primitive
         self._mesh = mesh
