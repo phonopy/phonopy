@@ -205,7 +205,7 @@ class Symmetry:
     def _set_map_operations(self):
         ops = self._symmetry_operations
         pos = self._cell.get_scaled_positions()
-        map_operations = np.zeros(len(pos), dtype=int)
+        map_operations = np.zeros(len(pos), dtype='intc')
 
         for i, eq_atom in enumerate(self._map_atoms):
             for j, (r, t) in enumerate(
