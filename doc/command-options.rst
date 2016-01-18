@@ -168,8 +168,8 @@ directory. The default file names for the calculators are as follows::
 Create ``FORCE_SETS``
 ----------------------
 
-``-f`` or ``--forces`` and ``--fz``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+``-f`` or ``--forces``
+~~~~~~~~~~~~~~~~~~~~~~
 
 .. _vasp_force_sets_option:
 
@@ -196,14 +196,15 @@ Attention:
   expansions are useful, e.g., ``disp-*/vasprun.xml``, or
   ``disp-{001..128}/vasprun.xml`` (for zsh, and recent bash).
 
-``--fz`` option is used to subtract residual forces in the equilibrium
-supercell.
+..
+   ``--fz`` option is used to subtract residual forces in the equilibrium
+   supercell.
 
-::
+   ::
 
-   % phonopy --fz sposcar/vasprun.xml disp-001/vasprun.xml ...
+      % phonopy --fz sposcar/vasprun.xml disp-001/vasprun.xml ...
 
-Usually the ``-f`` option is preferable to ``--fz``.
+   Usually the ``-f`` option is preferable to ``--fz``.
 
 .. _abinit_force_sets_option:
 
