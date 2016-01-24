@@ -35,8 +35,7 @@
 #ifndef __dynmat_H__
 #define __dynmat_H__
 
-int get_dynamical_matrix_at_q(double *dynamical_matrix_real,
-			      double *dynamical_matrix_image,
+int get_dynamical_matrix_at_q(double *dynamical_matrix,
 			      const int num_patom, 
 			      const int num_satom,
 			      const double *fc,

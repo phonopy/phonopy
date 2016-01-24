@@ -72,8 +72,7 @@ class DerivativeOfDynamicalMatrix:
     def _run_c(self, q, q_direction=None):
         import phonopy._phonopy as phonoc
         num_patom = len(self._p2s_map)
-        ddm_real = np.zeros((3, num_patom * 3, num_patom * 3), dtype='double')
-        ddm_imag = np.zeros((3, num_patom * 3, num_patom * 3), dtype='double')
+        ddm = np.zeros((3, num_patom * 3, num_patom * 3, 2), dtype='double')
         mass = self._pcell.get_masses()
         fc = self._force_constants
         vectors = self._smallest_vectors
@@ -92,8 +91,7 @@ class DerivativeOfDynamicalMatrix:
             nac_factor = 0
             q_dir = None
 
-        phonoc.derivative_dynmat(ddm_real,
-                                 ddm_imag,
+        phonoc.derivative_dynmat(ddm,
                                  fc,
                                  np.array(q, dtype='double'),
                                  np.array(self._pcell.get_cell().T,
@@ -107,8 +105,8 @@ class DerivativeOfDynamicalMatrix:
                                  born,
                                  dielectric,
                                  q_dir)
-        self._ddm = np.array([ddm_real[i] + ddm_real[i].T +
-                              1j * (ddm_imag[i] - ddm_imag[i].T)
+        self._ddm = np.array([ddm[i, :, :, 0] + ddm[i, :, :, 0].T +
+                              1j * (ddm[i, :, :, 1] - ddm[i, :, :, 1].T)
                               for i in range(3)]) / 2
         
     def _run_py(self, q, q_direction=None):

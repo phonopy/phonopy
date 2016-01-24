@@ -219,11 +219,9 @@ class DynamicalMatrix:
         multiplicity = self._multiplicity
         size_prim = len(mass)
         size_super = fc.shape[0]
-        dynamical_matrix_real = np.zeros((size_prim * 3, size_prim * 3),
-                                         dtype='double')
-        dynamical_matrix_image = np.zeros_like(dynamical_matrix_real)
-        phonoc.dynamical_matrix(dynamical_matrix_real,
-                                dynamical_matrix_image,
+        dynamical_matrix = np.zeros((size_prim * 3, size_prim * 3, 2),
+                                    dtype='double')
+        phonoc.dynamical_matrix(dynamical_matrix,
                                 fc,
                                 np.array(q, dtype='double'),
                                 vectors,
@@ -231,7 +229,7 @@ class DynamicalMatrix:
                                 mass,
                                 self._s2p_map,
                                 self._p2s_map)
-        dm = dynamical_matrix_real + dynamical_matrix_image * 1j
+        dm = dynamical_matrix[:, :, 0] + dynamical_matrix[:, :, 1] * 1j
         self._dynamical_matrix = (dm + dm.conj().transpose()) / 2
 
 # Non analytical term correction (NAC)
@@ -369,11 +367,9 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         multiplicity = self._multiplicity
         size_prim = len(mass)
         size_super = fc.shape[0]
-        dynamical_matrix_real = np.zeros((size_prim * 3, size_prim * 3),
-                                         dtype='double')
-        dynamical_matrix_image = np.zeros_like(dynamical_matrix_real)
-        phonoc.nac_dynamical_matrix(dynamical_matrix_real,
-                                    dynamical_matrix_image,
+        dynamical_matrix = np.zeros((size_prim * 3, size_prim * 3, 2),
+                                    dtype='double')
+        phonoc.nac_dynamical_matrix(dynamical_matrix,
                                     fc,
                                     np.array(q_red, dtype='double'),
                                     vectors,
@@ -384,7 +380,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
                                     np.array(q, dtype='double'),
                                     self._born,
                                     factor)
-        dm = dynamical_matrix_real + dynamical_matrix_image * 1j
+        dm = dynamical_matrix[:, :, 0] + dynamical_matrix[:, :, 1] * 1j
         self._dynamical_matrix = (dm + dm.conj().transpose()) / 2
 
 
