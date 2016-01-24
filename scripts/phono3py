@@ -39,6 +39,7 @@ import numpy as np
 from phonopy.interface.vasp import read_vasp
 from phonopy.file_IO import parse_BORN, write_FORCE_SETS, parse_FORCE_SETS
 from phonopy.units import VaspToTHz
+from phonopy.version import __version__
 from anharmonic.file_IO import (parse_disp_fc2_yaml, parse_disp_fc3_yaml,
                                 parse_FORCES_FC2, parse_FORCES_FC3,
                                 write_FORCES_FC3_vasp, write_FORCES_FC2_vasp,
@@ -46,7 +47,6 @@ from anharmonic.file_IO import (parse_disp_fc2_yaml, parse_disp_fc3_yaml,
 from anharmonic.cui.settings import Phono3pyConfParser
 from anharmonic.phonon3 import (Phono3py, Phono3pyJointDos, Phono3pyIsotope)
 from anharmonic.phonon3.gruneisen import get_gruneisen_parameters
-from anharmonic.phonon3.version import __version__
 from anharmonic.cui.phono3py_argparse import get_parser
 from anharmonic.cui.show_log import (print_phono3py, print_version, print_end,
                                      print_error,
