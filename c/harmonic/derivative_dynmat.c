@@ -61,8 +61,7 @@ static double get_dC(const int cart_i,
 		     const double q[3],
 		     const double *dielectric);
 
-void get_derivative_dynmat_at_q(double *derivative_dynmat_real,
-				double *derivative_dynmat_imag,
+void get_derivative_dynmat_at_q(double *derivative_dynmat,
 				const int num_patom, 
 				const int num_satom,
 				const double *fc,
@@ -78,7 +77,7 @@ void get_derivative_dynmat_at_q(double *derivative_dynmat_real,
 				const double *dielectric,
 				const double *q_direction)
 {
-  int i, j, k, l, m, n, is_nac;
+  int i, j, k, l, m, n, adrs, is_nac;
   double coef[3], real_coef[3], imag_coef[3];
   double c, s, phase, mass_sqrt, fc_elem, factor, real_phase, imag_phase;
   double ddm_real[3][3][3], ddm_imag[3][3][3];
@@ -202,14 +201,10 @@ void get_derivative_dynmat_at_q(double *derivative_dynmat_real,
       for (k = 0; k < 3; k++) {
 	for (l = 0; l < 3; l++) {
 	  for (m = 0; m < 3; m++) {
-	    derivative_dynmat_real
-	      [k * num_patom * num_patom * 9 +
-	       (i * 3 + l) * num_patom * 3 + j * 3 + m] +=
-	      ddm_real[k][l][m];
-	    derivative_dynmat_imag
-	      [k * num_patom * num_patom * 9 +
-	       (i * 3 + l) * num_patom * 3 + j * 3 + m] +=
-	      ddm_imag[k][l][m];
+	    adrs = (k * num_patom * num_patom * 18 +
+		    (i * 3 + l) * num_patom * 6 + j * 6 + m * 2);
+	    derivative_dynmat[adrs] += ddm_real[k][l][m];
+	    derivative_dynmat[adrs + 1] += ddm_imag[k][l][m];
 	  }
 	}
       }
