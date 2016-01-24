@@ -185,17 +185,11 @@ int get_phonons(lapack_complex_double *a,
 {
   int i, j, num_patom, num_satom, info;
   double q_cart[3];
-  double *dm, *charge_sum;
+  double *charge_sum;
   double inv_dielectric_factor, dielectric_factor, tmp_val;
 
   num_patom = multi->dims[1];
   num_satom = multi->dims[0];
-
-  dm = (double*) malloc(sizeof(double) * num_patom * num_patom * 9 * 2);
-
-  for (i = 0; i < num_patom * num_patom * 9 * 2; i++) {
-    dm[i] = 0.0;
-  }
 
   if (born) {
     if (fabs(q[0]) < 1e-10 && fabs(q[1]) < 1e-10 && fabs(q[2]) < 1e-10 &&
@@ -241,7 +235,7 @@ int get_phonons(lapack_complex_double *a,
     charge_sum = NULL;
   }
 
-  get_dynamical_matrix_at_q(dm,
+  get_dynamical_matrix_at_q((double*)a,
   			    num_patom,
   			    num_satom,
   			    fc2->data,
@@ -255,19 +249,6 @@ int get_phonons(lapack_complex_double *a,
   if (born) {
     free(charge_sum);
   }
-
-  for (i = 0; i < num_patom * 3; i++) {
-    for (j = 0; j < num_patom * 3; j++) {
-      a[i * num_patom * 3 + j] = lapack_make_complex_double
-	((dm[i * num_patom * 6 + j * 2] +
-	  dm[j * num_patom * 6 + i * 2]) / 2,
-	 (dm[i * num_patom * 6 + j * 2 + 1] -
-	  dm[j * num_patom * 6 + i * 2 + 1]) / 2);
-    }
-  }
-
-
-  free(dm);
 
   info = phonopy_zheev(w, a, num_patom * 3, uplo);
   

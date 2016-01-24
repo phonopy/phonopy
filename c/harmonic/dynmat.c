@@ -47,11 +47,11 @@ int get_dynamical_matrix_at_q(double *dynamical_matrix,
 			      const int *p2s_map,
 			      const double *charge_sum)
 {
-  int i, j, k, l, m, adrs;
+  int i, j, k, l, m, adrs, adrsT;
   double phase, cos_phase, sin_phase, mass_sqrt, fc_elem;
   double dm_real[3][3], dm_imag[3][3];
   
-#pragma omp parallel for private(j, k, l, m, adrs, phase, cos_phase, sin_phase, mass_sqrt, dm_real, dm_imag, fc_elem)
+/* #pragma omp parallel for private(j, k, l, m, adrs, phase, cos_phase, sin_phase, mass_sqrt, dm_real, dm_imag, fc_elem) */
   for (i = 0; i < num_patom; i++) {
     for (j = 0; j < num_patom; j++) {
       mass_sqrt = sqrt(mass[i] * mass[j]);
@@ -98,12 +98,27 @@ int get_dynamical_matrix_at_q(double *dynamical_matrix,
       for (k = 0; k < 3; k++) {
 	for (l = 0; l < 3; l++) {
 	  adrs = (i * 3 + k) * num_patom * 6 + j * 6 + l * 2;
-	  dynamical_matrix[adrs] += dm_real[k][l];
-	  dynamical_matrix[adrs + 1] += dm_imag[k][l];
+	  dynamical_matrix[adrs] = dm_real[k][l];
+	  dynamical_matrix[adrs + 1] = dm_imag[k][l];
 	}
       }
     }
   }
+
+  /* Symmetrize to be a Hermitian matrix */
+  for (i = 0; i < num_patom * 3; i++) {
+    for (j = i; j < num_patom * 3; j++) {
+      adrs = i * num_patom * 6 + j * 2;
+      adrsT = j * num_patom * 6 + i * 2;
+      dynamical_matrix[adrs] += dynamical_matrix[adrsT];
+      dynamical_matrix[adrs] /= 2;
+      dynamical_matrix[adrs + 1] -= dynamical_matrix[adrsT+ 1];
+      dynamical_matrix[adrs + 1] /= 2;
+      dynamical_matrix[adrsT] = dynamical_matrix[adrs];
+      dynamical_matrix[adrsT + 1] = -dynamical_matrix[adrs + 1];
+    }
+  }
+
   return 0;
 }
 
