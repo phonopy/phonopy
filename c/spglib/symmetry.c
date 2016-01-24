@@ -836,7 +836,7 @@ transform_pointsymmetry(SPGCONST PointSymmetry * lat_sym_orig,
     /* The operations that have non-integer elements are not counted. */
     if (mat_is_int_matrix(drot, mat_Dabs(mat_get_determinant_d3(trans_mat)) / 10)) {
       mat_cast_matrix_3d_to_3i(lat_sym_new.rot[size], drot);
-      if (! abs(mat_get_determinant_i3(lat_sym_new.rot[size])) == 1) {
+      if (abs(mat_get_determinant_i3(lat_sym_new.rot[size])) != 1) {
 	warning_print("spglib: A point symmetry operation is not unimodular.");
 	warning_print("(line %d, %s).\n", __LINE__, __FILE__);
 	goto err;
