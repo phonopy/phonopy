@@ -35,8 +35,7 @@
 #ifndef __derivative_dynmat_H__
 #define __derivative_dynmat_H__
 
-void get_derivative_dynmat_at_q(double *derivative_dynmat_real,
-				double *derivative_dynmat_imag,
+void get_derivative_dynmat_at_q(double *derivative_dynmat,
 				const int num_patom, 
 				const int num_satom,
 				const double *fc,
