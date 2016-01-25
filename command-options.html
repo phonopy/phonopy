@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Command options &mdash; Phonopy v.1.10.0</title>
+    <title>Command options &mdash; Phonopy v.1.10.2</title>
     
     <link rel="stylesheet" href="_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.10.0',
+        VERSION:     '1.10.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Phonopy v.1.10.0" href="index.html" />
+    <link rel="top" title="Phonopy v.1.10.2" href="index.html" />
     <link rel="next" title="Quasi harmonic approximation" href="qha.html" />
     <link rel="prev" title="How to watch animation" href="animation.html" />
 <meta charset='utf-8'>
@@ -50,7 +50,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.10.0</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.10.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -111,7 +111,7 @@
 </ul>
 </li>
 <li><a class="reference internal" href="#create-force-sets">Create <code class="docutils literal"><span class="pre">FORCE_SETS</span></code></a><ul>
-<li><a class="reference internal" href="#f-or-forces-and-fz"><code class="docutils literal"><span class="pre">-f</span></code> or <code class="docutils literal"><span class="pre">--forces</span></code> and <code class="docutils literal"><span class="pre">--fz</span></code></a><ul>
+<li><a class="reference internal" href="#f-or-forces"><code class="docutils literal"><span class="pre">-f</span></code> or <code class="docutils literal"><span class="pre">--forces</span></code></a><ul>
 <li><a class="reference internal" href="#vasp-interface">VASP interface</a></li>
 <li><a class="reference internal" href="#abinit-interface">Abinit interface</a></li>
 <li><a class="reference internal" href="#pwscf-interface">Pwscf interface</a></li>
@@ -327,8 +327,8 @@ Elk    | elk.in
 </div>
 <div class="section" id="create-force-sets">
 <h2>Create <code class="docutils literal"><span class="pre">FORCE_SETS</span></code><a class="headerlink" href="#create-force-sets" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="f-or-forces-and-fz">
-<h3><code class="docutils literal"><span class="pre">-f</span></code> or <code class="docutils literal"><span class="pre">--forces</span></code> and <code class="docutils literal"><span class="pre">--fz</span></code><a class="headerlink" href="#f-or-forces-and-fz" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="f-or-forces">
+<h3><code class="docutils literal"><span class="pre">-f</span></code> or <code class="docutils literal"><span class="pre">--forces</span></code><a class="headerlink" href="#f-or-forces" title="Permalink to this headline">¶</a></h3>
 <div class="section" id="vasp-interface">
 <span id="vasp-force-sets-option"></span><h4>VASP interface<a class="headerlink" href="#vasp-interface" title="Permalink to this headline">¶</a></h4>
 <p><code class="docutils literal"><span class="pre">FORCE_SETS</span></code> file is created from <code class="docutils literal"><span class="pre">disp.yaml</span></code>, which is an output
@@ -349,12 +349,6 @@ parsing xml file uses huge memory space. It is recommended</li>
 expansions are useful, e.g., <code class="docutils literal"><span class="pre">disp-*/vasprun.xml</span></code>, or
 <code class="docutils literal"><span class="pre">disp-{001..128}/vasprun.xml</span></code> (for zsh, and recent bash).</li>
 </ul>
-<p><code class="docutils literal"><span class="pre">--fz</span></code> option is used to subtract residual forces in the equilibrium
-supercell.</p>
-<div class="highlight-python"><div class="highlight"><pre>% phonopy --fz sposcar/vasprun.xml disp-001/vasprun.xml ...
-</pre></div>
-</div>
-<p>Usually the <code class="docutils literal"><span class="pre">-f</span></code> option is preferable to <code class="docutils literal"><span class="pre">--fz</span></code>.</p>
 </div>
 <div class="section" id="abinit-interface">
 <span id="abinit-force-sets-option"></span><h4>Abinit interface<a class="headerlink" href="#abinit-interface" title="Permalink to this headline">¶</a></h4>
@@ -535,7 +529,7 @@ written on a dense sampling mesh.</p>
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.3.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.4.<br/>
     </p>
   </div>
 </footer>

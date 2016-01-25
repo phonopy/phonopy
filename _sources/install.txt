@@ -5,10 +5,12 @@ Download and install
 
 The procedure of setup phonopy is explained in this section. It is
 supposed that phonopy is installed on the recent linux distribution
-like Ubuntu or Fedora with Python version 2.6 or later. Mac OS X users
-may find some more information on :ref:`install_MacOSX`. If you met
-installation problems, it is recommended to prepare a system with
-Ubuntu linux as a virtual machine. See :ref:`virtualmachine`
+like Ubuntu or Fedora with Python version 2.6 or later. Python version
+3.4 or later is expected to work. Mac OS X users
+may find some more information at :ref:`install_MacOSX`.
+The most recommended system is Ubuntu linux version 14.04 or later. If
+you have any installation problem that you may feel difficult to
+solve, please use a ubuntu virtual machine (see :ref:`virtualmachine`).
 
 1. Prepare the following Python libraries:
 
@@ -33,11 +35,11 @@ Ubuntu linux as a virtual machine. See :ref:`virtualmachine`
 
 2. Download the source code from:
 
-   https://sourceforge.net/projects/phonopy/files/phonopy/phonopy-1.9/ .
+   https://sourceforge.net/projects/phonopy/files/phonopy/phonopy-1.10/ .
 
    and extract it::
 
-   % tar xvfz phonopy-1.10.0.tar.gz
+   % tar xvfz phonopy-1.10.2.tar.gz
 
 3. Set up C-libraries for python C-API and python codes. This can be
    done as follows:
@@ -57,7 +59,7 @@ Ubuntu linux as a virtual machine. See :ref:`virtualmachine`
    .bashrc, .zshenv, etc. If it is installed under your current
    directory, the path to be added to :envvar:`$PYTHONPATH` is such as below::
 
-      export PYTHONPATH=~/phonopy-1.10.0/lib/python
+      export PYTHONPATH=~/phonopy-1.10.2/lib/python
 
 
 Special cases on installation
