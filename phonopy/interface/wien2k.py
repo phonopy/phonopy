@@ -33,7 +33,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
-from phonopy.file_IO import write_FORCE_SETS, get_drift_forces
+from phonopy.file_IO import get_drift_forces
 from phonopy.structure.atoms import Atoms
 from phonopy.structure.symmetry import Symmetry
 from phonopy.structure.cells import get_angles, get_cell_parameters
@@ -42,72 +42,38 @@ from phonopy.harmonic.force_constants import similarity_transformation
 def parse_set_of_forces(displacements,
                         forces_filenames,
                         supercell,
+                        disp_keyword='first_atoms',
                         is_distribute=True,
                         symprec=1e-5):
     natom = supercell.get_number_of_atoms()
     lattice = supercell.get_cell()
+    force_sets = []
 
     for wien2k_filename, disp in zip(forces_filenames,
-                                     displacements['first_atoms']):
+                                     displacements[disp_keyword]):
         # Parse wien2k case.scf file
         wien2k_forces = get_forces_wien2k(wien2k_filename, lattice)
         if is_distribute:
-            force_set = distribute_forces(
+            forces = _distribute_forces(
                 supercell,
                 [disp['number'], disp['displacement']],
                 wien2k_forces,
                 wien2k_filename,
                 symprec)
-            if not force_set:
-                return False
+            if not forces:
+                return []
         else:
             if not (natom == len(wien2k_forces)):
-                print "%s contains only forces of %d atoms" % (
-                    wien2k_filename, len(wien2k_forces))
-                return False
+                print("%s contains only forces of %d atoms" %
+                      (wien2k_filename, len(wien2k_forces)))
+                return []
             else:
-                force_set = wien2k_forces
+                forces = wien2k_forces
 
-        drift_force = get_drift_forces(force_set, filename=wien2k_filename)
-        disp['forces'] = np.array(force_set) - drift_force
+        drift_force = get_drift_forces(forces, filename=wien2k_filename)
+        force_sets.append(np.array(forces) - drift_force)
                 
-    return True
-
-def create_FORCE_SETS(forces_filenames,
-                      displacements,
-                      supercell,
-                      filename='FORCE_SETS',
-                      is_distribute=True,
-                      symprec=1e-5):
-    natom = supercell.get_number_of_atoms()
-    lattice = supercell.get_cell()
-
-    for wien2k_filename, disp in zip(forces_filenames,
-                                     displacements['first_atoms']):
-        # Parse wien2k case.scf file
-        wien2k_forces = get_forces_wien2k(wien2k_filename, lattice)
-        if is_distribute:
-            force_set = distribute_forces(
-                supercell,
-                [disp['number'], disp['displacement']],
-                wien2k_forces,
-                wien2k_filename,
-                symprec)
-            if not force_set:
-                return False
-        else:
-            if not (natom == len(wien2k_forces)):
-                print "%s contains only forces of %d atoms" % (
-                    wien2k_filename, len(wien2k_forces))
-                return False
-            else:
-                force_set = wien2k_forces
-
-        drift_force = get_drift_forces(force_set, filename=wien2k_filename)
-        disp['forces'] = np.array(force_set) - drift_force
-                
-    write_FORCE_SETS(displacements, filename=filename)
-    return True
+    return force_sets
 
 def get_wien2k_struct(cell, npts, r0s, rmts):
 
@@ -298,9 +264,10 @@ def write_supercells_with_displacements(supercell,
     w.close()
     for i, cell in enumerate(cells_with_displacements):
         symmetry = Symmetry(cell)
-        print "Number of non-equivalent atoms in %sS-%03d: %d" % (
-            filename, i + 1, len(symmetry.get_independent_atoms()))
-        w = open(filename.split('/')[-1]+"S-%03d" % (i + 1), 'w')
+        supercell_filename = filename.split('/')[-1]+"S-%03d" % (i + 1)
+        print("Number of non-equivalent atoms in %s: %d" %
+              (supercell_filename, len(symmetry.get_independent_atoms())))
+        w = open(supercell_filename, 'w')
         w.write(get_wien2k_struct(cell, npts_super, r0s_super, rmts_super))
         w.close()
 
@@ -323,24 +290,7 @@ def get_forces_wien2k(filename, lattice):
 
     return forces[-num_atom:]
 
-def get_independent_atoms_in_dot_scf(filename):
-    positions = []
-    for line in open(filename):
-        if line[:4] == ":POS":
-            if "POSITION" in line:
-                x = float(line[30:37])
-                y = float(line[38:45])
-                z = float(line[46:53])
-            else:
-                x = float(line[27:34])
-                y = float(line[35:42])
-                z = float(line[43:50])
-            num_atom = int(line[4:7])
-            positions.append([x,y,z])
-
-    return np.array(positions)[-num_atom:]
-
-def distribute_forces(supercell, disp, forces, filename, symprec):
+def _distribute_forces(supercell, disp, forces, filename, symprec):
     natom = supercell.get_number_of_atoms()
     lattice = supercell.get_cell()
     symbols = supercell.get_chemical_symbols()
@@ -361,21 +311,24 @@ def distribute_forces(supercell, disp, forces, filename, symprec):
     map_operations = symmetry.get_map_operations()
     map_atoms = symmetry.get_map_atoms()
 
-    atoms_in_dot_scf = get_independent_atoms_in_dot_scf(filename)
+    atoms_in_dot_scf = _get_independent_atoms_in_dot_scf(filename)
 
     if len(forces) != len(atoms_in_dot_scf):
-        print "%s does not contain necessary information." % filename
-        print "Plese check if there are \"FGL\" lines with"
-        print "\"total forces\" are required." 
+        print("%s does not contain necessary information." % filename)
+        print("Plese check if there are \"FGL\" lines with")
+        print("\"total forces\" are required.")
         return False
     
     if len(atoms_in_dot_scf) == natom:
-        print "It is assumed that there is no symmetrically-equivalent atoms in "
-        print "\'%s\' at wien2k calculation." % filename
-        print ""
+        print('')
+        print("It is assumed that there is no symmetrically-equivalent "
+              "atoms in ")
+        print("\'%s\' at wien2k calculation." % filename)
+        print('')
         force_set = forces
     elif len(forces) != len(independent_atoms):
-        print "Non-equivalent atoms of %s could not be recognized by phonopy." % filename
+        print("Non-equivalent atoms of %s could not be recognized by phonopy." %
+              filename)
         return False
     else:
         # 1. Transform wien2k forces to those on independent atoms
@@ -385,26 +338,45 @@ def distribute_forces(supercell, disp, forces, filename, symprec):
             for j, pos in enumerate(cell.get_scaled_positions()):
                 diff = pos_wien2k - pos
                 diff -= np.rint(diff)
-                if (abs(diff) < 0.00001).all():
+                if (abs(diff) < symprec).all():
                     forces_remap.append(
-                        np.dot(forces[i], rotations[map_operations[j]].T))
+                        np.dot(rotations[map_operations[j]], forces[i]))
                     indep_atoms_to_wien2k.append(map_atoms[j])
                     break
                 
-        if not len(forces_remap) == len(forces):
-            print "Atomic position mapping between Wien2k and phonopy failed."
-            print "If you think this is caused by a bug of phonopy"
-            print "please report it in the phonopy mainling list."
+        if len(forces_remap) != len(forces):
+            print("Atomic position mapping between Wien2k and phonopy failed.")
+            print("If you think this is caused by a bug of phonopy")
+            print("please report it in the phonopy mainling list.")
             return False
  
         # 2. Distribute forces from independent to dependent atoms.
         force_set = []
         for i in range(natom):
+            j = indep_atoms_to_wien2k.index(map_atoms[i])
             force_set.append(np.dot(
-                forces_remap[indep_atoms_to_wien2k.index(map_atoms[i])],
-                rotations[map_operations[i]]))
+                rotations[map_operations[i]].T, forces_remap[j]))
 
     return force_set
+
+def _get_independent_atoms_in_dot_scf(filename):
+    positions = []
+    for line in open(filename):
+        if line[:4] == ":POS":
+            if "POSITION" in line:
+                x = float(line[30:37])
+                y = float(line[38:45])
+                z = float(line[46:53])
+            else:
+                x = float(line[27:34])
+                y = float(line[35:42])
+                z = float(line[43:50])
+            num_atom = int(line[4:7])
+            positions.append([x,y,z])
+
+    return np.array(positions)[-num_atom:]
+
+
 
 if __name__ == '__main__':
     from optparse import OptionParser
@@ -437,7 +409,7 @@ if __name__ == '__main__':
         cell.set_cell(lattice)
         npts, r0s, rmts = parse_core_param(open(args[1]))
         text = get_wien2k_struct(cell, npts, r0s, rmts)
-        print text
+        print(text)
 
     elif options.w2v:
         cell, npts, r0s, rmts = parse_wien2k_struct(args[0])
@@ -455,4 +427,5 @@ if __name__ == '__main__':
             w.write("%-10s     %5d     %10.8f     %10.5f\n" %
                     (symbol, npt, r0, rmt))
     else:
-        print "You need to set -r or -w option."
+        print("You need to set -r or -w option.")
+

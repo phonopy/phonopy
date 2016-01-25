@@ -14,7 +14,7 @@ class Conductivity:
                  symmetry,
                  grid_points=None,
                  temperatures=None,
-                 sigmas=[],
+                 sigmas=None,
                  is_isotope=False,
                  mass_variances=None,
                  mesh_divisors=None,
@@ -23,6 +23,8 @@ class Conductivity:
                  no_kappa_stars=False,
                  gv_delta_q=None, # finite difference for group veolocity
                  log_level=0):
+        if sigmas is None:
+            sigmas = []
         self._pp = interaction
         self._collision = None # has to be set derived class
         

@@ -72,10 +72,12 @@ class DerivativeOfDynamicalMatrix:
     def _run_c(self, q, q_direction=None):
         import phonopy._phonopy as phonoc
         num_patom = len(self._p2s_map)
-        ddm_real = np.zeros((3, num_patom * 3, num_patom * 3), dtype='double')
-        ddm_imag = np.zeros((3, num_patom * 3, num_patom * 3), dtype='double')
+
         mass = self._pcell.get_masses()
         fc = self._force_constants
+        itemsize = self._force_constants.itemsize
+        ddm = np.zeros((3, num_patom * 3, num_patom * 3),
+                       dtype=("c%d" % (itemsize * 2)))
         vectors = self._smallest_vectors
         multiplicity = self._multiplicity
         if self._dynmat.is_nac():
@@ -92,8 +94,7 @@ class DerivativeOfDynamicalMatrix:
             nac_factor = 0
             q_dir = None
 
-        phonoc.derivative_dynmat(ddm_real,
-                                 ddm_imag,
+        phonoc.derivative_dynmat(ddm.view(dtype='double'),
                                  fc,
                                  np.array(q, dtype='double'),
                                  np.array(self._pcell.get_cell().T,
@@ -107,9 +108,7 @@ class DerivativeOfDynamicalMatrix:
                                  born,
                                  dielectric,
                                  q_dir)
-        self._ddm = np.array([ddm_real[i] + ddm_real[i].T +
-                              1j * (ddm_imag[i] - ddm_imag[i].T)
-                              for i in range(3)]) / 2
+        self._ddm = ddm
         
     def _run_py(self, q, q_direction=None):
         if self._dynmat.is_nac():
@@ -131,13 +130,16 @@ class DerivativeOfDynamicalMatrix:
         else:
             num_elem = 3
 
-        ddm = np.zeros((num_elem, 3 * num_patom, 3 * num_patom), dtype=complex)
+        itemsize = self._force_constants.itemsize
+        ddm = np.zeros((num_elem, 3 * num_patom, 3 * num_patom),
+                       dtype=("c%d" % (itemsize * 2)))
         
         for i, j in list(np.ndindex(num_patom, num_patom)):
             s_i = self._p2s_map[i]
             s_j = self._p2s_map[j]
             mass = np.sqrt(self._mass[i] * self._mass[j])
-            ddm_local = np.zeros((num_elem, 3, 3), dtype='complex128')
+            ddm_local = np.zeros((num_elem, 3, 3),
+                                 dtype=("c%d" % (itemsize * 2)))
 
             for k in range(num_satom):
                 if s_j != self._s2p_map[k]:

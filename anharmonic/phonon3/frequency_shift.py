@@ -8,9 +8,11 @@ def get_frequency_shift(interaction,
                         grid_points,
                         band_indices,
                         epsilons,
-                        temperatures=[0.0, 300.0],
+                        temperatures=None,
                         output_filename=None,
                         log_level=0):
+    if temperatures is None:
+        temperatures = [0.0, 300.0]
     fst = FrequencyShift(interaction)
     band_indices_flatten = interaction.get_band_indices()
     mesh = interaction.get_mesh_numbers()

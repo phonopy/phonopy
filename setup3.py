@@ -1,6 +1,8 @@
 from distutils.core import setup, Extension
 import numpy
-from setup import extension_spglib, extension_phonopy, packages_phonopy, scripts_phonopy
+from setup import (extension_spglib, extension_phonopy,
+                   packages_phonopy, scripts_phonopy)
+import platform
 
 include_dirs_numpy = [numpy.get_include()]
 
@@ -35,11 +37,14 @@ include_dirs = (['c/harmonic_h',
                  'c/kspclib_h'] +
                 include_dirs_numpy)
 define_macros = []
+
 ##
-## Uncomment and modify below if lapacke is prepared in a special location
+## Modify include_dirs and extra_link_args if lapacke is prepared in a special
+## location
 #
-# include_dirs += ['../lapack-3.5.0/lapacke/include']
-# extra_link_args = ['-lgomp', '../lapack-3.5.0/liblapacke.a']
+if platform.system() == 'Darwin':
+    include_dirs += ['../lapack-3.5.0/lapacke/include']
+    extra_link_args = ['../lapack-3.5.0/liblapacke.a']
 
 ## Uncomment below to measure reciprocal_to_normal_squared_openmp performance
 # define_macros = [('MEASURE_R2N', None)]
@@ -64,7 +69,8 @@ extension_phono3py = Extension(
 
 packages_phono3py = ['anharmonic',
                      'anharmonic.other',
-                     'anharmonic.phonon3']
+                     'anharmonic.phonon3',
+                     'anharmonic.cui']
 scripts_phono3py = ['scripts/phono3py',
                     'scripts/kaccum',
                     'scripts/gaccum']
@@ -86,15 +92,27 @@ extension_lapackepy = Extension(
     include_dirs=include_dirs,
     sources=sources_lapackepy)
 
-setup(name='phono3py',
-      version='0.9.14',
-      description='This is the phono3py module.',
-      author='Atsushi Togo',
-      author_email='atz.togo@gmail.com',
-      url='http://phonopy.sourceforge.net/',
-      packages=(packages_phonopy + packages_phono3py),
-      scripts=(scripts_phonopy + scripts_phono3py),
-      ext_modules=[extension_spglib,
-                   extension_lapackepy,
-                   extension_phonopy,
-                   extension_phono3py])
+if __name__ == '__main__':
+    version = ''
+    with open("phonopy/version.py") as w:
+        for line in w:
+            if "__version__" in line:
+                version = line.split()[2].strip('\"')
+    
+    if all([x.isdigit() for x in version.split('.')]):
+        setup(name='phono3py',
+              version=version,
+              description='This is the phono3py module.',
+              author='Atsushi Togo',
+              author_email='atz.togo@gmail.com',
+              url='http://phonopy.sourceforge.net/',
+              packages=(packages_phonopy + packages_phono3py),
+              scripts=(scripts_phonopy + scripts_phono3py),
+              ext_modules=[extension_spglib,
+                           extension_lapackepy,
+                           extension_phonopy,
+                           extension_phono3py])
+    else:
+        print("Phono3py version number could not be retrieved.")
+
+

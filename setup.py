@@ -84,12 +84,21 @@ scripts_phonopy = ['scripts/phonopy',
                    'scripts/pdosplot']
 
 if __name__ == '__main__':
-    setup(name='phonopy',
-          version='1.10.1',
-          description='This is the phonopy module.',
-          author='Atsushi Togo',
-          author_email='atz.togo@gmail.com',
-          url='http://phonopy.sourceforge.net/',
-          packages=packages_phonopy,
-          scripts=scripts_phonopy,
-          ext_modules=ext_modules_phonopy)
+    version = ''
+    with open("phonopy/version.py") as w:
+        for line in w:
+            if "__version__" in line:
+                version = line.split()[2].strip('\"')
+
+    if all([x.isdigit() for x in version.split('.')]):
+        setup(name='phonopy',
+              version=version,
+              description='This is the phonopy module.',
+              author='Atsushi Togo',
+              author_email='atz.togo@gmail.com',
+              url='http://phonopy.sourceforge.net/',
+              packages=packages_phonopy,
+              scripts=scripts_phonopy,
+              ext_modules=ext_modules_phonopy)
+    else:
+        print("Phonopy version number could not be retrieved.")

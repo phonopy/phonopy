@@ -11,7 +11,7 @@ def get_thermal_conductivity_RTA(
         interaction,
         symmetry,
         temperatures=np.arange(0, 1001, 10, dtype='double'),
-        sigmas=[],
+        sigmas=None,
         mass_variances=None,
         grid_points=None,
         is_isotope=False,
@@ -29,6 +29,8 @@ def get_thermal_conductivity_RTA(
         output_filename=None,
         log_level=0):
 
+    if sigmas is None:
+        sigmas = []
     if log_level:
         print("-------------------- Lattice thermal conducitivity (RTA) "
               "--------------------")
@@ -299,7 +301,7 @@ class Conductivity_RTA(Conductivity):
                  symmetry,
                  grid_points=None,
                  temperatures=np.arange(0, 1001, 10, dtype='double'),
-                 sigmas=[],
+                 sigmas=None,
                  is_isotope=False,
                  mass_variances=None,
                  boundary_mfp=None, # in micrometre
@@ -312,6 +314,8 @@ class Conductivity_RTA(Conductivity):
                  run_with_g=True,
                  log_level=0):
 
+        if sigmas is None:
+            sigmas = []
         self._pp = None
         self._temperatures = None
         self._sigmas = None

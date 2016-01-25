@@ -38,11 +38,9 @@ from phonopy.units import VaspToTHz
 def estimate_band_connection(prev_eigvecs, eigvecs, prev_band_order):
     metric = np.abs(np.dot(prev_eigvecs.conjugate().T, eigvecs))
     connection_order = []
-    indices = range(len(metric))
-    indices.reverse()
     for overlaps in metric:
         maxval = 0
-        for i in indices:
+        for i in reversed(range(len(metric))):
             val = overlaps[i]
             if i in connection_order:
                 continue

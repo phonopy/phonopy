@@ -183,8 +183,7 @@ PyInit__phonopy(void)
 
 static PyObject * py_get_dynamical_matrix(PyObject *self, PyObject *args)
 {
-  PyArrayObject* dynamical_matrix_real;
-  PyArrayObject* dynamical_matrix_imag;
+  PyArrayObject* dynamical_matrix;
   PyArrayObject* force_constants;
   PyArrayObject* r_vector;
   PyArrayObject* q_vector;
@@ -193,9 +192,8 @@ static PyObject * py_get_dynamical_matrix(PyObject *self, PyObject *args)
   PyArrayObject* super2prim_map;
   PyArrayObject* prim2super_map;
 
-  if (!PyArg_ParseTuple(args, "OOOOOOOOO",
-			&dynamical_matrix_real,
-			&dynamical_matrix_imag,
+  if (!PyArg_ParseTuple(args, "OOOOOOOO",
+			&dynamical_matrix,
 			&force_constants,
 			&q_vector,
 			&r_vector,
@@ -205,8 +203,7 @@ static PyObject * py_get_dynamical_matrix(PyObject *self, PyObject *args)
 			&prim2super_map))
     return NULL;
 
-  double* dm_r = (double*)PyArray_DATA(dynamical_matrix_real);
-  double* dm_i = (double*)PyArray_DATA(dynamical_matrix_imag);
+  double* dm = (double*)PyArray_DATA(dynamical_matrix);
   const double* fc = (double*)PyArray_DATA(force_constants);
   const double* q = (double*)PyArray_DATA(q_vector);
   const double* r = (double*)PyArray_DATA(r_vector);
@@ -217,8 +214,7 @@ static PyObject * py_get_dynamical_matrix(PyObject *self, PyObject *args)
   const int num_patom = PyArray_DIMS(prim2super_map)[0];
   const int num_satom = PyArray_DIMS(super2prim_map)[0];
 
-  get_dynamical_matrix_at_q(dm_r,
-			    dm_i,
+  get_dynamical_matrix_at_q(dm,
 			    num_patom,
 			    num_satom,
 			    fc,
@@ -236,8 +232,7 @@ static PyObject * py_get_dynamical_matrix(PyObject *self, PyObject *args)
 
 static PyObject * py_get_nac_dynamical_matrix(PyObject *self, PyObject *args)
 {
-  PyArrayObject* dynamical_matrix_real;
-  PyArrayObject* dynamical_matrix_imag;
+  PyArrayObject* dynamical_matrix;
   PyArrayObject* force_constants;
   PyArrayObject* r_vector;
   PyArrayObject* q_cart_vector;
@@ -249,9 +244,8 @@ static PyObject * py_get_nac_dynamical_matrix(PyObject *self, PyObject *args)
   PyArrayObject* born;
   double factor;
 
-  if (!PyArg_ParseTuple(args, "OOOOOOOOOOOd",
-			&dynamical_matrix_real,
-			&dynamical_matrix_imag,
+  if (!PyArg_ParseTuple(args, "OOOOOOOOOOd",
+			&dynamical_matrix,
 			&force_constants,
 			&q_vector,
 			&r_vector,
@@ -264,8 +258,7 @@ static PyObject * py_get_nac_dynamical_matrix(PyObject *self, PyObject *args)
 			&factor))
     return NULL;
 
-  double* dm_r = (double*)PyArray_DATA(dynamical_matrix_real);
-  double* dm_i = (double*)PyArray_DATA(dynamical_matrix_imag);
+  double* dm = (double*)PyArray_DATA(dynamical_matrix);
   const double* fc = (double*)PyArray_DATA(force_constants);
   const double* q_cart = (double*)PyArray_DATA(q_cart_vector);
   const double* q = (double*)PyArray_DATA(q_vector);
@@ -285,8 +278,7 @@ static PyObject * py_get_nac_dynamical_matrix(PyObject *self, PyObject *args)
   n = num_satom / num_patom;
 
   get_charge_sum(charge_sum, num_patom, factor / n, q_cart, z);
-  get_dynamical_matrix_at_q(dm_r,
-			    dm_i,
+  get_dynamical_matrix_at_q(dm,
 			    num_patom,
 			    num_satom,
 			    fc,
@@ -305,8 +297,7 @@ static PyObject * py_get_nac_dynamical_matrix(PyObject *self, PyObject *args)
 
 static PyObject * py_get_derivative_dynmat(PyObject *self, PyObject *args)
 {
-  PyArrayObject* derivative_dynmat_real;
-  PyArrayObject* derivative_dynmat_imag;
+  PyArrayObject* derivative_dynmat;
   PyArrayObject* force_constants;
   PyArrayObject* r_vector;
   PyArrayObject* lattice;
@@ -320,9 +311,8 @@ static PyObject * py_get_derivative_dynmat(PyObject *self, PyObject *args)
   PyArrayObject* q_direction;
   double nac_factor;
 
-  if (!PyArg_ParseTuple(args, "OOOOOOOOOOdOOO",
-			&derivative_dynmat_real,
-			&derivative_dynmat_imag,
+  if (!PyArg_ParseTuple(args, "OOOOOOOOOdOOO",
+			&derivative_dynmat,
 			&force_constants,
 			&q_vector,
 			&lattice, /* column vectors */
@@ -338,8 +328,7 @@ static PyObject * py_get_derivative_dynmat(PyObject *self, PyObject *args)
     return NULL;
   }
 
-  double* ddm_r = (double*)PyArray_DATA(derivative_dynmat_real);
-  double* ddm_i = (double*)PyArray_DATA(derivative_dynmat_imag);
+  double* ddm = (double*)PyArray_DATA(derivative_dynmat);
   const double* fc = (double*)PyArray_DATA(force_constants);
   const double* q = (double*)PyArray_DATA(q_vector);
   const double* lat = (double*)PyArray_DATA(lattice);
@@ -369,8 +358,7 @@ static PyObject * py_get_derivative_dynmat(PyObject *self, PyObject *args)
     q_dir = (double*)PyArray_DATA(q_direction);
   }
 
-  get_derivative_dynmat_at_q(ddm_r,
-			     ddm_i,
+  get_derivative_dynmat_at_q(ddm,
 			     num_patom,
 			     num_satom,
 			     fc,

@@ -43,11 +43,12 @@ import phonopy.file_IO as file_IO
 from phonopy.cui.settings import Settings, PhonopyConfParser
 from phonopy.cui.show_symmetry import check_symmetry
 from phonopy.units import *
-from phonopy.version import phonopy_version
+from phonopy.version import __version__
 from phonopy.structure.cells import print_cell, determinant
 from phonopy.structure.atoms import atom_data, symbol_map
 from phonopy.interface import create_FORCE_SETS, read_crystal_structure
 
+phonopy_version = __version__
 
 # AA is created at http://www.network-science.de/ascii/.
 def print_phononpy():
@@ -125,6 +126,9 @@ def print_cells(phonon, unitcell_filename):
 
 def print_settings(settings):
     print("Python version %d.%d.%d" % sys.version_info[:3])
+    import phonopy.structure.spglib as spglib
+    print("Spglib version %d.%d.%d" % spglib.get_version())
+
     run_mode = settings.get_run_mode()
     if run_mode == 'band':
         print("Band structure mode")
@@ -328,9 +332,6 @@ parser.add_option("--fc_symmetry", dest="fc_symmetry",
 parser.add_option("--fits_debye_model", dest="fits_debye_model",
                   action="store_true",
                   help="Fits total DOS to a Debye model")
-parser.add_option("--fz", "--force_sets_zero", dest="force_sets_zero_mode",
-                  action="store_true",
-                  help="Create FORCE_SETS. disp.yaml in the current directory and vapsrun.xml's for VASP or case.scf(m) for Wien2k as arguments are required. The first argument is that of the perfect supercell to subtract residual forces")
 parser.add_option("--gc", "--gamma_center", dest="is_gamma_center",
                   action="store_true",
                   help="Set mesh as Gamma center")
@@ -530,7 +531,7 @@ if options.force_sets_mode or options.force_sets_zero_mode:
     error_num = create_FORCE_SETS(interface_mode,
                                   args,
                                   options,
-                                  log_level)
+                                  log_level=log_level)
     if log_level > 0:
         print_end()
     sys.exit(error_num)
@@ -905,7 +906,7 @@ if run_mode == 'qpoints':
         if log_level > 0:
             print("Q-points that will be calculated at:")
             for q in q_points:
-                print("    ", q)
+                print("    %s" % q)
     else:
         q_points = file_IO.parse_QPOINTS()
         if log_level > 0:

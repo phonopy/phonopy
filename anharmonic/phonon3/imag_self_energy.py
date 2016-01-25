@@ -12,7 +12,7 @@ def get_imag_self_energy(interaction,
                          sigmas,
                          frequency_step=None,
                          num_frequency_points=None,
-                         temperatures=[0.0, 300.0],
+                         temperatures=None,
                          scattering_event_class=None, # class 1 or 2
                          run_with_g=True,
                          write_details=False,
@@ -44,6 +44,8 @@ def get_imag_self_energy(interaction,
         Tuple: (Imaginary part of self energy, sampling frequency points)
 
     """
+    if temperatures is None:
+        temperatures = [0.0, 300.0]
 
     if temperatures is None:
         print("Temperatures have to be set.")

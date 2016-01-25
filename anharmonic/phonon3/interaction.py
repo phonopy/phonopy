@@ -299,6 +299,6 @@ class Interaction:
         num_grid = len(self._grid_address)
         self._phonon_done = np.zeros(num_grid, dtype='byte')
         self._frequencies = np.zeros((num_grid, num_band), dtype='double')
+        itemsize = self._frequencies.itemsize
         self._eigenvectors = np.zeros((num_grid, num_band, num_band),
-                                      dtype='complex128')
-        
+                                      dtype=("c%d" % (itemsize * 2)))
