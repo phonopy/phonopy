@@ -3,6 +3,13 @@
 Change Log
 ==========
 
+Jan-25-2016: Version 1.10.2
+----------------------------
+
+* Python 3 support
+* Many fixes
+* spglib update to v1.9.0
+
 Oct-20-2015: Version 1.10.0 (release for testing)
 --------------------------------------------------
 

@@ -22,9 +22,6 @@ Welcome to phonopy
 **Phonopy** is an open source package for phonon calculations at
 harmonic and quasi-harmonic levels.
 
-Phonopy-1.9.7 is the stable version and 1.10.0 is an experimental
-release toward python 3 support.
-
 **Phono3py** for phonon-phonon interaction calculations has been 
 released as an open beta
 version. See the document at http://atztogo.github.io/phono3py/
@@ -37,45 +34,32 @@ results can be downloaed.
 
 
 Selected features
-=======================
-
-Selected features of harmonic and quasi-harmonic phonons are:
+==================
 
 - Phonon dispersion relation (band structure)
 - Phonon DOS and partial-DOS
-- Phonon thermal properties, free energy, heat capacity (Cv), and entropy
+- Phonon thermal properties, free energy, heat capacity (Cv), and
+  entropy
 - Phonon group velocity
+- Thermal ellipsoids / mean square displacements
 - Thermal expansion and heat capacity at constant pressure (Cp) within
   quasi-harmonic approximation (:ref:`phonopy-qha <phonopy_qha>`)
 - Mode Grüneisen parameters (:ref:`gruneisen <phonopy_gruneisen>`)
 - Non-analytical-term correction, LO-TO splitting (Born effective
   charges and dielectric constant are required.)
-- Creation of atomic modulations of normal modes
-- Characters of irreducible representations of normal modes
-- Crystal symmetry tools
-- :ref:`Python module <phonopy_module>` (Phonopy can be used in python script.)
-- Graphical plots
+- Irreducible representations of normal modes
+- Interfaces to calculators:
+  :ref:`VASP <tutorial>`,
+  :ref:`VASP DFPT <vasp_dfpt_interface>`,
+  :ref:`Abinit <abinit_interface>`,
+  :ref:`Pwscf <pwscf_interface>`,
+  :ref:`Siesta <siesta_interface>`,
+  :ref:`Elk <elk_interface>`,
+  :ref:`FHI-aims <FHI_aims_interface>`,
+  :ref:`Wien2k <wien2k_interface>`
+- :ref:`APIs <phonopy_module>`
   
 |i0| |i1| |i2| |i3|
-
-
-Interfaces to calculators
-===========================
-
-- :ref:`VASP interface <tutorial>` (:ref:`finite displacement method <reference_plk>`)
-- :ref:`Wien2k interface <wien2k_interface>` (:ref:`finite displacement method <reference_plk>`)
-- :ref:`Abinit interface <abinit_interface>` (:ref:`finite displacement method <reference_plk>`) 
-- :ref:`Pwscf interface <pwscf_interface>` (:ref:`finite displacement method <reference_plk>`) 
-- :ref:`Siesta interface <siesta_interface>` (:ref:`finite displacement method <reference_plk>`) 
-- :ref:`Elk interface <elk_interface>` (:ref:`finite displacement method <reference_plk>`) 
-- :ref:`VASP DFPT interface <vasp_dfpt_interface>` (force constants)
-- :ref:`FHI-aims interface <FHI_aims_interface>` (:ref:`finite displacement method <reference_plk>`)
-
-
-For the other calculators, input files under certain formats
-(:ref:`force sets <file_forces>` or :ref:`force constants
-<file_force_constants>`) are required. But the interfaces for popular
-calculators may be implemented if requested.
 
 Documentation
 =============

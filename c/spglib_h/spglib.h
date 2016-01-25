@@ -1,5 +1,3 @@
-/* version 1.8.2.1 */
-
 /* Copyright (C) 2008 Atsushi Togo */
 /* All rights reserved. */
 
@@ -42,6 +40,10 @@
 #ifndef SPGCONST
 #define SPGCONST
 #endif
+
+int spg_get_major_version(void);
+int spg_get_minor_version(void);
+int spg_get_micro_version(void);
 
 /*
   ------------------------------------------------------------------
