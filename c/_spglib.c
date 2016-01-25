@@ -43,6 +43,7 @@
 #define PYUNICODE_FROMSTRING PyUnicode_FromString
 #endif
 
+static PyObject * get_version(PyObject *self, PyObject *args);
 static PyObject * get_dataset(PyObject *self, PyObject *args);
 static PyObject * get_spacegroup_type(PyObject *self, PyObject *args);
 static PyObject * get_pointgroup(PyObject *self, PyObject *args);
@@ -80,6 +81,7 @@ error_out(PyObject *m) {
 
 static PyMethodDef _spglib_methods[] = {
   {"error_out", (PyCFunction)error_out, METH_NOARGS, NULL},
+  {"version", get_version, METH_VARARGS, "Spglib version"},
   {"dataset", get_dataset, METH_VARARGS, "Dataset for crystal symmetry"},
   {"spacegroup_type", get_spacegroup_type, METH_VARARGS, "Space-group type symbols"},
   {"symmetry_from_database", get_symmetry_from_database, METH_VARARGS,
@@ -165,7 +167,27 @@ PyInit__spglib(void)
 #endif
 }
 
+static PyObject * get_version(PyObject *self, PyObject *args)
+{
+  if (!PyArg_ParseTuple(args, "")) {
+    return NULL;
+  }
 
+  PyObject *array;
+  int i;
+  int version[3];
+
+  version[0] = spg_get_major_version();
+  version[1] = spg_get_minor_version();
+  version[2] = spg_get_micro_version();
+
+  array = PyList_New(3);
+  for (i = 0; i < 3; i++) {
+    PyList_SetItem(array, i, PyLong_FromLong((long)version[i]));
+  }
+
+  return array;
+}
 
 static PyObject * get_dataset(PyObject *self, PyObject *args)
 {
