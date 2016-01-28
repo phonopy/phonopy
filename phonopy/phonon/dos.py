@@ -112,8 +112,14 @@ def plot_partial_dos(pyplot,
     for set_for_sum in indices:
         pdos_sum = np.zeros(frequency_points.shape, dtype='double')
         for i in set_for_sum:
-            if i > num_atom - 1 or i < 0:
-                print("Your specified atom number is out of range.")
+            if i > num_atom - 1:
+                print("Atom number \'%d\' is specified," % (i + 1))
+                print("but it is not allowed to be larger than the number of "
+                      "atoms.")
+                raise ValueError
+            if i < 0:
+                print("Atom number \'%d\' is specified, but it must be "
+                      "positive." % (i + 1))
                 raise ValueError
             pdos_sum += partial_dos[i]
         if flip_xy:
