@@ -327,7 +327,7 @@ SI base unit, i.e., to Joule, kg, and metre, respectively. These values
 implemented in phonopy are found at `a phonopy github page
 <https://github.com/atztogo/phonopy/blob/master/phonopy/units.py>`_. This
 unit conversion factor can be manually specified. See
-:ref:`unit_conversion_factor_option`.
+:ref:`frequency_conversion_factor_tag`.
 
 The unit conversion factor in the ``BORN`` file is multiplied with the second
 term of the right hand side of the equation in

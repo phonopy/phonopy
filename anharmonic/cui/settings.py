@@ -12,6 +12,7 @@ class Phono3pySettings(Settings):
         self._create_displacements = False
         self._cutoff_fc3_distance = None
         self._cutoff_pair_distance = None
+        self._frequency_scale_factor = None
         self._grid_addresses = None
         self._grid_points = None
         self._ion_clamped = False
@@ -76,6 +77,12 @@ class Phono3pySettings(Settings):
 
     def get_cutoff_pair_distance(self):
         return self._cutoff_pair_distance
+
+    def set_frequency_scale_factor(self, frequency_scale_factor):
+        self._frequency_scale_factor = frequency_scale_factor
+
+    def get_frequency_scale_factor(self):
+        return self._frequency_scale_factor
 
     def set_grid_addresses(self, grid_addresses):
         self._grid_addresses = grid_addresses
@@ -258,28 +265,27 @@ class Phono3pyConfParser(ConfParser):
         for opt in self._option_list:
             if opt.dest == 'phonon_supercell_dimension':
                 if self._options.phonon_supercell_dimension is not None:
-                    self._confs['dim_fc2'] = \
-                        self._options.phonon_supercell_dimension
+                    self._confs['dim_fc2'] = self._options.phonon_supercell_dimension
 
             if opt.dest == 'boundary_mfp':
                 if self._options.boundary_mfp is not None:
-                    self._confs['boundary_mfp'] = \
-                        self._options.boundary_mfp
+                    self._confs['boundary_mfp'] = self._options.boundary_mfp
 
             if opt.dest == 'constant_averaged_pp_interaction':
                 if self._options.constant_averaged_pp_interaction is not None:
-                    self._confs['constant_averaged_pp_interaction'] = \
-                        self._options.constant_averaged_pp_interaction
+                    self._confs['constant_averaged_pp_interaction'] = self._options.constant_averaged_pp_interaction
 
             if opt.dest == 'cutoff_fc3_distance':
                 if self._options.cutoff_fc3_distance is not None:
-                    self._confs['cutoff_fc3_distance'] = \
-                        self._options.cutoff_fc3_distance
+                    self._confs['cutoff_fc3_distance'] = self._options.cutoff_fc3_distance
 
             if opt.dest == 'cutoff_pair_distance':
                 if self._options.cutoff_pair_distance is not None:
-                    self._confs['cutoff_pair_distance'] = \
-                        self._options.cutoff_pair_distance
+                    self._confs['cutoff_pair_distance'] = self._options.cutoff_pair_distance
+
+            if opt.dest == 'frequency_scale_factor':
+                if self._options.frequency_scale_factor is not None:
+                    self._confs['frequency_scale_factor'] = self._options.frequency_scale_factor
 
             if opt.dest == 'grid_addresses':
                 if self._options.grid_addresses is not None:
@@ -367,8 +373,7 @@ class Phono3pyConfParser(ConfParser):
 
             if opt.dest == 'scattering_event_class':
                 if self._options.scattering_event_class is not None:
-                    self._confs['scattering_event_class'] = \
-                        self._options.scattering_event_class
+                    self._confs['scattering_event_class'] = self._options.scattering_event_class
 
             if opt.dest == 'temperatures':
                 if self._options.temperatures is not None:
@@ -436,6 +441,10 @@ class Phono3pyConfParser(ConfParser):
             if conf_key == 'cutoff_pair_distance':
                 self.set_parameter('cutoff_pair_distance',
                                    float(confs['cutoff_pair_distance']))
+
+            if conf_key == 'frequency_scale_factor':
+                self.set_parameter('frequency_scale_factor',
+                                   float(confs['frequency_scale_factor']))
 
             if conf_key == 'grid_addresses':
                 vals = [int(x) for x in
@@ -605,6 +614,12 @@ class Phono3pyConfParser(ConfParser):
         if params.has_key('cutoff_pair_distance'):
             self._settings.set_cutoff_pair_distance(
                 params['cutoff_pair_distance'])
+
+        # This scale factor is multiplied to frequencies only, i.e., changes 
+        # frequencies but assumed not to change the physical unit
+        if params.has_key('frequency_scale_factor'):
+            self._settings.set_frequency_scale_factor(
+                params['frequency_scale_factor'])
 
         # Grid addresses (sets of three integer values)
         if params.has_key('grid_addresses'):

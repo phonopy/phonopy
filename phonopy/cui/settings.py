@@ -53,6 +53,7 @@ class Settings:
         self._dm_decimals = None
         self._fc_decimals = None
         self._fc_symmetry_iteration = 0
+        self._frequency_conversion_factor = None
         self._gv_delta_q = None
         self._is_diagonal_displacement = True
         self._is_eigenvectors = False
@@ -134,6 +135,12 @@ class Settings:
 
     def get_fc_decimals(self):
         return self._fc_decimals
+
+    def set_frequency_conversion_factor(self, frequency_conversion_factor):
+        self._frequency_conversion_factor = frequency_conversion_factor
+
+    def get_frequency_conversion_factor(self):
+        return self._frequency_conversion_factor
 
     def set_frequency_pitch(self, frequency_pitch):
         self._frequency_pitch = frequency_pitch
@@ -365,6 +372,11 @@ class ConfParser:
         if 'fc_symmetry' in params:
             self._settings.set_fc_symmetry_iteration(int(params['fc_symmetry']))
     
+        # Frequency unit conversion factor
+        if 'frequency_conversion_factor' in params:
+            self._settings.set_frequency_conversion_factor(
+                params['frequency_conversion_factor'])
+
         # Spectram drawing step
         if 'frequency_pitch' in params:
             self._settings.set_frequency_pitch(params['frequency_pitch'])
@@ -457,6 +469,8 @@ class ConfParser:
             self._settings.set_min_temperature(params['tmin'])
         if 'tstep' in params:
             self._settings.set_temperature_step(params['tstep'])
+
+        # Choice of imposing translational invariance
         if 'tsym_type' in params:
             self._settings.set_tsym_type(params['tsym_type'])
     
@@ -601,6 +615,10 @@ class ConfParser:
             if opt.dest == 'mesh_numbers':
                 if self._options.mesh_numbers:
                     self._confs['mesh_numbers'] = self._options.mesh_numbers
+
+            if opt.dest == 'frequency_conversion_factor':
+                if self._options.frequency_conversion_factor:
+                    self._confs['frequency_conversion_factor'] = self._options.frequency_conversion_factor
 
             if opt.dest == 'frequency_pitch':
                 if self._options.frequency_pitch:
@@ -796,6 +814,10 @@ class ConfParser:
                     self.setting_error("Number of elements of q_direction is less than 3")
                 else:
                     self.set_parameter('q_direction', q_direction)
+
+            if conf_key == 'frequency_conversion_factor':
+                val = float(confs['frequency_conversion_factor'])
+                self.set_parameter('frequency_conversion_factor', val)
 
             if conf_key == 'frequency_pitch':
                 val = float(confs['frequency_pitch'])

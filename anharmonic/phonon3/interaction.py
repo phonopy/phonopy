@@ -1,10 +1,13 @@
 import numpy as np
 from phonopy.phonon.solver import set_phonon_c, set_phonon_py
-from phonopy.harmonic.dynamical_matrix import get_smallest_vectors, get_dynamical_matrix
+from phonopy.harmonic.dynamical_matrix import (get_smallest_vectors,
+                                               get_dynamical_matrix)
 from phonopy.units import VaspToTHz, Hbar, EV, Angstrom, THz, AMU, PlanckConstant
 from anharmonic.phonon3.real_to_reciprocal import RealToReciprocal
 from anharmonic.phonon3.reciprocal_to_normal import ReciprocalToNormal
-from anharmonic.phonon3.triplets import get_triplets_at_q, get_nosym_triplets_at_q, get_bz_grid_address
+from anharmonic.phonon3.triplets import (get_triplets_at_q,
+                                         get_nosym_triplets_at_q,
+                                         get_bz_grid_address)
 
 class Interaction:
     def __init__(self,

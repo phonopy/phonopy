@@ -38,7 +38,7 @@ import sys
 import numpy as np
 from phonopy.interface.vasp import read_vasp
 from phonopy.file_IO import parse_BORN, write_FORCE_SETS, parse_FORCE_SETS
-from phonopy.units import VaspToTHz
+from phonopy.units import VaspToTHz, PwscfToTHz
 from phonopy.version import __version__
 from anharmonic.file_IO import (parse_disp_fc2_yaml, parse_disp_fc3_yaml,
                                 parse_FORCES_FC2, parse_FORCES_FC3,
@@ -72,6 +72,22 @@ if options.quiet:
     log_level = 0
 if options.log_level is not None:
     log_level=options.log_level
+
+#
+# Phono3py interface mode
+#
+# Physical units: energy,  distance,  atomic mass, force
+# vasp          : eV,      Angstrom,  AMU,         eV/Angstrom
+# pwscf         : Ry,      au,        AMU,         Ry/au
+#
+if options.pwscf_mode:
+    interface_mode = 'pwscf'
+    from phonopy.interface.pwscf import write_supercells_with_displacements
+    factor = PwscfToTHz
+else:
+    interface_mode = 'vasp'
+    from phonopy.interface.vasp import write_supercells_with_displacements
+    factor = VaspToTHz
 
 # Input and output filename extension
 input_filename = options.input_filename
@@ -223,7 +239,7 @@ unitcell = read_vasp(unitcell_filename, settings.get_chemical_symbols())
 ######################
 # Translate settings #
 ######################
-conf = get_phono3py_configurations(settings, options)
+conf = get_phono3py_configurations(settings)
 primitive_matrix = conf['primitive_matrix']
 supercell_matrix = conf['supercell_matrix']
 phonon_supercell_matrix = conf['phonon_supercell_matrix']

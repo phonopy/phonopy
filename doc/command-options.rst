@@ -18,6 +18,7 @@ tags:
 * ``--dim`` (``DIM``)
 * ``--dos`` (``DOS = .TRUE.``)
 * ``--eigvecs``, ``--eigenvectors`` (``EIGENVECTORS = .TRUE.``)
+* ``--factor`` (``FREQUENCY_CONVERSION_FACTOR``)
 * ``--fits_debye_model`` (``DEBYE_MODEL = .TRUE.``)
 * ``--gc``, ``--gamma_center`` (``GAMMA_CENTER``)
 * ``--gv``, ``--group_velocity`` (``GROUP_VELOCITY = .TRUE.``)
@@ -316,33 +317,6 @@ Result is plotted (saved) to PDF file.
 ::
 
    % phonopy -p -s
-
-
-Unit conversion factor
-----------------------
-
-.. _unit_conversion_factor_option:
-
-``--factor``
-~~~~~~~~~~~~
-
-Unit conversion factor of frequency from input values to your favorite
-unit is specified. The default value is that to convert to THz. The
-default conversion factors for ``wien2k``, ``abinit``, ``pwscf``, and
-``elk`` are 3.44595, 21.49068, 108.9708, and 154.1079
-respectively. These are determined following the physical unit systems
-of the calculators. How to calcualte these conversion factors is
-explained at :ref:`physical_unit_conversion`.
-
-When calculating thermal property, the factor to THz is
-required. Otherwise the calculated thermal properties have wrong
-units. In the case of band structure plot, any factor can be used,
-where the frequency is simply shown in the unit you specified.
-
-::
-
-   % phonopy --factor=521.471
-
 
 
 Log level
