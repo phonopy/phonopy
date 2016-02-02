@@ -436,7 +436,7 @@ def write_imag_self_energy_at_grid_point(gp,
                                          temperature=None,
                                          scattering_event_class=None,
                                          filename=None,
-                                         is_nosym=False):
+                                         is_mesh_symmetry=False):
 
     gammas_filename = "gammas"
     gammas_filename += "-m%d%d%d-g%d-" % (mesh[0],
@@ -457,7 +457,7 @@ def write_imag_self_energy_at_grid_point(gp,
 
     if not filename == None:
         gammas_filename += ".%s" % filename
-    elif is_nosym:
+    elif not is_mesh_symmetry:
         gammas_filename += ".nosym"
     gammas_filename += ".dat"
 
@@ -473,7 +473,7 @@ def write_joint_dos(gp,
                     sigma=None,
                     temperatures=None,
                     filename=None,
-                    is_nosym=False):
+                    is_mesh_symmetry=True):
     if temperatures is None:
         _write_joint_dos_at_t(gp,
                               mesh,
@@ -482,7 +482,7 @@ def write_joint_dos(gp,
                               sigma=sigma,
                               temperature=None,
                               filename=filename,
-                              is_nosym=is_nosym)
+                              is_mesh_symmetry=is_mesh_symmetry)
     else:
         for jdos_at_t, t in zip(jdos, temperatures):
             _write_joint_dos_at_t(gp,
@@ -492,7 +492,7 @@ def write_joint_dos(gp,
                                   sigma=sigma,
                                   temperature=t,
                                   filename=filename,
-                                  is_nosym=is_nosym)
+                                  is_mesh_symmetry=is_mesh_symmetry)
 
 def _write_joint_dos_at_t(gp,
                           mesh,
@@ -501,13 +501,13 @@ def _write_joint_dos_at_t(gp,
                           sigma=None,
                           temperature=None,
                           filename=None,
-                          is_nosym=False):
+                          is_mesh_symmetry=True):
     jdos_filename = "jdos-m%d%d%d-g%d" % (mesh[0], mesh[1], mesh[2], gp)
     if sigma is not None:
         jdos_filename += ("-s%f" % sigma).rstrip('0').rstrip('\.')
     if temperature is not None:
         jdos_filename += ("-t%f" % temperature).rstrip('0').rstrip('\.')
-    if is_nosym:
+    if not is_mesh_symmetry:
         jdos_filename += ".nosym"
     if filename is not None:
         jdos_filename += ".%s" % filename
@@ -526,7 +526,7 @@ def write_linewidth_at_grid_point(gp,
                                   gamma,
                                   mesh,
                                   sigma=None,
-                                  is_nosym=False,
+                                  is_mesh_symmetry=True,
                                   filename=None):
 
     lw_filename = "linewidth"
@@ -539,7 +539,7 @@ def write_linewidth_at_grid_point(gp,
 
     if not filename == None:
         lw_filename += ".%s" % filename
-    elif is_nosym:
+    elif not is_mesh_symmetry:
         lw_filename += ".nosym"
     lw_filename += ".dat"
 
@@ -554,7 +554,7 @@ def write_frequency_shift(gp,
                           delta,
                           mesh,
                           epsilon=None,
-                          is_nosym=False,
+                          is_mesh_symmetry=True,
                           filename=None):
 
     fst_filename = "frequency_shift"
@@ -568,7 +568,7 @@ def write_frequency_shift(gp,
         fst_filename += "b%d" % (i + 1)
     if not filename == None:
         fst_filename += ".%s" % filename
-    elif is_nosym:
+    elif not is_mesh_symmetry:
         fst_filename += ".nosym"
     fst_filename += ".dat"
 

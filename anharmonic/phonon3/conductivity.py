@@ -20,7 +20,7 @@ class Conductivity:
                  mesh_divisors=None,
                  coarse_mesh_shifts=None,
                  boundary_mfp=None, # in micrometre
-                 no_kappa_stars=False,
+                 is_kappa_star=True,
                  gv_delta_q=None, # finite difference for group veolocity
                  log_level=0):
         if sigmas is None:
@@ -30,7 +30,7 @@ class Conductivity:
         
         self._temperatures = temperatures
         self._sigmas = sigmas
-        self._no_kappa_stars = no_kappa_stars
+        self._is_kappa_star = is_kappa_star
         self._gv_delta_q = gv_delta_q
         self._log_level = log_level
         self._primitive = self._pp.get_primitive()
@@ -41,7 +41,7 @@ class Conductivity:
 
         self._symmetry = symmetry
 
-        if self._no_kappa_stars:
+        if not self._is_kappa_star:
             self._point_operations = np.array([np.eye(3, dtype='intc')],
                                               dtype='intc')
         else:
@@ -173,7 +173,7 @@ class Conductivity:
                 coarse_mesh_shifts=self._coarse_mesh_shifts)
             (self._ir_grid_points,
              self._ir_grid_weights) = self._get_ir_grid_points()
-        elif self._no_kappa_stars: # All grid points
+        elif not self._is_kappa_star: # All grid points
             coarse_grid_address = get_grid_address(self._coarse_mesh)
             coarse_grid_points = np.arange(np.prod(self._coarse_mesh),
                                            dtype='intc')

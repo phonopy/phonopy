@@ -228,12 +228,12 @@ if log_level:
 ##########################
 # Read crystal structure #
 ##########################
-if options.cell_poscar is None:
+if settings.get_cell_filename() is None:
     file_exists('POSCAR', log_level)
     unitcell_filename = 'POSCAR'
 else:
-    file_exists(options.cell_poscar, log_level)
-    unitcell_filename = options.cell_poscar
+    file_exists(settings.get_cell_filename(), log_level)
+    unitcell_filename = settings.get_cell_filename()
 unitcell = read_vasp(unitcell_filename, settings.get_chemical_symbols())
 
 ######################
@@ -257,7 +257,6 @@ num_frequency_points = conf['num_frequency_points']
 frequency_step = conf['frequency_step']
 frequency_scale_factor = conf['frequency_scale_factor']
 cutoff_frequency = conf['cutoff_frequency']
-tsym_type = conf['tsym_type']
 
 symprec = options.symprec
 
@@ -290,9 +289,9 @@ phono3py = Phono3py(
     sigmas=sigmas,
     cutoff_frequency=cutoff_frequency,
     frequency_factor_to_THz=frequency_factor_to_THz,
-    is_symmetry=True,
-    is_nosym=options.is_nosym,
-    symmetrize_fc3_q=options.is_symmetrize_fc3_q,
+    is_symmetry=settings.get_is_symmetry(),
+    is_mesh_symmetry=settings.get_is_mesh_symmetry(),
+    symmetrize_fc3_q=settings.get_is_symmetrize_fc3_q(),
     symprec=symprec,
     log_level=log_level,
     lapack_zheev_uplo=options.uplo)
@@ -319,7 +318,8 @@ if options.write_grid_points:
                       mesh,
                       mesh_divs,
                       coarse_mesh_shifts,
-                      options,
+                      settings.get_is_kappa_star(),                  
+                      symprec,
                       log_level)
 
     if log_level:
@@ -335,7 +335,8 @@ if options.show_num_triplets:
                       mesh_divs,
                       grid_points,
                       coarse_mesh_shifts,
-                      options,
+                      settings.get_is_kappa_star(),                  
+                      symprec,
                       log_level)    
 
     if log_level:
@@ -348,12 +349,6 @@ if options.show_num_triplets:
 create_phono3py_force_constants(phono3py,
                                 phonon_supercell_matrix,
                                 settings,
-                                options.read_fc3,
-                                options.read_fc2,
-                                tsym_type,
-                                options.is_symmetrize_fc3_r,
-                                options.is_symmetrize_fc3_q,
-                                options.is_symmetrize_fc2,
                                 input_filename,
                                 output_filename,
                                 log_level)
@@ -442,7 +437,7 @@ if run_mode == "jdos":
         temperatures=temperature_points,
         frequency_factor_to_THz=frequency_factor_to_THz,
         frequency_scale_factor=frequency_scale_factor,
-        is_nosym=options.is_nosym,
+        is_mesh_symmetry=settings.get_is_mesh_symmetry(),
         symprec=symprec,
         output_filename=output_filename,
         log_level=log_level)
@@ -506,7 +501,7 @@ if run_mode is not None:
         nac_q_direction=nac_q_direction,
         constant_averaged_interaction=ave_pp,
         frequency_scale_factor=frequency_scale_factor,
-        unit_conversion=options.pp_unit_conversion)
+        unit_conversion=settings.get_pp_conversion_factor())
 
 if run_mode == "linewidth":
     if grid_points is None:
@@ -557,11 +552,11 @@ elif run_mode == "conductivity-RTA" or run_mode == "conductivity-LBTE":
         grid_points=grid_points,
         boundary_mfp=settings.get_boundary_mfp(),
         use_averaged_pp_interaction=settings.get_average_pp_interaction(),
-        gamma_unit_conversion=options.gamma_unit_conversion,
+        gamma_unit_conversion=settings.get_gamma_conversion_factor(),
         mesh_divisors=mesh_divs,
         coarse_mesh_shifts=settings.get_coarse_mesh_shifts(),
-        is_reducible_collision_matrix=options.is_reducible_collision_matrix,
-        no_kappa_stars=settings.get_no_kappa_stars(),
+        is_reducible_collision_matrix=settings.get_is_reducible_collision_matrix(),
+        is_kappa_star=settings.get_is_kappa_star(),
         gv_delta_q=settings.get_group_velocity_delta_q(),
         run_with_g=settings.get_run_with_g(),
         pinv_cutoff=settings.get_pinv_cutoff(),

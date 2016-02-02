@@ -104,13 +104,6 @@ def get_phono3py_configurations(settings):
     else:
         cutoff_frequency = settings.get_cutoff_frequency()
 
-    if settings.get_is_translational_symmetry():
-        tsym_type = 1
-    elif settings.get_tsym_type() > 0:
-        tsym_type = settings.get_tsym_type()
-    else:
-        tsym_type = 0
-
     conf = {}
     conf['primitive_matrix'] = primitive_matrix
     conf['supercell_matrix'] = supercell_matrix
@@ -129,6 +122,5 @@ def get_phono3py_configurations(settings):
     conf['frequency_step'] = frequency_step
     conf['frequency_scale_factor'] = frequency_scale_factor
     conf['cutoff_frequency'] = cutoff_frequency
-    conf['tsym_type'] = tsym_type
 
     return conf

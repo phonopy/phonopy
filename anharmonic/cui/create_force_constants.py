@@ -48,15 +48,21 @@ from anharmonic.cui.show_log import (show_phono3py_force_constants_settings,
 def create_phono3py_force_constants(phono3py,
                                     phonon_supercell_matrix,
                                     settings,
-                                    read_fc3,
-                                    read_fc2,
-                                    tsym_type,
-                                    symmetrize_fc3_r,
-                                    symmetrize_fc3_q,
-                                    symmetrize_fc2,
                                     input_filename,
                                     output_filename,
                                     log_level):
+    read_fc3 = settings.get_read_fc3()
+    read_fc2 = settings.get_read_fc2()
+    symmetrize_fc3_r = settings.get_is_symmetrize_fc3_r()
+    symmetrize_fc3_q = settings.get_is_symmetrize_fc3_q()
+    symmetrize_fc2 = settings.get_is_symmetrize_fc2()
+    if settings.get_is_translational_symmetry():
+        tsym_type = 1
+    elif settings.get_tsym_type() > 0:
+        tsym_type = settings.get_tsym_type()
+    else:
+        tsym_type = 0
+
     if log_level:
         show_phono3py_force_constants_settings(read_fc3,
                                                read_fc2,

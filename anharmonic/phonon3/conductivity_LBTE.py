@@ -22,7 +22,7 @@ def get_thermal_conductivity_LBTE(
         grid_points=None,
         boundary_mfp=None, # in micrometre
         is_reducible_collision_matrix=False,
-        no_kappa_stars=False,
+        is_kappa_star=True,
         gv_delta_q=1e-4, # for group velocity
         pinv_cutoff=1.0e-8,
         write_collision=False,
@@ -54,7 +54,7 @@ def get_thermal_conductivity_LBTE(
         mass_variances=mass_variances,
         boundary_mfp=boundary_mfp,
         is_reducible_collision_matrix=is_reducible_collision_matrix,
-        no_kappa_stars=no_kappa_stars,
+        is_kappa_star=is_kappa_star,
         gv_delta_q=gv_delta_q,
         pinv_cutoff=pinv_cutoff,
         log_level=log_level)
@@ -256,7 +256,7 @@ class Conductivity_LBTE(Conductivity):
                  mass_variances=None,
                  boundary_mfp=None, # in micrometre
                  is_reducible_collision_matrix=False,
-                 no_kappa_stars=False,
+                 is_kappa_star=True,
                  gv_delta_q=None, # finite difference for group veolocity
                  pinv_cutoff=1.0e-8,
                  log_level=0):
@@ -265,7 +265,7 @@ class Conductivity_LBTE(Conductivity):
         self._pp = None
         self._temperatures = None
         self._sigmas = None
-        self._no_kappa_stars = None
+        self._is_kappa_star = None
         self._gv_delta_q = None
         self._log_level = None
         self._primitive = None
@@ -313,12 +313,12 @@ class Conductivity_LBTE(Conductivity):
                               is_isotope=is_isotope,
                               mass_variances=mass_variances,
                               boundary_mfp=boundary_mfp,
-                              no_kappa_stars=no_kappa_stars,
+                              is_kappa_star=is_kappa_star,
                               gv_delta_q=gv_delta_q,
                               log_level=log_level)
 
         self._is_reducible_collision_matrix = is_reducible_collision_matrix
-        if self._no_kappa_stars:
+        if not self._is_kappa_star:
             self._is_reducible_collision_matrix = True
         self._collision_matrix = None
         self._pinv_cutoff = pinv_cutoff
@@ -472,7 +472,7 @@ class Conductivity_LBTE(Conductivity):
             sys.stdout.flush()
             
         if self._is_reducible_collision_matrix:
-            if not self._no_kappa_stars:
+            if self._is_kappa_star:
                 self._expand_collisions()
             self._combine_reducible_collisions()
             weights = np.ones(np.prod(self._mesh), dtype='intc')

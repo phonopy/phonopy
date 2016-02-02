@@ -39,7 +39,7 @@ def get_parser():
     parser.set_defaults(band_indices=None,
                         band_paths=None,
                         band_points=None,
-                        cell_poscar=None,
+                        cell_filename=None,
                         constant_averaged_pp_interaction=None,
                         cutoff_fc3_distance=None,
                         cutoff_frequency=None,
@@ -69,7 +69,7 @@ def get_parser():
                         is_decay_channel=False,
                         is_nodiag=False,
                         is_displacement=False,
-                        is_nosym=False,
+                        is_nomeshsym=False,
                         is_gruneisen=False,
                         is_isotope=False,
                         is_joint_dos=False,
@@ -147,7 +147,7 @@ def get_parser():
         "--br", "--bterta", dest="is_bterta", action="store_true",
         help="Calculate thermal conductivity in BTE-RTA")
     parser.add_option(
-        "-c", "--cell", dest="cell_poscar", action="store", type="string",
+        "-c", "--cell", dest="cell_filename", action="store", type="string",
         help="Read unit cell", metavar="FILE")
     parser.add_option(
         "--cf2", "--create_f2", dest="forces_fc2_mode",
@@ -282,8 +282,8 @@ def get_parser():
         "--noks", "--no_kappa_stars", dest="no_kappa_stars", action="store_true",
         help="Deactivate summation of partial kappa at q-stars"),
     parser.add_option(
-        "--nosym", dest="is_nosym", action="store_true",
-        help="No symmetrization of triplets")
+        "--nomeshsym", dest="is_nomeshsym", action="store_true",
+        help="No symmetrization of triplets is made.")
     parser.add_option(
         "--num_freq_points", dest="num_frequency_points", type="int",
         help="Number of sampling points for spectrum")
