@@ -40,16 +40,17 @@ from phonopy.interface.vasp import read_vasp
 from phonopy.file_IO import parse_BORN, write_FORCE_SETS, parse_FORCE_SETS
 from phonopy.units import VaspToTHz, PwscfToTHz
 from phonopy.version import __version__
+from phonopy.interface import read_crystal_structure
 from anharmonic.file_IO import (parse_disp_fc2_yaml, parse_disp_fc3_yaml,
                                 parse_FORCES_FC2, parse_FORCES_FC3,
                                 write_FORCES_FC3_vasp, write_FORCES_FC2_vasp,
-                                write_FORCES_FC2)
+                                write_FORCES_FC2, write_FORCES_FC3)
 from anharmonic.cui.settings import Phono3pyConfParser
 from anharmonic.phonon3 import (Phono3py, Phono3pyJointDos, Phono3pyIsotope)
 from anharmonic.phonon3.gruneisen import get_gruneisen_parameters
 from anharmonic.cui.phono3py_argparse import get_parser
 from anharmonic.cui.show_log import (print_phono3py, print_version, print_end,
-                                     print_error,
+                                     print_error, print_error_message,
                                      show_phono3py_settings,
                                      show_phono3py_cells, file_exists)
 from anharmonic.cui.triplets_info import write_grid_points, show_num_triplets
@@ -82,11 +83,13 @@ if options.log_level is not None:
 #
 if options.pwscf_mode:
     interface_mode = 'pwscf'
-    from phonopy.interface.pwscf import write_supercells_with_displacements
+    from phonopy.interface.pwscf import (write_supercells_with_displacements,
+                                         parse_set_of_forces)
     factor = PwscfToTHz
 else:
     interface_mode = 'vasp'
-    from phonopy.interface.vasp import write_supercells_with_displacements
+    from phonopy.interface.vasp import (write_supercells_with_displacements,
+                                        parse_set_of_forces)
     factor = VaspToTHz
 
 # Input and output filename extension
@@ -119,7 +122,11 @@ if options.forces_fc3_mode or options.forces_fc3_file_mode:
         filenames = [x.strip() for x in open(args[0])]
     else:
         filenames = args
-    write_FORCES_FC3_vasp(filenames, disp_dataset)
+    if interface_mode == 'pwscf':
+        pass
+    else:
+        force_sets = parse_set_of_forces(disp_dataset['natom'], filenames)
+        write_FORCES_FC3(disp_dataset, force_sets, filename="FORCES_FC3")
     
     if log_level:
         print("FORCES_FC3 has been created.")
@@ -221,6 +228,8 @@ elif settings.get_is_bterta():
     run_mode = "conductivity-RTA"
 elif settings.get_is_lbte():
     run_mode = "conductivity-LBTE"
+elif settings.get_create_displacements():
+    run_mode = "displacements"
 
 if log_level:
     print("Run mode: %s" % run_mode)
@@ -228,13 +237,27 @@ if log_level:
 ##########################
 # Read crystal structure #
 ##########################
-if settings.get_cell_filename() is None:
-    file_exists('POSCAR', log_level)
-    unitcell_filename = 'POSCAR'
-else:
-    file_exists(settings.get_cell_filename(), log_level)
-    unitcell_filename = settings.get_cell_filename()
-unitcell = read_vasp(unitcell_filename, settings.get_chemical_symbols())
+unitcell, optional_structure_file_information = read_crystal_structure(
+    filename=settings.get_cell_filename(),
+    interface_mode=interface_mode,
+    chemical_symbols=settings.get_chemical_symbols(),
+    yaml_mode=settings.get_yaml_mode())
+unitcell_filename = optional_structure_file_information[0]
+
+if unitcell is None:
+    print_error_message("Crystal structure file of %s could not be found." %
+                        unitcell_filename)
+    if log_level > 0:
+        print_error()
+    sys.exit(1)
+
+# Check unit cell
+if np.linalg.det(unitcell.get_cell()) < 0.0:
+    print_error_message("Determinant of the lattice vector matrix "
+                        "has to be positive.")
+    if log_level > 0:
+        print_end()
+    sys.exit(0)
 
 ######################
 # Translate settings #
@@ -267,10 +290,16 @@ if settings.get_create_displacements():
     create_phono3py_supercells(unitcell,
                                supercell_matrix,
                                phonon_supercell_matrix,
-                               output_filename,
+                               settings.get_displacement_distance(),
+                               settings.get_is_plusminus_displacement(),
+                               settings.get_is_diagonal_displacement(),
+                               settings.get_cutoff_pair_distance(),
+                               write_supercells_with_displacements,
+                               optional_structure_file_information,
                                symprec,
-                               settings,
-                               log_level)
+                               output_filename=output_filename,
+                               interface_mode=interface_mode,
+                               log_level=log_level)
     if log_level:
         print_end()
     sys.exit(0)

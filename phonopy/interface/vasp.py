@@ -42,7 +42,8 @@ from phonopy.structure.atoms import Atoms, symbol_map, atom_data
 from phonopy.structure.cells import get_primitive, get_supercell
 from phonopy.structure.symmetry import Symmetry
 from phonopy.harmonic.force_constants import similarity_transformation
-from phonopy.file_IO import write_FORCE_SETS, write_force_constants_to_hdf5, write_FORCE_CONSTANTS
+from phonopy.file_IO import (write_FORCE_SETS, write_force_constants_to_hdf5,
+                             write_FORCE_CONSTANTS)
 
 def parse_set_of_forces(num_atoms,
                         forces_filenames,
@@ -132,7 +133,7 @@ def create_FORCE_CONSTANTS(filename, options, log_level):
             print("FORCE_CONSTANTS has been created from vasprun.xml.")
 
     if log_level > 0:
-        print("Atom types:", atom_types)
+        print("Atom types: %s" % (" ".join(atom_types)))
     return 0
         
 #
@@ -231,10 +232,17 @@ def write_vasp(filename, atoms, direct=True):
     f.write(lines)
 
 def write_supercells_with_displacements(supercell,
-                                        cells_with_displacements):
+                                        cells_with_displacements,
+                                        pre_filename="POSCAR",
+                                        width=3):
     write_vasp("SPOSCAR", supercell, direct=True)
     for i, cell in enumerate(cells_with_displacements):
-        write_vasp('POSCAR-%03d' % (i + 1), cell, direct=True)
+        if cell is not None:
+            write_vasp("{pre_filename}-{0:0{width}}".format(i + 1,
+                                                   pre_filename=pre_filename,
+                                                   width=width),
+                       cell,
+                       direct=True)
 
     _write_magnetic_moments(supercell)
 

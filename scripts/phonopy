@@ -255,7 +255,8 @@ if options.force_sets_mode or options.force_sets_zero_mode:
         file_exists(filename, log_level)
     error_num = create_FORCE_SETS(interface_mode,
                                   args,
-                                  options,
+                                  options.symprec,
+                                  is_wien2k_p1=options.is_wien2k_p1,
                                   log_level=log_level)
     if log_level > 0:
         print_end()

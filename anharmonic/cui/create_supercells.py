@@ -33,22 +33,29 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import sys
-from phonopy.interface.vasp import write_vasp
 from anharmonic.phonon3 import Phono3py
 from anharmonic.file_IO import write_disp_fc3_yaml, write_disp_fc2_yaml
 
 def create_phono3py_supercells(unitcell,
                                supercell_matrix,
                                phonon_supercell_matrix,
-                               output_filename,
+                               displacement_distance,
+                               is_plusminus,
+                               is_diagonal,
+                               cutoff_pair_distance,
+                               write_supercells_with_displacements,
+                               optional_structure_file_information,
                                symprec,
-                               settings,
-                               log_level):
-    if settings.get_displacement_distance() is None:
-        displacement_distance = 0.03
+                               interface_mode='vasp',
+                               output_filename=None,
+                               log_level=1):
+    if displacement_distance is None:
+        if interface_mode == 'pwscf':
+            distance = 0.06
+        else:
+            distance = 0.03
     else:
-        displacement_distance = settings.get_displacement_distance()
-    cutoff_pair_distance = settings.get_cutoff_pair_distance()
+        distance = displacement_distance
     phono3py = Phono3py(
         unitcell,
         supercell_matrix,
@@ -56,15 +63,15 @@ def create_phono3py_supercells(unitcell,
         symprec=symprec)
     supercell = phono3py.get_supercell()
     phono3py.generate_displacements(
-        distance=displacement_distance,
+        distance=distance,
         cutoff_pair_distance=cutoff_pair_distance,
-        is_plusminus=settings.get_is_plusminus_displacement(),
-        is_diagonal=settings.get_is_diagonal_displacement())
+        is_plusminus=is_plusminus,
+        is_diagonal=is_diagonal)
     dds = phono3py.get_displacement_dataset()
     
     if log_level:
         print('')
-        print("Displacement distance: %s" % displacement_distance)
+        print("Displacement distance: %s" % distance)
 
     if output_filename is None:
         filename = 'disp_fc3.yaml'
@@ -74,9 +81,17 @@ def create_phono3py_supercells(unitcell,
     num_disps, num_disp_files = write_disp_fc3_yaml(dds,
                                                     supercell,
                                                     filename=filename)
-    for i, dcell in enumerate(phono3py.get_supercells_with_displacements()):
-        if dcell is not None:
-            write_vasp('POSCAR-%05d' % (i + 1), dcell, direct=True)
+    cells_with_disps = phono3py.get_supercells_with_displacements()
+    if interface_mode == 'pwscf':
+        pp_filenames = optional_structure_file_information[1]
+        write_supercells_with_displacements(supercell,
+                                            cells_with_disps,
+                                            pp_filenames,
+                                            width=5)
+    else:
+        write_supercells_with_displacements(supercell,
+                                            cells_with_disps,
+                                            width=5)
 
     if log_level:
         print("Number of displacements: %d" % num_disps)
@@ -97,9 +112,19 @@ def create_phono3py_supercells(unitcell,
         num_disps = write_disp_fc2_yaml(phonon_dds,
                                         phonon_supercell,
                                         filename=filename)
-        for i, dcell in enumerate(
-                phono3py.get_phonon_supercells_with_displacements()):
-            write_vasp('POSCAR_FC2-%05d' % (i + 1), dcell, direct=True)
+        cells_with_disps = phono3py.get_phonon_supercells_with_displacements()
+        if interface_mode == 'pwscf':
+            pp_filenames = optional_structure_file_information[1]
+            write_supercells_with_displacements(phonon_supercell,
+                                                cells_with_disps,
+                                                pp_filenames,
+                                                pre_filename="supercell_fc2",
+                                                width=5)
+        else:
+            write_supercells_with_displacements(phonon_supercell,
+                                                cells_with_disps,
+                                                pre_filename="POSCAR_FC2",
+                                                width=5)
 
         if log_level:
             print("Number of displacements for special fc2: %d" % num_disps)

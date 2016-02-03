@@ -125,10 +125,19 @@ def write_pwscf(filename, cell, pp_filenames):
 
 def write_supercells_with_displacements(supercell,
                                         cells_with_displacements,
-                                        pp_filenames):
+                                        pp_filenames,
+                                        pre_filename="supercell",
+                                        width=3):
     write_pwscf("supercell.in", supercell, pp_filenames)
     for i, cell in enumerate(cells_with_displacements):
-        write_pwscf("supercell-%03d.in" % (i + 1), cell, pp_filenames)
+        if cell is not None:
+            filename = "{pre_filename}-{0:0{width}}.in".format(
+                i + 1,
+                pre_filename=pre_filename,
+                width=width)
+            write_pwscf(filename,
+                        cell,
+                        pp_filenames)
 
 def get_pwscf_structure(cell, pp_filenames=None):
     lattice = cell.get_cell()
