@@ -38,7 +38,7 @@ import sys
 import numpy as np
 from phonopy.interface.vasp import read_vasp
 from phonopy.file_IO import parse_BORN, write_FORCE_SETS, parse_FORCE_SETS
-from phonopy.units import VaspToTHz, PwscfToTHz
+from phonopy.units import VaspToTHz, PwscfToTHz, Bohr, Rydberg
 from phonopy.version import __version__
 from phonopy.interface import read_crystal_structure
 from anharmonic.file_IO import (parse_disp_fc2_yaml, parse_disp_fc3_yaml,
@@ -85,12 +85,14 @@ if options.pwscf_mode:
     interface_mode = 'pwscf'
     from phonopy.interface.pwscf import (write_supercells_with_displacements,
                                          parse_set_of_forces)
-    factor = PwscfToTHz
+    energy_to_eV = Rydberg
+    distance_to_A = Bohr
 else:
     interface_mode = 'vasp'
     from phonopy.interface.vasp import (write_supercells_with_displacements,
                                         parse_set_of_forces)
-    factor = VaspToTHz
+    energy_to_eV = None
+    distance_to_A = None
 
 # Input and output filename extension
 input_filename = options.input_filename
@@ -123,10 +125,10 @@ if options.forces_fc3_mode or options.forces_fc3_file_mode:
     else:
         filenames = args
     if interface_mode == 'pwscf':
-        pass
+        force_sets = parse_set_of_forces(disp_dataset['natom'], filenames)
     else:
         force_sets = parse_set_of_forces(disp_dataset['natom'], filenames)
-        write_FORCES_FC3(disp_dataset, force_sets, filename="FORCES_FC3")
+    write_FORCES_FC3(disp_dataset, force_sets, filename="FORCES_FC3")
     
     if log_level:
         print("FORCES_FC3 has been created.")
@@ -304,6 +306,14 @@ if settings.get_create_displacements():
         print_end()
     sys.exit(0)
 
+#################################################
+# Change unit of lattice parameters to Angstrom #
+#################################################
+if distance_to_A is not None:
+    lattice = unitcell.get_cell()
+    lattice *= distance_to_A
+    unitcell.set_cell(lattice)
+
 #####################
 # Initiate phono3py #
 #####################
@@ -378,9 +388,11 @@ if options.show_num_triplets:
 create_phono3py_force_constants(phono3py,
                                 phonon_supercell_matrix,
                                 settings,
-                                input_filename,
-                                output_filename,
-                                log_level)
+                                energy_to_eV=energy_to_eV,
+                                distance_to_A=distance_to_A,
+                                input_filename=input_filename,
+                                output_filename=output_filename,
+                                log_level=log_level)
 
 ##################################
 # Non-analytical term correction #
