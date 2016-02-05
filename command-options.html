@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Command options &mdash; Phonopy v.1.10.2</title>
+    <title>Command options &mdash; Phonopy v.1.10.4</title>
     
     <link rel="stylesheet" href="_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.10.2',
+        VERSION:     '1.10.4',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Phonopy v.1.10.2" href="index.html" />
+    <link rel="top" title="Phonopy v.1.10.4" href="index.html" />
     <link rel="next" title="Quasi harmonic approximation" href="qha.html" />
     <link rel="prev" title="How to watch animation" href="animation.html" />
 <meta charset='utf-8'>
@@ -50,7 +50,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.10.2</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.10.4</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -77,9 +77,10 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="">Command options</a></li>
 <li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
-<li class="toctree-l1"><a class="reference internal" href="interfaces.html">Interfaces to calculators and phonopy API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interfaces.html">Interfaces to calculators</a></li>
 <li class="toctree-l1"><a class="reference internal" href="auxiliary-tools.html">Auxiliary tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy-module.html">Using phonopy as a python module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="theory.html">Formulations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
@@ -128,10 +129,6 @@
 <li><a class="reference internal" href="#graph-plotting">Graph plotting</a><ul>
 <li><a class="reference internal" href="#p"><code class="docutils literal"><span class="pre">-p</span></code></a></li>
 <li><a class="reference internal" href="#p-s"><code class="docutils literal"><span class="pre">-p</span> <span class="pre">-s</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#unit-conversion-factor">Unit conversion factor</a><ul>
-<li><a class="reference internal" href="#factor"><code class="docutils literal"><span class="pre">--factor</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#log-level">Log level</a><ul>
@@ -213,6 +210,7 @@ tags:</p>
 <li><code class="docutils literal"><span class="pre">--dim</span></code> (<code class="docutils literal"><span class="pre">DIM</span></code>)</li>
 <li><code class="docutils literal"><span class="pre">--dos</span></code> (<code class="docutils literal"><span class="pre">DOS</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
 <li><code class="docutils literal"><span class="pre">--eigvecs</span></code>, <code class="docutils literal"><span class="pre">--eigenvectors</span></code> (<code class="docutils literal"><span class="pre">EIGENVECTORS</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--factor</span></code> (<code class="docutils literal"><span class="pre">FREQUENCY_CONVERSION_FACTOR</span></code>)</li>
 <li><code class="docutils literal"><span class="pre">--fits_debye_model</span></code> (<code class="docutils literal"><span class="pre">DEBYE_MODEL</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
 <li><code class="docutils literal"><span class="pre">--gc</span></code>, <code class="docutils literal"><span class="pre">--gamma_center</span></code> (<code class="docutils literal"><span class="pre">GAMMA_CENTER</span></code>)</li>
 <li><code class="docutils literal"><span class="pre">--gv</span></code>, <code class="docutils literal"><span class="pre">--group_velocity</span></code> (<code class="docutils literal"><span class="pre">GROUP_VELOCITY</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
@@ -251,7 +249,7 @@ tags.</p>
 prepared. Wien2k, Pwscf, Abinit and Elk interfaces are invoked with
 <code class="docutils literal"><span class="pre">--wienk2</span></code>, <code class="docutils literal"><span class="pre">--pwscf</span></code>, <code class="docutils literal"><span class="pre">--abinit</span></code>, and <code class="docutils literal"><span class="pre">--elk</span></code> options,
 respectively, and if none of these options is specified, VASP mode is invoked.</p>
-<p>The details about these interfaces are found at <a class="reference internal" href="interfaces.html#calculator-interfaces"><span>Interfaces to force calculators</span></a>.</p>
+<p>The details about these interfaces are found at <a class="reference internal" href="interfaces.html#calculator-interfaces"><span>Interfaces to calculators</span></a>.</p>
 <div class="section" id="wien2k">
 <span id="wien2k-mode"></span><h3><code class="docutils literal"><span class="pre">--wien2k</span></code><a class="headerlink" href="#wien2k" title="Permalink to this headline">¶</a></h3>
 <p><strong>Behavior is changed at phonopy 1.9.2.</strong></p>
@@ -332,7 +330,7 @@ Elk    | elk.in
 <div class="section" id="vasp-interface">
 <span id="vasp-force-sets-option"></span><h4>VASP interface<a class="headerlink" href="#vasp-interface" title="Permalink to this headline">¶</a></h4>
 <p><code class="docutils literal"><span class="pre">FORCE_SETS</span></code> file is created from <code class="docutils literal"><span class="pre">disp.yaml</span></code>, which is an output
-file when creating supercell with displacements, and
+file when creating supercells with displacements, and
 <code class="docutils literal"><span class="pre">vasprun.xml</span></code>&#8216;s, which are the VASP output files. <code class="docutils literal"><span class="pre">disp.yaml</span></code> in
 the current directory is automatically read. The order of
 displacements written in <code class="docutils literal"><span class="pre">disp.yaml</span></code> file has to correpond to that of
@@ -423,26 +421,6 @@ more details, please refer <a class="reference internal" href="vasp.html#vasp-df
 <span id="graph-save-option"></span><h3><code class="docutils literal"><span class="pre">-p</span> <span class="pre">-s</span></code><a class="headerlink" href="#p-s" title="Permalink to this headline">¶</a></h3>
 <p>Result is plotted (saved) to PDF file.</p>
 <div class="highlight-python"><div class="highlight"><pre>% phonopy -p -s
-</pre></div>
-</div>
-</div>
-</div>
-<div class="section" id="unit-conversion-factor">
-<h2>Unit conversion factor<a class="headerlink" href="#unit-conversion-factor" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="factor">
-<span id="unit-conversion-factor-option"></span><h3><code class="docutils literal"><span class="pre">--factor</span></code><a class="headerlink" href="#factor" title="Permalink to this headline">¶</a></h3>
-<p>Unit conversion factor of frequency from input values to your favorite
-unit is specified. The default value is that to convert to THz. The
-default conversion factors for <code class="docutils literal"><span class="pre">wien2k</span></code>, <code class="docutils literal"><span class="pre">abinit</span></code>, <code class="docutils literal"><span class="pre">pwscf</span></code>, and
-<code class="docutils literal"><span class="pre">elk</span></code> are 3.44595, 21.49068, 108.9708, and 154.1079
-respectively. These are determined following the physical unit systems
-of the calculators. How to calcualte these conversion factors is
-explained at <a class="reference internal" href="theory.html#physical-unit-conversion"><span>About physical unit conversion</span></a>.</p>
-<p>When calculating thermal property, the factor to THz is
-required. Otherwise the calculated thermal properties have wrong
-units. In the case of band structure plot, any factor can be used,
-where the frequency is simply shown in the unit you specified.</p>
-<div class="highlight-python"><div class="highlight"><pre>% phonopy --factor=521.471
 </pre></div>
 </div>
 </div>

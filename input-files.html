@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Input files &mdash; Phonopy v.1.10.2</title>
+    <title>Input files &mdash; Phonopy v.1.10.4</title>
     
     <link rel="stylesheet" href="_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.10.2',
+        VERSION:     '1.10.4',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Phonopy v.1.10.2" href="index.html" />
+    <link rel="top" title="Phonopy v.1.10.4" href="index.html" />
     <link rel="next" title="Output files" href="output-files.html" />
     <link rel="prev" title="Features" href="features.html" />
 <meta charset='utf-8'>
@@ -50,7 +50,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.10.2</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.10.4</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -77,9 +77,10 @@
 <li class="toctree-l1"><a class="reference internal" href="command-options.html">Command options</a></li>
 <li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
-<li class="toctree-l1"><a class="reference internal" href="interfaces.html">Interfaces to calculators and phonopy API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interfaces.html">Interfaces to calculators</a></li>
 <li class="toctree-l1"><a class="reference internal" href="auxiliary-tools.html">Auxiliary tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy-module.html">Using phonopy as a python module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="theory.html">Formulations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
@@ -345,13 +346,15 @@ unit cell.</p>
 </div>
 </div>
 <div class="section" id="born-optional">
-<span id="born"></span><h2><code class="docutils literal"><span class="pre">BORN</span></code> (optional)<a class="headerlink" href="#born-optional" title="Permalink to this headline">¶</a></h2>
+<span id="born-file"></span><h2><code class="docutils literal"><span class="pre">BORN</span></code> (optional)<a class="headerlink" href="#born-optional" title="Permalink to this headline">¶</a></h2>
 <p>This file is used with the <code class="docutils literal"><span class="pre">--nac</span></code> option or <code class="docutils literal"><span class="pre">NAC</span></code> tag.</p>
 <p>The formula implemented is refered to <a class="reference internal" href="theory.html#non-analytical-term-correction-theory"><span>Non-analytical term correction</span></a>.</p>
 <div class="section" id="id3">
 <h3>Format<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
-<p>In the first line, the first value is the unit conversion factor. For
-VASP, it may be 27.2116 <img class="math" src="_images/math/c69691d64985442217922c8d34e835a9dea60178.png" alt="\times"/> 0.52918.</p>
+<p>In the first line, unit conversion factor is given. In versions 1.10.4
+or later, the default value for each calculater can be used if
+characters than numerical number are given. The default values for the
+calculaters are found at <a class="reference internal" href="interfaces.html#nac-default-value-interfaces"><span>Default unit conversion factor for non-analytical term correction</span></a>.</p>
 <p>In the second line, dielectric constant <img class="math" src="_images/math/19bc0073dde1bcd1a8e6a32b251e80cced668f04.png" alt="\epsilon"/> is specifed
 in Cartesian coordinates. The nine values correspond to the tensor
 elements of xx, xy, xz, yx, yy, yz, zx, zy, and zz.</p>
@@ -441,6 +444,13 @@ file.</p>
 <div class="section" id="id4">
 <h3>Example<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-python"><div class="highlight"><pre> 14.400
+ 3.269  0.000  0.000  0.000  3.269  0.000  0.000  0.000  3.234
+ 2.981  0.000  0.000  0.000  2.981  0.000  0.000  0.000  2.952
+-1.935  0.000  0.000  0.000 -2.036 -0.261  0.000 -0.261 -1.968
+</pre></div>
+</div>
+<p>or using the default NAC unit conversion factor (version 1.10.4 or later),</p>
+<div class="highlight-python"><div class="highlight"><pre>auto
  3.269  0.000  0.000  0.000  3.269  0.000  0.000  0.000  3.234
  2.981  0.000  0.000  0.000  2.981  0.000  0.000  0.000  2.952
 -1.935  0.000  0.000  0.000 -2.036 -0.261  0.000 -0.261 -1.968

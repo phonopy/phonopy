@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Interfaces to calculators and phonopy API &mdash; Phonopy v.1.10.2</title>
+    <title>Interfaces to calculators &mdash; Phonopy v.1.10.4</title>
     
     <link rel="stylesheet" href="_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.10.2',
+        VERSION:     '1.10.4',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Phonopy v.1.10.2" href="index.html" />
+    <link rel="top" title="Phonopy v.1.10.4" href="index.html" />
     <link rel="next" title="Wien2k &amp; phonopy calculation" href="wien2k.html" />
     <link rel="prev" title="Calculation of mode Grüneisen parameters" href="gruneisen.html" />
 <meta charset='utf-8'>
@@ -50,7 +50,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.10.2</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.10.4</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -77,9 +77,10 @@
 <li class="toctree-l1"><a class="reference internal" href="command-options.html">Command options</a></li>
 <li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="">Interfaces to calculators and phonopy API</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Interfaces to calculators</a></li>
 <li class="toctree-l1"><a class="reference internal" href="auxiliary-tools.html">Auxiliary tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy-module.html">Using phonopy as a python module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="theory.html">Formulations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
@@ -97,11 +98,17 @@
   <ul class="dropdown-menu localtoc"
       role="menu"
       aria-labelledby="dLabelLocalToc"><ul>
-<li><a class="reference internal" href="#">Interfaces to calculators and phonopy API</a><ul>
-<li><a class="reference internal" href="#interfaces-to-force-calculators">Interfaces to force calculators</a></li>
+<li><a class="reference internal" href="#">Interfaces to calculators</a><ul>
+<li><a class="reference internal" href="#physical-unit-system-for-calculator">Physical unit system for calculator</a></li>
+<li><a class="reference internal" href="#default-file-name-value-and-conversion-factor">Default file name, value, and conversion factor</a><ul>
+<li><a class="reference internal" href="#default-unit-cell-file-name-for-calculator">Default unit cell file name for calculator</a></li>
+<li><a class="reference internal" href="#default-displacement-distances">Default displacement distances</a></li>
+<li><a class="reference internal" href="#default-unit-conversion-factor-for-non-analytical-term-correction">Default unit conversion factor for non-analytical term correction</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#interface-to-force-calculator">Interface to force calculator</a></li>
 <li><a class="reference internal" href="#interface-to-vasp-dfpt-force-constants">Interface to  VASP DFPT force constants</a></li>
 <li><a class="reference internal" href="#interface-to-fhi-aims-forces">Interface to FHI-aims forces</a></li>
-<li><a class="reference internal" href="#phonopy-api">Phonopy API</a></li>
 </ul>
 </li>
 </ul>
@@ -145,15 +152,14 @@
   <div class="row">
     <div class="col-md-12 content">
       
-  <div class="section" id="interfaces-to-calculators-and-phonopy-api">
-<h1>Interfaces to calculators and phonopy API<a class="headerlink" href="#interfaces-to-calculators-and-phonopy-api" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="interfaces-to-force-calculators">
-<span id="calculator-interfaces"></span><h2>Interfaces to force calculators<a class="headerlink" href="#interfaces-to-force-calculators" title="Permalink to this headline">¶</a></h2>
+  <div class="section" id="interfaces-to-calculators">
+<span id="calculator-interfaces"></span><h1>Interfaces to calculators<a class="headerlink" href="#interfaces-to-calculators" title="Permalink to this headline">¶</a></h1>
 <p>The interfaces for VASP, Wien2k, Pwscf, Abinit, and Elk are built in
 to the usual phonopy command. See the command options and how to
 invoke each of them at <a class="reference internal" href="command-options.html#force-calculators"><span>Force calculators</span></a>.</p>
-<p>For each calculator, each physical unit system is used. The physical
-unit systems used for the calculators are summarized below.</p>
+<div class="section" id="physical-unit-system-for-calculator">
+<h2>Physical unit system for calculator<a class="headerlink" href="#physical-unit-system-for-calculator" title="Permalink to this headline">¶</a></h2>
+<p>Physical unit systems used for the calculators are as follows:</p>
 <div class="highlight-python"><div class="highlight"><pre>        | Distance   Atomic mass   Force         Force constants
 -----------------------------------------------------------------
 VASP    | Angstrom   AMU           eV/Angstrom   eV/Angstrom^2
@@ -164,26 +170,53 @@ Siesta  | au (bohr)  AMU           eV/Angstrom   eV/Angstrom.au
 elk     | au (bohr)  AMU           hartree/au    hartree/au^2
 </pre></div>
 </div>
-<p>Default unit cell file names are also changed according to the calculators:</p>
+</div>
+<div class="section" id="default-file-name-value-and-conversion-factor">
+<h2>Default file name, value, and conversion factor<a class="headerlink" href="#default-file-name-value-and-conversion-factor" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="default-unit-cell-file-name-for-calculator">
+<h3>Default unit cell file name for calculator<a class="headerlink" href="#default-unit-cell-file-name-for-calculator" title="Permalink to this headline">¶</a></h3>
+<p>Without specifying <code class="docutils literal"><span class="pre">-c</span></code> option, default file name for unit cell is
+used as shown below:</p>
 <div class="highlight-python"><div class="highlight"><pre>VASP    | POSCAR
 Wien2k  | case.struct
-Abinit  | unitcell.in
 Pwscf   | unitcell.in
+Abinit  | unitcell.in
 Siesta  | input.fdf
 Elk     | elk.in
 </pre></div>
 </div>
-<p>Default displacement distances created by <code class="docutils literal"><span class="pre">CREATE_DISPLACEMENTS</span> <span class="pre">=</span>
-<span class="pre">.TRUE.</span></code> (or <code class="docutils literal"><span class="pre">-d</span></code> option):</p>
+</div>
+<div class="section" id="default-displacement-distances">
+<h3>Default displacement distances<a class="headerlink" href="#default-displacement-distances" title="Permalink to this headline">¶</a></h3>
+<p>Without specifying <code class="docutils literal"><span class="pre">DISPLACEMENT_DISTANCE</span></code> tag or <code class="docutils literal"><span class="pre">--amplitude</span></code>
+option, default displacement distance is used when creating supercells
+with displacements <code class="docutils literal"><span class="pre">CREATE_DISPLACEMENTS</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code> or <code class="docutils literal"><span class="pre">-d</span></code>
+option. The default value is dependent on calculator, and the list is
+shown below:</p>
 <div class="highlight-python"><div class="highlight"><pre>VASP    | 0.01 Angstrom
 Wien2k  | 0.02 au (bohr)
-Abinit  | 0.02 au (bohr)
 Pwscf   | 0.02 au (bohr)
+Abinit  | 0.02 au (bohr)
 Siesta  | 0.02 au (bohr)
 Elk     | 0.02 au (bohr)
 </pre></div>
 </div>
-<p>Short tutorials for there calculators are found in the following pages.</p>
+</div>
+<div class="section" id="default-unit-conversion-factor-for-non-analytical-term-correction">
+<span id="nac-default-value-interfaces"></span><h3>Default unit conversion factor for non-analytical term correction<a class="headerlink" href="#default-unit-conversion-factor-for-non-analytical-term-correction" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">VASP</span>    <span class="o">|</span> <span class="mf">14.399652</span>
+<span class="n">Wien2k</span>  <span class="o">|</span> <span class="mi">2000</span>
+<span class="n">Pwscf</span>   <span class="o">|</span> <span class="mi">2</span>
+<span class="n">Abinit</span>  <span class="o">|</span> <span class="mf">51.422090</span>
+<span class="n">Siesta</span>  <span class="o">|</span> <span class="mf">51.422090</span>
+<span class="n">Elk</span>     <span class="o">|</span> <span class="mi">1</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="interface-to-force-calculator">
+<h2>Interface to force calculator<a class="headerlink" href="#interface-to-force-calculator" title="Permalink to this headline">¶</a></h2>
+<p>Short tutorials for force calculators are found in the following pages.</p>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="procedure.html">VASP &amp; phonopy calculation</a><ul>
@@ -242,23 +275,6 @@ FHI-aims mailing list.</p>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="FHI-aims.html">FHI-aims &amp; phonopy calculations</a></li>
-</ul>
-</div>
-</div>
-<div class="section" id="phonopy-api">
-<h2>Phonopy API<a class="headerlink" href="#phonopy-api" title="Permalink to this headline">¶</a></h2>
-<p>Phonopy can be used as a python module. Phonopy API is explained in
-the following page.</p>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="phonopy-module.html">Using phonopy as a python module</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="phonopy-module.html#import">Import</a></li>
-<li class="toctree-l2"><a class="reference internal" href="phonopy-module.html#work-flow">Work flow</a></li>
-<li class="toctree-l2"><a class="reference internal" href="phonopy-module.html#eigenvectors">Eigenvectors</a></li>
-<li class="toctree-l2"><a class="reference internal" href="phonopy-module.html#atoms-class-in-phonopy"><code class="docutils literal"><span class="pre">Atoms</span></code> class in Phonopy</a></li>
-<li class="toctree-l2"><a class="reference internal" href="phonopy-module.html#definitions-of-variables">Definitions of variables</a></li>
-</ul>
-</li>
 </ul>
 </div>
 </div>

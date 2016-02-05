@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Features &mdash; Phonopy v.1.10.2</title>
+    <title>Features &mdash; Phonopy v.1.10.4</title>
     
     <link rel="stylesheet" href="_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.10.2',
+        VERSION:     '1.10.4',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Phonopy v.1.10.2" href="index.html" />
+    <link rel="top" title="Phonopy v.1.10.4" href="index.html" />
     <link rel="next" title="Input files" href="input-files.html" />
     <link rel="prev" title="Set up Ubuntu linux on VirtualBox" href="virtualmachine.html" />
 <meta charset='utf-8'>
@@ -50,7 +50,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.10.2</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.10.4</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -77,9 +77,10 @@
 <li class="toctree-l1"><a class="reference internal" href="command-options.html">Command options</a></li>
 <li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
-<li class="toctree-l1"><a class="reference internal" href="interfaces.html">Interfaces to calculators and phonopy API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interfaces.html">Interfaces to calculators</a></li>
 <li class="toctree-l1"><a class="reference internal" href="auxiliary-tools.html">Auxiliary tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy-module.html">Using phonopy as a python module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="theory.html">Formulations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
@@ -161,7 +162,7 @@ See <a class="reference internal" href="setting-tags.html#band-structure-related
 <div class="section" id="density-of-states">
 <h2>Density of states<a class="headerlink" href="#density-of-states" title="Permalink to this headline">¶</a></h2>
 <p>Total and partial density of states are calculated based on the
-<em>q</em>-point sampling mesh (<a class="reference internal" href="setting-tags.html#dos-related-tags"><span>DOS</span></a>). Smearing parameter
+<em>q</em>-point sampling mesh (<a class="reference internal" href="setting-tags.html#dos-related-tags"><span>Density of states (DOS) tags</span></a>). Smearing parameter
 is set by <a class="reference internal" href="setting-tags.html#sigma-tag"><span>SIGMA</span></a> tag or <code class="docutils literal"><span class="pre">--sigma</span></code> option.</p>
 </div>
 <div class="section" id="group-velocity">

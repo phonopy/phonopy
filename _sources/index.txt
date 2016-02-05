@@ -36,19 +36,17 @@ results can be downloaed.
 Selected features
 ==================
 
-- Phonon dispersion relation (band structure)
-- Phonon DOS and partial-DOS
-- Phonon thermal properties, free energy, heat capacity (Cv), and
-  entropy
-- Phonon group velocity
-- Thermal ellipsoids / mean square displacements
-- Thermal expansion and heat capacity at constant pressure (Cp) within
-  quasi-harmonic approximation (:ref:`phonopy-qha <phonopy_qha>`)
-- Mode Grüneisen parameters (:ref:`gruneisen <phonopy_gruneisen>`)
-- Non-analytical-term correction, LO-TO splitting (Born effective
-  charges and dielectric constant are required.)
-- Irreducible representations of normal modes
-- Interfaces to calculators:
+- :ref:`Phonon band structure <band_structure_related_tags>`, :ref:`phonon DOS and partial-DOS <dos_related_tags>`
+- :ref:`Phonon thermal properties <thermal_properties_tag>`: Free energy, heat capacity (Cv), and entropy
+- :ref:`Phonon group velocity <group_velocity>`
+- :ref:`Thermal ellipsoids <thermal_displacement_matrices_tag>` / :ref:`Mean square displacements <thermal_displacements_tag>`
+- :ref:`Irreducible representations of normal modes <irreducible_representation_related_tags>`
+- :ref:`Quasi-harmonic approximation <phonopy_qha>`: Thermal expansion, heat
+  capacity at constant pressure (Cp),
+- :ref:`Mode Grüneisen parameters <phonopy_gruneisen>`
+- :ref:`Non-analytical-term correction <nac_tag>`: LO-TO splitting
+  (:ref:`Born effective charges and dielectric constant are required. <born_file>`)
+- :ref:`Interfaces to calculators <calculator_interfaces>`:
   :ref:`VASP <tutorial>`,
   :ref:`VASP DFPT <vasp_dfpt_interface>`,
   :ref:`Abinit <abinit_interface>`,
@@ -57,7 +55,7 @@ Selected features
   :ref:`Elk <elk_interface>`,
   :ref:`FHI-aims <FHI_aims_interface>`,
   :ref:`Wien2k <wien2k_interface>`
-- :ref:`APIs <phonopy_module>`
+- :ref:`Python APIs <phonopy_module>`
   
 |i0| |i1| |i2| |i3|
 
@@ -81,6 +79,7 @@ Documentation
    interfaces
    auxiliary-tools
    external-tools
+   phonopy-module
    theory
    citation
    reference

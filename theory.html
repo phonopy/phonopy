@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Formulations &mdash; Phonopy v.1.10.2</title>
+    <title>Formulations &mdash; Phonopy v.1.10.4</title>
     
     <link rel="stylesheet" href="_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.10.2',
+        VERSION:     '1.10.4',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,9 +28,9 @@
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Phonopy v.1.10.2" href="index.html" />
+    <link rel="top" title="Phonopy v.1.10.4" href="index.html" />
     <link rel="next" title="Mean square displacement" href="thermal-displacement.html" />
-    <link rel="prev" title="External tools" href="external-tools.html" />
+    <link rel="prev" title="Using phonopy as a python module" href="phonopy-module.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
@@ -50,7 +50,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.10.2</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.10.4</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -77,9 +77,10 @@
 <li class="toctree-l1"><a class="reference internal" href="command-options.html">Command options</a></li>
 <li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
-<li class="toctree-l1"><a class="reference internal" href="interfaces.html">Interfaces to calculators and phonopy API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interfaces.html">Interfaces to calculators</a></li>
 <li class="toctree-l1"><a class="reference internal" href="auxiliary-tools.html">Auxiliary tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy-module.html">Using phonopy as a python module</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="">Formulations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
@@ -125,7 +126,7 @@
               
                 
   <li>
-    <a href="external-tools.html" title="Previous Chapter: External tools"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; External tools</span>
+    <a href="phonopy-module.html" title="Previous Chapter: Using phonopy as a python module"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; Using phonopy...</span>
     </a>
   </li>
   <li>
@@ -405,7 +406,7 @@ calculation of <code class="docutils literal"><span class="pre">sqrt(EV/AMU)/Ang
 SI base unit, i.e., to Joule, kg, and metre, respectively. These values
 implemented in phonopy are found at <a class="reference external" href="https://github.com/atztogo/phonopy/blob/master/phonopy/units.py">a phonopy github page</a>. This
 unit conversion factor can be manually specified. See
-<a class="reference internal" href="command-options.html#unit-conversion-factor-option"><span>&#8211;factor</span></a>.</p>
+<a class="reference internal" href="setting-tags.html#frequency-conversion-factor-tag"><span>frequency_conversion_factor</span></a>.</p>
 <p>The unit conversion factor in the <code class="docutils literal"><span class="pre">BORN</span></code> file is multiplied with the second
 term of the right hand side of the equation in
 <a class="reference internal" href="#non-analytical-term-correction-theory"><span>Non-analytical term correction</span></a> where this equation is written
@@ -425,7 +426,7 @@ VASP interface, internally <img class="math" src="_images/math/751e674d2a53f72a4
 interface, the conversion factor is <img class="math" src="_images/math/cbcb4ad697c7ba8b19ff1d4c18fe30d4c9032353.png" alt="(\text{hartree}
 \rightarrow \text{mRy})=2000"/>. For the other interfaces, the
 conversion factors are similarly calculated following the unit
-systems employed in phonopy (<a class="reference internal" href="interfaces.html#calculator-interfaces"><span>Interfaces to force calculators</span></a>).</p>
+systems employed in phonopy (<a class="reference internal" href="interfaces.html#calculator-interfaces"><span>Interfaces to calculators</span></a>).</p>
 </div>
 </div>
 

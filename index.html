@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Welcome to phonopy &mdash; Phonopy v.1.10.2</title>
+    <title>Welcome to phonopy &mdash; Phonopy v.1.10.4</title>
     
     <link rel="stylesheet" href="_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.10.2',
+        VERSION:     '1.10.4',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Phonopy v.1.10.2" href="#" />
+    <link rel="top" title="Phonopy v.1.10.4" href="#" />
     <link rel="next" title="Examples" href="examples.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
@@ -49,7 +49,7 @@
         </button>
         <a class="navbar-brand" href="#">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.10.2</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.10.4</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -76,9 +76,10 @@
 <li class="toctree-l1"><a class="reference internal" href="command-options.html">Command options</a></li>
 <li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
-<li class="toctree-l1"><a class="reference internal" href="interfaces.html">Interfaces to calculators and phonopy API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interfaces.html">Interfaces to calculators</a></li>
 <li class="toctree-l1"><a class="reference internal" href="auxiliary-tools.html">Auxiliary tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy-module.html">Using phonopy as a python module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="theory.html">Formulations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
@@ -156,19 +157,17 @@ results can be downloaed.</p>
 <div class="section" id="selected-features">
 <h2>Selected features<a class="headerlink" href="#selected-features" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li>Phonon dispersion relation (band structure)</li>
-<li>Phonon DOS and partial-DOS</li>
-<li>Phonon thermal properties, free energy, heat capacity (Cv), and
-entropy</li>
-<li>Phonon group velocity</li>
-<li>Thermal ellipsoids / mean square displacements</li>
-<li>Thermal expansion and heat capacity at constant pressure (Cp) within
-quasi-harmonic approximation (<a class="reference internal" href="qha.html#phonopy-qha"><span>phonopy-qha</span></a>)</li>
-<li>Mode Grüneisen parameters (<a class="reference internal" href="gruneisen.html#phonopy-gruneisen"><span>gruneisen</span></a>)</li>
-<li>Non-analytical-term correction, LO-TO splitting (Born effective
-charges and dielectric constant are required.)</li>
-<li>Irreducible representations of normal modes</li>
-<li>Interfaces to calculators:
+<li><a class="reference internal" href="setting-tags.html#band-structure-related-tags"><span>Phonon band structure</span></a>, <a class="reference internal" href="setting-tags.html#dos-related-tags"><span>phonon DOS and partial-DOS</span></a></li>
+<li><a class="reference internal" href="setting-tags.html#thermal-properties-tag"><span>Phonon thermal properties</span></a>: Free energy, heat capacity (Cv), and entropy</li>
+<li><a class="reference internal" href="group-velocity.html#group-velocity"><span>Phonon group velocity</span></a></li>
+<li><a class="reference internal" href="setting-tags.html#thermal-displacement-matrices-tag"><span>Thermal ellipsoids</span></a> / <a class="reference internal" href="setting-tags.html#thermal-displacements-tag"><span>Mean square displacements</span></a></li>
+<li><a class="reference internal" href="setting-tags.html#irreducible-representation-related-tags"><span>Irreducible representations of normal modes</span></a></li>
+<li><a class="reference internal" href="qha.html#phonopy-qha"><span>Quasi-harmonic approximation</span></a>: Thermal expansion, heat
+capacity at constant pressure (Cp),</li>
+<li><a class="reference internal" href="gruneisen.html#phonopy-gruneisen"><span>Mode Grüneisen parameters</span></a></li>
+<li><a class="reference internal" href="setting-tags.html#nac-tag"><span>Non-analytical-term correction</span></a>: LO-TO splitting
+(<a class="reference internal" href="input-files.html#born-file"><span>Born effective charges and dielectric constant are required.</span></a>)</li>
+<li><a class="reference internal" href="interfaces.html#calculator-interfaces"><span>Interfaces to calculators</span></a>:
 <a class="reference internal" href="procedure.html#tutorial"><span>VASP</span></a>,
 <a class="reference internal" href="vasp.html#vasp-dfpt-interface"><span>VASP DFPT</span></a>,
 <a class="reference internal" href="abinit.html#abinit-interface"><span>Abinit</span></a>,
@@ -177,7 +176,7 @@ charges and dielectric constant are required.)</li>
 <a class="reference internal" href="elk.html#elk-interface"><span>Elk</span></a>,
 <a class="reference internal" href="FHI-aims.html#fhi-aims-interface"><span>FHI-aims</span></a>,
 <a class="reference internal" href="wien2k.html#wien2k-interface"><span>Wien2k</span></a></li>
-<li><a class="reference internal" href="phonopy-module.html#phonopy-module"><span>APIs</span></a></li>
+<li><a class="reference internal" href="phonopy-module.html#phonopy-module"><span>Python APIs</span></a></li>
 </ul>
 <p><a class="reference internal" href="_images/band.png"><img alt="i0" src="_images/band.png" style="width: 15%;" /></a> <a class="reference internal" href="_images/pdos.png"><img alt="i1" src="_images/pdos.png" style="width: 15%;" /></a> <a class="reference internal" href="_images/thermalprop.png"><img alt="i2" src="_images/thermalprop.png" style="width: 15%;" /></a> <a class="reference internal" href="_images/QHA.png"><img alt="i3" src="_images/QHA.png" style="width: 15%;" /></a></p>
 </div>
@@ -196,9 +195,10 @@ charges and dielectric constant are required.)</li>
 <li class="toctree-l1"><a class="reference internal" href="command-options.html">Command options</a></li>
 <li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
-<li class="toctree-l1"><a class="reference internal" href="interfaces.html">Interfaces to calculators and phonopy API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interfaces.html">Interfaces to calculators</a></li>
 <li class="toctree-l1"><a class="reference internal" href="auxiliary-tools.html">Auxiliary tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy-module.html">Using phonopy as a python module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="theory.html">Formulations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>

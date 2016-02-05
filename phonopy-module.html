@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Using phonopy as a python module &mdash; Phonopy v.1.10.2</title>
+    <title>Using phonopy as a python module &mdash; Phonopy v.1.10.4</title>
     
     <link rel="stylesheet" href="_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.10.2',
+        VERSION:     '1.10.4',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,10 +28,9 @@
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Phonopy v.1.10.2" href="index.html" />
-    <link rel="up" title="Interfaces to calculators and phonopy API" href="interfaces.html" />
-    <link rel="next" title="Auxiliary tools" href="auxiliary-tools.html" />
-    <link rel="prev" title="FHI-aims &amp; phonopy calculations" href="FHI-aims.html" />
+    <link rel="top" title="Phonopy v.1.10.4" href="index.html" />
+    <link rel="next" title="Formulations" href="theory.html" />
+    <link rel="prev" title="External tools" href="external-tools.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
@@ -51,7 +50,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.10.2</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.10.4</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -78,9 +77,10 @@
 <li class="toctree-l1"><a class="reference internal" href="command-options.html">Command options</a></li>
 <li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="interfaces.html">Interfaces to calculators and phonopy API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interfaces.html">Interfaces to calculators</a></li>
 <li class="toctree-l1"><a class="reference internal" href="auxiliary-tools.html">Auxiliary tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Using phonopy as a python module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="theory.html">Formulations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
@@ -149,11 +149,11 @@
               
                 
   <li>
-    <a href="FHI-aims.html" title="Previous Chapter: FHI-aims & phonopy calculations"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; FHI-aims & ph...</span>
+    <a href="external-tools.html" title="Previous Chapter: External tools"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; External tools</span>
     </a>
   </li>
   <li>
-    <a href="auxiliary-tools.html" title="Next Chapter: Auxiliary tools"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">Auxiliary tools &raquo;</span>
+    <a href="theory.html" title="Next Chapter: Formulations"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">Formulations &raquo;</span>
     </a>
   </li>
               
@@ -239,7 +239,7 @@ page.</p>
 set by using the <code class="docutils literal"><span class="pre">factor</span></code> keyword. The factor from the VASP unit to
 THz is the default value of <code class="docutils literal"><span class="pre">factor</span></code>. Some of the physical unit
 conversion factors may be found in <code class="docutils literal"><span class="pre">phonopy/units.py</span></code>. More about
-the conversion factor is written <a class="reference internal" href="command-options.html#unit-conversion-factor-option"><span>here</span></a>.</p>
+the conversion factor is written <a class="reference internal" href="setting-tags.html#frequency-conversion-factor-tag"><span>here</span></a>.</p>
 </div>
 <div class="section" id="force-calculation">
 <h3>Force calculation<a class="headerlink" href="#force-calculation" title="Permalink to this headline">¶</a></h3>
