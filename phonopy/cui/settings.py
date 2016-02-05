@@ -53,6 +53,7 @@ class Settings:
         self._dm_decimals = None
         self._fc_decimals = None
         self._fc_symmetry_iteration = 0
+        self._frequency_conversion_factor = None
         self._gv_delta_q = None
         self._is_diagonal_displacement = True
         self._is_eigenvectors = False
@@ -80,6 +81,7 @@ class Settings:
         self._tmin = 0
         self._tstep = 10
         self._tsym_type = 0
+        self._yaml_mode = False
 
     def set_bands(self, bands):
         self._band_paths = bands
@@ -134,6 +136,12 @@ class Settings:
 
     def get_fc_decimals(self):
         return self._fc_decimals
+
+    def set_frequency_conversion_factor(self, frequency_conversion_factor):
+        self._frequency_conversion_factor = frequency_conversion_factor
+
+    def get_frequency_conversion_factor(self):
+        return self._frequency_conversion_factor
 
     def set_frequency_pitch(self, frequency_pitch):
         self._frequency_pitch = frequency_pitch
@@ -301,6 +309,12 @@ class Settings:
     def get_tsym_type(self):
         return self._tsym_type
     
+    def set_yaml_mode(self, yaml_mode):
+        self._yaml_mode = yaml_mode
+        
+    def get_yaml_mode(self):
+        return self._yaml_mode
+
 
 # Parse phonopy setting filen
 class ConfParser:
@@ -365,6 +379,11 @@ class ConfParser:
         if 'fc_symmetry' in params:
             self._settings.set_fc_symmetry_iteration(int(params['fc_symmetry']))
     
+        # Frequency unit conversion factor
+        if 'frequency_conversion_factor' in params:
+            self._settings.set_frequency_conversion_factor(
+                params['frequency_conversion_factor'])
+
         # Spectram drawing step
         if 'frequency_pitch' in params:
             self._settings.set_frequency_pitch(params['frequency_pitch'])
@@ -457,6 +476,8 @@ class ConfParser:
             self._settings.set_min_temperature(params['tmin'])
         if 'tstep' in params:
             self._settings.set_temperature_step(params['tstep'])
+
+        # Choice of imposing translational invariance
         if 'tsym_type' in params:
             self._settings.set_tsym_type(params['tsym_type'])
     
@@ -481,6 +502,9 @@ class ConfParser:
                     bands.append(band)
             self._settings.set_bands(bands)
 
+        # Activate phonopy YAML mode
+        if 'yaml_mode' in params:
+            self._settings.set_yaml_mode(params['yaml_mode'])
 
     def read_file(self, filename):
         file = open(filename, 'r')
@@ -602,6 +626,10 @@ class ConfParser:
                 if self._options.mesh_numbers:
                     self._confs['mesh_numbers'] = self._options.mesh_numbers
 
+            if opt.dest == 'frequency_conversion_factor':
+                if self._options.frequency_conversion_factor:
+                    self._confs['frequency_conversion_factor'] = self._options.frequency_conversion_factor
+
             if opt.dest == 'frequency_pitch':
                 if self._options.frequency_pitch:
                     self._confs['frequency_pitch'] = self._options.frequency_pitch
@@ -641,6 +669,10 @@ class ConfParser:
             if opt.dest == 'tstep':
                 if self._options.tstep:
                     self._confs['tstep'] = self._options.tstep
+
+            if opt.dest == 'yaml_mode':
+                if self._options.yaml_mode:
+                    self._confs['yaml_mode'] = '.true.'
 
     def parse_conf(self):
         confs = self._confs
@@ -797,6 +829,10 @@ class ConfParser:
                 else:
                     self.set_parameter('q_direction', q_direction)
 
+            if conf_key == 'frequency_conversion_factor':
+                val = float(confs['frequency_conversion_factor'])
+                self.set_parameter('frequency_conversion_factor', val)
+
             if conf_key == 'frequency_pitch':
                 val = float(confs['frequency_pitch'])
                 self.set_parameter('frequency_pitch', val)
@@ -837,6 +873,11 @@ class ConfParser:
             # Group velocity finite difference
             if conf_key == 'gv_delta_q':
                 self.set_parameter('gv_delta_q', float(confs['gv_delta_q']))
+
+            # Phonopy YAML mode
+            if conf_key == 'yaml_mode':
+                if confs['yaml_mode'] == '.true.':
+                    self.set_parameter('yaml_mode', True)
 
     def set_parameter(self, key, val):
         self._parameters[key] = val
@@ -888,7 +929,6 @@ class PhonopySettings(Settings):
         self._thermal_atom_pairs = None
         self._write_dynamical_matrices = False
         self._write_mesh = True
-        self._yaml_mode = False
 
     def set_anime_band_index(self, band_index):
         self._anime_band_index = band_index
@@ -1146,12 +1186,6 @@ class PhonopySettings(Settings):
     def get_write_mesh(self):
         return self._write_mesh
 
-    def set_yaml_mode(self, yaml_mode):
-        self._yaml_mode = yaml_mode
-        
-    def get_yaml_mode(self):
-        return self._yaml_mode
-
 
         
 class PhonopyConfParser(ConfParser):
@@ -1276,10 +1310,6 @@ class PhonopyConfParser(ConfParser):
             if opt.dest == 'lapack_solver':
                 if self._options.lapack_solver:
                     self._confs['lapack_solver'] = '.true.'
-
-            if opt.dest == 'yaml_mode':
-                if self._options.yaml_mode:
-                    self._confs['yaml_mode'] = '.true.'
 
 
     def _parse_conf(self):
@@ -1447,11 +1477,6 @@ class PhonopyConfParser(ConfParser):
             if conf_key == 'lapack_solver':
                 if confs['lapack_solver'] == '.true.':
                     self.set_parameter('lapack_solver', True)
-
-            # Phonopy YAML mode
-            if conf_key == 'yaml_mode':
-                if confs['yaml_mode'] == '.true.':
-                    self.set_parameter('yaml_mode', True)
 
 
     def _parse_conf_modulation(self, confs):
@@ -1698,7 +1723,3 @@ class PhonopyConfParser(ConfParser):
         if 'lapack_solver' in params:
             self._settings.set_lapack_solver(params['lapack_solver'])
     
-        # Activate phonopy YAML mode
-        if 'yaml_mode' in params:
-            self._settings.set_yaml_mode(params['yaml_mode'])
-                

@@ -27,7 +27,7 @@ class JointDos:
                  temperatures=None,
                  frequency_factor_to_THz=VaspToTHz,
                  frequency_scale_factor=1.0,
-                 is_nosym=False,
+                 is_mesh_symmetry=True,
                  symprec=1e-5,
                  filename=None,
                  log_level=False,
@@ -53,7 +53,7 @@ class JointDos:
         self._temperatures = temperatures
         self._frequency_factor_to_THz = frequency_factor_to_THz
         self._frequency_scale_factor = frequency_scale_factor
-        self._is_nosym = is_nosym
+        self._is_mesh_symmetry = is_mesh_symmetry
         self._symprec = symprec
         self._filename = filename
         self._log_level = log_level
@@ -239,7 +239,7 @@ class JointDos:
             symprec=self._symprec)
         
     def _set_triplets(self):
-        if self._is_nosym:
+        if not self._is_mesh_symmetry:
             if self._log_level:
                 print("Triplets at q without considering symmetry")
                 sys.stdout.flush()

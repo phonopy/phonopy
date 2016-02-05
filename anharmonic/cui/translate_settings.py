@@ -36,7 +36,7 @@ import numpy as np
 from phonopy.units import VaspToTHz
 from anharmonic.phonon3.triplets import get_grid_point_from_address
 
-def get_phono3py_configurations(settings, options):
+def get_phono3py_configurations(settings):
     primitive_matrix = settings.get_primitive_matrix()
     supercell_matrix = settings.get_supercell_matrix()
     phonon_supercell_matrix = settings.get_phonon_supercell_matrix()
@@ -78,10 +78,10 @@ def get_phono3py_configurations(settings, options):
         temperature_points = settings.get_temperatures() # For spectra
         temperatures = settings.get_temperatures() # For others
 
-    if options.factor is None:
+    if settings.get_frequency_conversion_factor() is None:
         frequency_factor_to_THz = VaspToTHz
     else:
-        frequency_factor_to_THz = options.factor
+        frequency_factor_to_THz = settings.get_frequency_conversion_factor()
 
     if settings.get_num_frequency_points() is None:
         if settings.get_frequency_pitch() is None:
@@ -94,22 +94,15 @@ def get_phono3py_configurations(settings, options):
         num_frequency_points = settings.get_num_frequency_points()
         frequency_step = None
 
-    if options.freq_scale is None:
+    if settings.get_frequency_scale_factor() is None:
         frequency_scale_factor = 1.0
     else:
-        frequency_scale_factor = options.freq_scale
+        frequency_scale_factor = settings.get_frequency_scale_factor()
 
     if settings.get_cutoff_frequency() is None:
         cutoff_frequency = 1e-2
     else:
         cutoff_frequency = settings.get_cutoff_frequency()
-
-    if settings.get_is_translational_symmetry():
-        tsym_type = 1
-    elif settings.get_tsym_type() > 0:
-        tsym_type = settings.get_tsym_type()
-    else:
-        tsym_type = 0
 
     conf = {}
     conf['primitive_matrix'] = primitive_matrix
@@ -129,6 +122,5 @@ def get_phono3py_configurations(settings, options):
     conf['frequency_step'] = frequency_step
     conf['frequency_scale_factor'] = frequency_scale_factor
     conf['cutoff_frequency'] = cutoff_frequency
-    conf['tsym_type'] = tsym_type
 
     return conf

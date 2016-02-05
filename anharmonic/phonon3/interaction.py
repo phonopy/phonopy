@@ -1,10 +1,13 @@
 import numpy as np
 from phonopy.phonon.solver import set_phonon_c, set_phonon_py
-from phonopy.harmonic.dynamical_matrix import get_smallest_vectors, get_dynamical_matrix
+from phonopy.harmonic.dynamical_matrix import (get_smallest_vectors,
+                                               get_dynamical_matrix)
 from phonopy.units import VaspToTHz, Hbar, EV, Angstrom, THz, AMU, PlanckConstant
 from anharmonic.phonon3.real_to_reciprocal import RealToReciprocal
 from anharmonic.phonon3.reciprocal_to_normal import ReciprocalToNormal
-from anharmonic.phonon3.triplets import get_triplets_at_q, get_nosym_triplets_at_q, get_bz_grid_address
+from anharmonic.phonon3.triplets import (get_triplets_at_q,
+                                         get_nosym_triplets_at_q,
+                                         get_bz_grid_address)
 
 class Interaction:
     def __init__(self,
@@ -17,7 +20,7 @@ class Interaction:
                  constant_averaged_interaction=None,
                  frequency_factor_to_THz=VaspToTHz,
                  unit_conversion=None,
-                 is_nosym=False,
+                 is_mesh_symmetry=True,
                  symmetrize_fc3_q=False,
                  cutoff_frequency=None,
                  lapack_zheev_uplo='L'):
@@ -46,7 +49,7 @@ class Interaction:
             self._cutoff_frequency = 0
         else:
             self._cutoff_frequency = cutoff_frequency
-        self._is_nosym = is_nosym
+        self._is_mesh_symmetry = is_mesh_symmetry
         self._symmetrize_fc3_q = symmetrize_fc3_q
         self._lapack_zheev_uplo = lapack_zheev_uplo
 
@@ -130,15 +133,12 @@ class Interaction:
     def get_lapack_zheev_uplo(self):
         return self._lapack_zheev_uplo
 
-    def is_nosym(self):
-        return self._is_nosym
-
     def get_cutoff_frequency(self):
         return self._cutoff_frequency
         
     def set_grid_point(self, grid_point, stores_triplets_map=False):
         reciprocal_lattice = np.linalg.inv(self._primitive.get_cell())
-        if self._is_nosym:
+        if not self._is_mesh_symmetry:
             (triplets_at_q,
              weights_at_q,
              grid_address,

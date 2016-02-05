@@ -228,10 +228,7 @@ class Phonopy:
         self._unitcell.set_masses(u_masses)
         self._set_dynamical_matrix()
         
-    def set_nac_params(self, nac_params=None, method=None):
-        if method is not None:
-            print("set_nac_params:")
-            print("  Keyword argument of \"method\" is not more supported.")
+    def set_nac_params(self, nac_params=None):
         self._nac_params = nac_params
         self._set_dynamical_matrix()
 

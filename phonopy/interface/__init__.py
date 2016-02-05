@@ -106,7 +106,8 @@ def get_default_cell_filename(interface_mode, yaml_mode):
 
 def create_FORCE_SETS(interface_mode,
                       force_filenames,
-                      options,
+                      symprec,
+                      is_wien2k_p1=False,
                       log_level=0):
     if (interface_mode == 'vasp' or
         interface_mode == 'abinit' or
@@ -136,8 +137,8 @@ def create_FORCE_SETS(interface_mode,
             force_filenames,
             supercell,
             disp_keyword='first_atoms',
-            is_distribute=(not options.is_wien2k_p1),
-            symprec=options.symprec)
+            is_distribute=(not is_wien2k_p1),
+            symprec=symprec)
     else:
         force_sets = []
 

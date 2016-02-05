@@ -43,7 +43,8 @@ def write_grid_points(primitive,
                       mesh,
                       mesh_divs,
                       coarse_mesh_shifts,
-                      options,
+                      is_kappa_star,
+                      symprec,
                       log_level):
     print("-" * 76)
     if mesh is None:
@@ -56,8 +57,8 @@ def write_grid_points(primitive,
              mesh,
              mesh_divs,
              coarse_mesh_shifts,
-             is_nosym=options.no_kappa_stars,
-             symprec=options.symprec)
+             is_kappa_star=is_kappa_star,
+             symprec=symprec)
         write_ir_grid_points(mesh,
                              mesh_divs,
                              ir_grid_points,
@@ -74,7 +75,8 @@ def show_num_triplets(primitive,
                       mesh_divs,
                       grid_points,
                       coarse_mesh_shifts,
-                      options,
+                      is_kappa_star,
+                      symprec,
                       log_level):
     print("-" * 76)
 
@@ -83,8 +85,8 @@ def show_num_triplets(primitive,
         mesh,
         mesh_divs,
         coarse_mesh_shifts,
-        is_nosym=options.no_kappa_stars,
-        symprec=options.symprec)
+        is_kappa_star=is_kappa_star,
+        symprec=symprec)
 
     if grid_points:
         _grid_points = grid_points
@@ -93,10 +95,10 @@ def show_num_triplets(primitive,
 
     print("Grid point        q-point        No. of triplets")
     for gp in _grid_points:
-        num_triplets =  get_number_of_triplets(primitive,
-                                               mesh,
-                                               gp,
-                                               symprec=options.symprec)
+        num_triplets = get_number_of_triplets(primitive,
+                                              mesh,
+                                              gp,
+                                              symprec=symprec)
         q = grid_address[gp] / np.array(mesh, dtype='double')
         print("  %5d     (%5.2f %5.2f %5.2f)  %8d" %
               (gp, q[0], q[1], q[2], num_triplets))

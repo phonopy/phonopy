@@ -20,7 +20,7 @@ def get_thermal_conductivity_RTA(
         gamma_unit_conversion=None,
         mesh_divisors=None,
         coarse_mesh_shifts=None,
-        no_kappa_stars=False,
+        is_kappa_star=True,
         gv_delta_q=1e-4,
         run_with_g=True, # integration weights from gaussian smearing function
         write_gamma=False,
@@ -47,7 +47,7 @@ def get_thermal_conductivity_RTA(
             gamma_unit_conversion=gamma_unit_conversion,
             mesh_divisors=mesh_divisors,
             coarse_mesh_shifts=coarse_mesh_shifts,
-            no_kappa_stars=no_kappa_stars,
+            is_kappa_star=is_kappa_star,
             gv_delta_q=gv_delta_q,
             run_with_g=run_with_g,
             log_level=log_level)
@@ -309,7 +309,7 @@ class Conductivity_RTA(Conductivity):
                  gamma_unit_conversion=None,
                  mesh_divisors=None,
                  coarse_mesh_shifts=None,
-                 no_kappa_stars=False,
+                 is_kappa_star=True,
                  gv_delta_q=None,
                  run_with_g=True,
                  log_level=0):
@@ -319,7 +319,7 @@ class Conductivity_RTA(Conductivity):
         self._pp = None
         self._temperatures = None
         self._sigmas = None
-        self._no_kappa_stars = None
+        self._is_kappa_star = None
         self._gv_delta_q = None
         self._run_with_g = run_with_g
         self._log_level = None
@@ -372,7 +372,7 @@ class Conductivity_RTA(Conductivity):
                               mesh_divisors=mesh_divisors,
                               coarse_mesh_shifts=coarse_mesh_shifts,
                               boundary_mfp=boundary_mfp,
-                              no_kappa_stars=no_kappa_stars,
+                              is_kappa_star=is_kappa_star,
                               gv_delta_q=gv_delta_q,
                               log_level=log_level)
 

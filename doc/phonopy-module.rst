@@ -68,7 +68,7 @@ In general case, unit conversion factor for phonon frequency has to be
 set by using the ``factor`` keyword. The factor from the VASP unit to
 THz is the default value of ``factor``. Some of the physical unit
 conversion factors may be found in ``phonopy/units.py``. More about
-the conversion factor is written :ref:`here <unit_conversion_factor_option>`.
+the conversion factor is written :ref:`here <frequency_conversion_factor_tag>`.
 
 
 Force calculation
