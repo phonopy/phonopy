@@ -320,12 +320,15 @@ def get_born_parameters(f, primitive, symmetry):
     from phonopy.harmonic.force_constants import similarity_transformation
 
     # Read unit conversion factor, damping factor, ...
-    factors = [float(x) for x in f.readline().split()]
-    if len(factors) < 1:
+    line_arr = f.readline().split()
+    if len(line_arr) < 1:
         print("BORN file format of line 1 is incorrect")
         return False
-    if len(factors) < 2:
-        factors = factors[0]
+    if len(line_arr) > 0:
+        try:
+            factor = float(line_arr[0])
+        except (ValueError, TypeError):
+            factor = None
 
     # Read dielectric constant
     line = f.readline().split()
@@ -362,7 +365,7 @@ def get_born_parameters(f, primitive, symmetry):
                                             born[map_atoms[i]])
 
     non_anal = {'born': born,
-                'factor': factors,
+                'factor': factor,
                 'dielectric': dielectric }
 
     return non_anal

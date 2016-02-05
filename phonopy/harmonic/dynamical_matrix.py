@@ -34,7 +34,6 @@
 
 import numpy as np
 from phonopy.structure.cells import get_reduced_bases
-DAMPING_FACTOR = 0.25
 
 def get_dynamical_matrix(fc2,
                          supercell,
@@ -239,7 +238,6 @@ class DynamicalMatrixNAC(DynamicalMatrix):
                  primitive,
                  force_constants,
                  nac_params=None,
-                 method='wang',
                  decimals=None,
                  symprec=1e-5):
 
@@ -252,9 +250,8 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         self._bare_force_constants = self._force_constants.copy()
 
         self._nac = True
-        self._method = None
         if nac_params is not None:
-            self.set_nac_params(nac_params, method=method)
+            self.set_nac_params(nac_params)
 
     def get_born_effective_charges(self):
         return self._born
@@ -265,17 +262,9 @@ class DynamicalMatrixNAC(DynamicalMatrix):
     def get_dielectric_constant(self):
         return self._dielectric
     
-    def set_nac_params(self, nac_params, method='wang'):
-        self._method = method
+    def set_nac_params(self, nac_params):
         self._born = np.array(nac_params['born'], dtype='double', order='C')
-        factor = nac_params['factor']
-        if (isinstance(factor, list) or
-            isinstance(factor, tuple)):
-            self._unit_conversion = factor[0]
-            self._damping_factor = factor[1]
-        else:
-            self._unit_conversion = factor
-            self._damping_factor = DAMPING_FACTOR
+        self._unit_conversion = nac_params['factor']
         self._dielectric = np.array(nac_params['dielectric'],
                                     dtype='double', order='C')
 
@@ -298,39 +287,22 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         constant = (self._unit_conversion * 4.0 * np.pi / volume
                     / np.dot(q, np.dot(self._dielectric, q)))
 
-        # Parlinski method
-        if self._method == 'parlinski':
-            charge_sum = self._get_charge_sum(num_atom, q)
-            nac_q = np.zeros((num_atom * 3, num_atom * 3), dtype='double')
-            m = self._pcell.get_masses()
-            q_distance = np.array(q_red) - np.rint(q_red)
-            constant *= np.exp(-np.dot(q_distance, q_distance) /
-                               self._damping_factor ** 2)
-            for i in range(num_atom):
-                for j in range(num_atom):
-                    nac_q[i*3:(i+1)*3, j*3:(j+1)*3] = (
-                        charge_sum[i, j] * constant / np.sqrt(m[i] * m[j]))
-
-            DynamicalMatrix.set_dynamical_matrix(self, q_red, verbose)
-            self._dynamical_matrix += nac_q
-
         # Wang method (J. Phys.: Condens. Matter 22 (2010) 202201)
-        else:
+        import phonopy._phonopy as phonoc
+        try:
             import phonopy._phonopy as phonoc
-            try:
-                import phonopy._phonopy as phonoc
-                self._set_c_nac_dynamical_matrix(q_red, q, constant)
-            except ImportError:
-                fc = self._bare_force_constants.copy()
-                nac_q = np.zeros((num_atom, num_atom, 3, 3), dtype='double')
-                for i in range(num_atom):
-                    A_i = np.dot(q, self._born[i])
-                    for j in range(num_atom):
-                        A_j = np.dot(q, self._born[j])
-                        nac_q[i, j] = np.outer(A_i, A_j) * constant
-                self._set_NAC_force_constants(fc, nac_q)
-                self._force_constants = fc
-                DynamicalMatrix.set_dynamical_matrix(self, q_red, verbose)
+            self._set_c_nac_dynamical_matrix(q_red, q, constant)
+        except ImportError:
+            fc = self._bare_force_constants.copy()
+            nac_q = np.zeros((num_atom, num_atom, 3, 3), dtype='double')
+            for i in range(num_atom):
+                A_i = np.dot(q, self._born[i])
+                for j in range(num_atom):
+                    A_j = np.dot(q, self._born[j])
+                    nac_q[i, j] = np.outer(A_i, A_j) * constant
+            self._set_NAC_force_constants(fc, nac_q)
+            self._force_constants = fc
+            DynamicalMatrix.set_dynamical_matrix(self, q_red, verbose)
 
     def _set_NAC_force_constants(self, fc, nac_q):
         N = (self._scell.get_number_of_atoms() //

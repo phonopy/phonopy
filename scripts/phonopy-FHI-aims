@@ -901,8 +901,8 @@ if __name__ == "__main__":
         nac_method = control.phonon["nac"]["method"]
         print "# | reading polarizabilities from %s" % nac_file
         nac_params = parse_BORN(phonopy_obj.primitive, filename=nac_file)
-        print "# | setting method for non-analytical terms in dynamical matrix to \'%s\'" % nac_method
-        phonopy_obj.set_nac_params(nac_params, method=nac_method)
+        # print "# | setting method for non-analytical terms in dynamical matrix to \'%s\'" % nac_method
+        phonopy_obj.set_nac_params(nac_params)
         print "#"
 
     if requested_nac:

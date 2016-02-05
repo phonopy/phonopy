@@ -38,7 +38,7 @@ import sys
 import numpy as np
 from phonopy.interface.vasp import read_vasp
 from phonopy.file_IO import parse_BORN, write_FORCE_SETS, parse_FORCE_SETS
-from phonopy.units import VaspToTHz, PwscfToTHz, Bohr, Rydberg
+from phonopy.units import VaspToTHz, PwscfToTHz, Bohr, Rydberg, Hartree
 from phonopy.version import __version__
 from phonopy.interface import read_crystal_structure
 from anharmonic.file_IO import (parse_disp_fc2_yaml, parse_disp_fc3_yaml,
@@ -400,6 +400,15 @@ create_phono3py_force_constants(phono3py,
 if settings.get_is_nac():
     file_exists('BORN', log_level)
     nac_params = parse_BORN(phonon_primitive)
+    nac_factor = Hartree * Bohr
+    if nac_params['factor'] is None:
+        pass
+    elif abs(nac_params['factor'] - nac_factor) > 1e-4:
+        print("-" * 22 + " Non-analytical term correction " + "-" * 22)
+        print("NAC unit conversion factor in BORN file %f was ignored." %
+              nac_params['factor'])
+        print("Instead, the default value %6.4f is used." % nac_factor)
+    nac_params['factor'] = nac_factor
     nac_q_direction = settings.get_nac_q_direction()
 else:
     nac_params = None
