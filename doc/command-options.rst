@@ -178,7 +178,7 @@ VASP interface
 ^^^^^^^^^^^^^^
 
 ``FORCE_SETS`` file is created from ``disp.yaml``, which is an output
-file when creating supercell with displacements, and
+file when creating supercells with displacements, and
 ``vasprun.xml``'s, which are the VASP output files. ``disp.yaml`` in
 the current directory is automatically read. The order of
 displacements written in ``disp.yaml`` file has to correpond to that of

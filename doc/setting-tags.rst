@@ -387,6 +387,8 @@ when those files are not needed, e.g., in (P)DOS calculation,
    WRITE_MESH = .FALSE.
 
 
+.. _dos_related_tags:
+
 Density of states (DOS) tags
 -----------------------------
 
@@ -397,8 +399,6 @@ vertical axis is {no. of states}/({unit cell} x {unit of the
 horizontal axis}). If the DOS is integrated over the frequency range,
 it will be :math:`3N_\mathrm{a}` states, where :math:`N_\mathrm{a}` is
 the number of atoms in the unit cell.
-
-.. _dos_related_tags:
 
 ``DOS``
 ~~~~~~~~
@@ -665,7 +665,7 @@ Non-analytical term correction
 
 Non-analytical term correction is applied to dynamical
 matrix. ``BORN`` file has to be prepared in the current directory. See
-:ref:`born` and :ref:`non_analytical_term_correction_theory`.
+:ref:`born_file` and :ref:`non_analytical_term_correction_theory`.
 
 ::
 
