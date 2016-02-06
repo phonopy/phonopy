@@ -668,10 +668,10 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
             bands,
             is_eigenvectors=settings.get_is_eigenvectors(),
             is_band_connection=settings.get_is_band_connection())
-        phonon.write_yaml_band_structure()
+        phonon.write_yaml_band_structure(labels=settings.get_band_labels())
     
         if options.is_graph_plot and run_mode != 'band_mesh':
-            plot = phonon.plot_band_structure(symbols=settings.get_band_labels())
+            plot = phonon.plot_band_structure(labels=settings.get_band_labels())
             if options.is_graph_save:
                 plot.savefig('band.pdf')
             else:
@@ -866,10 +866,10 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
         if settings.get_is_eigenvectors():
             plot = phonon.plot_band_structure_and_dos(
                 pdos_indices=pdos_indices,
-                symbols=settings.get_band_labels())
+                labels=settings.get_band_labels())
         else:
             plot = phonon.plot_band_structure_and_dos(
-                symbols=settings.get_band_labels())
+                labels=settings.get_band_labels())
         if options.is_graph_save:
             plot.savefig('band_dos.pdf')
         else:

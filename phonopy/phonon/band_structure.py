@@ -75,10 +75,11 @@ class BandStructure:
         self._paths = [np.array(path) for path in paths]
         self._distances = []
         self._distance = 0.
-        self._special_point = [0.]
+        self._special_points = [0.]
         self._eigenvalues = None
         self._eigenvectors = None
         self._frequencies = None
+        self._group_velocities = None
         self._set_band(verbose=verbose)
 
     def get_distances(self):
@@ -102,7 +103,7 @@ class BandStructure:
     def get_unit_conversion_factor(self):
         return self._factor
     
-    def plot(self, pyplot, symbols=None):
+    def plot(self, pyplot, labels=None):
         for distances, frequencies in zip(self._distances,
                                           self._frequencies):
             for freqs in frequencies.T:
@@ -113,57 +114,100 @@ class BandStructure:
 
         pyplot.ylabel('Frequency')
         pyplot.xlabel('Wave vector')
-        if symbols and len(symbols)==len(self._special_point):
-            pyplot.xticks(self._special_point, symbols)
+        if labels and len(labels) == len(self._special_points):
+            pyplot.xticks(self._special_points, labels)
         else:
-            pyplot.xticks(self._special_point, [''] * len(self._special_point))
+            pyplot.xticks(self._special_points,
+                          [''] * len(self._special_points))
         pyplot.xlim(0, self._distance)
         pyplot.axhline(y=0, linestyle=':', linewidth=0.5, color='b')
 
-    def write_yaml(self):
-        w = open('band.yaml', 'w')
+    def write_yaml(self, labels=None, filename="band.yaml"):
+        with open(filename, 'w') as w:
+            natom = self._cell.get_number_of_atoms()
+            lattice = np.linalg.inv(self._cell.get_cell()) # column vectors
+            nq_paths = []
+            for qpoints in self._paths:
+                nq_paths.append(len(qpoints))
+            text = []
+            text.append("nqpoint: %-7d" % np.sum(nq_paths))
+            text.append("npath: %-7d" % len(self._paths))
+            text.append("nqpoint_segment:")
+            text += ["- %d" % nq for nq in nq_paths]                
+            text.append("natom: %-7d" % (natom))
+            text.append("reciprocal_lattice:")
+            for vec, axis in zip(lattice.T, ('a*', 'b*', 'c*')):
+                text.append("- [ %12.8f, %12.8f, %12.8f ] # %2s" %
+                        (tuple(vec) + (axis,)))
+            text.append('')
+            text.append("phonon:")
+            text.append('')
+            w.write("\n".join(text))
+
+            for i in range(len(self._paths)):
+                qpoints = self._paths[i]
+                distances = self._distances[i]
+                frequencies = self._frequencies[i]
+                if self._group_velocities is None:
+                    group_velocities = None
+                else:
+                    group_velocities = self._group_velocities[i]
+                if self._eigenvectors is None:
+                    eigenvectors = None
+                else:
+                    eigenvectors = self._eigenvectors[i]
+                _labels = None
+                if labels is not None:
+                    if len(labels) == len(self._paths) + 1:
+                        _labels = (labels[i], labels[i + 1])
+
+                w.write("\n".join(self._get_q_segment_yaml(qpoints,
+                                                           distances,
+                                                           frequencies,
+                                                           eigenvectors,
+                                                           group_velocities,
+                                                           _labels)))
+
+    def _get_q_segment_yaml(self,
+                            qpoints,
+                            distances,
+                            frequencies,
+                            eigenvectors,
+                            group_velocities,
+                            labels):
         natom = self._cell.get_number_of_atoms()
-        lattice = np.linalg.inv(self._cell.get_cell()) # column vectors
-        nqpoint = 0
-        for qpoints in self._paths:
-            nqpoint += len(qpoints)
-        w.write("nqpoint: %-7d\n" % nqpoint)
-        w.write("npath: %-7d\n" % len(self._paths))
-        w.write("natom: %-7d\n" % (natom))
-        w.write("reciprocal_lattice:\n")
-        for vec, axis in zip(lattice.T, ('a*', 'b*', 'c*')):
-            w.write("- [ %12.8f, %12.8f, %12.8f ] # %2s\n" %
-                    (tuple(vec) + (axis,)))
-        w.write("phonon:\n")
-        for i, (qpoints, distances, frequencies) in enumerate(zip(
-            self._paths,
-            self._distances,
-            self._frequencies)):
-             for j, q in enumerate(qpoints):
-                w.write("- q-position: [ %12.7f, %12.7f, %12.7f ]\n" % tuple(q))
-                w.write("  distance: %12.7f\n" % distances[j])
-                w.write("  band:\n")
-                for k, freq in enumerate(frequencies[j]):
-                    w.write("  - # %d\n" % (k + 1))
-                    w.write("    frequency: %15.10f\n" % freq)
-    
-                    if self._group_velocity is not None:
-                        gv = self._group_velocities[i][j, k]
-                        w.write("    group_velocity: ")
-                        w.write("[ %13.7f, %13.7f, %13.7f ]\n" % tuple(gv))
-                        
-                    if self._is_eigenvectors:
-                        eigenvectors = self._eigenvectors[i]
-                        w.write("    eigenvector:\n")
-                        for l in range(natom):
-                            w.write("    - # atom %d\n" % (l + 1))
-                            for m in (0, 1, 2):
-                                w.write("      - [ %17.14f, %17.14f ]\n" %
+        text = []
+        for j in range(len(qpoints)):
+            q = qpoints[j]
+            text.append("- q-position: [ %12.7f, %12.7f, %12.7f ]" % tuple(q))
+            text.append("  distance: %12.7f" % distances[j])
+            if labels is not None:
+                if j == 0:
+                    text.append("  label: \'%s\'" % labels[0])
+                elif j == len(qpoints) - 1:
+                    text.append("  label: \'%s\'" % labels[1])
+            text.append("  band:")
+            for k, freq in enumerate(frequencies[j]):
+                text.append("  - # %d" % (k + 1))
+                text.append("    frequency: %15.10f" % freq)
+
+                if group_velocities is not None:
+                    gv = group_velocities[j, k]
+                    text.append("    group_velocity: "
+                                "[ %13.7f, %13.7f, %13.7f ]" % tuple(gv))
+
+                if eigenvectors is not None:
+                    text.append("    eigenvector:")
+                    for l in range(natom):
+                        text.append("    - # atom %d" % (l + 1))
+                        for m in (0, 1, 2):
+                            text.append("      - [ %17.14f, %17.14f ]" %
                                         (eigenvectors[j, l * 3 + m, k].real,
                                          eigenvectors[j, l * 3 + m, k].imag))
+            text.append('')
+        text.append('')
 
-                        
-                w.write("\n")
+        return text
 
     def _set_initial_point(self, qpoint):
         self._lastq = qpoint.copy()
@@ -196,7 +240,7 @@ class BandStructure:
             if self._group_velocity is not None:
                 group_velocities.append(np.array(gv_on_path))
             distances.append(np.array(distances_on_path))
-            self._special_point.append(self._distance)
+            self._special_points.append(self._distance)
 
         self._eigenvalues = eigvals
         if self._is_eigenvectors:
