@@ -51,29 +51,31 @@ except ImportError:
 
 from phonopy.units import VaspToTHz
 
-def read_band_yaml(filename, segment_scales=None):
+def read_band_yaml(filename):
     data = yaml.load(open(filename), Loader=Loader)
     segment_positions = []
     frequencies = []
     distances = []
-    npoints = data['nqpoint'] // data['npath']
+    end_points = [0,]
+    for i in range(len(data['nqpoint_segment'])):
+        end_points.append(np.sum(data['nqpoint_segment'][:(i + 1)]))
+    end_points[-1] -= 1
     distance_scale = 1.0
     distance = 0.0
     prev_distance = 0.0
+    labels = []
 
     for j, v in enumerate(data['phonon']):
-        if j % npoints == 0:
-            segment_positions.append(distance)
-            if segment_scales is not None:
-                distance_scale = segment_scales[len(segment_positions) - 1]
-
+        if j in end_points:
+            if 'label' in v:
+                labels.append(v['label'])
         frequencies.append([f['frequency'] for f in v['band']])
         delta = v['distance'] - prev_distance
         distance += delta * distance_scale
         distances.append(distance)
         prev_distance = v['distance']
 
-    return distances, frequencies, segment_positions
+    return distances, frequencies, end_points, labels
 
 def read_dos_dat(filename):
     dos = []
@@ -100,7 +102,6 @@ parser.set_defaults(band_labels=None,
                     is_points=False,
                     is_vertial_line=False,
                     output_filename=None,
-                    segment_scales=None,
                     xlabel=None,
                     ylabel=None,
                     show_legend=False,
@@ -130,9 +131,6 @@ parser.add_option("--line", "-l", dest="is_vertial_line",
 parser.add_option("-o", "--output", dest="output_filename",
                   action="store", type="string",
                   help="Output filename of PDF plot")
-parser.add_option("--segment_scales", dest="segment_scales",
-                  action="store", type="string",
-                  help="Scale band segments")
 parser.add_option("--xlabel", dest="xlabel", action="store", type="string",
                   help="Specify x-label")
 parser.add_option("--ylabel", dest="ylabel", action="store", type="string",
@@ -175,26 +173,23 @@ else:
 if options.is_gnuplot:
     print("# distance  frequency (bands are separated by blank lines)")
 
-if options.segment_scales:
-    segment_scales = [float(x) for x in options.segment_scales.split()]
-else:
-    segment_scales = None
-
 if options.dos:
     dos_frequencies, dos = read_dos_dat(options.dos)
 
 for i, filename in enumerate(filenames):
     (distances,
      frequencies,
-     segment_positions) = read_band_yaml(filename,
-                                         segment_scales=segment_scales)
+     end_points,
+     labels) = read_band_yaml(filename)
+    segment_positions = np.array(distances)[end_points]
 
     if options.is_gnuplot:
-        print(("# segments: " + "%10.8f " * (len(segment_positions) + 1)) %
-              (tuple(segment_positions) + (distances[-1],)))
+        print("# End points of segments: ")
+        print("#   " + "%10.8f " * len(segment_positions) %
+              tuple(segment_positions))
         
     elif options.is_vertial_line and len(filenames) == 1:
-        for v in segment_positions[1:]:
+        for v in segment_positions[1:-1]:
             plt.axvline(x=v, linewidth=0.5, color='b')
 
     for j, freqs in enumerate(np.array(frequencies).T):
@@ -230,7 +225,7 @@ if not options.is_gnuplot:
         plt.ylim(ymin=options.f_min)
     plt.axhline(y=0, linestyle=':', linewidth=0.5, color='b')
     if len(filenames) == 1:
-        xticks = segment_positions + [distances[-1]]
+        xticks = segment_positions
         if options.band_labels:
             band_labels = [x for x in options.band_labels.split()]
             if len(band_labels) == len(xticks):
@@ -238,6 +233,8 @@ if not options.is_gnuplot:
             else:
                 print("Numbers of labels and band segments don't match.")
                 sys.exit(1)
+        elif labels:
+            plt.xticks(xticks, labels)
         else:
             plt.xticks(xticks, [''] * len(xticks))
     else:
