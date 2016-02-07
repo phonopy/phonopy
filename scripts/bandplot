@@ -53,29 +53,21 @@ from phonopy.units import VaspToTHz
 
 def read_band_yaml(filename):
     data = yaml.load(open(filename), Loader=Loader)
-    segment_positions = []
     frequencies = []
     distances = []
-    end_points = [0,]
-    for i in range(len(data['nqpoint_segment'])):
-        end_points.append(np.sum(data['nqpoint_segment'][:(i + 1)]))
-    end_points[-1] -= 1
-    distance_scale = 1.0
-    distance = 0.0
-    prev_distance = 0.0
     labels = []
-
     for j, v in enumerate(data['phonon']):
-        if j in end_points:
-            if 'label' in v:
-                labels.append(v['label'])
+        if 'label' in v:
+            labels.append(v['label'])
+        else:
+            labels.append(None)
         frequencies.append([f['frequency'] for f in v['band']])
-        delta = v['distance'] - prev_distance
-        distance += delta * distance_scale
-        distances.append(distance)
-        prev_distance = v['distance']
+        distances.append(v['distance'])
 
-    return distances, frequencies, end_points, labels
+    return (np.array(distances),
+            np.array(frequencies),
+            data['segment_nqpoint'],
+            labels)
 
 def read_dos_dat(filename):
     dos = []
@@ -179,30 +171,54 @@ if options.dos:
 for i, filename in enumerate(filenames):
     (distances,
      frequencies,
-     end_points,
+     segment_nqpoint,
      labels) = read_band_yaml(filename)
-    segment_positions = np.array(distances)[end_points]
+
+    end_points = [0,]
+    for nq in segment_nqpoint:
+        end_points.append(nq + end_points[-1])
+    end_points[-1] -= 1
+    segment_positions = distances[end_points]
+
+    if all(x is None for x in labels):
+        labels_at_ends = None
+    else:
+        labels_at_ends = [labels[n] for n in end_points]
 
     if options.is_gnuplot:
         print("# End points of segments: ")
         print("#   " + "%10.8f " * len(segment_positions) %
               tuple(segment_positions))
-        
     elif options.is_vertial_line and len(filenames) == 1:
         for v in segment_positions[1:-1]:
             plt.axvline(x=v, linewidth=0.5, color='b')
 
-    for j, freqs in enumerate(np.array(frequencies).T):
-        if options.is_gnuplot:
-            for d, f in zip(distances, freqs * options.factor):
-                print("%f %f" % (d, f))
+    if options.is_gnuplot:
+        for j, freqs in enumerate(frequencies.T):
+            q = 0
+            for nq in segment_nqpoint:
+                for d, f in zip(distances[q:(q + nq)],
+                                freqs[q:(q + nq)] * options.factor):
+                    print("%f %f" % (d, f))
+                q += nq
+                print('')
             print('')
-        else:
+    else:
+        q = 0
+        print(frequencies).shape
+        for j, nq in enumerate(segment_nqpoint):
             if j == 0:
-                plt.plot(distances, freqs * options.factor, colors[i],
+                print(frequencies[q:(q + nq)]).shape
+                print(distances[q:(q + nq)]).shape
+                plt.plot(distances[q:(q + nq)],
+                         frequencies[q:(q + nq)] * options.factor,
+                         colors[i],
                          label=filename)
             else:
-                plt.plot(distances, freqs * options.factor, colors[i])
+                plt.plot(distances[q:(q + nq)],
+                         frequencies[q:(q + nq)] * options.factor,
+                         colors[i])
+            q += nq
 
     if options.is_gnuplot:
         print('')
@@ -233,8 +249,8 @@ if not options.is_gnuplot:
             else:
                 print("Numbers of labels and band segments don't match.")
                 sys.exit(1)
-        elif labels:
-            plt.xticks(xticks, labels)
+        elif labels_at_ends:
+            plt.xticks(xticks, labels_at_ends)
         else:
             plt.xticks(xticks, [''] * len(xticks))
     else:
