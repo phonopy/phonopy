@@ -132,7 +132,7 @@ class BandStructure:
             text = []
             text.append("nqpoint: %-7d" % np.sum(nq_paths))
             text.append("npath: %-7d" % len(self._paths))
-            text.append("nqpoint_segment:")
+            text.append("segment_nqpoint:")
             text += ["- %d" % nq for nq in nq_paths]                
             text.append("natom: %-7d" % (natom))
             text.append("reciprocal_lattice:")
