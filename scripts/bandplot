@@ -205,11 +205,8 @@ for i, filename in enumerate(filenames):
             print('')
     else:
         q = 0
-        print(frequencies).shape
         for j, nq in enumerate(segment_nqpoint):
             if j == 0:
-                print(frequencies[q:(q + nq)]).shape
-                print(distances[q:(q + nq)]).shape
                 plt.plot(distances[q:(q + nq)],
                          frequencies[q:(q + nq)] * options.factor,
                          colors[i],
@@ -283,5 +280,3 @@ if not options.is_gnuplot:
         plt.savefig(options.output_filename)
     else:
         plt.show()
-    
-
