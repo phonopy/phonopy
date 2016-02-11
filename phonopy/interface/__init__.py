@@ -51,8 +51,8 @@ def read_crystal_structure(filename=None,
             return None, (unitcell_filename,)
     
     if yaml_mode:
-        from phonopy.interface.phonopy_yaml import phonopyYaml
-        unitcell = phonopyYaml(unitcell_filename).get_atoms()
+        from phonopy.interface.phonopy_yaml import PhonopyYaml
+        unitcell = PhonopyYaml(unitcell_filename).get_atoms()
         return unitcell, (unitcell_filename,)
         
     if interface_mode == 'vasp':

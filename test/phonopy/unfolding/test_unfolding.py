@@ -2,7 +2,6 @@
 import unittest
 import sys
 import numpy as np
-from phonopy.interface.phonopy_yaml import phonopyYaml
 from phonopy.structure.cells import get_supercell
 from phonopy.unfolding import Unfolding
 from phonopy import Phonopy

@@ -512,8 +512,8 @@ class Phonopy:
         self._band_structure.plot(plt, labels=labels)
         return plt
 
-    def write_yaml_band_structure(self, labels=None):
-        self._band_structure.write_yaml(labels=labels)
+    def write_yaml_band_structure(self, labels=None, filename="band.yaml"):
+        self._band_structure.write_yaml(labels=labels, filename=filename)
 
     # Sampling mesh
     def set_mesh(self,

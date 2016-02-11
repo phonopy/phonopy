@@ -251,28 +251,22 @@ def parse_disp_yaml(filename="disp.yaml", return_cell=False):
 
 def write_disp_yaml(displacements, supercell, directions=None,
                     filename='disp.yaml'):
-    file = open(filename, 'w')
-    file.write("natom: %4d\n" % supercell.get_number_of_atoms())
-    file.write("displacements:\n")
+    text = []
+    text.append("natom: %4d" % supercell.get_number_of_atoms())
+    text.append("displacements:")
     for i, disp in enumerate(displacements):
-        file.write("- atom: %4d\n" % (disp[0] + 1))
+        text.append("- atom: %4d" % (disp[0] + 1))
         if directions is not None:
-            file.write("  direction:\n")
-            file.write("    [ %20.16f,%20.16f,%20.16f ]\n" % tuple(directions[i][1:4]))
-        file.write("  displacement:\n")
-        file.write("    [ %20.16f,%20.16f,%20.16f ]\n" % tuple(disp[1:4]))
-            
-    file.write("lattice:\n")
-    for axis in supercell.get_cell():
-        file.write("- [ %20.15f,%20.15f,%20.15f ]\n" % tuple(axis))
-    symbols = supercell.get_chemical_symbols()
-    positions = supercell.get_scaled_positions()
-    file.write("atoms:\n")
-    for i, (s, v) in enumerate(zip(symbols, positions)):
-        file.write("- symbol: %-2s # %d\n" % (s, i+1))
-        file.write("  position: [ %18.14f,%18.14f,%18.14f ]\n" % \
-                       (v[0], v[1], v[2]))
-    file.close()
+            text.append("  direction:")
+            text.append("    [ %20.16f,%20.16f,%20.16f ]" %
+                        tuple(directions[i][1:4]))
+        text.append("  displacement:")
+        text.append("    [ %20.16f,%20.16f,%20.16f ]" % tuple(disp[1:4]))
+
+    text.append(str(supercell)) # supercell is given as PhonopyAtoms object.
+
+    with open(filename, 'w') as w:
+        w.write("\n".join(text))
 
 #
 # DISP (old phonopy displacement format)

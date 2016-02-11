@@ -49,7 +49,7 @@ except ImportError:
 
 from phonopy.structure.atoms import Atoms, PhonopyAtoms
 
-class phonopyYaml:
+class PhonopyYaml:
     def __init__(self, filename):
         self._data = yaml.load(open(filename), Loader=Loader)
         self._lattice = self._data['lattice']
