@@ -66,6 +66,7 @@ class BandStructure:
                  verbose=False):
         self._dynamical_matrix = dynamical_matrix
         self._cell = dynamical_matrix.get_primitive()
+        self._supercell = dynamical_matrix.get_supercell()
         self._factor = factor
         self._is_eigenvectors = is_eigenvectors
         self._is_band_connection = is_band_connection
@@ -126,7 +127,10 @@ class BandStructure:
     def write_yaml(self, labels=None, filename="band.yaml"):
         with open(filename, 'w') as w:
             natom = self._cell.get_number_of_atoms()
-            lattice = np.linalg.inv(self._cell.get_cell()) # column vectors
+            rec_lattice = np.linalg.inv(self._cell.get_cell()) # column vectors
+            smat = self._supercell.get_supercell_matrix()
+            pmat = self._cell.get_primitive_matrix()
+            tmat = np.rint(np.dot(np.linalg.inv(pmat), smat)).astype(int)
             nq_paths = []
             for qpoints in self._paths:
                 nq_paths.append(len(qpoints))
@@ -136,11 +140,14 @@ class BandStructure:
             text.append("segment_nqpoint:")
             text += ["- %d" % nq for nq in nq_paths]                
             text.append("reciprocal_lattice:")
-            for vec, axis in zip(lattice.T, ('a*', 'b*', 'c*')):
+            for vec, axis in zip(rec_lattice.T, ('a*', 'b*', 'c*')):
                 text.append("- [ %12.8f, %12.8f, %12.8f ] # %2s" %
-                        (tuple(vec) + (axis,)))
+                            (tuple(vec) + (axis,)))
             text.append("natom: %-7d" % (natom))
             text.append(str(PhonopyAtoms(atoms=self._cell)))
+            text.append("supercell_matrix:")
+            for v in tmat:
+                text.append("- [ %4d, %4d, %4d ]" % tuple(v))
             text.append('')
             text.append("phonon:")
             text.append('')
