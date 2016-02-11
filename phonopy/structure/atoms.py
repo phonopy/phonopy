@@ -50,9 +50,8 @@ class Atoms:
                  pbc=None):
 
         # cell
-        if cell is None:
-            self.cell = None
-        else:
+        self.cell = None
+        if cell is not None:
             self.cell = np.array(cell, dtype='double', order='C')
 
         # position
@@ -66,15 +65,16 @@ class Atoms:
         self.symbols = symbols
 
         # Atomic numbers
-        if numbers is None:
-            self.numbers = None
-        else:
+        self.numbers = None
+        if numbers is not None:
             self.numbers = np.array(numbers, dtype='intc')
 
         # masses
+        self.masses = None
         self.set_masses(masses)
 
         # (initial) magnetic moments
+        self.magmoms = None
         self.set_magnetic_moments(magmoms)
 
         # number --> symbol
@@ -82,7 +82,7 @@ class Atoms:
             self._numbers_to_symbols()
 
         # symbol --> number
-        elif not self.symbols is None:
+        elif self.symbols is not None:
             self._symbols_to_numbers()
 
         # symbol --> mass
@@ -162,8 +162,8 @@ class Atoms:
         self.symbols = [atom_data[n][1] for n in self.numbers]
         
     def _symbols_to_numbers(self):
-        self.numbers = np.array([symbol_map[s]
-                                 for s in self.symbols], dtype='intc')
+        self.numbers = np.array(
+            [symbol_map[s] for s in self.symbols], dtype='intc')
         
     def _symbols_to_masses(self):
         masses = [atom_data[symbol_map[s]][3] for s in self.symbols]
@@ -205,11 +205,12 @@ class PhonopyAtoms(Atoms):
         for v, a in zip(self.cell, ('a', 'b', 'c')):
             lines.append("- [ %22.16f, %22.16f, %22.16f ] # %s" %
                          (v[0], v[1], v[2], a))
-        lines.append("points:")
-        for i, (s, v) in enumerate(zip(self.symbols, self.scaled_positions)):
+        lines.append("atoms:")
+        for i, (s, v, m) in enumerate(
+                zip(self.symbols, self.scaled_positions, self.masses)):
             lines.append("- symbol: %-2s # %d" % (s, i + 1))
-            lines.append("  coordinates: [ %19.16f, %19.16f, %19.16f ]" %
-                         tuple(v))
+            lines.append("  position: [ %19.16f, %19.16f, %19.16f ]" % tuple(v))
+            lines.append("  mass: %f" % m)
         return "\n".join(lines)
 
 atom_data = [ 

@@ -1,6 +1,6 @@
 import unittest
 
-from phonopy.interface.phonopy_yaml import phonopyYaml
+from phonopy.interface.phonopy_yaml import PhonopyYaml
 
 class TestPhonopyYaml(unittest.TestCase):
 
@@ -12,8 +12,8 @@ class TestPhonopyYaml(unittest.TestCase):
     
     def test_read_poscar_yaml(self):
         filename = "POSCAR.yaml"
-        phpy_yaml = phonopyYaml(filename)
-        print phpy_yaml
+        phpy_yaml = PhonopyYaml(filename)
+        print(phpy_yaml)
 
 if __name__ == '__main__':
     unittest.main()

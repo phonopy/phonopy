@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 
-from phonopy.interface.phonopy_yaml import phonopyYaml
+from phonopy.interface.phonopy_yaml import PhonopyYaml
 from anharmonic.phonon3.triplets import (get_grid_point_from_address,
                                          get_grid_point_from_address_py)
 
@@ -9,7 +9,7 @@ class TestTriplets(unittest.TestCase):
 
     def setUp(self):
         filename = "POSCAR.yaml"
-        self._cell = phonopyYaml(filename).get_atoms()
+        self._cell = PhonopyYaml(filename).get_atoms()
     
     def tearDown(self):
         pass

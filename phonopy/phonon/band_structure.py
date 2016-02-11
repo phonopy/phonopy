@@ -34,6 +34,7 @@
 
 import numpy as np
 from phonopy.units import VaspToTHz
+from phonopy.structure.atoms import PhonopyAtoms
 
 def estimate_band_connection(prev_eigvecs, eigvecs, prev_band_order):
     metric = np.abs(np.dot(prev_eigvecs.conjugate().T, eigvecs))
@@ -134,11 +135,12 @@ class BandStructure:
             text.append("npath: %-7d" % len(self._paths))
             text.append("segment_nqpoint:")
             text += ["- %d" % nq for nq in nq_paths]                
-            text.append("natom: %-7d" % (natom))
             text.append("reciprocal_lattice:")
             for vec, axis in zip(lattice.T, ('a*', 'b*', 'c*')):
                 text.append("- [ %12.8f, %12.8f, %12.8f ] # %2s" %
                         (tuple(vec) + (axis,)))
+            text.append("natom: %-7d" % (natom))
+            text.append(str(PhonopyAtoms(atoms=self._cell)))
             text.append('')
             text.append("phonon:")
             text.append('')

@@ -46,7 +46,7 @@ from phonopy.units import (Wien2kToTHz, AbinitToTHz, PwscfToTHz, ElkToTHz,
                            SiestaToTHz, VaspToTHz, Hartree, Bohr)
 from phonopy.version import __version__
 from phonopy.structure.cells import print_cell, determinant
-from phonopy.structure.atoms import atom_data, symbol_map
+from phonopy.structure.atoms import atom_data, symbol_map, PhonopyAtoms
 from phonopy.interface import create_FORCE_SETS, read_crystal_structure
 
 phonopy_version = __version__
@@ -479,7 +479,7 @@ if run_mode == 'displacements':
     displacements = phonon.get_displacements()
     directions = phonon.get_displacement_directions()
     file_IO.write_disp_yaml(displacements,
-                            supercell,
+                            PhonopyAtoms(atoms=supercell),
                             directions=directions)
     
     # Write supercells with displacements
