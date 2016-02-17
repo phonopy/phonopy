@@ -229,6 +229,7 @@ def write_vasp(filename, atoms, direct=True):
     lines = _get_vasp_structure(atoms, direct=direct)
     f = open(filename, 'w')
     f.write(lines)
+    f.close()
 
 def write_supercells_with_displacements(supercell,
                                         cells_with_displacements):
@@ -296,6 +297,7 @@ def _get_vasp_structure(atoms, direct=True):
     lines += "\n"
     lines += "Direct\n"
     lines += get_scaled_positions_lines(scaled_positions)
+    lines += "\n"
 
     return lines
     
