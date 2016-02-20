@@ -863,6 +863,24 @@ def write_detailed_gamma_to_hdf5(detailed_gamma,
     w.close()
 
     return full_filename
+
+def write_all_phonons_to_hdf5(frequency,
+                              eigenvector,
+                              grid_address,
+                              mesh,
+                              filename=None):
+    suffix = _get_filename_suffix(mesh, filename=filename)
+    full_filename = "phonon" + suffix + ".hdf5"
+
+    w = h5py.File(full_filename, 'w')
+    w.create_dataset('mesh', data=mesh)
+    w.create_dataset('grid_address', data=grid_address)
+    w.create_dataset('frequency', data=frequency)
+    w.create_dataset('eigenvector', data=eigenvector)
+
+    w.close()
+
+    return full_filename
         
 def write_ir_grid_points(mesh,
                          mesh_divs,

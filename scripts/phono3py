@@ -552,6 +552,19 @@ if run_mode is not None:
         constant_averaged_interaction=ave_pp,
         frequency_scale_factor=frequency_scale_factor,
         unit_conversion=settings.get_pp_conversion_factor())
+    if settings.get_write_phonon():
+        filename = phono3py.write_all_phonons(filename=output_filename)
+        if filename:
+            if log_level:
+                print("All phonons on grid points are written into %s." %
+                      filename)
+            #     print_end()
+            # sys.exit(0)
+        else:
+            print("Writing phonons failed.")
+            if log_level:
+                print_error()
+            sys.exit(1)
 
 if run_mode == "linewidth":
     if grid_points is None:
