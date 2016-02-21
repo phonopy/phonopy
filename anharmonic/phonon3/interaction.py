@@ -88,7 +88,7 @@ class Interaction:
             self._interaction_strength = np.ones(
                 (num_triplets, len(self._band_indices), num_band, num_band),
                 dtype='double') * self._constant_averaged_interaction / num_grid
-            self.set_phonon(self._triplets_at_q.ravel())
+            self.set_phonons(self._triplets_at_q.ravel())
 
     def get_interaction_strength(self):
         return self._interaction_strength
@@ -204,7 +204,27 @@ class Interaction:
         if nac_q_direction is not None:
             self._nac_q_direction = np.array(nac_q_direction, dtype='double')
 
-    def set_phonon(self, grid_points):
+    def set_phonon_data(self, frequencies, eigenvectors, grid_address):
+        if grid_address.shape != self._grid_address.shape:
+            print("=" * 26 + " Warning " + "=" * 26)
+            print("Input grid address size is inconsistent. "
+                  "Setting phonons faild.")
+            print("=" * 26 + " Warning " + "=" * 26)
+            return False
+
+        if (self._grid_address - grid_address).all():
+            print("=" * 26 + " Warning " + "=" * 26)
+            print("Input grid addresses are inconsistent. "
+                  "Setting phonons faild.")
+            print("=" * 26 + " Warning " + "=" * 26)
+            return False
+        else:
+            self._phonon_done[:] = 1
+            self._frequencies[:] = frequencies
+            self._eigenvectors[:] = eigenvectors
+            return True
+
+    def set_phonons(self, grid_points):
         # for i, grid_triplet in enumerate(self._triplets_at_q):
         #     for gp in grid_triplet:
         #         self._set_phonon_py(gp)
@@ -220,7 +240,7 @@ class Interaction:
     def _run_c(self):
         import anharmonic._phono3py as phono3c
         
-        self.set_phonon(self._triplets_at_q.ravel())
+        self.set_phonons(self._triplets_at_q.ravel())
         num_band = self._primitive.get_number_of_atoms() * 3
         svecs, multiplicity = get_smallest_vectors(self._supercell,
                                                    self._primitive,

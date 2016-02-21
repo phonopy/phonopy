@@ -418,7 +418,7 @@ def _set_triplets_integration_weights_c(g,
                 mesh,
                 grid_address,
                 bz_map)
-            interaction.set_phonon(np.unique(neighboring_grid_points))
+            interaction.set_phonons(np.unique(neighboring_grid_points))
 
     phono3c.triplets_integration_weights(
         g,
@@ -444,7 +444,7 @@ def _set_triplets_integration_weights_py(g, interaction, frequency_points):
         triplets_at_q,
         grid_address,
         bz_map)
-    interaction.set_phonon(np.unique(tetrahedra_vertices))
+    interaction.set_phonons(np.unique(tetrahedra_vertices))
     frequencies = interaction.get_phonons()[0]
     num_band = frequencies.shape[1]
     for i, vertices in enumerate(tetrahedra_vertices):

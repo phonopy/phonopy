@@ -39,6 +39,7 @@ class Phono3pySettings(Settings):
         self._read_fc2 = False
         self._read_fc3 = False
         self._read_gamma = False
+        self._read_phonon = False
         self._run_with_g = True
         self._phonon_supercell_matrix = None
         self._pinv_cutoff = 1.0e-8
@@ -261,6 +262,12 @@ class Phono3pySettings(Settings):
     def get_read_gamma(self):
         return self._read_gamma
 
+    def set_read_phonon(self, read_phonon):
+        self._read_phonon = read_phonon
+
+    def get_read_phonon(self):
+        return self._read_phonon
+
     def set_run_with_g(self, run_with_g):
         self._run_with_g = run_with_g
 
@@ -456,6 +463,10 @@ class Phono3pyConfParser(ConfParser):
             if opt.dest == 'read_gamma':
                 if self._options.read_gamma:
                     self._confs['read_gamma'] = '.true.'
+
+            if opt.dest == 'read_phonon':
+                if self._options.read_phonon:
+                    self._confs['read_phonon'] = '.true.'
 
             if opt.dest == 'run_with_g':
                 if not self._options.run_with_g:
@@ -676,6 +687,10 @@ class Phono3pyConfParser(ConfParser):
                 if confs['read_gamma'] == '.true.':
                     self.set_parameter('read_gamma', True)
 
+            if conf_key == 'read_phonon':
+                if confs['read_phonon'] == '.true.':
+                    self.set_parameter('read_phonon', True)
+
             if conf_key == 'run_with_g':
                 if confs['run_with_g'] == '.false.':
                     self.set_parameter('run_with_g', False)
@@ -863,6 +878,10 @@ class Phono3pyConfParser(ConfParser):
         if params.has_key('read_gamma'):
             self._settings.set_read_gamma(params['read_gamma'])
             
+        # Read phonons from hdf5
+        if params.has_key('read_phonon'):
+            self._settings.set_read_phonon(params['read_phonon'])
+
         # Calculate imag-part self energy with integration weights from gaussian
         # smearing function
         if params.has_key('run_with_g'):

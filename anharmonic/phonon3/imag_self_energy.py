@@ -441,7 +441,7 @@ class ImagSelfEnergy:
             self._temperature = float(temperature)
         
     def set_averaged_pp_interaction(self, ave_pp):
-        self._pp.set_phonon(self._triplets_at_q.ravel())
+        self._pp.set_phonons(self._triplets_at_q.ravel())
         (self._frequencies,
          self._eigenvectors) = self._pp.get_phonons()[:2]
 

@@ -179,9 +179,8 @@ def write_FORCE_CONSTANTS(force_constants, filename='FORCE_CONSTANTS'):
 def write_force_constants_to_hdf5(force_constants,
                                   filename='force_constants.hdf5'):
     import h5py
-    w = h5py.File(filename, 'w')
-    w.create_dataset('force_constants', data=force_constants)
-    w.close()
+    with h5py.File(filename, 'w') as w:
+        w.create_dataset('force_constants', data=force_constants)
 
 def parse_FORCE_CONSTANTS(filename="FORCE_CONSTANTS"):
     fcfile = open(filename)
@@ -199,8 +198,10 @@ def parse_FORCE_CONSTANTS(filename="FORCE_CONSTANTS"):
 
 def read_force_constants_hdf5(filename="force_constants.hdf5"):
     import h5py
-    f = h5py.File(filename)
-    return f[f.keys()[0]][:]
+    with h5py.File(filename, 'r') as f:
+        fc = f[f.keys()[0]][:]
+        return fc
+    return None
 
 #
 # disp.yaml

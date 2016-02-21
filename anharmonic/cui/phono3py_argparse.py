@@ -325,6 +325,9 @@ def get_parser():
         "--read_gamma", dest="read_gamma", action="store_true",
         help="Read Gammas from files")
     parser.add_option(
+        "--read_phonon", dest="read_phonon", action="store_true",
+        help="Read phonons from files")
+    parser.add_option(
         "--reducible_colmat", dest="is_reducible_collision_matrix",
         action="store_true", help="Solve reducible collision matrix")
     parser.add_option(

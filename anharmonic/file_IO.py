@@ -334,15 +334,14 @@ def read_fc4_from_hdf5(filename='fc4.hdf5'):
     return fc4
     
 def write_fc3_to_hdf5(force_constants_third, filename='fc3.hdf5'):
-    w = h5py.File(filename, 'w')
-    w.create_dataset('fc3', data=force_constants_third)
-    w.close()
+    with h5py.File(filename, 'w') as w:
+        w.create_dataset('fc3', data=force_constants_third)
 
 def read_fc3_from_hdf5(filename='fc3.hdf5'):
-    f = h5py.File(filename, 'r')
-    fc3 = f['fc3'][:]
-    f.close()
-    return fc3
+    with h5py.File(filename, 'r') as f:
+        fc3 = f['fc3'][:]
+        return fc3
+    return None
     
 def write_fc2_dat(force_constants, filename='fc2.dat'):
     w = open(filename, 'w')
@@ -354,20 +353,19 @@ def write_fc2_dat(force_constants, filename='fc2.dat'):
             w.write("\n")
 
 def write_fc2_to_hdf5(force_constants, filename='fc2.hdf5'):
-    w = h5py.File(filename, 'w')
-    w.create_dataset('fc2', data=force_constants)
-    w.close()
+    with h5py.File(filename, 'w') as w:
+        w.create_dataset('fc2', data=force_constants)
 
 def read_fc2_from_hdf5(filename='fc2.hdf5'):
-    f = h5py.File(filename, 'r')
-    if 'fc2' in f.keys():
-        fc2 = f['fc2'][:]
-    elif 'force_constants' in f.keys():
-        fc2 = f['force_constants'][:]
-    else:
-        fc2 = None
-    f.close()
-    return fc2
+    with h5py.File(filename, 'r') as f:
+        if 'fc2' in f.keys():
+            fc2 = f['fc2'][:]
+        elif 'force_constants' in f.keys():
+            fc2 = f['force_constants'][:]
+        else:
+            fc2 = None
+        return fc2
+    return None
 
 def write_triplets(triplets,
                    weights,
@@ -416,16 +414,15 @@ def write_grid_address(grid_address, mesh, filename=None):
 def write_grid_address_to_hdf5(grid_address, mesh, filename=None):
     suffix = _get_filename_suffix(mesh, filename=filename)
     full_filename = "grid_address" + suffix + ".hdf5"
-    w = h5py.File(full_filename, 'w')
-    w.create_dataset('mesh', data=mesh)
-    w.create_dataset('grid_address', data=grid_address)
-
-    return full_filename
+    with h5py.File(full_filename, 'w') as w:
+        w.create_dataset('mesh', data=mesh)
+        w.create_dataset('grid_address', data=grid_address)
+        return full_filename
+    return None
 
 def write_freq_shifts_to_hdf5(freq_shifts, filename='freq_shifts.hdf5'):
-    w = h5py.File(filename, 'w')
-    w.create_dataset('shift', data=freq_shifts)
-    w.close()
+    with h5py.File(filename, 'w') as w:
+        w.create_dataset('shift', data=freq_shifts)
 
 def write_imag_self_energy_at_grid_point(gp,
                                          band_indices,
@@ -593,34 +590,32 @@ def write_collision_to_hdf5(temperature,
         suffix += "-s" + sigma_str
     if filename is not None:
         suffix += "." + filename
-    w = h5py.File("collision" + suffix + ".hdf5", 'w')
-    w.create_dataset('temperature', data=temperature)
-    if gamma is not None:
-        w.create_dataset('gamma', data=gamma)
-    if gamma_isotope is not None:
-        w.create_dataset('gamma_isotope', data=gamma_isotope)
-    if collision_matrix is not None:
-        w.create_dataset('collision_matrix', data=collision_matrix)
-    w.close()
+    with h5py.File("collision" + suffix + ".hdf5", 'w') as w:
+        w.create_dataset('temperature', data=temperature)
+        if gamma is not None:
+            w.create_dataset('gamma', data=gamma)
+        if gamma_isotope is not None:
+            w.create_dataset('gamma_isotope', data=gamma_isotope)
+        if collision_matrix is not None:
+            w.create_dataset('collision_matrix', data=collision_matrix)
 
-    text = "Collisions "
-    if grid_point is not None:
-        text += "at grid adress %d " % grid_point
-    if sigma is not None:
+        text = "Collisions "
         if grid_point is not None:
-            text += "and "
-        else:
-            text += "at "
-        text += "sigma %s " % sigma_str
-    text += "were written into \n"
-    text += "\"%s\"" % ("collision" + suffix + ".hdf5")
-    print(text)
-    print('')
+            text += "at grid adress %d " % grid_point
+        if sigma is not None:
+            if grid_point is not None:
+                text += "and "
+            else:
+                text += "at "
+            text += "sigma %s " % sigma_str
+        text += "were written into \n"
+        text += "\"%s\"" % ("collision" + suffix + ".hdf5")
+        print(text)
+        print('')
 
 def write_full_collision_matrix(collision_matrix, filename='fcm.hdf5'):
-    w = h5py.File(filename, 'w')
-    w.create_dataset('collision_matrix', data=collision_matrix)
-    w.close()
+    with h5py.File(filename, 'w') as w:
+        w.create_dataset('collision_matrix', data=collision_matrix)
     
 def write_kappa_to_hdf5(temperature,
                         mesh,
@@ -650,53 +645,52 @@ def write_kappa_to_hdf5(temperature,
                                   band_indices=band_indices,
                                   sigma=sigma,
                                   filename=filename)
-    w = h5py.File("kappa" + suffix + ".hdf5", 'w')
-    w.create_dataset('temperature', data=temperature)
-    if frequency is not None:
-        w.create_dataset('frequency', data=frequency)
-    if group_velocity is not None:
-        w.create_dataset('group_velocity', data=group_velocity)
-    if heat_capacity is not None:
-        w.create_dataset('heat_capacity', data=heat_capacity)
-    if kappa is not None:
-        w.create_dataset('kappa', data=kappa)
-    if mode_kappa is not None:
-        w.create_dataset('mode_kappa', data=mode_kappa)
-    if gamma is not None:
-        w.create_dataset('gamma', data=gamma)
-    if gamma_isotope is not None:
-        w.create_dataset('gamma_isotope', data=gamma_isotope)
-    if averaged_pp_interaction is not None:
-        w.create_dataset('ave_pp', data=averaged_pp_interaction)
-    if qpoint is not None:
-        w.create_dataset('qpoint', data=qpoint)
-    if weight is not None:
-        w.create_dataset('weight', data=weight)
-    w.close()
-
-    if verbose:
-        text = ""
+    with h5py.File("kappa" + suffix + ".hdf5", 'w') as w:
+        w.create_dataset('temperature', data=temperature)
+        if frequency is not None:
+            w.create_dataset('frequency', data=frequency)
+        if group_velocity is not None:
+            w.create_dataset('group_velocity', data=group_velocity)
+        if heat_capacity is not None:
+            w.create_dataset('heat_capacity', data=heat_capacity)
         if kappa is not None:
-            text += "Thermal conductivity and related properties "
-        else:
-            text += "Thermal conductivity related properties "
-        if grid_point is not None:
-            text += "at gp-%d " % grid_point
-            if band_index is not None:
-                text += "and band_index-%d\n" % (band_index + 1)
-        if sigma is not None:
-            if grid_point is not None:
-                text += "and "
+            w.create_dataset('kappa', data=kappa)
+        if mode_kappa is not None:
+            w.create_dataset('mode_kappa', data=mode_kappa)
+        if gamma is not None:
+            w.create_dataset('gamma', data=gamma)
+        if gamma_isotope is not None:
+            w.create_dataset('gamma_isotope', data=gamma_isotope)
+        if averaged_pp_interaction is not None:
+            w.create_dataset('ave_pp', data=averaged_pp_interaction)
+        if qpoint is not None:
+            w.create_dataset('qpoint', data=qpoint)
+        if weight is not None:
+            w.create_dataset('weight', data=weight)
+
+        if verbose:
+            text = ""
+            if kappa is not None:
+                text += "Thermal conductivity and related properties "
             else:
-                text += "at "
-            text += "sigma %s\n" % sigma
-            text += "were written into "
-        else:
-            text += "were written into "
-            if band_index is None:
-                text += "\n"
-        text += "\"%s\"" % ("kappa" + suffix + ".hdf5")
-        print(text)
+                text += "Thermal conductivity related properties "
+            if grid_point is not None:
+                text += "at gp-%d " % grid_point
+                if band_index is not None:
+                    text += "and band_index-%d\n" % (band_index + 1)
+            if sigma is not None:
+                if grid_point is not None:
+                    text += "and "
+                else:
+                    text += "at "
+                text += "sigma %s\n" % sigma
+                text += "were written into "
+            else:
+                text += "were written into "
+                if band_index is None:
+                    text += "\n"
+            text += "\"%s\"" % ("kappa" + suffix + ".hdf5")
+            print(text)
 
 def write_collision_eigenvalues_to_hdf5(temperatures,
                                         mesh,
@@ -707,18 +701,18 @@ def write_collision_eigenvalues_to_hdf5(temperatures,
     suffix = _get_filename_suffix(mesh,
                                   sigma=sigma,
                                   filename=filename)
-    w = h5py.File("coleigs" + suffix + ".hdf5", 'w')
-    w.create_dataset('temperature', data=temperatures)
-    w.create_dataset('collision_eigenvalues', data=collision_eigenvalues)
-    w.close()
+    with h5py.File("coleigs" + suffix + ".hdf5", 'w') as w:
+        w.create_dataset('temperature', data=temperatures)
+        w.create_dataset('collision_eigenvalues', data=collision_eigenvalues)
+        w.close()
 
-    if verbose:
-        text = "Eigenvalues of collision matrix "
-        if sigma is not None:
-            text += "with sigma %s\n" % sigma
-        text += "were written into "
-        text += "\"%s\"" % ("coleigs" + suffix + ".hdf5")
-        print(text)
+        if verbose:
+            text = "Eigenvalues of collision matrix "
+            if sigma is not None:
+                text += "with sigma %s\n" % sigma
+            text += "were written into "
+            text += "\"%s\"" % ("coleigs" + suffix + ".hdf5")
+            print(text)
 
 def read_gamma_from_hdf5(mesh,
                          mesh_divisors=None,
@@ -762,10 +756,12 @@ def read_gamma_from_hdf5(mesh,
         else:
             averaged_pp_interaction = None
     
-    if verbose:
-        print("Read data from %s." % ("kappa" + suffix + ".hdf5"))
+        if verbose:
+            print("Read data from %s." % ("kappa" + suffix + ".hdf5"))
     
-    return gamma, gamma_isotope, averaged_pp_interaction
+        return gamma, gamma_isotope, averaged_pp_interaction
+
+    return None
 
 def read_collision_from_hdf5(mesh,
                              grid_point=None,
@@ -783,30 +779,32 @@ def read_collision_from_hdf5(mesh,
 
     if not os.path.exists("collision" + suffix + ".hdf5"):
         return False
+
+    with h5py.File("collision" + suffix + ".hdf5", 'r') as f:
+        gamma = f['gamma'][:]
+        collision_matrix = f['collision_matrix'][:]
+        temperatures = f['temperature'][:]
+        f.close()
         
-    f = h5py.File("collision" + suffix + ".hdf5", 'r')
-    gamma = f['gamma'][:]
-    collision_matrix = f['collision_matrix'][:]
-    temperatures = f['temperature'][:]
-    f.close()
-    
-    if verbose:
-        text = "Collisions "
-        if grid_point is not None:
-            text += "at grid adress %d " % grid_point
-        if sigma is not None:
+        if verbose:
+            text = "Collisions "
             if grid_point is not None:
-                text += "and "
-            else:
-                text += "at "
-            text += "sigma %s " % sigma_str
-        text += "were read from "
-        if grid_point is not None:
-            text += "\n"
-        text += "%s" % ("collision" + suffix + ".hdf5")
-        print(text)
-    
-    return collision_matrix, gamma, temperatures
+                text += "at grid adress %d " % grid_point
+            if sigma is not None:
+                if grid_point is not None:
+                    text += "and "
+                else:
+                    text += "at "
+                text += "sigma %s " % sigma_str
+            text += "were read from "
+            if grid_point is not None:
+                text += "\n"
+            text += "%s" % ("collision" + suffix + ".hdf5")
+            print(text)
+
+        return collision_matrix, gamma, temperatures
+
+    return None
 
 def write_amplitude_to_hdf5(amplitude,
                             mesh,
@@ -817,25 +815,26 @@ def write_amplitude_to_hdf5(amplitude,
                             eigenvector=None):
     suffix = "-m%d%d%d" % tuple(mesh)
     suffix += ("-g%d" % grid_point)
-    w = h5py.File("amplitude" + suffix + ".hdf5", 'w')
-    w.create_dataset('amplitude', data=amplitude)
-    if triplet is not None:
-        w.create_dataset('triplet', data=triplet)
-    if weight is not None:
-        w.create_dataset('weight', data=weight)
-    if frequency is not None:
-        w.create_dataset('frequency', data=frequency)
-    if eigenvector is not None:
-        w.create_dataset('eigenvector', data=eigenvector)
-    w.close()
+    with h5py.File("amplitude" + suffix + ".hdf5", 'w') as w:
+        w.create_dataset('amplitude', data=amplitude)
+        if triplet is not None:
+            w.create_dataset('triplet', data=triplet)
+        if weight is not None:
+            w.create_dataset('weight', data=weight)
+        if frequency is not None:
+            w.create_dataset('frequency', data=frequency)
+        if eigenvector is not None:
+            w.create_dataset('eigenvector', data=eigenvector)
 
 def read_amplitude_from_hdf5(amplitudes_at_q,
                              mesh,
                              grid_point):
     suffix = "-m%d%d%d" % tuple(mesh)
     suffix += ("-g%d" % grid_point)
-    f = h5py.File("amplitude" + suffix + ".hdf5", 'r')
-    amplitudes_at_q[:] = f['amplitudes'][:]
+    with h5py.File("amplitude" + suffix + ".hdf5", 'r') as f:
+        amplitudes_at_q[:] = f['amplitudes'][:]
+        return amplitudes_at_q
+    return None
 
 def write_detailed_gamma_to_hdf5(detailed_gamma,
                                  temperature,
@@ -852,36 +851,56 @@ def write_detailed_gamma_to_hdf5(detailed_gamma,
                                   filename=filename)
     full_filename = "gamma_detail" + suffix + ".hdf5"
 
-    w = h5py.File(full_filename, 'w')
-    w.create_dataset('gamma_detail', data=detailed_gamma)
-    w.create_dataset('temperature', data=temperature)
-    w.create_dataset('mesh', data=mesh)
-    w.create_dataset('triplet', data=triplets)
-    w.create_dataset('weight', data=weights)
-    if frequency_points is not None:
-        w.create_dataset('frequency_point', data=frequency_points)
-    w.close()
+    with h5py.File(full_filename, 'w') as w:
+        w.create_dataset('gamma_detail', data=detailed_gamma)
+        w.create_dataset('temperature', data=temperature)
+        w.create_dataset('mesh', data=mesh)
+        w.create_dataset('triplet', data=triplets)
+        w.create_dataset('weight', data=weights)
+        if frequency_points is not None:
+            w.create_dataset('frequency_point', data=frequency_points)
+        return full_filename
 
-    return full_filename
-
-def write_all_phonons_to_hdf5(frequency,
-                              eigenvector,
-                              grid_address,
-                              mesh,
-                              filename=None):
+def write_phonon_to_hdf5(frequency,
+                         eigenvector,
+                         grid_address,
+                         mesh,
+                          filename=None):
     suffix = _get_filename_suffix(mesh, filename=filename)
     full_filename = "phonon" + suffix + ".hdf5"
 
-    w = h5py.File(full_filename, 'w')
-    w.create_dataset('mesh', data=mesh)
-    w.create_dataset('grid_address', data=grid_address)
-    w.create_dataset('frequency', data=frequency)
-    w.create_dataset('eigenvector', data=eigenvector)
+    with h5py.File(full_filename, 'w') as w:
+        w.create_dataset('mesh', data=mesh)
+        w.create_dataset('grid_address', data=grid_address)
+        w.create_dataset('frequency', data=frequency)
+        w.create_dataset('eigenvector', data=eigenvector)
+        return full_filename
 
-    w.close()
+def read_phonon_from_hdf5(mesh,
+                          filename=None,
+                          verbose=True):
+    suffix = _get_filename_suffix(mesh, filename=filename)
+    hdf5_filename = "phonon" + suffix + ".hdf5"
+    if not os.path.exists(hdf5_filename):
+        if verbose:
+            print("%s not found." % hdf5_filename)
+        return (None, None, None, None, hdf5_filename)
 
-    return full_filename
-        
+    with h5py.File(hdf5_filename, 'r') as f:
+        frequencies = np.array(f['frequency'][:], dtype='double', order='C')
+        itemsize = frequencies.itemsize
+        eigenvectors = np.array(f['eigenvector'][:],
+                                dtype=("c%d" % (itemsize * 2)), order='C')
+        mesh_in_file = np.array(f['mesh'][:], dtype='intc')
+        grid_address = np.array(f['grid_address'][:], dtype='intc', order='C')
+        return (frequencies,
+                eigenvectors,
+                mesh_in_file,
+                grid_address,
+                hdf5_filename)
+
+    return (None, None, None, None, hdf5_filename)
+
 def write_ir_grid_points(mesh,
                          mesh_divs,
                          grid_points,

@@ -198,7 +198,7 @@ class Conductivity:
                                  dtype='double', order='C')
 
         self._grid_point_count = 0
-        self._pp.set_phonon(self._grid_points)
+        self._pp.set_phonons(self._grid_points)
         self._frequencies = self._pp.get_phonons()[0]
 
     def _set_gamma_isotope_at_sigmas(self, i):

@@ -38,6 +38,7 @@ import sys
 import numpy as np
 from phonopy.interface.vasp import read_vasp
 from phonopy.file_IO import parse_BORN, write_FORCE_SETS, parse_FORCE_SETS
+from anharmonic.file_IO import read_phonon_from_hdf5
 from phonopy.units import VaspToTHz, PwscfToTHz, Bohr, Rydberg, Hartree
 from phonopy.version import __version__
 from phonopy.interface import read_crystal_structure
@@ -540,7 +541,7 @@ if run_mode == "isotope":
     if log_level:
         print_end()
     sys.exit(0)
-            
+
 #############################
 # Phonon-phonon interaction #
 #############################
@@ -553,15 +554,36 @@ if run_mode is not None:
         frequency_scale_factor=frequency_scale_factor,
         unit_conversion=settings.get_pp_conversion_factor())
     if settings.get_write_phonon():
-        filename = phono3py.write_all_phonons(filename=output_filename)
+        filename = phono3py.write_phonons(filename=output_filename)
         if filename:
             if log_level:
                 print("All phonons on grid points are written into %s." %
                       filename)
-            #     print_end()
-            # sys.exit(0)
+                print_end()
+            sys.exit(0)
         else:
             print("Writing phonons failed.")
+            if log_level:
+                print_error()
+            sys.exit(1)
+    if settings.get_read_phonon():
+        phonons = read_phonon_from_hdf5(mesh,
+                                        filename=input_filename,
+                                        verbose=log_level)
+        if phonons[0] is None:
+            print("Reading phonons from %s failed." % phonons[4])
+            if log_level:
+                print_error()
+            sys.exit(1)
+        frequencies = phonons[0]
+        eigenvectors = phonons[1]
+        grid_address = phonons[3]
+        if phono3py.set_phonon_data(frequencies, eigenvectors, grid_address):
+            if log_level:
+                print("Phonons are read from %s." % phonons[4])
+        else:
+            print("Phonon data in %s are inconsistent to the calculation "
+                  "setting." % phonons[4])
             if log_level:
                 print_error()
             sys.exit(1)
