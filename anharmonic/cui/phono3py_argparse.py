@@ -122,6 +122,7 @@ def get_parser():
                         write_collision=False,
                         write_detailed_gamma=False,
                         write_gamma=False,
+                        write_phonon=False,
                         write_grid_points=False)
     parser.add_option(
         "--amplitude", dest="displacement_distance", type="float",
@@ -324,6 +325,9 @@ def get_parser():
         "--read_gamma", dest="read_gamma", action="store_true",
         help="Read Gammas from files")
     parser.add_option(
+        "--read_phonon", dest="read_phonon", action="store_true",
+        help="Read phonons from files")
+    parser.add_option(
         "--reducible_colmat", dest="is_reducible_collision_matrix",
         action="store_true", help="Solve reducible collision matrix")
     parser.add_option(
@@ -398,5 +402,8 @@ def get_parser():
     parser.add_option(
         "--write_gamma", dest="write_gamma", action="store_true",
         help="Write imag-part of self energy to files")
+    parser.add_option(
+        "--write_phonon", dest="write_phonon", action="store_true",
+        help="Write all phonons on grid points to files")
 
     return parser

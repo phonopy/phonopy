@@ -2,7 +2,9 @@ import numpy as np
 from phonopy.phonon.group_velocity import get_group_velocity
 from phonopy.harmonic.force_constants import similarity_transformation
 from phonopy.units import EV, THz, Angstrom
-from anharmonic.phonon3.triplets import get_grid_address, reduce_grid_points, get_ir_grid_points, from_coarse_to_dense_grid_points
+from anharmonic.phonon3.triplets import (get_grid_address, reduce_grid_points,
+                                         get_ir_grid_points,
+                                         from_coarse_to_dense_grid_points)
 from anharmonic.other.isotope import Isotope
 
 unit_to_WmK = ((THz * Angstrom) ** 2 / (Angstrom ** 3) * EV / THz /
@@ -196,7 +198,7 @@ class Conductivity:
                                  dtype='double', order='C')
 
         self._grid_point_count = 0
-        self._pp.set_phonon(self._grid_points)
+        self._pp.set_phonons(self._grid_points)
         self._frequencies = self._pp.get_phonons()[0]
 
     def _set_gamma_isotope_at_sigmas(self, i):

@@ -39,6 +39,7 @@ class Phono3pySettings(Settings):
         self._read_fc2 = False
         self._read_fc3 = False
         self._read_gamma = False
+        self._read_phonon = False
         self._run_with_g = True
         self._phonon_supercell_matrix = None
         self._pinv_cutoff = 1.0e-8
@@ -47,8 +48,9 @@ class Phono3pySettings(Settings):
         self._temperatures = None
         self._write_amplitude = False
         self._write_collision = False
-        self._write_gamma = False
         self._write_detailed_gamma = False
+        self._write_gamma = False
+        self._write_phonon = False
 
     def set_boundary_mfp(self, boundary_mfp):
         self._boundary_mfp = boundary_mfp
@@ -260,6 +262,12 @@ class Phono3pySettings(Settings):
     def get_read_gamma(self):
         return self._read_gamma
 
+    def set_read_phonon(self, read_phonon):
+        self._read_phonon = read_phonon
+
+    def get_read_phonon(self):
+        return self._read_phonon
+
     def set_run_with_g(self, run_with_g):
         self._run_with_g = run_with_g
 
@@ -308,6 +316,11 @@ class Phono3pySettings(Settings):
     def get_write_gamma(self):
         return self._write_gamma
 
+    def set_write_phonon(self, write_phonon):
+        self._write_phonon = write_phonon
+
+    def get_write_phonon(self):
+        return self._write_phonon
 
 class Phono3pyConfParser(ConfParser):
     def __init__(self, filename=None, options=None, option_list=None):
@@ -451,6 +464,10 @@ class Phono3pyConfParser(ConfParser):
                 if self._options.read_gamma:
                     self._confs['read_gamma'] = '.true.'
 
+            if opt.dest == 'read_phonon':
+                if self._options.read_phonon:
+                    self._confs['read_phonon'] = '.true.'
+
             if opt.dest == 'run_with_g':
                 if not self._options.run_with_g:
                     self._confs['run_with_g'] = '.false.'
@@ -486,6 +503,10 @@ class Phono3pyConfParser(ConfParser):
             if opt.dest == 'write_collision':
                 if self._options.write_collision:
                     self._confs['write_collision'] = '.true.'
+
+            if opt.dest == 'write_phonon':
+                if self._options.write_phonon:
+                    self._confs['write_phonon'] = '.true.'
 
     def _parse_conf(self):
         confs = self._confs
@@ -666,6 +687,10 @@ class Phono3pyConfParser(ConfParser):
                 if confs['read_gamma'] == '.true.':
                     self.set_parameter('read_gamma', True)
 
+            if conf_key == 'read_phonon':
+                if confs['read_phonon'] == '.true.':
+                    self.set_parameter('read_phonon', True)
+
             if conf_key == 'run_with_g':
                 if confs['run_with_g'] == '.false.':
                     self.set_parameter('run_with_g', False)
@@ -700,7 +725,10 @@ class Phono3pyConfParser(ConfParser):
             if conf_key == 'write_collision':
                 if confs['write_collision'] == '.true.':
                     self.set_parameter('write_collision', True)
-                    
+
+            if conf_key == 'write_phonon':
+                if confs['write_phonon'] == '.true.':
+                    self.set_parameter('write_phonon', True)
 
     def _set_settings(self):
         ConfParser.set_settings(self)
@@ -850,6 +878,10 @@ class Phono3pyConfParser(ConfParser):
         if params.has_key('read_gamma'):
             self._settings.set_read_gamma(params['read_gamma'])
             
+        # Read phonons from hdf5
+        if params.has_key('read_phonon'):
+            self._settings.set_read_phonon(params['read_phonon'])
+
         # Calculate imag-part self energy with integration weights from gaussian
         # smearing function
         if params.has_key('run_with_g'):
@@ -890,6 +922,10 @@ class Phono3pyConfParser(ConfParser):
         if params.has_key('write_collision'):
             self._settings.set_write_collision(params['write_collision'])
             
+        # Write all phonons on grid points to hdf5
+        if params.has_key('write_phonon'):
+            self._settings.set_write_phonon(params['write_phonon'])
+
 
         
 

@@ -2,7 +2,8 @@ import numpy as np
 from phonopy.phonon.group_velocity import get_group_velocity
 from phonopy.units import THzToEv, THz, Angstrom
 from phonopy.phonon.thermal_properties import mode_cv as get_mode_cv
-from anharmonic.file_IO import write_kappa_to_hdf5, write_triplets, read_gamma_from_hdf5, write_grid_address
+from anharmonic.file_IO import (write_kappa_to_hdf5, write_triplets,
+                                read_gamma_from_hdf5, write_grid_address)
 from anharmonic.phonon3.conductivity import Conductivity
 from anharmonic.phonon3.imag_self_energy import ImagSelfEnergy
 from anharmonic.phonon3.triplets import get_grid_points_by_rotations

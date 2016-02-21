@@ -17,7 +17,7 @@ from anharmonic.phonon3.conductivity_LBTE import get_thermal_conductivity_LBTE
 from anharmonic.phonon3.joint_dos import JointDos
 from anharmonic.phonon3.displacement_fc3 import get_third_order_displacements, \
      direction_to_displacement
-from anharmonic.file_IO import write_joint_dos
+from anharmonic.file_IO import write_joint_dos, write_phonon_to_hdf5
 from anharmonic.other.isotope import Isotope
 from anharmonic.phonon3.fc3 import get_fc3, set_permutation_symmetry_fc3, \
      set_translational_invariance_fc3, cutoff_fc3_by_zero
@@ -145,6 +145,29 @@ class Phono3py:
             nac_params=nac_params,
             frequency_scale_factor=frequency_scale_factor)
         self._interaction.set_nac_q_direction(nac_q_direction=nac_q_direction)
+
+    def set_phonon_data(self, frequencies, eigenvectors, grid_address):
+        if self._interaction is not None:
+            return self._interaction.set_phonon_data(frequencies,
+                                                     eigenvectors,
+                                                     grid_address)
+        else:
+            return False
+
+    def write_phonons(self, filename=None):
+        if self._interaction is not None:
+            grid_address = self._interaction.get_grid_address()
+            grid_points = np.arange(len(grid_address), dtype='intc')
+            self._interaction.set_phonons(grid_points)
+            freqs, eigvecs, _ = self._interaction.get_phonons()
+            hdf5_filename = write_phonon_to_hdf5(freqs,
+                                                 eigvecs,
+                                                 grid_address,
+                                                 self._mesh,
+                                                 filename=filename)
+            return hdf5_filename
+        else:
+            return False
 
     def generate_displacements(self,
                                distance=0.03,
