@@ -174,7 +174,6 @@ class Modulation:
         phase_factor = np.exp(1j * np.pi * argument / 180) / phase_for_zero
 
         return phase_factor
-        modulation *= phase_factor
 
     def _eigvals_to_frequencies(self, eigvals):
         e = np.array(eigvals).real

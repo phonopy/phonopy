@@ -41,21 +41,22 @@ from phonopy.units import Bohr
 from phonopy.cui.settings import fracval
 from phonopy.structure.atoms import Atoms, symbol_map
 
-def parse_set_of_forces(displacements,
-                        forces_filenames,
-                        num_atom):
+def parse_set_of_forces(num_atoms, forces_filenames):
     hook = 'Forces acting on atoms'
-    for pwscf_filename, disp in zip(forces_filenames,
-                                    displacements['first_atoms']):
-        pwscf_forces = iter_collect_forces(pwscf_filename,
-                                           num_atom,
+    force_sets = []
+    for filename in forces_filenames:
+        pwscf_forces = iter_collect_forces(filename,
+                                           num_atoms,
                                            hook,
                                            [6, 7, 8],
                                            word='force')
-        drift_force = get_drift_forces(pwscf_forces)
-        disp['forces'] = np.array(pwscf_forces) - drift_force
+        if not pwscf_forces:
+            return []
 
-    return True
+        drift_force = get_drift_forces(pwscf_forces)
+        force_sets.append(np.array(pwscf_forces) - drift_force)
+        
+    return force_sets
 
 def read_pwscf(filename):
     pwscf_in = PwscfIn(open(filename).readlines())

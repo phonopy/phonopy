@@ -44,17 +44,16 @@ from phonopy.structure.symmetry import Symmetry
 from phonopy.harmonic.force_constants import similarity_transformation
 from phonopy.file_IO import write_FORCE_SETS, write_force_constants_to_hdf5, write_FORCE_CONSTANTS
 
-def parse_set_of_forces(displacements,
+def parse_set_of_forces(num_atoms,
                         forces_filenames,
                         is_zero_point=False,
                         verbose=True):
-
     if verbose:
         sys.stdout.write("counter (file index): ")
         
-    num_atom = displacements['natom']
     count = 0
     is_parsed = True
+    force_sets = []
         
     if is_zero_point:
         force_files = forces_filenames[1:]
@@ -69,33 +68,36 @@ def parse_set_of_forces(displacements,
             sys.stdout.write("%d " % (count + 1))
         count += 1
             
-        if not _check_forces(zero_forces, num_atom, forces_filenames[0]):
+        if not _check_forces(zero_forces, num_atoms, forces_filenames[0]):
             is_parsed = False
     else:
         force_files = forces_filenames
 
-    for i, disp in enumerate(displacements['first_atoms']):
-        if _is_version528(force_files[i]):
-            disp['forces'] = _get_forces_vasprun_xml(_iterparse(
-                VasprunWrapper(force_files[i]), tag='varray'))
+    for filename in force_files:
+        if _is_version528(filename):
+            force_sets.append(_get_forces_vasprun_xml(_iterparse(
+                VasprunWrapper(filename), tag='varray')))
         else:
-            disp['forces'] = _get_forces_vasprun_xml(
-                _iterparse(force_files[i], tag='varray'))
+            force_sets.append(_get_forces_vasprun_xml(
+                _iterparse(filename, tag='varray')))
 
         if is_zero_point:
-            disp['forces'] -= zero_forces
+            force_sets[-1] -= zero_forces
 
         if verbose:
             sys.stdout.write("%d " % (count + 1))
         count += 1
         
-        if not _check_forces(disp['forces'], num_atom, force_files[i]):
+        if not _check_forces(force_sets[-1], num_atoms, filename):
             is_parsed = False
 
     if verbose:
         print('')
-        
-    return is_parsed
+
+    if is_parsed:
+        return force_sets
+    else:
+        return []
 
 def _check_forces(forces, num_atom, filename):
     if len(forces) != num_atom:

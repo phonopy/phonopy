@@ -42,21 +42,21 @@ from phonopy.units import Bohr
 from phonopy.cui.settings import fracval
 from phonopy.structure.atoms import Atoms, symbol_map
 
-def parse_set_of_forces(displacements,
-                        forces_filenames,
-                        num_atom):
-    hook = ''
-    for siesta_filename, disp in zip(forces_filenames,
-                                    displacements['first_atoms']):
-        siesta_forces = iter_collect_forces(siesta_filename,
-                                           num_atom,
-                                           hook,
-                                           [1, 2, 3],
-                                           word='')
+def parse_set_of_forces(num_atoms, forces_filenames):
+    hook = '' # Just for skipping the first line
+    force_sets = []
+    for filename in forces_filenames:
+        siesta_forces = iter_collect_forces(filename,
+                                            num_atoms,
+                                            hook,
+                                            [1, 2, 3],
+                                            word='')
+        if not siesta_forces:
+            return []
         drift_force = get_drift_forces(siesta_forces)
-        disp['forces'] = np.array(siesta_forces) - drift_force
+        force_sets.append(np.array(siesta_forces) - drift_force)
 
-    return True
+    return force_sets
 
 def read_siesta(filename):
     siesta_in = SiestaIn(open(filename).read())

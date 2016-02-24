@@ -1,9 +1,42 @@
-"""
-Spglib interface for ASE
-"""
+# Copyright (C) 2015 Atsushi Togo
+# All rights reserved.
+#
+# This file is part of spglib.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#
+# * Redistributions of source code must retain the above copyright
+#   notice, this list of conditions and the following disclaimer.
+#
+# * Redistributions in binary form must reproduce the above copyright
+#   notice, this list of conditions and the following disclaimer in
+#   the documentation and/or other materials provided with the
+#   distribution.
+#
+# * Neither the name of the spglib project nor the names of its
+#   contributors may be used to endorse or promote products derived
+#   from this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+# COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
 
-import phonopy._spglib as spg
+from phonopy import _spglib as spg
 import numpy as np
+
+def get_version():
+    return tuple(spg.version())
 
 def get_symmetry(bulk, use_magmoms=False, symprec=1e-5, angle_tolerance=-1.0):
     """
@@ -199,13 +232,13 @@ def standardize_cell(bulk,
     numbers = np.zeros(num_atom * 4, dtype='intc')
     numbers[:num_atom] = np.array(bulk.get_atomic_numbers(), dtype='intc')
     num_atom_std = spg.standardize_cell(lattice,
-                                            pos,
-                                            numbers,
-                                            num_atom,
-                                            to_primitive,
-                                            no_idealize,
-                                            symprec,
-                                            angle_tolerance)
+                                        pos,
+                                        numbers,
+                                        num_atom,
+                                        to_primitive,
+                                        no_idealize,
+                                        symprec,
+                                        angle_tolerance)
 
     return (np.array(lattice.T, dtype='double', order='C'),
             np.array(pos[:num_atom_std], dtype='double', order='C'),
@@ -224,11 +257,11 @@ def refine_cell(bulk, symprec=1e-5, angle_tolerance=-1.0):
     numbers = np.zeros(num_atom * 4, dtype='intc')
     numbers[:num_atom] = np.array(bulk.get_atomic_numbers(), dtype='intc')
     num_atom_std = spg.refine_cell(lattice,
-                                       pos,
-                                       numbers,
-                                       num_atom,
-                                       symprec,
-                                       angle_tolerance)
+                                   pos,
+                                   numbers,
+                                   num_atom,
+                                   symprec,
+                                   angle_tolerance)
 
     return (np.array(lattice.T, dtype='double', order='C'),
             np.array(pos[:num_atom_std], dtype='double', order='C'),
@@ -424,4 +457,3 @@ def get_stabilized_reciprocal_mesh(mesh,
         qpoints)
     
     return mapping, mesh_points
-
