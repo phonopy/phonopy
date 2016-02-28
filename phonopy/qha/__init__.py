@@ -653,7 +653,7 @@ class QHA:
         plt.xlabel(xlabel)
         plt.ylabel(ylabel)
         plt.plot(self._temperatures[:self._max_t_index],
-                 self._cp_numerical[:self._max_t_index] / Z,
+                 np.array(self._cp_numerical[:self._max_t_index]) / Z,
                  'r-')
 
         # exp
@@ -670,7 +670,7 @@ class QHA:
         plt.xlabel(xlabel)
         plt.ylabel(ylabel)
         plt.plot(self._temperatures[:self._max_t_index],
-                 self._cp_polyfit[:self._max_t_index] / Z,
+                 np.array(self._cp_polyfit[:self._max_t_index]) / Z,
                  'r-')
 
         # exp
