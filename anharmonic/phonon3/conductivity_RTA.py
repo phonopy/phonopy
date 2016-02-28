@@ -32,26 +32,27 @@ def get_thermal_conductivity_RTA(
 
     if sigmas is None:
         sigmas = []
+
     if log_level:
         print("-------------------- Lattice thermal conducitivity (RTA) "
               "--------------------")
-        br = Conductivity_RTA(
-            interaction,
-            symmetry,
-            grid_points=grid_points,
-            temperatures=temperatures,
-            sigmas=sigmas,
-            is_isotope=is_isotope,
-            mass_variances=mass_variances,
-            boundary_mfp=boundary_mfp,
-            use_averaged_pp_interaction=use_averaged_pp_interaction,
-            gamma_unit_conversion=gamma_unit_conversion,
-            mesh_divisors=mesh_divisors,
-            coarse_mesh_shifts=coarse_mesh_shifts,
-            is_kappa_star=is_kappa_star,
-            gv_delta_q=gv_delta_q,
-            run_with_g=run_with_g,
-            log_level=log_level)
+    br = Conductivity_RTA(
+        interaction,
+        symmetry,
+        grid_points=grid_points,
+        temperatures=temperatures,
+        sigmas=sigmas,
+        is_isotope=is_isotope,
+        mass_variances=mass_variances,
+        boundary_mfp=boundary_mfp,
+        use_averaged_pp_interaction=use_averaged_pp_interaction,
+        gamma_unit_conversion=gamma_unit_conversion,
+        mesh_divisors=mesh_divisors,
+        coarse_mesh_shifts=coarse_mesh_shifts,
+        is_kappa_star=is_kappa_star,
+        gv_delta_q=gv_delta_q,
+        run_with_g=run_with_g,
+        log_level=log_level)
 
     if read_gamma:
         if not _set_gamma_from_file(br, filename=input_filename):
