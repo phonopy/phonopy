@@ -479,7 +479,7 @@ if run_mode == 'displacements':
     displacements = phonon.get_displacements()
     directions = phonon.get_displacement_directions()
     file_IO.write_disp_yaml(displacements,
-                            PhonopyAtoms(atoms=supercell),
+                            supercell,
                             directions=directions)
     
     # Write supercells with displacements
