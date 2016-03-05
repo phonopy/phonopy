@@ -203,5 +203,5 @@ if __name__ == '__main__':
     from phonopy.structure.symmetry import Symmetry
     cell, sp_filenames = read_elk(sys.argv[1])
     symmetry = Symmetry(cell)
-    print "#", symmetry.get_international_table()
-    print get_elk_structure(cell, sp_filenames=sp_filenames)
+    print("# %s" % symmetry.get_international_table())
+    print(get_elk_structure(cell, sp_filenames=sp_filenames))

@@ -211,7 +211,7 @@ def parse_disp_yaml(filename="disp.yaml", return_cell=False):
         import yaml
     except ImportError:
         print("You need to install python-yaml.")
-        exit(1)
+        sys.exit(1)
         
     try:
         from yaml import CLoader as Loader

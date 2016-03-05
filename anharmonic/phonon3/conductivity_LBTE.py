@@ -492,7 +492,7 @@ class Conductivity_LBTE(Conductivity):
                     text += "for sigma=%s -----------" % sigma
                 else:
                     text += "with tetrahedron method -----------"
-                print text
+                print(text)
                 print(("#%6s       " + " %-10s" * 6) %
                       ("T(K)", "xx", "yy", "zz", "yz", "xz", "xy"))
             for k, t in enumerate(self._temperatures):
@@ -798,7 +798,7 @@ class Conductivity_LBTE(Conductivity):
             pass
         else:
             text += "  (dq=%3.1e)" % self._gv_delta_q
-        print text
+        print(text)
         for f, v, pp in zip(frequencies, gv, ave_pp):
             print("%8.3f   (%8.3f %8.3f %8.3f) %8.3f %11.3e" %
                   (f, v[0], v[1], v[2], np.linalg.norm(v), pp))

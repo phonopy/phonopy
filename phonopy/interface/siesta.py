@@ -64,24 +64,24 @@ def read_siesta(filename):
     lattice = siesta_in._tags["latticevectors"]
     positions = siesta_in._tags["atomiccoordinates"]
     atypes = siesta_in._tags["chemicalspecieslabel"]
-    cell = Atoms(numbers=numbers,
-                 cell=lattice)
+    cell = Atoms(numbers=numbers, cell=lattice)
 
     coordformat = siesta_in._tags["atomiccoordinatesformat"]
     if coordformat == "fractional" or coordformat == "scaledbylatticevectors":
         cell.set_scaled_positions(positions)
     elif coordformat == "scaledcartesian":
         if siesta_in._tags['latticeconstant'] == 'ang':
-            cell.set_positions(np.array(positions) / Bohr)#convert from angstroem to Bohr 
+            cell.set_positions(np.array(positions) / Bohr)
         else:
             cell.set_positions(np.array(positions))
     elif coordformat == "notscaledcartesianang" or coordformat == "ang":
-        cell.set_positions(np.array(positions) / Bohr) #convert from angstroem to Bohr 
+        cell.set_positions(np.array(positions) / Bohr) 
     elif coordformat == "notscaledcartesianbohr" or coordformat == "bohr":
         cell.set_positions(np.array(positions))
     else:
-        print "The format %s for the AtomicCoordinatesFormat is not implemented"%coordformat
-        exit() 
+        print("The format %s for the AtomicCoordinatesFormat is not "
+              "implemented." % coordformat)
+        sys.exit(1) 
     
     return cell, atypes
 
@@ -140,8 +140,9 @@ class SiestaIn:
             - cell_parameters
             - atomic_species
         """
-        #capture tags
-        for tag,value,unit in re.findall('([\.A-Za-z]+)\s+?%s(?:[ ]+)?([A-Za-z]+)?'%self._num_regex,lines):
+        for tag,value,unit in re.findall(
+                '([\.A-Za-z]+)\s+?%s(?:[ ]+)?([A-Za-z]+)?' %
+                self._num_regex,lines):
             tag = tag.lower()
             if tag == "latticeconstant":
                 self._tags['latticeconstantunit'] = unit.lower()
@@ -160,19 +161,27 @@ class SiestaIn:
         acell = self._tags['latticeconstant']
 
         #capture the blocks
-        blocks = re.findall('%block\s+([A-Za-z_]+)\s((?:.+\n)+?(?=(?:\s+)?%endblock))',lines,re.MULTILINE)
+        blocks = re.findall(
+            '%block\s+([A-Za-z_]+)\s((?:.+\n)+?(?=(?:\s+)?%endblock))',
+            lines, re.MULTILINE)
         for tag,block in blocks:
             tag = tag.replace('_','').lower()
             if   tag == "chemicalspecieslabel":
                 lines = block.split('\n')[:-1]
-                self._tags["atomicnumbers"] = dict([map(int,species.split()[:2]) for species in lines])
-                self._tags[tag] = dict([(lambda x: (x[2],int(x[0])))(species.split()) for species in lines])
+                self._tags["atomicnumbers"] = dict([map(int,species.split()[:2])
+                                                    for species in lines])
+                self._tags[tag] = dict(
+                    [(lambda x: (x[2],int(x[0])))(species.split())
+                     for species in lines])
             elif tag == "latticevectors":
-                self._tags[tag] = [[ float(v)*acell for v in vector.split()] for vector in block.split('\n')[:3]]
+                self._tags[tag] = [[ float(v)*acell for v in vector.split()]
+                                   for vector in block.split('\n')[:3]]
             elif tag == "atomiccoordinatesandatomicspecies":
                 lines = block.split('\n')[:-1]
-                self._tags["atomiccoordinates"] = [ [float(x)  for x in atom.split()[:3]] for atom in lines ]
-                self._tags["atomicspecies"] = [ int(atom.split()[3]) for atom in lines]
+                self._tags["atomiccoordinates"] = [
+                    [float(x)  for x in atom.split()[:3]] for atom in lines]
+                self._tags["atomicspecies"] = [int(atom.split()[3])
+                                               for atom in lines]
        
         #check if the block are present
         self.check_present("atomicspecies")
@@ -181,12 +190,13 @@ class SiestaIn:
         self.check_present("chemicalspecieslabel")
             
         #translate the atomicspecies to atomic numbers
-        self._tags["atomicnumbers"] = [self._tags["atomicnumbers"][atype] for atype in self._tags["atomicspecies"]]
+        self._tags["atomicnumbers"] = [self._tags["atomicnumbers"][atype]
+                                       for atype in self._tags["atomicspecies"]]
     
     def check_present(self,tag):
         if not self._tags[tag]:
-            print "%s not present"%tag
-            exit()
+            print("%s not present" % tag)
+            sys.exit(1)
  
     def __str__(self):
         return self._tags
@@ -195,7 +205,7 @@ class SiestaIn:
 if __name__ == '__main__':
     import sys
     from phonopy.structure.symmetry import Symmetry
-    cell,atypes = read_siesta(sys.argv[1])
+    cell, atypes = read_siesta(sys.argv[1])
     symmetry = Symmetry(cell)
-    print "#", symmetry.get_international_table()
-    print get_siesta_structure(cell,atypes)
+    print("# %s" % symmetry.get_international_table())
+    print(get_siesta_structure(cell,atypes))

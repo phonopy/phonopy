@@ -38,8 +38,8 @@ import numpy as np
 try:
     import yaml
 except ImportError:
-    print "You need to install python-yaml."
-    exit(1)
+    print("You need to install python-yaml.")
+    sys.exit(1)
 
 try:
     from yaml import CLoader as Loader

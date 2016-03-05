@@ -59,7 +59,7 @@ try:
     import yaml
 except ImportError:
     print("You need to install python-yaml.")
-    exit(1)
+    sys.exit(1)
     
 try:
     from yaml import CLoader as Loader

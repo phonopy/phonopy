@@ -134,7 +134,7 @@ if options.forces_fc3_mode or options.forces_fc3_file_mode:
     if log_level:
         print("FORCES_FC3 has been created.")
         print_end()
-    exit(0)
+    sys.exit(0)
 
 #####################
 # Create FORCES_FC2 #
@@ -153,7 +153,7 @@ if options.forces_fc2_mode:
     if log_level:
         print("FORCES_FC2 has been created.")
         print_end()
-    exit(0)
+    sys.exit(0)
 
 if options.force_sets_to_forces_fc2_mode:
     filename = 'FORCE_SETS'
@@ -164,7 +164,7 @@ if options.force_sets_to_forces_fc2_mode:
     if log_level:
         print("FORCES_FC2 has been created from FORCE_SETS.")
         print_end()
-    exit(0)
+    sys.exit(0)
     
 #####################################
 # Create FORCE_SETS from FORCES_FC* #
@@ -197,7 +197,7 @@ if options.force_sets_mode:
     if log_level:
         print("FORCE_SETS has been created.")
         print_end()
-    exit(0)
+    sys.exit(0)
     
 ##################
 # Parse settings #

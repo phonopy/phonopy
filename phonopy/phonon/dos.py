@@ -32,6 +32,7 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import sys
 import numpy as np
 from phonopy.phonon.tetrahedron_mesh import TetrahedronMesh
 
@@ -252,7 +253,7 @@ class TotalDos(Dos):
             from scipy.optimize import curve_fit
         except ImportError:
             print("You need to install python-scipy.")
-            exit(1)
+            sys.exit(1)
 
         def Debye_dos(freq, a):
             return a * freq**2
