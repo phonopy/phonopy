@@ -1,4 +1,4 @@
-x.. _command_options:
+.. _command_options:
 
 Command options
 ===============
