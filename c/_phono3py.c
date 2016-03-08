@@ -90,6 +90,7 @@ static PyObject * py_inverse_collision_matrix(PyObject *self, PyObject *args);
 static PyObject * py_inverse_collision_matrix_libflame(PyObject *self, PyObject *args);
 #endif
 
+static int in_tetrahedra(const double f0, SPGCONST double freq_vertices[24][4]);
 static void get_triplet_tetrahedra_vertices
   (int vertices[2][24][4],
    SPGCONST int relative_grid_address[2][24][4][3],
@@ -1088,17 +1089,58 @@ py_set_triplets_integration_weights(PyObject *self, PyObject *args)
 	}
 	for (j = 0; j < num_band0; j++) {
 	  f0 = frequency_points[j];
-	  g0 = thm_get_integration_weight(f0, freq_vertices[0], 'I');
-	  g1 = thm_get_integration_weight(f0, freq_vertices[1], 'I');
-	  g2 = thm_get_integration_weight(f0, freq_vertices[2], 'I');
+	  if (in_tetrahedra(f0, freq_vertices[0])) {
+	    g0 = thm_get_integration_weight(f0, freq_vertices[0], 'I');
+	  } else {
+	    g0 = -1;
+	  }
+	  if (in_tetrahedra(f0, freq_vertices[1])) {
+	    g1 = thm_get_integration_weight(f0, freq_vertices[1], 'I');
+	  } else {
+	    g1 = -1;
+	  }
+	  if (in_tetrahedra(f0, freq_vertices[2])) {
+	    g2 = thm_get_integration_weight(f0, freq_vertices[2], 'I');
+	  } else {
+	    g2 = -1;
+	  }
 	  adrs_shift = i * num_band0 * num_band * num_band +
 	    j * num_band * num_band + b1 * num_band + b2;
-	  iw[adrs_shift] = g0;
+	  if (g0 < 0) {
+	    iw[adrs_shift] = 0;
+	  } else {
+	    iw[adrs_shift] = g0;
+	  }
 	  adrs_shift += num_triplets * num_band0 * num_band * num_band;
-	  iw[adrs_shift] = g1 - g2;
+	  if (g1 < 0 && g2 < 0) {
+	    iw[adrs_shift] = 0;
+	  } else {
+	    if (g1 < 0) {
+	      iw[adrs_shift] = - g2;
+	    } else {
+	      if (g2 < 0) {
+		iw[adrs_shift] = g1;
+	      } else {
+		iw[adrs_shift] = g1 - g2;
+	      }
+	    }
+	  }
 	  if (num_iw == 3) {
 	    adrs_shift += num_triplets * num_band0 * num_band * num_band;
-	    iw[adrs_shift] = g0 + g1 + g2;
+	    if (g0 < 0 && g1 < 0 && g2 < 0) {
+	      iw[adrs_shift] = 0;
+	    } else {
+	      if (g0 < 0) {
+		g0 = 0;
+	      }
+	      if (g1 < 0) {
+		g1 = 0;
+	      }
+	      if (g2 < 0) {
+		g2 = 0;
+	      }
+	      iw[adrs_shift] = g0 + g1 + g2;
+	    }
 	  }
 	}
       }	
@@ -1106,6 +1148,32 @@ py_set_triplets_integration_weights(PyObject *self, PyObject *args)
   }
 	    
   Py_RETURN_NONE;
+}
+
+static int in_tetrahedra(const double f0, SPGCONST double freq_vertices[24][4])
+{
+  int i, j;
+  double fmin, fmax;
+
+  fmin = freq_vertices[0][0];
+  fmax = freq_vertices[0][0];
+
+  for (i = 0; i < 24; i++) {
+    for (j = 0; j < 4; j++) {
+      if (fmin > freq_vertices[i][j]) {
+	fmin = freq_vertices[i][j];
+      }
+      if (fmax < freq_vertices[i][j]) {
+	fmax = freq_vertices[i][j];
+      }
+    }
+  }
+
+  if (fmin > f0 || fmax < f0) {
+    return 0;
+  } else {
+    return 1;
+  }
 }
 
 static PyObject *
