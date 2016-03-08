@@ -95,15 +95,20 @@ void reciprocal_to_normal_squared
     if (freqs0[bi] > cutoff_frequency) {
       for (j = 0; j < num_band; j++) {
 	for (k = 0; k < num_band; k++) {
-	  set_fc3_sum(fc3_normal_squared,
-		      i, j, k, bi,
-		      freqs0, freqs1, freqs2,
-		      eigvecs0, eigvecs1, eigvecs2,
-		      fc3_reciprocal,
-		      masses,
-		      num_atom,
-		      num_band,
-		      cutoff_frequency);
+	  if (fc3_normal_squared
+	      [i * num_band * num_band + j * num_band + k] < 0) {
+	    fc3_normal_squared[i * num_band * num_band + j * num_band + k] = 0;
+	  } else {
+	    set_fc3_sum(fc3_normal_squared,
+			i, j, k, bi,
+			freqs0, freqs1, freqs2,
+			eigvecs0, eigvecs1, eigvecs2,
+			fc3_reciprocal,
+			masses,
+			num_atom,
+			num_band,
+			cutoff_frequency);
+	  }
 	}
       }
     } else {
@@ -150,17 +155,21 @@ void reciprocal_to_normal_squared_openmp
 
 #pragma omp parallel for private(j, k)
       for (jk = 0; jk < num_band * num_band; jk++) {
-	j = jk / num_band;
-	k = jk % num_band;
-	set_fc3_sum(fc3_normal_squared,
-		    i, j, k, bi,
-		    freqs0, freqs1, freqs2,
-		    eigvecs0, eigvecs1, eigvecs2,
-		    fc3_reciprocal,
-		    masses,
-		    num_atom,
-		    num_band,
-		    cutoff_frequency);
+	if (fc3_normal_squared[i * num_band * num_band + jk] < 0) {
+	  fc3_normal_squared[i * num_band * num_band + jk] = 0;
+	} else {
+	  j = jk / num_band;
+	  k = jk % num_band;
+	  set_fc3_sum(fc3_normal_squared,
+		      i, j, k, bi,
+		      freqs0, freqs1, freqs2,
+		      eigvecs0, eigvecs1, eigvecs2,
+		      fc3_reciprocal,
+		      masses,
+		      num_atom,
+		      num_band,
+		      cutoff_frequency);
+	}
       }
 
 #ifdef MEASURE_R2N
