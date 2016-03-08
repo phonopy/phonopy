@@ -3,6 +3,13 @@
 Change Log
 ==========
 
+Feb-7-2016: Version 1.10.4
+----------------------------
+
+* More keywords are written in ``band.yaml``.
+* Default NAC unit conversion factors (:ref:`born_file`)
+* Collection of many minor fixes and updates
+
 Jan-25-2016: Version 1.10.2
 ----------------------------
 
