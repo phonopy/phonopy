@@ -28,6 +28,7 @@ before_install:
 install:
     - conda install --yes python=$TRAVIS_PYTHON_VERSION pip numpy python-ase spglib scipy
     - git describe --tags --dirty
+    - git describe --tags --dirty | sed -e 's/\([.0-9]*\)-\(.*\)-g.*/\2/' -e 's/^v//g' > __nanoversion__.txt
     - python setup.py install
 
 script: true
