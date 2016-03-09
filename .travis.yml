@@ -1,0 +1,44 @@
+language: python
+sudo: false
+dist: trusty
+
+python:
+    - '2.7'
+    - '3.4'
+    - '3.5'
+
+
+cache: apt
+
+addons:
+  apt:
+    packages:
+    - libopenblas-dev
+    - liblapack-dev
+    - gfortran
+
+
+before_install:
+    - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
+    - bash miniconda.sh -b -p $HOME/miniconda
+    - export PATH="$HOME/miniconda/bin:$PATH"
+    - conda update --yes conda
+    - conda config --add channels jochym
+
+install:
+    - conda install --yes python=$TRAVIS_PYTHON_VERSION pip numpy python-ase spglib scipy
+    - git describe --tags --dirty
+    - python setup.py install
+
+script: true
+
+#deploy:
+#  skip_cleanup: true
+#  provider: pypi
+#  user: jochym
+#  password:
+#    secure: a0PJM114WOEhzABWNq7ZCIZfmm6h1qv21X3IZ1cSU8fW+8PDN4wmh08qY/BNloE0o/qvifD68TyBDqfdUpQvaEp7Dpm4dWC6MCqv7JqUc5N3rtkgztjsHw7z2LK32npC+KWtq38jZ/4aJVIHOgNPz54sddtgyq/f8OwgTh9Wx2EKmi1m/TRDBBvYTCHoBQX2fU9wqxZHklWUZJjl6DyxJdszWdefk7l7dzlQhyWK43Gw5K9sTJsPGQZhknC8xG1ce2C9bgciWFRKuwuedhcR8ro3cTChbT3bQm9yICQvUO8evOacDHV3TwwRi8k+kbIi4KFsvmGwvM0dYCZJ2FaD5zQ9ztPfnMy5G295Sn6kCVeRedaOoIi1Xj3NGQtIqlsrfIu2cG8XSr+Sv2FINMcYar4bMZtqygXfpv5LQF88iMBQXFFKhDoPKUWywo5mozeIwW+kNsNWx6mQdbXC6nCDd/rakGYNMNXeJJ0203M10GdIga+Ir+UtcFfoLHDoqXQsONrsKcNmpny+tHC5u1x6j1WczhkNKzhxl5w54+x0BmE2SlKPS5WgDdmh1OKPlRy5tzIHm2Q8CFBdkwfaKF4mcwYAkHKG8keP2qVW0qQkbI8uinQeSbV/1+pUBkFNxYqp2Csi2tVf9cllIEb13WCCqYgjNElhJR1SJ90Oom8X2ts=
+#  on:
+#    branch: master
+#    tags: true
+#    python: 2.7
