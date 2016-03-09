@@ -314,6 +314,7 @@ class Conductivity_RTA(Conductivity):
                  is_kappa_star=True,
                  gv_delta_q=None,
                  run_with_g=True,
+                 with_g_zero=False,
                  log_level=0):
 
         if sigmas is None:
@@ -324,6 +325,7 @@ class Conductivity_RTA(Conductivity):
         self._is_kappa_star = None
         self._gv_delta_q = None
         self._run_with_g = run_with_g
+        self._with_g_zero = with_g_zero
         self._log_level = None
         self._primitive = None
         self._dm = None
@@ -450,10 +452,16 @@ class Conductivity_RTA(Conductivity):
                 print("Number of triplets: %d" %
                       len(self._pp.get_triplets_at_q()[0]))
                 print("Calculating interaction...")
-                
-            self._collision.run_interaction()
-            self._averaged_pp_interaction[i] = (
-                self._pp.get_averaged_interaction())
+
+            if (self._with_g_zero and
+                len(self._sigmas) == 1 and
+                self._sigmas[0] is None):
+                self._collision.set_sigma(None)
+                self._collision.set_integration_weights()
+            self._collision.run_interaction(with_g_zero=self._with_g_zero)
+            if not self._with_g_zero:
+                self._averaged_pp_interaction[i] = (
+                    self._pp.get_averaged_interaction())
             self._set_gamma_at_sigmas(i)
             
         if self._isotope is not None and not self._read_gamma_iso:
@@ -506,9 +514,16 @@ class Conductivity_RTA(Conductivity):
                 else:
                     text += "sigma=%s" % sigma
                 print(text)
-            self._collision.set_sigma(sigma)
-            if not sigma or self._run_with_g:
-                self._collision.set_integration_weights()
+
+            if (self._with_g_zero and
+                len(self._sigmas) == 1 and
+                self._sigmas[0] is None and
+                not self._use_ave_pp):
+                pass
+            else:
+                self._collision.set_sigma(sigma)
+                if sigma is None or self._run_with_g:
+                    self._collision.set_integration_weights()
             for k, t in enumerate(self._temperatures):
                 self._collision.set_temperature(t)
                 self._collision.run()
@@ -554,8 +569,17 @@ class Conductivity_RTA(Conductivity):
         frequencies = self._frequencies[gp][self._pp.get_band_indices()]
         gv = self._gv[i]
         ave_pp = self._averaged_pp_interaction[i]
-        
-        text = "Frequency     group velocity (x, y, z)     |gv|       Pqj"
+
+        show_Pqj = not (self._with_g_zero and
+                        len(self._sigmas) == 1 and
+                        self._sigmas[0] is None and
+                        not self._use_ave_pp)
+
+
+        if show_Pqj:
+            text = "Frequency     group velocity (x, y, z)     |gv|       Pqj"
+        else:
+            text = "Frequency     group velocity (x, y, z)     |gv|"
         if self._gv_delta_q is None:
             pass
         else:
@@ -578,10 +602,18 @@ class Conductivity_RTA(Conductivity):
                     for f, v, pp in zip(frequencies,
                                     np.dot(rot_c, gv.T).T,
                                     ave_pp):
-                        print("%8.3f   (%8.3f %8.3f %8.3f) %8.3f %11.3e" %
-                              (f, v[0], v[1], v[2], np.linalg.norm(v), pp))
+                        if show_Pqj:
+                            print("%8.3f   (%8.3f %8.3f %8.3f) %8.3f %11.3e" %
+                                  (f, v[0], v[1], v[2], np.linalg.norm(v), pp))
+                        else:
+                            print("%8.3f   (%8.3f %8.3f %8.3f) %8.3f" %
+                                  (f, v[0], v[1], v[2], np.linalg.norm(v)))
             print('')
         else:
             for f, v, pp in zip(frequencies, gv, ave_pp):
-                print("%8.3f   (%8.3f %8.3f %8.3f) %8.3f %11.3e" %
-                      (f, v[0], v[1], v[2], np.linalg.norm(v), pp))
+                if show_Pqj:
+                    print("%8.3f   (%8.3f %8.3f %8.3f) %8.3f %11.3e" %
+                          (f, v[0], v[1], v[2], np.linalg.norm(v), pp))
+                else:
+                    print("%8.3f   (%8.3f %8.3f %8.3f) %8.3f" %
+                          (f, v[0], v[1], v[2], np.linalg.norm(v)))

@@ -72,7 +72,7 @@ class Interaction:
         
         self._allocate_phonon()
         
-    def run(self, lang='C'):
+    def run(self, g_zero=None, lang='C'):
         num_band = self._primitive.get_number_of_atoms() * 3
         num_triplets = len(self._triplets_at_q)
 
@@ -81,7 +81,7 @@ class Interaction:
                 (num_triplets, len(self._band_indices), num_band, num_band),
                 dtype='double')
             if lang == 'C':
-                self._run_c()
+                self._run_c(g_zero=g_zero)
             else:
                 self._run_py()
         else:
@@ -89,7 +89,6 @@ class Interaction:
             self._interaction_strength = np.ones(
                 (num_triplets, len(self._band_indices), num_band, num_band),
                 dtype='double') * self._constant_averaged_interaction / num_grid
-            self.set_phonons(self._triplets_at_q.ravel())
 
     def get_interaction_strength(self):
         return self._interaction_strength
@@ -185,6 +184,7 @@ class Interaction:
         self._grid_address = grid_address
         self._bz_map = bz_map
         self._ir_map_at_q = ir_map_at_q
+        self.set_phonons(self._triplets_at_q.ravel())
 
     def set_dynamical_matrix(self,
                              fc2,
@@ -239,10 +239,9 @@ class Interaction:
         num_band = self._primitive.get_number_of_atoms() * 3
         return np.dot(w, v_sum) / num_band ** 2
             
-    def _run_c(self):
+    def _run_c(self, g_zero=None):
         import anharmonic._phono3py as phono3c
         
-        self.set_phonons(self._triplets_at_q.ravel())
         num_band = self._primitive.get_number_of_atoms() * 3
         svecs, multiplicity = get_smallest_vectors(self._supercell,
                                                    self._primitive,
@@ -251,7 +250,14 @@ class Interaction:
         p2s = self._primitive.get_primitive_to_supercell_map()
         s2p = self._primitive.get_supercell_to_primitive_map()
 
+        if g_zero is None:
+            _g_zero = np.zeros(self._interaction_strength.shape,
+                               dtype='byte', order='C')
+        else:
+            _g_zero = g_zero
+
         phono3c.interaction(self._interaction_strength,
+                            _g_zero,
                             self._frequencies,
                             self._eigenvectors,
                             self._triplets_at_q,

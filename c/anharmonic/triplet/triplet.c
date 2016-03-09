@@ -87,6 +87,7 @@ int tpl_get_triplets_reciprocal_mesh_at_q(int map_triplets[],
 }
 
 int tpl_get_integration_weight(double *iw,
+			       char *iw_zero,
 			       const double frequency_points[],
 			       const int num_band0,
 			       PHPYCONST int relative_grid_address[24][4][3],
@@ -100,6 +101,7 @@ int tpl_get_integration_weight(double *iw,
 			       const int num_iw)
 {
   return tpi_get_integration_weight(iw,
+				    iw_zero,
 				    frequency_points,
 				    num_band0,
 				    relative_grid_address,

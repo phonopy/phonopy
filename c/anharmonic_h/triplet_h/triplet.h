@@ -70,6 +70,7 @@ int tpl_get_BZ_triplets_at_q(int triplets[][3],
 
 
 int tpl_get_integration_weight(double *iw,
+			       char *iw_zero,
 			       const double frequency_points[],
 			       const int num_band0,
 			       PHPYCONST int relative_grid_address[24][4][3],

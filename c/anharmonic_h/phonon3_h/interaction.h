@@ -38,6 +38,7 @@
 #include <phonoc_array.h>
 
 void get_interaction(Darray *fc3_normal_squared,
+		     const char *g_zero,
 		     const Darray *frequencies,
 		     const Carray *eigenvectors,
 		     const Iarray *triplets,

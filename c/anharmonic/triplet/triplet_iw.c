@@ -36,6 +36,15 @@
 #include <phonoc_const.h>
 #include <tetrahedron_method.h>
 
+static void set_freq_vertices(double freq_vertices[3][24][4],
+			      const double frequencies[],
+			      PHPYCONST int vertices[2][24][4],
+			      const int num_band,
+			      const int b1,
+			      const int b2);
+static int set_g(double g[3],
+		 const double f0,
+		 PHPYCONST double freq_vertices[3][24][4]);
 static int in_tetrahedra(const double f0, PHPYCONST double freq_vertices[24][4]);
 static void get_triplet_tetrahedra_vertices
 (int vertices[2][24][4],
@@ -46,6 +55,7 @@ static void get_triplet_tetrahedra_vertices
  const int bz_map[]);
 
 int tpi_get_integration_weight(double *iw,
+			       char *iw_zero,
 			       const double frequency_points[],
 			       const int num_band0,
 			       PHPYCONST int relative_grid_address[24][4][3],
@@ -62,7 +72,7 @@ int tpi_get_integration_weight(double *iw,
   int tp_relative_grid_address[2][24][4][3];
   int vertices[2][24][4];
   int adrs_shift;
-  double f0, f1, f2, g0, g1, g2;
+  double g[3];
   double freq_vertices[3][24][4];
     
   for (i = 0; i < 2; i++) {
@@ -77,7 +87,7 @@ int tpi_get_integration_weight(double *iw,
     }
   }
 
-#pragma omp parallel for private(j, k, b1, b2, vertices, adrs_shift, f0, f1, f2, g0, g1, g2, freq_vertices)
+#pragma omp parallel for private(j, b1, b2, vertices, adrs_shift, g, freq_vertices)
   for (i = 0; i < num_triplets; i++) {
     get_triplet_tetrahedra_vertices(vertices,
 				    tp_relative_grid_address,
@@ -87,69 +97,18 @@ int tpi_get_integration_weight(double *iw,
 				    bz_map);
     for (b1 = 0; b1 < num_band; b1++) {
       for (b2 = 0; b2 < num_band; b2++) {
-	for (j = 0; j < 24; j++) {
-	  for (k = 0; k < 4; k++) {
-	    f1 = frequencies[vertices[0][j][k] * num_band + b1];
-	    f2 = frequencies[vertices[1][j][k] * num_band + b2];
-	    freq_vertices[0][j][k] = f1 + f2;
-	    freq_vertices[1][j][k] = -f1 + f2;
-	    freq_vertices[2][j][k] = f1 - f2;
-	  }
-	}
+	set_freq_vertices
+	  (freq_vertices, frequencies, vertices, num_band, b1, b2);
 	for (j = 0; j < num_band0; j++) {
-	  f0 = frequency_points[j];
-	  if (in_tetrahedra(f0, freq_vertices[0])) {
-	    g0 = thm_get_integration_weight(f0, freq_vertices[0], 'I');
-	  } else {
-	    g0 = -1;
-	  }
-	  if (in_tetrahedra(f0, freq_vertices[1])) {
-	    g1 = thm_get_integration_weight(f0, freq_vertices[1], 'I');
-	  } else {
-	    g1 = -1;
-	  }
-	  if (in_tetrahedra(f0, freq_vertices[2])) {
-	    g2 = thm_get_integration_weight(f0, freq_vertices[2], 'I');
-	  } else {
-	    g2 = -1;
-	  }
 	  adrs_shift = i * num_band0 * num_band * num_band +
 	    j * num_band * num_band + b1 * num_band + b2;
-	  if (g0 < 0) {
-	    iw[adrs_shift] = 0;
-	  } else {
-	    iw[adrs_shift] = g0;
-	  }
+	  iw_zero[adrs_shift] = set_g(g, frequency_points[j], freq_vertices);
+	  iw[adrs_shift] = g[0];
 	  adrs_shift += num_triplets * num_band0 * num_band * num_band;
-	  if (g1 < 0 && g2 < 0) {
-	    iw[adrs_shift] = 0;
-	  } else {
-	    if (g1 < 0) {
-	      iw[adrs_shift] = - g2;
-	    } else {
-	      if (g2 < 0) {
-		iw[adrs_shift] = g1;
-	      } else {
-		iw[adrs_shift] = g1 - g2;
-	      }
-	    }
-	  }
+	  iw[adrs_shift] = g[1] - g[2];
 	  if (num_iw == 3) {
 	    adrs_shift += num_triplets * num_band0 * num_band * num_band;
-	    if (g0 < 0 && g1 < 0 && g2 < 0) {
-	      iw[adrs_shift] = 0;
-	    } else {
-	      if (g0 < 0) {
-		g0 = 0;
-	      }
-	      if (g1 < 0) {
-		g1 = 0;
-	      }
-	      if (g2 < 0) {
-		g2 = 0;
-	      }
-	      iw[adrs_shift] = g0 + g1 + g2;
-	    }
+	    iw[adrs_shift] = g[0] + g[1] + g[2];
 	  }
 	}
       }	
@@ -157,6 +116,57 @@ int tpi_get_integration_weight(double *iw,
   }
 
   return 0;
+}
+
+static void set_freq_vertices(double freq_vertices[3][24][4],
+			      const double frequencies[],
+			      PHPYCONST int vertices[2][24][4],
+			      const int num_band,
+			      const int b1,
+			      const int b2)
+{
+  int i, j;
+  double f1, f2;
+  
+  for (i = 0; i < 24; i++) {
+    for (j = 0; j < 4; j++) {
+      f1 = frequencies[vertices[0][i][j] * num_band + b1];
+      f2 = frequencies[vertices[1][i][j] * num_band + b2];
+      freq_vertices[0][i][j] = f1 + f2;
+      freq_vertices[1][i][j] = -f1 + f2;
+      freq_vertices[2][i][j] = f1 - f2;
+    }
+  }
+}
+
+static int set_g(double g[3],
+		 const double f0,
+		 PHPYCONST double freq_vertices[3][24][4])
+{
+  int iw_zero;
+
+  iw_zero = 1;
+
+  if (in_tetrahedra(f0, freq_vertices[0])) {
+    g[0] = thm_get_integration_weight(f0, freq_vertices[0], 'I');
+    iw_zero = 0;
+  } else {
+    g[0] = 0;
+  }
+  if (in_tetrahedra(f0, freq_vertices[1])) {
+    g[1] = thm_get_integration_weight(f0, freq_vertices[1], 'I');
+    iw_zero = 0;
+  } else {
+    g[1] = 0;
+  }
+  if (in_tetrahedra(f0, freq_vertices[2])) {
+    g[2] = thm_get_integration_weight(f0, freq_vertices[2], 'I');
+    iw_zero = 0;
+  } else {
+    g[2] = 0;
+  }
+
+  return iw_zero;
 }
 
 static int in_tetrahedra(const double f0, PHPYCONST double freq_vertices[24][4])

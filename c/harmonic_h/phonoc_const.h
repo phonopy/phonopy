@@ -36,6 +36,7 @@
 #define __phonoc_const_H__
 
 #define M_2PI 6.283185307179586
+#define KB 8.6173382568083159E-05
 
 /* PHPYCONST is used instead of 'const' so to avoid gcc warning. */
 /* However there should be better way than this way.... */

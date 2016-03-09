@@ -53,9 +53,8 @@ static lapack_complex_double fc3_sum_in_reciprocal_to_normal
  const double *masses,
  const int num_atom);
 
-static void set_fc3_sum
-(double *fc3_normal_squared,
- const int i,
+static double get_fc3_sum
+(const int i,
  const int j,
  const int k,
  const int bi,
@@ -73,6 +72,7 @@ static void set_fc3_sum
 
 void reciprocal_to_normal_squared
 (double *fc3_normal_squared,
+ const char *g_zero,
  const lapack_complex_double *fc3_reciprocal,
  const double *freqs0,
  const double *freqs1,
@@ -89,18 +89,18 @@ void reciprocal_to_normal_squared
   int i, j, k, bi, num_atom;
 
   num_atom = num_band / 3;
-  
+
   for (i = 0; i < num_band0; i++) {
     bi = band_indices[i];
     if (freqs0[bi] > cutoff_frequency) {
       for (j = 0; j < num_band; j++) {
 	for (k = 0; k < num_band; k++) {
-	  if (fc3_normal_squared
-	      [i * num_band * num_band + j * num_band + k] < 0) {
+	  if (g_zero[i * num_band * num_band + j * num_band + k]) {
 	    fc3_normal_squared[i * num_band * num_band + j * num_band + k] = 0;
-	  } else {
-	    set_fc3_sum(fc3_normal_squared,
-			i, j, k, bi,
+	    continue;
+	  }
+	  fc3_normal_squared[i * num_band * num_band + j * num_band + k] =
+	    get_fc3_sum(i, j, k, bi,
 			freqs0, freqs1, freqs2,
 			eigvecs0, eigvecs1, eigvecs2,
 			fc3_reciprocal,
@@ -108,7 +108,6 @@ void reciprocal_to_normal_squared
 			num_atom,
 			num_band,
 			cutoff_frequency);
-	  }
 	}
       }
     } else {
@@ -121,6 +120,7 @@ void reciprocal_to_normal_squared
 
 void reciprocal_to_normal_squared_openmp
 (double *fc3_normal_squared,
+ const char *g_zero,
  const lapack_complex_double *fc3_reciprocal,
  const double *freqs0,
  const double *freqs1,
@@ -155,13 +155,14 @@ void reciprocal_to_normal_squared_openmp
 
 #pragma omp parallel for private(j, k)
       for (jk = 0; jk < num_band * num_band; jk++) {
-	if (fc3_normal_squared[i * num_band * num_band + jk] < 0) {
+	if (g_zero[i * num_band * num_band + jk]) {
 	  fc3_normal_squared[i * num_band * num_band + jk] = 0;
-	} else {
-	  j = jk / num_band;
-	  k = jk % num_band;
-	  set_fc3_sum(fc3_normal_squared,
-		      i, j, k, bi,
+	  continue;
+	}
+	j = jk / num_band;
+	k = jk % num_band;
+	fc3_normal_squared[i * num_band * num_band + jk] =
+	  get_fc3_sum(i, j, k, bi,
 		      freqs0, freqs1, freqs2,
 		      eigvecs0, eigvecs1, eigvecs2,
 		      fc3_reciprocal,
@@ -169,7 +170,6 @@ void reciprocal_to_normal_squared_openmp
 		      num_atom,
 		      num_band,
 		      cutoff_frequency);
-	}
       }
 
 #ifdef MEASURE_R2N
@@ -201,9 +201,8 @@ void reciprocal_to_normal_squared_openmp
   }
 }
 
-static void set_fc3_sum
-(double *fc3_normal_squared,
- const int i,
+static double get_fc3_sum
+(const int i,
  const int j,
  const int k,
  const int bi,
@@ -232,10 +231,9 @@ static void set_fc3_sum
        num_atom);
     sum_real = lapack_complex_double_real(fc3_sum);
     sum_imag = lapack_complex_double_imag(fc3_sum);
-    fc3_normal_squared[i * num_band * num_band + j * num_band + k] =
-      (sum_real * sum_real + sum_imag * sum_imag) / fff;
+    return (sum_real * sum_real + sum_imag * sum_imag) / fff;
   } else {
-    fc3_normal_squared[i * num_band * num_band + j * num_band + k] = 0;
+    return 0;
   }
 }
 

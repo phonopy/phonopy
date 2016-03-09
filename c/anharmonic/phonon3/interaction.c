@@ -36,6 +36,7 @@
 #include <stdlib.h>
 #include <lapacke.h>
 #include <phonoc_array.h>
+#include <phonoc_const.h>
 #include <phonoc_utils.h>
 #include <phonon3_h/interaction.h>
 #include <phonon3_h/real_to_reciprocal.h>
@@ -49,6 +50,7 @@ static const int index_exchange[6][3] = {{0, 1, 2},
 					 {1, 0, 2}};
 static void get_interaction_at_triplet(Darray *fc3_normal_squared,
 				       const int i,
+				       const char *g_zero,
 				       const Darray *frequencies,
 				       const Carray *eigenvectors,
 				       const Iarray *triplets,
@@ -66,6 +68,7 @@ static void get_interaction_at_triplet(Darray *fc3_normal_squared,
 				       const int num_triplets,
 				       const int openmp_at_bands);
 static void real_to_normal(double *fc3_normal_squared,
+			   const char *g_zero,
 			   const double *freqs0,
 			   const double *freqs1,
 			   const double *freqs2,		      
@@ -87,8 +90,9 @@ static void real_to_normal(double *fc3_normal_squared,
 			   const int num_triplets,
 			   const int openmp_at_bands);
 static void real_to_normal_sym_q(double *fc3_normal_squared,
-				 double *freqs[3],
-				 lapack_complex_double *eigvecs[3],
+				 const char *g_zero,
+				 PHPYCONST double *freqs[3],
+				 PHPYCONST lapack_complex_double *eigvecs[3],
 				 const Darray *fc3,
 				 const double q[9], /* q0, q1, q2 */
 				 const Darray *shortest_vectors,
@@ -106,6 +110,7 @@ static void real_to_normal_sym_q(double *fc3_normal_squared,
 
 /* fc3_normal_squared[num_triplets, num_band0, num_band, num_band] */
 void get_interaction(Darray *fc3_normal_squared,
+		     const char *g_zero,
 		     const Darray *frequencies,
 		     const Carray *eigenvectors,
 		     const Iarray *triplets,
@@ -130,6 +135,7 @@ void get_interaction(Darray *fc3_normal_squared,
     for (i = 0; i < triplets->dims[0]; i++) {
       get_interaction_at_triplet(fc3_normal_squared,
 				 i,
+				 g_zero,
 				 frequencies,
 				 eigenvectors,
 				 triplets,
@@ -151,6 +157,7 @@ void get_interaction(Darray *fc3_normal_squared,
     for (i = 0; i < triplets->dims[0]; i++) {
       get_interaction_at_triplet(fc3_normal_squared,
 				 i,
+				 g_zero,
 				 frequencies,
 				 eigenvectors,
 				 triplets,
@@ -173,6 +180,7 @@ void get_interaction(Darray *fc3_normal_squared,
 
 static void get_interaction_at_triplet(Darray *fc3_normal_squared,
 				       const int i,
+				       const char *g_zero,
 				       const Darray *frequencies,
 				       const Carray *eigenvectors,
 				       const Iarray *triplets,
@@ -210,6 +218,7 @@ static void get_interaction_at_triplet(Darray *fc3_normal_squared,
   if (symmetrize_fc3_q) {
     real_to_normal_sym_q((fc3_normal_squared->data +
 			  i * num_band0 * num_band * num_band),
+			 g_zero + i * num_band0 * num_band * num_band,
 			 freqs,
 			 eigvecs,
 			 fc3,
@@ -229,6 +238,7 @@ static void get_interaction_at_triplet(Darray *fc3_normal_squared,
   } else {
     real_to_normal((fc3_normal_squared->data +
 		    i * num_band0 * num_band * num_band),
+		   g_zero + i * num_band0 * num_band * num_band,
 		   freqs[0],
 		   freqs[1],
 		   freqs[2],
@@ -253,6 +263,7 @@ static void get_interaction_at_triplet(Darray *fc3_normal_squared,
 }
 
 static void real_to_normal(double *fc3_normal_squared,
+			   const char* g_zero,
 			   const double *freqs0,
 			   const double *freqs1,
 			   const double *freqs2,		      
@@ -297,6 +308,7 @@ static void real_to_normal(double *fc3_normal_squared,
 	   triplet_index, num_triplets, num_band0);
 #endif
     reciprocal_to_normal_squared_openmp(fc3_normal_squared,
+					g_zero,
 					fc3_reciprocal,
 					freqs0,
 					freqs1,
@@ -311,6 +323,7 @@ static void real_to_normal(double *fc3_normal_squared,
 					cutoff_frequency);
   } else {
     reciprocal_to_normal_squared(fc3_normal_squared,
+				 g_zero,
 				 fc3_reciprocal,
 				 freqs0,
 				 freqs1,
@@ -329,6 +342,7 @@ static void real_to_normal(double *fc3_normal_squared,
 }
 
 static void real_to_normal_sym_q(double *fc3_normal_squared,
+				 const char *g_zero,
 				 double *freqs[3],
 				 lapack_complex_double *eigvecs[3],
 				 const Darray *fc3,
@@ -365,6 +379,7 @@ static void real_to_normal_sym_q(double *fc3_normal_squared,
       }
     }
     real_to_normal(fc3_normal_squared_ex,
+		   g_zero,
 		   freqs[index_exchange[i][0]],
 		   freqs[index_exchange[i][1]],
 		   freqs[index_exchange[i][2]],
