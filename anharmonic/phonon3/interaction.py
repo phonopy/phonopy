@@ -7,8 +7,7 @@ from anharmonic.phonon3.real_to_reciprocal import RealToReciprocal
 from anharmonic.phonon3.reciprocal_to_normal import ReciprocalToNormal
 from anharmonic.phonon3.triplets import (get_triplets_at_q,
                                          get_nosym_triplets_at_q,
-                                         get_bz_grid_address,
-                                         get_triplets_integration_weights)
+                                         get_bz_grid_address)
 
 class Interaction:
     def __init__(self,
@@ -78,20 +77,9 @@ class Interaction:
         num_triplets = len(self._triplets_at_q)
 
         if self._constant_averaged_interaction is None:
-            # self._interaction_strength = np.zeros(
-            #     (num_triplets, len(self._band_indices), num_band, num_band),
-            #     dtype='double')
-
-            self.set_phonons(np.array([self._grid_point], dtype='intc'))
-            freqs = self._frequencies[self._grid_point][self._band_indices]
-            g = get_triplets_integration_weights(
-                self,
-                np.array(freqs, dtype='double'),
-                None)
-
-            self._interaction_strength = np.array(
-                -1 * (g[0] < 0) * (g[1] < 0), dtype='double', order='C')
-
+            self._interaction_strength = np.zeros(
+                (num_triplets, len(self._band_indices), num_band, num_band),
+                dtype='double')
             if lang == 'C':
                 self._run_c()
             else:
