@@ -40,6 +40,7 @@
 #include <lapacke.h>
 #include <lapack_wrapper.h>
 #include <phonoc_array.h>
+#include <phonoc_const.h>
 #include <phonoc_utils.h>
 #include <phonon3_h/fc3.h>
 #include <phonon3_h/frequency_shift.h>
@@ -78,8 +79,8 @@ static PyObject * py_set_permutation_symmetry_fc3(PyObject *self,
 static PyObject * py_get_neighboring_gird_points(PyObject *self, PyObject *args);
 static PyObject * py_set_integration_weights(PyObject *self, PyObject *args);
 static PyObject *
-py_spg_get_triplets_reciprocal_mesh_at_q(PyObject *self, PyObject *args);
-static PyObject * py_spg_get_BZ_triplets_at_q(PyObject *self, PyObject *args);
+py_tpl_get_triplets_reciprocal_mesh_at_q(PyObject *self, PyObject *args);
+static PyObject * py_tpl_get_BZ_triplets_at_q(PyObject *self, PyObject *args);
 static PyObject *
 py_set_triplets_integration_weights(PyObject *self, PyObject *args);
 static PyObject *
@@ -89,15 +90,6 @@ static PyObject * py_inverse_collision_matrix(PyObject *self, PyObject *args);
 #ifdef LIBFLAME
 static PyObject * py_inverse_collision_matrix_libflame(PyObject *self, PyObject *args);
 #endif
-
-static int in_tetrahedra(const double f0, SPGCONST double freq_vertices[24][4]);
-static void get_triplet_tetrahedra_vertices
-  (int vertices[2][24][4],
-   SPGCONST int relative_grid_address[2][24][4][3],
-   const int mesh[3],
-   const int triplet[3],
-   SPGCONST int bz_grid_address[][3],
-   const int bz_map[]);
 
 static PyMethodDef functions[] = {
   {"interaction", py_get_interaction, METH_VARARGS, "Interaction of triplets"},
@@ -130,9 +122,9 @@ static PyMethodDef functions[] = {
    "Neighboring grid points by relative grid addresses"},
   {"integration_weights", py_set_integration_weights, METH_VARARGS,
    "Integration weights of tetrahedron method"},
-  {"triplets_reciprocal_mesh_at_q", py_spg_get_triplets_reciprocal_mesh_at_q,
+  {"triplets_reciprocal_mesh_at_q", py_tpl_get_triplets_reciprocal_mesh_at_q,
    METH_VARARGS, "Triplets on reciprocal mesh points at a specific q-point"},
-  {"BZ_triplets_at_q", py_spg_get_BZ_triplets_at_q, METH_VARARGS,
+  {"BZ_triplets_at_q", py_tpl_get_BZ_triplets_at_q, METH_VARARGS,
    "Triplets in reciprocal primitive lattice are transformed to those in BZ."},
   {"triplets_integration_weights", py_set_triplets_integration_weights, METH_VARARGS,
    "Integration weights of tetrahedron method for triplets"},
@@ -844,11 +836,11 @@ static PyObject * py_get_neighboring_gird_points(PyObject *self, PyObject *args)
   int* relative_grid_points = (int*)relative_grid_points_py->data;
   const int *grid_points = (int*)grid_points_py->data;
   const int num_grid_points = (int)grid_points_py->dimensions[0];
-  SPGCONST int (*relative_grid_address)[3] =
+  PHPYCONST int (*relative_grid_address)[3] =
     (int(*)[3])relative_grid_address_py->data;
   const int num_relative_grid_address = relative_grid_address_py->dimensions[0];
   const int *mesh = (int*)mesh_py->data;
-  SPGCONST int (*bz_grid_address)[3] = (int(*)[3])bz_grid_address_py->data;
+  PHPYCONST int (*bz_grid_address)[3] = (int(*)[3])bz_grid_address_py->data;
   const int *bz_map = (int*)bz_map_py->data;
 
   int i;
@@ -892,12 +884,12 @@ static PyObject * py_set_integration_weights(PyObject *self, PyObject *args)
   double *iw = (double*)iw_py->data;
   const double *frequency_points = (double*)frequency_points_py->data;
   const int num_band0 = frequency_points_py->dimensions[0];
-  SPGCONST int (*relative_grid_address)[4][3] =
+  PHPYCONST int (*relative_grid_address)[4][3] =
     (int(*)[4][3])relative_grid_address_py->data;
   const int *mesh = (int*)mesh_py->data;
-  SPGCONST int *grid_points = (int*)grid_points_py->data;
+  PHPYCONST int *grid_points = (int*)grid_points_py->data;
   const int num_gp = (int)grid_points_py->dimensions[0];
-  SPGCONST int (*bz_grid_address)[3] = (int(*)[3])bz_grid_address_py->data;
+  PHPYCONST int (*bz_grid_address)[3] = (int(*)[3])bz_grid_address_py->data;
   const int *bz_map = (int*)bz_map_py->data;
   const double *frequencies = (double*)frequencies_py->data;
   const int num_band = (int)frequencies_py->dimensions[1];
@@ -934,7 +926,7 @@ static PyObject * py_set_integration_weights(PyObject *self, PyObject *args)
 }
 
 static PyObject * 
-py_spg_get_triplets_reciprocal_mesh_at_q(PyObject *self, PyObject *args)
+py_tpl_get_triplets_reciprocal_mesh_at_q(PyObject *self, PyObject *args)
 {
   PyArrayObject* map_triplets;
   PyArrayObject* grid_address_py;
@@ -959,10 +951,10 @@ py_spg_get_triplets_reciprocal_mesh_at_q(PyObject *self, PyObject *args)
   int *map_q_int = (int*)map_q->data;
 
   const int* mesh_int = (int*)mesh->data;
-  SPGCONST int (*rot)[3][3] = (int(*)[3][3])rotations->data;
+  PHPYCONST int (*rot)[3][3] = (int(*)[3][3])rotations->data;
   const int num_rot = rotations->dimensions[0];
   const int num_ir =
-    spg_get_triplets_reciprocal_mesh_at_q(map_triplets_int,
+    tpl_get_triplets_reciprocal_mesh_at_q(map_triplets_int,
 					  map_q_int,
 					  grid_address,
 					  fixed_grid_number,
@@ -975,7 +967,7 @@ py_spg_get_triplets_reciprocal_mesh_at_q(PyObject *self, PyObject *args)
 }
 
 
-static PyObject * py_spg_get_BZ_triplets_at_q(PyObject *self, PyObject *args)
+static PyObject * py_tpl_get_BZ_triplets_at_q(PyObject *self, PyObject *args)
 {
   PyArrayObject* triplets_py;
   PyArrayObject* bz_grid_address_py;
@@ -994,14 +986,14 @@ static PyObject * py_spg_get_BZ_triplets_at_q(PyObject *self, PyObject *args)
   }
 
   int (*triplets)[3] = (int(*)[3])triplets_py->data;
-  SPGCONST int (*bz_grid_address)[3] = (int(*)[3])bz_grid_address_py->data;
+  PHPYCONST int (*bz_grid_address)[3] = (int(*)[3])bz_grid_address_py->data;
   const int *bz_map = (int*)bz_map_py->data;
   const int *map_triplets = (int*)map_triplets_py->data;
   const int num_map_triplets = (int)map_triplets_py->dimensions[0];
   const int *mesh = (int*)mesh_py->data;
   int num_ir;
 
-  num_ir = spg_get_BZ_triplets_at_q(triplets,
+  num_ir = tpl_get_BZ_triplets_at_q(triplets,
 				    grid_point,
 				    bz_grid_address,
 				    bz_map,
@@ -1038,142 +1030,31 @@ py_set_triplets_integration_weights(PyObject *self, PyObject *args)
   double *iw = (double*)iw_py->data;
   const double *frequency_points = (double*)frequency_points_py->data;
   const int num_band0 = frequency_points_py->dimensions[0];
-  SPGCONST int (*relative_grid_address)[4][3] =
+  PHPYCONST int (*relative_grid_address)[4][3] =
     (int(*)[4][3])relative_grid_address_py->data;
   const int *mesh = (int*)mesh_py->data;
-  SPGCONST int (*triplets)[3] = (int(*)[3])triplets_py->data;
+  PHPYCONST int (*triplets)[3] = (int(*)[3])triplets_py->data;
   const int num_triplets = (int)triplets_py->dimensions[0];
-  SPGCONST int (*bz_grid_address)[3] = (int(*)[3])bz_grid_address_py->data;
+  PHPYCONST int (*bz_grid_address)[3] = (int(*)[3])bz_grid_address_py->data;
   const int *bz_map = (int*)bz_map_py->data;
   const double *frequencies = (double*)frequencies_py->data;
   const int num_band = (int)frequencies_py->dimensions[1];
   const int num_iw = (int)iw_py->dimensions[0];
 
-  int i, j, k, l, b1, b2, sign;
-  int tp_relative_grid_address[2][24][4][3];
-  int vertices[2][24][4];
-  int adrs_shift;
-  double f0, f1, f2, g0, g1, g2;
-  double freq_vertices[3][24][4];
-    
-  for (i = 0; i < 2; i++) {
-    sign = 1 - i * 2;
-    for (j = 0; j < 24; j++) {
-      for (k = 0; k < 4; k++) {
-	for (l = 0; l < 3; l++) {
-	  tp_relative_grid_address[i][j][k][l] = 
-	    relative_grid_address[j][k][l] * sign;
-	}
-      }
-    }
-  }
-
-#pragma omp parallel for private(j, k, b1, b2, vertices, adrs_shift, f0, f1, f2, g0, g1, g2, freq_vertices)
-  for (i = 0; i < num_triplets; i++) {
-    get_triplet_tetrahedra_vertices(vertices,
-				    tp_relative_grid_address,
-				    mesh,
-				    triplets[i],
-				    bz_grid_address,
-				    bz_map);
-    for (b1 = 0; b1 < num_band; b1++) {
-      for (b2 = 0; b2 < num_band; b2++) {
-	for (j = 0; j < 24; j++) {
-	  for (k = 0; k < 4; k++) {
-	    f1 = frequencies[vertices[0][j][k] * num_band + b1];
-	    f2 = frequencies[vertices[1][j][k] * num_band + b2];
-	    freq_vertices[0][j][k] = f1 + f2;
-	    freq_vertices[1][j][k] = -f1 + f2;
-	    freq_vertices[2][j][k] = f1 - f2;
-	  }
-	}
-	for (j = 0; j < num_band0; j++) {
-	  f0 = frequency_points[j];
-	  if (in_tetrahedra(f0, freq_vertices[0])) {
-	    g0 = thm_get_integration_weight(f0, freq_vertices[0], 'I');
-	  } else {
-	    g0 = -1;
-	  }
-	  if (in_tetrahedra(f0, freq_vertices[1])) {
-	    g1 = thm_get_integration_weight(f0, freq_vertices[1], 'I');
-	  } else {
-	    g1 = -1;
-	  }
-	  if (in_tetrahedra(f0, freq_vertices[2])) {
-	    g2 = thm_get_integration_weight(f0, freq_vertices[2], 'I');
-	  } else {
-	    g2 = -1;
-	  }
-	  adrs_shift = i * num_band0 * num_band * num_band +
-	    j * num_band * num_band + b1 * num_band + b2;
-	  if (g0 < 0) {
-	    iw[adrs_shift] = 0;
-	  } else {
-	    iw[adrs_shift] = g0;
-	  }
-	  adrs_shift += num_triplets * num_band0 * num_band * num_band;
-	  if (g1 < 0 && g2 < 0) {
-	    iw[adrs_shift] = 0;
-	  } else {
-	    if (g1 < 0) {
-	      iw[adrs_shift] = - g2;
-	    } else {
-	      if (g2 < 0) {
-		iw[adrs_shift] = g1;
-	      } else {
-		iw[adrs_shift] = g1 - g2;
-	      }
-	    }
-	  }
-	  if (num_iw == 3) {
-	    adrs_shift += num_triplets * num_band0 * num_band * num_band;
-	    if (g0 < 0 && g1 < 0 && g2 < 0) {
-	      iw[adrs_shift] = 0;
-	    } else {
-	      if (g0 < 0) {
-		g0 = 0;
-	      }
-	      if (g1 < 0) {
-		g1 = 0;
-	      }
-	      if (g2 < 0) {
-		g2 = 0;
-	      }
-	      iw[adrs_shift] = g0 + g1 + g2;
-	    }
-	  }
-	}
-      }	
-    }
-  }
+  tpl_get_integration_weight(iw,
+			     frequency_points,
+			     num_band0,
+			     relative_grid_address,
+			     mesh,
+			     triplets,
+			     num_triplets,
+			     bz_grid_address,
+			     bz_map,
+			     frequencies,
+			     num_band,
+			     num_iw);
 	    
   Py_RETURN_NONE;
-}
-
-static int in_tetrahedra(const double f0, SPGCONST double freq_vertices[24][4])
-{
-  int i, j;
-  double fmin, fmax;
-
-  fmin = freq_vertices[0][0];
-  fmax = freq_vertices[0][0];
-
-  for (i = 0; i < 24; i++) {
-    for (j = 0; j < 4; j++) {
-      if (fmin > freq_vertices[i][j]) {
-	fmin = freq_vertices[i][j];
-      }
-      if (fmax < freq_vertices[i][j]) {
-	fmax = freq_vertices[i][j];
-      }
-    }
-  }
-
-  if (fmin > f0 || fmax < f0) {
-    return 0;
-  } else {
-    return 1;
-  }
 }
 
 static PyObject *
@@ -1197,7 +1078,7 @@ py_set_triplets_integration_weights_with_sigma(PyObject *self, PyObject *args)
   double *iw = (double*)iw_py->data;
   const double *frequency_points = (double*)frequency_points_py->data;
   const int num_band0 = frequency_points_py->dimensions[0];
-  SPGCONST int (*triplets)[3] = (int(*)[3])triplets_py->data;
+  PHPYCONST int (*triplets)[3] = (int(*)[3])triplets_py->data;
   const int num_triplets = (int)triplets_py->dimensions[0];
   const double *frequencies = (double*)frequencies_py->data;
   const int num_band = (int)frequencies_py->dimensions[1];
@@ -1301,28 +1182,5 @@ static PyObject * py_inverse_collision_matrix(PyObject *self, PyObject *args)
 			    eigvals, num_column, cutoff);
 
   return PyLong_FromLong((long) info);
-}
-
-static void get_triplet_tetrahedra_vertices
-  (int vertices[2][24][4],
-   SPGCONST int relative_grid_address[2][24][4][3],
-   const int mesh[3],
-   const int triplet[3],
-   SPGCONST int bz_grid_address[][3],
-   const int bz_map[])
-{
-  int i, j;
-
-  for (i = 0; i < 2; i++) {
-    for (j = 0; j < 24; j++) {
-      thm_get_neighboring_grid_points(vertices[i][j],
-				      triplet[i + 1],
-				      relative_grid_address[i][j],
-				      4,
-				      mesh,
-				      bz_grid_address,
-				      bz_map);
-    }
-  }
 }
 
