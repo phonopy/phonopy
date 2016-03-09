@@ -31,7 +31,7 @@ install:
     - git describe --tags --dirty | sed -e 's/\([.0-9]*\)-\(.*\)-g.*/\2/' -e 's/^v//g' > __nanoversion__.txt
     - python setup.py install
 
-script: cd test/phonopy ; nosetests
+script: nosetests test/phonopy 
 
 #deploy:
 #  skip_cleanup: true
