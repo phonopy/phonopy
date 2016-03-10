@@ -80,6 +80,8 @@ class Unfolding:
             self._q_index += 1
             return self._weights[self._q_index - 1]
 
+    next=__next__
+
     def prepare(self):
         self._comm_points = get_commensurate_points(self._supercell_matrix)
         self._set_translations()
