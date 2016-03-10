@@ -42,7 +42,8 @@ from phonopy.structure.atoms import Atoms, symbol_map, atom_data
 from phonopy.structure.cells import get_primitive, get_supercell
 from phonopy.structure.symmetry import Symmetry
 from phonopy.harmonic.force_constants import similarity_transformation
-from phonopy.file_IO import write_FORCE_SETS, write_force_constants_to_hdf5, write_FORCE_CONSTANTS
+from phonopy.file_IO import (write_FORCE_SETS, write_force_constants_to_hdf5,
+                             write_FORCE_CONSTANTS)
 
 def parse_set_of_forces(num_atoms,
                         forces_filenames,
@@ -132,7 +133,7 @@ def create_FORCE_CONSTANTS(filename, options, log_level):
             print("FORCE_CONSTANTS has been created from vasprun.xml.")
 
     if log_level > 0:
-        print("Atom types:", atom_types)
+        print("Atom types: %s" % (" ".join(atom_types)))
     return 0
         
 #
@@ -228,14 +229,21 @@ def _expand_symbols(num_atoms, symbols=None):
 #
 def write_vasp(filename, atoms, direct=True):
     lines = _get_vasp_structure(atoms, direct=direct)
-    f = open(filename, 'w')
-    f.write(lines)
+    with open(filename, 'w') as w:
+        w.write("\n".join(lines))
 
 def write_supercells_with_displacements(supercell,
-                                        cells_with_displacements):
+                                        cells_with_displacements,
+                                        pre_filename="POSCAR",
+                                        width=3):
     write_vasp("SPOSCAR", supercell, direct=True)
     for i, cell in enumerate(cells_with_displacements):
-        write_vasp('POSCAR-%03d' % (i + 1), cell, direct=True)
+        if cell is not None:
+            write_vasp("{pre_filename}-{0:0{width}}".format(i + 1,
+                                                   pre_filename=pre_filename,
+                                                   width=width),
+                       cell,
+                       direct=True)
 
     _write_magnetic_moments(supercell)
 
@@ -255,15 +263,18 @@ def _write_magnetic_moments(cell):
         w.close()
                 
 def get_scaled_positions_lines(scaled_positions):
-    lines = ""
+    return "\n".join(_get_scaled_positions_lines(scaled_positions))
+
+def _get_scaled_positions_lines(scaled_positions):
+    lines = []
     for i, vec in enumerate(scaled_positions):
+        line_str = ""
         for x in (vec - np.rint(vec)):
             if float('%20.16f' % x) < 0.0:
-                lines += "%20.16f" % (x + 1.0)
+                line_str += "%20.16f" % (x + 1.0)
             else:
-                lines += "%20.16f" % (x)
-        if i < len(scaled_positions) - 1:
-            lines += "\n"
+                line_str += "%20.16f" % (x)
+        lines.append(line_str)
 
     return lines
 
@@ -286,17 +297,18 @@ def _get_vasp_structure(atoms, direct=True):
      scaled_positions,
      sort_list) = sort_positions_by_symbols(atoms.get_chemical_symbols(),
                                             atoms.get_scaled_positions())
-    lines = ""     
-    for s in symbols:
-        lines += "%s " % s
-    lines += "\n"
-    lines += "   1.0\n"
+    lines = []
+    lines.append(" ".join(["%s" % s for s in symbols]))
+    lines.append("   1.0")
     for a in atoms.get_cell():
-        lines += "  %21.16f %21.16f %21.16f\n" % tuple(a)
-    lines += ("%4d " * len(num_atoms)) % tuple(num_atoms)
-    lines += "\n"
-    lines += "Direct\n"
-    lines += get_scaled_positions_lines(scaled_positions)
+        lines.append("  %21.16f %21.16f %21.16f" % tuple(a))
+    lines.append(" ".join(["%4d" % n for n in num_atoms]))
+    lines.append("Direct")
+    lines += _get_scaled_positions_lines(scaled_positions)
+
+    # VASP compiled on some system, ending by \n is necessary to read POSCAR
+    # properly.
+    lines.append('')
 
     return lines
     

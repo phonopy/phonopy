@@ -1,7 +1,7 @@
 from __future__ import print_function
 import unittest
 import numpy as np
-from phonopy.interface.phonopy_yaml import phonopyYaml
+from phonopy.interface.phonopy_yaml import PhonopyYaml
 from phonopy.harmonic.dynmat_to_fc import get_commensurate_points
 from phonopy.structure.cells import get_supercell, get_primitive
 
@@ -9,7 +9,7 @@ class TestDynmatToFc(unittest.TestCase):
 
     def setUp(self):
         filename = "POSCAR.yaml"
-        self._cell = phonopyYaml(filename).get_atoms()
+        self._cell = PhonopyYaml(filename).get_atoms()
     
     def tearDown(self):
         pass

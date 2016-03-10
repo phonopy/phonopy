@@ -38,7 +38,7 @@ try:
 except ImportError:
     import sys
     print("Phonopy C-extension has to be built properly.")
-    sys.exit(0)
+    sys.exit(1)
 
 parallelepiped_vertices = np.array([[0, 0, 0],
                                     [1, 0, 0],

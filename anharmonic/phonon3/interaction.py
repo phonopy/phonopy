@@ -1,10 +1,13 @@
 import numpy as np
 from phonopy.phonon.solver import set_phonon_c, set_phonon_py
-from phonopy.harmonic.dynamical_matrix import get_smallest_vectors, get_dynamical_matrix
+from phonopy.harmonic.dynamical_matrix import (get_smallest_vectors,
+                                               get_dynamical_matrix)
 from phonopy.units import VaspToTHz, Hbar, EV, Angstrom, THz, AMU, PlanckConstant
 from anharmonic.phonon3.real_to_reciprocal import RealToReciprocal
 from anharmonic.phonon3.reciprocal_to_normal import ReciprocalToNormal
-from anharmonic.phonon3.triplets import get_triplets_at_q, get_nosym_triplets_at_q, get_bz_grid_address
+from anharmonic.phonon3.triplets import (get_triplets_at_q,
+                                         get_nosym_triplets_at_q,
+                                         get_bz_grid_address)
 
 class Interaction:
     def __init__(self,
@@ -17,7 +20,7 @@ class Interaction:
                  constant_averaged_interaction=None,
                  frequency_factor_to_THz=VaspToTHz,
                  unit_conversion=None,
-                 is_nosym=False,
+                 is_mesh_symmetry=True,
                  symmetrize_fc3_q=False,
                  cutoff_frequency=None,
                  lapack_zheev_uplo='L'):
@@ -46,7 +49,7 @@ class Interaction:
             self._cutoff_frequency = 0
         else:
             self._cutoff_frequency = cutoff_frequency
-        self._is_nosym = is_nosym
+        self._is_mesh_symmetry = is_mesh_symmetry
         self._symmetrize_fc3_q = symmetrize_fc3_q
         self._lapack_zheev_uplo = lapack_zheev_uplo
 
@@ -85,7 +88,7 @@ class Interaction:
             self._interaction_strength = np.ones(
                 (num_triplets, len(self._band_indices), num_band, num_band),
                 dtype='double') * self._constant_averaged_interaction / num_grid
-            self.set_phonon(self._triplets_at_q.ravel())
+            self.set_phonons(self._triplets_at_q.ravel())
 
     def get_interaction_strength(self):
         return self._interaction_strength
@@ -130,15 +133,12 @@ class Interaction:
     def get_lapack_zheev_uplo(self):
         return self._lapack_zheev_uplo
 
-    def is_nosym(self):
-        return self._is_nosym
-
     def get_cutoff_frequency(self):
         return self._cutoff_frequency
         
     def set_grid_point(self, grid_point, stores_triplets_map=False):
         reciprocal_lattice = np.linalg.inv(self._primitive.get_cell())
-        if self._is_nosym:
+        if not self._is_mesh_symmetry:
             (triplets_at_q,
              weights_at_q,
              grid_address,
@@ -204,7 +204,27 @@ class Interaction:
         if nac_q_direction is not None:
             self._nac_q_direction = np.array(nac_q_direction, dtype='double')
 
-    def set_phonon(self, grid_points):
+    def set_phonon_data(self, frequencies, eigenvectors, grid_address):
+        if grid_address.shape != self._grid_address.shape:
+            print("=" * 26 + " Warning " + "=" * 26)
+            print("Input grid address size is inconsistent. "
+                  "Setting phonons faild.")
+            print("=" * 26 + " Warning " + "=" * 26)
+            return False
+
+        if (self._grid_address - grid_address).all():
+            print("=" * 26 + " Warning " + "=" * 26)
+            print("Input grid addresses are inconsistent. "
+                  "Setting phonons faild.")
+            print("=" * 26 + " Warning " + "=" * 26)
+            return False
+        else:
+            self._phonon_done[:] = 1
+            self._frequencies[:] = frequencies
+            self._eigenvectors[:] = eigenvectors
+            return True
+
+    def set_phonons(self, grid_points):
         # for i, grid_triplet in enumerate(self._triplets_at_q):
         #     for gp in grid_triplet:
         #         self._set_phonon_py(gp)
@@ -220,7 +240,7 @@ class Interaction:
     def _run_c(self):
         import anharmonic._phono3py as phono3c
         
-        self.set_phonon(self._triplets_at_q.ravel())
+        self.set_phonons(self._triplets_at_q.ravel())
         num_band = self._primitive.get_number_of_atoms() * 3
         svecs, multiplicity = get_smallest_vectors(self._supercell,
                                                    self._primitive,

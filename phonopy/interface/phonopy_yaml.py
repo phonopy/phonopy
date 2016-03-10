@@ -40,7 +40,7 @@ try:
     import yaml
 except ImportError:
     print("You need to install python-yaml.")
-    exit(1)
+    sys.exit(1)
 
 try:
     from yaml import CLoader as Loader
@@ -50,7 +50,7 @@ except ImportError:
 
 from phonopy.structure.atoms import Atoms, PhonopyAtoms
 
-class phonopyYaml:
+class PhonopyYaml:
     def __init__(self, filename):
         with open(filename) as infile :
             self._data = yaml.load( infile, Loader=Loader)

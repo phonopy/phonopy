@@ -39,7 +39,7 @@ def get_parser():
     parser.set_defaults(band_indices=None,
                         band_paths=None,
                         band_points=None,
-                        cell_poscar=None,
+                        cell_filename=None,
                         constant_averaged_pp_interaction=None,
                         cutoff_fc3_distance=None,
                         cutoff_frequency=None,
@@ -48,13 +48,14 @@ def get_parser():
                         delta_fc2=False,
                         delta_fc2_sets_mode=False,
                         displacement_distance=None,
-                        factor=None,
                         force_sets_to_forces_fc2_mode=None,
                         forces_fc3_mode=False,
                         forces_fc3_file_mode=False,
                         forces_fc2_mode=False,
                         force_sets_mode=False,
+                        frequency_conversion_factor=None,
                         frequency_pitch=None,
+                        frequency_scale_factor=None,
                         num_frequency_points=None,
                         freq_scale=None,
                         gamma_unit_conversion=None,
@@ -68,7 +69,7 @@ def get_parser():
                         is_decay_channel=False,
                         is_nodiag=False,
                         is_displacement=False,
-                        is_nosym=False,
+                        is_nomeshsym=False,
                         is_gruneisen=False,
                         is_isotope=False,
                         is_joint_dos=False,
@@ -121,6 +122,7 @@ def get_parser():
                         write_collision=False,
                         write_detailed_gamma=False,
                         write_gamma=False,
+                        write_phonon=False,
                         write_grid_points=False)
     parser.add_option(
         "--amplitude", dest="displacement_distance", type="float",
@@ -146,7 +148,7 @@ def get_parser():
         "--br", "--bterta", dest="is_bterta", action="store_true",
         help="Calculate thermal conductivity in BTE-RTA")
     parser.add_option(
-        "-c", "--cell", dest="cell_poscar", action="store", type="string",
+        "-c", "--cell", dest="cell_filename", action="store", type="string",
         help="Read unit cell", metavar="FILE")
     parser.add_option(
         "--cf2", "--create_f2", dest="forces_fc2_mode",
@@ -194,7 +196,7 @@ def get_parser():
         "--dim_fc2", dest="phonon_supercell_dimension", type="string",
         help="Supercell dimension for extra fc2")
     parser.add_option(
-        "--factor", dest="factor", type="float",
+        "--factor", dest="frequency_conversion_factor", type="float",
         help="Conversion factor to favorite frequency unit")
     parser.add_option(
         "--fc2", dest="read_fc2", action="store_true",
@@ -207,9 +209,9 @@ def get_parser():
         dest="force_sets_to_forces_fc2_mode",
         action="store_true", help="Create FORCES_FC2 from FORCE_SETS")
     parser.add_option(
-        "--freq_scale", dest="freq_scale", type="float",
-        help=("Scale factor is multiplied to frequencies only, i.e., changes "
-              "frequencies but assumed not to change the physical unit"))
+        "--freq_scale", dest="frequency_scale_factor", type="float",
+        help=("Squared scale factor multiplied with fc2. Therefore frequency "
+              "is changed but the contribution from NAC is not changed."))
     parser.add_option(
         "--freq_pitch", dest="frequency_pitch", type="float",
         help="Pitch in frequency for spectrum")
@@ -281,8 +283,8 @@ def get_parser():
         "--noks", "--no_kappa_stars", dest="no_kappa_stars", action="store_true",
         help="Deactivate summation of partial kappa at q-stars"),
     parser.add_option(
-        "--nosym", dest="is_nosym", action="store_true",
-        help="No symmetrization of triplets")
+        "--nomeshsym", dest="is_nomeshsym", action="store_true",
+        help="No symmetrization of triplets is made.")
     parser.add_option(
         "--num_freq_points", dest="num_frequency_points", type="int",
         help="Number of sampling points for spectrum")
@@ -302,6 +304,9 @@ def get_parser():
         "--pp_unit_conversion", dest="pp_unit_conversion", type="float",
         help="Conversion factor for ph-ph interaction")
     parser.add_option(
+        "--pwscf", dest="pwscf_mode",
+        action="store_true", help="Invoke Pwscf mode")
+    parser.add_option(
         "--qpoints", dest="qpoints", type="string",
         help="Calculate at specified q-points")
     parser.add_option(
@@ -310,14 +315,18 @@ def get_parser():
     parser.add_option(
         "-q", "--quiet", dest="quiet", action="store_true",
         help="Print out smallest information")
-    # parser.add_option("--read_amplitude", dest="read_amplitude", action="store_true",
-    #                   help="Read phonon-phonon interaction amplitudes")
+    # parser.add_option(
+    #     "--read_amplitude", dest="read_amplitude", action="store_true",
+    #     help="Read phonon-phonon interaction amplitudes")
     parser.add_option(
         "--read_collision", dest="read_collision", type="string",
         help="Read collision matrix and Gammas from files")
     parser.add_option(
         "--read_gamma", dest="read_gamma", action="store_true",
         help="Read Gammas from files")
+    parser.add_option(
+        "--read_phonon", dest="read_phonon", action="store_true",
+        help="Read phonons from files")
     parser.add_option(
         "--reducible_colmat", dest="is_reducible_collision_matrix",
         action="store_true", help="Solve reducible collision matrix")
@@ -393,5 +402,8 @@ def get_parser():
     parser.add_option(
         "--write_gamma", dest="write_gamma", action="store_true",
         help="Write imag-part of self energy to files")
+    parser.add_option(
+        "--write_phonon", dest="write_phonon", action="store_true",
+        help="Write all phonons on grid points to files")
 
     return parser

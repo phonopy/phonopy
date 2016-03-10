@@ -17,7 +17,7 @@ from anharmonic.phonon3.conductivity_LBTE import get_thermal_conductivity_LBTE
 from anharmonic.phonon3.joint_dos import JointDos
 from anharmonic.phonon3.displacement_fc3 import get_third_order_displacements, \
      direction_to_displacement
-from anharmonic.file_IO import write_joint_dos
+from anharmonic.file_IO import write_joint_dos, write_phonon_to_hdf5
 from anharmonic.other.isotope import Isotope
 from anharmonic.phonon3.fc3 import get_fc3, set_permutation_symmetry_fc3, \
      set_translational_invariance_fc3, cutoff_fc3_by_zero
@@ -35,7 +35,7 @@ class Phono3py:
                  cutoff_frequency=1e-4,
                  frequency_factor_to_THz=VaspToTHz,
                  is_symmetry=True,
-                 is_nosym=False,
+                 is_mesh_symmetry=True,
                  symmetrize_fc3_q=False,
                  symprec=1e-5,
                  log_level=0,
@@ -46,7 +46,7 @@ class Phono3py:
         self._sigmas = sigmas
         self._frequency_factor_to_THz = frequency_factor_to_THz
         self._is_symmetry = is_symmetry
-        self._is_nosym = is_nosym
+        self._is_mesh_symmetry = is_mesh_symmetry
         self._lapack_zheev_uplo =  lapack_zheev_uplo
         self._symmetrize_fc3_q = symmetrize_fc3_q
         self._cutoff_frequency = cutoff_frequency
@@ -135,7 +135,7 @@ class Phono3py:
             frequency_factor_to_THz=self._frequency_factor_to_THz,
             unit_conversion=unit_conversion,
             cutoff_frequency=self._cutoff_frequency,
-            is_nosym=self._is_nosym,
+            is_mesh_symmetry=self._is_mesh_symmetry,
             symmetrize_fc3_q=self._symmetrize_fc3_q,
             lapack_zheev_uplo=self._lapack_zheev_uplo)
         self._interaction.set_dynamical_matrix(
@@ -145,6 +145,29 @@ class Phono3py:
             nac_params=nac_params,
             frequency_scale_factor=frequency_scale_factor)
         self._interaction.set_nac_q_direction(nac_q_direction=nac_q_direction)
+
+    def set_phonon_data(self, frequencies, eigenvectors, grid_address):
+        if self._interaction is not None:
+            return self._interaction.set_phonon_data(frequencies,
+                                                     eigenvectors,
+                                                     grid_address)
+        else:
+            return False
+
+    def write_phonons(self, filename=None):
+        if self._interaction is not None:
+            grid_address = self._interaction.get_grid_address()
+            grid_points = np.arange(len(grid_address), dtype='intc')
+            self._interaction.set_phonons(grid_points)
+            freqs, eigvecs, _ = self._interaction.get_phonons()
+            hdf5_filename = write_phonon_to_hdf5(freqs,
+                                                 eigvecs,
+                                                 grid_address,
+                                                 self._mesh,
+                                                 filename=filename)
+            return hdf5_filename
+        else:
+            return False
 
     def generate_displacements(self,
                                distance=0.03,
@@ -402,7 +425,7 @@ class Phono3py:
             mesh_divisors=None,
             coarse_mesh_shifts=None,
             is_reducible_collision_matrix=False,
-            no_kappa_stars=False,
+            is_kappa_star=True,
             gv_delta_q=None, # for group velocity
             run_with_g=True, # integration weights for smearing method, too
             pinv_cutoff=1.0e-8, # for pseudo-inversion of collision matrix
@@ -428,7 +451,7 @@ class Phono3py:
                 grid_points=grid_points,
                 boundary_mfp=boundary_mfp,
                 is_reducible_collision_matrix=is_reducible_collision_matrix,
-                no_kappa_stars=no_kappa_stars,
+                is_kappa_star=is_kappa_star,
                 gv_delta_q=gv_delta_q,
                 pinv_cutoff=pinv_cutoff,
                 write_collision=write_collision,
@@ -450,7 +473,7 @@ class Phono3py:
                 gamma_unit_conversion=gamma_unit_conversion,
                 mesh_divisors=mesh_divisors,
                 coarse_mesh_shifts=coarse_mesh_shifts,
-                no_kappa_stars=no_kappa_stars,
+                is_kappa_star=is_kappa_star,
                 gv_delta_q=gv_delta_q,
                 run_with_g=run_with_g,
                 write_gamma=write_gamma,
@@ -718,7 +741,7 @@ class Phono3pyJointDos:
                  temperatures=None,
                  frequency_factor_to_THz=VaspToTHz,
                  frequency_scale_factor=None,
-                 is_nosym=False,
+                 is_mesh_symmetry=True,
                  symprec=1e-5,
                  output_filename=None,
                  log_level=0):
@@ -737,7 +760,7 @@ class Phono3pyJointDos:
         self._temperatures = temperatures
         self._frequency_factor_to_THz = frequency_factor_to_THz
         self._frequency_scale_factor = frequency_scale_factor
-        self._is_nosym = is_nosym
+        self._is_mesh_symmetry = is_mesh_symmetry
         self._symprec = symprec
         self._filename = output_filename
         self._log_level = log_level
@@ -755,7 +778,7 @@ class Phono3pyJointDos:
             temperatures=self._temperatures,
             frequency_factor_to_THz=self._frequency_factor_to_THz,
             frequency_scale_factor=self._frequency_scale_factor,
-            is_nosym=self._is_nosym,
+            is_mesh_symmetry=self._is_mesh_symmetry,
             symprec=self._symprec,
             filename=output_filename,
             log_level=self._log_level)
@@ -798,4 +821,4 @@ class Phono3pyJointDos:
                         sigma=sigma,
                         temperatures=self._temperatures,
                         filename=self._filename,
-                        is_nosym=self._is_nosym)
+                        is_mesh_symmetry=self._is_mesh_symmetry)

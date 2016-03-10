@@ -1,19 +1,16 @@
-Interfaces to calculators and phonopy API
-==========================================
-
 .. _calculator_interfaces:
 
-Interfaces to force calculators
---------------------------------
+Interfaces to calculators
+==========================
 
 The interfaces for VASP, Wien2k, Pwscf, Abinit, and Elk are built in
 to the usual phonopy command. See the command options and how to
 invoke each of them at :ref:`force_calculators`. 
 
-For each calculator, each physical unit system is used. The physical
-unit systems used for the calculators are summarized below.
+Physical unit system for calculator
+------------------------------------
 
-::
+Physical unit systems used for the calculators are as follows::
 
            | Distance   Atomic mass   Force         Force constants
    -----------------------------------------------------------------
@@ -24,27 +21,57 @@ unit systems used for the calculators are summarized below.
    Siesta  | au (bohr)  AMU           eV/Angstrom   eV/Angstrom.au
    elk     | au (bohr)  AMU           hartree/au    hartree/au^2
 
+Default file name, value, and conversion factor
+---------------------------------------------------
 
-Default unit cell file names are also changed according to the calculators::
-    
+Default unit cell file name for calculator
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Without specifying ``-c`` option, default file name for unit cell is
+used as shown below::
+
    VASP    | POSCAR     
    Wien2k  | case.struct
-   Abinit  | unitcell.in
    Pwscf   | unitcell.in
+   Abinit  | unitcell.in
    Siesta  | input.fdf
    Elk     | elk.in
 
-Default displacement distances created by ``CREATE_DISPLACEMENTS =
-.TRUE.`` (or ``-d`` option)::
+Default displacement distances
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Without specifying ``DISPLACEMENT_DISTANCE`` tag or ``--amplitude``
+option, default displacement distance is used when creating supercells
+with displacements ``CREATE_DISPLACEMENTS = .TRUE.`` or ``-d``
+option. The default value is dependent on calculator, and the list is
+shown below::
 
    VASP    | 0.01 Angstrom
    Wien2k  | 0.02 au (bohr)
-   Abinit  | 0.02 au (bohr)
    Pwscf   | 0.02 au (bohr)
+   Abinit  | 0.02 au (bohr)
    Siesta  | 0.02 au (bohr)
    Elk     | 0.02 au (bohr)
 
-Short tutorials for there calculators are found in the following pages.
+.. _nac_default_value_interfaces:
+
+Default unit conversion factor for non-analytical term correction
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+::
+
+   VASP    | 14.399652
+   Wien2k  | 2000
+   Pwscf   | 2
+   Abinit  | 51.422090
+   Siesta  | 51.422090
+   Elk     | 1
+
+
+Interface to force calculator
+------------------------------
+
+Short tutorials for force calculators are found in the following pages.
 
 .. toctree::
    :maxdepth: 2
@@ -79,15 +106,4 @@ FHI-aims mailing list.
    :maxdepth: 2
 
    FHI-aims
-
-Phonopy API
-------------
-
-Phonopy can be used as a python module. Phonopy API is explained in
-the following page.
-
-.. toctree::
-   :maxdepth: 2
-
-   phonopy-module
 

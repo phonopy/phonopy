@@ -162,15 +162,13 @@ def _bandplot(plt,
                         curve[j] = curve[cutoff_index]
     
             if np.linalg.norm(qpoints[-1]) < epsilon:
-                range_rev = range(len(qpoints))
-                range_rev.reverse()
                 cutoff_index = len(qpoints) - 1
-                for j in range_rev:
+                for j in reversed(range(len(qpoints))):
                     q = qpoints[j]
                     if not np.linalg.norm(q) < epsilon:
                         cutoff_index = j
                         break
-                for j in range_rev:
+                for j in reversed(range(len(qpoints))):
                     if j == cutoff_index:
                         break
                     if abs(freqs[j]) < abs(max(freqs)) / 10:

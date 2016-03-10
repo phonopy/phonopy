@@ -32,6 +32,7 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import sys
 import numpy as np
 
 def get_eos(eos):
@@ -107,7 +108,7 @@ class EOSFit:
             import scipy
         except ImportError:
             print("You need to install python-scipy.")
-            exit(1)
+            sys.exit(1)
 
         warnings.filterwarnings('error')
 

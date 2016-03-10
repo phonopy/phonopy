@@ -35,6 +35,7 @@
 import numpy as np
 from phonopy.units import VaspToTHz
 from phonopy.structure.grid_points import GridPoints
+from phonopy.structure.atoms import PhonopyAtoms
 
 class Mesh:
     def __init__(self,
@@ -135,14 +136,27 @@ class Mesh:
         w = open('mesh.yaml', 'w')
         eigenvalues = self._eigenvalues
         natom = self._cell.get_number_of_atoms()
-        lattice = np.linalg.inv(self._cell.get_cell()) # column vectors
+        rec_lattice = np.linalg.inv(self._cell.get_cell()) # column vectors
+        supercell = self._dynamical_matrix.get_supercell()
+        smat = supercell.get_supercell_matrix()
+        pmat = self._cell.get_primitive_matrix()
+        tmat = np.rint(np.dot(np.linalg.inv(pmat), smat)).astype(int)
+
+
         w.write("mesh: [ %5d, %5d, %5d ]\n" % tuple(self._mesh))
         w.write("nqpoint: %-7d\n" % self._qpoints.shape[0])
-        w.write("natom:   %-7d\n" % natom)
         w.write("reciprocal_lattice:\n")
-        for vec, axis in zip(lattice.T, ('a*', 'b*', 'c*')):
+        for vec, axis in zip(rec_lattice.T, ('a*', 'b*', 'c*')):
             w.write("- [ %12.8f, %12.8f, %12.8f ] # %2s\n" %
                     (tuple(vec) + (axis,)))
+        w.write("natom:   %-7d\n" % natom)
+        w.write(str(PhonopyAtoms(atoms=self._cell)))
+        w.write("\n")
+        w.write("supercell_matrix:\n")
+        for v in tmat:
+            w.write("- [ %4d, %4d, %4d ]\n" % tuple(v))
+
+        w.write("\n")
         w.write("phonon:\n")
 
         for i, q in enumerate(self._qpoints):

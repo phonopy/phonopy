@@ -228,10 +228,7 @@ class Phonopy:
         self._unitcell.set_masses(u_masses)
         self._set_dynamical_matrix()
         
-    def set_nac_params(self, nac_params=None, method=None):
-        if method is not None:
-            print("set_nac_params:")
-            print("  Keyword argument of \"method\" is not more supported.")
+    def set_nac_params(self, nac_params=None):
         self._nac_params = nac_params
         self._set_dynamical_matrix()
 
@@ -506,17 +503,17 @@ class Phonopy:
                 band.get_frequencies(),
                 band.get_eigenvectors())
 
-    def plot_band_structure(self, symbols=None):
+    def plot_band_structure(self, labels=None):
         import matplotlib.pyplot as plt
-        if symbols:
+        if labels:
             from matplotlib import rc
             rc('text', usetex=True)
 
-        self._band_structure.plot(plt, symbols=symbols)
+        self._band_structure.plot(plt, labels=labels)
         return plt
 
-    def write_yaml_band_structure(self):
-        self._band_structure.write_yaml()
+    def write_yaml_band_structure(self, labels=None, filename="band.yaml"):
+        self._band_structure.write_yaml(labels=labels, filename=filename)
 
     # Sampling mesh
     def set_mesh(self,
@@ -558,17 +555,17 @@ class Phonopy:
         self._mesh.write_yaml()
 
     # Plot band structure and DOS (PDOS) together
-    def plot_band_structure_and_dos(self, pdos_indices=None, symbols=None):
+    def plot_band_structure_and_dos(self, pdos_indices=None, labels=None):
         import matplotlib.pyplot as plt
         import matplotlib.gridspec as gridspec
-        if symbols:
+        if labels:
             from matplotlib import rc
             rc('text', usetex=True)
 
         plt.figure(figsize=(10, 6))
         gs = gridspec.GridSpec(1, 2, width_ratios=[3, 1])
         ax1 = plt.subplot(gs[0, 0])
-        self._band_structure.plot(plt, symbols=symbols)
+        self._band_structure.plot(plt, labels=labels)
         ax2 = plt.subplot(gs[0, 1], sharey=ax1)
         plt.subplots_adjust(wspace=0.03)
         plt.setp(ax2.get_yticklabels(), visible=False)

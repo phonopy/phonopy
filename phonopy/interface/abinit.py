@@ -158,7 +158,7 @@ class AbinitIn:
 
         for tag in ['natom', 'ntypat']:
             if tag not in elements:
-                print "%s is not found in the input file." % tag
+                print("%s is not found in the input file." % tag)
                 sys.exit(1)
 
         for tag, self._values in elements.iteritems():
@@ -270,5 +270,5 @@ if __name__ == '__main__':
     abinit = AbinitIn(open(sys.argv[1]).readlines())
     cell = read_abinit(sys.argv[1])
     symmetry = Symmetry(cell)
-    print "#", symmetry.get_international_table()
-    print get_abinit_structure(cell)
+    print("# %s" % symmetry.get_international_table())
+    print(get_abinit_structure(cell))

@@ -198,7 +198,7 @@ Example
    -0.187500000000000  -0.437500000000000  -0.437500000000000
    ...
 
-.. _born:
+.. _born_file:
 
 ``BORN`` (optional)
 -----------------------
@@ -239,12 +239,10 @@ The formula implemented is refered to :ref:`non_analytical_term_correction_theor
 Format
 ~~~~~~
 
-In the first line, the first value is the unit conversion factor. For
-VASP, it may be 27.2116 :math:`\times` 0.52918.
-
-.. The second value is only used for the ``--nac_old`` option. This is
-.. the damping parameter :math:`\sigma` and this can be omitted. The
-.. default value of :math:`\sigma=0.25`.
+In the first line, unit conversion factor is given. In versions 1.10.4
+or later, the default value for each calculater can be used if
+characters than numerical number are given. The default values for the
+calculaters are found at :ref:`nac_default_value_interfaces`.
 
 In the second line, dielectric constant :math:`\epsilon` is specifed
 in Cartesian coordinates. The nine values correspond to the tensor
@@ -338,6 +336,15 @@ Example
 ::
 
     14.400
+    3.269  0.000  0.000  0.000  3.269  0.000  0.000  0.000  3.234
+    2.981  0.000  0.000  0.000  2.981  0.000  0.000  0.000  2.952
+   -1.935  0.000  0.000  0.000 -2.036 -0.261  0.000 -0.261 -1.968
+
+or using the default NAC unit conversion factor (version 1.10.4 or later),
+
+::
+
+   default value
     3.269  0.000  0.000  0.000  3.269  0.000  0.000  0.000  3.234
     2.981  0.000  0.000  0.000  2.981  0.000  0.000  0.000  2.952
    -1.935  0.000  0.000  0.000 -2.036 -0.261  0.000 -0.261 -1.968

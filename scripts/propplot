@@ -45,7 +45,7 @@ try:
     import yaml
 except ImportError:
     print("You need to install python-yaml.")
-    exit(1)
+    sys.exit(1)
     
 try:
     from yaml import CLoader as Loader
@@ -106,7 +106,7 @@ else:
          ( not options.is_entropy ) and 
          ( not options.is_free_energy ) ):
         print("Set --cv, --entropy or --fe")
-        exit(0)
+        sys.exit(0)
 
 if len( args ) == 0:
     filenames = ['thermal_properties.yaml']

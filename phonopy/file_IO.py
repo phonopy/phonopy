@@ -179,9 +179,8 @@ def write_FORCE_CONSTANTS(force_constants, filename='FORCE_CONSTANTS'):
 def write_force_constants_to_hdf5(force_constants,
                                   filename='force_constants.hdf5'):
     import h5py
-    w = h5py.File(filename, 'w')
-    w.create_dataset('force_constants', data=force_constants)
-    w.close()
+    with h5py.File(filename, 'w') as w:
+        w.create_dataset('force_constants', data=force_constants)
 
 def parse_FORCE_CONSTANTS(filename="FORCE_CONSTANTS"):
     fcfile = open(filename)
@@ -199,8 +198,10 @@ def parse_FORCE_CONSTANTS(filename="FORCE_CONSTANTS"):
 
 def read_force_constants_hdf5(filename="force_constants.hdf5"):
     import h5py
-    f = h5py.File(filename)
-    return f[f.keys()[0]][:]
+    with h5py.File(filename, 'r') as f:
+        fc = f[f.keys()[0]][:]
+        return fc
+    return None
 
 #
 # disp.yaml
@@ -210,7 +211,7 @@ def parse_disp_yaml(filename="disp.yaml", return_cell=False):
         import yaml
     except ImportError:
         print("You need to install python-yaml.")
-        exit(1)
+        sys.exit(1)
         
     try:
         from yaml import CLoader as Loader
@@ -251,28 +252,25 @@ def parse_disp_yaml(filename="disp.yaml", return_cell=False):
 
 def write_disp_yaml(displacements, supercell, directions=None,
                     filename='disp.yaml'):
-    file = open(filename, 'w')
-    file.write("natom: %4d\n" % supercell.get_number_of_atoms())
-    file.write("displacements:\n")
+
+    from phonopy.structure.atoms import PhonopyAtoms
+
+    text = []
+    text.append("natom: %4d" % supercell.get_number_of_atoms())
+    text.append("displacements:")
     for i, disp in enumerate(displacements):
-        file.write("- atom: %4d\n" % (disp[0] + 1))
+        text.append("- atom: %4d" % (disp[0] + 1))
         if directions is not None:
-            file.write("  direction:\n")
-            file.write("    [ %20.16f,%20.16f,%20.16f ]\n" % tuple(directions[i][1:4]))
-        file.write("  displacement:\n")
-        file.write("    [ %20.16f,%20.16f,%20.16f ]\n" % tuple(disp[1:4]))
-            
-    file.write("lattice:\n")
-    for axis in supercell.get_cell():
-        file.write("- [ %20.15f,%20.15f,%20.15f ]\n" % tuple(axis))
-    symbols = supercell.get_chemical_symbols()
-    positions = supercell.get_scaled_positions()
-    file.write("atoms:\n")
-    for i, (s, v) in enumerate(zip(symbols, positions)):
-        file.write("- symbol: %-2s # %d\n" % (s, i+1))
-        file.write("  position: [ %18.14f,%18.14f,%18.14f ]\n" % \
-                       (v[0], v[1], v[2]))
-    file.close()
+            text.append("  direction:")
+            text.append("    [ %20.16f,%20.16f,%20.16f ]" %
+                        tuple(directions[i][1:4]))
+        text.append("  displacement:")
+        text.append("    [ %20.16f,%20.16f,%20.16f ]" % tuple(disp[1:4]))
+
+    text.append(str(PhonopyAtoms(atoms=supercell)))
+
+    with open(filename, 'w') as w:
+        w.write("\n".join(text))
 
 #
 # DISP (old phonopy displacement format)
@@ -320,12 +318,15 @@ def get_born_parameters(f, primitive, symmetry):
     from phonopy.harmonic.force_constants import similarity_transformation
 
     # Read unit conversion factor, damping factor, ...
-    factors = [float(x) for x in f.readline().split()]
-    if len(factors) < 1:
+    line_arr = f.readline().split()
+    if len(line_arr) < 1:
         print("BORN file format of line 1 is incorrect")
         return False
-    if len(factors) < 2:
-        factors = factors[0]
+    if len(line_arr) > 0:
+        try:
+            factor = float(line_arr[0])
+        except (ValueError, TypeError):
+            factor = None
 
     # Read dielectric constant
     line = f.readline().split()
@@ -362,7 +363,7 @@ def get_born_parameters(f, primitive, symmetry):
                                             born[map_atoms[i]])
 
     non_anal = {'born': born,
-                'factor': factors,
+                'factor': factor,
                 'dielectric': dielectric }
 
     return non_anal
