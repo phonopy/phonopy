@@ -37,7 +37,10 @@ from phonopy.harmonic.dynmat_to_fc import get_commensurate_points
 from phonopy.structure.atoms import Atoms
 from phonopy.structure.cells import get_supercell
 
-class Unfolding:
+from future.utils import implements_iterator
+
+@implements_iterator
+class Unfolding(object):
     def __init__(self,
                  phonon,
                  supercell_matrix,
@@ -79,8 +82,6 @@ class Unfolding:
             self._weights[self._q_index] = self._get_unfolding_weight()
             self._q_index += 1
             return self._weights[self._q_index - 1]
-
-    next=__next__
 
     def prepare(self):
         self._comm_points = get_commensurate_points(self._supercell_matrix)
