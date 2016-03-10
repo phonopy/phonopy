@@ -72,7 +72,7 @@ class Unfolding:
             if verbose:
                 print(self._q_index)
 
-    def next(self):
+    def __next__(self):
         if self._q_index == len(self._eigvecs):
             raise StopIteration
         else:
