@@ -1,0 +1,40 @@
+language: python
+sudo: false
+dist: trusty
+python:
+    - '2.7'
+    - '3.4'
+    - '3.5'
+
+cache: apt
+addons:
+  apt:
+    packages:
+    - libopenblas-dev
+    - liblapack-dev
+    - gfortran
+
+before_install:
+    - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
+    - bash miniconda.sh -b -p $HOME/miniconda
+    - export PATH="$HOME/miniconda/bin:$PATH"
+    - conda update --yes conda
+    - conda config --add channels jochym
+
+install:
+    - conda install --yes python=$TRAVIS_PYTHON_VERSION pip numpy python-ase spglib scipy yaml pyyaml future
+    - git describe --tags --dirty
+    - git describe --tags --dirty | sed -e 's/\([.0-9]*\)-\(.*\)-g.*/\2/' -e 's/^v//g' > __nanoversion__.txt
+    - python setup.py install
+
+script: "( cd test/phonopy ; for d in * ; do ( cd $d ; for f in test_*.py ; do python $f ; done  ) ; done )"
+
+deploy:
+  skip_cleanup: true
+  provider: pypi
+  user: jochym
+  password:
+    secure: M3YvQ6BbcCNndgcJMt+yMxZX008r1hsE6Gg68Dx2HMx/D86ZvyQs6fteppeHlb0x5qv5i8jCiJYaR9VCzPI7HaiYBMbPNB8mZyWZ8Ww0WJZK9rA0jthoJ2pAR6vGwWZkz4/zOAZEWC10vzjHRYE9lOw3gSlBw6G+QRz3rBNiOxNflgcG/YCU0Gi1/BLyY0/jR6/P1cOIIHqUcFa8uhrAzqU6uSyODdrLb02B4yNvz4mHj0/JuwRmmfwQMbF15NDv8HCvZju1G8No/FYEEoxjO674WLKW2phE5X0kTpRoW9A7epPQfdSaVkQOgG6NTx+o5MaYzk/WVVfDGhLEuRmVYXF8SgUSp05YGxRrcB3CVGERZ3EUZJUevEM00Cw6I4jbYv32vcAE0act8cLMJUwFYA4zimTX5iSGJrAPMo7J+i0ofZftvGnu40fsPv0AHe64pxr3aXWS3eigRb6+20mzKl+aulvsfGN9av3Go0U04t4rPSMzI6LiJrVhDAM9M1xSfn0Uh1fuIr1WSGQ5skwi5XEMjUiseyaeP4xo2xoGFxuzFM1cP5/tyvr0juZ8PKn/PKgvYzkFn7wZLnA4+ls4Z72JqX0ARqi64+dJW+s6dzJqJsZg8mPT7+iToxCxXN2Q/GXaRH21XI2NmgqV7RvL2kKBaLp1T3qzQzkOKkju30Q=
+  on:
+    branch: master
+    python: 2.7

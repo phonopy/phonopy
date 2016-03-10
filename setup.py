@@ -90,9 +90,17 @@ if __name__ == '__main__':
             if "__version__" in line:
                 version = line.split()[2].strip('\"')
 
+    with open('__nanoversion__.txt') as nv:
+        nanoversion=''
+        for line in nv:
+            nanoversion='%.4s' % (line.strip())
+            break
+        if nanoversion :
+            nanoversion='.'+nanoversion
+
     if all([x.isdigit() for x in version.split('.')]):
         setup(name='phonopy',
-              version=version,
+              version=version+nanoversion,
               description='This is the phonopy module.',
               author='Atsushi Togo',
               author_email='atz.togo@gmail.com',
