@@ -428,6 +428,7 @@ class Phono3py:
             is_kappa_star=True,
             gv_delta_q=None, # for group velocity
             run_with_g=True, # integration weights for smearing method, too
+            with_g_zero=False,
             pinv_cutoff=1.0e-8, # for pseudo-inversion of collision matrix
             write_gamma=False,
             read_gamma=False,
@@ -476,6 +477,7 @@ class Phono3py:
                 is_kappa_star=is_kappa_star,
                 gv_delta_q=gv_delta_q,
                 run_with_g=run_with_g,
+                with_g_zero=with_g_zero,
                 write_gamma=write_gamma,
                 read_gamma=read_gamma,
                 input_filename=input_filename,

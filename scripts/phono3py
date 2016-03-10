@@ -644,6 +644,7 @@ elif run_mode == "conductivity-RTA" or run_mode == "conductivity-LBTE":
         is_kappa_star=settings.get_is_kappa_star(),
         gv_delta_q=settings.get_group_velocity_delta_q(),
         run_with_g=settings.get_run_with_g(),
+        with_g_zero=settings.get_with_g_zero(),
         pinv_cutoff=settings.get_pinv_cutoff(),
         write_gamma=settings.get_write_gamma(),
         read_gamma=settings.get_read_gamma(),

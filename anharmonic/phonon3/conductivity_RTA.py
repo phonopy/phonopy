@@ -24,6 +24,7 @@ def get_thermal_conductivity_RTA(
         is_kappa_star=True,
         gv_delta_q=1e-4,
         run_with_g=True, # integration weights from gaussian smearing function
+        with_g_zero=False,
         write_gamma=False,
         read_gamma=False,
         input_filename=None,
@@ -52,6 +53,7 @@ def get_thermal_conductivity_RTA(
         is_kappa_star=is_kappa_star,
         gv_delta_q=gv_delta_q,
         run_with_g=run_with_g,
+        with_g_zero=with_g_zero,
         log_level=log_level)
 
     if read_gamma:

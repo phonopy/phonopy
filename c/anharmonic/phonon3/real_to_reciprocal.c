@@ -59,17 +59,21 @@ void real_to_reciprocal(lapack_complex_double *fc3_reciprocal,
 			const Darray *shortest_vectors,
 			const Iarray *multiplicity,
 			const int *p2s_map,
-			const int *s2p_map)
+			const int *s2p_map,
+			const int openmp_at_bands)
 {
-  int i, j, k, num_patom;
+  int i, j, k, jk, num_patom;
   double pre_phase;
   lapack_complex_double pre_phase_factor;
   
   num_patom = multiplicity->dims[1];
 
   for (i = 0; i < num_patom; i++) {
-    for (j = 0; j < num_patom; j++) {
-      for (k = 0; k < num_patom; k++) {
+    if (openmp_at_bands) {
+#pragma omp parallel for private(j, k)
+      for (jk = 0; jk < num_patom * num_patom; jk++) {
+	j = jk / num_patom;
+	k = jk % num_patom;
 	real_to_reciprocal_elements(fc3_reciprocal +
 				    i * 27 * num_patom * num_patom +
 				    j * 27 * num_patom +
@@ -82,6 +86,23 @@ void real_to_reciprocal(lapack_complex_double *fc3_reciprocal,
 				    s2p_map,
 				    i, j, k);
 	
+      }
+    } else {
+      for (j = 0; j < num_patom; j++) {
+	for (k = 0; k < num_patom; k++) {
+	  real_to_reciprocal_elements(fc3_reciprocal +
+				      i * 27 * num_patom * num_patom +
+				      j * 27 * num_patom +
+				      k * 27,
+				      q,
+				      fc3,
+				      shortest_vectors,
+				      multiplicity,
+				      p2s_map,
+				      s2p_map,
+				      i, j, k);
+	
+	}
       }
     }
 

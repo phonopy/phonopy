@@ -32,6 +32,7 @@
 /* ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE */
 /* POSSIBILITY OF SUCH DAMAGE. */
 
+#include <stdlib.h>
 #include <lapacke.h>
 #include <math.h>
 #include <phonoc_utils.h>
@@ -134,7 +135,8 @@ void reciprocal_to_normal_squared_openmp
  const int num_band,
  const double cutoff_frequency)
 {
-  int i, j, k, jk, bi, num_atom;
+  int i, j, k, l, ijk, jk, bi, num_atom, count;
+  int *n;
 
 #ifdef MEASURE_R2N
   double loopTotalCPUTime, loopTotalWallTime;
@@ -144,61 +146,52 @@ void reciprocal_to_normal_squared_openmp
 
   num_atom = num_band / 3;
 
-  for (i = 0; i < num_band0; i++) {
-    bi = band_indices[i];
-    if (freqs0[bi] > cutoff_frequency) {
+  n = (int*)malloc(sizeof(int) * num_band0 * num_band * num_band);
+
+  count = 0;
+  for (ijk = 0; ijk < num_band0 * num_band * num_band; ijk++) {
+    if (g_zero[ijk]) {
+      fc3_normal_squared[ijk] = 0;
+    } else {
+      n[count] = ijk;
+      count++;
+    }
+  }
 
 #ifdef MEASURE_R2N
-      loopStartWallTime = time(NULL);
-      loopStartCPUTime = clock();
+  loopStartWallTime = time(NULL);
+  loopStartCPUTime = clock();
 #endif
 
-#pragma omp parallel for private(j, k)
-      for (jk = 0; jk < num_band * num_band; jk++) {
-	if (g_zero[i * num_band * num_band + jk]) {
-	  fc3_normal_squared[i * num_band * num_band + jk] = 0;
-	  continue;
-	}
-	j = jk / num_band;
-	k = jk % num_band;
-	fc3_normal_squared[i * num_band * num_band + jk] =
-	  get_fc3_sum(i, j, k, bi,
-		      freqs0, freqs1, freqs2,
-		      eigvecs0, eigvecs1, eigvecs2,
-		      fc3_reciprocal,
-		      masses,
-		      num_atom,
-		      num_band,
-		      cutoff_frequency);
-      }
+#pragma omp parallel for private(ijk, i, j, k, jk, bi)
+  for (l = 0; l < count; l++) {
+    ijk = n[l];
+    i = ijk / (num_band * num_band);
+    jk = ijk % (num_band * num_band);
+    j = jk / num_band;
+    k = jk % num_band;
+    bi = band_indices[i];
+    if (freqs0[bi] > cutoff_frequency) {
+      fc3_normal_squared[n[l]] = get_fc3_sum(i, j, k, bi,
+					     freqs0, freqs1, freqs2,
+					     eigvecs0, eigvecs1, eigvecs2,
+					     fc3_reciprocal,
+					     masses,
+					     num_atom,
+					     num_band,
+					     cutoff_frequency);
+    } else {
+      fc3_normal_squared[n[l]] = 0;      
+    }
+  }
 
 #ifdef MEASURE_R2N
       loopTotalCPUTime = (double)(clock() - loopStartCPUTime) / CLOCKS_PER_SEC;
       loopTotalWallTime = difftime(time(NULL), loopStartWallTime);
-      printf("  Band index %d/%d %1.3fs (%1.3fs CPU)\n",
-	     i + 1, num_band0, loopTotalWallTime, loopTotalCPUTime);
-/* #else */
-/*       printf("*"); */
-/*       if (i == (num_band0 - 1)) { */
-/* 	printf("\n"); */
-/*       } */
-/*       if ((i % 20) == 0 && i != 0) { */
-/* 	printf("\n"); */
-/*       } */
+      printf("  %1.3fs (%1.3fs CPU)\n", loopTotalWallTime, loopTotalCPUTime);
 #endif
 
-    } else {
-      for (j = 0; j < num_band * num_band; j++) {
-	fc3_normal_squared[i * num_band * num_band + j] = 0;
-      }
-
-#ifdef MEASURE_R2N
-      printf("  Band index %d/%d skipped due to frequency cutoff...\n",
-	     i + 1, num_band0);
-#endif
-
-    }
-  }
+  free(n);
 }
 
 static double get_fc3_sum

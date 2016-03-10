@@ -36,7 +36,8 @@ from optparse import OptionParser
 
 def get_parser():
     parser = OptionParser()
-    parser.set_defaults(band_indices=None,
+    parser.set_defaults(average_pp_interaction=False,
+                        band_indices=None,
                         band_paths=None,
                         band_points=None,
                         cell_filename=None,
@@ -91,9 +92,13 @@ def get_parser():
                         mesh_numbers=None,
                         mesh_divisors=None,
                         no_kappa_stars=False,
+                        output_filename=None,
                         phonon_supercell_dimension=None,
                         pinv_cutoff=1.0e-8,
+                        pp_unit_conversion=None,
                         primitive_axis=None,
+                        qpoints=None,
+                        quiet=False,
                         q_direction=None,
                         read_amplitude=False,
                         read_collision=None,
@@ -101,10 +106,6 @@ def get_parser():
                         read_fc3=False,
                         read_gamma=False,
                         run_with_g=True,
-                        output_filename=None,
-                        pp_unit_conversion=None,
-                        qpoints=None,
-                        quiet=False,
                         scattering_event_class=None,
                         show_num_triplets=False,
                         sigma=None,
@@ -116,8 +117,8 @@ def get_parser():
                         tstep=None,
                         tsym_type=None,
                         uplo='L',
-                        average_pp_interaction=False,
                         verbose=False,
+                        with_g_zero=False,
                         write_amplitude=False,
                         write_collision=False,
                         write_detailed_gamma=False,
@@ -385,6 +386,13 @@ def get_parser():
     parser.add_option(
         "-v", "--verbose", dest="verbose", action="store_true",
         help="Detailed run-time information is displayed")
+    parser.add_option(
+        "--with_g_zero", dest="with_g_zero",
+        action="store_true",
+        help=("Avoid calculating ph-ph interaction for RTA conductivity when "
+              "integration weight is zero. This is activated when only using "
+              "tetrahedron method and no smearing method is used. Average "
+              "ph-ph interaction is not obtained with this option."))
     parser.add_option(
         "--wgp", "--write_grid_points", dest="write_grid_points",
         action="store_true",

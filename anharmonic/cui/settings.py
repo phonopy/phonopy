@@ -46,6 +46,7 @@ class Phono3pySettings(Settings):
         self._pp_conversion_factor = None
         self._scattering_event_class = None # scattering event class 1 or 2
         self._temperatures = None
+        self._with_g_zero = False
         self._write_amplitude = False
         self._write_collision = False
         self._write_detailed_gamma = False
@@ -292,6 +293,12 @@ class Phono3pySettings(Settings):
     def get_average_pp_interaction(self):
         return self._average_pp_interaction
 
+    def set_with_g_zero(self, with_g_zero):
+        self._with_g_zero = with_g_zero
+
+    def get_with_g_zero(self):
+        return self._with_g_zero
+
     def set_write_amplitude(self, write_amplitude):
         self._write_amplitude = write_amplitude
 
@@ -487,6 +494,10 @@ class Phono3pyConfParser(ConfParser):
             if opt.dest == 'average_pp_interaction':
                 if self._options.average_pp_interaction:
                     self._confs['average_pp_interaction'] = '.true.'
+
+            if opt.dest == 'with_g_zero':
+                if self._options.with_g_zero:
+                    self._confs['with_g_zero'] = '.true.'
 
             if opt.dest == 'write_amplitude':
                 if self._options.write_amplitude:
@@ -710,6 +721,10 @@ class Phono3pyConfParser(ConfParser):
                 if confs['average_pp_interaction'] == '.true.':
                     self.set_parameter('average_pp_interaction', True)
 
+            if conf_key == 'with_g_zero':
+                if confs['with_g_zero'] == '.true.':
+                    self.set_parameter('with_g_zero', True)
+
             if conf_key == 'write_amplitude':
                 if confs['write_amplitude'] == '.true.':
                     self.set_parameter('write_amplitude', True)
@@ -904,6 +919,10 @@ class Phono3pyConfParser(ConfParser):
         if params.has_key('average_pp_interaction'):
             self._settings.set_average_pp_interaction(
                 params['average_pp_interaction'])
+
+        # Avoid calculating useless ph-ph calculation for RTA conductivity
+        if params.has_key('with_g_zero'):
+            self._settings.set_with_g_zero(params['with_g_zero'])
 
         # Write phonon-phonon interaction amplitudes to hdf5
         if params.has_key('write_amplitude'):

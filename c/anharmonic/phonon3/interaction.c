@@ -300,7 +300,8 @@ static void real_to_normal(double *fc3_normal_squared,
 		     shortest_vectors,
 		     multiplicity,
 		     p2s_map,
-		     s2p_map);
+		     s2p_map,
+		     openmp_at_bands);
 
   if (openmp_at_bands) {
 #ifdef MEASURE_R2N
