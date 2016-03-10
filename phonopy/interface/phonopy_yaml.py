@@ -32,13 +32,14 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import print_function
 import sys
 import numpy as np
 
 try:
     import yaml
 except ImportError:
-    print "You need to install python-yaml."
+    print("You need to install python-yaml.")
     exit(1)
 
 try:
