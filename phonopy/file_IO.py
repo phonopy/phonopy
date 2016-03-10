@@ -60,8 +60,8 @@ def write_FORCE_SETS(dataset, filename='FORCE_SETS'):
             fp.write("%15.10f %15.10f %15.10f\n" % (tuple(f)))
 
 def parse_FORCE_SETS(is_translational_invariance=False, filename="FORCE_SETS"):
-    f = open(filename, 'r')
-    return _get_set_of_forces(f, is_translational_invariance)
+    with open(filename, 'r') as f:
+        return _get_set_of_forces(f, is_translational_invariance)
 
 def parse_FORCE_SETS_from_strings(strings, is_translational_invariance=False):
     return _get_set_of_forces(StringIO.StringIO(strings),
