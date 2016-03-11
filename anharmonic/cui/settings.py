@@ -5,7 +5,6 @@ class Phono3pySettings(Settings):
     def __init__(self):
         Settings.__init__(self)
 
-        self._average_pp_interaction = False
         self._boundary_mfp = 1.0e6 # In micrometre. The default value is
                                    # just set to avoid divergence.
         self._coarse_mesh_shifts = None
@@ -20,10 +19,12 @@ class Phono3pySettings(Settings):
         self._ion_clamped = False
         self._is_bterta = False
         self._is_frequency_shift = False
+        self._is_full_pp = False
         self._is_gruneisen = False
         self._is_imag_self_energy = False
         self._is_isotope = False
         self._is_joint_dos = False
+        self._is_kappa_star = True
         self._is_lbte = False
         self._is_linewidth = False
         self._is_reducible_collision_matrix = False
@@ -33,7 +34,6 @@ class Phono3pySettings(Settings):
         self._mass_variances = None
         self._max_freepath = None
         self._mesh_divisors = None
-        self._is_kappa_star = True
         self._read_amplitude = False
         self._read_collision = None
         self._read_fc2 = False
@@ -46,7 +46,7 @@ class Phono3pySettings(Settings):
         self._pp_conversion_factor = None
         self._scattering_event_class = None # scattering event class 1 or 2
         self._temperatures = None
-        self._with_g_zero = False
+        self._use_ave_pp = False
         self._write_amplitude = False
         self._write_collision = False
         self._write_detailed_gamma = False
@@ -131,6 +131,12 @@ class Phono3pySettings(Settings):
     def get_is_frequency_shift(self):
         return self._is_frequency_shift
 
+    def set_is_full_pp(self, is_full_pp):
+        self._is_full_pp = is_full_pp
+
+    def get_is_full_pp(self):
+        return self._is_full_pp
+
     def set_is_gruneisen(self, is_gruneisen):
         self._is_gruneisen = is_gruneisen
 
@@ -154,6 +160,12 @@ class Phono3pySettings(Settings):
 
     def get_is_joint_dos(self):
         return self._is_joint_dos
+
+    def set_is_kappa_star(self, is_kappa_star):
+        self._is_kappa_star = is_kappa_star
+
+    def get_is_kappa_star(self):
+        return self._is_kappa_star
 
     def set_is_lbte(self, is_lbte):
         self._is_lbte = is_lbte
@@ -208,12 +220,6 @@ class Phono3pySettings(Settings):
 
     def get_mesh_divisors(self):
         return self._mesh_divisors
-
-    def set_is_kappa_star(self, is_kappa_star):
-        self._is_kappa_star = is_kappa_star
-
-    def get_is_kappa_star(self):
-        return self._is_kappa_star
 
     def set_phonon_supercell_matrix(self, matrix):
         self._phonon_supercell_matrix = matrix
@@ -287,17 +293,11 @@ class Phono3pySettings(Settings):
     def get_temperatures(self):
         return self._temperatures
 
-    def set_average_pp_interaction(self, average_pp_interaction):
-        self._average_pp_interaction = average_pp_interaction
+    def set_use_ave_pp(self, use_ave_pp):
+        self._use_ave_pp = use_ave_pp
 
-    def get_average_pp_interaction(self):
-        return self._average_pp_interaction
-
-    def set_with_g_zero(self, with_g_zero):
-        self._with_g_zero = with_g_zero
-
-    def get_with_g_zero(self):
-        return self._with_g_zero
+    def get_use_ave_pp(self):
+        return self._use_ave_pp
 
     def set_write_amplitude(self, write_amplitude):
         self._write_amplitude = write_amplitude
@@ -395,6 +395,10 @@ class Phono3pyConfParser(ConfParser):
                 if self._options.is_frequency_shift:
                     self._confs['frequency_shift'] = '.true.'
 
+            if opt.dest == 'is_full_pp':
+                if self._options.is_full_pp:
+                    self._confs['full_pp'] = '.true.'
+
             if opt.dest == 'is_imag_self_energy':
                 if self._options.is_imag_self_energy:
                     self._confs['imag_self_energy'] = '.true.'
@@ -406,6 +410,10 @@ class Phono3pyConfParser(ConfParser):
             if opt.dest == 'is_joint_dos':
                 if self._options.is_joint_dos:
                     self._confs['joint_dos'] = '.true.'
+
+            if opt.dest == 'is_kappa_star':
+                if self._options.no_kappa_stars:
+                    self._confs['kappa_star'] = '.false.'
 
             if opt.dest == 'is_lbte':
                 if self._options.is_lbte:
@@ -442,10 +450,6 @@ class Phono3pyConfParser(ConfParser):
             if opt.dest == 'mesh_divisors':
                 if self._options.mesh_divisors is not None:
                     self._confs['mesh_divisors'] = self._options.mesh_divisors
-
-            if opt.dest == 'is_kappa_star':
-                if self._options.no_kappa_stars:
-                    self._confs['is_kappa_star'] = '.false.'
 
             if opt.dest == 'pinv_cutoff':
                 if self._options.pinv_cutoff is not None:
@@ -491,13 +495,9 @@ class Phono3pyConfParser(ConfParser):
                 if self._options.temperatures is not None:
                     self._confs['temperatures'] = self._options.temperatures
 
-            if opt.dest == 'average_pp_interaction':
-                if self._options.average_pp_interaction:
-                    self._confs['average_pp_interaction'] = '.true.'
-
-            if opt.dest == 'with_g_zero':
-                if self._options.with_g_zero:
-                    self._confs['with_g_zero'] = '.true.'
+            if opt.dest == 'use_ave_pp':
+                if self._options.use_ave_pp:
+                    self._confs['use_ave_pp'] = '.true.'
 
             if opt.dest == 'write_amplitude':
                 if self._options.write_amplitude:
@@ -565,6 +565,10 @@ class Phono3pyConfParser(ConfParser):
             if conf_key == 'frequency_scale_factor':
                 self.set_parameter('frequency_scale_factor',
                                    float(confs['frequency_scale_factor']))
+
+            if conf_key == 'full_pp':
+                if confs['full_pp'] == '.true.':
+                    self.set_parameter('is_full_pp', True)
 
             if conf_key == 'gamma_conversion_factor':
                 self.set_parameter('gamma_conversion_factor',
@@ -664,8 +668,8 @@ class Phono3pyConfParser(ConfParser):
                 else:
                     self.setting_error("Mesh divisors are incorrectly set.")
 
-            if conf_key == 'is_kappa_star':
-                if confs['is_kappa_star'] == '.false.':
+            if conf_key == 'kappa_star':
+                if confs['kappa_star'] == '.false.':
                     self.set_parameter('is_kappa_star', False)
 
             if conf_key == 'pinv_cutoff':
@@ -717,13 +721,9 @@ class Phono3pyConfParser(ConfParser):
                 else:
                     self.set_parameter('temperatures', vals)
 
-            if conf_key == 'average_pp_interaction':
-                if confs['average_pp_interaction'] == '.true.':
-                    self.set_parameter('average_pp_interaction', True)
-
-            if conf_key == 'with_g_zero':
-                if confs['with_g_zero'] == '.true.':
-                    self.set_parameter('with_g_zero', True)
+            if conf_key == 'use_ave_pp':
+                if confs['use_ave_pp'] == '.true.':
+                    self.set_parameter('use_ave_pp', True)
 
             if conf_key == 'write_amplitude':
                 if confs['write_amplitude'] == '.true.':
@@ -808,6 +808,10 @@ class Phono3pyConfParser(ConfParser):
         # Calculate frequency_shifts
         if params.has_key('is_frequency_shift'):
             self._settings.set_is_frequency_shift(params['is_frequency_shift'])
+
+        # Calculate full ph-ph interaction strength for RTA conductivity
+        if params.has_key('is_full_pp'):
+            self._settings.set_is_full_pp(params['is_full_pp'])
 
         # Calculate phonon-Gruneisen parameters
         if params.has_key('is_gruneisen'):
@@ -916,13 +920,8 @@ class Phono3pyConfParser(ConfParser):
             self._settings.set_temperatures(params['temperatures'])
 
         # Use averaged ph-ph interaction
-        if params.has_key('average_pp_interaction'):
-            self._settings.set_average_pp_interaction(
-                params['average_pp_interaction'])
-
-        # Avoid calculating useless ph-ph calculation for RTA conductivity
-        if params.has_key('with_g_zero'):
-            self._settings.set_with_g_zero(params['with_g_zero'])
+        if params.has_key('use_ave_pp'):
+            self._settings.set_use_ave_pp(params['use_ave_pp'])
 
         # Write phonon-phonon interaction amplitudes to hdf5
         if params.has_key('write_amplitude'):

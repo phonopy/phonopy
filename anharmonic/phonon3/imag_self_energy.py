@@ -331,7 +331,7 @@ class ImagSelfEnergy:
         self._cutoff_frequency = interaction.get_cutoff_frequency()
 
         self._g = None # integration weights
-        self._g_zero = None # if calculate ph-ph interaction or not
+        self._g_zero = None
         self._mesh = self._pp.get_mesh_numbers()
         self._band_indices = self._pp.get_band_indices()
         self._is_collision_matrix = False
@@ -364,11 +364,11 @@ class ImagSelfEnergy:
                     dtype='double')
             self._run_with_frequency_points()
 
-    def run_interaction(self, with_g_zero=False):
-        if self._frequency_points is None and with_g_zero:
-            self._pp.run(g_zero=self._g_zero, lang=self._lang)
-        else:
+    def run_interaction(self, is_full_pp=True):
+        if is_full_pp or self._frequency_points is not None:
             self._pp.run(lang=self._lang)
+        else:
+            self._pp.run(g_zero=self._g_zero, lang=self._lang)
         self._pp_strength = self._pp.get_interaction_strength()
 
     def set_integration_weights(self, scattering_event_class=None):

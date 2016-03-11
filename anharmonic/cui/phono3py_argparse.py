@@ -36,8 +36,7 @@ from optparse import OptionParser
 
 def get_parser():
     parser = OptionParser()
-    parser.set_defaults(average_pp_interaction=False,
-                        band_indices=None,
+    parser.set_defaults(band_indices=None,
                         band_paths=None,
                         band_points=None,
                         cell_filename=None,
@@ -77,6 +76,7 @@ def get_parser():
                         is_linewidth=False,
                         is_lbte=False,
                         is_frequency_shift=False,
+                        is_full_pp=False,
                         is_nac=False,
                         is_plusminus_displacements=False,
                         is_reducible_collision_matrix=False,
@@ -117,8 +117,8 @@ def get_parser():
                         tstep=None,
                         tsym_type=None,
                         uplo='L',
+                        use_ave_pp=False,
                         verbose=False,
-                        with_g_zero=False,
                         write_amplitude=False,
                         write_collision=False,
                         write_detailed_gamma=False,
@@ -128,9 +128,6 @@ def get_parser():
     parser.add_option(
         "--amplitude", dest="displacement_distance", type="float",
         help="Distance of displacements")
-    parser.add_option(
-        "--ave_pp", dest="average_pp_interaction", action="store_true",
-        help="Use averaged ph-ph interaction")
     parser.add_option(
         "--band", dest="band_paths", action="store", type="string",
         help="Band structure paths calculated for Gruneisen parameter")
@@ -216,6 +213,13 @@ def get_parser():
     parser.add_option(
         "--freq_pitch", dest="frequency_pitch", type="float",
         help="Pitch in frequency for spectrum")
+    parser.add_option(
+        "--full_pp", dest="is_full_pp",
+        action="store_true",
+        help=("Calculate full ph-ph interaction for RTA conductivity."
+              "This may be activated when full elements of ph-ph interaction "
+              "strength are needed, i.e., to calculate average ph-ph "
+              "interaction strength."))
     parser.add_option(
         "--gamma_unit_conversion", dest="gamma_unit_conversion", type="float",
         help="Conversion factor for gamma")
@@ -320,6 +324,9 @@ def get_parser():
     #     "--read_amplitude", dest="read_amplitude", action="store_true",
     #     help="Read phonon-phonon interaction amplitudes")
     parser.add_option(
+        "--use_ave_pp", dest="use_ave_pp", action="store_true",
+        help="Use averaged ph-ph interaction")
+    parser.add_option(
         "--read_collision", dest="read_collision", type="string",
         help="Read collision matrix and Gammas from files")
     parser.add_option(
@@ -387,17 +394,10 @@ def get_parser():
         "-v", "--verbose", dest="verbose", action="store_true",
         help="Detailed run-time information is displayed")
     parser.add_option(
-        "--with_g_zero", dest="with_g_zero",
-        action="store_true",
-        help=("Avoid calculating ph-ph interaction for RTA conductivity when "
-              "integration weight is zero. This is activated when only using "
-              "tetrahedron method and no smearing method is used. Average "
-              "ph-ph interaction is not obtained with this option."))
-    parser.add_option(
         "--wgp", "--write_grid_points", dest="write_grid_points",
         action="store_true",
-        help=("Write grid address of irreducible grid points for specified mesh "
-              "numbers to ir_grid_address.yaml"))
+        help=("Write grid address of irreducible grid points for specified "
+              "mesh numbers to ir_grid_address.yaml"))
     # parser.add_option("--write_amplitude", dest="write_amplitude",
     #                   action="store_true",
     #                   help="Write phonon-phonon interaction amplitudes")

@@ -200,7 +200,7 @@ def show_phono3py_settings(settings,
     if cutoff_frequency:
         print("Cutoff frequency: %s" % cutoff_frequency)
 
-    if (settings.get_average_pp_interaction() and
+    if (settings.get_use_ave_pp() and
         (settings.get_is_bterta() or settings.get_is_lbte())):
         print("Use averaged ph-ph interaction")
 
