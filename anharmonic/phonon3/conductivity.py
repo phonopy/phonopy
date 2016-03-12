@@ -91,7 +91,7 @@ class Conductivity:
     def __iter__(self):
         return self
             
-    def next(self):
+    def __next__(self):
         if self._grid_point_count == len(self._grid_points):
             if self._log_level:
                 print("=================== End of collection of collisions "
@@ -101,6 +101,9 @@ class Conductivity:
             self._run_at_grid_point()
             self._grid_point_count += 1
             return self._grid_point_count - 1
+
+    def next(self):
+        return self.__next__()
 
     def get_mesh_divisors(self):
         return self._mesh_divisors

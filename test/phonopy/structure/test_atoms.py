@@ -1,3 +1,4 @@
+from __future__ import print_function
 import unittest
 
 from phonopy.structure.atoms import PhonopyAtoms, Atoms
@@ -27,7 +28,7 @@ class TestCell(unittest.TestCase):
         print(self._cell.get_cell())
         for s, p in zip(self._cell.get_chemical_symbols(),
                         self._cell.get_scaled_positions()):
-            print s, p
+            print(s, p)
 
     def test_phonopy_atoms(self):
         print(PhonopyAtoms(atoms=self._cell))
