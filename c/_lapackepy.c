@@ -151,9 +151,9 @@ static PyObject * py_set_phonons_at_gridpoints(PyObject *self, PyObject *args)
   PyArrayObject* q_direction;
   PyArrayObject* dielectric_constant;
   double nac_factor, unit_conversion_factor;
-  char uplo;
+  char* uplo;
 
-  if (!PyArg_ParseTuple(args, "OOOOOOOOOOOOdOOOOdc",
+  if (!PyArg_ParseTuple(args, "OOOOOOOOOOOOdOOOOds",
 			&frequencies,
 			&eigenvectors,
 			&phonon_done_py,
@@ -228,7 +228,7 @@ static PyObject * py_set_phonons_at_gridpoints(PyObject *self, PyObject *args)
 			    rec_lat,
 			    q_dir,
 			    nac_factor,
-			    uplo);
+			    uplo[0]);
 
   free(freqs);
   free(eigvecs);
@@ -257,7 +257,7 @@ static PyObject * py_get_phonons_at_qpoints(PyObject *self, PyObject *args)
   PyArrayObject* q_direction_py;
   PyArrayObject* dielectric_constant_py;
   double nac_factor, unit_conversion_factor;
-  char uplo;
+  char* uplo;
 
   if (sizeof(lapack_complex_double) != sizeof(npy_complex128)) {
     printf("***********************************************************\n");
@@ -267,7 +267,7 @@ static PyObject * py_get_phonons_at_qpoints(PyObject *self, PyObject *args)
     return NULL;
   }
 
-  if (!PyArg_ParseTuple(args, "OOOOOOOOOdOOOOdc",
+  if (!PyArg_ParseTuple(args, "OOOOOOOOOdOOOOds",
 			&frequencies_py,
 			&eigenvectors_py,
 			&qpoints_py,
@@ -338,7 +338,7 @@ static PyObject * py_get_phonons_at_qpoints(PyObject *self, PyObject *args)
 		q_dir,
 		nac_factor,
 		unit_conversion_factor,
-		uplo);
+		uplo[0]);
   }
 
   free(fc2);

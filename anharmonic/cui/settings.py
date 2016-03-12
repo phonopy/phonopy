@@ -740,190 +740,190 @@ class Phono3pyConfParser(ConfParser):
                 self._settings.set_create_displacements('displacements')
     
         # Supercell dimension for fc2
-        if params.has_key('dim_fc2'):
+        if 'dim_fc2' in params:
             self._settings.set_phonon_supercell_matrix(params['dim_fc2'])
 
         # Boundary mean free path for thermal conductivity calculation
-        if params.has_key('boundary_mfp'):
+        if 'boundary_mfp' in params:
             self._settings.set_boundary_mfp(params['boundary_mfp'])
 
         # Peierls type approximation for squared ph-ph interaction strength
-        if params.has_key('constant_averaged_pp_interaction'):
+        if 'constant_averaged_pp_interaction' in params:
             self._settings.set_constant_averaged_pp_interaction(
                 params['constant_averaged_pp_interaction'])
 
         # Cutoff distance of third-order force constants. Elements where any 
         # pair of atoms has larger distance than cut-off distance are set zero.
-        if params.has_key('cutoff_fc3_distance'):
+        if 'cutoff_fc3_distance' in params:
             self._settings.set_cutoff_fc3_distance(params['cutoff_fc3_distance'])
 
         # Cutoff distance between pairs of displaced atoms used for supercell
         # creation with displacements and making third-order force constants
-        if params.has_key('cutoff_pair_distance'):
+        if 'cutoff_pair_distance' in params:
             self._settings.set_cutoff_pair_distance(
                 params['cutoff_pair_distance'])
 
         # This scale factor is multiplied to frequencies only, i.e., changes 
         # frequencies but assumed not to change the physical unit
-        if params.has_key('frequency_scale_factor'):
+        if 'frequency_scale_factor' in params:
             self._settings.set_frequency_scale_factor(
                 params['frequency_scale_factor'])
 
         # Gamma unit conversion factor
-        if params.has_key('gamma_conversion_factor'):
+        if 'gamma_conversion_factor' in params:
             self._settings.set_gamma_conversion_factor(
                 params['gamma_conversion_factor'])
 
         # Grid addresses (sets of three integer values)
-        if params.has_key('grid_addresses'):
+        if 'grid_addresses' in params:
             self._settings.set_grid_addresses(params['grid_addresses'])
 
         # Grid points
-        if params.has_key('grid_points'):
+        if 'grid_points' in params:
             self._settings.set_grid_points(params['grid_points'])
 
         # Atoms are clamped under applied strain in Gruneisen parameter calculation
-        if params.has_key('ion_clamped'):
+        if 'ion_clamped' in params:
             self._settings.set_ion_clamped(params['ion_clamped'])
 
         # Calculate thermal conductivity in BTE-RTA
-        if params.has_key('is_bterta'):
+        if 'is_bterta' in params:
             self._settings.set_is_bterta(params['is_bterta'])
 
         # Calculate frequency_shifts
-        if params.has_key('is_frequency_shift'):
+        if 'is_frequency_shift' in params:
             self._settings.set_is_frequency_shift(params['is_frequency_shift'])
 
         # Calculate phonon-Gruneisen parameters
-        if params.has_key('is_gruneisen'):
+        if 'is_gruneisen' in params:
             self._settings.set_is_gruneisen(params['is_gruneisen'])
 
         # Calculate imaginary part of self energy
-        if params.has_key('is_imag_self_energy'):
+        if 'is_imag_self_energy' in params:
             self._settings.set_is_imag_self_energy(params['is_imag_self_energy'])
 
         # Calculate lifetime due to isotope scattering
-        if params.has_key('is_isotope'):
+        if 'is_isotope' in params:
             self._settings.set_is_isotope(params['is_isotope'])
 
         # Calculate joint-DOS
-        if params.has_key('is_joint_dos'):
+        if 'is_joint_dos' in params:
             self._settings.set_is_joint_dos(params['is_joint_dos'])
 
         # Calculate thermal conductivity in LBTE with Chaput's method
-        if params.has_key('is_lbte'):
+        if 'is_lbte' in params:
             self._settings.set_is_lbte(params['is_lbte'])
 
         # Calculate linewidths
-        if params.has_key('is_linewidth'):
+        if 'is_linewidth' in params:
             self._settings.set_is_linewidth(params['is_linewidth'])
 
         # Solve reducible collision matrix but not reduced matrix
-        if params.has_key('is_reducible_collision_matrix'):
+        if 'is_reducible_collision_matrix' in params:
             self._settings.set_is_reducible_collision_matrix(
                 params['is_reducible_collision_matrix'])
 
         # Symmetrize fc2 by index exchange
-        if params.has_key('is_symmetrize_fc2'):
+        if 'is_symmetrize_fc2' in params:
             self._settings.set_is_symmetrize_fc2(params['is_symmetrize_fc2'])
 
         # Symmetrize phonon fc3 by index exchange
-        if params.has_key('is_symmetrize_fc3_q'):
+        if 'is_symmetrize_fc3_q' in params:
             self._settings.set_is_symmetrize_fc3_q(params['is_symmetrize_fc3_q'])
 
         # Symmetrize fc3 by index exchange
-        if params.has_key('is_symmetrize_fc3_r'):
+        if 'is_symmetrize_fc3_r' in params:
             self._settings.set_is_symmetrize_fc3_r(params['is_symmetrize_fc3_r'])
 
         # Mass variance parameters
-        if params.has_key('mass_variances'):
+        if 'mass_variances' in params:
             self._settings.set_mass_variances(params['mass_variances'])
 
         # Maximum mean free path
-        if params.has_key('max_freepath'):
+        if 'max_freepath' in params:
             self._settings.set_max_freepath(params['max_freepath'])
 
         # Divisors for mesh numbers
-        if params.has_key('mesh_divisors'):
+        if 'mesh_divisors' in params:
             self._settings.set_mesh_divisors(params['mesh_divisors'][:3])
             if len(params['mesh_divisors']) > 3:
                 self._settings.set_coarse_mesh_shifts(
                     params['mesh_divisors'][3:])
 
         # Cutoff frequency for pseudo inversion of collision matrix
-        if params.has_key('pinv_cutoff'):
+        if 'pinv_cutoff' in params:
             self._settings.set_pinv_cutoff(params['pinv_cutoff'])
 
         # Ph-ph interaction unit conversion factor
-        if params.has_key('pp_conversion_factor'):
+        if 'pp_conversion_factor' in params:
             self._settings.set_pp_conversion_factor(params['pp_conversion_factor'])
 
         # Read phonon-phonon interaction amplitudes from hdf5
-        if params.has_key('read_amplitude'):
+        if 'read_amplitude' in params:
             self._settings.set_read_amplitude(params['read_amplitude'])
 
         # Read collision matrix and gammas from hdf5
-        if params.has_key('read_collision'):
+        if 'read_collision' in params:
             self._settings.set_read_collision(params['read_collision'])
 
         # Read fc2 from hdf5
-        if params.has_key('read_fc2'):
+        if 'read_fc2' in params:
             self._settings.set_read_fc2(params['read_fc2'])
             
         # Read fc3 from hdf5
-        if params.has_key('read_fc3'):
+        if 'read_fc3' in params:
             self._settings.set_read_fc3(params['read_fc3'])
             
         # Read gammas from hdf5
-        if params.has_key('read_gamma'):
+        if 'read_gamma' in params:
             self._settings.set_read_gamma(params['read_gamma'])
             
         # Read phonons from hdf5
-        if params.has_key('read_phonon'):
+        if 'read_phonon' in params:
             self._settings.set_read_phonon(params['read_phonon'])
 
         # Calculate imag-part self energy with integration weights from gaussian
         # smearing function
-        if params.has_key('run_with_g'):
+        if 'run_with_g' in params:
             self._settings.set_run_with_g(params['run_with_g'])
             
         # Sum partial kappa at q-stars
-        if params.has_key('is_kappa_star'):
+        if 'is_kappa_star' in params:
             self._settings.set_is_kappa_star(params['is_kappa_star'])
 
         # Scattering event class 1 or 2
-        if params.has_key('scattering_event_class'):
+        if 'scattering_event_class' in params:
             self._settings.set_scattering_event_class(
                 params['scattering_event_class'])
 
         # Temperatures
-        if params.has_key('temperatures'):
+        if 'temperatures' in params:
             self._settings.set_temperatures(params['temperatures'])
 
         # Use averaged ph-ph interaction
-        if params.has_key('average_pp_interaction'):
+        if 'average_pp_interaction' in params:
             self._settings.set_average_pp_interaction(
                 params['average_pp_interaction'])
 
         # Write phonon-phonon interaction amplitudes to hdf5
-        if params.has_key('write_amplitude'):
+        if 'write_amplitude' in params:
             self._settings.set_write_amplitude(params['write_amplitude'])
 
         # Write detailed imag-part of self energy to hdf5
-        if params.has_key('write_detailed_gamma'):
+        if 'write_detailed_gamma' in params:
             self._settings.set_write_detailed_gamma(
                 params['write_detailed_gamma'])
 
         # Write imag-part of self energy to hdf5
-        if params.has_key('write_gamma'):
+        if 'write_gamma' in params:
             self._settings.set_write_gamma(params['write_gamma'])
 
         # Write collision matrix and gammas to hdf5
-        if params.has_key('write_collision'):
+        if 'write_collision' in params:
             self._settings.set_write_collision(params['write_collision'])
             
         # Write all phonons on grid points to hdf5
-        if params.has_key('write_phonon'):
+        if 'write_phonon' in params:
             self._settings.set_write_phonon(params['write_phonon'])
 
 

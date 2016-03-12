@@ -174,7 +174,7 @@ class TetrahedronMesh:
     def __iter__(self):
         return self
             
-    def next(self):
+    def __next__(self):
         if self._grid_point_count == len(self._ir_grid_points):
             raise StopIteration
         else:
@@ -188,6 +188,9 @@ class TetrahedronMesh:
             self._integration_weights /= np.prod(self._mesh)
             self._grid_point_count += 1
             return self._integration_weights
+
+    def next(self):
+        return self.__next__()
 
     def get_integration_weights(self):
         return self._integration_weights

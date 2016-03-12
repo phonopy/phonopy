@@ -53,7 +53,7 @@ from phonopy.structure.atoms import Atoms, PhonopyAtoms
 class PhonopyYaml:
     def __init__(self, filename):
         with open(filename) as infile :
-            self._data = yaml.load( infile, Loader=Loader)
+            self._data = yaml.load(infile, Loader=Loader)
         self._lattice = self._data['lattice']
 
         self._points = None

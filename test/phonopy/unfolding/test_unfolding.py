@@ -15,7 +15,7 @@ class TestUnfolding(unittest.TestCase):
 
     def setUp(self):
         self._cell = read_vasp("POSCAR")
-        print(PhonopyAtoms(atoms=self._cell))
+        # print(PhonopyAtoms(atoms=self._cell))
         self._unfolding = None
     
     def tearDown(self):
@@ -34,9 +34,9 @@ class TestUnfolding(unittest.TestCase):
                                     [2, 2, -2]]
         self._prepare_unfolding(qpoints, unfolding_supercell_matrix)
         self._run_unfolding()
-        self._write_wieghts(qpoints,
-                            unfolding_supercell_matrix,
-                            "unfolding.dat")
+        weights = self._get_weights(qpoints, unfolding_supercell_matrix)
+        # self._write_weights(weights, "unfolding.dat")
+        self._compare(weights, "unfolding.dat")
 
     def test_Unfolding_SC(self):
         ## mesh
@@ -49,9 +49,14 @@ class TestUnfolding(unittest.TestCase):
         unfolding_supercell_matrix = np.diag([4, 4, 4])
         self._prepare_unfolding(qpoints, unfolding_supercell_matrix)
         self._run_unfolding()
-        self._write_wieghts(qpoints,
-                            unfolding_supercell_matrix,
-                            "unfolding_to_atoms.dat")
+        weights = self._get_weights(qpoints, unfolding_supercell_matrix)
+        # self._write_weights(weights, "unfolding_to_atoms.dat")
+        self._compare(weights, "unfolding_to_atoms.dat")
+
+    def _compare(self, weights, filename):
+        with open(filename) as f:
+            weights_in_file = np.loadtxt(f)
+            self.assertTrue((np.abs(weights_in_file - weights) < 1e-3).all())
 
     def _prepare_unfolding(self, qpoints, unfolding_supercell_matrix):
         supercell = get_supercell(self._cell, np.diag([2, 2, 2]))
@@ -65,29 +70,34 @@ class TestUnfolding(unittest.TestCase):
                                     qpoints)
 
     def _run_unfolding(self):
-        self._unfolding.run(verbose=True)
-        print(self._unfolding.get_unfolding_weights().shape)
+        self._unfolding.run(verbose=False)
+        # print(self._unfolding.get_unfolding_weights().shape)
 
-    def _write_wieghts(self, qpoints, unfolding_supercell_matrix, filename):
+    def _get_weights(self, qpoints, unfolding_supercell_matrix):
         P = np.linalg.inv(unfolding_supercell_matrix)
         comm_points = self._unfolding.get_commensurate_points()
         # (nd + 1, num_atom_super / num_atom_prim, num_atom_super * 3)
         weights = self._unfolding.get_unfolding_weights() 
         freqs = self._unfolding.get_frequencies()
 
+        out_vals = []
+        for i, q in enumerate(qpoints):
+            q_prim = np.dot(P.T, q)
+            for j, G in enumerate(comm_points):
+                q_k = q_prim + G
+                q_k -= np.rint(q_k)
+                if (np.abs(q_k[0] - q_k[1:]) > 1e-5).any():
+                    continue
+                for k, f in enumerate(freqs[i]):
+                    uw = weights[i, k, j]
+                    out_vals.append([q_k[0], q_k[1], q_k[2], f, uw])
+
+        return out_vals
+
+    def _write_weights(self, weights, filename):
         with open(filename, 'w') as w:
-            lines = []
-            for i, q in enumerate(qpoints):
-                q_prim = np.dot(P.T, q)
-                for j, G in enumerate(comm_points):
-                    q_k = q_prim + G
-                    q_k -= np.rint(q_k)
-                    if (np.abs(q_k[0] - q_k[1:]) > 1e-5).any():
-                        continue
-                    for k, f in enumerate(freqs[i]):
-                        uw = weights[i, k, j]
-                        lines.append("%10.7f %10.7f %10.7f  %12.7f  %10.7f" %
-                                     (q_k[0], q_k[1], q_k[2], f, uw))
+            lines = ["%10.7f %10.7f %10.7f  %12.7f  %10.7f" % tuple(x)
+                     for x in weights]
             w.write("\n".join(lines))
 
     def _get_phonon(self, cell):

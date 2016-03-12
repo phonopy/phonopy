@@ -653,8 +653,8 @@ py_thm_integration_weight(PyObject *self, PyObject *args)
 {
   double omega;
   PyArrayObject* tetrahedra_omegas_py;
-  char function;
-  if (!PyArg_ParseTuple(args, "dOc",
+  char* function;
+  if (!PyArg_ParseTuple(args, "dOs",
 			&omega,
 			&tetrahedra_omegas_py,
 			&function)) {
@@ -666,7 +666,7 @@ py_thm_integration_weight(PyObject *self, PyObject *args)
 
   double iw = thm_get_integration_weight(omega,
 					 tetrahedra_omegas,
-					 function);
+					 function[0]);
 
   return PyFloat_FromDouble(iw);
 }
@@ -677,8 +677,8 @@ py_thm_integration_weight_at_omegas(PyObject *self, PyObject *args)
   PyArrayObject* integration_weights_py;
   PyArrayObject* omegas_py;
   PyArrayObject* tetrahedra_omegas_py;
-  char function;
-  if (!PyArg_ParseTuple(args, "OOOc",
+  char* function;
+  if (!PyArg_ParseTuple(args, "OOOs",
 			&integration_weights_py,
 			&omegas_py,
 			&tetrahedra_omegas_py,
@@ -696,7 +696,7 @@ py_thm_integration_weight_at_omegas(PyObject *self, PyObject *args)
 				       num_omegas,
 				       omegas,
 				       tetrahedra_omegas,
-				       function);
+				       function[0]);
 
   Py_RETURN_NONE;
 }
