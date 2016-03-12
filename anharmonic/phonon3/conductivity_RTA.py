@@ -17,13 +17,14 @@ def get_thermal_conductivity_RTA(
         grid_points=None,
         is_isotope=False,
         boundary_mfp=None, # in micrometre
-        use_averaged_pp_interaction=False,
+        use_ave_pp=False,
         gamma_unit_conversion=None,
         mesh_divisors=None,
         coarse_mesh_shifts=None,
         is_kappa_star=True,
         gv_delta_q=1e-4,
         run_with_g=True, # integration weights from gaussian smearing function
+        is_full_pp=False,
         write_gamma=False,
         read_gamma=False,
         input_filename=None,
@@ -45,13 +46,14 @@ def get_thermal_conductivity_RTA(
         is_isotope=is_isotope,
         mass_variances=mass_variances,
         boundary_mfp=boundary_mfp,
-        use_averaged_pp_interaction=use_averaged_pp_interaction,
+        use_ave_pp=use_ave_pp,
         gamma_unit_conversion=gamma_unit_conversion,
         mesh_divisors=mesh_divisors,
         coarse_mesh_shifts=coarse_mesh_shifts,
         is_kappa_star=is_kappa_star,
         gv_delta_q=gv_delta_q,
         run_with_g=run_with_g,
+        is_full_pp=is_full_pp,
         log_level=log_level)
 
     if read_gamma:
@@ -307,13 +309,14 @@ class Conductivity_RTA(Conductivity):
                  is_isotope=False,
                  mass_variances=None,
                  boundary_mfp=None, # in micrometre
-                 use_averaged_pp_interaction=False,
+                 use_ave_pp=False,
                  gamma_unit_conversion=None,
                  mesh_divisors=None,
                  coarse_mesh_shifts=None,
                  is_kappa_star=True,
                  gv_delta_q=None,
                  run_with_g=True,
+                 is_full_pp=False,
                  log_level=0):
 
         if sigmas is None:
@@ -324,6 +327,7 @@ class Conductivity_RTA(Conductivity):
         self._is_kappa_star = None
         self._gv_delta_q = None
         self._run_with_g = run_with_g
+        self._is_full_pp = is_full_pp
         self._log_level = None
         self._primitive = None
         self._dm = None
@@ -347,7 +351,7 @@ class Conductivity_RTA(Conductivity):
         self._gamma = None
         self._gamma_iso = None
         self._gamma_unit_conversion = gamma_unit_conversion
-        self._use_ave_pp = use_averaged_pp_interaction
+        self._use_ave_pp = use_ave_pp
         self._averaged_pp_interaction = None
         self._num_ignored_phonon_modes = None
         self._num_sampling_grid_points = None
@@ -450,10 +454,7 @@ class Conductivity_RTA(Conductivity):
                 print("Number of triplets: %d" %
                       len(self._pp.get_triplets_at_q()[0]))
                 print("Calculating interaction...")
-                
-            self._collision.run_interaction()
-            self._averaged_pp_interaction[i] = (
-                self._pp.get_averaged_interaction())
+
             self._set_gamma_at_sigmas(i)
             
         if self._isotope is not None and not self._read_gamma_iso:
@@ -489,8 +490,9 @@ class Conductivity_RTA(Conductivity):
         if self._isotope is not None:
             self._gamma_iso = np.zeros(
                 (len(self._sigmas), num_grid_points, num_band0), dtype='double')
-        self._averaged_pp_interaction = np.zeros(
-            (num_grid_points, num_band0), dtype='double')
+        if self._is_full_pp or self._use_ave_pp:
+            self._averaged_pp_interaction = np.zeros(
+                (num_grid_points, num_band0), dtype='double')
         self._num_ignored_phonon_modes = np.zeros(
             (len(self._sigmas), len(self._temperatures)), dtype='intc')
         self._collision = ImagSelfEnergy(
@@ -506,9 +508,17 @@ class Conductivity_RTA(Conductivity):
                 else:
                     text += "sigma=%s" % sigma
                 print(text)
+
             self._collision.set_sigma(sigma)
-            if not sigma or self._run_with_g:
-                self._collision.set_integration_weights()
+            if not self._read_gamma:
+                if sigma is None or self._run_with_g:
+                    self._collision.set_integration_weights()
+                if self._is_full_pp and j == 1:
+                    self._averaged_pp_interaction[i] = (
+                        self._pp.get_averaged_interaction())
+                else:
+                    self._collision.run_interaction(is_full_pp=self._is_full_pp)
+
             for k, t in enumerate(self._temperatures):
                 self._collision.set_temperature(t)
                 self._collision.run()
@@ -553,9 +563,14 @@ class Conductivity_RTA(Conductivity):
         gp = self._grid_points[i]
         frequencies = self._frequencies[gp][self._pp.get_band_indices()]
         gv = self._gv[i]
-        ave_pp = self._averaged_pp_interaction[i]
-        
-        text = "Frequency     group velocity (x, y, z)     |gv|       Pqj"
+
+        if self._is_full_pp or self._use_ave_pp:
+            ave_pp = self._averaged_pp_interaction[i]
+
+        if self._is_full_pp or self._use_ave_pp:
+            text = "Frequency     group velocity (x, y, z)     |gv|       Pqj"
+        else:
+            text = "Frequency     group velocity (x, y, z)     |gv|"
         if self._gv_delta_q is None:
             pass
         else:
@@ -575,13 +590,23 @@ class Conductivity_RTA(Conductivity):
     
                     print(" k*%-2d (%5.2f %5.2f %5.2f)" %
                           ((i + 1,) + tuple(np.dot(rot, q))))
-                    for f, v, pp in zip(frequencies,
-                                    np.dot(rot_c, gv.T).T,
-                                    ave_pp):
-                        print("%8.3f   (%8.3f %8.3f %8.3f) %8.3f %11.3e" %
-                              (f, v[0], v[1], v[2], np.linalg.norm(v), pp))
+                    if self._is_full_pp or self._use_ave_pp:
+                        for f, v, pp in zip(frequencies,
+                                            np.dot(rot_c, gv.T).T,
+                                            ave_pp):
+                            print("%8.3f   (%8.3f %8.3f %8.3f) %8.3f %11.3e" %
+                                  (f, v[0], v[1], v[2], np.linalg.norm(v), pp))
+                    else:
+                        for f, v in zip(frequencies, np.dot(rot_c, gv.T).T):
+                            print("%8.3f   (%8.3f %8.3f %8.3f) %8.3f" %
+                                  (f, v[0], v[1], v[2], np.linalg.norm(v)))
             print('')
         else:
-            for f, v, pp in zip(frequencies, gv, ave_pp):
-                print("%8.3f   (%8.3f %8.3f %8.3f) %8.3f %11.3e" %
-                      (f, v[0], v[1], v[2], np.linalg.norm(v), pp))
+            if self._is_full_pp or self._use_ave_pp:
+                for f, v, pp in zip(frequencies, gv, ave_pp):
+                    print("%8.3f   (%8.3f %8.3f %8.3f) %8.3f %11.3e" %
+                          (f, v[0], v[1], v[2], np.linalg.norm(v), pp))
+            else:
+                for f, v in zip(frequencies, gv):
+                    print("%8.3f   (%8.3f %8.3f %8.3f) %8.3f" %
+                          (f, v[0], v[1], v[2], np.linalg.norm(v)))

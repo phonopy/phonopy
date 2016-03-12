@@ -282,15 +282,16 @@ def get_triplets_integration_weights(interaction,
     triplets = interaction.get_triplets_at_q()[0]
     frequencies = interaction.get_phonons()[0]
     num_band = frequencies.shape[1]
+    g_zero = None
 
     if is_collision_matrix:
         g = np.zeros(
             (3, len(triplets), len(frequency_points), num_band, num_band),
-            dtype='double')
+            dtype='double', order='C')
     else:
         g = np.zeros(
             (2, len(triplets), len(frequency_points), num_band, num_band),
-            dtype='double')
+            dtype='double', order='C')
 
     if sigma:
         if lang == 'C':
@@ -317,7 +318,7 @@ def get_triplets_integration_weights(interaction,
                         g[2, i, :, j, k] = g0 + g1 + g2
     else:
         if lang == 'C':
-            _set_triplets_integration_weights_c(
+            g_zero = _set_triplets_integration_weights_c(
                 g,
                 interaction,
                 frequency_points,
@@ -326,7 +327,7 @@ def get_triplets_integration_weights(interaction,
             _set_triplets_integration_weights_py(
                 g, interaction, frequency_points)
 
-    return g
+    return g, g_zero
 
 def get_tetrahedra_vertices(relative_address,
                             mesh,
@@ -420,8 +421,11 @@ def _set_triplets_integration_weights_c(g,
                 bz_map)
             interaction.set_phonons(np.unique(neighboring_grid_points))
 
+    g_zero = np.zeros(g.shape[1:], dtype='byte', order='C')
+
     phono3c.triplets_integration_weights(
         g,
+        g_zero,
         frequency_points,
         thm.get_tetrahedra(),
         mesh,
@@ -429,6 +433,8 @@ def _set_triplets_integration_weights_c(g,
         interaction.get_phonons()[0],
         grid_address,
         bz_map)
+
+    return g_zero
 
 def _set_triplets_integration_weights_py(g, interaction, frequency_points):
     reciprocal_lattice = np.linalg.inv(interaction.get_primitive().get_cell())

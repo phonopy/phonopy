@@ -32,25 +32,17 @@
 /* ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE */
 /* POSSIBILITY OF SUCH DAMAGE. */
 
-#ifndef __interaction_H__
-#define __interaction_H__
+#ifndef __phonoc_const_H__
+#define __phonoc_const_H__
 
-#include <phonoc_array.h>
+#define M_2PI 6.283185307179586
+#define KB 8.6173382568083159E-05
 
-void get_interaction(Darray *fc3_normal_squared,
-		     const char *g_zero,
-		     const Darray *frequencies,
-		     const Carray *eigenvectors,
-		     const Iarray *triplets,
-		     const int *grid_address,
-		     const int *mesh,
-		     const Darray *fc3,
-		     const Darray *shortest_vectors,
-		     const Iarray *multiplicity,
-		     const double *masses,
-		     const int *p2s_map,
-		     const int *s2p_map,
-		     const int *band_indices,
-		     const int is_sym_q,
-		     const double cutoff_frequency);
+/* PHPYCONST is used instead of 'const' so to avoid gcc warning. */
+/* However there should be better way than this way.... */
+#ifndef PHPYCONST
+#define PHPYCONST
+#endif
+
+
 #endif

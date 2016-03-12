@@ -1,7 +1,7 @@
-/* Copyright (C) 2015 Atsushi Togo */
+/* Copyright (C) 2016 Atsushi Togo */
 /* All rights reserved. */
 
-/* This file is part of phonopy. */
+/* phono3py. This file is part of phonopy. */
 
 /* Redistribution and use in source and binary forms, with or without */
 /* modification, are permitted provided that the following conditions */
@@ -32,25 +32,23 @@
 /* ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE */
 /* POSSIBILITY OF SUCH DAMAGE. */
 
-#ifndef __interaction_H__
-#define __interaction_H__
+#ifndef __triplet_iw_H__
+#define __triplet_iw_H__
 
-#include <phonoc_array.h>
+#include <phonoc_const.h>
 
-void get_interaction(Darray *fc3_normal_squared,
-		     const char *g_zero,
-		     const Darray *frequencies,
-		     const Carray *eigenvectors,
-		     const Iarray *triplets,
-		     const int *grid_address,
-		     const int *mesh,
-		     const Darray *fc3,
-		     const Darray *shortest_vectors,
-		     const Iarray *multiplicity,
-		     const double *masses,
-		     const int *p2s_map,
-		     const int *s2p_map,
-		     const int *band_indices,
-		     const int is_sym_q,
-		     const double cutoff_frequency);
+int tpi_get_integration_weight(double *iw,
+			       char *iw_zero,
+			       const double frequency_points[],
+			       const int num_band0,
+			       PHPYCONST int relative_grid_address[24][4][3],
+			       const int mesh[3],
+			       PHPYCONST int triplets[][3],
+			       const int num_triplets,
+			       PHPYCONST int bz_grid_address[][3],
+			       const int bz_map[],
+			       const double frequencies[],
+			       const int num_band,
+			       const int num_iw);
+
 #endif

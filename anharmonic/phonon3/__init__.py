@@ -420,7 +420,7 @@ class Phono3py:
             mass_variances=None,
             grid_points=None,
             boundary_mfp=None, # in micrometre
-            use_averaged_pp_interaction=False,
+            use_ave_pp=False,
             gamma_unit_conversion=None,
             mesh_divisors=None,
             coarse_mesh_shifts=None,
@@ -428,6 +428,7 @@ class Phono3py:
             is_kappa_star=True,
             gv_delta_q=None, # for group velocity
             run_with_g=True, # integration weights for smearing method, too
+            is_full_pp=False,
             pinv_cutoff=1.0e-8, # for pseudo-inversion of collision matrix
             write_gamma=False,
             read_gamma=False,
@@ -469,13 +470,14 @@ class Phono3py:
                 mass_variances=mass_variances,
                 grid_points=grid_points,
                 boundary_mfp=boundary_mfp,
-                use_averaged_pp_interaction=use_averaged_pp_interaction,
+                use_ave_pp=use_ave_pp,
                 gamma_unit_conversion=gamma_unit_conversion,
                 mesh_divisors=mesh_divisors,
                 coarse_mesh_shifts=coarse_mesh_shifts,
                 is_kappa_star=is_kappa_star,
                 gv_delta_q=gv_delta_q,
                 run_with_g=run_with_g,
+                is_full_pp=is_full_pp,
                 write_gamma=write_gamma,
                 read_gamma=read_gamma,
                 input_filename=input_filename,

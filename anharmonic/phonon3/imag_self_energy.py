@@ -331,6 +331,7 @@ class ImagSelfEnergy:
         self._cutoff_frequency = interaction.get_cutoff_frequency()
 
         self._g = None # integration weights
+        self._g_zero = None
         self._mesh = self._pp.get_mesh_numbers()
         self._band_indices = self._pp.get_band_indices()
         self._is_collision_matrix = False
@@ -363,11 +364,12 @@ class ImagSelfEnergy:
                     dtype='double')
             self._run_with_frequency_points()
 
-    def run_interaction(self):
-        self._pp.run(lang=self._lang)
+    def run_interaction(self, is_full_pp=True):
+        if is_full_pp or self._frequency_points is not None:
+            self._pp.run(lang=self._lang)
+        else:
+            self._pp.run(g_zero=self._g_zero, lang=self._lang)
         self._pp_strength = self._pp.get_interaction_strength()
-        (self._frequencies,
-         self._eigenvectors) = self._pp.get_phonons()[:2]
 
     def set_integration_weights(self, scattering_event_class=None):
         if self._frequency_points is None:
@@ -375,7 +377,7 @@ class ImagSelfEnergy:
         else:
             f_points = self._frequency_points
 
-        self._g = get_triplets_integration_weights(
+        self._g, self._g_zero = get_triplets_integration_weights(
             self._pp,
             np.array(f_points, dtype='double'),
             self._sigma,
@@ -419,6 +421,7 @@ class ImagSelfEnergy:
             (self._triplets_at_q,
              self._weights_at_q) = self._pp.get_triplets_at_q()[:2]
             self._grid_point = grid_point
+            self._frequencies, self._eigenvectors, _ = self._pp.get_phonons()
             
     def set_sigma(self, sigma):
         if sigma is None:
@@ -427,6 +430,7 @@ class ImagSelfEnergy:
             self._sigma = float(sigma)
 
         self._g = None
+        self._g_zero = None
 
     def set_frequency_points(self, frequency_points):
         if frequency_points is None:

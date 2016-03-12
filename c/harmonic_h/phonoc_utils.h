@@ -38,8 +38,6 @@
 #include <lapacke.h>
 #include <phonoc_array.h>
 
-#define M_2PI 6.283185307179586
-
 lapack_complex_double get_phase_factor(const double q[],
 				       const Darray *shortest_vectors,
 				       const Iarray *multiplicity,
