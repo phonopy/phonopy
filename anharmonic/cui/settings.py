@@ -810,7 +810,7 @@ class Phono3pyConfParser(ConfParser):
             self._settings.set_is_frequency_shift(params['is_frequency_shift'])
 
         # Calculate full ph-ph interaction strength for RTA conductivity
-        if params.has_key('is_full_pp'):
+        if 'is_full_pp' in params:
             self._settings.set_is_full_pp(params['is_full_pp'])
 
         # Calculate phonon-Gruneisen parameters
