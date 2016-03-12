@@ -140,7 +140,8 @@ def create_FORCE_CONSTANTS(filename, options, log_level):
 # read VASP POSCAR
 #
 def read_vasp(filename, symbols=None):
-    lines = open(filename).readlines()
+    with open(filename) as infile :
+    	lines = infile.readlines()
     return _get_atoms_from_poscar(lines, symbols)
 
 def read_vasp_from_strings(strings, symbols=None):

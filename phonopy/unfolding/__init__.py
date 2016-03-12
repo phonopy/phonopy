@@ -37,7 +37,10 @@ from phonopy.harmonic.dynmat_to_fc import get_commensurate_points
 from phonopy.structure.atoms import Atoms
 from phonopy.structure.cells import get_supercell
 
-class Unfolding:
+from future.utils import implements_iterator
+
+@implements_iterator
+class Unfolding(object):
     def __init__(self,
                  phonon,
                  supercell_matrix,
@@ -72,7 +75,7 @@ class Unfolding:
             if verbose:
                 print(self._q_index)
 
-    def next(self):
+    def __next__(self):
         if self._q_index == len(self._eigvecs):
             raise StopIteration
         else:
