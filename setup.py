@@ -1,7 +1,14 @@
 from distutils.core import setup, Extension
 import numpy
+import os
 
 include_dirs_numpy = [numpy.get_include()]
+cc = None
+if 'CC' in os.environ:
+    if 'clang' in os.environ['CC']:
+        cc = 'clang'
+    if 'gcc' in os.environ['CC']:
+        cc = 'gcc'
 
 ######################
 # _phonopy extension #
@@ -18,7 +25,12 @@ if __name__ == '__main__':
     extra_link_args_phonopy = []
 else:
     extra_compile_args_phonopy = ['-fopenmp',]
-    extra_link_args_phonopy = ['-lgomp',]
+    if cc == 'gcc':
+        extra_link_args_phonopy = ['-lgomp',]
+    elif cc == 'clang':
+        extra_link_args_phonopy = []
+    else:
+        extra_link_args_phonopy = ['-lgomp',]
 
 extension_phonopy = Extension(
     'phonopy._phonopy',
@@ -36,7 +48,12 @@ if __name__ == '__main__':
     extra_link_args_spglib=[]
 else:
     extra_compile_args_spglib=['-fopenmp',]
-    extra_link_args_spglib=['-lgomp',]
+    if cc == 'gcc':
+        extra_link_args_spglib=['-lgomp',]
+    elif cc == 'clang':
+        extra_link_args_spglib=[]
+    else:
+        extra_link_args_spglib=['-lgomp',]
 
 extension_spglib = Extension(
     'phonopy._spglib',

@@ -3,6 +3,7 @@ import numpy
 from setup import (extension_spglib, extension_phonopy,
                    packages_phonopy, scripts_phonopy)
 import platform
+import os
 
 include_dirs_numpy = [numpy.get_include()]
 
@@ -27,10 +28,18 @@ sources = ['c/_phono3py.c',
            'c/spglib/kpoint.c',
            'c/kspclib/kgrid.c',
            'c/kspclib/tetrahedron_method.c']
-extra_link_args = ['-lgomp',
-                   '-llapacke', # this is when lapacke is installed on system
+extra_link_args = ['-llapacke', # this is when lapacke is installed on system
                    '-llapack',
                    '-lblas']
+cc = None
+if 'CC' in os.environ:
+    if 'clang' in os.environ['CC']:
+        cc = 'clang'
+    if 'gcc' in os.environ['CC']:
+        cc = 'gcc'
+if cc == 'gcc' or cc is None:
+    extra_link_args.append('-lgomp')
+
 extra_compile_args = ['-fopenmp',]
 include_dirs = (['c/harmonic_h',
                  'c/anharmonic_h',
@@ -115,5 +124,3 @@ if __name__ == '__main__':
                            extension_phono3py])
     else:
         print("Phono3py version number could not be retrieved.")
-
-
