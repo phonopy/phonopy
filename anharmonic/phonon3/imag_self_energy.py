@@ -345,7 +345,7 @@ class ImagSelfEnergy:
             self._unit_conversion = unit_conversion
 
     def run(self):
-        if self._pp_strength is None:        
+        if self._pp_strength is None:
             self.run_interaction()
 
         num_band0 = self._pp_strength.shape[1]

@@ -510,14 +510,16 @@ class Conductivity_RTA(Conductivity):
                 print(text)
 
             self._collision.set_sigma(sigma)
-            if not self._read_gamma:
+            if not self._use_ave_pp:
                 if sigma is None or self._run_with_g:
                     self._collision.set_integration_weights()
-                if self._is_full_pp and j == 1:
-                    self._averaged_pp_interaction[i] = (
-                        self._pp.get_averaged_interaction())
+                if self._is_full_pp and j != 0:
+                    pass
                 else:
                     self._collision.run_interaction(is_full_pp=self._is_full_pp)
+                if self._is_full_pp and j == 0:
+                    self._averaged_pp_interaction[i] = (
+                        self._pp.get_averaged_interaction())
 
             for k, t in enumerate(self._temperatures):
                 self._collision.set_temperature(t)
