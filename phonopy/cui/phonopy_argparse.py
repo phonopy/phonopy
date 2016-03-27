@@ -104,6 +104,7 @@ def get_parser():
         tmax=None,
         tmin=None,
         tstep=None,
+        vasp_mode=False,
         verbose=False,
         wien2k_mode=False,
         write_dynamical_matrices=False,
@@ -337,6 +338,9 @@ def get_parser():
     parser.add_option(
         "-v", "--verbose", dest="verbose", action="store_true",
         help="Detailed information is shown.")
+    parser.add_option(
+        "--vasp", dest="vasp_mode",
+        action="store_true", help="Invoke Vasp mode")
     parser.add_option(
         "--wien2k", dest="wien2k_mode",
         action="store_true", help="Invoke Wien2k mode")

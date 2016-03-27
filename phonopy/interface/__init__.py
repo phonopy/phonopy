@@ -36,7 +36,7 @@ import os
 from phonopy.file_IO import parse_disp_yaml, write_FORCE_SETS
 
 def read_crystal_structure(filename=None,
-                           interface_mode='vasp',
+                           interface_mode=None,
                            chemical_symbols=None,
                            yaml_mode=False):
     if filename is None:
@@ -55,7 +55,7 @@ def read_crystal_structure(filename=None,
         unitcell = PhonopyYaml(unitcell_filename).get_atoms()
         return unitcell, (unitcell_filename,)
         
-    if interface_mode == 'vasp':
+    if interface_mode is None or interface_mode == 'vasp':
         from phonopy.interface.vasp import read_vasp
         if chemical_symbols is None:
             unitcell = read_vasp(unitcell_filename)
@@ -91,7 +91,7 @@ def read_crystal_structure(filename=None,
 def get_default_cell_filename(interface_mode, yaml_mode):
     if yaml_mode:
         return "POSCAR.yaml"
-    if interface_mode == 'vasp':
+    if interface_mode is None or interface_mode == 'vasp':
         return "POSCAR"
     if interface_mode == 'abinit':
         return "unitcell.in"
@@ -109,7 +109,8 @@ def create_FORCE_SETS(interface_mode,
                       symprec,
                       is_wien2k_p1=False,
                       log_level=0):
-    if (interface_mode == 'vasp' or
+    if (interface_mode is None or
+        interface_mode == 'vasp' or
         interface_mode == 'abinit' or
         interface_mode == 'elk' or
         interface_mode == 'pwscf' or
@@ -156,7 +157,7 @@ def create_FORCE_SETS(interface_mode,
     return 0
             
 def get_force_sets(interface_mode, num_atoms, force_filenames):
-    if interface_mode == 'vasp':
+    if interface_mode is None or interface_mode == 'vasp':
         from phonopy.interface.vasp import parse_set_of_forces
         force_sets = parse_set_of_forces(num_atoms, force_filenames)
     elif interface_mode == 'abinit':
