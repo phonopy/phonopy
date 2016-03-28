@@ -136,7 +136,14 @@ class BandStructure:
                 nq_paths.append(len(qpoints))
             text = []
             if comment is not None:
-                text.append("comment: %s" % comment)
+                try:
+                    import yaml
+                    text.append(
+                        yaml.dump(comment, default_flow_style=False).rstrip())
+                except ImportError:
+                    print("You need to install python-yaml.")
+                    print("Additional comments were not written in %s." %
+                          filename)
             text.append("nqpoint: %-7d" % np.sum(nq_paths))
             text.append("npath: %-7d" % len(self._paths))
             text.append("segment_nqpoint:")
