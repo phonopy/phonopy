@@ -109,9 +109,19 @@ if __name__ == '__main__':
             if "__version__" in line:
                 version = line.split()[2].strip('\"')
     
+    # To deploy to pypi by travis-CI
+    nanoversion = ''
+    if os.path.isfile("__nanoversion__.txt"):
+        with open('__nanoversion__.txt') as nv:
+            for line in nv:
+                nanoversion = '%.4s' % (line.strip())
+                break
+            if nanoversion:
+                nanoversion = '.' + nanoversion
+
     if all([x.isdigit() for x in version.split('.')]):
         setup(name='phono3py',
-              version=version,
+              version=(version + nanoversion),
               description='This is the phono3py module.',
               author='Atsushi Togo',
               author_email='atz.togo@gmail.com',
