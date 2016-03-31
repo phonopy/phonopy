@@ -218,31 +218,38 @@ if options.wien2k_mode:
     from phonopy.interface.wien2k import write_supercells_with_displacements
     factor = Wien2kToTHz
     nac_factor = 2000.0
+    distance_to_A = Bohr
 elif options.abinit_mode:
     interface_mode = 'abinit'
     from phonopy.interface.abinit import write_supercells_with_displacements
     factor = AbinitToTHz
     nac_factor = Hartree / Bohr
+    distance_to_A = Bohr
 elif options.pwscf_mode:
     interface_mode = 'pwscf'
     from phonopy.interface.pwscf import write_supercells_with_displacements
     factor = PwscfToTHz
     nac_factor = 2.0
+    distance_to_A = Bohr
 elif options.elk_mode:
     interface_mode = 'elk'
     from phonopy.interface.elk import write_supercells_with_displacements
     factor = ElkToTHz
     nac_factor = 1.0
+    distance_to_A = Bohr
 elif options.siesta_mode:
     interface_mode = 'siesta'
     from phonopy.interface.siesta import write_supercells_with_displacements
     factor = SiestaToTHz
     nac_factor = Hartree / Bohr
+    distance_to_A = Bohr
 else:
     if options.vasp_mode:
         interface_mode = 'vasp'
+        distance_to_A = 1.0
     else:
         interface_mode = None
+        distance_to_A = 1.0
     from phonopy.interface.vasp import write_supercells_with_displacements
     from phonopy.interface.vasp import create_FORCE_CONSTANTS
     factor = VaspToTHz
@@ -340,6 +347,7 @@ if options.is_check_symmetry:
     check_symmetry(unitcell,
                    primitive_axis=settings.get_primitive_matrix(),
                    symprec=options.symprec,
+                   distance_to_A=distance_to_A,
                    phonopy_version=phonopy_version)
     if log_level > 0:
         print_end()
@@ -500,21 +508,13 @@ if run_mode == 'displacements':
             filename=unitcell_filename)
     elif interface_mode == 'abinit':
         write_supercells_with_displacements(supercell, cells_with_disps)
-    elif interface_mode == 'pwscf':
-        pp_filenames = optional_structure_file_information[1]
-        write_supercells_with_displacements(supercell,
-                                            cells_with_disps,
-                                            pp_filenames)
-    elif interface_mode == 'elk':
-        sp_filenames = optional_structure_file_information[1]
-        write_supercells_with_displacements(supercell,
-                                            cells_with_disps,
-                                            sp_filenames)
-    elif interface_mode == 'siesta':
-        atypes = optional_structure_file_information[1]
-        write_supercells_with_displacements(supercell,
-                                            cells_with_disps,
-                                            atypes)
+    elif (interface_mode == 'pwscf' or
+          interface_mode == 'elk' or
+          interface_mode == 'siesta'):
+        write_supercells_with_displacements(
+            supercell,
+            cells_with_disps,
+            optional_structure_file_information[1])
     else: # default or vasp
         write_supercells_with_displacements(supercell, cells_with_disps)
 
