@@ -3,24 +3,28 @@ from phonopy.structure.symmetry import Symmetry
 from phonopy.structure.cells import get_supercell, get_primitive
 from phonopy.structure.atoms import Atoms
 from phonopy.units import VaspToTHz
-from phonopy.harmonic.force_constants import get_fc2, set_permutation_symmetry, \
-     set_translational_invariance
+from phonopy.harmonic.force_constants import (get_fc2, set_permutation_symmetry,
+                                              set_translational_invariance)
 from phonopy.harmonic.displacement import get_least_displacements
 from phonopy.harmonic.displacement import direction_to_displacement as \
      direction_to_displacement_fc2
-from anharmonic.phonon3.imag_self_energy import get_imag_self_energy, \
-     write_imag_self_energy, get_linewidth, write_linewidth
+from anharmonic.phonon3.imag_self_energy import (get_imag_self_energy,
+                                                 write_imag_self_energy,
+                                                 get_linewidth,
+                                                 write_linewidth)
 from anharmonic.phonon3.frequency_shift import get_frequency_shift
 from anharmonic.phonon3.interaction import Interaction
 from anharmonic.phonon3.conductivity_RTA import get_thermal_conductivity_RTA
 from anharmonic.phonon3.conductivity_LBTE import get_thermal_conductivity_LBTE
 from anharmonic.phonon3.joint_dos import JointDos
-from anharmonic.phonon3.displacement_fc3 import get_third_order_displacements, \
-     direction_to_displacement
+from anharmonic.phonon3.displacement_fc3 import (get_third_order_displacements,
+                                                 direction_to_displacement)
 from anharmonic.file_IO import write_joint_dos, write_phonon_to_hdf5
 from anharmonic.other.isotope import Isotope
-from anharmonic.phonon3.fc3 import get_fc3, set_permutation_symmetry_fc3, \
-     set_translational_invariance_fc3, cutoff_fc3_by_zero
+from anharmonic.phonon3.fc3 import (get_fc3,
+                                    set_permutation_symmetry_fc3,
+                                    set_translational_invariance_fc3,
+                                    cutoff_fc3_by_zero)
 
 class Phono3py:
     def __init__(self,
@@ -83,7 +87,7 @@ class Phono3py:
         self._displacement_dataset = None
         self._phonon_displacement_dataset = None
         self._phonon_supercells_with_displacements = None
-                
+
         # Thermal conductivity
         self._thermal_conductivity = None # conductivity_RTA object
 
@@ -101,7 +105,7 @@ class Phono3py:
         # Other variables
         self._fc2 = None
         self._fc3 = None
-        
+
         # Setup interaction
         self._interaction = None
         self._mesh = None
@@ -195,17 +199,18 @@ class Phono3py:
                 phonon_displacement_directions,
                 distance,
                 self._phonon_supercell)
-            
+
     def produce_fc2(self,
                     forces_fc2,
                     displacement_dataset=None,
+                    is_translational_symmetry=False,
                     is_permutation_symmetry=False,
-                    translational_symmetry_type=0):
+                    translational_symmetry_type=None):
         if displacement_dataset is None:
             disp_dataset = self._displacement_dataset
         else:
             disp_dataset = displacement_dataset
-            
+
         for forces, disp1 in zip(forces_fc2, disp_dataset['first_atoms']):
             disp1['forces'] = forces
         self._fc2 = get_fc2(self._phonon_supercell,
@@ -213,10 +218,16 @@ class Phono3py:
                             disp_dataset)
         if is_permutation_symmetry:
             set_permutation_symmetry(self._fc2)
+        if is_translational_symmetry:
+            tsym_type = 1
+        else:
+            tsym_type = 0
         if translational_symmetry_type:
+            tsym_type = translational_symmetry_type
+        if tsym_type:
             set_translational_invariance(
                 self._fc2,
-                translational_symmetry_type=translational_symmetry_type)
+                translational_symmetry_type=tsym_type)
 
     def produce_fc3(self,
                     forces_fc3,
@@ -230,7 +241,7 @@ class Phono3py:
             disp_dataset = self._displacement_dataset
         else:
             disp_dataset = displacement_dataset
-        
+
         for forces, disp1 in zip(forces_fc3, disp_dataset['first_atoms']):
             disp1['forces'] = forces
         fc2 = get_fc2(self._supercell, self._symmetry, disp_dataset)
@@ -247,7 +258,7 @@ class Phono3py:
             set_translational_invariance(
                 fc2,
                 translational_symmetry_type=tsym_type)
-        
+
         count = len(disp_dataset['first_atoms'])
         for disp1 in disp_dataset['first_atoms']:
             for disp2 in disp1['second_atoms']:
@@ -278,7 +289,7 @@ class Phono3py:
                            self._supercell,
                            cutoff_distance,
                            self._symprec)
-            
+
     def set_permutation_symmetry(self):
         if self._fc2 is not None:
             set_permutation_symmetry(self._fc2)
@@ -295,10 +306,10 @@ class Phono3py:
             set_translational_invariance_fc3(
                 self._fc3,
                 translational_symmetry_type=translational_symmetry_type)
-        
+
     def get_interaction_strength(self):
         return self._interaction
-        
+
     def get_fc2(self):
         return self._fc2
 
@@ -335,10 +346,10 @@ class Phono3py:
 
     def get_phonon_supercell_symmetry(self):
         return self._phonon_supercell_symmetry
-        
+
     def set_displacement_dataset(self, dataset):
         self._displacement_dataset = dataset
-        
+
     def get_displacement_dataset(self):
         return self._displacement_dataset
 
@@ -358,7 +369,7 @@ class Phono3py:
                       self._phonon_supercell,
                       self._phonon_displacement_dataset)
         return self._phonon_supercells_with_displacements
-        
+
     def run_imag_self_energy(self,
                              grid_points,
                              frequency_step=None,
@@ -385,7 +396,7 @@ class Phono3py:
             run_with_g=run_with_g,
             write_details=write_details,
             log_level=self._log_level)
-            
+
     def write_imag_self_energy(self, filename=None):
         write_imag_self_energy(
             self._imag_self_energy,
@@ -397,7 +408,7 @@ class Phono3py:
             self._sigmas,
             scattering_event_class=self._scattering_event_class,
             filename=filename)
-        
+
     def run_linewidth(self,
                       grid_points,
                       temperatures=np.arange(0, 1001, 10, dtype='double'),
@@ -531,7 +542,7 @@ class Phono3py:
             len(self._primitive_symmetry.get_pointgroup_operations())):
             print("Warning: point group symmetries of supercell and primitive"
                   "cell are different.")
-        
+
     def _search_phonon_supercell_symmetry(self):
         if self._phonon_supercell_matrix is None:
             self._phonon_supercell_symmetry = self._symmetry
@@ -595,7 +606,7 @@ class Phono3py:
         masses = supercell.get_masses()
         numbers = supercell.get_atomic_numbers()
         lattice = supercell.get_cell()
-        
+
         for disp1 in displacement_dataset['first_atoms']:
             disp_cart1 = disp1['displacement']
             positions = supercell.get_positions()
@@ -609,18 +620,18 @@ class Phono3py:
                       pbc=True))
 
         return supercells
-            
+
     def _build_supercells_with_displacements(self):
         supercells = []
         magmoms = self._supercell.get_magnetic_moments()
         masses = self._supercell.get_masses()
         numbers = self._supercell.get_atomic_numbers()
         lattice = self._supercell.get_cell()
-        
+
         supercells = self._build_phonon_supercells_with_displacements(
             self._supercell,
             self._displacement_dataset)
-        
+
         for disp1 in self._displacement_dataset['first_atoms']:
             disp_cart1 = disp1['displacement']
             for disp2 in disp1['second_atoms']:
@@ -642,14 +653,14 @@ class Phono3py:
                     supercells.append(None)
 
         self._supercells_with_displacements = supercells
-            
+
     def _get_primitive_cell(self, supercell, supercell_matrix, primitive_matrix):
         inv_supercell_matrix = np.linalg.inv(supercell_matrix)
         if primitive_matrix is None:
             t_mat = inv_supercell_matrix
         else:
             t_mat = np.dot(inv_supercell_matrix, primitive_matrix)
-            
+
         return get_primitive(supercell, t_mat, self._symprec)
 
     def _set_masses(self, masses):
@@ -704,7 +715,7 @@ class Phono3pyIsotope:
             adrs = self._iso.get_grid_address()[gp]
             q = adrs.astype('double') / self._mesh
             print("q-point: %s" % q)
-            
+
             if self._sigmas:
                 for sigma in self._sigmas:
                     if sigma is None:
@@ -723,7 +734,7 @@ class Phono3pyIsotope:
             else:
                 print("sigma or tetrahedron method has to be set.")
 
-                    
+
     def set_dynamical_matrix(self,
                              fc2,
                              supercell,
@@ -742,7 +753,7 @@ class Phono3pyIsotope:
 
     def set_sigma(self, sigma):
         self._iso.set_sigma(sigma)
-        
+
 
 class Phono3pyJointDos:
     def __init__(self,
@@ -805,7 +816,7 @@ class Phono3pyJointDos:
     def run(self, grid_points):
         for gp in grid_points:
             self._jdos.set_grid_point(gp)
-            
+
             if self._log_level:
                 weights = self._jdos.get_triplets_at_q()[1]
                 print("--------------------------------- Joint DOS "
@@ -819,7 +830,7 @@ class Phono3pyJointDos:
                 print("Phonon frequency:")
                 frequencies = self._jdos.get_phonons()[0]
                 print("%s" % frequencies[gp])
-            
+
             if self._sigmas:
                 for sigma in self._sigmas:
                     if sigma is None:
