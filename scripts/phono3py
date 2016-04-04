@@ -624,14 +624,12 @@ elif run_mode == "imag_self_energy":
 elif run_mode == "frequency_shift":
     phono3py.get_frequency_shift(
         grid_points,
-        epsilons=sigmas,
         temperatures=temperatures,
         output_filename=output_filename)
 elif run_mode == "conductivity-RTA" or run_mode == "conductivity-LBTE":
     phono3py.run_thermal_conductivity(
         is_LBTE=settings.get_is_lbte(),
         temperatures=temperatures,
-        sigmas=sigmas,
         is_isotope=settings.get_is_isotope(),
         mass_variances=settings.get_mass_variances(),
         grid_points=grid_points,
@@ -648,6 +646,7 @@ elif run_mode == "conductivity-RTA" or run_mode == "conductivity-LBTE":
         pinv_cutoff=settings.get_pinv_cutoff(),
         write_gamma=settings.get_write_gamma(),
         read_gamma=settings.get_read_gamma(),
+        write_kappa=True,
         write_collision=settings.get_write_collision(),
         read_collision=settings.get_read_collision(),
         input_filename=input_filename,

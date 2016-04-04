@@ -27,12 +27,10 @@ def get_thermal_conductivity_RTA(
         is_full_pp=False,
         write_gamma=False,
         read_gamma=False,
+        write_kappa=False,
         input_filename=None,
         output_filename=None,
         log_level=0):
-
-    if sigmas is None:
-        sigmas = []
 
     if log_level:
         print("-------------------- Lattice thermal conducitivity (RTA) "
@@ -71,9 +69,10 @@ def get_thermal_conductivity_RTA(
         if log_level > 1 and read_gamma is False:
             _write_triplets(interaction)
 
-    if (grid_points is None and _all_bands_exist(interaction)):
-        br.set_kappa_at_sigmas()
-        _write_kappa(br, filename=output_filename, log_level=log_level)
+    if write_kappa:
+        if (grid_points is None and _all_bands_exist(interaction)):
+            br.set_kappa_at_sigmas()
+            _write_kappa(br, filename=output_filename, log_level=log_level)
 
     return br
 
@@ -218,7 +217,8 @@ def _write_kappa(br, filename=None, log_level=0):
                             weight=weights,
                             mesh_divisors=mesh_divisors,
                             sigma=sigma,
-                            filename=filename)
+                            filename=filename,
+                            verbose=log_level)
                
 def _set_gamma_from_file(br, filename=None, verbose=True):
     sigmas = br.get_sigmas()
@@ -318,9 +318,6 @@ class Conductivity_RTA(Conductivity):
                  run_with_g=True,
                  is_full_pp=False,
                  log_level=0):
-
-        if sigmas is None:
-            sigmas = []
         self._pp = None
         self._temperatures = None
         self._sigmas = None
