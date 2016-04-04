@@ -26,12 +26,13 @@ class Conductivity:
                  gv_delta_q=None, # finite difference for group veolocity
                  log_level=0):
         if sigmas is None:
-            sigmas = []
+            self._sigmas = []
+        else:
+            self._sigmas = sigmas
         self._pp = interaction
         self._collision = None # has to be set derived class
         
         self._temperatures = temperatures
-        self._sigmas = sigmas
         self._is_kappa_star = is_kappa_star
         self._gv_delta_q = gv_delta_q
         self._log_level = log_level

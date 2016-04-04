@@ -28,6 +28,7 @@ def get_thermal_conductivity_LBTE(
         pinv_cutoff=1.0e-8,
         write_collision=False,
         read_collision=False,
+        write_kappa=False,
         input_filename=None,
         output_filename=None,
         log_level=0):
@@ -76,8 +77,8 @@ def get_thermal_conductivity_LBTE(
 
     if not read_collision or read_from == "grid_points":
         _write_collision(lbte, filename=output_filename)
-        
-    if grid_points is None:
+
+    if write_kappa and grid_points is None:
         lbte.set_kappa_at_sigmas()
         _write_kappa(lbte, filename=output_filename, log_level=log_level)
     

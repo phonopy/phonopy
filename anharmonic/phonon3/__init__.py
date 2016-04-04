@@ -41,9 +41,10 @@ class Phono3py:
                  log_level=0,
                  lapack_zheev_uplo='L'):
         if sigmas is None:
-            sigmas = []
+            self._sigmas = [None]
+        else:
+            self._sigmas = sigmas
         self._symprec = symprec
-        self._sigmas = sigmas
         self._frequency_factor_to_THz = frequency_factor_to_THz
         self._is_symmetry = is_symmetry
         self._is_mesh_symmetry = is_mesh_symmetry
@@ -221,9 +222,10 @@ class Phono3py:
                     forces_fc3,
                     displacement_dataset=None,
                     cutoff_distance=None, # set fc3 zero
-                    translational_symmetry_type=0,
+                    is_translational_symmetry=False,
                     is_permutation_symmetry=False,
-                    is_permutation_symmetry_fc2=False):
+                    is_permutation_symmetry_fc2=False,
+                    translational_symmetry_type=None):
         if displacement_dataset is None:
             disp_dataset = self._displacement_dataset
         else:
@@ -234,10 +236,17 @@ class Phono3py:
         fc2 = get_fc2(self._supercell, self._symmetry, disp_dataset)
         if is_permutation_symmetry_fc2:
             set_permutation_symmetry(fc2)
+
+        if is_translational_symmetry:
+            tsym_type = 1
+        else:
+            tsym_type = 0
         if translational_symmetry_type:
+            tsym_type = translational_symmetry_type
+        if tsym_type:
             set_translational_invariance(
                 fc2,
-                translational_symmetry_type=translational_symmetry_type)
+                translational_symmetry_type=tsym_type)
         
         count = len(disp_dataset['first_atoms'])
         for disp1 in disp_dataset['first_atoms']:
@@ -249,7 +258,7 @@ class Phono3py:
             disp_dataset,
             fc2,
             self._symmetry,
-            translational_symmetry_type=translational_symmetry_type,
+            translational_symmetry_type=tsym_type,
             is_permutation_symmetry=is_permutation_symmetry,
             verbose=self._log_level)
 
@@ -358,6 +367,8 @@ class Phono3py:
                              scattering_event_class=None,
                              run_with_g=True,
                              write_details=False):
+        if self._interaction is None:
+            self.set_phph_interaction()
         if temperatures is None:
             temperatures = [0.0, 300.0]
         self._grid_points = grid_points
@@ -392,6 +403,8 @@ class Phono3py:
                       temperatures=np.arange(0, 1001, 10, dtype='double'),
                       run_with_g=True,
                       write_details=False):
+        if self._interaction is None:
+            self.set_phph_interaction()
         self._grid_points = grid_points
         self._temperatures = temperatures
         self._linewidth = get_linewidth(self._interaction,
@@ -413,9 +426,8 @@ class Phono3py:
 
     def run_thermal_conductivity(
             self,
-            is_LBTE=True,
+            is_LBTE=False,
             temperatures=np.arange(0, 1001, 10, dtype='double'),
-            sigmas=None,
             is_isotope=False,
             mass_variances=None,
             grid_points=None,
@@ -432,15 +444,15 @@ class Phono3py:
             pinv_cutoff=1.0e-8, # for pseudo-inversion of collision matrix
             write_gamma=False,
             read_gamma=False,
+            write_kappa=False,
             write_collision=False,
             read_collision=False,
             write_amplitude=False,
             read_amplitude=False,
             input_filename=None,
             output_filename=None):
-
-        if sigmas is None:
-            sigmas = []
+        if self._interaction is None:
+            self.set_phph_interaction()
         if is_LBTE:
             self._thermal_conductivity = get_thermal_conductivity_LBTE(
                 self._interaction,
@@ -457,6 +469,7 @@ class Phono3py:
                 pinv_cutoff=pinv_cutoff,
                 write_collision=write_collision,
                 read_collision=read_collision,
+                write_kappa=write_kappa,
                 input_filename=input_filename,
                 output_filename=output_filename,
                 log_level=self._log_level)
@@ -480,6 +493,7 @@ class Phono3py:
                 is_full_pp=is_full_pp,
                 write_gamma=write_gamma,
                 read_gamma=read_gamma,
+                write_kappa=write_kappa,
                 input_filename=input_filename,
                 output_filename=output_filename,
                 log_level=self._log_level)
@@ -489,16 +503,17 @@ class Phono3py:
 
     def get_frequency_shift(self,
                             grid_points,
-                            epsilons=None,
                             temperatures=np.arange(0, 1001, 10, dtype='double'),
                             output_filename=None):
+        if self._interaction is None:
+            self.set_phph_interaction()
         if epsilons is None:
             epsilons = [0.1]
         self._grid_points = grid_points
         get_frequency_shift(self._interaction,
                             self._grid_points,
                             self._band_indices,
-                            epsilons,
+                            self._sigmas,
                             temperatures,
                             output_filename=output_filename,
                             log_level=self._log_level)
@@ -667,9 +682,10 @@ class Phono3pyIsotope:
                  cutoff_frequency=None,
                  lapack_zheev_uplo='L'):
         if sigmas is None:
-            sigmas = []
+            self._sigmas = [None]
+        else:
+            self._sigmas = sigmas
         self._mesh = mesh
-        self._sigmas = sigmas
         self._iso = Isotope(mesh,
                             primitive,
                             mass_variances=mass_variances,
@@ -748,14 +764,15 @@ class Phono3pyJointDos:
                  output_filename=None,
                  log_level=0):
         if sigmas is None:
-            sigmas = []
+            self._sigmas = [None]
+        else:
+            self._sigmas = sigmas
         self._supercell = supercell
         self._primitive = primitive
         self._mesh = mesh
         self._fc2 = fc2
         self._nac_params = nac_params
         self._nac_q_direction = nac_q_direction
-        self._sigmas = sigmas
         self._cutoff_frequency = cutoff_frequency
         self._frequency_step = frequency_step
         self._num_frequency_points = num_frequency_points
