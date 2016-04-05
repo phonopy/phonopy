@@ -407,7 +407,8 @@ class Phono3py:
             self._temperatures,
             self._sigmas,
             scattering_event_class=self._scattering_event_class,
-            filename=filename)
+            filename=filename,
+            is_mesh_symmetry=self._is_mesh_symmetry)
 
     def run_linewidth(self,
                       grid_points,
@@ -433,7 +434,8 @@ class Phono3py:
                         self._grid_points,
                         self._sigmas,
                         self._temperatures,
-                        filename=filename)
+                        filename=filename,
+                        is_mesh_symmetry=self._is_mesh_symmetry)
 
     def run_thermal_conductivity(
             self,
