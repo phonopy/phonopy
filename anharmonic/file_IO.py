@@ -433,7 +433,7 @@ def write_imag_self_energy_at_grid_point(gp,
                                          temperature=None,
                                          scattering_event_class=None,
                                          filename=None,
-                                         is_mesh_symmetry=False):
+                                         is_mesh_symmetry=True):
 
     gammas_filename = "gammas"
     gammas_filename += "-m%d%d%d-g%d-" % (mesh[0],
@@ -523,8 +523,8 @@ def write_linewidth_at_grid_point(gp,
                                   gamma,
                                   mesh,
                                   sigma=None,
-                                  is_mesh_symmetry=True,
-                                  filename=None):
+                                  filename=None,
+                                  is_mesh_symmetry=True):
 
     lw_filename = "linewidth"
     lw_filename += "-m%d%d%d-g%d-" % (mesh[0], mesh[1], mesh[2], gp)
@@ -551,8 +551,8 @@ def write_frequency_shift(gp,
                           delta,
                           mesh,
                           epsilon=None,
-                          is_mesh_symmetry=True,
-                          filename=None):
+                          filename=None,
+                          is_mesh_symmetry=True):
 
     fst_filename = "frequency_shift"
     fst_filename += "-m%d%d%d-g%d-" % (mesh[0], mesh[1], mesh[2], gp)
