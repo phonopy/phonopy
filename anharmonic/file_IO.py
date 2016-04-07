@@ -89,7 +89,7 @@ def write_disp_fc3_yaml(dataset, supercell, filename='disp_fc3.yaml'):
                     num_disp_files += 1
             else:
                 num_disp_files += 1
-                
+
     w.write("num_second_displacements: %d\n" %  num_second)
     w.write("num_displacements_created: %d\n" %  num_disp_files)
 
@@ -122,7 +122,7 @@ def write_disp_fc3_yaml(dataset, supercell, filename='disp_fc3.yaml'):
                     else:
                         w.write("    included: %s\n" % "false")
                 w.write("    displacements:\n")
-                
+
             disp_cart2 = disp2['displacement']
             w.write("    - [%20.16f,%20.16f,%20.16f ] # %05d\n" %
                     (disp_cart2[0], disp_cart2[1], disp_cart2[2], count2))
@@ -151,7 +151,7 @@ def write_disp_fc2_yaml(dataset, supercell, filename='disp_fc2.yaml'):
     write_cell_yaml(w, supercell)
 
     w.close()
-    
+
     return num_first
 
 def write_FORCES_FC4_vasp(vaspruns,
@@ -171,7 +171,7 @@ def write_FORCES_FC3_vasp(vaspruns,
     w = open(filename, 'w')
     write_FORCES_FC3(disp_dataset, forces, fp=w)
     w.close()
-    
+
 def write_FORCES_FC2_vasp(vaspruns,
                           disp_dataset,
                           filename='FORCES_FC2'):
@@ -189,7 +189,7 @@ def write_FORCES_FC2(disp_dataset,
         w = open(filename, 'w')
     else:
         w = fp
-        
+
     for i, disp1 in enumerate(disp_dataset['first_atoms']):
         w.write("# File: %-5d\n" % (i + 1))
         w.write("# %-5d " % (disp1['number'] + 1))
@@ -200,20 +200,20 @@ def write_FORCES_FC2(disp_dataset,
             force_set = forces_fc2[i]
         for forces in force_set:
             w.write("%15.10f %15.10f %15.10f\n" % tuple(forces))
-    
+
 def write_FORCES_FC3(disp_dataset, forces_fc3, fp=None, filename="FORCES_FC3"):
     if fp is None:
         w = open(filename, 'w')
     else:
         w = fp
-        
+
     natom = disp_dataset['natom']
     num_disp1 = len(disp_dataset['first_atoms'])
     count = num_disp1
     file_count = num_disp1
 
     write_FORCES_FC2(disp_dataset, forces_fc2=forces_fc3, fp=w)
-    
+
     for i, disp1 in enumerate(disp_dataset['first_atoms']):
         atom1 = disp1['number']
         for disp2 in disp1['second_atoms']:
@@ -244,7 +244,7 @@ def write_FORCES_FC4(disp_dataset, forces_fc4, fp=None, filename="FORCES_FC4"):
         w = open(filename, 'w')
     else:
         w = fp
-        
+
     natom = disp_dataset['natom']
     num_disp1 = len(disp_dataset['first_atoms'])
     num_disp2 = 0
@@ -253,7 +253,7 @@ def write_FORCES_FC4(disp_dataset, forces_fc4, fp=None, filename="FORCES_FC4"):
     count = num_disp1 + num_disp2
 
     write_FORCES_FC3(disp_dataset, forces_fc3=forces_fc4, fp=w)
-    
+
     for i, disp1 in enumerate(disp_dataset['first_atoms']):
         atom1 = disp1['number']
         for disp2 in disp1['second_atoms']:
@@ -273,7 +273,7 @@ def write_FORCES_FC4(disp_dataset, forces_fc4, fp=None, filename="FORCES_FC4"):
                 for forces in forces_fc4[count]:
                     w.write("%15.10f %15.10f %15.10f\n" % tuple(forces))
                 count += 1
-            
+
 def write_fc3_yaml(force_constants_third,
                    filename='fc3.yaml',
                    is_symmetrize=False):
@@ -332,7 +332,7 @@ def read_fc4_from_hdf5(filename='fc4.hdf5'):
     fc4 = f['fc4'][:]
     f.close()
     return fc4
-    
+
 def write_fc3_to_hdf5(force_constants_third, filename='fc3.hdf5'):
     with h5py.File(filename, 'w') as w:
         w.create_dataset('fc3', data=force_constants_third)
@@ -342,7 +342,7 @@ def read_fc3_from_hdf5(filename='fc3.hdf5'):
         fc3 = f['fc3'][:]
         return fc3
     return None
-    
+
 def write_fc2_dat(force_constants, filename='fc2.dat'):
     w = open(filename, 'w')
     for i, fcs in enumerate(force_constants):
@@ -396,7 +396,7 @@ def write_grid_address(grid_address, mesh, filename=None):
         suffix += "." + filename
     suffix += ".dat"
     grid_address_filename += suffix
-    
+
     w = open(grid_address_filename, 'w')
     w.write("# Grid addresses for %dx%dx%d mesh\n" % tuple(mesh))
     w.write("#%9s    %8s %8s %8s     %8s %8s %8s\n" %
@@ -508,8 +508,8 @@ def _write_joint_dos_at_t(gp,
         jdos_filename += ".nosym"
     if filename is not None:
         jdos_filename += ".%s" % filename
-    jdos_filename += ".dat" 
-        
+    jdos_filename += ".dat"
+
     w = open(jdos_filename, 'w')
     for omega, vals in zip(frequencies, jdos):
         w.write("%15.7f" % omega)
@@ -573,7 +573,7 @@ def write_frequency_shift(gp,
     for v, t in zip(delta.sum(axis=1) / delta.shape[1], temperatures):
         w.write("%15.7f %20.15e\n" % (t, v))
     w.close()
-    
+
 def write_collision_to_hdf5(temperature,
                             mesh,
                             gamma=None,
@@ -616,7 +616,7 @@ def write_collision_to_hdf5(temperature,
 def write_full_collision_matrix(collision_matrix, filename='fcm.hdf5'):
     with h5py.File(filename, 'w') as w:
         w.create_dataset('collision_matrix', data=collision_matrix)
-    
+
 def write_kappa_to_hdf5(temperature,
                         mesh,
                         frequency=None,
@@ -735,7 +735,7 @@ def read_gamma_from_hdf5(mesh,
         if verbose:
             print("%s not found." % ("kappa" + suffix + ".hdf5"))
             return False
-        
+
     with h5py.File("kappa" + suffix + ".hdf5", 'r') as f:
         if len(f['gamma'].shape) > 0:
             gamma = f['gamma'][:]
@@ -755,10 +755,10 @@ def read_gamma_from_hdf5(mesh,
                 averaged_pp_interaction = f['ave_pp'][()]
         else:
             averaged_pp_interaction = None
-    
+
         if verbose:
             print("Read data from %s." % ("kappa" + suffix + ".hdf5"))
-    
+
         return gamma, gamma_isotope, averaged_pp_interaction
 
     return None
@@ -785,7 +785,7 @@ def read_collision_from_hdf5(mesh,
         collision_matrix = f['collision_matrix'][:]
         temperatures = f['temperature'][:]
         f.close()
-        
+
         if verbose:
             text = "Collisions "
             if grid_point is not None:
@@ -939,7 +939,7 @@ def parse_disp_fc2_yaml(filename="disp_fc2.yaml"):
     new_dataset['first_atoms'] = new_first_atoms
 
     return new_dataset
-        
+
 def parse_disp_fc3_yaml(filename="disp_fc3.yaml"):
     dataset = _parse_yaml(filename)
     natom = dataset['natom']
@@ -970,7 +970,7 @@ def parse_disp_fc3_yaml(filename="disp_fc3.yaml"):
     new_dataset['first_atoms'] = new_first_atoms
 
     return new_dataset
-    
+
 def parse_disp_fc4_yaml(filename="disp_fc4.yaml"):
     dataset = _parse_yaml(filename)
     natom = dataset['natom']
@@ -1008,13 +1008,12 @@ def parse_disp_fc4_yaml(filename="disp_fc4.yaml"):
     new_dataset['num_third_displacements'] = dataset['num_third_displacements']
 
     return new_dataset
-    
+
 def parse_FORCES_FC2(disp_dataset, filename="FORCES_FC2"):
     num_atom = disp_dataset['natom']
     num_disp = len(disp_dataset['first_atoms'])
-    f2 = open(filename, 'r')
-    forces_fc2 = [_parse_force_lines(f2, num_atom) for i in range(num_disp)]
-    f2.close()
+    with open(filename, 'r') as f2:
+        forces_fc2 = [_parse_force_lines(f2, num_atom) for i in range(num_disp)]
     return forces_fc2
 
 def parse_FORCES_FC3(disp_dataset, filename="FORCES_FC3"):
@@ -1022,9 +1021,8 @@ def parse_FORCES_FC3(disp_dataset, filename="FORCES_FC3"):
     num_disp = len(disp_dataset['first_atoms'])
     for disp1 in disp_dataset['first_atoms']:
         num_disp += len(disp1['second_atoms'])
-    f3 = open(filename, 'r')
-    forces_fc3 = [_parse_force_lines(f3, num_atom) for i in range(num_disp)]
-    f3.close()
+    with open(filename, 'r') as f3:
+        forces_fc3 = [_parse_force_lines(f3, num_atom) for i in range(num_disp)]
     return forces_fc3
 
 def parse_FORCES_FC4(disp_dataset, filename="FORCES_FC4"):
@@ -1038,7 +1036,7 @@ def parse_FORCES_FC4(disp_dataset, filename="FORCES_FC4"):
     assert num_disp == (disp_dataset['num_first_displacements'] +
                         disp_dataset['num_second_displacements'] +
                         disp_dataset['num_third_displacements'])
-        
+
 
     f4 = open(filename, 'r')
     forces_fc4 = [_parse_force_lines(f4, num_atom) for i in range(num_disp)]
@@ -1106,7 +1104,7 @@ def parse_triplets(filename):
         weights.append(line_array[3])
 
     return np.array(triplets), np.array(weights)
-    
+
 def parse_grid_address(filename):
     f = open(filename, 'r')
     grid_address = []
