@@ -32,6 +32,7 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import sys
 from phonopy.harmonic.force_constants import show_drift_force_constants
 from anharmonic.phonon3.fc3 import show_drift_fc3
 from anharmonic.file_IO import (parse_disp_fc3_yaml,
@@ -91,7 +92,13 @@ def create_phono3py_force_constants(phono3py,
             file_exists(filename, log_level)
             if log_level:
                 print("Reading fc3 from %s" % filename)
+            supercell = phono3py.get_supercell()
             fc3 = read_fc3_from_hdf5(filename=filename)
+            if fc3.shape[0] != supercell.get_number_of_atoms():
+                print("Matrix shape of fc3 doesn't agree with supercell size.")
+                if log_level:
+                    print_error()
+                sys.exit(1)
             phono3py.set_fc3(fc3)
         else: # fc3 from FORCES_THIRD and FORCES_SECOND
             _create_phono3py_fc3(phono3py,
@@ -119,7 +126,7 @@ def create_phono3py_force_constants(phono3py,
         phonon_supercell = phono3py.get_phonon_supercell()
         phonon_fc2 = read_fc2_from_hdf5(filename=filename)
         if phonon_fc2.shape[0] != phonon_supercell.get_number_of_atoms():
-            print("Matrix shape of fc2 doesn't agree with supercell.")
+            print("Matrix shape of fc2 doesn't agree with supercell size.")
             if log_level:
                 print_error()
             sys.exit(1)
