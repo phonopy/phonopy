@@ -145,8 +145,7 @@ def read_vasp(filename, symbols=None):
     return _get_atoms_from_poscar(lines, symbols)
 
 def read_vasp_from_strings(strings, symbols=None):
-    return _get_atoms_from_poscar(
-        StringIO.StringIO(strings).readlines(), symbols)
+    return _get_atoms_from_poscar(StringIO(strings).readlines(), symbols)
 
 def _get_atoms_from_poscar(lines, symbols):
     line1 = [x for x in lines[0].split()]
