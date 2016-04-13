@@ -152,8 +152,8 @@
 <ol class="arabic">
 <li><p class="first">Read a Wien2k struct file with the P lattice format and create
 supercells with the Wien2k struct format of P lattice using
-<code class="docutils literal"><span class="pre">--wien2k</span></code> option (<a class="reference internal" href="command-options.html#wien2k-mode"><span>&#8211;wien2k</span></a>):</p>
-<div class="highlight-python"><div class="highlight"><pre>% phonopy --wien2k -d --dim=&quot;2 2 2&quot; -c case.struct
+<code class="docutils literal"><span class="pre">--wien2k</span></code> option (<a class="reference internal" href="command-options.html#wien2k-mode"><span class="std std-ref">&#8211;wien2k</span></a>):</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">wien2k</span> <span class="o">-</span><span class="n">d</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;2 2 2&quot;</span> <span class="o">-</span><span class="n">c</span> <span class="n">case</span><span class="o">.</span><span class="n">struct</span>
 </pre></div>
 </div>
 <p>In this example, 2x2x2 supercells are created. <code class="docutils literal"><span class="pre">case.structS</span></code> and
@@ -177,7 +177,7 @@ criteria with saving one by one using <code class="docutils literal"><span class
 <a class="reference external" href="http://www.wien2k.at/reg_user/unsupported/">http://www.wien2k.at/reg_user/unsupported/</a>.</p>
 </li>
 <li><p class="first">Or try experimetal support of <code class="docutils literal"><span class="pre">-f</span></code> option:</p>
-<div class="highlight-python"><div class="highlight"><pre>% phonopy --wien2k -f case-001.scf case-002.scf ...
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">wien2k</span> <span class="o">-</span><span class="n">f</span> <span class="n">case</span><span class="o">-</span><span class="mf">001.</span><span class="n">scf</span> <span class="n">case</span><span class="o">-</span><span class="mf">002.</span><span class="n">scf</span> <span class="o">...</span>
 </pre></div>
 </div>
 <p>where <code class="docutils literal"><span class="pre">case-xxx.scf</span></code> are the Wien2k results for the
@@ -200,7 +200,7 @@ case. An example is found in <code class="docutils literal"><span class="pre">ex
 </li>
 <li><p class="first">Run post-process of phonopy with the Wien2k unit cell struct file
 used in the step 1:</p>
-<div class="highlight-python"><div class="highlight"><pre>% phonopy --wien2k -c case.struct --dim=&quot;2 2 2&quot; [other-OPTIONS] [setting-file]
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">wien2k</span> <span class="o">-</span><span class="n">c</span> <span class="n">case</span><span class="o">.</span><span class="n">struct</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;2 2 2&quot;</span> <span class="p">[</span><span class="n">other</span><span class="o">-</span><span class="n">OPTIONS</span><span class="p">]</span> <span class="p">[</span><span class="n">setting</span><span class="o">-</span><span class="n">file</span><span class="p">]</span>
 </pre></div>
 </div>
 </li>
@@ -232,7 +232,7 @@ be done using <code class="docutils literal"><span class="pre">supercell</span><
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.5.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.<br/>
     </p>
   </div>
 </footer>

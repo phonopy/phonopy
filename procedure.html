@@ -67,7 +67,7 @@
       role="menu"
       aria-labelledby="dLabelGlobalToc"><ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="">Tutorial</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Tutorial</a></li>
 <li class="toctree-l1"><a class="reference internal" href="workflow.html">Work flow</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install.html">Download and install</a></li>
 <li class="toctree-l1"><a class="reference internal" href="features.html">Features</a></li>
@@ -152,17 +152,17 @@
 <span id="tutorial"></span><h1>VASP &amp; phonopy calculation<a class="headerlink" href="#vasp-phonopy-calculation" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="pre-process">
 <h2>Pre-process<a class="headerlink" href="#pre-process" title="Permalink to this headline">¶</a></h2>
-<p>The input stureture of <code class="docutils literal"><span class="pre">POSCAR</span></code> is supposed to be <a class="reference internal" href="input-files.html#example-poscar1"><span>this</span></a>.</p>
+<p>The input stureture of <code class="docutils literal"><span class="pre">POSCAR</span></code> is supposed to be <a class="reference internal" href="input-files.html#example-poscar1"><span class="std std-ref">this</span></a>.</p>
 <p>In the pre-process, supercell structures with (or without) displacements are created from a unit cell fully consiering crystal symmetry.</p>
 <p>To obtain supercells (<img class="math" src="_images/math/5365ffdb4a545753460c5417513aae7b22054182.png" alt="2\times 2\times 3"/>) with displacements,
 run phonopy:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">phonopy</span> <span class="o">-</span><span class="n">d</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;2 2 3&quot;</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">phonopy</span> <span class="o">-</span><span class="n">d</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;2 2 3&quot;</span>
 </pre></div>
 </div>
 <p>You should find the files, <code class="docutils literal"><span class="pre">SPOSCAR</span></code>, <code class="docutils literal"><span class="pre">disp.yaml</span></code>, and <code class="docutils literal"><span class="pre">POSCAR-{number}</span></code> as
 follows:</p>
-<div class="highlight-python"><div class="highlight"><pre>% ls
-disp.yaml  POSCAR  POSCAR-001  POSCAR-002  POSCAR-003  SPOSCAR
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">ls</span>
+<span class="n">disp</span><span class="o">.</span><span class="n">yaml</span>  <span class="n">POSCAR</span>  <span class="n">POSCAR</span><span class="o">-</span><span class="mi">001</span>  <span class="n">POSCAR</span><span class="o">-</span><span class="mi">002</span>  <span class="n">POSCAR</span><span class="o">-</span><span class="mi">003</span>  <span class="n">SPOSCAR</span>
 </pre></div>
 </div>
 <p><code class="docutils literal"><span class="pre">SPOSCAR</span></code> is the perfect supercell structure, <code class="docutils literal"><span class="pre">disp.yaml</span></code> contains
@@ -175,30 +175,30 @@ to the different atomic displacements written in <code class="docutils literal">
 <p>Force constants are calculated using the structure files <code class="docutils literal"><span class="pre">POSCAR-{number}</span></code>
 (from forces on atoms) or using the <code class="docutils literal"><span class="pre">SPOSCAR</span></code> file (direct calculation of force
 constants) by your favorite calculator. See the
-<a class="reference internal" href="#details-of-procedure"><span>details</span></a>.</p>
+<a class="reference internal" href="#details-of-procedure"><span class="std std-ref">details</span></a>.</p>
 <p>In the case of VASP, the calculations for the finite displacement method can be proceeded just using the <code class="docutils literal"><span class="pre">POSCAR-{number}</span></code> files as <code class="docutils literal"><span class="pre">POSCAR</span></code> of VASP calculations. An example of the <code class="docutils literal"><span class="pre">INCAR</span></code> is as follows:</p>
-<div class="highlight-python"><div class="highlight"><pre>   PREC = Accurate
- IBRION = -1
-  ENCUT = 500
-  EDIFF = 1.0e-08
- ISMEAR = 0; SIGMA = 0.01
-  IALGO = 38
-  LREAL = .FALSE.
-ADDGRID = .TRUE.
-  LWAVE = .FALSE.
- LCHARG = .FALSE.
+<div class="highlight-default"><div class="highlight"><pre><span></span>   <span class="n">PREC</span> <span class="o">=</span> <span class="n">Accurate</span>
+ <span class="n">IBRION</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+  <span class="n">ENCUT</span> <span class="o">=</span> <span class="mi">500</span>
+  <span class="n">EDIFF</span> <span class="o">=</span> <span class="mf">1.0e-08</span>
+ <span class="n">ISMEAR</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">SIGMA</span> <span class="o">=</span> <span class="mf">0.01</span>
+  <span class="n">IALGO</span> <span class="o">=</span> <span class="mi">38</span>
+  <span class="n">LREAL</span> <span class="o">=</span> <span class="o">.</span><span class="n">FALSE</span><span class="o">.</span>
+<span class="n">ADDGRID</span> <span class="o">=</span> <span class="o">.</span><span class="n">TRUE</span><span class="o">.</span>
+  <span class="n">LWAVE</span> <span class="o">=</span> <span class="o">.</span><span class="n">FALSE</span><span class="o">.</span>
+ <span class="n">LCHARG</span> <span class="o">=</span> <span class="o">.</span><span class="n">FALSE</span><span class="o">.</span>
 </pre></div>
 </div>
 <p>Be careful not to relax the structures. Then create <code class="docutils literal"><span class="pre">FORCE_SETS</span></code>
-file using <a class="reference internal" href="command-options.html#vasp-force-sets-option"><span>VASP interface</span></a>:</p>
-<div class="highlight-python"><div class="highlight"><pre>% phonopy -f disp-001/vasprun.xml disp-002/vasprun.xml disp-003/vasprun.xml
+file using <a class="reference internal" href="command-options.html#vasp-force-sets-option"><span class="std std-ref">VASP interface</span></a>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">f</span> <span class="n">disp</span><span class="o">-</span><span class="mi">001</span><span class="o">/</span><span class="n">vasprun</span><span class="o">.</span><span class="n">xml</span> <span class="n">disp</span><span class="o">-</span><span class="mi">002</span><span class="o">/</span><span class="n">vasprun</span><span class="o">.</span><span class="n">xml</span> <span class="n">disp</span><span class="o">-</span><span class="mi">003</span><span class="o">/</span><span class="n">vasprun</span><span class="o">.</span><span class="n">xml</span>
 </pre></div>
 </div>
 <p>or</p>
-<div class="highlight-python"><div class="highlight"><pre>% phonopy -f disp-{001..003}/vasprun.xml
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">f</span> <span class="n">disp</span><span class="o">-</span><span class="p">{</span><span class="mf">001.</span><span class="o">.</span><span class="mi">003</span><span class="p">}</span><span class="o">/</span><span class="n">vasprun</span><span class="o">.</span><span class="n">xml</span>
 </pre></div>
 </div>
-<p>If you want to calculate force constants by VASP-DFPT directory, see <a class="reference internal" href="vasp.html#vasp-dfpt-interface"><span>VASP-DFPT &amp; phonopy calculation</span></a>.</p>
+<p>If you want to calculate force constants by VASP-DFPT directory, see <a class="reference internal" href="vasp.html#vasp-dfpt-interface"><span class="std std-ref">VASP-DFPT &amp; phonopy calculation</span></a>.</p>
 </div>
 <div class="section" id="post-process">
 <h2>Post-process<a class="headerlink" href="#post-process" title="Permalink to this headline">¶</a></h2>
@@ -211,43 +211,43 @@ dynamical matrices with the specified <em>q</em>-points.</li>
 </ol>
 <p>For mesh sampling calculation, prepare the following setting file named, e.g.,
 <code class="docutils literal"><span class="pre">mesh.conf</span></code>:</p>
-<div class="highlight-python"><div class="highlight"><pre>ATOM_NAME = Si O
-DIM = 2 2 3
-MP = 8 8 8
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">ATOM_NAME</span> <span class="o">=</span> <span class="n">Si</span> <span class="n">O</span>
+<span class="n">DIM</span> <span class="o">=</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">3</span>
+<span class="n">MP</span> <span class="o">=</span> <span class="mi">8</span> <span class="mi">8</span> <span class="mi">8</span>
 </pre></div>
 </div>
 <p>The density of states (DOS) is plotted by:</p>
-<div class="highlight-python"><div class="highlight"><pre>% phonopy -p mesh.conf
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">p</span> <span class="n">mesh</span><span class="o">.</span><span class="n">conf</span>
 </pre></div>
 </div>
 <p>Thermal properties are calculated with the sampling mesh by:</p>
-<div class="highlight-python"><div class="highlight"><pre>% phonopy -t mesh.conf
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">t</span> <span class="n">mesh</span><span class="o">.</span><span class="n">conf</span>
 </pre></div>
 </div>
 <p>You should check the convergence with respect to the mesh numbers.
 Thermal properties can be plotted by:</p>
-<div class="highlight-python"><div class="highlight"><pre>% phonopy -t -p mesh.conf
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">t</span> <span class="o">-</span><span class="n">p</span> <span class="n">mesh</span><span class="o">.</span><span class="n">conf</span>
 </pre></div>
 </div>
 <p>Projected DOS is calculated by the following setting file named, e.g., <code class="docutils literal"><span class="pre">pdos.conf</span></code>:</p>
-<div class="highlight-python"><div class="highlight"><pre>ATOM_NAME = Si O
-DIM = 2 2 3
-MP = 8 8 8
-PDOS = 1 2, 3 4 5 6
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">ATOM_NAME</span> <span class="o">=</span> <span class="n">Si</span> <span class="n">O</span>
+<span class="n">DIM</span> <span class="o">=</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">3</span>
+<span class="n">MP</span> <span class="o">=</span> <span class="mi">8</span> <span class="mi">8</span> <span class="mi">8</span>
+<span class="n">PDOS</span> <span class="o">=</span> <span class="mi">1</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span> <span class="mi">4</span> <span class="mi">5</span> <span class="mi">6</span>
 </pre></div>
 </div>
 <p>and plotted by:</p>
-<div class="highlight-python"><div class="highlight"><pre>% phonopy -p pdos.conf
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">p</span> <span class="n">pdos</span><span class="o">.</span><span class="n">conf</span>
 </pre></div>
 </div>
 <p>Band structure is calculated with the following setting file named, e.g., <cite>band.conf</cite> by:</p>
-<div class="highlight-python"><div class="highlight"><pre>ATOM_NAME = Si O
-DIM =  2 2 3
-BAND = 0.5 0.5 0.5  0.0 0.0 0.0  0.5 0.5 0.0  0.0 0.5 0.0
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">ATOM_NAME</span> <span class="o">=</span> <span class="n">Si</span> <span class="n">O</span>
+<span class="n">DIM</span> <span class="o">=</span>  <span class="mi">2</span> <span class="mi">2</span> <span class="mi">3</span>
+<span class="n">BAND</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="mf">0.5</span> <span class="mf">0.5</span>  <span class="mf">0.0</span> <span class="mf">0.0</span> <span class="mf">0.0</span>  <span class="mf">0.5</span> <span class="mf">0.5</span> <span class="mf">0.0</span>  <span class="mf">0.0</span> <span class="mf">0.5</span> <span class="mf">0.0</span>
 </pre></div>
 </div>
 <p>The band structure is plotted by:</p>
-<div class="highlight-python"><div class="highlight"><pre>% phonopy -p band.conf
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">p</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
 </pre></div>
 </div>
 <p>In either case, by setting the <code class="docutils literal"><span class="pre">-s</span></code> option, the plot is going to be saved in the PDF
@@ -267,23 +267,23 @@ supercell contains one atomic displacement. It is done by using
 <code class="docutils literal"><span class="pre">-d</span></code> option with <code class="docutils literal"><span class="pre">--dim</span></code> option that specifies supercell
 dimension.  The files of supercells with atomic displacements like
 as <code class="docutils literal"><span class="pre">POSCAR-001</span></code>, <code class="docutils literal"><span class="pre">POSCAR-002</span></code>, ..., are created in current
-directory (the file format and names are different in <a class="reference internal" href="command-options.html#wien2k-mode"><span>WIEN2k
+directory (the file format and names are different in <a class="reference internal" href="command-options.html#wien2k-mode"><span class="std std-ref">WIEN2k
 mode</span></a>.) by running phonopy. The files <code class="docutils literal"><span class="pre">disp.yaml</span></code>
 and <code class="docutils literal"><span class="pre">SPOSCAR</span></code> are also created. The file <code class="docutils literal"><span class="pre">SPOSCAR</span></code> is the
 perfect supercell that contains no atomic displacement. This file
 is not usually used.</li>
 <li>Calculate forces on atoms of the supercells with atomic
-displacements. Currently phonopy has <a class="reference internal" href="command-options.html#vasp-force-sets-option"><span>VASP</span></a> and <a class="reference internal" href="wien2k.html#wien2k-interface"><span>WIEN2k</span></a>
+displacements. Currently phonopy has <a class="reference internal" href="command-options.html#vasp-force-sets-option"><span class="std std-ref">VASP</span></a> and <a class="reference internal" href="wien2k.html#wien2k-interface"><span class="std std-ref">WIEN2k</span></a>
 interfaces to create <code class="docutils literal"><span class="pre">FORCE_SETS</span></code>. After obtaining forces on
 atoms that calculated by some calculator (it&#8217;s out of phonopy), the
 forces are summarized in <code class="docutils literal"><span class="pre">FORCE_SETS</span></code> file following the
-<a class="reference internal" href="input-files.html#file-forces"><span>format</span></a>.</li>
-<li>Calculate phonon related properties. See <a class="reference internal" href="features.html#analyze-phonon"><span>Features</span></a>.</li>
+<a class="reference internal" href="input-files.html#file-forces"><span class="std std-ref">format</span></a>.</li>
+<li>Calculate phonon related properties. See <a class="reference internal" href="features.html#analyze-phonon"><span class="std std-ref">Features</span></a>.</li>
 </ol>
 <p>If you already have force constants, the first and second steps can be
 omitted. However your force constants have to be converted to the
-<a class="reference internal" href="input-files.html#file-force-constants"><span>format</span></a> that phonopy can read.  The
-<a class="reference internal" href="command-options.html#vasp-force-constants"><span>VASP interface</span></a> to convert force
+<a class="reference internal" href="input-files.html#file-force-constants"><span class="std std-ref">format</span></a> that phonopy can read.  The
+<a class="reference internal" href="command-options.html#vasp-force-constants"><span class="std std-ref">VASP interface</span></a> to convert force
 constants is prepared in phonopy.</p>
 </div>
 </div>
@@ -309,7 +309,7 @@ constants is prepared in phonopy.</p>
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.5.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.<br/>
     </p>
   </div>
 </footer>

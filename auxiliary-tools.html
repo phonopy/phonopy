@@ -78,7 +78,7 @@
 <li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="interfaces.html">Interfaces to calculators</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="">Auxiliary tools</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Auxiliary tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="phonopy-module.html">Using phonopy as a python module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="theory.html">Formulations</a></li>
@@ -168,11 +168,11 @@ format. <code class="docutils literal"><span class="pre">-o</span></code> option
 file in PDF format. A few more options are prepared and shown by
 <code class="docutils literal"><span class="pre">-h</span></code> option. If you specify more than two yaml files, they are
 plotted together.</p>
-<div class="highlight-python"><div class="highlight"><pre>bandplot band.yaml
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">bandplot</span> <span class="n">band</span><span class="o">.</span><span class="n">yaml</span>
 </pre></div>
 </div>
 <p>To obtain a simple text format data:</p>
-<div class="highlight-python"><div class="highlight"><pre>bandplot --gnuplot band.yaml
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">bandplot</span> <span class="o">--</span><span class="n">gnuplot</span> <span class="n">band</span><span class="o">.</span><span class="n">yaml</span>
 </pre></div>
 </div>
 </div>
@@ -180,7 +180,7 @@ plotted together.</p>
 <span id="pdosplot-tool"></span><h2><code class="docutils literal"><span class="pre">pdosplot</span></code><a class="headerlink" href="#pdosplot" title="Permalink to this headline">¶</a></h2>
 <p>Partial density of states (PDOS) are plotted.</p>
 <p><code class="docutils literal"><span class="pre">-i</span></code> option is used as</p>
-<div class="highlight-python"><div class="highlight"><pre>pdosplot -i &#39;1 2 4 5, 3 6&#39; -o &#39;pdos.pdf&#39; partial_dos.dat
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">pdosplot</span> <span class="o">-</span><span class="n">i</span> <span class="s1">&#39;1 2 4 5, 3 6&#39;</span> <span class="o">-</span><span class="n">o</span> <span class="s1">&#39;pdos.pdf&#39;</span> <span class="n">partial_dos</span><span class="o">.</span><span class="n">dat</span>
 </pre></div>
 </div>
 <p>The indices and comma in &#8216;1 2 3 4, 5 6&#8217; mean as follows. The indices
@@ -195,7 +195,7 @@ correspond to atoms.  A few more options are prepared and shown by
 <p>Thermal properties are plotted. Options are prepared and shown by
 <code class="docutils literal"><span class="pre">-h</span></code> option. If you specify more than two yaml files, they are
 plotted together.</p>
-<div class="highlight-python"><div class="highlight"><pre>proplot thermal_properties_A.yaml thermal_properties_B.yaml
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">proplot</span> <span class="n">thermal_properties_A</span><span class="o">.</span><span class="n">yaml</span> <span class="n">thermal_properties_B</span><span class="o">.</span><span class="n">yaml</span>
 </pre></div>
 </div>
 </div>
@@ -212,7 +212,7 @@ file and <code class="docutils literal"><span class="pre">--overwrite</span></co
 as a character string. The first value is the atom index and remaining
 three values are for direction. <code class="docutils literal"><span class="pre">--amplitude</span></code> is used with <code class="docutils literal"><span class="pre">-a</span></code>
 and specify the displacement amplitude. An example is as follows:</p>
-<div class="highlight-python"><div class="highlight"><pre>dispmanager disp.yaml -o disp-new.yaml -a &quot;33 1 1 0&quot; --amplitude 0.05
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">dispmanager</span> <span class="n">disp</span><span class="o">.</span><span class="n">yaml</span> <span class="o">-</span><span class="n">o</span> <span class="n">disp</span><span class="o">-</span><span class="n">new</span><span class="o">.</span><span class="n">yaml</span> <span class="o">-</span><span class="n">a</span> <span class="s2">&quot;33 1 1 0&quot;</span> <span class="o">--</span><span class="n">amplitude</span> <span class="mf">0.05</span>
 </pre></div>
 </div>
 <p><code class="docutils literal"><span class="pre">disp-new.yaml</span></code> is created from <code class="docutils literal"><span class="pre">disp.yaml</span></code> with a new
@@ -222,7 +222,7 @@ lattice vectors. The amplitude unit is same as the lattice vectors.</p>
 <p><code class="docutils literal"><span class="pre">-s</span></code> is specified with displacement indices. For example when there
 are four dependent displacements and only the first and third
 displacements are needed, <code class="docutils literal"><span class="pre">dispmanager</span></code> is used like</p>
-<div class="highlight-python"><div class="highlight"><pre>dispmanager disp.yaml -o disp-new.yaml -s &quot;1 3&quot;
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">dispmanager</span> <span class="n">disp</span><span class="o">.</span><span class="n">yaml</span> <span class="o">-</span><span class="n">o</span> <span class="n">disp</span><span class="o">-</span><span class="n">new</span><span class="o">.</span><span class="n">yaml</span> <span class="o">-</span><span class="n">s</span> <span class="s2">&quot;1 3&quot;</span>
 </pre></div>
 </div>
 </div>
@@ -247,11 +247,11 @@ type file and <code class="docutils literal"><span class="pre">POSCAR</span></co
 <code class="docutils literal"><span class="pre">POSCAR</span></code> and <code class="docutils literal"><span class="pre">OUTCAR</span></code> in current directory are read.</p>
 <div class="section" id="pa-primitive-axis">
 <h3><code class="docutils literal"><span class="pre">--pa</span></code>, <code class="docutils literal"><span class="pre">--primitive_axis</span></code><a class="headerlink" href="#pa-primitive-axis" title="Permalink to this headline">¶</a></h3>
-<p>This is same as <a class="reference internal" href="setting-tags.html#primitive-axis-tag"><span>PRIMITIVE_AXIS</span></a>.</p>
+<p>This is same as <a class="reference internal" href="setting-tags.html#primitive-axis-tag"><span class="std std-ref">PRIMITIVE_AXIS</span></a>.</p>
 </div>
 <div class="section" id="dim">
 <h3><code class="docutils literal"><span class="pre">--dim</span></code><a class="headerlink" href="#dim" title="Permalink to this headline">¶</a></h3>
-<p>This is same as <a class="reference internal" href="setting-tags.html#dimension-tag"><span>CELL_FILENAME</span></a>.</p>
+<p>This is same as <a class="reference internal" href="setting-tags.html#dimension-tag"><span class="std std-ref">CELL_FILENAME</span></a>.</p>
 </div>
 <div class="section" id="st">
 <h3><code class="docutils literal"><span class="pre">--st</span></code><a class="headerlink" href="#st" title="Permalink to this headline">¶</a></h3>
@@ -281,7 +281,7 @@ type file and <code class="docutils literal"><span class="pre">POSCAR</span></co
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.5.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.<br/>
     </p>
   </div>
 </footer>

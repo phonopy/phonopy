@@ -75,7 +75,7 @@
 <li class="toctree-l1"><a class="reference internal" href="output-files.html">Output files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="setting-tags.html">Setting tags</a></li>
 <li class="toctree-l1"><a class="reference internal" href="command-options.html">Command options</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="">Quasi harmonic approximation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Quasi harmonic approximation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="interfaces.html">Interfaces to calculators</a></li>
 <li class="toctree-l1"><a class="reference internal" href="auxiliary-tools.html">Auxiliary tools</a></li>
@@ -166,24 +166,24 @@
 heat capacity at constant pressure can be calculated under the
 quasi-harmonic approximation. <code class="docutils literal"><span class="pre">phonopy-qha</span></code> is the script to
 calculate them. An example of the usage is as follows:</p>
-<div class="highlight-python"><div class="highlight"><pre>phonopy-qha e-v.dat thermal_properties-{1..10}.yaml
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">phonopy</span><span class="o">-</span><span class="n">qha</span> <span class="n">e</span><span class="o">-</span><span class="n">v</span><span class="o">.</span><span class="n">dat</span> <span class="n">thermal_properties</span><span class="o">-</span><span class="p">{</span><span class="mf">1.</span><span class="o">.</span><span class="mi">10</span><span class="p">}</span><span class="o">.</span><span class="n">yaml</span>
 </pre></div>
 </div>
 <p>1st argument is the filename of volume-energy data (in the above
 expample, <code class="docutils literal"><span class="pre">e-v.dat</span></code>). The volume and energy of the cell (default
 units are in <img class="math" src="_images/math/1f2315642658781595c397905f41d3b48de3ccbd.png" alt="\mathrm{\AA}^3"/> and eV, respectively). An example of the
 volume-energy file is:</p>
-<div class="highlight-python"><div class="highlight"><pre>#   cell volume        energy of cell other than phonon
-   156.7387309525      -104.5290025375
-   154.4138492700      -104.6868148175
-   152.2544070150      -104.8064238800
-   150.2790355600      -104.8911768625
-   148.4469296725      -104.9470385875
-   146.7037426750      -104.9783724075
-   145.1182305450      -104.9871878600
-   143.5676103350      -104.9765270775
-   142.1282086200      -104.9485225225
-   139.4989658225      -104.8492814250
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1">#   cell volume        energy of cell other than phonon</span>
+   <span class="mf">156.7387309525</span>      <span class="o">-</span><span class="mf">104.5290025375</span>
+   <span class="mf">154.4138492700</span>      <span class="o">-</span><span class="mf">104.6868148175</span>
+   <span class="mf">152.2544070150</span>      <span class="o">-</span><span class="mf">104.8064238800</span>
+   <span class="mf">150.2790355600</span>      <span class="o">-</span><span class="mf">104.8911768625</span>
+   <span class="mf">148.4469296725</span>      <span class="o">-</span><span class="mf">104.9470385875</span>
+   <span class="mf">146.7037426750</span>      <span class="o">-</span><span class="mf">104.9783724075</span>
+   <span class="mf">145.1182305450</span>      <span class="o">-</span><span class="mf">104.9871878600</span>
+   <span class="mf">143.5676103350</span>      <span class="o">-</span><span class="mf">104.9765270775</span>
+   <span class="mf">142.1282086200</span>      <span class="o">-</span><span class="mf">104.9485225225</span>
+   <span class="mf">139.4989658225</span>      <span class="o">-</span><span class="mf">104.8492814250</span>
 </pre></div>
 </div>
 <p>Lines starting with <code class="docutils literal"><span class="pre">#</span></code> are ignored. The other arguments are the
@@ -191,7 +191,7 @@ filenames of <code class="docutils literal"><span class="pre">thermal_properties
 volumes given in the 1st argument. The <code class="docutils literal"><span class="pre">thermal_properties.yaml</span></code> at
 volume points have to be calculated with the same temperature ranges
 and same temperature steps. <code class="docutils literal"><span class="pre">thermal_properties.yaml</span></code> can be
-calculated by following <a class="reference internal" href="setting-tags.html#thermal-properties-tag"><span>Thermal properties related tags</span></a>, where the
+calculated by following <a class="reference internal" href="setting-tags.html#thermal-properties-tag"><span class="std std-ref">Thermal properties related tags</span></a>, where the
 physical unit of the Helmholtz free energy is kJ/mol as the default,
 i.e., no need to convert the physical unit in usual cases.</p>
 <p>The example for Aluminum is found in the <code class="docutils literal"><span class="pre">example</span></code> directory.</p>
@@ -230,13 +230,13 @@ only plotted.</p>
 <h4><code class="docutils literal"><span class="pre">--pressure</span></code><a class="headerlink" href="#pressure" title="Permalink to this headline">¶</a></h4>
 <p><strong>This option is not yet well tested. Please report to the mailing list when you get wrong results.</strong></p>
 <p>Pressure is specified in GPa. This corresponds to the <img class="math" src="_images/math/f9cd47ee828774a5bf1a063755dba74cabb5806a.png" alt="pV"/> term
-described in the following section <a class="reference internal" href="#theory-of-qha"><span>Theory of quasi-harmonic approximation</span></a>.</p>
+described in the following section <a class="reference internal" href="#theory-of-qha"><span class="std std-ref">Theory of quasi-harmonic approximation</span></a>.</p>
 </div>
 <div class="section" id="b">
 <h4><code class="docutils literal"><span class="pre">-b</span></code><a class="headerlink" href="#b" title="Permalink to this headline">¶</a></h4>
 <p>Fitting volume-energy data to an EOS, and show bulk
 modulus (without considering phonons). This is made by:</p>
-<div class="highlight-python"><div class="highlight"><pre>phonopy-qha -b e-v.dat
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">phonopy</span><span class="o">-</span><span class="n">qha</span> <span class="o">-</span><span class="n">b</span> <span class="n">e</span><span class="o">-</span><span class="n">v</span><span class="o">.</span><span class="n">dat</span>
 </pre></div>
 </div>
 </div>
@@ -244,7 +244,7 @@ modulus (without considering phonons). This is made by:</p>
 <h4><code class="docutils literal"><span class="pre">--eos</span></code><a class="headerlink" href="#eos" title="Permalink to this headline">¶</a></h4>
 <p>EOS is chosen among <code class="docutils literal"><span class="pre">vinet</span></code>, <code class="docutils literal"><span class="pre">birch_murnaghan</span></code>, and
 <code class="docutils literal"><span class="pre">murnaghan</span></code>. The default EOS is <code class="docutils literal"><span class="pre">vinet</span></code>.</p>
-<div class="highlight-python"><div class="highlight"><pre>phonopy-qha --eos=&#39;birch_murnaghan&#39; -b e-v.dat
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">phonopy</span><span class="o">-</span><span class="n">qha</span> <span class="o">--</span><span class="n">eos</span><span class="o">=</span><span class="s1">&#39;birch_murnaghan&#39;</span> <span class="o">-</span><span class="n">b</span> <span class="n">e</span><span class="o">-</span><span class="n">v</span><span class="o">.</span><span class="n">dat</span>
 </pre></div>
 </div>
 </div>
@@ -261,7 +261,7 @@ modulus (without considering phonons). This is made by:</p>
 Cv and S (<code class="docutils literal"><span class="pre">Cp-temperature_polyfit.*</span></code>)</li>
 <li>Helmholtz free energy vs volume (<code class="docutils literal"><span class="pre">helmholtz-volume.*</span></code>). When
 <code class="docutils literal"><span class="pre">--pressure</span></code> option is specified, energy offset of <img class="math" src="_images/math/f9cd47ee828774a5bf1a063755dba74cabb5806a.png" alt="pV"/> is
-added. See also the following section (<a class="reference internal" href="#theory-of-qha"><span>Theory of quasi-harmonic approximation</span></a>).</li>
+added. See also the following section (<a class="reference internal" href="#theory-of-qha"><span class="std std-ref">Theory of quasi-harmonic approximation</span></a>).</li>
 <li>Volume vs T (<code class="docutils literal"><span class="pre">volume-temperature.*</span></code>)</li>
 <li>Thermal expansion coefficient vs T (<code class="docutils literal"><span class="pre">thermal_expansion.*</span></code>)</li>
 </ul>
@@ -279,10 +279,10 @@ constant pressure. We need some transformation from function of <em>V</em> to
 function of <em>p</em>. Gibbs free energy is defined at a constant pressure by
 the transformation:</p>
 <div class="math">
-<p><img src="_images/math/9e7ee1212534b4628b010ee223d3787feed10517.png" alt="G(T, p) = \min_V \left[ U(V) + F_\mathrm{phonon}(T;\,V) + pV \right],"/></p>
+<p><img src="_images/math/eaa6372bfac252fdd237b6b03cf47cd8da207d86.png" alt="G(T, p) = \min_V \left[ U(V) + F_\mathrm{phonon}(T;\,V) + pV \right],"/></p>
 </div><p>where</p>
 <div class="math">
-<p><img src="_images/math/b043dd2b461044f849c9425589b813467b4ef4ac.png" alt="\min_V[ \text{function of } V ]"/></p>
+<p><img src="_images/math/c3ed3ef616d8bce98c948a7800742c5471ea2820.png" alt="\min_V[ \text{function of } V ]"/></p>
 </div><p>means to find unique minimum value in the brackets by changing
 volume. Since volume dependencies of energies in electronic and phonon
 structures are different, volume giving the minimum value of the
@@ -316,7 +316,7 @@ thermal properties at constant pressure.</p>
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.5.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.<br/>
     </p>
   </div>
 </footer>

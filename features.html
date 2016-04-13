@@ -70,7 +70,7 @@
 <li class="toctree-l1"><a class="reference internal" href="procedure.html">Tutorial</a></li>
 <li class="toctree-l1"><a class="reference internal" href="workflow.html">Work flow</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install.html">Download and install</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="">Features</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="input-files.html">Input files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="output-files.html">Output files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="setting-tags.html">Setting tags</a></li>
@@ -157,65 +157,65 @@
 <div class="section" id="band-structure">
 <h2>Band structure<a class="headerlink" href="#band-structure" title="Permalink to this headline">¶</a></h2>
 <p>Phonon band structure is calculated for the specified band paths.
-See <a class="reference internal" href="setting-tags.html#band-structure-related-tags"><span>Band structure tags</span></a>.</p>
+See <a class="reference internal" href="setting-tags.html#band-structure-related-tags"><span class="std std-ref">Band structure tags</span></a>.</p>
 </div>
 <div class="section" id="density-of-states">
 <h2>Density of states<a class="headerlink" href="#density-of-states" title="Permalink to this headline">¶</a></h2>
 <p>Total and partial density of states are calculated based on the
-<em>q</em>-point sampling mesh (<a class="reference internal" href="setting-tags.html#dos-related-tags"><span>Density of states (DOS) tags</span></a>). Smearing parameter
-is set by <a class="reference internal" href="setting-tags.html#sigma-tag"><span>SIGMA</span></a> tag or <code class="docutils literal"><span class="pre">--sigma</span></code> option.</p>
+<em>q</em>-point sampling mesh (<a class="reference internal" href="setting-tags.html#dos-related-tags"><span class="std std-ref">Density of states (DOS) tags</span></a>). Smearing parameter
+is set by <a class="reference internal" href="setting-tags.html#sigma-tag"><span class="std std-ref">SIGMA</span></a> tag or <code class="docutils literal"><span class="pre">--sigma</span></code> option.</p>
 </div>
 <div class="section" id="group-velocity">
 <h2>Group velocity<a class="headerlink" href="#group-velocity" title="Permalink to this headline">¶</a></h2>
 <p>Phonon group velocity is calculated from first derivative of dynamical
-matrix. See <a class="reference internal" href="setting-tags.html#group-velocity-tag"><span>Group velocity</span></a>.</p>
+matrix. See <a class="reference internal" href="setting-tags.html#group-velocity-tag"><span class="std std-ref">Group velocity</span></a>.</p>
 </div>
 <div class="section" id="thermal-properties">
 <h2>Thermal properties<a class="headerlink" href="#thermal-properties" title="Permalink to this headline">¶</a></h2>
 <p>Helmholtz free energy, heat capacity at constant volume, and entropy
 at temperatures are calculated from the phonon frequencies on the
-<em>q</em>-point sampling mesh. See <a class="reference internal" href="setting-tags.html#thermal-properties-tag"><span>Thermal properties related tags</span></a>.</p>
+<em>q</em>-point sampling mesh. See <a class="reference internal" href="setting-tags.html#thermal-properties-tag"><span class="std std-ref">Thermal properties related tags</span></a>.</p>
 </div>
 <div class="section" id="thermal-properties-at-constant-pressure-and-thermal-expansion">
 <h2>Thermal properties at constant pressure and thermal expansion<a class="headerlink" href="#thermal-properties-at-constant-pressure-and-thermal-expansion" title="Permalink to this headline">¶</a></h2>
 <p>Gibbs free energy, heat capacity at constant pressure, and thermal
 expansion are calcualted with quasi-harmonic approximation. See
-<a class="reference internal" href="qha.html#phonopy-qha"><span>Quasi harmonic approximation</span></a>.</p>
+<a class="reference internal" href="qha.html#phonopy-qha"><span class="std std-ref">Quasi harmonic approximation</span></a>.</p>
 </div>
 <div class="section" id="measure-of-how-far-atoms-move-at-finite-temperature">
 <h2>Measure of how far atoms move at finite temperature<a class="headerlink" href="#measure-of-how-far-atoms-move-at-finite-temperature" title="Permalink to this headline">¶</a></h2>
 <p>How far atoms are displaced from their equilibrium positions at
 temperatures is calculated as mean square displacements. See
-<a class="reference internal" href="setting-tags.html#thermal-atomic-displacements-tags"><span>Thermal displacements</span></a>.</p>
+<a class="reference internal" href="setting-tags.html#thermal-atomic-displacements-tags"><span class="std std-ref">Thermal displacements</span></a>.</p>
 </div>
 <div class="section" id="calculation-of-mode-gruneisen-parameters">
 <h2>Calculation of mode Grüneisen parameters<a class="headerlink" href="#calculation-of-mode-gruneisen-parameters" title="Permalink to this headline">¶</a></h2>
 <p>A script <code class="docutils literal"><span class="pre">gruneisen</span></code> is used for calculating mode Grüneisen
 parameters in band structure style and mesh sampling style. See the
-details at <a class="reference internal" href="gruneisen.html#phonopy-gruneisen"><span>Calculation of mode Grüneisen parameters</span></a>.</p>
+details at <a class="reference internal" href="gruneisen.html#phonopy-gruneisen"><span class="std std-ref">Calculation of mode Grüneisen parameters</span></a>.</p>
 </div>
 <div class="section" id="normal-mode-analysis">
 <h2>Normal mode analysis<a class="headerlink" href="#normal-mode-analysis" title="Permalink to this headline">¶</a></h2>
 <p>Irreducible representations are assigned using polarization vectors of
 phonon normal modes
-(<a class="reference internal" href="setting-tags.html#irreducible-representation-related-tags"><span>Characters of irreducible representations</span></a>). Atomic displacements
+(<a class="reference internal" href="setting-tags.html#irreducible-representation-related-tags"><span class="std std-ref">Characters of irreducible representations</span></a>). Atomic displacements
 corresponding to the real part of the polarization vectors are
-obtained (<a class="reference internal" href="setting-tags.html#modulation-tag"><span>Create modulated structure</span></a>). This may be
+obtained (<a class="reference internal" href="setting-tags.html#modulation-tag"><span class="std std-ref">Create modulated structure</span></a>). This may be
 applied for research of the second-order like structural phase
 transition.</p>
 </div>
 <div class="section" id="animation">
 <h2>Animation<a class="headerlink" href="#animation" title="Permalink to this headline">¶</a></h2>
-<p>Phonon mode is visualized by animation. See <a class="reference internal" href="setting-tags.html#animation-tag"><span>Create animation file</span></a>.</p>
+<p>Phonon mode is visualized by animation. See <a class="reference internal" href="setting-tags.html#animation-tag"><span class="std std-ref">Create animation file</span></a>.</p>
 </div>
 <div class="section" id="plot-and-output">
 <h2>Plot and output<a class="headerlink" href="#plot-and-output" title="Permalink to this headline">¶</a></h2>
 <p>The results of DOS, PDOS, band structure, and thermal properties are
 immediately plotted by specifying <code class="docutils literal"><span class="pre">-p</span></code> option
-(<a class="reference internal" href="command-options.html#graph-option"><span>Graph plotting</span></a>). When <code class="docutils literal"><span class="pre">-s</span></code> option is set together with the
+(<a class="reference internal" href="command-options.html#graph-option"><span class="std std-ref">Graph plotting</span></a>). When <code class="docutils literal"><span class="pre">-s</span></code> option is set together with the
 <code class="docutils literal"><span class="pre">-p</span></code> option, the plot is stored in the PDF file
-(<a class="reference internal" href="command-options.html#graph-save-option"><span>-p -s</span></a>). In addition those results are saved
-in output text files (<a class="reference internal" href="output-files.html#output-files"><span>Output files</span></a>), too.</p>
+(<a class="reference internal" href="command-options.html#graph-save-option"><span class="std std-ref">-p -s</span></a>). In addition those results are saved
+in output text files (<a class="reference internal" href="output-files.html#output-files"><span class="std std-ref">Output files</span></a>), too.</p>
 </div>
 </div>
 
@@ -239,7 +239,7 @@ in output text files (<a class="reference internal" href="output-files.html#outp
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.5.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.<br/>
     </p>
   </div>
 </footer>

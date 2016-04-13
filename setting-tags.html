@@ -73,7 +73,7 @@
 <li class="toctree-l1"><a class="reference internal" href="features.html">Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="input-files.html">Input files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="output-files.html">Output files</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="">Setting tags</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Setting tags</a></li>
 <li class="toctree-l1"><a class="reference internal" href="command-options.html">Command options</a></li>
 <li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
@@ -245,7 +245,7 @@
       
   <div class="section" id="setting-tags">
 <span id="id1"></span><h1>Setting tags<a class="headerlink" href="#setting-tags" title="Permalink to this headline">¶</a></h1>
-<p>Most of the setting tags have corresponding command-line options (<span class="xref std std-ref">command_options</span>).</p>
+<p>Most of the setting tags have corresponding command-line options (<a class="reference internal" href="command-options.html#command-options"><span class="std std-ref">Command options</span></a>).</p>
 <p>For specifying real and reciprocal points, fractional values
 (e.g. <code class="docutils literal"><span class="pre">1/3</span></code>) are accepted. However fractional values must not
 have space among characters (e.g. <code class="docutils literal"><span class="pre">1</span> <span class="pre">/</span> <span class="pre">3</span></code>) are not allowed.</p>
@@ -256,19 +256,19 @@ have space among characters (e.g. <code class="docutils literal"><span class="pr
 <p>The supercell is created from the input unit cell. When three integers
 are specified, a supercell elongated along axes of unit cell is
 created.</p>
-<div class="highlight-python"><div class="highlight"><pre>DIM = 2 2 3
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">DIM</span> <span class="o">=</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">3</span>
 </pre></div>
 </div>
 <p>In this case, a 2x2x3 supercell is created.</p>
 <p>When nine integers are specified, the supercell is created by
 multiplying the supercell matrix <img class="math" src="_images/math/334501cd15978f356e18bb02e2ac826bf4f61cac.png" alt="M_\mathrm{s}"/> with the unit
 cell. For example,</p>
-<div class="highlight-python"><div class="highlight"><pre>DIM = 0 1 1  1 0 1  1 1 0
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">DIM</span> <span class="o">=</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">1</span>  <span class="mi">1</span> <span class="mi">0</span> <span class="mi">1</span>  <span class="mi">1</span> <span class="mi">1</span> <span class="mi">0</span>
 </pre></div>
 </div>
 <p>the supercell matrix is</p>
 <div class="math">
-<p><img src="_images/math/f9ba69e05a8503977bdd4ccd932d89a72dcecf58.png" alt="M_\mathrm{s} = \begin{pmatrix}
+<p><img src="_images/math/370a27d3721c3d408adee710a70e84a8c17a3cfa.png" alt="M_\mathrm{s} = \begin{pmatrix}
 0 &amp; 1 &amp; 1 \\
 1 &amp; 0 &amp; 1 \\
 1 &amp; 1 &amp; 0
@@ -281,7 +281,7 @@ those of supercell, <img class="math" src="_images/math/5a3081ef3ed7b99083f1dbea
 <img class="math" src="_images/math/a454cca58ead035bdbdfad251eda86d17a8fc5bf.png" alt="\mathbf{b}_\mathrm{s}"/>, <img class="math" src="_images/math/0298b49b4e11950a7d7fb75b0640a25264c63428.png" alt="\mathbf{c}_\mathrm{s}"/>, are
 determined by,</p>
 <div class="math">
-<p><img src="_images/math/be4b130dee19ed41a079e1e62c2a7e36a8058134.png" alt="( \mathbf{a}_\mathrm{s} \; \mathbf{b}_\mathrm{s} \; \mathbf{c}_\mathrm{s} )
+<p><img src="_images/math/aef849e5e686975b6970503cfacaa2183ea9d66d.png" alt="( \mathbf{a}_\mathrm{s} \; \mathbf{b}_\mathrm{s} \; \mathbf{c}_\mathrm{s} )
 =  ( \mathbf{a}_\mathrm{u} \; \mathbf{b}_\mathrm{u} \;
 \mathbf{c}_\mathrm{u} ) M_\mathrm{s}"/></p>
 </div><p>Be careful that the axes in <code class="docutils literal"><span class="pre">POSCAR</span></code> is defined by three row
@@ -290,18 +290,18 @@ vectors, i.e., <img class="math" src="_images/math/7c67257dd8e20170c54e8bf5ba21d
 </div>
 <div class="section" id="primitive-axis">
 <span id="primitive-axis-tag"></span><h3><code class="docutils literal"><span class="pre">PRIMITIVE_AXIS</span></code><a class="headerlink" href="#primitive-axis" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-python"><div class="highlight"><pre>PRIMITIVE_AXIS = 0.0 0.5 0.5  0.5 0.0 0.5  0.5 0.5 0.0
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">PRIMITIVE_AXIS</span> <span class="o">=</span> <span class="mf">0.0</span> <span class="mf">0.5</span> <span class="mf">0.5</span>  <span class="mf">0.5</span> <span class="mf">0.0</span> <span class="mf">0.5</span>  <span class="mf">0.5</span> <span class="mf">0.5</span> <span class="mf">0.0</span>
 </pre></div>
 </div>
 <p>Likewise,</p>
-<div class="highlight-python"><div class="highlight"><pre>PRIMITIVE_AXIS = 0 1/2 1/2  1/2 0 1/2  1/2 1/2 0
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">PRIMITIVE_AXIS</span> <span class="o">=</span> <span class="mi">0</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span>  <span class="mi">1</span><span class="o">/</span><span class="mi">2</span> <span class="mi">0</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span>  <span class="mi">1</span><span class="o">/</span><span class="mi">2</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span> <span class="mi">0</span>
 </pre></div>
 </div>
 <p>The primitive cell for building the dynamical matrix is created by
 multiplying primitive-axis matrix <img class="math" src="_images/math/ed5eb22a8204dd3e7e6237395da7ec7597f29649.png" alt="M_\mathrm{p}"/>. Let the matrix
 as,</p>
 <div class="math">
-<p><img src="_images/math/dfd3221a97f43d749feb65b30f01c5699e50e76b.png" alt="M_\mathrm{p} = \begin{pmatrix}
+<p><img src="_images/math/caae48609c859da79fee1f3cad4bb668c0308f58.png" alt="M_\mathrm{p} = \begin{pmatrix}
 0.0 &amp; 0.5 &amp; 0.5 \\
 0.5 &amp; 0.0 &amp; 0.5 \\
 0.5 &amp; 0.5 &amp; 0.0
@@ -315,7 +315,7 @@ those of supercell, <img class="math" src="_images/math/5954dc42d29df3a300246e8f
 <img class="math" src="_images/math/2a11ea14b938f167771e6645622afa0832f6dd1c.png" alt="\mathbf{b}_\mathrm{p}"/>, <img class="math" src="_images/math/a3969b8079498f063e84f8a36ef1de8cded0f198.png" alt="\mathbf{c}_\mathrm{p}"/>, are
 determined by,</p>
 <div class="math">
-<p><img src="_images/math/9e2ab2bc1851f811baa382d5e4d3fac45e956bcb.png" alt="( \mathbf{a}_\mathrm{p} \; \mathbf{b}_\mathrm{p} \; \mathbf{c}_\mathrm{p} )
+<p><img src="_images/math/69c637cecf4eb06c05f9e38a8832942b497ebfe9.png" alt="( \mathbf{a}_\mathrm{p} \; \mathbf{b}_\mathrm{p} \; \mathbf{c}_\mathrm{p} )
 =  ( \mathbf{a}_\mathrm{u} \; \mathbf{b}_\mathrm{u} \;
 \mathbf{c}_\mathrm{u} ) M_\mathrm{p}"/></p>
 </div><p>Be careful that the axes in <code class="docutils literal"><span class="pre">POSCAR</span></code> is defined by three row
@@ -325,7 +325,7 @@ vectors, i.e., <img class="math" src="_images/math/7c67257dd8e20170c54e8bf5ba21d
 <div class="section" id="atom-name">
 <h3><code class="docutils literal"><span class="pre">ATOM_NAME</span></code><a class="headerlink" href="#atom-name" title="Permalink to this headline">¶</a></h3>
 <p>Chemical symbols</p>
-<div class="highlight-python"><div class="highlight"><pre>ATOM_NAME = Si O
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">ATOM_NAME</span> <span class="o">=</span> <span class="n">Si</span> <span class="n">O</span>
 </pre></div>
 </div>
 <p>The number of chemical symbols have to be same as that of the numbers
@@ -350,7 +350,7 @@ specified. The order of atoms in the primitive cell that is defined by
 noted that this tag does not affect to the symmetry search.</p>
 <p>For example, when there are six atoms in a primitive cell, <code class="docutils literal"><span class="pre">MASS</span></code> is
 set as follows</p>
-<div class="highlight-python"><div class="highlight"><pre>MASS =   28.085 28.085 16.000 16.000 16.000 16.000
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">MASS</span> <span class="o">=</span>   <span class="mf">28.085</span> <span class="mf">28.085</span> <span class="mf">16.000</span> <span class="mf">16.000</span> <span class="mf">16.000</span> <span class="mf">16.000</span>
 </pre></div>
 </div>
 </div>
@@ -364,16 +364,16 @@ tag is used with <code class="docutils literal"><span class="pre">-d</span></cod
 information of the supercell used for VASP. Unlike <code class="docutils literal"><span class="pre">MAGMOM</span></code> in VASP,
 <code class="docutils literal"><span class="pre">*</span></code> can not be used, i.e., all the values (the same number of times
 to the number of atoms in unit cell) have to be explicitly written.</p>
-<div class="highlight-python"><div class="highlight"><pre>MAGMOM = 1.0 1.0 -1.0 -1.0
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">MAGMOM</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="mf">1.0</span> <span class="o">-</span><span class="mf">1.0</span> <span class="o">-</span><span class="mf">1.0</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="cell-filename">
 <span id="dimension-tag"></span><h3><code class="docutils literal"><span class="pre">CELL_FILENAME</span></code><a class="headerlink" href="#cell-filename" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">CELL_FILENAME</span> <span class="o">=</span> <span class="n">UPOSCAR</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">CELL_FILENAME</span> <span class="o">=</span> <span class="n">UPOSCAR</span>
 </pre></div>
 </div>
-<p>See <a class="reference internal" href="command-options.html#cell-filename-option"><span>Input cell</span></a>.</p>
+<p>See <a class="reference internal" href="command-options.html#cell-filename-option"><span class="std std-ref">Input cell</span></a>.</p>
 </div>
 </div>
 <div class="section" id="unit-conversion-factor">
@@ -386,12 +386,12 @@ default conversion factors for <code class="docutils literal"><span class="pre">
 <code class="docutils literal"><span class="pre">elk</span></code> are 3.44595, 21.49068, 108.9708, and 154.1079
 respectively. These are determined following the physical unit systems
 of the calculators. How to calcualte these conversion factors is
-explained at <a class="reference internal" href="theory.html#physical-unit-conversion"><span>About physical unit conversion</span></a>.</p>
+explained at <a class="reference internal" href="theory.html#physical-unit-conversion"><span class="std std-ref">About physical unit conversion</span></a>.</p>
 <p>When calculating thermal property, the factor to THz is
 required. Otherwise the calculated thermal properties have wrong
 units. In the case of band structure plot, any factor can be used,
 where the frequency is simply shown in the unit you specified.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">FREQUENCY_CONVERSION_FACTOR</span> <span class="o">=</span> <span class="mf">521.471</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">FREQUENCY_CONVERSION_FACTOR</span> <span class="o">=</span> <span class="mf">521.471</span>
 </pre></div>
 </div>
 </div>
@@ -402,8 +402,8 @@ where the frequency is simply shown in the unit you specified.</p>
 <h3><code class="docutils literal"><span class="pre">CREATE_DISPLACEMENTS</span></code><a class="headerlink" href="#create-displacements" title="Permalink to this headline">¶</a></h3>
 <p>Supercells with displacements are created.  This tag is used as the
 post process of phonon calculation.</p>
-<div class="highlight-python"><div class="highlight"><pre>CREATE_DISPLACEMENTS = .TRUE.
-DIM = 2 2 2
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">CREATE_DISPLACEMENTS</span> <span class="o">=</span> <span class="o">.</span><span class="n">TRUE</span><span class="o">.</span>
+<span class="n">DIM</span> <span class="o">=</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span>
 </pre></div>
 </div>
 </div>
@@ -449,8 +449,8 @@ ends. The default value is <code class="docutils literal"><span class="pre">BAND
 <p>An example of three paths, (0,0,0) to (1/2,0,1/2), (1/2,1/2,1) to
 (0,0,0), and (0,0,0) to (1/2,1/2,1/2), with 101 sampling points of
 each path are as follows:</p>
-<div class="highlight-python"><div class="highlight"><pre>BAND = 0 0 0  1/2 0 1/2,  1/2 1/2 1  0 0 0   1/2 1/2 1/2
-BAND_POINTS = 101
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">BAND</span> <span class="o">=</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span>  <span class="mi">1</span><span class="o">/</span><span class="mi">2</span> <span class="mi">0</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span>  <span class="mi">1</span><span class="o">/</span><span class="mi">2</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span> <span class="mi">1</span>  <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span>   <span class="mi">1</span><span class="o">/</span><span class="mi">2</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span>
+<span class="n">BAND_POINTS</span> <span class="o">=</span> <span class="mi">101</span>
 </pre></div>
 </div>
 </div>
@@ -459,11 +459,11 @@ BAND_POINTS = 101
 <p>Labels specified are depicted in band structure plot at the points of
 band segments. The number of labels has to correspond to the
 number of band paths specified by <code class="docutils literal"><span class="pre">BAND</span></code> plus one.</p>
-<div class="highlight-python"><div class="highlight"><pre>BAND = 1/2 0 1/2   0 0 0   1/2 1/2 1/2
-BAND_LABELS = X \Gamma L
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">BAND</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span> <span class="mi">0</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span>   <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span>   <span class="mi">1</span><span class="o">/</span><span class="mi">2</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span>
+<span class="n">BAND_LABELS</span> <span class="o">=</span> <span class="n">X</span> \<span class="n">Gamma</span> <span class="n">L</span>
 </pre></div>
 </div>
-<p><a class="reference internal" href="_images/band-labels.png"><img alt="bandlabels" src="_images/band-labels.png" /></a></p>
+<p><a class="reference internal" href="_images/band-labels.png"><img alt="bandlabels" src="_images/band-labels.png" style="width: 406.0px; height: 306.0px;" /></a></p>
 <p>The colors of curves are automatically determined by matplotlib. The
 same color in a band segment shows the same kind of band. Between
 different band segments, the correspondence of colors doesn&#8217;t mean
@@ -475,12 +475,12 @@ anything.</p>
 band structure is drawn considering band crossings. In sensitive
 cases, to obtain better band connections, it requires to increase
 number of points calculated in band segments by the <code class="docutils literal"><span class="pre">BAND_POINTS</span></code> tag.</p>
-<div class="highlight-python"><div class="highlight"><pre>BAND = 1/2 0 1/2   0 0 0   1/2 1/2 1/2
-BAND_POINTS = 101
-BAND_CONNECTION = .TRUE.
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">BAND</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span> <span class="mi">0</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span>   <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span>   <span class="mi">1</span><span class="o">/</span><span class="mi">2</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span>
+<span class="n">BAND_POINTS</span> <span class="o">=</span> <span class="mi">101</span>
+<span class="n">BAND_CONNECTION</span> <span class="o">=</span> <span class="o">.</span><span class="n">TRUE</span><span class="o">.</span>
 </pre></div>
 </div>
-<p><a class="reference internal" href="_images/band-connection.png"><img alt="bandconnection" src="_images/band-connection.png" /></a></p>
+<p><a class="reference internal" href="_images/band-connection.png"><img alt="bandconnection" src="_images/band-connection.png" style="width: 406.0px; height: 306.0px;" /></a></p>
 </div>
 </div>
 <div class="section" id="mesh-sampling-tags">
@@ -495,12 +495,12 @@ scheme, i.e., for odd number, a point comes to the center, and for
 even number, the center is shifted half in the distance between
 neighboring mesh points.</p>
 <p>Examples of an even mesh with <img class="math" src="_images/math/85011adca50d3725af2e048eeb9ec7b02ccdd401.png" alt="\Gamma"/> center in two ways,</p>
-<div class="highlight-python"><div class="highlight"><pre>MP = 8 8 8
-GAMMA_CENTER = .TRUE.
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">MP</span> <span class="o">=</span> <span class="mi">8</span> <span class="mi">8</span> <span class="mi">8</span>
+<span class="n">GAMMA_CENTER</span> <span class="o">=</span> <span class="o">.</span><span class="n">TRUE</span><span class="o">.</span>
 </pre></div>
 </div>
-<div class="highlight-python"><div class="highlight"><pre>MP = 8 8 8
-MP_SHIFT = 1/2 1/2 1/2
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">MP</span> <span class="o">=</span> <span class="mi">8</span> <span class="mi">8</span> <span class="mi">8</span>
+<span class="n">MP_SHIFT</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span>
 </pre></div>
 </div>
 </div>
@@ -515,7 +515,7 @@ respect to neighboring grid points in each direction.</p>
 <h3><code class="docutils literal"><span class="pre">GAMMA_CENTER</span></code><a class="headerlink" href="#gamma-center" title="Permalink to this headline">¶</a></h3>
 <p>Instead of employing the Monkhorst-Pack scheme for the mesh sampling,
 <img class="math" src="_images/math/85011adca50d3725af2e048eeb9ec7b02ccdd401.png" alt="\Gamma"/> center mesh is used. The default value is <code class="docutils literal"><span class="pre">.FALSE.</span></code>.</p>
-<div class="highlight-python"><div class="highlight"><pre>GAMMA_CENTER = .TRUE.
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">GAMMA_CENTER</span> <span class="o">=</span> <span class="o">.</span><span class="n">TRUE</span><span class="o">.</span>
 </pre></div>
 </div>
 </div>
@@ -527,7 +527,7 @@ when those files are not needed, e.g., in (P)DOS calculation,
 <code class="docutils literal"><span class="pre">WRITE_MESH</span> <span class="pre">=</span> <span class="pre">.FALSE.</span></code> can disable to write out those files. With
 (P)DOS calculation, DOS output files are obtained even with
 <code class="docutils literal"><span class="pre">WRITE_MESH</span> <span class="pre">=</span> <span class="pre">.FALSE.</span></code>. The default setting is <code class="docutils literal"><span class="pre">.TRUE.</span></code>.</p>
-<div class="highlight-python"><div class="highlight"><pre>WRITE_MESH = .FALSE.
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">WRITE_MESH</span> <span class="o">=</span> <span class="o">.</span><span class="n">FALSE</span><span class="o">.</span>
 </pre></div>
 </div>
 </div>
@@ -545,13 +545,13 @@ the number of atoms in the unit cell.</p>
 <h3><code class="docutils literal"><span class="pre">DOS</span></code><a class="headerlink" href="#dos" title="Permalink to this headline">¶</a></h3>
 <p>This tag enables to calculate DOS. This tag is automatically set when
 <code class="docutils literal"><span class="pre">PDOS</span></code> tag or <code class="docutils literal"><span class="pre">-p</span></code> option.</p>
-<div class="highlight-python"><div class="highlight"><pre>DOS = .TRUE.
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">DOS</span> <span class="o">=</span> <span class="o">.</span><span class="n">TRUE</span><span class="o">.</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="dos-range">
 <h3><code class="docutils literal"><span class="pre">DOS_RANGE</span></code><a class="headerlink" href="#dos-range" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-python"><div class="highlight"><pre>DOS_RANGE = 0 40 0.1
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">DOS_RANGE</span> <span class="o">=</span> <span class="mi">0</span> <span class="mi">40</span> <span class="mf">0.1</span>
 </pre></div>
 </div>
 <p>Total and partial density of states are drawn with some
@@ -560,7 +560,7 @@ with 0.1 pitch.</p>
 </div>
 <div class="section" id="pdos">
 <h3><code class="docutils literal"><span class="pre">PDOS</span></code><a class="headerlink" href="#pdos" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-python"><div class="highlight"><pre>PDOS = 1 2, 3 4 5 6
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">PDOS</span> <span class="o">=</span> <span class="mi">1</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span> <span class="mi">4</span> <span class="mi">5</span> <span class="mi">6</span>
 </pre></div>
 </div>
 <p>By setting this tag, <code class="docutils literal"><span class="pre">EIGENVECTORS</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code> and <code class="docutils literal"><span class="pre">MESH_SYMMETRY</span> <span class="pre">=</span>
@@ -577,8 +577,8 @@ and, 6 are summarized as the other curve.</p>
 <p>Eigenvectors are projected along the direction specified by this tag.
 Projection direction is specified in reduced coordinates, i.e., with
 respect to <em>a</em>, <em>b</em>, <em>c</em> axes.</p>
-<div class="highlight-python"><div class="highlight"><pre>PDOS = 1, 2
-PROJECTION_DIRECTION = -1 1 1
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">PDOS</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span>
+<span class="n">PROJECTION_DIRECTION</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span>
 </pre></div>
 </div>
 </div>
@@ -587,7 +587,7 @@ PROJECTION_DIRECTION = -1 1 1
 <p>This tag specifies the smearing width. The unit is same as that used
 for phonon frequency. The default value is the value given by the
 difference of maximum and minimum frequencies divided by 100.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">SIGMA</span> <span class="o">=</span> <span class="mf">0.1</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">SIGMA</span> <span class="o">=</span> <span class="mf">0.1</span>
 </pre></div>
 </div>
 </div>
@@ -605,7 +605,7 @@ the Debye frequency is <img class="math" src="_images/math/38b7b6a9b8ad6b6ee8842
 number of atoms in unit cell. Users have to unserstand that this is
 <strong>not</strong> a unique way to determine Debye frequency. Debye frequency is
 dependent on how to parameterize it.</p>
-<div class="highlight-python"><div class="highlight"><pre>DEBYE_MODEL = .TRUE.
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">DEBYE_MODEL</span> <span class="o">=</span> <span class="o">.</span><span class="n">TRUE</span><span class="o">.</span>
 </pre></div>
 </div>
 </div>
@@ -616,7 +616,7 @@ dependent on how to parameterize it.</p>
 <h3><code class="docutils literal"><span class="pre">TPROP</span></code>, <code class="docutils literal"><span class="pre">TMIN</span></code>, <code class="docutils literal"><span class="pre">TMAX</span></code>, <code class="docutils literal"><span class="pre">TSTEP</span></code><a class="headerlink" href="#tprop-tmin-tmax-tstep" title="Permalink to this headline">¶</a></h3>
 <p>Thermal properties, free energy, heat capacity, and entropy, are
 calculated from their statistical thermodynamic expressions (see
-<a class="reference internal" href="theory.html#thermal-properties-expressions"><span>Thermodynamic properties</span></a>). Thermal properties are
+<a class="reference internal" href="theory.html#thermal-properties-expressions"><span class="std std-ref">Thermodynamic properties</span></a>). Thermal properties are
 calculated from phonon frequencies on a sampling mesh in the
 reciprocal space. Therefore These tags are used with <code class="docutils literal"><span class="pre">MP</span></code> tag and
 their convergence with respect to the sampling mesh has to be
@@ -636,8 +636,8 @@ results in kJ/mol, you have to divide the phonopy output by four.</p>
 <p><code class="docutils literal"><span class="pre">TMIN</span></code>, <code class="docutils literal"><span class="pre">TMAX</span></code>, and <code class="docutils literal"><span class="pre">TSTEP</span></code> tags are used to specify the
 temperature range to be calculated. The default values of them are 0,
 1000, and 10, respectively.</p>
-<div class="highlight-python"><div class="highlight"><pre>TPROP = .TRUE.
-TMAX = 2000
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">TPROP</span> <span class="o">=</span> <span class="o">.</span><span class="n">TRUE</span><span class="o">.</span>
+<span class="n">TMAX</span> <span class="o">=</span> <span class="mi">2000</span>
 </pre></div>
 </div>
 </div>
@@ -649,23 +649,23 @@ TMAX = 2000
 <p>Mean square displacements projected to Cartesian axes as a function of
 temperature are calculated from the number of phonon excitations. The
 usages of <code class="docutils literal"><span class="pre">TMAX</span></code>, <code class="docutils literal"><span class="pre">TMIN</span></code>, <code class="docutils literal"><span class="pre">TSTEP</span></code> tags are same as those in
-<a class="reference internal" href="#thermal-properties-tag"><span>thermal properties tags</span></a>. The result is
+<a class="reference internal" href="#thermal-properties-tag"><span class="std std-ref">thermal properties tags</span></a>. The result is
 writen into <code class="docutils literal"><span class="pre">thermal_displacements.yaml</span></code>. See the detail of the
-method, <a class="reference internal" href="thermal-displacement.html#thermal-displacement"><span>Mean square displacement</span></a>.</p>
+method, <a class="reference internal" href="thermal-displacement.html#thermal-displacement"><span class="std std-ref">Mean square displacement</span></a>.</p>
 <p>The projection is applied along arbitrary direction using
-<code class="docutils literal"><span class="pre">PROJECTION_DIRECTION</span></code> tag (<a class="reference internal" href="#projection-direction-tag"><span>PROJECTION_DIRECTION</span></a>).</p>
-<div class="highlight-python"><div class="highlight"><pre>TDISP = .TRUE.
-PROJECTION_DIRECTION = 1 1 0
+<code class="docutils literal"><span class="pre">PROJECTION_DIRECTION</span></code> tag (<a class="reference internal" href="#projection-direction-tag"><span class="std std-ref">PROJECTION_DIRECTION</span></a>).</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">TDISP</span> <span class="o">=</span> <span class="o">.</span><span class="n">TRUE</span><span class="o">.</span>
+<span class="n">PROJECTION_DIRECTION</span> <span class="o">=</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">0</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="tdispmat-tmax-tmin-tstep">
 <span id="thermal-displacement-matrices-tag"></span><h3><code class="docutils literal"><span class="pre">TDISPMAT</span></code>, <code class="docutils literal"><span class="pre">TMAX</span></code>, <code class="docutils literal"><span class="pre">TMIN</span></code>, <code class="docutils literal"><span class="pre">TSTEP</span></code><a class="headerlink" href="#tdispmat-tmax-tmin-tstep" title="Permalink to this headline">¶</a></h3>
 <p>Mean square displacement matricies are calculated. The difinition is
-shown at <a class="reference internal" href="thermal-displacement.html#thermal-displacement"><span>Mean square displacement</span></a>. The result is
+shown at <a class="reference internal" href="thermal-displacement.html#thermal-displacement"><span class="std std-ref">Mean square displacement</span></a>. The result is
 writen into <code class="docutils literal"><span class="pre">thermal_displacement_matrices.yaml</span></code> where six matrix
 elements are given in the order of xx, yy, zz, yz, xz, xy.</p>
-<div class="highlight-python"><div class="highlight"><pre>TDISPMAT = .TRUE.
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">TDISPMAT</span> <span class="o">=</span> <span class="o">.</span><span class="n">TRUE</span><span class="o">.</span>
 </pre></div>
 </div>
 </div>
@@ -684,7 +684,7 @@ is read, and the q-points written in this file are calculated.</p>
 </div>
 <div class="section" id="writedm">
 <span id="writedm-tag"></span><h3><code class="docutils literal"><span class="pre">WRITEDM</span></code><a class="headerlink" href="#writedm" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-python"><div class="highlight"><pre>WRITEDM = .TRUE.
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">WRITEDM</span> <span class="o">=</span> <span class="o">.</span><span class="n">TRUE</span><span class="o">.</span>
 </pre></div>
 </div>
 <p>Dynamical matrices <img class="math" src="_images/math/9dfa31437b58c0473299320aa638151cd88cf61b.png" alt="D"/> are written into <code class="docutils literal"><span class="pre">qpoints.yaml</span></code>
@@ -693,9 +693,9 @@ the primitive cell.</p>
 <p>The physical unit of dynamical matrix is <code class="docutils literal"><span class="pre">[unit</span> <span class="pre">of</span> <span class="pre">force]</span> <span class="pre">/</span> <span class="pre">([unit</span> <span class="pre">of</span>
 <span class="pre">displacement]</span> <span class="pre">*</span> <span class="pre">[unit</span> <span class="pre">of</span> <span class="pre">mass])</span></code>, i.e., square of the unit of phonon
 frequency before multiplying the unit conversion factor
-(see <a class="reference internal" href="#frequency-conversion-factor-tag"><span>frequency_conversion_factor</span></a>).</p>
+(see <a class="reference internal" href="#frequency-conversion-factor-tag"><span class="std std-ref">frequency_conversion_factor</span></a>).</p>
 <div class="math">
-<p><img src="_images/math/a594045ab2869b40d8f8cf2e18565251dc34e1f4.png" alt="D =
+<p><img src="_images/math/e50f4616cc4a93d66c058d7e7088ab45e923d842.png" alt="D =
 \begin{pmatrix}
 D_{11} &amp; D_{12} &amp; D_{13} &amp; \\
 D_{21} &amp; D_{22} &amp; D_{23} &amp; \cdots \\
@@ -704,7 +704,7 @@ D_{31} &amp; D_{32} &amp; D_{33} &amp; \\
 \end{pmatrix},"/></p>
 </div><p>and <img class="math" src="_images/math/c413fea74f291cd36029018375a89834c7b1f7d0.png" alt="D_{jj'}"/> is</p>
 <div class="math">
-<p><img src="_images/math/0d2ce96fcc281bb7fdc25e3e6fba5611e51cb46e.png" alt="D_{jj'} =
+<p><img src="_images/math/29509e5ce122f5ae4454252844a766c5506c2dbb.png" alt="D_{jj'} =
 \begin{pmatrix}
 Re(D_{jj'}^{xx}) &amp; Im(D_{jj'}^{xx}) &amp; Re(D_{jj'}^{xy}) &amp;
 Im(D_{jj'}^{xy}) &amp; Re(D_{jj'}^{xz}) &amp; Im(D_{jj'}^{xz}) \\
@@ -717,11 +717,11 @@ Im(D_{jj'}^{zy}) &amp; Re(D_{jj'}^{zz}) &amp; Im(D_{jj'}^{zz}) \\
 phonon frequencies may be recovered from <code class="docutils literal"><span class="pre">qpoints.yaml</span></code> by writing a
 simple python script. For example, <code class="docutils literal"><span class="pre">qpoints.yaml</span></code> is obtained for
 NaCl at <img class="math" src="_images/math/548d8dd6dd7d62e5b5ce61a5527c3c1b67e0df5a.png" alt="q=(0, 0.5, 0.5)"/> by</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">phonopy</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;2 2 2&quot;</span> <span class="o">--</span><span class="n">pa</span><span class="o">=</span><span class="s2">&quot;0 1/2 1/2  1/2 0 1/2  1/2 1/2 0&quot;</span> <span class="o">--</span><span class="n">qpoints</span><span class="o">=</span><span class="s2">&quot;0 1/2 1/2&quot;</span> <span class="o">--</span><span class="n">writedm</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">phonopy</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;2 2 2&quot;</span> <span class="o">--</span><span class="n">pa</span><span class="o">=</span><span class="s2">&quot;0 1/2 1/2  1/2 0 1/2  1/2 1/2 0&quot;</span> <span class="o">--</span><span class="n">qpoints</span><span class="o">=</span><span class="s2">&quot;0 1/2 1/2&quot;</span> <span class="o">--</span><span class="n">writedm</span>
 </pre></div>
 </div>
 <p>and the dynamical matrix may be used as</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="ch">#!/usr/bin/env python</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
 
 <span class="kn">import</span> <span class="nn">yaml</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
@@ -748,8 +748,8 @@ NaCl at <img class="math" src="_images/math/548d8dd6dd7d62e5b5ce61a5527c3c1b67e0
 <h3><code class="docutils literal"><span class="pre">NAC</span></code><a class="headerlink" href="#nac" title="Permalink to this headline">¶</a></h3>
 <p>Non-analytical term correction is applied to dynamical
 matrix. <code class="docutils literal"><span class="pre">BORN</span></code> file has to be prepared in the current directory. See
-<a class="reference internal" href="input-files.html#born-file"><span>BORN (optional)</span></a> and <a class="reference internal" href="theory.html#non-analytical-term-correction-theory"><span>Non-analytical term correction</span></a>.</p>
-<div class="highlight-python"><div class="highlight"><pre>NAC = .TRUE.
+<a class="reference internal" href="input-files.html#born-file"><span class="std std-ref">BORN (optional)</span></a> and <a class="reference internal" href="theory.html#non-analytical-term-correction-theory"><span class="std std-ref">Non-analytical term correction</span></a>.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">NAC</span> <span class="o">=</span> <span class="o">.</span><span class="n">TRUE</span><span class="o">.</span>
 </pre></div>
 </div>
 </div>
@@ -759,9 +759,9 @@ matrix. <code class="docutils literal"><span class="pre">BORN</span></code> file
 <img class="math" src="_images/math/39880e04d581edbff26ded5a5c24a2a5bded3b68.png" alt="\mathbf{q}\rightarrow\mathbf{0}"/>, i.e. practically
 <img class="math" src="_images/math/85011adca50d3725af2e048eeb9ec7b02ccdd401.png" alt="\Gamma"/>-point. Away from <img class="math" src="_images/math/85011adca50d3725af2e048eeb9ec7b02ccdd401.png" alt="\Gamma"/>-point, this setting is
 ignored and the specified <strong>q</strong>-point is used as the <strong>q</strong>-direction.</p>
-<div class="highlight-python"><div class="highlight"><pre>MP = 1 1 1
-NAC = .TRUE.
-Q_DIRECTION = 1 0 0
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">MP</span> <span class="o">=</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span>
+<span class="n">NAC</span> <span class="o">=</span> <span class="o">.</span><span class="n">TRUE</span><span class="o">.</span>
+<span class="n">Q_DIRECTION</span> <span class="o">=</span> <span class="mi">1</span> <span class="mi">0</span> <span class="mi">0</span>
 </pre></div>
 </div>
 </div>
@@ -776,16 +776,16 @@ mode in Cartesian coordinates. The physical unit depends on physical
 units of input files and frequency conversion factor, but if VASP and
 the default settings (e.g., THz for phonon frequency) are simply used,
 then the physical unit will be Angstrom THz.</p>
-<div class="highlight-python"><div class="highlight"><pre>GROUP_VELOCITY = .TRUE.
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">GROUP_VELOCITY</span> <span class="o">=</span> <span class="o">.</span><span class="n">TRUE</span><span class="o">.</span>
 </pre></div>
 </div>
-<p>Technical details are shown at <a class="reference internal" href="group-velocity.html#group-velocity"><span>Method</span></a>.</p>
+<p>Technical details are shown at <a class="reference internal" href="group-velocity.html#group-velocity"><span class="std std-ref">Method</span></a>.</p>
 </div>
 <div class="section" id="gv-delta-q">
 <h3><code class="docutils literal"><span class="pre">GV_DELTA_Q</span></code><a class="headerlink" href="#gv-delta-q" title="Permalink to this headline">¶</a></h3>
 <p>The reciprocal distance used for finite difference method is
 specified. The default value is 1e-4.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">GV_DELTA_Q</span> <span class="o">=</span> <span class="mf">0.01</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">GV_DELTA_Q</span> <span class="o">=</span> <span class="mf">0.01</span>
 </pre></div>
 </div>
 </div>
@@ -807,17 +807,17 @@ specified. The default value is 1e-4.</p>
 iteration of the following set of symmetrization applied to force
 constants is specified. The default value is 0. In the case of VASP,
 this tag is usually unnecessary to be specified.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">FC_SYMMETRY</span> <span class="o">=</span> <span class="mi">1</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">FC_SYMMETRY</span> <span class="o">=</span> <span class="mi">1</span>
 </pre></div>
 </div>
 <p>From the translation invariance condition,</p>
 <div class="math">
-<p><img src="_images/math/15a859c4ba5fd97eb4388c17eb30dc6358a6c278.png" alt="\sum_i \Phi_{ij}^{\alpha\beta} = 0, \;\;\text{for all $j$, $\alpha$, $\beta$},"/></p>
+<p><img src="_images/math/859da292a0166c63bf5996ad87564a56a6e256b2.png" alt="\sum_i \Phi_{ij}^{\alpha\beta} = 0, \;\;\text{for all $j$, $\alpha$, $\beta$},"/></p>
 </div><p>where <em>i</em> and <em>j</em> are the atom indices, and <img class="math" src="_images/math/ad59b6e24a4a00ac621801f8d7513d68be654ab5.png" alt="\alpha"/> and
 <img class="math" src="_images/math/8ce03f78ed945f2ef3dac87c8799b55b393527e7.png" alt="\beta"/> are the Catesian indices for atoms <em>i</em> and <em>j</em>,
 respectively. Force constants are symmetric in each pair as</p>
 <div class="math">
-<p><img src="_images/math/d816ee123686b305bbe083a98a8e5cba9d9ad2c6.png" alt="\Phi_{ij}^{\alpha\beta}
+<p><img src="_images/math/15c631d53db4147bef304341d0ffb3279fca8fcf.png" alt="\Phi_{ij}^{\alpha\beta}
      = \frac{\partial^2 U}{\partial u_i^\alpha \partial u_j^\beta}
      = \frac{\partial^2 U}{\partial u_j^\beta \partial u_i^\alpha}
      = \Phi_{ji}^{\beta\alpha}"/></p>
@@ -831,7 +831,7 @@ force applying <code class="docutils literal"><span class="pre">FC_SYMMETRY</spa
 <span id="force-constants-tag"></span><h2>Force constants<a class="headerlink" href="#force-constants" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="id5">
 <h3><code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span></code><a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">FORCE_CONSTANTS</span> <span class="o">=</span> <span class="n">READ</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">FORCE_CONSTANTS</span> <span class="o">=</span> <span class="n">READ</span>
 </pre></div>
 </div>
 <p>There are three values to be set, which are <code class="docutils literal"><span class="pre">READ</span></code> and <code class="docutils literal"><span class="pre">WRITE</span></code>,
@@ -840,14 +840,14 @@ and <code class="docutils literal"><span class="pre">.FALSE.</span></code>. The 
 <code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span> <span class="pre">=</span> <span class="pre">WRITE</span></code>, force constants calculated from
 <code class="docutils literal"><span class="pre">FORCE_SETS</span></code> are written to <code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span></code> file.</p>
 <p>The file format of <code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span></code> is shown
-<a class="reference internal" href="input-files.html#file-force-constants"><span>here</span></a>.</p>
+<a class="reference internal" href="input-files.html#file-force-constants"><span class="std std-ref">here</span></a>.</p>
 </div>
 </div>
 <div class="section" id="create-animation-file">
 <span id="animation-tag"></span><h2>Create animation file<a class="headerlink" href="#create-animation-file" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="anime-type">
 <h3><code class="docutils literal"><span class="pre">ANIME_TYPE</span></code><a class="headerlink" href="#anime-type" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">ANIME_TYPE</span> <span class="o">=</span> <span class="n">JMOL</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">ANIME_TYPE</span> <span class="o">=</span> <span class="n">JMOL</span>
 </pre></div>
 </div>
 <p>There are <code class="docutils literal"><span class="pre">V_SIM</span></code>, <code class="docutils literal"><span class="pre">ARC</span></code>, <code class="docutils literal"><span class="pre">XYZ</span></code>, <code class="docutils literal"><span class="pre">JMOL</span></code>, and <code class="docutils literal"><span class="pre">POSCAR</span></code>
@@ -863,7 +863,7 @@ animation images are created such as <code class="docutils literal"><span class=
 <p><strong>The format of ``ANIME`` tag was modified after ver. 0.9.3.3.</strong></p>
 <div class="section" id="for-v-sim">
 <h4>For v_sim<a class="headerlink" href="#for-v-sim" title="Permalink to this headline">¶</a></h4>
-<div class="highlight-python"><div class="highlight"><pre>ANIME = 0.5 0.5 0
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">ANIME</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="mf">0.5</span> <span class="mi">0</span>
 </pre></div>
 </div>
 <p>The values are the <em>q</em>-point to be calculated. An animation file of
@@ -880,7 +880,7 @@ animation images are created such as <code class="docutils literal"><span class=
 necessary to be set.</p>
 <p><code class="docutils literal"><span class="pre">anime.arc</span></code>, <code class="docutils literal"><span class="pre">anime.xyz</span></code>, <code class="docutils literal"><span class="pre">anime.xyz_jmol</span></code>, or <code class="docutils literal"><span class="pre">APOSCAR-*</span></code>
 are generated according to the <code class="docutils literal"><span class="pre">ANIME_TYPE</span></code> setting.</p>
-<div class="highlight-python"><div class="highlight"><pre>ANIME = 4 5 20  0.5 0.5 0
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">ANIME</span> <span class="o">=</span> <span class="mi">4</span> <span class="mi">5</span> <span class="mi">20</span>  <span class="mf">0.5</span> <span class="mf">0.5</span> <span class="mi">0</span>
 </pre></div>
 </div>
 <p>The values are as follows from left:</p>
@@ -912,7 +912,7 @@ dimension.</p>
 <p>Atomic displacement of the <em>j</em>-th atom is created from the real part
 of the eigenvectors with amplitudes and phase factors as</p>
 <div class="math">
-<p><img src="_images/math/2114d73eb3baa6b5a275958dc0b1261c9fdd2771.png" alt="\frac{A} { \sqrt{N_\mathrm{a}m_j} } \operatorname{Re} \left[ \exp(i\phi)
+<p><img src="_images/math/92df5da360ff79a484d8eca1772ec0cb98fb7a80.png" alt="\frac{A} { \sqrt{N_\mathrm{a}m_j} } \operatorname{Re} \left[ \exp(i\phi)
 \mathbf{e}_j \exp( \mathbf{q} \cdot \mathbf{r}_{jl} ) \right],"/></p>
 </div><p>where <img class="math" src="_images/math/0acafa529182e79b4f56165ec677554fba7fcf98.png" alt="A"/> is the amplitude, <img class="math" src="_images/math/10e009bdb83f96c5f47c58b34d5d4b12ef268d5b.png" alt="\phi"/> is the phase,
 <img class="math" src="_images/math/5477894f53c543b441eb8e2091a4ca80e4124300.png" alt="N_\mathrm{a}"/> is the number of atoms in the supercell specified
@@ -921,7 +921,7 @@ in this tag and <img class="math" src="_images/math/6d5f7404ca9c2f30c463f91e94d4
 is the position of the <em>j</em>-th atom in the <em>l</em>-th unit cell, and
 <img class="math" src="_images/math/e7b8c9bb509f9569603622c23c91da69c6b64dc5.png" alt="\mathbf{e}_j"/> is the <em>j</em>-th atom part of eigenvector. Convention of
 eigenvector or dynamical matrix employed in phonopy is shown in
-<a class="reference internal" href="theory.html#dynacmial-matrix-theory"><span>Dynamical matrix</span></a>.</p>
+<a class="reference internal" href="theory.html#dynacmial-matrix-theory"><span class="std std-ref">Dynamical matrix</span></a>.</p>
 <p>If several modes are specified as shown in the example above, they are
 overlapped on the structure. The output filenames are
 <code class="docutils literal"><span class="pre">MPOSCAR...</span></code>. Each modulated structure of a normal mode is written
@@ -933,7 +933,7 @@ Some information is written into <code class="docutils literal"><span class="pre
 <div class="section" id="usage">
 <h4>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h4>
 <p>The first three (nine) values correspond to supercell dimension
-(supercell matrix) like the <a class="reference internal" href="#dimension-tag"><span>CELL_FILENAME</span></a> tag. The following
+(supercell matrix) like the <a class="reference internal" href="#dimension-tag"><span class="std std-ref">CELL_FILENAME</span></a> tag. The following
 values are used to describe how the atoms are modulated. Multiple sets
 of modulations can be specified by separating by comma <code class="docutils literal"><span class="pre">,</span></code>. In each
 set, the first three values give a Q-point in the reduced coordinates
@@ -946,16 +946,16 @@ the modulation vector is adjusted as the largest absolute value,
 <img class="math" src="_images/math/a6ddd9b14b89b24abb3f1f855dcc1f94a1af73a4.png" alt="\left|\mathbf{e}_j\right|/\sqrt{m_j}"/>, of element of
 3N dimensional modulation vector to be real. The complex modulation
 vector is shown in <code class="docutils literal"><span class="pre">modulation.yaml</span></code>.</p>
-<div class="highlight-python"><div class="highlight"><pre>MODULATION = 3 3 1, 1/3 1/3 0 1 2, 1/3 1/3 0 2 3.5
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">MODULATION</span> <span class="o">=</span> <span class="mi">3</span> <span class="mi">3</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="o">/</span><span class="mi">3</span> <span class="mi">1</span><span class="o">/</span><span class="mi">3</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="o">/</span><span class="mi">3</span> <span class="mi">1</span><span class="o">/</span><span class="mi">3</span> <span class="mi">0</span> <span class="mi">2</span> <span class="mf">3.5</span>
 </pre></div>
 </div>
-<div class="highlight-python"><div class="highlight"><pre>MODULATION = 3 3 1, 1/3 1/3 0 1 2, 1/3 0 0 2 2
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">MODULATION</span> <span class="o">=</span> <span class="mi">3</span> <span class="mi">3</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="o">/</span><span class="mi">3</span> <span class="mi">1</span><span class="o">/</span><span class="mi">3</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="o">/</span><span class="mi">3</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">2</span> <span class="mi">2</span>
 </pre></div>
 </div>
-<div class="highlight-python"><div class="highlight"><pre>MODULATION = 3 3 1, 1/3 1/3 0 1 1 0, 1/3 1/3 0 1 1 90
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">MODULATION</span> <span class="o">=</span> <span class="mi">3</span> <span class="mi">3</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="o">/</span><span class="mi">3</span> <span class="mi">1</span><span class="o">/</span><span class="mi">3</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="o">/</span><span class="mi">3</span> <span class="mi">1</span><span class="o">/</span><span class="mi">3</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">90</span>
 </pre></div>
 </div>
-<div class="highlight-python"><div class="highlight"><pre>MODULATION = -1 1 1 1 -1 1 1 1 -1, 1/2 1/2 0 1 2
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">MODULATION</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="o">-</span><span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">2</span>
 </pre></div>
 </div>
 </div>
@@ -973,7 +973,7 @@ primitive cell using <code class="docutils literal"><span class="pre">PRIMITIVE_
 to be calculated.  The degenerated modes are searched only by the closeness of
 frequencies. The frequency difference to be tolerated is specified by
 the fourth value in the frequency unit that the user specified.</p>
-<div class="highlight-python"><div class="highlight"><pre>IRREPS = 0 0 0 1e-3
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">IRREPS</span> <span class="o">=</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">1</span><span class="n">e</span><span class="o">-</span><span class="mi">3</span>
 </pre></div>
 </div>
 <p>Only the databases of IRs for a few point group types at the
@@ -983,8 +983,8 @@ the symbols of the IRs and the rotation operations are shown.</p>
 <div class="section" id="show-irreps">
 <h3><code class="docutils literal"><span class="pre">SHOW_IRREPS</span></code><a class="headerlink" href="#show-irreps" title="Permalink to this headline">¶</a></h3>
 <p>Irreducible representations are shown along with character table.</p>
-<div class="highlight-python"><div class="highlight"><pre>IRREPS = 1/3 1/3 0
-SHOW_IRREPS = .TRUE.
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">IRREPS</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="mi">3</span> <span class="mi">1</span><span class="o">/</span><span class="mi">3</span> <span class="mi">0</span>
+<span class="n">SHOW_IRREPS</span> <span class="o">=</span> <span class="o">.</span><span class="n">TRUE</span><span class="o">.</span>
 </pre></div>
 </div>
 </div>
@@ -992,8 +992,8 @@ SHOW_IRREPS = .TRUE.
 <h3><code class="docutils literal"><span class="pre">LITTLE_COGROUP</span></code><a class="headerlink" href="#little-cogroup" title="Permalink to this headline">¶</a></h3>
 <p>Show irreps of little co-group (point-group of wavevector) instead of
 little group.</p>
-<div class="highlight-python"><div class="highlight"><pre>IRREPS = 0 0 1/8
-LITTLE_COGROUP = .TRUE.
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">IRREPS</span> <span class="o">=</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">1</span><span class="o">/</span><span class="mi">8</span>
+<span class="n">LITTLE_COGROUP</span> <span class="o">=</span> <span class="o">.</span><span class="n">TRUE</span><span class="o">.</span>
 </pre></div>
 </div>
 </div>
@@ -1020,7 +1020,7 @@ LITTLE_COGROUP = .TRUE.
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.5.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.<br/>
     </p>
   </div>
 </footer>
