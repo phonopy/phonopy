@@ -31,7 +31,7 @@ class Conductivity:
             self._sigmas = sigmas
         self._pp = interaction
         self._collision = None # has to be set derived class
-        
+
         self._temperatures = temperatures
         self._is_kappa_star = is_kappa_star
         self._gv_delta_q = gv_delta_q
@@ -91,7 +91,7 @@ class Conductivity:
 
     def __iter__(self):
         return self
-            
+
     def __next__(self):
         if self._grid_point_count == len(self._grid_points):
             if self._log_level:
@@ -117,16 +117,16 @@ class Conductivity:
 
     def get_frequencies(self):
         return self._frequencies[self._grid_points]
-        
+
     def get_qpoints(self):
         return self._qpoints
-            
+
     def get_grid_points(self):
         return self._grid_points
 
     def get_grid_weights(self):
         return self._grid_weights
-            
+
     def get_temperatures(self):
         return self._temperatures
 
@@ -137,17 +137,17 @@ class Conductivity:
     def set_gamma(self, gamma):
         self._gamma = gamma
         self._read_gamma = True
-        
+
     def set_gamma_isotope(self, gamma_iso):
         self._gamma_iso = gamma_iso
         self._read_gamma_iso = True
 
     def get_gamma(self):
         return self._gamma
-        
+
     def get_gamma_isotope(self):
         return self._gamma_iso
-        
+
     def get_kappa(self):
         return self._kappa
 
@@ -238,7 +238,7 @@ class Conductivity:
                 else:
                     self._mesh_divisors.append(1)
                     print(("Mesh number %d for the " +
-                           ["first", "second", "third"][i] + 
+                           ["first", "second", "third"][i] +
                            " axis is not dividable by divisor %d.") % (m, n))
             self._mesh_divisors = np.array(self._mesh_divisors, dtype='intc')
             if coarse_mesh_shifts is None:
@@ -249,7 +249,7 @@ class Conductivity:
                 if (self._coarse_mesh_shifts[i] and
                     (self._mesh_divisors[i] % 2 != 0)):
                     print("Coarse grid along " +
-                          ["first", "second", "third"][i] + 
+                          ["first", "second", "third"][i] +
                           " axis can not be shifted. Set False.")
                     self._coarse_mesh_shifts[i] = False
 
@@ -266,10 +266,10 @@ class Conductivity:
             mesh_shifts = self._coarse_mesh_shifts
         (coarse_grid_points,
          coarse_grid_weights,
-         coarse_grid_address) = get_ir_grid_points(
-            self._coarse_mesh,
-            self._symmetry.get_pointgroup_operations(),
-            mesh_shifts=mesh_shifts)
+         coarse_grid_address, _) = get_ir_grid_points(
+             self._coarse_mesh,
+             self._symmetry.get_pointgroup_operations(),
+             mesh_shifts=mesh_shifts)
         grid_points = from_coarse_to_dense_grid_points(
             self._mesh,
             self._mesh_divisors,
@@ -278,11 +278,10 @@ class Conductivity:
             coarse_mesh_shifts=self._coarse_mesh_shifts)
         grid_weights = coarse_grid_weights
 
-        assert grid_weights.sum() == np.prod(self._mesh //
-                                             self._mesh_divisors)
+        assert grid_weights.sum() == np.prod(self._mesh // self._mesh_divisors)
 
         return grid_points, grid_weights
-            
+
     def _set_isotope(self, mass_variances):
         if mass_variances is True:
             mv = None
@@ -297,7 +296,7 @@ class Conductivity:
             cutoff_frequency=self._cutoff_frequency,
             lapack_zheev_uplo=self._pp.get_lapack_zheev_uplo())
         self._mass_variances = self._isotope.get_mass_variances()
-        
+
     def _set_gv(self, i):
         # Group velocity [num_freqs, 3]
         gv = self._get_gv(self._qpoints[i])
@@ -330,9 +329,9 @@ class Conductivity:
         #         if mean_free_path > self._boundary_mfp:
         #             main_diagonal[l] = (
         #                 gv_norm / (4 * np.pi * self._boundary_mfp))
-                    
+
         return main_diagonal
-                        
+
     def _get_boundary_scattering(self, i):
         num_band = self._primitive.get_number_of_atoms() * 3
         g_boundary = np.zeros(num_band, dtype='double')
@@ -340,7 +339,7 @@ class Conductivity:
             g_boundary[l] = (np.linalg.norm(self._gv[i, l]) * Angstrom * 1e6 /
                              (4 * np.pi * self._boundary_mfp))
         return g_boundary
-        
+
     def _show_log_header(self, i):
         if self._log_level:
             gp = self._grid_points[i]
@@ -359,4 +358,3 @@ class Conductivity:
                 print(("Mass variance parameters: " +
                        "%5.2e " * len(self._mass_variances)) %
                       tuple(self._mass_variances))
-                        
