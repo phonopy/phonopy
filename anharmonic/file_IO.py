@@ -411,12 +411,16 @@ def write_grid_address(grid_address, mesh, filename=None):
 
     return grid_address_filename
 
-def write_grid_address_to_hdf5(grid_address, mesh, filename=None):
+def write_grid_address_to_hdf5(grid_address,
+                               mesh,
+                               grid_mapping_table,
+                               filename=None):
     suffix = _get_filename_suffix(mesh, filename=filename)
     full_filename = "grid_address" + suffix + ".hdf5"
     with h5py.File(full_filename, 'w') as w:
         w.create_dataset('mesh', data=mesh)
         w.create_dataset('grid_address', data=grid_address)
+        w.create_dataset('grid_mapping_table', data=grid_mapping_table)
         return full_filename
     return None
 
