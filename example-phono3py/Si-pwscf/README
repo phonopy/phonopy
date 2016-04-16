@@ -1,0 +1,11 @@
+This is the example of silicon calculation. The supercell is 2x2x2 of the conventinal unit cell. The pwscf calculation was made to obtain forces with 50 Ry, 2x2x2 k-point mesh for the supercell, PBE, and the lattice parameters in Si.in. Silicon crystal is F-centre, so there is the transformation matrix from the conventinal unit cell to the primitive cell.
+
+To create fc3.hdf5 and fc2.hdf5,
+
+% phono3py --pwscf -c Si.in --dim="2 2 2" --sym_fc3r --sym_fc2 --tsym
+
+Using 11x11x11 sampling mesh, lattice thermal conductivity is calculated by
+
+% phono3py --pwscf -c Si.in --dim="2 2 2" --pa="0 1/2 1/2 1/2 0 1/2 1/2 1/2 0" --mesh="11 11 11" --fc3 --fc2 --br
+
+kappa-m111111.hdf5 is written as the result. The lattice thermal conductivity is calculated as 101.9 W/m-K at 300 K. This becomes, with 19x19x19 sampling mesh, 130.0 W/m-K.
