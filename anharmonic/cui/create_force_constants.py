@@ -208,7 +208,7 @@ def _create_phono3py_fc3(phono3py,
     if log_level:
         print("Sets of supercell forces are read from %s." % "FORCES_FC3")
     forces_fc3 = parse_FORCES_FC3(disp_dataset)
-    if None in forces_fc3:
+    if not forces_fc3:
         return False
 
     _convert_force_unit(forces_fc3, energy_to_eV, distance_to_A)
@@ -258,7 +258,7 @@ def _create_phono3py_fc2(phono3py,
         print("Sets of supercell forces are read from %s." % "FORCES_FC3")
     file_exists("FORCES_FC3", log_level)
     forces_fc2 = parse_FORCES_FC2(disp_dataset, filename="FORCES_FC3")
-    if None in forces_fc2:
+    if not forces_fc2:
         return False
 
     _convert_force_unit(forces_fc2, energy_to_eV, distance_to_A)
@@ -300,7 +300,7 @@ def _create_phono3py_phonon_fc2(phono3py,
               "FORCES_FC2")
     file_exists("FORCES_FC2", log_level)
     forces_fc2 = parse_FORCES_FC2(disp_dataset)
-    if None in forces_fc2:
+    if not forces_fc2:
         return False
 
     _convert_force_unit(forces_fc2, energy_to_eV, distance_to_A)

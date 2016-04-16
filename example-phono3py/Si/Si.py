@@ -7,8 +7,11 @@ from phonopy.units import Bohr, Hartree
 from phonopy.harmonic.force_constants import show_drift_force_constants
 from anharmonic.phonon3.fc3 import show_drift_fc3
 from anharmonic.phonon3 import Phono3py
-from anharmonic.file_IO import (write_disp_fc3_yaml, parse_disp_fc3_yaml,
-                                parse_FORCES_FC3, read_fc3_from_hdf5,
+from anharmonic.file_IO import (parse_disp_fc3_yaml,
+                                parse_disp_fc2_yaml,
+                                parse_FORCES_FC2,
+                                parse_FORCES_FC3,
+                                read_fc3_from_hdf5,
                                 read_fc2_from_hdf5)
 
 cell = read_vasp("POSCAR-unitcell")
@@ -32,6 +35,15 @@ phono3py.produce_fc3(
     is_permutation_symmetry_fc2=True)
 fc3 = phono3py.get_fc3()
 fc2 = phono3py.get_fc2()
+
+# # Create fc2 from disp_fc2.yaml and FORCES_FC2
+# disp_dataset2 = parse_disp_fc2_yaml(filename="disp_fc2.yaml")
+# forces_fc2 = parse_FORCES_FC2(disp_dataset2, filename="FORCES_FC2")
+# phono3py.produce_fc2(
+#     forces_fc2,
+#     displacement_dataset=disp_dataset2,
+#     is_translational_symmetry=True,
+#     is_permutation_symmetry=True)
 
 # # Read fc3 and fc2 from c3.hdf5 and fc2.hdf5
 # fc3 = read_fc3_from_hdf5(filename="fc3.hdf5")

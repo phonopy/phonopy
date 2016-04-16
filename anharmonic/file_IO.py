@@ -1016,8 +1016,14 @@ def parse_disp_fc4_yaml(filename="disp_fc4.yaml"):
 def parse_FORCES_FC2(disp_dataset, filename="FORCES_FC2"):
     num_atom = disp_dataset['natom']
     num_disp = len(disp_dataset['first_atoms'])
+    forces_fc2 = []
     with open(filename, 'r') as f2:
-        forces_fc2 = [_parse_force_lines(f2, num_atom) for i in range(num_disp)]
+        for i in range(num_disp):
+            forces = _parse_force_lines(f2, num_atom)
+            if forces is None:
+                return []
+            else:
+                forces_fc2.append(forces)
     return forces_fc2
 
 def parse_FORCES_FC3(disp_dataset, filename="FORCES_FC3"):
@@ -1025,8 +1031,15 @@ def parse_FORCES_FC3(disp_dataset, filename="FORCES_FC3"):
     num_disp = len(disp_dataset['first_atoms'])
     for disp1 in disp_dataset['first_atoms']:
         num_disp += len(disp1['second_atoms'])
+
+    forces_fc3 = []
     with open(filename, 'r') as f3:
-        forces_fc3 = [_parse_force_lines(f3, num_atom) for i in range(num_disp)]
+        for i in range(num_disp):
+            forces = _parse_force_lines(f3, num_atom)
+            if forces is None:
+                return []
+            else:
+                forces_fc3.append(forces)
     return forces_fc3
 
 def parse_FORCES_FC4(disp_dataset, filename="FORCES_FC4"):
