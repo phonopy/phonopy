@@ -1,7 +1,14 @@
 from distutils.core import setup, Extension
 import numpy
+import os
 
 include_dirs_numpy = [numpy.get_include()]
+cc = None
+if 'CC' in os.environ:
+    if 'clang' in os.environ['CC']:
+        cc = 'clang'
+    if 'gcc' in os.environ['CC']:
+        cc = 'gcc'
 
 ######################
 # _phonopy extension #
@@ -18,7 +25,12 @@ if __name__ == '__main__':
     extra_link_args_phonopy = []
 else:
     extra_compile_args_phonopy = ['-fopenmp',]
-    extra_link_args_phonopy = ['-lgomp',]
+    if cc == 'gcc':
+        extra_link_args_phonopy = ['-lgomp',]
+    elif cc == 'clang':
+        extra_link_args_phonopy = []
+    else:
+        extra_link_args_phonopy = ['-lgomp',]
 
 extension_phonopy = Extension(
     'phonopy._phonopy',
@@ -36,7 +48,12 @@ if __name__ == '__main__':
     extra_link_args_spglib=[]
 else:
     extra_compile_args_spglib=['-fopenmp',]
-    extra_link_args_spglib=['-lgomp',]
+    if cc == 'gcc':
+        extra_link_args_spglib=['-lgomp',]
+    elif cc == 'clang':
+        extra_link_args_spglib=[]
+    else:
+        extra_link_args_spglib=['-lgomp',]
 
 extension_spglib = Extension(
     'phonopy._spglib',
@@ -90,9 +107,19 @@ if __name__ == '__main__':
             if "__version__" in line:
                 version = line.split()[2].strip('\"')
 
+    # To deploy to pypi by travis-CI
+    nanoversion = ''
+    if os.path.isfile("__nanoversion__.txt"):
+        with open('__nanoversion__.txt') as nv:
+            for line in nv:
+                nanoversion = '%.4s' % (line.strip())
+                break
+            if nanoversion:
+                nanoversion = '.' + nanoversion
+
     if all([x.isdigit() for x in version.split('.')]):
         setup(name='phonopy',
-              version=version,
+              version=(version + nanoversion),
               description='This is the phonopy module.',
               author='Atsushi Togo',
               author_email='atz.togo@gmail.com',

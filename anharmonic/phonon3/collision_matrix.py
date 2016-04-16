@@ -92,8 +92,7 @@ class CollisionMatrix(ImagSelfEnergy):
         if grid_point is None:
             self._grid_point = None
         else:
-            self._pp.set_grid_point(grid_point,
-                                             stores_triplets_map=True)
+            self._pp.set_grid_point(grid_point, stores_triplets_map=True)
             self._pp_strength = None
             (self._triplets_at_q,
              self._weights_at_q,
@@ -107,6 +106,7 @@ class CollisionMatrix(ImagSelfEnergy):
                 self._pp.get_bz_map(),
                 self._mesh)
             self._bz_map = self._pp.get_bz_map()
+            self._frequencies, self._eigenvectors, _ = self._pp.get_phonons()
             
     def _run_collision_matrix(self):
         self._run_with_band_indices()

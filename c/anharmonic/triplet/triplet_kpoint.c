@@ -34,11 +34,11 @@
 /* ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE */
 /* POSSIBILITY OF SUCH DAMAGE. */
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <mathfunc.h>
 #include <kpoint.h>
 #include <kgrid.h>
+#include <phonoc_const.h>
 #include <triplet_h/triplet_kpoint.h>
 
 static void grid_point_to_address_double(int address_double[3],
@@ -53,7 +53,7 @@ static int get_ir_triplets_at_q(int map_triplets[],
 				const MatINT * rot_reciprocal);
 static int get_BZ_triplets_at_q(int triplets[][3],
 				const int grid_point,
-				SPGCONST int bz_grid_address[][3],
+				PHPYCONST int bz_grid_address[][3],
 				const int bz_map[],
 				const int map_triplets[],
 				const int num_map_triplets,
@@ -89,7 +89,7 @@ int tpk_get_ir_triplets_at_q(int map_triplets[],
 
 int tpk_get_BZ_triplets_at_q(int triplets[][3],
 			     const int grid_point,
-			     SPGCONST int bz_grid_address[][3],
+			     PHPYCONST int bz_grid_address[][3],
 			     const int bz_map[],
 			     const int map_triplets[],
 			     const int num_map_triplets,
@@ -197,7 +197,7 @@ static int get_ir_triplets_at_q(int map_triplets[],
 
 static int get_BZ_triplets_at_q(int triplets[][3],
 				const int grid_point,
-				SPGCONST int bz_grid_address[][3],
+				PHPYCONST int bz_grid_address[][3],
 				const int bz_map[],
 				const int map_triplets[],
 				const int num_map_triplets,

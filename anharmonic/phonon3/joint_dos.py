@@ -167,7 +167,7 @@ class JointDos:
                                             occupation(freqs, t), 0))
         
         for i, freq_point in enumerate(self._frequency_points):
-            g = get_triplets_integration_weights(
+            g, _ = get_triplets_integration_weights(
                 self,
                 np.array([freq_point], dtype='double'),
                 self._sigma,

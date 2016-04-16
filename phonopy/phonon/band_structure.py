@@ -51,7 +51,7 @@ def estimate_band_connection(prev_eigvecs, eigvecs, prev_band_order):
         connection_order.append(maxindex)
 
     band_order = [connection_order[x] for x in prev_band_order]
-        
+
     return band_order
 
 
@@ -73,7 +73,7 @@ class BandStructure:
         if is_band_connection:
             self._is_eigenvectors = True
         self._group_velocity = group_velocity
-            
+
         self._paths = [np.array(path) for path in paths]
         self._distances = []
         self._distance = 0.
@@ -101,10 +101,10 @@ class BandStructure:
 
     def get_group_velocities(self):
         return self._group_velocities
-    
+
     def get_unit_conversion_factor(self):
         return self._factor
-    
+
     def plot(self, pyplot, labels=None):
         for distances, frequencies in zip(self._distances,
                                           self._frequencies):
@@ -124,7 +124,7 @@ class BandStructure:
         pyplot.xlim(0, self._distance)
         pyplot.axhline(y=0, linestyle=':', linewidth=0.5, color='b')
 
-    def write_yaml(self, labels=None, filename="band.yaml"):
+    def write_yaml(self, labels=None, comment=None, filename="band.yaml"):
         with open(filename, 'w') as w:
             natom = self._cell.get_number_of_atoms()
             rec_lattice = np.linalg.inv(self._cell.get_cell()) # column vectors
@@ -135,10 +135,19 @@ class BandStructure:
             for qpoints in self._paths:
                 nq_paths.append(len(qpoints))
             text = []
+            if comment is not None:
+                try:
+                    import yaml
+                    text.append(
+                        yaml.dump(comment, default_flow_style=False).rstrip())
+                except ImportError:
+                    print("You need to install python-yaml.")
+                    print("Additional comments were not written in %s." %
+                          filename)
             text.append("nqpoint: %-7d" % np.sum(nq_paths))
             text.append("npath: %-7d" % len(self._paths))
             text.append("segment_nqpoint:")
-            text += ["- %d" % nq for nq in nq_paths]                
+            text += ["- %d" % nq for nq in nq_paths]
             text.append("reciprocal_lattice:")
             for vec, axis in zip(rec_lattice.T, ('a*', 'b*', 'c*')):
                 text.append("- [ %12.8f, %12.8f, %12.8f ] # %2s" %
@@ -257,7 +266,7 @@ class BandStructure:
         if self._group_velocity is not None:
             self._group_velocities = group_velocities
         self._distances = distances
-        
+
         self._set_frequencies()
 
     def _solve_dm_on_path(self, path, verbose):
@@ -270,11 +279,11 @@ class BandStructure:
         if self._group_velocity is not None:
             self._group_velocity.set_q_points(path)
             gv = self._group_velocity.get_group_velocity()
-        
+
         for i, q in enumerate(path):
             self._shift_point(q)
             distances_on_path.append(self._distance)
-            
+
             if is_nac:
                 q_direction = None
                 if (np.abs(q) < 0.0001).all(): # For Gamma point

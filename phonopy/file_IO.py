@@ -60,12 +60,12 @@ def write_FORCE_SETS(dataset, filename='FORCE_SETS'):
             fp.write("%15.10f %15.10f %15.10f\n" % (tuple(f)))
 
 def parse_FORCE_SETS(is_translational_invariance=False, filename="FORCE_SETS"):
-    f = open(filename, 'r')
-    return _get_set_of_forces(f, is_translational_invariance)
+    with open(filename, 'r') as f:
+        return _get_set_of_forces(f, is_translational_invariance)
 
 def parse_FORCE_SETS_from_strings(strings, is_translational_invariance=False):
-    return _get_set_of_forces(StringIO.StringIO(strings),
-                             is_translational_invariance)
+    return _get_set_of_forces(StringIO(strings),
+                              is_translational_invariance)
 
 def _get_set_of_forces(f, is_translational_invariance):
     set_of_forces = []
@@ -306,7 +306,7 @@ def parse_BORN(primitive, symprec=1e-5, is_symmetry=True, filename="BORN"):
     return _parse_BORN_from_file_object(f, primitive, symprec, is_symmetry)
 
 def parse_BORN_from_strings(strings, primitive, symprec=1e-5, is_symmetry=True):
-    f = StringIO.StringIO(strings)
+    f = StringIO(strings)
     return _parse_BORN_from_file_object(f, primitive, symprec, is_symmetry)
 
 def _parse_BORN_from_file_object(f, primitive, symprec, is_symmetry):

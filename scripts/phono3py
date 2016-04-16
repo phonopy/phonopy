@@ -44,7 +44,6 @@ from phonopy.version import __version__
 from phonopy.interface import read_crystal_structure
 from anharmonic.file_IO import (parse_disp_fc2_yaml, parse_disp_fc3_yaml,
                                 parse_FORCES_FC2, parse_FORCES_FC3,
-                                write_FORCES_FC3_vasp, write_FORCES_FC2_vasp,
                                 write_FORCES_FC2, write_FORCES_FC3)
 from anharmonic.cui.settings import Phono3pyConfParser
 from anharmonic.phonon3 import (Phono3py, Phono3pyJointDos, Phono3pyIsotope)
@@ -148,7 +147,13 @@ if options.forces_fc2_mode:
     if log_level:
         print("Displacement dataset is read from %s." % filename)
     disp_dataset = parse_disp_fc2_yaml()
-    write_FORCES_FC2_vasp(args, disp_dataset)
+
+    filenames = args
+    if interface_mode == 'pwscf':
+        force_sets = parse_set_of_forces(disp_dataset['natom'], filenames)
+    else:
+        force_sets = parse_set_of_forces(disp_dataset['natom'], filenames)
+    write_FORCES_FC2(disp_dataset, forces_fc2=force_sets, filename="FORCES_FC2")
 
     if log_level:
         print("FORCES_FC2 has been created.")
@@ -624,19 +629,17 @@ elif run_mode == "imag_self_energy":
 elif run_mode == "frequency_shift":
     phono3py.get_frequency_shift(
         grid_points,
-        epsilons=sigmas,
         temperatures=temperatures,
         output_filename=output_filename)
 elif run_mode == "conductivity-RTA" or run_mode == "conductivity-LBTE":
     phono3py.run_thermal_conductivity(
         is_LBTE=settings.get_is_lbte(),
         temperatures=temperatures,
-        sigmas=sigmas,
         is_isotope=settings.get_is_isotope(),
         mass_variances=settings.get_mass_variances(),
         grid_points=grid_points,
         boundary_mfp=settings.get_boundary_mfp(),
-        use_averaged_pp_interaction=settings.get_average_pp_interaction(),
+        use_ave_pp=settings.get_use_ave_pp(),
         gamma_unit_conversion=settings.get_gamma_conversion_factor(),
         mesh_divisors=mesh_divs,
         coarse_mesh_shifts=settings.get_coarse_mesh_shifts(),
@@ -644,9 +647,11 @@ elif run_mode == "conductivity-RTA" or run_mode == "conductivity-LBTE":
         is_kappa_star=settings.get_is_kappa_star(),
         gv_delta_q=settings.get_group_velocity_delta_q(),
         run_with_g=settings.get_run_with_g(),
+        is_full_pp=settings.get_is_full_pp(),
         pinv_cutoff=settings.get_pinv_cutoff(),
         write_gamma=settings.get_write_gamma(),
         read_gamma=settings.get_read_gamma(),
+        write_kappa=True,
         write_collision=settings.get_write_collision(),
         read_collision=settings.get_read_collision(),
         input_filename=input_filename,

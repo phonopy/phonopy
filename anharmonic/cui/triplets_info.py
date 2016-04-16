@@ -51,8 +51,9 @@ def write_grid_points(primitive,
         print("To write grid points, mesh numbers have to be specified.")
     else:
         (ir_grid_points,
-         coarse_grid_weights,
-         grid_address) = get_coarse_ir_grid_points(
+         grid_weights,
+         bz_grid_address,
+         grid_mapping_table) = get_coarse_ir_grid_points(
              primitive,
              mesh,
              mesh_divs,
@@ -62,10 +63,12 @@ def write_grid_points(primitive,
         write_ir_grid_points(mesh,
                              mesh_divs,
                              ir_grid_points,
-                             coarse_grid_weights,
-                             grid_address,
+                             grid_weights,
+                             bz_grid_address,
                              np.linalg.inv(primitive.get_cell()))
-        gadrs_hdf5_fname = write_grid_address_to_hdf5(grid_address, mesh)
+        gadrs_hdf5_fname = write_grid_address_to_hdf5(bz_grid_address,
+                                                      mesh,
+                                                      grid_mapping_table)
 
         print("Ir-grid points are written into \"ir_grid_points.yaml\".")
         print("Grid addresses are written into \"%s\"." % gadrs_hdf5_fname)
@@ -80,7 +83,7 @@ def show_num_triplets(primitive,
                       log_level):
     print("-" * 76)
 
-    ir_grid_points, _, grid_address = get_coarse_ir_grid_points(
+    ir_grid_points, _, grid_address, _ = get_coarse_ir_grid_points(
         primitive,
         mesh,
         mesh_divs,
