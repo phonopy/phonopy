@@ -929,6 +929,7 @@ class PhonopySettings(Settings):
         self._thermal_atom_pairs = None
         self._write_dynamical_matrices = False
         self._write_mesh = True
+        self._xyz_projection = False
 
     def set_anime_band_index(self, band_index):
         self._anime_band_index = band_index
@@ -1186,7 +1187,11 @@ class PhonopySettings(Settings):
     def get_write_mesh(self):
         return self._write_mesh
 
-
+    def set_xyz_projection(self, xyz_projection):
+        self._xyz_projection = xyz_projection
+        
+    def get_xyz_projection(self):
+        return self._xyz_projection
         
 class PhonopyConfParser(ConfParser):
     def __init__(self, filename=None, options=None, option_list=None):
@@ -1218,6 +1223,10 @@ class PhonopyConfParser(ConfParser):
                 if self._options.pdos:
                     self._confs['pdos'] = self._options.pdos
 
+            if opt.dest == 'xyz_projection':
+                if self._options.xyz_projection:
+                    self._confs['xyz_projection'] = '.true.'
+    
             if opt.dest == 'fc_computation_algorithm':
                 if self._options.fc_computation_algorithm is not None:
                     self._confs['fc_computation_algorithm'] = self._options.fc_computation_algorithm
@@ -1304,7 +1313,8 @@ class PhonopyConfParser(ConfParser):
 
             # Overwrite
             if opt.dest == 'is_check_symmetry':
-                if self._options.is_check_symmetry: # Dummy 'dim' setting for sym-check
+                if self._options.is_check_symmetry: 
+                    # Dummy 'dim' setting for sym-check
                     self._confs['dim'] = '1 1 1'
 
             if opt.dest == 'lapack_solver':
@@ -1393,7 +1403,8 @@ class PhonopyConfParser(ConfParser):
                      confs['anime_type'] == 'jmol'):
                     self.set_parameter('anime_type', confs['anime_type'])
                 else:
-                    self.setting_error("%s is not available for ANIME_TYPE tag." % confs['anime_type'])
+                    self.setting_error("%s is not available for ANIME_TYPE tag."
+                                       % confs['anime_type'])
 
             # Modulation
             if conf_key == 'modulation':
@@ -1418,16 +1429,21 @@ class PhonopyConfParser(ConfParser):
             # DOS
             if conf_key == 'pdos':
                 vals = []
-                for sum_set in confs['pdos'].split(','):
-                    indices = [ int(x) - 1 for x in sum_set.split() ]
-                    vals.append(indices)
+                for index_set in confs['pdos'].split(','):
+                    vals.append([int(x) - 1 for x in index_set.split()])
                 self.set_parameter('pdos', vals)
 
+            if conf_key == 'xyz_projection':
+                if confs['xyz_projection'] == '.true.':
+                    self.set_parameter('xyz_projection', True)
+
             if conf_key == 'dos':
-                self.set_parameter('dos', confs['dos'])
+                if confs['dos'] == '.true.':
+                    self.set_parameter('dos', True)
 
             if conf_key == 'debye_model':
-                self.set_parameter('fits_debye_model', confs['debye_model'])
+                if confs['debye_model'] == '.true.':
+                    self.set_parameter('fits_debye_model', True)
 
             if conf_key == 'dos_range':
                 vals = [ float(x) for x in confs['dos_range'].split() ]
@@ -1435,19 +1451,23 @@ class PhonopyConfParser(ConfParser):
 
             # Thermal properties
             if conf_key == 'tprop':
-                self.set_parameter('tprop', confs['tprop'])
+                if confs['tprop'] == '.true.':
+                    self.set_parameter('tprop', True)
 
             # Projected thermal properties
             if conf_key == 'ptprop':
-                self.set_parameter('ptprop', confs['ptprop'])
+                if confs['ptprop'] == '.true.':
+                    self.set_parameter('ptprop', True)
 
             # Thermal displacement
             if conf_key == 'tdisp':
-                self.set_parameter('tdisp', confs['tdisp'])
+                if confs['tdisp'] == '.true.':
+                    self.set_parameter('tdisp', True)
 
             # Thermal displacement matrices
             if conf_key == 'tdispmat':
-                self.set_parameter('tdispmat', confs['tdispmat'])
+                if confs['tdispmat'] == '.true.':
+                    self.set_parameter('tdispmat', True)
 
             # Thermal distance
             if conf_key == 'tdistance':
@@ -1461,17 +1481,19 @@ class PhonopyConfParser(ConfParser):
                 if len(atom_pairs) > 0:
                     self.set_parameter('tdistance', atom_pairs)
             
-            # Projection direction used for thermal displacements
+            # Projection direction used for thermal displacements and PDOS
             if conf_key == 'projection_direction':
                 vals = [float(x) for x in confs['projection_direction'].split()]
                 if len(vals) < 3:
-                    self.setting_error("PROJECTION_DIRECTION (--pd) is incorrectly specified.")
+                    self.setting_error(
+                        "PROJECTION_DIRECTION (--pd) is incorrectly specified.")
                 else:
                     self.set_parameter('projection_direction', vals)
 
             # Group velocity
             if conf_key == 'group_velocity':
-                self.set_parameter('is_group_velocity', confs['group_velocity'])
+                if confs['group_velocity'] == '.true.':
+                    self.set_parameter('is_group_velocity', True)
 
             # Use Lapack solver via Lapacke
             if conf_key == 'lapack_solver':
@@ -1661,27 +1683,37 @@ class PhonopyConfParser(ConfParser):
             self._settings.set_is_dos_mode(True)
     
         if 'dos' in params:
-            if params['dos'] == '.true.':
-                self._settings.set_is_dos_mode(True)
+            self._settings.set_is_dos_mode(params['dos'])
 
         if 'fits_debye_model' in params:
-            if params['fits_debye_model'] == '.true.':
-                self._settings.set_fits_Debye_model(True)
+            self._settings.set_fits_Debye_model(params['fits_debye_model'])
     
+        # Project PDOS x, y, z directions in Cartesian coordinates
+        if 'xyz_projection' in params:
+            self._settings.set_xyz_projection(params['xyz_projection'])
+            if 'pdos' not in params:
+                self.set_parameter('pdos', [])
+
         if 'pdos' in params:
             self._settings.set_pdos_indices(params['pdos'])
             self._settings.set_is_eigenvectors(True)
             self._settings.set_is_dos_mode(True)
             self._settings.set_is_mesh_symmetry(False)
-    
+            if 'projection_direction' in params:
+                if 'xyz_projection' in params and params['xyz_projection']:
+                    pass
+                else:
+                    self._settings.set_projection_direction(
+                        params['projection_direction'])
+                    self._settings.set_is_mesh_symmetry(False)
+
         # Thermal properties
         if 'tprop' in params:
-            if params['tprop'] == '.true.':
-                self._settings.set_is_thermal_properties(True)
-    
+            self._settings.set_is_thermal_properties(params['tprop'])
+
         # Projected thermal properties
         if 'ptprop' in params:
-            if params['ptprop'] == '.true.':
+            if params['ptprop']:
                 self._settings.set_is_thermal_properties(True)
                 self._settings.set_is_projected_thermal_properties(True)
                 self._settings.set_is_eigenvectors(True)
@@ -1689,14 +1721,19 @@ class PhonopyConfParser(ConfParser):
     
         # Thermal displacements
         if 'tdisp' in params:
-            if params['tdisp'] == '.true.':
+            if params['tdisp']:
                 self._settings.set_is_thermal_displacements(True)
                 self._settings.set_is_eigenvectors(True)
                 self._settings.set_is_mesh_symmetry(False)
+
+                if 'projection_direction' in params:
+                    self._settings.set_projection_direction(
+                        params['projection_direction'])
+                    self._settings.set_is_mesh_symmetry(False)
     
         # Thermal displacement matrices
         if 'tdispmat' in params:
-            if params['tdispmat'] == '.true.':
+            if params['tdispmat']:
                 self._settings.set_is_thermal_displacement_matrices(True)
                 self._settings.set_is_eigenvectors(True)
                 self._settings.set_is_mesh_symmetry(False)
@@ -1708,18 +1745,10 @@ class PhonopyConfParser(ConfParser):
             self._settings.set_is_mesh_symmetry(False)
             self._settings.set_thermal_atom_pairs(params['tdistance'])
     
-        # Projection direction (currently only used for thermal displacements)
-        if 'projection_direction' in params: 
-            self._settings.set_projection_direction(
-                params['projection_direction'])
-            self._settings.set_is_mesh_symmetry(False)
-
         # Group velocity
         if 'is_group_velocity' in params:
-            if params['is_group_velocity'] == '.true.':
-                self._settings.set_is_group_velocity(True)
+            self._settings.set_is_group_velocity(params['is_group_velocity'])
 
         # Use Lapack solver via Lapacke
         if 'lapack_solver' in params:
             self._settings.set_lapack_solver(params['lapack_solver'])
-    
