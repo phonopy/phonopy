@@ -828,6 +828,7 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
                       "(fractional)" % tuple(p_direction))
                 print("                      [%6.3f %6.3f %6.3f] "
                       "(Cartesian)" % tuple(c_direction))
+            if log_level > 0:
                 print("Calculating partial PDOS...")
             dos_range = settings.get_dos_range()
             phonon.set_partial_DOS(
