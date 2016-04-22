@@ -637,6 +637,7 @@ def write_kappa_to_hdf5(temperature,
                         grid_point=None,
                         band_index=None,
                         sigma=None,
+                        kappa_unit_conversion=None,
                         filename=None,
                         verbose=True):
     if band_index is None:
@@ -671,6 +672,9 @@ def write_kappa_to_hdf5(temperature,
             w.create_dataset('qpoint', data=qpoint)
         if weight is not None:
             w.create_dataset('weight', data=weight)
+        if kappa_unit_conversion is not None:
+            w.create_dataset('kappa_unit_conversion',
+                             data=kappa_unit_conversion)
 
         if verbose:
             text = ""

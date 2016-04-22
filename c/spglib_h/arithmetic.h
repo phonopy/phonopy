@@ -1,4 +1,4 @@
-/* Copyright (C) 2015 Atsushi Togo */
+/* Copyright (C) 2016 Atsushi Togo */
 /* All rights reserved. */
 
 /* This file is part of spglib. */
@@ -32,12 +32,7 @@
 /* ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE */
 /* POSSIBILITY OF SUCH DAMAGE. */
 
-#ifndef __version_H__
-#define __version_H__
-
-#define SPGLIB_MAJOR_VERSION 1
-#define SPGLIB_MINOR_VERSION 9
-#define SPGLIB_MICRO_VERSION 2
+#ifndef __arithmetic_H__
+#define __arithmetic_H__
 
 #endif
-

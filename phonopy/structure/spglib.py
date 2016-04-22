@@ -38,29 +38,46 @@ import numpy as np
 def get_version():
     return tuple(spg.version())
 
-def get_symmetry(bulk, use_magmoms=False, symprec=1e-5, angle_tolerance=-1.0):
-    """
-    Return symmetry operations as hash.
-    Hash key 'rotations' gives the numpy integer array
-    of the rotation matrices for scaled positions
-    Hash key 'translations' gives the numpy double array
-    of the translation vectors in scaled positions
+def get_symmetry(cell, use_magmoms=False, symprec=1e-5, angle_tolerance=-1.0):
+    """This gives crystal symmetry operations from a crystal structure.
+
+    Args:
+        cell: Crystal structrue given either in Atoms object or tuple.
+            In the case given by a tuple, it has to follow the form below,
+            (Lattice parameters in a 3x3 array (see the detail below),
+             Fractional atomic positions in an Nx3 array,
+             Integer numbers to distinguish species in a length N array,
+             (optional) Collinear magnetic moments in a length N array),
+            where N is the number of atoms.
+            Lattice parameters are given in the form:
+                [[a_x, a_y, a_z],
+                 [b_x, b_y, b_z],
+                 [c_x, c_y, c_z]]
+        use_magmoms:
+            bool: If True, collinear magnetic polarizatin is considered.
+        symprec:
+            float: Symmetry search tolerance in the unit of length.
+        angle_tolerance:
+            float: Symmetry search tolerance in the unit of angle deg.
+                If the value is negative, an internally optimized routine
+                is used to judge symmetry.
+
+    Return:
+        dictionary: Rotation parts and translation parts.
+
+        'rotations': Gives the numpy 'intc' array of the rotation matrices.
+        'translations': Gives the numpy 'double' array of fractional
+            translations with respect to a, b, c axes.
     """
 
-    # Atomic positions have to be specified by scaled positions for spglib.
-    positions = np.array(bulk.get_scaled_positions(), dtype='double', order='C')
-    lattice = np.array(bulk.get_cell().T, dtype='double', order='C')
-    numbers = np.array(bulk.get_atomic_numbers(), dtype='intc')
-
-    # Get number of symmetry operations and allocate symmetry operations
-    # multi = spg.multiplicity(cell, positions, numbers, symprec)
-    multi = 48 * bulk.get_number_of_atoms()
+    lattice, positions, numbers, magmoms = _expand_cell(
+        cell, use_magmoms=use_magmoms)
+    multi = 48 * len(positions)
     rotation = np.zeros((multi, 3, 3), dtype='intc')
     translation = np.zeros((multi, 3), dtype='double')
 
     # Get symmetry operations
     if use_magmoms:
-        magmoms = bulk.get_magnetic_moments()
         equivalent_atoms = np.zeros(len(magmoms), dtype='intc')
         num_sym = spg.symmetry_with_collinear_spin(rotation,
                                                    translation,
@@ -90,7 +107,7 @@ def get_symmetry(bulk, use_magmoms=False, symprec=1e-5, angle_tolerance=-1.0):
                 'translations': np.array(translation[:num_sym],
                                          dtype='double', order='C')}
 
-def get_symmetry_dataset(bulk, symprec=1e-5, angle_tolerance=-1.0):
+def get_symmetry_dataset(cell, symprec=1e-5, angle_tolerance=-1.0):
     """
     number: International space group number
     international: International symbol
@@ -109,10 +126,8 @@ def get_symmetry_dataset(bulk, symprec=1e-5, angle_tolerance=-1.0):
       Standardized unit cell
     pointgroup_number, pointgroup_symbol: Point group number (see get_pointgroup)
     """
-    positions = np.array(bulk.get_scaled_positions(), dtype='double', order='C')
-    lattice = np.array(bulk.get_cell().T, dtype='double', order='C')
-    numbers = np.array(bulk.get_atomic_numbers(), dtype='intc')
-    
+
+    lattice, positions, numbers, _ = _expand_cell(cell)
     keys = ('number',
             'hall_number',
             'international',
@@ -158,13 +173,13 @@ def get_symmetry_dataset(bulk, symprec=1e-5, angle_tolerance=-1.0):
 
     return dataset
 
-def get_spacegroup(bulk, symprec=1e-5, angle_tolerance=-1.0, symbol_type=0):
+def get_spacegroup(cell, symprec=1e-5, angle_tolerance=-1.0, symbol_type=0):
     """
     Return space group in international table symbol and number
     as a string.
     """
 
-    dataset = get_symmetry_dataset(bulk,
+    dataset = get_symmetry_dataset(cell,
                                    symprec=symprec,
                                    angle_tolerance=angle_tolerance)
     symbols = spg.spacegroup_type(dataset['hall_number'])
@@ -215,7 +230,7 @@ def get_pointgroup(rotations):
     # (symbol, pointgroup_number, transformation_matrix)
     return spg.pointgroup(np.array(rotations, dtype='intc', order='C'))
 
-def standardize_cell(bulk,
+def standardize_cell(cell,
                      to_primitive=0,
                      no_idealize=0,
                      symprec=1e-5,
@@ -223,16 +238,17 @@ def standardize_cell(bulk,
     """
     Return standardized cell
     """
-    # Atomic positions have to be specified by scaled positions for spglib.
-    num_atom = bulk.get_number_of_atoms()
-    lattice = np.array(bulk.get_cell().T, dtype='double', order='C')
-    pos = np.zeros((num_atom * 4, 3), dtype='double')
-    pos[:num_atom] = bulk.get_scaled_positions()
 
+    lattice, _positions, _numbers, _ = _expand_cell(cell)
+
+    # Atomic positions have to be specified by scaled positions for spglib.
+    num_atom = len(_positions)
+    positions = np.zeros((num_atom * 4, 3), dtype='double', order='C')
+    positions[:num_atom] = _positions
     numbers = np.zeros(num_atom * 4, dtype='intc')
-    numbers[:num_atom] = np.array(bulk.get_atomic_numbers(), dtype='intc')
+    numbers[:num_atom] = _numbers
     num_atom_std = spg.standardize_cell(lattice,
-                                        pos,
+                                        positions,
                                         numbers,
                                         num_atom,
                                         to_primitive,
@@ -241,45 +257,41 @@ def standardize_cell(bulk,
                                         angle_tolerance)
 
     return (np.array(lattice.T, dtype='double', order='C'),
-            np.array(pos[:num_atom_std], dtype='double', order='C'),
+            np.array(positions[:num_atom_std], dtype='double', order='C'),
             np.array(numbers[:num_atom_std], dtype='intc'))
 
-def refine_cell(bulk, symprec=1e-5, angle_tolerance=-1.0):
+def refine_cell(cell, symprec=1e-5, angle_tolerance=-1.0):
     """
     Return refined cell
     """
-    # Atomic positions have to be specified by scaled positions for spglib.
-    num_atom = bulk.get_number_of_atoms()
-    lattice = np.array(bulk.get_cell().T, dtype='double', order='C')
-    pos = np.zeros((num_atom * 4, 3), dtype='double')
-    pos[:num_atom] = bulk.get_scaled_positions()
 
+    lattice, _positions, _numbers, _ = _expand_cell(cell)
+
+    # Atomic positions have to be specified by scaled positions for spglib.
+    num_atom = len(_positions)
+    positions = np.zeros((num_atom * 4, 3), dtype='double', order='C')
+    positions[:num_atom] = _positions
     numbers = np.zeros(num_atom * 4, dtype='intc')
-    numbers[:num_atom] = np.array(bulk.get_atomic_numbers(), dtype='intc')
+    numbers[:num_atom] = _numbers
     num_atom_std = spg.refine_cell(lattice,
-                                   pos,
+                                   positions,
                                    numbers,
                                    num_atom,
                                    symprec,
                                    angle_tolerance)
 
     return (np.array(lattice.T, dtype='double', order='C'),
-            np.array(pos[:num_atom_std], dtype='double', order='C'),
+            np.array(positions[:num_atom_std], dtype='double', order='C'),
             np.array(numbers[:num_atom_std], dtype='intc'))
 
-def find_primitive(bulk, symprec=1e-5, angle_tolerance=-1.0):
+def find_primitive(cell, symprec=1e-5, angle_tolerance=-1.0):
     """
     A primitive cell in the input cell is searched and returned
     as an object of Atoms class.
     If no primitive cell is found, (None, None, None) is returned.
     """
 
-    # Atomic positions have to be specified by scaled positions for spglib.
-    positions = np.array(bulk.get_scaled_positions(), dtype='double', order='C')
-    lattice = np.array(bulk.get_cell().T, dtype='double', order='C')
-    numbers = np.array(bulk.get_atomic_numbers(), dtype='intc')
-
-    # lattice is transposed with respect to the definition of Atoms class
+    lattice, positions, numbers, _ = _expand_cell(cell)
     num_atom_prim = spg.primitive(lattice,
                                   positions,
                                   numbers,
@@ -317,7 +329,7 @@ def get_grid_point_from_address(grid_address, mesh):
     
 
 def get_ir_reciprocal_mesh(mesh,
-                           bulk,
+                           cell,
                            is_shift=np.zeros(3, dtype='intc'),
                            is_time_reversal=True,
                            symprec=1e-5):
@@ -327,6 +339,7 @@ def get_ir_reciprocal_mesh(mesh,
     is_shift=[0, 0, 0] gives Gamma center mesh.
     """
 
+    lattice, positions, numbers, _ = _expand_cell(cell)
     mapping = np.zeros(np.prod(mesh), dtype='intc')
     mesh_points = np.zeros((np.prod(mesh), 3), dtype='intc')
     spg.ir_reciprocal_mesh(
@@ -335,9 +348,9 @@ def get_ir_reciprocal_mesh(mesh,
         np.array(mesh, dtype='intc'),
         np.array(is_shift, dtype='intc'),
         is_time_reversal * 1,
-        np.array(bulk.get_cell().T, dtype='double', order='C'),
-        np.array(bulk.get_scaled_positions(), dtype='double', order='C'),
-        np.array(bulk.get_atomic_numbers(), dtype='intc'),
+        lattice,
+        positions,
+        numbers,
         symprec)
   
     return mapping, mesh_points
@@ -457,3 +470,49 @@ def get_stabilized_reciprocal_mesh(mesh,
         qpoints)
     
     return mapping, mesh_points
+
+def niggli_reduce(lattice, eps=1e-5):
+    """Run Niggli reduction
+
+    Args:
+        lattice: Lattice parameters in the form of
+            [[a_x, a_y, a_z],
+             [b_x, b_y, b_z],
+             [c_x, c_y, c_z]]
+        eps: Tolerance.
+    
+    Returns:
+        if the Niggli reduction succeeded:
+            Reduced lattice parameters are given as a numpy 'double' array:
+            [[a_x, a_y, a_z],
+             [b_x, b_y, b_z],
+             [c_x, c_y, c_z]]
+        otherwise returns None.
+    """
+    niggli_lattice = np.array(np.transpose(lattice), dtype='double', order='C')
+    result = spg.niggli_reduce(niggli_lattice, float(eps))
+    if result == 0:
+        return None
+    else:
+        return np.array(np.transpose(niggli_lattice), dtype='double', order='C')
+
+def _expand_cell(cell, use_magmoms=False):
+    if isinstance(cell, tuple):
+        lattice = np.array(np.transpose(cell[0]), dtype='double', order='C')
+        positions = np.array(cell[1], dtype='double', order='C')
+        numbers = np.array(cell[2], dtype='intc')
+        if len(cell) > 3 and use_magmoms:
+            magmoms = np.array(cell[3], dtype='double')
+        else:
+            magmoms = None
+    else:
+        lattice = np.array(cell.get_cell().T, dtype='double', order='C')
+        positions = np.array(cell.get_scaled_positions(),
+                             dtype='double', order='C')
+        numbers = np.array(cell.get_atomic_numbers(), dtype='intc')
+        if use_magmoms:
+            magmoms = np.array(cell.get_magnetic_moments(), dtype='double')
+        else:
+            magmoms = None
+
+    return (lattice, positions, numbers, magmoms)

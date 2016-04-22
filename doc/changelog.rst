@@ -3,6 +3,14 @@
 Change Log
 ==========
 
+Apr-22-2016: Version 1.10.8
+----------------------------
+
+* :ref:`xyz_projection_tag` tag is created for PDOS.
+* :ref:`vasp_mode` option is created to explicitly show VASP is used
+  to generate ``band.yaml`` as the calculator.
+* spglib update to v1.9.2
+
 Feb-7-2016: Version 1.10.4
 ----------------------------
 
