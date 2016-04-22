@@ -47,6 +47,7 @@ tags:
 * ``--tstep`` (``TSTEP``)
 * ``--writedm`` (``WRITEDM = .TRUE.``)
 * ``--writefc`` (``FORCE_CONSTANTS = WRITE``)
+* ``--xyz_projection`` (``XYZ_PROJECTION = .TRUE.``)
 
 When both of command-line option and setting tag for the same purpose
 are set simultaneously, the command-line options overide the setting
@@ -60,7 +61,8 @@ Force calculators
 Currently interfaces for VASP, Wien2k, Pwscf, Abinit, and Elk are
 prepared. Wien2k, Pwscf, Abinit and Elk interfaces are invoked with
 ``--wienk2``, ``--pwscf``, ``--abinit``, and ``--elk`` options,
-respectively, and if none of these options is specified, VASP mode is invoked.
+respectively, and if none of these options or ``--vasp`` option is
+specified, VASP mode is invoked.
 
 The details about these interfaces are found at :ref:`calculator_interfaces`.
 
@@ -142,6 +144,17 @@ input file that contains the unit cell crystal structure, e.g.,
 
    % phonopy --elk -c elk-unitcell.in band.conf
 
+.. _vasp_mode:
+
+``--vasp``
+~~~~~~~~~~~~
+
+This doesn't change the default behaviour, but ``vasp`` will appear as
+the calculator such as in ``band.yaml``::
+
+   calculator: vasp
+   nqpoint: 204    
+   ...
   
 .. _cell_filename_option:
 
