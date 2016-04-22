@@ -531,15 +531,15 @@ static const SpacegroupType spacegroup_types[] = {
   {197, "T^3   ", "I 2 2 3         ", "I 2 3                          ", "I 2 3              ", "I23       ", "     ",            BODY, 28 }, /* 491 */
   {198, "T^4   ", "P 2ac 2ab 3     ", "P 2_1 3                        ", "P 2_1 3            ", "P2_13     ", "     ",       PRIMITIVE, 28 }, /* 492 */
   {199, "T^5   ", "I 2b 2c 3       ", "I 2_1 3                        ", "I 2_1 3            ", "I2_13     ", "     ",            BODY, 28 }, /* 493 */
-  {200, "Th^1  ", "-P 2 2 3        ", "P m 3                          ", "P 2/m -3           ", "Pm3       ", "     ",       PRIMITIVE, 29 }, /* 494 */
-  {201, "Th^2  ", "P 2 2 3 -1n     ", "P n 3                          ", "P 2/n -3           ", "Pn3       ", "1    ",       PRIMITIVE, 29 }, /* 495 */
-  {201, "Th^2  ", "-P 2ab 2bc 3    ", "P n 3                          ", "P 2/n -3           ", "Pn3       ", "2    ",       PRIMITIVE, 29 }, /* 496 */
-  {202, "Th^3  ", "-F 2 2 3        ", "F m 3                          ", "F 2/m -3           ", "Fm3       ", "     ",            FACE, 29 }, /* 497 */
-  {203, "Th^4  ", "F 2 2 3 -1d     ", "F d 3                          ", "F 2/d -3           ", "Fd3       ", "1    ",            FACE, 29 }, /* 498 */
-  {203, "Th^4  ", "-F 2uv 2vw 3    ", "F d 3                          ", "F 2/d -3           ", "Fd3       ", "2    ",            FACE, 29 }, /* 499 */
-  {204, "Th^5  ", "-I 2 2 3        ", "I m 3                          ", "I 2/m -3           ", "Im3       ", "     ",            BODY, 29 }, /* 500 */
-  {205, "Th^6  ", "-P 2ac 2ab 3    ", "P a 3                          ", "P 2_1/a -3         ", "Pa3       ", "     ",       PRIMITIVE, 29 }, /* 501 */
-  {206, "Th^7  ", "-I 2b 2c 3      ", "I a 3                          ", "I 2_1/a -3         ", "Ia3       ", "     ",            BODY, 29 }, /* 502 */
+  {200, "Th^1  ", "-P 2 2 3        ", "P m -3                         ", "P 2/m -3           ", "Pm-3      ", "     ",       PRIMITIVE, 29 }, /* 494 */
+  {201, "Th^2  ", "P 2 2 3 -1n     ", "P n -3                         ", "P 2/n -3           ", "Pn-3      ", "1    ",       PRIMITIVE, 29 }, /* 495 */
+  {201, "Th^2  ", "-P 2ab 2bc 3    ", "P n -3                         ", "P 2/n -3           ", "Pn-3      ", "2    ",       PRIMITIVE, 29 }, /* 496 */
+  {202, "Th^3  ", "-F 2 2 3        ", "F m -3                         ", "F 2/m -3           ", "Fm-3      ", "     ",            FACE, 29 }, /* 497 */
+  {203, "Th^4  ", "F 2 2 3 -1d     ", "F d -3                         ", "F 2/d -3           ", "Fd-3      ", "1    ",            FACE, 29 }, /* 498 */
+  {203, "Th^4  ", "-F 2uv 2vw 3    ", "F d -3                         ", "F 2/d -3           ", "Fd-3      ", "2    ",            FACE, 29 }, /* 499 */
+  {204, "Th^5  ", "-I 2 2 3        ", "I m -3                         ", "I 2/m -3           ", "Im-3      ", "     ",            BODY, 29 }, /* 500 */
+  {205, "Th^6  ", "-P 2ac 2ab 3    ", "P a -3                         ", "P 2_1/a -3         ", "Pa-3      ", "     ",       PRIMITIVE, 29 }, /* 501 */
+  {206, "Th^7  ", "-I 2b 2c 3      ", "I a -3                         ", "I 2_1/a -3         ", "Ia-3      ", "     ",            BODY, 29 }, /* 502 */
   {207, "O^1   ", "P 4 2 3         ", "P 4 3 2                        ", "P 4 3 2            ", "P432      ", "     ",       PRIMITIVE, 30 }, /* 503 */
   {208, "O^2   ", "P 4n 2 3        ", "P 4_2 3 2                      ", "P 4_2 3 2          ", "P4_232    ", "     ",       PRIMITIVE, 30 }, /* 504 */
   {209, "O^3   ", "F 4 2 3         ", "F 4 3 2                        ", "F 4 3 2            ", "F432      ", "     ",            FACE, 30 }, /* 505 */
@@ -8575,7 +8575,7 @@ SpacegroupType spgdb_get_spacegroup_type(const int hall_number)
 
   spgtype.number = 0;
   
-  if (0 < hall_number || hall_number < 531) {
+  if (0 < hall_number && hall_number < 531) {
     spgtype = spacegroup_types[hall_number];
   } else {
     spgtype = spacegroup_types[0];

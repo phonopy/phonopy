@@ -245,12 +245,6 @@ int spgat_get_multiplicity(SPGCONST double lattice[3][3],
 			   const double symprec,
 			   const double angle_tolerance);
 
-/* Considering periodicity of crystal, one of the possible smallest */
-/* lattice is searched. The lattice is stored in ``smallest_lattice``. */
-int spg_get_smallest_lattice(double smallest_lattice[3][3],
-			     SPGCONST double lattice[3][3],
-			     const double symprec);
-
 /* Space group is found in international table symbol (``symbol``) and */
 /* number (return value). 0 is returned when it fails. */
 int spg_get_international(char symbol[11],
@@ -321,11 +315,9 @@ int spgat_standardize_cell(double lattice[3][3],
 			   const double symprec,
 			   const double angle_tolerance);
 
-/************/
-/* Obsolete */
-/************/
-/* A primitive cell is found from an input cell. Be careful that  */
-/* ``lattice``, ``position``, and ``types`` are overwritten. */
+/* This is a wrapper of spg_standardize_cell. */
+/* A primitive cell is found from an input cell. */
+/* Be careful that ``lattice``, ``position``, and ``types`` are overwritten. */
 /* ``num_atom`` is returned as return value. */
 /* When any primitive cell is not found, 0 is returned. */
 int spg_find_primitive(double lattice[3][3],
@@ -341,9 +333,7 @@ int spgat_find_primitive(double lattice[3][3],
 			 const double symprec,
 			 const double angle_tolerance);
 
-/************/
-/* Obsolete */
-/************/
+/* This is a wrapper of spg_standardize_cell. */
 /* Bravais lattice with internal atomic points are returned. */
 /* The arrays are require to have 4 times larger memory space */
 /* those of input cell. */
@@ -362,6 +352,9 @@ int spgat_refine_cell(double lattice[3][3],
 		      const double symprec,
 		      const double angle_tolerance);
 
+/* Delaunay reduction for lattice parameters */
+/* ``lattice`` is overwritten when the redution ends succeeded. */
+int spg_delaunay_reduce(double lattice[3][3], const double symprec);
 
 /*---------*/
 /* kpoints */
@@ -475,26 +468,11 @@ void spg_get_neighboring_grid_points(int relative_grid_points[],
 				     SPGCONST int bz_grid_address[][3],
 				     const int bz_map[]);
 
-/* /\*--------------------*\/ */
-/* /\* tetrahedron method *\/ */
-/* /\*--------------------*\/ */
-/* void */
-/* spg_get_tetrahedra_relative_grid_address(int relative_grid_address[24][4][3], */
-/* 					 SPGCONST double rec_lattice[3][3]); */
-/* void */
-/* spg_get_all_tetrahedra_relative_grid_address */
-/* (int relative_grid_address[4][24][4][3]); */
-/* double */
-/* spg_get_tetrahedra_integration_weight(const double omega, */
-/* 				      SPGCONST double tetrahedra_omegas[24][4], */
-/* 				      const char function); */
-/* void */
-/* spg_get_tetrahedra_integration_weight_at_omegas */
-/* (double integration_weights[], */
-/*  const int num_omegas, */
-/*  const double omegas[], */
-/*  SPGCONST double tetrahedra_omegas[24][4], */
-/*  const char function); */
+/*--------*/
+/* Niggli */
+/*--------*/
+/* Return 0 if failed */
+int spg_niggli_reduce(double lattice[3][3], const double symprec);
 
 #endif
 

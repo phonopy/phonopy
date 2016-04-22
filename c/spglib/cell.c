@@ -58,7 +58,8 @@ static VecDBL *
 translate_atoms_in_trimmed_lattice(SPGCONST Cell * cell,
 				   SPGCONST double prim_lat[3][3]);
 static int * get_overlap_table(const VecDBL * position,
-			       SPGCONST Cell * cell,
+			       const int cell_size,
+			       const int * cell_types,
 			       SPGCONST Cell * trimmed_cell,
 			       const double symprec);
 
@@ -67,7 +68,13 @@ Cell * cel_alloc_cell(const int size)
 {
   Cell *cell;
   int i, j;
-  
+
+  cell = NULL;
+
+  if (size < 1) {
+    return NULL;
+  }
+
   cell = NULL;
 
   if ((cell = (Cell*) malloc(sizeof(Cell))) == NULL) {
@@ -81,23 +88,21 @@ Cell * cel_alloc_cell(const int size)
     }
   }
   cell->size = size;
-  
-  if (size > 0) {
-    if ((cell->types = (int *) malloc(sizeof(int) * size)) == NULL) {
-      warning_print("spglib: Memory could not be allocated.");
-      free(cell);
-      cell = NULL;
-      return NULL;
-    }
-    if ((cell->position =
-	 (double (*)[3]) malloc(sizeof(double[3]) * size)) == NULL) {
-      warning_print("spglib: Memory could not be allocated.");
-      free(cell->types);
-      cell->types = NULL;
-      free(cell);
-      cell = NULL;
-      return NULL;
-    }
+
+  if ((cell->types = (int *) malloc(sizeof(int) * size)) == NULL) {
+    warning_print("spglib: Memory could not be allocated.");
+    free(cell);
+    cell = NULL;
+    return NULL;
+  }
+  if ((cell->position =
+       (double (*)[3]) malloc(sizeof(double[3]) * size)) == NULL) {
+    warning_print("spglib: Memory could not be allocated.");
+    free(cell->types);
+    cell->types = NULL;
+    free(cell);
+    cell = NULL;
+    return NULL;
   }
 
   return cell;
@@ -105,14 +110,17 @@ Cell * cel_alloc_cell(const int size)
 
 void cel_free_cell(Cell * cell)
 {
-  if (cell->size > 0) {
-    free(cell->position);
-    cell->position = NULL;
-    free(cell->types);
-    cell->types = NULL;
+  if (cell != NULL) {
+    if (cell->position != NULL) {
+      free(cell->position);
+      cell->position = NULL;
+    }
+    if (cell->types != NULL) {
+      free(cell->types);
+      cell->types = NULL;
+    }
+    free(cell);
   }
-  free (cell);
-  cell = NULL;
 }
 
 void cel_set_cell(Cell * cell,
@@ -135,7 +143,7 @@ Cell * cel_copy_cell(SPGCONST Cell * cell)
   Cell * cell_new;
 
   cell_new = NULL;
-  
+
   if ((cell_new = cel_alloc_cell(cell->size)) == NULL) {
     return NULL;
   }
@@ -162,7 +170,7 @@ int cel_is_overlap(const double a[3],
   }
 
   mat_multiply_matrix_vector_d3(v_diff, lattice, v_diff);
-  if ( mat_norm_squared_d3(v_diff) < symprec * symprec) {
+  if (mat_norm_squared_d3(v_diff) < symprec * symprec) {
     return 1;
   } else {
     return 0;
@@ -196,8 +204,8 @@ static Cell * trim_cell(int * mapping_table,
   overlap_table = NULL;
   trimmed_cell = NULL;
 
-  ratio = mat_Nint(mat_get_determinant_d3(cell->lattice) /
-		   mat_get_determinant_d3(trimmed_lattice));
+  ratio = abs(mat_Nint(mat_get_determinant_d3(cell->lattice) /
+		       mat_get_determinant_d3(trimmed_lattice)));
 
   /* Check if cell->size is dividable by ratio */
   if ((cell->size / ratio) * ratio != cell->size) {
@@ -212,17 +220,21 @@ static Cell * trim_cell(int * mapping_table,
 						     trimmed_lattice))
       == NULL) {
     cel_free_cell(trimmed_cell);
+    trimmed_cell = NULL;
     goto err;
   }
 
   mat_copy_matrix_d3(trimmed_cell->lattice, trimmed_lattice);
 
   if ((overlap_table = get_overlap_table(position,
-					 cell,
+					 cell->size,
+					 cell->types,
 					 trimmed_cell,
 					 symprec)) == NULL) {
     mat_free_VecDBL(position);
+    position = NULL;
     cel_free_cell(trimmed_cell);
+    trimmed_cell = NULL;
     goto err;
   }
 
@@ -243,6 +255,7 @@ static Cell * trim_cell(int * mapping_table,
 		overlap_table);
 
   mat_free_VecDBL(position);
+  position = NULL;
   free(overlap_table);
 
   return trimmed_cell;
@@ -281,7 +294,7 @@ static void set_positions(Cell * trimmed_cell,
 	trimmed_cell->position[j][l] += position->vec[i][l];
       }
     }
-	
+
   }
 
   multi = position->size / trimmed_cell->size;
@@ -327,7 +340,8 @@ translate_atoms_in_trimmed_lattice(SPGCONST Cell * cell,
 
 /* Return NULL if failed */
 static int * get_overlap_table(const VecDBL * position,
-			       SPGCONST Cell * cell,
+			       const int cell_size,
+			       const int * cell_types,
 			       SPGCONST Cell * trimmed_cell,
 			       const double symprec)
 {
@@ -337,18 +351,18 @@ static int * get_overlap_table(const VecDBL * position,
 
   trim_tolerance = symprec;
 
-  ratio = cell->size / trimmed_cell->size;
+  ratio = cell_size / trimmed_cell->size;
 
-  if ((overlap_table = (int*)malloc(sizeof(int) * cell->size)) == NULL) {
+  if ((overlap_table = (int*)malloc(sizeof(int) * cell_size)) == NULL) {
     return NULL;
   }
-  
+
   for (attempt = 0; attempt < 100; attempt++) {
-    for (i = 0; i < cell->size; i++) {
+    for (i = 0; i < cell_size; i++) {
       overlap_table[i] = -1;
       num_overlap = 0;
-      for (j = 0; j < cell->size; j++) {
-	if (cell->types[i] == cell->types[j]) {
+      for (j = 0; j < cell_size; j++) {
+	if (cell_types[i] == cell_types[j]) {
 	  if (cel_is_overlap(position->vec[i],
 			     position->vec[j],
 			     trimmed_cell->lattice,
@@ -379,12 +393,12 @@ static int * get_overlap_table(const VecDBL * position,
       }
     }
 
-    for (i = 0; i < cell->size; i++) {
+    for (i = 0; i < cell_size; i++) {
       if (overlap_table[i] != i) {
 	continue;
       }
       count = 0;
-      for (j = 0; j < cell->size; j++) {
+      for (j = 0; j < cell_size; j++) {
 	if (i == overlap_table[j]) {
 	  count++;
 	}
