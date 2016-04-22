@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Command options &mdash; Phonopy v.1.10.4</title>
+    <title>Command options &mdash; Phonopy v.1.10.8</title>
     
     <link rel="stylesheet" href="_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.10.4',
+        VERSION:     '1.10.8',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Phonopy v.1.10.4" href="index.html" />
+    <link rel="top" title="Phonopy v.1.10.8" href="index.html" />
     <link rel="next" title="Quasi harmonic approximation" href="qha.html" />
     <link rel="prev" title="How to watch animation" href="animation.html" />
 <meta charset='utf-8'>
@@ -50,7 +50,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.10.4</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.10.8</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -105,6 +105,7 @@
 <li><a class="reference internal" href="#pwscf"><code class="docutils literal"><span class="pre">--pwscf</span></code></a></li>
 <li><a class="reference internal" href="#siesta"><code class="docutils literal"><span class="pre">--siesta</span></code></a></li>
 <li><a class="reference internal" href="#elk"><code class="docutils literal"><span class="pre">--elk</span></code></a></li>
+<li><a class="reference internal" href="#vasp"><code class="docutils literal"><span class="pre">--vasp</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#input-cell">Input cell</a><ul>
@@ -238,6 +239,7 @@ tags:</p>
 <li><code class="docutils literal"><span class="pre">--tstep</span></code> (<code class="docutils literal"><span class="pre">TSTEP</span></code>)</li>
 <li><code class="docutils literal"><span class="pre">--writedm</span></code> (<code class="docutils literal"><span class="pre">WRITEDM</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
 <li><code class="docutils literal"><span class="pre">--writefc</span></code> (<code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span> <span class="pre">=</span> <span class="pre">WRITE</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--xyz_projection</span></code> (<code class="docutils literal"><span class="pre">XYZ_PROJECTION</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
 </ul>
 <p>When both of command-line option and setting tag for the same purpose
 are set simultaneously, the command-line options overide the setting
@@ -247,7 +249,8 @@ tags.</p>
 <p>Currently interfaces for VASP, Wien2k, Pwscf, Abinit, and Elk are
 prepared. Wien2k, Pwscf, Abinit and Elk interfaces are invoked with
 <code class="docutils literal"><span class="pre">--wienk2</span></code>, <code class="docutils literal"><span class="pre">--pwscf</span></code>, <code class="docutils literal"><span class="pre">--abinit</span></code>, and <code class="docutils literal"><span class="pre">--elk</span></code> options,
-respectively, and if none of these options is specified, VASP mode is invoked.</p>
+respectively, and if none of these options or <code class="docutils literal"><span class="pre">--vasp</span></code> option is
+specified, VASP mode is invoked.</p>
 <p>The details about these interfaces are found at <a class="reference internal" href="interfaces.html#calculator-interfaces"><span class="std std-ref">Interfaces to calculators</span></a>.</p>
 <div class="section" id="wien2k">
 <span id="wien2k-mode"></span><h3><code class="docutils literal"><span class="pre">--wien2k</span></code><a class="headerlink" href="#wien2k" title="Permalink to this headline">¶</a></h3>
@@ -299,6 +302,16 @@ input file that contains the unit cell crystal structure, e.g.,</p>
 with <code class="docutils literal"><span class="pre">--cell</span></code> (<code class="docutils literal"><span class="pre">-c</span></code>) option or <code class="docutils literal"><span class="pre">CELL_FILENAME</span></code> tag to read Elk
 input file that contains the unit cell crystal structure, e.g.,</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">elk</span> <span class="o">-</span><span class="n">c</span> <span class="n">elk</span><span class="o">-</span><span class="n">unitcell</span><span class="o">.</span><span class="ow">in</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="vasp">
+<span id="vasp-mode"></span><h3><code class="docutils literal"><span class="pre">--vasp</span></code><a class="headerlink" href="#vasp" title="Permalink to this headline">¶</a></h3>
+<p>This doesn&#8217;t change the default behaviour, but <code class="docutils literal"><span class="pre">vasp</span></code> will appear as
+the calculator such as in <code class="docutils literal"><span class="pre">band.yaml</span></code>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">calculator</span><span class="p">:</span> <span class="n">vasp</span>
+<span class="n">nqpoint</span><span class="p">:</span> <span class="mi">204</span>
+<span class="o">...</span>
 </pre></div>
 </div>
 </div>

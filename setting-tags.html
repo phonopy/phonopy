@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Setting tags &mdash; Phonopy v.1.10.4</title>
+    <title>Setting tags &mdash; Phonopy v.1.10.8</title>
     
     <link rel="stylesheet" href="_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.10.4',
+        VERSION:     '1.10.8',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Phonopy v.1.10.4" href="index.html" />
+    <link rel="top" title="Phonopy v.1.10.8" href="index.html" />
     <link rel="next" title="How to watch animation" href="animation.html" />
     <link rel="prev" title="Output files" href="output-files.html" />
 <meta charset='utf-8'>
@@ -50,7 +50,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.10.4</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.10.8</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -138,6 +138,7 @@
 <li><a class="reference internal" href="#dos-range"><code class="docutils literal"><span class="pre">DOS_RANGE</span></code></a></li>
 <li><a class="reference internal" href="#pdos"><code class="docutils literal"><span class="pre">PDOS</span></code></a></li>
 <li><a class="reference internal" href="#projection-direction"><code class="docutils literal"><span class="pre">PROJECTION_DIRECTION</span></code></a></li>
+<li><a class="reference internal" href="#xyz-projection"><code class="docutils literal"><span class="pre">XYZ_PROJECTION</span></code></a></li>
 <li><a class="reference internal" href="#sigma"><code class="docutils literal"><span class="pre">SIGMA</span></code></a></li>
 <li><a class="reference internal" href="#tetrahedron"><code class="docutils literal"><span class="pre">TETRAHEDRON</span></code></a></li>
 <li><a class="reference internal" href="#debye-model"><code class="docutils literal"><span class="pre">DEBYE_MODEL</span></code></a></li>
@@ -579,6 +580,22 @@ Projection direction is specified in reduced coordinates, i.e., with
 respect to <em>a</em>, <em>b</em>, <em>c</em> axes.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">PDOS</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span>
 <span class="n">PROJECTION_DIRECTION</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="xyz-projection">
+<span id="xyz-projection-tag"></span><h3><code class="docutils literal"><span class="pre">XYZ_PROJECTION</span></code><a class="headerlink" href="#xyz-projection" title="Permalink to this headline">¶</a></h3>
+<p>PDOS is calculated using eigenvectors projected along x, y, and z
+Cartesian coordinates. The format of output file <code class="docutils literal"><span class="pre">partial_dos.dat</span></code>
+becomes different when using this tag, where phonon-mode-frequency and
+x, y, and z components of PDOS are written out in the order:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">frequency</span> <span class="n">atom1_x</span> <span class="n">atom1_y</span> <span class="n">atom1_z</span> <span class="n">atom2_x</span> <span class="n">atom2_y</span> <span class="n">atom2_z</span> <span class="o">...</span>
+</pre></div>
+</div>
+<p>With <code class="docutils literal"><span class="pre">-p</span></code> option, three curves are drawn. These correspond to
+sums of all projections to x, sums of all projections to y, and sums
+of all projections to z composents of eigenvectors, respectively.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">XYZ_PROJECTION</span> <span class="o">=</span> <span class="o">.</span><span class="n">TRUE</span><span class="o">.</span>
 </pre></div>
 </div>
 </div>

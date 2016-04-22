@@ -23,41 +23,18 @@ If you have used phonopy, please cite the following article:
           Month = {Nov}
      }
 
-..
-   * "First-principles calculations of the ferroelastic transition between rutile-type and CaCl2-type SiO2 at high pressures",
-       Atsushi Togo, Fumiyasu Oba, and Isao Tanaka, Phys. Rev. B, **78**, 134106 (2008)
-
-       http://dx.doi.org/10.1103/PhysRevB.78.134106
-
-     ::
-
-	@article {phonopy,
-	      Journal = {Phys. rev. B},
-	      Year = {2008},
-	      Title = {First-principles calculations of the ferroelastic transition between rutile-type and CaCl$_2$-type SiO$_2$ at high pressures},
-	      Author = {Togo, A and Oba, F and Tanaka, I},
-	      Pages = {134106--134114},
-	      Volume = {78},
-	      Issue = {13},
-	      Month = {Oct}
-	}
-
 Some papers where phonopy was used
 -----------------------------------
 
-:ref:`phonopy-qha <phonopy_qha>`: Thermal properties, quasi-harmonic approximation used for thermal expansion
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``phonopy-qha``: Thermal properties, quasi-harmonic approximation used for thermal expansion
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 *  "First-principles phonon calculations of thermal expansion in Ti3SiC2, Ti3AlC2, and Ti3GeC2"
      Atsushi Togo, Laurent Chaput, Isao Tanaka, Gilles Hug,
      Phys. Rev. B, **81**, 174301-1-6 (2010)
 
-:ref:`MODULATION tag <modulation_tag>` : Collective atomic modulation, symmetry breaking
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-*  "Inversion Symmetry Breaking by Oxygen Octahedral Rotations in the Ruddlesden-Popper NaRTiO4 Family"
-     Hirofumi Akamatsu, Koji Fujita, Toshihiro Kuge, Arnab Sen Gupta, Atsushi Togo, Shiming Lei, Fei Xue, Greg Stone, James M. Rondinelli, Long-Qing Chen, Isao Tanaka, Venkatraman Gopalan, and Katsuhisa Tanaka
-     Phys. Rev. Lett. **112**, 187602-1-5 (2014)
+``MODULATION`` tag: Collective atomic modulation, symmetry breaking
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 *  "Evolution of crystal structures in metallic elements"
      Atsushi Togo and Isao Tanaka,
@@ -67,12 +44,15 @@ Some papers where phonopy was used
      Atsushi Togo, Fumiyasu Oba, and Isao Tanaka,
      Phys. Rev. B, **77**, 184101-1-5 (2008)
 
-*  "First-principles calculations of the ferroelastic transition between rutile-type and CaCl2-type SiO2 at high pressures",
-     Atsushi Togo, Fumiyasu Oba, and Isao Tanaka,
-     Phys. Rev. B, **78**, 134106 (2008)
+*  "Inversion Symmetry Breaking by Oxygen Octahedral Rotations in the Ruddlesden-Popper NaRTiO4 Family"
+     Hirofumi Akamatsu, Koji Fujita, Toshihiro Kuge, Arnab Sen Gupta, Atsushi Togo, Shiming Lei, Fei Xue, Greg Stone, James M. Rondinelli, Long-Qing Chen, Isao Tanaka, Venkatraman Gopalan, and Katsuhisa Tanaka
+     Phys. Rev. Lett. **112**, 187602-1-5 (2014)   
 
-:ref:`TDISP, TDISPMAT tags <thermal_displacement_matrices_tag>`: Root mean square thermal atomic displacement
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+*  "First-principles calculations of the ferroelastic transition between rutile-type and CaCl2-type SiO2 at high pressures",
+     Atsushi Togo, Fumiyasu Oba, and Isao Tanaka, Phys. Rev. B, **78**, 134106 (2008)
+
+``TDISP``, ``TDISPMAT`` tags: Root mean square thermal atomic displacement 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 *  "Neutron diffraction measurements and first-principles study of thermal motion of atoms in select Mn+1AXn and binary MX transition-metal carbide phases"
      Nina J. Lane, Sven C. Vogel, Gilles Hug, Atsushi Togo, Laurent Chaput, Lars Hultman, and Michel W. Barsoum,

@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Output files &mdash; Phonopy v.1.10.4</title>
+    <title>Output files &mdash; Phonopy v.1.10.8</title>
     
     <link rel="stylesheet" href="_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.10.4',
+        VERSION:     '1.10.8',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Phonopy v.1.10.4" href="index.html" />
+    <link rel="top" title="Phonopy v.1.10.8" href="index.html" />
     <link rel="next" title="Setting tags" href="setting-tags.html" />
     <link rel="prev" title="Input files" href="input-files.html" />
 <meta charset='utf-8'>
@@ -50,7 +50,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.10.4</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.10.8</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -234,6 +234,23 @@ following lines:</p>
 <p>where from the left to right in each line, frequency, PDOS of Na and
 PDOS of Cl. The first line is just a comment to remember the sigma
 value used.</p>
+<p>With <a class="reference internal" href="setting-tags.html#xyz-projection-tag"><span class="std std-ref">XYZ_PROJECTION</span></a> tag specified, the format changes to
+represent x, y, and z components:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Sigma = 0.063253</span>
+       <span class="o">-</span><span class="mf">0.6695362607</span>        <span class="mf">0.0000000000</span>        <span class="mf">0.0000000000</span>        <span class="mf">0.0000000000</span>        <span class="mf">0.0000000000</span>        <span class="mf">0.0000000000</span>        <span class="mf">0.0000000000</span>
+       <span class="o">-</span><span class="mf">0.6315846221</span>        <span class="mf">0.0000000000</span>        <span class="mf">0.0000000000</span>        <span class="mf">0.0000000000</span>        <span class="mf">0.0000000000</span>        <span class="mf">0.0000000000</span>        <span class="mf">0.0000000000</span>
+       <span class="o">-</span><span class="mf">0.5936329834</span>        <span class="mf">0.0000000000</span>        <span class="mf">0.0000000000</span>        <span class="mf">0.0000000000</span>        <span class="mf">0.0000000000</span>        <span class="mf">0.0000000000</span>        <span class="mf">0.0000000000</span>
+       <span class="o">-</span><span class="mf">0.5556813448</span>        <span class="mf">0.0000000000</span>        <span class="mf">0.0000000000</span>        <span class="mf">0.0000000000</span>        <span class="mf">0.0000000000</span>        <span class="mf">0.0000000000</span>        <span class="mf">0.0000000000</span>
+       <span class="o">-</span><span class="mf">0.5177297062</span>        <span class="mf">0.0000000000</span>        <span class="mf">0.0000000000</span>        <span class="mf">0.0000000000</span>        <span class="mf">0.0000000000</span>        <span class="mf">0.0000000000</span>        <span class="mf">0.0000000000</span>
+       <span class="o">-</span><span class="mf">0.4797780675</span>        <span class="mf">0.0000000000</span>        <span class="mf">0.0000000000</span>        <span class="mf">0.0000000000</span>        <span class="mf">0.0000000000</span>        <span class="mf">0.0000000000</span>        <span class="mf">0.0000000000</span>
+       <span class="o">-</span><span class="mf">0.4418264289</span>        <span class="mf">0.0000000000</span>        <span class="mf">0.0000000000</span>        <span class="mf">0.0000000000</span>        <span class="mf">0.0000000000</span>        <span class="mf">0.0000000000</span>        <span class="mf">0.0000000000</span>
+       <span class="o">-</span><span class="mf">0.4038747903</span>        <span class="mf">0.0000000000</span>        <span class="mf">0.0000000000</span>        <span class="mf">0.0000000000</span>        <span class="mf">0.0000000000</span>        <span class="mf">0.0000000000</span>        <span class="mf">0.0000000000</span>
+       <span class="o">-</span><span class="mf">0.3659231516</span>        <span class="mf">0.0000000000</span>        <span class="mf">0.0000000000</span>        <span class="mf">0.0000000000</span>        <span class="mf">0.0000000001</span>        <span class="mf">0.0000000001</span>        <span class="mf">0.0000000001</span>
+       <span class="o">-</span><span class="mf">0.3279715130</span>        <span class="mf">0.0000000009</span>        <span class="mf">0.0000000009</span>        <span class="mf">0.0000000009</span>        <span class="mf">0.0000000014</span>        <span class="mf">0.0000000014</span>        <span class="mf">0.0000000014</span>
+       <span class="o">-</span><span class="mf">0.2900198744</span>        <span class="mf">0.0000000123</span>        <span class="mf">0.0000000123</span>        <span class="mf">0.0000000123</span>        <span class="mf">0.0000000184</span>        <span class="mf">0.0000000184</span>        <span class="mf">0.0000000184</span>
+<span class="o">...</span>
+</pre></div>
+</div>
 </div>
 </div>
 <div class="section" id="disp-yaml">
