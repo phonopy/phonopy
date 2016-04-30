@@ -53,9 +53,14 @@ define_macros = []
 ## location
 #
 if platform.system() == 'Darwin':
-    # With lapack package in MacPorts
-    include_dirs += ['/opt/local/include/lapack']
-    extra_link_args = ['-L/opt/local/lib/lapack']
+    # phono3py is compiled with gcc5 from MacPorts. (export CC=gcc)
+    #   port install gcc5
+    #   port select --set gcc mp-gcc5
+    # With OpenBLAS in MacPorts 
+    #   port install OpenBLAS +gcc5
+    #   port install py27-numpy +gcc5 +openblas
+    include_dirs += ['/opt/local/include']
+    extra_link_args = ['/opt/local/lib/libopenblas.a']
 #     # With lapack compiled manually
 #     include_dirs += ['../lapack-3.5.0/lapacke/include']
 #     extra_link_args = ['../lapack-3.5.0/liblapacke.a']
