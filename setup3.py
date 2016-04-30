@@ -53,8 +53,12 @@ define_macros = []
 ## location
 #
 if platform.system() == 'Darwin':
-    include_dirs += ['../lapack-3.5.0/lapacke/include']
-    extra_link_args = ['../lapack-3.5.0/liblapacke.a']
+    # With lapack package in MacPorts
+    include_dirs += ['/opt/local/include/lapack']
+    extra_link_args = ['-L/opt/local/lib/lapack']
+#     # With lapack compiled manually
+#     include_dirs += ['../lapack-3.5.0/lapacke/include']
+#     extra_link_args = ['../lapack-3.5.0/liblapacke.a']
 
 ## Uncomment below to measure reciprocal_to_normal_squared_openmp performance
 # define_macros = [('MEASURE_R2N', None)]
