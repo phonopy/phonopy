@@ -37,10 +37,29 @@ A set of frequencies calculated by the
 ``thermal_properties.yaml``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The :ref:`thermal properties <thermal_properties_tag>` calculated
-with ``-t`` option are stored in the YAML format.
+:ref:`Thermal properties <thermal_properties_tag>` calculated
+are stored in the YAML format.
 
-``thermal_properties.yaml`` is plot using the tool ``propplot`` (:ref:`propplot_tool`).
+The auxiliary tool ``propplot`` (:ref:`propplot_tool`) can be used to
+plot the content of ``thermal_properties.yaml``.
+
+``thermal_displacements.yaml``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:ref:`Mean square displcements of atoms <thermal_displacements_tag>`
+are stored in the YAML format. Without projecting eigenvectors along a
+specific direction, the results projected along Cartesianl
+coordinates, therefore three values for each atom at a temperature,
+are written into the file.
+
+``thermal_displacement_matrices.yaml``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:ref:`Mean square displacement matricies of atoms
+<thermal_displacement_matrices_tag>` are stored in the YAML
+format. Since the matrix for each atom at a temperature is symmetric,
+only six elements of it, xx, yy, zz, yz, xz, xy, are written in this
+order.
 
 ``total_dos.dat`` and ``partial_dos.dat``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -48,7 +67,8 @@ with ``-t`` option are stored in the YAML format.
 :ref:`Total DOS and partial dos <dos_related_tags>` are stored in the
 simple format, respectively.
 
-``total_dos.dat`` and ``partial_dos.dat`` are viewed using the tool ``pdosplot`` (:ref:`pdosplot_tool`).
+``total_dos.dat`` and ``partial_dos.dat`` are viewed using the
+auxiliary tool ``pdosplot`` (:ref:`pdosplot_tool`).
 
 File format of ``partial_dos.dat``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
