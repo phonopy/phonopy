@@ -720,17 +720,17 @@ class ConfParser:
             if conf_key == 'mass':
                 self.set_parameter(
                     'mass',
-                    [ float(x) for x in confs['mass'].split()])
+                    [float(x) for x in confs['mass'].split()])
 
             if conf_key == 'magmom':
                 self.set_parameter(
                     'magmom',
-                    [ float(x) for x in confs['magmom'].split()])
+                    [float(x) for x in confs['magmom'].split()])
 
             if conf_key == 'atom_name':
                 self.set_parameter(
                     'atom_name',
-                    [ x.capitalize() for x in confs['atom_name'].split() ])
+                    [x.capitalize() for x in confs['atom_name'].split()])
 
             if conf_key == 'displacement_distance':
                 self.set_parameter('displacement_distance',
@@ -859,15 +859,15 @@ class ConfParser:
                     self.set_parameter('is_tetrahedron_method', True)
                 
             if conf_key == 'tmin':
-                val = float(confs['tmin'].split()[0])
+                val = float(confs['tmin'])
                 self.set_parameter('tmin', val)
 
             if conf_key == 'tmax':
-                val = float(confs['tmax'].split()[0])
+                val = float(confs['tmax'])
                 self.set_parameter('tmax', val)
 
             if conf_key == 'tstep':
-                val = float(confs['tstep'].split()[0])
+                val = float(confs['tstep'])
                 self.set_parameter('tstep', val)
 
             # Group velocity finite difference
@@ -901,11 +901,13 @@ class PhonopySettings(Settings):
         self._band_connection = False
         self._cutoff_radius = None
         self._dos = None
-        self._dos_range = { 'min':  None,
-                            'max':  None }
+        self._dos_range = {'min':  None,
+                           'max':  None}
         self._fc_computation_algorithm = "svd"
         self._fc_spg_symmetry = False
         self._fits_Debye_model = False
+        self._fmin = None
+        self._fmax = None
         self._irreps_q_point = None
         self._irreps_tolerance = 1e-5
         self._is_dos_mode = False
@@ -914,6 +916,7 @@ class PhonopySettings(Settings):
         self._is_gamma_center = False
         self._is_hdf5 = False
         self._is_little_cogroup = False
+        self._is_moment = False
         self._is_plusminus_displacement = 'auto'
         self._is_thermal_displacements = False
         self._is_thermal_displacement_matrices = False
@@ -922,6 +925,7 @@ class PhonopySettings(Settings):
         self._is_projected_thermal_properties = False
         self._lapack_solver = False
         self._modulation = None
+        self._moment_order = None
         self._pdos_indices = None
         self._projection_direction = None
         self._run_mode = None
@@ -979,14 +983,14 @@ class PhonopySettings(Settings):
     def get_cutoff_radius(self):
         return self._cutoff_radius
 
-    def set_dos_range(self, dos_min, dos_max, dos_step):
-        self._dos_range = {'min':  dos_min,
-                           'max':  dos_max}
-        self._frequency_pitch = dos_step
+    def set_dos_range(self, fmin, fmax, fstep):
+        self._fmin = fmin
+        self._fmax = fmax
+        self._frequency_pitch = fstep
 
     def get_dos_range(self):
-        dos_range = {'min': self._dos_range['min'],
-                     'max': self._dos_range['max'],
+        dos_range = {'min': self._fmin,
+                     'max': self._fmax,
                      'step': self._frequency_pitch}
         return dos_range
 
@@ -1007,6 +1011,18 @@ class PhonopySettings(Settings):
 
     def get_fits_Debye_model(self):
         return self._fits_Debye_model
+
+    def set_max_frequency(self, fmax):
+        self._fmax = fmax
+
+    def get_max_frequency(self):
+        return self._fmax
+
+    def set_min_frequency(self, fmin):
+        self._fmin = fmin
+
+    def get_min_frequency(self):
+        return self._fmin
 
     def set_irreps_q_point(self, q_point):
         self._irreps_q_point = q_point
@@ -1061,6 +1077,12 @@ class PhonopySettings(Settings):
 
     def get_is_little_cogroup(self):
         return self._is_little_cogroup
+
+    def set_is_moment(self, is_moment):
+        self._is_moment = is_moment
+
+    def get_is_moment(self):
+        return self._is_moment
 
     def set_is_projected_thermal_properties(self, is_ptp):
         self._is_projected_thermal_properties = is_ptp
@@ -1124,6 +1146,12 @@ class PhonopySettings(Settings):
 
     def get_modulation(self):
         return self._modulation
+
+    def set_moment_order(self, moment_order):
+        self._moment_order = moment_order
+
+    def get_moment_order(self):
+        return self._moment_order
 
     def set_pdos_indices(self, indices):
         self._pdos_indices = indices
@@ -1239,6 +1267,14 @@ class PhonopyConfParser(ConfParser):
                 if self._options.fits_debye_model:
                     self._confs['debye_model'] = '.true.'
 
+            if opt.dest == 'fmax':
+                if self._options.fmax:
+                    self._confs['fmax'] = self._options.fmax
+
+            if opt.dest == 'fmin':
+                if self._options.fmin:
+                    self._confs['fmin'] = self._options.fmin
+
             if opt.dest == 'is_thermal_properties':
                 if self._options.is_thermal_properties:
                     self._confs['tprop'] = '.true.'
@@ -1310,6 +1346,14 @@ class PhonopyConfParser(ConfParser):
             if opt.dest == 'is_group_velocity':
                 if self._options.is_group_velocity:
                     self._confs['group_velocity'] = '.true.'
+
+            if opt.dest == 'is_moment':
+                if self._options.is_moment:
+                    self._confs['moment'] = '.true.'
+
+            if opt.dest == 'moment_order':
+                if self._options.moment_order:
+                    self._confs['moment_order'] = self._options.moment_order
 
             # Overwrite
             if opt.dest == 'is_check_symmetry':
@@ -1446,8 +1490,14 @@ class PhonopyConfParser(ConfParser):
                     self.set_parameter('fits_debye_model', True)
 
             if conf_key == 'dos_range':
-                vals = [ float(x) for x in confs['dos_range'].split() ]
+                vals = [float(x) for x in confs['dos_range'].split()]
                 self.set_parameter('dos_range', vals)
+
+            if conf_key == 'fmax':
+                self.set_parameter('fmax', float(confs['fmax']))
+
+            if conf_key == 'fmin':
+                self.set_parameter('fmin', float(confs['fmin']))
 
             # Thermal properties
             if conf_key == 'tprop':
@@ -1495,6 +1545,14 @@ class PhonopyConfParser(ConfParser):
                 if confs['group_velocity'] == '.true.':
                     self.set_parameter('is_group_velocity', True)
 
+            # Moment of phonon states distribution
+            if conf_key == 'moment':
+                if confs['moment'] == '.true.':
+                    self.set_parameter('moment', True)
+
+            if conf_key == 'moment_order':
+                self.set_parameter('moment_order', int(confs['moment_order']))
+                    
             # Use Lapack solver via Lapacke
             if conf_key == 'lapack_solver':
                 if confs['lapack_solver'] == '.true.':
@@ -1659,7 +1717,7 @@ class PhonopyConfParser(ConfParser):
         if 'modulation' in params:
             self._settings.set_run_mode('modulation')
             self._settings.set_modulation(params['modulation'])
-    
+
         # Character table mode
         if 'irreps_qpoint' in params:
             self._settings.set_run_mode('irreps')
@@ -1676,17 +1734,22 @@ class PhonopyConfParser(ConfParser):
                 
         # DOS
         if 'dos_range' in params:
-            dos_min =  params['dos_range'][0]
-            dos_max =  params['dos_range'][1]
-            dos_step = params['dos_range'][2]
-            self._settings.set_dos_range(dos_min, dos_max, dos_step)
-            self._settings.set_is_dos_mode(True)
+            fmin =  params['dos_range'][0]
+            fmax =  params['dos_range'][1]
+            fstep = params['dos_range'][2]
+            self._settings.set_dos_range(fmin, fmax, fstep)
     
         if 'dos' in params:
             self._settings.set_is_dos_mode(params['dos'])
 
         if 'fits_debye_model' in params:
             self._settings.set_fits_Debye_model(params['fits_debye_model'])
+
+        if 'fmax' in params:
+            self._settings.set_max_frequency(params['fmax'])
+
+        if 'fmin' in params:
+            self._settings.set_min_frequency(params['fmin'])
     
         # Project PDOS x, y, z directions in Cartesian coordinates
         if 'xyz_projection' in params:
@@ -1748,6 +1811,15 @@ class PhonopyConfParser(ConfParser):
         # Group velocity
         if 'is_group_velocity' in params:
             self._settings.set_is_group_velocity(params['is_group_velocity'])
+
+        # Moment mode
+        if 'moment' in params:
+            self._settings.set_is_moment(params['moment'])
+            self._settings.set_is_eigenvectors(True)
+            self._settings.set_is_mesh_symmetry(False)
+
+            if 'moment_order' in params:
+                self._settings.set_moment_order(params['moment_order'])
 
         # Use Lapack solver via Lapacke
         if 'lapack_solver' in params:
