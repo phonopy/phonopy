@@ -64,6 +64,7 @@ class TestMoment(unittest.TestCase):
             vals[i + 3, 0] = moment.get_moment()
             self.assertTrue(np.abs(moment.get_moment() - data[i + 3, 0]) < 1e-5)
 
+        moment.write_yaml()
         # self._show(vals)
 
     def _show(self, vals):

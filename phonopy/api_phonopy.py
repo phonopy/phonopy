@@ -60,6 +60,7 @@ from phonopy.phonon.qpoints_mode import QpointsPhonon
 from phonopy.phonon.irreps import IrReps
 from phonopy.phonon.group_velocity import GroupVelocity
 from phonopy.phonon.tetrahedron_mesh import TetrahedronMesh
+from phonopy.phonon.moment import PhononMoment
 
 class Phonopy:
     def __init__(self,
@@ -1093,6 +1094,37 @@ class Phonopy:
         self._group_velocity.set_q_points([q_point])
         return self._group_velocity.get_group_velocity()[0]
 
+    # Moment
+    def set_moment(self,
+                   order=1,
+                   is_projection=False,
+                   freq_min=None,
+                   freq_max=None):
+        if self._mesh is None:
+            print("set_mesh has to be done before set_moment")
+            return False
+        else:
+            if is_projection:
+                if self._mesh.get_eigenvectors() is None:
+                    print("Warning: Eigenvectors have to be calculated.")
+                    return False
+                moment = PhononMoment(
+                    self._mesh.get_frequencies(),
+                    weights=self._mesh.get_weights(),
+                    eigenvectors=self._mesh.get_eigenvectors())
+            else:
+                moment = PhononMoment(
+                    self._mesh.get_frequencies(),
+                    weights=self._mesh.get_weights())
+            if freq_min is not None or freq_max is not None:
+                moment.set_frequency_range(freq_min=freq_min,
+                                           freq_max=freq_max)
+            moment.run(order=order)
+            self._moment = moment.get_moment()
+            return True
+
+    def get_moment(self):
+        return self._moment
 
     #################
     # Local methods #

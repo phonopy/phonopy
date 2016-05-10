@@ -53,7 +53,7 @@ class PhononMoment:
     def set_frequency_range(self,
                             freq_min=None,
                             freq_max=None,
-                            tolerance=1e-5):
+                            tolerance=1e-8):
         if freq_min is None:
             self._fmin = - tolerance
         else:
@@ -90,4 +90,5 @@ class PhononMoment:
                     projection = np.abs(eigvec) ** 2
                     norm0 += w * projection
                     moment += freq ** order * w * projection
-        self._moment = moment / norm0
+        self._moment = np.array([np.sum((moment / norm0)[i * 3:(i + 1) * 3])
+                                 for i in range(len(moment) / 3)]) / 3
