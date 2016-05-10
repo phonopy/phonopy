@@ -48,7 +48,6 @@ class Atoms:
                  scaled_positions=None,
                  cell=None,
                  pbc=None):
-
         # cell
         self.cell = None
         if cell is not None:
@@ -56,10 +55,11 @@ class Atoms:
 
         # position
         self.scaled_positions = None
-        if (not self.cell is None) and  (not positions is None):
-            self.set_positions(positions)
-        if (not scaled_positions is None):
-            self.set_scaled_positions(scaled_positions)
+        if self.cell is not None:
+            if positions is not None:
+                self.set_positions(positions)
+            elif scaled_positions is not None:
+                self.set_scaled_positions(scaled_positions)
 
         # Atom symbols
         self.symbols = symbols

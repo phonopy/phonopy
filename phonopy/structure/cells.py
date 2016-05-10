@@ -64,24 +64,24 @@ def trim_cell(relative_axes, cell, symprec):
         trimed_magmoms = None
     else:
         trimed_magmoms = []
-    atom_map = []
+    extracted_atoms = []
 
     positions_in_new_lattice = np.dot(positions, np.linalg.inv(relative_axes).T)
     positions_in_new_lattice -= np.floor(positions_in_new_lattice)
     trimed_positions = np.zeros_like(positions_in_new_lattice)
     num_atom = 0
     
+    mapping_table = np.arange(len(positions), dtype='intc')
     for i, pos in enumerate(positions_in_new_lattice):
         is_overlap = False
         if num_atom > 0:
             diff = trimed_positions[:num_atom] - pos
             diff -= np.rint(diff)
-
-            # axis argument in linalg.norm is relatively new?
-            # distances = np.linalg.norm(np.dot(diff, trimed_lattice), axis=1)
-            distances = np.sqrt(np.sum(np.dot(diff, trimed_lattice) ** 2, axis=1))
-            if (distances < symprec).any():
+            distances = np.linalg.norm(np.dot(diff, trimed_lattice), axis=1)
+            overlap_indices = np.where(distances < symprec)[0]
+            if len(overlap_indices) > 0:
                 is_overlap = True
+                mapping_table[i] = extracted_atoms[overlap_indices[0]]
 
         if not is_overlap:
             trimed_positions[num_atom] = pos
@@ -91,7 +91,7 @@ def trim_cell(relative_axes, cell, symprec):
                 trimed_masses.append(masses[i])
             if magmoms is not None:
                 trimed_magmoms.append(magmoms[i])
-            atom_map.append(i)
+            extracted_atoms.append(i)
 
     trimed_cell = Atoms(numbers=trimed_numbers,
                         masses=trimed_masses,
@@ -100,7 +100,7 @@ def trim_cell(relative_axes, cell, symprec):
                         cell=trimed_lattice,
                         pbc=True)
 
-    return trimed_cell, atom_map
+    return trimed_cell, extracted_atoms, mapping_table
 
 def print_cell(cell, mapping=None, stars=None):
     symbols = cell.get_chemical_symbols()
@@ -173,14 +173,17 @@ class Supercell(Atoms):
         trim_frame = np.array([mat[0] / float(frame[0]),
                                mat[1] / float(frame[1]),
                                mat[2] / float(frame[2])])
-        supercell, sur2s_map = trim_cell(trim_frame,
-                                         sur_cell,
-                                         symprec)
+        supercell, sur2s_map, mapping_table = trim_cell(trim_frame,
+                                                        sur_cell,
+                                                        symprec)
 
         multi = supercell.get_number_of_atoms() // unitcell.get_number_of_atoms()
         
         if multi != determinant(self._supercell_matrix):
             print("Supercell creation failed.")
+            print("Probably some atoms are overwrapped. "
+                  "The mapping table is give below.")
+            print(mapping_table)
             Atoms.__init__(self)
         else:            
             Atoms.__init__(self,
@@ -284,9 +287,9 @@ class Primitive(Atoms):
         return self._p2p_map
 
     def _primitive_cell(self, supercell):
-        trimed_cell, p2s_map = trim_cell(self._primitive_matrix,
-                                         supercell,
-                                         self._symprec)
+        trimed_cell, p2s_map, mapping_table = trim_cell(self._primitive_matrix,
+                                                        supercell,
+                                                        self._symprec)
         Atoms.__init__(self,
                        numbers=trimed_cell.get_atomic_numbers(),
                        masses=trimed_cell.get_masses(),
