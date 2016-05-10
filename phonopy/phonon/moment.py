@@ -37,8 +37,8 @@ import numpy as np
 class PhononMoment:
     def __init__(self,
                  frequencies,
-                 eigenvectors,
-                 weights):
+                 weights,
+                 eigenvectors=None):
         self._frequencies = frequencies
         self._eigenvectors = eigenvectors
         self._weights = weights
@@ -50,23 +50,44 @@ class PhononMoment:
     def get_moment(self):
         return self._moment
 
-    def set_frequency_range(self, freq_min=None, freq_max=None):
-        if freq_min is not None:
-            self._fmin = 0
+    def set_frequency_range(self,
+                            freq_min=None,
+                            freq_max=None,
+                            tolerance=1e-5):
+        if freq_min is None:
+            self._fmin = - tolerance
         else:
-            self._fmin = freq_min
+            self._fmin = freq_min - tolerance
 
         if freq_max is None:
-            self._fmax = np.max(self._frequencies) + 1e-5
+            self._fmax = np.max(self._frequencies) + tolerance
         else:
-            self._fmax = freq_max
+            self._fmax = freq_max + tolerance
 
     def run(self, order=1):
+        if self._eigenvectors is None:
+            self._get_moment(order)
+        else:
+            self._get_projected_moment(order)
+
+    def _get_moment(self, order):
         moment = 0
         norm0 = 0
         for i, w in enumerate(self._weights):
+            for freq in self._frequencies[i]:
+                if self._fmin < freq and freq < self._fmax :
+                    norm0 += w
+                    moment += freq ** order * w
+        self._moment = moment / norm0
+
+    def _get_projected_moment(self, order):
+        moment = np.zeros(self._frequencies.shape[1], dtype='double')
+        norm0 = np.zeros_like(moment)
+        for i, w in enumerate(self._weights):
             for freq, eigvec in zip(self._frequencies[i],
                                     self._eigenvectors[i].T):
-                norm0 += w
-                moment += freq ** order * w
+                if self._fmin < freq and freq < self._fmax :
+                    projection = np.abs(eigvec) ** 2
+                    norm0 += w * projection
+                    moment += freq ** order * w * projection
         self._moment = moment / norm0
