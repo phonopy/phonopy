@@ -2,3 +2,4 @@ graft c/harmonic_h
 graft c/spglib_h
 graft c/kspclib_h
 graft example
+include __nanoversion__.txt
