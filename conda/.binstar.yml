@@ -40,7 +40,7 @@ before_script:
   - conda config --add channels jochym
 ## Put your main computations here!  
 script:
-  - GIT_BRANCH=`git branch |grep '^*'|sed 's/^*\s\?//'`
+  - GIT_BRANCH=`git branch |grep '^*'|sed -e 's/^*\s\?//' -e 's/(HEAD [a-z ]* \(.*\))$/\1/'`
   - echo $GIT_BRANCH
   - echo $branch
   - echo '%(branch)s'
