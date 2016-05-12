@@ -44,6 +44,7 @@ deploy:
         python: 2.7
     # testing anaconda
     - provider: script
+      skip_cleanup: true
       script: anaconda -t $ANACONDA_TOKEN build trigger --test-only --branch rc jochym/phonopy
       on:
         branch: rc
@@ -62,6 +63,7 @@ deploy:
         python: 2.7  
     # production anaconda
     - provider: script
+      skip_cleanup: true
       script: anaconda -t $ANACONDA_TOKEN build trigger --branch master jochym/phonopy
       on:
         branch: master
