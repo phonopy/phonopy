@@ -25,9 +25,8 @@ engine:
  - python=3.4
  - python=3
 ## The env param is an environment variable list 
-# engine:
-#  - MY_ENV=A CC=gcc
-#  - MY_ENV=B
+#env:
+#  - GIT_BRANCH='%(branch)s'
 
 #===============================================================================
 # Scrip options
@@ -41,7 +40,7 @@ before_script:
   - conda config --add channels jochym
 ## Put your main computations here!  
 script:
-  - conda build .
+  - GIT_BRANCH=`git branch |grep '^*'|sed 's/^*\s\?//'` conda build .
 ## This will run after the script regardless of the result of script
 ## BINSTAR_BUILD_RESULT=[succcess|failure] 
 after_script:

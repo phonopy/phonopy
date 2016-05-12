@@ -3,8 +3,11 @@ package:
 
 source:
   git_url: https://github.com/jochym/phonopy.git
+  git_branch: {{ environ.get('GIT_BRANCH','') }}
 
 build:
+  script_env:
+    - GIT_BRANCH
   #preserve_egg_dir: True
   #entry_points:
     # Put any entry points (scripts to be generated automatically) here. The
