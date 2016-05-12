@@ -102,7 +102,7 @@ if __name__ == '__main__':
             except ValueError :
                 nanoversion=0
             if nanoversion :
-                nanoversion='.'+nanoversion
+                nanoversion='.'+str(nanoversion)
 
     if all([x.isdigit() for x in version.split('.')]):
         setup(name='phonopy',
