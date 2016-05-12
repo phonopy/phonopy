@@ -92,15 +92,15 @@ if __name__ == '__main__':
                 version = line.split()[2].strip('\"')
 
     # To deploy to pypi/conda by travis-CI
+    nanoversion=''
     if os.path.isfile("__nanoversion__.txt"):
         with open('__nanoversion__.txt') as nv:
-            nanoversion=''
             try :
                 for line in nv:
                     nanoversion = int(line.strip())
                     break
             except ValueError :
-                nanoversion=''
+                pass
             if nanoversion :
                 nanoversion='.'+str(nanoversion)
 
