@@ -42,6 +42,8 @@ before_script:
 script:
   - GIT_BRANCH=`git branch |grep '^*'|sed 's/^*\s\?//'`
   - echo $GIT_BRANCH
+  - echo $branch
+  - echo '%(branch)s'
   - conda build .
 ## This will run after the script regardless of the result of script
 ## BINSTAR_BUILD_RESULT=[succcess|failure] 
