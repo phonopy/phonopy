@@ -26,7 +26,7 @@ engine:
  - python=3
 ## The env param is an environment variable list 
 env:
-  - GIT_BR=`git branch |grep '^*'|sed -e 's/^*\s\?//' -e 's/(HEAD [a-z ]* \(.*\))$/\1/'`
+  - GIT_BRANCH=master
 
 #===============================================================================
 # Scrip options

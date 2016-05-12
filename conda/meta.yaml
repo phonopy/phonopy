@@ -8,7 +8,7 @@ source:
 build:
   script_env:
     - GIT_BRANCH
-    - GIT_BR
+
   #preserve_egg_dir: True
   #entry_points:
     # Put any entry points (scripts to be generated automatically) here. The
