@@ -22,7 +22,7 @@ before_install:
     - conda config --add channels jochym
 
 install:
-    - conda install --yes python=$TRAVIS_PYTHON_VERSION pip numpy python-ase spglib scipy yaml pyyaml future anaconda-client
+    - conda install --yes python=$TRAVIS_PYTHON_VERSION pip numpy python-ase spglib scipy yaml pyyaml future anaconda-client anaconda-build
     - git describe --tags --dirty
     - git describe --tags --dirty | sed -e 's/\([.0-9]*\)-\(.*\)-g.*/\2/' -e 's/^[vr]//g' > __nanoversion__.txt
     - python setup.py install
@@ -44,7 +44,7 @@ deploy:
         python: 2.7
     # testing anaconda
     - provider: script
-      script: anaconda -t $ANACONDA_TOKEN build trigger jochym/phonopy
+      script: anaconda -t $ANACONDA_TOKEN build trigger --test-only --branch rc jochym/phonopy
       on:
         branch: rc
         tags: false
@@ -63,7 +63,7 @@ deploy:
         python: 2.7  
     # production anaconda
     - provider: script
-      script: anaconda -t $ANACONDA_TOKEN build trigger jochym/phonopy
+      script: anaconda -t $ANACONDA_TOKEN build trigger --branch master jochym/phonopy
       on:
         branch: master
         tags: true
