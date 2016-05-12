@@ -53,7 +53,7 @@ test:
     # - nose
 
 about:
-  home: http://phonopy.sourceforge.net/
+  home: https://atztogo.github.io/phonopy/
   license: BSD
   summary: 'Phonon calculation with finite displacements method.'
 
