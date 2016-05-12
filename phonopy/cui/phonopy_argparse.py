@@ -355,6 +355,9 @@ def get_parser():
         help=("Write dynamical matrices. This has to be used "
               "with QPOINTS setting (or --qpoints)"))
     parser.add_option(
+        "--xyz_projection", dest="xyz_projection", action="store_true",
+        help="Project PDOS x, y, z directions in Cartesian coordinates")
+    parser.add_option(
         "--yaml", dest="yaml_mode", action="store_true",
         help="Activate phonopy YAML mode")
 

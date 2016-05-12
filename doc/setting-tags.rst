@@ -452,6 +452,27 @@ respect to *a*, *b*, *c* axes.
    PDOS = 1, 2   
    PROJECTION_DIRECTION = -1 1 1
 
+.. _xyz_projection_tag:
+
+``XYZ_PROJECTION``
+~~~~~~~~~~~~~~~~~~~
+
+PDOS is calculated using eigenvectors projected along x, y, and z
+Cartesian coordinates. The format of output file ``partial_dos.dat``
+becomes different when using this tag, where phonon-mode-frequency and
+x, y, and z components of PDOS are written out in the order::
+
+   frequency atom1_x atom1_y atom1_z atom2_x atom2_y atom2_z ...
+
+With ``-p`` option, three curves are drawn. These correspond to
+sums of all projections to x, sums of all projections to y, and sums
+of all projections to z composents of eigenvectors, respectively.
+
+::
+
+   XYZ_PROJECTION = .TRUE.
+
+
 .. _sigma_tag:
 
 ``SIGMA``

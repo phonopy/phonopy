@@ -23,27 +23,6 @@ If you have used phonopy, please cite the following article:
           Month = {Nov}
      }
 
-The following article is not necessarily cited, but the citation
-encourages running phonopy project.
-
-* "First-principles calculations of the ferroelastic transition between rutile-type and CaCl2-type SiO2 at high pressures",
-    Atsushi Togo, Fumiyasu Oba, and Isao Tanaka, Phys. Rev. B, **78**, 134106 (2008)
-
-    http://dx.doi.org/10.1103/PhysRevB.78.134106
-
-  ::
-  
-     @article {phonopy,
-  	   Journal = {Phys. rev. B},
-  	   Year = {2008},
-  	   Title = {First-principles calculations of the ferroelastic transition between rutile-type and CaCl$_2$-type SiO$_2$ at high pressures},
-  	   Author = {Togo, A and Oba, F and Tanaka, I},
-  	   Pages = {134106--134114},
-  	   Volume = {78},
-  	   Issue = {13},
-  	   Month = {Oct}
-     }
-
 Some papers where phonopy was used
 -----------------------------------
 
@@ -68,6 +47,9 @@ Some papers where phonopy was used
 *  "Inversion Symmetry Breaking by Oxygen Octahedral Rotations in the Ruddlesden-Popper NaRTiO4 Family"
      Hirofumi Akamatsu, Koji Fujita, Toshihiro Kuge, Arnab Sen Gupta, Atsushi Togo, Shiming Lei, Fei Xue, Greg Stone, James M. Rondinelli, Long-Qing Chen, Isao Tanaka, Venkatraman Gopalan, and Katsuhisa Tanaka
      Phys. Rev. Lett. **112**, 187602-1-5 (2014)   
+
+*  "First-principles calculations of the ferroelastic transition between rutile-type and CaCl2-type SiO2 at high pressures",
+     Atsushi Togo, Fumiyasu Oba, and Isao Tanaka, Phys. Rev. B, **78**, 134106 (2008)
 
 ``TDISP``, ``TDISPMAT`` tags: Root mean square thermal atomic displacement 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

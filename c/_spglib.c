@@ -60,6 +60,7 @@ static PyObject * get_grid_points_by_rotations(PyObject *self, PyObject *args);
 static PyObject * get_BZ_grid_points_by_rotations(PyObject *self, PyObject *args);
 static PyObject * relocate_BZ_grid_address(PyObject *self, PyObject *args);
 static PyObject * get_symmetry_from_database(PyObject *self, PyObject *args);
+static PyObject * py_niggli_reduce(PyObject *self, PyObject *args);
 
 struct module_state {
   PyObject *error;
@@ -107,6 +108,7 @@ static PyMethodDef _spglib_methods[] = {
    "Rotated grid points in BZ are returned"},
   {"BZ_grid_address", relocate_BZ_grid_address, METH_VARARGS,
    "Relocate grid addresses inside Brillouin zone"},
+  {"niggli_reduce", py_niggli_reduce, METH_VARARGS, "Niggli reduction"},
   {NULL, NULL, 0, NULL}
 };
 
@@ -363,7 +365,7 @@ static PyObject * get_spacegroup_type(PyObject *self, PyObject *args)
   PyObject *array;
   SpglibSpacegroupType symbols;
 
-  if (!PyArg_ParseTuple(args, "i",&hall_number)) {
+  if (!PyArg_ParseTuple(args, "i", &hall_number)) {
     return NULL;
   }
 
@@ -818,4 +820,19 @@ static PyObject * relocate_BZ_grid_address(PyObject *self, PyObject *args)
 					   is_shift);
 
   return PyLong_FromLong((long) num_ir_gp);
+}
+
+static PyObject * py_niggli_reduce(PyObject *self, PyObject *args)
+{
+  PyArrayObject* lattice_py;
+  double eps;
+  if (!PyArg_ParseTuple(args, "Od", &lattice_py, &eps)) {
+    return NULL;
+  }
+
+  double (*lattice)[3] = (double(*)[3])PyArray_DATA(lattice_py);
+
+  int result = spg_niggli_reduce(lattice, eps);
+
+  return PyLong_FromLong((long) result);
 }

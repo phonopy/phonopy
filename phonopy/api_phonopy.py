@@ -682,7 +682,8 @@ class Phonopy:
                         freq_max=None,
                         freq_pitch=None,
                         tetrahedron_method=False,
-                        direction=None):
+                        direction=None,
+                        xyz_projection=False):
         self._pdos = None
 
         if self._mesh is None:
@@ -704,13 +705,13 @@ class Phonopy:
             direction_cart = np.dot(direction, self._primitive.get_cell())
         else:
             direction_cart = None
-        pdos = PartialDos(self._mesh,
-                          sigma=sigma,
-                          tetrahedron_method=tetrahedron_method,
-                          direction=direction_cart)
-        pdos.set_draw_area(freq_min, freq_max, freq_pitch)
-        pdos.run()
-        self._pdos = pdos
+        self._pdos = PartialDos(self._mesh,
+                                sigma=sigma,
+                                tetrahedron_method=tetrahedron_method,
+                                direction=direction_cart,
+                                xyz_projection=xyz_projection)
+        self._pdos.set_draw_area(freq_min, freq_max, freq_pitch)
+        self._pdos.run()
         return True
 
     def get_partial_DOS(self):
