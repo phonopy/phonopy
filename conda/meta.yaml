@@ -3,7 +3,7 @@ package:
 
 source:
   git_url: https://github.com/jochym/phonopy.git
-  git_branch: {{ environ.get('GIT_BRANCH','') }}
+  git_branch: {{ environ.get('GIT_BRANCH','package') }}
 
 build:
   script_env:
