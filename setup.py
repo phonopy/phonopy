@@ -100,7 +100,7 @@ if __name__ == '__main__':
                     nanoversion = int(line.strip())
                     break
             except ValueError :
-                nanoversion=0
+                nanoversion=''
             if nanoversion :
                 nanoversion='.'+str(nanoversion)
 
