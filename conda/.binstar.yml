@@ -37,14 +37,10 @@ engine:
 
 ## Run before the script
 before_script:
-#  - conda update -n root conda conda-build --yes
+  - conda update -n root conda conda-build --yes
   - conda config --add channels jochym
 ## Put your main computations here!  
 script:
-  - cat ../setup.py
-  - pwd
-  - git describe --tags --dirty
-  - git branch -v
   - conda build .
 ## This will run after the script regardless of the result of script
 ## BINSTAR_BUILD_RESULT=[succcess|failure] 
