@@ -37,7 +37,7 @@ engine:
 
 ## Run before the script
 before_script:
-  - conda update -n root conda conda-build --yes
+#  - conda update -n root conda conda-build --yes
   - conda config --add channels jochym
 ## Put your main computations here!  
 script:
