@@ -38,10 +38,10 @@ def get_triplets_at_q(grid_point,
                     np.prod(mesh), weights.sum())
 
     # These maps are required for collision matrix calculation.
-    if not stores_triplets_map: 
+    if not stores_triplets_map:
         map_triplets = None
         map_q = None
-        
+
     return triplets_at_q, weights, bz_grid_address, bz_map, map_triplets, map_q
 
 def get_triplets_third_q_list(grid_point,
@@ -54,9 +54,9 @@ def get_triplets_third_q_list(grid_point,
         bz_map,
         np.arange(len(bz_grid_address), dtype='intc'),
         mesh)
-    
+
     return np.array(triplets_at_q[:, 2], dtype='intc')
-    
+
 def get_nosym_triplets_at_q(grid_point,
                             mesh,
                             primitive_lattice,
@@ -80,7 +80,7 @@ def get_nosym_triplets_at_q(grid_point,
         map_q = map_triplets.copy()
 
     return triplets_at_q, weights, bz_grid_address, bz_map, map_triplets, map_q
-        
+
 
 def get_grid_address(mesh):
     grid_mapping_table, grid_address = spg.get_stabilized_reciprocal_mesh(
@@ -133,7 +133,7 @@ def get_ir_grid_points(mesh, rotations, mesh_shifts=None):
     (ir_grid_points,
      ir_grid_weights) = extract_ir_grid_points(grid_mapping_table)
 
-    return ir_grid_points, ir_grid_weights, grid_address
+    return ir_grid_points, ir_grid_weights, grid_address, grid_mapping_table
 
 def get_grid_points_by_rotations(grid_point,
                                  reciprocal_rotations,
@@ -160,7 +160,7 @@ def get_BZ_grid_points_by_rotations(grid_point,
         mesh,
         bz_map,
         is_shift=np.where(mesh_shifts, 1, 0))
-    
+
 def reduce_grid_points(mesh_divisors,
                        grid_address,
                        dense_grid_points,
@@ -209,41 +209,52 @@ def get_coarse_ir_grid_points(primitive,
                               coarse_mesh_shifts,
                               is_kappa_star=True,
                               symprec=1e-5):
-    if mesh_divisors is None:
-        mesh_divs = [1, 1, 1]
-    else:
-        mesh_divs = mesh_divisors
     mesh = np.array(mesh, dtype='intc')
-    mesh_divs = np.array(mesh_divs, dtype='intc')
-    coarse_mesh = mesh // mesh_divs
-    if coarse_mesh_shifts is None:
-        coarse_mesh_shifts = [False, False, False]
 
-    if not is_kappa_star:
-        coarse_grid_address = get_grid_address(coarse_mesh)
-        coarse_grid_points = np.arange(np.prod(coarse_mesh), dtype='intc')
-        coarse_grid_weights = np.ones(len(coarse_grid_points), dtype='intc')
+    symmetry = Symmetry(primitive, symprec)
+    point_group = symmetry.get_pointgroup_operations()
+
+    if mesh_divisors is None:
+        (ir_grid_points,
+         ir_grid_weights,
+         grid_address,
+         grid_mapping_table) = get_ir_grid_points(mesh, point_group)
     else:
-        symmetry = Symmetry(primitive, symprec)
-        (coarse_grid_points,
-         coarse_grid_weights,
-         coarse_grid_address) = get_ir_grid_points(
-             coarse_mesh,
-             symmetry.get_pointgroup_operations(),
-             mesh_shifts=coarse_mesh_shifts)
-    grid_points = from_coarse_to_dense_grid_points(
-        mesh,
-        mesh_divs,
-        coarse_grid_points,
-        coarse_grid_address,
-        coarse_mesh_shifts=coarse_mesh_shifts)
-    grid_address = get_grid_address(mesh)
-    primitive_lattice = np.linalg.inv(primitive.get_cell())
-    bz_grid_address, _ = spg.relocate_BZ_grid_address(grid_address,
-                                                      mesh,
-                                                      primitive_lattice)
+        mesh_divs = np.array(mesh_divisors, dtype='intc')
+        coarse_mesh = mesh // mesh_divs
+        if coarse_mesh_shifts is None:
+            coarse_mesh_shifts = [False, False, False]
+    
+        if not is_kappa_star:
+            coarse_grid_address = get_grid_address(coarse_mesh)
+            coarse_grid_points = np.arange(np.prod(coarse_mesh), dtype='intc')
+            coarse_grid_weights = np.ones(len(coarse_grid_points), dtype='intc')
+        else:
+            (coarse_ir_grid_points,
+             coarse_ir_grid_weights,
+             coarse_grid_address,
+             coarse_grid_mapping_table) = get_ir_grid_points(
+                 coarse_mesh,
+                 point_group,
+                 mesh_shifts=coarse_mesh_shifts)
+        ir_grid_points = from_coarse_to_dense_grid_points(
+            mesh,
+            mesh_divs,
+            coarse_grid_points,
+            coarse_grid_address,
+            coarse_mesh_shifts=coarse_mesh_shifts)
+        grid_address = get_grid_address(mesh)
+        ir_grid_weights = ir_grid_weights
 
-    return grid_points, coarse_grid_weights, bz_grid_address
+    primitive_lattice = np.linalg.inv(primitive.get_cell())
+    bz_grid_address, bz_map = spg.relocate_BZ_grid_address(grid_address,
+                                                           mesh,
+                                                           primitive_lattice)
+
+    return (ir_grid_points,
+            ir_grid_weights,
+            bz_grid_address,
+            grid_mapping_table)
 
 def get_number_of_triplets(primitive,
                            mesh,
@@ -282,15 +293,16 @@ def get_triplets_integration_weights(interaction,
     triplets = interaction.get_triplets_at_q()[0]
     frequencies = interaction.get_phonons()[0]
     num_band = frequencies.shape[1]
+    g_zero = None
 
     if is_collision_matrix:
         g = np.zeros(
             (3, len(triplets), len(frequency_points), num_band, num_band),
-            dtype='double')
+            dtype='double', order='C')
     else:
         g = np.zeros(
             (2, len(triplets), len(frequency_points), num_band, num_band),
-            dtype='double')
+            dtype='double', order='C')
 
     if sigma:
         if lang == 'C':
@@ -301,7 +313,7 @@ def get_triplets_integration_weights(interaction,
                 triplets,
                 frequencies,
                 sigma)
-        else:        
+        else:
             for i, tp in enumerate(triplets):
                 f1s = frequencies[tp[1]]
                 f2s = frequencies[tp[2]]
@@ -317,7 +329,7 @@ def get_triplets_integration_weights(interaction,
                         g[2, i, :, j, k] = g0 + g1 + g2
     else:
         if lang == 'C':
-            _set_triplets_integration_weights_c(
+            g_zero = _set_triplets_integration_weights_c(
                 g,
                 interaction,
                 frequency_points,
@@ -326,7 +338,7 @@ def get_triplets_integration_weights(interaction,
             _set_triplets_integration_weights_py(
                 g, interaction, frequency_points)
 
-    return g
+    return g, g_zero
 
 def get_tetrahedra_vertices(relative_address,
                             mesh,
@@ -368,7 +380,7 @@ def _get_triplets_reciprocal_mesh_at_q(fixed_grid_number,
         np.array(rotations, dtype='intc', order='C'))
 
     return map_triplets, map_q, mesh_points
-        
+
 def _get_BZ_triplets_at_q(grid_point,
                           bz_grid_address,
                           bz_map,
@@ -389,7 +401,7 @@ def _get_BZ_triplets_at_q(grid_point,
                                           bz_map,
                                           map_triplets,
                                           np.array(mesh, dtype='intc'))
-    
+
     return triplets, ir_weights
 
 
@@ -420,8 +432,11 @@ def _set_triplets_integration_weights_c(g,
                 bz_map)
             interaction.set_phonons(np.unique(neighboring_grid_points))
 
+    g_zero = np.zeros(g.shape[1:], dtype='byte', order='C')
+
     phono3c.triplets_integration_weights(
         g,
+        g_zero,
         frequency_points,
         thm.get_tetrahedra(),
         mesh,
@@ -429,6 +444,8 @@ def _set_triplets_integration_weights_c(g,
         interaction.get_phonons()[0],
         grid_address,
         bz_map)
+
+    return g_zero
 
 def _set_triplets_integration_weights_py(g, interaction, frequency_points):
     reciprocal_lattice = np.linalg.inv(interaction.get_primitive().get_cell())
@@ -494,7 +511,7 @@ class GridBrillouinZone:
             [0, -1, 0],
             [0, -1, 1],
             [0, 0, -1]], dtype='intc', order='C')
-    
+
     def __init__(self,
                  primitive_vectors,
                  mesh,

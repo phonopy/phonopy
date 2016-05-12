@@ -43,6 +43,7 @@ static void imag_self_energy_at_bands(double *imag_self_energy,
 				      const double *frequencies,
 				      const int *triplets,
 				      const double *g,
+				      const char *g_zero,
 				      const double temperature,
 				      const double cutoff_frequency);
 static double sum_imag_self_energy_at_band(const int num_band,
@@ -50,12 +51,14 @@ static double sum_imag_self_energy_at_band(const int num_band,
 					   const double *n1,
 					   const double *n2,
 					   const double *g1,
-					   const double *g2_3);
+					   const double *g2_3,
+					   const char *g_zero);
 static double sum_imag_self_energy_at_band_0K(const int num_band,
 					      const double *fc3_normal_squared,
 					      const double *n1,
 					      const double *n2,
-					      const double *g);
+					      const double *g,
+					      const char *g_zero);
 static void
 detailed_imag_self_energy_at_bands(double *imag_self_energy,
 				   const Darray *fc3_normal_squared,
@@ -89,6 +92,7 @@ void get_imag_self_energy_at_bands_with_g(double *imag_self_energy,
 					  const int *triplets,
 					  const int *weights,
 					  const double *g,
+					  const char *g_zero,
 					  const double temperature,
 					  const double unit_conversion_factor,
 					  const double cutoff_frequency)
@@ -105,6 +109,7 @@ void get_imag_self_energy_at_bands_with_g(double *imag_self_energy,
 			    frequencies,
 			    triplets,
 			    g,
+			    g_zero,
 			    temperature,
 			    cutoff_frequency);
   
@@ -143,10 +148,11 @@ static void imag_self_energy_at_bands(double *imag_self_energy,
 				      const double *frequencies,
 				      const int *triplets,
 				      const double *g,
+				      const char *g_zero,
 				      const double temperature,
 				      const double cutoff_frequency)
 {
-  int i, j, num_triplets, num_band0, num_band, gp1, gp2;
+  int i, j, num_triplets, num_band0, num_band, gp1, gp2, adrs_shift;
   double f1, f2;
   double *n1, *n2;
 
@@ -154,7 +160,7 @@ static void imag_self_energy_at_bands(double *imag_self_energy,
   num_band0 = fc3_normal_squared->dims[1];
   num_band = fc3_normal_squared->dims[2];
 
-#pragma omp parallel for private(j, gp1, gp2, n1, n2, f1, f2)
+#pragma omp parallel for private(j, gp1, gp2, n1, n2, f1, f2, adrs_shift)
   for (i = 0; i < num_triplets; i++) {
     gp1 = triplets[i * 3 + 1];
     gp2 = triplets[i * 3 + 2];
@@ -176,26 +182,27 @@ static void imag_self_energy_at_bands(double *imag_self_energy,
     }
     
     for (j = 0; j < num_band0; j++) {
+      adrs_shift = i * num_band0 * num_band * num_band + j * num_band * num_band;
       if (temperature > 0) {
 	imag_self_energy[i * num_band0 + j] =
 	  sum_imag_self_energy_at_band
 	  (num_band,
-	   fc3_normal_squared->data +
-	   i * num_band0 * num_band * num_band + j * num_band * num_band,
+	   fc3_normal_squared->data + adrs_shift,
 	   n1,
 	   n2,
-	   g + i * num_band0 * num_band * num_band + j * num_band * num_band,
+	   g + adrs_shift,
 	   g + (i + num_triplets) * num_band0 * num_band * num_band +
-	   j * num_band * num_band);
+	   j * num_band * num_band,
+	   g_zero + adrs_shift);
       } else {
 	imag_self_energy[i * num_band0 + j] =
 	  sum_imag_self_energy_at_band_0K
 	  (num_band,
-	   fc3_normal_squared->data +
-	   i * num_band0 * num_band * num_band + j * num_band * num_band,
+	   fc3_normal_squared->data + adrs_shift,
 	   n1,
 	   n2,
-	   g + i * num_band0 * num_band * num_band + j * num_band * num_band);
+	   g + adrs_shift,
+	   g_zero + adrs_shift);
       }
     }
     free(n1);
@@ -208,20 +215,20 @@ static double sum_imag_self_energy_at_band(const int num_band,
 					   const double *n1,
 					   const double *n2,
 					   const double *g1,
-					   const double *g2_3)
+					   const double *g2_3,
+					   const char *g_zero)
 {
-  int i, j;
+  int ij, i, j;
   double sum_g;
 
   sum_g = 0;
-  for (i = 0; i < num_band; i++) {
-    if (n1[i] < 0) {continue;}
-    for (j = 0; j < num_band; j++) {
-      if (n2[j] < 0) {continue;}
-      sum_g += ((n1[i] + n2[j] + 1) * g1[i * num_band + j] +
-		(n1[i] - n2[j]) * g2_3[i * num_band + j]) *
-	fc3_normal_squared[i * num_band + j];
-    }
+  for (ij = 0; ij < num_band * num_band; ij++) {
+    if (g_zero[ij]) {continue;}
+    i = ij / num_band;
+    j = ij % num_band;
+    if (n1[i] < 0 || n2[j] < 0) {continue;}
+    sum_g += ((n1[i] + n2[j] + 1) * g1[ij] +
+	      (n1[i] - n2[j]) * g2_3[ij]) * fc3_normal_squared[ij];
   }
   return sum_g;
 }
@@ -230,18 +237,19 @@ static double sum_imag_self_energy_at_band_0K(const int num_band,
 					      const double *fc3_normal_squared,
 					      const double *n1,
 					      const double *n2,
-					      const double *g1)
+					      const double *g1,
+					      const char *g_zero)
 {
-  int i, j;
+  int ij, i, j;
   double sum_g;
 
   sum_g = 0;
-  for (i = 0; i < num_band; i++) {
-    if (n1[i] < 0) {continue;}
-    for (j = 0; j < num_band; j++) {
-      if (n2[j] < 0) {continue;}
-      sum_g += g1[i * num_band + j] * fc3_normal_squared[i * num_band + j];
-    }
+  for (ij = 0; ij < num_band * num_band; ij++) {
+    if (g_zero[ij]) {continue;}
+    i = ij / num_band;
+    j = ij % num_band;
+    if (n1[i] < 0 || n2[j] < 0) {continue;}
+    sum_g += g1[ij] * fc3_normal_squared[ij];
   }
   return sum_g;
 }

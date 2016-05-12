@@ -38,11 +38,12 @@
 #include <phonoc_array.h>
 
 void get_imag_self_energy_at_bands_with_g(double *imag_self_energy,
-					  const Darray *fc3_normal_sqared,
+					  const Darray *fc3_normal_squared,
 					  const double *frequencies,
-					  const int *grid_point_triplets,
-					  const int *triplet_weights,
+					  const int *triplets,
+					  const int *weights,
 					  const double *g,
+					  const char *g_zero,
 					  const double temperature,
 					  const double unit_conversion_factor,
 					  const double cutoff_frequency);

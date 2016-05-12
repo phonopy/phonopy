@@ -3,6 +3,7 @@ import numpy
 from setup import (extension_spglib, extension_phonopy,
                    packages_phonopy, scripts_phonopy)
 import platform
+import os
 
 include_dirs_numpy = [numpy.get_include()]
 
@@ -22,14 +23,23 @@ sources = ['c/_phono3py.c',
            'c/anharmonic/other/isotope.c',
            'c/anharmonic/triplet/triplet.c',
            'c/anharmonic/triplet/triplet_kpoint.c',
+           'c/anharmonic/triplet/triplet_iw.c',
            'c/spglib/mathfunc.c',
            'c/spglib/kpoint.c',
            'c/kspclib/kgrid.c',
            'c/kspclib/tetrahedron_method.c']
-extra_link_args = ['-lgomp',
-                   '-llapacke', # this is when lapacke is installed on system
+extra_link_args = ['-llapacke', # this is when lapacke is installed on system
                    '-llapack',
                    '-lblas']
+cc = None
+if 'CC' in os.environ:
+    if 'clang' in os.environ['CC']:
+        cc = 'clang'
+    if 'gcc' in os.environ['CC']:
+        cc = 'gcc'
+if cc == 'gcc' or cc is None:
+    extra_link_args.append('-lgomp')
+
 extra_compile_args = ['-fopenmp',]
 include_dirs = (['c/harmonic_h',
                  'c/anharmonic_h',
@@ -99,9 +109,19 @@ if __name__ == '__main__':
             if "__version__" in line:
                 version = line.split()[2].strip('\"')
     
+    # To deploy to pypi by travis-CI
+    nanoversion = ''
+    if os.path.isfile("__nanoversion__.txt"):
+        with open('__nanoversion__.txt') as nv:
+            for line in nv:
+                nanoversion = '%.4s' % (line.strip())
+                break
+            if nanoversion:
+                nanoversion = '.' + nanoversion
+
     if all([x.isdigit() for x in version.split('.')]):
         setup(name='phono3py',
-              version=version,
+              version=(version + nanoversion),
               description='This is the phono3py module.',
               author='Atsushi Togo',
               author_email='atz.togo@gmail.com',
@@ -114,5 +134,3 @@ if __name__ == '__main__':
                            extension_phono3py])
     else:
         print("Phono3py version number could not be retrieved.")
-
-

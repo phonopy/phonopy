@@ -1,7 +1,7 @@
 /* Copyright (C) 2015 Atsushi Togo */
 /* All rights reserved. */
 
-/* These codes were originally parts of spglib, but only develped */
+/* Some of these codes were originally parts of spglib, but only develped */
 /* and used for phono3py. Therefore these were moved from spglib to */
 /* phono3py. This file is part of phonopy. */
 
@@ -37,11 +37,7 @@
 #ifndef __triplet_H__
 #define __triplet_H__
 
-/* SPGCONST is used instead of 'const' so to avoid gcc warning. */
-/* However there should be better way than this way.... */
-#ifndef SPGCONST
-#define SPGCONST
-#endif
+#include <phonoc_const.h>
 
 /* Irreducible triplets of k-points are searched under conservation of */
 /* :math:``\mathbf{k}_1 + \mathbf{k}_2 + \mathbf{k}_3 = \mathbf{G}``. */
@@ -49,14 +45,14 @@
 /* and map_q[prod(mesh)] are required. rotations are point-group- */
 /* operations in real space for which duplicate operations are allowed */
 /* in the input. */
-int spg_get_triplets_reciprocal_mesh_at_q(int map_triplets[],
+int tpl_get_triplets_reciprocal_mesh_at_q(int map_triplets[],
 					  int map_q[],
 					  int grid_address[][3],
 					  const int grid_point,
 					  const int mesh[3],
 					  const int is_time_reversal,
 					  const int num_rot,
-					  SPGCONST int rotations[][3][3]);
+					  PHPYCONST int rotations[][3][3]);
 
 /* Irreducible grid-point-triplets in BZ are stored. */
 /* triplets are recovered from grid_point and triplet_weights. */
@@ -64,12 +60,27 @@ int spg_get_triplets_reciprocal_mesh_at_q(int map_triplets[],
 /* are given not by grid_address, but by bz_grid_address. */
 /* triplets[num_ir_triplets][3] = number of non-zero triplets weights*/
 /* Number of ir-triplets is returned. */
-int spg_get_BZ_triplets_at_q(int triplets[][3],
+int tpl_get_BZ_triplets_at_q(int triplets[][3],
 			     const int grid_point,
-			     SPGCONST int bz_grid_address[][3],
+			     PHPYCONST int bz_grid_address[][3],
 			     const int bz_map[],
 			     const int map_triplets[],
 			     const int num_map_triplets,
 			     const int mesh[3]);
+
+
+int tpl_get_integration_weight(double *iw,
+			       char *iw_zero,
+			       const double frequency_points[],
+			       const int num_band0,
+			       PHPYCONST int relative_grid_address[24][4][3],
+			       const int mesh[3],
+			       PHPYCONST int triplets[][3],
+			       const int num_triplets,
+			       PHPYCONST int bz_grid_address[][3],
+			       const int bz_map[],
+			       const double frequencies[],
+			       const int num_band,
+			       const int num_iw);
 
 #endif

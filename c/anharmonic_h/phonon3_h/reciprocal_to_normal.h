@@ -40,6 +40,7 @@
 
 void reciprocal_to_normal_squared
 (double *fc3_normal_squared,
+ const char *g_zero,
  const lapack_complex_double *fc3_reciprocal,
  const double *freqs0,
  const double *freqs1,
@@ -55,6 +56,7 @@ void reciprocal_to_normal_squared
 
 void reciprocal_to_normal_squared_openmp
 (double *fc3_normal_squared,
+ const char *g_zero,
  const lapack_complex_double *fc3_reciprocal,
  const double *freqs0,
  const double *freqs1,
