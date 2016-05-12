@@ -38,7 +38,7 @@ deploy:
       distributions: sdist
       user: jochym
       password:
-          secure: "JBSrOM59mYHCInktXcbERawSb1cbEVkAAoY4Fq9xdXQfZgkrQQDrEKvsm3neH9RNUr66DvfNk4UDjil5xWF0hJTPoX0UAu7gHRuGnnsXwSwgvCMQ37/FvZnMXZp7zA7w0VfPEjK4FWcYincioqS6AewPsJaF4Dsp4W/bnIomZ3EhASvNn1oj7vqlhXhACGA9ZhZNROurhfqaUChSuefe7ze7idfKhJX0bhS5U+DGCaED8EdYRCQHaekbwy+WAin2YQIMxbxCsdoBoaoaTtUoR+k//O6/Jjb2QzsFgnP3JwCG9GlohyVOeBJlnLHkM7zGhfE4yzr1f4i8o6pePXKOhiZ0CjMVA6zQlMl4Aqe6vzAF00lOySV8radtXWI8Aevx0A1Z2diSMrTjnSWAglKph3vJGM1jzvEEc3M7shij0b3IfqohAT2M8oUPHE81MnhlVKf6QdkIy04eCi/ne3L2zTyTvILz1JMnnKSSbSH9vgZIaKDBtRz56lZmsDdhmCs9HlzB7uQNVTpmNRhPudiREMBFsh/OmqL0d9WsbalXaYVljlunHpuAVJKQynX2CEvyeOxELpjWU1W9mbItFqvXdnXHMX8eYLK6RYlJp5DR/QS3Ev6ldY6cURqj0EsL0RZxEwR02+pyiT6CC8ZtCC/isAKoQvHxKHwI0OG2y6z0i8Y="
+          secure: "q38wumRKBZynQ63Jhke/r5Tm1r35dNTdulHth3SWG0U/oefSzR8743magaPOllk0qowFNExiVRhuK6U1eCm2a0tjFcbt3+2Zl6JTyjq/n1cp8ZzNAXGn/U8QTjMlPURcqt/FhIhKrg/hBkrpd1clClGxc+RYa4R26YnOhIgJ3eWANpPJbJpPlLJYW8KlPdgeXa+NuqTVoaaNP0vtmhLOm6QRRaB6k4vMT1kdKEk/X5JNuwrLsa0WPomLFqCeTANZmzQ3buBFkvJtdCkIUnfbMpKWXO2w7fwkHj1eGDTsmLX2NVCDaHoUqmhol4PWUK7e3NJ0fvOIWAaQQVHGzhowvSoTsJRpfcQu5KV7PSQnja7f5tkOS6qoYzzH1yFkKCFJkz7Czl2P0PkloincMvhja9RYnStcvK0lbPQ5IOGMVzqczVnpC4VW6HNSEsodiGma9pzs5En+wkIIEgkZ+zqRcozqzh1oT9u7vL8ANHkgEPF14Ez5th8/O00fgryXDFku4xOcOdy/KrXss82NImP1suO4LxwhPCMgssKD9dDv2mg0mAzfJucnJKoX7m8Id5qlTnWYpozsw7Vf08YKWOzor7pD31Mrn8tzJ/CubRJfcUzG9Q5MWSPMcs+WYlZfOAYD6mQlSy7cWFogfj59z4uDdAv1+RbywEYfIlQoxTdkQy4="
       on:
           branch: rc
           tags: false
@@ -49,11 +49,11 @@ deploy:
       distributions: sdist
       user: jochym
       password:
-          secure: GI6iKqz/Bmxu8IxP442M4FCH3m7thd+lJjHH1aO37ClSzmLm9Y0fAyXkIaN/aW66yMT4yx6cRZ0EgQBrIF6DlY3DvnnA+qM0K3MNz1gMs3BCQ+AO+r9wRF0jnC4WUtgIXgiYbmYDXWPafT8lsQbRgsrcU5daSoK9N9kM7V8kWYZbG/XRdoOQuGn5G3k6WURJC4eI0iwxAgNyYhnmcquBbE6WwgH+Eoi4rOI0cNfLgZtk2mDNbRWC82VBuSSx3x8w/8nagfuWOZYBAb1Z0+vfUZhnrQgIveqIvxgnSSsFIc2TIoSANSwZ+44nIBQwlhK5a3yCm15BtEtq1lbslHFptAO+c9T7PfS0RZOIzBxAEBB1CZ+2vgE3ZBfPM7gxl3PhDWEcwEqktydW+J4sKs/Pz7zFtn4P3lSsHaVInQrTrouuFLn8DO4ZUS8XVLRtkqA1CX6cJHIs8qtG1cVjAku6BNtxGXaf69ZP4aMjphP3t1npWQqPw4Aiv30aF8tFu6KzS2El4ZcQd3Mn5CsKV4Rvq54XsDJeXDvlXHrr0gPT7vRaOi5kdsBvX/a8x+9VP9kG+4Dth7GGAJ4jtvc8M8XnxbT1r7KOX+/KY1VdgC8n6pVRICUsp6ckAvxyKCUhKf3RAJYf4+R+1NQFq/vdVtkfHaMbFRFdIxjk6gRA3zGMKZ8=
+          secure: M3YvQ6BbcCNndgcJMt+yMxZX008r1hsE6Gg68Dx2HMx/D86ZvyQs6fteppeHlb0x5qv5i8jCiJYaR9VCzPI7HaiYBMbPNB8mZyWZ8Ww0WJZK9rA0jthoJ2pAR6vGwWZkz4/zOAZEWC10vzjHRYE9lOw3gSlBw6G+QRz3rBNiOxNflgcG/YCU0Gi1/BLyY0/jR6/P1cOIIHqUcFa8uhrAzqU6uSyODdrLb02B4yNvz4mHj0/JuwRmmfwQMbF15NDv8HCvZju1G8No/FYEEoxjO674WLKW2phE5X0kTpRoW9A7epPQfdSaVkQOgG6NTx+o5MaYzk/WVVfDGhLEuRmVYXF8SgUSp05YGxRrcB3CVGERZ3EUZJUevEM00Cw6I4jbYv32vcAE0act8cLMJUwFYA4zimTX5iSGJrAPMo7J+i0ofZftvGnu40fsPv0AHe64pxr3aXWS3eigRb6+20mzKl+aulvsfGN9av3Go0U04t4rPSMzI6LiJrVhDAM9M1xSfn0Uh1fuIr1WSGQ5skwi5XEMjUiseyaeP4xo2xoGFxuzFM1cP5/tyvr0juZ8PKn/PKgvYzkFn7wZLnA4+ls4Z72JqX0ARqi64+dJW+s6dzJqJsZg8mPT7+iToxCxXN2Q/GXaRH21XI2NmgqV7RvL2kKBaLp1T3qzQzkOKkju30Q=
       on:
-            branch: master
-            tags: true
-            python: 2.7  
+        branch: master
+        tags: true
+        python: 2.7  
             
 
 # Old one-step variant
