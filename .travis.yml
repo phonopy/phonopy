@@ -38,18 +38,18 @@ deploy:
       distributions: sdist
       user: jochym
       password:
-          secure: "q38wumRKBZynQ63Jhke/r5Tm1r35dNTdulHth3SWG0U/oefSzR8743magaPOllk0qowFNExiVRhuK6U1eCm2a0tjFcbt3+2Zl6JTyjq/n1cp8ZzNAXGn/U8QTjMlPURcqt/FhIhKrg/hBkrpd1clClGxc+RYa4R26YnOhIgJ3eWANpPJbJpPlLJYW8KlPdgeXa+NuqTVoaaNP0vtmhLOm6QRRaB6k4vMT1kdKEk/X5JNuwrLsa0WPomLFqCeTANZmzQ3buBFkvJtdCkIUnfbMpKWXO2w7fwkHj1eGDTsmLX2NVCDaHoUqmhol4PWUK7e3NJ0fvOIWAaQQVHGzhowvSoTsJRpfcQu5KV7PSQnja7f5tkOS6qoYzzH1yFkKCFJkz7Czl2P0PkloincMvhja9RYnStcvK0lbPQ5IOGMVzqczVnpC4VW6HNSEsodiGma9pzs5En+wkIIEgkZ+zqRcozqzh1oT9u7vL8ANHkgEPF14Ez5th8/O00fgryXDFku4xOcOdy/KrXss82NImP1suO4LxwhPCMgssKD9dDv2mg0mAzfJucnJKoX7m8Id5qlTnWYpozsw7Vf08YKWOzor7pD31Mrn8tzJ/CubRJfcUzG9Q5MWSPMcs+WYlZfOAYD6mQlSy7cWFogfj59z4uDdAv1+RbywEYfIlQoxTdkQy4="
+        secure: "q38wumRKBZynQ63Jhke/r5Tm1r35dNTdulHth3SWG0U/oefSzR8743magaPOllk0qowFNExiVRhuK6U1eCm2a0tjFcbt3+2Zl6JTyjq/n1cp8ZzNAXGn/U8QTjMlPURcqt/FhIhKrg/hBkrpd1clClGxc+RYa4R26YnOhIgJ3eWANpPJbJpPlLJYW8KlPdgeXa+NuqTVoaaNP0vtmhLOm6QRRaB6k4vMT1kdKEk/X5JNuwrLsa0WPomLFqCeTANZmzQ3buBFkvJtdCkIUnfbMpKWXO2w7fwkHj1eGDTsmLX2NVCDaHoUqmhol4PWUK7e3NJ0fvOIWAaQQVHGzhowvSoTsJRpfcQu5KV7PSQnja7f5tkOS6qoYzzH1yFkKCFJkz7Czl2P0PkloincMvhja9RYnStcvK0lbPQ5IOGMVzqczVnpC4VW6HNSEsodiGma9pzs5En+wkIIEgkZ+zqRcozqzh1oT9u7vL8ANHkgEPF14Ez5th8/O00fgryXDFku4xOcOdy/KrXss82NImP1suO4LxwhPCMgssKD9dDv2mg0mAzfJucnJKoX7m8Id5qlTnWYpozsw7Vf08YKWOzor7pD31Mrn8tzJ/CubRJfcUzG9Q5MWSPMcs+WYlZfOAYD6mQlSy7cWFogfj59z4uDdAv1+RbywEYfIlQoxTdkQy4="
       on:
-          branch: rc
-          tags: false
-          python: 2.7
+        branch: rc
+        tags: false
+        python: 2.7
     # production
     - provider: pypi
       skip_cleanup: true
       distributions: sdist
       user: jochym
       password:
-          secure: M3YvQ6BbcCNndgcJMt+yMxZX008r1hsE6Gg68Dx2HMx/D86ZvyQs6fteppeHlb0x5qv5i8jCiJYaR9VCzPI7HaiYBMbPNB8mZyWZ8Ww0WJZK9rA0jthoJ2pAR6vGwWZkz4/zOAZEWC10vzjHRYE9lOw3gSlBw6G+QRz3rBNiOxNflgcG/YCU0Gi1/BLyY0/jR6/P1cOIIHqUcFa8uhrAzqU6uSyODdrLb02B4yNvz4mHj0/JuwRmmfwQMbF15NDv8HCvZju1G8No/FYEEoxjO674WLKW2phE5X0kTpRoW9A7epPQfdSaVkQOgG6NTx+o5MaYzk/WVVfDGhLEuRmVYXF8SgUSp05YGxRrcB3CVGERZ3EUZJUevEM00Cw6I4jbYv32vcAE0act8cLMJUwFYA4zimTX5iSGJrAPMo7J+i0ofZftvGnu40fsPv0AHe64pxr3aXWS3eigRb6+20mzKl+aulvsfGN9av3Go0U04t4rPSMzI6LiJrVhDAM9M1xSfn0Uh1fuIr1WSGQ5skwi5XEMjUiseyaeP4xo2xoGFxuzFM1cP5/tyvr0juZ8PKn/PKgvYzkFn7wZLnA4+ls4Z72JqX0ARqi64+dJW+s6dzJqJsZg8mPT7+iToxCxXN2Q/GXaRH21XI2NmgqV7RvL2kKBaLp1T3qzQzkOKkju30Q=
+        secure: M3YvQ6BbcCNndgcJMt+yMxZX008r1hsE6Gg68Dx2HMx/D86ZvyQs6fteppeHlb0x5qv5i8jCiJYaR9VCzPI7HaiYBMbPNB8mZyWZ8Ww0WJZK9rA0jthoJ2pAR6vGwWZkz4/zOAZEWC10vzjHRYE9lOw3gSlBw6G+QRz3rBNiOxNflgcG/YCU0Gi1/BLyY0/jR6/P1cOIIHqUcFa8uhrAzqU6uSyODdrLb02B4yNvz4mHj0/JuwRmmfwQMbF15NDv8HCvZju1G8No/FYEEoxjO674WLKW2phE5X0kTpRoW9A7epPQfdSaVkQOgG6NTx+o5MaYzk/WVVfDGhLEuRmVYXF8SgUSp05YGxRrcB3CVGERZ3EUZJUevEM00Cw6I4jbYv32vcAE0act8cLMJUwFYA4zimTX5iSGJrAPMo7J+i0ofZftvGnu40fsPv0AHe64pxr3aXWS3eigRb6+20mzKl+aulvsfGN9av3Go0U04t4rPSMzI6LiJrVhDAM9M1xSfn0Uh1fuIr1WSGQ5skwi5XEMjUiseyaeP4xo2xoGFxuzFM1cP5/tyvr0juZ8PKn/PKgvYzkFn7wZLnA4+ls4Z72JqX0ARqi64+dJW+s6dzJqJsZg8mPT7+iToxCxXN2Q/GXaRH21XI2NmgqV7RvL2kKBaLp1T3qzQzkOKkju30Q=
       on:
         branch: master
         tags: true
