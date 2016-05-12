@@ -1,5 +1,6 @@
 from distutils.core import setup, Extension
 import numpy
+import os
 
 include_dirs_numpy = [numpy.get_include()]
 
@@ -90,13 +91,18 @@ if __name__ == '__main__':
             if "__version__" in line:
                 version = line.split()[2].strip('\"')
 
-    with open('__nanoversion__.txt') as nv:
-        nanoversion=''
-        for line in nv:
-            nanoversion='%.4s' % (line.strip())
-            break
-        if nanoversion :
-            nanoversion='.'+nanoversion
+    # To deploy to pypi/conda by travis-CI
+    if os.path.isfile("__nanoversion__.txt"):
+        with open('__nanoversion__.txt') as nv:
+            nanoversion=''
+            try :
+                for line in nv:
+                    nanoversion = int(line.strip())
+                    break
+            except ValueError :
+                nanoversion=0
+            if nanoversion :
+                nanoversion='.'+nanoversion
 
     if all([x.isdigit() for x in version.split('.')]):
         setup(name='phonopy',
