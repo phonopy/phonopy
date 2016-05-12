@@ -25,8 +25,8 @@ engine:
  - python=3.4
  - python=3
 ## The env param is an environment variable list 
-#env:
-#  - GIT_BRANCH='%(branch)s'
+env:
+  - GIT_BR=`git branch |grep '^*'|sed -e 's/^*\s\?//' -e 's/(HEAD [a-z ]* \(.*\))$/\1/'`
 
 #===============================================================================
 # Scrip options
@@ -41,9 +41,6 @@ before_script:
 ## Put your main computations here!  
 script:
   - GIT_BRANCH=`git branch |grep '^*'|sed -e 's/^*\s\?//' -e 's/(HEAD [a-z ]* \(.*\))$/\1/'`
-  - echo $GIT_BRANCH
-  - echo $branch
-  - echo '%(branch)s'
   - conda build .
 ## This will run after the script regardless of the result of script
 ## BINSTAR_BUILD_RESULT=[succcess|failure] 

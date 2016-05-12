@@ -1,7 +1,7 @@
 #!/bin/bash
 
 git describe --tags --dirty | sed -e 's/-\(.*\)-g.*/+\1/' -e 's/^[vr]//g' > __conda_version__.txt
-echo $GIT_BRANCH
+echo ">$GIT_BRANCH< >$GIT_BR<"
 $PYTHON setup.py install
 
 # Add more build steps here, if they are necessary.
