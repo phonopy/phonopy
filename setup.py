@@ -108,7 +108,7 @@ if __name__ == '__main__':
                 version = line.split()[2].strip('\"')
 
     # To deploy to pypi/conda by travis-CI
-    nanoversion=''
+    nanoversion = ''
     if os.path.isfile("__nanoversion__.txt"):
         with open('__nanoversion__.txt') as nv:
             try :
@@ -118,9 +118,9 @@ if __name__ == '__main__':
             except ValueError :
                 pass
             if nanoversion :
-                nanoversion='.'+str(nanoversion)
+                nanoversion = '.'+str(nanoversion)
             else :
-                nanoversion=''
+                nanoversion = ''
 
     if all([x.isdigit() for x in version.split('.')]):
         setup(name='phonopy',
