@@ -26,7 +26,7 @@ class TestUnfolding(unittest.TestCase):
         # nd = 10
         # qpoints = np.array(list(np.ndindex(nd, nd, nd))) / float(nd)
         ## band
-        nd = 100
+        nd = 50
         qpoints = np.array([[x,] * 3 for x in range(nd)]) / float(nd)
 
         unfolding_supercell_matrix=[[-2, 2, 2],
@@ -36,7 +36,7 @@ class TestUnfolding(unittest.TestCase):
         self._run_unfolding()
         weights = self._get_weights(qpoints, unfolding_supercell_matrix)
         # self._write_weights(weights, "unfolding.dat")
-        self._compare(weights, "unfolding.dat")
+        self._compare(weights, "bin-unfolding.dat")
 
     def test_Unfolding_SC(self):
         ## mesh
@@ -51,12 +51,14 @@ class TestUnfolding(unittest.TestCase):
         self._run_unfolding()
         weights = self._get_weights(qpoints, unfolding_supercell_matrix)
         # self._write_weights(weights, "unfolding_to_atoms.dat")
-        self._compare(weights, "unfolding_to_atoms.dat")
+        self._compare(weights, "bin-unfolding_to_atoms.dat")
 
     def _compare(self, weights, filename):
+        bin_data = self._binning(weights)
+        # self._write_bin_data(bin_data, filename)
         with open(filename) as f:
-            weights_in_file = np.loadtxt(f)
-            self.assertTrue((np.abs(weights_in_file - weights) < 1e-3).all())
+            bin_data_in_file = np.loadtxt(f)
+            self.assertTrue((np.abs(bin_data - bin_data_in_file) < 1e-4).all())
 
     def _prepare_unfolding(self, qpoints, unfolding_supercell_matrix):
         supercell = get_supercell(self._cell, np.diag([2, 2, 2]))
@@ -100,6 +102,11 @@ class TestUnfolding(unittest.TestCase):
                      for x in weights]
             w.write("\n".join(lines))
 
+    def _write_bin_data(self, bin_data, filename):
+        with open(filename, 'w') as w:
+            lines = ["%8.5f %8.5f %8.5f" % tuple(v) for v in bin_data]
+            w.write("\n".join(lines))
+
     def _get_phonon(self, cell):
         phonon = Phonopy(cell,
                          np.diag([1, 1, 1]),
@@ -126,6 +133,40 @@ class TestUnfolding(unittest.TestCase):
         phonon.set_nac_params({'born': born,
                                'factor': factors,
                                'dielectric': epsilon})
+
+    def _binning(self, data):
+        x = []
+        y = []
+        w = []
+        for vals in data:
+            if vals[4] > 1e-3:
+                x.append(vals[0])
+                y.append(vals[3])
+                w.append(vals[4])
+        x = np.around(x, decimals=5)
+        y = np.around(y, decimals=5)
+        w = np.array(w)
+    
+        points = {}
+        for e_x, e_y, e_z in zip(x, y, w):
+            if (e_x, e_y) in points:
+                points[(e_x, e_y)] += e_z
+            else:
+                points[(e_x, e_y)] = e_z
+    
+        x = []
+        y = []
+        w = []
+        for key in points:
+            x.append(key[0])
+            y.append(key[1])
+            w.append(points[key])
+    
+        data = np.transpose([x, y, w])
+        data = sorted(data, key=lambda data: data[1])
+        data = sorted(data, key=lambda data: data[0])
+
+        return np.array(data)
 
 if __name__ == '__main__':
     unittest.main()
