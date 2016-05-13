@@ -107,15 +107,20 @@ if __name__ == '__main__':
             if "__version__" in line:
                 version = line.split()[2].strip('\"')
 
-    # To deploy to pypi by travis-CI
+    # To deploy to pypi/conda by travis-CI
     nanoversion = ''
     if os.path.isfile("__nanoversion__.txt"):
         with open('__nanoversion__.txt') as nv:
-            for line in nv:
-                nanoversion = '%.4s' % (line.strip())
-                break
-            if nanoversion:
-                nanoversion = '.' + nanoversion
+            try :
+                for line in nv:
+                    nanoversion = int(line.strip())
+                    break
+            except ValueError :
+                pass
+            if nanoversion :
+                nanoversion = '.'+str(nanoversion)
+            else :
+                nanoversion = ''
 
     if all([x.isdigit() for x in version.split('.')]):
         setup(name='phonopy',
@@ -123,7 +128,7 @@ if __name__ == '__main__':
               description='This is the phonopy module.',
               author='Atsushi Togo',
               author_email='atz.togo@gmail.com',
-              url='http://phonopy.sourceforge.net/',
+              url='http://atztogo.github.io/phonopy/',
               packages=packages_phonopy,
               scripts=scripts_phonopy,
               ext_modules=ext_modules_phonopy)

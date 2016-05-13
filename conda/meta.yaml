@@ -3,8 +3,12 @@ package:
 
 source:
   git_url: https://github.com/jochym/phonopy.git
+  git_branch: {{ environ.get('GIT_BRANCH','master') }}
 
 build:
+  script_env:
+    - GIT_BRANCH
+
   #preserve_egg_dir: True
   #entry_points:
     # Put any entry points (scripts to be generated automatically) here. The
@@ -53,7 +57,7 @@ test:
     # - nose
 
 about:
-  home: http://phonopy.sourceforge.net/
+  home: https://atztogo.github.io/phonopy/
   license: BSD
   summary: 'Phonon calculation with finite displacements method.'
 

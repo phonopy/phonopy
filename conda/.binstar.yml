@@ -22,12 +22,10 @@ platform:
 ## The engine are the inital conda packages you want to run with 
 engine:
  - python=2
- - python=3.4
  - python=3
 ## The env param is an environment variable list 
-# engine:
-#  - MY_ENV=A CC=gcc
-#  - MY_ENV=B
+env:
+  - GIT_BRANCH=master
 
 #===============================================================================
 # Scrip options
@@ -41,6 +39,7 @@ before_script:
   - conda config --add channels jochym
 ## Put your main computations here!  
 script:
+  - GIT_BRANCH=`git branch |grep '^*'|sed -e 's/^*\s\?//' -e 's/(HEAD [a-z ]* \(.*\))$/\1/'`
   - conda build .
 ## This will run after the script regardless of the result of script
 ## BINSTAR_BUILD_RESULT=[succcess|failure] 
