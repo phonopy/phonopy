@@ -245,7 +245,8 @@ int get_phonons(lapack_complex_double *a,
    			    masses,
   			    s2p,
   			    p2s,
-  			    charge_sum);
+  			    charge_sum,
+			    0);
   if (born) {
     free(charge_sum);
   }
