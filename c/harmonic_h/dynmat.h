@@ -45,7 +45,8 @@ int get_dynamical_matrix_at_q(double *dynamical_matrix,
 			      const double *mass,
 			      const int *s2p_map, 
 			      const int *p2s_map,
-			      const double *charge_sum);
+			      const double *charge_sum,
+			      const int with_openmp);
 void get_charge_sum(double *charge_sum,
 		    const int num_patom,
 		    const double factor,
