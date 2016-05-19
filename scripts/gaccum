@@ -1,9 +1,10 @@
-#!/opt/local/Library/Frameworks/Python.framework/Versions/2.7/Resources/Python.app/Contents/MacOS/Python
+#!/usr/bin/env python
 
 import numpy as np
 from phonopy.cui.settings import fracval
 from phonopy.phonon.tetrahedron_mesh import TetrahedronMesh
 from phonopy.phonon.dos import NormalDistribution
+from anharmonic.phonon3.triplets import get_ir_grid_points
 
 class GammaDOS:
     def __init__(self,
@@ -122,6 +123,8 @@ if __name__ == '__main__':
                          help="Mesh numbers")
     parser.add_argument('--pqj', action='store_true',
                         help='Calculate Pqj instead of Gamma')
+    parser.add_argument('--cv', action='store_true',
+                        help='Calculate Cv instead of Gamma')
     parser.add_argument('filenames', nargs='*')
     args = parser.parse_args()
 
@@ -146,6 +149,9 @@ if __name__ == '__main__':
 
     if args.pqj:
         gamma = f['ave_pp'][:].reshape((1,) + f['ave_pp'].shape)
+    elif args.cv:
+        gamma = f['heat_capacity'][:]
+        print("hoge")
     else:
         gamma = f['gamma'][:]
 
