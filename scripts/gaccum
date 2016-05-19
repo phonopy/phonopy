@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/opt/local/Library/Frameworks/Python.framework/Versions/2.7/Resources/Python.app/Contents/MacOS/Python
 
 import numpy as np
 from phonopy.cui.settings import fracval
@@ -120,31 +120,34 @@ if __name__ == '__main__':
                         default="1 0 0 0 1 0 0 0 1", help="Primitive matrix")
     parser.add_argument("--mesh", dest="mesh", default="1 1 1",
                          help="Mesh numbers")
+    parser.add_argument('--pqj', action='store_true',
+                        help='Calculate Pqj instead of Gamma')
     parser.add_argument('filenames', nargs='*')
     args = parser.parse_args()
-    
+
     cell = read_vasp(args.filenames[0])
     primitive = get_primitive(cell, np.reshape(
         [fracval(x) for x in args.primitive_axis.split()], (3, 3)))
 
     f = h5py.File(args.filenames[1])
     mesh = np.array([int(x) for x in args.mesh.split()], dtype='intc')
-    gamma = f['gamma']
     frequencies = f['frequency'][:]
     temperatures = f['temperature'][:]
     weights = f['weight'][:]
 
     symmetry = Symmetry(primitive)
     rotations = symmetry.get_pointgroup_operations()
-    gp = GridPoints(mesh,
-                    np.linalg.inv(primitive.get_cell()),
-                    rotations=rotations)
-    grid_address = gp.get_grid_address()
-    grid_mapping_table = gp.get_grid_mapping_table()
-    ir_grid_points = gp.get_ir_grid_points()
-    weights_for_check = gp.get_ir_grid_weights()
+    (ir_grid_points,
+     weights_for_check,
+     grid_address,
+     grid_mapping_table) = get_ir_grid_points(mesh, rotations)
 
     assert (weights == weights_for_check).all()
+
+    if args.pqj:
+        gamma = f['ave_pp'][:].reshape((1,) + f['ave_pp'].shape)
+    else:
+        gamma = f['gamma'][:]
 
     gamma_dos = GammaDOStetrahedron(gamma,
                                     primitive,
@@ -163,9 +166,13 @@ if __name__ == '__main__':
                          
     freq_points, gdos = gamma_dos.get_gdos()
 
-    for i, gdos_t in enumerate(gdos):
-        print "# %d K" % temperatures[i], gamma[i].sum(axis=0).sum(axis=0)
-        for f, g in zip(freq_points, gdos_t): # show kappa_xx
-            print ("%f " * 3) % (f, g[0], g[1])
-        print
-        print
+    if args.pqj:
+        for f, g in zip(freq_points, gdos[0]): # show kappa_xx
+            print("%f %e %e" % (f, g[0], g[1]))
+    else:
+        for i, gdos_t in enumerate(gdos):
+            print("# %d K %f" % (temperatures[i], gamma[i].sum(axis=0).sum(axis=0)))
+            for f, g in zip(freq_points, gdos_t): # show kappa_xx
+                print("%f %f %f" % (f, g[0], g[1]))
+            print('')
+            print('')
