@@ -11,17 +11,17 @@ from phonopy.interface.vasp import read_vasp
 from phonopy.file_IO import parse_FORCE_SETS, parse_BORN
 
 result_full_range = """
- 1.000000  1.000000  1.000000  1.000000  1.000000  1.000000  1.000000 
- 4.076455  4.249643  4.249643  4.249643  3.903252  3.903252  3.903252 
-17.935902 19.412878 19.412878 19.412878 16.458794 16.458794 16.458794 
- 1.000000  1.000000  1.000000  1.000000  1.000000  1.000000  1.000000 
- 3.546168  3.634746  3.634746  3.634746  3.468353  3.468353  3.468353 
-12.678862 13.307873 13.307873 13.307873 12.126286 12.126286 12.126286 
+1.000000  1.000000  1.000000
+ 4.076455  4.249643  3.903252
+17.935902 19.412878 16.458794
+ 1.000000  1.000000  1.000000
+ 3.546168  3.634746  3.468353
+12.678862 13.307873 12.126286
 """
 
 class TestMoment(unittest.TestCase):
     def setUp(self):
-        self._cell = read_vasp("POSCAR")
+        self._cell = read_vasp("POSCAR_moment")
     
     def tearDown(self):
         pass
@@ -33,8 +33,15 @@ class TestMoment(unittest.TestCase):
         moment = phonon.set_mesh([13, 13, 13],
                                  is_eigenvectors=True,
                                  is_mesh_symmetry=False)
+        num_atom = phonon.get_primitive().get_number_of_atoms()
         q, w, f, e = phonon.get_mesh()
-        vals = np.zeros((6, f.shape[1] + 1), dtype='double')
+        vals = np.zeros((6, num_atom + 1), dtype='double')
+
+        moment = PhononMoment(f, w)
+        for i in range(3):
+            moment.run(order=i)
+            vals[i, 0] = moment.get_moment()
+            self.assertTrue(np.abs(moment.get_moment() - data[i, 0]) < 1e-5)
 
         moment = PhononMoment(f, w, eigenvectors=e)
         for i in range(3):
@@ -42,12 +49,6 @@ class TestMoment(unittest.TestCase):
             moms = moment.get_moment()
             vals[i, 1:] = moms
             self.assertTrue((np.abs(moms - data[i, 1:]) < 1e-5).all())
-
-        moment = PhononMoment(f, w)
-        for i in range(3):
-            moment.run(order=i)
-            vals[i, 0] = moment.get_moment()
-            self.assertTrue(np.abs(moment.get_moment() - data[i, 0]) < 1e-5)
 
         moment = PhononMoment(f, w, eigenvectors=e)
         moment.set_frequency_range(freq_min=3, freq_max=4)
@@ -64,7 +65,6 @@ class TestMoment(unittest.TestCase):
             vals[i + 3, 0] = moment.get_moment()
             self.assertTrue(np.abs(moment.get_moment() - data[i + 3, 0]) < 1e-5)
 
-        moment.write_yaml()
         # self._show(vals)
 
     def _show(self, vals):
@@ -78,7 +78,7 @@ class TestMoment(unittest.TestCase):
                                            [0.5, 0, 0.5],
                                            [0.5, 0.5, 0]],
                          is_auto_displacements=False)
-        force_sets = parse_FORCE_SETS()
+        force_sets = parse_FORCE_SETS(filename="FORCE_SETS_moment")
         phonon.set_displacement_dataset(force_sets)
         phonon.produce_force_constants()
         supercell = phonon.get_supercell()
