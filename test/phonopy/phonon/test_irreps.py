@@ -6,9 +6,8 @@ except ImportError:
 import sys
 import numpy as np
 from phonopy import Phonopy
-from phonopy.phonon.moment import PhononMoment
 from phonopy.interface.vasp import read_vasp
-from phonopy.file_IO import parse_FORCE_SETS, parse_BORN
+from phonopy.file_IO import parse_FORCE_SETS
 
 chars_Amm2 = """1. 0. -1. 0. -1. 0.  1. 0.
 1. 0. -1. 0.  1. 0. -1. 0.
