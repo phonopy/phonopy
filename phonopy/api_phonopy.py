@@ -553,10 +553,21 @@ class Phonopy:
         return True
 
     def get_mesh(self):
-        return (self._mesh.get_qpoints(),
-                self._mesh.get_weights(),
-                self._mesh.get_frequencies(),
-                self._mesh.get_eigenvectors())
+        if self._mesh is None:
+            return None
+        else:
+            return (self._mesh.get_qpoints(),
+                    self._mesh.get_weights(),
+                    self._mesh.get_frequencies(),
+                    self._mesh.get_eigenvectors())
+    
+    def get_mesh_grid_info(self):
+        if self._mesh is None:
+            return None
+        else:
+            return (self._mesh.get_grid_address(),
+                    self._mesh.get_ir_grid_points(),
+                    self._mesh.get_grid_mapping_table())
 
     def write_hdf5_mesh(self):
         self._mesh.write_hdf5()
