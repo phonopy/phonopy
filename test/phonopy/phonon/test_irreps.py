@@ -125,10 +125,6 @@ class TestIrreps(unittest.TestCase):
         chars = phonon.get_irreps().get_characters()
         self.assertTrue(np.abs(chars - data).all() < 1e-5)
 
-    def _show(self, vals):
-        for v in vals:
-            print(("%9.6f " * len(v)) % tuple(v))
-
     def _get_phonon(self, spgtype, dim, pmat):
         cell = read_vasp("POSCAR_%s" % spgtype)
         phonon = Phonopy(cell,
