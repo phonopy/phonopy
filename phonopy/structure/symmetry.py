@@ -35,7 +35,7 @@
 import sys
 import numpy as np
 import phonopy.structure.spglib as spg
-from phonopy.structure.atoms import Atoms
+from phonopy.structure.atoms import PhonopyAtoms as Atoms
 
 class Symmetry:
     def __init__(self, cell, symprec=1e-5, is_symmetry=True):

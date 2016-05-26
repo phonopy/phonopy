@@ -38,7 +38,8 @@ try:
 except ImportError:
     from io import StringIO
 import numpy as np
-from phonopy.structure.atoms import Atoms, symbol_map, atom_data
+from phonopy.structure.atoms import PhonopyAtoms as Atoms
+from phonopy.structure.atoms import symbol_map, atom_data
 from phonopy.structure.cells import get_primitive, get_supercell
 from phonopy.structure.symmetry import Symmetry
 from phonopy.harmonic.force_constants import similarity_transformation

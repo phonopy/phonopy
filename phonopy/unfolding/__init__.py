@@ -34,7 +34,7 @@
 
 import numpy as np
 from phonopy.harmonic.dynmat_to_fc import get_commensurate_points
-from phonopy.structure.atoms import Atoms
+from phonopy.structure.atoms import PhonopyAtoms as Atoms
 from phonopy.structure.cells import get_supercell
 
 class Unfolding(object):

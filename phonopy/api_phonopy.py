@@ -34,7 +34,7 @@
 
 import sys
 import numpy as np
-from phonopy.structure.atoms import Atoms
+from phonopy.structure.atoms import PhonopyAtoms as Atoms
 from phonopy.structure.symmetry import Symmetry
 from phonopy.structure.cells import get_supercell, get_primitive
 from phonopy.harmonic.displacement import (get_least_displacements,
@@ -86,7 +86,7 @@ class Phonopy:
         self._log_level = log_level
 
         # Create supercell and primitive cell
-        self._unitcell = unitcell
+        self._unitcell = Atoms(atoms=unitcell)
         self._supercell_matrix = supercell_matrix
         self._primitive_matrix = primitive_matrix
         self._supercell = None
@@ -178,6 +178,12 @@ class Phonopy:
         """return symmetry of primitive cell"""
         return self._primitive_symmetry
 
+    def get_supercell_matrix(self):
+        return self._supercell_matrix
+
+    def get_primitive_matrix(self):
+        return self._primitive_matrix
+
     def get_unit_conversion_factor(self):
         return self._factor
     unit_conversion_factor = property(get_unit_conversion_factor)
@@ -209,6 +215,9 @@ class Phonopy:
                                      self._supercell,
                                      self._primitive,
                                      self._symprec)
+
+    def get_nac_params(self):
+        return self._nac_params
 
     def get_dynamical_matrix(self):
         return self._dynamical_matrix

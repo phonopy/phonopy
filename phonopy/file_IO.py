@@ -218,7 +218,7 @@ def parse_disp_yaml(filename="disp.yaml", return_cell=False):
     except ImportError:
         from yaml import Loader
 
-    from phonopy.structure.atoms import Atoms
+    from phonopy.structure.atoms import PhonopyAtoms as Atoms
 
     dataset = yaml.load(open(filename), Loader=Loader)
     natom = dataset['natom']
@@ -253,8 +253,6 @@ def parse_disp_yaml(filename="disp.yaml", return_cell=False):
 def write_disp_yaml(displacements, supercell, directions=None,
                     filename='disp.yaml'):
 
-    from phonopy.structure.atoms import PhonopyAtoms
-
     text = []
     text.append("natom: %4d" % supercell.get_number_of_atoms())
     text.append("displacements:")
@@ -267,7 +265,7 @@ def write_disp_yaml(displacements, supercell, directions=None,
         text.append("  displacement:")
         text.append("    [ %20.16f,%20.16f,%20.16f ]" % tuple(disp[1:4]))
 
-    text.append(str(PhonopyAtoms(atoms=supercell)))
+    text.append(str(supercell))
 
     with open(filename, 'w') as w:
         w.write("\n".join(text))
