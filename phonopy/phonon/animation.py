@@ -34,8 +34,9 @@
 
 import numpy as np
 import sys
-from phonopy.structure.cells import get_angles, get_cell_parameters, get_cell_matrix
-from phonopy.structure.atoms import Atoms
+from phonopy.structure.cells import (get_angles, get_cell_parameters,
+                                     get_cell_matrix)
+from phonopy.structure.atoms import PhonopyAtoms as Atoms
 from phonopy.interface.vasp import write_vasp
 from phonopy.units import VaspToTHz
 

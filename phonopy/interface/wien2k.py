@@ -34,7 +34,7 @@
 
 import numpy as np
 from phonopy.file_IO import get_drift_forces
-from phonopy.structure.atoms import Atoms
+from phonopy.structure.atoms import PhonopyAtoms as Atoms
 from phonopy.structure.symmetry import Symmetry
 from phonopy.structure.cells import get_angles, get_cell_parameters
 from phonopy.harmonic.force_constants import similarity_transformation

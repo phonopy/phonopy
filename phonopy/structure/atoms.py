@@ -179,8 +179,10 @@ class PhonopyAtoms(Atoms):
                  masses=None,
                  magmoms=None,
                  scaled_positions=None,
+                 positions=None,
                  cell=None,
-                 atoms=None):
+                 atoms=None,
+                 pbc=True): # pbc is dummy argument, and never used.
         if atoms:
             Atoms.__init__(self,
                            numbers=atoms.get_atomic_numbers(),
@@ -196,22 +198,27 @@ class PhonopyAtoms(Atoms):
                            masses=masses,
                            magmoms=magmoms,
                            scaled_positions=scaled_positions,
+                           positions=positions,
                            cell=cell,
                            pbc=True)
 
-    def __str__(self):
+    def get_yaml_lines(self):
         lines = []
         lines.append("lattice:")
         for v, a in zip(self.cell, ('a', 'b', 'c')):
-            lines.append("- [ %22.16f, %22.16f, %22.16f ] # %s" %
+            lines.append("- [ %21.15f, %21.15f, %21.15f ] # %s" %
                          (v[0], v[1], v[2], a))
-        lines.append("atoms:")
+        lines.append("points:")
         for i, (s, v, m) in enumerate(
                 zip(self.symbols, self.scaled_positions, self.masses)):
             lines.append("- symbol: %-2s # %d" % (s, i + 1))
-            lines.append("  position: [ %19.16f, %19.16f, %19.16f ]" % tuple(v))
+            lines.append("  coordinates: [ %18.15f, %18.15f, %18.15f ]" %
+                         tuple(v))
             lines.append("  mass: %f" % m)
-        return "\n".join(lines)
+        return lines
+
+    def __str__(self):
+        return "\n".join(self.get_yaml_lines())
 
 atom_data = [ 
     [  0, "X", "X", None], # 0

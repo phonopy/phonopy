@@ -1,4 +1,3 @@
-from __future__ import print_function
 import unittest
 import sys
 import numpy as np
@@ -7,15 +6,14 @@ from phonopy.unfolding import Unfolding
 from phonopy import Phonopy
 from phonopy.interface.vasp import read_vasp
 from phonopy.file_IO import parse_FORCE_SETS, parse_BORN
-from phonopy.structure.atoms import PhonopyAtoms
-# from phonopy.structure.atoms import Atoms
+from phonopy.structure.atoms import PhonopyAtoms as Atoms
 # from phonopy.interface.vasp import write_vasp
 
 class TestUnfolding(unittest.TestCase):
 
     def setUp(self):
         self._cell = read_vasp("POSCAR")
-        # print(PhonopyAtoms(atoms=self._cell))
+        # print(self._cell)
         self._unfolding = None
     
     def tearDown(self):

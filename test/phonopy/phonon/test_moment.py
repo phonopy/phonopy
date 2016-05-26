@@ -8,15 +8,15 @@ import numpy as np
 from phonopy import Phonopy
 from phonopy.phonon.moment import PhononMoment
 from phonopy.interface.vasp import read_vasp
-from phonopy.file_IO import parse_FORCE_SETS, parse_BORN
+from phonopy.file_IO import parse_FORCE_SETS
 
 result_full_range = """
-1.000000  1.000000  1.000000
- 4.076455  4.249643  3.903252
-17.935902 19.412878 16.458794
  1.000000  1.000000  1.000000
- 3.546168  3.634746  3.468353
-12.678862 13.307873 12.126286
+ 4.062877  4.237388  3.888351
+17.935864 19.412878 16.458717
+ 1.000000  1.000000  1.000000
+ 3.515491  3.605997  3.436412
+12.456606 13.099939 11.894498
 """
 
 class TestMoment(unittest.TestCase):
@@ -88,8 +88,7 @@ class TestMoment(unittest.TestCase):
                       'Cl': [[-1.08672, 0, 0],
                              [0, -1.08672, 0],
                              [0, 0, -1.08672]]}
-        born = [born_elems[s]
-                for s in supercell.get_chemical_symbols()]
+        born = [born_elems[s] for s in ['Na', 'Cl']]
         epsilon = [[2.43533967, 0, 0],
                    [0, 2.43533967, 0],
                    [0, 0, 2.43533967]]

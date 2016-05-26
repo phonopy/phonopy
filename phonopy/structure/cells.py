@@ -33,7 +33,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
-from phonopy.structure.atoms import Atoms
+from phonopy.structure.atoms import PhonopyAtoms as Atoms
 
 def get_supercell(unitcell, supercell_matrix, symprec=1e-5):
     return Supercell(unitcell, supercell_matrix, symprec=symprec)
