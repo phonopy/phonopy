@@ -923,6 +923,9 @@ class Phonopy:
         return (self._qpoints_phonon.get_frequencies(),
                 self._qpoints_phonon.get_eigenvectors())
 
+    def write_hdf5_qpoints_phonon(self):
+        self._qpoints_phonon.write_hdf5()
+
     def write_yaml_qpoints_phonon(self):
         self._qpoints_phonon.write_yaml()
 
