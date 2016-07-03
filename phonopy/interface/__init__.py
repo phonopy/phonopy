@@ -54,7 +54,7 @@ def read_crystal_structure(filename=None,
         from phonopy.interface.phonopy_yaml import PhonopyYaml
         phpy_yaml = PhonopyYaml()
         phpy_yaml.read(unitcell_filename)
-        unitcell = phpy_yaml.get_cell()
+        unitcell = phpy_yaml.get_unitcell()
         return unitcell, (unitcell_filename,)
         
     if interface_mode is None or interface_mode == 'vasp':

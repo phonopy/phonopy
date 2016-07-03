@@ -80,6 +80,7 @@ class PhonopyYaml:
             self._load(infile)
 
     def set(self, phonopy):
+        self._version = phonopy.get_version()
         self._unitcell = phonopy.get_unitcell()
         self._primitive = phonopy.get_primitive()
         self._supercell = phonopy.get_supercell()
@@ -106,6 +107,7 @@ class PhonopyYaml:
             dielectric = self._nac_params['dielectric']
 
         lines.append("phonopy:")
+        lines.append("  version: %s" % self._version)
         if self._supercell_matrix is not None:
             lines.append("  supercell_matrix:")
             for v in self._supercell_matrix:
@@ -202,13 +204,23 @@ class PhonopyYaml:
         points = []
         symbols = []
         masses = []
-        for x in cell_yaml['points']:
-            if 'coordinates' in x:
-                points.append(x['coordinates'])
-            if 'symbol' in x:
-                symbols.append(x['symbol'])
-            if 'mass' in x:
-                masses.append(x['mass'])
+        if 'points' in cell_yaml:
+            for x in cell_yaml['points']:
+                if 'coordinates' in x:
+                    points.append(x['coordinates'])
+                if 'symbol' in x:
+                    symbols.append(x['symbol'])
+                if 'mass' in x:
+                    masses.append(x['mass'])
+        # For version < 1.10.9
+        elif 'atoms' in cell_yaml:
+            for x in cell_yaml['atoms']:
+                if 'coordinates' not in x and 'position' in x:
+                    points.append(x['position'])
+                if 'symbol' in x:
+                    symbols.append(x['symbol'])
+                if 'mass' in x:
+                    masses.append(x['mass'])
         return self._get_cell(lattice, points, symbols, masses=masses)
 
     def _get_cell(self, lattice, points, symbols, masses=None):

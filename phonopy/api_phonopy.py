@@ -34,6 +34,7 @@
 
 import sys
 import numpy as np
+from phonopy.version import __version__
 from phonopy.structure.atoms import PhonopyAtoms as Atoms
 from phonopy.structure.symmetry import Symmetry
 from phonopy.structure.cells import get_supercell, get_primitive
@@ -150,12 +151,8 @@ class Phonopy:
         # set_group_velocity
         self._group_velocity = None
 
-    ####################
-    # Cell             #
-    # displacements    #
-    # force constants  #
-    # dynamical matrix #
-    ####################
+    def get_version(self):
+        return __version__
 
     def get_primitive(self):
         return self._primitive
