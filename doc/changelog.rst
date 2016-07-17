@@ -3,6 +3,15 @@
 Change Log
 ==========
 
+Jul-17-2016: Version 1.10.10
+-----------------------------
+
+* :ref:`dos_moment_tag` tags are implemented to calculate
+  phonon moments.
+* ``qpoints.hdf5`` is written with the ``--hdf5`` option. Dynamical
+  matrices are also stored in ``qpoints.hdf5`` with ``WRITEDM =
+  .TRUE.`` (``--writedm`` option).
+
 Apr-22-2016: Version 1.10.8
 ----------------------------
 
