@@ -20,12 +20,17 @@ tags:
 * ``--eigvecs``, ``--eigenvectors`` (``EIGENVECTORS = .TRUE.``)
 * ``--factor`` (``FREQUENCY_CONVERSION_FACTOR``)
 * ``--fits_debye_model`` (``DEBYE_MODEL = .TRUE.``)
+* ``--fmax`` (``FMAX``)
+* ``--fmin`` (``FMIN``)
 * ``--gc``, ``--gamma_center`` (``GAMMA_CENTER``)
 * ``--gv``, ``--group_velocity`` (``GROUP_VELOCITY = .TRUE.``)
 * ``--gv_delta_q`` (``GV_DELTA_Q``)
+* ``--hdf5`` (``HDF5 = .TRUE.``)
 * ``--irreps`` (``IRREPS``)
 * ``--lcg``, ``--little_cogroup`` (``LITTLE_COGROUP``)
 * ``--modulation`` (``MODULATION``)
+* ``--moment`` (``MOMENT = .TRUE.``)
+* ``--moment_order`` (``MOMENT_ORDER``)
 * ``--mp``, ``--mesh`` (``MP``)
 * ``--nac`` (``NAC = .TRUE.``)
 * ``--nosym`` (``SYMMETRY = .FALSE.``)
@@ -402,3 +407,13 @@ calculation results are written into ``mesh.hdf5`` but not into
 ``mesh.yaml``. Using this option may reduce the data output size and
 thus writing time when ``mesh.yaml`` is huge, e.g., eigenvectors are
 written on a dense sampling mesh.
+
+``qpoints.hdf5``
+^^^^^^^^^^^^^^^^^
+
+In the specific q-points calculations (:ref:`qpoints_tag`),
+calculation results are written into ``qpoints.hdf5`` but not into
+``qpoints.yaml``. With :ref:`writedm_tag`, dynamical matrices are also
+stored in ``qpoints.hdf5``. Using this option may be useful with large
+set of q-points with including eigenvector or dynamical matrix output.
+

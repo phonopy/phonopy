@@ -426,7 +426,7 @@ static PyObject * py_get_imag_self_energy_with_g(PyObject *self, PyObject *args)
   Darray* fc3_normal_squared = convert_to_darray(fc3_normal_squared_py);
   double* gamma = (double*)PyArray_DATA(gamma_py);
   const double* g = (double*)PyArray_DATA(g_py);
-  const char* g_zero = (double*)PyArray_DATA(g_zero_py);
+  const char* g_zero = (char*)PyArray_DATA(g_zero_py);
   const double* frequencies = (double*)PyArray_DATA(frequencies_py);
   const int* grid_point_triplets = (int*)PyArray_DATA(grid_point_triplets_py);
   const int* triplet_weights = (int*)PyArray_DATA(triplet_weights_py);

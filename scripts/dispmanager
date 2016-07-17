@@ -41,7 +41,7 @@
 
 import sys, os
 import numpy as np
-from phonopy.structure.atoms import Atoms
+from phonopy.structure.atoms import PhonopyAtoms as Atoms
 from phonopy.interface.vasp import write_vasp
 import phonopy.file_IO as file_IO
 

@@ -49,13 +49,9 @@ from optparse import OptionParser
 parser = OptionParser()
 parser.set_defaults(num_atoms=None,
                     primitive_axis =None,
-                    primitive_atoms=None,
                     supercell_matrix=None,
                     symmetrize_tensors=False,
                     symprec=1e-5)
-parser.add_option("-a", "--atoms", dest="primitive_atoms",
-                  action="store", type="string",
-                  help="Atom indices in primitive cell")
 parser.add_option("--dim", dest="supercell_matrix",
                   action="store", type="string",
                   help="Same behavior as DIM tag")
@@ -101,14 +97,17 @@ if options.supercell_matrix:
 else:
     supercell_matrix = np.eye(3, dtype='intc')
 
-borns, epsilon = get_born_OUTCAR(poscar_filename=poscar_filename,
-                                 outcar_filename=outcar_filename,
-                                 primitive_axis=primitive_axis,
-                                 supercell_matrix=supercell_matrix,
-                                 symmetrize_tensors=options.symmetrize_tensors,
-                                 symprec=options.symprec)
+borns, epsilon, atom_indices = get_born_OUTCAR(
+    poscar_filename=poscar_filename,
+    outcar_filename=outcar_filename,
+    primitive_matrix=primitive_axis,
+    supercell_matrix=supercell_matrix,
+    symmetrize_tensors=options.symmetrize_tensors,
+    symprec=options.symprec)
 
-print("14.400")
+text = "# epsilon and Z* of atoms "
+text += ' '.join(["%d" % n for n in atom_indices + 1])
+print(text)
 print(("%12.7f" * 9) % tuple(epsilon.flatten()))
 for z in borns:
     print(("%12.7f" * 9) % tuple(z.flatten()))

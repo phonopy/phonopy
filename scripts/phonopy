@@ -655,7 +655,11 @@ if run_mode == 'qpoints':
         is_eigenvectors=settings.get_is_eigenvectors(),
         write_dynamical_matrices=settings.get_write_dynamical_matrices(),
         factor=factor)
-    phonon.write_yaml_qpoints_phonon()
+
+    if settings.get_is_hdf5():
+        phonon.write_hdf5_qpoints_phonon()
+    else:
+        phonon.write_yaml_qpoints_phonon()
 
 # Band structure and mesh sampling
 elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
@@ -884,6 +888,55 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
                     plot.savefig('total_dos.pdf')
                 else:
                     plot.show()
+
+        elif settings.get_is_moment():
+            dos_range = settings.get_dos_range()
+            freq_min = dos_range['min']
+            freq_max = dos_range['max']
+            if log_level > 0:
+                text = "Calculating moment of phonon states distribution"
+                if freq_min is None and freq_max is None:
+                    text += "..."
+                elif freq_min is None and freq_max is not None:
+                    text += "\nbelow frequency %.3f..." % freq_max
+                elif freq_min is not None and freq_max is None:
+                    text += "\nabove frequency %.3f..." % freq_min
+                elif freq_min is not None and freq_max is not None:
+                    text += ("\nbetween frequencies %.3f and %.3f..." %
+                             (freq_min, freq_max))
+            print(text)
+            print('')
+            print("Order|   Total   |   Projected to atoms")
+            if settings.get_moment_order() is not None:
+                phonon.set_moment(order=settings.get_moment_order(),
+                                  freq_min=freq_min,
+                                  freq_max=freq_max,
+                                  is_projection=False)
+                total_moment = phonon.get_moment()
+                phonon.set_moment(order=settings.get_moment_order(),
+                                  freq_min=freq_min,
+                                  freq_max=freq_max,
+                                  is_projection=True)
+                text = " %3d |%10.5f | " % (settings.get_moment_order(),
+                                            total_moment)
+                for m in phonon.get_moment():
+                    text += "%10.5f " % m
+                print(text)
+            else:
+                for i in range(3):
+                    phonon.set_moment(order=i,
+                                      freq_min=freq_min,
+                                      freq_max=freq_max,
+                                      is_projection=False)
+                    total_moment = phonon.get_moment()
+                    phonon.set_moment(order=i,
+                                      freq_min=freq_min,
+                                      freq_max=freq_max,
+                                      is_projection=True)
+                    text = " %3d |%10.5f | " % (i, total_moment)
+                    for m in phonon.get_moment():
+                        text += "%10.5f " % m
+                    print(text)
 
     if (run_mode == 'band_mesh' and
         options.is_graph_plot and

@@ -39,7 +39,8 @@ from phonopy.file_IO import iter_collect_forces, get_drift_forces
 from phonopy.interface.vasp import get_scaled_positions_lines
 from phonopy.units import Bohr
 from phonopy.cui.settings import fracval
-from phonopy.structure.atoms import Atoms, symbol_map
+from phonopy.structure.atoms import PhonopyAtoms as Atoms
+from phonopy.structure.atoms import symbol_map
 
 def parse_set_of_forces(num_atoms, forces_filenames):
     hook = 'Forces acting on atoms'

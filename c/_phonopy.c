@@ -223,7 +223,8 @@ static PyObject * py_get_dynamical_matrix(PyObject *self, PyObject *args)
 			    m,
 			    s2p_map,
 			    p2s_map,
-			    NULL);
+			    NULL,
+			    1);
 
   Py_RETURN_NONE;
 }
@@ -287,7 +288,8 @@ static PyObject * py_get_nac_dynamical_matrix(PyObject *self, PyObject *args)
 			    m,
 			    s2p_map,
 			    p2s_map,
-			    charge_sum);
+			    charge_sum,
+			    1);
 
   free(charge_sum);
 

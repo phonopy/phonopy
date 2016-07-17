@@ -33,7 +33,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
-from phonopy.units import *
+from phonopy.units import AMU, THzToEv, Kb, EV, Hbar, Angstrom
 from phonopy.harmonic.dynamical_matrix import get_equivalent_smallest_vectors
 # np.seterr(invalid='raise')
 
@@ -48,7 +48,7 @@ class ThermalMotion:
             self._cutoff_frequency = 0
         else:
             self._cutoff_frequency = cutoff_frequency
-            
+
         self._distances = None
         self._displacements = None
         self._frequencies = frequencies
@@ -83,7 +83,7 @@ class ThermalMotion:
     def project_eigenvectors(self, direction, lattice=None):
         """
         direction
-        
+
         Without specifying lattice:
           Projection direction in Cartesian coordinates
         With lattice:
@@ -95,7 +95,7 @@ class ThermalMotion:
         else:
             projector = np.array(direction, dtype=float)
         projector /= np.linalg.norm(projector)
-        
+
         self._p_eigenvectors = []
         for vecs_q in self._eigenvectors:
             p_vecs_q = []
@@ -118,7 +118,7 @@ class ThermalDisplacements(ThermalMotion):
                                cutoff_frequency=cutoff_frequency)
 
         self._displacements = None
-        
+
     def get_thermal_displacements(self):
         return (self._temperatures, self._displacements)
 
@@ -139,7 +139,7 @@ class ThermalDisplacements(ThermalMotion):
                     c = v2 / masses
                     for i, t in enumerate(temps):
                         disps[i] += self.get_Q2(f, t) * c
-            
+
         self._displacements = disps / len(freqs)
 
     def write_yaml(self):
@@ -158,7 +158,7 @@ class ThermalDisplacements(ThermalMotion):
                 for j in range(len(elems) - 1):
                     f.write(", %10.7f" % elems[j + 1])
                 f.write(" ] # atom %d\n" % (i + 1))
-        
+
     def plot(self, pyplot, is_legend=False):
         plots = []
         labels = []
@@ -166,7 +166,7 @@ class ThermalDisplacements(ThermalMotion):
         for i, u in enumerate(self._displacements.transpose()):
             plots.append(pyplot.plot(self._temperatures, u ))
             labels.append("%d-%s" % ( i//3 + 1, xyz[i % 3]))
-        
+
         if is_legend:
             pyplot.legend(plots, labels, loc='upper left')
 
@@ -222,7 +222,7 @@ class ThermalDisplacementMatrices(ThermalMotion):
                 f.write("  - [ %f, %f, %f, %f, %f, %f ] # atom %d\n" %
                         (m[0, 0], m[1, 1], m[2, 2],
                          m[1, 2], m[0, 2], m[0, 1], i + 1))
-        
+
 class ThermalDistances(ThermalMotion):
     def __init__(self,
                  frequencies, # Have to be supplied in THz
@@ -263,7 +263,7 @@ class ThermalDistances(ThermalMotion):
                                                       self._symprec)[0]
 
             self._project_eigenvectors(delta_r, self._primitive.get_cell())
-            
+
             for freqs, vecs, q in zip(self._frequencies,
                                       self._p_eigenvectors,
                                       self._qpoints):
@@ -278,11 +278,12 @@ class ThermalDistances(ThermalMotion):
                     if f > self._cutoff_frequency:
                         for j, t in enumerate(self._temperatures):
                             dists[j, i] += self.get_Q2(f, t) * (
-                                v2[patom1] * c1 + cross_term * c_cross + v2[patom2] * c2)
-            
+                                v2[patom1] * c1 +
+                                cross_term * c_cross + v2[patom2] * c2)
+
         self._atom_pairs = atom_pairs
         self._distances = dists / len(self._frequencies)
-                             
+
     def write_yaml(self):
         natom = len(self._masses)
         f = open('thermal_distances.yaml', 'w')
@@ -296,5 +297,3 @@ class ThermalDistances(ThermalMotion):
             for i, (atom1, atom2) in enumerate(self._atom_pairs):
                 f.write("  - %10.7f # atom pair %d-%d\n"
                         % (u[i], atom1 + 1, atom2 + 1))
-
-

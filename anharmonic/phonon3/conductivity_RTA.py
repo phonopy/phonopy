@@ -82,6 +82,7 @@ def get_thermal_conductivity_RTA(
 def _write_gamma(br, interaction, i, filename=None, verbose=True):
     grid_points = br.get_grid_points()
     group_velocities = br.get_group_velocities()
+    gv_by_gv = br.get_gv_by_gv()
     mode_heat_capacities = br.get_mode_heat_capacities()
     ave_pp = br.get_averaged_pp_interaction()
     mesh = br.get_mesh_numbers()
@@ -108,6 +109,7 @@ def _write_gamma(br, interaction, i, filename=None, verbose=True):
                                 mesh,
                                 frequency=frequencies,
                                 group_velocity=group_velocities[i],
+                                gv_by_gv=gv_by_gv[i],
                                 heat_capacity=mode_heat_capacities[:, i],
                                 gamma=gamma[j, :, i],
                                 gamma_isotope=gamma_isotope_at_sigma,
@@ -135,6 +137,7 @@ def _write_gamma(br, interaction, i, filename=None, verbose=True):
                         mesh,
                         frequency=frequencies,
                         group_velocity=group_velocities[i, k],
+                        gv_by_gv=gv_by_gv[i, k],
                         heat_capacity=mode_heat_capacities[:, i, k],
                         gamma=gamma[j, :, i, k],
                         gamma_isotope=gamma_isotope_at_sigma,
@@ -176,6 +179,7 @@ def _write_kappa(br, interaction, filename=None, log_level=0):
     mesh_divisors = br.get_mesh_divisors()
     frequencies = br.get_frequencies()
     gv = br.get_group_velocities()
+    gv_by_gv = br.get_gv_by_gv()
     mode_cv = br.get_mode_heat_capacities()
     ave_pp = br.get_averaged_pp_interaction()
     qpoints = br.get_qpoints()
@@ -218,6 +222,7 @@ def _write_kappa(br, interaction, filename=None, log_level=0):
                             mesh,
                             frequency=frequencies,
                             group_velocity=gv,
+                            gv_by_gv=gv_by_gv,
                             heat_capacity=mode_cv,
                             kappa=kappa_at_sigma,
                             mode_kappa=mode_kappa[i],
@@ -357,6 +362,7 @@ class Conductivity_RTA(Conductivity):
 
         self._frequencies = None
         self._gv = None
+        self._gv_sum2 = None
         self._gamma = None
         self._gamma_iso = None
         self._gamma_unit_conversion = gamma_unit_conversion
@@ -428,11 +434,16 @@ class Conductivity_RTA(Conductivity):
                             gv_sum2[:, l] * cv[k, l] / (g_sum[l] * 2) *
                             self._conversion_factor)
 
+            self._gv_sum2[i] = gv_sum2.T
+
         self._mode_kappa /= self._num_sampling_grid_points
         self._kappa = self._mode_kappa.sum(axis=2).sum(axis=2)
 
     def get_mode_heat_capacities(self):
         return self._cv
+
+    def get_gv_by_gv(self):
+        return self._gv_sum2
 
     def get_number_of_ignored_phonon_modes(self):
         return self._num_ignored_phonon_modes
@@ -494,6 +505,7 @@ class Conductivity_RTA(Conductivity):
                                     num_grid_points,
                                     num_band0), dtype='double')
         self._gv = np.zeros((num_grid_points, num_band0, 3), dtype='double')
+        self._gv_sum2 = np.zeros((num_grid_points, num_band0, 6), dtype='double')
         self._cv = np.zeros(
             (len(self._temperatures), num_grid_points, num_band0), dtype='double')
         if self._isotope is not None:

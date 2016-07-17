@@ -58,6 +58,8 @@ def get_parser():
         force_constants_mode=False,
         force_sets_mode=False,
         force_sets_zero_mode=False,
+        fmin=None,
+        fmax=None,
         frequency_conversion_factor=None,
         gv_delta_q=None,
         is_band_connection=False,
@@ -72,6 +74,7 @@ def get_parser():
         is_hdf5=False,
         is_legend=False,
         is_little_cogroup=False,
+        is_moment=False,
         is_nac=False,
         is_nodiag=False,
         is_nomeshsym=False,
@@ -91,6 +94,7 @@ def get_parser():
         masses=None,
         mesh_numbers=None,
         modulation=None,
+        moment_order=None,
         primitive_axis=None,
         projection_direction=None,
         pwscf_mode=False,
@@ -195,6 +199,12 @@ def get_parser():
         "--fits_debye_model", dest="fits_debye_model", action="store_true",
         help="Fits total DOS to a Debye model")
     parser.add_option(
+        "--fmax", dest="fmax", type="float",
+        help="Maximum frequency used for moment calculation")
+    parser.add_option(
+        "--fmin", dest="fmin", type="float",
+        help="Minimum frequency used for moment calculation")
+    parser.add_option(
         "--gc", "--gamma_center", dest="is_gamma_center", action="store_true",
         help="Set mesh as Gamma center")
     parser.add_option(
@@ -237,6 +247,12 @@ def get_parser():
         "--mp", "--mesh", dest="mesh_numbers", action="store", type="string",
         help="Same behavior as MP tag")
     parser.add_option(
+        "--moment", dest="is_moment", action="store_true",
+        help="Calculate moment of phonon states distribution")
+    parser.add_option(
+        "--moment_order", dest="moment_order",
+        type="int", help="Order of moment of phonon states distribution")
+    parser.add_option(
         "--nac", dest="is_nac", action="store_true",
         help="Non-analytical term correction")
     parser.add_option(
@@ -276,6 +292,14 @@ def get_parser():
         "--pwscf", dest="pwscf_mode",
         action="store_true", help="Invoke Pwscf mode")
     parser.add_option(
+        "--qpoints", dest="qpoints", type="string",
+        help="Calculate at specified q-points")
+    parser.add_option(
+        "--q_direction", dest="q_direction", type="string",
+        help=("Direction of q-vector perturbation used for NAC at "
+              "q->0, and group velocity for degenerate phonon "
+              "mode in q-points mode"))
+    parser.add_option(
         "--siesta", dest="siesta_mode",
         action="store_true", help="Invoke Siesta mode")
     parser.add_option(
@@ -313,24 +337,16 @@ def get_parser():
         dest="is_tetrahedron_method", action="store_true",
         help="Use tetrahedron method for DOS/PDOS")
     parser.add_option(
-        "--tmax", dest="tmax", type="string",
+        "--tmax", dest="tmax", type="float",
         help="Maximum calculated temperature")
     parser.add_option(
-        "--qpoints", dest="qpoints", type="string",
-        help="Calculate at specified q-points")
-    parser.add_option(
-        "--q_direction", dest="q_direction", type="string",
-        help=("Direction of q-vector perturbation used for NAC at "
-              "q->0, and group velocity for degenerate phonon "
-              "mode in q-points mode"))
-    parser.add_option(
-        "--tmin", dest="tmin", type="string",
+        "--tmin", dest="tmin", type="float",
         help="Minimum calculated temperature")
     parser.add_option(
         "--trigonal", dest="is_trigonal_displacements", action="store_true",
         help="Set displacements of all trigonal axes ")
     parser.add_option(
-        "--tstep", dest="tstep", type="string",
+        "--tstep", dest="tstep", type="float",
         help="Calculated temperature step")
     parser.add_option(
         "--tolerance", dest="symprec", type="float",

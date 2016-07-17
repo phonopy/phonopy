@@ -73,6 +73,18 @@ class QpointsPhonon:
     def get_eigenvectors(self):
         return self._eigenvectors
         
+    def write_hdf5(self):
+        import h5py
+        with h5py.File('qpoints.hdf5', 'w') as w:
+            w.create_dataset('qpoint', data=self._qpoints)
+            w.create_dataset('frequency', data=self._frequencies)
+            if self._is_eigenvectors:
+                w.create_dataset('eigenvector', data=self._eigenvectors)
+            if self._gv is not None:
+                w.create_dataset('group_velocity', data=self._gv)
+            if self._write_dynamical_matrix:
+                w.create_dataset('dynamical_matrix', data=self._dm)
+
     def write_yaml(self):
         w = open('qpoints.yaml', 'w')
         w.write("nqpoint: %-7d\n" % len(self._qpoints))

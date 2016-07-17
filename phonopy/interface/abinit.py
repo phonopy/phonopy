@@ -39,7 +39,7 @@ from phonopy.file_IO import collect_forces, get_drift_forces
 from phonopy.interface.vasp import get_scaled_positions_lines
 from phonopy.units import Bohr
 from phonopy.cui.settings import fracval
-from phonopy.structure.atoms import Atoms
+from phonopy.structure.atoms import PhonopyAtoms as Atoms
 
 def parse_set_of_forces(num_atoms, forces_filenames):
     hook = 'cartesian forces (eV/Angstrom)'

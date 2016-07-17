@@ -38,7 +38,7 @@ import phonopy.structure.spglib as spg
 from phonopy.structure.symmetry import Symmetry, find_primitive, get_pointgroup
 from phonopy.structure.cells import get_primitive, print_cell, get_supercell
 from phonopy.interface.vasp import write_vasp
-from phonopy.structure.atoms import Atoms
+from phonopy.structure.atoms import PhonopyAtoms as Atoms
 
 def check_symmetry(input_cell,
                    primitive_axis=None,

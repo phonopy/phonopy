@@ -261,7 +261,7 @@ class TotalDos(Dos):
         freq_max = self._frequency_points.max()
         
         if freq_max_fit is None:
-            N_fit = len(self._frequency_points) / 4.0 # Hard coded
+            N_fit = int(len(self._frequency_points) / 4.0) # Hard coded
         else:
             N_fit = int(freq_max_fit / (freq_max - freq_min) *
                         len(self._frequency_points))

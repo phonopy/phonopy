@@ -34,7 +34,6 @@
 
 import numpy as np
 from phonopy.units import VaspToTHz
-from phonopy.structure.atoms import PhonopyAtoms
 
 def estimate_band_connection(prev_eigvecs, eigvecs, prev_band_order):
     metric = np.abs(np.dot(prev_eigvecs.conjugate().T, eigvecs))
@@ -153,7 +152,7 @@ class BandStructure:
                 text.append("- [ %12.8f, %12.8f, %12.8f ] # %2s" %
                             (tuple(vec) + (axis,)))
             text.append("natom: %-7d" % (natom))
-            text.append(str(PhonopyAtoms(atoms=self._cell)))
+            text.append(str(self._cell))
             text.append("supercell_matrix:")
             for v in tmat:
                 text.append("- [ %4d, %4d, %4d ]" % tuple(v))

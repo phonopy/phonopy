@@ -2,6 +2,9 @@
 
 import numpy as np
 from phonopy.phonon.tetrahedron_mesh import TetrahedronMesh
+from phonopy.harmonic.force_constants import similarity_transformation
+from anharmonic.phonon3.triplets import get_ir_grid_points, get_grid_points_by_rotations
+
 
 def fracval(frac):
     if frac.find('/') == -1:
@@ -53,6 +56,37 @@ class KappaDOS:
                     np.dot(iw, self._mode_kappa[:, i]), axes=(1, 0, 2))
         self._kdos *= np.prod(mesh)
 
+def get_gv_by_gv(gv,
+                 symmetry,
+                 primitive,
+                 mesh,
+                 grid_points,
+                 grid_address):
+    point_operations = symmetry.get_reciprocal_operations()
+    rec_lat = np.linalg.inv(primitive.get_cell())
+    rotations_cartesian = np.array(
+        [similarity_transformation(rec_lat, r)
+         for r in point_operations], dtype='double')
+
+    num_band = gv.shape[1]
+    gv_sum2 = np.zeros((gv.shape[0], num_band, 6), dtype='double')
+    for i, gp in enumerate(grid_points):
+        rotation_map = get_grid_points_by_rotations(
+            grid_address[gp],
+            point_operations,
+            mesh)
+        gv_by_gv = np.zeros((num_band, 3, 3), dtype='double')
+        for r in rotations_cartesian:
+            gvs_rot = np.dot(gv[i], r.T)
+            gv_by_gv += [np.outer(r_gv, r_gv) for r_gv in gvs_rot]
+        gv_by_gv /= len(rotation_map) // len(np.unique(rotation_map))
+        for j, vxv in enumerate(
+                ([0, 0], [1, 1], [2, 2], [1, 2], [0, 2], [0, 1])):
+            gv_sum2[i, :, j] = gv_by_gv[:, vxv[0], vxv[1]]
+
+    return gv_sum2
+
+
 if __name__ == '__main__':
     """Incremental kappa with respect to frequency and the derivative"""
 
@@ -69,6 +103,8 @@ if __name__ == '__main__':
                         default="1 0 0 0 1 0 0 0 1", help="Primitive matrix")
     parser.add_argument("--mesh", dest="mesh", default="1 1 1",
                          help="Mesh numbers")
+    parser.add_argument('--gv', action='store_true',
+                        help='Calculate gv_x_gv instead of kappa')
     parser.add_argument('filenames', nargs='*')
     args = parser.parse_args()
     
@@ -78,23 +114,35 @@ if __name__ == '__main__':
 
     f = h5py.File(args.filenames[1])
     mesh = np.array([int(x) for x in args.mesh.split()], dtype='intc')
-    mode_kappa = f['mode_kappa']
     frequencies = f['frequency'][:]
     temperatures = f['temperature'][:]
     weights = f['weight'][:]
 
     symmetry = Symmetry(primitive)
     rotations = symmetry.get_pointgroup_operations()
-    gp = GridPoints(mesh,
-                    np.linalg.inv(primitive.get_cell()),
-                    rotations=rotations)
-    grid_address = gp.get_grid_address()
-    grid_mapping_table = gp.get_grid_mapping_table()
-    ir_grid_points = gp.get_ir_grid_points()
-    weights_for_check = gp.get_ir_grid_weights()
+    (ir_grid_points,
+     weights_for_check,
+     grid_address,
+     grid_mapping_table) = get_ir_grid_points(mesh, rotations)
 
     assert (weights == weights_for_check).all()
-    
+
+    if args.gv:
+        if 'gv_by_gv' in f:
+            gv_sum2 = f['gv_by_gv'][:]
+        else:
+            gv = f['group_velocity'][:]
+            gv_sum2 = get_gv_by_gv(gv,
+                                   symmetry,
+                                   primitive,
+                                   mesh,
+                                   ir_grid_points,
+                                   grid_address)
+        unit_conversion = primitive.get_volume() * np.prod(mesh)
+        mode_kappa = gv_sum2.reshape((1,) + gv_sum2.shape) / unit_conversion
+    else:
+        mode_kappa = f['mode_kappa'][:]
+        
     kappa_dos = KappaDOS(mode_kappa,
                          primitive,
                          frequencies,
@@ -106,7 +154,8 @@ if __name__ == '__main__':
     freq_points, kdos = kappa_dos.get_kdos()
 
     for i, kdos_t in enumerate(kdos):
-        print "# %d K" % temperatures[i], mode_kappa[i].sum(axis=0).sum(axis=0)
+        if not args.gv:
+            print "# %d K" % temperatures[i], mode_kappa[i].sum(axis=0).sum(axis=0)
         for f, k in zip(freq_points, kdos_t): # show kappa_xx
             print ("%f " * 13) % ((f,) + tuple(k[0]) + tuple(k[1]))
         print

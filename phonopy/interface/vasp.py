@@ -38,7 +38,8 @@ try:
 except ImportError:
     from io import StringIO
 import numpy as np
-from phonopy.structure.atoms import Atoms, symbol_map, atom_data
+from phonopy.structure.atoms import PhonopyAtoms as Atoms
+from phonopy.structure.atoms import symbol_map, atom_data
 from phonopy.structure.cells import get_primitive, get_supercell
 from phonopy.structure.symmetry import Symmetry
 from phonopy.harmonic.force_constants import similarity_transformation
@@ -323,11 +324,19 @@ def _get_reduced_symbols(symbols):
 #
 def get_born_OUTCAR(poscar_filename="POSCAR",
                     outcar_filename="OUTCAR",
-                    primitive_axis=np.eye(3),
-                    supercell_matrix=np.eye(3, dtype='intc'),
+                    primitive_matrix=None,
+                    supercell_matrix=None,
                     is_symmetry=True,
                     symmetrize_tensors=False,
                     symprec=1e-5):
+    if primitive_matrix is None:
+        pmat = np.eye(3)
+    else:
+        pmat = primitive_matrix
+    if supercell_matrix is None:
+        smat = np.eye(3, dtype='intc')
+    else:
+        smat = supercell_matrix
     ucell = read_vasp(poscar_filename)
     outcar = open(outcar_filename)
 
@@ -344,13 +353,9 @@ def get_born_OUTCAR(poscar_filename="POSCAR",
         epsilon = _symmetrize_tensor(epsilon, point_sym)
         borns = _symmetrize_borns(borns, u_sym, lattice, positions, symprec)
 
-    inv_smat = np.linalg.inv(supercell_matrix)
-    scell = get_supercell(ucell,
-                          supercell_matrix,
-                          symprec=symprec)
-    pcell = get_primitive(scell,
-                          np.dot(inv_smat, primitive_axis),
-                          symprec=symprec)
+    inv_smat = np.linalg.inv(smat)
+    scell = get_supercell(ucell, smat, symprec=symprec)
+    pcell = get_primitive(scell, np.dot(inv_smat, pmat), symprec=symprec)
     p2s = np.array(pcell.get_primitive_to_supercell_map(), dtype='intc')
     p_sym = Symmetry(pcell, is_symmetry=is_symmetry, symprec=symprec)
     s_indep_atoms = p2s[p_sym.get_independent_atoms()]
@@ -358,7 +363,7 @@ def get_born_OUTCAR(poscar_filename="POSCAR",
     u_indep_atoms = [u2u[x] for x in s_indep_atoms]
     reduced_borns = borns[u_indep_atoms].copy()
 
-    return reduced_borns, epsilon
+    return reduced_borns, epsilon, s_indep_atoms
 
 def _read_born_and_epsilon(outcar):
     borns = []

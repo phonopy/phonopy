@@ -34,7 +34,8 @@
 
 import sys
 import numpy as np
-from phonopy.structure.atoms import Atoms
+from phonopy.version import __version__
+from phonopy.structure.atoms import PhonopyAtoms as Atoms
 from phonopy.structure.symmetry import Symmetry
 from phonopy.structure.cells import get_supercell, get_primitive
 from phonopy.harmonic.displacement import (get_least_displacements,
@@ -60,6 +61,7 @@ from phonopy.phonon.qpoints_mode import QpointsPhonon
 from phonopy.phonon.irreps import IrReps
 from phonopy.phonon.group_velocity import GroupVelocity
 from phonopy.phonon.tetrahedron_mesh import TetrahedronMesh
+from phonopy.phonon.moment import PhononMoment
 
 class Phonopy:
     def __init__(self,
@@ -85,7 +87,7 @@ class Phonopy:
         self._log_level = log_level
 
         # Create supercell and primitive cell
-        self._unitcell = unitcell
+        self._unitcell = Atoms(atoms=unitcell)
         self._supercell_matrix = supercell_matrix
         self._primitive_matrix = primitive_matrix
         self._supercell = None
@@ -149,12 +151,8 @@ class Phonopy:
         # set_group_velocity
         self._group_velocity = None
 
-    ####################
-    # Cell             #
-    # displacements    #
-    # force constants  #
-    # dynamical matrix #
-    ####################
+    def get_version(self):
+        return __version__
 
     def get_primitive(self):
         return self._primitive
@@ -176,6 +174,12 @@ class Phonopy:
     def get_primitive_symmetry(self):
         """return symmetry of primitive cell"""
         return self._primitive_symmetry
+
+    def get_supercell_matrix(self):
+        return self._supercell_matrix
+
+    def get_primitive_matrix(self):
+        return self._primitive_matrix
 
     def get_unit_conversion_factor(self):
         return self._factor
@@ -208,6 +212,9 @@ class Phonopy:
                                      self._supercell,
                                      self._primitive,
                                      self._symprec)
+
+    def get_nac_params(self):
+        return self._nac_params
 
     def get_dynamical_matrix(self):
         return self._dynamical_matrix
@@ -552,10 +559,21 @@ class Phonopy:
         return True
 
     def get_mesh(self):
-        return (self._mesh.get_qpoints(),
-                self._mesh.get_weights(),
-                self._mesh.get_frequencies(),
-                self._mesh.get_eigenvectors())
+        if self._mesh is None:
+            return None
+        else:
+            return (self._mesh.get_qpoints(),
+                    self._mesh.get_weights(),
+                    self._mesh.get_frequencies(),
+                    self._mesh.get_eigenvectors())
+    
+    def get_mesh_grid_info(self):
+        if self._mesh is None:
+            return None
+        else:
+            return (self._mesh.get_grid_address(),
+                    self._mesh.get_ir_grid_points(),
+                    self._mesh.get_grid_mapping_table())
 
     def write_hdf5_mesh(self):
         self._mesh.write_hdf5()
@@ -902,6 +920,9 @@ class Phonopy:
         return (self._qpoints_phonon.get_frequencies(),
                 self._qpoints_phonon.get_eigenvectors())
 
+    def write_hdf5_qpoints_phonon(self):
+        self._qpoints_phonon.write_hdf5()
+
     def write_yaml_qpoints_phonon(self):
         self._qpoints_phonon.write_yaml()
 
@@ -1093,6 +1114,37 @@ class Phonopy:
         self._group_velocity.set_q_points([q_point])
         return self._group_velocity.get_group_velocity()[0]
 
+    # Moment
+    def set_moment(self,
+                   order=1,
+                   is_projection=False,
+                   freq_min=None,
+                   freq_max=None):
+        if self._mesh is None:
+            print("set_mesh has to be done before set_moment")
+            return False
+        else:
+            if is_projection:
+                if self._mesh.get_eigenvectors() is None:
+                    print("Warning: Eigenvectors have to be calculated.")
+                    return False
+                moment = PhononMoment(
+                    self._mesh.get_frequencies(),
+                    weights=self._mesh.get_weights(),
+                    eigenvectors=self._mesh.get_eigenvectors())
+            else:
+                moment = PhononMoment(
+                    self._mesh.get_frequencies(),
+                    weights=self._mesh.get_weights())
+            if freq_min is not None or freq_max is not None:
+                moment.set_frequency_range(freq_min=freq_min,
+                                           freq_max=freq_max)
+            moment.run(order=order)
+            self._moment = moment.get_moment()
+            return True
+
+    def get_moment(self):
+        return self._moment
 
     #################
     # Local methods #
