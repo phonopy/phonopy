@@ -5,17 +5,17 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Mean square displacement &mdash; Phonopy v.1.10.8</title>
+    <title>Mean square displacement &mdash; Phonopy v.1.10.10</title>
     
     <link rel="stylesheet" href="_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="_static/bootswatch-3.3.4/cosmo/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="_static/bootswatch-3.3.6/cosmo/bootstrap.min.css" type="text/css" />
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.10.8',
+        VERSION:     '1.10.10',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -26,9 +26,9 @@
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Phonopy v.1.10.8" href="index.html" />
+    <link rel="top" title="Phonopy v.1.10.10" href="index.html" />
     <link rel="up" title="Formulations" href="theory.html" />
     <link rel="next" title="Method" href="group-velocity.html" />
     <link rel="prev" title="Formulations" href="theory.html" />
@@ -51,7 +51,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.10.8</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.10.10</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -148,7 +148,7 @@
 <p>From Eq. (10.71) in the book &#8220;Thermodynamics of Crystal&#8221;, atomic
 displacement, <strong>u</strong>, is written by</p>
 <div class="math">
-<p><img src="_images/math/315d7d3efcc9932bf6d19be294c549a8b8e82fcc.png" alt="u^\alpha(jl,t) = \left(\frac{\hbar}{2Nm_j}\right)^{\frac{1}{2}}
+<p><img src="_images/math/e2aa052be46ee4c09b58c3c303aee14f67452858.png" alt="u^\alpha(jl,t) = \left(\frac{\hbar}{2Nm_j}\right)^{\frac{1}{2}}
 \sum_{\mathbf{q},\nu}\left[\omega_\nu(\mathbf{q})\right]^{-\frac{1}{2}}
 \left[\hat{a}_\nu(\mathbf{q})\exp(-i\omega_\nu(\mathbf{q})t)+
 \hat{a}^\dagger_\nu(\mathbf{-q})\exp({i\omega_\nu(\mathbf{q})}t)\right]
@@ -166,19 +166,19 @@ polarization vector of the atom <em>jl</em> and the band <img class="math" src="
 phonon. The expectation value of the squared atomic displacement is
 calculated as,</p>
 <div class="math">
-<p><img src="_images/math/77c9ea006107da0b271988712c4f6a07a502f57d.png" alt="\left\langle |u^\alpha(jl, t)|^2 \right\rangle = \frac{\hbar}{2Nm_j}
+<p><img src="_images/math/1789fc8a5c97731fccfe7884b1bc2e3a831ca98e.png" alt="\left\langle |u^\alpha(jl, t)|^2 \right\rangle = \frac{\hbar}{2Nm_j}
 \sum_{\mathbf{q},\nu}\omega_\nu(\mathbf{q})^{-1}
 (1+2n_\nu(\mathbf{q}))|e^\alpha_\nu(j,\mathbf{q})|^2,"/></p>
 </div><p>where <em>n</em> is the phonon population, which is give by,</p>
 <div class="math">
-<p><img src="_images/math/111a5a542d119cf245f268f15dd10b24ae5926bb.png" alt="n_\nu(\mathbf{q}) =
+<p><img src="_images/math/d1bb76d84268dbaaabb620570c976424d609c75a.png" alt="n_\nu(\mathbf{q}) =
 \frac{1}{\exp(\hbar\omega_\nu(\mathbf{q})/\mathrm{k_B}T)-1},"/></p>
 </div><p>where <em>T</em> is the temperature, and <img class="math" src="_images/math/15c7d7e94eeb1be0a91ed4fbd9050c9c0958708c.png" alt="\mathrm{k_B}"/> is the
 Boltzmann constant. The equation is calculated using the commutation
 relation of the creation and annihilation operators and the
 expectation values of the combination of the operations, e.g.,</p>
 <div class="math">
-<p><img src="_images/math/cd59f6389872cf57b54d3cc8ae33dd79d5a30e17.png" alt="[ \hat{a}_\nu(\mathbf{q}), \hat{a}^\dagger_{\nu'}(\mathbf{q'}) ]
+<p><img src="_images/math/a829c02c8af90810d647b89f6461dffcc2bcd436.png" alt="[ \hat{a}_\nu(\mathbf{q}), \hat{a}^\dagger_{\nu'}(\mathbf{q'}) ]
 = \delta(\mathbf{q}-\mathbf{q}')\delta_{\nu\nu'},
 
 [ \hat{a}_\nu(\mathbf{q}), \hat{a}_{\nu'}(\mathbf{q'}) ] = 0,
@@ -195,7 +195,7 @@ expectation values of the combination of the operations, e.g.,</p>
 <h1>Mean square displacement matrix<a class="headerlink" href="#mean-square-displacement-matrix" title="Permalink to this headline">¶</a></h1>
 <p>Mean square displacement matrix is defined as follows:</p>
 <div class="math">
-<p><img src="_images/math/22b412184d10f688c5fb444b7fc3a90476255f8e.png" alt="\mathrm{B}(j, t) = \frac{\hbar}{2Nm_j}
+<p><img src="_images/math/9ede08f383b576931a86e8188676b05b64efd71a.png" alt="\mathrm{B}(j, t) = \frac{\hbar}{2Nm_j}
 \sum_{\mathbf{q},\nu}\omega_\nu(\mathbf{q})^{-1}
 (1+2n_\nu(\mathbf{q}))
 \mathbf{e}_\nu(j,\mathbf{q}) \otimes \mathbf{e}^*_\nu(j,\mathbf{q})."/></p>
@@ -209,7 +209,7 @@ defined in the input structure file. Mean square displacement along an
 arbitrary axis is obtained projecting eigenvectors in the Cartesian
 axes as follows:</p>
 <div class="math">
-<p><img src="_images/math/5a56b6f07b1062eecb3e8c820e06707cb914d7ae.png" alt="\left\langle |u(jl, t)|^2 \right\rangle = \frac{\hbar}{2Nm_j}
+<p><img src="_images/math/785c7c645030543600c7acefda75c92a0f9be9d2.png" alt="\left\langle |u(jl, t)|^2 \right\rangle = \frac{\hbar}{2Nm_j}
 \sum_{\mathbf{q},\nu}\omega_\nu(\mathbf{q})^{-1}
 (1+2n_\nu(\mathbf{q}))|
 \hat{\mathbf{n}}\cdot\mathbf{e}_\nu(j,\mathbf{q})|^2"/></p>
@@ -236,7 +236,7 @@ axes as follows:</p>
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.3.<br/>
     </p>
   </div>
 </footer>

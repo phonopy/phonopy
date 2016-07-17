@@ -5,17 +5,17 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Command options &mdash; Phonopy v.1.10.8</title>
+    <title>Command options &mdash; Phonopy v.1.10.10</title>
     
     <link rel="stylesheet" href="_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="_static/bootswatch-3.3.4/cosmo/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="_static/bootswatch-3.3.6/cosmo/bootstrap.min.css" type="text/css" />
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.10.8',
+        VERSION:     '1.10.10',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -26,9 +26,9 @@
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Phonopy v.1.10.8" href="index.html" />
+    <link rel="top" title="Phonopy v.1.10.10" href="index.html" />
     <link rel="next" title="Quasi harmonic approximation" href="qha.html" />
     <link rel="prev" title="How to watch animation" href="animation.html" />
 <meta charset='utf-8'>
@@ -50,7 +50,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.10.8</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.10.10</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -146,6 +146,7 @@
 <li><a class="reference internal" href="#hdf5"><code class="docutils literal"><span class="pre">--hdf5</span></code></a><ul>
 <li><a class="reference internal" href="#force-constants-hdf5"><code class="docutils literal"><span class="pre">force_constants.hdf5</span></code></a></li>
 <li><a class="reference internal" href="#mesh-hdf5"><code class="docutils literal"><span class="pre">mesh.hdf5</span></code></a></li>
+<li><a class="reference internal" href="#qpoints-hdf5"><code class="docutils literal"><span class="pre">qpoints.hdf5</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -212,12 +213,17 @@ tags:</p>
 <li><code class="docutils literal"><span class="pre">--eigvecs</span></code>, <code class="docutils literal"><span class="pre">--eigenvectors</span></code> (<code class="docutils literal"><span class="pre">EIGENVECTORS</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
 <li><code class="docutils literal"><span class="pre">--factor</span></code> (<code class="docutils literal"><span class="pre">FREQUENCY_CONVERSION_FACTOR</span></code>)</li>
 <li><code class="docutils literal"><span class="pre">--fits_debye_model</span></code> (<code class="docutils literal"><span class="pre">DEBYE_MODEL</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--fmax</span></code> (<code class="docutils literal"><span class="pre">FMAX</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--fmin</span></code> (<code class="docutils literal"><span class="pre">FMIN</span></code>)</li>
 <li><code class="docutils literal"><span class="pre">--gc</span></code>, <code class="docutils literal"><span class="pre">--gamma_center</span></code> (<code class="docutils literal"><span class="pre">GAMMA_CENTER</span></code>)</li>
 <li><code class="docutils literal"><span class="pre">--gv</span></code>, <code class="docutils literal"><span class="pre">--group_velocity</span></code> (<code class="docutils literal"><span class="pre">GROUP_VELOCITY</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
 <li><code class="docutils literal"><span class="pre">--gv_delta_q</span></code> (<code class="docutils literal"><span class="pre">GV_DELTA_Q</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--hdf5</span></code> (<code class="docutils literal"><span class="pre">HDF5</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
 <li><code class="docutils literal"><span class="pre">--irreps</span></code> (<code class="docutils literal"><span class="pre">IRREPS</span></code>)</li>
 <li><code class="docutils literal"><span class="pre">--lcg</span></code>, <code class="docutils literal"><span class="pre">--little_cogroup</span></code> (<code class="docutils literal"><span class="pre">LITTLE_COGROUP</span></code>)</li>
 <li><code class="docutils literal"><span class="pre">--modulation</span></code> (<code class="docutils literal"><span class="pre">MODULATION</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--moment</span></code> (<code class="docutils literal"><span class="pre">MOMENT</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--moment_order</span></code> (<code class="docutils literal"><span class="pre">MOMENT_ORDER</span></code>)</li>
 <li><code class="docutils literal"><span class="pre">--mp</span></code>, <code class="docutils literal"><span class="pre">--mesh</span></code> (<code class="docutils literal"><span class="pre">MP</span></code>)</li>
 <li><code class="docutils literal"><span class="pre">--nac</span></code> (<code class="docutils literal"><span class="pre">NAC</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
 <li><code class="docutils literal"><span class="pre">--nosym</span></code> (<code class="docutils literal"><span class="pre">SYMMETRY</span> <span class="pre">=</span> <span class="pre">.FALSE.</span></code>)</li>
@@ -495,6 +501,14 @@ calculation results are written into <code class="docutils literal"><span class=
 thus writing time when <code class="docutils literal"><span class="pre">mesh.yaml</span></code> is huge, e.g., eigenvectors are
 written on a dense sampling mesh.</p>
 </div>
+<div class="section" id="qpoints-hdf5">
+<h4><code class="docutils literal"><span class="pre">qpoints.hdf5</span></code><a class="headerlink" href="#qpoints-hdf5" title="Permalink to this headline">¶</a></h4>
+<p>In the specific q-points calculations (<a class="reference internal" href="setting-tags.html#qpoints-tag"><span class="std std-ref">QPOINTS</span></a>),
+calculation results are written into <code class="docutils literal"><span class="pre">qpoints.hdf5</span></code> but not into
+<code class="docutils literal"><span class="pre">qpoints.yaml</span></code>. With <a class="reference internal" href="setting-tags.html#writedm-tag"><span class="std std-ref">WRITEDM</span></a>, dynamical matrices are also
+stored in <code class="docutils literal"><span class="pre">qpoints.hdf5</span></code>. Using this option may be useful with large
+set of q-points with including eigenvector or dynamical matrix output.</p>
+</div>
 </div>
 </div>
 </div>
@@ -519,7 +533,7 @@ written on a dense sampling mesh.</p>
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.3.<br/>
     </p>
   </div>
 </footer>

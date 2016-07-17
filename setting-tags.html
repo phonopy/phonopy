@@ -5,17 +5,17 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Setting tags &mdash; Phonopy v.1.10.8</title>
+    <title>Setting tags &mdash; Phonopy v.1.10.10</title>
     
     <link rel="stylesheet" href="_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="_static/bootswatch-3.3.4/cosmo/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="_static/bootswatch-3.3.6/cosmo/bootstrap.min.css" type="text/css" />
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.10.8',
+        VERSION:     '1.10.10',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -26,9 +26,9 @@
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Phonopy v.1.10.8" href="index.html" />
+    <link rel="top" title="Phonopy v.1.10.10" href="index.html" />
     <link rel="next" title="How to watch animation" href="animation.html" />
     <link rel="prev" title="Output files" href="output-files.html" />
 <meta charset='utf-8'>
@@ -50,7 +50,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.10.8</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.10.10</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -107,10 +107,7 @@
 <li><a class="reference internal" href="#mass"><code class="docutils literal"><span class="pre">MASS</span></code></a></li>
 <li><a class="reference internal" href="#magmom"><code class="docutils literal"><span class="pre">MAGMOM</span></code></a></li>
 <li><a class="reference internal" href="#cell-filename"><code class="docutils literal"><span class="pre">CELL_FILENAME</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#unit-conversion-factor">Unit conversion factor</a><ul>
-<li><a class="reference internal" href="#frequency-conversion-factor"><code class="docutils literal"><span class="pre">frequency_conversion_factor</span></code></a></li>
+<li><a class="reference internal" href="#frequency-conversion-factor"><code class="docutils literal"><span class="pre">FREQUENCY_CONVERSION_FACTOR</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#displacement-creation-tags">Displacement creation tags</a><ul>
@@ -121,36 +118,38 @@
 </ul>
 </li>
 <li><a class="reference internal" href="#band-structure-tags">Band structure tags</a><ul>
-<li><a class="reference internal" href="#band-band-points"><code class="docutils literal"><span class="pre">BAND</span></code>, <code class="docutils literal"><span class="pre">BAND_POINTS</span></code></a></li>
+<li><a class="reference internal" href="#band-and-band-points"><code class="docutils literal"><span class="pre">BAND</span></code> and <code class="docutils literal"><span class="pre">BAND_POINTS</span></code></a></li>
 <li><a class="reference internal" href="#band-labels"><code class="docutils literal"><span class="pre">BAND_LABELS</span></code></a></li>
 <li><a class="reference internal" href="#band-connection"><code class="docutils literal"><span class="pre">BAND_CONNECTION</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#mesh-sampling-tags">Mesh sampling tags</a><ul>
-<li><a class="reference internal" href="#mp-mesh"><code class="docutils literal"><span class="pre">MP</span></code>, <code class="docutils literal"><span class="pre">MESH</span></code></a></li>
+<li><a class="reference internal" href="#mesh-or-mp"><code class="docutils literal"><span class="pre">MESH</span></code> or <code class="docutils literal"><span class="pre">MP</span></code></a></li>
 <li><a class="reference internal" href="#mp-shift"><code class="docutils literal"><span class="pre">MP_SHIFT</span></code></a></li>
 <li><a class="reference internal" href="#gamma-center"><code class="docutils literal"><span class="pre">GAMMA_CENTER</span></code></a></li>
 <li><a class="reference internal" href="#write-mesh"><code class="docutils literal"><span class="pre">WRITE_MESH</span></code></a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#density-of-states-dos-tags">Density of states (DOS) tags</a><ul>
+<li><a class="reference internal" href="#phonon-density-of-states-dos-tags">Phonon density of states (DOS) tags</a><ul>
 <li><a class="reference internal" href="#dos"><code class="docutils literal"><span class="pre">DOS</span></code></a></li>
 <li><a class="reference internal" href="#dos-range"><code class="docutils literal"><span class="pre">DOS_RANGE</span></code></a></li>
+<li><a class="reference internal" href="#fmin-and-fmax"><code class="docutils literal"><span class="pre">FMIN</span></code> and <code class="docutils literal"><span class="pre">FMAX</span></code></a></li>
 <li><a class="reference internal" href="#pdos"><code class="docutils literal"><span class="pre">PDOS</span></code></a></li>
 <li><a class="reference internal" href="#projection-direction"><code class="docutils literal"><span class="pre">PROJECTION_DIRECTION</span></code></a></li>
 <li><a class="reference internal" href="#xyz-projection"><code class="docutils literal"><span class="pre">XYZ_PROJECTION</span></code></a></li>
 <li><a class="reference internal" href="#sigma"><code class="docutils literal"><span class="pre">SIGMA</span></code></a></li>
 <li><a class="reference internal" href="#tetrahedron"><code class="docutils literal"><span class="pre">TETRAHEDRON</span></code></a></li>
 <li><a class="reference internal" href="#debye-model"><code class="docutils literal"><span class="pre">DEBYE_MODEL</span></code></a></li>
+<li><a class="reference internal" href="#momemt-and-moment-order"><code class="docutils literal"><span class="pre">MOMEMT</span></code> and <code class="docutils literal"><span class="pre">MOMENT_ORDER</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#thermal-properties-related-tags">Thermal properties related tags</a><ul>
-<li><a class="reference internal" href="#tprop-tmin-tmax-tstep"><code class="docutils literal"><span class="pre">TPROP</span></code>, <code class="docutils literal"><span class="pre">TMIN</span></code>, <code class="docutils literal"><span class="pre">TMAX</span></code>, <code class="docutils literal"><span class="pre">TSTEP</span></code></a></li>
+<li><a class="reference internal" href="#tprop-tmin-tmax-and-tstep"><code class="docutils literal"><span class="pre">TPROP</span></code>, <code class="docutils literal"><span class="pre">TMIN</span></code>, <code class="docutils literal"><span class="pre">TMAX</span></code>, and <code class="docutils literal"><span class="pre">TSTEP</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#thermal-displacements">Thermal displacements</a><ul>
-<li><a class="reference internal" href="#tdisp-tmax-tmin-tstep"><code class="docutils literal"><span class="pre">TDISP</span></code>, <code class="docutils literal"><span class="pre">TMAX</span></code>, <code class="docutils literal"><span class="pre">TMIN</span></code>, <code class="docutils literal"><span class="pre">TSTEP</span></code></a></li>
-<li><a class="reference internal" href="#tdispmat-tmax-tmin-tstep"><code class="docutils literal"><span class="pre">TDISPMAT</span></code>, <code class="docutils literal"><span class="pre">TMAX</span></code>, <code class="docutils literal"><span class="pre">TMIN</span></code>, <code class="docutils literal"><span class="pre">TSTEP</span></code></a></li>
+<li><a class="reference internal" href="#tdisp-tmax-tmin-and-tstep"><code class="docutils literal"><span class="pre">TDISP</span></code>, <code class="docutils literal"><span class="pre">TMAX</span></code>, <code class="docutils literal"><span class="pre">TMIN</span></code>, and <code class="docutils literal"><span class="pre">TSTEP</span></code></a></li>
+<li><a class="reference internal" href="#tdispmat-tmax-tmin-and-tstep"><code class="docutils literal"><span class="pre">TDISPMAT</span></code>, <code class="docutils literal"><span class="pre">TMAX</span></code>, <code class="docutils literal"><span class="pre">TMIN</span></code>, and <code class="docutils literal"><span class="pre">TSTEP</span></code></a></li>
 <li><a class="reference internal" href="#cutoff-frequency"><code class="docutils literal"><span class="pre">CUTOFF_FREQUENCY</span></code></a></li>
 </ul>
 </li>
@@ -244,14 +243,37 @@
   <div class="row">
     <div class="col-md-12 content">
       
-  <div class="section" id="setting-tags">
-<span id="id1"></span><h1>Setting tags<a class="headerlink" href="#setting-tags" title="Permalink to this headline">¶</a></h1>
-<p>Most of the setting tags have corresponding command-line options (<a class="reference internal" href="command-options.html#command-options"><span class="std std-ref">Command options</span></a>).</p>
+  <div class="contents local topic" id="contents">
+<ul class="simple">
+<li><a class="reference internal" href="#setting-tags" id="id6">Setting tags</a><ul>
+<li><a class="reference internal" href="#basic-tags" id="id7">Basic tags</a></li>
+<li><a class="reference internal" href="#displacement-creation-tags" id="id8">Displacement creation tags</a></li>
+<li><a class="reference internal" href="#band-structure-tags" id="id9">Band structure tags</a></li>
+<li><a class="reference internal" href="#mesh-sampling-tags" id="id10">Mesh sampling tags</a></li>
+<li><a class="reference internal" href="#phonon-density-of-states-dos-tags" id="id11">Phonon density of states (DOS) tags</a></li>
+<li><a class="reference internal" href="#thermal-properties-related-tags" id="id12">Thermal properties related tags</a></li>
+<li><a class="reference internal" href="#thermal-displacements" id="id13">Thermal displacements</a></li>
+<li><a class="reference internal" href="#specific-q-points" id="id14">Specific q-points</a></li>
+<li><a class="reference internal" href="#non-analytical-term-correction" id="id15">Non-analytical term correction</a></li>
+<li><a class="reference internal" href="#group-velocity" id="id16">Group velocity</a></li>
+<li><a class="reference internal" href="#symmetry" id="id17">Symmetry</a></li>
+<li><a class="reference internal" href="#force-constants" id="id18">Force constants</a></li>
+<li><a class="reference internal" href="#create-animation-file" id="id19">Create animation file</a></li>
+<li><a class="reference internal" href="#create-modulated-structure" id="id20">Create modulated structure</a></li>
+<li><a class="reference internal" href="#characters-of-irreducible-representations" id="id21">Characters of irreducible representations</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="setting-tags">
+<span id="id1"></span><h1><a class="toc-backref" href="#id6">Setting tags</a><a class="headerlink" href="#setting-tags" title="Permalink to this headline">¶</a></h1>
+<p>Most of the setting tags have corresponding command-line options
+(<a class="reference internal" href="command-options.html#command-options"><span class="std std-ref">Command options</span></a>).</p>
 <p>For specifying real and reciprocal points, fractional values
 (e.g. <code class="docutils literal"><span class="pre">1/3</span></code>) are accepted. However fractional values must not
 have space among characters (e.g. <code class="docutils literal"><span class="pre">1</span> <span class="pre">/</span> <span class="pre">3</span></code>) are not allowed.</p>
 <div class="section" id="basic-tags">
-<h2>Basic tags<a class="headerlink" href="#basic-tags" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id7">Basic tags</a><a class="headerlink" href="#basic-tags" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="dim">
 <h3><code class="docutils literal"><span class="pre">DIM</span></code><a class="headerlink" href="#dim" title="Permalink to this headline">¶</a></h3>
 <p>The supercell is created from the input unit cell. When three integers
@@ -269,7 +291,7 @@ cell. For example,</p>
 </div>
 <p>the supercell matrix is</p>
 <div class="math">
-<p><img src="_images/math/370a27d3721c3d408adee710a70e84a8c17a3cfa.png" alt="M_\mathrm{s} = \begin{pmatrix}
+<p><img src="_images/math/1ca4e37b4c28a1a3cb10ddcb9c6fcc9da97350fe.png" alt="M_\mathrm{s} = \begin{pmatrix}
 0 &amp; 1 &amp; 1 \\
 1 &amp; 0 &amp; 1 \\
 1 &amp; 1 &amp; 0
@@ -282,7 +304,7 @@ those of supercell, <img class="math" src="_images/math/5a3081ef3ed7b99083f1dbea
 <img class="math" src="_images/math/a454cca58ead035bdbdfad251eda86d17a8fc5bf.png" alt="\mathbf{b}_\mathrm{s}"/>, <img class="math" src="_images/math/0298b49b4e11950a7d7fb75b0640a25264c63428.png" alt="\mathbf{c}_\mathrm{s}"/>, are
 determined by,</p>
 <div class="math">
-<p><img src="_images/math/aef849e5e686975b6970503cfacaa2183ea9d66d.png" alt="( \mathbf{a}_\mathrm{s} \; \mathbf{b}_\mathrm{s} \; \mathbf{c}_\mathrm{s} )
+<p><img src="_images/math/95f0ab834d15fad380864172868d17aae1901241.png" alt="( \mathbf{a}_\mathrm{s} \; \mathbf{b}_\mathrm{s} \; \mathbf{c}_\mathrm{s} )
 =  ( \mathbf{a}_\mathrm{u} \; \mathbf{b}_\mathrm{u} \;
 \mathbf{c}_\mathrm{u} ) M_\mathrm{s}"/></p>
 </div><p>Be careful that the axes in <code class="docutils literal"><span class="pre">POSCAR</span></code> is defined by three row
@@ -302,7 +324,7 @@ vectors, i.e., <img class="math" src="_images/math/7c67257dd8e20170c54e8bf5ba21d
 multiplying primitive-axis matrix <img class="math" src="_images/math/ed5eb22a8204dd3e7e6237395da7ec7597f29649.png" alt="M_\mathrm{p}"/>. Let the matrix
 as,</p>
 <div class="math">
-<p><img src="_images/math/caae48609c859da79fee1f3cad4bb668c0308f58.png" alt="M_\mathrm{p} = \begin{pmatrix}
+<p><img src="_images/math/0f99de69f72e009759759d2ac547216295244c25.png" alt="M_\mathrm{p} = \begin{pmatrix}
 0.0 &amp; 0.5 &amp; 0.5 \\
 0.5 &amp; 0.0 &amp; 0.5 \\
 0.5 &amp; 0.5 &amp; 0.0
@@ -316,7 +338,7 @@ those of supercell, <img class="math" src="_images/math/5954dc42d29df3a300246e8f
 <img class="math" src="_images/math/2a11ea14b938f167771e6645622afa0832f6dd1c.png" alt="\mathbf{b}_\mathrm{p}"/>, <img class="math" src="_images/math/a3969b8079498f063e84f8a36ef1de8cded0f198.png" alt="\mathbf{c}_\mathrm{p}"/>, are
 determined by,</p>
 <div class="math">
-<p><img src="_images/math/69c637cecf4eb06c05f9e38a8832942b497ebfe9.png" alt="( \mathbf{a}_\mathrm{p} \; \mathbf{b}_\mathrm{p} \; \mathbf{c}_\mathrm{p} )
+<p><img src="_images/math/4554c462ff9f58b04db319d2484324f512679332.png" alt="( \mathbf{a}_\mathrm{p} \; \mathbf{b}_\mathrm{p} \; \mathbf{c}_\mathrm{p} )
 =  ( \mathbf{a}_\mathrm{u} \; \mathbf{b}_\mathrm{u} \;
 \mathbf{c}_\mathrm{u} ) M_\mathrm{p}"/></p>
 </div><p>Be careful that the axes in <code class="docutils literal"><span class="pre">POSCAR</span></code> is defined by three row
@@ -376,29 +398,27 @@ to the number of atoms in unit cell) have to be explicitly written.</p>
 </div>
 <p>See <a class="reference internal" href="command-options.html#cell-filename-option"><span class="std std-ref">Input cell</span></a>.</p>
 </div>
-</div>
-<div class="section" id="unit-conversion-factor">
-<h2>Unit conversion factor<a class="headerlink" href="#unit-conversion-factor" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="frequency-conversion-factor">
-<span id="frequency-conversion-factor-tag"></span><h3><code class="docutils literal"><span class="pre">frequency_conversion_factor</span></code><a class="headerlink" href="#frequency-conversion-factor" title="Permalink to this headline">¶</a></h3>
+<span id="frequency-conversion-factor-tag"></span><h3><code class="docutils literal"><span class="pre">FREQUENCY_CONVERSION_FACTOR</span></code><a class="headerlink" href="#frequency-conversion-factor" title="Permalink to this headline">¶</a></h3>
 <p>Unit conversion factor of frequency from input values to your favorite
-unit is specified. The default value is that to convert to THz. The
-default conversion factors for <code class="docutils literal"><span class="pre">wien2k</span></code>, <code class="docutils literal"><span class="pre">abinit</span></code>, <code class="docutils literal"><span class="pre">pwscf</span></code>, and
-<code class="docutils literal"><span class="pre">elk</span></code> are 3.44595, 21.49068, 108.9708, and 154.1079
-respectively. These are determined following the physical unit systems
-of the calculators. How to calcualte these conversion factors is
-explained at <a class="reference internal" href="theory.html#physical-unit-conversion"><span class="std std-ref">About physical unit conversion</span></a>.</p>
-<p>When calculating thermal property, the factor to THz is
-required. Otherwise the calculated thermal properties have wrong
-units. In the case of band structure plot, any factor can be used,
-where the frequency is simply shown in the unit you specified.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">FREQUENCY_CONVERSION_FACTOR</span> <span class="o">=</span> <span class="mf">521.471</span>
-</pre></div>
-</div>
+unit can be specified, but the use should be limited and it is
+recommended to use this tag to convert the frequency unit to THz in
+some exceptional case, for example, a special force calculator whose
+physical unit system is different from the default setting of phonopy
+is used. If the frequency unit is different from THz, though it works
+just for seeing results of frequencies, e.g., band structure or DOS,
+it doesn&#8217;t work for derived values like thermal properties and
+mean square displacements.</p>
+<p>The default values for calculators are those to convert frequency
+units to THz. The default conversion factors for <code class="docutils literal"><span class="pre">wien2k</span></code>,
+<code class="docutils literal"><span class="pre">abinit</span></code>, <code class="docutils literal"><span class="pre">pwscf</span></code>, and <code class="docutils literal"><span class="pre">elk</span></code> are 3.44595, 21.49068, 108.9708,
+and 154.1079 respectively. These are determined following the physical
+unit systems of the calculators. How to calcualte these conversion
+factors is explained at <a class="reference internal" href="theory.html#physical-unit-conversion"><span class="std std-ref">About physical unit conversion</span></a>.</p>
 </div>
 </div>
 <div class="section" id="displacement-creation-tags">
-<h2>Displacement creation tags<a class="headerlink" href="#displacement-creation-tags" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id8">Displacement creation tags</a><a class="headerlink" href="#displacement-creation-tags" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="create-displacements">
 <h3><code class="docutils literal"><span class="pre">CREATE_DISPLACEMENTS</span></code><a class="headerlink" href="#create-displacements" title="Permalink to this headline">¶</a></h3>
 <p>Supercells with displacements are created.  This tag is used as the
@@ -438,9 +458,9 @@ are written.</p>
 </div>
 </div>
 <div class="section" id="band-structure-tags">
-<span id="band-structure-related-tags"></span><h2>Band structure tags<a class="headerlink" href="#band-structure-tags" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="band-band-points">
-<h3><code class="docutils literal"><span class="pre">BAND</span></code>, <code class="docutils literal"><span class="pre">BAND_POINTS</span></code><a class="headerlink" href="#band-band-points" title="Permalink to this headline">¶</a></h3>
+<span id="band-structure-related-tags"></span><h2><a class="toc-backref" href="#id9">Band structure tags</a><a class="headerlink" href="#band-structure-tags" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="band-and-band-points">
+<h3><code class="docutils literal"><span class="pre">BAND</span></code> and <code class="docutils literal"><span class="pre">BAND_POINTS</span></code><a class="headerlink" href="#band-and-band-points" title="Permalink to this headline">¶</a></h3>
 <p><code class="docutils literal"><span class="pre">BAND</span></code> gives sampling band paths. The reciprocal points are
 specified in reduced coordinates. The given points are connected for
 defining band paths. When comma <code class="docutils literal"><span class="pre">,</span></code> is inserted between the points,
@@ -485,22 +505,22 @@ number of points calculated in band segments by the <code class="docutils litera
 </div>
 </div>
 <div class="section" id="mesh-sampling-tags">
-<span id="id2"></span><h2>Mesh sampling tags<a class="headerlink" href="#mesh-sampling-tags" title="Permalink to this headline">¶</a></h2>
+<span id="id2"></span><h2><a class="toc-backref" href="#id10">Mesh sampling tags</a><a class="headerlink" href="#mesh-sampling-tags" title="Permalink to this headline">¶</a></h2>
 <p>Mesh sampling tags are used commonly for calculations of thermal
 properties and density of states.</p>
-<div class="section" id="mp-mesh">
-<span id="mp-tag"></span><h3><code class="docutils literal"><span class="pre">MP</span></code>, <code class="docutils literal"><span class="pre">MESH</span></code><a class="headerlink" href="#mp-mesh" title="Permalink to this headline">¶</a></h3>
-<p><code class="docutils literal"><span class="pre">MP</span></code> numbers give uniform meshes in each axis. As the default
+<div class="section" id="mesh-or-mp">
+<span id="mp-tag"></span><h3><code class="docutils literal"><span class="pre">MESH</span></code> or <code class="docutils literal"><span class="pre">MP</span></code><a class="headerlink" href="#mesh-or-mp" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal"><span class="pre">MESH</span></code> numbers give uniform meshes in each axis. As the default
 behavior, the center of mesh is determined by the Monkhorst-Pack
 scheme, i.e., for odd number, a point comes to the center, and for
 even number, the center is shifted half in the distance between
 neighboring mesh points.</p>
 <p>Examples of an even mesh with <img class="math" src="_images/math/85011adca50d3725af2e048eeb9ec7b02ccdd401.png" alt="\Gamma"/> center in two ways,</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">MP</span> <span class="o">=</span> <span class="mi">8</span> <span class="mi">8</span> <span class="mi">8</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">MESH</span> <span class="o">=</span> <span class="mi">8</span> <span class="mi">8</span> <span class="mi">8</span>
 <span class="n">GAMMA_CENTER</span> <span class="o">=</span> <span class="o">.</span><span class="n">TRUE</span><span class="o">.</span>
 </pre></div>
 </div>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">MP</span> <span class="o">=</span> <span class="mi">8</span> <span class="mi">8</span> <span class="mi">8</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">MESH</span> <span class="o">=</span> <span class="mi">8</span> <span class="mi">8</span> <span class="mi">8</span>
 <span class="n">MP_SHIFT</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span>
 </pre></div>
 </div>
@@ -533,15 +553,31 @@ when those files are not needed, e.g., in (P)DOS calculation,
 </div>
 </div>
 </div>
-<div class="section" id="density-of-states-dos-tags">
-<span id="dos-related-tags"></span><h2>Density of states (DOS) tags<a class="headerlink" href="#density-of-states-dos-tags" title="Permalink to this headline">¶</a></h2>
-<p>Density of states (DOS) is calcualted either with smearing method
-(default) or tetrahedron method. The physical unit of horizontal axis
-is that of frequency that the user employs, e.g., THz, and that of
+<div class="section" id="phonon-density-of-states-dos-tags">
+<span id="dos-related-tags"></span><h2><a class="toc-backref" href="#id11">Phonon density of states (DOS) tags</a><a class="headerlink" href="#phonon-density-of-states-dos-tags" title="Permalink to this headline">¶</a></h2>
+<p>Phonon density of states (DOS) is calcualted either with smearing
+method (default) or tetrahedron method. Phonons are calculated on a
+sampling mesh, therefore these tags must be used with
+<a class="reference internal" href="#mesh-sampling-tags"><span class="std std-ref">Mesh sampling tags</span></a>. The physical unit of horizontal axis is
+that of frequency that the user employs, e.g., THz, and that of
 vertical axis is {no. of states}/({unit cell} x {unit of the
 horizontal axis}). If the DOS is integrated over the frequency range,
 it will be <img class="math" src="_images/math/303402c838902cc79f9bc2e4043c2ec27833d469.png" alt="3N_\mathrm{a}"/> states, where <img class="math" src="_images/math/5477894f53c543b441eb8e2091a4ca80e4124300.png" alt="N_\mathrm{a}"/> is
 the number of atoms in the unit cell.</p>
+<p>Phonon-DOS is formally defined as</p>
+<div class="math">
+<p><img src="_images/math/001251b922989be36ee9a44631b8d2c5947788b4.png" alt="g(\omega) = \frac{1}{N} \sum_\lambda \delta(\omega - \omega_\lambda)"/></p>
+</div><p>where <img class="math" src="_images/math/75e27f04188974063be3230dca208cd495b77ce1.png" alt="N"/> is the number of unit cells and <img class="math" src="_images/math/527c93b3396b0580580a12c679d10b498bb28e70.png" alt="\lambda = (\nu,
+\mathbf{q})"/> with <img class="math" src="_images/math/d67fb61cfffca2cc069e083d76cb6220b4ca14c8.png" alt="\nu"/> as the band index and <img class="math" src="_images/math/dd9f8e4fa6ad795780215243cbd5a5719b772ad3.png" alt="\mathbf{q}"/>
+as the q-point. This is computed on a set of descritized sampling
+frequency points for which <img class="math" src="_images/math/c7415c6919c2eb17b1ea36f0243079b59825ee89.png" alt="\omega"/> is specified arbitrary using
+<a class="reference internal" href="#dos-range-tag"><span class="std std-ref">DOS_RANGE</span></a>. The phonon frequencies <img class="math" src="_images/math/b25e75e206b6d370f1f6ff1505cf6ff122178969.png" alt="\omega_\lambda"/>
+are obtained on a sampling mesh whose the number of grid points being
+<img class="math" src="_images/math/75e27f04188974063be3230dca208cd495b77ce1.png" alt="N"/>. In the smearing method, the delta function is replaced by
+normal distribution (Gaussian function) with the standard deviation
+specified by <a class="reference internal" href="#sigma-tag"><span class="std std-ref">SIGMA</span></a>. In the tetrahedron method, the
+Brillouin integration is made analytically within tetrahedra in
+reciprocal space.</p>
 <div class="section" id="dos">
 <h3><code class="docutils literal"><span class="pre">DOS</span></code><a class="headerlink" href="#dos" title="Permalink to this headline">¶</a></h3>
 <p>This tag enables to calculate DOS. This tag is automatically set when
@@ -551,27 +587,53 @@ the number of atoms in the unit cell.</p>
 </div>
 </div>
 <div class="section" id="dos-range">
-<h3><code class="docutils literal"><span class="pre">DOS_RANGE</span></code><a class="headerlink" href="#dos-range" title="Permalink to this headline">¶</a></h3>
+<span id="dos-range-tag"></span><h3><code class="docutils literal"><span class="pre">DOS_RANGE</span></code><a class="headerlink" href="#dos-range" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">DOS_RANGE</span> <span class="o">=</span> <span class="mi">0</span> <span class="mi">40</span> <span class="mf">0.1</span>
 </pre></div>
 </div>
 <p>Total and partial density of states are drawn with some
 parameters. The example makes DOS be calculated from frequency=0 to 40
 with 0.1 pitch.</p>
+<p><a class="reference internal" href="#dos-fmin-fmax-tags"><span class="std std-ref">FMIN and FMAX</span></a> can be alternatively
+used to specify the minimum and maximum frequencies (the first and
+second values).</p>
+</div>
+<div class="section" id="fmin-and-fmax">
+<span id="dos-fmin-fmax-tags"></span><h3><code class="docutils literal"><span class="pre">FMIN</span></code> and <code class="docutils literal"><span class="pre">FMAX</span></code><a class="headerlink" href="#fmin-and-fmax" title="Permalink to this headline">¶</a></h3>
+<p>The frequency range to be calculated for phonon-DOS is
+specified. <code class="docutils literal"><span class="pre">FMIN</span></code> and <code class="docutils literal"><span class="pre">FMAX</span></code> give the minimum and maximum
+frequencies of the range, respectively.</p>
 </div>
 <div class="section" id="pdos">
 <h3><code class="docutils literal"><span class="pre">PDOS</span></code><a class="headerlink" href="#pdos" title="Permalink to this headline">¶</a></h3>
+<p>Projected DOS is calculated using this tag. The formal definition is
+written as</p>
+<div class="math">
+<p><img src="_images/math/d65a79b20ad8e16856b822456e2ed893af7fbe35.png" alt="g^j(\omega, \hat{\mathbf{n}}) = \frac{1}{N} \sum_\lambda
+\delta(\omega - \omega_\lambda) |\hat{\mathbf{n}} \cdot
+\mathbf{e}^j_\lambda|^2,"/></p>
+</div><p>where <img class="math" src="_images/math/d32c78b759903e3f4bd4fd2ce0b86358f7500c5d.png" alt="j"/> is the atom indices and <img class="math" src="_images/math/166488e8f118a87010b162c49abbe92d0b25effc.png" alt="\hat{\mathbf{n}}"/> is
+the unit projection direction vector. Without specifying
+<a class="reference internal" href="#projection-direction-tag"><span class="std std-ref">PROJECTION_DIRECTION</span></a> or <a class="reference internal" href="#xyz-projection-tag"><span class="std std-ref">XYZ_PROJECTION</span></a>, PDOS is
+computed as sum of <img class="math" src="_images/math/286e6599ead14443a9e0646ef0ee5143ec1710b3.png" alt="g^j(\omega, \hat{\mathbf{n}})"/> projected
+onto Cartesian axes <img class="math" src="_images/math/975c0f20e558a0b09286b055b142fe433bb84f93.png" alt="x,y,z"/>, i.e.,</p>
+<div class="math">
+<p><img src="_images/math/0162cb5876319d0a77821e2ad79e57bf41030c64.png" alt="g^j(\omega) = \sum_{\hat{\mathbf{n}} = \{x, y, z\}} g^j(\omega,
+\hat{\mathbf{n}})."/></p>
+</div><p>The atom indices <img class="math" src="_images/math/d32c78b759903e3f4bd4fd2ce0b86358f7500c5d.png" alt="j"/> are specified by</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">PDOS</span> <span class="o">=</span> <span class="mi">1</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span> <span class="mi">4</span> <span class="mi">5</span> <span class="mi">6</span>
 </pre></div>
 </div>
-<p>By setting this tag, <code class="docutils literal"><span class="pre">EIGENVECTORS</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code> and <code class="docutils literal"><span class="pre">MESH_SYMMETRY</span> <span class="pre">=</span>
-<span class="pre">.FALSE.</span></code> are automatically set.  <code class="docutils literal"><span class="pre">PDOS</span></code> tag controls how elements
-of eigenvectors are added. Each value gives the atom index in
-primitive cell. <code class="docutils literal"><span class="pre">,</span></code> separates the atom sets. Therefore in the
-example, atom 1 and 2 are summarized as one curve and atom 3, 4, 5,
-and, 6 are summarized as the other curve.</p>
-<p>The projection is applied along arbitrary direction using
-<code class="docutils literal"><span class="pre">PROJECTION_DIRECTION</span></code> tag.</p>
+<p>These numbers are those in the primitive cell.  <code class="docutils literal"><span class="pre">,</span></code> separates the
+atom sets. In this example, atom 1 and 2 are summarized as one curve
+and atom 3, 4, 5, and, 6 are summarized as another curve.</p>
+<p><code class="docutils literal"><span class="pre">EIGENVECTORS</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code> and <code class="docutils literal"><span class="pre">MESH_SYMMETRY</span> <span class="pre">=</span> <span class="pre">.FALSE.</span></code> are
+automatically set, therefore the calculation takes much more time than
+usual DOS calculation. With a very dense sampling mesh, writing data
+into <code class="docutils literal"><span class="pre">mesh.yaml</span></code> or <code class="docutils literal"><span class="pre">mesh.hdf5</span></code> can be unexpectedly huge. If only
+PDOS is necessary but these output files are unnecessary, then it is
+good to consider using <code class="docutils literal"><span class="pre">WRITE_MESH</span> <span class="pre">=</span> <span class="pre">.FALSE.</span></code>
+(<a class="reference internal" href="#write-mesh-tag"><span class="std std-ref">WRITE_MESH</span></a>).</p>
 </div>
 <div class="section" id="projection-direction">
 <span id="projection-direction-tag"></span><h3><code class="docutils literal"><span class="pre">PROJECTION_DIRECTION</span></code><a class="headerlink" href="#projection-direction" title="Permalink to this headline">¶</a></h3>
@@ -626,23 +688,56 @@ dependent on how to parameterize it.</p>
 </pre></div>
 </div>
 </div>
+<div class="section" id="momemt-and-moment-order">
+<span id="dos-moment-tag"></span><h3><code class="docutils literal"><span class="pre">MOMEMT</span></code> and <code class="docutils literal"><span class="pre">MOMENT_ORDER</span></code><a class="headerlink" href="#momemt-and-moment-order" title="Permalink to this headline">¶</a></h3>
+<p>Phonon moments for DOS and PDOS defined below are calculated using
+these tags up to arbitrary order. The order is specified with
+<code class="docutils literal"><span class="pre">MOMENT_ORDER</span></code> (<img class="math" src="_images/math/413f8a8e40062a9090d9d50b88bc7b551b314c26.png" alt="n"/> in the formula). Unless <code class="docutils literal"><span class="pre">MOMENT_ORDER</span></code>
+specified, the first and second moments are calculated.</p>
+<p>The moments for DOS are given as</p>
+<div class="math">
+<p><img src="_images/math/fcf245efe219f4002aa2f373ab4a8ed68d1f2ea4.png" alt="M_n(\omega_\text{min}, \omega_\text{max})
+&amp;=\frac{\int_{\omega_\text{min}}^{\omega_\text{max}} \omega^n
+g(\omega) d\omega} {\int_{\omega_\text{min}}^{\omega_\text{max}}
+g(\omega) d\omega}."/></p>
+</div><p>The moments for PDOS are given as</p>
+<div class="math">
+<p><img src="_images/math/8bb19e61d1f40ccbf65a35019c9c28972adbd789.png" alt="M_n^j(\omega_\text{min}, \omega_\text{max})
+&amp;=\frac{\int_{\omega_\text{min}}^{\omega_\text{max}} \omega^n
+g^j(\omega) d\omega} {\int_{\omega_\text{min}}^{\omega_\text{max}}
+g^j(\omega) d\omega}."/></p>
+</div><p><img class="math" src="_images/math/261e8774c22c1fc0ab0df2de72f0645691364438.png" alt="\omega_\text{min}"/> and <img class="math" src="_images/math/f9a5beef3a8061d761b47e3b049aa31fcec016d3.png" alt="\omega_\text{max}"/> are specified
+:using ref:<cite>dos_fmin_fmax_tags</cite> tags. When these are not specified,
+the moments are computed with the range of <img class="math" src="_images/math/c89cd5dcbf9b769bd8e6b2402c584e381ea1774f.png" alt="\epsilon &lt; \omega
+&lt; \infty"/>, where <img class="math" src="_images/math/19bc0073dde1bcd1a8e6a32b251e80cced668f04.png" alt="\epsilon"/> is a small positive
+value. Imaginary frequencies are treated as negative real values in
+this computation, therefore it is not a good idea to set negative
+<img class="math" src="_images/math/261e8774c22c1fc0ab0df2de72f0645691364438.png" alt="\omega_\text{min}"/>.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">MOMENT</span> <span class="o">=</span> <span class="o">.</span><span class="n">TRUE</span><span class="o">.</span>
+<span class="n">MOMENT_ORDER</span> <span class="o">=</span> <span class="mi">3</span>
+</pre></div>
+</div>
+</div>
 </div>
 <div class="section" id="thermal-properties-related-tags">
-<span id="thermal-properties-tag"></span><h2>Thermal properties related tags<a class="headerlink" href="#thermal-properties-related-tags" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="tprop-tmin-tmax-tstep">
-<h3><code class="docutils literal"><span class="pre">TPROP</span></code>, <code class="docutils literal"><span class="pre">TMIN</span></code>, <code class="docutils literal"><span class="pre">TMAX</span></code>, <code class="docutils literal"><span class="pre">TSTEP</span></code><a class="headerlink" href="#tprop-tmin-tmax-tstep" title="Permalink to this headline">¶</a></h3>
+<span id="thermal-properties-tag"></span><h2><a class="toc-backref" href="#id12">Thermal properties related tags</a><a class="headerlink" href="#thermal-properties-related-tags" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="tprop-tmin-tmax-and-tstep">
+<h3><code class="docutils literal"><span class="pre">TPROP</span></code>, <code class="docutils literal"><span class="pre">TMIN</span></code>, <code class="docutils literal"><span class="pre">TMAX</span></code>, and <code class="docutils literal"><span class="pre">TSTEP</span></code><a class="headerlink" href="#tprop-tmin-tmax-and-tstep" title="Permalink to this headline">¶</a></h3>
 <p>Thermal properties, free energy, heat capacity, and entropy, are
 calculated from their statistical thermodynamic expressions (see
 <a class="reference internal" href="theory.html#thermal-properties-expressions"><span class="std std-ref">Thermodynamic properties</span></a>). Thermal properties are
 calculated from phonon frequencies on a sampling mesh in the
-reciprocal space. Therefore These tags are used with <code class="docutils literal"><span class="pre">MP</span></code> tag and
-their convergence with respect to the sampling mesh has to be
-checked. Usually this calculation is not computationally demanding, so
-the convergence is easily achieved with increasing the density of the
-sampling mesh. <code class="docutils literal"><span class="pre">-p</span></code> option can be used together to plot the thermal
-propreties. Phonon frequencies have to be calculated in THz. Therefore
-unit conversion factor to THz may be specified using
-<code class="docutils literal"><span class="pre">FREQUENCY_CONVERSION_FACTOR</span></code> tag. The calculated values are
+reciprocal space. Therefore these tags must be used with
+<a class="reference internal" href="#mesh-sampling-tags"><span class="std std-ref">Mesh sampling tags</span></a> and their convergence with respect to the
+sampling mesh has to be checked. Usually this calculation is not
+computationally demanding, so the convergence is easily achieved with
+increasing the density of the sampling mesh. <code class="docutils literal"><span class="pre">-p</span></code> option can be used
+together to plot the thermal propreties.</p>
+<p>Phonon frequencies have to be calculated in THz and this is the
+default setting of phonopy. However as a special case when
+unit conversion factor is specified using
+<code class="docutils literal"><span class="pre">FREQUENCY_CONVERSION_FACTOR</span></code> tag, careful attention is required.</p>
+<p>The calculated values are
 written into <code class="docutils literal"><span class="pre">thermal_properties.yaml</span></code>. The unit systems of free
 energy, heat capacity, and entropy are kJ/mol, J/K/mol, and J/K/mol,
 respectively, where 1 mol means <img class="math" src="_images/math/23b105d808058931d6f8bc7bfc042bce29601629.png" alt="\mathrm{N_A}\times"/> your input
@@ -660,15 +755,20 @@ temperature range to be calculated. The default values of them are 0,
 </div>
 </div>
 <div class="section" id="thermal-displacements">
-<span id="thermal-atomic-displacements-tags"></span><h2>Thermal displacements<a class="headerlink" href="#thermal-displacements" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="tdisp-tmax-tmin-tstep">
-<span id="thermal-displacements-tag"></span><h3><code class="docutils literal"><span class="pre">TDISP</span></code>, <code class="docutils literal"><span class="pre">TMAX</span></code>, <code class="docutils literal"><span class="pre">TMIN</span></code>, <code class="docutils literal"><span class="pre">TSTEP</span></code><a class="headerlink" href="#tdisp-tmax-tmin-tstep" title="Permalink to this headline">¶</a></h3>
+<span id="thermal-atomic-displacements-tags"></span><h2><a class="toc-backref" href="#id13">Thermal displacements</a><a class="headerlink" href="#thermal-displacements" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="tdisp-tmax-tmin-and-tstep">
+<span id="thermal-displacements-tag"></span><h3><code class="docutils literal"><span class="pre">TDISP</span></code>, <code class="docutils literal"><span class="pre">TMAX</span></code>, <code class="docutils literal"><span class="pre">TMIN</span></code>, and <code class="docutils literal"><span class="pre">TSTEP</span></code><a class="headerlink" href="#tdisp-tmax-tmin-and-tstep" title="Permalink to this headline">¶</a></h3>
 <p>Mean square displacements projected to Cartesian axes as a function of
 temperature are calculated from the number of phonon excitations. The
 usages of <code class="docutils literal"><span class="pre">TMAX</span></code>, <code class="docutils literal"><span class="pre">TMIN</span></code>, <code class="docutils literal"><span class="pre">TSTEP</span></code> tags are same as those in
 <a class="reference internal" href="#thermal-properties-tag"><span class="std std-ref">thermal properties tags</span></a>. The result is
 writen into <code class="docutils literal"><span class="pre">thermal_displacements.yaml</span></code>. See the detail of the
-method, <a class="reference internal" href="thermal-displacement.html#thermal-displacement"><span class="std std-ref">Mean square displacement</span></a>.</p>
+method, <a class="reference internal" href="thermal-displacement.html#thermal-displacement"><span class="std std-ref">Mean square displacement</span></a>. These tags must be used with
+<a class="reference internal" href="#mesh-sampling-tags"><span class="std std-ref">Mesh sampling tags</span></a></p>
+<p>Phonon frequencies have to be calculated in THz and this is the
+default setting of phonopy. However as a special case when unit
+conversion factor is specified using <code class="docutils literal"><span class="pre">FREQUENCY_CONVERSION_FACTOR</span></code>
+tag, careful attention is required.</p>
 <p>The projection is applied along arbitrary direction using
 <code class="docutils literal"><span class="pre">PROJECTION_DIRECTION</span></code> tag (<a class="reference internal" href="#projection-direction-tag"><span class="std std-ref">PROJECTION_DIRECTION</span></a>).</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">TDISP</span> <span class="o">=</span> <span class="o">.</span><span class="n">TRUE</span><span class="o">.</span>
@@ -676,8 +776,8 @@ method, <a class="reference internal" href="thermal-displacement.html#thermal-di
 </pre></div>
 </div>
 </div>
-<div class="section" id="tdispmat-tmax-tmin-tstep">
-<span id="thermal-displacement-matrices-tag"></span><h3><code class="docutils literal"><span class="pre">TDISPMAT</span></code>, <code class="docutils literal"><span class="pre">TMAX</span></code>, <code class="docutils literal"><span class="pre">TMIN</span></code>, <code class="docutils literal"><span class="pre">TSTEP</span></code><a class="headerlink" href="#tdispmat-tmax-tmin-tstep" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="tdispmat-tmax-tmin-and-tstep">
+<span id="thermal-displacement-matrices-tag"></span><h3><code class="docutils literal"><span class="pre">TDISPMAT</span></code>, <code class="docutils literal"><span class="pre">TMAX</span></code>, <code class="docutils literal"><span class="pre">TMIN</span></code>, and <code class="docutils literal"><span class="pre">TSTEP</span></code><a class="headerlink" href="#tdispmat-tmax-tmin-and-tstep" title="Permalink to this headline">¶</a></h3>
 <p>Mean square displacement matricies are calculated. The difinition is
 shown at <a class="reference internal" href="thermal-displacement.html#thermal-displacement"><span class="std std-ref">Mean square displacement</span></a>. The result is
 writen into <code class="docutils literal"><span class="pre">thermal_displacement_matrices.yaml</span></code> where six matrix
@@ -685,6 +785,13 @@ elements are given in the order of xx, yy, zz, yz, xz, xy.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">TDISPMAT</span> <span class="o">=</span> <span class="o">.</span><span class="n">TRUE</span><span class="o">.</span>
 </pre></div>
 </div>
+<p>The 3x3 matrix restricts distribution of each atom around the
+equilibrium position to be ellipsoid. But the distribution is not
+necessarily to be so.</p>
+<p>Phonon frequencies have to be calculated in THz and this is the
+default setting of phonopy. However as a special case when
+unit conversion factor is specified using
+<code class="docutils literal"><span class="pre">FREQUENCY_CONVERSION_FACTOR</span></code> tag, careful attention is required.</p>
 </div>
 <div class="section" id="cutoff-frequency">
 <h3><code class="docutils literal"><span class="pre">CUTOFF_FREQUENCY</span></code><a class="headerlink" href="#cutoff-frequency" title="Permalink to this headline">¶</a></h3>
@@ -693,7 +800,7 @@ thermal displacements.</p>
 </div>
 </div>
 <div class="section" id="specific-q-points">
-<h2>Specific q-points<a class="headerlink" href="#specific-q-points" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id14">Specific q-points</a><a class="headerlink" href="#specific-q-points" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="qpoints">
 <span id="qpoints-tag"></span><h3><code class="docutils literal"><span class="pre">QPOINTS</span></code><a class="headerlink" href="#qpoints" title="Permalink to this headline">¶</a></h3>
 <p>When <code class="docutils literal"><span class="pre">QPOINTS</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>, <code class="docutils literal"><span class="pre">QPOINTS</span></code> file in your working directory
@@ -710,9 +817,9 @@ the primitive cell.</p>
 <p>The physical unit of dynamical matrix is <code class="docutils literal"><span class="pre">[unit</span> <span class="pre">of</span> <span class="pre">force]</span> <span class="pre">/</span> <span class="pre">([unit</span> <span class="pre">of</span>
 <span class="pre">displacement]</span> <span class="pre">*</span> <span class="pre">[unit</span> <span class="pre">of</span> <span class="pre">mass])</span></code>, i.e., square of the unit of phonon
 frequency before multiplying the unit conversion factor
-(see <a class="reference internal" href="#frequency-conversion-factor-tag"><span class="std std-ref">frequency_conversion_factor</span></a>).</p>
+(see <a class="reference internal" href="#frequency-conversion-factor-tag"><span class="std std-ref">FREQUENCY_CONVERSION_FACTOR</span></a>).</p>
 <div class="math">
-<p><img src="_images/math/e50f4616cc4a93d66c058d7e7088ab45e923d842.png" alt="D =
+<p><img src="_images/math/1ee97ba5c846e3941beed6953213b500c50f0edb.png" alt="D =
 \begin{pmatrix}
 D_{11} &amp; D_{12} &amp; D_{13} &amp; \\
 D_{21} &amp; D_{22} &amp; D_{23} &amp; \cdots \\
@@ -721,7 +828,7 @@ D_{31} &amp; D_{32} &amp; D_{33} &amp; \\
 \end{pmatrix},"/></p>
 </div><p>and <img class="math" src="_images/math/c413fea74f291cd36029018375a89834c7b1f7d0.png" alt="D_{jj'}"/> is</p>
 <div class="math">
-<p><img src="_images/math/29509e5ce122f5ae4454252844a766c5506c2dbb.png" alt="D_{jj'} =
+<p><img src="_images/math/6258200fb9662f780644d556f5e3ac4f32c26777.png" alt="D_{jj'} =
 \begin{pmatrix}
 Re(D_{jj'}^{xx}) &amp; Im(D_{jj'}^{xx}) &amp; Re(D_{jj'}^{xy}) &amp;
 Im(D_{jj'}^{xy}) &amp; Re(D_{jj'}^{xz}) &amp; Im(D_{jj'}^{xz}) \\
@@ -760,7 +867,7 @@ NaCl at <img class="math" src="_images/math/548d8dd6dd7d62e5b5ce61a5527c3c1b67e0
 </div>
 </div>
 <div class="section" id="non-analytical-term-correction">
-<span id="nac-tag"></span><h2>Non-analytical term correction<a class="headerlink" href="#non-analytical-term-correction" title="Permalink to this headline">¶</a></h2>
+<span id="nac-tag"></span><h2><a class="toc-backref" href="#id15">Non-analytical term correction</a><a class="headerlink" href="#non-analytical-term-correction" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="nac">
 <h3><code class="docutils literal"><span class="pre">NAC</span></code><a class="headerlink" href="#nac" title="Permalink to this headline">¶</a></h3>
 <p>Non-analytical term correction is applied to dynamical
@@ -776,7 +883,7 @@ matrix. <code class="docutils literal"><span class="pre">BORN</span></code> file
 <img class="math" src="_images/math/39880e04d581edbff26ded5a5c24a2a5bded3b68.png" alt="\mathbf{q}\rightarrow\mathbf{0}"/>, i.e. practically
 <img class="math" src="_images/math/85011adca50d3725af2e048eeb9ec7b02ccdd401.png" alt="\Gamma"/>-point. Away from <img class="math" src="_images/math/85011adca50d3725af2e048eeb9ec7b02ccdd401.png" alt="\Gamma"/>-point, this setting is
 ignored and the specified <strong>q</strong>-point is used as the <strong>q</strong>-direction.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">MP</span> <span class="o">=</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">MESH</span> <span class="o">=</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span>
 <span class="n">NAC</span> <span class="o">=</span> <span class="o">.</span><span class="n">TRUE</span><span class="o">.</span>
 <span class="n">Q_DIRECTION</span> <span class="o">=</span> <span class="mi">1</span> <span class="mi">0</span> <span class="mi">0</span>
 </pre></div>
@@ -784,7 +891,7 @@ ignored and the specified <strong>q</strong>-point is used as the <strong>q</str
 </div>
 </div>
 <div class="section" id="group-velocity">
-<span id="group-velocity-tag"></span><h2>Group velocity<a class="headerlink" href="#group-velocity" title="Permalink to this headline">¶</a></h2>
+<span id="group-velocity-tag"></span><h2><a class="toc-backref" href="#id16">Group velocity</a><a class="headerlink" href="#group-velocity" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="id3">
 <h3><code class="docutils literal"><span class="pre">GROUP_VELOCITY</span></code><a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
 <p>Group velocities at q-points are calculated by using this tag. The
@@ -808,7 +915,7 @@ specified. The default value is 1e-4.</p>
 </div>
 </div>
 <div class="section" id="symmetry">
-<h2>Symmetry<a class="headerlink" href="#symmetry" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id17">Symmetry</a><a class="headerlink" href="#symmetry" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="symmetry-tag">
 <span id="id4"></span><h3><code class="docutils literal"><span class="pre">SYMMETRY</span></code><a class="headerlink" href="#symmetry-tag" title="Permalink to this headline">¶</a></h3>
 <p>P1 symmetry is enforced to the input unit cell by setting <code class="docutils literal"><span class="pre">SYMMETRY</span> <span class="pre">=</span> <span class="pre">.FALSE</span></code>.</p>
@@ -829,12 +936,12 @@ this tag is usually unnecessary to be specified.</p>
 </div>
 <p>From the translation invariance condition,</p>
 <div class="math">
-<p><img src="_images/math/859da292a0166c63bf5996ad87564a56a6e256b2.png" alt="\sum_i \Phi_{ij}^{\alpha\beta} = 0, \;\;\text{for all $j$, $\alpha$, $\beta$},"/></p>
+<p><img src="_images/math/c68997871339a2d3802067855509e9e4308637b2.png" alt="\sum_i \Phi_{ij}^{\alpha\beta} = 0, \;\;\text{for all $j$, $\alpha$, $\beta$},"/></p>
 </div><p>where <em>i</em> and <em>j</em> are the atom indices, and <img class="math" src="_images/math/ad59b6e24a4a00ac621801f8d7513d68be654ab5.png" alt="\alpha"/> and
 <img class="math" src="_images/math/8ce03f78ed945f2ef3dac87c8799b55b393527e7.png" alt="\beta"/> are the Catesian indices for atoms <em>i</em> and <em>j</em>,
 respectively. Force constants are symmetric in each pair as</p>
 <div class="math">
-<p><img src="_images/math/15c631d53db4147bef304341d0ffb3279fca8fcf.png" alt="\Phi_{ij}^{\alpha\beta}
+<p><img src="_images/math/5d0e40c7b7931c18d486fba198369353e1c0ae4d.png" alt="\Phi_{ij}^{\alpha\beta}
      = \frac{\partial^2 U}{\partial u_i^\alpha \partial u_j^\beta}
      = \frac{\partial^2 U}{\partial u_j^\beta \partial u_i^\alpha}
      = \Phi_{ji}^{\beta\alpha}"/></p>
@@ -845,7 +952,7 @@ force applying <code class="docutils literal"><span class="pre">FC_SYMMETRY</spa
 </div>
 </div>
 <div class="section" id="force-constants">
-<span id="force-constants-tag"></span><h2>Force constants<a class="headerlink" href="#force-constants" title="Permalink to this headline">¶</a></h2>
+<span id="force-constants-tag"></span><h2><a class="toc-backref" href="#id18">Force constants</a><a class="headerlink" href="#force-constants" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="id5">
 <h3><code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span></code><a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">FORCE_CONSTANTS</span> <span class="o">=</span> <span class="n">READ</span>
@@ -861,7 +968,7 @@ and <code class="docutils literal"><span class="pre">.FALSE.</span></code>. The 
 </div>
 </div>
 <div class="section" id="create-animation-file">
-<span id="animation-tag"></span><h2>Create animation file<a class="headerlink" href="#create-animation-file" title="Permalink to this headline">¶</a></h2>
+<span id="animation-tag"></span><h2><a class="toc-backref" href="#id19">Create animation file</a><a class="headerlink" href="#create-animation-file" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="anime-type">
 <h3><code class="docutils literal"><span class="pre">ANIME_TYPE</span></code><a class="headerlink" href="#anime-type" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">ANIME_TYPE</span> <span class="o">=</span> <span class="n">JMOL</span>
@@ -920,7 +1027,7 @@ however dummy values, e.g. 0, are required.</p>
 </div>
 </div>
 <div class="section" id="create-modulated-structure">
-<span id="modulation-tag"></span><h2>Create modulated structure<a class="headerlink" href="#create-modulated-structure" title="Permalink to this headline">¶</a></h2>
+<span id="modulation-tag"></span><h2><a class="toc-backref" href="#id20">Create modulated structure</a><a class="headerlink" href="#create-modulated-structure" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="modulation">
 <h3><code class="docutils literal"><span class="pre">MODULATION</span></code><a class="headerlink" href="#modulation" title="Permalink to this headline">¶</a></h3>
 <p>The <code class="docutils literal"><span class="pre">MODULATION</span></code> tag is used to create a crystal structure with
@@ -929,7 +1036,7 @@ dimension.</p>
 <p>Atomic displacement of the <em>j</em>-th atom is created from the real part
 of the eigenvectors with amplitudes and phase factors as</p>
 <div class="math">
-<p><img src="_images/math/92df5da360ff79a484d8eca1772ec0cb98fb7a80.png" alt="\frac{A} { \sqrt{N_\mathrm{a}m_j} } \operatorname{Re} \left[ \exp(i\phi)
+<p><img src="_images/math/3c1e0835c29afcb1b59f00252fa6ff3b96debb4b.png" alt="\frac{A} { \sqrt{N_\mathrm{a}m_j} } \operatorname{Re} \left[ \exp(i\phi)
 \mathbf{e}_j \exp( \mathbf{q} \cdot \mathbf{r}_{jl} ) \right],"/></p>
 </div><p>where <img class="math" src="_images/math/0acafa529182e79b4f56165ec677554fba7fcf98.png" alt="A"/> is the amplitude, <img class="math" src="_images/math/10e009bdb83f96c5f47c58b34d5d4b12ef268d5b.png" alt="\phi"/> is the phase,
 <img class="math" src="_images/math/5477894f53c543b441eb8e2091a4ca80e4124300.png" alt="N_\mathrm{a}"/> is the number of atoms in the supercell specified
@@ -979,7 +1086,7 @@ vector is shown in <code class="docutils literal"><span class="pre">modulation.y
 </div>
 </div>
 <div class="section" id="characters-of-irreducible-representations">
-<span id="irreducible-representation-related-tags"></span><h2>Characters of irreducible representations<a class="headerlink" href="#characters-of-irreducible-representations" title="Permalink to this headline">¶</a></h2>
+<span id="irreducible-representation-related-tags"></span><h2><a class="toc-backref" href="#id21">Characters of irreducible representations</a><a class="headerlink" href="#characters-of-irreducible-representations" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="irreps">
 <span id="irreps-tag"></span><h3><code class="docutils literal"><span class="pre">IRREPS</span></code><a class="headerlink" href="#irreps" title="Permalink to this headline">¶</a></h3>
 <p>Characters of irreducible representations (IRs) of phonon modes are
@@ -1037,7 +1144,7 @@ little group.</p>
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.3.<br/>
     </p>
   </div>
 </footer>

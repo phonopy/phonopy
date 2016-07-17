@@ -1,9 +1,14 @@
+.. contents::
+   :depth: 2
+   :local:
+
 .. _setting_tags:
 
 Setting tags
 ============
 
-Most of the setting tags have corresponding command-line options (:ref:`command_options`).
+Most of the setting tags have corresponding command-line options
+(:ref:`command_options`).
 
 For specifying real and reciprocal points, fractional values
 (e.g. ``1/3``) are accepted. However fractional values must not
@@ -42,7 +47,7 @@ the supercell matrix is
    M_\mathrm{s} = \begin{pmatrix}
    0 & 1 & 1 \\
    1 & 0 & 1 \\
-   1 & 1 & 0 
+   1 & 1 & 0
    \end{pmatrix}
 
 where the rows correspond to the first three, second three, and third
@@ -57,7 +62,7 @@ determined by,
 
    ( \mathbf{a}_\mathrm{s} \; \mathbf{b}_\mathrm{s} \; \mathbf{c}_\mathrm{s} )
    =  ( \mathbf{a}_\mathrm{u} \; \mathbf{b}_\mathrm{u} \;
-   \mathbf{c}_\mathrm{u} ) M_\mathrm{s} 
+   \mathbf{c}_\mathrm{u} ) M_\mathrm{s}
 
 Be careful that the axes in ``POSCAR`` is defined by three row
 vectors, i.e., :math:`( \mathbf{a}_\mathrm{u} \; \mathbf{b}_\mathrm{u}
@@ -103,7 +108,7 @@ determined by,
 
    ( \mathbf{a}_\mathrm{p} \; \mathbf{b}_\mathrm{p} \; \mathbf{c}_\mathrm{p} )
    =  ( \mathbf{a}_\mathrm{u} \; \mathbf{b}_\mathrm{u} \;
-   \mathbf{c}_\mathrm{u} ) M_\mathrm{p} 
+   \mathbf{c}_\mathrm{u} ) M_\mathrm{p}
 
 Be careful that the axes in ``POSCAR`` is defined by three row
 vectors, i.e., :math:`( \mathbf{a}_\mathrm{u} \; \mathbf{b}_\mathrm{u}
@@ -177,30 +182,27 @@ to the number of atoms in unit cell) have to be explicitly written.
 
 See :ref:`cell_filename_option`.
 
-Unit conversion factor
-----------------------
-
 .. _frequency_conversion_factor_tag:
 
-``frequency_conversion_factor``
+``FREQUENCY_CONVERSION_FACTOR``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Unit conversion factor of frequency from input values to your favorite
-unit is specified. The default value is that to convert to THz. The
-default conversion factors for ``wien2k``, ``abinit``, ``pwscf``, and
-``elk`` are 3.44595, 21.49068, 108.9708, and 154.1079
-respectively. These are determined following the physical unit systems
-of the calculators. How to calcualte these conversion factors is
-explained at :ref:`physical_unit_conversion`.
+unit can be specified, but the use should be limited and it is
+recommended to use this tag to convert the frequency unit to THz in
+some exceptional case, for example, a special force calculator whose
+physical unit system is different from the default setting of phonopy
+is used. If the frequency unit is different from THz, though it works
+just for seeing results of frequencies, e.g., band structure or DOS,
+it doesn't work for derived values like thermal properties and
+mean square displacements.
 
-When calculating thermal property, the factor to THz is
-required. Otherwise the calculated thermal properties have wrong
-units. In the case of band structure plot, any factor can be used,
-where the frequency is simply shown in the unit you specified.
-
-::
-
-   FREQUENCY_CONVERSION_FACTOR = 521.471
+The default values for calculators are those to convert frequency
+units to THz. The default conversion factors for ``wien2k``,
+``abinit``, ``pwscf``, and ``elk`` are 3.44595, 21.49068, 108.9708,
+and 154.1079 respectively. These are determined following the physical
+unit systems of the calculators. How to calcualte these conversion
+factors is explained at :ref:`physical_unit_conversion`.
 
 Displacement creation tags
 --------------------------
@@ -254,7 +256,7 @@ are written.
 Band structure tags
 ----------------------------
 
-``BAND``, ``BAND_POINTS``
+``BAND`` and ``BAND_POINTS``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ``BAND`` gives sampling band paths. The reciprocal points are
@@ -331,10 +333,10 @@ properties and density of states.
 
 .. _mp_tag:
 
-``MP``, ``MESH``
-~~~~~~~~~~~~~~~~~
+``MESH`` or ``MP``
+~~~~~~~~~~~~~~~~~~~
 
-``MP`` numbers give uniform meshes in each axis. As the default
+``MESH`` numbers give uniform meshes in each axis. As the default
 behavior, the center of mesh is determined by the Monkhorst-Pack
 scheme, i.e., for odd number, a point comes to the center, and for
 even number, the center is shifted half in the distance between
@@ -344,12 +346,12 @@ Examples of an even mesh with :math:`\Gamma` center in two ways,
 
 ::
 
-   MP = 8 8 8 
+   MESH = 8 8 8
    GAMMA_CENTER = .TRUE.
 
 ::
 
-   MP = 8 8 8 
+   MESH = 8 8 8
    MP_SHIFT = 1/2 1/2 1/2
 
 ``MP_SHIFT``
@@ -389,16 +391,36 @@ when those files are not needed, e.g., in (P)DOS calculation,
 
 .. _dos_related_tags:
 
-Density of states (DOS) tags
------------------------------
+Phonon density of states (DOS) tags
+------------------------------------
 
-Density of states (DOS) is calcualted either with smearing method
-(default) or tetrahedron method. The physical unit of horizontal axis
-is that of frequency that the user employs, e.g., THz, and that of
+Phonon density of states (DOS) is calcualted either with smearing
+method (default) or tetrahedron method. Phonons are calculated on a
+sampling mesh, therefore these tags must be used with
+:ref:`mesh_sampling_tags`. The physical unit of horizontal axis is
+that of frequency that the user employs, e.g., THz, and that of
 vertical axis is {no. of states}/({unit cell} x {unit of the
 horizontal axis}). If the DOS is integrated over the frequency range,
 it will be :math:`3N_\mathrm{a}` states, where :math:`N_\mathrm{a}` is
 the number of atoms in the unit cell.
+
+Phonon-DOS is formally defined as
+
+.. math::
+
+   g(\omega) = \frac{1}{N} \sum_\lambda \delta(\omega - \omega_\lambda)
+
+where :math:`N` is the number of unit cells and :math:`\lambda = (\nu,
+\mathbf{q})` with :math:`\nu` as the band index and :math:`\mathbf{q}`
+as the q-point. This is computed on a set of descritized sampling
+frequency points for which :math:`\omega` is specified arbitrary using
+:ref:`dos_range_tag`. The phonon frequencies :math:`\omega_\lambda`
+are obtained on a sampling mesh whose the number of grid points being
+:math:`N`. In the smearing method, the delta function is replaced by
+normal distribution (Gaussian function) with the standard deviation
+specified by :ref:`sigma_tag`. In the tetrahedron method, the
+Brillouin integration is made analytically within tetrahedra in
+reciprocal space.
 
 ``DOS``
 ~~~~~~~~
@@ -410,8 +432,8 @@ This tag enables to calculate DOS. This tag is automatically set when
 
    DOS = .TRUE.
 
+.. _dos_range_tag:
 
-   
 ``DOS_RANGE``
 ~~~~~~~~~~~~~
 ::
@@ -422,21 +444,60 @@ Total and partial density of states are drawn with some
 parameters. The example makes DOS be calculated from frequency=0 to 40
 with 0.1 pitch.
 
+:ref:`dos_fmin_fmax_tags` can be alternatively
+used to specify the minimum and maximum frequencies (the first and
+second values).
+
+.. _dos_fmin_fmax_tags:
+
+``FMIN`` and ``FMAX``
+~~~~~~~~~~~~~~~~~~~~~~
+
+The frequency range to be calculated for phonon-DOS is
+specified. ``FMIN`` and ``FMAX`` give the minimum and maximum
+frequencies of the range, respectively.
+
 ``PDOS``
 ~~~~~~~~
+
+Projected DOS is calculated using this tag. The formal definition is
+written as
+
+.. math::
+
+   g^j(\omega, \hat{\mathbf{n}}) = \frac{1}{N} \sum_\lambda 
+   \delta(\omega - \omega_\lambda) |\hat{\mathbf{n}} \cdot
+   \mathbf{e}^j_\lambda|^2,
+
+where :math:`j` is the atom indices and :math:`\hat{\mathbf{n}}` is
+the unit projection direction vector. Without specifying
+:ref:`projection_direction_tag` or :ref:`xyz_projection_tag`, PDOS is
+computed as sum of :math:`g^j(\omega, \hat{\mathbf{n}})` projected
+onto Cartesian axes :math:`x,y,z`, i.e.,
+
+.. math::
+
+   g^j(\omega) = \sum_{\hat{\mathbf{n}} = \{x, y, z\}} g^j(\omega,
+   \hat{\mathbf{n}}).
+
+The atom indices :math:`j` are specified by
+
 ::
 
    PDOS = 1 2, 3 4 5 6
 
-By setting this tag, ``EIGENVECTORS = .TRUE.`` and ``MESH_SYMMETRY =
-.FALSE.`` are automatically set.  ``PDOS`` tag controls how elements
-of eigenvectors are added. Each value gives the atom index in
-primitive cell. ``,`` separates the atom sets. Therefore in the
-example, atom 1 and 2 are summarized as one curve and atom 3, 4, 5,
-and, 6 are summarized as the other curve.
 
-The projection is applied along arbitrary direction using
-``PROJECTION_DIRECTION`` tag.
+These numbers are those in the primitive cell.  ``,`` separates the
+atom sets. In this example, atom 1 and 2 are summarized as one curve
+and atom 3, 4, 5, and, 6 are summarized as another curve.
+
+``EIGENVECTORS = .TRUE.`` and ``MESH_SYMMETRY = .FALSE.`` are
+automatically set, therefore the calculation takes much more time than
+usual DOS calculation. With a very dense sampling mesh, writing data
+into ``mesh.yaml`` or ``mesh.hdf5`` can be unexpectedly huge. If only
+PDOS is necessary but these output files are unnecessary, then it is
+good to consider using ``WRITE_MESH = .FALSE.``
+(:ref:`write_mesh_tag`).
 
 .. _projection_direction_tag:
 
@@ -449,7 +510,7 @@ respect to *a*, *b*, *c* axes.
 
 ::
 
-   PDOS = 1, 2   
+   PDOS = 1, 2
    PROJECTION_DIRECTION = -1 1 1
 
 .. _xyz_projection_tag:
@@ -508,27 +569,73 @@ dependent on how to parameterize it.
 ::
 
    DEBYE_MODEL = .TRUE.
-   
+
+.. _dos_moment_tag:
+
+``MOMEMT`` and ``MOMENT_ORDER``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Phonon moments for DOS and PDOS defined below are calculated using
+these tags up to arbitrary order. The order is specified with
+``MOMENT_ORDER`` (:math:`n` in the formula). Unless ``MOMENT_ORDER``
+specified, the first and second moments are calculated.
+
+The moments for DOS are given as
+
+.. math::
+
+   M_n(\omega_\text{min}, \omega_\text{max})
+   &=\frac{\int_{\omega_\text{min}}^{\omega_\text{max}} \omega^n
+   g(\omega) d\omega} {\int_{\omega_\text{min}}^{\omega_\text{max}}
+   g(\omega) d\omega}.
+
+The moments for PDOS are given as
+
+.. math::
+
+   M_n^j(\omega_\text{min}, \omega_\text{max})
+   &=\frac{\int_{\omega_\text{min}}^{\omega_\text{max}} \omega^n
+   g^j(\omega) d\omega} {\int_{\omega_\text{min}}^{\omega_\text{max}}
+   g^j(\omega) d\omega}.
+
+:math:`\omega_\text{min}` and :math:`\omega_\text{max}` are specified
+:using ref:`dos_fmin_fmax_tags` tags. When these are not specified,
+the moments are computed with the range of :math:`\epsilon < \omega
+< \infty`, where :math:`\epsilon` is a small positive
+value. Imaginary frequencies are treated as negative real values in
+this computation, therefore it is not a good idea to set negative
+:math:`\omega_\text{min}`.
+
+::
+
+   MOMENT = .TRUE.
+   MOMENT_ORDER = 3
+
 .. _thermal_properties_tag:
 
 Thermal properties related tags
 --------------------------------
 
-``TPROP``, ``TMIN``, ``TMAX``, ``TSTEP``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+``TPROP``, ``TMIN``, ``TMAX``, and ``TSTEP``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Thermal properties, free energy, heat capacity, and entropy, are
 calculated from their statistical thermodynamic expressions (see
 :ref:`thermal_properties_expressions`). Thermal properties are
 calculated from phonon frequencies on a sampling mesh in the
-reciprocal space. Therefore These tags are used with ``MP`` tag and
-their convergence with respect to the sampling mesh has to be
-checked. Usually this calculation is not computationally demanding, so
-the convergence is easily achieved with increasing the density of the
-sampling mesh. ``-p`` option can be used together to plot the thermal
-propreties. Phonon frequencies have to be calculated in THz. Therefore
-unit conversion factor to THz may be specified using
-``FREQUENCY_CONVERSION_FACTOR`` tag. The calculated values are
+reciprocal space. Therefore these tags must be used with
+:ref:`mesh_sampling_tags` and their convergence with respect to the
+sampling mesh has to be checked. Usually this calculation is not
+computationally demanding, so the convergence is easily achieved with
+increasing the density of the sampling mesh. ``-p`` option can be used
+together to plot the thermal propreties.
+
+Phonon frequencies have to be calculated in THz and this is the
+default setting of phonopy. However as a special case when
+unit conversion factor is specified using
+``FREQUENCY_CONVERSION_FACTOR`` tag, careful attention is required.
+
+The calculated values are
 written into ``thermal_properties.yaml``. The unit systems of free
 energy, heat capacity, and entropy are kJ/mol, J/K/mol, and J/K/mol,
 respectively, where 1 mol means :math:`\mathrm{N_A}\times` your input
@@ -554,7 +661,7 @@ Thermal displacements
 
 .. _thermal_displacements_tag:
 
-``TDISP``, ``TMAX``, ``TMIN``, ``TSTEP``
+``TDISP``, ``TMAX``, ``TMIN``, and ``TSTEP``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Mean square displacements projected to Cartesian axes as a function of
@@ -562,7 +669,13 @@ temperature are calculated from the number of phonon excitations. The
 usages of ``TMAX``, ``TMIN``, ``TSTEP`` tags are same as those in
 :ref:`thermal properties tags <thermal_properties_tag>`. The result is
 writen into ``thermal_displacements.yaml``. See the detail of the
-method, :ref:`thermal_displacement`.
+method, :ref:`thermal_displacement`. These tags must be used with
+:ref:`mesh_sampling_tags`
+
+Phonon frequencies have to be calculated in THz and this is the
+default setting of phonopy. However as a special case when unit
+conversion factor is specified using ``FREQUENCY_CONVERSION_FACTOR``
+tag, careful attention is required.
 
 The projection is applied along arbitrary direction using
 ``PROJECTION_DIRECTION`` tag (:ref:`projection_direction_tag`).
@@ -574,8 +687,8 @@ The projection is applied along arbitrary direction using
 
 .. _thermal_displacement_matrices_tag:
 
-``TDISPMAT``, ``TMAX``, ``TMIN``, ``TSTEP``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+``TDISPMAT``, ``TMAX``, ``TMIN``, and ``TSTEP``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Mean square displacement matricies are calculated. The difinition is
 shown at :ref:`thermal_displacement`. The result is
@@ -585,6 +698,15 @@ elements are given in the order of xx, yy, zz, yz, xz, xy.
 ::
 
    TDISPMAT = .TRUE.
+
+The 3x3 matrix restricts distribution of each atom around the
+equilibrium position to be ellipsoid. But the distribution is not
+necessarily to be so.
+
+Phonon frequencies have to be calculated in THz and this is the
+default setting of phonopy. However as a special case when
+unit conversion factor is specified using
+``FREQUENCY_CONVERSION_FACTOR`` tag, careful attention is required.
 
 ``CUTOFF_FREQUENCY``
 ~~~~~~~~~~~~~~~~~~~~~
@@ -634,7 +756,7 @@ frequency before multiplying the unit conversion factor
 and :math:`D_{jj'}` is
 
 .. math::
-   D_{jj'} = 
+   D_{jj'} =
    \begin{pmatrix}
    Re(D_{jj'}^{xx}) & Im(D_{jj'}^{xx}) & Re(D_{jj'}^{xy}) &
    Im(D_{jj'}^{xy}) & Re(D_{jj'}^{xz}) & Im(D_{jj'}^{xz}) \\
@@ -658,10 +780,10 @@ and the dynamical matrix may be used as
 .. code-block:: python
 
    #!/usr/bin/env python
-   
+
    import yaml
    import numpy as np
-   
+
    data = yaml.load(open("qpoints.yaml"))
    dynmat = []
    dynmat_data = data['phonon'][0]['dynamical_matrix']
@@ -669,7 +791,7 @@ and the dynamical matrix may be used as
        vals = np.reshape(row, (-1, 2))
        dynmat.append(vals[:, 0] + vals[:, 1] * 1j)
    dynmat = np.array(dynmat)
-   
+
    eigvals, eigvecs, = np.linalg.eigh(dynmat)
    frequencies = np.sqrt(np.abs(eigvals.real)) * np.sign(eigvals.real)
    conversion_factor_to_THz = 15.633302
@@ -678,7 +800,7 @@ and the dynamical matrix may be used as
 
 .. _nac_tag:
 
-Non-analytical term correction 
+Non-analytical term correction
 ----------------------------------
 
 ``NAC``
@@ -702,7 +824,7 @@ ignored and the specified **q**-point is used as the **q**-direction.
 
 ::
 
-   MP = 1 1 1
+   MESH = 1 1 1
    NAC = .TRUE.
    Q_DIRECTION = 1 0 0
 
@@ -786,7 +908,7 @@ respectively. Force constants are symmetric in each pair as
 .. math::
 
    \Phi_{ij}^{\alpha\beta}
-        = \frac{\partial^2 U}{\partial u_i^\alpha \partial u_j^\beta} 
+        = \frac{\partial^2 U}{\partial u_i^\alpha \partial u_j^\beta}
         = \frac{\partial^2 U}{\partial u_j^\beta \partial u_i^\alpha}
 	= \Phi_{ji}^{\beta\alpha}
 
@@ -814,7 +936,7 @@ force applying ``FC_SYMMETRY``.
 .. .. math::
 
 ..    \Phi_{ij}^{\alpha\beta}
-..         = \frac{\partial^2 U}{\partial u_i^\alpha \partial u_j^\beta} 
+..         = \frac{\partial^2 U}{\partial u_i^\alpha \partial u_j^\beta}
 ..         = \frac{\partial^2 U}{\partial u_j^\beta \partial u_i^\alpha}
 .. 	= \Phi_{ji}^{\beta\alpha}
 
@@ -872,7 +994,7 @@ settings. Those may be viewed by ``v_sim``, ``gdis``, ``jmol``
 (animation), ``jmol`` (vibration), respectively. For ``POSCAR``, a set
 of ``POSCAR`` format structure files corresponding to respective
 animation images are created such as ``APOSCAR-000``,
-``APOSCAR-001``,.... 
+``APOSCAR-001``,....
 
 There are several parameters to be set in the ``ANIME`` tag.
 
@@ -1040,7 +1162,7 @@ Irreducible representations are shown along with character table.
 ::
 
    IRREPS = 1/3 1/3 0
-   SHOW_IRREPS = .TRUE.   
+   SHOW_IRREPS = .TRUE.
 
 ``LITTLE_COGROUP``
 ~~~~~~~~~~~~~~~~~~~
@@ -1051,5 +1173,3 @@ little group.
 
    IRREPS = 0 0 1/8
    LITTLE_COGROUP = .TRUE.
-
-

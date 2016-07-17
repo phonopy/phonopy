@@ -5,17 +5,17 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Change Log &mdash; Phonopy v.1.10.8</title>
+    <title>Change Log &mdash; Phonopy v.1.10.10</title>
     
     <link rel="stylesheet" href="_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="_static/bootswatch-3.3.4/cosmo/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="_static/bootswatch-3.3.6/cosmo/bootstrap.min.css" type="text/css" />
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.10.8',
+        VERSION:     '1.10.10',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -26,9 +26,9 @@
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Phonopy v.1.10.8" href="index.html" />
+    <link rel="top" title="Phonopy v.1.10.10" href="index.html" />
     <link rel="prev" title="References" href="reference.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
@@ -49,7 +49,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.10.8</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.10.10</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -98,6 +98,7 @@
       role="menu"
       aria-labelledby="dLabelLocalToc"><ul>
 <li><a class="reference internal" href="#">Change Log</a><ul>
+<li><a class="reference internal" href="#jul-17-2016-version-1-10-10">Jul-17-2016: Version 1.10.10</a></li>
 <li><a class="reference internal" href="#apr-22-2016-version-1-10-8">Apr-22-2016: Version 1.10.8</a></li>
 <li><a class="reference internal" href="#feb-7-2016-version-1-10-4">Feb-7-2016: Version 1.10.4</a></li>
 <li><a class="reference internal" href="#jan-25-2016-version-1-10-2">Jan-25-2016: Version 1.10.2</a></li>
@@ -208,6 +209,16 @@
       
   <div class="section" id="change-log">
 <span id="changelog"></span><h1>Change Log<a class="headerlink" href="#change-log" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="jul-17-2016-version-1-10-10">
+<h2>Jul-17-2016: Version 1.10.10<a class="headerlink" href="#jul-17-2016-version-1-10-10" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><a class="reference internal" href="setting-tags.html#dos-moment-tag"><span class="std std-ref">MOMEMT and MOMENT_ORDER</span></a> tags are implemented to calculate
+phonon moments.</li>
+<li><code class="docutils literal"><span class="pre">qpoints.hdf5</span></code> is written with the <code class="docutils literal"><span class="pre">--hdf5</span></code> option. Dynamical
+matrices are also stored in <code class="docutils literal"><span class="pre">qpoints.hdf5</span></code> with <code class="docutils literal"><span class="pre">WRITEDM</span> <span class="pre">=</span>
+<span class="pre">.TRUE.</span></code> (<code class="docutils literal"><span class="pre">--writedm</span></code> option).</li>
+</ul>
+</div>
 <div class="section" id="apr-22-2016-version-1-10-8">
 <h2>Apr-22-2016: Version 1.10.8<a class="headerlink" href="#apr-22-2016-version-1-10-8" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
@@ -416,7 +427,7 @@ constants.</li>
 <h2>Oct-3-2013: Version 1.7.4<a class="headerlink" href="#oct-3-2013-version-1-7-4" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li>Thermal displacement matrix is implemented. See
-<a class="reference internal" href="setting-tags.html#thermal-displacement-matrices-tag"><span class="std std-ref">TDISPMAT, TMAX, TMIN, TSTEP</span></a> and <a class="reference internal" href="thermal-displacement.html#thermal-displacement"><span class="std std-ref">Mean square displacement</span></a>.</li>
+<a class="reference internal" href="setting-tags.html#thermal-displacement-matrices-tag"><span class="std std-ref">TDISPMAT, TMAX, TMIN, and TSTEP</span></a> and <a class="reference internal" href="thermal-displacement.html#thermal-displacement"><span class="std std-ref">Mean square displacement</span></a>.</li>
 <li>PDOS with projection along arbitrary direction was implemented. See
 <a class="reference internal" href="setting-tags.html#projection-direction-tag"><span class="std std-ref">PROJECTION_DIRECTION</span></a>.</li>
 <li><code class="docutils literal"><span class="pre">partial_dos.dat</span></code> format was changed. XYZ projected PDOS is not
@@ -504,7 +515,7 @@ accelerates the calculation speed.</li>
 <h2>Feb-7-2013: Version 1.6.3<a class="headerlink" href="#feb-7-2013-version-1-6-3" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li>Arbitral projection direction is allowed for thermal displacements
-calculation. (<a class="reference internal" href="setting-tags.html#thermal-displacements-tag"><span class="std std-ref">TDISP, TMAX, TMIN, TSTEP</span></a>)</li>
+calculation. (<a class="reference internal" href="setting-tags.html#thermal-displacements-tag"><span class="std std-ref">TDISP, TMAX, TMIN, and TSTEP</span></a>)</li>
 <li>A new tag <cite>WRITEDM</cite> and an option <cite>&#8211;writedm</cite> are
 implemented. Dynamical matrices are written into <code class="docutils literal"><span class="pre">qpoints.yaml</span></code>
 when this is used togather with the <code class="docutils literal"><span class="pre">QPOINTS</span></code> mode. (<a class="reference internal" href="setting-tags.html#writedm-tag"><span class="std std-ref">WRITEDM</span></a>)</li>
@@ -583,7 +594,7 @@ was implemented by the function <code class="docutils literal"><span class="pre"
 <code class="docutils literal"><span class="pre">BAND_LABELS</span></code> (<a class="reference internal" href="setting-tags.html#band-labels-tag"><span class="std std-ref">BAND_LABELS</span></a>).</li>
 <li><code class="docutils literal"><span class="pre">--band</span></code> option is implemented.</li>
 <li><code class="docutils literal"><span class="pre">GAMMA_CENTER</span></code> tag and <code class="docutils literal"><span class="pre">--gc</span></code>, <code class="docutils literal"><span class="pre">--gamma_center</span></code> option are
-implemented (<a class="reference internal" href="setting-tags.html#mp-tag"><span class="std std-ref">MP, MESH</span></a>).</li>
+implemented (<a class="reference internal" href="setting-tags.html#mp-tag"><span class="std std-ref">MESH or MP</span></a>).</li>
 <li><code class="docutils literal"><span class="pre">phonopy-qha</span></code> was polished. Most of the code was moved to
 <code class="docutils literal"><span class="pre">phonopy/qha/__init__.py</span></code>.</li>
 <li><code class="docutils literal"><span class="pre">Phonopy::get_mesh</span></code> and <code class="docutils literal"><span class="pre">Phonopy::get_band_structure</span></code> were
@@ -721,7 +732,7 @@ modified. Please first check <a class="reference internal" href="examples.html#e
 <li>NDIM and MATDIM tags are replaced by DIM tag (<a class="reference internal" href="setting-tags.html#dimension-tag"><span class="std std-ref">CELL_FILENAME</span></a>).</li>
 <li>Band structure setting tags are changed to BAND tag
 (<a class="reference internal" href="setting-tags.html#band-structure-related-tags"><span class="std std-ref">Band structure tags</span></a>).</li>
-<li>DOS tag is renamed to DOS_RANGE tag (<a class="reference internal" href="setting-tags.html#dos-related-tags"><span class="std std-ref">Density of states (DOS) tags</span></a>).</li>
+<li>DOS tag is renamed to DOS_RANGE tag (<a class="reference internal" href="setting-tags.html#dos-related-tags"><span class="std std-ref">Phonon density of states (DOS) tags</span></a>).</li>
 </ul>
 <p>These changes are applied only for the phonopy interface. Internal
 simulation code has not been touched, so <strong>physical results would not
@@ -978,7 +989,7 @@ from those in structure with atomic displacements.</li>
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.3.<br/>
     </p>
   </div>
 </footer>
