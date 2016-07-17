@@ -55,7 +55,7 @@ class PhononMoment:
                             freq_max=None,
                             tolerance=1e-8):
         if freq_min is None:
-            self._fmin = - tolerance
+            self._fmin = tolerance
         else:
             self._fmin = freq_min - tolerance
 
