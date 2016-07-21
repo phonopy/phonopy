@@ -3,6 +3,11 @@
 Command options
 ===============
 
+.. contents::
+   :depth: 1
+   :local:
+
+
 Some of command-line options are equivalent to respective setting
 tags:
 
@@ -60,8 +65,8 @@ tags.
 
 .. _force_calculators:
 
-Force calculators
-------------------
+Choice of force calculator
+---------------------------
 
 Currently interfaces for VASP, Wien2k, Pwscf, Abinit, and Elk are
 prepared. Wien2k, Pwscf, Abinit and Elk interfaces are invoked with

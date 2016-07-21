@@ -1,11 +1,11 @@
-.. contents::
-   :depth: 2
-   :local:
-
 .. _setting_tags:
 
 Setting tags
 ============
+
+.. contents::
+   :depth: 1
+   :local:
 
 Most of the setting tags have corresponding command-line options
 (:ref:`command_options`).
