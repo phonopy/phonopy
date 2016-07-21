@@ -3,6 +3,10 @@
 Examples
 ===============
 
+.. contents::
+   :depth: 2
+   :local:
+
 Example files are stored in the ``example`` directory of distributed
 package.
 
