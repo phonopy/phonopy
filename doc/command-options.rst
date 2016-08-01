@@ -27,6 +27,7 @@ tags:
 * ``--fits_debye_model`` (``DEBYE_MODEL = .TRUE.``)
 * ``--fmax`` (``FMAX``)
 * ``--fmin`` (``FMIN``)
+* ``--fpitch`` (``FPITCH``)
 * ``--gc``, ``--gamma_center`` (``GAMMA_CENTER``)
 * ``--gv``, ``--group_velocity`` (``GROUP_VELOCITY = .TRUE.``)
 * ``--gv_delta_q`` (``GV_DELTA_Q``)

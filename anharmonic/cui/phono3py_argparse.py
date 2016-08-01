@@ -54,7 +54,7 @@ def get_parser():
                         forces_fc2_mode=False,
                         force_sets_mode=False,
                         frequency_conversion_factor=None,
-                        frequency_pitch=None,
+                        fpitch=None,
                         frequency_scale_factor=None,
                         num_frequency_points=None,
                         freq_scale=None,
@@ -211,7 +211,7 @@ def get_parser():
         help=("Squared scale factor multiplied with fc2. Therefore frequency "
               "is changed but the contribution from NAC is not changed."))
     parser.add_option(
-        "--freq_pitch", dest="frequency_pitch", type="float",
+        "--freq_pitch", dest="fpitch", type="float",
         help="Pitch in frequency for spectrum")
     parser.add_option(
         "--full_pp", dest="is_full_pp",

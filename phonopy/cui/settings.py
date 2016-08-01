@@ -70,7 +70,7 @@ class Settings:
         self._masses = None
         self._mesh = None
         self._mesh_shift = None
-        self._frequency_pitch = None
+        self._fpitch = None
         self._num_frequency_points = None
         self._primitive_matrix = None
         self._qpoints = None
@@ -143,11 +143,11 @@ class Settings:
     def get_frequency_conversion_factor(self):
         return self._frequency_conversion_factor
 
-    def set_frequency_pitch(self, frequency_pitch):
-        self._frequency_pitch = frequency_pitch
+    def set_frequency_pitch(self, fpitch):
+        self._fpitch = fpitch
 
     def get_frequency_pitch(self):
-        return self._frequency_pitch
+        return self._fpitch
 
     def set_num_frequency_points(self, num_frequency_points):
         self._num_frequency_points = num_frequency_points
@@ -385,8 +385,8 @@ class ConfParser:
                 params['frequency_conversion_factor'])
 
         # Spectram drawing step
-        if 'frequency_pitch' in params:
-            self._settings.set_frequency_pitch(params['frequency_pitch'])
+        if 'fpitch' in params:
+            self._settings.set_frequency_pitch(params['fpitch'])
 
         # Number of sampling points for spectram drawing 
         if 'num_frequency_points' in params:
@@ -630,9 +630,9 @@ class ConfParser:
                 if self._options.frequency_conversion_factor:
                     self._confs['frequency_conversion_factor'] = self._options.frequency_conversion_factor
 
-            if opt.dest == 'frequency_pitch':
-                if self._options.frequency_pitch:
-                    self._confs['frequency_pitch'] = self._options.frequency_pitch
+            if opt.dest == 'fpitch':
+                if self._options.fpitch:
+                    self._confs['fpitch'] = self._options.fpitch
 
             if opt.dest == 'num_frequency_points':
                 if self._options.num_frequency_points:
@@ -833,9 +833,9 @@ class ConfParser:
                 val = float(confs['frequency_conversion_factor'])
                 self.set_parameter('frequency_conversion_factor', val)
 
-            if conf_key == 'frequency_pitch':
-                val = float(confs['frequency_pitch'])
-                self.set_parameter('frequency_pitch', val)
+            if conf_key == 'fpitch':
+                val = float(confs['fpitch'])
+                self.set_parameter('fpitch', val)
 
             if conf_key == 'num_frequency_points':
                 val = int(confs['num_frequency_points'])
@@ -906,8 +906,8 @@ class PhonopySettings(Settings):
         self._fc_computation_algorithm = "svd"
         self._fc_spg_symmetry = False
         self._fits_Debye_model = False
-        self._fmin = None
         self._fmax = None
+        self._fmin = None
         self._irreps_q_point = None
         self._irreps_tolerance = 1e-5
         self._is_dos_mode = False
@@ -983,15 +983,15 @@ class PhonopySettings(Settings):
     def get_cutoff_radius(self):
         return self._cutoff_radius
 
-    def set_dos_range(self, fmin, fmax, fstep):
+    def set_dos_range(self, fmin, fmax, fpitch):
         self._fmin = fmin
         self._fmax = fmax
-        self._frequency_pitch = fstep
+        self._fpitch = fpitch
 
     def get_dos_range(self):
         dos_range = {'min': self._fmin,
                      'max': self._fmax,
-                     'step': self._frequency_pitch}
+                     'step': self._fpitch}
         return dos_range
 
     def set_fc_computation_algorithm(self, fc_computation_algorithm):
@@ -1736,8 +1736,8 @@ class PhonopyConfParser(ConfParser):
         if 'dos_range' in params:
             fmin =  params['dos_range'][0]
             fmax =  params['dos_range'][1]
-            fstep = params['dos_range'][2]
-            self._settings.set_dos_range(fmin, fmax, fstep)
+            fpitch = params['dos_range'][2]
+            self._settings.set_dos_range(fmin, fmax, fpitch)
     
         if 'dos' in params:
             self._settings.set_is_dos_mode(params['dos'])
@@ -1750,7 +1750,7 @@ class PhonopyConfParser(ConfParser):
 
         if 'fmin' in params:
             self._settings.set_min_frequency(params['fmin'])
-    
+
         # Project PDOS x, y, z directions in Cartesian coordinates
         if 'xyz_projection' in params:
             self._settings.set_xyz_projection(params['xyz_projection'])

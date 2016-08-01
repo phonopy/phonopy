@@ -53,7 +53,7 @@ def write_partial_dos(frequency_points,
     fp = open('partial_dos.dat', 'w')
     if comment is not None:
         fp.write("# %s\n" % comment)
-        
+
     for freq, pdos in zip(frequency_points, partial_dos.T):
         fp.write("%20.10f" % freq)
         fp.write(("%20.10f" * len(pdos)) % tuple(pdos))
@@ -136,7 +136,7 @@ def plot_partial_dos(pyplot,
         pyplot.ylabel(ylabel)
 
     pyplot.grid(draw_grid)
-    
+
 class NormalDistribution:
     def __init__(self, sigma):
         self._sigma = sigma
@@ -196,16 +196,14 @@ class Dos:
         f_min = self._frequencies.min()
         f_max = self._frequencies.max()
 
-        if self._tetrahedron_mesh is not None:
-            self._sigma = 0
         if self._sigma is None:
             self._sigma = (f_max - f_min) / 100.0
-            
+
         if freq_min is None:
             f_min -= self._sigma * 10
         else:
             f_min = freq_min
-            
+
         if freq_max is None:
             f_max += self._sigma * 10
         else:
@@ -215,7 +213,9 @@ class Dos:
             f_delta = (f_max - f_min) / 200.0
         else:
             f_delta = freq_pitch
-        self._frequency_points = np.arange(f_min, f_max + f_delta * 0.1, f_delta)
+        self._frequency_points = np.arange(f_min,
+                                           f_max + f_delta * 0.1,
+                                           f_delta)
 
 class TotalDos(Dos):
     def __init__(self, mesh_object, sigma=None, tetrahedron_method=False):
@@ -259,7 +259,7 @@ class TotalDos(Dos):
 
         freq_min = self._frequency_points.min()
         freq_max = self._frequency_points.max()
-        
+
         if freq_max_fit is None:
             N_fit = int(len(self._frequency_points) / 4.0) # Hard coded
         else:
@@ -305,7 +305,7 @@ class TotalDos(Dos):
             comment = "Sigma = %f" % self._sigma
         else:
             comment = "Tetrahedron method"
-            
+
         write_total_dos(self._frequency_points,
                         self._dos,
                         comment=comment)
@@ -375,7 +375,7 @@ class PartialDos(Dos):
             #     for j in range(len(self._frequency_points)):
             #         self._partial_dos[:, j] += iw[j, ib] * frac * w
             self._partial_dos += np.dot(iw * w, self._eigvecs2[i].T).T
-        
+
     def get_partial_dos(self):
         """
         frequency_points: Sampling frequencies
@@ -413,14 +413,13 @@ class PartialDos(Dos):
                          ylabel=_ylabel,
                          draw_grid=draw_grid,
                          flip_xy=flip_xy)
-    
+
     def write(self):
         if self._tetrahedron_mesh is None:
             comment = "Sigma = %f" % self._sigma
         else:
             comment = "Tetrahedron method"
-            
+
         write_partial_dos(self._frequency_points,
                           self._partial_dos,
                           comment=comment)
-
