@@ -3,6 +3,12 @@
 Change Log
 ==========
 
+Aug-1-2016: Version 1.10.12
+-----------------------------
+
+* ``FPITCH`` (``--fpicth``) is made (:ref:`dos_fmin_fmax_tags`).
+* Minor update of ``gruneisen``.
+
 Jul-17-2016: Version 1.10.10
 -----------------------------
 

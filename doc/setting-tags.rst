@@ -450,12 +450,14 @@ second values).
 
 .. _dos_fmin_fmax_tags:
 
-``FMIN`` and ``FMAX``
-~~~~~~~~~~~~~~~~~~~~~~
+``FMIN``, ``FMAX``, and ``FPITCH``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The frequency range to be calculated for phonon-DOS is
-specified. ``FMIN`` and ``FMAX`` give the minimum and maximum
-frequencies of the range, respectively.
+The uniform frequency sampling points for phonon-DOS calculation are
+specified. ``FMIN`` and ``FMAX`` give the minimum, maximum frequencies
+of the range, respectively, and ``FPITCH`` gives the frequency pitch
+to be sampled. These three values are the same as those that can be
+specified by ``DOS_RANGE``.
 
 ``PDOS``
 ~~~~~~~~
