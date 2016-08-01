@@ -34,6 +34,7 @@
 
 import numpy as np
 from phonopy.phonon.band_structure import estimate_band_connection
+from phonopy.phonon.degeneracy import rotate_eigenvectors
 
 class Gruneisen:
     def __init__(self,
@@ -57,14 +58,11 @@ class Gruneisen:
         if qpoints is not None:
             self._set_gruneisen()
 
-        if self._is_band_connection:
-            self._band_order = range(self._dynmat.get_dimension())
-            self._prev_eigvecs = None
 
     def set_qpoints(self, qpoints):
         self._qpoints = qpoints
         self._set_gruneisen()
-        
+
     def get_gruneisen(self):
         return self._gruneisen
 
@@ -76,59 +74,44 @@ class Gruneisen:
 
     def _set_gruneisen(self):
         dV = self._volume_plus - self._volume_minus
-        # dV1 = self._volume - self._volume_minus
-        # dV2 = self._volume_plus - self._volume
 
         if self._is_band_connection:
             self._q_direction = self._qpoints[0] - self._qpoints[-1]
+            band_order = range(self._dynmat.get_dimension())
+            prev_eigvecs = None
 
-        dD = []
-        # ddD = [] # For dg/dV
+        edDe = [] # <e|dD|e>
         eigvals = []
         for i, q in enumerate(self._qpoints):
-            if (self._is_band_connection and
-                self._dynmat.is_nac()):
+            if self._is_band_connection and self._dynmat.is_nac():
                 self._dynmat.set_dynamical_matrix(
                     q, q_direction=self._q_direction)
             else:
                 self._dynmat.set_dynamical_matrix(q)
 
             dm = self._dynmat.get_dynamical_matrix()
-            eigvals_at_q, eigvecs = np.linalg.eigh(dm)
-            eigvals_at_q = eigvals_at_q.real
-
-            dD_at_q = [np.vdot(eig, np.dot(
-                self._get_dD(q, self._dynmat_minus, self._dynmat_plus), eig)
-                           ).real for eig in eigvecs.T]
-
-            # dD_minus = self._get_dD(q, self._dynmat_minus, self._dynmat)
-            # dD_plus = self._get_dD(q, self._dynmat, self._dynmat_plus)
-            # ddD_at_q = [
-            #     np.vdot(eig, np.dot(dD_plus / dV2 - dD_minus / dV1 , eig)).real
-            #     for eig in eigvecs.T]
+            evals, evecs = np.linalg.eigh(dm)
+            evals_at_q = evals.real
+            dD = self._get_dD(q, self._dynmat_minus, self._dynmat_plus)
+            evecs_at_q, edDe_at_q = rotate_eigenvectors(evals_at_q, evecs, dD)
 
             if self._is_band_connection:
-                if self._prev_eigvecs is not None:
-                    self._band_order = estimate_band_connection(
-                        self._prev_eigvecs,
-                        eigvecs,
-                        self._band_order)
-                eigvals.append([eigvals_at_q[b] for b in self._band_order])
-                dD.append([dD_at_q[b] for b in self._band_order])
-                # ddD.append([ddD_at_q[b] for b in self._band_order])
-                self._prev_eigvecs = eigvecs
+                if prev_eigvecs is not None:
+                    band_order = estimate_band_connection(
+                        prev_eigvecs,
+                        evecs_at_q,
+                        band_order)
+                eigvals.append([evals_at_q[b] for b in band_order])
+                edDe.append([edDe_at_q[b] for b in band_order])
+                prev_eigvecs = evecs_at_q
             else:
-                eigvals.append(eigvals_at_q)
-                dD.append(dD_at_q)
-                # ddD.append(ddD_at_q)
+                eigvals.append(evals_at_q)
+                edDe.append(edDe_at_q)
 
-        dD = np.array(dD, dtype='double', order='C')
-        # ddD = np.array(ddD, dtype='double', order='C')
-        eigvals = np.array(eigvals, dtype='double', order='C')
-        
-        self._gruneisen = -dD / dV / eigvals * self._volume / 2
-        # self._gamma_prime = -ddD / (dV / 2) / eigvals * self._volume ** 2 / 2
-        self._eigenvalues = eigvals
+        edDe = np.array(edDe, dtype='double', order='C')
+        self._eigenvalues = np.array(eigvals, dtype='double', order='C')
+        self._gruneisen = -edDe / dV / self._eigenvalues * self._volume / 2
+
 
     def _get_dD(self, q, d_a, d_b):
         if (self._is_band_connection and d_a.is_nac() and d_b.is_nac()):
