@@ -51,8 +51,10 @@ from phonopy.structure.atoms import PhonopyAtoms as Atoms
 
 class PhonopyYaml:
     def __init__(self,
+                 configures=None,
                  calculator=None,
                  show_force_constants=False):
+        self._configures = configures
         self._calculator = calculator
         self._show_force_constants = show_force_constants
 
@@ -79,7 +81,7 @@ class PhonopyYaml:
         with open(filename) as infile:
             self._load(infile)
 
-    def set(self, phonopy):
+    def set_phonon_info(self, phonopy):
         self._version = phonopy.get_version()
         self._unitcell = phonopy.get_unitcell()
         self._primitive = phonopy.get_primitive()
@@ -118,7 +120,11 @@ class PhonopyYaml:
                 lines.append("  - [ %18.15f, %18.15f, %18.15f ]" % tuple(v))
         if self._calculator:
             lines.append("  calculator: %s" % self._calculator)
-        lines.append("  nac_unit_conversion_factor: %f" % nac_factor)
+        if self._nac_params:
+            lines.append("  nac_unit_conversion_factor: %f" % nac_factor)
+        lines.append("  configure:")
+        for key in self._configures:
+            lines.append("    %s: \"%s\"" % (key, self._configures[key]))
         lines.append("")
 
         lines += self._get_physical_unit_yaml_lines()
