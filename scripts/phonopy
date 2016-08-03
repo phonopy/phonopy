@@ -1033,7 +1033,7 @@ else:
 
 # END
 if log_level > 0:
-    phpy_yaml = PhonopyYaml(configures=phonopy_conf.get_configures(),
+    phpy_yaml = PhonopyYaml(configuration=phonopy_conf.get_configures(),
                             calculator=interface_mode)
     phpy_yaml.set_phonon_info(phonon)
     with open("phonopy.yaml", 'w') as w:
