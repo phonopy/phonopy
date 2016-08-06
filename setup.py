@@ -87,6 +87,7 @@ packages_phonopy = ['phonopy',
                     'phonopy.interface',
                     'phonopy.phonon',
                     'phonopy.qha',
+                    'phonopy.spectrum',
                     'phonopy.structure',
                     'phonopy.unfolding']
 scripts_phonopy = ['scripts/phonopy',
