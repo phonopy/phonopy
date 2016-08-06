@@ -119,7 +119,7 @@ class JointDos:
             
         self._joint_dos = None
         self._frequency_points = None
-        self.set_phonon(np.array([grid_point], dtype='intc'))
+        self.set_phonons(np.array([grid_point], dtype='intc'))
 
     def get_triplets_at_q(self):
         return self._triplets_at_q, self._weights_at_q
@@ -143,7 +143,7 @@ class JointDos:
             self._run_c_with_g()
                 
     def _run_c_with_g(self):
-        self.set_phonon(self._triplets_at_q.ravel())
+        self.set_phonons(self._triplets_at_q.ravel())
         if self._sigma is None:
             f_max = np.max(self._frequencies) * 2
         else:
@@ -200,7 +200,7 @@ class JointDos:
             self._triplets_at_q,
             self._grid_address,
             self._bz_map)
-        self.set_phonon(self._vertices.ravel())
+        self.set_phonons(self._vertices.ravel())
         f_max = np.max(self._frequencies) * 2
         f_max *= 1.005
         f_min = 0
@@ -266,7 +266,7 @@ class JointDos:
                  self._symmetry.get_pointgroup_operations(),
                  self._reciprocal_lattice)
 
-    def set_phonon(self, grid_points):
+    def set_phonons(self, grid_points):
         set_phonon_c(self._dm,
                      self._frequencies,
                      self._eigenvectors,
