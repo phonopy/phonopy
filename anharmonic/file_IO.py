@@ -653,6 +653,7 @@ def write_kappa_to_hdf5(temperature,
                                   filename=filename)
     with h5py.File("kappa" + suffix + ".hdf5", 'w') as w:
         w.create_dataset('temperature', data=temperature)
+        w.create_dataset('mesh', data=mesh)
         if frequency is not None:
             w.create_dataset('frequency', data=frequency)
         if group_velocity is not None:
