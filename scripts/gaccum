@@ -1,10 +1,13 @@
 #!/usr/bin/env python
 
+import math
 import numpy as np
 from phonopy.cui.settings import fracval
 from phonopy.phonon.tetrahedron_mesh import TetrahedronMesh
 from phonopy.phonon.dos import NormalDistribution
 from anharmonic.phonon3.triplets import get_ir_grid_points
+
+epsilon = 1.0e-8
 
 class GammaDOS:
     def __init__(self,
@@ -25,7 +28,7 @@ class GammaDOS:
     
     def _set_frequency_points(self):
         min_freq = np.min(self._frequencies)
-        max_freq = np.max(self._frequencies)
+        max_freq = np.max(self._frequencies) + epsilon
         self._frequency_points = np.linspace(min_freq,
                                              max_freq,
                                              self._num_fpoints)
@@ -125,6 +128,12 @@ if __name__ == '__main__':
                         help='Calculate Pqj instead of Gamma')
     parser.add_argument('--cv', action='store_true',
                         help='Calculate Cv instead of Gamma')
+    parser.add_argument('--tau', action='store_true',
+                        help='Calculate lifetimes (tau) instead of Gamma')
+    parser.add_argument('--gv_norm', action='store_true',
+                        help='Calculate |g_v| instead of Gamma')
+    parser.add_argument('--temperature', type=float, dest='temperature',
+                        help='Temperature to output data at')
     parser.add_argument('filenames', nargs='*')
     args = parser.parse_args()
 
@@ -133,7 +142,10 @@ if __name__ == '__main__':
         [fracval(x) for x in args.primitive_axis.split()], (3, 3)))
 
     f = h5py.File(args.filenames[1])
-    mesh = np.array([int(x) for x in args.mesh.split()], dtype='intc')
+    if 'mesh' in f:
+        mesh = np.array(f['mesh'][:], dtype='intc')
+    else:
+        mesh = np.array([int(x) for x in args.mesh.split()], dtype='intc')
     frequencies = f['frequency'][:]
     temperatures = f['temperature'][:]
     weights = f['weight'][:]
@@ -145,15 +157,33 @@ if __name__ == '__main__':
      grid_address,
      grid_mapping_table) = get_ir_grid_points(mesh, rotations)
 
-    assert (weights == weights_for_check).all()
+    if (weights != weights_for_check).any():
+        print("*** gaccum exited ***")
+        print("Something wrong in crystal symmetry. "
+              "Please check --pa or --mesh")
+        sys.exit(1)
 
     if args.pqj:
         gamma = f['ave_pp'][:].reshape((1,) + f['ave_pp'].shape)
     elif args.cv:
         gamma = f['heat_capacity'][:]
-        print("hoge")
+    elif args.tau:
+        g = f['gamma'][:]
+        g = np.where(g > 0, g, -1)
+        gamma = np.where(g > 0, 1.0 / (2.0 * g), 0) # tau
+    elif args.gv_norm:
+        gamma = np.sqrt((f['group_velocity'][:, :, :] ** 2).sum(axis=2))
+        gamma = gamma.reshape((1,) + gamma.shape)
     else:
         gamma = f['gamma'][:]
+
+    if args.temperature is not None and gamma.shape[0] > 1:
+        for i, t in enumerate(temperatures):
+            if np.abs(t - args.temperature) < epsilon:
+                temperatures = temperatures[i:i+1]
+                gamma = gamma[i:i+1,:,:]
+
+                break
 
     gamma_dos = GammaDOStetrahedron(gamma,
                                     primitive,
@@ -177,7 +207,9 @@ if __name__ == '__main__':
             print("%f %e %e" % (f, g[0], g[1]))
     else:
         for i, gdos_t in enumerate(gdos):
-            print("# %d K %f" % (temperatures[i], gamma[i].sum(axis=0).sum(axis=0)))
+            total = np.dot(weights, gamma[i]).sum() / weights.sum()
+            assert np.isclose(gdos_t[-1][0], total)
+            print("# %d K" % temperatures[i])
             for f, g in zip(freq_points, gdos_t): # show kappa_xx
                 print("%f %f %f" % (f, g[0], g[1]))
             print('')
