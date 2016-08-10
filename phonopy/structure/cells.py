@@ -72,13 +72,17 @@ def trim_cell(relative_axes, cell, symprec):
     num_atom = 0
     
     mapping_table = np.arange(len(positions), dtype='intc')
+    symprec2 = symprec ** 2
     for i, pos in enumerate(positions_in_new_lattice):
         is_overlap = False
         if num_atom > 0:
             diff = trimed_positions[:num_atom] - pos
             diff -= np.rint(diff)
-            distances = np.linalg.norm(np.dot(diff, trimed_lattice), axis=1)
-            overlap_indices = np.where(distances < symprec)[0]
+            # Older numpy doesn't support axis argument.
+            # distances = np.linalg.norm(np.dot(diff, trimed_lattice), axis=1)
+            # overlap_indices = np.where(distances < symprec)[0]
+            distances2 = np.sum(np.dot(diff, trimed_lattice) ** 2, axis=1)
+            overlap_indices = np.where(distances2 < symprec2)[0]
             if len(overlap_indices) > 0:
                 is_overlap = True
                 mapping_table[i] = extracted_atoms[overlap_indices[0]]
