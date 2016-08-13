@@ -412,7 +412,8 @@ def solve_fc3(fc3,
     positions = supercell.get_scaled_positions()
     pos_center = positions[first_atom_num].copy()
     positions -= pos_center
-    rot_map_syms = get_positions_sent_by_rot_inv(positions,
+    rot_map_syms = get_positions_sent_by_rot_inv(lattice,
+                                                 positions,
                                                  site_symmetry,
                                                  symprec)
 
