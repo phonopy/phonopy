@@ -49,6 +49,7 @@ static PyObject * py_get_thermal_properties(PyObject *self, PyObject *args);
 static PyObject * py_distribute_fc2(PyObject *self, PyObject *args);
 
 static int distribute_fc2(double * fc2,
+			  const double * lat,
 			  const double * pos,
 			  const int num_pos,
 			  const int atom_disp,
@@ -422,7 +423,7 @@ static PyObject * py_get_thermal_properties(PyObject *self, PyObject *args)
   }
 
   return PyTuple_Pack(3,
-		      PyFloat_FromDouble(free_energy / sum_weights), 
+		      PyFloat_FromDouble(free_energy / sum_weights),
 		      PyFloat_FromDouble(entropy / sum_weights),
 		      PyFloat_FromDouble(heat_capacity / sum_weights));
 }
@@ -470,6 +471,7 @@ static double get_heat_capacity_omega(const double temperature,
 static PyObject * py_distribute_fc2(PyObject *self, PyObject *args)
 {
   PyArrayObject* force_constants;
+  PyArrayObject* lattice;
   PyArrayObject* positions;
   PyArrayObject* rotation;
   PyArrayObject* rotation_cart;
@@ -477,8 +479,9 @@ static PyObject * py_distribute_fc2(PyObject *self, PyObject *args)
   int atom_disp, map_atom_disp;
   double symprec;
 
-  if (!PyArg_ParseTuple(args, "OOiiOOOd",
+  if (!PyArg_ParseTuple(args, "OOOiiOOOd",
 			&force_constants,
+			&lattice,
 			&positions,
 			&atom_disp,
 			&map_atom_disp,
@@ -493,10 +496,12 @@ static PyObject * py_distribute_fc2(PyObject *self, PyObject *args)
   const double* r_cart = (double*)PyArray_DATA(rotation_cart);
   double* fc2 = (double*)PyArray_DATA(force_constants);
   const double* t = (double*)PyArray_DATA(translation);
+  const double* lat = (double*)PyArray_DATA(lattice);
   const double* pos = (double*)PyArray_DATA(positions);
   const int num_pos = PyArray_DIMS(positions)[0];
 
   distribute_fc2(fc2,
+		 lat,
 		 pos,
 		 num_pos,
 		 atom_disp,
@@ -510,6 +515,7 @@ static PyObject * py_distribute_fc2(PyObject *self, PyObject *args)
 }
 
 static int distribute_fc2(double * fc2,
+			  const double * lat,
 			  const double * pos,
 			  const int num_pos,
 			  const int atom_disp,
@@ -521,8 +527,12 @@ static int distribute_fc2(double * fc2,
 {
   int i, j, k, l, m, address_new, address;
   int is_found, rot_atom;
+  double distance2, symprec2, diff_cart;
   double rot_pos[3], diff[3];
 
+  symprec2 = symprec * symprec;
+
+  is_found = 1;
   for (i = 0; i < num_pos; i++) {
     for (j = 0; j < 3; j++) {
       rot_pos[j] = t[j];
@@ -531,24 +541,30 @@ static int distribute_fc2(double * fc2,
       }
     }
 
+    rot_atom = -1;
     for (j = 0; j < num_pos; j++) {
-      is_found = 1;
       for (k = 0; k < 3; k++) {
 	diff[k] = pos[j * 3 + k] - rot_pos[k];
 	diff[k] -= nint(diff[k]);
-	if (fabs(diff[k]) > symprec) {
-	  is_found = 0;
-	  break;
-	}
       }
-      if (is_found) {
-	rot_atom = j;
-	break;
+      distance2 = 0;
+      for (k = 0; k < 3; k++) {
+	diff_cart = 0;
+	for (l = 0; l < 3; l++) {
+	  diff_cart += lat[k * 3 + l] * diff[l];
+	}
+	distance2 += diff_cart * diff_cart;
+      }
+
+      if (distance2 < symprec2) {
+	  rot_atom = j;
+	  break;
       }
     }
 
-    if (! is_found) {
+    if (rot_atom < 0) {
       printf("Encounter some problem in distribute_fc2.\n");
+      is_found = 0;
       goto end;
     }
 

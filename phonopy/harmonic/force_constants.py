@@ -91,7 +91,7 @@ def get_fc2(supercell,
     rotations = symmetry.get_symmetry_operations()['rotations']
     trans = symmetry.get_symmetry_operations()['translations']
     positions = supercell.get_scaled_positions()
-    lattice = supercell.get_cell().T
+    lattice = np.array(supercell.get_cell().T, dtype='double', order='C')
 
     if atom_list is None:
         distribute_force_constants(force_constants,
@@ -129,21 +129,12 @@ def cutoff_force_constants(force_constants,
         pos_i = positions[i]
         for j in range(num_atom):
             pos_j = positions[j]
-            min_distance = get_shortest_distance_in_PBC(pos_i,
-                                                        pos_j,
-                                                        reduced_bases)
+            min_distance = _get_shortest_distance_in_PBC(pos_i,
+                                                         pos_j,
+                                                         reduced_bases)
             if min_distance > cutoff_radius:
                 force_constants[i, j] = 0.0
 
-def get_shortest_distance_in_PBC(pos_i, pos_j, reduced_bases):
-    distances = []
-    for k in (-1, 0, 1):
-        for l in (-1, 0, 1):
-            for m in (-1, 0, 1):
-                diff = pos_j + np.array([k, l, m]) - pos_i
-                distances.append(np.linalg.norm(np.dot(diff, reduced_bases)))
-    return np.min(distances)
-                        
 
 def symmetrize_force_constants(force_constants, iteration=3):
     for i in range(iteration):
@@ -153,7 +144,7 @@ def symmetrize_force_constants(force_constants, iteration=3):
 def distribute_force_constants(force_constants,
                                atom_list,
                                atom_list_done,
-                               lattice,
+                               lattice, # column vectors
                                positions,
                                rotations,
                                trans,
@@ -161,14 +152,15 @@ def distribute_force_constants(force_constants,
     for atom_disp in atom_list:
         if atom_disp in atom_list_done:
             continue
-            
-        map_atom_disp, map_sym = get_atom_mapping_by_symmetry(
+
+        map_atom_disp, map_sym = _get_atom_mapping_by_symmetry(
             atom_list_done,
             atom_disp,
-            rotations, 
+            rotations,
             trans,
+            lattice,
             positions,
-            symprec)
+            symprec=symprec)
 
         _distribute_fc2_part(force_constants,
                              positions,
@@ -179,27 +171,6 @@ def distribute_force_constants(force_constants,
                              trans[map_sym],
                              symprec)
 
-    
-def get_atom_mapping_by_symmetry(atom_list_done,
-                                 atom_number,
-                                 rotations,
-                                 translations,
-                                 positions,
-                                 symprec=1e-5):
-    """
-    Find a mapping from an atom to an atom in the atom list done.
-    """
-
-    for i, (r, t) in enumerate(zip(rotations, translations)):
-        rot_pos = np.dot(positions[atom_number], r.T) + t
-        for j in atom_list_done:
-            diff = positions[j] - rot_pos
-            if (abs(diff - np.rint(diff)) < symprec).all():
-                return j, i
-
-    print("Input forces are not enough to calculate force constants,")
-    print("or something wrong (e.g. crystal structure does not match).")
-    raise ValueError
 
 def solve_force_constants(force_constants,
                           disp_atom_number,
@@ -228,17 +199,22 @@ def solve_force_constants(force_constants,
                                    site_symmetry,
                                    symprec)
         return None
-    
-def get_positions_sent_by_rot_inv(positions, site_symmetry, symprec):
+
+def get_positions_sent_by_rot_inv(lattice, # column vectors
+                                  positions,
+                                  site_symmetry,
+                                  symprec):
     rot_map_syms = []
+    symprec2 = symprec ** 2
     for sym in site_symmetry:
         rot_map = np.zeros(len(positions), dtype='intc')
         rot_pos = np.dot(positions, sym.T)
         is_found = False
         for i, rot_pos_i in enumerate(rot_pos):
             diff = positions - rot_pos_i
-            j = np.nonzero((
-                    np.abs(diff - np.rint(diff)) < symprec).all(axis=1))[0]
+            diff -= np.rint(diff)
+            diff = np.dot(diff, lattice.T)
+            j = np.nonzero(np.sum(diff ** 2, axis=1) < symprec2)[0]
             rot_map[j] = i
 
         rot_map_syms.append(rot_map)
@@ -258,8 +234,60 @@ def get_rotated_forces(forces_syms, site_sym_cart):
 
     return rot_forces
 
+def set_tensor_symmetry_old(force_constants,
+                            lattice, # column vectors
+                            positions,
+                            symmetry):
+    """
+    Full force constants are symmetrized using crystal symmetry.
+    This method extracts symmetrically equivalent sets of atomic pairs and
+    take sum of their force constants and average the sum.
+
+    Since get_force_constants_disps may include crystal symmetry, this method
+    is usually meaningless.
+    """
+
+    rotations = symmetry.get_symmetry_operations()['rotations']
+    translations = symmetry.get_symmetry_operations()['translations']
+    symprec = symmetry.get_symmetry_tolerance()
+
+    fc_bak = force_constants.copy()
+
+    # Create mapping table between an atom and the symmetry operated atom
+    # map[ i, j ]
+    # i: atom index
+    # j: operation index
+    mapping = []
+    for pos_i in positions:
+        map_local = []
+        for rot, trans in zip(rotations, translations):
+            rot_pos = np.dot(pos_i, rot.T) + trans
+            for j, pos_j in enumerate(positions):
+                diff = pos_j - rot_pos
+                diff -= np.rint(diff)
+                diff = np.dot(diff, lattice.T)
+                if np.linalg.norm < symprec:
+                    map_local.append(j)
+                    break
+        mapping.append(map_local)
+    mapping = np.array(mapping)
+
+    # Look for the symmetrically equivalent force constant tensors
+    for i, pos_i in enumerate(positions):
+        for j, pos_j in enumerate(positions):
+            tmp_fc = np.zeros((3, 3), dtype='double')
+            for k, rot in enumerate(rotations):
+                cart_rot = similarity_transformation(lattice, rot)
+
+                # Reverse rotation of force constant is summed
+                tmp_fc += similarity_transformation(cart_rot.T,
+                                                    fc_bak[mapping[i, k],
+                                                           mapping[j, k]])
+            # Take average and set to new force cosntants
+            force_constants[i, j] = tmp_fc / len(rotations)
+
 def set_tensor_symmetry(force_constants,
-                        lattice,
+                        lattice, # column vectors
                         positions,
                         symmetry):
     rotations = symmetry.get_symmetry_operations()['rotations']
@@ -269,7 +297,8 @@ def set_tensor_symmetry(force_constants,
     cart_rot = np.array([similarity_transformation(lattice, rot)
                          for rot in rotations])
 
-    mapa = _get_atom_indices_by_symmetry(positions,
+    mapa = _get_atom_indices_by_symmetry(lattice,
+                                         positions,
                                          rotations,
                                          translations,
                                          symprec)
@@ -312,7 +341,7 @@ def set_tensor_symmetry_PJ(force_constants,
     Full force constants are symmetrized using crystal symmetry.
     This method extracts symmetrically equivalent sets of atomic pairs and
     take sum of their force constants and average the sum.
-    
+
     Since get_force_constants_disps may include crystal symmetry, this method
     is usually meaningless.
     """
@@ -323,71 +352,22 @@ def set_tensor_symmetry_PJ(force_constants,
 
     N = len(rotations)
 
-    mapa = _get_atom_indices_by_symmetry(positions,
+    mapa = _get_atom_indices_by_symmetry(lattice,
+                                         positions,
                                          rotations,
                                          translations,
                                          symprec)
-    cart_rot = np.array([similarity_transformation(lattice, rot).T 
+    cart_rot = np.array([similarity_transformation(lattice, rot).T
                          for rot in rotations])
     cart_rot_inv = np.array([np.linalg.inv(rot) for rot in cart_rot])
-    fcm = np.array([force_constants[mapa[n],:,:,:][:,mapa[n],:,:] 
+    fcm = np.array([force_constants[mapa[n],:,:,:][:,mapa[n],:,:]
                     for n in range(N)])
     s = np.transpose(np.array([np.dot(cart_rot[n],
-                                      np.dot(fcm[n], cart_rot_inv[n])) 
+                                      np.dot(fcm[n], cart_rot_inv[n]))
                                for n in range(N)]), (0, 2, 3, 1, 4))
     force_constants[:] = np.array(np.average(s, axis=0),
                                   dtype='double',
                                   order='C')
-
-def set_tensor_symmetry_old(force_constants,
-                            lattice,
-                            positions,
-                            symmetry):
-    """
-    Full force constants are symmetrized using crystal symmetry.
-    This method extracts symmetrically equivalent sets of atomic pairs and
-    take sum of their force constants and average the sum.
-    
-    Since get_force_constants_disps may include crystal symmetry, this method
-    is usually meaningless.
-    """
-
-    rotations = symmetry.get_symmetry_operations()['rotations']
-    translations = symmetry.get_symmetry_operations()['translations']
-    symprec = symmetry.get_symmetry_tolerance()
-
-    fc_bak = force_constants.copy()
-
-    # Create mapping table between an atom and the symmetry operated atom
-    # map[ i, j ]
-    # i: atom index
-    # j: operation index
-    mapping = []
-    for pos_i in positions:
-        map_local = []
-        for rot, trans in zip(rotations, translations):
-            rot_pos = np.dot(pos_i, rot.T) + trans
-            for j, pos_j in enumerate(positions):
-                diff = pos_j - rot_pos
-                if (abs(diff -diff.round()) < symprec).all():
-                    map_local.append(j)
-                    break
-        mapping.append(map_local)
-    mapping = np.array(mapping)
-
-    # Look for the symmetrically equivalent force constant tensors
-    for i, pos_i in enumerate(positions):
-        for j, pos_j in enumerate(positions):
-            tmp_fc = np.zeros((3, 3), dtype='double')
-            for k, rot in enumerate(rotations):
-                cart_rot = similarity_transformation(lattice, rot)
-
-                # Reverse rotation of force constant is summed
-                tmp_fc += similarity_transformation(cart_rot.T,
-                                                    fc_bak[mapping[i, k],
-                                                           mapping[j, k]])
-            # Take average and set to new force cosntants
-            force_constants[i, j] = tmp_fc / len(rotations)
 
 def set_translational_invariance(force_constants,
                                  translational_symmetry_type=1):
@@ -403,7 +383,7 @@ def set_translational_invariance(force_constants,
            force_constants,
            index=i,
            translational_symmetry_type=translational_symmetry_type)
-    
+
 def set_translational_invariance_per_index(fc2,
                                            index=0,
                                            translational_symmetry_type=1):
@@ -431,7 +411,7 @@ def set_translational_invariance_per_index(fc2,
 def set_permutation_symmetry(force_constants):
     """
     Phi_ij_ab = Phi_ji_ba
-    
+
     i, j: atom index
     a, b: Cartesian axis index
 
@@ -455,11 +435,11 @@ def rotational_invariance(force_constants,
     """
     print("Check rotational invariance ...")
 
-    fc = force_constants 
+    fc = force_constants
     p2s = primitive.get_primitive_to_supercell_map()
 
     abc = "xyz"
-    
+
     for pi, p in enumerate(p2s):
         for i in range(3):
             mat = np.zeros((3, 3), dtype='double')
@@ -513,7 +493,7 @@ def show_drift_force_constants(force_constants, name="force constants"):
 
 #################
 # Local methods #
-#################    
+#################
 def _solve_force_constants_svd(force_constants,
                                disp_atom_number,
                                displacements,
@@ -521,14 +501,15 @@ def _solve_force_constants_svd(force_constants,
                                supercell,
                                site_symmetry,
                                symprec):
-    lat = supercell.get_cell().T
+    lattice = supercell.get_cell().T
     positions = supercell.get_scaled_positions()
     pos_center = positions[disp_atom_number].copy()
     positions -= pos_center
-    rot_map_syms = get_positions_sent_by_rot_inv(positions,
+    rot_map_syms = get_positions_sent_by_rot_inv(lattice,
+                                                 positions,
                                                  site_symmetry,
                                                  symprec)
-    site_sym_cart = [similarity_transformation(lat, sym)
+    site_sym_cart = [similarity_transformation(lattice, sym)
                      for sym in site_symmetry]
     rot_disps = get_rotated_displacement(displacements, site_sym_cart)
     inv_displacements = np.linalg.pinv(rot_disps)
@@ -547,7 +528,7 @@ def _solve_force_constants_svd(force_constants,
 # KL(m).
 # This is very similar, but instead of using inverse displacement
 # and later multiplying it by the force a linear regression is used.
-# Force is "plotted" versus displacement and the slope is 
+# Force is "plotted" versus displacement and the slope is
 # calculated, together with its standard deviation.
 def _solve_force_constants_regression(force_constants,
                                       disp_atom_number,
@@ -557,14 +538,15 @@ def _solve_force_constants_regression(force_constants,
                                       site_symmetry,
                                       symprec):
     fc_errors = np.zeros((3, 3), dtype='double')
-    lat = supercell.get_cell().T
+    lattice = supercell.get_cell().T
     positions = supercell.get_scaled_positions()
     pos_center = positions[disp_atom_number].copy()
     positions -= pos_center
-    rot_map_syms = get_positions_sent_by_rot_inv(positions,
+    rot_map_syms = get_positions_sent_by_rot_inv(lattice,
+                                                 positions,
                                                  site_symmetry,
                                                  symprec)
-    site_sym_cart = [similarity_transformation(lat, sym)
+    site_sym_cart = [similarity_transformation(lattice, sym)
                      for sym in site_symmetry]
     rot_disps = get_rotated_displacement(displacements, site_sym_cart)
     inv_displacements = np.linalg.pinv(rot_disps)
@@ -577,17 +559,17 @@ def _solve_force_constants_regression(force_constants,
                                    site_sym_cart))
 
         combined_forces = np.reshape(combined_forces, (-1, 3))
-        # KL(m). 
+        # KL(m).
         # We measure the Fi-Xj slope (linear regression), see:
 # stackoverflow.com/questions/9990789/how-to-force-zero-interception-in-linear-regression
 # en.wikipedia.org/wiki/Simple_linear_regression#Linear_regression_without_the_intercept_term
-# http://courses.washington.edu/qsci483/Lectures/20.pdf 
+# http://courses.washington.edu/qsci483/Lectures/20.pdf
         for x in range(3):
             for y in range(3):
                 xLin = rot_disps.T[x]
                 yLin = combined_forces.T[y]
                 force_constants[disp_atom_number,i,x,y] = \
-                      -np.dot(xLin,yLin) / np.dot(xLin,xLin) 
+                      -np.dot(xLin,yLin) / np.dot(xLin,xLin)
                 if len(xLin)<=1:
                     # no chances for a fitting error, we have just one value
                     err = 0
@@ -595,7 +577,7 @@ def _solve_force_constants_regression(force_constants,
                     variance = np.dot(yLin,yLin)/np.dot(xLin,xLin) - \
                                   force_constants[disp_atom_number,i,x,y]**2
                     if variance<0 and variance>-1e-10:
-                       # in numerics, it happens. This is "numerical zero" 
+                       # in numerics, it happens. This is "numerical zero"
                        err = 0
                     else:
                        err = np.sqrt(variance) / ( len(xLin)-1 )
@@ -611,15 +593,15 @@ def _get_force_constants_disps(force_constants,
     """
     Phi = -F / d
     """
-    
+
     """
     Force constants are obtained by one of the following algorithm.
 
     svd: Singular value decomposition is used, which is equivalent to
          least square fitting.
-    
+
     regression:
-         The goal is to monitor the quality of computed force constants (FC). 
+         The goal is to monitor the quality of computed force constants (FC).
          For that the FC spread is calculated, more precisely its standard
          deviation, i.e. sqrt(variance). Every displacement results in
          slightly different FC (due to numerical errors) -- that is why the
@@ -661,14 +643,14 @@ def _get_force_constants_disps(force_constants,
                 print(" Standard deviation of the force constants, full table:")
                 print(fc_errors / avg_len)
                 print(" Maximal table element is %f" % (fc_errors.max() / avg_len))
-        
+
     return disp_atom_list
 
 def _distribute_fc2_part(force_constants,
                          positions,
                          atom_disp,
                          map_atom_disp,
-                         lattice,
+                         lattice, # column vectors
                          r,
                          t,
                          symprec):
@@ -680,6 +662,7 @@ def _distribute_fc2_part(force_constants,
     try:
         import phonopy._phonopy as phonoc
         phonoc.distribute_fc2(force_constants,
+                              lattice,
                               positions,
                               atom_disp,
                               map_atom_disp,
@@ -693,20 +676,22 @@ def _distribute_fc2_part(force_constants,
             rot_atom = -1
             for j, pos_j in enumerate(positions):
                 diff = pos_j - rot_pos
-                if (abs(diff - np.rint(diff)) < symprec).all():
+                diff -= np.rint(diff)
+                diff = np.dot(diff, lattice.T)
+                if np.linalg.norm(diff) < symprec:
                     rot_atom = j
                     break
-        
+
             if rot_atom < 0:
                 print("Input forces are not enough to calculate force constants,")
                 print("or something wrong (e.g. crystal structure does not match).")
                 raise ValueError
-            
+
             # R^-1 P R (inverse transformation)
             force_constants[atom_disp, i] += similarity_transformation(
                 rot_cartesian.T,
                 force_constants[map_atom_disp, rot_atom])
-    
+
 def _combine_force_constants_equivalent_atoms(fc_combined,
                                               force_constants,
                                               i,
@@ -746,12 +731,62 @@ def _average_force_constants_by_sitesym(fc_new,
 
     return num_sitesym
 
-def _get_atom_indices_by_symmetry(positions, rotations, translations, symprec):
+def _get_atom_indices_by_symmetry(lattice,
+                                  positions,
+                                  rotations,
+                                  translations,
+                                  symprec):
+    # To understand this method, understanding numpy broadcasting is mandatory.
+
     K = len(positions)
+    # positions[K, 3]
+    # dot()[K, N, 3] where N is number of sym opts.
+    # translation[N, 3] is added to the last two dimenstions after dot().
     rpos = np.dot(positions, np.transpose(rotations, (0, 2, 1))) + translations
+
+    # np.tile(rpos, (K, 1, 1, 1))[K(2), K(1), N, 3]
+    # by adding one dimension in front of [K(1), N, 3].
+    # np.transpose(np.tile(rpos, (K, 1, 1, 1)), (2, 1, 0, 3))[N, K(1), K(2), 3]
     diff = positions - np.transpose(np.tile(rpos, (K, 1, 1, 1)), (2, 1, 0, 3))
-    m = (abs(diff - diff.round()) < symprec).all(axis=-1)
-    mapa = np.tile(np.arange(K, dtype='intc'), (K, 1))
-    mapa = np.array([mapa[mr] for mr in m])
+    diff -= np.rint(diff)
+    diff = np.dot(diff, lattice.T)
+    # m[N, K(1), K(2)]
+    m = (np.sum(diff ** 2, axis=3) < symprec ** 2)
+    # index_array[K(1), K(2)]
+    index_array = np.tile(np.arange(K, dtype='intc'), (K, 1))
+    # Understanding numpy boolean array indexing (extract True elements)
+    # mapa[N, K(1)]
+    mapa = np.array([index_array[mr] for mr in m])
     return mapa
 
+def _get_shortest_distance_in_PBC(pos_i, pos_j, reduced_bases):
+    distances = []
+    for k in (-1, 0, 1):
+        for l in (-1, 0, 1):
+            for m in (-1, 0, 1):
+                diff = pos_j + np.array([k, l, m]) - pos_i
+                distances.append(np.linalg.norm(np.dot(diff, reduced_bases)))
+    return np.min(distances)
+
+def _get_atom_mapping_by_symmetry(atom_list_done,
+                                  atom_number,
+                                  rotations,
+                                  translations,
+                                  lattice, # column vectors
+                                  positions,
+                                  symprec=1e-5):
+    """
+    Find a mapping from an atom to an atom in the atom list done.
+    """
+
+    for i, (r, t) in enumerate(zip(rotations, translations)):
+        rot_pos = np.dot(positions[atom_number], r.T) + t
+        for j in atom_list_done:
+            diff = positions[j] - rot_pos
+            diff -= np.rint(diff)
+            if np.linalg.norm(np.dot(diff, lattice.T)) < symprec:
+                return j, i
+
+    print("Input forces are not enough to calculate force constants,")
+    print("or something wrong (e.g. crystal structure does not match).")
+    raise ValueError
