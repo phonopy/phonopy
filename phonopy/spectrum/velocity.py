@@ -35,6 +35,7 @@
 import numpy as np
 from phonopy.harmonic.dynamical_matrix import get_smallest_vectors
 from phonopy.units import AMU, kb_J
+from phonopy.structure.grid_points import get_qpoints
 
 class Velocity:
     def __init__(self,
@@ -64,22 +65,22 @@ class VelocityQ:
     def __init__(self,
                  supercell,
                  primitive,
-                 symmetry,
-                 velocities): # m/s
+                 velocities, # m/s
+                 symprec=1e-5):
         self._supercell = supercell
         self._primitive = primitive
-        self._symmetry = symmetry
         self._velocities = velocities
 
-        symprec = symmetry.get_symmetry_tolerance()
         (self._shortest_vectors,
          self._multiplicity) = get_smallest_vectors(supercell,
                                                     primitive,
                                                     symprec)
-        self._transform([0, 0, 0])
 
-    def run(self):
-        pass
+    def run(self, q):
+        self._velocities = self._transform(q)
+
+    def get_velocities(self):
+        return self._velocities
 
     def _transform(self, q):
         """ exp(i q.r(i)) v(i)"""
@@ -87,20 +88,55 @@ class VelocityQ:
         m = self._primitive.get_masses()
         num_s = self._supercell.get_number_of_atoms()
         num_p = self._primitive.get_number_of_atoms()
-        N = num_s / num_p
         v = self._velocities
         v_q = np.zeros((v.shape[0], num_p, 3), dtype='complex128')
 
         for p_i in range(num_p):
             for s_i in range(num_s):
-                pf = np.sqrt(m[p_i]) / N * self._get_phase_factor(p_i, s_i, q)
+                pf = np.sqrt(m[p_i]) * self._get_phase_factor(p_i, s_i, q)
                 v_q[:, p_i, :] += pf * v[:, s_i, :]
+
+        return v_q
 
     def _get_phase_factor(self, p_i, s_i, q):
         multi = self._multiplicity[s_i, p_i]
         pos = self._shortest_vectors[s_i, p_i, :multi]
         return np.exp(-2j * np.pi * np.dot(q, pos.T)).sum()
+
+class VelocityQMesh(VelocityQ):
+    def __init__(self,
+                 supercell,
+                 primitive,
+                 velocities,
+                 symmetry,
+                 mesh): # m/s
+        symprec = symmetry.get_symmetry_tolerance()
+        VelocityQ.__init__(self,
+                           supercell,
+                           primitive,
+                           velocities,
+                           symprec=symprec)
+        point_group_opts = symmetry.get_pointgroup_operations()
+        rec_lat = np.linalg.inv(primitive.get_cell())
+        self._ir_qpts, self._weights = get_qpoints(mesh,
+                                                   rec_lat,
+                                                   is_gamma_center=True,
+                                                   rotations=point_group_opts)
+
+    def run(self):
+        num_s = self._supercell.get_number_of_atoms()
+        num_p = self._primitive.get_number_of_atoms()
+        N = num_s / num_p
+        v = self._velocities
+        v_q = np.zeros((len(self._ir_qpts), v.shape[0], num_p, 3),
+                       dtype='complex128')
         
+        for i, q in enumerate(self._ir_qpts):
+            v_q[i] = self._transform(q)
+        self._velocities = v_q
+
+    def get_ir_qpoints(self):
+        return self._ir_qpts, self._weights
 
 class AutoCorrelation:
     def __init__(self,
