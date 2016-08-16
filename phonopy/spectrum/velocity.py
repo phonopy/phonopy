@@ -85,7 +85,6 @@ class VelocityQ:
     def _transform(self, q):
         """ exp(i q.r(i)) v(i)"""
 
-        m = self._primitive.get_masses()
         num_s = self._supercell.get_number_of_atoms()
         num_p = self._primitive.get_number_of_atoms()
         v = self._velocities
@@ -93,7 +92,7 @@ class VelocityQ:
 
         for p_i in range(num_p):
             for s_i in range(num_s):
-                pf = np.sqrt(m[p_i]) * self._get_phase_factor(p_i, s_i, q)
+                pf = self._get_phase_factor(p_i, s_i, q)
                 v_q[:, p_i, :] += pf * v[:, s_i, :]
 
         return v_q
@@ -128,11 +127,11 @@ class VelocityQMesh(VelocityQ):
         num_p = self._primitive.get_number_of_atoms()
         N = num_s / num_p
         v = self._velocities
-        v_q = np.zeros((len(self._ir_qpts), v.shape[0], num_p, 3),
+        v_q = np.zeros((v.shape[0], num_p, len(self._ir_qpts), 3),
                        dtype='complex128')
         
         for i, q in enumerate(self._ir_qpts):
-            v_q[i] = self._transform(q)
+            v_q[:, :, i, :] = self._transform(q)
         self._velocities = v_q
 
     def get_ir_qpoints(self):
@@ -147,7 +146,7 @@ class AutoCorrelation:
         self._masses = masses
         self._temperature = temperature
 
-        self._vv_real = None # real space auto correlation
+        self._vv = None
         self._n_elements = 0
 
     def run(self, num_frequency_points):
@@ -158,16 +157,20 @@ class AutoCorrelation:
         if n_elem < 1:
             return False
 
-        vv = np.zeros((max_lag,) + v.shape[1:], dtype='double', order='C')
+        vv = np.zeros((max_lag,) + v.shape[1:], dtype=v.dtype, order='C')
 
         d = max_lag / 2
         for i in range(max_lag):
-            vv[i - d] = (v[d:(d + n_elem)] * v[i:(i + n_elem)]).sum(axis=0)
+            if len(vv.shape) == 3:
+                vv[i - d] = (v[d:(d + n_elem)] * v[i:(i + n_elem)]).sum(axis=0)
+            else:
+                vv[i - d] = (v[d:(d + n_elem)] *
+                             v[i:(i + n_elem)].conj()).sum(axis=0)
 
-        self._vv_real = vv
+        self._vv = vv
         if self._masses is not None and self._temperature is not None:
             for i, m in enumerate(self._masses):
-                self._vv_real[:, i, :] *= m * AMU / (kb_J * self._temperature)
+                self._vv[:, i] *= m * AMU / (kb_J * self._temperature)
 
         self._n_elements = n_elem
 
@@ -176,8 +179,8 @@ class AutoCorrelation:
     def run_at_q(self, q, num_frequency_points):
         pass
 
-    def get_vv_real(self):
-        return self._vv_real
+    def get_autocorrelation(self):
+        return self._vv
 
     def get_number_of_elements(self):
         return self._n_elements
