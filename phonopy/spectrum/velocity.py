@@ -34,6 +34,7 @@
 
 import numpy as np
 from phonopy.harmonic.dynamical_matrix import get_smallest_vectors
+from phonopy.harmonic.dynmat_to_fc import get_commensurate_points
 from phonopy.units import AMU, kb_J
 from phonopy.structure.grid_points import get_qpoints
 
@@ -100,42 +101,61 @@ class VelocityQ:
     def _get_phase_factor(self, p_i, s_i, q):
         multi = self._multiplicity[s_i, p_i]
         pos = self._shortest_vectors[s_i, p_i, :multi]
-        return np.exp(-2j * np.pi * np.dot(q, pos.T)).sum()
+        return np.exp(-2j * np.pi * np.dot(q, pos.T)).sum() / multi
 
-class VelocityQMesh(VelocityQ):
+class VelocityQpoints(VelocityQ):
     def __init__(self,
                  supercell,
                  primitive,
-                 velocities,
-                 symmetry,
-                 mesh): # m/s
-        symprec = symmetry.get_symmetry_tolerance()
+                 velocities, # m/s
+                 symmetry=None,
+                 symprec=1e-5):
+        if symmetry is not None:
+            symprec = symmetry.get_symmetry_tolerance()
+            self._point_group_opts = symmetry.get_pointgroup_operations()
+        else:
+            self._point_group_opts = None
         VelocityQ.__init__(self,
                            supercell,
                            primitive,
                            velocities,
                            symprec=symprec)
-        point_group_opts = symmetry.get_pointgroup_operations()
-        rec_lat = np.linalg.inv(primitive.get_cell())
-        self._ir_qpts, self._weights = get_qpoints(mesh,
-                                                   rec_lat,
-                                                   is_gamma_center=True,
-                                                   rotations=point_group_opts)
+        self._qpoints = None
+        self._weights = None
 
-    def run(self):
+    def run(self, verbose=False):
         num_s = self._supercell.get_number_of_atoms()
         num_p = self._primitive.get_number_of_atoms()
         N = num_s / num_p
         v = self._velocities
-        v_q = np.zeros((v.shape[0], num_p, len(self._ir_qpts), 3),
+        v_q = np.zeros((v.shape[0], num_p, len(self._qpoints), 3),
                        dtype='complex128')
         
-        for i, q in enumerate(self._ir_qpts):
+        for i, q in enumerate(self._qpoints):
+            if verbose:
+                print("%d/%d" % (i + 1, len(self._qpoints)))
             v_q[:, :, i, :] = self._transform(q)
         self._velocities = v_q
 
-    def get_ir_qpoints(self):
-        return self._ir_qpts, self._weights
+    def set_mesh(self, mesh):
+        rec_lat = np.linalg.inv(self._primitive.get_cell())
+        self._qpoints, self._weights = get_qpoints(
+            mesh,
+            rec_lat,
+            is_gamma_center=True,
+            rotations=self._point_group_opts)
+
+    def set_qpoints(self, qpoints):
+        self._weights = np.ones(len(qpoints), dtype='intc')
+        self._qpoints = qpoints
+
+    def set_commensurate_points(self):
+        supercell_matrix = np.linalg.inv(self._primitive.get_primitive_matrix())
+        supercell_matrix = np.rint(supercell_matrix).astype('intc')
+        self.set_qpoints(get_commensurate_points(supercell_matrix))
+
+    def get_qpoints(self):
+        return self._qpoints, self._weights
 
 class AutoCorrelation:
     def __init__(self,
@@ -149,7 +169,7 @@ class AutoCorrelation:
         self._vv = None
         self._n_elements = 0
 
-    def run(self, num_frequency_points):
+    def run(self, num_frequency_points, verbose=False):
         v = self._velocities
         max_lag = num_frequency_points * 2
         n_elem = len(v) - max_lag
@@ -161,11 +181,14 @@ class AutoCorrelation:
 
         d = max_lag / 2
         for i in range(max_lag):
-            if len(vv.shape) == 3:
-                vv[i - d] = (v[d:(d + n_elem)] * v[i:(i + n_elem)]).sum(axis=0)
-            else:
+            if verbose:
+                print("%d/%d" % (i + 1, max_lag))
+            if np.iscomplexobj(vv):
                 vv[i - d] = (v[d:(d + n_elem)] *
                              v[i:(i + n_elem)].conj()).sum(axis=0)
+            else:
+                vv[i - d] = (v[d:(d + n_elem)] *
+                             v[i:(i + n_elem)]).sum(axis=0)
 
         self._vv = vv
         if self._masses is not None and self._temperature is not None:
@@ -175,9 +198,6 @@ class AutoCorrelation:
         self._n_elements = n_elem
 
         return True
-
-    def run_at_q(self, q, num_frequency_points):
-        pass
 
     def get_autocorrelation(self):
         return self._vv
