@@ -47,7 +47,7 @@ class Velocity:
         self._lattice = lattice
         self._positions = positions
         self._timestep = timestep
-        self._velocities = None # m/s
+        self._velocities = None # in m/s [timestep, atom, 3]
 
     def run(self, skip_steps=0):
         pos = self._positions
@@ -66,7 +66,7 @@ class VelocityQ:
     def __init__(self,
                  supercell,
                  primitive,
-                 velocities, # m/s
+                 velocities, # in m/s
                  symprec=1e-5):
         self._supercell = supercell
         self._primitive = primitive
@@ -77,11 +77,15 @@ class VelocityQ:
                                                     primitive,
                                                     symprec)
 
+        # VelocityQ       [timestep, p_atom, 3]
+        # VelocityQpoints [timestep, p_atom, qpoitns, 3]
+        self._velocities_q = None
+
     def run(self, q):
-        self._velocities = self._transform(q)
+        self._velocities_q = self._transform(q)
 
     def get_velocities(self):
-        return self._velocities
+        return self._velocities_q
 
     def _transform(self, q):
         """ exp(i q.r(i)) v(i)"""
@@ -107,7 +111,7 @@ class VelocityQpoints(VelocityQ):
     def __init__(self,
                  supercell,
                  primitive,
-                 velocities, # m/s
+                 velocities, # in m/s either real or reciprocal
                  symmetry=None,
                  symprec=1e-5):
         if symmetry is not None:
@@ -120,6 +124,7 @@ class VelocityQpoints(VelocityQ):
                            primitive,
                            velocities,
                            symprec=symprec)
+
         self._qpoints = None
         self._weights = None
 
@@ -135,7 +140,7 @@ class VelocityQpoints(VelocityQ):
             if verbose:
                 print("%d/%d" % (i + 1, len(self._qpoints)))
             v_q[:, :, i, :] = self._transform(q)
-        self._velocities = v_q
+        self._velocities_q = v_q
 
     def set_mesh(self, mesh):
         rec_lat = np.linalg.inv(self._primitive.get_cell())
@@ -179,13 +184,16 @@ class AutoCorrelation:
 
         vv = np.zeros((max_lag,) + v.shape[1:], dtype=v.dtype, order='C')
 
+        if np.iscomplexobj(vv):
+            v_c = v.conj()
+
         d = max_lag / 2
         for i in range(max_lag):
             if verbose:
                 print("%d/%d" % (i + 1, max_lag))
             if np.iscomplexobj(vv):
                 vv[i - d] = (v[d:(d + n_elem)] *
-                             v[i:(i + n_elem)].conj()).sum(axis=0)
+                             v_c[i:(i + n_elem)]).sum(axis=0)
             else:
                 vv[i - d] = (v[d:(d + n_elem)] *
                              v[i:(i + n_elem)]).sum(axis=0)
