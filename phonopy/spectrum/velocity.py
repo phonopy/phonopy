@@ -32,6 +32,7 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import sys
 import numpy as np
 from phonopy.harmonic.dynamical_matrix import get_smallest_vectors
 from phonopy.harmonic.dynmat_to_fc import get_commensurate_points
@@ -62,52 +63,7 @@ class Velocity:
     def get_timestep(self):
         return self._timestep
 
-class VelocityQ:
-    def __init__(self,
-                 supercell,
-                 primitive,
-                 velocities, # in m/s
-                 symprec=1e-5):
-        self._supercell = supercell
-        self._primitive = primitive
-        self._velocities = velocities
-
-        (self._shortest_vectors,
-         self._multiplicity) = get_smallest_vectors(supercell,
-                                                    primitive,
-                                                    symprec)
-
-        # VelocityQ       [timestep, p_atom, 3]
-        # VelocityQpoints [timestep, p_atom, qpoitns, 3]
-        self._velocities_q = None
-
-    def run(self, q):
-        self._velocities_q = self._transform(q)
-
-    def get_velocities(self):
-        return self._velocities_q
-
-    def _transform(self, q):
-        """ exp(i q.r(i)) v(i)"""
-
-        num_s = self._supercell.get_number_of_atoms()
-        num_p = self._primitive.get_number_of_atoms()
-        v = self._velocities
-        v_q = np.zeros((v.shape[0], num_p, 3), dtype='complex128')
-
-        for p_i in range(num_p):
-            for s_i in range(num_s):
-                pf = self._get_phase_factor(p_i, s_i, q)
-                v_q[:, p_i, :] += pf * v[:, s_i, :]
-
-        return v_q
-
-    def _get_phase_factor(self, p_i, s_i, q):
-        multi = self._multiplicity[s_i, p_i]
-        pos = self._shortest_vectors[s_i, p_i, :multi]
-        return np.exp(-2j * np.pi * np.dot(q, pos.T)).sum() / multi
-
-class VelocityQpoints(VelocityQ):
+class VelocityQpoints:
     def __init__(self,
                  supercell,
                  primitive,
@@ -119,28 +75,29 @@ class VelocityQpoints(VelocityQ):
             self._point_group_opts = symmetry.get_pointgroup_operations()
         else:
             self._point_group_opts = None
-        VelocityQ.__init__(self,
-                           supercell,
-                           primitive,
-                           velocities,
-                           symprec=symprec)
 
+        self._supercell = supercell
+        self._primitive = primitive
+        self._velocities = velocities
+
+        (self._shortest_vectors,
+         self._multiplicity) = get_smallest_vectors(supercell,
+                                                    primitive,
+                                                    symprec)
         self._qpoints = None
         self._weights = None
 
-    def run(self, verbose=False):
+        self._velocities_q = None # [timestep, p_atom, qpoitns, 3]
+
+    def run(self):
         num_s = self._supercell.get_number_of_atoms()
         num_p = self._primitive.get_number_of_atoms()
         N = num_s / num_p
         v = self._velocities
-        v_q = np.zeros((v.shape[0], num_p, len(self._qpoints), 3),
-                       dtype='complex128')
-        
-        for i, q in enumerate(self._qpoints):
-            if verbose:
-                print("%d/%d" % (i + 1, len(self._qpoints)))
-            v_q[:, :, i, :] = self._transform(q)
-        self._velocities_q = v_q
+        self._velocities_q = self._transform(self._qpoints)
+
+    def get_velocities(self):
+        return self._velocities_q
 
     def set_mesh(self, mesh):
         rec_lat = np.linalg.inv(self._primitive.get_cell())
@@ -161,6 +118,33 @@ class VelocityQpoints(VelocityQ):
 
     def get_qpoints(self):
         return self._qpoints, self._weights
+
+    def _transform(self, q):
+        """ exp(i q.r(i)) v(i)"""
+
+        s2p = self._primitive.get_supercell_to_primitive_map()
+        p2s = self._primitive.get_primitive_to_supercell_map()
+
+        num_s = self._supercell.get_number_of_atoms()
+        num_p = self._primitive.get_number_of_atoms()
+        v = self._velocities
+
+        q_array = np.reshape(q, (-1, 3))
+        v_q = np.zeros((v.shape[0], num_p, len(q_array), 3), dtype='complex128')
+
+        for p_i, s_i in enumerate(p2s):
+            for s_j, s2p_j in enumerate(s2p):
+                if s2p_j == s_i:
+                    for q_i, pf in enumerate(
+                            self._get_phase_factor(p_i, s_j, q_array)):
+                        v_q[:, p_i, q_i, :] += pf * v[:, s_j, :]
+        return v_q
+
+    def _get_phase_factor(self, p_i, s_j, q_array):
+        multi = self._multiplicity[s_j, p_i]
+        pos = self._shortest_vectors[s_j, p_i, :multi]
+        return np.exp(-2j * np.pi * np.dot(q_array, pos.T)).sum(axis=1) / multi
+
 
 class AutoCorrelation:
     def __init__(self,
@@ -187,16 +171,22 @@ class AutoCorrelation:
         if np.iscomplexobj(vv):
             v_c = v.conj()
 
+        # Here is the bottle neck.
         d = max_lag / 2
         for i in range(max_lag):
             if verbose:
-                print("%d/%d" % (i + 1, max_lag))
+                if (i + 1) % (max_lag // 100) == 0:
+                    sys.stdout.write("\r%d%%" % (((i + 1) * 100) // max_lag))
+                    sys.stdout.flush()
             if np.iscomplexobj(vv):
                 vv[i - d] = (v[d:(d + n_elem)] *
                              v_c[i:(i + n_elem)]).sum(axis=0)
             else:
                 vv[i - d] = (v[d:(d + n_elem)] *
                              v[i:(i + n_elem)]).sum(axis=0)
+        if verbose:
+            sys.stdout.write("\r    \n")
+            sys.stdout.flush()
 
         self._vv = vv
         if self._masses is not None and self._temperature is not None:
