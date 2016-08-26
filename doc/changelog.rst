@@ -3,11 +3,13 @@
 Change Log
 ==========
 
-Aug-1-2016: Version 1.10.12
------------------------------
+Aug-26-2016: Version 1.11.0
+---------------------------
 
 * ``FPITCH`` (``--fpicth``) is made (:ref:`dos_fmin_fmax_tags`).
 * Minor update of ``gruneisen``.
+* ``phonopy.yaml`` and ``phonopy_disp.yaml`` are written when running
+  phonopy.
 
 Jul-17-2016: Version 1.10.10
 -----------------------------
