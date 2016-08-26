@@ -5,17 +5,17 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Setting tags &mdash; Phonopy v.1.10.10</title>
+    <title>Setting tags &mdash; Phonopy v.1.11.0</title>
     
     <link rel="stylesheet" href="_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="_static/bootswatch-3.3.6/cosmo/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="_static/bootswatch-3.3.4/cosmo/bootstrap.min.css" type="text/css" />
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.10.10',
+        VERSION:     '1.11.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -26,9 +26,9 @@
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Phonopy v.1.10.10" href="index.html" />
+    <link rel="top" title="Phonopy v.1.11.0" href="index.html" />
     <link rel="next" title="How to watch animation" href="animation.html" />
     <link rel="prev" title="Output files" href="output-files.html" />
 <meta charset='utf-8'>
@@ -50,7 +50,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.10.10</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.11.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -133,7 +133,7 @@
 <li><a class="reference internal" href="#phonon-density-of-states-dos-tags">Phonon density of states (DOS) tags</a><ul>
 <li><a class="reference internal" href="#dos"><code class="docutils literal"><span class="pre">DOS</span></code></a></li>
 <li><a class="reference internal" href="#dos-range"><code class="docutils literal"><span class="pre">DOS_RANGE</span></code></a></li>
-<li><a class="reference internal" href="#fmin-and-fmax"><code class="docutils literal"><span class="pre">FMIN</span></code> and <code class="docutils literal"><span class="pre">FMAX</span></code></a></li>
+<li><a class="reference internal" href="#fmin-fmax-and-fpitch"><code class="docutils literal"><span class="pre">FMIN</span></code>, <code class="docutils literal"><span class="pre">FMAX</span></code>, and <code class="docutils literal"><span class="pre">FPITCH</span></code></a></li>
 <li><a class="reference internal" href="#pdos"><code class="docutils literal"><span class="pre">PDOS</span></code></a></li>
 <li><a class="reference internal" href="#projection-direction"><code class="docutils literal"><span class="pre">PROJECTION_DIRECTION</span></code></a></li>
 <li><a class="reference internal" href="#xyz-projection"><code class="docutils literal"><span class="pre">XYZ_PROJECTION</span></code></a></li>
@@ -591,15 +591,17 @@ reciprocal space.</p>
 <p>Total and partial density of states are drawn with some
 parameters. The example makes DOS be calculated from frequency=0 to 40
 with 0.1 pitch.</p>
-<p><a class="reference internal" href="#dos-fmin-fmax-tags"><span class="std std-ref">FMIN and FMAX</span></a> can be alternatively
+<p><a class="reference internal" href="#dos-fmin-fmax-tags"><span class="std std-ref">FMIN, FMAX, and FPITCH</span></a> can be alternatively
 used to specify the minimum and maximum frequencies (the first and
 second values).</p>
 </div>
-<div class="section" id="fmin-and-fmax">
-<span id="dos-fmin-fmax-tags"></span><h3><code class="docutils literal"><span class="pre">FMIN</span></code> and <code class="docutils literal"><span class="pre">FMAX</span></code><a class="headerlink" href="#fmin-and-fmax" title="Permalink to this headline">¶</a></h3>
-<p>The frequency range to be calculated for phonon-DOS is
-specified. <code class="docutils literal"><span class="pre">FMIN</span></code> and <code class="docutils literal"><span class="pre">FMAX</span></code> give the minimum and maximum
-frequencies of the range, respectively.</p>
+<div class="section" id="fmin-fmax-and-fpitch">
+<span id="dos-fmin-fmax-tags"></span><h3><code class="docutils literal"><span class="pre">FMIN</span></code>, <code class="docutils literal"><span class="pre">FMAX</span></code>, and <code class="docutils literal"><span class="pre">FPITCH</span></code><a class="headerlink" href="#fmin-fmax-and-fpitch" title="Permalink to this headline">¶</a></h3>
+<p>The uniform frequency sampling points for phonon-DOS calculation are
+specified. <code class="docutils literal"><span class="pre">FMIN</span></code> and <code class="docutils literal"><span class="pre">FMAX</span></code> give the minimum, maximum frequencies
+of the range, respectively, and <code class="docutils literal"><span class="pre">FPITCH</span></code> gives the frequency pitch
+to be sampled. These three values are the same as those that can be
+specified by <code class="docutils literal"><span class="pre">DOS_RANGE</span></code>.</p>
 </div>
 <div class="section" id="pdos">
 <h3><code class="docutils literal"><span class="pre">PDOS</span></code><a class="headerlink" href="#pdos" title="Permalink to this headline">¶</a></h3>

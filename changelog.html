@@ -5,17 +5,17 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Change Log &mdash; Phonopy v.1.10.10</title>
+    <title>Change Log &mdash; Phonopy v.1.11.0</title>
     
     <link rel="stylesheet" href="_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="_static/bootswatch-3.3.6/cosmo/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="_static/bootswatch-3.3.4/cosmo/bootstrap.min.css" type="text/css" />
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.10.10',
+        VERSION:     '1.11.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -26,9 +26,9 @@
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Phonopy v.1.10.10" href="index.html" />
+    <link rel="top" title="Phonopy v.1.11.0" href="index.html" />
     <link rel="prev" title="References" href="reference.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
@@ -49,7 +49,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.10.10</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.11.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -98,6 +98,7 @@
       role="menu"
       aria-labelledby="dLabelLocalToc"><ul>
 <li><a class="reference internal" href="#">Change Log</a><ul>
+<li><a class="reference internal" href="#aug-26-2016-version-1-11-0">Aug-26-2016: Version 1.11.0</a></li>
 <li><a class="reference internal" href="#jul-17-2016-version-1-10-10">Jul-17-2016: Version 1.10.10</a></li>
 <li><a class="reference internal" href="#apr-22-2016-version-1-10-8">Apr-22-2016: Version 1.10.8</a></li>
 <li><a class="reference internal" href="#feb-7-2016-version-1-10-4">Feb-7-2016: Version 1.10.4</a></li>
@@ -209,6 +210,15 @@
       
   <div class="section" id="change-log">
 <span id="changelog"></span><h1>Change Log<a class="headerlink" href="#change-log" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="aug-26-2016-version-1-11-0">
+<h2>Aug-26-2016: Version 1.11.0<a class="headerlink" href="#aug-26-2016-version-1-11-0" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">FPITCH</span></code> (<code class="docutils literal"><span class="pre">--fpicth</span></code>) is made (<a class="reference internal" href="setting-tags.html#dos-fmin-fmax-tags"><span class="std std-ref">FMIN, FMAX, and FPITCH</span></a>).</li>
+<li>Minor update of <code class="docutils literal"><span class="pre">gruneisen</span></code>.</li>
+<li><code class="docutils literal"><span class="pre">phonopy.yaml</span></code> and <code class="docutils literal"><span class="pre">phonopy_disp.yaml</span></code> are written when running
+phonopy.</li>
+</ul>
+</div>
 <div class="section" id="jul-17-2016-version-1-10-10">
 <h2>Jul-17-2016: Version 1.10.10<a class="headerlink" href="#jul-17-2016-version-1-10-10" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
@@ -298,7 +308,7 @@ when PDOS is invoked.</li>
 been changed. Now they are just to invoke those calculator modes
 without a unit cell structure file. The unit cell structure file is
 specified using <code class="docutils literal"><span class="pre">--cell</span></code> (<code class="docutils literal"><span class="pre">-c</span></code>) option or <code class="docutils literal"><span class="pre">CELL_FILENAME</span></code>
-tag. See <a class="reference internal" href="command-options.html#force-calculators"><span class="std std-ref">Force calculators</span></a>, <a class="reference internal" href="wien2k.html#wien2k-interface"><span class="std std-ref">Wien2k &amp; phonopy calculation</span></a>,
+tag. See <a class="reference internal" href="command-options.html#force-calculators"><span class="std std-ref">Choice of force calculator</span></a>, <a class="reference internal" href="wien2k.html#wien2k-interface"><span class="std std-ref">Wien2k &amp; phonopy calculation</span></a>,
 <a class="reference internal" href="abinit.html#abinit-interface"><span class="std std-ref">Abinit &amp; phonopy calculation</span></a>, and <a class="reference internal" href="pwscf.html#pwscf-interface"><span class="std std-ref">Pwscf &amp; phonopy calculation</span></a>.</li>
 <li>For the <code class="docutils literal"><span class="pre">gruneisen</span></code> command, <code class="docutils literal"><span class="pre">--factor</span></code>, <code class="docutils literal"><span class="pre">--nomeshsym</span></code>,
 <code class="docutils literal"><span class="pre">--wien2k</span></code>, <code class="docutils literal"><span class="pre">--abinit</span></code>, and <code class="docutils literal"><span class="pre">--pwscf</span></code> options are
