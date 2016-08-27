@@ -107,8 +107,7 @@ class TestUnfolding(unittest.TestCase):
 
     def _get_phonon(self, cell):
         phonon = Phonopy(cell,
-                         np.diag([1, 1, 1]),
-                         is_auto_displacements=False)
+                         np.diag([1, 1, 1]))
         force_sets = parse_FORCE_SETS()
         phonon.set_displacement_dataset(force_sets)
         phonon.produce_force_constants()

@@ -76,8 +76,7 @@ class TestMoment(unittest.TestCase):
                          np.diag([2, 2, 2]),
                          primitive_matrix=[[0, 0.5, 0.5],
                                            [0.5, 0, 0.5],
-                                           [0.5, 0.5, 0]],
-                         is_auto_displacements=False)
+                                           [0.5, 0.5, 0]])
         force_sets = parse_FORCE_SETS(filename="FORCE_SETS_moment")
         phonon.set_displacement_dataset(force_sets)
         phonon.produce_force_constants()

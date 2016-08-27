@@ -49,6 +49,11 @@ except ImportError:
 
 from phonopy.structure.atoms import PhonopyAtoms as Atoms
 
+def get_unitcell_from_phonopy_yaml(filename):
+    ph_yaml = PhonopyYaml()
+    ph_yaml.read(filename)
+    return ph_yaml.get_unitcell()
+
 class PhonopyYaml:
     def __init__(self,
                  configuration=None,
@@ -114,10 +119,11 @@ class PhonopyYaml:
             lines.append("  calculator: %s" % self._calculator)
         if self._nac_params:
             lines.append("  nac_unit_conversion_factor: %f" % nac_factor)
-        lines.append("  configuration:")
-        for key in self._configuration:
-            lines.append("    %s: \"%s\"" % (key, self._configuration[key]))
-        lines.append("")
+        if self._configuration is not None:
+            lines.append("  configuration:")
+            for key in self._configuration:
+                lines.append("    %s: \"%s\"" % (key, self._configuration[key]))
+            lines.append("")
 
         lines += self._get_physical_unit_yaml_lines()
 
