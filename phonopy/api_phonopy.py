@@ -69,7 +69,7 @@ class Phonopy:
                  supercell_matrix,
                  primitive_matrix=None,
                  nac_params=None,
-                 distance=0.01,
+                 distance=None,
                  factor=VaspToTHz,
                  is_auto_displacements=None,
                  dynamical_matrix_decimals=None,
@@ -87,8 +87,14 @@ class Phonopy:
                 print("Use \'generate_displacements\' method explicitly to "
                       "create sets of displacements.")
 
+        if distance is not None:
+            print("Warning: \'distance\' keyword argument is obsolete at "
+                  "Phonopy instantiation.")
+            print("Specify \'distance\' keyword argument when calling "
+                  "\'generate_displacements\'")
+            print("method (See the Phonopy API document).")
+
         self._symprec = symprec
-        self._distance = distance
         self._factor = factor
         self._is_symmetry = is_symmetry
         self._use_lapack_solver = use_lapack_solver
