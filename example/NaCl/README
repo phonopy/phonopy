@@ -1,0 +1,25 @@
+NaCl example. Details are presented on the phonopy document at http://atztogo.github.io/phonopy/examples.html.
+
+Shortly the usage is shown here, too. FORSE_SETS is obtained by
+
+% phonopy -f vasprun.xml-001 vasprun.xml-002
+
+Band structure is plotted by
+
+% phonopy -p --nac --dim="2 2 2" --pa="0.0 0.5 0.5  0.5 0.0 0.5  0.5 0.5 0.0" \
+  --band="0.0 0.0 0.0  0.5 0.0 0.0  0.5 0.5 0.0  0.0 0.0 0.0  0.5 0.5 0.5"
+
+PDOS is plotted by:
+
+% phonopy -p --nac --dim="2 2 2" --pa="0.0 0.5 0.5  0.5 0.0 0.5  0.5 0.5 0.0" \
+  --mesh="15 15 15" --pdos="1, 2" --thm
+
+Both are plotted together by:
+
+% phonopy -p --nac --dim="2 2 2" --pa="0.0 0.5 0.5  0.5 0.0 0.5  0.5 0.5 0.0" \
+  --band="0.0 0.0 0.0  0.5 0.0 0.0  0.5 0.5 0.0  0.0 0.0 0.0  0.5 0.5 0.5" \
+  --mesh="15 15 15" --pdos="1, 2" --thm
+
+NaCl.py, NaCl-yaml.py, and NaCl-read_write_fc.py are phonopy API examples, which are executed by, e.g.,
+
+% python NaCl.py
