@@ -12,7 +12,7 @@ from phonopy.structure.atoms import PhonopyAtoms as Atoms
 class TestUnfolding(unittest.TestCase):
 
     def setUp(self):
-        self._cell = read_vasp("POSCAR")
+        self._cell = read_vasp("../POSCAR_NaCl")
         # print(self._cell)
         self._unfolding = None
     

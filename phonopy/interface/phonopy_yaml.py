@@ -69,12 +69,16 @@ class PhonopyYaml:
         self._supercell_matrix = None
         self._primitive_matrix = None
         self._force_constants = None
-        self._p2s_map = None
         self._s2p_map = None
-        self._p2p_map = None
+        self._u2p_map = None
+        self._nac_params = None
+        self._version = None
 
     def get_unitcell(self):
         return self._unitcell
+
+    def set_unitcell(self, cell):
+        self._unitcell = cell
 
     def get_primitive(self):
         return self._primitive
@@ -113,8 +117,9 @@ class PhonopyYaml:
             nac_factor = self._nac_params['factor']
             dielectric = self._nac_params['dielectric']
 
-        lines.append("phonopy:")
-        lines.append("  version: %s" % self._version)
+        if self._version:
+            lines.append("phonopy:")
+            lines.append("  version: %s" % self._version)
         if self._calculator:
             lines.append("  calculator: %s" % self._calculator)
         if self._nac_params:

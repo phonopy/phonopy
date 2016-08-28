@@ -7,7 +7,7 @@ from phonopy.structure.cells import get_supercell, get_primitive
 class TestDynmatToFc(unittest.TestCase):
 
     def setUp(self):
-        filename = "POSCAR.yaml"
+        filename = "../NaCl.yaml"
         self._cell = get_unitcell_from_phonopy_yaml(filename)
     
     def tearDown(self):

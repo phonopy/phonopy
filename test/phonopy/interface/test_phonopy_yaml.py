@@ -35,7 +35,7 @@ class TestPhonopyYaml(unittest.TestCase):
         # print(unitcell)
 
     def _get_phonon(self):
-        cell = read_vasp("POSCAR_NaCl")
+        cell = read_vasp("../POSCAR_NaCl")
         phonon = Phonopy(cell,
                          np.diag([2, 2, 2]),
                          primitive_matrix=[[0, 0.5, 0.5],
