@@ -857,7 +857,7 @@ class Phonopy:
             return False
 
         self._qpoints_phonon = QpointsPhonon(
-            q_points,
+            np.reshape(q_points, (-1, 3)),
             self._dynamical_matrix,
             nac_q_direction=nac_q_direction,
             is_eigenvectors=is_eigenvectors,
