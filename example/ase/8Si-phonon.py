@@ -6,7 +6,8 @@ import numpy as np
 
 # GPAW setting
 a = 5.404
-bulk = PhonopyAtoms(symbols=['Si']*8,
+bulk = PhonopyAtoms(symbols=(['Si'] * 8),
+                    cell=np.diag((a, a, a)),
                     scaled_positions=[(0, 0, 0),
                                       (0, 0.5, 0.5),
                                       (0.5, 0, 0.5),
@@ -14,23 +15,20 @@ bulk = PhonopyAtoms(symbols=['Si']*8,
                                       (0.25, 0.25, 0.25),
                                       (0.25, 0.75, 0.75),
                                       (0.75, 0.25, 0.75),
-                                      (0.75, 0.75, 0.25)] )
-bulk.set_cell(np.diag((a, a, a)))
-
+                                      (0.75, 0.75, 0.25)])
 calc = GPAW(mode=PW(300),
-            kpts={'size': (4, 4, 4)},
-            symmetry={'symmorphic': False})
+            kpts={'size': (4, 4, 4)})
 
 phonon = Phonopy(bulk,
-                 [[1,0,0],[0,1,0],[0,0,1]],
+                 [[1,0,0], [0,1,0], [0,0,1]],
                  primitive_matrix=[[0, 0.5, 0.5],
                                    [0.5, 0, 0.5],
-                                   [0.5, 0.5, 0]],
-                 distance=0.01)
-print "[Phonopy] Atomic displacements:"
+                                   [0.5, 0.5, 0]])
+phonon.generate_displacements(distance=0.01)
+print("[Phonopy] Atomic displacements:")
 disps = phonon.get_displacements()
 for d in disps:
-    print "[Phonopy]", d[0], d[1:]
+    print ("[Phonopy] %d %s" % (d[0], d[1:]))
 supercells = phonon.get_supercells_with_displacements()
 
 # Force calculations by calculator
@@ -51,9 +49,9 @@ for scell in supercells:
 
 # Phonopy post-process
 phonon.produce_force_constants(forces=set_of_forces)
-print
-print "[Phonopy] Phonon frequencies at Gamma:"
+print('')
+print("[Phonopy] Phonon frequencies at Gamma:")
 for i, freq in enumerate(phonon.get_frequencies((0, 0, 0))):
-    print "[Phonopy] %3d: %10.5f THz" %  (i + 1, freq) # THz
+    print("[Phonopy] %3d: %10.5f THz" %  (i + 1, freq)) # THz
 
 
