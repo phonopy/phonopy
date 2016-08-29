@@ -161,11 +161,13 @@ class AbinitIn:
                 print("%s is not found in the input file." % tag)
                 sys.exit(1)
 
-        for tag, self._values in elements.iteritems():
+        for tag in elements:
+            self._values = elements[tag]
             if tag == 'natom' or tag == 'ntypat':
                 self._set_methods[tag]()
 
-        for tag, self._values in elements.iteritems():
+        for tag in elements:
+            self._values = elements[tag]
             if tag != 'natom' and tag != 'ntypat':
                 self._set_methods[tag]()
 
