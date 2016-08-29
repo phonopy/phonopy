@@ -3,13 +3,17 @@
 Change Log
 ==========
 
-Aug-26-2016: Version 1.11.0
+Aug-29-2016: Version 1.11.0
 ---------------------------
 
 * ``FPITCH`` (``--fpicth``) is made (:ref:`dos_fmin_fmax_tags`).
 * Minor update of ``gruneisen``.
-* ``phonopy.yaml`` and ``phonopy_disp.yaml`` are written when running
-  phonopy.
+* Tentatively ``phonopy.yaml`` and ``phonopy_disp.yaml`` are written
+  when running phonopy.
+* In Phonopy-API, from this version, to create displacements in
+  supercells internally the phonopy object, the
+  ``generate_displacements`` method has to be called explicitely along
+  with the ``distance`` argument. See :ref:`phonopy_module`.
 
 Jul-17-2016: Version 1.10.10
 -----------------------------
