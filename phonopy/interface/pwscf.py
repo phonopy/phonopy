@@ -222,11 +222,13 @@ class PwscfIn:
                 print("%s is not found in the input file." % tag)
                 sys.exit(1)
                     
-        for tag, self._values in elements.iteritems():
+        for tag in elements:
+            self._values = elements[tag]
             if tag == 'ibrav' or tag == 'nat' or tag == 'ntyp':
                 self._set_methods[tag]()
 
-        for tag, self._values in elements.iteritems():
+        for tag in elements:
+            self._values = elements[tag]
             if tag != 'ibrav' and tag != 'nat' and tag != 'ntyp':
                 self._set_methods[tag]()
 
@@ -298,11 +300,3 @@ class PwscfIn:
             
         self._tags['atomic_species'] = species
         
-if __name__ == '__main__':
-    import sys
-    from phonopy.structure.symmetry import Symmetry
-    # abinit = PwscfIn(open(sys.argv[1]).readlines())
-    cell, pp_filenames = read_pwscf(sys.argv[1])
-    # symmetry = Symmetry(cell)
-    # print("# %s" % symmetry.get_international_table())
-    print(get_pwscf_structure(cell, pp_filenames))
