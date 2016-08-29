@@ -198,14 +198,46 @@
 <span id="id1"></span><h1>Command options<a class="headerlink" href="#command-options" title="Permalink to this headline">¶</a></h1>
 <div class="contents local topic" id="contents">
 <ul class="simple">
-<li><a class="reference internal" href="#choice-of-force-calculator" id="id2">Choice of force calculator</a></li>
-<li><a class="reference internal" href="#input-cell" id="id3">Input cell</a></li>
-<li><a class="reference internal" href="#create-force-sets" id="id4">Create <code class="docutils literal"><span class="pre">FORCE_SETS</span></code></a></li>
-<li><a class="reference internal" href="#create-force-constants" id="id5">Create <code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span></code></a></li>
-<li><a class="reference internal" href="#graph-plotting" id="id6">Graph plotting</a></li>
-<li><a class="reference internal" href="#log-level" id="id7">Log level</a></li>
-<li><a class="reference internal" href="#crystal-symmetry" id="id8">Crystal symmetry</a></li>
-<li><a class="reference internal" href="#input-output-file-control" id="id9">Input/Output file control</a></li>
+<li><a class="reference internal" href="#choice-of-force-calculator" id="id2">Choice of force calculator</a><ul>
+<li><a class="reference internal" href="#wien2k" id="id3"><code class="docutils literal"><span class="pre">--wien2k</span></code></a></li>
+<li><a class="reference internal" href="#abinit" id="id4"><code class="docutils literal"><span class="pre">--abinit</span></code></a></li>
+<li><a class="reference internal" href="#pwscf" id="id5"><code class="docutils literal"><span class="pre">--pwscf</span></code></a></li>
+<li><a class="reference internal" href="#siesta" id="id6"><code class="docutils literal"><span class="pre">--siesta</span></code></a></li>
+<li><a class="reference internal" href="#elk" id="id7"><code class="docutils literal"><span class="pre">--elk</span></code></a></li>
+<li><a class="reference internal" href="#vasp" id="id8"><code class="docutils literal"><span class="pre">--vasp</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#input-cell" id="id9">Input cell</a><ul>
+<li><a class="reference internal" href="#c-or-cell" id="id10"><code class="docutils literal"><span class="pre">-c</span></code> or <code class="docutils literal"><span class="pre">--cell</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#create-force-sets" id="id11">Create <code class="docutils literal"><span class="pre">FORCE_SETS</span></code></a><ul>
+<li><a class="reference internal" href="#f-or-forces" id="id12"><code class="docutils literal"><span class="pre">-f</span></code> or <code class="docutils literal"><span class="pre">--forces</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#create-force-constants" id="id13">Create <code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span></code></a><ul>
+<li><a class="reference internal" href="#fc-or-force-constants" id="id14"><code class="docutils literal"><span class="pre">--fc</span></code> or <code class="docutils literal"><span class="pre">--force_constants</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#graph-plotting" id="id15">Graph plotting</a><ul>
+<li><a class="reference internal" href="#p" id="id16"><code class="docutils literal"><span class="pre">-p</span></code></a></li>
+<li><a class="reference internal" href="#p-s" id="id17"><code class="docutils literal"><span class="pre">-p</span> <span class="pre">-s</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#log-level" id="id18">Log level</a><ul>
+<li><a class="reference internal" href="#v-or-verbose" id="id19"><code class="docutils literal"><span class="pre">-v</span></code> or <code class="docutils literal"><span class="pre">--verbose</span></code></a></li>
+<li><a class="reference internal" href="#q-or-quiet" id="id20"><code class="docutils literal"><span class="pre">-q</span></code> or <code class="docutils literal"><span class="pre">--quiet</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#crystal-symmetry" id="id21">Crystal symmetry</a><ul>
+<li><a class="reference internal" href="#tolerance" id="id22"><code class="docutils literal"><span class="pre">--tolerance</span></code></a></li>
+<li><a class="reference internal" href="#symmetry" id="id23"><code class="docutils literal"><span class="pre">--symmetry</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#input-output-file-control" id="id24">Input/Output file control</a><ul>
+<li><a class="reference internal" href="#hdf5" id="id25"><code class="docutils literal"><span class="pre">--hdf5</span></code></a></li>
+</ul>
+</li>
 </ul>
 </div>
 <p>Some of command-line options are equivalent to respective setting
@@ -272,7 +304,7 @@ respectively, and if none of these options or <code class="docutils literal"><sp
 specified, VASP mode is invoked.</p>
 <p>The details about these interfaces are found at <a class="reference internal" href="interfaces.html#calculator-interfaces"><span class="std std-ref">Interfaces to calculators</span></a>.</p>
 <div class="section" id="wien2k">
-<span id="wien2k-mode"></span><h3><code class="docutils literal"><span class="pre">--wien2k</span></code><a class="headerlink" href="#wien2k" title="Permalink to this headline">¶</a></h3>
+<span id="wien2k-mode"></span><h3><a class="toc-backref" href="#id3"><code class="docutils literal"><span class="pre">--wien2k</span></code></a><a class="headerlink" href="#wien2k" title="Permalink to this headline">¶</a></h3>
 <p><strong>Behavior is changed at phonopy 1.9.2.</strong></p>
 <p>This option invokes the WIEN2k mode.In this mode. Usually this option
 is used with <code class="docutils literal"><span class="pre">--cell</span></code> (<code class="docutils literal"><span class="pre">-c</span></code>) option or <code class="docutils literal"><span class="pre">CELL_FILENAME</span></code> tag to
@@ -288,7 +320,7 @@ information <a class="reference internal" href="wien2k.html#wien2k-interface"><s
 </div>
 </div>
 <div class="section" id="abinit">
-<span id="abinit-mode"></span><h3><code class="docutils literal"><span class="pre">--abinit</span></code><a class="headerlink" href="#abinit" title="Permalink to this headline">¶</a></h3>
+<span id="abinit-mode"></span><h3><a class="toc-backref" href="#id4"><code class="docutils literal"><span class="pre">--abinit</span></code></a><a class="headerlink" href="#abinit" title="Permalink to this headline">¶</a></h3>
 <p>Abinit mode is invoked with this option. Usually this option is used
 with <code class="docutils literal"><span class="pre">--cell</span></code> (<code class="docutils literal"><span class="pre">-c</span></code>) option or <code class="docutils literal"><span class="pre">CELL_FILENAME</span></code> tag to read
 Abinit main input file that contains the unit cell crystal structure,
@@ -298,7 +330,7 @@ e.g.,</p>
 </div>
 </div>
 <div class="section" id="pwscf">
-<span id="pwscf-mode"></span><h3><code class="docutils literal"><span class="pre">--pwscf</span></code><a class="headerlink" href="#pwscf" title="Permalink to this headline">¶</a></h3>
+<span id="pwscf-mode"></span><h3><a class="toc-backref" href="#id5"><code class="docutils literal"><span class="pre">--pwscf</span></code></a><a class="headerlink" href="#pwscf" title="Permalink to this headline">¶</a></h3>
 <p>Pwscf mode is invoked with this option. Usually this option is used
 with <code class="docutils literal"><span class="pre">--cell</span></code> (<code class="docutils literal"><span class="pre">-c</span></code>) option or <code class="docutils literal"><span class="pre">CELL_FILENAME</span></code> tag to read Pwscf
 input file that contains the unit cell crystal structure, e.g.,</p>
@@ -307,7 +339,7 @@ input file that contains the unit cell crystal structure, e.g.,</p>
 </div>
 </div>
 <div class="section" id="siesta">
-<span id="siesta-mode"></span><h3><code class="docutils literal"><span class="pre">--siesta</span></code><a class="headerlink" href="#siesta" title="Permalink to this headline">¶</a></h3>
+<span id="siesta-mode"></span><h3><a class="toc-backref" href="#id6"><code class="docutils literal"><span class="pre">--siesta</span></code></a><a class="headerlink" href="#siesta" title="Permalink to this headline">¶</a></h3>
 <p>Siesta mode is invoked with this option. Usually this option is used
 with <code class="docutils literal"><span class="pre">--cell</span></code> (<code class="docutils literal"><span class="pre">-c</span></code>) option or <code class="docutils literal"><span class="pre">CELL_FILENAME</span></code> tag to read a Siesta
 input file that contains the unit cell crystal structure, e.g.,</p>
@@ -316,7 +348,7 @@ input file that contains the unit cell crystal structure, e.g.,</p>
 </div>
 </div>
 <div class="section" id="elk">
-<span id="elk-mode"></span><h3><code class="docutils literal"><span class="pre">--elk</span></code><a class="headerlink" href="#elk" title="Permalink to this headline">¶</a></h3>
+<span id="elk-mode"></span><h3><a class="toc-backref" href="#id7"><code class="docutils literal"><span class="pre">--elk</span></code></a><a class="headerlink" href="#elk" title="Permalink to this headline">¶</a></h3>
 <p>Pwscf mode is invoked with this option. Usually this option is used
 with <code class="docutils literal"><span class="pre">--cell</span></code> (<code class="docutils literal"><span class="pre">-c</span></code>) option or <code class="docutils literal"><span class="pre">CELL_FILENAME</span></code> tag to read Elk
 input file that contains the unit cell crystal structure, e.g.,</p>
@@ -325,7 +357,7 @@ input file that contains the unit cell crystal structure, e.g.,</p>
 </div>
 </div>
 <div class="section" id="vasp">
-<span id="vasp-mode"></span><h3><code class="docutils literal"><span class="pre">--vasp</span></code><a class="headerlink" href="#vasp" title="Permalink to this headline">¶</a></h3>
+<span id="vasp-mode"></span><h3><a class="toc-backref" href="#id8"><code class="docutils literal"><span class="pre">--vasp</span></code></a><a class="headerlink" href="#vasp" title="Permalink to this headline">¶</a></h3>
 <p>This doesn&#8217;t change the default behaviour, but <code class="docutils literal"><span class="pre">vasp</span></code> will appear as
 the calculator such as in <code class="docutils literal"><span class="pre">band.yaml</span></code>:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">calculator</span><span class="p">:</span> <span class="n">vasp</span>
@@ -336,9 +368,9 @@ the calculator such as in <code class="docutils literal"><span class="pre">band.
 </div>
 </div>
 <div class="section" id="input-cell">
-<span id="cell-filename-option"></span><h2><a class="toc-backref" href="#id3">Input cell</a><a class="headerlink" href="#input-cell" title="Permalink to this headline">¶</a></h2>
+<span id="cell-filename-option"></span><h2><a class="toc-backref" href="#id9">Input cell</a><a class="headerlink" href="#input-cell" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="c-or-cell">
-<h3><code class="docutils literal"><span class="pre">-c</span></code> or <code class="docutils literal"><span class="pre">--cell</span></code><a class="headerlink" href="#c-or-cell" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id10"><code class="docutils literal"><span class="pre">-c</span></code> or <code class="docutils literal"><span class="pre">--cell</span></code></a><a class="headerlink" href="#c-or-cell" title="Permalink to this headline">¶</a></h3>
 <p>Unit cell crystal structure file is specified with this tag.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">cell</span><span class="o">=</span><span class="n">POSCAR</span><span class="o">-</span><span class="n">unitcell</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
 </pre></div>
@@ -355,9 +387,9 @@ directory. The default file names for the calculators are as follows:</p>
 </div>
 </div>
 <div class="section" id="create-force-sets">
-<h2><a class="toc-backref" href="#id4">Create <code class="docutils literal"><span class="pre">FORCE_SETS</span></code></a><a class="headerlink" href="#create-force-sets" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id11">Create <code class="docutils literal"><span class="pre">FORCE_SETS</span></code></a><a class="headerlink" href="#create-force-sets" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="f-or-forces">
-<h3><code class="docutils literal"><span class="pre">-f</span></code> or <code class="docutils literal"><span class="pre">--forces</span></code><a class="headerlink" href="#f-or-forces" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id12"><code class="docutils literal"><span class="pre">-f</span></code> or <code class="docutils literal"><span class="pre">--forces</span></code></a><a class="headerlink" href="#f-or-forces" title="Permalink to this headline">¶</a></h3>
 <div class="section" id="vasp-interface">
 <span id="vasp-force-sets-option"></span><h4>VASP interface<a class="headerlink" href="#vasp-interface" title="Permalink to this headline">¶</a></h4>
 <p><code class="docutils literal"><span class="pre">FORCE_SETS</span></code> file is created from <code class="docutils literal"><span class="pre">disp.yaml</span></code>, which is an output
@@ -426,9 +458,9 @@ files.</p>
 </div>
 </div>
 <div class="section" id="create-force-constants">
-<h2><a class="toc-backref" href="#id5">Create <code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span></code></a><a class="headerlink" href="#create-force-constants" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id13">Create <code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span></code></a><a class="headerlink" href="#create-force-constants" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="fc-or-force-constants">
-<span id="vasp-force-constants"></span><h3><code class="docutils literal"><span class="pre">--fc</span></code> or <code class="docutils literal"><span class="pre">--force_constants</span></code><a class="headerlink" href="#fc-or-force-constants" title="Permalink to this headline">¶</a></h3>
+<span id="vasp-force-constants"></span><h3><a class="toc-backref" href="#id14"><code class="docutils literal"><span class="pre">--fc</span></code> or <code class="docutils literal"><span class="pre">--force_constants</span></code></a><a class="headerlink" href="#fc-or-force-constants" title="Permalink to this headline">¶</a></h3>
 <p><strong>Currently this option supports only VASP output.</strong></p>
 <p>VASP output of force constants is imported from
 <code class="docutils literal"><span class="pre">vasprun.xml</span></code> and <code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span></code> is created.</p>
@@ -440,16 +472,16 @@ more details, please refer <a class="reference internal" href="vasp.html#vasp-df
 </div>
 </div>
 <div class="section" id="graph-plotting">
-<span id="graph-option"></span><h2><a class="toc-backref" href="#id6">Graph plotting</a><a class="headerlink" href="#graph-plotting" title="Permalink to this headline">¶</a></h2>
+<span id="graph-option"></span><h2><a class="toc-backref" href="#id15">Graph plotting</a><a class="headerlink" href="#graph-plotting" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="p">
-<h3><code class="docutils literal"><span class="pre">-p</span></code><a class="headerlink" href="#p" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id16"><code class="docutils literal"><span class="pre">-p</span></code></a><a class="headerlink" href="#p" title="Permalink to this headline">¶</a></h3>
 <p>Result is plotted.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">p</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="p-s">
-<span id="graph-save-option"></span><h3><code class="docutils literal"><span class="pre">-p</span> <span class="pre">-s</span></code><a class="headerlink" href="#p-s" title="Permalink to this headline">¶</a></h3>
+<span id="graph-save-option"></span><h3><a class="toc-backref" href="#id17"><code class="docutils literal"><span class="pre">-p</span> <span class="pre">-s</span></code></a><a class="headerlink" href="#p-s" title="Permalink to this headline">¶</a></h3>
 <p>Result is plotted (saved) to PDF file.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">p</span> <span class="o">-</span><span class="n">s</span>
 </pre></div>
@@ -457,20 +489,20 @@ more details, please refer <a class="reference internal" href="vasp.html#vasp-df
 </div>
 </div>
 <div class="section" id="log-level">
-<h2><a class="toc-backref" href="#id7">Log level</a><a class="headerlink" href="#log-level" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id18">Log level</a><a class="headerlink" href="#log-level" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="v-or-verbose">
-<h3><code class="docutils literal"><span class="pre">-v</span></code> or <code class="docutils literal"><span class="pre">--verbose</span></code><a class="headerlink" href="#v-or-verbose" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id19"><code class="docutils literal"><span class="pre">-v</span></code> or <code class="docutils literal"><span class="pre">--verbose</span></code></a><a class="headerlink" href="#v-or-verbose" title="Permalink to this headline">¶</a></h3>
 <p>More detailed log are shown</p>
 </div>
 <div class="section" id="q-or-quiet">
-<h3><code class="docutils literal"><span class="pre">-q</span></code> or <code class="docutils literal"><span class="pre">--quiet</span></code><a class="headerlink" href="#q-or-quiet" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id20"><code class="docutils literal"><span class="pre">-q</span></code> or <code class="docutils literal"><span class="pre">--quiet</span></code></a><a class="headerlink" href="#q-or-quiet" title="Permalink to this headline">¶</a></h3>
 <p>No log is shown.</p>
 </div>
 </div>
 <div class="section" id="crystal-symmetry">
-<h2><a class="toc-backref" href="#id8">Crystal symmetry</a><a class="headerlink" href="#crystal-symmetry" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id21">Crystal symmetry</a><a class="headerlink" href="#crystal-symmetry" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="tolerance">
-<h3><code class="docutils literal"><span class="pre">--tolerance</span></code><a class="headerlink" href="#tolerance" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id22"><code class="docutils literal"><span class="pre">--tolerance</span></code></a><a class="headerlink" href="#tolerance" title="Permalink to this headline">¶</a></h3>
 <p>The specified value is used as allowed tolerance to find symmetry of
 crystal structure. The default value is 1e-5.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">tolerance</span><span class="o">=</span><span class="mi">1</span><span class="n">e</span><span class="o">-</span><span class="mi">3</span>
@@ -478,7 +510,7 @@ crystal structure. The default value is 1e-5.</p>
 </div>
 </div>
 <div class="section" id="symmetry">
-<h3><code class="docutils literal"><span class="pre">--symmetry</span></code><a class="headerlink" href="#symmetry" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id23"><code class="docutils literal"><span class="pre">--symmetry</span></code></a><a class="headerlink" href="#symmetry" title="Permalink to this headline">¶</a></h3>
 <p>Using this option, various crystal symmetry information is just
 printed out and phonopy stops without going to phonon analysis.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">symmetry</span>
@@ -490,9 +522,9 @@ printed out and phonopy stops without going to phonon analysis.</p>
 </div>
 </div>
 <div class="section" id="input-output-file-control">
-<h2><a class="toc-backref" href="#id9">Input/Output file control</a><a class="headerlink" href="#input-output-file-control" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id24">Input/Output file control</a><a class="headerlink" href="#input-output-file-control" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="hdf5">
-<span id="hdf5-option"></span><h3><code class="docutils literal"><span class="pre">--hdf5</span></code><a class="headerlink" href="#hdf5" title="Permalink to this headline">¶</a></h3>
+<span id="hdf5-option"></span><h3><a class="toc-backref" href="#id25"><code class="docutils literal"><span class="pre">--hdf5</span></code></a><a class="headerlink" href="#hdf5" title="Permalink to this headline">¶</a></h3>
 <p>The following input/output files are read/written in hdf5 format
 instead of their original formats (in parenthesis).</p>
 <ul class="simple">

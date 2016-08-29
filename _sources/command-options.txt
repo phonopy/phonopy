@@ -4,7 +4,7 @@ Command options
 ===============
 
 .. contents::
-   :depth: 1
+   :depth: 2
    :local:
 
 

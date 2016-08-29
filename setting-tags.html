@@ -247,21 +247,100 @@
 <span id="id1"></span><h1>Setting tags<a class="headerlink" href="#setting-tags" title="Permalink to this headline">¶</a></h1>
 <div class="contents local topic" id="contents">
 <ul class="simple">
-<li><a class="reference internal" href="#basic-tags" id="id6">Basic tags</a></li>
-<li><a class="reference internal" href="#displacement-creation-tags" id="id7">Displacement creation tags</a></li>
-<li><a class="reference internal" href="#band-structure-tags" id="id8">Band structure tags</a></li>
-<li><a class="reference internal" href="#mesh-sampling-tags" id="id9">Mesh sampling tags</a></li>
-<li><a class="reference internal" href="#phonon-density-of-states-dos-tags" id="id10">Phonon density of states (DOS) tags</a></li>
-<li><a class="reference internal" href="#thermal-properties-related-tags" id="id11">Thermal properties related tags</a></li>
-<li><a class="reference internal" href="#thermal-displacements" id="id12">Thermal displacements</a></li>
-<li><a class="reference internal" href="#specific-q-points" id="id13">Specific q-points</a></li>
-<li><a class="reference internal" href="#non-analytical-term-correction" id="id14">Non-analytical term correction</a></li>
-<li><a class="reference internal" href="#group-velocity" id="id15">Group velocity</a></li>
-<li><a class="reference internal" href="#symmetry" id="id16">Symmetry</a></li>
-<li><a class="reference internal" href="#force-constants" id="id17">Force constants</a></li>
-<li><a class="reference internal" href="#create-animation-file" id="id18">Create animation file</a></li>
-<li><a class="reference internal" href="#create-modulated-structure" id="id19">Create modulated structure</a></li>
-<li><a class="reference internal" href="#characters-of-irreducible-representations" id="id20">Characters of irreducible representations</a></li>
+<li><a class="reference internal" href="#basic-tags" id="id6">Basic tags</a><ul>
+<li><a class="reference internal" href="#dim" id="id7"><code class="docutils literal"><span class="pre">DIM</span></code></a></li>
+<li><a class="reference internal" href="#primitive-axis" id="id8"><code class="docutils literal"><span class="pre">PRIMITIVE_AXIS</span></code></a></li>
+<li><a class="reference internal" href="#atom-name" id="id9"><code class="docutils literal"><span class="pre">ATOM_NAME</span></code></a></li>
+<li><a class="reference internal" href="#eigenvectors" id="id10"><code class="docutils literal"><span class="pre">EIGENVECTORS</span></code></a></li>
+<li><a class="reference internal" href="#mass" id="id11"><code class="docutils literal"><span class="pre">MASS</span></code></a></li>
+<li><a class="reference internal" href="#magmom" id="id12"><code class="docutils literal"><span class="pre">MAGMOM</span></code></a></li>
+<li><a class="reference internal" href="#cell-filename" id="id13"><code class="docutils literal"><span class="pre">CELL_FILENAME</span></code></a></li>
+<li><a class="reference internal" href="#frequency-conversion-factor" id="id14"><code class="docutils literal"><span class="pre">FREQUENCY_CONVERSION_FACTOR</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#displacement-creation-tags" id="id15">Displacement creation tags</a><ul>
+<li><a class="reference internal" href="#create-displacements" id="id16"><code class="docutils literal"><span class="pre">CREATE_DISPLACEMENTS</span></code></a></li>
+<li><a class="reference internal" href="#displacement-distance" id="id17"><code class="docutils literal"><span class="pre">DISPLACEMENT_DISTANCE</span></code></a></li>
+<li><a class="reference internal" href="#diag" id="id18"><code class="docutils literal"><span class="pre">DIAG</span></code></a></li>
+<li><a class="reference internal" href="#pm" id="id19"><code class="docutils literal"><span class="pre">PM</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#band-structure-tags" id="id20">Band structure tags</a><ul>
+<li><a class="reference internal" href="#band-and-band-points" id="id21"><code class="docutils literal"><span class="pre">BAND</span></code> and <code class="docutils literal"><span class="pre">BAND_POINTS</span></code></a></li>
+<li><a class="reference internal" href="#band-labels" id="id22"><code class="docutils literal"><span class="pre">BAND_LABELS</span></code></a></li>
+<li><a class="reference internal" href="#band-connection" id="id23"><code class="docutils literal"><span class="pre">BAND_CONNECTION</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#mesh-sampling-tags" id="id24">Mesh sampling tags</a><ul>
+<li><a class="reference internal" href="#mesh-or-mp" id="id25"><code class="docutils literal"><span class="pre">MESH</span></code> or <code class="docutils literal"><span class="pre">MP</span></code></a></li>
+<li><a class="reference internal" href="#mp-shift" id="id26"><code class="docutils literal"><span class="pre">MP_SHIFT</span></code></a></li>
+<li><a class="reference internal" href="#gamma-center" id="id27"><code class="docutils literal"><span class="pre">GAMMA_CENTER</span></code></a></li>
+<li><a class="reference internal" href="#write-mesh" id="id28"><code class="docutils literal"><span class="pre">WRITE_MESH</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#phonon-density-of-states-dos-tags" id="id29">Phonon density of states (DOS) tags</a><ul>
+<li><a class="reference internal" href="#dos" id="id30"><code class="docutils literal"><span class="pre">DOS</span></code></a></li>
+<li><a class="reference internal" href="#dos-range" id="id31"><code class="docutils literal"><span class="pre">DOS_RANGE</span></code></a></li>
+<li><a class="reference internal" href="#fmin-fmax-and-fpitch" id="id32"><code class="docutils literal"><span class="pre">FMIN</span></code>, <code class="docutils literal"><span class="pre">FMAX</span></code>, and <code class="docutils literal"><span class="pre">FPITCH</span></code></a></li>
+<li><a class="reference internal" href="#pdos" id="id33"><code class="docutils literal"><span class="pre">PDOS</span></code></a></li>
+<li><a class="reference internal" href="#projection-direction" id="id34"><code class="docutils literal"><span class="pre">PROJECTION_DIRECTION</span></code></a></li>
+<li><a class="reference internal" href="#xyz-projection" id="id35"><code class="docutils literal"><span class="pre">XYZ_PROJECTION</span></code></a></li>
+<li><a class="reference internal" href="#sigma" id="id36"><code class="docutils literal"><span class="pre">SIGMA</span></code></a></li>
+<li><a class="reference internal" href="#tetrahedron" id="id37"><code class="docutils literal"><span class="pre">TETRAHEDRON</span></code></a></li>
+<li><a class="reference internal" href="#debye-model" id="id38"><code class="docutils literal"><span class="pre">DEBYE_MODEL</span></code></a></li>
+<li><a class="reference internal" href="#momemt-and-moment-order" id="id39"><code class="docutils literal"><span class="pre">MOMEMT</span></code> and <code class="docutils literal"><span class="pre">MOMENT_ORDER</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#thermal-properties-related-tags" id="id40">Thermal properties related tags</a><ul>
+<li><a class="reference internal" href="#tprop-tmin-tmax-and-tstep" id="id41"><code class="docutils literal"><span class="pre">TPROP</span></code>, <code class="docutils literal"><span class="pre">TMIN</span></code>, <code class="docutils literal"><span class="pre">TMAX</span></code>, and <code class="docutils literal"><span class="pre">TSTEP</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#thermal-displacements" id="id42">Thermal displacements</a><ul>
+<li><a class="reference internal" href="#tdisp-tmax-tmin-and-tstep" id="id43"><code class="docutils literal"><span class="pre">TDISP</span></code>, <code class="docutils literal"><span class="pre">TMAX</span></code>, <code class="docutils literal"><span class="pre">TMIN</span></code>, and <code class="docutils literal"><span class="pre">TSTEP</span></code></a></li>
+<li><a class="reference internal" href="#tdispmat-tmax-tmin-and-tstep" id="id44"><code class="docutils literal"><span class="pre">TDISPMAT</span></code>, <code class="docutils literal"><span class="pre">TMAX</span></code>, <code class="docutils literal"><span class="pre">TMIN</span></code>, and <code class="docutils literal"><span class="pre">TSTEP</span></code></a></li>
+<li><a class="reference internal" href="#cutoff-frequency" id="id45"><code class="docutils literal"><span class="pre">CUTOFF_FREQUENCY</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#specific-q-points" id="id46">Specific q-points</a><ul>
+<li><a class="reference internal" href="#qpoints" id="id47"><code class="docutils literal"><span class="pre">QPOINTS</span></code></a></li>
+<li><a class="reference internal" href="#writedm" id="id48"><code class="docutils literal"><span class="pre">WRITEDM</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#non-analytical-term-correction" id="id49">Non-analytical term correction</a><ul>
+<li><a class="reference internal" href="#nac" id="id50"><code class="docutils literal"><span class="pre">NAC</span></code></a></li>
+<li><a class="reference internal" href="#q-direction" id="id51"><code class="docutils literal"><span class="pre">Q_DIRECTION</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#group-velocity" id="id52">Group velocity</a><ul>
+<li><a class="reference internal" href="#id3" id="id53"><code class="docutils literal"><span class="pre">GROUP_VELOCITY</span></code></a></li>
+<li><a class="reference internal" href="#gv-delta-q" id="id54"><code class="docutils literal"><span class="pre">GV_DELTA_Q</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#symmetry" id="id55">Symmetry</a><ul>
+<li><a class="reference internal" href="#symmetry-tag" id="id56"><code class="docutils literal"><span class="pre">SYMMETRY</span></code></a></li>
+<li><a class="reference internal" href="#mesh-symmetry" id="id57"><code class="docutils literal"><span class="pre">MESH_SYMMETRY</span></code></a></li>
+<li><a class="reference internal" href="#fc-symmetry" id="id58"><code class="docutils literal"><span class="pre">FC_SYMMETRY</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#force-constants" id="id59">Force constants</a><ul>
+<li><a class="reference internal" href="#id5" id="id60"><code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#create-animation-file" id="id61">Create animation file</a><ul>
+<li><a class="reference internal" href="#anime-type" id="id62"><code class="docutils literal"><span class="pre">ANIME_TYPE</span></code></a></li>
+<li><a class="reference internal" href="#anime" id="id63"><code class="docutils literal"><span class="pre">ANIME</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#create-modulated-structure" id="id64">Create modulated structure</a><ul>
+<li><a class="reference internal" href="#modulation" id="id65"><code class="docutils literal"><span class="pre">MODULATION</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#characters-of-irreducible-representations" id="id66">Characters of irreducible representations</a><ul>
+<li><a class="reference internal" href="#irreps" id="id67"><code class="docutils literal"><span class="pre">IRREPS</span></code></a></li>
+<li><a class="reference internal" href="#show-irreps" id="id68"><code class="docutils literal"><span class="pre">SHOW_IRREPS</span></code></a></li>
+<li><a class="reference internal" href="#little-cogroup" id="id69"><code class="docutils literal"><span class="pre">LITTLE_COGROUP</span></code></a></li>
+</ul>
+</li>
 </ul>
 </div>
 <p>Most of the setting tags have corresponding command-line options
@@ -272,7 +351,7 @@ have space among characters (e.g. <code class="docutils literal"><span class="pr
 <div class="section" id="basic-tags">
 <h2><a class="toc-backref" href="#id6">Basic tags</a><a class="headerlink" href="#basic-tags" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="dim">
-<h3><code class="docutils literal"><span class="pre">DIM</span></code><a class="headerlink" href="#dim" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id7"><code class="docutils literal"><span class="pre">DIM</span></code></a><a class="headerlink" href="#dim" title="Permalink to this headline">¶</a></h3>
 <p>The supercell is created from the input unit cell. When three integers
 are specified, a supercell elongated along axes of unit cell is
 created.</p>
@@ -309,7 +388,7 @@ vectors, i.e., <img class="math" src="_images/math/7c67257dd8e20170c54e8bf5ba21d
 \; \mathbf{c}_\mathrm{u} )^T"/>.</p>
 </div>
 <div class="section" id="primitive-axis">
-<span id="primitive-axis-tag"></span><h3><code class="docutils literal"><span class="pre">PRIMITIVE_AXIS</span></code><a class="headerlink" href="#primitive-axis" title="Permalink to this headline">¶</a></h3>
+<span id="primitive-axis-tag"></span><h3><a class="toc-backref" href="#id8"><code class="docutils literal"><span class="pre">PRIMITIVE_AXIS</span></code></a><a class="headerlink" href="#primitive-axis" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">PRIMITIVE_AXIS</span> <span class="o">=</span> <span class="mf">0.0</span> <span class="mf">0.5</span> <span class="mf">0.5</span>  <span class="mf">0.5</span> <span class="mf">0.0</span> <span class="mf">0.5</span>  <span class="mf">0.5</span> <span class="mf">0.5</span> <span class="mf">0.0</span>
 </pre></div>
 </div>
@@ -343,7 +422,7 @@ vectors, i.e., <img class="math" src="_images/math/7c67257dd8e20170c54e8bf5ba21d
 \; \mathbf{c}_\mathrm{u} )^T"/>.</p>
 </div>
 <div class="section" id="atom-name">
-<h3><code class="docutils literal"><span class="pre">ATOM_NAME</span></code><a class="headerlink" href="#atom-name" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id9"><code class="docutils literal"><span class="pre">ATOM_NAME</span></code></a><a class="headerlink" href="#atom-name" title="Permalink to this headline">¶</a></h3>
 <p>Chemical symbols</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">ATOM_NAME</span> <span class="o">=</span> <span class="n">Si</span> <span class="n">O</span>
 </pre></div>
@@ -356,12 +435,12 @@ you don&#8217;t need to set this tag, i.e., chemical symbols are read from
 the structure file.</p>
 </div>
 <div class="section" id="eigenvectors">
-<h3><code class="docutils literal"><span class="pre">EIGENVECTORS</span></code><a class="headerlink" href="#eigenvectors" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id10"><code class="docutils literal"><span class="pre">EIGENVECTORS</span></code></a><a class="headerlink" href="#eigenvectors" title="Permalink to this headline">¶</a></h3>
 <p>When this tag is &#8216;.TRUE.&#8217;, eigenvectors are calculated. With <code class="docutils literal"><span class="pre">-p</span></code>
 option, partial density of states are calculated.</p>
 </div>
 <div class="section" id="mass">
-<span id="mass-tag"></span><h3><code class="docutils literal"><span class="pre">MASS</span></code><a class="headerlink" href="#mass" title="Permalink to this headline">¶</a></h3>
+<span id="mass-tag"></span><h3><a class="toc-backref" href="#id11"><code class="docutils literal"><span class="pre">MASS</span></code></a><a class="headerlink" href="#mass" title="Permalink to this headline">¶</a></h3>
 <p>This tag is not necessary to use usually, because atomic masses are
 automatically set from the chemical symbols.</p>
 <p>Atomic masses of a <strong>primitive cell</strong> are overwritten by the values
@@ -375,7 +454,7 @@ set as follows</p>
 </div>
 </div>
 <div class="section" id="magmom">
-<span id="magmom-tag"></span><h3><code class="docutils literal"><span class="pre">MAGMOM</span></code><a class="headerlink" href="#magmom" title="Permalink to this headline">¶</a></h3>
+<span id="magmom-tag"></span><h3><a class="toc-backref" href="#id12"><code class="docutils literal"><span class="pre">MAGMOM</span></code></a><a class="headerlink" href="#magmom" title="Permalink to this headline">¶</a></h3>
 <p>Symmetry of spin such as collinear magnetic moments is considered
 using this tag. The number of values has to be equal to the number of
 atoms in the unit cell, not the primitive cell or supercell. If this
@@ -389,14 +468,14 @@ to the number of atoms in unit cell) have to be explicitly written.</p>
 </div>
 </div>
 <div class="section" id="cell-filename">
-<span id="dimension-tag"></span><h3><code class="docutils literal"><span class="pre">CELL_FILENAME</span></code><a class="headerlink" href="#cell-filename" title="Permalink to this headline">¶</a></h3>
+<span id="dimension-tag"></span><h3><a class="toc-backref" href="#id13"><code class="docutils literal"><span class="pre">CELL_FILENAME</span></code></a><a class="headerlink" href="#cell-filename" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">CELL_FILENAME</span> <span class="o">=</span> <span class="n">UPOSCAR</span>
 </pre></div>
 </div>
 <p>See <a class="reference internal" href="command-options.html#cell-filename-option"><span class="std std-ref">Input cell</span></a>.</p>
 </div>
 <div class="section" id="frequency-conversion-factor">
-<span id="frequency-conversion-factor-tag"></span><h3><code class="docutils literal"><span class="pre">FREQUENCY_CONVERSION_FACTOR</span></code><a class="headerlink" href="#frequency-conversion-factor" title="Permalink to this headline">¶</a></h3>
+<span id="frequency-conversion-factor-tag"></span><h3><a class="toc-backref" href="#id14"><code class="docutils literal"><span class="pre">FREQUENCY_CONVERSION_FACTOR</span></code></a><a class="headerlink" href="#frequency-conversion-factor" title="Permalink to this headline">¶</a></h3>
 <p>Unit conversion factor of frequency from input values to your favorite
 unit can be specified, but the use should be limited and it is
 recommended to use this tag to convert the frequency unit to THz in
@@ -415,9 +494,9 @@ factors is explained at <a class="reference internal" href="theory.html#physical
 </div>
 </div>
 <div class="section" id="displacement-creation-tags">
-<h2><a class="toc-backref" href="#id7">Displacement creation tags</a><a class="headerlink" href="#displacement-creation-tags" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id15">Displacement creation tags</a><a class="headerlink" href="#displacement-creation-tags" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="create-displacements">
-<h3><code class="docutils literal"><span class="pre">CREATE_DISPLACEMENTS</span></code><a class="headerlink" href="#create-displacements" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id16"><code class="docutils literal"><span class="pre">CREATE_DISPLACEMENTS</span></code></a><a class="headerlink" href="#create-displacements" title="Permalink to this headline">¶</a></h3>
 <p>Supercells with displacements are created.  This tag is used as the
 post process of phonon calculation.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">CREATE_DISPLACEMENTS</span> <span class="o">=</span> <span class="o">.</span><span class="n">TRUE</span><span class="o">.</span>
@@ -426,14 +505,14 @@ post process of phonon calculation.</p>
 </div>
 </div>
 <div class="section" id="displacement-distance">
-<span id="displacement-distance-tag"></span><h3><code class="docutils literal"><span class="pre">DISPLACEMENT_DISTANCE</span></code><a class="headerlink" href="#displacement-distance" title="Permalink to this headline">¶</a></h3>
+<span id="displacement-distance-tag"></span><h3><a class="toc-backref" href="#id17"><code class="docutils literal"><span class="pre">DISPLACEMENT_DISTANCE</span></code></a><a class="headerlink" href="#displacement-distance" title="Permalink to this headline">¶</a></h3>
 <p>Finite atomic displacement distance is set as specified value when
 creating supercells with displacements. The default displacement
 amplitude is 0.01 <img class="math" src="_images/math/cc7e3efb47bfc638a0117dab0201e2df22f31d5e.png" alt="\textrm{\AA}"/>, but when the <code class="docutils literal"><span class="pre">wien2k</span></code> or
 <code class="docutils literal"><span class="pre">abinit</span></code> option is specified, the default value is 0.02 Bohr.</p>
 </div>
 <div class="section" id="diag">
-<h3><code class="docutils literal"><span class="pre">DIAG</span></code><a class="headerlink" href="#diag" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id18"><code class="docutils literal"><span class="pre">DIAG</span></code></a><a class="headerlink" href="#diag" title="Permalink to this headline">¶</a></h3>
 <p>When this tag is set <code class="docutils literal"><span class="pre">.FALSE.</span></code>, displacements in diagonal directions
 are not searched, i.e. all the displacements are along the lattice
 vectors. <code class="docutils literal"><span class="pre">DIAG</span> <span class="pre">=</span> <span class="pre">.FALSE.</span></code> is recommended if one of the lattice
@@ -441,7 +520,7 @@ parameter of your supercell is much longer or much shorter than the
 other lattice parameters.</p>
 </div>
 <div class="section" id="pm">
-<h3><code class="docutils literal"><span class="pre">PM</span></code><a class="headerlink" href="#pm" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id19"><code class="docutils literal"><span class="pre">PM</span></code></a><a class="headerlink" href="#pm" title="Permalink to this headline">¶</a></h3>
 <p>This tag specified how displacements are found. When <code class="docutils literal"><span class="pre">PM</span> <span class="pre">=</span> <span class="pre">.FALSE.</span></code>,
 least displacements that can calculate force constants are found. This
 may cause less accurate result. When <code class="docutils literal"><span class="pre">PM</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>, all the
@@ -455,9 +534,9 @@ are written.</p>
 </div>
 </div>
 <div class="section" id="band-structure-tags">
-<span id="band-structure-related-tags"></span><h2><a class="toc-backref" href="#id8">Band structure tags</a><a class="headerlink" href="#band-structure-tags" title="Permalink to this headline">¶</a></h2>
+<span id="band-structure-related-tags"></span><h2><a class="toc-backref" href="#id20">Band structure tags</a><a class="headerlink" href="#band-structure-tags" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="band-and-band-points">
-<h3><code class="docutils literal"><span class="pre">BAND</span></code> and <code class="docutils literal"><span class="pre">BAND_POINTS</span></code><a class="headerlink" href="#band-and-band-points" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id21"><code class="docutils literal"><span class="pre">BAND</span></code> and <code class="docutils literal"><span class="pre">BAND_POINTS</span></code></a><a class="headerlink" href="#band-and-band-points" title="Permalink to this headline">¶</a></h3>
 <p><code class="docutils literal"><span class="pre">BAND</span></code> gives sampling band paths. The reciprocal points are
 specified in reduced coordinates. The given points are connected for
 defining band paths. When comma <code class="docutils literal"><span class="pre">,</span></code> is inserted between the points,
@@ -473,7 +552,7 @@ each path are as follows:</p>
 </div>
 </div>
 <div class="section" id="band-labels">
-<span id="band-labels-tag"></span><h3><code class="docutils literal"><span class="pre">BAND_LABELS</span></code><a class="headerlink" href="#band-labels" title="Permalink to this headline">¶</a></h3>
+<span id="band-labels-tag"></span><h3><a class="toc-backref" href="#id22"><code class="docutils literal"><span class="pre">BAND_LABELS</span></code></a><a class="headerlink" href="#band-labels" title="Permalink to this headline">¶</a></h3>
 <p>Labels specified are depicted in band structure plot at the points of
 band segments. The number of labels has to correspond to the
 number of band paths specified by <code class="docutils literal"><span class="pre">BAND</span></code> plus one.</p>
@@ -488,7 +567,7 @@ different band segments, the correspondence of colors doesn&#8217;t mean
 anything.</p>
 </div>
 <div class="section" id="band-connection">
-<span id="band-connection-tag"></span><h3><code class="docutils literal"><span class="pre">BAND_CONNECTION</span></code><a class="headerlink" href="#band-connection" title="Permalink to this headline">¶</a></h3>
+<span id="band-connection-tag"></span><h3><a class="toc-backref" href="#id23"><code class="docutils literal"><span class="pre">BAND_CONNECTION</span></code></a><a class="headerlink" href="#band-connection" title="Permalink to this headline">¶</a></h3>
 <p>With this option, band connections are estimated from eigenvectors and
 band structure is drawn considering band crossings. In sensitive
 cases, to obtain better band connections, it requires to increase
@@ -502,11 +581,11 @@ number of points calculated in band segments by the <code class="docutils litera
 </div>
 </div>
 <div class="section" id="mesh-sampling-tags">
-<span id="id2"></span><h2><a class="toc-backref" href="#id9">Mesh sampling tags</a><a class="headerlink" href="#mesh-sampling-tags" title="Permalink to this headline">¶</a></h2>
+<span id="id2"></span><h2><a class="toc-backref" href="#id24">Mesh sampling tags</a><a class="headerlink" href="#mesh-sampling-tags" title="Permalink to this headline">¶</a></h2>
 <p>Mesh sampling tags are used commonly for calculations of thermal
 properties and density of states.</p>
 <div class="section" id="mesh-or-mp">
-<span id="mp-tag"></span><h3><code class="docutils literal"><span class="pre">MESH</span></code> or <code class="docutils literal"><span class="pre">MP</span></code><a class="headerlink" href="#mesh-or-mp" title="Permalink to this headline">¶</a></h3>
+<span id="mp-tag"></span><h3><a class="toc-backref" href="#id25"><code class="docutils literal"><span class="pre">MESH</span></code> or <code class="docutils literal"><span class="pre">MP</span></code></a><a class="headerlink" href="#mesh-or-mp" title="Permalink to this headline">¶</a></h3>
 <p><code class="docutils literal"><span class="pre">MESH</span></code> numbers give uniform meshes in each axis. As the default
 behavior, the center of mesh is determined by the Monkhorst-Pack
 scheme, i.e., for odd number, a point comes to the center, and for
@@ -523,14 +602,14 @@ neighboring mesh points.</p>
 </div>
 </div>
 <div class="section" id="mp-shift">
-<h3><code class="docutils literal"><span class="pre">MP_SHIFT</span></code><a class="headerlink" href="#mp-shift" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id26"><code class="docutils literal"><span class="pre">MP_SHIFT</span></code></a><a class="headerlink" href="#mp-shift" title="Permalink to this headline">¶</a></h3>
 <p><code class="docutils literal"><span class="pre">MP_SHIFT</span></code> gives the shifts in direction along the corresponding
 reciprocal axes (<img class="math" src="_images/math/f5794f4da3d30691ddf257b9e2f277fc5820f618.png" alt="a^*"/>, <img class="math" src="_images/math/324809b3ab6dc33e198cf54d34924d693adde57f.png" alt="b^*"/>, <img class="math" src="_images/math/eef50c8001339d908f076abcacca512054f8f1b8.png" alt="c^*"/>). 0 or 1/2
 (0.5) can be used as these values. 1/2 means the half mesh shift with
 respect to neighboring grid points in each direction.</p>
 </div>
 <div class="section" id="gamma-center">
-<h3><code class="docutils literal"><span class="pre">GAMMA_CENTER</span></code><a class="headerlink" href="#gamma-center" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id27"><code class="docutils literal"><span class="pre">GAMMA_CENTER</span></code></a><a class="headerlink" href="#gamma-center" title="Permalink to this headline">¶</a></h3>
 <p>Instead of employing the Monkhorst-Pack scheme for the mesh sampling,
 <img class="math" src="_images/math/85011adca50d3725af2e048eeb9ec7b02ccdd401.png" alt="\Gamma"/> center mesh is used. The default value is <code class="docutils literal"><span class="pre">.FALSE.</span></code>.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">GAMMA_CENTER</span> <span class="o">=</span> <span class="o">.</span><span class="n">TRUE</span><span class="o">.</span>
@@ -538,7 +617,7 @@ respect to neighboring grid points in each direction.</p>
 </div>
 </div>
 <div class="section" id="write-mesh">
-<span id="write-mesh-tag"></span><h3><code class="docutils literal"><span class="pre">WRITE_MESH</span></code><a class="headerlink" href="#write-mesh" title="Permalink to this headline">¶</a></h3>
+<span id="write-mesh-tag"></span><h3><a class="toc-backref" href="#id28"><code class="docutils literal"><span class="pre">WRITE_MESH</span></code></a><a class="headerlink" href="#write-mesh" title="Permalink to this headline">¶</a></h3>
 <p>With a dense mesh, with eigenvectors, without mesh symmetry, sometimes
 its output file <code class="docutils literal"><span class="pre">mesh.yaml</span></code> or <code class="docutils literal"><span class="pre">mesh.hdf5</span></code> can be huge. However
 when those files are not needed, e.g., in (P)DOS calculation,
@@ -551,7 +630,7 @@ when those files are not needed, e.g., in (P)DOS calculation,
 </div>
 </div>
 <div class="section" id="phonon-density-of-states-dos-tags">
-<span id="dos-related-tags"></span><h2><a class="toc-backref" href="#id10">Phonon density of states (DOS) tags</a><a class="headerlink" href="#phonon-density-of-states-dos-tags" title="Permalink to this headline">¶</a></h2>
+<span id="dos-related-tags"></span><h2><a class="toc-backref" href="#id29">Phonon density of states (DOS) tags</a><a class="headerlink" href="#phonon-density-of-states-dos-tags" title="Permalink to this headline">¶</a></h2>
 <p>Phonon density of states (DOS) is calcualted either with smearing
 method (default) or tetrahedron method. Phonons are calculated on a
 sampling mesh, therefore these tags must be used with
@@ -576,7 +655,7 @@ specified by <a class="reference internal" href="#sigma-tag"><span class="std st
 Brillouin integration is made analytically within tetrahedra in
 reciprocal space.</p>
 <div class="section" id="dos">
-<h3><code class="docutils literal"><span class="pre">DOS</span></code><a class="headerlink" href="#dos" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id30"><code class="docutils literal"><span class="pre">DOS</span></code></a><a class="headerlink" href="#dos" title="Permalink to this headline">¶</a></h3>
 <p>This tag enables to calculate DOS. This tag is automatically set when
 <code class="docutils literal"><span class="pre">PDOS</span></code> tag or <code class="docutils literal"><span class="pre">-p</span></code> option.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">DOS</span> <span class="o">=</span> <span class="o">.</span><span class="n">TRUE</span><span class="o">.</span>
@@ -584,7 +663,7 @@ reciprocal space.</p>
 </div>
 </div>
 <div class="section" id="dos-range">
-<span id="dos-range-tag"></span><h3><code class="docutils literal"><span class="pre">DOS_RANGE</span></code><a class="headerlink" href="#dos-range" title="Permalink to this headline">¶</a></h3>
+<span id="dos-range-tag"></span><h3><a class="toc-backref" href="#id31"><code class="docutils literal"><span class="pre">DOS_RANGE</span></code></a><a class="headerlink" href="#dos-range" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">DOS_RANGE</span> <span class="o">=</span> <span class="mi">0</span> <span class="mi">40</span> <span class="mf">0.1</span>
 </pre></div>
 </div>
@@ -596,7 +675,7 @@ used to specify the minimum and maximum frequencies (the first and
 second values).</p>
 </div>
 <div class="section" id="fmin-fmax-and-fpitch">
-<span id="dos-fmin-fmax-tags"></span><h3><code class="docutils literal"><span class="pre">FMIN</span></code>, <code class="docutils literal"><span class="pre">FMAX</span></code>, and <code class="docutils literal"><span class="pre">FPITCH</span></code><a class="headerlink" href="#fmin-fmax-and-fpitch" title="Permalink to this headline">¶</a></h3>
+<span id="dos-fmin-fmax-tags"></span><h3><a class="toc-backref" href="#id32"><code class="docutils literal"><span class="pre">FMIN</span></code>, <code class="docutils literal"><span class="pre">FMAX</span></code>, and <code class="docutils literal"><span class="pre">FPITCH</span></code></a><a class="headerlink" href="#fmin-fmax-and-fpitch" title="Permalink to this headline">¶</a></h3>
 <p>The uniform frequency sampling points for phonon-DOS calculation are
 specified. <code class="docutils literal"><span class="pre">FMIN</span></code> and <code class="docutils literal"><span class="pre">FMAX</span></code> give the minimum, maximum frequencies
 of the range, respectively, and <code class="docutils literal"><span class="pre">FPITCH</span></code> gives the frequency pitch
@@ -604,7 +683,7 @@ to be sampled. These three values are the same as those that can be
 specified by <code class="docutils literal"><span class="pre">DOS_RANGE</span></code>.</p>
 </div>
 <div class="section" id="pdos">
-<h3><code class="docutils literal"><span class="pre">PDOS</span></code><a class="headerlink" href="#pdos" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id33"><code class="docutils literal"><span class="pre">PDOS</span></code></a><a class="headerlink" href="#pdos" title="Permalink to this headline">¶</a></h3>
 <p>Projected DOS is calculated using this tag. The formal definition is
 written as</p>
 <div class="math">
@@ -635,7 +714,7 @@ good to consider using <code class="docutils literal"><span class="pre">WRITE_ME
 (<a class="reference internal" href="#write-mesh-tag"><span class="std std-ref">WRITE_MESH</span></a>).</p>
 </div>
 <div class="section" id="projection-direction">
-<span id="projection-direction-tag"></span><h3><code class="docutils literal"><span class="pre">PROJECTION_DIRECTION</span></code><a class="headerlink" href="#projection-direction" title="Permalink to this headline">¶</a></h3>
+<span id="projection-direction-tag"></span><h3><a class="toc-backref" href="#id34"><code class="docutils literal"><span class="pre">PROJECTION_DIRECTION</span></code></a><a class="headerlink" href="#projection-direction" title="Permalink to this headline">¶</a></h3>
 <p>Eigenvectors are projected along the direction specified by this tag.
 Projection direction is specified in reduced coordinates, i.e., with
 respect to <em>a</em>, <em>b</em>, <em>c</em> axes.</p>
@@ -645,7 +724,7 @@ respect to <em>a</em>, <em>b</em>, <em>c</em> axes.</p>
 </div>
 </div>
 <div class="section" id="xyz-projection">
-<span id="xyz-projection-tag"></span><h3><code class="docutils literal"><span class="pre">XYZ_PROJECTION</span></code><a class="headerlink" href="#xyz-projection" title="Permalink to this headline">¶</a></h3>
+<span id="xyz-projection-tag"></span><h3><a class="toc-backref" href="#id35"><code class="docutils literal"><span class="pre">XYZ_PROJECTION</span></code></a><a class="headerlink" href="#xyz-projection" title="Permalink to this headline">¶</a></h3>
 <p>PDOS is calculated using eigenvectors projected along x, y, and z
 Cartesian coordinates. The format of output file <code class="docutils literal"><span class="pre">partial_dos.dat</span></code>
 becomes different when using this tag, where phonon-mode-frequency and
@@ -661,7 +740,7 @@ of all projections to z composents of eigenvectors, respectively.</p>
 </div>
 </div>
 <div class="section" id="sigma">
-<span id="sigma-tag"></span><h3><code class="docutils literal"><span class="pre">SIGMA</span></code><a class="headerlink" href="#sigma" title="Permalink to this headline">¶</a></h3>
+<span id="sigma-tag"></span><h3><a class="toc-backref" href="#id36"><code class="docutils literal"><span class="pre">SIGMA</span></code></a><a class="headerlink" href="#sigma" title="Permalink to this headline">¶</a></h3>
 <p>This tag specifies the smearing width. The unit is same as that used
 for phonon frequency. The default value is the value given by the
 difference of maximum and minimum frequencies divided by 100.</p>
@@ -670,11 +749,11 @@ difference of maximum and minimum frequencies divided by 100.</p>
 </div>
 </div>
 <div class="section" id="tetrahedron">
-<span id="debye-model-tag"></span><h3><code class="docutils literal"><span class="pre">TETRAHEDRON</span></code><a class="headerlink" href="#tetrahedron" title="Permalink to this headline">¶</a></h3>
+<span id="debye-model-tag"></span><h3><a class="toc-backref" href="#id37"><code class="docutils literal"><span class="pre">TETRAHEDRON</span></code></a><a class="headerlink" href="#tetrahedron" title="Permalink to this headline">¶</a></h3>
 <p>Tetrahedron method is used instead of smearing method.</p>
 </div>
 <div class="section" id="debye-model">
-<h3><code class="docutils literal"><span class="pre">DEBYE_MODEL</span></code><a class="headerlink" href="#debye-model" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id38"><code class="docutils literal"><span class="pre">DEBYE_MODEL</span></code></a><a class="headerlink" href="#debye-model" title="Permalink to this headline">¶</a></h3>
 <p>By setting <code class="docutils literal"><span class="pre">.TRUE.</span></code>, DOS at lower phonon frequencies are fit to a
 Debye model. By default, the DOS from 0 to 1/4 of the maximum phonon
 frequencies are used for the fitting. The function used to the fitting
@@ -688,7 +767,7 @@ dependent on how to parameterize it.</p>
 </div>
 </div>
 <div class="section" id="momemt-and-moment-order">
-<span id="dos-moment-tag"></span><h3><code class="docutils literal"><span class="pre">MOMEMT</span></code> and <code class="docutils literal"><span class="pre">MOMENT_ORDER</span></code><a class="headerlink" href="#momemt-and-moment-order" title="Permalink to this headline">¶</a></h3>
+<span id="dos-moment-tag"></span><h3><a class="toc-backref" href="#id39"><code class="docutils literal"><span class="pre">MOMEMT</span></code> and <code class="docutils literal"><span class="pre">MOMENT_ORDER</span></code></a><a class="headerlink" href="#momemt-and-moment-order" title="Permalink to this headline">¶</a></h3>
 <p>Phonon moments for DOS and PDOS defined below are calculated using
 these tags up to arbitrary order. The order is specified with
 <code class="docutils literal"><span class="pre">MOMENT_ORDER</span></code> (<img class="math" src="_images/math/413f8a8e40062a9090d9d50b88bc7b551b314c26.png" alt="n"/> in the formula). Unless <code class="docutils literal"><span class="pre">MOMENT_ORDER</span></code>
@@ -719,9 +798,9 @@ this computation, therefore it is not a good idea to set negative
 </div>
 </div>
 <div class="section" id="thermal-properties-related-tags">
-<span id="thermal-properties-tag"></span><h2><a class="toc-backref" href="#id11">Thermal properties related tags</a><a class="headerlink" href="#thermal-properties-related-tags" title="Permalink to this headline">¶</a></h2>
+<span id="thermal-properties-tag"></span><h2><a class="toc-backref" href="#id40">Thermal properties related tags</a><a class="headerlink" href="#thermal-properties-related-tags" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="tprop-tmin-tmax-and-tstep">
-<h3><code class="docutils literal"><span class="pre">TPROP</span></code>, <code class="docutils literal"><span class="pre">TMIN</span></code>, <code class="docutils literal"><span class="pre">TMAX</span></code>, and <code class="docutils literal"><span class="pre">TSTEP</span></code><a class="headerlink" href="#tprop-tmin-tmax-and-tstep" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id41"><code class="docutils literal"><span class="pre">TPROP</span></code>, <code class="docutils literal"><span class="pre">TMIN</span></code>, <code class="docutils literal"><span class="pre">TMAX</span></code>, and <code class="docutils literal"><span class="pre">TSTEP</span></code></a><a class="headerlink" href="#tprop-tmin-tmax-and-tstep" title="Permalink to this headline">¶</a></h3>
 <p>Thermal properties, free energy, heat capacity, and entropy, are
 calculated from their statistical thermodynamic expressions (see
 <a class="reference internal" href="theory.html#thermal-properties-expressions"><span class="std std-ref">Thermodynamic properties</span></a>). Thermal properties are
@@ -754,9 +833,9 @@ temperature range to be calculated. The default values of them are 0,
 </div>
 </div>
 <div class="section" id="thermal-displacements">
-<span id="thermal-atomic-displacements-tags"></span><h2><a class="toc-backref" href="#id12">Thermal displacements</a><a class="headerlink" href="#thermal-displacements" title="Permalink to this headline">¶</a></h2>
+<span id="thermal-atomic-displacements-tags"></span><h2><a class="toc-backref" href="#id42">Thermal displacements</a><a class="headerlink" href="#thermal-displacements" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="tdisp-tmax-tmin-and-tstep">
-<span id="thermal-displacements-tag"></span><h3><code class="docutils literal"><span class="pre">TDISP</span></code>, <code class="docutils literal"><span class="pre">TMAX</span></code>, <code class="docutils literal"><span class="pre">TMIN</span></code>, and <code class="docutils literal"><span class="pre">TSTEP</span></code><a class="headerlink" href="#tdisp-tmax-tmin-and-tstep" title="Permalink to this headline">¶</a></h3>
+<span id="thermal-displacements-tag"></span><h3><a class="toc-backref" href="#id43"><code class="docutils literal"><span class="pre">TDISP</span></code>, <code class="docutils literal"><span class="pre">TMAX</span></code>, <code class="docutils literal"><span class="pre">TMIN</span></code>, and <code class="docutils literal"><span class="pre">TSTEP</span></code></a><a class="headerlink" href="#tdisp-tmax-tmin-and-tstep" title="Permalink to this headline">¶</a></h3>
 <p>Mean square displacements projected to Cartesian axes as a function of
 temperature are calculated from the number of phonon excitations. The
 usages of <code class="docutils literal"><span class="pre">TMAX</span></code>, <code class="docutils literal"><span class="pre">TMIN</span></code>, <code class="docutils literal"><span class="pre">TSTEP</span></code> tags are same as those in
@@ -776,7 +855,7 @@ tag, careful attention is required.</p>
 </div>
 </div>
 <div class="section" id="tdispmat-tmax-tmin-and-tstep">
-<span id="thermal-displacement-matrices-tag"></span><h3><code class="docutils literal"><span class="pre">TDISPMAT</span></code>, <code class="docutils literal"><span class="pre">TMAX</span></code>, <code class="docutils literal"><span class="pre">TMIN</span></code>, and <code class="docutils literal"><span class="pre">TSTEP</span></code><a class="headerlink" href="#tdispmat-tmax-tmin-and-tstep" title="Permalink to this headline">¶</a></h3>
+<span id="thermal-displacement-matrices-tag"></span><h3><a class="toc-backref" href="#id44"><code class="docutils literal"><span class="pre">TDISPMAT</span></code>, <code class="docutils literal"><span class="pre">TMAX</span></code>, <code class="docutils literal"><span class="pre">TMIN</span></code>, and <code class="docutils literal"><span class="pre">TSTEP</span></code></a><a class="headerlink" href="#tdispmat-tmax-tmin-and-tstep" title="Permalink to this headline">¶</a></h3>
 <p>Mean square displacement matricies are calculated. The difinition is
 shown at <a class="reference internal" href="thermal-displacement.html#thermal-displacement"><span class="std std-ref">Mean square displacement</span></a>. The result is
 writen into <code class="docutils literal"><span class="pre">thermal_displacement_matrices.yaml</span></code> where six matrix
@@ -793,20 +872,20 @@ unit conversion factor is specified using
 <code class="docutils literal"><span class="pre">FREQUENCY_CONVERSION_FACTOR</span></code> tag, careful attention is required.</p>
 </div>
 <div class="section" id="cutoff-frequency">
-<h3><code class="docutils literal"><span class="pre">CUTOFF_FREQUENCY</span></code><a class="headerlink" href="#cutoff-frequency" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id45"><code class="docutils literal"><span class="pre">CUTOFF_FREQUENCY</span></code></a><a class="headerlink" href="#cutoff-frequency" title="Permalink to this headline">¶</a></h3>
 <p>Frequencies lower than this cutoff frequency are not used to calculate
 thermal displacements.</p>
 </div>
 </div>
 <div class="section" id="specific-q-points">
-<h2><a class="toc-backref" href="#id13">Specific q-points</a><a class="headerlink" href="#specific-q-points" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id46">Specific q-points</a><a class="headerlink" href="#specific-q-points" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="qpoints">
-<span id="qpoints-tag"></span><h3><code class="docutils literal"><span class="pre">QPOINTS</span></code><a class="headerlink" href="#qpoints" title="Permalink to this headline">¶</a></h3>
+<span id="qpoints-tag"></span><h3><a class="toc-backref" href="#id47"><code class="docutils literal"><span class="pre">QPOINTS</span></code></a><a class="headerlink" href="#qpoints" title="Permalink to this headline">¶</a></h3>
 <p>When <code class="docutils literal"><span class="pre">QPOINTS</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>, <code class="docutils literal"><span class="pre">QPOINTS</span></code> file in your working directory
 is read, and the q-points written in this file are calculated.</p>
 </div>
 <div class="section" id="writedm">
-<span id="writedm-tag"></span><h3><code class="docutils literal"><span class="pre">WRITEDM</span></code><a class="headerlink" href="#writedm" title="Permalink to this headline">¶</a></h3>
+<span id="writedm-tag"></span><h3><a class="toc-backref" href="#id48"><code class="docutils literal"><span class="pre">WRITEDM</span></code></a><a class="headerlink" href="#writedm" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">WRITEDM</span> <span class="o">=</span> <span class="o">.</span><span class="n">TRUE</span><span class="o">.</span>
 </pre></div>
 </div>
@@ -866,9 +945,9 @@ NaCl at <img class="math" src="_images/math/548d8dd6dd7d62e5b5ce61a5527c3c1b67e0
 </div>
 </div>
 <div class="section" id="non-analytical-term-correction">
-<span id="nac-tag"></span><h2><a class="toc-backref" href="#id14">Non-analytical term correction</a><a class="headerlink" href="#non-analytical-term-correction" title="Permalink to this headline">¶</a></h2>
+<span id="nac-tag"></span><h2><a class="toc-backref" href="#id49">Non-analytical term correction</a><a class="headerlink" href="#non-analytical-term-correction" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="nac">
-<h3><code class="docutils literal"><span class="pre">NAC</span></code><a class="headerlink" href="#nac" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id50"><code class="docutils literal"><span class="pre">NAC</span></code></a><a class="headerlink" href="#nac" title="Permalink to this headline">¶</a></h3>
 <p>Non-analytical term correction is applied to dynamical
 matrix. <code class="docutils literal"><span class="pre">BORN</span></code> file has to be prepared in the current directory. See
 <a class="reference internal" href="input-files.html#born-file"><span class="std std-ref">BORN (optional)</span></a> and <a class="reference internal" href="theory.html#non-analytical-term-correction-theory"><span class="std std-ref">Non-analytical term correction</span></a>.</p>
@@ -877,7 +956,7 @@ matrix. <code class="docutils literal"><span class="pre">BORN</span></code> file
 </div>
 </div>
 <div class="section" id="q-direction">
-<h3><code class="docutils literal"><span class="pre">Q_DIRECTION</span></code><a class="headerlink" href="#q-direction" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id51"><code class="docutils literal"><span class="pre">Q_DIRECTION</span></code></a><a class="headerlink" href="#q-direction" title="Permalink to this headline">¶</a></h3>
 <p>This tag is used to activate NAC at
 <img class="math" src="_images/math/39880e04d581edbff26ded5a5c24a2a5bded3b68.png" alt="\mathbf{q}\rightarrow\mathbf{0}"/>, i.e. practically
 <img class="math" src="_images/math/85011adca50d3725af2e048eeb9ec7b02ccdd401.png" alt="\Gamma"/>-point. Away from <img class="math" src="_images/math/85011adca50d3725af2e048eeb9ec7b02ccdd401.png" alt="\Gamma"/>-point, this setting is
@@ -890,9 +969,9 @@ ignored and the specified <strong>q</strong>-point is used as the <strong>q</str
 </div>
 </div>
 <div class="section" id="group-velocity">
-<span id="group-velocity-tag"></span><h2><a class="toc-backref" href="#id15">Group velocity</a><a class="headerlink" href="#group-velocity" title="Permalink to this headline">¶</a></h2>
+<span id="group-velocity-tag"></span><h2><a class="toc-backref" href="#id52">Group velocity</a><a class="headerlink" href="#group-velocity" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="id3">
-<h3><code class="docutils literal"><span class="pre">GROUP_VELOCITY</span></code><a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id53"><code class="docutils literal"><span class="pre">GROUP_VELOCITY</span></code></a><a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
 <p>Group velocities at q-points are calculated by using this tag. The
 group velocities are written into a yaml file corresponding to the run
 mode in Cartesian coordinates. The physical unit depends on physical
@@ -905,7 +984,7 @@ then the physical unit will be Angstrom THz.</p>
 <p>Technical details are shown at <a class="reference internal" href="group-velocity.html#group-velocity"><span class="std std-ref">Method</span></a>.</p>
 </div>
 <div class="section" id="gv-delta-q">
-<h3><code class="docutils literal"><span class="pre">GV_DELTA_Q</span></code><a class="headerlink" href="#gv-delta-q" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id54"><code class="docutils literal"><span class="pre">GV_DELTA_Q</span></code></a><a class="headerlink" href="#gv-delta-q" title="Permalink to this headline">¶</a></h3>
 <p>The reciprocal distance used for finite difference method is
 specified. The default value is 1e-4.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">GV_DELTA_Q</span> <span class="o">=</span> <span class="mf">0.01</span>
@@ -914,18 +993,18 @@ specified. The default value is 1e-4.</p>
 </div>
 </div>
 <div class="section" id="symmetry">
-<h2><a class="toc-backref" href="#id16">Symmetry</a><a class="headerlink" href="#symmetry" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id55">Symmetry</a><a class="headerlink" href="#symmetry" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="symmetry-tag">
-<span id="id4"></span><h3><code class="docutils literal"><span class="pre">SYMMETRY</span></code><a class="headerlink" href="#symmetry-tag" title="Permalink to this headline">¶</a></h3>
+<span id="id4"></span><h3><a class="toc-backref" href="#id56"><code class="docutils literal"><span class="pre">SYMMETRY</span></code></a><a class="headerlink" href="#symmetry-tag" title="Permalink to this headline">¶</a></h3>
 <p>P1 symmetry is enforced to the input unit cell by setting <code class="docutils literal"><span class="pre">SYMMETRY</span> <span class="pre">=</span> <span class="pre">.FALSE</span></code>.</p>
 </div>
 <div class="section" id="mesh-symmetry">
-<span id="nomeshsym-tag"></span><h3><code class="docutils literal"><span class="pre">MESH_SYMMETRY</span></code><a class="headerlink" href="#mesh-symmetry" title="Permalink to this headline">¶</a></h3>
+<span id="nomeshsym-tag"></span><h3><a class="toc-backref" href="#id57"><code class="docutils literal"><span class="pre">MESH_SYMMETRY</span></code></a><a class="headerlink" href="#mesh-symmetry" title="Permalink to this headline">¶</a></h3>
 <p>Symmetry search on the reciprocal sampling mesh is disabled by setting
 <code class="docutils literal"><span class="pre">MESH_SYMMETRY</span> <span class="pre">=</span> <span class="pre">.FALSE.</span></code>.</p>
 </div>
 <div class="section" id="fc-symmetry">
-<span id="fc-symmetry-tag"></span><h3><code class="docutils literal"><span class="pre">FC_SYMMETRY</span></code><a class="headerlink" href="#fc-symmetry" title="Permalink to this headline">¶</a></h3>
+<span id="fc-symmetry-tag"></span><h3><a class="toc-backref" href="#id58"><code class="docutils literal"><span class="pre">FC_SYMMETRY</span></code></a><a class="headerlink" href="#fc-symmetry" title="Permalink to this headline">¶</a></h3>
 <p>This tag is used to symmetrize force constants partly. The number of
 iteration of the following set of symmetrization applied to force
 constants is specified. The default value is 0. In the case of VASP,
@@ -951,9 +1030,9 @@ force applying <code class="docutils literal"><span class="pre">FC_SYMMETRY</spa
 </div>
 </div>
 <div class="section" id="force-constants">
-<span id="force-constants-tag"></span><h2><a class="toc-backref" href="#id17">Force constants</a><a class="headerlink" href="#force-constants" title="Permalink to this headline">¶</a></h2>
+<span id="force-constants-tag"></span><h2><a class="toc-backref" href="#id59">Force constants</a><a class="headerlink" href="#force-constants" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="id5">
-<h3><code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span></code><a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id60"><code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span></code></a><a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">FORCE_CONSTANTS</span> <span class="o">=</span> <span class="n">READ</span>
 </pre></div>
 </div>
@@ -967,9 +1046,9 @@ and <code class="docutils literal"><span class="pre">.FALSE.</span></code>. The 
 </div>
 </div>
 <div class="section" id="create-animation-file">
-<span id="animation-tag"></span><h2><a class="toc-backref" href="#id18">Create animation file</a><a class="headerlink" href="#create-animation-file" title="Permalink to this headline">¶</a></h2>
+<span id="animation-tag"></span><h2><a class="toc-backref" href="#id61">Create animation file</a><a class="headerlink" href="#create-animation-file" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="anime-type">
-<h3><code class="docutils literal"><span class="pre">ANIME_TYPE</span></code><a class="headerlink" href="#anime-type" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id62"><code class="docutils literal"><span class="pre">ANIME_TYPE</span></code></a><a class="headerlink" href="#anime-type" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">ANIME_TYPE</span> <span class="o">=</span> <span class="n">JMOL</span>
 </pre></div>
 </div>
@@ -982,7 +1061,7 @@ animation images are created such as <code class="docutils literal"><span class=
 <p>There are several parameters to be set in the <code class="docutils literal"><span class="pre">ANIME</span></code> tag.</p>
 </div>
 <div class="section" id="anime">
-<h3><code class="docutils literal"><span class="pre">ANIME</span></code><a class="headerlink" href="#anime" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id63"><code class="docutils literal"><span class="pre">ANIME</span></code></a><a class="headerlink" href="#anime" title="Permalink to this headline">¶</a></h3>
 <p><strong>The format of ``ANIME`` tag was modified after ver. 0.9.3.3.</strong></p>
 <div class="section" id="for-v-sim">
 <h4>For v_sim<a class="headerlink" href="#for-v-sim" title="Permalink to this headline">¶</a></h4>
@@ -1026,9 +1105,9 @@ however dummy values, e.g. 0, are required.</p>
 </div>
 </div>
 <div class="section" id="create-modulated-structure">
-<span id="modulation-tag"></span><h2><a class="toc-backref" href="#id19">Create modulated structure</a><a class="headerlink" href="#create-modulated-structure" title="Permalink to this headline">¶</a></h2>
+<span id="modulation-tag"></span><h2><a class="toc-backref" href="#id64">Create modulated structure</a><a class="headerlink" href="#create-modulated-structure" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="modulation">
-<h3><code class="docutils literal"><span class="pre">MODULATION</span></code><a class="headerlink" href="#modulation" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id65"><code class="docutils literal"><span class="pre">MODULATION</span></code></a><a class="headerlink" href="#modulation" title="Permalink to this headline">¶</a></h3>
 <p>The <code class="docutils literal"><span class="pre">MODULATION</span></code> tag is used to create a crystal structure with
 displacements along normal modes at q-point in the specified supercell
 dimension.</p>
@@ -1085,9 +1164,9 @@ vector is shown in <code class="docutils literal"><span class="pre">modulation.y
 </div>
 </div>
 <div class="section" id="characters-of-irreducible-representations">
-<span id="irreducible-representation-related-tags"></span><h2><a class="toc-backref" href="#id20">Characters of irreducible representations</a><a class="headerlink" href="#characters-of-irreducible-representations" title="Permalink to this headline">¶</a></h2>
+<span id="irreducible-representation-related-tags"></span><h2><a class="toc-backref" href="#id66">Characters of irreducible representations</a><a class="headerlink" href="#characters-of-irreducible-representations" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="irreps">
-<span id="irreps-tag"></span><h3><code class="docutils literal"><span class="pre">IRREPS</span></code><a class="headerlink" href="#irreps" title="Permalink to this headline">¶</a></h3>
+<span id="irreps-tag"></span><h3><a class="toc-backref" href="#id67"><code class="docutils literal"><span class="pre">IRREPS</span></code></a><a class="headerlink" href="#irreps" title="Permalink to this headline">¶</a></h3>
 <p>Characters of irreducible representations (IRs) of phonon modes are
 shown. For this calculation, a primitive cell has to be used. If the
 input unit cell is a non-primitive cell, it has to be transformed to a
@@ -1104,7 +1183,7 @@ the fourth value in the frequency unit that the user specified.</p>
 the symbols of the IRs and the rotation operations are shown.</p>
 </div>
 <div class="section" id="show-irreps">
-<h3><code class="docutils literal"><span class="pre">SHOW_IRREPS</span></code><a class="headerlink" href="#show-irreps" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id68"><code class="docutils literal"><span class="pre">SHOW_IRREPS</span></code></a><a class="headerlink" href="#show-irreps" title="Permalink to this headline">¶</a></h3>
 <p>Irreducible representations are shown along with character table.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">IRREPS</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="mi">3</span> <span class="mi">1</span><span class="o">/</span><span class="mi">3</span> <span class="mi">0</span>
 <span class="n">SHOW_IRREPS</span> <span class="o">=</span> <span class="o">.</span><span class="n">TRUE</span><span class="o">.</span>
@@ -1112,7 +1191,7 @@ the symbols of the IRs and the rotation operations are shown.</p>
 </div>
 </div>
 <div class="section" id="little-cogroup">
-<h3><code class="docutils literal"><span class="pre">LITTLE_COGROUP</span></code><a class="headerlink" href="#little-cogroup" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id69"><code class="docutils literal"><span class="pre">LITTLE_COGROUP</span></code></a><a class="headerlink" href="#little-cogroup" title="Permalink to this headline">¶</a></h3>
 <p>Show irreps of little co-group (point-group of wavevector) instead of
 little group.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">IRREPS</span> <span class="o">=</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">1</span><span class="o">/</span><span class="mi">8</span>

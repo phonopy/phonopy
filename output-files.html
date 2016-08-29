@@ -111,6 +111,8 @@
 </ul>
 </li>
 <li><a class="reference internal" href="#disp-yaml"><code class="docutils literal"><span class="pre">disp.yaml</span></code></a></li>
+<li><a class="reference internal" href="#phonopy-yaml-and-phonon-disp-yaml"><code class="docutils literal"><span class="pre">phonopy.yaml</span></code> and <code class="docutils literal"><span class="pre">phonon_disp.yaml</span></code></a></li>
+<li><a class="reference internal" href="#hdf5-files"><code class="docutils literal"><span class="pre">.hdf5</span></code> files</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#how-to-read-phonopy-yaml-files">How to read phonopy YAML files</a><ul>
@@ -169,12 +171,35 @@
       
   <div class="section" id="output-files">
 <span id="id1"></span><h1>Output files<a class="headerlink" href="#output-files" title="Permalink to this headline">¶</a></h1>
+<div class="contents local topic" id="contents">
+<ul class="simple">
+<li><a class="reference internal" href="#list-of-files" id="id4">List of files</a><ul>
+<li><a class="reference internal" href="#band-yaml" id="id5"><code class="docutils literal"><span class="pre">band.yaml</span></code></a></li>
+<li><a class="reference internal" href="#mesh-yaml" id="id6"><code class="docutils literal"><span class="pre">mesh.yaml</span></code></a></li>
+<li><a class="reference internal" href="#qpoints-yaml" id="id7"><code class="docutils literal"><span class="pre">qpoints.yaml</span></code></a></li>
+<li><a class="reference internal" href="#thermal-properties-yaml" id="id8"><code class="docutils literal"><span class="pre">thermal_properties.yaml</span></code></a></li>
+<li><a class="reference internal" href="#thermal-displacements-yaml" id="id9"><code class="docutils literal"><span class="pre">thermal_displacements.yaml</span></code></a></li>
+<li><a class="reference internal" href="#thermal-displacement-matrices-yaml" id="id10"><code class="docutils literal"><span class="pre">thermal_displacement_matrices.yaml</span></code></a></li>
+<li><a class="reference internal" href="#total-dos-dat-and-partial-dos-dat" id="id11"><code class="docutils literal"><span class="pre">total_dos.dat</span></code> and <code class="docutils literal"><span class="pre">partial_dos.dat</span></code></a></li>
+<li><a class="reference internal" href="#disp-yaml" id="id12"><code class="docutils literal"><span class="pre">disp.yaml</span></code></a></li>
+<li><a class="reference internal" href="#phonopy-yaml-and-phonon-disp-yaml" id="id13"><code class="docutils literal"><span class="pre">phonopy.yaml</span></code> and <code class="docutils literal"><span class="pre">phonon_disp.yaml</span></code></a></li>
+<li><a class="reference internal" href="#hdf5-files" id="id14"><code class="docutils literal"><span class="pre">.hdf5</span></code> files</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#how-to-read-phonopy-yaml-files" id="id15">How to read phonopy YAML files</a><ul>
+<li><a class="reference internal" href="#mesh-yaml-band-yaml-qpoints-yaml" id="id16"><code class="docutils literal"><span class="pre">mesh.yaml</span></code>, <code class="docutils literal"><span class="pre">band.yaml</span></code>, <code class="docutils literal"><span class="pre">qpoints.yaml</span></code></a></li>
+<li><a class="reference internal" href="#id2" id="id17"><code class="docutils literal"><span class="pre">thermal_properties.yaml</span></code></a></li>
+<li><a class="reference internal" href="#id3" id="id18"><code class="docutils literal"><span class="pre">disp.yaml</span></code></a></li>
+</ul>
+</li>
+</ul>
+</div>
 <p>The output data are stored in the following files on the current
 directory.</p>
 <div class="section" id="list-of-files">
-<h2>List of files<a class="headerlink" href="#list-of-files" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id4">List of files</a><a class="headerlink" href="#list-of-files" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="band-yaml">
-<h3><code class="docutils literal"><span class="pre">band.yaml</span></code><a class="headerlink" href="#band-yaml" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id5"><code class="docutils literal"><span class="pre">band.yaml</span></code></a><a class="headerlink" href="#band-yaml" title="Permalink to this headline">¶</a></h3>
 <p>Sets of phonon frequencies on band paths calculated by the
 <a class="reference internal" href="setting-tags.html#band-structure-related-tags"><span class="std std-ref">band-structure mode</span></a>
 (e.g. <code class="docutils literal"><span class="pre">BAND</span></code> tag) are stored in the YAML format.</p>
@@ -183,26 +208,26 @@ directory.</p>
 format to that in the gnuplot-style format using the <code class="docutils literal"><span class="pre">--gnuplot</span></code> option.</p>
 </div>
 <div class="section" id="mesh-yaml">
-<h3><code class="docutils literal"><span class="pre">mesh.yaml</span></code><a class="headerlink" href="#mesh-yaml" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id6"><code class="docutils literal"><span class="pre">mesh.yaml</span></code></a><a class="headerlink" href="#mesh-yaml" title="Permalink to this headline">¶</a></h3>
 <p>A set of frequencies on irreducible q-points of a q-point mesh by the
 <a class="reference internal" href="setting-tags.html#dos-related-tags"><span class="std std-ref">mesh-sampling mode</span></a> (<code class="docutils literal"><span class="pre">MP</span></code> tag) is stored in
 the YAML format.</p>
 </div>
 <div class="section" id="qpoints-yaml">
-<h3><code class="docutils literal"><span class="pre">qpoints.yaml</span></code><a class="headerlink" href="#qpoints-yaml" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id7"><code class="docutils literal"><span class="pre">qpoints.yaml</span></code></a><a class="headerlink" href="#qpoints-yaml" title="Permalink to this headline">¶</a></h3>
 <p>A set of frequencies calculated by the
 <a class="reference internal" href="setting-tags.html#qpoints-tag"><span class="std std-ref">q-points mode</span></a>
 (<code class="docutils literal"><span class="pre">QPOINTS</span></code> tag) is stored in the YAML format.</p>
 </div>
 <div class="section" id="thermal-properties-yaml">
-<h3><code class="docutils literal"><span class="pre">thermal_properties.yaml</span></code><a class="headerlink" href="#thermal-properties-yaml" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id8"><code class="docutils literal"><span class="pre">thermal_properties.yaml</span></code></a><a class="headerlink" href="#thermal-properties-yaml" title="Permalink to this headline">¶</a></h3>
 <p><a class="reference internal" href="setting-tags.html#thermal-properties-tag"><span class="std std-ref">Thermal properties</span></a> calculated
 are stored in the YAML format.</p>
 <p>The auxiliary tool <code class="docutils literal"><span class="pre">propplot</span></code> (<a class="reference internal" href="auxiliary-tools.html#propplot-tool"><span class="std std-ref">propplot</span></a>) can be used to
 plot the content of <code class="docutils literal"><span class="pre">thermal_properties.yaml</span></code>.</p>
 </div>
 <div class="section" id="thermal-displacements-yaml">
-<h3><code class="docutils literal"><span class="pre">thermal_displacements.yaml</span></code><a class="headerlink" href="#thermal-displacements-yaml" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id9"><code class="docutils literal"><span class="pre">thermal_displacements.yaml</span></code></a><a class="headerlink" href="#thermal-displacements-yaml" title="Permalink to this headline">¶</a></h3>
 <p><a class="reference internal" href="setting-tags.html#thermal-displacements-tag"><span class="std std-ref">Mean square displcements of atoms</span></a>
 are stored in the YAML format. Without projecting eigenvectors along a
 specific direction, the results projected along Cartesianl
@@ -210,14 +235,14 @@ coordinates, therefore three values for each atom at a temperature,
 are written into the file.</p>
 </div>
 <div class="section" id="thermal-displacement-matrices-yaml">
-<h3><code class="docutils literal"><span class="pre">thermal_displacement_matrices.yaml</span></code><a class="headerlink" href="#thermal-displacement-matrices-yaml" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id10"><code class="docutils literal"><span class="pre">thermal_displacement_matrices.yaml</span></code></a><a class="headerlink" href="#thermal-displacement-matrices-yaml" title="Permalink to this headline">¶</a></h3>
 <p><a class="reference internal" href="setting-tags.html#thermal-displacement-matrices-tag"><span class="std std-ref">Mean square displacement matricies of atoms</span></a> are stored in the YAML
 format. Since the matrix for each atom at a temperature is symmetric,
 only six elements of it, xx, yy, zz, yz, xz, xy, are written in this
 order.</p>
 </div>
 <div class="section" id="total-dos-dat-and-partial-dos-dat">
-<h3><code class="docutils literal"><span class="pre">total_dos.dat</span></code> and <code class="docutils literal"><span class="pre">partial_dos.dat</span></code><a class="headerlink" href="#total-dos-dat-and-partial-dos-dat" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id11"><code class="docutils literal"><span class="pre">total_dos.dat</span></code> and <code class="docutils literal"><span class="pre">partial_dos.dat</span></code></a><a class="headerlink" href="#total-dos-dat-and-partial-dos-dat" title="Permalink to this headline">¶</a></h3>
 <p><a class="reference internal" href="setting-tags.html#dos-related-tags"><span class="std std-ref">Total DOS and partial dos</span></a> are stored in the
 simple format, respectively.</p>
 <p><code class="docutils literal"><span class="pre">total_dos.dat</span></code> and <code class="docutils literal"><span class="pre">partial_dos.dat</span></code> are viewed using the
@@ -273,7 +298,7 @@ represent x, y, and z components:</p>
 </div>
 </div>
 <div class="section" id="disp-yaml">
-<h3><code class="docutils literal"><span class="pre">disp.yaml</span></code><a class="headerlink" href="#disp-yaml" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id12"><code class="docutils literal"><span class="pre">disp.yaml</span></code></a><a class="headerlink" href="#disp-yaml" title="Permalink to this headline">¶</a></h3>
 <p>This file contains information to create supercells with
 displacements. The format is hopefully understood just looking into
 it. &#8216;displacement&#8217; is written in Cartesian coordinates.  The
@@ -286,9 +311,18 @@ displacement and direction are related by</p>
 (three column vectors), and <img class="math" src="_images/math/be8808430361e0e62361948b729d4ffd3db9a335.png" alt="\mathbf{d}"/> is the direction along
 the supercell axes.</p>
 </div>
+<div class="section" id="phonopy-yaml-and-phonon-disp-yaml">
+<h3><a class="toc-backref" href="#id13"><code class="docutils literal"><span class="pre">phonopy.yaml</span></code> and <code class="docutils literal"><span class="pre">phonon_disp.yaml</span></code></a><a class="headerlink" href="#phonopy-yaml-and-phonon-disp-yaml" title="Permalink to this headline">¶</a></h3>
+<p>Phonopy configurations and crystal structures are stored to remember
+what a user executed.</p>
+</div>
+<div class="section" id="hdf5-files">
+<h3><a class="toc-backref" href="#id14"><code class="docutils literal"><span class="pre">.hdf5</span></code> files</a><a class="headerlink" href="#hdf5-files" title="Permalink to this headline">¶</a></h3>
+<p>See <a class="reference internal" href="command-options.html#hdf5-option"><span class="std std-ref">&#8211;hdf5</span></a>.</p>
+</div>
 </div>
 <div class="section" id="how-to-read-phonopy-yaml-files">
-<h2>How to read phonopy YAML files<a class="headerlink" href="#how-to-read-phonopy-yaml-files" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id15">How to read phonopy YAML files</a><a class="headerlink" href="#how-to-read-phonopy-yaml-files" title="Permalink to this headline">¶</a></h2>
 <p>Most phonopy results are written in the YAML format. YAML files are
 easily translated to the combination of lists and dictionaries in the
 python case. For each computer language, e.g., Ruby, each YAML parser
@@ -297,7 +331,7 @@ analyze the data easily in conjunction with your favorite
 language. See <a class="reference external" href="http://www.yaml.org/">http://www.yaml.org/</a>. The basic of the YAML format is
 found easily on the web.</p>
 <div class="section" id="mesh-yaml-band-yaml-qpoints-yaml">
-<h3><code class="docutils literal"><span class="pre">mesh.yaml</span></code>, <code class="docutils literal"><span class="pre">band.yaml</span></code>, <code class="docutils literal"><span class="pre">qpoints.yaml</span></code><a class="headerlink" href="#mesh-yaml-band-yaml-qpoints-yaml" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id16"><code class="docutils literal"><span class="pre">mesh.yaml</span></code>, <code class="docutils literal"><span class="pre">band.yaml</span></code>, <code class="docutils literal"><span class="pre">qpoints.yaml</span></code></a><a class="headerlink" href="#mesh-yaml-band-yaml-qpoints-yaml" title="Permalink to this headline">¶</a></h3>
 <div class="section" id="general">
 <h4>General<a class="headerlink" href="#general" title="Permalink to this headline">¶</a></h4>
 <table border="1" class="docutils">
@@ -396,14 +430,14 @@ unit used in the real space.</td>
 </div>
 </div>
 <div class="section" id="id2">
-<h3><code class="docutils literal"><span class="pre">thermal_properties.yaml</span></code><a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id17"><code class="docutils literal"><span class="pre">thermal_properties.yaml</span></code></a><a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
 <p>The physical units of the thermal properties are given in the unit
 section of this YAML file. However the physical units are only correct
 when phonopy ran with proper physical units. See
 <a class="reference internal" href="setting-tags.html#thermal-properties-tag"><span class="std std-ref">Thermal properties related tags</span></a>.</p>
 </div>
 <div class="section" id="id3">
-<h3><code class="docutils literal"><span class="pre">disp.yaml</span></code><a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id18"><code class="docutils literal"><span class="pre">disp.yaml</span></code></a><a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
 <table border="1" class="docutils">
 <colgroup>
 <col width="20%" />
