@@ -989,7 +989,7 @@ class IrReps:
         for mapping_table in character_table[ptg]['mapping_table']:
             rotation_symbols = []
             for r in self._conventional_rotations:
-                symbol = get_rotation_symbol(r, mapping_table)
+                symbol = _get_rotation_symbol(r, mapping_table)
                 rotation_symbols.append(symbol)
 
             if not False in rotation_symbols:
@@ -1058,14 +1058,14 @@ class IrReps:
             width = 6
             print("Original rotation matrices:")
             print('')
-            print_rotations(self._rotations_at_q, width=width)
+            _print_rotations(self._rotations_at_q, width=width)
         else:
             width = 4
             print("Original symmetry operations:")
             print('')
-            print_rotations(self._rotations_at_q,
-                            translations=self._translations_at_q,
-                            width=width)
+            _print_rotations(self._rotations_at_q,
+                             translations=self._translations_at_q,
+                             width=width)
 
         print("Transformation matrix:")
         print('')
@@ -1074,9 +1074,9 @@ class IrReps:
         print('')
         print("Rotation matrices by transformation matrix:")
         print('')
-        print_rotations(self._conventional_rotations,
-                        rotation_symbols=self._rotation_symbols,
-                        width=width)
+        _print_rotations(self._conventional_rotations,
+                         rotation_symbols=self._rotation_symbols,
+                         width=width)
         print("Character table:")
         print('')
         for i, deg_set in enumerate(self._degenerate_sets):
@@ -1085,7 +1085,7 @@ class IrReps:
                 print(text)
             else:
                 print(text + self._ir_labels[i])
-            print_characters(self._characters[i])
+            _print_characters(self._characters[i])
             print('')
 
         if show_irreps:
@@ -1206,14 +1206,15 @@ class IrReps:
                 
         pass
                 
-def get_rotation_symbol(rotation, mapping_table):
-    for k, v in mapping_table.iteritems():
+def _get_rotation_symbol(rotation, mapping_table):
+    for k in mapping_table:
+        v = mapping_table[k]
         for r in v:
             if (r == rotation).all():
                 return k
     return False
 
-def print_characters(characters, width=6):
+def _print_characters(characters, width=6):
     text = ""
     for i, c in enumerate(characters):
         angle = np.angle(c) / np.pi * 180
@@ -1231,7 +1232,7 @@ def print_characters(characters, width=6):
             print("    " + text)
             text = ""
 
-def print_rotations(rotations,
+def _print_rotations(rotations,
                     translations=None,
                     rotation_symbols=None,
                     width=6):
@@ -1250,6 +1251,10 @@ def print_rotations(rotations,
                 if translations is None:
                     if len(rot_symbol) < 3:
                         text += "    %2s    " % rot_symbol
+                    elif len(rot_symbol) == 3:
+                        text += "    %3s   " % rot_symbol
+                    elif len(rot_symbol) == 4:
+                        text += "   %4s   " % rot_symbol
                     else:
                         text += "   %5s  " % rot_symbol
                 else:
