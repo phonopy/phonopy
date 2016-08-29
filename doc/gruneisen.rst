@@ -3,6 +3,10 @@
 Calculation of mode Grüneisen parameters
 ========================================
 
+.. contents::
+   :depth: 2
+   :local:
+
 How to run
 -----------
 

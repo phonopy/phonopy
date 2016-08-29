@@ -4,7 +4,7 @@ Setting tags
 ============
 
 .. contents::
-   :depth: 1
+   :depth: 2
    :local:
 
 Most of the setting tags have corresponding command-line options
