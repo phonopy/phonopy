@@ -212,7 +212,8 @@ class Symmetry:
                 zip(ops['rotations'], ops['translations'])):
                 
                 diff = np.dot(pos[i], r.T) + t - pos[eq_atom]
-                if (abs(diff - np.rint(diff)) < self._symprec).all():
+                diff -= np.rint(diff)
+                if np.linalg.norm(diff) < self._symprec:
                     map_operations[i] = j
                     break
 
@@ -289,42 +290,4 @@ def get_lattice_vector_equivalence(point_symmetry):
             equivalence[0] = True
 
     return equivalence
-
-
-if __name__ == '__main__':
-    from phonopy.structure.symmetry import Symmetry
-    from phonopy.interface.vasp import read_vasp
     
-    def get_magmom(text):
-        magmom = []
-        for numxmag in text.split():
-            if '*' in numxmag:
-                num, mag = numxmag.split('*')
-                magmom += [float(mag)] * int(num)
-            else:
-                magmom.append(float(numxmag))
-        return magmom
-    
-    def parse_incar(filename):
-        for line in open(filename):
-            for conf in line.split(';'):
-                if 'MAGMOM' in conf:
-                    return get_magmom(conf.split('=')[1])
-    
-    cell = read_vasp("POSCAR")
-    symmetry = Symmetry(cell, symprec=1e-3)
-    map_nonspin = symmetry.get_map_atoms()
-    print("Number of operations w/o spin %d" %
-          len(symmetry.get_symmetry_operations()['rotations']))
-    magmoms = parse_incar("INCAR")
-    cell.set_magnetic_moments(magmoms)
-    symmetry = Symmetry(cell, symprec=1e-3)
-    print("Number of operations w spin %d" %
-          len(symmetry.get_symmetry_operations()['rotations']))
-    map_withspin = symmetry.get_map_atoms()
-    if ((map_nonspin - map_withspin) == 0).all():
-        print(True)
-    else:
-        print(False)
-        print(map_nonspin)
-        print(map_withspin)

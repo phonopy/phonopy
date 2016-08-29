@@ -3,6 +3,10 @@
 Output files
 ============
 
+.. contents::
+   :depth: 2
+   :local:
+
 The output data are stored in the following files on the current
 directory.
 
@@ -138,6 +142,16 @@ where :math:`\mathbf{u}` is the displacement in Cartesian coordinates,
 (three column vectors), and :math:`\mathbf{d}` is the direction along
 the supercell axes.
 
+``phonopy.yaml`` and ``phonon_disp.yaml``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Phonopy configurations and crystal structures are stored to remember
+what a user executed. 
+
+``.hdf5`` files
+^^^^^^^^^^^^^^^^^
+
+See :ref:`hdf5_option`.
 
 
 How to read phonopy YAML files

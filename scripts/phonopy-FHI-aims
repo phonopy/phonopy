@@ -33,6 +33,11 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+# 2016/08/29  togo: Known bug. Support for modulation output doesn't work.
+#
+# 2016/08/29  togo: Minor fix to follow the change of Phonopy instantiation
+#                   Now phonopy_obj.generate_displacements(distance=some_value)
+#                   must be called after the Phonopy instantiation.
 #
 # 2014/09/23  christian.carbogno && shanghui: adding write_eigenfrequencies_and_eigenvectors_at_gamma 
 #                                            (both non-nac and nac)                      
@@ -398,7 +403,8 @@ def post_process_band(phonopy_obj, parameters, frequency_unit_factor, is_eigenve
         frequencies[i] = numpy.array(frequencies_band)
     fmin = numpy.min(frequencies)
     fmax = numpy.max(frequencies)
-    for (unit, factor) in AimsFrequencyUnitFactors.iteritems():
+    for unit in AimsFrequencyUnitFactors:
+        factor = AimsFrequencyUnitFactors[unit]
         if (factor == frequency_unit_factor):
             frequency_unit = unit
             break
@@ -466,7 +472,8 @@ def post_process_dos(phonopy_obj, mesh_obj, parameters, do_matplotlib=False):
     fstep = ( fmax - fmin ) / parameters["fpoints"]
     dos_obj.set_draw_area(fmin, fmax, fstep)
     dos_obj.run()
-    for (unit, factor) in AimsFrequencyUnitFactors.iteritems():
+    for unit in AimsFrequencyUnitFactors:
+        factor = AimsFrequencyUnitFactors[unit]
         if (factor == frequency_unit_factor):
             frequency_unit = unit
             break
@@ -819,9 +826,9 @@ if __name__ == "__main__":
         print "# |          command line option to turn off symmetry."
     print "# generating supercells with displacements"
     phonopy_obj = Phonopy(cell, supercell_matrix, 
-                          distance=control.phonon["displacement"], 
                           symprec=control.phonon["symmetry_thresh"],
                           factor=frequency_unit_factor)
+    phonopy_obj.generate_displacements(distance=control.phonon["displacement"])
     print "# | Spacegroup: %s" % phonopy_obj.symmetry.get_international_table()
     supercells = phonopy_obj.get_supercells_with_displacements()
     digits = int( math.ceil( math.log(len(supercells)+1,10) ) ) + 1

@@ -69,19 +69,33 @@ class Phonopy:
                  supercell_matrix,
                  primitive_matrix=None,
                  nac_params=None,
-                 distance=0.01,
+                 distance=None,
                  factor=VaspToTHz,
-                 is_auto_displacements=True,
+                 is_auto_displacements=None,
                  dynamical_matrix_decimals=None,
                  force_constants_decimals=None,
                  symprec=1e-5,
                  is_symmetry=True,
                  use_lapack_solver=False,
                  log_level=0):
+
+        if is_auto_displacements is not None:
+            print("Warning: \'is_auto_displacements\' argument is obsolete.")
+            if is_auto_displacements is False:
+                print("Sets of displacements are not created as default.")
+            else:
+                print("Use \'generate_displacements\' method explicitly to "
+                      "create sets of displacements.")
+
+        if distance is not None:
+            print("Warning: \'distance\' keyword argument is obsolete at "
+                  "Phonopy instantiation.")
+            print("Specify \'distance\' keyword argument when calling "
+                  "\'generate_displacements\'")
+            print("method (See the Phonopy API document).")
+
         self._symprec = symprec
-        self._distance = distance
         self._factor = factor
-        self._is_auto_displacements = is_auto_displacements
         self._is_symmetry = is_symmetry
         self._use_lapack_solver = use_lapack_solver
         self._log_level = log_level
@@ -106,8 +120,6 @@ class Phonopy:
         self._displacements = None
         self._displacement_directions = None
         self._supercells_with_displacements = None
-        if self._is_auto_displacements:
-            self.generate_displacements(distance=self._distance)
 
         # set_force_constants or set_forces
         self._force_constants = None
@@ -224,8 +236,9 @@ class Phonopy:
         self._unitcell = unitcell
         self._build_supercell()
         self._build_primitive_cell()
-        if self._is_auto_displacements:
-            self.generate_displacements(distance=self._distance)
+        self._search_symmetry()
+        self._search_primitive_symmetry()
+        self._displacement_dataset = None
 
     def set_masses(self, masses):
         p_masses = np.array(masses)
@@ -292,61 +305,6 @@ class Phonopy:
 
     def set_dynamical_matrix(self):
         self._set_dynamical_matrix()
-
-    def set_displacements(self, displacements):
-        print('')
-        print("********************************** Warning"
-              "**********************************")
-        print("set_displacements is obsolete. Do nothing.")
-        print("******************************************"
-              "**********************************")
-        print('')
-
-    def set_force_sets(self, force_sets):
-        print('')
-        print("********************************** Warning"
-              "**********************************")
-        print("set_force_sets will be obsolete.")
-        print("   The method name is changed to set_displacement_dataset.")
-        print("******************************************"
-              "**********************************")
-        print('')
-        self.set_displacement_dataset(force_sets)
-
-    def set_post_process(self,
-                         primitive_matrix=None,
-                         sets_of_forces=None,
-                         displacement_dataset=None,
-                         force_constants=None,
-                         is_nac=None):
-        print('')
-        print("********************************** Warning"
-              "**********************************")
-        print("set_post_process will be obsolete.")
-        print("  produce_force_constants is used instead of set_post_process"
-              " for producing")
-        print("  force constants from forces.")
-        if primitive_matrix is not None:
-            print("  primitive_matrix has to be given at Phonopy::__init__"
-                  " object creation.")
-        print ("******************************************"
-               "**********************************")
-        print('')
-
-        if primitive_matrix is not None:
-            self._primitive_matrix = primitive_matrix
-            self._build_primitive_cell()
-            self._search_primitive_symmetry()
-
-        if sets_of_forces is not None:
-            self.set_forces(sets_of_forces)
-        elif displacement_dataset is not None:
-            self._displacement_dataset = displacement_dataset
-        elif force_constants is not None:
-            self.set_force_constants(force_constants)
-
-        if self._displacement_dataset is not None:
-            self.produce_force_constants()
 
     def generate_displacements(self,
                                distance=0.01,
@@ -416,10 +374,8 @@ class Phonopy:
         self._set_dynamical_matrix()
 
     def symmetrize_force_constants_by_space_group(self):
-        from phonopy.harmonic.force_constants import \
-            set_tensor_symmetry, \
-            set_tensor_symmetry_old, \
-            set_tensor_symmetry_PJ
+        from phonopy.harmonic.force_constants import (set_tensor_symmetry,
+                                                      set_tensor_symmetry_PJ)
         set_tensor_symmetry_PJ(self._force_constants,
                                self._supercell.get_cell().T,
                                self._supercell.get_scaled_positions(),
@@ -620,7 +576,8 @@ class Phonopy:
                                band_indices=None,
                                cutoff_frequency=None):
         if self._mesh is None:
-            print("set_mesh has to be done before set_thermal_properties")
+            print("Warning: set_mesh has to be done before "
+                  "set_thermal_properties")
             return False
         else:
             tp = ThermalProperties(self._mesh.get_frequencies(),
@@ -830,7 +787,7 @@ class Phonopy:
         self._thermal_displacement_matrices = None
 
         if self._mesh is None:
-            print("\'set_mesh\' has to finish correctly "
+            print("Warning: \'set_mesh\' has to finish correctly "
                   "before \'set_thermal_displacement_matrices\'.")
             return False
 
@@ -899,15 +856,14 @@ class Phonopy:
                            q_points,
                            nac_q_direction=None,
                            is_eigenvectors=False,
-                           write_dynamical_matrices=False,
-                           factor=VaspToTHz):
+                           write_dynamical_matrices=False):
         if self._dynamical_matrix is None:
             print("Warning: Dynamical matrix has not yet built.")
             self._qpoints_phonon = None
             return False
 
         self._qpoints_phonon = QpointsPhonon(
-            q_points,
+            np.reshape(q_points, (-1, 3)),
             self._dynamical_matrix,
             nac_q_direction=nac_q_direction,
             is_eigenvectors=is_eigenvectors,
@@ -1121,7 +1077,7 @@ class Phonopy:
                    freq_min=None,
                    freq_max=None):
         if self._mesh is None:
-            print("set_mesh has to be done before set_moment")
+            print("Warning: set_mesh has to be done before set_moment")
             return False
         else:
             if is_projection:

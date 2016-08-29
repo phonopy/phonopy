@@ -4,13 +4,18 @@ from phonopy.file_IO import parse_FORCE_SETS
 import numpy as np
 
 def get_frequency(poscar_filename, force_sets_filename):
-    bulk = read_vasp(poscar_filename)
-    volume = bulk.get_volume()
-    phonon = Phonopy(bulk, [[2, 0, 0], [0, 2, 0], [0, 0, 2]],
-                     is_auto_displacements=False)
+    unitcell = read_vasp(poscar_filename)
+    volume = unitcell.get_volume()
+    phonon = Phonopy(unitcell,
+                     [[2, 0, 0],
+                      [0, 2, 0],
+                      [0, 0, 2]],
+                     primitive_matrix=[[0, 0.5, 0.5],
+                                       [0.5, 0, 0.5],
+                                       [0.5, 0.5, 0]])
     force_sets = parse_FORCE_SETS(filename=force_sets_filename)
-    phonon.set_force_sets(force_sets)
-    phonon.set_post_process([[0, 0.5, 0.5], [0.5, 0, 0.5], [0.5, 0.5, 0]])
+    phonon.set_displacement_dataset(force_sets)
+    phonon.produce_force_constants()
     return phonon.get_frequencies([0.5, 0.5, 0]), volume
 
 frequencies = []
@@ -23,10 +28,14 @@ for i in range(-10, 6):
     volumes.append(v)
 
 import matplotlib.pyplot as plt
-for curve in np.array(frequencies).T:
-    plt.plot(volumes, curve**2 * np.sign(curve))
-    for v, f2 in zip(volumes, curve ** 2 * np.sign(curve)):
-         print v, f2
-    print
-    print
+for freq_at_X in np.array(frequencies).T:
+    freq_squared = freq_at_X ** 2 * np.sign(freq_at_X)
+    # np.sign is used to treat imaginary mode, since
+    # imaginary frequency is returned as a negative value from phonopy.
+    plt.plot(volumes, freq_squared, "o-")
+    # for v, f2 in zip(volumes, freq_squared):
+    #      print("%f %f" % (v, f2))
+    # print('')
+    # print('')
+plt.title("Frequeny squared (THz^2) at X-point vs volume (A^3)")
 plt.show()

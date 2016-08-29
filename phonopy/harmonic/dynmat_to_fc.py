@@ -66,7 +66,7 @@ class DynmatToForceConstants:
         self._dynmat = None
         n = self._supercell.get_number_of_atoms()
         self._force_constants = np.zeros((n, n, 3, 3), dtype='double')
-        
+
         if frequencies is not None and eigenvectors is not None:
             self.set_dynamical_matrices(frequencies, eigenvectors)
 
@@ -76,13 +76,13 @@ class DynmatToForceConstants:
 
     def get_force_constants(self):
         return self._force_constants
-            
+
     def get_commensurate_points(self):
         return self._commensurate_points
-            
+
     def get_dynamical_matrices(self):
         return self._dynmat
-            
+
     def set_dynamical_matrices(self,
                                frequencies_at_qpoints,
                                eigenvectors_at_qpoints):
@@ -92,9 +92,9 @@ class DynmatToForceConstants:
             eigvals = frequencies ** 2 * np.sign(frequencies)
             dynmat.append(
                 np.dot(np.dot(eigvecs, np.diag(eigvals)), eigvecs.T.conj()))
-            
+
         self._dynmat = np.array(dynmat, dtype='complex128', order='C')
-        
+
     def _inverse_transformation(self):
         s2p = self._primitive.get_supercell_to_primitive_map()
         p2s = self._primitive.get_primitive_to_supercell_map()
@@ -140,4 +140,3 @@ class DynmatToForceConstants:
                                   (p_i * 3):(p_i * 3 + 3),
                                   (p_j * 3):(p_j * 3 + 3)] * coef
         return sum_q.real
-        

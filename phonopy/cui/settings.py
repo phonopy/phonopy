@@ -70,7 +70,7 @@ class Settings:
         self._masses = None
         self._mesh = None
         self._mesh_shift = None
-        self._frequency_pitch = None
+        self._fpitch = None
         self._num_frequency_points = None
         self._primitive_matrix = None
         self._qpoints = None
@@ -143,11 +143,11 @@ class Settings:
     def get_frequency_conversion_factor(self):
         return self._frequency_conversion_factor
 
-    def set_frequency_pitch(self, frequency_pitch):
-        self._frequency_pitch = frequency_pitch
+    def set_frequency_pitch(self, fpitch):
+        self._fpitch = fpitch
 
     def get_frequency_pitch(self):
-        return self._frequency_pitch
+        return self._fpitch
 
     def set_num_frequency_points(self, num_frequency_points):
         self._num_frequency_points = num_frequency_points
@@ -330,6 +330,9 @@ class ConfParser:
             self.read_options() # store data in self._confs
         self.parse_conf() # self.parameters[key] = val
 
+    def get_configures(self):
+        return self._confs
+
     def get_settings(self):
         return self._settings
 
@@ -385,8 +388,8 @@ class ConfParser:
                 params['frequency_conversion_factor'])
 
         # Spectram drawing step
-        if 'frequency_pitch' in params:
-            self._settings.set_frequency_pitch(params['frequency_pitch'])
+        if 'fpitch' in params:
+            self._settings.set_frequency_pitch(params['fpitch'])
 
         # Number of sampling points for spectram drawing 
         if 'num_frequency_points' in params:
@@ -508,8 +511,9 @@ class ConfParser:
 
     def read_file(self, filename):
         file = open(filename, 'r')
-        confs = self._confs
         is_continue = False
+        left = None
+
         for line in file:
             if line.strip() == '':
                 is_continue = False
@@ -519,16 +523,14 @@ class ConfParser:
                 is_continue = False
                 continue
 
-            if is_continue:
-                confs[left] += line.strip()
-                confs[left] = confs[left].replace('+++', ' ')
+            if is_continue and left is not None:
+                self._confs[left] += line.strip()
+                self._confs[left] = self._confs[left].replace('+++', ' ')
                 is_continue = False
                 
             if line.find('=') != -1:
-                left, right = [x.strip().lower() for x in line.split('=')]
-                if left == 'band_labels':
-                    right = [x.strip() for x in line.split('=')][1]
-                confs[left] = right
+                left, right = [x.strip() for x in line.split('=')]
+                self._confs[left.lower()] = right
 
             if line.find('+++') != -1:
                 is_continue = True
@@ -630,9 +632,9 @@ class ConfParser:
                 if self._options.frequency_conversion_factor:
                     self._confs['frequency_conversion_factor'] = self._options.frequency_conversion_factor
 
-            if opt.dest == 'frequency_pitch':
-                if self._options.frequency_pitch:
-                    self._confs['frequency_pitch'] = self._options.frequency_pitch
+            if opt.dest == 'fpitch':
+                if self._options.fpitch:
+                    self._confs['fpitch'] = self._options.fpitch
 
             if opt.dest == 'num_frequency_points':
                 if self._options.num_frequency_points:
@@ -833,9 +835,9 @@ class ConfParser:
                 val = float(confs['frequency_conversion_factor'])
                 self.set_parameter('frequency_conversion_factor', val)
 
-            if conf_key == 'frequency_pitch':
-                val = float(confs['frequency_pitch'])
-                self.set_parameter('frequency_pitch', val)
+            if conf_key == 'fpitch':
+                val = float(confs['fpitch'])
+                self.set_parameter('fpitch', val)
 
             if conf_key == 'num_frequency_points':
                 val = int(confs['num_frequency_points'])
@@ -906,8 +908,8 @@ class PhonopySettings(Settings):
         self._fc_computation_algorithm = "svd"
         self._fc_spg_symmetry = False
         self._fits_Debye_model = False
-        self._fmin = None
         self._fmax = None
+        self._fmin = None
         self._irreps_q_point = None
         self._irreps_tolerance = 1e-5
         self._is_dos_mode = False
@@ -983,15 +985,15 @@ class PhonopySettings(Settings):
     def get_cutoff_radius(self):
         return self._cutoff_radius
 
-    def set_dos_range(self, fmin, fmax, fstep):
+    def set_dos_range(self, fmin, fmax, fpitch):
         self._fmin = fmin
         self._fmax = fmax
-        self._frequency_pitch = fstep
+        self._fpitch = fpitch
 
     def get_dos_range(self):
         dos_range = {'min': self._fmin,
                      'max': self._fmax,
-                     'step': self._frequency_pitch}
+                     'step': self._fpitch}
         return dos_range
 
     def set_fc_computation_algorithm(self, fc_computation_algorithm):
@@ -1371,7 +1373,7 @@ class PhonopyConfParser(ConfParser):
 
         for conf_key in confs.keys():
             if conf_key == 'create_displacements':
-                if confs['create_displacements'] == '.true.':
+                if confs['create_displacements'].lower() == '.true.':
                     self.set_parameter('create_displacements', True)
 
             if conf_key == 'band_labels':
@@ -1379,27 +1381,27 @@ class PhonopyConfParser(ConfParser):
                 self.set_parameter('band_labels', labels)
 
             if conf_key == 'band_connection':
-                if confs['band_connection'] == '.true.':
+                if confs['band_connection'].lower() == '.true.':
                     self.set_parameter('band_connection', True)
 
             if conf_key == 'force_constants':
                 self.set_parameter('force_constants',
-                                   confs['force_constants'])
+                                   confs['force_constants'].lower())
 
             if conf_key == 'cutoff_radius':
                 val = float(confs['cutoff_radius'])
                 self.set_parameter('cutoff_radius', val)
 
             if conf_key == 'writedm':
-                if confs['writedm'] == '.true.':
+                if confs['writedm'].lower() == '.true.':
                     self.set_parameter('write_dynamical_matrices', True)
 
             if conf_key == 'write_mesh':
-                if confs['write_mesh'] == '.false.':
+                if confs['write_mesh'].lower() == '.false.':
                     self.set_parameter('write_mesh', False)
 
             if conf_key == 'hdf5':
-                if confs['hdf5'] == '.true.':
+                if confs['hdf5'].lower() == '.true.':
                     self.set_parameter('hdf5', True)
 
             if conf_key == 'mp':
@@ -1415,19 +1417,19 @@ class PhonopyConfParser(ConfParser):
                 self.set_parameter('mp_shift', vals[:3])
                 
             if conf_key == 'time_reversal_symmetry':
-                if confs['time_reversal_symmetry'] == '.false.':
+                if confs['time_reversal_symmetry'].lower() == '.false.':
                     self.set_parameter('is_time_reversal_symmetry', False)
 
             if conf_key == 'gamma_center':
-                if confs['gamma_center'] == '.true.':
+                if confs['gamma_center'].lower() == '.true.':
                     self.set_parameter('is_gamma_center', True)
 
             if conf_key == 'fc_computation_algorithm':
                 self.set_parameter('fc_computation_algorithm',
-                                   confs['fc_computation_algorithm'])
+                                   confs['fc_computation_algorithm'].lower())
 
             if conf_key == 'fc_spg_symmetry':
-                if confs['fc_spg_symmetry'] == '.true.':
+                if confs['fc_spg_symmetry'].lower() == '.true.':
                     self.set_parameter('fc_spg_symmetry', True)
 
             # Animation
@@ -1440,19 +1442,16 @@ class PhonopyConfParser(ConfParser):
                     self.set_parameter('anime', data)
 
             if conf_key == 'anime_type':
-                if (confs['anime_type'] == 'arc' or
-                     confs['anime_type'] == 'v_sim' or
-                     confs['anime_type'] == 'poscar' or
-                     confs['anime_type'] == 'xyz' or
-                     confs['anime_type'] == 'jmol'):
-                    self.set_parameter('anime_type', confs['anime_type'])
+                anime_type = confs['anime_type'].lower()
+                if anime_type in ('arc', 'v_sim', 'poscar', 'xyz', 'jmol'):
+                    self.set_parameter('anime_type', anime_type)
                 else:
                     self.setting_error("%s is not available for ANIME_TYPE tag."
                                        % confs['anime_type'])
 
             # Modulation
             if conf_key == 'modulation':
-                self._parse_conf_modulation(confs)
+                self._parse_conf_modulation(confs['modulation'])
 
             # Character table
             if conf_key == 'irreps':
@@ -1463,11 +1462,11 @@ class PhonopyConfParser(ConfParser):
                     self.setting_error("IRREPS is incorrectly set.")
 
             if conf_key == 'show_irreps':
-                if confs['show_irreps'] == '.true.':
+                if confs['show_irreps'].lower() == '.true.':
                     self.set_parameter('show_irreps', True)
 
             if conf_key == 'little_cogroup':
-                if confs['little_cogroup'] == '.true.':
+                if confs['little_cogroup'].lower() == '.true.':
                     self.set_parameter('little_cogroup', True)
                     
             # DOS
@@ -1478,15 +1477,15 @@ class PhonopyConfParser(ConfParser):
                 self.set_parameter('pdos', vals)
 
             if conf_key == 'xyz_projection':
-                if confs['xyz_projection'] == '.true.':
+                if confs['xyz_projection'].lower() == '.true.':
                     self.set_parameter('xyz_projection', True)
 
             if conf_key == 'dos':
-                if confs['dos'] == '.true.':
+                if confs['dos'].lower() == '.true.':
                     self.set_parameter('dos', True)
 
             if conf_key == 'debye_model':
-                if confs['debye_model'] == '.true.':
+                if confs['debye_model'].lower() == '.true.':
                     self.set_parameter('fits_debye_model', True)
 
             if conf_key == 'dos_range':
@@ -1501,29 +1500,29 @@ class PhonopyConfParser(ConfParser):
 
             # Thermal properties
             if conf_key == 'tprop':
-                if confs['tprop'] == '.true.':
+                if confs['tprop'].lower() == '.true.':
                     self.set_parameter('tprop', True)
 
             # Projected thermal properties
             if conf_key == 'ptprop':
-                if confs['ptprop'] == '.true.':
+                if confs['ptprop'].lower() == '.true.':
                     self.set_parameter('ptprop', True)
 
             # Thermal displacement
             if conf_key == 'tdisp':
-                if confs['tdisp'] == '.true.':
+                if confs['tdisp'].lower() == '.true.':
                     self.set_parameter('tdisp', True)
 
             # Thermal displacement matrices
             if conf_key == 'tdispmat':
-                if confs['tdispmat'] == '.true.':
+                if confs['tdispmat'].lower() == '.true.':
                     self.set_parameter('tdispmat', True)
 
             # Thermal distance
             if conf_key == 'tdistance':
                 atom_pairs = []
                 for atoms in confs['tdistance'].split(','):
-                    pair = [ int(x)-1 for x in atoms.split() ]
+                    pair = [int(x) - 1 for x in atoms.split()]
                     if len(pair) == 2:
                         atom_pairs.append(pair)
                     else:
@@ -1542,12 +1541,12 @@ class PhonopyConfParser(ConfParser):
 
             # Group velocity
             if conf_key == 'group_velocity':
-                if confs['group_velocity'] == '.true.':
+                if confs['group_velocity'].lower() == '.true.':
                     self.set_parameter('is_group_velocity', True)
 
             # Moment of phonon states distribution
             if conf_key == 'moment':
-                if confs['moment'] == '.true.':
+                if confs['moment'].lower() == '.true.':
                     self.set_parameter('moment', True)
 
             if conf_key == 'moment_order':
@@ -1555,15 +1554,15 @@ class PhonopyConfParser(ConfParser):
                     
             # Use Lapack solver via Lapacke
             if conf_key == 'lapack_solver':
-                if confs['lapack_solver'] == '.true.':
+                if confs['lapack_solver'].lower() == '.true.':
                     self.set_parameter('lapack_solver', True)
 
 
-    def _parse_conf_modulation(self, confs):
+    def _parse_conf_modulation(self, conf_modulation):
         modulation = {}
         modulation['dimension'] = [1, 1, 1]
         modulation['order'] = None
-        mod_list = confs['modulation'].split(',')
+        mod_list = conf_modulation.split(',')
         header = mod_list[0].split()
         if len(header) > 2 and len(mod_list) > 1:
             if len(header) > 8:
@@ -1577,11 +1576,11 @@ class PhonopyConfParser(ConfParser):
             else:
                 dimension = [int(x) for x in header[:3]]
                 modulation['dimension'] = dimension
-                if len(header) > 5:
-                    delta_q = [float(x) for x in header[6:9]]
+                if len(header) > 3:
+                    delta_q = [float(x) for x in header[3:6]]
                     modulation['delta_q'] = delta_q
                 if len(header) == 7:
-                    modulation['order'] = int(header[9])
+                    modulation['order'] = int(header[7])
                 
             vals = []
             for phonon_mode in mod_list[1:]:
@@ -1736,8 +1735,8 @@ class PhonopyConfParser(ConfParser):
         if 'dos_range' in params:
             fmin =  params['dos_range'][0]
             fmax =  params['dos_range'][1]
-            fstep = params['dos_range'][2]
-            self._settings.set_dos_range(fmin, fmax, fstep)
+            fpitch = params['dos_range'][2]
+            self._settings.set_dos_range(fmin, fmax, fpitch)
     
         if 'dos' in params:
             self._settings.set_is_dos_mode(params['dos'])
@@ -1750,7 +1749,7 @@ class PhonopyConfParser(ConfParser):
 
         if 'fmin' in params:
             self._settings.set_min_frequency(params['fmin'])
-    
+
         # Project PDOS x, y, z directions in Cartesian coordinates
         if 'xyz_projection' in params:
             self._settings.set_xyz_projection(params['xyz_projection'])

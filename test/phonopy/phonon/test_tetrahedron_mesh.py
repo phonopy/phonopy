@@ -75,8 +75,7 @@ class TestTetrahedronMesh(unittest.TestCase):
         cell = read_vasp("POSCAR_%s" % spgtype)
         phonon = Phonopy(cell,
                          np.diag(dim),
-                         primitive_matrix=pmat,
-                         is_auto_displacements=False)
+                         primitive_matrix=pmat)
         force_sets = parse_FORCE_SETS(filename="FORCE_SETS_%s" % spgtype)
         phonon.set_displacement_dataset(force_sets)
         phonon.produce_force_constants()

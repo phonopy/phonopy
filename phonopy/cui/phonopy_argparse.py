@@ -58,9 +58,10 @@ def get_parser():
         force_constants_mode=False,
         force_sets_mode=False,
         force_sets_zero_mode=False,
-        fmin=None,
         fmax=None,
+        fmin=None,
         frequency_conversion_factor=None,
+        fpitch=None,
         gv_delta_q=None,
         is_band_connection=False,
         is_check_symmetry=False,
@@ -200,10 +201,13 @@ def get_parser():
         help="Fits total DOS to a Debye model")
     parser.add_option(
         "--fmax", dest="fmax", type="float",
-        help="Maximum frequency used for moment calculation")
+        help="Maximum frequency used for DOS or moment calculation")
     parser.add_option(
         "--fmin", dest="fmin", type="float",
-        help="Minimum frequency used for moment calculation")
+        help="Minimum frequency used for DOS or moment calculation")
+    parser.add_option(
+        "--fpitch", dest="fpitch", type="float",
+        help="Frequency pitch used for DOS or moment calculation")
     parser.add_option(
         "--gc", "--gamma_center", dest="is_gamma_center", action="store_true",
         help="Set mesh as Gamma center")

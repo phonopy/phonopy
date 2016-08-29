@@ -25,7 +25,7 @@ class TestPhonopyYaml(unittest.TestCase):
     def test_write_phonopy_yaml(self):
         phonopy = self._get_phonon()
         phpy_yaml = PhonopyYaml(calculator='vasp')
-        phpy_yaml.set(phonopy)
+        phpy_yaml.set_phonon_info(phonopy)
         print(phpy_yaml)
 
     def _get_unitcell(self, filename):
@@ -35,13 +35,12 @@ class TestPhonopyYaml(unittest.TestCase):
         # print(unitcell)
 
     def _get_phonon(self):
-        cell = read_vasp("POSCAR_NaCl")
+        cell = read_vasp("../POSCAR_NaCl")
         phonon = Phonopy(cell,
                          np.diag([2, 2, 2]),
                          primitive_matrix=[[0, 0.5, 0.5],
                                            [0.5, 0, 0.5],
-                                           [0.5, 0.5, 0]],
-                         is_auto_displacements=False)
+                                           [0.5, 0.5, 0]])
         force_sets = parse_FORCE_SETS(filename="FORCE_SETS_NaCl")
         phonon.set_displacement_dataset(force_sets)
         phonon.produce_force_constants()

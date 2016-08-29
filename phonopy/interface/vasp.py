@@ -596,6 +596,31 @@ def _get_atomtypes_from_vasprun_xml(element):
     return None
 
 #
+# XDATCAR
+#
+def read_XDATCAR(filename="XDATCAR"):
+    lattice = None
+    symbols = None
+    numbers_of_atoms = None
+    with open(filename) as f:
+        f.readline()
+        scale = float(f.readline())
+        a = [float(x) for x in f.readline().split()[:3]]
+        b = [float(x) for x in f.readline().split()[:3]]
+        c = [float(x) for x in f.readline().split()[:3]]
+        lattice = np.transpose([a, b, c]) * scale
+        symbols = f.readline().split()
+        numbers_of_atoms = np.array(
+            [int(x) for x in f.readline().split()[:len(symbols)]], dtype='intc')
+
+    if lattice is not None:
+        data = np.loadtxt(filename, skiprows=7, comments='D')
+        return (data.reshape((-1, numbers_of_atoms.sum(), 3)),
+                np.array(lattice, dtype='double', order='C'))
+    else:
+        return None
+
+#
 # OUTCAR handling (obsolete)
 #
 def read_force_constant_OUTCAR(filename):
@@ -627,8 +652,3 @@ def get_force_constants_OUTCAR(filename):
             force_constants[i, j] = -fc_tmp[i*3:(i+1)*3, j*3:(j+1)*3]
 
     return force_constants
-
-if __name__ == '__main__':
-    import sys
-    atoms = read_vasp(sys.argv[1])
-    write_vasp('%s-new' % sys.argv[1], atoms)

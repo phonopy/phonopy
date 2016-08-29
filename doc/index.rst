@@ -22,15 +22,13 @@ Welcome to phonopy
 **Phonopy** is an open source package for phonon calculations at
 harmonic and quasi-harmonic levels.
 
-**Phono3py** for phonon-phonon interaction calculations has been 
-released as an open beta
-version. See the document at http://atztogo.github.io/phono3py/
-.
+**Phono3py** is another open source package for phonon-phonon interaction and lattice thermal
+conductivity calculations. See the document at http://atztogo.github.io/phono3py/
 
-**Phonon database**: A collection of phonon and mode-Gruneisen
-parameter calculations is available at
-http://phonondb.mtl.kyoto-u.ac.jp/ . The raw data of phonopy & VASP
-results can be downloaed.
+**Phonon database**: A collection of first principles phonon
+calculations is available as open data at
+http://phonondb.mtl.kyoto-u.ac.jp/ , where the raw data of phonopy & VASP
+results are downloaded.
 
 
 Selected features

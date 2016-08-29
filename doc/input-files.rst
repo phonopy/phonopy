@@ -1,6 +1,10 @@
 Input files
 ===========
 
+.. contents::
+   :depth: 2
+   :local:
+
 Setting file
 -------------
 
@@ -76,8 +80,8 @@ Example of rutile-type silicon oxide crystal structure (2)
 
 .. _file_forces:
 
-Force file (`FORCE_SETS`)
--------------------------
+Force file (``FORCE_SETS``)
+----------------------------
 
 This file gives sets of forces in supercells with finite atomic
 displacements. Each supercell involves one displaced atom.  The first
@@ -177,7 +181,11 @@ Example
      0.000000000000000     4.635786969900130     0.000000000000000
      0.000000000000000     0.000000000000000     4.635786969900130
 
+``force_constants.hdf5``
+-------------------------
 
+This is an alternative of ``FORCE_CONSTANTS`` but the data is stored
+in HDF5 format. See the detail of how to obtain this file, :ref:`hdf5_option`.
 
 ``QPOINTS`` (optional)
 -----------------------

@@ -66,23 +66,21 @@ def get_eigenvectors(q,
     if perturbation is None:
         return eigvals, eigvecs
 
-    eigvecs_new = np.zeros_like(eigvecs)
-    deg_sets = degenerate_sets(eigvals)
-
     if derivative_order is not None:
         ddm.set_derivative_order(derivative_order)
     dD = _get_dD(q, ddm, perturbation)
+    rot_eigvecs, _ = rotate_eigenvectors(eigvals, eigvecs, dD)
 
-    for deg in deg_sets:
-        if len(deg) == 1:
-            continue
-        
-        eigvecs_arranged = _rearrange_eigenvectors(dD, eigvecs[:, deg])
+    return eigvals, rot_eigvecs
 
-        if eigvecs_arranged is not None:
-            eigvecs[:, deg] = eigvecs_arranged
-
-    return eigvals, eigvecs
+def rotate_eigenvectors(eigvals, eigvecs, dD):
+    rot_eigvecs = np.zeros_like(eigvecs)
+    eigvals_dD = np.zeros_like(eigvals)
+    for deg in degenerate_sets(eigvals):
+        dD_part = np.dot(eigvecs[:, deg].T.conj(), np.dot(dD, eigvecs[:, deg]))
+        eigvals_dD[deg], eigvecs_dD = np.linalg.eigh(dD_part)
+        rot_eigvecs[:, deg] = np.dot(eigvecs[:, deg], eigvecs_dD)
+    return rot_eigvecs, eigvals_dD
 
 def _get_dD(q, ddm, perturbation):
     ddm.run(q)
@@ -101,7 +99,3 @@ def _get_dD(q, ddm, perturbation):
         dD += 2 * perturbation[1] * perturbation[2] * ddm_vals[3]
         return dD / np.linalg.norm(perturbation) ** 2
 
-def _rearrange_eigenvectors(dD, eigvecs_deg):
-    dD_part = np.dot(eigvecs_deg.T.conj(), np.dot(dD, eigvecs_deg))
-    p_eigvals, p_eigvecs = np.linalg.eigh(dD_part)
-    return np.dot(eigvecs_deg, p_eigvecs)

@@ -3,6 +3,11 @@
 Command options
 ===============
 
+.. contents::
+   :depth: 2
+   :local:
+
+
 Some of command-line options are equivalent to respective setting
 tags:
 
@@ -22,6 +27,7 @@ tags:
 * ``--fits_debye_model`` (``DEBYE_MODEL = .TRUE.``)
 * ``--fmax`` (``FMAX``)
 * ``--fmin`` (``FMIN``)
+* ``--fpitch`` (``FPITCH``)
 * ``--gc``, ``--gamma_center`` (``GAMMA_CENTER``)
 * ``--gv``, ``--group_velocity`` (``GROUP_VELOCITY = .TRUE.``)
 * ``--gv_delta_q`` (``GV_DELTA_Q``)
@@ -60,8 +66,8 @@ tags.
 
 .. _force_calculators:
 
-Force calculators
-------------------
+Choice of force calculator
+---------------------------
 
 Currently interfaces for VASP, Wien2k, Pwscf, Abinit, and Elk are
 prepared. Wien2k, Pwscf, Abinit and Elk interfaces are invoked with

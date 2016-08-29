@@ -49,10 +49,17 @@ except ImportError:
 
 from phonopy.structure.atoms import PhonopyAtoms as Atoms
 
+def get_unitcell_from_phonopy_yaml(filename):
+    ph_yaml = PhonopyYaml()
+    ph_yaml.read(filename)
+    return ph_yaml.get_unitcell()
+
 class PhonopyYaml:
     def __init__(self,
+                 configuration=None,
                  calculator=None,
                  show_force_constants=False):
+        self._configuration = configuration
         self._calculator = calculator
         self._show_force_constants = show_force_constants
 
@@ -62,12 +69,16 @@ class PhonopyYaml:
         self._supercell_matrix = None
         self._primitive_matrix = None
         self._force_constants = None
-        self._p2s_map = None
         self._s2p_map = None
-        self._p2p_map = None
+        self._u2p_map = None
+        self._nac_params = None
+        self._version = None
 
     def get_unitcell(self):
         return self._unitcell
+
+    def set_unitcell(self, cell):
+        self._unitcell = cell
 
     def get_primitive(self):
         return self._primitive
@@ -79,7 +90,7 @@ class PhonopyYaml:
         with open(filename) as infile:
             self._load(infile)
 
-    def set(self, phonopy):
+    def set_phonon_info(self, phonopy):
         self._version = phonopy.get_version()
         self._unitcell = phonopy.get_unitcell()
         self._primitive = phonopy.get_primitive()
@@ -106,22 +117,32 @@ class PhonopyYaml:
             nac_factor = self._nac_params['factor']
             dielectric = self._nac_params['dielectric']
 
-        lines.append("phonopy:")
-        lines.append("  version: %s" % self._version)
-        if self._supercell_matrix is not None:
-            lines.append("  supercell_matrix:")
-            for v in self._supercell_matrix:
-                lines.append("  - [ %3d, %3d, %3d ]" % tuple(v))
-        if self._primitive_matrix is not None:
-            lines.append("  primitive_matrix:")
-            for v in self._primitive_matrix:
-                lines.append("  - [ %18.15f, %18.15f, %18.15f ]" % tuple(v))
+        if self._version:
+            lines.append("phonopy:")
+            lines.append("  version: %s" % self._version)
         if self._calculator:
             lines.append("  calculator: %s" % self._calculator)
-        lines.append("  nac_unit_conversion_factor: %f" % nac_factor)
-        lines.append("")
+        if self._nac_params:
+            lines.append("  nac_unit_conversion_factor: %f" % nac_factor)
+        if self._configuration is not None:
+            lines.append("  configuration:")
+            for key in self._configuration:
+                lines.append("    %s: \"%s\"" % (key, self._configuration[key]))
+            lines.append("")
 
         lines += self._get_physical_unit_yaml_lines()
+
+        if self._supercell_matrix is not None:
+            lines.append("supercell_matrix:")
+            for v in self._supercell_matrix:
+                lines.append("- [ %3d, %3d, %3d ]" % tuple(v))
+            lines.append("")
+
+        if self._primitive_matrix is not None:
+            lines.append("primitive_matrix:")
+            for v in self._primitive_matrix:
+                lines.append("- [ %18.15f, %18.15f, %18.15f ]" % tuple(v))
+            lines.append("")
 
         if self._primitive is not None:
             lines.append("primitive_cell:")
