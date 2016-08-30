@@ -162,16 +162,16 @@
 <span id="phonopy-qha"></span><h1>Quasi harmonic approximation<a class="headerlink" href="#quasi-harmonic-approximation" title="Permalink to this headline">¶</a></h1>
 <div class="contents local topic" id="contents">
 <ul class="simple">
-<li><a class="reference internal" href="#usage-of-phonopy-qha" id="id3">Usage of <code class="docutils literal"><span class="pre">phonopy-qha</span></code></a><ul>
-<li><a class="reference internal" href="#options" id="id4">Options</a></li>
-<li><a class="reference internal" href="#output-files" id="id5">Output files</a></li>
+<li><a class="reference internal" href="#usage-of-phonopy-qha" id="id1">Usage of <code class="docutils literal"><span class="pre">phonopy-qha</span></code></a><ul>
+<li><a class="reference internal" href="#options" id="id2">Options</a></li>
+<li><a class="reference internal" href="#output-files" id="id3">Output files</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#theory-of-quasi-harmonic-approximation" id="id6">Theory of quasi-harmonic approximation</a></li>
+<li><a class="reference internal" href="#theory-of-quasi-harmonic-approximation" id="id4">Theory of quasi-harmonic approximation</a></li>
 </ul>
 </div>
 <div class="section" id="usage-of-phonopy-qha">
-<h2><a class="toc-backref" href="#id3">Usage of <code class="docutils literal"><span class="pre">phonopy-qha</span></code></a><a class="headerlink" href="#usage-of-phonopy-qha" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id1">Usage of <code class="docutils literal"><span class="pre">phonopy-qha</span></code></a><a class="headerlink" href="#usage-of-phonopy-qha" title="Permalink to this headline">¶</a></h2>
 <p>Using phonopy results of thermal properties, thermal expansion and
 heat capacity at constant pressure can be calculated under the
 quasi-harmonic approximation. <code class="docutils literal"><span class="pre">phonopy-qha</span></code> is the script to
@@ -208,7 +208,7 @@ i.e., no need to convert the physical unit in usual cases.</p>
 <p>If the condition under puressure is expected, <img class="math" src="_images/math/0dfed6bacce2d7a8fcef075bfe60b6abdce343d5.png" alt="PV"/> terms may be
 included in the energies.</p>
 <div class="section" id="options">
-<span id="phonopy-qha-options"></span><h3><a class="toc-backref" href="#id4">Options</a><a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h3>
+<span id="phonopy-qha-options"></span><h3><a class="toc-backref" href="#id2">Options</a><a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h3>
 <div class="section" id="h">
 <h4><code class="docutils literal"><span class="pre">-h</span></code><a class="headerlink" href="#h" title="Permalink to this headline">¶</a></h4>
 <p>Show help. The available options are shown. Without any option, the
@@ -238,12 +238,9 @@ only plotted.</p>
 </div>
 <div class="section" id="pressure">
 <h4><code class="docutils literal"><span class="pre">--pressure</span></code><a class="headerlink" href="#pressure" title="Permalink to this headline">¶</a></h4>
-<dl class="docutils">
-<dt><a href="#id1"><span class="problematic" id="id2">**</span></a>This option is not yet well tested. Please report to the mailing</dt>
-<dd>list when you get wrong results.**</dd>
-</dl>
 <p>Pressure is specified in GPa. This corresponds to the <img class="math" src="_images/math/f9cd47ee828774a5bf1a063755dba74cabb5806a.png" alt="pV"/> term
-described in the following section <a class="reference internal" href="#theory-of-qha"><span class="std std-ref">Theory of quasi-harmonic approximation</span></a>.</p>
+described in the following section <a class="reference internal" href="#theory-of-qha"><span class="std std-ref">Theory of quasi-harmonic approximation</span></a>. Note that
+bulk modulus obtained with this option than 0 GPa is incorrect.</p>
 </div>
 <div class="section" id="b">
 <h4><code class="docutils literal"><span class="pre">-b</span></code><a class="headerlink" href="#b" title="Permalink to this headline">¶</a></h4>
@@ -263,7 +260,7 @@ modulus (without considering phonons). This is made by:</p>
 </div>
 </div>
 <div class="section" id="output-files">
-<span id="phonopy-qha-output-files"></span><h3><a class="toc-backref" href="#id5">Output files</a><a class="headerlink" href="#output-files" title="Permalink to this headline">¶</a></h3>
+<span id="phonopy-qha-output-files"></span><h3><a class="toc-backref" href="#id3">Output files</a><a class="headerlink" href="#output-files" title="Permalink to this headline">¶</a></h3>
 <p>The physical units of V and T are <img class="math" src="_images/math/31da0980227a84c9bf406e28e1650ea7231839f9.png" alt="\AA^3"/> and K,
 respectively. The unit of eV for Helmholtz and Gibbs energies, J/K/mol
 for <img class="math" src="_images/math/a6fc75acd772f5bbe97b33bab623014ecabbd943.png" alt="C_V"/> and entropy, GPa for for bulk modulus and pressure
@@ -290,7 +287,7 @@ used.</p>
 </div>
 </div>
 <div class="section" id="theory-of-quasi-harmonic-approximation">
-<span id="theory-of-qha"></span><h2><a class="toc-backref" href="#id6">Theory of quasi-harmonic approximation</a><a class="headerlink" href="#theory-of-quasi-harmonic-approximation" title="Permalink to this headline">¶</a></h2>
+<span id="theory-of-qha"></span><h2><a class="toc-backref" href="#id4">Theory of quasi-harmonic approximation</a><a class="headerlink" href="#theory-of-quasi-harmonic-approximation" title="Permalink to this headline">¶</a></h2>
 <p>Here the word &#8216;quasi-harmonic approximation&#8217; is used for an
 approximation that introduces volume dependence of phonon frequencies
 as a part of anharmonic effect.</p>

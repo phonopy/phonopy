@@ -91,11 +91,9 @@ The calculated values are written into files.
 ``--pressure`` 
 ~~~~~~~~~~~~~~~~
 
-**This option is not yet well tested. Please report to the mailing
- list when you get wrong results.**
-
 Pressure is specified in GPa. This corresponds to the :math:`pV` term
-described in the following section :ref:`theory_of_qha`. 
+described in the following section :ref:`theory_of_qha`. Note that
+bulk modulus obtained with this option than 0 GPa is incorrect.
 
 ``-b`` 
 ~~~~~~~
