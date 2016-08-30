@@ -543,7 +543,7 @@ class QHA:
                                plt,
                                thin_number=10,
                                xlabel=r'Volume $(\AA^3)$',
-                               ylabel='Free energy'):
+                               ylabel='Free energy (eV)'):
         volume_points = np.linspace(min(self._volumes),
                                     max(self._volumes),
                                     201)
@@ -626,7 +626,7 @@ class QHA:
     def _plot_gibbs_temperature(self,
                                 plt,
                                 xlabel='Temperature (K)',
-                                ylabel='Gibbs free energy'):
+                                ylabel='Gibbs free energy (eV)'):
         plt.xlabel(xlabel)
         plt.ylabel(ylabel)
         plt.plot(self._temperatures[:self._max_t_index],
@@ -636,7 +636,7 @@ class QHA:
     def _plot_bulk_modulus_temperature(self,
                                        plt,
                                        xlabel='Temperature (K)',
-                                       ylabel='Bulk modulus'):
+                                       ylabel='Bulk modulus (GPa)'):
         plt.xlabel(xlabel)
         plt.ylabel(ylabel)
         plt.plot(self._temperatures[:self._max_t_index],
