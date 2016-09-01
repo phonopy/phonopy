@@ -42,7 +42,7 @@ def fracval(frac):
         x = frac.split('/')
         return float(x[0]) / float(x[1])
 
-class Settings:
+class Settings(object):
     def __init__(self):
         self._band_paths = None
         self._band_indices = None
@@ -317,7 +317,7 @@ class Settings:
 
 
 # Parse phonopy setting filen
-class ConfParser:
+class ConfParser(object):
     def __init__(self, filename=None, options=None, option_list=None):
         self._confs = {}
         self._parameters = {}

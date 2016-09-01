@@ -37,7 +37,7 @@ from phonopy.units import AMU, THzToEv, Kb, EV, Hbar, Angstrom
 from phonopy.harmonic.dynamical_matrix import get_equivalent_smallest_vectors
 # np.seterr(invalid='raise')
 
-class ThermalMotion:
+class ThermalMotion(object):
     def __init__(self,
                  frequencies, # have to be supplied in THz
                  eigenvectors,

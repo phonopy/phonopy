@@ -14,7 +14,7 @@ def fracval(frac):
         x = frac.split('/')
         return float(x[0]) / float(x[1])
 
-class KappaDOS:
+class KappaDOS(object):
     def __init__(self,
                  mode_kappa,
                  cell,

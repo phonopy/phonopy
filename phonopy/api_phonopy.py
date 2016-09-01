@@ -63,7 +63,7 @@ from phonopy.phonon.group_velocity import GroupVelocity
 from phonopy.phonon.tetrahedron_mesh import TetrahedronMesh
 from phonopy.phonon.moment import PhononMoment
 
-class Phonopy:
+class Phonopy(object):
     def __init__(self,
                  unitcell,
                  supercell_matrix,

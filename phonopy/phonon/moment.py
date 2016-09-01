@@ -34,7 +34,7 @@
 
 import numpy as np
 
-class PhononMoment:
+class PhononMoment(object):
     def __init__(self,
                  frequencies,
                  weights,

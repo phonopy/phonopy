@@ -70,7 +70,7 @@ def delta_dynamical_matrix(q,
     return dm2 - dm1
 
 
-class GroupVelocity:
+class GroupVelocity(object):
     """
     d omega   ----
     ------- = \  / omega

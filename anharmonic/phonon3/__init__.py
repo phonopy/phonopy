@@ -26,7 +26,7 @@ from anharmonic.phonon3.fc3 import (get_fc3,
                                     set_translational_invariance_fc3,
                                     cutoff_fc3_by_zero)
 
-class Phono3py:
+class Phono3py(object):
     def __init__(self,
                  unitcell,
                  supercell_matrix,
@@ -683,7 +683,7 @@ class Phono3py:
              self._phonon_primitive.get_supercell_to_primitive_map()]]
         self._phonon_supercell.set_masses(s_masses)
 
-class Phono3pyIsotope:
+class Phono3pyIsotope(object):
     def __init__(self,
                  mesh,
                  primitive,
@@ -757,7 +757,7 @@ class Phono3pyIsotope:
         self._iso.set_sigma(sigma)
 
 
-class Phono3pyJointDos:
+class Phono3pyJointDos(object):
     def __init__(self,
                  supercell,
                  primitive,

@@ -115,7 +115,7 @@ def get_abinit_structure(cell):
 
     return lines
 
-class AbinitIn:
+class AbinitIn(object):
     def __init__(self, lines):
         self._set_methods = {'acell':     self._set_acell,
                              'natom':     self._set_natom,

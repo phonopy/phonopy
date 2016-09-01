@@ -40,7 +40,7 @@ from phonopy.structure.atoms import PhonopyAtoms as Atoms
 from phonopy.interface.vasp import write_vasp
 from phonopy.units import VaspToTHz
 
-class Animation:
+class Animation(object):
     def __init__(self,
                  qpoint,
                  dynamical_matrix,

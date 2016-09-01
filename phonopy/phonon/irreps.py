@@ -735,7 +735,7 @@ character_table = {
 }
 
 
-class IrReps:
+class IrReps(object):
     def __init__(self,
                  dynamical_matrix,
                  q,

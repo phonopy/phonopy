@@ -173,7 +173,7 @@ def get_pwscf_structure(cell, pp_filenames=None):
 
     return lines
     
-class PwscfIn:
+class PwscfIn(object):
     def __init__(self, lines):
         self._set_methods = {'ibrav':            self._set_ibrav,
                              'nat':              self._set_nat,

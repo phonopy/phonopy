@@ -482,7 +482,7 @@ def _set_triplets_integration_weights_py(g, interaction, frequency_points):
             if len(g) == 3:
                 g[2, i, :, j, k] = g0 + g1 + g2
 
-class GridBrillouinZone:
+class GridBrillouinZone(object):
     search_space = np.array([
             [0, 0, 0],
             [0, 0, 1],

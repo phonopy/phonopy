@@ -69,7 +69,7 @@ def get_qpoints_in_Brillouin_zone(primitive_vectors, qpoints):
     bz.run(qpoints)
     return bz.get_shortest_qpoints()
 
-class BrillouinZone:
+class BrillouinZone(object):
     def __init__(self, primitive_vectors):
         self._primitive_vectors = primitive_vectors # column vectors
         self._tolerance = min(np.sum(primitive_vectors ** 2, axis=0)) * 0.01

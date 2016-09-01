@@ -9,7 +9,7 @@ from anharmonic.phonon3.triplets import get_ir_grid_points
 
 epsilon = 1.0e-8
 
-class GammaDOS:
+class GammaDOS(object):
     def __init__(self,
                  gamma,
                  frequencies,

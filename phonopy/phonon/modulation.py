@@ -40,7 +40,7 @@ from phonopy.units import VaspToTHz
 from phonopy.phonon.degeneracy import get_eigenvectors
 from phonopy.harmonic.derivative_dynmat import DerivativeOfDynamicalMatrix
 
-class Modulation:
+class Modulation(object):
     def __init__(self,
                  dynamical_matrix,
                  dimension,

@@ -34,7 +34,7 @@
 
 import numpy as np
 
-class Forces:
+class Forces(object):
     """
     forces: Forces on atoms in a supercell with a displacement in Cartesian coordinate
       [ [ F_1x, F_1y, F_1z ], 

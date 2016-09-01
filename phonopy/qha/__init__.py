@@ -36,7 +36,7 @@ import numpy as np
 from phonopy.units import Avogadro, EvTokJmol, EVAngstromToGPa
 from phonopy.qha.eos import get_eos, fit_to_eos
 
-class BulkModulus:
+class BulkModulus(object):
     def __init__(self,
                  volumes,
                  electronic_energies,
@@ -82,7 +82,7 @@ class BulkModulus:
         return plt
 
 
-class QHA:
+class QHA(object):
     def __init__(self,
                  volumes, # Angstrom^3
                  electronic_energies, # eV

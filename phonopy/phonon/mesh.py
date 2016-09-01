@@ -36,7 +36,7 @@ import numpy as np
 from phonopy.units import VaspToTHz
 from phonopy.structure.grid_points import GridPoints
 
-class Mesh:
+class Mesh(object):
     def __init__(self,
                  dynamical_matrix,
                  mesh,

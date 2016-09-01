@@ -12,7 +12,7 @@ from anharmonic.phonon3.imag_self_energy import get_frequency_points
 from phonopy.harmonic.dynamical_matrix import get_dynamical_matrix
 from phonopy.structure.tetrahedron_method import TetrahedronMethod
 
-class JointDos:
+class JointDos(object):
     def __init__(self,
                  mesh,
                  primitive,

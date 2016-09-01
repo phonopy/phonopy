@@ -35,7 +35,7 @@
 
 import numpy as np
 
-class Atoms:
+class Atoms(object):
     """Atoms class compatible with the ASE Atoms class
     Only the necessary stuffs to phonpy are implemented. """
     

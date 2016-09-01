@@ -122,7 +122,7 @@ def get_siesta_structure(cell,atypes):
 
     return lines
 
-class SiestaIn:
+class SiestaIn(object):
     _num_regex = '([+-]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?)'
     _tags = { "latticeconstant":          1.0,
               "latticeconstantunit":     None,

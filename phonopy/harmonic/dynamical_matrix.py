@@ -64,7 +64,7 @@ def get_dynamical_matrix(fc2,
         dm.set_nac_params(nac_params)
     return dm
 
-class DynamicalMatrix:
+class DynamicalMatrix(object):
     """Dynamical matrix class
     
     When prmitive and supercell lattices are L_p and L_s, respectively,

@@ -137,7 +137,7 @@ def plot_partial_dos(pyplot,
 
     pyplot.grid(draw_grid)
 
-class NormalDistribution:
+class NormalDistribution(object):
     def __init__(self, sigma):
         self._sigma = sigma
 
@@ -145,7 +145,7 @@ class NormalDistribution:
         return 1.0 / np.sqrt(2 * np.pi) / self._sigma * \
             np.exp(-x**2 / 2.0 / self._sigma**2)
 
-class CauchyDistribution:
+class CauchyDistribution(object):
     def __init__(self, gamma):
         self._gamma = gamma
 
@@ -153,7 +153,7 @@ class CauchyDistribution:
         return self._gamma / np.pi / (x**2 + self._gamma**2)
 
 
-class Dos:
+class Dos(object):
     def __init__(self, mesh_object, sigma=None, tetrahedron_method=False):
         self._mesh_object = mesh_object
         self._frequencies = mesh_object.get_frequencies()

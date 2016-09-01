@@ -54,7 +54,7 @@ def estimate_band_connection(prev_eigvecs, eigvecs, prev_band_order):
     return band_order
 
 
-class BandStructure:
+class BandStructure(object):
     def __init__(self,
                  paths,
                  dynamical_matrix,

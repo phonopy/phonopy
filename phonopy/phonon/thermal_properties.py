@@ -54,7 +54,7 @@ def mode_ZPE(temp, freqs):
 def mode_zero(temp, freqs):
     return 0
 
-class ThermalPropertiesBase:
+class ThermalPropertiesBase(object):
     def __init__(self,
                  frequencies,
                  weights=None,
