@@ -1083,8 +1083,11 @@ class IrReps(object):
             text = "%3d (%8.3f): " % (deg_set[0] + 1, self._freqs[deg_set[0]])
             if self._ir_labels is None:
                 print(text)
+            elif self._ir_labels[i] is None:
+                warning = "Not found. Try adjusting tolerance value in IRREPS."
+                print("%s%s" % (text, warning))
             else:
-                print(text + self._ir_labels[i])
+                print("%s%s" % (text, self._ir_labels[i]))
             _print_characters(self._characters[i])
             print('')
 
