@@ -1232,71 +1232,74 @@ def _print_characters(characters, width=6):
             print("    " + text)
             text = ""
 
-def _print_rotations(rotations,
-                    translations=None,
-                    rotation_symbols=None,
-                    width=6):
-    for i in range(len(rotations) // width):
-        if rotation_symbols is None:
-            if translations is None:
-                print(("    %2d    " * width) %
-                      tuple(np.arange(i * width, (i + 1) * width) + 1))
-            else:
-                print(("       %2d       " * width) %
-                      tuple(np.arange(i * width, (i + 1) * width) + 1))
-        else:
-            text = ""
-            for k in range(width):
-                rot_symbol = rotation_symbols[i * width + k]
-                if translations is None:
-                    if len(rot_symbol) < 3:
-                        text += "    %2s    " % rot_symbol
-                    elif len(rot_symbol) == 3:
-                        text += "    %3s   " % rot_symbol
-                    elif len(rot_symbol) == 4:
-                        text += "   %4s   " % rot_symbol
-                    else:
-                        text += "   %5s  " % rot_symbol
-                else:
-                    if len(rot_symbol) < 3:
-                        text += "       %2s        " % rot_symbol
-                    else:
-                        text += "     %5s     " % rot_symbol
-            print(text)
+def _get_rotation_text(rotations,
+                       translations,
+                       rotation_symbols,
+                       width,
+                       num_rest,
+                       i):
+    lines = []
+    if rotation_symbols is None:
         if translations is None:
-            print(" -------- " * width)
+            lines.append(("    %2d    " * num_rest) %
+                         tuple(np.arange(i * width, i * width + num_rest) + 1))
         else:
-            print(" -------------- " * width)
+            lines.append(("       %2d       " * num_rest) %
+                         tuple(np.arange(i * width, i * width + num_rest) + 1))
+    else:
+        text = ""
+        for k in range(num_rest):
+            rot_symbol = rotation_symbols[i * width + k]
+            if translations is None:
+                if len(rot_symbol) < 3:
+                    text += "    %2s    " % rot_symbol
+                elif len(rot_symbol) == 3:
+                    text += "    %3s   " % rot_symbol
+                elif len(rot_symbol) == 4:
+                    text += "   %4s   " % rot_symbol
+                else:
+                    text += "   %5s  " % rot_symbol
+            else:
+                if len(rot_symbol) < 3:
+                    text += "       %2s        " % rot_symbol
+                else:
+                    text += "     %5s     " % rot_symbol
+        lines.append(text)
+    if translations is None:
+        lines.append(" -------- " * num_rest)
+    else:
+        lines.append(" -------------- " * num_rest)
 
-        for j in range(3):
-            text = ""
-            for k in range(width):
-                text += " %2d %2d %2d " % tuple(rotations[i * width + k][j])
-                if translations is not None:
-                    text += "%5.2f " % translations[i * width + k][j]
-            print(text)
-        print('')
-    
+    for j in range(3):
+        text = ""
+        for k in range(num_rest):
+            text += " %2d %2d %2d " % tuple(rotations[i * width + k][j])
+            if translations is not None:
+                text += "%5.2f " % translations[i * width + k][j]
+        lines.append(text)
+    lines.append('')
+
+    return "\n".join(lines)
+
+def _print_rotations(rotations,
+                     translations=None,
+                     rotation_symbols=None,
+                     width=6):
+    for i in range(len(rotations) // width):
+        print(_get_rotation_text(rotations,
+                                 translations,
+                                 rotation_symbols,
+                                 width,
+                                 width,
+                                 i))
+
     num_rest = len(rotations) % width
     if num_rest > 0:
         i = len(rotations) // width
-        if rotation_symbols is None:
-            print(("    %2d    " * num_rest) %
-                  tuple(np.arange(i * width, i * width + num_rest) + 1))
-        else:
-            text = ""
-            for k in range(num_rest):
-                rot_symbol = rotation_symbols[i * width + k]
-                if len(rot_symbol) < 3:
-                    text += "    %2s    " % rot_symbol
-                else:
-                    text += "   %5s  " % rot_symbol
-            print(text)
-        print(" -------- " * num_rest)
-        for j in range(3):
-            text = ""
-            for k in range(num_rest):
-                text += (" %2d %2d %2d ") % tuple(rotations[i * width + k][j])
-            print(text)
-        print('')
+        print(_get_rotation_text(rotations,
+                                 translations,
+                                 rotation_symbols,
+                                 width,
+                                 num_rest,
+                                 i))
 
