@@ -10,7 +10,7 @@ are created. In addition, disp.yaml file is created. After force
 calculations with the crystal structures in supercell-xxx.in, it is
 needed to create FORCE_SETS file by
 
-% phonopy --pwscf -f supercell-001.out supercell-002.out
+% phonopy --pwscf -f NaCl-001.out NaCl-002.out
 
 Here .out files are the output of the Pwscf calculations and are
 supposed to contain the forces on atoms calculated by Pwscf. The
