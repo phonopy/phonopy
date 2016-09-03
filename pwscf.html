@@ -158,7 +158,8 @@ More tags may be supported on request.</p>
 </div>
 <div class="section" id="how-to-run">
 <h2>How to run<a class="headerlink" href="#how-to-run" title="Permalink to this headline">¶</a></h2>
-<p>A procedure of Pwscf-phonopy calculation is as follows:</p>
+<p>The procedure of Pwscf-phonopy calculation is shown below using the
+NaCl example found in <code class="docutils literal"><span class="pre">example/NaCl-pwscf</span></code> directory.</p>
 <ol class="arabic">
 <li><p class="first">Read a Pwscf input file and create supercells with
 <a class="reference internal" href="command-options.html#pwscf-mode"><span class="std std-ref">&#8211;pwscf</span></a> option:</p>
@@ -167,39 +168,92 @@ More tags may be supported on request.</p>
 </div>
 <p>In this example, 2x2x2 supercells are created. <code class="docutils literal"><span class="pre">supercell.in</span></code> and
 <code class="docutils literal"><span class="pre">supercell-xxx.in</span></code> (<code class="docutils literal"><span class="pre">xxx</span></code> are numbers) give the perfect
-supercell and supercells with displacements, respectively. In these
-supercell files, lines only relevant to crystal structures are
-generated. <code class="docutils literal"><span class="pre">disp.yaml</span></code> is also created. This file contains
-information on displacements. Perhaps the supercell files are
-stored in <code class="docutils literal"><span class="pre">disp-xxx</span></code> directories, then Pwscf calculations are
-executed in these directories.</p>
+supercell and supercells with displacements, respectively. In the
+case of the NaCl example, two files <code class="docutils literal"><span class="pre">supercell-001.in</span></code> and
+<code class="docutils literal"><span class="pre">supercell-002.in</span></code> are created. In these supercell files, lines
+only relevant to crystal structures are given. <code class="docutils literal"><span class="pre">disp.yaml</span></code> is
+also generated, which contains information about supercell and
+displacements.</p>
 </li>
-<li><p class="first">Calculate forces on atoms in the supercells with
-displacements. Calculation specification tags have to be added to
-<code class="docutils literal"><span class="pre">supercell-xxx.in</span></code> files. Crystal structure is not allowed to relaxed
-in the force calculations, because atomic forces induced by a small
-atomic displacement are what we need for phonon calculation.</p>
-</li>
-<li><p class="first">Create <code class="docutils literal"><span class="pre">FORCE_SETS</span></code> by</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">pwscf</span> <span class="o">-</span><span class="n">f</span> <span class="n">disp</span><span class="o">-</span><span class="mi">001</span><span class="o">/</span><span class="n">supercell</span><span class="o">-</span><span class="mf">001.</span><span class="n">out</span> <span class="n">disp</span><span class="o">-</span><span class="mi">002</span><span class="o">/</span><span class="n">supercell</span><span class="o">-</span><span class="mf">002.</span><span class="n">out</span>  <span class="o">...</span>
+<li><p class="first">To make Pwscf input files, necessary setting information is added to
+<code class="docutils literal"><span class="pre">supercell-xxx.in</span></code> files, e.g., by:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>% for i in {001,002};do cat header.in supercell-$i.in &gt;| NaCl-$i.in; done
 </pre></div>
 </div>
-<p>Here <code class="docutils literal"><span class="pre">*.out</span></code> files are the saved texts of standard outputs of
-Pwscf calculations. To run this command, <code class="docutils literal"><span class="pre">disp.yaml</span></code> has to be
-located in the current directory because the atomic displacements are
-written into the FORCE_SETS file. See some more detail at
-<a class="reference internal" href="command-options.html#pwscf-force-sets-option"><span class="std std-ref">Pwscf interface</span></a>. An example is found in
-<code class="docutils literal"><span class="pre">example/NaCl-pwscf</span></code>.</p>
+<p>where <code class="docutils literal"><span class="pre">header.in</span></code> is specially made for this NaCl example and
+this file is found in <code class="docutils literal"><span class="pre">example/NaCl-pwscf</span></code> directory. This
+setting is of course dependent on systems and has to be written for
+each interested system. Note that supercells with displacements
+must not be relaxed in the force calculations, because atomic
+forces induced by a small atomic displacement are what we need for
+phonon calculation.</p>
+<p>Then Pwscf supercell calculations are executed to obtain force on
+atoms, e.g., as follows:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">mpirun</span> <span class="n">pw</span><span class="o">.</span><span class="n">x</span> <span class="o">-</span><span class="n">i</span> <span class="n">NaCl</span><span class="o">-</span><span class="mf">001.</span><span class="ow">in</span> <span class="o">|&amp;</span> <span class="n">tee</span> <span class="n">NaCl</span><span class="o">-</span><span class="mf">001.</span><span class="n">out</span>
+<span class="o">%</span> <span class="n">mpirun</span> <span class="n">pw</span><span class="o">.</span><span class="n">x</span> <span class="o">-</span><span class="n">i</span> <span class="n">NaCl</span><span class="o">-</span><span class="mf">002.</span><span class="ow">in</span> <span class="o">|&amp;</span> <span class="n">tee</span> <span class="n">NaCl</span><span class="o">-</span><span class="mf">002.</span><span class="n">out</span>
+</pre></div>
+</div>
 </li>
-<li><p class="first">Run post-process of phonopy with the Pwscf input file for the
-unit cell used in the step 1:</p>
+<li><p class="first">To create <code class="docutils literal"><span class="pre">FORCE_SETS</span></code>, that is used by phonopy,
+the following phonopy command is executed:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">pwscf</span> <span class="o">-</span><span class="n">f</span> <span class="n">NaCl</span><span class="o">-</span><span class="mf">001.</span><span class="n">out</span> <span class="n">NaCl</span><span class="o">-</span><span class="mf">002.</span><span class="n">out</span>
+</pre></div>
+</div>
+<p>Here <code class="docutils literal"><span class="pre">.out</span></code> files are the saved text files of standard outputs of the
+Pwscf calculations. If more supercells with displacements were
+created in the step 1, all <code class="docutils literal"><span class="pre">.out</span></code> files are given in the above
+command. To run this command, <code class="docutils literal"><span class="pre">disp.yaml</span></code> has to be located in
+the current directory because the information on atomic
+displacements stored in <code class="docutils literal"><span class="pre">disp.yaml</span></code> are used to generate
+<code class="docutils literal"><span class="pre">FORCE_SETS</span></code>. See some more detail at
+<a class="reference internal" href="command-options.html#pwscf-force-sets-option"><span class="std std-ref">Pwscf interface</span></a>.</p>
+</li>
+<li><p class="first">Now post-process of phonopy is ready to run. The unit cell file
+used in the step 1 has to be specified but <code class="docutils literal"><span class="pre">FORCE_SETS</span></code> is
+automatically read. Examples of post-process are shown below.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">pwscf</span> <span class="o">-</span><span class="n">c</span> <span class="n">NaCl</span><span class="o">.</span><span class="ow">in</span> <span class="o">-</span><span class="n">p</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
+        <span class="n">_</span>
+  <span class="n">_</span> <span class="n">__</span> <span class="o">|</span> <span class="o">|</span><span class="n">__</span>   <span class="n">___</span>  <span class="n">_</span> <span class="n">__</span>   <span class="n">___</span>   <span class="n">_</span> <span class="n">__</span>  <span class="n">_</span>   <span class="n">_</span>
+ <span class="o">|</span> <span class="s1">&#39;_ \| &#39;</span><span class="n">_</span> \ <span class="o">/</span> <span class="n">_</span> \<span class="o">|</span> <span class="s1">&#39;_ \ / _ \ | &#39;</span><span class="n">_</span> \<span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span>
+ <span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="p">)</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="o">||</span> <span class="o">|</span><span class="n">_</span><span class="p">)</span> <span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span>
+ <span class="o">|</span> <span class="o">.</span><span class="n">__</span><span class="o">/|</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="o">|</span>\<span class="n">___</span><span class="o">/|</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="o">|</span>\<span class="n">___</span><span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="o">.</span><span class="n">__</span><span class="o">/</span> \<span class="n">__</span><span class="p">,</span> <span class="o">|</span>
+ <span class="o">|</span><span class="n">_</span><span class="o">|</span>                            <span class="o">|</span><span class="n">_</span><span class="o">|</span>    <span class="o">|</span><span class="n">___</span><span class="o">/</span>
+                                      <span class="mf">1.11</span><span class="o">.</span><span class="mi">0</span>
+
+<span class="n">Python</span> <span class="n">version</span> <span class="mf">2.7</span><span class="o">.</span><span class="mi">12</span>
+<span class="n">Spglib</span> <span class="n">version</span> <span class="mf">1.9</span><span class="o">.</span><span class="mi">2</span>
+<span class="n">Calculator</span> <span class="n">interface</span><span class="p">:</span> <span class="n">pwscf</span>
+<span class="n">Band</span> <span class="n">structure</span> <span class="n">mode</span>
+<span class="n">Settings</span><span class="p">:</span>
+  <span class="n">Supercell</span><span class="p">:</span> <span class="p">[</span><span class="mi">2</span> <span class="mi">2</span> <span class="mi">2</span><span class="p">]</span>
+  <span class="n">Primitive</span> <span class="n">axis</span><span class="p">:</span>
+    <span class="p">[</span> <span class="mf">0.</span>   <span class="mf">0.5</span>  <span class="mf">0.5</span><span class="p">]</span>
+    <span class="p">[</span> <span class="mf">0.5</span>  <span class="mf">0.</span>   <span class="mf">0.5</span><span class="p">]</span>
+    <span class="p">[</span> <span class="mf">0.5</span>  <span class="mf">0.5</span>  <span class="mf">0.</span> <span class="p">]</span>
+<span class="n">Spacegroup</span><span class="p">:</span> <span class="n">Fm</span><span class="o">-</span><span class="mi">3</span><span class="n">m</span> <span class="p">(</span><span class="mi">225</span><span class="p">)</span>
+<span class="n">Computing</span> <span class="n">force</span> <span class="n">constants</span><span class="o">...</span>
+<span class="n">Reciprocal</span> <span class="n">space</span> <span class="n">paths</span> <span class="ow">in</span> <span class="n">reduced</span> <span class="n">coordinates</span><span class="p">:</span>
+<span class="p">[</span> <span class="mf">0.00</span>  <span class="mf">0.00</span>  <span class="mf">0.00</span><span class="p">]</span> <span class="o">--&gt;</span> <span class="p">[</span> <span class="mf">0.50</span>  <span class="mf">0.00</span>  <span class="mf">0.00</span><span class="p">]</span>
+<span class="p">[</span> <span class="mf">0.50</span>  <span class="mf">0.00</span>  <span class="mf">0.00</span><span class="p">]</span> <span class="o">--&gt;</span> <span class="p">[</span> <span class="mf">0.50</span>  <span class="mf">0.50</span>  <span class="mf">0.00</span><span class="p">]</span>
+<span class="p">[</span> <span class="mf">0.50</span>  <span class="mf">0.50</span>  <span class="mf">0.00</span><span class="p">]</span> <span class="o">--&gt;</span> <span class="p">[</span><span class="o">-</span><span class="mf">0.00</span> <span class="o">-</span><span class="mf">0.00</span>  <span class="mf">0.00</span><span class="p">]</span>
+<span class="p">[</span> <span class="mf">0.00</span>  <span class="mf">0.00</span>  <span class="mf">0.00</span><span class="p">]</span> <span class="o">--&gt;</span> <span class="p">[</span> <span class="mf">0.50</span>  <span class="mf">0.50</span>  <span class="mf">0.50</span><span class="p">]</span>
+                 <span class="n">_</span>
+   <span class="n">___</span> <span class="n">_</span> <span class="n">__</span>   <span class="n">__</span><span class="o">|</span> <span class="o">|</span>
+  <span class="o">/</span> <span class="n">_</span> \ <span class="s1">&#39;_ \ / _` |</span>
+ <span class="o">|</span>  <span class="n">__</span><span class="o">/</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="p">(</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span>
+  \<span class="n">___</span><span class="o">|</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="o">|</span>\<span class="n">__</span><span class="p">,</span><span class="n">_</span><span class="o">|</span>
 </pre></div>
 </div>
-<p>or:</p>
+<p><a class="reference internal" href="_images/NaCl-pwscf-band.png"><img alt="pwscf-band" src="_images/NaCl-pwscf-band.png" style="width: 50%;" /></a></p>
+<p><code class="docutils literal"><span class="pre">--pwscf</span> <span class="pre">-c</span> <span class="pre">NaCl.in</span></code> is specific for the Pwscf-phonopy
+calculation but the other settings are totally common among calculator
+interfaces such as</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">pwscf</span> <span class="o">-</span><span class="n">c</span> <span class="n">NaCl</span><span class="o">.</span><span class="ow">in</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;2 2 2&quot;</span> <span class="p">[</span><span class="n">other</span><span class="o">-</span><span class="n">OPTIONS</span><span class="p">]</span> <span class="p">[</span><span class="n">setting</span><span class="o">-</span><span class="n">file</span><span class="p">]</span>
 </pre></div>
 </div>
+<p>For settings and command options, see
+<a class="reference internal" href="setting-tags.html#setting-tags"><span class="std std-ref">Setting tags</span></a> and <a class="reference internal" href="command-options.html#command-options"><span class="std std-ref">Command options</span></a>, respectively, and
+for examples, see <a class="reference internal" href="examples.html#examples-link"><span class="std std-ref">Examples</span></a>.</p>
 </li>
 </ol>
 </div>
