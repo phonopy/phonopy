@@ -37,7 +37,7 @@ tags:
 * ``--modulation`` (``MODULATION``)
 * ``--moment`` (``MOMENT = .TRUE.``)
 * ``--moment_order`` (``MOMENT_ORDER``)
-* ``--mp``, ``--mesh`` (``MP``)
+* ``--mp``, ``--mesh`` (``MP`` or ``MESH``)
 * ``--nac`` (``NAC = .TRUE.``)
 * ``--nosym`` (``SYMMETRY = .FALSE.``)
 * ``--nomeshsym`` (``MESH_SYMMETRY = .FALSE.``)

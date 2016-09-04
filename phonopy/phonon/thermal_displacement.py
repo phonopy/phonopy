@@ -35,6 +35,7 @@
 import numpy as np
 from phonopy.units import AMU, THzToEv, Kb, EV, Hbar, Angstrom
 from phonopy.harmonic.dynamical_matrix import get_equivalent_smallest_vectors
+from phonopy.interface.cif import write_cif_P1
 # np.seterr(invalid='raise')
 
 class ThermalMotion(object):
@@ -79,6 +80,9 @@ class ThermalMotion(object):
             temps.append(t)
             t += t_step
         self._temperatures = np.array(temps)
+
+    def set_temperatures(self, temperatures):
+        self._temperatures = temperatures
 
     def project_eigenvectors(self, direction, lattice=None):
         """
@@ -175,7 +179,8 @@ class ThermalDisplacementMatrices(ThermalMotion):
                  frequencies, # Have to be supplied in THz
                  eigenvectors,
                  masses,
-                 cutoff_frequency=None):
+                 cutoff_frequency=None,
+                 lattice=None): # column vectors in real space
 
         ThermalMotion.__init__(self,
                                frequencies,
@@ -184,6 +189,14 @@ class ThermalDisplacementMatrices(ThermalMotion):
                                cutoff_frequency=cutoff_frequency)
 
         self._disp_matrices = None
+        self._disp_matrices_cif = None
+
+        if lattice is not None:
+            A = lattice
+            N = np.diag([np.linalg.norm(x) for x in np.linalg.inv(A)])
+            self._ANinv = np.linalg.inv(np.dot(A, N))
+        else:
+            self._ANinv = None
 
     def get_thermal_displacement_matrices(self):
         return (self._temperatures, self._disp_matrices)
@@ -202,26 +215,55 @@ class ThermalDisplacementMatrices(ThermalMotion):
                         disps[i] += self.get_Q2(f, t) * np.array(c)
         self._disp_matrices = disps / len(self._frequencies)
 
+        if self._ANinv is not None:
+            self._disp_matrices_cif = np.zeros(self._disp_matrices.shape,
+                                               dtype='double')
+            for i, matrices in enumerate(self._disp_matrices):
+                for j, mat in enumerate(matrices):
+                    mat_cif = np.dot(np.dot(self._ANinv, mat.real),
+                                     self._ANinv.T)
+                    self._disp_matrices_cif[i, j] = mat_cif
+
+    def write_cif(self, cell, temperature_index):
+        write_cif_P1(cell,
+                     U_cif=self._disp_matrices_cif[temperature_index],
+                     filename="tdispmat.cif")
+
     def write_yaml(self):
         natom = len(self._masses)
-        f = open('thermal_displacement_matrices.yaml', 'w')
-        f.write("# Thermal displacement_matrices\n")
-        f.write("natom: %5d\n" % (natom))
-        f.write("cutoff_frequency: %f\n" % self._cutoff_frequency)
-        f.write("thermal_displacement_matrices:\n")
-        for t, matrices in zip(self._temperatures, self._disp_matrices):
-            f.write("- temperature:   %15.7f\n" % t)
-            f.write("  displacement_matrices:\n")
-            for i, mat in enumerate(matrices):
-                ## For checking imaginary part that should be zero
-                # f.write("  - # atom %d\n" % (i + 1))
-                # for v in mat:
-                #     f.write("    [ %f, %f, %f, %f, %f, %f ]\n" %
-                #             (tuple(v.real) + tuple(v.imag)))
-                m = mat.real
-                f.write("  - [ %f, %f, %f, %f, %f, %f ] # atom %d\n" %
+        lines = []
+
+        with open('thermal_displacement_matrices.yaml', 'w') as w:
+            lines.append("# Thermal displacement_matrices")
+            lines.append("natom: %5d" % (natom))
+            lines.append("cutoff_frequency: %f" % self._cutoff_frequency)
+            lines.append("thermal_displacement_matrices:")
+            for i, t in enumerate(self._temperatures):
+                matrices = self._disp_matrices[i]
+                lines.append("- temperature:   %15.7f" % t)
+                lines.append("  displacement_matrices:")
+                for j, mat in enumerate(matrices):
+                    ## For checking imaginary part that should be zero
+                    # lines.append("  - # atom %d" % (i + 1))
+                    # for v in mat:
+                    #     lines.append(
+                    #         "    [ %8.5f, %8.5f, %8.5f, %8.5f, %8.5f, %8.5f ]" %
+                    #         (tuple(v.real) + tuple(v.imag)))
+                    m = mat.real
+                    lines.append(
+                        ("  - [ " + "%8.5f, " * 5 + "%8.5f ] # atom %d") %
                         (m[0, 0], m[1, 1], m[2, 2],
-                         m[1, 2], m[0, 2], m[0, 1], i + 1))
+                         m[1, 2], m[0, 2], m[0, 1], j + 1))
+                if self._ANinv is not None:
+                    matrices_cif = self._disp_matrices_cif[i]
+                    lines.append("  displacement_matrices_cif:")
+                    for j, mat_cif in enumerate(matrices_cif):
+                        m = mat_cif
+                        lines.append(
+                            ("  - [ " + "%8.5f, " * 5 + "%8.5f ] # atom %d") %
+                            (m[0, 0], m[1, 1], m[2, 2],
+                             m[1, 2], m[0, 2], m[0, 1], j + 1))
+            w.write("\n".join(lines))
 
 class ThermalDistances(ThermalMotion):
     def __init__(self,

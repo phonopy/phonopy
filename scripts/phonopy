@@ -816,15 +816,19 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
             if log_level > 0:
                 print("Calculating thermal displacement matrices...")
             tprop_range = settings.get_thermal_property_range()
-            tstep = tprop_range['step']
-            tmax = tprop_range['max']
-            tmin = tprop_range['min']
+            t_step = tprop_range['step']
+            t_max = tprop_range['max']
+            t_min = tprop_range['min']
+            t_cif = settings.get_thermal_displacement_matrix_temperature()
             phonon.set_thermal_displacement_matrices(
-                tstep,
-                tmax,
-                tmin,
-                cutoff_frequency=settings.get_cutoff_frequency())
+                t_step=t_step,
+                t_max=t_max,
+                t_min=t_min,
+                cutoff_frequency=settings.get_cutoff_frequency(),
+                t_cif=t_cif)
             phonon.write_yaml_thermal_displacement_matrices()
+            if t_cif is not None:
+                phonon.write_thermal_displacement_matrix_to_cif(0)
 
         # Thermal distances
         elif settings.get_is_thermal_distances():

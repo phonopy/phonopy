@@ -772,10 +772,11 @@ class Phonopy(object):
 
     # Thermal displacement matrix
     def set_thermal_displacement_matrices(self,
-                                           t_step=10,
-                                           t_max=1000,
-                                           t_min=0,
-                                           cutoff_frequency=None):
+                                          t_step=10,
+                                          t_max=1000,
+                                          t_min=0,
+                                          cutoff_frequency=None,
+                                          t_cif=None):
         """
         cutoff_frequency:
           phonon modes that have frequencies below cutoff_frequency
@@ -804,21 +805,31 @@ class Phonopy(object):
             return False
 
         tdm = ThermalDisplacementMatrices(frequencies,
-                                           eigvecs,
-                                           self._primitive.get_masses(),
-                                           cutoff_frequency=cutoff_frequency)
-        tdm.set_temperature_range(t_min, t_max, t_step)
+                                          eigvecs,
+                                          self._primitive.get_masses(),
+                                          cutoff_frequency=cutoff_frequency,
+                                          lattice=self._primitive.get_cell().T)
+        if t_cif is None:
+            tdm.set_temperature_range(t_min, t_max, t_step)
+        else:
+            tdm.set_temperatures([t_cif])
         tdm.run()
 
         self._thermal_displacement_matrices = tdm
         return True
 
     def get_thermal_displacement_matrices(self):
-        if self._thermal_displacement_matrices is not None:
-            return self._thermal_displacement_matrices.get_thermal_displacement_matrices()
+        tdm = self._thermal_displacement_matrices
+        if tdm is not None:
+            return tdm.get_thermal_displacement_matrices()
 
     def write_yaml_thermal_displacement_matrices(self):
         self._thermal_displacement_matrices.write_yaml()
+
+    def write_thermal_displacement_matrix_to_cif(self,
+                                                 temperature_index):
+        self._thermal_displacement_matrices.write_cif(self._primitive,
+                                                      temperature_index)
 
     # Mean square distance between a pair of atoms
     def set_thermal_distances(self,

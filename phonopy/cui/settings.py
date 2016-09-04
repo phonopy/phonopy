@@ -629,16 +629,18 @@ class ConfParser(object):
                     self._confs['mesh_numbers'] = self._options.mesh_numbers
 
             if opt.dest == 'frequency_conversion_factor':
-                if self._options.frequency_conversion_factor:
-                    self._confs['frequency_conversion_factor'] = self._options.frequency_conversion_factor
+                opt_freq_factor = self._options.frequency_conversion_factor
+                if opt_freq_factor:
+                    self._confs['frequency_conversion_factor'] = opt_freq_factor
 
             if opt.dest == 'fpitch':
                 if self._options.fpitch:
                     self._confs['fpitch'] = self._options.fpitch
 
             if opt.dest == 'num_frequency_points':
-                if self._options.num_frequency_points:
-                    self._confs['num_frequency_points'] = self._options.num_frequency_points
+                opt_num_freqs = self._options.num_frequency_points
+                if opt_num_freqs:
+                    self._confs['num_frequency_points'] = opt_num_freqs
 
             if opt.dest == 'primitive_axis':
                 if self._options.primitive_axis:
@@ -933,6 +935,7 @@ class PhonopySettings(Settings):
         self._run_mode = None
         self._show_irreps = False
         self._thermal_atom_pairs = None
+        self._thermal_displacement_matrix_temperatue = None
         self._write_dynamical_matrices = False
         self._write_mesh = True
         self._xyz_projection = False
@@ -1199,6 +1202,12 @@ class PhonopySettings(Settings):
     def get_thermal_atom_pairs(self):
         return self._thermal_atom_pairs
 
+    def set_thermal_displacement_matrix_temperature(self, t):
+        self._thermal_displacement_matrix_temperatue = t
+
+    def get_thermal_displacement_matrix_temperature(self):
+        return self._thermal_displacement_matrix_temperatue
+
     def set_show_irreps(self, show_irreps):
         self._show_irreps = show_irreps
         
@@ -1293,9 +1302,15 @@ class PhonopyConfParser(ConfParser):
                 if self._options.is_thermal_displacement_matrices:
                     self._confs['tdispmat'] = '.true.'
                     
+            if opt.dest == 'thermal_displacement_matrices_cif':
+                opt_tdm_cif = self._options.thermal_displacement_matrices_cif
+                if opt_tdm_cif:
+                    self._confs['tdispmat_cif'] = opt_tdm_cif
+                    
             if opt.dest == 'projection_direction':
-                if self._options.projection_direction is not None:
-                    self._confs['projection_direction'] = self._options.projection_direction
+                opt_proj_dir = self._options.projection_direction
+                if opt_proj_dir is not None:
+                    self._confs['projection_direction'] = opt_proj_dir
 
             if opt.dest == 'is_read_force_constants':
                 if self._options.is_read_force_constants:
@@ -1404,8 +1419,11 @@ class PhonopyConfParser(ConfParser):
                 if confs['hdf5'].lower() == '.true.':
                     self.set_parameter('hdf5', True)
 
-            if conf_key == 'mp':
-                vals = [int(x) for x in confs['mp'].split()]
+            if conf_key == 'mp' or conf_key == 'mesh':
+                if conf_key == 'mp':
+                    vals = [int(x) for x in confs['mp'].split()]
+                if conf_key == 'mesh':
+                    vals = [int(x) for x in confs['mesh'].split()]
                 if len(vals) < 3:
                     self.setting_error("Mesh numbers are incorrectly set.")
                 self.set_parameter('mesh_numbers', vals[:3])
@@ -1518,6 +1536,11 @@ class PhonopyConfParser(ConfParser):
                 if confs['tdispmat'].lower() == '.true.':
                     self.set_parameter('tdispmat', True)
 
+            # Write thermal displacement matrices to cif file,
+            # for which the temperature to execute is stored.
+            if conf_key == 'tdispmat_cif':
+                self.set_parameter('tdispmat_cif', float(confs['tdispmat_cif']))
+
             # Thermal distance
             if conf_key == 'tdistance':
                 atom_pairs = []
@@ -1526,7 +1549,8 @@ class PhonopyConfParser(ConfParser):
                     if len(pair) == 2:
                         atom_pairs.append(pair)
                     else:
-                        self.setting_error("TDISTANCE is incorrectly specified.")
+                        self.setting_error(
+                            "TDISTANCE is incorrectly specified.")
                 if len(atom_pairs) > 0:
                     self.set_parameter('tdistance', atom_pairs)
             
@@ -1794,12 +1818,19 @@ class PhonopyConfParser(ConfParser):
                     self._settings.set_is_mesh_symmetry(False)
     
         # Thermal displacement matrices
-        if 'tdispmat' in params:
-            if params['tdispmat']:
+        if 'tdispmat' in params or 'tdispmat_cif' in params:
+            if 'tdispmat' in params and not params['tdispmat']:
+                pass
+            else:
                 self._settings.set_is_thermal_displacement_matrices(True)
                 self._settings.set_is_eigenvectors(True)
                 self._settings.set_is_mesh_symmetry(False)
-    
+                # Temperature used to calculate thermal displacement matrix
+                # to write aniso_U to cif
+                if 'tdispmat_cif' in params:
+                    self._settings.set_thermal_displacement_matrix_temperature(
+                        params['tdispmat_cif'])
+
         # Thermal distances
         if 'tdistance' in params: 
             self._settings.set_is_thermal_distances(True)
