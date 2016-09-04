@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Mean square displacement &mdash; Phonopy v.1.11.0</title>
+    <title>Mean square displacement &mdash; Phonopy v.1.11.2</title>
     
     <link rel="stylesheet" href="_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.11.0',
+        VERSION:     '1.11.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
-    <link rel="top" title="Phonopy v.1.11.0" href="index.html" />
+    <link rel="top" title="Phonopy v.1.11.2" href="index.html" />
     <link rel="up" title="Formulations" href="theory.html" />
     <link rel="next" title="Method" href="group-velocity.html" />
     <link rel="prev" title="Formulations" href="theory.html" />
@@ -51,7 +51,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.11.0</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.11.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -102,6 +102,7 @@
 <li><a class="reference internal" href="#">Mean square displacement</a></li>
 <li><a class="reference internal" href="#mean-square-displacement-matrix">Mean square displacement matrix</a></li>
 <li><a class="reference internal" href="#projection-to-an-arbitrary-axis-from-the-cartesian-axes">Projection to an arbitrary axis from the Cartesian axes</a></li>
+<li><a class="reference internal" href="#mean-square-displacement-matrix-in-cif-format">Mean square displacement matrix in cif format</a></li>
 </ul>
 </ul>
 </li>
@@ -166,12 +167,12 @@ polarization vector of the atom <em>jl</em> and the band <img class="math" src="
 phonon. The expectation value of the squared atomic displacement is
 calculated as,</p>
 <div class="math">
-<p><img src="_images/math/1789fc8a5c97731fccfe7884b1bc2e3a831ca98e.png" alt="\left\langle |u^\alpha(jl, t)|^2 \right\rangle = \frac{\hbar}{2Nm_j}
+<p><img src="_images/math/fbb8142b8ffb00c0a245866500047c6d5a9a28e6.png" alt="\left\langle |u^\alpha(jl, t)|^2 \right\rangle = \frac{\hbar}{2Nm_j}
 \sum_{\mathbf{q},\nu}\omega_\nu(\mathbf{q})^{-1}
-(1+2n_\nu(\mathbf{q}))|e^\alpha_\nu(j,\mathbf{q})|^2,"/></p>
-</div><p>where <em>n</em> is the phonon population, which is give by,</p>
+(1+2n_\nu(\mathbf{q},T))|e^\alpha_\nu(j,\mathbf{q})|^2,"/></p>
+</div><p>where <img class="math" src="_images/math/c5d6f7c862740ed75bbe6eb4ce8ed0260e3f129c.png" alt="n_\nu(\mathbf{q},T)"/> is the phonon population, which is give by,</p>
 <div class="math">
-<p><img src="_images/math/d1bb76d84268dbaaabb620570c976424d609c75a.png" alt="n_\nu(\mathbf{q}) =
+<p><img src="_images/math/ecf49d4666005ffab850892d02caf4c1425b556e.png" alt="n_\nu(\mathbf{q},T) =
 \frac{1}{\exp(\hbar\omega_\nu(\mathbf{q})/\mathrm{k_B}T)-1},"/></p>
 </div><p>where <em>T</em> is the temperature, and <img class="math" src="_images/math/15c7d7e94eeb1be0a91ed4fbd9050c9c0958708c.png" alt="\mathrm{k_B}"/> is the
 Boltzmann constant. The equation is calculated using the commutation
@@ -192,11 +193,11 @@ expectation values of the combination of the operations, e.g.,</p>
 = 0."/></p>
 </div></div>
 <div class="section" id="mean-square-displacement-matrix">
-<h1>Mean square displacement matrix<a class="headerlink" href="#mean-square-displacement-matrix" title="Permalink to this headline">¶</a></h1>
+<span id="thermal-displacement-matrix"></span><h1>Mean square displacement matrix<a class="headerlink" href="#mean-square-displacement-matrix" title="Permalink to this headline">¶</a></h1>
 <p>Mean square displacement matrix is defined as follows:</p>
 <div class="math">
-<p><img src="_images/math/9ede08f383b576931a86e8188676b05b64efd71a.png" alt="\mathrm{B}(j, t) = \frac{\hbar}{2Nm_j}
-\sum_{\mathbf{q},\nu}\omega_\nu(\mathbf{q})^{-1}
+<p><img src="_images/math/e8e61f04cfa9a2a66d1f88931963fe324dad62f0.png" alt="\mathrm{U}_\text{cart}(j, T) = \frac{\hbar}{2Nm_j}
+\sum_{\mathbf{q},\nu}\omega_\nu(\mathbf{q},T)^{-1}
 (1+2n_\nu(\mathbf{q}))
 \mathbf{e}_\nu(j,\mathbf{q}) \otimes \mathbf{e}^*_\nu(j,\mathbf{q})."/></p>
 </div><p>This is a symmetry matrix and diagonal elements are same as mean
@@ -214,6 +215,33 @@ axes as follows:</p>
 (1+2n_\nu(\mathbf{q}))|
 \hat{\mathbf{n}}\cdot\mathbf{e}_\nu(j,\mathbf{q})|^2"/></p>
 </div><p>where <img class="math" src="_images/math/166488e8f118a87010b162c49abbe92d0b25effc.png" alt="\hat{\mathbf{n}}"/> is an arbitrary unit direction.</p>
+</div>
+<div class="section" id="mean-square-displacement-matrix-in-cif-format">
+<h1>Mean square displacement matrix in cif format<a class="headerlink" href="#mean-square-displacement-matrix-in-cif-format" title="Permalink to this headline">¶</a></h1>
+<p>According to the paper by Grosse-Kunstleve and Adams [J. Appl. Cryst.,
+35, 477-480 (2002)], mean square displacement matrix in the cif
+definition (<code class="docutils literal"><span class="pre">aniso_U</span></code>),
+<img class="math" src="_images/math/a5d254cf73976a11f3dabc0403dbc8bdd7a31389.png" alt="\mathrm{U}_\text{cif}"/>, is obtained by</p>
+<div class="math">
+<p><img src="_images/math/cca9d0d7158dc50be8a9e1cbfb4ba2c8f8391861.png" alt="\mathrm{U}_\text{cif} = (\mathrm{AN})^{-1}\mathrm{U}_\text{cart}
+(\mathrm{AN})^{-\mathrm{T}},"/></p>
+</div><p>where <img class="math" src="_images/math/8ada065803b9820fccf12da08171ae49788ca42f.png" alt="\mathrm{A}"/> is the matrix to transform a point in fractional
+coordinates to the Cartesian coordinates and <img class="math" src="_images/math/20e827a0be3a55a3c2bf0470fbf0198bfdcfe442.png" alt="\mathrm{N}"/> is the
+diagonal matrix made of reciprocal basis vector lengths as follows:</p>
+<div class="math">
+<p><img src="_images/math/5a76d52ed992c0212eac0301f0c623cb9d111e01.png" alt="\mathrm{A} = \begin{pmatrix}
+a_x &amp; b_x &amp; c_x \\
+a_y &amp; b_y &amp; c_y \\
+a_z &amp; b_z &amp; c_z
+\end{pmatrix}"/></p>
+</div><p>and</p>
+<div class="math">
+<p><img src="_images/math/b01e741240e2930a2254a6b283a7354ceb00beca.png" alt="\mathrm{N} = \begin{pmatrix}
+a^* &amp; 0 &amp; 0 \\
+0 &amp; b^* &amp; 0 \\
+0 &amp; 0 &amp; c^*
+\end{pmatrix}."/></p>
+</div><p><img class="math" src="_images/math/f5794f4da3d30691ddf257b9e2f277fc5820f618.png" alt="a^*"/>, <img class="math" src="_images/math/324809b3ab6dc33e198cf54d34924d693adde57f.png" alt="b^*"/>, <img class="math" src="_images/math/eef50c8001339d908f076abcacca512054f8f1b8.png" alt="c^*"/> are defined without <img class="math" src="_images/math/9871bd64995368def3d10c85692a233e4cb5e3f9.png" alt="2\pi"/>.</p>
 </div>
 
 
