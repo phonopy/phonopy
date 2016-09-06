@@ -6,8 +6,10 @@ import os
 
 try:
     from setuptools import setup, Extension
+    use_setuptools = True
 except ImportError:
     from distutils.core import setup, Extension
+    use_setuptools = False
 
 include_dirs_numpy = [numpy.get_include()]
 
@@ -133,17 +135,36 @@ if __name__ == '__main__':
                 nanoversion = '.' + nanoversion
 
     if all([x.isdigit() for x in version.split('.')]):
-        setup(name='phono3py',
-              version=(version + nanoversion),
-              description='This is the phono3py module.',
-              author='Atsushi Togo',
-              author_email='atz.togo@gmail.com',
-              url='http://phonopy.sourceforge.net/',
-              packages=(packages_phonopy + packages_phono3py),
-              scripts=(scripts_phonopy + scripts_phono3py),
-              ext_modules=[extension_spglib,
-                           extension_lapackepy,
-                           extension_phonopy,
-                           extension_phono3py])
+        if use_setuptools:
+            setup(name='phono3py',
+                  version=(version + nanoversion),
+                  description='This is the phono3py module.',
+                  author='Atsushi Togo',
+                  author_email='atz.togo@gmail.com',
+                  url='http://phonopy.sourceforge.net/',
+                  packages=(packages_phonopy + packages_phono3py),
+                  requires=['numpy', 'PyYAML', 'h5py'],
+                  provides=['phonopy'],
+                  scripts=(scripts_phonopy + scripts_phono3py),
+                  ext_modules=[extension_spglib,
+                               extension_lapackepy,
+                               extension_phonopy,
+                               extension_phono3py])
+        else:
+            setup(name='phono3py',
+                  version=(version + nanoversion),
+                  description='This is the phono3py module.',
+                  author='Atsushi Togo',
+                  author_email='atz.togo@gmail.com',
+                  url='http://phonopy.sourceforge.net/',
+                  packages=(packages_phonopy + packages_phono3py),
+                  requires=['numpy', 'PyYAML', 'h5py'],
+                  provides=['phonopy'],
+                  scripts=(scripts_phonopy + scripts_phono3py),
+                  ext_modules=[extension_spglib,
+                               extension_lapackepy,
+                               extension_phonopy,
+                               extension_phono3py])
+
     else:
         print("Phono3py version number could not be retrieved.")
