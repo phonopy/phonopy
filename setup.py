@@ -1,6 +1,12 @@
-from distutils.core import setup, Extension
 import numpy
 import os
+
+try:
+    from setuptools import setup, Extension
+    use_setuptools = True
+except ImportError:
+    from distutils.core import setup, Extension
+    use_setuptools = False
 
 include_dirs_numpy = [numpy.get_include()]
 cc = None
@@ -124,14 +130,32 @@ if __name__ == '__main__':
                 nanoversion = ''
 
     if all([x.isdigit() for x in version.split('.')]):
-        setup(name='phonopy',
-              version=(version + nanoversion),
-              description='This is the phonopy module.',
-              author='Atsushi Togo',
-              author_email='atz.togo@gmail.com',
-              url='http://atztogo.github.io/phonopy/',
-              packages=packages_phonopy,
-              scripts=scripts_phonopy,
-              ext_modules=ext_modules_phonopy)
+        version_number = version + nanoversion
+        if use_setuptools:
+            setup(name='phonopy',
+                  version=version_number,
+                  description='This is the phonopy module.',
+                  author='Atsushi Togo',
+                  author_email='atz.togo@gmail.com',
+                  url='http://atztogo.github.io/phonopy/',
+                  packages=packages_phonopy,
+                  install_requires=['numpy', 'PyYAML'],
+                  provides=['phonopy'],
+                  scripts=scripts_phonopy,
+                  ext_modules=ext_modules_phonopy)
+        else:
+            setup(name='phonopy',
+                  version=version_number,
+                  description='This is the phonopy module.',
+                  author='Atsushi Togo',
+                  author_email='atz.togo@gmail.com',
+                  url='http://atztogo.github.io/phonopy/',
+                  packages=packages_phonopy,
+                  requires=['numpy', 'PyYAML'],
+                  provides=['phonopy'],
+                  scripts=scripts_phonopy,
+                  ext_modules=ext_modules_phonopy)
     else:
         print("Phonopy version number could not be retrieved.")
+
+

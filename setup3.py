@@ -1,9 +1,13 @@
-from distutils.core import setup, Extension
 import numpy
 from setup import (extension_spglib, extension_phonopy,
                    packages_phonopy, scripts_phonopy)
 import platform
 import os
+
+try:
+    from setuptools import setup, Extension
+except ImportError:
+    from distutils.core import setup, Extension
 
 include_dirs_numpy = [numpy.get_include()]
 
