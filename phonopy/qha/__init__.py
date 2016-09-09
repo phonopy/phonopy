@@ -763,7 +763,10 @@ class QHA(object):
             parameters = np.polyfit(self._volumes, self._cv[i], 4)
             cv = (np.dot(parameters, [v**4, v**3, v**2, v, 1]) /
                   v / 1000 / EvTokJmol * EVAngstromToGPa)
-            gamma.append(beta * kt / cv)
+            if cv < 1e-10:
+                gamma.append(0.0)
+            else:
+                gamma.append(beta * kt / cv)
         self._gruneisen_parameters = gamma
 
     def _get_max_t_index(self, temperatures):
