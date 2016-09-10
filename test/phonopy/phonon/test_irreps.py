@@ -89,6 +89,24 @@ chars_Pc = """ 1.  0. -1.  0.
  1.  0.  1.  0.
  1.  0. -1.  0."""
 
+chars_P_42_1m = """ 1.  0. -1.  0.  1.  0. -1.  0. -1.  0.  1.  0. -1.  0.  1.  0.
+ 2.  0.  0.  0. -2.  0.  0.  0.  0.  0.  0.  0. -0.  0. -0.  0.
+ 2.  0. -0.  0. -2.  0.  0.  0.  0.  0.  0.  0. -0.  0. -0.  0.
+ 1.  0. -1.  0.  1.  0. -1.  0.  1.  0. -1.  0.  1.  0. -1.  0.
+ 1.  0.  1.  0.  1.  0.  1.  0.  1.  0.  1.  0.  1.  0.  1.  0.
+ 2.  0. -0.  0. -2.  0.  0.  0. -0.  0. -0.  0.  0.  0.  0.  0.
+ 1.  0. -1.  0.  1.  0. -1.  0. -1.  0.  1.  0. -1.  0.  1.  0.
+ 1.  0. -1.  0.  1.  0. -1.  0.  1.  0. -1.  0.  1.  0. -1.  0.
+ 2.  0.  0.  0. -2.  0. -0.  0.  0.  0. -0.  0.  0.  0.  0.  0.
+ 1.  0.  1.  0.  1.  0.  1.  0. -1.  0. -1.  0. -1.  0. -1.  0.
+ 2.  0.  0.  0. -2.  0. -0.  0. -0.  0. -0.  0.  0.  0.  0.  0.
+ 1.  0. -1.  0.  1.  0. -1.  0. -1.  0.  1.  0. -1.  0.  1.  0.
+ 2.  0.  0.  0. -2.  0.  0.  0.  0.  0.  0.  0. -0.  0. -0.  0.
+ 1.  0.  1.  0.  1.  0.  1.  0.  1.  0.  1.  0.  1.  0.  1.  0.
+ 1.  0.  1.  0.  1.  0.  1.  0.  1.  0.  1.  0.  1.  0.  1.  0.
+ 2.  0.  0.  0. -2.  0.  0.  0. -0.  0.  0.  0.  0.  0. -0.  0.
+ 1.  0. -1.  0.  1.  0. -1.  0. -1.  0.  1.  0. -1.  0.  1.  0."""
+
 class TestIrreps(unittest.TestCase):
     def setUp(self):
         pass
@@ -97,7 +115,7 @@ class TestIrreps(unittest.TestCase):
         pass
     
     def test_Amm2(self):
-        data = np.loadtxt(StringIO(chars_Amm2)).view(complex)
+        data = np.loadtxt(StringIO(chars_Amm2)).view(dtype='complex128')
         phonon = self._get_phonon("Amm2", 
                                   [3, 2, 2],
                                   [[1, 0, 0],
@@ -108,7 +126,7 @@ class TestIrreps(unittest.TestCase):
         self.assertTrue(np.abs(chars - data).all() < 1e-5)
 
     def test_Pbar6m2(self):
-        data = np.loadtxt(StringIO(chars_Pbar6m2)).view(complex)
+        data = np.loadtxt(StringIO(chars_Pbar6m2)).view(dtype='complex128')
         phonon = self._get_phonon("P-6m2", 
                                   [2, 2, 3],
                                   np.eye(3))
@@ -117,9 +135,18 @@ class TestIrreps(unittest.TestCase):
         self.assertTrue(np.abs(chars - data).all() < 1e-5)
 
     def test_Pc(self):
-        data = np.loadtxt(StringIO(chars_Pc)).view(complex)
+        data = np.loadtxt(StringIO(chars_Pc)).view(dtype='complex128')
         phonon = self._get_phonon("Pc", 
                                   [2, 2, 2],
+                                  np.eye(3))
+        phonon.set_irreps([0, 0, 0])
+        chars = phonon.get_irreps().get_characters()
+        self.assertTrue(np.abs(chars - data).all() < 1e-5)
+
+    def test_P_42_1m(self):
+        data = np.loadtxt(StringIO(chars_P_42_1m)).view(dtype='complex128')
+        phonon = self._get_phonon("P-42_1m", 
+                                  [2, 2, 3],
                                   np.eye(3))
         phonon.set_irreps([0, 0, 0])
         chars = phonon.get_irreps().get_characters()
@@ -134,6 +161,11 @@ class TestIrreps(unittest.TestCase):
         phonon.set_displacement_dataset(force_sets)
         phonon.produce_force_constants()
         return phonon
+
+    def _show_chars(self, chars):
+        for line in chars:
+            line_str = str(line.view(dtype='double').round(decimals=1))
+            print(line_str.replace("[", '').replace("]", ''))
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestIrreps)
