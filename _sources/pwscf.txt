@@ -3,6 +3,10 @@
 Pwscf & phonopy calculation
 =========================================
 
+Quantum espresso package itself has a set of the phonon calculation
+system. But the document here explains how to calculate phonons using
+phonopy, i.e., using the finite displacement and supercell approach.
+
 Supported Pwscf tags
 ---------------------------
 
@@ -123,3 +127,92 @@ NaCl example found in ``example/NaCl-pwscf`` directory.
    :ref:`setting_tags` and :ref:`command_options`, respectively, and
    for examples, see :ref:`examples_link`.
 
+Non-analytical term correction (Optional)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To activate non-analytical term correction, :ref:`born_file` is
+required. This file contains the information of Born effective charge
+and dielectric constant. These physical values are also obtained from
+the pwscf (``pw.x``) & phonon (``ph.x``) codes in quantum-espresso
+package. There are two steps. The first step is usual self-consistent
+field (SCF) calculation
+by and the second step is running its response function calculations
+under DFPT.
+
+For the SCF calculation, the input file ``NaCl.in`` looks like::
+
+    &control
+       calculation = 'scf'
+       tprnfor = .true.
+       tstress = .true.
+       pseudo_dir = '/home/togo/espresso/pseudo/'
+    /
+    &system
+       ibrav = 0
+       nat = 8
+       ntyp = 2
+       ecutwfc = 70.0
+    /
+    &electrons
+       diagonalization = 'david'
+       conv_thr = 1.0d-9
+    /
+   ATOMIC_SPECIES
+    Na  22.98976928 Na.pbe-spn-kjpaw_psl.0.2.UPF
+    Cl  35.453      Cl.pbe-n-kjpaw_psl.0.1.UPF
+   ATOMIC_POSITIONS crystal
+    Na   0.0000000000000000  0.0000000000000000  0.0000000000000000
+    Na   0.0000000000000000  0.5000000000000000  0.5000000000000000
+    Na   0.5000000000000000  0.0000000000000000  0.5000000000000000
+    Na   0.5000000000000000  0.5000000000000000  0.0000000000000000
+    Cl   0.5000000000000000  0.5000000000000000  0.5000000000000000
+    Cl   0.5000000000000000  0.0000000000000000  0.0000000000000000
+    Cl   0.0000000000000000  0.5000000000000000  0.0000000000000000
+    Cl   0.0000000000000000  0.0000000000000000  0.5000000000000000
+   CELL_PARAMETERS angstrom
+    5.6903014761756712 0 0
+    0 5.6903014761756712 0
+    0 0 5.6903014761756712
+   K_POINTS automatic
+    8 8 8 1 1 1
+
+where more the k-point mesh numbers are specified. This may be exectued as::
+
+   mpirun ~/espresso/bin/pw.x -i NaCl.in |& tee NaCl.out
+
+Many files whose names stating with ``pwscf`` should be created. These
+are used for the next calculation. The input file for the response
+function calculations, ``NaCl.ph.in``, is
+created as follows::
+
+    &inputph
+     tr2_ph = 1.0d-14,
+     epsil = .true.
+    /
+   0 0 0
+
+Similary ``ph.x`` is executed::
+
+   % mpirun ~/espresso/bin/ph.x -i NaCl.ph.in |& tee NaCl.ph.out
+
+Finally the Born effective charges and dielectric constant are
+obtained in the output file ``NaCl.ph.out``. The ``BORN`` file has to
+be created manually following the ``BORN`` format
+(:ref:`born_file`). The ``BORN`` file for this NaCl calculation would
+be something like below::
+
+   default value
+   2.472958201 0 0 0 2.472958201 0 0 0 2.472958201
+   1.105385 0 0 0 1.105385 0 0 0 1.105385
+   -1.105385 0 0 0 -1.105385 0 0 0 -1.105385
+
+Once this is made, the non-analytical term correction is included 
+just adding the ``--nac`` options as follows::
+
+     % phonopy --pwscf -c NaCl.in -p band.conf
+
+
+|pwscf-band-nac|
+
+.. |pwscf-band-nac| image:: NaCl-pwscf-band-NAC.png
+   			    :width: 50%

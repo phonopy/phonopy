@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Examples &mdash; Phonopy v.1.11.2</title>
+    <title>Examples &#8212; Phonopy v.1.11.2</title>
     
     <link rel="stylesheet" href="_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -186,6 +186,8 @@ package.</p>
 <h2><a class="toc-backref" href="#id1">Si</a><a class="headerlink" href="#si" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="force-sets-file-creation-for-vasp">
 <h3><a class="toc-backref" href="#id2"><code class="docutils literal"><span class="pre">FORCE_SETS</span></code> file creation for VASP</a><a class="headerlink" href="#force-sets-file-creation-for-vasp" title="Permalink to this headline">¶</a></h3>
+<p>For the other calculators such as pwscf, abinit, etc, the way to
+create <code class="docutils literal"><span class="pre">FORCE_SETS</span></code> is found following <a class="reference internal" href="interfaces.html#calculator-interfaces"><span class="std std-ref">Interfaces to calculators</span></a>.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">f</span> <span class="n">vasprun</span><span class="o">.</span><span class="n">xml</span>
         <span class="n">_</span>
   <span class="n">_</span> <span class="n">__</span> <span class="o">|</span> <span class="o">|</span><span class="n">__</span>   <span class="n">___</span>  <span class="n">_</span> <span class="n">__</span>   <span class="n">___</span>   <span class="n">_</span> <span class="n">__</span>  <span class="n">_</span>   <span class="n">_</span>
@@ -362,7 +364,7 @@ package.</p>
 <p><a class="reference internal" href="_images/NaCl-PDOS.png"><img alt="NaCl-PDOS" src="_images/NaCl-PDOS.png" style="width: 50%;" /></a></p>
 <p>With non-analytical term correction, the PDOS may not change very much
 because it mainly affects phonon modes in the reciprocal
-region close to <img class="math" src="_images/math/85011adca50d3725af2e048eeb9ec7b02ccdd401.png" alt="\Gamma"/> point.</p>
+region close to <span class="math">\Gamma</span> point.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">nac</span> <span class="o">-</span><span class="n">p</span> <span class="n">pdos</span><span class="o">.</span><span class="n">conf</span>
         <span class="n">_</span>
   <span class="n">_</span> <span class="n">__</span> <span class="o">|</span> <span class="o">|</span><span class="n">__</span>   <span class="n">___</span>  <span class="n">_</span> <span class="n">__</span>   <span class="n">___</span>   <span class="n">_</span> <span class="n">__</span>  <span class="n">_</span>   <span class="n">_</span>
@@ -634,7 +636,7 @@ profile than that given by the smearing method.</p>
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.5.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.6.<br/>
     </p>
   </div>
 </footer>

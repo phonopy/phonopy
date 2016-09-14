@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Mean square displacement &mdash; Phonopy v.1.11.2</title>
+    <title>Mean square displacement &#8212; Phonopy v.1.11.2</title>
     
     <link rel="stylesheet" href="_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -149,37 +149,37 @@
 <p>From Eq. (10.71) in the book &#8220;Thermodynamics of Crystal&#8221;, atomic
 displacement, <strong>u</strong>, is written by</p>
 <div class="math">
-<p><img src="_images/math/e2aa052be46ee4c09b58c3c303aee14f67452858.png" alt="u^\alpha(jl,t) = \left(\frac{\hbar}{2Nm_j}\right)^{\frac{1}{2}}
+<p><span class="math">u^\alpha(jl,t) = \left(\frac{\hbar}{2Nm_j}\right)^{\frac{1}{2}}
 \sum_{\mathbf{q},\nu}\left[\omega_\nu(\mathbf{q})\right]^{-\frac{1}{2}}
 \left[\hat{a}_\nu(\mathbf{q})\exp(-i\omega_\nu(\mathbf{q})t)+
 \hat{a}^\dagger_\nu(\mathbf{-q})\exp({i\omega_\nu(\mathbf{q})}t)\right]
 \exp({i\mathbf{q}\cdot\mathbf{r}(jl)})
-e^\alpha_\nu(j,\mathbf{q})"/></p>
+e^\alpha_\nu(j,\mathbf{q})</span></p>
 </div><p>where <em>j</em> and <em>l</em> are the labels for the <em>j</em>-th atomic position in the
-<em>l</em>-th unit cell, <em>t</em> is the time, <img class="math" src="_images/math/ad59b6e24a4a00ac621801f8d7513d68be654ab5.png" alt="\alpha"/> is an axis (a
+<em>l</em>-th unit cell, <em>t</em> is the time, <span class="math">\alpha</span> is an axis (a
 Cartesian axis in the default behavior of phonopy), <em>m</em> is the atomic
-mass, <em>N</em> is the number of the unit cells, <img class="math" src="_images/math/dd9f8e4fa6ad795780215243cbd5a5719b772ad3.png" alt="\mathbf{q}"/> is the
-wave vector, <img class="math" src="_images/math/d67fb61cfffca2cc069e083d76cb6220b4ca14c8.png" alt="\nu"/> is the index of phonon mode. <em>e</em> is the
-polarization vector of the atom <em>jl</em> and the band <img class="math" src="_images/math/d67fb61cfffca2cc069e083d76cb6220b4ca14c8.png" alt="\nu"/> at
-<img class="math" src="_images/math/dd9f8e4fa6ad795780215243cbd5a5719b772ad3.png" alt="\mathbf{q}"/>. <img class="math" src="_images/math/5ca196f8914042430edb98128ff2daad871b4185.png" alt="\mathbf{r}(jl)"/> is the atomic position and
-<img class="math" src="_images/math/c7415c6919c2eb17b1ea36f0243079b59825ee89.png" alt="\omega"/> is the phonon frequency. <img class="math" src="_images/math/1e618046fcb4f8b705c49012fd2c7e99bb418cf1.png" alt="\hat{a}^\dagger"/> and
-<img class="math" src="_images/math/b74103745833a2240db713f3a8b2d2c8f256eccb.png" alt="\hat{a}"/> are the creation and annihilation operators of
+mass, <em>N</em> is the number of the unit cells, <span class="math">\mathbf{q}</span> is the
+wave vector, <span class="math">\nu</span> is the index of phonon mode. <em>e</em> is the
+polarization vector of the atom <em>jl</em> and the band <span class="math">\nu</span> at
+<span class="math">\mathbf{q}</span>. <span class="math">\mathbf{r}(jl)</span> is the atomic position and
+<span class="math">\omega</span> is the phonon frequency. <span class="math">\hat{a}^\dagger</span> and
+<span class="math">\hat{a}</span> are the creation and annihilation operators of
 phonon. The expectation value of the squared atomic displacement is
 calculated as,</p>
 <div class="math">
-<p><img src="_images/math/fbb8142b8ffb00c0a245866500047c6d5a9a28e6.png" alt="\left\langle |u^\alpha(jl, t)|^2 \right\rangle = \frac{\hbar}{2Nm_j}
+<p><span class="math">\left\langle |u^\alpha(jl, t)|^2 \right\rangle = \frac{\hbar}{2Nm_j}
 \sum_{\mathbf{q},\nu}\omega_\nu(\mathbf{q})^{-1}
-(1+2n_\nu(\mathbf{q},T))|e^\alpha_\nu(j,\mathbf{q})|^2,"/></p>
-</div><p>where <img class="math" src="_images/math/c5d6f7c862740ed75bbe6eb4ce8ed0260e3f129c.png" alt="n_\nu(\mathbf{q},T)"/> is the phonon population, which is give by,</p>
+(1+2n_\nu(\mathbf{q},T))|e^\alpha_\nu(j,\mathbf{q})|^2,</span></p>
+</div><p>where <span class="math">n_\nu(\mathbf{q},T)</span> is the phonon population, which is give by,</p>
 <div class="math">
-<p><img src="_images/math/ecf49d4666005ffab850892d02caf4c1425b556e.png" alt="n_\nu(\mathbf{q},T) =
-\frac{1}{\exp(\hbar\omega_\nu(\mathbf{q})/\mathrm{k_B}T)-1},"/></p>
-</div><p>where <em>T</em> is the temperature, and <img class="math" src="_images/math/15c7d7e94eeb1be0a91ed4fbd9050c9c0958708c.png" alt="\mathrm{k_B}"/> is the
+<p><span class="math">n_\nu(\mathbf{q},T) =
+\frac{1}{\exp(\hbar\omega_\nu(\mathbf{q})/\mathrm{k_B}T)-1},</span></p>
+</div><p>where <em>T</em> is the temperature, and <span class="math">\mathrm{k_B}</span> is the
 Boltzmann constant. The equation is calculated using the commutation
 relation of the creation and annihilation operators and the
 expectation values of the combination of the operations, e.g.,</p>
 <div class="math">
-<p><img src="_images/math/a829c02c8af90810d647b89f6461dffcc2bcd436.png" alt="[ \hat{a}_\nu(\mathbf{q}), \hat{a}^\dagger_{\nu'}(\mathbf{q'}) ]
+<p><span class="math">[ \hat{a}_\nu(\mathbf{q}), \hat{a}^\dagger_{\nu'}(\mathbf{q'}) ]
 = \delta(\mathbf{q}-\mathbf{q}')\delta_{\nu\nu'},
 
 [ \hat{a}_\nu(\mathbf{q}), \hat{a}_{\nu'}(\mathbf{q'}) ] = 0,
@@ -190,16 +190,16 @@ expectation values of the combination of the operations, e.g.,</p>
 = 0,
 
 \langle|\hat{a}^\dagger_\nu(\mathbf{q})\hat{a}^\dagger_{\nu'}(\mathbf{q'})|\rangle
-= 0."/></p>
+= 0.</span></p>
 </div></div>
 <div class="section" id="mean-square-displacement-matrix">
 <span id="thermal-displacement-matrix"></span><h1>Mean square displacement matrix<a class="headerlink" href="#mean-square-displacement-matrix" title="Permalink to this headline">¶</a></h1>
 <p>Mean square displacement matrix is defined as follows:</p>
 <div class="math">
-<p><img src="_images/math/e8e61f04cfa9a2a66d1f88931963fe324dad62f0.png" alt="\mathrm{U}_\text{cart}(j, T) = \frac{\hbar}{2Nm_j}
+<p><span class="math">\mathrm{U}_\text{cart}(j, T) = \frac{\hbar}{2Nm_j}
 \sum_{\mathbf{q},\nu}\omega_\nu(\mathbf{q},T)^{-1}
 (1+2n_\nu(\mathbf{q}))
-\mathbf{e}_\nu(j,\mathbf{q}) \otimes \mathbf{e}^*_\nu(j,\mathbf{q})."/></p>
+\mathbf{e}_\nu(j,\mathbf{q}) \otimes \mathbf{e}^*_\nu(j,\mathbf{q}).</span></p>
 </div><p>This is a symmetry matrix and diagonal elements are same as mean
 square displacement calculated along Cartesian x, y, z directions.</p>
 </div>
@@ -210,38 +210,38 @@ defined in the input structure file. Mean square displacement along an
 arbitrary axis is obtained projecting eigenvectors in the Cartesian
 axes as follows:</p>
 <div class="math">
-<p><img src="_images/math/785c7c645030543600c7acefda75c92a0f9be9d2.png" alt="\left\langle |u(jl, t)|^2 \right\rangle = \frac{\hbar}{2Nm_j}
+<p><span class="math">\left\langle |u(jl, t)|^2 \right\rangle = \frac{\hbar}{2Nm_j}
 \sum_{\mathbf{q},\nu}\omega_\nu(\mathbf{q})^{-1}
 (1+2n_\nu(\mathbf{q}))|
-\hat{\mathbf{n}}\cdot\mathbf{e}_\nu(j,\mathbf{q})|^2"/></p>
-</div><p>where <img class="math" src="_images/math/166488e8f118a87010b162c49abbe92d0b25effc.png" alt="\hat{\mathbf{n}}"/> is an arbitrary unit direction.</p>
+\hat{\mathbf{n}}\cdot\mathbf{e}_\nu(j,\mathbf{q})|^2</span></p>
+</div><p>where <span class="math">\hat{\mathbf{n}}</span> is an arbitrary unit direction.</p>
 </div>
 <div class="section" id="mean-square-displacement-matrix-in-cif-format">
 <h1>Mean square displacement matrix in cif format<a class="headerlink" href="#mean-square-displacement-matrix-in-cif-format" title="Permalink to this headline">¶</a></h1>
 <p>According to the paper by Grosse-Kunstleve and Adams [J. Appl. Cryst.,
 35, 477-480 (2002)], mean square displacement matrix in the cif
 definition (<code class="docutils literal"><span class="pre">aniso_U</span></code>),
-<img class="math" src="_images/math/a5d254cf73976a11f3dabc0403dbc8bdd7a31389.png" alt="\mathrm{U}_\text{cif}"/>, is obtained by</p>
+<span class="math">\mathrm{U}_\text{cif}</span>, is obtained by</p>
 <div class="math">
-<p><img src="_images/math/cca9d0d7158dc50be8a9e1cbfb4ba2c8f8391861.png" alt="\mathrm{U}_\text{cif} = (\mathrm{AN})^{-1}\mathrm{U}_\text{cart}
-(\mathrm{AN})^{-\mathrm{T}},"/></p>
-</div><p>where <img class="math" src="_images/math/8ada065803b9820fccf12da08171ae49788ca42f.png" alt="\mathrm{A}"/> is the matrix to transform a point in fractional
-coordinates to the Cartesian coordinates and <img class="math" src="_images/math/20e827a0be3a55a3c2bf0470fbf0198bfdcfe442.png" alt="\mathrm{N}"/> is the
+<p><span class="math">\mathrm{U}_\text{cif} = (\mathrm{AN})^{-1}\mathrm{U}_\text{cart}
+(\mathrm{AN})^{-\mathrm{T}},</span></p>
+</div><p>where <span class="math">\mathrm{A}</span> is the matrix to transform a point in fractional
+coordinates to the Cartesian coordinates and <span class="math">\mathrm{N}</span> is the
 diagonal matrix made of reciprocal basis vector lengths as follows:</p>
 <div class="math">
-<p><img src="_images/math/5a76d52ed992c0212eac0301f0c623cb9d111e01.png" alt="\mathrm{A} = \begin{pmatrix}
+<p><span class="math">\mathrm{A} = \begin{pmatrix}
 a_x &amp; b_x &amp; c_x \\
 a_y &amp; b_y &amp; c_y \\
 a_z &amp; b_z &amp; c_z
-\end{pmatrix}"/></p>
+\end{pmatrix}</span></p>
 </div><p>and</p>
 <div class="math">
-<p><img src="_images/math/b01e741240e2930a2254a6b283a7354ceb00beca.png" alt="\mathrm{N} = \begin{pmatrix}
+<p><span class="math">\mathrm{N} = \begin{pmatrix}
 a^* &amp; 0 &amp; 0 \\
 0 &amp; b^* &amp; 0 \\
 0 &amp; 0 &amp; c^*
-\end{pmatrix}."/></p>
-</div><p><img class="math" src="_images/math/f5794f4da3d30691ddf257b9e2f277fc5820f618.png" alt="a^*"/>, <img class="math" src="_images/math/324809b3ab6dc33e198cf54d34924d693adde57f.png" alt="b^*"/>, <img class="math" src="_images/math/eef50c8001339d908f076abcacca512054f8f1b8.png" alt="c^*"/> are defined without <img class="math" src="_images/math/9871bd64995368def3d10c85692a233e4cb5e3f9.png" alt="2\pi"/>.</p>
+\end{pmatrix}.</span></p>
+</div><p><span class="math">a^*</span>, <span class="math">b^*</span>, <span class="math">c^*</span> are defined without <span class="math">2\pi</span>.</p>
 </div>
 
 
@@ -264,7 +264,7 @@ a^* &amp; 0 &amp; 0 \\
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.5.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.6.<br/>
     </p>
   </div>
 </footer>

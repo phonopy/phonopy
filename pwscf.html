@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Pwscf &amp; phonopy calculation &mdash; Phonopy v.1.11.2</title>
+    <title>Pwscf &amp; phonopy calculation &#8212; Phonopy v.1.11.2</title>
     
     <link rel="stylesheet" href="_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -101,7 +101,10 @@
       aria-labelledby="dLabelLocalToc"><ul>
 <li><a class="reference internal" href="#">Pwscf &amp; phonopy calculation</a><ul>
 <li><a class="reference internal" href="#supported-pwscf-tags">Supported Pwscf tags</a></li>
-<li><a class="reference internal" href="#how-to-run">How to run</a></li>
+<li><a class="reference internal" href="#how-to-run">How to run</a><ul>
+<li><a class="reference internal" href="#non-analytical-term-correction-optional">Non-analytical term correction (Optional)</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -147,6 +150,9 @@
       
   <div class="section" id="pwscf-phonopy-calculation">
 <span id="pwscf-interface"></span><h1>Pwscf &amp; phonopy calculation<a class="headerlink" href="#pwscf-phonopy-calculation" title="Permalink to this headline">¶</a></h1>
+<p>Quantum espresso package itself has a set of the phonon calculation
+system. But the document here explains how to calculate phonons using
+phonopy, i.e., using the finite displacement and supercell approach.</p>
 <div class="section" id="supported-pwscf-tags">
 <h2>Supported Pwscf tags<a class="headerlink" href="#supported-pwscf-tags" title="Permalink to this headline">¶</a></h2>
 <p>Currently Pwscf tags that phonopy can read are shown below.  Only
@@ -256,6 +262,90 @@ interfaces such as</p>
 for examples, see <a class="reference internal" href="examples.html#examples-link"><span class="std std-ref">Examples</span></a>.</p>
 </li>
 </ol>
+<div class="section" id="non-analytical-term-correction-optional">
+<h3>Non-analytical term correction (Optional)<a class="headerlink" href="#non-analytical-term-correction-optional" title="Permalink to this headline">¶</a></h3>
+<p>To activate non-analytical term correction, <a class="reference internal" href="input-files.html#born-file"><span class="std std-ref">BORN (optional)</span></a> is
+required. This file contains the information of Born effective charge
+and dielectric constant. These physical values are also obtained from
+the pwscf (<code class="docutils literal"><span class="pre">pw.x</span></code>) &amp; phonon (<code class="docutils literal"><span class="pre">ph.x</span></code>) codes in quantum-espresso
+package. There are two steps. The first step is usual self-consistent
+field (SCF) calculation
+by and the second step is running its response function calculations
+under DFPT.</p>
+<p>For the SCF calculation, the input file <code class="docutils literal"><span class="pre">NaCl.in</span></code> looks like:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span> <span class="o">&amp;</span><span class="n">control</span>
+    <span class="n">calculation</span> <span class="o">=</span> <span class="s1">&#39;scf&#39;</span>
+    <span class="n">tprnfor</span> <span class="o">=</span> <span class="o">.</span><span class="n">true</span><span class="o">.</span>
+    <span class="n">tstress</span> <span class="o">=</span> <span class="o">.</span><span class="n">true</span><span class="o">.</span>
+    <span class="n">pseudo_dir</span> <span class="o">=</span> <span class="s1">&#39;/home/togo/espresso/pseudo/&#39;</span>
+ <span class="o">/</span>
+ <span class="o">&amp;</span><span class="n">system</span>
+    <span class="n">ibrav</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">nat</span> <span class="o">=</span> <span class="mi">8</span>
+    <span class="n">ntyp</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">ecutwfc</span> <span class="o">=</span> <span class="mf">70.0</span>
+ <span class="o">/</span>
+ <span class="o">&amp;</span><span class="n">electrons</span>
+    <span class="n">diagonalization</span> <span class="o">=</span> <span class="s1">&#39;david&#39;</span>
+    <span class="n">conv_thr</span> <span class="o">=</span> <span class="mf">1.0</span><span class="n">d</span><span class="o">-</span><span class="mi">9</span>
+ <span class="o">/</span>
+<span class="n">ATOMIC_SPECIES</span>
+ <span class="n">Na</span>  <span class="mf">22.98976928</span> <span class="n">Na</span><span class="o">.</span><span class="n">pbe</span><span class="o">-</span><span class="n">spn</span><span class="o">-</span><span class="n">kjpaw_psl</span><span class="o">.</span><span class="mf">0.2</span><span class="o">.</span><span class="n">UPF</span>
+ <span class="n">Cl</span>  <span class="mf">35.453</span>      <span class="n">Cl</span><span class="o">.</span><span class="n">pbe</span><span class="o">-</span><span class="n">n</span><span class="o">-</span><span class="n">kjpaw_psl</span><span class="o">.</span><span class="mf">0.1</span><span class="o">.</span><span class="n">UPF</span>
+<span class="n">ATOMIC_POSITIONS</span> <span class="n">crystal</span>
+ <span class="n">Na</span>   <span class="mf">0.0000000000000000</span>  <span class="mf">0.0000000000000000</span>  <span class="mf">0.0000000000000000</span>
+ <span class="n">Na</span>   <span class="mf">0.0000000000000000</span>  <span class="mf">0.5000000000000000</span>  <span class="mf">0.5000000000000000</span>
+ <span class="n">Na</span>   <span class="mf">0.5000000000000000</span>  <span class="mf">0.0000000000000000</span>  <span class="mf">0.5000000000000000</span>
+ <span class="n">Na</span>   <span class="mf">0.5000000000000000</span>  <span class="mf">0.5000000000000000</span>  <span class="mf">0.0000000000000000</span>
+ <span class="n">Cl</span>   <span class="mf">0.5000000000000000</span>  <span class="mf">0.5000000000000000</span>  <span class="mf">0.5000000000000000</span>
+ <span class="n">Cl</span>   <span class="mf">0.5000000000000000</span>  <span class="mf">0.0000000000000000</span>  <span class="mf">0.0000000000000000</span>
+ <span class="n">Cl</span>   <span class="mf">0.0000000000000000</span>  <span class="mf">0.5000000000000000</span>  <span class="mf">0.0000000000000000</span>
+ <span class="n">Cl</span>   <span class="mf">0.0000000000000000</span>  <span class="mf">0.0000000000000000</span>  <span class="mf">0.5000000000000000</span>
+<span class="n">CELL_PARAMETERS</span> <span class="n">angstrom</span>
+ <span class="mf">5.6903014761756712</span> <span class="mi">0</span> <span class="mi">0</span>
+ <span class="mi">0</span> <span class="mf">5.6903014761756712</span> <span class="mi">0</span>
+ <span class="mi">0</span> <span class="mi">0</span> <span class="mf">5.6903014761756712</span>
+<span class="n">K_POINTS</span> <span class="n">automatic</span>
+ <span class="mi">8</span> <span class="mi">8</span> <span class="mi">8</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span>
+</pre></div>
+</div>
+<p>where more the k-point mesh numbers are specified. This may be exectued as:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">mpirun</span> <span class="o">~/</span><span class="n">espresso</span><span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">pw</span><span class="o">.</span><span class="n">x</span> <span class="o">-</span><span class="n">i</span> <span class="n">NaCl</span><span class="o">.</span><span class="ow">in</span> <span class="o">|&amp;</span> <span class="n">tee</span> <span class="n">NaCl</span><span class="o">.</span><span class="n">out</span>
+</pre></div>
+</div>
+<p>Many files whose names stating with <code class="docutils literal"><span class="pre">pwscf</span></code> should be created. These
+are used for the next calculation. The input file for the response
+function calculations, <code class="docutils literal"><span class="pre">NaCl.ph.in</span></code>, is
+created as follows:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span> <span class="o">&amp;</span><span class="n">inputph</span>
+  <span class="n">tr2_ph</span> <span class="o">=</span> <span class="mf">1.0</span><span class="n">d</span><span class="o">-</span><span class="mi">14</span><span class="p">,</span>
+  <span class="n">epsil</span> <span class="o">=</span> <span class="o">.</span><span class="n">true</span><span class="o">.</span>
+ <span class="o">/</span>
+<span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span>
+</pre></div>
+</div>
+<p>Similary <code class="docutils literal"><span class="pre">ph.x</span></code> is executed:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">mpirun</span> <span class="o">~/</span><span class="n">espresso</span><span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">ph</span><span class="o">.</span><span class="n">x</span> <span class="o">-</span><span class="n">i</span> <span class="n">NaCl</span><span class="o">.</span><span class="n">ph</span><span class="o">.</span><span class="ow">in</span> <span class="o">|&amp;</span> <span class="n">tee</span> <span class="n">NaCl</span><span class="o">.</span><span class="n">ph</span><span class="o">.</span><span class="n">out</span>
+</pre></div>
+</div>
+<p>Finally the Born effective charges and dielectric constant are
+obtained in the output file <code class="docutils literal"><span class="pre">NaCl.ph.out</span></code>. The <code class="docutils literal"><span class="pre">BORN</span></code> file has to
+be created manually following the <code class="docutils literal"><span class="pre">BORN</span></code> format
+(<a class="reference internal" href="input-files.html#born-file"><span class="std std-ref">BORN (optional)</span></a>). The <code class="docutils literal"><span class="pre">BORN</span></code> file for this NaCl calculation would
+be something like below:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">default</span> <span class="n">value</span>
+<span class="mf">2.472958201</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mf">2.472958201</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mf">2.472958201</span>
+<span class="mf">1.105385</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mf">1.105385</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mf">1.105385</span>
+<span class="o">-</span><span class="mf">1.105385</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="o">-</span><span class="mf">1.105385</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="o">-</span><span class="mf">1.105385</span>
+</pre></div>
+</div>
+<p>Once this is made, the non-analytical term correction is included
+just adding the <code class="docutils literal"><span class="pre">--nac</span></code> options as follows:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">pwscf</span> <span class="o">-</span><span class="n">c</span> <span class="n">NaCl</span><span class="o">.</span><span class="ow">in</span> <span class="o">-</span><span class="n">p</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="_images/NaCl-pwscf-band-NAC.png"><img alt="pwscf-band-nac" src="_images/NaCl-pwscf-band-NAC.png" style="width: 50%;" /></a></p>
+</div>
 </div>
 </div>
 
@@ -279,7 +369,7 @@ for examples, see <a class="reference internal" href="examples.html#examples-lin
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.5.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.6.<br/>
     </p>
   </div>
 </footer>

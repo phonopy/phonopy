@@ -52,6 +52,7 @@ tags:
 * ``-t`` (``TPROP``)
 * ``--td`` (``TDISP``)
 * ``--tdm`` (``TDISPMAT``)
+* ``--tdm_cif`` (``TDISPMAT_CIF``)
 * ``--thm``, ``--tetrahedron_method`` (``TETRAHEDRON``)
 * ``--tmin`` (``TMIN``)
 * ``--tmax`` (``TMAX``)
