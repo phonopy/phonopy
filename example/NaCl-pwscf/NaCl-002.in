@@ -9,9 +9,6 @@
     ibrav = 0
     nat = 64
     ntyp = 2
-    occupations = 'smearing'
-    smearing = 'gaussian'
-    degauss = 0.01
     ecutwfc = 70.0
  /
  &electrons
