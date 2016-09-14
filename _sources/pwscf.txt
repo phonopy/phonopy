@@ -207,9 +207,9 @@ be something like below::
    -1.105385 0 0 0 -1.105385 0 0 0 -1.105385
 
 Once this is made, the non-analytical term correction is included 
-just adding the ``--nac`` options as follows::
+just adding the ``--nac`` option as follows::
 
-     % phonopy --pwscf -c NaCl.in -p band.conf
+     % phonopy --pwscf --nac -c NaCl.in -p band.conf
 
 
 |pwscf-band-nac|
