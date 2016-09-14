@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Method &#8212; Phonopy v.1.11.2</title>
+    <title>Method &mdash; Phonopy v.1.11.2</title>
     
     <link rel="stylesheet" href="_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -146,13 +146,13 @@
 <span id="group-velocity"></span><h1>Method<a class="headerlink" href="#method" title="Permalink to this headline">¶</a></h1>
 <p>Phonopy calculates group velocity of phonon as follows:</p>
 <div class="math">
-<p><span class="math">\mathbf{v}_\mathrm{g}(\mathbf{q}\nu) = &amp; \nabla_\mathbf{q} \omega(\mathbf{q}\nu) \\
+<p><img src="_images/math/275922a9d368b5fcb4b6843c0a8d91d22fc7c64a.png" alt="\mathbf{v}_\mathrm{g}(\mathbf{q}\nu) = &amp; \nabla_\mathbf{q} \omega(\mathbf{q}\nu) \\
 =&amp;\frac{\partial\omega(\mathbf{q}\nu)}{\partial \mathbf{q}} \\
 =&amp;\frac{1}{2\omega(\mathbf{q}\nu)}\frac{\partial[\omega(\mathbf{q}\nu)]^2}{\partial
 \mathbf{q}} \\
 =&amp;\frac{1}{2\omega(\mathbf{q}\nu)}\left&lt;\mathbf{e}(\mathbf{q}\nu)\biggl|
 \frac{\partial D(\mathbf{q})} {\partial
-\mathbf{q}}\biggl|\mathbf{e}(\mathbf{q}\nu)\right&gt;,</span></p>
+\mathbf{q}}\biggl|\mathbf{e}(\mathbf{q}\nu)\right&gt;,"/></p>
 </div><p>where the meanings of the variables are found at <a class="reference internal" href="theory.html#formulations"><span class="std std-ref">Formulations</span></a>.</p>
 </div>
 <div class="section" id="finite-difference-method">
@@ -160,23 +160,23 @@
 <p>In the previous versions, group velocity was calculated using finite
 difference method:</p>
 <div class="math">
-<p><span class="math">\mathbf{v}_\mathrm{g}(\mathbf{q}\nu) =
+<p><img src="_images/math/63e63a856371733e9f0341975a7f2cd7a0ff73dc.png" alt="\mathbf{v}_\mathrm{g}(\mathbf{q}\nu) =
 \frac{1}{2\omega(\mathbf{q}\nu)}\left&lt;\mathbf{e}(\mathbf{q}\nu)\biggl|
 \frac{\partial D(\mathbf{q})} {\partial
 \mathbf{q}}\biggl|\mathbf{e}(\mathbf{q}\nu)\right&gt;
 \simeq \frac{1}{2\omega(\mathbf{q}\nu)}
 \left&lt;\mathbf{e}(\mathbf{q}\nu)\biggl|
 \frac{\Delta D(\mathbf{q})}
-{\Delta \mathbf{q}}\biggl|\mathbf{e}(\mathbf{q}\nu)\right&gt;.</span></p>
+{\Delta \mathbf{q}}\biggl|\mathbf{e}(\mathbf{q}\nu)\right&gt;."/></p>
 </div><p>Group velocity calculation with the finite difference method is still
 able to be activated using <code class="docutils literal"><span class="pre">GV_DELTA_Q</span></code> tag or <code class="docutils literal"><span class="pre">-gv_delta_q</span></code>
-option.  <span class="math">\Delta\mathbf{q} = (\Delta q_x, \Delta q_y, \Delta
-q_z)</span> is described in Cartesian coordinated in reciprocal space. In
-the implementation, central difference is employed, and <span class="math">+\Delta
-q_\alpha</span> and <span class="math">-\Delta q_\alpha</span> are taken to calculate group
-velocity, where <span class="math">\alpha</span> is the Cartesian index in reciprocal
-space. <span class="math">\Delta q_\alpha</span> is specified in the unit of reciprocal
-space distance (<span class="math">\mathrm{\AA}^{-1}</span> for the default case) by
+option.  <img class="math" src="_images/math/82db33c0a4c2a5134d71c9ce7c204a9994a4f2fc.png" alt="\Delta\mathbf{q} = (\Delta q_x, \Delta q_y, \Delta
+q_z)"/> is described in Cartesian coordinated in reciprocal space. In
+the implementation, central difference is employed, and <img class="math" src="_images/math/1fc9f200651b2ae9b88c063bc8669fee0940c5d0.png" alt="+\Delta
+q_\alpha"/> and <img class="math" src="_images/math/0ccd4709bd85944296c21a507194458922fd407b.png" alt="-\Delta q_\alpha"/> are taken to calculate group
+velocity, where <img class="math" src="_images/math/ad59b6e24a4a00ac621801f8d7513d68be654ab5.png" alt="\alpha"/> is the Cartesian index in reciprocal
+space. <img class="math" src="_images/math/5fea0e515aa8148b62691323fe342ce83432b9de.png" alt="\Delta q_\alpha"/> is specified in the unit of reciprocal
+space distance (<img class="math" src="_images/math/9f99f79defce0f92996c9359b5248ee78d66342b.png" alt="\mathrm{\AA}^{-1}"/> for the default case) by
 <code class="docutils literal"><span class="pre">--gv_delta_q</span></code> option or <code class="docutils literal"><span class="pre">GV_DELTA_Q</span></code> tag.</p>
 </div>
 
@@ -200,7 +200,7 @@ space distance (<span class="math">\mathrm{\AA}^{-1}</span> for the default case
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.6.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.5.<br/>
     </p>
   </div>
 </footer>
