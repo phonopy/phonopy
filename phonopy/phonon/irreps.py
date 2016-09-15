@@ -1084,7 +1084,10 @@ class IrReps:
             if self._ir_labels is None:
                 print(text)
             else:
-                print(text + self._ir_labels[i])
+                if self._ir_labels[i] is None:
+                    print(text)
+                else:
+                    print(text + self._ir_labels[i])
             _print_characters(self._characters[i])
             print('')
 
