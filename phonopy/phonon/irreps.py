@@ -40,11 +40,17 @@ from phonopy.units import VaspToTHz
 from phonopy.harmonic.derivative_dynmat import DerivativeOfDynamicalMatrix
 
 # from Wikipedia http://en.wikipedia.org/wiki/List_of_character_tables_for_chemically_important_3D_point_groups
-character_table = { 
+character_table = {
+# C1
     '1': None,
+
+# Ci
     '-1': None,
+
+# C2
     '2': None,
 
+# C1v = Cs = C1h
     'm':
     { 'rotation_list':
       [ 'E', 'sgh'],
@@ -61,6 +67,7 @@ character_table = {
       ]
     },
 
+# C2h
     '2/m':
     { 'rotation_list':
       [ 'E', 'C2', 'i', 'sgh'],
@@ -112,6 +119,7 @@ character_table = {
      ]
      },
 
+# C2v
     'mm2':
     { 'rotation_list':
       [ 'E', 'C2', 'sgvxz', 'sgvyz'],
@@ -136,6 +144,7 @@ character_table = {
       ]
     },
 
+# D2h
     'mmm':
     { 'rotation_list':
       [ 'E', 'C2', 'C2x', 'C2y', 'i', 'sgxy',
@@ -231,6 +240,7 @@ character_table = {
       ]
     },
 
+# C4h
     '4/m':
     { 'rotation_list':
       [ 'E', 'C4', 'C2', 'i', 'S4', 'sgh'],
@@ -269,6 +279,7 @@ character_table = {
       ]
     },
 
+# D4
     '422':
     { 'rotation_list':
       [ 'E', 'C4', 'C2', 'C2\'', 'C2\'\''],
@@ -346,6 +357,7 @@ character_table = {
       ]
     },
 
+# D2d
     '-42m':
     { 'rotation_list':
       [ 'E', 'S4', 'C2z', 'C2\'', 'sgd'],
@@ -384,6 +396,7 @@ character_table = {
       ]
     },
 
+#  D4h
     '4/mmm':
     { 'rotation_list':
       [ 'E', 'C4', 'C2', 'C2\'', 'C2\'\'', 'i',
@@ -451,6 +464,7 @@ character_table = {
       ]
     },
 
+# C3
     '3':
     { 'rotation_list':
       [ 'E', 'C3'],
@@ -471,8 +485,10 @@ character_table = {
       ]
     },
 
+# S6
     '-3': None,
 
+# D3
     '32':
     { 'rotation_list':
       [ 'E', 'C3', 'C2\'' ],
@@ -503,8 +519,10 @@ character_table = {
       ]
     },
 
+# C3v
     '3m': None,
 
+# D3d
     '-3m':
     { 'rotation_list':
       [ 'E', 'C3', 'C2', 'i', 'S6', 'sgd' ],
@@ -556,11 +574,19 @@ character_table = {
       ]
     },
 
+# C6
     '6': None,
+
+
     '-6': None,
+
+# C6h
     '6/m': None,
+
+# D6
     '622': None,
 
+# C6v
     '6mm':
     { 'rotation_list':
       [ 'E', 'C6', 'C3', 'C2', 'sgv', 'sgd' ],
@@ -611,6 +637,7 @@ character_table = {
       ]
     },
 
+# D3h
     '-6m2':
     { 'rotation_list':
       [ 'E', 'C3', 'C\'2', 'sgh', 'S3', 'sgv' ],
@@ -662,6 +689,7 @@ character_table = {
       ]
     },
 
+# D6h
     '6/mmm':
     { 'rotation_list':
       [ 'E', 'C6', 'C3', 'C2', 'C2\'', 'C2\'\'',
@@ -755,8 +783,13 @@ character_table = {
       ]
     },
 
+# T
     '23': None,
+
+# Th
     'm-3': None,
+
+# O
     '432': None,
 
 # Td
@@ -848,6 +881,7 @@ character_table = {
          ]
          },
 
+# Oh
     'm-3m':
     { 'rotation_list':
       [ 'E', 'C3', 'C2', 'C4', 'C4^2', 'i',
