@@ -35,31 +35,22 @@
 
 import numpy as np
 
+
 class Atoms(object):
-    """Atoms class compatible with the ASE Atoms class
-    Only the necessary stuffs to phonpy are implemented. """
-    
-    def __init__(self,
-                 symbols=None,
-                 positions=None,
-                 numbers=None, 
-                 masses=None,
-                 magmoms=None,
-                 scaled_positions=None,
-                 cell=None,
-                 pbc=None):
+    """
+    Atoms class compatible with the ASE Atoms class. Only the necessary stuffs
+    to phonopy are implemented.
+    """
+
+    def __init__(self, symbols=None, positions=None, numbers=None, masses=None,
+                 magmoms=None, scaled_positions=None, cell=None, pbc=None):
         # cell
         self.cell = None
-        if cell is not None:
-            self.cell = np.array(cell, dtype='double', order='C')
 
         # position
         self.scaled_positions = None
-        if self.cell is not None:
-            if positions is not None:
-                self.set_positions(positions)
-            elif scaled_positions is not None:
-                self.set_scaled_positions(scaled_positions)
+        self.set_cell(cell, positions=positions,
+                      scaled_positions=scaled_positions)
 
         # Atom symbols
         self.symbols = symbols
@@ -89,9 +80,14 @@ class Atoms(object):
         if self.symbols and (self.masses is None):
             self._symbols_to_masses()
 
-
-    def set_cell(self, cell):
-        self.cell = np.array(cell, dtype='double', order='C')
+    def set_cell(self, cell, positions=None, scaled_positions=None):
+        scaled_positions = scaled_positions or self.scaled_positions
+        if cell is not None:
+            self.cell = np.array(cell, dtype='double', order='C')
+            if positions is not None:
+                self.set_positions(positions)
+            elif scaled_positions is not None:
+                self.set_scaled_positions(scaled_positions)
 
     def get_cell(self):
         return self.cell.copy()
@@ -157,14 +153,14 @@ class Atoms(object):
                      magmoms=self.magmoms,
                      symbols=self.symbols,
                      pbc=True)
-        
+
     def _numbers_to_symbols(self):
         self.symbols = [atom_data[n][1] for n in self.numbers]
-        
+
     def _symbols_to_numbers(self):
         self.numbers = np.array(
             [symbol_map[s] for s in self.symbols], dtype='intc')
-        
+
     def _symbols_to_masses(self):
         masses = [atom_data[symbol_map[s]][3] for s in self.symbols]
         if None in masses:
@@ -172,17 +168,11 @@ class Atoms(object):
         else:
             self.masses = np.array(masses, dtype='double')
 
+
 class PhonopyAtoms(Atoms):
-    def __init__(self,
-                 symbols=None,
-                 numbers=None, 
-                 masses=None,
-                 magmoms=None,
-                 scaled_positions=None,
-                 positions=None,
-                 cell=None,
-                 atoms=None,
-                 pbc=True): # pbc is dummy argument, and never used.
+    def __init__(self, symbols=None, numbers=None, masses=None, magmoms=None,
+                 scaled_positions=None, positions=None, cell=None, atoms=None,
+                 pbc=True):  # pbc is dummy argument, and never used.
         if atoms:
             Atoms.__init__(self,
                            numbers=atoms.get_atomic_numbers(),
@@ -203,8 +193,7 @@ class PhonopyAtoms(Atoms):
                            pbc=True)
 
     def get_yaml_lines(self):
-        lines = []
-        lines.append("lattice:")
+        lines = ["lattice:"]
         for v, a in zip(self.cell, ('a', 'b', 'c')):
             lines.append("- [ %21.15f, %21.15f, %21.15f ] # %s" %
                          (v[0], v[1], v[2], a))
@@ -220,264 +209,265 @@ class PhonopyAtoms(Atoms):
     def __str__(self):
         return "\n".join(self.get_yaml_lines())
 
-atom_data = [ 
-    [  0, "X", "X", None], # 0
-    [  1, "H", "Hydrogen", 1.00794], # 1
-    [  2, "He", "Helium", 4.002602], # 2
-    [  3, "Li", "Lithium", 6.941], # 3
-    [  4, "Be", "Beryllium", 9.012182], # 4
-    [  5, "B", "Boron", 10.811], # 5
-    [  6, "C", "Carbon", 12.0107], # 6
-    [  7, "N", "Nitrogen", 14.0067], # 7
-    [  8, "O", "Oxygen", 15.9994], # 8
-    [  9, "F", "Fluorine", 18.9984032], # 9
-    [ 10, "Ne", "Neon", 20.1797], # 10
-    [ 11, "Na", "Sodium", 22.98976928], # 11
-    [ 12, "Mg", "Magnesium", 24.3050], # 12
-    [ 13, "Al", "Aluminium", 26.9815386], # 13
-    [ 14, "Si", "Silicon", 28.0855], # 14
-    [ 15, "P", "Phosphorus", 30.973762], # 15
-    [ 16, "S", "Sulfur", 32.065], # 16
-    [ 17, "Cl", "Chlorine", 35.453], # 17
-    [ 18, "Ar", "Argon", 39.948], # 18
-    [ 19, "K", "Potassium", 39.0983], # 19
-    [ 20, "Ca", "Calcium", 40.078], # 20
-    [ 21, "Sc", "Scandium", 44.955912], # 21
-    [ 22, "Ti", "Titanium", 47.867], # 22
-    [ 23, "V", "Vanadium", 50.9415], # 23
-    [ 24, "Cr", "Chromium", 51.9961], # 24
-    [ 25, "Mn", "Manganese", 54.938045], # 25
-    [ 26, "Fe", "Iron", 55.845], # 26
-    [ 27, "Co", "Cobalt", 58.933195], # 27
-    [ 28, "Ni", "Nickel", 58.6934], # 28
-    [ 29, "Cu", "Copper", 63.546], # 29
-    [ 30, "Zn", "Zinc", 65.38], # 30
-    [ 31, "Ga", "Gallium", 69.723], # 31
-    [ 32, "Ge", "Germanium", 72.64], # 32
-    [ 33, "As", "Arsenic", 74.92160], # 33
-    [ 34, "Se", "Selenium", 78.96], # 34
-    [ 35, "Br", "Bromine", 79.904], # 35
-    [ 36, "Kr", "Krypton", 83.798], # 36
-    [ 37, "Rb", "Rubidium", 85.4678], # 37
-    [ 38, "Sr", "Strontium", 87.62], # 38
-    [ 39, "Y", "Yttrium", 88.90585], # 39
-    [ 40, "Zr", "Zirconium", 91.224], # 40
-    [ 41, "Nb", "Niobium", 92.90638], # 41
-    [ 42, "Mo", "Molybdenum", 95.96], # 42
-    [ 43, "Tc", "Technetium", None], # 43
-    [ 44, "Ru", "Ruthenium", 101.07], # 44
-    [ 45, "Rh", "Rhodium", 102.90550], # 45
-    [ 46, "Pd", "Palladium", 106.42], # 46
-    [ 47, "Ag", "Silver", 107.8682], # 47
-    [ 48, "Cd", "Cadmium", 112.411], # 48
-    [ 49, "In", "Indium", 114.818], # 49
-    [ 50, "Sn", "Tin", 118.710], # 50
-    [ 51, "Sb", "Antimony", 121.760], # 51
-    [ 52, "Te", "Tellurium", 127.60], # 52
-    [ 53, "I", "Iodine", 126.90447], # 53
-    [ 54, "Xe", "Xenon", 131.293], # 54
-    [ 55, "Cs", "Caesium", 132.9054519], # 55
-    [ 56, "Ba", "Barium", 137.327], # 56
-    [ 57, "La", "Lanthanum", 138.90547], # 57
-    [ 58, "Ce", "Cerium", 140.116], # 58
-    [ 59, "Pr", "Praseodymium", 140.90765], # 59
-    [ 60, "Nd", "Neodymium", 144.242], # 60
-    [ 61, "Pm", "Promethium", None], # 61
-    [ 62, "Sm", "Samarium", 150.36], # 62
-    [ 63, "Eu", "Europium", 151.964], # 63
-    [ 64, "Gd", "Gadolinium", 157.25], # 64
-    [ 65, "Tb", "Terbium", 158.92535], # 65
-    [ 66, "Dy", "Dysprosium", 162.500], # 66
-    [ 67, "Ho", "Holmium", 164.93032], # 67
-    [ 68, "Er", "Erbium", 167.259], # 68
-    [ 69, "Tm", "Thulium", 168.93421], # 69
-    [ 70, "Yb", "Ytterbium", 173.054], # 70
-    [ 71, "Lu", "Lutetium", 174.9668], # 71
-    [ 72, "Hf", "Hafnium", 178.49], # 72
-    [ 73, "Ta", "Tantalum", 180.94788], # 73
-    [ 74, "W", "Tungsten", 183.84], # 74
-    [ 75, "Re", "Rhenium", 186.207], # 75
-    [ 76, "Os", "Osmium", 190.23], # 76
-    [ 77, "Ir", "Iridium", 192.217], # 77
-    [ 78, "Pt", "Platinum", 195.084], # 78
-    [ 79, "Au", "Gold", 196.966569], # 79
-    [ 80, "Hg", "Mercury", 200.59], # 80
-    [ 81, "Tl", "Thallium", 204.3833], # 81
-    [ 82, "Pb", "Lead", 207.2], # 82
-    [ 83, "Bi", "Bismuth", 208.98040], # 83
-    [ 84, "Po", "Polonium", None], # 84
-    [ 85, "At", "Astatine", None], # 85
-    [ 86, "Rn", "Radon", None], # 86
-    [ 87, "Fr", "Francium", None], # 87
-    [ 88, "Ra", "Radium", None], # 88
-    [ 89, "Ac", "Actinium", None], # 89
-    [ 90, "Th", "Thorium", 232.03806], # 90
-    [ 91, "Pa", "Protactinium", 231.03588], # 91
-    [ 92, "U", "Uranium", 238.02891], # 92
-    [ 93, "Np", "Neptunium", None], # 93
-    [ 94, "Pu", "Plutonium", None], # 94
-    [ 95, "Am", "Americium", None], # 95
-    [ 96, "Cm", "Curium", None], # 96
-    [ 97, "Bk", "Berkelium", None], # 97
-    [ 98, "Cf", "Californium", None], # 98
-    [ 99, "Es", "Einsteinium", None], # 99
-    [100, "Fm", "Fermium", None], # 100
-    [101, "Md", "Mendelevium", None], # 101
-    [102, "No", "Nobelium", None], # 102
-    [103, "Lr", "Lawrencium", None], # 103
-    [104, "Rf", "Rutherfordium", None], # 104
-    [105, "Db", "Dubnium", None], # 105
-    [106, "Sg", "Seaborgium", None], # 106
-    [107, "Bh", "Bohrium", None], # 107
-    [108, "Hs", "Hassium", None], # 108
-    [109, "Mt", "Meitnerium", None], # 109
-    [110, "Ds", "Darmstadtium", None], # 110
-    [111, "Rg", "Roentgenium", None], # 111
-    [112, "Cn", "Copernicium", None], # 112
-    [113, "Uut", "Ununtrium", None], # 113
-    [114, "Uuq", "Ununquadium", None], # 114
-    [115, "Uup", "Ununpentium", None], # 115
-    [116, "Uuh", "Ununhexium", None], # 116
-    [117, "Uus", "Ununseptium", None], # 117
-    [118, "Uuo", "Ununoctium", None], # 118
-    ]
+
+atom_data = [
+    [0, "X", "X", None],  # 0
+    [1, "H", "Hydrogen", 1.00794],  # 1
+    [2, "He", "Helium", 4.002602],  # 2
+    [3, "Li", "Lithium", 6.941],  # 3
+    [4, "Be", "Beryllium", 9.012182],  # 4
+    [5, "B", "Boron", 10.811],  # 5
+    [6, "C", "Carbon", 12.0107],  # 6
+    [7, "N", "Nitrogen", 14.0067],  # 7
+    [8, "O", "Oxygen", 15.9994],  # 8
+    [9, "F", "Fluorine", 18.9984032],  # 9
+    [10, "Ne", "Neon", 20.1797],  # 10
+    [11, "Na", "Sodium", 22.98976928],  # 11
+    [12, "Mg", "Magnesium", 24.3050],  # 12
+    [13, "Al", "Aluminium", 26.9815386],  # 13
+    [14, "Si", "Silicon", 28.0855],  # 14
+    [15, "P", "Phosphorus", 30.973762],  # 15
+    [16, "S", "Sulfur", 32.065],  # 16
+    [17, "Cl", "Chlorine", 35.453],  # 17
+    [18, "Ar", "Argon", 39.948],  # 18
+    [19, "K", "Potassium", 39.0983],  # 19
+    [20, "Ca", "Calcium", 40.078],  # 20
+    [21, "Sc", "Scandium", 44.955912],  # 21
+    [22, "Ti", "Titanium", 47.867],  # 22
+    [23, "V", "Vanadium", 50.9415],  # 23
+    [24, "Cr", "Chromium", 51.9961],  # 24
+    [25, "Mn", "Manganese", 54.938045],  # 25
+    [26, "Fe", "Iron", 55.845],  # 26
+    [27, "Co", "Cobalt", 58.933195],  # 27
+    [28, "Ni", "Nickel", 58.6934],  # 28
+    [29, "Cu", "Copper", 63.546],  # 29
+    [30, "Zn", "Zinc", 65.38],  # 30
+    [31, "Ga", "Gallium", 69.723],  # 31
+    [32, "Ge", "Germanium", 72.64],  # 32
+    [33, "As", "Arsenic", 74.92160],  # 33
+    [34, "Se", "Selenium", 78.96],  # 34
+    [35, "Br", "Bromine", 79.904],  # 35
+    [36, "Kr", "Krypton", 83.798],  # 36
+    [37, "Rb", "Rubidium", 85.4678],  # 37
+    [38, "Sr", "Strontium", 87.62],  # 38
+    [39, "Y", "Yttrium", 88.90585],  # 39
+    [40, "Zr", "Zirconium", 91.224],  # 40
+    [41, "Nb", "Niobium", 92.90638],  # 41
+    [42, "Mo", "Molybdenum", 95.96],  # 42
+    [43, "Tc", "Technetium", None],  # 43
+    [44, "Ru", "Ruthenium", 101.07],  # 44
+    [45, "Rh", "Rhodium", 102.90550],  # 45
+    [46, "Pd", "Palladium", 106.42],  # 46
+    [47, "Ag", "Silver", 107.8682],  # 47
+    [48, "Cd", "Cadmium", 112.411],  # 48
+    [49, "In", "Indium", 114.818],  # 49
+    [50, "Sn", "Tin", 118.710],  # 50
+    [51, "Sb", "Antimony", 121.760],  # 51
+    [52, "Te", "Tellurium", 127.60],  # 52
+    [53, "I", "Iodine", 126.90447],  # 53
+    [54, "Xe", "Xenon", 131.293],  # 54
+    [55, "Cs", "Caesium", 132.9054519],  # 55
+    [56, "Ba", "Barium", 137.327],  # 56
+    [57, "La", "Lanthanum", 138.90547],  # 57
+    [58, "Ce", "Cerium", 140.116],  # 58
+    [59, "Pr", "Praseodymium", 140.90765],  # 59
+    [60, "Nd", "Neodymium", 144.242],  # 60
+    [61, "Pm", "Promethium", None],  # 61
+    [62, "Sm", "Samarium", 150.36],  # 62
+    [63, "Eu", "Europium", 151.964],  # 63
+    [64, "Gd", "Gadolinium", 157.25],  # 64
+    [65, "Tb", "Terbium", 158.92535],  # 65
+    [66, "Dy", "Dysprosium", 162.500],  # 66
+    [67, "Ho", "Holmium", 164.93032],  # 67
+    [68, "Er", "Erbium", 167.259],  # 68
+    [69, "Tm", "Thulium", 168.93421],  # 69
+    [70, "Yb", "Ytterbium", 173.054],  # 70
+    [71, "Lu", "Lutetium", 174.9668],  # 71
+    [72, "Hf", "Hafnium", 178.49],  # 72
+    [73, "Ta", "Tantalum", 180.94788],  # 73
+    [74, "W", "Tungsten", 183.84],  # 74
+    [75, "Re", "Rhenium", 186.207],  # 75
+    [76, "Os", "Osmium", 190.23],  # 76
+    [77, "Ir", "Iridium", 192.217],  # 77
+    [78, "Pt", "Platinum", 195.084],  # 78
+    [79, "Au", "Gold", 196.966569],  # 79
+    [80, "Hg", "Mercury", 200.59],  # 80
+    [81, "Tl", "Thallium", 204.3833],  # 81
+    [82, "Pb", "Lead", 207.2],  # 82
+    [83, "Bi", "Bismuth", 208.98040],  # 83
+    [84, "Po", "Polonium", None],  # 84
+    [85, "At", "Astatine", None],  # 85
+    [86, "Rn", "Radon", None],  # 86
+    [87, "Fr", "Francium", None],  # 87
+    [88, "Ra", "Radium", None],  # 88
+    [89, "Ac", "Actinium", None],  # 89
+    [90, "Th", "Thorium", 232.03806],  # 90
+    [91, "Pa", "Protactinium", 231.03588],  # 91
+    [92, "U", "Uranium", 238.02891],  # 92
+    [93, "Np", "Neptunium", None],  # 93
+    [94, "Pu", "Plutonium", None],  # 94
+    [95, "Am", "Americium", None],  # 95
+    [96, "Cm", "Curium", None],  # 96
+    [97, "Bk", "Berkelium", None],  # 97
+    [98, "Cf", "Californium", None],  # 98
+    [99, "Es", "Einsteinium", None],  # 99
+    [100, "Fm", "Fermium", None],  # 100
+    [101, "Md", "Mendelevium", None],  # 101
+    [102, "No", "Nobelium", None],  # 102
+    [103, "Lr", "Lawrencium", None],  # 103
+    [104, "Rf", "Rutherfordium", None],  # 104
+    [105, "Db", "Dubnium", None],  # 105
+    [106, "Sg", "Seaborgium", None],  # 106
+    [107, "Bh", "Bohrium", None],  # 107
+    [108, "Hs", "Hassium", None],  # 108
+    [109, "Mt", "Meitnerium", None],  # 109
+    [110, "Ds", "Darmstadtium", None],  # 110
+    [111, "Rg", "Roentgenium", None],  # 111
+    [112, "Cn", "Copernicium", None],  # 112
+    [113, "Uut", "Ununtrium", None],  # 113
+    [114, "Uuq", "Ununquadium", None],  # 114
+    [115, "Uup", "Ununpentium", None],  # 115
+    [116, "Uuh", "Ununhexium", None],  # 116
+    [117, "Uus", "Ununseptium", None],  # 117
+    [118, "Uuo", "Ununoctium", None],  # 118
+]
 
 symbol_map = {
-    "H":1,
-    "He":2,
-    "Li":3,
-    "Be":4,
-    "B":5,
-    "C":6,
-    "N":7,
-    "O":8,
-    "F":9,
-    "Ne":10,
-    "Na":11,
-    "Mg":12,
-    "Al":13,
-    "Si":14,
-    "P":15,
-    "S":16,
-    "Cl":17,
-    "Ar":18,
-    "K":19,
-    "Ca":20,
-    "Sc":21,
-    "Ti":22,
-    "V":23,
-    "Cr":24,
-    "Mn":25,
-    "Fe":26,
-    "Co":27,
-    "Ni":28,
-    "Cu":29,
-    "Zn":30,
-    "Ga":31,
-    "Ge":32,
-    "As":33,
-    "Se":34,
-    "Br":35,
-    "Kr":36,
-    "Rb":37,
-    "Sr":38,
-    "Y":39,
-    "Zr":40,
-    "Nb":41,
-    "Mo":42,
-    "Tc":43,
-    "Ru":44,
-    "Rh":45,
-    "Pd":46,
-    "Ag":47,
-    "Cd":48,
-    "In":49,
-    "Sn":50,
-    "Sb":51,
-    "Te":52,
-    "I":53,
-    "Xe":54,
-    "Cs":55,
-    "Ba":56,
-    "La":57,
-    "Ce":58,
-    "Pr":59,
-    "Nd":60,
-    "Pm":61,
-    "Sm":62,
-    "Eu":63,
-    "Gd":64,
-    "Tb":65,
-    "Dy":66,
-    "Ho":67,
-    "Er":68,
-    "Tm":69,
-    "Yb":70,
-    "Lu":71,
-    "Hf":72,
-    "Ta":73,
-    "W":74,
-    "Re":75,
-    "Os":76,
-    "Ir":77,
-    "Pt":78,
-    "Au":79,
-    "Hg":80,
-    "Tl":81,
-    "Pb":82,
-    "Bi":83,
-    "Po":84,
-    "At":85,
-    "Rn":86,
-    "Fr":87,
-    "Ra":88,
-    "Ac":89,
-    "Th":90,
-    "Pa":91,
-    "U":92,
-    "Np":93,
-    "Pu":94,
-    "Am":95,
-    "Cm":96,
-    "Bk":97,
-    "Cf":98,
-    "Es":99,
-    "Fm":100,
-    "Md":101,
-    "No":102,
-    "Lr":103,
-    "Rf":104,
-    "Db":105,
-    "Sg":106,
-    "Bh":107,
-    "Hs":108,
-    "Mt":109,
-    "Ds":110,
-    "Rg":111,
-    "Cn":112,
-    "Uut":113,
-    "Uuq":114,
-    "Uup":115,
-    "Uuh":116,
-    "Uus":117,
-    "Uuo":118,
-    }
+    "H": 1,
+    "He": 2,
+    "Li": 3,
+    "Be": 4,
+    "B": 5,
+    "C": 6,
+    "N": 7,
+    "O": 8,
+    "F": 9,
+    "Ne": 10,
+    "Na": 11,
+    "Mg": 12,
+    "Al": 13,
+    "Si": 14,
+    "P": 15,
+    "S": 16,
+    "Cl": 17,
+    "Ar": 18,
+    "K": 19,
+    "Ca": 20,
+    "Sc": 21,
+    "Ti": 22,
+    "V": 23,
+    "Cr": 24,
+    "Mn": 25,
+    "Fe": 26,
+    "Co": 27,
+    "Ni": 28,
+    "Cu": 29,
+    "Zn": 30,
+    "Ga": 31,
+    "Ge": 32,
+    "As": 33,
+    "Se": 34,
+    "Br": 35,
+    "Kr": 36,
+    "Rb": 37,
+    "Sr": 38,
+    "Y": 39,
+    "Zr": 40,
+    "Nb": 41,
+    "Mo": 42,
+    "Tc": 43,
+    "Ru": 44,
+    "Rh": 45,
+    "Pd": 46,
+    "Ag": 47,
+    "Cd": 48,
+    "In": 49,
+    "Sn": 50,
+    "Sb": 51,
+    "Te": 52,
+    "I": 53,
+    "Xe": 54,
+    "Cs": 55,
+    "Ba": 56,
+    "La": 57,
+    "Ce": 58,
+    "Pr": 59,
+    "Nd": 60,
+    "Pm": 61,
+    "Sm": 62,
+    "Eu": 63,
+    "Gd": 64,
+    "Tb": 65,
+    "Dy": 66,
+    "Ho": 67,
+    "Er": 68,
+    "Tm": 69,
+    "Yb": 70,
+    "Lu": 71,
+    "Hf": 72,
+    "Ta": 73,
+    "W": 74,
+    "Re": 75,
+    "Os": 76,
+    "Ir": 77,
+    "Pt": 78,
+    "Au": 79,
+    "Hg": 80,
+    "Tl": 81,
+    "Pb": 82,
+    "Bi": 83,
+    "Po": 84,
+    "At": 85,
+    "Rn": 86,
+    "Fr": 87,
+    "Ra": 88,
+    "Ac": 89,
+    "Th": 90,
+    "Pa": 91,
+    "U": 92,
+    "Np": 93,
+    "Pu": 94,
+    "Am": 95,
+    "Cm": 96,
+    "Bk": 97,
+    "Cf": 98,
+    "Es": 99,
+    "Fm": 100,
+    "Md": 101,
+    "No": 102,
+    "Lr": 103,
+    "Rf": 104,
+    "Db": 105,
+    "Sg": 106,
+    "Bh": 107,
+    "Hs": 108,
+    "Mt": 109,
+    "Ds": 110,
+    "Rg": 111,
+    "Cn": 112,
+    "Uut": 113,
+    "Uuq": 114,
+    "Uup": 115,
+    "Uuh": 116,
+    "Uus": 117,
+    "Uuo": 118,
+}
 
 # This data are obtained from
 # J. R. de Laeter, J. K. Böhlke, P. De Bièvre, H. Hidaka, H. S. Peiser,
 # K. J. R. Rosman and P. D. P. Taylor (2003).
 # "Atomic weights of the elements. Review 2000 (IUPAC Technical Report)"
 isotope_data = {
-    'H':  [[1, 1.0078250319, 0.999885], [2, 2.0141017779, 0.000115]],
+    'H': [[1, 1.0078250319, 0.999885], [2, 2.0141017779, 0.000115]],
     'He': [[3, 3.0160293094, 0.00000134], [4, 4.0026032497, 0.99999866]],
     'Li': [[6, 6.0151223, 0.0759], [7, 7.0160041, 0.9241]],
     'Be': [[9, 9.0121822, 1.0000]],
-    'B':  [[10, 10.0129371, 0.199], [11, 11.0093055, 0.801]],
-    'C':  [[12, 12, 0.9893], [13, 13.003354838, 0.0107]],
-    'N':  [[14, 14.0030740074, 0.99636], [15, 15.000108973, 0.00364]],
-    'O':  [[16, 15.9949146223, 0.99757], [17, 16.99913150, 0.00038],
-           [18, 17.9991604, 0.00205]],
-    'F':  [[19, 18.99840320, 1.0000]],
+    'B': [[10, 10.0129371, 0.199], [11, 11.0093055, 0.801]],
+    'C': [[12, 12, 0.9893], [13, 13.003354838, 0.0107]],
+    'N': [[14, 14.0030740074, 0.99636], [15, 15.000108973, 0.00364]],
+    'O': [[16, 15.9949146223, 0.99757], [17, 16.99913150, 0.00038],
+          [18, 17.9991604, 0.00205]],
+    'F': [[19, 18.99840320, 1.0000]],
     'Ne': [[20, 19.992440176, 0.9048], [21, 20.99384674, 0.0027],
            [22, 21.99138550, 0.0925]],
     'Na': [[23, 22.98976966, 1.0000]],
@@ -486,14 +476,14 @@ isotope_data = {
     'Al': [[27, 26.98153841, 1.0000]],
     'Si': [[28, 27.97692649, 0.92223], [29, 28.97649468, 0.04685],
            [30, 29.97377018, 0.03092]],
-    'P':  [[31, 30.97376149, 1.0000]],
-    'S':  [[32, 31.97207073, 0.9499], [33, 32.97145854, 0.0075],
-           [34, 33.96786687, 0.0425], [36, 35.96708088, 0.0001]],
+    'P': [[31, 30.97376149, 1.0000]],
+    'S': [[32, 31.97207073, 0.9499], [33, 32.97145854, 0.0075],
+          [34, 33.96786687, 0.0425], [36, 35.96708088, 0.0001]],
     'Cl': [[35, 34.96885271, 0.7576], [37, 36.96590260, 0.2424]],
     'Ar': [[36, 35.96754626, 0.003365], [38, 37.9627322, 0.000632],
            [40, 39.962383124, 0.996003]],
-    'K':  [[39, 38.96370, 0.932581], [40, 39.96399867, 0.000117],
-           [41, 40.96182597, 0.067302]],
+    'K': [[39, 38.96370, 0.932581], [40, 39.96399867, 0.000117],
+          [41, 40.96182597, 0.067302]],
     'Ca': [[40, 39.9625912, 0.96941], [42, 41.9586183, 0.00647],
            [43, 42.9587668, 0.00135], [44, 43.9554811, 0.02086],
            [46, 45.9536927, 0.00004], [48, 47.952533, 0.00187]],
@@ -501,7 +491,7 @@ isotope_data = {
     'Ti': [[46, 45.9526295, 0.0825], [47, 46.9517637, 0.0744],
            [48, 47.9479470, 0.7372], [49, 48.9478707, 0.0541],
            [50, 49.9447920, 0.0518]],
-    'V':  [[50, 49.9471627, 0.00250], [51, 50.9439635, 0.99750]],
+    'V': [[50, 49.9471627, 0.00250], [51, 50.9439635, 0.99750]],
     'Cr': [[50, 49.9460495, 0.04345], [52, 51.9405115, 0.83789],
            [53, 52.9406534, 0.09501], [54, 53.9388846, 0.02365]],
     'Mn': [[55, 54.9380493, 1.0000]],
@@ -530,7 +520,7 @@ isotope_data = {
     'Rb': [[85, 84.9117924, 0.7217], [87, 86.9091858, 0.2783]],
     'Sr': [[84, 83.913426, 0.0056], [86, 85.9092647, 0.0986],
            [87, 86.9088816, 0.0700], [88, 87.9056167, 0.8258]],
-    'Y':  [[89, 88.9058485, 1.0000]],
+    'Y': [[89, 88.9058485, 1.0000]],
     'Zr': [[90, 89.9047022, 0.5145], [91, 90.9056434, 0.1122],
            [92, 91.9050386, 0.1715], [94, 93.9063144, 0.1738],
            [96, 95.908275, 0.0280]],
@@ -564,7 +554,7 @@ isotope_data = {
            [123, 122.9042711, 0.0089], [124, 123.9028188, 0.0474],
            [125, 124.9044241, 0.0707], [126, 125.9033049, 0.1884],
            [128, 127.9044615, 0.3174], [130, 129.9062229, 0.3408]],
-    'I':  [[127, 126.904468, 1.0000]],
+    'I': [[127, 126.904468, 1.0000]],
     'Xe': [[124, 123.9058954, 0.000952], [126, 125.904268, 0.000890],
            [128, 127.9035305, 0.019102], [129, 128.9047799, 0.264006],
            [130, 129.9035089, 0.040710], [131, 130.9050828, 0.212324],
@@ -612,9 +602,9 @@ isotope_data = {
            [177, 176.9432204, 0.1860], [178, 177.9436981, 0.2728],
            [179, 178.9458154, 0.1362], [180, 179.9465488, 0.3508]],
     'Ta': [[180, 179.947466, 0.00012], [181, 180.947996, 0.99988]],
-    'W':  [[180, 179.946706, 0.0012], [182, 181.948205, 0.2650],
-           [183, 182.9502242, 0.1431], [184, 183.9509323, 0.3064],
-           [186, 185.95436, 0.2843]],
+    'W': [[180, 179.946706, 0.0012], [182, 181.948205, 0.2650],
+          [183, 182.9502242, 0.1431], [184, 183.9509323, 0.3064],
+          [186, 185.95436, 0.2843]],
     'Re': [[185, 184.952955, 0.3740], [187, 186.9557505, 0.6260]],
     'Os': [[184, 183.952491, 0.0002], [186, 185.953838, 0.0159],
            [187, 186.9557476, 0.0196], [188, 187.9558357, 0.1324],
@@ -641,6 +631,6 @@ isotope_data = {
     'Ac': None,
     'Th': [[232, 232.0380495, 1.0000]],
     'Pa': [[231, 231.03588, 1.0000]],
-    'U':  [[234, 234.0409447, 0.000054], [235, 235.0439222, 0.007204],
-           [238, 238.0507835, 0.992742]]
+    'U': [[234, 234.0409447, 0.000054], [235, 235.0439222, 0.007204],
+          [238, 238.0507835, 0.992742]]
 }
