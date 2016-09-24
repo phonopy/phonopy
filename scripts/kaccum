@@ -165,7 +165,8 @@ if __name__ == '__main__':
         g = f['gamma'][:]
         g = np.where(g > 0, g, -1)
         gv_norm = np.sqrt((f['group_velocity'][:] ** 2).sum(axis=2))
-        frequencies = np.where(g > 0, gv_norm / (2.0 * g), 0) # mean free path
+        # mean free path though the variable name is frequency...
+        frequencies = np.where(g > 0, gv_norm / (2 * 2 * np.pi * g), 0)
     else:
         frequencies = f['frequency'][:]
 
@@ -175,7 +176,7 @@ if __name__ == '__main__':
                 temperatures = temperatures[i:i+1]
                 mode_kappa = mode_kappa[i:i+1,:,:]
                 if len(frequencies.shape) == 3: # For mean free path
-                    frequencies = frequencies[i]
+                    frequencies = frequencies[i:i+1]
 
     if args.mfp:
         kdos = []
