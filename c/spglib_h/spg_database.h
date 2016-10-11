@@ -45,7 +45,7 @@ typedef struct {
   char international[32];
   char international_full[20];
   char international_short[11];
-  char setting[6];
+  char choice[6];
   Centering centering;
   int pointgroup_number;
 } SpacegroupType;

@@ -362,7 +362,7 @@ Spacegroup spa_get_spacegroup_with_hall_number(SPGCONST Primitive * primitive,
   }
 
  err:
-  warning_print("spglib: Space group with the input setting could not be found ");
+  warning_print("spglib: Space group with the input choice could not be found ");
   warning_print("(line %d, %s).\n", __LINE__, __FILE__);
 
  ret:
@@ -498,8 +498,8 @@ static Spacegroup get_spacegroup(const int hall_number,
 	   spacegroup_type.international_full);
     strcpy(spacegroup.international_short,
 	   spacegroup_type.international_short);
-    strcpy(spacegroup.setting,
-	   spacegroup_type.setting);
+    strcpy(spacegroup.choice,
+	   spacegroup_type.choice);
   }
 
   return spacegroup;

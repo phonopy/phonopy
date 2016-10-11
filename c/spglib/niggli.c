@@ -171,7 +171,7 @@ static NiggliParams * initialize(const double *lattice_, const double eps_)
 
   if ((p = (NiggliParams*)malloc(sizeof(NiggliParams))) == NULL) {
     warning_print("niggli: Memory could not be allocated.");
-    return 0;
+    return NULL;
   }
 
   p->A = 0;

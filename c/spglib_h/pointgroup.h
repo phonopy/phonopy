@@ -67,6 +67,7 @@ typedef enum {
 typedef struct {
   int number;
   char symbol[6];
+  char schoenflies[4];
   Holohedry holohedry;
   Laue laue;
 } Pointgroup;

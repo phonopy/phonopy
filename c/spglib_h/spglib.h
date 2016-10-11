@@ -41,10 +41,6 @@
 #define SPGCONST
 #endif
 
-int spg_get_major_version(void);
-int spg_get_minor_version(void);
-int spg_get_micro_version(void);
-
 /*
   ------------------------------------------------------------------
 
@@ -94,12 +90,25 @@ int spg_get_micro_version(void);
   ------------------------------------------------------------------
 */
 
+typedef enum {
+  SPGLIB_SUCCESS = 0,
+  SPGERR_SPACEGROUP_SEARCH_FAILED,
+  SPGERR_CELL_STANDARDIZATION_FAILED,
+  SPGERR_SYMMETRY_OPERATION_SEARCH_FAILED,
+  SPGERR_ATOMS_TOO_CLOSE,
+  SPGERR_POINTGROUP_NOT_FOUND,
+  SPGERR_NIGGLI_FAILED,
+  SPGERR_DELAUNAY_FAILED,
+  SPGERR_ARRAY_SIZE_SHORTAGE,
+  SPGERR_NONE,
+} SpglibError;
+
 typedef struct {
   int spacegroup_number;
   int hall_number;
   char international_symbol[11];
   char hall_symbol[17];
-  char setting[6];
+  char choice[6];
   double transformation_matrix[3][3];
   double origin_shift[3];
   int n_operations;
@@ -112,19 +121,30 @@ typedef struct {
   double std_lattice[3][3];
   int *std_types;
   double (*std_positions)[3];
-  int pointgroup_number;
+  /* int pointgroup_number; */
   char pointgroup_symbol[6];
 } SpglibDataset;
 
 typedef struct {
   int number;
+  char international_short[11];
+  char international_full[20];
+  char international[32];
   char schoenflies[7];
   char hall_symbol[17];
-  char international[32];
-  char international_full[20];
-  char international_short[11];
-  int pointgroup_number;
+  char choice[6];
+  char pointgroup_international[6];
+  char pointgroup_schoenflies[4];
+  int arithmetic_crystal_class_number;
+  char arithmetic_crystal_class_symbol[7];
 } SpglibSpacegroupType;
+
+int spg_get_major_version(void);
+int spg_get_minor_version(void);
+int spg_get_micro_version(void);
+
+SpglibError spg_get_error_code(void);
+char * spg_get_error_message(SpglibError spglib_error);
 
 SpglibDataset * spg_get_dataset(SPGCONST double lattice[3][3],
 				SPGCONST double position[][3],
@@ -183,27 +203,6 @@ int spgat_get_symmetry(int rotation[][3][3],
 		       const int num_atom,
 		       const double symprec,
 		       const double angle_tolerance);
-
-/* This is only used to check consistensy with spg_get_symmetry. */
-int spg_get_symmetry_numerical(int rotation[][3][3],
-			       double translation[][3],
-			       const int max_size,
-			       SPGCONST double lattice[3][3],
-			       SPGCONST double position[][3],
-			       const int types[],
-			       const int num_atom,
-			       const double symprec);
-
-int spgat_get_symmetry_numerical(int rotation[][3][3],
-				 double translation[][3],
-				 const int max_size,
-				 SPGCONST double lattice[3][3],
-				 SPGCONST double position[][3],
-				 const int types[],
-				 const int num_atom,
-				 const double symprec,
-				 const double angle_tolerance);
-
 
 /* Find symmetry operations with collinear spins on atoms. */
 int spg_get_symmetry_with_collinear_spin(int rotation[][3][3],
