@@ -530,6 +530,8 @@ class ConfParser(object):
                 
             if line.find('=') != -1:
                 left, right = [x.strip() for x in line.split('=')]
+                if right.lower() in ('.true.', '.false.'):
+                    right = right.lower()
                 self._confs[left.lower()] = right
 
             if line.find('+++') != -1:
