@@ -4,6 +4,12 @@ from setup import (extension_spglib, extension_phonopy,
 import platform
 import os
 
+# For making source distribution package:
+# 1. distutils should be used.
+# 2. rm __nanoversion__.txt
+# 3. python setup3.py sdist -t MANIFEST-phono3py.in
+# 4. git checkout -- __nanoversion__.txt
+
 try:
     from setuptools import setup, Extension
     use_setuptools = True
