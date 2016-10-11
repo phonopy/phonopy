@@ -1,6 +1,12 @@
 import numpy
 import os
 
+# For making source distribution package:
+# 1. distutils should be used.
+# 2. rm __nanoversion__.txt
+# 3. python setup.py sdist
+# 4. git checkout -- __nanoversion__.txt
+
 try:
     from setuptools import setup, Extension
     use_setuptools = True
@@ -67,6 +73,7 @@ extension_spglib = Extension(
     extra_compile_args=extra_compile_args_spglib,
     extra_link_args=extra_link_args_spglib,
     sources=['c/_spglib.c',
+             'c/spglib/arithmetic.c',
              'c/spglib/cell.c',
              'c/spglib/delaunay.c',
              'c/spglib/hall_symbol.c',

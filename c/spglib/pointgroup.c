@@ -458,8 +458,12 @@ Pointgroup ptg_get_pointgroup(const int pointgroup_number)
   pointgroup.number = pointgroup_number;
   pointgroup_type = pointgroup_data[pointgroup_number];
   strcpy(pointgroup.symbol, pointgroup_type.symbol);
+  strcpy(pointgroup.schoenflies, pointgroup_type.schoenflies);
   for (i = 0; i < 5; i++) {
     if (pointgroup.symbol[i] == ' ') {pointgroup.symbol[i] = '\0';}
+  }
+  for (i = 0; i < 3; i++) {
+    if (pointgroup.schoenflies[i] == ' ') {pointgroup.schoenflies[i] = '\0';}
   }
   pointgroup.holohedry = pointgroup_type.holohedry;
   pointgroup.laue = pointgroup_type.laue;

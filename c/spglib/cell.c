@@ -39,9 +39,6 @@
 
 #include "debug.h"
 
-#include <assert.h>
-
-
 #define INCREASE_RATE 2.0
 #define REDUCE_RATE 0.95
 
@@ -175,6 +172,46 @@ int cel_is_overlap(const double a[3],
   } else {
     return 0;
   }
+}
+
+/* 1: At least one overlap of a pair of atoms was found. */
+/* 0: No overlap of atoms was found. */
+int cel_any_overlap(SPGCONST Cell * cell,
+		    const double symprec) {
+  int i, j;
+
+  for (i = 0; i < cell->size; i++) {
+    for (j = i + 1; j < cell->size; j++) {
+      if (cel_is_overlap(cell->position[i],
+			 cell->position[j],
+			 cell->lattice,
+			 symprec)) {
+	return 1;
+      }
+    }
+  }
+  return 0;
+}
+
+/* 1: At least one overlap of a pair of atoms with same type was found. */
+/* 0: No overlap of atoms was found. */
+int cel_any_overlap_with_same_type(SPGCONST Cell * cell,
+				   const double symprec) {
+  int i, j;
+
+  for (i = 0; i < cell->size; i++) {
+    for (j = i + 1; j < cell->size; j++) {
+      if (cell->types[i] == cell->types[j]) {
+	if (cel_is_overlap(cell->position[i],
+			   cell->position[j],
+			   cell->lattice,
+			   symprec)) {
+	  return 1;
+	}
+      }
+    }
+  }
+  return 0;
 }
 
 Cell * cel_trim_cell(int * mapping_table,
@@ -345,7 +382,7 @@ static int * get_overlap_table(const VecDBL * position,
 			       SPGCONST Cell * trimmed_cell,
 			       const double symprec)
 {
-  int i, j, attempt, num_overlap, ratio, count;
+  int i, j, attempt, num_overlap, ratio;
   double trim_tolerance;
   int *overlap_table;
 
@@ -359,26 +396,38 @@ static int * get_overlap_table(const VecDBL * position,
 
   for (attempt = 0; attempt < 100; attempt++) {
     for (i = 0; i < cell_size; i++) {
-      overlap_table[i] = -1;
-      num_overlap = 0;
+      overlap_table[i] = i;
       for (j = 0; j < cell_size; j++) {
 	if (cell_types[i] == cell_types[j]) {
 	  if (cel_is_overlap(position->vec[i],
 			     position->vec[j],
 			     trimmed_cell->lattice,
 			     trim_tolerance)) {
-	    num_overlap++;
-	    if (overlap_table[i] == -1) {
+	    if (overlap_table[j] == j) {
 	      overlap_table[i] = j;
-	      assert(j <= i);
+	      break;
 	    }
 	  }
+	}
+      }
+    }
+
+    for (i = 0; i < cell_size; i++) {
+      if (overlap_table[i] != i) {
+	continue;
+      }
+
+      num_overlap = 0;
+      for (j = 0; j < cell_size; j++) {
+	if (i == overlap_table[j]) {
+	  num_overlap++;
 	}
       }
 
       if (num_overlap == ratio)	{
 	continue;
       }
+
       if (num_overlap < ratio) {
 	trim_tolerance *= INCREASE_RATE;
 	warning_print("spglib: Increase tolerance to %f ", trim_tolerance);
@@ -393,19 +442,6 @@ static int * get_overlap_table(const VecDBL * position,
       }
     }
 
-    for (i = 0; i < cell_size; i++) {
-      if (overlap_table[i] != i) {
-	continue;
-      }
-      count = 0;
-      for (j = 0; j < cell_size; j++) {
-	if (i == overlap_table[j]) {
-	  count++;
-	}
-      }
-      assert(count == ratio);
-    }
-
     goto found;
 
   cont:
@@ -414,7 +450,8 @@ static int * get_overlap_table(const VecDBL * position,
 
   warning_print("spglib: Could not trim cell well ");
   warning_print("(line %d, %s).\n", __LINE__, __FILE__);
-  return NULL;
+  free(overlap_table);
+  overlap_table = NULL;
 
 found:
   return overlap_table;
