@@ -134,6 +134,10 @@ if __name__ == '__main__':
                         help='Calculate |g_v| instead of Gamma')
     parser.add_argument('--temperature', type=float, dest='temperature',
                         help='Temperature to output data at')
+    parser.add_argument('--nsp', '--num_sampling_points', type=int,
+                        dest='num_sampling_points',
+                        default=100,
+                        help='Number of sampling points in MFP axis')
     parser.add_argument('filenames', nargs='*')
     args = parser.parse_args()
 
@@ -193,7 +197,7 @@ if __name__ == '__main__':
                                     grid_mapping_table,
                                     ir_grid_points,
                                     weights,
-                                    num_fpoints=200)
+                                    num_fpoints=args.num_sampling_points)
 
     # gamma_dos = GammaDOSsmearing(gamma,
     #                              frequencies,

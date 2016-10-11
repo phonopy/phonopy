@@ -23,7 +23,8 @@ class KappaDOS(object):
                  grid_address,
                  grid_mapping_table,
                  ir_grid_points,
-                 grid_order=None):
+                 grid_order=None,
+                 num_sampling_points=100):
         self._mode_kappa = mode_kappa
         self._tetrahedron_mesh = TetrahedronMesh(
             cell,
@@ -35,7 +36,9 @@ class KappaDOS(object):
 
         min_freq = min(frequencies.ravel())
         max_freq = max(frequencies.ravel()) + epsilon
-        self._frequency_points = np.linspace(min_freq, max_freq, 100)
+        self._frequency_points = np.linspace(min_freq,
+                                             max_freq,
+                                             num_sampling_points)
         self._kdos = np.zeros(
             (len(mode_kappa), len(self._frequency_points), 2, 6),
             dtype='double')
@@ -110,6 +113,10 @@ if __name__ == '__main__':
                         help='Mean free path is used instead of frequency')
     parser.add_argument('--temperature', type=float, dest='temperature',
                         help='Temperature to output data at')
+    parser.add_argument('--nsp', '--num_sampling_points', type=int,
+                        dest='num_sampling_points',
+                        default=100,
+                        help='Number of sampling points in MFP axis')
     parser.add_argument('--average', action='store_true',
                         help=("Output the traces of the tensors divided by 3 "
                               "rather than the unique elements"))
@@ -165,7 +172,8 @@ if __name__ == '__main__':
         g = f['gamma'][:]
         g = np.where(g > 0, g, -1)
         gv_norm = np.sqrt((f['group_velocity'][:] ** 2).sum(axis=2))
-        frequencies = np.where(g > 0, gv_norm / (2.0 * g), 0) # mean free path
+        # mean free path though the variable name is frequency...
+        frequencies = np.where(g > 0, gv_norm / (2 * 2 * np.pi * g), 0)
     else:
         frequencies = f['frequency'][:]
 
@@ -175,7 +183,7 @@ if __name__ == '__main__':
                 temperatures = temperatures[i:i+1]
                 mode_kappa = mode_kappa[i:i+1,:,:]
                 if len(frequencies.shape) == 3: # For mean free path
-                    frequencies = frequencies[i]
+                    frequencies = frequencies[i:i+1]
 
     if args.mfp:
         kdos = []
@@ -187,7 +195,8 @@ if __name__ == '__main__':
                                  mesh,
                                  grid_address,
                                  grid_mapping_table,
-                                 ir_grid_points)
+                                 ir_grid_points,
+                                 num_sampling_points=args.num_sampling_points)
             sampling_points_at_T, kdos_at_T = kappa_dos.get_kdos()
             kdos.append(kdos_at_T[0])
             sampling_points.append(sampling_points_at_T)
@@ -200,7 +209,8 @@ if __name__ == '__main__':
                              mesh,
                              grid_address,
                              grid_mapping_table,
-                             ir_grid_points)
+                             ir_grid_points,
+                             num_sampling_points=args.nsp)
         freq_points, kdos = kappa_dos.get_kdos()
         sampling_points = np.tile(freq_points, (len(kdos), 1))
 
