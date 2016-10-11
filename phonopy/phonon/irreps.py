@@ -1063,13 +1063,9 @@ class IrReps(object):
         return np.array(rotations_at_q), np.array(trans_at_q)
 
     def _get_conventional_rotations(self):
-        spacegroup_symbol = self._symmetry_dataset['international'][0]
-        spacegroup_number = self._symmetry_dataset['number']
         rotations = self._rotations_at_q.copy()
-        pointgroup = get_pointgroup(rotations)
-        pointgroup_symbol = pointgroup[0]
-        transformation_matrix = pointgroup[1]
-
+        pointgroup_symbol = self._symmetry_dataset['pointgroup']
+        transformation_matrix = self._symmetry_dataset['transformation_matrix']
         conventional_rotations = self._transform_rotations(
             transformation_matrix, rotations)
 
