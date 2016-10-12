@@ -367,7 +367,7 @@ In phonopy, so-called commensurate points mean the q-points whose waves are
 confined in the supercell used in the phonon calculation.
 
 To explain about the commensurate points, let basis vectors of a
-primitive in direct space cell be the column vectors
+primitive cell in direct space cell be the column vectors
 :math:`(\mathbf{a}_\mathrm{p} \; \mathbf{b}_\mathrm{p} \;
 \mathbf{c}_\mathrm{p})` and those of the supercell be
 :math:`(\mathbf{a}_\mathrm{s} \; \mathbf{b}_\mathrm{s} \;
