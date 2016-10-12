@@ -530,8 +530,6 @@ class ConfParser(object):
                 
             if line.find('=') != -1:
                 left, right = [x.strip() for x in line.split('=')]
-                if right.lower() in ('.true.', '.false.'):
-                    right = right.lower()
                 self._confs[left.lower()] = right
 
             if line.find('+++') != -1:
@@ -743,33 +741,33 @@ class ConfParser(object):
                                    float(confs['displacement_distance']))
                 
             if conf_key == 'diag':
-                if confs['diag'] == '.false.':
+                if confs['diag'].lower() == '.false.':
                     self.set_parameter('diag', False)
-                if confs['diag'] == '.true.':
+                if confs['diag'].lower() == '.true.':
                     self.set_parameter('diag', True)
 
             if conf_key == 'pm':
-                if confs['pm'] == '.false.':
+                if confs['pm'].lower() == '.false.':
                     self.set_parameter('pm_displacement', False)
-                if confs['pm'] == '.true.':
+                if confs['pm'].lower() == '.true.':
                     self.set_parameter('pm_displacement', True)
 
             if conf_key == 'trigonal':
-                if confs['trigonal'] == '.false.':
+                if confs['trigonal'].lower() == '.false.':
                     self.set_parameter('is_trigonal_displacement', False)
-                if confs['trigonal'] == '.true.':
+                if confs['trigonal'].lower() == '.true.':
                     self.set_parameter('is_trigonal_displacement', True)
 
             if conf_key == 'eigenvectors':
-                if confs['eigenvectors'] == '.true.':
+                if confs['eigenvectors'].lower() == '.true.':
                     self.set_parameter('is_eigenvectors', True)
 
             if conf_key == 'nac':
-                if confs['nac'] == '.true.':
+                if confs['nac'].lower() == '.true.':
                     self.set_parameter('is_nac', True)
 
             if conf_key == 'symmetry':
-                if confs['symmetry'] == '.false.':
+                if confs['symmetry'].lower() == '.false.':
                     self.set_parameter('is_symmetry', False)
                     self.set_parameter('is_mesh_symmetry', False)
 
@@ -778,7 +776,7 @@ class ConfParser(object):
                     self.set_parameter('is_mesh_symmetry', False)
                 
             if conf_key == 'translation':
-                if confs['translation'] == '.true.':
+                if confs['translation'].lower() == '.true.':
                     self.set_parameter('is_translation', True)
 
             if conf_key == 'tsym_type':
@@ -859,9 +857,9 @@ class ConfParser(object):
                     self.set_parameter('sigma', vals)
 
             if conf_key == 'tetrahedron':
-                if confs['tetrahedron'] == '.false.':
+                if confs['tetrahedron'].lower() == '.false.':
                     self.set_parameter('is_tetrahedron_method', False)
-                if confs['tetrahedron'] == '.true.':
+                if confs['tetrahedron'].lower() == '.true.':
                     self.set_parameter('is_tetrahedron_method', True)
                 
             if conf_key == 'tmin':
@@ -882,7 +880,7 @@ class ConfParser(object):
 
             # Phonopy YAML mode
             if conf_key == 'yaml_mode':
-                if confs['yaml_mode'] == '.true.':
+                if confs['yaml_mode'].lower() == '.true.':
                     self.set_parameter('yaml_mode', True)
 
     def set_parameter(self, key, val):
