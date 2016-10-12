@@ -4,6 +4,10 @@
  Formulations
 ==============
 
+.. contents::
+   :depth: 2
+   :local:
+
 Second-order force constants
 ============================
 
@@ -54,7 +58,8 @@ Modified Parlinski-Li-Kawazoe method
 ====================================
 
 The following is a modified and simplified version of the
-Parlinski-Li-Kawazoe method.
+Parlinski-Li-Kawazoe method, which is just a numerical fitting
+approach to obtain force constants from forces and displacements.
 
 The last equation above is represented by matrices as
 
@@ -307,8 +312,8 @@ Group velocity
 
 .. _physical_unit_conversion:
 
-About physical unit conversion
-==============================
+Physical unit conversion
+=========================
 
 Phonopy calculates phonon frequencies based on input values from
 users. In the default case, the physical units of distance, atomic
@@ -337,6 +342,7 @@ The physical unit of the part of the equation corresponding to force
 constants:
 
 .. math::
+
     \frac{4\pi}{\Omega_0}
     \frac{[\sum_{\gamma}q_{\gamma}Z^{*}_{j,\gamma\alpha}]
     [\sum_{\gamma'}q_{\gamma'}Z^{*}_{j',\gamma'\beta}]}
@@ -352,3 +358,78 @@ interface, the conversion factor is :math:`(\text{hartree}
 conversion factors are similarly calculated following the unit
 systems employed in phonopy (:ref:`calculator_interfaces`).
       
+.. _definition_of_commensurate_points:
+
+Commensurate points
+====================
+
+In phonopy, so-called commensurate points mean the q-points whose waves are
+confined in the supercell used in the phonon calculation.
+
+To explain about the commensurate points, let basis vectors of a
+primitive in direct space cell be the column vectors
+:math:`(\mathbf{a}_\mathrm{p} \; \mathbf{b}_\mathrm{p} \;
+\mathbf{c}_\mathrm{p})` and those of the supercell be
+:math:`(\mathbf{a}_\mathrm{s} \; \mathbf{b}_\mathrm{s} \;
+\mathbf{c}_\mathrm{s})`. The transformation of the basis vectors from
+the primitive cell to the supercell is written as
+
+.. math::
+
+   ( \mathbf{a}_\mathrm{s} \; \mathbf{b}_\mathrm{s} \; \mathbf{c}_\mathrm{s} )
+   =  ( \mathbf{a}_\mathrm{p} \; \mathbf{b}_\mathrm{p} \;
+   \mathbf{c}_\mathrm{p} ) \boldsymbol{P}.
+
+:math:`\boldsymbol{P}` is given as a :math:`3\times 3` matrix and its
+elements are all integers, which is a constraint we have. The
+resolution for q-points being the commensurate points is determined by
+:math:`\boldsymbol{P}` since one period of a wave has to be bound by
+any of lattice points inside the supercell. Therefore the number of
+commensurate points becomes the same as the number of the primitive
+cell that can be contained in the supercell, i.e.,
+:math:`\det(\boldsymbol{P})`.
+
+Then let the basis vectors in reciprocal space be the column vectors
+:math:`(\mathbf{a}^*_\mathrm{p} \; \mathbf{b}^*_\mathrm{p} \;
+\mathbf{c}^*_\mathrm{p})`. Note that often reciprocal vectors are
+deifned by row vectors, but column vectors are chosen here to
+formulate. Formally we see the set of besis vectors are :math:`3\times
+3` matrices, we have the following relation:
+
+.. math::
+
+   ( \mathbf{a}^*_\mathrm{p} \;
+   \mathbf{b}^*_\mathrm{p} \; \mathbf{c}^*_\mathrm{p} ) = 2\pi (
+   \mathbf{a}_\mathrm{p} \; \mathbf{b}_\mathrm{p} \;
+   \mathbf{c}_\mathrm{p} )^{-\mathbf{T}}.
+
+Similarly for the supercell, we define a relation
+
+.. math::
+
+   ( \mathbf{a}^*_\mathrm{s} \;
+   \mathbf{b}^*_\mathrm{s} \; \mathbf{c}^*_\mathrm{s} ) = 2\pi (
+   \mathbf{a}_\mathrm{s} \; \mathbf{b}_\mathrm{s} \;
+   \mathbf{c}_\mathrm{s} )^{-\mathbf{T}}.
+
+Then 
+
+.. math::
+
+   ( \mathbf{a}^*_\mathrm{s} \; \mathbf{b}^*_\mathrm{s} \;
+   \mathbf{c}^*_\mathrm{s} ) \boldsymbol{P}^{\mathrm{T}} = (
+   \mathbf{a}^*_\mathrm{p} \; \mathbf{b}^*_\mathrm{p} \;
+   \mathbf{c}^*_\mathrm{p} ).
+
+To multiply an arbitrary q-point :math:`\mathbf{q}` on both sides
+
+.. math::
+
+   ( \mathbf{a}^*_\mathrm{s} \; \mathbf{b}^*_\mathrm{s} \;
+   \mathbf{c}^*_\mathrm{s} ) \boldsymbol{P}^{\mathrm{T}} \mathbf{q} = (
+   \mathbf{a}^*_\mathrm{p} \; \mathbf{b}^*_\mathrm{p} \;
+   \mathbf{c}^*_\mathrm{p} ) \mathbf{q},
+
+we find the constraint of a q-point being one of the commensurate points is
+the elements of :math:`\boldsymbol{P}^{\mathrm{T}} \mathbf{q}` to be integers.
+

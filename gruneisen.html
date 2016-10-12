@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Calculation of mode Grüneisen parameters &mdash; Phonopy v.1.11.2</title>
+    <title>Calculation of mode Grüneisen parameters &#8212; Phonopy v.1.11.2</title>
     
     <link rel="stylesheet" href="_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -81,7 +81,7 @@
 <li class="toctree-l1"><a class="reference internal" href="auxiliary-tools.html">Auxiliary tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="phonopy-module.html">Using phonopy as a python module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="theory.html">Formulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="formulation.html">Formulations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
@@ -186,11 +186,11 @@ bands correspond to those of mode Grüneinen parameters.</p>
 <p><a class="reference internal" href="_images/Si-gruneisen-mesh.png"><img alt="i1" src="_images/Si-gruneisen-mesh.png" style="width: 406.0px; height: 306.0px;" /></a></p>
 <p>In the plot (<code class="docutils literal"><span class="pre">-p</span></code> option), the colors of mode Grüneinen parameters
 are set for band indices with ascending order of phonon frequencies.</p>
-<p>Mode Grüneinen parameter may diverge around <img class="math" src="_images/math/85011adca50d3725af2e048eeb9ec7b02ccdd401.png" alt="\Gamma"/>-point. In
+<p>Mode Grüneinen parameter may diverge around <img class="math" src="_images/math/d872993ed0c7c420e73e77a1d285ac100c516806.png" alt="\Gamma"/>-point. In
 the above example for band paths, mode Grüneinen parameters are
-calculated at <img class="math" src="_images/math/85011adca50d3725af2e048eeb9ec7b02ccdd401.png" alt="\Gamma"/>-point, but <code class="docutils literal"><span class="pre">gruneisen</span></code> script avoids
+calculated at <img class="math" src="_images/math/d872993ed0c7c420e73e77a1d285ac100c516806.png" alt="\Gamma"/>-point, but <code class="docutils literal"><span class="pre">gruneisen</span></code> script avoids
 showing the values on the plot. Instead the values at the neighboring
-<strong>q</strong>-points of <img class="math" src="_images/math/85011adca50d3725af2e048eeb9ec7b02ccdd401.png" alt="\Gamma"/>-point are used for the plot.</p>
+<strong>q</strong>-points of <img class="math" src="_images/math/d872993ed0c7c420e73e77a1d285ac100c516806.png" alt="\Gamma"/>-point are used for the plot.</p>
 </div>
 <div class="section" id="abinit-pwscf-and-wien2k-interfaces">
 <span id="gruneisen-calculators"></span><h2><a class="toc-backref" href="#id2">Abinit, Pwscf, and Wien2k interfaces</a><a class="headerlink" href="#abinit-pwscf-and-wien2k-interfaces" title="Permalink to this headline">¶</a></h2>
@@ -233,28 +233,28 @@ parameters are prepared.</p>
 </div>
 <div class="section" id="method-to-calculate-mode-gruneisen-parameters">
 <h2><a class="toc-backref" href="#id4">Method to calculate mode Grüneisen parameters</a><a class="headerlink" href="#method-to-calculate-mode-gruneisen-parameters" title="Permalink to this headline">¶</a></h2>
-<p>Mode Grüneisen parameter <img class="math" src="_images/math/06a502e7fc92b6330aae76e398e9edde2411c4b9.png" alt="\gamma(\mathbf{q}\nu)"/> at the wave
-vector <img class="math" src="_images/math/dd9f8e4fa6ad795780215243cbd5a5719b772ad3.png" alt="\mathbf{q}"/> and band index <img class="math" src="_images/math/d67fb61cfffca2cc069e083d76cb6220b4ca14c8.png" alt="\nu"/> is given by</p>
+<p>Mode Grüneisen parameter <img class="math" src="_images/math/3011ebf87c2ceffc90cd2de8f998ec54915a5c60.png" alt="\gamma(\mathbf{q}\nu)"/> at the wave
+vector <img class="math" src="_images/math/9658517ccd5cd64cff63909f92e47b5981b1b2b5.png" alt="\mathbf{q}"/> and band index <img class="math" src="_images/math/ca3b8fa4180eee2dfc3af9d13fae1da451cd2c31.png" alt="\nu"/> is given by</p>
 <div class="math">
-<p><img src="_images/math/9b64128eb18f697908e08cb8c6fd49425d3e7ff9.png" alt="\gamma(\mathbf{q}\nu) =&amp; -\frac{V}{\omega(\mathbf{q}\nu)}\frac{\partial
+<p><img src="_images/math/1787d625dc058d891cb13bfb05e35ad641d3622b.png" alt="\gamma(\mathbf{q}\nu) =&amp; -\frac{V}{\omega(\mathbf{q}\nu)}\frac{\partial
 \omega(\mathbf{q}\nu)}{\partial V}\\
 =&amp;-\frac{V}{2[\omega(\mathbf{q}\nu)]^2}\left&lt;\mathbf{e}(\mathbf{q}\nu)\biggl|
 \frac{\partial D(\mathbf{q})}
 {\partial V}\biggl|\mathbf{e}(\mathbf{q}\nu)\right&gt;,"/></p>
-</div><p>where <img class="math" src="_images/math/c99df7a209495334da442b1ec998abaabfa320d8.png" alt="V"/> is the volume, <img class="math" src="_images/math/9e6d977146f4037ef24a597ff5a6cb0a6bd40c3b.png" alt="\omega(\mathbf{q}\nu)"/> is the
-phonon frequency, <img class="math" src="_images/math/1d58717d82c7601bb29389fba032abffc102fd71.png" alt="D(\mathbf{q})"/> is the dynamical matrix,
-and <img class="math" src="_images/math/fec4fba29eca65e24d4441035423d76440d3fbf9.png" alt="\mathbf{e}(\mathbf{q}\nu)"/> is the eigenvector. This is
+</div><p>where <img class="math" src="_images/math/fae0e7a73748991e5540d874416000583f64f58e.png" alt="V"/> is the volume, <img class="math" src="_images/math/ab34d5cefc577884f04bd2d0f20082aa5d775641.png" alt="\omega(\mathbf{q}\nu)"/> is the
+phonon frequency, <img class="math" src="_images/math/747b6bb98b8899fc42d6caf7880139aa7269a30f.png" alt="D(\mathbf{q})"/> is the dynamical matrix,
+and <img class="math" src="_images/math/059d27449b0e3d0a1db6dba0f7e5f9512980ed0c.png" alt="\mathbf{e}(\mathbf{q}\nu)"/> is the eigenvector. This is
 approximated by the finite difference method:</p>
 <div class="math">
-<p><img src="_images/math/152289cba80afe633aba0ff8f511bca750e13972.png" alt="\gamma(\mathbf{q}\nu) \simeq -\frac{V}{2[\omega(\mathbf{q}\nu)]^2}
+<p><img src="_images/math/963faf364222bbb775bfc6f543f9f7ce250bea61.png" alt="\gamma(\mathbf{q}\nu) \simeq -\frac{V}{2[\omega(\mathbf{q}\nu)]^2}
 \left&lt;\mathbf{e}(\mathbf{q}\nu)\biggl|
 \frac{\Delta D(\mathbf{q})}
 {\Delta V}\biggl|\mathbf{e}(\mathbf{q}\nu)\right&gt;."/></p>
 </div><p>The <code class="docutils literal"><span class="pre">gruneisen</span></code> script requires three phonon calculations
 at corresponding three volume points. One is for eigenvectors at the
-equilibrium volume (<img class="math" src="_images/math/c99df7a209495334da442b1ec998abaabfa320d8.png" alt="V"/>) and the remaining two are for <img class="math" src="_images/math/7966932e1f889d554d3dbe42dff7dafc5b548d83.png" alt="\Delta
+equilibrium volume (<img class="math" src="_images/math/fae0e7a73748991e5540d874416000583f64f58e.png" alt="V"/>) and the remaining two are for <img class="math" src="_images/math/0d1eb4800ebe64f39b0bf02822a01e24285ca7f5.png" alt="\Delta
 D(\mathbf{q})"/> with slightly larger and smaller volumes than
-<img class="math" src="_images/math/c99df7a209495334da442b1ec998abaabfa320d8.png" alt="V"/>.</p>
+<img class="math" src="_images/math/fae0e7a73748991e5540d874416000583f64f58e.png" alt="V"/>.</p>
 </div>
 </div>
 
@@ -278,7 +278,7 @@ D(\mathbf{q})"/> with slightly larger and smaller volumes than
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.5.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.6.<br/>
     </p>
   </div>
 </footer>

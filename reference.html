@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>References &mdash; Phonopy v.1.11.2</title>
+    <title>References &#8212; Phonopy v.1.11.2</title>
     
     <link rel="stylesheet" href="_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -81,7 +81,7 @@
 <li class="toctree-l1"><a class="reference internal" href="auxiliary-tools.html">Auxiliary tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="phonopy-module.html">Using phonopy as a python module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="theory.html">Formulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="formulation.html">Formulations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
@@ -213,7 +213,7 @@ example is shown in the following paper:</p>
 <span id="reference-nac"></span><h3>Non-analytical term correction<a class="headerlink" href="#non-analytical-term-correction" title="Permalink to this headline">¶</a></h3>
 <p>Non-metallic crystals are polarized by atomic displacements and the
 generated macroscopic field changes force constants near
-<img class="math" src="_images/math/85011adca50d3725af2e048eeb9ec7b02ccdd401.png" alt="\Gamma"/> point. This contribution is included through
+<img class="math" src="_images/math/d872993ed0c7c420e73e77a1d285ac100c516806.png" alt="\Gamma"/> point. This contribution is included through
 non-analytical term correction.</p>
 <ul class="simple">
 <li>R. M. Pick, M. H. Cohen, and R. M. Martin, Phys. Rev. B 1, 910, (1970)</li>
@@ -224,12 +224,17 @@ non-analytical term correction.</p>
 <div class="section" id="interpolation-scheme-at-general-q-points-with-non-analytical-term-correction">
 <span id="reference-wang-nac"></span><h3>Interpolation scheme at general <em>q</em>-points with non-analytical term correction<a class="headerlink" href="#interpolation-scheme-at-general-q-points-with-non-analytical-term-correction" title="Permalink to this headline">¶</a></h3>
 <p>The above non-anarytical term correction can be applied only at
-<img class="math" src="_images/math/bb40fb8b11b460413f57c8dff936dbf6a9530198.png" alt="\mathbf{q}\rightarrow \mathbf{0}"/>. To connect smoothly to
+<img class="math" src="_images/math/0ed4151b10cc423d0736b6fab656451ba1e2fa78.png" alt="\mathbf{q}\rightarrow \mathbf{0}"/>. To connect smoothly to
 general <strong>q</strong> points, the following interpolation scheme is employed
 in phonopy (<a class="reference internal" href="setting-tags.html#nac-tag"><span class="std std-ref">Non-analytical term correction</span></a>).</p>
 <ul class="simple">
-<li>Y Wang , J J Wang , W Y Wang , Z G Mei , S L Shang , L Q Chen and
+<li>Y. Wang , J. J. Wang , W. Y. Wang , Z. G. Mei , S. L. Shang , L. Q. Chen and
 Z K Liu, J. Phys.: Condens. Matter. 22, 202201 (2010)</li>
+</ul>
+<p>The first derivative of this expression, which is for example used for
+group velocity calclation, is described in the following paper:</p>
+<ul class="simple">
+<li>Atsushi Togo, Laurent Chaput, and Isao Tanaka, Phys. Rev. B, 91, 094306-1-31 (2015)</li>
 </ul>
 </div>
 </div>
@@ -287,7 +292,7 @@ university press</li>
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.5.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.6.<br/>
     </p>
   </div>
 </footer>
