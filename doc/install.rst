@@ -35,11 +35,11 @@ solve, please use a ubuntu virtual machine (see :ref:`virtualmachine`).
 
 2. Download the source code from:
 
-   https://sourceforge.net/projects/phonopy/files/phonopy/phonopy-1.10/ .
+   https://sourceforge.net/projects/phonopy/files/phonopy/phonopy-1.11/ .
 
    and extract it::
 
-   % tar xvfz phonopy-1.10.2.tar.gz
+   % tar xvfz phonopy-1.11.0.tar.gz
 
 3. Set up C-libraries for python C-API and python codes. This can be
    done as follows:
@@ -59,7 +59,7 @@ solve, please use a ubuntu virtual machine (see :ref:`virtualmachine`).
    .bashrc, .zshenv, etc. If it is installed under your current
    directory, the path to be added to :envvar:`$PYTHONPATH` is such as below::
 
-      export PYTHONPATH=~/phonopy-1.10.2/lib/python
+      export PYTHONPATH=~/phonopy-1.11.0/lib/python
 
 
 Special cases on installation
