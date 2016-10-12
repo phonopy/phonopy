@@ -85,9 +85,13 @@ The above non-anarytical term correction can be applied only at
 general **q** points, the following interpolation scheme is employed
 in phonopy (:ref:`nac_tag`).
 
-- \Y Wang , J J Wang , W Y Wang , Z G Mei , S L Shang , L Q Chen and
+- \Y. Wang , J. J. Wang , W. Y. Wang , Z. G. Mei , S. L. Shang , L. Q. Chen and
   Z K Liu, J. Phys.: Condens. Matter. 22, 202201 (2010)
 
+The first derivative of this expression, which is for example used for
+group velocity calclation, is described in the following paper:
+
+- Atsushi Togo, Laurent Chaput, and Isao Tanaka, Phys. Rev. B, 91, 094306-1-31 (2015)
 
 Other methods and software for calculating force constants
 -----------------------------------------------------------

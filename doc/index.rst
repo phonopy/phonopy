@@ -78,7 +78,7 @@ Documentation
    auxiliary-tools
    external-tools
    phonopy-module
-   theory
+   formulation
    citation
    reference
    changelog
