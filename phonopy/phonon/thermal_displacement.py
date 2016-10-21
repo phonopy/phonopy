@@ -59,30 +59,42 @@ class ThermalMotion(object):
         self._masses3 = np.array([[m] * 3 for m in masses]).flatten() * AMU
         self._temperatures = None
 
-    def _get_population(self, freq, t): # freq in THz
-        if t < 1: # temperatue less than 1 K is approximated as 0 K.
-            return 0
-        else:
-            return 1.0 / (np.exp(freq * THzToEv / (Kb * t)) - 1)
-
     def get_Q2(self, freq, t): # freq in THz
         return Hbar * EV / Angstrom ** 2 * (
             (self._get_population(freq, t) + 0.5) / (freq * 1e12 * 2 * np.pi))
 
-    def set_temperature_range(self, t_min=0, t_max=1000, t_step=10):
-        if t_min < 0:
-            t_min = 0
-        if t_step < 0:
-            t_step = 0
-        temps = []
-        t = t_min
-        while t < t_max + t_step / 2.0:
-            temps.append(t)
-            t += t_step
-        self._temperatures = np.array(temps)
+    def get_temperatures(self):
+        return self._temperatures
+
+    def set_temperature_range(self, t_min=None, t_max=None, t_step=None):
+        if t_min is None:
+            _t_min = 10
+        elif t_min < 0:
+            _t_min = 0
+        else:
+            _t_min = t_min
+
+        if t_max is None:
+            _t_max = 1000
+        elif t_max > _t_min:
+            _t_max = t_max
+        else:
+            _t_max = _t_min
+
+        if t_step is None:
+            _t_step = 10
+        elif t_step > 0:
+            _t_step = t_step
+        else:
+            _t_step = 10
+
+        self._temperatures = np.arange(_t_min, _t_max + _t_step / 2.0, _t_step,
+                                       dtype='double')
 
     def set_temperatures(self, temperatures):
-        self._temperatures = temperatures
+        t_array = np.array(temperatures)
+        condition = np.logical_not(t_array < 0)
+        self._temperatures = np.extract(condition, t_array)
 
     def project_eigenvectors(self, direction, lattice=None):
         """
@@ -107,6 +119,12 @@ class ThermalMotion(object):
                 p_vecs_q.append(np.dot(vecs.reshape(-1, 3), projector))
             self._p_eigenvectors.append(np.transpose(p_vecs_q))
         self._p_eigenvectors = np.array(self._p_eigenvectors)
+
+    def _get_population(self, freq, t): # freq in THz
+        if t < 1: # temperatue less than 1 K is approximated as 0 K.
+            return 0
+        else:
+            return 1.0 / (np.exp(freq * THzToEv / (Kb * t)) - 1)
 
 class ThermalDisplacements(ThermalMotion):
     def __init__(self,
