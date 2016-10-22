@@ -27,13 +27,12 @@ requirements:
   build:
     - python
     - numpy
-    - PyYAML
 
   run:
     - python
     - numpy
     - matplotlib
-    - PyYAML
+    - pyyaml
     - h5py
 
 test:
