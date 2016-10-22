@@ -4,7 +4,7 @@ dist: trusty
 
 python:
     - '2.7'
-    - '3.5'
+    # - '3.5'
 
 cache: apt
 addons:
@@ -12,6 +12,7 @@ addons:
     packages:
     - libopenblas-dev
     - liblapack-dev
+    - libhdf5-serial-dev
     # - libhdf5-7
     # - libhdf5-dev
 
