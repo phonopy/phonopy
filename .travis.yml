@@ -19,7 +19,9 @@ before_install:
     - conda update --yes conda
 
 install:
-    - conda install --yes python=$TRAVIS_PYTHON_VERSION pip numpy PyYAML anaconda-client anaconda-build
+    - conda install --yes python=$TRAVIS_PYTHON_VERSION pip numpy PyYAML anaconda-cliento anaconda-build
+    - pwd
+    - git branch -v
     - git describe --tags --dirty
     - ./get_nanoversion.sh
     - cat __nanoversion__.txt
