@@ -21,7 +21,8 @@ before_install:
 install:
     - conda install --yes python=$TRAVIS_PYTHON_VERSION pip numpy PyYAML anaconda-client anaconda-build
     - git describe --tags --dirty
-    - git describe --tags --dirty | sed -e 's/\([.0-9]*\)-\(.*\)-g.*/\2/' -e 's/^[vr]//g' > __nanoversion__.txt
+    - ./get_nanoversion.sh
+    - cat __nanoversion__.txt
     - python setup.py install
 
 script: "( cd test/phonopy ; for d in * ; do ( cd $d ; for f in test_*.py ; do python $f ; done  ) ; done )"
