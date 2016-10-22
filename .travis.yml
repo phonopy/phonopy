@@ -12,7 +12,8 @@ addons:
     packages:
     - libopenblas-dev
     - liblapack-dev
-    - libhdf5-10
+    - libhdf5-7
+    - libhdf5-dev
 
 before_install:
     - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
@@ -21,7 +22,8 @@ before_install:
     - conda update --yes conda
 
 install:
-    - conda install --yes python=$TRAVIS_PYTHON_VERSION pip numpy PyYAML anaconda-client anaconda-build
+    - conda install --yes python=$TRAVIS_PYTHON_VERSION pip numpy anaconda-client anaconda-build
+    # - conda install --yes python=$TRAVIS_PYTHON_VERSION pip numpy PyYAML anaconda-client anaconda-build
     - pwd
     # - git branch -v
     # - git describe --tags --dirty
