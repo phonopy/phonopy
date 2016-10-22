@@ -11,17 +11,15 @@ addons:
     packages:
     - libopenblas-dev
     - liblapack-dev
-    - gfortran
 
 before_install:
     - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
     - bash miniconda.sh -b -p $HOME/miniconda
     - export PATH="$HOME/miniconda/bin:$PATH"
     - conda update --yes conda
-    - conda config --add channels jochym
 
 install:
-    - conda install --yes python=$TRAVIS_PYTHON_VERSION pip numpy python-ase spglib scipy yaml pyyaml future anaconda-client anaconda-build
+    - conda install --yes python=$TRAVIS_PYTHON_VERSION pip numpy PyYAML anaconda-client anaconda-build
     - git describe --tags --dirty
     - git describe --tags --dirty | sed -e 's/\([.0-9]*\)-\(.*\)-g.*/\2/' -e 's/^[vr]//g' > __nanoversion__.txt
     - python setup.py install
@@ -34,37 +32,42 @@ deploy:
       server: https://testpypi.python.org/pypi
       skip_cleanup: true
       distributions: sdist
-      user: jochym
+      user: atztogo
       password:
-        secure: "q38wumRKBZynQ63Jhke/r5Tm1r35dNTdulHth3SWG0U/oefSzR8743magaPOllk0qowFNExiVRhuK6U1eCm2a0tjFcbt3+2Zl6JTyjq/n1cp8ZzNAXGn/U8QTjMlPURcqt/FhIhKrg/hBkrpd1clClGxc+RYa4R26YnOhIgJ3eWANpPJbJpPlLJYW8KlPdgeXa+NuqTVoaaNP0vtmhLOm6QRRaB6k4vMT1kdKEk/X5JNuwrLsa0WPomLFqCeTANZmzQ3buBFkvJtdCkIUnfbMpKWXO2w7fwkHj1eGDTsmLX2NVCDaHoUqmhol4PWUK7e3NJ0fvOIWAaQQVHGzhowvSoTsJRpfcQu5KV7PSQnja7f5tkOS6qoYzzH1yFkKCFJkz7Czl2P0PkloincMvhja9RYnStcvK0lbPQ5IOGMVzqczVnpC4VW6HNSEsodiGma9pzs5En+wkIIEgkZ+zqRcozqzh1oT9u7vL8ANHkgEPF14Ez5th8/O00fgryXDFku4xOcOdy/KrXss82NImP1suO4LxwhPCMgssKD9dDv2mg0mAzfJucnJKoX7m8Id5qlTnWYpozsw7Vf08YKWOzor7pD31Mrn8tzJ/CubRJfcUzG9Q5MWSPMcs+WYlZfOAYD6mQlSy7cWFogfj59z4uDdAv1+RbywEYfIlQoxTdkQy4="
+        secure: "Po6vOS9TlkXHD8SBbQxPkZHWzekpk99YnxFmKRILsZpNw32MJk039wTkDEz3e3XJkNIWdAK3dhfkxkJgnwpeBwUlYCGSU5FdNsTpqJDhLtEDkhq1rs1icL/P0C2Y4X0QMIug32HlQQU2kNzi+rS0ldB/TSEInrIoSw98r50SQt5mTPGjxVQ0LC9HdLCKEjdGAry8zY+n6IgoF+YxwB2F85Wr480bbYMhgNt+LCt99ABcTDZd7CI9qmBUgXAacOCLfpcMG36gnAZrN4wOQia8TnlHLP9bPTc7jRk8KW/2NOFFjbbwTmtEHQeB3lxC2lfGEEiqyHCDo3cpv0DR683M/KpIdDBUONbIaKAJLg5Ty/993jAhetnlLTZOYoDPX6LnUDoOcSF+33JEikG2c5xTs7oqGM1KJiK5gOp8aWUA7D5kHmv0a2GxhK19xZ5So/qJpxDuOgwzoc5RxPgpzt/T2uk4lX4LiQrB1fA2TRA7Vl7kN2QJjCTzCbB4AamRoDCAsBAix4arKHNrYpXgouXOx9Dbr6x7VsMFr184BdJyT2nsi1XpqBabdopK41c6atZQBQggzBcYWs1qlkJb0ISf+P6SklyCgXGX4djH6+UwMmVG15cSc4AS7Z9peGP3LoGpv2QmtbSwmmr/AnOLL1puK8OFd45whI/BTcdfhksWqiY"
       on:
+        repo: atztogo/phonopy
         branch: rc
         tags: false
-        python: 2.7
+        # python: 2.7
+
     # testing anaconda
     - provider: script
       skip_cleanup: true
-      script: anaconda -t $ANACONDA_TOKEN build trigger --test-only --branch rc jochym/phonopy
+      script: conda/anaconda_deploy.sh rc $ANACONDA_TOKEN $TRAVIS_BRANCH
       on:
+        repo: atztogo/phonopy
         branch: rc
         tags: false
-        python: 2.7
+        # python: 2.7
+
     # production pypi
     - provider: pypi
       skip_cleanup: true
       distributions: sdist
-      user: jochym
+      user: atztogo
       password:
-        secure: M3YvQ6BbcCNndgcJMt+yMxZX008r1hsE6Gg68Dx2HMx/D86ZvyQs6fteppeHlb0x5qv5i8jCiJYaR9VCzPI7HaiYBMbPNB8mZyWZ8Ww0WJZK9rA0jthoJ2pAR6vGwWZkz4/zOAZEWC10vzjHRYE9lOw3gSlBw6G+QRz3rBNiOxNflgcG/YCU0Gi1/BLyY0/jR6/P1cOIIHqUcFa8uhrAzqU6uSyODdrLb02B4yNvz4mHj0/JuwRmmfwQMbF15NDv8HCvZju1G8No/FYEEoxjO674WLKW2phE5X0kTpRoW9A7epPQfdSaVkQOgG6NTx+o5MaYzk/WVVfDGhLEuRmVYXF8SgUSp05YGxRrcB3CVGERZ3EUZJUevEM00Cw6I4jbYv32vcAE0act8cLMJUwFYA4zimTX5iSGJrAPMo7J+i0ofZftvGnu40fsPv0AHe64pxr3aXWS3eigRb6+20mzKl+aulvsfGN9av3Go0U04t4rPSMzI6LiJrVhDAM9M1xSfn0Uh1fuIr1WSGQ5skwi5XEMjUiseyaeP4xo2xoGFxuzFM1cP5/tyvr0juZ8PKn/PKgvYzkFn7wZLnA4+ls4Z72JqX0ARqi64+dJW+s6dzJqJsZg8mPT7+iToxCxXN2Q/GXaRH21XI2NmgqV7RvL2kKBaLp1T3qzQzkOKkju30Q=
+        secure: "sjUxbFSrhflB/NqMwcJCmalmQRX1EN4zgsK2YyY93JEk16aep+5pRyV87Q3Q54L19PGOkTqOrGyvUhwxTHUweo87F2DM1gd695bg0rROcquvhwWxlTuhMhMoUGSxDljgKbEeTvLikFd91JX2Rr/deIZLog/c3z/m55MbgHqGoyR5p1twxqLoUcJHznM8Mnn/KTauVHVQKG/6sVQr/h9AhRB8qI5VRCcrnDqAWoePqkgibWjEKchx/lmgW4TiB15IIvmIVgMxNwUa2q91Lqn3AhZDOcB/TST34yZCx8j1TpLJgAtB8+aRnTdmtfhnPWN8gebVuHJni+EQYsq4sIOiRzsU5qHkCzmW2x6I/kcTTYWYW4KybKorWQcypotTkyDoSfFuhZ93kyMy6QXBdV0/3xskBAbA++Mc93u6KaNMDnBGLb9PoeIT6R6YRNnwDAYBSlJ8lMZoNwVKrPhxI11r15eAK/4NamUHSLORBJWYKw1Z1Ko5wjkMXTSC4y7rC5UD+wrgZCfhB7WBLvatGBA3oD83dmEzMl3zA3wyaegDqHbEzKIFCGX5/eKrVN91hQrvlFkVYwf7YHAcNTvplZi0EGotfuZVsyhHiYSXRrMdF16g/NyZwunMEydafsbbwQatLxMhCMufX+5B1bk8VsmM0QDI9EV3rdvC7vgpnO5KPpY="
       on:
         branch: master
         tags: false
-        python: 2.7  
+        # python: 2.7  
+
     # production anaconda
     - provider: script
       skip_cleanup: true
-      script: anaconda -t $ANACONDA_TOKEN build trigger --branch master jochym/phonopy
+      script: conda/anaconda_deploy.sh main $ANACONDA_TOKEN $TRAVIS_BRANCH
       on:
         branch: master
         tags: false
-        python: 2.7
+        # python: 2.7

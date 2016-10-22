@@ -2,7 +2,7 @@ package:
   name: phonopy
 
 source:
-  git_url: https://github.com/jochym/phonopy.git
+  git_url: https://github.com/atztogo/phonopy.git
   git_branch: {{ environ.get('GIT_BRANCH','master') }}
 
 build:
@@ -27,14 +27,14 @@ requirements:
   build:
     - python
     - numpy
-    - spglib
+    - PyYAML
 
   run:
     - python
     - numpy
     - matplotlib
-    - spglib
-    - pyyaml
+    - PyYAML
+    - h5py
 
 test:
   # Python imports
