@@ -2,9 +2,7 @@
 
 git describe --tags --dirty | sed -e 's/-\(.*\)-g.*/+\1/' -e 's/^[vr]//g' > __conda_version__.txt
 
-cd python
 ./get_nanoversion.sh
-ln -s ../src .
 
 $PYTHON setup.py install
 
