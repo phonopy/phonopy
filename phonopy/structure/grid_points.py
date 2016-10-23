@@ -78,7 +78,7 @@ def extract_ir_grid_points(grid_mapping_table):
     
     return ir_grid_points, ir_weights
 
-class GridPoints:
+class GridPoints(object):
     def __init__(self,
                  mesh_numbers,
                  reciprocal_lattice, # column vectors

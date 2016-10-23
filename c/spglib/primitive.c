@@ -43,6 +43,7 @@
 #include "debug.h"
 
 #define REDUCE_RATE 0.95
+#define NUM_ATTEMPT 20
 
 static Primitive * get_primitive(SPGCONST Cell * cell, const double symprec);
 static Cell * get_cell_with_smallest_lattice(SPGCONST Cell * cell,
@@ -138,11 +139,11 @@ static Primitive * get_primitive(SPGCONST Cell * cell, const double symprec)
   pure_trans = NULL;
 
   if ((primitive = prm_alloc_primitive(cell->size)) == NULL) {
-    return NULL;
+    goto notfound;
   }
 
   tolerance = symprec;
-  for (attempt = 0; attempt < 100; attempt++) {
+  for (attempt = 0; attempt < NUM_ATTEMPT; attempt++) {
     debug_print("get_primitive (attempt = %d):\n", attempt);
     if ((pure_trans = sym_get_pure_translation(cell, tolerance)) == NULL) {
       goto cont;
@@ -175,6 +176,9 @@ static Primitive * get_primitive(SPGCONST Cell * cell, const double symprec)
   }
 
   prm_free_primitive(primitive);
+  primitive = NULL;
+
+ notfound:
   return NULL;
 
  found:
@@ -293,7 +297,7 @@ static int get_primitive_lattice_vectors_iterative(double prim_lattice[3][3],
     mat_copy_vector_d3(pure_trans_reduced->vec[i], pure_trans->vec[i]);
   }
 
-  for (attempt = 0; attempt < 100; attempt++) {
+  for (attempt = 0; attempt < NUM_ATTEMPT; attempt++) {
     multi = pure_trans_reduced->size;
 
     if ((vectors = get_translation_candidates(pure_trans_reduced)) == NULL) {
@@ -344,8 +348,9 @@ static int get_primitive_lattice_vectors_iterative(double prim_lattice[3][3],
 	goto fail;
       }
 
-      warning_print("Tolerance is reduced to %f (%d), num_pure_trans = %d\n",
-		    tolerance, attempt, pure_trans_reduced->size);
+      warning_print("spglib: Tolerance is reduced to %f (%d), ",
+		    tolerance, attempt);
+      warning_print("num_pure_trans = %d\n", pure_trans_reduced->size);
 
       tolerance *= REDUCE_RATE;
     }

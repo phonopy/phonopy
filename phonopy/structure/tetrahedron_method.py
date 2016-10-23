@@ -101,7 +101,7 @@ def get_tetrahedra_integration_weight(omegas,
             function)
         return integration_weights
 
-class TetrahedronMethod:
+class TetrahedronMethod(object):
     def __init__(self,
                  primitive_vectors=None, # column vectors
                  mesh=None,

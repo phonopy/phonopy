@@ -85,6 +85,7 @@ def get_parser():
         is_tetrahedron_method=False,
         is_thermal_displacements=False,
         is_thermal_displacement_matrices=False,
+        is_thermal_displacement_matrices_cif=None,
         is_thermal_properties=False,
         is_projected_thermal_properties=False,
         is_trigonal_displacements=False,
@@ -336,6 +337,10 @@ def get_parser():
         "--tdm", "--thermal_displacement_matrix",
         dest="is_thermal_displacement_matrices", action="store_true",
         help="Output thermal displacement matrices")
+    parser.add_option(
+        "--tdm_cif", "--thermal_displacement_matrix_cif",
+        dest="thermal_displacement_matrices_cif", type="float",
+        help="Write cif with aniso_U for which temperature is specified")
     parser.add_option(
         "--thm", "--tetrahedron_method",
         dest="is_tetrahedron_method", action="store_true",

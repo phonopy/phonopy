@@ -53,7 +53,7 @@ def get_mass_variances(primitive):
 
     return np.array(mass_variances, dtype='double')
 
-class Isotope:
+class Isotope(object):
     def __init__(self,
                  mesh,
                  primitive,

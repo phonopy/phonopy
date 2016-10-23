@@ -38,7 +38,7 @@ from phonopy.phonon.thermal_properties import mode_cv
 from phonopy.gruneisen import Gruneisen
 from phonopy.units import THzToEv
 
-class Mesh:
+class Mesh(object):
     def __init__(self,
                  phonon,
                  phonon_plus,

@@ -9,3 +9,5 @@ Small imaginary acoustic mode may appear due to the shortage of supercell size. 
 An animation file for the v_sim viewer is created by
 
 % phonopy anime.conf
+
+INCAR file in this directory gives an example of setting for calculating Born effective charge and dielectric constant.

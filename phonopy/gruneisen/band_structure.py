@@ -35,7 +35,7 @@
 import numpy as np
 from phonopy.gruneisen import Gruneisen
 
-class BandStructure:
+class BandStructure(object):
     def __init__(self,
                  phonon,
                  phonon_plus,

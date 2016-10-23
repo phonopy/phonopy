@@ -129,7 +129,7 @@ def get_elk_structure(cell, sp_filenames=None):
         
     return lines
 
-class ElkIn:
+class ElkIn(object):
     def __init__(self, lines):
         self._set_methods = {'atoms':  self._set_atoms,
                              'avec':   self._set_avec,

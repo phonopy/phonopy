@@ -10,7 +10,7 @@ from anharmonic.other.isotope import Isotope
 unit_to_WmK = ((THz * Angstrom) ** 2 / (Angstrom ** 3) * EV / THz /
                (2 * np.pi)) # 2pi comes from definition of lifetime.
 
-class Conductivity:
+class Conductivity(object):
     def __init__(self,
                  interaction,
                  symmetry,

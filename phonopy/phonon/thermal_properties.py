@@ -54,7 +54,7 @@ def mode_ZPE(temp, freqs):
 def mode_zero(temp, freqs):
     return 0
 
-class ThermalPropertiesBase:
+class ThermalPropertiesBase(object):
     def __init__(self,
                  frequencies,
                  weights=None,
@@ -68,7 +68,7 @@ class ThermalPropertiesBase:
         self._weights = None
         self._is_projection = is_projection
         self._cutoff_frequency = cutoff_frequency
-        
+
         if band_indices is not None:
             bi = np.hstack(band_indices).astype('intc')
             self._band_indices = bi
@@ -149,7 +149,16 @@ class ThermalProperties(ThermalPropertiesBase):
                                        is_projection=is_projection,
                                        band_indices=band_indices,
                                        cutoff_frequency=cutoff_frequency)
+        self._thermal_properties = None
+        self._temperatures = None
+        self._high_T_entropy = None
+        self._zero_point_energy = None
+        self._projected_thermal_properties = None
+
         self._set_high_T_entropy_and_zero_point_energy()
+
+    def get_temperatures(self):
+        return self._temperatures
 
     def get_number_of_integrated_modes(self):
         """Number of phonon modes used for integration on sampling mesh"""
@@ -165,6 +174,36 @@ class ThermalProperties(ThermalPropertiesBase):
     def get_high_T_entropy(self):
         return self._high_T_entropy
 
+    def set_temperature_range(self, t_min=None, t_max=None, t_step=None):
+        if t_min is None:
+            _t_min = 10
+        elif t_min < 0:
+            _t_min = 0
+        else:
+            _t_min = t_min
+
+        if t_max is None:
+            _t_max = 1000
+        elif t_max > _t_min:
+            _t_max = t_max
+        else:
+            _t_max = _t_min
+
+        if t_step is None:
+            _t_step = 10
+        elif t_step > 0:
+            _t_step = t_step
+        else:
+            _t_step = 10
+
+        self._temperatures = np.arange(_t_min, _t_max + _t_step / 2.0, _t_step,
+                                       dtype='double')
+
+    def set_temperatures(self, temperatures):
+        t_array = np.array(temperatures)
+        condition = np.logical_not(t_array < 0)
+        self._temperatures = np.extract(condition, t_array)
+
     def plot(self, pyplot):
         temps, fe, entropy, cv = self._thermal_properties
 
@@ -177,34 +216,35 @@ class ThermalProperties(ThermalPropertiesBase):
         pyplot.grid(True)
         pyplot.xlabel('Temperature [K]')
 
-    def set_thermal_properties(self, t_step=10, t_max=1000, t_min=0):
+    def run(self, t_step=None, t_max=None, t_min=None):
         import warnings
-        warnings.warn("\'set_thermal_properties\' method is depreciated. "
-                      "Use \'run\' method instead.")
-        self.run(t_step=t_step, t_max=t_max, t_min=t_min)
+        if (t_step is not None or 
+            t_max is not None or 
+            t_min is not None):
+            warnings.warn("keywords for this method are depreciated. "
+                          "Use \'set_temperature_range\' or "
+                          "\'set_temperature_range\' method instead.")
+            self.set_temperature_range(t_min=t_min, t_max=t_max, t_step=t_step)
 
-    def run(self, t_step=10, t_max=1000, t_min=0):
-        temperatures = np.arange(t_min, t_max + t_step / 2.0, t_step,
-                                 dtype='double')
         fe = []
         entropy = []
         cv = []
         energy = []
         try:
             import phonopy._phonopy as phonoc
-            for t in temperatures:
+            for t in self._temperatures:
                 props = self._get_c_thermal_properties(t)
                 fe.append(props[0] * EvTokJmol + self._zero_point_energy)
                 entropy.append(props[1] * EvTokJmol * 1000)
                 cv.append(props[2] * EvTokJmol * 1000)
         except ImportError:
-            for t in temperatures:
+            for t in self._temperatures:
                 props = self._get_py_thermal_properties(t)
                 fe.append(props[0])
                 entropy.append(props[1] * 1000,)
                 cv.append(props[2] * 1000)
 
-        self._thermal_properties = [temperatures,
+        self._thermal_properties = [self._temperatures,
                                     np.array(fe, dtype='double', order='C'),
                                     np.array(entropy, dtype='double', order='C'),
                                     np.array(cv, dtype='double', order='C')]
@@ -214,13 +254,13 @@ class ThermalProperties(ThermalPropertiesBase):
             entropy = []
             cv = []
             energy = []
-            for t in temperatures:
+            for t in self._temperatures:
                 fe.append(self.get_free_energy(t))
                 entropy.append(self.get_entropy(t) * 1000,)
                 cv.append(self.get_heat_capacity_v(t) * 1000)
 
             self._projected_thermal_properties = [
-                temperatures,
+                self._temperatures,
                 np.array(fe, dtype='double'),
                 np.array(entropy, dtype='double'),
                 np.array(cv, dtype='double')]

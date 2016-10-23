@@ -674,6 +674,10 @@ writen into ``thermal_displacements.yaml``. See the detail of the
 method, :ref:`thermal_displacement`. These tags must be used with
 :ref:`mesh_sampling_tags`
 
+``CUTOFF_FREQUENCY`` tag with a small value is recommened to be set
+when sampling :math:`\Gamma` point or using very dense sampling mesh
+to avoid divergence.
+
 Phonon frequencies have to be calculated in THz and this is the
 default setting of phonopy. However as a special case when unit
 conversion factor is specified using ``FREQUENCY_CONVERSION_FACTOR``
@@ -693,13 +697,17 @@ The projection is applied along arbitrary direction using
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Mean square displacement matricies are calculated. The difinition is
-shown at :ref:`thermal_displacement`. The result is
-writen into ``thermal_displacement_matrices.yaml`` where six matrix
-elements are given in the order of xx, yy, zz, yz, xz, xy.
+shown at :ref:`thermal_displacement`. The result is writen into
+``thermal_displacement_matrices.yaml`` where six matrix elements are
+given in the order of xx, yy, zz, yz, xz, xy.  In this yaml file,
+``displacement_matrices`` and ``displacement_matrices_cif`` correspond
+to
+:math:`\mathrm{U}_\text{cart}` and :math:`\mathrm{U}_\text{cif}`
+defined at :ref:`thermal_displacement_matrix`, respectively.
 
-::
-
-   TDISPMAT = .TRUE.
+``CUTOFF_FREQUENCY`` tag with a small value is recommened to be set
+when sampling :math:`\Gamma` point or using very dense sampling mesh
+to avoid divergence.
 
 The 3x3 matrix restricts distribution of each atom around the
 equilibrium position to be ellipsoid. But the distribution is not
@@ -709,6 +717,23 @@ Phonon frequencies have to be calculated in THz and this is the
 default setting of phonopy. However as a special case when
 unit conversion factor is specified using
 ``FREQUENCY_CONVERSION_FACTOR`` tag, careful attention is required.
+
+::
+
+   TDISPMAT = .TRUE.
+
+.. _thermal_displacement_cif_tag:
+
+``TDISPMAT_CIF``
+~~~~~~~~~~~~~~~~~
+
+This tag specifis a temperature at which thermal displacement is
+calculated and the mean square displacement matrix is written to the
+cif file ``tdispmat.cif`` with the dictionary item ``aniso_U``.
+
+::
+
+   TDISPMAT_CIF = 1273.0
 
 ``CUTOFF_FREQUENCY``
 ~~~~~~~~~~~~~~~~~~~~~

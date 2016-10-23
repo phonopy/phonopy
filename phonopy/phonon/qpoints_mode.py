@@ -36,7 +36,7 @@ import numpy as np
 import cmath
 from phonopy.units import VaspToTHz
 
-class QpointsPhonon:
+class QpointsPhonon(object):
     def __init__(self,
                  qpoints,
                  dynamical_matrix, 

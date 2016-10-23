@@ -132,7 +132,7 @@ def _get_tetrahedra_frequencies_Py(gp,
         t_frequencies[:, i, :] = frequencies[gp_ir_index[neighbors]].T
     return t_frequencies
 
-class TetrahedronMesh:
+class TetrahedronMesh(object):
     def __init__(self,
                  cell,
                  frequencies, # only at ir-grid-points

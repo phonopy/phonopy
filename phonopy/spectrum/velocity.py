@@ -39,7 +39,7 @@ from phonopy.harmonic.dynmat_to_fc import get_commensurate_points
 from phonopy.units import AMU, kb_J
 from phonopy.structure.grid_points import get_qpoints
 
-class Velocity:
+class Velocity(object):
     def __init__(self,
                  lattice=None, # column vectors, in Angstrom
                  positions=None, # fractional coordinates
@@ -63,7 +63,7 @@ class Velocity:
     def get_timestep(self):
         return self._timestep
 
-class VelocityQpoints:
+class VelocityQpoints(object):
     def __init__(self,
                  supercell,
                  primitive,
@@ -146,7 +146,7 @@ class VelocityQpoints:
         return np.exp(-2j * np.pi * np.dot(q_array, pos.T)).sum(axis=1) / multi
 
 
-class AutoCorrelation:
+class AutoCorrelation(object):
     def __init__(self,
                  velocities, # in m/s
                  masses=None, # in AMU

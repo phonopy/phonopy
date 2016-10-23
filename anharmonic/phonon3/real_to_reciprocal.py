@@ -1,7 +1,7 @@
 import numpy as np
 from phonopy.harmonic.dynamical_matrix import get_smallest_vectors
 
-class RealToReciprocal:
+class RealToReciprocal(object):
     def __init__(self,
                  fc3,
                  supercell,

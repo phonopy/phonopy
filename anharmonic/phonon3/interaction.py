@@ -9,7 +9,7 @@ from anharmonic.phonon3.triplets import (get_triplets_at_q,
                                          get_nosym_triplets_at_q,
                                          get_bz_grid_address)
 
-class Interaction:
+class Interaction(object):
     def __init__(self,
                  supercell,
                  primitive,

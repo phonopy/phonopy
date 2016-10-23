@@ -54,7 +54,7 @@ def get_unitcell_from_phonopy_yaml(filename):
     ph_yaml.read(filename)
     return ph_yaml.get_unitcell()
 
-class PhonopyYaml:
+class PhonopyYaml(object):
     def __init__(self,
                  configuration=None,
                  calculator=None,

@@ -47,7 +47,7 @@ def get_commensurate_points(supercell_matrix): # wrt primitive cell
     rec_supercell = get_supercell(rec_primitive, supercell_matrix.T)
     return rec_supercell.get_scaled_positions()
 
-class DynmatToForceConstants:
+class DynmatToForceConstants(object):
     def __init__(self,
                  primitive,
                  supercell,

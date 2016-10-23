@@ -48,7 +48,7 @@ def get_frequency_shift(interaction,
                                       epsilon=epsilon,
                                       filename=output_filename)
 
-class FrequencyShift:
+class FrequencyShift(object):
     def __init__(self,
                  interaction,
                  grid_point=None,

@@ -10,7 +10,7 @@ are created. In addition, disp.yaml file is created. After force
 calculations with the crystal structures in supercell-xxx.in, it is
 needed to create FORCE_SETS file by
 
-% phonopy --pwscf -f supercell-001.out supercell-002.out
+% phonopy --pwscf -f NaCl-001.out NaCl-002.out
 
 Here .out files are the output of the Pwscf calculations and are
 supposed to contain the forces on atoms calculated by Pwscf. The
@@ -18,3 +18,9 @@ disp.yaml file has to be put in the current directory. Now you can run
 phonon calculation, e.g.,
 
 % phonopy --pwscf -c NaCl.in -p band.conf
+
+Non-analytical term correction can be applied using --nac option by
+
+% phonopy --pwscf --nac -c NaCl.in -p band.conf
+
+BORN file is created running DFPT calculation using ph.x (phonon) code in the quantum espresso package. The details of howto are found in the phonopy documentation. The input and output files of the ph.x DFPT calculation are NaCl.ph.in and NaCl.ph.out.

@@ -462,7 +462,7 @@ static void get_conventional_lattice(double lattice[3][3],
 
   debug_print("bravais lattice\n");
   debug_print_matrix_d3(spacegroup->bravais_lattice);
-  debug_print("%s\n", spacegroup->setting);
+  debug_print("%s\n", spacegroup->choice);
 
   switch (pointgroup.holohedry) {
   case TRICLI:
@@ -478,7 +478,7 @@ static void get_conventional_lattice(double lattice[3][3],
     set_tetra(lattice, metric);
     break;
   case TRIGO:
-    if (spacegroup->setting[0] == 'R') {
+    if (spacegroup->choice[0] == 'R') {
       set_rhomb(lattice, metric);
     } else {
       set_trigo(lattice, metric);

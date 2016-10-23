@@ -58,7 +58,7 @@ def get_gruneisen_parameters(fc2,
         filename = 'gruneisen3.' + output_filename + '.yaml'
     gruneisen.write_yaml(filename=filename)
 
-class Gruneisen:
+class Gruneisen(object):
     def __init__(self,
                  fc2,
                  fc3,

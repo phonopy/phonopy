@@ -35,7 +35,7 @@
 import numpy as np
 from phonopy.phonon.thermal_properties import ThermalProperties as PhononThermalProperties
 
-class ThermalProperties:
+class ThermalProperties(object):
     def __init__(self,
                  gruneisen_mesh,
                  volumes,

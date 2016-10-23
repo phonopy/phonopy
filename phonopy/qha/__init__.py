@@ -36,7 +36,7 @@ import numpy as np
 from phonopy.units import Avogadro, EvTokJmol, EVAngstromToGPa
 from phonopy.qha.eos import get_eos, fit_to_eos
 
-class BulkModulus:
+class BulkModulus(object):
     def __init__(self,
                  volumes,
                  electronic_energies,
@@ -82,7 +82,7 @@ class BulkModulus:
         return plt
 
 
-class QHA:
+class QHA(object):
     def __init__(self,
                  volumes, # Angstrom^3
                  electronic_energies, # eV
@@ -543,7 +543,7 @@ class QHA:
                                plt,
                                thin_number=10,
                                xlabel=r'Volume $(\AA^3)$',
-                               ylabel='Free energy'):
+                               ylabel='Free energy (eV)'):
         volume_points = np.linspace(min(self._volumes),
                                     max(self._volumes),
                                     201)
@@ -626,7 +626,7 @@ class QHA:
     def _plot_gibbs_temperature(self,
                                 plt,
                                 xlabel='Temperature (K)',
-                                ylabel='Gibbs free energy'):
+                                ylabel='Gibbs free energy (eV)'):
         plt.xlabel(xlabel)
         plt.ylabel(ylabel)
         plt.plot(self._temperatures[:self._max_t_index],
@@ -636,7 +636,7 @@ class QHA:
     def _plot_bulk_modulus_temperature(self,
                                        plt,
                                        xlabel='Temperature (K)',
-                                       ylabel='Bulk modulus'):
+                                       ylabel='Bulk modulus (GPa)'):
         plt.xlabel(xlabel)
         plt.ylabel(ylabel)
         plt.plot(self._temperatures[:self._max_t_index],
@@ -763,7 +763,10 @@ class QHA:
             parameters = np.polyfit(self._volumes, self._cv[i], 4)
             cv = (np.dot(parameters, [v**4, v**3, v**2, v, 1]) /
                   v / 1000 / EvTokJmol * EVAngstromToGPa)
-            gamma.append(beta * kt / cv)
+            if cv < 1e-10:
+                gamma.append(0.0)
+            else:
+                gamma.append(beta * kt / cv)
         self._gruneisen_parameters = gamma
 
     def _get_max_t_index(self, temperatures):

@@ -91,10 +91,9 @@ The calculated values are written into files.
 ``--pressure`` 
 ~~~~~~~~~~~~~~~~
 
-**This option is not yet well tested. Please report to the mailing list when you get wrong results.**
-
 Pressure is specified in GPa. This corresponds to the :math:`pV` term
-described in the following section :ref:`theory_of_qha`. 
+described in the following section :ref:`theory_of_qha`. Note that
+bulk modulus obtained with this option than 0 GPa is incorrect.
 
 ``-b`` 
 ~~~~~~~
@@ -119,18 +118,29 @@ EOS is chosen among ``vinet``, ``birch_murnaghan``, and
 Output files
 ^^^^^^^^^^^^^
 
-- Bulk modulus vs T (``bulk_modulus-temperature.*``)
-- Gibbs free energy vs T (``gibbs-temperature.*``)
+The physical units of V and T are :math:`\AA^3` and K,
+respectively. The unit of eV for Helmholtz and Gibbs energies, J/K/mol
+for :math:`C_V` and entropy, GPa for for bulk modulus and pressure
+are used.
+
+- Bulk modulus (GPa) vs T (``bulk_modulus-temperature.*``)
+- Gibbs free energy (eV) vs T (``gibbs-temperature.*``) 
 - Volume change with respect to the volume at 300 K vs T (``volume_expansion.*``)
-- Heat capacity at constant pressure vs T derived by
+- Heat capacity at constant pressure (J/K/mol) vs T derived by
   :math:`-T\frac{\partial^2 G}{\partial T^2}`  (``Cp-temperature.*``)
-- Heat capacity at constant puressure vs T by polynomial fittings of
-  Cv and S (``Cp-temperature_polyfit.*``)
-- Helmholtz free energy vs volume (``helmholtz-volume.*``). When
-  ``--pressure`` option is specified, energy offset of :math:`pV` is
-  added. See also the following section (:ref:`theory_of_qha`).
+- Heat capacity at constant puressure (J/K/mol) vs T by polynomial
+  fittings of Cv and S (``Cp-temperature_polyfit.*``)
+- Helmholtz free energy (eV) vs volume
+  (``helmholtz-volume.*``). When ``--pressure`` option is specified,
+  energy offset of :math:`pV` is added. See also the following section
+  (:ref:`theory_of_qha`).
 - Volume vs T (``volume-temperature.*``)
 - Thermal expansion coefficient vs T (``thermal_expansion.*``)
+- Thermodynamics Grüneisen parameter (no unit) vs T (``gruneisen-temperature.dat``)
+
+``Cv-volume.dat``, ``entropy-volume.dat``,
+and ``dsdv-temperature.dat`` (:math:`dS/dV`) are the data internally
+used.
 
 .. _theory_of_qha:
 

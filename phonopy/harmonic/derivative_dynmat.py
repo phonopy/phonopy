@@ -34,7 +34,7 @@
 
 import numpy as np
 
-class DerivativeOfDynamicalMatrix:
+class DerivativeOfDynamicalMatrix(object):
     def __init__(self, dynamical_matrix):
         self._dynmat = dynamical_matrix
         (self._smallest_vectors,

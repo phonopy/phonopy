@@ -63,7 +63,7 @@ from phonopy.phonon.group_velocity import GroupVelocity
 from phonopy.phonon.tetrahedron_mesh import TetrahedronMesh
 from phonopy.phonon.moment import PhononMoment
 
-class Phonopy:
+class Phonopy(object):
     def __init__(self,
                  unitcell,
                  supercell_matrix,
@@ -567,41 +567,6 @@ class Phonopy:
 
         return plt
 
-    # Thermal property
-    def set_thermal_properties(self,
-                               t_step=10,
-                               t_max=1000,
-                               t_min=0,
-                               is_projection=False,
-                               band_indices=None,
-                               cutoff_frequency=None):
-        if self._mesh is None:
-            print("Warning: set_mesh has to be done before "
-                  "set_thermal_properties")
-            return False
-        else:
-            tp = ThermalProperties(self._mesh.get_frequencies(),
-                                   weights=self._mesh.get_weights(),
-                                   eigenvectors=self._mesh.get_eigenvectors(),
-                                   is_projection=is_projection,
-                                   band_indices=band_indices,
-                                   cutoff_frequency=cutoff_frequency)
-            tp.run(t_step=t_step, t_max=t_max, t_min=t_min)
-            self._thermal_properties = tp
-
-    def get_thermal_properties(self):
-        temps, fe, entropy, cv = \
-            self._thermal_properties.get_thermal_properties()
-        return temps, fe, entropy, cv
-
-    def plot_thermal_properties(self):
-        import matplotlib.pyplot as plt
-        self._thermal_properties.plot(plt)
-        return plt
-
-    def write_yaml_thermal_properties(self, filename='thermal_properties.yaml'):
-        self._thermal_properties.write_yaml(filename=filename)
-
     # DOS
     def set_total_DOS(self,
                       sigma=None,
@@ -712,11 +677,54 @@ class Phonopy:
     def write_partial_DOS(self):
         self._pdos.write()
 
+    # Thermal property
+    def set_thermal_properties(self,
+                               t_step=10,
+                               t_max=1000,
+                               t_min=0,
+                               temperatures=None,
+                               is_projection=False,
+                               band_indices=None,
+                               cutoff_frequency=None):
+        if self._mesh is None:
+            print("Warning: set_mesh has to be done before "
+                  "set_thermal_properties")
+            return False
+        else:
+            tp = ThermalProperties(self._mesh.get_frequencies(),
+                                   weights=self._mesh.get_weights(),
+                                   eigenvectors=self._mesh.get_eigenvectors(),
+                                   is_projection=is_projection,
+                                   band_indices=band_indices,
+                                   cutoff_frequency=cutoff_frequency)
+            if temperatures is None:
+                tp.set_temperature_range(t_step=t_step,
+                                         t_max=t_max,
+                                         t_min=t_min)
+            else:
+                tp.set_temperatures(temperatures)
+            tp.run()
+            self._thermal_properties = tp
+
+    def get_thermal_properties(self):
+        temps, fe, entropy, cv = \
+            self._thermal_properties.get_thermal_properties()
+        return temps, fe, entropy, cv
+
+    def plot_thermal_properties(self):
+        import matplotlib.pyplot as plt
+        self._thermal_properties.plot(plt)
+        return plt
+
+    def write_yaml_thermal_properties(self, filename='thermal_properties.yaml'):
+        self._thermal_properties.write_yaml(filename=filename)
+
     # Thermal displacement
     def set_thermal_displacements(self,
                                   t_step=10,
                                   t_max=1000,
                                   t_min=0,
+                                  temperatures=None,
                                   direction=None,
                                   cutoff_frequency=None):
         """
@@ -750,7 +758,10 @@ class Phonopy:
                                   eigvecs,
                                   self._primitive.get_masses(),
                                   cutoff_frequency=cutoff_frequency)
-        td.set_temperature_range(t_min, t_max, t_step)
+        if temperatures is None:
+            td.set_temperature_range(t_min, t_max, t_step)
+        else:
+            td.set_temperatures(temperatures)
         if direction is not None:
             td.project_eigenvectors(direction, self._primitive.get_cell())
         td.run()
@@ -772,10 +783,11 @@ class Phonopy:
 
     # Thermal displacement matrix
     def set_thermal_displacement_matrices(self,
-                                           t_step=10,
-                                           t_max=1000,
-                                           t_min=0,
-                                           cutoff_frequency=None):
+                                          t_step=10,
+                                          t_max=1000,
+                                          t_min=0,
+                                          cutoff_frequency=None,
+                                          t_cif=None):
         """
         cutoff_frequency:
           phonon modes that have frequencies below cutoff_frequency
@@ -804,21 +816,31 @@ class Phonopy:
             return False
 
         tdm = ThermalDisplacementMatrices(frequencies,
-                                           eigvecs,
-                                           self._primitive.get_masses(),
-                                           cutoff_frequency=cutoff_frequency)
-        tdm.set_temperature_range(t_min, t_max, t_step)
+                                          eigvecs,
+                                          self._primitive.get_masses(),
+                                          cutoff_frequency=cutoff_frequency,
+                                          lattice=self._primitive.get_cell().T)
+        if t_cif is None:
+            tdm.set_temperature_range(t_min, t_max, t_step)
+        else:
+            tdm.set_temperatures([t_cif])
         tdm.run()
 
         self._thermal_displacement_matrices = tdm
         return True
 
     def get_thermal_displacement_matrices(self):
-        if self._thermal_displacement_matrices is not None:
-            return self._thermal_displacement_matrices.get_thermal_displacement_matrices()
+        tdm = self._thermal_displacement_matrices
+        if tdm is not None:
+            return tdm.get_thermal_displacement_matrices()
 
     def write_yaml_thermal_displacement_matrices(self):
         self._thermal_displacement_matrices.write_yaml()
+
+    def write_thermal_displacement_matrix_to_cif(self,
+                                                 temperature_index):
+        self._thermal_displacement_matrices.write_cif(self._primitive,
+                                                      temperature_index)
 
     # Mean square distance between a pair of atoms
     def set_thermal_distances(self,

@@ -35,7 +35,7 @@
 from phonopy.qha import *
 from phonopy.units import EvTokJmol, EVAngstromToGPa
 
-class PhonopyQHA:
+class PhonopyQHA(object):
     def __init__(self,
                  volumes,
                  electronic_energies,

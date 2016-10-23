@@ -8,7 +8,7 @@ Installation using MacPorts
 
 This is one way to install phonopy on Mac OS X. This procedure was
 tested on Yosemite with MacPorts version 2.3.3. In the following case,
-gcc-4.9 and python-2.7 are used as the default C-compiler and python
+gcc-5 and python-2.7 are used as the default C-compiler and python
 and using these numpy and scipy are made.
 
 1) Install MacPorts. Download MacPorts from http://www.macports.org/
@@ -18,14 +18,15 @@ and using these numpy and scipy are made.
 
    ::
    
-      % sudo port install gcc49
-      % sudo port select --set gcc mp-gcc49
+      % sudo port install gcc5
+      % sudo port select --set gcc mp-gcc5
+      % sudo port install OpenBLAS +gcc5
       % sudo port install python27
       % sudo port select --set python python27
-      % sudo port install atlas +gcc49
-      % sudo port install py27-numpy +gcc49 +atlas
-      % sudo port install py27-scipy +gcc49 +atlas
-      % sudo port install py27-matplotlib py27-yaml py27-h5py
+      % sudo port install py27-numpy +gcc5 +openblas
+      % sudo port install py27-scipy +gcc5 +openblas
+      % sudo port install py27-matplotlib py27-yaml
+      % sudo port install py27-h5py +gcc5
    
 3) Install phonopy following :ref:`install` (step 1 can be omitted.)
 
@@ -35,4 +36,4 @@ and using these numpy and scipy are made.
    ::
    
       % export CC=gcc
-      % python setup.py install --home=.
+      % python setup.py install --user

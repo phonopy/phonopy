@@ -16,6 +16,9 @@ Si
 ``FORCE_SETS`` file creation for VASP
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+For the other calculators such as pwscf, abinit, etc, the way to
+create ``FORCE_SETS`` is found following :ref:`calculator_interfaces`.
+
 ::
 
    % phonopy -f vasprun.xml 

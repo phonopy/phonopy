@@ -92,7 +92,7 @@ def fit_to_eos(volumes, fe, eos):
     ebp = fit.get_b_prime()
     return ee, eb, ebp, ev
 
-class EOSFit:
+class EOSFit(object):
     def __init__(self, volume, energy, eos):
         self._energy = np.array(energy)
         self._volume = np.array(volume)

@@ -76,7 +76,6 @@ def get_phonon(cell_filename,
                      dim,
                      primitive_matrix=primitive_matrix,
                      factor=factor,
-                     is_auto_displacements=False,
                      symprec=symprec)
     force_sets = parse_FORCE_SETS(filename=force_sets_filename)
     phonon.set_displacement_dataset(force_sets)
@@ -103,7 +102,6 @@ def get_phonon_from_force_constants(cell_filename,
                      dim,
                      primitive_matrix=primitive_matrix,
                      factor=factor,
-                     is_auto_displacements=False,
                      symprec=symprec)
     if is_hdf5:
         force_constants = read_force_constants_hdf5(

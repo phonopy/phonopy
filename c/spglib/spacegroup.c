@@ -49,6 +49,7 @@
 #include "debug.h"
 
 #define REDUCE_RATE 0.95
+#define NUM_ATTEMPT 20
 #define INT_PREC 0.1
 
 static double change_of_basis_monocli[18][3][3] = {{{ 1, 0, 0 },
@@ -305,7 +306,7 @@ Primitive * spa_get_spacegroup(Spacegroup * spacegroup,
 
   tolerance = symprec;
 
-  for (attempt = 0; attempt < 100; attempt++) {
+  for (attempt = 0; attempt < NUM_ATTEMPT; attempt++) {
     if ((primitive = prm_get_primitive(cell, tolerance)) == NULL) {
       goto cont;
     }
@@ -362,7 +363,7 @@ Spacegroup spa_get_spacegroup_with_hall_number(SPGCONST Primitive * primitive,
   }
 
  err:
-  warning_print("spglib: Space group with the input setting could not be found ");
+  warning_print("spglib: Space group with the input choice could not be found ");
   warning_print("(line %d, %s).\n", __LINE__, __FILE__);
 
  ret:
@@ -498,8 +499,8 @@ static Spacegroup get_spacegroup(const int hall_number,
 	   spacegroup_type.international_full);
     strcpy(spacegroup.international_short,
 	   spacegroup_type.international_short);
-    strcpy(spacegroup.setting,
-	   spacegroup_type.setting);
+    strcpy(spacegroup.choice,
+	   spacegroup_type.choice);
   }
 
   return spacegroup;
@@ -536,7 +537,7 @@ static int iterative_search_hall_number(double origin_shift[3],
   }
 
   tolerance = symprec;
-  for (attempt = 0; attempt < 100; attempt++) {
+  for (attempt = 0; attempt < NUM_ATTEMPT; attempt++) {
 
     warning_print("spglib: Attempt %d tolerance = %f failed",
 		  attempt, tolerance);

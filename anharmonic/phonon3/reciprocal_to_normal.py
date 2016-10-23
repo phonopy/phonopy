@@ -1,6 +1,6 @@
 import numpy as np
 
-class ReciprocalToNormal:
+class ReciprocalToNormal(object):
     def __init__(self,
                  primitive,
                  frequencies,

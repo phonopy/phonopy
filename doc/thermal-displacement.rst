@@ -31,13 +31,13 @@ calculated as,
 
    \left\langle |u^\alpha(jl, t)|^2 \right\rangle = \frac{\hbar}{2Nm_j}
    \sum_{\mathbf{q},\nu}\omega_\nu(\mathbf{q})^{-1}
-   (1+2n_\nu(\mathbf{q}))|e^\alpha_\nu(j,\mathbf{q})|^2,
+   (1+2n_\nu(\mathbf{q},T))|e^\alpha_\nu(j,\mathbf{q})|^2,
 
-where *n* is the phonon population, which is give by,
+where :math:`n_\nu(\mathbf{q},T)` is the phonon population, which is give by,
 
 .. math::
 
-   n_\nu(\mathbf{q}) =
+   n_\nu(\mathbf{q},T) =
    \frac{1}{\exp(\hbar\omega_\nu(\mathbf{q})/\mathrm{k_B}T)-1},
 
 where *T* is the temperature, and :math:`\mathrm{k_B}` is the
@@ -60,6 +60,8 @@ expectation values of the combination of the operations, e.g.,
    \langle|\hat{a}^\dagger_\nu(\mathbf{q})\hat{a}^\dagger_{\nu'}(\mathbf{q'})|\rangle
    = 0.
 
+.. _thermal_displacement_matrix:
+
 Mean square displacement matrix
 --------------------------------
 
@@ -67,8 +69,8 @@ Mean square displacement matrix is defined as follows:
 
 .. math::
 
-   \mathrm{B}(j, t) = \frac{\hbar}{2Nm_j}
-   \sum_{\mathbf{q},\nu}\omega_\nu(\mathbf{q})^{-1}
+   \mathrm{U}_\text{cart}(j, T) = \frac{\hbar}{2Nm_j}
+   \sum_{\mathbf{q},\nu}\omega_\nu(\mathbf{q},T)^{-1}
    (1+2n_\nu(\mathbf{q}))
    \mathbf{e}_\nu(j,\mathbf{q}) \otimes \mathbf{e}^*_\nu(j,\mathbf{q}).
 
@@ -91,4 +93,45 @@ axes as follows:
    \hat{\mathbf{n}}\cdot\mathbf{e}_\nu(j,\mathbf{q})|^2
 
 where :math:`\hat{\mathbf{n}}` is an arbitrary unit direction.
+
+Mean square displacement matrix in cif format
+----------------------------------------------
+
+According to the paper by Grosse-Kunstleve and Adams [J. Appl. Cryst.,
+35, 477-480 (2002)], mean square displacement matrix in the cif
+definition (``aniso_U``),
+:math:`\mathrm{U}_\text{cif}`, is obtained by
+
+.. math::
+
+   \mathrm{U}_\text{cif} = (\mathrm{AN})^{-1}\mathrm{U}_\text{cart}
+   (\mathrm{AN})^{-\mathrm{T}},
+
+where :math:`\mathrm{A}` is the matrix to transform a point in fractional
+coordinates to the Cartesian coordinates and :math:`\mathrm{N}` is the
+diagonal matrix made of reciprocal basis vector lengths as follows:
+
+.. math::
+
+   \mathrm{A} = \begin{pmatrix}
+   a_x & b_x & c_x \\
+   a_y & b_y & c_y \\
+   a_z & b_z & c_z
+   \end{pmatrix}
+
+and
+
+.. math::
+
+   \mathrm{N} = \begin{pmatrix}
+   a^* & 0 & 0 \\
+   0 & b^* & 0 \\
+   0 & 0 & c^*
+   \end{pmatrix}.
+
+:math:`a^*`, :math:`b^*`, :math:`c^*` are defined without :math:`2\pi`.
+
+
+
+
 

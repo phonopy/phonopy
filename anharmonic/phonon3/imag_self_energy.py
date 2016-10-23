@@ -305,7 +305,7 @@ def write_imag_self_energy(imag_self_energy,
                          filename=filename,
                          is_mesh_symmetry=is_mesh_symmetry)
 
-class ImagSelfEnergy:
+class ImagSelfEnergy(object):
     def __init__(self,
                  interaction,
                  frequency_points=None,
