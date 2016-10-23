@@ -3,6 +3,10 @@
 Download and install
 =====================
 
+.. contents::
+   :depth: 2
+   :local:
+
 Building using setup.py
 ------------------------
 
@@ -62,7 +66,16 @@ solve, please use a ubuntu virtual machine (see :ref:`virtualmachine`).
    .bashrc, .zshenv, etc. If it is installed under your current
    directory, the path to be added to :envvar:`$PYTHONPATH` is such as below::
 
-      export PYTHONPATH=~/phonopy-1.11.0/lib/python
+      export PYTHONPATH=~/phonopy-1.11.2/lib/python
+
+Tips on setup.py installation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   
+.. toctree::
+   :maxdepth: 1
+
+   MacOSX   
+   virtualmachine
 
 Install using pip/conda
 ------------------------
@@ -99,11 +112,3 @@ Conda is another choice for Linux (64bit) users::
 Currently conda packages for the other OS, e.g., Mac and windows, are
 not prepared by the main developers of phonopy.
 
-Special cases on installation
-------------------------------
-   
-.. toctree::
-   :maxdepth: 1
-
-   MacOSX   
-   virtualmachine
