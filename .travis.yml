@@ -1,9 +1,10 @@
 language: python
 sudo: false
 dist: trusty
+
 python:
     - '2.7'
-    - '3.5'
+    # - '3.5'
 
 cache: apt
 addons:
@@ -11,22 +12,27 @@ addons:
     packages:
     - libopenblas-dev
     - liblapack-dev
-    - gfortran
+    - libhdf5-serial-dev
+    # - libhdf5-7
+    # - libhdf5-dev
 
 before_install:
     - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
     - bash miniconda.sh -b -p $HOME/miniconda
     - export PATH="$HOME/miniconda/bin:$PATH"
     - conda update --yes conda
-    - conda config --add channels jochym
 
 install:
-    - conda install --yes python=$TRAVIS_PYTHON_VERSION pip numpy python-ase spglib scipy yaml pyyaml future anaconda-client anaconda-build
-    - git describe --tags --dirty
-    - git describe --tags --dirty | sed -e 's/\([.0-9]*\)-\(.*\)-g.*/\2/' -e 's/^[vr]//g' > __nanoversion__.txt
+    - conda install --yes python=$TRAVIS_PYTHON_VERSION pip numpy anaconda-client anaconda-build
+    # - conda install --yes python=$TRAVIS_PYTHON_VERSION pip numpy PyYAML anaconda-client anaconda-build
+    - pwd
+    # - git branch -v
+    # - git describe --tags --dirty
+    - ./get_nanoversion.sh
+    - cat __nanoversion__.txt
     - python setup.py install
 
-script: "( cd test/phonopy ; for d in * ; do ( cd $d ; for f in test_*.py ; do python $f ; done  ) ; done )"
+script: "( cd test/phonopy ; for d in * ; do ( cd $d ; for f in test_*.py ; do python $f ; done  ) ; done; cd ../.. )"
 
 deploy:
     # testing pypi
@@ -34,37 +40,42 @@ deploy:
       server: https://testpypi.python.org/pypi
       skip_cleanup: true
       distributions: sdist
-      user: jochym
+      user: atztogo
       password:
-        secure: "q38wumRKBZynQ63Jhke/r5Tm1r35dNTdulHth3SWG0U/oefSzR8743magaPOllk0qowFNExiVRhuK6U1eCm2a0tjFcbt3+2Zl6JTyjq/n1cp8ZzNAXGn/U8QTjMlPURcqt/FhIhKrg/hBkrpd1clClGxc+RYa4R26YnOhIgJ3eWANpPJbJpPlLJYW8KlPdgeXa+NuqTVoaaNP0vtmhLOm6QRRaB6k4vMT1kdKEk/X5JNuwrLsa0WPomLFqCeTANZmzQ3buBFkvJtdCkIUnfbMpKWXO2w7fwkHj1eGDTsmLX2NVCDaHoUqmhol4PWUK7e3NJ0fvOIWAaQQVHGzhowvSoTsJRpfcQu5KV7PSQnja7f5tkOS6qoYzzH1yFkKCFJkz7Czl2P0PkloincMvhja9RYnStcvK0lbPQ5IOGMVzqczVnpC4VW6HNSEsodiGma9pzs5En+wkIIEgkZ+zqRcozqzh1oT9u7vL8ANHkgEPF14Ez5th8/O00fgryXDFku4xOcOdy/KrXss82NImP1suO4LxwhPCMgssKD9dDv2mg0mAzfJucnJKoX7m8Id5qlTnWYpozsw7Vf08YKWOzor7pD31Mrn8tzJ/CubRJfcUzG9Q5MWSPMcs+WYlZfOAYD6mQlSy7cWFogfj59z4uDdAv1+RbywEYfIlQoxTdkQy4="
+        secure: "NDepERc9hinMkLT9r7AqywiZJ7vtxCbrPTJO1abzD4SfW3k+y256XbJNqp/7zQNhi8xplVulOkffAOHXyPTEDiNOBWsF1EE13jSFK6kLjCHTXxZ+mMgO+xHwOaHOTqdZRjsEU4gU28aObVm9/GEl2O5xLWmv5ip6rMDQZTx6enCYdo6OzlTny2WvHIjBSj0FztrWmG7hrgIsjtspyJQk/qBNoOy/fnuQ62PX7pOr9nLlQMEd9XroIzRMbsbA+u9u9KsyONtNRNldJnK542SU36lO0v/aN0fqshIEP9FQWi7KI3L3xtrKqkdj8V4YfDY+s+XeoumuFoNU8GPL2M/Eg3iYGlhwMywKU9U1UrEpKmmVg60Tai/nzpGYQF/2oTH4Zg49mYsiFi7B2oGOhJV545j4zS3g9L4hVGRFzim7PZe5cjNgH+OCVtZxY11KJebygoVn7uTRxAtDq4T2ZFYxqtshzoV7uT/lEUkriXKDIbqJd4x6idH3T5rcdEebJGfnpuBjw+sslG9JIWjl1WMBPbHEhzZNH83YUxqjmg/qJw9BZmuSW7BVxgf+5MN/pBtB8YZMnTQ2tKRI/kTvUutvzABSc0AxdkLlsM7SzCh6WAqdkQb5Sch+FhAaiDupn/gp6CAudVoSWC9WhNsB0oGgHLTmwUKkhg01eniwj40SHII="
       on:
+        repo: atztogo/phonopy
         branch: rc
         tags: false
-        python: 2.7
+        # python: 2.7
+
     # testing anaconda
     - provider: script
       skip_cleanup: true
-      script: anaconda -t $ANACONDA_TOKEN build trigger --test-only --branch rc jochym/phonopy
+      script: conda/anaconda_deploy.sh rc $ANACONDA_TOKEN $TRAVIS_BRANCH
       on:
+        repo: atztogo/phonopy
         branch: rc
         tags: false
-        python: 2.7
+        # python: 2.7
+
     # production pypi
     - provider: pypi
       skip_cleanup: true
       distributions: sdist
-      user: jochym
+      user: atztogo
       password:
-        secure: M3YvQ6BbcCNndgcJMt+yMxZX008r1hsE6Gg68Dx2HMx/D86ZvyQs6fteppeHlb0x5qv5i8jCiJYaR9VCzPI7HaiYBMbPNB8mZyWZ8Ww0WJZK9rA0jthoJ2pAR6vGwWZkz4/zOAZEWC10vzjHRYE9lOw3gSlBw6G+QRz3rBNiOxNflgcG/YCU0Gi1/BLyY0/jR6/P1cOIIHqUcFa8uhrAzqU6uSyODdrLb02B4yNvz4mHj0/JuwRmmfwQMbF15NDv8HCvZju1G8No/FYEEoxjO674WLKW2phE5X0kTpRoW9A7epPQfdSaVkQOgG6NTx+o5MaYzk/WVVfDGhLEuRmVYXF8SgUSp05YGxRrcB3CVGERZ3EUZJUevEM00Cw6I4jbYv32vcAE0act8cLMJUwFYA4zimTX5iSGJrAPMo7J+i0ofZftvGnu40fsPv0AHe64pxr3aXWS3eigRb6+20mzKl+aulvsfGN9av3Go0U04t4rPSMzI6LiJrVhDAM9M1xSfn0Uh1fuIr1WSGQ5skwi5XEMjUiseyaeP4xo2xoGFxuzFM1cP5/tyvr0juZ8PKn/PKgvYzkFn7wZLnA4+ls4Z72JqX0ARqi64+dJW+s6dzJqJsZg8mPT7+iToxCxXN2Q/GXaRH21XI2NmgqV7RvL2kKBaLp1T3qzQzkOKkju30Q=
+        secure: "Jjr207RsWxHXQU0YNjEat/FEk0BsC0ynSP+nYQM0KLWrWzF/NPrutkqdWmvyA/YMZi/ItUMLbHOL9MCPxCeqW8S7vyLXEIs9b5frM2vcNdEDf74W6ZorwusqPIBE9xhdaJVFSFj+SLiU/9OgAbJNMIl6CwIfKRbg5v2lmVKzIe7PqW4HdWYVOkWh8QukGV4rGPtGc6VYjjPuVx7rOkmkOgoF0+roXJZIbAclEcqnIxzYAkiscQaZgCJmagrYKx9RjGC8Y68su4fw1PutQZ9LJElTJ2ZcqVdJa5AOW0ths9qOEXFSuO7ZoTt7nCzEH5N/Abhh3eQ5bRPh+vSpOOUZtfSlDnD6qOf5rBH1w5KyGs3MbDKVJuGr9HQVoMugI9t+/anGyGj2gDAF6r/XRc73aO0cubiV8WZSnHv5Olsq0948hb1Dqz73m09+eIhDnaPDkSHtsoHTPjaBcgMyWpmgVFh9o+fcNQUZzPIeBJfDPowYyjyvLU+H9OkDgnfnOFvSWQfPrHXMdsxSxUX+NKR6U3XuDLYBYctcBg1DR7Nq9i1/W46/HSTmGduboRU/4WDu2jEQ01uTNzlrE8wk9Hwlx7E822iYYv6e1BrACfnmVYoAbIMMk/yo+W33j+HA96Vp7DhUQ95fHBtXZ0ASC5wDbSi1L9vqs4qugSh40dDZeLg="
       on:
         branch: master
         tags: false
-        python: 2.7  
+        # python: 2.7  
+
     # production anaconda
     - provider: script
       skip_cleanup: true
-      script: anaconda -t $ANACONDA_TOKEN build trigger --branch master jochym/phonopy
+      script: conda/anaconda_deploy.sh main $ANACONDA_TOKEN $TRAVIS_BRANCH
       on:
         branch: master
         tags: false
-        python: 2.7
+        # python: 2.7

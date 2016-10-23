@@ -5,19 +5,36 @@ import platform
 import os
 
 # For making source distribution package:
-# 1. distutils should be used.
-# 2. rm __nanoversion__.txt
-# 3. python setup3.py sdist -t MANIFEST-phono3py.in
-# 4. git checkout -- __nanoversion__.txt
+# 1. cp MANIFEST-phono3py.in MANIFEST.in
+# 2. python setup3.py sdist
+# 3. git checkout -- MANIFEST.in
 
 try:
     from setuptools import setup, Extension
     use_setuptools = True
+    print("setuptools is used.")
 except ImportError:
     from distutils.core import setup, Extension
     use_setuptools = False
+    print("distutils is used.")
 
 include_dirs_numpy = [numpy.get_include()]
+extra_link_args = []
+cc = None
+if 'CC' in os.environ:
+    if 'clang' in os.environ['CC']:
+        cc = 'clang'
+    if 'gcc' in os.environ['CC']:
+        cc = 'gcc'
+if cc == 'gcc' or cc is None:
+    extra_link_args.append('-lgomp')
+
+# Workaround Python issue 21121
+import sysconfig
+config_var = sysconfig.get_config_var("CFLAGS")
+if config_var is not None and "-Werror=declaration-after-statement" in config_var:
+    os.environ['CFLAGS'] = config_var.replace(
+        "-Werror=declaration-after-statement", "")    
 
 sources = ['c/_phono3py.c',
            'c/harmonic/dynmat.c',
@@ -40,17 +57,9 @@ sources = ['c/_phono3py.c',
            'c/spglib/kpoint.c',
            'c/kspclib/kgrid.c',
            'c/kspclib/tetrahedron_method.c']
-extra_link_args = ['-llapacke', # this is when lapacke is installed on system
-                   '-llapack',
-                   '-lblas']
-cc = None
-if 'CC' in os.environ:
-    if 'clang' in os.environ['CC']:
-        cc = 'clang'
-    if 'gcc' in os.environ['CC']:
-        cc = 'gcc'
-if cc == 'gcc' or cc is None:
-    extra_link_args.append('-lgomp')
+extra_link_args += ['-llapacke', # this is when lapacke is installed on system
+                    '-llapack',
+                    '-lblas']
 
 extra_compile_args = ['-fopenmp',]
 include_dirs = (['c/harmonic_h',
@@ -124,53 +133,57 @@ extension_lapackepy = Extension(
     sources=sources_lapackepy)
 
 if __name__ == '__main__':
-    version = ''
+    version_nums = [None, None, None]
     with open("phonopy/version.py") as w:
         for line in w:
             if "__version__" in line:
-                version = line.split()[2].strip('\"')
-    
+                for i, num in enumerate(line.split()[2].strip('\"').split('.')):
+                    version_nums[i] = int(num)
+
     # To deploy to pypi by travis-CI
-    nanoversion = ''
     if os.path.isfile("__nanoversion__.txt"):
         with open('__nanoversion__.txt') as nv:
-            for line in nv:
-                nanoversion = '%.4s' % (line.strip())
-                break
+            try :
+                for line in nv:
+                    nanoversion = int(line.strip())
+                    break
+            except ValueError :
+                nanoversion = 0
             if nanoversion:
-                nanoversion = '.' + nanoversion
+                version_nums.append(nanoversion)
 
-    if all([x.isdigit() for x in version.split('.')]):
-        if use_setuptools:
-            setup(name='phono3py',
-                  version=(version + nanoversion),
-                  description='This is the phono3py module.',
-                  author='Atsushi Togo',
-                  author_email='atz.togo@gmail.com',
-                  url='http://phonopy.sourceforge.net/',
-                  packages=(packages_phonopy + packages_phono3py),
-                  requires=['numpy', 'PyYAML', 'h5py'],
-                  provides=['phonopy'],
-                  scripts=(scripts_phonopy + scripts_phono3py),
-                  ext_modules=[extension_spglib,
-                               extension_lapackepy,
-                               extension_phonopy,
-                               extension_phono3py])
-        else:
-            setup(name='phono3py',
-                  version=(version + nanoversion),
-                  description='This is the phono3py module.',
-                  author='Atsushi Togo',
-                  author_email='atz.togo@gmail.com',
-                  url='http://phonopy.sourceforge.net/',
-                  packages=(packages_phonopy + packages_phono3py),
-                  requires=['numpy', 'PyYAML', 'h5py'],
-                  provides=['phonopy'],
-                  scripts=(scripts_phonopy + scripts_phono3py),
-                  ext_modules=[extension_spglib,
-                               extension_lapackepy,
-                               extension_phonopy,
-                               extension_phono3py])
+    if None in version_nums:
+        print("Failed to get version number in setup.py.")
+        raise
 
+    version_number = ".".join(["%d" % n for n in version_nums])
+    if use_setuptools:
+        setup(name='phono3py',
+              version=version_number,
+              description='This is the phono3py module.',
+              author='Atsushi Togo',
+              author_email='atz.togo@gmail.com',
+              url='http://phonopy.sourceforge.net/',
+              packages=(packages_phonopy + packages_phono3py),
+              requires=['numpy', 'PyYAML', 'matplotlib', 'h5py'],
+              provides=['phonopy'],
+              scripts=(scripts_phonopy + scripts_phono3py),
+              ext_modules=[extension_spglib,
+                           extension_lapackepy,
+                           extension_phonopy,
+                           extension_phono3py])
     else:
-        print("Phono3py version number could not be retrieved.")
+        setup(name='phono3py',
+              version=version_number,
+              description='This is the phono3py module.',
+              author='Atsushi Togo',
+              author_email='atz.togo@gmail.com',
+              url='http://phonopy.sourceforge.net/',
+              packages=(packages_phonopy + packages_phono3py),
+              requires=['numpy', 'PyYAML', 'matplotlib', 'h5py'],
+              provides=['phonopy'],
+              scripts=(scripts_phonopy + scripts_phono3py),
+              ext_modules=[extension_spglib,
+                           extension_lapackepy,
+                           extension_phonopy,
+                           extension_phono3py])

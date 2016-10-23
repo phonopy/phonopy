@@ -722,6 +722,8 @@ unit conversion factor is specified using
 
    TDISPMAT = .TRUE.
 
+.. _thermal_displacement_cif_tag:
+
 ``TDISPMAT_CIF``
 ~~~~~~~~~~~~~~~~~
 

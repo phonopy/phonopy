@@ -3,6 +3,8 @@
 Set up Ubuntu linux on VirtualBox
 -------------------------------------------
 
+**This document is old and can be partly different for the recent virsion of VirtualBox.**
+
 The following the steps to install Ubuntu linux on VirtualBox. This
 document is prepared for the user who failed to install phonopy for
 some reason. Basically the questions on this procedure are not
@@ -25,7 +27,7 @@ linux on VMware player can be set up similarly.
    The Ubuntu Server image is found at
    http://www.ubuntu.com/download/server/download. Alternatively it
    may be downloaded from the mirror sites near your location. For
-   example, the file name is ``ubuntu-11.10-desktop-i386.iso``.
+   example, the file name may be like ``ubuntu-14.04-desktop-i386.iso``.
 
 3. Create a new virtual machine
 
@@ -123,4 +125,3 @@ linux on VMware player can be set up similarly.
 
 .. |vbox4| image:: Ubuntu-install.png
            :scale: 50
-

@@ -44,6 +44,7 @@
 
 #define NUM_ATOMS_CRITERION_FOR_OPENMP 1000
 #define ANGLE_REDUCE_RATE 0.95
+#define NUM_ATTEMPT 100
 #define PI 3.14159265358979323846
 /* Tolerance of angle between lattice vectors in degrees */
 /* Negative value invokes converter from symprec. */
@@ -509,6 +510,7 @@ static VecDBL * get_translation(SPGCONST int rot[3][3],
     if (is_found[i]) {
       for (j = 0; j < 3; j++) {
 	trans->vec[k][j] = cell->position[i][j] - origin[j];
+	trans->vec[k][j] -= mat_Nint(trans->vec[k][j]);
       }
       k++;
     }
@@ -738,7 +740,7 @@ static PointSymmetry get_lattice_symmetry(SPGCONST double cell_lattice[3][3],
   mat_get_metric(metric_orig, min_lattice);
   angle_tol = angle_symprec;
 
-  for (attempt = 0; attempt < 100; attempt++) {
+  for (attempt = 0; attempt < NUM_ATTEMPT; attempt++) {
     num_sym = 0;
     for (i = 0; i < 26; i++) {
       for (j = 0; j < 26; j++) {
