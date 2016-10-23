@@ -3,7 +3,10 @@
 Download and install
 =====================
 
-The procedure of setup phonopy is explained in this section. It is
+Building using setup.py
+------------------------
+
+The procedure to setup phonopy is explained in this section. It is
 supposed that phonopy is installed on the recent linux distribution
 like Ubuntu or Fedora with Python version 2.6 or later. Python version
 3.4 or later is expected to work. Mac OS X users
@@ -25,7 +28,7 @@ solve, please use a ubuntu virtual machine (see :ref:`virtualmachine`).
         python-matplotlib python-yaml
     
    ``python-scipy`` is also required to use ``phonopy-qha`` or
-   ``DEBYE_MODEL`` tag..
+   ``DEBYE_MODEL`` tag.
 
    The ``texlive-fonts-recommended`` package may be required, if you
    see the following message in ploting results::
@@ -39,7 +42,7 @@ solve, please use a ubuntu virtual machine (see :ref:`virtualmachine`).
 
    and extract it::
 
-   % tar xvfz phonopy-1.11.0.tar.gz
+   % tar xvfz phonopy-1.11.2.tar.gz
 
 3. Set up C-libraries for python C-API and python codes. This can be
    done as follows:
@@ -61,6 +64,40 @@ solve, please use a ubuntu virtual machine (see :ref:`virtualmachine`).
 
       export PYTHONPATH=~/phonopy-1.11.0/lib/python
 
+Install using pip/conda
+------------------------
+
+Occasionally PyPI and conda packages are prepared at phonopy
+releases. Using these packages, the phonopy installtion is expected to
+be easily done.
+
+Using pip
+~~~~~~~~~
+
+Numpy is required before the python-spglib installation. The command to
+install spglib is::
+
+   % pip install phonopy
+
+If you see the error message like below in the installation process::
+
+   _phonopy.c:35:20: fatal error: Python.h: No such file or directory
+
+development tools for building python module are additionally
+necessary and are installed using OS's package management system,
+e.g.,::
+
+   sudo apt-get install python-dev
+
+Using conda
+~~~~~~~~~~~~
+
+Conda is another choice for Linux (64bit) users::
+
+   % conda install -c atztogo phonopy
+
+Currently conda packages for the other OS, e.g., Mac and windows, are
+not prepared by the main developers of phonopy.
 
 Special cases on installation
 ------------------------------

@@ -43,6 +43,7 @@
 
 #define INCREASE_RATE 1.05
 #define REDUCE_RATE 0.95
+#define NUM_ATTEMPT 100
 
 static int get_exact_positions(VecDBL *positions,
 			       int * equiv_atoms,
@@ -98,7 +99,7 @@ VecDBL * ssm_get_exact_positions(int *wyckoffs,
   }
 
   tolerance = symprec;
-  for (attempt = 0; attempt < 100; attempt++) {
+  for (attempt = 0; attempt < NUM_ATTEMPT; attempt++) {
     num_atoms = get_exact_positions(positions,
 				    equiv_atoms,
 				    conv_prim,
@@ -113,6 +114,7 @@ VecDBL * ssm_get_exact_positions(int *wyckoffs,
       warning_print("spglib: Some site-symmetry is found broken. ");
       warning_print("(%d != %d)\n", num_atoms, conv_prim->size);
       warning_print("        Increase tolerance to %f", tolerance);
+      warning_print(" (%d)", attempt);
       warning_print(" (line %d, %s).\n", __LINE__, __FILE__);
     }
 
@@ -121,6 +123,7 @@ VecDBL * ssm_get_exact_positions(int *wyckoffs,
       warning_print("spglib: Some site-symmetry is found broken. ");
       warning_print("(%d != %d)\n", num_atoms, conv_prim->size);
       warning_print("        Reduce tolerance to %f", tolerance);
+      warning_print(" (%d)", attempt);
       warning_print(" (line %d, %s).\n", __LINE__, __FILE__);
     }
   }

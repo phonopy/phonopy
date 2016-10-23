@@ -49,6 +49,7 @@
 #include "debug.h"
 
 #define REDUCE_RATE 0.95
+#define NUM_ATTEMPT 20
 #define INT_PREC 0.1
 
 static double change_of_basis_monocli[18][3][3] = {{{ 1, 0, 0 },
@@ -305,7 +306,7 @@ Primitive * spa_get_spacegroup(Spacegroup * spacegroup,
 
   tolerance = symprec;
 
-  for (attempt = 0; attempt < 100; attempt++) {
+  for (attempt = 0; attempt < NUM_ATTEMPT; attempt++) {
     if ((primitive = prm_get_primitive(cell, tolerance)) == NULL) {
       goto cont;
     }
@@ -536,7 +537,7 @@ static int iterative_search_hall_number(double origin_shift[3],
   }
 
   tolerance = symprec;
-  for (attempt = 0; attempt < 100; attempt++) {
+  for (attempt = 0; attempt < NUM_ATTEMPT; attempt++) {
 
     warning_print("spglib: Attempt %d tolerance = %f failed",
 		  attempt, tolerance);

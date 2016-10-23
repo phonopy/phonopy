@@ -54,6 +54,7 @@
 #include "version.h"
 
 #define REDUCE_RATE 0.9
+#define NUM_ATTEMPT 10
 
 /*-------*/
 /* error */
@@ -1034,7 +1035,7 @@ static SpglibDataset * get_dataset(SPGCONST double lattice[3][3],
   }
 
   tolerance = symprec;
-  for (attempt = 0; attempt < 10; attempt++) {
+  for (attempt = 0; attempt < NUM_ATTEMPT; attempt++) {
     if ((primitive = spa_get_spacegroup(&spacegroup, cell, tolerance))
 	== NULL) {
       cel_free_cell(cell);
