@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Download and install &mdash; Phonopy v.1.11.2</title>
+    <title>Download and install &#8212; Phonopy v.1.11.2</title>
     
     <link rel="stylesheet" href="_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -28,6 +28,8 @@
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
     <link rel="top" title="Phonopy v.1.11.2" href="index.html" />
     <link rel="next" title="Using phonopy on Mac OS X" href="MacOSX.html" />
     <link rel="prev" title="Work flow" href="workflow.html" />
@@ -99,7 +101,15 @@
       role="menu"
       aria-labelledby="dLabelLocalToc"><ul>
 <li><a class="reference internal" href="#">Download and install</a><ul>
-<li><a class="reference internal" href="#special-cases-on-installation">Special cases on installation</a></li>
+<li><a class="reference internal" href="#building-using-setup-py">Building using setup.py</a><ul>
+<li><a class="reference internal" href="#tips-on-setup-py-installation">Tips on setup.py installation</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#install-using-pip-conda">Install using pip/conda</a><ul>
+<li><a class="reference internal" href="#using-pip">Using pip</a></li>
+<li><a class="reference internal" href="#using-conda">Using conda</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -145,7 +155,22 @@
       
   <div class="section" id="download-and-install">
 <span id="install"></span><h1>Download and install<a class="headerlink" href="#download-and-install" title="Permalink to this headline">¶</a></h1>
-<p>The procedure of setup phonopy is explained in this section. It is
+<div class="contents local topic" id="contents">
+<ul class="simple">
+<li><a class="reference internal" href="#building-using-setup-py" id="id1">Building using setup.py</a><ul>
+<li><a class="reference internal" href="#tips-on-setup-py-installation" id="id2">Tips on setup.py installation</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#install-using-pip-conda" id="id3">Install using pip/conda</a><ul>
+<li><a class="reference internal" href="#using-pip" id="id4">Using pip</a></li>
+<li><a class="reference internal" href="#using-conda" id="id5">Using conda</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="building-using-setup-py">
+<h2><a class="toc-backref" href="#id1">Building using setup.py</a><a class="headerlink" href="#building-using-setup-py" title="Permalink to this headline">¶</a></h2>
+<p>The procedure to setup phonopy is explained in this section. It is
 supposed that phonopy is installed on the recent linux distribution
 like Ubuntu or Fedora with Python version 2.6 or later. Python version
 3.4 or later is expected to work. Mac OS X users
@@ -167,7 +192,7 @@ solve, please use a ubuntu virtual machine (see <a class="reference internal" hr
 </pre></div>
 </div>
 <p><code class="docutils literal"><span class="pre">python-scipy</span></code> is also required to use <code class="docutils literal"><span class="pre">phonopy-qha</span></code> or
-<code class="docutils literal"><span class="pre">DEBYE_MODEL</span></code> tag..</p>
+<code class="docutils literal"><span class="pre">DEBYE_MODEL</span></code> tag.</p>
 <p>The <code class="docutils literal"><span class="pre">texlive-fonts-recommended</span></code> package may be required, if you
 see the following message in ploting results:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span>! I can&#39;t find file `pncr7t&#39;.
@@ -177,7 +202,7 @@ see the following message in ploting results:</p>
 <li><p class="first">Download the source code from:</p>
 <p><a class="reference external" href="https://sourceforge.net/projects/phonopy/files/phonopy/phonopy-1.11/">https://sourceforge.net/projects/phonopy/files/phonopy/phonopy-1.11/</a> .</p>
 <p>and extract it:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">tar</span> <span class="n">xvfz</span> <span class="n">phonopy</span><span class="o">-</span><span class="mf">1.11</span><span class="o">.</span><span class="mf">0.</span><span class="n">tar</span><span class="o">.</span><span class="n">gz</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">tar</span> <span class="n">xvfz</span> <span class="n">phonopy</span><span class="o">-</span><span class="mf">1.11</span><span class="o">.</span><span class="mf">2.</span><span class="n">tar</span><span class="o">.</span><span class="n">gz</span>
 </pre></div>
 </div>
 </li>
@@ -197,18 +222,52 @@ Another choice may be to use the user scheme (see the python document):</p>
 <li><p class="first">Put <code class="docutils literal"><span class="pre">lib/python</span></code> path into <span class="target" id="index-0"></span><code class="xref std std-envvar docutils literal"><span class="pre">$PYTHONPATH</span></code>, e.g., in your
 .bashrc, .zshenv, etc. If it is installed under your current
 directory, the path to be added to <span class="target" id="index-1"></span><code class="xref std std-envvar docutils literal"><span class="pre">$PYTHONPATH</span></code> is such as below:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">export</span> <span class="n">PYTHONPATH</span><span class="o">=~/</span><span class="n">phonopy</span><span class="o">-</span><span class="mf">1.11</span><span class="o">.</span><span class="mi">0</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">python</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">export</span> <span class="n">PYTHONPATH</span><span class="o">=~/</span><span class="n">phonopy</span><span class="o">-</span><span class="mf">1.11</span><span class="o">.</span><span class="mi">2</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">python</span>
 </pre></div>
 </div>
 </li>
 </ol>
-<div class="section" id="special-cases-on-installation">
-<h2>Special cases on installation<a class="headerlink" href="#special-cases-on-installation" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="tips-on-setup-py-installation">
+<h3><a class="toc-backref" href="#id2">Tips on setup.py installation</a><a class="headerlink" href="#tips-on-setup-py-installation" title="Permalink to this headline">¶</a></h3>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="MacOSX.html">Using phonopy on Mac OS X</a></li>
 <li class="toctree-l1"><a class="reference internal" href="virtualmachine.html">Set up Ubuntu linux on VirtualBox</a></li>
 </ul>
+</div>
+</div>
+</div>
+<div class="section" id="install-using-pip-conda">
+<h2><a class="toc-backref" href="#id3">Install using pip/conda</a><a class="headerlink" href="#install-using-pip-conda" title="Permalink to this headline">¶</a></h2>
+<p>Occasionally PyPI and conda packages are prepared at phonopy
+releases. Using these packages, the phonopy installtion is expected to
+be easily done.</p>
+<div class="section" id="using-pip">
+<h3><a class="toc-backref" href="#id4">Using pip</a><a class="headerlink" href="#using-pip" title="Permalink to this headline">¶</a></h3>
+<p>Numpy is required before the python-spglib installation. The command to
+install spglib is:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">pip</span> <span class="n">install</span> <span class="n">phonopy</span>
+</pre></div>
+</div>
+<p>If you see the error message like below in the installation process:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">_phonopy</span><span class="o">.</span><span class="n">c</span><span class="p">:</span><span class="mi">35</span><span class="p">:</span><span class="mi">20</span><span class="p">:</span> <span class="n">fatal</span> <span class="n">error</span><span class="p">:</span> <span class="n">Python</span><span class="o">.</span><span class="n">h</span><span class="p">:</span> <span class="n">No</span> <span class="n">such</span> <span class="n">file</span> <span class="ow">or</span> <span class="n">directory</span>
+</pre></div>
+</div>
+<p>development tools for building python module are additionally
+necessary and are installed using OS&#8217;s package management system,
+e.g.,:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">apt</span><span class="o">-</span><span class="n">get</span> <span class="n">install</span> <span class="n">python</span><span class="o">-</span><span class="n">dev</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="using-conda">
+<h3><a class="toc-backref" href="#id5">Using conda</a><a class="headerlink" href="#using-conda" title="Permalink to this headline">¶</a></h3>
+<p>Conda is another choice for Linux (64bit) users:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">atztogo</span> <span class="n">phonopy</span>
+</pre></div>
+</div>
+<p>Currently conda packages for the other OS, e.g., Mac and windows, are
+not prepared by the main developers of phonopy.</p>
 </div>
 </div>
 </div>
@@ -233,7 +292,7 @@ directory, the path to be added to <span class="target" id="index-1"></span><cod
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.5.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.8.<br/>
     </p>
   </div>
 </footer>

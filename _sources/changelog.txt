@@ -3,6 +3,13 @@
 Change Log
 ==========
 
+Oct-23-2016: Version 1.11.2
+---------------------------
+
+* ``TDISPMAT_CIF`` (``--tdm_cif``) for CIF output for thermal
+  displacement is added (:ref:`thermal_displacement_cif_tag`).
+* spglib update to v1.9.7
+
 Aug-29-2016: Version 1.11.0
 ---------------------------
 

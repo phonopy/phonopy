@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Using phonopy on Mac OS X &mdash; Phonopy v.1.11.2</title>
+    <title>Using phonopy on Mac OS X &#8212; Phonopy v.1.11.2</title>
     
     <link rel="stylesheet" href="_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -28,6 +28,8 @@
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
     <link rel="top" title="Phonopy v.1.11.2" href="index.html" />
     <link rel="up" title="Download and install" href="install.html" />
     <link rel="next" title="Set up Ubuntu linux on VirtualBox" href="virtualmachine.html" />
@@ -150,21 +152,22 @@
 <h2>Installation using MacPorts<a class="headerlink" href="#installation-using-macports" title="Permalink to this headline">¶</a></h2>
 <p>This is one way to install phonopy on Mac OS X. This procedure was
 tested on Yosemite with MacPorts version 2.3.3. In the following case,
-gcc-4.9 and python-2.7 are used as the default C-compiler and python
+gcc-5 and python-2.7 are used as the default C-compiler and python
 and using these numpy and scipy are made.</p>
 <ol class="arabic">
 <li><p class="first">Install MacPorts. Download MacPorts from <a class="reference external" href="http://www.macports.org/">http://www.macports.org/</a>
 and follow the installation instruction.</p>
 </li>
 <li><p class="first">Install the following packages</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">sudo</span> <span class="n">port</span> <span class="n">install</span> <span class="n">gcc49</span>
-<span class="o">%</span> <span class="n">sudo</span> <span class="n">port</span> <span class="n">select</span> <span class="o">--</span><span class="nb">set</span> <span class="n">gcc</span> <span class="n">mp</span><span class="o">-</span><span class="n">gcc49</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">sudo</span> <span class="n">port</span> <span class="n">install</span> <span class="n">gcc5</span>
+<span class="o">%</span> <span class="n">sudo</span> <span class="n">port</span> <span class="n">select</span> <span class="o">--</span><span class="nb">set</span> <span class="n">gcc</span> <span class="n">mp</span><span class="o">-</span><span class="n">gcc5</span>
+<span class="o">%</span> <span class="n">sudo</span> <span class="n">port</span> <span class="n">install</span> <span class="n">OpenBLAS</span> <span class="o">+</span><span class="n">gcc5</span>
 <span class="o">%</span> <span class="n">sudo</span> <span class="n">port</span> <span class="n">install</span> <span class="n">python27</span>
 <span class="o">%</span> <span class="n">sudo</span> <span class="n">port</span> <span class="n">select</span> <span class="o">--</span><span class="nb">set</span> <span class="n">python</span> <span class="n">python27</span>
-<span class="o">%</span> <span class="n">sudo</span> <span class="n">port</span> <span class="n">install</span> <span class="n">atlas</span> <span class="o">+</span><span class="n">gcc49</span>
-<span class="o">%</span> <span class="n">sudo</span> <span class="n">port</span> <span class="n">install</span> <span class="n">py27</span><span class="o">-</span><span class="n">numpy</span> <span class="o">+</span><span class="n">gcc49</span> <span class="o">+</span><span class="n">atlas</span>
-<span class="o">%</span> <span class="n">sudo</span> <span class="n">port</span> <span class="n">install</span> <span class="n">py27</span><span class="o">-</span><span class="n">scipy</span> <span class="o">+</span><span class="n">gcc49</span> <span class="o">+</span><span class="n">atlas</span>
-<span class="o">%</span> <span class="n">sudo</span> <span class="n">port</span> <span class="n">install</span> <span class="n">py27</span><span class="o">-</span><span class="n">matplotlib</span> <span class="n">py27</span><span class="o">-</span><span class="n">yaml</span> <span class="n">py27</span><span class="o">-</span><span class="n">h5py</span>
+<span class="o">%</span> <span class="n">sudo</span> <span class="n">port</span> <span class="n">install</span> <span class="n">py27</span><span class="o">-</span><span class="n">numpy</span> <span class="o">+</span><span class="n">gcc5</span> <span class="o">+</span><span class="n">openblas</span>
+<span class="o">%</span> <span class="n">sudo</span> <span class="n">port</span> <span class="n">install</span> <span class="n">py27</span><span class="o">-</span><span class="n">scipy</span> <span class="o">+</span><span class="n">gcc5</span> <span class="o">+</span><span class="n">openblas</span>
+<span class="o">%</span> <span class="n">sudo</span> <span class="n">port</span> <span class="n">install</span> <span class="n">py27</span><span class="o">-</span><span class="n">matplotlib</span> <span class="n">py27</span><span class="o">-</span><span class="n">yaml</span>
+<span class="o">%</span> <span class="n">sudo</span> <span class="n">port</span> <span class="n">install</span> <span class="n">py27</span><span class="o">-</span><span class="n">h5py</span> <span class="o">+</span><span class="n">gcc5</span>
 </pre></div>
 </div>
 </li>
@@ -172,7 +175,7 @@ and follow the installation instruction.</p>
 <p>Before running setup.py, gcc can be used as the C-compiler instead
 of clang for compiling phonopy C-extension as follows,</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">export</span> <span class="n">CC</span><span class="o">=</span><span class="n">gcc</span>
-<span class="o">%</span> <span class="n">python</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">install</span> <span class="o">--</span><span class="n">home</span><span class="o">=.</span>
+<span class="o">%</span> <span class="n">python</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">install</span> <span class="o">--</span><span class="n">user</span>
 </pre></div>
 </div>
 </li>
@@ -200,7 +203,7 @@ of clang for compiling phonopy C-extension as follows,</p>
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.5.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.8.<br/>
     </p>
   </div>
 </footer>
