@@ -12,8 +12,6 @@ addons:
     packages:
     - liblapack-dev
     - libhdf5-serial-dev
-    - python-h5py
-    - python3-h5py
 
 before_install:
     - wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
@@ -22,7 +20,7 @@ before_install:
     - conda update --yes conda
 
 install:
-    - conda install --yes python=$TRAVIS_PYTHON_VERSION pip numpy anaconda-client anaconda-build
+    - conda install --yes python=$TRAVIS_PYTHON_VERSION pip numpy h5py pyyaml matplotlib anaconda-client anaconda-build
     - pwd
     # - git branch -v
     # - git describe --tags --dirty
