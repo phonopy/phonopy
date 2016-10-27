@@ -1,20 +1,17 @@
 language: python
-sudo: false
+sudo: required
 dist: trusty
 
 python:
     - '2.7'
-    # - '3.5'
+    - '3.5'
 
 cache: apt
 addons:
   apt:
     packages:
-    - libopenblas-dev
     - liblapack-dev
     - libhdf5-serial-dev
-    # - libhdf5-7
-    # - libhdf5-dev
 
 before_install:
     - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
