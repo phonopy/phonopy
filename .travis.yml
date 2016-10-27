@@ -12,6 +12,8 @@ addons:
     packages:
     - liblapack-dev
     - libhdf5-serial-dev
+    - python-h5py
+    - python3-h5py
 
 before_install:
     - wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
