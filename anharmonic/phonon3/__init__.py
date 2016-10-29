@@ -377,7 +377,7 @@ class Phono3py(object):
                              temperatures=None,
                              scattering_event_class=None,
                              run_with_g=True,
-                             write_details=False):
+                             write_gamma_detail=False):
         if self._interaction is None:
             self.set_phph_interaction()
         if temperatures is None:
@@ -394,7 +394,7 @@ class Phono3py(object):
             temperatures=temperatures,
             scattering_event_class=scattering_event_class,
             run_with_g=run_with_g,
-            write_details=write_details,
+            write_details=write_gamma_detail,
             log_level=self._log_level)
 
     def write_imag_self_energy(self, filename=None):
@@ -414,7 +414,7 @@ class Phono3py(object):
                       grid_points,
                       temperatures=np.arange(0, 1001, 10, dtype='double'),
                       run_with_g=True,
-                      write_details=False):
+                      write_gamma_detail=False):
         if self._interaction is None:
             self.set_phph_interaction()
         self._grid_points = grid_points
@@ -424,7 +424,7 @@ class Phono3py(object):
                                         self._sigmas,
                                         temperatures=temperatures,
                                         run_with_g=run_with_g,
-                                        write_details=write_details,
+                                        write_details=write_gamma_detail,
                                         log_level=self._log_level)
 
     def write_linewidth(self, filename=None):
@@ -458,6 +458,7 @@ class Phono3py(object):
             write_gamma=False,
             read_gamma=False,
             write_kappa=False,
+            write_detailed_gamma=False,
             write_collision=False,
             read_collision=False,
             write_amplitude=False,

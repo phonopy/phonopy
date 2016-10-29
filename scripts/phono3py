@@ -608,7 +608,7 @@ if run_mode == "linewidth":
         grid_points,
         temperatures=temperatures,
         run_with_g=settings.get_run_with_g(),
-        write_details=settings.get_write_detailed_gamma())
+        write_gamma_detail=settings.get_write_gamma_detail())
     phono3py.write_linewidth(filename=output_filename)
 elif run_mode == "imag_self_energy":
     if not settings.get_run_with_g() and settings.get_scattering_event_class():
@@ -629,7 +629,7 @@ elif run_mode == "imag_self_energy":
         temperatures=temperature_points,
         scattering_event_class=settings.get_scattering_event_class(),
         run_with_g=settings.get_run_with_g(),
-        write_details=settings.get_write_detailed_gamma())
+        write_gamma_detail=settings.get_write_gamma_detail())
     phono3py.write_imag_self_energy(filename=output_filename)
 elif run_mode == "frequency_shift":
     phono3py.get_frequency_shift(
