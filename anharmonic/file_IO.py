@@ -848,15 +848,15 @@ def read_amplitude_from_hdf5(amplitudes_at_q,
         return amplitudes_at_q
     return None
 
-def write_detailed_gamma_to_hdf5(detailed_gamma,
-                                 temperature,
-                                 mesh,
-                                 grid_point,
-                                 sigma,
-                                 triplets,
-                                 weights,
-                                 frequency_points=None,
-                                 filename=None):
+def write_gamma_detail_to_hdf5(detailed_gamma,
+                               temperature,
+                               mesh,
+                               grid_point,
+                               sigma,
+                               triplets,
+                               weights,
+                               frequency_points=None,
+                               filename=None):
     suffix = _get_filename_suffix(mesh,
                                   grid_point=grid_point,
                                   sigma=sigma,

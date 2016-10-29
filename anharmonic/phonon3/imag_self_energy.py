@@ -3,7 +3,7 @@ from phonopy.units import VaspToTHz, Hbar, EV, Angstrom, THz, AMU
 from phonopy.phonon.degeneracy import degenerate_sets
 from anharmonic.phonon3.triplets import (get_triplets_integration_weights,
                                          gaussian, occupation)
-from anharmonic.file_IO import (write_detailed_gamma_to_hdf5,
+from anharmonic.file_IO import (write_gamma_detail_to_hdf5,
                                 write_linewidth_at_grid_point,
                                 write_imag_self_energy_at_grid_point)
 
@@ -136,7 +136,7 @@ def get_imag_self_energy(interaction,
             gamma_sigmas.append(gamma)
 
             if write_details:
-                filename = write_detailed_gamma_to_hdf5(
+                filename = write_gamma_detail_to_hdf5(
                     detailed_gamma,
                     temperatures,
                     mesh,
@@ -234,7 +234,7 @@ def get_linewidth(interaction,
                         axes=(1, 2, 3, 0))
 
             if write_details:
-                filename = write_detailed_gamma_to_hdf5(
+                filename = write_gamma_detail_to_hdf5(
                     detailed_gamma,
                     temperatures,
                     mesh,

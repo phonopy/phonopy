@@ -121,7 +121,7 @@ def get_parser():
                         verbose=False,
                         write_amplitude=False,
                         write_collision=False,
-                        write_detailed_gamma=False,
+                        write_gamma_detail=False,
                         write_gamma=False,
                         write_phonon=False,
                         write_grid_points=False)
@@ -405,7 +405,8 @@ def get_parser():
         "--write_collision", dest="write_collision", action="store_true",
         help="Write collision matrix and Gammas to files")
     parser.add_option(
-        "--write_detailed_gamma", dest="write_detailed_gamma",
+        "--write_gamma_detail", "--write_detailed_gamma",
+        dest="write_gamma_detail",
         action="store_true", help="Write out detailed imag-part of self energy")
     parser.add_option(
         "--write_gamma", dest="write_gamma", action="store_true",
