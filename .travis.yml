@@ -1,16 +1,10 @@
 language: python
-sudo: required
+sudo: false
 dist: trusty
 
 python:
     - '2.7'
     - '3.5'
-
-# cache: apt
-# addons:
-#  apt:
-#    packages:
-#    - liblapack-dev
 
 before_install:
     - wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
