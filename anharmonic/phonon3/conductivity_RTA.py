@@ -551,7 +551,6 @@ class Conductivity_RTA(Conductivity):
                 self._collision.set_temperature(t)
                 self._collision.run()
                 self._gamma[j, k, i] = self._collision.get_imag_self_energy()
-                print(self._collision.get_detailed_imag_self_energy().sum())
 
     def _get_gv_by_gv(self, i):
         rotation_map = get_grid_points_by_rotations(
