@@ -394,7 +394,7 @@ class Phono3py(object):
             temperatures=temperatures,
             scattering_event_class=scattering_event_class,
             run_with_g=run_with_g,
-            write_details=write_gamma_detail,
+            write_detail=write_gamma_detail,
             log_level=self._log_level)
 
     def write_imag_self_energy(self, filename=None):
@@ -424,7 +424,7 @@ class Phono3py(object):
                                         self._sigmas,
                                         temperatures=temperatures,
                                         run_with_g=run_with_g,
-                                        write_details=write_gamma_detail,
+                                        write_detail=write_gamma_detail,
                                         log_level=self._log_level)
 
     def write_linewidth(self, filename=None):
@@ -458,7 +458,7 @@ class Phono3py(object):
             write_gamma=False,
             read_gamma=False,
             write_kappa=False,
-            write_detailed_gamma=False,
+            write_gamma_detail=False,
             write_collision=False,
             read_collision=False,
             write_amplitude=False,
@@ -508,6 +508,7 @@ class Phono3py(object):
                 write_gamma=write_gamma,
                 read_gamma=read_gamma,
                 write_kappa=write_kappa,
+                write_gamma_detail=write_gamma_detail,
                 input_filename=input_filename,
                 output_filename=output_filename,
                 log_level=self._log_level)
