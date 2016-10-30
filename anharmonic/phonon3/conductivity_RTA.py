@@ -28,6 +28,7 @@ def get_thermal_conductivity_RTA(
         write_gamma=False,
         read_gamma=False,
         write_kappa=False,
+        write_gamma_detail=False,
         input_filename=None,
         output_filename=None,
         log_level=0):
@@ -52,6 +53,7 @@ def get_thermal_conductivity_RTA(
         gv_delta_q=gv_delta_q,
         run_with_g=run_with_g,
         is_full_pp=is_full_pp,
+        with_gamma_detail=write_gamma_detail,
         log_level=log_level)
 
     if read_gamma:
@@ -334,6 +336,7 @@ class Conductivity_RTA(Conductivity):
                  gv_delta_q=None,
                  run_with_g=True,
                  is_full_pp=False,
+                 with_gamma_detail=False,
                  log_level=0):
         self._pp = None
         self._temperatures = None
@@ -342,6 +345,7 @@ class Conductivity_RTA(Conductivity):
         self._gv_delta_q = None
         self._run_with_g = run_with_g
         self._is_full_pp = is_full_pp
+        self._with_gamma_detail = with_gamma_detail
         self._log_level = None
         self._primitive = None
         self._dm = None
@@ -518,6 +522,7 @@ class Conductivity_RTA(Conductivity):
             (len(self._sigmas), len(self._temperatures)), dtype='intc')
         self._collision = ImagSelfEnergy(
             self._pp,
+            with_detail=self._with_gamma_detail,
             unit_conversion=self._gamma_unit_conversion)
 
     def _set_gamma_at_sigmas(self, i):
@@ -546,6 +551,7 @@ class Conductivity_RTA(Conductivity):
                 self._collision.set_temperature(t)
                 self._collision.run()
                 self._gamma[j, k, i] = self._collision.get_imag_self_energy()
+                print(self._collision.get_detailed_imag_self_energy().sum())
 
     def _get_gv_by_gv(self, i):
         rotation_map = get_grid_points_by_rotations(

@@ -15,7 +15,7 @@ def get_imag_self_energy(interaction,
                          temperatures=None,
                          scattering_event_class=None, # class 1 or 2
                          run_with_g=True,
-                         write_details=False,
+                         write_detail=False,
                          log_level=0):
     """Imaginary part of self energy at frequency points
 
@@ -52,7 +52,7 @@ def get_imag_self_energy(interaction,
         return False
 
     mesh = interaction.get_mesh_numbers()
-    ise = ImagSelfEnergy(interaction, in_details=write_details)
+    ise = ImagSelfEnergy(interaction, with_detail=write_detail)
     imag_self_energy = []
     frequency_points = []
     for i, gp in enumerate(grid_points):
@@ -83,7 +83,7 @@ def get_imag_self_energy(interaction,
 
         gamma_sigmas = []
         fp_sigmas = []
-        if write_details:
+        if write_detail:
             triplets, weights, _, _ = interaction.get_triplets_at_q()
 
         for j, sigma in enumerate(sigmas):
@@ -110,7 +110,7 @@ def get_imag_self_energy(interaction,
                 (len(temperatures), len(frequency_points_at_sigma),
                  len(interaction.get_band_indices())), dtype='double')
 
-            if write_details:
+            if write_detail:
                 num_band0 = len(interaction.get_band_indices())
                 num_band = frequencies.shape[1]
                 detailed_gamma = np.zeros(
@@ -128,14 +128,14 @@ def get_imag_self_energy(interaction,
                     ise.set_temperature(t)
                     ise.run()
                     gamma[l, k] = ise.get_imag_self_energy()[0]
-                    if write_details:
+                    if write_detail:
                         detailed_gamma[l, k] = np.transpose(
                             ise.get_detailed_imag_self_energy()[0],
                             axes=(1, 2, 3, 0))
 
             gamma_sigmas.append(gamma)
 
-            if write_details:
+            if write_detail:
                 filename = write_gamma_detail_to_hdf5(
                     detailed_gamma,
                     temperatures,
@@ -177,9 +177,9 @@ def get_linewidth(interaction,
                   sigmas,
                   temperatures=np.arange(0, 1001, 10, dtype='double'),
                   run_with_g=True,
-                  write_details=False,
+                  write_detail=False,
                   log_level=0):
-    ise = ImagSelfEnergy(interaction, in_details=write_details)
+    ise = ImagSelfEnergy(interaction, with_detail=write_detail)
     band_indices = interaction.get_band_indices()
     mesh = interaction.get_mesh_numbers()
     gamma = np.zeros(
@@ -203,7 +203,7 @@ def get_linewidth(interaction,
             print("Phonon frequency:")
             print("%s" % frequencies[gp])
 
-        if write_details:
+        if write_detail:
             triplets, weights, _, _ = interaction.get_triplets_at_q()
 
         for j, sigma in enumerate(sigmas):
@@ -216,7 +216,7 @@ def get_linewidth(interaction,
             if sigma is None or run_with_g:
                 ise.set_integration_weights()
 
-            if write_details:
+            if write_detail:
                 num_band0 = len(interaction.get_band_indices())
                 num_band = frequencies.shape[1]
                 num_temp = len(temperatures)
@@ -228,12 +228,12 @@ def get_linewidth(interaction,
                 ise.set_temperature(t)
                 ise.run()
                 gamma[i, j, k] = ise.get_imag_self_energy()
-                if write_details:
+                if write_detail:
                     detailed_gamma[k] = np.transpose(
                         ise.get_detailed_imag_self_energy(),
                         axes=(1, 2, 3, 0))
 
-            if write_details:
+            if write_detail:
                 filename = write_gamma_detail_to_hdf5(
                     detailed_gamma,
                     temperatures,
@@ -311,7 +311,7 @@ class ImagSelfEnergy(object):
                  frequency_points=None,
                  temperature=None,
                  sigma=None,
-                 in_details=False,
+                 with_detail=False,
                  unit_conversion=None,
                  lang='C'):
         self._pp = interaction
@@ -330,7 +330,7 @@ class ImagSelfEnergy(object):
         self._frequencies = None
         self._triplets_at_q = None
         self._weights_at_q = None
-        self._in_details = in_details
+        self._with_detail = with_detail
         self._unit_conversion = None
         self._cutoff_frequency = interaction.get_cutoff_frequency()
 
@@ -355,14 +355,14 @@ class ImagSelfEnergy(object):
         num_band0 = self._pp_strength.shape[1]
         if self._frequency_points is None:
             self._imag_self_energy = np.zeros(num_band0, dtype='double')
-            if self._in_details:
+            if self._with_detail:
                 self._detailed_imag_self_energy = np.zeros_like(
                     self._pp_strength)
             self._run_with_band_indices()
         else:
             self._imag_self_energy = np.zeros(
                 (len(self._frequency_points), num_band0), dtype='double')
-            if self._in_details:
+            if self._with_detail:
                 self._detailed_imag_self_energy = np.zeros(
                     (len(self._frequency_points),) + self._pp_strength.shape,
                     dtype='double')
@@ -469,7 +469,7 @@ class ImagSelfEnergy(object):
         if self._g is not None:
             if self._lang == 'C':
                 self._run_c_with_band_indices_with_g()
-                if self._in_details:
+                if self._with_detail:
                     self._run_c_detailed_with_band_indices_with_g()
             else:
                 self._run_py_with_band_indices_with_g()
@@ -483,7 +483,7 @@ class ImagSelfEnergy(object):
         if self._g is not None:
             if self._lang == 'C':
                 self._run_c_with_frequency_points_with_g()
-                if self._in_details:
+                if self._with_detail:
                     self._run_c_detailed_with_frequency_points_with_g()
             else:
                 self._run_py_with_frequency_points_with_g()
