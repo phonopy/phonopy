@@ -8,7 +8,8 @@ Examples
    :local:
 
 Example files are stored in the ``example`` directory of distributed
-package.
+source package that can be downloaded at
+https://pypi.python.org/pypi/phonopy .
 
 Si
 ---
