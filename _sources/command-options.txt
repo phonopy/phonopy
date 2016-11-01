@@ -194,6 +194,8 @@ directory. The default file names for the calculators are as follows::
 Create ``FORCE_SETS``
 ----------------------
 
+.. _f_force_sets_option:
+
 ``-f`` or ``--forces``
 ~~~~~~~~~~~~~~~~~~~~~~
 
@@ -222,15 +224,7 @@ Attention:
   expansions are useful, e.g., ``disp-*/vasprun.xml``, or
   ``disp-{001..128}/vasprun.xml`` (for zsh, and recent bash).
 
-..
-   ``--fz`` option is used to subtract residual forces in the equilibrium
-   supercell.
 
-   ::
-
-      % phonopy --fz sposcar/vasprun.xml disp-001/vasprun.xml ...
-
-   Usually the ``-f`` option is preferable to ``--fz``.
 
 .. _abinit_force_sets_option:
 
@@ -290,6 +284,8 @@ For more information, :ref:`wien2k_interface`.
 Elk interface
 ^^^^^^^^^^^^^^^^
 
+
+
 ``FORCE_SETS`` file is created from ``disp.yaml`` and Elk output
 files.
 
@@ -297,6 +293,36 @@ files.
 
    % phonopy --elk -f disp-001/INFO.OUT disp-002/INFO.OUT  ...
 
+
+.. _fz_force_sets_option:
+
+``--fz``
+~~~~~~~~~
+
+``--fz`` option is used to subtract residual forces frown the forces
+calculated for the supercells with displacements. Here the residual
+forces mean that the forces calculated for the perfect supercell for
+which the number of atoms has to be the same as those for the
+supercells with displacements. If the forces are accurately calculated
+by calculators, the residual forces should be canceled when plus-minus
+displacements are employed (see :ref:`pm_displacement_tag`), that is
+the default option in phonopy. Therefore ``--fz`` option is expected
+to be useful when ``PM = .FALSE.`` is set in the phonopy setting file.
+
+The usage of this option is almost the same as that of ``-f`` option
+except that one more argument is inserted at the front. Mind that
+``--fz`` is exclusively used with ``-f`` option. The example 
+for the VASP interface is shown below::
+
+   % phonopy --fz sposcar/vasprun.xml disp-001/vasprun.xml ...
+
+where ``sposcar/vasprun.xml`` assumes the output file for the perfect
+supercell containing residual forces.
+
+This option perhaps works for the other calculator interfaces than the
+VASP interface, but it is not tested yet. It would be appreciated if
+you report it to the phonopy mailing list when you find it
+does/doesn't work for any other calculator interfaces.
 
 Create ``FORCE_CONSTANTS``
 --------------------------

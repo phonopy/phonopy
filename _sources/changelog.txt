@@ -3,6 +3,11 @@
 Change Log
 ==========
 
+Nov-1-2016:
+---------------------------
+
+* ``--fz`` option comes back. See :ref:`fz_force_sets_option`.
+
 Oct-23-2016: Version 1.11.2
 ---------------------------
 
