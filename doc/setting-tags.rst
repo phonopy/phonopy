@@ -237,14 +237,17 @@ vectors. ``DIAG = .FALSE.`` is recommended if one of the lattice
 parameter of your supercell is much longer or much shorter than the
 other lattice parameters.
 
+.. _pm_displacement_tag:
+
 ``PM``
 ~~~~~~~
 
 This tag specified how displacements are found. When ``PM = .FALSE.``,
 least displacements that can calculate force constants are found. This
 may cause less accurate result. When ``PM = .TRUE.``, all the
-displacements that are opposite to the least displacements are found.
-The default setting is ``PM = AUTO``. Plus-minus displacements are
+displacements that are opposite directions to the least displacements
+are also found, which is called plus-minus displacements here. The
+default setting is ``PM = AUTO``. Plus-minus displacements are
 considered with this tag. If the plus and minus displacements are
 symmetrically equivalent, only the plus displacement is found. This
 may be in between ``.FALSE.`` and ``.TRUE.``. You can check how it
