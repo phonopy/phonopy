@@ -201,6 +201,13 @@ def get_parser():
         "--fits_debye_model", dest="fits_debye_model", action="store_true",
         help="Fits total DOS to a Debye model")
     parser.add_option(
+        "--fz", "--force_sets_zero", dest="force_sets_zero_mode",
+        action="store_true",
+        help=("Create FORCE_SETS. disp.yaml in the current directory and "
+              "vapsrun.xml's for VASP or case.scf(m) for Wien2k as arguments "
+              "are required. The first argument is that of the perfect "
+              "supercell to subtract residual forces"))
+    parser.add_option(
         "--fmax", dest="fmax", type="float",
         help="Maximum frequency used for DOS or moment calculation")
     parser.add_option(

@@ -48,7 +48,6 @@ from phonopy.file_IO import (write_FORCE_SETS, write_force_constants_to_hdf5,
 
 def parse_set_of_forces(num_atoms,
                         forces_filenames,
-                        is_zero_point=False,
                         verbose=True):
     if verbose:
         sys.stdout.write("counter (file index): ")
@@ -56,24 +55,7 @@ def parse_set_of_forces(num_atoms,
     count = 0
     is_parsed = True
     force_sets = []
-
-    if is_zero_point:
-        force_files = forces_filenames[1:]
-        if _is_version528(forces_filenames[0]):
-            zero_forces = _get_forces_vasprun_xml(_iterparse(
-                VasprunWrapper(forces_filenames[0]), tag='varray'))
-        else:
-            zero_forces = _get_forces_vasprun_xml(
-                _iterparse(forces_filenames[0], tag='varray'))
-
-        if verbose:
-            sys.stdout.write("%d " % (count + 1))
-        count += 1
-
-        if not _check_forces(zero_forces, num_atoms, forces_filenames[0]):
-            is_parsed = False
-    else:
-        force_files = forces_filenames
+    force_files = forces_filenames
 
     for filename in force_files:
         if _is_version528(filename):
@@ -82,9 +64,6 @@ def parse_set_of_forces(num_atoms,
         else:
             force_sets.append(_get_forces_vasprun_xml(
                 _iterparse(filename, tag='varray')))
-
-        if is_zero_point:
-            force_sets[-1] -= zero_forces
 
         if verbose:
             sys.stdout.write("%d " % (count + 1))
