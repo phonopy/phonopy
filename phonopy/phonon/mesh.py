@@ -183,7 +183,7 @@ class Mesh(object):
                 (num_qpoints, num_band, num_band,), dtype='complex128')
 
         if self._use_lapack_solver:
-            from phonopy.phonon.solver import get_phonons_at_qpoints
+            from phono3py.phonon.solver import get_phonons_at_qpoints
             get_phonons_at_qpoints(self._frequencies,
                                    self._eigenvectors,
                                    self._dynamical_matrix,
