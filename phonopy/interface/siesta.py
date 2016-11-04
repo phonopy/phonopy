@@ -65,7 +65,7 @@ def read_siesta(filename):
     lattice = siesta_in._tags["latticevectors"]
     positions = siesta_in._tags["atomiccoordinates"]
     atypes = siesta_in._tags["chemicalspecieslabel"]
-    cell = Atoms(numbers=numbers, cell=lattice)
+    cell = Atoms(numbers=numbers, cell=lattice, scaled_positions=positions)
 
     coordformat = siesta_in._tags["atomiccoordinatesformat"]
     if coordformat == "fractional" or coordformat == "scaledbylatticevectors":
