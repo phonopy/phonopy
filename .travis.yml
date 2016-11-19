@@ -23,7 +23,7 @@ install:
 
 script: 
     - cd test/phonopy 
-    - python -m unittest discover -b
+    - python -m unittest discover
     - cd ../..
 
 deploy:
