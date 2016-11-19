@@ -394,7 +394,6 @@ class TestIrreps(unittest.TestCase):
                                   np.eye(3))
         phonon.set_irreps([0, 0, 0])
         chars = phonon.get_irreps().get_characters()
-        #self.assertTrue(np.abs(chars - data).all() < 1e-5)
         np.testing.assert_allclose(chars,data,atol=1e-5)
 
     def test_pt06_P222_1(self):
@@ -404,7 +403,6 @@ class TestIrreps(unittest.TestCase):
                                   np.eye(3))
         phonon.set_irreps([0, 0, 0])
         chars = phonon.get_irreps().get_characters()
-        #self.assertTrue(np.abs(chars - data).all() < 1e-5)
         np.testing.assert_allclose(chars,data,atol=1e-5)
 
     def test_pt07_Amm2(self):
@@ -416,7 +414,6 @@ class TestIrreps(unittest.TestCase):
                                    [0, 0.5, 0.5]])
         phonon.set_irreps([0, 0, 0])
         chars = phonon.get_irreps().get_characters()
-        #self.assertTrue(np.abs(chars - data).all() < 1e-5)
         np.testing.assert_allclose(chars,data,atol=1e-5)
 
     def test_pt09_P4_1(self):
@@ -426,7 +423,6 @@ class TestIrreps(unittest.TestCase):
                                   np.eye(3))
         phonon.set_irreps([0, 0, 0])
         chars = phonon.get_irreps().get_characters()
-        #self.assertTrue(np.abs(chars - data).all() < 1e-5)
         np.testing.assert_allclose(chars,data,atol=1e-5)
 
     def test_pt10_Pbar4(self):
@@ -436,7 +432,6 @@ class TestIrreps(unittest.TestCase):
                                   np.eye(3))
         phonon.set_irreps([0, 0, 0])
         chars = phonon.get_irreps().get_characters()
-        #self.assertTrue(np.abs(chars - data).all() < 1e-5)
         np.testing.assert_allclose(chars,data,atol=1e-5)
 
     def test_pt11_I4_1a(self):
@@ -448,7 +443,6 @@ class TestIrreps(unittest.TestCase):
                                             [1, 1, -1]]) * 0.5)
         phonon.set_irreps([0, 0, 0])
         chars = phonon.get_irreps().get_characters()
-        #self.assertTrue(np.abs(chars - data).all() < 1e-5)
         np.testing.assert_allclose(chars,data,atol=1e-5)
 
     def test_pt13_P4mm(self):
@@ -458,7 +452,6 @@ class TestIrreps(unittest.TestCase):
                                   np.eye(3))
         phonon.set_irreps([0, 0, 0])
         chars = phonon.get_irreps().get_characters()
-        #self.assertTrue(np.abs(chars - data).all() < 1e-5)
         np.testing.assert_allclose(chars,data,atol=1e-5)
 
     def test_pt14_Pbar42_1m(self):
@@ -468,7 +461,6 @@ class TestIrreps(unittest.TestCase):
                                   np.eye(3))
         phonon.set_irreps([0, 0, 0])
         chars = phonon.get_irreps().get_characters()
-        #self.assertTrue(np.abs(chars - data).all() < 1e-5)
         np.testing.assert_allclose(chars,data,atol=1e-5)
 
     def test_pt20_Pbar3m1(self):
@@ -478,7 +470,6 @@ class TestIrreps(unittest.TestCase):
                                   np.eye(3))
         phonon.set_irreps([0, 0, 0])
         chars = phonon.get_irreps().get_characters()
-        #self.assertTrue(np.abs(chars - data).all() < 1e-5)
         np.testing.assert_allclose(chars,data,atol=1e-5)
 
     def test_pt26_Pbar6m2(self):
@@ -488,7 +479,6 @@ class TestIrreps(unittest.TestCase):
                                   np.eye(3))
         phonon.set_irreps([0, 0, 0])
         chars = phonon.get_irreps().get_characters()
-        #self.assertTrue(np.abs(chars - data).all() < 1e-5)
         np.testing.assert_allclose(chars,data,atol=1e-5)
 
     def test_pt31_Pbar43m(self):
@@ -498,7 +488,6 @@ class TestIrreps(unittest.TestCase):
                                   np.eye(3))
         phonon.set_irreps([0, 0, 0])
         chars = phonon.get_irreps().get_characters()
-        #self.assertTrue(np.abs(chars - data).all() < 1e-5)
         np.testing.assert_allclose(chars,data,atol=1e-5)
 
     def _get_phonon(self, spgtype, dim, pmat):

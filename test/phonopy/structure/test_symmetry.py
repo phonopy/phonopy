@@ -35,7 +35,6 @@ class TestSymmetry(unittest.TestCase):
         end = time.time()
         # print(end - start)
         map_ops = symmetry.get_map_operations()
-        #self.assertTrue((map_ops_cmp == map_ops).all())
         np.testing.assert_allclose(map_ops_cmp, map_ops)
 
     def test_magmom(self):
