@@ -394,7 +394,8 @@ class TestIrreps(unittest.TestCase):
                                   np.eye(3))
         phonon.set_irreps([0, 0, 0])
         chars = phonon.get_irreps().get_characters()
-        self.assertTrue(np.abs(chars - data).all() < 1e-5)
+        #self.assertTrue(np.abs(chars - data).all() < 1e-5)
+        np.assert_allclose(chars,data,atol=1e-5)
 
     def test_pt06_P222_1(self):
         data = np.loadtxt(StringIO(chars_P222_1)).view(dtype='complex128')
@@ -403,7 +404,8 @@ class TestIrreps(unittest.TestCase):
                                   np.eye(3))
         phonon.set_irreps([0, 0, 0])
         chars = phonon.get_irreps().get_characters()
-        self.assertTrue(np.abs(chars - data).all() < 1e-5)
+        #self.assertTrue(np.abs(chars - data).all() < 1e-5)
+        np.assert_allclose(chars,data,atol=1e-5)
 
     def test_pt07_Amm2(self):
         data = np.loadtxt(StringIO(chars_Amm2)).view(dtype='complex128')
@@ -414,7 +416,8 @@ class TestIrreps(unittest.TestCase):
                                    [0, 0.5, 0.5]])
         phonon.set_irreps([0, 0, 0])
         chars = phonon.get_irreps().get_characters()
-        self.assertTrue(np.abs(chars - data).all() < 1e-5)
+        #self.assertTrue(np.abs(chars - data).all() < 1e-5)
+        np.assert_allclose(chars,data,atol=1e-5)
 
     def test_pt09_P4_1(self):
         data = np.loadtxt(StringIO(chars_P4_1)).view(dtype='complex128')
@@ -423,7 +426,8 @@ class TestIrreps(unittest.TestCase):
                                   np.eye(3))
         phonon.set_irreps([0, 0, 0])
         chars = phonon.get_irreps().get_characters()
-        self.assertTrue(np.abs(chars - data).all() < 1e-5)
+        #self.assertTrue(np.abs(chars - data).all() < 1e-5)
+        np.assert_allclose(chars,data,atol=1e-5)
 
     def test_pt10_Pbar4(self):
         data = np.loadtxt(StringIO(chars_Pbar4)).view(dtype='complex128')
@@ -432,7 +436,8 @@ class TestIrreps(unittest.TestCase):
                                   np.eye(3))
         phonon.set_irreps([0, 0, 0])
         chars = phonon.get_irreps().get_characters()
-        self.assertTrue(np.abs(chars - data).all() < 1e-5)
+        #self.assertTrue(np.abs(chars - data).all() < 1e-5)
+        np.assert_allclose(chars,data,atol=1e-5)
 
     def test_pt11_I4_1a(self):
         data = np.loadtxt(StringIO(chars_I4_1a)).view(dtype='complex128')
@@ -443,7 +448,8 @@ class TestIrreps(unittest.TestCase):
                                             [1, 1, -1]]) * 0.5)
         phonon.set_irreps([0, 0, 0])
         chars = phonon.get_irreps().get_characters()
-        self.assertTrue(np.abs(chars - data).all() < 1e-5)
+        #self.assertTrue(np.abs(chars - data).all() < 1e-5)
+        np.assert_allclose(chars,data,atol=1e-5)
 
     def test_pt13_P4mm(self):
         data = np.loadtxt(StringIO(chars_P4mm)).view(dtype='complex128')
@@ -452,7 +458,8 @@ class TestIrreps(unittest.TestCase):
                                   np.eye(3))
         phonon.set_irreps([0, 0, 0])
         chars = phonon.get_irreps().get_characters()
-        self.assertTrue(np.abs(chars - data).all() < 1e-5)
+        #self.assertTrue(np.abs(chars - data).all() < 1e-5)
+        np.assert_allclose(chars,data,atol=1e-5)
 
     def test_pt14_Pbar42_1m(self):
         data = np.loadtxt(StringIO(chars_Pbar42_1m)).view(dtype='complex128')
@@ -461,7 +468,8 @@ class TestIrreps(unittest.TestCase):
                                   np.eye(3))
         phonon.set_irreps([0, 0, 0])
         chars = phonon.get_irreps().get_characters()
-        self.assertTrue(np.abs(chars - data).all() < 1e-5)
+        #self.assertTrue(np.abs(chars - data).all() < 1e-5)
+        np.assert_allclose(chars,data,atol=1e-5)
 
     def test_pt20_Pbar3m1(self):
         data = np.loadtxt(StringIO(chars_Pbar3m1)).view(dtype='complex128')
@@ -470,7 +478,8 @@ class TestIrreps(unittest.TestCase):
                                   np.eye(3))
         phonon.set_irreps([0, 0, 0])
         chars = phonon.get_irreps().get_characters()
-        self.assertTrue(np.abs(chars - data).all() < 1e-5)
+        #self.assertTrue(np.abs(chars - data).all() < 1e-5)
+        np.assert_allclose(chars,data,atol=1e-5)
 
     def test_pt26_Pbar6m2(self):
         data = np.loadtxt(StringIO(chars_Pbar6m2)).view(dtype='complex128')
@@ -479,7 +488,8 @@ class TestIrreps(unittest.TestCase):
                                   np.eye(3))
         phonon.set_irreps([0, 0, 0])
         chars = phonon.get_irreps().get_characters()
-        self.assertTrue(np.abs(chars - data).all() < 1e-5)
+        #self.assertTrue(np.abs(chars - data).all() < 1e-5)
+        np.assert_allclose(chars,data,atol=1e-5)
 
     def test_pt31_Pbar43m(self):
         data = np.loadtxt(StringIO(chars_Pbar43m)).view(dtype='complex128')
@@ -488,7 +498,8 @@ class TestIrreps(unittest.TestCase):
                                   np.eye(3))
         phonon.set_irreps([0, 0, 0])
         chars = phonon.get_irreps().get_characters()
-        self.assertTrue(np.abs(chars - data).all() < 1e-5)
+        #self.assertTrue(np.abs(chars - data).all() < 1e-5)
+        np.assert_allclose(chars,data,atol=1e-5)
 
     def _get_phonon(self, spgtype, dim, pmat):
         cell = read_vasp(os.path.join(data_dir,"POSCAR_%s" % spgtype))
