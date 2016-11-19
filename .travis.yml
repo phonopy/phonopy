@@ -56,6 +56,7 @@ deploy:
       password:
         secure: "Jjr207RsWxHXQU0YNjEat/FEk0BsC0ynSP+nYQM0KLWrWzF/NPrutkqdWmvyA/YMZi/ItUMLbHOL9MCPxCeqW8S7vyLXEIs9b5frM2vcNdEDf74W6ZorwusqPIBE9xhdaJVFSFj+SLiU/9OgAbJNMIl6CwIfKRbg5v2lmVKzIe7PqW4HdWYVOkWh8QukGV4rGPtGc6VYjjPuVx7rOkmkOgoF0+roXJZIbAclEcqnIxzYAkiscQaZgCJmagrYKx9RjGC8Y68su4fw1PutQZ9LJElTJ2ZcqVdJa5AOW0ths9qOEXFSuO7ZoTt7nCzEH5N/Abhh3eQ5bRPh+vSpOOUZtfSlDnD6qOf5rBH1w5KyGs3MbDKVJuGr9HQVoMugI9t+/anGyGj2gDAF6r/XRc73aO0cubiV8WZSnHv5Olsq0948hb1Dqz73m09+eIhDnaPDkSHtsoHTPjaBcgMyWpmgVFh9o+fcNQUZzPIeBJfDPowYyjyvLU+H9OkDgnfnOFvSWQfPrHXMdsxSxUX+NKR6U3XuDLYBYctcBg1DR7Nq9i1/W46/HSTmGduboRU/4WDu2jEQ01uTNzlrE8wk9Hwlx7E822iYYv6e1BrACfnmVYoAbIMMk/yo+W33j+HA96Vp7DhUQ95fHBtXZ0ASC5wDbSi1L9vqs4qugSh40dDZeLg="
       on:
+        repo: atztogo/phonopy
         branch: master
         tags: false
         # python: 2.7  
@@ -65,6 +66,7 @@ deploy:
       skip_cleanup: true
       script: conda/anaconda_deploy.sh main $ANACONDA_TOKEN $TRAVIS_BRANCH
       on:
+        repo: atztogo/phonopy
         branch: master
         tags: false
         # python: 2.7
