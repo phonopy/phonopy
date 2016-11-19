@@ -8,11 +8,13 @@ from phonopy.interface.vasp import read_vasp
 from phonopy.file_IO import parse_FORCE_SETS, parse_BORN
 from phonopy.structure.atoms import PhonopyAtoms as Atoms
 # from phonopy.interface.vasp import write_vasp
+import os
+data_dir=os.path.dirname(os.path.abspath(__file__))
 
 class TestUnfolding(unittest.TestCase):
 
     def setUp(self):
-        self._cell = read_vasp("../POSCAR_NaCl")
+        self._cell = read_vasp(os.path.join(data_dir,"../POSCAR_NaCl"))
         # print(self._cell)
         self._unfolding = None
     
@@ -34,7 +36,7 @@ class TestUnfolding(unittest.TestCase):
         self._run_unfolding()
         weights = self._get_weights(qpoints, unfolding_supercell_matrix)
         # self._write_weights(weights, "unfolding.dat")
-        self._compare(weights, "bin-unfolding.dat")
+        self._compare(weights, os.path.join(data_dir,"bin-unfolding.dat"))
 
     def test_Unfolding_SC(self):
         ## mesh
@@ -49,7 +51,7 @@ class TestUnfolding(unittest.TestCase):
         self._run_unfolding()
         weights = self._get_weights(qpoints, unfolding_supercell_matrix)
         # self._write_weights(weights, "unfolding_to_atoms.dat")
-        self._compare(weights, "bin-unfolding_to_atoms.dat")
+        self._compare(weights, os.path.join(data_dir,"bin-unfolding_to_atoms.dat"))
 
     def _compare(self, weights, filename):
         bin_data = self._binning(weights)
