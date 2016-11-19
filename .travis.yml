@@ -24,7 +24,6 @@ install:
 script: 
     - cd test/phonopy 
     - python -m unittest discover -b
-    - cd ../..
 
 deploy:
     # testing pypi
