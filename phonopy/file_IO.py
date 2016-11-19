@@ -391,7 +391,7 @@ def read_thermal_properties_yaml(filenames, factor=1.0):
     cv = []
     entropy = []
     fe_phonon = []
-    for i in range(len(filenames)):
+    for i, _ in enumerate(filenames):
         temp.append([v['temperature'] for v in thermal_properties[i]])
         cv.append([v['heat_capacity'] for v in thermal_properties[i]])
         entropy.append([v['entropy'] for v in thermal_properties[i]])
