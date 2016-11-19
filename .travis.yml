@@ -23,7 +23,7 @@ install:
 
 script: 
     - cd test/phonopy 
-    - for d in harmonic interface phonon spectrum structure unfolding ; do  cd $d ; for f in test_*.py ; do python $f ; done ; cd .. ; done
+    - python -m unittest discover -b
     - cd ../..
 
 deploy:
