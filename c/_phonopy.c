@@ -39,7 +39,9 @@
 #include <derivative_dynmat.h>
 #include <kgrid.h>
 #include <tetrahedron_method.h>
-#include <phonoc_const.h>
+
+#define KB 8.6173382568083159E-05
+#define PHPYCONST
 
 /* Build dynamical matrix */
 static PyObject * py_get_dynamical_matrix(PyObject *self, PyObject *args);

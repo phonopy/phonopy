@@ -144,8 +144,8 @@ class Symmetry(object):
 
     def _set_symmetry_operations_with_magmoms(self):
         self._symmetry_operations = spg.get_symmetry(self._cell,
-                                             symprec=self._symprec)
-        self._map_atoms=self._symmetry_operations['equivalent_atoms']
+                                                     symprec=self._symprec)
+        self._map_atoms = self._symmetry_operations['equivalent_atoms']
         self._set_map_atoms()
         
     def _set_map_atoms(self):
@@ -153,7 +153,7 @@ class Symmetry(object):
         translations = self._symmetry_operations['translations']
         positions = self._cell.get_scaled_positions()
         lattice = self._cell.get_cell()
-        map_atoms = range(self._cell.get_number_of_atoms())
+        map_atoms = np.arange(self._cell.get_number_of_atoms())
         for i, p in enumerate(positions):
             is_found = False
             for j in range(i):
