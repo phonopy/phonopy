@@ -716,7 +716,11 @@ def _expand_cell(cell):
         positions = np.array(cell.get_scaled_positions(),
                              dtype='double', order='C')
         numbers = np.array(cell.get_atomic_numbers(), dtype='intc')
-        magmoms = None
+        _magmoms = cell.get_magnetic_moments()
+        if _magmoms is not None:
+            magmoms = np.array(_magmoms, dtype='double')
+        else:
+            magmoms = None
 
     if _check(lattice, positions, numbers, magmoms):
         return (lattice, positions, numbers, magmoms)
