@@ -60,7 +60,7 @@ class TestUnfolding(unittest.TestCase):
         with open(filename) as f:
             bin_data_in_file = np.loadtxt(f)
             np.testing.assert_allclose(bin_data, bin_data_in_file,
-                                       atol=1e-4, rtol=0)
+                                       atol=2e-4, rtol=0)
 
     def _prepare_unfolding(self, qpoints, unfolding_supercell_matrix):
         supercell = get_supercell(self._cell, np.diag([2, 2, 2]))
