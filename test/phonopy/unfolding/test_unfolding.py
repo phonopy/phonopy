@@ -51,14 +51,16 @@ class TestUnfolding(unittest.TestCase):
         self._run_unfolding()
         weights = self._get_weights(qpoints, unfolding_supercell_matrix)
         # self._write_weights(weights, "unfolding_to_atoms.dat")
-        self._compare(weights, os.path.join(data_dir,"bin-unfolding_to_atoms.dat"))
+        self._compare(weights, os.path.join(data_dir,
+                                            "bin-unfolding_to_atoms.dat"))
 
     def _compare(self, weights, filename):
         bin_data = self._binning(weights)
         # self._write_bin_data(bin_data, filename)
         with open(filename) as f:
             bin_data_in_file = np.loadtxt(f)
-            np.testing.assert_allclose(bin_data, bin_data_in_file, atol=1e-4)
+            np.testing.assert_allclose(bin_data, bin_data_in_file,
+                                       atol=1e-4, rtol=0)
 
     def _prepare_unfolding(self, qpoints, unfolding_supercell_matrix):
         supercell = get_supercell(self._cell, np.diag([2, 2, 2]))
@@ -168,5 +170,5 @@ class TestUnfolding(unittest.TestCase):
         return np.array(data)
 
 if __name__ == '__main__':
-    #unittest.main()
-    pass
+    unittest.main()
+    # pass
