@@ -9,6 +9,8 @@ from phonopy import Phonopy
 from phonopy.phonon.moment import PhononMoment
 from phonopy.interface.vasp import read_vasp
 from phonopy.file_IO import parse_FORCE_SETS
+import os
+data_dir=os.path.dirname(os.path.abspath(__file__))
 
 result_full_range = """
  1.000000  1.000000  1.000000
@@ -21,7 +23,7 @@ result_full_range = """
 
 class TestMoment(unittest.TestCase):
     def setUp(self):
-        self._cell = read_vasp("POSCAR_moment")
+        self._cell = read_vasp(os.path.join(data_dir,"POSCAR_moment"))
     
     def tearDown(self):
         pass
@@ -77,7 +79,7 @@ class TestMoment(unittest.TestCase):
                          primitive_matrix=[[0, 0.5, 0.5],
                                            [0.5, 0, 0.5],
                                            [0.5, 0.5, 0]])
-        force_sets = parse_FORCE_SETS(filename="FORCE_SETS_moment")
+        force_sets = parse_FORCE_SETS(filename=os.path.join(data_dir,"FORCE_SETS_moment"))
         phonon.set_displacement_dataset(force_sets)
         phonon.produce_force_constants()
         supercell = phonon.get_supercell()

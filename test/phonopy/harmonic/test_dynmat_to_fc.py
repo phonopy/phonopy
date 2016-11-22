@@ -4,11 +4,14 @@ from phonopy.interface.phonopy_yaml import get_unitcell_from_phonopy_yaml
 from phonopy.harmonic.dynmat_to_fc import get_commensurate_points
 from phonopy.structure.cells import get_supercell, get_primitive
 
+import os
+data_dir=os.path.dirname(os.path.abspath(__file__))
+
 class TestDynmatToFc(unittest.TestCase):
 
     def setUp(self):
         filename = "../NaCl.yaml"
-        self._cell = get_unitcell_from_phonopy_yaml(filename)
+        self._cell = get_unitcell_from_phonopy_yaml(os.path.join(data_dir,filename))
     
     def tearDown(self):
         pass
@@ -26,13 +29,13 @@ class TestDynmatToFc(unittest.TestCase):
         self._compare(comm_points)
 
     def _compare(self, comm_points, filename="comm_points.dat"):
-        with open(filename) as f:
+        with open(os.path.join(data_dir,filename)) as f:
             comm_points_in_file = np.loadtxt(f)
             self.assertTrue(
                 (np.abs(comm_points_in_file[:,1:] - comm_points) < 1e-3).all())
 
     def _write(self, comm_points, filename="comm_points.dat"):
-        with open(filename, 'w') as w:
+        with open(os.path.join(data_dir,filename), 'w') as w:
             lines = []
             for i, p in enumerate(comm_points):
                 lines.append("%d %5.2f %5.2f %5.2f" % ((i + 1,) + tuple(p)))

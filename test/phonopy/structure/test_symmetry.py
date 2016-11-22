@@ -6,6 +6,8 @@ import time
 from phonopy.structure.symmetry import Symmetry
 from phonopy.structure.cells import get_supercell
 from phonopy.interface.phonopy_yaml import get_unitcell_from_phonopy_yaml
+import os
+data_dir=os.path.dirname(os.path.abspath(__file__))
 
 class TestSymmetry(unittest.TestCase):
 
@@ -17,27 +19,28 @@ class TestSymmetry(unittest.TestCase):
     
     def test_get_map_operations(self):
         symprec = 1e-5
-        cell = get_unitcell_from_phonopy_yaml("../NaCl.yaml")
+        cell = get_unitcell_from_phonopy_yaml(
+            os.path.join(data_dir,"../NaCl.yaml"))
         scell = get_supercell(cell, np.diag([2, 2, 2]), symprec=symprec)
         symmetry = Symmetry(scell, symprec=symprec)
-
-        map_ops_cmp = [  0,   2,  51,  53,   8,   1,  65,  98,   3,  14,
-                        34,  24,  76,  69,  54, 110, 576, 198, 229, 208,
-                       201, 192, 210, 294,   5,  67,  36,  57,  18,  90,
-                        23, 114,   0,   9,   1,  96,   6, 323,  98, 326,
-                         3,  42,  17, 293,  16, 130,  99, 337, 192, 194,
-                       202, 199, 205, 196, 200, 193,  12,   5,  30, 108,
-                        37, 128, 291, 302]
         start = time.time()
         symmetry._set_map_operations()
         end = time.time()
         # print(end - start)
         map_ops = symmetry.get_map_operations()
-        self.assertTrue((map_ops_cmp == map_ops).all())
+        map_atoms = symmetry.get_map_atoms()
+        positions = scell.get_scaled_positions()
+        rotations = symmetry.get_symmetry_operations()['rotations']
+        translations = symmetry.get_symmetry_operations()['translations']
+        for i, (op_i, atom_i) in enumerate(zip(map_ops, map_atoms)):
+            r_pos = np.dot(rotations[op_i], positions[i]) + translations[op_i]
+            diff = positions[atom_i] - r_pos
+            diff -= np.rint(diff)
+            self.assertTrue((diff < symprec).all())
 
     def test_magmom(self):
         symprec = 1e-5
-        cell = get_unitcell_from_phonopy_yaml("Cr.yaml")
+        cell = get_unitcell_from_phonopy_yaml(os.path.join(data_dir,"Cr.yaml"))
         symmetry_nonspin = Symmetry(cell, symprec=symprec)
         atom_map_nonspin = symmetry_nonspin.get_map_atoms()
         len_sym_nonspin = len(

@@ -8,11 +8,13 @@ from phonopy.interface.vasp import read_vasp
 from phonopy.file_IO import parse_FORCE_SETS, parse_BORN
 from phonopy.structure.atoms import PhonopyAtoms as Atoms
 # from phonopy.interface.vasp import write_vasp
+import os
+data_dir=os.path.dirname(os.path.abspath(__file__))
 
 class TestUnfolding(unittest.TestCase):
 
     def setUp(self):
-        self._cell = read_vasp("../POSCAR_NaCl")
+        self._cell = read_vasp(os.path.join(data_dir,"../POSCAR_NaCl"))
         # print(self._cell)
         self._unfolding = None
     
@@ -34,7 +36,7 @@ class TestUnfolding(unittest.TestCase):
         self._run_unfolding()
         weights = self._get_weights(qpoints, unfolding_supercell_matrix)
         # self._write_weights(weights, "unfolding.dat")
-        self._compare(weights, "bin-unfolding.dat")
+        self._compare(weights, os.path.join(data_dir,"bin-unfolding.dat"))
 
     def test_Unfolding_SC(self):
         ## mesh
@@ -49,14 +51,16 @@ class TestUnfolding(unittest.TestCase):
         self._run_unfolding()
         weights = self._get_weights(qpoints, unfolding_supercell_matrix)
         # self._write_weights(weights, "unfolding_to_atoms.dat")
-        self._compare(weights, "bin-unfolding_to_atoms.dat")
+        self._compare(weights, os.path.join(data_dir,
+                                            "bin-unfolding_to_atoms.dat"))
 
     def _compare(self, weights, filename):
         bin_data = self._binning(weights)
         # self._write_bin_data(bin_data, filename)
         with open(filename) as f:
             bin_data_in_file = np.loadtxt(f)
-            self.assertTrue((np.abs(bin_data - bin_data_in_file) < 1e-4).all())
+            np.testing.assert_allclose(bin_data, bin_data_in_file,
+                                       atol=1e-2, rtol=0)
 
     def _prepare_unfolding(self, qpoints, unfolding_supercell_matrix):
         supercell = get_supercell(self._cell, np.diag([2, 2, 2]))
@@ -108,7 +112,7 @@ class TestUnfolding(unittest.TestCase):
     def _get_phonon(self, cell):
         phonon = Phonopy(cell,
                          np.diag([1, 1, 1]))
-        force_sets = parse_FORCE_SETS()
+        force_sets = parse_FORCE_SETS(filename=os.path.join(data_dir,"FORCE_SETS"))
         phonon.set_displacement_dataset(force_sets)
         phonon.produce_force_constants()
         return phonon
@@ -166,5 +170,5 @@ class TestUnfolding(unittest.TestCase):
         return np.array(data)
 
 if __name__ == '__main__':
-    #unittest.main()
-    pass
+    unittest.main()
+    # pass

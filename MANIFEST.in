@@ -3,3 +3,5 @@ graft c/spglib_h
 graft c/kspclib_h
 graft example
 include __nanoversion__.txt
+recursive-include test *
+recursive-exclude test *.pyc

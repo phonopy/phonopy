@@ -91,4 +91,4 @@ class PhononMoment(object):
                     norm0 += w * projection
                     moment += freq ** order * w * projection
         self._moment = np.array([np.sum((moment / norm0)[i * 3:(i + 1) * 3])
-                                 for i in range(len(moment) / 3)]) / 3
+                                 for i in range(len(moment) // 3)]) / 3

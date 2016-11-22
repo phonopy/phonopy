@@ -12,6 +12,8 @@ from phonopy.structure.symmetry import Symmetry
 from phonopy.structure.spglib import get_stabilized_reciprocal_mesh
 from phonopy.structure.tetrahedron_method import TetrahedronMethod
 from phonopy.phonon.tetrahedron_mesh import TetrahedronMesh
+import os
+data_dir=os.path.dirname(os.path.abspath(__file__))
 
 dos_str = """-0.672024 0.000000 0.029844 0.005522 0.731712 0.029450 1.433580 0.116998
 2.135448 0.200612 2.837315 0.329781 3.539183 0.905737 4.241051 1.808068
@@ -72,11 +74,11 @@ class TestTetrahedronMesh(unittest.TestCase):
             print(("%f " * 8) % tuple(row))
 
     def _get_phonon(self, spgtype, dim, pmat):
-        cell = read_vasp("POSCAR_%s" % spgtype)
+        cell = read_vasp(os.path.join(data_dir,"POSCAR_%s" % spgtype))
         phonon = Phonopy(cell,
                          np.diag(dim),
                          primitive_matrix=pmat)
-        force_sets = parse_FORCE_SETS(filename="FORCE_SETS_%s" % spgtype)
+        force_sets = parse_FORCE_SETS(filename=os.path.join(data_dir,"FORCE_SETS_%s" % spgtype))
         phonon.set_displacement_dataset(force_sets)
         phonon.produce_force_constants()
         return phonon
