@@ -6,6 +6,8 @@ import time
 from phonopy.structure.symmetry import Symmetry
 from phonopy.structure.cells import get_supercell
 from phonopy.interface.phonopy_yaml import get_unitcell_from_phonopy_yaml
+import os
+data_dir=os.path.dirname(os.path.abspath(__file__))
 
 class TestSymmetry(unittest.TestCase):
 
@@ -17,7 +19,7 @@ class TestSymmetry(unittest.TestCase):
     
     def test_get_map_operations(self):
         symprec = 1e-5
-        cell = get_unitcell_from_phonopy_yaml("../NaCl.yaml")
+        cell = get_unitcell_from_phonopy_yaml(os.path.join(data_dir,"../NaCl.yaml"))
         scell = get_supercell(cell, np.diag([2, 2, 2]), symprec=symprec)
         symmetry = Symmetry(scell, symprec=symprec)
 
@@ -33,11 +35,11 @@ class TestSymmetry(unittest.TestCase):
         end = time.time()
         # print(end - start)
         map_ops = symmetry.get_map_operations()
-        self.assertTrue((map_ops_cmp == map_ops).all())
+        np.testing.assert_allclose(map_ops_cmp, map_ops)
 
     def test_magmom(self):
         symprec = 1e-5
-        cell = get_unitcell_from_phonopy_yaml("Cr.yaml")
+        cell = get_unitcell_from_phonopy_yaml(os.path.join(data_dir,"Cr.yaml"))
         symmetry_nonspin = Symmetry(cell, symprec=symprec)
         atom_map_nonspin = symmetry_nonspin.get_map_atoms()
         len_sym_nonspin = len(

@@ -5,6 +5,8 @@ from phonopy import Phonopy
 from phonopy.interface.phonopy_yaml import PhonopyYaml
 from phonopy.interface.vasp import read_vasp
 from phonopy.file_IO import parse_FORCE_SETS
+import os
+data_dir=os.path.dirname(os.path.abspath(__file__))
 
 class TestPhonopyYaml(unittest.TestCase):
 
@@ -15,11 +17,11 @@ class TestPhonopyYaml(unittest.TestCase):
         pass
     
     def test_read_poscar_yaml(self):
-        filename = "POSCAR.yaml"
+        filename = os.path.join(data_dir,"POSCAR.yaml")
         self._get_unitcell(filename)
 
     def test_read_phonopy_yaml(self):
-        filename = "phonopy.yaml"
+        filename = os.path.join(data_dir,"phonopy.yaml")
         self._get_unitcell(filename)
 
     def test_write_phonopy_yaml(self):
@@ -35,13 +37,13 @@ class TestPhonopyYaml(unittest.TestCase):
         # print(unitcell)
 
     def _get_phonon(self):
-        cell = read_vasp("../POSCAR_NaCl")
+        cell = read_vasp(os.path.join(data_dir,"../POSCAR_NaCl"))
         phonon = Phonopy(cell,
                          np.diag([2, 2, 2]),
                          primitive_matrix=[[0, 0.5, 0.5],
                                            [0.5, 0, 0.5],
                                            [0.5, 0.5, 0]])
-        force_sets = parse_FORCE_SETS(filename="FORCE_SETS_NaCl")
+        force_sets = parse_FORCE_SETS(filename=os.path.join(data_dir,"FORCE_SETS_NaCl"))
         phonon.set_displacement_dataset(force_sets)
         phonon.produce_force_constants()
         supercell = phonon.get_supercell()

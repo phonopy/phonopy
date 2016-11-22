@@ -3,6 +3,8 @@ import unittest
 import numpy as np
 from phonopy.interface.phonopy_yaml import get_unitcell_from_phonopy_yaml
 from phonopy.interface.pwscf import read_pwscf
+import os
+data_dir=os.path.dirname(os.path.abspath(__file__))
 
 class TestPwscf(unittest.TestCase):
 
@@ -13,8 +15,8 @@ class TestPwscf(unittest.TestCase):
         pass
     
     def test_read_pwscf(self):
-        cell, pp_filenames = read_pwscf("NaCl-pwscf.in")
-        cell_ref = get_unitcell_from_phonopy_yaml("NaCl-pwscf.yaml")
+        cell, pp_filenames = read_pwscf(os.path.join(data_dir,"NaCl-pwscf.in"))
+        cell_ref = get_unitcell_from_phonopy_yaml(os.path.join(data_dir,"NaCl-pwscf.yaml"))
         self.assertTrue(
             (np.abs(cell.get_cell() - cell_ref.get_cell()) < 1e-5).all())
         diff_pos = cell.get_scaled_positions() - cell_ref.get_scaled_positions()
