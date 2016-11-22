@@ -153,7 +153,7 @@ class Symmetry(object):
         translations = self._symmetry_operations['translations']
         positions = self._cell.get_scaled_positions()
         lattice = self._cell.get_cell()
-        map_atoms = range(self._cell.get_number_of_atoms())
+        map_atoms = np.arange(self._cell.get_number_of_atoms())
         for i, p in enumerate(positions):
             is_found = False
             for j in range(i):
