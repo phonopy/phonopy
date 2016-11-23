@@ -816,10 +816,9 @@ sampling mesh has to be checked. Usually this calculation is not
 computationally demanding, so the convergence is easily achieved with
 increasing the density of the sampling mesh. <code class="docutils literal"><span class="pre">-p</span></code> option can be used
 together to plot the thermal propreties.</p>
-<p>Phonon frequencies have to be calculated in THz and this is the
-default setting of phonopy. However as a special case when
-unit conversion factor is specified using
-<code class="docutils literal"><span class="pre">FREQUENCY_CONVERSION_FACTOR</span></code> tag, careful attention is required.</p>
+<p>Phonon frequencies in THz, which is the default setting of phonopy,
+are used to obtain the thermal properties, therefore physical units
+have to be set properly for it (see <a class="reference internal" href="interfaces.html#calculator-interfaces"><span class="std std-ref">Interfaces to calculators</span></a>.)</p>
 <p>The calculated values are
 written into <code class="docutils literal"><span class="pre">thermal_properties.yaml</span></code>. The unit systems of free
 energy, heat capacity, and entropy are kJ/mol, J/K/mol, and J/K/mol,
@@ -844,17 +843,17 @@ temperature range to be calculated. The default values of them are 0,
 <p>Mean square displacements projected to Cartesian axes as a function of
 temperature are calculated from the number of phonon excitations. The
 usages of <code class="docutils literal"><span class="pre">TMAX</span></code>, <code class="docutils literal"><span class="pre">TMIN</span></code>, <code class="docutils literal"><span class="pre">TSTEP</span></code> tags are same as those in
-<a class="reference internal" href="#thermal-properties-tag"><span class="std std-ref">thermal properties tags</span></a>. The result is
-writen into <code class="docutils literal"><span class="pre">thermal_displacements.yaml</span></code>. See the detail of the
-method, <a class="reference internal" href="thermal-displacement.html#thermal-displacement"><span class="std std-ref">Mean square displacement</span></a>. These tags must be used with
+<a class="reference internal" href="#thermal-properties-tag"><span class="std std-ref">thermal properties tags</span></a>. Phonon
+frequencies in THz, which is the default setting of phonopy, are used to
+obtain the mean square displacements, therefore physical units have to
+be set properly for it (see <a class="reference internal" href="interfaces.html#calculator-interfaces"><span class="std std-ref">Interfaces to calculators</span></a>.) The result
+is given in <img class="math" src="_images/math/9bb7861c0c2b2f9e34557ec7737ffcf2151475b6.png" alt="\textrm{\AA}^2"/> and writen into
+<code class="docutils literal"><span class="pre">thermal_displacements.yaml</span></code>. See the detail of the method,
+<a class="reference internal" href="thermal-displacement.html#thermal-displacement"><span class="std std-ref">Mean square displacement</span></a>. These tags must be used with
 <a class="reference internal" href="#mesh-sampling-tags"><span class="std std-ref">Mesh sampling tags</span></a></p>
 <p><code class="docutils literal"><span class="pre">CUTOFF_FREQUENCY</span></code> tag with a small value is recommened to be set
 when sampling <img class="math" src="_images/math/d872993ed0c7c420e73e77a1d285ac100c516806.png" alt="\Gamma"/> point or using very dense sampling mesh
 to avoid divergence.</p>
-<p>Phonon frequencies have to be calculated in THz and this is the
-default setting of phonopy. However as a special case when unit
-conversion factor is specified using <code class="docutils literal"><span class="pre">FREQUENCY_CONVERSION_FACTOR</span></code>
-tag, careful attention is required.</p>
 <p>The projection is applied along arbitrary direction using
 <code class="docutils literal"><span class="pre">PROJECTION_DIRECTION</span></code> tag (<a class="reference internal" href="#projection-direction-tag"><span class="std std-ref">PROJECTION_DIRECTION</span></a>).</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">TDISP</span> <span class="o">=</span> <span class="o">.</span><span class="n">TRUE</span><span class="o">.</span>
@@ -864,13 +863,17 @@ tag, careful attention is required.</p>
 </div>
 <div class="section" id="tdispmat-tmax-tmin-and-tstep">
 <span id="thermal-displacement-matrices-tag"></span><h3><a class="toc-backref" href="#id44"><code class="docutils literal"><span class="pre">TDISPMAT</span></code>, <code class="docutils literal"><span class="pre">TMAX</span></code>, <code class="docutils literal"><span class="pre">TMIN</span></code>, and <code class="docutils literal"><span class="pre">TSTEP</span></code></a><a class="headerlink" href="#tdispmat-tmax-tmin-and-tstep" title="Permalink to this headline">¶</a></h3>
-<p>Mean square displacement matricies are calculated. The difinition is
-shown at <a class="reference internal" href="thermal-displacement.html#thermal-displacement"><span class="std std-ref">Mean square displacement</span></a>. The result is writen into
+<p>Mean square displacement matricies are calculated. The definition is
+shown at <a class="reference internal" href="thermal-displacement.html#thermal-displacement"><span class="std std-ref">Mean square displacement</span></a>. Phonon frequencies in THz, which
+is the default setting of phonopy, are
+used to obtain the mean square displacement matricies, therefore
+physical units have to be set properly for it (see
+<a class="reference internal" href="interfaces.html#calculator-interfaces"><span class="std std-ref">Interfaces to calculators</span></a>.) The result is given in
+<img class="math" src="_images/math/9bb7861c0c2b2f9e34557ec7737ffcf2151475b6.png" alt="\textrm{\AA}^2"/> and writen into
 <code class="docutils literal"><span class="pre">thermal_displacement_matrices.yaml</span></code> where six matrix elements are
 given in the order of xx, yy, zz, yz, xz, xy.  In this yaml file,
 <code class="docutils literal"><span class="pre">displacement_matrices</span></code> and <code class="docutils literal"><span class="pre">displacement_matrices_cif</span></code> correspond
-to
-<img class="math" src="_images/math/010a04123831b0cd81f4fe4c26efc100be6067b9.png" alt="\mathrm{U}_\text{cart}"/> and <img class="math" src="_images/math/b72ca23df3499e7e1df096fd8b1956164fb947bb.png" alt="\mathrm{U}_\text{cif}"/>
+to <img class="math" src="_images/math/010a04123831b0cd81f4fe4c26efc100be6067b9.png" alt="\mathrm{U}_\text{cart}"/> and <img class="math" src="_images/math/b72ca23df3499e7e1df096fd8b1956164fb947bb.png" alt="\mathrm{U}_\text{cif}"/>
 defined at <a class="reference internal" href="thermal-displacement.html#thermal-displacement-matrix"><span class="std std-ref">Mean square displacement matrix</span></a>, respectively.</p>
 <p><code class="docutils literal"><span class="pre">CUTOFF_FREQUENCY</span></code> tag with a small value is recommened to be set
 when sampling <img class="math" src="_images/math/d872993ed0c7c420e73e77a1d285ac100c516806.png" alt="\Gamma"/> point or using very dense sampling mesh
@@ -878,19 +881,20 @@ to avoid divergence.</p>
 <p>The 3x3 matrix restricts distribution of each atom around the
 equilibrium position to be ellipsoid. But the distribution is not
 necessarily to be so.</p>
-<p>Phonon frequencies have to be calculated in THz and this is the
-default setting of phonopy. However as a special case when
-unit conversion factor is specified using
-<code class="docutils literal"><span class="pre">FREQUENCY_CONVERSION_FACTOR</span></code> tag, careful attention is required.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">TDISPMAT</span> <span class="o">=</span> <span class="o">.</span><span class="n">TRUE</span><span class="o">.</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="tdispmat-cif">
 <span id="thermal-displacement-cif-tag"></span><h3><a class="toc-backref" href="#id45"><code class="docutils literal"><span class="pre">TDISPMAT_CIF</span></code></a><a class="headerlink" href="#tdispmat-cif" title="Permalink to this headline">¶</a></h3>
-<p>This tag specifis a temperature at which thermal displacement is
+<p>This tag specifis a temperature (K) at which thermal displacement is
 calculated and the mean square displacement matrix is written to the
-cif file <code class="docutils literal"><span class="pre">tdispmat.cif</span></code> with the dictionary item <code class="docutils literal"><span class="pre">aniso_U</span></code>.</p>
+cif file <code class="docutils literal"><span class="pre">tdispmat.cif</span></code> with the dictionary item <code class="docutils literal"><span class="pre">aniso_U</span></code>. Phonon
+frequencies in THz, which is the default setting of phonopy, are used
+to obtain the mean square displacement matricies, therefore physical
+units have to be set properly for it (see
+<a class="reference internal" href="interfaces.html#calculator-interfaces"><span class="std std-ref">Interfaces to calculators</span></a>.) The result is given in
+<img class="math" src="_images/math/9bb7861c0c2b2f9e34557ec7737ffcf2151475b6.png" alt="\textrm{\AA}^2"/>.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">TDISPMAT_CIF</span> <span class="o">=</span> <span class="mf">1273.0</span>
 </pre></div>
 </div>
