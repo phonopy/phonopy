@@ -55,6 +55,12 @@ int cel_is_overlap(const double a[3],
 		   const double b[3],
 		   SPGCONST double lattice[3][3],
 		   const double symprec);
+int cel_is_overlap_with_same_type(const double a[3],
+				  const double b[3],
+				  const int type_a,
+				  const int type_b,
+				  SPGCONST double lattice[3][3],
+				  const double symprec);
 int cel_any_overlap(SPGCONST Cell * cell,
 		    const double symprec);
 int cel_any_overlap_with_same_type(SPGCONST Cell * cell,

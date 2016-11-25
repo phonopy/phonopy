@@ -37,6 +37,7 @@
 #include "mathfunc.h"
 #include "symmetry.h"
 #include "cell.h"
+#include "spin.h"
 #include "debug.h"
 
 static Symmetry * get_collinear_operations(SPGCONST Symmetry *sym_nonspin,
@@ -104,10 +105,12 @@ static Symmetry * get_collinear_operations(SPGCONST Symmetry *sym_nonspin,
 	pos[k] += sym_nonspin->trans[i][k];
       }
       for (k = 0; k < cell->size; k++) {
-	if (cel_is_overlap(cell->position[k],
-			   pos,
-			   cell->lattice,
-			   symprec)) {
+	if (cel_is_overlap_with_same_type(cell->position[k],
+					  pos,
+					  cell->types[k],
+					  cell->types[j],
+					  cell->lattice,
+					  symprec)) {
 	  if (sign == 0) {
 	    if (mat_Dabs(spins[j] - spins[k]) < symprec) {
 	      sign = 1;
@@ -183,7 +186,12 @@ static int set_equivalent_atoms(int * equiv_atoms,
 	pos[k] += symmetry->trans[j][k];
       }
       for (k = 0; k < cell->size; k++) {
-	if (cel_is_overlap(pos, cell->position[k], cell->lattice, symprec)) {
+	if (cel_is_overlap_with_same_type(pos,
+					  cell->position[k],
+					  cell->types[i],
+					  cell->types[k],
+					  cell->lattice,
+					  symprec)) {
 	  if (mapping_table[k] < i) {
 	    equiv_atoms[i] = equiv_atoms[mapping_table[k]];
 	    is_found = 1;
@@ -240,7 +248,12 @@ static int * get_mapping_table(SPGCONST Symmetry *symmetry,
 	  pos[k] = cell->position[i][k] + symmetry->trans[j][k];
 	}
 	for (k = 0; k < cell->size; k++) {
-	  if (cel_is_overlap(pos, cell->position[k], cell->lattice, symprec)) {
+	  if (cel_is_overlap_with_same_type(pos,
+					    cell->position[k],
+					    cell->types[i],
+					    cell->types[k],
+					    cell->lattice,
+					    symprec)) {
 	    if (k < i) {
 	      mapping_table[i] = mapping_table[k];
 	      is_found = 1;

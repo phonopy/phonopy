@@ -37,6 +37,7 @@
 #include "cell.h"
 #include "mathfunc.h"
 #include "symmetry.h"
+#include "site_symmetry.h"
 #include "sitesym_database.h"
 
 #include "debug.h"
@@ -222,10 +223,12 @@ static int set_equivalent_atom(VecDBL *positions,
       for (l = 0; l < 3; l++) {
 	pos[l] += conv_sym->trans[k][l];
       }
-      if (cel_is_overlap(pos,
-			 conv_prim->position[i],
-			 conv_prim->lattice,
-			 symprec)) {
+      if (cel_is_overlap_with_same_type(pos,
+					conv_prim->position[i],
+					conv_prim->types[indep_atoms[j]],
+					conv_prim->types[i],
+					conv_prim->lattice,
+					symprec)) {
 	for (l = 0; l < 3; l++) {
 	  positions->vec[i][l] = mat_Dmod1(pos[l]);
 	}
