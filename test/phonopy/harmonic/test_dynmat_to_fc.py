@@ -31,8 +31,9 @@ class TestDynmatToFc(unittest.TestCase):
     def _compare(self, comm_points, filename="comm_points.dat"):
         with open(os.path.join(data_dir,filename)) as f:
             comm_points_in_file = np.loadtxt(f)
-            self.assertTrue(
-                (np.abs(comm_points_in_file[:,1:] - comm_points) < 1e-3).all())
+            #self.assertTrue(
+            #    (np.abs(comm_points_in_file[:,1:] - comm_points) < 1e-3).all())
+            np.testing.assert_allclose(comm_points_in_file[:,1:],comm_points,atol=1e-3)
 
     def _write(self, comm_points, filename="comm_points.dat"):
         with open(os.path.join(data_dir,filename), 'w') as w:
