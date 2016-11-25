@@ -34,6 +34,7 @@
 
 #include <math.h>
 #include <stdlib.h>
+#define PI 3.14159265358979323846
 
 static void get_dynmat_ij(double *dynamical_matrix,
 			  const int num_patom, 
@@ -253,8 +254,8 @@ static void get_dm(double dm_real[3][3],
     for (m = 0; m < 3; m++) {
       phase += q[m] * r[k * num_patom * 81 + i * 81 + l * 3 + m];
     }
-    cos_phase += cos(phase * 2 * M_PI) / multi[k * num_patom + i];
-    sin_phase += sin(phase * 2 * M_PI) / multi[k * num_patom + i];
+    cos_phase += cos(phase * 2 * PI) / multi[k * num_patom + i];
+    sin_phase += sin(phase * 2 * PI) / multi[k * num_patom + i];
   }
 
   for (l = 0; l < 3; l++) {

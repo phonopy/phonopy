@@ -143,7 +143,11 @@ class Symmetry(object):
         self._map_atoms = self._dataset['equivalent_atoms']
 
     def _set_symmetry_operations_with_magmoms(self):
-        self._symmetry_operations = spg.get_symmetry(self._cell,
+        cell = (self._cell.get_cell(),
+                self._cell.get_scaled_positions(),
+                self._cell.get_atomic_numbers(),
+                self._cell.get_magnetic_moments())
+        self._symmetry_operations = spg.get_symmetry(cell,
                                                      symprec=self._symprec)
         self._map_atoms = self._symmetry_operations['equivalent_atoms']
         self._set_map_atoms()
