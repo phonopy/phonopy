@@ -240,8 +240,18 @@ def parse_disp_yaml(filename="disp.yaml", return_cell=False):
     
     if return_cell:
         lattice = dataset['lattice']
-        positions = [x['position'] for x in dataset['atoms']]
-        symbols = [x['symbol'] for x in dataset['atoms']]
+        if 'points' in dataset:
+            data_key = 'points'
+            pos_key = 'coordinates'
+        elif 'atoms' in dataset:
+            data_key = 'atoms'
+            pos_key = 'position'
+        else:
+            data_key = None
+            pos_key = None
+        
+        positions = [x[pos_key] for x in dataset[data_key]]
+        symbols = [x['symbol'] for x in dataset[data_key]]
         cell = Atoms(cell=lattice,
                      scaled_positions=positions,
                      symbols=symbols,
