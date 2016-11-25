@@ -263,14 +263,14 @@ int spgat_get_international(char symbol[11],
 
 /* Space group is found in schoenflies (``symbol``) and as number (return */
 /* value).  0 is returned when it fails. */
-int spg_get_schoenflies(char symbol[10],
+int spg_get_schoenflies(char symbol[7],
 			SPGCONST double lattice[3][3],
 			SPGCONST double position[][3],
 			const int types[],
 			const int num_atom,
 			const double symprec);
 
-int spgat_get_schoenflies(char symbol[10],
+int spgat_get_schoenflies(char symbol[7],
 			  SPGCONST double lattice[3][3],
 			  SPGCONST double position[][3],
 			  const int types[],

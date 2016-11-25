@@ -32,6 +32,8 @@
 /* ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE */
 /* POSSIBILITY OF SUCH DAMAGE. */
 
+#include "sitesym_database.h"
+
 static const int position_wyckoff[] =
   {    0, /* The first element is dummy. */
        1,    2,   11,   16,   21,   26,   27,   28,   29,   32,

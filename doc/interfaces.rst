@@ -21,6 +21,9 @@ Physical unit systems used for the calculators are as follows::
    Siesta  | au (bohr)  AMU           eV/Angstrom   eV/Angstrom.au
    elk     | au (bohr)  AMU           hartree/au    hartree/au^2
 
+For these sets of physical properties, phonon frequency is calcualted
+in THz.
+
 Default file name, value, and conversion factor
 ---------------------------------------------------
 

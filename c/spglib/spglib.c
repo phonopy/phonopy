@@ -144,7 +144,7 @@ static int get_international(char symbol[11],
 			     const int types[],
 			     const int num_atom,
 			     const double symprec);
-static int get_schoenflies(char symbol[10],
+static int get_schoenflies(char symbol[7],
 			   SPGCONST double lattice[3][3],
 			   SPGCONST double position[][3],
 			   const int types[], const int num_atom,
@@ -505,7 +505,7 @@ int spgat_get_international(char symbol[11],
 }
 
 /* Return 0 if failed */
-int spg_get_schoenflies(char symbol[10],
+int spg_get_schoenflies(char symbol[7],
 			SPGCONST double lattice[3][3],
 			SPGCONST double position[][3],
 			const int types[],
@@ -523,7 +523,7 @@ int spg_get_schoenflies(char symbol[10],
 }
 
 /* Return 0 if failed */
-int spgat_get_schoenflies(char symbol[10],
+int spgat_get_schoenflies(char symbol[7],
 			  SPGCONST double lattice[3][3],
 			  SPGCONST double position[][3],
 			  const int types[],
@@ -1667,7 +1667,7 @@ static int get_international(char symbol[11],
   return 0;
 }
 
-static int get_schoenflies(char symbol[10],
+static int get_schoenflies(char symbol[7],
 			   SPGCONST double lattice[3][3],
 			   SPGCONST double position[][3],
 			   const int types[],
