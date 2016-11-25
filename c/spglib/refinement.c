@@ -769,7 +769,12 @@ static int search_equivalent_atom(const int atom_index,
       pos_rot[j] += symmetry->trans[i][j];
     }
     for (j = 0; j < atom_index; j++) {
-      if (cel_is_overlap(cell->position[j], pos_rot, cell->lattice, symprec)) {
+      if (cel_is_overlap_with_same_type(cell->position[j],
+					pos_rot,
+					cell->types[j],
+					cell->types[atom_index],
+					cell->lattice,
+					symprec)) {
 	return j;
       }
     }
