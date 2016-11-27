@@ -101,6 +101,7 @@ def file_exists(filename, log_level):
 
 def finalize_phonopy(log_level,
                      phonopy_conf,
+                     phonon,
                      interface_mode,
                      filename="phonopy.yaml"):
     if log_level > 0:
@@ -1061,4 +1062,4 @@ else:
 ########################
 # Phonopy finalization #
 ########################
-finalize_phonopy(log_level, phonopy_conf, interface_mode)
+finalize_phonopy(log_level, phonopy_conf, phonon, interface_mode)
