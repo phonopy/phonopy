@@ -32,6 +32,8 @@
 /* ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE */
 /* POSSIBILITY OF SUCH DAMAGE. */
 
+#include "kgrid.h"
+
 static void get_all_grid_addresses(int grid_address[][3], const int mesh[3]);
 static int get_grid_point_double_mesh(const int address_double[3],
 				      const int mesh[3]);

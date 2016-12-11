@@ -34,6 +34,7 @@
 
 #include <math.h>
 #include <stdlib.h>
+#include <dynmat.h>
 #define PI 3.14159265358979323846
 
 static void get_dynmat_ij(double *dynamical_matrix,
