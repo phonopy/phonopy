@@ -42,7 +42,9 @@ from phonopy.cui.settings import fracval
 from phonopy.structure.atoms import PhonopyAtoms as Atoms
 from phonopy.structure.atoms import symbol_map
 
-def parse_set_of_forces(num_atoms, forces_filenames):
+def parse_set_of_forces(num_atoms,
+                        forces_filenames,
+                        verbose=True):
     hook = 'Forces acting on atoms'
     force_sets = []
     for filename in forces_filenames:
@@ -54,7 +56,9 @@ def parse_set_of_forces(num_atoms, forces_filenames):
         if not pwscf_forces:
             return []
 
-        drift_force = get_drift_forces(pwscf_forces)
+        drift_force = get_drift_forces(pwscf_forces,
+                                       filename=filename,
+                                       verbose=verbose)
         force_sets.append(np.array(pwscf_forces) - drift_force)
         
     return force_sets

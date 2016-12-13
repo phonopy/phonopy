@@ -36,12 +36,13 @@ import sys
 import numpy as np
 
 from phonopy.file_IO import collect_forces, get_drift_forces
-from phonopy.interface.vasp import get_scaled_positions_lines, sort_positions_by_symbols
+from phonopy.interface.vasp import (get_scaled_positions_lines,
+                                    sort_positions_by_symbols)
 from phonopy.units import Bohr
 from phonopy.structure.atoms import PhonopyAtoms as Atoms
 from phonopy.structure.atoms import symbol_map
 
-def parse_set_of_forces(num_atoms, forces_filenames):
+def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
     hook = 'Forces :'
     force_sets = []
     for filename in forces_filenames:
@@ -54,7 +55,9 @@ def parse_set_of_forces(num_atoms, forces_filenames):
         if not elk_forces:
             return []
 
-        drift_force = get_drift_forces(elk_forces)
+        drift_force = get_drift_forces(elk_forces,
+                                       filename=filename,
+                                       verbose=verbose)
         force_sets.append(np.array(elk_forces) - drift_force)
 
     return force_sets

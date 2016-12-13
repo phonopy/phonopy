@@ -161,7 +161,7 @@ def read_aims_output(filename):
             forces = []
             for i in range(N):
                 l += 1
-                force = map(float, lines[l].split()[2:5])
+                force = map(float, lines[l].split()[-3:])
                 forces.append(force)
         l += 1
     

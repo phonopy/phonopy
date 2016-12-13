@@ -44,7 +44,8 @@ def parse_set_of_forces(displacements,
                         supercell,
                         disp_keyword='first_atoms',
                         is_distribute=True,
-                        symprec=1e-5):
+                        symprec=1e-5,
+                        verbose=True):
     natom = supercell.get_number_of_atoms()
     lattice = supercell.get_cell()
     force_sets = []
@@ -64,13 +65,16 @@ def parse_set_of_forces(displacements,
                 return []
         else:
             if not (natom == len(wien2k_forces)):
-                print("%s contains only forces of %d atoms" %
-                      (wien2k_filename, len(wien2k_forces)))
+                if verbose:
+                    print("%s contains only forces of %d atoms" %
+                          (wien2k_filename, len(wien2k_forces)))
                 return []
             else:
                 forces = wien2k_forces
 
-        drift_force = get_drift_forces(forces, filename=wien2k_filename)
+        drift_force = get_drift_forces(forces,
+                                       filename=wien2k_filename,
+                                       verbose=verbose)
         force_sets.append(np.array(forces) - drift_force)
                 
     return force_sets
