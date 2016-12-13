@@ -102,14 +102,16 @@ def _get_line_ignore_blank(f):
         line = _get_line_ignore_blank(f)
     return line
 
-def get_drift_forces(forces, filename=None):
+def get_drift_forces(forces, filename=None, verbose=True):
     drift_force = np.sum(forces, axis=0) / len(forces)
-    if filename is None:
-        print("Drift force")
-    else:
-        print("Drift force of %s" % filename)
-    print("%12.8f %12.8f %12.8f" % tuple(drift_force))
-    print("This drift force was subtracted from forces.")
+
+    if verbose:
+        if filename is None:
+            print("Drift force: %12.8f %12.8f %12.8f to be subtracted"
+                  % tuple(drift_force))
+        else:
+            print("Drift force of %s to be subtracted" % filename)
+            print("%12.8f %12.8f %12.8f" % tuple(drift_force))
 
     return drift_force
     
