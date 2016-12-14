@@ -228,6 +228,12 @@ int spgat_get_symmetry_with_collinear_spin(int rotation[][3][3],
 					   const double symprec,
 					   const double angle_tolerance);
 
+/* Space group type (hall_number) is searched from symmetry operations. */
+int spg_get_hall_number_from_symmetry(SPGCONST int rotation[][3][3],
+                                      SPGCONST double translation[][3],
+                                      const int num_operations,
+                                      const double symprec);
+
 /* Return exact number of symmetry operations. This function may */
 /* be used in advance to allocate memoery space for symmetry */
 /* operations. */

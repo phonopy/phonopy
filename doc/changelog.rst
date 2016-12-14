@@ -3,10 +3,11 @@
 Change Log
 ==========
 
-Nov-1-2016:
+Dec-14-2016: Version 1.11.6
 ---------------------------
 
 * ``--fz`` option comes back. See :ref:`fz_force_sets_option`.
+* spglib update to v1.9.9
 
 Oct-23-2016: Version 1.11.2
 ---------------------------

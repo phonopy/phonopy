@@ -102,19 +102,6 @@ def _get_line_ignore_blank(f):
         line = _get_line_ignore_blank(f)
     return line
 
-def get_drift_forces(forces, filename=None, verbose=True):
-    drift_force = np.sum(forces, axis=0) / len(forces)
-
-    if verbose:
-        if filename is None:
-            print("Drift force: %12.8f %12.8f %12.8f to be subtracted"
-                  % tuple(drift_force))
-        else:
-            print("Drift force of %s to be subtracted" % filename)
-            print("%12.8f %12.8f %12.8f" % tuple(drift_force))
-
-    return drift_force
-    
 def collect_forces(f, num_atom, hook, force_pos, word=None):
     for line in f:
         if hook in line:
@@ -130,9 +117,11 @@ def collect_forces(f, num_atom, hook, force_pos, word=None):
             
         elems = line.split()
         if len(elems) > force_pos[2]:
-            forces.append([float(elems[i]) for i in force_pos])
-            # calculation = 'scf'
-            # forces.append([float(x) for x in elems[6:9]])
+            try:
+                forces.append([float(elems[i]) for i in force_pos])
+            except ValueError:
+                forces = []
+                break
         else:
             return False
 
@@ -160,7 +149,8 @@ def iter_collect_forces(filename,
             prev_forces = forces[:]
 
     if i == max_iter - 1:
-        print("Reached to max number of iterations (%d)." % max_iter)
+        sys.stderr.write("Reached to max number of iterations (%d).\n" %
+                         max_iter)
         
     return forces
     

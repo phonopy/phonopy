@@ -51,17 +51,18 @@ typedef struct {
 
 Symmetry * sym_alloc_symmetry(const int size);
 void sym_free_symmetry(Symmetry * symmetry);
-Symmetry * sym_get_operation(SPGCONST Cell * primitive,
-			     const double symprec);
-Symmetry * sym_reduce_operation(SPGCONST Cell * primitive,
-				SPGCONST Symmetry * symmetry,
-				const double symprec);
-VecDBL * sym_get_pure_translation(SPGCONST Cell *cell,
-				   const double symprec);
-VecDBL * sym_reduce_pure_translation(SPGCONST Cell * cell,
-				      const VecDBL * pure_trans,
-				      const double symprec);
-void sym_set_angle_tolerance(double tolerance);
-double sym_get_angle_tolerance(void);
+Symmetry * sym_get_operation(const Cell * primitive,
+                             const double symprec,
+                             const double angle_tolerance);
+Symmetry * sym_reduce_operation(const Cell * primitive,
+                                const Symmetry * symmetry,
+                                const double symprec,
+				const double angle_tolerance);
+VecDBL * sym_get_pure_translation(const Cell *cell,
+				  const double symprec);
+VecDBL * sym_reduce_pure_translation(const Cell * cell,
+				     const VecDBL * pure_trans,
+				     const double symprec,
+				     const double angle_tolerance);
 
 #endif

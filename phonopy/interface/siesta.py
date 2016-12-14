@@ -36,8 +36,10 @@ import sys
 import numpy as np
 import re
 
-from phonopy.file_IO import iter_collect_forces, get_drift_forces
-from phonopy.interface.vasp import get_scaled_positions_lines
+from phonopy.file_IO import iter_collect_forces
+from phonopy.interface.vasp import (get_scaled_positions_lines,
+                                    check_forces,
+                                    get_drift_forces)
 from phonopy.units import Bohr
 from phonopy.cui.settings import fracval
 from phonopy.structure.atoms import PhonopyAtoms as Atoms
@@ -45,21 +47,28 @@ from phonopy.structure.atoms import symbol_map
 
 def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
     hook = '' # Just for skipping the first line
+    is_parsed = True
     force_sets = []
-    for filename in forces_filenames:
+    for i, filename in enumerate(forces_filenames):
+        if verbose:
+            sys.stdout.write("%d. " % (i + 1))
         siesta_forces = iter_collect_forces(filename,
                                             num_atoms,
                                             hook,
                                             [1, 2, 3],
                                             word='')
-        if not siesta_forces:
-            return []
-        drift_force = get_drift_forces(siesta_forces,
-                                       filename=filename,
-                                       verbose=verbose)
-        force_sets.append(np.array(siesta_forces) - drift_force)
+        if check_forces(siesta_forces, num_atoms, filename, verbose=verbose):
+            drift_force = get_drift_forces(siesta_forces,
+                                           filename=filename,
+                                           verbose=verbose)
+            force_sets.append(np.array(siesta_forces) - drift_force)
+        else:
+            is_parsed = False
 
-    return force_sets
+    if is_parsed:
+        return force_sets
+    else:
+        return []
 
 def read_siesta(filename):
     siesta_in = SiestaIn(open(filename).read())
