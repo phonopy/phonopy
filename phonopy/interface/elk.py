@@ -35,33 +35,41 @@
 import sys
 import numpy as np
 
-from phonopy.file_IO import collect_forces, get_drift_forces
+from phonopy.file_IO import collect_forces
 from phonopy.interface.vasp import (get_scaled_positions_lines,
-                                    sort_positions_by_symbols)
+                                    sort_positions_by_symbols,
+                                    check_forces,
+                                    get_drift_forces)
 from phonopy.units import Bohr
 from phonopy.structure.atoms import PhonopyAtoms as Atoms
 from phonopy.structure.atoms import symbol_map
 
 def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
     hook = 'Forces :'
+    is_parsed = True
     force_sets = []
-    for filename in forces_filenames:
+
+    for i, filename in enumerate(forces_filenames):
+        if verbose:
+            sys.stdout.write("%d. " % (i + 1))
         f = open(filename)
         elk_forces = collect_forces(f,
                                     num_atoms,
                                     hook,
                                     [3, 4, 5],
                                     word='total force')
-        if not elk_forces:
-            return []
+        if check_forces(elk_forces, num_atoms, filename, verbose=verbose):
+            drift_force = get_drift_forces(elk_forces,
+                                           filename=filename,
+                                           verbose=verbose)
+            force_sets.append(np.array(elk_forces) - drift_force)
+        else:
+            is_parsed = False
 
-        drift_force = get_drift_forces(elk_forces,
-                                       filename=filename,
-                                       verbose=verbose)
-        force_sets.append(np.array(elk_forces) - drift_force)
-
-    return force_sets
-
+    if is_parsed:
+        return force_sets
+    else:
+        return []
 
 def read_elk(filename):
     elk_in = ElkIn(open(filename).readlines())
