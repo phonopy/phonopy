@@ -37,17 +37,21 @@
 
 #include "cell.h"
 #include "mathfunc.h"
+#include "symmetry.h"
 
 typedef struct {
   Cell *cell;
-  int * mapping_table;
+  int *mapping_table;
   int size;
-  double t_mat[3][3];
   double tolerance;
+  double angle_tolerance;
 } Primitive;
 
 Primitive * prm_alloc_primitive(const int size);
 void prm_free_primitive(Primitive * primitive);
-Primitive * prm_get_primitive(SPGCONST Cell * cell, const double symprec);
-
+Primitive * prm_get_primitive(const Cell * cell,
+                              const double symprec,
+                              const double angle_tolerance);
+Symmetry * prm_get_primitive_symmetry(const Symmetry *symmetry,
+				      const double symprec);
 #endif
