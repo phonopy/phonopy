@@ -41,17 +41,17 @@
 #include "symmetry.h"
 
 Symmetry *
-ref_get_refined_symmetry_operations(SPGCONST Cell * cell,
-				    SPGCONST Cell * primitive,
-				    SPGCONST Spacegroup * spacegroup,
-				    const double symprec);
+ref_get_refined_symmetry_operations(const Cell * cell,
+                                    const Cell * primitive,
+                                    SPGCONST Spacegroup * spacegroup,
+                                    const double symprec);
 Cell * ref_get_Wyckoff_positions(int * wyckoffs,
-				 int * equiv_atoms,
-				 SPGCONST Cell * primitive,
-				 SPGCONST Cell * cell,
-				 SPGCONST Spacegroup * spacegroup,
-				 SPGCONST Symmetry * symmetry,
-				 const int * mapping_table,
-				 const double symprec);
+                                 int * equiv_atoms,
+                                 const Cell * primitive,
+                                 const Cell * cell,
+                                 SPGCONST Spacegroup * spacegroup,
+                                 const Symmetry * symmetry,
+                                 const int * mapping_table,
+                                 const double symprec);
 
 #endif

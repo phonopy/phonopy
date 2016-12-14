@@ -40,40 +40,40 @@
 #include "spin.h"
 #include "debug.h"
 
-static Symmetry * get_collinear_operations(SPGCONST Symmetry *sym_nonspin,
-					   SPGCONST Cell *cell,
-					   const double spins[],
-					   const double symprec);
+static Symmetry * get_collinear_operations(const Symmetry *sym_nonspin,
+                                           const Cell *cell,
+                                           const double spins[],
+                                           const double symprec);
 static int set_equivalent_atoms(int * equiv_atoms,
-				SPGCONST Symmetry *symmetry,
-				SPGCONST Cell * cell,
-				const double symprec);
-static int * get_mapping_table(SPGCONST Symmetry *symmetry,
-			       SPGCONST Cell * cell,
-			       const double symprec);
+                                const Symmetry *symmetry,
+                                const Cell * cell,
+                                const double symprec);
+static int * get_mapping_table(const Symmetry *symmetry,
+                               const Cell * cell,
+                               const double symprec);
 
 /* Return NULL if failed */
 Symmetry * spn_get_collinear_operations(int equiv_atoms[],
-					SPGCONST Symmetry *sym_nonspin,
-					SPGCONST Cell *cell,
-					const double spins[],
-					const double symprec)
+                                        const Symmetry *sym_nonspin,
+                                        const Cell *cell,
+                                        const double spins[],
+                                        const double symprec)
 {
   Symmetry *symmetry;
 
   symmetry = NULL;
 
   if ((symmetry = get_collinear_operations(sym_nonspin,
-					   cell,
-					   spins,
-					   symprec)) == NULL) {
+                                           cell,
+                                           spins,
+                                           symprec)) == NULL) {
     return NULL;
   }
 
   if ((set_equivalent_atoms(equiv_atoms,
-			    symmetry,
-			    cell,
-			    symprec)) == 0) {
+                            symmetry,
+                            cell,
+                            symprec)) == 0) {
     sym_free_symmetry(symmetry);
     symmetry = NULL;
   }
@@ -81,10 +81,10 @@ Symmetry * spn_get_collinear_operations(int equiv_atoms[],
   return symmetry;
 }
 
-static Symmetry * get_collinear_operations(SPGCONST Symmetry *sym_nonspin,
-					   SPGCONST Cell *cell,
-					   const double spins[],
-					   const double symprec)
+static Symmetry * get_collinear_operations(const Symmetry *sym_nonspin,
+                                           const Cell *cell,
+                                           const double spins[],
+                                           const double symprec)
 {
   Symmetry *symmetry;
   int i, j, k, sign, is_found, num_sym;
@@ -102,38 +102,38 @@ static Symmetry * get_collinear_operations(SPGCONST Symmetry *sym_nonspin,
     for (j = 0; j < cell->size; j++) {
       mat_multiply_matrix_vector_id3(pos, sym_nonspin->rot[i], cell->position[j]);
       for (k = 0; k < 3; k++) {
-	pos[k] += sym_nonspin->trans[i][k];
+        pos[k] += sym_nonspin->trans[i][k];
       }
       for (k = 0; k < cell->size; k++) {
-	if (cel_is_overlap_with_same_type(cell->position[k],
-					  pos,
-					  cell->types[k],
-					  cell->types[j],
-					  cell->lattice,
-					  symprec)) {
-	  if (sign == 0) {
-	    if (mat_Dabs(spins[j] - spins[k]) < symprec) {
-	      sign = 1;
-	      break;
-	    }
-	    if (mat_Dabs(spins[j] + spins[k]) < symprec) {
-	      sign = -1;
-	      break;
-	    }
-	    is_found = 0;
-	    break;
-	  } else {
-	    if (mat_Dabs(spins[j] - spins[k] * sign) < symprec) {
-	      break;
-	    } else {
-	      is_found = 0;
-	      break;
-	    }
-	  }
-	}
+        if (cel_is_overlap_with_same_type(cell->position[k],
+                                          pos,
+                                          cell->types[k],
+                                          cell->types[j],
+                                          cell->lattice,
+                                          symprec)) {
+          if (sign == 0) {
+            if (mat_Dabs(spins[j] - spins[k]) < symprec) {
+              sign = 1;
+              break;
+            }
+            if (mat_Dabs(spins[j] + spins[k]) < symprec) {
+              sign = -1;
+              break;
+            }
+            is_found = 0;
+            break;
+          } else {
+            if (mat_Dabs(spins[j] - spins[k] * sign) < symprec) {
+              break;
+            } else {
+              is_found = 0;
+              break;
+            }
+          }
+        }
       }
       if (! is_found) {
-	break;
+        break;
       }
     }
     if (is_found) {
@@ -159,9 +159,9 @@ static Symmetry * get_collinear_operations(SPGCONST Symmetry *sym_nonspin,
 
 /* Return 0 if failed */
 static int set_equivalent_atoms(int * equiv_atoms,
-				SPGCONST Symmetry *symmetry,
-				SPGCONST Cell * cell,
-				const double symprec)
+                                const Symmetry *symmetry,
+                                const Cell * cell,
+                                const double symprec)
 {
   int i, j, k, is_found;
   double pos[3];
@@ -180,27 +180,27 @@ static int set_equivalent_atoms(int * equiv_atoms,
     is_found = 0;
     for (j = 0; j < symmetry->size; j++) {
       mat_multiply_matrix_vector_id3(pos,
-				     symmetry->rot[j],
-				     cell->position[i]);
+                                     symmetry->rot[j],
+                                     cell->position[i]);
       for (k = 0; k < 3; k++) {
-	pos[k] += symmetry->trans[j][k];
+        pos[k] += symmetry->trans[j][k];
       }
       for (k = 0; k < cell->size; k++) {
-	if (cel_is_overlap_with_same_type(pos,
-					  cell->position[k],
-					  cell->types[i],
-					  cell->types[k],
-					  cell->lattice,
-					  symprec)) {
-	  if (mapping_table[k] < i) {
-	    equiv_atoms[i] = equiv_atoms[mapping_table[k]];
-	    is_found = 1;
-	    break;
-	  }
-	}
+        if (cel_is_overlap_with_same_type(pos,
+                                          cell->position[k],
+                                          cell->types[i],
+                                          cell->types[k],
+                                          cell->lattice,
+                                          symprec)) {
+          if (mapping_table[k] < i) {
+            equiv_atoms[i] = equiv_atoms[mapping_table[k]];
+            is_found = 1;
+            break;
+          }
+        }
       }
       if (is_found) {
-	break;
+        break;
       }
     }
     if (!is_found) {
@@ -222,16 +222,16 @@ static int set_equivalent_atoms(int * equiv_atoms,
 }
 
 /* Return NULL if failed */
-static int * get_mapping_table(SPGCONST Symmetry *symmetry,
-			       SPGCONST Cell * cell,
-			       const double symprec)
+static int * get_mapping_table(const Symmetry *symmetry,
+                               const Cell * cell,
+                               const double symprec)
 {
   int i, j, k, is_found;
   double pos[3];
   int *mapping_table;
   SPGCONST int I[3][3] = {{ 1, 0, 0},
-			  { 0, 1, 0},
-			  { 0, 0, 1}};
+                          { 0, 1, 0},
+                          { 0, 0, 1}};
 
   mapping_table = NULL;
 
@@ -244,26 +244,26 @@ static int * get_mapping_table(SPGCONST Symmetry *symmetry,
     is_found = 0;
     for (j = 0; j < symmetry->size; j++) {
       if (mat_check_identity_matrix_i3(symmetry->rot[j], I)) {
-	for (k = 0; k < 3; k++) {
-	  pos[k] = cell->position[i][k] + symmetry->trans[j][k];
-	}
-	for (k = 0; k < cell->size; k++) {
-	  if (cel_is_overlap_with_same_type(pos,
-					    cell->position[k],
-					    cell->types[i],
-					    cell->types[k],
-					    cell->lattice,
-					    symprec)) {
-	    if (k < i) {
-	      mapping_table[i] = mapping_table[k];
-	      is_found = 1;
-	      break;
-	    }
-	  }
-	}
+        for (k = 0; k < 3; k++) {
+          pos[k] = cell->position[i][k] + symmetry->trans[j][k];
+        }
+        for (k = 0; k < cell->size; k++) {
+          if (cel_is_overlap_with_same_type(pos,
+                                            cell->position[k],
+                                            cell->types[i],
+                                            cell->types[k],
+                                            cell->lattice,
+                                            symprec)) {
+            if (k < i) {
+              mapping_table[i] = mapping_table[k];
+              is_found = 1;
+              break;
+            }
+          }
+        }
       }
       if (is_found) {
-	break;
+        break;
       }
     }
     if (!is_found) {
