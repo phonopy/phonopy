@@ -69,7 +69,7 @@ def parse_set_of_forces(num_atoms,
             sys.stdout.write("%d " % (count + 1))
         count += 1
 
-        if not _check_forces(force_sets[-1], num_atoms, filename):
+        if not check_forces(force_sets[-1], num_atoms, filename):
             is_parsed = False
 
     if verbose:
@@ -80,13 +80,31 @@ def parse_set_of_forces(num_atoms,
     else:
         return []
 
-def _check_forces(forces, num_atom, filename):
+def check_forces(forces, num_atom, filename, verbose=True):
     if len(forces) != num_atom:
-        sys.stdout.write(" \"%s\" does not contain necessary information. " %
-                         filename)
+        if verbose:
+            stars = '*' * len(filename)
+            sys.stdout.write("\n")
+            sys.stdout.write("***************%s***************\n" % stars)
+            sys.stdout.write("***** Parsing \"%s\" failed. *****\n" % filename)
+            sys.stdout.write("***************%s***************\n" % stars)
         return False
     else:
         return True
+
+def get_drift_forces(forces, filename=None, verbose=True):
+    drift_force = np.sum(forces, axis=0) / len(forces)
+
+    if verbose:
+        if filename is None:
+            print("Drift force: %12.8f %12.8f %12.8f to be subtracted"
+                  % tuple(drift_force))
+        else:
+            print("Drift force of \"%s\" to be subtracted" % filename)
+            print("%12.8f %12.8f %12.8f" % tuple(drift_force))
+        sys.stdout.flush()
+
+    return drift_force
 
 def create_FORCE_CONSTANTS(filename, options, log_level):
     fc_and_atom_types = read_force_constant_vasprun_xml(filename)

@@ -35,27 +35,35 @@
 import sys
 import numpy as np
 
-from phonopy.file_IO import collect_forces, get_drift_forces
-from phonopy.interface.vasp import get_scaled_positions_lines
+from phonopy.file_IO import collect_forces
+from phonopy.interface.vasp import (get_scaled_positions_lines, check_forces,
+                                    get_drift_forces)
 from phonopy.units import Bohr
 from phonopy.cui.settings import fracval
 from phonopy.structure.atoms import PhonopyAtoms as Atoms
 
 def parse_set_of_forces(num_atoms, forces_filenames, verbose=True):
     hook = 'cartesian forces (eV/Angstrom)'
+    is_parsed = True
     force_sets = []
-    for filename in forces_filenames:
+    for i, filename in enumerate(forces_filenames):
+        if verbose:
+            sys.stdout.write("%d. " % (i + 1))
+
         f = open(filename)
         abinit_forces = collect_forces(f, num_atoms, hook, [1, 2, 3])
-        if not abinit_forces:
-            return []
+        if check_forces(abinit_forces, num_atoms, filename, verbose=verbose):
+            drift_force = get_drift_forces(abinit_forces,
+                                           filename=filename,
+                                           verbose=verbose)
+            force_sets.append(np.array(abinit_forces) - drift_force)
+        else:
+            is_parsed = False
 
-        drift_force = get_drift_forces(abinit_forces,
-                                       filename=filename,
-                                       verbose=verbose)
-        force_sets.append(np.array(abinit_forces) - drift_force)
-
-    return force_sets
+    if is_parsed:
+        return force_sets
+    else:
+        return []
 
 def read_abinit(filename):
     abinit_in = AbinitIn(open(filename).readlines())
