@@ -336,8 +336,8 @@ properties and density of states.
 
 .. _mp_tag:
 
-``MESH`` or ``MP``
-~~~~~~~~~~~~~~~~~~~
+``MESH``, ``MP``, or ``MESH_NUMBERS``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ``MESH`` numbers give uniform meshes in each axis. As the default
 behavior, the center of mesh is determined by the Monkhorst-Pack
