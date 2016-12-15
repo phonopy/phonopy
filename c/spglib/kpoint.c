@@ -206,6 +206,7 @@ static int relocate_BZ_grid_address(int bz_grid_address[][3],
 static double get_tolerance_for_BZ_reduction(SPGCONST double rec_lattice[3][3],
 					     const int mesh[3]);
 static int check_mesh_symmetry(const int mesh[3],
+                               const int is_shift[3],
                                const MatINT *rot_reciprocal);
 
 /* grid_address (e.g. 4x4x4 mesh, unless GRID_ORDER_XYZ is defined) */
@@ -500,7 +501,7 @@ static int get_ir_reciprocal_mesh(int grid_address[][3],
 				  const int is_shift[3],
 				  const MatINT *rot_reciprocal)
 {
-  if (check_mesh_symmetry(mesh, rot_reciprocal)) {
+  if (check_mesh_symmetry(mesh, is_shift, rot_reciprocal)) {
     return get_ir_reciprocal_mesh_normal(grid_address,
                                          ir_mapping_table,
                                          mesh,
@@ -592,6 +593,11 @@ static int get_ir_reciprocal_mesh_distortion(int grid_address[][3],
         indivisible = address_double_rot[k] % divisor[k];
         if (indivisible) {break;}
         address_double_rot[k] /= divisor[k];
+        if ((address_double_rot[k] % 2 != 0 && is_shift[k] == 0) ||
+            (address_double_rot[k] % 2 == 0 && is_shift[k] == 1)) {
+          indivisible = 1;
+          break;
+        }
       }
       if (indivisible) {continue;}
       grid_point_rot = kgd_get_grid_point_double_mesh(address_double_rot, mesh);
@@ -729,6 +735,7 @@ static double get_tolerance_for_BZ_reduction(SPGCONST double rec_lattice[3][3],
 }
 
 static int check_mesh_symmetry(const int mesh[3],
+                               const int is_shift[3],
                                const MatINT *rot_reciprocal)
 {
   int i;
@@ -750,7 +757,7 @@ static int check_mesh_symmetry(const int mesh[3],
         rot_reciprocal->mat[i][2][1] == 1) {eq[1] = 1;}
   }
 
-  return (((eq[0] && mesh[0] == mesh[1]) || (!eq[0])) &&
-          ((eq[1] && mesh[1] == mesh[2]) || (!eq[1])) &&
-          ((eq[2] && mesh[2] == mesh[0]) || (!eq[2])));
+  return (((eq[0] && mesh[0] == mesh[1] && is_shift[0] == is_shift[1]) || (!eq[0])) &&
+          ((eq[1] && mesh[1] == mesh[2] && is_shift[1] == is_shift[2]) || (!eq[1])) &&
+          ((eq[2] && mesh[2] == mesh[0] && is_shift[2] == is_shift[0]) || (!eq[2])));
 }
