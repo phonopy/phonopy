@@ -795,8 +795,8 @@ class ConfParser(object):
             if conf_key == 'dm_decimals':
                 self.set_parameter('dm_decimals', confs['dm_decimals'])
 
-            if conf_key == 'mesh_numbers':
-                vals = [ int(x) for x in confs['mesh_numbers'].split() ]
+            if conf_key in ['mesh_numbers', 'mp', 'mesh']:
+                vals = [int(x) for x in confs[conf_key].split()]
                 if len(vals) < 3:
                     self.setting_error("Mesh numbers are incorrectly set.")
                 self.set_parameter('mesh_numbers', vals[:3])
@@ -1419,17 +1419,8 @@ class PhonopyConfParser(ConfParser):
                 if confs['hdf5'].lower() == '.true.':
                     self.set_parameter('hdf5', True)
 
-            if conf_key == 'mp' or conf_key == 'mesh':
-                if conf_key == 'mp':
-                    vals = [int(x) for x in confs['mp'].split()]
-                if conf_key == 'mesh':
-                    vals = [int(x) for x in confs['mesh'].split()]
-                if len(vals) < 3:
-                    self.setting_error("Mesh numbers are incorrectly set.")
-                self.set_parameter('mesh_numbers', vals[:3])
-
             if conf_key == 'mp_shift':
-                vals = [ fracval(x) for x in confs['mp_shift'].split()]
+                vals = [fracval(x) for x in confs['mp_shift'].split()]
                 if len(vals) < 3:
                     self.setting_error("MP_SHIFT is incorrectly set.")
                 self.set_parameter('mp_shift', vals[:3])
@@ -1473,7 +1464,7 @@ class PhonopyConfParser(ConfParser):
 
             # Character table
             if conf_key == 'irreps':
-                vals = [ fracval(x) for x in confs['irreps'].split()]
+                vals = [fracval(x) for x in confs['irreps'].split()]
                 if len(vals) == 3 or len(vals) == 4:
                     self.set_parameter('irreps_qpoint', vals)
                 else:
@@ -1724,7 +1715,7 @@ class PhonopyConfParser(ConfParser):
             self._settings.set_run_mode('anime')
             anime_type = self._settings.get_anime_type()
             if anime_type == 'v_sim':
-                qpoints = [ fracval(x) for x in params['anime'][0:3] ]
+                qpoints = [fracval(x) for x in params['anime'][0:3]]
                 self._settings.set_anime_qpoint(qpoints)
                 if len(params['anime']) > 3:
                     self._settings.set_anime_amplitude(float(params['anime'][3]))
@@ -1734,7 +1725,7 @@ class PhonopyConfParser(ConfParser):
                 self._settings.set_anime_division(int(params['anime'][2]))
             if len(params['anime']) == 6:
                 self._settings.set_anime_shift(
-                    [ fracval(x) for x in params['anime'][3:6] ])
+                    [fracval(x) for x in params['anime'][3:6]])
     
         # Modulation mode
         if 'modulation' in params:
