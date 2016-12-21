@@ -564,7 +564,7 @@ class Vasprun(object):
         if self._is_version528():
             return self._parse_by_expat(VasprunWrapper(self._filename))
         else:
-            return self._parse_by_expat(self._filename)
+            return self._parse_by_expat(open(self._filename))
     
     def _parse_by_expat(self, filename):
         vasprun = VasprunxmlExpat(filename)
@@ -580,10 +580,10 @@ class Vasprun(object):
                     return False
 
 class VasprunxmlExpat(object):
-    def __init__(self, filename):
+    def __init__(self, file):
         import xml.parsers.expat
 
-        self._filename = filename
+        self._file = file
 
         self._is_forces = False
         self._is_stress = False
@@ -620,7 +620,7 @@ class VasprunxmlExpat(object):
 
     def parse(self):
         try:
-            self._p.ParseFile(open(self._filename))
+            self._p.ParseFile(self._file)
         except:
             return False
         else:
