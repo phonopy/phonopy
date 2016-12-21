@@ -48,8 +48,13 @@ from phonopy.file_IO import (write_FORCE_SETS, write_force_constants_to_hdf5,
 
 def parse_set_of_forces(num_atoms,
                         forces_filenames,
+                        use_expat=True,
                         verbose=True):
     if verbose:
+        if use_expat:
+            sys.stdout.write("*******************************************\n")
+            sys.stdout.write("*** Experimental use of VasprunxmlExpat ***\n")
+            sys.stdout.write("*******************************************\n\n")
         sys.stdout.write("counter (file index): ")
 
     count = 0
@@ -58,7 +63,7 @@ def parse_set_of_forces(num_atoms,
     force_files = forces_filenames
 
     for filename in force_files:
-        vasprun = VasprunEtree(filename)
+        vasprun = Vasprun(filename, use_expat=use_expat)
         force_sets.append(vasprun.read_forces())
         if verbose:
             sys.stdout.write("%d " % (count + 1))
@@ -102,7 +107,7 @@ def get_drift_forces(forces, filename=None, verbose=True):
     return drift_force
 
 def create_FORCE_CONSTANTS(filename, options, log_level):
-    vasprun = VasprunEtree(filename)
+    vasprun = Vasprun(filename)
     fc_and_atom_types = vasprun.read_force_constants()
     if not fc_and_atom_types:
         print('')
@@ -451,33 +456,37 @@ class VasprunWrapper(object):
         else:
             return "<i type=\"string\" name=\"PRECFOCK\"></i>"
 
-class VasprunEtree(object):
-    def __init__(self, filename):
+class Vasprun(object):
+    def __init__(self, filename, use_expat=False):
         self._filename = filename
+        self._use_expat = use_expat
 
     def read_forces(self):
-        vasprun = self._parse_vasprun_xml(tag='varray')
-        return self._get_forces(vasprun)
+        if self._use_expat:
+            return self._parse_expat_vasprun_xml()
+        else:
+            vasprun_etree = self._parse_etree_vasprun_xml(tag='varray')
+            return self._get_forces(vasprun_etree)
 
     def read_force_constants(self):
-        vasprun = self._parse_vasprun_xml()
+        vasprun = self._parse_etree_vasprun_xml()
         return self._get_force_constants(vasprun)
     
-    def _get_forces(self, vasprun):
+    def _get_forces(self, vasprun_etree):
         """
-        vasprun = etree.iterparse(filename, tag='varray')
+        vasprun_etree = etree.iterparse(filename, tag='varray')
         """
         forces = []
-        for event, element in vasprun:
+        for event, element in vasprun_etree:
             if element.attrib['name'] == 'forces':
                 for v in element:
                     forces.append([float(x) for x in v.text.split()])
         return np.array(forces)
     
-    def _get_force_constants(self, vasprun):
+    def _get_force_constants(self, vasprun_etree):
         fc_tmp = None
         num_atom = 0
-        for event, element in vasprun:
+        for event, element in vasprun_etree:
             if num_atom == 0:
                 atomtypes = self._get_atomtypes(element)
                 if atomtypes:
@@ -533,13 +542,13 @@ class VasprunEtree(object):
     
         return None
 
-    def _parse_vasprun_xml(self, tag=None):
+    def _parse_etree_vasprun_xml(self, tag=None):
         if self._is_version528():
-            return self._iterparse(VasprunWrapper(self._filename), tag=tag)
+            return self._parse_by_etree(VasprunWrapper(self._filename), tag=tag)
         else:
-            return self._iterparse(self._filename, tag=tag)
+            return self._parse_by_etree(self._filename, tag=tag)
     
-    def _iterparse(self, filename, tag=None):
+    def _parse_by_etree(self, filename, tag=None):
         try:
             import xml.etree.cElementTree as etree
             for event, elem in etree.iterparse(filename):
@@ -551,6 +560,17 @@ class VasprunEtree(object):
                   "phonopy 1.8.5.1 with python-lxml .")
             sys.exit(1)
     
+    def _parse_expat_vasprun_xml(self):
+        if self._is_version528():
+            return self._parse_by_expat(VasprunWrapper(self._filename))
+        else:
+            return self._parse_by_expat(self._filename)
+    
+    def _parse_by_expat(self, filename):
+        vasprun = VasprunxmlExpat(filename)
+        vasprun.parse()
+        return vasprun.get_forces()[-1]
+
     def _is_version528(self):
         for line in open(self._filename):
             if '\"version\"' in line:
@@ -561,6 +581,8 @@ class VasprunEtree(object):
 
 class VasprunxmlExpat(object):
     def __init__(self, filename):
+        import xml.parsers.expat
+
         self._filename = filename
 
         self._is_forces = False
