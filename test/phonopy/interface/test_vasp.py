@@ -8,6 +8,7 @@ except ImportError:
 import tarfile
 from phonopy.interface.vasp import Vasprun
 
+data_dir = os.path.dirname(os.path.abspath(__file__))
 force_data = [
     """    -0.01806194      0.00000000      0.00000000
      0.00302404      0.00000000      0.00000000
@@ -141,7 +142,8 @@ force_data = [
 class TestVASP(unittest.TestCase):
 
     def setUp(self):
-        self._tar = tarfile.open("vasprun.xml.tar.bz2")
+        filename = os.path.join(data_dir, "vasprun.xml.tar.bz2")
+        self._tar = tarfile.open(filename)
     
     def tearDown(self):
         pass
