@@ -6,6 +6,7 @@ try:
 except ImportError:
     from io import StringIO
 import tarfile
+import os
 from phonopy.interface.vasp import Vasprun
 
 data_dir = os.path.dirname(os.path.abspath(__file__))
