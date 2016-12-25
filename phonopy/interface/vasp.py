@@ -54,6 +54,7 @@ def parse_set_of_forces(num_atoms,
         if use_expat:
             sys.stdout.write("*******************************************\n")
             sys.stdout.write("*** Experimental use of VasprunxmlExpat ***\n")
+            sys.stdout.write("*** Please report if you find problems. ***\n")
             sys.stdout.write("*******************************************\n\n")
         sys.stdout.write("counter (file index): ")
 
@@ -63,14 +64,15 @@ def parse_set_of_forces(num_atoms,
     force_files = forces_filenames
 
     for filename in force_files:
-        vasprun = Vasprun(filename, use_expat=use_expat)
-        force_sets.append(vasprun.read_forces())
-        if verbose:
-            sys.stdout.write("%d " % (count + 1))
-        count += 1
-
-        if not check_forces(force_sets[-1], num_atoms, filename):
-            is_parsed = False
+        with open(filename) as fp:
+            vasprun = Vasprun(fp, use_expat=use_expat)
+            force_sets.append(vasprun.read_forces())
+            if verbose:
+                sys.stdout.write("%d " % (count + 1))
+            count += 1
+    
+            if not check_forces(force_sets[-1], num_atoms, filename):
+                is_parsed = False
 
     if verbose:
         print('')
@@ -107,7 +109,7 @@ def get_drift_forces(forces, filename=None, verbose=True):
     return drift_force
 
 def create_FORCE_CONSTANTS(filename, options, log_level):
-    vasprun = Vasprun(filename)
+    vasprun = Vasprun(open(filename))
     fc_and_atom_types = vasprun.read_force_constants()
     if not fc_and_atom_types:
         print('')
@@ -446,19 +448,19 @@ class VasprunWrapper(object):
     This is used to avoid VASP 5.2.8 vasprun.xml defect at PRECFOCK,
     xml parser stops with error.
     """
-    def __init__(self, filename):
-        self._f = open(filename)
+    def __init__(self, fileptr):
+        self._fileptr = fileptr
 
     def read(self, size=None):
-        element = self._f.next()
+        element = self._fileptr.next()
         if element.find("PRECFOCK") == -1:
             return element
         else:
             return "<i type=\"string\" name=\"PRECFOCK\"></i>"
 
 class Vasprun(object):
-    def __init__(self, filename, use_expat=False):
-        self._filename = filename
+    def __init__(self, fileptr, use_expat=False):
+        self._fileptr = fileptr
         self._use_expat = use_expat
 
     def read_forces(self):
@@ -474,7 +476,7 @@ class Vasprun(object):
     
     def _get_forces(self, vasprun_etree):
         """
-        vasprun_etree = etree.iterparse(filename, tag='varray')
+        vasprun_etree = etree.iterparse(fileptr, tag='varray')
         """
         forces = []
         for event, element in vasprun_etree:
@@ -544,14 +546,14 @@ class Vasprun(object):
 
     def _parse_etree_vasprun_xml(self, tag=None):
         if self._is_version528():
-            return self._parse_by_etree(VasprunWrapper(self._filename), tag=tag)
+            return self._parse_by_etree(VasprunWrapper(self._fileptr), tag=tag)
         else:
-            return self._parse_by_etree(self._filename, tag=tag)
+            return self._parse_by_etree(self._fileptr, tag=tag)
     
-    def _parse_by_etree(self, filename, tag=None):
+    def _parse_by_etree(self, fileptr, tag=None):
         try:
             import xml.etree.cElementTree as etree
-            for event, elem in etree.iterparse(filename):
+            for event, elem in etree.iterparse(fileptr):
                 if tag is None or elem.tag == tag:
                     yield event, elem
         except ImportError:
@@ -562,28 +564,34 @@ class Vasprun(object):
     
     def _parse_expat_vasprun_xml(self):
         if self._is_version528():
-            return self._parse_by_expat(VasprunWrapper(self._filename))
+            return self._parse_by_expat(VasprunWrapper(self._fileptr))
         else:
-            return self._parse_by_expat(open(self._filename))
+            return self._parse_by_expat(self._fileptr)
     
-    def _parse_by_expat(self, filename):
-        vasprun = VasprunxmlExpat(filename)
+    def _parse_by_expat(self, fileptr):
+        vasprun = VasprunxmlExpat(fileptr)
         vasprun.parse()
         return vasprun.get_forces()[-1]
 
     def _is_version528(self):
-        for line in open(self._filename):
+        for line in self._fileptr:
             if '\"version\"' in line:
+                self._fileptr.seek(0)
                 if '5.2.8' in line:
+                    sys.stdout.write(
+                        "\n"
+                        "**********************************************\n"
+                        "* A special routine was used for VASP 5.2.8. *\n"
+                        "**********************************************\n")
                     return True
                 else:
                     return False
 
 class VasprunxmlExpat(object):
-    def __init__(self, file):
+    def __init__(self, fileptr):
         import xml.parsers.expat
 
-        self._file = file
+        self._fileptr = fileptr
 
         self._is_forces = False
         self._is_stress = False
@@ -620,7 +628,7 @@ class VasprunxmlExpat(object):
 
     def parse(self):
         try:
-            self._p.ParseFile(self._file)
+            self._p.ParseFile(self._fileptr)
         except:
             return False
         else:
