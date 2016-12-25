@@ -48,8 +48,15 @@ from phonopy.file_IO import (write_FORCE_SETS, write_force_constants_to_hdf5,
 
 def parse_set_of_forces(num_atoms,
                         forces_filenames,
+                        use_expat=True,
                         verbose=True):
     if verbose:
+        if use_expat:
+            sys.stdout.write(
+                "*********************************************\n"
+                "*** VasprunxmlExpat is under the testing. ***\n"
+                "***  Please report if you find problems.  ***\n"
+                "*********************************************\n\n")
         sys.stdout.write("counter (file index): ")
 
     count = 0
@@ -58,19 +65,15 @@ def parse_set_of_forces(num_atoms,
     force_files = forces_filenames
 
     for filename in force_files:
-        if _is_version528(filename):
-            force_sets.append(_get_forces_vasprun_xml(_iterparse(
-                VasprunWrapper(filename), tag='varray')))
-        else:
-            force_sets.append(_get_forces_vasprun_xml(
-                _iterparse(filename, tag='varray')))
-
-        if verbose:
-            sys.stdout.write("%d " % (count + 1))
-        count += 1
-
-        if not check_forces(force_sets[-1], num_atoms, filename):
-            is_parsed = False
+        with open(filename) as fp:
+            vasprun = Vasprun(fp, use_expat=use_expat)
+            force_sets.append(vasprun.read_forces())
+            if verbose:
+                sys.stdout.write("%d " % (count + 1))
+            count += 1
+    
+            if not check_forces(force_sets[-1], num_atoms, filename):
+                is_parsed = False
 
     if verbose:
         print('')
@@ -107,7 +110,8 @@ def get_drift_forces(forces, filename=None, verbose=True):
     return drift_force
 
 def create_FORCE_CONSTANTS(filename, options, log_level):
-    fc_and_atom_types = read_force_constant_vasprun_xml(filename)
+    vasprun = Vasprun(open(filename))
+    fc_and_atom_types = vasprun.read_force_constants()
     if not fc_and_atom_types:
         print('')
         print("\'%s\' dones not contain necessary information." % filename)
@@ -445,152 +449,348 @@ class VasprunWrapper(object):
     This is used to avoid VASP 5.2.8 vasprun.xml defect at PRECFOCK,
     xml parser stops with error.
     """
-    def __init__(self, filename):
-        self.f = open(filename)
+    def __init__(self, fileptr):
+        self._fileptr = fileptr
 
     def read(self, size=None):
-        element = self.f.next()
+        element = self._fileptr.next()
         if element.find("PRECFOCK") == -1:
             return element
         else:
             return "<i type=\"string\" name=\"PRECFOCK\"></i>"
 
-def read_atomtypes_vasprun_xml(filename):
-    vasprun = _parse_vasprun_xml(filename)
-    for event, element in vasprun:
-        atomtypes = _get_atomtypes_from_vasprun_xml(element)
-        if atomtypes:
-            return atomtypes
-    return None
+class Vasprun(object):
+    def __init__(self, fileptr, use_expat=False):
+        self._fileptr = fileptr
+        self._use_expat = use_expat
 
-def read_force_constant_vasprun_xml(filename):
-    vasprun = _parse_vasprun_xml(filename)
-    return get_force_constants_vasprun_xml(vasprun)
+    def read_forces(self):
+        if self._use_expat:
+            return self._parse_expat_vasprun_xml()
+        else:
+            vasprun_etree = self._parse_etree_vasprun_xml(tag='varray')
+            return self._get_forces(vasprun_etree)
 
-def get_force_constants_vasprun_xml(vasprun):
-    fc_tmp = None
-    num_atom = 0
-    for event, element in vasprun:
-        if num_atom == 0:
-            atomtypes = _get_atomtypes_from_vasprun_xml(element)
-            if atomtypes:
-                num_atoms, elements, elem_masses = atomtypes[:3]
-                num_atom = np.sum(num_atoms)
-                masses = []
-                for n, m in zip(num_atoms, elem_masses):
-                    masses += [m] * n
-
-        # Get Hessian matrix (normalized by masses)
-        if element.tag == 'varray':
-            if element.attrib['name'] == 'hessian':
-                fc_tmp = []
-                for v in element.findall('./v'):
-                    fc_tmp.append([float(x) for x in v.text.strip().split()])
-
-    if fc_tmp is None:
-        return False
-    else:
-        fc_tmp = np.array(fc_tmp)
-        if fc_tmp.shape != (num_atom * 3, num_atom * 3):
+    def read_force_constants(self):
+        vasprun = self._parse_etree_vasprun_xml()
+        return self._get_force_constants(vasprun)
+    
+    def _get_forces(self, vasprun_etree):
+        """
+        vasprun_etree = etree.iterparse(fileptr, tag='varray')
+        """
+        forces = []
+        for event, element in vasprun_etree:
+            if element.attrib['name'] == 'forces':
+                for v in element:
+                    forces.append([float(x) for x in v.text.split()])
+        return np.array(forces)
+    
+    def _get_force_constants(self, vasprun_etree):
+        fc_tmp = None
+        num_atom = 0
+        for event, element in vasprun_etree:
+            if num_atom == 0:
+                atomtypes = self._get_atomtypes(element)
+                if atomtypes:
+                    num_atoms, elements, elem_masses = atomtypes[:3]
+                    num_atom = np.sum(num_atoms)
+                    masses = []
+                    for n, m in zip(num_atoms, elem_masses):
+                        masses += [m] * n
+    
+            # Get Hessian matrix (normalized by masses)
+            if element.tag == 'varray':
+                if element.attrib['name'] == 'hessian':
+                    fc_tmp = []
+                    for v in element.findall('./v'):
+                        fc_tmp.append([float(x) for x in v.text.strip().split()])
+    
+        if fc_tmp is None:
             return False
-        # num_atom = fc_tmp.shape[0] / 3
-        force_constants = np.zeros((num_atom, num_atom, 3, 3), dtype='double')
-
-        for i in range(num_atom):
-            for j in range(num_atom):
-                force_constants[i, j] = fc_tmp[i*3:(i+1)*3, j*3:(j+1)*3]
-
-        # Inverse normalization by atomic weights
-        for i in range(num_atom):
-            for j in range(num_atom):
-                force_constants[i, j] *= -np.sqrt(masses[i] * masses[j])
-
-        return force_constants, elements
-
-def get_forces_from_vasprun_xmls(vaspruns, num_atom, index_shift=0):
-    forces = []
-    for i, vasprun in enumerate(vaspruns):
-        sys.stderr.write("%d " % (i + 1 + index_shift))
-
-        if _is_version528(vasprun):
-            force_set = _get_forces_vasprun_xml(
-                _iterparse(VasprunWrapper(vasprun), tag='varray'))
         else:
-            force_set = _get_forces_vasprun_xml(
-                _iterparse(vasprun, tag='varray'))
-        if force_set.shape[0] == num_atom:
-            forces.append(force_set)
-        else:
-            print("\nNumber of forces in vasprun.xml #%d is wrong." % (i + 1))
-            sys.exit(1)
-
-    sys.stderr.write("\n")
-    return np.array(forces)
-
-def get_force_constants_from_vasprun_xmls(vasprun_filenames):
-    force_constants_set = []
-    for i, filename in enumerate(vasprun_filenames):
-        sys.stderr.write("%d: %s\n" % (i + 1, filename))
-        force_constants_set.append(
-            read_force_constant_vasprun_xml(filename)[0])
-    sys.stderr.write("\n")
-    return force_constants_set
-
-def _parse_vasprun_xml(filename):
-    if _is_version528(filename):
-        return _iterparse(VasprunWrapper(filename))
-    else:
-        return _iterparse(filename)
-
-def _iterparse(fname, tag=None):
-    try:
-        import xml.etree.cElementTree as etree
-        for event, elem in etree.iterparse(fname):
-            if tag is None or elem.tag == tag:
-                yield event, elem
-    except ImportError:
-        print("Python 2.5 or later is needed.")
-        print("For creating FORCE_SETS file with Python 2.4, you can use "
-              "phonopy 1.8.5.1 with python-lxml .")
-        sys.exit(1)
-
-def _is_version528(filename):
-    for line in open(filename):
-        if '\"version\"' in line:
-            if '5.2.8' in line:
-                return True
-            else:
+            fc_tmp = np.array(fc_tmp)
+            if fc_tmp.shape != (num_atom * 3, num_atom * 3):
                 return False
+            # num_atom = fc_tmp.shape[0] / 3
+            force_constants = np.zeros((num_atom, num_atom, 3, 3), dtype='double')
+    
+            for i in range(num_atom):
+                for j in range(num_atom):
+                    force_constants[i, j] = fc_tmp[i*3:(i+1)*3, j*3:(j+1)*3]
+    
+            # Inverse normalization by atomic weights
+            for i in range(num_atom):
+                for j in range(num_atom):
+                    force_constants[i, j] *= -np.sqrt(masses[i] * masses[j])
+    
+            return force_constants, elements
+    
+    def _get_atomtypes(self, element):
+        atom_types = []
+        masses = []
+        valences = []
+        num_atoms = []
+    
+        if element.tag == 'array':
+            if 'name' in element.attrib:
+                if element.attrib['name'] == 'atomtypes':
+                    for rc in element.findall('./set/rc'):
+                        atom_info = [x.text for x in rc.findall('./c')]
+                        num_atoms.append(int(atom_info[0]))
+                        atom_types.append(atom_info[1].strip())
+                        masses.append(float(atom_info[2]))
+                        valences.append(float(atom_info[3]))
+                    return num_atoms, atom_types, masses, valences
+    
+        return None
 
-def _get_forces_vasprun_xml(vasprun):
-    """
-    vasprun = etree.iterparse(filename, tag='varray')
-    """
-    forces = []
-    for event, element in vasprun:
-        if element.attrib['name'] == 'forces':
-            for v in element:
-                forces.append([float(x) for x in v.text.split()])
-    return np.array(forces)
+    def _parse_etree_vasprun_xml(self, tag=None):
+        if self._is_version528():
+            return self._parse_by_etree(VasprunWrapper(self._fileptr), tag=tag)
+        else:
+            return self._parse_by_etree(self._fileptr, tag=tag)
+    
+    def _parse_by_etree(self, fileptr, tag=None):
+        try:
+            import xml.etree.cElementTree as etree
+            for event, elem in etree.iterparse(fileptr):
+                if tag is None or elem.tag == tag:
+                    yield event, elem
+        except ImportError:
+            print("Python 2.5 or later is needed.")
+            print("For creating FORCE_SETS file with Python 2.4, you can use "
+                  "phonopy 1.8.5.1 with python-lxml .")
+            sys.exit(1)
+    
+    def _parse_expat_vasprun_xml(self):
+        if self._is_version528():
+            return self._parse_by_expat(VasprunWrapper(self._fileptr))
+        else:
+            return self._parse_by_expat(self._fileptr)
+    
+    def _parse_by_expat(self, fileptr):
+        vasprun = VasprunxmlExpat(fileptr)
+        vasprun.parse()
+        return vasprun.get_forces()[-1]
 
-def _get_atomtypes_from_vasprun_xml(element):
-    atom_types = []
-    masses = []
-    valences = []
-    num_atoms = []
+    def _is_version528(self):
+        for line in self._fileptr:
+            if '\"version\"' in line:
+                self._fileptr.seek(0)
+                if '5.2.8' in line:
+                    sys.stdout.write(
+                        "\n"
+                        "**********************************************\n"
+                        "* A special routine was used for VASP 5.2.8. *\n"
+                        "**********************************************\n")
+                    return True
+                else:
+                    return False
 
-    if element.tag == 'array':
-        if 'name' in element.attrib:
-            if element.attrib['name'] == 'atomtypes':
-                for rc in element.findall('./set/rc'):
-                    atom_info = [x.text for x in rc.findall('./c')]
-                    num_atoms.append(int(atom_info[0]))
-                    atom_types.append(atom_info[1].strip())
-                    masses.append(float(atom_info[2]))
-                    valences.append(float(atom_info[3]))
-                return num_atoms, atom_types, masses, valences
+class VasprunxmlExpat(object):
+    def __init__(self, fileptr):
+        import xml.parsers.expat
 
-    return None
+        self._fileptr = fileptr
+
+        self._is_forces = False
+        self._is_stress = False
+        self._is_positions = False
+        self._is_symbols = False
+        self._is_basis = False
+        self._is_energy = False
+
+        self._is_v = False
+        self._is_i = False
+        self._is_rc = False
+        self._is_c = False
+
+        self._is_scstep = False
+        self._is_structure = False
+
+        self._all_forces = []
+        self._all_stress = []
+        self._all_points = []
+        self._all_lattice = []
+        self._symbols = []
+        self._all_energies = []
+        self._forces = None
+        self._stress = None
+        self._points = None
+        self._lattice = None
+        self._energies = None
+
+        self._p = xml.parsers.expat.ParserCreate()
+        self._p.buffer_text = True
+        self._p.StartElementHandler = self._start_element
+        self._p.EndElementHandler = self._end_element
+        self._p.CharacterDataHandler = self._char_data
+
+    def parse(self):
+        try:
+            self._p.ParseFile(self._fileptr)
+        except:
+            return False
+        else:
+            return True
+
+    def get_forces(self):
+        return np.array(self._all_forces)
+
+    def get_stress(self):
+        return np.array(self._all_stress)
+
+    def get_points(self):
+        return np.array(self._all_points)
+
+    def get_lattice(self):
+        return np.array(self._all_lattice)
+
+    def get_symbols(self):
+        return self._symbols
+
+    def get_cells(self):
+        cells = []
+        if len(self._all_points) == len(self._all_lattice):
+            for p, l in zip(self._all_points, self._all_lattice):
+                cells.append(Cell(lattice=l,
+                                  points=p,
+                                  symbols=self._symbols))
+        return cells
+
+    def get_energies(self):
+        return np.array(self._all_energies)
+
+    def _start_element(self, name, attrs):
+        # Used not to collect energies in <scstep>
+        if name == 'scstep':
+            self._is_scstep = True
+
+        # Used not to collect basis and positions in
+        # <structure name="initialpos" >
+        # <structure name="finalpos" >
+        if name == 'structure':
+            if 'name' in attrs.keys():
+                self._is_structure = True
+
+        if (self._is_forces or
+            self._is_stress or
+            self._is_positions or
+            self._is_basis):
+            if name == 'v':
+                self._is_v = True
+
+        if name == 'varray':
+            if 'name' in attrs.keys():
+                if attrs['name'] == 'forces':
+                    self._is_forces = True
+                    self._forces = []
+
+                if attrs['name'] == 'stress':
+                    self._is_stress = True
+                    self._stress = []
+
+                if not self._is_structure:
+                    if attrs['name'] == 'positions':
+                        self._is_positions = True
+                        self._points = []
+
+                    if attrs['name'] == 'basis':
+                        self._is_basis = True
+                        self._lattice = []
+
+        if self._is_energy and name == 'i':
+            self._is_i = True
+
+        if name == 'energy' and (not self._is_scstep):
+            self._is_energy = True
+            self._energies = []
+
+        if self._is_symbols and name == 'rc':
+            self._is_rc = True
+
+        if self._is_symbols and self._is_rc and name == 'c':
+            self._is_c = True
+
+        if name == 'array':
+            if 'name' in attrs.keys():
+                if attrs['name'] == 'atoms':
+                    self._is_symbols = True
+
+
+    def _end_element(self, name):
+        if name == 'scstep':
+            self._is_scstep = False
+
+        if name == 'structure' and self._is_structure:
+            self._is_structure = False
+
+        if name == 'varray':
+            if self._is_forces:
+                self._is_forces = False
+                self._all_forces.append(self._forces)
+
+            if self._is_stress:
+                self._is_stress = False
+                self._all_stress.append(self._stress)
+
+            if self._is_positions:
+                self._is_positions = False
+                self._all_points.append(np.transpose(self._points))
+
+            if self._is_basis:
+                self._is_basis = False
+                self._all_lattice.append(np.transpose(self._lattice))
+
+        if name == 'array':
+            if self._is_symbols:
+                self._is_symbols = False
+
+
+        if name == 'energy' and (not self._is_scstep):
+            self._is_energy = False
+            self._all_energies.append(self._energies)
+
+        if name == 'v':
+            self._is_v = False
+
+        if name == 'i':
+            self._is_i = False
+
+        if name == 'rc':
+            self._is_rc = False
+            if self._is_symbols:
+                self._symbols.pop(-1)
+
+        if name == 'c':
+            self._is_c = False
+
+    def _char_data(self, data):
+        if self._is_v:
+            if self._is_forces:
+                self._forces.append(
+                    [float(x) for x in data.split()])
+
+            if self._is_stress:
+                self._stress.append(
+                    [float(x) for x in data.split()])
+
+            if self._is_positions:
+                self._points.append(
+                    [float(x) for x in data.split()])
+
+            if self._is_basis:
+                self._lattice.append(
+                    [float(x) for x in data.split()])
+
+        if self._is_i:
+            if self._is_energy:
+                self._energies.append(float(data.strip()))
+
+        if self._is_c:
+            if self._is_symbols:
+                self._symbols.append(str(data.strip()))
 
 #
 # XDATCAR
