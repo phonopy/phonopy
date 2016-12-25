@@ -37,6 +37,7 @@ try:
     from StringIO import StringIO
 except ImportError:
     from io import StringIO
+import io
 import numpy as np
 from phonopy.structure.atoms import PhonopyAtoms as Atoms
 from phonopy.structure.atoms import symbol_map, atom_data
@@ -65,7 +66,7 @@ def parse_set_of_forces(num_atoms,
     force_files = forces_filenames
 
     for filename in force_files:
-        with open(filename) as fp:
+        with io.open(filename, "rb") as fp:
             vasprun = Vasprun(fp, use_expat=use_expat)
             force_sets.append(vasprun.read_forces())
             if verbose:
@@ -110,7 +111,7 @@ def get_drift_forces(forces, filename=None, verbose=True):
     return drift_force
 
 def create_FORCE_CONSTANTS(filename, options, log_level):
-    vasprun = Vasprun(open(filename))
+    vasprun = Vasprun(io.open(filename, "rb"))
     fc_and_atom_types = vasprun.read_force_constants()
     if not fc_and_atom_types:
         print('')
@@ -576,9 +577,9 @@ class Vasprun(object):
 
     def _is_version528(self):
         for line in self._fileptr:
-            if '\"version\"' in line:
+            if '\"version\"' in str(line):
                 self._fileptr.seek(0)
-                if '5.2.8' in line:
+                if '5.2.8' in str(line):
                     sys.stdout.write(
                         "\n"
                         "**********************************************\n"
