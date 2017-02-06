@@ -90,6 +90,11 @@ def read_crystal_structure(filename=None,
         unitcell, atypes = read_siesta(unitcell_filename)
         return unitcell, (unitcell_filename, atypes)
 
+    if interface_mode == 'crystal':
+        from phonopy.interface.crystal import read_crystal
+        unitcell, conv_numbers = read_crystal(unitcell_filename)
+        return unitcell, (unitcell_filename, conv_numbers)
+
 def get_default_cell_filename(interface_mode, yaml_mode):
     if yaml_mode:
         return "POSCAR.yaml"
@@ -105,6 +110,8 @@ def get_default_cell_filename(interface_mode, yaml_mode):
         return "elk.in"
     if interface_mode == 'siesta':
         return "input.fdf"
+    if interface_mode == 'crystal':
+        return "crystal.o"
 
 def create_FORCE_SETS(interface_mode,
                       force_filenames,
@@ -119,7 +126,8 @@ def create_FORCE_SETS(interface_mode,
         interface_mode == 'abinit' or
         interface_mode == 'elk' or
         interface_mode == 'pwscf' or
-        interface_mode == 'siesta'):
+        interface_mode == 'siesta' or
+        interface_mode == 'crystal'):
         disp_dataset = parse_disp_yaml(filename=disp_filename)
         num_atoms = disp_dataset['natom']
         num_displacements = len(disp_dataset['first_atoms'])
@@ -192,6 +200,8 @@ def get_force_sets(interface_mode,
         from phonopy.interface.elk import parse_set_of_forces
     elif interface_mode == 'siesta':
         from phonopy.interface.siesta import parse_set_of_forces
+    elif interface_mode == 'crystal':
+        from phonopy.interface.crystal import parse_set_of_forces
     else:
         return []
 
