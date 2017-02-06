@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>CRYSTAL &amp; phonopy calculation &#8212; Phonopy v.1.11.6</title>
+    
+    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/bootswatch-3.3.6/cosmo/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.11.6',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="top" title="Phonopy v.1.11.6" href="index.html" />
+    <link rel="up" title="Interfaces to calculators" href="interfaces.html" />
+    <link rel="next" title="VASP &amp; phonopy calculation" href="vasp.html" />
+    <link rel="prev" title="Elk &amp; phonopy calculation" href="elk.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body role="document">
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">
+          Phonopy</a>
+        <span class="navbar-text navbar-version pull-left"><b>1.11.6</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="procedure.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">Work flow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Download and install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="input-files.html">Input files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="output-files.html">Output files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setting-tags.html">Setting tags</a></li>
+<li class="toctree-l1"><a class="reference internal" href="command-options.html">Command options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="interfaces.html">Interfaces to calculators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="auxiliary-tools.html">Auxiliary tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phonopy-module.html">Using phonopy as a python module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="formulation.html">Formulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citation.html">How to cite phonopy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">CRYSTAL &amp; phonopy calculation</a><ul>
+<li><a class="reference internal" href="#supported-features">Supported features</a></li>
+<li><a class="reference internal" href="#how-to-run">How to run</a><ul>
+<li><a class="reference internal" href="#non-analytical-term-correction-optional">Non-analytical term correction (Optional)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="elk.html" title="Previous Chapter: Elk & phonopy calculation"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; Elk & phonopy...</span>
+    </a>
+  </li>
+  <li>
+    <a href="vasp.html" title="Next Chapter: VASP & phonopy calculation"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">VASP & phonop... &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <div class="section" id="crystal-phonopy-calculation">
+<span id="crystal-interface"></span><h1>CRYSTAL &amp; phonopy calculation<a class="headerlink" href="#crystal-phonopy-calculation" title="Permalink to this headline">¶</a></h1>
+<p>CRYSTAL program package has a robust built-in phonon calculation
+workflow. However, the Phonopy interface enables convenient access
+to many phonon-related properties, such as subsequent Phono3py
+calculations of lattice thermal conductivity.</p>
+<div class="section" id="supported-features">
+<h2>Supported features<a class="headerlink" href="#supported-features" title="Permalink to this headline">¶</a></h2>
+<p>The CRYSTAL interface reads the unit cell from a CRYSTAL output file
+(lattice vectors, conventional atomic numbers, fractional atomic positions)
+For optimization outputs, the final geometry in the file is read.</p>
+<p>If dielectric tensor and effective Born charges are present, the interface
+creates a BORN file for Non-analytical correction (<a class="reference internal" href="setting-tags.html#nac-tag"><span class="std std-ref">Non-analytical term correction</span></a>).
+The recommended strategy is to carry out a Gamma-point frequency calculation
+with INTENS and INTCPHF. This produces all required quantities and also confirms that
+the structure optimization has converged to a true local minimum.</p>
+<p>If ATOMSPIN keyword is present, magnetic moments are read from it. There
+is very little experience on using this feature, so be careful.</p>
+</div>
+<div class="section" id="how-to-run">
+<h2>How to run<a class="headerlink" href="#how-to-run" title="Permalink to this headline">¶</a></h2>
+<p>The workflow for a CRYSTAL-Phonopy calculation is outlined here using the
+Si example found in <code class="docutils literal"><span class="pre">example/Si-CRYSTAL</span></code>.</p>
+<p>In this example, the CRYSTAL output file is <code class="docutils literal"><span class="pre">crystal.o</span></code>.
+This is the default for the CRYSTAL interface, so, the <code class="docutils literal"><span class="pre">-c</span> <span class="pre">crystal.o</span></code>
+parameter is not needed</p>
+<ol class="arabic">
+<li><p class="first">Create supercells with <a class="reference internal" href="command-options.html#crystal-mode"><span class="std std-ref">&#8211;crystal</span></a> option:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">crystal</span> <span class="o">-</span><span class="n">d</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;4 4 4&quot;</span>
+</pre></div>
+</div>
+<p>In this example, 4x4x4 supercells are created. For every supercell file, the
+interface creates a .d12 input file and an .ext structure file. The files
+<code class="docutils literal"><span class="pre">supercell.d12/.ext</span></code> contain the perfect supercell. The files
+<code class="docutils literal"><span class="pre">supercell-xxx.d12/.ext</span></code> (<code class="docutils literal"><span class="pre">xxx</span></code> are numbers) contain the supercells
+with displacements. File <code class="docutils literal"><span class="pre">disp.yaml</span></code> is also generated, containing information
+about the supercell and the displacements.</p>
+<p>In the case of the Si example, files <code class="docutils literal"><span class="pre">supercell-001.d12</span></code> and
+<code class="docutils literal"><span class="pre">supercell-001.ext</span></code> will be created.</p>
+</li>
+<li><p class="first">To make valid CRYSTAL input files, there are two possible options:</p>
+<ol class="loweralpha simple">
+<li>Manually: modify the generated supercell-xxx.d12 files by replacing
+the line <code class="docutils literal"><span class="pre">Insert</span> <span class="pre">basis</span> <span class="pre">sets</span> <span class="pre">and</span> <span class="pre">parameters</span> <span class="pre">here</span></code> with the
+basis set and computational parameters.</li>
+<li>Recommended option: before generating the supercells, include a file named
+<code class="docutils literal"><span class="pre">TEMPLATE</span></code> in the current directory. This file should contain the
+basis sets and computational parameters for CRYSTAL (see the Si example).
+When phonopy finds this file, it automatically generates complete
+CRYSTAL input files in the step 1</li>
+</ol>
+<p>Note that supercells with displacements must not be relaxed in the
+force calculations, because atomic forces induced by a small atomic
+displacement are what we need for phonon calculation. To get accurate
+forces, TOLDEE parameter should be 10 or higher. Phonopy includes this
+parameter and the necessary GRADCAL keyword automatically in the inputs.</p>
+<p>Then, CRYSTAL supercell calculations are executed to obtain forces on
+atoms, e.g., as follows:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">runcry14</span> <span class="n">supercell</span><span class="o">-</span><span class="mf">001.</span><span class="n">d12</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">To create <code class="docutils literal"><span class="pre">FORCE_SETS</span></code>, that is used by phonopy,
+the following phonopy command is executed:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">crystal</span> <span class="o">-</span><span class="n">f</span> <span class="n">supercell</span><span class="o">-</span><span class="mf">001.</span><span class="n">o</span>
+</pre></div>
+</div>
+<p>Here <code class="docutils literal"><span class="pre">.o</span></code> files are the CRYSTAL output files from the force
+calculations. saved text files of standard outputs of the
+Pwscf calculations. All <code class="docutils literal"><span class="pre">.o</span></code> files corresponding to the generated
+<code class="docutils literal"><span class="pre">supercell-xxx.d12</span></code> files have to be given in the above command.
+To run this command, <code class="docutils literal"><span class="pre">disp.yaml</span></code> has to be located in the current
+directory because the information on atomic displacements stored in
+<code class="docutils literal"><span class="pre">disp.yaml</span></code> are used to generate <code class="docutils literal"><span class="pre">FORCE_SETS</span></code>. See some more detail at
+<span class="xref std std-ref">crystal_force_sets_option</span>.</p>
+</li>
+<li><p class="first">Now, Phonopy post-prcessing commands can be run. <code class="docutils literal"><span class="pre">FORCE_SETS</span></code> is
+automatically read in. Create phonon dispersion plot with:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">crystal</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;4 4 4&quot;</span> <span class="o">-</span><span class="n">p</span> <span class="o">-</span><span class="n">s</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
+        <span class="n">_</span>
+  <span class="n">_</span> <span class="n">__</span> <span class="o">|</span> <span class="o">|</span><span class="n">__</span>   <span class="n">___</span>  <span class="n">_</span> <span class="n">__</span>   <span class="n">___</span>   <span class="n">_</span> <span class="n">__</span>  <span class="n">_</span>   <span class="n">_</span>
+ <span class="o">|</span> <span class="s1">&#39;_ \| &#39;</span><span class="n">_</span> \ <span class="o">/</span> <span class="n">_</span> \<span class="o">|</span> <span class="s1">&#39;_ \ / _ \ | &#39;</span><span class="n">_</span> \<span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span>
+ <span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="p">)</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="o">||</span> <span class="o">|</span><span class="n">_</span><span class="p">)</span> <span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span>
+ <span class="o">|</span> <span class="o">.</span><span class="n">__</span><span class="o">/|</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="o">|</span>\<span class="n">___</span><span class="o">/|</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="o">|</span>\<span class="n">___</span><span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="o">.</span><span class="n">__</span><span class="o">/</span> \<span class="n">__</span><span class="p">,</span> <span class="o">|</span>
+ <span class="o">|</span><span class="n">_</span><span class="o">|</span>                            <span class="o">|</span><span class="n">_</span><span class="o">|</span>    <span class="o">|</span><span class="n">___</span><span class="o">/</span>
+                                      <span class="mf">1.11</span><span class="o">.</span><span class="mi">6</span>
+
+
+<span class="n">Python</span> <span class="n">version</span> <span class="mf">2.7</span><span class="o">.</span><span class="mi">3</span>
+<span class="n">Spglib</span> <span class="n">version</span> <span class="mf">1.9</span><span class="o">.</span><span class="mi">9</span>
+<span class="n">Calculator</span> <span class="n">interface</span><span class="p">:</span> <span class="n">crystal</span>
+<span class="n">Band</span> <span class="n">structure</span> <span class="n">mode</span>
+<span class="n">Settings</span><span class="p">:</span>
+  <span class="n">Supercell</span><span class="p">:</span> <span class="p">[</span><span class="mi">4</span> <span class="mi">4</span> <span class="mi">4</span><span class="p">]</span>
+<span class="n">Spacegroup</span><span class="p">:</span> <span class="n">Fd</span><span class="o">-</span><span class="mi">3</span><span class="n">m</span> <span class="p">(</span><span class="mi">227</span><span class="p">)</span>
+<span class="n">Computing</span> <span class="n">force</span> <span class="n">constants</span><span class="o">...</span>
+<span class="n">Reciprocal</span> <span class="n">space</span> <span class="n">paths</span> <span class="ow">in</span> <span class="n">reduced</span> <span class="n">coordinates</span><span class="p">:</span>
+<span class="p">[</span> <span class="mf">0.00</span>  <span class="mf">0.00</span>  <span class="mf">0.00</span><span class="p">]</span> <span class="o">--&gt;</span> <span class="p">[</span> <span class="mf">0.50</span>  <span class="mf">0.00</span>  <span class="mf">0.50</span><span class="p">]</span>
+<span class="p">[</span> <span class="mf">0.50</span>  <span class="mf">0.00</span>  <span class="mf">0.50</span><span class="p">]</span> <span class="o">--&gt;</span> <span class="p">[</span> <span class="mf">0.50</span>  <span class="mf">0.25</span>  <span class="mf">0.75</span><span class="p">]</span>
+<span class="p">[</span> <span class="mf">0.50</span>  <span class="mf">0.25</span>  <span class="mf">0.75</span><span class="p">]</span> <span class="o">--&gt;</span> <span class="p">[</span> <span class="mf">0.37</span>  <span class="mf">0.38</span>  <span class="mf">0.75</span><span class="p">]</span>
+<span class="p">[</span> <span class="mf">0.38</span>  <span class="mf">0.38</span>  <span class="mf">0.75</span><span class="p">]</span> <span class="o">--&gt;</span> <span class="p">[</span> <span class="mf">0.00</span>  <span class="mf">0.00</span>  <span class="mf">0.00</span><span class="p">]</span>
+<span class="p">[</span> <span class="mf">0.00</span>  <span class="mf">0.00</span>  <span class="mf">0.00</span><span class="p">]</span> <span class="o">--&gt;</span> <span class="p">[</span> <span class="mf">0.50</span>  <span class="mf">0.50</span>  <span class="mf">0.50</span><span class="p">]</span>
+<span class="p">[</span> <span class="mf">0.50</span>  <span class="mf">0.50</span>  <span class="mf">0.50</span><span class="p">]</span> <span class="o">--&gt;</span> <span class="p">[</span> <span class="mf">0.63</span>  <span class="mf">0.25</span>  <span class="mf">0.63</span><span class="p">]</span>
+<span class="p">[</span> <span class="mf">0.62</span>  <span class="mf">0.25</span>  <span class="mf">0.62</span><span class="p">]</span> <span class="o">--&gt;</span> <span class="p">[</span> <span class="mf">0.50</span>  <span class="mf">0.25</span>  <span class="mf">0.75</span><span class="p">]</span>
+<span class="p">[</span> <span class="mf">0.50</span>  <span class="mf">0.25</span>  <span class="mf">0.75</span><span class="p">]</span> <span class="o">--&gt;</span> <span class="p">[</span> <span class="mf">0.50</span>  <span class="mf">0.50</span>  <span class="mf">0.50</span><span class="p">]</span>
+<span class="p">[</span> <span class="mf">0.50</span>  <span class="mf">0.50</span>  <span class="mf">0.50</span><span class="p">]</span> <span class="o">--&gt;</span> <span class="p">[</span> <span class="mf">0.37</span>  <span class="mf">0.37</span>  <span class="mf">0.75</span><span class="p">]</span>
+<span class="p">[</span> <span class="mf">0.62</span>  <span class="mf">0.25</span>  <span class="mf">0.62</span><span class="p">]</span> <span class="o">--&gt;</span> <span class="p">[</span> <span class="mf">0.50</span> <span class="o">-</span><span class="mf">0.00</span>  <span class="mf">0.50</span><span class="p">]</span>
+                 <span class="n">_</span>
+   <span class="n">___</span> <span class="n">_</span> <span class="n">__</span>   <span class="n">__</span><span class="o">|</span> <span class="o">|</span>
+  <span class="o">/</span> <span class="n">_</span> \ <span class="s1">&#39;_ \ / _` |</span>
+ <span class="o">|</span>  <span class="n">__</span><span class="o">/</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="p">(</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span>
+  \<span class="n">___</span><span class="o">|</span><span class="n">_</span><span class="o">|</span> <span class="o">|</span><span class="n">_</span><span class="o">|</span>\<span class="n">__</span><span class="p">,</span><span class="n">_</span><span class="o">|</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="_images/Si-crystal-band.png"><img alt="crystal-band" src="_images/Si-crystal-band.png" style="width: 33%;" /></a></p>
+<p>For further settings and command options, see the general Phonopy documentation
+<a class="reference internal" href="setting-tags.html#setting-tags"><span class="std std-ref">Setting tags</span></a> and <a class="reference internal" href="command-options.html#command-options"><span class="std std-ref">Command options</span></a>, respectively, and
+for examples, see <a class="reference internal" href="examples.html#examples-link"><span class="std std-ref">Examples</span></a>.</p>
+</li>
+</ol>
+<div class="section" id="non-analytical-term-correction-optional">
+<h3>Non-analytical term correction (Optional)<a class="headerlink" href="#non-analytical-term-correction-optional" title="Permalink to this headline">¶</a></h3>
+<p>The workflow for a CRYSTAL-Phonopy calculation with Non-analytical correction
+is outlined here using the NaCl example found in <code class="docutils literal"><span class="pre">example/NaCl-CRYSTAL</span></code>.</p>
+<p>In this example, the CRYSTAL output file is <code class="docutils literal"><span class="pre">crystal.o</span></code>.
+This is the default for the CRYSTAL interface, so, the <code class="docutils literal"><span class="pre">-c</span> <span class="pre">crystal.o</span></code>
+parameter is not needed.</p>
+<p>To activate non-analytical term correction, <a class="reference internal" href="input-files.html#born-file"><span class="std std-ref">BORN (optional)</span></a> is
+required. This file contains the Born effective charges
+and the dielectric tensor. They can be calculated with CRYSTAL.
+The recommended strategy is to carry out a Gamma-point frequency calculation
+with INTENS and INTCPHF. This produces all required quantities and also confirms that
+the structure optimization has converged to a true local minimum.
+(see the FREQCALC-INTENS-INTCPHF block in the beginning of <code class="docutils literal"><span class="pre">crystal.o</span></code>)</p>
+<p>The workflow is very similar to the Si example below:</p>
+<ol class="arabic">
+<li><p class="first">Create displaced supercells:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">phonopy</span> <span class="o">--</span><span class="n">crystal</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;4 4 4&quot;</span> <span class="o">-</span><span class="n">d</span>
+</pre></div>
+</div>
+<p>Note that now the CRYSTAL interface automatically creates the <code class="docutils literal"><span class="pre">BORN</span></code>
+file. It should look like this:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">default</span>
+<span class="mf">1.8126</span> <span class="mf">0.0000</span> <span class="mf">0.0000</span> <span class="mf">0.0000</span> <span class="mf">1.8126</span> <span class="mf">0.0000</span> <span class="mf">0.0000</span> <span class="mf">0.0000</span> <span class="mf">1.8126</span>
+<span class="mf">1.0238</span> <span class="o">-</span><span class="mf">0.0000</span> <span class="o">-</span><span class="mf">0.0000</span> <span class="o">-</span><span class="mf">0.0000</span> <span class="mf">1.0238</span> <span class="mf">0.0000</span> <span class="o">-</span><span class="mf">0.0000</span> <span class="mf">0.0000</span> <span class="mf">1.0238</span>
+<span class="o">-</span><span class="mf">1.0238</span> <span class="mf">0.0000</span> <span class="mf">0.0000</span> <span class="mf">0.0000</span> <span class="o">-</span><span class="mf">1.0238</span> <span class="mf">0.0000</span> <span class="mf">0.0000</span> <span class="mf">0.0000</span> <span class="o">-</span><span class="mf">1.0238</span>
+</pre></div>
+</div>
+<p>However, if you don&#8217;t want to run a FREQCALC-INTENS-INTCPHF calculation,
+but have the necessary data from some other source, you can create
+the <code class="docutils literal"><span class="pre">BORN</span></code> file manually following the <code class="docutils literal"><span class="pre">BORN</span></code> format
+(<a class="reference internal" href="input-files.html#born-file"><span class="std std-ref">BORN (optional)</span></a>).</p>
+</li>
+<li><p class="first">Run the supercell inputs with CRYSTAL</p>
+</li>
+<li><p class="first">Collect forces:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">phonopy</span> <span class="o">--</span><span class="n">crystal</span> <span class="o">-</span><span class="n">f</span> <span class="n">supercell</span><span class="o">-*</span><span class="n">o</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Calculate phonon dispersion data into band.yaml and save band.pdf,
+using Non-analytical correction &#8211;nac:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">phonopy</span> <span class="o">--</span><span class="n">crystal</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;4 4 4&quot;</span> <span class="o">-</span><span class="n">p</span> <span class="o">-</span><span class="n">s</span> <span class="o">--</span><span class="n">nac</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="_images/NaCl-crystal-band-NAC.png"><img alt="crystal-band-nac" src="_images/NaCl-crystal-band-NAC.png" style="width: 33%;" /></a></p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+        <br/>
+        
+<div id="sourcelink">
+  <a href="_sources/crystal.txt"
+     rel="nofollow">Source</a>
+</div>
+      
+    </p>
+    <p>
+        &copy; Copyright 2009, Atsushi Togo.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

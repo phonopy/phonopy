@@ -335,7 +335,7 @@ tag. See <a class="reference internal" href="command-options.html#force-calculat
 <a class="reference internal" href="abinit.html#abinit-interface"><span class="std std-ref">Abinit &amp; phonopy calculation</span></a>, and <a class="reference internal" href="pwscf.html#pwscf-interface"><span class="std std-ref">Pwscf &amp; phonopy calculation</span></a>.</li>
 <li>For the <code class="docutils literal"><span class="pre">gruneisen</span></code> command, <code class="docutils literal"><span class="pre">--factor</span></code>, <code class="docutils literal"><span class="pre">--nomeshsym</span></code>,
 <code class="docutils literal"><span class="pre">--wien2k</span></code>, <code class="docutils literal"><span class="pre">--abinit</span></code>, and <code class="docutils literal"><span class="pre">--pwscf</span></code> options are
-implemented. See <a class="reference internal" href="gruneisen.html#gruneisen-calculators"><span class="std std-ref">Abinit, Pwscf, and Wien2k interfaces</span></a> and
+implemented. See <a class="reference internal" href="gruneisen.html#gruneisen-calculators"><span class="std std-ref">Abinit, Pwscf, Wien2k, and CRYSTAL interfaces</span></a> and
 <a class="reference internal" href="gruneisen.html#gruneisen-command-options"><span class="std std-ref">Command options</span></a>.</li>
 <li>In phonopy-API, timing to call Phonopy._set_dynamical_matrix is
 changed to reduce the number of calls of this function. This may
@@ -627,7 +627,7 @@ was implemented by the function <code class="docutils literal"><span class="pre"
 <code class="docutils literal"><span class="pre">BAND_LABELS</span></code> (<a class="reference internal" href="setting-tags.html#band-labels-tag"><span class="std std-ref">BAND_LABELS</span></a>).</li>
 <li><code class="docutils literal"><span class="pre">--band</span></code> option is implemented.</li>
 <li><code class="docutils literal"><span class="pre">GAMMA_CENTER</span></code> tag and <code class="docutils literal"><span class="pre">--gc</span></code>, <code class="docutils literal"><span class="pre">--gamma_center</span></code> option are
-implemented (<a class="reference internal" href="setting-tags.html#mp-tag"><span class="std std-ref">MESH or MP</span></a>).</li>
+implemented (<a class="reference internal" href="setting-tags.html#mp-tag"><span class="std std-ref">MESH, MP, or MESH_NUMBERS</span></a>).</li>
 <li><code class="docutils literal"><span class="pre">phonopy-qha</span></code> was polished. Most of the code was moved to
 <code class="docutils literal"><span class="pre">phonopy/qha/__init__.py</span></code>.</li>
 <li><code class="docutils literal"><span class="pre">Phonopy::get_mesh</span></code> and <code class="docutils literal"><span class="pre">Phonopy::get_band_structure</span></code> were
@@ -1022,7 +1022,7 @@ from those in structure with atomic displacements.</li>
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.8.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9.<br/>
     </p>
   </div>
 </footer>

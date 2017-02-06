@@ -199,8 +199,8 @@ mean square displacements.
 
 The default values for calculators are those to convert frequency
 units to THz. The default conversion factors for ``wien2k``,
-``abinit``, ``pwscf``, and ``elk`` are 3.44595, 21.49068, 108.9708,
-and 154.1079 respectively. These are determined following the physical
+``abinit``, ``pwscf``, ``elk``, and CRYSTAL are 3.44595, 21.49068, 108.9708,
+154.1079, and 15.633302 respectively. These are determined following the physical
 unit systems of the calculators. How to calcualte these conversion
 factors is explained at :ref:`physical_unit_conversion`.
 
@@ -336,8 +336,8 @@ properties and density of states.
 
 .. _mp_tag:
 
-``MESH`` or ``MP``
-~~~~~~~~~~~~~~~~~~~
+``MESH``, ``MP``, or ``MESH_NUMBERS``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ``MESH`` numbers give uniform meshes in each axis. As the default
 behavior, the center of mesh is determined by the Monkhorst-Pack

@@ -156,7 +156,7 @@
       
   <div class="section" id="interfaces-to-calculators">
 <span id="calculator-interfaces"></span><h1>Interfaces to calculators<a class="headerlink" href="#interfaces-to-calculators" title="Permalink to this headline">¶</a></h1>
-<p>The interfaces for VASP, Wien2k, Pwscf, Abinit, and Elk are built in
+<p>The interfaces for VASP, Wien2k, Pwscf, Abinit, Elk and CRYSTAL are built in
 to the usual phonopy command. See the command options and how to
 invoke each of them at <a class="reference internal" href="command-options.html#force-calculators"><span class="std std-ref">Choice of force calculator</span></a>.</p>
 <div class="section" id="physical-unit-system-for-calculator">
@@ -170,9 +170,10 @@ invoke each of them at <a class="reference internal" href="command-options.html#
 <span class="n">Abinit</span>  <span class="o">|</span> <span class="n">au</span> <span class="p">(</span><span class="n">bohr</span><span class="p">)</span>  <span class="n">AMU</span>           <span class="n">eV</span><span class="o">/</span><span class="n">Angstrom</span>   <span class="n">eV</span><span class="o">/</span><span class="n">Angstrom</span><span class="o">.</span><span class="n">au</span>
 <span class="n">Siesta</span>  <span class="o">|</span> <span class="n">au</span> <span class="p">(</span><span class="n">bohr</span><span class="p">)</span>  <span class="n">AMU</span>           <span class="n">eV</span><span class="o">/</span><span class="n">Angstrom</span>   <span class="n">eV</span><span class="o">/</span><span class="n">Angstrom</span><span class="o">.</span><span class="n">au</span>
 <span class="n">elk</span>     <span class="o">|</span> <span class="n">au</span> <span class="p">(</span><span class="n">bohr</span><span class="p">)</span>  <span class="n">AMU</span>           <span class="n">hartree</span><span class="o">/</span><span class="n">au</span>    <span class="n">hartree</span><span class="o">/</span><span class="n">au</span><span class="o">^</span><span class="mi">2</span>
+<span class="n">CRYSTAL</span> <span class="o">|</span> <span class="n">Angstrom</span>   <span class="n">AMU</span>           <span class="n">eV</span><span class="o">/</span><span class="n">Angstrom</span>   <span class="n">eV</span><span class="o">/</span><span class="n">Angstrom</span><span class="o">^</span><span class="mi">2</span>
 </pre></div>
 </div>
-<p>For these sets of physical properties, phonon frequency is calcualted
+<p>For these sets of physical properties, phonon frequency is calculated
 in THz.</p>
 </div>
 <div class="section" id="default-file-name-value-and-conversion-factor">
@@ -187,6 +188,7 @@ used as shown below:</p>
 <span class="n">Abinit</span>  <span class="o">|</span> <span class="n">unitcell</span><span class="o">.</span><span class="ow">in</span>
 <span class="n">Siesta</span>  <span class="o">|</span> <span class="nb">input</span><span class="o">.</span><span class="n">fdf</span>
 <span class="n">Elk</span>     <span class="o">|</span> <span class="n">elk</span><span class="o">.</span><span class="ow">in</span>
+<span class="n">CRYSTAL</span> <span class="o">|</span> <span class="n">crystal</span><span class="o">.</span><span class="n">o</span>
 </pre></div>
 </div>
 </div>
@@ -203,6 +205,7 @@ shown below:</p>
 <span class="n">Abinit</span>  <span class="o">|</span> <span class="mf">0.02</span> <span class="n">au</span> <span class="p">(</span><span class="n">bohr</span><span class="p">)</span>
 <span class="n">Siesta</span>  <span class="o">|</span> <span class="mf">0.02</span> <span class="n">au</span> <span class="p">(</span><span class="n">bohr</span><span class="p">)</span>
 <span class="n">Elk</span>     <span class="o">|</span> <span class="mf">0.02</span> <span class="n">au</span> <span class="p">(</span><span class="n">bohr</span><span class="p">)</span>
+<span class="n">CRYSTAL</span> <span class="o">|</span> <span class="mf">0.01</span> <span class="n">Angstrom</span>
 </pre></div>
 </div>
 </div>
@@ -214,6 +217,7 @@ shown below:</p>
 <span class="n">Abinit</span>  <span class="o">|</span> <span class="mf">51.422090</span>
 <span class="n">Siesta</span>  <span class="o">|</span> <span class="mf">51.422090</span>
 <span class="n">Elk</span>     <span class="o">|</span> <span class="mi">1</span>
+<span class="n">CRYSTAL</span> <span class="o">|</span> <span class="mf">14.399652</span>
 </pre></div>
 </div>
 </div>
@@ -252,6 +256,11 @@ shown below:</p>
 <li class="toctree-l1"><a class="reference internal" href="elk.html">Elk &amp; phonopy calculation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="elk.html#supported-elk-tags">Supported Elk tags</a></li>
 <li class="toctree-l2"><a class="reference internal" href="elk.html#how-to-run">How to run</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="crystal.html">CRYSTAL &amp; phonopy calculation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="crystal.html#supported-features">Supported features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="crystal.html#how-to-run">How to run</a></li>
 </ul>
 </li>
 </ul>
@@ -305,7 +314,7 @@ FHI-aims mailing list.</p>
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.8.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9.<br/>
     </p>
   </div>
 </footer>

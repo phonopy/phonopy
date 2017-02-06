@@ -279,8 +279,9 @@ is 0.01.)</p>
 <p>The frequency unit conversion factor to THz has to be set by using the <code class="docutils literal"><span class="pre">factor</span></code>
 keyword in <code class="docutils literal"><span class="pre">Phonopy</span></code> class. The factors are <code class="docutils literal"><span class="pre">VaspToTHz</span></code> for VASP,
 <code class="docutils literal"><span class="pre">Wien2kToTHz</span></code> for Wien2k, <code class="docutils literal"><span class="pre">AbinitToTHz</span></code> for Abinit,
-<code class="docutils literal"><span class="pre">PwscfToTHz</span></code> for Pwscf, <code class="docutils literal"><span class="pre">ElkToTHz</span></code> for Elk, and <code class="docutils literal"><span class="pre">SiestaToTHz</span></code>
-for Siesta. <code class="docutils literal"><span class="pre">VaspToTHz</span></code> is the default value. For example:</p>
+<code class="docutils literal"><span class="pre">PwscfToTHz</span></code> for Pwscf, <code class="docutils literal"><span class="pre">ElkToTHz</span></code> for Elk, <code class="docutils literal"><span class="pre">SiestaToTHz</span></code>
+for Siesta, and <code class="docutils literal"><span class="pre">CrystalToTHz</span> <span class="pre">for</span> <span class="pre">CRYSTAL</span></code>. <code class="docutils literal"><span class="pre">VaspToTHz</span></code> is the default value.
+For example:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">phonopy.units</span> <span class="k">import</span> <span class="n">AbinitToTHz</span>
 
 <span class="n">phonon</span> <span class="o">=</span> <span class="n">Phonopy</span><span class="p">(</span><span class="n">unitcell</span><span class="p">,</span>
@@ -690,7 +691,7 @@ structures. The physical unit follows that of input crystal structure.</p>
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.8.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9.<br/>
     </p>
   </div>
 </footer>
