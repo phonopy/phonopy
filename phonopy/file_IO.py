@@ -349,6 +349,12 @@ def get_born_parameters(f, primitive, symmetry):
             return False
         born[i] = np.reshape([float(x) for x in line], (3, 3))
 
+    # Check that the number of atoms in the BORN file was correct
+    line = f.readline().split()
+    if len(line) > 0:
+        print("Too many atoms in the BORN file (it should only contain symmetry-independent atoms)")
+        return False
+
     # Expand Born effective charges to all atoms in the primitive cell
     rotations = symmetry.get_symmetry_operations()['rotations']
     map_operations = symmetry.get_map_operations()

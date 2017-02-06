@@ -43,7 +43,7 @@ from phonopy.cui.settings import PhonopyConfParser
 from phonopy.cui.show_symmetry import check_symmetry
 from phonopy.cui.phonopy_argparse import get_parser
 from phonopy.units import (Wien2kToTHz, AbinitToTHz, PwscfToTHz, ElkToTHz,
-                           SiestaToTHz, VaspToTHz, Hartree, Bohr)
+                           SiestaToTHz, VaspToTHz, CrystalToTHz, Hartree, Bohr)
 from phonopy.structure.cells import print_cell, determinant
 from phonopy.structure.atoms import atom_data, symbol_map
 from phonopy.interface import create_FORCE_SETS, read_crystal_structure
@@ -228,6 +228,7 @@ if options.loglevel is not None:
 # elk           : hartree, au,        AMU,         hartree/au
 # pwscf         : Ry,      au,        AMU,         Ry/au
 # siesta        : eV,      au,        AMU,         eV/Angstroem
+# CRYSTAL       : eV,      Angstrom,  AMU,         eV/Angstroem
 #
 if options.wien2k_mode:
     interface_mode = 'wien2k'
@@ -259,6 +260,12 @@ elif options.siesta_mode:
     factor = SiestaToTHz
     nac_factor = Hartree / Bohr
     distance_to_A = Bohr
+elif options.crystal_mode:
+    interface_mode = 'crystal'
+    from phonopy.interface.crystal import write_supercells_with_displacements
+    factor = CrystalToTHz
+    nac_factor = Hartree * Bohr
+    distance_to_A = 1.0
 else:
     if options.vasp_mode:
         interface_mode = 'vasp'
@@ -498,6 +505,8 @@ if run_mode == 'displacements':
             interface_mode == 'pwscf' or
             interface_mode == 'siesta'):
             displacement_distance = 0.02
+        elif interface_mode == 'crystal':
+            displacement_distance = 0.01
         else: # default or vasp
             displacement_distance = 0.01
     else:
@@ -536,6 +545,13 @@ if run_mode == 'displacements':
             supercell,
             cells_with_disps,
             optional_structure_file_information[1])
+    elif interface_mode == 'crystal':
+        conv_numbers = optional_structure_file_information[1]
+        write_supercells_with_displacements(supercell,
+                                            cells_with_disps,
+                                            conv_numbers,
+                                            settings.get_supercell_matrix(),
+                                            template_file="TEMPLATE")
     else: # default or vasp
         write_supercells_with_displacements(supercell, cells_with_disps)
 

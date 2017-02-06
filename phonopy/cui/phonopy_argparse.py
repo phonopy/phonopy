@@ -44,6 +44,7 @@ def get_parser():
         band_paths=None,
         band_points=None,
         cell_filename=None,
+        crystal_mode=False,
         cutoff_frequency=None,
         cutoff_radius=None,
         displacement_distance=None,
@@ -146,6 +147,9 @@ def get_parser():
     parser.add_option(
         "-c", "--cell", dest="cell_filename", action="store", type="string",
         help="Read unit cell", metavar="FILE")
+    parser.add_option(
+        "--crystal", dest="crystal_mode", action="store_true", 
+        help="Invoke CRYSTAL mode")
     parser.add_option(
         "--cutoff_freq", "--cutoff_frequency",
         dest="cutoff_frequency", type="float",
