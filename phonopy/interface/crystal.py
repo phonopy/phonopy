@@ -278,7 +278,7 @@ class CrystalIn:
                     atomdata = lines[l].split()
                     is_asym.append(atomdata[1])
                     aspecies.append(atomdata[3].capitalize())
-                    coords.append(map(float, atomdata[4:7]))
+                    coords.append([float(x) for x in atomdata[4:7]])
                     convnum.append(int(atomdata[2]))
                     l += 1
             elif 'DIRECT LATTICE VECTORS CARTESIAN COMPONENTS' in line:
@@ -286,11 +286,11 @@ class CrystalIn:
                 l += 2
                 #          X                    Y                    Z
                 for lattvec in range(1, 4):
-                    lattvecs.append(map(float, lines[l].split()))
+                    lattvecs.append([float(x) for x in lines[l].split()])
                     l += 1
             elif 'ATOMSPIN' in line:
                 # Read ATOMSPIN, and save the magnetic moments for later parsing
-                # (not all necessary information is around yet)
+                # (not all necessary information is available at this point)
                 # All spins must be entered on one line!
                 # ATOMSPIN
                 # 8
@@ -298,7 +298,7 @@ class CrystalIn:
                 l += 1
                 numspins = int(lines[l])
                 l += 1
-                atomspins = map(int, lines[l].split())
+                atomspins = [int(x) for x in lines[l].split()]
                 l += 1
             elif 'COMPONENT    ALPHA(REAL, IMAGINARY)         EPSILON       CHI(1)' in line:
                 # XX      296.9851        0.0000        7.9433        6.9433
@@ -325,7 +325,7 @@ class CrystalIn:
                         zeffatom = []
                         for i in range(0, 3):
                             # 1     8.3860E-01  3.4861E-01  3.4861E-01
-                            zeffatom += map(float, lines[l].split()[1:4])
+                            zeffatom += [float(x) for x in lines[l].split()[1:4]]
                             l += 1
                         zeff.append(zeffatom)
                         l += 4
