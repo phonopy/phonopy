@@ -370,7 +370,7 @@ class CrystalIn:
 
                 self._tags['magnetic_moments'] = magmoms
                 print("CRYSTAL-interface: Following magnetic moments have been read from ATOMSPIN entry:")
-                print magmoms
+                print(magmoms)
             else:
                 print("CRYSTAL-interface: Invalid ATOMSPIN entry, magnetic moments have not been set")
         else: 
