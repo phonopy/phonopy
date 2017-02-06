@@ -40,7 +40,7 @@ from phonopy import PhonopyGruneisen
 from phonopy.interface import read_crystal_structure, get_default_cell_filename
 from phonopy.file_IO import (parse_FORCE_SETS, parse_BORN,
                              parse_FORCE_CONSTANTS, read_force_constants_hdf5)
-from phonopy.units import VaspToTHz, Wien2kToTHz, AbinitToTHz, PwscfToTHz
+from phonopy.units import VaspToTHz, Wien2kToTHz, AbinitToTHz, PwscfToTHz, CrystalToTHz
 import numpy as np
 
 def fracval(frac):
@@ -125,6 +125,7 @@ parser.set_defaults(
     band_paths=None,
     cell_filename=None,
     color_scheme=None,
+    crystal_mode=False,
     cutoff_frequency=None,
     cutoff_wave_vector=1e-4,
     factor=None,
@@ -163,6 +164,8 @@ parser.add_option("-c", "--cell", dest="cell_filename",
 parser.add_option("--color", dest="color_scheme",
                   action="store", type="string",
                   help="Color scheme")
+parser.add_option("--crystal", dest="crystal_mode",
+                  action="store_true", help="Invoke CRYSTAL mode")
 parser.add_option("--cutoff", dest="cutoff_frequency", type="float",
                   help="Plot above this cutoff frequency for mesh sampling mode.")
 parser.add_option("--dim", dest="supercell_dimension",
@@ -272,6 +275,7 @@ else:
 # wien2k        : Ry,      au,        AMU,         mRy/au
 # pwscf         : Ry,      au,        AMU,         Ry/au
 # abinit        : hartree, au(=bohr), AMU,         eV/Angstrom
+# CRYSTAL       : eV,      Angstrom,  AMU,         eV/Angstrom
 #
 if options.wien2k_mode:
     interface_mode = 'wien2k'
@@ -282,6 +286,9 @@ elif options.abinit_mode:
 elif options.pwscf_mode:
     interface_mode = 'pwscf'
     factor = PwscfToTHz
+elif options.crystal_mode:
+    interface_mode = 'crystal'
+    factor = CrystalToTHz
 else:
     interface_mode = 'vasp'
     factor = VaspToTHz
