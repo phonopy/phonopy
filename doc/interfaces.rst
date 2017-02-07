@@ -3,7 +3,7 @@
 Interfaces to calculators
 ==========================
 
-The interfaces for VASP, Wien2k, Pwscf, Abinit, and Elk are built in
+The interfaces for VASP, Wien2k, Pwscf, Abinit, Elk and CRYSTAL are built in
 to the usual phonopy command. See the command options and how to
 invoke each of them at :ref:`force_calculators`. 
 
@@ -20,8 +20,9 @@ Physical unit systems used for the calculators are as follows::
    Abinit  | au (bohr)  AMU           eV/Angstrom   eV/Angstrom.au
    Siesta  | au (bohr)  AMU           eV/Angstrom   eV/Angstrom.au
    elk     | au (bohr)  AMU           hartree/au    hartree/au^2
+   CRYSTAL | Angstrom   AMU           eV/Angstrom   eV/Angstrom^2
 
-For these sets of physical properties, phonon frequency is calcualted
+For these sets of physical properties, phonon frequency is calculated
 in THz.
 
 Default file name, value, and conversion factor
@@ -39,6 +40,7 @@ used as shown below::
    Abinit  | unitcell.in
    Siesta  | input.fdf
    Elk     | elk.in
+   CRYSTAL | crystal.o
 
 Default displacement distances
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -55,6 +57,7 @@ shown below::
    Abinit  | 0.02 au (bohr)
    Siesta  | 0.02 au (bohr)
    Elk     | 0.02 au (bohr)
+   CRYSTAL | 0.01 Angstrom
 
 .. _nac_default_value_interfaces:
 
@@ -69,6 +72,7 @@ Default unit conversion factor for non-analytical term correction
    Abinit  | 51.422090
    Siesta  | 51.422090
    Elk     | 1
+   CRYSTAL | 14.399652
 
 
 Interface to force calculator
@@ -85,6 +89,7 @@ Short tutorials for force calculators are found in the following pages.
    abinit
    siesta
    elk
+   crystal
 
 Interface to  VASP DFPT force constants
 ---------------------------------------

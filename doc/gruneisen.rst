@@ -63,10 +63,10 @@ showing the values on the plot. Instead the values at the neighboring
 
 .. _gruneisen_calculators:
 
-Abinit, Pwscf, and Wien2k interfaces
--------------------------------------
+Abinit, Pwscf, Wien2k, and CRYSTAL interfaces
+---------------------------------------------
 
-``--abinit``, ``--pwscf``, or ``--wien2k`` options can be specified
+``--abinit``, ``--pwscf``, ``--wien2k``, or ``--crystal`` options can be specified
 for corresponding calculators and the crystal structure file format
 should be different from that of the VASP format. An Abinit example is
 as follows::
@@ -79,7 +79,7 @@ as follows::
 Command options
 ----------------
 
-If one of ``--abinit``, ``--pwscf``, or ``--wien2k`` options is
+If one of ``--abinit``, ``--pwscf``, ``--wien2k``, or ``--crystal`` options is
 specified, the interface mode is changed to it. The unit conversion
 factor to THz is appropriately selected and its crystal structure file
 format is accepted. If none of them is specified, as the VASP

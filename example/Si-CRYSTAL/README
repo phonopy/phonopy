@@ -1,0 +1,26 @@
+Si phonon dispersions
+
+CRYSTAL output file is crystal.o. This is the default file name
+for the CRYSTAL interface, so, the -c crystal.o parameter is not needed
+
+1) Create displaced supercells:
+   phonopy --crystal --dim="4 4 4" -d
+   Complete CRYSTAL inputs can be prepared manually
+   or with the help of a template (see TEMPLATE)
+
+2) Run the supercell input with CRYSTAL
+   Here supercell-001.o has been pre-calculated.
+
+3) Collect forces:
+   phonopy --crystal -f supercell-*o
+
+4) Calculate phonon dispersion data into band.yaml and save band.pdf:
+   phonopy --crystal --dim="4 4 4" -p -s band.conf
+
+   Plot the phonon dispersion in cm^{-1} units:
+   (factor = CrystalToTHz * THzToCm = 15.633302 * 33.356410)
+   phonopy --crystal --dim="4 4 4" -p -s --factor=521.47083 band.conf
+
+   Create a formatted plot (here band.yaml is in cm^{-1) units):
+   bandplot --fmin=0 --line --ylabel="Frequency (cm\$^{-1}\$)" "--band_labels=`grep BAND_LABELS band.conf | cut -d= -f2-`" -o dispersion.pdf
+
