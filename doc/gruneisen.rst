@@ -64,7 +64,7 @@ showing the values on the plot. Instead the values at the neighboring
 .. _gruneisen_calculators:
 
 Abinit, Pwscf, Wien2k, and CRYSTAL interfaces
--------------------------------------
+---------------------------------------------
 
 ``--abinit``, ``--pwscf``, ``--wien2k``, or ``--crystal`` options can be specified
 for corresponding calculators and the crystal structure file format

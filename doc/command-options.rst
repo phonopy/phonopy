@@ -159,7 +159,7 @@ input file that contains the unit cell crystal structure, e.g.,
 .. _crystal_mode:
 
 ``--crystal``
-~~~~~~~~~~~~
+~~~~~~~~~~~~~
 
 CRYSTAL mode is invoked with this option. Usually this option is used
 with ``--cell`` (``-c``) option or ``CELL_FILENAME`` tag to read a CRYSTAL
@@ -308,7 +308,7 @@ files.
    % phonopy --elk -f disp-001/INFO.OUT disp-002/INFO.OUT  ...
 
 CRYSTAL interface
-^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^
 
 ``FORCE_SETS`` file is created from ``disp.yaml`` and CRYSTAL output
 files.
