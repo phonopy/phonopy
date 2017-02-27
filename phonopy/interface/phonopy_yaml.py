@@ -54,6 +54,40 @@ def get_unitcell_from_phonopy_yaml(filename):
     ph_yaml.read(filename)
     return ph_yaml.get_unitcell()
 
+def get_physical_unit_yaml_lines(calculator,
+                                 show_force_constants=False):
+    # VASP    | Angstrom   AMU           eV/Angstrom   eV/Angstrom^2
+    # Wien2k  | au (bohr)  AMU           mRy/au        mRy/au^2
+    # Pwscf   | au (bohr)  AMU           Ry/au         Ry/au^2
+    # Abinit  | au (bohr)  AMU           eV/Angstrom   eV/Angstrom.au
+    # Siesta  | au (bohr)  AMU           eV/Angstrom   eV/Angstrom.au
+    # elk     | au (bohr)  AMU           hartree/au    hartree/au^2
+    # CRYSTAL | Angstrom   AMU           eV/Angstrom   eV/Angstrom^2
+
+    lines = []
+    if calculator in ['wien2k', 'abinit', 'elk', 'pwscf', 'siesta']:
+        lines.append("  length: au")
+    elif calculator in ['vasp', 'crystal']:
+        lines.append("  length: Angstrom")
+
+    if show_force_constants:
+        fc_units = {'vasp': 'eV/Angstrom^2',
+                    'wien2k': 'mRy/au^2',
+                    'pwscf': 'Ry/au^2',
+                    'abinit': 'eV/Angstrom.au',
+                    'siesta': 'eV/Angstrom.au',
+                    'elk': 'hartree/au^2'}
+        if calculator in fc_units:
+            lines.append("  force_constants: %s" %
+                         fc_units[calculator])
+
+    if len(lines) > 0:
+        lines.insert(0, "physical_unit:")
+        lines.append("  atomic_mass: AMU")
+        lines.append("")
+
+    return lines
+
 class PhonopyYaml(object):
     def __init__(self,
                  configuration=None,
@@ -130,7 +164,9 @@ class PhonopyYaml(object):
                 lines.append("    %s: \"%s\"" % (key, self._configuration[key]))
             lines.append("")
 
-        lines += self._get_physical_unit_yaml_lines()
+        lines += get_physical_unit_yaml_lines(
+            self._calculator,
+            show_force_constants=self._show_force_constants)
 
         if self._supercell_matrix is not None:
             lines.append("supercell_matrix:")
@@ -270,37 +306,6 @@ class PhonopyYaml(object):
         else:
             return None
 
-    def _get_physical_unit_yaml_lines(self):
-        # VASP    | Angstrom   AMU           eV/Angstrom   eV/Angstrom^2
-        # Wien2k  | au (bohr)  AMU           mRy/au        mRy/au^2
-        # Pwscf   | au (bohr)  AMU           Ry/au         Ry/au^2
-        # Abinit  | au (bohr)  AMU           eV/Angstrom   eV/Angstrom.au
-        # Siesta  | au (bohr)  AMU           eV/Angstrom   eV/Angstrom.au
-        # elk     | au (bohr)  AMU           hartree/au    hartree/au^2
-
-        lines = []
-        if self._calculator in ['wien2k', 'abinit', 'elk', 'pwscf', 'siesta']:
-            lines.append("  length: au")
-        elif self._calculator == 'vasp':
-            lines.append("  length: Angstrom")
-
-        if self._show_force_constants:
-            fc_units = {'vasp': 'eV/Angstrom^2',
-                        'wien2k': 'mRy/au^2',
-                        'pwscf': 'Ry/au^2',
-                        'abinit': 'eV/Angstrom.au',
-                        'siesta': 'eV/Angstrom.au',
-                        'elk': 'hartree/au^2'}
-            if self._calculator in fc_units:
-                lines.append("  force_constants: %s" %
-                             fc_units[self._calculator])
-
-        if len(lines) > 0:
-            lines.insert(0, "physical_unit:")
-            lines.append("  atomic_mass: AMU")
-            lines.append("")
-
-        return lines
 
             
         

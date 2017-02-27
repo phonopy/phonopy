@@ -772,7 +772,7 @@ class ConfParser(object):
                     self.set_parameter('is_mesh_symmetry', False)
 
             if conf_key == 'mesh_symmetry':
-                if confs['mesh_symmetry'] == '.false.':
+                if confs['mesh_symmetry'].lower() == '.false.':
                     self.set_parameter('is_mesh_symmetry', False)
                 
             if conf_key == 'translation':
@@ -783,7 +783,7 @@ class ConfParser(object):
                 self.set_parameter('tsym_type', confs['tsym_type'])
 
             if conf_key == 'rotational':
-                if confs['rotational'] == '.true.':
+                if confs['rotational'].lower() == '.true.':
                     self.set_parameter('is_rotational', True)
 
             if conf_key == 'fc_symmetry':
@@ -816,7 +816,7 @@ class ConfParser(object):
                 self.set_parameter('band_paths', bands)
 
             if conf_key == 'qpoints':
-                if confs['qpoints'] == '.true.':
+                if confs['qpoints'].lower() == '.true.':
                     self.set_parameter('qpoints', True)
                 else:
                     vals = [fracval(x) for x in confs['qpoints'].split()]

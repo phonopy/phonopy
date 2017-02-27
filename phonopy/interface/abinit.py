@@ -92,14 +92,20 @@ def read_abinit(filename):
                  scaled_positions=positions)
 
 def write_abinit(filename, cell):
-    f = open(filename, 'w')
-    f.write(get_abinit_structure(cell))
+    with open(filename, 'w') as f:
+        f.write(get_abinit_structure(cell))
 
 def write_supercells_with_displacements(supercell,
-                                        cells_with_displacements):
+                                        cells_with_displacements,
+                                        pre_filename="supercell",
+                                        width=3):
     write_abinit("supercell.in", supercell)
     for i, cell in enumerate(cells_with_displacements):
-        write_abinit("supercell-%03d.in" % (i + 1), cell)
+        filename = "{pre_filename}-{0:0{width}}.in".format(
+            i + 1,
+            pre_filename=pre_filename,
+            width=width)
+        write_abinit(filename, cell)
 
 def get_abinit_structure(cell):
     znucl = []
