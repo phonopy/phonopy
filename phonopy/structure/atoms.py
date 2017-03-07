@@ -260,12 +260,17 @@ class PhonopyAtoms(Atoms):
             lines.append("- [ %21.15f, %21.15f, %21.15f ] # %s" %
                          (v[0], v[1], v[2], a))
         lines.append("points:")
+        if self.masses is None:
+            masses = [None] * len(self.symbols)
+        else:
+            masses = self.masses
         for i, (s, v, m) in enumerate(
-                zip(self.symbols, self.scaled_positions, self.masses)):
+                zip(self.symbols, self.scaled_positions, masses)):
             lines.append("- symbol: %-2s # %d" % (s, i + 1))
             lines.append("  coordinates: [ %18.15f, %18.15f, %18.15f ]" %
                          tuple(v))
-            lines.append("  mass: %f" % m)
+            if m is not None:
+                lines.append("  mass: %f" % m)
         return lines
 
     def __str__(self):
