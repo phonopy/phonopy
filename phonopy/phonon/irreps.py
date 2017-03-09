@@ -1077,7 +1077,7 @@ class IrReps(object):
         trans_rots = []
 
         for r in rotations:
-            r_conv = similarity_transformation(np.linalg.inv(tmat), r)
+            r_conv = similarity_transformation(tmat, r)
             trans_rots.append(np.rint(r_conv).astype(int))
 
         return np.array(trans_rots)
