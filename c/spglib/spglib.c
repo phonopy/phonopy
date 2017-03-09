@@ -1159,10 +1159,10 @@ static int set_dataset(SpglibDataset * dataset,
   strcpy(dataset->international_symbol, spacegroup->international_short);
   strcpy(dataset->hall_symbol, spacegroup->hall_symbol);
   strcpy(dataset->choice, spacegroup->choice);
-  mat_inverse_matrix_d3(inv_lat, cell->lattice, 0);
+  mat_inverse_matrix_d3(inv_lat, spacegroup->bravais_lattice, 0);
   mat_multiply_matrix_d3(dataset->transformation_matrix,
                          inv_lat,
-                         spacegroup->bravais_lattice);
+                         cell->lattice);
   mat_copy_vector_d3(dataset->origin_shift, spacegroup->origin_shift);
 
   /* Symmetry operations */
