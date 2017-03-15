@@ -220,7 +220,7 @@ phonopy_qha = PhonopyQHA(volumes,
                          verbose=True)
 
 for filename, r in zip(args[1:(len(volumes)+1)], imag_ratios):
-    if r < 0.01:
+    if r > 0.01:
         print("Warning: %s has imaginary modes." % filename)
 
 if options.is_graph_plot and not options.is_graph_save:
