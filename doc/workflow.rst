@@ -1,7 +1,7 @@
 .. _workflow:
 
 Work flow
---------------------
+==========
 
 Work flow of phonopy is shown schematically. There are two ways to
 calculate, (1) atomic forces from finite displacements and (2) given

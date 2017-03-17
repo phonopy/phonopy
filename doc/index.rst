@@ -64,6 +64,7 @@ Documentation
 .. toctree::
    :maxdepth: 1
 
+   introduction
    examples
    Tutorial <procedure>
    workflow
