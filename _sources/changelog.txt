@@ -3,6 +3,17 @@
 Change Log
 ==========
 
+Mar-31-2017: Version 1.11.10
+----------------------------
+
+* Maintenance release with many fixes.
+
+Feb-7-2017: Version 1.11.8
+---------------------------
+
+* CRYSTAL code interface (:ref:`crystal_mode`) is added by Antti Karttunen.
+* Different vasprun.xml (expat) parser is under testing.
+
 Dec-14-2016: Version 1.11.6
 ---------------------------
 
