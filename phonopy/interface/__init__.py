@@ -214,11 +214,12 @@ def get_force_sets(interface_mode,
 def _check_number_of_files(num_displacements,
                            force_filenames,
                            disp_filename):
-    num_files = len(force_filenames)
-    if num_displacements != num_files:
+    if num_displacements != len(force_filenames):
         print('')
-        print("Number of files to be read don't match "
-              "to number of displacements in %s." % disp_filename)
+        print("Number of files to be read (%d) don't match to" %
+              len(force_filenames))
+        print("the number of displacements (%d) in %s." %
+              (num_displacements, disp_filename))
         return 1
     else:
         return 0

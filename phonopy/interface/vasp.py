@@ -52,12 +52,6 @@ def parse_set_of_forces(num_atoms,
                         use_expat=True,
                         verbose=True):
     if verbose:
-        if use_expat:
-            sys.stdout.write(
-                "*********************************************\n"
-                "*** VasprunxmlExpat is under the testing. ***\n"
-                "***  Please report if you find problems.  ***\n"
-                "*********************************************\n\n")
         sys.stdout.write("counter (file index): ")
 
     count = 0
