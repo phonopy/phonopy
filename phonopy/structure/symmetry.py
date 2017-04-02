@@ -106,7 +106,7 @@ class Symmetry(object):
 
     def get_site_symmetry(self, atom_number):
         pos = self._cell.get_scaled_positions()[atom_number]
-        symprec = self._symprec
+        lattice = self._cell.get_cell()
         rot = self._symmetry_operations['rotations']
         trans = self._symmetry_operations['translations']
         site_symmetries = []
@@ -114,7 +114,9 @@ class Symmetry(object):
         for r, t in zip(rot, trans):
             rot_pos = np.dot(pos, r.T) + t
             diff = pos - rot_pos
-            if (abs(diff - np.rint(diff)) < symprec).all():
+            diff -= np.rint(diff)
+            diff = np.dot(diff, lattice)
+            if np.linalg.norm(diff) < self._symprec:
                 site_symmetries.append(r)
 
         return np.array(site_symmetries, dtype='intc')
@@ -208,6 +210,7 @@ class Symmetry(object):
     def _set_map_operations(self):
         ops = self._symmetry_operations
         pos = self._cell.get_scaled_positions()
+        lattice = self._cell.get_cell()
         map_operations = np.zeros(len(pos), dtype='intc')
 
         for i, eq_atom in enumerate(self._map_atoms):
@@ -216,10 +219,10 @@ class Symmetry(object):
                 
                 diff = np.dot(pos[i], r.T) + t - pos[eq_atom]
                 diff -= np.rint(diff)
-                if np.linalg.norm(diff) < self._symprec:
+                dist = np.linalg.norm(np.dot(diff, lattice))
+                if dist < self._symprec:
                     map_operations[i] = j
                     break
-
         self._map_operations = map_operations
 
     def _set_nosym(self):
