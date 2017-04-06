@@ -71,11 +71,14 @@ class Mesh(object):
         self._frequencies = None
         self._eigenvalues = None
         self._eigenvectors = None
-        self._set_phonon()
 
+        self._group_velocity = group_velocity
         self._group_velocities = None
-        if group_velocity is not None:
-            self._set_group_velocities(group_velocity)
+
+    def run(self):
+        self._set_phonon()
+        if self._group_velocity is not None:
+            self._set_group_velocities(self._group_velocity)
 
     def get_dynamical_matrix(self):
         return self._dynamical_matrix
