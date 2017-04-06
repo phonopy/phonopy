@@ -742,7 +742,8 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
                         is_time_reversal=t_symmetry,
                         is_mesh_symmetry=q_symmetry,
                         is_eigenvectors=settings.get_is_eigenvectors(),
-                        is_gamma_center=settings.get_is_gamma_center())
+                        is_gamma_center=settings.get_is_gamma_center(),
+                        run_immediately=False)
         weights = phonon.get_mesh()[1]
         if log_level > 0:
             if q_symmetry:
@@ -751,6 +752,9 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
             else:
                 print("Number of q-points on sampling mesh: %d" %
                       weights.shape[0])
+            print("Calculating phonons on sampling mesh...")
+
+        phonon.run_mesh()
 
         if settings.get_write_mesh():
             if settings.get_is_hdf5():
