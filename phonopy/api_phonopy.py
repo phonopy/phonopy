@@ -488,13 +488,18 @@ class Phonopy(object):
                                         filename=filename)
 
     # Sampling mesh
+    def run_mesh(self):
+        if self._mesh is not None:
+            self._mesh.run()
+
     def set_mesh(self,
                  mesh,
                  shift=None,
                  is_time_reversal=True,
                  is_mesh_symmetry=True,
                  is_eigenvectors=False,
-                 is_gamma_center=False):
+                 is_gamma_center=False,
+                 run_immediately=True):
         if self._dynamical_matrix is None:
             print("Warning: Dynamical matrix has not yet built.")
             self._mesh = None
@@ -512,6 +517,8 @@ class Phonopy(object):
             rotations=self._primitive_symmetry.get_pointgroup_operations(),
             factor=self._factor,
             use_lapack_solver=self._use_lapack_solver)
+        if run_immediately:
+            self._mesh.run()
         return True
 
     def get_mesh(self):

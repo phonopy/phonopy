@@ -35,7 +35,7 @@
 import sys
 import numpy as np
 from phonopy.phonon.tetrahedron_mesh import TetrahedronMesh
-
+from phonopy.structure.tetrahedron_method import TetrahedronMethod
 
 def write_total_dos(frequency_points,
                     total_dos,
@@ -152,6 +152,40 @@ class CauchyDistribution(object):
     def calc(self, x):
         return self._gamma / np.pi / (x**2 + self._gamma**2)
 
+def run_tetrahedron_method_dos(mesh,
+                               frequency_points,
+                               frequencies,
+                               grid_address,
+                               grid_mapping_table,
+                               relative_grid_address,
+                               coef=None): # for each grid point
+    try:
+        import phonopy._phonopy as phonoc
+    except ImportError:
+        import sys
+        print("Phonopy C-extension has to be built properly.")
+        sys.exit(1)
+
+    if coef is None:
+        _coef = np.ones((frequencies.shape[0], 1, frequencies.shape[1]),
+                        dtype='double')
+    else:
+        _coef = np.array(coef, dtype='double', order='C')
+    arr_shape = frequencies.shape + (len(frequency_points), _coef.shape[1])
+    dos = np.zeros(arr_shape, dtype='double')
+
+    phonoc.tetrahedron_method_dos(dos,
+                                  mesh,
+                                  frequency_points,
+                                  frequencies,
+                                  _coef,
+                                  grid_address,
+                                  grid_mapping_table,
+                                  relative_grid_address)
+    if coef is None:
+        return dos[:,:,:,0].sum(axis=0).sum(axis=0) / np.prod(mesh)
+    else:
+        return dos.sum(axis=0).sum(axis=0) / np.prod(mesh)
 
 class Dos(object):
     def __init__(self, mesh_object, sigma=None, tetrahedron_method=False):
@@ -226,17 +260,34 @@ class TotalDos(Dos):
         self._dos = None
         self._freq_Debye = None
         self._Debye_fit_coef = None
+        self._openmp_thm = True
 
     def run(self):
         if self._tetrahedron_mesh is None:
             self._dos = np.array([self._get_density_of_states_at_freq(f)
                                   for f in self._frequency_points])
         else:
-            self._dos = np.zeros_like(self._frequency_points)
-            thm = self._tetrahedron_mesh
-            thm.set(value='I', frequency_points=self._frequency_points)
-            for i, iw in enumerate(thm):
-                self._dos += np.sum(iw * self._weights[i], axis=1)
+            if self._openmp_thm:
+                self._run_tetrahedron_method_dos()
+            else:
+                self._dos = np.zeros_like(self._frequency_points)
+                thm = self._tetrahedron_mesh
+                thm.set(value='I', frequency_points=self._frequency_points)
+                for i, iw in enumerate(thm):
+                    self._dos += np.sum(iw * self._weights[i], axis=1)
+
+    def _run_tetrahedron_method_dos(self):
+        mesh = self._mesh_object.get_mesh_numbers()
+        cell = self._mesh_object.get_dynamical_matrix().get_primitive()
+        reciprocal_lattice = np.linalg.inv(cell.get_cell())
+        tm = TetrahedronMethod(reciprocal_lattice, mesh=mesh)
+        self._dos = run_tetrahedron_method_dos(
+            mesh,
+            self._frequency_points,
+            self._frequencies,
+            self._mesh_object.get_grid_address(),
+            self._mesh_object.get_grid_mapping_table(),
+            tm.get_tetrahedra())
 
     def get_dos(self):
         """
@@ -349,16 +400,21 @@ class PartialDos(Dos):
                 proj_eigvecs += self._eigenvectors[:, i_z, :] * d[2]
                 self._eigvecs2 = np.abs(proj_eigvecs) ** 2
 
+        self._openmp_thm = True
+
     def run(self):
-        num_pdos = self._eigvecs2.shape[1]
-        num_freqs = len(self._frequency_points)
-        self._partial_dos = np.zeros((num_pdos, num_freqs), dtype='double')
         if self._tetrahedron_mesh is None:
             self._run_smearing_method()
         else:
-            self._run_tetrahedron_method()
+            if self._openmp_thm:
+                self._run_tetrahedron_method_dos()
+            else:
+                self._run_tetrahedron_method()
 
     def _run_smearing_method(self):
+        num_pdos = self._eigvecs2.shape[1]
+        num_freqs = len(self._frequency_points)
+        self._partial_dos = np.zeros((num_pdos, num_freqs), dtype='double')
         weights = self._weights / float(np.sum(self._weights))
         for i, freq in enumerate(self._frequency_points):
             amplitudes = self._smearing_function.calc(self._frequencies - freq)
@@ -367,14 +423,29 @@ class PartialDos(Dos):
                     weights, self._eigvecs2[:, j, :] * amplitudes).sum()
 
     def _run_tetrahedron_method(self):
+        num_pdos = self._eigvecs2.shape[1]
+        num_freqs = len(self._frequency_points)
+        self._partial_dos = np.zeros((num_pdos, num_freqs), dtype='double')
         thm = self._tetrahedron_mesh
         thm.set(value='I', frequency_points=self._frequency_points)
         for i, iw in enumerate(thm):
             w = self._weights[i]
-            # for ib, frac in enumerate(self._eigvecs2[i].T):
-            #     for j in range(len(self._frequency_points)):
-            #         self._partial_dos[:, j] += iw[j, ib] * frac * w
             self._partial_dos += np.dot(iw * w, self._eigvecs2[i].T).T
+
+    def _run_tetrahedron_method_dos(self):
+        mesh = self._mesh_object.get_mesh_numbers()
+        cell = self._mesh_object.get_dynamical_matrix().get_primitive()
+        reciprocal_lattice = np.linalg.inv(cell.get_cell())
+        tm = TetrahedronMethod(reciprocal_lattice, mesh=mesh)
+        pdos = run_tetrahedron_method_dos(
+            mesh,
+            self._frequency_points,
+            self._frequencies,
+            self._mesh_object.get_grid_address(),
+            self._mesh_object.get_grid_mapping_table(),
+            tm.get_tetrahedra(),
+            coef=self._eigvecs2)
+        self._partial_dos = pdos.T
 
     def get_partial_dos(self):
         """
