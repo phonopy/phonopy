@@ -360,8 +360,6 @@ def get_equivalent_smallest_vectors(atom_number_supercell,
                                     supercell,
                                     primitive_lattice,
                                     symprec):
-    distances = []
-    differences = []
     reduced_bases = get_reduced_bases(supercell.get_cell(), symprec)
     positions = np.dot(supercell.get_positions(), np.linalg.inv(reduced_bases))
 
@@ -370,17 +368,19 @@ def get_equivalent_smallest_vectors(atom_number_supercell,
 
     p_pos = positions[atom_number_primitive]
     s_pos = positions[atom_number_supercell]
-    for i in (-1, 0, 1):
-        for j in (-1, 0, 1):
-            for k in (-1, 0, 1):
-                # The vector arrow is from the atom in primitive to
-                # the atom in supercell cell plus a supercell lattice
-                # point. This is related to determine the phase
-                # convension when building dynamical matrix.
-                diff = s_pos + [i, j, k] - p_pos
-                differences.append(diff)
-                vec = np.dot(diff, reduced_bases)
-                distances.append(np.linalg.norm(vec))
+    
+    # The vector arrow is from the atom in primitive to
+    # the atom in supercell cell plus a supercell lattice
+    # point. This is related to determine the phase
+    # convension when building dynamical matrix.
+    supercell_vectors = np.array([
+        [i, j, k] for i in (-1, 0, 1)
+                  for j in (-1, 0, 1)
+                  for k in (-1, 0, 1)
+    ])
+    
+    differences = s_pos + supercell_vectors - p_pos
+    distances = np.linalg.norm(np.dot(differences, reduced_bases), axis=1)
 
     minimum = min(distances)
     smallest_vectors = []
