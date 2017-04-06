@@ -366,8 +366,7 @@ def get_equivalent_smallest_vectors(atom_number_supercell,
     positions = np.dot(supercell.get_positions(), np.linalg.inv(reduced_bases))
 
     # Atomic positions are confined into the lattice made of reduced bases.
-    for pos in positions:
-        pos -= np.rint(pos)
+    positions -= np.rint(positions)
 
     p_pos = positions[atom_number_primitive]
     s_pos = positions[atom_number_supercell]
