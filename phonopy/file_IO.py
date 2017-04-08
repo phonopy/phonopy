@@ -191,9 +191,7 @@ def parse_FORCE_CONSTANTS(filename="FORCE_CONSTANTS"):
 def read_force_constants_hdf5(filename="force_constants.hdf5"):
     import h5py
     with h5py.File(filename, 'r') as f:
-        fc = f[f.keys()[0]][:]
-        return fc
-    return None
+        return f[next(iter(f.keys()))][:]
 
 #
 # disp.yaml
