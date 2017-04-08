@@ -380,8 +380,7 @@ def get_equivalent_smallest_vectors(atom_number_supercell,
     ])
     
     differences = s_pos + supercell_vectors - p_pos
-    distances = np.linalg.norm(np.dot(differences, reduced_bases), axis=1)
-
+    distances = np.sqrt((np.dot(differences, reduced_bases) ** 2).sum(axis=1))
     minimum = min(distances)
     smallest_vectors = []
     for i in range(27):
