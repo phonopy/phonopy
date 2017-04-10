@@ -232,11 +232,7 @@ class ThermalProperties(ThermalPropertiesBase):
         energy = []
         try:
             import phonopy._phonopy as phonoc
-            for t in self._temperatures:
-                props = self._get_c_thermal_properties(t)
-                fe.append(props[0] * EvTokJmol + self._zero_point_energy)
-                entropy.append(props[1] * EvTokJmol * 1000)
-                cv.append(props[2] * EvTokJmol * 1000)
+            self._run_c_thermal_properties()
         except ImportError:
             for t in self._temperatures:
                 props = self._get_py_thermal_properties(t)
@@ -248,7 +244,7 @@ class ThermalProperties(ThermalPropertiesBase):
                                     np.array(fe, dtype='double', order='C'),
                                     np.array(entropy, dtype='double', order='C'),
                                     np.array(cv, dtype='double', order='C')]
-
+        
         if self._is_projection:
             fe = []
             entropy = []
@@ -274,6 +270,21 @@ class ThermalProperties(ThermalPropertiesBase):
             lines += self._get_projected_tp_yaml_lines()
         with open(filename, 'w') as f:
             f.write("\n".join(lines))
+
+    def _run_c_thermal_properties(self):
+        import phonopy._phonopy as phonoc
+
+        props = np.zeros((len(self._temperatures), 3),
+                         dtype='double', order='C')
+        return phonoc.thermal_properties(props,
+                                         self._temperatures,
+                                         self._frequencies,
+                                         self._weights)
+
+        fe = props[0] * EvTokJmol + self._zero_point_energy
+        entropy = props[1] * EvTokJmol * 1000
+        cv = props[2] * EvTokJmol * 1000
+        self._thermal_properties = [self._temperatures, fe, entropy, cv]
         
     def _get_tp_yaml_lines(self):
         lines = []
@@ -350,16 +361,6 @@ class ThermalProperties(ThermalPropertiesBase):
             lines.append(line)
         return lines
             
-    def _get_c_thermal_properties(self, t):
-        import phonopy._phonopy as phonoc
-
-        if t > 0:
-            return phonoc.thermal_properties(t,
-                                             self._frequencies,
-                                             self._weights)
-        else:
-            return (0.0, 0.0, 0.0)
-
     def _get_py_thermal_properties(self, t):
         return (self.get_free_energy(t),
                 self.get_entropy(t),
