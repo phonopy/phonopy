@@ -226,24 +226,11 @@ class ThermalProperties(ThermalPropertiesBase):
                           "\'set_temperature_range\' method instead.")
             self.set_temperature_range(t_min=t_min, t_max=t_max, t_step=t_step)
 
-        fe = []
-        entropy = []
-        cv = []
-        energy = []
         try:
             import phonopy._phonopy as phonoc
             self._run_c_thermal_properties()
         except ImportError:
-            for t in self._temperatures:
-                props = self._get_py_thermal_properties(t)
-                fe.append(props[0])
-                entropy.append(props[1] * 1000,)
-                cv.append(props[2] * 1000)
-
-        self._thermal_properties = [self._temperatures,
-                                    np.array(fe, dtype='double', order='C'),
-                                    np.array(entropy, dtype='double', order='C'),
-                                    np.array(cv, dtype='double', order='C')]
+            self._run_py_thermal_properties()
         
         if self._is_projection:
             fe = []
@@ -276,15 +263,31 @@ class ThermalProperties(ThermalPropertiesBase):
 
         props = np.zeros((len(self._temperatures), 3),
                          dtype='double', order='C')
-        return phonoc.thermal_properties(props,
-                                         self._temperatures,
-                                         self._frequencies,
-                                         self._weights)
-
-        fe = props[0] * EvTokJmol + self._zero_point_energy
-        entropy = props[1] * EvTokJmol * 1000
-        cv = props[2] * EvTokJmol * 1000
+        phonoc.thermal_properties(props,
+                                  self._temperatures,
+                                  self._frequencies,
+                                  self._weights)
+        
+        fe = props[:, 0] * EvTokJmol + self._zero_point_energy
+        entropy = props[:, 1] * EvTokJmol * 1000
+        cv = props[:, 2] * EvTokJmol * 1000
         self._thermal_properties = [self._temperatures, fe, entropy, cv]
+
+    def _run_py_thermal_properties(self):
+        fe = []
+        entropy = []
+        cv = []
+        energy = []
+        for t in self._temperatures:
+            props = self._get_py_thermal_properties(t)
+            fe.append(props[0])
+            entropy.append(props[1] * 1000)
+            cv.append(props[2] * 1000)
+        self._thermal_properties = [self._temperatures,
+                                    np.array(fe, dtype='double', order='C'),
+                                    np.array(entropy, dtype='double', order='C'),
+                                    np.array(cv, dtype='double', order='C')]
+
         
     def _get_tp_yaml_lines(self):
         lines = []

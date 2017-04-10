@@ -460,12 +460,12 @@ static PyObject * py_get_thermal_properties(PyObject *self, PyObject *args)
     thermal_props[i] = 0;
   }
 
-  tp = (double*)malloc(sizeof(double) * num_q_points * num_temp * 3);
-  for (i = 0; i < num_q_points * num_temp * 3; i++) {
+  tp = (double*)malloc(sizeof(double) * num_qpoints * num_temp * 3);
+  for (i = 0; i < num_qpoints * num_temp * 3; i++) {
     tp[i] = 0;
   }
 
-#pragma omp parallel for private(j, omega) reduction(+:free_energy, entropy, heat_capacity)
+#pragma omp parallel for private(j, k, omega)
   for (i = 0; i < num_qpoints; i++){
     for (j = 0; j < num_temp; j++) {
       for (k = 0; k < num_bands; k++){
@@ -490,6 +490,7 @@ static PyObject * py_get_thermal_properties(PyObject *self, PyObject *args)
 
   free(tp);
 
+  sum_weights = 0;
 #pragma omp parallel for reduction(+:sum_weights)
   for (i = 0; i < num_qpoints; i++){
     sum_weights += w[i];
