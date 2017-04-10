@@ -422,55 +422,86 @@ static PyObject * py_get_derivative_dynmat(PyObject *self, PyObject *args)
 /* Thermal properties */
 static PyObject * py_get_thermal_properties(PyObject *self, PyObject *args)
 {
-  double temperature;
-  PyArrayObject* frequencies;
-  PyArrayObject* weights;
+  PyArrayObject* thermal_props_py;
+  PyArrayObject* temperatures_py;
+  PyArrayObject* frequencies_py;
+  PyArrayObject* weights_py;
 
+  double *temperatures;
   double* freqs;
+  double *thermal_props;
   int* w;
   int num_qpoints;
   int num_bands;
+  int num_temp;
 
-  int i, j;
-  long sum_weights = 0;
-  double free_energy = 0;
-  double entropy = 0;
-  double heat_capacity = 0;
-  double omega = 0;
+  int i, j, k;
+  long sum_weights;
+  double omega;
+  double *tp;
 
-  if (!PyArg_ParseTuple(args, "dOO",
-			&temperature,
-			&frequencies,
-			&weights)) {
+  if (!PyArg_ParseTuple(args, "OOOO",
+                        &thermal_props_py,
+			&temperatures_py,
+			&frequencies_py,
+			&weights_py)) {
     return NULL;
   }
 
-  freqs = (double*)PyArray_DATA(frequencies);
-  w = (int*)PyArray_DATA(weights);
-  num_qpoints = PyArray_DIMS(frequencies)[0];
-  num_bands = PyArray_DIMS(frequencies)[1];
+  thermal_props = (double*)PyArray_DATA(thermal_props_py);
+  temperatures = (double*)PyArray_DATA(temperatures_py);
+  num_temp = PyArray_DIMS(temperatures_py)[0];
+  freqs = (double*)PyArray_DATA(frequencies_py);
+  num_qpoints = PyArray_DIMS(frequencies_py)[0];
+  w = (int*)PyArray_DATA(weights_py);
+  num_bands = PyArray_DIMS(frequencies_py)[1];
 
-#pragma omp parallel for private(j, omega) reduction(+:free_energy, entropy, heat_capacity)
+  for (i = 0; i < num_temp * 3; i++) {
+    thermal_props[i] = 0;
+  }
+
+  tp = (double*)malloc(sizeof(double) * num_qpoints * num_temp * 3);
+  for (i = 0; i < num_qpoints * num_temp * 3; i++) {
+    tp[i] = 0;
+  }
+
+#pragma omp parallel for private(j, k, omega)
   for (i = 0; i < num_qpoints; i++){
-    for (j = 0; j < num_bands; j++){
-      omega = freqs[i * num_bands + j];
-      if (omega > 0.0) {
-	free_energy += get_free_energy_omega(temperature, omega) * w[i];
-	entropy += get_entropy_omega(temperature, omega) * w[i];
-	heat_capacity += get_heat_capacity_omega(temperature, omega)* w[i];
+    for (j = 0; j < num_temp; j++) {
+      for (k = 0; k < num_bands; k++){
+        omega = freqs[i * num_bands + k];
+        if (temperatures[j] > 0 && omega > 0.0) {
+          tp[i * num_temp * 3 + j * 3] +=
+            get_free_energy_omega(temperatures[j], omega) * w[i];
+          tp[i * num_temp * 3 + j * 3 + 1] +=
+            get_entropy_omega(temperatures[j], omega) * w[i];
+          tp[i * num_temp * 3 + j * 3 + 2] +=
+            get_heat_capacity_omega(temperatures[j], omega)* w[i];
+        }
       }
     }
   }
+    
+  for (i = 0; i < num_temp * 3; i++) {
+    for (j = 0; j < num_qpoints; j++) {
+      thermal_props[i] += tp[j * num_temp * 3 + i];
+    }
+  }
 
+  free(tp);
+
+  sum_weights = 0;
 #pragma omp parallel for reduction(+:sum_weights)
   for (i = 0; i < num_qpoints; i++){
     sum_weights += w[i];
   }
 
-  return PyTuple_Pack(3,
-		      PyFloat_FromDouble(free_energy / sum_weights),
-		      PyFloat_FromDouble(entropy / sum_weights),
-		      PyFloat_FromDouble(heat_capacity / sum_weights));
+  for (i = 0; i < num_temp * 3; i++) {
+    thermal_props[i] /= sum_weights;
+  }
+
+
+  Py_RETURN_NONE;
 }
 
 static double get_free_energy_omega(const double temperature,
