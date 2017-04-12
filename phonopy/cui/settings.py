@@ -624,6 +624,10 @@ class ConfParser(object):
                 if self._options.masses:
                     self._confs['mass'] = self._options.masses
 
+            if opt.dest == 'magmoms':
+                if self._options.magmoms:
+                    self._confs['magmom'] = self._options.magmoms
+
             if opt.dest == 'mesh_numbers':
                 if self._options.mesh_numbers:
                     self._confs['mesh_numbers'] = self._options.mesh_numbers
