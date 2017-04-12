@@ -95,6 +95,7 @@ def get_parser():
         lapack_solver=False,
         loglevel=None,
         masses=None,
+        magmom=None,
         mesh_numbers=None,
         modulation=None,
         moment_order=None,
@@ -256,6 +257,9 @@ def get_parser():
     parser.add_option(
         "--mass", dest="masses", action="store", type="string",
         help="Same as MASS tag")
+    parser.add_option(
+        "--magmom", dest="magmoms", action="store", type="string",
+        help="Same as MAGMOM tag")
     parser.add_option(
         "--modulation", dest="modulation", action="store", type="string",
         help="Same as MODULATION tag")
