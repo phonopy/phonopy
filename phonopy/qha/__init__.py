@@ -158,13 +158,14 @@ class QHA(object):
 
     def plot(self, thin_number=10, volume_temp_exp=None):
         import matplotlib.pyplot as plt
+        plt.figure(figsize=(7, 3.5))
         plt.subplot(1, 3, 1)
         self._plot_helmholtz_volume(plt, thin_number=thin_number)
         plt.subplot(1, 3, 2)
         self._plot_volume_temperature(plt, exp_data=volume_temp_exp)
         plt.subplot(1, 3, 3)
         self._plot_thermal_expansion(plt)
-        plt.subplots_adjust(wspace=0.35)
+        plt.tight_layout()
         return plt
 
     def get_eos(self):

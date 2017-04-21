@@ -16,7 +16,6 @@ A presentation in pdf for introduction to phonopy is downloaded `***here***
 
 .. figure:: phonopy-slide-top.png
    :scale: 65
-   :align: center
 
 Features
 ---------
