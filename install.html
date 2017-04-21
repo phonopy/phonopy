@@ -18,7 +18,8 @@
         VERSION:     '1.11.10',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
       };
     </script>
     <script type="text/javascript" src="_static/jquery.js"></script>
@@ -30,7 +31,6 @@
     <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="top" title="Phonopy v.1.11.10" href="index.html" />
     <link rel="next" title="Using phonopy on Mac OS X" href="MacOSX.html" />
     <link rel="prev" title="Work flow" href="workflow.html" />
 <meta charset='utf-8'>
@@ -69,10 +69,10 @@
       role="menu"
       aria-labelledby="dLabelGlobalToc"><ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="introduction.html">Phonopy introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
-<li class="toctree-l1"><a class="reference internal" href="procedure.html">Tutorial</a></li>
 <li class="toctree-l1"><a class="reference internal" href="workflow.html">Work flow</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Download and install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="procedure.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="features.html">Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="input-files.html">Input files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="output-files.html">Output files</a></li>
@@ -102,16 +102,14 @@
       role="menu"
       aria-labelledby="dLabelLocalToc"><ul>
 <li><a class="reference internal" href="#">Download and install</a><ul>
+<li><a class="reference internal" href="#from-source-code">From source code</a><ul>
 <li><a class="reference internal" href="#system-requirement">System requirement</a></li>
-<li><a class="reference internal" href="#install-using-pip-conda">Install using pip/conda</a><ul>
-<li><a class="reference internal" href="#using-pip">Using pip</a></li>
-<li><a class="reference internal" href="#using-conda">Using conda</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#building-using-setup-py">Building using setup.py</a><ul>
+<li><a class="reference internal" href="#building-using-setup-py">Building using setup.py</a></li>
 <li><a class="reference internal" href="#tips-on-setup-py-installation">Tips on setup.py installation</a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#conda">conda</a></li>
+<li><a class="reference internal" href="#pip">pip</a></li>
 </ul>
 </li>
 </ul>
@@ -159,29 +157,28 @@
 <span id="install"></span><h1>Download and install<a class="headerlink" href="#download-and-install" title="Permalink to this headline">¶</a></h1>
 <div class="contents local topic" id="contents">
 <ul class="simple">
-<li><a class="reference internal" href="#system-requirement" id="id1">System requirement</a></li>
-<li><a class="reference internal" href="#install-using-pip-conda" id="id2">Install using pip/conda</a><ul>
-<li><a class="reference internal" href="#using-pip" id="id3">Using pip</a></li>
-<li><a class="reference internal" href="#using-conda" id="id4">Using conda</a></li>
+<li><a class="reference internal" href="#from-source-code" id="id1">From source code</a><ul>
+<li><a class="reference internal" href="#system-requirement" id="id2">System requirement</a></li>
+<li><a class="reference internal" href="#building-using-setup-py" id="id3">Building using setup.py</a></li>
+<li><a class="reference internal" href="#tips-on-setup-py-installation" id="id4">Tips on setup.py installation</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#building-using-setup-py" id="id5">Building using setup.py</a><ul>
-<li><a class="reference internal" href="#tips-on-setup-py-installation" id="id6">Tips on setup.py installation</a></li>
-</ul>
-</li>
+<li><a class="reference internal" href="#conda" id="id5">conda</a></li>
+<li><a class="reference internal" href="#pip" id="id6">pip</a></li>
 </ul>
 </div>
+<div class="section" id="from-source-code">
+<h2><a class="toc-backref" href="#id1">From source code</a><a class="headerlink" href="#from-source-code" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="system-requirement">
-<h2><a class="toc-backref" href="#id1">System requirement</a><a class="headerlink" href="#system-requirement" title="Permalink to this headline">¶</a></h2>
+<h3><a class="toc-backref" href="#id2">System requirement</a><a class="headerlink" href="#system-requirement" title="Permalink to this headline">¶</a></h3>
 <p>The procedure to setup phonopy is explained in this section. It is
 supposed that phonopy is installed on the recent linux distribution
 like Ubuntu or Fedora with Python version 2.6 or later. Python version
-3.4 or later is expected to work. Mac OS X users
-may find some more information at <a class="reference internal" href="MacOSX.html#install-macosx"><span class="std std-ref">Using phonopy on Mac OS X</span></a>.
-The most recommended system is Ubuntu linux version 14.04 or later. If
-you have any installation problem that you may feel difficult to
-solve, please use a ubuntu virtual machine (see
-<a class="reference internal" href="virtualmachine.html#virtualmachine"><span class="std std-ref">Set up Ubuntu linux on VirtualBox</span></a>).</p>
+3.4 or later is expected to work. Mac OS X users may find some more
+information at <a class="reference internal" href="MacOSX.html#install-macosx"><span class="std std-ref">Using phonopy on Mac OS X</span></a>.  The most recommended system is
+Ubuntu linux version 14.04 or later. If you have any installation
+problem that you may feel difficult to solve, please use a ubuntu
+virtual machine (see <a class="reference internal" href="virtualmachine.html#virtualmachine"><span class="std std-ref">Set up Ubuntu linux on VirtualBox</span></a>).</p>
 <p>Prepare the following Python libraries:</p>
 <ul class="simple">
 <li>Python and its header files</li>
@@ -204,41 +201,8 @@ see the following message in ploting results:</p>
 </pre></div>
 </div>
 </div>
-<div class="section" id="install-using-pip-conda">
-<h2><a class="toc-backref" href="#id2">Install using pip/conda</a><a class="headerlink" href="#install-using-pip-conda" title="Permalink to this headline">¶</a></h2>
-<p>Occasionally PyPI and conda packages are prepared at phonopy
-releases. Using these packages, the phonopy installtion is expected to
-be easily done.</p>
-<div class="section" id="using-pip">
-<h3><a class="toc-backref" href="#id3">Using pip</a><a class="headerlink" href="#using-pip" title="Permalink to this headline">¶</a></h3>
-<p>Numpy is required before the python-spglib installation. The command to
-install spglib is:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">pip</span> <span class="n">install</span> <span class="n">phonopy</span>
-</pre></div>
-</div>
-<p>If you see the error message like below in the installation process:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">_phonopy</span><span class="o">.</span><span class="n">c</span><span class="p">:</span><span class="mi">35</span><span class="p">:</span><span class="mi">20</span><span class="p">:</span> <span class="n">fatal</span> <span class="n">error</span><span class="p">:</span> <span class="n">Python</span><span class="o">.</span><span class="n">h</span><span class="p">:</span> <span class="n">No</span> <span class="n">such</span> <span class="n">file</span> <span class="ow">or</span> <span class="n">directory</span>
-</pre></div>
-</div>
-<p>development tools for building python module are additionally
-necessary and are installed using OS&#8217;s package management system,
-e.g.,:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">apt</span><span class="o">-</span><span class="n">get</span> <span class="n">install</span> <span class="n">python</span><span class="o">-</span><span class="n">dev</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="using-conda">
-<h3><a class="toc-backref" href="#id4">Using conda</a><a class="headerlink" href="#using-conda" title="Permalink to this headline">¶</a></h3>
-<p>Conda is another choice for Linux (64bit) users:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">atztogo</span> <span class="n">phonopy</span>
-</pre></div>
-</div>
-<p>Currently conda packages for the other OS, e.g., Mac and windows, are
-not prepared by the main developers of phonopy.</p>
-</div>
-</div>
 <div class="section" id="building-using-setup-py">
-<h2><a class="toc-backref" href="#id5">Building using setup.py</a><a class="headerlink" href="#building-using-setup-py" title="Permalink to this headline">¶</a></h2>
+<h3><a class="toc-backref" href="#id3">Building using setup.py</a><a class="headerlink" href="#building-using-setup-py" title="Permalink to this headline">¶</a></h3>
 <p>If package installation is not possible or you want to compile with
 special compiler or special options, phonopy is built using
 setup.py. In this case, manual modification of <code class="docutils literal"><span class="pre">setup.py</span></code> may be
@@ -272,14 +236,42 @@ directory, the path to be added to <span class="target" id="index-1"></span><cod
 </div>
 </li>
 </ol>
+</div>
 <div class="section" id="tips-on-setup-py-installation">
-<h3><a class="toc-backref" href="#id6">Tips on setup.py installation</a><a class="headerlink" href="#tips-on-setup-py-installation" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id4">Tips on setup.py installation</a><a class="headerlink" href="#tips-on-setup-py-installation" title="Permalink to this headline">¶</a></h3>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="MacOSX.html">Using phonopy on Mac OS X</a></li>
 <li class="toctree-l1"><a class="reference internal" href="virtualmachine.html">Set up Ubuntu linux on VirtualBox</a></li>
 </ul>
 </div>
+</div>
+</div>
+<div class="section" id="conda">
+<h2><a class="toc-backref" href="#id5">conda</a><a class="headerlink" href="#conda" title="Permalink to this headline">¶</a></h2>
+<p>Conda is a good choice for Linux (64bit) users to install phonopy:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">conda</span> <span class="n">install</span> <span class="n">conda</span> <span class="n">install</span> <span class="n">numpy</span> <span class="n">scipy</span> <span class="n">h5py</span> <span class="n">pyyaml</span> <span class="n">matplotlib</span>
+<span class="o">%</span> <span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">atztogo</span> <span class="n">phonopy</span>
+</pre></div>
+</div>
+<p>Currently conda packages for the other OS, e.g., Mac and windows, are
+not prepared by the main developers of phonopy.</p>
+</div>
+<div class="section" id="pip">
+<h2><a class="toc-backref" href="#id6">pip</a><a class="headerlink" href="#pip" title="Permalink to this headline">¶</a></h2>
+<p>Phonopy is installed using pip by:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">pip</span> <span class="n">install</span> <span class="n">phonopy</span>
+</pre></div>
+</div>
+<p>If you see the error message like below in the installation process:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">_phonopy</span><span class="o">.</span><span class="n">c</span><span class="p">:</span><span class="mi">35</span><span class="p">:</span><span class="mi">20</span><span class="p">:</span> <span class="n">fatal</span> <span class="n">error</span><span class="p">:</span> <span class="n">Python</span><span class="o">.</span><span class="n">h</span><span class="p">:</span> <span class="n">No</span> <span class="n">such</span> <span class="n">file</span> <span class="ow">or</span> <span class="n">directory</span>
+</pre></div>
+</div>
+<p>development tools for building python module are additionally
+necessary and are installed using OS&#8217;s package management system,
+e.g.,:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">apt</span><span class="o">-</span><span class="n">get</span> <span class="n">install</span> <span class="n">python</span><span class="o">-</span><span class="n">dev</span>
+</pre></div>
 </div>
 </div>
 </div>
@@ -297,14 +289,14 @@ directory, the path to be added to <span class="target" id="index-1"></span><cod
         <br/>
         
 <div id="sourcelink">
-  <a href="_sources/install.txt"
+  <a href="_sources/install.rst.txt"
      rel="nofollow">Source</a>
 </div>
       
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.4.<br/>
     </p>
   </div>
 </footer>

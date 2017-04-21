@@ -307,6 +307,8 @@ files.
 
    % phonopy --elk -f disp-001/INFO.OUT disp-002/INFO.OUT  ...
 
+.. _crystal_force_sets_option:
+
 CRYSTAL interface
 ^^^^^^^^^^^^^^^^^
 

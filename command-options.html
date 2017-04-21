@@ -18,7 +18,8 @@
         VERSION:     '1.11.10',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
       };
     </script>
     <script type="text/javascript" src="_static/jquery.js"></script>
@@ -30,7 +31,6 @@
     <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="top" title="Phonopy v.1.11.10" href="index.html" />
     <link rel="next" title="Quasi harmonic approximation" href="qha.html" />
     <link rel="prev" title="How to watch animation" href="animation.html" />
 <meta charset='utf-8'>
@@ -475,7 +475,7 @@ files.</p>
 </div>
 </div>
 <div class="section" id="crystal-interface">
-<h4>CRYSTAL interface<a class="headerlink" href="#crystal-interface" title="Permalink to this headline">¶</a></h4>
+<span id="crystal-force-sets-option"></span><h4>CRYSTAL interface<a class="headerlink" href="#crystal-interface" title="Permalink to this headline">¶</a></h4>
 <p><code class="docutils literal"><span class="pre">FORCE_SETS</span></code> file is created from <code class="docutils literal"><span class="pre">disp.yaml</span></code> and CRYSTAL output
 files.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">crystal</span> <span class="o">-</span><span class="n">f</span> <span class="n">supercell</span><span class="o">-</span><span class="mf">001.</span><span class="n">o</span> <span class="n">supercell</span><span class="o">-</span><span class="mf">002.</span><span class="n">o</span>  <span class="o">...</span>
@@ -623,14 +623,14 @@ set of q-points with including eigenvector or dynamical matrix output.</p>
         <br/>
         
 <div id="sourcelink">
-  <a href="_sources/command-options.txt"
+  <a href="_sources/command-options.rst.txt"
      rel="nofollow">Source</a>
 </div>
       
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.4.<br/>
     </p>
   </div>
 </footer>
