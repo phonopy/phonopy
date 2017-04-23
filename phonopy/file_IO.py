@@ -384,13 +384,14 @@ def read_thermal_properties_yaml(filenames, factor=1.0):
         from yaml import Loader
 
     thermal_properties = []
-    imag_ratios = []
+    num_modes = []
+    num_integrated_modes = []
     for filename in filenames:
         tp_yaml = yaml.load(open(filename).read(), Loader=Loader)
         thermal_properties.append(tp_yaml['thermal_properties'])
-        if 'num_modes' in tp_yaml:
-            imag_ratios.append(1 - (float(tp_yaml['num_integrated_modes']) /
-                                    tp_yaml['num_modes']))
+        if 'num_modes' in tp_yaml and 'num_integrated_modes' in tp_yaml:
+            num_modes.append(tp_yaml['num_modes'])
+            num_integrated_modes.append(tp_yaml['num_integrated_modes'])
 
     temperatures = [v['temperature'] for v in thermal_properties[0]]
     temp = []
@@ -419,7 +420,7 @@ def read_thermal_properties_yaml(filenames, factor=1.0):
         print("Stop phonopy-qha")
         sys.exit(1)
 
-    return temperatures, cv, entropy, fe_phonon, imag_ratios
+    return temperatures, cv, entropy, fe_phonon, num_modes, num_integrated_modes
 
 def read_cp(filename):
     return _parse_QHA_data(filename)

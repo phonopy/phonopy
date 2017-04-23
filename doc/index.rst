@@ -65,11 +65,9 @@ Documentation
    :maxdepth: 1
 
    introduction
-   examples
-   Tutorial <procedure>
-   workflow
    install
-   features
+   Tutorial <procedure>
+   examples
    input-files
    output-files
    setting-tags

@@ -13,29 +13,36 @@ Usage of ``phonopy-qha``
 Using phonopy results of thermal properties, thermal expansion and
 heat capacity at constant pressure can be calculated under the
 quasi-harmonic approximation. ``phonopy-qha`` is the script to
-calculate them. An example of the usage is as follows:
+calculate them. An example of the usage for ``example/Si-QHA`` is as
+follows.
 
-::
+To watch selected plots::
 
-   phonopy-qha e-v.dat thermal_properties-{1..10}.yaml
+   phonopy-qha --sparse=50 -p e-v.dat thermal_properties.yaml-{-{5..1},{0..5}}
 
+.. figure:: Si-QHA.png
+
+Without plots::
+
+   phonopy-qha e-v.dat thermal_properties.yaml-{-{5..1},{0..5}}
 
 1st argument is the filename of volume-energy data (in the above
-expample, ``e-v.dat``). The volume and energy of the cell (default
-units are in :math:`\mathrm{\AA}^3` and eV, respectively). An example of the
-volume-energy file is::
+expample, ``e-v.dat``). The volume and energy of the unit cell
+(default units are in :math:`\mathrm{\AA}^3` and eV, respectively). An
+example of the volume-energy file is::
 
-   #   cell volume        energy of cell other than phonon
-      156.7387309525      -104.5290025375
-      154.4138492700      -104.6868148175
-      152.2544070150      -104.8064238800
-      150.2790355600      -104.8911768625
-      148.4469296725      -104.9470385875
-      146.7037426750      -104.9783724075
-      145.1182305450      -104.9871878600
-      143.5676103350      -104.9765270775
-      142.1282086200      -104.9485225225
-      139.4989658225      -104.8492814250
+   #   cell volume   energy of cell other than phonon
+        140.030000           -42.132246
+        144.500000           -42.600974
+        149.060000           -42.949142
+        153.720000           -43.188162
+        158.470000           -43.326751
+        163.320000           -43.375124
+        168.270000           -43.339884
+        173.320000           -43.230619
+        178.470000           -43.054343
+        183.720000           -42.817825
+        189.070000           -42.527932
 
 Lines starting with ``#`` are ignored. The other arguments are the
 filenames of ``thermal_properties.yaml`` calculated at the respective
@@ -46,10 +53,11 @@ calculated by following :ref:`thermal_properties_tag`, where the
 physical unit of the Helmholtz free energy is kJ/mol as the default,
 i.e., no need to convert the physical unit in usual cases.
 
-The example for Aluminum is found in the ``example`` directory.
+Another example for Aluminum is found in the ``example/Al-QHA`` directory.
 
 If the condition under puressure is expected, :math:`PV` terms may be
-included in the energies.
+included in the energies, or equivalent effect is applied using
+``--pressure`` option.
 
 .. _phonopy_qha_options:
 
@@ -144,8 +152,8 @@ used.
 
 .. _theory_of_qha:
 
-Theory of quasi-harmonic approximation
---------------------------------------
+Thermal properties in (*T*, *p*) space calculated under QHA
+------------------------------------------------------------
 
 Here the word 'quasi-harmonic approximation' is used for an
 approximation that introduces volume dependence of phonon frequencies

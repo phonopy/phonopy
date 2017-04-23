@@ -93,10 +93,6 @@ parser.add_option("--cu_range", "--create_unitcells_range",
                   action="store",
                   type="string",
                   help="Range of created unitcells, plus, minus in percent, and number of unit cells")
-parser.add_option("--factor",
-                  dest="factor",
-                  type="float",
-                  help="Conversion factor that is multiplied with all extensive variables")
 parser.add_option("--eos",
                   dest="eos",
                   action="store",
@@ -107,6 +103,14 @@ parser.add_option("--es", "--energy_shift",
                   action="store",
                   type="float",
                   help="Energy shift that is subtracted from Helmholtz free energy")
+parser.add_option("--exclude_imaginary",
+                  dest="exclude_imaginary",
+                  action="store_true",
+                  help="Exclude volumes that show imaginary modes")
+parser.add_option("--factor",
+                  dest="factor",
+                  type="float",
+                  help="Conversion factor that is multiplied with all extensive variables")
 parser.add_option("-p", "--plot",
                   dest="is_graph_plot",
                   action="store_true",
@@ -127,7 +131,8 @@ parser.add_option("--symbol",
 parser.add_option("--sparse",
                   dest="thin_number",
                   type="int",
-                  help="Thin out the F-V plots of temperature. The value is used as deviser of number of temperature points.")
+                  help=("Thin out the F-V plots of temperature. The value is "
+                        "used as deviser of number of temperature points."))
 parser.add_option("--tmax",
                   dest="t_max",
                   type="float",
@@ -178,7 +183,6 @@ else:
 
 # Show bulk modulus of v-e data
 if options.is_bulk_modulus_only:
-    
     bulk_modulus = PhonopyQHA(volumes,
                               electronic_energies,
                               eos=options.eos)
@@ -193,7 +197,7 @@ if options.is_bulk_modulus_only:
 
 # Check number of files
 if len(volumes) != len(args[1:]):
-    print("The umber of thermal_properites.yaml files (%d) "
+    print("The number of thermal_properites.yaml files (%d) "
           "is inconsisten with" % len(args[1:]))
     print("the number of e-v data (%d)." % len(volumes))
     sys.exit(1)
@@ -203,25 +207,41 @@ if len(volumes) != len(args[1:]):
  cv,
  entropy,
  fe_phonon,
- imag_ratios) = read_thermal_properties_yaml(args[1:(len(volumes)+1)],
-                                             factor=options.factor)
+ num_modes,
+ num_integrated_modes) = read_thermal_properties_yaml(args[1:(len(volumes)+1)],
+                                                      factor=options.factor)
+
+# Treatment of thermal properties with imaginary modes
+if options.exclude_imaginary and num_modes:
+    indices = []
+    num_imag_modes = np.array(num_modes) - np.array(num_integrated_modes)
+    for i, nim in enumerate(num_imag_modes):
+        if nim < 4:
+            indices.append(i)
+else:
+    indices = range(len(volumes))
 
 ##########################
 # Analyzing and plotting #
 ##########################
-phonopy_qha = PhonopyQHA(volumes,
-                         electronic_energies,
+phonopy_qha = PhonopyQHA(volumes[indices],
+                         electronic_energies[indices],
                          eos=options.eos,
                          temperatures=temperatures,
-                         free_energy=fe_phonon,
-                         cv=cv,
-                         entropy=entropy,
+                         free_energy=fe_phonon[:, indices],
+                         cv=cv[:, indices],
+                         entropy=entropy[:, indices],
                          t_max=options.t_max,
                          verbose=True)
 
-for filename, r in zip(args[1:(len(volumes)+1)], imag_ratios):
-    if r > 0.01:
-        print("Warning: %s has imaginary modes." % filename)
+if num_modes:
+    num_imag_modes = np.array(num_modes) - np.array(num_integrated_modes)
+    for filename, nim in zip(args[1:(len(volumes)+1)], num_imag_modes):
+        if nim > 3:
+            if options.exclude_imaginary:
+                print("# %s has been excluded." % filename)
+            else:
+                print("# Warning: %s has imaginary modes." % filename)
 
 if options.is_graph_plot and not options.is_graph_save:
     # Plot on display
