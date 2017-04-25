@@ -335,7 +335,8 @@ def get_born_parameters(f, primitive, symmetry):
     
     # Read Born effective charge
     independent_atoms = symmetry.get_independent_atoms()
-    born = np.zeros((primitive.get_number_of_atoms(), 3, 3), dtype=float)
+    born = np.zeros((primitive.get_number_of_atoms(), 3, 3),
+                    dtype='double', order='C')
 
     for i in independent_atoms:
         line = f.readline().split()
@@ -350,7 +351,8 @@ def get_born_parameters(f, primitive, symmetry):
     # Check that the number of atoms in the BORN file was correct
     line = f.readline().split()
     if len(line) > 0:
-        print("Too many atoms in the BORN file (it should only contain symmetry-independent atoms)")
+        print("Too many atoms in the BORN file (it should only contain "
+              "symmetry-independent atoms)")
         return False
 
     # Expand Born effective charges to all atoms in the primitive cell

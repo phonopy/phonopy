@@ -141,6 +141,9 @@ class DynamicalMatrix(object):
             return dm.round(decimals=self._decimals)
 
     def set_dynamical_matrix(self, q, verbose=False):
+        self._set_dynamical_matrix(q, verbose=verbose)
+
+    def _set_dynamical_matrix(self, q, verbose=False):
         try:
             import phonopy._phonopy as phonoc
             self._set_c_dynamical_matrix(q)
@@ -270,41 +273,42 @@ class DynamicalMatrixNAC(DynamicalMatrix):
 
     def set_dynamical_matrix(self, q_red, q_direction=None, verbose=False):
         num_atom = self._pcell.get_number_of_atoms()
+        rec_lat = np.linalg.inv(self._pcell.get_cell()) # column vectors
 
         if q_direction is None:
-            q = np.dot(q_red, np.linalg.inv(self._pcell.get_cell()).T)
+            q = np.dot(q_red, rec_lat.T)
         else:
-            q = np.dot(q_direction, np.linalg.inv(self._pcell.get_cell()).T)
+            q = np.dot(q_direction, rec_lat.T)
 
         if (q_direction is None and np.abs(q).sum() < self._symprec) or \
                 ((q_direction is not None) and
                  np.abs(q_direction).sum() < self._symprec):
             self._force_constants = self._bare_force_constants.copy()
-            DynamicalMatrix.set_dynamical_matrix(self, q_red, verbose)
+            self._set_dynamical_matrix(q_red, verbose)
             return False
     
+        self._get_Gonze_nac_dynamical_matrix(q, rec_lat)
+        self._set_Wang_nac_dynamical_matrix(q_red, q, verbose)
+
+    def _set_Wang_nac_dynamical_matrix(self, q_red, q, verbose):
+        # Wang method (J. Phys.: Condens. Matter 22 (2010) 202201)
         volume = self._pcell.get_volume()
         constant = (self._unit_conversion * 4.0 * np.pi / volume
                     / np.dot(q, np.dot(self._dielectric, q)))
 
-        # Wang method (J. Phys.: Condens. Matter 22 (2010) 202201)
         import phonopy._phonopy as phonoc
         try:
             import phonopy._phonopy as phonoc
-            self._set_c_nac_dynamical_matrix(q_red, q, constant)
+            self._set_c_Wang_nac_dynamical_matrix(q_red, q, constant)
         except ImportError:
+            num_atom = self._pcell.get_number_of_atoms()
             fc = self._bare_force_constants.copy()
-            nac_q = np.zeros((num_atom, num_atom, 3, 3), dtype='double')
-            for i in range(num_atom):
-                A_i = np.dot(q, self._born[i])
-                for j in range(num_atom):
-                    A_j = np.dot(q, self._born[j])
-                    nac_q[i, j] = np.outer(A_i, A_j) * constant
-            self._set_NAC_force_constants(fc, nac_q)
+            nac_q = self._get_charge_sum(num_atom, q) * constant
+            self._set_py_Wang_nac_force_constants(fc, nac_q)
             self._force_constants = fc
-            DynamicalMatrix.set_dynamical_matrix(self, q_red, verbose)
+            self._set_dynamical_matrix(q_red, verbose)
 
-    def _set_NAC_force_constants(self, fc, nac_q):
+    def _set_py_Wang_nac_force_constants(self, fc, nac_q):
         N = (self._scell.get_number_of_atoms() //
              self._pcell.get_number_of_atoms())
         for s1 in range(self._scell.get_number_of_atoms()):
@@ -319,17 +323,42 @@ class DynamicalMatrixNAC(DynamicalMatrix):
                 p2 = self._p2p_map[s2]
                 fc[s1, s2] += nac_q[p1, p2] / N
 
-    def _get_charge_sum(self, num_atom, q):
-        charge_sum = np.zeros((num_atom, num_atom, 3, 3), dtype='double')
-        for i in range(num_atom):
-            for j in range(num_atom):
-                for a in (0, 1, 2):
-                    for b in (0, 1, 2):
-                        charge_sum[i, j, a, b] = \
-                            np.dot(q, self._born[i, :, a]) * np.dot(q, self._born[j, :, b])
-        return charge_sum
+    def _get_Gonze_nac_dynamical_matrix(self, q, rec_lat):
+        G_list = self._get_G_list(rec_lat)
+        g_norm = np.sqrt((G_list ** 2).sum(axis=1))
+        G = np.array(G_list[np.argsort(g_norm)], dtype='double', order='C')
+        K_list = G_list + q
+        k_norm = np.sqrt((K_list ** 2).sum(axis=1))
+        K = np.array(K_list[np.argsort(k_norm)], dtype='double', order='C')
 
-    def _set_c_nac_dynamical_matrix(self, q_red, q, factor):
+        # print("------ %s -------" % q)
+        # for g, k, g_n, k_n in zip(G, K, g_norm, k_norm):
+        #     print("%s = %s" % (g, g_n))
+        #     print("%s = %s" % (k, k_n))
+        #     print('')
+
+    def _get_G_list(self, rec_lat, g_rad=2):
+        # g_rad must be greater than 0 for broadcasting.
+        n = g_rad * 2 + 1
+        G = np.zeros((n ** 3, 3), dtype='double', order='C')
+        count = 0
+        for i in range(-g_rad, g_rad + 1):
+            for j in range(-g_rad, g_rad + 1):
+                for k in range(-g_rad, g_rad + 1):
+                    G[count] = [i, j, k]
+                    count += 1
+        return np.dot(G, rec_lat.T)
+
+    def _get_charge_sum(self, num_atom, q):
+        nac_q = np.zeros((num_atom, num_atom, 3, 3), dtype='double', order='C')
+        for i in range(num_atom):
+            A_i = np.dot(q, self._born[i])
+            for j in range(num_atom):
+                A_j = np.dot(q, self._born[j])
+                nac_q[i, j] = np.outer(A_i, A_j)
+        return nac_q
+
+    def _set_c_Wang_nac_dynamical_matrix(self, q_red, q, factor):
         import phonopy._phonopy as phonoc
 
         fc = self._bare_force_constants.copy()
