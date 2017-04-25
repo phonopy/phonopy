@@ -272,9 +272,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
                                     dtype='double', order='C')
 
     def set_dynamical_matrix(self, q_red, q_direction=None, verbose=False):
-        num_atom = self._pcell.get_number_of_atoms()
         rec_lat = np.linalg.inv(self._pcell.get_cell()) # column vectors
-
         if q_direction is None:
             q = np.dot(q_red, rec_lat.T)
         else:
@@ -287,15 +285,18 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             self._set_dynamical_matrix(q_red, verbose)
             return False
     
-        self._get_Gonze_nac_dynamical_matrix(q, rec_lat)
+        print(self._get_Gonze_nac_dynamical_matrix(q))
         self._set_Wang_nac_dynamical_matrix(q_red, q, verbose)
 
-    def _set_Wang_nac_dynamical_matrix(self, q_red, q, verbose):
-        # Wang method (J. Phys.: Condens. Matter 22 (2010) 202201)
+    def _get_constant_factor(self, q):
         volume = self._pcell.get_volume()
         constant = (self._unit_conversion * 4.0 * np.pi / volume
                     / np.dot(q, np.dot(self._dielectric, q)))
+        return constant
 
+    def _set_Wang_nac_dynamical_matrix(self, q_red, q, verbose):
+        # Wang method (J. Phys.: Condens. Matter 22 (2010) 202201)
+        constant = self._get_constant_factor(q)
         import phonopy._phonopy as phonoc
         try:
             import phonopy._phonopy as phonoc
@@ -323,7 +324,9 @@ class DynamicalMatrixNAC(DynamicalMatrix):
                 p2 = self._p2p_map[s2]
                 fc[s1, s2] += nac_q[p1, p2] / N
 
-    def _get_Gonze_nac_dynamical_matrix(self, q, rec_lat):
+    def _get_Gonze_nac_dynamical_matrix(self, q):
+        pos = self._pcell.get_positions()
+        rec_lat = np.linalg.inv(self._pcell.get_cell()) # column vectors
         G_list = self._get_G_list(rec_lat)
         g_norm = np.sqrt((G_list ** 2).sum(axis=1))
         G = np.array(G_list[np.argsort(g_norm)], dtype='double', order='C')
@@ -331,11 +334,29 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         k_norm = np.sqrt((K_list ** 2).sum(axis=1))
         K = np.array(K_list[np.argsort(k_norm)], dtype='double', order='C')
 
-        # print("------ %s -------" % q)
-        # for g, k, g_n, k_n in zip(G, K, g_norm, k_norm):
-        #     print("%s = %s" % (g, g_n))
-        #     print("%s = %s" % (k, k_n))
-        #     print('')
+        num_atom = self._pcell.get_number_of_atoms()
+        C = np.zeros((3, 3), dtype='complex128', order='C')
+        for q_K in K:
+            Z_mat = (self._get_charge_sum(num_atom, q_K) *
+                     self._get_constant_factor(q_K))
+            for i in range(num_atom):
+                for j in range(num_atom):
+                    exp_K = np.exp(2j * np.pi * np.dot(pos[i] - pos[j], q_K))
+                    C += Z_mat[i, j] * exp_K
+
+        for q_G in G:
+            if np.linalg.norm(q_G) < 1e-5:
+                continue
+            Z_mat = (self._get_charge_sum(num_atom, q_G) *
+                     self._get_constant_factor(q_G))
+            for i in range(num_atom):
+                C_j = np.zeros((3, 3), dtype='complex128', order='C')
+                for j in range(num_atom):
+                    exp_G = np.exp(2j * np.pi * np.dot(pos[i] - pos[j], q_G))
+                    C_j += Z_mat[i, j] * exp_G
+                C -= np.diag(C_j.sum(axis=1))
+
+        return C
 
     def _get_G_list(self, rec_lat, g_rad=2):
         # g_rad must be greater than 0 for broadcasting.
