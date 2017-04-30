@@ -271,7 +271,11 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         self._dielectric = np.array(nac_params['dielectric'],
                                     dtype='double', order='C')
 
-    def set_dynamical_matrix(self, q_red, q_direction=None, verbose=False):
+    def set_dynamical_matrix(self,
+                             q_red,
+                             q_direction=None,
+                             method='wang',
+                             verbose=False):
         rec_lat = np.linalg.inv(self._pcell.get_cell()) # column vectors
         if q_direction is None:
             q = np.dot(q_red, rec_lat.T)
@@ -285,18 +289,22 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             self._set_dynamical_matrix(q_red, verbose)
             return False
     
-        print(self._get_Gonze_nac_dynamical_matrix(q))
-        self._set_Wang_nac_dynamical_matrix(q_red, q, verbose)
-
-    def _get_constant_factor(self, q):
-        volume = self._pcell.get_volume()
-        constant = (self._unit_conversion * 4.0 * np.pi / volume
-                    / np.dot(q, np.dot(self._dielectric, q)))
-        return constant
+        if method == 'wang':
+            self._set_Wang_nac_dynamical_matrix(q_red, q, verbose)
+        else:
+            # Only once force constants without dipole-dipole
+            # interaction are prepared. Dynamical matrix at general
+            # q-point is calculated from it plus Gonze's dipole-dipole
+            # interaction matrix.
+            print(self._get_Gonze_nac_dynamical_matrix(q))
 
     def _set_Wang_nac_dynamical_matrix(self, q_red, q, verbose):
         # Wang method (J. Phys.: Condens. Matter 22 (2010) 202201)
-        constant = self._get_constant_factor(q)
+        constant = _get_constant_factor(q,
+                                        self._dielectric,
+                                        self._pcell.get_volume(),
+                                        self._unit_conversion)
+
         import phonopy._phonopy as phonoc
         try:
             import phonopy._phonopy as phonoc
@@ -304,7 +312,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         except ImportError:
             num_atom = self._pcell.get_number_of_atoms()
             fc = self._bare_force_constants.copy()
-            nac_q = self._get_charge_sum(num_atom, q) * constant
+            nac_q = _get_charge_sum(num_atom, q, self._born) * constant
             self._set_py_Wang_nac_force_constants(fc, nac_q)
             self._force_constants = fc
             self._set_dynamical_matrix(q_red, verbose)
@@ -337,8 +345,11 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         num_atom = self._pcell.get_number_of_atoms()
         C = np.zeros((3, 3), dtype='complex128', order='C')
         for q_K in K:
-            Z_mat = (self._get_charge_sum(num_atom, q_K) *
-                     self._get_constant_factor(q_K))
+            Z_mat = (_get_charge_sum(num_atom, q_K, self._born) *
+                     _get_constant_factor(q_K,
+                                          self._dielectric,
+                                          self._pcell.get_volume(),
+                                          self._unit_conversion))
             for i in range(num_atom):
                 for j in range(num_atom):
                     exp_K = np.exp(2j * np.pi * np.dot(pos[i] - pos[j], q_K))
@@ -347,8 +358,11 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         for q_G in G:
             if np.linalg.norm(q_G) < 1e-5:
                 continue
-            Z_mat = (self._get_charge_sum(num_atom, q_G) *
-                     self._get_constant_factor(q_G))
+            Z_mat = (_get_charge_sum(num_atom, q_G, self._born) *
+                     _get_constant_factor(q_G,
+                                          self._dielectric,
+                                          self._pcell.get_volume(),
+                                          self._unit_conversion))
             for i in range(num_atom):
                 C_j = np.zeros((3, 3), dtype='complex128', order='C')
                 for j in range(num_atom):
@@ -369,15 +383,6 @@ class DynamicalMatrixNAC(DynamicalMatrix):
                     G[count] = [i, j, k]
                     count += 1
         return np.dot(G, rec_lat.T)
-
-    def _get_charge_sum(self, num_atom, q):
-        nac_q = np.zeros((num_atom, num_atom, 3, 3), dtype='double', order='C')
-        for i in range(num_atom):
-            A_i = np.dot(q, self._born[i])
-            for j in range(num_atom):
-                A_j = np.dot(q, self._born[j])
-                nac_q[i, j] = np.outer(A_i, A_j)
-        return nac_q
 
     def _set_c_Wang_nac_dynamical_matrix(self, q_red, q, factor):
         import phonopy._phonopy as phonoc
@@ -476,4 +481,18 @@ def get_smallest_vectors(supercell, primitive, symprec):
                 shortest_vectors[i][j][k] = elem
 
     return shortest_vectors, multiplicity
+
+def _get_charge_sum(num_atom, q, born):
+    nac_q = np.zeros((num_atom, num_atom, 3, 3), dtype='double', order='C')
+    for i in range(num_atom):
+        A_i = np.dot(q, born[i])
+        for j in range(num_atom):
+            A_j = np.dot(q, born[j])
+            nac_q[i, j] = np.outer(A_i, A_j)
+    return nac_q
+
+def _get_constant_factor(q, dielectric, volume, unit_conversion):
+    return (unit_conversion * 4.0 * np.pi / volume /
+            np.dot(q, np.dot(dielectric, q)))
+
 

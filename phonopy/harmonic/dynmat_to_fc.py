@@ -84,16 +84,19 @@ class DynmatToForceConstants(object):
         return self._dynmat
 
     def set_dynamical_matrices(self,
-                               frequencies_at_qpoints,
-                               eigenvectors_at_qpoints):
-        dynmat = []
-        for frequencies, eigvecs in zip(frequencies_at_qpoints,
-                                        eigenvectors_at_qpoints):
-            eigvals = frequencies ** 2 * np.sign(frequencies)
-            dynmat.append(
-                np.dot(np.dot(eigvecs, np.diag(eigvals)), eigvecs.T.conj()))
-
-        self._dynmat = np.array(dynmat, dtype='complex128', order='C')
+                               frequencies_at_qpoints=None,
+                               eigenvectors_at_qpoints=None,
+                               dynmat=None):
+        if dynmat is None:
+            dm = []
+            for frequencies, eigvecs in zip(frequencies_at_qpoints,
+                                            eigenvectors_at_qpoints):
+                eigvals = frequencies ** 2 * np.sign(frequencies)
+                dm.append(
+                    np.dot(np.dot(eigvecs, np.diag(eigvals)), eigvecs.T.conj()))
+        else:
+            dm = dynmat
+        self._dynmat = np.array(dm, dtype='complex128', order='C')
 
     def _inverse_transformation(self):
         s2p = self._primitive.get_supercell_to_primitive_map()
