@@ -32,6 +32,7 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import textwrap
 import numpy as np
 from phonopy.structure.cells import get_reduced_bases
 
@@ -99,8 +100,8 @@ class DynamicalMatrix(object):
         p2p_map = primitive.get_primitive_to_primitive_map()
         self._p2p_map = [p2p_map[self._s2p_map[i]]
                          for i in range(len(self._s2p_map))]
-        self._smallest_vectors, self._multiplicity = \
-            get_smallest_vectors(supercell, primitive, symprec)
+        (self._smallest_vectors,
+         self._multiplicity) = primitive.get_smallest_vectors()
         self._mass = self._pcell.get_masses()
         # Non analytical term correction
         self._nac = False
@@ -241,6 +242,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
                  primitive,
                  force_constants,
                  nac_params=None,
+                 method=None,
                  decimals=None,
                  symprec=1e-5):
 
@@ -251,6 +253,11 @@ class DynamicalMatrixNAC(DynamicalMatrix):
                                  decimals=decimals,
                                  symprec=1e-5)
         self._bare_force_constants = self._force_constants.copy()
+
+        if method is None:
+            self._method = 'wang'
+        else:
+            self._method = method
 
         self._nac = True
         if nac_params is not None:
@@ -274,7 +281,6 @@ class DynamicalMatrixNAC(DynamicalMatrix):
     def set_dynamical_matrix(self,
                              q_red,
                              q_direction=None,
-                             method='wang',
                              verbose=False):
         rec_lat = np.linalg.inv(self._pcell.get_cell()) # column vectors
         if q_direction is None:
@@ -289,16 +295,16 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             self._set_dynamical_matrix(q_red, verbose)
             return False
     
-        if method == 'wang':
-            self._set_Wang_nac_dynamical_matrix(q_red, q, verbose)
+        if self._method == 'wang':
+            self._set_Wang_dynamical_matrix(q_red, q, verbose)
         else:
             # Only once force constants without dipole-dipole
             # interaction are prepared. Dynamical matrix at general
             # q-point is calculated from it plus Gonze's dipole-dipole
             # interaction matrix.
-            print(self._get_Gonze_nac_dynamical_matrix(q))
+            print(self._get_Gonze_dynamical_matrix(q))
 
-    def _set_Wang_nac_dynamical_matrix(self, q_red, q, verbose):
+    def _set_Wang_dynamical_matrix(self, q_red, q, verbose):
         # Wang method (J. Phys.: Condens. Matter 22 (2010) 202201)
         constant = _get_constant_factor(q,
                                         self._dielectric,
@@ -308,16 +314,16 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         import phonopy._phonopy as phonoc
         try:
             import phonopy._phonopy as phonoc
-            self._set_c_Wang_nac_dynamical_matrix(q_red, q, constant)
+            self._set_c_Wang_dynamical_matrix(q_red, q, constant)
         except ImportError:
             num_atom = self._pcell.get_number_of_atoms()
             fc = self._bare_force_constants.copy()
             nac_q = _get_charge_sum(num_atom, q, self._born) * constant
-            self._set_py_Wang_nac_force_constants(fc, nac_q)
+            self._set_py_Wang_force_constants(fc, nac_q)
             self._force_constants = fc
             self._set_dynamical_matrix(q_red, verbose)
 
-    def _set_py_Wang_nac_force_constants(self, fc, nac_q):
+    def _set_py_Wang_force_constants(self, fc, nac_q):
         N = (self._scell.get_number_of_atoms() //
              self._pcell.get_number_of_atoms())
         for s1 in range(self._scell.get_number_of_atoms()):
@@ -332,7 +338,13 @@ class DynamicalMatrixNAC(DynamicalMatrix):
                 p2 = self._p2p_map[s2]
                 fc[s1, s2] += nac_q[p1, p2] / N
 
-    def _get_Gonze_nac_dynamical_matrix(self, q):
+    def _get_Gonze_dynamical_matrix(self, q):
+        pass
+
+    def _set_Gonze_force_constants(self):
+        pass
+
+    def _get_Gonze_dipole_dipole(self, q):
         pos = self._pcell.get_positions()
         rec_lat = np.linalg.inv(self._pcell.get_cell()) # column vectors
         G_list = self._get_G_list(rec_lat)
@@ -384,7 +396,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
                     count += 1
         return np.dot(G, rec_lat.T)
 
-    def _set_c_Wang_nac_dynamical_matrix(self, q_red, q, factor):
+    def _set_c_Wang_dynamical_matrix(self, q_red, q, factor):
         import phonopy._phonopy as phonoc
 
         fc = self._bare_force_constants.copy()
@@ -415,72 +427,44 @@ def get_equivalent_smallest_vectors(atom_number_supercell,
                                     supercell,
                                     primitive_lattice,
                                     symprec):
-    reduced_bases = get_reduced_bases(supercell.get_cell(), symprec)
-    positions = np.dot(supercell.get_positions(), np.linalg.inv(reduced_bases))
+    from phonopy.structure.cells import get_equivalent_smallest_vectors as func
 
-    # Atomic positions are confined into the lattice made of reduced bases.
-    positions -= np.rint(positions)
+    print("")
+    print("****************************** warning "
+          "******************************")
+    msg = textwrap.wrap(
+        "phonopy.harmonic.dynamical_matrix.get_equivalent_smallest_vectors "
+        "was moved to phonopy.structure.cells.get_equivalent_smallest_vectors. "
+        "The alias, phonopy.harmonic.dynamical_matrix.get_equivalent_smallest_"
+        "vectors will be removed at some future version.\n")
+    print("\n".join(msg))
+    print("***************************************"
+          "******************************")
+    print("")
 
-    p_pos = positions[atom_number_primitive]
-    s_pos = positions[atom_number_supercell]
-    
-    # The vector arrow is from the atom in primitive to
-    # the atom in supercell cell plus a supercell lattice
-    # point. This is related to determine the phase
-    # convension when building dynamical matrix.
-    supercell_vectors = np.array([
-        [i, j, k] for i in (-1, 0, 1)
-                  for j in (-1, 0, 1)
-                  for k in (-1, 0, 1)
-    ])
-    
-    differences = s_pos + supercell_vectors - p_pos
-    distances = np.sqrt((np.dot(differences, reduced_bases) ** 2).sum(axis=1))
-    minimum = min(distances)
-    smallest_vectors = []
-    for i in range(27):
-        if abs(minimum - distances[i]) < symprec:
-            relative_scale = np.dot(reduced_bases,
-                                    np.linalg.inv(primitive_lattice))
-            smallest_vectors.append(np.dot(differences[i], relative_scale))
-            
-    return smallest_vectors
+    return func(atom_number_supercell,
+                atom_number_primitive,
+                supercell,
+                primitive_lattice,
+                symprec)
 
 def get_smallest_vectors(supercell, primitive, symprec):
-    """
-    shortest_vectors:
+    from phonopy.structure.cells import get_smallest_vectors as func
 
-      Shortest vectors from an atom in primitive cell to an atom in
-      supercell in the fractional coordinates. If an atom in supercell
-      is on the border centered at an atom in primitive and there are
-      multiple vectors that have the same distance and different
-      directions, several shortest vectors are stored. The
-      multiplicity is stored in another array, "multiplicity".
-      [atom_super, atom_primitive, multiple-vectors, 3]
-      
-    multiplicity:
-      Number of multiple shortest vectors (third index of "shortest_vectors")
-      [atom_super, atom_primitive]
-    """
-
-    p2s_map = primitive.get_primitive_to_supercell_map()
-    size_super = supercell.get_number_of_atoms()
-    size_prim = primitive.get_number_of_atoms()
-    shortest_vectors = np.zeros((size_super, size_prim, 27, 3), dtype='double')
-    multiplicity = np.zeros((size_super, size_prim), dtype='intc')
-
-    for i in range(size_super): # run in supercell
-        for j, s_j in enumerate(p2s_map): # run in primitive
-            vectors = get_equivalent_smallest_vectors(i,
-                                                      s_j,
-                                                      supercell, 
-                                                      primitive.get_cell(),
-                                                      symprec)
-            multiplicity[i][j] = len(vectors)
-            for k, elem in enumerate(vectors):
-                shortest_vectors[i][j][k] = elem
-
-    return shortest_vectors, multiplicity
+    print("")
+    print("****************************** warning "
+          "******************************")
+    msg = textwrap.wrap(
+        "phonopy.harmonic.dynamical_matrix.get_smallest_vectors "
+        "was moved to phonopy.structure.cells.get_smallest_vectors. "
+        "The alias, phonopy.harmonic.dynamical_matrix.get_smallest_vectors, "
+        "will be removed at some future version.")
+    print("\n".join(msg))
+    print("***************************************"
+          "******************************")
+    print("")
+    
+    return func(supercell, primitive, symprec)
 
 def _get_charge_sum(num_atom, q, born):
     nac_q = np.zeros((num_atom, num_atom, 3, 3), dtype='double', order='C')

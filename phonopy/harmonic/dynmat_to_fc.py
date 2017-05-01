@@ -36,7 +36,6 @@ import numpy as np
 from phonopy.structure.atoms import PhonopyAtoms as Atoms
 from phonopy.structure.symmetry import Symmetry
 from phonopy.structure.cells import get_supercell
-from phonopy.harmonic.dynamical_matrix import get_smallest_vectors
 from phonopy.harmonic.force_constants import distribute_force_constants
 
 def get_commensurate_points(supercell_matrix): # wrt primitive cell
@@ -60,12 +59,11 @@ class DynmatToForceConstants(object):
         supercell_matrix = np.rint(supercell_matrix).astype('intc')
         self._commensurate_points = get_commensurate_points(supercell_matrix)
         (self._shortest_vectors,
-         self._multiplicity) = get_smallest_vectors(supercell,
-                                                    primitive,
-                                                    symprec)
+         self._multiplicity) = primitive.get_smallest_vectors()
         self._dynmat = None
         n = self._supercell.get_number_of_atoms()
-        self._force_constants = np.zeros((n, n, 3, 3), dtype='double')
+        self._force_constants = np.zeros((n, n, 3, 3),
+                                         dtype='double', order='C')
 
         if frequencies is not None and eigenvectors is not None:
             self.set_dynamical_matrices(frequencies, eigenvectors)
@@ -96,6 +94,7 @@ class DynmatToForceConstants(object):
                     np.dot(np.dot(eigvecs, np.diag(eigvals)), eigvecs.T.conj()))
         else:
             dm = dynmat
+
         self._dynmat = np.array(dm, dtype='complex128', order='C')
 
     def _inverse_transformation(self):
