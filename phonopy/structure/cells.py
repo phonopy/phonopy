@@ -181,7 +181,9 @@ class Supercell(Atoms):
                                                         sur_cell,
                                                         symprec)
 
-        multi = supercell.get_number_of_atoms() // unitcell.get_number_of_atoms()
+        num_satom = supercell.get_number_of_atoms()
+        num_uatom = unitcell.get_number_of_atoms()
+        multi = num_satom // num_uatom
         
         if multi != determinant(self._supercell_matrix):
             print("Supercell creation failed.")
@@ -197,7 +199,7 @@ class Supercell(Atoms):
                            scaled_positions=supercell.get_scaled_positions(),
                            cell=supercell.get_cell(),
                            pbc=True)
-            self._u2s_map = np.arange(unitcell.get_number_of_atoms()) * multi
+            self._u2s_map = np.arange(num_uatom) * multi
             self._u2u_map = dict([(j, i) for i, j in enumerate(self._u2s_map)])
             self._s2u_map = np.array(u2sur_map)[sur2s_map] * multi
 
