@@ -181,7 +181,9 @@ class Supercell(Atoms):
                                                         sur_cell,
                                                         symprec)
 
-        multi = supercell.get_number_of_atoms() // unitcell.get_number_of_atoms()
+        num_satom = supercell.get_number_of_atoms()
+        num_uatom = unitcell.get_number_of_atoms()
+        multi = num_satom // num_uatom
         
         if multi != determinant(self._supercell_matrix):
             print("Supercell creation failed.")
@@ -197,7 +199,7 @@ class Supercell(Atoms):
                            scaled_positions=supercell.get_scaled_positions(),
                            cell=supercell.get_cell(),
                            pbc=True)
-            self._u2s_map = np.arange(unitcell.get_number_of_atoms()) * multi
+            self._u2s_map = np.arange(num_uatom) * multi
             self._u2u_map = dict([(j, i) for i, j in enumerate(self._u2s_map)])
             self._s2u_map = np.array(u2sur_map)[sur2s_map] * multi
 
@@ -274,9 +276,13 @@ class Primitive(Atoms):
         self._p2s_map = None
         self._s2p_map = None
         self._p2p_map = None
+        self._smallest_vectors = None
+        self._multiplicity = None
+
         self._primitive_cell(supercell)
         self._supercell_to_primitive_map(supercell.get_scaled_positions())
         self._primitive_to_primitive_map()
+        self._set_smallest_vectors(supercell)
 
     def get_primitive_matrix(self):
         return self._primitive_matrix
@@ -289,6 +295,9 @@ class Primitive(Atoms):
 
     def get_primitive_to_primitive_map(self):
         return self._p2p_map
+
+    def get_smallest_vectors(self):
+        return self._smallest_vectors, self._multiplicity
 
     def _primitive_cell(self, supercell):
         trimed_cell, p2s_map, mapping_table = trim_cell(self._primitive_matrix,
@@ -324,6 +333,10 @@ class Primitive(Atoms):
         in primitive cell
         """
         self._p2p_map = dict([(j, i) for i, j in enumerate(self._p2s_map)])
+
+    def _set_smallest_vectors(self, supercell):
+        self._smallest_vectors, self._multiplicity = get_smallest_vectors(
+            supercell, self, self._symprec)
 
 #
 # Get distance between a pair of atoms
@@ -416,6 +429,81 @@ def get_shortest_bases_from_extented_bases(extended_bases, tolerance):
 
     print("Delaunary reduction is failed.")
     return np.array(basis[:3], dtype='double')
+
+#
+# Shortest pairs of atoms in supercell (Wigner-Seitz like)
+#
+def get_equivalent_smallest_vectors(atom_number_supercell,
+                                    atom_number_primitive,
+                                    supercell,
+                                    primitive_lattice,
+                                    symprec):
+    reduced_bases = get_reduced_bases(supercell.get_cell(), symprec)
+    positions = np.dot(supercell.get_positions(), np.linalg.inv(reduced_bases))
+
+    # Atomic positions are confined into the lattice made of reduced bases.
+    positions -= np.rint(positions)
+
+    p_pos = positions[atom_number_primitive]
+    s_pos = positions[atom_number_supercell]
+    
+    # The vector arrow is from the atom in primitive to
+    # the atom in supercell cell plus a supercell lattice
+    # point. This is related to determine the phase
+    # convension when building dynamical matrix.
+    supercell_vectors = np.array([
+        [i, j, k] for i in (-1, 0, 1)
+                  for j in (-1, 0, 1)
+                  for k in (-1, 0, 1)
+    ])
+    
+    differences = s_pos + supercell_vectors - p_pos
+    distances = np.sqrt((np.dot(differences, reduced_bases) ** 2).sum(axis=1))
+    minimum = min(distances)
+    smallest_vectors = []
+    for i in range(27):
+        if abs(minimum - distances[i]) < symprec:
+            relative_scale = np.dot(reduced_bases,
+                                    np.linalg.inv(primitive_lattice))
+            smallest_vectors.append(np.dot(differences[i], relative_scale))
+            
+    return smallest_vectors
+
+def get_smallest_vectors(supercell, primitive, symprec):
+    """
+    shortest_vectors:
+
+      Shortest vectors from an atom in primitive cell to an atom in
+      supercell in the fractional coordinates. If an atom in supercell
+      is on the border centered at an atom in primitive and there are
+      multiple vectors that have the same distance and different
+      directions, several shortest vectors are stored. The
+      multiplicity is stored in another array, "multiplicity".
+      [atom_super, atom_primitive, multiple-vectors, 3]
+      
+    multiplicity:
+      Number of multiple shortest vectors (third index of "shortest_vectors")
+      [atom_super, atom_primitive]
+    """
+
+    p2s_map = primitive.get_primitive_to_supercell_map()
+    size_super = supercell.get_number_of_atoms()
+    size_prim = primitive.get_number_of_atoms()
+    shortest_vectors = np.zeros((size_super, size_prim, 27, 3), dtype='double')
+    multiplicity = np.zeros((size_super, size_prim), dtype='intc')
+
+    for i in range(size_super): # run in supercell
+        for j, s_j in enumerate(p2s_map): # run in primitive
+            vectors = get_equivalent_smallest_vectors(i,
+                                                      s_j,
+                                                      supercell, 
+                                                      primitive.get_cell(),
+                                                      symprec)
+            multiplicity[i][j] = len(vectors)
+            for k, elem in enumerate(vectors):
+                shortest_vectors[i][j][k] = elem
+
+    return shortest_vectors, multiplicity
 
 #
 # Other tiny tools

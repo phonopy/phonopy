@@ -81,9 +81,8 @@ class VelocityQpoints(object):
         self._velocities = velocities
 
         (self._shortest_vectors,
-         self._multiplicity) = get_smallest_vectors(supercell,
-                                                    primitive,
-                                                    symprec)
+         self._multiplicity) = primitive.get_smallest_vectors()
+
         self._qpoints = None
         self._weights = None
 

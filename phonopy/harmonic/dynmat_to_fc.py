@@ -36,7 +36,6 @@ import numpy as np
 from phonopy.structure.atoms import PhonopyAtoms as Atoms
 from phonopy.structure.symmetry import Symmetry
 from phonopy.structure.cells import get_supercell
-from phonopy.harmonic.dynamical_matrix import get_smallest_vectors
 from phonopy.harmonic.force_constants import distribute_force_constants
 
 def get_commensurate_points(supercell_matrix): # wrt primitive cell
@@ -60,12 +59,13 @@ class DynmatToForceConstants(object):
         supercell_matrix = np.rint(supercell_matrix).astype('intc')
         self._commensurate_points = get_commensurate_points(supercell_matrix)
         (self._shortest_vectors,
-         self._multiplicity) = get_smallest_vectors(supercell,
-                                                    primitive,
-                                                    symprec)
+         self._multiplicity) = primitive.get_smallest_vectors()
         self._dynmat = None
         n = self._supercell.get_number_of_atoms()
-        self._force_constants = np.zeros((n, n, 3, 3), dtype='double')
+        self._force_constants = np.zeros((n, n, 3, 3),
+                                         dtype='double', order='C')
+        itemsize = self._force_constants.itemsize
+        self._dtype_complex = ("c%d" % (itemsize * 2))
 
         if frequencies is not None and eigenvectors is not None:
             self.set_dynamical_matrices(frequencies, eigenvectors)
@@ -84,16 +84,20 @@ class DynmatToForceConstants(object):
         return self._dynmat
 
     def set_dynamical_matrices(self,
-                               frequencies_at_qpoints,
-                               eigenvectors_at_qpoints):
-        dynmat = []
-        for frequencies, eigvecs in zip(frequencies_at_qpoints,
-                                        eigenvectors_at_qpoints):
-            eigvals = frequencies ** 2 * np.sign(frequencies)
-            dynmat.append(
-                np.dot(np.dot(eigvecs, np.diag(eigvals)), eigvecs.T.conj()))
+                               frequencies_at_qpoints=None,
+                               eigenvectors_at_qpoints=None,
+                               dynmat=None):
+        if dynmat is None:
+            dm = []
+            for frequencies, eigvecs in zip(frequencies_at_qpoints,
+                                            eigenvectors_at_qpoints):
+                eigvals = frequencies ** 2 * np.sign(frequencies)
+                dm.append(
+                    np.dot(np.dot(eigvecs, np.diag(eigvals)), eigvecs.T.conj()))
+        else:
+            dm = dynmat
 
-        self._dynmat = np.array(dynmat, dtype='complex128', order='C')
+        self._dynmat = np.array(dm, dtype=self._dtype_complex, order='C')
 
     def _inverse_transformation(self):
         s2p = self._primitive.get_supercell_to_primitive_map()
@@ -132,7 +136,7 @@ class DynmatToForceConstants(object):
     def _sum_q(self, p_i, s_j, p_j):
         multi = self._multiplicity[s_j, p_i]
         pos = self._shortest_vectors[s_j, p_i, :multi]
-        sum_q = np.zeros((3, 3), dtype='complex128')
+        sum_q = np.zeros((3, 3), dtype=self._dtype_complex, order='C')
         phases = -2j * np.pi * np.dot(self._commensurate_points, pos.T)
         phase_factors = np.exp(phases).sum(axis=1) / multi
         for i, coef in enumerate(phase_factors):
