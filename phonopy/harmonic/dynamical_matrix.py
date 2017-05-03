@@ -246,16 +246,22 @@ class DynamicalMatrixNAC(DynamicalMatrix):
                                     dtype='double', order='C')
         if 'method' not in nac_params:
             self._method = 'wang'
+        elif nac_params['method'] == 'gonze':
+            self._method = 'gonze'
         else:
-            self._method = nac_params['method']
+            self._method = 'wang'
 
         if self._method == 'gonze':
-            cutoff = 4
+            if 'G_cutoff' in nac_params:
+                cutoff = nac_params['G_cutoff']
+            else:
+                cutoff = 4
             rec_lat = np.linalg.inv(self._pcell.get_cell()) # column vectors
             G_vec_list = self._get_G_list(rec_lat)
             G_norm = np.sqrt((G_vec_list ** 2).sum(axis=1))
             self._G_list = G_vec_list[G_norm < cutoff]
-            print(len(self._G_list))
+            print("G cutoff distance: %f, number of G points: %d" %
+                  (cutoff, len(self._G_list)))
             self._set_Gonze_force_constants()
             self._Gonze_count = 0
 

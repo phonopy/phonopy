@@ -328,6 +328,14 @@ def get_born_parameters(f, primitive, symmetry):
             factor = None
             method = line_arr[0]
 
+    # For Gonze type NAC
+    G_cutoff = None
+    if method is not None and len(line_arr) > 1:
+        try:
+            G_cutoff = float(line_arr[1])
+        except (ValueError, TypeError):
+            pass
+
     # Read dielectric constant
     line = f.readline().split()
     if not len(line) == 9:
@@ -375,6 +383,8 @@ def get_born_parameters(f, primitive, symmetry):
                 'dielectric': dielectric }
     if method is not None:
         non_anal['method'] = method
+        if G_cutoff is not None:
+            non_anal['G_cutoff'] = G_cutoff
 
     return non_anal
 
