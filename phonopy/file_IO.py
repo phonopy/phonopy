@@ -323,8 +323,10 @@ def get_born_parameters(f, primitive, symmetry):
     if len(line_arr) > 0:
         try:
             factor = float(line_arr[0])
+            method = None
         except (ValueError, TypeError):
             factor = None
+            method = line_arr[0]
 
     # Read dielectric constant
     line = f.readline().split()
@@ -371,6 +373,8 @@ def get_born_parameters(f, primitive, symmetry):
     non_anal = {'born': born,
                 'factor': factor,
                 'dielectric': dielectric }
+    if method is not None:
+        non_anal['method'] = method
 
     return non_anal
 

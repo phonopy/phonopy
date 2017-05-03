@@ -64,6 +64,8 @@ class DynmatToForceConstants(object):
         n = self._supercell.get_number_of_atoms()
         self._force_constants = np.zeros((n, n, 3, 3),
                                          dtype='double', order='C')
+        itemsize = self._force_constants.itemsize
+        self._dtype_complex = ("c%d" % (itemsize * 2))
 
         if frequencies is not None and eigenvectors is not None:
             self.set_dynamical_matrices(frequencies, eigenvectors)
@@ -95,7 +97,7 @@ class DynmatToForceConstants(object):
         else:
             dm = dynmat
 
-        self._dynmat = np.array(dm, dtype='complex128', order='C')
+        self._dynmat = np.array(dm, dtype=self._dtype_complex, order='C')
 
     def _inverse_transformation(self):
         s2p = self._primitive.get_supercell_to_primitive_map()
@@ -134,7 +136,7 @@ class DynmatToForceConstants(object):
     def _sum_q(self, p_i, s_j, p_j):
         multi = self._multiplicity[s_j, p_i]
         pos = self._shortest_vectors[s_j, p_i, :multi]
-        sum_q = np.zeros((3, 3), dtype='complex128')
+        sum_q = np.zeros((3, 3), dtype=self._dtype_complex, order='C')
         phases = -2j * np.pi * np.dot(self._commensurate_points, pos.T)
         phase_factors = np.exp(phases).sum(axis=1) / multi
         for i, coef in enumerate(phase_factors):
