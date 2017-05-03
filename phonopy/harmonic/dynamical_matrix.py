@@ -349,9 +349,9 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         self._set_dynamical_matrix(q_red)
         rec_lat = np.linalg.inv(self._pcell.get_cell()) # column vectors
         q = np.dot(rec_lat, q_red)
-        if np.linalg.norm(q_direction) > self._symprec:
-            dm_dd = self._get_Gonze_dipole_dipole(q, q_direction)
-            self._dynamical_matrix += dm_dd
+        # if np.linalg.norm(q_direction) > self._symprec:
+        dm_dd = self._get_Gonze_dipole_dipole(q, q_direction)
+        self._dynamical_matrix += dm_dd
 
     def _set_Gonze_force_constants(self):
         d2f = DynmatToForceConstants(self._pcell,
@@ -365,9 +365,9 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             print("%d/%d %s" % (i + 1, num_q, q_red))
             self._set_dynamical_matrix(q_red)
             q = np.dot(rec_lat, q_red)
-            if np.linalg.norm(q) > self._symprec:
-                dm_dd = self._get_Gonze_dipole_dipole(q, q)
-                self._dynamical_matrix -= dm_dd
+            # if np.linalg.norm(q) > self._symprec:
+            dm_dd = self._get_Gonze_dipole_dipole(q, q)
+            self._dynamical_matrix -= dm_dd
             dynmat.append(self._dynamical_matrix)
         d2f.set_dynamical_matrices(dynmat=dynmat)
         d2f.run()
@@ -381,7 +381,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         volume = self._pcell.get_volume()
         for q_G in self._G_list:
             q_K = q_G + q
-            if np.linalg.norm(q_K) < self._symprec:
+            if np.linalg.norm(q_G) < self._symprec:
                 if np.linalg.norm(q_direction) < self._symprec:
                     continue
                 else:
