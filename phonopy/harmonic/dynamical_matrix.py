@@ -427,19 +427,15 @@ class DynamicalMatrixNAC(DynamicalMatrix):
                 
         return (C_dd + C_dd.T.conj()) / 2
 
-    def _get_G_list(self, rec_lat, g_rad=30):
+    def _get_G_list(self, rec_lat, g_rad=100):
         # g_rad must be greater than 0 for broadcasting.
         n = g_rad * 2 + 1
         G = np.zeros((n ** 3, 3), dtype='double', order='C')
-        count = 0
-        for i in range(-g_rad, g_rad + 1):
-            for j in range(-g_rad, g_rad + 1):
-                for k in range(-g_rad, g_rad + 1):
-                    G[count] = [i, j, k]
-                    count += 1
+        pts = np.arange(-g_rad, g_rad + 1)
+        grid = np.meshgrid(pts, pts, pts)
+        for i in range(3):
+            G[:, i] = grid[i].ravel()
         return np.dot(G, rec_lat.T)
-
-
 
 # Helper methods
 def get_equivalent_smallest_vectors(atom_number_supercell,
