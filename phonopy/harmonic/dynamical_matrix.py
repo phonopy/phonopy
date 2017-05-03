@@ -286,10 +286,10 @@ class DynamicalMatrixNAC(DynamicalMatrix):
 
     def _set_Wang_dynamical_matrix(self, q_red, q):
         # Wang method (J. Phys.: Condens. Matter 22 (2010) 202201)
-        constant = _get_constant_factor(q,
-                                        self._dielectric,
-                                        self._pcell.get_volume(),
-                                        self._unit_conversion)
+        constant = self._get_constant_factor(q,
+                                             self._dielectric,
+                                             self._pcell.get_volume(),
+                                             self._unit_conversion)
 
         import phonopy._phonopy as phonoc
         try:
@@ -298,7 +298,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         except ImportError:
             num_atom = self._pcell.get_number_of_atoms()
             fc = self._bare_force_constants.copy()
-            nac_q = _get_charge_sum(num_atom, q, self._born) * constant
+            nac_q = self._get_charge_sum(num_atom, q, self._born) * constant
             self._set_py_Wang_force_constants(fc, nac_q)
             self._force_constants = fc
             self._set_dynamical_matrix(q_red)
@@ -343,7 +343,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
                 fc[s1, s2] += nac_q[p1, p2] / N
 
     def _set_Gonze_dynamical_matrix(self, q_red, q_direction):
-        print("%d" % self._Gonze_count)
+        print("%d %s" % (self._Gonze_count + 1, q_red))
         self._Gonze_count += 1
         self._force_constants = self._Gonze_force_constants
         self._set_dynamical_matrix(q_red)
@@ -362,10 +362,10 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         num_q = len(d2f.get_commensurate_points())
         rec_lat = np.linalg.inv(self._pcell.get_cell()) # column vectors
         for i, q_red in enumerate(d2f.get_commensurate_points()):
-            print("%d/%d" % (i + 1, num_q))
+            print("%d/%d %s" % (i + 1, num_q, q_red))
             self._set_dynamical_matrix(q_red)
-            if np.linalg.norm(q_red) > self._symprec:
-                q = np.dot(rec_lat, q_red)
+            q = np.dot(rec_lat, q_red)
+            if np.linalg.norm(q) > self._symprec:
                 dm_dd = self._get_Gonze_dipole_dipole(q, q)
                 self._dynamical_matrix -= dm_dd
             dynmat.append(self._dynamical_matrix)
@@ -378,7 +378,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         num_atom = self._pcell.get_number_of_atoms()
         C = np.zeros((num_atom, 3, num_atom, 3),
                      dtype=self._dtype_complex, order='C')
-
+        volume = self._pcell.get_volume()
         for q_G in self._G_list:
             q_K = q_G + q
             if np.linalg.norm(q_K) < self._symprec:
@@ -389,11 +389,11 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             else:
                 dq_K = q_K
 
-            Z_mat = (_get_charge_sum(num_atom, dq_K, self._born) *
-                     _get_constant_factor(dq_K,
-                                          self._dielectric,
-                                          self._pcell.get_volume(),
-                                          self._unit_conversion))
+            Z_mat = (self._get_charge_sum(num_atom, dq_K, self._born) *
+                     self._get_constant_factor(dq_K,
+                                               self._dielectric,
+                                               volume,      
+                                               self._unit_conversion))
             for i in range(num_atom):
                 dpos = - pos + pos[i]
                 phase_factor = np.exp(2j * np.pi * np.dot(dpos, q_K))
@@ -403,11 +403,11 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         for q_G in self._G_list:
             if np.linalg.norm(q_G) < self._symprec:
                 continue
-            Z_mat = (_get_charge_sum(num_atom, q_G, self._born) *
-                     _get_constant_factor(q_G,
-                                          self._dielectric,
-                                          self._pcell.get_volume(),
-                                          self._unit_conversion))
+            Z_mat = (self._get_charge_sum(num_atom, q_G, self._born) *
+                     self._get_constant_factor(q_G,
+                                               self._dielectric,
+                                               volume,
+                                               self._unit_conversion))
             for i in range(num_atom):
                 C_i = np.zeros((3, 3), dtype=self._dtype_complex, order='C')
                 dpos = - pos + pos[i]
@@ -425,7 +425,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
 
         C_dd = C.reshape(num_atom * 3, num_atom * 3)
                 
-        return (C_dd + C_dd.T.conj()) / 2
+        return C_dd
 
     def _get_G_list(self, rec_lat, g_rad=100):
         # g_rad must be greater than 0 for broadcasting.
@@ -436,6 +436,18 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         for i in range(3):
             G[:, i] = grid[i].ravel()
         return np.dot(G, rec_lat.T)
+
+    def _get_charge_sum(self, num_atom, q, born):
+        nac_q = np.zeros((num_atom, num_atom, 3, 3), dtype='double', order='C')
+        A = np.dot(q, born)
+        for i in range(num_atom):
+            for j in range(num_atom):
+                nac_q[i, j] = np.outer(A[i], A[j])
+        return nac_q
+
+    def _get_constant_factor(self, q, dielectric, volume, unit_conversion):
+        return (unit_conversion * 4.0 * np.pi / volume /
+                np.dot(q.T, np.dot(dielectric, q)))
 
 # Helper methods
 def get_equivalent_smallest_vectors(atom_number_supercell,
@@ -482,14 +494,3 @@ def get_smallest_vectors(supercell, primitive, symprec):
     
     return func(supercell, primitive, symprec)
 
-def _get_charge_sum(num_atom, q, born):
-    nac_q = np.zeros((num_atom, num_atom, 3, 3), dtype='double', order='C')
-    A = np.dot(q, born)
-    for i in range(num_atom):
-        for j in range(num_atom):
-            nac_q[i, j] = np.outer(A[i], A[j])
-    return nac_q
-
-def _get_constant_factor(q, dielectric, volume, unit_conversion):
-    return (unit_conversion * 4.0 * np.pi / volume /
-            np.dot(q.T, np.dot(dielectric, q)))

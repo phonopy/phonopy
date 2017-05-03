@@ -44,7 +44,8 @@ def get_commensurate_points(supercell_matrix): # wrt primitive cell
                           cell=np.diag([1, 1, 1]),
                           pbc=True)
     rec_supercell = get_supercell(rec_primitive, supercell_matrix.T)
-    return rec_supercell.get_scaled_positions()
+    q_pos = rec_supercell.get_scaled_positions()
+    return np.where(q_pos > 1 - 1e-15, q_pos - 1, q_pos)
 
 class DynmatToForceConstants(object):
     def __init__(self,
