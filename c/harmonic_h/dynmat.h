@@ -47,6 +47,17 @@ int get_dynamical_matrix_at_q(double *dynamical_matrix,
 			      const int *p2s_map,
 			      const double *charge_sum,
 			      const int with_openmp);
+void get_dipole_dipole(double *dd, /* [natom, 3, natom, 3, (real, imag)] */
+                       const double *K_list, /* [num_kvec, 3] */
+                       const int num_K,
+                       const int num_patom,
+                       const double *q_vector,
+                       const double *q_direction,
+                       const double *born,
+                       const double *dielectric,
+                       const double factor, /* 4pi/V*unit-conv */
+                       const double *pos, /* [natom, 3] */
+                       const double tolerance);
 void get_charge_sum(double *charge_sum,
 		    const int num_patom,
 		    const double factor,

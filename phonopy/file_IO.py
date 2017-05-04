@@ -323,8 +323,18 @@ def get_born_parameters(f, primitive, symmetry):
     if len(line_arr) > 0:
         try:
             factor = float(line_arr[0])
+            method = None
         except (ValueError, TypeError):
             factor = None
+            method = line_arr[0]
+
+    # For Gonze type NAC
+    G_cutoff = None
+    if method is not None and len(line_arr) > 1:
+        try:
+            G_cutoff = float(line_arr[1])
+        except (ValueError, TypeError):
+            pass
 
     # Read dielectric constant
     line = f.readline().split()
@@ -335,7 +345,8 @@ def get_born_parameters(f, primitive, symmetry):
     
     # Read Born effective charge
     independent_atoms = symmetry.get_independent_atoms()
-    born = np.zeros((primitive.get_number_of_atoms(), 3, 3), dtype=float)
+    born = np.zeros((primitive.get_number_of_atoms(), 3, 3),
+                    dtype='double', order='C')
 
     for i in independent_atoms:
         line = f.readline().split()
@@ -350,7 +361,8 @@ def get_born_parameters(f, primitive, symmetry):
     # Check that the number of atoms in the BORN file was correct
     line = f.readline().split()
     if len(line) > 0:
-        print("Too many atoms in the BORN file (it should only contain symmetry-independent atoms)")
+        print("Too many atoms in the BORN file (it should only contain "
+              "symmetry-independent atoms)")
         return False
 
     # Expand Born effective charges to all atoms in the primitive cell
@@ -369,6 +381,10 @@ def get_born_parameters(f, primitive, symmetry):
     non_anal = {'born': born,
                 'factor': factor,
                 'dielectric': dielectric }
+    if method is not None:
+        non_anal['method'] = method
+        if G_cutoff is not None:
+            non_anal['G_cutoff'] = G_cutoff
 
     return non_anal
 
