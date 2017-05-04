@@ -258,37 +258,44 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             else:
                 self._G_cutoff = 4
             rec_lat = np.linalg.inv(self._pcell.get_cell()) # column vectors
-            self._G_vec_list = self._get_G_list(rec_lat)
+            G_vec_list = self._get_G_list(rec_lat)
+            G_norm = np.sqrt(((G_vec_list) ** 2).sum(axis=1))
+            self._G_list = G_vec_list[G_norm < self._G_cutoff]
+            print("G-cutoff distance: %f, number of G-points: %d" %
+                  (self._G_cutoff, len(self._G_list)))
+            print(self._G_list)
             self._set_Gonze_force_constants()
             self._Gonze_count = 0
 
     def set_dynamical_matrix(self, q_red, q_direction=None):
         rec_lat = np.linalg.inv(self._pcell.get_cell()) # column vectors
         if q_direction is None:
-            q = np.dot(q_red, rec_lat.T)
+            q_norm = np.linalg.norm(np.dot(q_red, rec_lat.T))
         else:
-            q = np.dot(q_direction, rec_lat.T)
+            q_norm = np.linalg.norm(np.dot(q_direction, rec_lat.T))
 
-        if ((q_direction is None and np.abs(q).sum() < self._symprec) or
-            ((q_direction is not None) and
-             np.abs(q_direction).sum() < self._symprec)):
+        if q_norm < self._symprec:
             self._force_constants = self._bare_force_constants.copy()
             self._set_dynamical_matrix(q_red)
             return False
     
         if self._method == 'wang':
-            self._set_Wang_dynamical_matrix(q_red, q)
+            self._set_Wang_dynamical_matrix(q_red, q_direction)
         else:
-            self._set_Gonze_dynamical_matrix(q_red, q)
+            self._set_Gonze_dynamical_matrix(q_red, q_direction)
 
-    def _set_Wang_dynamical_matrix(self, q_red, q):
+    def _set_Wang_dynamical_matrix(self, q_red, q_direction):
         # Wang method (J. Phys.: Condens. Matter 22 (2010) 202201)
+        rec_lat = np.linalg.inv(self._pcell.get_cell()) # column vectors
+        if q_direction is None:
+            q = np.dot(q_red, rec_lat.T)
+        else:
+            q = np.dot(q_direction, rec_lat.T)
+
         constant = self._get_constant_factor(q,
                                              self._dielectric,
                                              self._pcell.get_volume(),
                                              self._unit_conversion)
-
-        import phonopy._phonopy as phonoc
         try:
             import phonopy._phonopy as phonoc
             self._set_c_Wang_dynamical_matrix(q_red, q, constant)
@@ -344,10 +351,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         self._Gonze_count += 1
         self._force_constants = self._Gonze_force_constants
         self._set_dynamical_matrix(q_red)
-        rec_lat = np.linalg.inv(self._pcell.get_cell()) # column vectors
-        q = np.dot(rec_lat, q_red)
-        # if np.linalg.norm(q_direction) > self._symprec:
-        dm_dd = self._get_Gonze_dipole_dipole(q, q_direction)
+        dm_dd = self._get_Gonze_dipole_dipole(q_red, q_direction)
         self._dynamical_matrix += dm_dd
 
     def _set_Gonze_force_constants(self):
@@ -357,43 +361,81 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         self._force_constants = self._bare_force_constants
         dynmat = []
         num_q = len(d2f.get_commensurate_points())
-        rec_lat = np.linalg.inv(self._pcell.get_cell()) # column vectors
         for i, q_red in enumerate(d2f.get_commensurate_points()):
             print("%d/%d %s" % (i + 1, num_q, q_red))
             self._set_dynamical_matrix(q_red)
-            q = np.dot(rec_lat, q_red)
-            # if np.linalg.norm(q) > self._symprec:
-            dm_dd = self._get_Gonze_dipole_dipole(q, q)
+            dm_dd = self._get_Gonze_dipole_dipole(q_red, None)
             self._dynamical_matrix -= dm_dd
             dynmat.append(self._dynamical_matrix)
         d2f.set_dynamical_matrices(dynmat=dynmat)
         d2f.run()
         self._Gonze_force_constants = d2f.get_force_constants()
 
-    def _get_Gonze_dipole_dipole(self, q, q_direction):
+    def _get_Gonze_dipole_dipole(self, q_red, q_direction):
+        rec_lat = np.linalg.inv(self._pcell.get_cell()) # column vectors
+        q = np.dot(q_red, rec_lat.T)
+        # K_norm = np.sqrt(((self._G_vec_list + q) ** 2).sum(axis=1))
+        # K_list = self._G_vec_list[K_norm < self._G_cutoff] + q
+        K_list = self._G_list + q
+        if q_direction is None:
+            q_dir_cart = None
+        else:
+            q_dir_cart = np.array(np.dot(q_direction, rec_lat.T),
+                                  dtype='double')
+        
+        try:
+            import phonopy._phonopy as phonoc
+            C = self._get_c_dipole_dipole(K_list, q, q_dir_cart)
+        except ImportError:
+            C = self._get_py_dipole_dipole(K_list, q, q_dir_cart)
+
+        mass = self._pcell.get_masses()
+        num_atom = self._pcell.get_number_of_atoms()
+        pos = self._pcell.get_positions()
+        for i in range(num_atom):
+            dpos = pos - pos[i]
+            phase_factor = np.exp(2j * np.pi * np.dot(dpos, q))
+            # phase_factor = np.ones(len(dpos))
+            for j in range(num_atom):
+                C[i, :, j, :] *= phase_factor[j] / np.sqrt(mass[i] * mass[j])
+
+        C_dd = C.reshape(num_atom * 3, num_atom * 3)
+                
+        return C_dd
+
+    def _get_c_dipole_dipole(self, K_list, q, q_dir_cart):
+        import phonopy._phonopy as phonoc
+
         pos = self._pcell.get_positions()
         num_atom = self._pcell.get_number_of_atoms()
+        volume = self._pcell.get_volume()
         C = np.zeros((num_atom, 3, num_atom, 3),
                      dtype=self._dtype_complex, order='C')
+
+        phonoc.dipole_dipole(C.view(dtype='double'),
+                             np.array(K_list, dtype='double', order='C'),
+                             q,
+                             q_dir_cart,
+                             self._born,
+                             self._dielectric,
+                             np.array(pos, dtype='double', order='C'),
+                             self._unit_conversion * 4.0 * np.pi / volume,
+                             self._symprec)
+        return C
+
+    def _get_py_dipole_dipole(self, K_list, q, q_dir_cart):
+        pos = self._pcell.get_positions()
+        num_atom = self._pcell.get_number_of_atoms()
         volume = self._pcell.get_volume()
-
-        G_norm = np.sqrt((self._G_vec_list ** 2).sum(axis=1))
-        G_list = self._G_vec_list[G_norm < self._G_cutoff]
-        print("G cutoff distance: %f, number of G points: %d" %
-              (self._G_cutoff, len(G_list)))
-        K_norm = np.sqrt(((self._G_vec_list + q) ** 2).sum(axis=1))
-        K_list = self._G_vec_list[K_norm < self._G_cutoff] + q
-        print("G+q cutoff distance: %f, number of G+q points: %d" %
-              (self._G_cutoff, len(K_list)))
-
+        C = np.zeros((num_atom, 3, num_atom, 3),
+                     dtype=self._dtype_complex, order='C')
 
         for q_K in K_list:
-            q_G = q_K - q
-            if np.linalg.norm(q_G) < self._symprec:
-                if np.linalg.norm(q_direction) < self._symprec:
+            if np.linalg.norm(q_K) < self._symprec:
+                if q_dir_cart is None:
                     continue
                 else:
-                    dq_K = q_direction
+                    dq_K = q_dir_cart
             else:
                 dq_K = q_K
 
@@ -425,16 +467,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
                     C_i += Z_mat[i, j] * phase_factor[j]
                 C[i, :,  i, :] -= C_i
 
-        mass = self._pcell.get_masses()
-        for i in range(num_atom):
-            dpos = pos - pos[i]
-            phase_factor = np.exp(2j * np.pi * np.dot(dpos, q))
-            for j in range(num_atom):
-                C[i, :, j, :] *= phase_factor[j] / np.sqrt(mass[i] * mass[j])
-
-        C_dd = C.reshape(num_atom * 3, num_atom * 3)
-                
-        return C_dd
+        return C
 
     def _get_G_list(self, rec_lat, g_rad=100):
         # g_rad must be greater than 0 for broadcasting.
