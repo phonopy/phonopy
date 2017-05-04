@@ -224,7 +224,8 @@ class DynamicalMatrixNAC(DynamicalMatrix):
 
         # For method == 'gonze'
         self._Gonze_force_constants = None
-        self._G_list = None
+        self._G_vec_list = None
+        self._G_cutoff = None
 
         self._nac = True
         if nac_params is not None:
@@ -253,15 +254,11 @@ class DynamicalMatrixNAC(DynamicalMatrix):
 
         if self._method == 'gonze':
             if 'G_cutoff' in nac_params:
-                cutoff = nac_params['G_cutoff']
+                self._G_cutoff = nac_params['G_cutoff']
             else:
-                cutoff = 4
+                self._G_cutoff = 4
             rec_lat = np.linalg.inv(self._pcell.get_cell()) # column vectors
-            G_vec_list = self._get_G_list(rec_lat)
-            G_norm = np.sqrt((G_vec_list ** 2).sum(axis=1))
-            self._G_list = G_vec_list[G_norm < cutoff]
-            print("G cutoff distance: %f, number of G points: %d" %
-                  (cutoff, len(self._G_list)))
+            self._G_vec_list = self._get_G_list(rec_lat)
             self._set_Gonze_force_constants()
             self._Gonze_count = 0
 
@@ -379,8 +376,19 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         C = np.zeros((num_atom, 3, num_atom, 3),
                      dtype=self._dtype_complex, order='C')
         volume = self._pcell.get_volume()
-        for q_G in self._G_list:
-            q_K = q_G + q
+
+        G_norm = np.sqrt((self._G_vec_list ** 2).sum(axis=1))
+        G_list = self._G_vec_list[G_norm < self._G_cutoff]
+        print("G cutoff distance: %f, number of G points: %d" %
+              (self._G_cutoff, len(G_list)))
+        K_norm = np.sqrt(((self._G_vec_list + q) ** 2).sum(axis=1))
+        K_list = self._G_vec_list[K_norm < self._G_cutoff] + q
+        print("G+q cutoff distance: %f, number of G+q points: %d" %
+              (self._G_cutoff, len(K_list)))
+
+
+        for q_K in K_list:
+            q_G = q_K - q
             if np.linalg.norm(q_G) < self._symprec:
                 if np.linalg.norm(q_direction) < self._symprec:
                     continue
@@ -400,7 +408,8 @@ class DynamicalMatrixNAC(DynamicalMatrix):
                 for j in range(num_atom):
                     C[i, :,  j, :] += Z_mat[i, j] * phase_factor[j]
 
-        for q_G in self._G_list:
+        for q_K in K_list:
+            q_G = q_K - q
             if np.linalg.norm(q_G) < self._symprec:
                 continue
             Z_mat = (self._get_charge_sum(num_atom, q_G, self._born) *
