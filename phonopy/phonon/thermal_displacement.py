@@ -34,7 +34,7 @@
 
 import numpy as np
 from phonopy.units import AMU, THzToEv, Kb, EV, Hbar, Angstrom
-from phonopy.harmonic.dynamical_matrix import get_equivalent_smallest_vectors
+from phonopy.structure.cells import get_equivalent_smallest_vectors
 from phonopy.interface.cif import write_cif_P1
 # np.seterr(invalid='raise')
 

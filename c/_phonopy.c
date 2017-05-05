@@ -46,6 +46,7 @@
 /* Build dynamical matrix */
 static PyObject * py_get_dynamical_matrix(PyObject *self, PyObject *args);
 static PyObject * py_get_nac_dynamical_matrix(PyObject *self, PyObject *args);
+static PyObject * py_get_dipole_dipole(PyObject *self, PyObject *args);
 static PyObject * py_get_derivative_dynmat(PyObject *self, PyObject *args);
 static PyObject * py_get_thermal_properties(PyObject *self, PyObject *args);
 static PyObject * py_distribute_fc2(PyObject *self, PyObject *args);
@@ -103,6 +104,7 @@ static PyMethodDef _phonopy_methods[] = {
   {"error_out", (PyCFunction)error_out, METH_NOARGS, NULL},
   {"dynamical_matrix", py_get_dynamical_matrix, METH_VARARGS, "Dynamical matrix"},
   {"nac_dynamical_matrix", py_get_nac_dynamical_matrix, METH_VARARGS, "NAC dynamical matrix"},
+  {"dipole_dipole", py_get_dipole_dipole, METH_VARARGS, "Dipole-dipole interaction"},
   {"derivative_dynmat", py_get_derivative_dynmat, METH_VARARGS, "Q derivative of dynamical matrix"},
   {"thermal_properties", py_get_thermal_properties, METH_VARARGS, "Thermal properties"},
   {"distribute_fc2", py_distribute_fc2, METH_VARARGS, "Distribute force constants"},
@@ -322,6 +324,71 @@ static PyObject * py_get_nac_dynamical_matrix(PyObject *self, PyObject *args)
 
   Py_RETURN_NONE;
 }
+
+static PyObject * py_get_dipole_dipole(PyObject *self, PyObject *args)
+{
+  PyArrayObject* dd_py;
+  PyArrayObject* K_list_py;
+  PyArrayObject* q_vector_py;
+  PyArrayObject* q_direction_py;
+  PyArrayObject* born_py;
+  PyArrayObject* dielectric_py;
+  PyArrayObject* pos_py;
+  double factor;
+  double tolerance;
+
+  double* dd;
+  double* K_list;
+  double* q_vector;
+  double* q_direction;
+  double* born;
+  double* dielectric;
+  double *pos;
+  int num_patom, num_K;
+
+  if (!PyArg_ParseTuple(args, "OOOOOOOdd",
+			&dd_py,
+                        &K_list_py,
+			&q_vector_py,
+			&q_direction_py,
+			&born_py,
+                        &dielectric_py,
+                        &pos_py,
+			&factor,
+                        &tolerance))
+    return NULL;
+
+
+  dd = (double*)PyArray_DATA(dd_py);
+  K_list = (double*)PyArray_DATA(K_list_py);
+  if ((PyObject*)q_direction_py == Py_None) {
+    q_direction = NULL;
+  } else {
+    q_direction = (double*)PyArray_DATA(q_direction_py);
+  }
+  q_vector = (double*)PyArray_DATA(q_vector_py);
+  born = (double*)PyArray_DATA(born_py);
+  dielectric = (double*)PyArray_DATA(dielectric_py);
+  pos = (double*)PyArray_DATA(pos_py);
+  num_K = PyArray_DIMS(K_list_py)[0];
+  num_patom = PyArray_DIMS(pos_py)[0];
+
+  get_dipole_dipole(dd, /* [natom, 3, natom, 3, (real, imag)] */
+                    K_list, /* [num_kvec, 3] */
+                    num_K,
+                    num_patom,
+                    q_vector,
+                    q_direction,
+                    born,
+                    dielectric,
+                    factor, /* 4pi/V*unit-conv */
+                    pos, /* [natom, 3] */
+                    tolerance);
+
+  Py_RETURN_NONE;
+}
+
+
 
 static PyObject * py_get_derivative_dynmat(PyObject *self, PyObject *args)
 {

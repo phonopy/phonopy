@@ -319,12 +319,20 @@ def _get_reduced_symbols(symbols):
 # Non-analytical term
 #
 def get_born_OUTCAR(poscar_filename="POSCAR",
-                    outcar_filename="OUTCAR",
+                    outcar_filename=None,
                     primitive_matrix=None,
                     supercell_matrix=None,
                     is_symmetry=True,
                     symmetrize_tensors=False,
+                    read_vasprunxml=False,
                     symprec=1e-5):
+    if outcar_filename is None:
+        if read_vasprunxml:
+            filename = "vasprun.xml"
+        else:
+            filename = "OUTCAR"
+    else:
+        filename = outcar_filename
     if primitive_matrix is None:
         pmat = np.eye(3)
     else:
@@ -334,9 +342,19 @@ def get_born_OUTCAR(poscar_filename="POSCAR",
     else:
         smat = supercell_matrix
     ucell = read_vasp(poscar_filename)
-    outcar = open(outcar_filename)
 
-    borns, epsilon = _read_born_and_epsilon(outcar)
+    if read_vasprunxml:
+        import io
+        borns = []
+        epsilon = []
+        with io.open(outcar_filename, "rb") as f:
+            vasprun = VasprunxmlExpat(f)
+            if vasprun.parse():
+                epsilon = vasprun.get_epsilon()
+                borns = vasprun.get_born()
+    else:
+        borns, epsilon = _read_born_and_epsilon(filename)
+
     num_atom = len(borns)
     assert num_atom == ucell.get_number_of_atoms()
 
@@ -361,41 +379,44 @@ def get_born_OUTCAR(poscar_filename="POSCAR",
 
     return reduced_borns, epsilon, s_indep_atoms
 
-def _read_born_and_epsilon(outcar):
-    borns = []
-    while True:
-        line = outcar.readline()
-        if not line:
-            break
-
-        if "NIONS" in line:
-            num_atom = int(line.split()[11])
-
-        if "MACROSCOPIC STATIC DIELECTRIC TENSOR" in line:
-            epsilon = []
-            outcar.readline()
-            epsilon.append([float(x) for x in outcar.readline().split()])
-            epsilon.append([float(x) for x in outcar.readline().split()])
-            epsilon.append([float(x) for x in outcar.readline().split()])
-
-        if "BORN" in line:
-            outcar.readline()
+def _read_born_and_epsilon(filename):
+    with open(filename) as outcar:
+        borns = []
+        epsilon = []
+    
+        while True:
             line = outcar.readline()
-            if "ion" in line:
-                for i in range(num_atom):
-                    born = []
-                    born.append([float(x)
-                                 for x in outcar.readline().split()][1:])
-                    born.append([float(x)
-                                 for x in outcar.readline().split()][1:])
-                    born.append([float(x)
-                                 for x in outcar.readline().split()][1:])
-                    outcar.readline()
-                    borns.append(born)
-
-    borns = np.array(borns, dtype='double')
-    epsilon = np.array(epsilon, dtype='double')
-
+            if not line:
+                break
+    
+            if "NIONS" in line:
+                num_atom = int(line.split()[11])
+    
+            if "MACROSCOPIC STATIC DIELECTRIC TENSOR" in line:
+                epsilon = []
+                outcar.readline()
+                epsilon.append([float(x) for x in outcar.readline().split()])
+                epsilon.append([float(x) for x in outcar.readline().split()])
+                epsilon.append([float(x) for x in outcar.readline().split()])
+    
+            if "BORN" in line:
+                outcar.readline()
+                line = outcar.readline()
+                if "ion" in line:
+                    for i in range(num_atom):
+                        born = []
+                        born.append([float(x)
+                                     for x in outcar.readline().split()][1:])
+                        born.append([float(x)
+                                     for x in outcar.readline().split()][1:])
+                        born.append([float(x)
+                                     for x in outcar.readline().split()][1:])
+                        outcar.readline()
+                        borns.append(born)
+    
+        borns = np.array(borns, dtype='double')
+        epsilon = np.array(epsilon, dtype='double')
+    
     return borns, epsilon
 
 def _symmetrize_borns(borns, u_sym, lattice, positions, symprec):
@@ -595,11 +616,14 @@ class VasprunxmlExpat(object):
         self._is_symbols = False
         self._is_basis = False
         self._is_energy = False
+        self._is_epsilon = False
+        self._is_born = False
 
         self._is_v = False
         self._is_i = False
         self._is_rc = False
         self._is_c = False
+        self._is_set = False
 
         self._is_scstep = False
         self._is_structure = False
@@ -610,11 +634,14 @@ class VasprunxmlExpat(object):
         self._all_lattice = []
         self._symbols = []
         self._all_energies = []
+        self._born = []
         self._forces = None
         self._stress = None
         self._points = None
         self._lattice = None
         self._energies = None
+        self._epsilon = None
+        self._born_atom = None
 
         self._p = xml.parsers.expat.ParserCreate()
         self._p.buffer_text = True
@@ -635,6 +662,12 @@ class VasprunxmlExpat(object):
 
     def get_stress(self):
         return np.array(self._all_stress)
+
+    def get_epsilon(self):
+        return np.array(self._epsilon)
+
+    def get_born(self):
+        return np.array(self._born)
 
     def get_points(self):
         return np.array(self._all_points)
@@ -671,6 +704,8 @@ class VasprunxmlExpat(object):
 
         if (self._is_forces or
             self._is_stress or
+            self._is_epsilon or
+            self._is_born or
             self._is_positions or
             self._is_basis):
             if name == 'v':
@@ -685,6 +720,10 @@ class VasprunxmlExpat(object):
                 if attrs['name'] == 'stress':
                     self._is_stress = True
                     self._stress = []
+
+                if attrs['name'] == 'epsilon':
+                    self._is_epsilon = True
+                    self._epsilon = []
 
                 if not self._is_structure:
                     if attrs['name'] == 'positions':
@@ -708,11 +747,17 @@ class VasprunxmlExpat(object):
         if self._is_symbols and self._is_rc and name == 'c':
             self._is_c = True
 
+        if self._is_born and name == 'set':
+            self._is_set = True
+            self._born_atom = []
+
         if name == 'array':
             if 'name' in attrs.keys():
                 if attrs['name'] == 'atoms':
                     self._is_symbols = True
 
+                if attrs['name'] == 'born_charges':
+                    self._is_born = True
 
     def _end_element(self, name):
         if name == 'scstep':
@@ -738,10 +783,15 @@ class VasprunxmlExpat(object):
                 self._is_basis = False
                 self._all_lattice.append(np.transpose(self._lattice))
 
+            if self._is_epsilon:
+                self._is_epsilon = False
+
         if name == 'array':
             if self._is_symbols:
                 self._is_symbols = False
 
+            if self._is_born:
+                self._is_born = False
 
         if name == 'energy' and (not self._is_scstep):
             self._is_energy = False
@@ -761,6 +811,12 @@ class VasprunxmlExpat(object):
         if name == 'c':
             self._is_c = False
 
+        if name == 'set':
+            self._is_set = False
+            if self._is_born:
+                self._born.append(self._born_atom)
+                self._born_atom = None
+
     def _char_data(self, data):
         if self._is_v:
             if self._is_forces:
@@ -771,12 +827,20 @@ class VasprunxmlExpat(object):
                 self._stress.append(
                     [float(x) for x in data.split()])
 
+            if self._is_epsilon:
+                self._epsilon.append(
+                    [float(x) for x in data.split()])
+
             if self._is_positions:
                 self._points.append(
                     [float(x) for x in data.split()])
 
             if self._is_basis:
                 self._lattice.append(
+                    [float(x) for x in data.split()])
+
+            if self._is_born:
+                self._born_atom.append(
                     [float(x) for x in data.split()])
 
         if self._is_i:

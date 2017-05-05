@@ -36,7 +36,7 @@
 
 import numpy as np
 import sys
-from phonopy.interface.vasp import get_born_OUTCAR
+from phonopy.interface.vasp import get_born_OUTCAR, VasprunxmlExpat
 
 def fracval(frac):
     if frac.find('/') == -1:
@@ -51,6 +51,7 @@ parser.set_defaults(num_atoms=None,
                     primitive_axis =None,
                     supercell_matrix=None,
                     symmetrize_tensors=False,
+                    read_vasprunxml=False,
                     symprec=1e-5)
 parser.add_option("--dim", dest="supercell_matrix",
                   action="store", type="string",
@@ -63,12 +64,18 @@ parser.add_option("--st", "--symmetrize_tensors", dest="symmetrize_tensors",
                   help="Symmetrize tensors")
 parser.add_option("--tolerance", dest="symprec", type="float",
                   help="Symmetry tolerance to search")
+parser.add_option("--vasprunxml", dest="read_vasprunxml",
+                  action="store_true",
+                  help="Read vasprun.xml instead of OUTCAR")
 (options, args) = parser.parse_args()
 
 if args:
     outcar_filename = args[0]
 else:
-    outcar_filename = "OUTCAR"
+    if options.read_vasprunxml:
+        outcar_filename = "vasprun.xml"
+    else:
+        outcar_filename = "OUTCAR"
 
 if len(args) > 1:
     poscar_filename = args[1]
@@ -103,12 +110,12 @@ borns, epsilon, atom_indices = get_born_OUTCAR(
     primitive_matrix=primitive_axis,
     supercell_matrix=supercell_matrix,
     symmetrize_tensors=options.symmetrize_tensors,
+    read_vasprunxml=options.read_vasprunxml,
     symprec=options.symprec)
 
 text = "# epsilon and Z* of atoms "
 text += ' '.join(["%d" % n for n in atom_indices + 1])
 print(text)
-print(("%12.7f" * 9) % tuple(epsilon.flatten()))
+print(("%13.8f" * 9) % tuple(epsilon.flatten()))
 for z in borns:
-    print(("%12.7f" * 9) % tuple(z.flatten()))
-
+    print(("%13.8f" * 9) % tuple(z.flatten()))
