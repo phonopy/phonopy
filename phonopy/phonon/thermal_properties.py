@@ -81,7 +81,11 @@ class ThermalPropertiesBase(object):
             self._frequencies = frequencies
             self._eigenvectors = eigenvectors
 
-        if cutoff_frequency is not None:
+        if cutoff_frequency is None:
+            pass
+        elif cutoff_frequency < 0:
+            self._frequencies = abs(self._frequencies)
+        else:
             self._frequencies = np.where(self._frequencies > cutoff_frequency,
                                          self._frequencies, -1)
         self._frequencies = np.array(self._frequencies,

@@ -188,7 +188,16 @@ def print_settings(settings):
         print("  Use Lapack solver via Lapacke: on")
     if run_mode == 'mesh' or run_mode == 'band_mesh':
         print("  Sampling mesh: %s" % np.array(settings.get_mesh()[0]))
-
+        if settings.get_is_thermal_properties():
+            cutoff_freq = settings.get_cutoff_frequency()
+            if cutoff_freq is None:
+                pass
+            elif cutoff_freq < 0:
+                print("  - Thermal properties are calculatd with "
+                      "absolute phonon frequnecy.")
+            else:
+                print("  - Phonon frequencies > %f are used to calculate "
+                      "thermal properties." % cutoff_freq)
     if (np.diag(np.diag(settings.get_supercell_matrix())) \
             - settings.get_supercell_matrix()).any():
         print("  Supercell matrix:")
