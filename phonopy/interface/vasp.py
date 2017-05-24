@@ -66,7 +66,7 @@ def parse_set_of_forces(num_atoms,
             if verbose:
                 sys.stdout.write("%d " % (count + 1))
             count += 1
-    
+
             if not check_forces(force_sets[-1], num_atoms, filename):
                 is_parsed = False
 
@@ -104,16 +104,16 @@ def get_drift_forces(forces, filename=None, verbose=True):
 
     return drift_force
 
-def create_FORCE_CONSTANTS(filename, options, log_level):
-    vasprun = Vasprun(io.open(filename, "rb"))
-    fc_and_atom_types = vasprun.read_force_constants()
+def create_FORCE_CONSTANTS(filename, is_hdf5, log_level):
+    fc_and_atom_types = parse_force_constants(filename)
+
     if not fc_and_atom_types:
         print('')
         print("\'%s\' dones not contain necessary information." % filename)
         return 1
 
     force_constants, atom_types = fc_and_atom_types
-    if options.is_hdf5:
+    if is_hdf5:
         try:
             import h5py
         except ImportError:
@@ -132,6 +132,21 @@ def create_FORCE_CONSTANTS(filename, options, log_level):
     if log_level > 0:
         print("Atom types: %s" % (" ".join(atom_types)))
     return 0
+
+def parse_force_constants(filename):
+    """Return force constants and chemical elements
+
+    Args:
+        filename (str): Filename
+
+    Returns:
+        tuple: force constants and chemical elements
+
+    """
+
+    vasprun = Vasprun(io.open(filename, "rb"))
+    return vasprun.read_force_constants()
+
 
 #
 # read VASP POSCAR
@@ -383,22 +398,22 @@ def _read_born_and_epsilon(filename):
     with open(filename) as outcar:
         borns = []
         epsilon = []
-    
+
         while True:
             line = outcar.readline()
             if not line:
                 break
-    
+
             if "NIONS" in line:
                 num_atom = int(line.split()[11])
-    
+
             if "MACROSCOPIC STATIC DIELECTRIC TENSOR" in line:
                 epsilon = []
                 outcar.readline()
                 epsilon.append([float(x) for x in outcar.readline().split()])
                 epsilon.append([float(x) for x in outcar.readline().split()])
                 epsilon.append([float(x) for x in outcar.readline().split()])
-    
+
             if "BORN" in line:
                 outcar.readline()
                 line = outcar.readline()
@@ -413,10 +428,10 @@ def _read_born_and_epsilon(filename):
                                      for x in outcar.readline().split()][1:])
                         outcar.readline()
                         borns.append(born)
-    
+
         borns = np.array(borns, dtype='double')
         epsilon = np.array(epsilon, dtype='double')
-    
+
     return borns, epsilon
 
 def _symmetrize_borns(borns, u_sym, lattice, positions, symprec):
@@ -490,7 +505,7 @@ class Vasprun(object):
     def read_force_constants(self):
         vasprun = self._parse_etree_vasprun_xml()
         return self._get_force_constants(vasprun)
-    
+
     def _get_forces(self, vasprun_etree):
         """
         vasprun_etree = etree.iterparse(fileptr, tag='varray')
@@ -501,7 +516,7 @@ class Vasprun(object):
                 for v in element:
                     forces.append([float(x) for x in v.text.split()])
         return np.array(forces)
-    
+
     def _get_force_constants(self, vasprun_etree):
         fc_tmp = None
         num_atom = 0
@@ -514,14 +529,14 @@ class Vasprun(object):
                     masses = []
                     for n, m in zip(num_atoms, elem_masses):
                         masses += [m] * n
-    
+
             # Get Hessian matrix (normalized by masses)
             if element.tag == 'varray':
                 if element.attrib['name'] == 'hessian':
                     fc_tmp = []
                     for v in element.findall('./v'):
                         fc_tmp.append([float(x) for x in v.text.strip().split()])
-    
+
         if fc_tmp is None:
             return False
         else:
@@ -530,24 +545,24 @@ class Vasprun(object):
                 return False
             # num_atom = fc_tmp.shape[0] / 3
             force_constants = np.zeros((num_atom, num_atom, 3, 3), dtype='double')
-    
+
             for i in range(num_atom):
                 for j in range(num_atom):
                     force_constants[i, j] = fc_tmp[i*3:(i+1)*3, j*3:(j+1)*3]
-    
+
             # Inverse normalization by atomic weights
             for i in range(num_atom):
                 for j in range(num_atom):
                     force_constants[i, j] *= -np.sqrt(masses[i] * masses[j])
-    
+
             return force_constants, elements
-    
+
     def _get_atomtypes(self, element):
         atom_types = []
         masses = []
         valences = []
         num_atoms = []
-    
+
         if element.tag == 'array':
             if 'name' in element.attrib:
                 if element.attrib['name'] == 'atomtypes':
@@ -558,7 +573,7 @@ class Vasprun(object):
                         masses.append(float(atom_info[2]))
                         valences.append(float(atom_info[3]))
                     return num_atoms, atom_types, masses, valences
-    
+
         return None
 
     def _parse_etree_vasprun_xml(self, tag=None):
@@ -566,7 +581,7 @@ class Vasprun(object):
             return self._parse_by_etree(VasprunWrapper(self._fileptr), tag=tag)
         else:
             return self._parse_by_etree(self._fileptr, tag=tag)
-    
+
     def _parse_by_etree(self, fileptr, tag=None):
         try:
             import xml.etree.cElementTree as etree
@@ -578,13 +593,13 @@ class Vasprun(object):
             print("For creating FORCE_SETS file with Python 2.4, you can use "
                   "phonopy 1.8.5.1 with python-lxml .")
             sys.exit(1)
-    
+
     def _parse_expat_vasprun_xml(self):
         if self._is_version528():
             return self._parse_by_expat(VasprunWrapper(self._fileptr))
         else:
             return self._parse_by_expat(self._fileptr)
-    
+
     def _parse_by_expat(self, fileptr):
         vasprun = VasprunxmlExpat(fileptr)
         vasprun.parse()
