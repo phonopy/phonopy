@@ -307,7 +307,9 @@ def get_parser():
         help="Set plus minus displacements")
     parser.add_option(
         "--pr", "--pretend_real", dest="pretend_real", action="store_true",
-        help="Use imaginary frequency as real for thermal property calculation")
+        help=("Use imaginary frequency as real for thermal property "
+              "calculation. For a testing purpose only, when a small "
+              "amount of imaginary branches obtained."))
     parser.add_option(
         "--pt", "--projected_thermal_property",
         dest="is_projected_thermal_properties", action="store_true",
