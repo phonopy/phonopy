@@ -657,6 +657,18 @@ temperature range to be calculated. The default values of them are 0,
    TPROP = .TRUE.
    TMAX = 2000
 
+``PRETEND_REAL``
+~~~~~~~~~~~~~~~~~
+
+This enables to take imaginary frequencies as real for thermal
+property calculation. This does give false thermal properties,
+therefore for a testing purpose only, when a small amount of imaginary
+branches obtained.
+
+::
+
+   TPROP = .TRUE.
+   PRETEND_REAL = .TRUE.
 
 .. _thermal_atomic_displacements_tags:
 
