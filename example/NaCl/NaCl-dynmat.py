@@ -36,6 +36,6 @@ print(dynmat_from_yaml)
 eigvals, eigvecs, = np.linalg.eigh(dynmat)
 frequencies = np.sqrt(np.abs(eigvals.real)) * np.sign(eigvals.real)
 conversion_factor_to_THz = 15.633302
-print frequencies * conversion_factor_to_THz
+print(frequencies * conversion_factor_to_THz)
 
 

@@ -17,7 +17,7 @@ cv = []
 fe = []
 for index in range(-5,6):
     filename = "thermal_properties.yaml-%d" % index
-    print "Reading", filename
+    print("Reading %s" % filename)
     thermal_properties = yaml.load(open(filename),
                                   Loader=Loader)['thermal_properties']
     temperatures = [v['temperature'] for v in thermal_properties]
@@ -36,7 +36,7 @@ qha = PhonopyQHA(volumes,
 
 # qha.plot_helmholtz_volume().show()
 # qha.plot_volume_temperature().show()
-# qha.plot_thermal_expansion().show()
+qha.plot_thermal_expansion().show()
 # plot = qha.plot_volume_expansion()
 # if plot:
 #     plot.show()
@@ -44,5 +44,4 @@ qha = PhonopyQHA(volumes,
 # qha.plot_bulk_modulus_temperature().show()
 # qha.plot_heat_capacity_P_numerical().show()
 # qha.plot_heat_capacity_P_polyfit().show()
-qha.plot_gruneisen_temperature().show()
-
+# qha.plot_gruneisen_temperature().show()

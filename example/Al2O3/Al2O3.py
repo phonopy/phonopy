@@ -13,7 +13,7 @@ phonon = Phonopy(cell,
                                    [1./3, 1./3, 1./3]])
 
 symmetry = phonon.get_symmetry()
-print "Space group:", symmetry.get_international_table()
+print("Space group: %s" % symmetry.get_international_table())
 
 force_sets = parse_FORCE_SETS()
 phonon.set_displacement_dataset(force_sets)
@@ -24,7 +24,7 @@ phonon.set_nac_params(born)
 
 # Example to obtain dynamical matrix
 dmat = phonon.get_dynamical_matrix_at_q([0,0,0])
-print dmat
+print(dmat)
 
 # Example of band structure calculation
 bands = []
@@ -45,7 +45,7 @@ bands.append(band)
 #*********************
 # Matplotlib required
 #*********************
-print "\nPhonon dispersion:"
+print("\nPhonon dispersion:")
 phonon.set_band_structure(bands,
                           is_eigenvectors=True)
 band_plot = phonon.plot_band_structure(["X", "$\Gamma$", "L"])
@@ -63,8 +63,8 @@ for (qs_at_segments,
     for q, d, f in zip(qs_at_segments,
                        dists_at_segments,
                        freqs_at_segments):
-        print "# %f %f %f" % tuple(q)
-        print d, ("%f " * len(f)) % tuple(f)
+        print("# %f %f %f" % tuple(q))
+        print(("%s " + "%f " * len(f)) % ((d,) + tuple(f)))
 
 # If you just want to plot along q-points of all band segments, the
 # following is easier.
@@ -73,6 +73,6 @@ for (qs_at_segments,
 # all_qs = np.vstack(qpoints)
 # all_dists = np.hstack(distances)
 # all_eigvecs = np.concatenate(eigvecs)
-# print "# shape of eigvecs", all_eigvecs.shape
+# print("# shape of eigvecs %s" % all_eigvecs.shape)
 # for d, q, f in zip(all_dists, all_qs, all_freqs):
-#     print ("%f " * (4 + len(f))) % ((d,) + tuple(q) + tuple(f))
+#     print(("%f " * (4 + len(f))) % ((d,) + tuple(q) + tuple(f)))
