@@ -61,7 +61,8 @@ class ThermalPropertiesBase(object):
                  eigenvectors=None,
                  is_projection=False,
                  band_indices=None,
-                 cutoff_frequency=None):
+                 cutoff_frequency=None,
+                 pretend_real=False):
         self._band_indices = None
         self._frequencies = None
         self._eigenvectors = None
@@ -81,7 +82,9 @@ class ThermalPropertiesBase(object):
             self._frequencies = frequencies
             self._eigenvectors = eigenvectors
 
-        if cutoff_frequency is not None:
+        if pretend_real:
+            self._frequencies = abs(self._frequencies)
+        elif cutoff_frequency is not None:
             self._frequencies = np.where(self._frequencies > cutoff_frequency,
                                          self._frequencies, -1)
         self._frequencies = np.array(self._frequencies,
@@ -141,14 +144,16 @@ class ThermalProperties(ThermalPropertiesBase):
                  eigenvectors=None,
                  is_projection=False,
                  band_indices=None,
-                 cutoff_frequency=None):
+                 cutoff_frequency=None,
+                 pretend_real=False):
         ThermalPropertiesBase.__init__(self,
                                        frequencies,
                                        weights=weights,
                                        eigenvectors=eigenvectors,
                                        is_projection=is_projection,
                                        band_indices=band_indices,
-                                       cutoff_frequency=cutoff_frequency)
+                                       cutoff_frequency=cutoff_frequency,
+                                       pretend_real=pretend_real)
         self._thermal_properties = None
         self._temperatures = None
         self._high_T_entropy = None

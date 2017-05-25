@@ -935,6 +935,7 @@ class PhonopySettings(Settings):
         self._modulation = None
         self._moment_order = None
         self._pdos_indices = None
+        self._pretend_real = False
         self._projection_direction = None
         self._run_mode = None
         self._show_irreps = False
@@ -1168,6 +1169,12 @@ class PhonopySettings(Settings):
     def get_pdos_indices(self):
         return self._pdos_indices
 
+    def set_pretend_real(self, pretend_real):
+        self._pretend_real = pretend_real
+
+    def get_pretend_real(self):
+        return self._pretend_real
+
     def set_projection_direction(self, direction):
         self._projection_direction = direction
 
@@ -1294,6 +1301,10 @@ class PhonopyConfParser(ConfParser):
                 if self._options.is_thermal_properties:
                     self._confs['tprop'] = '.true.'
 
+            if opt.dest == 'pretend_real':
+                if self._options.pretend_real:
+                    self._confs['pretend_real'] = '.true.'
+
             if opt.dest == 'is_projected_thermal_properties':
                 if self._options.is_projected_thermal_properties:
                     self._confs['ptprop'] = '.true.'
@@ -1385,7 +1396,6 @@ class PhonopyConfParser(ConfParser):
             if opt.dest == 'lapack_solver':
                 if self._options.lapack_solver:
                     self._confs['lapack_solver'] = '.true.'
-
 
     def _parse_conf(self):
         confs = self._confs
@@ -1521,6 +1531,11 @@ class PhonopyConfParser(ConfParser):
                 if confs['ptprop'].lower() == '.true.':
                     self.set_parameter('ptprop', True)
 
+            # Use imaginary frequency as real for thermal property calculation
+            if conf_key == 'pretend_real':
+                if confs['pretend_real'].lower() == '.true.':
+                    self.set_parameter('pretend_real', True)
+
             # Thermal displacement
             if conf_key == 'tdisp':
                 if confs['tdisp'].lower() == '.true.':
@@ -1575,7 +1590,6 @@ class PhonopyConfParser(ConfParser):
             if conf_key == 'lapack_solver':
                 if confs['lapack_solver'].lower() == '.true.':
                     self.set_parameter('lapack_solver', True)
-
 
     def _parse_conf_modulation(self, conf_modulation):
         modulation = {}
@@ -1799,6 +1813,10 @@ class PhonopyConfParser(ConfParser):
                 self._settings.set_is_projected_thermal_properties(True)
                 self._settings.set_is_eigenvectors(True)
                 self._settings.set_is_mesh_symmetry(False)
+
+        # Use imaginary frequency as real for thermal property calculation
+        if 'pretend_real' in params:
+            self._settings.set_pretend_real(params['pretend_real'])
     
         # Thermal displacements
         if 'tdisp' in params:

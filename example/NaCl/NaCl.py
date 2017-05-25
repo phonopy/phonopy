@@ -35,7 +35,7 @@ phonon = Phonopy(unitcell,
                                    [0.5, 0.5, 0]])
 
 symmetry = phonon.get_symmetry()
-print "Space group:", symmetry.get_international_table()
+print("Space group: %s" % symmetry.get_international_table())
 
 force_sets = parse_FORCE_SETS()
 phonon.set_displacement_dataset(force_sets)
@@ -69,7 +69,7 @@ append_band(bands, [0.0, 0.0, 0.0], [0.5, 0.5, 0.5])
 phonon.set_band_structure(bands)
 q_points, distances, frequencies, eigvecs = phonon.get_band_structure()
 for q, d, freq in zip(q_points, distances, frequencies):
-    print q, d, freq
+    print("%s %s %s" % (q, d, freq))
 phonon.plot_band_structure().show()
 
 # Mesh sampling 20x20x20
@@ -81,12 +81,12 @@ phonon.set_thermal_properties(t_step=10,
 # DOS
 phonon.set_total_DOS(sigma=0.1)
 for omega, dos in np.array(phonon.get_total_DOS()).T:
-    print "%15.7f%15.7f" % (omega, dos)
+    print("%15.7f%15.7f" % (omega, dos))
 phonon.plot_total_DOS().show()
 
 # Thermal properties
 for t, free_energy, entropy, cv in np.array(phonon.get_thermal_properties()).T:
-    print ("%12.3f " + "%15.7f" * 3) % ( t, free_energy, entropy, cv )
+    print(("%12.3f " + "%15.7f" * 3) % ( t, free_energy, entropy, cv))
 phonon.plot_thermal_properties().show()
 
 # PDOS

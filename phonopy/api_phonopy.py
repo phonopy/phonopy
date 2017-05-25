@@ -692,7 +692,8 @@ class Phonopy(object):
                                temperatures=None,
                                is_projection=False,
                                band_indices=None,
-                               cutoff_frequency=None):
+                               cutoff_frequency=None,
+                               pretend_real=False):
         if self._mesh is None:
             print("Warning: set_mesh has to be done before "
                   "set_thermal_properties")
@@ -703,7 +704,8 @@ class Phonopy(object):
                                    eigenvectors=self._mesh.get_eigenvectors(),
                                    is_projection=is_projection,
                                    band_indices=band_indices,
-                                   cutoff_frequency=cutoff_frequency)
+                                   cutoff_frequency=cutoff_frequency,
+                                   pretend_real=pretend_real)
             if temperatures is None:
                 tp.set_temperature_range(t_step=t_step,
                                          t_max=t_max,

@@ -8,3 +8,5 @@ The following command demonstrates the quasi-harmonic approximation calculation.
 For more plots in pdf,
 
 % phonopy-qha -s e-v.dat thermal_properties.yaml-{-{5..1},{0..5}} --sparse=50
+
+Before running Si.py, FORCE_SETs have to be created from vasprun.xml's, that are in the compressed file, with disp.yaml that is contained in this directory.
