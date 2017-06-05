@@ -376,7 +376,9 @@ def get_born_OUTCAR(poscar_filename="POSCAR",
         borns, epsilon = _read_born_and_epsilon(filename)
 
     num_atom = len(borns)
-    assert num_atom == ucell.get_number_of_atoms()
+    assert num_atom == ucell.get_number_of_atoms(), \
+        "num_atom %d != len(borns) %d" % (ucell.get_number_of_atoms(),
+                                          len(borns))
 
     if symmetrize_tensors:
         lattice = ucell.get_cell().T
@@ -680,13 +682,12 @@ class VasprunxmlExpat(object):
         self._p.CharacterDataHandler = self._char_data
 
     def parse(self):
-        # try:
-        #     self._p.ParseFile(self._fileptr)
-        # except:
-        #     return False
-        # else:
-        #     return True
-        self._p.ParseFile(self._fileptr)
+        try:
+            self._p.ParseFile(self._fileptr)
+        except:
+            return False
+        else:
+            return True
 
     def get_forces(self):
         return np.array(self._all_forces)
