@@ -4,7 +4,7 @@ Download and install
 =====================
 
 .. contents::
-   :depth: 2
+   :depth: 3
    :local:
 
 From source code
@@ -17,10 +17,7 @@ The procedure to setup phonopy is explained in this section. It is
 supposed that phonopy is installed on the recent linux distribution
 like Ubuntu or Fedora with Python version 2.6 or later. Python version
 3.4 or later is expected to work. Mac OS X users may find some more
-information at :ref:`install_MacOSX`.  The most recommended system is
-Ubuntu linux version 14.04 or later. If you have any installation
-problem that you may feel difficult to solve, please use a ubuntu
-virtual machine (see :ref:`virtualmachine`).
+information at :ref:`install_MacOSX`.
 
 Prepare the following Python libraries:
 
@@ -29,20 +26,36 @@ Prepare the following Python libraries:
 * matplotlib
 * python-yaml (pyyaml)
 * python-h5py (h5py)
-    
-In Ubuntu linux, they are installed by::
+
+By Ubuntu package manager
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The most recommended system is Ubuntu linux version 14.04 or later. If
+you have any installation problem that you may feel difficult to
+solve, please use a ubuntu virtual machine (see
+:ref:`virtualmachine`).  
+
+The python libraries are installed by::
    
-   % sudo apt-get install python-dev python-numpy \
-     python-matplotlib python-yaml python-h5py
+   % sudo apt-get install python-dev python-numpy  python-matplotlib python-yaml python-h5py
     
 ``python-scipy`` is also required to use ``phonopy-qha`` or
-``DEBYE_MODEL`` tag. The python libraries are also possible to be
-installed using pip or conda.
+``DEBYE_MODEL`` tag.
 
 The ``texlive-fonts-recommended`` package may be required, if you
 see the following message in ploting results::
    
    ! I can't find file `pncr7t'.
+
+By conda
+^^^^^^^^^
+
+The python libraries are also possible to be installed using pip or
+conda. Conda packages are distributed in binary and recommended often
+more than pip. The installation of necessary libraries is done as
+follows::
+
+   % conda install numpy scipy h5py pyyaml matplotlib
 
 Building using setup.py
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -94,7 +107,7 @@ conda
 
 Conda is a good choice for Linux (64bit) users to install phonopy::
 
-   % conda install conda install numpy scipy h5py pyyaml matplotlib
+   % conda install numpy scipy h5py pyyaml matplotlib
    % conda install -c atztogo phonopy
 
 Currently conda packages for the other OS, e.g., Mac and windows, are
