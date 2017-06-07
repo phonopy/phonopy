@@ -68,7 +68,7 @@ def get_dynamical_matrix(fc2,
 
 class DynamicalMatrix(object):
     """Dynamical matrix class
-    
+
     When prmitive and supercell lattices are L_p and L_s, respectively,
     frame F is defined by
     L_p = dot(F, L_s), then L_s = dot(F^-1, L_p).
@@ -76,7 +76,7 @@ class DynamicalMatrix(object):
         [ a1 a2 a3 ]
     L = [ b1 b2 b3 ]
         [ c1 c2 c3 ]
-    
+
     Phase difference in primitive cell unit
     between atoms 1 and 2 in supercell is calculated by, e.g.,
     1j * dot((x_s(2) - x_s(1)), F^-1) * 2pi
@@ -117,7 +117,7 @@ class DynamicalMatrix(object):
 
     def get_decimals(self):
         return self._decimals
-    
+
     def get_supercell(self):
         return self._scell
 
@@ -187,8 +187,8 @@ class DynamicalMatrix(object):
             for j, s_j in enumerate(self._p2s_map):
                 sqrt_mm = np.sqrt(mass[i] * mass[j])
                 dm_local = np.zeros((3, 3), dtype=self._dtype_complex)
-                # Sum in lattice points                
-                for k in range(self._scell.get_number_of_atoms()): 
+                # Sum in lattice points
+                for k in range(self._scell.get_number_of_atoms()):
                     if s_j == self._s2p_map[k]:
                         multi = multiplicity[k][i]
                         phase = []
@@ -201,7 +201,7 @@ class DynamicalMatrix(object):
                 dm[(i*3):(i*3+3), (j*3):(j*3+3)] += dm_local
 
         # Impose Hermisian condition
-        self._dynamical_matrix = (dm + dm.conj().transpose()) / 2 
+        self._dynamical_matrix = (dm + dm.conj().transpose()) / 2
 
 # Non analytical term correction (NAC)
 # Call this when NAC is required instead of DynamicalMatrix
@@ -239,7 +239,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
 
     def get_dielectric_constant(self):
         return self._dielectric
-    
+
     def set_nac_params(self, nac_params):
         self._born = np.array(nac_params['born'], dtype='double', order='C')
         self._unit_conversion = nac_params['factor']
@@ -278,7 +278,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             self._force_constants = self._bare_force_constants.copy()
             self._set_dynamical_matrix(q_red)
             return False
-    
+
         if self._method == 'wang':
             self._set_Wang_dynamical_matrix(q_red, q_direction)
         else:
@@ -342,7 +342,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             if s1 != self._s2p_map[s1]:
                 continue
             p1 = self._p2p_map[s1]
-            for s2 in range(self._scell.get_number_of_atoms()):            
+            for s2 in range(self._scell.get_number_of_atoms()):
                 p2 = self._p2p_map[s2]
                 fc[s1, s2] += nac_q[p1, p2] / N
 
@@ -382,7 +382,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         else:
             q_dir_cart = np.array(np.dot(q_direction, rec_lat.T),
                                   dtype='double')
-        
+
         try:
             import phonopy._phonopy as phonoc
             C = self._get_c_dipole_dipole(K_list, q, q_dir_cart)
@@ -400,7 +400,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
                 C[i, :, j, :] *= phase_factor[j] / np.sqrt(mass[i] * mass[j])
 
         C_dd = C.reshape(num_atom * 3, num_atom * 3)
-                
+
         return C_dd
 
     def _get_c_dipole_dipole(self, K_list, q, q_dir_cart):
@@ -442,7 +442,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             Z_mat = (self._get_charge_sum(num_atom, dq_K, self._born) *
                      self._get_constant_factor(dq_K,
                                                self._dielectric,
-                                               volume,      
+                                               volume,
                                                self._unit_conversion))
             for i in range(num_atom):
                 dpos = - pos + pos[i]
@@ -533,6 +533,5 @@ def get_smallest_vectors(supercell, primitive, symprec):
     print("***************************************"
           "******************************")
     print("")
-    
-    return func(supercell, primitive, symprec)
 
+    return func(supercell, primitive, symprec)

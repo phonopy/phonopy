@@ -45,6 +45,7 @@ tags:
 * ``--pa``, ``--primitive_axis`` (``PRIMITIVE_AXIS``)
 * ``--pd``, ``--projection_direction`` (``PROJECTION_DIRECTION``)
 * ``--pdos`` (``PDOS``)
+* ``--pr``, ``--pretend_real`` (``PRETEND_REAL = .TRUE.``)
 * ``--q_direction`` (``Q_DIRECTION``)
 * ``--readfc`` (``FORCE_CONSTANTS = READ``)
 * ``--show_irreps`` (``SHOW_IRREPS``)
