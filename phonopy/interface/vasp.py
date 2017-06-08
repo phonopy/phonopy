@@ -386,8 +386,8 @@ def get_born_OUTCAR(poscar_filename="POSCAR",
         u_sym = Symmetry(ucell, is_symmetry=is_symmetry, symprec=symprec)
         point_sym = [similarity_transformation(lattice, r)
                      for r in u_sym.get_pointgroup_operations()]
-        epsilon = _symmetrize_tensor(epsilon, point_sym)
-        borns = _symmetrize_borns(borns, u_sym, lattice, positions, symprec)
+        epsilon = symmetrize_2nd_rank_tensor(epsilon, point_sym)
+        borns = symmetrize_borns(borns, u_sym, lattice, positions, symprec)
 
     inv_smat = np.linalg.inv(smat)
     scell = get_supercell(ucell, smat, symprec=symprec)
@@ -441,12 +441,12 @@ def _read_born_and_epsilon(filename):
 
     return borns, epsilon
 
-def _symmetrize_borns(borns, u_sym, lattice, positions, symprec):
+def symmetrize_borns(borns, u_sym, lattice, positions, symprec):
     borns_orig = borns.copy()
     for i, Z in enumerate(borns):
         site_sym = [similarity_transformation(lattice, r)
                     for r in u_sym.get_site_symmetry(i)]
-        Z = _symmetrize_tensor(Z, site_sym)
+        Z = symmetrize_2nd_rank_tensor(Z, site_sym)
 
     rotations = u_sym.get_symmetry_operations()['rotations']
     translations = u_sym.get_symmetry_operations()['translations']
@@ -473,7 +473,7 @@ def _symmetrize_borns(borns, u_sym, lattice, positions, symprec):
 
     return borns
 
-def _symmetrize_tensor(tensor, symmetry_operations):
+def symmetrize_2nd_rank_tensor(tensor, symmetry_operations):
     sum_tensor = np.zeros_like(tensor)
     for sym in symmetry_operations:
         sum_tensor += similarity_transformation(sym, tensor)
