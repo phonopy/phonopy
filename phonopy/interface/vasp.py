@@ -42,7 +42,8 @@ import numpy as np
 from phonopy.structure.atoms import PhonopyAtoms as Atoms
 from phonopy.structure.atoms import symbol_map, atom_data
 from phonopy.structure.cells import get_primitive, get_supercell
-from phonopy.structure.symmetry import Symmetry
+from phonopy.structure.symmetry import (Symmetry, get_site_symmetry,
+                                        get_pointgroup_operations)
 from phonopy.harmonic.force_constants import similarity_transformation
 from phonopy.file_IO import (write_FORCE_SETS, write_force_constants_to_hdf5,
                              write_FORCE_CONSTANTS)
@@ -381,13 +382,21 @@ def get_born_OUTCAR(poscar_filename="POSCAR",
                                           len(borns))
 
     if symmetrize_tensors:
-        lattice = ucell.get_cell().T
+        lattice = ucell.get_cell()
         positions = ucell.get_scaled_positions()
         u_sym = Symmetry(ucell, is_symmetry=is_symmetry, symprec=symprec)
-        point_sym = [similarity_transformation(lattice, r)
-                     for r in u_sym.get_pointgroup_operations()]
-        epsilon = _symmetrize_tensor(epsilon, point_sym)
-        borns = _symmetrize_borns(borns, u_sym, lattice, positions, symprec)
+        rotations = u_sym.get_symmetry_operations()['rotations']
+        translations = u_sym.get_symmetry_operations()['translations']
+        ptg_ops = get_pointgroup_operations(rotations)
+        epsilon = symmetrize_2nd_rank_tensor(epsilon,
+                                             ptg_ops,
+                                             lattice)
+        borns = symmetrize_borns(borns,
+                                 rotations,
+                                 translations,
+                                 lattice,
+                                 positions,
+                                 symprec)
 
     inv_smat = np.linalg.inv(smat)
     scell = get_supercell(ucell, smat, symprec=symprec)
@@ -441,16 +450,22 @@ def _read_born_and_epsilon(filename):
 
     return borns, epsilon
 
-def _symmetrize_borns(borns, u_sym, lattice, positions, symprec):
+def symmetrize_borns(borns,
+                     rotations,
+                     translations,
+                     lattice,
+                     positions,
+                     symprec):
     borns_orig = borns.copy()
     for i, Z in enumerate(borns):
-        site_sym = [similarity_transformation(lattice, r)
-                    for r in u_sym.get_site_symmetry(i)]
-        Z = _symmetrize_tensor(Z, site_sym)
+        site_sym = get_site_symmetry(i,
+                                     lattice,
+                                     positions,
+                                     rotations,
+                                     translations,
+                                     symprec)
+        Z = symmetrize_2nd_rank_tensor(Z, site_sym, lattice)
 
-    rotations = u_sym.get_symmetry_operations()['rotations']
-    translations = u_sym.get_symmetry_operations()['translations']
-    map_atoms = u_sym.get_map_atoms()
     borns_copy = np.zeros_like(borns)
     for i in range(len(borns)):
         count = 0
@@ -458,8 +473,9 @@ def _symmetrize_borns(borns, u_sym, lattice, positions, symprec):
             count += 1
             diff = np.dot(positions, r.T) + t - positions[i]
             diff -= np.rint(diff)
-            j = np.nonzero((np.abs(diff) < symprec).all(axis=1))[0][0]
-            r_cart = similarity_transformation(lattice, r)
+            dist = np.sqrt(np.sum(np.dot(diff, lattice) ** 2, axis=1))
+            j = np.nonzero(dist < symprec)[0][0]
+            r_cart = similarity_transformation(lattice.T, r)
             borns_copy[i] += similarity_transformation(r_cart, borns[j])
         borns_copy[i] /= count
 
@@ -473,9 +489,11 @@ def _symmetrize_borns(borns, u_sym, lattice, positions, symprec):
 
     return borns
 
-def _symmetrize_tensor(tensor, symmetry_operations):
+def symmetrize_2nd_rank_tensor(tensor, symmetry_operations, lattice):
+    sym_cart = [similarity_transformation(lattice.T, r)
+                for r in symmetry_operations]
     sum_tensor = np.zeros_like(tensor)
-    for sym in symmetry_operations:
+    for sym in sym_cart:
         sum_tensor += similarity_transformation(sym, tensor)
     return sum_tensor / len(symmetry_operations)
 
