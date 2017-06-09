@@ -86,11 +86,14 @@ def _get_symmetry_yaml(cell, symmetry, phonopy_version=None):
     yaml = []
 
     if phonopy_version is not None:
-        yaml.append("phonopy_version: %s" % phonopy_version)
+        yaml.append("phonopy_version: '%s'" % phonopy_version)
 
     if cell.get_magnetic_moments() is None:
-        yaml.append("space_group_type: " + symmetry.get_international_table())
-    yaml.append("point_group_type: " + symmetry.get_pointgroup())
+        spg_symbol, spg_number = symmetry.get_international_table().split()
+        spg_number = int(spg_number.replace('(', '').replace(')', ''))
+        yaml.append("space_group_type: '%s'" % spg_symbol)
+        yaml.append("space_group_number: %d" % spg_number)
+        yaml.append("point_group_type: '%s'" % symmetry.get_pointgroup())
     yaml.append("space_group_operations:")
     for i, (r, t) in enumerate(zip(rotations, translations)):
         yaml.append("- rotation: # %d" % (i + 1))
@@ -105,6 +108,7 @@ def _get_symmetry_yaml(cell, symmetry, phonopy_version=None):
             if j < 2:
                 line += ", "
             else:
+                line += " ]"
                 yaml.append(line)
     yaml.append("atom_mapping:")
     for i, atom_num in enumerate(atom_sets):
@@ -115,9 +119,9 @@ def _get_symmetry_yaml(cell, symmetry, phonopy_version=None):
         yaml.append("- atom: %d" % (i + 1))
 
         if cell.get_magnetic_moments() is None:
-            yaml.append("  Wyckoff: %s" % wyckoffs[i])
+            yaml.append("  Wyckoff: '%s'" % wyckoffs[i])
         site_pointgroup = get_pointgroup(sitesym)
-        yaml.append("  site_point_group: %s" % site_pointgroup[0])
+        yaml.append("  site_point_group: '%s'" % site_pointgroup[0])
         yaml.append("  orientation:")
         for v in site_pointgroup[1]:
             yaml.append("  - [%2d, %2d, %2d]" % tuple(v))
