@@ -33,6 +33,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
+import phonopy.structure.spglib as spg
 from phonopy.structure.atoms import PhonopyAtoms as Atoms
 
 def get_supercell(unitcell, supercell_matrix, symprec=1e-5):
@@ -365,32 +366,48 @@ def get_distance(cell, a0, a1, tolerance=1e-5):
 #
 # Delaunay reduction
 #
-def get_reduced_bases(lattice, tolerance=1e-5):
+def get_reduced_bases(lattice,
+                      method='delaunay',
+                      tolerance=1e-5):
+    """Apply reduction to basis vectors
+
+    args:
+        basis as row vectors, [a, b, c]^T
+    return:
+         reduced basin as row vectors, [a_red, b_red, c_red]^T
+    """
+
+    if method == 'niggli':
+        return spg.niggli_reduce(lattice, eps=tolerance)
+    else:
+        return spg.delaunay_reduce(lattice, eps=tolerance)
+
+def get_Delaunay_reduction(lattice, tolerance):
     """
     This is an implementation of Delaunay reduction.
     Some information is found in International table.
+    This method is obsoleted and should not be used.
 
     lattice: row vectors
     return lattice: row vectors
     """
-    return get_Delaunay_reduction(lattice, tolerance)
 
-def get_Delaunay_reduction(lattice, tolerance):
     extended_bases = np.zeros((4, 3), dtype='double')
     extended_bases[:3, :] = lattice
     extended_bases[3] = -np.sum(lattice, axis=0)
 
     for i in range(100):
-        if reduce_bases(extended_bases, tolerance):
+        if _reduce_bases(extended_bases, tolerance):
             break
     if i == 99:
         print("Delaunary reduction was failed.")
 
-    shortest = get_shortest_bases_from_extented_bases(extended_bases, tolerance)
+    shortest = _get_shortest_bases_from_extented_bases(extended_bases,
+                                                       tolerance)
 
     return shortest
 
-def reduce_bases(extended_bases, tolerance):
+def _reduce_bases(extended_bases, tolerance):
     metric = np.dot(extended_bases, extended_bases.T)
     for i in range(4):
         for j in range(i+1, 4):
@@ -406,7 +423,7 @@ def reduce_bases(extended_bases, tolerance):
     # All non diagonal elements of metric tensor is negative.
     return True
 
-def get_shortest_bases_from_extented_bases(extended_bases, tolerance):
+def _get_shortest_bases_from_extented_bases(extended_bases, tolerance):
 
     def mycmp(x, y):
         return cmp(np.vdot(x, x), np.vdot(y, y))

@@ -122,7 +122,7 @@ def cutoff_force_constants(force_constants,
                            cutoff_radius,
                            symprec=1e-5):
     num_atom = supercell.get_number_of_atoms()
-    reduced_bases = get_reduced_bases(supercell.get_cell(), symprec)
+    reduced_bases = get_reduced_bases(supercell.get_cell(), tolerance=symprec)
     positions = np.dot(supercell.get_positions(),
                        np.linalg.inv(reduced_bases))
     for i in range(num_atom):
