@@ -487,6 +487,14 @@ def symmetrize_borns(borns,
         sys.stderr.write(
             "Born effective charge symmetrization might go wrong.\n")
 
+        sys.stderr.write("Sum of Born charges:\n")
+        sys.stderr.write(str(borns_orig.sum(axis=0)))
+        sys.stderr.write("\n")
+
+        # for b_o, b in zip(borns_orig, borns):
+        #     sys.stderr.write(str(b - b_o))
+        #     sys.stderr.write("\n")
+
     return borns
 
 def symmetrize_2nd_rank_tensor(tensor, symmetry_operations, lattice):

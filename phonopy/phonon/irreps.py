@@ -45,7 +45,16 @@ character_table = {
     '1': None,
 
     # Ci (2)
-    '-1': None,
+    '-1': 
+    [{'rotation_list': ('E', 'i'),
+      'character_table': {'Ag' : ( 1, 1 ),
+                          'Au' : ( 1,-1 )},
+      'mapping_table': {'E': ((( 1, 0, 0 ),
+                               ( 0, 1, 0 ),
+                               ( 0, 0, 1 )),),
+                        'i': (((-1, 0, 0 ),
+                               ( 0,-1, 0 ),
+                               ( 0, 0,-1 )),)}}],
 
     # C2 (3)
     '2': None,

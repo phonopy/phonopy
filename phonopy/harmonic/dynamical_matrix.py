@@ -35,7 +35,6 @@
 import textwrap
 from phonopy.harmonic.dynmat_to_fc import DynmatToForceConstants
 import numpy as np
-from phonopy.structure.cells import get_reduced_bases
 
 def get_dynamical_matrix(fc2,
                          supercell,
