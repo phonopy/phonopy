@@ -40,7 +40,8 @@ from phonopy import PhonopyGruneisen
 from phonopy.interface import read_crystal_structure, get_default_cell_filename
 from phonopy.file_IO import (parse_FORCE_SETS, parse_BORN,
                              parse_FORCE_CONSTANTS, read_force_constants_hdf5)
-from phonopy.units import VaspToTHz, Wien2kToTHz, AbinitToTHz, PwscfToTHz, CrystalToTHz
+from phonopy.units import (VaspToTHz, Wien2kToTHz, AbinitToTHz, PwscfToTHz,
+                           CrystalToTHz)
 import numpy as np
 
 def fracval(frac):
@@ -234,9 +235,7 @@ if options.is_hdf5:
     try:
         import h5py
     except ImportError:
-        print_error_message("You need to install python-h5py.")
-        if log_level > 0:
-            print_end()
+        print("You need to install python-h5py.")
         sys.exit(1)
 
 if len(args) is not 3:
