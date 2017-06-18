@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>CRYSTAL &amp; phonopy calculation &#8212; Phonopy v.1.11.10</title>
+    <title>CRYSTAL &amp; phonopy calculation &#8212; Phonopy v.1.11.12</title>
     
     <link rel="stylesheet" href="_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -15,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.11.10',
+        VERSION:     '1.11.12',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -39,7 +38,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 
   </head>
-  <body role="document">
+  <body>
 
   <div id="navbar" class="navbar navbar-default navbar-fixed-top">
     <div class="container">
@@ -52,7 +51,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.11.10</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.11.12</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -175,7 +174,7 @@ Si example found in <code class="docutils literal"><span class="pre">example/Si-
 This is the default for the CRYSTAL interface, so, the <code class="docutils literal"><span class="pre">-c</span> <span class="pre">crystal.o</span></code>
 parameter is not needed</p>
 <ol class="arabic">
-<li><p class="first">Create supercells with <a class="reference internal" href="command-options.html#crystal-mode"><span class="std std-ref">&#8211;crystal</span></a> option:</p>
+<li><p class="first">Create supercells with <a class="reference internal" href="command-options.html#crystal-mode"><span class="std std-ref">--crystal</span></a> option:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">crystal</span> <span class="o">-</span><span class="n">d</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;4 4 4&quot;</span>
 </pre></div>
 </div>
@@ -296,7 +295,7 @@ file. It should look like this:</p>
 <span class="o">-</span><span class="mf">1.0238</span> <span class="mf">0.0000</span> <span class="mf">0.0000</span> <span class="mf">0.0000</span> <span class="o">-</span><span class="mf">1.0238</span> <span class="mf">0.0000</span> <span class="mf">0.0000</span> <span class="mf">0.0000</span> <span class="o">-</span><span class="mf">1.0238</span>
 </pre></div>
 </div>
-<p>However, if you don&#8217;t want to run a FREQCALC-INTENS-INTCPHF calculation,
+<p>However, if you don’t want to run a FREQCALC-INTENS-INTCPHF calculation,
 but have the necessary data from some other source, you can create
 the <code class="docutils literal"><span class="pre">BORN</span></code> file manually following the <code class="docutils literal"><span class="pre">BORN</span></code> format
 (<a class="reference internal" href="input-files.html#born-file"><span class="std std-ref">BORN (optional)</span></a>).</p>
@@ -309,7 +308,7 @@ the <code class="docutils literal"><span class="pre">BORN</span></code> file man
 </div>
 </li>
 <li><p class="first">Calculate phonon dispersion data into band.yaml and save band.pdf,
-using Non-analytical correction &#8211;nac:</p>
+using Non-analytical correction –nac:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">phonopy</span> <span class="o">--</span><span class="n">crystal</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;4 4 4&quot;</span> <span class="o">-</span><span class="n">p</span> <span class="o">-</span><span class="n">s</span> <span class="o">--</span><span class="n">nac</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
 </pre></div>
 </div>
@@ -340,7 +339,7 @@ using Non-analytical correction &#8211;nac:</p>
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.4.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.2.<br/>
     </p>
   </div>
 </footer>

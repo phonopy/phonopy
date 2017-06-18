@@ -3,6 +3,14 @@
 Change Log
 ==========
 
+June-18-2017: Version 1.11.12
+-------------------------------
+
+* Maintenance release with many minor fixes after v1.11.10.
+* -1,and -3 point groups are added for irreps dataset.
+* :ref:`pretend_real_tags` was made.
+* ``--vasprunxml`` option for ``outcar-born``
+
 Mar-31-2017: Version 1.11.10
 ----------------------------
 

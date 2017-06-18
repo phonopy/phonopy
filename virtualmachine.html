@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Set up Ubuntu linux on VirtualBox &#8212; Phonopy v.1.11.10</title>
+    <title>Set up Ubuntu linux on VirtualBox &#8212; Phonopy v.1.11.12</title>
     
     <link rel="stylesheet" href="_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -15,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.11.10',
+        VERSION:     '1.11.12',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -39,7 +38,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 
   </head>
-  <body role="document">
+  <body>
 
   <div id="navbar" class="navbar navbar-default navbar-fixed-top">
     <div class="container">
@@ -52,7 +51,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.11.10</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.11.12</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -168,25 +167,25 @@ example, the file name may be like <code class="docutils literal"><span class="p
 </li>
 <li><p class="first">Create a new virtual machine</p>
 <p>You can specify parameters, but it is also OK just clicking next,
-next, ...</p>
+next, …</p>
 <p><a class="reference internal" href="_images/virtualbox-new.png"><img alt="vbox1" src="_images/virtualbox-new.png" style="width: 385.0px; height: 275.0px;" /></a></p>
 <p>Then you can create an empty virtual machine image.</p>
 <p><a class="reference internal" href="_images/virtualbox-imagenew.png"><img alt="vbox2" src="_images/virtualbox-imagenew.png" style="width: 385.0px; height: 275.0px;" /></a></p>
 <p>To install ubuntu server, set the install image as the virtual CD
-device from Settings -&gt; Storage, and click &#8216;OK&#8217;.</p>
+device from Settings -&gt; Storage, and click ‘OK’.</p>
 <p><a class="reference internal" href="_images/vitualbox-fromimage.png"><img alt="vbox3" src="_images/vitualbox-fromimage.png" style="width: 332.5px; height: 270.0px;" /></a></p>
 <p>Start the virtual machine, then the installation of Ubuntu linux
 will start.</p>
 <p><a class="reference internal" href="_images/Ubuntu-install.png"><img alt="vbox4" src="_images/Ubuntu-install.png" style="width: 512.0px; height: 353.5px;" /></a></p>
-<p>In the install process, you may just click &#8216;continue&#8217;, ...,
-&#8216;install&#8217;, etc. The computer&#8217;s name and user name are set as you
+<p>In the install process, you may just click ‘continue’, …,
+‘install’, etc. The computer’s name and user name are set as you
 like.</p>
 </li>
 <li><p class="first">System setting of the virtual machine</p>
 <p>Boot the virtual machine and login to the ubuntu linux with the user
 name and password.</p>
-<p>The terminal emulator is opened by &#8216;Alt&#8217; + &#8216;Ctrl&#8217; + &#8216;T&#8217; or from the
-top-left corner seraching &#8216;terminal&#8217;. What has to do first is
+<p>The terminal emulator is opened by ‘Alt’ + ‘Ctrl’ + ‘T’ or from the
+top-left corner seraching ‘terminal’. What has to do first is
 update the system by:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">sudo</span> <span class="n">apt</span><span class="o">-</span><span class="n">get</span> <span class="n">update</span>
 </pre></div>
@@ -198,7 +197,7 @@ update the system by:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">sudo</span> <span class="n">apt</span><span class="o">-</span><span class="n">get</span> <span class="n">install</span> <span class="n">openssh</span><span class="o">-</span><span class="n">server</span>
 </pre></div>
 </div>
-<p>&#8216;vim&#8217;, &#8216;zsh&#8217;, &#8216;screen&#8217;, &#8216;aptitude&#8217; may be also useful.
+<p>‘vim’, ‘zsh’, ‘screen’, ‘aptitude’ may be also useful.
 Then install phonopy following <a class="reference internal" href="install.html#install"><span class="std std-ref">Download and install</span></a>.</p>
 </li>
 <li><p class="first">Using phonopy from the host computer of the virtual machine</p>
@@ -256,7 +255,7 @@ computer.</p>
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.4.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.2.<br/>
     </p>
   </div>
 </footer>

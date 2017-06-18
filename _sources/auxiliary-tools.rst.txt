@@ -130,6 +130,15 @@ file of ``OUTCAR``.  The first and second arguments are ``OUTCAR``
 type file and ``POSCAR`` type file, respectively. If both are omitted,
 ``POSCAR`` and ``OUTCAR`` in current directory are read.
 
+::
+
+   outcar-born
+
+::
+
+   outcar-born --st OUTCAR POSCAR
+
+
 ``--pa``, ``--primitive_axis``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -143,7 +152,18 @@ This is same as :ref:`dimension_tag`.
 ``--st``
 ^^^^^^^^^
 
-**Experimental**
-
 Dielectric constant and Born effective charge tensors are symmetrized.
 
+``--vasprunxml``
+^^^^^^^^^^^^^^^^^
+
+Read ``vasprun.xml`` instead of ``OUTCAR``. If no argument is
+specified, ``vasprun.xml`` is read.
+
+::
+
+   outcar-born --vasprunxml
+
+::
+
+   outcar-born --st --vasprunxml vasprun.xml POSCAR

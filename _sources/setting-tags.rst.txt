@@ -657,6 +657,8 @@ temperature range to be calculated. The default values of them are 0,
    TPROP = .TRUE.
    TMAX = 2000
 
+.. _pretend_real_tags:
+
 ``PRETEND_REAL``
 ~~~~~~~~~~~~~~~~~
 

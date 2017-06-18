@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Auxiliary tools &#8212; Phonopy v.1.11.10</title>
+    <title>Auxiliary tools &#8212; Phonopy v.1.11.12</title>
     
     <link rel="stylesheet" href="_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -15,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.11.10',
+        VERSION:     '1.11.12',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -39,7 +38,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 
   </head>
-  <body role="document">
+  <body>
 
   <div id="navbar" class="navbar navbar-default navbar-fixed-top">
     <div class="container">
@@ -52,7 +51,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.11.10</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.11.12</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -113,6 +112,7 @@
 <li><a class="reference internal" href="#pa-primitive-axis"><code class="docutils literal"><span class="pre">--pa</span></code>, <code class="docutils literal"><span class="pre">--primitive_axis</span></code></a></li>
 <li><a class="reference internal" href="#dim"><code class="docutils literal"><span class="pre">--dim</span></code></a></li>
 <li><a class="reference internal" href="#st"><code class="docutils literal"><span class="pre">--st</span></code></a></li>
+<li><a class="reference internal" href="#vasprunxml"><code class="docutils literal"><span class="pre">--vasprunxml</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -184,7 +184,7 @@ plotted together.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">pdosplot</span> <span class="o">-</span><span class="n">i</span> <span class="s1">&#39;1 2 4 5, 3 6&#39;</span> <span class="o">-</span><span class="n">o</span> <span class="s1">&#39;pdos.pdf&#39;</span> <span class="n">partial_dos</span><span class="o">.</span><span class="n">dat</span>
 </pre></div>
 </div>
-<p>The indices and comma in &#8216;1 2 3 4, 5 6&#8217; mean as follows. The indices
+<p>The indices and comma in ‘1 2 3 4, 5 6’ mean as follows. The indices
 are separated into blocks by comma (1 2 4 5 and 3 6). PDOS specified
 by the successive indices separated by space in each block are summed
 up. The PDOS of blocks are drawn simultaneously. Indices usually
@@ -246,6 +246,12 @@ equivalent or not.</p>
 file of <code class="docutils literal"><span class="pre">OUTCAR</span></code>.  The first and second arguments are <code class="docutils literal"><span class="pre">OUTCAR</span></code>
 type file and <code class="docutils literal"><span class="pre">POSCAR</span></code> type file, respectively. If both are omitted,
 <code class="docutils literal"><span class="pre">POSCAR</span></code> and <code class="docutils literal"><span class="pre">OUTCAR</span></code> in current directory are read.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">outcar</span><span class="o">-</span><span class="n">born</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">outcar</span><span class="o">-</span><span class="n">born</span> <span class="o">--</span><span class="n">st</span> <span class="n">OUTCAR</span> <span class="n">POSCAR</span>
+</pre></div>
+</div>
 <div class="section" id="pa-primitive-axis">
 <h3><code class="docutils literal"><span class="pre">--pa</span></code>, <code class="docutils literal"><span class="pre">--primitive_axis</span></code><a class="headerlink" href="#pa-primitive-axis" title="Permalink to this headline">¶</a></h3>
 <p>This is same as <a class="reference internal" href="setting-tags.html#primitive-axis-tag"><span class="std std-ref">PRIMITIVE_AXIS</span></a>.</p>
@@ -256,8 +262,18 @@ type file and <code class="docutils literal"><span class="pre">POSCAR</span></co
 </div>
 <div class="section" id="st">
 <h3><code class="docutils literal"><span class="pre">--st</span></code><a class="headerlink" href="#st" title="Permalink to this headline">¶</a></h3>
-<p><strong>Experimental</strong></p>
 <p>Dielectric constant and Born effective charge tensors are symmetrized.</p>
+</div>
+<div class="section" id="vasprunxml">
+<h3><code class="docutils literal"><span class="pre">--vasprunxml</span></code><a class="headerlink" href="#vasprunxml" title="Permalink to this headline">¶</a></h3>
+<p>Read <code class="docutils literal"><span class="pre">vasprun.xml</span></code> instead of <code class="docutils literal"><span class="pre">OUTCAR</span></code>. If no argument is
+specified, <code class="docutils literal"><span class="pre">vasprun.xml</span></code> is read.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">outcar</span><span class="o">-</span><span class="n">born</span> <span class="o">--</span><span class="n">vasprunxml</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">outcar</span><span class="o">-</span><span class="n">born</span> <span class="o">--</span><span class="n">st</span> <span class="o">--</span><span class="n">vasprunxml</span> <span class="n">vasprun</span><span class="o">.</span><span class="n">xml</span> <span class="n">POSCAR</span>
+</pre></div>
+</div>
 </div>
 </div>
 </div>
@@ -282,7 +298,7 @@ type file and <code class="docutils literal"><span class="pre">POSCAR</span></co
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.4.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.2.<br/>
     </p>
   </div>
 </footer>

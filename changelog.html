@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Change Log &#8212; Phonopy v.1.11.10</title>
+    <title>Change Log &#8212; Phonopy v.1.11.12</title>
     
     <link rel="stylesheet" href="_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -15,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.11.10',
+        VERSION:     '1.11.12',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -38,7 +37,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 
   </head>
-  <body role="document">
+  <body>
 
   <div id="navbar" class="navbar navbar-default navbar-fixed-top">
     <div class="container">
@@ -51,7 +50,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.11.10</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.11.12</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -99,6 +98,7 @@
       role="menu"
       aria-labelledby="dLabelLocalToc"><ul>
 <li><a class="reference internal" href="#">Change Log</a><ul>
+<li><a class="reference internal" href="#june-18-2017-version-1-11-12">June-18-2017: Version 1.11.12</a></li>
 <li><a class="reference internal" href="#mar-31-2017-version-1-11-10">Mar-31-2017: Version 1.11.10</a></li>
 <li><a class="reference internal" href="#feb-7-2017-version-1-11-8">Feb-7-2017: Version 1.11.8</a></li>
 <li><a class="reference internal" href="#dec-14-2016-version-1-11-6">Dec-14-2016: Version 1.11.6</a></li>
@@ -215,6 +215,15 @@
       
   <div class="section" id="change-log">
 <span id="changelog"></span><h1>Change Log<a class="headerlink" href="#change-log" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="june-18-2017-version-1-11-12">
+<h2>June-18-2017: Version 1.11.12<a class="headerlink" href="#june-18-2017-version-1-11-12" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Maintenance release with many minor fixes after v1.11.10.</li>
+<li>-1,and -3 point groups are added for irreps dataset.</li>
+<li><a class="reference internal" href="setting-tags.html#pretend-real-tags"><span class="std std-ref">PRETEND_REAL</span></a> was made.</li>
+<li><code class="docutils literal"><span class="pre">--vasprunxml</span></code> option for <code class="docutils literal"><span class="pre">outcar-born</span></code></li>
+</ul>
+</div>
 <div class="section" id="mar-31-2017-version-1-11-10">
 <h2>Mar-31-2017: Version 1.11.10<a class="headerlink" href="#mar-31-2017-version-1-11-10" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
@@ -224,14 +233,14 @@
 <div class="section" id="feb-7-2017-version-1-11-8">
 <h2>Feb-7-2017: Version 1.11.8<a class="headerlink" href="#feb-7-2017-version-1-11-8" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li>CRYSTAL code interface (<a class="reference internal" href="command-options.html#crystal-mode"><span class="std std-ref">&#8211;crystal</span></a>) is added by Antti Karttunen.</li>
+<li>CRYSTAL code interface (<a class="reference internal" href="command-options.html#crystal-mode"><span class="std std-ref">--crystal</span></a>) is added by Antti Karttunen.</li>
 <li>Different vasprun.xml (expat) parser is under testing.</li>
 </ul>
 </div>
 <div class="section" id="dec-14-2016-version-1-11-6">
 <h2>Dec-14-2016: Version 1.11.6<a class="headerlink" href="#dec-14-2016-version-1-11-6" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li><code class="docutils literal"><span class="pre">--fz</span></code> option comes back. See <a class="reference internal" href="command-options.html#fz-force-sets-option"><span class="std std-ref">&#8211;fz</span></a>.</li>
+<li><code class="docutils literal"><span class="pre">--fz</span></code> option comes back. See <a class="reference internal" href="command-options.html#fz-force-sets-option"><span class="std std-ref">--fz</span></a>.</li>
 <li>spglib update to v1.9.9</li>
 </ul>
 </div>
@@ -270,7 +279,7 @@ matrices are also stored in <code class="docutils literal"><span class="pre">qpo
 <h2>Apr-22-2016: Version 1.10.8<a class="headerlink" href="#apr-22-2016-version-1-10-8" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><a class="reference internal" href="setting-tags.html#xyz-projection-tag"><span class="std std-ref">XYZ_PROJECTION</span></a> tag is created for PDOS.</li>
-<li><a class="reference internal" href="command-options.html#vasp-mode"><span class="std std-ref">&#8211;vasp</span></a> option is created to explicitly show VASP is used
+<li><a class="reference internal" href="command-options.html#vasp-mode"><span class="std std-ref">--vasp</span></a> option is created to explicitly show VASP is used
 to generate <code class="docutils literal"><span class="pre">band.yaml</span></code> as the calculator.</li>
 <li>spglib update to v1.9.2</li>
 </ul>
@@ -311,7 +320,7 @@ by Henrique Pereira Coutada Miranda.</li>
 <h2>Aug-12-2015: Version 1.9.6<a class="headerlink" href="#aug-12-2015-version-1-9-6" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><code class="docutils literal"><span class="pre">--hdf5</span></code> option. Some output files can be written in hdf5
-format. See <a class="reference internal" href="command-options.html#hdf5-option"><span class="std std-ref">&#8211;hdf5</span></a>.</li>
+format. See <a class="reference internal" href="command-options.html#hdf5-option"><span class="std std-ref">--hdf5</span></a>.</li>
 <li>Improve tetrahedron method performance in the calculation of DOS and
 PDOS.</li>
 <li>Spglib update to version 1.8.2.1.</li>
@@ -360,14 +369,14 @@ raise timing issue to phonopy-API users.</li>
 <div class="section" id="oct-30-2014-version-1-9-1-3">
 <h2>Oct-30-2014: Version 1.9.1.3<a class="headerlink" href="#oct-30-2014-version-1-9-1-3" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li>Experimental support for Abinit. See <a class="reference internal" href="command-options.html#pwscf-mode"><span class="std std-ref">&#8211;pwscf</span></a> and
+<li>Experimental support for Abinit. See <a class="reference internal" href="command-options.html#pwscf-mode"><span class="std std-ref">--pwscf</span></a> and
 <a class="reference internal" href="command-options.html#pwscf-force-sets-option"><span class="std std-ref">Pwscf interface</span></a>.</li>
 </ul>
 </div>
 <div class="section" id="oct-29-2014-version-1-9-1-2">
 <h2>Oct-29-2014: Version 1.9.1.2<a class="headerlink" href="#oct-29-2014-version-1-9-1-2" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li>Experimental support for Abinit. See <a class="reference internal" href="command-options.html#abinit-mode"><span class="std std-ref">&#8211;abinit</span></a> and
+<li>Experimental support for Abinit. See <a class="reference internal" href="command-options.html#abinit-mode"><span class="std std-ref">--abinit</span></a> and
 <a class="reference internal" href="command-options.html#abinit-force-sets-option"><span class="std std-ref">Abinit interface</span></a>.</li>
 <li>FHI-aims modulation output. Some more examples for <code class="docutils literal"><span class="pre">phonopy-FHI-aims</span></code>.</li>
 </ul>
@@ -482,7 +491,7 @@ output. Instead atom projected PDOS (sum of XYZ projected PDOS)
 is written. See <a class="reference internal" href="output-files.html#output-files"><span class="std std-ref">Output files</span></a>.</li>
 <li>DOS and PDOS python interface was modified. The keyword of
 <code class="docutils literal"><span class="pre">omega_something</span></code> is changed to <code class="docutils literal"><span class="pre">freq_something</span></code>.</li>
-<li><code class="docutils literal"><span class="pre">gruneisen</span></code> didn&#8217;t run because it didn&#8217;t follow the move of
+<li><code class="docutils literal"><span class="pre">gruneisen</span></code> didn’t run because it didn’t follow the move of
 the <code class="docutils literal"><span class="pre">file_IO.py</span></code> file location. This is fixed.</li>
 <li>The formula of non-analytical term correction implemented in phonopy
 is not translational invariant in reciprocal space. This induces
@@ -542,7 +551,7 @@ characters, <code class="docutils literal"><span class="pre">SHOW_IRREPS</span><
 used. The output file name was also renamed to <code class="docutils literal"><span class="pre">irreps.yaml</span></code>. In
 the ir-reps calculation, display and file outputs were modified to
 show the arguments of complex value characters.</li>
-<li>Numpy array types of &#8216;double&#8217; and &#8216;intc&#8217; for those arrays
+<li>Numpy array types of ‘double’ and ‘intc’ for those arrays
 passed to numpy C-API are used.</li>
 <li><code class="docutils literal"><span class="pre">thermal_displacement.py</span></code> is slightly modified for the preparation
 to include thermal displacement matrix.</li>
@@ -563,7 +572,7 @@ accelerates the calculation speed.</li>
 <ul class="simple">
 <li>Arbitral projection direction is allowed for thermal displacements
 calculation. (<a class="reference internal" href="setting-tags.html#thermal-displacements-tag"><span class="std std-ref">TDISP, TMAX, TMIN, and TSTEP</span></a>)</li>
-<li>A new tag <cite>WRITEDM</cite> and an option <cite>&#8211;writedm</cite> are
+<li>A new tag <cite>WRITEDM</cite> and an option <cite>–writedm</cite> are
 implemented. Dynamical matrices are written into <code class="docutils literal"><span class="pre">qpoints.yaml</span></code>
 when this is used togather with the <code class="docutils literal"><span class="pre">QPOINTS</span></code> mode. (<a class="reference internal" href="setting-tags.html#writedm-tag"><span class="std std-ref">WRITEDM</span></a>)</li>
 </ul>
@@ -581,7 +590,7 @@ when this is used togather with the <code class="docutils literal"><span class="
 of point group -3m.</li>
 <li>A new option <code class="docutils literal"><span class="pre">--irreps</span></code> or <code class="docutils literal"><span class="pre">IRREPS</span></code> tag (Experimental).</li>
 <li><code class="docutils literal"><span class="pre">character_table.yaml</span></code> output.</li>
-<li>Eigenvectors output in``modulation.yaml`` was recovered.</li>
+<li>Eigenvectors output in“modulation.yaml“ was recovered.</li>
 </ul>
 </div>
 <div class="section" id="oct-22-2012-version-1-6">
@@ -858,7 +867,7 @@ write_vasp, and read_vasp, are implemented.</li>
 <h2>Sep-22-2010: Version 0.9.1.4<a class="headerlink" href="#sep-22-2010-version-0-9-1-4" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li>The new tag <code class="docutils literal"><span class="pre">ANIME_TYPE</span></code> supports <code class="docutils literal"><span class="pre">xyz</span></code> and <code class="docutils literal"><span class="pre">xyz_jmol</span></code> formats
-by Jörg Meyer and Christian Carbogno, and also <cite>A set of ``POSCAR`</cite>
+by Jörg Meyer and Christian Carbogno, and also <cite>A set of “POSCAR`</cite>
 files corresponding to animation frames.</li>
 <li>Fix bugs in <code class="docutils literal"><span class="pre">trim_cell</span></code> and
 <code class="docutils literal"><span class="pre">Primitive.__supercell_to_primitive_map</span></code> in <code class="docutils literal"><span class="pre">cells.py</span></code>. When
@@ -871,8 +880,8 @@ correctly.</li>
 <h2>Aug-24-2010: Version 0.9.1.3<a class="headerlink" href="#aug-24-2010-version-0-9-1-3" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li>Update symmetry finder of spglib. Now precision is in Cartesian distance.</li>
-<li>The animation output for <code class="docutils literal"><span class="pre">arc</span></code> didn&#8217;t work. Now it works.</li>
-<li>Qpoint mode didn&#8217;t work with bugs. Now it works.</li>
+<li>The animation output for <code class="docutils literal"><span class="pre">arc</span></code> didn’t work. Now it works.</li>
+<li>Qpoint mode didn’t work with bugs. Now it works.</li>
 <li><code class="docutils literal"><span class="pre">--vasp</span></code> option is renamed to <code class="docutils literal"><span class="pre">--cell</span></code> or <code class="docutils literal"><span class="pre">-c</span></code>.</li>
 <li>The new options <code class="docutils literal"><span class="pre">--symmetry</span></code>, <code class="docutils literal"><span class="pre">--displacement</span></code> or <code class="docutils literal"><span class="pre">-d</span></code>,
 <code class="docutils literal"><span class="pre">--dim</span></code>, <code class="docutils literal"><span class="pre">--primitive_axis</span></code> are implemented.</li>
@@ -1036,7 +1045,7 @@ from those in structure with atomic displacements.</li>
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.4.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.2.<br/>
     </p>
   </div>
 </footer>

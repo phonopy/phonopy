@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Setting tags &#8212; Phonopy v.1.11.10</title>
+    <title>Setting tags &#8212; Phonopy v.1.11.12</title>
     
     <link rel="stylesheet" href="_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -15,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.11.10',
+        VERSION:     '1.11.12',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -39,7 +38,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 
   </head>
-  <body role="document">
+  <body>
 
   <div id="navbar" class="navbar navbar-default navbar-fixed-top">
     <div class="container">
@@ -52,7 +51,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.11.10</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.11.12</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -436,12 +435,12 @@ vectors, i.e., <img class="math" src="_images/math/7e693b224ca1ba381521afe117470
 in the sixth line of <code class="docutils literal"><span class="pre">POSCAR</span></code>.</p>
 <p>Chemical symbols read by phonopy are overwritten by those written in
 <code class="docutils literal"><span class="pre">POSCAR</span></code>. See <code class="docutils literal"><span class="pre">POSCAR</span></code> examples. In WIEN2k mode,
-you don&#8217;t need to set this tag, i.e., chemical symbols are read from
+you don’t need to set this tag, i.e., chemical symbols are read from
 the structure file.</p>
 </div>
 <div class="section" id="eigenvectors">
 <h3><a class="toc-backref" href="#id10"><code class="docutils literal"><span class="pre">EIGENVECTORS</span></code></a><a class="headerlink" href="#eigenvectors" title="Permalink to this headline">¶</a></h3>
-<p>When this tag is &#8216;.TRUE.&#8217;, eigenvectors are calculated. With <code class="docutils literal"><span class="pre">-p</span></code>
+<p>When this tag is ‘.TRUE.’, eigenvectors are calculated. With <code class="docutils literal"><span class="pre">-p</span></code>
 option, partial density of states are calculated.</p>
 </div>
 <div class="section" id="mass">
@@ -488,7 +487,7 @@ some exceptional case, for example, a special force calculator whose
 physical unit system is different from the default setting of phonopy
 is used. If the frequency unit is different from THz, though it works
 just for seeing results of frequencies, e.g., band structure or DOS,
-it doesn&#8217;t work for derived values like thermal properties and
+it doesn’t work for derived values like thermal properties and
 mean square displacements.</p>
 <p>The default values for calculators are those to convert frequency
 units to THz. The default conversion factors for <code class="docutils literal"><span class="pre">wien2k</span></code>,
@@ -569,7 +568,7 @@ number of band paths specified by <code class="docutils literal"><span class="pr
 <p><a class="reference internal" href="_images/band-labels.png"><img alt="bandlabels" src="_images/band-labels.png" style="width: 406.0px; height: 306.0px;" /></a></p>
 <p>The colors of curves are automatically determined by matplotlib. The
 same color in a band segment shows the same kind of band. Between
-different band segments, the correspondence of colors doesn&#8217;t mean
+different band segments, the correspondence of colors doesn’t mean
 anything.</p>
 </div>
 <div class="section" id="band-connection">
@@ -837,7 +836,7 @@ temperature range to be calculated. The default values of them are 0,
 </div>
 </div>
 <div class="section" id="pretend-real">
-<h3><a class="toc-backref" href="#id42"><code class="docutils literal"><span class="pre">PRETEND_REAL</span></code></a><a class="headerlink" href="#pretend-real" title="Permalink to this headline">¶</a></h3>
+<span id="pretend-real-tags"></span><h3><a class="toc-backref" href="#id42"><code class="docutils literal"><span class="pre">PRETEND_REAL</span></code></a><a class="headerlink" href="#pretend-real" title="Permalink to this headline">¶</a></h3>
 <p>This enables to take imaginary frequencies as real for thermal
 property calculation. This does give false thermal properties,
 therefore for a testing purpose only, when a small amount of imaginary
@@ -955,7 +954,7 @@ Im(D_{jj'}^{yy}) &amp; Re(D_{jj'}^{yz}) &amp; Im(D_{jj'}^{yz}) \\
 Re(D_{jj'}^{zx}) &amp; Im(D_{jj'}^{zx}) &amp; Re(D_{jj'}^{zy}) &amp;
 Im(D_{jj'}^{zy}) &amp; Re(D_{jj'}^{zz}) &amp; Im(D_{jj'}^{zz}) \\
 \end{pmatrix},"/></p>
-</div><p>where <em>j</em> and <em>j&#8217;</em> are the atomic indices in the primitive cell. The
+</div><p>where <em>j</em> and <em>j’</em> are the atomic indices in the primitive cell. The
 phonon frequencies may be recovered from <code class="docutils literal"><span class="pre">qpoints.yaml</span></code> by writing a
 simple python script. For example, <code class="docutils literal"><span class="pre">qpoints.yaml</span></code> is obtained for
 NaCl at <img class="math" src="_images/math/25fb629bcbf440c08ef1c236349172847e43a773.png" alt="q=(0, 0.5, 0.5)"/> by</p>
@@ -1097,12 +1096,12 @@ settings. Those may be viewed by <code class="docutils literal"><span class="pre
 (animation), <code class="docutils literal"><span class="pre">jmol</span></code> (vibration), respectively. For <code class="docutils literal"><span class="pre">POSCAR</span></code>, a set
 of <code class="docutils literal"><span class="pre">POSCAR</span></code> format structure files corresponding to respective
 animation images are created such as <code class="docutils literal"><span class="pre">APOSCAR-000</span></code>,
-<code class="docutils literal"><span class="pre">APOSCAR-001</span></code>,....</p>
+<code class="docutils literal"><span class="pre">APOSCAR-001</span></code>,….</p>
 <p>There are several parameters to be set in the <code class="docutils literal"><span class="pre">ANIME</span></code> tag.</p>
 </div>
 <div class="section" id="anime">
 <h3><a class="toc-backref" href="#id65"><code class="docutils literal"><span class="pre">ANIME</span></code></a><a class="headerlink" href="#anime" title="Permalink to this headline">¶</a></h3>
-<p><strong>The format of ``ANIME`` tag was modified after ver. 0.9.3.3.</strong></p>
+<p><strong>The format of “ANIME“ tag was modified after ver. 0.9.3.3.</strong></p>
 <div class="section" id="for-v-sim">
 <h4>For v_sim<a class="headerlink" href="#for-v-sim" title="Permalink to this headline">¶</a></h4>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">ANIME</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="mf">0.5</span> <span class="mi">0</span>
@@ -1262,7 +1261,7 @@ little group.</p>
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.4.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.2.<br/>
     </p>
   </div>
 </footer>
