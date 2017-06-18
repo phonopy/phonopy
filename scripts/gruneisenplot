@@ -34,11 +34,13 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import sys
+
 try:
     import yaml
 except ImportError:
-    print "You need to install python-yaml."
-    exit(1)
+    print("You need to install python-yaml.")
+    sys.exit(1)
     
 try:
     from yaml import CLoader as Loader
@@ -50,29 +52,37 @@ import numpy as np
 
 def print_band(data):
     distance = 0
-    print "#%-9s %-10s %-10s   " % ("    q_a", "    q_b", "    q_c"),
-    print "%-12s   " % "   Distance",
-    print "%-12s %-12s     ..." % ("   Gruneisen", "   Frequency")
+    text = "#%-9s %-10s %-10s    " % ("    q_a", "    q_b", "    q_c") 
+    text += "%-12s    " % "   Distance"
+    text += "%-12s %-12s     ..." % ("   Gruneisen", "   Frequency")
+    lines = [text,]
+
     for path in data['path']:
         for q in path['phonon']:
-            print "%10.7f %10.7f %10.7f   " % (tuple(q['q-position'])),
-            print "%12.7f   " % (q['distance'] + distance),
+            text = "%10.7f %10.7f %10.7f    " % (tuple(q['q-position']))
+            text += "%12.7f    " % (q['distance'] + distance)
             for band in q['band']:
-                print "%12.7f %12.7f " % (band['gruneisen'], band['frequency']),
-            print
+                text += "%12.7f %12.7f  " % (band['gruneisen'],
+                                             band['frequency'])
+            lines.append(text)
         distance += path['phonon'][-1]['distance']
 
-def print_mesh(data):
-    print "#%-9s %-10s %-10s " % ("    q_a", "    q_b", "    q_c"),
-    print "%-12s " % "Multiplicity",
-    print "%-12s %-12s     ..." % ("   Gruneisen", "   Frequency")
-    for qpt in data['phonon']:
-        print "%10.7f %10.7f %10.7f " % (tuple(qpt['q-position'])),
-        print "%12d " % qpt['multiplicity'],
-        for band in qpt['band']:
-            print "%12.7f %12.7f " % (band['gruneisen'], band['frequency']),
-        print
+    print("\n".join(lines))
 
+def print_mesh(data):
+    text = "#%-9s %-10s %-10s  " % ("    q_a", "    q_b", "    q_c")
+    text += "%-12s  " % "Multiplicity"
+    text += "%-12s %-12s     ..." % ("   Gruneisen", "   Frequency")
+    lines = [text,]
+
+    for qpt in data['phonon']:
+        text = "%10.7f %10.7f %10.7f  " % (tuple(qpt['q-position']))
+        text += "%12d  " % qpt['multiplicity']
+        for band in qpt['band']:
+            text += "%12.7f %12.7f  " % (band['gruneisen'], band['frequency'])
+        lines.append(text)
+
+    print("\n".join(lines))
 
 def plot_band(data, is_fg, g_max, g_min):
     import matplotlib.pyplot as plt
@@ -120,7 +130,7 @@ def plot_yaml_mesh(data, is_fg, cutoff_frequency=None):
 
 def plot_hdf5_mesh(data, is_fg, cutoff_frequency=None):
     x = data['frequency']
-    y = data['gruneisen']
+    y = data['gruneisen'][:]
     return plot_mesh(x, y, is_fg, cutoff_frequency=cutoff_frequency)
 
 def plot_mesh(x, y, is_fg, cutoff_frequency=None):
@@ -145,26 +155,27 @@ def get_thermodynamic_Gruneisen_parameter_yaml(data, cutoff_frequency=None):
         m.append(qpt['multiplicity'])
         x.append([band['frequency'] for band in qpt['band']])
         y.append([band['gruneisen'] for band in qpt['band']])
-    freqs = np.where(x > cutoff_frequency, x, 0)
-    gammas = np.array(y)
-    get_thermodynamic_Gruneisen_parameter(gammas, freqs, m,
+    get_thermodynamic_Gruneisen_parameter(x, y, m,
                                           cutoff_frequency=cutoff_frequency)
     
 def get_thermodynamic_Gruneisen_parameter_hdf5(data, cutoff_frequency=None):
-    x = data['frequency']
-    y = data['gruneisen']
-    m = data['weight']
-    freqs = np.where(x > cutoff_frequency, x, 0)
-    gammas = np.array(y)
-    
-    get_thermodynamic_Gruneisen_parameter(gammas, freqs, m,
+    x = data['frequency'][:]
+    y = data['gruneisen'][:]
+    m = data['weight'][:]
+    get_thermodynamic_Gruneisen_parameter(x, y, m,
                                           cutoff_frequency=cutoff_frequency)
 
-def get_thermodynamic_Gruneisen_parameter(gammas, freqs, m, cutoff_frequency=None):
-    from phonopy.gruneisen.mesh import get_thermodynamic_Gruneisen_parameter as tgp
-    print "Thermodynamic gruneisen parameter at 300K:", tgp(gammas, freqs, m, 300)
-    
+def get_thermodynamic_Gruneisen_parameter(x, y, m,
+                                          cutoff_frequency=None):
+    freqs = np.array(x)
+    if cutoff_frequency:
+        freqs = np.where(freqs > cutoff_frequency, x, -1)
+    gammas = np.array(y)
+    weights = np.array(m)
 
+    from phonopy.gruneisen.mesh import get_thermodynamic_Gruneisen_parameter as gtgp
+    print("Thermodynamic gruneisen parameter at 300K: %s" %
+          gtgp(gammas, freqs, weights, 300))
 
 # Parse options
 from optparse import OptionParser
@@ -189,7 +200,8 @@ parser.add_option("--fg", dest="is_fg", action="store_true",
 parser.add_option("-t", "--title", dest="title", action="store",
                   type="string", help="Title of plot")
 parser.add_option("--cutoff", dest="cutoff_frequency", type="float",
-                  help="Plot above this cutoff frequency for mesh sampling mode.")
+                  help=("Plot above this cutoff frequency for mesh sampling "
+                        "mode."))
 parser.add_option("--fmax", dest="f_max", type="float",
                   help="Maximum frequency plotted")
 parser.add_option("--fmin", dest="f_min", type="float",
@@ -206,17 +218,21 @@ if options.is_hdf5:
     try:
         import h5py
     except ImportError:
-        print_error_message("You need to install python-h5py.")
-        if log_level > 0:
-            print_end()
+        print("You need to install python-h5py.")
         sys.exit(1)
 
-    data = h5py.File("gruneisen.hdf5")
+    if len(args) == 0:
+        filename = "gruneisen.hdf5"
+    else:
+        filename = args[0]
+    data = h5py.File(filename)
 else:
     if len(args) == 0:
-        data = yaml.load(open("gruneisen.yaml").read(), Loader=Loader)
+        filename = "gruneisen.yaml"
     else:
-        data = yaml.load(open(args[0]).read(), Loader=Loader)
+        filename = args[0]
+    with open(filename) as f:
+        data = yaml.load(f.read(), Loader=Loader)
 
 if 'path' in data:
     if options.is_gnuplot:
