@@ -158,9 +158,13 @@ else:
     for v in options.td_indices.split(','):
         set_of_indices.append([int(x) for x in v.split()])
 
-print(set_of_indices)
-
 # Plot
+fig, ax = plt.subplots()
+ax.xaxis.set_ticks_position('both')
+ax.yaxis.set_ticks_position('both')
+ax.xaxis.set_tick_params(which='both', direction='in')
+ax.yaxis.set_tick_params(which='both', direction='in')
+
 plots = []
 for indices in set_of_indices:
     d = np.zeros(len(temperatures), dtype='double')
@@ -168,6 +172,8 @@ for indices in set_of_indices:
         d += displacements[:, i-1]
     plots.append(plt.plot(temperatures[tmin_index:tmax_index],
                           d[tmin_index:tmax_index] / len(indices)))
+
+ax.set_xlim((0, temperatures[tmax_index - 1]))
 
 # Set y range
 if (options.ymin is not None) and (options.ymax is not None):

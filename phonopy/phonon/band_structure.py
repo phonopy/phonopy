@@ -114,6 +114,7 @@ class BandStructure(object):
 
         pyplot.ylabel('Frequency')
         pyplot.xlabel('Wave vector')
+
         if labels and len(labels) == len(self._special_points):
             pyplot.xticks(self._special_points, labels)
         else:
