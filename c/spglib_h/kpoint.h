@@ -37,9 +37,6 @@
 
 #include "mathfunc.h"
 
-#define KPT_NUM_BZ_SEARCH_SPACE 125
-extern const int kpt_bz_search_space[KPT_NUM_BZ_SEARCH_SPACE][3];
-
 int kpt_get_irreducible_reciprocal_mesh(int grid_address[][3],
 					int map[],
 					const int mesh[3],

@@ -199,8 +199,8 @@ mean square displacements.
 
 The default values for calculators are those to convert frequency
 units to THz. The default conversion factors for ``wien2k``,
-``abinit``, ``pwscf``, and ``elk`` are 3.44595, 21.49068, 108.9708,
-and 154.1079 respectively. These are determined following the physical
+``abinit``, ``pwscf``, ``elk``, and CRYSTAL are 3.44595, 21.49068, 108.9708,
+154.1079, and 15.633302 respectively. These are determined following the physical
 unit systems of the calculators. How to calcualte these conversion
 factors is explained at :ref:`physical_unit_conversion`.
 
@@ -336,8 +336,8 @@ properties and density of states.
 
 .. _mp_tag:
 
-``MESH`` or ``MP``
-~~~~~~~~~~~~~~~~~~~
+``MESH``, ``MP``, or ``MESH_NUMBERS``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ``MESH`` numbers give uniform meshes in each axis. As the default
 behavior, the center of mesh is determined by the Monkhorst-Pack
@@ -635,10 +635,9 @@ computationally demanding, so the convergence is easily achieved with
 increasing the density of the sampling mesh. ``-p`` option can be used
 together to plot the thermal propreties.
 
-Phonon frequencies have to be calculated in THz and this is the
-default setting of phonopy. However as a special case when
-unit conversion factor is specified using
-``FREQUENCY_CONVERSION_FACTOR`` tag, careful attention is required.
+Phonon frequencies in THz, which is the default setting of phonopy,
+are used to obtain the thermal properties, therefore physical units
+have to be set properly for it (see :ref:`calculator_interfaces`.)
 
 The calculated values are
 written into ``thermal_properties.yaml``. The unit systems of free
@@ -658,6 +657,18 @@ temperature range to be calculated. The default values of them are 0,
    TPROP = .TRUE.
    TMAX = 2000
 
+``PRETEND_REAL``
+~~~~~~~~~~~~~~~~~
+
+This enables to take imaginary frequencies as real for thermal
+property calculation. This does give false thermal properties,
+therefore for a testing purpose only, when a small amount of imaginary
+branches obtained.
+
+::
+
+   TPROP = .TRUE.
+   PRETEND_REAL = .TRUE.
 
 .. _thermal_atomic_displacements_tags:
 
@@ -672,19 +683,18 @@ Thermal displacements
 Mean square displacements projected to Cartesian axes as a function of
 temperature are calculated from the number of phonon excitations. The
 usages of ``TMAX``, ``TMIN``, ``TSTEP`` tags are same as those in
-:ref:`thermal properties tags <thermal_properties_tag>`. The result is
-writen into ``thermal_displacements.yaml``. See the detail of the
-method, :ref:`thermal_displacement`. These tags must be used with
+:ref:`thermal properties tags <thermal_properties_tag>`. Phonon
+frequencies in THz, which is the default setting of phonopy, are used to
+obtain the mean square displacements, therefore physical units have to
+be set properly for it (see :ref:`calculator_interfaces`.) The result
+is given in :math:`\textrm{\AA}^2` and writen into
+``thermal_displacements.yaml``. See the detail of the method,
+:ref:`thermal_displacement`. These tags must be used with
 :ref:`mesh_sampling_tags`
 
 ``CUTOFF_FREQUENCY`` tag with a small value is recommened to be set
 when sampling :math:`\Gamma` point or using very dense sampling mesh
 to avoid divergence.
-
-Phonon frequencies have to be calculated in THz and this is the
-default setting of phonopy. However as a special case when unit
-conversion factor is specified using ``FREQUENCY_CONVERSION_FACTOR``
-tag, careful attention is required.
 
 The projection is applied along arbitrary direction using
 ``PROJECTION_DIRECTION`` tag (:ref:`projection_direction_tag`).
@@ -699,13 +709,17 @@ The projection is applied along arbitrary direction using
 ``TDISPMAT``, ``TMAX``, ``TMIN``, and ``TSTEP``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Mean square displacement matricies are calculated. The difinition is
-shown at :ref:`thermal_displacement`. The result is writen into
+Mean square displacement matricies are calculated. The definition is
+shown at :ref:`thermal_displacement`. Phonon frequencies in THz, which
+is the default setting of phonopy, are
+used to obtain the mean square displacement matricies, therefore
+physical units have to be set properly for it (see
+:ref:`calculator_interfaces`.) The result is given in
+:math:`\textrm{\AA}^2` and writen into
 ``thermal_displacement_matrices.yaml`` where six matrix elements are
 given in the order of xx, yy, zz, yz, xz, xy.  In this yaml file,
 ``displacement_matrices`` and ``displacement_matrices_cif`` correspond
-to
-:math:`\mathrm{U}_\text{cart}` and :math:`\mathrm{U}_\text{cif}`
+to :math:`\mathrm{U}_\text{cart}` and :math:`\mathrm{U}_\text{cif}`
 defined at :ref:`thermal_displacement_matrix`, respectively.
 
 ``CUTOFF_FREQUENCY`` tag with a small value is recommened to be set
@@ -716,11 +730,6 @@ The 3x3 matrix restricts distribution of each atom around the
 equilibrium position to be ellipsoid. But the distribution is not
 necessarily to be so.
 
-Phonon frequencies have to be calculated in THz and this is the
-default setting of phonopy. However as a special case when
-unit conversion factor is specified using
-``FREQUENCY_CONVERSION_FACTOR`` tag, careful attention is required.
-
 ::
 
    TDISPMAT = .TRUE.
@@ -730,9 +739,14 @@ unit conversion factor is specified using
 ``TDISPMAT_CIF``
 ~~~~~~~~~~~~~~~~~
 
-This tag specifis a temperature at which thermal displacement is
+This tag specifis a temperature (K) at which thermal displacement is
 calculated and the mean square displacement matrix is written to the
-cif file ``tdispmat.cif`` with the dictionary item ``aniso_U``.
+cif file ``tdispmat.cif`` with the dictionary item ``aniso_U``. Phonon
+frequencies in THz, which is the default setting of phonopy, are used
+to obtain the mean square displacement matricies, therefore physical
+units have to be set properly for it (see
+:ref:`calculator_interfaces`.) The result is given in
+:math:`\textrm{\AA}^2`.
 
 ::
 

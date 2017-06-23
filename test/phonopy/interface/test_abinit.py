@@ -3,6 +3,9 @@ import unittest
 import numpy as np
 from phonopy.interface.phonopy_yaml import get_unitcell_from_phonopy_yaml
 from phonopy.interface.abinit import read_abinit
+import os
+
+data_dir = os.path.dirname(os.path.abspath(__file__))
 
 class TestAbinit(unittest.TestCase):
 
@@ -13,8 +16,9 @@ class TestAbinit(unittest.TestCase):
         pass
     
     def test_read_abinit(self):
-        cell = read_abinit("NaCl-abinit.in")
-        cell_ref = get_unitcell_from_phonopy_yaml("NaCl-abinit.yaml")
+        cell = read_abinit(os.path.join(data_dir, "NaCl-abinit.in"))
+        filename = os.path.join(data_dir, "NaCl-abinit-pwscf.yaml")
+        cell_ref = get_unitcell_from_phonopy_yaml(filename)
         self.assertTrue(
             (np.abs(cell.get_cell() - cell_ref.get_cell()) < 1e-5).all())
         diff_pos = cell.get_scaled_positions() - cell_ref.get_scaled_positions()

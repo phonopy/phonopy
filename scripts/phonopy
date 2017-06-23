@@ -43,7 +43,7 @@ from phonopy.cui.settings import PhonopyConfParser
 from phonopy.cui.show_symmetry import check_symmetry
 from phonopy.cui.phonopy_argparse import get_parser
 from phonopy.units import (Wien2kToTHz, AbinitToTHz, PwscfToTHz, ElkToTHz,
-                           SiestaToTHz, VaspToTHz, Hartree, Bohr)
+                           SiestaToTHz, VaspToTHz, CrystalToTHz, Hartree, Bohr)
 from phonopy.structure.cells import print_cell, determinant
 from phonopy.structure.atoms import atom_data, symbol_map
 from phonopy.interface import create_FORCE_SETS, read_crystal_structure
@@ -101,6 +101,7 @@ def file_exists(filename, log_level):
 
 def finalize_phonopy(log_level,
                      phonopy_conf,
+                     phonon,
                      interface_mode,
                      filename="phonopy.yaml"):
     if log_level > 0:
@@ -187,7 +188,16 @@ def print_settings(settings):
         print("  Use Lapack solver via Lapacke: on")
     if run_mode == 'mesh' or run_mode == 'band_mesh':
         print("  Sampling mesh: %s" % np.array(settings.get_mesh()[0]))
-
+        if settings.get_is_thermal_properties():
+            cutoff_freq = settings.get_cutoff_frequency()
+            if cutoff_freq is None:
+                pass
+            elif cutoff_freq < 0:
+                print("  - Thermal properties are calculatd with "
+                      "absolute phonon frequnecy.")
+            else:
+                print("  - Phonon frequencies > %f are used to calculate "
+                      "thermal properties." % cutoff_freq)
     if (np.diag(np.diag(settings.get_supercell_matrix())) \
             - settings.get_supercell_matrix()).any():
         print("  Supercell matrix:")
@@ -227,6 +237,7 @@ if options.loglevel is not None:
 # elk           : hartree, au,        AMU,         hartree/au
 # pwscf         : Ry,      au,        AMU,         Ry/au
 # siesta        : eV,      au,        AMU,         eV/Angstroem
+# CRYSTAL       : eV,      Angstrom,  AMU,         eV/Angstroem
 #
 if options.wien2k_mode:
     interface_mode = 'wien2k'
@@ -258,6 +269,12 @@ elif options.siesta_mode:
     factor = SiestaToTHz
     nac_factor = Hartree / Bohr
     distance_to_A = Bohr
+elif options.crystal_mode:
+    interface_mode = 'crystal'
+    from phonopy.interface.crystal import write_supercells_with_displacements
+    factor = CrystalToTHz
+    nac_factor = Hartree * Bohr
+    distance_to_A = 1.0
 else:
     if options.vasp_mode:
         interface_mode = 'vasp'
@@ -307,7 +324,7 @@ if options.force_constants_mode:
     if len(args) > 0:
         file_exists(args[0], log_level)
         error_num = create_FORCE_CONSTANTS(args[0],
-                                           options,
+                                           options.is_hdf5,
                                            log_level)
     else:
         print_error_message("Please specify vasprun.xml.")
@@ -497,6 +514,8 @@ if run_mode == 'displacements':
             interface_mode == 'pwscf' or
             interface_mode == 'siesta'):
             displacement_distance = 0.02
+        elif interface_mode == 'crystal':
+            displacement_distance = 0.01
         else: # default or vasp
             displacement_distance = 0.01
     else:
@@ -535,6 +554,13 @@ if run_mode == 'displacements':
             supercell,
             cells_with_disps,
             optional_structure_file_information[1])
+    elif interface_mode == 'crystal':
+        conv_numbers = optional_structure_file_information[1]
+        write_supercells_with_displacements(supercell,
+                                            cells_with_disps,
+                                            conv_numbers,
+                                            settings.get_supercell_matrix(),
+                                            template_file="TEMPLATE")
     else: # default or vasp
         write_supercells_with_displacements(supercell, cells_with_disps)
 
@@ -544,6 +570,7 @@ if run_mode == 'displacements':
 
     finalize_phonopy(log_level,
                      phonopy_conf,
+                     phonon,
                      interface_mode,
                      filename="phonopy_disp.yaml")
 
@@ -724,7 +751,8 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
                         is_time_reversal=t_symmetry,
                         is_mesh_symmetry=q_symmetry,
                         is_eigenvectors=settings.get_is_eigenvectors(),
-                        is_gamma_center=settings.get_is_gamma_center())
+                        is_gamma_center=settings.get_is_gamma_center(),
+                        run_immediately=False)
         weights = phonon.get_mesh()[1]
         if log_level > 0:
             if q_symmetry:
@@ -733,6 +761,9 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
             else:
                 print("Number of q-points on sampling mesh: %d" %
                       weights.shape[0])
+            print("Calculating phonons on sampling mesh...")
+
+        phonon.run_mesh()
 
         if settings.get_write_mesh():
             if settings.get_is_hdf5():
@@ -758,7 +789,8 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
                 tmin,
                 is_projection=settings.get_is_projected_thermal_properties(),
                 band_indices=settings.get_band_indices(),
-                cutoff_frequency=settings.get_cutoff_frequency())
+                cutoff_frequency=settings.get_cutoff_frequency(),
+                pretend_real=settings.get_pretend_real())
             phonon.write_yaml_thermal_properties()
 
             if log_level > 0:
@@ -1061,4 +1093,4 @@ else:
 ########################
 # Phonopy finalization #
 ########################
-finalize_phonopy(log_level, phonopy_conf, interface_mode)
+finalize_phonopy(log_level, phonopy_conf, phonon, interface_mode)

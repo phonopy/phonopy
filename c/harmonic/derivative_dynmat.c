@@ -34,6 +34,7 @@
 
 #include <math.h>
 #include <stdlib.h>
+#define PI 3.14159265358979323846
 
 static void get_derivative_nac(double *ddnac,
 			       double *dnac,
@@ -147,8 +148,8 @@ void get_derivative_dynmat_at_q(double *derivative_dynmat,
 	  for (m = 0; m < 3; m++) {
 	    phase += q[m] * r[k * num_patom * 81 + i * 81 + l * 3 + m];
 	  }
-	  s = sin(phase * 2 * M_PI);
-	  c = cos(phase * 2 * M_PI);
+	  s = sin(phase * 2 * PI);
+	  c = cos(phase * 2 * PI);
 
 	  real_phase += c;
 	  imag_phase += s;
@@ -156,7 +157,7 @@ void get_derivative_dynmat_at_q(double *derivative_dynmat,
 	  for (m = 0; m < 3; m++) {
 	    coef[m] = 0;
 	    for (n = 0; n < 3; n++) {
-	      coef[m] += 2 * M_PI *
+	      coef[m] += 2 * PI *
 		lattice[m * 3 + n] * r[k * num_patom * 81 + i * 81 + l * 3 + n];
 	    }
 	  }

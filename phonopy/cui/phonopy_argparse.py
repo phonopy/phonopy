@@ -44,6 +44,7 @@ def get_parser():
         band_paths=None,
         band_points=None,
         cell_filename=None,
+        crystal_mode=False,
         cutoff_frequency=None,
         cutoff_radius=None,
         displacement_distance=None,
@@ -94,9 +95,11 @@ def get_parser():
         lapack_solver=False,
         loglevel=None,
         masses=None,
+        magmom=None,
         mesh_numbers=None,
         modulation=None,
         moment_order=None,
+        pretend_real=False,
         primitive_axis=None,
         projection_direction=None,
         pwscf_mode=False,
@@ -146,6 +149,9 @@ def get_parser():
     parser.add_option(
         "-c", "--cell", dest="cell_filename", action="store", type="string",
         help="Read unit cell", metavar="FILE")
+    parser.add_option(
+        "--crystal", dest="crystal_mode", action="store_true", 
+        help="Invoke CRYSTAL mode")
     parser.add_option(
         "--cutoff_freq", "--cutoff_frequency",
         dest="cutoff_frequency", type="float",
@@ -253,6 +259,9 @@ def get_parser():
         "--mass", dest="masses", action="store", type="string",
         help="Same as MASS tag")
     parser.add_option(
+        "--magmom", dest="magmoms", action="store", type="string",
+        help="Same as MAGMOM tag")
+    parser.add_option(
         "--modulation", dest="modulation", action="store", type="string",
         help="Same as MODULATION tag")
     parser.add_option(
@@ -297,6 +306,11 @@ def get_parser():
         "--pm", dest="is_plusminus_displacements", action="store_true",
         help="Set plus minus displacements")
     parser.add_option(
+        "--pr", "--pretend_real", dest="pretend_real", action="store_true",
+        help=("Use imaginary frequency as real for thermal property "
+              "calculation. For a testing purpose only, when a small "
+              "amount of imaginary branches obtained."))
+    parser.add_option(
         "--pt", "--projected_thermal_property",
         dest="is_projected_thermal_properties", action="store_true",
         help="Output projected thermal properties")
@@ -312,9 +326,6 @@ def get_parser():
               "q->0, and group velocity for degenerate phonon "
               "mode in q-points mode"))
     parser.add_option(
-        "--siesta", dest="siesta_mode",
-        action="store_true", help="Invoke Siesta mode")
-    parser.add_option(
         "-q", "--quiet", dest="quiet", action="store_true",
         help="Print out smallest information")
     parser.add_option(
@@ -326,6 +337,9 @@ def get_parser():
     parser.add_option(
         "--show_irreps", dest="show_irreps", action="store_true",
         help="Show IR-Reps along with characters")
+    parser.add_option(
+        "--siesta", dest="siesta_mode",
+        action="store_true", help="Invoke Siesta mode")
     parser.add_option(
         "--sigma", dest="sigma", type="string",
         help="Smearing width for DOS")

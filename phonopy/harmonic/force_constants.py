@@ -34,8 +34,8 @@
 
 import numpy as np
 import sys
-from phonopy.structure.cells import get_reduced_bases
-from phonopy.harmonic.dynamical_matrix import get_equivalent_smallest_vectors
+from phonopy.structure.cells import (get_reduced_bases,
+                                     get_equivalent_smallest_vectors)
 
 def get_force_constants(set_of_forces,
                         symmetry,
@@ -122,7 +122,7 @@ def cutoff_force_constants(force_constants,
                            cutoff_radius,
                            symprec=1e-5):
     num_atom = supercell.get_number_of_atoms()
-    reduced_bases = get_reduced_bases(supercell.get_cell(), symprec)
+    reduced_bases = get_reduced_bases(supercell.get_cell(), tolerance=symprec)
     positions = np.dot(supercell.get_positions(),
                        np.linalg.inv(reduced_bases))
     for i in range(num_atom):
@@ -205,7 +205,6 @@ def get_positions_sent_by_rot_inv(lattice, # column vectors
                                   site_symmetry,
                                   symprec):
     rot_map_syms = []
-    symprec2 = symprec ** 2
     for sym in site_symmetry:
         rot_map = np.zeros(len(positions), dtype='intc')
         rot_pos = np.dot(positions, sym.T)
@@ -214,7 +213,7 @@ def get_positions_sent_by_rot_inv(lattice, # column vectors
             diff = positions - rot_pos_i
             diff -= np.rint(diff)
             diff = np.dot(diff, lattice.T)
-            j = np.nonzero(np.sum(diff ** 2, axis=1) < symprec2)[0]
+            j = np.nonzero(np.sqrt(np.sum(diff ** 2, axis=1)) < symprec)[0]
             rot_map[j] = i
 
         rot_map_syms.append(rot_map)
@@ -266,7 +265,7 @@ def set_tensor_symmetry_old(force_constants,
                 diff = pos_j - rot_pos
                 diff -= np.rint(diff)
                 diff = np.dot(diff, lattice.T)
-                if np.linalg.norm < symprec:
+                if np.linalg.norm(diff) < symprec:
                     map_local.append(j)
                     break
         mapping.append(map_local)
@@ -751,7 +750,7 @@ def _get_atom_indices_by_symmetry(lattice,
     diff -= np.rint(diff)
     diff = np.dot(diff, lattice.T)
     # m[N, K(1), K(2)]
-    m = (np.sum(diff ** 2, axis=3) < symprec ** 2)
+    m = (np.sqrt(np.sum(diff ** 2, axis=3)) < symprec)
     # index_array[K(1), K(2)]
     index_array = np.tile(np.arange(K, dtype='intc'), (K, 1))
     # Understanding numpy boolean array indexing (extract True elements)

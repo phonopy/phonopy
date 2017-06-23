@@ -79,7 +79,7 @@ class Mesh(object):
 
     def get_mesh_numbers(self):
         return self._mesh
-        
+
     def get_phonon(self):
         return self._phonon
 
@@ -130,7 +130,7 @@ class Mesh(object):
         w.create_dataset('frequency', data=self._frequencies)
         w.create_dataset('qpoint', data=self._qpoints)
         w.close()
-    
+
     def plot(self,
              cutoff_frequency=None,
              color_scheme=None,
@@ -172,8 +172,8 @@ class Mesh(object):
                     plt.plot(freqs, g, marker, markersize=markersize)
                 else:
                     plt.plot(freqs, g, marker)
-        
-        return plt      
+
+        return plt
 
 
 def get_thermodynamic_Gruneisen_parameter(gammas,
@@ -181,7 +181,10 @@ def get_thermodynamic_Gruneisen_parameter(gammas,
                                           multiplicities,
                                           t):
     if t > 0:
-        cv = mode_cv(t, frequencies * THzToEv)
+        conditions = (frequencies > 0)
+        freq_temp = np.where(conditions, x, 1)
+        cv_temp = mode_cv(t, frequencies * THzToEv)
+        cv = np.where(conditions, x, 0)
         return (np.dot(multiplicities, cv * gammas).sum() /
                 np.dot(multiplicities, cv).sum())
     else:

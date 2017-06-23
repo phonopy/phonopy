@@ -15,22 +15,31 @@ class TestCell(unittest.TestCase):
                   [0.7, 0.7, 0.0],
                   [0.2, 0.8, 0.5],
                   [0.8, 0.2, 0.5]]
-        
-        self._cell = Atoms(cell=lattice,
-                           scaled_positions=points,
-                           symbols=symbols)
+
+        self._cells = []
+        self._cells.append(Atoms(cell=lattice,
+                                 scaled_positions=points,
+                                 symbols=symbols))
+
+        # The element for which mass is not defined.
+        symbols = ['Ac'] * 2 + ['O'] * 4
+        self._cells.append(Atoms(cell=lattice,
+                                 scaled_positions=points,
+                                 symbols=symbols))
     
     def tearDown(self):
         pass
     
     def test_atoms(self):
-        print(self._cell.get_cell())
-        for s, p in zip(self._cell.get_chemical_symbols(),
-                        self._cell.get_scaled_positions()):
-            print("%s %s" % (s, p))
+        for cell in self._cells:
+            print(cell.get_cell())
+            for s, p in zip(cell.get_chemical_symbols(),
+                            cell.get_scaled_positions()):
+                print("%s %s" % (s, p))
 
     def test_phonopy_atoms(self):
-        print(PhonopyAtoms(atoms=self._cell))
+        for cell in self._cells:
+            print(PhonopyAtoms(atoms=cell))
 
 if __name__ == '__main__':
     unittest.main()

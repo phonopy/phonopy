@@ -55,7 +55,8 @@ class ThermalProperties(object):
         self._thermal_properties = []
         for V in volumes:
             tp = self._get_thermal_properties_at_V(V)
-            tp.run(t_step=t_step, t_max=t_max, t_min=t_min)
+            tp.set_temperature_range(t_min=t_min, t_max=t_max, t_step=t_step)
+            tp.run()
             self._thermal_properties.append(tp)
 
     def get_thermal_properties(self):

@@ -49,15 +49,15 @@ def write_FORCE_SETS(dataset, filename='FORCE_SETS'):
     forces = [x['forces'] for x in dataset['first_atoms']]
     
     # Write FORCE_SETS
-    fp = open(filename, 'w')
-    fp.write("%-5d\n" % num_atom)
-    fp.write("%-5d\n" % len(displacements))
-    for count, disp in enumerate(displacements):
-        fp.write("\n%-5d\n" % (disp['number'] + 1))
-        fp.write("%20.16f %20.16f %20.16f\n" % (tuple(disp['displacement'])))
-
-        for f in forces[count]:
-            fp.write("%15.10f %15.10f %15.10f\n" % (tuple(f)))
+    with open(filename, 'w') as fp:
+        fp.write("%-5d\n" % num_atom)
+        fp.write("%-5d\n" % len(displacements))
+        for count, disp in enumerate(displacements):
+            fp.write("\n%-5d\n" % (disp['number'] + 1))
+            fp.write("%20.16f %20.16f %20.16f\n" % (tuple(disp['displacement'])))
+    
+            for f in forces[count]:
+                fp.write("%15.10f %15.10f %15.10f\n" % (tuple(f)))
 
 def parse_FORCE_SETS(is_translational_invariance=False, filename="FORCE_SETS"):
     with open(filename, 'r') as f:
@@ -102,17 +102,6 @@ def _get_line_ignore_blank(f):
         line = _get_line_ignore_blank(f)
     return line
 
-def get_drift_forces(forces, filename=None):
-    drift_force = np.sum(forces, axis=0) / len(forces)
-    if filename is None:
-        print("Drift force")
-    else:
-        print("Drift force of %s" % filename)
-    print("%12.8f %12.8f %12.8f" % tuple(drift_force))
-    print("This drift force was subtracted from forces.")
-
-    return drift_force
-    
 def collect_forces(f, num_atom, hook, force_pos, word=None):
     for line in f:
         if hook in line:
@@ -128,9 +117,11 @@ def collect_forces(f, num_atom, hook, force_pos, word=None):
             
         elems = line.split()
         if len(elems) > force_pos[2]:
-            forces.append([float(elems[i]) for i in force_pos])
-            # calculation = 'scf'
-            # forces.append([float(x) for x in elems[6:9]])
+            try:
+                forces.append([float(elems[i]) for i in force_pos])
+            except ValueError:
+                forces = []
+                break
         else:
             return False
 
@@ -145,36 +136,36 @@ def iter_collect_forces(filename,
                         force_pos,
                         word=None,
                         max_iter=1000):
-    f = open(filename)
-    forces = []
-    prev_forces = []
-
-    for i in range(max_iter):
-        forces = collect_forces(f, num_atom, hook, force_pos, word=word)
-        if not forces:
-            forces = prev_forces[:]
-            break
-        else:
-            prev_forces = forces[:]
-
-    if i == max_iter - 1:
-        print("Reached to max number of iterations (%d)." % max_iter)
-        
-    return forces
+    with open(filename) as f:
+        forces = []
+        prev_forces = []
+    
+        for i in range(max_iter):
+            forces = collect_forces(f, num_atom, hook, force_pos, word=word)
+            if not forces:
+                forces = prev_forces[:]
+                break
+            else:
+                prev_forces = forces[:]
+    
+        if i == max_iter - 1:
+            sys.stderr.write("Reached to max number of iterations (%d).\n" %
+                             max_iter)
+            
+        return forces
     
 #
 # FORCE_CONSTANTS, force_constants.hdf5
 #
 def write_FORCE_CONSTANTS(force_constants, filename='FORCE_CONSTANTS'):
-    w = open(filename, 'w')
-    fc_shape = force_constants.shape
-    w.write("%4d\n" % (fc_shape[0]))
-    for i in range(fc_shape[0]):
-        for j in range(fc_shape[1]):
-            w.write("%4d%4d\n" % (i+1, j+1))
-            for vec in force_constants[i][j]:
-                w.write(("%22.15f"*3 + "\n") % tuple(vec))
-    w.close()
+    with open(filename, 'w') as w:
+        fc_shape = force_constants.shape
+        w.write("%4d\n" % (fc_shape[0]))
+        for i in range(fc_shape[0]):
+            for j in range(fc_shape[1]):
+                w.write("%4d%4d\n" % (i+1, j+1))
+                for vec in force_constants[i][j]:
+                    w.write(("%22.15f"*3 + "\n") % tuple(vec))
 
 def write_force_constants_to_hdf5(force_constants,
                                   filename='force_constants.hdf5'):
@@ -183,25 +174,24 @@ def write_force_constants_to_hdf5(force_constants,
         w.create_dataset('force_constants', data=force_constants)
 
 def parse_FORCE_CONSTANTS(filename="FORCE_CONSTANTS"):
-    fcfile = open(filename)
-    num = int((fcfile.readline().strip().split())[0])
-    force_constants = np.zeros((num, num, 3, 3), dtype=float)
-    for i in range(num):
-        for j in range(num):
-            fcfile.readline()
-            tensor = []
-            for k in range(3):
-                tensor.append([float(x) for x in fcfile.readline().strip().split()])
-            force_constants[i, j] = np.array(tensor)
-
-    return force_constants
+    with open(filename) as fcfile:
+        num = int((fcfile.readline().strip().split())[0])
+        force_constants = np.zeros((num, num, 3, 3), dtype=float)
+        for i in range(num):
+            for j in range(num):
+                fcfile.readline()
+                tensor = []
+                for k in range(3):
+                    tensor.append([float(x)
+                                   for x in fcfile.readline().strip().split()])
+                force_constants[i, j] = np.array(tensor)
+    
+        return force_constants
 
 def read_force_constants_hdf5(filename="force_constants.hdf5"):
     import h5py
     with h5py.File(filename, 'r') as f:
-        fc = f[f.keys()[0]][:]
-        return fc
-    return None
+        return f[next(iter(f.keys()))][:]
 
 #
 # disp.yaml
@@ -220,35 +210,46 @@ def parse_disp_yaml(filename="disp.yaml", return_cell=False):
 
     from phonopy.structure.atoms import PhonopyAtoms as Atoms
 
-    dataset = yaml.load(open(filename), Loader=Loader)
-    natom = dataset['natom']
-    new_dataset = {}
-    new_dataset['natom'] = natom
-    new_first_atoms = []
-    for first_atoms in dataset['displacements']:
-        first_atoms['atom'] -= 1
-        atom1 = first_atoms['atom']
-        disp1 = first_atoms['displacement']
-        if 'direction' in first_atoms:
-            direct1 = first_atoms['direction']
-            new_first_atoms.append({'number': atom1,
-                                    'displacement': disp1,
-                                    'direction':direct1})
+    with open(filename) as f:
+        dataset = yaml.load(f, Loader=Loader)
+        natom = dataset['natom']
+        new_dataset = {}
+        new_dataset['natom'] = natom
+        new_first_atoms = []
+        for first_atoms in dataset['displacements']:
+            first_atoms['atom'] -= 1
+            atom1 = first_atoms['atom']
+            disp1 = first_atoms['displacement']
+            if 'direction' in first_atoms:
+                direct1 = first_atoms['direction']
+                new_first_atoms.append({'number': atom1,
+                                        'displacement': disp1,
+                                        'direction':direct1})
+            else:
+                new_first_atoms.append({'number': atom1, 'displacement': disp1})
+        new_dataset['first_atoms'] = new_first_atoms
+        
+        if return_cell:
+            lattice = dataset['lattice']
+            if 'points' in dataset:
+                data_key = 'points'
+                pos_key = 'coordinates'
+            elif 'atoms' in dataset:
+                data_key = 'atoms'
+                pos_key = 'position'
+            else:
+                data_key = None
+                pos_key = None
+            
+            positions = [x[pos_key] for x in dataset[data_key]]
+            symbols = [x['symbol'] for x in dataset[data_key]]
+            cell = Atoms(cell=lattice,
+                         scaled_positions=positions,
+                         symbols=symbols,
+                         pbc=True)
+            return new_dataset, cell
         else:
-            new_first_atoms.append({'number': atom1, 'displacement': disp1})
-    new_dataset['first_atoms'] = new_first_atoms
-    
-    if return_cell:
-        lattice = dataset['lattice']
-        positions = [x['position'] for x in dataset['atoms']]
-        symbols = [x['symbol'] for x in dataset['atoms']]
-        cell = Atoms(cell=lattice,
-                     scaled_positions=positions,
-                     symbols=symbols,
-                     pbc=True)
-        return new_dataset, cell
-    else:
-        return new_dataset
+            return new_dataset
 
 def write_disp_yaml(displacements, supercell, directions=None,
                     filename='disp.yaml'):
@@ -274,14 +275,14 @@ def write_disp_yaml(displacements, supercell, directions=None,
 # DISP (old phonopy displacement format)
 #
 def parse_DISP(filename='DISP'):
-    disp = open(filename)
-    displacements = []
-    for line in disp:
-        if line.strip() != '':
-            a = line.split()
-            displacements.append(
-                [int(a[0])-1, float(a[1]), float(a[2]), float(a[3])])
-    return displacements
+    with open(filename) as disp:
+        displacements = []
+        for line in disp:
+            if line.strip() != '':
+                a = line.split()
+                displacements.append(
+                    [int(a[0])-1, float(a[1]), float(a[2]), float(a[3])])
+        return displacements
 
 #
 # QPOINTS
@@ -289,19 +290,19 @@ def parse_DISP(filename='DISP'):
 def parse_QPOINTS(filename="QPOINTS"):
     from phonopy.cui.settings import fracval
 
-    f = open(filename, 'r')
-    num_qpoints = int(f.readline().strip())
-    qpoints = []
-    for i in range(num_qpoints):
-        qpoints.append([fracval(x) for x in f.readline().strip().split()])
-    return np.array(qpoints)
+    with open(filename, 'r') as f:
+        num_qpoints = int(f.readline().strip())
+        qpoints = []
+        for i in range(num_qpoints):
+            qpoints.append([fracval(x) for x in f.readline().strip().split()])
+        return np.array(qpoints)
 
 #
 # BORN
 #
 def parse_BORN(primitive, symprec=1e-5, is_symmetry=True, filename="BORN"):
-    f = open(filename, 'r')
-    return _parse_BORN_from_file_object(f, primitive, symprec, is_symmetry)
+    with open(filename, 'r') as f:
+        return _parse_BORN_from_file_object(f, primitive, symprec, is_symmetry)
 
 def parse_BORN_from_strings(strings, primitive, symprec=1e-5, is_symmetry=True):
     f = StringIO(strings)
@@ -323,8 +324,18 @@ def get_born_parameters(f, primitive, symmetry):
     if len(line_arr) > 0:
         try:
             factor = float(line_arr[0])
+            method = None
         except (ValueError, TypeError):
             factor = None
+            method = line_arr[0]
+
+    # For Gonze type NAC
+    G_cutoff = None
+    if method is not None and len(line_arr) > 1:
+        try:
+            G_cutoff = float(line_arr[1])
+        except (ValueError, TypeError):
+            pass
 
     # Read dielectric constant
     line = f.readline().split()
@@ -335,7 +346,8 @@ def get_born_parameters(f, primitive, symmetry):
     
     # Read Born effective charge
     independent_atoms = symmetry.get_independent_atoms()
-    born = np.zeros((primitive.get_number_of_atoms(), 3, 3), dtype=float)
+    born = np.zeros((primitive.get_number_of_atoms(), 3, 3),
+                    dtype='double', order='C')
 
     for i in independent_atoms:
         line = f.readline().split()
@@ -346,6 +358,13 @@ def get_born_parameters(f, primitive, symmetry):
             print("BORN file format of line %d is incorrect" % (i + 3))
             return False
         born[i] = np.reshape([float(x) for x in line], (3, 3))
+
+    # Check that the number of atoms in the BORN file was correct
+    line = f.readline().split()
+    if len(line) > 0:
+        print("Too many atoms in the BORN file (it should only contain "
+              "symmetry-independent atoms)")
+        return False
 
     # Expand Born effective charges to all atoms in the primitive cell
     rotations = symmetry.get_symmetry_operations()['rotations']
@@ -363,6 +382,10 @@ def get_born_parameters(f, primitive, symmetry):
     non_anal = {'born': born,
                 'factor': factor,
                 'dielectric': dielectric }
+    if method is not None:
+        non_anal['method'] = method
+        if G_cutoff is not None:
+            non_anal['G_cutoff'] = G_cutoff
 
     return non_anal
 
@@ -378,13 +401,15 @@ def read_thermal_properties_yaml(filenames, factor=1.0):
         from yaml import Loader
 
     thermal_properties = []
-    imag_ratios = []
+    num_modes = []
+    num_integrated_modes = []
     for filename in filenames:
-        tp_yaml = yaml.load(open(filename).read(), Loader=Loader)
-        thermal_properties.append(tp_yaml['thermal_properties'])
-        if 'num_modes' in tp_yaml:
-            imag_ratios.append(1 - (float(tp_yaml['num_integrated_modes']) /
-                                    tp_yaml['num_modes']))
+        with open(filename) as f:
+            tp_yaml = yaml.load(f.read(), Loader=Loader)
+            thermal_properties.append(tp_yaml['thermal_properties'])
+            if 'num_modes' in tp_yaml and 'num_integrated_modes' in tp_yaml:
+                num_modes.append(tp_yaml['num_modes'])
+                num_integrated_modes.append(tp_yaml['num_integrated_modes'])
 
     temperatures = [v['temperature'] for v in thermal_properties[0]]
     temp = []
@@ -413,7 +438,7 @@ def read_thermal_properties_yaml(filenames, factor=1.0):
         print("Stop phonopy-qha")
         sys.exit(1)
 
-    return temperatures, cv, entropy, fe_phonon, imag_ratios
+    return temperatures, cv, entropy, fe_phonon, num_modes, num_integrated_modes
 
 def read_cp(filename):
     return _parse_QHA_data(filename)
@@ -446,13 +471,14 @@ def _is_temperatures_match(temperatures):
 
 def _parse_QHA_data(filename):
     data = []
-    for line in open(filename):
-        if line.strip() == '' or line.strip()[0] == '#':
-            continue
-        if '#' in line:
-            data.append([float(x) for x in line.split('#')[0].split()])
-        else:
-            data.append([float(x) for x in line.split()])
-    return np.array(data).transpose()
+    with open(filename) as f:
+        for line in f:
+            if line.strip() == '' or line.strip()[0] == '#':
+                continue
+            if '#' in line:
+                data.append([float(x) for x in line.split('#')[0].split()])
+            else:
+                data.append([float(x) for x in line.split()])
+        return np.array(data).transpose()
 
 

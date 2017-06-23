@@ -37,34 +37,6 @@ import numpy as np
 from phonopy.structure.tetrahedron_method import TetrahedronMethod
 from phonopy.structure.grid_points import extract_ir_grid_points
 
-def run_tetrahedron_method(data_out,
-                           data_in,
-                           mesh,
-                           frequency_points,
-                           frequencies,
-                           weights,
-                           grid_address,
-                           grid_mapping_table,
-                           ir_grid_points,
-                           relative_grid_address):
-    try:
-        import phonopy._phonopy as phonoc
-    except ImportError:
-        import sys
-        print("Phonopy C-extension has to be built properly.")
-        sys.exit(1)
-
-    phonoc.run_tetrahedron_method(data_out,
-                                  data_in,
-                                  np.array(mesh, dtype='intc'),
-                                  frequency_points,
-                                  frequencies,
-                                  weights,
-                                  grid_address,
-                                  grid_mapping_table,
-                                  ir_grid_points,
-                                  relative_grid_address)
-
 def get_tetrahedra_frequencies(gp,
                                mesh,
                                grid_address,
@@ -155,7 +127,7 @@ class TetrahedronMesh(object):
                 self._grid_order = [1, mesh[0], mesh[0] * mesh[1]]
             else:
                 self._grid_order = grid_order
-        self._ir_grid_points = ir_grid_points
+        self._ir_grid_points = np.array(ir_grid_points, dtype='intc')
 
         self._gp_ir_index = None
 
@@ -209,9 +181,10 @@ class TetrahedronMesh(object):
             min_frequency = np.amin(self._frequencies)
             self._frequency_points = np.linspace(min_frequency,
                                                  max_frequency,
-                                                 division_number)
+                                                 division_number,
+                                                 dtype='double')
         else:
-            self._frequency_points = frequency_points
+            self._frequency_points = np.array(frequency_points, dtype='double')
 
         num_ir_grid_points = len(self._ir_grid_points)
         num_band = self._cell.get_number_of_atoms() * 3

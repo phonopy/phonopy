@@ -624,6 +624,10 @@ class ConfParser(object):
                 if self._options.masses:
                     self._confs['mass'] = self._options.masses
 
+            if opt.dest == 'magmoms':
+                if self._options.magmoms:
+                    self._confs['magmom'] = self._options.magmoms
+
             if opt.dest == 'mesh_numbers':
                 if self._options.mesh_numbers:
                     self._confs['mesh_numbers'] = self._options.mesh_numbers
@@ -772,7 +776,7 @@ class ConfParser(object):
                     self.set_parameter('is_mesh_symmetry', False)
 
             if conf_key == 'mesh_symmetry':
-                if confs['mesh_symmetry'] == '.false.':
+                if confs['mesh_symmetry'].lower() == '.false.':
                     self.set_parameter('is_mesh_symmetry', False)
                 
             if conf_key == 'translation':
@@ -783,7 +787,7 @@ class ConfParser(object):
                 self.set_parameter('tsym_type', confs['tsym_type'])
 
             if conf_key == 'rotational':
-                if confs['rotational'] == '.true.':
+                if confs['rotational'].lower() == '.true.':
                     self.set_parameter('is_rotational', True)
 
             if conf_key == 'fc_symmetry':
@@ -795,8 +799,8 @@ class ConfParser(object):
             if conf_key == 'dm_decimals':
                 self.set_parameter('dm_decimals', confs['dm_decimals'])
 
-            if conf_key == 'mesh_numbers':
-                vals = [ int(x) for x in confs['mesh_numbers'].split() ]
+            if conf_key in ['mesh_numbers', 'mp', 'mesh']:
+                vals = [int(x) for x in confs[conf_key].split()]
                 if len(vals) < 3:
                     self.setting_error("Mesh numbers are incorrectly set.")
                 self.set_parameter('mesh_numbers', vals[:3])
@@ -816,7 +820,7 @@ class ConfParser(object):
                 self.set_parameter('band_paths', bands)
 
             if conf_key == 'qpoints':
-                if confs['qpoints'] == '.true.':
+                if confs['qpoints'].lower() == '.true.':
                     self.set_parameter('qpoints', True)
                 else:
                     vals = [fracval(x) for x in confs['qpoints'].split()]
@@ -931,6 +935,7 @@ class PhonopySettings(Settings):
         self._modulation = None
         self._moment_order = None
         self._pdos_indices = None
+        self._pretend_real = False
         self._projection_direction = None
         self._run_mode = None
         self._show_irreps = False
@@ -1164,6 +1169,12 @@ class PhonopySettings(Settings):
     def get_pdos_indices(self):
         return self._pdos_indices
 
+    def set_pretend_real(self, pretend_real):
+        self._pretend_real = pretend_real
+
+    def get_pretend_real(self):
+        return self._pretend_real
+
     def set_projection_direction(self, direction):
         self._projection_direction = direction
 
@@ -1290,6 +1301,10 @@ class PhonopyConfParser(ConfParser):
                 if self._options.is_thermal_properties:
                     self._confs['tprop'] = '.true.'
 
+            if opt.dest == 'pretend_real':
+                if self._options.pretend_real:
+                    self._confs['pretend_real'] = '.true.'
+
             if opt.dest == 'is_projected_thermal_properties':
                 if self._options.is_projected_thermal_properties:
                     self._confs['ptprop'] = '.true.'
@@ -1382,7 +1397,6 @@ class PhonopyConfParser(ConfParser):
                 if self._options.lapack_solver:
                     self._confs['lapack_solver'] = '.true.'
 
-
     def _parse_conf(self):
         confs = self._confs
 
@@ -1419,17 +1433,8 @@ class PhonopyConfParser(ConfParser):
                 if confs['hdf5'].lower() == '.true.':
                     self.set_parameter('hdf5', True)
 
-            if conf_key == 'mp' or conf_key == 'mesh':
-                if conf_key == 'mp':
-                    vals = [int(x) for x in confs['mp'].split()]
-                if conf_key == 'mesh':
-                    vals = [int(x) for x in confs['mesh'].split()]
-                if len(vals) < 3:
-                    self.setting_error("Mesh numbers are incorrectly set.")
-                self.set_parameter('mesh_numbers', vals[:3])
-
             if conf_key == 'mp_shift':
-                vals = [ fracval(x) for x in confs['mp_shift'].split()]
+                vals = [fracval(x) for x in confs['mp_shift'].split()]
                 if len(vals) < 3:
                     self.setting_error("MP_SHIFT is incorrectly set.")
                 self.set_parameter('mp_shift', vals[:3])
@@ -1473,7 +1478,7 @@ class PhonopyConfParser(ConfParser):
 
             # Character table
             if conf_key == 'irreps':
-                vals = [ fracval(x) for x in confs['irreps'].split()]
+                vals = [fracval(x) for x in confs['irreps'].split()]
                 if len(vals) == 3 or len(vals) == 4:
                     self.set_parameter('irreps_qpoint', vals)
                 else:
@@ -1525,6 +1530,11 @@ class PhonopyConfParser(ConfParser):
             if conf_key == 'ptprop':
                 if confs['ptprop'].lower() == '.true.':
                     self.set_parameter('ptprop', True)
+
+            # Use imaginary frequency as real for thermal property calculation
+            if conf_key == 'pretend_real':
+                if confs['pretend_real'].lower() == '.true.':
+                    self.set_parameter('pretend_real', True)
 
             # Thermal displacement
             if conf_key == 'tdisp':
@@ -1580,7 +1590,6 @@ class PhonopyConfParser(ConfParser):
             if conf_key == 'lapack_solver':
                 if confs['lapack_solver'].lower() == '.true.':
                     self.set_parameter('lapack_solver', True)
-
 
     def _parse_conf_modulation(self, conf_modulation):
         modulation = {}
@@ -1724,7 +1733,7 @@ class PhonopyConfParser(ConfParser):
             self._settings.set_run_mode('anime')
             anime_type = self._settings.get_anime_type()
             if anime_type == 'v_sim':
-                qpoints = [ fracval(x) for x in params['anime'][0:3] ]
+                qpoints = [fracval(x) for x in params['anime'][0:3]]
                 self._settings.set_anime_qpoint(qpoints)
                 if len(params['anime']) > 3:
                     self._settings.set_anime_amplitude(float(params['anime'][3]))
@@ -1734,7 +1743,7 @@ class PhonopyConfParser(ConfParser):
                 self._settings.set_anime_division(int(params['anime'][2]))
             if len(params['anime']) == 6:
                 self._settings.set_anime_shift(
-                    [ fracval(x) for x in params['anime'][3:6] ])
+                    [fracval(x) for x in params['anime'][3:6]])
     
         # Modulation mode
         if 'modulation' in params:
@@ -1804,6 +1813,10 @@ class PhonopyConfParser(ConfParser):
                 self._settings.set_is_projected_thermal_properties(True)
                 self._settings.set_is_eigenvectors(True)
                 self._settings.set_is_mesh_symmetry(False)
+
+        # Use imaginary frequency as real for thermal property calculation
+        if 'pretend_real' in params:
+            self._settings.set_pretend_real(params['pretend_real'])
     
         # Thermal displacements
         if 'tdisp' in params:

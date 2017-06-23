@@ -33,6 +33,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
+import phonopy.structure.spglib as spg
 from phonopy.structure.atoms import PhonopyAtoms as Atoms
 
 def get_supercell(unitcell, supercell_matrix, symprec=1e-5):
@@ -45,12 +46,12 @@ def trim_cell(relative_axes, cell, symprec):
     """
     relative_axes: relative axes to supercell axes
     Trim positions outside relative axes
-    
+
     """
     positions = cell.get_scaled_positions()
     numbers = cell.get_atomic_numbers()
     masses = cell.get_masses()
-    magmoms = cell.get_magnetic_moments()    
+    magmoms = cell.get_magnetic_moments()
     lattice = cell.get_cell()
     trimed_lattice = np.dot(relative_axes.T, lattice)
 
@@ -70,9 +71,8 @@ def trim_cell(relative_axes, cell, symprec):
     positions_in_new_lattice -= np.floor(positions_in_new_lattice)
     trimed_positions = np.zeros_like(positions_in_new_lattice)
     num_atom = 0
-    
+
     mapping_table = np.arange(len(positions), dtype='intc')
-    symprec2 = symprec ** 2
     for i, pos in enumerate(positions_in_new_lattice):
         is_overlap = False
         if num_atom > 0:
@@ -81,9 +81,11 @@ def trim_cell(relative_axes, cell, symprec):
             # Older numpy doesn't support axis argument.
             # distances = np.linalg.norm(np.dot(diff, trimed_lattice), axis=1)
             # overlap_indices = np.where(distances < symprec)[0]
-            distances2 = np.sum(np.dot(diff, trimed_lattice) ** 2, axis=1)
-            overlap_indices = np.where(distances2 < symprec2)[0]
+            distances = np.sqrt(
+                np.sum(np.dot(diff, trimed_lattice) ** 2, axis=1))
+            overlap_indices = np.where(distances < symprec)[0]
             if len(overlap_indices) > 0:
+                assert len(overlap_indices) == 1
                 is_overlap = True
                 mapping_table[i] = extracted_atoms[overlap_indices[0]]
 
@@ -122,7 +124,7 @@ def print_cell(cell, mapping=None, stars=None):
             if i in stars:
                 num = "*"
         num += "%d" % (i + 1)
-        line = ("%5s %-2s%18.14f%18.14f%18.14f" % 
+        line = ("%5s %-2s%18.14f%18.14f%18.14f" %
                 (num, symbols[i], v[0], v[1], v[2]))
         if masses is not None:
             line += " %7.3f" % masses[i]
@@ -135,7 +137,7 @@ def print_cell(cell, mapping=None, stars=None):
 
 class Supercell(Atoms):
     """Build supercell from supercell matrix
-    In this function, unit cell is considered 
+    In this function, unit cell is considered
     [1,0,0]
     [0,1,0]
     [0,0,1].
@@ -148,7 +150,7 @@ class Supercell(Atoms):
     First, create supercell with surrounding simple lattice.
     Second, trim the surrounding supercell with the target lattice.
     """
-    
+
     def __init__(self, unitcell, supercell_matrix, symprec=1e-5):
         self._s2u_map = None
         self._u2s_map = None
@@ -158,7 +160,7 @@ class Supercell(Atoms):
 
     def get_supercell_matrix(self):
         return self._supercell_matrix
-        
+
     def get_supercell_to_unitcell_map(self):
         return self._s2u_map
 
@@ -172,7 +174,7 @@ class Supercell(Atoms):
         mat = self._supercell_matrix
         frame = self._get_surrounding_frame(mat)
         sur_cell, u2sur_map = self._get_simple_supercell(frame, unitcell)
-    
+
         # Trim the simple supercell by the supercell matrix
         trim_frame = np.array([mat[0] / float(frame[0]),
                                mat[1] / float(frame[1]),
@@ -181,15 +183,17 @@ class Supercell(Atoms):
                                                         sur_cell,
                                                         symprec)
 
-        multi = supercell.get_number_of_atoms() // unitcell.get_number_of_atoms()
-        
+        num_satom = supercell.get_number_of_atoms()
+        num_uatom = unitcell.get_number_of_atoms()
+        multi = num_satom // num_uatom
+
         if multi != determinant(self._supercell_matrix):
             print("Supercell creation failed.")
             print("Probably some atoms are overwrapped. "
                   "The mapping table is give below.")
             print(mapping_table)
             Atoms.__init__(self)
-        else:            
+        else:
             Atoms.__init__(self,
                            numbers=supercell.get_atomic_numbers(),
                            masses=supercell.get_masses(),
@@ -197,7 +201,7 @@ class Supercell(Atoms):
                            scaled_positions=supercell.get_scaled_positions(),
                            cell=supercell.get_cell(),
                            pbc=True)
-            self._u2s_map = np.arange(unitcell.get_number_of_atoms()) * multi
+            self._u2s_map = np.arange(num_uatom) * multi
             self._u2u_map = dict([(j, i) for i, j in enumerate(self._u2s_map)])
             self._s2u_map = np.array(u2sur_map)[sur2s_map] * multi
 
@@ -274,13 +278,17 @@ class Primitive(Atoms):
         self._p2s_map = None
         self._s2p_map = None
         self._p2p_map = None
+        self._smallest_vectors = None
+        self._multiplicity = None
+
         self._primitive_cell(supercell)
         self._supercell_to_primitive_map(supercell.get_scaled_positions())
         self._primitive_to_primitive_map()
+        self._set_smallest_vectors(supercell)
 
     def get_primitive_matrix(self):
         return self._primitive_matrix
-        
+
     def get_primitive_to_supercell_map(self):
         return self._p2s_map
 
@@ -289,6 +297,9 @@ class Primitive(Atoms):
 
     def get_primitive_to_primitive_map(self):
         return self._p2p_map
+
+    def get_smallest_vectors(self):
+        return self._smallest_vectors, self._multiplicity
 
     def _primitive_cell(self, supercell):
         trimed_cell, p2s_map, mapping_table = trim_cell(self._primitive_matrix,
@@ -325,6 +336,10 @@ class Primitive(Atoms):
         """
         self._p2p_map = dict([(j, i) for i, j in enumerate(self._p2s_map)])
 
+    def _set_smallest_vectors(self, supercell):
+        self._smallest_vectors, self._multiplicity = get_smallest_vectors(
+            supercell, self, self._symprec)
+
 #
 # Get distance between a pair of atoms
 #
@@ -338,7 +353,7 @@ def get_distance(cell, a0, a1, tolerance=1e-5):
     for pos in scaled_pos:
         pos -= np.rint(pos)
 
-    # Look for the shortest one in surrounded 3x3x3 cells 
+    # Look for the shortest one in surrounded 3x3x3 cells
     distances = []
     for i in (-1, 0, 1):
         for j in (-1, 0, 1):
@@ -350,33 +365,49 @@ def get_distance(cell, a0, a1, tolerance=1e-5):
 
 #
 # Delaunay reduction
-#    
-def get_reduced_bases(lattice, tolerance=1e-5):
+#
+def get_reduced_bases(lattice,
+                      method='delaunay',
+                      tolerance=1e-5):
+    """Apply reduction to basis vectors
+
+    args:
+        basis as row vectors, [a, b, c]^T
+    return:
+         reduced basin as row vectors, [a_red, b_red, c_red]^T
+    """
+
+    if method == 'niggli':
+        return spg.niggli_reduce(lattice, eps=tolerance)
+    else:
+        return spg.delaunay_reduce(lattice, eps=tolerance)
+
+def get_Delaunay_reduction(lattice, tolerance):
     """
     This is an implementation of Delaunay reduction.
     Some information is found in International table.
+    This method is obsoleted and should not be used.
 
     lattice: row vectors
     return lattice: row vectors
     """
-    return get_Delaunay_reduction(lattice, tolerance)
 
-def get_Delaunay_reduction(lattice, tolerance):
     extended_bases = np.zeros((4, 3), dtype='double')
     extended_bases[:3, :] = lattice
     extended_bases[3] = -np.sum(lattice, axis=0)
 
     for i in range(100):
-        if reduce_bases(extended_bases, tolerance):
+        if _reduce_bases(extended_bases, tolerance):
             break
     if i == 99:
         print("Delaunary reduction was failed.")
 
-    shortest = get_shortest_bases_from_extented_bases(extended_bases, tolerance)
+    shortest = _get_shortest_bases_from_extented_bases(extended_bases,
+                                                       tolerance)
 
     return shortest
 
-def reduce_bases(extended_bases, tolerance):
+def _reduce_bases(extended_bases, tolerance):
     metric = np.dot(extended_bases, extended_bases.T)
     for i in range(4):
         for j in range(i+1, 4):
@@ -392,7 +423,7 @@ def reduce_bases(extended_bases, tolerance):
     # All non diagonal elements of metric tensor is negative.
     return True
 
-def get_shortest_bases_from_extented_bases(extended_bases, tolerance):
+def _get_shortest_bases_from_extented_bases(extended_bases, tolerance):
 
     def mycmp(x, y):
         return cmp(np.vdot(x, x), np.vdot(y, y))
@@ -404,7 +435,7 @@ def get_shortest_bases_from_extented_bases(extended_bases, tolerance):
     basis[6]  = extended_bases[2] + extended_bases[0]
     # Sort bases by the lengthes (shorter is earlier)
     basis = sorted(basis, key=lambda vec: (vec ** 2).sum())
-    
+
     # Choose shortest and linearly independent three bases
     # This algorithm may not be perfect.
     for i in range(7):
@@ -418,8 +449,83 @@ def get_shortest_bases_from_extented_bases(extended_bases, tolerance):
     return np.array(basis[:3], dtype='double')
 
 #
+# Shortest pairs of atoms in supercell (Wigner-Seitz like)
+#
+def get_equivalent_smallest_vectors(atom_number_supercell,
+                                    atom_number_primitive,
+                                    supercell,
+                                    primitive_lattice,
+                                    symprec):
+    reduced_bases = get_reduced_bases(supercell.get_cell(), symprec)
+    positions = np.dot(supercell.get_positions(), np.linalg.inv(reduced_bases))
+
+    # Atomic positions are confined into the lattice made of reduced bases.
+    positions -= np.rint(positions)
+
+    p_pos = positions[atom_number_primitive]
+    s_pos = positions[atom_number_supercell]
+
+    # The vector arrow is from the atom in primitive to
+    # the atom in supercell cell plus a supercell lattice
+    # point. This is related to determine the phase
+    # convension when building dynamical matrix.
+    supercell_vectors = np.array([
+        [i, j, k] for i in (-1, 0, 1)
+                  for j in (-1, 0, 1)
+                  for k in (-1, 0, 1)
+    ])
+
+    differences = s_pos + supercell_vectors - p_pos
+    distances = np.sqrt((np.dot(differences, reduced_bases) ** 2).sum(axis=1))
+    minimum = min(distances)
+    smallest_vectors = []
+    for i in range(27):
+        if abs(minimum - distances[i]) < symprec:
+            relative_scale = np.dot(reduced_bases,
+                                    np.linalg.inv(primitive_lattice))
+            smallest_vectors.append(np.dot(differences[i], relative_scale))
+
+    return smallest_vectors
+
+def get_smallest_vectors(supercell, primitive, symprec):
+    """
+    shortest_vectors:
+
+      Shortest vectors from an atom in primitive cell to an atom in
+      supercell in the fractional coordinates. If an atom in supercell
+      is on the border centered at an atom in primitive and there are
+      multiple vectors that have the same distance and different
+      directions, several shortest vectors are stored. The
+      multiplicity is stored in another array, "multiplicity".
+      [atom_super, atom_primitive, multiple-vectors, 3]
+
+    multiplicity:
+      Number of multiple shortest vectors (third index of "shortest_vectors")
+      [atom_super, atom_primitive]
+    """
+
+    p2s_map = primitive.get_primitive_to_supercell_map()
+    size_super = supercell.get_number_of_atoms()
+    size_prim = primitive.get_number_of_atoms()
+    shortest_vectors = np.zeros((size_super, size_prim, 27, 3), dtype='double')
+    multiplicity = np.zeros((size_super, size_prim), dtype='intc')
+
+    for i in range(size_super): # run in supercell
+        for j, s_j in enumerate(p2s_map): # run in primitive
+            vectors = get_equivalent_smallest_vectors(i,
+                                                      s_j,
+                                                      supercell,
+                                                      primitive.get_cell(),
+                                                      symprec)
+            multiplicity[i][j] = len(vectors)
+            for k, elem in enumerate(vectors):
+                shortest_vectors[i][j][k] = elem
+
+    return shortest_vectors, multiplicity
+
+#
 # Other tiny tools
-#    
+#
 def get_angles(lattice):
     a, b, c = get_cell_parameters(lattice)
     alpha = np.arccos(np.vdot(lattice[1], lattice[2]) / b / c) / np.pi * 180
@@ -457,5 +563,3 @@ def determinant(m):
             m[0][1] * m[1][0] * m[2][2] +
             m[0][2] * m[1][0] * m[2][1] -
             m[0][2] * m[1][1] * m[2][0])
-
-

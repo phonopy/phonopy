@@ -61,8 +61,7 @@ class BandStructure(object):
                  is_eigenvectors=False,
                  is_band_connection=False,
                  group_velocity=None,
-                 factor=VaspToTHz,
-                 verbose=False):
+                 factor=VaspToTHz):
         self._dynamical_matrix = dynamical_matrix
         self._cell = dynamical_matrix.get_primitive()
         self._supercell = dynamical_matrix.get_supercell()
@@ -81,7 +80,7 @@ class BandStructure(object):
         self._eigenvectors = None
         self._frequencies = None
         self._group_velocities = None
-        self._set_band(verbose=verbose)
+        self._set_band()
 
     def get_distances(self):
         return self._distances
@@ -235,7 +234,7 @@ class BandStructure(object):
                    np.linalg.inv(self._cell.get_cell()).T))
         self._lastq = qpoint.copy()
 
-    def _set_band(self, verbose=False):
+    def _set_band(self):
         eigvals = []
         eigvecs = []
         group_velocities = []
@@ -248,8 +247,7 @@ class BandStructure(object):
             (distances_on_path,
              eigvals_on_path,
              eigvecs_on_path,
-             gv_on_path) = self._solve_dm_on_path(path,
-                                                  verbose)
+             gv_on_path) = self._solve_dm_on_path(path)
 
             eigvals.append(np.array(eigvals_on_path))
             if self._is_eigenvectors:
@@ -268,7 +266,7 @@ class BandStructure(object):
 
         self._set_frequencies()
 
-    def _solve_dm_on_path(self, path, verbose):
+    def _solve_dm_on_path(self, path):
         is_nac = self._dynamical_matrix.is_nac()
         distances_on_path = []
         eigvals_on_path = []
@@ -288,10 +286,9 @@ class BandStructure(object):
                 if (np.abs(q) < 0.0001).all(): # For Gamma point
                     q_direction = path[0] - path[-1]
                 self._dynamical_matrix.set_dynamical_matrix(
-                    q, q_direction=q_direction, verbose=verbose)
+                    q, q_direction=q_direction)
             else:
-                self._dynamical_matrix.set_dynamical_matrix(
-                    q, verbose=verbose)
+                self._dynamical_matrix.set_dynamical_matrix(q)
             dm = self._dynamical_matrix.get_dynamical_matrix()
 
             if self._is_eigenvectors:

@@ -4,21 +4,20 @@ Download and install
 =====================
 
 .. contents::
-   :depth: 2
+   :depth: 3
    :local:
 
+From source code
+-----------------
+
 System requirement
--------------------
+~~~~~~~~~~~~~~~~~~
 
 The procedure to setup phonopy is explained in this section. It is
 supposed that phonopy is installed on the recent linux distribution
 like Ubuntu or Fedora with Python version 2.6 or later. Python version
-3.4 or later is expected to work. Mac OS X users
-may find some more information at :ref:`install_MacOSX`.
-The most recommended system is Ubuntu linux version 14.04 or later. If
-you have any installation problem that you may feel difficult to
-solve, please use a ubuntu virtual machine (see
-:ref:`virtualmachine`).
+3.4 or later is expected to work. Mac OS X users may find some more
+information at :ref:`install_MacOSX`.
 
 Prepare the following Python libraries:
 
@@ -27,58 +26,39 @@ Prepare the following Python libraries:
 * matplotlib
 * python-yaml (pyyaml)
 * python-h5py (h5py)
-    
-In Ubuntu linux, they are installed by::
+
+By Ubuntu package manager
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The most recommended system is Ubuntu linux version 14.04 or later. If
+you have any installation problem that you may feel difficult to
+solve, please use a ubuntu virtual machine (see
+:ref:`virtualmachine`).  
+
+The python libraries are installed by::
    
-   % sudo apt-get install python-dev python-numpy \
-     python-matplotlib python-yaml python-h5py
+   % sudo apt-get install python-dev python-numpy  python-matplotlib python-yaml python-h5py
     
 ``python-scipy`` is also required to use ``phonopy-qha`` or
-``DEBYE_MODEL`` tag. The python libraries are also possible to be
-installed using pip or conda.
+``DEBYE_MODEL`` tag.
 
 The ``texlive-fonts-recommended`` package may be required, if you
 see the following message in ploting results::
    
    ! I can't find file `pncr7t'.
 
-Install using pip/conda
-------------------------
+By conda
+^^^^^^^^^
 
-Occasionally PyPI and conda packages are prepared at phonopy
-releases. Using these packages, the phonopy installtion is expected to
-be easily done.
+The python libraries are also possible to be installed using pip or
+conda. Conda packages are distributed in binary and recommended often
+more than pip. The installation of necessary libraries is done as
+follows::
 
-Using pip
-~~~~~~~~~
-
-Numpy is required before the python-spglib installation. The command to
-install spglib is::
-
-   % pip install phonopy
-
-If you see the error message like below in the installation process::
-
-   _phonopy.c:35:20: fatal error: Python.h: No such file or directory
-
-development tools for building python module are additionally
-necessary and are installed using OS's package management system,
-e.g.,::
-
-   sudo apt-get install python-dev
-
-Using conda
-~~~~~~~~~~~~
-
-Conda is another choice for Linux (64bit) users::
-
-   % conda install -c atztogo phonopy
-
-Currently conda packages for the other OS, e.g., Mac and windows, are
-not prepared by the main developers of phonopy.
+   % conda install numpy scipy h5py pyyaml matplotlib
 
 Building using setup.py
-------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 If package installation is not possible or you want to compile with
 special compiler or special options, phonopy is built using
@@ -121,4 +101,33 @@ Tips on setup.py installation
 
    MacOSX   
    virtualmachine
+
+conda
+------
+
+Conda is a good choice for Linux (64bit) users to install phonopy::
+
+   % conda install numpy scipy h5py pyyaml matplotlib
+   % conda install -c atztogo phonopy
+
+Currently conda packages for the other OS, e.g., Mac and windows, are
+not prepared by the main developers of phonopy.
+
+pip
+----
+
+Phonopy is installed using pip by::
+
+   % pip install phonopy
+
+If you see the error message like below in the installation process::
+
+   _phonopy.c:35:20: fatal error: Python.h: No such file or directory
+
+development tools for building python module are additionally
+necessary and are installed using OS's package management system,
+e.g.,::
+
+   sudo apt-get install python-dev
+
 

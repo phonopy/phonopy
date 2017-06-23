@@ -49,14 +49,14 @@ def read_crystal_structure(filename=None,
             return None, (unitcell_filename + " (default file name)",)
         else:
             return None, (unitcell_filename,)
-    
+
     if yaml_mode:
         from phonopy.interface.phonopy_yaml import PhonopyYaml
         phpy_yaml = PhonopyYaml()
         phpy_yaml.read(unitcell_filename)
         unitcell = phpy_yaml.get_unitcell()
         return unitcell, (unitcell_filename,)
-        
+
     if interface_mode is None or interface_mode == 'vasp':
         from phonopy.interface.vasp import read_vasp
         if chemical_symbols is None:
@@ -64,17 +64,17 @@ def read_crystal_structure(filename=None,
         else:
             unitcell = read_vasp(unitcell_filename, symbols=chemical_symbols)
         return unitcell, (unitcell_filename,)
-        
+
     if interface_mode == 'abinit':
         from phonopy.interface.abinit import read_abinit
         unitcell = read_abinit(unitcell_filename)
         return unitcell, (unitcell_filename,)
-        
+
     if interface_mode == 'pwscf':
         from phonopy.interface.pwscf import read_pwscf
         unitcell, pp_filenames = read_pwscf(unitcell_filename)
         return unitcell, (unitcell_filename, pp_filenames)
-        
+
     if interface_mode == 'wien2k':
         from phonopy.interface.wien2k import parse_wien2k_struct
         unitcell, npts, r0s, rmts = parse_wien2k_struct(unitcell_filename)
@@ -90,6 +90,11 @@ def read_crystal_structure(filename=None,
         unitcell, atypes = read_siesta(unitcell_filename)
         return unitcell, (unitcell_filename, atypes)
 
+    if interface_mode == 'crystal':
+        from phonopy.interface.crystal import read_crystal
+        unitcell, conv_numbers = read_crystal(unitcell_filename)
+        return unitcell, (unitcell_filename, conv_numbers)
+
 def get_default_cell_filename(interface_mode, yaml_mode):
     if yaml_mode:
         return "POSCAR.yaml"
@@ -104,95 +109,120 @@ def get_default_cell_filename(interface_mode, yaml_mode):
     if interface_mode == 'elk':
         return "elk.in"
     if interface_mode == 'siesta':
-        return "input.fdf" 
+        return "input.fdf"
+    if interface_mode == 'crystal':
+        return "crystal.o"
 
 def create_FORCE_SETS(interface_mode,
                       force_filenames,
-                      symprec,
+                      symprec=1e-5,
                       is_wien2k_p1=False,
                       force_sets_zero_mode=False,
+                      disp_filename='disp.yaml',
+                      force_sets_filename='FORCE_SETS',
                       log_level=0):
     if (interface_mode is None or
         interface_mode == 'vasp' or
         interface_mode == 'abinit' or
         interface_mode == 'elk' or
         interface_mode == 'pwscf' or
-        interface_mode == 'siesta'):
-        displacements = parse_disp_yaml(filename='disp.yaml')
-        num_atoms = displacements['natom']
-        if _check_number_of_files(displacements,
-                                  force_filenames,
-                                  force_sets_zero_mode):
-            return 1
-        force_sets = _get_force_sets(interface_mode, num_atoms, force_filenames)
+        interface_mode == 'siesta' or
+        interface_mode == 'crystal'):
+        disp_dataset = parse_disp_yaml(filename=disp_filename)
+        num_atoms = disp_dataset['natom']
+        num_displacements = len(disp_dataset['first_atoms'])
+        if force_sets_zero_mode:
+            num_displacements += 1
+        force_sets = get_force_sets(interface_mode,
+                                    num_atoms,
+                                    num_displacements,
+                                    force_filenames,
+                                    disp_filename,
+                                    verbose=(log_level > 0))
 
     elif interface_mode == 'wien2k':
-        displacements, supercell = parse_disp_yaml(filename='disp.yaml',
-                                                   return_cell=True)
+        disp_dataset, supercell = parse_disp_yaml(filename=disp_filename,
+                                                  return_cell=True)
         from phonopy.interface.wien2k import parse_set_of_forces
-        if _check_number_of_files(displacements,
+        num_displacements = len(disp_dataset['first_atoms'])
+        if force_sets_zero_mode:
+            num_displacements += 1
+        if _check_number_of_files(num_displacements,
                                   force_filenames,
-                                  force_sets_zero_mode):
-            return 1
-        force_sets = parse_set_of_forces(
-            displacements,
-            force_filenames,
-            supercell,
-            disp_keyword='first_atoms',
-            is_distribute=(not is_wien2k_p1),
-            symprec=symprec)
+                                  disp_filename):
+            force_sets = []
+        else:
+            disps = [[d['number'], d['displacement']]
+                     for d in disp_dataset['first_atoms']]
+            force_sets = parse_set_of_forces(
+                disps,
+                force_filenames,
+                supercell,
+                is_distribute=(not is_wien2k_p1),
+                symprec=symprec,
+                verbose=(log_level > 0))
     else:
         force_sets = []
 
     if force_sets:
         if force_sets_zero_mode:
             force_sets = _subtract_residual_forces(force_sets)
-        for forces, disp in zip(force_sets, displacements['first_atoms']):
+        for forces, disp in zip(force_sets, disp_dataset['first_atoms']):
             disp['forces'] = forces
-        write_FORCE_SETS(displacements, filename='FORCE_SETS')
-        
+        write_FORCE_SETS(disp_dataset, filename=force_sets_filename)
+
     if log_level > 0:
         if force_sets:
-            print("FORCE_SETS has been created.")
+            print("%s has been created." % force_sets_filename)
         else:
-            print("FORCE_SETS could not be created.")
+            print("%s could not be created." % force_sets_filename)
 
     return 0
 
-def _check_number_of_files(displacements,
+def get_force_sets(interface_mode,
+                   num_atoms,
+                   num_displacements,
+                   force_filenames,
+                   disp_filename,
+                   verbose=True):
+    if _check_number_of_files(num_displacements,
+                              force_filenames,
+                              disp_filename):
+        return []
+
+    if interface_mode is None or interface_mode == 'vasp':
+        from phonopy.interface.vasp import parse_set_of_forces
+    elif interface_mode == 'abinit':
+        from phonopy.interface.abinit import parse_set_of_forces
+    elif interface_mode == 'pwscf':
+        from phonopy.interface.pwscf import parse_set_of_forces
+    elif interface_mode == 'elk':
+        from phonopy.interface.elk import parse_set_of_forces
+    elif interface_mode == 'siesta':
+        from phonopy.interface.siesta import parse_set_of_forces
+    elif interface_mode == 'crystal':
+        from phonopy.interface.crystal import parse_set_of_forces
+    else:
+        return []
+
+    force_sets = parse_set_of_forces(num_atoms,
+                                     force_filenames,
+                                     verbose=verbose)
+
+    return force_sets
+
+def _check_number_of_files(num_displacements,
                            force_filenames,
-                           force_sets_zero_mode):
-    num_files = len(force_filenames)
-    if force_sets_zero_mode:
-        num_files -= 1
-    if len(displacements['first_atoms']) != num_files:
+                           disp_filename):
+    if num_displacements != len(force_filenames):
         print('')
-        print("Number of files to be read don't match "
-              "to number of displacements in disp.yaml.")
+        print("Number of files to be read (%d) don't match to" %
+              len(force_filenames))
+        print("the number of displacements (%d) in %s." %
+              (num_displacements, disp_filename))
         return 1
     else:
         return 0
-            
-def _get_force_sets(interface_mode,
-                    num_atoms,
-                    force_filenames):
-    if interface_mode is None or interface_mode == 'vasp':
-        from phonopy.interface.vasp import parse_set_of_forces
-        force_sets = parse_set_of_forces(num_atoms, force_filenames)
-    elif interface_mode == 'abinit':
-        from phonopy.interface.abinit import parse_set_of_forces
-        force_sets = parse_set_of_forces(num_atoms, force_filenames)
-    elif interface_mode == 'pwscf':
-        from phonopy.interface.pwscf import parse_set_of_forces
-        force_sets = parse_set_of_forces(num_atoms, force_filenames)
-    elif interface_mode == 'elk':
-        from phonopy.interface.elk import parse_set_of_forces
-        force_sets = parse_set_of_forces(num_atoms, force_filenames)
-    elif interface_mode == 'siesta':
-        from phonopy.interface.siesta import parse_set_of_forces
-        force_sets = parse_set_of_forces(num_atoms, force_filenames)
-
-    return force_sets
 
 def _subtract_residual_forces(force_sets):
     for i in range(1, len(force_sets)):

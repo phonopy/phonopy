@@ -52,7 +52,8 @@ Selected features
   :ref:`Siesta <siesta_interface>`,
   :ref:`Elk <elk_interface>`,
   :ref:`FHI-aims <FHI_aims_interface>`,
-  :ref:`Wien2k <wien2k_interface>`
+  :ref:`Wien2k <wien2k_interface>`,
+  :ref:`CRYSTAL <crystal_interface>`
 - :ref:`Python APIs <phonopy_module>`
   
 |i0| |i1| |i2| |i3|
@@ -63,11 +64,10 @@ Documentation
 .. toctree::
    :maxdepth: 1
 
-   examples
-   Tutorial <procedure>
-   workflow
+   introduction
    install
-   features
+   Tutorial <procedure>
+   examples
    input-files
    output-files
    setting-tags

@@ -1,0 +1,32 @@
+NaCl phonon dispersions with non-analytical correction
+
+CRYSTAL output file is crystal.o. This is the default file name
+for the CRYSTAL interface, so, the -c crystal.o parameter is not needed
+
+CRYSTAL output file crystal.o includes the Born effective
+charges and the dielectric tensor 
+(from FREQCALC-INTENS-INTCPHF, see the input in the beginning of crystal.o)
+
+1) Create displaced supercells:
+   phonopy --crystal --dim="4 4 4" -d
+   Complete CRYSTAL inputs can be prepared manually
+   or with the help of a template (see TEMPLATE)
+
+2) Run the supercell inputs with CRYSTAL
+   Here supercell-001.o and supercell-002.o have been pre-calculated.
+
+3) Collect forces:
+   phonopy --crystal -f supercell-*o
+
+4) Calculate phonon dispersion data into band.yaml and save band.pdf:
+   phonopy --crystal --dim="4 4 4" -p -s band.conf
+
+   Take the non-analytical correction into account (see BORN file)
+   phonopy --crystal --dim="4 4 4" -p -s --nac band.conf 
+   
+   Plot the phonon dispersion in cm^{-1} units:
+   (factor = CrystalToTHz * THzToCm = 15.633302 * 33.356410)
+   phonopy --crystal --dim="4 4 4" -p -s --nac --factor=521.47083 band.conf
+
+   Create a formatted plot (here band.yaml is in cm^{-1) units):
+   bandplot --fmin=0 --line --ylabel="Frequency (cm\$^{-1}\$)" "--band_labels=`grep BAND_LABELS band.conf | cut -d= -f2-`" -o dispersion.pdf

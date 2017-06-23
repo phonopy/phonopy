@@ -74,7 +74,7 @@ class Atoms(object):
 
         # (initial) magnetic moments
         self.magmoms = None
-        self.set_magnetic_moments(magmoms)
+        self._set_magnetic_moments(magmoms)
 
         # numbers and symbols
         if self.numbers is not None: # number --> symbol
@@ -120,11 +120,8 @@ class Atoms(object):
             return self.masses.copy()
 
     def set_magnetic_moments(self, magmoms):
-        if magmoms is None:
-            self.magmoms = None
-        else:
-            self.magmoms = np.array(magmoms, dtype='double')
-            self._check()
+        self._set_magnetic_moments(magmoms)
+        self._check()
 
     def get_magnetic_moments(self):
         if self.magmoms is None:
@@ -181,6 +178,12 @@ class Atoms(object):
             self.masses = None
         else:
             self.masses = np.array(masses, dtype='double')
+
+    def _set_magnetic_moments(self, magmoms):
+        if magmoms is None:
+            self.magmoms = None
+        else:
+            self.magmoms = np.array(magmoms, dtype='double')
 
     def _set_cell_and_positions(self,
                                 cell,
@@ -260,12 +263,17 @@ class PhonopyAtoms(Atoms):
             lines.append("- [ %21.15f, %21.15f, %21.15f ] # %s" %
                          (v[0], v[1], v[2], a))
         lines.append("points:")
+        if self.masses is None:
+            masses = [None] * len(self.symbols)
+        else:
+            masses = self.masses
         for i, (s, v, m) in enumerate(
-                zip(self.symbols, self.scaled_positions, self.masses)):
+                zip(self.symbols, self.scaled_positions, masses)):
             lines.append("- symbol: %-2s # %d" % (s, i + 1))
             lines.append("  coordinates: [ %18.15f, %18.15f, %18.15f ]" %
                          tuple(v))
-            lines.append("  mass: %f" % m)
+            if m is not None:
+                lines.append("  mass: %f" % m)
         return lines
 
     def __str__(self):

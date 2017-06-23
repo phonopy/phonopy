@@ -45,6 +45,7 @@ tags:
 * ``--pa``, ``--primitive_axis`` (``PRIMITIVE_AXIS``)
 * ``--pd``, ``--projection_direction`` (``PROJECTION_DIRECTION``)
 * ``--pdos`` (``PDOS``)
+* ``--pr``, ``--pretend_real`` (``PRETEND_REAL = .TRUE.``)
 * ``--q_direction`` (``Q_DIRECTION``)
 * ``--readfc`` (``FORCE_CONSTANTS = READ``)
 * ``--show_irreps`` (``SHOW_IRREPS``)
@@ -71,8 +72,8 @@ Choice of force calculator
 ---------------------------
 
 Currently interfaces for VASP, Wien2k, Pwscf, Abinit, and Elk are
-prepared. Wien2k, Pwscf, Abinit and Elk interfaces are invoked with
-``--wienk2``, ``--pwscf``, ``--abinit``, and ``--elk`` options,
+prepared. Wien2k, Pwscf, Abinit, Elk and CRYSTAL interfaces are invoked with
+``--wienk2``, ``--pwscf``, ``--abinit``, ``--elk`` and ``--crystal`` options,
 respectively, and if none of these options or ``--vasp`` option is
 specified, VASP mode is invoked.
 
@@ -148,13 +149,26 @@ input file that contains the unit cell crystal structure, e.g.,
 ``--elk``
 ~~~~~~~~~~~~
 
-Pwscf mode is invoked with this option. Usually this option is used
+Elk mode is invoked with this option. Usually this option is used
 with ``--cell`` (``-c``) option or ``CELL_FILENAME`` tag to read Elk
 input file that contains the unit cell crystal structure, e.g.,
 
 ::
 
    % phonopy --elk -c elk-unitcell.in band.conf
+
+.. _crystal_mode:
+
+``--crystal``
+~~~~~~~~~~~~~
+
+CRYSTAL mode is invoked with this option. Usually this option is used
+with ``--cell`` (``-c``) option or ``CELL_FILENAME`` tag to read a CRYSTAL
+input file that contains the unit cell crystal structure, e.g.,
+
+::
+
+   % phonopy --crystal -c crystal.o band.conf
 
 .. _vasp_mode:
 
@@ -190,6 +204,7 @@ directory. The default file names for the calculators are as follows::
    Abinit | unitcell.in
    Pwscf  | unitcell.in
    Elk    | elk.in
+   CRYSTAL| crystal.o
 
 Create ``FORCE_SETS``
 ----------------------
@@ -293,6 +308,17 @@ files.
 
    % phonopy --elk -f disp-001/INFO.OUT disp-002/INFO.OUT  ...
 
+.. _crystal_force_sets_option:
+
+CRYSTAL interface
+^^^^^^^^^^^^^^^^^
+
+``FORCE_SETS`` file is created from ``disp.yaml`` and CRYSTAL output
+files.
+
+::
+
+   % phonopy --crystal -f supercell-001.o supercell-002.o  ...
 
 .. _fz_force_sets_option:
 
@@ -407,7 +433,7 @@ printed out and phonopy stops without going to phonon analysis.
    % phonopy --symmetry
 
 This tag can be used together with the ``--cell`` (``-c``),
-``--abinit``, ``--pwscf``, ``--elk``, ``--wien2k``, or
+``--abinit``, ``--pwscf``, ``--elk``, ``--wien2k``, ``--crystal`` or
 ``--primitive_axis`` option.
 
 Input/Output file control
