@@ -109,9 +109,8 @@ def write_aims(filename, atoms):
         if magmoms is not None:
             lines += initial_moment_line % magmoms[n]
 
-    f = open(filename, 'w')
-    f.write(lines)
-    f.close()
+    with open(filename, 'w') as f:
+        f.write(lines)
 
 
 

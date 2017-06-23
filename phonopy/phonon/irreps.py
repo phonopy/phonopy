@@ -1362,15 +1362,15 @@ class IrReps(object):
             print("%3d (%8.3f):" % (deg_set[0] + 1, self._freqs[deg_set[0]]))
             print('')
             for j, irrep_R in enumerate(irrep_Rs):
-                for k in range(len(irrep_R)):
+                for k, irrep_Rk in enumerate(irrep_R):
                     text = "     "
-                    for l in range(len(irrep_R)):
-                        if irrep_R[k][l].real > 0:
+                    for l, irrep_Rkl in enumerate(irrep_Rk):
+                        if irrep_Rkl.real > 0:
                             sign_r = " "
                         else:
                             sign_r = "-"
                         
-                        if irrep_R[k][l].imag > 0:
+                        if irrep_Rkl.imag > 0:
                             sign_i = "+"
                         else:
                             sign_i = "-"
@@ -1385,8 +1385,8 @@ class IrReps(object):
 
                         text += "%s (%s%5.3f %s%5.3fi) " % (
                             str_index,
-                            sign_r, abs(irrep_R[k][l].real),
-                            sign_i, abs(irrep_R[k][l].imag))
+                            sign_r, abs(irrep_Rkl.real),
+                            sign_i, abs(irrep_Rkl.imag))
                     print(text)
                 if len(irrep_R) > 1:
                     print('')
