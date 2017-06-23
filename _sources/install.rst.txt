@@ -16,8 +16,9 @@ System requirement
 The procedure to setup phonopy is explained in this section. It is
 supposed that phonopy is installed on the recent linux distribution
 like Ubuntu or Fedora with Python version 2.6 or later. Python version
-3.4 or later is expected to work. Mac OS X users may find some more
-information at :ref:`install_MacOSX`.
+3.4 or later is expected to work. Mac OS X users may use conda packages 
+and also find some more information at :ref:`install_MacOSX`. 
+Windows users should use conda packages as well. 
 
 Prepare the following Python libraries:
 
@@ -50,7 +51,7 @@ see the following message in ploting results::
 By conda
 ^^^^^^^^^
 
-The python libraries are also possible to be installed using pip or
+The python libraries may be also installed using pip or
 conda. Conda packages are distributed in binary and recommended often
 more than pip. The installation of necessary libraries is done as
 follows::
@@ -105,13 +106,21 @@ Tips on setup.py installation
 conda
 ------
 
-Conda is a good choice for Linux (64bit) users to install phonopy::
+Conda is a good choice for all users (Linux/MacOSX/Windows). 
+The Linux (64bit) conda packages are prepared by the author and 
+can be installed using::
 
    % conda install numpy scipy h5py pyyaml matplotlib
    % conda install -c atztogo phonopy
 
-Currently conda packages for the other OS, e.g., Mac and windows, are
-not prepared by the main developers of phonopy.
+Currently conda packages for the other OS: (MacOSX, Windows and other flavours
+of Linux), are prepared by conda-forge project and may be installed using::
+
+   % conda install -c conda-forge phonopy
+
+The conda-forge packages are usually available within few days after 
+the release. 
+
 
 pip
 ----
