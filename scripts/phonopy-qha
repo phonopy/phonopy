@@ -63,6 +63,7 @@ from optparse import OptionParser
 parser = OptionParser()
 parser.set_defaults(create_unitcells_range=None,
                     factor=1.0,
+                    energy_plot_factor=1.0,
                     volume_factor=1.0,
                     pressure=0.0,
                     is_create_unitcells=False,
@@ -146,11 +147,19 @@ parser.add_option("--vf", "--volume_factor",
                   dest="volume_factor",
                   type="float",
                   help="Conversion factor of volume to A^3")
+parser.add_option("--epf", "--energy_plot_factor",
+                  dest="energy_plot_factor",
+                  type="float",
+                  help=("Conversion factor of energy for plot after fitting, "
+                        "i.e., the input data have to have the proper physical"
+                        "units, but plotting is done with multiplied with this "
+                        "factor."))
 (options, args) = parser.parse_args()
 
 if options.is_graph_save:
     import matplotlib
-    matplotlib.use('Agg')            
+    matplotlib.use('Agg')
+    matplotlib.rc('pdf', fonttype=42)     
 
 ####################
 # Create unitcells #
@@ -232,6 +241,7 @@ phonopy_qha = PhonopyQHA(volumes[indices],
                          cv=cv[:, indices],
                          entropy=entropy[:, indices],
                          t_max=options.t_max,
+                         energy_plot_factor=options.energy_plot_factor,
                          verbose=True)
 
 if num_modes:
@@ -310,4 +320,3 @@ phonopy_qha.write_bulk_modulus_temperature()
 phonopy_qha.write_heat_capacity_P_numerical()
 phonopy_qha.write_heat_capacity_P_polyfit()
 phonopy_qha.write_gruneisen_temperature()
-
