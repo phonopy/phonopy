@@ -92,7 +92,7 @@ class QHA(object):
                  fe_phonon, # kJ/mol
                  eos='vinet',
                  t_max=None,
-                 energy_plot_factor=1.0):
+                 energy_plot_factor=None):
         self._volumes = np.array(volumes)
         self._electronic_energies = np.array(electronic_energies)
 
@@ -614,7 +614,14 @@ class QHA(object):
                                plt,
                                thin_number=10,
                                xlabel=r'Volume $(\AA^3)$',
-                               ylabel='Free energy (eV)'):
+                               ylabel='Free energy'):
+        if self._energy_plot_factor is None:
+            _energy_plot_factor = 1
+            _ylabel = ylabel + ' (eV)'
+        else:
+            _energy_plot_factor = self._energy_plot_factor
+            _ylabel = ylabel
+
         volume_points = np.linspace(min(self._volumes),
                                     max(self._volumes),
                                     201)
@@ -627,31 +634,41 @@ class QHA(object):
                 selected_volumes.append(self._equiv_volumes[i])
                 selected_energies.append(self._equiv_energies[i])
 
-        e0 = selected_energies[0] * self._energy_plot_factor
+        for i, t in enumerate(self._temperatures[:self._max_t_index]):
+            if t >= 298:
+                if i > 0:
+                    de = self._equiv_energies[i] - self._equiv_energies[i - 1]
+                    dt = t - self._temperatures[i - 1]
+                    e0 = ((298 - self._temperatures[i - 1]) / dt * de +
+                          self._equiv_energies[i - 1])
+                else:
+                    e0 = 0
+                break
+        e0 *= _energy_plot_factor
 
         for i, t in enumerate(self._temperatures[:self._max_t_index]):
             if i % thin_number == 0:
                 plt.plot(self._volumes,
-                         np.array(self._free_energies[i]) *
-                         self._energy_plot_factor - e0,
+                         np.array(self._free_energies[i]) * _energy_plot_factor
+                         - e0,
                          'bo', markeredgecolor='b', markersize=3)
                 plt.plot(volume_points,
                          self._eos(volume_points, * self._equiv_parameters[i]) *
-                         self._energy_plot_factor - e0, 'b-')
+                         _energy_plot_factor - e0, 'b-')
                 thin_index = i
 
         for i, j in enumerate((0, thin_index)):
             plt.text(self._volumes[-2],
                      (self._free_energies[j][-1] + (1 - i * 2) * 0.1 - 0.05) *
-                     self._energy_plot_factor - e0,
+                     _energy_plot_factor - e0,
                      "%dK" % int(self._temperatures[j]),
                      fontsize=8)
 
         plt.plot(selected_volumes,
-                 np.array(selected_energies) * self._energy_plot_factor - e0,
+                 np.array(selected_energies) * _energy_plot_factor - e0,
                  'ro-', markeredgecolor='r', markersize=3)
         plt.xlabel(xlabel)
-        plt.ylabel(ylabel)
+        plt.ylabel(_ylabel)
 
     def _plot_volume_temperature(self,
                                  plt,
