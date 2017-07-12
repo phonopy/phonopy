@@ -45,6 +45,7 @@ class PhonopyQHA(object):
                  cv=None,
                  entropy=None,
                  t_max=None,
+                 energy_plot_factor=None,
                  verbose=False):
         """
         The following two have the same number of elements
@@ -76,7 +77,8 @@ class PhonopyQHA(object):
                             entropy,
                             free_energy,
                             eos=eos,
-                            t_max=t_max)
+                            t_max=t_max,
+                            energy_plot_factor=energy_plot_factor)
             self._qha.run(verbose=verbose)
 
     def get_bulk_modulus(self):

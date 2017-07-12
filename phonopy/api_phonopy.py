@@ -476,6 +476,12 @@ class Phonopy(object):
             from matplotlib import rc
             rc('text', usetex=True)
 
+        fig, ax = plt.subplots()
+        ax.xaxis.set_ticks_position('both')
+        ax.yaxis.set_ticks_position('both')
+        ax.xaxis.set_tick_params(which='both', direction='in')
+        ax.yaxis.set_tick_params(which='both', direction='in')
+
         self._band_structure.plot(plt, labels=labels)
         return plt
 
@@ -552,11 +558,20 @@ class Phonopy(object):
             from matplotlib import rc
             rc('text', usetex=True)
 
+
         plt.figure(figsize=(10, 6))
         gs = gridspec.GridSpec(1, 2, width_ratios=[3, 1])
         ax1 = plt.subplot(gs[0, 0])
+        ax1.xaxis.set_ticks_position('both')
+        ax1.yaxis.set_ticks_position('both')
+        ax1.xaxis.set_tick_params(which='both', direction='in')
+        ax1.yaxis.set_tick_params(which='both', direction='in')
         self._band_structure.plot(plt, labels=labels)
         ax2 = plt.subplot(gs[0, 1], sharey=ax1)
+        ax2.xaxis.set_ticks_position('both')
+        ax2.yaxis.set_ticks_position('both')
+        ax2.xaxis.set_tick_params(which='both', direction='in')
+        ax2.yaxis.set_tick_params(which='both', direction='in')
         plt.subplots_adjust(wspace=0.03)
         plt.setp(ax2.get_yticklabels(), visible=False)
 
@@ -571,6 +586,8 @@ class Phonopy(object):
                             ylabel="",
                             draw_grid=False,
                             flip_xy=True)
+
+        ax2.set_xlim((0, None))
 
         return plt
 
@@ -616,7 +633,17 @@ class Phonopy(object):
 
     def plot_total_DOS(self):
         import matplotlib.pyplot as plt
-        self._total_dos.plot(plt)
+
+        fig, ax = plt.subplots()
+        ax.xaxis.set_ticks_position('both')
+        ax.yaxis.set_ticks_position('both')
+        ax.xaxis.set_tick_params(which='both', direction='in')
+        ax.yaxis.set_tick_params(which='both', direction='in')
+
+        self._total_dos.plot(plt, draw_grid=False)
+
+        ax.set_ylim((0, None))
+
         return plt
 
     def write_total_DOS(self):
@@ -676,9 +703,20 @@ class Phonopy(object):
 
     def plot_partial_DOS(self, pdos_indices=None, legend=None):
         import matplotlib.pyplot as plt
+
+        fig, ax = plt.subplots()
+        ax.xaxis.set_ticks_position('both')
+        ax.yaxis.set_ticks_position('both')
+        ax.xaxis.set_tick_params(which='both', direction='in')
+        ax.yaxis.set_tick_params(which='both', direction='in')
+
         self._pdos.plot(plt,
                         indices=pdos_indices,
-                        legend=legend)
+                        legend=legend,
+                        draw_grid=False)
+
+        ax.set_ylim((0, None))
+
         return plt
 
     def write_partial_DOS(self):
@@ -722,7 +760,18 @@ class Phonopy(object):
 
     def plot_thermal_properties(self):
         import matplotlib.pyplot as plt
+
+        fig, ax = plt.subplots()
+        ax.xaxis.set_ticks_position('both')
+        ax.yaxis.set_ticks_position('both')
+        ax.xaxis.set_tick_params(which='both', direction='in')
+        ax.yaxis.set_tick_params(which='both', direction='in')
+
         self._thermal_properties.plot(plt)
+
+        temps, _, _, _ = self._thermal_properties.get_thermal_properties()
+        ax.set_xlim((0, temps[-1]))
+
         return plt
 
     def write_yaml_thermal_properties(self, filename='thermal_properties.yaml'):
@@ -784,7 +833,18 @@ class Phonopy(object):
 
     def plot_thermal_displacements(self, is_legend=False):
         import matplotlib.pyplot as plt
+
+        fig, ax = plt.subplots()
+        ax.xaxis.set_ticks_position('both')
+        ax.yaxis.set_ticks_position('both')
+        ax.xaxis.set_tick_params(which='both', direction='in')
+        ax.yaxis.set_tick_params(which='both', direction='in')
+
         self._thermal_displacements.plot(plt, is_legend=is_legend)
+
+        temps, _ = self._thermal_displacements.get_thermal_displacements()
+        ax.set_xlim((0, temps[-1]))
+
         return plt
 
     def write_yaml_thermal_displacements(self):

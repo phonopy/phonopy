@@ -1,5 +1,6 @@
 package:
   name: phonopy
+  version: version_from_shell
 
 source:
   git_url: https://github.com/atztogo/phonopy.git

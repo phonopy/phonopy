@@ -150,6 +150,12 @@ for i, f in enumerate(frequencies):
         break
 
 # Plot
+fig, ax = plt.subplots()
+ax.xaxis.set_ticks_position('both')
+ax.yaxis.set_ticks_position('both')
+ax.xaxis.set_tick_params(which='both', direction='in')
+ax.yaxis.set_tick_params(which='both', direction='in')
+
 plots = []
 for nums in indices:
     pdos = np.zeros(frequencies.shape[0], dtype='double')
@@ -158,8 +164,9 @@ for nums in indices:
     plots.append(plt.plot(
         frequencies[min_i:max_i], pdos[min_i:max_i] * options.factor))
 
-plt.grid(True)
+# plt.grid(True)
 
+ax.set_ylim((0, None))
 plt.xlim(min_freq, max_freq)
 
 if (options.ymin is not None) and (options.ymax is not None):
