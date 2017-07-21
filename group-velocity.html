@@ -4,17 +4,15 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Method &#8212; Phonopy v.1.11.10</title>
+    <title>Method &#8212; Phonopy v.1.11.12</title>
     
-    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="_static/bootswatch-3.3.6/cosmo/bootstrap.min.css" type="text/css" />
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.11.10',
+        VERSION:     '1.11.12',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -24,6 +22,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
@@ -51,7 +50,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.11.10</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.11.12</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -145,37 +144,37 @@
 <span id="group-velocity"></span><h1>Method<a class="headerlink" href="#method" title="Permalink to this headline">¶</a></h1>
 <p>Phonopy calculates group velocity of phonon as follows:</p>
 <div class="math">
-<p><img src="_images/math/adb4de61edb156b34722d4a7c1b71bcb662c53b3.png" alt="\mathbf{v}_\mathrm{g}(\mathbf{q}\nu) = &amp; \nabla_\mathbf{q} \omega(\mathbf{q}\nu) \\
+\[\begin{split}\mathbf{v}_\mathrm{g}(\mathbf{q}\nu) = &amp; \nabla_\mathbf{q} \omega(\mathbf{q}\nu) \\
 =&amp;\frac{\partial\omega(\mathbf{q}\nu)}{\partial \mathbf{q}} \\
 =&amp;\frac{1}{2\omega(\mathbf{q}\nu)}\frac{\partial[\omega(\mathbf{q}\nu)]^2}{\partial
 \mathbf{q}} \\
 =&amp;\frac{1}{2\omega(\mathbf{q}\nu)}\left&lt;\mathbf{e}(\mathbf{q}\nu)\biggl|
 \frac{\partial D(\mathbf{q})} {\partial
-\mathbf{q}}\biggl|\mathbf{e}(\mathbf{q}\nu)\right&gt;,"/></p>
-</div><p>where the meanings of the variables are found at <a class="reference internal" href="formulation.html#formulations"><span class="std std-ref">Formulations</span></a>.</p>
+\mathbf{q}}\biggl|\mathbf{e}(\mathbf{q}\nu)\right&gt;,\end{split}\]</div>
+<p>where the meanings of the variables are found at <a class="reference internal" href="formulation.html#formulations"><span class="std std-ref">Formulations</span></a>.</p>
 </div>
 <div class="section" id="finite-difference-method">
 <h1>Finite difference method<a class="headerlink" href="#finite-difference-method" title="Permalink to this headline">¶</a></h1>
 <p>In the previous versions, group velocity was calculated using finite
 difference method:</p>
 <div class="math">
-<p><img src="_images/math/49785fa905dd2c8cf408baaab7d6235caa1d3914.png" alt="\mathbf{v}_\mathrm{g}(\mathbf{q}\nu) =
+\[\mathbf{v}_\mathrm{g}(\mathbf{q}\nu) =
 \frac{1}{2\omega(\mathbf{q}\nu)}\left&lt;\mathbf{e}(\mathbf{q}\nu)\biggl|
 \frac{\partial D(\mathbf{q})} {\partial
 \mathbf{q}}\biggl|\mathbf{e}(\mathbf{q}\nu)\right&gt;
 \simeq \frac{1}{2\omega(\mathbf{q}\nu)}
 \left&lt;\mathbf{e}(\mathbf{q}\nu)\biggl|
 \frac{\Delta D(\mathbf{q})}
-{\Delta \mathbf{q}}\biggl|\mathbf{e}(\mathbf{q}\nu)\right&gt;."/></p>
-</div><p>Group velocity calculation with the finite difference method is still
+{\Delta \mathbf{q}}\biggl|\mathbf{e}(\mathbf{q}\nu)\right&gt;.\]</div>
+<p>Group velocity calculation with the finite difference method is still
 able to be activated using <code class="docutils literal"><span class="pre">GV_DELTA_Q</span></code> tag or <code class="docutils literal"><span class="pre">-gv_delta_q</span></code>
-option.  <img class="math" src="_images/math/5e603618cc395462738af048297d2d8db84e39e1.png" alt="\Delta\mathbf{q} = (\Delta q_x, \Delta q_y, \Delta
-q_z)"/> is described in Cartesian coordinated in reciprocal space. In
-the implementation, central difference is employed, and <img class="math" src="_images/math/361b1faed8a047535d6f78554372fdc4d0f1ffc5.png" alt="+\Delta
-q_\alpha"/> and <img class="math" src="_images/math/8e8cffb135c48ce12183b6f581d5878e718b8130.png" alt="-\Delta q_\alpha"/> are taken to calculate group
-velocity, where <img class="math" src="_images/math/877d234f4cec6974ce218fc2e975a486a7972dfd.png" alt="\alpha"/> is the Cartesian index in reciprocal
-space. <img class="math" src="_images/math/037c075236cac9a547c3f99129967507bb6b8c9d.png" alt="\Delta q_\alpha"/> is specified in the unit of reciprocal
-space distance (<img class="math" src="_images/math/94b8ede0cc824a7f482b399f599114b6314cde2b.png" alt="\mathrm{\AA}^{-1}"/> for the default case) by
+option.  <span class="math">\(\Delta\mathbf{q} = (\Delta q_x, \Delta q_y, \Delta
+q_z)\)</span> is described in Cartesian coordinated in reciprocal space. In
+the implementation, central difference is employed, and <span class="math">\(+\Delta
+q_\alpha\)</span> and <span class="math">\(-\Delta q_\alpha\)</span> are taken to calculate group
+velocity, where <span class="math">\(\alpha\)</span> is the Cartesian index in reciprocal
+space. <span class="math">\(\Delta q_\alpha\)</span> is specified in the unit of reciprocal
+space distance (<span class="math">\(\mathrm{\AA}^{-1}\)</span> for the default case) by
 <code class="docutils literal"><span class="pre">--gv_delta_q</span></code> option or <code class="docutils literal"><span class="pre">GV_DELTA_Q</span></code> tag.</p>
 </div>
 

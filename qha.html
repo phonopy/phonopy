@@ -4,17 +4,15 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Quasi harmonic approximation &#8212; Phonopy v.1.11.10</title>
+    <title>Quasi harmonic approximation &#8212; Phonopy v.1.11.12</title>
     
-    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="_static/bootswatch-3.3.6/cosmo/bootstrap.min.css" type="text/css" />
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.11.10',
+        VERSION:     '1.11.12',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -24,6 +22,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
@@ -51,7 +50,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.11.10</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.11.12</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -190,7 +189,7 @@ follows.</p>
 </div>
 <p>1st argument is the filename of volume-energy data (in the above
 expample, <code class="docutils literal"><span class="pre">e-v.dat</span></code>). The volume and energy of the unit cell
-(default units are in <img class="math" src="_images/math/cee00dc08d76ee1945fde39ee89fd4af85d79ca1.png" alt="\mathrm{\AA}^3"/> and eV, respectively). An
+(default units are in <span class="math">\(\mathrm{\AA}^3\)</span> and eV, respectively). An
 example of the volume-energy file is:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1">#   cell volume   energy of cell other than phonon</span>
      <span class="mf">140.030000</span>           <span class="o">-</span><span class="mf">42.132246</span>
@@ -215,7 +214,7 @@ calculated by following <a class="reference internal" href="setting-tags.html#th
 physical unit of the Helmholtz free energy is kJ/mol as the default,
 i.e., no need to convert the physical unit in usual cases.</p>
 <p>Another example for Aluminum is found in the <code class="docutils literal"><span class="pre">example/Al-QHA</span></code> directory.</p>
-<p>If the condition under puressure is expected, <img class="math" src="_images/math/b70632dbfd585df0a5f35a65d58cba2a0590c18d.png" alt="PV"/> terms may be
+<p>If the condition under puressure is expected, <span class="math">\(PV\)</span> terms may be
 included in the energies, or equivalent effect is applied using
 <code class="docutils literal"><span class="pre">--pressure</span></code> option.</p>
 <div class="section" id="options">
@@ -249,7 +248,7 @@ only plotted.</p>
 </div>
 <div class="section" id="pressure">
 <h4><code class="docutils literal"><span class="pre">--pressure</span></code><a class="headerlink" href="#pressure" title="Permalink to this headline">¶</a></h4>
-<p>Pressure is specified in GPa. This corresponds to the <img class="math" src="_images/math/188034e5a7ba8a3c4e08e5e0c2e604d64207071d.png" alt="pV"/> term
+<p>Pressure is specified in GPa. This corresponds to the <span class="math">\(pV\)</span> term
 described in the following section <a class="reference internal" href="#theory-of-qha"><span class="std std-ref">Thermal properties in (T, p) space calculated under QHA</span></a>. Note that
 bulk modulus obtained with this option than 0 GPa is incorrect.</p>
 </div>
@@ -272,28 +271,28 @@ modulus (without considering phonons). This is made by:</p>
 </div>
 <div class="section" id="output-files">
 <span id="phonopy-qha-output-files"></span><h3><a class="toc-backref" href="#id3">Output files</a><a class="headerlink" href="#output-files" title="Permalink to this headline">¶</a></h3>
-<p>The physical units of V and T are <img class="math" src="_images/math/83f6cd3f66012fed147156f2d70a676b271f337b.png" alt="\AA^3"/> and K,
+<p>The physical units of V and T are <span class="math">\(\AA^3\)</span> and K,
 respectively. The unit of eV for Helmholtz and Gibbs energies, J/K/mol
-for <img class="math" src="_images/math/7565890e33e92aa60dd3b0dae6f5dc8f4b984fc2.png" alt="C_V"/> and entropy, GPa for for bulk modulus and pressure
+for <span class="math">\(C_V\)</span> and entropy, GPa for for bulk modulus and pressure
 are used.</p>
 <ul class="simple">
 <li>Bulk modulus (GPa) vs T (<code class="docutils literal"><span class="pre">bulk_modulus-temperature.*</span></code>)</li>
 <li>Gibbs free energy (eV) vs T (<code class="docutils literal"><span class="pre">gibbs-temperature.*</span></code>)</li>
 <li>Volume change with respect to the volume at 300 K vs T (<code class="docutils literal"><span class="pre">volume_expansion.*</span></code>)</li>
 <li>Heat capacity at constant pressure (J/K/mol) vs T derived by
-<img class="math" src="_images/math/08107ab9d2abb5c093597a92cafe287063f9119b.png" alt="-T\frac{\partial^2 G}{\partial T^2}"/>  (<code class="docutils literal"><span class="pre">Cp-temperature.*</span></code>)</li>
+<span class="math">\(-T\frac{\partial^2 G}{\partial T^2}\)</span>  (<code class="docutils literal"><span class="pre">Cp-temperature.*</span></code>)</li>
 <li>Heat capacity at constant puressure (J/K/mol) vs T by polynomial
 fittings of Cv and S (<code class="docutils literal"><span class="pre">Cp-temperature_polyfit.*</span></code>)</li>
 <li>Helmholtz free energy (eV) vs volume
 (<code class="docutils literal"><span class="pre">helmholtz-volume.*</span></code>). When <code class="docutils literal"><span class="pre">--pressure</span></code> option is specified,
-energy offset of <img class="math" src="_images/math/188034e5a7ba8a3c4e08e5e0c2e604d64207071d.png" alt="pV"/> is added. See also the following section
+energy offset of <span class="math">\(pV\)</span> is added. See also the following section
 (<a class="reference internal" href="#theory-of-qha"><span class="std std-ref">Thermal properties in (T, p) space calculated under QHA</span></a>).</li>
 <li>Volume vs T (<code class="docutils literal"><span class="pre">volume-temperature.*</span></code>)</li>
 <li>Thermal expansion coefficient vs T (<code class="docutils literal"><span class="pre">thermal_expansion.*</span></code>)</li>
 <li>Thermodynamics Grüneisen parameter (no unit) vs T (<code class="docutils literal"><span class="pre">gruneisen-temperature.dat</span></code>)</li>
 </ul>
 <p><code class="docutils literal"><span class="pre">Cv-volume.dat</span></code>, <code class="docutils literal"><span class="pre">entropy-volume.dat</span></code>,
-and <code class="docutils literal"><span class="pre">dsdv-temperature.dat</span></code> (<img class="math" src="_images/math/75e5aa0159247354f7e69dfb99ba7cf43a08c058.png" alt="dS/dV"/>) are the data internally
+and <code class="docutils literal"><span class="pre">dsdv-temperature.dat</span></code> (<span class="math">\(dS/dV\)</span>) are the data internally
 used.</p>
 </div>
 </div>
@@ -309,11 +308,11 @@ constant pressure. We need some transformation from function of <em>V</em> to
 function of <em>p</em>. Gibbs free energy is defined at a constant pressure by
 the transformation:</p>
 <div class="math">
-<p><img src="_images/math/4b45da13479acb80e77388d2d1e7752525f474bb.png" alt="G(T, p) = \min_V \left[ U(V) + F_\mathrm{phonon}(T;\,V) + pV \right],"/></p>
-</div><p>where</p>
+\[G(T, p) = \min_V \left[ U(V) + F_\mathrm{phonon}(T;\,V) + pV \right],\]</div>
+<p>where</p>
 <div class="math">
-<p><img src="_images/math/a15cf742cc2537dc57c2b7fa7b5d916d1736fc85.png" alt="\min_V[ \text{function of } V ]"/></p>
-</div><p>means to find unique minimum value in the brackets by changing
+\[\min_V[ \text{function of } V ]\]</div>
+<p>means to find unique minimum value in the brackets by changing
 volume. Since volume dependencies of energies in electronic and phonon
 structures are different, volume giving the minimum value of the
 energy function in the square brackets shifts from the value

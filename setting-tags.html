@@ -4,17 +4,15 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Setting tags &#8212; Phonopy v.1.11.10</title>
+    <title>Setting tags &#8212; Phonopy v.1.11.12</title>
     
-    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="_static/bootswatch-3.3.6/cosmo/bootstrap.min.css" type="text/css" />
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.11.10',
+        VERSION:     '1.11.12',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -24,6 +22,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
@@ -51,7 +50,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.11.10</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.11.12</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -364,32 +363,32 @@ created.</p>
 </div>
 <p>In this case, a 2x2x3 supercell is created.</p>
 <p>When nine integers are specified, the supercell is created by
-multiplying the supercell matrix <img class="math" src="_images/math/dcb777ce9d2a32d88da8e12faac259eb2b3f26c2.png" alt="M_\mathrm{s}"/> with the unit
+multiplying the supercell matrix <span class="math">\(M_\mathrm{s}\)</span> with the unit
 cell. For example,</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">DIM</span> <span class="o">=</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">1</span>  <span class="mi">1</span> <span class="mi">0</span> <span class="mi">1</span>  <span class="mi">1</span> <span class="mi">1</span> <span class="mi">0</span>
 </pre></div>
 </div>
 <p>the supercell matrix is</p>
 <div class="math">
-<p><img src="_images/math/74757708bba5c397bc7f883c469fa46652a5f688.png" alt="M_\mathrm{s} = \begin{pmatrix}
+\[\begin{split}M_\mathrm{s} = \begin{pmatrix}
 0 &amp; 1 &amp; 1 \\
 1 &amp; 0 &amp; 1 \\
 1 &amp; 1 &amp; 0
-\end{pmatrix}"/></p>
-</div><p>where the rows correspond to the first three, second three, and third
+\end{pmatrix}\end{split}\]</div>
+<p>where the rows correspond to the first three, second three, and third
 three sets of numbers, respectively. When lattice parameters of unit
-cell are the column vectors of <img class="math" src="_images/math/ad59deca65b65c8809b9cf78515794608d54c16d.png" alt="\mathbf{a}_\mathrm{u}"/>,
-<img class="math" src="_images/math/13a3abc967b931d32f92b2ca3765285cf996578a.png" alt="\mathbf{b}_\mathrm{u}"/>, and <img class="math" src="_images/math/3c939de8787b3038cf10db4c5183ea057cc6bf93.png" alt="\mathbf{c}_\mathrm{u}"/>,
-those of supercell, <img class="math" src="_images/math/13ed07bb0748127183a15e315e7f6bd84ad74602.png" alt="\mathbf{a}_\mathrm{s}"/>,
-<img class="math" src="_images/math/d67346cdefa9b5c1e989a0c85a73d05e101ff7d0.png" alt="\mathbf{b}_\mathrm{s}"/>, <img class="math" src="_images/math/503f0669c3cf22890cba4f4caa8c8edae84a1b4d.png" alt="\mathbf{c}_\mathrm{s}"/>, are
+cell are the column vectors of <span class="math">\(\mathbf{a}_\mathrm{u}\)</span>,
+<span class="math">\(\mathbf{b}_\mathrm{u}\)</span>, and <span class="math">\(\mathbf{c}_\mathrm{u}\)</span>,
+those of supercell, <span class="math">\(\mathbf{a}_\mathrm{s}\)</span>,
+<span class="math">\(\mathbf{b}_\mathrm{s}\)</span>, <span class="math">\(\mathbf{c}_\mathrm{s}\)</span>, are
 determined by,</p>
 <div class="math">
-<p><img src="_images/math/adb5f8c40c770334084fff34ab51ad5500a6a90e.png" alt="( \mathbf{a}_\mathrm{s} \; \mathbf{b}_\mathrm{s} \; \mathbf{c}_\mathrm{s} )
+\[( \mathbf{a}_\mathrm{s} \; \mathbf{b}_\mathrm{s} \; \mathbf{c}_\mathrm{s} )
 =  ( \mathbf{a}_\mathrm{u} \; \mathbf{b}_\mathrm{u} \;
-\mathbf{c}_\mathrm{u} ) M_\mathrm{s}"/></p>
-</div><p>Be careful that the axes in <code class="docutils literal"><span class="pre">POSCAR</span></code> is defined by three row
-vectors, i.e., <img class="math" src="_images/math/7e693b224ca1ba381521afe1174708f340ace0d9.png" alt="( \mathbf{a}_\mathrm{u} \; \mathbf{b}_\mathrm{u}
-\; \mathbf{c}_\mathrm{u} )^T"/>.</p>
+\mathbf{c}_\mathrm{u} ) M_\mathrm{s}\]</div>
+<p>Be careful that the axes in <code class="docutils literal"><span class="pre">POSCAR</span></code> is defined by three row
+vectors, i.e., <span class="math">\(( \mathbf{a}_\mathrm{u} \; \mathbf{b}_\mathrm{u}
+\; \mathbf{c}_\mathrm{u} )^T\)</span>.</p>
 </div>
 <div class="section" id="primitive-axis">
 <span id="primitive-axis-tag"></span><h3><a class="toc-backref" href="#id8"><code class="docutils literal"><span class="pre">PRIMITIVE_AXIS</span></code></a><a class="headerlink" href="#primitive-axis" title="Permalink to this headline">¶</a></h3>
@@ -401,29 +400,29 @@ vectors, i.e., <img class="math" src="_images/math/7e693b224ca1ba381521afe117470
 </pre></div>
 </div>
 <p>The primitive cell for building the dynamical matrix is created by
-multiplying primitive-axis matrix <img class="math" src="_images/math/e7bf6bcdb1f58b2badcbece2d6e53541a09f2e0d.png" alt="M_\mathrm{p}"/>. Let the matrix
+multiplying primitive-axis matrix <span class="math">\(M_\mathrm{p}\)</span>. Let the matrix
 as,</p>
 <div class="math">
-<p><img src="_images/math/558e0e81e65c2376087cad2d393fe9f46a137033.png" alt="M_\mathrm{p} = \begin{pmatrix}
+\[\begin{split}M_\mathrm{p} = \begin{pmatrix}
 0.0 &amp; 0.5 &amp; 0.5 \\
 0.5 &amp; 0.0 &amp; 0.5 \\
 0.5 &amp; 0.5 &amp; 0.0
-\end{pmatrix}"/></p>
-</div><p>where the rows correspond to the first three, second three, and
+\end{pmatrix}\end{split}\]</div>
+<p>where the rows correspond to the first three, second three, and
 third three sets of numbers, respectively.</p>
 <p>When lattice parameters of unit cell (set by <code class="docutils literal"><span class="pre">POSCAR</span></code>) are the
-column vectors of <img class="math" src="_images/math/ad59deca65b65c8809b9cf78515794608d54c16d.png" alt="\mathbf{a}_\mathrm{u}"/>,
-<img class="math" src="_images/math/13a3abc967b931d32f92b2ca3765285cf996578a.png" alt="\mathbf{b}_\mathrm{u}"/>, and <img class="math" src="_images/math/3c939de8787b3038cf10db4c5183ea057cc6bf93.png" alt="\mathbf{c}_\mathrm{u}"/>,
-those of supercell, <img class="math" src="_images/math/559f89009e97df6e7b5b93bf3e95c620c944673c.png" alt="\mathbf{a}_\mathrm{p}"/>,
-<img class="math" src="_images/math/04f69e950eeeee3c4a4523e8d8bc9cd3eb2c67f9.png" alt="\mathbf{b}_\mathrm{p}"/>, <img class="math" src="_images/math/a4a034e21af196ed02d4cfd6c6cf066c32a965f3.png" alt="\mathbf{c}_\mathrm{p}"/>, are
+column vectors of <span class="math">\(\mathbf{a}_\mathrm{u}\)</span>,
+<span class="math">\(\mathbf{b}_\mathrm{u}\)</span>, and <span class="math">\(\mathbf{c}_\mathrm{u}\)</span>,
+those of supercell, <span class="math">\(\mathbf{a}_\mathrm{p}\)</span>,
+<span class="math">\(\mathbf{b}_\mathrm{p}\)</span>, <span class="math">\(\mathbf{c}_\mathrm{p}\)</span>, are
 determined by,</p>
 <div class="math">
-<p><img src="_images/math/3aef0697dc259c2ff3e05cc59bcf26631109104d.png" alt="( \mathbf{a}_\mathrm{p} \; \mathbf{b}_\mathrm{p} \; \mathbf{c}_\mathrm{p} )
+\[( \mathbf{a}_\mathrm{p} \; \mathbf{b}_\mathrm{p} \; \mathbf{c}_\mathrm{p} )
 =  ( \mathbf{a}_\mathrm{u} \; \mathbf{b}_\mathrm{u} \;
-\mathbf{c}_\mathrm{u} ) M_\mathrm{p}"/></p>
-</div><p>Be careful that the axes in <code class="docutils literal"><span class="pre">POSCAR</span></code> is defined by three row
-vectors, i.e., <img class="math" src="_images/math/7e693b224ca1ba381521afe1174708f340ace0d9.png" alt="( \mathbf{a}_\mathrm{u} \; \mathbf{b}_\mathrm{u}
-\; \mathbf{c}_\mathrm{u} )^T"/>.</p>
+\mathbf{c}_\mathrm{u} ) M_\mathrm{p}\]</div>
+<p>Be careful that the axes in <code class="docutils literal"><span class="pre">POSCAR</span></code> is defined by three row
+vectors, i.e., <span class="math">\(( \mathbf{a}_\mathrm{u} \; \mathbf{b}_\mathrm{u}
+\; \mathbf{c}_\mathrm{u} )^T\)</span>.</p>
 </div>
 <div class="section" id="atom-name">
 <h3><a class="toc-backref" href="#id9"><code class="docutils literal"><span class="pre">ATOM_NAME</span></code></a><a class="headerlink" href="#atom-name" title="Permalink to this headline">¶</a></h3>
@@ -512,7 +511,7 @@ post process of phonon calculation.</p>
 <span id="displacement-distance-tag"></span><h3><a class="toc-backref" href="#id17"><code class="docutils literal"><span class="pre">DISPLACEMENT_DISTANCE</span></code></a><a class="headerlink" href="#displacement-distance" title="Permalink to this headline">¶</a></h3>
 <p>Finite atomic displacement distance is set as specified value when
 creating supercells with displacements. The default displacement
-amplitude is 0.01 <img class="math" src="_images/math/4b13b1755625fc54ae9826e19fe076b51b385163.png" alt="\textrm{\AA}"/>, but when the <code class="docutils literal"><span class="pre">wien2k</span></code> or
+amplitude is 0.01 <span class="math">\(\textrm{\AA}\)</span>, but when the <code class="docutils literal"><span class="pre">wien2k</span></code> or
 <code class="docutils literal"><span class="pre">abinit</span></code> option is specified, the default value is 0.02 Bohr.</p>
 </div>
 <div class="section" id="diag">
@@ -596,7 +595,7 @@ behavior, the center of mesh is determined by the Monkhorst-Pack
 scheme, i.e., for odd number, a point comes to the center, and for
 even number, the center is shifted half in the distance between
 neighboring mesh points.</p>
-<p>Examples of an even mesh with <img class="math" src="_images/math/d872993ed0c7c420e73e77a1d285ac100c516806.png" alt="\Gamma"/> center in two ways,</p>
+<p>Examples of an even mesh with <span class="math">\(\Gamma\)</span> center in two ways,</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">MESH</span> <span class="o">=</span> <span class="mi">8</span> <span class="mi">8</span> <span class="mi">8</span>
 <span class="n">GAMMA_CENTER</span> <span class="o">=</span> <span class="o">.</span><span class="n">TRUE</span><span class="o">.</span>
 </pre></div>
@@ -609,14 +608,14 @@ neighboring mesh points.</p>
 <div class="section" id="mp-shift">
 <h3><a class="toc-backref" href="#id26"><code class="docutils literal"><span class="pre">MP_SHIFT</span></code></a><a class="headerlink" href="#mp-shift" title="Permalink to this headline">¶</a></h3>
 <p><code class="docutils literal"><span class="pre">MP_SHIFT</span></code> gives the shifts in direction along the corresponding
-reciprocal axes (<img class="math" src="_images/math/f8c09bb8fa9507824f5d0ffa11542c5fefa5c41b.png" alt="a^*"/>, <img class="math" src="_images/math/f90f3b0b1161b8b322e4540a68dac93b46a6a3e9.png" alt="b^*"/>, <img class="math" src="_images/math/fd688c7724c647ecb19565e49e59adcb46965359.png" alt="c^*"/>). 0 or 1/2
+reciprocal axes (<span class="math">\(a^*\)</span>, <span class="math">\(b^*\)</span>, <span class="math">\(c^*\)</span>). 0 or 1/2
 (0.5) can be used as these values. 1/2 means the half mesh shift with
 respect to neighboring grid points in each direction.</p>
 </div>
 <div class="section" id="gamma-center">
 <h3><a class="toc-backref" href="#id27"><code class="docutils literal"><span class="pre">GAMMA_CENTER</span></code></a><a class="headerlink" href="#gamma-center" title="Permalink to this headline">¶</a></h3>
 <p>Instead of employing the Monkhorst-Pack scheme for the mesh sampling,
-<img class="math" src="_images/math/d872993ed0c7c420e73e77a1d285ac100c516806.png" alt="\Gamma"/> center mesh is used. The default value is <code class="docutils literal"><span class="pre">.FALSE.</span></code>.</p>
+<span class="math">\(\Gamma\)</span> center mesh is used. The default value is <code class="docutils literal"><span class="pre">.FALSE.</span></code>.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">GAMMA_CENTER</span> <span class="o">=</span> <span class="o">.</span><span class="n">TRUE</span><span class="o">.</span>
 </pre></div>
 </div>
@@ -643,18 +642,18 @@ sampling mesh, therefore these tags must be used with
 that of frequency that the user employs, e.g., THz, and that of
 vertical axis is {no. of states}/({unit cell} x {unit of the
 horizontal axis}). If the DOS is integrated over the frequency range,
-it will be <img class="math" src="_images/math/a021b7f5d785b9ac9bf9ffdd1e92adb3537944db.png" alt="3N_\mathrm{a}"/> states, where <img class="math" src="_images/math/7e8446546f111784635b760d4a5840b252d96bec.png" alt="N_\mathrm{a}"/> is
+it will be <span class="math">\(3N_\mathrm{a}\)</span> states, where <span class="math">\(N_\mathrm{a}\)</span> is
 the number of atoms in the unit cell.</p>
 <p>Phonon-DOS is formally defined as</p>
 <div class="math">
-<p><img src="_images/math/11b138fc73570947df1f9666a10459d371039644.png" alt="g(\omega) = \frac{1}{N} \sum_\lambda \delta(\omega - \omega_\lambda)"/></p>
-</div><p>where <img class="math" src="_images/math/f4170ed8938b79490d8923857962695514a8e4cb.png" alt="N"/> is the number of unit cells and <img class="math" src="_images/math/692942417d6b6ebe9700c72c9f751be0e5a2c088.png" alt="\lambda = (\nu,
-\mathbf{q})"/> with <img class="math" src="_images/math/ca3b8fa4180eee2dfc3af9d13fae1da451cd2c31.png" alt="\nu"/> as the band index and <img class="math" src="_images/math/9658517ccd5cd64cff63909f92e47b5981b1b2b5.png" alt="\mathbf{q}"/>
+\[g(\omega) = \frac{1}{N} \sum_\lambda \delta(\omega - \omega_\lambda)\]</div>
+<p>where <span class="math">\(N\)</span> is the number of unit cells and <span class="math">\(\lambda = (\nu,
+\mathbf{q})\)</span> with <span class="math">\(\nu\)</span> as the band index and <span class="math">\(\mathbf{q}\)</span>
 as the q-point. This is computed on a set of descritized sampling
-frequency points for which <img class="math" src="_images/math/b51aa99e0bc8cc8c3d17c0b9cf822db73e13293e.png" alt="\omega"/> is specified arbitrary using
-<a class="reference internal" href="#dos-range-tag"><span class="std std-ref">DOS_RANGE</span></a>. The phonon frequencies <img class="math" src="_images/math/72a79f7d4f4c79d07b2ecc38a1f8dbfdc1f3c2af.png" alt="\omega_\lambda"/>
+frequency points for which <span class="math">\(\omega\)</span> is specified arbitrary using
+<a class="reference internal" href="#dos-range-tag"><span class="std std-ref">DOS_RANGE</span></a>. The phonon frequencies <span class="math">\(\omega_\lambda\)</span>
 are obtained on a sampling mesh whose the number of grid points being
-<img class="math" src="_images/math/f4170ed8938b79490d8923857962695514a8e4cb.png" alt="N"/>. In the smearing method, the delta function is replaced by
+<span class="math">\(N\)</span>. In the smearing method, the delta function is replaced by
 normal distribution (Gaussian function) with the standard deviation
 specified by <a class="reference internal" href="#sigma-tag"><span class="std std-ref">SIGMA</span></a>. In the tetrahedron method, the
 Brillouin integration is made analytically within tetrahedra in
@@ -692,18 +691,18 @@ specified by <code class="docutils literal"><span class="pre">DOS_RANGE</span></
 <p>Projected DOS is calculated using this tag. The formal definition is
 written as</p>
 <div class="math">
-<p><img src="_images/math/a1538baccd0ff3cc1d2f56033b57382b8e0fabbf.png" alt="g^j(\omega, \hat{\mathbf{n}}) = \frac{1}{N} \sum_\lambda
+\[g^j(\omega, \hat{\mathbf{n}}) = \frac{1}{N} \sum_\lambda
 \delta(\omega - \omega_\lambda) |\hat{\mathbf{n}} \cdot
-\mathbf{e}^j_\lambda|^2,"/></p>
-</div><p>where <img class="math" src="_images/math/6b21e0b0899a0d2879d3b8019087fa630bab4ea2.png" alt="j"/> is the atom indices and <img class="math" src="_images/math/478876c4be3d80f295d2eff116c1ca1db7eeabec.png" alt="\hat{\mathbf{n}}"/> is
+\mathbf{e}^j_\lambda|^2,\]</div>
+<p>where <span class="math">\(j\)</span> is the atom indices and <span class="math">\(\hat{\mathbf{n}}\)</span> is
 the unit projection direction vector. Without specifying
 <a class="reference internal" href="#projection-direction-tag"><span class="std std-ref">PROJECTION_DIRECTION</span></a> or <a class="reference internal" href="#xyz-projection-tag"><span class="std std-ref">XYZ_PROJECTION</span></a>, PDOS is
-computed as sum of <img class="math" src="_images/math/c443b4898942d35581989d9554b3200f185f029a.png" alt="g^j(\omega, \hat{\mathbf{n}})"/> projected
-onto Cartesian axes <img class="math" src="_images/math/d53e4234a5512e3fe3549ee8a21f24fd4f874f04.png" alt="x,y,z"/>, i.e.,</p>
+computed as sum of <span class="math">\(g^j(\omega, \hat{\mathbf{n}})\)</span> projected
+onto Cartesian axes <span class="math">\(x,y,z\)</span>, i.e.,</p>
 <div class="math">
-<p><img src="_images/math/c7ce202bcb6fd86b862aeb21f3c065d7e2679169.png" alt="g^j(\omega) = \sum_{\hat{\mathbf{n}} = \{x, y, z\}} g^j(\omega,
-\hat{\mathbf{n}})."/></p>
-</div><p>The atom indices <img class="math" src="_images/math/6b21e0b0899a0d2879d3b8019087fa630bab4ea2.png" alt="j"/> are specified by</p>
+\[g^j(\omega) = \sum_{\hat{\mathbf{n}} = \{x, y, z\}} g^j(\omega,
+\hat{\mathbf{n}}).\]</div>
+<p>The atom indices <span class="math">\(j\)</span> are specified by</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">PDOS</span> <span class="o">=</span> <span class="mi">1</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span> <span class="mi">4</span> <span class="mi">5</span> <span class="mi">6</span>
 </pre></div>
 </div>
@@ -762,8 +761,8 @@ difference of maximum and minimum frequencies divided by 100.</p>
 <p>By setting <code class="docutils literal"><span class="pre">.TRUE.</span></code>, DOS at lower phonon frequencies are fit to a
 Debye model. By default, the DOS from 0 to 1/4 of the maximum phonon
 frequencies are used for the fitting. The function used to the fitting
-is <img class="math" src="_images/math/0bff3bbe300c106bddbdd0d9068c3b1ef6031365.png" alt="D(\omega)=a\omega^2"/> where <img class="math" src="_images/math/bd9d9c7512c898e0a254a0882184197bc1bd9c9f.png" alt="a"/> is the parameter and
-the Debye frequency is <img class="math" src="_images/math/5b369a1b9649bd1b14e2bd8f7c1304078768c0ef.png" alt="(9N/a)^{1/3}"/> where <img class="math" src="_images/math/f4170ed8938b79490d8923857962695514a8e4cb.png" alt="N"/> is the
+is <span class="math">\(D(\omega)=a\omega^2\)</span> where <span class="math">\(a\)</span> is the parameter and
+the Debye frequency is <span class="math">\((9N/a)^{1/3}\)</span> where <span class="math">\(N\)</span> is the
 number of atoms in unit cell. Users have to unserstand that this is
 <strong>not</strong> a unique way to determine Debye frequency. Debye frequency is
 dependent on how to parameterize it.</p>
@@ -775,27 +774,27 @@ dependent on how to parameterize it.</p>
 <span id="dos-moment-tag"></span><h3><a class="toc-backref" href="#id39"><code class="docutils literal"><span class="pre">MOMEMT</span></code> and <code class="docutils literal"><span class="pre">MOMENT_ORDER</span></code></a><a class="headerlink" href="#momemt-and-moment-order" title="Permalink to this headline">¶</a></h3>
 <p>Phonon moments for DOS and PDOS defined below are calculated using
 these tags up to arbitrary order. The order is specified with
-<code class="docutils literal"><span class="pre">MOMENT_ORDER</span></code> (<img class="math" src="_images/math/e11f2701c4a39c7fe543a6c4150b421d50f1c159.png" alt="n"/> in the formula). Unless <code class="docutils literal"><span class="pre">MOMENT_ORDER</span></code>
+<code class="docutils literal"><span class="pre">MOMENT_ORDER</span></code> (<span class="math">\(n\)</span> in the formula). Unless <code class="docutils literal"><span class="pre">MOMENT_ORDER</span></code>
 specified, the first and second moments are calculated.</p>
 <p>The moments for DOS are given as</p>
 <div class="math">
-<p><img src="_images/math/1dc48521aac456483350fd7eecfb24ab6a9a01c7.png" alt="M_n(\omega_\text{min}, \omega_\text{max})
+\[M_n(\omega_\text{min}, \omega_\text{max})
 &amp;=\frac{\int_{\omega_\text{min}}^{\omega_\text{max}} \omega^n
 g(\omega) d\omega} {\int_{\omega_\text{min}}^{\omega_\text{max}}
-g(\omega) d\omega}."/></p>
-</div><p>The moments for PDOS are given as</p>
+g(\omega) d\omega}.\]</div>
+<p>The moments for PDOS are given as</p>
 <div class="math">
-<p><img src="_images/math/2bc73b14c275ee41aa7a8e2aab55fc6b4de949cf.png" alt="M_n^j(\omega_\text{min}, \omega_\text{max})
+\[M_n^j(\omega_\text{min}, \omega_\text{max})
 &amp;=\frac{\int_{\omega_\text{min}}^{\omega_\text{max}} \omega^n
 g^j(\omega) d\omega} {\int_{\omega_\text{min}}^{\omega_\text{max}}
-g^j(\omega) d\omega}."/></p>
-</div><p><img class="math" src="_images/math/c6540b517676c14cc3746954ba9a21bd712af87a.png" alt="\omega_\text{min}"/> and <img class="math" src="_images/math/a0bad0bf9daf1bb00ac97651bee6c4de4e39261b.png" alt="\omega_\text{max}"/> are specified
+g^j(\omega) d\omega}.\]</div>
+<p><span class="math">\(\omega_\text{min}\)</span> and <span class="math">\(\omega_\text{max}\)</span> are specified
 :using ref:<cite>dos_fmin_fmax_tags</cite> tags. When these are not specified,
-the moments are computed with the range of <img class="math" src="_images/math/b26b041423e934224ed89e19c4ed5acba3627151.png" alt="\epsilon &lt; \omega
-&lt; \infty"/>, where <img class="math" src="_images/math/65d19c66c148d5016c6a89d26486bf6d1966ded1.png" alt="\epsilon"/> is a small positive
+the moments are computed with the range of <span class="math">\(\epsilon &lt; \omega
+&lt; \infty\)</span>, where <span class="math">\(\epsilon\)</span> is a small positive
 value. Imaginary frequencies are treated as negative real values in
 this computation, therefore it is not a good idea to set negative
-<img class="math" src="_images/math/c6540b517676c14cc3746954ba9a21bd712af87a.png" alt="\omega_\text{min}"/>.</p>
+<span class="math">\(\omega_\text{min}\)</span>.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">MOMENT</span> <span class="o">=</span> <span class="o">.</span><span class="n">TRUE</span><span class="o">.</span>
 <span class="n">MOMENT_ORDER</span> <span class="o">=</span> <span class="mi">3</span>
 </pre></div>
@@ -822,7 +821,7 @@ have to be set properly for it (see <a class="reference internal" href="interfac
 <p>The calculated values are
 written into <code class="docutils literal"><span class="pre">thermal_properties.yaml</span></code>. The unit systems of free
 energy, heat capacity, and entropy are kJ/mol, J/K/mol, and J/K/mol,
-respectively, where 1 mol means <img class="math" src="_images/math/a92dc686c9d1fd100b6df77652c54a74fa21ab61.png" alt="\mathrm{N_A}\times"/> your input
+respectively, where 1 mol means <span class="math">\(\mathrm{N_A}\times\)</span> your input
 unit cell (not formula unit), i.e. you have to divide the value by
 number of formula unit in your unit cell by yourself. For example, in
 MgO (conventional) unit cell, if you want to compare with experimental
@@ -858,12 +857,12 @@ usages of <code class="docutils literal"><span class="pre">TMAX</span></code>, <
 frequencies in THz, which is the default setting of phonopy, are used to
 obtain the mean square displacements, therefore physical units have to
 be set properly for it (see <a class="reference internal" href="interfaces.html#calculator-interfaces"><span class="std std-ref">Interfaces to calculators</span></a>.) The result
-is given in <img class="math" src="_images/math/9bb7861c0c2b2f9e34557ec7737ffcf2151475b6.png" alt="\textrm{\AA}^2"/> and writen into
+is given in <span class="math">\(\textrm{\AA}^2\)</span> and writen into
 <code class="docutils literal"><span class="pre">thermal_displacements.yaml</span></code>. See the detail of the method,
 <a class="reference internal" href="thermal-displacement.html#thermal-displacement"><span class="std std-ref">Mean square displacement</span></a>. These tags must be used with
 <a class="reference internal" href="#mesh-sampling-tags"><span class="std std-ref">Mesh sampling tags</span></a></p>
 <p><code class="docutils literal"><span class="pre">CUTOFF_FREQUENCY</span></code> tag with a small value is recommened to be set
-when sampling <img class="math" src="_images/math/d872993ed0c7c420e73e77a1d285ac100c516806.png" alt="\Gamma"/> point or using very dense sampling mesh
+when sampling <span class="math">\(\Gamma\)</span> point or using very dense sampling mesh
 to avoid divergence.</p>
 <p>The projection is applied along arbitrary direction using
 <code class="docutils literal"><span class="pre">PROJECTION_DIRECTION</span></code> tag (<a class="reference internal" href="#projection-direction-tag"><span class="std std-ref">PROJECTION_DIRECTION</span></a>).</p>
@@ -880,14 +879,14 @@ is the default setting of phonopy, are
 used to obtain the mean square displacement matricies, therefore
 physical units have to be set properly for it (see
 <a class="reference internal" href="interfaces.html#calculator-interfaces"><span class="std std-ref">Interfaces to calculators</span></a>.) The result is given in
-<img class="math" src="_images/math/9bb7861c0c2b2f9e34557ec7737ffcf2151475b6.png" alt="\textrm{\AA}^2"/> and writen into
+<span class="math">\(\textrm{\AA}^2\)</span> and writen into
 <code class="docutils literal"><span class="pre">thermal_displacement_matrices.yaml</span></code> where six matrix elements are
 given in the order of xx, yy, zz, yz, xz, xy.  In this yaml file,
 <code class="docutils literal"><span class="pre">displacement_matrices</span></code> and <code class="docutils literal"><span class="pre">displacement_matrices_cif</span></code> correspond
-to <img class="math" src="_images/math/010a04123831b0cd81f4fe4c26efc100be6067b9.png" alt="\mathrm{U}_\text{cart}"/> and <img class="math" src="_images/math/b72ca23df3499e7e1df096fd8b1956164fb947bb.png" alt="\mathrm{U}_\text{cif}"/>
+to <span class="math">\(\mathrm{U}_\text{cart}\)</span> and <span class="math">\(\mathrm{U}_\text{cif}\)</span>
 defined at <a class="reference internal" href="thermal-displacement.html#thermal-displacement-matrix"><span class="std std-ref">Mean square displacement matrix</span></a>, respectively.</p>
 <p><code class="docutils literal"><span class="pre">CUTOFF_FREQUENCY</span></code> tag with a small value is recommened to be set
-when sampling <img class="math" src="_images/math/d872993ed0c7c420e73e77a1d285ac100c516806.png" alt="\Gamma"/> point or using very dense sampling mesh
+when sampling <span class="math">\(\Gamma\)</span> point or using very dense sampling mesh
 to avoid divergence.</p>
 <p>The 3x3 matrix restricts distribution of each atom around the
 equilibrium position to be ellipsoid. But the distribution is not
@@ -905,7 +904,7 @@ frequencies in THz, which is the default setting of phonopy, are used
 to obtain the mean square displacement matricies, therefore physical
 units have to be set properly for it (see
 <a class="reference internal" href="interfaces.html#calculator-interfaces"><span class="std std-ref">Interfaces to calculators</span></a>.) The result is given in
-<img class="math" src="_images/math/9bb7861c0c2b2f9e34557ec7737ffcf2151475b6.png" alt="\textrm{\AA}^2"/>.</p>
+<span class="math">\(\textrm{\AA}^2\)</span>.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">TDISPMAT_CIF</span> <span class="o">=</span> <span class="mf">1273.0</span>
 </pre></div>
 </div>
@@ -928,24 +927,24 @@ is read, and the q-points written in this file are calculated.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">WRITEDM</span> <span class="o">=</span> <span class="o">.</span><span class="n">TRUE</span><span class="o">.</span>
 </pre></div>
 </div>
-<p>Dynamical matrices <img class="math" src="_images/math/3cf5aa5abe312e6fd4996975341a43aa566e8d8d.png" alt="D"/> are written into <code class="docutils literal"><span class="pre">qpoints.yaml</span></code>
-in the following <img class="math" src="_images/math/c5fc5ea625b51943e1239d68faadcff98e79f511.png" alt="6N\times3N"/> format, where <em>N</em> is the number of atoms in
+<p>Dynamical matrices <span class="math">\(D\)</span> are written into <code class="docutils literal"><span class="pre">qpoints.yaml</span></code>
+in the following <span class="math">\(6N\times3N\)</span> format, where <em>N</em> is the number of atoms in
 the primitive cell.</p>
 <p>The physical unit of dynamical matrix is <code class="docutils literal"><span class="pre">[unit</span> <span class="pre">of</span> <span class="pre">force]</span> <span class="pre">/</span> <span class="pre">([unit</span> <span class="pre">of</span>
 <span class="pre">displacement]</span> <span class="pre">*</span> <span class="pre">[unit</span> <span class="pre">of</span> <span class="pre">mass])</span></code>, i.e., square of the unit of phonon
 frequency before multiplying the unit conversion factor
 (see <a class="reference internal" href="#frequency-conversion-factor-tag"><span class="std std-ref">FREQUENCY_CONVERSION_FACTOR</span></a>).</p>
 <div class="math">
-<p><img src="_images/math/4481ef2cc75d5e26363971beed952d3c6f2cf3d6.png" alt="D =
+\[\begin{split}D =
 \begin{pmatrix}
 D_{11} &amp; D_{12} &amp; D_{13} &amp; \\
 D_{21} &amp; D_{22} &amp; D_{23} &amp; \cdots \\
 D_{31} &amp; D_{32} &amp; D_{33} &amp; \\
 &amp; \vdots &amp;  &amp; \\
-\end{pmatrix},"/></p>
-</div><p>and <img class="math" src="_images/math/988433d22edc64b159af900fb26b1de7d4055d4b.png" alt="D_{jj'}"/> is</p>
+\end{pmatrix},\end{split}\]</div>
+<p>and <span class="math">\(D_{jj'}\)</span> is</p>
 <div class="math">
-<p><img src="_images/math/877ae8eeaf9ce1013c938a9160a8b94269f8e6f8.png" alt="D_{jj'} =
+\[\begin{split}D_{jj'} =
 \begin{pmatrix}
 Re(D_{jj'}^{xx}) &amp; Im(D_{jj'}^{xx}) &amp; Re(D_{jj'}^{xy}) &amp;
 Im(D_{jj'}^{xy}) &amp; Re(D_{jj'}^{xz}) &amp; Im(D_{jj'}^{xz}) \\
@@ -953,11 +952,11 @@ Re(D_{jj'}^{yx}) &amp; Im(D_{jj'}^{yx}) &amp; Re(D_{jj'}^{yy}) &amp;
 Im(D_{jj'}^{yy}) &amp; Re(D_{jj'}^{yz}) &amp; Im(D_{jj'}^{yz}) \\
 Re(D_{jj'}^{zx}) &amp; Im(D_{jj'}^{zx}) &amp; Re(D_{jj'}^{zy}) &amp;
 Im(D_{jj'}^{zy}) &amp; Re(D_{jj'}^{zz}) &amp; Im(D_{jj'}^{zz}) \\
-\end{pmatrix},"/></p>
-</div><p>where <em>j</em> and <em>j’</em> are the atomic indices in the primitive cell. The
+\end{pmatrix},\end{split}\]</div>
+<p>where <em>j</em> and <em>j’</em> are the atomic indices in the primitive cell. The
 phonon frequencies may be recovered from <code class="docutils literal"><span class="pre">qpoints.yaml</span></code> by writing a
 simple python script. For example, <code class="docutils literal"><span class="pre">qpoints.yaml</span></code> is obtained for
-NaCl at <img class="math" src="_images/math/25fb629bcbf440c08ef1c236349172847e43a773.png" alt="q=(0, 0.5, 0.5)"/> by</p>
+NaCl at <span class="math">\(q=(0, 0.5, 0.5)\)</span> by</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">phonopy</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;2 2 2&quot;</span> <span class="o">--</span><span class="n">pa</span><span class="o">=</span><span class="s2">&quot;0 1/2 1/2  1/2 0 1/2  1/2 1/2 0&quot;</span> <span class="o">--</span><span class="n">qpoints</span><span class="o">=</span><span class="s2">&quot;0 1/2 1/2&quot;</span> <span class="o">--</span><span class="n">writedm</span>
 </pre></div>
 </div>
@@ -997,8 +996,8 @@ matrix. <code class="docutils literal"><span class="pre">BORN</span></code> file
 <div class="section" id="q-direction">
 <h3><a class="toc-backref" href="#id53"><code class="docutils literal"><span class="pre">Q_DIRECTION</span></code></a><a class="headerlink" href="#q-direction" title="Permalink to this headline">¶</a></h3>
 <p>This tag is used to activate NAC at
-<img class="math" src="_images/math/9fa4e8237895a4528aa594dcf52d012a6e04ad93.png" alt="\mathbf{q}\rightarrow\mathbf{0}"/>, i.e. practically
-<img class="math" src="_images/math/d872993ed0c7c420e73e77a1d285ac100c516806.png" alt="\Gamma"/>-point. Away from <img class="math" src="_images/math/d872993ed0c7c420e73e77a1d285ac100c516806.png" alt="\Gamma"/>-point, this setting is
+<span class="math">\(\mathbf{q}\rightarrow\mathbf{0}\)</span>, i.e. practically
+<span class="math">\(\Gamma\)</span>-point. Away from <span class="math">\(\Gamma\)</span>-point, this setting is
 ignored and the specified <strong>q</strong>-point is used as the <strong>q</strong>-direction.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">MESH</span> <span class="o">=</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span>
 <span class="n">NAC</span> <span class="o">=</span> <span class="o">.</span><span class="n">TRUE</span><span class="o">.</span>
@@ -1053,16 +1052,16 @@ this tag is usually unnecessary to be specified.</p>
 </div>
 <p>From the translation invariance condition,</p>
 <div class="math">
-<p><img src="_images/math/a96d57e8fa6c18e2839d294f1dd984db046c3570.png" alt="\sum_i \Phi_{ij}^{\alpha\beta} = 0, \;\;\text{for all $j$, $\alpha$, $\beta$},"/></p>
-</div><p>where <em>i</em> and <em>j</em> are the atom indices, and <img class="math" src="_images/math/877d234f4cec6974ce218fc2e975a486a7972dfd.png" alt="\alpha"/> and
-<img class="math" src="_images/math/410a9d0df9c135dd73b269cba7ef04dcfd932b1f.png" alt="\beta"/> are the Catesian indices for atoms <em>i</em> and <em>j</em>,
+\[\sum_i \Phi_{ij}^{\alpha\beta} = 0, \;\;\text{for all $j$, $\alpha$, $\beta$},\]</div>
+<p>where <em>i</em> and <em>j</em> are the atom indices, and <span class="math">\(\alpha\)</span> and
+<span class="math">\(\beta\)</span> are the Catesian indices for atoms <em>i</em> and <em>j</em>,
 respectively. Force constants are symmetric in each pair as</p>
 <div class="math">
-<p><img src="_images/math/eec96bab68d7edd04720b4bfdb5fe3bab02e8cd3.png" alt="\Phi_{ij}^{\alpha\beta}
+\[\Phi_{ij}^{\alpha\beta}
      = \frac{\partial^2 U}{\partial u_i^\alpha \partial u_j^\beta}
      = \frac{\partial^2 U}{\partial u_j^\beta \partial u_i^\alpha}
-     = \Phi_{ji}^{\beta\alpha}"/></p>
-</div><p>These symmetrizations break the symmetry conditions each other. Be
+     = \Phi_{ji}^{\beta\alpha}\]</div>
+<p>These symmetrizations break the symmetry conditions each other. Be
 careful that the other symmetries of force constants, i.e., the
 symmetry from crystal symmetry or rotational symmetry, are broken to
 force applying <code class="docutils literal"><span class="pre">FC_SYMMETRY</span></code>.</p>
@@ -1117,7 +1116,7 @@ animation images are created such as <code class="docutils literal"><span class=
 </div>
 <div class="section" id="for-the-other-animation-formats">
 <h4>For the other animation formats<a class="headerlink" href="#for-the-other-animation-formats" title="Permalink to this headline">¶</a></h4>
-<p>Phonon is only calculated at <img class="math" src="_images/math/d872993ed0c7c420e73e77a1d285ac100c516806.png" alt="\Gamma"/> point. So <em>q</em>-point is not
+<p>Phonon is only calculated at <span class="math">\(\Gamma\)</span> point. So <em>q</em>-point is not
 necessary to be set.</p>
 <p><code class="docutils literal"><span class="pre">anime.arc</span></code>, <code class="docutils literal"><span class="pre">anime.xyz</span></code>, <code class="docutils literal"><span class="pre">anime.xyz_jmol</span></code>, or <code class="docutils literal"><span class="pre">APOSCAR-*</span></code>
 are generated according to the <code class="docutils literal"><span class="pre">ANIME_TYPE</span></code> setting.</p>
@@ -1153,14 +1152,14 @@ dimension.</p>
 <p>Atomic displacement of the <em>j</em>-th atom is created from the real part
 of the eigenvectors with amplitudes and phase factors as</p>
 <div class="math">
-<p><img src="_images/math/a6c4a9c9df8474d608efc14b066f9ceef03e726d.png" alt="\frac{A} { \sqrt{N_\mathrm{a}m_j} } \operatorname{Re} \left[ \exp(i\phi)
-\mathbf{e}_j \exp( \mathbf{q} \cdot \mathbf{r}_{jl} ) \right],"/></p>
-</div><p>where <img class="math" src="_images/math/0043fe6507e9b1d112e07a2801e24927e267dd50.png" alt="A"/> is the amplitude, <img class="math" src="_images/math/c2f31c22645274c375eff7920cfdfdc18d60341f.png" alt="\phi"/> is the phase,
-<img class="math" src="_images/math/7e8446546f111784635b760d4a5840b252d96bec.png" alt="N_\mathrm{a}"/> is the number of atoms in the supercell specified
-in this tag and <img class="math" src="_images/math/afd1d18b958d1de3d2b40c935825bc8cff6c872b.png" alt="m_j"/> is the mass of the <em>j</em>-th atom,
-<img class="math" src="_images/math/9658517ccd5cd64cff63909f92e47b5981b1b2b5.png" alt="\mathbf{q}"/> is the q-point specified, <img class="math" src="_images/math/0f3ca8b8fd084100fb27d517c0998e72e771fb6e.png" alt="\mathbf{r}_{jl}"/>
+\[\frac{A} { \sqrt{N_\mathrm{a}m_j} } \operatorname{Re} \left[ \exp(i\phi)
+\mathbf{e}_j \exp( \mathbf{q} \cdot \mathbf{r}_{jl} ) \right],\]</div>
+<p>where <span class="math">\(A\)</span> is the amplitude, <span class="math">\(\phi\)</span> is the phase,
+<span class="math">\(N_\mathrm{a}\)</span> is the number of atoms in the supercell specified
+in this tag and <span class="math">\(m_j\)</span> is the mass of the <em>j</em>-th atom,
+<span class="math">\(\mathbf{q}\)</span> is the q-point specified, <span class="math">\(\mathbf{r}_{jl}\)</span>
 is the position of the <em>j</em>-th atom in the <em>l</em>-th unit cell, and
-<img class="math" src="_images/math/4dcb3f2335d339b914778dd858f6fae7193845d6.png" alt="\mathbf{e}_j"/> is the <em>j</em>-th atom part of eigenvector. Convention of
+<span class="math">\(\mathbf{e}_j\)</span> is the <em>j</em>-th atom part of eigenvector. Convention of
 eigenvector or dynamical matrix employed in phonopy is shown in
 <a class="reference internal" href="formulation.html#dynacmial-matrix-theory"><span class="std std-ref">Dynamical matrix</span></a>.</p>
 <p>If several modes are specified as shown in the example above, they are
@@ -1184,7 +1183,7 @@ degrees. The phase factor is optional. If it is not specified, 0 is
 used.</p>
 <p>Before multiplying user specified phase factor, the phase of
 the modulation vector is adjusted as the largest absolute value,
-<img class="math" src="_images/math/1ada5c57f6b21c7198623b53505ead0e0f8dd2d6.png" alt="\left|\mathbf{e}_j\right|/\sqrt{m_j}"/>, of element of
+<span class="math">\(\left|\mathbf{e}_j\right|/\sqrt{m_j}\)</span>, of element of
 3N dimensional modulation vector to be real. The complex modulation
 vector is shown in <code class="docutils literal"><span class="pre">modulation.yaml</span></code>.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">MODULATION</span> <span class="o">=</span> <span class="mi">3</span> <span class="mi">3</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="o">/</span><span class="mi">3</span> <span class="mi">1</span><span class="o">/</span><span class="mi">3</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="o">/</span><span class="mi">3</span> <span class="mi">1</span><span class="o">/</span><span class="mi">3</span> <span class="mi">0</span> <span class="mi">2</span> <span class="mf">3.5</span>
@@ -1218,7 +1217,7 @@ the fourth value in the frequency unit that the user specified.</p>
 </pre></div>
 </div>
 <p>Only the databases of IRs for a few point group types at the
-<img class="math" src="_images/math/d872993ed0c7c420e73e77a1d285ac100c516806.png" alt="\Gamma"/> point are implemented. If the database is available,
+<span class="math">\(\Gamma\)</span> point are implemented. If the database is available,
 the symbols of the IRs and the rotation operations are shown.</p>
 </div>
 <div class="section" id="show-irreps">
