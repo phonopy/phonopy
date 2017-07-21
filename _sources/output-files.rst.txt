@@ -179,19 +179,22 @@ natom          Number of atoms in the primitive cell.
 phonon         Key name of list for q-points.
 q-position     Position of q-vector in reduced coordinates.
 band           Key name of list for bands.
-frequency      Phonon frequency in a specified unit at each band
-eigenvector    Eigenvector at each band.
+frequency      Phonon frequency in a specified unit at each phonon
+               mode
+eigenvector    Eigenvector at each phonon mode.
                Each eigenvector :math:`\mathbf{e}` of
-	       :ref:`dynamical matrix <dynacmial_matrix_theory>`
-	       is shown as sets of three
-	       complex values of each atom along the Cartesian axes in
-	       the primitive cell. The real and imaginary values
-	       correspond to the left and right, respectively.
-	       A set of eigenvectors comprising all bands at a q-point
-	       forms a unitary matrix obtained as the result of 
-	       numpy.linalg.eigh, i.e., LAPACK of routine _heevd.
-	       Therefore eigenvectors correspond to the column vectors 
-	       of the unitary matrix.
+               :ref:`dynamical matrix <dynacmial_matrix_theory>`
+               is shown as sets of three
+               complex values of each atom along the Cartesian axes in
+               the primitive cell. The real and imaginary values
+               correspond to the left and right, respectively.
+               A set of eigenvectors comprising all bands at a q-point
+               forms a unitary matrix obtained as the result of 
+               numpy.linalg.eigh, i.e., LAPACK of routine _heevd.
+               Therefore eigenvectors correspond to the column vectors 
+               of the unitary matrix.
+group_velocity Group velocity at each phonon mode in the
+               Cartesian coordinates defined in the unit cell.
 ============== =======================================================
 
 Mesh sampling mode
