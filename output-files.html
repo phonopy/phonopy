@@ -22,6 +22,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
@@ -302,11 +303,11 @@ displacements. The format is hopefully understood just looking into
 it. ‘displacement’ is written in Cartesian coordinates.  The
 displacement and direction are related by</p>
 <div class="math">
-<p><img src="_images/math/842e0ef7c57483c843400aee29cbecf5efd38879.png" alt="\mathbf{u} = A \frac{( \mathbf{a}, \mathbf{b}, \mathbf{c} ) \mathbf{d}}{|( \mathbf{a}, \mathbf{b}, \mathbf{c} ) \mathbf{d}|},"/></p>
-</div><p>where <img class="math" src="_images/math/2978d86319a8d5f6b72d697bce6ebfd0bcab6ca9.png" alt="\mathbf{u}"/> is the displacement in Cartesian coordinates,
-<img class="math" src="_images/math/0043fe6507e9b1d112e07a2801e24927e267dd50.png" alt="A"/> is the amplitude, <img class="math" src="_images/math/81dcf405cbc5cd33848aa84a5095902382bc8d28.png" alt="( \mathbf{a}, \mathbf{b},
-\mathbf{c} )"/> is the matrix representing supercell lattice vectors
-(three column vectors), and <img class="math" src="_images/math/ffe01bcfa6fe21a0a352a04888734aec6deda327.png" alt="\mathbf{d}"/> is the direction along
+\[\mathbf{u} = A \frac{( \mathbf{a}, \mathbf{b}, \mathbf{c} ) \mathbf{d}}{|( \mathbf{a}, \mathbf{b}, \mathbf{c} ) \mathbf{d}|},\]</div>
+<p>where <span class="math">\(\mathbf{u}\)</span> is the displacement in Cartesian coordinates,
+<span class="math">\(A\)</span> is the amplitude, <span class="math">\(( \mathbf{a}, \mathbf{b},
+\mathbf{c} )\)</span> is the matrix representing supercell lattice vectors
+(three column vectors), and <span class="math">\(\mathbf{d}\)</span> is the direction along
 the supercell axes.</p>
 </div>
 <div class="section" id="phonopy-yaml-and-phonon-disp-yaml">
@@ -363,7 +364,7 @@ found easily on the web.</p>
 </tr>
 <tr class="row-even"><td>eigenvector</td>
 <td>Eigenvector at each band.
-Each eigenvector <img class="math" src="_images/math/84958aa798a56239e9670a8f47177b51617f073b.png" alt="\mathbf{e}"/> of
+Each eigenvector <span class="math">\(\mathbf{e}\)</span> of
 <a class="reference internal" href="formulation.html#dynacmial-matrix-theory"><span class="std std-ref">dynamical matrix</span></a>
 is shown as sets of three
 complex values of each atom along the Cartesian axes in

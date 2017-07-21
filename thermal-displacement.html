@@ -22,6 +22,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
@@ -146,53 +147,53 @@
 <p>From Eq. (10.71) in the book “Thermodynamics of Crystal”, atomic
 displacement, <strong>u</strong>, is written by</p>
 <div class="math">
-<p><img src="_images/math/cd140275f82317f9244e857ca0bc4b1db5dbe007.png" alt="u^\alpha(jl,t) = \left(\frac{\hbar}{2Nm_j}\right)^{\frac{1}{2}}
+\[u^\alpha(jl,t) = \left(\frac{\hbar}{2Nm_j}\right)^{\frac{1}{2}}
 \sum_{\mathbf{q},\nu}\left[\omega_\nu(\mathbf{q})\right]^{-\frac{1}{2}}
 \left[\hat{a}_\nu(\mathbf{q})\exp(-i\omega_\nu(\mathbf{q})t)+
 \hat{a}^\dagger_\nu(\mathbf{-q})\exp({i\omega_\nu(\mathbf{q})}t)\right]
 \exp({i\mathbf{q}\cdot\mathbf{r}(jl)})
-e^\alpha_\nu(j,\mathbf{q})"/></p>
-</div><p>where <em>j</em> and <em>l</em> are the labels for the <em>j</em>-th atomic position in the
-<em>l</em>-th unit cell, <em>t</em> is the time, <img class="math" src="_images/math/877d234f4cec6974ce218fc2e975a486a7972dfd.png" alt="\alpha"/> is an axis (a
+e^\alpha_\nu(j,\mathbf{q})\]</div>
+<p>where <em>j</em> and <em>l</em> are the labels for the <em>j</em>-th atomic position in the
+<em>l</em>-th unit cell, <em>t</em> is the time, <span class="math">\(\alpha\)</span> is an axis (a
 Cartesian axis in the default behavior of phonopy), <em>m</em> is the atomic
-mass, <em>N</em> is the number of the unit cells, <img class="math" src="_images/math/9658517ccd5cd64cff63909f92e47b5981b1b2b5.png" alt="\mathbf{q}"/> is the
-wave vector, <img class="math" src="_images/math/ca3b8fa4180eee2dfc3af9d13fae1da451cd2c31.png" alt="\nu"/> is the index of phonon mode. <em>e</em> is the
-polarization vector of the atom <em>jl</em> and the band <img class="math" src="_images/math/ca3b8fa4180eee2dfc3af9d13fae1da451cd2c31.png" alt="\nu"/> at
-<img class="math" src="_images/math/9658517ccd5cd64cff63909f92e47b5981b1b2b5.png" alt="\mathbf{q}"/>. <img class="math" src="_images/math/0c1332a41052512298350527298ed5d047f654b2.png" alt="\mathbf{r}(jl)"/> is the atomic position and
-<img class="math" src="_images/math/b51aa99e0bc8cc8c3d17c0b9cf822db73e13293e.png" alt="\omega"/> is the phonon frequency. <img class="math" src="_images/math/7137b77e7927f934524e5a463e92a87d9c19fee4.png" alt="\hat{a}^\dagger"/> and
-<img class="math" src="_images/math/8d6498cc51196a2e38f403d0e4cf0a236f88531a.png" alt="\hat{a}"/> are the creation and annihilation operators of
+mass, <em>N</em> is the number of the unit cells, <span class="math">\(\mathbf{q}\)</span> is the
+wave vector, <span class="math">\(\nu\)</span> is the index of phonon mode. <em>e</em> is the
+polarization vector of the atom <em>jl</em> and the band <span class="math">\(\nu\)</span> at
+<span class="math">\(\mathbf{q}\)</span>. <span class="math">\(\mathbf{r}(jl)\)</span> is the atomic position and
+<span class="math">\(\omega\)</span> is the phonon frequency. <span class="math">\(\hat{a}^\dagger\)</span> and
+<span class="math">\(\hat{a}\)</span> are the creation and annihilation operators of
 phonon. The expectation value of the squared atomic displacement is
 calculated as,</p>
 <div class="math">
-<p><img src="_images/math/9cdf0bfd028d9782b36b3e9d8d5a5fa47c14aa6a.png" alt="\left\langle |u^\alpha(jl, t)|^2 \right\rangle = \frac{\hbar}{2Nm_j}
+\[\left\langle |u^\alpha(jl, t)|^2 \right\rangle = \frac{\hbar}{2Nm_j}
 \sum_{\mathbf{q},\nu}\omega_\nu(\mathbf{q})^{-1}
-(1+2n_\nu(\mathbf{q},T))|e^\alpha_\nu(j,\mathbf{q})|^2,"/></p>
-</div><p>where <img class="math" src="_images/math/3694352ecca446650a790a290d8817cdc0f61e19.png" alt="n_\nu(\mathbf{q},T)"/> is the phonon population, which is give by,</p>
+(1+2n_\nu(\mathbf{q},T))|e^\alpha_\nu(j,\mathbf{q})|^2,\]</div>
+<p>where <span class="math">\(n_\nu(\mathbf{q},T)\)</span> is the phonon population, which is give by,</p>
 <div class="math">
-<p><img src="_images/math/af598e6e252cf0a40c2373ddf5b23c8c4a9f3a64.png" alt="n_\nu(\mathbf{q},T) =
-\frac{1}{\exp(\hbar\omega_\nu(\mathbf{q})/\mathrm{k_B}T)-1},"/></p>
-</div><p>where <em>T</em> is the temperature, and <img class="math" src="_images/math/c435b7d335440cdec55adc8015f38ce11e932217.png" alt="\mathrm{k_B}"/> is the
+\[n_\nu(\mathbf{q},T) =
+\frac{1}{\exp(\hbar\omega_\nu(\mathbf{q})/\mathrm{k_B}T)-1},\]</div>
+<p>where <em>T</em> is the temperature, and <span class="math">\(\mathrm{k_B}\)</span> is the
 Boltzmann constant. The equation is calculated using the commutation
 relation of the creation and annihilation operators and the
 expectation values of the combination of the operations, e.g.,</p>
 <div class="math">
-<p><img src="_images/math/cedc53540240694538163a4a1f95af352c7fb994.png" alt="[ \hat{a}_\nu(\mathbf{q}), \hat{a}^\dagger_{\nu'}(\mathbf{q'}) ]
+\[\begin{split}[ \hat{a}_\nu(\mathbf{q}), \hat{a}^\dagger_{\nu'}(\mathbf{q'}) ]
 &amp;= \delta(\mathbf{q}-\mathbf{q}')\delta_{\nu\nu'},\\
 [ \hat{a}_\nu(\mathbf{q}), \hat{a}_{\nu'}(\mathbf{q'}) ] &amp;= 0,\\
 [ \hat{a}^\dagger_\nu(\mathbf{q}), \hat{a}^\dagger_{\nu'}(\mathbf{q'}) ] &amp;= 0,\\
 \langle|\hat{a}_\nu(\mathbf{q})\hat{a}_{\nu'}(\mathbf{q'})|\rangle &amp;= 0,\\
 \langle|\hat{a}^\dagger_\nu(\mathbf{q})\hat{a}^\dagger_{\nu'}(\mathbf{q'})|\rangle
-&amp;= 0."/></p>
-</div></div>
+&amp;= 0.\end{split}\]</div>
+</div>
 <div class="section" id="mean-square-displacement-matrix">
 <span id="thermal-displacement-matrix"></span><h1>Mean square displacement matrix<a class="headerlink" href="#mean-square-displacement-matrix" title="Permalink to this headline">¶</a></h1>
 <p>Mean square displacement matrix is defined as follows:</p>
 <div class="math">
-<p><img src="_images/math/76376db6e6dfd733945849392d2276906935aa17.png" alt="\mathrm{U}_\text{cart}(j, T) = \frac{\hbar}{2Nm_j}
+\[\mathrm{U}_\text{cart}(j, T) = \frac{\hbar}{2Nm_j}
 \sum_{\mathbf{q},\nu}\omega_\nu(\mathbf{q},T)^{-1}
 (1+2n_\nu(\mathbf{q}))
-\mathbf{e}_\nu(j,\mathbf{q}) \otimes \mathbf{e}^*_\nu(j,\mathbf{q})."/></p>
-</div><p>This is a symmetry matrix and diagonal elements are same as mean
+\mathbf{e}_\nu(j,\mathbf{q}) \otimes \mathbf{e}^*_\nu(j,\mathbf{q}).\]</div>
+<p>This is a symmetry matrix and diagonal elements are same as mean
 square displacement calculated along Cartesian x, y, z directions.</p>
 </div>
 <div class="section" id="projection-to-an-arbitrary-axis-from-the-cartesian-axes">
@@ -202,38 +203,38 @@ defined in the input structure file. Mean square displacement along an
 arbitrary axis is obtained projecting eigenvectors in the Cartesian
 axes as follows:</p>
 <div class="math">
-<p><img src="_images/math/8da0bce5108405e4862a3538e8755063884f5c04.png" alt="\left\langle |u(jl, t)|^2 \right\rangle = \frac{\hbar}{2Nm_j}
+\[\left\langle |u(jl, t)|^2 \right\rangle = \frac{\hbar}{2Nm_j}
 \sum_{\mathbf{q},\nu}\omega_\nu(\mathbf{q})^{-1}
 (1+2n_\nu(\mathbf{q}))|
-\hat{\mathbf{n}}\cdot\mathbf{e}_\nu(j,\mathbf{q})|^2"/></p>
-</div><p>where <img class="math" src="_images/math/478876c4be3d80f295d2eff116c1ca1db7eeabec.png" alt="\hat{\mathbf{n}}"/> is an arbitrary unit direction.</p>
+\hat{\mathbf{n}}\cdot\mathbf{e}_\nu(j,\mathbf{q})|^2\]</div>
+<p>where <span class="math">\(\hat{\mathbf{n}}\)</span> is an arbitrary unit direction.</p>
 </div>
 <div class="section" id="mean-square-displacement-matrix-in-cif-format">
 <h1>Mean square displacement matrix in cif format<a class="headerlink" href="#mean-square-displacement-matrix-in-cif-format" title="Permalink to this headline">¶</a></h1>
 <p>According to the paper by Grosse-Kunstleve and Adams [J. Appl. Cryst.,
 35, 477-480 (2002)], mean square displacement matrix in the cif
 definition (<code class="docutils literal"><span class="pre">aniso_U</span></code>),
-<img class="math" src="_images/math/b72ca23df3499e7e1df096fd8b1956164fb947bb.png" alt="\mathrm{U}_\text{cif}"/>, is obtained by</p>
+<span class="math">\(\mathrm{U}_\text{cif}\)</span>, is obtained by</p>
 <div class="math">
-<p><img src="_images/math/7806495f87988bc46eaf246a0399dea8748be6ad.png" alt="\mathrm{U}_\text{cif} = (\mathrm{AN})^{-1}\mathrm{U}_\text{cart}
-(\mathrm{AN})^{-\mathrm{T}},"/></p>
-</div><p>where <img class="math" src="_images/math/c7d424a23b54e47c8f38437be72671fb0f789201.png" alt="\mathrm{A}"/> is the matrix to transform a point in fractional
-coordinates to the Cartesian coordinates and <img class="math" src="_images/math/5324221299528e62425a57c0674516e3b149e100.png" alt="\mathrm{N}"/> is the
+\[\mathrm{U}_\text{cif} = (\mathrm{AN})^{-1}\mathrm{U}_\text{cart}
+(\mathrm{AN})^{-\mathrm{T}},\]</div>
+<p>where <span class="math">\(\mathrm{A}\)</span> is the matrix to transform a point in fractional
+coordinates to the Cartesian coordinates and <span class="math">\(\mathrm{N}\)</span> is the
 diagonal matrix made of reciprocal basis vector lengths as follows:</p>
 <div class="math">
-<p><img src="_images/math/3f3c9b74f13abc866ae667d928f46e4cdbbe284e.png" alt="\mathrm{A} = \begin{pmatrix}
+\[\begin{split}\mathrm{A} = \begin{pmatrix}
 a_x &amp; b_x &amp; c_x \\
 a_y &amp; b_y &amp; c_y \\
 a_z &amp; b_z &amp; c_z
-\end{pmatrix}"/></p>
-</div><p>and</p>
+\end{pmatrix}\end{split}\]</div>
+<p>and</p>
 <div class="math">
-<p><img src="_images/math/4229643d51642b87abfdae8b1b61f623e1bcc590.png" alt="\mathrm{N} = \begin{pmatrix}
+\[\begin{split}\mathrm{N} = \begin{pmatrix}
 a^* &amp; 0 &amp; 0 \\
 0 &amp; b^* &amp; 0 \\
 0 &amp; 0 &amp; c^*
-\end{pmatrix}."/></p>
-</div><p><img class="math" src="_images/math/f8c09bb8fa9507824f5d0ffa11542c5fefa5c41b.png" alt="a^*"/>, <img class="math" src="_images/math/f90f3b0b1161b8b322e4540a68dac93b46a6a3e9.png" alt="b^*"/>, <img class="math" src="_images/math/fd688c7724c647ecb19565e49e59adcb46965359.png" alt="c^*"/> are defined without <img class="math" src="_images/math/6f064faadf14a1d739a4ca4e1ea4aeeb3a342dfe.png" alt="2\pi"/>.</p>
+\end{pmatrix}.\end{split}\]</div>
+<p><span class="math">\(a^*\)</span>, <span class="math">\(b^*\)</span>, <span class="math">\(c^*\)</span> are defined without <span class="math">\(2\pi\)</span>.</p>
 </div>
 
 
