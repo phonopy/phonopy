@@ -42,11 +42,11 @@ import phonopy.file_IO as file_IO
 from phonopy.cui.settings import PhonopyConfParser
 from phonopy.cui.show_symmetry import check_symmetry
 from phonopy.cui.phonopy_argparse import get_parser
-from phonopy.units import (Wien2kToTHz, AbinitToTHz, PwscfToTHz, ElkToTHz,
-                           SiestaToTHz, VaspToTHz, CrystalToTHz, Hartree, Bohr)
+from phonopy.cui.phonopy_argparse import get_parser
 from phonopy.structure.cells import print_cell, determinant
 from phonopy.structure.atoms import atom_data, symbol_map
-from phonopy.interface import create_FORCE_SETS, read_crystal_structure
+from phonopy.interface import (create_FORCE_SETS, read_crystal_structure,
+                               get_default_physical_units)
 from phonopy.interface.phonopy_yaml import PhonopyYaml
 
 phonopy_version = __version__
@@ -230,62 +230,33 @@ if options.loglevel is not None:
 #
 # Phonopy interface mode
 #
-# Physical units: energy,  distance,  atomic mass, force
-# vasp          : eV,      Angstrom,  AMU,         eV/Angstrom
-# wien2k        : Ry,      au(=borh), AMU,         mRy/au
-# abinit        : hartree, au,        AMU,         eV/Angstrom
-# elk           : hartree, au,        AMU,         hartree/au
-# pwscf         : Ry,      au,        AMU,         Ry/au
-# siesta        : eV,      au,        AMU,         eV/Angstroem
-# CRYSTAL       : eV,      Angstrom,  AMU,         eV/Angstroem
-#
 if options.wien2k_mode:
     interface_mode = 'wien2k'
     from phonopy.interface.wien2k import write_supercells_with_displacements
-    factor = Wien2kToTHz
-    nac_factor = 2000.0
-    distance_to_A = Bohr
 elif options.abinit_mode:
     interface_mode = 'abinit'
     from phonopy.interface.abinit import write_supercells_with_displacements
-    factor = AbinitToTHz
-    nac_factor = Hartree / Bohr
-    distance_to_A = Bohr
 elif options.pwscf_mode:
     interface_mode = 'pwscf'
     from phonopy.interface.pwscf import write_supercells_with_displacements
-    factor = PwscfToTHz
-    nac_factor = 2.0
-    distance_to_A = Bohr
 elif options.elk_mode:
     interface_mode = 'elk'
     from phonopy.interface.elk import write_supercells_with_displacements
-    factor = ElkToTHz
-    nac_factor = 1.0
-    distance_to_A = Bohr
 elif options.siesta_mode:
     interface_mode = 'siesta'
     from phonopy.interface.siesta import write_supercells_with_displacements
-    factor = SiestaToTHz
-    nac_factor = Hartree / Bohr
-    distance_to_A = Bohr
 elif options.crystal_mode:
     interface_mode = 'crystal'
     from phonopy.interface.crystal import write_supercells_with_displacements
-    factor = CrystalToTHz
-    nac_factor = Hartree * Bohr
-    distance_to_A = 1.0
 else:
     if options.vasp_mode:
         interface_mode = 'vasp'
-        distance_to_A = 1.0
     else:
         interface_mode = None
-        distance_to_A = 1.0
     from phonopy.interface.vasp import write_supercells_with_displacements
     from phonopy.interface.vasp import create_FORCE_CONSTANTS
-    factor = VaspToTHz
-    nac_factor = Hartree * Bohr
+
+physical_units = get_default_physical_units(interface_mode)
 
 if options.is_graph_save:
     import matplotlib
@@ -391,7 +362,7 @@ if options.is_check_symmetry:
     check_symmetry(unitcell,
                    primitive_axis=settings.get_primitive_matrix(),
                    symprec=options.symprec,
-                   distance_to_A=distance_to_A,
+                   distance_to_A=physical_units['distance_to_A'],
                    phonopy_version=phonopy_version)
     if log_level > 0:
         print_end()
@@ -467,12 +438,12 @@ else: # Read FORCE_SETS, FORCE_CONSTANTS, or force_constants.hdf5
 
     # Overwrite frequency unit conversion factor
     if settings.get_frequency_conversion_factor() is not None:
-        factor = settings.get_frequency_conversion_factor()
+        physical_units['factor'] = settings.get_frequency_conversion_factor()
 
     phonon = Phonopy(unitcell,
                      settings.get_supercell_matrix(),
                      primitive_matrix=settings.get_primitive_matrix(),
-                     factor=factor,
+                     factor=physical_units['factor'],
                      dynamical_matrix_decimals=settings.get_dm_decimals(),
                      force_constants_decimals=settings.get_fc_decimals(),
                      symprec=options.symprec,
@@ -609,7 +580,7 @@ if settings.get_is_nac():
                 print_end()
             sys.exit(1)
         if nac_params['factor'] == None:
-            nac_params['factor'] = nac_factor
+            nac_params['factor'] = physical_units['nac_factor']
         phonon.set_nac_params(nac_params=nac_params)
 
         if log_level > 1:
