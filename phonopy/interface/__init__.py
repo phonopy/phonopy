@@ -113,6 +113,59 @@ def get_default_cell_filename(interface_mode, yaml_mode):
     if interface_mode == 'crystal':
         return "crystal.o"
 
+def get_default_physical_units(interface_mode):
+    """Return physical units used for calculators
+
+    Physical units: energy,  distance,  atomic mass, force
+    vasp          : eV,      Angstrom,  AMU,         eV/Angstrom
+    wien2k        : Ry,      au(=borh), AMU,         mRy/au
+    abinit        : hartree, au,        AMU,         eV/Angstrom
+    elk           : hartree, au,        AMU,         hartree/au
+    pwscf         : Ry,      au,        AMU,         Ry/au
+    siesta        : eV,      au,        AMU,         eV/Angstroem
+    CRYSTAL       : eV,      Angstrom,  AMU,         eV/Angstroem
+
+    """
+
+    from phonopy.units import (Wien2kToTHz, AbinitToTHz, PwscfToTHz, ElkToTHz,
+                               SiestaToTHz, VaspToTHz, CrystalToTHz, Hartree,
+                               Bohr)
+
+    units = {'factor': None,
+             'nac_factor': None,
+             'distance_to_A': None}
+
+    if interface_mode is None or interface_mode == 'vasp':
+        units['factor'] = VaspToTHz
+        units['nac_factor'] = Hartree * Bohr
+        units['distance_to_A'] = 1.0
+    elif interface_mode == 'abinit':
+        units['factor'] = AbinitToTHz
+        units['nac_factor'] = Hartree / Bohr
+        units['distance_to_A'] = Bohr
+    elif interface_mode == 'pwscf':
+        units['factor'] = PwscfToTHz
+        units['nac_factor'] = 2.0
+        units['distance_to_A'] = Bohr
+    elif interface_mode == 'wien2k':
+        units['factor'] = Wien2kToTHz
+        units['nac_factor'] = 2000.0
+        units['distance_to_A'] = Bohr
+    elif interface_mode == 'elk':
+        units['factor'] = ElkToTHz
+        units['nac_factor'] = 1.0
+        units['distance_to_A'] = Bohr
+    elif interface_mode == 'siesta':
+        units['factor'] = SiestaToTHz
+        units['nac_factor'] = Hartree / Bohr
+        units['distance_to_A'] = Bohr
+    elif interface_mode == 'crystal':
+        units['factor'] = CrystalToTHz
+        units['nac_factor'] = Hartree * Bohr
+        units['distance_to_A'] = 1.0
+
+    return units
+
 def create_FORCE_SETS(interface_mode,
                       force_filenames,
                       symprec=1e-5,

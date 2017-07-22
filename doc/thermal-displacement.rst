@@ -48,17 +48,12 @@ expectation values of the combination of the operations, e.g.,
 .. math::
 
    [ \hat{a}_\nu(\mathbf{q}), \hat{a}^\dagger_{\nu'}(\mathbf{q'}) ]
-   = \delta(\mathbf{q}-\mathbf{q}')\delta_{\nu\nu'},
-
-   [ \hat{a}_\nu(\mathbf{q}), \hat{a}_{\nu'}(\mathbf{q'}) ] = 0,
-
-   [ \hat{a}^\dagger_\nu(\mathbf{q}), \hat{a}^\dagger_{\nu'}(\mathbf{q'}) ] = 0,
-
-   \langle|\hat{a}_\nu(\mathbf{q})\hat{a}_{\nu'}(\mathbf{q'})|\rangle
-   = 0,
-
+   &= \delta(\mathbf{q}-\mathbf{q}')\delta_{\nu\nu'},\\
+   [ \hat{a}_\nu(\mathbf{q}), \hat{a}_{\nu'}(\mathbf{q'}) ] &= 0,\\
+   [ \hat{a}^\dagger_\nu(\mathbf{q}), \hat{a}^\dagger_{\nu'}(\mathbf{q'}) ] &= 0,\\
+   \langle|\hat{a}_\nu(\mathbf{q})\hat{a}_{\nu'}(\mathbf{q'})|\rangle &= 0,\\
    \langle|\hat{a}^\dagger_\nu(\mathbf{q})\hat{a}^\dagger_{\nu'}(\mathbf{q'})|\rangle
-   = 0.
+   &= 0.
 
 .. _thermal_displacement_matrix:
 

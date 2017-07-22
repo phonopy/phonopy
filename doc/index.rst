@@ -88,11 +88,10 @@ Documentation
 Mailing list
 ============
 
-For questions, bug reports, and comments, please visit following
-mailing list:
-
-https://lists.sourceforge.net/lists/listinfo/phonopy-users
-
+For questions, bug reports, and comments, please visit
+https://lists.sourceforge.net/lists/listinfo/phonopy-users to
+subscribe the phonopy mailing list 
+and send them to phonopy-users@lists.sourceforge.net.
 Message body including attached files has to be smaller than 300 KB.
 
 License
