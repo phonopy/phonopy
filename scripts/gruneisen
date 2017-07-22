@@ -148,6 +148,7 @@ parser.set_defaults(
     pwscf_mode=False,
     sampling_mesh=None,
     save_graph=False,
+    siesta_mode=False,
     supercell_dimension=None,
     symprec=1e-5,
     title=None,
@@ -217,6 +218,8 @@ parser.add_option("--readfc", dest="reads_force_constants",
 parser.add_option("-s", "--save", dest="save_graph",
                   action="store_true",
                   help="Save plot data in pdf")
+parser.add_option("--siesta", dest="siesta_mode",
+                  action="store_true", help="Invoke Siesta mode")
 parser.add_option("-t", "--title", dest="title", action="store",
                   type="string", help="Title of plot")
 parser.add_option("--tmax", dest="tmax", type="float",
@@ -272,14 +275,7 @@ else:
 
 
 #
-# Phonopy interface mode
-#
-# Physical units: energy,  distance,  atomic mass, force
-# vasp          : eV,      Angstrom,  AMU,         eV/Angstrom
-# wien2k        : Ry,      au,        AMU,         mRy/au
-# pwscf         : Ry,      au,        AMU,         Ry/au
-# abinit        : hartree, au(=bohr), AMU,         eV/Angstrom
-# CRYSTAL       : eV,      Angstrom,  AMU,         eV/Angstrom
+# Phonopy gruneisen interface mode
 #
 if options.wien2k_mode:
     interface_mode = 'wien2k'
@@ -287,6 +283,10 @@ elif options.abinit_mode:
     interface_mode = 'abinit'
 elif options.pwscf_mode:
     interface_mode = 'pwscf'
+elif options.elk_mode:
+    interface_mode = 'elk'
+elif options.siesta_mode:
+    interface_mode = 'siesta'
 elif options.crystal_mode:
     interface_mode = 'crystal'
 else:

@@ -1,0 +1,7 @@
+For band structure type calculation:
+
+% gruneisen NaCl-1.00 NaCl-1.005 NaCl-0.995 --dim="2 2 2" --pa="0 1/2 1/2 1/2 0 1/2 1/2 1/2 0" --band="1/2 1/4 3/4 0 0 0 1/2 1/2 1/2 1/2 0.0 1/2" -p -c POSCAR-unitcell --nac
+
+For mesh sampling calculation:
+
+% gruneisen NaCl-1.00 NaCl-1.005 NaCl-0.995 --dim="2 2 2"  --pa="0 1/2 1/2 1/2 0 1/2 1/2 1/2 0" --mesh="20 20 20" -p -c POSCAR-unitcell --nac
