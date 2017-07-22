@@ -35,14 +35,15 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import sys
+import numpy as np
 from phonopy import Phonopy
 from phonopy import PhonopyGruneisen
-from phonopy.interface import read_crystal_structure, get_default_cell_filename
+from phonopy.interface import (read_crystal_structure,
+                               get_default_cell_filename,
+                               get_default_physical_units)
 from phonopy.file_IO import (parse_FORCE_SETS, parse_BORN,
                              parse_FORCE_CONSTANTS, read_force_constants_hdf5)
-from phonopy.units import (VaspToTHz, Wien2kToTHz, AbinitToTHz, PwscfToTHz,
-                           CrystalToTHz)
-import numpy as np
+from phonopy.units import VaspToTHz
 
 def fracval(frac):
     if frac.find('/') == -1:
@@ -69,14 +70,14 @@ def get_phonon(cell_filename,
                dim,
                primitive_matrix=np.eye(3),
                born_filename=None,
-               factor=VaspToTHz,
+               physical_units=None,
                interface_mode='vasp',
                symprec=1e-5):
     cell = get_cell(cell_filename, interface_mode)
     phonon = Phonopy(cell,
                      dim,
                      primitive_matrix=primitive_matrix,
-                     factor=factor,
+                     factor=physical_units['factor'],
                      symprec=symprec)
     force_sets = parse_FORCE_SETS(filename=force_sets_filename)
     phonon.set_displacement_dataset(force_sets)
@@ -85,6 +86,8 @@ def get_phonon(cell_filename,
         nac_params = parse_BORN(phonon.get_primitive(),
                                 filename=born_filename,
                                 symprec=symprec)
+        if nac_params['factor'] == None:
+            nac_params['factor'] = physical_units['nac_factor']
         phonon.set_nac_params(nac_params)
     phonon.set_dynamical_matrix()
     return phonon
@@ -94,7 +97,7 @@ def get_phonon_from_force_constants(cell_filename,
                                     dim,
                                     primitive_matrix=np.eye(3),
                                     born_filename=None,
-                                    factor=VaspToTHz,
+                                    physical_units=None,
                                     interface_mode='vasp',
                                     symprec=1e-5,
                                     is_hdf5=False):
@@ -102,7 +105,7 @@ def get_phonon_from_force_constants(cell_filename,
     phonon = Phonopy(cell,
                      dim,
                      primitive_matrix=primitive_matrix,
-                     factor=factor,
+                     factor=physical_units['factor'],
                      symprec=symprec)
     if is_hdf5:
         force_constants = read_force_constants_hdf5(
@@ -115,6 +118,8 @@ def get_phonon_from_force_constants(cell_filename,
         nac_params = parse_BORN(phonon.get_primitive(),
                                 filename=born_filename,
                                 symprec=symprec)
+        if nac_params['factor'] == None:
+            nac_params['factor'] = physical_units['nac_factor']
         phonon.set_nac_params(nac_params)
     phonon.set_dynamical_matrix()
     return phonon
@@ -278,22 +283,19 @@ else:
 #
 if options.wien2k_mode:
     interface_mode = 'wien2k'
-    factor = Wien2kToTHz
 elif options.abinit_mode:
     interface_mode = 'abinit'
-    factor = AbinitToTHz
 elif options.pwscf_mode:
     interface_mode = 'pwscf'
-    factor = PwscfToTHz
 elif options.crystal_mode:
     interface_mode = 'crystal'
-    factor = CrystalToTHz
 else:
     interface_mode = 'vasp'
-    factor = VaspToTHz
+physical_units = get_default_physical_units(interface_mode)
+
 
 if options.factor is not None:
-    factor = options.factor
+    physical_units['factor'] = options.factor
     
 if options.cell_filename:
     cell_filename = options.cell_filename
@@ -317,7 +319,7 @@ for i in range(3):
                 dim,
                 primitive_matrix=primitive_axis,
                 born_filename=born_filename,
-                factor=factor,
+                physical_units=physical_units,
                 interface_mode=interface_mode,
                 symprec=options.symprec,
                 is_hdf5=True)
@@ -328,7 +330,7 @@ for i in range(3):
                 dim,
                 primitive_matrix=primitive_axis,
                 born_filename=born_filename,
-                factor=factor,
+                physical_units=physical_units,
                 interface_mode=interface_mode,
                 symprec=options.symprec)
         phonons.append(phonon)
@@ -338,7 +340,7 @@ for i in range(3):
                             dim,
                             primitive_matrix=primitive_axis,
                             born_filename=born_filename,
-                            factor=factor,
+                            physical_units=physical_units,
                             interface_mode=interface_mode,
                             symprec=options.symprec)
         phonons.append(phonon)
