@@ -58,6 +58,8 @@ follows::
 
    % conda install numpy scipy h5py pyyaml matplotlib
 
+.. _install_setup_py:
+
 Building using setup.py
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -72,27 +74,38 @@ needed.
 
    and extract it::
 
-   % tar xvfz phonopy-1.11.2.tar.gz
+      % tar xvfz phonopy-1.11.12.31.tar.gz
+      % cd phonopy-1.11.12.31
+
+   The other option is using git to clone the phonopy repository from github::
+
+     % git clone https://github.com/atztogo/phonopy.git
+     % cd phonopy
 
 2. Set up C-libraries for python C-API and python codes. This can be
    done as follows:
 
    Run ``setup.py`` script::
 
-      % python setup.py install --home=<my-directory>
-
-   where :file:`{<my-directory>}` may be your current directory, :file:`.`.
-   Another choice may be to use the user scheme (see the python document)::
-
       % python setup.py install --user
 
-   The executable command ``phonopy`` is located in the ``bin`` directory.
+   Watching carefully where the phonopy commands and library are
+   installed. Those locations can be ``~/.local/bin`` and
+   ``~/.local/lib`` directories, respectively.
 
-3. Put ``lib/python`` path into :envvar:`$PYTHONPATH`, e.g., in your
-   .bashrc, .zshenv, etc. If it is installed under your current
-   directory, the path to be added to :envvar:`$PYTHONPATH` is such as below::
+3. Assuming the installation location is those shown in the step 2,
+   set :envvar:`$PATH` and :envvar:`$PYTHONPATH`::
 
-      export PYTHONPATH=~/phonopy-1.11.2/lib/python
+      export PYTHONPATH=~/.local/lib:$PYTHONPATH
+      export PYTH=~/.local/bin:$PATH
+
+   or if ``PYTHONPATH`` is not yet set in your system::
+
+      export PYTHONPATH=~/.local/lib
+      export PYTH=~/.local/bin:$PATH
+
+   in your ``.bashrc`` (or maybe ``.bash_profile``), ``.zshenv``, or
+   other script for the other shells. 
 
 Tips on setup.py installation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -102,6 +115,8 @@ Tips on setup.py installation
 
    MacOSX   
    virtualmachine
+
+.. _install_conda:
 
 conda
 ------
@@ -139,4 +154,49 @@ e.g.,::
 
    sudo apt-get install python-dev
 
+.. _install_trouble_shooting:
 
+Trouble shooting
+-----------------
+
+Remove previous phonopy installations
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Sometimes previous installations of phonopy prevent from loading newly
+installed phonopy. In this case, it is recommended to uninstall all
+the older phonopy packages by
+
+1. Running ``pip uninstall phonopy`` as many times as no phonopy
+   packages will be found. Error message may be shown, but don't mind
+   it. Similarly do ``conda uninstall phonopy``.
+
+2. There may still exist litter of phonopy packages. So it is also
+   recommend to remove them if it is found, e.g.::
+
+     % rm -fr ~/.local/lib/python*/site-packages/phonopy*
+
+Set correct environment variables ``PATH`` and ``PYTHONPATH``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In phonopy, ``PATH`` and ``PYTHONPATH`` play important roles. Of
+course the information about them can be easily found in internet
+(e.g. https://en.wikipedia.org/wiki/PATH_(variable)), so you really
+have to find information by yourself and read them. Even if you can't
+understand them, first you must ask to your colleagues or people
+before sending this unnecessary question (as a researcher using
+computer simulation) to the mailing list.
+
+The problem appears when phonopy execution and library paths are set
+multiple times in those environment variable. It is easy to check
+current environment variables by::
+
+   % echo $PATH
+
+::
+
+   % echo $PYTHONPATH
+
+If you find multiple phonopy paths are found, then remove all except
+for what you really need. Then logout from the current shell
+(terminal) and open new shell (terminal) to see if the modified
+``PATH`` and ``PYTHONPATH`` are appropriate or not.

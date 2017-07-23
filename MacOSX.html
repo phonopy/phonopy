@@ -147,29 +147,25 @@
 <div class="section" id="installation-using-macports">
 <h2>Installation using MacPorts<a class="headerlink" href="#installation-using-macports" title="Permalink to this headline">¶</a></h2>
 <p>This is one way to install phonopy on Mac OS X. This procedure was
-tested on Yosemite with MacPorts version 2.4.1. In the following case,
-gcc-6 and python-2.7 are used as the default C-compiler and python
-and using these numpy and scipy are made.</p>
+tested on Sierra with MacPorts version 2.4.1. In the following case,
+gcc-7 is used as the default C-compiler.</p>
 <ol class="arabic">
 <li><p class="first">Install MacPorts. Download MacPorts from <a class="reference external" href="http://www.macports.org/">http://www.macports.org/</a>
 and follow the installation instruction.</p>
 </li>
-<li><p class="first">Install the following packages</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">sudo</span> <span class="n">port</span> <span class="n">install</span> <span class="n">gcc6</span>
-<span class="o">%</span> <span class="n">sudo</span> <span class="n">port</span> <span class="n">select</span> <span class="o">--</span><span class="nb">set</span> <span class="n">gcc</span> <span class="n">mp</span><span class="o">-</span><span class="n">gcc6</span>
-<span class="o">%</span> <span class="n">sudo</span> <span class="n">port</span> <span class="n">install</span> <span class="n">OpenBLAS</span> <span class="o">+</span><span class="n">gcc6</span>
-<span class="o">%</span> <span class="n">sudo</span> <span class="n">port</span> <span class="n">install</span> <span class="n">python27</span>
-<span class="o">%</span> <span class="n">sudo</span> <span class="n">port</span> <span class="n">select</span> <span class="o">--</span><span class="nb">set</span> <span class="n">python</span> <span class="n">python27</span>
-<span class="o">%</span> <span class="n">sudo</span> <span class="n">port</span> <span class="n">install</span> <span class="n">py27</span><span class="o">-</span><span class="n">numpy</span> <span class="o">+</span><span class="n">gcc6</span> <span class="o">+</span><span class="n">openblas</span>
-<span class="o">%</span> <span class="n">sudo</span> <span class="n">port</span> <span class="n">install</span> <span class="n">py27</span><span class="o">-</span><span class="n">scipy</span> <span class="o">+</span><span class="n">gcc6</span> <span class="o">+</span><span class="n">openblas</span>
-<span class="o">%</span> <span class="n">sudo</span> <span class="n">port</span> <span class="n">install</span> <span class="n">py27</span><span class="o">-</span><span class="n">matplotlib</span> <span class="n">py27</span><span class="o">-</span><span class="n">yaml</span>
-<span class="o">%</span> <span class="n">sudo</span> <span class="n">port</span> <span class="n">install</span> <span class="n">py27</span><span class="o">-</span><span class="n">h5py</span> <span class="o">+</span><span class="n">gcc6</span>
+<li><p class="first">Install <code class="docutils literal"><span class="pre">gcc</span></code> by</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">sudo</span> <span class="n">port</span> <span class="n">install</span> <span class="n">gcc7</span>
+<span class="o">%</span> <span class="n">sudo</span> <span class="n">port</span> <span class="n">select</span> <span class="o">--</span><span class="nb">set</span> <span class="n">gcc</span> <span class="n">mp</span><span class="o">-</span><span class="n">gcc7</span>
 </pre></div>
 </div>
 </li>
-<li><p class="first">Install phonopy following <a class="reference internal" href="install.html#install"><span class="std std-ref">Download and install</span></a> (step 1 can be omitted.)</p>
-<p>Before running setup.py, gcc can be used as the C-compiler instead
-of clang for compiling phonopy C-extension as follows,</p>
+<li><p class="first">Install necessary python libraries following <a class="reference internal" href="install.html#install-conda"><span class="std std-ref">installation of
+python libraries by conda</span></a>.</p>
+</li>
+<li><p class="first">Install phonopy following <a class="reference internal" href="install.html#install-setup-py"><span class="std std-ref">Building using setup.py</span></a>.</p>
+<p>Before running setup.py, the environment variable of <code class="docutils literal"><span class="pre">CC=gcc</span></code> is
+set so that gcc can be used as the C-compiler instead
+of clang for compiling phonopy C-extension as follows:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">export</span> <span class="n">CC</span><span class="o">=</span><span class="n">gcc</span>
 <span class="o">%</span> <span class="n">python</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">install</span> <span class="o">--</span><span class="n">user</span>
 </pre></div>
