@@ -286,13 +286,15 @@ each path are as follows:
 ~~~~~~~~~~~~~~~~~~
 
 Labels specified are depicted in band structure plot at the points of
-band segments. The number of labels has to correspond to the
-number of band paths specified by ``BAND`` plus one.
+band segments. The number of labels has to correspond to the number of
+band paths specified by ``BAND`` plus one. When LaTeX math style
+expression such as :math:`\Gamma` (``\Gamma``) is expected, it is
+probably necessary to place it between two $ characters.
 
 ::
 
    BAND = 1/2 0 1/2   0 0 0   1/2 1/2 1/2
-   BAND_LABELS = X \Gamma L
+   BAND_LABELS = X $\Gamma$ L
 
 .. |bandlabels| image:: band-labels.png
                 :scale: 50

@@ -558,10 +558,12 @@ each path are as follows:</p>
 <div class="section" id="band-labels">
 <span id="band-labels-tag"></span><h3><a class="toc-backref" href="#id22"><code class="docutils literal"><span class="pre">BAND_LABELS</span></code></a><a class="headerlink" href="#band-labels" title="Permalink to this headline">¶</a></h3>
 <p>Labels specified are depicted in band structure plot at the points of
-band segments. The number of labels has to correspond to the
-number of band paths specified by <code class="docutils literal"><span class="pre">BAND</span></code> plus one.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">BAND</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span> <span class="mi">0</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span>   <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span>   <span class="mi">1</span><span class="o">/</span><span class="mi">2</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span>
-<span class="n">BAND_LABELS</span> <span class="o">=</span> <span class="n">X</span> \<span class="n">Gamma</span> <span class="n">L</span>
+band segments. The number of labels has to correspond to the number of
+band paths specified by <code class="docutils literal"><span class="pre">BAND</span></code> plus one. When LaTeX math style
+expression such as <span class="math">\(\Gamma\)</span> (<code class="docutils literal"><span class="pre">\Gamma</span></code>) is expected, it is
+probably necessary to place it between two $ characters.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>BAND = 1/2 0 1/2   0 0 0   1/2 1/2 1/2
+BAND_LABELS = X $\Gamma$ L
 </pre></div>
 </div>
 <p><a class="reference internal" href="_images/band-labels.png"><img alt="bandlabels" src="_images/band-labels.png" style="width: 406.0px; height: 306.0px;" /></a></p>
