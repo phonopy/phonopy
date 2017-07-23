@@ -1,6 +1,6 @@
 .. _install:
 
-Download and install
+Installation
 =====================
 
 .. contents::
@@ -160,7 +160,7 @@ Trouble shooting
 -----------------
 
 Remove previous phonopy installations
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Sometimes previous installations of phonopy prevent from loading newly
 installed phonopy. In this case, it is recommended to uninstall all
@@ -196,7 +196,6 @@ current environment variables by::
 
    % echo $PYTHONPATH
 
-If you find multiple phonopy paths are found, then remove all except
-for what you really need. Then logout from the current shell
-(terminal) and open new shell (terminal) to see if the modified
-``PATH`` and ``PYTHONPATH`` are appropriate or not.
+When multiple different phonopy paths are found, remove all except for
+what you really need. Then logout from the current shell (terminal)
+and open new shell (terminal) to confirm that the modification is activated.
