@@ -20,9 +20,10 @@ gcc-7 is used as the default C-compiler.
       % sudo port install gcc7
       % sudo port select --set gcc mp-gcc7
 
-3) Install necessary python libraries following :ref:`installation of
-   python libraries by conda <install_conda>`.
-   
+3) Install necessary python libraries by conda,
+
+   % conda install numpy scipy h5py pyyaml matplotlib
+
 4) Install phonopy following :ref:`install_setup_py`.
 
    Before running setup.py, the environment variable of ``CC=gcc`` is
