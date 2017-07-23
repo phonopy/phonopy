@@ -32,4 +32,7 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-__version__ = "1.11.12"
+from phonopy.version.git_hash import git_hash
+
+short_version = "1.11.12"
+__version__ = short_version

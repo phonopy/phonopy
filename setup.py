@@ -105,7 +105,8 @@ packages_phonopy = ['phonopy',
                     'phonopy.qha',
                     'phonopy.spectrum',
                     'phonopy.structure',
-                    'phonopy.unfolding']
+                    'phonopy.unfolding',
+                    'phonopy.version']
 scripts_phonopy = ['scripts/phonopy',
                    'scripts/phonopy-qha',
                    'scripts/phonopy-FHI-aims',
@@ -118,12 +119,29 @@ scripts_phonopy = ['scripts/phonopy',
                    'scripts/pdosplot']
 
 if __name__ == '__main__':
+
     version_nums = [None, None, None]
-    with open("phonopy/version.py") as w:
-        for line in w:
-            if "__version__" in line:
+    with open("phonopy/version/__init__.py") as f:
+        for line in f:
+            if "short_version" in line:
                 for i, num in enumerate(line.split()[2].strip('\"').split('.')):
                     version_nums[i] = int(num)
+                break
+
+    try:
+        import subprocess
+        git_describe = subprocess.check_output(["git", "describe", "--tags"])
+        git_hash = str(git_describe.strip().split(b"-")[2][1:])
+        if git_hash[:2] == "b\'":
+            git_hash = git_hash[2:]
+        git_hash = git_hash.replace('\'', '')
+        with open("phonopy/version/git_hash.py", 'w') as w:
+            git_hash_line = "git_hash = \"%s\"\n" % git_hash
+            w.write(git_hash_line)
+            print(git_hash_line)
+    except:
+        with open("phonopy/version/git_hash.py", 'w') as w:
+            w.write("git_hash = None\n")
 
     # To deploy to pypi/conda by travis-CI
     if os.path.isfile("__nanoversion__.txt"):
