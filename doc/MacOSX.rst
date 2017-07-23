@@ -20,7 +20,7 @@ gcc-7 is used as the default C-compiler.
       % sudo port install gcc7
       % sudo port select --set gcc mp-gcc7
 
-3) Install necessary python libraries by conda,
+3) Install necessary python libraries by conda::
 
    % conda install numpy scipy h5py pyyaml matplotlib
 
