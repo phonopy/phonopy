@@ -1,7 +1,7 @@
 import numpy
 import os
 
-with_openmp = False
+with_openmp = True
 
 try:
     from setuptools import setup, Extension
