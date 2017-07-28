@@ -1,6 +1,8 @@
 import numpy
 import os
 
+with_openmp = False
+
 try:
     from setuptools import setup, Extension
     use_setuptools = True
@@ -35,10 +37,7 @@ sources_phonopy = ['c/_phonopy.c',
                    'c/kspclib/kgrid.c',
                    'c/kspclib/tetrahedron_method.c']
 
-if __name__ == '__main__':
-    extra_compile_args_phonopy = []
-    extra_link_args_phonopy = []
-else:
+if with_openmp:
     extra_compile_args_phonopy = ['-fopenmp',]
     if cc == 'gcc':
         extra_link_args_phonopy = ['-lgomp',]
@@ -46,6 +45,9 @@ else:
         extra_link_args_phonopy = []
     else:
         extra_link_args_phonopy = ['-lgomp',]
+else:
+    extra_compile_args_phonopy = []
+    extra_link_args_phonopy = []
 
 extension_phonopy = Extension(
     'phonopy._phonopy',
@@ -58,10 +60,7 @@ extension_phonopy = Extension(
 #####################
 # _spglib extension #
 #####################
-if __name__ == '__main__':
-    extra_compile_args_spglib=[]
-    extra_link_args_spglib=[]
-else:
+if with_openmp:
     extra_compile_args_spglib=['-fopenmp',]
     if cc == 'gcc':
         extra_link_args_spglib=['-lgomp',]
@@ -69,6 +68,9 @@ else:
         extra_link_args_spglib=[]
     else:
         extra_link_args_spglib=['-lgomp',]
+else:
+    extra_compile_args_spglib=[]
+    extra_link_args_spglib=[]
 
 extension_spglib = Extension(
     'phonopy._spglib',
