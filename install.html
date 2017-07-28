@@ -1,13 +1,16 @@
 <!DOCTYPE html>
 
+
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
     <title>Installation &#8212; Phonopy v.1.11.12</title>
     
-    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/bootswatch-3.3.6/cosmo/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
@@ -22,7 +25,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
@@ -37,7 +40,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 
   </head>
-  <body>
+  <body role="document">
 
   <div id="navbar" class="navbar navbar-default navbar-fixed-top">
     <div class="container">
@@ -110,6 +113,7 @@
 </li>
 <li><a class="reference internal" href="#conda">conda</a></li>
 <li><a class="reference internal" href="#pip">pip</a></li>
+<li><a class="reference internal" href="#multithreading-support">Multithreading support</a></li>
 <li><a class="reference internal" href="#trouble-shooting">Trouble shooting</a><ul>
 <li><a class="reference internal" href="#remove-previous-phonopy-installations">Remove previous phonopy installations</a></li>
 <li><a class="reference internal" href="#set-correct-environment-variables-path-and-pythonpath">Set correct environment variables <code class="docutils literal"><span class="pre">PATH</span></code> and <code class="docutils literal"><span class="pre">PYTHONPATH</span></code></a></li>
@@ -174,9 +178,10 @@
 </li>
 <li><a class="reference internal" href="#conda" id="id7">conda</a></li>
 <li><a class="reference internal" href="#pip" id="id8">pip</a></li>
-<li><a class="reference internal" href="#trouble-shooting" id="id9">Trouble shooting</a><ul>
-<li><a class="reference internal" href="#remove-previous-phonopy-installations" id="id10">Remove previous phonopy installations</a></li>
-<li><a class="reference internal" href="#set-correct-environment-variables-path-and-pythonpath" id="id11">Set correct environment variables <code class="docutils literal"><span class="pre">PATH</span></code> and <code class="docutils literal"><span class="pre">PYTHONPATH</span></code></a></li>
+<li><a class="reference internal" href="#multithreading-support" id="id9">Multithreading support</a></li>
+<li><a class="reference internal" href="#trouble-shooting" id="id10">Trouble shooting</a><ul>
+<li><a class="reference internal" href="#remove-previous-phonopy-installations" id="id11">Remove previous phonopy installations</a></li>
+<li><a class="reference internal" href="#set-correct-environment-variables-path-and-pythonpath" id="id12">Set correct environment variables <code class="docutils literal"><span class="pre">PATH</span></code> and <code class="docutils literal"><span class="pre">PYTHONPATH</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -312,22 +317,47 @@ the release.</p>
 </pre></div>
 </div>
 <p>development tools for building python module are additionally
-necessary and are installed using OS’s package management system,
+necessary and are installed using OS&#8217;s package management system,
 e.g.,:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">apt</span><span class="o">-</span><span class="n">get</span> <span class="n">install</span> <span class="n">python</span><span class="o">-</span><span class="n">dev</span>
 </pre></div>
 </div>
 </div>
+<div class="section" id="multithreading-support">
+<span id="install-trouble-shooting"></span><h2><a class="toc-backref" href="#id9">Multithreading support</a><a class="headerlink" href="#multithreading-support" title="Permalink to this headline">¶</a></h2>
+<p>Two kinds of multithreadings can be used in phonopy.</p>
+<ol class="arabic">
+<li><p class="first">Multithreaded BLAS linked numpy</p>
+<p>Phonopy uses numpy to run singular value decomposition in the
+calculation of force constants and diagonalizaion of dynamical
+matrices. For these, numpy internally calls the LAPACK
+routines. Therefore if a user installs a numpy that is linked with
+multithreaded BLAS, these parts are multithreaded. For example, MKL
+linked numpy is easily installed using conda.</p>
+</li>
+<li><p class="first">OpenMP support in phonopy and spglib</p>
+<p>OpenMP are applied in the symmetry finding of spglib and the
+distribution of symmetry reduced force constants elements to full
+force constants elements in phonopy. When a chosen supercell is
+very large and there are many cores on a computer, these parts may
+work well to reduce the computational time. In the default phonopy
+setting, this is not activated. To enable this, it is necessary to
+build phonopy using modified <code class="docutils literal"><span class="pre">setup.py</span></code> in which <code class="docutils literal"><span class="pre">with_openmp</span> <span class="pre">=</span>
+<span class="pre">False</span></code> must be changed to <code class="docutils literal"><span class="pre">with_openmp</span> <span class="pre">=</span> <span class="pre">True</span></code>. For this,
+currently only gcc is supported.</p>
+</li>
+</ol>
+</div>
 <div class="section" id="trouble-shooting">
-<span id="install-trouble-shooting"></span><h2><a class="toc-backref" href="#id9">Trouble shooting</a><a class="headerlink" href="#trouble-shooting" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id10">Trouble shooting</a><a class="headerlink" href="#trouble-shooting" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="remove-previous-phonopy-installations">
-<h3><a class="toc-backref" href="#id10">Remove previous phonopy installations</a><a class="headerlink" href="#remove-previous-phonopy-installations" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id11">Remove previous phonopy installations</a><a class="headerlink" href="#remove-previous-phonopy-installations" title="Permalink to this headline">¶</a></h3>
 <p>Sometimes previous installations of phonopy prevent from loading newly
 installed phonopy. In this case, it is recommended to uninstall all
 the older phonopy packages by</p>
 <ol class="arabic">
 <li><p class="first">Running <code class="docutils literal"><span class="pre">pip</span> <span class="pre">uninstall</span> <span class="pre">phonopy</span></code> as many times as no phonopy
-packages will be found. Error message may be shown, but don’t mind
+packages will be found. Error message may be shown, but don&#8217;t mind
 it. Similarly do <code class="docutils literal"><span class="pre">conda</span> <span class="pre">uninstall</span> <span class="pre">phonopy</span></code>.</p>
 </li>
 <li><p class="first">There may still exist litter of phonopy packages. So it is also
@@ -339,11 +369,11 @@ recommend to remove them if it is found, e.g.:</p>
 </ol>
 </div>
 <div class="section" id="set-correct-environment-variables-path-and-pythonpath">
-<h3><a class="toc-backref" href="#id11">Set correct environment variables <code class="docutils literal"><span class="pre">PATH</span></code> and <code class="docutils literal"><span class="pre">PYTHONPATH</span></code></a><a class="headerlink" href="#set-correct-environment-variables-path-and-pythonpath" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id12">Set correct environment variables <code class="docutils literal"><span class="pre">PATH</span></code> and <code class="docutils literal"><span class="pre">PYTHONPATH</span></code></a><a class="headerlink" href="#set-correct-environment-variables-path-and-pythonpath" title="Permalink to this headline">¶</a></h3>
 <p>In phonopy, <code class="docutils literal"><span class="pre">PATH</span></code> and <code class="docutils literal"><span class="pre">PYTHONPATH</span></code> play important roles. Of
 course the information about them can be easily found in internet
 (e.g. <a class="reference external" href="https://en.wikipedia.org/wiki/PATH_(variable">https://en.wikipedia.org/wiki/PATH_(variable</a>)), so you really
-have to find information by yourself and read them. Even if you can’t
+have to find information by yourself and read them. Even if you can&#8217;t
 understand them, first you must ask to your colleagues or people
 before sending this unnecessary question (as a researcher using
 computer simulation) to the mailing list.</p>
@@ -383,7 +413,7 @@ and open new shell (terminal) to confirm that the modification is activated.</p>
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.2.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.4.<br/>
     </p>
   </div>
 </footer>

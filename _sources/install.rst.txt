@@ -107,6 +107,7 @@ needed.
    in your ``.bashrc`` (or maybe ``.bash_profile``), ``.zshenv``, or
    other script for the other shells. 
 
+
 Tips on setup.py installation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
    
@@ -155,6 +156,33 @@ e.g.,::
    sudo apt-get install python-dev
 
 .. _install_trouble_shooting:
+
+
+Multithreading support
+-----------------------
+
+Two kinds of multithreadings can be used in phonopy.
+
+1. Multithreaded BLAS linked numpy
+   
+   Phonopy uses numpy to run singular value decomposition in the
+   calculation of force constants and diagonalizaion of dynamical
+   matrices. For these, numpy internally calls the LAPACK
+   routines. Therefore if a user installs a numpy that is linked with
+   multithreaded BLAS, these parts are multithreaded. For example, MKL
+   linked numpy is easily installed using conda.
+
+2. OpenMP support in phonopy and spglib
+
+   OpenMP are applied in the symmetry finding of spglib and the
+   distribution of symmetry reduced force constants elements to full
+   force constants elements in phonopy. When a chosen supercell is
+   very large and there are many cores on a computer, these parts may
+   work well to reduce the computational time. In the default phonopy
+   setting, this is not activated. To enable this, it is necessary to
+   build phonopy using modified ``setup.py`` in which ``with_openmp =
+   False`` must be changed to ``with_openmp = True``. For this,
+   currently only gcc is supported.
 
 Trouble shooting
 -----------------
