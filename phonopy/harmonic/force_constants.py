@@ -149,27 +149,47 @@ def distribute_force_constants(force_constants,
                                rotations,
                                trans,
                                symprec):
-    for atom_disp in atom_list:
-        if atom_disp in atom_list_done:
-            continue
+    if True:
+        rots_cartesian = np.array([similarity_transformation(lattice, r)
+                                   for r in rotations],
+                                  dtype='double', order='C')
+        atom_list_copied = []
+        for i in atom_list:
+            if i not in atom_list_done:
+                atom_list_copied.append(i)
 
-        map_atom_disp, map_sym = _get_atom_mapping_by_symmetry(
-            atom_list_done,
-            atom_disp,
-            rotations,
-            trans,
-            lattice,
-            positions,
-            symprec=symprec)
-
-        _distribute_fc2_part(force_constants,
-                             positions,
-                             atom_disp,
-                             map_atom_disp,
-                             lattice,
-                             rotations[map_sym],
-                             trans[map_sym],
-                             symprec)
+        import phonopy._phonopy as phonoc
+        phonoc.distribute_fc2_all(force_constants,
+                                  lattice,
+                                  positions,
+                                  np.array(atom_list_copied, dtype='intc'),
+                                  np.array(atom_list_done, dtype='intc'),
+                                  rots_cartesian,
+                                  rotations,
+                                  trans,
+                                  symprec)
+    else:
+        for atom_disp in atom_list:
+            if atom_disp in atom_list_done:
+                continue
+    
+            map_atom_disp, map_sym = _get_atom_mapping_by_symmetry(
+                atom_list_done,
+                atom_disp,
+                rotations,
+                trans,
+                lattice,
+                positions,
+                symprec=symprec)
+    
+            _distribute_fc2_part(force_constants,
+                                 positions,
+                                 atom_disp,
+                                 map_atom_disp,
+                                 lattice,
+                                 rotations[map_sym],
+                                 trans[map_sym],
+                                 symprec)
 
 
 def solve_force_constants(force_constants,

@@ -34,6 +34,7 @@
 
 #include <Python.h>
 #include <stdio.h>
+#include <math.h>
 #include <numpy/arrayobject.h>
 #include <dynmat.h>
 #include <derivative_dynmat.h>
@@ -50,16 +51,17 @@ static PyObject * py_get_dipole_dipole(PyObject *self, PyObject *args);
 static PyObject * py_get_derivative_dynmat(PyObject *self, PyObject *args);
 static PyObject * py_get_thermal_properties(PyObject *self, PyObject *args);
 static PyObject * py_distribute_fc2(PyObject *self, PyObject *args);
+static PyObject * py_distribute_fc2_all(PyObject *self, PyObject *args);
 
-static int distribute_fc2(double * fc2,
-			  const double * lat,
-			  const double * pos,
+static int distribute_fc2(double *fc2,
+			  const double lat[3][3],
+			  const double (*pos)[3],
 			  const int num_pos,
 			  const int atom_disp,
 			  const int map_atom_disp,
-			  const double * r_cart,
-			  const int * r,
-			  const double * t,
+			  const double r_cart[3][3],
+			  const int r[3][3],
+			  const double t[3],
 			  const double symprec);
 static PyObject * py_thm_neighboring_grid_points(PyObject *self, PyObject *args);
 static PyObject *
@@ -80,6 +82,13 @@ static double get_entropy_omega(const double temperature,
 static double get_heat_capacity_omega(const double temperature,
 				      const double omega);
 /* static double get_energy_omega(double temperature, double omega); */
+static int check_overlap(const double (*pos)[3],
+                         const int num_pos,
+                         const double pos_orig[3],
+                         const double lat[3][3],
+                         const int r[3][3],
+                         const double t[3],
+                         const double symprec);
 static int nint(const double a);
 
 struct module_state {
@@ -108,6 +117,8 @@ static PyMethodDef _phonopy_methods[] = {
   {"derivative_dynmat", py_get_derivative_dynmat, METH_VARARGS, "Q derivative of dynamical matrix"},
   {"thermal_properties", py_get_thermal_properties, METH_VARARGS, "Thermal properties"},
   {"distribute_fc2", py_distribute_fc2, METH_VARARGS, "Distribute force constants"},
+  {"distribute_fc2_all", py_distribute_fc2_all, METH_VARARGS,
+   "Distribute force constants for all atoms in atom_list"},
   {"neighboring_grid_points", py_thm_neighboring_grid_points,
    METH_VARARGS, "Neighboring grid points by relative grid addresses"},
   {"tetrahedra_relative_grid_address", py_thm_relative_grid_address,
@@ -548,7 +559,7 @@ static PyObject * py_get_thermal_properties(PyObject *self, PyObject *args)
       }
     }
   }
-    
+
   for (i = 0; i < num_temp * 3; i++) {
     for (j = 0; j < num_qpoints; j++) {
       thermal_props[i] += tp[j * num_temp * 3 + i];
@@ -613,43 +624,43 @@ static double get_heat_capacity_omega(const double temperature,
 
 static PyObject * py_distribute_fc2(PyObject *self, PyObject *args)
 {
-  PyArrayObject* force_constants;
-  PyArrayObject* lattice;
-  PyArrayObject* positions;
-  PyArrayObject* rotation;
-  PyArrayObject* rotation_cart;
-  PyArrayObject* translation;
+  PyArrayObject* force_constants_py;
+  PyArrayObject* lattice_py;
+  PyArrayObject* positions_py;
+  PyArrayObject* rotation_py;
+  PyArrayObject* rotation_cart_py;
+  PyArrayObject* translation_py;
   int atom_disp, map_atom_disp;
   double symprec;
 
-  int* r;
-  double* r_cart;
-  double* fc2;
-  double* t;
-  double* lat;
-  double* pos;
+  int (*r)[3];
+  double (*r_cart)[3];
+  double *fc2;
+  double *t;
+  double (*lat)[3];
+  double (*pos)[3];
   int num_pos;
 
   if (!PyArg_ParseTuple(args, "OOOiiOOOd",
-			&force_constants,
-			&lattice,
-			&positions,
-			&atom_disp,
-			&map_atom_disp,
-			&rotation_cart,
-			&rotation,
-			&translation,
-			&symprec)) {
+                        &force_constants_py,
+                        &lattice_py,
+                        &positions_py,
+                        &atom_disp,
+                        &map_atom_disp,
+                        &rotation_cart_py,
+                        &rotation_py,
+                        &translation_py,
+                        &symprec)) {
     return NULL;
   }
 
-  r = (int*)PyArray_DATA(rotation);
-  r_cart = (double*)PyArray_DATA(rotation_cart);
-  fc2 = (double*)PyArray_DATA(force_constants);
-  t = (double*)PyArray_DATA(translation);
-  lat = (double*)PyArray_DATA(lattice);
-  pos = (double*)PyArray_DATA(positions);
-  num_pos = PyArray_DIMS(positions)[0];
+  r = (int(*)[3])PyArray_DATA(rotation_py);
+  r_cart = (double(*)[3])PyArray_DATA(rotation_cart_py);
+  fc2 = (double*)PyArray_DATA(force_constants_py);
+  t = (double*)PyArray_DATA(translation_py);
+  lat = (double(*)[3])PyArray_DATA(lattice_py);
+  pos = (double(*)[3])PyArray_DATA(positions_py);
+  num_pos = PyArray_DIMS(positions_py)[0];
 
   distribute_fc2(fc2,
 		 lat,
@@ -665,53 +676,121 @@ static PyObject * py_distribute_fc2(PyObject *self, PyObject *args)
   Py_RETURN_NONE;
 }
 
-static int distribute_fc2(double * fc2,
-			  const double * lat,
-			  const double * pos,
+static PyObject * py_distribute_fc2_all(PyObject *self, PyObject *args)
+{
+  PyArrayObject* force_constants_py;
+  PyArrayObject* lattice_py;
+  PyArrayObject* positions_py;
+  PyArrayObject* atom_list_py;
+  PyArrayObject* atom_list_done_py;
+  PyArrayObject* rotations_py;
+  PyArrayObject* rotations_cart_py;
+  PyArrayObject* translations_py;
+  double symprec;
+
+  int (*r)[3][3];
+  int *atom_list;
+  int *atom_list_done;
+  double (*r_cart)[3][3];
+  double *fc2;
+  double (*t)[3];
+  double (*lat)[3];
+  double (*pos)[3];
+  double (*pos_done)[3];
+  int num_pos, num_rot, len_atom_list, len_atom_list_done, map_atom_disp;
+  int i, j;
+
+  if (!PyArg_ParseTuple(args, "OOOOOOOOd",
+                        &force_constants_py,
+                        &lattice_py,
+                        &positions_py,
+                        &atom_list_py,
+                        &atom_list_done_py,
+                        &rotations_cart_py,
+                        &rotations_py,
+                        &translations_py,
+                        &symprec)) {
+    return NULL;
+  }
+
+  atom_list = (int*)PyArray_DATA(atom_list_py);
+  len_atom_list = PyArray_DIMS(atom_list_py)[0];
+  atom_list_done = (int*)PyArray_DATA(atom_list_done_py);
+  len_atom_list_done = PyArray_DIMS(atom_list_done_py)[0];
+  r = (int(*)[3][3])PyArray_DATA(rotations_py);
+  num_rot = PyArray_DIMS(rotations_py)[0];
+  r_cart = (double(*)[3][3])PyArray_DATA(rotations_cart_py);
+  fc2 = (double*)PyArray_DATA(force_constants_py);
+  t = (double(*)[3])PyArray_DATA(translations_py);
+  lat = (double(*)[3])PyArray_DATA(lattice_py);
+  pos = (double(*)[3])PyArray_DATA(positions_py);
+  num_pos = PyArray_DIMS(positions_py)[0];
+
+  pos_done = (double(*)[3])malloc(sizeof(double[3]) * len_atom_list_done);
+  for (i = 0; i < len_atom_list_done; i++) {
+    for (j = 0; j < 3; j++) {
+      pos_done[i][j] = pos[atom_list_done[i]][j];
+    }
+  }
+
+#pragma omp parallel for private(j)
+  for (i = 0; i < len_atom_list; i++) {
+    for (j = 0; j < num_rot; j++) {
+      map_atom_disp = check_overlap(pos_done,
+                                    len_atom_list_done,
+                                    pos[atom_list[i]],
+                                    lat,
+                                    r[j],
+                                    t[j],
+                                    symprec);
+      if (map_atom_disp > -1) {
+        distribute_fc2(fc2,
+                       lat,
+                       pos,
+                       num_pos,
+                       atom_list[i],
+                       atom_list_done[map_atom_disp],
+                       r_cart[j],
+                       r[j],
+                       t[j],
+                       symprec);
+        break;
+      }
+    }
+    if (j == num_rot) {
+      printf("Input forces are not enough to calculate force constants,\n");
+      printf("or something wrong (e.g. crystal structure does not match).\n");
+      printf("%d, %d\n", i, j);
+    }
+  }
+
+  free(pos_done);
+  Py_RETURN_NONE;
+}
+
+static int distribute_fc2(double *fc2,
+			  const double lat[3][3],
+			  const double (*pos)[3],
 			  const int num_pos,
 			  const int atom_disp,
 			  const int map_atom_disp,
-			  const double * r_cart,
-			  const int * r,
-			  const double * t,
+			  const double r_cart[3][3],
+			  const int r[3][3],
+			  const double t[3],
 			  const double symprec)
 {
   int i, j, k, l, m, address_new, address;
   int is_found, rot_atom;
-  double distance2, symprec2, diff_cart;
-  double rot_pos[3], diff[3];
-
-  symprec2 = symprec * symprec;
 
   is_found = 1;
   for (i = 0; i < num_pos; i++) {
-    for (j = 0; j < 3; j++) {
-      rot_pos[j] = t[j];
-      for (k = 0; k < 3; k++) {
-	rot_pos[j] += r[j * 3 + k] * pos[i * 3 + k];
-      }
-    }
-
-    rot_atom = -1;
-    for (j = 0; j < num_pos; j++) {
-      for (k = 0; k < 3; k++) {
-	diff[k] = pos[j * 3 + k] - rot_pos[k];
-	diff[k] -= nint(diff[k]);
-      }
-      distance2 = 0;
-      for (k = 0; k < 3; k++) {
-	diff_cart = 0;
-	for (l = 0; l < 3; l++) {
-	  diff_cart += lat[k * 3 + l] * diff[l];
-	}
-	distance2 += diff_cart * diff_cart;
-      }
-
-      if (distance2 < symprec2) {
-	  rot_atom = j;
-	  break;
-      }
-    }
+    rot_atom = check_overlap(pos,
+                             num_pos,
+                             pos[i],
+                             lat,
+                             r,
+                             t,
+                             symprec);
 
     if (rot_atom < 0) {
       printf("Encounter some problem in distribute_fc2.\n");
@@ -727,7 +806,7 @@ static int distribute_fc2(double * fc2,
 	for (l = 0; l < 3; l++) {
 	  for (m = 0; m < 3; m++) {
 	    fc2[address_new + j * 3 + k] +=
-	      r_cart[l * 3 + j] * r_cart[m * 3 + k] *
+	      r_cart[l][j] * r_cart[m][k] *
 	      fc2[address + l * 3 + m];
 	  }
 	}
@@ -1081,6 +1160,46 @@ static PyObject * py_tetrahedron_method_dos(PyObject *self, PyObject *args)
   weights = NULL;
 
   Py_RETURN_NONE;
+}
+
+static int check_overlap(const double (*pos)[3],
+                         const int num_pos,
+                         const double pos_orig[3],
+                         const double lat[3][3],
+                         const int r[3][3],
+                         const double t[3],
+                         const double symprec)
+{
+  int i, j, k;
+  double diff[3], rot_pos[3];
+  double diff_cart, distance2;
+
+  for (i = 0; i < 3; i++) {
+    rot_pos[i] = t[i];
+    for (j = 0; j < 3; j++) {
+      rot_pos[i] += r[i][j] * pos_orig[j];
+    }
+  }
+
+  for (i = 0; i < num_pos; i++) {
+    for (j = 0; j < 3; j++) {
+      diff[j] = pos[i][j] - rot_pos[j];
+      diff[j] -= nint(diff[j]);
+    }
+    distance2 = 0;
+    for (j = 0; j < 3; j++) {
+      diff_cart = 0;
+      for (k = 0; k < 3; k++) {
+        diff_cart += lat[j][k] * diff[k];
+      }
+      distance2 += diff_cart * diff_cart;
+    }
+
+    if (sqrt(distance2) < symprec) {
+      return i;
+    }
+  }
+  return -1;
 }
 
 static int nint(const double a)
