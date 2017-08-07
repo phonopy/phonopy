@@ -8,14 +8,20 @@ python:
     - '3.6'
 
 before_install:
-    - TRAVIS_PYTHON_VERSION=`python --version |& awk '{print $2}'|awk -F'.' '{print $1"."$2}'`
-    - wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+    #- TRAVIS_PYTHON_VERSION=`python --version |& awk '{print $2}'|awk -F'.' '{print $1"."$2}'`
+    # - wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+    - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
+        wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh;
+      else
+        wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+      fi
+    - echo $TRAVIS_PYTHON_VERSION
     - bash miniconda.sh -b -p $HOME/miniconda
     - export PATH="$HOME/miniconda/bin:$PATH"
     - conda update --yes conda
 
 install:
-    - conda install --yes python=$TRAVIS_PYTHON_VERSION pip numpy h5py pyyaml matplotlib
+    - conda install --yes python=$TRAVIS_PYTHON_VERSION pip numpy h5py pyyaml matplotlib setuptools setuptools_scm
     - pwd
     - ./get_nanoversion.sh
     - cat __nanoversion__.txt

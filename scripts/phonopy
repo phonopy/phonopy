@@ -61,7 +61,12 @@ def print_phononpy():
  |_|                            |_|    |___/""")
 
 def print_version(version):
-    print(('%s' % version).rjust(44))
+    try:
+        import pkg_resources
+        rev = pkg_resources.require("phonopy")[0].version.split('.')[3]
+        print(('%s-r%s' % (version, rev)).rjust(44))
+    except ImportError:
+        print(('%s' % version).rjust(44))
     print('')
 
 def print_end():
