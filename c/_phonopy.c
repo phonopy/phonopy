@@ -54,13 +54,13 @@ static PyObject * py_distribute_fc2(PyObject *self, PyObject *args);
 static PyObject * py_distribute_fc2_all(PyObject *self, PyObject *args);
 
 static int distribute_fc2(double *fc2,
-			  const double lat[3][3],
+			  const double (*lat)[3],
 			  const double (*pos)[3],
 			  const int num_pos,
 			  const int atom_disp,
 			  const int map_atom_disp,
 			  const double r_cart[3][3],
-			  const int r[3][3],
+			  const int (*r)[3],
 			  const double t[3],
 			  const double symprec);
 static PyObject * py_thm_neighboring_grid_points(PyObject *self, PyObject *args);
@@ -85,8 +85,8 @@ static double get_heat_capacity_omega(const double temperature,
 static int check_overlap(const double (*pos)[3],
                          const int num_pos,
                          const double pos_orig[3],
-                         const double lat[3][3],
-                         const int r[3][3],
+                         const double (*lat)[3],
+                         const int (*r)[3],
                          const double t[3],
                          const double symprec);
 static int nint(const double a);
@@ -769,13 +769,13 @@ static PyObject * py_distribute_fc2_all(PyObject *self, PyObject *args)
 }
 
 static int distribute_fc2(double *fc2,
-			  const double lat[3][3],
+			  const double (*lat)[3],
 			  const double (*pos)[3],
 			  const int num_pos,
 			  const int atom_disp,
 			  const int map_atom_disp,
 			  const double r_cart[3][3],
-			  const int r[3][3],
+			  const int (*r)[3],
 			  const double t[3],
 			  const double symprec)
 {
@@ -1165,8 +1165,8 @@ static PyObject * py_tetrahedron_method_dos(PyObject *self, PyObject *args)
 static int check_overlap(const double (*pos)[3],
                          const int num_pos,
                          const double pos_orig[3],
-                         const double lat[3][3],
-                         const int r[3][3],
+                         const double (*lat)[3],
+                         const int (*r)[3],
                          const double t[3],
                          const double symprec)
 {
