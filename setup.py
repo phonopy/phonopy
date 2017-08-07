@@ -1,5 +1,6 @@
-import numpy
 import os
+import sys
+import numpy
 
 with_openmp = False
 
@@ -11,6 +12,17 @@ except ImportError:
     from distutils.core import setup, Extension
     use_setuptools = False
     print("distutils is used.")
+
+try:
+    from setuptools_scm import get_version
+except ImportError:
+    git_hash = None
+
+if 'setuptools_scm' in sys.modules.keys():
+    try:
+        git_hash = get_version().split('.')[3]
+    except:
+        git_hash = None
 
 include_dirs_numpy = [numpy.get_include()]
 cc = None
@@ -107,8 +119,7 @@ packages_phonopy = ['phonopy',
                     'phonopy.qha',
                     'phonopy.spectrum',
                     'phonopy.structure',
-                    'phonopy.unfolding',
-                    'phonopy.version']
+                    'phonopy.unfolding']
 scripts_phonopy = ['scripts/phonopy',
                    'scripts/phonopy-qha',
                    'scripts/phonopy-FHI-aims',
@@ -123,27 +134,12 @@ scripts_phonopy = ['scripts/phonopy',
 if __name__ == '__main__':
 
     version_nums = [None, None, None]
-    with open("phonopy/version/__init__.py") as f:
+    with open("phonopy/version.py") as f:
         for line in f:
-            if "short_version" in line:
+            if "__version__" in line:
                 for i, num in enumerate(line.split()[2].strip('\"').split('.')):
                     version_nums[i] = int(num)
                 break
-
-    try:
-        import subprocess
-        git_describe = subprocess.check_output(["git", "describe", "--tags"])
-        git_hash = str(git_describe.strip().split(b"-")[2][1:])
-        if git_hash[:2] == "b\'":
-            git_hash = git_hash[2:]
-        git_hash = git_hash.replace('\'', '')
-        with open("phonopy/version/git_hash.py", 'w') as w:
-            git_hash_line = "git_hash = \"%s\"\n" % git_hash
-            w.write(git_hash_line)
-            print(git_hash_line)
-    except:
-        with open("phonopy/version/git_hash.py", 'w') as w:
-            w.write("git_hash = None\n")
 
     # To deploy to pypi/conda by travis-CI
     if os.path.isfile("__nanoversion__.txt"):
@@ -162,6 +158,9 @@ if __name__ == '__main__':
         raise
 
     version_number = ".".join(["%d" % n for n in version_nums])
+    if git_hash:
+        version_number += "%s" % git_hash
+
     if use_setuptools:
         setup(name='phonopy',
               version=version_number,
