@@ -1,6 +1,6 @@
 #!/bin/bash
 
-./get_nanoversion.sh
+# ./get_nanoversion.sh
 
 $PYTHON setup.py install
 

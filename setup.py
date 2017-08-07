@@ -16,13 +16,14 @@ except ImportError:
 try:
     from setuptools_scm import get_version
 except ImportError:
-    git_hash = None
+    git_num = None
 
 if 'setuptools_scm' in sys.modules.keys():
     try:
-        git_hash = get_version().split('.')[3]
+        git_ver = get_version()
+        git_num = int(git_ver.split('.')[3].split('+')[0].replace("dev", ""))
     except:
-        git_hash = None
+        git_num = None
 
 include_dirs_numpy = [numpy.get_include()]
 cc = None
@@ -141,25 +142,26 @@ if __name__ == '__main__':
                     version_nums[i] = int(num)
                 break
 
-    # To deploy to pypi/conda by travis-CI
-    if os.path.isfile("__nanoversion__.txt"):
-        with open('__nanoversion__.txt') as nv:
-            try :
-                for line in nv:
-                    nanoversion = int(line.strip())
-                    break
-            except ValueError :
-                nanoversion = 0
-            if nanoversion:
-                version_nums.append(nanoversion)
+    # # To deploy to pypi/conda by travis-CI
+    # if os.path.isfile("__nanoversion__.txt"):
+    #     with open('__nanoversion__.txt') as nv:
+    #         try :
+    #             for line in nv:
+    #                 nanoversion = int(line.strip())
+    #                 break
+    #         except ValueError :
+    #             nanoversion = 0
+    #         if nanoversion:
+    #             version_nums.append(nanoversion)
+
+    if git_num:
+        version_nums.append(git_num)
 
     if None in version_nums:
         print("Failed to get version number in setup.py.")
         raise
 
     version_number = ".".join(["%d" % n for n in version_nums])
-    if git_hash:
-        version_number += "%s" % git_hash
 
     if use_setuptools:
         setup(name='phonopy',

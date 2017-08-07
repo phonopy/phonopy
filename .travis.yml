@@ -23,8 +23,8 @@ before_install:
 install:
     - conda install --yes python=$TRAVIS_PYTHON_VERSION pip numpy h5py pyyaml matplotlib setuptools setuptools_scm
     - pwd
-    - ./get_nanoversion.sh
-    - cat __nanoversion__.txt
+    # - ./get_nanoversion.sh
+    # - cat __nanoversion__.txt
     - python setup.py install
 
 script: 
