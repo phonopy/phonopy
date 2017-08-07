@@ -54,13 +54,13 @@ static PyObject * py_distribute_fc2(PyObject *self, PyObject *args);
 static PyObject * py_distribute_fc2_all(PyObject *self, PyObject *args);
 
 static int distribute_fc2(double *fc2,
-			  const double (*lat)[3],
-			  const double (*pos)[3],
+			  PHPYCONST double lat[3][3],
+			  PHPYCONST double (*pos)[3],
 			  const int num_pos,
 			  const int atom_disp,
 			  const int map_atom_disp,
-			  const double r_cart[3][3],
-			  const int (*r)[3],
+			  PHPYCONST double r_cart[3][3],
+			  PHPYCONST int r[3][3],
 			  const double t[3],
 			  const double symprec);
 static PyObject * py_thm_neighboring_grid_points(PyObject *self, PyObject *args);
@@ -82,11 +82,11 @@ static double get_entropy_omega(const double temperature,
 static double get_heat_capacity_omega(const double temperature,
 				      const double omega);
 /* static double get_energy_omega(double temperature, double omega); */
-static int check_overlap(const double (*pos)[3],
+static int check_overlap(PHPYCONST double (*pos)[3],
                          const int num_pos,
                          const double pos_orig[3],
-                         const double (*lat)[3],
-                         const int (*r)[3],
+                         PHPYCONST double lat[3][3],
+                         PHPYCONST int r[3][3],
                          const double t[3],
                          const double symprec);
 static int nint(const double a);
@@ -768,57 +768,6 @@ static PyObject * py_distribute_fc2_all(PyObject *self, PyObject *args)
   Py_RETURN_NONE;
 }
 
-static int distribute_fc2(double *fc2,
-			  const double (*lat)[3],
-			  const double (*pos)[3],
-			  const int num_pos,
-			  const int atom_disp,
-			  const int map_atom_disp,
-			  const double r_cart[3][3],
-			  const int (*r)[3],
-			  const double t[3],
-			  const double symprec)
-{
-  int i, j, k, l, m, address_new, address;
-  int is_found, rot_atom;
-
-  is_found = 1;
-  for (i = 0; i < num_pos; i++) {
-    rot_atom = check_overlap(pos,
-                             num_pos,
-                             pos[i],
-                             lat,
-                             r,
-                             t,
-                             symprec);
-
-    if (rot_atom < 0) {
-      printf("Encounter some problem in distribute_fc2.\n");
-      is_found = 0;
-      goto end;
-    }
-
-    /* R^-1 P R */
-    address = map_atom_disp * num_pos * 9 + rot_atom * 9;
-    address_new = atom_disp * num_pos * 9 + i * 9;
-    for (j = 0; j < 3; j++) {
-      for (k = 0; k < 3; k++) {
-	for (l = 0; l < 3; l++) {
-	  for (m = 0; m < 3; m++) {
-	    fc2[address_new + j * 3 + k] +=
-	      r_cart[l][j] * r_cart[m][k] *
-	      fc2[address + l * 3 + m];
-	  }
-	}
-      }
-    }
-  end:
-    ;
-  }
-
-  return is_found;
-}
-
 static PyObject *py_thm_neighboring_grid_points(PyObject *self, PyObject *args)
 {
   PyArrayObject* relative_grid_points_py;
@@ -1162,11 +1111,62 @@ static PyObject * py_tetrahedron_method_dos(PyObject *self, PyObject *args)
   Py_RETURN_NONE;
 }
 
-static int check_overlap(const double (*pos)[3],
+static int distribute_fc2(double *fc2,
+			  PHPYCONST double lat[3][3],
+			  PHPYCONST double (*pos)[3],
+			  const int num_pos,
+			  const int atom_disp,
+			  const int map_atom_disp,
+			  PHPYCONST double r_cart[3][3],
+			  PHPYCONST int r[3][3],
+			  const double t[3],
+			  const double symprec)
+{
+  int i, j, k, l, m, address_new, address;
+  int is_found, rot_atom;
+
+  is_found = 1;
+  for (i = 0; i < num_pos; i++) {
+    rot_atom = check_overlap(pos,
+                             num_pos,
+                             pos[i],
+                             lat,
+                             r,
+                             t,
+                             symprec);
+
+    if (rot_atom < 0) {
+      printf("Encounter some problem in distribute_fc2.\n");
+      is_found = 0;
+      goto end;
+    }
+
+    /* R^-1 P R */
+    address = map_atom_disp * num_pos * 9 + rot_atom * 9;
+    address_new = atom_disp * num_pos * 9 + i * 9;
+    for (j = 0; j < 3; j++) {
+      for (k = 0; k < 3; k++) {
+	for (l = 0; l < 3; l++) {
+	  for (m = 0; m < 3; m++) {
+	    fc2[address_new + j * 3 + k] +=
+	      r_cart[l][j] * r_cart[m][k] *
+	      fc2[address + l * 3 + m];
+	  }
+	}
+      }
+    }
+  end:
+    ;
+  }
+
+  return is_found;
+}
+
+static int check_overlap(PHPYCONST double (*pos)[3],
                          const int num_pos,
                          const double pos_orig[3],
-                         const double (*lat)[3],
-                         const int (*r)[3],
+                         PHPYCONST double lat[3][3],
+                         PHPYCONST int r[3][3],
                          const double t[3],
                          const double symprec)
 {
