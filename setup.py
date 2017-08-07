@@ -143,18 +143,17 @@ if __name__ == '__main__':
                 break
 
     # # To deploy to pypi/conda by travis-CI
-    # if os.path.isfile("__nanoversion__.txt"):
-    #     with open('__nanoversion__.txt') as nv:
-    #         try :
-    #             for line in nv:
-    #                 nanoversion = int(line.strip())
-    #                 break
-    #         except ValueError :
-    #             nanoversion = 0
-    #         if nanoversion:
-    #             version_nums.append(nanoversion)
-
-    if git_num:
+    if os.path.isfile("__nanoversion__.txt"):
+        with open('__nanoversion__.txt') as nv:
+            try :
+                for line in nv:
+                    nanoversion = int(line.strip())
+                    break
+            except ValueError :
+                nanoversion = 0
+            if nanoversion:
+                version_nums.append(nanoversion)
+    elif git_num:
         version_nums.append(git_num)
 
     if None in version_nums:
