@@ -457,35 +457,53 @@ def get_equivalent_smallest_vectors(atom_number_supercell,
                                     primitive_lattice,
                                     symprec):
     reduced_bases = get_reduced_bases(supercell.get_cell(), symprec)
-    positions = np.dot(supercell.get_positions(), np.linalg.inv(reduced_bases))
+    reduced_bases_inv = np.linalg.inv(reduced_bases)
+    cart_positions = supercell.get_positions()
 
-    # Atomic positions are confined into the lattice made of reduced bases.
-    positions -= np.rint(positions)
+    # Atomic positions are confined into the delaunay-reduced superlattice.
+    # Their positions will lie in the range -0.5 < x < 0.5, so that vectors
+    # drawn between them have components in the range -1 < x < 1.
+    def reduced_frac_pos(i):
+        vec = np.dot(cart_positions[i], reduced_bases_inv)
+        return vec - np.rint(vec)
+    p_pos = reduced_frac_pos(atom_number_primitive)
+    s_pos = reduced_frac_pos(atom_number_supercell)
 
-    p_pos = positions[atom_number_primitive]
-    s_pos = positions[atom_number_supercell]
+    # The vector arrow is from the atom in the primitive cell to the
+    # atom in the supercell.
+    differences = get_equivalent_smallest_vectors_simple(s_pos - p_pos,
+                                                         reduced_bases,
+                                                         symprec)
 
-    # The vector arrow is from the atom in primitive to
-    # the atom in supercell cell plus a supercell lattice
-    # point. This is related to determine the phase
-    # convension when building dynamical matrix.
-    supercell_vectors = np.array([
+    # Return fractional coords in the basis of the primitive cell
+    #  rather than the supercell.
+    relative_scale = reduced_bases.dot(np.linalg.inv(primitive_lattice))
+    return differences.dot(relative_scale)
+
+# Given:
+#  - A delaunay-reduced lattice (row vectors)
+#  - A fractional vector (with respect to that lattice)
+#      whose coords lie in the range (-1 < x < 1)
+# Produce:
+#  - All fractional vectors of shortest length that are translationally
+#      equivalent to that vector under the lattice.
+def get_equivalent_smallest_vectors_simple(frac_vector,
+                                           reduced_bases, # row vectors
+                                           symprec):
+
+    # Try all nearby images of the vector
+    lattice_points = np.array([
         [i, j, k] for i in (-1, 0, 1)
                   for j in (-1, 0, 1)
                   for k in (-1, 0, 1)
     ])
+    candidates = frac_vector + lattice_points
 
-    differences = s_pos + supercell_vectors - p_pos
-    distances = np.sqrt((np.dot(differences, reduced_bases) ** 2).sum(axis=1))
-    minimum = min(distances)
-    smallest_vectors = []
-    for i in range(27):
-        if abs(minimum - distances[i]) < symprec:
-            relative_scale = np.dot(reduced_bases,
-                                    np.linalg.inv(primitive_lattice))
-            smallest_vectors.append(np.dot(differences[i], relative_scale))
-
-    return smallest_vectors
+    # Filter out the best ones by computing cartesian lengths.
+    # (A "clever" optimizer might try to skip the square root calculation here,
+    #  but he would be wrong; we're comparing a *difference* to the tolerance)
+    lengths = np.sqrt(np.sum(np.dot(candidates, reduced_bases)**2, axis=1))
+    return candidates[lengths - lengths.min() < symprec]
 
 def get_smallest_vectors(supercell, primitive, symprec):
     """
@@ -510,16 +528,34 @@ def get_smallest_vectors(supercell, primitive, symprec):
     shortest_vectors = np.zeros((size_super, size_prim, 27, 3), dtype='double')
     multiplicity = np.zeros((size_super, size_prim), dtype='intc')
 
-    for i in range(size_super): # run in supercell
-        for j, s_j in enumerate(p2s_map): # run in primitive
-            vectors = get_equivalent_smallest_vectors(i,
-                                                      s_j,
-                                                      supercell,
-                                                      primitive.get_cell(),
-                                                      symprec)
-            multiplicity[i][j] = len(vectors)
+    reduced_bases = get_reduced_bases(supercell.get_cell(), symprec)
+    reduced_bases_inv = np.linalg.inv(reduced_bases)
+    primitive_lattice = primitive.get_cell()
+    primitive_lattice_inv = np.linalg.inv(primitive_lattice)
+
+    # matrix that converts fractional positions in the reduced bases into
+    #  fractional positions in the primitive lattice
+    supercell_to_primitive_frac = reduced_bases.dot(primitive_lattice_inv)
+
+    # all positions are reduced into the cell formed by the reduced bases
+    supercell_fracs = np.dot(supercell.get_positions(), reduced_bases_inv)
+    supercell_fracs -= np.rint(supercell_fracs)
+
+    for s_index, s_pos in enumerate(supercell_fracs): # run in supercell
+        for j, p_index in enumerate(p2s_map): # run in primitive
+            p_pos = supercell_fracs[p_index]
+
+            # find smallest vectors equivalent under the supercell lattice
+            vectors = get_equivalent_smallest_vectors_simple(s_pos - p_pos,
+                                                             reduced_bases,
+                                                             symprec)
+
+            # return primitive-cell-fractional vectors rather than supercell-fractional
+            vectors = [np.dot(v, supercell_to_primitive_frac) for v in vectors]
+
+            multiplicity[s_index][j] = len(vectors)
             for k, elem in enumerate(vectors):
-                shortest_vectors[i][j][k] = elem
+                shortest_vectors[s_index][j][k] = elem
 
     return shortest_vectors, multiplicity
 
