@@ -337,7 +337,7 @@ class Primitive(Atoms):
         self._p2p_map = dict([(j, i) for i, j in enumerate(self._p2s_map)])
 
     def _set_smallest_vectors(self, supercell):
-        self._smallest_vectors, self._multiplicity = get_smallest_vectors(
+        self._smallest_vectors, self._multiplicity = _get_smallest_vectors(
             supercell, self, self._symprec)
 
 #
@@ -451,6 +451,12 @@ def _get_shortest_bases_from_extented_bases(extended_bases, tolerance):
 #
 # Shortest pairs of atoms in supercell (Wigner-Seitz like)
 #
+# This is currently no longer used in phonopy, but still used by
+# phono3py. In phono3py, this is used to measure the shortest distance
+# between arbitrary pair of atoms in supercell. Therefore this method
+# may be moved to phono3py, but this way of use can also happen in
+# phonopy in the future, so let's keep it for a while.
+#
 def get_equivalent_smallest_vectors(atom_number_supercell,
                                     atom_number_primitive,
                                     supercell,
@@ -471,9 +477,9 @@ def get_equivalent_smallest_vectors(atom_number_supercell,
 
     # The vector arrow is from the atom in the primitive cell to the
     # atom in the supercell.
-    differences = get_equivalent_smallest_vectors_simple(s_pos - p_pos,
-                                                         reduced_bases,
-                                                         symprec)
+    differences = _get_equivalent_smallest_vectors_simple(s_pos - p_pos,
+                                                          reduced_bases,
+                                                          symprec)
 
     # Return fractional coords in the basis of the primitive cell
     #  rather than the supercell.
@@ -487,9 +493,9 @@ def get_equivalent_smallest_vectors(atom_number_supercell,
 # Produce:
 #  - All fractional vectors of shortest length that are translationally
 #      equivalent to that vector under the lattice.
-def get_equivalent_smallest_vectors_simple(frac_vector,
-                                           reduced_bases, # row vectors
-                                           symprec):
+def _get_equivalent_smallest_vectors_simple(frac_vector,
+                                            reduced_bases, # row vectors
+                                            symprec):
 
     # Try all nearby images of the vector
     lattice_points = np.array([
@@ -505,7 +511,7 @@ def get_equivalent_smallest_vectors_simple(frac_vector,
     lengths = np.sqrt(np.sum(np.dot(candidates, reduced_bases)**2, axis=1))
     return candidates[lengths - lengths.min() < symprec]
 
-def get_smallest_vectors(supercell, primitive, symprec):
+def _get_smallest_vectors(supercell, primitive, symprec):
     """
     shortest_vectors:
 
@@ -546,9 +552,9 @@ def get_smallest_vectors(supercell, primitive, symprec):
             p_pos = supercell_fracs[p_index]
 
             # find smallest vectors equivalent under the supercell lattice
-            vectors = get_equivalent_smallest_vectors_simple(s_pos - p_pos,
-                                                             reduced_bases,
-                                                             symprec)
+            vectors = _get_equivalent_smallest_vectors_simple(s_pos - p_pos,
+                                                              reduced_bases,
+                                                              symprec)
 
             # return primitive-cell-fractional vectors rather than supercell-fractional
             vectors = [np.dot(v, supercell_to_primitive_frac) for v in vectors]

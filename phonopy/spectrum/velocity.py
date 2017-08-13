@@ -34,7 +34,6 @@
 
 import sys
 import numpy as np
-from phonopy.harmonic.dynamical_matrix import get_smallest_vectors
 from phonopy.harmonic.dynmat_to_fc import get_commensurate_points
 from phonopy.units import AMU, kb_J
 from phonopy.structure.grid_points import get_qpoints
