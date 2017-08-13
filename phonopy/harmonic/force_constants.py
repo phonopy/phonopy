@@ -878,14 +878,13 @@ def _compute_permutation_c(positions_a, # scaled positions
             permutation_error()
 
     except ImportError:
-        symprec2 = symprec**2
-
         for i, pos_b in enumerate(positions_b):
             diffs = positions_a - pos_b
             diffs -= np.rint(diffs)
             diffs = np.dot(diffs, lattice.T)
 
-            possible_j = np.nonzero(np.sum(diffs**2, axis=1) < symprec2)[0]
+            possible_j = np.nonzero(
+                np.sqrt(np.sum(diffs**2, axis=1)) < symprec)[0]
             if len(possible_j) != 1:
                 permutation_error()
 
