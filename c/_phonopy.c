@@ -233,6 +233,8 @@ static PyObject * py_compute_permutation(PyObject *self, PyObject *args)
   double (*rot_pos)[3];
   int num_pos;
 
+  int is_found;
+
   if (!PyArg_ParseTuple(args, "OOOOd",
                         &permutation,
                         &lattice,
@@ -248,7 +250,7 @@ static PyObject * py_compute_permutation(PyObject *self, PyObject *args)
   rot_pos = (double(*)[3])PyArray_DATA(permuted_positions);
   num_pos = PyArray_DIMS(positions)[0];
 
-  int is_found = compute_permutation(rot_atoms,
+  is_found = compute_permutation(rot_atoms,
                                      lat,
                                      pos,
                                      rot_pos,
@@ -1363,11 +1365,19 @@ static void distribute_fc2_with_mappings(double (*fc2)[3][3], // shape [num_pos]
                                          const int num_rot,
                                          const int num_pos)
 {
-  for (int i = 0; i < len_atom_list; i++) {
+  int i, j, k, l, m;
+  int atom_todo, atom_done, atom_other;
+  int sym_index;
+  double (*fc2_done)[3];
+  double (*fc2_todo)[3];
+  double (*r_cart)[3];
+  const int * permutation;
+
+  for (i = 0; i < len_atom_list; i++) {
     // look up how this atom maps into the done list.
-    int atom_todo = atom_list[i];
-    int atom_done = map_atoms[atom_todo];
-    int sym_index = map_syms[atom_todo];
+    atom_todo = atom_list[i];
+    atom_done = map_atoms[atom_todo];
+    sym_index = map_syms[atom_todo];
 
     // skip the atoms in the done list,
     // which are easily identified because they map to themselves.
@@ -1375,17 +1385,17 @@ static void distribute_fc2_with_mappings(double (*fc2)[3][3], // shape [num_pos]
       continue;
 
     // look up information about the rotation
-    double (*r_cart)[3] = r_carts[sym_index];
-    const int * permutation = &permutations[sym_index * num_pos]; // shape [num_pos]
+    r_cart = r_carts[sym_index];
+    permutation = &permutations[sym_index * num_pos]; // shape [num_pos]
 
     // distribute terms from atom_done to atom_todo
-    for (int atom_other = 0; atom_other < num_pos; atom_other++) {
-      double (*fc2_done)[3] = fc2[atom_done * num_pos + permutation[atom_other]];
-      double (*fc2_todo)[3] = fc2[atom_todo * num_pos + atom_other];
-      for (int j = 0; j < 3; j++) {
-        for (int k = 0; k < 3; k++) {
-          for (int l = 0; l < 3; l++) {
-            for (int m = 0; m < 3; m++) {
+    for (atom_other = 0; atom_other < num_pos; atom_other++) {
+      fc2_done = fc2[atom_done * num_pos + permutation[atom_other]];
+      fc2_todo = fc2[atom_todo * num_pos + atom_other];
+      for (j = 0; j < 3; j++) {
+        for (k = 0; k < 3; k++) {
+          for (l = 0; l < 3; l++) {
+            for (m = 0; m < 3; m++) {
               /* P' = R^-1 P R */
               fc2_todo[j][k] += r_cart[l][j] * r_cart[m][k] * fc2_done[l][m];
             }
