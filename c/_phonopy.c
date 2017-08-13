@@ -52,6 +52,7 @@ static PyObject * py_get_derivative_dynmat(PyObject *self, PyObject *args);
 static PyObject * py_get_thermal_properties(PyObject *self, PyObject *args);
 static PyObject * py_distribute_fc2(PyObject *self, PyObject *args);
 static PyObject * py_distribute_fc2_all(PyObject *self, PyObject *args);
+static PyObject * py_distribute_fc2_with_mappings(PyObject *self, PyObject *args);
 static PyObject * py_compute_permutation(PyObject *self, PyObject *args);
 
 static int distribute_fc2(double *fc2,
@@ -64,6 +65,16 @@ static int distribute_fc2(double *fc2,
 			  PHPYCONST int r[3][3],
 			  const double t[3],
 			  const double symprec);
+
+static void distribute_fc2_with_mappings(double (*fc2)[3][3],
+                                         const int * atom_list,
+                                         const int len_atom_list,
+                                         PHPYCONST double (*r_carts)[3][3],
+                                         const int * permutations,
+                                         const int * map_atoms,
+                                         const int * map_syms,
+                                         const int num_rot,
+                                         const int num_pos);
 
 static int compute_permutation(int * rot_atom,
 				  PHPYCONST double lat[3][3],
@@ -128,6 +139,8 @@ static PyMethodDef _phonopy_methods[] = {
   {"distribute_fc2", py_distribute_fc2, METH_VARARGS, "Distribute force constants"},
   {"distribute_fc2_all", py_distribute_fc2_all, METH_VARARGS,
    "Distribute force constants for all atoms in atom_list"},
+  {"distribute_fc2_with_mappings", py_distribute_fc2_with_mappings, METH_VARARGS,
+   "Distribute force constants for all atoms in atom_list using precomputed symmetry mappings."},
   {"compute_permutation", py_compute_permutation, METH_VARARGS,
    "Compute indices of original points in a set of rotated points."},
   {"neighboring_grid_points", py_thm_neighboring_grid_points,
@@ -878,6 +891,73 @@ static PyObject * py_distribute_fc2_all(PyObject *self, PyObject *args)
   Py_RETURN_NONE;
 }
 
+static PyObject * py_distribute_fc2_with_mappings(PyObject *self, PyObject *args)
+{
+  PyArrayObject* force_constants_py;
+  PyArrayObject* permutations_py;
+  PyArrayObject* map_atoms_py;
+  PyArrayObject* map_syms_py;
+  PyArrayObject* atom_list_py;
+  PyArrayObject* rotations_cart_py;
+
+  double (*r_carts)[3][3];
+  double (*fc2)[3][3];
+  int *permutations;
+  int *map_atoms;
+  int *map_syms;
+  int *atom_list;
+  int num_pos, num_rot, len_atom_list;
+
+  if (!PyArg_ParseTuple(args, "OOOOOO",
+                        &force_constants_py,
+                        &atom_list_py,
+                        &rotations_cart_py,
+                        &permutations_py,
+                        &map_atoms_py,
+                        &map_syms_py)) {
+    return NULL;
+  }
+
+  fc2 = (double(*)[3][3])PyArray_DATA(force_constants_py);
+  atom_list = (int*)PyArray_DATA(atom_list_py);
+  len_atom_list = PyArray_DIMS(atom_list_py)[0];
+  permutations = (int*)PyArray_DATA(permutations_py);
+  map_atoms = (int*)PyArray_DATA(map_atoms_py);
+  map_syms = (int*)PyArray_DATA(map_syms_py);
+  r_carts = (double(*)[3][3])PyArray_DATA(rotations_cart_py);
+  num_rot = PyArray_DIMS(permutations_py)[0];
+  num_pos = PyArray_DIMS(permutations_py)[1];
+
+  if (PyArray_NDIM(map_atoms_py) != 1 || PyArray_DIMS(map_atoms_py)[0] != num_pos)
+  {
+    PyErr_SetString(PyExc_ValueError, "wrong shape for map_atoms");
+    return NULL;
+  }
+
+  if (PyArray_NDIM(map_syms_py) != 1 || PyArray_DIMS(map_syms_py)[0] != num_pos)
+  {
+    PyErr_SetString(PyExc_ValueError, "wrong shape for map_syms");
+    return NULL;
+  }
+
+  if (PyArray_DIMS(rotations_cart_py)[0] != num_rot)
+  {
+    PyErr_SetString(PyExc_ValueError, "permutations and rotations are different length");
+    return NULL;
+  }
+
+  distribute_fc2_with_mappings(fc2,
+                               atom_list,
+                               len_atom_list,
+                               r_carts,
+                               permutations,
+                               map_atoms,
+                               map_syms,
+                               num_rot,
+                               num_pos);
+  Py_RETURN_NONE;
+}
+
 static PyObject *py_thm_neighboring_grid_points(PyObject *self, PyObject *args)
 {
   PyArrayObject* relative_grid_points_py;
@@ -1270,6 +1350,50 @@ static int distribute_fc2(double *fc2,
   }
 
   return is_found;
+}
+
+// Distributes all force constants using precomputed data about symmetry mappings.
+static void distribute_fc2_with_mappings(double (*fc2)[3][3], // shape [num_pos][num_pos]
+                                         const int * atom_list,
+                                         const int len_atom_list,
+                                         PHPYCONST double (*r_carts)[3][3], // shape[num_rot]
+                                         const int * permutations, // shape [num_rot][num_pos]
+                                         const int * map_atoms, // shape [num_pos]
+                                         const int * map_syms, // shape [num_pos]
+                                         const int num_rot,
+                                         const int num_pos)
+{
+  for (int i = 0; i < len_atom_list; i++) {
+    // look up how this atom maps into the done list.
+    int atom_todo = atom_list[i];
+    int atom_done = map_atoms[atom_todo];
+    int sym_index = map_syms[atom_todo];
+
+    // skip the atoms in the done list,
+    // which are easily identified because they map to themselves.
+    if (atom_todo == atom_done)
+      continue;
+
+    // look up information about the rotation
+    double (*r_cart)[3] = r_carts[sym_index];
+    const int * permutation = &permutations[sym_index * num_pos]; // shape [num_pos]
+
+    // distribute terms from atom_done to atom_todo
+    for (int atom_other = 0; atom_other < num_pos; atom_other++) {
+      double (*fc2_done)[3] = fc2[atom_done * num_pos + permutation[atom_other]];
+      double (*fc2_todo)[3] = fc2[atom_todo * num_pos + atom_other];
+      for (int j = 0; j < 3; j++) {
+        for (int k = 0; k < 3; k++) {
+          for (int l = 0; l < 3; l++) {
+            for (int m = 0; m < 3; m++) {
+              /* P' = R^-1 P R */
+              fc2_todo[j][k] += r_cart[l][j] * r_cart[m][k] * fc2_done[l][m];
+            }
+          }
+        }
+      }
+    }
+  }
 }
 
 static int check_overlap(PHPYCONST double (*pos)[3],
