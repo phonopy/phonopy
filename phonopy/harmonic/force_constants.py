@@ -457,16 +457,17 @@ def rotational_invariance(force_constants,
     fc = force_constants
     p2s = primitive.get_primitive_to_supercell_map()
 
+    smallest_vectors, multiplicity = primitive.get_smallest_vectors()
+
     abc = "xyz"
 
     for pi, p in enumerate(p2s):
         for i in range(3):
             mat = np.zeros((3, 3), dtype='double')
             for s in range(supercell.get_number_of_atoms()):
-                vecs = np.array(get_equivalent_smallest_vectors(
-                    s, p, supercell, primitive.get_cell(), symprec))
-                m = len(vecs)
-                v = np.dot(vecs[:,:].sum(axis=0) / m, primitive.get_cell())
+                m = multiplicity[s, pi]
+                vecs = smallest_vectors[s, pi, :m]
+                v = np.dot(vecs.sum(axis=0) / m, primitive.get_cell())
                 for j in range(3):
                     for k in range(3):
                         mat[j, k] += (fc[p, s, i, j] * v[k] -
