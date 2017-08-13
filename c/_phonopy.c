@@ -52,6 +52,7 @@ static PyObject * py_get_derivative_dynmat(PyObject *self, PyObject *args);
 static PyObject * py_get_thermal_properties(PyObject *self, PyObject *args);
 static PyObject * py_distribute_fc2(PyObject *self, PyObject *args);
 static PyObject * py_distribute_fc2_all(PyObject *self, PyObject *args);
+static PyObject * py_compute_permutation(PyObject *self, PyObject *args);
 
 static int distribute_fc2(double *fc2,
 			  PHPYCONST double lat[3][3],
@@ -63,6 +64,14 @@ static int distribute_fc2(double *fc2,
 			  PHPYCONST int r[3][3],
 			  const double t[3],
 			  const double symprec);
+
+static int compute_permutation(int * rot_atom,
+				  PHPYCONST double lat[3][3],
+				  PHPYCONST double (*pos)[3],
+				  PHPYCONST double (*rot_pos)[3],
+				  const int num_pos,
+				  const double symprec);
+
 static PyObject * py_thm_neighboring_grid_points(PyObject *self, PyObject *args);
 static PyObject *
 py_thm_relative_grid_address(PyObject *self, PyObject *args);
@@ -119,6 +128,8 @@ static PyMethodDef _phonopy_methods[] = {
   {"distribute_fc2", py_distribute_fc2, METH_VARARGS, "Distribute force constants"},
   {"distribute_fc2_all", py_distribute_fc2_all, METH_VARARGS,
    "Distribute force constants for all atoms in atom_list"},
+  {"compute_permutation", py_compute_permutation, METH_VARARGS,
+   "Compute indices of original points in a set of rotated points."},
   {"neighboring_grid_points", py_thm_neighboring_grid_points,
    METH_VARARGS, "Neighboring grid points by relative grid addresses"},
   {"tetrahedra_relative_grid_address", py_thm_relative_grid_address,
@@ -195,6 +206,44 @@ PyInit__phonopy(void)
 #endif
 }
 
+static PyObject * py_compute_permutation(PyObject *self, PyObject *args)
+{
+  PyArrayObject* permutation;
+  PyArrayObject* lattice;
+  PyArrayObject* positions;
+  PyArrayObject* permuted_positions;
+  double symprec;
+
+  int* rot_atoms;
+  double (*lat)[3];
+  double (*pos)[3];
+  double (*rot_pos)[3];
+  int num_pos;
+
+  if (!PyArg_ParseTuple(args, "OOOOd",
+                        &permutation,
+                        &lattice,
+                        &positions,
+                        &permuted_positions,
+                        &symprec)) {
+    return NULL;
+  }
+
+  rot_atoms = (int*)PyArray_DATA(permutation);
+  lat = (double(*)[3])PyArray_DATA(lattice);
+  pos = (double(*)[3])PyArray_DATA(positions);
+  rot_pos = (double(*)[3])PyArray_DATA(permuted_positions);
+  num_pos = PyArray_DIMS(positions)[0];
+
+  int is_found = compute_permutation(rot_atoms,
+                                     lat,
+                                     pos,
+                                     rot_pos,
+                                     num_pos,
+                                     symprec);
+
+  return Py_BuildValue("i", is_found);
+}
 
 static PyObject * py_get_dynamical_matrix(PyObject *self, PyObject *args)
 {
@@ -620,6 +669,68 @@ static double get_heat_capacity_omega(const double temperature,
 /*   /\* omega must be normalized to eV. *\/ */
 /*   return omega / (exp(omega / (KB * temperature)) - 1); */
 /* } */
+
+static int compute_permutation(int * rot_atom,
+                               PHPYCONST double lat[3][3],
+                               PHPYCONST double (*pos)[3],
+                               PHPYCONST double (*rot_pos)[3],
+                               const int num_pos,
+                               const double symprec)
+{
+  int i,j,k,l;
+  int search_start;
+  double distance2, symprec2, diff_cart;
+  double diff[3];
+
+  symprec2 = symprec * symprec;
+  for (i = 0; i < num_pos; i++) {
+    rot_atom[i] = -1;
+  }
+
+  // optimization: Iterate primarily by pos instead of rot_pos.
+  //  (find where 0 belongs in rot_atom, then where 1 belongs, etc.)
+  //  Then track the first unassigned index.
+  //
+  // This works best if the permutation is close to the identity.
+  // (more specifically, if the max value of 'rot_atom[i] - i' is small)
+  search_start = 0;
+  for (i = 0; i < num_pos; i++) {
+    while (rot_atom[search_start] >= 0) {
+      search_start++;
+    }
+    for (j = search_start; j < num_pos; j++) {
+      if (rot_atom[j] >= 0) {
+        continue;
+      }
+
+      for (k = 0; k < 3; k++) {
+        diff[k] = pos[i][k] - rot_pos[j][k];
+        diff[k] -= nint(diff[k]);
+      }
+      distance2 = 0;
+      for (k = 0; k < 3; k++) {
+        diff_cart = 0;
+        for (l = 0; l < 3; l++) {
+          diff_cart += lat[k][l] * diff[l];
+        }
+        distance2 += diff_cart * diff_cart;
+      }
+
+      if (distance2 < symprec2) {
+        rot_atom[j] = i;
+        break;
+      }
+    }
+  }
+
+  for (i = 0; i < num_pos; i++) {
+    if (rot_atom[i] < 0) {
+      printf("Encounter some problem in compute_permutation.\n");
+      return 0;
+    }
+  }
+  return 1;
+}
 
 
 static PyObject * py_distribute_fc2(PyObject *self, PyObject *args)
