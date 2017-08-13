@@ -679,10 +679,9 @@ static int compute_permutation(int * rot_atom,
 {
   int i,j,k,l;
   int search_start;
-  double distance2, symprec2, diff_cart;
+  double distance2, diff_cart;
   double diff[3];
 
-  symprec2 = symprec * symprec;
   for (i = 0; i < num_pos; i++) {
     rot_atom[i] = -1;
   }
@@ -716,7 +715,7 @@ static int compute_permutation(int * rot_atom,
         distance2 += diff_cart * diff_cart;
       }
 
-      if (distance2 < symprec2) {
+      if (sqrt(distance2) < symprec) {
         rot_atom[j] = i;
         break;
       }
