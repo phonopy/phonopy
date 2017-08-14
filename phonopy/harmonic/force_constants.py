@@ -145,11 +145,33 @@ def distribute_force_constants(force_constants,
                                atom_list,
                                atom_list_done,
                                lattice, # column vectors
-                               positions,
-                               rotations,
-                               trans,
+                               positions, # scaled (fractional)
+                               rotations, # scaled (fractional)
+                               trans, # scaled (fractional)
                                symprec):
     if True:
+        permutations = _compute_all_sg_permutations(positions,
+                                                    rotations,
+                                                    trans,
+                                                    lattice,
+                                                    symprec)
+
+        map_atoms, map_syms = _get_sym_mappings_from_permutations(
+            permutations, atom_list_done)
+
+        rots_cartesian = np.array([similarity_transformation(lattice, r)
+                                   for r in rotations],
+                                  dtype='double', order='C')
+
+        import phonopy._phonopy as phonoc
+        phonoc.distribute_fc2_with_mappings(force_constants,
+                                            np.array(atom_list, dtype='intc'),
+                                            rots_cartesian,
+                                            permutations,
+                                            np.array(map_atoms, dtype='intc'),
+                                            np.array(map_syms, dtype='intc'))
+
+    elif True:
         rots_cartesian = np.array([similarity_transformation(lattice, r)
                                    for r in rotations],
                                   dtype='double', order='C')
@@ -807,6 +829,25 @@ def _get_atom_mapping_by_symmetry(atom_list_done,
     print("or something wrong (e.g. crystal structure does not match).")
     raise ValueError
 
+# Compute a permutation for every space group operation.
+# See '_compute_permutation_for_rotation' for more info.
+#
+# Output has shape (num_rot, num_pos)
+def _compute_all_sg_permutations(positions, # scaled positions
+                                 rotations, # scaled
+                                 translations, # scaled
+                                 lattice, # column vectors
+                                 symprec):
+
+    out = [] # Finally the shape is fixed as (num_sym, num_pos_of_supercell).
+    for (sym, t) in zip(rotations, translations):
+        rotated_positions = np.dot(positions, sym.T) + t
+        out.append(_compute_permutation_for_rotation(positions,
+                                                     rotated_positions,
+                                                     lattice,
+                                                     symprec))
+    return np.array(out, dtype='intc', order='C')
+
 # Get the overall permutation such that
 #
 #        positions_a[perm[i]] == positions_b[i]   (modulo the lattice)
@@ -831,7 +872,7 @@ def _compute_permutation_for_rotation(positions_a, # scaled positions
     def sort_by_lattice_distance(fracs):
         carts = np.dot(fracs - np.rint(fracs), lattice.T)
         perm = np.argsort(np.sum(carts**2, axis=1))
-        sorted_fracs = fracs[perm]
+        sorted_fracs = np.array(fracs[perm], dtype='double', order='C')
         return perm, sorted_fracs
 
     (perm_a, sorted_a) = sort_by_lattice_distance(positions_a)
@@ -894,3 +935,45 @@ def _compute_permutation_c(positions_a, # scaled positions
             permutation_error()
 
     return permutation
+
+# This can be thought of as computing 'map_atom_disp' and 'map_sym' for all atoms,
+# except done using permutations instead of by computing overlaps.
+#
+# Input:
+#  * permutations, shape [num_rot][num_pos]
+#  * atom_list_done
+#
+# Output:
+#  * map_atoms, shape [num_pos].
+#    Maps each atom in the full structure to its equivalent atom in atom_list_done.
+#    (each entry will be an integer found in atom_list_done)
+#
+#  * map_syms, shape [num_pos].
+#    For each atom, provides the index of a rotation that maps it into atom_list_done.
+#    (there might be more than one such rotation, but only one will be returned)
+#    (each entry will be an integer 0 <= i < num_rot)
+def _get_sym_mappings_from_permutations(permutations,
+                                        atom_list_done):
+    assert permutations.ndim == 2
+    num_pos = permutations.shape[1]
+
+    # filled with -1
+    map_atoms = np.zeros((num_pos,), dtype='intc') - 1
+    map_syms  = np.zeros((num_pos,), dtype='intc') - 1
+
+    atom_list_done = set(atom_list_done)
+    for atom_todo in range(num_pos):
+        for (sym_index, permutation) in enumerate(permutations):
+            if permutation[atom_todo] in atom_list_done:
+                map_atoms[atom_todo] = permutation[atom_todo]
+                map_syms[atom_todo]  = sym_index
+                break
+        else:
+            print("Input forces are not enough to calculate force constants,")
+            print("or something wrong (e.g. crystal structure does not match).")
+            raise ValueError
+
+    assert set(map_atoms) & set(atom_list_done) == set(map_atoms)
+    assert -1 not in map_atoms
+    assert -1 not in map_syms
+    return map_atoms, map_syms
