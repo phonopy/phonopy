@@ -251,11 +251,11 @@ static PyObject * py_compute_permutation(PyObject *self, PyObject *args)
   num_pos = PyArray_DIMS(positions)[0];
 
   is_found = compute_permutation(rot_atoms,
-                                     lat,
-                                     pos,
-                                     rot_pos,
-                                     num_pos,
-                                     symprec);
+                                 lat,
+                                 pos,
+                                 rot_pos,
+                                 num_pos,
+                                 symprec);
 
   return Py_BuildValue("i", is_found);
 }
@@ -701,12 +701,12 @@ static int compute_permutation(int * rot_atom,
     rot_atom[i] = -1;
   }
 
-  // optimization: Iterate primarily by pos instead of rot_pos.
-  //  (find where 0 belongs in rot_atom, then where 1 belongs, etc.)
-  //  Then track the first unassigned index.
-  //
-  // This works best if the permutation is close to the identity.
-  // (more specifically, if the max value of 'rot_atom[i] - i' is small)
+  /* optimization: Iterate primarily by pos instead of rot_pos. */
+  /*  (find where 0 belongs in rot_atom, then where 1 belongs, etc.) */
+  /*  Then track the first unassigned index. */
+  /* */
+  /* This works best if the permutation is close to the identity. */
+  /* (more specifically, if the max value of 'rot_atom[i] - i' is small) */
   search_start = 0;
   for (i = 0; i < num_pos; i++) {
     while (rot_atom[search_start] >= 0) {
@@ -1354,14 +1354,14 @@ static int distribute_fc2(double *fc2,
   return is_found;
 }
 
-// Distributes all force constants using precomputed data about symmetry mappings.
-static void distribute_fc2_with_mappings(double (*fc2)[3][3], // shape [num_pos][num_pos]
+/* Distributes all force constants using precomputed data about symmetry mappings. */
+static void distribute_fc2_with_mappings(double (*fc2)[3][3], /* shape[num_pos][num_pos] */
                                          const int * atom_list,
                                          const int len_atom_list,
-                                         PHPYCONST double (*r_carts)[3][3], // shape[num_rot]
-                                         const int * permutations, // shape [num_rot][num_pos]
-                                         const int * map_atoms, // shape [num_pos]
-                                         const int * map_syms, // shape [num_pos]
+                                         PHPYCONST double (*r_carts)[3][3], /* shape[num_rot] */
+                                         const int * permutations, /* shape[num_rot][num_pos] */
+                                         const int * map_atoms, /* shape [num_pos] */
+                                         const int * map_syms, /* shape [num_pos] */
                                          const int num_rot,
                                          const int num_pos)
 {
@@ -1374,21 +1374,22 @@ static void distribute_fc2_with_mappings(double (*fc2)[3][3], // shape [num_pos]
   const int * permutation;
 
   for (i = 0; i < len_atom_list; i++) {
-    // look up how this atom maps into the done list.
+    /* look up how this atom maps into the done list. */
     atom_todo = atom_list[i];
     atom_done = map_atoms[atom_todo];
     sym_index = map_syms[atom_todo];
 
-    // skip the atoms in the done list,
-    // which are easily identified because they map to themselves.
-    if (atom_todo == atom_done)
+    /* skip the atoms in the done list, */
+    /* which are easily identified because they map to themselves. */
+    if (atom_todo == atom_done) {
       continue;
+    }
 
-    // look up information about the rotation
+    /* look up information about the rotation */
     r_cart = r_carts[sym_index];
-    permutation = &permutations[sym_index * num_pos]; // shape [num_pos]
+    permutation = &permutations[sym_index * num_pos]; /* shape[num_pos] */
 
-    // distribute terms from atom_done to atom_todo
+    /* distribute terms from atom_done to atom_todo */
     for (atom_other = 0; atom_other < num_pos; atom_other++) {
       fc2_done = fc2[atom_done * num_pos + permutation[atom_other]];
       fc2_todo = fc2[atom_todo * num_pos + atom_other];

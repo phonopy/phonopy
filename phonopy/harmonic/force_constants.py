@@ -156,8 +156,8 @@ def distribute_force_constants(force_constants,
                                                     lattice,
                                                     symprec)
 
-        map_atoms, map_syms = _get_sym_mappings_from_permutations(permutations,
-                                                                  atom_list_done)
+        map_atoms, map_syms = _get_sym_mappings_from_permutations(
+            permutations, atom_list_done)
 
         rots_cartesian = np.array([similarity_transformation(lattice, r)
                                    for r in rotations],
@@ -167,7 +167,7 @@ def distribute_force_constants(force_constants,
         phonoc.distribute_fc2_with_mappings(force_constants,
                                             np.array(atom_list, dtype='intc'),
                                             rots_cartesian,
-                                            np.array(permutations, dtype='intc'),
+                                            permutations,
                                             np.array(map_atoms, dtype='intc'),
                                             np.array(map_syms, dtype='intc'))
 
@@ -839,14 +839,14 @@ def _compute_all_sg_permutations(positions, # scaled positions
                                  lattice, # column vectors
                                  symprec):
 
-    out = []
+    out = [] # Finally the shape is fixed as (num_sym, num_pos_of_supercell).
     for (sym, t) in zip(rotations, translations):
         rotated_positions = np.dot(positions, sym.T) + t
         out.append(_compute_permutation_for_rotation(positions,
                                                      rotated_positions,
                                                      lattice,
                                                      symprec))
-    return np.array(out, dtype='intc')
+    return np.array(out, dtype='intc', order='C')
 
 # Get the overall permutation such that
 #
@@ -872,7 +872,7 @@ def _compute_permutation_for_rotation(positions_a, # scaled positions
     def sort_by_lattice_distance(fracs):
         carts = np.dot(fracs - np.rint(fracs), lattice.T)
         perm = np.argsort(np.sum(carts**2, axis=1))
-        sorted_fracs = fracs[perm]
+        sorted_fracs = np.array(fracs[perm], dtype='double', order='C')
         return perm, sorted_fracs
 
     (perm_a, sorted_a) = sort_by_lattice_distance(positions_a)
