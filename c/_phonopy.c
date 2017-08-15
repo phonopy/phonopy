@@ -35,6 +35,7 @@
 #include <Python.h>
 #include <stdio.h>
 #include <math.h>
+#include <float.h>
 #include <numpy/arrayobject.h>
 #include <dynmat.h>
 #include <derivative_dynmat.h>
@@ -54,6 +55,7 @@ static PyObject * py_distribute_fc2(PyObject *self, PyObject *args);
 static PyObject * py_distribute_fc2_all(PyObject *self, PyObject *args);
 static PyObject * py_distribute_fc2_with_mappings(PyObject *self, PyObject *args);
 static PyObject * py_compute_permutation(PyObject *self, PyObject *args);
+static PyObject * py_gsv_move_smallest_vectors(PyObject *self, PyObject *args);
 
 static int distribute_fc2(double *fc2,
 			  PHPYCONST double lat[3][3],
@@ -82,6 +84,12 @@ static int compute_permutation(int * rot_atom,
 				  PHPYCONST double (*rot_pos)[3],
 				  const int num_pos,
 				  const double symprec);
+
+static void gsv_move_smallest_vectors(double (*vectors)[27][3],
+                                      int * multiplicity,
+                                      PHPYCONST double (*lengths)[27],
+                                      const int num_lists,
+                                      const double symprec);
 
 static PyObject * py_thm_neighboring_grid_points(PyObject *self, PyObject *args);
 static PyObject *
@@ -143,6 +151,8 @@ static PyMethodDef _phonopy_methods[] = {
    "Distribute force constants for all atoms in atom_list using precomputed symmetry mappings."},
   {"compute_permutation", py_compute_permutation, METH_VARARGS,
    "Compute indices of original points in a set of rotated points."},
+  {"gsv_move_smallest_vectors", py_gsv_move_smallest_vectors, METH_VARARGS,
+   "Implementation detail of get_smallest_vectors."},
   {"neighboring_grid_points", py_thm_neighboring_grid_points,
    METH_VARARGS, "Neighboring grid points by relative grid addresses"},
   {"tetrahedra_relative_grid_address", py_thm_relative_grid_address,
@@ -258,6 +268,41 @@ static PyObject * py_compute_permutation(PyObject *self, PyObject *args)
                                  symprec);
 
   return Py_BuildValue("i", is_found);
+}
+
+static PyObject * py_gsv_move_smallest_vectors(PyObject *self, PyObject *args)
+{
+  PyArrayObject* py_vectors;
+  PyArrayObject* py_multiplicity;
+  PyArrayObject* py_lengths;
+  double symprec;
+
+  double (*vectors)[27][3];
+  double (*lengths)[27];
+  int * multiplicity;
+  int size_super, size_prim;
+
+  if (!PyArg_ParseTuple(args, "OOOd",
+                        &py_vectors,
+                        &py_multiplicity,
+                        &py_lengths,
+                        &symprec)) {
+    return NULL;
+  }
+
+  vectors = (double(*)[27][3])PyArray_DATA(py_vectors);
+  multiplicity = (int*)PyArray_DATA(py_multiplicity);
+  lengths = (double(*)[27])PyArray_DATA(py_lengths);
+  size_super = PyArray_DIMS(py_vectors)[0];
+  size_prim = PyArray_DIMS(py_vectors)[1];
+
+  gsv_move_smallest_vectors(vectors,
+                            multiplicity,
+                            lengths,
+                            size_super * size_prim,
+                            symprec);
+
+  Py_RETURN_NONE;
 }
 
 static PyObject * py_get_dynamical_matrix(PyObject *self, PyObject *args)
@@ -746,6 +791,50 @@ static int compute_permutation(int * rot_atom,
   return 1;
 }
 
+/* Implementation detail of get_smallest_vectors. */
+/* Finds the smallest vectors within each list and moves them to the front. */
+static void gsv_move_smallest_vectors(double (*vector_lists)[27][3],        /* shape [num_lists] */
+                                      int * multiplicity,                   /* shape [num_lists] */
+                                      PHPYCONST double (*length_lists)[27], /* shape [num_lists] */
+                                      const int num_lists,
+                                      const double symprec)
+{
+  int i,j,k;
+  int count;
+  double minimum;
+  double (*vectors)[3];
+  double * lengths;
+
+  for (i = 0; i < num_lists; i++) {
+    /* Look at a single list of 27 vectors. */
+    lengths = length_lists[i];
+    vectors = vector_lists[i];
+
+    /* Compute the minimum length. */
+    minimum = DBL_MAX;
+    for (j = 0; j < 27; j++) {
+      if (lengths[j] < minimum) {
+        minimum = lengths[j];
+      }
+    }
+
+    /* Move vectors whose length is within tolerance. */
+    count = 0;
+    for (j = 0; j < 27; j++) {
+      if (lengths[j] - minimum <= symprec) {
+        /* Copy the vector to the next unoccupied space at the front of the list. */
+        /* It will overwrite one of the vectors we already looked at that weren't */
+        /* short enough. (that, or it will harmlessly overwrite itself). */
+        for (k = 0; k < 3; k++) {
+          vectors[count][k] = vectors[j][k];
+        }
+        count++;
+      }
+    }
+
+    multiplicity[i] = count;
+  }
+}
 
 static PyObject * py_distribute_fc2(PyObject *self, PyObject *args)
 {
