@@ -55,7 +55,7 @@ static PyObject * py_distribute_fc2(PyObject *self, PyObject *args);
 static PyObject * py_distribute_fc2_all(PyObject *self, PyObject *args);
 static PyObject * py_distribute_fc2_with_mappings(PyObject *self, PyObject *args);
 static PyObject * py_compute_permutation(PyObject *self, PyObject *args);
-static PyObject * py_gsv_move_smallest_vectors(PyObject *self, PyObject *args);
+static PyObject * py_gsv_copy_smallest_vectors(PyObject *self, PyObject *args);
 
 static int distribute_fc2(double *fc2,
 			  PHPYCONST double lat[3][3],
@@ -85,7 +85,7 @@ static int compute_permutation(int * rot_atom,
 				  const int num_pos,
 				  const double symprec);
 
-static void gsv_move_smallest_vectors(double (*shortest_vectors)[27][3],
+static void gsv_copy_smallest_vectors(double (*shortest_vectors)[27][3],
                                       int * multiplicity,
                                       PHPYCONST double (*vector_lists)[27][3],
                                       PHPYCONST double (*length_lists)[27],
@@ -152,7 +152,7 @@ static PyMethodDef _phonopy_methods[] = {
    "Distribute force constants for all atoms in atom_list using precomputed symmetry mappings."},
   {"compute_permutation", py_compute_permutation, METH_VARARGS,
    "Compute indices of original points in a set of rotated points."},
-  {"gsv_move_smallest_vectors", py_gsv_move_smallest_vectors, METH_VARARGS,
+  {"gsv_copy_smallest_vectors", py_gsv_copy_smallest_vectors, METH_VARARGS,
    "Implementation detail of get_smallest_vectors."},
   {"neighboring_grid_points", py_thm_neighboring_grid_points,
    METH_VARARGS, "Neighboring grid points by relative grid addresses"},
@@ -271,7 +271,7 @@ static PyObject * py_compute_permutation(PyObject *self, PyObject *args)
   return Py_BuildValue("i", is_found);
 }
 
-static PyObject * py_gsv_move_smallest_vectors(PyObject *self, PyObject *args)
+static PyObject * py_gsv_copy_smallest_vectors(PyObject *self, PyObject *args)
 {
   PyArrayObject* py_shortest_vectors;
   PyArrayObject* py_multiplicity;
@@ -301,7 +301,7 @@ static PyObject * py_gsv_move_smallest_vectors(PyObject *self, PyObject *args)
   size_super = PyArray_DIMS(py_vectors)[0];
   size_prim = PyArray_DIMS(py_vectors)[1];
 
-  gsv_move_smallest_vectors(shortest_vectors,
+  gsv_copy_smallest_vectors(shortest_vectors,
                             multiplicity,
                             vectors,
                             lengths,
@@ -798,13 +798,8 @@ static int compute_permutation(int * rot_atom,
 }
 
 /* Implementation detail of get_smallest_vectors. */
-/* Finds the smallest vectors within each list and moves them to the front. */
-/* */
-/* shortest_vectors[num_lists, 27, 3] */
-/* multiplicity[num_lists] */
-/* vector_lists[num_lists, 27, 3] */
-/* length_lists[num_list, 27] */
-static void gsv_move_smallest_vectors(double (*shortest_vectors)[27][3],
+/* Finds the smallest vectors within each list and copies them to the output. */
+static void gsv_copy_smallest_vectors(double (*shortest_vectors)[27][3],
                                       int * multiplicity,
                                       PHPYCONST double (*vector_lists)[27][3],
                                       PHPYCONST double (*length_lists)[27],
@@ -830,13 +825,10 @@ static void gsv_move_smallest_vectors(double (*shortest_vectors)[27][3],
       }
     }
 
-    /* Move vectors whose length is within tolerance. */
+    /* Copy vectors whose length is within tolerance. */
     count = 0;
     for (j = 0; j < 27; j++) {
       if (lengths[j] - minimum <= symprec) {
-        /* Copy the vector to the next unoccupied space at the front of the list. */
-        /* It will overwrite one of the vectors we already looked at that weren't */
-        /* short enough. (that, or it will harmlessly overwrite itself). */
         for (k = 0; k < 3; k++) {
           shortest_vectors[i][count][k] = vectors[j][k];
         }

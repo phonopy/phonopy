@@ -589,14 +589,13 @@ def _get_smallest_vectors(supercell, primitive, symprec):
 
     # The last final bits are done in C.
     #
-    # For each list of 27 vectors, we will identify the shortest ones
-    # and move them to the front.
+    # We will gather the shortest ones from each list of 27 vectors.
     shortest_vectors = np.zeros_like(candidate_vectors,
                                      dtype='double', order='C')
     multiplicity = np.zeros((size_super, size_prim), dtype='intc', order='C')
 
     import phonopy._phonopy as phonoc
-    phonoc.gsv_move_smallest_vectors(shortest_vectors,
+    phonoc.gsv_copy_smallest_vectors(shortest_vectors,
                                      multiplicity,
                                      candidate_vectors,
                                      lengths,
