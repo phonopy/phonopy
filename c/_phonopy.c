@@ -85,9 +85,10 @@ static int compute_permutation(int * rot_atom,
 				  const int num_pos,
 				  const double symprec);
 
-static void gsv_move_smallest_vectors(double (*vectors)[27][3],
+static void gsv_move_smallest_vectors(double (*shortest_vectors)[27][3],
                                       int * multiplicity,
-                                      PHPYCONST double (*lengths)[27],
+                                      PHPYCONST double (*vector_lists)[27][3],
+                                      PHPYCONST double (*length_lists)[27],
                                       const int num_lists,
                                       const double symprec);
 
@@ -272,32 +273,37 @@ static PyObject * py_compute_permutation(PyObject *self, PyObject *args)
 
 static PyObject * py_gsv_move_smallest_vectors(PyObject *self, PyObject *args)
 {
-  PyArrayObject* py_vectors;
+  PyArrayObject* py_shortest_vectors;
   PyArrayObject* py_multiplicity;
+  PyArrayObject* py_vectors;
   PyArrayObject* py_lengths;
   double symprec;
 
+  double (*shortest_vectors)[27][3];
   double (*vectors)[27][3];
   double (*lengths)[27];
   int * multiplicity;
   int size_super, size_prim;
 
-  if (!PyArg_ParseTuple(args, "OOOd",
-                        &py_vectors,
+  if (!PyArg_ParseTuple(args, "OOOOd",
+                        &py_shortest_vectors,
                         &py_multiplicity,
+                        &py_vectors,
                         &py_lengths,
                         &symprec)) {
     return NULL;
   }
 
-  vectors = (double(*)[27][3])PyArray_DATA(py_vectors);
+  shortest_vectors = (double(*)[27][3])PyArray_DATA(py_shortest_vectors);
   multiplicity = (int*)PyArray_DATA(py_multiplicity);
+  vectors = (double(*)[27][3])PyArray_DATA(py_vectors);
   lengths = (double(*)[27])PyArray_DATA(py_lengths);
   size_super = PyArray_DIMS(py_vectors)[0];
   size_prim = PyArray_DIMS(py_vectors)[1];
 
-  gsv_move_smallest_vectors(vectors,
+  gsv_move_smallest_vectors(shortest_vectors,
                             multiplicity,
+                            vectors,
                             lengths,
                             size_super * size_prim,
                             symprec);
@@ -793,9 +799,15 @@ static int compute_permutation(int * rot_atom,
 
 /* Implementation detail of get_smallest_vectors. */
 /* Finds the smallest vectors within each list and moves them to the front. */
-static void gsv_move_smallest_vectors(double (*vector_lists)[27][3],        /* shape [num_lists] */
-                                      int * multiplicity,                   /* shape [num_lists] */
-                                      PHPYCONST double (*length_lists)[27], /* shape [num_lists] */
+/* */
+/* shortest_vectors[num_lists, 27, 3] */
+/* multiplicity[num_lists] */
+/* vector_lists[num_lists, 27, 3] */
+/* length_lists[num_list, 27] */
+static void gsv_move_smallest_vectors(double (*shortest_vectors)[27][3],
+                                      int * multiplicity,
+                                      PHPYCONST double (*vector_lists)[27][3],
+                                      PHPYCONST double (*length_lists)[27],
                                       const int num_lists,
                                       const double symprec)
 {
@@ -826,7 +838,7 @@ static void gsv_move_smallest_vectors(double (*vector_lists)[27][3],        /* s
         /* It will overwrite one of the vectors we already looked at that weren't */
         /* short enough. (that, or it will harmlessly overwrite itself). */
         for (k = 0; k < 3; k++) {
-          vectors[count][k] = vectors[j][k];
+          shortest_vectors[i][count][k] = vectors[j][k];
         }
         count++;
       }

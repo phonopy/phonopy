@@ -535,7 +535,8 @@ def _get_smallest_vectors(supercell, primitive, symprec):
     reduced_bases = get_reduced_bases(supercell.get_cell(), symprec)
 
     # Reduce all positions into the cell formed by the reduced bases.
-    supercell_fracs = np.dot(supercell.get_positions(), np.linalg.inv(reduced_bases))
+    supercell_fracs = np.dot(supercell.get_positions(),
+                             np.linalg.inv(reduced_bases))
     supercell_fracs -= np.rint(supercell_fracs)
     primitive_fracs = supercell_fracs[list(p2s_map)]
 
@@ -582,19 +583,22 @@ def _get_smallest_vectors(supercell, primitive, symprec):
     # by the primitive cell.
     #
     # shape: (size_super, size_prim, 27, 3)
-    shortest_vectors = np.dot(candidate_fracs,
-                              reduced_bases.dot(np.linalg.inv(primitive.get_cell())))
+    candidate_vectors = np.dot(
+        candidate_fracs,
+        reduced_bases.dot(np.linalg.inv(primitive.get_cell())))
 
     # The last final bits are done in C.
     #
     # For each list of 27 vectors, we will identify the shortest ones
     # and move them to the front.
-    shortest_vectors = np.array(shortest_vectors, dtype='double', order='C')
+    shortest_vectors = np.zeros_like(candidate_vectors,
+                                     dtype='double', order='C')
     multiplicity = np.zeros((size_super, size_prim), dtype='intc', order='C')
 
     import phonopy._phonopy as phonoc
     phonoc.gsv_move_smallest_vectors(shortest_vectors,
                                      multiplicity,
+                                     candidate_vectors,
                                      lengths,
                                      symprec)
 
