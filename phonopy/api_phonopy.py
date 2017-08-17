@@ -485,6 +485,14 @@ class Phonopy(object):
         self._band_structure.plot(plt, labels=labels)
         return plt
 
+    def write_hdf5_band_structure(self,
+                                  labels=None,
+                                  comment=None,
+                                  filename="band.hdf5"):
+        self._band_structure.write_hdf5(labels=labels,
+                                        comment=comment,
+                                        filename=filename)
+
     def write_yaml_band_structure(self,
                                   labels=None,
                                   comment=None,
