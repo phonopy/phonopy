@@ -1,9 +1,12 @@
 import unittest
 
+import os
 import numpy as np
 from phonopy.structure.atoms import PhonopyAtoms as Atoms
 from phonopy.structure.cells import get_supercell
 from phonopy.interface.phonopy_yaml import get_unitcell_from_phonopy_yaml
+
+data_dir = os.path.dirname(os.path.abspath(__file__))
 
 class TestSupercell(unittest.TestCase):
 
@@ -51,7 +54,8 @@ class TestSupercell(unittest.TestCase):
                                                     self._smats,
                                                     self._fnames)):
             scell = get_supercell(cell, smat)
-            scell_yaml = get_unitcell_from_phonopy_yaml(fname)
+            scell_yaml = get_unitcell_from_phonopy_yaml(os.path.join(data_dir,
+                                                                     fname))
             np.testing.assert_allclose(scell.get_cell(), scell_yaml.get_cell(),
                                        atol=1e-5)
             pos = scell.get_scaled_positions()
