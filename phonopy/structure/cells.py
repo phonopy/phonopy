@@ -36,8 +36,11 @@ import numpy as np
 import phonopy.structure.spglib as spg
 from phonopy.structure.atoms import PhonopyAtoms as Atoms
 
-def get_supercell(unitcell, supercell_matrix, symprec=1e-5):
-    return Supercell(unitcell, supercell_matrix, symprec=symprec)
+def get_supercell(unitcell, supercell_matrix, is_old_style=True, symprec=1e-5):
+    return Supercell(unitcell,
+                     supercell_matrix,
+                     is_old_style=is_old_style,
+                     symprec=symprec)
 
 def get_primitive(supercell, primitive_frame, symprec=1e-5):
     return Primitive(supercell, primitive_frame, symprec=symprec)
@@ -151,7 +154,12 @@ class Supercell(Atoms):
     Second, trim the surrounding supercell with the target lattice.
     """
 
-    def __init__(self, unitcell, supercell_matrix, symprec=1e-5):
+    def __init__(self,
+                 unitcell,
+                 supercell_matrix,
+                 is_old_style=True,
+                 symprec=1e-5):
+        self._is_old_style = is_old_style
         self._s2u_map = None
         self._u2s_map = None
         self._u2u_map = None
@@ -172,22 +180,37 @@ class Supercell(Atoms):
 
     def _create_supercell(self, unitcell, symprec):
         mat = self._supercell_matrix
-        frame = self._get_surrounding_frame(mat)
-        sur_cell, u2sur_map = self._get_simple_supercell(frame, unitcell)
 
-        # Trim the simple supercell by the supercell matrix
-        trim_frame = np.array([mat[0] / float(frame[0]),
-                               mat[1] / float(frame[1]),
-                               mat[2] / float(frame[2])])
+        if self._is_old_style:
+            P = None
+            multi = self._get_surrounding_frame(mat)
+            # trim_fram is to trim overlapping atoms.
+            trim_frame = np.array([mat[0] / float(multi[0]),
+                                   mat[1] / float(multi[1]),
+                                   mat[2] / float(multi[2])])
+        else:
+            # In the new style, it is unnecessary to trim atoms,
+            # but trim_cell is still used to make point to be 0 <= x, y, z < 1.
+            if (np.diag(np.diagonal(mat)) != mat).any():
+                snf = SNF3x3(mat)
+                snf.run()
+                P = snf.P
+                multi = np.diagonal(snf.A)
+            else:
+                P = None
+                multi = np.diagonal(mat)
+            trim_frame = np.eye(3)
+
+        sur_cell, u2sur_map = self._get_simple_supercell(unitcell, multi, P)
         supercell, sur2s_map, mapping_table = trim_cell(trim_frame,
                                                         sur_cell,
                                                         symprec)
 
         num_satom = supercell.get_number_of_atoms()
         num_uatom = unitcell.get_number_of_atoms()
-        multi = num_satom // num_uatom
+        N = num_satom // num_uatom
 
-        if multi != determinant(self._supercell_matrix):
+        if N != determinant(self._supercell_matrix):
             print("Supercell creation failed.")
             print("Probably some atoms are overwrapped. "
                   "The mapping table is give below.")
@@ -201,9 +224,65 @@ class Supercell(Atoms):
                            scaled_positions=supercell.get_scaled_positions(),
                            cell=supercell.get_cell(),
                            pbc=True)
-            self._u2s_map = np.arange(num_uatom) * multi
+            self._u2s_map = np.arange(num_uatom) * N
             self._u2u_map = dict([(j, i) for i, j in enumerate(self._u2s_map)])
-            self._s2u_map = np.array(u2sur_map)[sur2s_map] * multi
+            self._s2u_map = np.array(u2sur_map)[sur2s_map] * N
+
+    def _get_simple_supercell(self, unitcell, multi, P):
+        if self._is_old_style:
+            mat = np.diag(multi)
+        else:
+            mat = self._supercell_matrix
+
+        # Scaled positions within the frame, i.e., create a supercell that
+        # is made simply to multiply the input cell.
+        positions = unitcell.get_scaled_positions()
+        numbers = unitcell.get_atomic_numbers()
+        masses = unitcell.get_masses()
+        magmoms = unitcell.get_magnetic_moments()
+        lattice = unitcell.get_cell()
+
+        # Index of a axis runs fastest for creating lattice points.
+        # See numpy.meshgrid document for the complicated index order for 3D
+        b, c, a = np.meshgrid(range(multi[1]), range(multi[2]), range(multi[0]))
+        lattice_points = np.c_[a.ravel(), b.ravel(), c.ravel()]
+
+        if P is not None:
+            # If supercell matrix is not a diagonal matrix,
+            # Smith normal form is applied to find oblique basis vectors for
+            # supercell and primitive cells, where their basis vectos are
+            # parallel each other. By this reason, simple construction of
+            # supercell becomes possible.
+            P_inv = np.rint(np.linalg.inv(P)).astype(int)
+            assert determinant(P_inv) == 1
+            lattice_points = np.dot(lattice_points, P_inv.T)
+
+        n = len(positions)
+        n_l = len(lattice_points)
+        # tile: repeat blocks
+        # repeat: repeat each element
+        positions_multi = np.dot(np.tile(lattice_points, (n, 1)) +
+                                 np.repeat(positions, n_l, axis=0),
+                                 np.linalg.inv(mat).T)
+        numbers_multi = np.repeat(numbers, n_l)
+        atom_map = np.repeat(np.arange(n), n_l)
+        if masses is None:
+            masses_multi = None
+        else:
+            masses_multi = np.repeat(masses, n_l)
+        if magmoms is None:
+            magmoms_multi = None
+        else:
+            magmoms_multi = np.repeat(magmoms, n_l)
+
+        simple_supercell = Atoms(numbers=numbers_multi,
+                                 masses=masses_multi,
+                                 magmoms=magmoms_multi,
+                                 scaled_positions=positions_multi,
+                                 cell=np.dot(mat, lattice),
+                                 pbc=True)
+
+        return simple_supercell, atom_map
 
     def _get_surrounding_frame(self, supercell_matrix):
         # Build a frame surrounding supercell lattice
@@ -211,6 +290,7 @@ class Supercell(Atoms):
         #  [2,0,0]
         #  [0,2,0] is the frame for FCC from simple cubic.
         #  [0,0,2]
+
         m = np.array(supercell_matrix)
         axes = np.array([[0, 0, 0],
                          m[:,0],
@@ -222,49 +302,6 @@ class Supercell(Atoms):
                          m[:,0] + m[:,1] + m[:,2]])
         frame = [max(axes[:,i]) - min(axes[:,i]) for i in (0,1,2)]
         return frame
-
-    def _get_simple_supercell(self, multi, unitcell, SNF_Pmat=None):
-        # Scaled positions within the frame, i.e., create a supercell that
-        # is made simply to multiply the input cell.
-        positions = unitcell.get_scaled_positions()
-        numbers = unitcell.get_atomic_numbers()
-        masses = unitcell.get_masses()
-        magmoms = unitcell.get_magnetic_moments()
-        lattice = unitcell.get_cell()
-
-        atom_map = []
-        positions_multi = []
-        numbers_multi = []
-        if masses is None:
-            masses_multi = None
-        else:
-            masses_multi = []
-        if magmoms is None:
-            magmoms_multi = None
-        else:
-            magmoms_multi = []
-        for l, pos in enumerate(positions):
-            for i in range(multi[2]):
-                for j in range(multi[1]):
-                    for k in range(multi[0]):
-                        positions_multi.append([(pos[0] + k) / multi[0],
-                                                (pos[1] + j) / multi[1],
-                                                (pos[2] + i) / multi[2]])
-                        numbers_multi.append(numbers[l])
-                        if masses is not None:
-                            masses_multi.append(masses[l])
-                        atom_map.append(l)
-                        if magmoms is not None:
-                            magmoms_multi.append(magmoms[l])
-
-        simple_supercell = Atoms(numbers=numbers_multi,
-                                 masses=masses_multi,
-                                 magmoms=magmoms_multi,
-                                 scaled_positions=positions_multi,
-                                 cell=np.dot(np.diag(multi), lattice),
-                                 pbc=True)
-
-        return simple_supercell, atom_map
 
 class Primitive(Atoms):
     def __init__(self, supercell, primitive_matrix, symprec=1e-5):
