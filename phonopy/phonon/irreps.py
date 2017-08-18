@@ -42,7 +42,12 @@ from phonopy.harmonic.derivative_dynmat import DerivativeOfDynamicalMatrix
 # from Wikipedia http://en.wikipedia.org/wiki/List_of_character_tables_for_chemically_important_3D_point_groups
 character_table = {
     # C1 (1)
-    '1': None,
+    '1': 
+    [{'rotation_list': ('E'),
+      'character_table': {'A' : ( 1 )},
+      'mapping_table': {'E': ((( 1, 0, 0 ),
+                                 ( 0, 1, 0 ),
+                                 ( 0, 0, 1 )),)}}],
 
     # Ci (2)
     '-1': 
