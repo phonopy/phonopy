@@ -223,7 +223,7 @@ class Supercell(Atoms):
         frame = [max(axes[:,i]) - min(axes[:,i]) for i in (0,1,2)]
         return frame
 
-    def _get_simple_supercell(self, multi, unitcell):
+    def _get_simple_supercell(self, multi, unitcell, SNF_Pmat=None):
         # Scaled positions within the frame, i.e., create a supercell that
         # is made simply to multiply the input cell.
         positions = unitcell.get_scaled_positions()
@@ -341,29 +341,6 @@ class Primitive(Atoms):
             supercell, self, self._symprec)
 
 #
-# Get distance between a pair of atoms
-#
-def get_distance(cell, a0, a1, tolerance=1e-5):
-    """
-    Return the shortest distance between a pair of atoms in PBC
-    """
-    reduced_bases = get_reduced_bases(cell.get_cell(), tolerance)
-    scaled_pos = np.dot(cell.get_positions(), np.linalg.inv(reduced_bases))
-    # move scaled atomic positions into -0.5 < r <= 0.5
-    for pos in scaled_pos:
-        pos -= np.rint(pos)
-
-    # Look for the shortest one in surrounded 3x3x3 cells
-    distances = []
-    for i in (-1, 0, 1):
-        for j in (-1, 0, 1):
-            for k in (-1, 0, 1):
-                distances.append(np.linalg.norm(
-                        np.dot(scaled_pos[a0] - scaled_pos[a1] + [i, j, k],
-                               reduced_bases)))
-    return min(distances)
-
-#
 # Delaunay reduction
 #
 def get_reduced_bases(lattice,
@@ -381,72 +358,6 @@ def get_reduced_bases(lattice,
         return spg.niggli_reduce(lattice, eps=tolerance)
     else:
         return spg.delaunay_reduce(lattice, eps=tolerance)
-
-def get_Delaunay_reduction(lattice, tolerance):
-    """
-    This is an implementation of Delaunay reduction.
-    Some information is found in International table.
-    This method is obsoleted and should not be used.
-
-    lattice: row vectors
-    return lattice: row vectors
-    """
-
-    extended_bases = np.zeros((4, 3), dtype='double')
-    extended_bases[:3, :] = lattice
-    extended_bases[3] = -np.sum(lattice, axis=0)
-
-    for i in range(100):
-        if _reduce_bases(extended_bases, tolerance):
-            break
-    if i == 99:
-        print("Delaunary reduction was failed.")
-
-    shortest = _get_shortest_bases_from_extented_bases(extended_bases,
-                                                       tolerance)
-
-    return shortest
-
-def _reduce_bases(extended_bases, tolerance):
-    metric = np.dot(extended_bases, extended_bases.T)
-    for i in range(4):
-        for j in range(i+1, 4):
-            if metric[i][j] > tolerance:
-                for k in range(4):
-                    if (k != i) and (k != j):
-                        extended_bases[k] += extended_bases[i]
-                extended_bases[i] = -extended_bases[i]
-                extended_bases[j] = extended_bases[j]
-                return False
-
-    # Reduction is completed.
-    # All non diagonal elements of metric tensor is negative.
-    return True
-
-def _get_shortest_bases_from_extented_bases(extended_bases, tolerance):
-
-    def mycmp(x, y):
-        return cmp(np.vdot(x, x), np.vdot(y, y))
-
-    basis = np.zeros((7, 3), dtype='double')
-    basis[:4] = extended_bases
-    basis[4]  = extended_bases[0] + extended_bases[1]
-    basis[5]  = extended_bases[1] + extended_bases[2]
-    basis[6]  = extended_bases[2] + extended_bases[0]
-    # Sort bases by the lengthes (shorter is earlier)
-    basis = sorted(basis, key=lambda vec: (vec ** 2).sum())
-
-    # Choose shortest and linearly independent three bases
-    # This algorithm may not be perfect.
-    for i in range(7):
-        for j in range(i + 1, 7):
-            for k in range(j + 1, 7):
-                if abs(np.linalg.det(
-                        [basis[i], basis[j], basis[k]])) > tolerance:
-                    return np.array([basis[i], basis[j], basis[k]])
-
-    print("Delaunary reduction is failed.")
-    return np.array(basis[:3], dtype='double')
 
 #
 # Shortest pairs of atoms in supercell (Wigner-Seitz like)
@@ -643,3 +554,261 @@ def determinant(m):
             m[0][1] * m[1][0] * m[2][2] +
             m[0][2] * m[1][0] * m[2][1] -
             m[0][2] * m[1][1] * m[2][0])
+
+#
+# Smith normal form for 3x3 integer matrix
+# This code is maintained at https://github.com/atztogo/snf3x3.
+#
+class SNF3x3(object):
+    def __init__(self, A):
+        self._A_orig = np.array(A, dtype='intc')
+        self._A = np.array(A, dtype='intc')
+        self._Ps = []
+        self._Qs = []
+        self._L = []
+        self._P = None
+        self._Q = None
+        self._attempt = 0
+
+    def run(self):
+        for i in self:
+            pass
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        self._attempt += 1
+        if self._first():
+            if self._second():
+                self._set_PQ()
+                raise StopIteration
+        return self._attempt
+
+    def next(self):
+        self.__next__()
+
+    @property
+    def A(self):
+        return self._A.copy()
+
+    @property
+    def P(self):
+        return self._P.copy()
+
+    @property
+    def Q(self):
+        return self._Q.copy()
+
+    def _set_PQ(self):
+        if np.linalg.det(self._A) < 0:
+            for i in range(3):
+                if self._A[i, i] < 0:
+                    self._flip_sign_row(i)
+            self._Ps += self._L
+            self._L = []
+
+        P = np.eye(3, dtype='intc')
+        for _P in self._Ps:
+            P = np.dot(_P, P)
+        Q = np.eye(3, dtype='intc')
+        for _Q in self._Qs:
+            Q = np.dot(Q, _Q.T)
+
+        if np.linalg.det(P) < 0:
+            P = -P
+            Q = -Q
+
+        self._P = P
+        self._Q = Q
+
+    def _first(self):
+        self._first_one_loop()
+        A = self._A
+        if A[1, 0] == 0 and A[2, 0] == 0:
+            return True
+        elif A[1, 0] % A[0, 0] == 0 and A[2, 0] % A[0, 0] == 0:
+            self._first_finalize()
+            self._Ps += self._L
+            self._L = []
+            return True
+        else:
+            return False
+
+    def _first_one_loop(self):
+        self._first_column()
+        self._Ps += self._L
+        self._L = []
+        self._A = self._A.T
+        self._first_column()
+        self._Qs += self._L
+        self._L = []
+        self._A = self._A.T
+
+    def _first_column(self):
+        i = self._search_first_pivot()
+        if i > 0:
+            self._swap_rows(0, i)
+
+        if self._A[1, 0] != 0:
+            self._zero_first_column(1)
+        if self._A[2, 0] != 0:
+            self._zero_first_column(2)
+
+    def _zero_first_column(self, j):
+        if self._A[j, 0] < 0:
+            self._flip_sign_row(j)
+        A = self._A
+        r, s, t = xgcd([A[0, 0], A[j, 0]])
+        self._set_zero(0, j, A[0, 0], A[j, 0], r, s, t)
+
+    def _search_first_pivot(self):
+        A = self._A
+        for i in range(3): # column index
+            if A[i, 0] != 0:
+                return i
+
+    def _first_finalize(self):
+        """Set zeros along the first colomn except for A[0, 0]
+
+        This is possible only when A[1,0] and A[2,0] are dividable by A[0,0].
+
+        """
+
+        A = self._A
+        L = np.eye(3, dtype='intc')
+        L[1, 0] = -A[1, 0] // A[0, 0]
+        L[2, 0] = -A[2, 0] // A[0, 0]
+        self._L.append(L.copy())
+        self._A = np.dot(L, self._A)
+
+    def _second(self):
+        """Find Smith normal form for Right-low 2x2 matrix"""
+
+        self._second_one_loop()
+        A = self._A
+        if A[2, 1] == 0:
+            return True
+        elif A[2, 1] % A[1, 1] == 0:
+            self._second_finalize()
+            self._Ps += self._L
+            self._L = []
+            return True
+        else:
+            return False
+
+    def _second_one_loop(self):
+        self._second_column()
+        self._Ps += self._L
+        self._L = []
+        self._A = self._A.T
+        self._second_column()
+        self._Qs += self._L
+        self._L = []
+        self._A = self._A.T
+
+    def _second_column(self):
+        """Right-low 2x2 matrix
+
+        Assume elements in first row and column are all zero except for A[0,0].
+
+        """
+
+        if self._A[1, 1] == 0 and self._A[2, 1] != 0:
+            self._swap_rows(1, 2)
+
+        if self._A[2, 1] != 0:
+            self._zero_second_column()
+
+    def _zero_second_column(self):
+        if self._A[2, 1] < 0:
+            self._flip_sign_row(2)
+        A = self._A
+        r, s, t = xgcd([A[1, 1], A[2, 1]])
+        self._set_zero(1, 2, A[1, 1], A[2, 1], r, s, t)
+
+    def _second_finalize(self):
+        """Set zero at A[2, 1]
+
+        This is possible only when A[2,1] is dividable by A[1,1].
+
+        """
+
+        A = self._A
+        L = np.eye(3, dtype='intc')
+        L[2, 1] = -A[2, 1] // A[1, 1]
+        self._L.append(L.copy())
+        self._A = np.dot(L, self._A)
+
+    def _swap_rows(self, i, j):
+        """Swap i and j rows
+
+        As the side effect, determinant flips.
+
+        """
+
+        L = np.eye(3, dtype='intc')
+        L[i, i] = 0
+        L[j, j] = 0
+        L[i, j] = 1
+        L[j, i] = 1
+        self._L.append(L.copy())
+        self._A = np.dot(L, self._A)
+
+    def _flip_sign_row(self, i):
+        """Multiply -1 for all elements in row"""
+
+        L = np.eye(3, dtype='intc')
+        L[i, i] = -1
+        self._L.append(L.copy())
+        self._A = np.dot(L, self._A)
+
+    def _set_zero(self, i, j, a, b, r, s, t):
+        """Let A[i, j] be zero based on Bezout's identity
+
+           [ii ij]
+           [ji jj] is a (k,k) minor of original 3x3 matrix.
+
+        """
+
+        L = np.eye(3, dtype='intc')
+        L[i, i] = s
+        L[i, j] = t
+        L[j, i] = -b // r
+        L[j, j] = a // r
+        self._L.append(L.copy())
+        self._A = np.dot(L, self._A)
+
+def xgcd(vals):
+    _xgcd = Xgcd(vals)
+    return _xgcd.run()
+
+class Xgcd(object):
+    def __init__(self, vals):
+        self._vals = np.array(vals, dtype='intc')
+
+    def run(self):
+        r0, r1 = self._vals
+        s0 = 1
+        s1 = 0
+        t0 = 0
+        t1 = 1
+        for i in range(1000):
+            r0, r1, s0, s1, t0, t1 = self._step(r0, r1, s0, s1, t0, t1)
+            if r1 == 0:
+                break
+        self._rst = np.array([r0, s0, t0], dtype='intc')
+        return self._rst
+
+    def _step(self, r0, r1, s0, s1, t0, t1):
+        q, m = divmod(r0, r1)
+        r2 = m
+        s2 = s0 - q * s1
+        t2 = t0 - q * t1
+        return r1, r2, s1, s2, t1, t2
+
+    def __str__(self):
+        v = self._vals
+        r, s, t = self._rst
+        return "%d = %d * (%d) + %d * (%d)" % (r, v[0], s, v[1], t)
+
