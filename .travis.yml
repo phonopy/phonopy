@@ -35,7 +35,7 @@ script:
 deploy:
     # testing pypi
     - provider: pypi
-      server: https://testpypi.python.org/pypi
+      server: https://test.pypi.org/legacy/
       skip_cleanup: true
       distributions: sdist
       user: atztogo
