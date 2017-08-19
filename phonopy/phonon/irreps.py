@@ -46,8 +46,8 @@ character_table = {
     [{'rotation_list': ('E'),
       'character_table': {'A' : ( 1 )},
       'mapping_table': {'E': ((( 1, 0, 0 ),
-                                 ( 0, 1, 0 ),
-                                 ( 0, 0, 1 )),)}}],
+                               ( 0, 1, 0 ),
+                               ( 0, 0, 1 )),)}}],
 
     # Ci (2)
     '-1': 
