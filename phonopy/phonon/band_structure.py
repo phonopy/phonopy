@@ -123,6 +123,30 @@ class BandStructure(object):
         pyplot.xlim(0, self._distance)
         pyplot.axhline(y=0, linestyle=':', linewidth=0.5, color='b')
 
+    def write_hdf5(self, labels=None, comment=None, filename="band.hdf5"):
+        import h5py
+        with h5py.File(filename, 'w') as w:
+            w.create_dataset('path', data=self._paths)
+            w.create_dataset('distance', data=self._distances)
+            w.create_dataset('frequency', data=self._frequencies)
+            if self._eigenvectors is not None:
+                w.create_dataset('eigenvector', data=self._eigenvectors)
+            if self._group_velocities is not None:
+                w.create_dataset('group_velocity', data=self._group_velocities)
+            if comment:
+                for key in comment:
+                    if key not in ('path',
+                                   'distance',
+                                   'frequency',
+                                   'eigenvector',
+                                   'group_velocity'):
+                        w.create_dataset(key, data=np.string_(comment[key]))
+            if labels:
+                maxlen = max([len(l) for l in labels])
+                dset = w.create_dataset('label', (len(labels),), dtype='S10')
+                for i, l in enumerate(labels):
+                    dset[i] = np.string_(l)
+
     def write_yaml(self, labels=None, comment=None, filename="band.yaml"):
         with open(filename, 'w') as w:
             natom = self._cell.get_number_of_atoms()
