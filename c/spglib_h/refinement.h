@@ -53,5 +53,4 @@ Cell * ref_get_Wyckoff_positions(int * wyckoffs,
                                  const Symmetry * symmetry,
                                  const int * mapping_table,
                                  const double symprec);
-
 #endif

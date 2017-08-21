@@ -253,7 +253,7 @@ static int set_exact_location(double position[3],
   double sum_rot[3][3];
   double pos[3], sum_trans[3];
 
-  debug_print("get_exact_location\n");
+  debug_print("set_exact_location\n");
 
   num_sum = 0;
   for (i = 0; i < 3; i++) {
