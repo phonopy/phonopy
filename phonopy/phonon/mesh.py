@@ -182,8 +182,9 @@ class Mesh(object):
         self._eigenvalues = np.zeros((num_qpoints, num_band), dtype='double')
         self._frequencies = np.zeros_like(self._eigenvalues)
         if self._is_eigenvectors or self._use_lapack_solver:
+            dtype = "c%d" % (np.dtype('double').itemsize * 2)
             self._eigenvectors = np.zeros(
-                (num_qpoints, num_band, num_band,), dtype='complex128')
+                (num_qpoints, num_band, num_band,), dtype=dtype)
 
         if self._use_lapack_solver:
             from phono3py.phonon.solver import get_phonons_at_qpoints

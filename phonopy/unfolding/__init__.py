@@ -138,7 +138,8 @@ class Unfolding(object):
 
     def _get_unfolding_weight(self):
         eigvecs = self._eigvecs[self._q_index]
-        weights = np.zeros((eigvecs.shape[0], self._N), dtype='complex128')
+        dtype = "c%d" % (np.dtype('double').itemsize * 2)
+        weights = np.zeros((eigvecs.shape[0], self._N), dtype=dtype)
         for shift, indices in zip(self._trans_p, self._index_set):
             dot_eigs = np.einsum(
                 'ij,ij->j', eigvecs.conj(), eigvecs[indices, :])
