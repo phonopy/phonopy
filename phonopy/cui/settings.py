@@ -712,17 +712,17 @@ class ConfParser(object):
                     else:
                         self.set_parameter('supercell_matrix', matrix)
 
-            if conf_key == 'primitive_axis':
-                if not len(confs['primitive_axis'].split()) == 9:
-                    self.setting_error(
-                        "Number of elements in PRIMITIVE_AXIS has to be 9.")
+            if conf_key in ('primitive_axis', 'primitive_axes'):
+                if not len(confs[conf_key].split()) == 9:
+                    self.setting_error("Number of elements in %s has to be 9." %
+                                       conf_key.upper())
                 p_axis = []
-                for x in confs['primitive_axis'].split():
+                for x in confs[conf_key].split():
                     p_axis.append(fracval(x))
                 p_axis = np.array(p_axis).reshape(3,3)
                 if np.linalg.det(p_axis) < 1e-8:
-                    self.setting_error(
-                        "PRIMITIVE_AXIS has to have positive determinant.")
+                    self.setting_error("%s has to have positive determinant." %
+                                       conf_key.upper())
                 self.set_parameter('primitive_axis', p_axis)
 
             if conf_key == 'mass':
