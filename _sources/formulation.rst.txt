@@ -1,15 +1,14 @@
 .. _formulations:
 
-==============
- Formulations
-==============
+Formulations
+=============
 
 .. contents::
    :depth: 2
    :local:
 
 Second-order force constants
-============================
+-----------------------------
 
 Potential energy of phonon system is represented as functions of atomic
 positions:
@@ -55,7 +54,7 @@ usually :math:`F_\beta(j'l') \equiv 0`.
 .. _force_constants_solver_theory:
    
 Modified Parlinski-Li-Kawazoe method
-====================================
+-------------------------------------
 
 The following is a modified and simplified version of the
 Parlinski-Li-Kawazoe method, which is just a numerical fitting
@@ -168,11 +167,12 @@ site-symmetry operations. This is solved by pseudo inverse.
 .. _dynacmial_matrix_theory:
 
 Dynamical matrix
-================
+-----------------
 
 In phonopy, a phase convention of dynamical matrix is used as follows:
 
 .. math::
+   :label: eq_dynmat
 
    D_{\alpha\beta}(jj',\mathbf{q}) = \frac{1}{\sqrt{m_j m_{j'}}}
     \sum_{l'}
@@ -215,7 +215,7 @@ constant, and :math:`t` is the time.
 .. _non_analytical_term_correction_theory:
 
 Non-analytical term correction
-==============================
+-------------------------------
 
 To correct long range interaction of macroscopic electric field
 induced by polarization of collective ionic motions near the
@@ -240,17 +240,17 @@ method of Wang *et al.* (:ref:`reference_wang_NAC`).
 .. _thermal_properties_expressions:
 
 Thermodynamic properties
-========================
+-------------------------
 
 Phonon number
--------------
+~~~~~~~~~~~~~~
 
 .. math::
 
    n = \frac{1}{\exp(\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B} T)-1}
 
 Harmonic phonon energy
-----------------------
+~~~~~~~~~~~~~~~~~~~~~~~
 
 .. math::
 
@@ -259,7 +259,7 @@ Harmonic phonon energy
 
 
 Constant volume heat capacity
------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. math::
 
@@ -270,7 +270,7 @@ Constant volume heat capacity
     T)}{[\exp(\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B} T)-1]^2} 
 
 Partition function
-------------------
+~~~~~~~~~~~~~~~~~~~
 
 .. math::
 
@@ -279,7 +279,7 @@ Partition function
     T)}{1-\exp(-\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B} T)} 
 
 Helmholtz free energy
----------------------
+~~~~~~~~~~~~~~~~~~~~~~
 
 .. math::
 
@@ -289,7 +289,7 @@ Helmholtz free energy
     \bigl[1 -\exp(-\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B} T) \bigr] 
 
 Entropy
--------
+~~~~~~~~
 
 .. math::
 
@@ -297,14 +297,14 @@ Entropy
       &= \frac{1}{2T}\sum_{\mathbf{q}\nu}\hbar\omega(\mathbf{q}\nu)\coth(\hbar\omega(\mathbf{q}\nu)/2k_\mathrm{B}T)-k_\mathrm{B} \sum_{\mathbf{q}\nu}\ln\left[2\sinh(\hbar\omega(\mathbf{q}\nu)/2k_\mathrm{B}T)\right]
 
 Thermal displacement
-====================
+---------------------
 
 .. toctree::
 
    thermal-displacement
 
 Group velocity
-==============
+---------------
 
 .. toctree::
 
@@ -313,7 +313,7 @@ Group velocity
 .. _physical_unit_conversion:
 
 Physical unit conversion
-=========================
+-------------------------
 
 Phonopy calculates phonon frequencies based on input values from
 users. In the default case, the physical units of distance, atomic
@@ -360,8 +360,57 @@ systems employed in phonopy (:ref:`calculator_interfaces`).
       
 .. _definition_of_commensurate_points:
 
+Crystal structure
+------------------
+
+Coordinates in direct and reciprocal spaces
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+As usual, in phonopy, the Born-von Karman boundary condition is
+assumed. Basis vectors of a primitive lattice are defined in three
+column vectors :math:`( \mathbf{a} \; \mathbf{b} \; \mathbf{c}
+)`. Coordinates of a point in the direct space :math:`\mathbf{r}` is
+represented with respect to these basis vectors, therefore :math:`x
+\mathbf{a} + y \mathbf{b} + z \mathbf{a}`, where :math:`0 \le x, y, z
+< 1`.  Basis vectors of the reciprocal lattice may be given by three
+row vectors, :math:`( \mathbf{a}^{*T} /\; \mathbf{b}^{*T} /\;
+\mathbf{c}^{*T} )`, but here they are defined as three column vectors
+as :math:`( \mathbf{a}^{*} \; \mathbf{b}^{*} \; \mathbf{c}^{*} )`
+
+.. math::
+   :label: eq_rec_basis_vectors
+
+   \mathbf{a}^{*} &= \frac{\mathbf{b} \times \mathbf{c}}{\mathbf{a} \cdot
+   (\mathbf{b} \times \mathbf{c})}, \\
+   \mathbf{b}^{*} &= \frac{\mathbf{c} \times \mathbf{a}}{\mathbf{b} \cdot
+   (\mathbf{c} \times \mathbf{a})}, \\
+   \mathbf{c}^{*} &= \frac{\mathbf{a} \times \mathbf{b}}{\mathbf{c} \cdot
+   (\mathbf{a} \times \mathbf{b})}.
+
+Coordinates of a point in the reciprocal space :math:`\mathbf{q}` is
+represented with respect to these basis vectors, therefore :math:`q_x
+\mathbf{a}^{*} + q_y \mathbf{b}^{*} + q_z \mathbf{c}^{*}`. Following
+these definition, phase factor should be represented as
+:math:`\exp(2\pi i\mathbf{q}\cdot\mathbf{r})`, however in phonopy
+documentation, :math:`2\pi` is implicitly included and not shown,
+i.e., it is represented like :math:`\exp(i\mathbf{q}\cdot\mathbf{r})`
+(e.g., see Eq. :eq:`eq_dynmat`). In the output of the reciprocal basis
+vectors, :math:`2\pi` is not included, e.g., in ``band.yaml``.
+
+In phonopy, unless :ref:`primitive_axis_tag` (or ``--pa`` option) is
+specified, basis vectors in direct space :math:`( \mathbf{a} \;
+\mathbf{b} \; \mathbf{c})` are set from the input unit celll structure
+even if it is a supercell or a conventional unit cell having centring,
+therefore the basis vectors in the reciprocal space are given by
+Eq. :eq:`eq_rec_basis_vectors`. When using :ref:`primitive_axis_tag`,
+:math:`( \mathbf{a} \; \mathbf{b} \; \mathbf{c})` are transformed as
+written at :ref:`primitive_axis_tag`, therefore :math:`(
+\mathbf{a}^{*} \; \mathbf{b}^{*} \; \mathbf{c}^{*} )` are also
+modified by those calculated following Eq. :eq:`eq_rec_basis_vectors` with
+the transformed :math:`( \mathbf{a} \; \mathbf{b} \; \mathbf{c})`.
+
 Commensurate points
-====================
+~~~~~~~~~~~~~~~~~~~~
 
 In phonopy, so-called commensurate points mean the q-points whose waves are
 confined in the supercell used in the phonon calculation.
@@ -399,7 +448,7 @@ formulate. Formally we see the set of besis vectors are :math:`3\times
 .. math::
 
    ( \mathbf{a}^*_\mathrm{p} \;
-   \mathbf{b}^*_\mathrm{p} \; \mathbf{c}^*_\mathrm{p} ) = 2\pi (
+   \mathbf{b}^*_\mathrm{p} \; \mathbf{c}^*_\mathrm{p} ) = (
    \mathbf{a}_\mathrm{p} \; \mathbf{b}_\mathrm{p} \;
    \mathbf{c}_\mathrm{p} )^{-\mathbf{T}}.
 
@@ -408,7 +457,7 @@ Similarly for the supercell, we define a relation
 .. math::
 
    ( \mathbf{a}^*_\mathrm{s} \;
-   \mathbf{b}^*_\mathrm{s} \; \mathbf{c}^*_\mathrm{s} ) = 2\pi (
+   \mathbf{b}^*_\mathrm{s} \; \mathbf{c}^*_\mathrm{s} ) = (
    \mathbf{a}_\mathrm{s} \; \mathbf{b}_\mathrm{s} \;
    \mathbf{c}_\mathrm{s} )^{-\mathbf{T}}.
 

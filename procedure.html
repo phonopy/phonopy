@@ -1,16 +1,13 @@
 <!DOCTYPE html>
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
     <title>VASP &amp; phonopy calculation &#8212; Phonopy v.1.11.12</title>
     
-    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="_static/bootswatch-3.3.6/cosmo/bootstrap.min.css" type="text/css" />
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
@@ -25,7 +22,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
@@ -40,7 +37,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 
   </head>
-  <body role="document">
+  <body>
 
   <div id="navbar" class="navbar navbar-default navbar-fixed-top">
     <div class="container">
@@ -256,7 +253,7 @@ Thermal properties can be plotted by:</p>
 </pre></div>
 </div>
 <p>In either case, by setting the <code class="docutils literal"><span class="pre">-s</span></code> option, the plot is going to be saved in the PDF
-format. If you don&#8217;t need to plot DOS, the (partial) DOS
+format. If you don’t need to plot DOS, the (partial) DOS
 is just calculated using the <code class="docutils literal"><span class="pre">--dos</span></code> option.</p>
 </div>
 <div class="section" id="non-analytical-term-correction-optional">
@@ -332,14 +329,14 @@ those for the other calculators.</p>
 supercell contains one atomic displacement. It is done by using
 <code class="docutils literal"><span class="pre">-d</span></code> option with <code class="docutils literal"><span class="pre">--dim</span></code> option that specifies supercell
 dimension.  The files of supercells with atomic displacements like
-as <code class="docutils literal"><span class="pre">POSCAR-001</span></code>, <code class="docutils literal"><span class="pre">POSCAR-002</span></code>, ..., (*) are created in current
+as <code class="docutils literal"><span class="pre">POSCAR-001</span></code>, <code class="docutils literal"><span class="pre">POSCAR-002</span></code>, …, (*) are created in current
 directory by running phonopy. The files <code class="docutils literal"><span class="pre">disp.yaml</span></code> and
 <code class="docutils literal"><span class="pre">SPOSCAR</span></code> are also created. The file <code class="docutils literal"><span class="pre">SPOSCAR</span></code> is the perfect
 supercell that contains no atomic displacement. This file is not
 usually used.</li>
 <li>Calculate forces on atoms of the supercells with atomic
 displacements. After obtaining forces on atoms that calculated by
-some calculator (it&#8217;s out of phonopy), the forces are summarized in
+some calculator (it’s out of phonopy), the forces are summarized in
 <code class="docutils literal"><span class="pre">FORCE_SETS</span></code> file following the <a class="reference internal" href="input-files.html#file-forces"><span class="std std-ref">format</span></a>.</li>
 <li>Calculate phonon related properties. See <a class="reference internal" href="introduction.html#analyze-phonon"><span class="std std-ref">Features</span></a>.</li>
 </ol>
@@ -372,7 +369,7 @@ constants is prepared in phonopy.</p>
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.4.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.2.<br/>
     </p>
   </div>
 </footer>
