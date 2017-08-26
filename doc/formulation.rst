@@ -403,11 +403,12 @@ specified, basis vectors in direct space :math:`( \mathbf{a} \;
 even if it is a supercell or a conventional unit cell having centring,
 therefore the basis vectors in the reciprocal space are given by
 Eq. :eq:`eq_rec_basis_vectors`. When using :ref:`primitive_axis_tag`,
-:math:`( \mathbf{a} \; \mathbf{b} \; \mathbf{c})` are transformed as
-written at :ref:`primitive_axis_tag`, therefore :math:`(
-\mathbf{a}^{*} \; \mathbf{b}^{*} \; \mathbf{c}^{*} )` are also
-modified by those calculated following Eq. :eq:`eq_rec_basis_vectors` with
-the transformed :math:`( \mathbf{a} \; \mathbf{b} \; \mathbf{c})`.
+:math:`( \mathbf{a} \; \mathbf{b} \; \mathbf{c})` are set from those
+transformed by the transformation matrix :math:`M_\text{p}` as written
+at :ref:`primitive_axis_tag`, therefore :math:`( \mathbf{a}^{*} \;
+\mathbf{b}^{*} \; \mathbf{c}^{*} )` are given by those calculated
+following Eq. :eq:`eq_rec_basis_vectors` with this :math:`( \mathbf{a}
+\; \mathbf{b} \; \mathbf{c})`.
 
 Commensurate points
 ~~~~~~~~~~~~~~~~~~~~
