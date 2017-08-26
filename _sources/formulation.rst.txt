@@ -370,12 +370,16 @@ As usual, in phonopy, the Born-von Karman boundary condition is
 assumed. Basis vectors of a primitive lattice are defined in three
 column vectors :math:`( \mathbf{a} \; \mathbf{b} \; \mathbf{c}
 )`. Coordinates of a point in the direct space :math:`\mathbf{r}` is
-represented with respect to these basis vectors, therefore :math:`x
-\mathbf{a} + y \mathbf{b} + z \mathbf{a}`, where :math:`0 \le x, y, z
-< 1`.  Basis vectors of the reciprocal lattice may be given by three
-row vectors, :math:`( \mathbf{a}^{*T} /\; \mathbf{b}^{*T} /\;
-\mathbf{c}^{*T} )`, but here they are defined as three column vectors
-as :math:`( \mathbf{a}^{*} \; \mathbf{b}^{*} \; \mathbf{c}^{*} )`
+represented with respect to these basis vectors. The direct lattice
+points are given by :math:`i
+\mathbf{a} + j \mathbf{b} + k \mathbf{a}, \{i,
+j, k \in \mathbb{Z}\}`, and the points for atoms in a unit cell :math:`x
+\mathbf{a} + y \mathbf{b} + z \mathbf{a}, \{0 \le x, y, z
+< 1\}`. Basis vectors of the reciprocal
+lattice may be given by three row vectors, :math:`( \mathbf{a}^{*T}
+/\; \mathbf{b}^{*T} /\; \mathbf{c}^{*T} )`, but here they are defined
+as three column vectors as :math:`( \mathbf{a}^{*} \; \mathbf{b}^{*}
+\; \mathbf{c}^{*} )` with
 
 .. math::
    :label: eq_rec_basis_vectors
@@ -389,13 +393,16 @@ as :math:`( \mathbf{a}^{*} \; \mathbf{b}^{*} \; \mathbf{c}^{*} )`
 
 Coordinates of a point in the reciprocal space :math:`\mathbf{q}` is
 represented with respect to these basis vectors, therefore :math:`q_x
-\mathbf{a}^{*} + q_y \mathbf{b}^{*} + q_z \mathbf{c}^{*}`. Following
-these definition, phase factor should be represented as
-:math:`\exp(2\pi i\mathbf{q}\cdot\mathbf{r})`, however in phonopy
-documentation, :math:`2\pi` is implicitly included and not shown,
-i.e., it is represented like :math:`\exp(i\mathbf{q}\cdot\mathbf{r})`
-(e.g., see Eq. :eq:`eq_dynmat`). In the output of the reciprocal basis
-vectors, :math:`2\pi` is not included, e.g., in ``band.yaml``.
+\mathbf{a}^{*} + q_y \mathbf{b}^{*} + q_z \mathbf{c}^{*}`. The
+reciprocal lattice points are given by :math:`G_x\mathbf{a}^{*} + G_y
+\mathbf{b}^{*} + G_z \mathbf{c}^{*}, \{G_x,
+G_y, G_z \in \mathbb{Z}\}`. Following these definition, phase
+factor should be represented as :math:`\exp(2\pi
+i\mathbf{q}\cdot\mathbf{r})`, however in phonopy documentation,
+:math:`2\pi` is implicitly included and not shown, i.e., it is
+represented like :math:`\exp(i\mathbf{q}\cdot\mathbf{r})` (e.g., see
+Eq. :eq:`eq_dynmat`). In the output of the reciprocal basis vectors,
+:math:`2\pi` is not included, e.g., in ``band.yaml``.
 
 In phonopy, unless :ref:`primitive_axis_tag` (or ``--pa`` option) is
 specified, basis vectors in direct space :math:`( \mathbf{a} \;

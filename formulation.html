@@ -467,12 +467,16 @@ systems employed in phonopy (<a class="reference internal" href="interfaces.html
 assumed. Basis vectors of a primitive lattice are defined in three
 column vectors <span class="math">\(( \mathbf{a} \; \mathbf{b} \; \mathbf{c}
 )\)</span>. Coordinates of a point in the direct space <span class="math">\(\mathbf{r}\)</span> is
-represented with respect to these basis vectors, therefore <span class="math">\(x
-\mathbf{a} + y \mathbf{b} + z \mathbf{a}\)</span>, where <span class="math">\(0 \le x, y, z
-&lt; 1\)</span>.  Basis vectors of the reciprocal lattice may be given by three
-row vectors, <span class="math">\(( \mathbf{a}^{*T} /\; \mathbf{b}^{*T} /\;
-\mathbf{c}^{*T} )\)</span>, but here they are defined as three column vectors
-as <span class="math">\(( \mathbf{a}^{*} \; \mathbf{b}^{*} \; \mathbf{c}^{*} )\)</span></p>
+represented with respect to these basis vectors. The direct lattice
+points are given by <span class="math">\(i
+\mathbf{a} + j \mathbf{b} + k \mathbf{a}, \{i,
+j, k \in \mathbb{Z}\}\)</span>, and the points for atoms in a unit cell <span class="math">\(x
+\mathbf{a} + y \mathbf{b} + z \mathbf{a}, \{0 \le x, y, z
+&lt; 1\}\)</span>. Basis vectors of the reciprocal
+lattice may be given by three row vectors, <span class="math">\(( \mathbf{a}^{*T}
+/\; \mathbf{b}^{*T} /\; \mathbf{c}^{*T} )\)</span>, but here they are defined
+as three column vectors as <span class="math">\(( \mathbf{a}^{*} \; \mathbf{b}^{*}
+\; \mathbf{c}^{*} )\)</span> with</p>
 <div class="math" id="equation-eq_rec_basis_vectors">
 <span class="eqno">(2)<a class="headerlink" href="#equation-eq_rec_basis_vectors" title="Permalink to this equation">¶</a></span>\[\begin{split}\mathbf{a}^{*} &amp;= \frac{\mathbf{b} \times \mathbf{c}}{\mathbf{a} \cdot
 (\mathbf{b} \times \mathbf{c})}, \\
@@ -482,13 +486,16 @@ as <span class="math">\(( \mathbf{a}^{*} \; \mathbf{b}^{*} \; \mathbf{c}^{*} )\)
 (\mathbf{a} \times \mathbf{b})}.\end{split}\]</div>
 <p>Coordinates of a point in the reciprocal space <span class="math">\(\mathbf{q}\)</span> is
 represented with respect to these basis vectors, therefore <span class="math">\(q_x
-\mathbf{a}^{*} + q_y \mathbf{b}^{*} + q_z \mathbf{c}^{*}\)</span>. Following
-these definition, phase factor should be represented as
-<span class="math">\(\exp(2\pi i\mathbf{q}\cdot\mathbf{r})\)</span>, however in phonopy
-documentation, <span class="math">\(2\pi\)</span> is implicitly included and not shown,
-i.e., it is represented like <span class="math">\(\exp(i\mathbf{q}\cdot\mathbf{r})\)</span>
-(e.g., see Eq. <a class="reference internal" href="#equation-eq_dynmat">(1)</a>). In the output of the reciprocal basis
-vectors, <span class="math">\(2\pi\)</span> is not included, e.g., in <code class="docutils literal"><span class="pre">band.yaml</span></code>.</p>
+\mathbf{a}^{*} + q_y \mathbf{b}^{*} + q_z \mathbf{c}^{*}\)</span>. The
+reciprocal lattice points are given by <span class="math">\(G_x\mathbf{a}^{*} + G_y
+\mathbf{b}^{*} + G_z \mathbf{c}^{*}, \{G_x,
+G_y, G_z \in \mathbb{Z}\}\)</span>. Following these definition, phase
+factor should be represented as <span class="math">\(\exp(2\pi
+i\mathbf{q}\cdot\mathbf{r})\)</span>, however in phonopy documentation,
+<span class="math">\(2\pi\)</span> is implicitly included and not shown, i.e., it is
+represented like <span class="math">\(\exp(i\mathbf{q}\cdot\mathbf{r})\)</span> (e.g., see
+Eq. <a class="reference internal" href="#equation-eq_dynmat">(1)</a>). In the output of the reciprocal basis vectors,
+<span class="math">\(2\pi\)</span> is not included, e.g., in <code class="docutils literal"><span class="pre">band.yaml</span></code>.</p>
 <p>In phonopy, unless <a class="reference internal" href="setting-tags.html#primitive-axis-tag"><span class="std std-ref">PRIMITIVE_AXIS or PRIMITIVE_AXES</span></a> (or <code class="docutils literal"><span class="pre">--pa</span></code> option) is
 specified, basis vectors in direct space <span class="math">\(( \mathbf{a} \;
 \mathbf{b} \; \mathbf{c})\)</span> are set from the input unit celll structure
