@@ -185,6 +185,36 @@ class BandStructure(object):
             text.append('')
             w.write("\n".join(text))
 
+            # if multiple labels belong to one xtick
+            if not len(labels) == (len(self._paths) + 1):
+                newlabels = []
+                # first point
+                newlabels.append(labels[0])
+                del labels[0]
+                for i in range(len(self._paths)-1):
+                    if any(self._paths[i][-1] != self._paths[i+1][0]):
+                        newlabels.append('{} | {}'.format(labels[0], labels[1]))
+                        del labels[0]
+                        del labels[0]
+                    else:
+                        newlabels.append(labels[0])
+                        del labels[0]
+                if labels != []:
+                    newlabels.append(labels[0])
+                    del labels[0]
+                labels = newlabels
+
+            # Make Latex labels:
+            for i in range(len(labels)):
+                if labels[i] == 'GAMMA':
+                    labels[i] = '$\Gamma$'
+                elif labels[i] == 'DELTA':
+                    labels[i] = '$\Delta$'
+                elif labels[i] == 'SIGMA':
+                    labels[i] = '$\Sigma$'
+
+
+
             for i in range(len(self._paths)):
                 qpoints = self._paths[i]
                 distances = self._distances[i]
