@@ -183,7 +183,6 @@ class BandStructure(object):
             # Make Latex labels:
             for i in range(len(labels)):
                 if labels[i] == 'GAMMA':
-                    print 'saw GAMMA'
                     labels[i] = '$\Gamma$'
                 elif labels[i] == 'DELTA':
                     labels[i] = '$\Delta$'
