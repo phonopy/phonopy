@@ -87,7 +87,7 @@ class GridPoints(object):
                  is_time_reversal=True,
                  fit_in_BZ=True,
                  rotations=None, # Point group operations in real space
-                 is_mesh_symmetry=True):
+                 is_mesh_symmetry=True): # Except for time reversal symmetry
         self._mesh = np.array(mesh_numbers, dtype='intc')
         self._rec_lat = reciprocal_lattice
         self._is_shift = self._shift2boolean(q_mesh_shift,
@@ -133,7 +133,7 @@ class GridPoints(object):
                                  is_time_reversal=self._is_time_reversal)
         else:
             self._set_ir_qpoints([np.eye(3, dtype='intc')],
-                                 is_time_reversal=False)
+                                 is_time_reversal=self._is_time_reversal)
     
     def _shift2boolean(self,
                        q_mesh_shift,

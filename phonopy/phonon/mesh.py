@@ -61,7 +61,8 @@ class Mesh(object):
                               np.linalg.inv(self._cell.get_cell()),
                               q_mesh_shift=shift,
                               is_gamma_center=is_gamma_center,
-                              is_time_reversal=is_time_reversal,
+                              is_time_reversal=(is_time_reversal and
+                                                is_mesh_symmetry),
                               rotations=rotations,
                               is_mesh_symmetry=is_mesh_symmetry)
 
