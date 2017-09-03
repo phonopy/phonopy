@@ -47,7 +47,7 @@ def write_FORCE_SETS(dataset, filename='FORCE_SETS'):
     num_atom = dataset['natom']
     displacements = dataset['first_atoms']
     forces = [x['forces'] for x in dataset['first_atoms']]
-    
+
     # Write FORCE_SETS
     with open(filename, 'w') as fp:
         fp.write("%-5d\n" % num_atom)
@@ -55,7 +55,7 @@ def write_FORCE_SETS(dataset, filename='FORCE_SETS'):
         for count, disp in enumerate(displacements):
             fp.write("\n%-5d\n" % (disp['number'] + 1))
             fp.write("%20.16f %20.16f %20.16f\n" % (tuple(disp['displacement'])))
-    
+
             for f in forces[count]:
                 fp.write("%15.10f %15.10f %15.10f\n" % (tuple(f)))
 
@@ -93,7 +93,7 @@ def _get_set_of_forces(f, is_translational_invariance):
 
     dataset = {'natom': num_atom,
                'first_atoms': set_of_forces}
-    
+
     return dataset
 
 def _get_line_ignore_blank(f):
@@ -114,7 +114,7 @@ def collect_forces(f, num_atom, hook, force_pos, word=None):
         if word is not None:
             if word not in line:
                 continue
-            
+
         elems = line.split()
         if len(elems) > force_pos[2]:
             try:
@@ -139,7 +139,7 @@ def iter_collect_forces(filename,
     with open(filename) as f:
         forces = []
         prev_forces = []
-    
+
         for i in range(max_iter):
             forces = collect_forces(f, num_atom, hook, force_pos, word=word)
             if not forces:
@@ -147,13 +147,13 @@ def iter_collect_forces(filename,
                 break
             else:
                 prev_forces = forces[:]
-    
+
         if i == max_iter - 1:
             sys.stderr.write("Reached to max number of iterations (%d).\n" %
                              max_iter)
-            
+
         return forces
-    
+
 #
 # FORCE_CONSTANTS, force_constants.hdf5
 #
@@ -185,7 +185,7 @@ def parse_FORCE_CONSTANTS(filename="FORCE_CONSTANTS"):
                     tensor.append([float(x)
                                    for x in fcfile.readline().strip().split()])
                 force_constants[i, j] = np.array(tensor)
-    
+
         return force_constants
 
 def read_force_constants_hdf5(filename="force_constants.hdf5"):
@@ -202,7 +202,7 @@ def parse_disp_yaml(filename="disp.yaml", return_cell=False):
     except ImportError:
         print("You need to install python-yaml.")
         sys.exit(1)
-        
+
     try:
         from yaml import CLoader as Loader
     except ImportError:
@@ -228,7 +228,7 @@ def parse_disp_yaml(filename="disp.yaml", return_cell=False):
             else:
                 new_first_atoms.append({'number': atom1, 'displacement': disp1})
         new_dataset['first_atoms'] = new_first_atoms
-        
+
         if return_cell:
             lattice = dataset['lattice']
             if 'points' in dataset:
@@ -240,7 +240,7 @@ def parse_disp_yaml(filename="disp.yaml", return_cell=False):
             else:
                 data_key = None
                 pos_key = None
-            
+
             positions = [x[pos_key] for x in dataset[data_key]]
             symbols = [x['symbol'] for x in dataset[data_key]]
             cell = Atoms(cell=lattice,
@@ -251,7 +251,9 @@ def parse_disp_yaml(filename="disp.yaml", return_cell=False):
         else:
             return new_dataset
 
-def write_disp_yaml(displacements, supercell, directions=None,
+def write_disp_yaml(displacements,
+                    supercell,
+                    directions=None,
                     filename='disp.yaml'):
 
     text = []
@@ -343,7 +345,7 @@ def get_born_parameters(f, primitive, symmetry):
         print("BORN file format of line 2 is incorrect")
         return False
     dielectric = np.reshape([float(x) for x in line], (3, 3))
-    
+
     # Read Born effective charge
     independent_atoms = symmetry.get_independent_atoms()
     born = np.zeros((primitive.get_number_of_atoms(), 3, 3),
@@ -390,7 +392,7 @@ def get_born_parameters(f, primitive, symmetry):
     return non_anal
 
 #
-# e-v.dat, thermal_properties.yaml 
+# e-v.dat, thermal_properties.yaml
 #
 EQUIVALENCE_TOLERANCE = 1e-5
 def read_thermal_properties_yaml(filenames, factor=1.0):
@@ -456,7 +458,7 @@ def read_v_e(filename,
     volumes *= volume_factor * factor
     electronic_energies *= factor
     electronic_energies += volumes * pressure / EVAngstromToGPa
-    
+
     return volumes, electronic_energies
 
 def _is_temperatures_match(temperatures):
@@ -480,5 +482,3 @@ def _parse_QHA_data(filename):
             else:
                 data.append([float(x) for x in line.split()])
         return np.array(data).transpose()
-
-
