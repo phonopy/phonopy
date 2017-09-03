@@ -128,7 +128,8 @@ class VelocityQpoints(object):
         v = self._velocities
 
         q_array = np.reshape(q, (-1, 3))
-        v_q = np.zeros((v.shape[0], num_p, len(q_array), 3), dtype='complex128')
+        dtype = "c%d" % (np.dtype('double').itemsize * 2)
+        v_q = np.zeros((v.shape[0], num_p, len(q_array), 3), dtype=dtype)
 
         for p_i, s_i in enumerate(p2s):
             for s_j, s2p_j in enumerate(s2p):

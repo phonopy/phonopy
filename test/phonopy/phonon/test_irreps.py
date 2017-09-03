@@ -388,7 +388,7 @@ class TestIrreps(unittest.TestCase):
         pass
     
     def test_pt04_Pc(self):
-        data = np.loadtxt(StringIO(chars_Pc)).view(dtype='complex128')
+        data = self._load_data(chars_Pc)
         phonon = self._get_phonon("Pc", 
                                   [2, 2, 2],
                                   np.eye(3))
@@ -397,7 +397,7 @@ class TestIrreps(unittest.TestCase):
         np.testing.assert_allclose(chars,data,atol=1e-5)
 
     def test_pt06_P222_1(self):
-        data = np.loadtxt(StringIO(chars_P222_1)).view(dtype='complex128')
+        data = self._load_data(chars_P222_1)
         phonon = self._get_phonon("P222_1", 
                                   [2, 2, 1],
                                   np.eye(3))
@@ -406,7 +406,7 @@ class TestIrreps(unittest.TestCase):
         np.testing.assert_allclose(chars,data,atol=1e-5)
 
     def test_pt07_Amm2(self):
-        data = np.loadtxt(StringIO(chars_Amm2)).view(dtype='complex128')
+        data = self._load_data(chars_Amm2)
         phonon = self._get_phonon("Amm2", 
                                   [3, 2, 2],
                                   [[1, 0, 0],
@@ -417,7 +417,7 @@ class TestIrreps(unittest.TestCase):
         np.testing.assert_allclose(chars,data,atol=1e-5)
 
     def test_pt09_P4_1(self):
-        data = np.loadtxt(StringIO(chars_P4_1)).view(dtype='complex128')
+        data = self._load_data(chars_P4_1)
         phonon = self._get_phonon("P4_1", 
                                   [2, 2, 1],
                                   np.eye(3))
@@ -426,7 +426,7 @@ class TestIrreps(unittest.TestCase):
         np.testing.assert_allclose(chars,data,atol=1e-5)
 
     def test_pt10_Pbar4(self):
-        data = np.loadtxt(StringIO(chars_Pbar4)).view(dtype='complex128')
+        data = self._load_data(chars_Pbar4)
         phonon = self._get_phonon("P-4", 
                                   [1, 1, 2],
                                   np.eye(3))
@@ -435,7 +435,7 @@ class TestIrreps(unittest.TestCase):
         np.testing.assert_allclose(chars,data,atol=1e-5)
 
     def test_pt11_I4_1a(self):
-        data = np.loadtxt(StringIO(chars_I4_1a)).view(dtype='complex128')
+        data = self._load_data(chars_I4_1a)
         phonon = self._get_phonon("I4_1a", 
                                   [2, 2, 1],
                                   np.array([[-1, 1, 1],
@@ -446,7 +446,7 @@ class TestIrreps(unittest.TestCase):
         np.testing.assert_allclose(chars,data,atol=1e-5)
 
     def test_pt13_P4mm(self):
-        data = np.loadtxt(StringIO(chars_P4mm)).view(dtype='complex128')
+        data = self._load_data(chars_P4mm)
         phonon = self._get_phonon("P4mm", 
                                   [3, 3, 2],
                                   np.eye(3))
@@ -455,7 +455,7 @@ class TestIrreps(unittest.TestCase):
         np.testing.assert_allclose(chars,data,atol=1e-5)
 
     def test_pt14_Pbar42_1m(self):
-        data = np.loadtxt(StringIO(chars_Pbar42_1m)).view(dtype='complex128')
+        data = self._load_data(chars_Pbar42_1m)
         phonon = self._get_phonon("P-42_1m", 
                                   [2, 2, 3],
                                   np.eye(3))
@@ -464,7 +464,7 @@ class TestIrreps(unittest.TestCase):
         np.testing.assert_allclose(chars,data,atol=1e-5)
 
     def test_pt20_Pbar3m1(self):
-        data = np.loadtxt(StringIO(chars_Pbar3m1)).view(dtype='complex128')
+        data = self._load_data(chars_Pbar3m1)
         phonon = self._get_phonon("P-3m1", 
                                   [3, 3, 2],
                                   np.eye(3))
@@ -473,7 +473,7 @@ class TestIrreps(unittest.TestCase):
         np.testing.assert_allclose(chars,data,atol=1e-5)
 
     def test_pt26_Pbar6m2(self):
-        data = np.loadtxt(StringIO(chars_Pbar6m2)).view(dtype='complex128')
+        data = self._load_data(chars_Pbar6m2)
         phonon = self._get_phonon("P-6m2", 
                                   [2, 2, 3],
                                   np.eye(3))
@@ -482,7 +482,7 @@ class TestIrreps(unittest.TestCase):
         np.testing.assert_allclose(chars,data,atol=1e-5)
 
     def test_pt31_Pbar43m(self):
-        data = np.loadtxt(StringIO(chars_Pbar43m)).view(dtype='complex128')
+        data = self._load_data(chars_Pbar43m)
         phonon = self._get_phonon("P-43m", 
                                   [2, 2, 2],
                                   np.eye(3))
@@ -505,6 +505,11 @@ class TestIrreps(unittest.TestCase):
         for line in chars:
             line_str = str(line.view(dtype='double').round(decimals=1))
             print(line_str.replace("[", '').replace("]", ''))
+
+    def _load_data(self, data_str):
+        data = np.loadtxt(StringIO(data_str))
+        data = data.view(dtype="c%d" % (data.itemsize * 2))
+        return data
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestIrreps)

@@ -87,7 +87,7 @@ class GridPoints(object):
                  is_time_reversal=True,
                  fit_in_BZ=True,
                  rotations=None, # Point group operations in real space
-                 is_mesh_symmetry=True):
+                 is_mesh_symmetry=True): # Except for time reversal symmetry
         self._mesh = np.array(mesh_numbers, dtype='intc')
         self._rec_lat = reciprocal_lattice
         self._is_shift = self._shift2boolean(q_mesh_shift,
@@ -133,7 +133,7 @@ class GridPoints(object):
                                  is_time_reversal=self._is_time_reversal)
         else:
             self._set_ir_qpoints([np.eye(3, dtype='intc')],
-                                 is_time_reversal=False)
+                                 is_time_reversal=self._is_time_reversal)
     
     def _shift2boolean(self,
                        q_mesh_shift,
@@ -147,13 +147,14 @@ class GridPoints(object):
             shift = np.zeros(3, dtype='double')
         else:
             shift = np.array(q_mesh_shift, dtype='double')
-    
+
         diffby2 = np.abs(shift * 2 - np.rint(shift * 2))
+
         if (diffby2 < 0.01).all(): # zero/half shift
+            diff = np.abs(shift - np.rint(shift))
             if is_gamma_center:
-                is_shift = [0, 0, 0]
+                is_shift = list(diff > 0.1)
             else: # Monkhorst-pack
-                diff = np.abs(shift - np.rint(shift))
                 is_shift = list(np.logical_xor((diff > 0.1),
                                                (self._mesh % 2 == 0)) * 1)
         else:
@@ -181,7 +182,6 @@ class GridPoints(object):
     def _set_ir_qpoints(self,
                         rotations,
                         is_time_reversal=True):
-    
         grid_mapping_table, grid_address = get_stabilized_reciprocal_mesh(
             self._mesh,
             rotations,

@@ -220,6 +220,10 @@ Cell * get_Wyckoff_positions(int * wyckoffs,
         spacegroup,
         primitive,
         symprec)) == NULL) {
+
+    warning_print("spglib: get_bravais_exact_positions_and_lattice failed.");
+    warning_print(" (line %d, %s).\n", __LINE__, __FILE__);
+
     goto ret;
   }
 
@@ -244,6 +248,10 @@ Cell * get_Wyckoff_positions(int * wyckoffs,
                              equiv_atoms_bravais,
                              mapping_table) == 0) {
       cel_free_cell(bravais);
+
+      warning_print("spglib: set_equivalent_atoms failed.");
+      warning_print(" (line %d, %s).\n", __LINE__, __FILE__);
+
       bravais = NULL;
     }
   }
@@ -325,6 +333,8 @@ get_bravais_exact_positions_and_lattice(int * wyckoffs,
                                                  symprec)) == NULL) {
     sym_free_symmetry(conv_sym);
     conv_sym = NULL;
+    warning_print("spglib: ssm_get_exact_positions failed.");
+    warning_print(" (line %d, %s).\n", __LINE__, __FILE__);
     goto err;
   }
 

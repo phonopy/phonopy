@@ -190,7 +190,6 @@ class Supercell(Atoms):
                                    mat[2] / float(multi[2])])
         else:
             # In the new style, it is unnecessary to trim atoms,
-            # but trim_cell is still used to make point to be 0 <= x, y, z < 1.
             if (np.diag(np.diagonal(mat)) != mat).any():
                 snf = SNF3x3(mat)
                 snf.run()
@@ -848,4 +847,3 @@ class Xgcd(object):
         v = self._vals
         r, s, t = self._rst
         return "%d = %d * (%d) + %d * (%d)" % (r, v[0], s, v[1], t)
-

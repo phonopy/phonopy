@@ -85,7 +85,8 @@ def rotate_eigenvectors(eigvals, eigvecs, dD):
 def _get_dD(q, ddm, perturbation):
     ddm.run(q)
     ddm_vals = ddm.get_derivative_of_dynamical_matrix()
-    dD = np.zeros(ddm_vals.shape[1:], dtype='complex128')
+    dtype = "c%d" % (np.dtype('double').itemsize * 2)
+    dD = np.zeros(ddm_vals.shape[1:], dtype=dtype)
     if len(ddm_vals) == 3:
         for i in range(3):
             dD += perturbation[i] * ddm_vals[i]

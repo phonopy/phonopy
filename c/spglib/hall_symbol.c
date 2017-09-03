@@ -1548,7 +1548,20 @@ static int find_hall_symbol(double origin_shift[3],
 
   /* TRIGO, IT: 143-167, Hall: 430-461 */
   if (430 <= hall_number && hall_number <= 461) {
-    if (centering == R_CENTER) {
+    if (hall_number == 433 ||
+        hall_number == 434 ||
+        hall_number == 436 ||
+        hall_number == 437 ||
+        hall_number == 444 ||
+        hall_number == 445 ||
+        hall_number == 450 ||
+        hall_number == 451 ||
+        hall_number == 452 ||
+        hall_number == 453 ||
+        hall_number == 458 ||
+        hall_number == 459 ||
+        hall_number == 460 ||
+        hall_number == 461) {
       if (is_hall_symbol_rhombo(origin_shift,
 				hall_number,
 				primitive_lattice,

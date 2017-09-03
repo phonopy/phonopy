@@ -391,12 +391,12 @@ void mat_get_metric(double metric[3][3],
 
 double mat_norm_squared_d3(const double a[3])
 {
-  return a[0]*a[0]+a[1]*a[1]+a[2]*a[2];
+  return a[0] * a[0] + a[1] * a[1] + a[2] * a[2];
 }
 
 int mat_norm_squared_i3(const int a[3])
 {
-  return a[0]*a[0]+a[1]*a[1]+a[2]*a[2];
+  return a[0] * a[0] + a[1] * a[1] + a[2] * a[2];
 }
 
 double mat_Dabs(const double a)

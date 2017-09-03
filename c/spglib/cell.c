@@ -32,6 +32,7 @@
 /* ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE */
 /* POSSIBILITY OF SUCH DAMAGE. */
 
+#include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include "cell.h"
@@ -176,7 +177,7 @@ int cel_is_overlap(const double a[3],
   }
 
   mat_multiply_matrix_vector_d3(v_diff, lattice, v_diff);
-  if (mat_norm_squared_d3(v_diff) < symprec * symprec) {
+  if (sqrt(mat_norm_squared_d3(v_diff)) < symprec) {
     return 1;
   } else {
     return 0;
@@ -260,6 +261,8 @@ static Cell * trim_cell(int * mapping_table,
   VecDBL * position;
   int *overlap_table;
 
+  debug_print("trim_cell\n");
+
   position = NULL;
   overlap_table = NULL;
   trimmed_cell = NULL;
@@ -269,16 +272,20 @@ static Cell * trim_cell(int * mapping_table,
 
   /* Check if cell->size is dividable by ratio */
   if ((cell->size / ratio) * ratio != cell->size) {
-    return NULL;
+    warning_print("spglib: atom number ratio is inconsistent.\n");
+    warning_print(" (line %d, %s).\n", __LINE__, __FILE__);
+    goto err;
   }
 
   if ((trimmed_cell = cel_alloc_cell(cell->size / ratio)) == NULL) {
-    return NULL;
+    goto err;
   }
 
   if ((position = translate_atoms_in_trimmed_lattice(cell,
                                                      trimmed_lattice))
       == NULL) {
+    warning_print("spglib: translate_atoms_in_trimmed_lattice failed.\n");
+    warning_print(" (line %d, %s).\n", __LINE__, __FILE__);
     cel_free_cell(trimmed_cell);
     trimmed_cell = NULL;
     goto err;
@@ -291,6 +298,8 @@ static Cell * trim_cell(int * mapping_table,
                                          cell->types,
                                          trimmed_cell,
                                          symprec)) == NULL) {
+    warning_print("spglib: get_overlap_table failed.\n");
+    warning_print(" (line %d, %s).\n", __LINE__, __FILE__);
     mat_free_VecDBL(position);
     position = NULL;
     cel_free_cell(trimmed_cell);

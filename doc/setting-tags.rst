@@ -70,8 +70,8 @@ vectors, i.e., :math:`( \mathbf{a}_\mathrm{u} \; \mathbf{b}_\mathrm{u}
 
 .. _primitive_axis_tag:
 
-``PRIMITIVE_AXIS``
-~~~~~~~~~~~~~~~~~~
+``PRIMITIVE_AXIS`` or ``PRIMITIVE_AXES``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ::
 
    PRIMITIVE_AXIS = 0.0 0.5 0.5  0.5 0.0 0.5  0.5 0.5 0.0

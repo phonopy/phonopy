@@ -156,8 +156,9 @@ class QpointsPhonon(object):
             
         self._frequencies = np.array(self._frequencies,
                                      dtype='double', order='C')
+        dtype = "c%d" % (np.dtype('double').itemsize * 2)
         self._eigenvectors = np.array(self._eigenvectors,
-                                      dtype='complex128', order='C')
+                                      dtype=dtype, order='C')
                 
     def _get_dynamical_matrix(self, q):
         if self._nac_q_direction is not None and (np.abs(q) < 1e-5).all():
