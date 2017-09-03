@@ -39,6 +39,8 @@
 
 #include "debug.h"
 
+#define NUM_ATTEMPT 100
+
 static int delaunay_reduce(double red_lattice[3][3], 
 			   SPGCONST double lattice[3][3],
 			   SPGCONST double symprec);
@@ -86,23 +88,21 @@ static int delaunay_reduce(double red_lattice[3][3],
 			   SPGCONST double lattice[3][3],
 			   const double symprec)
 {
-  int i, j;
-  double volume, sum;
+  int i, j, attempt, succeeded;
+  double volume;
   double basis[4][3];
 
   get_exteneded_basis(basis, lattice);
   
-  sum = 0;
-  for (i = 0; i < 4; i++) {
-    for (j = 0; j < 3; j++) {
-      sum += basis[i][j] * basis[i][j];
+  for (attempt = 0; attempt < NUM_ATTEMPT; attempt++) {
+    succeeded = delaunay_reduce_basis(basis, symprec);
+    if (succeeded) {
+      break;
     }
   }
 
-  while (1) {
-    if (delaunay_reduce_basis(basis, symprec)) {
-      break;
-    }
+  if (!succeeded) {
+    goto err;
   }
 
   get_delaunay_shortest_vectors(basis, symprec);
@@ -160,7 +160,7 @@ static void get_delaunay_shortest_vectors(double basis[4][3],
   /* Bubble sort */
   for (i = 0; i < 6; i++) {
     for (j = 0; j < 6; j++) {
-      if (mat_norm_squared_d3(b[j]) > mat_norm_squared_d3(b[j+1])) {
+      if (mat_norm_squared_d3(b[j]) > mat_norm_squared_d3(b[j+1]) + symprec) {
 	mat_copy_vector_d3(tmpvec, b[j]);
 	mat_copy_vector_d3(b[j], b[j+1]);
 	mat_copy_vector_d3(b[j+1], tmpvec);
@@ -238,7 +238,7 @@ static int delaunay_reduce_2D(double red_lattice[3][3],
 			      const int unique_axis,
 			      const double symprec)
 {
-  int i, j, k;
+  int i, j, k, attempt, succeeded;
   double volume;
   double basis[3][3], lattice_2D[3][2], unique_vec[3];
 
@@ -257,11 +257,17 @@ static int delaunay_reduce_2D(double red_lattice[3][3],
   }
 
   get_exteneded_basis_2D(basis, lattice_2D);
-  
-  while (1) {
-    if (delaunay_reduce_basis_2D(basis, symprec)) {
+
+
+  for (attempt = 0; attempt < NUM_ATTEMPT; attempt++) {
+    succeeded = delaunay_reduce_basis_2D(basis, symprec);
+    if (succeeded) {
       break;
     }
+  }
+
+  if (!succeeded) {
+    goto err;
   }
 
   get_delaunay_shortest_vectors_2D(basis, unique_vec, symprec);

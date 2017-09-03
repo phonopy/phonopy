@@ -197,8 +197,9 @@ class GroupVelocity(object):
     def _get_dD_analytical(self, q):
         self._ddm.run(q)
         ddm = self._ddm.get_derivative_of_dynamical_matrix()
+        dtype = "c%d" % (np.dtype('double').itemsize * 2)
         ddm_dirs = np.zeros((len(self._directions),) + ddm.shape[1:],
-                            dtype='complex128')
+                            dtype=dtype)
         for i, dq in enumerate(self._directions):
             for j in range(3):
                 ddm_dirs[i] += dq[j] * ddm[j]

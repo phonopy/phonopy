@@ -101,6 +101,7 @@ class PhonopyYaml(object):
         self._primitive = None
         self._supercell = None
         self._supercell_matrix = None
+        self._symmetry = None # symmetry of supercell
         self._primitive_matrix = None
         self._force_constants = None
         self._s2p_map = None
@@ -130,6 +131,7 @@ class PhonopyYaml(object):
         self._primitive = phonopy.get_primitive()
         self._supercell = phonopy.get_supercell()
         self._supercell_matrix = phonopy.get_supercell_matrix()
+        self._symmetry = phonopy.get_symmetry()
         self._primitive_matrix = phonopy.get_primitive_matrix()
         self._force_constants = phonopy.get_force_constants()
         self._s2p_map = self._primitive.get_supercell_to_primitive_map()
@@ -174,6 +176,17 @@ class PhonopyYaml(object):
                 lines.append("- [ %3d, %3d, %3d ]" % tuple(v))
             lines.append("")
 
+        if self._symmetry is not None:
+            lines.append("space_group:")
+            lines.append("  type: \"%s\"" %
+                         self._symmetry.get_dataset()['international'])
+            lines.append("  number: %d" %
+                         self._symmetry.get_dataset()['number'])
+            lines.append("  Hall_symbol: \"%s\"" %
+                         self._symmetry.get_dataset()['hall'])
+            lines.append("")
+
+
         if self._primitive_matrix is not None:
             lines.append("primitive_matrix:")
             for v in self._primitive_matrix:
@@ -190,7 +203,7 @@ class PhonopyYaml(object):
                 lines.append("  - [ %21.15f, %21.15f, %21.15f ] # %s" %
                              (v[0], v[1], v[2], a))
             lines.append("")
-            
+
         if self._unitcell is not None:
             lines.append("unit_cell:")
             count = 0
@@ -305,7 +318,3 @@ class PhonopyYaml(object):
                          scaled_positions=_points)
         else:
             return None
-
-
-            
-        
