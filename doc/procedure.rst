@@ -207,7 +207,7 @@ In the case of finite difference approach, there are three steps.
    some calculator (it's out of phonopy), the forces are summarized in
    ``FORCE_SETS`` file following the :ref:`format <file_forces>`.
 
-3. Calculate phonon related properties. See :ref:`analyze_phonon`.
+3. Calculate phonon related properties.
 
 If you already have force constants, the first and second steps can be
 omitted. However your force constants have to be converted to the

@@ -412,6 +412,8 @@ No log is shown.
 Crystal symmetry
 -----------------
 
+.. _tolerance_option:
+
 ``--tolerance``
 ~~~~~~~~~~~~~~~
 
@@ -421,6 +423,8 @@ crystal structure. The default value is 1e-5.
 ::
 
    % phonopy --tolerance=1e-3
+
+.. _symmetry_option:
 
 ``--symmetry``
 ~~~~~~~~~~~~~~
