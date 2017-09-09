@@ -7,9 +7,10 @@ Citation of phonopy
 If you have used phonopy, please cite the following article:
 
 * "First principles phonon calculations in materials science",
-    Atsushi Togo and Isao Tanaka, Scr. Mater., **108**, 1-5 (2015)
 
-    http://dx.doi.org/10.1016/j.scriptamat.2015.07.021
+  Atsushi Togo and Isao Tanaka, Scr. Mater., **108**, 1-5 (2015)
+
+  http://dx.doi.org/10.1016/j.scriptamat.2015.07.021 (Open access)
 
   ::
   
@@ -29,38 +30,55 @@ Some papers where phonopy was used
 ``phonopy-qha``: Thermal properties, quasi-harmonic approximation used for thermal expansion
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-*  "First-principles phonon calculations of thermal expansion in Ti3SiC2, Ti3AlC2, and Ti3GeC2"
-     Atsushi Togo, Laurent Chaput, Isao Tanaka, Gilles Hug,
-     Phys. Rev. B, **81**, 174301-1-6 (2010)
+* "First-principles phonon calculations of thermal expansion in
+  Ti3SiC2, Ti3AlC2, and Ti3GeC2",
+
+  Atsushi Togo, Laurent Chaput, Isao Tanaka, Gilles Hug,
+  Phys. Rev. B, **81**, 174301-1-6 (2010)
 
 ``MODULATION`` tag: Collective atomic modulation, symmetry breaking
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-*  "Evolution of crystal structures in metallic elements"
-     Atsushi Togo and Isao Tanaka,
-     Phys. Rev. B, **87**, 184104-1-6 (2013)
+* "Evolution of crystal structures in metallic elements",
+
+  Atsushi Togo and Isao Tanaka,
+  Phys. Rev. B, **87**, 184104-1-6 (2013)
  
-*  "Transition pathway of CO2 crystals under high pressures"
-     Atsushi Togo, Fumiyasu Oba, and Isao Tanaka,
-     Phys. Rev. B, **77**, 184101-1-5 (2008)
+* "Transition pathway of CO2 crystals under high pressures",
 
-*  "Inversion Symmetry Breaking by Oxygen Octahedral Rotations in the Ruddlesden-Popper NaRTiO4 Family"
-     Hirofumi Akamatsu, Koji Fujita, Toshihiro Kuge, Arnab Sen Gupta, Atsushi Togo, Shiming Lei, Fei Xue, Greg Stone, James M. Rondinelli, Long-Qing Chen, Isao Tanaka, Venkatraman Gopalan, and Katsuhisa Tanaka
-     Phys. Rev. Lett. **112**, 187602-1-5 (2014)   
+  Atsushi Togo, Fumiyasu Oba, and Isao Tanaka,
+  Phys. Rev. B, **77**, 184101-1-5 (2008)
 
-*  "First-principles calculations of the ferroelastic transition between rutile-type and CaCl2-type SiO2 at high pressures",
-     Atsushi Togo, Fumiyasu Oba, and Isao Tanaka, Phys. Rev. B, **78**, 134106 (2008)
+* "Inversion Symmetry Breaking by Oxygen Octahedral Rotations in the
+  Ruddlesden-Popper NaRTiO4 Family",
+
+  Hirofumi Akamatsu, Koji Fujita, Toshihiro Kuge, Arnab Sen Gupta,
+  Atsushi Togo, Shiming Lei, Fei Xue, Greg Stone,
+  James M. Rondinelli, Long-Qing Chen, Isao Tanaka, Venkatraman
+  Gopalan, and Katsuhisa Tanaka,
+  Phys. Rev. Lett. **112**, 187602-1-5 (2014)
+
+* "First-principles calculations of the ferroelastic transition between
+  rutile-type and CaCl2-type SiO2 at high pressures",
+
+  Atsushi Togo, Fumiyasu Oba, and Isao Tanaka, Phys. Rev. B, **78**, 134106 (2008)
 
 ``TDISP``, ``TDISPMAT`` tags: Root mean square thermal atomic displacement 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-*  "Neutron diffraction measurements and first-principles study of thermal motion of atoms in select Mn+1AXn and binary MX transition-metal carbide phases"
-     Nina J. Lane, Sven C. Vogel, Gilles Hug, Atsushi Togo, Laurent Chaput, Lars Hultman, and Michel W. Barsoum,
-     Phys. Rev. B, **86**, 214301-1-9 (2012)
+*  "Neutron diffraction measurements and first-principles study of
+   thermal motion of atoms in select Mn+1AXn and binary MX
+   transition-metal carbide phases",
 
-*  "Ab initio ORTEP drawings: a case study of N-based molecular crystals with different chemical nature"
-     Volker L. Deringer, Ralf P. Stoffel, Atsushi Togo, Bernhard Eck, Martin Mevencd and Richard Dronskowski
-     Cryst. Eng. Comm., (2014)
+   Nina J. Lane, Sven C. Vogel, Gilles Hug, Atsushi Togo, Laurent
+   Chaput, Lars Hultman, and Michel W. Barsoum, Phys. Rev. B,
+   **86**, 214301-1-9 (2012)
+
+*  "Ab initio ORTEP drawings: a case study of N-based molecular
+   crystals with different chemical nature",
+
+   Volker L. Deringer, Ralf P. Stoffel, Atsushi Togo, Bernhard Eck,
+   Martin Mevencd and Richard Dronskowski, Cryst. Eng. Comm., (2014)
 
   
 A short history of phonopy

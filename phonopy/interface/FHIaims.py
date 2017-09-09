@@ -131,7 +131,7 @@ def read_aims_output(filename):
     N = 0
     while l < len(lines):
         line = lines[l]
-        if "Number of atoms" in line:
+        if "| Number of atoms" in line:
             N = int(line.split()[5])
         elif "| Unit cell:" in line:
             cell = []

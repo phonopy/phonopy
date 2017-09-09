@@ -1,7 +1,7 @@
 .. _install:
 
 Installation
-=====================
+=============
 
 .. contents::
    :depth: 3
@@ -94,7 +94,7 @@ needed.
    ``~/.local/lib`` directories, respectively.
 
 3. Assuming the installation location is those shown in the step 2,
-   set :envvar:`$PATH` and :envvar:`$PYTHONPATH`::
+   set ``$PATH`` and ``$PYTHONPATH``::
 
       export PYTHONPATH=~/.local/lib:$PYTHONPATH
       export PYTH=~/.local/bin:$PATH

@@ -3,9 +3,23 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-=======================================================
+
 Welcome to phonopy
-=======================================================
+===================
+
+**Phonopy** is an open source package for phonon calculations at
+harmonic and quasi-harmonic levels.
+
+**Phono3py** is another open source package for phonon-phonon interaction and lattice thermal
+conductivity calculations. See the documentation at http://atztogo.github.io/phono3py/
+
+**Phonon database**: A collection of first principles phonon
+calculations is available as open data at
+http://phonondb.mtl.kyoto-u.ac.jp/ , where the raw data of phonopy & VASP
+results are downloaded.
+
+The following features of phonopy are highlighted:
+
 
 .. |i0| image:: band.png
         :width: 15%
@@ -18,21 +32,6 @@ Welcome to phonopy
 
 .. |i3| image:: QHA.png
         :width: 15%
-
-**Phonopy** is an open source package for phonon calculations at
-harmonic and quasi-harmonic levels.
-
-**Phono3py** is another open source package for phonon-phonon interaction and lattice thermal
-conductivity calculations. See the document at http://atztogo.github.io/phono3py/
-
-**Phonon database**: A collection of first principles phonon
-calculations is available as open data at
-http://phonondb.mtl.kyoto-u.ac.jp/ , where the raw data of phonopy & VASP
-results are downloaded.
-
-
-Selected features
-==================
 
 - :ref:`Phonon band structure <band_structure_related_tags>`, :ref:`phonon DOS and partial-DOS <dos_related_tags>`
 - :ref:`Phonon thermal properties <thermal_properties_tag>`: Free energy, heat capacity (Cv), and entropy
@@ -55,18 +54,24 @@ Selected features
   :ref:`Wien2k <wien2k_interface>`,
   :ref:`CRYSTAL <crystal_interface>`
 - :ref:`Python APIs <phonopy_module>`
-  
+
+
+A presentation in pdf for introduction to phonopy is downloaded `***here***
+<https://sf.net/projects/phonopy/files/phonopy.pdf/download>`_.
+
 |i0| |i1| |i2| |i3|
 
+
 Documentation
-=============
+==============
 
 .. toctree::
    :maxdepth: 1
 
-   introduction
    install
+   symmetry
    Tutorial <procedure>
+   workflow
    examples
    input-files
    output-files
@@ -82,6 +87,15 @@ Documentation
    citation
    reference
    changelog
+
+..
+   Latex master doc is documentation.rst.
+   But documentation.rst is not included for html.
+
+.. toctree::
+   :hidden:
+
+   documentation
 
 .. _mailinglist:
 
@@ -106,3 +120,9 @@ Contact
 
 * Author: `Atsushi Togo <http://atztogo.github.io/>`_
 
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
