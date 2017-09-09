@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Search &#8212; phonopy 1.11.12 documentation</title>
+    <title>Crystal symmetry &#8212; phonopy 1.11.12 documentation</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
@@ -20,24 +20,18 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <script type="text/javascript" src="_static/searchtools.js"></script>
     <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="#" />
-  <script type="text/javascript">
-    jQuery(function() { Search.loadIndex("searchindex.js"); });
-  </script>
-  
-  <script type="text/javascript" id="searchindexloader"></script>
-  
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="VASP &amp; phonopy calculation" href="procedure.html" />
+    <link rel="prev" title="Set up Ubuntu linux on VirtualBox" href="virtualmachine.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
 <meta name="apple-mobile-web-app-capable" content="yes">
-
 
   </head>
   <body>
@@ -68,9 +62,9 @@
      href="index.html">Site <b class="caret"></b></a>
   <ul class="dropdown-menu globaltoc"
       role="menu"
-      aria-labelledby="dLabelGlobalToc"><ul>
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="symmetry.html">Crystal symmetry</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Crystal symmetry</a></li>
 <li class="toctree-l1"><a class="reference internal" href="procedure.html">Tutorial</a></li>
 <li class="toctree-l1"><a class="reference internal" href="workflow.html">Work flow</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
@@ -89,8 +83,8 @@
 <li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
 </ul>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="documentation.html">Documentation</a></li>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="documentation.html">Documentation</a></li>
 </ul>
 </ul>
 </li>
@@ -103,13 +97,27 @@
      href="#">Page <b class="caret"></b></a>
   <ul class="dropdown-menu localtoc"
       role="menu"
-      aria-labelledby="dLabelLocalToc"></ul>
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Crystal symmetry</a><ul>
+<li><a class="reference internal" href="#tolerance-used-in-crystal-symmetry-search">Tolerance used in crystal symmetry search</a></li>
+</ul>
+</li>
+</ul>
+</ul>
 </li>
               
             
             
               
                 
+  <li>
+    <a href="virtualmachine.html" title="Previous Chapter: Set up Ubuntu linux on VirtualBox"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; Set up Ubuntu...</span>
+    </a>
+  </li>
+  <li>
+    <a href="procedure.html" title="Next Chapter: VASP & phonopy calculation"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">VASP & phonop... &raquo;</span>
+    </a>
+  </li>
               
             
             
@@ -119,6 +127,13 @@
 
           
             
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
           
         </div>
     </div>
@@ -128,35 +143,50 @@
   <div class="row">
     <div class="col-md-12 content">
       
-  <h1 id="search-documentation">Search</h1>
-  <div id="fallback" class="admonition warning">
-  <script type="text/javascript">$('#fallback').hide();</script>
-  <p>
-    Please activate JavaScript to enable the search
-    functionality.
-  </p>
-  </div>
-  <p>
-    From here you can search these documents. Enter your search
-    words into the box below and click "search". Note that the search
-    function will automatically search for all of the words. Pages
-    containing fewer words won't appear in the result list.
-  </p>
+  <div class="section" id="crystal-symmetry">
+<h1>Crystal symmetry<a class="headerlink" href="#crystal-symmetry" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="tolerance-used-in-crystal-symmetry-search">
+<h2>Tolerance used in crystal symmetry search<a class="headerlink" href="#tolerance-used-in-crystal-symmetry-search" title="Permalink to this headline">¶</a></h2>
+<p>Phonon calculation is based on the assumption that atoms have thier
+own equilibrium positions where forces on these atoms are zero. In
+addition, there is a unit cell that contains these atoms and the unit
+cell are repeated in the direct space, i.e., it forms a lattice. The
+lattice vectors (or basis vectors) and points of atoms in this unit
+cell give the information of the crystal structure.</p>
+<p>The crystal structure may have a specific symmetry. The categorization
+of the crystal symmetried is achieved by the group theory about
+symmetry operations, and there are the 230 different space group
+types. In phonopy, the crystal symmetry is automatically analyzed from
+the input unit cell structure file that doesn’t contain the symmetry
+information. Symmetries are searched by attemping possible symmetry
+operations to the crsytal structure and cheking if the crystal
+structure after the symmetry operation is overlapping to the original
+crystal structures. In this analysis, a tolerance of distance is
+used to tolerate small deviation of overlapping. This tolerance is
+the user’s choice. The default value is <code class="docutils literal"><span class="pre">1e-5</span></code>.</p>
+<p>Often we know the space group type of our crystal. Therefore it is
+recommended to check whether the space group type of the input unit
+cell is the correct one or not with very tight value such as
+<code class="docutils literal"><span class="pre">--tolerance=1e-8</span></code> using <a class="reference internal" href="command-options.html#tolerance-option"><span class="std std-ref">--tolerance</span></a> option. If an input
+unit cell structure is naively distorted for which the distortion is
+about the same order of the chosen tolerance, inconsistency in
+symmetry handling may occur and it can result in a crash of the
+calculation or induce a strange calculation result. This can be
+checked by changing the tolerance value variously and watching the
+obtained space group type. If an input unit cell structure is
+distorted, different space group types are found with respect to the
+different tolerance values.</p>
+<p>The detailed space group information is obtained by
+<a class="reference internal" href="command-options.html#symmetry-option"><span class="std std-ref">--symmetry</span></a> option. As a result of using this option and
+the chosen tolerance value, <code class="docutils literal"><span class="pre">BPOSCAR</span></code> file is obtained. This is a
+standardized conventional unit cell (see
+<a class="reference external" href="https://atztogo.github.io/spglib/definition.html#conventions-of-standardized-unit-cell">https://atztogo.github.io/spglib/definition.html#conventions-of-standardized-unit-cell</a>),
+and its distortion against the crystal symmetry is very small. It is
+recommended to used this structure as the starting point of phonopy
+calculation.</p>
+</div>
+</div>
 
-  
-  <form class="form-inline" action="" method="get">
-    <div class="form-group">
-      <input type="text" class="form-control" name="q" value="" />
-    </div>
-    <input type="submit" class="btn btn-default" value="search" />
-    <span id="search-progress" style="padding-left: 10px"></span>
-  </form>  
-  
-  
-  
-  <div id="search-results">
-  
-  </div>
 
     </div>
       
@@ -169,6 +199,10 @@
       
         <br/>
         
+<div id="sourcelink">
+  <a href="_sources/symmetry.rst.txt"
+     rel="nofollow">Source</a>
+</div>
       
     </p>
     <p>
