@@ -69,6 +69,7 @@ Documentation
    :maxdepth: 1
 
    install
+   symmetry
    Tutorial <procedure>
    workflow
    examples
