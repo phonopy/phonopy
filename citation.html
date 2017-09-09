@@ -3,12 +3,9 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>How to cite phonopy &#8212; Phonopy v.1.11.12</title>
-    
+    <title>How to cite phonopy &#8212; phonopy 1.11.12 documentation</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
@@ -22,7 +19,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
@@ -66,9 +63,9 @@
   <ul class="dropdown-menu globaltoc"
       role="menu"
       aria-labelledby="dLabelGlobalToc"><ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="procedure.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">Work flow</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="input-files.html">Input files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="output-files.html">Output files</a></li>
@@ -84,6 +81,9 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">How to cite phonopy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="documentation.html">Documentation</a></li>
 </ul>
 </ul>
 </li>
@@ -155,12 +155,9 @@
 <h2>Citation of phonopy<a class="headerlink" href="#citation-of-phonopy" title="Permalink to this headline">¶</a></h2>
 <p>If you have used phonopy, please cite the following article:</p>
 <ul>
-<li><dl class="first docutils">
-<dt>“First principles phonon calculations in materials science”,</dt>
-<dd><p class="first">Atsushi Togo and Isao Tanaka, Scr. Mater., <strong>108</strong>, 1-5 (2015)</p>
-<p class="last"><a class="reference external" href="http://dx.doi.org/10.1016/j.scriptamat.2015.07.021">http://dx.doi.org/10.1016/j.scriptamat.2015.07.021</a></p>
-</dd>
-</dl>
+<li><p class="first">“First principles phonon calculations in materials science”,</p>
+<p>Atsushi Togo and Isao Tanaka, Scr. Mater., <strong>108</strong>, 1-5 (2015)</p>
+<p><a class="reference external" href="http://dx.doi.org/10.1016/j.scriptamat.2015.07.021">http://dx.doi.org/10.1016/j.scriptamat.2015.07.021</a> (Open access)</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="nd">@article</span> <span class="p">{</span><span class="n">phonopy</span><span class="p">,</span>
      <span class="n">Journal</span> <span class="o">=</span> <span class="p">{</span><span class="n">Scr</span><span class="o">.</span> <span class="n">Mater</span><span class="o">.</span><span class="p">},</span>
      <span class="n">Year</span> <span class="o">=</span> <span class="p">{</span><span class="mi">2015</span><span class="p">},</span>
@@ -179,57 +176,53 @@
 <h2>Some papers where phonopy was used<a class="headerlink" href="#some-papers-where-phonopy-was-used" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="phonopy-qha-thermal-properties-quasi-harmonic-approximation-used-for-thermal-expansion">
 <h3><code class="docutils literal"><span class="pre">phonopy-qha</span></code>: Thermal properties, quasi-harmonic approximation used for thermal expansion<a class="headerlink" href="#phonopy-qha-thermal-properties-quasi-harmonic-approximation-used-for-thermal-expansion" title="Permalink to this headline">¶</a></h3>
-<ul class="simple">
-<li><dl class="first docutils">
-<dt>“First-principles phonon calculations of thermal expansion in Ti3SiC2, Ti3AlC2, and Ti3GeC2”</dt>
-<dd>Atsushi Togo, Laurent Chaput, Isao Tanaka, Gilles Hug,
-Phys. Rev. B, <strong>81</strong>, 174301-1-6 (2010)</dd>
-</dl>
+<ul>
+<li><p class="first">“First-principles phonon calculations of thermal expansion in
+Ti3SiC2, Ti3AlC2, and Ti3GeC2”,</p>
+<p>Atsushi Togo, Laurent Chaput, Isao Tanaka, Gilles Hug,
+Phys. Rev. B, <strong>81</strong>, 174301-1-6 (2010)</p>
 </li>
 </ul>
 </div>
 <div class="section" id="modulation-tag-collective-atomic-modulation-symmetry-breaking">
 <h3><code class="docutils literal"><span class="pre">MODULATION</span></code> tag: Collective atomic modulation, symmetry breaking<a class="headerlink" href="#modulation-tag-collective-atomic-modulation-symmetry-breaking" title="Permalink to this headline">¶</a></h3>
-<ul class="simple">
-<li><dl class="first docutils">
-<dt>“Evolution of crystal structures in metallic elements”</dt>
-<dd>Atsushi Togo and Isao Tanaka,
-Phys. Rev. B, <strong>87</strong>, 184104-1-6 (2013)</dd>
-</dl>
+<ul>
+<li><p class="first">“Evolution of crystal structures in metallic elements”,</p>
+<p>Atsushi Togo and Isao Tanaka,
+Phys. Rev. B, <strong>87</strong>, 184104-1-6 (2013)</p>
 </li>
-<li><dl class="first docutils">
-<dt>“Transition pathway of CO2 crystals under high pressures”</dt>
-<dd>Atsushi Togo, Fumiyasu Oba, and Isao Tanaka,
-Phys. Rev. B, <strong>77</strong>, 184101-1-5 (2008)</dd>
-</dl>
+<li><p class="first">“Transition pathway of CO2 crystals under high pressures”,</p>
+<p>Atsushi Togo, Fumiyasu Oba, and Isao Tanaka,
+Phys. Rev. B, <strong>77</strong>, 184101-1-5 (2008)</p>
 </li>
-<li><dl class="first docutils">
-<dt>“Inversion Symmetry Breaking by Oxygen Octahedral Rotations in the Ruddlesden-Popper NaRTiO4 Family”</dt>
-<dd>Hirofumi Akamatsu, Koji Fujita, Toshihiro Kuge, Arnab Sen Gupta, Atsushi Togo, Shiming Lei, Fei Xue, Greg Stone, James M. Rondinelli, Long-Qing Chen, Isao Tanaka, Venkatraman Gopalan, and Katsuhisa Tanaka
-Phys. Rev. Lett. <strong>112</strong>, 187602-1-5 (2014)</dd>
-</dl>
+<li><p class="first">“Inversion Symmetry Breaking by Oxygen Octahedral Rotations in the
+Ruddlesden-Popper NaRTiO4 Family”,</p>
+<p>Hirofumi Akamatsu, Koji Fujita, Toshihiro Kuge, Arnab Sen Gupta,
+Atsushi Togo, Shiming Lei, Fei Xue, Greg Stone,
+James M. Rondinelli, Long-Qing Chen, Isao Tanaka, Venkatraman
+Gopalan, and Katsuhisa Tanaka,
+Phys. Rev. Lett. <strong>112</strong>, 187602-1-5 (2014)</p>
 </li>
-<li><dl class="first docutils">
-<dt>“First-principles calculations of the ferroelastic transition between rutile-type and CaCl2-type SiO2 at high pressures”,</dt>
-<dd>Atsushi Togo, Fumiyasu Oba, and Isao Tanaka, Phys. Rev. B, <strong>78</strong>, 134106 (2008)</dd>
-</dl>
+<li><p class="first">“First-principles calculations of the ferroelastic transition between
+rutile-type and CaCl2-type SiO2 at high pressures”,</p>
+<p>Atsushi Togo, Fumiyasu Oba, and Isao Tanaka, Phys. Rev. B, <strong>78</strong>, 134106 (2008)</p>
 </li>
 </ul>
 </div>
 <div class="section" id="tdisp-tdispmat-tags-root-mean-square-thermal-atomic-displacement">
 <h3><code class="docutils literal"><span class="pre">TDISP</span></code>, <code class="docutils literal"><span class="pre">TDISPMAT</span></code> tags: Root mean square thermal atomic displacement<a class="headerlink" href="#tdisp-tdispmat-tags-root-mean-square-thermal-atomic-displacement" title="Permalink to this headline">¶</a></h3>
-<ul class="simple">
-<li><dl class="first docutils">
-<dt>“Neutron diffraction measurements and first-principles study of thermal motion of atoms in select Mn+1AXn and binary MX transition-metal carbide phases”</dt>
-<dd>Nina J. Lane, Sven C. Vogel, Gilles Hug, Atsushi Togo, Laurent Chaput, Lars Hultman, and Michel W. Barsoum,
-Phys. Rev. B, <strong>86</strong>, 214301-1-9 (2012)</dd>
-</dl>
+<ul>
+<li><p class="first">“Neutron diffraction measurements and first-principles study of
+thermal motion of atoms in select Mn+1AXn and binary MX
+transition-metal carbide phases”,</p>
+<p>Nina J. Lane, Sven C. Vogel, Gilles Hug, Atsushi Togo, Laurent
+Chaput, Lars Hultman, and Michel W. Barsoum, Phys. Rev. B,
+<strong>86</strong>, 214301-1-9 (2012)</p>
 </li>
-<li><dl class="first docutils">
-<dt>“Ab initio ORTEP drawings: a case study of N-based molecular crystals with different chemical nature”</dt>
-<dd>Volker L. Deringer, Ralf P. Stoffel, Atsushi Togo, Bernhard Eck, Martin Mevencd and Richard Dronskowski
-Cryst. Eng. Comm., (2014)</dd>
-</dl>
+<li><p class="first">“Ab initio ORTEP drawings: a case study of N-based molecular
+crystals with different chemical nature”,</p>
+<p>Volker L. Deringer, Ralf P. Stoffel, Atsushi Togo, Bernhard Eck,
+Martin Mevencd and Richard Dronskowski, Cryst. Eng. Comm., (2014)</p>
 </li>
 </ul>
 </div>
@@ -268,7 +261,7 @@ later the symmetry finder was replaced by spglib
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.2.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.3.<br/>
     </p>
   </div>
 </footer>

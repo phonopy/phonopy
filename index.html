@@ -3,12 +3,9 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>Welcome to phonopy &#8212; Phonopy v.1.11.12</title>
-    
+    <title>Welcome to phonopy &#8212; phonopy 1.11.12 documentation</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
@@ -22,14 +19,14 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Introduction" href="introduction.html" />
+    <link rel="next" title="Installation" href="install.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
@@ -65,9 +62,9 @@
   <ul class="dropdown-menu globaltoc"
       role="menu"
       aria-labelledby="dLabelGlobalToc"><ul>
-<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="procedure.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">Work flow</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="input-files.html">Input files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="output-files.html">Output files</a></li>
@@ -84,6 +81,9 @@
 <li class="toctree-l1"><a class="reference internal" href="reference.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
 </ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="documentation.html">Documentation</a></li>
+</ul>
 </ul>
 </li>
               
@@ -96,14 +96,14 @@
   <ul class="dropdown-menu localtoc"
       role="menu"
       aria-labelledby="dLabelLocalToc"><ul>
-<li><a class="reference internal" href="#">Welcome to phonopy</a><ul>
-<li><a class="reference internal" href="#selected-features">Selected features</a></li>
-<li><a class="reference internal" href="#documentation">Documentation</a></li>
+<li><a class="reference internal" href="#">Welcome to phonopy</a></li>
+<li><a class="reference internal" href="#documentation">Documentation</a><ul>
+</ul>
+</li>
 <li><a class="reference internal" href="#mailing-list">Mailing list</a></li>
 <li><a class="reference internal" href="#license">License</a></li>
 <li><a class="reference internal" href="#contact">Contact</a></li>
-</ul>
-</li>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
 </ul>
 </ul>
 </li>
@@ -113,7 +113,7 @@
               
                 
   <li>
-    <a href="introduction.html" title="Next Chapter: Introduction"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">Introduction &raquo;</span>
+    <a href="install.html" title="Next Chapter: Installation"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">Installation &raquo;</span>
     </a>
   </li>
               
@@ -146,13 +146,12 @@
 <p><strong>Phonopy</strong> is an open source package for phonon calculations at
 harmonic and quasi-harmonic levels.</p>
 <p><strong>Phono3py</strong> is another open source package for phonon-phonon interaction and lattice thermal
-conductivity calculations. See the document at <a class="reference external" href="http://atztogo.github.io/phono3py/">http://atztogo.github.io/phono3py/</a></p>
+conductivity calculations. See the documentation at <a class="reference external" href="http://atztogo.github.io/phono3py/">http://atztogo.github.io/phono3py/</a></p>
 <p><strong>Phonon database</strong>: A collection of first principles phonon
 calculations is available as open data at
 <a class="reference external" href="http://phonondb.mtl.kyoto-u.ac.jp/">http://phonondb.mtl.kyoto-u.ac.jp/</a> , where the raw data of phonopy &amp; VASP
 results are downloaded.</p>
-<div class="section" id="selected-features">
-<h2>Selected features<a class="headerlink" href="#selected-features" title="Permalink to this headline">¶</a></h2>
+<p>The following features of phonopy are highlighted:</p>
 <ul class="simple">
 <li><a class="reference internal" href="setting-tags.html#band-structure-related-tags"><span class="std std-ref">Phonon band structure</span></a>, <a class="reference internal" href="setting-tags.html#dos-related-tags"><span class="std std-ref">phonon DOS and partial-DOS</span></a></li>
 <li><a class="reference internal" href="setting-tags.html#thermal-properties-tag"><span class="std std-ref">Phonon thermal properties</span></a>: Free energy, heat capacity (Cv), and entropy</li>
@@ -176,15 +175,16 @@ capacity at constant pressure (Cp),</li>
 <a class="reference internal" href="crystal.html#crystal-interface"><span class="std std-ref">CRYSTAL</span></a></li>
 <li><a class="reference internal" href="phonopy-module.html#phonopy-module"><span class="std std-ref">Python APIs</span></a></li>
 </ul>
+<p>A presentation in pdf for introduction to phonopy is downloaded <a class="reference external" href="https://sf.net/projects/phonopy/files/phonopy.pdf/download">***here***</a>.</p>
 <p><a class="reference internal" href="_images/band.png"><img alt="i0" src="_images/band.png" style="width: 15%;" /></a> <a class="reference internal" href="_images/pdos.png"><img alt="i1" src="_images/pdos.png" style="width: 15%;" /></a> <a class="reference internal" href="_images/thermalprop.png"><img alt="i2" src="_images/thermalprop.png" style="width: 15%;" /></a> <a class="reference internal" href="_images/QHA.png"><img alt="i3" src="_images/QHA.png" style="width: 15%;" /></a></p>
 </div>
 <div class="section" id="documentation">
-<h2>Documentation<a class="headerlink" href="#documentation" title="Permalink to this headline">¶</a></h2>
+<h1>Documentation<a class="headerlink" href="#documentation" title="Permalink to this headline">¶</a></h1>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="procedure.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">Work flow</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="input-files.html">Input files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="output-files.html">Output files</a></li>
@@ -202,9 +202,11 @@ capacity at constant pressure (Cp),</li>
 <li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
 </ul>
 </div>
+<div class="toctree-wrapper compound">
+</div>
 </div>
 <div class="section" id="mailing-list">
-<span id="mailinglist"></span><h2>Mailing list<a class="headerlink" href="#mailing-list" title="Permalink to this headline">¶</a></h2>
+<span id="mailinglist"></span><h1>Mailing list<a class="headerlink" href="#mailing-list" title="Permalink to this headline">¶</a></h1>
 <p>For questions, bug reports, and comments, please visit
 <a class="reference external" href="https://lists.sourceforge.net/lists/listinfo/phonopy-users">https://lists.sourceforge.net/lists/listinfo/phonopy-users</a> to
 subscribe the phonopy mailing list
@@ -212,16 +214,23 @@ and send them to <a class="reference external" href="mailto:phonopy-users&#37;&#
 Message body including attached files has to be smaller than 300 KB.</p>
 </div>
 <div class="section" id="license">
-<h2>License<a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h2>
+<h1>License<a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h1>
 <p>New BSD from version 1.3.</p>
 <p>(LGPL from ver. 0.9.3 to version 1.2.1., GPL to version 0.9.2.)</p>
 </div>
 <div class="section" id="contact">
-<h2>Contact<a class="headerlink" href="#contact" title="Permalink to this headline">¶</a></h2>
+<h1>Contact<a class="headerlink" href="#contact" title="Permalink to this headline">¶</a></h1>
 <ul class="simple">
 <li>Author: <a class="reference external" href="http://atztogo.github.io/">Atsushi Togo</a></li>
 </ul>
 </div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
+<li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
+<li><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></li>
+</ul>
 </div>
 
 
@@ -244,7 +253,7 @@ Message body including attached files has to be smaller than 300 KB.</p>
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.2.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.3.<br/>
     </p>
   </div>
 </footer>
