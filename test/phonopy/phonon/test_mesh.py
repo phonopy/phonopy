@@ -20,13 +20,28 @@ class TestIterMesh(unittest.TestCase):
         pass
     
     def testIterMesh(self):
-        pass
+        phonon = self._get_phonon()
+        phonon.set_iter_mesh([3, 3, 3], is_eigenvectors=True)
+        imesh = phonon.get_iter_mesh()
+        freqs = []
+        eigvecs = []
+        for i, (f, e) in enumerate(imesh):
+            freqs.append(f)
+            eigvecs.append(e)
+
+        phonon.set_mesh([3, 3, 3], is_eigenvectors=True)
+        _, _, mesh_freqs, mesh_eigvecs = phonon.get_mesh()
+
+        np.testing.assert_allclose(mesh_freqs, freqs)
+        np.testing.assert_allclose(mesh_eigvecs, eigvecs)
 
     def _get_phonon(self):
         cell = read_vasp(os.path.join(data_dir, "../POSCAR_NaCl"))
         phonon = Phonopy(cell,
-                         np.diag(dim),
-                         primitive_matrix=pmat)
+                         np.diag([2, 2, 2]),
+                         primitive_matrix=[[0, 0.5, 0.5],
+                                           [0.5, 0, 0.5],
+                                           [0.5, 0.5, 0]])
         filename = os.path.join(data_dir,"../FORCE_SETS_NaCl")
         force_sets = parse_FORCE_SETS(filename=filename)
         phonon.set_displacement_dataset(force_sets)
@@ -35,6 +50,9 @@ class TestIterMesh(unittest.TestCase):
         nac_params = parse_BORN(phonon.get_primitive(), filename=filename_born)
         phonon.set_nac_params(nac_params)
         return phonon
+
+    def _set_mesh(self):
+        pass
 
 
 if __name__ == '__main__':

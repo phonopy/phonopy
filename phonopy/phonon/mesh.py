@@ -47,7 +47,6 @@ class MeshBase(object):
                  is_gamma_center=False,
                  rotations=None, # Point group operations in real space
                  factor=VaspToTHz):
-
         self._mesh = np.array(mesh, dtype='intc')
         self._is_eigenvectors = is_eigenvectors
         self._factor = factor
@@ -252,10 +251,8 @@ class IterMesh(MeshBase):
                  is_mesh_symmetry=True,
                  is_eigenvectors=False,
                  is_gamma_center=False,
-                 group_velocity=None,
                  rotations=None, # Point group operations in real space
-                 factor=VaspToTHz,
-                 use_lapack_solver=False):
+                 factor=VaspToTHz):
         MeshBase.__init__(self,
                           dynamical_matrix,
                           mesh,
@@ -264,10 +261,8 @@ class IterMesh(MeshBase):
                           is_mesh_symmetry=is_mesh_symmetry,
                           is_eigenvectors=is_eigenvectors,
                           is_gamma_center=is_gamma_center,
-                          group_velocity=group_velocity,
                           rotations=rotations,
-                          factor=factor,
-                          use_lapack_solver=use_lapack_solver)
+                          factor=factor)
 
         self._q_count = 0
 
@@ -278,7 +273,7 @@ class IterMesh(MeshBase):
         if self._q_count == len(self._qpoints):
             raise StopIteration
         else:
-            q = self._qpoints(self._q_count)
+            q = self._qpoints[self._q_count]
             self._dynamical_matrix.set_dynamical_matrix(q)
             dm = self._dynamical_matrix.get_dynamical_matrix()
             if self._is_eigenvectors:
@@ -291,6 +286,7 @@ class IterMesh(MeshBase):
                                          dtype='double',
                                          order='C') * self._factor
             self._q_count += 1
+            return self._frequencies, self._eigenvectors
 
     def next(self):
         return self.__next__()

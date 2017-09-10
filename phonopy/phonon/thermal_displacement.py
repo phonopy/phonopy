@@ -197,6 +197,7 @@ class ThermalDisplacementMatrices(ThermalMotion):
                  frequencies, # Have to be supplied in THz
                  eigenvectors,
                  masses,
+                 iter_mesh=None,
                  cutoff_frequency=None,
                  lattice=None): # column vectors in real space
 
@@ -208,6 +209,11 @@ class ThermalDisplacementMatrices(ThermalMotion):
 
         self._disp_matrices = None
         self._disp_matrices_cif = None
+
+        if iter_mesh is None:
+            self._iter_phonons = zip(self._frequencies, self._eigenvectors)
+        else:
+            self._iter_phonons = iter_mesh
 
         if lattice is not None:
             A = lattice
@@ -223,7 +229,7 @@ class ThermalDisplacementMatrices(ThermalMotion):
         disps = np.zeros((len(self._temperatures), len(self._masses),
                           3, 3), dtype=complex)
 
-        for freqs, eigvecs in zip(self._frequencies, self._eigenvectors):
+        for count, (freqs, eigvecs) in enumerate(self._iter_phonons):
             for f, vec in zip(freqs, eigvecs.T):
                 if f > self._cutoff_frequency:
                     c = []
@@ -231,7 +237,7 @@ class ThermalDisplacementMatrices(ThermalMotion):
                         c.append(np.outer(v, v.conj()) / m)
                     for i, t in enumerate(self._temperatures):
                         disps[i] += self.get_Q2(f, t) * np.array(c)
-        self._disp_matrices = disps / len(self._frequencies)
+        self._disp_matrices = disps / (count + 1)
 
         if self._ANinv is not None:
             self._disp_matrices_cif = np.zeros(self._disp_matrices.shape,
