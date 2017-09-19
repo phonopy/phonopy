@@ -8,22 +8,22 @@ import numpy as np
 from phonopy import Phonopy
 from phonopy.phonon.moment import PhononMoment
 from phonopy.interface.vasp import read_vasp
-from phonopy.file_IO import parse_FORCE_SETS
+from phonopy.file_IO import parse_FORCE_SETS, parse_BORN
 import os
 data_dir=os.path.dirname(os.path.abspath(__file__))
 
 result_full_range = """
  1.000000  1.000000  1.000000
- 4.062877  4.237388  3.888351
-17.935864 19.412878 16.458717
+ 4.062876  4.237382  3.888355
+17.935853 19.412818 16.458755
  1.000000  1.000000  1.000000
- 3.515491  3.605997  3.436412
-12.456606 13.099939 11.894498
+ 3.515492  3.605997  3.436413
+12.456609 13.099933 11.894505
 """
 
 class TestMoment(unittest.TestCase):
     def setUp(self):
-        self._cell = read_vasp(os.path.join(data_dir,"POSCAR_moment"))
+        self._cell = read_vasp(os.path.join(data_dir, "../POSCAR_NaCl"))
     
     def tearDown(self):
         pass
@@ -52,6 +52,13 @@ class TestMoment(unittest.TestCase):
             vals[i, 1:] = moms
             self.assertTrue((np.abs(moms - data[i, 1:]) < 1e-5).all())
 
+        moment = PhononMoment(f, w)
+        moment.set_frequency_range(freq_min=3, freq_max=4)
+        for i in range(3):
+            moment.run(order=i)
+            vals[i + 3, 0] = moment.get_moment()
+            self.assertTrue(np.abs(moment.get_moment() - data[i + 3, 0]) < 1e-5)
+
         moment = PhononMoment(f, w, eigenvectors=e)
         moment.set_frequency_range(freq_min=3, freq_max=4)
         for i in range(3):
@@ -59,13 +66,6 @@ class TestMoment(unittest.TestCase):
             moms = moment.get_moment()
             vals[i + 3, 1:] = moms
             self.assertTrue((np.abs(moms - data[i + 3, 1:]) < 1e-5).all())
-
-        moment = PhononMoment(f, w)
-        moment.set_frequency_range(freq_min=3, freq_max=4)
-        for i in range(3):
-            moment.run(order=i)
-            vals[i + 3, 0] = moment.get_moment()
-            self.assertTrue(np.abs(moment.get_moment() - data[i + 3, 0]) < 1e-5)
 
         # self._show(vals)
 
@@ -79,24 +79,14 @@ class TestMoment(unittest.TestCase):
                          primitive_matrix=[[0, 0.5, 0.5],
                                            [0.5, 0, 0.5],
                                            [0.5, 0.5, 0]])
-        force_sets = parse_FORCE_SETS(filename=os.path.join(data_dir,"FORCE_SETS_moment"))
+        filename = os.path.join(data_dir, "../FORCE_SETS_NaCl")
+        force_sets = parse_FORCE_SETS(filename=filename)
         phonon.set_displacement_dataset(force_sets)
         phonon.produce_force_constants()
-        supercell = phonon.get_supercell()
-        born_elems = {'Na': [[1.08703, 0, 0],
-                             [0, 1.08703, 0],
-                             [0, 0, 1.08703]],
-                      'Cl': [[-1.08672, 0, 0],
-                             [0, -1.08672, 0],
-                             [0, 0, -1.08672]]}
-        born = [born_elems[s] for s in ['Na', 'Cl']]
-        epsilon = [[2.43533967, 0, 0],
-                   [0, 2.43533967, 0],
-                   [0, 0, 2.43533967]]
-        factors = 14.400
-        phonon.set_nac_params({'born': born,
-                               'factor': factors,
-                               'dielectric': epsilon})
+        filename_born = os.path.join(data_dir, "../BORN_NaCl")
+        nac_params = parse_BORN(phonon.get_primitive(), filename=filename_born)
+        phonon.set_nac_params(nac_params)
+
         return phonon
 
 if __name__ == '__main__':

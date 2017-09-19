@@ -1563,7 +1563,7 @@ class PhonopyConfParser(ConfParser):
                             "TDISTANCE is incorrectly specified.")
                 if len(atom_pairs) > 0:
                     self.set_parameter('tdistance', atom_pairs)
-            
+
             # Projection direction used for thermal displacements and PDOS
             if conf_key == 'projection_direction':
                 vals = [float(x) for x in confs['projection_direction'].split()]
@@ -1829,7 +1829,7 @@ class PhonopyConfParser(ConfParser):
                     self._settings.set_projection_direction(
                         params['projection_direction'])
                     self._settings.set_is_mesh_symmetry(False)
-    
+
         # Thermal displacement matrices
         if 'tdispmat' in params or 'tdispmat_cif' in params:
             if 'tdispmat' in params and not params['tdispmat']:

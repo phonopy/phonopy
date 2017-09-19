@@ -36,7 +36,7 @@ import numpy as np
 from phonopy.units import VaspToTHz
 from phonopy.structure.grid_points import GridPoints
 
-class Mesh(object):
+class MeshBase(object):
     def __init__(self,
                  dynamical_matrix,
                  mesh,
@@ -45,17 +45,13 @@ class Mesh(object):
                  is_mesh_symmetry=True,
                  is_eigenvectors=False,
                  is_gamma_center=False,
-                 group_velocity=None,
                  rotations=None, # Point group operations in real space
-                 factor=VaspToTHz,
-                 use_lapack_solver=False):
-
+                 factor=VaspToTHz):
         self._mesh = np.array(mesh, dtype='intc')
         self._is_eigenvectors = is_eigenvectors
         self._factor = factor
         self._cell = dynamical_matrix.get_primitive()
         self._dynamical_matrix = dynamical_matrix
-        self._use_lapack_solver = use_lapack_solver
 
         self._gp = GridPoints(self._mesh,
                               np.linalg.inv(self._cell.get_cell()),
@@ -73,20 +69,12 @@ class Mesh(object):
         self._eigenvalues = None
         self._eigenvectors = None
 
-        self._group_velocity = group_velocity
-        self._group_velocities = None
-
-    def run(self):
-        self._set_phonon()
-        if self._group_velocity is not None:
-            self._set_group_velocities(self._group_velocity)
-
     def get_dynamical_matrix(self):
         return self._dynamical_matrix
-        
+
     def get_mesh_numbers(self):
         return self._mesh
-        
+
     def get_qpoints(self):
         return self._qpoints
 
@@ -98,7 +86,7 @@ class Mesh(object):
 
     def get_ir_grid_points(self):
         return self._gp.get_ir_grid_points()
-    
+
     def get_grid_mapping_table(self):
         return self._gp.get_grid_mapping_table()
 
@@ -108,16 +96,69 @@ class Mesh(object):
     def get_frequencies(self):
         return self._frequencies
 
+
+class Mesh(MeshBase):
+    def __init__(self,
+                 dynamical_matrix,
+                 mesh,
+                 shift=None,
+                 is_time_reversal=True,
+                 is_mesh_symmetry=True,
+                 is_eigenvectors=False,
+                 is_gamma_center=False,
+                 group_velocity=None,
+                 rotations=None, # Point group operations in real space
+                 factor=VaspToTHz,
+                 use_lapack_solver=False):
+        MeshBase.__init__(self,
+                          dynamical_matrix,
+                          mesh,
+                          shift=shift,
+                          is_time_reversal=is_time_reversal,
+                          is_mesh_symmetry=is_mesh_symmetry,
+                          is_eigenvectors=is_eigenvectors,
+                          is_gamma_center=is_gamma_center,
+                          rotations=rotations,
+                          factor=factor)
+
+        self._group_velocity = group_velocity
+        self._group_velocities = None
+        self._use_lapack_solver = use_lapack_solver
+
+        self._q_count = 0
+
+    def __iter__(self):
+        return self
+
+    def next(self):
+        return self.__next__()
+
+    def __next__(self):
+        if self._eigenvectors is None:
+            return StopIteration
+
+        if self._q_count == len(self._qpoints):
+            raise StopIteration
+        else:
+            i = self._q_count
+            self._q_count += 1
+            return self._frequencies[i], self._eigenvectors[i]
+
+    def run(self):
+        self._set_phonon()
+        if self._group_velocity is not None:
+            self._set_group_velocities(self._group_velocity)
+
     def get_group_velocities(self):
         return self._group_velocities
-    
+
     def get_eigenvectors(self):
         """
         Eigenvectors is a numpy array of three dimension.
         The first index runs through q-points.
         In the second and third indices, eigenvectors obtained
         using numpy.linalg.eigh are stored.
-        
+
         The third index corresponds to the eigenvalue's index.
         The second index is for atoms [x1, y1, z1, x2, y2, z2, ...].
         """
@@ -216,7 +257,55 @@ class Mesh(object):
                                          dtype='double',
                                          order='C') * self._factor
 
-
     def _set_group_velocities(self, group_velocity):
         group_velocity.set_q_points(self._qpoints)
         self._group_velocities = group_velocity.get_group_velocity()
+
+class IterMesh(MeshBase):
+    def __init__(self,
+                 dynamical_matrix,
+                 mesh,
+                 shift=None,
+                 is_time_reversal=True,
+                 is_mesh_symmetry=True,
+                 is_eigenvectors=False,
+                 is_gamma_center=False,
+                 rotations=None, # Point group operations in real space
+                 factor=VaspToTHz):
+        MeshBase.__init__(self,
+                          dynamical_matrix,
+                          mesh,
+                          shift=shift,
+                          is_time_reversal=is_time_reversal,
+                          is_mesh_symmetry=is_mesh_symmetry,
+                          is_eigenvectors=is_eigenvectors,
+                          is_gamma_center=is_gamma_center,
+                          rotations=rotations,
+                          factor=factor)
+
+        self._q_count = 0
+
+    def __iter__(self):
+        return self
+
+    def next(self):
+        return self.__next__()
+
+    def __next__(self):
+        if self._q_count == len(self._qpoints):
+            raise StopIteration
+        else:
+            q = self._qpoints[self._q_count]
+            self._dynamical_matrix.set_dynamical_matrix(q)
+            dm = self._dynamical_matrix.get_dynamical_matrix()
+            if self._is_eigenvectors:
+                eigvals, self._eigenvectors = np.linalg.eigh(dm)
+                self._eigenvalues = eigvals.real
+            else:
+                self._eigenvalues = np.linalg.eigvalsh(dm).real
+            self._frequencies = np.array(np.sqrt(abs(self._eigenvalues)) *
+                                         np.sign(self._eigenvalues),
+                                         dtype='double',
+                                         order='C') * self._factor
+            self._q_count += 1
+            return self._frequencies, self._eigenvectors
