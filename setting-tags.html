@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Setting tags &#8212; phonopy 1.11.12 documentation</title>
+    <title>Setting tags &#8212; Phonopy v.1.11.12</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
@@ -22,7 +22,7 @@
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -64,6 +64,7 @@
       role="menu"
       aria-labelledby="dLabelGlobalToc"><ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symmetry.html">Crystal symmetry</a></li>
 <li class="toctree-l1"><a class="reference internal" href="procedure.html">Tutorial</a></li>
 <li class="toctree-l1"><a class="reference internal" href="workflow.html">Work flow</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
@@ -868,6 +869,7 @@ when sampling <span class="math">\(\Gamma\)</span> point or using very dense sam
 to avoid divergence.</p>
 <p>The projection is applied along arbitrary direction using
 <code class="docutils literal"><span class="pre">PROJECTION_DIRECTION</span></code> tag (<a class="reference internal" href="#projection-direction-tag"><span class="std std-ref">PROJECTION_DIRECTION</span></a>).</p>
+<p><code class="docutils literal"><span class="pre">mesh.yaml</span></code> or <code class="docutils literal"><span class="pre">mesh.hdf5</span></code> is not written out from phonopy-1.11.12.121.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">TDISP</span> <span class="o">=</span> <span class="o">.</span><span class="n">TRUE</span><span class="o">.</span>
 <span class="n">PROJECTION_DIRECTION</span> <span class="o">=</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">0</span>
 </pre></div>
@@ -893,6 +895,7 @@ to avoid divergence.</p>
 <p>The 3x3 matrix restricts distribution of each atom around the
 equilibrium position to be ellipsoid. But the distribution is not
 necessarily to be so.</p>
+<p><code class="docutils literal"><span class="pre">mesh.yaml</span></code> or <code class="docutils literal"><span class="pre">mesh.hdf5</span></code> is not written out from phonopy-1.11.12.121.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">TDISPMAT</span> <span class="o">=</span> <span class="o">.</span><span class="n">TRUE</span><span class="o">.</span>
 </pre></div>
 </div>
@@ -907,6 +910,7 @@ to obtain the mean square displacement matricies, therefore physical
 units have to be set properly for it (see
 <a class="reference internal" href="interfaces.html#calculator-interfaces"><span class="std std-ref">Interfaces to calculators</span></a>.) The result is given in
 <span class="math">\(\textrm{\AA}^2\)</span>.</p>
+<p><code class="docutils literal"><span class="pre">mesh.yaml</span></code> or <code class="docutils literal"><span class="pre">mesh.hdf5</span></code> is not written out from phonopy-1.11.12.121.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">TDISPMAT_CIF</span> <span class="o">=</span> <span class="mf">1273.0</span>
 </pre></div>
 </div>

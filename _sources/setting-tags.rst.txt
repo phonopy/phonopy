@@ -703,6 +703,8 @@ to avoid divergence.
 The projection is applied along arbitrary direction using
 ``PROJECTION_DIRECTION`` tag (:ref:`projection_direction_tag`).
 
+``mesh.yaml`` or ``mesh.hdf5`` is not written out from phonopy-1.11.12.121.
+
 ::
 
    TDISP = .TRUE.
@@ -734,6 +736,8 @@ The 3x3 matrix restricts distribution of each atom around the
 equilibrium position to be ellipsoid. But the distribution is not
 necessarily to be so.
 
+``mesh.yaml`` or ``mesh.hdf5`` is not written out from phonopy-1.11.12.121.
+
 ::
 
    TDISPMAT = .TRUE.
@@ -751,6 +755,8 @@ to obtain the mean square displacement matricies, therefore physical
 units have to be set properly for it (see
 :ref:`calculator_interfaces`.) The result is given in
 :math:`\textrm{\AA}^2`.
+
+``mesh.yaml`` or ``mesh.hdf5`` is not written out from phonopy-1.11.12.121.
 
 ::
 
