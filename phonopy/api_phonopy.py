@@ -929,29 +929,24 @@ class Phonopy(object):
         self._thermal_displacement_matrices = None
 
         if self._mesh is not None:
-            eigvecs = self._mesh.get_eigenvectors()
-            frequencies = self._mesh.get_frequencies()
-            mesh_nums = self._mesh.get_mesh_numbers()
-            if self._mesh.get_eigenvectors() is None:
+            eigvecs = self._mesh.get_eigenvectors() 
+            if eigvecs is None:
                 print("Warning: Eigenvectors have to be calculated.")
                 return False
-            if np.prod(mesh_nums) != len(eigvecs):
+            if np.prod(self._mesh.get_mesh_numbers()) != len(eigvecs):
                 print("Warning: Sampling mesh must not be symmetrized.")
                 return False
 
             tdm = ThermalDisplacementMatrices(
-                frequencies,
-                eigvecs,
+                self._mesh,
                 self._primitive.get_masses(),
                 cutoff_frequency=cutoff_frequency,
                 lattice=self._primitive.get_cell().T)
         else:
             if self._iter_mesh is not None:
                 tdm = ThermalDisplacementMatrices(
-                    None,
-                    None,
+                    self._iter_mesh,
                     self._primitive.get_masses(),
-                    iter_mesh=self._iter_mesh,
                     cutoff_frequency=cutoff_frequency,
                     lattice=self._primitive.get_cell().T)
             else:

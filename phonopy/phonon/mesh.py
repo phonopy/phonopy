@@ -71,10 +71,10 @@ class MeshBase(object):
 
     def get_dynamical_matrix(self):
         return self._dynamical_matrix
-        
+
     def get_mesh_numbers(self):
         return self._mesh
-        
+
     def get_qpoints(self):
         return self._qpoints
 
@@ -86,7 +86,7 @@ class MeshBase(object):
 
     def get_ir_grid_points(self):
         return self._gp.get_ir_grid_points()
-    
+
     def get_grid_mapping_table(self):
         return self._gp.get_grid_mapping_table()
 
@@ -125,6 +125,26 @@ class Mesh(MeshBase):
         self._group_velocities = None
         self._use_lapack_solver = use_lapack_solver
 
+        self._q_count = 0
+
+    def __iter__(self):
+        return self
+
+    def next(self):
+        return self.__next__()
+
+    def __next__(self):
+        if self._eigenvectors is None:
+            print("Eigenvectors was not found.")
+            return StopIteration
+
+        if self._q_count == len(self._qpoints):
+            raise StopIteration
+        else:
+            i = self._q_count
+            self._q_count += 1
+            return self._frequencies[i], self._eigenvectors[i]
+
     def run(self):
         self._set_phonon()
         if self._group_velocity is not None:
@@ -132,14 +152,14 @@ class Mesh(MeshBase):
 
     def get_group_velocities(self):
         return self._group_velocities
-    
+
     def get_eigenvectors(self):
         """
         Eigenvectors is a numpy array of three dimension.
         The first index runs through q-points.
         In the second and third indices, eigenvectors obtained
         using numpy.linalg.eigh are stored.
-        
+
         The third index corresponds to the eigenvalue's index.
         The second index is for atoms [x1, y1, z1, x2, y2, z2, ...].
         """
@@ -268,7 +288,10 @@ class IterMesh(MeshBase):
 
     def __iter__(self):
         return self
-            
+
+    def next(self):
+        return self.__next__()
+
     def __next__(self):
         if self._q_count == len(self._qpoints):
             raise StopIteration
@@ -287,6 +310,3 @@ class IterMesh(MeshBase):
                                          order='C') * self._factor
             self._q_count += 1
             return self._frequencies, self._eigenvectors
-
-    def next(self):
-        return self.__next__()

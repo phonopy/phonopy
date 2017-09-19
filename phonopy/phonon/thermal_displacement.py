@@ -194,26 +194,20 @@ class ThermalDisplacements(ThermalMotion):
 
 class ThermalDisplacementMatrices(ThermalMotion):
     def __init__(self,
-                 frequencies, # Have to be supplied in THz
-                 eigenvectors,
+                 iter_phonons,
                  masses,
-                 iter_mesh=None,
                  cutoff_frequency=None,
                  lattice=None): # column vectors in real space
 
         ThermalMotion.__init__(self,
-                               frequencies,
-                               eigenvectors,
+                               None,
+                               None,
                                masses,
                                cutoff_frequency=cutoff_frequency)
 
         self._disp_matrices = None
         self._disp_matrices_cif = None
-
-        if iter_mesh is None:
-            self._iter_phonons = zip(self._frequencies, self._eigenvectors)
-        else:
-            self._iter_phonons = iter_mesh
+        self._iter_phonons = iter_phonons
 
         if lattice is not None:
             A = lattice
