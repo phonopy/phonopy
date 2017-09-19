@@ -852,37 +852,44 @@ class Phonopy(object):
           are ignored.
 
         direction:
-          Projection direction in reduced coordinates
+          Projection direction in reduced coordinates (
         """
         self._thermal_displacements = None
 
-        if self._mesh is None:
-            print("Warning: \'set_mesh\' has to finish correctly "
-                  "before \'set_thermal_displacements\'.")
-            return False
+        if self._mesh is not None:
+            eigvecs = self._mesh.get_eigenvectors()
+            mesh_nums = self._mesh.get_mesh_numbers()
+            if eigvecs is None:
+                print("Warning: Eigenvectors have to be calculated.")
+                return False
+            if np.prod(mesh_nums) != len(eigvecs):
+                print("Warning: Sampling mesh must not be symmetrized.")
+                return False
 
-        eigvecs = self._mesh.get_eigenvectors()
-        frequencies = self._mesh.get_frequencies()
-        mesh_nums = self._mesh.get_mesh_numbers()
+            iter_phonons = self._mesh
+        else:
+            if self._iter_mesh is not None:
+                iter_phonons = self._iter_mesh
+            else:
+                print("Warning: \'set_mesh\' has to finish correctly "
+                      "before \'set_thermal_displacements\'.")
+                return False
 
-        if self._mesh.get_eigenvectors() is None:
-            print("Warning: Eigenvectors have to be calculated.")
-            return False
+        if direction is not None:
+            projection_direction = np.dot(direction, self._primitive.get_cell())
+            td = ThermalDisplacements(iter_phonons,
+                                      self._primitive.get_masses(),
+                                      projection_direction=projection_direction,
+                                      cutoff_frequency=cutoff_frequency)
+        else:
+            td = ThermalDisplacements(iter_phonons,
+                                      self._primitive.get_masses(),
+                                      cutoff_frequency=cutoff_frequency)
 
-        if np.prod(mesh_nums) != len(eigvecs):
-            print("Warning: Sampling mesh must not be symmetrized.")
-            return False
-
-        td = ThermalDisplacements(frequencies,
-                                  eigvecs,
-                                  self._primitive.get_masses(),
-                                  cutoff_frequency=cutoff_frequency)
         if temperatures is None:
             td.set_temperature_range(t_min, t_max, t_step)
         else:
             td.set_temperatures(temperatures)
-        if direction is not None:
-            td.project_eigenvectors(direction, self._primitive.get_cell())
         td.run()
 
         self._thermal_displacements = td
@@ -937,22 +944,20 @@ class Phonopy(object):
                 print("Warning: Sampling mesh must not be symmetrized.")
                 return False
 
-            tdm = ThermalDisplacementMatrices(
-                self._mesh,
-                self._primitive.get_masses(),
-                cutoff_frequency=cutoff_frequency,
-                lattice=self._primitive.get_cell().T)
+            iter_phonons = self._mesh
         else:
             if self._iter_mesh is not None:
-                tdm = ThermalDisplacementMatrices(
-                    self._iter_mesh,
-                    self._primitive.get_masses(),
-                    cutoff_frequency=cutoff_frequency,
-                    lattice=self._primitive.get_cell().T)
+                iter_phonons = self._iter_mesh
             else:
                 print("Warning: \'set_mesh\' has to finish correctly "
                       "before \'set_thermal_displacement_matrices\'.")
                 return False
+
+        tdm = ThermalDisplacementMatrices(
+            iter_phonons,
+            self._primitive.get_masses(),
+            cutoff_frequency=cutoff_frequency,
+            lattice=self._primitive.get_cell().T)
 
         if t_cif is None:
             tdm.set_temperature_range(t_min, t_max, t_step)

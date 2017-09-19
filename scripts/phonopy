@@ -732,8 +732,8 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
          q_symmetry,
          is_gamma_center) =  settings.get_mesh()
 
-        if settings.get_is_iter_mesh():
-            print("Use IterMesh")
+        if (settings.get_is_thermal_displacements() or
+            settings.get_is_thermal_displacement_matrices()):
             phonon.set_iter_mesh(mesh,
                                  mesh_shift,
                                  is_time_reversal=t_symmetry,

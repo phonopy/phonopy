@@ -923,7 +923,6 @@ class PhonopySettings(Settings):
         self._is_group_velocity = False
         self._is_gamma_center = False
         self._is_hdf5 = False
-        self._is_iter_mesh = False
         self._is_little_cogroup = False
         self._is_moment = False
         self._is_plusminus_displacement = 'auto'
@@ -1082,12 +1081,6 @@ class PhonopySettings(Settings):
 
     def get_is_group_velocity(self):
         return self._is_group_velocity
-
-    def set_is_iter_mesh(self, is_iter_mesh):
-        self._is_iter_mesh = is_iter_mesh
-
-    def get_is_iter_mesh(self):
-        return self._is_iter_mesh
 
     def set_is_little_cogroup(self, is_little_cogroup):
         self._is_little_cogroup = is_little_cogroup
@@ -1329,10 +1322,6 @@ class PhonopyConfParser(ConfParser):
                 if opt_tdm_cif:
                     self._confs['tdispmat_cif'] = opt_tdm_cif
                     
-            if opt.dest == 'is_iter_mesh':
-                if self._options.is_iter_mesh:
-                    self._confs['iter_mesh'] = '.true.'
-
             if opt.dest == 'projection_direction':
                 opt_proj_dir = self._options.projection_direction
                 if opt_proj_dir is not None:
@@ -1575,11 +1564,6 @@ class PhonopyConfParser(ConfParser):
                 if len(atom_pairs) > 0:
                     self.set_parameter('tdistance', atom_pairs)
 
-            # Use IterMesh instead of Mesh
-            if conf_key == 'iter_mesh':
-                if confs['iter_mesh'].lower() == '.true.':
-                    self.set_parameter('iter_mesh', True)
-                    
             # Projection direction used for thermal displacements and PDOS
             if conf_key == 'projection_direction':
                 vals = [float(x) for x in confs['projection_direction'].split()]
@@ -1845,7 +1829,7 @@ class PhonopyConfParser(ConfParser):
                     self._settings.set_projection_direction(
                         params['projection_direction'])
                     self._settings.set_is_mesh_symmetry(False)
-    
+
         # Thermal displacement matrices
         if 'tdispmat' in params or 'tdispmat_cif' in params:
             if 'tdispmat' in params and not params['tdispmat']:
@@ -1859,9 +1843,6 @@ class PhonopyConfParser(ConfParser):
                 if 'tdispmat_cif' in params:
                     self._settings.set_thermal_displacement_matrix_temperature(
                         params['tdispmat_cif'])
-
-                if 'iter_mesh' in params:
-                    self._settings.set_is_iter_mesh(params['iter_mesh'])
 
         # Thermal distances
         if 'tdistance' in params: 

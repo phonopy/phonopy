@@ -135,7 +135,6 @@ class Mesh(MeshBase):
 
     def __next__(self):
         if self._eigenvectors is None:
-            print("Eigenvectors was not found.")
             return StopIteration
 
         if self._q_count == len(self._qpoints):
