@@ -1,15 +1,16 @@
 import unittest
+import os
+import sys
 try:
     from StringIO import StringIO
 except ImportError:
     from io import StringIO
-import sys
 import numpy as np
 from phonopy import Phonopy
 from phonopy.interface.vasp import read_vasp
 from phonopy.file_IO import parse_FORCE_SETS
-import os
-data_dir=os.path.dirname(os.path.abspath(__file__))
+
+data_dir = os.path.dirname(os.path.abspath(__file__))
 
 chars_Pc = """ 1.  0. -1.  0.
  1.  0.  1.  0.
@@ -495,7 +496,8 @@ class TestIrreps(unittest.TestCase):
         phonon = Phonopy(cell,
                          np.diag(dim),
                          primitive_matrix=pmat)
-        force_sets = parse_FORCE_SETS(filename=os.path.join(data_dir,"FORCE_SETS_%s" % spgtype))
+        filename = os.path.join(data_dir,"FORCE_SETS_%s" % spgtype)
+        force_sets = parse_FORCE_SETS(filename=filename)
         phonon.set_displacement_dataset(force_sets)
         phonon.produce_force_constants()
         print(phonon.get_symmetry().get_pointgroup())

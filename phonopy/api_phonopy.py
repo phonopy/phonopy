@@ -49,7 +49,7 @@ from phonopy.harmonic.dynamical_matrix import (DynamicalMatrix,
                                                DynamicalMatrixNAC)
 from phonopy.phonon.band_structure import BandStructure
 from phonopy.phonon.thermal_properties import ThermalProperties
-from phonopy.phonon.mesh import Mesh
+from phonopy.phonon.mesh import Mesh, IterMesh
 from phonopy.units import VaspToTHz
 from phonopy.phonon.dos import TotalDos, PartialDos
 from phonopy.phonon.thermal_displacement import (ThermalDisplacements,
@@ -135,6 +135,9 @@ class Phonopy(object):
 
         # set_mesh
         self._mesh = None
+
+        # set_iter_mesh
+        self._iter_mesh = None
 
         # set_tetrahedron_method
         self._tetrahedron_method = None
@@ -558,6 +561,56 @@ class Phonopy(object):
     def write_yaml_mesh(self):
         self._mesh.write_yaml()
 
+    # Sampling mesh:
+    # Solving dynamical matrices at q-points one-by-one as an iterator
+    def set_iter_mesh(self,
+                      mesh,
+                      shift=None,
+                      is_time_reversal=True,
+                      is_mesh_symmetry=True,
+                      is_eigenvectors=False,
+                      is_gamma_center=False):
+        """Create an IterMesh instance
+
+        """
+
+
+        if self._dynamical_matrix is None:
+            print("Warning: Dynamical matrix has not yet built.")
+            self._iter_mesh = None
+            return False
+
+        self._iter_mesh = IterMesh(
+            self._dynamical_matrix,
+            mesh,
+            shift=shift,
+            is_time_reversal=is_time_reversal,
+            is_mesh_symmetry=is_mesh_symmetry,
+            is_eigenvectors=is_eigenvectors,
+            is_gamma_center=is_gamma_center,
+            rotations=self._primitive_symmetry.get_pointgroup_operations(),
+            factor=self._factor)
+        return True
+
+    def get_iter_mesh(self):
+        """Returns IterMesh instance
+
+        This instance object does not store all phonon data. With very
+        dense mesh and eigenvectors needed, IterMesh can save memory
+        space, but expected to be slow.
+
+        This object is used as an iterator. Phonon frequencies and
+        eigenvectos are obtained as below:
+
+            for i, (freqs, eigvecs) in enumerate(iter_mesh):
+                print(i + 1)
+                print(freqs)
+                print(eigvecs)
+
+        """
+
+        return self._iter_mesh
+
     # Plot band structure and DOS (PDOS) together
     def plot_band_structure_and_dos(self, pdos_indices=None, labels=None):
         import matplotlib.pyplot as plt
@@ -799,37 +852,44 @@ class Phonopy(object):
           are ignored.
 
         direction:
-          Projection direction in reduced coordinates
+          Projection direction in reduced coordinates (
         """
         self._thermal_displacements = None
 
-        if self._mesh is None:
-            print("Warning: \'set_mesh\' has to finish correctly "
-                  "before \'set_thermal_displacements\'.")
-            return False
+        if self._mesh is not None:
+            eigvecs = self._mesh.get_eigenvectors()
+            mesh_nums = self._mesh.get_mesh_numbers()
+            if eigvecs is None:
+                print("Warning: Eigenvectors have to be calculated.")
+                return False
+            if np.prod(mesh_nums) != len(eigvecs):
+                print("Warning: Sampling mesh must not be symmetrized.")
+                return False
 
-        eigvecs = self._mesh.get_eigenvectors()
-        frequencies = self._mesh.get_frequencies()
-        mesh_nums = self._mesh.get_mesh_numbers()
+            iter_phonons = self._mesh
+        else:
+            if self._iter_mesh is not None:
+                iter_phonons = self._iter_mesh
+            else:
+                print("Warning: \'set_mesh\' has to finish correctly "
+                      "before \'set_thermal_displacements\'.")
+                return False
 
-        if self._mesh.get_eigenvectors() is None:
-            print("Warning: Eigenvectors have to be calculated.")
-            return False
+        if direction is not None:
+            projection_direction = np.dot(direction, self._primitive.get_cell())
+            td = ThermalDisplacements(iter_phonons,
+                                      self._primitive.get_masses(),
+                                      projection_direction=projection_direction,
+                                      cutoff_frequency=cutoff_frequency)
+        else:
+            td = ThermalDisplacements(iter_phonons,
+                                      self._primitive.get_masses(),
+                                      cutoff_frequency=cutoff_frequency)
 
-        if np.prod(mesh_nums) != len(eigvecs):
-            print("Warning: Sampling mesh must not be symmetrized.")
-            return False
-
-        td = ThermalDisplacements(frequencies,
-                                  eigvecs,
-                                  self._primitive.get_masses(),
-                                  cutoff_frequency=cutoff_frequency)
         if temperatures is None:
             td.set_temperature_range(t_min, t_max, t_step)
         else:
             td.set_temperatures(temperatures)
-        if direction is not None:
-            td.project_eigenvectors(direction, self._primitive.get_cell())
         td.run()
 
         self._thermal_displacements = td
@@ -875,28 +935,30 @@ class Phonopy(object):
         """
         self._thermal_displacement_matrices = None
 
-        if self._mesh is None:
-            print("Warning: \'set_mesh\' has to finish correctly "
-                  "before \'set_thermal_displacement_matrices\'.")
-            return False
+        if self._mesh is not None:
+            eigvecs = self._mesh.get_eigenvectors() 
+            if eigvecs is None:
+                print("Warning: Eigenvectors have to be calculated.")
+                return False
+            if np.prod(self._mesh.get_mesh_numbers()) != len(eigvecs):
+                print("Warning: Sampling mesh must not be symmetrized.")
+                return False
 
-        eigvecs = self._mesh.get_eigenvectors()
-        frequencies = self._mesh.get_frequencies()
-        mesh_nums = self._mesh.get_mesh_numbers()
+            iter_phonons = self._mesh
+        else:
+            if self._iter_mesh is not None:
+                iter_phonons = self._iter_mesh
+            else:
+                print("Warning: \'set_mesh\' has to finish correctly "
+                      "before \'set_thermal_displacement_matrices\'.")
+                return False
 
-        if self._mesh.get_eigenvectors() is None:
-            print("Warning: Eigenvectors have to be calculated.")
-            return False
+        tdm = ThermalDisplacementMatrices(
+            iter_phonons,
+            self._primitive.get_masses(),
+            cutoff_frequency=cutoff_frequency,
+            lattice=self._primitive.get_cell().T)
 
-        if np.prod(mesh_nums) != len(eigvecs):
-            print("Warning: Sampling mesh must not be symmetrized.")
-            return False
-
-        tdm = ThermalDisplacementMatrices(frequencies,
-                                          eigvecs,
-                                          self._primitive.get_masses(),
-                                          cutoff_frequency=cutoff_frequency,
-                                          lattice=self._primitive.get_cell().T)
         if t_cif is None:
             tdm.set_temperature_range(t_min, t_max, t_step)
         else:
@@ -1093,7 +1155,7 @@ class Phonopy(object):
         return True
 
     def get_modulated_supercells(self):
-        """Returns cells with modulations as Atoms objects"""
+        """Returns cells with modulations as Atoms instances"""
         return self._modulation.get_modulated_supercells()
 
     def get_modulations_and_supercell(self):
@@ -1102,7 +1164,7 @@ class Phonopy(object):
         (modulations, supercell)
 
         modulations: Atomic modulations of supercell in Cartesian coordinates
-        supercell: Supercell as an Atoms object.
+        supercell: Supercell as an Atoms instance.
 
         """
         return self._modulation.get_modulations_and_supercell()
