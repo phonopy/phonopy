@@ -960,6 +960,7 @@ if __name__ == "__main__":
                         is_mesh_symmetry=mesh_symmetry,
                         is_eigenvectors=mesh_eigenvectors,
                         factor=frequency_unit_factor)
+        mesh_obj.run()
         if options.yaml:
             mesh_obj.write_yaml()
                         
