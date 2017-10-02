@@ -51,6 +51,7 @@
 
 static Cell * get_Wyckoff_positions(int * wyckoffs,
                                     int * equiv_atoms,
+                                    int * mapping_to_primitive,
                                     const Cell * primitive,
                                     const Cell * cell,
                                     SPGCONST Spacegroup * spacegroup,
@@ -60,11 +61,13 @@ static Cell * get_Wyckoff_positions(int * wyckoffs,
 static Cell *
 get_bravais_exact_positions_and_lattice(int * wyckoffs,
                                         int * equiv_atoms,
+                                        int * mapping_to_primitive,
                                         SPGCONST Spacegroup * spacegroup,
                                         const Cell * primitive,
                                         const double symprec);
 static Cell * expand_positions(int * wyckoffs,
                                int * equiv_atoms,
+                               int * mapping_to_primitive,
                                const Cell * conv_prim,
                                const Symmetry * conv_sym,
                                const int * wyckoffs_prim,
@@ -163,6 +166,7 @@ ref_get_refined_symmetry_operations(const Cell * cell,
 /* Return NULL if failed */
 Cell * ref_get_Wyckoff_positions(int * wyckoffs,
                                  int * equiv_atoms,
+                                 int * mapping_to_primitive,
                                  const Cell * primitive,
                                  const Cell * cell,
                                  SPGCONST Spacegroup * spacegroup,
@@ -172,6 +176,7 @@ Cell * ref_get_Wyckoff_positions(int * wyckoffs,
 {
   return get_Wyckoff_positions(wyckoffs,
                                equiv_atoms,
+                               mapping_to_primitive,
                                primitive,
                                cell,
                                spacegroup,
@@ -182,6 +187,7 @@ Cell * ref_get_Wyckoff_positions(int * wyckoffs,
 
 Cell * get_Wyckoff_positions(int * wyckoffs,
                              int * equiv_atoms,
+                             int * mapping_to_primitive,
                              const Cell * primitive,
                              const Cell * cell,
                              SPGCONST Spacegroup * spacegroup,
@@ -217,6 +223,7 @@ Cell * get_Wyckoff_positions(int * wyckoffs,
   if ((bravais = get_bravais_exact_positions_and_lattice
        (wyckoffs_bravais,
         equiv_atoms_bravais,
+        mapping_to_primitive,
         spacegroup,
         primitive,
         symprec)) == NULL) {
@@ -270,6 +277,7 @@ Cell * get_Wyckoff_positions(int * wyckoffs,
 static Cell *
 get_bravais_exact_positions_and_lattice(int * wyckoffs,
                                         int * equiv_atoms,
+                                        int * mapping_to_primitive,
                                         SPGCONST Spacegroup *spacegroup,
                                         const Cell * primitive,
                                         const double symprec)
@@ -344,6 +352,7 @@ get_bravais_exact_positions_and_lattice(int * wyckoffs,
 
   bravais = expand_positions(wyckoffs,
                              equiv_atoms,
+                             mapping_to_primitive,
                              conv_prim,
                              conv_sym,
                              wyckoffs_prim,
@@ -367,6 +376,7 @@ get_bravais_exact_positions_and_lattice(int * wyckoffs,
 /* Return NULL if failed */
 static Cell * expand_positions(int * wyckoffs,
                                int * equiv_atoms,
+                               int * mapping_to_primitive,
                                const Cell * conv_prim,
                                const Symmetry * conv_sym,
                                const int * wyckoffs_prim,
@@ -390,7 +400,7 @@ static Cell * expand_positions(int * wyckoffs,
     if (mat_check_identity_matrix_i3(identity, conv_sym->rot[i])) {
       for (j = 0; j < conv_prim->size; j++) {
         bravais->types[num_atom] = conv_prim->types[j];
-        mat_copy_vector_d3(bravais->position[ num_atom ],
+        mat_copy_vector_d3(bravais->position[num_atom],
                            conv_prim->position[j]);
         for (k = 0; k < 3; k++) {
           bravais->position[num_atom][k] += conv_sym->trans[i][k];
@@ -399,6 +409,7 @@ static Cell * expand_positions(int * wyckoffs,
         }
         wyckoffs[num_atom] = wyckoffs_prim[j];
         equiv_atoms[num_atom] = equiv_atoms_prim[j];
+        mapping_to_primitive[num_atom] = j;
         num_atom++;
       }
     }

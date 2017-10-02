@@ -392,16 +392,15 @@ Spacegroup spa_search_spacegroup_with_symmetry(const Symmetry *symmetry,
 }
 
 /* Return NULL if failed */
-Cell * spa_transform_to_primitive(const Cell * cell,
+Cell * spa_transform_to_primitive(int * mapping_table,
+                                  const Cell * cell,
                                   SPGCONST double trans_mat[3][3],
                                   const Centering centering,
                                   const double symprec)
 {
-  int * mapping_table;
   double tmat[3][3], tmat_inv[3][3], prim_lat[3][3];
   Cell * primitive;
 
-  mapping_table = NULL;
   primitive = NULL;
 
   if (!mat_inverse_matrix_d3(tmat_inv, trans_mat, symprec)) {
@@ -431,20 +430,12 @@ Cell * spa_transform_to_primitive(const Cell * cell,
     goto err;
   }
 
-  if ((mapping_table = (int*) malloc(sizeof(int) * cell->size)) == NULL) {
-    warning_print("spglib: Memory could not be allocated ");
-    goto err;
-  }
-
   mat_multiply_matrix_d3(prim_lat, cell->lattice, tmat);
   if ((primitive = cel_trim_cell(mapping_table, prim_lat, cell, symprec))
       == NULL) {
     warning_print("spglib: cel_trim_cell failed.");
     warning_print(" (line %d, %s).\n", __LINE__, __FILE__);
   }
-
-  free(mapping_table);
-  mapping_table = NULL;
 
   return primitive;
 
@@ -457,7 +448,7 @@ Cell * spa_transform_from_primitive(const Cell * primitive,
 				    const Centering centering,
 				    const double symprec)
 {
-  int multi, i, j, k, count;
+  int multi, i, j, k, num_atom;
   int *mapping_table;
   double tmat[3][3], inv_tmat[3][3], shift[3][3];
   Cell *std_cell, *trimmed_cell;
@@ -509,23 +500,24 @@ Cell * spa_transform_from_primitive(const Cell * primitive,
 
   mat_multiply_matrix_d3(std_cell->lattice, primitive->lattice, inv_tmat);
 
-  count = 0;
+  num_atom = 0;
   for (i = 0; i < primitive->size; i++) {
-    mat_multiply_matrix_vector_d3(std_cell->position[count],
+    mat_multiply_matrix_vector_d3(std_cell->position[num_atom],
 				  tmat,
 				  primitive->position[i]);
-    std_cell->types[count] = primitive->types[i];
-    for (j = 0; j < multi - 1; j++) {
-      mat_copy_vector_d3(std_cell->position[count + j + 1],
-			 std_cell->position[count]);
-    }
-    count++;
-    for (j = 0; j < multi - 1; j++) {
-      std_cell->types[count] = primitive->types[i];
+    std_cell->types[num_atom] = primitive->types[i];
+    num_atom++;
+  }
+
+  for (i = 0; i < multi - 1; i++) {
+    for (j = 0; j < primitive->size; j++) {
+      mat_copy_vector_d3(std_cell->position[num_atom],
+			 std_cell->position[j]);
       for (k = 0; k < 3; k++) {
-	std_cell->position[count][k] += shift[j][k];
+	std_cell->position[num_atom][k] += shift[i][k];
       }
-      count++;
+      std_cell->types[num_atom] = std_cell->types[j];
+      num_atom++;
     }
   }
 

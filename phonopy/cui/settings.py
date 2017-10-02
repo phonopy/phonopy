@@ -1613,7 +1613,7 @@ class PhonopyConfParser(ConfParser):
                     delta_q = [float(x) for x in header[3:6]]
                     modulation['delta_q'] = delta_q
                 if len(header) == 7:
-                    modulation['order'] = int(header[7])
+                    modulation['order'] = int(header[6])
                 
             vals = []
             for phonon_mode in mod_list[1:]:
