@@ -3,6 +3,20 @@
 Change Log
 ==========
 
+Oct-2-2017: Version 1.11.14
+-------------------------------
+
+* 6/m and 1 point groups are added for irreps dataset.
+* ``band.hdf5`` is output instead of ``band.yaml`` when using ``--hdf5``
+  option together.
+* Spglib update to v1.9.10. By this, symmetry search for supercells
+  with large number of dimensions may become significantly faster.
+* It is changed so that ``mesh.yaml`` or ``mesh.hdf5`` is not written
+  out in thermal displacements calculations (``TDISP``, ``TDISPMAT``,
+  ``TDISPMAT_CIF``). This is done to reduce the memory consumption of
+  this calculation with dense mesh sampling.
+* And many minor updates.
+
 June-18-2017: Version 1.11.12
 -------------------------------
 
