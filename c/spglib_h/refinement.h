@@ -47,6 +47,7 @@ ref_get_refined_symmetry_operations(const Cell * cell,
                                     const double symprec);
 Cell * ref_get_Wyckoff_positions(int * wyckoffs,
                                  int * equiv_atoms,
+                                 int * mapping_to_primitive,
                                  const Cell * primitive,
                                  const Cell * cell,
                                  SPGCONST Spacegroup * spacegroup,

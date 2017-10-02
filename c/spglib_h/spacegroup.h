@@ -73,7 +73,8 @@ Primitive * spa_get_spacegroup(Spacegroup * spacegroup,
                                const double angle_tolerance);
 Spacegroup spa_search_spacegroup_with_symmetry(const Symmetry *symmetry,
 					       const double symprec);
-Cell * spa_transform_to_primitive(const Cell * cell,
+Cell * spa_transform_to_primitive(int * mapping_table,
+                                  const Cell * cell,
                                   SPGCONST double trans_mat[3][3],
                                   const Centering centering,
                                   const double symprec);
