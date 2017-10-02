@@ -93,13 +93,17 @@ static Symmetry * reduce_operation(const Cell * primitive,
 				   const Symmetry * symmetry,
 				   const double symprec,
 				   const double angle_symprec);
-static int search_translation_part(int lat_point_atoms[],
+static int search_translation_part(int atoms_found[],
 				   const Cell * cell,
 				   SPGCONST int rot[3][3],
 				   const int min_atom_index,
 				   const double origin[3],
 				   const double symprec,
 				   const int is_identity);
+static int search_pure_translations(int atoms_found[],
+                                    const Cell * cell,
+                                    const double trans[3],
+                                    const double symprec);
 static int is_overlap_all_atoms(const double test_trans[3],
 				SPGCONST int rot[3][3],
 				const Cell * cell,
@@ -431,7 +435,8 @@ static VecDBL * get_translation(SPGCONST int rot[3][3],
   mat_multiply_matrix_vector_id3(origin, rot, cell->position[min_atom_index]);
 
 #ifdef _OPENMP
-  if (cell->size < NUM_ATOMS_CRITERION_FOR_OPENMP) {
+  if (cell->size < NUM_ATOMS_CRITERION_FOR_OPENMP || is_identity) {
+    /* In this case, OpenMP multithreading is not used. */
     num_trans = search_translation_part(is_found,
 					cell,
 					rot,
@@ -443,6 +448,7 @@ static VecDBL * get_translation(SPGCONST int rot[3][3],
       goto ret;
     }
   } else {
+    /* In this case, OpenMP multithreading is used. */
     /* Collect indices of atoms with the type where the minimum number */
     /* of atoms belong. */
     if ((min_type_atoms = (int*) malloc(sizeof(int)*cell->size)) == NULL) {
@@ -513,7 +519,7 @@ static VecDBL * get_translation(SPGCONST int rot[3][3],
   return trans;
 }
 
-static int search_translation_part(int lat_point_atoms[],
+static int search_translation_part(int atoms_found[],
 				   const Cell * cell,
 				   SPGCONST int rot[3][3],
 				   const int min_atom_index,
@@ -522,27 +528,93 @@ static int search_translation_part(int lat_point_atoms[],
 				   const int is_identity)
 {
   int i, j, num_trans;
-  double vec[3];
+  double trans[3];
 
   num_trans = 0;
 
   for (i = 0; i < cell->size; i++) {
+    if (atoms_found[i]) {
+      continue;
+    }
+
     if (cell->types[i] != cell->types[min_atom_index]) {
       continue;
     }
 
     for (j = 0; j < 3; j++) {
-      vec[j] = cell->position[i][j] - origin[j];
+      trans[j] = cell->position[i][j] - origin[j];
     }
-    if (is_overlap_all_atoms(vec,
+    if (is_overlap_all_atoms(trans,
 			     rot,
 			     cell,
 			     symprec,
 			     is_identity)) {
-      lat_point_atoms[i] = 1;
+      atoms_found[i] = 1;
       num_trans++;
+      if (is_identity) {
+        num_trans += search_pure_translations(atoms_found,
+                                              cell,
+                                              trans,
+                                              symprec);
+      }
     }
   }
+
+  return num_trans;
+}
+
+static int search_pure_translations(int atoms_found[],
+                                    const Cell * cell,
+                                    const double trans[3],
+                                    const double symprec)
+{
+  int i, j, num_trans, i_atom, initial_atom;
+  int *copy_atoms_found;
+  double vec[3];
+
+  num_trans = 0;
+
+  copy_atoms_found = (int*)malloc(sizeof(int) * cell->size);
+  for (i = 0; i < cell->size; i++) {
+    copy_atoms_found[i] = atoms_found[i];
+  }
+
+  for (initial_atom = 0; initial_atom < cell->size; initial_atom++) {
+    if (!copy_atoms_found[initial_atom]) {
+      continue;
+    }
+    
+    i_atom = initial_atom;
+
+    for (i = 0; i < cell->size; i++) {
+      for (j = 0; j < 3; j++) {
+        vec[j] = cell->position[i_atom][j] + trans[j];
+      }
+
+      for (j = 0; j < cell->size; j++) {
+        if (cel_is_overlap_with_same_type(vec,
+                                          cell->position[j],
+                                          cell->types[i_atom],
+                                          cell->types[j],
+                                          cell->lattice,
+                                          symprec)) {
+          if (!atoms_found[j]) {
+            atoms_found[j] = 1;
+            num_trans++;
+          }
+          i_atom = j;
+          
+          break;
+        }
+      }
+
+      if (i_atom == initial_atom) {
+        break;
+      }
+    }
+  }
+
+  free(copy_atoms_found);
 
   return num_trans;
 }
