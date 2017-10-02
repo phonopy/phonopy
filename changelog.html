@@ -3,13 +3,16 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Change Log &#8212; Phonopy v.1.11.12</title>
+    
+    <title>Change Log &#8212; Phonopy v.1.11.14</title>
+    
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.11.12',
+        VERSION:     '1.11.14',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -19,7 +22,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
@@ -47,7 +50,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.11.12</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.11.14</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -99,6 +102,7 @@
       role="menu"
       aria-labelledby="dLabelLocalToc"><ul>
 <li><a class="reference internal" href="#">Change Log</a><ul>
+<li><a class="reference internal" href="#oct-2-2017-version-1-11-14">Oct-2-2017: Version 1.11.14</a></li>
 <li><a class="reference internal" href="#june-18-2017-version-1-11-12">June-18-2017: Version 1.11.12</a></li>
 <li><a class="reference internal" href="#mar-31-2017-version-1-11-10">Mar-31-2017: Version 1.11.10</a></li>
 <li><a class="reference internal" href="#feb-7-2017-version-1-11-8">Feb-7-2017: Version 1.11.8</a></li>
@@ -220,6 +224,21 @@
       
   <div class="section" id="change-log">
 <span id="changelog"></span><h1>Change Log<a class="headerlink" href="#change-log" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="oct-2-2017-version-1-11-14">
+<h2>Oct-2-2017: Version 1.11.14<a class="headerlink" href="#oct-2-2017-version-1-11-14" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>6/m and 1 point groups are added for irreps dataset.</li>
+<li><code class="docutils literal"><span class="pre">band.hdf5</span></code> is output instead of <code class="docutils literal"><span class="pre">band.yaml</span></code> when using <code class="docutils literal"><span class="pre">--hdf5</span></code>
+option together.</li>
+<li>Spglib update to v1.9.10. By this, symmetry search for supercells
+with large number of dimensions may become significantly faster.</li>
+<li>It is changed so that <code class="docutils literal"><span class="pre">mesh.yaml</span></code> or <code class="docutils literal"><span class="pre">mesh.hdf5</span></code> is not written
+out in thermal displacements calculations (<code class="docutils literal"><span class="pre">TDISP</span></code>, <code class="docutils literal"><span class="pre">TDISPMAT</span></code>,
+<code class="docutils literal"><span class="pre">TDISPMAT_CIF</span></code>). This is done to reduce the memory consumption of
+this calculation with dense mesh sampling.</li>
+<li>And many minor updates.</li>
+</ul>
+</div>
 <div class="section" id="june-18-2017-version-1-11-12">
 <h2>June-18-2017: Version 1.11.12<a class="headerlink" href="#june-18-2017-version-1-11-12" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
@@ -595,7 +614,7 @@ when this is used togather with the <code class="docutils literal"><span class="
 of point group -3m.</li>
 <li>A new option <code class="docutils literal"><span class="pre">--irreps</span></code> or <code class="docutils literal"><span class="pre">IRREPS</span></code> tag (Experimental).</li>
 <li><code class="docutils literal"><span class="pre">character_table.yaml</span></code> output.</li>
-<li>Eigenvectors output in``modulation.yaml`` was recovered.</li>
+<li>Eigenvectors output in“modulation.yaml“ was recovered.</li>
 </ul>
 </div>
 <div class="section" id="oct-22-2012-version-1-6">
@@ -872,7 +891,7 @@ write_vasp, and read_vasp, are implemented.</li>
 <h2>Sep-22-2010: Version 0.9.1.4<a class="headerlink" href="#sep-22-2010-version-0-9-1-4" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li>The new tag <code class="docutils literal"><span class="pre">ANIME_TYPE</span></code> supports <code class="docutils literal"><span class="pre">xyz</span></code> and <code class="docutils literal"><span class="pre">xyz_jmol</span></code> formats
-by Jörg Meyer and Christian Carbogno, and also <cite>A set of ``POSCAR`</cite>
+by Jörg Meyer and Christian Carbogno, and also <cite>A set of “POSCAR`</cite>
 files corresponding to animation frames.</li>
 <li>Fix bugs in <code class="docutils literal"><span class="pre">trim_cell</span></code> and
 <code class="docutils literal"><span class="pre">Primitive.__supercell_to_primitive_map</span></code> in <code class="docutils literal"><span class="pre">cells.py</span></code>. When
@@ -1050,7 +1069,7 @@ from those in structure with atomic displacements.</li>
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.3.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.2.<br/>
     </p>
   </div>
 </footer>
