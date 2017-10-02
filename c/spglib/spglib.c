@@ -92,9 +92,8 @@ static SpglibDataset * get_dataset(SPGCONST double lattice[3][3],
 static SpglibDataset * init_dataset(void);
 static int set_dataset(SpglibDataset * dataset,
                        const Cell * cell,
-                       const Cell * primitive,
+                       const Primitive * primitive,
                        SPGCONST Spacegroup * spacegroup,
-                       const int * mapping_table,
                        const double tolerance);
 static int get_symmetry_from_dataset(int rotation[][3][3],
                                      double translation[][3],
@@ -324,6 +323,8 @@ void spg_free_dataset(SpglibDataset *dataset)
     dataset->wyckoffs = NULL;
     free(dataset->equivalent_atoms);
     dataset->equivalent_atoms = NULL;
+    free(dataset->mapping_to_primitive);
+    dataset->mapping_to_primitive = NULL;
     dataset->n_atoms = 0;
   }
 
@@ -332,6 +333,8 @@ void spg_free_dataset(SpglibDataset *dataset)
     dataset->std_positions = NULL;
     free(dataset->std_types);
     dataset->std_types = NULL;
+    free(dataset->std_mapping_to_primitive);
+    dataset->std_mapping_to_primitive = NULL;
     dataset->n_std_atoms = 0;
   }
 
@@ -342,7 +345,6 @@ void spg_free_dataset(SpglibDataset *dataset)
   strcpy(dataset->choice, "");
 
   free(dataset);
-  dataset = NULL;
 }
 
 /* Return 0 if failed */
@@ -1063,9 +1065,8 @@ static SpglibDataset * get_dataset(SPGCONST double lattice[3][3],
     if (spacegroup.number > 0) {
       if (set_dataset(dataset,
                       cell,
-                      primitive->cell,
+                      primitive,
                       &spacegroup,
-                      primitive->mapping_table,
                       primitive->tolerance)) {
         goto found;
       } else {
@@ -1122,12 +1123,14 @@ static SpglibDataset * init_dataset(void)
   dataset->n_atoms = 0;
   dataset->wyckoffs = NULL;
   dataset->equivalent_atoms = NULL;
+  dataset->mapping_to_primitive = NULL;
   dataset->n_operations = 0;
   dataset->rotations = NULL;
   dataset->translations = NULL;
   dataset->n_std_atoms = 0;
   dataset->std_positions = NULL;
   dataset->std_types = NULL;
+  dataset->std_mapping_to_primitive = NULL;
   /* dataset->pointgroup_number = 0; */
   strcpy(dataset->pointgroup_symbol, "");
 
@@ -1137,17 +1140,18 @@ static SpglibDataset * init_dataset(void)
 /* Return 0 if failed */
 static int set_dataset(SpglibDataset * dataset,
                        const Cell * cell,
-                       const Cell * primitive,
+                       const Primitive * primitive,
                        SPGCONST Spacegroup * spacegroup,
-                       const int * mapping_table,
                        const double tolerance)
 {
   int i;
+  int *std_mapping_to_primitive;
   double inv_lat[3][3];
   Cell *bravais;
   Symmetry *symmetry;
   Pointgroup pointgroup;
 
+  std_mapping_to_primitive = NULL;
   bravais = NULL;
   symmetry = NULL;
 
@@ -1166,7 +1170,7 @@ static int set_dataset(SpglibDataset * dataset,
 
   /* Symmetry operations */
   if ((symmetry = ref_get_refined_symmetry_operations(cell,
-                                                      primitive,
+                                                      primitive->cell,
                                                       spacegroup,
                                                       tolerance)) == NULL) {
     return 0;
@@ -1201,25 +1205,49 @@ static int set_dataset(SpglibDataset * dataset,
   }
 
   if ((dataset->equivalent_atoms =
-       (int*) malloc(sizeof(int) * dataset->n_atoms))
-      == NULL) {
+       (int*) malloc(sizeof(int) * dataset->n_atoms)) == NULL) {
+    warning_print("spglib: Memory could not be allocated.");
+    goto err;
+  }
+
+  if ((dataset->mapping_to_primitive =
+       (int*) malloc(sizeof(int) * dataset->n_atoms)) == NULL) {
+    warning_print("spglib: Memory could not be allocated.");
+    goto err;
+  }
+
+  if ((std_mapping_to_primitive =
+       (int*) malloc(sizeof(int) * primitive->cell->size * 4)) == NULL) {
     warning_print("spglib: Memory could not be allocated.");
     goto err;
   }
 
   if ((bravais = ref_get_Wyckoff_positions(dataset->wyckoffs,
                                            dataset->equivalent_atoms,
-                                           primitive,
+                                           std_mapping_to_primitive,
+                                           primitive->cell,
                                            cell,
                                            spacegroup,
                                            symmetry,
-                                           mapping_table,
+                                           primitive->mapping_table,
                                            tolerance)) == NULL) {
 
     warning_print("spglib: ref_get_Wyckoff_positions failed.");
     warning_print(" (line %d, %s).\n", __LINE__, __FILE__);
 
     goto err;
+  }
+
+
+  for (i = 0; i < primitive->cell->size; i++) {
+    /* This is an assertion. */
+    if (std_mapping_to_primitive[i] != i) {
+      warning_print("spglib: ref_get_Wyckoff_positions failed.");
+      warning_print("Unexpected atom index mapping of bravais (%d != %d).\n",
+                    std_mapping_to_primitive[i], i);
+      warning_print(" (line %d, %s).\n", __LINE__, __FILE__);
+      goto err;
+    }
   }
 
   debug_print("Refined cell after ref_get_Wyckoff_positions\n");
@@ -1234,6 +1262,10 @@ static int set_dataset(SpglibDataset * dataset,
            bravais->position[i][2]);
   }
 #endif
+
+  for (i = 0; i < dataset->n_atoms; i++) {
+    dataset->mapping_to_primitive[i] = primitive->mapping_table[i];
+  }  
 
   dataset->n_std_atoms = bravais->size;
   mat_copy_matrix_d3(dataset->std_lattice, bravais->lattice);
@@ -1251,11 +1283,20 @@ static int set_dataset(SpglibDataset * dataset,
     goto err;
   }
 
+  if ((dataset->std_mapping_to_primitive =
+       (int*) malloc(sizeof(int) * dataset->n_std_atoms)) == NULL) {
+    warning_print("spglib: Memory could not be allocated.");
+    goto err;
+  }
+
   for (i = 0; i < dataset->n_std_atoms; i++) {
     mat_copy_vector_d3(dataset->std_positions[i], bravais->position[i]);
     dataset->std_types[i] = bravais->types[i];
+    dataset->std_mapping_to_primitive[i] = std_mapping_to_primitive[i];
   }
 
+  free(std_mapping_to_primitive);
+  std_mapping_to_primitive = NULL;
   cel_free_cell(bravais);
   bravais = NULL;
   sym_free_symmetry(symmetry);
@@ -1272,6 +1313,14 @@ static int set_dataset(SpglibDataset * dataset,
     free(dataset->std_positions);
     dataset->std_positions = NULL;
   }
+  if (dataset->std_mapping_to_primitive != NULL) {
+    free(dataset->std_mapping_to_primitive);
+    dataset->std_mapping_to_primitive = NULL;
+  }
+  if (std_mapping_to_primitive != NULL) {
+    free(std_mapping_to_primitive);
+    std_mapping_to_primitive = NULL;
+  }
   if (bravais != NULL) {
     cel_free_cell(bravais);
     bravais = NULL;
@@ -1279,6 +1328,10 @@ static int set_dataset(SpglibDataset * dataset,
   if (dataset->equivalent_atoms != NULL) {
     free(dataset->equivalent_atoms);
     dataset->equivalent_atoms = NULL;
+  }
+  if (dataset->mapping_to_primitive != NULL) {
+    free(dataset->mapping_to_primitive);
+    dataset->mapping_to_primitive = NULL;
   }
   if (dataset->wyckoffs != NULL) {
     free(dataset->wyckoffs);
@@ -1342,10 +1395,12 @@ static int get_symmetry_from_dataset(int rotation[][3][3],
   }
 
   spg_free_dataset(dataset);
+  dataset = NULL;
   return num_sym;
 
  err:
   spg_free_dataset(dataset);
+  dataset = NULL;
   spglib_error_code = SPGERR_ARRAY_SIZE_SHORTAGE;
   return 0;
 }
@@ -1394,6 +1449,7 @@ static int get_symmetry_with_collinear_spin(int rotation[][3][3],
 
   if ((sym_nonspin = sym_alloc_symmetry(dataset->n_operations)) == NULL) {
     spg_free_dataset(dataset);
+    dataset = NULL;
     cel_free_cell(cell);
     cell = NULL;
     goto err;
@@ -1404,6 +1460,7 @@ static int get_symmetry_with_collinear_spin(int rotation[][3][3],
     mat_copy_vector_d3(sym_nonspin->trans[i], dataset->translations[i]);
   }
   spg_free_dataset(dataset);
+  dataset = NULL;
 
   if ((symmetry = spn_get_collinear_operations(equivalent_atoms,
                                                sym_nonspin,
@@ -1476,6 +1533,7 @@ static int get_multiplicity(SPGCONST double lattice[3][3],
 
   size = dataset->n_operations;
   spg_free_dataset(dataset);
+  dataset = NULL;
 
   return size;
 }
@@ -1487,7 +1545,8 @@ static int standardize_primitive(double lattice[3][3],
                                  const double symprec,
                                  const double angle_tolerance)
 {
-  int num_prim_atom;
+  int i, num_prim_atom;
+  int *mapping_table;
   Centering centering;
   SpglibDataset *dataset;
   Cell *primitive, *bravais;
@@ -1497,6 +1556,7 @@ static int standardize_primitive(double lattice[3][3],
                            { 0, 0, 1 }};
 
   num_prim_atom = 0;
+  mapping_table = NULL;
   dataset = NULL;
   primitive = NULL;
   bravais = NULL;
@@ -1512,12 +1572,15 @@ static int standardize_primitive(double lattice[3][3],
   }
 
   if ((centering = get_centering(dataset->hall_number)) == CENTERING_ERROR) {
+    spg_free_dataset(dataset);
+    dataset = NULL;
     goto err;
   }
 
   if ((bravais = cel_alloc_cell(dataset->n_std_atoms)) == NULL) {
     spg_free_dataset(dataset);
-    return 0;
+    dataset = NULL;
+    goto err;
   }
 
   cel_set_cell(bravais,
@@ -1526,11 +1589,38 @@ static int standardize_primitive(double lattice[3][3],
                dataset->std_types);
 
   spg_free_dataset(dataset);
+  dataset = NULL;
 
-  primitive = spa_transform_to_primitive(bravais,
+  if ((mapping_table = (int*) malloc(sizeof(int) * bravais->size)) == NULL) {
+    warning_print("spglib: Memory could not be allocated ");
+    cel_free_cell(bravais);
+    bravais = NULL;
+    goto err;
+  }
+
+  primitive = spa_transform_to_primitive(mapping_table,
+                                         bravais,
                                          identity,
                                          centering,
                                          symprec);
+
+  for (i = 0; i < primitive->size; i++) {
+    /* This is an assertion. */
+    if (mapping_table[i] != i) {
+      warning_print("spglib: spa_transform_to_primitive failed.");
+      warning_print("Unexpected atom index mapping to primitive (%d != %d).\n",
+                    mapping_table[i], i);
+      warning_print(" (line %d, %s).\n", __LINE__, __FILE__);
+      free(mapping_table);
+      mapping_table = NULL;
+      cel_free_cell(bravais);
+      bravais = NULL;
+      goto err;
+    }
+  }
+
+  free(mapping_table);
+  mapping_table = NULL;
   cel_free_cell(bravais);
   bravais = NULL;
 
@@ -1589,6 +1679,7 @@ static int standardize_cell(double lattice[3][3],
   }
 
   spg_free_dataset(dataset);
+  dataset = NULL;
 
   return n_std_atoms;
 
@@ -1610,12 +1701,14 @@ static int get_standardized_cell(double lattice[3][3],
                                  const double symprec,
                                  const double angle_tolerance)
 {
-  int num_std_atom, num_prim_atom;
+  int i, num_std_atom, num_prim_atom;
+  int *mapping_table;
   SpglibDataset *dataset;
   Cell *std_cell, *cell, *primitive;
   Centering centering;
 
   num_std_atom = 0;
+  mapping_table = NULL;
   dataset = NULL;
   std_cell = NULL;
   cell = NULL;
@@ -1642,7 +1735,18 @@ static int get_standardized_cell(double lattice[3][3],
   }
 
   cel_set_cell(cell, lattice, position, types);
-  if ((primitive = spa_transform_to_primitive(cell,
+
+  if ((mapping_table = (int*) malloc(sizeof(int) * cell->size)) == NULL) {
+    warning_print("spglib: Memory could not be allocated ");
+    cel_free_cell(cell);
+    cell = NULL;
+    spg_free_dataset(dataset);
+    dataset = NULL;
+    goto err;
+  }
+
+  if ((primitive = spa_transform_to_primitive(mapping_table,
+                                              cell,
                                               dataset->transformation_matrix,
                                               centering,
                                               symprec)) == NULL) {
@@ -1650,10 +1754,29 @@ static int get_standardized_cell(double lattice[3][3],
     warning_print(" (line %d, %s).\n", __LINE__, __FILE__);
   }
 
-  spg_free_dataset(dataset);
-  dataset = NULL;
+  for (i = 0; i < cell->size; i++) {
+    /* This is an assertion. */
+    if (mapping_table[i] != dataset->mapping_to_primitive[i]) {
+      warning_print("spglib: spa_transform_to_primitive failed.");
+      warning_print("Unexpected atom index mapping to primitive (%d != %d).\n",
+                    mapping_table[i], dataset->mapping_to_primitive[i]);
+      warning_print(" (line %d, %s).\n", __LINE__, __FILE__);
+      free(mapping_table);
+      mapping_table = NULL;
+      cel_free_cell(cell);
+      cell = NULL;
+      spg_free_dataset(dataset);
+      dataset = NULL;
+      goto err;
+    }
+  }
+
+  free(mapping_table);
+  mapping_table = NULL;
   cel_free_cell(cell);
   cell = NULL;
+  spg_free_dataset(dataset);
+  dataset = NULL;
 
   if (primitive == NULL) {
     goto err;
@@ -1860,6 +1983,7 @@ static int get_ir_reciprocal_mesh(int grid_address[][3],
 
   if ((rotations = mat_alloc_MatINT(dataset->n_operations)) == NULL) {
     spg_free_dataset(dataset);
+    dataset = NULL;
     return 0;
   }
 
@@ -1877,6 +2001,7 @@ static int get_ir_reciprocal_mesh(int grid_address[][3],
   mat_free_MatINT(rotations);
   rotations = NULL;
   spg_free_dataset(dataset);
+  dataset = NULL;
   return num_ir;
 }
 
