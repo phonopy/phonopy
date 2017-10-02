@@ -480,3 +480,9 @@ calculation results are written into ``qpoints.hdf5`` but not into
 stored in ``qpoints.hdf5``. Using this option may be useful with large
 set of q-points with including eigenvector or dynamical matrix output.
 
+``band.hdf5``
+^^^^^^^^^^^^^^^
+
+In the band structure calculations (:ref:`band_structure_related_tags`),
+calculation results are written into ``band.hdf5`` but not into
+``band.yaml``.
