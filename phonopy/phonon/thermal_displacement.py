@@ -36,7 +36,6 @@ import numpy as np
 from phonopy.units import AMU, THzToEv, Kb, EV, Hbar, Angstrom
 from phonopy.structure.cells import get_equivalent_smallest_vectors
 from phonopy.interface.cif import write_cif_P1
-# np.seterr(invalid='raise')
 
 class ThermalMotion(object):
     def __init__(self,
@@ -51,6 +50,8 @@ class ThermalMotion(object):
         self._masses = masses * AMU
         self._masses3 = np.array([[m] * 3 for m in masses]).ravel() * AMU
         self._temperatures = None
+        self._np_overflow = None # Switch of error handling of numpy.
+                                 # 'raise' to see which phonon it is.
 
     def get_Q2(self, freq, t): # freq in THz
         return Hbar * EV / Angstrom ** 2 * (
@@ -152,7 +153,7 @@ class ThermalDisplacements(ThermalMotion):
                         disps[i] += self.get_Q2(f, t) * c
 
         self._displacements = disps / (count + 1)
-        
+
     def write_yaml(self):
         natom = len(self._masses)
         f = open('thermal_displacements.yaml', 'w')
@@ -220,18 +221,9 @@ class ThermalDisplacementMatrices(ThermalMotion):
         return (self._temperatures, self._disp_matrices)
 
     def run(self):
-        disps = np.zeros((len(self._temperatures), len(self._masses),
-                          3, 3), dtype=complex)
-
-        for count, (freqs, eigvecs) in enumerate(self._iter_phonons):
-            for f, vec in zip(freqs, eigvecs.T):
-                if f > self._cutoff_frequency:
-                    c = []
-                    for v, m in zip(vec.reshape(-1, 3), self._masses):
-                        c.append(np.outer(v, v.conj()) / m)
-                    for i, t in enumerate(self._temperatures):
-                        disps[i] += self.get_Q2(f, t) * np.array(c)
-        self._disp_matrices = disps / (count + 1)
+        np.seterr(over=self._np_overflow)
+        self._get_disp_matrices()
+        np.seterr(over=None)
 
         if self._ANinv is not None:
             self._disp_matrices_cif = np.zeros(self._disp_matrices.shape,
@@ -241,6 +233,24 @@ class ThermalDisplacementMatrices(ThermalMotion):
                     mat_cif = np.dot(np.dot(self._ANinv, mat.real),
                                      self._ANinv.T)
                     self._disp_matrices_cif[i, j] = mat_cif
+
+    def _get_disp_matrices(self):
+        disps = np.zeros((len(self._temperatures), len(self._masses),
+                          3, 3), dtype=complex)
+        for count, (freqs, eigvecs) in enumerate(self._iter_phonons):
+            for i_band, (f, vec) in enumerate(zip(freqs, eigvecs.T)):
+                if f > self._cutoff_frequency:
+                    c = []
+                    for v, m in zip(vec.reshape(-1, 3), self._masses):
+                        c.append(np.outer(v, v.conj()) / m)
+                    for i, t in enumerate(self._temperatures):
+                        try:
+                            disps[i] += self.get_Q2(f, t) * np.array(c)
+                        except FloatingPointError as e:
+                            # Probably, overflow in exp(freq / (kB * T))
+                            print("%s: T=%.1f freq=%.2f (band #%d)" %
+                                  (e, t, f, i_band))
+        self._disp_matrices = disps / (count + 1)
 
     def write_cif(self, cell, temperature_index):
         write_cif_P1(cell,
@@ -265,8 +275,8 @@ class ThermalDisplacementMatrices(ThermalMotion):
                     # lines.append("  - # atom %d" % (i + 1))
                     # for v in mat:
                     #     lines.append(
-                    #         "    [ %8.5f, %8.5f, %8.5f, %8.5f, %8.5f, %8.5f ]" %
-                    #         (tuple(v.real) + tuple(v.imag)))
+                    #         "    [ %8.5f, %8.5f, %8.5f, %8.5f, %8.5f, %8.5f ]"
+                    #         % (tuple(v.real) + tuple(v.imag)))
                     m = mat.real
                     lines.append(
                         ("  - [ " + "%8.5f, " * 5 + "%8.5f ] # atom %d") %
@@ -315,15 +325,17 @@ class ThermalDistances(ThermalMotion):
     def run(self, atom_pairs):
         s2p = self._primitive.get_supercell_to_primitive_map()
         p2p = self._primitive.get_primitive_to_primitive_map()
-        dists = np.zeros((len(self._temperatures), len(atom_pairs)), dtype=float)
+        dists = np.zeros((len(self._temperatures), len(atom_pairs)),
+                         dtype=float)
         for i, (atom1, atom2) in enumerate(atom_pairs):
             patom1 = p2p[s2p[atom1]]
             patom2 = p2p[s2p[atom2]]
-            delta_r = get_equivalent_smallest_vectors(atom2,
-                                                      atom1,
-                                                      self._supercell,
-                                                      self._primitive.get_cell(),
-                                                      self._symprec)[0]
+            delta_r = get_equivalent_smallest_vectors(
+                atom2,
+                atom1,
+                self._supercell,
+                self._primitive.get_cell(),
+                self._symprec)[0]
 
             self._project_eigenvectors(delta_r, self._primitive.get_cell())
 
