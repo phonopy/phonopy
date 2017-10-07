@@ -568,7 +568,8 @@ class Vasprun(object):
                 if element.attrib['name'] == 'hessian':
                     fc_tmp = []
                     for v in element.findall('./v'):
-                        fc_tmp.append([float(x) for x in v.text.strip().split()])
+                        fc_tmp.append([float(x)
+                                       for x in v.text.strip().split()])
 
         if fc_tmp is None:
             return False
@@ -577,7 +578,8 @@ class Vasprun(object):
             if fc_tmp.shape != (num_atom * 3, num_atom * 3):
                 return False
             # num_atom = fc_tmp.shape[0] / 3
-            force_constants = np.zeros((num_atom, num_atom, 3, 3), dtype='double')
+            force_constants = np.zeros((num_atom, num_atom, 3, 3),
+                                       dtype='double')
 
             for i in range(num_atom):
                 for j in range(num_atom):
@@ -661,7 +663,7 @@ class VasprunxmlExpat(object):
                and 3.x, it is prepared as follows:
 
                import io
-               io.open(filename, "rb")    
+               io.open(filename, "rb")
 
         """
 
@@ -679,6 +681,7 @@ class VasprunxmlExpat(object):
         self._is_eigenvalues = False
         self._is_epsilon = False
         self._is_born = False
+        self._is_efermi = False
 
         self._is_v = False
         self._is_i = False
@@ -706,6 +709,7 @@ class VasprunxmlExpat(object):
         self._energies = None
         self._epsilon = None
         self._born_atom = None
+        self._efermi = None
         self._k_weights = None
         self._eigenvalues = None
         self._eig_state = [0, 0]
@@ -734,6 +738,9 @@ class VasprunxmlExpat(object):
 
     def get_epsilon(self):
         return np.array(self._epsilon)
+
+    def get_efermi(self):
+        return self._efermi
 
     def get_born(self):
         return np.array(self._born)
@@ -816,6 +823,12 @@ class VasprunxmlExpat(object):
                     if attrs['name'] == 'basis':
                         self._is_basis = True
                         self._lattice = []
+
+        if name == 'i':
+            if 'name' in attrs.keys():
+                if attrs['name'] == 'efermi':
+                    self._is_i = True
+                    self._is_efermi = True
 
         if self._is_energy and name == 'i':
             self._is_i = True
@@ -932,6 +945,8 @@ class VasprunxmlExpat(object):
 
         if name == 'i':
             self._is_i = False
+            if self._is_efermi:
+                self._is_efermi = False
 
         if name == 'rc':
             self._is_rc = False
@@ -991,6 +1006,9 @@ class VasprunxmlExpat(object):
         if self._is_i:
             if self._is_energy:
                 self._energies.append(float(data.strip()))
+
+            if self._is_efermi:
+                self._efermi = float(data.strip())
 
         if self._is_c:
             if self._is_symbols:
