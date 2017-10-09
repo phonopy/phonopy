@@ -920,11 +920,11 @@ class VasprunxmlExpat(object):
 
             if self._is_positions:
                 self._is_positions = False
-                self._all_points.append(np.transpose(self._points))
+                self._all_points.append(self._points)
 
             if self._is_basis:
                 self._is_basis = False
-                self._all_lattice.append(np.transpose(self._lattice))
+                self._all_lattice.append(self._lattice)
 
             if self._is_epsilon:
                 self._is_epsilon = False
