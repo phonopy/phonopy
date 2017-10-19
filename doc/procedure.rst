@@ -142,14 +142,14 @@ In addition, it is recommended to increase the number of k-points to
 be sampled. Twice the number for each axis may be a choice. After
 running this VASP calculation, ``BORN`` file has to be created
 following the ``BORN`` format (:ref:`born_file`). However for VASP, an
-auxiliary tool is prepared, which is ``outcar-born``. There is an
-option ``--pa`` for this command to set a transformation matrix from
-supercell or unit cell with centring to the primitive cell. Since this
-rutile-type SiO2 has the primitive lattice, it is unnecessary to set
-this option. Running ``outcar-born`` in the directory containing
-``OUTCAR`` of this VASP calculation::
+auxiliary tool is prepared, which is ``phonopy-vasp-born``. There is
+an option ``--pa`` for this command to set a transformation matrix
+from supercell or unit cell with centring to the primitive cell. Since
+this rutile-type SiO2 has the primitive lattice, it is unnecessary to
+set this option. Running ``phonopy-vasp-born`` in the directory
+containing ``vasprun.xml`` (or ``OUTCAR``) of this VASP calculation::
 
-   % outcar-born
+   % phonopy-vasp-born
    # epsilon and Z* of atoms 1 3
       3.2605670   0.0000000   0.0000000   0.0000000   3.2605670   0.0000000   0.0000000   0.0000000   3.4421330
       3.7558600   0.3020100   0.0000000   0.3020100   3.7558600   0.0000000   0.0000000   0.0000000   3.9965200
@@ -157,7 +157,7 @@ this option. Running ``outcar-born`` in the directory containing
 
 To employ symmetry constraints, ``--st`` option may used as follows::
 
-   % outcar-born --st
+   % phonopy-vasp-born --st
    # epsilon and Z* of atoms 1 3
       3.2605670   0.0000000   0.0000000   0.0000000   3.2605670   0.0000000   0.0000000   0.0000000   3.4421330
       3.7561900   0.3020100   0.0000000   0.3020100   3.7561900   0.0000000   0.0000000   0.0000000   3.9968733

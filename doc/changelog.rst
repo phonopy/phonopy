@@ -3,6 +3,17 @@
 Change Log
 ==========
 
+Oct-19-2017: Version 1.12.0
+-----------------------------
+
+* The names of auxiliary tools and ``gruneisen`` are changed, for
+  which the prefix ``phonopy-`` is added to the old names to avoid
+  accidental conflict with other filenames already existing under
+  ``bin``. ``outcar-born`` is renamed to
+  ``phonopy-vasp-born``. Similarly ``gruneisen`` is renamed
+  ``phonopy-gruneisen``. Please find these changes at
+  :ref:`auxiliary_tools` and :ref:`phonopy_gruneisen`.
+
 Oct-2-2017: Version 1.11.14
 -------------------------------
 
