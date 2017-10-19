@@ -1,111 +1,179 @@
-.. _vasp_fd_interface:
+.. _vasp_interface:
 
 VASP & phonopy calculation
-===========================
+==================================
 
-Please follow the page :ref:`tutorial` and :ref:`examples_link`.
+Pre-process
+~~~~~~~~~~~~
 
-.. _vasp_dfpt_interface:
+The input stureture of ``POSCAR`` (:ref:`this <example_POSCAR1>`) is
+used as an example here. Most files are found at `SiO2-HP example
+<https://github.com/atztogo/phonopy/tree/master/example/SiO2-HP/>`_.
 
-VASP-DFPT & phonopy calculation
-===========================================
+In the pre-process, supercell structures with (or without)
+displacements are created from a unit cell fully consiering crystal
+symmetry.
 
-How to run
------------
+To obtain supercells (:math:`2\times 2\times 3`) with displacements,
+run phonopy::
 
-VASP can calculate force constants in real space using DFPT. The
-procedure to calculate phonon properties may be as follows:
+   phonopy -d --dim="2 2 3"
 
-1) Prepare unit cell structure named, e.g., ``POSCAR-unitcell``. The
-   following structure is a conventional unit cell of NaCl.
+You should find the files, ``SPOSCAR``, ``disp.yaml``, and
+``POSCAR-{number}`` as follows::
 
-   ::
+   % ls
+   disp.yaml  POSCAR  POSCAR-001  POSCAR-002  POSCAR-003  SPOSCAR
 
-       Na Cl                         
-          1.00000000000000     
-            5.6903014761756712    0.0000000000000000    0.0000000000000000
-            0.0000000000000000    5.6903014761756712    0.0000000000000000
-            0.0000000000000000    0.0000000000000000    5.6903014761756712
-          4   4
-       Direct
-         0.0000000000000000  0.0000000000000000  0.0000000000000000
-         0.0000000000000000  0.5000000000000000  0.5000000000000000
-         0.5000000000000000  0.0000000000000000  0.5000000000000000
-         0.5000000000000000  0.5000000000000000  0.0000000000000000
-         0.5000000000000000  0.5000000000000000  0.5000000000000000
-         0.5000000000000000  0.0000000000000000  0.0000000000000000
-         0.0000000000000000  0.5000000000000000  0.0000000000000000
-         0.0000000000000000  0.0000000000000000  0.5000000000000000
+``SPOSCAR`` is the perfect supercell structure, ``disp.yaml`` contains
+the information on displacements, and ``POSCAR-{number}`` are the
+supercells with atomic displacements. ``POSCAR-{number}`` corresponds
+to the different atomic displacements written in ``disp.yaml``.
 
+Calculation of sets of forces
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-2) Prepare a perfect supercell structure from ``POSCAR-unitcell``,
-   e.g.,
+Force constants are calculated using the structure files
+``POSCAR-{number}`` (from forces on atoms) or using the ``SPOSCAR``
+file. In the case of VASP, the calculations for the finite
+displacement method can be proceeded just using the
+``POSCAR-{number}`` files as ``POSCAR`` of VASP calculations. An
+example of the ``INCAR`` is as follows::
 
-   ::
+      PREC = Accurate
+    IBRION = -1
+     ENCUT = 500
+     EDIFF = 1.0e-08
+    ISMEAR = 0; SIGMA = 0.01
+     IALGO = 38
+     LREAL = .FALSE.
+     LWAVE = .FALSE.
+    LCHARG = .FALSE.
 
-      % phonopy -d --dim="2 2 2" -c POSCAR-unitcell
+Be careful not to relax the structures. Then create ``FORCE_SETS``
+file using :ref:`vasp_force_sets_option`::
 
-3) Rename ``SPOSCAR`` created in (2) to
-   ``POSCAR`` (``POSCAR-{number}`` and ``disp.yaml`` files will never be used.)
+   % phonopy -f disp-001/vasprun.xml disp-002/vasprun.xml disp-003/vasprun.xml
 
-   ::
+or
 
-      % mv SPOSCAR POSCAR
+::
 
-4) Calculate force constants of the perfect supercell by running VASP
-   with ``IBRION = 8`` and ``NSW = 1``. An example of ``INCAR`` for
-   insulator may be such like (**just an example!**)::
+   % phonopy -f disp-{001..003}/vasprun.xml
 
-        PREC = Accurate
-       ENCUT = 500
-      IBRION = 8
-       EDIFF = 1.0e-08
-       IALGO = 38
-      ISMEAR = 0; SIGMA = 0.1
-       LREAL = .FALSE.
-     ADDGRID = .TRUE.
-       LWAVE = .FALSE.
-      LCHARG = .FALSE.
+If you want to calculate force constants by VASP-DFPT directory, see
+:ref:`vasp_dfpt_interface`.
 
-5) After finishing the VASP calculation, confirm ``vasprun.xml``
-   contains ``hessian`` elements, and then create ``FORCE_CONSTANTS``::
+Post-process
+~~~~~~~~~~~~~
 
-   % phonopy --fc vasprun.xml
-  
-6) Run phonopy with the original unit cell ``POSCAR-unitcell`` and
-   setting tag ``FORCE_CONSTANTS = READ`` or ``--readfc`` option,
-   e.g., as found in ``example/NaCl-VASPdfpt``
+In the post-process,
 
-   ::
+1. Force constants are calculated from the sets of forces
+2. A part of dynamical matrix is built from the force constants
+3. Phonon frequencies and eigenvectors are calculated from the
+   dynamical matrices with the specified *q*-points.
 
-      % phonopy --dim="2 2 2" -c POSCAR-unitcell band.conf
-              _                                    
-        _ __ | |__   ___  _ __   ___   _ __  _   _ 
-       | '_ \| '_ \ / _ \| '_ \ / _ \ | '_ \| | | |
-       | |_) | | | | (_) | | | | (_) || |_) | |_| |
-       | .__/|_| |_|\___/|_| |_|\___(_) .__/ \__, |
-       |_|                            |_|    |___/
-      
-                                           1.1
-      
-      Band structure mode
-      Settings:
-        Force constants: read
-        Supercell:  [2 2 2]
-        Primitive axis:
-           [ 0.   0.5  0.5]
-           [ 0.5  0.   0.5]
-           [ 0.5  0.5  0. ]
-      Spacegroup:  Fm-3m (225)
-      Paths in reciprocal reduced coordinates:
-      [ 0.00  0.00  0.00] --> [ 0.50  0.00  0.00]
-      [ 0.50  0.00  0.00] --> [ 0.50  0.50  0.00]
-      [ 0.50  0.50  0.00] --> [-0.00 -0.00  0.00]
-      [ 0.00  0.00  0.00] --> [ 0.50  0.50  0.50]
+For mesh sampling calculation, prepare the following setting file
+named, e.g., ``mesh.conf``::
 
-.. |NaCl-VASPdfpt| image:: NaCl-VASPdfpt.png
-                   :scale: 50
+   ATOM_NAME = Si O
+   DIM = 2 2 3
+   MP = 8 8 8
 
-|NaCl-VASPdfpt|
+The density of states (DOS) is plotted by::
 
+   % phonopy -p mesh.conf
 
+Thermal properties are calculated with the sampling mesh by::
+
+   % phonopy -t mesh.conf
+
+You should check the convergence with respect to the mesh numbers.
+Thermal properties can be plotted by::
+
+   % phonopy -t -p mesh.conf
+
+Projected DOS is calculated by the following setting file named, e.g.,
+``pdos.conf``::
+
+   ATOM_NAME = Si O
+   DIM = 2 2 3
+   MP = 8 8 8
+   PDOS = 1 2, 3 4 5 6
+
+and plotted by::
+
+   % phonopy -p pdos.conf
+
+Band structure is calculated with the following setting file named,
+e.g., `band.conf` by::
+
+   ATOM_NAME = Si O
+   DIM =  2 2 3
+   BAND = 0.5 0.5 0.5  0.0 0.0 0.0  0.5 0.5 0.0  0.0 0.5 0.0
+
+The band structure is plotted by::
+
+   % phonopy -p band.conf
+
+In either case, by setting the ``-s`` option, the plot is going to be
+saved in the PDF format. If you don't need to plot DOS, the (partial)
+DOS is just calculated using the ``--dos`` option.
+
+Non-analytical term correction (Optional)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+To activate non-analytical term correction, :ref:`born_file` is
+required. This file contains the information of Born effective charge
+and dielectric constant. These physical values are also obtained from
+the first-principles calculations, e.g., by using VASP, pwscf, etc. In
+the case of VASP, an example of ``INCAR`` will be as shown below::
+
+       PREC = Accurate
+     IBRION = -1
+     NELMIN = 5
+      ENCUT = 500
+      EDIFF = 1.000000e-08
+     ISMEAR = 0
+      SIGMA = 1.000000e-02
+      IALGO = 38
+      LREAL = .FALSE.
+      LWAVE = .FALSE.
+     LCHARG = .FALSE.
+   LEPSILON = .TRUE.
+
+In addition, it is recommended to increase the number of k-points to
+be sampled. Twice the number for each axis may be a choice. After
+running this VASP calculation, ``BORN`` file has to be created
+following the ``BORN`` format (:ref:`born_file`). However for VASP, an
+auxiliary tool is prepared, which is ``phonopy-vasp-born``. There is
+an option ``--pa`` for this command to set a transformation matrix
+from supercell or unit cell with centring to the primitive cell. Since
+this rutile-type SiO2 has the primitive lattice, it is unnecessary to
+set this option. Running ``phonopy-vasp-born`` in the directory
+containing ``vasprun.xml`` (or ``OUTCAR``) of this VASP calculation::
+
+   % phonopy-vasp-born
+   # epsilon and Z* of atoms 1 3
+      3.2605670   0.0000000   0.0000000   0.0000000   3.2605670   0.0000000   0.0000000   0.0000000   3.4421330
+      3.7558600   0.3020100   0.0000000   0.3020100   3.7558600   0.0000000   0.0000000   0.0000000   3.9965200
+     -1.8783900  -0.5270900   0.0000000  -0.5270900  -1.8783900   0.0000000   0.0000100   0.0000100  -1.9987900
+
+To employ symmetry constraints, ``--st`` option may used as follows::
+
+   % phonopy-vasp-born --st
+   # epsilon and Z* of atoms 1 3
+      3.2605670   0.0000000   0.0000000   0.0000000   3.2605670   0.0000000   0.0000000   0.0000000   3.4421330
+      3.7561900   0.3020100   0.0000000   0.3020100   3.7561900   0.0000000   0.0000000   0.0000000   3.9968733
+     -1.8780950  -0.5270900   0.0000000  -0.5270900  -1.8780950   0.0000000   0.0000000   0.0000000  -1.9984367
+
+The values are slightly modified by symmetry, but we can see the
+original values obtained directly from VASP was already very good.
+
+To put ``BORN`` file in the current directly, and running phonopy with
+``--nac`` option, non-analytical term correction is activated, such as::
+
+   % phonopy -p --nac band.conf
+
+Please watch the example of NaCl with and without ``--nac`` option shown in
+:ref:`examples_link`.

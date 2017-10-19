@@ -42,7 +42,7 @@ A procedure of Abinit-phonopy calculation is as follows:
 3) Create ``FORCE_SETS`` by
 
    ::
-   
+
      % phonopy --abinit -f disp-001/supercell-001.out disp-002/supercell-002.out  ...
 
    To run this command, ``disp.yaml`` has to be located in the current
@@ -57,6 +57,5 @@ A procedure of Abinit-phonopy calculation is as follows:
    % phonopy --abinit -c NaCl.in -p band.conf
 
    or::
-   
-   % phonopy --abinit -c NaCl.in --dim="2 2 2" [other-OPTIONS] [setting-file]
 
+   % phonopy --abinit -c NaCl.in --dim="2 2 2" [other-OPTIONS] [setting-file]

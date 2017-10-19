@@ -5,7 +5,7 @@ Interfaces to calculators
 
 The interfaces for VASP, Wien2k, Pwscf, Abinit, Elk and CRYSTAL are built in
 to the usual phonopy command. See the command options and how to
-invoke each of them at :ref:`force_calculators`. 
+invoke each of them at :ref:`force_calculators`.
 
 Physical unit system for calculator
 ------------------------------------
@@ -34,7 +34,7 @@ Default unit cell file name for calculator
 Without specifying ``-c`` option, default file name for unit cell is
 used as shown below::
 
-   VASP    | POSCAR     
+   VASP    | POSCAR
    Wien2k  | case.struct
    Pwscf   | unitcell.in
    Abinit  | unitcell.in
@@ -75,15 +75,17 @@ Default unit conversion factor for non-analytical term correction
    CRYSTAL | 14.399652
 
 
-Interface to force calculator
-------------------------------
+.. _interfaces_to_force_calculators:
+
+Interfaces to force calculators
+--------------------------------
 
 Short tutorials for force calculators are found in the following pages.
 
 .. toctree::
    :maxdepth: 2
 
-   procedure
+   vasp
    wien2k
    pwscf
    abinit
@@ -101,7 +103,7 @@ creates ``FORCE_CONSTANTS`` file.
 .. toctree::
    :maxdepth: 2
 
-   vasp
+   vasp-dfpt
 
 Interface to FHI-aims forces
 -----------------------------
@@ -114,4 +116,3 @@ FHI-aims mailing list.
    :maxdepth: 2
 
    FHI-aims
-
