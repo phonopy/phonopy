@@ -1,7 +1,10 @@
 .. _thermal_displacement:
 
+Thermal displacement
+---------------------
+
 Mean square displacement
---------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 From Eq. (10.71) in the book "Thermodynamics of Crystal", atomic
 displacement, **u**, is written by
@@ -42,7 +45,7 @@ where :math:`n_\nu(\mathbf{q},T)` is the phonon population, which is give by,
 
 where *T* is the temperature, and :math:`\mathrm{k_B}` is the
 Boltzmann constant. The equation is calculated using the commutation
-relation of the creation and annihilation operators and the 
+relation of the creation and annihilation operators and the
 expectation values of the combination of the operations, e.g.,
 
 .. math::
@@ -58,7 +61,7 @@ expectation values of the combination of the operations, e.g.,
 .. _thermal_displacement_matrix:
 
 Mean square displacement matrix
---------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Mean square displacement matrix is defined as follows:
 
@@ -73,7 +76,7 @@ This is a symmetry matrix and diagonal elements are same as mean
 square displacement calculated along Cartesian x, y, z directions.
 
 Projection to an arbitrary axis from the Cartesian axes
---------------------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In phonopy, eigenvectors are calculated in the Cartesian axes that are
 defined in the input structure file. Mean square displacement along an
@@ -90,7 +93,7 @@ axes as follows:
 where :math:`\hat{\mathbf{n}}` is an arbitrary unit direction.
 
 Mean square displacement matrix in cif format
-----------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 According to the paper by Grosse-Kunstleve and Adams [J. Appl. Cryst.,
 35, 477-480 (2002)], mean square displacement matrix in the cif
@@ -125,8 +128,3 @@ and
    \end{pmatrix}.
 
 :math:`a^*`, :math:`b^*`, :math:`c^*` are defined without :math:`2\pi`.
-
-
-
-
-

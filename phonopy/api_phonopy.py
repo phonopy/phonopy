@@ -546,7 +546,7 @@ class Phonopy(object):
                     self._mesh.get_weights(),
                     self._mesh.get_frequencies(),
                     self._mesh.get_eigenvectors())
-    
+
     def get_mesh_grid_info(self):
         if self._mesh is None:
             return None
@@ -936,7 +936,7 @@ class Phonopy(object):
         self._thermal_displacement_matrices = None
 
         if self._mesh is not None:
-            eigvecs = self._mesh.get_eigenvectors() 
+            eigvecs = self._mesh.get_eigenvectors()
             if eigvecs is None:
                 print("Warning: Eigenvectors have to be calculated.")
                 return False
