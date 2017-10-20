@@ -75,15 +75,18 @@ Default unit conversion factor for non-analytical term correction
    CRYSTAL | 14.399652
 
 
-.. _interfaces_to_force_calculators:
+.. _tutorials_for_calculators:
 
-Interfaces to force calculators
---------------------------------
+Tutorials for calculators
+--------------------------
+
+Force calculators
+^^^^^^^^^^^^^^^^^^^
 
 Short tutorials for force calculators are found in the following pages.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    vasp
    wien2k
@@ -93,26 +96,26 @@ Short tutorials for force calculators are found in the following pages.
    elk
    crystal
 
-Interface to  VASP DFPT force constants
----------------------------------------
+VASP DFPT force constants
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Using VASP DFPT feature, force constants are directly
 calculated. Phonopy VASP DFPT interface reads ``vasprun.xml`` and
 creates ``FORCE_CONSTANTS`` file.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    vasp-dfpt
 
-Interface to FHI-aims forces
------------------------------
+For FHI-aims
+^^^^^^^^^^^^^
 
 For FHI-aims, there is a special command, ``phonopy-FHI-aims``. This
 tool is maintained by FHI-aims community and questions may be sent to the
 FHI-aims mailing list.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    FHI-aims
