@@ -3,16 +3,13 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>Formulations &#8212; Phonopy v.1.11.14</title>
-    
+    <title>Formulations &#8212; Phonopy v.1.12.0</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.11.14',
+        VERSION:     '1.12.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -22,14 +19,14 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Mean square displacement" href="thermal-displacement.html" />
+    <link rel="next" title="How to cite phonopy" href="citation.html" />
     <link rel="prev" title="Using phonopy as a python module" href="phonopy-module.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
@@ -50,7 +47,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.11.14</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.12.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -115,8 +112,18 @@
 <li><a class="reference internal" href="#entropy">Entropy</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#thermal-displacement">Thermal displacement</a></li>
-<li><a class="reference internal" href="#group-velocity">Group velocity</a></li>
+<li><a class="reference internal" href="#thermal-displacement">Thermal displacement</a><ul>
+<li><a class="reference internal" href="#mean-square-displacement">Mean square displacement</a></li>
+<li><a class="reference internal" href="#mean-square-displacement-matrix">Mean square displacement matrix</a></li>
+<li><a class="reference internal" href="#projection-to-an-arbitrary-axis-from-the-cartesian-axes">Projection to an arbitrary axis from the Cartesian axes</a></li>
+<li><a class="reference internal" href="#mean-square-displacement-matrix-in-cif-format">Mean square displacement matrix in cif format</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#group-velocity">Group velocity</a><ul>
+<li><a class="reference internal" href="#method">Method</a></li>
+<li><a class="reference internal" href="#finite-difference-method">Finite difference method</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#physical-unit-conversion">Physical unit conversion</a></li>
 <li><a class="reference internal" href="#crystal-structure">Crystal structure</a><ul>
 <li><a class="reference internal" href="#coordinates-in-direct-and-reciprocal-spaces">Coordinates in direct and reciprocal spaces</a></li>
@@ -138,7 +145,7 @@
     </a>
   </li>
   <li>
-    <a href="thermal-displacement.html" title="Next Chapter: Mean square displacement"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">Mean square d... &raquo;</span>
+    <a href="citation.html" title="Next Chapter: How to cite phonopy"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">How to cite phonopy &raquo;</span>
     </a>
   </li>
               
@@ -170,31 +177,41 @@
 <span id="id1"></span><h1>Formulations<a class="headerlink" href="#formulations" title="Permalink to this headline">¶</a></h1>
 <div class="contents local topic" id="contents">
 <ul class="simple">
-<li><a class="reference internal" href="#second-order-force-constants" id="id3">Second-order force constants</a></li>
-<li><a class="reference internal" href="#modified-parlinski-li-kawazoe-method" id="id4">Modified Parlinski-Li-Kawazoe method</a></li>
-<li><a class="reference internal" href="#dynamical-matrix" id="id5">Dynamical matrix</a></li>
-<li><a class="reference internal" href="#non-analytical-term-correction" id="id6">Non-analytical term correction</a></li>
-<li><a class="reference internal" href="#thermodynamic-properties" id="id7">Thermodynamic properties</a><ul>
-<li><a class="reference internal" href="#phonon-number" id="id8">Phonon number</a></li>
-<li><a class="reference internal" href="#harmonic-phonon-energy" id="id9">Harmonic phonon energy</a></li>
-<li><a class="reference internal" href="#constant-volume-heat-capacity" id="id10">Constant volume heat capacity</a></li>
-<li><a class="reference internal" href="#partition-function" id="id11">Partition function</a></li>
-<li><a class="reference internal" href="#helmholtz-free-energy" id="id12">Helmholtz free energy</a></li>
-<li><a class="reference internal" href="#entropy" id="id13">Entropy</a></li>
+<li><a class="reference internal" href="#second-order-force-constants" id="id5">Second-order force constants</a></li>
+<li><a class="reference internal" href="#modified-parlinski-li-kawazoe-method" id="id6">Modified Parlinski-Li-Kawazoe method</a></li>
+<li><a class="reference internal" href="#dynamical-matrix" id="id7">Dynamical matrix</a></li>
+<li><a class="reference internal" href="#non-analytical-term-correction" id="id8">Non-analytical term correction</a></li>
+<li><a class="reference internal" href="#thermodynamic-properties" id="id9">Thermodynamic properties</a><ul>
+<li><a class="reference internal" href="#phonon-number" id="id10">Phonon number</a></li>
+<li><a class="reference internal" href="#harmonic-phonon-energy" id="id11">Harmonic phonon energy</a></li>
+<li><a class="reference internal" href="#constant-volume-heat-capacity" id="id12">Constant volume heat capacity</a></li>
+<li><a class="reference internal" href="#partition-function" id="id13">Partition function</a></li>
+<li><a class="reference internal" href="#helmholtz-free-energy" id="id14">Helmholtz free energy</a></li>
+<li><a class="reference internal" href="#entropy" id="id15">Entropy</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#thermal-displacement" id="id14">Thermal displacement</a></li>
-<li><a class="reference internal" href="#group-velocity" id="id15">Group velocity</a></li>
-<li><a class="reference internal" href="#physical-unit-conversion" id="id16">Physical unit conversion</a></li>
-<li><a class="reference internal" href="#crystal-structure" id="id17">Crystal structure</a><ul>
-<li><a class="reference internal" href="#coordinates-in-direct-and-reciprocal-spaces" id="id18">Coordinates in direct and reciprocal spaces</a></li>
-<li><a class="reference internal" href="#commensurate-points" id="id19">Commensurate points</a></li>
+<li><a class="reference internal" href="#thermal-displacement" id="id16">Thermal displacement</a><ul>
+<li><a class="reference internal" href="#mean-square-displacement" id="id17">Mean square displacement</a></li>
+<li><a class="reference internal" href="#mean-square-displacement-matrix" id="id18">Mean square displacement matrix</a></li>
+<li><a class="reference internal" href="#projection-to-an-arbitrary-axis-from-the-cartesian-axes" id="id19">Projection to an arbitrary axis from the Cartesian axes</a></li>
+<li><a class="reference internal" href="#mean-square-displacement-matrix-in-cif-format" id="id20">Mean square displacement matrix in cif format</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#group-velocity" id="id21">Group velocity</a><ul>
+<li><a class="reference internal" href="#method" id="id22">Method</a></li>
+<li><a class="reference internal" href="#finite-difference-method" id="id23">Finite difference method</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#physical-unit-conversion" id="id24">Physical unit conversion</a></li>
+<li><a class="reference internal" href="#crystal-structure" id="id25">Crystal structure</a><ul>
+<li><a class="reference internal" href="#coordinates-in-direct-and-reciprocal-spaces" id="id26">Coordinates in direct and reciprocal spaces</a></li>
+<li><a class="reference internal" href="#commensurate-points" id="id27">Commensurate points</a></li>
 </ul>
 </li>
 </ul>
 </div>
 <div class="section" id="second-order-force-constants">
-<h2><a class="toc-backref" href="#id3">Second-order force constants</a><a class="headerlink" href="#second-order-force-constants" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id5">Second-order force constants</a><a class="headerlink" href="#second-order-force-constants" title="Permalink to this headline">¶</a></h2>
 <p>Potential energy of phonon system is represented as functions of atomic
 positions:</p>
 <div class="math">
@@ -225,7 +242,7 @@ atoms with a finite displacement <span class="math">\(\Delta r_\alpha{(jl)}\)</s
 usually <span class="math">\(F_\beta(j'l') \equiv 0\)</span>.</p>
 </div>
 <div class="section" id="modified-parlinski-li-kawazoe-method">
-<span id="force-constants-solver-theory"></span><h2><a class="toc-backref" href="#id4">Modified Parlinski-Li-Kawazoe method</a><a class="headerlink" href="#modified-parlinski-li-kawazoe-method" title="Permalink to this headline">¶</a></h2>
+<span id="force-constants-solver-theory"></span><h2><a class="toc-backref" href="#id6">Modified Parlinski-Li-Kawazoe method</a><a class="headerlink" href="#modified-parlinski-li-kawazoe-method" title="Permalink to this headline">¶</a></h2>
 <p>The following is a modified and simplified version of the
 Parlinski-Li-Kawazoe method, which is just a numerical fitting
 approach to obtain force constants from forces and displacements.</p>
@@ -313,7 +330,7 @@ simultaneous equations are built such as</p>
 site-symmetry operations. This is solved by pseudo inverse.</p>
 </div>
 <div class="section" id="dynamical-matrix">
-<span id="dynacmial-matrix-theory"></span><h2><a class="toc-backref" href="#id5">Dynamical matrix</a><a class="headerlink" href="#dynamical-matrix" title="Permalink to this headline">¶</a></h2>
+<span id="dynacmial-matrix-theory"></span><h2><a class="toc-backref" href="#id7">Dynamical matrix</a><a class="headerlink" href="#dynamical-matrix" title="Permalink to this headline">¶</a></h2>
 <p>In phonopy, a phase convention of dynamical matrix is used as follows:</p>
 <div class="math" id="equation-eq_dynmat">
 <span class="eqno">(1)<a class="headerlink" href="#equation-eq_dynmat" title="Permalink to this equation">¶</a></span>\[D_{\alpha\beta}(jj',\mathbf{q}) = \frac{1}{\sqrt{m_j m_{j'}}}
@@ -344,7 +361,7 @@ annihilation operators of phonon, <span class="math">\(\hbar\)</span> is the red
 constant, and <span class="math">\(t\)</span> is the time.</p>
 </div>
 <div class="section" id="non-analytical-term-correction">
-<span id="non-analytical-term-correction-theory"></span><h2><a class="toc-backref" href="#id6">Non-analytical term correction</a><a class="headerlink" href="#non-analytical-term-correction" title="Permalink to this headline">¶</a></h2>
+<span id="non-analytical-term-correction-theory"></span><h2><a class="toc-backref" href="#id8">Non-analytical term correction</a><a class="headerlink" href="#non-analytical-term-correction" title="Permalink to this headline">¶</a></h2>
 <p>To correct long range interaction of macroscopic electric field
 induced by polarization of collective ionic motions near the
 <span class="math">\(\Gamma\)</span>-point, non-analytical term is added to dynamical matrix
@@ -355,26 +372,28 @@ non-analytical term is given by,</p>
 \[D_{\alpha\beta}(jj',\mathbf{q}\to \mathbf{0}) =
  D_{\alpha\beta}(jj',\mathbf{q}=\mathbf{0})
  + \frac{1}{\sqrt{m_j m_j}} \frac{4\pi}{\Omega_0}
- \frac{[\sum_{\gamma}q_{\gamma}Z^{*}_{j,\gamma\alpha}][\sum_{\gamma'}q_{\gamma'}Z^{*}_{j',\gamma'\beta}]}
- {\sum_{\alpha\beta}q_{\alpha}\epsilon_{\alpha\beta}^{\infty} q_{\beta}}.\]</div>
+ \frac{\left[\sum_{\gamma}q_{\gamma}Z^{*}_{j,\gamma\alpha}\right]
+ \left[\sum_{\gamma'}q_{\gamma'}Z^{*}_{j',\gamma'\beta}\right]}
+ {\sum_{\alpha\beta}q_{\alpha}\epsilon_{\alpha\beta}^{\infty}
+ q_{\beta}}.\]</div>
 <p>Phonon frequencies at general <strong>q</strong>-points are interpolated by the
 method of Wang <em>et al.</em> (<a class="reference internal" href="reference.html#reference-wang-nac"><span class="std std-ref">Interpolation scheme at general q-points with non-analytical term correction</span></a>).</p>
 </div>
 <div class="section" id="thermodynamic-properties">
-<span id="thermal-properties-expressions"></span><h2><a class="toc-backref" href="#id7">Thermodynamic properties</a><a class="headerlink" href="#thermodynamic-properties" title="Permalink to this headline">¶</a></h2>
+<span id="thermal-properties-expressions"></span><h2><a class="toc-backref" href="#id9">Thermodynamic properties</a><a class="headerlink" href="#thermodynamic-properties" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="phonon-number">
-<h3><a class="toc-backref" href="#id8">Phonon number</a><a class="headerlink" href="#phonon-number" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id10">Phonon number</a><a class="headerlink" href="#phonon-number" title="Permalink to this headline">¶</a></h3>
 <div class="math">
 \[n = \frac{1}{\exp(\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B} T)-1}\]</div>
 </div>
 <div class="section" id="harmonic-phonon-energy">
-<h3><a class="toc-backref" href="#id9">Harmonic phonon energy</a><a class="headerlink" href="#harmonic-phonon-energy" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id11">Harmonic phonon energy</a><a class="headerlink" href="#harmonic-phonon-energy" title="Permalink to this headline">¶</a></h3>
 <div class="math">
 \[E = \sum_{\mathbf{q}\nu}\hbar\omega(\mathbf{q}\nu)\left[\frac{1}{2} +
  \frac{1}{\exp(\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B} T)-1}\right]\]</div>
 </div>
 <div class="section" id="constant-volume-heat-capacity">
-<h3><a class="toc-backref" href="#id10">Constant volume heat capacity</a><a class="headerlink" href="#constant-volume-heat-capacity" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id12">Constant volume heat capacity</a><a class="headerlink" href="#constant-volume-heat-capacity" title="Permalink to this headline">¶</a></h3>
 <div class="math">
 \[\begin{split}C_V &amp;= \left(\frac{\partial E}{\partial T} \right)_V \\
     &amp;= \sum_{\mathbf{q}\nu} k_\mathrm{B}
@@ -383,14 +402,14 @@ method of Wang <em>et al.</em> (<a class="reference internal" href="reference.ht
  T)}{[\exp(\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B} T)-1]^2}\end{split}\]</div>
 </div>
 <div class="section" id="partition-function">
-<h3><a class="toc-backref" href="#id11">Partition function</a><a class="headerlink" href="#partition-function" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id13">Partition function</a><a class="headerlink" href="#partition-function" title="Permalink to this headline">¶</a></h3>
 <div class="math">
 \[Z = \exp(-\varphi/k_\mathrm{B} T) \prod_{\mathbf{q}\nu}
  \frac{\exp(-\hbar\omega(\mathbf{q}\nu)/2k_\mathrm{B}
  T)}{1-\exp(-\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B} T)}\]</div>
 </div>
 <div class="section" id="helmholtz-free-energy">
-<h3><a class="toc-backref" href="#id12">Helmholtz free energy</a><a class="headerlink" href="#helmholtz-free-energy" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id14">Helmholtz free energy</a><a class="headerlink" href="#helmholtz-free-energy" title="Permalink to this headline">¶</a></h3>
 <div class="math">
 \[\begin{split}F &amp;= -k_\mathrm{B} T \ln Z \\
   &amp;= \varphi + \frac{1}{2} \sum_{\mathbf{q}\nu}
@@ -398,34 +417,154 @@ method of Wang <em>et al.</em> (<a class="reference internal" href="reference.ht
 \bigl[1 -\exp(-\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B} T) \bigr]\end{split}\]</div>
 </div>
 <div class="section" id="entropy">
-<h3><a class="toc-backref" href="#id13">Entropy</a><a class="headerlink" href="#entropy" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id15">Entropy</a><a class="headerlink" href="#entropy" title="Permalink to this headline">¶</a></h3>
 <div class="math">
-\[\begin{split}S &amp;= -\frac{\partial F}{\partial T} \\
-  &amp;= \frac{1}{2T}\sum_{\mathbf{q}\nu}\hbar\omega(\mathbf{q}\nu)\coth(\hbar\omega(\mathbf{q}\nu)/2k_\mathrm{B}T)-k_\mathrm{B} \sum_{\mathbf{q}\nu}\ln\left[2\sinh(\hbar\omega(\mathbf{q}\nu)/2k_\mathrm{B}T)\right]\end{split}\]</div>
+\[\begin{split}S &amp;= -\frac{\partial F}{\partial T} \\ &amp;= \frac{1}{2T}
+  \sum_{\mathbf{q}\nu} \hbar\omega(\mathbf{q}\nu)
+  \coth(\hbar\omega(\mathbf{q}\nu)/2k_\mathrm{B}T)-k_\mathrm{B}
+  \sum_{\mathbf{q}\nu}
+  \ln\left[2\sinh(\hbar\omega(\mathbf{q}\nu)/2k_\mathrm{B}T)\right]\end{split}\]</div>
 </div>
 </div>
 <div class="section" id="thermal-displacement">
-<h2><a class="toc-backref" href="#id14">Thermal displacement</a><a class="headerlink" href="#thermal-displacement" title="Permalink to this headline">¶</a></h2>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="thermal-displacement.html">Mean square displacement</a></li>
-<li class="toctree-l1"><a class="reference internal" href="thermal-displacement.html#mean-square-displacement-matrix">Mean square displacement matrix</a></li>
-<li class="toctree-l1"><a class="reference internal" href="thermal-displacement.html#projection-to-an-arbitrary-axis-from-the-cartesian-axes">Projection to an arbitrary axis from the Cartesian axes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="thermal-displacement.html#mean-square-displacement-matrix-in-cif-format">Mean square displacement matrix in cif format</a></li>
-</ul>
+<span id="id2"></span><h2><a class="toc-backref" href="#id16">Thermal displacement</a><a class="headerlink" href="#thermal-displacement" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="mean-square-displacement">
+<h3><a class="toc-backref" href="#id17">Mean square displacement</a><a class="headerlink" href="#mean-square-displacement" title="Permalink to this headline">¶</a></h3>
+<p>From Eq. (10.71) in the book “Thermodynamics of Crystal”, atomic
+displacement, <strong>u</strong>, is written by</p>
+<div class="math">
+\[u^\alpha(jl,t) = \left(\frac{\hbar}{2Nm_j}\right)^{\frac{1}{2}}
+\sum_{\mathbf{q},\nu}\left[\omega_\nu(\mathbf{q})\right]^{-\frac{1}{2}}
+\left[\hat{a}_\nu(\mathbf{q})\exp(-i\omega_\nu(\mathbf{q})t)+
+\hat{a}^\dagger_\nu(\mathbf{-q})\exp({i\omega_\nu(\mathbf{q})}t)\right]
+\exp({i\mathbf{q}\cdot\mathbf{r}(jl)})
+e^\alpha_\nu(j,\mathbf{q})\]</div>
+<p>where <em>j</em> and <em>l</em> are the labels for the <em>j</em>-th atomic position in the
+<em>l</em>-th unit cell, <em>t</em> is the time, <span class="math">\(\alpha\)</span> is an axis (a
+Cartesian axis in the default behavior of phonopy), <em>m</em> is the atomic
+mass, <em>N</em> is the number of the unit cells, <span class="math">\(\mathbf{q}\)</span> is the
+wave vector, <span class="math">\(\nu\)</span> is the index of phonon mode. <em>e</em> is the
+polarization vector of the atom <em>jl</em> and the band <span class="math">\(\nu\)</span> at
+<span class="math">\(\mathbf{q}\)</span>. <span class="math">\(\mathbf{r}(jl)\)</span> is the atomic position and
+<span class="math">\(\omega\)</span> is the phonon frequency. <span class="math">\(\hat{a}^\dagger\)</span> and
+<span class="math">\(\hat{a}\)</span> are the creation and annihilation operators of
+phonon. The expectation value of the squared atomic displacement is
+calculated as,</p>
+<div class="math">
+\[\left\langle |u^\alpha(jl, t)|^2 \right\rangle = \frac{\hbar}{2Nm_j}
+\sum_{\mathbf{q},\nu}\omega_\nu(\mathbf{q})^{-1}
+(1+2n_\nu(\mathbf{q},T))|e^\alpha_\nu(j,\mathbf{q})|^2,\]</div>
+<p>where <span class="math">\(n_\nu(\mathbf{q},T)\)</span> is the phonon population, which is give by,</p>
+<div class="math">
+\[n_\nu(\mathbf{q},T) =
+\frac{1}{\exp(\hbar\omega_\nu(\mathbf{q})/\mathrm{k_B}T)-1},\]</div>
+<p>where <em>T</em> is the temperature, and <span class="math">\(\mathrm{k_B}\)</span> is the
+Boltzmann constant. The equation is calculated using the commutation
+relation of the creation and annihilation operators and the
+expectation values of the combination of the operations, e.g.,</p>
+<div class="math">
+\[\begin{split}[ \hat{a}_\nu(\mathbf{q}), \hat{a}^\dagger_{\nu'}(\mathbf{q'}) ]
+&amp;= \delta(\mathbf{q}-\mathbf{q}')\delta_{\nu\nu'},\\
+[ \hat{a}_\nu(\mathbf{q}), \hat{a}_{\nu'}(\mathbf{q'}) ] &amp;= 0,\\
+[ \hat{a}^\dagger_\nu(\mathbf{q}), \hat{a}^\dagger_{\nu'}(\mathbf{q'}) ] &amp;= 0,\\
+\langle|\hat{a}_\nu(\mathbf{q})\hat{a}_{\nu'}(\mathbf{q'})|\rangle &amp;= 0,\\
+\langle|\hat{a}^\dagger_\nu(\mathbf{q})\hat{a}^\dagger_{\nu'}(\mathbf{q'})|\rangle
+&amp;= 0.\end{split}\]</div>
+</div>
+<div class="section" id="mean-square-displacement-matrix">
+<span id="thermal-displacement-matrix"></span><h3><a class="toc-backref" href="#id18">Mean square displacement matrix</a><a class="headerlink" href="#mean-square-displacement-matrix" title="Permalink to this headline">¶</a></h3>
+<p>Mean square displacement matrix is defined as follows:</p>
+<div class="math">
+\[\mathrm{U}_\text{cart}(j, T) = \frac{\hbar}{2Nm_j}
+\sum_{\mathbf{q},\nu}\omega_\nu(\mathbf{q},T)^{-1}
+(1+2n_\nu(\mathbf{q}))
+\mathbf{e}_\nu(j,\mathbf{q}) \otimes \mathbf{e}^*_\nu(j,\mathbf{q}).\]</div>
+<p>This is a symmetry matrix and diagonal elements are same as mean
+square displacement calculated along Cartesian x, y, z directions.</p>
+</div>
+<div class="section" id="projection-to-an-arbitrary-axis-from-the-cartesian-axes">
+<h3><a class="toc-backref" href="#id19">Projection to an arbitrary axis from the Cartesian axes</a><a class="headerlink" href="#projection-to-an-arbitrary-axis-from-the-cartesian-axes" title="Permalink to this headline">¶</a></h3>
+<p>In phonopy, eigenvectors are calculated in the Cartesian axes that are
+defined in the input structure file. Mean square displacement along an
+arbitrary axis is obtained projecting eigenvectors in the Cartesian
+axes as follows:</p>
+<div class="math">
+\[\left\langle |u(jl, t)|^2 \right\rangle = \frac{\hbar}{2Nm_j}
+\sum_{\mathbf{q},\nu}\omega_\nu(\mathbf{q})^{-1}
+(1+2n_\nu(\mathbf{q}))|
+\hat{\mathbf{n}}\cdot\mathbf{e}_\nu(j,\mathbf{q})|^2\]</div>
+<p>where <span class="math">\(\hat{\mathbf{n}}\)</span> is an arbitrary unit direction.</p>
+</div>
+<div class="section" id="mean-square-displacement-matrix-in-cif-format">
+<h3><a class="toc-backref" href="#id20">Mean square displacement matrix in cif format</a><a class="headerlink" href="#mean-square-displacement-matrix-in-cif-format" title="Permalink to this headline">¶</a></h3>
+<p>According to the paper by Grosse-Kunstleve and Adams [J. Appl. Cryst.,
+35, 477-480 (2002)], mean square displacement matrix in the cif
+definition (<code class="docutils literal"><span class="pre">aniso_U</span></code>),
+<span class="math">\(\mathrm{U}_\text{cif}\)</span>, is obtained by</p>
+<div class="math">
+\[\mathrm{U}_\text{cif} = (\mathrm{AN})^{-1}\mathrm{U}_\text{cart}
+(\mathrm{AN})^{-\mathrm{T}},\]</div>
+<p>where <span class="math">\(\mathrm{A}\)</span> is the matrix to transform a point in fractional
+coordinates to the Cartesian coordinates and <span class="math">\(\mathrm{N}\)</span> is the
+diagonal matrix made of reciprocal basis vector lengths as follows:</p>
+<div class="math">
+\[\begin{split}\mathrm{A} = \begin{pmatrix}
+a_x &amp; b_x &amp; c_x \\
+a_y &amp; b_y &amp; c_y \\
+a_z &amp; b_z &amp; c_z
+\end{pmatrix}\end{split}\]</div>
+<p>and</p>
+<div class="math">
+\[\begin{split}\mathrm{N} = \begin{pmatrix}
+a^* &amp; 0 &amp; 0 \\
+0 &amp; b^* &amp; 0 \\
+0 &amp; 0 &amp; c^*
+\end{pmatrix}.\end{split}\]</div>
+<p><span class="math">\(a^*\)</span>, <span class="math">\(b^*\)</span>, <span class="math">\(c^*\)</span> are defined without <span class="math">\(2\pi\)</span>.</p>
 </div>
 </div>
 <div class="section" id="group-velocity">
-<h2><a class="toc-backref" href="#id15">Group velocity</a><a class="headerlink" href="#group-velocity" title="Permalink to this headline">¶</a></h2>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="group-velocity.html">Method</a></li>
-<li class="toctree-l1"><a class="reference internal" href="group-velocity.html#finite-difference-method">Finite difference method</a></li>
-</ul>
+<span id="id3"></span><h2><a class="toc-backref" href="#id21">Group velocity</a><a class="headerlink" href="#group-velocity" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="method">
+<h3><a class="toc-backref" href="#id22">Method</a><a class="headerlink" href="#method" title="Permalink to this headline">¶</a></h3>
+<p>Phonopy calculates group velocity of phonon as follows:</p>
+<div class="math">
+\[\begin{split}\mathbf{v}_\mathrm{g}(\mathbf{q}\nu) = &amp; \nabla_\mathbf{q} \omega(\mathbf{q}\nu) \\
+=&amp;\frac{\partial\omega(\mathbf{q}\nu)}{\partial \mathbf{q}} \\
+=&amp;\frac{1}{2\omega(\mathbf{q}\nu)}\frac{\partial[\omega(\mathbf{q}\nu)]^2}{\partial
+\mathbf{q}} \\
+=&amp;\frac{1}{2\omega(\mathbf{q}\nu)}\left&lt;\mathbf{e}(\mathbf{q}\nu)\biggl|
+\frac{\partial D(\mathbf{q})} {\partial
+\mathbf{q}}\biggl|\mathbf{e}(\mathbf{q}\nu)\right&gt;,\end{split}\]</div>
+<p>where the meanings of the variables are found at <a class="reference internal" href="#formulations"><span class="std std-ref">Formulations</span></a>.</p>
+</div>
+<div class="section" id="finite-difference-method">
+<h3><a class="toc-backref" href="#id23">Finite difference method</a><a class="headerlink" href="#finite-difference-method" title="Permalink to this headline">¶</a></h3>
+<p>In the previous versions, group velocity was calculated using finite
+difference method:</p>
+<div class="math">
+\[\mathbf{v}_\mathrm{g}(\mathbf{q}\nu) =
+\frac{1}{2\omega(\mathbf{q}\nu)}\left&lt;\mathbf{e}(\mathbf{q}\nu)\biggl|
+\frac{\partial D(\mathbf{q})} {\partial
+\mathbf{q}}\biggl|\mathbf{e}(\mathbf{q}\nu)\right&gt;
+\simeq \frac{1}{2\omega(\mathbf{q}\nu)}
+\left&lt;\mathbf{e}(\mathbf{q}\nu)\biggl|
+\frac{\Delta D(\mathbf{q})}
+{\Delta \mathbf{q}}\biggl|\mathbf{e}(\mathbf{q}\nu)\right&gt;.\]</div>
+<p>Group velocity calculation with the finite difference method is still
+able to be activated using <code class="docutils literal"><span class="pre">GV_DELTA_Q</span></code> tag or <code class="docutils literal"><span class="pre">-gv_delta_q</span></code>
+option.  <span class="math">\(\Delta\mathbf{q} = (\Delta q_x, \Delta q_y, \Delta
+q_z)\)</span> is described in Cartesian coordinated in reciprocal space. In
+the implementation, central difference is employed, and <span class="math">\(+\Delta
+q_\alpha\)</span> and <span class="math">\(-\Delta q_\alpha\)</span> are taken to calculate group
+velocity, where <span class="math">\(\alpha\)</span> is the Cartesian index in reciprocal
+space. <span class="math">\(\Delta q_\alpha\)</span> is specified in the unit of reciprocal
+space distance (<span class="math">\(\mathrm{\AA}^{-1}\)</span> for the default case) by
+<code class="docutils literal"><span class="pre">--gv_delta_q</span></code> option or <code class="docutils literal"><span class="pre">GV_DELTA_Q</span></code> tag.</p>
 </div>
 </div>
 <div class="section" id="physical-unit-conversion">
-<span id="id2"></span><h2><a class="toc-backref" href="#id16">Physical unit conversion</a><a class="headerlink" href="#physical-unit-conversion" title="Permalink to this headline">¶</a></h2>
+<span id="id4"></span><h2><a class="toc-backref" href="#id24">Physical unit conversion</a><a class="headerlink" href="#physical-unit-conversion" title="Permalink to this headline">¶</a></h2>
 <p>Phonopy calculates phonon frequencies based on input values from
 users. In the default case, the physical units of distance, atomic
 mass, force, and force constants are supposed to be
@@ -464,9 +603,9 @@ conversion factors are similarly calculated following the unit
 systems employed in phonopy (<a class="reference internal" href="interfaces.html#calculator-interfaces"><span class="std std-ref">Interfaces to calculators</span></a>).</p>
 </div>
 <div class="section" id="crystal-structure">
-<span id="definition-of-commensurate-points"></span><h2><a class="toc-backref" href="#id17">Crystal structure</a><a class="headerlink" href="#crystal-structure" title="Permalink to this headline">¶</a></h2>
+<span id="definition-of-commensurate-points"></span><h2><a class="toc-backref" href="#id25">Crystal structure</a><a class="headerlink" href="#crystal-structure" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="coordinates-in-direct-and-reciprocal-spaces">
-<h3><a class="toc-backref" href="#id18">Coordinates in direct and reciprocal spaces</a><a class="headerlink" href="#coordinates-in-direct-and-reciprocal-spaces" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id26">Coordinates in direct and reciprocal spaces</a><a class="headerlink" href="#coordinates-in-direct-and-reciprocal-spaces" title="Permalink to this headline">¶</a></h3>
 <p>As usual, in phonopy, the Born-von Karman boundary condition is
 assumed. Basis vectors of a primitive lattice are defined in three
 column vectors <span class="math">\(( \mathbf{a} \; \mathbf{b} \; \mathbf{c}
@@ -514,7 +653,7 @@ following Eq. <a class="reference internal" href="#equation-eq_rec_basis_vectors
 \; \mathbf{b} \; \mathbf{c})\)</span>.</p>
 </div>
 <div class="section" id="commensurate-points">
-<h3><a class="toc-backref" href="#id19">Commensurate points</a><a class="headerlink" href="#commensurate-points" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id27">Commensurate points</a><a class="headerlink" href="#commensurate-points" title="Permalink to this headline">¶</a></h3>
 <p>In phonopy, so-called commensurate points mean the q-points whose waves are
 confined in the supercell used in the phonon calculation.</p>
 <p>To explain about the commensurate points, let basis vectors of a
@@ -591,7 +730,7 @@ the elements of <span class="math">\(\boldsymbol{P}^{\mathrm{T}} \mathbf{q}\)</s
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.2.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.3.<br/>
     </p>
   </div>
 </footer>

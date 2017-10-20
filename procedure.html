@@ -3,16 +3,13 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>VASP &amp; phonopy calculation &#8212; Phonopy v.1.11.14</title>
-    
+    <title>Short tutorials &#8212; Phonopy v.1.12.0</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.11.14',
+        VERSION:     '1.12.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -22,7 +19,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
@@ -50,7 +47,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.11.14</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.12.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -77,7 +74,7 @@
 <li class="toctree-l1"><a class="reference internal" href="command-options.html">Command options</a></li>
 <li class="toctree-l1"><a class="reference internal" href="qha.html">Quasi harmonic approximation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gruneisen.html">Mode Grüneisen parameters</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="interfaces.html">Interfaces to calculators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interfaces.html">Interfaces to calculators</a></li>
 <li class="toctree-l1"><a class="reference internal" href="auxiliary-tools.html">Auxiliary tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="external-tools.html">External tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="phonopy-module.html">Using phonopy as a python module</a></li>
@@ -101,16 +98,7 @@
   <ul class="dropdown-menu localtoc"
       role="menu"
       aria-labelledby="dLabelLocalToc"><ul>
-<li><a class="reference internal" href="#">VASP &amp; phonopy calculation</a><ul>
-<li><a class="reference internal" href="#pre-process">Pre-process</a></li>
-<li><a class="reference internal" href="#calculation-of-sets-of-forces">Calculation of sets of forces</a></li>
-<li><a class="reference internal" href="#post-process">Post-process</a></li>
-<li><a class="reference internal" href="#non-analytical-term-correction-optional">Non-analytical term correction (Optional)</a><ul>
-<li><a class="reference internal" href="#some-more-details">Some more details</a></li>
-</ul>
-</li>
-</ul>
-</li>
+<li><a class="reference internal" href="#">Short tutorials</a></li>
 </ul>
 </ul>
 </li>
@@ -152,205 +140,11 @@
   <div class="row">
     <div class="col-md-12 content">
       
-  <div class="section" id="vasp-phonopy-calculation">
-<span id="tutorial"></span><h1>VASP &amp; phonopy calculation<a class="headerlink" href="#vasp-phonopy-calculation" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="pre-process">
-<h2>Pre-process<a class="headerlink" href="#pre-process" title="Permalink to this headline">¶</a></h2>
-<p>The input stureture of <code class="docutils literal"><span class="pre">POSCAR</span></code> (<a class="reference internal" href="input-files.html#example-poscar1"><span class="std std-ref">this</span></a>) is
-used as an example here. Most files are found at <a class="reference external" href="https://github.com/atztogo/phonopy/tree/master/example/SiO2-HP/">SiO2-HP example</a>.</p>
-<p>In the pre-process, supercell structures with (or without)
-displacements are created from a unit cell fully consiering crystal
-symmetry.</p>
-<p>To obtain supercells (<span class="math">\(2\times 2\times 3\)</span>) with displacements,
-run phonopy:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">phonopy</span> <span class="o">-</span><span class="n">d</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;2 2 3&quot;</span>
-</pre></div>
-</div>
-<p>You should find the files, <code class="docutils literal"><span class="pre">SPOSCAR</span></code>, <code class="docutils literal"><span class="pre">disp.yaml</span></code>, and <code class="docutils literal"><span class="pre">POSCAR-{number}</span></code> as
-follows:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">ls</span>
-<span class="n">disp</span><span class="o">.</span><span class="n">yaml</span>  <span class="n">POSCAR</span>  <span class="n">POSCAR</span><span class="o">-</span><span class="mi">001</span>  <span class="n">POSCAR</span><span class="o">-</span><span class="mi">002</span>  <span class="n">POSCAR</span><span class="o">-</span><span class="mi">003</span>  <span class="n">SPOSCAR</span>
-</pre></div>
-</div>
-<p><code class="docutils literal"><span class="pre">SPOSCAR</span></code> is the perfect supercell structure, <code class="docutils literal"><span class="pre">disp.yaml</span></code> contains
-the information on displacements, and <code class="docutils literal"><span class="pre">POSCAR-{number}</span></code> are the
-supercells with atomic displacements. <code class="docutils literal"><span class="pre">POSCAR-{number}</span></code> corresponds
-to the different atomic displacements written in <code class="docutils literal"><span class="pre">disp.yaml</span></code>.</p>
-</div>
-<div class="section" id="calculation-of-sets-of-forces">
-<h2>Calculation of sets of forces<a class="headerlink" href="#calculation-of-sets-of-forces" title="Permalink to this headline">¶</a></h2>
-<p>Force constants are calculated using the structure files <code class="docutils literal"><span class="pre">POSCAR-{number}</span></code>
-(from forces on atoms) or using the <code class="docutils literal"><span class="pre">SPOSCAR</span></code> file (direct calculation of force
-constants) by your favorite calculator. See the
-<a class="reference internal" href="#details-of-procedure"><span class="std std-ref">details</span></a>.</p>
-<p>In the case of VASP, the calculations for the finite displacement method can be proceeded just using the <code class="docutils literal"><span class="pre">POSCAR-{number}</span></code> files as <code class="docutils literal"><span class="pre">POSCAR</span></code> of VASP calculations. An example of the <code class="docutils literal"><span class="pre">INCAR</span></code> is as follows:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span>  <span class="n">PREC</span> <span class="o">=</span> <span class="n">Accurate</span>
-<span class="n">IBRION</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
- <span class="n">ENCUT</span> <span class="o">=</span> <span class="mi">500</span>
- <span class="n">EDIFF</span> <span class="o">=</span> <span class="mf">1.0e-08</span>
-<span class="n">ISMEAR</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">SIGMA</span> <span class="o">=</span> <span class="mf">0.01</span>
- <span class="n">IALGO</span> <span class="o">=</span> <span class="mi">38</span>
- <span class="n">LREAL</span> <span class="o">=</span> <span class="o">.</span><span class="n">FALSE</span><span class="o">.</span>
- <span class="n">LWAVE</span> <span class="o">=</span> <span class="o">.</span><span class="n">FALSE</span><span class="o">.</span>
-<span class="n">LCHARG</span> <span class="o">=</span> <span class="o">.</span><span class="n">FALSE</span><span class="o">.</span>
-</pre></div>
-</div>
-<p>Be careful not to relax the structures. Then create <code class="docutils literal"><span class="pre">FORCE_SETS</span></code>
-file using <a class="reference internal" href="command-options.html#vasp-force-sets-option"><span class="std std-ref">VASP interface</span></a>:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">f</span> <span class="n">disp</span><span class="o">-</span><span class="mi">001</span><span class="o">/</span><span class="n">vasprun</span><span class="o">.</span><span class="n">xml</span> <span class="n">disp</span><span class="o">-</span><span class="mi">002</span><span class="o">/</span><span class="n">vasprun</span><span class="o">.</span><span class="n">xml</span> <span class="n">disp</span><span class="o">-</span><span class="mi">003</span><span class="o">/</span><span class="n">vasprun</span><span class="o">.</span><span class="n">xml</span>
-</pre></div>
-</div>
-<p>or</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">f</span> <span class="n">disp</span><span class="o">-</span><span class="p">{</span><span class="mf">001.</span><span class="o">.</span><span class="mi">003</span><span class="p">}</span><span class="o">/</span><span class="n">vasprun</span><span class="o">.</span><span class="n">xml</span>
-</pre></div>
-</div>
-<p>If you want to calculate force constants by VASP-DFPT directory, see <a class="reference internal" href="vasp.html#vasp-dfpt-interface"><span class="std std-ref">VASP-DFPT &amp; phonopy calculation</span></a>.</p>
-</div>
-<div class="section" id="post-process">
-<h2>Post-process<a class="headerlink" href="#post-process" title="Permalink to this headline">¶</a></h2>
-<p>In the post-process,</p>
-<ol class="arabic simple">
-<li>Force constants are calculated from the sets of forces</li>
-<li>A part of dynamical matrix is built from the force constants</li>
-<li>Phonon frequencies and eigenvectors are calculated from the
-dynamical matrices with the specified <em>q</em>-points.</li>
-</ol>
-<p>For mesh sampling calculation, prepare the following setting file named, e.g.,
-<code class="docutils literal"><span class="pre">mesh.conf</span></code>:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">ATOM_NAME</span> <span class="o">=</span> <span class="n">Si</span> <span class="n">O</span>
-<span class="n">DIM</span> <span class="o">=</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">3</span>
-<span class="n">MP</span> <span class="o">=</span> <span class="mi">8</span> <span class="mi">8</span> <span class="mi">8</span>
-</pre></div>
-</div>
-<p>The density of states (DOS) is plotted by:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">p</span> <span class="n">mesh</span><span class="o">.</span><span class="n">conf</span>
-</pre></div>
-</div>
-<p>Thermal properties are calculated with the sampling mesh by:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">t</span> <span class="n">mesh</span><span class="o">.</span><span class="n">conf</span>
-</pre></div>
-</div>
-<p>You should check the convergence with respect to the mesh numbers.
-Thermal properties can be plotted by:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">t</span> <span class="o">-</span><span class="n">p</span> <span class="n">mesh</span><span class="o">.</span><span class="n">conf</span>
-</pre></div>
-</div>
-<p>Projected DOS is calculated by the following setting file named, e.g., <code class="docutils literal"><span class="pre">pdos.conf</span></code>:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">ATOM_NAME</span> <span class="o">=</span> <span class="n">Si</span> <span class="n">O</span>
-<span class="n">DIM</span> <span class="o">=</span> <span class="mi">2</span> <span class="mi">2</span> <span class="mi">3</span>
-<span class="n">MP</span> <span class="o">=</span> <span class="mi">8</span> <span class="mi">8</span> <span class="mi">8</span>
-<span class="n">PDOS</span> <span class="o">=</span> <span class="mi">1</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span> <span class="mi">4</span> <span class="mi">5</span> <span class="mi">6</span>
-</pre></div>
-</div>
-<p>and plotted by:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">p</span> <span class="n">pdos</span><span class="o">.</span><span class="n">conf</span>
-</pre></div>
-</div>
-<p>Band structure is calculated with the following setting file named, e.g., <cite>band.conf</cite> by:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">ATOM_NAME</span> <span class="o">=</span> <span class="n">Si</span> <span class="n">O</span>
-<span class="n">DIM</span> <span class="o">=</span>  <span class="mi">2</span> <span class="mi">2</span> <span class="mi">3</span>
-<span class="n">BAND</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="mf">0.5</span> <span class="mf">0.5</span>  <span class="mf">0.0</span> <span class="mf">0.0</span> <span class="mf">0.0</span>  <span class="mf">0.5</span> <span class="mf">0.5</span> <span class="mf">0.0</span>  <span class="mf">0.0</span> <span class="mf">0.5</span> <span class="mf">0.0</span>
-</pre></div>
-</div>
-<p>The band structure is plotted by:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">p</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
-</pre></div>
-</div>
-<p>In either case, by setting the <code class="docutils literal"><span class="pre">-s</span></code> option, the plot is going to be saved in the PDF
-format. If you don’t need to plot DOS, the (partial) DOS
-is just calculated using the <code class="docutils literal"><span class="pre">--dos</span></code> option.</p>
-</div>
-<div class="section" id="non-analytical-term-correction-optional">
-<h2>Non-analytical term correction (Optional)<a class="headerlink" href="#non-analytical-term-correction-optional" title="Permalink to this headline">¶</a></h2>
-<p>To activate non-analytical term correction, <a class="reference internal" href="input-files.html#born-file"><span class="std std-ref">BORN (optional)</span></a> is
-required. This file contains the information of Born effective charge
-and dielectric constant. These physical values are also obtained from
-the first-principles calculations, e.g., by using VASP, pwscf, etc. In
-the case of VASP, an example of <code class="docutils literal"><span class="pre">INCAR</span></code> will be as shown below:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span>    <span class="n">PREC</span> <span class="o">=</span> <span class="n">Accurate</span>
-  <span class="n">IBRION</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
-  <span class="n">NELMIN</span> <span class="o">=</span> <span class="mi">5</span>
-   <span class="n">ENCUT</span> <span class="o">=</span> <span class="mi">500</span>
-   <span class="n">EDIFF</span> <span class="o">=</span> <span class="mf">1.000000e-08</span>
-  <span class="n">ISMEAR</span> <span class="o">=</span> <span class="mi">0</span>
-   <span class="n">SIGMA</span> <span class="o">=</span> <span class="mf">1.000000e-02</span>
-   <span class="n">IALGO</span> <span class="o">=</span> <span class="mi">38</span>
-   <span class="n">LREAL</span> <span class="o">=</span> <span class="o">.</span><span class="n">FALSE</span><span class="o">.</span>
-   <span class="n">LWAVE</span> <span class="o">=</span> <span class="o">.</span><span class="n">FALSE</span><span class="o">.</span>
-  <span class="n">LCHARG</span> <span class="o">=</span> <span class="o">.</span><span class="n">FALSE</span><span class="o">.</span>
-<span class="n">LEPSILON</span> <span class="o">=</span> <span class="o">.</span><span class="n">TRUE</span><span class="o">.</span>
-</pre></div>
-</div>
-<p>In addition, it is recommended to increase the number of k-points to
-be sampled. Twice the number for each axis may be a choice. After
-running this VASP calculation, <code class="docutils literal"><span class="pre">BORN</span></code> file has to be created
-following the <code class="docutils literal"><span class="pre">BORN</span></code> format (<a class="reference internal" href="input-files.html#born-file"><span class="std std-ref">BORN (optional)</span></a>). However for VASP, an
-auxiliary tool is prepared, which is <code class="docutils literal"><span class="pre">outcar-born</span></code>. There is an
-option <code class="docutils literal"><span class="pre">--pa</span></code> for this command to set a transformation matrix from
-supercell or unit cell with centring to the primitive cell. Since this
-rutile-type SiO2 has the primitive lattice, it is unnecessary to set
-this option. Running <code class="docutils literal"><span class="pre">outcar-born</span></code> in the directory containing
-<code class="docutils literal"><span class="pre">OUTCAR</span></code> of this VASP calculation:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">outcar</span><span class="o">-</span><span class="n">born</span>
-<span class="c1"># epsilon and Z* of atoms 1 3</span>
-   <span class="mf">3.2605670</span>   <span class="mf">0.0000000</span>   <span class="mf">0.0000000</span>   <span class="mf">0.0000000</span>   <span class="mf">3.2605670</span>   <span class="mf">0.0000000</span>   <span class="mf">0.0000000</span>   <span class="mf">0.0000000</span>   <span class="mf">3.4421330</span>
-   <span class="mf">3.7558600</span>   <span class="mf">0.3020100</span>   <span class="mf">0.0000000</span>   <span class="mf">0.3020100</span>   <span class="mf">3.7558600</span>   <span class="mf">0.0000000</span>   <span class="mf">0.0000000</span>   <span class="mf">0.0000000</span>   <span class="mf">3.9965200</span>
-  <span class="o">-</span><span class="mf">1.8783900</span>  <span class="o">-</span><span class="mf">0.5270900</span>   <span class="mf">0.0000000</span>  <span class="o">-</span><span class="mf">0.5270900</span>  <span class="o">-</span><span class="mf">1.8783900</span>   <span class="mf">0.0000000</span>   <span class="mf">0.0000100</span>   <span class="mf">0.0000100</span>  <span class="o">-</span><span class="mf">1.9987900</span>
-</pre></div>
-</div>
-<p>To employ symmetry constraints, <code class="docutils literal"><span class="pre">--st</span></code> option may used as follows:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">outcar</span><span class="o">-</span><span class="n">born</span> <span class="o">--</span><span class="n">st</span>
-<span class="c1"># epsilon and Z* of atoms 1 3</span>
-   <span class="mf">3.2605670</span>   <span class="mf">0.0000000</span>   <span class="mf">0.0000000</span>   <span class="mf">0.0000000</span>   <span class="mf">3.2605670</span>   <span class="mf">0.0000000</span>   <span class="mf">0.0000000</span>   <span class="mf">0.0000000</span>   <span class="mf">3.4421330</span>
-   <span class="mf">3.7561900</span>   <span class="mf">0.3020100</span>   <span class="mf">0.0000000</span>   <span class="mf">0.3020100</span>   <span class="mf">3.7561900</span>   <span class="mf">0.0000000</span>   <span class="mf">0.0000000</span>   <span class="mf">0.0000000</span>   <span class="mf">3.9968733</span>
-  <span class="o">-</span><span class="mf">1.8780950</span>  <span class="o">-</span><span class="mf">0.5270900</span>   <span class="mf">0.0000000</span>  <span class="o">-</span><span class="mf">0.5270900</span>  <span class="o">-</span><span class="mf">1.8780950</span>   <span class="mf">0.0000000</span>   <span class="mf">0.0000000</span>   <span class="mf">0.0000000</span>  <span class="o">-</span><span class="mf">1.9984367</span>
-</pre></div>
-</div>
-<p>The values are slightly modified by symmetry, but we can see the
-original values obtained directly from VASP was already very good.</p>
-<p>To put <code class="docutils literal"><span class="pre">BORN</span></code> file in the current directly, and running phonopy with
-<code class="docutils literal"><span class="pre">--nac</span></code> option, non-analytical term correction is activated, such as:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">-</span><span class="n">p</span> <span class="o">--</span><span class="n">nac</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
-</pre></div>
-</div>
-<p>Please watch the example of NaCl with and without <code class="docutils literal"><span class="pre">--nac</span></code> option shown in
-<a class="reference internal" href="examples.html#examples-link"><span class="std std-ref">Examples</span></a>.</p>
-<div class="section" id="some-more-details">
-<span id="details-of-procedure"></span><h3>Some more details<a class="headerlink" href="#some-more-details" title="Permalink to this headline">¶</a></h3>
-<p>The structure file names are different in different force calculators,
-see <a class="reference internal" href="interfaces.html#calculator-interfaces"><span class="std std-ref">Interfaces to calculators</span></a>. To notify this, (*) is put
-after the structure file name. By refering
-<a class="reference internal" href="interfaces.html#calculator-interfaces"><span class="std std-ref">Interfaces to calculators</span></a>, please read the file name according to
-those for the other calculators.</p>
-<p>Following files are required in your working directory.</p>
-<ul class="simple">
-<li><code class="docutils literal"><span class="pre">POSCAR</span></code> (*), and <code class="docutils literal"><span class="pre">FORCE_SETS</span></code> or <code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span></code></li>
-<li><code class="docutils literal"><span class="pre">disp.yaml</span></code> is required to create <code class="docutils literal"><span class="pre">FORCE_SETS</span></code>.</li>
-</ul>
-<p>In the case of finite difference approach, there are three steps.</p>
-<ol class="arabic simple">
-<li>Create supercells and introduce atomic displacements. Each
-supercell contains one atomic displacement. It is done by using
-<code class="docutils literal"><span class="pre">-d</span></code> option with <code class="docutils literal"><span class="pre">--dim</span></code> option that specifies supercell
-dimension.  The files of supercells with atomic displacements like
-as <code class="docutils literal"><span class="pre">POSCAR-001</span></code>, <code class="docutils literal"><span class="pre">POSCAR-002</span></code>, …, (*) are created in current
-directory by running phonopy. The files <code class="docutils literal"><span class="pre">disp.yaml</span></code> and
-<code class="docutils literal"><span class="pre">SPOSCAR</span></code> are also created. The file <code class="docutils literal"><span class="pre">SPOSCAR</span></code> is the perfect
-supercell that contains no atomic displacement. This file is not
-usually used.</li>
-<li>Calculate forces on atoms of the supercells with atomic
-displacements. After obtaining forces on atoms that calculated by
-some calculator (it’s out of phonopy), the forces are summarized in
-<code class="docutils literal"><span class="pre">FORCE_SETS</span></code> file following the <a class="reference internal" href="input-files.html#file-forces"><span class="std std-ref">format</span></a>.</li>
-<li>Calculate phonon related properties.</li>
-</ol>
-<p>If you already have force constants, the first and second steps can be
-omitted. However your force constants have to be converted to the
-<a class="reference internal" href="input-files.html#file-force-constants"><span class="std std-ref">format</span></a> that phonopy can read. The
-<a class="reference internal" href="command-options.html#vasp-force-constants"><span class="std std-ref">VASP interface</span></a> to convert force
-constants is prepared in phonopy.</p>
-</div>
-</div>
+  <div class="section" id="short-tutorials">
+<span id="tutorial"></span><h1>Short tutorials<a class="headerlink" href="#short-tutorials" title="Permalink to this headline">¶</a></h1>
+<p>Tutorials for different force calculators, VASP, WIEN2k, PWscf (QE),
+ABINIT, SIESTA, Elk, and, CRYSTAL, are found at
+<a class="reference internal" href="interfaces.html#tutorials-for-calculators"><span class="std std-ref">Tutorials for calculators</span></a>.</p>
 </div>
 
 
@@ -373,7 +167,7 @@ constants is prepared in phonopy.</p>
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.2.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.3.<br/>
     </p>
   </div>
 </footer>

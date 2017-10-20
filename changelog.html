@@ -3,16 +3,13 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>Change Log &#8212; Phonopy v.1.11.14</title>
-    
+    <title>Change Log &#8212; Phonopy v.1.12.0</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.11.14',
+        VERSION:     '1.12.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -22,7 +19,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
@@ -50,7 +47,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.11.14</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.12.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -102,6 +99,7 @@
       role="menu"
       aria-labelledby="dLabelLocalToc"><ul>
 <li><a class="reference internal" href="#">Change Log</a><ul>
+<li><a class="reference internal" href="#oct-19-2017-version-1-12-0">Oct-19-2017: Version 1.12.0</a></li>
 <li><a class="reference internal" href="#oct-2-2017-version-1-11-14">Oct-2-2017: Version 1.11.14</a></li>
 <li><a class="reference internal" href="#june-18-2017-version-1-11-12">June-18-2017: Version 1.11.12</a></li>
 <li><a class="reference internal" href="#mar-31-2017-version-1-11-10">Mar-31-2017: Version 1.11.10</a></li>
@@ -224,6 +222,18 @@
       
   <div class="section" id="change-log">
 <span id="changelog"></span><h1>Change Log<a class="headerlink" href="#change-log" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="oct-19-2017-version-1-12-0">
+<h2>Oct-19-2017: Version 1.12.0<a class="headerlink" href="#oct-19-2017-version-1-12-0" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>The names of auxiliary tools and <code class="docutils literal"><span class="pre">gruneisen</span></code> are changed, for
+which the prefix <code class="docutils literal"><span class="pre">phonopy-</span></code> is added to the old names to avoid
+accidental conflict with other filenames already existing under
+<code class="docutils literal"><span class="pre">bin</span></code>. <code class="docutils literal"><span class="pre">outcar-born</span></code> is renamed to
+<code class="docutils literal"><span class="pre">phonopy-vasp-born</span></code>. Similarly <code class="docutils literal"><span class="pre">gruneisen</span></code> is renamed
+<code class="docutils literal"><span class="pre">phonopy-gruneisen</span></code>. Please find these changes at
+<a class="reference internal" href="auxiliary-tools.html#auxiliary-tools"><span class="std std-ref">Auxiliary tools</span></a> and <a class="reference internal" href="gruneisen.html#phonopy-gruneisen"><span class="std std-ref">Calculation of mode Grüneisen parameters</span></a>.</li>
+</ul>
+</div>
 <div class="section" id="oct-2-2017-version-1-11-14">
 <h2>Oct-2-2017: Version 1.11.14<a class="headerlink" href="#oct-2-2017-version-1-11-14" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
@@ -507,7 +517,7 @@ constants.</li>
 <h2>Oct-3-2013: Version 1.7.4<a class="headerlink" href="#oct-3-2013-version-1-7-4" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li>Thermal displacement matrix is implemented. See
-<a class="reference internal" href="setting-tags.html#thermal-displacement-matrices-tag"><span class="std std-ref">TDISPMAT, TMAX, TMIN, and TSTEP</span></a> and <a class="reference internal" href="thermal-displacement.html#thermal-displacement"><span class="std std-ref">Mean square displacement</span></a>.</li>
+<a class="reference internal" href="setting-tags.html#thermal-displacement-matrices-tag"><span class="std std-ref">TDISPMAT, TMAX, TMIN, and TSTEP</span></a> and <a class="reference internal" href="formulation.html#thermal-displacement"><span class="std std-ref">Thermal displacement</span></a>.</li>
 <li>PDOS with projection along arbitrary direction was implemented. See
 <a class="reference internal" href="setting-tags.html#projection-direction-tag"><span class="std std-ref">PROJECTION_DIRECTION</span></a>.</li>
 <li><code class="docutils literal"><span class="pre">partial_dos.dat</span></code> format was changed. XYZ projected PDOS is not
@@ -614,7 +624,7 @@ when this is used togather with the <code class="docutils literal"><span class="
 of point group -3m.</li>
 <li>A new option <code class="docutils literal"><span class="pre">--irreps</span></code> or <code class="docutils literal"><span class="pre">IRREPS</span></code> tag (Experimental).</li>
 <li><code class="docutils literal"><span class="pre">character_table.yaml</span></code> output.</li>
-<li>Eigenvectors output in“modulation.yaml“ was recovered.</li>
+<li>Eigenvectors output in``modulation.yaml`` was recovered.</li>
 </ul>
 </div>
 <div class="section" id="oct-22-2012-version-1-6">
@@ -782,7 +792,7 @@ of the document is correct.</p>
 disconnect the sequence of band paths
 (<a class="reference internal" href="setting-tags.html#band-structure-related-tags"><span class="std std-ref">Band structure tags</span></a>).</li>
 <li><code class="docutils literal"><span class="pre">dispmanager</span></code>, an auxiliary tool for modifying <code class="docutils literal"><span class="pre">disp.yaml</span></code>, is
-developed (<a class="reference internal" href="auxiliary-tools.html#dispmanager-tool"><span class="std std-ref">dispmanager</span></a>).</li>
+developed (<a class="reference internal" href="auxiliary-tools.html#dispmanager-tool"><span class="std std-ref">phonopy-dispmanager</span></a>).</li>
 <li>Symmetry finder update to spglib-1.0.3.1. Almost perfect casting to
 a Bravais lattice is achieved using <code class="docutils literal"><span class="pre">--symmetry</span></code> option.</li>
 <li>The setting tags <code class="docutils literal"><span class="pre">TRANSLATION</span></code>, <code class="docutils literal"><span class="pre">PERMUTATION</span></code>, and <code class="docutils literal"><span class="pre">MP_REDUCE</span></code>
@@ -891,7 +901,7 @@ write_vasp, and read_vasp, are implemented.</li>
 <h2>Sep-22-2010: Version 0.9.1.4<a class="headerlink" href="#sep-22-2010-version-0-9-1-4" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li>The new tag <code class="docutils literal"><span class="pre">ANIME_TYPE</span></code> supports <code class="docutils literal"><span class="pre">xyz</span></code> and <code class="docutils literal"><span class="pre">xyz_jmol</span></code> formats
-by Jörg Meyer and Christian Carbogno, and also <cite>A set of “POSCAR`</cite>
+by Jörg Meyer and Christian Carbogno, and also <cite>A set of ``POSCAR`</cite>
 files corresponding to animation frames.</li>
 <li>Fix bugs in <code class="docutils literal"><span class="pre">trim_cell</span></code> and
 <code class="docutils literal"><span class="pre">Primitive.__supercell_to_primitive_map</span></code> in <code class="docutils literal"><span class="pre">cells.py</span></code>. When
@@ -1069,7 +1079,7 @@ from those in structure with atomic displacements.</li>
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.2.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.3.<br/>
     </p>
   </div>
 </footer>

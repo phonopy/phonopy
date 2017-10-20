@@ -3,16 +3,13 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>Interfaces to calculators &#8212; Phonopy v.1.11.14</title>
-    
+    <title>Interfaces to calculators &#8212; Phonopy v.1.12.0</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.11.14',
+        VERSION:     '1.12.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -22,14 +19,14 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Wien2k &amp; phonopy calculation" href="wien2k.html" />
+    <link rel="next" title="VASP &amp; phonopy calculation" href="vasp.html" />
     <link rel="prev" title="Calculation of mode Grüneisen parameters" href="gruneisen.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
@@ -50,7 +47,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.11.14</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.12.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -109,9 +106,12 @@
 <li><a class="reference internal" href="#default-unit-conversion-factor-for-non-analytical-term-correction">Default unit conversion factor for non-analytical term correction</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#interface-to-force-calculator">Interface to force calculator</a></li>
-<li><a class="reference internal" href="#interface-to-vasp-dfpt-force-constants">Interface to  VASP DFPT force constants</a></li>
-<li><a class="reference internal" href="#interface-to-fhi-aims-forces">Interface to FHI-aims forces</a></li>
+<li><a class="reference internal" href="#tutorials-for-calculators">Tutorials for calculators</a><ul>
+<li><a class="reference internal" href="#force-calculators">Force calculators</a></li>
+<li><a class="reference internal" href="#vasp-dfpt-force-constants">VASP DFPT force constants</a></li>
+<li><a class="reference internal" href="#for-fhi-aims">For FHI-aims</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -127,7 +127,7 @@
     </a>
   </li>
   <li>
-    <a href="wien2k.html" title="Next Chapter: Wien2k & phonopy calculation"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">Wien2k & phon... &raquo;</span>
+    <a href="vasp.html" title="Next Chapter: VASP & phonopy calculation"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">VASP & phonop... &raquo;</span>
     </a>
   </li>
               
@@ -223,67 +223,36 @@ shown below:</p>
 </div>
 </div>
 </div>
-<div class="section" id="interface-to-force-calculator">
-<h2>Interface to force calculator<a class="headerlink" href="#interface-to-force-calculator" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="tutorials-for-calculators">
+<span id="id1"></span><h2>Tutorials for calculators<a class="headerlink" href="#tutorials-for-calculators" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="force-calculators">
+<h3>Force calculators<a class="headerlink" href="#force-calculators" title="Permalink to this headline">¶</a></h3>
 <p>Short tutorials for force calculators are found in the following pages.</p>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="procedure.html">VASP &amp; phonopy calculation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="procedure.html#pre-process">Pre-process</a></li>
-<li class="toctree-l2"><a class="reference internal" href="procedure.html#calculation-of-sets-of-forces">Calculation of sets of forces</a></li>
-<li class="toctree-l2"><a class="reference internal" href="procedure.html#post-process">Post-process</a></li>
-<li class="toctree-l2"><a class="reference internal" href="procedure.html#non-analytical-term-correction-optional">Non-analytical term correction (Optional)</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="wien2k.html">Wien2k &amp; phonopy calculation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="wien2k.html#how-to-run">How to run</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="pwscf.html">Pwscf &amp; phonopy calculation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="pwscf.html#supported-pwscf-tags">Supported Pwscf tags</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pwscf.html#how-to-run">How to run</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="abinit.html">Abinit &amp; phonopy calculation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="abinit.html#supported-abinit-variables">Supported Abinit variables</a></li>
-<li class="toctree-l2"><a class="reference internal" href="abinit.html#how-to-run">How to run</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="siesta.html">Siesta &amp; phonopy calculation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="siesta.html#supported-siesta-tags">Supported Siesta tags</a></li>
-<li class="toctree-l2"><a class="reference internal" href="siesta.html#how-to-run">How to run</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="elk.html">Elk &amp; phonopy calculation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="elk.html#supported-elk-tags">Supported Elk tags</a></li>
-<li class="toctree-l2"><a class="reference internal" href="elk.html#how-to-run">How to run</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="crystal.html">CRYSTAL &amp; phonopy calculation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="crystal.html#supported-features">Supported features</a></li>
-<li class="toctree-l2"><a class="reference internal" href="crystal.html#how-to-run">How to run</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="vasp.html">VASP &amp; phonopy calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wien2k.html">Wien2k &amp; phonopy calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pwscf.html">Pwscf &amp; phonopy calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="abinit.html">Abinit &amp; phonopy calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="siesta.html">Siesta &amp; phonopy calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="elk.html">Elk &amp; phonopy calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="crystal.html">CRYSTAL &amp; phonopy calculation</a></li>
 </ul>
 </div>
 </div>
-<div class="section" id="interface-to-vasp-dfpt-force-constants">
-<h2>Interface to  VASP DFPT force constants<a class="headerlink" href="#interface-to-vasp-dfpt-force-constants" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="vasp-dfpt-force-constants">
+<h3>VASP DFPT force constants<a class="headerlink" href="#vasp-dfpt-force-constants" title="Permalink to this headline">¶</a></h3>
 <p>Using VASP DFPT feature, force constants are directly
 calculated. Phonopy VASP DFPT interface reads <code class="docutils literal"><span class="pre">vasprun.xml</span></code> and
 creates <code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span></code> file.</p>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="vasp.html">VASP &amp; phonopy calculation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="vasp.html#vasp-dfpt-phonopy-calculation">VASP-DFPT &amp; phonopy calculation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="vasp.html#how-to-run">How to run</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="vasp-dfpt.html">VASP-DFPT &amp; phonopy calculation</a></li>
 </ul>
 </div>
 </div>
-<div class="section" id="interface-to-fhi-aims-forces">
-<h2>Interface to FHI-aims forces<a class="headerlink" href="#interface-to-fhi-aims-forces" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="for-fhi-aims">
+<h3>For FHI-aims<a class="headerlink" href="#for-fhi-aims" title="Permalink to this headline">¶</a></h3>
 <p>For FHI-aims, there is a special command, <code class="docutils literal"><span class="pre">phonopy-FHI-aims</span></code>. This
 tool is maintained by FHI-aims community and questions may be sent to the
 FHI-aims mailing list.</p>
@@ -291,6 +260,7 @@ FHI-aims mailing list.</p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="FHI-aims.html">FHI-aims &amp; phonopy calculations</a></li>
 </ul>
+</div>
 </div>
 </div>
 </div>
@@ -315,7 +285,7 @@ FHI-aims mailing list.</p>
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.2.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.3.<br/>
     </p>
   </div>
 </footer>

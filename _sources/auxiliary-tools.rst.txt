@@ -6,10 +6,14 @@ Auxiliary tools
 A few auxiliary tools are prepared. They are stored in ``bin``
 directory as well as ``phonopy``.
 
+.. contents::
+   :depth: 3
+   :local:
+
 .. _bandplot_tool:
 
-``bandplot``
-------------
+``phonopy-bandplot``
+---------------------
 
 Band structure is plotted reading phonopy output in ``band.yaml``
 format. ``-o`` option with a file name is used to save the plot into a
@@ -19,16 +23,16 @@ plotted together.
 
 ::
 
-   bandplot band.yaml
+   phonopy-bandplot band.yaml
 
 To obtain a simple text format data::
 
-   bandplot --gnuplot band.yaml
+   phonopy-bandplot --gnuplot band.yaml
 
 .. _pdosplot_tool:
 
-``pdosplot``
-------------
+``phonopy-pdosplot``
+---------------------
 
 Partial density of states (PDOS) are plotted. 
 
@@ -36,7 +40,7 @@ Partial density of states (PDOS) are plotted.
 
 ::
    
-   pdosplot -i '1 2 4 5, 3 6' -o 'pdos.pdf' partial_dos.dat
+   phonopy-pdosplot -i '1 2 4 5, 3 6' -o 'pdos.pdf' partial_dos.dat
 
 The indices and comma in '1 2 3 4, 5 6' mean as follows. The indices
 are separated into blocks by comma (1 2 4 5 and 3 6). PDOS specified
@@ -47,8 +51,8 @@ correspond to atoms.  A few more options are prepared and shown by
 
 .. _propplot_tool:
 
-``propplot``
-------------
+``phonopy-propplot``
+---------------------
 
 Thermal properties are plotted. Options are prepared and shown by
 ``-h`` option. If you specify more than two yaml files, they are
@@ -56,7 +60,7 @@ plotted together.
 
 ::
 
-   proplot thermal_properties_A.yaml thermal_properties_B.yaml
+   phonopy-proplot thermal_properties_A.yaml thermal_properties_B.yaml
 
 .. ``tdplot``
 .. ------------
@@ -71,8 +75,8 @@ plotted together.
 
 .. _dispmanager_tool:
 
-``dispmanager``
-----------------
+``phonopy-dispmanager``
+-------------------------
 
 This is used for two purposes.
 
@@ -92,7 +96,7 @@ and specify the displacement amplitude. An example is as follows:
 
 ::
 
-   dispmanager disp.yaml -o disp-new.yaml -a "33 1 1 0" --amplitude 0.05
+   phonopy-dispmanager disp.yaml -o disp-new.yaml -a "33 1 1 0" --amplitude 0.05
 
 ``disp-new.yaml`` is created from ``disp.yaml`` with a new
 displacement of the thirty-third atom (index 33) with the direction of
@@ -101,11 +105,11 @@ lattice vectors. The amplitude unit is same as the lattice vectors.
 
 ``-s`` is specified with displacement indices. For example when there
 are four dependent displacements and only the first and third
-displacements are needed, ``dispmanager`` is used like
+displacements are needed, ``phonopy-dispmanager`` is used like
 
 ::
 
-   dispmanager disp.yaml -o disp-new.yaml -s "1 3"
+   phonopy-dispmanager disp.yaml -o disp-new.yaml -s "1 3"
 
 ``-w``
 ^^^^^^^
@@ -122,8 +126,8 @@ The old style displacement file ``DISP`` is compared with
 equivalent or not.
 
 
-``outcar-born``
-----------------
+``phonopy-vasp-born``
+----------------------
 
 This script is used to create a ``BORN`` style file from VASP output
 file of ``OUTCAR``.  The first and second arguments are ``OUTCAR``
@@ -132,11 +136,11 @@ type file and ``POSCAR`` type file, respectively. If both are omitted,
 
 ::
 
-   outcar-born
+   phonopy-vasp-born
 
 ::
 
-   outcar-born --st OUTCAR POSCAR
+   phonopy-vasp-born --st OUTCAR POSCAR
 
 
 ``--pa``, ``--primitive_axis``
@@ -162,8 +166,8 @@ specified, ``vasprun.xml`` is read.
 
 ::
 
-   outcar-born --vasprunxml
+   phonopy-vasp-born --vasprunxml
 
 ::
 
-   outcar-born --st --vasprunxml vasprun.xml POSCAR
+   phonopy-vasp-born --st --vasprunxml vasprun.xml

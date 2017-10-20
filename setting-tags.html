@@ -3,16 +3,13 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>Setting tags &#8212; Phonopy v.1.11.14</title>
-    
+    <title>Setting tags &#8212; Phonopy v.1.12.0</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.11.14',
+        VERSION:     '1.12.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -22,7 +19,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
@@ -50,7 +47,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.11.14</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.12.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -865,7 +862,7 @@ obtain the mean square displacements, therefore physical units have to
 be set properly for it (see <a class="reference internal" href="interfaces.html#calculator-interfaces"><span class="std std-ref">Interfaces to calculators</span></a>.) The result
 is given in <span class="math">\(\textrm{\AA}^2\)</span> and writen into
 <code class="docutils literal"><span class="pre">thermal_displacements.yaml</span></code>. See the detail of the method,
-<a class="reference internal" href="thermal-displacement.html#thermal-displacement"><span class="std std-ref">Mean square displacement</span></a>. These tags must be used with
+<a class="reference internal" href="formulation.html#thermal-displacement"><span class="std std-ref">Thermal displacement</span></a>. These tags must be used with
 <a class="reference internal" href="#mesh-sampling-tags"><span class="std std-ref">Mesh sampling tags</span></a></p>
 <p><code class="docutils literal"><span class="pre">CUTOFF_FREQUENCY</span></code> tag with a small value is recommened to be set
 when sampling <span class="math">\(\Gamma\)</span> point or using very dense sampling mesh
@@ -881,7 +878,7 @@ to avoid divergence.</p>
 <div class="section" id="tdispmat-tmax-tmin-and-tstep">
 <span id="thermal-displacement-matrices-tag"></span><h3><a class="toc-backref" href="#id45"><code class="docutils literal"><span class="pre">TDISPMAT</span></code>, <code class="docutils literal"><span class="pre">TMAX</span></code>, <code class="docutils literal"><span class="pre">TMIN</span></code>, and <code class="docutils literal"><span class="pre">TSTEP</span></code></a><a class="headerlink" href="#tdispmat-tmax-tmin-and-tstep" title="Permalink to this headline">¶</a></h3>
 <p>Mean square displacement matricies are calculated. The definition is
-shown at <a class="reference internal" href="thermal-displacement.html#thermal-displacement"><span class="std std-ref">Mean square displacement</span></a>. Phonon frequencies in THz, which
+shown at <a class="reference internal" href="formulation.html#thermal-displacement"><span class="std std-ref">Thermal displacement</span></a>. Phonon frequencies in THz, which
 is the default setting of phonopy, are
 used to obtain the mean square displacement matricies, therefore
 physical units have to be set properly for it (see
@@ -891,7 +888,7 @@ physical units have to be set properly for it (see
 given in the order of xx, yy, zz, yz, xz, xy.  In this yaml file,
 <code class="docutils literal"><span class="pre">displacement_matrices</span></code> and <code class="docutils literal"><span class="pre">displacement_matrices_cif</span></code> correspond
 to <span class="math">\(\mathrm{U}_\text{cart}\)</span> and <span class="math">\(\mathrm{U}_\text{cif}\)</span>
-defined at <a class="reference internal" href="thermal-displacement.html#thermal-displacement-matrix"><span class="std std-ref">Mean square displacement matrix</span></a>, respectively.</p>
+defined at <a class="reference internal" href="formulation.html#thermal-displacement-matrix"><span class="std std-ref">Mean square displacement matrix</span></a>, respectively.</p>
 <p><code class="docutils literal"><span class="pre">CUTOFF_FREQUENCY</span></code> tag with a small value is recommened to be set
 when sampling <span class="math">\(\Gamma\)</span> point or using very dense sampling mesh
 to avoid divergence.</p>
@@ -1028,7 +1025,7 @@ then the physical unit will be Angstrom THz.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">GROUP_VELOCITY</span> <span class="o">=</span> <span class="o">.</span><span class="n">TRUE</span><span class="o">.</span>
 </pre></div>
 </div>
-<p>Technical details are shown at <a class="reference internal" href="group-velocity.html#group-velocity"><span class="std std-ref">Method</span></a>.</p>
+<p>Technical details are shown at <a class="reference internal" href="formulation.html#group-velocity"><span class="std std-ref">Group velocity</span></a>.</p>
 </div>
 <div class="section" id="gv-delta-q">
 <h3><a class="toc-backref" href="#id56"><code class="docutils literal"><span class="pre">GV_DELTA_Q</span></code></a><a class="headerlink" href="#gv-delta-q" title="Permalink to this headline">¶</a></h3>
@@ -1109,7 +1106,7 @@ animation images are created such as <code class="docutils literal"><span class=
 </div>
 <div class="section" id="anime">
 <h3><a class="toc-backref" href="#id65"><code class="docutils literal"><span class="pre">ANIME</span></code></a><a class="headerlink" href="#anime" title="Permalink to this headline">¶</a></h3>
-<p><strong>The format of “ANIME“ tag was modified after ver. 0.9.3.3.</strong></p>
+<p><strong>The format of ``ANIME`` tag was modified after ver. 0.9.3.3.</strong></p>
 <div class="section" id="for-v-sim">
 <h4>For v_sim<a class="headerlink" href="#for-v-sim" title="Permalink to this headline">¶</a></h4>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">ANIME</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="mf">0.5</span> <span class="mi">0</span>
@@ -1269,7 +1266,7 @@ little group.</p>
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.2.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.3.<br/>
     </p>
   </div>
 </footer>

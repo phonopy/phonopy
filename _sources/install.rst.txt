@@ -16,9 +16,9 @@ System requirement
 The procedure to setup phonopy is explained in this section. It is
 supposed that phonopy is installed on the recent linux distribution
 like Ubuntu or Fedora with Python version 2.6 or later. Python version
-3.4 or later is expected to work. Mac OS X users may use conda packages 
-and also find some more information at :ref:`install_MacOSX`. 
-Windows users should use conda packages as well. 
+3.4 or later is expected to work. Mac OS X users may use conda packages
+and also find some more information at :ref:`install_MacOSX`.
+Windows users should use conda packages as well.
 
 Prepare the following Python libraries:
 
@@ -31,21 +31,21 @@ Prepare the following Python libraries:
 By Ubuntu package manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The most recommended system is Ubuntu linux version 14.04 or later. If
-you have any installation problem that you may feel difficult to
-solve, please use a ubuntu virtual machine (see
-:ref:`virtualmachine`).  
+The most recommended system is Ubuntu linux version 14.04 (64-bit) or
+later. If you have any installation problem that you may feel
+difficult to solve, please use a virtual machine environment such as
+VirtualBox and install Ubuntu linux on it.
 
 The python libraries are installed by::
-   
+
    % sudo apt-get install python-dev python-numpy  python-matplotlib python-yaml python-h5py
-    
+
 ``python-scipy`` is also required to use ``phonopy-qha`` or
 ``DEBYE_MODEL`` tag.
 
 The ``texlive-fonts-recommended`` package may be required, if you
 see the following message in ploting results::
-   
+
    ! I can't find file `pncr7t'.
 
 By conda
@@ -105,25 +105,16 @@ needed.
       export PYTH=~/.local/bin:$PATH
 
    in your ``.bashrc`` (or maybe ``.bash_profile``), ``.zshenv``, or
-   other script for the other shells. 
+   other script for the other shells.
 
-
-Tips on setup.py installation
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   
-.. toctree::
-   :maxdepth: 1
-
-   MacOSX   
-   virtualmachine
 
 .. _install_conda:
 
 conda
 ------
 
-Conda is a good choice for all users (Linux/MacOSX/Windows). 
-The Linux (64bit) conda packages are prepared by the author and 
+Conda is a good choice for all users (Linux/MacOSX/Windows).
+The Linux (64bit) conda packages are prepared by the author and
 can be installed using::
 
    % conda install numpy scipy h5py pyyaml matplotlib
@@ -134,8 +125,8 @@ of Linux), are prepared by conda-forge project and may be installed using::
 
    % conda install -c conda-forge phonopy
 
-The conda-forge packages are usually available within few days after 
-the release. 
+The conda-forge packages are usually available within few days after
+the release.
 
 
 pip
@@ -164,7 +155,7 @@ Multithreading support
 Two kinds of multithreadings can be used in phonopy.
 
 1. Multithreaded BLAS linked numpy
-   
+
    Phonopy uses numpy to run singular value decomposition in the
    calculation of force constants and diagonalizaion of dynamical
    matrices. For these, numpy internally calls the LAPACK
@@ -183,6 +174,9 @@ Two kinds of multithreadings can be used in phonopy.
    build phonopy using modified ``setup.py`` in which ``with_openmp =
    False`` must be changed to ``with_openmp = True``. For this,
    currently only gcc is supported.
+
+.. include:: MacOSX.inc
+
 
 Trouble shooting
 -----------------
