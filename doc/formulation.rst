@@ -229,8 +229,10 @@ non-analytical term is given by,
    D_{\alpha\beta}(jj',\mathbf{q}\to \mathbf{0}) =
     D_{\alpha\beta}(jj',\mathbf{q}=\mathbf{0})
     + \frac{1}{\sqrt{m_j m_j}} \frac{4\pi}{\Omega_0}
-    \frac{[\sum_{\gamma}q_{\gamma}Z^{*}_{j,\gamma\alpha}][\sum_{\gamma'}q_{\gamma'}Z^{*}_{j',\gamma'\beta}]}
-    {\sum_{\alpha\beta}q_{\alpha}\epsilon_{\alpha\beta}^{\infty} q_{\beta}}.
+    \frac{\left[\sum_{\gamma}q_{\gamma}Z^{*}_{j,\gamma\alpha}\right]
+    \left[\sum_{\gamma'}q_{\gamma'}Z^{*}_{j',\gamma'\beta}\right]}
+    {\sum_{\alpha\beta}q_{\alpha}\epsilon_{\alpha\beta}^{\infty}
+    q_{\beta}}.
 
 Phonon frequencies at general **q**-points are interpolated by the
 method of Wang *et al.* (:ref:`reference_wang_NAC`).
@@ -293,22 +295,15 @@ Entropy
 
 .. math::
 
-    S &= -\frac{\partial F}{\partial T} \\
-      &= \frac{1}{2T}\sum_{\mathbf{q}\nu}\hbar\omega(\mathbf{q}\nu)\coth(\hbar\omega(\mathbf{q}\nu)/2k_\mathrm{B}T)-k_\mathrm{B} \sum_{\mathbf{q}\nu}\ln\left[2\sinh(\hbar\omega(\mathbf{q}\nu)/2k_\mathrm{B}T)\right]
+    S &= -\frac{\partial F}{\partial T} \\ &= \frac{1}{2T}
+      \sum_{\mathbf{q}\nu} \hbar\omega(\mathbf{q}\nu)
+      \coth(\hbar\omega(\mathbf{q}\nu)/2k_\mathrm{B}T)-k_\mathrm{B}
+      \sum_{\mathbf{q}\nu}
+      \ln\left[2\sinh(\hbar\omega(\mathbf{q}\nu)/2k_\mathrm{B}T)\right]
 
-Thermal displacement
----------------------
+.. include:: thermal-displacement.inc
 
-.. toctree::
-
-   thermal-displacement
-
-Group velocity
----------------
-
-.. toctree::
-
-   group-velocity
+.. include:: group-velocity.inc
 
 .. _physical_unit_conversion:
 

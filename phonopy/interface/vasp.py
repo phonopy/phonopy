@@ -339,21 +339,174 @@ def _get_reduced_symbols(symbols):
 #
 # Non-analytical term
 #
+def get_born_vasprunxml(filename="vasprun.xml",
+                        primitive_matrix=None,
+                        supercell_matrix=None,
+                        is_symmetry=True,
+                        symmetrize_tensors=False,
+                        symprec=1e-5):
+    import io
+    borns = []
+    epsilon = []
+    with io.open(filename, "rb") as f:
+        vasprun = VasprunxmlExpat(f)
+        if vasprun.parse():
+            epsilon = vasprun.get_epsilon()
+            borns = vasprun.get_born()
+            lattice = vasprun.get_lattice()[-1]
+            points = vasprun.get_points()[-1]
+            symbols = vasprun.get_symbols()
+            ucell = Atoms(symbols=symbols,
+                          scaled_positions=points,
+                          cell=lattice)
+        else:
+            return None
+
+    return _get_borns(ucell,
+                      borns,
+                      epsilon,
+                      primitive_matrix=primitive_matrix,
+                      supercell_matrix=supercell_matrix,
+                      is_symmetry=is_symmetry,
+                      symmetrize_tensors=symmetrize_tensors,
+                      symprec=symprec)
+
 def get_born_OUTCAR(poscar_filename="POSCAR",
                     outcar_filename=None,
                     primitive_matrix=None,
                     supercell_matrix=None,
                     is_symmetry=True,
                     symmetrize_tensors=False,
-                    read_vasprunxml=False,
                     symprec=1e-5):
     if outcar_filename is None:
-        if read_vasprunxml:
-            filename = "vasprun.xml"
-        else:
-            filename = "OUTCAR"
+        filename = "OUTCAR"
     else:
         filename = outcar_filename
+
+    ucell = read_vasp(poscar_filename)
+    borns, epsilon = _read_born_and_epsilon_from_OUTCAR(filename)
+    if len(borns) == 0 or len(epsilon) == 0:
+        return None
+    else:
+        return _get_borns(ucell,
+                          borns,
+                          epsilon,
+                          primitive_matrix=primitive_matrix,
+                          supercell_matrix=supercell_matrix,
+                          is_symmetry=is_symmetry,
+                          symmetrize_tensors=symmetrize_tensors,
+                          symprec=symprec)
+
+def symmetrize_borns_and_epsilon(borns,
+                                 epsilon,
+                                 ucell,
+                                 symprec=1e-5,
+                                 is_symmetry=True):
+    lattice = ucell.get_cell()
+    positions = ucell.get_scaled_positions()
+    u_sym = Symmetry(ucell, is_symmetry=is_symmetry, symprec=symprec)
+    rotations = u_sym.get_symmetry_operations()['rotations']
+    translations = u_sym.get_symmetry_operations()['translations']
+    ptg_ops = get_pointgroup_operations(rotations)
+    epsilon_ = symmetrize_2nd_rank_tensor(epsilon, ptg_ops, lattice)
+
+    for i, Z in enumerate(borns):
+        site_sym = get_site_symmetry(i,
+                                     lattice,
+                                     positions,
+                                     rotations,
+                                     translations,
+                                     symprec)
+        Z = symmetrize_2nd_rank_tensor(Z, site_sym, lattice)
+
+    borns_ = np.zeros_like(borns)
+    for i in range(len(borns)):
+        count = 0
+        for r, t in zip(rotations, translations):
+            count += 1
+            diff = np.dot(positions, r.T) + t - positions[i]
+            diff -= np.rint(diff)
+            dist = np.sqrt(np.sum(np.dot(diff, lattice) ** 2, axis=1))
+            j = np.nonzero(dist < symprec)[0][0]
+            r_cart = similarity_transformation(lattice.T, r)
+            borns_[i] += similarity_transformation(r_cart, borns[j])
+        borns_[i] /= count
+
+    return borns_, epsilon_
+
+def symmetrize_2nd_rank_tensor(tensor, symmetry_operations, lattice):
+    sym_cart = [similarity_transformation(lattice.T, r)
+                for r in symmetry_operations]
+    sum_tensor = np.zeros_like(tensor)
+    for sym in sym_cart:
+        sum_tensor += similarity_transformation(sym, tensor)
+    return sum_tensor / len(symmetry_operations)
+
+def _get_borns(ucell,
+               borns,
+               epsilon,
+               primitive_matrix=None,
+               supercell_matrix=None,
+               is_symmetry=True,
+               symmetrize_tensors=False,
+               symprec=1e-5):
+    """Parse Born effective charges and dielectric constants
+
+
+     Args:
+         ucell (Atoms): Unit cell structure
+         borns (np.array): Born effective charges of ucell
+         epsilon (np.array): Dielectric constant tensor
+
+     Returns:
+         (Born effective charges, dielectric constant)
+
+     Raises:
+          AssertionError: Inconsistency of number of atoms or Born effective
+              charges.
+
+     Warning:
+         Broken symmetry of Born effective charges
+
+     """
+
+    assert len(borns) == ucell.get_number_of_atoms(), \
+        "num_atom %d != len(borns) %d" % (ucell.get_number_of_atoms(),
+                                          len(borns))
+
+    if symmetrize_tensors:
+        borns_, epsilon_ = symmetrize_borns_and_epsilon(borns,
+                                                        epsilon,
+                                                        ucell,
+                                                        symprec=symprec,
+                                                        is_symmetry=is_symmetry)
+
+        if (abs(borns - borns_) > 0.1).any():
+            lines = ["Born effective charge symmetry is largely broken. "
+                     "Largest different among elements: "
+                     "%s" % np.amax(abs(borns - borns_))]
+            import warnings
+            warnings.warn("\n".join(lines))
+
+        borns = borns_
+        epsilon = epsilon_
+
+    borns, s_indep_atoms = _extract_independent_borns(
+        borns,
+        ucell,
+        primitive_matrix=primitive_matrix,
+        supercell_matrix=supercell_matrix,
+        is_symmetry=is_symmetry,
+        symprec=symprec)
+
+    return borns, epsilon, s_indep_atoms
+
+def _extract_independent_borns(borns,
+                               ucell,
+                               primitive_matrix=None,
+                               supercell_matrix=None,
+                               is_symmetry=True,
+                               symprec=1e-5):
     if primitive_matrix is None:
         pmat = np.eye(3)
     else:
@@ -362,41 +515,6 @@ def get_born_OUTCAR(poscar_filename="POSCAR",
         smat = np.eye(3, dtype='intc')
     else:
         smat = supercell_matrix
-    ucell = read_vasp(poscar_filename)
-
-    if read_vasprunxml:
-        import io
-        borns = []
-        epsilon = []
-        with io.open(outcar_filename, "rb") as f:
-            vasprun = VasprunxmlExpat(f)
-            if vasprun.parse():
-                epsilon = vasprun.get_epsilon()
-                borns = vasprun.get_born()
-    else:
-        borns, epsilon = _read_born_and_epsilon(filename)
-
-    num_atom = len(borns)
-    assert num_atom == ucell.get_number_of_atoms(), \
-        "num_atom %d != len(borns) %d" % (ucell.get_number_of_atoms(),
-                                          len(borns))
-
-    if symmetrize_tensors:
-        lattice = ucell.get_cell()
-        positions = ucell.get_scaled_positions()
-        u_sym = Symmetry(ucell, is_symmetry=is_symmetry, symprec=symprec)
-        rotations = u_sym.get_symmetry_operations()['rotations']
-        translations = u_sym.get_symmetry_operations()['translations']
-        ptg_ops = get_pointgroup_operations(rotations)
-        epsilon = symmetrize_2nd_rank_tensor(epsilon,
-                                             ptg_ops,
-                                             lattice)
-        borns = symmetrize_borns(borns,
-                                 rotations,
-                                 translations,
-                                 lattice,
-                                 positions,
-                                 symprec)
 
     inv_smat = np.linalg.inv(smat)
     scell = get_supercell(ucell, smat, symprec=symprec)
@@ -408,9 +526,9 @@ def get_born_OUTCAR(poscar_filename="POSCAR",
     u_indep_atoms = [u2u[x] for x in s_indep_atoms]
     reduced_borns = borns[u_indep_atoms].copy()
 
-    return reduced_borns, epsilon, s_indep_atoms
+    return reduced_borns, s_indep_atoms
 
-def _read_born_and_epsilon(filename):
+def _read_born_and_epsilon_from_OUTCAR(filename):
     with open(filename) as outcar:
         borns = []
         epsilon = []
@@ -449,61 +567,6 @@ def _read_born_and_epsilon(filename):
         epsilon = np.array(epsilon, dtype='double')
 
     return borns, epsilon
-
-def symmetrize_borns(borns,
-                     rotations,
-                     translations,
-                     lattice,
-                     positions,
-                     symprec):
-    borns_orig = borns.copy()
-    for i, Z in enumerate(borns):
-        site_sym = get_site_symmetry(i,
-                                     lattice,
-                                     positions,
-                                     rotations,
-                                     translations,
-                                     symprec)
-        Z = symmetrize_2nd_rank_tensor(Z, site_sym, lattice)
-
-    borns_copy = np.zeros_like(borns)
-    for i in range(len(borns)):
-        count = 0
-        for r, t in zip(rotations, translations):
-            count += 1
-            diff = np.dot(positions, r.T) + t - positions[i]
-            diff -= np.rint(diff)
-            dist = np.sqrt(np.sum(np.dot(diff, lattice) ** 2, axis=1))
-            j = np.nonzero(dist < symprec)[0][0]
-            r_cart = similarity_transformation(lattice.T, r)
-            borns_copy[i] += similarity_transformation(r_cart, borns[j])
-        borns_copy[i] /= count
-
-    borns = borns_copy
-    sum_born = borns.sum(axis=0) / len(borns)
-    borns -= sum_born
-
-    if (np.abs(borns_orig - borns) > 0.1).any():
-        sys.stderr.write(
-            "Born effective charge symmetrization might go wrong.\n")
-
-        sys.stderr.write("Sum of Born charges:\n")
-        sys.stderr.write(str(borns_orig.sum(axis=0)))
-        sys.stderr.write("\n")
-
-        # for b_o, b in zip(borns_orig, borns):
-        #     sys.stderr.write(str(b - b_o))
-        #     sys.stderr.write("\n")
-
-    return borns
-
-def symmetrize_2nd_rank_tensor(tensor, symmetry_operations, lattice):
-    sym_cart = [similarity_transformation(lattice.T, r)
-                for r in symmetry_operations]
-    sum_tensor = np.zeros_like(tensor)
-    for sym in sym_cart:
-        sum_tensor += similarity_transformation(sym, tensor)
-    return sum_tensor / len(symmetry_operations)
 
 #
 # vasprun.xml handling
@@ -568,7 +631,8 @@ class Vasprun(object):
                 if element.attrib['name'] == 'hessian':
                     fc_tmp = []
                     for v in element.findall('./v'):
-                        fc_tmp.append([float(x) for x in v.text.strip().split()])
+                        fc_tmp.append([float(x)
+                                       for x in v.text.strip().split()])
 
         if fc_tmp is None:
             return False
@@ -577,7 +641,8 @@ class Vasprun(object):
             if fc_tmp.shape != (num_atom * 3, num_atom * 3):
                 return False
             # num_atom = fc_tmp.shape[0] / 3
-            force_constants = np.zeros((num_atom, num_atom, 3, 3), dtype='double')
+            force_constants = np.zeros((num_atom, num_atom, 3, 3),
+                                       dtype='double')
 
             for i in range(num_atom):
                 for j in range(num_atom):
@@ -661,7 +726,7 @@ class VasprunxmlExpat(object):
                and 3.x, it is prepared as follows:
 
                import io
-               io.open(filename, "rb")    
+               io.open(filename, "rb")
 
         """
 
@@ -679,6 +744,7 @@ class VasprunxmlExpat(object):
         self._is_eigenvalues = False
         self._is_epsilon = False
         self._is_born = False
+        self._is_efermi = False
 
         self._is_v = False
         self._is_i = False
@@ -706,6 +772,7 @@ class VasprunxmlExpat(object):
         self._energies = None
         self._epsilon = None
         self._born_atom = None
+        self._efermi = None
         self._k_weights = None
         self._eigenvalues = None
         self._eig_state = [0, 0]
@@ -735,6 +802,9 @@ class VasprunxmlExpat(object):
     def get_epsilon(self):
         return np.array(self._epsilon)
 
+    def get_efermi(self):
+        return self._efermi
+
     def get_born(self):
         return np.array(self._born)
 
@@ -746,15 +816,6 @@ class VasprunxmlExpat(object):
 
     def get_symbols(self):
         return self._symbols
-
-    def get_cells(self):
-        cells = []
-        if len(self._all_points) == len(self._all_lattice):
-            for p, l in zip(self._all_points, self._all_lattice):
-                cells.append(Cell(lattice=l,
-                                  points=p,
-                                  symbols=self._symbols))
-        return cells
 
     def get_energies(self):
         return np.array(self._all_energies)
@@ -816,6 +877,12 @@ class VasprunxmlExpat(object):
                     if attrs['name'] == 'basis':
                         self._is_basis = True
                         self._lattice = []
+
+        if name == 'i':
+            if 'name' in attrs.keys():
+                if attrs['name'] == 'efermi':
+                    self._is_i = True
+                    self._is_efermi = True
 
         if self._is_energy and name == 'i':
             self._is_i = True
@@ -907,11 +974,11 @@ class VasprunxmlExpat(object):
 
             if self._is_positions:
                 self._is_positions = False
-                self._all_points.append(np.transpose(self._points))
+                self._all_points.append(self._points)
 
             if self._is_basis:
                 self._is_basis = False
-                self._all_lattice.append(np.transpose(self._lattice))
+                self._all_lattice.append(self._lattice)
 
             if self._is_epsilon:
                 self._is_epsilon = False
@@ -932,6 +999,8 @@ class VasprunxmlExpat(object):
 
         if name == 'i':
             self._is_i = False
+            if self._is_efermi:
+                self._is_efermi = False
 
         if name == 'rc':
             self._is_rc = False
@@ -991,6 +1060,9 @@ class VasprunxmlExpat(object):
         if self._is_i:
             if self._is_energy:
                 self._energies.append(float(data.strip()))
+
+            if self._is_efermi:
+                self._efermi = float(data.strip())
 
         if self._is_c:
             if self._is_symbols:

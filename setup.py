@@ -124,13 +124,13 @@ packages_phonopy = ['phonopy',
 scripts_phonopy = ['scripts/phonopy',
                    'scripts/phonopy-qha',
                    'scripts/phonopy-FHI-aims',
-                   'scripts/bandplot',
-                   'scripts/outcar-born',
-                   'scripts/propplot',
-                   'scripts/tdplot',
-                   'scripts/dispmanager',
-                   'scripts/gruneisen',
-                   'scripts/pdosplot']
+                   'scripts/phonopy-bandplot',
+                   'scripts/phonopy-vasp-born',
+                   'scripts/phonopy-propplot',
+                   'scripts/phonopy-tdplot',
+                   'scripts/phonopy-dispmanager',
+                   'scripts/phonopy-gruneisen',
+                   'scripts/phonopy-pdosplot']
 
 if __name__ == '__main__':
 

@@ -28,7 +28,7 @@ prepared. A calculation along paths in reciprocal space can be made by
 
 ::
 
-   % gruneisen orig plus minus --dim="2 2 2" --pa="0 1/2 1/2 1/2 0 1/2 1/2 1/2 0" --band="1/2 1/4 3/4 0 0 0 1/2 1/2 1/2 1/2 0.0 1/2" -p -c POSCAR-unitcell
+   % phonopy-gruneisen orig plus minus --dim="2 2 2" --pa="0 1/2 1/2 1/2 0 1/2 1/2 1/2 0" --band="1/2 1/4 3/4 0 0 0 1/2 1/2 1/2 1/2 0.0 1/2" -p -c POSCAR-unitcell
 
 .. |i0| image:: Si-gruneisen-band.png
         :scale: 50
@@ -45,7 +45,7 @@ A calculation on a reciprocal mesh is made by
 
 ::
 
-   % gruneisen orig plus minus --dim="2 2 2"  --pa="0 1/2 1/2 1/2 0 1/2 1/2 1/2 0" --mesh="20 20 20" -p -c POSCAR-unitcell --color="RB"
+   % phonopy-gruneisen orig plus minus --dim="2 2 2"  --pa="0 1/2 1/2 1/2 0 1/2 1/2 1/2 0" --mesh="20 20 20" -p -c POSCAR-unitcell --color="RB"
 
 .. |i1| image:: Si-gruneisen-mesh.png
         :scale: 50
@@ -57,9 +57,10 @@ are set for band indices with ascending order of phonon frequencies.
 
 Mode Grüneinen parameter may diverge around :math:`\Gamma`-point. In
 the above example for band paths, mode Grüneinen parameters are
-calculated at :math:`\Gamma`-point, but ``gruneisen`` script avoids
-showing the values on the plot. Instead the values at the neighboring
-**q**-points of :math:`\Gamma`-point are used for the plot.
+calculated at :math:`\Gamma`-point, but ``phonopy-gruneisen`` script
+avoids showing the values on the plot. Instead the values at the
+neighboring **q**-points of :math:`\Gamma`-point are used for the
+plot.
 
 .. _gruneisen_calculators:
 
@@ -71,7 +72,7 @@ for corresponding calculators and the crystal structure file format
 should be different from that of the VASP format. An Abinit example is
 as follows::
 
-   % gruneisen orig plus minus --abinit --dim="2 2 2" --pa="0 1/2 1/2 1/2 0 1/2 1/2 1/2 0" --band="1/2 1/4 3/4 0 0 0 1/2 1/2 1/2 1/2 0.0 1/2" -p -c Si.in
+   % phonopy-gruneisen orig plus minus --abinit --dim="2 2 2" --pa="0 1/2 1/2 1/2 0 1/2 1/2 1/2 0" --band="1/2 1/4 3/4 0 0 0 1/2 1/2 1/2 1/2 0.0 1/2" -p -c Si.in
 
 
 .. _gruneisen_command_options:
@@ -133,8 +134,8 @@ approximated by the finite difference method:
    \frac{\Delta D(\mathbf{q})}
    {\Delta V}\biggl|\mathbf{e}(\mathbf{q}\nu)\right>.
 
-The ``gruneisen`` script requires three phonon calculations
-at corresponding three volume points. One is for eigenvectors at the
-equilibrium volume (:math:`V`) and the remaining two are for :math:`\Delta
-D(\mathbf{q})` with slightly larger and smaller volumes than
-:math:`V`.
+The ``phonopy-gruneisen`` script requires three phonon calculations at
+corresponding three volume points. One is for eigenvectors at the
+equilibrium volume (:math:`V`) and the remaining two are for
+:math:`\Delta D(\mathbf{q})` with slightly larger and smaller volumes
+than :math:`V`.
