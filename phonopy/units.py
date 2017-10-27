@@ -66,5 +66,6 @@ AbinitToTHz = sqrt(EV/(AMU*Bohr))/Angstrom/(2*pi)/1e12 # [THz] 21.49068
 PwscfToTHz = sqrt(Rydberg*EV/AMU)/(Bohr*1e-10)/(2*pi)/1e12 # [THz] 108.97077
 ElkToTHz = sqrt(Hartree*EV/AMU)/(Bohr*1e-10)/(2*pi)/1e12 # [THz] 154.10794
 SiestaToTHz = sqrt(EV/(AMU*Bohr))/Angstrom/(2*pi)/1e12 # [THz] 21.49068
+CP2KToTHz = ElkToTHz  # CP2K uses a.u. units (Hartree/Bohr)
 CrystalToTHz = VaspToTHz
 EVAngstromToGPa = EV * 1e21
