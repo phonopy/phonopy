@@ -1,0 +1,75 @@
+
+&GLOBAL
+   PROJECT Si
+   RUN_TYPE ENERGY_FORCE
+   PRINT_LEVEL MEDIUM
+&END GLOBAL
+
+&FORCE_EVAL
+   METHOD Quickstep
+   &DFT
+      BASIS_SET_FILE_NAME  BASIS_MOLOPT
+      POTENTIAL_FILE_NAME  POTENTIAL
+
+      &POISSON
+         PERIODIC XYZ
+      &END POISSON
+
+      &SCF
+         SCF_GUESS ATOMIC
+         MAX_SCF 300
+         ADDED_MOS 100
+         &DIAGONALIZATION
+            ALGORITHM STANDARD
+            EPS_ADAPT 0.01
+         &END DIAGONALIZATION
+         &SMEAR  ON
+            METHOD FERMI_DIRAC
+            ELECTRONIC_TEMPERATURE [K] 300
+         &END SMEAR
+
+         &MIXING
+            METHOD BROYDEN_MIXING
+            ALPHA 0.2
+            BETA 1.5
+            NBROYDEN 8
+         &END MIXING
+
+      &END SCF
+      &XC
+         &XC_FUNCTIONAL PBE
+         &END XC_FUNCTIONAL
+      &END XC
+
+   &END DFT
+
+   &SUBSYS
+      &CELL
+         ABC [angstrom] 5.4661639157319968 5.4661639157319968 5.4661639157319968
+         PERIODIC XYZ
+      &END CELL
+      &COORD
+         SCALED
+         Si 0.875  0.875  0.875
+         Si 0.875  0.375  0.375
+         Si 0.375  0.875  0.375
+         Si 0.375  0.375  0.875
+         Si 0.125  0.125  0.125
+         Si 0.125  0.625  0.625
+         Si 0.625  0.125  0.625
+         Si 0.625  0.625  0.125
+      &END COORD
+      &KIND Si
+         ELEMENT Si
+         BASIS_SET DZVP-MOLOPT-GTH
+         POTENTIAL GTH-PBE
+      &END KIND
+
+   &END SUBSYS
+
+  &PRINT
+      &FORCES
+        FILENAME forces
+      &END FORCES
+   &END PRINT
+&END FORCE_EVAL
