@@ -362,14 +362,14 @@ def get_born_vasprunxml(filename="vasprun.xml",
         else:
             return None
 
-    return _get_borns(ucell,
-                      borns,
-                      epsilon,
-                      primitive_matrix=primitive_matrix,
-                      supercell_matrix=supercell_matrix,
-                      is_symmetry=is_symmetry,
-                      symmetrize_tensors=symmetrize_tensors,
-                      symprec=symprec)
+    return _get_indep_borns(ucell,
+                            borns,
+                            epsilon,
+                            primitive_matrix=primitive_matrix,
+                            supercell_matrix=supercell_matrix,
+                            is_symmetry=is_symmetry,
+                            symmetrize_tensors=symmetrize_tensors,
+                            symprec=symprec)
 
 def get_born_OUTCAR(poscar_filename="POSCAR",
                     outcar_filename=None,
@@ -388,14 +388,14 @@ def get_born_OUTCAR(poscar_filename="POSCAR",
     if len(borns) == 0 or len(epsilon) == 0:
         return None
     else:
-        return _get_borns(ucell,
-                          borns,
-                          epsilon,
-                          primitive_matrix=primitive_matrix,
-                          supercell_matrix=supercell_matrix,
-                          is_symmetry=is_symmetry,
-                          symmetrize_tensors=symmetrize_tensors,
-                          symprec=symprec)
+        return _get_indep_borns(ucell,
+                                borns,
+                                epsilon,
+                                primitive_matrix=primitive_matrix,
+                                supercell_matrix=supercell_matrix,
+                                is_symmetry=is_symmetry,
+                                symmetrize_tensors=symmetrize_tensors,
+                                symprec=symprec)
 
 def symmetrize_borns_and_epsilon(borns,
                                  epsilon,
@@ -442,14 +442,14 @@ def symmetrize_2nd_rank_tensor(tensor, symmetry_operations, lattice):
         sum_tensor += similarity_transformation(sym, tensor)
     return sum_tensor / len(symmetry_operations)
 
-def _get_borns(ucell,
-               borns,
-               epsilon,
-               primitive_matrix=None,
-               supercell_matrix=None,
-               is_symmetry=True,
-               symmetrize_tensors=False,
-               symprec=1e-5):
+def _get_indep_borns(ucell,
+                     borns,
+                     epsilon,
+                     primitive_matrix=None,
+                     supercell_matrix=None,
+                     is_symmetry=True,
+                     symmetrize_tensors=False,
+                     symprec=1e-5):
     """Parse Born effective charges and dielectric constants
 
 
@@ -459,7 +459,11 @@ def _get_borns(ucell,
          epsilon (np.array): Dielectric constant tensor
 
      Returns:
-         (Born effective charges, dielectric constant)
+         (np.array) Born effective charges of symmetrically independent atoms
+             in primitive cell
+         (np.array) Dielectric constant
+         (np.array) Atomic index mapping table from supercell to primitive cell
+             of independent atoms
 
      Raises:
           AssertionError: Inconsistency of number of atoms or Born effective
