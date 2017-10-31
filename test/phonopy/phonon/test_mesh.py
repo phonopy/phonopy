@@ -15,10 +15,10 @@ data_dir = os.path.dirname(os.path.abspath(__file__))
 class TestIterMesh(unittest.TestCase):
     def setUp(self):
         pass
-    
+
     def tearDown(self):
         pass
-    
+
     def testIterMesh(self):
         phonon = self._get_phonon()
         phonon.set_iter_mesh([3, 3, 3], is_eigenvectors=True)
