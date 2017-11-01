@@ -90,6 +90,11 @@ def read_crystal_structure(filename=None,
         unitcell, atypes = read_siesta(unitcell_filename)
         return unitcell, (unitcell_filename, atypes)
 
+    if interface_mode == 'cp2k':
+        from phonopy.interface.cp2k import read_cp2k
+        unitcell = read_cp2k(unitcell_filename)
+        return unitcell, (unitcell_filename,)
+
     if interface_mode == 'crystal':
         from phonopy.interface.crystal import read_crystal
         unitcell, conv_numbers = read_crystal(unitcell_filename)
@@ -100,9 +105,7 @@ def get_default_cell_filename(interface_mode, yaml_mode):
         return "POSCAR.yaml"
     if interface_mode is None or interface_mode == 'vasp':
         return "POSCAR"
-    if interface_mode == 'abinit':
-        return "unitcell.in"
-    if interface_mode == 'pwscf':
+    if interface_mode in ('abinit', 'pwscf'):
         return "unitcell.in"
     if interface_mode == 'wien2k':
         return "case.struct"
@@ -110,6 +113,8 @@ def get_default_cell_filename(interface_mode, yaml_mode):
         return "elk.in"
     if interface_mode == 'siesta':
         return "input.fdf"
+    if interface_mode == 'cp2k':
+        return "unitcell.inp"
     if interface_mode == 'crystal':
         return "crystal.o"
 
@@ -128,8 +133,8 @@ def get_default_physical_units(interface_mode):
     """
 
     from phonopy.units import (Wien2kToTHz, AbinitToTHz, PwscfToTHz, ElkToTHz,
-                               SiestaToTHz, VaspToTHz, CrystalToTHz, Hartree,
-                               Bohr)
+                               SiestaToTHz, VaspToTHz, CP2KToTHz, CrystalToTHz,
+                               Hartree, Bohr)
 
     units = {'factor': None,
              'nac_factor': None,
@@ -159,6 +164,10 @@ def get_default_physical_units(interface_mode):
         units['factor'] = SiestaToTHz
         units['nac_factor'] = Hartree / Bohr
         units['distance_to_A'] = Bohr
+    elif interface_mode == 'cp2k':
+        units['factor'] = CP2KToTHz
+        units['nac_factor'] = Hartree / Bohr  # in a.u.
+        units['distance_to_A'] = Bohr
     elif interface_mode == 'crystal':
         units['factor'] = CrystalToTHz
         units['nac_factor'] = Hartree * Bohr
@@ -180,6 +189,7 @@ def create_FORCE_SETS(interface_mode,
         interface_mode == 'elk' or
         interface_mode == 'pwscf' or
         interface_mode == 'siesta' or
+        interface_mode == 'cp2k' or
         interface_mode == 'crystal'):
         disp_dataset = parse_disp_yaml(filename=disp_filename)
         num_atoms = disp_dataset['natom']
@@ -253,6 +263,8 @@ def get_force_sets(interface_mode,
         from phonopy.interface.elk import parse_set_of_forces
     elif interface_mode == 'siesta':
         from phonopy.interface.siesta import parse_set_of_forces
+    elif interface_mode == 'cp2k':
+        from phonopy.interface.cp2k import parse_set_of_forces
     elif interface_mode == 'crystal':
         from phonopy.interface.crystal import parse_set_of_forces
     else:

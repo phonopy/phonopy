@@ -254,6 +254,9 @@ elif options.elk_mode:
 elif options.siesta_mode:
     interface_mode = 'siesta'
     from phonopy.interface.siesta import write_supercells_with_displacements
+elif options.cp2k_mode:
+    interface_mode = 'cp2k'
+    from phonopy.interface.cp2k import write_supercells_with_displacements
 elif options.crystal_mode:
     interface_mode = 'crystal'
     from phonopy.interface.crystal import write_supercells_with_displacements
@@ -492,7 +495,8 @@ if run_mode == 'displacements':
             interface_mode == 'abinit' or
             interface_mode == 'elk' or
             interface_mode == 'pwscf' or
-            interface_mode == 'siesta'):
+            interface_mode == 'siesta' or
+            interface_mode == 'cp2k'):
             displacement_distance = 0.02
         elif interface_mode == 'crystal':
             displacement_distance = 0.01
@@ -525,7 +529,7 @@ if run_mode == 'displacements':
             rmts,
             settings.get_supercell_matrix(),
             filename=unitcell_filename)
-    elif interface_mode == 'abinit':
+    elif interface_mode in ('abinit', 'cp2k'):
         write_supercells_with_displacements(supercell, cells_with_disps)
     elif (interface_mode == 'pwscf' or
           interface_mode == 'elk' or

@@ -315,10 +315,7 @@ def _parse_BORN_from_file_object(f, primitive, symprec, is_symmetry):
     symmetry = Symmetry(primitive, symprec=symprec, is_symmetry=is_symmetry)
     return get_born_parameters(f, primitive, symmetry)
 
-def get_born_parameters(f, primitive, symmetry):
-    from phonopy.harmonic.force_constants import similarity_transformation
-
-    # Read unit conversion factor, damping factor, ...
+def get_born_parameters(f, primitive, prim_symmetry):
     line_arr = f.readline().split()
     if len(line_arr) < 1:
         print("BORN file format of line 1 is incorrect")
@@ -347,9 +344,9 @@ def get_born_parameters(f, primitive, symmetry):
     dielectric = np.reshape([float(x) for x in line], (3, 3))
 
     # Read Born effective charge
-    independent_atoms = symmetry.get_independent_atoms()
-    born = np.zeros((primitive.get_number_of_atoms(), 3, 3),
-                    dtype='double', order='C')
+    independent_atoms = prim_symmetry.get_independent_atoms()
+    borns = np.zeros((primitive.get_number_of_atoms(), 3, 3),
+                     dtype='double', order='C')
 
     for i in independent_atoms:
         line = f.readline().split()
@@ -359,7 +356,7 @@ def get_born_parameters(f, primitive, symmetry):
         if not len(line) == 9:
             print("BORN file format of line %d is incorrect" % (i + 3))
             return False
-        born[i] = np.reshape([float(x) for x in line], (3, 3))
+        borns[i] = np.reshape([float(x) for x in line], (3, 3))
 
     # Check that the number of atoms in the BORN file was correct
     line = f.readline().split()
@@ -368,20 +365,8 @@ def get_born_parameters(f, primitive, symmetry):
               "symmetry-independent atoms)")
         return False
 
-    # Expand Born effective charges to all atoms in the primitive cell
-    rotations = symmetry.get_symmetry_operations()['rotations']
-    map_operations = symmetry.get_map_operations()
-    map_atoms = symmetry.get_map_atoms()
-
-    for i in range(primitive.get_number_of_atoms()):
-        # R_cart = L R L^-1
-        rot_cartesian = similarity_transformation(
-            primitive.get_cell().transpose(), rotations[map_operations[i]])
-        # R_cart^T B R_cart^-T (inverse rotation is required to transform)
-        born[i] = similarity_transformation(rot_cartesian.transpose(),
-                                            born[map_atoms[i]])
-
-    non_anal = {'born': born,
+    _expand_borns(borns, primitive, prim_symmetry)
+    non_anal = {'born': borns,
                 'factor': factor,
                 'dielectric': dielectric }
     if method is not None:
@@ -390,6 +375,23 @@ def get_born_parameters(f, primitive, symmetry):
             non_anal['G_cutoff'] = G_cutoff
 
     return non_anal
+
+def _expand_borns(borns, primitive, prim_symmetry):
+    from phonopy.harmonic.force_constants import similarity_transformation
+
+    # Expand Born effective charges to all atoms in the primitive cell
+    rotations = prim_symmetry.get_symmetry_operations()['rotations']
+    map_operations = prim_symmetry.get_map_operations()
+    map_atoms = prim_symmetry.get_map_atoms()
+    independent_atoms = prim_symmetry.get_independent_atoms()
+
+    for i in range(primitive.get_number_of_atoms()):
+        # R_cart = L R L^-1
+        rot_cartesian = similarity_transformation(
+            primitive.get_cell().transpose(), rotations[map_operations[i]])
+        # R_cart^T B R_cart^-T (inverse rotation is required to transform)
+        borns[i] = similarity_transformation(rot_cartesian.transpose(),
+                                             borns[map_atoms[i]])
 
 #
 # e-v.dat, thermal_properties.yaml

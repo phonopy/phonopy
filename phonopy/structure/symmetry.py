@@ -36,6 +36,7 @@ import sys
 import numpy as np
 import phonopy.structure.spglib as spg
 from phonopy.structure.atoms import PhonopyAtoms as Atoms
+from phonopy.harmonic.force_constants import similarity_transformation
 
 class Symmetry(object):
     def __init__(self, cell, symprec=1e-5, is_symmetry=True):
@@ -110,12 +111,12 @@ class Symmetry(object):
         rotations = self._symmetry_operations['rotations']
         translations = self._symmetry_operations['translations']
 
-        return get_site_symmetry(atom_number,
-                                 lattice,
-                                 positions,
-                                 rotations,
-                                 translations,
-                                 self._symprec)
+        return self._get_site_symmetry(atom_number,
+                                       lattice,
+                                       positions,
+                                       rotations,
+                                       translations,
+                                       self._symprec)
 
     def get_symmetry_tolerance(self):
         return self._symprec
@@ -128,6 +129,39 @@ class Symmetry(object):
         This is transpose of that shown in ITA (q' = qR).
         """
         return self._reciprocal_operations
+
+    def _get_pointgroup_operations(self, rotations):
+        ptg_ops = []
+        for rot in rotations:
+            is_same = False
+            for tmp_rot in ptg_ops:
+                if (tmp_rot == rot).all():
+                    is_same = True
+                    break
+            if not is_same:
+                ptg_ops.append(rot)
+
+        return ptg_ops
+
+    def _get_site_symmetry(self,
+                           atom_number,
+                           lattice,
+                           positions,
+                           rotations,
+                           translations,
+                           symprec):
+        pos = positions[atom_number]
+        site_symmetries = []
+
+        for r, t in zip(rotations, translations):
+            rot_pos = np.dot(pos, r.T) + t
+            diff = pos - rot_pos
+            diff -= np.rint(diff)
+            diff = np.dot(diff, lattice)
+            if np.linalg.norm(diff) < symprec:
+                site_symmetries.append(r)
+
+        return np.array(site_symmetries, dtype='intc')
 
     def _set_symmetry_dataset(self):
         self._dataset = spg.get_symmetry_dataset(self._cell, self._symprec)
@@ -180,7 +214,7 @@ class Symmetry(object):
 
     def _set_pointgroup_operations(self):
         rotations = self._symmetry_operations['rotations']
-        ptg_ops = get_pointgroup_operations(rotations)
+        ptg_ops = self._get_pointgroup_operations(rotations)
         reciprocal_rotations = [rot.T for rot in ptg_ops]
         exist_r_inv = False
         for rot in ptg_ops:
@@ -285,34 +319,42 @@ def get_lattice_vector_equivalence(point_symmetry):
 
     return equivalence
 
-def get_site_symmetry(atom_number,
-                      lattice,
-                      positions,
-                      rotations,
-                      translations,
-                      symprec):
-    pos = positions[atom_number]
-    site_symmetries = []
+def symmetrize_borns_and_epsilon(borns,
+                                 epsilon,
+                                 ucell,
+                                 symprec=1e-5,
+                                 is_symmetry=True):
+    lattice = ucell.get_cell()
+    positions = ucell.get_scaled_positions()
+    u_sym = Symmetry(ucell, is_symmetry=is_symmetry, symprec=symprec)
+    rotations = u_sym.get_symmetry_operations()['rotations']
+    translations = u_sym.get_symmetry_operations()['translations']
+    ptg_ops = u_sym.get_pointgroup_operations()
+    epsilon_ = _symmetrize_2nd_rank_tensor(epsilon, ptg_ops, lattice)
 
-    for r, t in zip(rotations, translations):
-        rot_pos = np.dot(pos, r.T) + t
-        diff = pos - rot_pos
-        diff -= np.rint(diff)
-        diff = np.dot(diff, lattice)
-        if np.linalg.norm(diff) < symprec:
-            site_symmetries.append(r)
+    for i, Z in enumerate(borns):
+        site_sym = u_sym.get_site_symmetry(i)
+        Z = _symmetrize_2nd_rank_tensor(Z, site_sym, lattice)
 
-    return np.array(site_symmetries, dtype='intc')
+    borns_ = np.zeros_like(borns)
+    for i in range(len(borns)):
+        count = 0
+        for r, t in zip(rotations, translations):
+            count += 1
+            diff = np.dot(positions, r.T) + t - positions[i]
+            diff -= np.rint(diff)
+            dist = np.sqrt(np.sum(np.dot(diff, lattice) ** 2, axis=1))
+            j = np.nonzero(dist < symprec)[0][0]
+            r_cart = similarity_transformation(lattice.T, r)
+            borns_[i] += similarity_transformation(r_cart, borns[j])
+        borns_[i] /= count
 
-def get_pointgroup_operations(rotations):
-    ptg_ops = []
-    for rot in rotations:
-        is_same = False
-        for tmp_rot in ptg_ops:
-            if (tmp_rot == rot).all():
-                is_same = True
-                break
-        if not is_same:
-            ptg_ops.append(rot)
+    return borns_, epsilon_
 
-    return ptg_ops
+def _symmetrize_2nd_rank_tensor(tensor, symmetry_operations, lattice):
+    sym_cart = [similarity_transformation(lattice.T, r)
+                for r in symmetry_operations]
+    sum_tensor = np.zeros_like(tensor)
+    for sym in sym_cart:
+        sum_tensor += similarity_transformation(sym, tensor)
+    return sum_tensor / len(symmetry_operations)

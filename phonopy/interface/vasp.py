@@ -42,9 +42,7 @@ import numpy as np
 from phonopy.structure.atoms import PhonopyAtoms as Atoms
 from phonopy.structure.atoms import symbol_map, atom_data
 from phonopy.structure.cells import get_primitive, get_supercell
-from phonopy.structure.symmetry import (Symmetry, get_site_symmetry,
-                                        get_pointgroup_operations)
-from phonopy.harmonic.force_constants import similarity_transformation
+from phonopy.structure.symmetry import Symmetry, symmetrize_borns_and_epsilon
 from phonopy.file_IO import (write_FORCE_SETS, write_force_constants_to_hdf5,
                              write_FORCE_CONSTANTS)
 
@@ -362,14 +360,14 @@ def get_born_vasprunxml(filename="vasprun.xml",
         else:
             return None
 
-    return _get_borns(ucell,
-                      borns,
-                      epsilon,
-                      primitive_matrix=primitive_matrix,
-                      supercell_matrix=supercell_matrix,
-                      is_symmetry=is_symmetry,
-                      symmetrize_tensors=symmetrize_tensors,
-                      symprec=symprec)
+    return _get_indep_borns(ucell,
+                            borns,
+                            epsilon,
+                            primitive_matrix=primitive_matrix,
+                            supercell_matrix=supercell_matrix,
+                            is_symmetry=is_symmetry,
+                            symmetrize_tensors=symmetrize_tensors,
+                            symprec=symprec)
 
 def get_born_OUTCAR(poscar_filename="POSCAR",
                     outcar_filename=None,
@@ -388,68 +386,23 @@ def get_born_OUTCAR(poscar_filename="POSCAR",
     if len(borns) == 0 or len(epsilon) == 0:
         return None
     else:
-        return _get_borns(ucell,
-                          borns,
-                          epsilon,
-                          primitive_matrix=primitive_matrix,
-                          supercell_matrix=supercell_matrix,
-                          is_symmetry=is_symmetry,
-                          symmetrize_tensors=symmetrize_tensors,
-                          symprec=symprec)
+        return _get_indep_borns(ucell,
+                                borns,
+                                epsilon,
+                                primitive_matrix=primitive_matrix,
+                                supercell_matrix=supercell_matrix,
+                                is_symmetry=is_symmetry,
+                                symmetrize_tensors=symmetrize_tensors,
+                                symprec=symprec)
 
-def symmetrize_borns_and_epsilon(borns,
-                                 epsilon,
-                                 ucell,
-                                 symprec=1e-5,
-                                 is_symmetry=True):
-    lattice = ucell.get_cell()
-    positions = ucell.get_scaled_positions()
-    u_sym = Symmetry(ucell, is_symmetry=is_symmetry, symprec=symprec)
-    rotations = u_sym.get_symmetry_operations()['rotations']
-    translations = u_sym.get_symmetry_operations()['translations']
-    ptg_ops = get_pointgroup_operations(rotations)
-    epsilon_ = symmetrize_2nd_rank_tensor(epsilon, ptg_ops, lattice)
-
-    for i, Z in enumerate(borns):
-        site_sym = get_site_symmetry(i,
-                                     lattice,
-                                     positions,
-                                     rotations,
-                                     translations,
-                                     symprec)
-        Z = symmetrize_2nd_rank_tensor(Z, site_sym, lattice)
-
-    borns_ = np.zeros_like(borns)
-    for i in range(len(borns)):
-        count = 0
-        for r, t in zip(rotations, translations):
-            count += 1
-            diff = np.dot(positions, r.T) + t - positions[i]
-            diff -= np.rint(diff)
-            dist = np.sqrt(np.sum(np.dot(diff, lattice) ** 2, axis=1))
-            j = np.nonzero(dist < symprec)[0][0]
-            r_cart = similarity_transformation(lattice.T, r)
-            borns_[i] += similarity_transformation(r_cart, borns[j])
-        borns_[i] /= count
-
-    return borns_, epsilon_
-
-def symmetrize_2nd_rank_tensor(tensor, symmetry_operations, lattice):
-    sym_cart = [similarity_transformation(lattice.T, r)
-                for r in symmetry_operations]
-    sum_tensor = np.zeros_like(tensor)
-    for sym in sym_cart:
-        sum_tensor += similarity_transformation(sym, tensor)
-    return sum_tensor / len(symmetry_operations)
-
-def _get_borns(ucell,
-               borns,
-               epsilon,
-               primitive_matrix=None,
-               supercell_matrix=None,
-               is_symmetry=True,
-               symmetrize_tensors=False,
-               symprec=1e-5):
+def _get_indep_borns(ucell,
+                     borns,
+                     epsilon,
+                     primitive_matrix=None,
+                     supercell_matrix=None,
+                     is_symmetry=True,
+                     symmetrize_tensors=False,
+                     symprec=1e-5):
     """Parse Born effective charges and dielectric constants
 
 
@@ -459,7 +412,11 @@ def _get_borns(ucell,
          epsilon (np.array): Dielectric constant tensor
 
      Returns:
-         (Born effective charges, dielectric constant)
+         (np.array) Born effective charges of symmetrically independent atoms
+             in primitive cell
+         (np.array) Dielectric constant
+         (np.array) Atomic index mapping table from supercell to primitive cell
+             of independent atoms
 
      Raises:
           AssertionError: Inconsistency of number of atoms or Born effective

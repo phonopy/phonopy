@@ -77,7 +77,7 @@ def parse_set_of_forces(disps,
             force_sets.append(np.array(forces) - drift_force)
         else:
             is_parsed = False
-                
+
     if is_parsed:
         return force_sets
     else:
@@ -89,7 +89,7 @@ def parse_wien2k_struct(filename):
 
     # 1
     title = file.readline().rstrip()
-    
+
     # 2
     num_site = int(file.readline()[27:30])
 
@@ -144,7 +144,7 @@ def parse_wien2k_struct(filename):
             npts.append(npt)
             r0s.append(r0)
             rmts.append(rmt)
-        
+
         # 8 - 10
         for j in range(3):
             file.readline()
@@ -152,7 +152,7 @@ def parse_wien2k_struct(filename):
     cell = Atoms(symbols=symbols,
                  scaled_positions=positions,
                  cell=lattice)
-    
+
     return cell, npts, r0s, rmts
 
 def write_supercells_with_displacements(supercell,
@@ -162,12 +162,12 @@ def write_supercells_with_displacements(supercell,
                                         filename="wien2k-"):
     v = supercell_matrix
     det = (  v[0,0] * v[1,1] * v[2,2]
-           + v[0,1] * v[1,2] * v[2,0] 
-           + v[0,2] * v[1,0] * v[2,1] 
-           - v[0,0] * v[1,2] * v[2,1] 
-           - v[0,1] * v[1,0] * v[2,2] 
+           + v[0,1] * v[1,2] * v[2,0]
+           + v[0,2] * v[1,0] * v[2,1]
+           - v[0,0] * v[1,2] * v[2,1]
+           - v[0,1] * v[1,0] * v[2,2]
            - v[0,2] * v[1,1] * v[2,0])
-        
+
     npts_super = []
     r0s_super = []
     rmts_super = []
@@ -203,17 +203,17 @@ def _get_wien2k_struct(cell, npts, r0s, rmts):
 
     # 1
     text += "Title\n"
-    
+
     # 2
     text += "%-4s%23s%3d\n" % ("P", "LATTICE,NONEQUIV.ATOMS:", num_atom)
-    
+
     # 3
     text += "%13s%4s\n" % ("MODE OF CALC=", "RELA")
-    
+
     # 4
     text += "%10.6f%10.6f%10.6f%10.6f%10.6f%10.6f\n" % (
         a, b, c, alpha, beta, gamma)
-    
+
     for i, pos in enumerate(positions):
 
         for j in (0,1,2):
@@ -225,17 +225,17 @@ def _get_wien2k_struct(cell, npts, r0s, rmts):
         # 5 format (4X,I4,4X,F10.8,3X,F10.8,3X,F10.8)
         text += "%4s%4d%4s%10.8f%3s%10.8f%3s%10.8f\n" % (
             "ATOM", -(i + 1), ": X=", pos[0], " Y=", pos[1], " Z=", pos[2])
-    
+
         # 6  format (15X,I2,17X,I2)
         text += "%15s%2d%17s%2d\n" % ("MULT=", 1, "ISPLIT=", 8)
-    
+
         # 7 format (A10,5X,I5,5X,F10.8,5X,F10.5,5X,F5.2)
         npt = npts[i]
         r0 = r0s[i]
         rmt = rmts[i]
         text += "%-10s%5s%5d%5s%10.8f%5s%10.5f%5s%5.1f\n" % (
             symbols[i], "NPT=", npt, "R0=", r0, "RMT=", rmt, "Z:", numbers[i])
-    
+
         # 8 - 10 format (20X,3F10.7)
         text += "%-20s%10.7f%10.7f%10.7f\n" % ("LOCAL ROT MATRIX:", 1, 0, 0)
         text += "%-20s%10.7f%10.7f%10.7f\n" % ("", 0, 1, 0)
@@ -324,7 +324,7 @@ def _distribute_forces(supercell, disp, forces, filename, symprec):
         print("Plese check if there are \"FGL\" lines with")
         print("\"total forces\" are required.")
         return False
-    
+
     if len(atoms_in_dot_scf) == natom:
         print("It is assumed that there is no symmetrically-equivalent "
               "atoms in ")
@@ -347,13 +347,13 @@ def _distribute_forces(supercell, disp, forces, filename, symprec):
                         np.dot(rotations[map_operations[j]], forces[i]))
                     indep_atoms_to_wien2k.append(map_atoms[j])
                     break
-                
+
         if len(forces_remap) != len(forces):
             print("Atomic position mapping between Wien2k and phonopy failed.")
             print("If you think this is caused by a bug of phonopy")
             print("please report it in the phonopy mainling list.")
             return False
- 
+
         # 2. Distribute forces from independent to dependent atoms.
         force_set = []
         for i in range(natom):
@@ -424,7 +424,7 @@ if __name__ == '__main__':
         clean_scaled_positions(cell)
         write_vasp("POSCAR.wien2k", cell, direct=True)
         w = open("wien2k_core.dat", 'w')
-        
+
         w.write("# symbol       npt       r0             rmt\n")
         for symbol, npt, r0, rmt in \
                 zip(cell.get_chemical_symbols(), npts, r0s, rmts):
@@ -432,4 +432,3 @@ if __name__ == '__main__':
                     (symbol, npt, r0, rmt))
     else:
         print("You need to set -r or -w option.")
-
