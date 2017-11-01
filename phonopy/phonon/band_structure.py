@@ -103,25 +103,24 @@ class BandStructure(object):
     def get_unit_conversion_factor(self):
         return self._factor
 
-    def plot(self, pyplot, labels=None):
+    def plot(self, plt, labels=None):
         for distances, frequencies in zip(self._distances,
                                           self._frequencies):
             for freqs in frequencies.T:
                 if self._is_band_connection:
-                    pyplot.plot(distances, freqs, '-')
+                    plt.plot(distances, freqs, '-')
                 else:
-                    pyplot.plot(distances, freqs, 'r-')
+                    plt.plot(distances, freqs, 'r-')
 
-        pyplot.ylabel('Frequency')
-        pyplot.xlabel('Wave vector')
+        plt.ylabel('Frequency')
+        plt.xlabel('Wave vector')
 
         if labels and len(labels) == len(self._special_points):
-            pyplot.xticks(self._special_points, labels)
+            plt.xticks(self._special_points, labels)
         else:
-            pyplot.xticks(self._special_points,
-                          [''] * len(self._special_points))
-        pyplot.xlim(0, self._distance)
-        pyplot.axhline(y=0, linestyle=':', linewidth=0.5, color='b')
+            plt.xticks(self._special_points, [''] * len(self._special_points))
+        plt.xlim(0, self._distance)
+        plt.axhline(y=0, linestyle=':', linewidth=0.5, color='b')
 
     def write_hdf5(self, labels=None, comment=None, filename="band.hdf5"):
         import h5py
