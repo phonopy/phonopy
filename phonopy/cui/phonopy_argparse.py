@@ -51,6 +51,7 @@ def get_parser():
         dynamical_matrix_decimals=None,
         elk_mode=False,
         siesta_mode=False,
+        cp2k_mode=False,
         fc_symmetry=None,
         fc_computation_algorithm=None,
         fc_spg_symmetry=False,
@@ -119,7 +120,7 @@ def get_parser():
         write_dynamical_matrices=False,
         write_mesh=True,
         yaml_mode=False)
-    
+
     parser.add_option(
         "--abinit", dest="abinit_mode",
         action="store_true", help="Invoke Abinit mode")
@@ -150,7 +151,10 @@ def get_parser():
         "-c", "--cell", dest="cell_filename", action="store", type="string",
         help="Read unit cell", metavar="FILE")
     parser.add_option(
-        "--crystal", dest="crystal_mode", action="store_true", 
+        "--cp2k", dest="cp2k_mode",
+        action="store_true", help="Invoke CP2K mode")
+    parser.add_option(
+        "--crystal", dest="crystal_mode", action="store_true",
         help="Invoke CRYSTAL mode")
     parser.add_option(
         "--cutoff_freq", "--cutoff_frequency",

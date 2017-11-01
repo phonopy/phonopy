@@ -51,8 +51,8 @@ parser = OptionParser()
 parser.set_defaults(num_atoms=None,
                     primitive_axis =None,
                     supercell_matrix=None,
-                    symmetrize_tensors=False,
-                    read_vasprunxml=False,
+                    symmetrize_tensors=True,
+                    read_outcar=False,
                     symprec=1e-5)
 parser.add_option("--dim", dest="supercell_matrix",
                   action="store", type="string",
@@ -60,24 +60,25 @@ parser.add_option("--dim", dest="supercell_matrix",
 parser.add_option("--pa", "--primitive_axis", dest="primitive_axis",
                   action="store", type="string",
                   help="Same as PRIMITIVE_AXIS tags")
-parser.add_option("--st", "--symmetrize_tensors", dest="symmetrize_tensors",
-                  action="store_true",
-                  help="Symmetrize tensors")
+parser.add_option("--nost", "--no_symmetrize_tensors",
+                  dest="symmetrize_tensors",
+                  action="store_false",
+                  help="Prevent from symmetrizing tensors")
 parser.add_option("--tolerance", dest="symprec", type="float",
                   help="Symmetry tolerance to search")
-parser.add_option("--vasprunxml", dest="read_vasprunxml",
+parser.add_option("--outcar", dest="read_outcar",
                   action="store_true",
-                  help=("Read vasprun.xml instead of OUTCAR. "
-                        "POSCAR is not necessary"))
+                  help=("Read OUTCAR instead of vasprun.xml. "
+                        "POSCAR is necessary in this case."))
 (options, args) = parser.parse_args()
 
 if args:
     outcar_filename = args[0]
 else:
-    if options.read_vasprunxml:
-        outcar_filename = "vasprun.xml"
-    else:
+    if options.read_outcar:
         outcar_filename = "OUTCAR"
+    else:
+        outcar_filename = "vasprun.xml"
 
 if len(args) > 1:
     poscar_filename = args[1]
@@ -111,17 +112,17 @@ with warnings.catch_warnings() as w:
     warnings.simplefilter("always")
 
     try:
-        if options.read_vasprunxml:
-            borns, epsilon, atom_indices = get_born_vasprunxml(
-                filename=outcar_filename,
+        if options.read_outcar:
+            borns, epsilon, atom_indices = get_born_OUTCAR(
+                poscar_filename=poscar_filename,
+                outcar_filename=outcar_filename,
                 primitive_matrix=primitive_axis,
                 supercell_matrix=supercell_matrix,
                 symmetrize_tensors=options.symmetrize_tensors,
                 symprec=options.symprec)
         else:
-            borns, epsilon, atom_indices = get_born_OUTCAR(
-                poscar_filename=poscar_filename,
-                outcar_filename=outcar_filename,
+            borns, epsilon, atom_indices = get_born_vasprunxml(
+                filename=outcar_filename,
                 primitive_matrix=primitive_axis,
                 supercell_matrix=supercell_matrix,
                 symmetrize_tensors=options.symmetrize_tensors,
