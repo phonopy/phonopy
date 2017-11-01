@@ -22,7 +22,7 @@
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -162,9 +162,10 @@ respectively. Perhaps these are renamed to <code class="docutils literal"><span 
 stored in <code class="docutils literal"><span class="pre">case-xxx</span></code> directories, then to be calculated using
 Wien2k.</p>
 </li>
-<li><p class="first">Calculate forces on atoms in the supercells with
-displacements. Select to use <code class="docutils literal"><span class="pre">case.struct_nn</span></code> file when running
-<code class="docutils literal"><span class="pre">init_lapw</span></code>. In the Wien2k calculations, the force convergence
+<li><p class="first">Calculate forces on atoms in the supercells with displacements. It
+is necessary to use <code class="docutils literal"><span class="pre">case.struct_nn</span></code> file when running
+<code class="docutils literal"><span class="pre">init_lapw</span></code>. Note that <code class="docutils literal"><span class="pre">case.struct_sgroup</span></code> file can’t be used
+with phonopy. In the Wien2k calculations, the force convergence
 option of <code class="docutils literal"><span class="pre">-fc</span></code> has to be specified to obtain <code class="docutils literal"><span class="pre">total</span> <span class="pre">forces</span></code>. A
 first attempt of the force convergence criterion may be 0.1
 (mRy/a.u.). It is recommended to try more strict convergence
