@@ -79,7 +79,14 @@ class PhonopyGruneisen(object):
         return True
 
     def get_mesh(self):
-        return self._mesh
+        if self._mesh is None:
+            return None
+        else:
+            return (self._mesh.get_qpoints(),
+                    self._mesh.get_weights(),
+                    self._mesh.get_frequencies(),
+                    self._mesh.get_eigenvectors(),
+                    self._mesh.get_gruneisen())
 
     def write_yaml_mesh(self):
         self._mesh.write_yaml()

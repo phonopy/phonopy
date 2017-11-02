@@ -30,8 +30,11 @@ gruneisen = PhonopyGruneisen(phonons["orig"],
                              phonons["minus"])
 
 gruneisen.set_mesh([2, 2, 2])
-gruneisen_params_on_mesh = gruneisen.get_mesh().get_gruneisen()
-print(gruneisen_params_on_mesh)
+q_points, _, frequencies, _, gammas = gruneisen.get_mesh()
+for q, freq, g in zip(q_points, frequencies, gammas):
+    print(("%5.2f %5.2f %5.2f " + (" %7.3f" * len(freq)))
+          % ((q[0], q[1], q[2]) + tuple(freq)))
+    print(((" " * 18) + (" %7.3f" * len(g))) % tuple(g))
 
 bands = []
 append_band(bands, [0.5, 0.5, 0.0], [0.0, 0.0, 0.0])

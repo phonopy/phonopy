@@ -88,6 +88,9 @@ class GruneisenMesh(GruneisenBase):
     def get_eigenvalues(self):
         return self._eigenvalues
 
+    def get_eigenvectors(self):
+        return self._eigenvectors
+
     def get_frequencies(self):
         return self._frequencies
 
