@@ -906,7 +906,7 @@ static int trigo_generators[][3][9] =
     {  -1, 0, 0, 0, -1, 0, 0, 0, -1, },
   },
 };
-  
+
 static double rhombo_h_VSpU[][3][9] =
 {
   { /* 1 */
@@ -1389,113 +1389,113 @@ static int cubic_generators[][3][9] =
 
 
 static int find_hall_symbol(double origin_shift[3],
-			    SPGCONST double bravais_lattice[3][3],
-			    const int hall_number,
-			    const Centering centering,
-			    const Symmetry *symmetry,
-			    const double symprec);
+                            SPGCONST double bravais_lattice[3][3],
+                            const int hall_number,
+                            const Centering centering,
+                            const Symmetry *symmetry,
+                            const double symprec);
 static int is_hall_symbol(double shift[3],
-			  const int hall_number,
-			  SPGCONST double primitive_lattice[3][3],
-			  const Symmetry *symmetry,
-			  Centering centering,
-			  SPGCONST int generators[3][9],
-			  SPGCONST double VSpU[3][9],
-			  const double symprec);
+                          const int hall_number,
+                          SPGCONST double primitive_lattice[3][3],
+                          const Symmetry *symmetry,
+                          Centering centering,
+                          SPGCONST int generators[3][9],
+                          SPGCONST double VSpU[3][9],
+                          const double symprec);
 static int is_hall_symbol_cubic(double shift[3],
-				const int hall_number,
-				SPGCONST double primitive_lattice[3][3],
-				const Symmetry *symmetry,
-				const Centering centering,
-				const double symprec);
+                                const int hall_number,
+                                SPGCONST double primitive_lattice[3][3],
+                                const Symmetry *symmetry,
+                                const Centering centering,
+                                const double symprec);
 static int is_hall_symbol_hexa(double shift[3],
-			       const int hall_number,
-			       SPGCONST double primitive_lattice[3][3],
-			       const Symmetry *symmetry,
-			       const double symprec);
+                               const int hall_number,
+                               SPGCONST double primitive_lattice[3][3],
+                               const Symmetry *symmetry,
+                               const double symprec);
 static int is_hall_symbol_rhombo(double shift[3],
-				 const int hall_number,
-				 SPGCONST double primitive_lattice[3][3],
-				 const Symmetry *symmetry,
-				 const double symprec);
+                                 const int hall_number,
+                                 SPGCONST double primitive_lattice[3][3],
+                                 const Symmetry *symmetry,
+                                 const double symprec);
 static int is_hall_symbol_trigonal(double shift[3],
-				   const int hall_number,
-				   SPGCONST double primitive_lattice[3][3],
-				   const Symmetry *symmetry,
-				   const double symprec);
+                                   const int hall_number,
+                                   SPGCONST double primitive_lattice[3][3],
+                                   const Symmetry *symmetry,
+                                   const double symprec);
 static int is_hall_symbol_tetra(double shift[3],
-				const int hall_number,
-				SPGCONST double primitive_lattice[3][3],
-				const Symmetry *symmetry,
-				const Centering centering,
-				const double symprec);
+                                const int hall_number,
+                                SPGCONST double primitive_lattice[3][3],
+                                const Symmetry *symmetry,
+                                const Centering centering,
+                                const double symprec);
 static int is_hall_symbol_ortho(double shift[3],
-				const int hall_number,
-				SPGCONST double primitive_lattice[3][3],
-				const Symmetry *symmetry,
-				const Centering centering,
-				const double symprec);
+                                const int hall_number,
+                                SPGCONST double primitive_lattice[3][3],
+                                const Symmetry *symmetry,
+                                const Centering centering,
+                                const double symprec);
 static int is_hall_symbol_monocli(double shift[3],
-				  const int hall_number,
-				  SPGCONST double primitive_lattice[3][3],
-				  const Symmetry *symmetry,
-				  const Centering centering,
-				  const double symprec);
+                                  const int hall_number,
+                                  SPGCONST double primitive_lattice[3][3],
+                                  const Symmetry *symmetry,
+                                  const Centering centering,
+                                  const double symprec);
 static int is_hall_symbol_tricli(double shift[3],
-				 const int hall_number,
-				 SPGCONST double primitive_lattice[3][3],
-				 const Symmetry *symmetry,
-				 const double symprec);
+                                 const int hall_number,
+                                 SPGCONST double primitive_lattice[3][3],
+                                 const Symmetry *symmetry,
+                                 const double symprec);
 static int get_translations(double trans[3][3],
-			    const Symmetry *symmetry,
-			    SPGCONST int rot[3][3][3]);
+                            const Symmetry *symmetry,
+                            SPGCONST int rot[3][3][3]);
 static void transform_translation(double trans_reduced[3],
-				  const Centering centering,
-				  const double trans[3]);
+                                  const Centering centering,
+                                  const double trans[3]);
 static void transform_rotation(double rot_reduced[3][3],
-			       const Centering centering,
-			       SPGCONST int rot[3][3]);
+                               const Centering centering,
+                               SPGCONST int rot[3][3]);
 static int get_origin_shift(double shift[3],
-			    const int hall_number,
-			    SPGCONST int rot[3][3][3],
-			    SPGCONST double trans[3][3],
-			    const Centering centering,
-			    SPGCONST double VSpU[3][9]);
+                            const int hall_number,
+                            SPGCONST int rot[3][3][3],
+                            SPGCONST double trans[3][3],
+                            const Centering centering,
+                            SPGCONST double VSpU[3][9]);
 static void unpack_generators(int rot[3][3][3], int generators[3][9]);
 static int set_dw(double dw[3],
-		  const int operation_index[2],
-		  SPGCONST int rot[3][3],
-		  const double trans[3],
-		  const Centering centering);
+                  const int operation_index[2],
+                  SPGCONST int rot[3][3],
+                  const double trans[3],
+                  const Centering centering);
 static int is_match_database(const int hall_number,
-			     const double shift[3],
-			     SPGCONST double primitive_lattice[3][3],
-			     const Centering centering,
-			     const Symmetry *symmetry,
-			     const double symprec);
+                             const double shift[3],
+                             SPGCONST double primitive_lattice[3][3],
+                             const Centering centering,
+                             const Symmetry *symmetry,
+                             const double symprec);
 
 
 int hal_match_hall_symbol_db(double origin_shift[3],
-			     SPGCONST double bravais_lattice[3][3],
-			     const int hall_number,
-			     const Centering centering,
-			     const Symmetry *symmetry,
-			     const double symprec)
+                             SPGCONST double bravais_lattice[3][3],
+                             const int hall_number,
+                             const Centering centering,
+                             const Symmetry *symmetry,
+                             const double symprec)
 {
   return find_hall_symbol(origin_shift,
-			  bravais_lattice,
-			  hall_number,
-			  centering,
-			  symmetry,
-			  symprec);
+                          bravais_lattice,
+                          hall_number,
+                          centering,
+                          symmetry,
+                          symprec);
 }
 
 static int find_hall_symbol(double origin_shift[3],
-			    SPGCONST double bravais_lattice[3][3],
-			    const int hall_number,
-			    const Centering centering,
-			    const Symmetry *symmetry,
-			    const double symprec)
+                            SPGCONST double bravais_lattice[3][3],
+                            const int hall_number,
+                            const Centering centering,
+                            const Symmetry *symmetry,
+                            const double symprec)
 {
   double primitive_lattice[3][3];
 
@@ -1528,21 +1528,21 @@ static int find_hall_symbol(double origin_shift[3],
   /* CUBIC IT: 195-230, Hall: 489-530 */
   if (489 <= hall_number && hall_number <= 530) {
     if (is_hall_symbol_cubic(origin_shift,
-			     hall_number,
-			     primitive_lattice,
-			     symmetry,
-			     centering,
-			     symprec)) {goto found;}
+                             hall_number,
+                             primitive_lattice,
+                             symmetry,
+                             centering,
+                             symprec)) {goto found;}
     return 0;
   }
 
   /* HEXA, IT: 168-194, Hall: 462-488 */
   if (462 <= hall_number && hall_number <= 488) {
     if (is_hall_symbol_hexa(origin_shift,
-			    hall_number,
-			    primitive_lattice,
-			    symmetry,
-			    symprec)) {goto found;}
+                            hall_number,
+                            primitive_lattice,
+                            symmetry,
+                            symprec)) {goto found;}
     return 0;
   }
 
@@ -1563,16 +1563,16 @@ static int find_hall_symbol(double origin_shift[3],
         hall_number == 460 ||
         hall_number == 461) {
       if (is_hall_symbol_rhombo(origin_shift,
-				hall_number,
-				primitive_lattice,
-				symmetry,
-				symprec)) {goto found;}
+                                hall_number,
+                                primitive_lattice,
+                                symmetry,
+                                symprec)) {goto found;}
     } else {
       if (is_hall_symbol_trigonal(origin_shift,
-				  hall_number,
-				  primitive_lattice,
-				  symmetry,
-				  symprec)) {goto found;}
+                                  hall_number,
+                                  primitive_lattice,
+                                  symmetry,
+                                  symprec)) {goto found;}
     }
     return 0;
   }
@@ -1580,43 +1580,43 @@ static int find_hall_symbol(double origin_shift[3],
   /* TETRA, IT: 75-142, Hall: 349-429 */
   if (349 <= hall_number && hall_number <= 429) {
     if (is_hall_symbol_tetra(origin_shift,
-			     hall_number,
-			     primitive_lattice,
-			     symmetry,
-			     centering,
-			     symprec)) {goto found;}
+                             hall_number,
+                             primitive_lattice,
+                             symmetry,
+                             centering,
+                             symprec)) {goto found;}
     return 0;
   }
-  
+
   /* ORTHO, IT: 16-74, Hall: 108-348 */
   if (108 <= hall_number && hall_number <= 348) {
     if (is_hall_symbol_ortho(origin_shift,
-			     hall_number,
-			     primitive_lattice,
-			     symmetry,
-			     centering,
-			     symprec)) {goto found;}
+                             hall_number,
+                             primitive_lattice,
+                             symmetry,
+                             centering,
+                             symprec)) {goto found;}
     return 0;
   }
 
   /* MONOCLI, IT: 3-15, Hall: 3-107 */
   if (3 <= hall_number && hall_number <= 107) {
     if (is_hall_symbol_monocli(origin_shift,
-			       hall_number,
-			       primitive_lattice,
-			       symmetry,
-			       centering,
-			       symprec)) {goto found;}
+                               hall_number,
+                               primitive_lattice,
+                               symmetry,
+                               centering,
+                               symprec)) {goto found;}
     return 0;
   }
 
   /* TRICLI, IT: 1-2, Hall: 1-2 */
   if (1 <= hall_number && hall_number <= 2) {
     if (is_hall_symbol_tricli(origin_shift,
-			      hall_number,
-			      primitive_lattice,
-			      symmetry,
-			      symprec)) {goto found;}
+                              hall_number,
+                              primitive_lattice,
+                              symmetry,
+                              symprec)) {goto found;}
     return 0;
   }
 
@@ -1651,46 +1651,46 @@ static int find_hall_symbol(double origin_shift[3],
 }
 
 static int is_hall_symbol_cubic(double shift[3],
-				const int hall_number,
-				SPGCONST double primitive_lattice[3][3],
-				const Symmetry *symmetry,
-				const Centering centering,
-				const double symprec)
+                                const int hall_number,
+                                SPGCONST double primitive_lattice[3][3],
+                                const Symmetry *symmetry,
+                                const Centering centering,
+                                const double symprec)
 {
   int i;
 
   for (i = 0; i < 10; i++) {
     if (centering == PRIMITIVE) {
       if (is_hall_symbol(shift,
-			 hall_number,
-			 primitive_lattice,
-			 symmetry,
-			 centering,
-			 cubic_generators[i],
-			 cubic_VSpU[i],
-			 symprec)) {return 1;}
+                         hall_number,
+                         primitive_lattice,
+                         symmetry,
+                         centering,
+                         cubic_generators[i],
+                         cubic_VSpU[i],
+                         symprec)) {return 1;}
     }
 
     if (centering == BODY) {
       if (is_hall_symbol(shift,
-			 hall_number,
-			 primitive_lattice,
-			 symmetry,
-			 centering,
-			 cubic_generators[i],
-			 cubic_I_VSpU[i],
-			 symprec)) {return 1;}
+                         hall_number,
+                         primitive_lattice,
+                         symmetry,
+                         centering,
+                         cubic_generators[i],
+                         cubic_I_VSpU[i],
+                         symprec)) {return 1;}
     }
 
     if (centering == FACE) {
       if (is_hall_symbol(shift,
-			 hall_number,
-			 primitive_lattice,
-			 symmetry,
-			 centering,
-			 cubic_generators[i],
-			 cubic_F_VSpU[i],
-			 symprec)) {return 1;}
+                         hall_number,
+                         primitive_lattice,
+                         symmetry,
+                         centering,
+                         cubic_generators[i],
+                         cubic_F_VSpU[i],
+                         symprec)) {return 1;}
     }
   }
 
@@ -1698,54 +1698,54 @@ static int is_hall_symbol_cubic(double shift[3],
 }
 
 static int is_hall_symbol_hexa(double shift[3],
-			       const int hall_number,
-			       SPGCONST double primitive_lattice[3][3],
-			       const Symmetry *symmetry,
-			       const double symprec)
+                               const int hall_number,
+                               SPGCONST double primitive_lattice[3][3],
+                               const Symmetry *symmetry,
+                               const double symprec)
 {
   int i;
 
   for (i = 0; i < 8; i++) {
     if (is_hall_symbol(shift,
-		       hall_number,
-		       primitive_lattice,
-		       symmetry,
-		       PRIMITIVE,
-		       hexa_generators[i],
-		       hexa_VSpU[i],
-		       symprec)) {return 1;}
+                       hall_number,
+                       primitive_lattice,
+                       symmetry,
+                       PRIMITIVE,
+                       hexa_generators[i],
+                       hexa_VSpU[i],
+                       symprec)) {return 1;}
   }
 
   return 0;
 }
 
 static int is_hall_symbol_trigonal(double shift[3],
-				   const int hall_number,
-				   SPGCONST double primitive_lattice[3][3],
-				   const Symmetry *symmetry,
-				   const double symprec)
+                                   const int hall_number,
+                                   SPGCONST double primitive_lattice[3][3],
+                                   const Symmetry *symmetry,
+                                   const double symprec)
 {
   int i;
 
   for (i = 0; i < 13; i++) {
     if (is_hall_symbol(shift,
-		       hall_number,
-		       primitive_lattice,
-		       symmetry,
-		       PRIMITIVE,
-		       trigo_generators[i],
-		       trigo_VSpU[i],
-		       symprec)) {return 1;}
+                       hall_number,
+                       primitive_lattice,
+                       symmetry,
+                       PRIMITIVE,
+                       trigo_generators[i],
+                       trigo_VSpU[i],
+                       symprec)) {return 1;}
   }
 
   return 0;
 }
 
 static int is_hall_symbol_rhombo(double shift[3],
-				 const int hall_number,
-				 SPGCONST double primitive_lattice[3][3],
-				 const Symmetry *symmetry,
-				 const double symprec)
+                                 const int hall_number,
+                                 SPGCONST double primitive_lattice[3][3],
+                                 const Symmetry *symmetry,
+                                 const double symprec)
 {
   int i;
 
@@ -1759,25 +1759,25 @@ static int is_hall_symbol_rhombo(double shift[3],
     /* hP */
     for (i = 0; i < 8; i++) {
       if (is_hall_symbol(shift,
-			 hall_number,
-			 primitive_lattice,
-			 symmetry,
-			 R_CENTER,
-			 rhombo_h_generators[i],
-			 rhombo_h_VSpU[i],
-			 symprec)) {return 1;}
+                         hall_number,
+                         primitive_lattice,
+                         symmetry,
+                         R_CENTER,
+                         rhombo_h_generators[i],
+                         rhombo_h_VSpU[i],
+                         symprec)) {return 1;}
     }
   } else {
     /* hR */
     for (i = 0; i < 8; i++) {
       if (is_hall_symbol(shift,
-			 hall_number,
-			 primitive_lattice,
-			 symmetry,
-			 PRIMITIVE,
-			 rhombo_p_generators[i],
-			 rhombo_p_VSpU[i],
-			 symprec)) {return 1;}
+                         hall_number,
+                         primitive_lattice,
+                         symmetry,
+                         PRIMITIVE,
+                         rhombo_p_generators[i],
+                         rhombo_p_VSpU[i],
+                         symprec)) {return 1;}
     }
   }
 
@@ -1785,35 +1785,35 @@ static int is_hall_symbol_rhombo(double shift[3],
 }
 
 static int is_hall_symbol_tetra(double shift[3],
-				const int hall_number,
-				SPGCONST double primitive_lattice[3][3],
-				const Symmetry *symmetry,
-				const Centering centering,
-				const double symprec)
+                                const int hall_number,
+                                SPGCONST double primitive_lattice[3][3],
+                                const Symmetry *symmetry,
+                                const Centering centering,
+                                const double symprec)
 {
   int i;
 
   for (i = 0; i < 8; i++) {
     if (centering==PRIMITIVE) {
       if (is_hall_symbol(shift,
-			 hall_number,
-			 primitive_lattice,
-			 symmetry,
-			 centering,
-			 tetra_generators[i],
-			 tetra_VSpU[i],
-			 symprec)) {return 1;}
+                         hall_number,
+                         primitive_lattice,
+                         symmetry,
+                         centering,
+                         tetra_generators[i],
+                         tetra_VSpU[i],
+                         symprec)) {return 1;}
     }
 
     if (centering==BODY) {
       if (is_hall_symbol(shift,
-			 hall_number,
-			 primitive_lattice,
-			 symmetry,
-			 centering,
-			 tetra_generators[i],
-			 tetra_I_VSpU[i],
-			 symprec)) {return 1;}
+                         hall_number,
+                         primitive_lattice,
+                         symmetry,
+                         centering,
+                         tetra_generators[i],
+                         tetra_I_VSpU[i],
+                         symprec)) {return 1;}
     }
   }
 
@@ -1821,79 +1821,79 @@ static int is_hall_symbol_tetra(double shift[3],
 }
 
 static int is_hall_symbol_ortho(double shift[3],
-				const int hall_number,
-				SPGCONST double primitive_lattice[3][3],
-				const Symmetry *symmetry,
-				const Centering centering,
-				const double symprec)
+                                const int hall_number,
+                                SPGCONST double primitive_lattice[3][3],
+                                const Symmetry *symmetry,
+                                const Centering centering,
+                                const double symprec)
 {
   int i;
 
   for (i = 0; i < 5; i++) {
     if (centering == PRIMITIVE) {
       if (is_hall_symbol(shift,
-			 hall_number,
-			 primitive_lattice,
-			 symmetry,
-			 centering,
-			 ortho_generators[i],
-			 ortho_VSpU[i],
-			 symprec)) {return 1;}
+                         hall_number,
+                         primitive_lattice,
+                         symmetry,
+                         centering,
+                         ortho_generators[i],
+                         ortho_VSpU[i],
+                         symprec)) {return 1;}
     }
 
     if (centering == BODY) {
       if (is_hall_symbol(shift,
-			 hall_number,
-			 primitive_lattice,
-			 symmetry,
-			 centering,
-			 ortho_generators[i],
-			 ortho_I_VSpU[i],
-			 symprec)) {return 1;}
+                         hall_number,
+                         primitive_lattice,
+                         symmetry,
+                         centering,
+                         ortho_generators[i],
+                         ortho_I_VSpU[i],
+                         symprec)) {return 1;}
     }
 
     if (centering == FACE) {
       if (is_hall_symbol(shift,
-			 hall_number,
-			 primitive_lattice,
-			 symmetry,
-			 centering,
-			 ortho_generators[i],
-			 ortho_F_VSpU[i],
-			 symprec)) {return 1;}
+                         hall_number,
+                         primitive_lattice,
+                         symmetry,
+                         centering,
+                         ortho_generators[i],
+                         ortho_F_VSpU[i],
+                         symprec)) {return 1;}
     }
 
     if (centering == A_FACE) {
       if (is_hall_symbol(shift,
-			 hall_number,
-			 primitive_lattice,
-			 symmetry,
-			 centering,
-			 ortho_generators[i],
-			 ortho_A_VSpU[i],
-			 symprec)) {return 1;}
+                         hall_number,
+                         primitive_lattice,
+                         symmetry,
+                         centering,
+                         ortho_generators[i],
+                         ortho_A_VSpU[i],
+                         symprec)) {return 1;}
     }
 
     if (centering == B_FACE) {
       if (is_hall_symbol(shift,
-			 hall_number,
-			 primitive_lattice,
-			 symmetry,
-			 centering,
-			 ortho_generators[i],
-			 ortho_B_VSpU[i],
-			 symprec)) {return 1;}
+                         hall_number,
+                         primitive_lattice,
+                         symmetry,
+                         centering,
+                         ortho_generators[i],
+                         ortho_B_VSpU[i],
+                         symprec)) {return 1;}
     }
 
     if (centering == C_FACE) {
       if (is_hall_symbol(shift,
-			 hall_number,
-			 primitive_lattice,
-			 symmetry,
-			 centering,
-			 ortho_generators[i],
-			 ortho_C_VSpU[i],
-			 symprec)) {return 1;}
+                         hall_number,
+                         primitive_lattice,
+                         symmetry,
+                         centering,
+                         ortho_generators[i],
+                         ortho_C_VSpU[i],
+                         symprec)) {return 1;}
     }
   }
 
@@ -1901,91 +1901,91 @@ static int is_hall_symbol_ortho(double shift[3],
 }
 
 static int is_hall_symbol_monocli(double shift[3],
-				  const int hall_number,
-				  SPGCONST double primitive_lattice[3][3],
-				  const Symmetry *symmetry,
-				  const Centering centering,
-				  const double symprec)
+                                  const int hall_number,
+                                  SPGCONST double primitive_lattice[3][3],
+                                  const Symmetry *symmetry,
+                                  const Centering centering,
+                                  const double symprec)
 {
   int i;
 
   for (i = 0; i < 9; i++) {
     if (centering == PRIMITIVE) {
       if (is_hall_symbol(shift,
-			 hall_number,
-			 primitive_lattice,
-			 symmetry,
-			 centering,
-			 monocli_generators[i],
-			 monocli_VSpU[i],
-			 symprec)) {return 1;}
+                         hall_number,
+                         primitive_lattice,
+                         symmetry,
+                         centering,
+                         monocli_generators[i],
+                         monocli_VSpU[i],
+                         symprec)) {return 1;}
     }
 
     if (centering == A_FACE) {
       if (is_hall_symbol(shift,
-			 hall_number,
-			 primitive_lattice,
-			 symmetry,
-			 centering,
-			 monocli_generators[i],
-			 monocli_A_VSpU[i],
-			 symprec)) {return 1;}
+                         hall_number,
+                         primitive_lattice,
+                         symmetry,
+                         centering,
+                         monocli_generators[i],
+                         monocli_A_VSpU[i],
+                         symprec)) {return 1;}
     }
 
     if (centering == B_FACE) {
       if (is_hall_symbol(shift,
-			 hall_number,
-			 primitive_lattice,
-			 symmetry,
-			 centering,
-			 monocli_generators[i],
-			 monocli_B_VSpU[i],
-			 symprec)) {return 1;}
+                         hall_number,
+                         primitive_lattice,
+                         symmetry,
+                         centering,
+                         monocli_generators[i],
+                         monocli_B_VSpU[i],
+                         symprec)) {return 1;}
     }
 
     if (centering == C_FACE) {
       if (is_hall_symbol(shift,
-			 hall_number,
-			 primitive_lattice,
-			 symmetry,
-			 centering,
-			 monocli_generators[i],
-			 monocli_C_VSpU[i],
-			 symprec)) {return 1;}
+                         hall_number,
+                         primitive_lattice,
+                         symmetry,
+                         centering,
+                         monocli_generators[i],
+                         monocli_C_VSpU[i],
+                         symprec)) {return 1;}
     }
 
     if (centering == BODY) {
       if (is_hall_symbol(shift,
-			 hall_number,
-			 primitive_lattice,
-			 symmetry,
-			 centering,
-			 monocli_generators[i],
-			 monocli_I_VSpU[i],
-			 symprec)) {return 1;}
+                         hall_number,
+                         primitive_lattice,
+                         symmetry,
+                         centering,
+                         monocli_generators[i],
+                         monocli_I_VSpU[i],
+                         symprec)) {return 1;}
     }
   }
-  
+
   return 0;
 }
 
 static int is_hall_symbol_tricli(double shift[3],
-				 const int hall_number,
-				 SPGCONST double primitive_lattice[3][3],
-				 const Symmetry *symmetry,
-				 const double symprec)
+                                 const int hall_number,
+                                 SPGCONST double primitive_lattice[3][3],
+                                 const Symmetry *symmetry,
+                                 const double symprec)
 {
   int i;
 
   for (i = 0; i < 2; i++) {
     if (is_hall_symbol(shift,
-		       hall_number,
-		       primitive_lattice,
-		       symmetry,
-		       PRIMITIVE,
-		       tricli_generators[i],
-		       tricli_VSpU[i],
-		       symprec)) {return 1;}
+                       hall_number,
+                       primitive_lattice,
+                       symmetry,
+                       PRIMITIVE,
+                       tricli_generators[i],
+                       tricli_VSpU[i],
+                       symprec)) {return 1;}
   }
 
   return 0;
@@ -1997,20 +1997,20 @@ static void unpack_generators(int rot[3][3][3], int generators[3][9])
   for (i = 0; i < 3; i++) {
     for (j = 0; j < 3; j++) {
       for (k = 0; k < 3; k++) {
-	rot[i][j][k] = generators[i][j*3+k];
+        rot[i][j][k] = generators[i][j*3+k];
       }
     }
   }
 }
 
 static int is_hall_symbol(double shift[3],
-			  const int hall_number,
-			  SPGCONST double primitive_lattice[3][3],
-			  const Symmetry *symmetry,
-			  Centering centering,
-			  SPGCONST int generators[3][9],
-			  SPGCONST double VSpU[3][9],
-			  const double symprec)
+                          const int hall_number,
+                          SPGCONST double primitive_lattice[3][3],
+                          const Symmetry *symmetry,
+                          Centering centering,
+                          SPGCONST int generators[3][9],
+                          SPGCONST double VSpU[3][9],
+                          const double symprec)
 {
   int is_origin_shift;
   int operation_index[2];
@@ -2026,19 +2026,19 @@ static int is_hall_symbol(double shift[3],
   unpack_generators(rot, generators);
   if (get_translations(trans, symmetry, rot)) {
     is_origin_shift = get_origin_shift(shift,
-				       hall_number,
-				       rot,
-				       trans,
-				       centering,
-				       VSpU);
+                                       hall_number,
+                                       rot,
+                                       trans,
+                                       centering,
+                                       VSpU);
 
     if (is_origin_shift) {
       if (is_match_database(hall_number,
-			    shift,
-			    primitive_lattice,
-			    centering,
-			    symmetry,
-			    symprec)) {goto found;}
+                            shift,
+                            primitive_lattice,
+                            centering,
+                            symmetry,
+                            symprec)) {goto found;}
     }
   } else {
     goto not_found;
@@ -2052,14 +2052,14 @@ static int is_hall_symbol(double shift[3],
 }
 
 static int get_translations(double trans[3][3],
-			    const Symmetry *symmetry,
-			    SPGCONST int rot[3][3][3])
+                            const Symmetry *symmetry,
+                            SPGCONST int rot[3][3][3])
 {
   int i, j;
   int is_found;
-  static SPGCONST int zero[3][3] = { { 0, 0, 0 }, 
-				     { 0, 0, 0 }, 
-				     { 0, 0, 0 }, };
+  static SPGCONST int zero[3][3] = { { 0, 0, 0 },
+                                     { 0, 0, 0 },
+                                     { 0, 0, 0 }, };
 
   for (i = 0; i < 3; i++) {
     for (j = 0; j < 3; j++) {
@@ -2072,9 +2072,9 @@ static int get_translations(double trans[3][3],
     is_found = 0;
     for (j = 0; j < symmetry->size; j++) {
       if (mat_check_identity_matrix_i3(symmetry->rot[j], rot[i])) {
-	mat_copy_vector_d3(trans[i], symmetry->trans[j]);
-	is_found = 1;
-	break;
+        mat_copy_vector_d3(trans[i], symmetry->trans[j]);
+        is_found = 1;
+        break;
       }
     }
     if (! is_found) {
@@ -2090,8 +2090,8 @@ static int get_translations(double trans[3][3],
 }
 
 static void transform_translation(double trans_reduced[3],
-				  const Centering centering,
-				  const double trans[3])
+                                  const Centering centering,
+                                  const double trans[3])
 {
   int i;
 
@@ -2127,8 +2127,8 @@ static void transform_translation(double trans_reduced[3],
 }
 
 static void transform_rotation(double rot_reduced[3][3],
-			       const Centering centering,
-			       SPGCONST int rot[3][3])
+                               const Centering centering,
+                               SPGCONST int rot[3][3])
 {
   mat_cast_matrix_3i_to_3d(rot_reduced, rot);
   if (centering != PRIMITIVE) {
@@ -2158,11 +2158,11 @@ static void transform_rotation(double rot_reduced[3][3],
 }
 
 static int get_origin_shift(double shift[3],
-			    const int hall_number,
-			    SPGCONST int rot[3][3][3],
-			    SPGCONST double trans[3][3],
-			    const Centering centering,
-			    SPGCONST double VSpU[3][9])
+                            const int hall_number,
+                            SPGCONST int rot[3][3][3],
+                            SPGCONST double trans[3][3],
+                            const Centering centering,
+                            SPGCONST double VSpU[3][9])
 {
   int i, j;
   int operation_index[2];
@@ -2175,15 +2175,15 @@ static int get_origin_shift(double shift[3],
     /* Zero matrix is the sign to set dw 0 */
     if (mat_get_determinant_i3(rot[i]) == 0) {
       for (j = 0; j < 3; j++) {
-	dw[i * 3 + j] = 0;
+        dw[i * 3 + j] = 0;
       }
     } else {
       if (set_dw(tmp_dw, operation_index, rot[i], trans[i], centering)) {
-	for (j = 0; j < 3; j++) {
-	  dw[i * 3 + j] = tmp_dw[j];
-	}
+        for (j = 0; j < 3; j++) {
+          dw[i * 3 + j] = tmp_dw[j];
+        }
       } else {
-	goto not_found;
+        goto not_found;
       }
     }
   }
@@ -2204,10 +2204,10 @@ static int get_origin_shift(double shift[3],
 }
 
 static int set_dw(double dw[3],
-		  const int operation_index[2],
-		  SPGCONST int rot[3][3],
-		  const double trans[3],
-		  const Centering centering)
+                  const int operation_index[2],
+                  SPGCONST int rot[3][3],
+                  const double trans[3],
+                  const Centering centering)
 {
   int i, j;
   int rot_db[3][3];
@@ -2219,8 +2219,8 @@ static int set_dw(double dw[3],
     transform_translation(trans_db_prim, centering, trans_db);
     if (mat_check_identity_matrix_i3(rot_db, rot)) {
       for (j = 0; j < 3; j++) {
-	dw[j] = trans_prim[j] - trans_db_prim[j];
-	dw[j] = mat_Dmod1(dw[j]);
+        dw[j] = trans_prim[j] - trans_db_prim[j];
+        dw[j] = mat_Dmod1(dw[j]);
       }
       goto found;
     }
@@ -2228,17 +2228,17 @@ static int set_dw(double dw[3],
 
   /* Not found */
   return 0;
-  
+
  found:
   return 1;
 }
 
 static int is_match_database(const int hall_number,
-			     const double origin_shift[3],
-			     SPGCONST double primitive_lattice[3][3],
-			     const Centering centering,
-			     const Symmetry *symmetry,
-			     const double symprec)
+                             const double origin_shift[3],
+                             SPGCONST double primitive_lattice[3][3],
+                             const Centering centering,
+                             const Symmetry *symmetry,
+                             const double symprec)
 {
   int i, j, k, is_found;
   int operation_index[2];
@@ -2255,20 +2255,20 @@ static int is_match_database(const int hall_number,
     for (j = 0; j < operation_index[0]; j++) {
       spgdb_get_operation(rot_db, trans_db, operation_index[1] + j);
       if (mat_check_identity_matrix_i3(symmetry->rot[i], rot_db)) {
-	transform_translation(trans_db_prim, centering, trans_db);
-	transform_translation(trans_prim, centering, symmetry->trans[i]);
-	transform_rotation(rot_prim, centering, rot_db);
-	for (k = 0; k < 3; k++) {
-	  diff[k] = trans_prim[k] - trans_db_prim[k] + origin_shift[k];
-	}
-	mat_multiply_matrix_vector_d3(shift_rot, rot_prim, origin_shift);
-	if (cel_is_overlap(diff, shift_rot, primitive_lattice, symprec)) {
-	  if (! found_list[j]) {
-	    found_list[j] = 1;
-	    is_found = 1;
-	    break;
-	  }
-	}
+        transform_translation(trans_db_prim, centering, trans_db);
+        transform_translation(trans_prim, centering, symmetry->trans[i]);
+        transform_rotation(rot_prim, centering, rot_db);
+        for (k = 0; k < 3; k++) {
+          diff[k] = trans_prim[k] - trans_db_prim[k] + origin_shift[k];
+        }
+        mat_multiply_matrix_vector_d3(shift_rot, rot_prim, origin_shift);
+        if (cel_is_overlap(diff, shift_rot, primitive_lattice, symprec)) {
+          if (! found_list[j]) {
+            found_list[j] = 1;
+            is_found = 1;
+            break;
+          }
+        }
       }
     }
 

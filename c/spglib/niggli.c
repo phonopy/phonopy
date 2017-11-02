@@ -89,7 +89,7 @@ static void debug_show(const int j, const NiggliParams *p)
   /* printf("%d %d %d\n", p->l, p->m, p->n); */
   /* for (i = 0; i < 3; i++) { */
   /*   printf("%f %f %f\n", */
-  /* 	   p->lattice[i * 3], p->lattice[i * 3 + 1], p->lattice[i * 3 + 2]); */
+  /*       p->lattice[i * 3], p->lattice[i * 3 + 1], p->lattice[i * 3 + 2]); */
   /* } */
 }
 #else
@@ -128,7 +128,7 @@ int niggli_reduce(double *lattice_, const double eps_)
   int i, j, succeeded;
   NiggliParams *p;
   int (*steps[8])(NiggliParams *p) = {step1, step2, step3, step4,
-				      step5, step6, step7, step8};
+                                      step5, step6, step7, step8};
 
   p = NULL;
   succeeded = 0;
@@ -145,9 +145,9 @@ int niggli_reduce(double *lattice_, const double eps_)
   for (i = 0; i < NIGGLI_MAX_NUM_LOOP; i++) {
     for (j = 0; j < 8; j++) {
       if ((*steps[j])(p)) {
-	debug_show(j + 1, p);
-	if (! reset(p)) {goto ret;}
-	if (j == 1 || j == 4 || j == 5 || j == 6 || j == 7) {break;}
+        debug_show(j + 1, p);
+        if (! reset(p)) {goto ret;}
+        if (j == 1 || j == 4 || j == 5 || j == 6 || j == 7) {break;}
       }
     }
     if (j == 8) {
@@ -203,7 +203,7 @@ static NiggliParams * initialize(const double *lattice_, const double eps_)
     p = NULL;
     return NULL;
   }
-  
+
   memcpy(p->lattice, lattice_, sizeof(double) * 9);
 
   return p;
@@ -225,7 +225,7 @@ static int reset(NiggliParams *p)
   double *lat_tmp;
 
   lat_tmp = NULL;
-  
+
   if ((lat_tmp = multiply_matrices(p->lattice, p->tmat)) == NULL) {return 0;}
   memcpy(p->lattice, lat_tmp, sizeof(double) * 9);
   free(lat_tmp);
@@ -420,7 +420,7 @@ static double * get_transpose(const double *M)
       M_T[i * 3 + j] = M[j * 3 + i];
     }
   }
-  
+
   return M_T;
 }
 
@@ -456,10 +456,10 @@ static double * multiply_matrices(const double *L, const double *R)
     for (j = 0; j < 3; j++) {
       M[i * 3 + j] = 0;
       for (k = 0; k < 3; k++) {
-	M[i * 3 + j] += L[i * 3 + k] * R[k * 3 + j];
+        M[i * 3 + j] += L[i * 3 + k] * R[k * 3 + j];
       }
     }
   }
-  
+
   return M;
 }
