@@ -44,8 +44,9 @@ def fracval(frac):
 
 class Settings(object):
     def __init__(self):
-        self._band_paths = None
         self._band_indices = None
+        self._band_paths = None
+        self._band_points = None
         self._cell_filename = None
         self._chemical_symbols = None
         self._cutoff_frequency = None
@@ -83,11 +84,17 @@ class Settings(object):
         self._tsym_type = 0
         self._yaml_mode = False
 
-    def set_bands(self, bands):
-        self._band_paths = bands
+    def set_band_paths(self, band_paths):
+        self._band_paths = band_paths
 
-    def get_bands(self):
+    def get_band_paths(self):
         return self._band_paths
+
+    def set_band_points(self, band_points):
+        self._band_points = band_points
+
+    def get_band_points(self):
+        return self._band_points
 
     def set_band_indices(self, band_indices):
         self._band_indices = band_indices
@@ -485,25 +492,25 @@ class ConfParser(object):
             self._settings.set_tsym_type(params['tsym_type'])
 
         # Band paths
+        # BAND = 0.0 0.0 0.0  0.5 0.0 0.0  0.5 0.5 0.0  0.0 0.0 0.0  0.5 0.5 0.5
+        # [array([[ 0. ,  0. ,  0. ],
+        #         [ 0.5,  0. ,  0. ],
+        #         [ 0.5,  0.5,  0. ],
+        #         [ 0. ,  0. ,  0. ],
+        #         [ 0.5,  0.5,  0.5]])]
+        #
+        # BAND = 0.0 0.0 0.0  0.5 0.0 0.0, 0.5 0.5 0.0  0.0 0.0 0.0  0.5 0.5 0.5
+        # [array([[ 0. ,  0. ,  0. ],
+        #         [ 0.5,  0. ,  0. ]]),
+        #  array([[ 0.5,  0.5,  0. ],
+        #         [ 0. ,  0. ,  0. ],
+        #         [ 0.5,  0.5,  0.5]])]
         if 'band_paths' in params:
-            if 'band_points' in params:
-                npoints = params['band_points'] - 1
-            else:
-                npoints = 50
+            self._settings.set_band_paths(params['band_paths'])
 
-            bands = []
-
-            for band_path in params['band_paths']:
-                nd = len(band_path)
-                for i in range(nd - 1):
-                    diff = (band_path[i + 1] - band_path[i]) / npoints
-                    band = [band_path[i].copy()]
-                    q = np.zeros(3)
-                    for j in range(npoints):
-                        q += diff
-                        band.append(band_path[i] + q)
-                    bands.append(band)
-            self._settings.set_bands(bands)
+        # This number includes end points
+        if 'band_points' in params:
+            self._settings.set_band_points(params['band_points'])
 
         # Activate phonopy YAML mode
         if 'yaml_mode' in params:

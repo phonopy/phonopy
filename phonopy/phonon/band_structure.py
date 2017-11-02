@@ -53,6 +53,28 @@ def estimate_band_connection(prev_eigvecs, eigvecs, prev_band_order):
 
     return band_order
 
+def get_band_qpoints(band_paths, npoints):
+    """Generate qpoints for band structure path
+
+    Args:
+        band_paths: Sets of end points of paths
+        npoints: Number of q-points in each path including end points
+
+    """
+
+    qpoints_of_paths = []
+    for band_path in band_paths:
+        nd = len(band_path)
+        for i in range(nd - 1):
+            diff = (band_path[i + 1] - band_path[i]) / npoints
+            qpoints = [band_path[i].copy()]
+            q = np.zeros(3)
+            for j in range(npoints):
+                q += diff
+                qpoints.append(band_path[i] + q)
+            qpoints_of_paths.append(np.array(qpoints))
+
+    return qpoints_of_paths
 
 class BandStructure(object):
     def __init__(self,
