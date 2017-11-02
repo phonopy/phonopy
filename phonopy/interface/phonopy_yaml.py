@@ -178,7 +178,7 @@ class PhonopyYaml(object):
                 lines.append("- [ %3d, %3d, %3d ]" % tuple(v))
             lines.append("")
 
-        if self._symmetry is not None:
+        if self._symmetry.get_dataset() is not None:
             lines.append("space_group:")
             lines.append("  type: \"%s\"" %
                          self._symmetry.get_dataset()['international'])
@@ -187,7 +187,6 @@ class PhonopyYaml(object):
             lines.append("  Hall_symbol: \"%s\"" %
                          self._symmetry.get_dataset()['hall'])
             lines.append("")
-
 
         if self._primitive_matrix is not None:
             lines.append("primitive_matrix:")

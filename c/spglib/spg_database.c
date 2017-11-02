@@ -570,7 +570,7 @@ static const SpacegroupType spacegroup_types[] = {
   {230, "Oh^10 ", "-I 4bd 2c 3     ", "I a -3 d                       ", "I 4_1/a -3 2/d     ", "Ia-3d     ", "     ",            BODY, 32 }, /* 530 */
 };
 
-static const int symmetry_operations[] = { 
+static const int symmetry_operations[] = {
   0       ,  /* dummy */
   16484   ,  /*    1 (  1) [  1, 0, 0, 0, 1, 0, 0, 0, 1,  0, 0, 0] */
   16484   ,  /*    2 (  2) [  1, 0, 0, 0, 1, 0, 0, 0, 1,  0, 0, 0] */
@@ -8570,11 +8570,11 @@ Symmetry * spgdb_get_spacegroup_operations(const int hall_number)
 /* Return spgtype.number = 0 if hall_number is out of range. */
 SpacegroupType spgdb_get_spacegroup_type(const int hall_number)
 {
-  int position; 
+  int position;
   SpacegroupType spgtype;
 
   spgtype.number = 0;
-  
+
   if (0 < hall_number && hall_number < 531) {
     spgtype = spacegroup_types[hall_number];
   } else {
@@ -8588,7 +8588,7 @@ SpacegroupType spgdb_get_spacegroup_type(const int hall_number)
   remove_space(spgtype.international_full, 20);
   remove_space(spgtype.international_short, 11);
   remove_space(spgtype.choice, 6);
-  
+
   return spgtype;
 }
 

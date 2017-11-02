@@ -268,7 +268,7 @@ class Settings(object):
 
     def get_primitive_matrix(self):
         return self._primitive_matrix
-        
+
     def set_qpoints(self, qpoints):
         self._qpoints = qpoints
 
@@ -292,7 +292,7 @@ class Settings(object):
 
     def get_temperature_step(self):
         return self._tstep
-    
+
     def set_time_reversal_symmetry(self, time_reversal_symmetry=True):
         self._is_time_reversal_symmetry = time_reversal_symmetry
 
@@ -308,10 +308,10 @@ class Settings(object):
 
     def get_tsym_type(self):
         return self._tsym_type
-    
+
     def set_yaml_mode(self, yaml_mode):
         self._yaml_mode = yaml_mode
-        
+
     def get_yaml_mode(self):
         return self._yaml_mode
 
@@ -347,41 +347,41 @@ class ConfParser(object):
         # Chemical symbols
         if 'atom_name' in params:
             self._settings.set_chemical_symbols(params['atom_name'])
-            
+
         # Sets of band indices that are summed
         if 'band_indices' in params:
             self._settings.set_band_indices(params['band_indices'])
-        
+
         # Filename of input unit cell
         if 'cell_filename' in params:
             self._settings.set_cell_filename(params['cell_filename'])
-        
+
         # Cutoff frequency
         if 'cutoff_frequency' in params:
             self._settings.set_cutoff_frequency(params['cutoff_frequency'])
-    
+
         # Diagonal displacement
         if 'diag' in params:
             self._settings.set_is_diagonal_displacement(params['diag'])
-    
+
         # Distance of finite displacements introduced
         if 'displacement_distance' in params:
             self._settings.set_displacement_distance(
                 params['displacement_distance'])
-    
+
         # Decimals of values of dynamical matrxi
         if 'dm_decimals' in params:
             self._settings.set_dm_decimals(int(params['dm_decimals']))
-    
+
         # Decimals of values of force constants
         if 'fc_decimals' in params:
             self._settings.set_fc_decimals(int(params['fc_decimals']))
-    
+
         # Enforce translational invariance and index permutation symmetry
         # to force constants?
         if 'fc_symmetry' in params:
             self._settings.set_fc_symmetry_iteration(int(params['fc_symmetry']))
-    
+
         # Frequency unit conversion factor
         if 'frequency_conversion_factor' in params:
             self._settings.set_frequency_conversion_factor(
@@ -391,14 +391,14 @@ class ConfParser(object):
         if 'fpitch' in params:
             self._settings.set_frequency_pitch(params['fpitch'])
 
-        # Number of sampling points for spectram drawing 
+        # Number of sampling points for spectram drawing
         if 'num_frequency_points' in params:
             self._settings.set_num_frequency_points(params['num_frequency_points'])
 
         # Group velocity finite difference
-        if 'gv_delta_q' in params: 
+        if 'gv_delta_q' in params:
             self._settings.set_group_velocity_delta_q(params['gv_delta_q'])
-            
+
         # Mesh sampling numbers
         if 'mesh_numbers' in params:
             self._settings.set_mesh_numbers(params['mesh_numbers'])
@@ -406,11 +406,11 @@ class ConfParser(object):
         # Is getting eigenvectors?
         if 'is_eigenvectors' in params:
             self._settings.set_is_eigenvectors(params['is_eigenvectors'])
-    
+
         # Is reciprocal mesh symmetry searched?
         if 'is_mesh_symmetry' in params:
             self._settings.set_is_mesh_symmetry(params['is_mesh_symmetry'])
-    
+
         # Non analytical term correction?
         if 'is_nac' in params:
             self._settings.set_is_nac(params['is_nac'])
@@ -418,43 +418,43 @@ class ConfParser(object):
         # Is rotational invariance ?
         if 'is_rotational' in params:
             self._settings.set_is_rotational_invariance(params['is_rotational'])
-    
+
         # Is crystal symmetry searched?
         if 'is_symmetry' in params:
             self._settings.set_is_symmetry(params['is_symmetry'])
-    
+
         # Tetrahedron method
         if 'is_tetrahedron_method' in params:
             self._settings.set_is_tetrahedron_method(
                 params['is_tetrahedron_method'])
-            
+
         # Is translational invariance ?
         if 'is_translation' in params:
             self._settings.set_is_translational_symmetry(
                 params['is_translation'])
-            
+
         # Trigonal displacement
         if 'is_trigonal_displacement' in params:
             self._settings.set_is_trigonal_displacement(
                 params['is_trigonal_displacement'])
-    
+
         # Magnetic moments
         if 'magmom' in params:
             self._settings.set_magnetic_moments(params['magmom'])
-    
+
         # Atomic mass
         if 'mass' in params:
             self._settings.set_masses(params['mass'])
-    
+
         # Plus minus displacement
         if 'pm_displacement' in params:
             self._settings.set_is_plusminus_displacement(
                 params['pm_displacement'])
-    
+
         # Primitive cell shape
         if 'primitive_axis' in params:
             self._settings.set_primitive_matrix(params['primitive_axis'])
-    
+
         # Q-points mode
         if 'qpoints' in params:
             if params['qpoints'] is not True:
@@ -463,7 +463,7 @@ class ConfParser(object):
         # q-direction for non analytical term correction
         if 'q_direction' in params:
             self._settings.set_nac_q_direction(params['q_direction'])
-    
+
         # Smearing width
         if 'sigma' in params:
             self._settings.set_sigma(params['sigma'])
@@ -483,16 +483,16 @@ class ConfParser(object):
         # Choice of imposing translational invariance
         if 'tsym_type' in params:
             self._settings.set_tsym_type(params['tsym_type'])
-    
+
         # Band paths
         if 'band_paths' in params:
             if 'band_points' in params:
                 npoints = params['band_points'] - 1
             else:
                 npoints = 50
-                
+
             bands = []
-            
+
             for band_path in params['band_paths']:
                 nd = len(band_path)
                 for i in range(nd - 1):
@@ -518,7 +518,7 @@ class ConfParser(object):
             if line.strip() == '':
                 is_continue = False
                 continue
-            
+
             if line.strip()[0] == '#':
                 is_continue = False
                 continue
@@ -527,7 +527,7 @@ class ConfParser(object):
                 self._confs[left] += line.strip()
                 self._confs[left] = self._confs[left].replace('+++', ' ')
                 is_continue = False
-                
+
             if line.find('=') != -1:
                 left, right = [x.strip() for x in line.split('=')]
                 self._confs[left.lower()] = right
@@ -540,7 +540,7 @@ class ConfParser(object):
             if opt.dest == 'band_indices':
                 if self._options.band_indices is not None:
                     self._confs['band_indices'] = self._options.band_indices
-            
+
             if opt.dest == 'band_paths':
                 if self._options.band_paths is not None:
                     self._confs['band'] = self._options.band_paths
@@ -552,7 +552,7 @@ class ConfParser(object):
             if opt.dest == 'cell_filename':
                 if self._options.cell_filename is not None:
                     self._confs['cell_filename'] = self._options.cell_filename
-            
+
             if opt.dest == 'cutoff_frequency':
                 if self._options.cutoff_frequency:
                     self._confs['cutoff_frequency'] = self._options.cutoff_frequency
@@ -583,7 +583,7 @@ class ConfParser(object):
             if opt.dest == 'is_eigenvectors':
                 if self._options.is_eigenvectors:
                     self._confs['eigenvectors'] = '.true.'
-                    
+
             if opt.dest == 'is_nac':
                 if self._options.is_nac:
                     self._confs['nac'] = '.true.'
@@ -603,7 +603,7 @@ class ConfParser(object):
             if opt.dest == 'is_translational_symmetry':
                 if self._options.is_translational_symmetry:
                     self._confs['translation'] = '.true.'
-                    
+
             if opt.dest == 'tsym_type':
                 if self._options.tsym_type:
                     self._confs['tsym_type'] = self._options.tsym_type
@@ -649,7 +649,7 @@ class ConfParser(object):
             if opt.dest == 'primitive_axis':
                 if self._options.primitive_axis:
                     self._confs['primitive_axis'] = self._options.primitive_axis
-                    
+
             if opt.dest == 'supercell_dimension':
                 if self._options.supercell_dimension:
                     self._confs['dim'] = self._options.supercell_dimension
@@ -669,7 +669,7 @@ class ConfParser(object):
             if opt.dest == 'tmax':
                 if self._options.tmax:
                     self._confs['tmax'] = self._options.tmax
-                    
+
             if opt.dest == 'tmin':
                 if self._options.tmin:
                     self._confs['tmin'] = self._options.tmin
@@ -743,7 +743,7 @@ class ConfParser(object):
             if conf_key == 'displacement_distance':
                 self.set_parameter('displacement_distance',
                                    float(confs['displacement_distance']))
-                
+
             if conf_key == 'diag':
                 if confs['diag'].lower() == '.false.':
                     self.set_parameter('diag', False)
@@ -778,7 +778,7 @@ class ConfParser(object):
             if conf_key == 'mesh_symmetry':
                 if confs['mesh_symmetry'].lower() == '.false.':
                     self.set_parameter('is_mesh_symmetry', False)
-                
+
             if conf_key == 'translation':
                 if confs['translation'].lower() == '.true.':
                     self.set_parameter('is_translation', True)
@@ -865,7 +865,7 @@ class ConfParser(object):
                     self.set_parameter('is_tetrahedron_method', False)
                 if confs['tetrahedron'].lower() == '.true.':
                     self.set_parameter('is_tetrahedron_method', True)
-                
+
             if conf_key == 'tmin':
                 val = float(confs['tmin'])
                 self.set_parameter('tmin', val)
@@ -971,13 +971,13 @@ class PhonopySettings(Settings):
 
     def set_anime_shift(self, shift):
         self._anime_shift = shift
-    
+
     def get_anime_shift(self):
         return self._anime_shift
 
     def set_anime_type(self, anime_type):
         self._anime_type = anime_type
-    
+
     def get_anime_type(self):
         return self._anime_type
 
@@ -1036,13 +1036,13 @@ class PhonopySettings(Settings):
 
     def set_irreps_q_point(self, q_point):
         self._irreps_q_point = q_point
-        
+
     def get_irreps_q_point(self):
         return self._irreps_q_point
 
     def set_irreps_tolerance(self, tolerance):
         self._irreps_tolerance = tolerance
-        
+
     def get_irreps_tolerance(self):
         return self._irreps_tolerance
 
@@ -1221,7 +1221,7 @@ class PhonopySettings(Settings):
 
     def set_show_irreps(self, show_irreps):
         self._show_irreps = show_irreps
-        
+
     def get_show_irreps(self):
         return self._show_irreps
 
@@ -1239,10 +1239,10 @@ class PhonopySettings(Settings):
 
     def set_xyz_projection(self, xyz_projection):
         self._xyz_projection = xyz_projection
-        
+
     def get_xyz_projection(self):
         return self._xyz_projection
-        
+
 class PhonopyConfParser(ConfParser):
     def __init__(self, filename=None, options=None, option_list=None):
         ConfParser.__init__(self, filename, options, option_list)
@@ -1264,7 +1264,7 @@ class PhonopyConfParser(ConfParser):
             if opt.dest == 'is_gamma_center':
                 if self._options.is_gamma_center:
                     self._confs['gamma_center'] = '.true.'
-    
+
             if opt.dest == 'is_dos_mode':
                 if self._options.is_dos_mode:
                     self._confs['dos'] = '.true.'
@@ -1276,7 +1276,7 @@ class PhonopyConfParser(ConfParser):
             if opt.dest == 'xyz_projection':
                 if self._options.xyz_projection:
                     self._confs['xyz_projection'] = '.true.'
-    
+
             if opt.dest == 'fc_computation_algorithm':
                 if self._options.fc_computation_algorithm is not None:
                     self._confs['fc_computation_algorithm'] = self._options.fc_computation_algorithm
@@ -1316,12 +1316,12 @@ class PhonopyConfParser(ConfParser):
             if opt.dest == 'is_thermal_displacement_matrices':
                 if self._options.is_thermal_displacement_matrices:
                     self._confs['tdispmat'] = '.true.'
-                    
+
             if opt.dest == 'thermal_displacement_matrices_cif':
                 opt_tdm_cif = self._options.thermal_displacement_matrices_cif
                 if opt_tdm_cif:
                     self._confs['tdispmat_cif'] = opt_tdm_cif
-                    
+
             if opt.dest == 'projection_direction':
                 opt_proj_dir = self._options.projection_direction
                 if opt_proj_dir is not None:
@@ -1330,23 +1330,23 @@ class PhonopyConfParser(ConfParser):
             if opt.dest == 'is_read_force_constants':
                 if self._options.is_read_force_constants:
                     self._confs['force_constants'] = 'read'
-    
+
             if opt.dest == 'write_force_constants':
                 if self._options.write_force_constants:
                     self._confs['force_constants'] = 'write'
-    
+
             if opt.dest == 'is_hdf5':
                 if self._options.is_hdf5:
                     self._confs['hdf5'] = '.true.'
-    
+
             if opt.dest == 'write_dynamical_matrices':
                 if self._options.write_dynamical_matrices:
                     self._confs['writedm'] = '.true.'
-    
+
             if opt.dest == 'write_mesh':
                 if not self._options.write_mesh:
                     self._confs['write_mesh'] = '.false.'
-    
+
             if opt.dest == 'irreps_qpoint':
                 if self._options.irreps_qpoint is not None:
                     self._confs['irreps'] = self._options.irreps_qpoint
@@ -1389,7 +1389,7 @@ class PhonopyConfParser(ConfParser):
 
             # Overwrite
             if opt.dest == 'is_check_symmetry':
-                if self._options.is_check_symmetry: 
+                if self._options.is_check_symmetry:
                     # Dummy 'dim' setting for sym-check
                     self._confs['dim'] = '1 1 1'
 
@@ -1438,7 +1438,7 @@ class PhonopyConfParser(ConfParser):
                 if len(vals) < 3:
                     self.setting_error("MP_SHIFT is incorrectly set.")
                 self.set_parameter('mp_shift', vals[:3])
-                
+
             if conf_key == 'time_reversal_symmetry':
                 if confs['time_reversal_symmetry'].lower() == '.false.':
                     self.set_parameter('is_time_reversal_symmetry', False)
@@ -1491,7 +1491,7 @@ class PhonopyConfParser(ConfParser):
             if conf_key == 'little_cogroup':
                 if confs['little_cogroup'].lower() == '.true.':
                     self.set_parameter('little_cogroup', True)
-                    
+
             # DOS
             if conf_key == 'pdos':
                 vals = []
@@ -1585,7 +1585,7 @@ class PhonopyConfParser(ConfParser):
 
             if conf_key == 'moment_order':
                 self.set_parameter('moment_order', int(confs['moment_order']))
-                    
+
             # Use Lapack solver via Lapacke
             if conf_key == 'lapack_solver':
                 if confs['lapack_solver'].lower() == '.true.':
@@ -1614,7 +1614,7 @@ class PhonopyConfParser(ConfParser):
                     modulation['delta_q'] = delta_q
                 if len(header) == 7:
                     modulation['order'] = int(header[6])
-                
+
             vals = []
             for phonon_mode in mod_list[1:]:
                 mode_conf = [x for x in phonon_mode.split()]
@@ -1650,7 +1650,7 @@ class PhonopyConfParser(ConfParser):
         if 'create_displacements' in params:
             if params['create_displacements']:
                 self._settings.set_run_mode('displacements')
-    
+
         # Is force constants written or read?
         if 'force_constants' in params:
             if params['force_constants'] == 'write':
@@ -1674,7 +1674,7 @@ class PhonopyConfParser(ConfParser):
         # Cutoff radius of force constants
         if 'cutoff_radius' in params:
             self._settings.set_cutoff_radius(params['cutoff_radius'])
-    
+
         # Mesh
         if 'mesh_numbers' in params:
             self._settings.set_run_mode('mesh')
@@ -1693,7 +1693,7 @@ class PhonopyConfParser(ConfParser):
             if 'is_gamma_center' in params:
                 if params['is_gamma_center']:
                     self._settings.set_is_gamma_center(True)
-    
+
         # band mode
         if 'band_paths' in params:
             self._settings.set_run_mode('band')
@@ -1707,7 +1707,7 @@ class PhonopyConfParser(ConfParser):
         # band & mesh mode
         if 'mesh_numbers' in params and 'band_paths' in params:
             self._settings.set_run_mode('band_mesh')
-    
+
         # Q-points mode
         if 'qpoints' in params:
             self._settings.set_run_mode('qpoints')
@@ -1720,15 +1720,15 @@ class PhonopyConfParser(ConfParser):
         # Whether write out mesh.yaml or mesh.hdf5
         if 'write_mesh' in params:
             self._settings.set_write_mesh(params['write_mesh'])
-                
+
         # q-vector direction at q->0 for non-analytical term correction
         if 'q_direction' in params:
             self._settings.set_nac_q_direction(params['q_direction'])
-            
+
         # Anime mode
         if 'anime_type' in params:
             self._settings.set_anime_type(params['anime_type'])
-    
+
         if 'anime' in params:
             self._settings.set_run_mode('anime')
             anime_type = self._settings.get_anime_type()
@@ -1744,7 +1744,7 @@ class PhonopyConfParser(ConfParser):
             if len(params['anime']) == 6:
                 self._settings.set_anime_shift(
                     [fracval(x) for x in params['anime'][3:6]])
-    
+
         # Modulation mode
         if 'modulation' in params:
             self._settings.set_run_mode('modulation')
@@ -1760,17 +1760,17 @@ class PhonopyConfParser(ConfParser):
 
             if 'show_irreps' in params:
                 self._settings.set_show_irreps(params['show_irreps'])
-                
+
             if 'little_cogroup' in params:
                 self._settings.set_is_little_cogroup(params['little_cogroup'])
-                
+
         # DOS
         if 'dos_range' in params:
             fmin =  params['dos_range'][0]
             fmax =  params['dos_range'][1]
             fpitch = params['dos_range'][2]
             self._settings.set_dos_range(fmin, fmax, fpitch)
-    
+
         if 'dos' in params:
             self._settings.set_is_dos_mode(params['dos'])
 
@@ -1817,7 +1817,7 @@ class PhonopyConfParser(ConfParser):
         # Use imaginary frequency as real for thermal property calculation
         if 'pretend_real' in params:
             self._settings.set_pretend_real(params['pretend_real'])
-    
+
         # Thermal displacements
         if 'tdisp' in params:
             if params['tdisp']:
@@ -1845,12 +1845,12 @@ class PhonopyConfParser(ConfParser):
                         params['tdispmat_cif'])
 
         # Thermal distances
-        if 'tdistance' in params: 
+        if 'tdistance' in params:
             self._settings.set_is_thermal_distances(True)
             self._settings.set_is_eigenvectors(True)
             self._settings.set_is_mesh_symmetry(False)
             self._settings.set_thermal_atom_pairs(params['tdistance'])
-    
+
         # Group velocity
         if 'is_group_velocity' in params:
             self._settings.set_is_group_velocity(params['is_group_velocity'])

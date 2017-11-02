@@ -38,7 +38,7 @@ import sysconfig
 config_var = sysconfig.get_config_var("CFLAGS")
 if config_var is not None and "-Werror=declaration-after-statement" in config_var:
     os.environ['CFLAGS'] = config_var.replace(
-        "-Werror=declaration-after-statement", "")    
+        "-Werror=declaration-after-statement", "")
 
 ######################
 # _phonopy extension #
@@ -94,6 +94,7 @@ extension_spglib = Extension(
              'c/spglib/arithmetic.c',
              'c/spglib/cell.c',
              'c/spglib/delaunay.c',
+             'c/spglib/determination.c',
              'c/spglib/hall_symbol.c',
              'c/spglib/kgrid.c',
              'c/spglib/kpoint.c',
@@ -186,5 +187,3 @@ if __name__ == '__main__':
               provides=['phonopy'],
               scripts=scripts_phonopy,
               ext_modules=ext_modules_phonopy)
-
-
