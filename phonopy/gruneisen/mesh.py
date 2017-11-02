@@ -33,41 +33,40 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
+from .core import GruneisenBase
 from phonopy.structure.grid_points import get_qpoints
 from phonopy.phonon.thermal_properties import mode_cv
-from phonopy.gruneisen import Gruneisen
-from phonopy.units import THzToEv
+from phonopy.units import THzToEv, VaspToTHz
 
-class Mesh(object):
+class GruneisenMesh(GruneisenBase):
     def __init__(self,
-                 phonon,
-                 phonon_plus,
-                 phonon_minus,
+                 dynmat,
+                 dynmat_plus,
+                 dynmat_minus,
                  mesh,
                  shift=None,
                  is_time_reversal=True,
                  is_gamma_center=False,
-                 is_mesh_symmetry=True):
-        self._phonon = phonon
+                 is_mesh_symmetry=True,
+                 rotations=None, # Point group operations in real space
+                 factor=VaspToTHz):
+        GruneisenBase.__init__(self,
+                               dynmat,
+                               dynmat_plus,
+                               dynmat_minus)
         self._mesh = np.array(mesh, dtype='intc')
-        self._factor = phonon.get_unit_conversion_factor(),
-        primitive = phonon.get_primitive()
-        primitive_symmetry = phonon.get_primitive_symmetry()
-        gruneisen = Gruneisen(phonon.get_dynamical_matrix(),
-                              phonon_plus.get_dynamical_matrix(),
-                              phonon_minus.get_dynamical_matrix())
+        self._factor = factor
+        primitive = dynmat.get_primitive()
         self._qpoints, self._weights = get_qpoints(
             self._mesh,
             np.linalg.inv(primitive.get_cell()),
             q_mesh_shift=shift,
             is_time_reversal=is_time_reversal,
             is_gamma_center=is_gamma_center,
-            rotations=primitive_symmetry.get_pointgroup_operations(),
+            rotations=rotations,
             is_mesh_symmetry=is_mesh_symmetry)
-        gruneisen.set_qpoints(self._qpoints)
-        self._gamma = gruneisen.get_gruneisen()
-        self._gamma_prime = gruneisen.get_gamma_prime()
-        self._eigenvalues = gruneisen.get_eigenvalues()
+        self.set_qpoints(self._qpoints)
+        self._gamma = self._gruneisen
         self._frequencies = np.sqrt(
             abs(self._eigenvalues)) * np.sign(self._eigenvalues) * self._factor
 
@@ -80,9 +79,6 @@ class Mesh(object):
     def get_mesh_numbers(self):
         return self._mesh
 
-    def get_phonon(self):
-        return self._phonon
-
     def get_qpoints(self):
         return self._qpoints
 
@@ -91,6 +87,9 @@ class Mesh(object):
 
     def get_eigenvalues(self):
         return self._eigenvalues
+
+    def get_eigenvectors(self):
+        return self._eigenvectors
 
     def get_frequencies(self):
         return self._frequencies
@@ -132,11 +131,11 @@ class Mesh(object):
         w.close()
 
     def plot(self,
+             plt,
              cutoff_frequency=None,
              color_scheme=None,
              marker='o',
              markersize=None):
-        import matplotlib.pyplot as plt
         n = len(self._gamma.T) - 1
         for i, (g, freqs) in enumerate(zip(self._gamma.T,
                                            self._frequencies.T)):
@@ -172,9 +171,6 @@ class Mesh(object):
                     plt.plot(freqs, g, marker, markersize=markersize)
                 else:
                     plt.plot(freqs, g, marker)
-
-        return plt
-
 
 def get_thermodynamic_Gruneisen_parameter(gammas,
                                           frequencies,

@@ -699,7 +699,15 @@ if run_mode == 'qpoints':
 # Band structure and mesh sampling
 elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
     if run_mode == 'band' or run_mode == 'band_mesh':
-        bands = settings.get_bands()
+        from phonopy.phonon.band_structure import get_band_qpoints
+
+        band_paths = settings.get_band_paths()
+        if settings.get_band_points() is None:
+            npoints = 51
+        else:
+            npoints = settings.get_band_points()
+        bands = get_band_qpoints(band_paths, npoints)
+
         if log_level > 0:
             print("Reciprocal space paths in reduced coordinates:")
             for band in bands:
@@ -761,7 +769,7 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
                     print("Number of q-points on sampling mesh: %d" %
                           weights.shape[0])
                 print("Calculating phonons on sampling mesh...")
-    
+
             phonon.run_mesh()
 
             if settings.get_write_mesh():
