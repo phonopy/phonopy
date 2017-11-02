@@ -34,7 +34,7 @@
 
 from phonopy.gruneisen import GruneisenMesh
 from phonopy.gruneisen import GruneisenBandStructure
-from phonopy.gruneisen.thermal_properties import ThermalProperties as GruneisenThermalProperties
+from phonopy.gruneisen import GruneisenThermalProperties
 
 class PhonopyGruneisen(object):
     def __init__(self,

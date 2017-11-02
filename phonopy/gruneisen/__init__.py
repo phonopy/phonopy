@@ -34,3 +34,4 @@
 
 from .mesh import GruneisenMesh
 from .band_structure import GruneisenBandStructure
+from .thermal_properties import GruneisenThermalProperties

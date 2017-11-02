@@ -33,9 +33,9 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
-from phonopy.phonon.thermal_properties import ThermalProperties as PhononThermalProperties
+from phonopy.phonon.thermal_properties import ThermalProperties
 
-class ThermalProperties(object):
+class GruneisenThermalProperties(object):
     def __init__(self,
                  gruneisen_mesh,
                  volumes,
@@ -69,9 +69,9 @@ class ThermalProperties(object):
 
     def _get_thermal_properties_at_V(self, V):
         frequencies = self._get_frequencies_at_V(V)
-        tp = PhononThermalProperties(frequencies,
-                                     weights=self._weights,
-                                     cutoff_frequency=self._cutoff_frequency)
+        tp = ThermalProperties(frequencies,
+                               weights=self._weights,
+                               cutoff_frequency=self._cutoff_frequency)
         return tp
 
     def _get_frequencies_at_V(self, V):
@@ -89,7 +89,7 @@ class ThermalProperties(object):
             -2 * ((self._gamma - g_prime * V0) * np.log(V / V0)
                   + g_prime * (V - V0)))
         return np.sqrt(abs(eigvals)) * np.sign(eigvals) * self._factor
-                                    
+
     def _get_frequencies_at_V_Taylor_expansion_to_1st_order(self, V):
         return self._frequencies * (
             1.0
