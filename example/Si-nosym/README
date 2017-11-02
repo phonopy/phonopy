@@ -1,0 +1,17 @@
+Si example with 'SYMMETRY = .FALSE.'. Normally disabling symmetry is not useful. So the reason this setting exists is for the test, which whould depend on each detailed reason.
+
+Usage:
+
+A set of supercells with displacements and its disp.yaml are created by
+
+% phonopy --dim="2 2 2" -d --nosym
+
+There are 12 displacements, which means 6 directions for each atom in the input unit cell. FORCE_SETS is created by
+
+% phonopy -f vasprun_xmls/disp-{001..012}/vasprun.xml
+
+Phonopy should be run with 'SYMMETRY = .FALSE.' or '--nosym'. 
+
+% phonopy mesh.conf 
+
+The result of the phonopy calculation may be compared with the example found in Si directory.
