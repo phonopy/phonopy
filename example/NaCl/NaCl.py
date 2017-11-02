@@ -68,8 +68,11 @@ append_band(bands, [0.5, 0.5, 0.0], [0.0, 0.0, 0.0])
 append_band(bands, [0.0, 0.0, 0.0], [0.5, 0.5, 0.5])
 phonon.set_band_structure(bands)
 q_points, distances, frequencies, eigvecs = phonon.get_band_structure()
-for q, d, freq in zip(q_points, distances, frequencies):
-    print("%s %s %s" % (q, d, freq))
+for q_path, d_path, freq_path in zip(q_points, distances, frequencies):
+    for q, d, freq in zip(q_path, d_path, freq_path):
+        print(("%10.5f  %5.2f %5.2f %5.2f " + (" %7.3f" * len(freq)))
+              % ((d, q[0], q[1], q[2]) + tuple(freq)))
+
 phonon.plot_band_structure().show()
 
 # Mesh sampling 20x20x20
