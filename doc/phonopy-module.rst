@@ -52,7 +52,7 @@ argument. The supercells with displacements are obtained by
    import numpy as np
    from phonopy import Phonopy
    from phonopy.structure.atoms import PhonopyAtoms
-   
+
    a = 5.404
    unitcell = PhonopyAtoms(symbols=['Si'] * 8,
                            cell=(np.eye(3) * a),
@@ -80,7 +80,7 @@ The frequency unit conversion factor to THz has to be set by using the ``factor`
 keyword in ``Phonopy`` class. The factors are ``VaspToTHz`` for VASP,
 ``Wien2kToTHz`` for Wien2k, ``AbinitToTHz`` for Abinit,
 ``PwscfToTHz`` for Pwscf, ``ElkToTHz`` for Elk, ``SiestaToTHz``
-for Siesta, and ``CrystalToTHz for CRYSTAL``. ``VaspToTHz`` is the default value. 
+for Siesta, and ``CrystalToTHz for CRYSTAL``. ``VaspToTHz`` is the default value.
 For example::
 
    from phonopy.units import AbinitToTHz
@@ -91,7 +91,7 @@ For example::
                                       [0.5, 0, 0.5],
                                       [0.5, 0.5, 0]],
                     distance=0.03,
-		    factor=AbinitToTHz)
+                    factor=AbinitToTHz)
 
 Some more information on physical unit conversion is found at
 :ref:`frequency_conversion_factor_tag`,
@@ -139,7 +139,7 @@ From the set of displacements and forces, force constants internally
 with calculated suuprcell sets of forces by
 
 ::
-   
+
    phonon.produce_force_constants()
 
 If you have force constants and don't need to create force constants
@@ -153,7 +153,7 @@ The force constants matrix is given in 4 dimensional array
 (better to be a numpy array of ``dtype='double', order='C'``).
 The shape of force constants matrix is ``(N, N, 3, 3)`` where ``N``
 is the number of atoms in the supercell and 3 gives Cartesian axes.
-   
+
 Band structure
 """""""""""""""
 
@@ -179,14 +179,14 @@ case of VASP to transform to THz, the factor is 15.633302.
    for i in range(51):
        band.append(q_start + (q_end - q_start) / 50 * i)
    bands.append(band)
-   
+
    q_start  = np.array([0.0, 0.0, 0.0])
    q_end    = np.array([0.5, 0.0, 0.0])
    band = []
    for i in range(51):
        band.append(q_start + (q_end - q_start) / 50 * i)
    bands.append(band)
-   
+
    phonon.set_band_structure(bands)
    phonon.plot_band_structure().show()
 
@@ -196,9 +196,9 @@ To obtain eigenvectors, it is necessary to inform to store
 eigenvectors by::
 
    phonon.set_band_structure(bands, is_eigenvectors=True)
-   
 
-   
+
+
 Mesh sampling
 """"""""""""""
 
@@ -253,7 +253,7 @@ temperaturs, Helmholtz free energy, entropy, and heat capacity.
                                  t_min=0)
    for t, free_energy, entropy, cv in np.array(phonon.get_thermal_properties()).T:
        print ("%12.3f " + "%15.7f" * 3) % ( t, free_energy, entropy, cv )
-   
+
    phonon.plot_thermal_properties().show()
 
 
@@ -339,7 +339,7 @@ Mesh sampling
            for vec in eigvecs_at_q.T:
                print vec
 
-       
+
 .. _phonopy_Atoms:
 
 ``PhonopyAtoms`` class
@@ -352,7 +352,7 @@ The usable keywords in the initialization are::
 
    symbols=None,
    positions=None,
-   numbers=None, 
+   numbers=None,
    masses=None,
    scaled_positions=None,
    cell=None
@@ -392,9 +392,9 @@ Atomic positions in fractional coordinates.
 
 ::
 
-  [ [ x1_a, x1_b, x1_c ], 
-    [ x2_a, x2_b, x2_c ], 
-    [ x3_a, x3_b, x3_c ], 
+  [ [ x1_a, x1_b, x1_c ],
+    [ x2_a, x2_b, x2_c ],
+    [ x3_a, x3_b, x3_c ],
     ...                   ]
 
 ``positions``
@@ -517,7 +517,7 @@ convention, the transformation is given by
 
    ( \mathbf{a}_\mathrm{s} \; \mathbf{b}_\mathrm{s} \; \mathbf{c}_\mathrm{s} )
    =  ( \mathbf{a}_\mathrm{u} \; \mathbf{b}_\mathrm{u} \;
-   \mathbf{c}_\mathrm{u} ) M_\mathrm{s} 
+   \mathbf{c}_\mathrm{u} ) M_\mathrm{s}
 
 where :math:`\mathbf{a}_\mathrm{u}`, :math:`\mathbf{b}_\mathrm{u}`,
 and :math:`\mathbf{c}_\mathrm{u}` are the column vectors of the
@@ -545,3 +545,51 @@ Symmetry search tolerance (often the name ``symprec`` is used in
 phonopy) is used to determine symmetry operations of the crystal
 structures. The physical unit follows that of input crystal structure.
 
+Getting parameters for non-analytical term correction
+------------------------------------------------------
+
+Parameters for non-analytical term correction may be made as
+follows. This example assumes that the user knows what are the unit
+cell and primitive cell and that the Born effective charge and
+dielectric constant were calculated using VASP code for the unit cell.
+
+::
+
+    import io
+    import numpy as np
+    from phonopy import Phonopy
+    from phonopy.units import Hartree, Bohr
+    from phonopy.structure.atoms import PhonopyAtoms
+    from phonopy.structure.symmetry import symmetrize_borns_and_epsilon
+    from phonopy.interface.vasp import VasprunxmlExpat
+
+    with io.open("vasprun.xml", "rb") as f:
+        vasprun = VasprunxmlExpat(f)
+        if vasprun.parse():
+            epsilon = vasprun.get_epsilon()
+            borns = vasprun.get_born()
+            lattice = vasprun.get_lattice()[-1]
+            points = vasprun.get_points()[-1]
+            symbols = vasprun.get_symbols()
+            unit_cell = PhonopyAtoms(symbols=symbols,
+                                     scaled_positions=points,
+                                     cell=lattice)
+
+    symprec = 1e-5
+    phonon = Phonopy(unit_cell,
+                     np.diag([1, 1, 1]),
+                     primitive_matrix=[[0, 0.5, 0.5],
+                                       [0.5, 0, 0.5],
+                                       [0.5, 0.5, 0]],
+                     symprec=symprec)
+
+    borns_, epsilon_ = symmetrize_borns_and_epsilon(
+        borns, epsilon, unit_cell, symprec=symprec)
+    np.testing.assert_allclose(borns, borns_, atol=1e-1)
+    np.testing.assert_allclose(epsilon, epsilon_, atol=1e-1)
+
+    pcell = phonon.get_primitive()
+    p2s_map = pcell.get_primitive_to_supercell_map()
+    nac_params = {'born': np.array([borns_[i] for i in p2s_map]),
+                  'factor': Hartree * Bohr,
+                  'dielectric': epsilon_}

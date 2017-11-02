@@ -21,16 +21,17 @@ The Wien2k-phonopy calculation works as follows:
    stored in ``case-xxx`` directories, then to be calculated using
    Wien2k.
 
-2) Calculate forces on atoms in the supercells with
-   displacements. Select to use ``case.struct_nn`` file when running
-   ``init_lapw``. In the Wien2k calculations, the force convergence
+2) Calculate forces on atoms in the supercells with displacements. It
+   is necessary to use ``case.struct_nn`` file when running
+   ``init_lapw``. Note that ``case.struct_sgroup`` file can't be used
+   with phonopy. In the Wien2k calculations, the force convergence
    option of ``-fc`` has to be specified to obtain ``total forces``. A
    first attempt of the force convergence criterion may be 0.1
    (mRy/a.u.). It is recommended to try more strict convergence
    criteria with saving one by one using ``save_lapw``.
 
 3) Create ``FORCE_SETS``
-   
+
    * Use ``scf2forces`` that is found at
      http://www.wien2k.at/reg_user/unsupported/.
    * Or try experimetal support of ``-f`` option::
@@ -64,4 +65,3 @@ Phonopy can read only the **P lattice format**. Therefore you have to
 convert your struct file to that with the P lattice format. This may
 be done using ``supercell`` script in the Wien2k package by making
 1x1x1 supercell.
-

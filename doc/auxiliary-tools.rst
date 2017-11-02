@@ -34,12 +34,12 @@ To obtain a simple text format data::
 ``phonopy-pdosplot``
 ---------------------
 
-Partial density of states (PDOS) are plotted. 
+Partial density of states (PDOS) are plotted.
 
 ``-i`` option is used as
 
 ::
-   
+
    phonopy-pdosplot -i '1 2 4 5, 3 6' -o 'pdos.pdf' partial_dos.dat
 
 The indices and comma in '1 2 3 4, 5 6' mean as follows. The indices
@@ -83,7 +83,7 @@ This is used for two purposes.
 The first argument is the displacement file (``disp.yaml`` type). The
 default file name is ``disp.yaml``.
 
-``-a``, ``--amplitude``, ``-s``, ``-o``, ``--overwite`` 
+``-a``, ``--amplitude``, ``-s``, ``-o``, ``--overwite``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ``-o`` is used to specify the output file name of the new displacement
@@ -130,9 +130,11 @@ equivalent or not.
 ----------------------
 
 This script is used to create a ``BORN`` style file from VASP output
-file of ``OUTCAR``.  The first and second arguments are ``OUTCAR``
-type file and ``POSCAR`` type file, respectively. If both are omitted,
-``POSCAR`` and ``OUTCAR`` in current directory are read.
+file of ``vasprun.xml``.  The first argument is a ``vasprun.xml``
+file.  If it is ommited, ``vasprun.xml`` at current directory are
+read. The Born effective charges and dielectric tensor are symmetrized
+as default. To prevent symmetrization, ``--nost`` option has to be
+specified.
 
 ::
 
@@ -140,7 +142,7 @@ type file and ``POSCAR`` type file, respectively. If both are omitted,
 
 ::
 
-   phonopy-vasp-born --st OUTCAR POSCAR
+   phonopy-vasp-born --nost
 
 
 ``--pa``, ``--primitive_axis``
@@ -153,21 +155,24 @@ This is same as :ref:`primitive_axis_tag`.
 
 This is same as :ref:`dimension_tag`.
 
-``--st``
-^^^^^^^^^
+``--nost``
+^^^^^^^^^^^
 
-Dielectric constant and Born effective charge tensors are symmetrized.
+Dielectric constant and Born effective charge tensors are not
+symmetrized.
 
-``--vasprunxml``
+``--outcar``
 ^^^^^^^^^^^^^^^^^
 
-Read ``vasprun.xml`` instead of ``OUTCAR``. If no argument is
-specified, ``vasprun.xml`` is read.
+Read ``OUTCAR`` instead of ``vasprun.xml``. Without specifying
+arguments, ``OUTCAR`` and ``POSCAR`` at current directory are
+read. ``POSCAR`` information is necessary in contrast to reading
+``vasprun.xml`` where the unit cell structure is also read from it.
 
 ::
 
-   phonopy-vasp-born --vasprunxml
+   phonopy-vasp-born --outcar
 
 ::
 
-   phonopy-vasp-born --st --vasprunxml vasprun.xml
+   phonopy-vasp-born --nost --outcar OUTCAR POSCAR

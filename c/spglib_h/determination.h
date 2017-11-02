@@ -1,4 +1,4 @@
-/* Copyright (C) 2011 Atsushi Togo */
+/* Copyright (C) 2017 Atsushi Togo */
 /* All rights reserved. */
 
 /* This file is part of spglib. */
@@ -32,27 +32,24 @@
 /* ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE */
 /* POSSIBILITY OF SUCH DAMAGE. */
 
-#ifndef __refinement_H__
-#define __refinement_H__
+#ifndef __determination_H__
+#define __determination_H__
 
 #include "cell.h"
-#include "symmetry.h"
+#include "primitive.h"
+#include "refinement.h"
 #include "spacegroup.h"
 
 typedef struct {
-  Cell *bravais;
-  Symmetry *symmetry;
-  int *wyckoffs;
-  int *equivalent_atoms;
-  int *std_mapping_to_primitive;
-} ExactStructure;
+  Primitive *primitive;
+  Spacegroup *spacegroup;
+  ExactStructure *exact_structure;
+} DataContainer;
 
-ExactStructure *
-ref_get_exact_structure_and_symmetry(const Cell * primitive,
-                                     const Cell * cell,
-                                     SPGCONST Spacegroup * spacegroup,
-                                     const int * mapping_table,
-                                     const double symprec);
-void ref_free_exact_structure(ExactStructure *exstr);
+DataContainer * det_determine_all(const Cell * cell,
+                                  const int hall_number,
+                                  const double symprec,
+                                  const double angle_tolerance);
+void det_free_container(DataContainer * container);
 
 #endif

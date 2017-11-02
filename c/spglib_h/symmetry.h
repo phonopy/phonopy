@@ -57,12 +57,12 @@ Symmetry * sym_get_operation(const Cell * primitive,
 Symmetry * sym_reduce_operation(const Cell * primitive,
                                 const Symmetry * symmetry,
                                 const double symprec,
-				const double angle_tolerance);
+                                const double angle_tolerance);
 VecDBL * sym_get_pure_translation(const Cell *cell,
-				  const double symprec);
+                                  const double symprec);
 VecDBL * sym_reduce_pure_translation(const Cell * cell,
-				     const VecDBL * pure_trans,
-				     const double symprec,
-				     const double angle_tolerance);
+                                     const VecDBL * pure_trans,
+                                     const double symprec,
+                                     const double angle_tolerance);
 
 #endif

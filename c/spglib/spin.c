@@ -95,7 +95,7 @@ static Symmetry * get_collinear_operations(const Symmetry *sym_nonspin,
   rot = mat_alloc_MatINT(sym_nonspin->size);
   trans = mat_alloc_VecDBL(sym_nonspin->size);
   num_sym = 0;
-  
+
   for (i = 0; i < sym_nonspin->size; i++) {
     sign = 0; /* Set sign as undetermined */
     is_found = 1;
@@ -172,7 +172,7 @@ static int set_equivalent_atoms(int * equiv_atoms,
   if ((mapping_table = get_mapping_table(symmetry, cell, symprec)) == NULL) {
     return 0;
   }
-  
+
   for (i = 0; i < cell->size; i++) {
     if (mapping_table[i] != i) {
       continue;
