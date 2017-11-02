@@ -360,22 +360,23 @@ if options.plot_graph:
         mpl.use('Agg')
 
 if options.band_paths:
+    from phonopy.phonon.band_structure import get_band_qpoints
+
     band_paths = []
     for path_str in options.band_paths.split(','):
-        paths = np.array(
-            [fracval(x) for x in path_str.split()]).reshape(-1, 3)
-        for i in range(len(paths) - 1):
-            band_paths.append([paths[i], paths[i + 1]])
-
-    gruneisen.set_band_structure(band_paths,
-                                 options.band_points)
+        paths = np.array([fracval(x) for x in path_str.split()])
+        if len(paths) % 3 != 0 or len(paths) < 6:
+            print("Band path is incorrectly set.")
+            sys.exit(1)
+        band_paths.append(paths.reshape(-1, 3))
+    bands = get_band_qpoints(band_paths, options.band_points)
+    gruneisen.set_band_structure(bands)
     gruneisen.write_yaml_band_structure()
     if options.plot_graph:
         plt = gruneisen.plot_band_structure(epsilon=options.cutoff_wave_vector,
                                             color_scheme=options.color_scheme)
         if options.title is not None:
             plt.suptitle(options.title)
-
 
 elif options.sampling_mesh:
     mesh_numbers = np.array([int(x) for x in options.sampling_mesh.split()])

@@ -105,19 +105,21 @@ class PhonopyGruneisen(object):
                         markersize=markersize)
         return plt
 
-    def set_band_structure(self,
-                           paths,
-                           num_points):
+    def set_band_structure(self, bands):
         self._band_structure = GruneisenBandStructure(
+            bands,
             self._phonon.get_dynamical_matrix(),
             self._phonon_plus.get_dynamical_matrix(),
             self._phonon_minus.get_dynamical_matrix(),
-            paths,
-            factor=self._phonon.get_unit_conversion_factor(),
-            num_points=num_points)
+            factor=self._phonon.get_unit_conversion_factor())
 
     def get_band_structure(self):
-        return self._band_structure
+        band = self._band_structure
+        return (band.get_qpoints(),
+                band.get_distances(),
+                band.get_frequencies(),
+                band.get_eigenvectors(),
+                band.get_gruneisen())
 
     def write_yaml_band_structure(self):
         self._band_structure.write_yaml()

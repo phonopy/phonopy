@@ -72,6 +72,9 @@ class GruneisenBase(object):
     def get_eigenvalues(self):
         return self._eigenvalues
 
+    def get_eigenvectors(self):
+        return self._eigenvectors
+
     def _set_gruneisen(self):
         dV = self._volume_plus - self._volume_minus
 
@@ -82,6 +85,7 @@ class GruneisenBase(object):
 
         edDe = [] # <e|dD|e>
         eigvals = []
+        eigvecs = []
         for i, q in enumerate(self._qpoints):
             if self._is_band_connection and self._dynmat.is_nac():
                 self._dynmat.set_dynamical_matrix(
@@ -101,15 +105,20 @@ class GruneisenBase(object):
                         prev_eigvecs,
                         evecs_at_q,
                         band_order)
-                eigvals.append([evals_at_q[b] for b in band_order])
-                edDe.append([edDe_at_q[b] for b in band_order])
+                eigvals.append(evals_at_q[band_order])
+                eigvecs.append(evecs_at_q[:, band_order])
+                edDe.append(edDe_at_q[band_order])
                 prev_eigvecs = evecs_at_q
             else:
                 eigvals.append(evals_at_q)
+                eigvecs.append(evecs_at_q)
                 edDe.append(edDe_at_q)
 
         edDe = np.array(edDe, dtype='double', order='C')
         self._eigenvalues = np.array(eigvals, dtype='double', order='C')
+        itemsize = self._eigenvalues.itemsize
+        self._eigenvectors = np.array(eigvecs,
+                                      dtype=("c%d" % (itemsize * 2)), order='C')
         self._gruneisen = -edDe / dV / self._eigenvalues * self._volume / 2
 
 

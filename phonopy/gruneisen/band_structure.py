@@ -38,12 +38,11 @@ from phonopy.units import VaspToTHz
 
 class GruneisenBandStructure(GruneisenBase):
     def __init__(self,
+                 paths,
                  dynmat,
                  dynmat_plus,
                  dynmat_minus,
-                 paths,
-                 factor=VaspToTHz,
-                 num_points=51):
+                 factor=VaspToTHz):
 
         GruneisenBase.__init__(self,
                                dynmat,
@@ -51,43 +50,52 @@ class GruneisenBandStructure(GruneisenBase):
                                dynmat_minus,
                                is_band_connection=True)
 
-        self._num_points = num_points
-
         primitive = dynmat.get_primitive()
-        rec_vectors = np.linalg.inv(primitive.get_cell())
+        rec_lattice = np.linalg.inv(primitive.get_cell())
         distance_shift = 0.0
 
         self._paths = []
+        for qpoints_ in paths:
+            qpoints = np.array(qpoints_)
+            distances = np.zeros(len(qpoints))
+            delta_qpoints = qpoints[1:] - qpoints[:-1]
+            delta_distances = np.sqrt(
+                (np.dot(delta_qpoints, rec_lattice) ** 2).sum(axis=1))
+            for i, dd in enumerate(delta_distances):
+                distances[i + 1] = distances[i] + dd
 
-        for path in paths:
-            qpoints, distances = _get_band_qpoints(path[0],
-                                                   path[1],
-                                                   rec_vectors,
-                                                   num_points=num_points)
             self.set_qpoints(qpoints)
-            gamma = self._gruneisen
             eigenvalues = self._eigenvalues
             frequencies = np.sqrt(abs(eigenvalues)) * np.sign(eigenvalues) * factor
-
             distances_with_shift = distances + distance_shift
 
             self._paths.append([qpoints,
                                 distances,
-                                gamma,
+                                self._gruneisen,
                                 eigenvalues,
+                                self._eigenvectors,
                                 frequencies,
                                 distances_with_shift])
 
             distance_shift = distances_with_shift[-1]
 
     def get_qpoints(self):
-        return self._paths
+        return [path[0] for path in self._paths]
+
+    def get_distances(self):
+        return [path[6] for path in self._paths]
+
+    def get_gruneisen(self):
+        return [path[2] for path in self._paths]
+
+    def get_eigenvalues(self):
+        return [path[3] for path in self._paths]
 
     def get_eigenvectors(self):
-        return self._eigenvectors
+        return [path[4] for path in self._paths]
 
     def get_frequencies(self):
-        return self._frequencies
+        return [path[5] for path in self._paths]
 
     def write_yaml(self):
         f = open("gruneisen.yaml", 'w')
@@ -97,10 +105,11 @@ class GruneisenBandStructure(GruneisenBase):
              distances,
              gamma,
              eigenvalues,
+             _,
              frequencies,
              distances_with_shift) = band_structure
 
-            f.write("- nqpoint: %d\n" % self._num_points)
+            f.write("- nqpoint: %d\n" % len(qpoints))
             f.write("  phonon:\n")
             for q, d, gs, freqs in zip(qpoints, distances, gamma, frequencies):
                 f.write("  - q-position: [ %10.7f, %10.7f, %10.7f ]\n" %
@@ -120,91 +129,65 @@ class GruneisenBandStructure(GruneisenBase):
              epsilon=None,
              color_scheme=None):
         for band_structure in self._paths:
-            (qpoints,
-             distances,
-             gamma,
-             eigenvalues,
-             frequencies,
-             distances_with_shift) = band_structure
-            _bandplot(axarr,
-                      gamma,
-                      frequencies,
-                      qpoints,
-                      distances_with_shift,
-                      epsilon,
-                      color_scheme)
+            self._plot(axarr, band_structure, epsilon, color_scheme)
 
-def _get_band_qpoints(q_start, q_end, rec_lattice, num_points=51):
-    qpoints = []
-    distances = []
-    distance = 0.0
-    q_start_ = np.array(q_start)
-    q_end_ = np.array(q_end)
-    dq = (q_end_ - q_start_) / (num_points - 1)
-    delta = np.linalg.norm(np.dot(rec_lattice, dq))
+    def _plot(self, axarr, band_structure, epsilon, color_scheme):
+        (qpoints,
+         distances,
+         gamma,
+         eigenvalues,
+         _,
+         frequencies,
+         distances_with_shift) = band_structure
 
-    for i in range(num_points):
-        distances.append(distance)
-        qpoints.append(q_start_+ dq * i)
-        distance += delta
+        n = len(gamma.T) - 1
+        ax1, ax2 = axarr
 
-    return np.array(qpoints), np.array(distances)
+        for i, (curve, freqs) in enumerate(zip(gamma.T.copy(), frequencies.T)):
+            if epsilon is not None:
+                if np.linalg.norm(qpoints[0]) < epsilon:
+                    cutoff_index = 0
+                    for j, q in enumerate(qpoints):
+                        if not np.linalg.norm(q) < epsilon:
+                            cutoff_index = j
+                            break
+                    for j in range(cutoff_index):
+                        if abs(freqs[j]) < abs(max(freqs)) / 10:
+                            curve[j] = curve[cutoff_index]
 
-def _bandplot(axarr,
-              gamma,
-              freqencies,
-              qpoints,
-              distances_with_shift,
-              epsilon=None,
-              color_scheme=None):
-    n = len(gamma.T) - 1
-    ax1, ax2 = axarr
+                if np.linalg.norm(qpoints[-1]) < epsilon:
+                    cutoff_index = len(qpoints) - 1
+                    for j in reversed(range(len(qpoints))):
+                        q = qpoints[j]
+                        if not np.linalg.norm(q) < epsilon:
+                            cutoff_index = j
+                            break
+                    for j in reversed(range(len(qpoints))):
+                        if j == cutoff_index:
+                            break
+                        if abs(freqs[j]) < abs(max(freqs)) / 10:
+                            curve[j] = curve[cutoff_index]
 
-    for i, (curve, freqs) in enumerate(zip(gamma.T.copy(), freqencies.T)):
+            self._plot_a_band(ax1, curve, distances_with_shift, i, n,
+                              color_scheme)
+        ax1.set_xlim(0, distances_with_shift[-1])
 
-        if epsilon is not None:
-            if np.linalg.norm(qpoints[0]) < epsilon:
-                cutoff_index = 0
-                for j, q in enumerate(qpoints):
-                    if not np.linalg.norm(q) < epsilon:
-                        cutoff_index = j
-                        break
-                for j in range(cutoff_index):
-                    if abs(freqs[j]) < abs(max(freqs)) / 10:
-                        curve[j] = curve[cutoff_index]
+        for i, freqs in enumerate(frequencies.T):
+            self._plot_a_band(ax2, freqs, distances_with_shift, i, n,
+                              color_scheme)
+        ax2.set_xlim(0, distances_with_shift[-1])
 
-            if np.linalg.norm(qpoints[-1]) < epsilon:
-                cutoff_index = len(qpoints) - 1
-                for j in reversed(range(len(qpoints))):
-                    q = qpoints[j]
-                    if not np.linalg.norm(q) < epsilon:
-                        cutoff_index = j
-                        break
-                for j in reversed(range(len(qpoints))):
-                    if j == cutoff_index:
-                        break
-                    if abs(freqs[j]) < abs(max(freqs)) / 10:
-                        curve[j] = curve[cutoff_index]
-
-        _plot_a_band(ax1, curve, distances_with_shift, i, n, color_scheme)
-    ax1.set_xlim(0, distances_with_shift[-1])
-
-    for i, freqs in enumerate(freqencies.T):
-        _plot_a_band(ax2, freqs, distances_with_shift, i, n, color_scheme)
-    ax2.set_xlim(0, distances_with_shift[-1])
-
-def _plot_a_band(ax, curve, distances_with_shift, i, n, color_scheme):
-    color = None
-    if color_scheme == 'RB':
-        color = (1. / n * i, 0, 1./ n * (n - i))
-    elif color_scheme == 'RG':
-        color = (1. / n * i, 1./ n * (n - i), 0)
-    elif color_scheme == 'RGB':
-        color = (max(2./ n * (i - n / 2.), 0),
-                 min(2./ n * i, 2./ n * (n - i)),
-                 max(2./ n * (n / 2. - i), 0))
-
-    if color:
-        ax.plot(distances_with_shift, curve, color=color)
-    else:
-        ax.plot(distances_with_shift, curve)
+    def _plot_a_band(self, ax, curve, distances_with_shift, i, n, color_scheme):
+        color = None
+        if color_scheme == 'RB':
+            color = (1. / n * i, 0, 1./ n * (n - i))
+        elif color_scheme == 'RG':
+            color = (1. / n * i, 1./ n * (n - i), 0)
+        elif color_scheme == 'RGB':
+            color = (max(2./ n * (i - n / 2.), 0),
+                     min(2./ n * i, 2./ n * (n - i)),
+                     max(2./ n * (n / 2. - i), 0))
+        if color:
+            ax.plot(distances_with_shift, curve, color=color)
+        else:
+            ax.plot(distances_with_shift, curve)

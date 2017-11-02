@@ -3,6 +3,13 @@ from phonopy import Phonopy, PhonopyGruneisen
 from phonopy.interface.vasp import read_vasp
 from phonopy.file_IO import parse_FORCE_SETS
 
+def append_band(bands, q_start, q_end):
+    band = []
+    for i in range(51):
+        band.append(np.array(q_start) +
+                    (np.array(q_end) - np.array(q_start)) / 50 * i)
+    bands.append(band)
+
 phonons = {}
 for vol in ("orig", "plus", "minus"):
     unitcell = read_vasp("%s/POSCAR-unitcell" % vol)
@@ -25,3 +32,16 @@ gruneisen = PhonopyGruneisen(phonons["orig"],
 gruneisen.set_mesh([2, 2, 2])
 gruneisen_params_on_mesh = gruneisen.get_mesh().get_gruneisen()
 print(gruneisen_params_on_mesh)
+
+bands = []
+append_band(bands, [0.5, 0.5, 0.0], [0.0, 0.0, 0.0])
+append_band(bands, [0.0, 0.0, 0.0], [0.5, 0.5, 0.5])
+gruneisen.set_band_structure(bands)
+
+q_points, distances, frequencies, _, gammas = gruneisen.get_band_structure()
+for q_path, d_path, freq_path, g_path in zip(q_points, distances,
+                                             frequencies, gammas):
+    for q, d, freq, g in zip(q_path, d_path, freq_path, g_path):
+        print(("%10.5f  %5.2f %5.2f %5.2f " + (" %7.3f" * len(freq)))
+              % ((d, q[0], q[1], q[2]) + tuple(freq)))
+        print(((" " * 30) + (" %7.3f" * len(g))) % tuple(g))

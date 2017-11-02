@@ -66,10 +66,10 @@ def get_band_qpoints(band_paths, npoints):
     for band_path in band_paths:
         nd = len(band_path)
         for i in range(nd - 1):
-            diff = (band_path[i + 1] - band_path[i]) / npoints
+            diff = (band_path[i + 1] - band_path[i]) / (npoints - 1)
             qpoints = [band_path[i].copy()]
             q = np.zeros(3)
-            for j in range(npoints):
+            for j in range(npoints -1):
                 q += diff
                 qpoints.append(band_path[i] + q)
             qpoints_of_paths.append(np.array(qpoints))
