@@ -1142,8 +1142,8 @@ static const int num_sitesym[] =
 
 
 int ssmdb_get_coordinate(int rot[3][3],
-			 double trans[3],
-			 const int index)
+                         double trans[3],
+                         const int index)
 {
   int i, rot_enc, trans_enc;
   int rows[3], trans_int[3];
@@ -1151,7 +1151,7 @@ int ssmdb_get_coordinate(int rot[3][3],
   /* Orbits are compressed using ternary numerical system for */
   /* rotation and base-24 system for translation. Elements of the first coloum */
   /* of rotation matrix can be one of {-2,-1,0,1,2} and the other elements can */
-  /* be one of {-1,0,1}. Translation can have one of */ 
+  /* be one of {-1,0,1}. Translation can have one of */
   /* {0,2,3,4,6,8,9,10,12,14,15,16,18,20,21,22} */
   /* divided by 24. Therefore 45^3 * 24^3 = 1259712000 different values can */
   /* enough map Wyckoff positions. */

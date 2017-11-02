@@ -36,7 +36,7 @@
 
 static void get_all_grid_addresses(int grid_address[][3], const int mesh[3]);
 static int get_grid_point_double_mesh(const int address_double[3],
-				      const int mesh[3]);
+                                      const int mesh[3]);
 static int get_grid_point_single_mesh(const int address[3], const int mesh[3]);
 static void modulo_i3(int v[3], const int m[3]);
 static void reduce_grid_address(int address[3], const int mesh[3]);
@@ -48,15 +48,15 @@ void kgd_get_all_grid_addresses(int grid_address[][3], const int mesh[3])
 }
 
 int kgd_get_grid_point_double_mesh(const int address_double[3],
-				   const int mesh[3])
+                                   const int mesh[3])
 {
   return get_grid_point_double_mesh(address_double, mesh);
 }
 
 void kgd_get_grid_address_double_mesh(int address_double[3],
-				      const int address[3],
-				      const int mesh[3],
-				      const int is_shift[3])
+                                      const int address[3],
+                                      const int mesh[3],
+                                      const int is_shift[3])
 {
   int i;
 
@@ -76,19 +76,19 @@ static void get_all_grid_addresses(int grid_address[][3], const int mesh[3])
     for (j = 0; j < mesh[1]; j++) {
       address[1] = j;
       for (k = 0; k < mesh[2]; k++) {
-	address[2] = k;
-	grid_point = get_grid_point_single_mesh(address, mesh);
-	grid_address[grid_point][0] = address[0];
-	grid_address[grid_point][1] = address[1];
-	grid_address[grid_point][2] = address[2];
-	reduce_grid_address(grid_address[grid_point], mesh);
+        address[2] = k;
+        grid_point = get_grid_point_single_mesh(address, mesh);
+        grid_address[grid_point][0] = address[0];
+        grid_address[grid_point][1] = address[1];
+        grid_address[grid_point][2] = address[2];
+        reduce_grid_address(grid_address[grid_point], mesh);
       }
     }
   }
 }
 
 static int get_grid_point_double_mesh(const int address_double[3],
-				      const int mesh[3])
+                                      const int mesh[3])
 {
   int i, address[3];
 
@@ -105,13 +105,13 @@ static int get_grid_point_double_mesh(const int address_double[3],
 }
 
 static int get_grid_point_single_mesh(const int address[3],
-				      const int mesh[3])
-{  
+                                      const int mesh[3])
+{
 #ifndef GRID_ORDER_XYZ
   return address[2] * mesh[0] * mesh[1] + address[1] * mesh[0] + address[0];
 #else
   return address[0] * mesh[1] * mesh[2] + address[1] * mesh[2] + address[2];
-#endif  
+#endif
 }
 
 static void modulo_i3(int v[3], const int m[3])
@@ -137,7 +137,7 @@ static void reduce_grid_address(int address[3], const int mesh[3])
 #else
     address[i] -= mesh[i] * (address[i] > (mesh[i] - 1) / 2);
 #endif
-  }  
+  }
 }
 
 static void reduce_grid_address_double(int address[3], const int mesh[3])
@@ -150,5 +150,5 @@ static void reduce_grid_address_double(int address[3], const int mesh[3])
 #else
     address[i] -= 2 * mesh[i] * (address[i] > mesh[i] - 1);
 #endif
-  }  
+  }
 }
