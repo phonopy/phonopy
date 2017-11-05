@@ -50,178 +50,192 @@ try:
 except ImportError:
     print("You need to install python-yaml.")
     exit(1)
-    
+
 try:
     from yaml import CLoader as Loader
-    from yaml import CDumper as Dumper
 except ImportError:
-    from yaml import Loader, Dumper
+    from yaml import Loader
 
-# Parse options
-from optparse import OptionParser
-parser = OptionParser()
-parser.set_defaults(output_filename=None,
-                    is_overwrite=False,
-                    is_create_structure_file=False,
-                    is_compatibility=False,
-                    is_d2d=False,
-                    add_disp=None,
-                    select_disp=None,
-                    amplitude=0.01)
-parser.add_option("-o", "--output", dest="output_filename",
-                  action="store", type="string",
-                  help="Output filename")
-parser.add_option("--overwrite", dest="is_overwrite",
-                  action="store_true", help="Overwrite input file")
-parser.add_option("-w", dest="is_create_structure_file",
-                  action="store_true", help="Create structure files")
-parser.add_option("-a", "--add", dest="add_disp",
-                  action="store", type="string",
-                  help="Direction of added displacement")
-parser.add_option("-s", "--select", dest="select_disp",
-                  action="store", type="string",
-                  help="Select displacements and write input file")
-parser.add_option("--amplitude", dest="amplitude", type="float",
-                  help="Amplitude of displacement")
-parser.add_option("--compatibility", dest="is_compatibility",
-                  action="store_true", help="Check if disp.yaml is equivalent to old DISP")
-parser.add_option("--d2d", dest="is_d2d",
-                  action="store_true", help="Show the order of calculated files for disp.yaml")
-(options, args) = parser.parse_args()
+def get_options():
+    # Parse options
+    import argparse
+    parser = argparse.ArgumentParser(
+        description="Phonopy dispmanager command-line-tool")
+    parser.set_defaults(output_filename=None,
+                        is_overwrite=False,
+                        is_create_structure_file=False,
+                        is_compatibility=False,
+                        is_d2d=False,
+                        add_disp=None,
+                        select_disp=None,
+                        amplitude=0.01)
+    parser.add_argument(
+        "-o", "--output", dest="output_filename",
+        help="Output filename")
+    parser.add_argument(
+        "--overwrite", dest="is_overwrite", action="store_true",
+        help="Overwrite input file")
+    parser.add_argument(
+        "-w", dest="is_create_structure_file", action="store_true",
+        help="Create structure files")
+    parser.add_argument(
+        "-a", "--add", dest="add_disp",
+        help="Direction of added displacement")
+    parser.add_argument(
+        "-s", "--select", dest="select_disp",
+        help="Select displacements and write input file")
+    parser.add_argument(
+        "--amplitude", dest="amplitude", type=float,
+        help="Amplitude of displacement")
+    parser.add_argument(
+        "--compatibility", dest="is_compatibility", action="store_true",
+        help="Check if disp.yaml is equivalent to old style DISP")
+    parser.add_argument(
+        "--d2d", dest="is_d2d", action="store_true",
+        help="Show the order of calculated files for disp.yaml")
+    parser.add_argument(
+        "filename", nargs='*',
+        help="Filenames of displacement file (disp.yaml)")
+    args = parser.parse_args()
+    return args
 
-if len(args) > 0:
-    filename = args[0]
-else:
-    filename = 'disp.yaml'
+def main(args):
+    if len(args.filename) > 0:
+        filename = args.filename[0]
+    else:
+        filename = 'disp.yaml'
 
-if os.path.exists(filename):
-    disp = yaml.load(open(filename).read(), Loader=Loader)
-else:
-    print("%s could not be found." % filename)
-    sys.exit(1)
-    
-natom = disp['natom']
-displacements = []
-directions = []
-for x in disp['displacements']:
-    atom = x['atom'] - 1
-    d = x['displacement']
-    displacements.append([atom, d[0], d[1], d[2]])
-    d = x['direction']
-    directions.append([atom, d[0], d[1], d[2]])
-lattice = disp['lattice']
-positions = [x['position'] for x in disp['atoms']]
-symbols = [x['symbol'] for x in disp['atoms']]
-cell = Atoms(cell=lattice,
-             scaled_positions=positions,
-             symbols=symbols,
-             pbc=True)
-
-######################
-# Create DPOSCAR-xxx #
-######################
-if options.is_create_structure_file:
-    for i, disp in enumerate(displacements):
-        positions = cell.get_positions()
-        positions[disp[0]] += disp[1:4]
-        write_vasp("%s-%03d" % ("DPOSCAR", i + 1),
-                    Atoms(numbers=cell.get_atomic_numbers(),
-                          masses=cell.get_masses(),
-                          positions=positions,
-                          cell=cell.get_cell(),
-                          pbc=True), direct=True)
-    sys.exit(0)
-
-######################
-# Check DISP         #
-######################
-if options.is_compatibility:
-    directions_DISP = file_IO.parse_DISP()
-    if len(directions_DISP) != len(directions):
-        print("disp.yaml and DISP are inconsistent.")
+    if os.path.exists(filename):
+        disp = yaml.load(open(filename).read(), Loader=Loader)
+    else:
+        print("%s could not be found." % filename)
         sys.exit(1)
-    print("     DISP               disp.yaml")
-    for d_DISP, d in zip(directions_DISP, directions):
-        if d_DISP[0] != d[0]:
+
+    natom = disp['natom']
+    displacements = []
+    directions = []
+    for x in disp['displacements']:
+        atom = x['atom'] - 1
+        d = x['displacement']
+        displacements.append([atom, d[0], d[1], d[2]])
+        d = x['direction']
+        directions.append([atom, d[0], d[1], d[2]])
+    lattice = disp['lattice']
+    positions = [x['coordinates'] for x in disp['points']]
+    symbols = [x['symbol'] for x in disp['points']]
+    cell = Atoms(cell=lattice,
+                 scaled_positions=positions,
+                 symbols=symbols,
+                 pbc=True)
+
+    ######################
+    # Create DPOSCAR-xxx #
+    ######################
+    if args.is_create_structure_file:
+        for i, disp in enumerate(displacements):
+            positions = cell.get_positions()
+            positions[disp[0]] += disp[1:4]
+            write_vasp("%s-%03d" % ("DPOSCAR", i + 1),
+                        Atoms(numbers=cell.get_atomic_numbers(),
+                              masses=cell.get_masses(),
+                              positions=positions,
+                              cell=cell.get_cell(),
+                              pbc=True), direct=True)
+        sys.exit(0)
+
+    ######################
+    # Check DISP         #
+    ######################
+    if args.is_compatibility:
+        directions_DISP = file_IO.parse_DISP()
+        if len(directions_DISP) != len(directions):
             print("disp.yaml and DISP are inconsistent.")
             sys.exit(1)
-        if (abs(np.array(d_DISP[1:4]) - np.array(d[1:4])) < 0.0001).all():
-            print d_DISP, d
-        else:
-            print("disp.yaml and DISP are inconsistent.")
+        print("     DISP               disp.yaml")
+        for d_DISP, d in zip(directions_DISP, directions):
+            if d_DISP[0] != d[0]:
+                print("disp.yaml and DISP are inconsistent.")
+                sys.exit(1)
+            if (abs(np.array(d_DISP[1:4]) - np.array(d[1:4])) < 0.0001).all():
+                print("%s %s" % (d_DISP, d))
+            else:
+                print("disp.yaml and DISP are inconsistent.")
+                sys.exit(1)
+        print("diap.yaml and DISP are equivalent!")
+        sys.exit(0)
+
+    #######################################
+    # Arrange order in DISP for disp.yaml #
+    #######################################
+    if args.is_d2d:
+        numbers = ""
+        count = 0
+        directions_DISP = file_IO.parse_DISP()
+        for i, d in enumerate(directions):
+            is_found = False
+            for j, d_DISP in enumerate(directions_DISP):
+                if (d_DISP[0] == d[0] and
+                    (abs(np.array(d_DISP[1:4]) - np.array(d[1:4])) < 0.0001).all()):
+                    numbers += "%03d," % (j + 1)
+                    count += 1
+                    is_found = True
+                    break
+            if not is_found:
+                print("disp.yaml and DISP are inconsistent.")
+                sys.exit(1)
+
+        print("%s" % numbers)
+        print("%d" % count)
+        sys.exit(0)
+
+    ####################
+    # Modify disp.yaml #
+    ####################
+    if args.is_overwrite:
+        output_filename = filename
+    else:
+        output_filename = args.output_filename
+
+    # Add displacements
+    if args.add_disp is not None:
+
+        if output_filename is None:
+            print("Output filename (-o or --overwrite) is required.")
             sys.exit(1)
-    print("diap.yaml and DISP are equivalent!")
-    sys.exit(0)
 
-#######################################
-# Arrange order in DISP for disp.yaml #
-#######################################
-if options.is_d2d:
-    numbers = ""
-    count = 0
-    directions_DISP = file_IO.parse_DISP()
-    for i, d in enumerate(directions):
-        is_found = False
-        for j, d_DISP in enumerate(directions_DISP):
-            if (d_DISP[0] == d[0] and
-                (abs(np.array(d_DISP[1:4]) - np.array(d[1:4])) < 0.0001).all()):
-                numbers += "%03d," % (j + 1)
-                count += 1
-                is_found = True
-                break
-        if not is_found:
-            print("disp.yaml and DISP are inconsistent.")
+        print("%s" % args.add_disp.split()[1:4])
+        v = np.array([float(x) for x in args.add_disp.split()[1:4]])
+        v = np.dot(v, cell.get_cell())
+        v = v / np.linalg.norm(v) * args.amplitude
+        d = [int(args.add_disp.split()[0]) - 1, v[0], v[1], v[2]]
+        displacements.append(d)
+        directions.append([float(x) for x in args.add_disp.split()])
+
+        file_IO.write_disp_yaml(displacements,
+                                cell,
+                                directions=directions,
+                                filename=output_filename)
+        sys.exit(0)
+
+    # Select displacements
+    if args.select_disp is not None:
+
+        if output_filename is None:
+            print("Output filename (-o or --overwrite) is required.")
             sys.exit(1)
 
-    print("%s" % numbers)
-    print("%d" % count)
-    sys.exit(0)
+        disp_selected = []
+        direction_selected = []
+        for x in args.select_disp.split():
+            disp_selected.append(displacements[int(x) - 1])
+            direction_selected.append(directions[int(x) - 1])
+        file_IO.write_disp_yaml(disp_selected,
+                                cell,
+                                directions=direction_selected,
+                                filename=output_filename)
+        sys.exit(0)
 
-####################
-# Modify disp.yaml #
-####################
-if options.is_overwrite:
-    output_filename = filename
-else:
-    output_filename = options.output_filename
+    print("Nothing has been done.")
 
-# Add displacements
-if options.add_disp is not None:
-
-    if output_filename is None:
-        print("Output filename (-o or --overwrite) is required.")
-        sys.exit(1)
-        
-    print("%s" % options.add_disp.split()[1:4])
-    v = np.array([float(x) for x in options.add_disp.split()[1:4]])
-    v = np.dot(v, cell.get_cell())
-    v = v / np.linalg.norm(v) * options.amplitude
-    d = [int(options.add_disp.split()[0]) - 1, v[0], v[1], v[2]]
-    displacements.append(d)
-    directions.append([float(x) for x in options.add_disp.split()])
-
-    file_IO.write_disp_yaml(displacements,
-                            cell,
-                            directions=directions,
-                            filename=output_filename)
-    sys.exit(0)
-
-# Select displacements
-if options.select_disp is not None:
-
-    if output_filename is None:
-        print("Output filename (-o or --overwrite) is required.")
-        sys.exit(1)
-        
-    disp_selected = []
-    direction_selected = []
-    for x in options.select_disp.split():
-        disp_selected.append(displacements[int(x) - 1])
-        direction_selected.append(directions[int(x) - 1])
-    file_IO.write_disp_yaml(disp_selected,
-                            cell,
-                            directions=direction_selected,
-                            filename=output_filename)
-    sys.exit(0)
-
-print("Nothing has been done.")
+if __name__ == "__main__":
+    main(get_options())
