@@ -144,8 +144,9 @@ def get_options():
     parser.add_argument(
         "-t", "--title", dest="title",
         help="Title of plot")
-    parser.add_argument('filenames', nargs='*',
-                        help="Filenames of phonon band structure result")
+    parser.add_argument(
+        "filenames", nargs='*',
+        help="Filenames of phonon band structure result (band.yaml)")
     args = parser.parse_args()
     return args
 
