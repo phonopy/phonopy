@@ -42,7 +42,6 @@ import phonopy.file_IO as file_IO
 from phonopy.cui.settings import PhonopyConfParser
 from phonopy.cui.show_symmetry import check_symmetry
 from phonopy.cui.phonopy_argparse import get_parser
-from phonopy.cui.phonopy_argparse import get_parser
 from phonopy.structure.cells import print_cell, determinant
 from phonopy.structure.atoms import atom_data, symbol_map
 from phonopy.interface import (create_FORCE_SETS, read_crystal_structure,
