@@ -325,15 +325,14 @@ class Settings(object):
 
 # Parse phonopy setting filen
 class ConfParser(object):
-    def __init__(self, filename=None, options=None, option_list=None):
+    def __init__(self, filename=None, args=None):
         self._confs = {}
         self._parameters = {}
-        self._options = options
-        self._option_list = option_list
+        self._args = args
 
         if filename is not None:
             self.read_file(filename) # store data in self._confs
-        if (options is not None) and (option_list is not None):
+        if args is not None:
             self.read_options() # store data in self._confs
         self.parse_conf() # self.parameters[key] = val
 
@@ -543,151 +542,151 @@ class ConfParser(object):
                 is_continue = True
 
     def read_options(self):
-        for opt in self._option_list:
-            if opt.dest == 'band_indices':
-                if self._options.band_indices is not None:
-                    self._confs['band_indices'] = self._options.band_indices
+        arg_list = vars(self._args)
+        if 'band_indices' in arg_list:
+            if self._args.band_indices is not None:
+                self._confs['band_indices'] = self._args.band_indices
 
-            if opt.dest == 'band_paths':
-                if self._options.band_paths is not None:
-                    self._confs['band'] = self._options.band_paths
+        if 'band_paths' in arg_list:
+            if self._args.band_paths is not None:
+                self._confs['band'] = self._args.band_paths
 
-            if opt.dest == 'band_points':
-                if self._options.band_points is not None:
-                    self._confs['band_points'] = self._options.band_points
+        if 'band_points' in arg_list:
+            if self._args.band_points is not None:
+                self._confs['band_points'] = self._args.band_points
 
-            if opt.dest == 'cell_filename':
-                if self._options.cell_filename is not None:
-                    self._confs['cell_filename'] = self._options.cell_filename
+        if 'cell_filename' in arg_list:
+            if self._args.cell_filename is not None:
+                self._confs['cell_filename'] = self._args.cell_filename
 
-            if opt.dest == 'cutoff_frequency':
-                if self._options.cutoff_frequency:
-                    self._confs['cutoff_frequency'] = self._options.cutoff_frequency
+        if 'cutoff_frequency' in arg_list:
+            if self._args.cutoff_frequency:
+                self._confs['cutoff_frequency'] = self._args.cutoff_frequency
 
-            if opt.dest == 'displacement_distance':
-                if self._options.displacement_distance:
-                    self._confs['displacement_distance'] = \
-                        self._options.displacement_distance
+        if 'displacement_distance' in arg_list:
+            if self._args.displacement_distance:
+                self._confs['displacement_distance'] = \
+                    self._args.displacement_distance
 
-            if opt.dest == 'dynamical_matrix_decimals':
-                if self._options.dynamical_matrix_decimals:
-                    self._confs['dm_decimals'] = \
-                        self._options.dynamical_matrix_decimals
+        if 'dynamical_matrix_decimals' in arg_list:
+            if self._args.dynamical_matrix_decimals:
+                self._confs['dm_decimals'] = \
+                    self._args.dynamical_matrix_decimals
 
-            if opt.dest == 'fc_symmetry':
-                if self._options.fc_symmetry:
-                    self._confs['fc_symmetry'] = self._options.fc_symmetry
+        if 'fc_symmetry' in arg_list:
+            if self._args.fc_symmetry:
+                self._confs['fc_symmetry'] = self._args.fc_symmetry
 
-            if opt.dest == 'force_constants_decimals':
-                if self._options.force_constants_decimals:
-                    self._confs['fc_decimals'] = \
-                        self._options.force_constants_decimals
+        if 'force_constants_decimals' in arg_list:
+            if self._args.force_constants_decimals:
+                self._confs['fc_decimals'] = \
+                    self._args.force_constants_decimals
 
-            if opt.dest == 'gv_delta_q':
-                if self._options.gv_delta_q:
-                    self._confs['gv_delta_q'] = self._options.gv_delta_q
+        if 'gv_delta_q' in arg_list:
+            if self._args.gv_delta_q:
+                self._confs['gv_delta_q'] = self._args.gv_delta_q
 
-            if opt.dest == 'is_eigenvectors':
-                if self._options.is_eigenvectors:
-                    self._confs['eigenvectors'] = '.true.'
+        if 'is_eigenvectors' in arg_list:
+            if self._args.is_eigenvectors:
+                self._confs['eigenvectors'] = '.true.'
 
-            if opt.dest == 'is_nac':
-                if self._options.is_nac:
-                    self._confs['nac'] = '.true.'
+        if 'is_nac' in arg_list:
+            if self._args.is_nac:
+                self._confs['nac'] = '.true.'
 
-            if opt.dest == 'is_nodiag':
-                if self._options.is_nodiag:
-                    self._confs['diag'] = '.false.'
+        if 'is_nodiag' in arg_list:
+            if self._args.is_nodiag:
+                self._confs['diag'] = '.false.'
 
-            if opt.dest == 'is_nomeshsym':
-                if self._options.is_nomeshsym:
-                    self._confs['mesh_symmetry'] = '.false.'
+        if 'is_nomeshsym' in arg_list:
+            if self._args.is_nomeshsym:
+                self._confs['mesh_symmetry'] = '.false.'
 
-            if opt.dest == 'is_nosym':
-                if self._options.is_nosym:
-                    self._confs['symmetry'] = '.false.'
+        if 'is_nosym' in arg_list:
+            if self._args.is_nosym:
+                self._confs['symmetry'] = '.false.'
 
-            if opt.dest == 'is_translational_symmetry':
-                if self._options.is_translational_symmetry:
-                    self._confs['translation'] = '.true.'
+        if 'is_translational_symmetry' in arg_list:
+            if self._args.is_translational_symmetry:
+                self._confs['translation'] = '.true.'
 
-            if opt.dest == 'tsym_type':
-                if self._options.tsym_type:
-                    self._confs['tsym_type'] = self._options.tsym_type
+        if 'tsym_type' in arg_list:
+            if self._args.tsym_type:
+                self._confs['tsym_type'] = self._args.tsym_type
 
-            if opt.dest == 'is_plusminus_displacements':
-                if self._options.is_plusminus_displacements:
-                    self._confs['pm'] = '.true.'
+        if 'is_plusminus_displacements' in arg_list:
+            if self._args.is_plusminus_displacements:
+                self._confs['pm'] = '.true.'
 
-            if opt.dest == 'is_tetrahedron_method':
-                if self._options.is_tetrahedron_method:
-                    self._confs['tetrahedron'] = '.true.'
+        if 'is_tetrahedron_method' in arg_list:
+            if self._args.is_tetrahedron_method:
+                self._confs['tetrahedron'] = '.true.'
 
-            if opt.dest == 'is_trigonal_displacements':
-                if self._options.is_trigonal_displacements:
-                    self._confs['trigonal'] = '.true.'
+        if 'is_trigonal_displacements' in arg_list:
+            if self._args.is_trigonal_displacements:
+                self._confs['trigonal'] = '.true.'
 
-            if opt.dest == 'masses':
-                if self._options.masses:
-                    self._confs['mass'] = self._options.masses
+        if 'masses' in arg_list:
+            if self._args.masses:
+                self._confs['mass'] = self._args.masses
 
-            if opt.dest == 'magmoms':
-                if self._options.magmoms:
-                    self._confs['magmom'] = self._options.magmoms
+        if 'magmoms' in arg_list:
+            if self._args.magmoms:
+                self._confs['magmom'] = self._args.magmoms
 
-            if opt.dest == 'mesh_numbers':
-                if self._options.mesh_numbers:
-                    self._confs['mesh_numbers'] = self._options.mesh_numbers
+        if 'mesh_numbers' in arg_list:
+            if self._args.mesh_numbers:
+                self._confs['mesh_numbers'] = self._args.mesh_numbers
 
-            if opt.dest == 'frequency_conversion_factor':
-                opt_freq_factor = self._options.frequency_conversion_factor
-                if opt_freq_factor:
-                    self._confs['frequency_conversion_factor'] = opt_freq_factor
+        if 'frequency_conversion_factor' in arg_list:
+            opt_freq_factor = self._args.frequency_conversion_factor
+            if opt_freq_factor:
+                self._confs['frequency_conversion_factor'] = opt_freq_factor
 
-            if opt.dest == 'fpitch':
-                if self._options.fpitch:
-                    self._confs['fpitch'] = self._options.fpitch
+        if 'fpitch' in arg_list:
+            if self._args.fpitch:
+                self._confs['fpitch'] = self._args.fpitch
 
-            if opt.dest == 'num_frequency_points':
-                opt_num_freqs = self._options.num_frequency_points
-                if opt_num_freqs:
-                    self._confs['num_frequency_points'] = opt_num_freqs
+        if 'num_frequency_points' in arg_list:
+            opt_num_freqs = self._args.num_frequency_points
+            if opt_num_freqs:
+                self._confs['num_frequency_points'] = opt_num_freqs
 
-            if opt.dest == 'primitive_axis':
-                if self._options.primitive_axis:
-                    self._confs['primitive_axis'] = self._options.primitive_axis
+        if 'primitive_axis' in arg_list:
+            if self._args.primitive_axis:
+                self._confs['primitive_axis'] = self._args.primitive_axis
 
-            if opt.dest == 'supercell_dimension':
-                if self._options.supercell_dimension:
-                    self._confs['dim'] = self._options.supercell_dimension
+        if 'supercell_dimension' in arg_list:
+            if self._args.supercell_dimension:
+                self._confs['dim'] = self._args.supercell_dimension
 
-            if opt.dest == 'qpoints':
-                if self._options.qpoints is not None:
-                    self._confs['qpoints'] = self._options.qpoints
+        if 'qpoints' in arg_list:
+            if self._args.qpoints is not None:
+                self._confs['qpoints'] = self._args.qpoints
 
-            if opt.dest == 'q_direction':
-                if self._options.q_direction is not None:
-                    self._confs['q_direction'] = self._options.q_direction
+        if 'q_direction' in arg_list:
+            if self._args.q_direction is not None:
+                self._confs['q_direction'] = self._args.q_direction
 
-            if opt.dest == 'sigma':
-                if self._options.sigma:
-                    self._confs['sigma'] = self._options.sigma
+        if 'sigma' in arg_list:
+            if self._args.sigma:
+                self._confs['sigma'] = self._args.sigma
 
-            if opt.dest == 'tmax':
-                if self._options.tmax:
-                    self._confs['tmax'] = self._options.tmax
+        if 'tmax' in arg_list:
+            if self._args.tmax:
+                self._confs['tmax'] = self._args.tmax
 
-            if opt.dest == 'tmin':
-                if self._options.tmin:
-                    self._confs['tmin'] = self._options.tmin
+        if 'tmin' in arg_list:
+            if self._args.tmin:
+                self._confs['tmin'] = self._args.tmin
 
-            if opt.dest == 'tstep':
-                if self._options.tstep:
-                    self._confs['tstep'] = self._options.tstep
+        if 'tstep' in arg_list:
+            if self._args.tstep:
+                self._confs['tstep'] = self._args.tstep
 
-            if opt.dest == 'yaml_mode':
-                if self._options.yaml_mode:
-                    self._confs['yaml_mode'] = '.true.'
+        if 'yaml_mode' in arg_list:
+            if self._args.yaml_mode:
+                self._confs['yaml_mode'] = '.true.'
 
     def parse_conf(self):
         confs = self._confs
@@ -1251,158 +1250,158 @@ class PhonopySettings(Settings):
         return self._xyz_projection
 
 class PhonopyConfParser(ConfParser):
-    def __init__(self, filename=None, options=None, option_list=None):
-        ConfParser.__init__(self, filename, options, option_list)
+    def __init__(self, filename=None, args=None):
+        ConfParser.__init__(self, filename, args)
         self._read_options()
         self._parse_conf()
         self._settings = PhonopySettings()
         self._set_settings()
 
     def _read_options(self):
-        for opt in self._option_list:
-            if opt.dest == 'band_labels':
-                if self._options.band_labels:
-                    self._confs['band_labels'] = self._options.band_labels
+        arg_list = vars(self._args)
+        if 'band_labels' in arg_list:
+            if self._args.band_labels:
+                self._confs['band_labels'] = self._args.band_labels
 
-            if opt.dest == 'is_displacement':
-                if self._options.is_displacement:
-                    self._confs['create_displacements'] = '.true.'
+        if 'is_displacement' in arg_list:
+            if self._args.is_displacement:
+                self._confs['create_displacements'] = '.true.'
 
-            if opt.dest == 'is_gamma_center':
-                if self._options.is_gamma_center:
-                    self._confs['gamma_center'] = '.true.'
+        if 'is_gamma_center' in arg_list:
+            if self._args.is_gamma_center:
+                self._confs['gamma_center'] = '.true.'
 
-            if opt.dest == 'is_dos_mode':
-                if self._options.is_dos_mode:
-                    self._confs['dos'] = '.true.'
+        if 'is_dos_mode' in arg_list:
+            if self._args.is_dos_mode:
+                self._confs['dos'] = '.true.'
 
-            if opt.dest == 'pdos':
-                if self._options.pdos:
-                    self._confs['pdos'] = self._options.pdos
+        if 'pdos' in arg_list:
+            if self._args.pdos:
+                self._confs['pdos'] = self._args.pdos
 
-            if opt.dest == 'xyz_projection':
-                if self._options.xyz_projection:
-                    self._confs['xyz_projection'] = '.true.'
+        if 'xyz_projection' in arg_list:
+            if self._args.xyz_projection:
+                self._confs['xyz_projection'] = '.true.'
 
-            if opt.dest == 'fc_computation_algorithm':
-                if self._options.fc_computation_algorithm is not None:
-                    self._confs['fc_computation_algorithm'] = self._options.fc_computation_algorithm
+        if 'fc_computation_algorithm' in arg_list:
+            if self._args.fc_computation_algorithm is not None:
+                self._confs['fc_computation_algorithm'] = self._args.fc_computation_algorithm
 
-            if opt.dest == 'fc_spg_symmetry':
-                if self._options.fc_spg_symmetry:
-                    self._confs['fc_spg_symmetry'] = '.true.'
+        if 'fc_spg_symmetry' in arg_list:
+            if self._args.fc_spg_symmetry:
+                self._confs['fc_spg_symmetry'] = '.true.'
 
-            if opt.dest == 'fits_debye_model':
-                if self._options.fits_debye_model:
-                    self._confs['debye_model'] = '.true.'
+        if 'fits_debye_model' in arg_list:
+            if self._args.fits_debye_model:
+                self._confs['debye_model'] = '.true.'
 
-            if opt.dest == 'fmax':
-                if self._options.fmax:
-                    self._confs['fmax'] = self._options.fmax
+        if 'fmax' in arg_list:
+            if self._args.fmax:
+                self._confs['fmax'] = self._args.fmax
 
-            if opt.dest == 'fmin':
-                if self._options.fmin:
-                    self._confs['fmin'] = self._options.fmin
+        if 'fmin' in arg_list:
+            if self._args.fmin:
+                self._confs['fmin'] = self._args.fmin
 
-            if opt.dest == 'is_thermal_properties':
-                if self._options.is_thermal_properties:
-                    self._confs['tprop'] = '.true.'
+        if 'is_thermal_properties' in arg_list:
+            if self._args.is_thermal_properties:
+                self._confs['tprop'] = '.true.'
 
-            if opt.dest == 'pretend_real':
-                if self._options.pretend_real:
-                    self._confs['pretend_real'] = '.true.'
+        if 'pretend_real' in arg_list:
+            if self._args.pretend_real:
+                self._confs['pretend_real'] = '.true.'
 
-            if opt.dest == 'is_projected_thermal_properties':
-                if self._options.is_projected_thermal_properties:
-                    self._confs['ptprop'] = '.true.'
+        if 'is_projected_thermal_properties' in arg_list:
+            if self._args.is_projected_thermal_properties:
+                self._confs['ptprop'] = '.true.'
 
-            if opt.dest == 'is_thermal_displacements':
-                if self._options.is_thermal_displacements:
-                    self._confs['tdisp'] = '.true.'
+        if 'is_thermal_displacements' in arg_list:
+            if self._args.is_thermal_displacements:
+                self._confs['tdisp'] = '.true.'
 
-            if opt.dest == 'is_thermal_displacement_matrices':
-                if self._options.is_thermal_displacement_matrices:
-                    self._confs['tdispmat'] = '.true.'
+        if 'is_thermal_displacement_matrices' in arg_list:
+            if self._args.is_thermal_displacement_matrices:
+                self._confs['tdispmat'] = '.true.'
 
-            if opt.dest == 'thermal_displacement_matrices_cif':
-                opt_tdm_cif = self._options.thermal_displacement_matrices_cif
-                if opt_tdm_cif:
-                    self._confs['tdispmat_cif'] = opt_tdm_cif
+        if 'thermal_displacement_matrices_cif' in arg_list:
+            opt_tdm_cif = self._args.thermal_displacement_matrices_cif
+            if opt_tdm_cif:
+                self._confs['tdispmat_cif'] = opt_tdm_cif
 
-            if opt.dest == 'projection_direction':
-                opt_proj_dir = self._options.projection_direction
-                if opt_proj_dir is not None:
-                    self._confs['projection_direction'] = opt_proj_dir
+        if 'projection_direction' in arg_list:
+            opt_proj_dir = self._args.projection_direction
+            if opt_proj_dir is not None:
+                self._confs['projection_direction'] = opt_proj_dir
 
-            if opt.dest == 'is_read_force_constants':
-                if self._options.is_read_force_constants:
-                    self._confs['force_constants'] = 'read'
+        if 'is_read_force_constants' in arg_list:
+            if self._args.is_read_force_constants:
+                self._confs['force_constants'] = 'read'
 
-            if opt.dest == 'write_force_constants':
-                if self._options.write_force_constants:
-                    self._confs['force_constants'] = 'write'
+        if 'write_force_constants' in arg_list:
+            if self._args.write_force_constants:
+                self._confs['force_constants'] = 'write'
 
-            if opt.dest == 'is_hdf5':
-                if self._options.is_hdf5:
-                    self._confs['hdf5'] = '.true.'
+        if 'is_hdf5' in arg_list:
+            if self._args.is_hdf5:
+                self._confs['hdf5'] = '.true.'
 
-            if opt.dest == 'write_dynamical_matrices':
-                if self._options.write_dynamical_matrices:
-                    self._confs['writedm'] = '.true.'
+        if 'write_dynamical_matrices' in arg_list:
+            if self._args.write_dynamical_matrices:
+                self._confs['writedm'] = '.true.'
 
-            if opt.dest == 'write_mesh':
-                if not self._options.write_mesh:
-                    self._confs['write_mesh'] = '.false.'
+        if 'write_mesh' in arg_list:
+            if not self._args.write_mesh:
+                self._confs['write_mesh'] = '.false.'
 
-            if opt.dest == 'irreps_qpoint':
-                if self._options.irreps_qpoint is not None:
-                    self._confs['irreps'] = self._options.irreps_qpoint
+        if 'irreps_qpoint' in arg_list:
+            if self._args.irreps_qpoint is not None:
+                self._confs['irreps'] = self._args.irreps_qpoint
 
-            if opt.dest == 'show_irreps':
-                if self._options.show_irreps:
-                    self._confs['show_irreps'] = '.true.'
+        if 'show_irreps' in arg_list:
+            if self._args.show_irreps:
+                self._confs['show_irreps'] = '.true.'
 
-            if opt.dest == 'is_little_cogroup':
-                if self._options.is_little_cogroup:
-                    self._confs['little_cogroup'] = '.true.'
+        if 'is_little_cogroup' in arg_list:
+            if self._args.is_little_cogroup:
+                self._confs['little_cogroup'] = '.true.'
 
-            if opt.dest == 'is_band_connection':
-                if self._options.is_band_connection:
-                    self._confs['band_connection'] = '.true.'
+        if 'is_band_connection' in arg_list:
+            if self._args.is_band_connection:
+                self._confs['band_connection'] = '.true.'
 
-            if opt.dest == 'cutoff_radius':
-                if self._options.cutoff_radius:
-                    self._confs['cutoff_radius'] = self._options.cutoff_radius
+        if 'cutoff_radius' in arg_list:
+            if self._args.cutoff_radius:
+                self._confs['cutoff_radius'] = self._args.cutoff_radius
 
-            if opt.dest == 'modulation':
-                if self._options.modulation:
-                    self._confs['modulation'] = self._options.modulation
+        if 'modulation' in arg_list:
+            if self._args.modulation:
+                self._confs['modulation'] = self._args.modulation
 
-            if opt.dest == 'anime':
-                if self._options.anime:
-                    self._confs['anime'] = self._options.anime
+        if 'anime' in arg_list:
+            if self._args.anime:
+                self._confs['anime'] = self._args.anime
 
-            if opt.dest == 'is_group_velocity':
-                if self._options.is_group_velocity:
-                    self._confs['group_velocity'] = '.true.'
+        if 'is_group_velocity' in arg_list:
+            if self._args.is_group_velocity:
+                self._confs['group_velocity'] = '.true.'
 
-            if opt.dest == 'is_moment':
-                if self._options.is_moment:
-                    self._confs['moment'] = '.true.'
+        if 'is_moment' in arg_list:
+            if self._args.is_moment:
+                self._confs['moment'] = '.true.'
 
-            if opt.dest == 'moment_order':
-                if self._options.moment_order:
-                    self._confs['moment_order'] = self._options.moment_order
+        if 'moment_order' in arg_list:
+            if self._args.moment_order:
+                self._confs['moment_order'] = self._args.moment_order
 
-            # Overwrite
-            if opt.dest == 'is_check_symmetry':
-                if self._options.is_check_symmetry:
-                    # Dummy 'dim' setting for sym-check
-                    self._confs['dim'] = '1 1 1'
+        # Overwrite
+        if 'is_check_symmetry' in arg_list:
+            if self._args.is_check_symmetry:
+                # Dummy 'dim' setting for sym-check
+                self._confs['dim'] = '1 1 1'
 
-            if opt.dest == 'lapack_solver':
-                if self._options.lapack_solver:
-                    self._confs['lapack_solver'] = '.true.'
+        if 'lapack_solver' in arg_list:
+            if self._args.lapack_solver:
+                self._confs['lapack_solver'] = '.true.'
 
     def _parse_conf(self):
         confs = self._confs
