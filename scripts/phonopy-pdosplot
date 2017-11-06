@@ -172,8 +172,9 @@ def main(args):
         pdos = np.zeros(frequencies.shape[0], dtype='double')
         for v in nums:
             pdos += dos[v - 1]
-        plots.append(plt.plot(
-            frequencies[min_i:max_i], pdos[min_i:max_i] * args.factor))
+        curve, = plt.plot(frequencies[min_i:max_i],
+                          pdos[min_i:max_i] * args.factor)
+        plots.append(curve)
 
     # plt.grid(True)
 
@@ -205,7 +206,7 @@ def main(args):
                 labels = indices
         else:
             labels = indices
-        plt.legend(labels, loc='upper left')
+        plt.legend(plots, labels, loc='upper left')
 
     if args.title is not None:
         plt.title(args.title)
