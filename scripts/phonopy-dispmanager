@@ -95,7 +95,7 @@ def get_options():
         help="Show the order of calculated files for disp.yaml")
     parser.add_argument(
         "filename", nargs='*',
-        help="Filenames of displacement file (disp.yaml)")
+        help="Filename of displacement file (disp.yaml)")
     args = parser.parse_args()
     return args
 
