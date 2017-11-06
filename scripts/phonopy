@@ -223,44 +223,43 @@ def print_settings(settings):
 ###########################
 
 parser = get_parser()
-(options, args) = parser.parse_args()
-option_list = parser.option_list
+args = parser.parse_args()
 
 # Set log level
 log_level = 1
-if options.verbose:
+if args.verbose:
     log_level = 2
-if options.quiet or options.is_check_symmetry:
+if args.quiet or args.is_check_symmetry:
     log_level = 0
-if options.loglevel is not None:
-    log_level = options.loglevel
+if args.loglevel is not None:
+    log_level = args.loglevel
 
 #
 # Phonopy interface mode
 #
-if options.wien2k_mode:
+if args.wien2k_mode:
     interface_mode = 'wien2k'
     from phonopy.interface.wien2k import write_supercells_with_displacements
-elif options.abinit_mode:
+elif args.abinit_mode:
     interface_mode = 'abinit'
     from phonopy.interface.abinit import write_supercells_with_displacements
-elif options.pwscf_mode:
+elif args.pwscf_mode:
     interface_mode = 'pwscf'
     from phonopy.interface.pwscf import write_supercells_with_displacements
-elif options.elk_mode:
+elif args.elk_mode:
     interface_mode = 'elk'
     from phonopy.interface.elk import write_supercells_with_displacements
-elif options.siesta_mode:
+elif args.siesta_mode:
     interface_mode = 'siesta'
     from phonopy.interface.siesta import write_supercells_with_displacements
-elif options.cp2k_mode:
+elif args.cp2k_mode:
     interface_mode = 'cp2k'
     from phonopy.interface.cp2k import write_supercells_with_displacements
-elif options.crystal_mode:
+elif args.crystal_mode:
     interface_mode = 'crystal'
     from phonopy.interface.crystal import write_supercells_with_displacements
 else:
-    if options.vasp_mode:
+    if args.vasp_mode:
         interface_mode = 'vasp'
     else:
         interface_mode = None
@@ -269,7 +268,7 @@ else:
 
 physical_units = get_default_physical_units(interface_mode)
 
-if options.is_graph_save:
+if args.is_graph_save:
     import matplotlib
     matplotlib.use('Agg')
 
@@ -286,32 +285,41 @@ if log_level > 0:
 ###########################
 
 # Create FORCE_SETS (-f or --force_sets)
-if options.force_sets_mode or options.force_sets_zero_mode:
+if args.force_sets or args.force_sets_zero:
+    if args.force_sets:
+        filenames = args.force_sets
+        force_sets_zero_mode = False
+    elif args.force_sets_zero:
+        filenames = args.force_sets_zero
+        force_sets_zero_mode = True
+    else:
+        print_error_message("Something wrong for parsing arguments.")
+        sys.exit(0)
+
     file_exists('disp.yaml', log_level)
-    for filename in args:
+    for filename in filenames:
         file_exists(filename, log_level)
+
+    if force_sets_zero_mode:
+        print("Forces in %s are subtracted from forces in all other files." %
+              filenames[0])
+
     error_num = create_FORCE_SETS(
         interface_mode,
-        args,
-        options.symprec,
-        is_wien2k_p1=options.is_wien2k_p1,
-        force_sets_zero_mode=options.force_sets_zero_mode,
+        filenames,
+        args.symprec,
+        is_wien2k_p1=args.is_wien2k_p1,
+        force_sets_zero_mode=force_sets_zero_mode,
         log_level=log_level)
     if log_level > 0:
         print_end()
     sys.exit(error_num)
 
 # Create FORCE_CONSTANTS (--fc or --force_constants)
-if options.force_constants_mode:
-    if len(args) > 0:
-        file_exists(args[0], log_level)
-        error_num = create_FORCE_CONSTANTS(args[0],
-                                           options.is_hdf5,
-                                           log_level)
-    else:
-        print_error_message("Please specify vasprun.xml.")
-        error_num = 1
-
+if args.force_constants:
+    filename = args.force_constants[0]
+    file_exists(filename, log_level)
+    error_num = create_FORCE_CONSTANTS(filename, args.is_hdf5, log_level)
     if log_level > 0:
         print_end()
     sys.exit(error_num)
@@ -319,15 +327,12 @@ if options.force_constants_mode:
 #########################
 # Read phonopy settings #
 #########################
-if len(args) > 0:
-    if file_exists(args[0], log_level):
-        phonopy_conf = PhonopyConfParser(filename=args[0],
-                                         options=options,
-                                         option_list=option_list)
+if len(args.conf_file) > 0:
+    if file_exists(args.conf_file[0], log_level):
+        phonopy_conf = PhonopyConfParser(filename=args.conf_file[0], args=args)
         settings = phonopy_conf.get_settings()
 else:
-    phonopy_conf = PhonopyConfParser(options=options,
-                                     option_list=option_list)
+    phonopy_conf = PhonopyConfParser(args=args)
     settings = phonopy_conf.get_settings()
 
 ##################
@@ -369,10 +374,10 @@ if magmoms is not None:
 ################################################
 # Check crystal symmetry and exit (--symmetry) #
 ################################################
-if options.is_check_symmetry:
+if args.is_check_symmetry:
     check_symmetry(unitcell,
                    primitive_axis=settings.get_primitive_matrix(),
-                   symprec=options.symprec,
+                   symprec=args.symprec,
                    distance_to_A=physical_units['distance_to_A'],
                    phonopy_version=phonopy_version)
     if log_level > 0:
@@ -394,7 +399,7 @@ if settings.get_supercell_matrix() is None:
 if run_mode == 'displacements':
     phonon = Phonopy(unitcell,
                      settings.get_supercell_matrix(),
-                     symprec=options.symprec,
+                     symprec=args.symprec,
                      is_symmetry=settings.get_is_symmetry(),
                      log_level=log_level)
 else: # Read FORCE_SETS, FORCE_CONSTANTS, or force_constants.hdf5
@@ -457,7 +462,7 @@ else: # Read FORCE_SETS, FORCE_CONSTANTS, or force_constants.hdf5
                      factor=physical_units['factor'],
                      dynamical_matrix_decimals=settings.get_dm_decimals(),
                      force_constants_decimals=settings.get_fc_decimals(),
-                     symprec=options.symprec,
+                     symprec=args.symprec,
                      is_symmetry=settings.get_is_symmetry(),
                      use_lapack_solver=settings.get_lapack_solver(),
                      log_level=log_level)
@@ -729,9 +734,9 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
             phonon.write_yaml_band_structure(labels=settings.get_band_labels(),
                                              comment=comment)
 
-        if options.is_graph_plot and run_mode != 'band_mesh':
+        if args.is_graph_plot and run_mode != 'band_mesh':
             plot = phonon.plot_band_structure(labels=settings.get_band_labels())
-            if options.is_graph_save:
+            if args.is_graph_save:
                 plot.savefig('band.pdf')
             else:
                 plot.show()
@@ -813,9 +818,9 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
                     print(("%12.3f " + "%15.7f" * 4) %
                           (T, F, S, CV, F + T * S / 1000))
 
-            if options.is_graph_plot:
+            if args.is_graph_plot:
                 plot = phonon.plot_thermal_properties()
-                if options.is_graph_save:
+                if args.is_graph_save:
                     plot.savefig('thermal_properties.pdf')
                 else:
                     plot.show()
@@ -844,9 +849,9 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
                 cutoff_frequency=settings.get_cutoff_frequency())
             phonon.write_yaml_thermal_displacements()
 
-            if options.is_graph_plot:
-                plot = phonon.plot_thermal_displacements(options.is_legend)
-                if options.is_graph_save:
+            if args.is_graph_plot:
+                plot = phonon.plot_thermal_displacements(args.is_legend)
+                if args.is_graph_save:
                     plot.savefig('thermal_displacement.pdf')
                 else:
                     plot.show()
@@ -911,24 +916,24 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
                 xyz_projection=settings.get_xyz_projection())
             phonon.write_partial_DOS()
 
-            if options.is_graph_plot:
+            if args.is_graph_plot:
                 pdos_indices = settings.get_pdos_indices()
                 if not pdos_indices:
                     num_atom = primitive.get_number_of_atoms()
                     pdos_indices = [np.arange(num_atom) * 3 + i
                                     for i in range(3)]
 
-            if options.is_graph_plot and run_mode != 'band_mesh':
+            if args.is_graph_plot and run_mode != 'band_mesh':
                 plot = phonon.plot_partial_DOS(
                     pdos_indices=pdos_indices,
                     legend=([np.array(x) + 1 for x in pdos_indices]))
-                if options.is_graph_save:
+                if args.is_graph_save:
                     plot.savefig('partial_dos.pdf')
                 else:
                     plot.show()
 
         # Total DOS
-        elif (options.is_graph_plot or settings.get_is_dos_mode()):
+        elif (args.is_graph_plot or settings.get_is_dos_mode()):
             dos_range = settings.get_dos_range()
 
             phonon.set_total_DOS(
@@ -948,9 +953,9 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
                     print("Debye frequency: %10.5f" % debye_freq)
             phonon.write_total_DOS()
 
-            if options.is_graph_plot and run_mode != 'band_mesh':
+            if args.is_graph_plot and run_mode != 'band_mesh':
                 plot = phonon.plot_total_DOS()
-                if options.is_graph_save:
+                if args.is_graph_save:
                     plot.savefig('total_dos.pdf')
                 else:
                     plot.show()
@@ -1005,7 +1010,7 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
                     print(text)
 
     if (run_mode == 'band_mesh' and
-        options.is_graph_plot and
+        args.is_graph_plot and
         not settings.get_is_thermal_properties() and
         not settings.get_is_thermal_displacements() and
         not settings.get_is_thermal_displacement_matrices() and
@@ -1017,7 +1022,7 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
         else:
             plot = phonon.plot_band_structure_and_dos(
                 labels=settings.get_band_labels())
-        if options.is_graph_save:
+        if args.is_graph_save:
             plot.savefig('band_dos.pdf')
         else:
             plot.show()
