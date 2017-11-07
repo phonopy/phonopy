@@ -219,9 +219,9 @@ def print_settings(settings):
         for v in settings.get_primitive_matrix():
             print("    %s" % v)
 
-###########################
-# Primitive option parser #
-###########################
+#################
+# Option parser #
+#################
 
 parser, deprecated = get_parser()
 args = parser.parse_args()
@@ -235,9 +235,20 @@ if args.quiet or args.is_check_symmetry:
 if args.loglevel is not None:
     log_level = args.loglevel
 
-#
-# Phonopy interface mode
-#
+################
+# Phonopy logo #
+################
+
+if log_level > 0:
+    print_phononpy()
+    print_version(phonopy_version)
+
+    if deprecated:
+        show_deprecated_option_warnings(deprecated)
+
+##########################
+# Phonopy interface mode #
+##########################
 if args.wien2k_mode:
     interface_mode = 'wien2k'
     from phonopy.interface.wien2k import write_supercells_with_displacements
@@ -272,17 +283,6 @@ physical_units = get_default_physical_units(interface_mode)
 if args.is_graph_save:
     import matplotlib
     matplotlib.use('Agg')
-
-################
-# Phonopy logo #
-################
-
-if log_level > 0:
-    print_phononpy()
-    print_version(phonopy_version)
-
-    if deprecated:
-        show_deprecated_option_warnings(deprecated)
 
 ###########################
 # Integrated helper tools #

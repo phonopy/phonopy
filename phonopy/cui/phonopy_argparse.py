@@ -47,7 +47,7 @@ def fix_deprecated_option_names(argv):
     return deprecated
 
 def show_deprecated_option_warnings(deprecated):
-    lines = ["Option names with underscores are deprecated, for which",
+    lines = ["Option names with underscores are deprecated, by which",
              "the underscores are replaced by dashes. Therefore"]
     for tag in deprecated:
         lines.append("'%s' has to be written as '%s'." %
