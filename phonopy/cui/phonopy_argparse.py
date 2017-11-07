@@ -112,7 +112,6 @@ def get_parser():
         is_nomeshsym=False,
         is_nosym=False,
         is_plusminus_displacements=False,
-        is_read_force_constants=False,
         is_tetrahedron_method=False,
         is_thermal_displacements=False,
         is_thermal_displacement_matrices=False,
@@ -139,6 +138,7 @@ def get_parser():
         quiet=False,
         q_direction=None,
         read_fc_format=None,
+        read_force_constants=False,
         show_irreps=False,
         sigma=None,
         supercell_dimension=None,
@@ -150,6 +150,7 @@ def get_parser():
         verbose=False,
         wien2k_mode=False,
         write_dynamical_matrices=False,
+        write_force_constants=False,
         write_fc_format=None,
         write_mesh=True,
         yaml_mode=False)
@@ -372,7 +373,7 @@ def get_parser():
         "-q", "--quiet", dest="quiet", action="store_true",
         help="Print out smallest information")
     parser.add_argument(
-        "--readfc", dest="is_read_force_constants", action="store_true",
+        "--readfc", dest="read_force_constants", action="store_true",
         help="Read FORCE_CONSTANTS")
     parser.add_argument(
         "--readfc-format", dest="readfc_format",

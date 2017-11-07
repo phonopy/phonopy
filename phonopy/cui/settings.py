@@ -924,7 +924,6 @@ class PhonopySettings(Settings):
         self._irreps_q_point = None
         self._irreps_tolerance = 1e-5
         self._is_dos_mode = False
-        self._is_force_constants = False
         self._is_group_velocity = False
         self._is_gamma_center = False
         self._is_hdf5 = False
@@ -944,6 +943,7 @@ class PhonopySettings(Settings):
         self._pretend_real = False
         self._projection_direction = None
         self._qpoints_format = 'yaml'
+        self._read_force_constants = False
         self._readfc_format = 'text'
         self._run_mode = None
         self._show_irreps = False
@@ -951,6 +951,7 @@ class PhonopySettings(Settings):
         self._thermal_displacement_matrix_temperatue = None
         self._write_dynamical_matrices = False
         self._write_mesh = True
+        self._write_force_constants = False
         self._writefc_format = 'text'
         self._xyz_projection = False
 
@@ -1079,12 +1080,6 @@ class PhonopySettings(Settings):
     def get_is_hdf5(self):
         return self._is_hdf5
 
-    def set_is_force_constants(self, is_force_constants):
-        self._is_force_constants = is_force_constants
-
-    def get_is_force_constants(self):
-        return self._is_force_constants
-
     def set_is_gamma_center(self, is_gamma_center):
         self._is_gamma_center = is_gamma_center
 
@@ -1208,6 +1203,12 @@ class PhonopySettings(Settings):
     def get_qpoints_format(self):
         return self._qpoints_format
 
+    def set_read_force_constants(self, read_force_constants):
+        self._read_force_constants = read_force_constants
+
+    def get_read_force_constants(self):
+        return self._read_force_constants
+
     def set_readfc_format(self, readfc_format):
         self._readfc_format = readfc_format
 
@@ -1263,6 +1264,12 @@ class PhonopySettings(Settings):
 
     def get_write_dynamical_matrices(self):
         return self._write_dynamical_matrices
+
+    def set_write_force_constants(self, write_force_constants):
+        self._write_force_constants = write_force_constants
+
+    def get_write_force_constants(self):
+        return self._write_force_constants
 
     def set_write_mesh(self, write_mesh):
         self._write_mesh = write_mesh
@@ -1370,13 +1377,13 @@ class PhonopyConfParser(ConfParser):
             if opt_proj_dir is not None:
                 self._confs['projection_direction'] = opt_proj_dir
 
-        if 'is_read_force_constants' in arg_list:
-            if self._args.is_read_force_constants:
-                self._confs['force_constants'] = 'read'
+        if 'read_force_constants' in arg_list:
+            if self._args.read_force_constants:
+                self._confs['read_force_constants'] = '.true.'
 
         if 'write_force_constants' in arg_list:
             if self._args.write_force_constants:
-                self._confs['force_constants'] = 'write'
+                self._confs['write_force_constants'] = '.true.'
 
         if 'readfc_format' in arg_list:
             if self._args.readfc_format:
@@ -1482,6 +1489,14 @@ class PhonopyConfParser(ConfParser):
             if conf_key == 'force_constants':
                 self.set_parameter('force_constants',
                                    confs['force_constants'].lower())
+
+            if conf_key == 'read_force_constants':
+                if confs['read_force_constants'].lower() == '.true.':
+                    self.set_parameter('read_force_constants', True)
+
+            if conf_key == 'write_force_constants':
+                if confs['write_force_constants'].lower() == '.true.':
+                    self.set_parameter('write_force_constants', True)
 
             if conf_key == 'cutoff_radius':
                 val = float(confs['cutoff_radius'])
@@ -1736,9 +1751,17 @@ class PhonopyConfParser(ConfParser):
         # Is force constants written or read?
         if 'force_constants' in params:
             if params['force_constants'] == 'write':
-                self._settings.set_is_force_constants("write")
+                self._settings.set_write_force_constants(True)
             elif params['force_constants'] == 'read':
-                self._settings.set_is_force_constants("read")
+                self._settings.set_read_force_constants(True)
+
+        if 'read_force_constants' in params:
+            self._settings.set_read_force_constants(
+                params['read_force_constants'])
+
+        if 'write_force_constants' in params:
+            self._settings.set_write_force_constants(
+                params['write_force_constants'])
 
         # Switch computation algorithm of force constants
         if 'fc_computation_algorithm' in params:

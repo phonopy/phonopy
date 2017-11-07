@@ -412,7 +412,7 @@ if run_mode == 'displacements':
 else: # Read FORCE_SETS, FORCE_CONSTANTS, or force_constants.hdf5
     num_atom = unitcell.get_number_of_atoms()
     num_satom = determinant(settings.get_supercell_matrix()) * num_atom
-    if settings.get_is_force_constants() == 'read':
+    if settings.get_read_force_constants():
         if settings.get_is_hdf5() or settings.get_readfc_format() == 'hdf5':
             try:
                 import h5py
@@ -572,14 +572,14 @@ if run_mode == 'displacements':
 ########################################
 # Preparations for phonon calculations #
 ########################################
-if settings.get_is_force_constants() == 'read':
+if settings.get_read_force_constants():
     phonon.set_force_constants(fc)
 elif os.path.exists("FORCE_SETS"):
     phonon.set_displacement_dataset(force_sets)
     if log_level > 0:
         print("Computing force constants...")
 
-    if (settings.get_is_force_constants() == "write" or
+    if (settings.get_write_force_constants() or
         settings.get_fc_symmetry_iteration() > 0 or
         settings.get_fc_spg_symmetry()):
         # Need to calculate full force constant tensors
@@ -646,7 +646,7 @@ if settings.get_fc_symmetry_iteration() > 0:
     phonon.symmetrize_force_constants(settings.get_fc_symmetry_iteration())
 
 # Write FORCE_CONSTANTS
-if settings.get_is_force_constants() == "write":
+if settings.get_write_force_constants():
     if settings.get_is_hdf5() or settings.get_writefc_format() == 'hdf5':
         file_IO.write_force_constants_to_hdf5(phonon.get_force_constants())
         if log_level > 0:
