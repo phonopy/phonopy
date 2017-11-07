@@ -32,7 +32,34 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import sys
+
+def fix_deprecated_option_names(argv):
+    deprecated = []
+    for i, v in enumerate(argv[1:]):
+        if v[0] == '-':
+            tag = v.split('=')[0]
+            if '_' in tag:
+                correct_tag = tag.replace('_', '-')
+                deprecated.append(tag)
+                argv[i + 1] = v.replace(tag, correct_tag)
+
+    return deprecated
+
+def show_deprecated_option_warnings(deprecated):
+    lines = ["Option names with underscores are deprecated, for which",
+             "the underscores are replaced by dashes. Therefore"]
+    for tag in deprecated:
+        lines.append("'%s' has to be written as '%s'." %
+                     (tag, tag.replace('_', '-')))
+    maxlen = max([len(line) for line in lines])
+    print("*" * maxlen)
+    print('\n'.join(lines))
+    print("*" * maxlen)
+    print("")
+
 def get_parser():
+    deprecated = fix_deprecated_option_names(sys.argv)
     import argparse
     parser = argparse.ArgumentParser(
         description="Phonopy command-line-tool")
@@ -134,17 +161,17 @@ def get_parser():
         "--band", dest="band_paths",
         help="Same behavior as BAND tag")
     parser.add_argument(
-        "--band_connection", dest="is_band_connection", action="store_true",
+        "--band-connection", dest="is_band_connection", action="store_true",
         help="Treat band crossings")
     parser.add_argument(
-        "--band_labels", dest="band_labels",
+        "--band-labels", dest="band_labels",
         help="Show labels at band segments")
     parser.add_argument(
-        "--band_points", dest="band_points", type=int,
+        "--band-points", dest="band_points", type=int,
         help=("Number of points calculated on a band segment in "
               "the band structure mode"))
     parser.add_argument(
-        "--bi", "--band_indices", dest="band_indices",
+        "--bi", "--band-indices", dest="band_indices",
         help=("Band indices to be included to calcualte thermal "
               "properties"))
     parser.add_argument(
@@ -157,12 +184,12 @@ def get_parser():
         "--crystal", dest="crystal_mode", action="store_true",
         help="Invoke CRYSTAL mode")
     parser.add_argument(
-        "--cutoff_freq", "--cutoff_frequency", dest="cutoff_frequency",
+        "--cutoff-freq", "--cutoff-frequency", dest="cutoff_frequency",
         type=float,
         help=("Thermal properties are not calculated below this "
               "cutoff frequency."))
     parser.add_argument(
-        "--cutoff_radius", dest="cutoff_radius", type=float,
+        "--cutoff-radius", dest="cutoff_radius", type=float,
         help="Out of cutoff radius, force constants are set zero.")
     parser.add_argument(
         "-d", "--displacement", dest="is_displacement", action="store_true",
@@ -171,7 +198,7 @@ def get_parser():
         "--dim", dest="supercell_dimension",
         help="Same behavior as DIM tag")
     parser.add_argument(
-        "--dm_decimals", dest="dynamical_matrix_decimals",
+        "--dm-decimals", dest="dynamical_matrix_decimals",
         type=int, help="Decimals of values of decimals")
     parser.add_argument(
         "--dos", dest="is_dos_mode", action="store_true",
@@ -184,32 +211,32 @@ def get_parser():
         "--elk", dest="elk_mode", action="store_true",
         help="Invoke elk mode")
     parser.add_argument(
-        "-f", "--force_sets", nargs='+',
+        "-f", "--force-sets", nargs='+', dest="force_sets",
         help="Create FORCE_SETS")
     parser.add_argument(
         "--factor", dest="frequency_conversion_factor", type=float,
         help="Conversion factor to favorite frequency unit")
     parser.add_argument(
-        "--fc", "--force_constants", nargs=1, dest="force_constants",
+        "--fc", "--force-constants", nargs=1, dest="force_constants",
         help=("Create FORCE_CONSTANTS from vaspurn.xml. "
               "vasprun.xml has to be passed as argument."))
     parser.add_argument(
-        "--fc_decimals", dest="force_constants_decimals", type=int,
+        "--fc-decimals", dest="force_constants_decimals", type=int,
         help="Decimals of values of force constants")
     parser.add_argument(
-        "--fc_computation_algorithm", dest="fc_computation_algorithm",
+        "--fc-computation-algorithm", dest="fc_computation_algorithm",
         help="Switch computation algorithm of force constants")
     parser.add_argument(
-        "--fc_spg_symmetry", dest="fc_spg_symmetry", action="store_true",
+        "--fc-spg-symmetry", dest="fc_spg_symmetry", action="store_true",
         help="Enforce space group symmetry to force constants")
     parser.add_argument(
-        "--fc_symmetry", dest="fc_symmetry", type=int,
+        "--fc-symmetry", dest="fc_symmetry", type=int,
         help="Symmetrize force constants")
     parser.add_argument(
-        "--fits_debye_model", dest="fits_debye_model", action="store_true",
+        "--fits-debye-model", dest="fits_debye_model", action="store_true",
         help="Fits total DOS to a Debye model")
     parser.add_argument(
-        "--fz", "--force_sets_zero", nargs='+', dest="force_sets_zero",
+        "--fz", "--force-sets-zero", nargs='+', dest="force_sets_zero",
         help=("Create FORCE_SETS. disp.yaml in the current directory and "
               "vapsrun.xml's for VASP or case.scf(m) for Wien2k as arguments "
               "are required. The first argument is that of the perfect "
@@ -224,31 +251,31 @@ def get_parser():
         "--fpitch", dest="fpitch", type=float,
         help="Frequency pitch used for DOS or moment calculation")
     parser.add_argument(
-        "--gc", "--gamma_center", dest="is_gamma_center", action="store_true",
+        "--gc", "--gamma-center", dest="is_gamma_center", action="store_true",
         help="Set mesh as Gamma center")
     parser.add_argument(
-        "--gv", "--group_velocity", dest="is_group_velocity",
+        "--gv", "--group-velocity", dest="is_group_velocity",
         action="store_true",
         help="Calculate group velocities at q-points")
     parser.add_argument(
-        "--gv_delta_q", dest="gv_delta_q", type=float,
+        "--gv-delta-q", dest="gv_delta_q", type=float,
         help="Delta-q distance used for group velocity calculation")
     parser.add_argument(
         "--hdf5", dest="is_hdf5", action="store_true",
         help="Use hdf5 for force constants")
     parser.add_argument(
-        "--irreps", "--irreps_qpoint", dest="irreps_qpoint",
+        "--irreps", "--irreps-qpoint", dest="irreps_qpoint",
         help="A q-point where characters of irreps are calculated")
-    parser.add_argument(
-        "--lapack_solver", dest="lapack_solver", action="store_true",
-        help=("Use Lapack via Lapacke for solving phonons. This "
-              "option can be used only when phonopy is compiled "
-              "specially."))
+    # parser.add_argument(
+    #     "--lapack-solver", dest="lapack_solver", action="store_true",
+    #     help=("Use Lapack via Lapacke for solving phonons. This "
+    #           "option can be used only when phonopy is compiled "
+    #           "specially."))
     parser.add_argument(
         "--legend", dest="is_legend", action="store_true",
         help="Legend of plots is shown in thermal displacements")
     parser.add_argument(
-        "--lcg", "--little_cogroup", dest="is_little_cogroup",
+        "--lcg", "--little-cogroup", dest="is_little_cogroup",
         action="store_true",
         help=("Show irreps of little co-group (or point-group of "
               "wave vector q) instead of little group"))
@@ -271,7 +298,7 @@ def get_parser():
         "--moment", dest="is_moment", action="store_true",
         help="Calculate moment of phonon states distribution")
     parser.add_argument(
-        "--moment_order", dest="moment_order",
+        "--moment-order", dest="moment_order",
         type=int, help="Order of moment of phonon states distribution")
     parser.add_argument(
         "--nac", dest="is_nac", action="store_true",
@@ -292,10 +319,10 @@ def get_parser():
         "-p", "--plot", dest="is_graph_plot", action="store_true",
         help="Plot data")
     parser.add_argument(
-        "--pa", "--primitive_axis", dest="primitive_axis",
+        "--pa", "--primitive-axis", dest="primitive_axis",
         help="Same as PRIMITIVE_AXIS tag")
     parser.add_argument(
-        "--pd", "--projection_direction", dest="projection_direction",
+        "--pd", "--projection-direction", dest="projection_direction",
         help="Same as PROJECTION_DIRECTION tag")
     parser.add_argument(
         "--pdos", dest="pdos",
@@ -304,12 +331,12 @@ def get_parser():
         "--pm", dest="is_plusminus_displacements", action="store_true",
         help="Set plus minus displacements")
     parser.add_argument(
-        "--pr", "--pretend_real", dest="pretend_real", action="store_true",
+        "--pr", "--pretend-real", dest="pretend_real", action="store_true",
         help=("Use imaginary frequency as real for thermal property "
               "calculation. For a testing purpose only, when a small "
               "amount of imaginary branches obtained."))
     parser.add_argument(
-        "--pt", "--projected_thermal_property",
+        "--pt", "--projected-thermal-property",
         dest="is_projected_thermal_properties", action="store_true",
         help="Output projected thermal properties")
     parser.add_argument(
@@ -319,7 +346,7 @@ def get_parser():
         "--qpoints", dest="qpoints",
         help="Calculate at specified q-points")
     parser.add_argument(
-        "--q_direction", dest="q_direction",
+        "--q-direction", dest="q_direction",
         help=("Direction of q-vector perturbation used for NAC at "
               "q->0, and group velocity for degenerate phonon "
               "mode in q-points mode"))
@@ -333,7 +360,7 @@ def get_parser():
         "-s", "--save", dest="is_graph_save", action="store_true",
         help="Save plot data in pdf")
     parser.add_argument(
-        "--show_irreps", dest="show_irreps", action="store_true",
+        "--show-irreps", dest="show_irreps", action="store_true",
         help="Show IR-Reps along with characters")
     parser.add_argument(
         "--siesta", dest="siesta_mode", action="store_true",
@@ -345,24 +372,24 @@ def get_parser():
         "--symmetry", dest="is_check_symmetry", action="store_true",
         help="Check crystal symmetry")
     parser.add_argument(
-        "-t", "--thermal_property", dest="is_thermal_properties",
+        "-t", "--thermal-property", dest="is_thermal_properties",
         action="store_true",
         help="Output thermal properties")
     parser.add_argument(
-        "--td", "--thermal_displacements", dest="is_thermal_displacements",
+        "--td", "--thermal-displacements", dest="is_thermal_displacements",
         action="store_true",
         help="Output thermal displacements")
     parser.add_argument(
-        "--tdm", "--thermal_displacement_matrix",
+        "--tdm", "--thermal-displacement-matrix",
         dest="is_thermal_displacement_matrices", action="store_true",
         help="Output thermal displacement matrices")
     parser.add_argument(
-        "--tdm_cif", "--thermal_displacement_matrix_cif",
+        "--tdm-cif", "--thermal-displacement-matrix-cif",
         dest="thermal_displacement_matrices_cif", type=float,
         help="Write cif with aniso_U for which temperature is specified")
     parser.add_argument(
-        "--thm", "--tetrahedron_method",
-        dest="is_tetrahedron_method", action="store_true",
+        "--thm", "--tetrahedron-method", dest="is_tetrahedron_method",
+        action="store_true",
         help="Use tetrahedron method for DOS/PDOS")
     parser.add_argument(
         "--tmax", dest="tmax", type=float,
@@ -399,7 +426,7 @@ def get_parser():
         help=("Write dynamical matrices. This has to be used "
               "with QPOINTS setting (or --qpoints)"))
     parser.add_argument(
-        "--xyz_projection", dest="xyz_projection", action="store_true",
+        "--xyz-projection", dest="xyz_projection", action="store_true",
         help="Project PDOS x, y, z directions in Cartesian coordinates")
     parser.add_argument(
         "--yaml", dest="yaml_mode", action="store_true",
@@ -408,4 +435,4 @@ def get_parser():
         "conf_file", nargs='*',
         help="Phonopy configure file")
 
-    return parser
+    return parser, deprecated

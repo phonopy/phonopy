@@ -41,7 +41,8 @@ from phonopy import Phonopy, PhonopyGruneisen, PhonopyQHA, __version__
 import phonopy.file_IO as file_IO
 from phonopy.cui.settings import PhonopyConfParser
 from phonopy.cui.show_symmetry import check_symmetry
-from phonopy.cui.phonopy_argparse import get_parser
+from phonopy.cui.phonopy_argparse import (get_parser,
+                                          show_deprecated_option_warnings)
 from phonopy.structure.cells import print_cell, determinant
 from phonopy.structure.atoms import atom_data, symbol_map
 from phonopy.interface import (create_FORCE_SETS, read_crystal_structure,
@@ -222,7 +223,7 @@ def print_settings(settings):
 # Primitive option parser #
 ###########################
 
-parser = get_parser()
+parser, deprecated = get_parser()
 args = parser.parse_args()
 
 # Set log level
@@ -279,6 +280,9 @@ if args.is_graph_save:
 if log_level > 0:
     print_phononpy()
     print_version(phonopy_version)
+
+    if deprecated:
+        show_deprecated_option_warnings(deprecated)
 
 ###########################
 # Integrated helper tools #
