@@ -66,6 +66,7 @@ def get_parser():
     parser.set_defaults(
         abinit_mode=False,
         anime=None,
+        band_format=None,
         band_indices=None,
         band_labels=None,
         band_paths=None,
@@ -81,6 +82,7 @@ def get_parser():
         cp2k_mode=False,
         fc_symmetry=None,
         fc_computation_algorithm=None,
+        fc_format=None,
         fc_spg_symmetry=False,
         fits_debye_model=False,
         force_constants_decimals=None,
@@ -124,6 +126,7 @@ def get_parser():
         loglevel=None,
         masses=None,
         magmom=None,
+        mesh_format=None,
         mesh_numbers=None,
         modulation=None,
         moment_order=None,
@@ -132,8 +135,10 @@ def get_parser():
         projection_direction=None,
         pwscf_mode=False,
         qpoints=None,
+        qpoints_format=None,
         quiet=False,
         q_direction=None,
+        read_fc_format=None,
         show_irreps=False,
         sigma=None,
         supercell_dimension=None,
@@ -145,6 +150,7 @@ def get_parser():
         verbose=False,
         wien2k_mode=False,
         write_dynamical_matrices=False,
+        write_fc_format=None,
         write_mesh=True,
         yaml_mode=False)
 
@@ -166,6 +172,9 @@ def get_parser():
     parser.add_argument(
         "--band-labels", dest="band_labels",
         help="Show labels at band segments")
+    parser.add_argument(
+        "--band-format", dest="band_format",
+        help="Band structure output file-format")
     parser.add_argument(
         "--band-points", dest="band_points", type=int,
         help=("Number of points calculated on a band segment in "
@@ -221,11 +230,14 @@ def get_parser():
         help=("Create FORCE_CONSTANTS from vaspurn.xml. "
               "vasprun.xml has to be passed as argument."))
     parser.add_argument(
+        "--fc-computation-algorithm", dest="fc_computation_algorithm",
+        help="Switch computation algorithm of force constants")
+    parser.add_argument(
         "--fc-decimals", dest="force_constants_decimals", type=int,
         help="Decimals of values of force constants")
     parser.add_argument(
-        "--fc-computation-algorithm", dest="fc_computation_algorithm",
-        help="Switch computation algorithm of force constants")
+        "--fc-format", dest="fc_format",
+        help="Force constants input/output file-format")
     parser.add_argument(
         "--fc-spg-symmetry", dest="fc_spg_symmetry", action="store_true",
         help="Enforce space group symmetry to force constants")
@@ -289,6 +301,9 @@ def get_parser():
         "--magmom", dest="magmoms",
         help="Same as MAGMOM tag")
     parser.add_argument(
+        "--mesh-format", dest="mesh_format",
+        help="Mesh output file-format")
+    parser.add_argument(
         "--modulation", dest="modulation",
         help="Same as MODULATION tag")
     parser.add_argument(
@@ -346,6 +361,9 @@ def get_parser():
         "--qpoints", dest="qpoints",
         help="Calculate at specified q-points")
     parser.add_argument(
+        "--qpoints-format", dest="qpoints_format",
+        help="Q-points output file-format")
+    parser.add_argument(
         "--q-direction", dest="q_direction",
         help=("Direction of q-vector perturbation used for NAC at "
               "q->0, and group velocity for degenerate phonon "
@@ -356,6 +374,9 @@ def get_parser():
     parser.add_argument(
         "--readfc", dest="is_read_force_constants", action="store_true",
         help="Read FORCE_CONSTANTS")
+    parser.add_argument(
+        "--readfc-format", dest="readfc_format",
+        help="Force constants input file-format")
     parser.add_argument(
         "-s", "--save", dest="is_graph_save", action="store_true",
         help="Save plot data in pdf")
@@ -421,6 +442,9 @@ def get_parser():
     parser.add_argument(
         "--writefc", dest="write_force_constants", action="store_true",
         help="Write FORCE_CONSTANTS")
+    parser.add_argument(
+        "--writefc-format", dest="writefc_format",
+        help="Force constants output file-format")
     parser.add_argument(
         "--writedm", dest="write_dynamical_matrices", action="store_true",
         help=("Write dynamical matrices. This has to be used "

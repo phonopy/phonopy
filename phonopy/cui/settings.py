@@ -896,8 +896,6 @@ class ConfParser(object):
     def set_parameter(self, key, val):
         self._parameters[key] = val
 
-
-
 #
 # For phonopy
 #
@@ -911,6 +909,7 @@ class PhonopySettings(Settings):
         self._anime_qpoint = None
         self._anime_shift = None
         self._anime_type = 'v_sim'
+        self._band_format = 'yaml'
         self._band_labels = None
         self._band_connection = False
         self._cutoff_radius = None
@@ -938,17 +937,21 @@ class PhonopySettings(Settings):
         self._is_thermal_properties = False
         self._is_projected_thermal_properties = False
         self._lapack_solver = False
+        self._mesh_format = 'yaml'
         self._modulation = None
         self._moment_order = None
         self._pdos_indices = None
         self._pretend_real = False
         self._projection_direction = None
+        self._qpoints_format = 'yaml'
+        self._readfc_format = 'text'
         self._run_mode = None
         self._show_irreps = False
         self._thermal_atom_pairs = None
         self._thermal_displacement_matrix_temperatue = None
         self._write_dynamical_matrices = False
         self._write_mesh = True
+        self._writefc_format = 'text'
         self._xyz_projection = False
 
     def set_anime_band_index(self, band_index):
@@ -986,6 +989,12 @@ class PhonopySettings(Settings):
 
     def get_anime_type(self):
         return self._anime_type
+
+    def set_band_format(self, band_format):
+        self._band_format = band_format
+
+    def get_band_format(self):
+        return self._band_format
 
     def set_band_labels(self, labels):
         self._band_labels = labels
@@ -1157,6 +1166,12 @@ class PhonopySettings(Settings):
                 self._is_mesh_symmetry,
                 self._is_gamma_center)
 
+    def set_mesh_format(self, mesh_format):
+        self._mesh_format = mesh_format
+
+    def get_mesh_format(self):
+        return self._mesh_format
+
     def set_modulation(self, modulation):
         self._modulation = modulation
 
@@ -1186,6 +1201,18 @@ class PhonopySettings(Settings):
 
     def get_projection_direction(self):
         return self._projection_direction
+
+    def set_qpoints_format(self, qpoints_format):
+        self._qpoints_format = qpoints_format
+
+    def get_qpoints_format(self):
+        return self._qpoints_format
+
+    def set_readfc_format(self, readfc_format):
+        self._readfc_format = readfc_format
+
+    def get_readfc_format(self):
+        return self._readfc_format
 
     def set_run_mode(self, run_mode):
         modes = ['qpoints',
@@ -1243,6 +1270,12 @@ class PhonopySettings(Settings):
     def get_write_mesh(self):
         return self._write_mesh
 
+    def set_writefc_format(self, writefc_format):
+        self._writefc_format = writefc_format
+
+    def get_writefc_format(self):
+        return self._writefc_format
+
     def set_xyz_projection(self, xyz_projection):
         self._xyz_projection = xyz_projection
 
@@ -1259,6 +1292,10 @@ class PhonopyConfParser(ConfParser):
 
     def _read_options(self):
         arg_list = vars(self._args)
+        if 'band_format' in arg_list:
+            if self._args.band_format:
+                self._confs['band_format'] = self._args.band_format
+
         if 'band_labels' in arg_list:
             if self._args.band_labels:
                 self._confs['band_labels'] = self._args.band_labels
@@ -1341,6 +1378,18 @@ class PhonopyConfParser(ConfParser):
             if self._args.write_force_constants:
                 self._confs['force_constants'] = 'write'
 
+        if 'readfc_format' in arg_list:
+            if self._args.readfc_format:
+                self._confs['readfc_format'] = self._args.readfc_format
+
+        if 'writefc_format' in arg_list:
+            if self._args.writefc_format:
+                self._confs['writefc_format'] = self._args.writefc_format
+
+        if 'fc_format' in arg_list:
+            if self._args.fc_format:
+                self._confs['fc_format'] = self._args.fc_format
+
         if 'is_hdf5' in arg_list:
             if self._args.is_hdf5:
                 self._confs['hdf5'] = '.true.'
@@ -1352,6 +1401,14 @@ class PhonopyConfParser(ConfParser):
         if 'write_mesh' in arg_list:
             if not self._args.write_mesh:
                 self._confs['write_mesh'] = '.false.'
+
+        if 'mesh_format' in arg_list:
+            if self._args.mesh_format:
+                self._confs['mesh_format'] = self._args.mesh_format
+
+        if 'qpoints_format' in arg_list:
+            if self._args.qpoints_format:
+                self._confs['qpoints_format'] = self._args.qpoints_format
 
         if 'irreps_qpoint' in arg_list:
             if self._args.irreps_qpoint is not None:
@@ -1411,6 +1468,9 @@ class PhonopyConfParser(ConfParser):
                 if confs['create_displacements'].lower() == '.true.':
                     self.set_parameter('create_displacements', True)
 
+            if conf_key == 'band_format':
+                self.set_parameter('band_format', confs['band_format'])
+
             if conf_key == 'band_labels':
                 labels = [x for x in confs['band_labels'].split()]
                 self.set_parameter('band_labels', labels)
@@ -1445,6 +1505,12 @@ class PhonopyConfParser(ConfParser):
                     self.setting_error("MP_SHIFT is incorrectly set.")
                 self.set_parameter('mp_shift', vals[:3])
 
+            if conf_key == 'mesh_format':
+                self.set_parameter('mesh_format', confs['mesh_format'])
+
+            if conf_key == 'qpoints_format':
+                self.set_parameter('qpoints_format', confs['qpoints_format'])
+
             if conf_key == 'time_reversal_symmetry':
                 if confs['time_reversal_symmetry'].lower() == '.false.':
                     self.set_parameter('is_time_reversal_symmetry', False)
@@ -1460,6 +1526,16 @@ class PhonopyConfParser(ConfParser):
             if conf_key == 'fc_spg_symmetry':
                 if confs['fc_spg_symmetry'].lower() == '.true.':
                     self.set_parameter('fc_spg_symmetry', True)
+
+            if conf_key == 'readfc_format':
+                self.set_parameter('readfc_format', confs['readfc_format'])
+
+            if conf_key == 'writefc_format':
+                self.set_parameter('writefc_format', confs['writefc_format'])
+
+            if conf_key == 'fc_format':
+                self.set_parameter('readfc_format', confs['fc_format'])
+                self.set_parameter('writefc_format', confs['fc_format'])
 
             # Animation
             if conf_key == 'anime':
@@ -1673,6 +1749,12 @@ class PhonopyConfParser(ConfParser):
         if 'fc_spg_symmetry' in params:
             self._settings.set_fc_spg_symmetry(params['fc_spg_symmetry'])
 
+        if 'readfc_format' in params:
+            self._settings.set_readfc_format(params['readfc_format'])
+
+        if 'writefc_format' in params:
+            self._settings.set_writefc_format(params['writefc_format'])
+
         # Use hdf5?
         if 'hdf5' in params:
             self._settings.set_is_hdf5(params['hdf5'])
@@ -1699,16 +1781,18 @@ class PhonopyConfParser(ConfParser):
             if 'is_gamma_center' in params:
                 if params['is_gamma_center']:
                     self._settings.set_is_gamma_center(True)
+            if 'mesh_format' in params:
+                self._settings.set_mesh_format(params['mesh_format'])
 
         # band mode
         if 'band_paths' in params:
             self._settings.set_run_mode('band')
-
-        if 'band_labels' in params:
-            self._settings.set_band_labels(params['band_labels'])
-
-        if 'band_connection' in params:
-            self._settings.set_is_band_connection(params['band_connection'])
+            if 'band_format' in params:
+                self._settings.set_band_format(params['band_format'])
+            if 'band_labels' in params:
+                self._settings.set_band_labels(params['band_labels'])
+            if 'band_connection' in params:
+                self._settings.set_is_band_connection(params['band_connection'])
 
         # band & mesh mode
         if 'mesh_numbers' in params and 'band_paths' in params:
@@ -1717,6 +1801,8 @@ class PhonopyConfParser(ConfParser):
         # Q-points mode
         if 'qpoints' in params:
             self._settings.set_run_mode('qpoints')
+            if 'qpoints_format' in params:
+                self._settings.set_qpoints_format(params['qpoints_format'])
 
         # Whether write out dynamical matrices or not
         if 'write_dynamical_matrices' in params:

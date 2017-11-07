@@ -323,7 +323,10 @@ if args.force_sets or args.force_sets_zero:
 if args.force_constants:
     filename = args.force_constants[0]
     file_exists(filename, log_level)
-    error_num = create_FORCE_CONSTANTS(filename, args.is_hdf5, log_level)
+    write_hdf5 = (args.is_hdf5 or
+                  args.fc_format == 'hdf5' or
+                  args.writefc_format == 'hdf5')
+    error_num = create_FORCE_CONSTANTS(filename, write_hdf5, log_level)
     if log_level > 0:
         print_end()
     sys.exit(error_num)
@@ -410,7 +413,7 @@ else: # Read FORCE_SETS, FORCE_CONSTANTS, or force_constants.hdf5
     num_atom = unitcell.get_number_of_atoms()
     num_satom = determinant(settings.get_supercell_matrix()) * num_atom
     if settings.get_is_force_constants() == 'read':
-        if settings.get_is_hdf5():
+        if settings.get_is_hdf5() or settings.get_readfc_format() == 'hdf5':
             try:
                 import h5py
             except ImportError:
@@ -433,7 +436,7 @@ else: # Read FORCE_SETS, FORCE_CONSTANTS, or force_constants.hdf5
         if fc.shape[0] != num_satom:
             error_text = ("Number of atoms in supercell is not consistent with "
                           "the matrix shape of\nforce constants read from ")
-            if settings.get_is_hdf5():
+            if settings.get_is_hdf5() or settings.get_readfc_format() == 'hdf5':
                 error_text += "force_constants.hdf5.\n"
             else:
                 error_text += "FORCE_CONSTANTS.\n"
@@ -644,7 +647,7 @@ if settings.get_fc_symmetry_iteration() > 0:
 
 # Write FORCE_CONSTANTS
 if settings.get_is_force_constants() == "write":
-    if settings.get_is_hdf5():
+    if settings.get_is_hdf5() or settings.get_writefc_format() == 'hdf5':
         file_IO.write_force_constants_to_hdf5(phonon.get_force_constants())
         if log_level > 0:
             print("Force constants are written into force_constants.hdf5.")
@@ -699,7 +702,7 @@ if run_mode == 'qpoints':
         is_eigenvectors=settings.get_is_eigenvectors(),
         write_dynamical_matrices=settings.get_write_dynamical_matrices())
 
-    if settings.get_is_hdf5():
+    if settings.get_is_hdf5() or settings.get_qpoints_format() == "hdf5":
         phonon.write_hdf5_qpoints_phonon()
     else:
         phonon.write_yaml_qpoints_phonon()
@@ -731,7 +734,7 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
         else:
             comment = {'calculator': interface_mode}
 
-        if settings.get_is_hdf5():
+        if settings.get_is_hdf5() or settings.get_band_format() == 'hdf5':
             phonon.write_hdf5_band_structure(labels=settings.get_band_labels(),
                                              comment=comment)
         else:
@@ -781,7 +784,8 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
             phonon.run_mesh()
 
             if settings.get_write_mesh():
-                if settings.get_is_hdf5():
+                if (settings.get_is_hdf5() or
+                    settings.get_mesh_format() == 'hdf5'):
                     phonon.write_hdf5_mesh()
                 else:
                     phonon.write_yaml_mesh()
