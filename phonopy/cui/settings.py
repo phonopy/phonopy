@@ -1476,7 +1476,7 @@ class PhonopyConfParser(ConfParser):
                     self.set_parameter('create_displacements', True)
 
             if conf_key == 'band_format':
-                self.set_parameter('band_format', confs['band_format'])
+                self.set_parameter('band_format', confs['band_format'].lower())
 
             if conf_key == 'band_labels':
                 labels = [x for x in confs['band_labels'].split()]
@@ -1521,10 +1521,11 @@ class PhonopyConfParser(ConfParser):
                 self.set_parameter('mp_shift', vals[:3])
 
             if conf_key == 'mesh_format':
-                self.set_parameter('mesh_format', confs['mesh_format'])
+                self.set_parameter('mesh_format', confs['mesh_format'].lower())
 
             if conf_key == 'qpoints_format':
-                self.set_parameter('qpoints_format', confs['qpoints_format'])
+                self.set_parameter('qpoints_format',
+                                   confs['qpoints_format'].lower())
 
             if conf_key == 'time_reversal_symmetry':
                 if confs['time_reversal_symmetry'].lower() == '.false.':
@@ -1543,14 +1544,14 @@ class PhonopyConfParser(ConfParser):
                     self.set_parameter('fc_spg_symmetry', True)
 
             if conf_key == 'readfc_format':
-                self.set_parameter('readfc_format', confs['readfc_format'])
+                self.set_parameter('readfc_format', confs['readfc_format'].lower())
 
             if conf_key == 'writefc_format':
-                self.set_parameter('writefc_format', confs['writefc_format'])
+                self.set_parameter('writefc_format', confs['writefc_format'].lower())
 
             if conf_key == 'fc_format':
-                self.set_parameter('readfc_format', confs['fc_format'])
-                self.set_parameter('writefc_format', confs['fc_format'])
+                self.set_parameter('readfc_format', confs['fc_format'].lower())
+                self.set_parameter('writefc_format', confs['fc_format'].lower())
 
             # Animation
             if conf_key == 'anime':
