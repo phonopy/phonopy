@@ -472,7 +472,7 @@ written as
 
 .. math::
 
-   g^j(\omega, \hat{\mathbf{n}}) = \frac{1}{N} \sum_\lambda 
+   g^j(\omega, \hat{\mathbf{n}}) = \frac{1}{N} \sum_\lambda
    \delta(\omega - \omega_\lambda) |\hat{\mathbf{n}} \cdot
    \mathbf{e}^j_\lambda|^2,
 
@@ -1029,7 +1029,17 @@ READ``, force constants are read from ``FORCE_CONSTANTS`` file. With
 The file format of ``FORCE_CONSTANTS`` is shown
 :ref:`here <file_force_constants>`.
 
+``READ_FORCE_CONSTANTS``
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
+``READ_FORCE_CONSTANTS = .TRUE.`` is equivalent to ``FORCE_CONSTANTS =
+READ``.
+
+``WRITE_FORCE_CONSTANTS``
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``WRITE_FORCE_CONSTANTS = .TRUE.`` is equivalent to ``FORCE_CONSTANTS =
+WRITE``.
 
 .. _animation_tag:
 
@@ -1227,3 +1237,106 @@ little group.
 
    IRREPS = 0 0 1/8
    LITTLE_COGROUP = .TRUE.
+
+Input/Output file control
+-------------------------
+
+.. _fc_format_tag:
+
+``FC_FORMAT``,  ``READFC_FORMAT``, ``WRITEFC_FORMAT``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+There are two file-formats to store force constants. Currently
+:ref:`text style<file_force_constants>` (``TEXT``) and hdf5 (``HDF5``)
+formats are supported. The default file format is the :ref:`text
+style<file_force_constants>`. Reading and writing force constants are
+invoked by :ref:`FORCE_CONSTANTS tag<force_constants_tag>`. Using
+these tags, the input/output formats are switched.
+
+``FC_FORMAT`` affects to both input and output, e.g.::
+
+   FORCE_CONSTANTS = WRITE
+   FC_FORMAT = HDF5
+
+``READFC_FORMAT`` and ``WRITEFC_FORMAT`` can be used to control
+input and output formats separately, i.e., the following setting to
+convert force constants format is possible::
+
+   READ_FORCE_CONSTANTS = .TRUE.
+   WRITE_FORCE_CONSTANTS = .TRUE.
+   WRITEFC_FORMAT = HDF5
+
+.. _band_format_tag:
+
+``BAND_FORMAT``, ``MESH_FORMAT``, ``QPOINTS_FORMAT``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+There are two file-formats to write the results of band structure,
+mesh, and q-points calculations. Currently YAML (``YAML``) and hdf5
+(``HDF5``) formats are supported. The default file format is the YAML
+format. The file format is changed as follows:
+
+::
+
+   BAND_FORMAT = HDF5
+
+::
+
+   MESH_FORMAT = HDF5
+
+::
+
+   QPOINTS_FORMAT = HDF5
+
+.. _hdf5_tag:
+
+``HDF5``
+~~~~~~~~~~~
+
+**This tag is deprecated.**
+
+The following output files are written in hdf5 format instead of their
+original formats (in parenthesis) by ``HDF5 = .TRUE.``.  In addition,
+``force_constants.hdf5`` is read with this tag.
+
+* ``force_constants.hdf5`` (``FORCE_CONSTANTS``)
+* ``mesh.hdf5`` (``mesh.yaml``)
+* ``band.hdf5`` (``band.yaml``)
+* ``qpoints.hdf5`` (``qpoints.yaml``)
+
+::
+
+   HDF5 = .TRUE.
+
+``force_constants.hdf5``
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+With ``--hdf5`` option and ``FORCE_CONSTANTS = WRITE``
+(``--writefc``), ``force_constants.hdf5`` is written.
+With ``--hdf5`` option and ``FORCE_CONSTANTS = READ`` (``--readfc``),
+``force_constants.hdf5`` is read.
+
+``mesh.hdf5``
+^^^^^^^^^^^^^^
+
+In the mesh sampling calculations (see :ref:`mesh_sampling_tags`),
+calculation results are written into ``mesh.hdf5`` but not into
+``mesh.yaml``. Using this option may reduce the data output size and
+thus writing time when ``mesh.yaml`` is huge, e.g., eigenvectors are
+written on a dense sampling mesh.
+
+``qpoints.hdf5``
+^^^^^^^^^^^^^^^^^
+
+In the specific q-points calculations (:ref:`qpoints_tag`),
+calculation results are written into ``qpoints.hdf5`` but not into
+``qpoints.yaml``. With :ref:`writedm_tag`, dynamical matrices are also
+stored in ``qpoints.hdf5``. Using this option may be useful with large
+set of q-points with including eigenvector or dynamical matrix output.
+
+``band.hdf5``
+^^^^^^^^^^^^^^^
+
+In the band structure calculations (:ref:`band_structure_related_tags`),
+calculation results are written into ``band.hdf5`` but not into
+``band.yaml``.

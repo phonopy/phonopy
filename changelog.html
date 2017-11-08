@@ -3,13 +3,13 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Change Log &#8212; Phonopy v.1.12.0</title>
+    <title>Change Log &#8212; Phonopy v.1.12.2</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.12.0',
+        VERSION:     '1.12.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -22,7 +22,7 @@
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -47,7 +47,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.12.0</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.12.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -99,6 +99,7 @@
       role="menu"
       aria-labelledby="dLabelLocalToc"><ul>
 <li><a class="reference internal" href="#">Change Log</a><ul>
+<li><a class="reference internal" href="#nov-8-2017-version-1-12-2">Nov-8-2017: Version 1.12.2</a></li>
 <li><a class="reference internal" href="#oct-19-2017-version-1-12-0">Oct-19-2017: Version 1.12.0</a></li>
 <li><a class="reference internal" href="#oct-2-2017-version-1-11-14">Oct-2-2017: Version 1.11.14</a></li>
 <li><a class="reference internal" href="#june-18-2017-version-1-11-12">June-18-2017: Version 1.11.12</a></li>
@@ -222,6 +223,27 @@
       
   <div class="section" id="change-log">
 <span id="changelog"></span><h1>Change Log<a class="headerlink" href="#change-log" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="nov-8-2017-version-1-12-2">
+<h2>Nov-8-2017: Version 1.12.2<a class="headerlink" href="#nov-8-2017-version-1-12-2" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Command option parser of the phonopy tools is replaced from
+<code class="docutils literal"><span class="pre">optparse</span></code> to <code class="docutils literal"><span class="pre">argparse</span></code>.</li>
+<li>The behaviours of <code class="docutils literal"><span class="pre">-f</span></code>, <code class="docutils literal"><span class="pre">--fz</span></code>, and <code class="docutils literal"><span class="pre">--fc</span></code> options are
+slightly changed. The filenames used with these options were the
+positional arguments previously. Now they are the command-line
+arguments, i.e., filenames have to be put just after the option name
+like <code class="docutils literal"><span class="pre">-f</span> <span class="pre">vasprun.xml-001</span> <span class="pre">vasprun.xml-002</span> <span class="pre">...</span></code>.</li>
+<li>New tags (options), <code class="docutils literal"><span class="pre">FC_FORMAT</span></code> (<code class="docutils literal"><span class="pre">--fc-format</span></code>),
+<code class="docutils literal"><span class="pre">READFC_FORMAT</span></code> (<code class="docutils literal"><span class="pre">read-fc-format</span></code>), <code class="docutils literal"><span class="pre">WRITEFC_FORMAT</span></code>
+(<code class="docutils literal"><span class="pre">write-fc-format</span></code>), <code class="docutils literal"><span class="pre">BAND_FORMAT</span></code> (<code class="docutils literal"><span class="pre">--band-format</span></code>),
+<code class="docutils literal"><span class="pre">MESH_FORMAT</span></code> (<code class="docutils literal"><span class="pre">--mesh-format</span></code>), and <code class="docutils literal"><span class="pre">QPOINTS_FORMAT</span></code>
+(<code class="docutils literal"><span class="pre">--qpoints-format</span></code>) were implemented. <code class="docutils literal"><span class="pre">HDF5</span></code> tag is deprecated.</li>
+<li>New tags <code class="docutils literal"><span class="pre">READ_FORCE_CONSTANTS</span></code> and <code class="docutils literal"><span class="pre">WRITE_FORCE_CONSTANTS</span></code>
+were made. They are equivalent to existing options of <code class="docutils literal"><span class="pre">--readfc</span></code>
+and <code class="docutils literal"><span class="pre">--writefc</span></code>. Using them, reading and writing force constants
+are separably controlled.</li>
+</ul>
+</div>
 <div class="section" id="oct-19-2017-version-1-12-0">
 <h2>Oct-19-2017: Version 1.12.0<a class="headerlink" href="#oct-19-2017-version-1-12-0" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
@@ -354,7 +376,7 @@ by Henrique Pereira Coutada Miranda.</li>
 <h2>Aug-12-2015: Version 1.9.6<a class="headerlink" href="#aug-12-2015-version-1-9-6" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><code class="docutils literal"><span class="pre">--hdf5</span></code> option. Some output files can be written in hdf5
-format. See <a class="reference internal" href="command-options.html#hdf5-option"><span class="std std-ref">--hdf5</span></a>.</li>
+format. See <a class="reference internal" href="setting-tags.html#hdf5-tag"><span class="std std-ref">HDF5</span></a>.</li>
 <li>Improve tetrahedron method performance in the calculation of DOS and
 PDOS.</li>
 <li>Spglib update to version 1.8.2.1.</li>

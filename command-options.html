@@ -3,13 +3,13 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Command options &#8212; Phonopy v.1.12.0</title>
+    <title>Command options &#8212; Phonopy v.1.12.2</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.12.0',
+        VERSION:     '1.12.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -22,7 +22,7 @@
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -47,7 +47,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.12.0</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.12.2</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -145,16 +145,6 @@
 <li><a class="reference internal" href="#symmetry"><code class="docutils literal"><span class="pre">--symmetry</span></code></a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#input-output-file-control">Input/Output file control</a><ul>
-<li><a class="reference internal" href="#hdf5"><code class="docutils literal"><span class="pre">--hdf5</span></code></a><ul>
-<li><a class="reference internal" href="#force-constants-hdf5"><code class="docutils literal"><span class="pre">force_constants.hdf5</span></code></a></li>
-<li><a class="reference internal" href="#mesh-hdf5"><code class="docutils literal"><span class="pre">mesh.hdf5</span></code></a></li>
-<li><a class="reference internal" href="#qpoints-hdf5"><code class="docutils literal"><span class="pre">qpoints.hdf5</span></code></a></li>
-<li><a class="reference internal" href="#band-hdf5"><code class="docutils literal"><span class="pre">band.hdf5</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
 </ul>
 </li>
 </ul>
@@ -240,65 +230,69 @@
 <li><a class="reference internal" href="#symmetry" id="id25"><code class="docutils literal"><span class="pre">--symmetry</span></code></a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#input-output-file-control" id="id26">Input/Output file control</a><ul>
-<li><a class="reference internal" href="#hdf5" id="id27"><code class="docutils literal"><span class="pre">--hdf5</span></code></a></li>
-</ul>
-</li>
 </ul>
 </div>
+<p>From phonopy v1.12.2, the command option names with underscores <code class="docutils literal"><span class="pre">_</span></code>
+are replaced by those with dashes <code class="docutils literal"><span class="pre">-</span></code>. Those tag names are unchanged.</p>
 <p>Some of command-line options are equivalent to respective setting
 tags:</p>
 <ul class="simple">
 <li><code class="docutils literal"><span class="pre">--amplitude</span></code> (<code class="docutils literal"><span class="pre">DISPLACEMENT_DISTANCE</span></code>)</li>
 <li><code class="docutils literal"><span class="pre">--anime</span></code> (<code class="docutils literal"><span class="pre">ANIME</span></code>)</li>
 <li><code class="docutils literal"><span class="pre">--band</span></code> (<code class="docutils literal"><span class="pre">BAND</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--band_connection</span></code>  (<code class="docutils literal"><span class="pre">BAND_CONNECTION</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--band_labels</span></code> (<code class="docutils literal"><span class="pre">BAND_LABELS</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--band_points</span></code>  (<code class="docutils literal"><span class="pre">BAND_POINTS</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--cutoff_freq</span></code> (<code class="docutils literal"><span class="pre">CUTOFF_FREQUENCY</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--band-connection</span></code>  (<code class="docutils literal"><span class="pre">BAND_CONNECTION</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--band-format</span></code> (<code class="docutils literal"><span class="pre">BAND_FORMAT</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--band-labels</span></code> (<code class="docutils literal"><span class="pre">BAND_LABELS</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--band-points</span></code>  (<code class="docutils literal"><span class="pre">BAND_POINTS</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--cutoff-freq</span></code> (<code class="docutils literal"><span class="pre">CUTOFF_FREQUENCY</span></code>)</li>
 <li><code class="docutils literal"><span class="pre">-c</span></code>, <code class="docutils literal"><span class="pre">--cell</span></code> (<code class="docutils literal"><span class="pre">CELL_FILENAME</span></code>)</li>
 <li><code class="docutils literal"><span class="pre">-d</span></code>  (<code class="docutils literal"><span class="pre">CREATE_DISPLACEMENTS</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code></li>
 <li><code class="docutils literal"><span class="pre">--dim</span></code> (<code class="docutils literal"><span class="pre">DIM</span></code>)</li>
 <li><code class="docutils literal"><span class="pre">--dos</span></code> (<code class="docutils literal"><span class="pre">DOS</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
 <li><code class="docutils literal"><span class="pre">--eigvecs</span></code>, <code class="docutils literal"><span class="pre">--eigenvectors</span></code> (<code class="docutils literal"><span class="pre">EIGENVECTORS</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
 <li><code class="docutils literal"><span class="pre">--factor</span></code> (<code class="docutils literal"><span class="pre">FREQUENCY_CONVERSION_FACTOR</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--fits_debye_model</span></code> (<code class="docutils literal"><span class="pre">DEBYE_MODEL</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--fits-debye-model</span></code> (<code class="docutils literal"><span class="pre">DEBYE_MODEL</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
 <li><code class="docutils literal"><span class="pre">--fmax</span></code> (<code class="docutils literal"><span class="pre">FMAX</span></code>)</li>
 <li><code class="docutils literal"><span class="pre">--fmin</span></code> (<code class="docutils literal"><span class="pre">FMIN</span></code>)</li>
 <li><code class="docutils literal"><span class="pre">--fpitch</span></code> (<code class="docutils literal"><span class="pre">FPITCH</span></code>)</li>
 <li><code class="docutils literal"><span class="pre">--gc</span></code>, <code class="docutils literal"><span class="pre">--gamma_center</span></code> (<code class="docutils literal"><span class="pre">GAMMA_CENTER</span></code>)</li>
 <li><code class="docutils literal"><span class="pre">--gv</span></code>, <code class="docutils literal"><span class="pre">--group_velocity</span></code> (<code class="docutils literal"><span class="pre">GROUP_VELOCITY</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--gv_delta_q</span></code> (<code class="docutils literal"><span class="pre">GV_DELTA_Q</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--gv-delta-q</span></code> (<code class="docutils literal"><span class="pre">GV_DELTA_Q</span></code>)</li>
 <li><code class="docutils literal"><span class="pre">--hdf5</span></code> (<code class="docutils literal"><span class="pre">HDF5</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
 <li><code class="docutils literal"><span class="pre">--irreps</span></code> (<code class="docutils literal"><span class="pre">IRREPS</span></code>)</li>
 <li><code class="docutils literal"><span class="pre">--lcg</span></code>, <code class="docutils literal"><span class="pre">--little_cogroup</span></code> (<code class="docutils literal"><span class="pre">LITTLE_COGROUP</span></code>)</li>
 <li><code class="docutils literal"><span class="pre">--modulation</span></code> (<code class="docutils literal"><span class="pre">MODULATION</span></code>)</li>
 <li><code class="docutils literal"><span class="pre">--moment</span></code> (<code class="docutils literal"><span class="pre">MOMENT</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
 <li><code class="docutils literal"><span class="pre">--moment_order</span></code> (<code class="docutils literal"><span class="pre">MOMENT_ORDER</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--mesh-format</span></code> (<code class="docutils literal"><span class="pre">MESH_FORMAT</span></code>)</li>
 <li><code class="docutils literal"><span class="pre">--mp</span></code>, <code class="docutils literal"><span class="pre">--mesh</span></code> (<code class="docutils literal"><span class="pre">MP</span></code> or <code class="docutils literal"><span class="pre">MESH</span></code>)</li>
 <li><code class="docutils literal"><span class="pre">--nac</span></code> (<code class="docutils literal"><span class="pre">NAC</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
 <li><code class="docutils literal"><span class="pre">--nosym</span></code> (<code class="docutils literal"><span class="pre">SYMMETRY</span> <span class="pre">=</span> <span class="pre">.FALSE.</span></code>)</li>
 <li><code class="docutils literal"><span class="pre">--nomeshsym</span></code> (<code class="docutils literal"><span class="pre">MESH_SYMMETRY</span> <span class="pre">=</span> <span class="pre">.FALSE.</span></code>)</li>
 <li><code class="docutils literal"><span class="pre">--nowritemesh</span></code> (<code class="docutils literal"><span class="pre">WRITE_MESH</span> <span class="pre">=</span> <span class="pre">.FALSE.</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--pa</span></code>, <code class="docutils literal"><span class="pre">--primitive_axis</span></code> (<code class="docutils literal"><span class="pre">PRIMITIVE_AXIS</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--pd</span></code>, <code class="docutils literal"><span class="pre">--projection_direction</span></code> (<code class="docutils literal"><span class="pre">PROJECTION_DIRECTION</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--pa</span></code>, <code class="docutils literal"><span class="pre">--primitive-axis</span></code> (<code class="docutils literal"><span class="pre">PRIMITIVE_AXIS</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--pd</span></code>, <code class="docutils literal"><span class="pre">--projection-direction</span></code> (<code class="docutils literal"><span class="pre">PROJECTION_DIRECTION</span></code>)</li>
 <li><code class="docutils literal"><span class="pre">--pdos</span></code> (<code class="docutils literal"><span class="pre">PDOS</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--pr</span></code>, <code class="docutils literal"><span class="pre">--pretend_real</span></code> (<code class="docutils literal"><span class="pre">PRETEND_REAL</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--q_direction</span></code> (<code class="docutils literal"><span class="pre">Q_DIRECTION</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--readfc</span></code> (<code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span> <span class="pre">=</span> <span class="pre">READ</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--show_irreps</span></code> (<code class="docutils literal"><span class="pre">SHOW_IRREPS</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--pr</span></code>, <code class="docutils literal"><span class="pre">--pretend-real</span></code> (<code class="docutils literal"><span class="pre">PRETEND_REAL</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--q-direction</span></code> (<code class="docutils literal"><span class="pre">Q_DIRECTION</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--qpoints</span></code> (<code class="docutils literal"><span class="pre">QPOINTS</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--qpoints-format</span></code> (<code class="docutils literal"><span class="pre">QPOINTS_FORMAT</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--readfc</span></code> (<code class="docutils literal"><span class="pre">READ_FORCE_CONSTANTS</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--readfc-format</span></code> (<code class="docutils literal"><span class="pre">READFC_FORMAT</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--show-irreps</span></code> (<code class="docutils literal"><span class="pre">SHOW_IRREPS</span></code>)</li>
 <li><code class="docutils literal"><span class="pre">--sigma</span></code> (<code class="docutils literal"><span class="pre">SIGMA</span></code>)</li>
 <li><code class="docutils literal"><span class="pre">-t</span></code> (<code class="docutils literal"><span class="pre">TPROP</span></code>)</li>
 <li><code class="docutils literal"><span class="pre">--td</span></code> (<code class="docutils literal"><span class="pre">TDISP</span></code>)</li>
 <li><code class="docutils literal"><span class="pre">--tdm</span></code> (<code class="docutils literal"><span class="pre">TDISPMAT</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--tdm_cif</span></code> (<code class="docutils literal"><span class="pre">TDISPMAT_CIF</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--thm</span></code>, <code class="docutils literal"><span class="pre">--tetrahedron_method</span></code> (<code class="docutils literal"><span class="pre">TETRAHEDRON</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--tdm-cif</span></code> (<code class="docutils literal"><span class="pre">TDISPMAT_CIF</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--thm</span></code>, <code class="docutils literal"><span class="pre">--tetrahedron-method</span></code> (<code class="docutils literal"><span class="pre">TETRAHEDRON</span></code>)</li>
 <li><code class="docutils literal"><span class="pre">--tmin</span></code> (<code class="docutils literal"><span class="pre">TMIN</span></code>)</li>
 <li><code class="docutils literal"><span class="pre">--tmax</span></code> (<code class="docutils literal"><span class="pre">TMAX</span></code>)</li>
 <li><code class="docutils literal"><span class="pre">--tstep</span></code> (<code class="docutils literal"><span class="pre">TSTEP</span></code>)</li>
 <li><code class="docutils literal"><span class="pre">--writedm</span></code> (<code class="docutils literal"><span class="pre">WRITEDM</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--writefc</span></code> (<code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span> <span class="pre">=</span> <span class="pre">WRITE</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">--xyz_projection</span></code> (<code class="docutils literal"><span class="pre">XYZ_PROJECTION</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--writefc</span></code> (<code class="docutils literal"><span class="pre">WRITE_FORCE_CONSTANTS</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--writefc-format</span></code> (<code class="docutils literal"><span class="pre">WRITEFC_FORMAT</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">--xyz-projection</span></code> (<code class="docutils literal"><span class="pre">XYZ_PROJECTION</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>)</li>
 </ul>
 <p>When both of command-line option and setting tag for the same purpose
 are set simultaneously, the command-line options overide the setting
@@ -570,47 +564,6 @@ printed out and phonopy stops without going to phonon analysis.</p>
 <p>This tag can be used together with the <code class="docutils literal"><span class="pre">--cell</span></code> (<code class="docutils literal"><span class="pre">-c</span></code>),
 <code class="docutils literal"><span class="pre">--abinit</span></code>, <code class="docutils literal"><span class="pre">--pwscf</span></code>, <code class="docutils literal"><span class="pre">--elk</span></code>, <code class="docutils literal"><span class="pre">--wien2k</span></code>, <code class="docutils literal"><span class="pre">--crystal</span></code> or
 <code class="docutils literal"><span class="pre">--primitive_axis</span></code> option.</p>
-</div>
-</div>
-<div class="section" id="input-output-file-control">
-<h2><a class="toc-backref" href="#id26">Input/Output file control</a><a class="headerlink" href="#input-output-file-control" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="hdf5">
-<span id="hdf5-option"></span><h3><a class="toc-backref" href="#id27"><code class="docutils literal"><span class="pre">--hdf5</span></code></a><a class="headerlink" href="#hdf5" title="Permalink to this headline">¶</a></h3>
-<p>The following input/output files are read/written in hdf5 format
-instead of their original formats (in parenthesis).</p>
-<ul class="simple">
-<li><code class="docutils literal"><span class="pre">force_constants.hdf5</span></code> (<code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span></code>)</li>
-<li><code class="docutils literal"><span class="pre">mesh.hdf5</span></code> (<code class="docutils literal"><span class="pre">mesh.yaml</span></code>)</li>
-</ul>
-<div class="section" id="force-constants-hdf5">
-<h4><code class="docutils literal"><span class="pre">force_constants.hdf5</span></code><a class="headerlink" href="#force-constants-hdf5" title="Permalink to this headline">¶</a></h4>
-<p>With <code class="docutils literal"><span class="pre">--hdf5</span></code> option and <code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span> <span class="pre">=</span> <span class="pre">WRITE</span></code>
-(<code class="docutils literal"><span class="pre">--writefc</span></code>), <code class="docutils literal"><span class="pre">force_constants.hdf5</span></code> is written.
-With <code class="docutils literal"><span class="pre">--hdf5</span></code> option and <code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span> <span class="pre">=</span> <span class="pre">READ</span></code> (<code class="docutils literal"><span class="pre">--readfc</span></code>),
-<code class="docutils literal"><span class="pre">force_constants.hdf5</span></code> is read.</p>
-</div>
-<div class="section" id="mesh-hdf5">
-<h4><code class="docutils literal"><span class="pre">mesh.hdf5</span></code><a class="headerlink" href="#mesh-hdf5" title="Permalink to this headline">¶</a></h4>
-<p>In the mesh sampling calculations (see <a class="reference internal" href="setting-tags.html#mesh-sampling-tags"><span class="std std-ref">Mesh sampling tags</span></a>),
-calculation results are written into <code class="docutils literal"><span class="pre">mesh.hdf5</span></code> but not into
-<code class="docutils literal"><span class="pre">mesh.yaml</span></code>. Using this option may reduce the data output size and
-thus writing time when <code class="docutils literal"><span class="pre">mesh.yaml</span></code> is huge, e.g., eigenvectors are
-written on a dense sampling mesh.</p>
-</div>
-<div class="section" id="qpoints-hdf5">
-<h4><code class="docutils literal"><span class="pre">qpoints.hdf5</span></code><a class="headerlink" href="#qpoints-hdf5" title="Permalink to this headline">¶</a></h4>
-<p>In the specific q-points calculations (<a class="reference internal" href="setting-tags.html#qpoints-tag"><span class="std std-ref">QPOINTS</span></a>),
-calculation results are written into <code class="docutils literal"><span class="pre">qpoints.hdf5</span></code> but not into
-<code class="docutils literal"><span class="pre">qpoints.yaml</span></code>. With <a class="reference internal" href="setting-tags.html#writedm-tag"><span class="std std-ref">WRITEDM</span></a>, dynamical matrices are also
-stored in <code class="docutils literal"><span class="pre">qpoints.hdf5</span></code>. Using this option may be useful with large
-set of q-points with including eigenvector or dynamical matrix output.</p>
-</div>
-<div class="section" id="band-hdf5">
-<h4><code class="docutils literal"><span class="pre">band.hdf5</span></code><a class="headerlink" href="#band-hdf5" title="Permalink to this headline">¶</a></h4>
-<p>In the band structure calculations (<a class="reference internal" href="setting-tags.html#band-structure-related-tags"><span class="std std-ref">Band structure tags</span></a>),
-calculation results are written into <code class="docutils literal"><span class="pre">band.hdf5</span></code> but not into
-<code class="docutils literal"><span class="pre">band.yaml</span></code>.</p>
-</div>
 </div>
 </div>
 </div>
