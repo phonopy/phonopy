@@ -7,6 +7,8 @@ Command options
    :depth: 2
    :local:
 
+From phonopy v1.12.2, the command option names with underscores ``_``
+are replaced by those with dashes ``-``. Those tag names are unchanged.
 
 Some of command-line options are equivalent to respective setting
 tags:
@@ -14,53 +16,59 @@ tags:
 * ``--amplitude`` (``DISPLACEMENT_DISTANCE``)
 * ``--anime`` (``ANIME``)
 * ``--band`` (``BAND``)
-* ``--band_connection``  (``BAND_CONNECTION = .TRUE.``)
-* ``--band_labels`` (``BAND_LABELS``)
-* ``--band_points``  (``BAND_POINTS``)
-* ``--cutoff_freq`` (``CUTOFF_FREQUENCY``)
+* ``--band-connection``  (``BAND_CONNECTION = .TRUE.``)
+* ``--band-format`` (``BAND_FORMAT``)
+* ``--band-labels`` (``BAND_LABELS``)
+* ``--band-points``  (``BAND_POINTS``)
+* ``--cutoff-freq`` (``CUTOFF_FREQUENCY``)
 * ``-c``, ``--cell`` (``CELL_FILENAME``)
 * ``-d``  (``CREATE_DISPLACEMENTS = .TRUE.``
 * ``--dim`` (``DIM``)
 * ``--dos`` (``DOS = .TRUE.``)
 * ``--eigvecs``, ``--eigenvectors`` (``EIGENVECTORS = .TRUE.``)
 * ``--factor`` (``FREQUENCY_CONVERSION_FACTOR``)
-* ``--fits_debye_model`` (``DEBYE_MODEL = .TRUE.``)
+* ``--fits-debye-model`` (``DEBYE_MODEL = .TRUE.``)
 * ``--fmax`` (``FMAX``)
 * ``--fmin`` (``FMIN``)
 * ``--fpitch`` (``FPITCH``)
 * ``--gc``, ``--gamma_center`` (``GAMMA_CENTER``)
 * ``--gv``, ``--group_velocity`` (``GROUP_VELOCITY = .TRUE.``)
-* ``--gv_delta_q`` (``GV_DELTA_Q``)
+* ``--gv-delta-q`` (``GV_DELTA_Q``)
 * ``--hdf5`` (``HDF5 = .TRUE.``)
 * ``--irreps`` (``IRREPS``)
 * ``--lcg``, ``--little_cogroup`` (``LITTLE_COGROUP``)
 * ``--modulation`` (``MODULATION``)
 * ``--moment`` (``MOMENT = .TRUE.``)
 * ``--moment_order`` (``MOMENT_ORDER``)
+* ``--mesh-format`` (``MESH_FORMAT``)
 * ``--mp``, ``--mesh`` (``MP`` or ``MESH``)
 * ``--nac`` (``NAC = .TRUE.``)
 * ``--nosym`` (``SYMMETRY = .FALSE.``)
 * ``--nomeshsym`` (``MESH_SYMMETRY = .FALSE.``)
 * ``--nowritemesh`` (``WRITE_MESH = .FALSE.``)
-* ``--pa``, ``--primitive_axis`` (``PRIMITIVE_AXIS``)
-* ``--pd``, ``--projection_direction`` (``PROJECTION_DIRECTION``)
+* ``--pa``, ``--primitive-axis`` (``PRIMITIVE_AXIS``)
+* ``--pd``, ``--projection-direction`` (``PROJECTION_DIRECTION``)
 * ``--pdos`` (``PDOS``)
-* ``--pr``, ``--pretend_real`` (``PRETEND_REAL = .TRUE.``)
-* ``--q_direction`` (``Q_DIRECTION``)
-* ``--readfc`` (``FORCE_CONSTANTS = READ``)
-* ``--show_irreps`` (``SHOW_IRREPS``)
+* ``--pr``, ``--pretend-real`` (``PRETEND_REAL = .TRUE.``)
+* ``--q-direction`` (``Q_DIRECTION``)
+* ``--qpoints`` (``QPOINTS``)
+* ``--qpoints-format`` (``QPOINTS_FORMAT``)
+* ``--readfc`` (``READ_FORCE_CONSTANTS = .TRUE.``)
+* ``--readfc-format`` (``READFC_FORMAT``)
+* ``--show-irreps`` (``SHOW_IRREPS``)
 * ``--sigma`` (``SIGMA``)
 * ``-t`` (``TPROP``)
 * ``--td`` (``TDISP``)
 * ``--tdm`` (``TDISPMAT``)
-* ``--tdm_cif`` (``TDISPMAT_CIF``)
-* ``--thm``, ``--tetrahedron_method`` (``TETRAHEDRON``)
+* ``--tdm-cif`` (``TDISPMAT_CIF``)
+* ``--thm``, ``--tetrahedron-method`` (``TETRAHEDRON``)
 * ``--tmin`` (``TMIN``)
 * ``--tmax`` (``TMAX``)
 * ``--tstep`` (``TSTEP``)
 * ``--writedm`` (``WRITEDM = .TRUE.``)
-* ``--writefc`` (``FORCE_CONSTANTS = WRITE``)
-* ``--xyz_projection`` (``XYZ_PROJECTION = .TRUE.``)
+* ``--writefc`` (``WRITE_FORCE_CONSTANTS = .TRUE.``)
+* ``--writefc-format`` (``WRITEFC_FORMAT``)
+* ``--xyz-projection`` (``XYZ_PROJECTION = .TRUE.``)
 
 When both of command-line option and setting tag for the same purpose
 are set simultaneously, the command-line options overide the setting
@@ -102,7 +110,7 @@ For previous versions than 1.9.1.3, this option is used as
 ::
 
    % phonopy --wien2k=NaCl.struct band.conf   (version <= 1.9.1.3)
-   
+
 
 .. _abinit_mode:
 
@@ -179,9 +187,9 @@ This doesn't change the default behaviour, but ``vasp`` will appear as
 the calculator such as in ``band.yaml``::
 
    calculator: vasp
-   nqpoint: 204    
+   nqpoint: 204
    ...
-  
+
 .. _cell_filename_option:
 
 Input cell
@@ -199,7 +207,7 @@ Unit cell crystal structure file is specified with this tag.
 Without specifying this tag, default file name is searched in current
 directory. The default file names for the calculators are as follows::
 
-   VASP   | POSCAR     
+   VASP   | POSCAR
    Wien2k | case.struct
    Abinit | unitcell.in
    Pwscf  | unitcell.in
@@ -269,7 +277,7 @@ files.
    % phonopy --pwscf -f disp-001/supercell.out disp-002/supercell.out  ...
 
 Here ``*.out`` files are the saved texts of standard outputs of Pwscf calculations.
-   
+
 .. _wien2k_force_sets_option:
 
 WIEN2k interface
@@ -337,7 +345,7 @@ to be useful when ``PM = .FALSE.`` is set in the phonopy setting file.
 
 The usage of this option is almost the same as that of ``-f`` option
 except that one more argument is inserted at the front. Mind that
-``--fz`` is exclusively used with ``-f`` option. The example 
+``--fz`` is exclusively used with ``-f`` option. The example
 for the VASP interface is shown below::
 
    % phonopy --fz sposcar/vasprun.xml disp-001/vasprun.xml ...
@@ -439,50 +447,3 @@ printed out and phonopy stops without going to phonon analysis.
 This tag can be used together with the ``--cell`` (``-c``),
 ``--abinit``, ``--pwscf``, ``--elk``, ``--wien2k``, ``--crystal`` or
 ``--primitive_axis`` option.
-
-Input/Output file control
--------------------------
-
-.. _hdf5_option:
-
-``--hdf5``
-~~~~~~~~~~~
-
-The following input/output files are read/written in hdf5 format
-instead of their original formats (in parenthesis).
-
-* ``force_constants.hdf5`` (``FORCE_CONSTANTS``)
-* ``mesh.hdf5`` (``mesh.yaml``)
-
-``force_constants.hdf5``
-^^^^^^^^^^^^^^^^^^^^^^^^^
-
-With ``--hdf5`` option and ``FORCE_CONSTANTS = WRITE``
-(``--writefc``), ``force_constants.hdf5`` is written.
-With ``--hdf5`` option and ``FORCE_CONSTANTS = READ`` (``--readfc``),
-``force_constants.hdf5`` is read.
-
-``mesh.hdf5``
-^^^^^^^^^^^^^^
-
-In the mesh sampling calculations (see :ref:`mesh_sampling_tags`),
-calculation results are written into ``mesh.hdf5`` but not into
-``mesh.yaml``. Using this option may reduce the data output size and
-thus writing time when ``mesh.yaml`` is huge, e.g., eigenvectors are
-written on a dense sampling mesh.
-
-``qpoints.hdf5``
-^^^^^^^^^^^^^^^^^
-
-In the specific q-points calculations (:ref:`qpoints_tag`),
-calculation results are written into ``qpoints.hdf5`` but not into
-``qpoints.yaml``. With :ref:`writedm_tag`, dynamical matrices are also
-stored in ``qpoints.hdf5``. Using this option may be useful with large
-set of q-points with including eigenvector or dynamical matrix output.
-
-``band.hdf5``
-^^^^^^^^^^^^^^^
-
-In the band structure calculations (:ref:`band_structure_related_tags`),
-calculation results are written into ``band.hdf5`` but not into
-``band.yaml``.

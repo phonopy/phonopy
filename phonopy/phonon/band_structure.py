@@ -53,6 +53,28 @@ def estimate_band_connection(prev_eigvecs, eigvecs, prev_band_order):
 
     return band_order
 
+def get_band_qpoints(band_paths, npoints):
+    """Generate qpoints for band structure path
+
+    Args:
+        band_paths: Sets of end points of paths
+        npoints: Number of q-points in each path including end points
+
+    """
+
+    qpoints_of_paths = []
+    for band_path in band_paths:
+        nd = len(band_path)
+        for i in range(nd - 1):
+            diff = (band_path[i + 1] - band_path[i]) / (npoints - 1)
+            qpoints = [band_path[i].copy()]
+            q = np.zeros(3)
+            for j in range(npoints -1):
+                q += diff
+                qpoints.append(band_path[i] + q)
+            qpoints_of_paths.append(np.array(qpoints))
+
+    return qpoints_of_paths
 
 class BandStructure(object):
     def __init__(self,
@@ -103,25 +125,24 @@ class BandStructure(object):
     def get_unit_conversion_factor(self):
         return self._factor
 
-    def plot(self, pyplot, labels=None):
+    def plot(self, plt, labels=None):
         for distances, frequencies in zip(self._distances,
                                           self._frequencies):
             for freqs in frequencies.T:
                 if self._is_band_connection:
-                    pyplot.plot(distances, freqs, '-')
+                    plt.plot(distances, freqs, '-')
                 else:
-                    pyplot.plot(distances, freqs, 'r-')
+                    plt.plot(distances, freqs, 'r-')
 
-        pyplot.ylabel('Frequency')
-        pyplot.xlabel('Wave vector')
+        plt.ylabel('Frequency')
+        plt.xlabel('Wave vector')
 
         if labels and len(labels) == len(self._special_points):
-            pyplot.xticks(self._special_points, labels)
+            plt.xticks(self._special_points, labels)
         else:
-            pyplot.xticks(self._special_points,
-                          [''] * len(self._special_points))
-        pyplot.xlim(0, self._distance)
-        pyplot.axhline(y=0, linestyle=':', linewidth=0.5, color='b')
+            plt.xticks(self._special_points, [''] * len(self._special_points))
+        plt.xlim(0, self._distance)
+        plt.axhline(y=0, linestyle=':', linewidth=0.5, color='b')
 
     def write_hdf5(self, labels=None, comment=None, filename="band.hdf5"):
         import h5py

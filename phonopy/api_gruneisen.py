@@ -32,9 +32,9 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from phonopy.gruneisen.mesh import Mesh as GruneisenMesh
-from phonopy.gruneisen.band_structure import BandStructure as GruneisenBand
-from phonopy.gruneisen.thermal_properties import ThermalProperties as GruneisenThermalProperties
+from phonopy.gruneisen import GruneisenMesh
+from phonopy.gruneisen import GruneisenBandStructure
+from phonopy.gruneisen import GruneisenThermalProperties
 
 class PhonopyGruneisen(object):
     def __init__(self,
@@ -63,18 +63,30 @@ class PhonopyGruneisen(object):
                 print("Warning: Dynamical matrix has not yet built.")
                 return False
 
-        self._mesh = GruneisenMesh(self._phonon,
-                                   self._phonon_plus,
-                                   self._phonon_minus,
-                                   mesh,
-                                   shift=shift,
-                                   is_time_reversal=is_time_reversal,
-                                   is_gamma_center=is_gamma_center,
-                                   is_mesh_symmetry=is_mesh_symmetry)
+        symmetry = phonon.get_primitive_symmetry()
+        rotations = symmetry.get_pointgroup_operations()
+        self._mesh = GruneisenMesh(
+            self._phonon.get_dynamical_matrix(),
+            self._phonon_plus.get_dynamical_matrix(),
+            self._phonon_minus.get_dynamical_matrix(),
+            mesh,
+            shift=shift,
+            is_time_reversal=is_time_reversal,
+            is_gamma_center=is_gamma_center,
+            is_mesh_symmetry=is_mesh_symmetry,
+            rotations=rotations,
+            factor=self._phonon.get_unit_conversion_factor())
         return True
 
     def get_mesh(self):
-        return self._mesh
+        if self._mesh is None:
+            return None
+        else:
+            return (self._mesh.get_qpoints(),
+                    self._mesh.get_weights(),
+                    self._mesh.get_frequencies(),
+                    self._mesh.get_eigenvectors(),
+                    self._mesh.get_gruneisen())
 
     def write_yaml_mesh(self):
         self._mesh.write_yaml()
@@ -87,22 +99,34 @@ class PhonopyGruneisen(object):
                   color_scheme=None,
                   marker='o',
                   markersize=None):
-        return self._mesh.plot(cutoff_frequency=cutoff_frequency,
-                               color_scheme=color_scheme,
-                               marker=marker,
-                               markersize=markersize)
+        import matplotlib.pyplot as plt
+        fig, ax = plt.subplots()
+        ax.xaxis.set_ticks_position('both')
+        ax.yaxis.set_ticks_position('both')
+        ax.xaxis.set_tick_params(which='both', direction='in')
+        ax.yaxis.set_tick_params(which='both', direction='in')
+        self._mesh.plot(plt,
+                        cutoff_frequency=cutoff_frequency,
+                        color_scheme=color_scheme,
+                        marker=marker,
+                        markersize=markersize)
+        return plt
 
-    def set_band_structure(self,
-                           paths,
-                           num_points):
-        self._band_structure = GruneisenBand(self._phonon,
-                                             self._phonon_plus,
-                                             self._phonon_minus,
-                                             paths,
-                                             num_points)
+    def set_band_structure(self, bands):
+        self._band_structure = GruneisenBandStructure(
+            bands,
+            self._phonon.get_dynamical_matrix(),
+            self._phonon_plus.get_dynamical_matrix(),
+            self._phonon_minus.get_dynamical_matrix(),
+            factor=self._phonon.get_unit_conversion_factor())
 
     def get_band_structure(self):
-        return self._band_structure
+        band = self._band_structure
+        return (band.get_qpoints(),
+                band.get_distances(),
+                band.get_frequencies(),
+                band.get_eigenvectors(),
+                band.get_gruneisen())
 
     def write_yaml_band_structure(self):
         self._band_structure.write_yaml()
@@ -110,8 +134,17 @@ class PhonopyGruneisen(object):
     def plot_band_structure(self,
                             epsilon=1e-4,
                             color_scheme=None):
-        return self._band_structure.plot(epsilon=epsilon,
-                                         color_scheme=color_scheme)
+        import matplotlib.pyplot as plt
+        fig, axarr = plt.subplots(2, 1)
+        for ax in axarr:
+            ax.xaxis.set_ticks_position('both')
+            ax.yaxis.set_ticks_position('both')
+            ax.xaxis.set_tick_params(which='both', direction='in')
+            ax.yaxis.set_tick_params(which='both', direction='in')
+            self._band_structure.plot(axarr,
+                                      epsilon=epsilon,
+                                      color_scheme=color_scheme)
+        return plt
 
     def set_thermal_properties(self,
                                volumes,
@@ -129,6 +162,6 @@ class PhonopyGruneisen(object):
 
     def get_thermal_properties(self):
         return self._thermal_properties
-        
+
     def write_yaml_thermal_properties(self, filename='thermal_properties'):
         self._thermal_properties.write_yaml(filename=filename)
