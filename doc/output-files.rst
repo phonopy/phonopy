@@ -151,7 +151,7 @@ what a user executed.
 ``.hdf5`` files
 ^^^^^^^^^^^^^^^^^
 
-See :ref:`hdf5_option`.
+See :ref:`hdf5_tag`.
 
 
 How to read phonopy YAML files

@@ -58,265 +58,254 @@ def create_unitcells(unitcell_filename,
         print("%f" % np.linalg.det(lattice_qha))
         write_vasp("QHAPOSCAR-%02d" % (i + 1), cell, direct=True)
 
-# Parse options
-from optparse import OptionParser
-parser = OptionParser()
-parser.set_defaults(create_unitcells_range=None,
-                    factor=1.0,
-                    energy_plot_factor=None,
-                    volume_factor=1.0,
-                    pressure=0.0,
-                    is_create_unitcells=False,
-                    is_graph_plot=False,
-                    is_graph_save=False,
-                    is_bulk_modulus_only=False,
-                    eos="vinet",
-                    energy_shift=None,
-                    symbol='o',
-                    cp_filename=None,
-                    ve_filename=None,
-                    thin_number=10,
-                    t_max=1000.0)
-parser.add_option("-b", dest="is_bulk_modulus_only",
-                  action="store_true",
-                  help="Just show Bulk modulus from v-e data")
-parser.add_option("--cp", "--heat_capacity",
-                  dest="cp_filename",
-                  type="string",
-                  help="Experimental data for heat capacity Cv",
-                  metavar="FILE")
-parser.add_option("--cu", "--create_unitcells",
-                  dest="is_create_unitcells",
-                  action="store_true",
-                  help="Create unitcells")
-parser.add_option("--cu_range", "--create_unitcells_range",
-                  dest="create_unitcells_range",
-                  action="store",
-                  type="string",
-                  help="Range of created unitcells, plus, minus in percent, and number of unit cells")
-parser.add_option("--eos",
-                  dest="eos",
-                  action="store",
-                  type="string",
-                  help="Choise of EOS among vinet, birch_murnaghan, and murnaghan")
-parser.add_option("--es", "--energy_shift",
-                  dest="energy_shift",
-                  action="store",
-                  type="float",
-                  help="Energy shift that is subtracted from Helmholtz free energy")
-parser.add_option("--exclude_imaginary",
-                  dest="exclude_imaginary",
-                  action="store_true",
-                  help="Exclude volumes that show imaginary modes")
-parser.add_option("--factor",
-                  dest="factor",
-                  type="float",
-                  help="Conversion factor that is multiplied with all extensive variables")
-parser.add_option("-p", "--plot",
-                  dest="is_graph_plot",
-                  action="store_true",
-                  help="Plot data")
-parser.add_option("--pressure",
-                  dest="pressure",
-                  type="float",
-                  help="Pressure in GPa")
-parser.add_option("-s", "--save",
-                  dest="is_graph_save",
-                  action="store_true",
-                  help="Save plot data in pdf")
-parser.add_option("--symbol",
-                  dest="symbol",
-                  action="store",
-                  type="string",
-                  help="Symbol used to plot experiment points")
-parser.add_option("--sparse",
-                  dest="thin_number",
-                  type="int",
-                  help=("Thin out the F-V plots of temperature. The value is "
-                        "used as deviser of number of temperature points."))
-parser.add_option("--tmax",
-                  dest="t_max",
-                  type="float",
-                  help="Maximum calculated temperature")
-parser.add_option("--ve", "--volume_expansion",
-                  dest="ve_filename",
-                  type="string",
-                  help="Experimental data for volume expansion",
-                  metavar="FILE")
-parser.add_option("--vf", "--volume_factor",
-                  dest="volume_factor",
-                  type="float",
-                  help="Conversion factor of volume to A^3")
-parser.add_option("--epf", "--energy_plot_factor",
-                  dest="energy_plot_factor",
-                  type="float",
-                  help=("Conversion factor of energy for plot after fitting, "
-                        "i.e., the input data have to have the proper physical"
-                        "units, but plotting is done with multiplied with this "
-                        "factor."))
-(options, args) = parser.parse_args()
+def get_options():
+    # Parse options
+    import argparse
+    parser = argparse.ArgumentParser(
+        description="Phonopy-QHA command-line-tool")
+    parser.set_defaults(create_unitcells_range=None,
+                        factor=1.0,
+                        energy_plot_factor=None,
+                        volume_factor=1.0,
+                        pressure=0.0,
+                        is_create_unitcells=False,
+                        is_graph_plot=False,
+                        is_graph_save=False,
+                        is_bulk_modulus_only=False,
+                        eos="vinet",
+                        energy_shift=None,
+                        symbol='o',
+                        cp_filename=None,
+                        ve_filename=None,
+                        thin_number=10,
+                        t_max=1000.0)
+    parser.add_argument(
+        "-b", dest="is_bulk_modulus_only", action="store_true",
+        help="Just show Bulk modulus from v-e data")
+    parser.add_argument(
+        "--cp", "--heat_capacity", dest="cp_filename", metavar="FILE",
+        help="Experimental data for heat capacity Cv")
+    parser.add_argument(
+        "--cu", "--create_unitcells", dest="is_create_unitcells",
+        action="store_true",
+        help="Create unitcells")
+    parser.add_argument(
+        "--cu_range", "--create_unitcells_range", dest="create_unitcells_range",
+        help=("Range of created unitcells, plus, minus in percent, "
+              "and number of unit cells"))
+    parser.add_argument(
+        "--eos", dest="eos",
+        help="Choise of EOS among vinet, birch_murnaghan, and murnaghan")
+    parser.add_argument(
+        "--es", "--energy_shift", dest="energy_shift",
+        help="Energy shift that is subtracted from Helmholtz free energy")
+    parser.add_argument(
+        "--exclude_imaginary", dest="exclude_imaginary", action="store_true",
+        help="Exclude volumes that show imaginary modes")
+    parser.add_argument(
+        "--factor", dest="factor", type=float,
+        help=("Conversion factor that is multiplied with all "
+              "extensive variables"))
+    parser.add_argument(
+        "-p", "--plot", dest="is_graph_plot", action="store_true",
+        help="Plot data")
+    parser.add_argument(
+        "--pressure", dest="pressure", type=float,
+        help="Pressure in GPa")
+    parser.add_argument(
+        "-s", "--save", dest="is_graph_save", action="store_true",
+        help="Save plot data in pdf")
+    parser.add_argument(
+        "--symbol", dest="symbol",
+        help="Symbol used to plot experiment points")
+    parser.add_argument(
+        "--sparse", dest="thin_number", type=int,
+        help=("Thin out the F-V plots of temperature. The value is "
+              "used as deviser of number of temperature points."))
+    parser.add_argument(
+        "--tmax", dest="t_max", type=float,
+        help="Maximum calculated temperature")
+    parser.add_argument(
+        "--ve", "--volume_expansion", dest="ve_filename", metavar="FILE",
+        help="Experimental data for volume expansion")
+    parser.add_argument(
+        "--vf", "--volume_factor", dest="volume_factor", type=float,
+        help="Conversion factor of volume to A^3")
+    parser.add_argument(
+        "--epf", "--energy_plot_factor", dest="energy_plot_factor", type=float,
+        help=("Conversion factor of energy for plot after fitting, "
+              "i.e., the input data have to have the proper physical"
+              "units, but plotting is done with multiplied with this "
+              "factor."))
+    parser.add_argument(
+        "filenames", nargs='*',
+        help="Filenames of e-v.dat and thermal_properties.yaml's")
+    args = parser.parse_args()
+    return args
 
-if options.is_graph_save:
-    import matplotlib
-    matplotlib.use('Agg')
-    matplotlib.rc('pdf', fonttype=42)     
+def main(args):
+    if args.is_graph_save:
+        import matplotlib
+        matplotlib.use('Agg')
+        matplotlib.rc('pdf', fonttype=42)
 
-####################
-# Create unitcells #
-####################
-if options.is_create_unitcells:
-    if options.create_unitcells_range:
-        plus, minus, num_div = options.create_unitcells_range.split()
-        create_unitcells(args[0], float(plus), float(minus), int(num_div))
+    ####################
+    # Create unitcells #
+    ####################
+    if args.is_create_unitcells:
+        if args.create_unitcells_range:
+            plus, minus, num_div = args.create_unitcells_range.split()
+            create_unitcells(args.filenames[0],
+                             float(plus), float(minus), int(num_div))
+        else:
+            create_unitcells(args.filenames[0])
+        sys.exit(0)
+
+    ########################
+    # Read data from files #
+    ########################
+    volumes, electronic_energies = read_v_e(args.filenames[0],
+                                            factor=args.factor,
+                                            volume_factor=args.volume_factor,
+                                            pressure=args.pressure)
+    if args.energy_shift is not None:
+        electronic_energies -= args.energy_shift
+
+    # Choose EOS
+    if args.eos == "birch_murnaghan":
+        print("# Third-order Birch-Murnaghan EOS")
+    elif args.eos == "murnaghan":
+        print("# Murnaghan EOS")
     else:
-        create_unitcells(args[0])
-    sys.exit(0)
+        print("# Vinet EOS")
 
-########################
-# Read data from files #
-########################
-volumes, electronic_energies = read_v_e(args[0],
-                                        factor=options.factor,
-                                        volume_factor=options.volume_factor,
-                                        pressure=options.pressure)
-if options.energy_shift is not None:
-    electronic_energies -= options.energy_shift
+    # Show bulk modulus of v-e data
+    if args.is_bulk_modulus_only:
+        bulk_modulus = PhonopyQHA(volumes,
+                                  electronic_energies,
+                                  eos=args.eos)
+        parameters = bulk_modulus.get_bulk_modulus_parameters()
+        print("Volume: %f" % parameters[3])
+        print("Energy: %f" % parameters[0])
+        print("Bulk modulus: %f" % (parameters[1] * EVAngstromToGPa))
+        print("Parameters: %f %f %f %f" % tuple(parameters))
+        if args.is_graph_plot:
+            bulk_modulus.plot_bulk_modulus().show()
+        sys.exit(0)
 
-# Choose EOS
-if options.eos == "birch_murnaghan":
-    print("# Third-order Birch-Murnaghan EOS")
-elif options.eos == "murnaghan":
-    print("# Murnaghan EOS")
-else:
-    print("# Vinet EOS")
+    # Check number of files
+    if len(volumes) != len(args.filenames[1:]):
+        print("The number of thermal_properites.yaml files (%d) "
+              "is inconsisten with" % len(args.filenames[1:]))
+        print("the number of e-v data (%d)." % len(volumes))
+        sys.exit(1)
 
-# Show bulk modulus of v-e data
-if options.is_bulk_modulus_only:
-    bulk_modulus = PhonopyQHA(volumes,
-                              electronic_energies,
-                              eos=options.eos)
-    parameters = bulk_modulus.get_bulk_modulus_parameters()
-    print("Volume: %f" % parameters[3])
-    print("Energy: %f" % parameters[0])
-    print("Bulk modulus: %f" % (parameters[1] * EVAngstromToGPa))
-    print("Parameters: %f %f %f %f" % tuple(parameters))
-    if options.is_graph_plot:
-        bulk_modulus.plot_bulk_modulus().show()
-    sys.exit(0)
+    # read data from thermal_properties
+    t_props = read_thermal_properties_yaml(args.filenames[1:(len(volumes)+1)],
+                                           factor=args.factor)
+    T, cv, entropy, fe_phonon, num_modes, num_integrated_modes = t_props
 
-# Check number of files
-if len(volumes) != len(args[1:]):
-    print("The number of thermal_properites.yaml files (%d) "
-          "is inconsisten with" % len(args[1:]))
-    print("the number of e-v data (%d)." % len(volumes))
-    sys.exit(1)
-
-# read data from thermal_properties
-(temperatures,
- cv,
- entropy,
- fe_phonon,
- num_modes,
- num_integrated_modes) = read_thermal_properties_yaml(args[1:(len(volumes)+1)],
-                                                      factor=options.factor)
-
-# Treatment of thermal properties with imaginary modes
-if options.exclude_imaginary and num_modes:
-    indices = []
-    num_imag_modes = np.array(num_modes) - np.array(num_integrated_modes)
-    for i, nim in enumerate(num_imag_modes):
-        if nim < 4:
-            indices.append(i)
-else:
-    indices = range(len(volumes))
-
-##########################
-# Analyzing and plotting #
-##########################
-phonopy_qha = PhonopyQHA(volumes[indices],
-                         electronic_energies[indices],
-                         eos=options.eos,
-                         temperatures=temperatures,
-                         free_energy=fe_phonon[:, indices],
-                         cv=cv[:, indices],
-                         entropy=entropy[:, indices],
-                         t_max=options.t_max,
-                         energy_plot_factor=options.energy_plot_factor,
-                         verbose=True)
-
-if num_modes:
-    num_imag_modes = np.array(num_modes) - np.array(num_integrated_modes)
-    for filename, nim in zip(args[1:(len(volumes)+1)], num_imag_modes):
-        if nim > 3:
-            if options.exclude_imaginary:
-                print("# %s has been excluded." % filename)
-            else:
-                print("# Warning: %s has imaginary modes." % filename)
-
-if options.is_graph_plot and not options.is_graph_save:
-    # Plot on display
-    # - Volume vs Helmholtz free energy
-    # - Volume vs Temperature
-    # - Thermal expansion coefficient
-    if options.ve_filename is None:
-        exp_data = None
+    # Treatment of thermal properties with imaginary modes
+    if args.exclude_imaginary and num_modes:
+        indices = []
+        num_imag_modes = np.array(num_modes) - np.array(num_integrated_modes)
+        for i, nim in enumerate(num_imag_modes):
+            if nim < 4:
+                indices.append(i)
     else:
-        exp_data = parse_ve(options.ve_filename)
+        indices = range(len(volumes))
 
-    phonopy_qha.plot_qha(thin_number=options.thin_number,
-                         volume_temp_exp=exp_data).show()
+    ##########################
+    # Analyzing and plotting #
+    ##########################
+    phonopy_qha = PhonopyQHA(volumes[indices],
+                             electronic_energies[indices],
+                             eos=args.eos,
+                             temperatures=T,
+                             free_energy=fe_phonon[:, indices],
+                             cv=cv[:, indices],
+                             entropy=entropy[:, indices],
+                             t_max=args.t_max,
+                             energy_plot_factor=args.energy_plot_factor,
+                             verbose=True)
 
-if options.is_graph_save:
-    # Volume vs Helmholts free energy
-    phonopy_qha.plot_pdf_helmholtz_volume(thin_number=options.thin_number)
+    if num_modes:
+        num_imag_modes = np.array(num_modes) - np.array(num_integrated_modes)
+        for filename, nim in zip(args.filenames[1:(len(volumes)+1)],
+                                 num_imag_modes):
+            if nim > 3:
+                if args.exclude_imaginary:
+                    print("# %s has been excluded." % filename)
+                else:
+                    print("# Warning: %s has imaginary modes." % filename)
 
-    # Volume vs Temperature
-    if options.ve_filename is None:
-        exp_data = None
-    else:
-        exp_data = parse_ve(options.ve_filename)
-    phonopy_qha.plot_pdf_volume_temperature(exp_data=exp_data)
+    if args.is_graph_plot and not args.is_graph_save:
+        # Plot on display
+        # - Volume vs Helmholtz free energy
+        # - Volume vs Temperature
+        # - Thermal expansion coefficient
+        if args.ve_filename is None:
+            exp_data = None
+        else:
+            exp_data = parse_ve(args.ve_filename)
 
-    # Thermal expansion coefficient
-    phonopy_qha.plot_pdf_thermal_expansion()
+        phonopy_qha.plot_qha(thin_number=args.thin_number,
+                             volume_temp_exp=exp_data).show()
 
-    # Volume expansion
-    if options.ve_filename is None:
-        exp_data = None
-    else:
-        exp_data = parse_ve(options.ve_filename)
-    phonopy_qha.plot_pdf_volume_expansion(exp_data=exp_data,
-                                  symbol=options.symbol)
+    if args.is_graph_save:
+        # Volume vs Helmholts free energy
+        phonopy_qha.plot_pdf_helmholtz_volume(thin_number=args.thin_number)
 
-    # G vs Temperature
-    phonopy_qha.plot_pdf_gibbs_temperature()
+        # Volume vs Temperature
+        if args.ve_filename is None:
+            exp_data = None
+        else:
+            exp_data = parse_ve(args.ve_filename)
+        phonopy_qha.plot_pdf_volume_temperature(exp_data=exp_data)
 
-    # Bulk modulus vs Temperature
-    phonopy_qha.plot_pdf_bulk_modulus_temperature()
+        # Thermal expansion coefficient
+        phonopy_qha.plot_pdf_thermal_expansion()
 
-    # C_P vs Temperature
-    if options.cp_filename is None:
-        exp_data = None
-    else:
-        exp_data = read_cp(options.cp_filename)
-    phonopy_qha.plot_pdf_heat_capacity_P_numerical(exp_data=exp_data)
+        # Volume expansion
+        if args.ve_filename is None:
+            exp_data = None
+        else:
+            exp_data = parse_ve(args.ve_filename)
+        phonopy_qha.plot_pdf_volume_expansion(exp_data=exp_data,
+                                      symbol=args.symbol)
 
-    # C_P vs Temperature (poly fit)
-    if options.cp_filename is None:
-        exp_data = None
-    else:
-        exp_data = read_cp(options.cp_filename)
-    phonopy_qha.plot_pdf_heat_capacity_P_polyfit(exp_data=exp_data)
+        # G vs Temperature
+        phonopy_qha.plot_pdf_gibbs_temperature()
 
-    # Gruneisen parameter vs Temperature
-    phonopy_qha.plot_pdf_gruneisen_temperature()
+        # Bulk modulus vs Temperature
+        phonopy_qha.plot_pdf_bulk_modulus_temperature()
 
-phonopy_qha.write_helmholtz_volume()
-phonopy_qha.write_volume_temperature()
-phonopy_qha.write_thermal_expansion()
-phonopy_qha.write_volume_expansion()
-phonopy_qha.write_gibbs_temperature()
-phonopy_qha.write_bulk_modulus_temperature()
-phonopy_qha.write_heat_capacity_P_numerical()
-phonopy_qha.write_heat_capacity_P_polyfit()
-phonopy_qha.write_gruneisen_temperature()
+        # C_P vs Temperature
+        if args.cp_filename is None:
+            exp_data = None
+        else:
+            exp_data = read_cp(args.cp_filename)
+        phonopy_qha.plot_pdf_heat_capacity_P_numerical(exp_data=exp_data)
+
+        # C_P vs Temperature (poly fit)
+        if args.cp_filename is None:
+            exp_data = None
+        else:
+            exp_data = read_cp(args.cp_filename)
+        phonopy_qha.plot_pdf_heat_capacity_P_polyfit(exp_data=exp_data)
+
+        # Gruneisen parameter vs Temperature
+        phonopy_qha.plot_pdf_gruneisen_temperature()
+
+    phonopy_qha.write_helmholtz_volume()
+    phonopy_qha.write_volume_temperature()
+    phonopy_qha.write_thermal_expansion()
+    phonopy_qha.write_volume_expansion()
+    phonopy_qha.write_gibbs_temperature()
+    phonopy_qha.write_bulk_modulus_temperature()
+    phonopy_qha.write_heat_capacity_P_numerical()
+    phonopy_qha.write_heat_capacity_P_polyfit()
+    phonopy_qha.write_gruneisen_temperature()
+
+if __name__ == "__main__":
+    main(get_options())

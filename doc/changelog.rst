@@ -3,6 +3,26 @@
 Change Log
 ==========
 
+Nov-8-2017: Version 1.12.2
+-----------------------------
+
+* Command option parser of the phonopy tools is replaced from
+  ``optparse`` to ``argparse``.
+* The behaviours of ``-f``, ``--fz``, and ``--fc`` options are
+  slightly changed. The filenames used with these options were the
+  positional arguments previously. Now they are the command-line
+  arguments, i.e., filenames have to be put just after the option name
+  like ``-f vasprun.xml-001 vasprun.xml-002 ...``.
+* New tags (options), ``FC_FORMAT`` (``--fc-format``),
+  ``READFC_FORMAT`` (``read-fc-format``), ``WRITEFC_FORMAT``
+  (``write-fc-format``), ``BAND_FORMAT`` (``--band-format``),
+  ``MESH_FORMAT`` (``--mesh-format``), and ``QPOINTS_FORMAT``
+  (``--qpoints-format``) were implemented. ``HDF5`` tag is deprecated.
+* New tags ``READ_FORCE_CONSTANTS`` and ``WRITE_FORCE_CONSTANTS``
+  were made. They are equivalent to existing options of ``--readfc``
+  and ``--writefc``. Using them, reading and writing force constants
+  are separably controlled.
+
 Oct-19-2017: Version 1.12.0
 -----------------------------
 
@@ -109,7 +129,7 @@ Oct-20-2015: Version 1.10.0 (release for testing)
 * An experimental release for testing python 3 support. Bug reports
   are very appreciated.
 
-Oct-20-2015: Version 1.9.7 
+Oct-20-2015: Version 1.9.7
 -----------------------------
 
 * Siesta interface (``--elk`` option) was added (:ref:`siesta_interface`)
@@ -122,7 +142,7 @@ Aug-12-2015: Version 1.9.6
 -----------------------------
 
 * ``--hdf5`` option. Some output files can be written in hdf5
-  format. See :ref:`hdf5_option`.
+  format. See :ref:`hdf5_tag`.
 * Improve tetrahedron method performance in the calculation of DOS and
   PDOS.
 * Spglib update to version 1.8.2.1.
@@ -132,7 +152,7 @@ July-11-2015: Version 1.9.5
 -----------------------------
 
 * Elk interface (``--elk`` option) was added (:ref:`elk_interface`).
-* Spglib update to version 1.8.1. 
+* Spglib update to version 1.8.1.
 
 
 Feb-18-2015: Version 1.9.4
@@ -189,7 +209,7 @@ Aug-28-2014: Version 1.9.0
 -----------------------------
 
 * Use a native cElementTree of Python as VASP XML parser and stop
-  using lxml. The native cElementTree is built in after Python 2.5. So 
+  using lxml. The native cElementTree is built in after Python 2.5. So
   Python 2.4 or before will not be suppored from this phonopy
   version. This migration to cElementTree was made by shyuep.
 
@@ -273,7 +293,7 @@ Oct-3-2013: Version 1.7.4
 * Thermal displacement matrix is implemented. See
   :ref:`thermal_displacement_matrices_tag` and :ref:`thermal_displacement`.
 * PDOS with projection along arbitrary direction was implemented. See
-  :ref:`projection_direction_tag`. 
+  :ref:`projection_direction_tag`.
 * ``partial_dos.dat`` format was changed. XYZ projected PDOS is not
   output. Instead atom projected PDOS (sum of XYZ projected PDOS)
   is written. See :ref:`output_files`.
@@ -561,7 +581,7 @@ Feb-20-2011: Version 0.9.4
   - Band structure setting tags are changed to BAND tag
     (:ref:`band_structure_related_tags`).
   - DOS tag is renamed to DOS_RANGE tag (:ref:`dos_related_tags`).
-  
+
   These changes are applied only for the phonopy interface. Internal
   simulation code has not been touched, so **physical results would not
   be affected**. If you have any questions, please send e-mail to
@@ -569,7 +589,7 @@ Feb-20-2011: Version 0.9.4
 
 * ``phonopy-FHI-aims`` had not worked in some of previous
   versions. Now it works by Jörg Meyer and Christian Carbogno.
-  
+
 * Directory structure of the code was changed.
 
 * Symmetry finder update to spglib-1.0.2
@@ -640,7 +660,7 @@ Sep-22-2010: Version 0.9.1.4
   ``Primitive.__supercell_to_primitive_map`` in ``cells.py``. When
   :math:`M_s^{-1}M_p` is not symmetric, the supercell was not created
   correctly.
- 
+
 * ``phonopy-FHI-aims`` update by jm.
 
 
@@ -674,7 +694,7 @@ June-10-2010: Version 0.9.1.2
   argument of ``set_q_non_analytical_term`` is used.
 
   At the same time, a small problem on the previous implementation was
-  found. When a reduced q-point is out of the first Brillouin zone, 
+  found. When a reduced q-point is out of the first Brillouin zone,
   it is not correctly handled. Currently it is fixed so as that when
   absolute values of elements of the reduced q-point are over 0.5, they
   are reduced into -0.5 < q < 0.5.
@@ -711,7 +731,7 @@ May-10-2010: Version 0.9.1
 
 * The methods of get_partial_DOS and get_total_DOS are added to the
   Phonopy class.
-  
+
 Apr-12-2010: Version 0.9.0.2
 ------------------------------------
 
@@ -733,9 +753,9 @@ Apr-10-2010: Version 0.9.0
   updated gradually.
 * A small Wien2k interface document is added (:ref:`wien2k_interface`).
 * A script ``phonopy-FHI-aims`` and its examples are added by
-  Jörg Meyer. 
+  Jörg Meyer.
 * spglib update
-  
+
 
 Mar-10-2010: Version 0.7.4
 ------------------------------------
@@ -784,4 +804,3 @@ Oct-14-2009: Version 0.6.2 released
 * ``--fz`` tag was implemented experimentally. This is supposed to
   enable to subtract residual forces on atoms in equilibrium structure
   from those in structure with atomic displacements.
-	

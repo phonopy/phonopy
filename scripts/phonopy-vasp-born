@@ -46,96 +46,108 @@ def fracval(frac):
         x = frac.split('/')
         return float(x[0]) / float(x[1])
 
-from optparse import OptionParser
-parser = OptionParser()
-parser.set_defaults(num_atoms=None,
-                    primitive_axis =None,
-                    supercell_matrix=None,
-                    symmetrize_tensors=True,
-                    read_outcar=False,
-                    symprec=1e-5)
-parser.add_option("--dim", dest="supercell_matrix",
-                  action="store", type="string",
-                  help="Same behavior as DIM tag")
-parser.add_option("--pa", "--primitive_axis", dest="primitive_axis",
-                  action="store", type="string",
-                  help="Same as PRIMITIVE_AXIS tags")
-parser.add_option("--nost", "--no_symmetrize_tensors",
-                  dest="symmetrize_tensors",
-                  action="store_false",
-                  help="Prevent from symmetrizing tensors")
-parser.add_option("--tolerance", dest="symprec", type="float",
-                  help="Symmetry tolerance to search")
-parser.add_option("--outcar", dest="read_outcar",
-                  action="store_true",
-                  help=("Read OUTCAR instead of vasprun.xml. "
-                        "POSCAR is necessary in this case."))
-(options, args) = parser.parse_args()
+def get_options():
+    # Parse options
+    import argparse
+    parser = argparse.ArgumentParser(
+        description="Phonopy vasp-born command-line-tool")
+    parser.set_defaults(num_atoms=None,
+                        primitive_axis =None,
+                        supercell_matrix=None,
+                        symmetrize_tensors=True,
+                        read_outcar=False,
+                        symprec=1e-5)
+    parser.add_argument(
+        "--dim", dest="supercell_matrix",
+        help="Same behavior as DIM tag")
+    parser.add_argument(
+        "--pa", "--primitive_axis", dest="primitive_axis",
+        help="Same as PRIMITIVE_AXIS tags")
+    parser.add_argument(
+        "--nost", "--no_symmetrize_tensors", dest="symmetrize_tensors",
+        action="store_false",
+        help="Prevent from symmetrizing tensors")
+    parser.add_argument(
+        "--tolerance", dest="symprec", type=float,
+        help="Symmetry tolerance to search")
+    parser.add_argument(
+        "--outcar", dest="read_outcar", action="store_true",
+        help=("Read OUTCAR instead of vasprun.xml. "
+              "POSCAR is necessary in this case."))
+    parser.add_argument(
+        "filenames", nargs='*',
+        help="Filenames: vasprun.xml or OUTCAR and POSCAR")
+    args = parser.parse_args()
+    return args
 
-if args:
-    outcar_filename = args[0]
-else:
-    if options.read_outcar:
-        outcar_filename = "OUTCAR"
+def main(args):
+    if args.filenames:
+        outcar_filename = args.filenames[0]
     else:
-        outcar_filename = "vasprun.xml"
-
-if len(args) > 1:
-    poscar_filename = args[1]
-else:
-    poscar_filename = "POSCAR"
-
-if options.primitive_axis:
-    vals = [fracval(x) for x in options.primitive_axis.split()]
-    if len(vals) == 9:
-        primitive_axis = np.array(vals).reshape(3, 3)
-    else:
-        print("Primitive axes are incorrectly set.")
-        sys.exit(1)
-else:
-    primitive_axis = np.eye(3)
-
-if options.supercell_matrix:
-    vals = [int(x) for x in options.supercell_matrix.split()]
-    if len(vals) == 9:
-        supercell_matrix = np.reshape(np.array(vals, dtype='intc'), (3, 3))
-    elif len(vals) == 3:
-        supercell_matrix = np.diag(np.array(vals, dtype='intc'))
-    else:
-        print("Supercell matrix is incorrectly set.")
-        sys.exit(1)
-else:
-    supercell_matrix = np.eye(3, dtype='intc')
-
-with warnings.catch_warnings() as w:
-    # To catch warnings as error, set warnings.simplefilter("error")
-    warnings.simplefilter("always")
-
-    try:
-        if options.read_outcar:
-            borns, epsilon, atom_indices = get_born_OUTCAR(
-                poscar_filename=poscar_filename,
-                outcar_filename=outcar_filename,
-                primitive_matrix=primitive_axis,
-                supercell_matrix=supercell_matrix,
-                symmetrize_tensors=options.symmetrize_tensors,
-                symprec=options.symprec)
+        if args.read_outcar:
+            outcar_filename = "OUTCAR"
         else:
-            borns, epsilon, atom_indices = get_born_vasprunxml(
-                filename=outcar_filename,
-                primitive_matrix=primitive_axis,
-                supercell_matrix=supercell_matrix,
-                symmetrize_tensors=options.symmetrize_tensors,
-                symprec=options.symprec)
-    except UserWarning:
-        sys.exit(1)
-    else:
-        text = "# epsilon and Z* of atoms "
-        text += ' '.join(["%d" % n for n in atom_indices + 1])
-        print(text)
-        print(("%13.8f" * 9) % tuple(epsilon.flatten()))
-        for z in borns:
-            print(("%13.8f" * 9) % tuple(z.flatten()))
-        sys.exit(0)
+            outcar_filename = "vasprun.xml"
 
-sys.exit(1)
+    if len(args.filenames) > 1:
+        poscar_filename = args.filenames[1]
+    else:
+        poscar_filename = "POSCAR"
+
+    if args.primitive_axis:
+        vals = [fracval(x) for x in args.primitive_axis.split()]
+        if len(vals) == 9:
+            primitive_axis = np.array(vals).reshape(3, 3)
+        else:
+            print("Primitive axes are incorrectly set.")
+            sys.exit(1)
+    else:
+        primitive_axis = np.eye(3)
+
+    if args.supercell_matrix:
+        vals = [int(x) for x in args.supercell_matrix.split()]
+        if len(vals) == 9:
+            supercell_matrix = np.reshape(np.array(vals, dtype='intc'), (3, 3))
+        elif len(vals) == 3:
+            supercell_matrix = np.diag(np.array(vals, dtype='intc'))
+        else:
+            print("Supercell matrix is incorrectly set.")
+            sys.exit(1)
+    else:
+        supercell_matrix = np.eye(3, dtype='intc')
+
+    with warnings.catch_warnings() as w:
+        # To catch warnings as error, set warnings.simplefilter("error")
+        warnings.simplefilter("always")
+
+        try:
+            if args.read_outcar:
+                borns, epsilon, atom_indices = get_born_OUTCAR(
+                    poscar_filename=poscar_filename,
+                    outcar_filename=outcar_filename,
+                    primitive_matrix=primitive_axis,
+                    supercell_matrix=supercell_matrix,
+                    symmetrize_tensors=args.symmetrize_tensors,
+                    symprec=args.symprec)
+            else:
+                borns, epsilon, atom_indices = get_born_vasprunxml(
+                    filename=outcar_filename,
+                    primitive_matrix=primitive_axis,
+                    supercell_matrix=supercell_matrix,
+                    symmetrize_tensors=args.symmetrize_tensors,
+                    symprec=args.symprec)
+        except UserWarning:
+            sys.exit(1)
+        else:
+            text = "# epsilon and Z* of atoms "
+            text += ' '.join(["%d" % n for n in atom_indices + 1])
+            print(text)
+            print(("%13.8f" * 9) % tuple(epsilon.flatten()))
+            for z in borns:
+                print(("%13.8f" * 9) % tuple(z.flatten()))
+            sys.exit(0)
+
+    sys.exit(1)
+
+if __name__ == "__main__":
+    main(get_options())

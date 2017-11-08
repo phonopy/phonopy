@@ -42,12 +42,11 @@ try:
 except ImportError:
     print("You need to install python-yaml.")
     sys.exit(1)
-    
+
 try:
     from yaml import CLoader as Loader
-    from yaml import CDumper as Dumper
 except ImportError:
-    from yaml import Loader, Dumper
+    from yaml import Loader
 
 from phonopy.units import VaspToTHz
 
@@ -80,221 +79,242 @@ def read_dos_dat(filename):
         dos.append(ary)
     return np.array(frequencies), np.array(dos)
 
-# Parse options
-from optparse import OptionParser
-parser = OptionParser()
-parser.set_defaults(band_labels=None,
-                    dos=None,
-                    dos_max=None, 
-                    dos_min=None,
-                    factor=1.0,
-                    f_max=None, 
-                    f_min=None,
-                    is_gnuplot=False,
-                    is_points=False,
-                    is_vertial_line=False,
-                    output_filename=None,
-                    xlabel=None,
-                    ylabel=None,
-                    show_legend=False,
-                    title=None)
-parser.add_option("--band_labels", dest="band_labels", action="store", type="string",
-                  help="Show labels at band segments")
-parser.add_option("--dos", dest="dos", type="string",
-                  help="Read dos.dat type file and plot with band structure")
-parser.add_option("--dmax", dest="dos_max", type="float",
-                  help="Maximum DOS plotted")
-parser.add_option("--dmin", dest="dos_min", type="float",
-                  help="Minimum DOS plotted")
-parser.add_option("--factor", dest="factor", type="float",
-                  help="Conversion factor to favorite frequency unit")
-parser.add_option("--fmax", dest="f_max", type="float",
-                  help="Maximum frequency plotted")
-parser.add_option("--fmin", dest="f_min", type="float",
-                  help="Minimum frequency plotted")
-parser.add_option("--gnuplot", dest="is_gnuplot", action="store_true",
-                  help="Output in gnuplot data style")
-parser.add_option("--legend", dest="show_legend",
-                  action="store_true",
-                  help="Show legend")
-parser.add_option("--line", "-l", dest="is_vertial_line",
-                  action="store_true",
-                  help="Vertial line is drawn at between paths")
-parser.add_option("-o", "--output", dest="output_filename",
-                  action="store", type="string",
-                  help="Output filename of PDF plot")
-parser.add_option("--xlabel", dest="xlabel", action="store", type="string",
-                  help="Specify x-label")
-parser.add_option("--ylabel", dest="ylabel", action="store", type="string",
-                  help="Specify y-label")
-parser.add_option("--points", dest="is_points",
-                  action="store_true",
-                  help="Draw points")
-parser.add_option("-t", "--title", dest="title", action="store",
-                  type="string", help="Title of plot")
-(options, args) = parser.parse_args()
+def get_options():
+    # Parse options
+    import argparse
+    parser = argparse.ArgumentParser(
+        description="Phonopy bandplot command-line-tool")
+    parser.set_defaults(band_labels=None,
+                        dos=None,
+                        dos_max=None,
+                        dos_min=None,
+                        factor=1.0,
+                        f_max=None,
+                        f_min=None,
+                        is_gnuplot=False,
+                        is_points=False,
+                        is_vertial_line=False,
+                        output_filename=None,
+                        xlabel=None,
+                        ylabel=None,
+                        show_legend=False,
+                        title=None)
+    parser.add_argument(
+        "--band-labels", dest="band_labels",
+        help="Show labels at band segments")
+    parser.add_argument(
+        "--dos", dest="dos",
+        help="Read dos.dat type file and plot with band structure")
+    parser.add_argument(
+        "--dmax", dest="dos_max", type=float,
+        help="Maximum DOS plotted")
+    parser.add_argument(
+        "--dmin", dest="dos_min", type=float,
+        help="Minimum DOS plotted")
+    parser.add_argument(
+        "--factor", dest="factor", type=float,
+        help="Conversion factor to favorite frequency unit")
+    parser.add_argument(
+        "--fmax", dest="f_max", type=float,
+        help="Maximum frequency plotted")
+    parser.add_argument(
+        "--fmin", dest="f_min", type=float,
+        help="Minimum frequency plotted")
+    parser.add_argument(
+        "--gnuplot", dest="is_gnuplot", action="store_true",
+        help="Output in gnuplot data style")
+    parser.add_argument(
+        "--legend", dest="show_legend", action="store_true",
+        help="Show legend")
+    parser.add_argument(
+        "--line", "-l", dest="is_vertial_line", action="store_true",
+        help="Vertial line is drawn at between paths")
+    parser.add_argument(
+        "-o", "--output", dest="output_filename", action="store",
+        help="Output filename of PDF plot")
+    parser.add_argument(
+        "--xlabel", dest="xlabel",
+        help="Specify x-label")
+    parser.add_argument(
+        "--ylabel", dest="ylabel",
+        help="Specify y-label")
+    parser.add_argument(
+        "--points", dest="is_points", action="store_true",
+        help="Draw points")
+    parser.add_argument(
+        "-t", "--title", dest="title",
+        help="Title of plot")
+    parser.add_argument(
+        "filenames", nargs='*',
+        help="Filenames of phonon band structure result (band.yaml)")
+    args = parser.parse_args()
+    return args
 
-if options.output_filename:
-    import matplotlib
-    matplotlib.use('Agg')            
+def main(args):
+    if args.output_filename:
+        import matplotlib
+        matplotlib.use('Agg')
 
-if not options.is_gnuplot:
-    import matplotlib.pyplot as plt
-    if options.band_labels:
-        from matplotlib import rc
-        rc('text', usetex=True)
-    if options.dos:
-        import matplotlib.gridspec as gridspec
-        plt.figure(figsize=(10, 6))
-        gs = gridspec.GridSpec(1, 2, width_ratios=[3, 1])
-        ax1 = plt.subplot(gs[0, 0])
-        ax1.xaxis.set_ticks_position('both')
-        ax1.yaxis.set_ticks_position('both')
-        ax1.xaxis.set_tick_params(which='both', direction='in')
-        ax1.yaxis.set_tick_params(which='both', direction='in')
-    else:
-        fig, ax = plt.subplots()
-        ax.xaxis.set_ticks_position('both')
-        ax.yaxis.set_ticks_position('both')
-        ax.xaxis.set_tick_params(which='both', direction='in')
-        ax.yaxis.set_tick_params(which='both', direction='in')
-
-colors = ['r-', 'b-', 'g-', 'c-', 'm-', 'y-', 'k-', 
-          'r--', 'b--', 'g--', 'c--', 'm--', 'y--', 'k--']
-if options.is_points:
-    colors = [x + 'o' for x in colors]
-
-count = 0
-
-
-if len(args) == 0:
-    filenames = ['band.yaml']
-else:
-    filenames = args
-
-if options.is_gnuplot:
-    print("# distance  frequency (bands are separated by blank lines)")
-
-if options.dos:
-    dos_frequencies, dos = read_dos_dat(options.dos)
-
-for i, filename in enumerate(filenames):
-    (distances,
-     frequencies,
-     segment_nqpoint,
-     labels) = read_band_yaml(filename)
-
-    end_points = [0,]
-    for nq in segment_nqpoint:
-        end_points.append(nq + end_points[-1])
-    end_points[-1] -= 1
-    segment_positions = distances[end_points]
-
-    if all(x is None for x in labels):
-        labels_at_ends = None
-    else:
-        labels_at_ends = [labels[n] for n in end_points]
-
-    if options.is_gnuplot:
-        print("# End points of segments: ")
-        print("#   " + "%10.8f " * len(segment_positions) %
-              tuple(segment_positions))
-    elif options.is_vertial_line and len(filenames) == 1:
-        for v in segment_positions[1:-1]:
-            plt.axvline(x=v, linewidth=0.5, color='b')
-
-    if options.is_gnuplot:
-        for j, freqs in enumerate(frequencies.T):
-            q = 0
-            for nq in segment_nqpoint:
-                for d, f in zip(distances[q:(q + nq)],
-                                freqs[q:(q + nq)] * options.factor):
-                    print("%f %f" % (d, f))
-                q += nq
-                print('')
-            print('')
-    else:
-        q = 0
-        for j, nq in enumerate(segment_nqpoint):
-            if j == 0:
-                plt.plot(distances[q:(q + nq)],
-                         frequencies[q:(q + nq)] * options.factor,
-                         colors[i],
-                         label=filename)
-            else:
-                plt.plot(distances[q:(q + nq)],
-                         frequencies[q:(q + nq)] * options.factor,
-                         colors[i])
-            q += nq
-
-    if options.is_gnuplot:
-        print('')
-
-    
-if not options.is_gnuplot:
-    if options.xlabel is None:
-        plt.xlabel('Wave vector')
-    else:
-        plt.xlabel(options.xlabel)
-    if options.ylabel is None:
-        plt.ylabel('Frequency')
-    else:
-        plt.ylabel(options.ylabel)
-    
-    plt.xlim(distances[0], distances[-1])
-    if options.f_max is not None:
-        plt.ylim(ymax=options.f_max)
-    if options.f_min is not None:
-        plt.ylim(ymin=options.f_min)
-    plt.axhline(y=0, linestyle=':', linewidth=0.5, color='b')
-    if len(filenames) == 1:
-        xticks = segment_positions
-        if options.band_labels:
-            band_labels = [x for x in options.band_labels.split()]
-            if len(band_labels) == len(xticks):
-                plt.xticks(xticks, band_labels)
-            else:
-                print("Numbers of labels and band segments don't match.")
-                sys.exit(1)
-        elif labels_at_ends:
-            plt.xticks(xticks, labels_at_ends)
+    if not args.is_gnuplot:
+        import matplotlib.pyplot as plt
+        if args.band_labels:
+            from matplotlib import rc
+            rc('text', usetex=True)
+        if args.dos:
+            import matplotlib.gridspec as gridspec
+            plt.figure(figsize=(10, 6))
+            gs = gridspec.GridSpec(1, 2, width_ratios=[3, 1])
+            ax1 = plt.subplot(gs[0, 0])
+            ax1.xaxis.set_ticks_position('both')
+            ax1.yaxis.set_ticks_position('both')
+            ax1.xaxis.set_tick_params(which='both', direction='in')
+            ax1.yaxis.set_tick_params(which='both', direction='in')
         else:
-            plt.xticks(xticks, [''] * len(xticks))
+            fig, ax = plt.subplots()
+            ax.xaxis.set_ticks_position('both')
+            ax.yaxis.set_ticks_position('both')
+            ax.xaxis.set_tick_params(which='both', direction='in')
+            ax.yaxis.set_tick_params(which='both', direction='in')
+
+    colors = ['r-', 'b-', 'g-', 'c-', 'm-', 'y-', 'k-',
+              'r--', 'b--', 'g--', 'c--', 'm--', 'y--', 'k--']
+    if args.is_points:
+        colors = [x + 'o' for x in colors]
+
+    count = 0
+
+
+    if len(args.filenames) == 0:
+        filenames = ['band.yaml']
     else:
-        plt.xticks([])
-    
-    if options.title is not None:
-        plt.title(options.title)
+        filenames = args.filenames
 
-    if options.show_legend:
-        plt.legend()
+    if args.is_gnuplot:
+        print("# distance  frequency (bands are separated by blank lines)")
 
-    if options.dos:
-        ax2 = plt.subplot(gs[0, 1], sharey=ax1)
-        ax2.xaxis.set_ticks_position('both')
-        ax2.yaxis.set_ticks_position('both')
-        ax2.xaxis.set_tick_params(which='both', direction='in')
-        ax2.yaxis.set_tick_params(which='both', direction='in')
+    if args.dos:
+        dos_frequencies, dos = read_dos_dat(args.dos)
 
-        plt.subplots_adjust(wspace=0.03)
-        plt.setp(ax2.get_yticklabels(), visible=False)
-        plt.plot(dos, dos_frequencies)
-        plt.xlabel('DOS')
+    for i, filename in enumerate(filenames):
+        (distances,
+         frequencies,
+         segment_nqpoint,
+         labels) = read_band_yaml(filename)
 
-        ax2.set_xlim((0, None))
+        end_points = [0,]
+        for nq in segment_nqpoint:
+            end_points.append(nq + end_points[-1])
+        end_points[-1] -= 1
+        segment_positions = distances[end_points]
 
-        if options.f_max is not None:
-            plt.ylim(ymax=options.f_max)
-        if options.f_min is not None:
-            plt.ylim(ymin=options.f_min)
-        if options.dos_max is not None:
-            plt.xlim(xmax=options.dos_max)
-        if options.dos_min is not None:
-            plt.xlim(xmin=options.dos_min)
-    
-    if options.output_filename is not None:
-        plt.rcParams['pdf.fonttype'] = 42
-        plt.rcParams['font.family'] = 'serif'
-        plt.savefig(options.output_filename)
-    else:
-        plt.show()
+        if all(x is None for x in labels):
+            labels_at_ends = None
+        else:
+            labels_at_ends = [labels[n] for n in end_points]
+
+        if args.is_gnuplot:
+            print("# End points of segments: ")
+            print("#   " + "%10.8f " * len(segment_positions) %
+                  tuple(segment_positions))
+        elif args.is_vertial_line and len(filenames) == 1:
+            for v in segment_positions[1:-1]:
+                plt.axvline(x=v, linewidth=0.5, color='b')
+
+        if args.is_gnuplot:
+            for j, freqs in enumerate(frequencies.T):
+                q = 0
+                for nq in segment_nqpoint:
+                    for d, f in zip(distances[q:(q + nq)],
+                                    freqs[q:(q + nq)] * args.factor):
+                        print("%f %f" % (d, f))
+                    q += nq
+                    print('')
+                print('')
+        else:
+            q = 0
+            for j, nq in enumerate(segment_nqpoint):
+                if j == 0:
+                    plt.plot(distances[q:(q + nq)],
+                             frequencies[q:(q + nq)] * args.factor,
+                             colors[i],
+                             label=filename)
+                else:
+                    plt.plot(distances[q:(q + nq)],
+                             frequencies[q:(q + nq)] * args.factor,
+                             colors[i])
+                q += nq
+
+        if args.is_gnuplot:
+            print('')
+
+
+    if not args.is_gnuplot:
+        if args.xlabel is None:
+            plt.xlabel('Wave vector')
+        else:
+            plt.xlabel(args.xlabel)
+        if args.ylabel is None:
+            plt.ylabel('Frequency')
+        else:
+            plt.ylabel(args.ylabel)
+
+        plt.xlim(distances[0], distances[-1])
+        if args.f_max is not None:
+            plt.ylim(ymax=args.f_max)
+        if args.f_min is not None:
+            plt.ylim(ymin=args.f_min)
+        plt.axhline(y=0, linestyle=':', linewidth=0.5, color='b')
+        if len(filenames) == 1:
+            xticks = segment_positions
+            if args.band_labels:
+                band_labels = [x for x in args.band_labels.split()]
+                if len(band_labels) == len(xticks):
+                    plt.xticks(xticks, band_labels)
+                else:
+                    print("Numbers of labels and band segments don't match.")
+                    sys.exit(1)
+            elif labels_at_ends:
+                plt.xticks(xticks, labels_at_ends)
+            else:
+                plt.xticks(xticks, [''] * len(xticks))
+        else:
+            plt.xticks([])
+
+        if args.title is not None:
+            plt.title(args.title)
+
+        if args.show_legend:
+            plt.legend()
+
+        if args.dos:
+            ax2 = plt.subplot(gs[0, 1], sharey=ax1)
+            ax2.xaxis.set_ticks_position('both')
+            ax2.yaxis.set_ticks_position('both')
+            ax2.xaxis.set_tick_params(which='both', direction='in')
+            ax2.yaxis.set_tick_params(which='both', direction='in')
+
+            plt.subplots_adjust(wspace=0.03)
+            plt.setp(ax2.get_yticklabels(), visible=False)
+            plt.plot(dos, dos_frequencies)
+            plt.xlabel('DOS')
+
+            ax2.set_xlim((0, None))
+
+            if args.f_max is not None:
+                plt.ylim(ymax=args.f_max)
+            if args.f_min is not None:
+                plt.ylim(ymin=args.f_min)
+            if args.dos_max is not None:
+                plt.xlim(xmax=args.dos_max)
+            if args.dos_min is not None:
+                plt.xlim(xmin=args.dos_min)
+
+        if args.output_filename is not None:
+            plt.rcParams['pdf.fonttype'] = 42
+            plt.rcParams['font.family'] = 'serif'
+            plt.savefig(args.output_filename)
+        else:
+            plt.show()
+
+if __name__ == "__main__":
+    main(get_options())
