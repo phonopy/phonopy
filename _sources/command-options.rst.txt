@@ -55,6 +55,7 @@ tags:
 * ``--qpoints-format`` (``QPOINTS_FORMAT``)
 * ``--readfc`` (``READ_FORCE_CONSTANTS = .TRUE.``)
 * ``--readfc-format`` (``READFC_FORMAT``)
+* ``--read-qpoints`` (``QPOINTS = .TRUE.``)
 * ``--show-irreps`` (``SHOW_IRREPS``)
 * ``--sigma`` (``SIGMA``)
 * ``-t`` (``TPROP``)
