@@ -139,6 +139,7 @@ def get_parser():
         q_direction=None,
         read_fc_format=None,
         read_force_constants=False,
+        read_qpoints=False,
         show_irreps=False,
         sigma=None,
         supercell_dimension=None,
@@ -378,6 +379,9 @@ def get_parser():
     parser.add_argument(
         "--readfc-format", dest="readfc_format",
         help="Force constants input file-format")
+    parser.add_argument(
+        "--read-qpointsfc", dest="read_qpoints", action="store_true",
+        help="Read QPOITNS")
     parser.add_argument(
         "-s", "--save", dest="is_graph_save", action="store_true",
         help="Save plot data in pdf")
