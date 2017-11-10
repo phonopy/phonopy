@@ -188,6 +188,8 @@ This is an alternative of ``FORCE_CONSTANTS`` but the data is stored
 in HDF5 format. See the detail of how to obtain this file,
 :ref:`fc_format_tag`.
 
+.. _qpoints_file:
+
 ``QPOINTS`` (optional)
 -----------------------
 

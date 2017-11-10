@@ -76,6 +76,7 @@ class Settings(object):
         self._primitive_matrix = None
         self._qpoints = None
         self._q_direction = None
+        self._read_qpoints = False
         self._sigma = None
         self._supercell_matrix = None
         self._tmax = 1000
@@ -282,6 +283,12 @@ class Settings(object):
     def get_qpoints(self):
         return self._qpoints
 
+    def set_read_qpoints(self, read_qpoints):
+        self._read_qpoints = read_qpoints
+
+    def get_read_qpoints(self):
+        return self._read_qpoints
+
     def set_sigma(self, sigma):
         self._sigma = sigma
 
@@ -346,174 +353,6 @@ class ConfParser(object):
         print(message)
         print("Please check the setting tags and options.")
         sys.exit(1)
-
-    def set_settings(self):
-        params = self._parameters
-
-        # Chemical symbols
-        if 'atom_name' in params:
-            self._settings.set_chemical_symbols(params['atom_name'])
-
-        # Sets of band indices that are summed
-        if 'band_indices' in params:
-            self._settings.set_band_indices(params['band_indices'])
-
-        # Filename of input unit cell
-        if 'cell_filename' in params:
-            self._settings.set_cell_filename(params['cell_filename'])
-
-        # Cutoff frequency
-        if 'cutoff_frequency' in params:
-            self._settings.set_cutoff_frequency(params['cutoff_frequency'])
-
-        # Diagonal displacement
-        if 'diag' in params:
-            self._settings.set_is_diagonal_displacement(params['diag'])
-
-        # Distance of finite displacements introduced
-        if 'displacement_distance' in params:
-            self._settings.set_displacement_distance(
-                params['displacement_distance'])
-
-        # Decimals of values of dynamical matrxi
-        if 'dm_decimals' in params:
-            self._settings.set_dm_decimals(int(params['dm_decimals']))
-
-        # Decimals of values of force constants
-        if 'fc_decimals' in params:
-            self._settings.set_fc_decimals(int(params['fc_decimals']))
-
-        # Enforce translational invariance and index permutation symmetry
-        # to force constants?
-        if 'fc_symmetry' in params:
-            self._settings.set_fc_symmetry_iteration(int(params['fc_symmetry']))
-
-        # Frequency unit conversion factor
-        if 'frequency_conversion_factor' in params:
-            self._settings.set_frequency_conversion_factor(
-                params['frequency_conversion_factor'])
-
-        # Spectram drawing step
-        if 'fpitch' in params:
-            self._settings.set_frequency_pitch(params['fpitch'])
-
-        # Number of sampling points for spectram drawing
-        if 'num_frequency_points' in params:
-            self._settings.set_num_frequency_points(params['num_frequency_points'])
-
-        # Group velocity finite difference
-        if 'gv_delta_q' in params:
-            self._settings.set_group_velocity_delta_q(params['gv_delta_q'])
-
-        # Mesh sampling numbers
-        if 'mesh_numbers' in params:
-            self._settings.set_mesh_numbers(params['mesh_numbers'])
-
-        # Is getting eigenvectors?
-        if 'is_eigenvectors' in params:
-            self._settings.set_is_eigenvectors(params['is_eigenvectors'])
-
-        # Is reciprocal mesh symmetry searched?
-        if 'is_mesh_symmetry' in params:
-            self._settings.set_is_mesh_symmetry(params['is_mesh_symmetry'])
-
-        # Non analytical term correction?
-        if 'is_nac' in params:
-            self._settings.set_is_nac(params['is_nac'])
-
-        # Is rotational invariance ?
-        if 'is_rotational' in params:
-            self._settings.set_is_rotational_invariance(params['is_rotational'])
-
-        # Is crystal symmetry searched?
-        if 'is_symmetry' in params:
-            self._settings.set_is_symmetry(params['is_symmetry'])
-
-        # Tetrahedron method
-        if 'is_tetrahedron_method' in params:
-            self._settings.set_is_tetrahedron_method(
-                params['is_tetrahedron_method'])
-
-        # Is translational invariance ?
-        if 'is_translation' in params:
-            self._settings.set_is_translational_symmetry(
-                params['is_translation'])
-
-        # Trigonal displacement
-        if 'is_trigonal_displacement' in params:
-            self._settings.set_is_trigonal_displacement(
-                params['is_trigonal_displacement'])
-
-        # Magnetic moments
-        if 'magmom' in params:
-            self._settings.set_magnetic_moments(params['magmom'])
-
-        # Atomic mass
-        if 'mass' in params:
-            self._settings.set_masses(params['mass'])
-
-        # Plus minus displacement
-        if 'pm_displacement' in params:
-            self._settings.set_is_plusminus_displacement(
-                params['pm_displacement'])
-
-        # Primitive cell shape
-        if 'primitive_axis' in params:
-            self._settings.set_primitive_matrix(params['primitive_axis'])
-
-        # Q-points mode
-        if 'qpoints' in params:
-            if params['qpoints'] is not True:
-                self._settings.set_qpoints(params['qpoints'])
-
-        # q-direction for non analytical term correction
-        if 'q_direction' in params:
-            self._settings.set_nac_q_direction(params['q_direction'])
-
-        # Smearing width
-        if 'sigma' in params:
-            self._settings.set_sigma(params['sigma'])
-
-        # Supercell size
-        if 'supercell_matrix' in params:
-            self._settings.set_supercell_matrix(params['supercell_matrix'])
-
-        # Temerature range
-        if 'tmax' in params:
-            self._settings.set_max_temperature(params['tmax'])
-        if 'tmin' in params:
-            self._settings.set_min_temperature(params['tmin'])
-        if 'tstep' in params:
-            self._settings.set_temperature_step(params['tstep'])
-
-        # Choice of imposing translational invariance
-        if 'tsym_type' in params:
-            self._settings.set_tsym_type(params['tsym_type'])
-
-        # Band paths
-        # BAND = 0.0 0.0 0.0  0.5 0.0 0.0  0.5 0.5 0.0  0.0 0.0 0.0  0.5 0.5 0.5
-        # [array([[ 0. ,  0. ,  0. ],
-        #         [ 0.5,  0. ,  0. ],
-        #         [ 0.5,  0.5,  0. ],
-        #         [ 0. ,  0. ,  0. ],
-        #         [ 0.5,  0.5,  0.5]])]
-        #
-        # BAND = 0.0 0.0 0.0  0.5 0.0 0.0, 0.5 0.5 0.0  0.0 0.0 0.0  0.5 0.5 0.5
-        # [array([[ 0. ,  0. ,  0. ],
-        #         [ 0.5,  0. ,  0. ]]),
-        #  array([[ 0.5,  0.5,  0. ],
-        #         [ 0. ,  0. ,  0. ],
-        #         [ 0.5,  0.5,  0.5]])]
-        if 'band_paths' in params:
-            self._settings.set_band_paths(params['band_paths'])
-
-        # This number includes end points
-        if 'band_points' in params:
-            self._settings.set_band_points(params['band_points'])
-
-        # Activate phonopy YAML mode
-        if 'yaml_mode' in params:
-            self._settings.set_yaml_mode(params['yaml_mode'])
 
     def read_file(self, filename):
         file = open(filename, 'r')
@@ -667,6 +506,10 @@ class ConfParser(object):
         if 'q_direction' in arg_list:
             if self._args.q_direction is not None:
                 self._confs['q_direction'] = self._args.q_direction
+
+        if 'read_qpoints' in arg_list:
+            if self._args.read_qpoints:
+                self._confs['read_qpoints'] = '.true.'
 
         if 'sigma' in arg_list:
             if self._args.sigma:
@@ -827,7 +670,9 @@ class ConfParser(object):
 
             if conf_key == 'qpoints':
                 if confs['qpoints'].lower() == '.true.':
-                    self.set_parameter('qpoints', True)
+                    self.set_parameter('read_qpoints', True)
+                elif confs['qpoints'].lower() == '.false.':
+                    self.set_parameter('read_qpoints', False)
                 else:
                     vals = [fracval(x) for x in confs['qpoints'].split()]
                     if len(vals) == 0 or len(vals) % 3 != 0:
@@ -835,6 +680,10 @@ class ConfParser(object):
                     else:
                         self.set_parameter('qpoints',
                                            list(np.reshape(vals, (-1, 3))))
+
+            if conf_key == 'read_qpoints':
+                if confs['read_qpoints'].lower() == '.true.':
+                    self.set_parameter('read_qpoints', True)
 
             if conf_key == 'q_direction':
                 q_direction = [fracval(x) for x in confs['q_direction'].split()]
@@ -895,6 +744,177 @@ class ConfParser(object):
 
     def set_parameter(self, key, val):
         self._parameters[key] = val
+
+    def set_settings(self):
+        params = self._parameters
+
+        # Chemical symbols
+        if 'atom_name' in params:
+            self._settings.set_chemical_symbols(params['atom_name'])
+
+        # Sets of band indices that are summed
+        if 'band_indices' in params:
+            self._settings.set_band_indices(params['band_indices'])
+
+        # Filename of input unit cell
+        if 'cell_filename' in params:
+            self._settings.set_cell_filename(params['cell_filename'])
+
+        # Cutoff frequency
+        if 'cutoff_frequency' in params:
+            self._settings.set_cutoff_frequency(params['cutoff_frequency'])
+
+        # Diagonal displacement
+        if 'diag' in params:
+            self._settings.set_is_diagonal_displacement(params['diag'])
+
+        # Distance of finite displacements introduced
+        if 'displacement_distance' in params:
+            self._settings.set_displacement_distance(
+                params['displacement_distance'])
+
+        # Decimals of values of dynamical matrxi
+        if 'dm_decimals' in params:
+            self._settings.set_dm_decimals(int(params['dm_decimals']))
+
+        # Decimals of values of force constants
+        if 'fc_decimals' in params:
+            self._settings.set_fc_decimals(int(params['fc_decimals']))
+
+        # Enforce translational invariance and index permutation symmetry
+        # to force constants?
+        if 'fc_symmetry' in params:
+            self._settings.set_fc_symmetry_iteration(int(params['fc_symmetry']))
+
+        # Frequency unit conversion factor
+        if 'frequency_conversion_factor' in params:
+            self._settings.set_frequency_conversion_factor(
+                params['frequency_conversion_factor'])
+
+        # Spectram drawing step
+        if 'fpitch' in params:
+            self._settings.set_frequency_pitch(params['fpitch'])
+
+        # Number of sampling points for spectram drawing
+        if 'num_frequency_points' in params:
+            self._settings.set_num_frequency_points(params['num_frequency_points'])
+
+        # Group velocity finite difference
+        if 'gv_delta_q' in params:
+            self._settings.set_group_velocity_delta_q(params['gv_delta_q'])
+
+        # Mesh sampling numbers
+        if 'mesh_numbers' in params:
+            self._settings.set_mesh_numbers(params['mesh_numbers'])
+
+        # Is getting eigenvectors?
+        if 'is_eigenvectors' in params:
+            self._settings.set_is_eigenvectors(params['is_eigenvectors'])
+
+        # Is reciprocal mesh symmetry searched?
+        if 'is_mesh_symmetry' in params:
+            self._settings.set_is_mesh_symmetry(params['is_mesh_symmetry'])
+
+        # Non analytical term correction?
+        if 'is_nac' in params:
+            self._settings.set_is_nac(params['is_nac'])
+
+        # Is rotational invariance ?
+        if 'is_rotational' in params:
+            self._settings.set_is_rotational_invariance(params['is_rotational'])
+
+        # Is crystal symmetry searched?
+        if 'is_symmetry' in params:
+            self._settings.set_is_symmetry(params['is_symmetry'])
+
+        # Tetrahedron method
+        if 'is_tetrahedron_method' in params:
+            self._settings.set_is_tetrahedron_method(
+                params['is_tetrahedron_method'])
+
+        # Is translational invariance ?
+        if 'is_translation' in params:
+            self._settings.set_is_translational_symmetry(
+                params['is_translation'])
+
+        # Trigonal displacement
+        if 'is_trigonal_displacement' in params:
+            self._settings.set_is_trigonal_displacement(
+                params['is_trigonal_displacement'])
+
+        # Magnetic moments
+        if 'magmom' in params:
+            self._settings.set_magnetic_moments(params['magmom'])
+
+        # Atomic mass
+        if 'mass' in params:
+            self._settings.set_masses(params['mass'])
+
+        # Plus minus displacement
+        if 'pm_displacement' in params:
+            self._settings.set_is_plusminus_displacement(
+                params['pm_displacement'])
+
+        # Primitive cell shape
+        if 'primitive_axis' in params:
+            self._settings.set_primitive_matrix(params['primitive_axis'])
+
+        # Q-points mode
+        if 'qpoints' in params:
+            self._settings.set_qpoints(params['qpoints'])
+
+        if 'read_qpoints' in params:
+            if params['read_qpoints']:
+                self._settings.set_read_qpoints(params['read_qpoints'])
+
+        # q-direction for non analytical term correction
+        if 'q_direction' in params:
+            self._settings.set_nac_q_direction(params['q_direction'])
+
+        # Smearing width
+        if 'sigma' in params:
+            self._settings.set_sigma(params['sigma'])
+
+        # Supercell size
+        if 'supercell_matrix' in params:
+            self._settings.set_supercell_matrix(params['supercell_matrix'])
+
+        # Temerature range
+        if 'tmax' in params:
+            self._settings.set_max_temperature(params['tmax'])
+        if 'tmin' in params:
+            self._settings.set_min_temperature(params['tmin'])
+        if 'tstep' in params:
+            self._settings.set_temperature_step(params['tstep'])
+
+        # Choice of imposing translational invariance
+        if 'tsym_type' in params:
+            self._settings.set_tsym_type(params['tsym_type'])
+
+        # Band paths
+        # BAND = 0.0 0.0 0.0  0.5 0.0 0.0  0.5 0.5 0.0  0.0 0.0 0.0  0.5 0.5 0.5
+        # [array([[ 0. ,  0. ,  0. ],
+        #         [ 0.5,  0. ,  0. ],
+        #         [ 0.5,  0.5,  0. ],
+        #         [ 0. ,  0. ,  0. ],
+        #         [ 0.5,  0.5,  0.5]])]
+        #
+        # BAND = 0.0 0.0 0.0  0.5 0.0 0.0, 0.5 0.5 0.0  0.0 0.0 0.0  0.5 0.5 0.5
+        # [array([[ 0. ,  0. ,  0. ],
+        #         [ 0.5,  0. ,  0. ]]),
+        #  array([[ 0.5,  0.5,  0. ],
+        #         [ 0. ,  0. ,  0. ],
+        #         [ 0.5,  0.5,  0.5]])]
+        if 'band_paths' in params:
+            self._settings.set_band_paths(params['band_paths'])
+
+        # This number includes end points
+        if 'band_points' in params:
+            self._settings.set_band_points(params['band_points'])
+
+        # Activate phonopy YAML mode
+        if 'yaml_mode' in params:
+            self._settings.set_yaml_mode(params['yaml_mode'])
 
 #
 # For phonopy
@@ -1823,7 +1843,7 @@ class PhonopyConfParser(ConfParser):
             self._settings.set_run_mode('band_mesh')
 
         # Q-points mode
-        if 'qpoints' in params:
+        if 'qpoints' in params or 'read_qpoints' in params:
             self._settings.set_run_mode('qpoints')
             if 'qpoints_format' in params:
                 self._settings.set_qpoints_format(params['qpoints_format'])
