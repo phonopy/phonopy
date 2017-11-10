@@ -776,8 +776,22 @@ Specific q-points
 ``QPOINTS``
 ~~~~~~~~~~~
 
-When ``QPOINTS = .TRUE.``, ``QPOINTS`` file in your working directory
-is read, and the q-points written in this file are calculated.
+When q-points are supplied, those phonons are calculated. Q-points are
+specified successive values separated by spaces and collected by every
+three values as vectors in reciprocal reduced coordinates.
+
+::
+
+   QPOINTS = 0 0 0  1/2 1/2 1/2  1/2 0 1/2
+
+With ``QPOINTS = .TRUE.``, q-points are read from ``QPOITNS`` file
+(see the file format at :ref:`QPOINTS<qpoints_file>`) in curret directory
+phonons at the q-points are calculated.
+
+::
+
+   QPOINTS = .TRUE.
+
 
 .. _writedm_tag:
 
