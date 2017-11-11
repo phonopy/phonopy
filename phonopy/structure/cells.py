@@ -252,7 +252,6 @@ class Primitive(Atoms):
         self._p2p_map = None
         self._smallest_vectors = None
         self._multiplicity = None
-
         self._primitive_cell(supercell)
         self._supercell_to_primitive_map(supercell.get_scaled_positions())
         self._primitive_to_primitive_map()
@@ -288,7 +287,7 @@ class Primitive(Atoms):
                            pbc=True)
             self._p2s_map = np.array(p2s_map, dtype='intc')
         else:
-            return False
+            raise ValueError
 
     def _supercell_to_primitive_map(self, pos):
         inv_F = np.linalg.inv(self._primitive_matrix)
@@ -372,10 +371,9 @@ def _trim_cell(relative_axes, cell, symprec):
                 trimmed_magmoms.append(magmoms[i])
             extracted_atoms.append(i)
 
-    scale = np.rint(1.0 / np.linalg.det(relative_axes))
-    if (len(numbers) // len(trimmed_numbers)) != scale:
-        return False
-    else:
+    # scale is not always to become integer.
+    scale = 1.0 / np.linalg.det(relative_axes)
+    if len(numbers) == np.rint(scale * len(trimmed_numbers)):
         trimmed_cell = Atoms(numbers=trimmed_numbers,
                              masses=trimmed_masses,
                              magmoms=trimmed_magmoms,
@@ -383,6 +381,8 @@ def _trim_cell(relative_axes, cell, symprec):
                              cell=trimmed_lattice,
                              pbc=True)
         return trimmed_cell, extracted_atoms, mapping_table
+    else:
+        return False
 
 #
 # Delaunay reduction
