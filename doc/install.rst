@@ -43,11 +43,6 @@ The python libraries are installed by::
 ``python-scipy`` is also required to use ``phonopy-qha`` or
 ``DEBYE_MODEL`` tag.
 
-The ``texlive-fonts-recommended`` package may be required, if you
-see the following message in ploting results::
-
-   ! I can't find file `pncr7t'.
-
 By conda
 ^^^^^^^^^
 
@@ -221,3 +216,16 @@ current environment variables by::
 When multiple different phonopy paths are found, remove all except for
 what you really need. Then logout from the current shell (terminal)
 and open new shell (terminal) to confirm that the modification is activated.
+
+Error in plotting on display
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``texlive-fonts-recommended`` and ``dviping`` packages may be required
+to install on your system, if you see something like the following
+messages when ploting::
+
+   ! I can't find file `pncr7t'.
+
+or::
+
+   ! LaTeX Error: File `type1cm.sty' not found.
