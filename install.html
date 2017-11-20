@@ -115,6 +115,7 @@
 <li><a class="reference internal" href="#trouble-shooting">Trouble shooting</a><ul>
 <li><a class="reference internal" href="#remove-previous-phonopy-installations">Remove previous phonopy installations</a></li>
 <li><a class="reference internal" href="#set-correct-environment-variables-path-and-pythonpath">Set correct environment variables <code class="docutils literal"><span class="pre">PATH</span></code> and <code class="docutils literal"><span class="pre">PYTHONPATH</span></code></a></li>
+<li><a class="reference internal" href="#error-in-plotting-on-display">Error in plotting on display</a></li>
 </ul>
 </li>
 </ul>
@@ -180,6 +181,7 @@
 <li><a class="reference internal" href="#trouble-shooting" id="id10">Trouble shooting</a><ul>
 <li><a class="reference internal" href="#remove-previous-phonopy-installations" id="id11">Remove previous phonopy installations</a></li>
 <li><a class="reference internal" href="#set-correct-environment-variables-path-and-pythonpath" id="id12">Set correct environment variables <code class="docutils literal"><span class="pre">PATH</span></code> and <code class="docutils literal"><span class="pre">PYTHONPATH</span></code></a></li>
+<li><a class="reference internal" href="#error-in-plotting-on-display" id="id13">Error in plotting on display</a></li>
 </ul>
 </li>
 </ul>
@@ -214,11 +216,6 @@ VirtualBox and install Ubuntu linux on it.</p>
 </div>
 <p><code class="docutils literal"><span class="pre">python-scipy</span></code> is also required to use <code class="docutils literal"><span class="pre">phonopy-qha</span></code> or
 <code class="docutils literal"><span class="pre">DEBYE_MODEL</span></code> tag.</p>
-<p>The <code class="docutils literal"><span class="pre">texlive-fonts-recommended</span></code> package may be required, if you
-see the following message in ploting results:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span>! I can&#39;t find file `pncr7t&#39;.
-</pre></div>
-</div>
 </div>
 <div class="section" id="by-conda">
 <h4><a class="toc-backref" href="#id4">By conda</a><a class="headerlink" href="#by-conda" title="Permalink to this headline">¶</a></h4>
@@ -426,6 +423,19 @@ current environment variables by:</p>
 <p>When multiple different phonopy paths are found, remove all except for
 what you really need. Then logout from the current shell (terminal)
 and open new shell (terminal) to confirm that the modification is activated.</p>
+</div>
+<div class="section" id="error-in-plotting-on-display">
+<h3><a class="toc-backref" href="#id13">Error in plotting on display</a><a class="headerlink" href="#error-in-plotting-on-display" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal"><span class="pre">texlive-fonts-recommended</span></code> and <code class="docutils literal"><span class="pre">dviping</span></code> packages may be required
+to install on your system, if you see something like the following
+messages when ploting:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>! I can&#39;t find file `pncr7t&#39;.
+</pre></div>
+</div>
+<p>or:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>! LaTeX Error: File `type1cm.sty&#39; not found.
+</pre></div>
+</div>
 </div>
 </div>
 </div>
