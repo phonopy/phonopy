@@ -62,16 +62,25 @@ def print_phononpy():
 
 def print_version(version):
     try:
+        version_text = ('%s' % version).rjust(44)
         import pkg_resources
-        ver = pkg_resources.require("phonopy")[0].version.split('.')
-        if len(ver) > 3:
-            rev = ver[3]
-            print(('%s-r%s' % (version, rev)).rjust(44))
-        else:
-            print(('%s' % version).rjust(44))
+        dist = pkg_resources.get_distribution("phonopy")
+        if dist.has_version():
+            ver = dist.version.split('.')
+            if len(ver) > 3:
+                rev = ver[3]
+                version_text = ('%s-r%s' % (version, rev)).rjust(44)
     except ImportError:
-        print(('%s' % version).rjust(44))
-    print('')
+        pass
+    except Exception as err:
+        if (err.__module__ == 'pkg_resources' and
+            err.__class__.__name__ == 'DistributionNotFound'):
+            pass
+        else:
+            raise
+    finally:
+        print(version_text)
+        print('')
 
 def print_end():
     print("""                 _

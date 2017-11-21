@@ -45,10 +45,10 @@ class TestSupercell(unittest.TestCase):
                             [ 1, 1,-1]])
 
         self._fnames = ("SiO2-123.yaml", "Si-conv.yaml")
-    
+
     def tearDown(self):
         pass
-    
+
     def test_get_supercell(self):
         for i, (cell, smat, fname) in enumerate(zip(self._cells,
                                                     self._smats,
@@ -68,7 +68,7 @@ class TestSupercell(unittest.TestCase):
             np.testing.assert_allclose(scell.get_masses(),
                                        scell_yaml.get_masses(),
                                        atol=1e-5)
-            
+
 
 
 if __name__ == '__main__':

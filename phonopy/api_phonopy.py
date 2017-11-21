@@ -1359,11 +1359,11 @@ class Phonopy(object):
             trans_mat = inv_supercell_matrix
         else:
             trans_mat = np.dot(inv_supercell_matrix, self._primitive_matrix)
-        self._primitive = get_primitive(
-            self._supercell, trans_mat, self._symprec)
-        num_satom = self._supercell.get_number_of_atoms()
-        num_patom = self._primitive.get_number_of_atoms()
-        if abs(num_satom * np.linalg.det(trans_mat) - num_patom) < 0.1:
-            return True
-        else:
-            return False
+
+        try:
+            self._primitive = get_primitive(
+                self._supercell, trans_mat, self._symprec)
+        except ValueError as err:
+            print("Creating primitive cell is failed.")
+            print("PRIMITIVE_AXIS may be incorrectly specified.")
+            raise

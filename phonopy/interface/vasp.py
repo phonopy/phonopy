@@ -822,7 +822,7 @@ class VasprunxmlExpat(object):
                     self._is_k_weights = True
                     self._k_weights = []
 
-                if attrs['name'] == 'epsilon':
+                if attrs['name'] == 'epsilon' or attrs['name'] == 'epsilon_scf':
                     self._is_epsilon = True
                     self._epsilon = []
 
