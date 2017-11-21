@@ -45,72 +45,6 @@ def get_supercell(unitcell, supercell_matrix, is_old_style=True, symprec=1e-5):
 def get_primitive(supercell, primitive_frame, symprec=1e-5):
     return Primitive(supercell, primitive_frame, symprec=symprec)
 
-def trim_cell(relative_axes, cell, symprec):
-    """
-    relative_axes: relative axes to supercell axes
-    Trim positions outside relative axes
-
-    """
-    positions = cell.get_scaled_positions()
-    numbers = cell.get_atomic_numbers()
-    masses = cell.get_masses()
-    magmoms = cell.get_magnetic_moments()
-    lattice = cell.get_cell()
-    trimed_lattice = np.dot(relative_axes.T, lattice)
-
-    trimed_positions = []
-    trimed_numbers = []
-    if masses is None:
-        trimed_masses = None
-    else:
-        trimed_masses = []
-    if magmoms is None:
-        trimed_magmoms = None
-    else:
-        trimed_magmoms = []
-    extracted_atoms = []
-
-    positions_in_new_lattice = np.dot(positions, np.linalg.inv(relative_axes).T)
-    positions_in_new_lattice -= np.floor(positions_in_new_lattice)
-    trimed_positions = np.zeros_like(positions_in_new_lattice)
-    num_atom = 0
-
-    mapping_table = np.arange(len(positions), dtype='intc')
-    for i, pos in enumerate(positions_in_new_lattice):
-        is_overlap = False
-        if num_atom > 0:
-            diff = trimed_positions[:num_atom] - pos
-            diff -= np.rint(diff)
-            # Older numpy doesn't support axis argument.
-            # distances = np.linalg.norm(np.dot(diff, trimed_lattice), axis=1)
-            # overlap_indices = np.where(distances < symprec)[0]
-            distances = np.sqrt(
-                np.sum(np.dot(diff, trimed_lattice) ** 2, axis=1))
-            overlap_indices = np.where(distances < symprec)[0]
-            if len(overlap_indices) > 0:
-                assert len(overlap_indices) == 1
-                is_overlap = True
-                mapping_table[i] = extracted_atoms[overlap_indices[0]]
-
-        if not is_overlap:
-            trimed_positions[num_atom] = pos
-            num_atom += 1
-            trimed_numbers.append(numbers[i])
-            if masses is not None:
-                trimed_masses.append(masses[i])
-            if magmoms is not None:
-                trimed_magmoms.append(magmoms[i])
-            extracted_atoms.append(i)
-
-    trimed_cell = Atoms(numbers=trimed_numbers,
-                        masses=trimed_masses,
-                        magmoms=trimed_magmoms,
-                        scaled_positions=trimed_positions[:num_atom],
-                        cell=trimed_lattice,
-                        pbc=True)
-
-    return trimed_cell, extracted_atoms, mapping_table
-
 def print_cell(cell, mapping=None, stars=None):
     symbols = cell.get_chemical_symbols()
     masses = cell.get_masses()
@@ -201,9 +135,11 @@ class Supercell(Atoms):
             trim_frame = np.eye(3)
 
         sur_cell, u2sur_map = self._get_simple_supercell(unitcell, multi, P)
-        supercell, sur2s_map, mapping_table = trim_cell(trim_frame,
-                                                        sur_cell,
-                                                        symprec)
+        trimmed_cell_ = _trim_cell(trim_frame, sur_cell, symprec)
+        if trimmed_cell_:
+            supercell, sur2s_map, mapping_table = trimmed_cell_
+        else:
+            return False
 
         num_satom = supercell.get_number_of_atoms()
         num_uatom = unitcell.get_number_of_atoms()
@@ -316,7 +252,6 @@ class Primitive(Atoms):
         self._p2p_map = None
         self._smallest_vectors = None
         self._multiplicity = None
-
         self._primitive_cell(supercell)
         self._supercell_to_primitive_map(supercell.get_scaled_positions())
         self._primitive_to_primitive_map()
@@ -338,18 +273,21 @@ class Primitive(Atoms):
         return self._smallest_vectors, self._multiplicity
 
     def _primitive_cell(self, supercell):
-        trimed_cell, p2s_map, mapping_table = trim_cell(self._primitive_matrix,
-                                                        supercell,
-                                                        self._symprec)
-        Atoms.__init__(self,
-                       numbers=trimed_cell.get_atomic_numbers(),
-                       masses=trimed_cell.get_masses(),
-                       magmoms=trimed_cell.get_magnetic_moments(),
-                       scaled_positions=trimed_cell.get_scaled_positions(),
-                       cell=trimed_cell.get_cell(),
-                       pbc=True)
-
-        self._p2s_map = np.array(p2s_map, dtype='intc')
+        trimmed_cell_ = _trim_cell(self._primitive_matrix,
+                                   supercell,
+                                   self._symprec)
+        if trimmed_cell_:
+            trimmed_cell, p2s_map, mapping_table = trimmed_cell_
+            Atoms.__init__(self,
+                           numbers=trimmed_cell.get_atomic_numbers(),
+                           masses=trimmed_cell.get_masses(),
+                           magmoms=trimmed_cell.get_magnetic_moments(),
+                           scaled_positions=trimmed_cell.get_scaled_positions(),
+                           cell=trimmed_cell.get_cell(),
+                           pbc=True)
+            self._p2s_map = np.array(p2s_map, dtype='intc')
+        else:
+            raise ValueError
 
     def _supercell_to_primitive_map(self, pos):
         inv_F = np.linalg.inv(self._primitive_matrix)
@@ -375,6 +313,76 @@ class Primitive(Atoms):
     def _set_smallest_vectors(self, supercell):
         self._smallest_vectors, self._multiplicity = _get_smallest_vectors(
             supercell, self, self._symprec)
+
+def _trim_cell(relative_axes, cell, symprec):
+    """
+    relative_axes: relative axes to supercell axes
+    Trim positions outside relative axes
+
+    """
+    positions = cell.get_scaled_positions()
+    numbers = cell.get_atomic_numbers()
+    masses = cell.get_masses()
+    magmoms = cell.get_magnetic_moments()
+    lattice = cell.get_cell()
+    trimmed_lattice = np.dot(relative_axes.T, lattice)
+
+    trimmed_positions = []
+    trimmed_numbers = []
+    if masses is None:
+        trimmed_masses = None
+    else:
+        trimmed_masses = []
+    if magmoms is None:
+        trimmed_magmoms = None
+    else:
+        trimmed_magmoms = []
+    extracted_atoms = []
+
+    positions_in_new_lattice = np.dot(positions, np.linalg.inv(relative_axes).T)
+    positions_in_new_lattice -= np.floor(positions_in_new_lattice)
+    trimmed_positions = np.zeros_like(positions_in_new_lattice)
+    num_atom = 0
+
+    mapping_table = np.arange(len(positions), dtype='intc')
+    for i, pos in enumerate(positions_in_new_lattice):
+        is_overlap = False
+        if num_atom > 0:
+            diff = trimmed_positions[:num_atom] - pos
+            diff -= np.rint(diff)
+            # Older numpy doesn't support axis argument.
+            # distances = np.linalg.norm(np.dot(diff, trimmed_lattice), axis=1)
+            # overlap_indices = np.where(distances < symprec)[0]
+            distances = np.sqrt(
+                np.sum(np.dot(diff, trimmed_lattice) ** 2, axis=1))
+            overlap_indices = np.where(distances < symprec)[0]
+            if len(overlap_indices) > 0:
+                assert len(overlap_indices) == 1
+                is_overlap = True
+                mapping_table[i] = extracted_atoms[overlap_indices[0]]
+
+        if not is_overlap:
+            trimmed_positions[num_atom] = pos
+            num_atom += 1
+            trimmed_numbers.append(numbers[i])
+            if masses is not None:
+                trimmed_masses.append(masses[i])
+            if magmoms is not None:
+                trimmed_magmoms.append(magmoms[i])
+            extracted_atoms.append(i)
+
+    # scale is not always to become integer.
+    scale = 1.0 / np.linalg.det(relative_axes)
+    if len(numbers) == np.rint(scale * len(trimmed_numbers)):
+        trimmed_cell = Atoms(numbers=trimmed_numbers,
+                             masses=trimmed_masses,
+                             magmoms=trimmed_magmoms,
+                             scaled_positions=trimmed_positions[:num_atom],
+                             cell=trimmed_lattice,
+                             pbc=True)
+        return trimmed_cell, extracted_atoms, mapping_table
+    else:
+        return False
 
 #
 # Delaunay reduction
