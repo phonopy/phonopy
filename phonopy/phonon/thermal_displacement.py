@@ -40,7 +40,8 @@ from phonopy.interface.cif import write_cif_P1
 class ThermalMotion(object):
     def __init__(self,
                  masses,
-                 cutoff_frequency=None):
+                 cutoff_frequency=None,
+                 max_frequency=None):
 
         if cutoff_frequency is None:
             self._cutoff_frequency = 0
@@ -101,7 +102,8 @@ class ThermalDisplacements(ThermalMotion):
                  iter_phonons,
                  masses,
                  projection_direction=None,
-                 cutoff_frequency=None):
+                 cutoff_frequency=None
+                 max_frequency=None):
         """Calculate mean square displacements
 
         iter_phonons: Mesh or IterMesh instance
@@ -122,7 +124,8 @@ class ThermalDisplacements(ThermalMotion):
 
         ThermalMotion.__init__(self,
                                masses,
-                               cutoff_frequency=cutoff_frequency)
+                               cutoff_frequency=cutoff_frequency,
+                               max_frequency=max_frequency)
 
         self._displacements = None
 
@@ -147,7 +150,7 @@ class ThermalDisplacements(ThermalMotion):
             else:
                 vecs2 = (abs(vecs) ** 2).T
             for f, v2 in zip(fs, vecs2):
-                if f > self._cutoff_frequency:
+                if (f > self._cutoff_frequency) and (f<= self._max_frequency):
                     c = v2 / masses
                     for i, t in enumerate(temps):
                         disps[i] += self.get_Q2(f, t) * c
