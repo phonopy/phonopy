@@ -105,7 +105,7 @@ class ThermalDisplacements(ThermalMotion):
                  iter_phonons,
                  masses,
                  projection_direction=None,
-                 cutoff_frequency=None
+                 cutoff_frequency=None,
                  max_frequency=None):
         """Calculate mean square displacements
 
