@@ -51,7 +51,7 @@ class ThermalMotion(object):
         if max_frequency is not None:
 	        self._max_frequency = max_frequency
         else:
-		self._max_frequency = float("inf")
+		self._max_frequency = np.inf
 		
         self._masses = masses * AMU
         self._masses3 = np.array([[m] * 3 for m in masses]).ravel() * AMU
