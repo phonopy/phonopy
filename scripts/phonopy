@@ -868,7 +868,8 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
                 tmax,
                 tmin,
                 direction=p_direction,
-                cutoff_frequency=settings.get_cutoff_frequency())
+                freq_min=settings.get_min_frequency(),
+                freq_max=settings.get_max_frequency())
             phonon.write_yaml_thermal_displacements()
 
             if args.is_graph_plot:
@@ -891,7 +892,8 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
                 t_step=t_step,
                 t_max=t_max,
                 t_min=t_min,
-                cutoff_frequency=settings.get_cutoff_frequency(),
+                freq_min=settings.get_min_frequency(),
+                freq_max=settings.get_max_frequency(),
                 t_cif=t_cif)
             phonon.write_yaml_thermal_displacement_matrices()
             if t_cif is not None:
@@ -983,9 +985,8 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
                     plot.show()
 
         elif settings.get_is_moment():
-            dos_range = settings.get_dos_range()
-            freq_min = dos_range['min']
-            freq_max = dos_range['max']
+            freq_min = settings.get_min_frequency()
+            freq_max = settings.get_max_frequency()
             if log_level > 0:
                 text = "Calculating moment of phonon states distribution"
                 if freq_min is None and freq_max is None:
