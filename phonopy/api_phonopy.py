@@ -845,14 +845,16 @@ class Phonopy(object):
                                   t_min=0,
                                   temperatures=None,
                                   direction=None,
-                                  cutoff_frequency=None):
-        """
-        cutoff_frequency:
-          phonon modes that have frequencies below cutoff_frequency
-          are ignored.
+                                  freq_min=None,
+                                  freq_max=None):
+        """Prepare thermal displacements calculation
 
-        direction:
-          Projection direction in reduced coordinates (
+        Args:
+            direction:
+                Projection direction in reduced coordinates.
+            freq_min: Phonons having frequency larger than this are included.
+            freq_max: Phonons having frequency smaller than this are included.
+
         """
         self._thermal_displacements = None
 
@@ -880,11 +882,13 @@ class Phonopy(object):
             td = ThermalDisplacements(iter_phonons,
                                       self._primitive.get_masses(),
                                       projection_direction=projection_direction,
-                                      cutoff_frequency=cutoff_frequency)
+                                      freq_min=freq_min,
+                                      freq_max=freq_max)
         else:
             td = ThermalDisplacements(iter_phonons,
                                       self._primitive.get_masses(),
-                                      cutoff_frequency=cutoff_frequency)
+                                      freq_min=freq_min,
+                                      freq_max=freq_max)
 
         if temperatures is None:
             td.set_temperature_range(t_min, t_max, t_step)
@@ -923,15 +927,17 @@ class Phonopy(object):
                                           t_step=10,
                                           t_max=1000,
                                           t_min=0,
-                                          cutoff_frequency=None,
+                                          freq_min=None,
+                                          freq_max=None,
                                           t_cif=None):
-        """
-        cutoff_frequency:
-          phonon modes that have frequencies below cutoff_frequency
-          are ignored.
+        """Prepare thermal displacement matrices
 
-        direction:
-          Projection direction in reduced coordinates
+        Args:
+            direction:
+                Projection direction in reduced coordinates.
+            freq_min: Phonons having frequency larger than this are included.
+            freq_max: Phonons having frequency smaller than this are included.
+
         """
         self._thermal_displacement_matrices = None
 
@@ -956,7 +962,8 @@ class Phonopy(object):
         tdm = ThermalDisplacementMatrices(
             iter_phonons,
             self._primitive.get_masses(),
-            cutoff_frequency=cutoff_frequency,
+            freq_min=freq_min,
+            freq_max=freq_max,
             lattice=self._primitive.get_cell().T)
 
         if t_cif is None:

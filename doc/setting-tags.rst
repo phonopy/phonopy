@@ -592,7 +592,7 @@ The moments for DOS are given as
 .. math::
 
    M_n(\omega_\text{min}, \omega_\text{max})
-   &=\frac{\int_{\omega_\text{min}}^{\omega_\text{max}} \omega^n
+   =\frac{\int_{\omega_\text{min}}^{\omega_\text{max}} \omega^n
    g(\omega) d\omega} {\int_{\omega_\text{min}}^{\omega_\text{max}}
    g(\omega) d\omega}.
 
@@ -601,7 +601,7 @@ The moments for PDOS are given as
 .. math::
 
    M_n^j(\omega_\text{min}, \omega_\text{max})
-   &=\frac{\int_{\omega_\text{min}}^{\omega_\text{max}} \omega^n
+   =\frac{\int_{\omega_\text{min}}^{\omega_\text{max}} \omega^n
    g^j(\omega) d\omega} {\int_{\omega_\text{min}}^{\omega_\text{max}}
    g^j(\omega) d\omega}.
 
@@ -674,6 +674,12 @@ branches obtained.
    TPROP = .TRUE.
    PRETEND_REAL = .TRUE.
 
+``CUTOFF_FREQUENCY``
+~~~~~~~~~~~~~~~~~~~~~
+
+Frequencies lower than this cutoff frequency are not used to calculate
+thermal properties.
+
 .. _thermal_atomic_displacements_tags:
 
 Thermal displacements
@@ -696,12 +702,14 @@ is given in :math:`\textrm{\AA}^2` and writen into
 :ref:`thermal_displacement`. These tags must be used with
 :ref:`mesh_sampling_tags`
 
-``CUTOFF_FREQUENCY`` tag with a small value is recommened to be set
-when sampling :math:`\Gamma` point or using very dense sampling mesh
-to avoid divergence.
-
-The projection is applied along arbitrary direction using
-``PROJECTION_DIRECTION`` tag (:ref:`projection_direction_tag`).
+Optionally, ``FMIN`` tag (``--fmin`` option) with a small value is
+recommened to be set when q-points at :math:`\Gamma` point or near
+:math:`\Gamma` point (e.g. using very dense sampling mesh) are sampled
+to avoid divergence. ``FMAX`` tag (``--fmax`` option) can be used to
+specify an upper bound of phonon frequencies where the phonons are
+considered in the summation. The projection is applied along arbitrary
+direction using ``PROJECTION_DIRECTION`` tag
+(:ref:`projection_direction_tag`).
 
 ``mesh.yaml`` or ``mesh.hdf5`` is not written out from phonopy-1.11.14.
 
@@ -728,9 +736,12 @@ given in the order of xx, yy, zz, yz, xz, xy.  In this yaml file,
 to :math:`\mathrm{U}_\text{cart}` and :math:`\mathrm{U}_\text{cif}`
 defined at :ref:`thermal_displacement_matrix`, respectively.
 
-``CUTOFF_FREQUENCY`` tag with a small value is recommened to be set
-when sampling :math:`\Gamma` point or using very dense sampling mesh
-to avoid divergence.
+Optionally, ``FMIN`` tag (``--fmin`` option) with a small value is
+recommened to be set when q-points at :math:`\Gamma` point or near
+:math:`\Gamma` point (e.g. using very dense sampling mesh) are sampled
+to avoid divergence. ``FMAX`` tag (``--fmax`` option) can be used to
+specify an upper bound of phonon frequencies where the phonons are
+considered in the summation.
 
 The 3x3 matrix restricts distribution of each atom around the
 equilibrium position to be ellipsoid. But the distribution is not
@@ -761,12 +772,6 @@ units have to be set properly for it (see
 ::
 
    TDISPMAT_CIF = 1273.0
-
-``CUTOFF_FREQUENCY``
-~~~~~~~~~~~~~~~~~~~~~
-
-Frequencies lower than this cutoff frequency are not used to calculate
-thermal displacements.
 
 Specific q-points
 -----------------
