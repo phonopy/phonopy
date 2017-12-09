@@ -214,8 +214,27 @@ def print_settings(settings):
                 print("  - Thermal properties are calculatd with "
                       "absolute phonon frequnecy.")
             else:
-                print("  - Phonon frequencies > %f are used to calculate "
+                print("  - Phonon frequencies > %5.3f are used to calculate "
                       "thermal properties." % cutoff_freq)
+        elif (settings.get_is_thermal_displacements() or
+              settings.get_is_thermal_displacement_matrices()):
+            fmin = settings.get_min_frequency()
+            fmax = settings.get_max_frequency()
+            text = None
+            if (fmin is not None) and (fmax is not None):
+                text = "  - Phonon frequency from %5.3f to %5.3f" % (fmin, fmax)
+                text += " are used to calculate\n"
+                text += "    thermal displacements."
+            elif (fmin is None) and (fmax is not None):
+                text = "Phonon frequency < %5.3f" % fmax
+                text = ("  - %s are used to calculate thermal displacements." %
+                        text)
+            elif (fmin is not None) and (fmax is None):
+                text = "Phonon frequency > %5.3f" % fmin
+                text = ("  - %s are used to calculate thermal displacements." %
+                        text)
+            if text:
+                print(text)
     if (np.diag(np.diag(settings.get_supercell_matrix())) \
             - settings.get_supercell_matrix()).any():
         print("  Supercell matrix:")
@@ -372,7 +391,7 @@ if unitcell is None:
 if np.linalg.det(unitcell.get_cell()) < 0.0:
     print_error_message("Lattice vectors have to follow the right-hand rule.")
     if log_level > 0:
-        print_end()
+        print_error()
     sys.exit(1)
 
 # Set magnetic moments
@@ -384,7 +403,7 @@ if magmoms is not None:
         error_text = "Invalid MAGMOM setting"
         print_error_message(error_text)
         if log_level > 0:
-            print_end()
+            print_error()
         sys.exit(1)
 
 ################################################
@@ -408,7 +427,7 @@ run_mode = settings.get_run_mode()
 if settings.get_supercell_matrix() is None:
     print_error_message("Supercell matrix (DIM or --dim) is not found.")
     if log_level > 0:
-        print_end()
+        print_error()
     sys.exit(1)
 
 # Prepare phonopy object
@@ -428,7 +447,7 @@ else: # Read FORCE_SETS, FORCE_CONSTANTS, or force_constants.hdf5
             except ImportError:
                 print_error_message("You need to install python-h5py.")
                 if log_level > 0:
-                    print_end()
+                    print_error()
                 sys.exit(1)
 
             if file_exists("force_constants.hdf5", log_level):
@@ -453,7 +472,7 @@ else: # Read FORCE_SETS, FORCE_CONSTANTS, or force_constants.hdf5
                            "and %s.") % unitcell_filename
             print_error_message(error_text)
             if log_level > 0:
-                print_end()
+                print_error()
             sys.exit(1)
 
     elif file_exists("FORCE_SETS", log_level):
@@ -465,7 +484,7 @@ else: # Read FORCE_SETS, FORCE_CONSTANTS, or force_constants.hdf5
                            " and %s") % unitcell_filename
             print_error_message(error_text)
             if log_level > 0:
-                print_end()
+                print_error()
             sys.exit(1)
 
     # Overwrite frequency unit conversion factor
@@ -610,7 +629,7 @@ if settings.get_is_nac():
             error_text = "BORN file could not be read correctly."
             print_error_message(error_text)
             if log_level > 0:
-                print_end()
+                print_error()
             sys.exit(1)
         if nac_params['factor'] == None:
             nac_params['factor'] = physical_units['nac_factor']
@@ -706,9 +725,9 @@ if run_mode == 'qpoints':
             for q in q_points:
                 print("    %s" % q)
     else:
+        print_error_message("Q-points are not properly specified.")
         if log_level > 0:
-            print_error_message("Q-points are not properly specified.")
-            print_end()
+            print_error()
         sys.exit(1)
     phonon.set_qpoints_phonon(
         q_points,
@@ -771,6 +790,14 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
 
         if (settings.get_is_thermal_displacements() or
             settings.get_is_thermal_displacement_matrices()):
+            if settings.get_cutoff_frequency() is not None:
+                if log_level > 0:
+                    print_error_message(
+                        "Use FMIN (--fmin) instead of CUTOFF_FREQUENCY "
+                        "(--cutoff-freq).")
+                    print_error()
+                sys.exit(1)
+
             phonon.set_iter_mesh(mesh,
                                  mesh_shift,
                                  is_time_reversal=t_symmetry,
@@ -868,7 +895,8 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
                 tmax,
                 tmin,
                 direction=p_direction,
-                cutoff_frequency=settings.get_cutoff_frequency())
+                freq_min=settings.get_min_frequency(),
+                freq_max=settings.get_max_frequency())
             phonon.write_yaml_thermal_displacements()
 
             if args.is_graph_plot:
@@ -891,7 +919,8 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
                 t_step=t_step,
                 t_max=t_max,
                 t_min=t_min,
-                cutoff_frequency=settings.get_cutoff_frequency(),
+                freq_min=settings.get_min_frequency(),
+                freq_max=settings.get_max_frequency(),
                 t_cif=t_cif)
             phonon.write_yaml_thermal_displacement_matrices()
             if t_cif is not None:
@@ -983,9 +1012,8 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
                     plot.show()
 
         elif settings.get_is_moment():
-            dos_range = settings.get_dos_range()
-            freq_min = dos_range['min']
-            freq_max = dos_range['max']
+            freq_min = settings.get_min_frequency()
+            freq_max = settings.get_max_frequency()
             if log_level > 0:
                 text = "Calculating moment of phonon states distribution"
                 if freq_min is None and freq_max is None:
