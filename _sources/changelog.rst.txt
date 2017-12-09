@@ -3,6 +3,15 @@
 Change Log
 ==========
 
+Dec-9-2017
+-----------------------------
+
+* For thermal displacements (and its matrices), ``FMIN (--fmin)`` and
+  ``FMAX (--fmax)`` can be used to limit phonons included to the
+  summation as the minimum and maximum frequenceis,
+  respectively. Instead, ``CUTOFF_FREQUENCY (--cutoff-freq)`` does not
+  work for thermal displacements.
+
 Nov-8-2017: Version 1.12.2
 -----------------------------
 
