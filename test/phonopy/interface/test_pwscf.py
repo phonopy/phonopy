@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 from phonopy.interface.phonopy_yaml import get_unitcell_from_phonopy_yaml
-from phonopy.interface.pwscf import read_pwscf
+from phonopy.interface.qe import read_pwscf
 import os
 data_dir = os.path.dirname(os.path.abspath(__file__))
 

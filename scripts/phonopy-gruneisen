@@ -147,7 +147,7 @@ def get_options():
         marker='o',
         markersize=None,
         primitive_axis=None,
-        pwscf_mode=False,
+        qe_mode=False,
         sampling_mesh=None,
         save_graph=False,
         siesta_mode=False,
@@ -221,8 +221,8 @@ def get_options():
         "--pa", "--primitive_axis", dest="primitive_axis",
         help="Same as PRIMITIVE_AXIS tags")
     parser.add_argument(
-        "--pwscf", dest="pwscf_mode", action="store_true",
-        help="Invoke Pwscf mode")
+        "--qe", "--pwscf", dest="qe_mode", action="store_true",
+        help="Invoke Quantum espresso mode")
     parser.add_argument(
         "--q_cutoff", dest="cutoff_wave_vector", type=float,
         help="Acoustic modes inside cutoff wave vector is treated.")
@@ -312,8 +312,8 @@ def main(args):
         interface_mode = 'wien2k'
     elif args.abinit_mode:
         interface_mode = 'abinit'
-    elif args.pwscf_mode:
-        interface_mode = 'pwscf'
+    elif args.qe_mode:
+        interface_mode = 'qe'
     elif args.elk_mode:
         interface_mode = 'elk'
     elif args.siesta_mode:

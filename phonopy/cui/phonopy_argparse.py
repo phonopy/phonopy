@@ -132,7 +132,7 @@ def get_parser():
         pretend_real=False,
         primitive_axis=None,
         projection_direction=None,
-        pwscf_mode=False,
+        qe_mode=False,
         qpoints=None,
         qpoints_format=None,
         quiet=False,
@@ -357,8 +357,8 @@ def get_parser():
         dest="is_projected_thermal_properties", action="store_true",
         help="Output projected thermal properties")
     parser.add_argument(
-        "--pwscf", dest="pwscf_mode",
-        action="store_true", help="Invoke Pwscf mode")
+        "--qe", "--pwscf", dest="qe_mode",
+        action="store_true", help="Invoke Quantum espresso (QE) mode")
     parser.add_argument(
         "--qpoints", dest="qpoints",
         help="Calculate at specified q-points")

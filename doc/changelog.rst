@@ -184,7 +184,7 @@ Jan-4-2015: Version 1.9.2
   without a unit cell structure file. The unit cell structure file is
   specified using ``--cell`` (``-c``) option or ``CELL_FILENAME``
   tag. See :ref:`force_calculators`, :ref:`wien2k_interface`,
-  :ref:`abinit_interface`, and :ref:`pwscf_interface`.
+  :ref:`abinit_interface`, and :ref:`qe_interface`.
 * For the ``gruneisen`` command, ``--factor``, ``--nomeshsym``,
   ``--wien2k``, ``--abinit``, and ``--pwscf`` options are
   implemented. See :ref:`gruneisen_calculators` and
@@ -197,8 +197,8 @@ Jan-4-2015: Version 1.9.2
 Oct-30-2014: Version 1.9.1.3
 -----------------------------
 
-* Experimental support for Abinit. See :ref:`pwscf_mode` and
-  :ref:`pwscf_force_sets_option`.
+* Experimental support for Abinit. See :ref:`qe_mode` and
+  :ref:`qe_force_sets_option`.
 
 Oct-29-2014: Version 1.9.1.2
 -----------------------------

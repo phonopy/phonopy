@@ -188,12 +188,14 @@ def get_pwscf_structure(cell, pp_filenames=None):
 class PwscfIn(object):
     def __init__(self, lines):
         self._set_methods = {'ibrav':            self._set_ibrav,
+                             'celldm(1)':        self._set_celldm1,
                              'nat':              self._set_nat,
                              'ntyp':             self._set_ntyp,
                              'atomic_species':   self._set_atom_types,
                              'atomic_positions': self._set_positions,
                              'cell_parameters':  self._set_lattice}
         self._tags = {'ibrav':            None,
+                      'celldm(1)':        None,
                       'nat':              None,
                       'ntyp':             None,
                       'atomic_species':   None,
@@ -236,12 +238,12 @@ class PwscfIn(object):
 
         for tag in elements:
             self._values = elements[tag]
-            if tag == 'ibrav' or tag == 'nat' or tag == 'ntyp':
+            if tag in ['ibrav', 'nat', 'ntyp', 'celldm(1)']:
                 self._set_methods[tag]()
 
         for tag in elements:
             self._values = elements[tag]
-            if tag != 'ibrav' and tag != 'nat' and tag != 'ntyp':
+            if tag not in ['ibrav', 'nat', 'ntyp']:
                 self._set_methods[tag]()
 
     def _set_ibrav(self):
@@ -252,6 +254,9 @@ class PwscfIn(object):
 
         self._tags['ibrav'] = ibrav
 
+    def _set_celldm1(self):
+        self._tags['celldm(1)'] = float(self._values[0])
+
     def _set_nat(self):
         self._tags['nat'] = int(self._values[0])
 
@@ -259,11 +264,20 @@ class PwscfIn(object):
         self._tags['ntyp'] = int(self._values[0])
 
     def _set_lattice(self):
+        """Calculate and set lattice parameters.
+
+        Invoked by CELL_PARAMETERS tag.
+
+        """
+
         unit = self._values[0]
         if unit == 'alat':
-            print("Only CELL_PARAMETERS format with alat is not supported.")
-            sys.exit(1)
-        if unit == 'angstrom':
+            if not self._tags['celldm(1)']:
+                print("celldm(1) has to be specified when using alat.")
+                sys.exit(1)
+            else:
+                factor = self._tags['celldm(1)'] # in Bohr
+        elif unit == 'angstrom':
             factor = 1.0 / Bohr
         else:
             factor = 1.0
