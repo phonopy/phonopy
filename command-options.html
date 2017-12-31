@@ -102,7 +102,7 @@
 <li><a class="reference internal" href="#choice-of-force-calculator">Choice of force calculator</a><ul>
 <li><a class="reference internal" href="#wien2k"><code class="docutils literal"><span class="pre">--wien2k</span></code></a></li>
 <li><a class="reference internal" href="#abinit"><code class="docutils literal"><span class="pre">--abinit</span></code></a></li>
-<li><a class="reference internal" href="#pwscf"><code class="docutils literal"><span class="pre">--pwscf</span></code></a></li>
+<li><a class="reference internal" href="#qe"><code class="docutils literal"><span class="pre">--qe</span></code></a></li>
 <li><a class="reference internal" href="#siesta"><code class="docutils literal"><span class="pre">--siesta</span></code></a></li>
 <li><a class="reference internal" href="#elk"><code class="docutils literal"><span class="pre">--elk</span></code></a></li>
 <li><a class="reference internal" href="#crystal"><code class="docutils literal"><span class="pre">--crystal</span></code></a></li>
@@ -116,8 +116,8 @@
 <li><a class="reference internal" href="#create-force-sets">Create <code class="docutils literal"><span class="pre">FORCE_SETS</span></code></a><ul>
 <li><a class="reference internal" href="#f-or-forces"><code class="docutils literal"><span class="pre">-f</span></code> or <code class="docutils literal"><span class="pre">--forces</span></code></a><ul>
 <li><a class="reference internal" href="#vasp-interface">VASP interface</a></li>
-<li><a class="reference internal" href="#abinit-interface">Abinit interface</a></li>
-<li><a class="reference internal" href="#pwscf-interface">Pwscf interface</a></li>
+<li><a class="reference internal" href="#abinit-interface">ABINIT interface</a></li>
+<li><a class="reference internal" href="#quantum-espresso-interface">Quantum ESPRESSO interface</a></li>
 <li><a class="reference internal" href="#wien2k-interface">WIEN2k interface</a></li>
 <li><a class="reference internal" href="#elk-interface">Elk interface</a></li>
 <li><a class="reference internal" href="#crystal-interface">CRYSTAL interface</a></li>
@@ -195,7 +195,7 @@
 <li><a class="reference internal" href="#choice-of-force-calculator" id="id2">Choice of force calculator</a><ul>
 <li><a class="reference internal" href="#wien2k" id="id3"><code class="docutils literal"><span class="pre">--wien2k</span></code></a></li>
 <li><a class="reference internal" href="#abinit" id="id4"><code class="docutils literal"><span class="pre">--abinit</span></code></a></li>
-<li><a class="reference internal" href="#pwscf" id="id5"><code class="docutils literal"><span class="pre">--pwscf</span></code></a></li>
+<li><a class="reference internal" href="#qe" id="id5"><code class="docutils literal"><span class="pre">--qe</span></code></a></li>
 <li><a class="reference internal" href="#siesta" id="id6"><code class="docutils literal"><span class="pre">--siesta</span></code></a></li>
 <li><a class="reference internal" href="#elk" id="id7"><code class="docutils literal"><span class="pre">--elk</span></code></a></li>
 <li><a class="reference internal" href="#crystal" id="id8"><code class="docutils literal"><span class="pre">--crystal</span></code></a></li>
@@ -300,11 +300,11 @@ are set simultaneously, the command-line options overide the setting
 tags.</p>
 <div class="section" id="choice-of-force-calculator">
 <span id="force-calculators"></span><h2><a class="toc-backref" href="#id2">Choice of force calculator</a><a class="headerlink" href="#choice-of-force-calculator" title="Permalink to this headline">¶</a></h2>
-<p>Currently interfaces for VASP, Wien2k, Pwscf, Abinit, and Elk are
-prepared. Wien2k, Pwscf, Abinit, Elk and CRYSTAL interfaces are invoked with
-<code class="docutils literal"><span class="pre">--wienk2</span></code>, <code class="docutils literal"><span class="pre">--pwscf</span></code>, <code class="docutils literal"><span class="pre">--abinit</span></code>, <code class="docutils literal"><span class="pre">--elk</span></code> and <code class="docutils literal"><span class="pre">--crystal</span></code> options,
-respectively, and if none of these options or <code class="docutils literal"><span class="pre">--vasp</span></code> option is
-specified, VASP mode is invoked.</p>
+<p>Currently interfaces for VASP, WIEN2k, Quantum ESPRESSO (QE), ABINIT,
+Elk, SIESTA, and CRYSTAL are prepared. These interfaces are invoked
+with <code class="docutils literal"><span class="pre">--vasp</span></code>, <code class="docutils literal"><span class="pre">--wienk2</span></code>, <code class="docutils literal"><span class="pre">--qe</span></code>, <code class="docutils literal"><span class="pre">--abinit</span></code>, <code class="docutils literal"><span class="pre">--elk</span></code>,
+<code class="docutils literal"><span class="pre">--siesta</span></code>, and <code class="docutils literal"><span class="pre">--crystal</span></code> options, respectively, and nothing is
+specified, <code class="docutils literal"><span class="pre">--vasp</span></code> is selected as the default interface.</p>
 <p>The details about these interfaces are found at <a class="reference internal" href="interfaces.html#calculator-interfaces"><span class="std std-ref">Interfaces to calculators</span></a>.</p>
 <div class="section" id="wien2k">
 <span id="wien2k-mode"></span><h3><a class="toc-backref" href="#id3"><code class="docutils literal"><span class="pre">--wien2k</span></code></a><a class="headerlink" href="#wien2k" title="Permalink to this headline">¶</a></h3>
@@ -332,12 +332,13 @@ e.g.,</p>
 </pre></div>
 </div>
 </div>
-<div class="section" id="pwscf">
-<span id="pwscf-mode"></span><h3><a class="toc-backref" href="#id5"><code class="docutils literal"><span class="pre">--pwscf</span></code></a><a class="headerlink" href="#pwscf" title="Permalink to this headline">¶</a></h3>
-<p>Pwscf mode is invoked with this option. Usually this option is used
-with <code class="docutils literal"><span class="pre">--cell</span></code> (<code class="docutils literal"><span class="pre">-c</span></code>) option or <code class="docutils literal"><span class="pre">CELL_FILENAME</span></code> tag to read Pwscf
-input file that contains the unit cell crystal structure, e.g.,</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">pwscf</span> <span class="o">-</span><span class="n">c</span> <span class="n">NaCl</span><span class="o">.</span><span class="ow">in</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
+<div class="section" id="qe">
+<span id="qe-mode"></span><h3><a class="toc-backref" href="#id5"><code class="docutils literal"><span class="pre">--qe</span></code></a><a class="headerlink" href="#qe" title="Permalink to this headline">¶</a></h3>
+<p>Quantum ESPRESSO mode is invoked with this option. Usually this option
+is used with <code class="docutils literal"><span class="pre">--cell</span></code> (<code class="docutils literal"><span class="pre">-c</span></code>) option or <code class="docutils literal"><span class="pre">CELL_FILENAME</span></code> tag to
+read QE/PWscf input file that contains the unit cell crystal structure,
+e.g.,</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">qe</span> <span class="o">-</span><span class="n">c</span> <span class="n">NaCl</span><span class="o">.</span><span class="ow">in</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
 </pre></div>
 </div>
 </div>
@@ -389,12 +390,12 @@ the calculator such as in <code class="docutils literal"><span class="pre">band.
 </div>
 <p>Without specifying this tag, default file name is searched in current
 directory. The default file names for the calculators are as follows:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">VASP</span>   <span class="o">|</span> <span class="n">POSCAR</span>
-<span class="n">Wien2k</span> <span class="o">|</span> <span class="n">case</span><span class="o">.</span><span class="n">struct</span>
-<span class="n">Abinit</span> <span class="o">|</span> <span class="n">unitcell</span><span class="o">.</span><span class="ow">in</span>
-<span class="n">Pwscf</span>  <span class="o">|</span> <span class="n">unitcell</span><span class="o">.</span><span class="ow">in</span>
-<span class="n">Elk</span>    <span class="o">|</span> <span class="n">elk</span><span class="o">.</span><span class="ow">in</span>
-<span class="n">CRYSTAL</span><span class="o">|</span> <span class="n">crystal</span><span class="o">.</span><span class="n">o</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">VASP</span>    <span class="o">|</span> <span class="n">POSCAR</span>
+<span class="n">WIEN2k</span>  <span class="o">|</span> <span class="n">case</span><span class="o">.</span><span class="n">struct</span>
+<span class="n">ABINIT</span>  <span class="o">|</span> <span class="n">unitcell</span><span class="o">.</span><span class="ow">in</span>
+<span class="n">PWscf</span>   <span class="o">|</span> <span class="n">unitcell</span><span class="o">.</span><span class="ow">in</span>
+<span class="n">Elk</span>     <span class="o">|</span> <span class="n">elk</span><span class="o">.</span><span class="ow">in</span>
+<span class="n">CRYSTAL</span> <span class="o">|</span> <span class="n">crystal</span><span class="o">.</span><span class="n">o</span>
 </pre></div>
 </div>
 </div>
@@ -425,23 +426,24 @@ expansions are useful, e.g., <code class="docutils literal"><span class="pre">di
 </ul>
 </div>
 <div class="section" id="abinit-interface">
-<span id="abinit-force-sets-option"></span><h4>Abinit interface<a class="headerlink" href="#abinit-interface" title="Permalink to this headline">¶</a></h4>
-<p><code class="docutils literal"><span class="pre">FORCE_SETS</span></code> file is created from <code class="docutils literal"><span class="pre">disp.yaml</span></code> and Abinit output
-files (<code class="docutils literal"><span class="pre">*.out</span></code>). In the reading of forces in Abinit output files,
+<span id="abinit-force-sets-option"></span><h4>ABINIT interface<a class="headerlink" href="#abinit-interface" title="Permalink to this headline">¶</a></h4>
+<p><code class="docutils literal"><span class="pre">FORCE_SETS</span></code> file is created from <code class="docutils literal"><span class="pre">disp.yaml</span></code> and ABINIT output
+files (<code class="docutils literal"><span class="pre">*.out</span></code>). In the reading of forces in ABINIT output files,
 forces in eV/Angstrom are read. The unit conversion factor is
 determined with this unit.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">abinit</span> <span class="o">-</span><span class="n">f</span> <span class="n">disp</span><span class="o">-</span><span class="mi">001</span><span class="o">/</span><span class="n">supercell</span><span class="o">.</span><span class="n">out</span> <span class="n">disp</span><span class="o">-</span><span class="mi">002</span><span class="o">/</span><span class="n">supercell</span><span class="o">.</span><span class="n">out</span>  <span class="o">...</span>
 </pre></div>
 </div>
 </div>
-<div class="section" id="pwscf-interface">
-<span id="pwscf-force-sets-option"></span><h4>Pwscf interface<a class="headerlink" href="#pwscf-interface" title="Permalink to this headline">¶</a></h4>
-<p><code class="docutils literal"><span class="pre">FORCE_SETS</span></code> file is created from <code class="docutils literal"><span class="pre">disp.yaml</span></code> and Pwscf output
+<div class="section" id="quantum-espresso-interface">
+<span id="qe-force-sets-option"></span><h4>Quantum ESPRESSO interface<a class="headerlink" href="#quantum-espresso-interface" title="Permalink to this headline">¶</a></h4>
+<p><code class="docutils literal"><span class="pre">FORCE_SETS</span></code> file is created from <code class="docutils literal"><span class="pre">disp.yaml</span></code> and PWscf output
 files.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">pwscf</span> <span class="o">-</span><span class="n">f</span> <span class="n">disp</span><span class="o">-</span><span class="mi">001</span><span class="o">/</span><span class="n">supercell</span><span class="o">.</span><span class="n">out</span> <span class="n">disp</span><span class="o">-</span><span class="mi">002</span><span class="o">/</span><span class="n">supercell</span><span class="o">.</span><span class="n">out</span>  <span class="o">...</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">qe</span> <span class="o">-</span><span class="n">f</span> <span class="n">disp</span><span class="o">-</span><span class="mi">001</span><span class="o">/</span><span class="n">supercell</span><span class="o">.</span><span class="n">out</span> <span class="n">disp</span><span class="o">-</span><span class="mi">002</span><span class="o">/</span><span class="n">supercell</span><span class="o">.</span><span class="n">out</span>  <span class="o">...</span>
 </pre></div>
 </div>
-<p>Here <code class="docutils literal"><span class="pre">*.out</span></code> files are the saved texts of standard outputs of Pwscf calculations.</p>
+<p>Here <code class="docutils literal"><span class="pre">*.out</span></code> files are the saved texts of standard outputs of PWscf
+calculations.</p>
 </div>
 <div class="section" id="wien2k-interface">
 <span id="wien2k-force-sets-option"></span><h4>WIEN2k interface<a class="headerlink" href="#wien2k-interface" title="Permalink to this headline">¶</a></h4>
@@ -453,7 +455,7 @@ this, you can use the external tool called <code class="docutils literal"><span 
 file when creating supercell with displacements, and
 <code class="docutils literal"><span class="pre">case.scf</span></code>’s, which are the WIEN2k output files. The order of
 displacements in <code class="docutils literal"><span class="pre">disp.yaml</span></code> file and the order of <code class="docutils literal"><span class="pre">case.scf</span></code>’s
-have to be same. <strong>For Wien2k struct file, only negative atom index
+have to be same. <strong>For WIEN2k struct file, only negative atom index
 with the P lattice format is supported.</strong></p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">wien2k</span> <span class="o">-</span><span class="n">f</span> <span class="n">case_001</span><span class="o">/</span><span class="n">case_001</span><span class="o">.</span><span class="n">scf</span> <span class="n">case_002</span><span class="o">/</span><span class="n">case_002</span><span class="o">.</span><span class="n">scf</span> <span class="o">...</span>
 </pre></div>
@@ -563,8 +565,8 @@ printed out and phonopy stops without going to phonon analysis.</p>
 </pre></div>
 </div>
 <p>This tag can be used together with the <code class="docutils literal"><span class="pre">--cell</span></code> (<code class="docutils literal"><span class="pre">-c</span></code>),
-<code class="docutils literal"><span class="pre">--abinit</span></code>, <code class="docutils literal"><span class="pre">--pwscf</span></code>, <code class="docutils literal"><span class="pre">--elk</span></code>, <code class="docutils literal"><span class="pre">--wien2k</span></code>, <code class="docutils literal"><span class="pre">--crystal</span></code> or
-<code class="docutils literal"><span class="pre">--primitive_axis</span></code> option.</p>
+<code class="docutils literal"><span class="pre">--abinit</span></code>, <code class="docutils literal"><span class="pre">--qe</span></code>, <code class="docutils literal"><span class="pre">--elk</span></code>, <code class="docutils literal"><span class="pre">--wien2k</span></code>, <code class="docutils literal"><span class="pre">--siesta</span></code>,
+<code class="docutils literal"><span class="pre">--crystal</span></code> or <code class="docutils literal"><span class="pre">--primitive_axis</span></code> option.</p>
 </div>
 </div>
 </div>

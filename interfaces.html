@@ -103,6 +103,7 @@
 <li><a class="reference internal" href="#default-file-name-value-and-conversion-factor">Default file name, value, and conversion factor</a><ul>
 <li><a class="reference internal" href="#default-unit-cell-file-name-for-calculator">Default unit cell file name for calculator</a></li>
 <li><a class="reference internal" href="#default-displacement-distances">Default displacement distances</a></li>
+<li><a class="reference internal" href="#default-unit-conversion-factor-of-phonon-frequency-to-thz">Default unit conversion factor of phonon frequency to THz</a></li>
 <li><a class="reference internal" href="#default-unit-conversion-factor-for-non-analytical-term-correction">Default unit conversion factor for non-analytical term correction</a></li>
 </ul>
 </li>
@@ -157,20 +158,21 @@
       
   <div class="section" id="interfaces-to-calculators">
 <span id="calculator-interfaces"></span><h1>Interfaces to calculators<a class="headerlink" href="#interfaces-to-calculators" title="Permalink to this headline">¶</a></h1>
-<p>The interfaces for VASP, Wien2k, Pwscf, Abinit, Elk and CRYSTAL are built in
-to the usual phonopy command. See the command options and how to
-invoke each of them at <a class="reference internal" href="command-options.html#force-calculators"><span class="std std-ref">Choice of force calculator</span></a>.</p>
+<p>The interfaces for VASP, WIEN2k, Quantum ESPRESSO (QE), ABINIT, Elk,
+SIESTA, and CRYSTAL are built in to the usual phonopy command. See the
+command options and how to invoke each of them at
+<a class="reference internal" href="command-options.html#force-calculators"><span class="std std-ref">Choice of force calculator</span></a>.</p>
 <div class="section" id="physical-unit-system-for-calculator">
 <h2>Physical unit system for calculator<a class="headerlink" href="#physical-unit-system-for-calculator" title="Permalink to this headline">¶</a></h2>
 <p>Physical unit systems used for the calculators are as follows:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span>        <span class="o">|</span> <span class="n">Distance</span>   <span class="n">Atomic</span> <span class="n">mass</span>   <span class="n">Force</span>         <span class="n">Force</span> <span class="n">constants</span>
 <span class="o">-----------------------------------------------------------------</span>
 <span class="n">VASP</span>    <span class="o">|</span> <span class="n">Angstrom</span>   <span class="n">AMU</span>           <span class="n">eV</span><span class="o">/</span><span class="n">Angstrom</span>   <span class="n">eV</span><span class="o">/</span><span class="n">Angstrom</span><span class="o">^</span><span class="mi">2</span>
-<span class="n">Wien2k</span>  <span class="o">|</span> <span class="n">au</span> <span class="p">(</span><span class="n">bohr</span><span class="p">)</span>  <span class="n">AMU</span>           <span class="n">mRy</span><span class="o">/</span><span class="n">au</span>        <span class="n">mRy</span><span class="o">/</span><span class="n">au</span><span class="o">^</span><span class="mi">2</span>
-<span class="n">Pwscf</span>   <span class="o">|</span> <span class="n">au</span> <span class="p">(</span><span class="n">bohr</span><span class="p">)</span>  <span class="n">AMU</span>           <span class="n">Ry</span><span class="o">/</span><span class="n">au</span>         <span class="n">Ry</span><span class="o">/</span><span class="n">au</span><span class="o">^</span><span class="mi">2</span>
-<span class="n">Abinit</span>  <span class="o">|</span> <span class="n">au</span> <span class="p">(</span><span class="n">bohr</span><span class="p">)</span>  <span class="n">AMU</span>           <span class="n">eV</span><span class="o">/</span><span class="n">Angstrom</span>   <span class="n">eV</span><span class="o">/</span><span class="n">Angstrom</span><span class="o">.</span><span class="n">au</span>
-<span class="n">Siesta</span>  <span class="o">|</span> <span class="n">au</span> <span class="p">(</span><span class="n">bohr</span><span class="p">)</span>  <span class="n">AMU</span>           <span class="n">eV</span><span class="o">/</span><span class="n">Angstrom</span>   <span class="n">eV</span><span class="o">/</span><span class="n">Angstrom</span><span class="o">.</span><span class="n">au</span>
-<span class="n">elk</span>     <span class="o">|</span> <span class="n">au</span> <span class="p">(</span><span class="n">bohr</span><span class="p">)</span>  <span class="n">AMU</span>           <span class="n">hartree</span><span class="o">/</span><span class="n">au</span>    <span class="n">hartree</span><span class="o">/</span><span class="n">au</span><span class="o">^</span><span class="mi">2</span>
+<span class="n">WIEN2k</span>  <span class="o">|</span> <span class="n">au</span> <span class="p">(</span><span class="n">bohr</span><span class="p">)</span>  <span class="n">AMU</span>           <span class="n">mRy</span><span class="o">/</span><span class="n">au</span>        <span class="n">mRy</span><span class="o">/</span><span class="n">au</span><span class="o">^</span><span class="mi">2</span>
+<span class="n">QE</span>      <span class="o">|</span> <span class="n">au</span> <span class="p">(</span><span class="n">bohr</span><span class="p">)</span>  <span class="n">AMU</span>           <span class="n">Ry</span><span class="o">/</span><span class="n">au</span>         <span class="n">Ry</span><span class="o">/</span><span class="n">au</span><span class="o">^</span><span class="mi">2</span>
+<span class="n">ABINIT</span>  <span class="o">|</span> <span class="n">au</span> <span class="p">(</span><span class="n">bohr</span><span class="p">)</span>  <span class="n">AMU</span>           <span class="n">eV</span><span class="o">/</span><span class="n">Angstrom</span>   <span class="n">eV</span><span class="o">/</span><span class="n">Angstrom</span><span class="o">.</span><span class="n">au</span>
+<span class="n">SIESTA</span>  <span class="o">|</span> <span class="n">au</span> <span class="p">(</span><span class="n">bohr</span><span class="p">)</span>  <span class="n">AMU</span>           <span class="n">eV</span><span class="o">/</span><span class="n">Angstrom</span>   <span class="n">eV</span><span class="o">/</span><span class="n">Angstrom</span><span class="o">.</span><span class="n">au</span>
+<span class="n">Elk</span>     <span class="o">|</span> <span class="n">au</span> <span class="p">(</span><span class="n">bohr</span><span class="p">)</span>  <span class="n">AMU</span>           <span class="n">hartree</span><span class="o">/</span><span class="n">au</span>    <span class="n">hartree</span><span class="o">/</span><span class="n">au</span><span class="o">^</span><span class="mi">2</span>
 <span class="n">CRYSTAL</span> <span class="o">|</span> <span class="n">Angstrom</span>   <span class="n">AMU</span>           <span class="n">eV</span><span class="o">/</span><span class="n">Angstrom</span>   <span class="n">eV</span><span class="o">/</span><span class="n">Angstrom</span><span class="o">^</span><span class="mi">2</span>
 </pre></div>
 </div>
@@ -184,10 +186,10 @@ in THz.</p>
 <p>Without specifying <code class="docutils literal"><span class="pre">-c</span></code> option, default file name for unit cell is
 used as shown below:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">VASP</span>    <span class="o">|</span> <span class="n">POSCAR</span>
-<span class="n">Wien2k</span>  <span class="o">|</span> <span class="n">case</span><span class="o">.</span><span class="n">struct</span>
-<span class="n">Pwscf</span>   <span class="o">|</span> <span class="n">unitcell</span><span class="o">.</span><span class="ow">in</span>
-<span class="n">Abinit</span>  <span class="o">|</span> <span class="n">unitcell</span><span class="o">.</span><span class="ow">in</span>
-<span class="n">Siesta</span>  <span class="o">|</span> <span class="nb">input</span><span class="o">.</span><span class="n">fdf</span>
+<span class="n">WIEN2k</span>  <span class="o">|</span> <span class="n">case</span><span class="o">.</span><span class="n">struct</span>
+<span class="n">QE</span>      <span class="o">|</span> <span class="n">unitcell</span><span class="o">.</span><span class="ow">in</span>
+<span class="n">ABINIT</span>  <span class="o">|</span> <span class="n">unitcell</span><span class="o">.</span><span class="ow">in</span>
+<span class="n">SIESTA</span>  <span class="o">|</span> <span class="nb">input</span><span class="o">.</span><span class="n">fdf</span>
 <span class="n">Elk</span>     <span class="o">|</span> <span class="n">elk</span><span class="o">.</span><span class="ow">in</span>
 <span class="n">CRYSTAL</span> <span class="o">|</span> <span class="n">crystal</span><span class="o">.</span><span class="n">o</span>
 </pre></div>
@@ -201,22 +203,34 @@ with displacements <code class="docutils literal"><span class="pre">CREATE_DISPL
 option. The default value is dependent on calculator, and the list is
 shown below:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">VASP</span>    <span class="o">|</span> <span class="mf">0.01</span> <span class="n">Angstrom</span>
-<span class="n">Wien2k</span>  <span class="o">|</span> <span class="mf">0.02</span> <span class="n">au</span> <span class="p">(</span><span class="n">bohr</span><span class="p">)</span>
-<span class="n">Pwscf</span>   <span class="o">|</span> <span class="mf">0.02</span> <span class="n">au</span> <span class="p">(</span><span class="n">bohr</span><span class="p">)</span>
-<span class="n">Abinit</span>  <span class="o">|</span> <span class="mf">0.02</span> <span class="n">au</span> <span class="p">(</span><span class="n">bohr</span><span class="p">)</span>
-<span class="n">Siesta</span>  <span class="o">|</span> <span class="mf">0.02</span> <span class="n">au</span> <span class="p">(</span><span class="n">bohr</span><span class="p">)</span>
+<span class="n">WIEN2k</span>  <span class="o">|</span> <span class="mf">0.02</span> <span class="n">au</span> <span class="p">(</span><span class="n">bohr</span><span class="p">)</span>
+<span class="n">QE</span>      <span class="o">|</span> <span class="mf">0.02</span> <span class="n">au</span> <span class="p">(</span><span class="n">bohr</span><span class="p">)</span>
+<span class="n">ABINIT</span>  <span class="o">|</span> <span class="mf">0.02</span> <span class="n">au</span> <span class="p">(</span><span class="n">bohr</span><span class="p">)</span>
+<span class="n">SIESTA</span>  <span class="o">|</span> <span class="mf">0.02</span> <span class="n">au</span> <span class="p">(</span><span class="n">bohr</span><span class="p">)</span>
 <span class="n">Elk</span>     <span class="o">|</span> <span class="mf">0.02</span> <span class="n">au</span> <span class="p">(</span><span class="n">bohr</span><span class="p">)</span>
 <span class="n">CRYSTAL</span> <span class="o">|</span> <span class="mf">0.01</span> <span class="n">Angstrom</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="default-unit-conversion-factor-of-phonon-frequency-to-thz">
+<span id="frequency-default-value-interfaces"></span><h3>Default unit conversion factor of phonon frequency to THz<a class="headerlink" href="#default-unit-conversion-factor-of-phonon-frequency-to-thz" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">VASP</span>    <span class="o">|</span> <span class="mf">15.633302</span>
+<span class="n">WIEN2k</span>  <span class="o">|</span> <span class="mf">3.44595837</span>
+<span class="n">QE</span>      <span class="o">|</span> <span class="mf">108.97077</span>
+<span class="n">ABINIT</span>  <span class="o">|</span> <span class="mf">21.49068</span>
+<span class="n">SIESTA</span>  <span class="o">|</span> <span class="mf">21.49068</span>
+<span class="n">Elk</span>     <span class="o">|</span> <span class="mf">154.10794</span>
+<span class="n">CRYSTAL</span> <span class="o">|</span> <span class="mf">15.633302</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="default-unit-conversion-factor-for-non-analytical-term-correction">
 <span id="nac-default-value-interfaces"></span><h3>Default unit conversion factor for non-analytical term correction<a class="headerlink" href="#default-unit-conversion-factor-for-non-analytical-term-correction" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">VASP</span>    <span class="o">|</span> <span class="mf">14.399652</span>
-<span class="n">Wien2k</span>  <span class="o">|</span> <span class="mi">2000</span>
-<span class="n">Pwscf</span>   <span class="o">|</span> <span class="mi">2</span>
-<span class="n">Abinit</span>  <span class="o">|</span> <span class="mf">51.422090</span>
-<span class="n">Siesta</span>  <span class="o">|</span> <span class="mf">51.422090</span>
+<span class="n">WIEN2k</span>  <span class="o">|</span> <span class="mi">2000</span>
+<span class="n">QE</span>      <span class="o">|</span> <span class="mi">2</span>
+<span class="n">ABINIT</span>  <span class="o">|</span> <span class="mf">51.422090</span>
+<span class="n">SIESTA</span>  <span class="o">|</span> <span class="mf">51.422090</span>
 <span class="n">Elk</span>     <span class="o">|</span> <span class="mi">1</span>
 <span class="n">CRYSTAL</span> <span class="o">|</span> <span class="mf">14.399652</span>
 </pre></div>
@@ -232,7 +246,7 @@ shown below:</p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="vasp.html">VASP &amp; phonopy calculation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="wien2k.html">Wien2k &amp; phonopy calculation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="pwscf.html">Pwscf &amp; phonopy calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pwscf.html">Quantum ESPRESSO (QE) &amp; phonopy calculation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="abinit.html">Abinit &amp; phonopy calculation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="siesta.html">Siesta &amp; phonopy calculation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="elk.html">Elk &amp; phonopy calculation</a></li>

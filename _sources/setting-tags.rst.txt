@@ -198,11 +198,11 @@ it doesn't work for derived values like thermal properties and
 mean square displacements.
 
 The default values for calculators are those to convert frequency
-units to THz. The default conversion factors for ``wien2k``,
-``abinit``, ``pwscf``, ``elk``, and CRYSTAL are 3.44595, 21.49068, 108.9708,
-154.1079, and 15.633302 respectively. These are determined following the physical
-unit systems of the calculators. How to calcualte these conversion
-factors is explained at :ref:`physical_unit_conversion`.
+units to THz. The default conversion factors are shown at
+:ref:`frequency_default_value_interfaces`. These are determined
+following the physical unit systems of the calculators. How to
+calcualte these conversion factors is explained at
+:ref:`physical_unit_conversion`.
 
 Displacement creation tags
 --------------------------

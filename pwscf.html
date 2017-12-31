@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Pwscf &amp; phonopy calculation &#8212; Phonopy v.1.12.2</title>
+    <title>Quantum ESPRESSO (QE) &amp; phonopy calculation &#8212; Phonopy v.1.12.2</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
@@ -98,7 +98,7 @@
   <ul class="dropdown-menu localtoc"
       role="menu"
       aria-labelledby="dLabelLocalToc"><ul>
-<li><a class="reference internal" href="#">Pwscf &amp; phonopy calculation</a><ul>
+<li><a class="reference internal" href="#">Quantum ESPRESSO (QE) &amp; phonopy calculation</a><ul>
 <li><a class="reference internal" href="#supported-pwscf-tags">Supported Pwscf tags</a></li>
 <li><a class="reference internal" href="#how-to-run">How to run</a><ul>
 <li><a class="reference internal" href="#non-analytical-term-correction-optional">Non-analytical term correction (Optional)</a></li>
@@ -147,9 +147,9 @@
   <div class="row">
     <div class="col-md-12 content">
       
-  <div class="section" id="pwscf-phonopy-calculation">
-<span id="pwscf-interface"></span><h1>Pwscf &amp; phonopy calculation<a class="headerlink" href="#pwscf-phonopy-calculation" title="Permalink to this headline">¶</a></h1>
-<p>Quantum espresso package itself has a set of the phonon calculation
+  <div class="section" id="quantum-espresso-qe-phonopy-calculation">
+<span id="qe-interface"></span><h1>Quantum ESPRESSO (QE) &amp; phonopy calculation<a class="headerlink" href="#quantum-espresso-qe-phonopy-calculation" title="Permalink to this headline">¶</a></h1>
+<p>Quantum ESPRESSO package itself has a set of the phonon calculation
 system. But the document here explains how to calculate phonons using
 phonopy, i.e., using the finite displacement and supercell approach.</p>
 <div class="section" id="supported-pwscf-tags">
@@ -157,7 +157,7 @@ phonopy, i.e., using the finite displacement and supercell approach.</p>
 <p>Currently Pwscf tags that phonopy can read are shown below.  Only
 <code class="docutils literal"><span class="pre">ibrav</span> <span class="pre">=</span> <span class="pre">0</span></code> type representation of crystal structure is supported.
 More tags may be supported on request.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">nat</span><span class="p">,</span> <span class="n">ntyp</span><span class="p">,</span> <span class="n">ATOMIC_SPECIES</span><span class="p">,</span> <span class="n">ATOMIC_POSITIONS</span><span class="p">,</span> <span class="n">CELL_PARAMETERS</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">nat</span><span class="p">,</span> <span class="n">ntyp</span><span class="p">,</span> <span class="n">celldm</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">ATOMIC_SPECIES</span><span class="p">,</span> <span class="n">ATOMIC_POSITIONS</span><span class="p">,</span> <span class="n">CELL_PARAMETERS</span>
 </pre></div>
 </div>
 </div>
@@ -167,8 +167,8 @@ More tags may be supported on request.</p>
 NaCl example found in <code class="docutils literal"><span class="pre">example/NaCl-pwscf</span></code> directory.</p>
 <ol class="arabic">
 <li><p class="first">Read a Pwscf input file and create supercells with
-<a class="reference internal" href="command-options.html#pwscf-mode"><span class="std std-ref">--pwscf</span></a> option:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">pwscf</span> <span class="o">-</span><span class="n">d</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;2 2 2&quot;</span> <span class="o">-</span><span class="n">c</span> <span class="n">NaCl</span><span class="o">.</span><span class="ow">in</span>
+<a class="reference internal" href="command-options.html#qe-mode"><span class="std std-ref">--qe</span></a> option:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">qe</span> <span class="o">-</span><span class="n">d</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;2 2 2&quot;</span> <span class="o">-</span><span class="n">c</span> <span class="n">NaCl</span><span class="o">.</span><span class="ow">in</span>
 </pre></div>
 </div>
 <p>In this example, 2x2x2 supercells are created. <code class="docutils literal"><span class="pre">supercell.in</span></code> and
@@ -201,7 +201,7 @@ atoms, e.g., as follows:</p>
 </li>
 <li><p class="first">To create <code class="docutils literal"><span class="pre">FORCE_SETS</span></code>, that is used by phonopy,
 the following phonopy command is executed:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">pwscf</span> <span class="o">-</span><span class="n">f</span> <span class="n">NaCl</span><span class="o">-</span><span class="mf">001.</span><span class="n">out</span> <span class="n">NaCl</span><span class="o">-</span><span class="mf">002.</span><span class="n">out</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">qe</span> <span class="o">-</span><span class="n">f</span> <span class="n">NaCl</span><span class="o">-</span><span class="mf">001.</span><span class="n">out</span> <span class="n">NaCl</span><span class="o">-</span><span class="mf">002.</span><span class="n">out</span>
 </pre></div>
 </div>
 <p>Here <code class="docutils literal"><span class="pre">.out</span></code> files are the saved text files of standard outputs of the
@@ -211,12 +211,12 @@ command. To run this command, <code class="docutils literal"><span class="pre">d
 the current directory because the information on atomic
 displacements stored in <code class="docutils literal"><span class="pre">disp.yaml</span></code> are used to generate
 <code class="docutils literal"><span class="pre">FORCE_SETS</span></code>. See some more detail at
-<a class="reference internal" href="command-options.html#pwscf-force-sets-option"><span class="std std-ref">Pwscf interface</span></a>.</p>
+<a class="reference internal" href="command-options.html#qe-force-sets-option"><span class="std std-ref">Quantum ESPRESSO interface</span></a>.</p>
 </li>
 <li><p class="first">Now post-process of phonopy is ready to run. The unit cell file
 used in the step 1 has to be specified but <code class="docutils literal"><span class="pre">FORCE_SETS</span></code> is
 automatically read. Examples of post-process are shown below.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">pwscf</span> <span class="o">-</span><span class="n">c</span> <span class="n">NaCl</span><span class="o">.</span><span class="ow">in</span> <span class="o">-</span><span class="n">p</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">qe</span> <span class="o">-</span><span class="n">c</span> <span class="n">NaCl</span><span class="o">.</span><span class="ow">in</span> <span class="o">-</span><span class="n">p</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
         <span class="n">_</span>
   <span class="n">_</span> <span class="n">__</span> <span class="o">|</span> <span class="o">|</span><span class="n">__</span>   <span class="n">___</span>  <span class="n">_</span> <span class="n">__</span>   <span class="n">___</span>   <span class="n">_</span> <span class="n">__</span>  <span class="n">_</span>   <span class="n">_</span>
  <span class="o">|</span> <span class="s1">&#39;_ \| &#39;</span><span class="n">_</span> \ <span class="o">/</span> <span class="n">_</span> \<span class="o">|</span> <span class="s1">&#39;_ \ / _ \ | &#39;</span><span class="n">_</span> \<span class="o">|</span> <span class="o">|</span> <span class="o">|</span> <span class="o">|</span>
@@ -250,10 +250,10 @@ automatically read. Examples of post-process are shown below.</p>
 </pre></div>
 </div>
 <p><a class="reference internal" href="_images/NaCl-pwscf-band.png"><img alt="pwscf-band" src="_images/NaCl-pwscf-band.png" style="width: 50%;" /></a></p>
-<p><code class="docutils literal"><span class="pre">--pwscf</span> <span class="pre">-c</span> <span class="pre">NaCl.in</span></code> is specific for the Pwscf-phonopy
+<p><code class="docutils literal"><span class="pre">--qe</span> <span class="pre">-c</span> <span class="pre">NaCl.in</span></code> is specific for the Pwscf-phonopy
 calculation but the other settings are totally common among calculator
 interfaces such as</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">pwscf</span> <span class="o">-</span><span class="n">c</span> <span class="n">NaCl</span><span class="o">.</span><span class="ow">in</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;2 2 2&quot;</span> <span class="p">[</span><span class="n">other</span><span class="o">-</span><span class="n">OPTIONS</span><span class="p">]</span> <span class="p">[</span><span class="n">setting</span><span class="o">-</span><span class="n">file</span><span class="p">]</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">qe</span> <span class="o">-</span><span class="n">c</span> <span class="n">NaCl</span><span class="o">.</span><span class="ow">in</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;2 2 2&quot;</span> <span class="p">[</span><span class="n">other</span><span class="o">-</span><span class="n">OPTIONS</span><span class="p">]</span> <span class="p">[</span><span class="n">setting</span><span class="o">-</span><span class="n">file</span><span class="p">]</span>
 </pre></div>
 </div>
 <p>For settings and command options, see
@@ -266,7 +266,7 @@ for examples, see <a class="reference internal" href="examples.html#examples-lin
 <p>To activate non-analytical term correction, <a class="reference internal" href="input-files.html#born-file"><span class="std std-ref">BORN (optional)</span></a> is
 required. This file contains the information of Born effective charge
 and dielectric constant. These physical values are also obtained from
-the pwscf (<code class="docutils literal"><span class="pre">pw.x</span></code>) &amp; phonon (<code class="docutils literal"><span class="pre">ph.x</span></code>) codes in quantum-espresso
+the pwscf (<code class="docutils literal"><span class="pre">pw.x</span></code>) &amp; phonon (<code class="docutils literal"><span class="pre">ph.x</span></code>) codes in Quantum ESPRESSO
 package. There are two steps. The first step is usual self-consistent
 field (SCF) calculation
 by and the second step is running its response function calculations
@@ -340,7 +340,7 @@ be something like below:</p>
 </div>
 <p>Once this is made, the non-analytical term correction is included
 just adding the <code class="docutils literal"><span class="pre">--nac</span></code> option as follows:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">pwscf</span> <span class="o">--</span><span class="n">nac</span> <span class="o">-</span><span class="n">c</span> <span class="n">NaCl</span><span class="o">.</span><span class="ow">in</span> <span class="o">-</span><span class="n">p</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">qe</span> <span class="o">--</span><span class="n">nac</span> <span class="o">-</span><span class="n">c</span> <span class="n">NaCl</span><span class="o">.</span><span class="ow">in</span> <span class="o">-</span><span class="n">p</span> <span class="n">band</span><span class="o">.</span><span class="n">conf</span>
 </pre></div>
 </div>
 <p><a class="reference internal" href="_images/NaCl-pwscf-band-NAC.png"><img alt="pwscf-band-nac" src="_images/NaCl-pwscf-band-NAC.png" style="width: 50%;" /></a></p>

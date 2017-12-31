@@ -1,9 +1,9 @@
-.. _pwscf_interface:
+.. _qe_interface:
 
-Pwscf & phonopy calculation
-=========================================
+Quantum ESPRESSO (QE) & phonopy calculation
+============================================
 
-Quantum espresso package itself has a set of the phonon calculation
+Quantum ESPRESSO package itself has a set of the phonon calculation
 system. But the document here explains how to calculate phonons using
 phonopy, i.e., using the finite displacement and supercell approach.
 
@@ -16,7 +16,7 @@ More tags may be supported on request.
 
 ::
 
-   nat, ntyp, ATOMIC_SPECIES, ATOMIC_POSITIONS, CELL_PARAMETERS
+   nat, ntyp, celldm(1), ATOMIC_SPECIES, ATOMIC_POSITIONS, CELL_PARAMETERS
 
 How to run
 ----------
@@ -25,9 +25,9 @@ The procedure of Pwscf-phonopy calculation is shown below using the
 NaCl example found in ``example/NaCl-pwscf`` directory.
 
 1) Read a Pwscf input file and create supercells with
-   :ref:`pwscf_mode` option::
+   :ref:`qe_mode` option::
 
-     % phonopy --pwscf -d --dim="2 2 2" -c NaCl.in
+     % phonopy --qe -d --dim="2 2 2" -c NaCl.in
 
    In this example, 2x2x2 supercells are created. ``supercell.in`` and
    ``supercell-xxx.in`` (``xxx`` are numbers) give the perfect
@@ -57,10 +57,10 @@ NaCl example found in ``example/NaCl-pwscf`` directory.
      % mpirun pw.x -i NaCl-001.in |& tee NaCl-001.out
      % mpirun pw.x -i NaCl-002.in |& tee NaCl-002.out
 
-3) To create ``FORCE_SETS``, that is used by phonopy, 
+3) To create ``FORCE_SETS``, that is used by phonopy,
    the following phonopy command is executed::
 
-     % phonopy --pwscf -f NaCl-001.out NaCl-002.out
+     % phonopy --qe -f NaCl-001.out NaCl-002.out
 
    Here ``.out`` files are the saved text files of standard outputs of the
    Pwscf calculations. If more supercells with displacements were
@@ -69,7 +69,7 @@ NaCl example found in ``example/NaCl-pwscf`` directory.
    the current directory because the information on atomic
    displacements stored in ``disp.yaml`` are used to generate
    ``FORCE_SETS``. See some more detail at
-   :ref:`pwscf_force_sets_option`.
+   :ref:`qe_force_sets_option`.
 
 4) Now post-process of phonopy is ready to run. The unit cell file
    used in the step 1 has to be specified but ``FORCE_SETS`` is
@@ -77,7 +77,7 @@ NaCl example found in ``example/NaCl-pwscf`` directory.
 
    ::
 
-     % phonopy --pwscf -c NaCl.in -p band.conf
+     % phonopy --qe -c NaCl.in -p band.conf
              _
        _ __ | |__   ___  _ __   ___   _ __  _   _
       | '_ \| '_ \ / _ \| '_ \ / _ \ | '_ \| | | |
@@ -85,7 +85,7 @@ NaCl example found in ``example/NaCl-pwscf`` directory.
       | .__/|_| |_|\___/|_| |_|\___(_) .__/ \__, |
       |_|                            |_|    |___/
                                            1.11.0
-     
+
      Python version 2.7.12
      Spglib version 1.9.2
      Calculator interface: pwscf
@@ -113,15 +113,15 @@ NaCl example found in ``example/NaCl-pwscf`` directory.
    |pwscf-band|
 
    .. |pwscf-band| image:: NaCl-pwscf-band.png
-			   :width: 50%
+                           :width: 50%
 
-   ``--pwscf -c NaCl.in`` is specific for the Pwscf-phonopy
+   ``--qe -c NaCl.in`` is specific for the Pwscf-phonopy
    calculation but the other settings are totally common among calculator
    interfaces such as
 
    ::
 
-     % phonopy --pwscf -c NaCl.in --dim="2 2 2" [other-OPTIONS] [setting-file]
+     % phonopy --qe -c NaCl.in --dim="2 2 2" [other-OPTIONS] [setting-file]
 
    For settings and command options, see
    :ref:`setting_tags` and :ref:`command_options`, respectively, and
@@ -133,7 +133,7 @@ Non-analytical term correction (Optional)
 To activate non-analytical term correction, :ref:`born_file` is
 required. This file contains the information of Born effective charge
 and dielectric constant. These physical values are also obtained from
-the pwscf (``pw.x``) & phonon (``ph.x``) codes in quantum-espresso
+the pwscf (``pw.x``) & phonon (``ph.x``) codes in Quantum ESPRESSO
 package. There are two steps. The first step is usual self-consistent
 field (SCF) calculation
 by and the second step is running its response function calculations
@@ -206,13 +206,13 @@ be something like below::
    1.105385 0 0 0 1.105385 0 0 0 1.105385
    -1.105385 0 0 0 -1.105385 0 0 0 -1.105385
 
-Once this is made, the non-analytical term correction is included 
+Once this is made, the non-analytical term correction is included
 just adding the ``--nac`` option as follows::
 
-     % phonopy --pwscf --nac -c NaCl.in -p band.conf
+     % phonopy --qe --nac -c NaCl.in -p band.conf
 
 
 |pwscf-band-nac|
 
 .. |pwscf-band-nac| image:: NaCl-pwscf-band-NAC.png
-   			    :width: 50%
+                            :width: 50%
