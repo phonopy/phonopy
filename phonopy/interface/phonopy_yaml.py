@@ -58,7 +58,7 @@ def get_physical_unit_yaml_lines(calculator,
                                  show_force_constants=False):
     # VASP    | Angstrom   AMU           eV/Angstrom   eV/Angstrom^2
     # Wien2k  | au (bohr)  AMU           mRy/au        mRy/au^2
-    # Pwscf   | au (bohr)  AMU           Ry/au         Ry/au^2
+    # QE      | au (bohr)  AMU           Ry/au         Ry/au^2
     # Abinit  | au (bohr)  AMU           eV/Angstrom   eV/Angstrom.au
     # Siesta  | au (bohr)  AMU           eV/Angstrom   eV/Angstrom.au
     # elk     | au (bohr)  AMU           hartree/au    hartree/au^2
@@ -66,7 +66,7 @@ def get_physical_unit_yaml_lines(calculator,
     # CRYSTAL | Angstrom   AMU           eV/Angstrom   eV/Angstrom^2
 
     lines = []
-    if calculator in ['wien2k', 'abinit', 'elk', 'pwscf', 'siesta']:
+    if calculator in ['wien2k', 'abinit', 'elk', 'qe', 'siesta']:
         lines.append("  length: au")
     elif calculator in ['vasp', 'crystal', 'cp2k']:
         lines.append("  length: Angstrom")
@@ -74,7 +74,7 @@ def get_physical_unit_yaml_lines(calculator,
     if show_force_constants:
         fc_units = {'vasp': 'eV/Angstrom^2',
                     'wien2k': 'mRy/au^2',
-                    'pwscf': 'Ry/au^2',
+                    'qe': 'Ry/au^2',
                     'abinit': 'eV/Angstrom.au',
                     'siesta': 'eV/Angstrom.au',
                     'elk': 'hartree/au^2',
