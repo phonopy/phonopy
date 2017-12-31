@@ -3,9 +3,10 @@
 Interfaces to calculators
 ==========================
 
-The interfaces for VASP, Wien2k, Pwscf, Abinit, Elk and CRYSTAL are built in
-to the usual phonopy command. See the command options and how to
-invoke each of them at :ref:`force_calculators`.
+The interfaces for VASP, WIEN2k, Quantum ESPRESSO (QE), ABINIT, Elk,
+SIESTA, and CRYSTAL are built in to the usual phonopy command. See the
+command options and how to invoke each of them at
+:ref:`force_calculators`.
 
 Physical unit system for calculator
 ------------------------------------
@@ -15,11 +16,11 @@ Physical unit systems used for the calculators are as follows::
            | Distance   Atomic mass   Force         Force constants
    -----------------------------------------------------------------
    VASP    | Angstrom   AMU           eV/Angstrom   eV/Angstrom^2
-   Wien2k  | au (bohr)  AMU           mRy/au        mRy/au^2
-   Pwscf   | au (bohr)  AMU           Ry/au         Ry/au^2
-   Abinit  | au (bohr)  AMU           eV/Angstrom   eV/Angstrom.au
-   Siesta  | au (bohr)  AMU           eV/Angstrom   eV/Angstrom.au
-   elk     | au (bohr)  AMU           hartree/au    hartree/au^2
+   WIEN2k  | au (bohr)  AMU           mRy/au        mRy/au^2
+   QE      | au (bohr)  AMU           Ry/au         Ry/au^2
+   ABINIT  | au (bohr)  AMU           eV/Angstrom   eV/Angstrom.au
+   SIESTA  | au (bohr)  AMU           eV/Angstrom   eV/Angstrom.au
+   Elk     | au (bohr)  AMU           hartree/au    hartree/au^2
    CRYSTAL | Angstrom   AMU           eV/Angstrom   eV/Angstrom^2
 
 For these sets of physical properties, phonon frequency is calculated
@@ -35,10 +36,10 @@ Without specifying ``-c`` option, default file name for unit cell is
 used as shown below::
 
    VASP    | POSCAR
-   Wien2k  | case.struct
-   Pwscf   | unitcell.in
-   Abinit  | unitcell.in
-   Siesta  | input.fdf
+   WIEN2k  | case.struct
+   QE      | unitcell.in
+   ABINIT  | unitcell.in
+   SIESTA  | input.fdf
    Elk     | elk.in
    CRYSTAL | crystal.o
 
@@ -52,12 +53,27 @@ option. The default value is dependent on calculator, and the list is
 shown below::
 
    VASP    | 0.01 Angstrom
-   Wien2k  | 0.02 au (bohr)
-   Pwscf   | 0.02 au (bohr)
-   Abinit  | 0.02 au (bohr)
-   Siesta  | 0.02 au (bohr)
+   WIEN2k  | 0.02 au (bohr)
+   QE      | 0.02 au (bohr)
+   ABINIT  | 0.02 au (bohr)
+   SIESTA  | 0.02 au (bohr)
    Elk     | 0.02 au (bohr)
    CRYSTAL | 0.01 Angstrom
+
+.. _frequency_default_value_interfaces:
+
+Default unit conversion factor of phonon frequency to THz
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+::
+
+   VASP    | 15.633302
+   WIEN2k  | 3.44595837
+   QE      | 108.97077
+   ABINIT  | 21.49068
+   SIESTA  | 21.49068
+   Elk     | 154.10794
+   CRYSTAL | 15.633302
 
 .. _nac_default_value_interfaces:
 
@@ -67,10 +83,10 @@ Default unit conversion factor for non-analytical term correction
 ::
 
    VASP    | 14.399652
-   Wien2k  | 2000
-   Pwscf   | 2
-   Abinit  | 51.422090
-   Siesta  | 51.422090
+   WIEN2k  | 2000
+   QE      | 2
+   ABINIT  | 51.422090
+   SIESTA  | 51.422090
    Elk     | 1
    CRYSTAL | 14.399652
 
