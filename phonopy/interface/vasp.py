@@ -41,10 +41,10 @@ import io
 import numpy as np
 from phonopy.structure.atoms import PhonopyAtoms as Atoms
 from phonopy.structure.atoms import symbol_map, atom_data
-from phonopy.structure.cells import get_primitive, get_supercell
-from phonopy.structure.symmetry import Symmetry, symmetrize_borns_and_epsilon
+from phonopy.structure.symmetry import Symmetry, elaborate_borns_and_epsilon
 from phonopy.file_IO import (write_FORCE_SETS, write_force_constants_to_hdf5,
                              write_FORCE_CONSTANTS)
+elaborate_borns_and_epsilon
 
 def parse_set_of_forces(num_atoms,
                         forces_filenames,
@@ -360,14 +360,15 @@ def get_born_vasprunxml(filename="vasprun.xml",
         else:
             return None
 
-    return _get_indep_borns(ucell,
-                            borns,
-                            epsilon,
-                            primitive_matrix=primitive_matrix,
-                            supercell_matrix=supercell_matrix,
-                            is_symmetry=is_symmetry,
-                            symmetrize_tensors=symmetrize_tensors,
-                            symprec=symprec)
+    return elaborate_borns_and_epsilon(
+        ucell,
+        borns,
+        epsilon,
+        primitive_matrix=primitive_matrix,
+        supercell_matrix=supercell_matrix,
+        is_symmetry=is_symmetry,
+        symmetrize_tensors=symmetrize_tensors,
+        symprec=symprec)
 
 def get_born_OUTCAR(poscar_filename="POSCAR",
                     outcar_filename=None,
@@ -386,104 +387,15 @@ def get_born_OUTCAR(poscar_filename="POSCAR",
     if len(borns) == 0 or len(epsilon) == 0:
         return None
     else:
-        return _get_indep_borns(ucell,
-                                borns,
-                                epsilon,
-                                primitive_matrix=primitive_matrix,
-                                supercell_matrix=supercell_matrix,
-                                is_symmetry=is_symmetry,
-                                symmetrize_tensors=symmetrize_tensors,
-                                symprec=symprec)
-
-def _get_indep_borns(ucell,
-                     borns,
-                     epsilon,
-                     primitive_matrix=None,
-                     supercell_matrix=None,
-                     is_symmetry=True,
-                     symmetrize_tensors=False,
-                     symprec=1e-5):
-    """Parse Born effective charges and dielectric constants
-
-
-     Args:
-         ucell (Atoms): Unit cell structure
-         borns (np.array): Born effective charges of ucell
-         epsilon (np.array): Dielectric constant tensor
-
-     Returns:
-         (np.array) Born effective charges of symmetrically independent atoms
-             in primitive cell
-         (np.array) Dielectric constant
-         (np.array) Atomic index mapping table from supercell to primitive cell
-             of independent atoms
-
-     Raises:
-          AssertionError: Inconsistency of number of atoms or Born effective
-              charges.
-
-     Warning:
-         Broken symmetry of Born effective charges
-
-     """
-
-    assert len(borns) == ucell.get_number_of_atoms(), \
-        "num_atom %d != len(borns) %d" % (ucell.get_number_of_atoms(),
-                                          len(borns))
-
-    if symmetrize_tensors:
-        borns_, epsilon_ = symmetrize_borns_and_epsilon(borns,
-                                                        epsilon,
-                                                        ucell,
-                                                        symprec=symprec,
-                                                        is_symmetry=is_symmetry)
-
-        if (abs(borns - borns_) > 0.1).any():
-            lines = ["Born effective charge symmetry is largely broken. "
-                     "Largest different among elements: "
-                     "%s" % np.amax(abs(borns - borns_))]
-            import warnings
-            warnings.warn("\n".join(lines))
-
-        borns = borns_
-        epsilon = epsilon_
-
-    borns, s_indep_atoms = _extract_independent_borns(
-        borns,
-        ucell,
-        primitive_matrix=primitive_matrix,
-        supercell_matrix=supercell_matrix,
-        is_symmetry=is_symmetry,
-        symprec=symprec)
-
-    return borns, epsilon, s_indep_atoms
-
-def _extract_independent_borns(borns,
-                               ucell,
-                               primitive_matrix=None,
-                               supercell_matrix=None,
-                               is_symmetry=True,
-                               symprec=1e-5):
-    if primitive_matrix is None:
-        pmat = np.eye(3)
-    else:
-        pmat = primitive_matrix
-    if supercell_matrix is None:
-        smat = np.eye(3, dtype='intc')
-    else:
-        smat = supercell_matrix
-
-    inv_smat = np.linalg.inv(smat)
-    scell = get_supercell(ucell, smat, symprec=symprec)
-    pcell = get_primitive(scell, np.dot(inv_smat, pmat), symprec=symprec)
-    p2s = np.array(pcell.get_primitive_to_supercell_map(), dtype='intc')
-    p_sym = Symmetry(pcell, is_symmetry=is_symmetry, symprec=symprec)
-    s_indep_atoms = p2s[p_sym.get_independent_atoms()]
-    u2u = scell.get_unitcell_to_unitcell_map()
-    u_indep_atoms = [u2u[x] for x in s_indep_atoms]
-    reduced_borns = borns[u_indep_atoms].copy()
-
-    return reduced_borns, s_indep_atoms
+        return elaborate_borns_and_epsilon(
+            ucell,
+            borns,
+            epsilon,
+            primitive_matrix=primitive_matrix,
+            supercell_matrix=supercell_matrix,
+            is_symmetry=is_symmetry,
+            symmetrize_tensors=symmetrize_tensors,
+            symprec=symprec)
 
 def _read_born_and_epsilon_from_OUTCAR(filename):
     with open(filename) as outcar:

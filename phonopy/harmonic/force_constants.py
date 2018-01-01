@@ -194,7 +194,7 @@ def distribute_force_constants(force_constants,
         for atom_disp in atom_list:
             if atom_disp in atom_list_done:
                 continue
-    
+
             map_atom_disp, map_sym = _get_atom_mapping_by_symmetry(
                 atom_list_done,
                 atom_disp,
@@ -203,7 +203,7 @@ def distribute_force_constants(force_constants,
                 lattice,
                 positions,
                 symprec=symprec)
-    
+
             _distribute_fc2_part(force_constants,
                                  positions,
                                  atom_disp,
