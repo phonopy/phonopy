@@ -35,6 +35,7 @@
 import sys
 import numpy as np
 import phonopy.structure.spglib as spg
+from phonopy.structure.cells import get_primitive, get_supercell
 from phonopy.structure.atoms import PhonopyAtoms as Atoms
 from phonopy.harmonic.force_constants import similarity_transformation
 
@@ -319,6 +320,71 @@ def get_lattice_vector_equivalence(point_symmetry):
 
     return equivalence
 
+def elaborate_borns_and_epsilon(ucell,
+                                borns,
+                                epsilon,
+                                primitive_matrix=None,
+                                supercell_matrix=None,
+                                is_symmetry=True,
+                                symmetrize_tensors=False,
+                                symprec=1e-5):
+    """Symmetrize Born effective charges and dielectric constants and
+    extract Born effective charges of symmetrically independent atoms
+    for primitive cell.
+
+
+     Args:
+         ucell (Atoms): Unit cell structure
+         borns (np.array): Born effective charges of ucell
+         epsilon (np.array): Dielectric constant tensor
+
+     Returns:
+         (np.array) Born effective charges of symmetrically independent atoms
+             in primitive cell
+         (np.array) Dielectric constant
+         (np.array) Atomic index mapping table from supercell to primitive cell
+             of independent atoms
+
+     Raises:
+          AssertionError: Inconsistency of number of atoms or Born effective
+              charges.
+
+     Warning:
+         Broken symmetry of Born effective charges
+
+    """
+
+    assert len(borns) == ucell.get_number_of_atoms(), \
+        "num_atom %d != len(borns) %d" % (ucell.get_number_of_atoms(),
+                                          len(borns))
+
+    if symmetrize_tensors:
+        borns_, epsilon_ = symmetrize_borns_and_epsilon(borns,
+                                                        epsilon,
+                                                        ucell,
+                                                        symprec=symprec,
+                                                        is_symmetry=is_symmetry)
+
+        if (abs(borns - borns_) > 0.1).any():
+            lines = ["Born effective charge symmetry is largely broken. "
+                     "Largest different among elements: "
+                     "%s" % np.amax(abs(borns - borns_))]
+            import warnings
+            warnings.warn("\n".join(lines))
+
+        borns = borns_
+        epsilon = epsilon_
+
+    borns, s_indep_atoms = _extract_independent_borns(
+        borns,
+        ucell,
+        primitive_matrix=primitive_matrix,
+        supercell_matrix=supercell_matrix,
+        is_symmetry=is_symmetry,
+        symprec=symprec)
+
+    return borns, epsilon, s_indep_atoms
+
 def symmetrize_borns_and_epsilon(borns,
                                  epsilon,
                                  ucell,
@@ -358,3 +424,30 @@ def _symmetrize_2nd_rank_tensor(tensor, symmetry_operations, lattice):
     for sym in sym_cart:
         sum_tensor += similarity_transformation(sym, tensor)
     return sum_tensor / len(symmetry_operations)
+
+def _extract_independent_borns(borns,
+                               ucell,
+                               primitive_matrix=None,
+                               supercell_matrix=None,
+                               is_symmetry=True,
+                               symprec=1e-5):
+    if primitive_matrix is None:
+        pmat = np.eye(3)
+    else:
+        pmat = primitive_matrix
+    if supercell_matrix is None:
+        smat = np.eye(3, dtype='intc')
+    else:
+        smat = supercell_matrix
+
+    inv_smat = np.linalg.inv(smat)
+    scell = get_supercell(ucell, smat, symprec=symprec)
+    pcell = get_primitive(scell, np.dot(inv_smat, pmat), symprec=symprec)
+    p2s = np.array(pcell.get_primitive_to_supercell_map(), dtype='intc')
+    p_sym = Symmetry(pcell, is_symmetry=is_symmetry, symprec=symprec)
+    s_indep_atoms = p2s[p_sym.get_independent_atoms()]
+    u2u = scell.get_unitcell_to_unitcell_map()
+    u_indep_atoms = [u2u[x] for x in s_indep_atoms]
+    reduced_borns = borns[u_indep_atoms].copy()
+
+    return reduced_borns, s_indep_atoms
