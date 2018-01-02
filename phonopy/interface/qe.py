@@ -330,6 +330,40 @@ class PwscfIn(object):
         self._tags['atomic_species'] = species
 
 class PH_Q2R(object):
+    """Parse QE/q2r output and create supercell force constants array
+    that is readable by phonopy. A simple usage is as follows:
+
+    ---------
+    #!/usr/bin/env python
+
+    from phonopy.file_IO import write_FORCE_CONSTANTS
+    from phonopy.interface.qe import read_pwscf, PH_Q2R
+
+    cell, _ = read_pwscf(primcell_filename)
+    q2r = PH_Q2R(q2r_filename)
+    q2r.run(cell)
+    write_FORCE_CONSTANTS(q2r.fc)
+    ---------
+
+    Treatment of non-analytical term correction (NAC) is different
+    between phonopy and QE. For insulator, QE automatically calculate
+    dielectric constant and Born effective charges at PH calculation
+    when q-point mesh sampling mode ('ldisp = .true.'). These data are
+    written in the Gamma point dynamical matrix file (probably
+    numbered as 1 among files). When running q2r.x, these files are
+    read including the dielectric constant and Born effective charges,
+    and the real space force constants where QE-NAC treatment is done
+    are written to the q2r output file. This is not that phonopy
+    expects. Therefore the dielectric constant and Born effective
+    charges data have to be removed manually from the Gamma point
+    dynamical matrix file before running q2r.x. Alternatively Gamma
+    point only PH calculation with 'epsil = .false.' can generate the
+    dynamical matrix file without the dielectric constant and Born
+    effective charges data. So it is possible to replace the Gamma
+    point file by this Gamma point only file to run q2r.x for phonopy.
+
+    """
+
     def __init__(self, filename, symprec=1e-5):
         self.fc = None
         self.dimension = None
