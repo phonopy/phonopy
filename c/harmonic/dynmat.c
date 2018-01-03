@@ -38,83 +38,83 @@
 #define PI 3.14159265358979323846
 
 static void get_dynmat_ij(double *dynamical_matrix,
-			  const int num_patom, 
-			  const int num_satom,
-			  const double *fc,
-			  const double *q,
-			  const double *r,
-			  const int *multi,
-			  const double *mass,
-			  const int *s2p_map, 
-			  const int *p2s_map,
-			  const double *charge_sum,
-			  const int i,
-			  const int j);
+                          const int num_patom,
+                          const int num_satom,
+                          const double *fc,
+                          const double *q,
+                          const double *r,
+                          const int *multi,
+                          const double *mass,
+                          const int *s2p_map,
+                          const int *p2s_map,
+                          const double *charge_sum,
+                          const int i,
+                          const int j);
 static void get_dm(double dm_real[3][3],
-		   double dm_imag[3][3],
-		   const int num_patom, 
-		   const int num_satom,
-		   const double *fc,
-		   const double *q,
-		   const double *r,
-		   const int *multi,
-		   const double mass_sqrt,
-		   const int *p2s_map,
-		   const double *charge_sum,
-		   const int i,
-		   const int j,
-		   const int k);
+                   double dm_imag[3][3],
+                   const int num_patom,
+                   const int num_satom,
+                   const double *fc,
+                   const double *q,
+                   const double *r,
+                   const int *multi,
+                   const double mass_sqrt,
+                   const int *p2s_map,
+                   const double *charge_sum,
+                   const int i,
+                   const int j,
+                   const int k);
 static double get_dielectric_part(const double q[3],
                                   const double *dielectric);
 
 int get_dynamical_matrix_at_q(double *dynamical_matrix,
-			      const int num_patom, 
-			      const int num_satom,
-			      const double *fc,
-			      const double *q,
-			      const double *r,
-			      const int *multi,
-			      const double *mass,
-			      const int *s2p_map, 
-			      const int *p2s_map,
-			      const double *charge_sum,
-			      const int with_openmp)
+                              const int num_patom,
+                              const int num_satom,
+                              const double *fc,
+                              const double *q,
+                              const double *r,
+                              const int *multi,
+                              const double *mass,
+                              const int *s2p_map,
+                              const int *p2s_map,
+                              const double *charge_sum,
+                              const int with_openmp)
 {
   int i, j, ij, adrs, adrsT;
-  
+
   if (with_openmp) {
 #pragma omp parallel for
     for (ij = 0; ij < num_patom * num_patom ; ij++) {
       get_dynmat_ij(dynamical_matrix,
-		    num_patom, 
-		    num_satom,
-		    fc,
-		    q,
-		    r,
-		    multi,
-		    mass,
-		    s2p_map, 
-		    p2s_map,
-		    charge_sum,
-		    ij / num_patom,  /* i */
-		    ij % num_patom); /* j */
+                    num_patom,
+                    num_satom,
+                    fc,
+                    q,
+                    r,
+                    multi,
+                    mass,
+                    s2p_map,
+                    p2s_map,
+                    charge_sum,
+                    ij / num_patom,  /* i */
+                    ij % num_patom); /* j */
     }
   } else {
     for (i = 0; i < num_patom; i++) {
       for (j = 0; j < num_patom; j++) {
-	get_dynmat_ij(dynamical_matrix,
-		      num_patom, 
-		      num_satom,
-		      fc,
-		      q,
-		      r,
-		      multi,
-		      mass,
-		      s2p_map, 
-		      p2s_map,
-		      charge_sum,
-		      i,
-		      j);
+        get_dynmat_ij(dynamical_matrix,
+                      num_patom,
+                      num_satom,
+                      fc,
+                      q,
+                      r,
+                      multi,
+                      mass,
+                      s2p_map,
+                      p2s_map,
+                      charge_sum,
+                      i,
+                      j);
       }
     }
   }
@@ -170,10 +170,10 @@ void get_dipole_dipole(double *dd, /* [natom, 3, natom, 3, (real, imag)] */
       if (!q_direction) {
         continue;
       } else {
-        for (i = 0; i < 3; i++) {q_K[i] = q_direction[i];} 
+        for (i = 0; i < 3; i++) {q_K[i] = q_direction[i];}
       }
     } else {
-      for (i = 0; i < 3; i++) {q_K[i] = K_list[g * 3 + i];} 
+      for (i = 0; i < 3; i++) {q_K[i] = K_list[g * 3 + i];}
     }
 
     get_charge_sum(charge_sum,
@@ -247,14 +247,14 @@ void get_dipole_dipole(double *dd, /* [natom, 3, natom, 3, (real, imag)] */
 }
 
 void get_charge_sum(double *charge_sum,
-		    const int num_patom,
-		    const double factor, /* 4pi/V*unit-conv and denominator */
-		    const double q_vector[3],
-		    const double *born)
+                    const int num_patom,
+                    const double factor, /* 4pi/V*unit-conv and denominator */
+                    const double q_vector[3],
+                    const double *born)
 {
   int i, j, k, a, b;
   double (*q_born)[3];
-  
+
   q_born = (double (*)[3]) malloc(sizeof(double[3]) * num_patom);
   for (i = 0; i < num_patom; i++) {
     for (j = 0; j < 3; j++) {
@@ -265,7 +265,7 @@ void get_charge_sum(double *charge_sum,
   for (i = 0; i < num_patom; i++) {
     for (j = 0; j < 3; j++) {
       for (k = 0; k < 3; k++) {
-	q_born[i][j] += q_vector[k] * born[i * 9 + k * 3 + j];
+        q_born[i][j] += q_vector[k] * born[i * 9 + k * 3 + j];
       }
     }
   }
@@ -273,10 +273,10 @@ void get_charge_sum(double *charge_sum,
   for (i = 0; i < num_patom; i++) {
     for (j = 0; j < num_patom; j++) {
       for (a = 0; a < 3; a++) {
-	for (b = 0; b < 3; b++) {
-	  charge_sum[i * 9 * num_patom + j * 9 + a * 3 + b] =
-	    q_born[i][a] * q_born[j][b] * factor;
-	}
+        for (b = 0; b < 3; b++) {
+          charge_sum[i * 9 * num_patom + j * 9 + a * 3 + b] =
+            q_born[i][a] * q_born[j][b] * factor;
+        }
       }
     }
   }
@@ -287,23 +287,23 @@ void get_charge_sum(double *charge_sum,
 
 
 static void get_dynmat_ij(double *dynamical_matrix,
-			  const int num_patom, 
-			  const int num_satom,
-			  const double *fc,
-			  const double *q,
-			  const double *r,
-			  const int *multi,
-			  const double *mass,
-			  const int *s2p_map, 
-			  const int *p2s_map,
-			  const double *charge_sum,
-			  const int i,
-			  const int j)
+                          const int num_patom,
+                          const int num_satom,
+                          const double *fc,
+                          const double *q,
+                          const double *r,
+                          const int *multi,
+                          const double *mass,
+                          const int *s2p_map,
+                          const int *p2s_map,
+                          const double *charge_sum,
+                          const int i,
+                          const int j)
 {
   int k, l, adrs;
   double mass_sqrt;
   double dm_real[3][3], dm_imag[3][3];
-  
+
   mass_sqrt = sqrt(mass[i] * mass[j]);
 
   for (k = 0; k < 3; k++) {
@@ -318,21 +318,21 @@ static void get_dynmat_ij(double *dynamical_matrix,
       continue;
     }
     get_dm(dm_real,
-	   dm_imag,
-	   num_patom, 
-	   num_satom,
-	   fc,
-	   q,
-	   r,
-	   multi,
-	   mass_sqrt,
-	   p2s_map,
-	   charge_sum,
-	   i,
-	   j,
-	   k);
+           dm_imag,
+           num_patom,
+           num_satom,
+           fc,
+           q,
+           r,
+           multi,
+           mass_sqrt,
+           p2s_map,
+           charge_sum,
+           i,
+           j,
+           k);
   }
-      
+
   for (k = 0; k < 3; k++) {
     for (l = 0; l < 3; l++) {
       adrs = (i * 3 + k) * num_patom * 6 + j * 6 + l * 2;
@@ -343,19 +343,19 @@ static void get_dynmat_ij(double *dynamical_matrix,
 }
 
 static void get_dm(double dm_real[3][3],
-		   double dm_imag[3][3],
-		   const int num_patom, 
-		   const int num_satom,
-		   const double *fc,
-		   const double *q,
-		   const double *r,
-		   const int *multi,
-		   const double mass_sqrt,
-		   const int *p2s_map,
-		   const double *charge_sum,
-		   const int i,
-		   const int j,
-		   const int k)
+                   double dm_imag[3][3],
+                   const int num_patom,
+                   const int num_satom,
+                   const double *fc,
+                   const double *q,
+                   const double *r,
+                   const int *multi,
+                   const double mass_sqrt,
+                   const int *p2s_map,
+                   const double *charge_sum,
+                   const int i,
+                   const int j,
+                   const int k)
 {
   int l, m;
   double phase, cos_phase, sin_phase, fc_elem;
@@ -375,12 +375,12 @@ static void get_dm(double dm_real[3][3],
   for (l = 0; l < 3; l++) {
     for (m = 0; m < 3; m++) {
       if (charge_sum) {
-	fc_elem = (fc[p2s_map[i] * num_satom * 9 + k * 9 + l * 3 + m] +
-		   charge_sum[i * num_patom * 9 +
-			      j * 9 + l * 3 + m]) / mass_sqrt;
+        fc_elem = (fc[p2s_map[i] * num_satom * 9 + k * 9 + l * 3 + m] +
+                   charge_sum[i * num_patom * 9 +
+                              j * 9 + l * 3 + m]) / mass_sqrt;
       } else {
-	fc_elem = fc[p2s_map[i] * num_satom * 9 +
-		     k * 9 + l * 3 + m] / mass_sqrt;
+        fc_elem = fc[p2s_map[i] * num_satom * 9 +
+                     k * 9 + l * 3 + m] / mass_sqrt;
       }
       dm_real[l][m] += fc_elem * cos_phase;
       dm_imag[l][m] += fc_elem * sin_phase;
