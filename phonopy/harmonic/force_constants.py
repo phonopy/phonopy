@@ -140,7 +140,7 @@ def symmetrize_force_constants(force_constants, iteration=3):
     try:
         import phonopy._phonopy as phonoc
         phonoc.perm_trans_symmetrize_fc(force_constants)
-    except:
+    except ImportError:
         for i in range(iteration):
             set_permutation_symmetry(force_constants)
             set_translational_invariance(force_constants)
