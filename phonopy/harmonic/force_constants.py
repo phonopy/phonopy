@@ -137,9 +137,13 @@ def cutoff_force_constants(force_constants,
 
 
 def symmetrize_force_constants(force_constants, iteration=3):
-    for i in range(iteration):
-        set_permutation_symmetry(force_constants)
-        set_translational_invariance(force_constants)
+    try:
+        import phonopy._phonopy as phonoc
+        phonoc.perm_trans_symmetrize_fc(force_constants)
+    except:
+        for i in range(iteration):
+            set_permutation_symmetry(force_constants)
+            set_translational_invariance(force_constants)
 
 def distribute_force_constants(force_constants,
                                atom_list,
@@ -456,6 +460,7 @@ def set_permutation_symmetry(force_constants):
     condition is imposed when making dynamical matrix Hermite in
     dynamical_matrix.py.
     """
+
     fc_copy = force_constants.copy()
     for i in range(force_constants.shape[0]):
         for j in range(force_constants.shape[1]):

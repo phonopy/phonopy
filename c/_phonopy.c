@@ -46,6 +46,7 @@
 #define PHPYCONST
 
 /* Build dynamical matrix */
+static PyObject * py_perm_trans_symmetrize_fc(PyObject *self, PyObject *args);
 static PyObject * py_get_dynamical_matrix(PyObject *self, PyObject *args);
 static PyObject * py_get_nac_dynamical_matrix(PyObject *self, PyObject *args);
 static PyObject * py_get_dipole_dipole(PyObject *self, PyObject *args);
@@ -140,6 +141,8 @@ error_out(PyObject *m) {
 
 static PyMethodDef _phonopy_methods[] = {
   {"error_out", (PyCFunction)error_out, METH_NOARGS, NULL},
+  {"perm_trans_symmetrize_fc", py_perm_trans_symmetrize_fc, METH_VARARGS,
+   "Enforce permutation and translational symmetry of force constants"},
   {"dynamical_matrix", py_get_dynamical_matrix, METH_VARARGS, "Dynamical matrix"},
   {"nac_dynamical_matrix", py_get_nac_dynamical_matrix, METH_VARARGS, "NAC dynamical matrix"},
   {"dipole_dipole", py_get_dipole_dipole, METH_VARARGS, "Dipole-dipole interaction"},
@@ -311,6 +314,67 @@ static PyObject * py_gsv_copy_smallest_vectors(PyObject *self, PyObject *args)
   Py_RETURN_NONE;
 }
 
+static PyObject * py_perm_trans_symmetrize_fc(PyObject *self, PyObject *args)
+{
+  PyArrayObject* force_constants;
+  double sum;
+  double *fc;
+  int natom, i, j, k, l, m, n;
+
+  if (!PyArg_ParseTuple(args, "O", &force_constants)) {
+    return NULL;
+  }
+
+  fc = (double*)PyArray_DATA(force_constants);
+  natom = PyArray_DIMS(force_constants)[0];
+
+#pragma omp parallel for private(j, k, l, m, n)
+  for (i = 0; i < natom; i++) {
+    /* non diagonal part */
+    for (j = i + 1; j < natom; j++) {
+      for (k = 0; k < 3; k++) {
+        for (l = 0; l < 3; l++) {
+          m = i * natom * 9 + j * 9 + k * 3 + l;
+          n = j * natom * 9 + i * 9 + l * 3 + k;
+          fc[m] += fc[n];
+          fc[m] /= 2;
+          fc[n] = fc[m];
+        }
+      }
+    }
+
+    /* diagnoal part */
+    for (k = 1; k < 3; k++) {
+      for (l = k + 1; l < 3; l++) {
+        m = i * natom * 9 + i * 9 + k * 3 + l;
+        n = i * natom * 9 + i * 9 + l * 3 + k;
+        fc[m] += fc[n];
+        fc[m] /= 2;
+        fc[n] = fc[m];
+      }
+    }
+  }
+
+  for (i = 0; i < natom; i++) {
+    for (k = 0; k < 3; k++) {
+      for (l = k; l < 3; l++) {
+        sum = 0;
+        m = i * natom * 9 + k * 3 + l;
+        for (j = 0; j < natom; j++) {
+          sum += fc[m];
+          m += 9;
+        }
+        fc[i * natom * 9 + i * 9 + k * 3 + l] -= sum;
+        if (k != l) {
+          fc[i * natom * 9 + i * 9 + l * 3 + k] -= sum;
+        }
+      }
+    }
+  }
+
+  Py_RETURN_NONE;
+}
+
 static PyObject * py_get_dynamical_matrix(PyObject *self, PyObject *args)
 {
   PyArrayObject* dynamical_matrix;
@@ -341,8 +405,9 @@ static PyObject * py_get_dynamical_matrix(PyObject *self, PyObject *args)
                         &multiplicity,
                         &mass,
                         &super2prim_map,
-                        &prim2super_map))
+                        &prim2super_map)) {
     return NULL;
+  }
 
   dm = (double*)PyArray_DATA(dynamical_matrix);
   fc = (double*)PyArray_DATA(force_constants);
