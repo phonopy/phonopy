@@ -322,8 +322,8 @@ text.
             supercell_matrix=np.diag(q2r.dimension),
             symmetrize_tensors=True)
         print("default")
-        print(("%13.8f" * 9) % tuple(q2r.epsilon.ravel()))
-        for z in q2r.borns:
+        print(("%13.8f" * 9) % tuple(epsilon.ravel()))
+        for z in borns:
             print(("%13.8f" * 9) % tuple(z.ravel()))
 
 Saving this script as ``make_born_q2r.py``,
