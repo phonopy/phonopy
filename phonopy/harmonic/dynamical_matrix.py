@@ -90,10 +90,10 @@ class DynamicalMatrix(object):
                  symprec=1e-5):
         self._scell = supercell
         self._pcell = primitive
-        self._force_constants = np.array(force_constants,
-                                         dtype='double', order='C')
         self._decimals = decimals
         self._symprec = symprec
+        self._force_constants = None
+        self._set_force_constants(force_constants)
 
         itemsize = self._force_constants.itemsize
         self._dtype_complex = ("c%d" % (itemsize * 2))
@@ -152,6 +152,17 @@ class DynamicalMatrix(object):
             self._set_c_dynamical_matrix(q)
         except ImportError:
             self._set_py_dynamical_matrix(q)
+
+    def _set_force_constants(self, fc):
+        if (type(fc) == np.ndarray and
+            fc.dtype == np.dtype('double') and
+            fc.flags.aligned and
+            fc.flags.owndata and
+            fc.flags.c_contiguous):
+            self._force_constants = fc
+        else:
+            self._force_constants = np.array(force_constants,
+                                             dtype='double', order='C')
 
     def _set_c_dynamical_matrix(self, q):
         import phonopy._phonopy as phonoc
