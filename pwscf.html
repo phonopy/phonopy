@@ -440,8 +440,8 @@ text.</p>
         <span class="n">supercell_matrix</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">q2r</span><span class="o">.</span><span class="n">dimension</span><span class="p">),</span>
         <span class="n">symmetrize_tensors</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;default&quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">((</span><span class="s2">&quot;</span><span class="si">%13.8f</span><span class="s2">&quot;</span> <span class="o">*</span> <span class="mi">9</span><span class="p">)</span> <span class="o">%</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">q2r</span><span class="o">.</span><span class="n">epsilon</span><span class="o">.</span><span class="n">ravel</span><span class="p">()))</span>
-    <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">q2r</span><span class="o">.</span><span class="n">borns</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">((</span><span class="s2">&quot;</span><span class="si">%13.8f</span><span class="s2">&quot;</span> <span class="o">*</span> <span class="mi">9</span><span class="p">)</span> <span class="o">%</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">epsilon</span><span class="o">.</span><span class="n">ravel</span><span class="p">()))</span>
+    <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">borns</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">((</span><span class="s2">&quot;</span><span class="si">%13.8f</span><span class="s2">&quot;</span> <span class="o">*</span> <span class="mi">9</span><span class="p">)</span> <span class="o">%</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">z</span><span class="o">.</span><span class="n">ravel</span><span class="p">()))</span>
 </pre></div>
 </div>
