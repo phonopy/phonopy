@@ -219,8 +219,6 @@ class DynamicalMatrixNAC(DynamicalMatrix):
                                  force_constants,
                                  decimals=decimals,
                                  symprec=1e-5)
-        self._bare_force_constants = self._force_constants.copy()
-
         # For method == 'gonze'
         self._Gonze_force_constants = None
         self._G_vec_list = None
@@ -274,7 +272,6 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             q_norm = np.linalg.norm(np.dot(q_direction, rec_lat.T))
 
         if q_norm < self._symprec:
-            self._force_constants = self._bare_force_constants.copy()
             self._set_dynamical_matrix(q_red)
             return False
 
@@ -300,16 +297,15 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             self._set_c_Wang_dynamical_matrix(q_red, q, constant)
         except ImportError:
             num_atom = self._pcell.get_number_of_atoms()
-            fc = self._bare_force_constants.copy()
+            fc_backup = self._force_constants.copy()
             nac_q = self._get_charge_sum(num_atom, q, self._born) * constant
-            self._set_py_Wang_force_constants(fc, nac_q)
-            self._force_constants = fc
+            self._set_py_Wang_force_constants(self._force_constants, nac_q)
             self._set_dynamical_matrix(q_red)
+            self._force_constants = fc_backup
 
     def _set_c_Wang_dynamical_matrix(self, q_red, q, factor):
         import phonopy._phonopy as phonoc
 
-        fc = self._bare_force_constants.copy()
         vectors = self._smallest_vectors
         mass = self._pcell.get_masses()
         multiplicity = self._multiplicity
@@ -318,7 +314,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         dm = np.zeros((size_prim * 3, size_prim * 3),
                       dtype=("c%d" % (itemsize * 2)))
         phonoc.nac_dynamical_matrix(dm.view(dtype='double'),
-                                    fc,
+                                    self._force_constants,
                                     np.array(q_red, dtype='double'),
                                     vectors,
                                     multiplicity,

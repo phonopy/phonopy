@@ -244,7 +244,7 @@ def get_parser():
         "--fc-spg-symmetry", dest="fc_spg_symmetry", action="store_true",
         help="Enforce space group symmetry to force constants")
     parser.add_argument(
-        "--fc-symmetry", dest="fc_symmetry", type=int,
+        "--fc-symmetry", dest="fc_symmetry", action="store_true",
         help="Symmetrize force constants")
     parser.add_argument(
         "--fits-debye-model", dest="fits_debye_model", action="store_true",

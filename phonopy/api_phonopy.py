@@ -372,8 +372,8 @@ class Phonopy(object):
 
         return True
 
-    def symmetrize_force_constants(self, iteration=3):
-        symmetrize_force_constants(self._force_constants, iteration)
+    def symmetrize_force_constants(self):
+        symmetrize_force_constants(self._force_constants)
         self._set_dynamical_matrix()
 
     def symmetrize_force_constants_by_space_group(self):

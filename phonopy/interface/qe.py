@@ -372,7 +372,7 @@ class PH_Q2R(object):
         self._symprec = symprec
         self._filename = filename
 
-    def run(self, cell):
+    def run(self, cell, parse_fc=True):
         """Run making supercell force constants readable for phonopy
 
         Args:
@@ -385,7 +385,8 @@ class PH_Q2R(object):
             self.dimension = fc_dct['dimension']
             self.epsilon = fc_dct['dielectric']
             self.borns = fc_dct['born']
-            self.fc = self._arrange_supercell_fc(cell, fc_dct['fc'])
+            if parse_fc:
+                self.fc = self._arrange_supercell_fc(cell, fc_dct['fc'])
 
     def _parse_q2r(self, f):
         """Parse q2r output file

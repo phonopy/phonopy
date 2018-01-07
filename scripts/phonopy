@@ -199,9 +199,8 @@ def print_settings(settings):
         print("  Non-analytical term correction: on")
     if settings.get_fc_spg_symmetry():
         print("  Enforce space group symmetry to force constants: on")
-    if settings.get_fc_symmetry_iteration() > 0:
-        print("  Force constants symmetrization: %d times" %
-              settings.get_fc_symmetry_iteration())
+    if settings.get_fc_symmetry():
+        print("  Force constants symmetrization: on")
     if settings.get_lapack_solver():
         print("  Use Lapack solver via Lapacke: on")
     if run_mode == 'mesh' or run_mode == 'band_mesh':
@@ -608,7 +607,7 @@ elif os.path.exists("FORCE_SETS"):
         print("Computing force constants...")
 
     if (settings.get_write_force_constants() or
-        settings.get_fc_symmetry_iteration() > 0 or
+        settings.get_fc_symmetry() or
         settings.get_fc_spg_symmetry()):
         # Need to calculate full force constant tensors
         phonon.produce_force_constants(
@@ -670,8 +669,8 @@ if settings.get_fc_spg_symmetry():
 
 # Imporse translational invariance and index permulation symmetry to
 # force constants
-if settings.get_fc_symmetry_iteration() > 0:
-    phonon.symmetrize_force_constants(settings.get_fc_symmetry_iteration())
+if settings.get_fc_symmetry():
+    phonon.symmetrize_force_constants()
 
 # Write FORCE_CONSTANTS
 if settings.get_write_force_constants():
