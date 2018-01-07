@@ -3,7 +3,7 @@
 Change Log
 ==========
 
-Jan-7-2018: Version 1.12.3
+Jan-7-2018: Version 1.12.4
 -----------------------------
 
 * For thermal displacements (and its matrices), ``FMIN (--fmin)`` and
