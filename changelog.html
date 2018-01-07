@@ -3,13 +3,13 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Change Log &#8212; Phonopy v.1.12.2</title>
+    <title>Change Log &#8212; Phonopy v.1.12.3</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.12.2',
+        VERSION:     '1.12.3',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -47,7 +47,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.12.2</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.12.3</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -99,7 +99,7 @@
       role="menu"
       aria-labelledby="dLabelLocalToc"><ul>
 <li><a class="reference internal" href="#">Change Log</a><ul>
-<li><a class="reference internal" href="#dec-9-2017">Dec-9-2017</a></li>
+<li><a class="reference internal" href="#jan-7-2018-version-1-12-3">Jan-7-2018: Version 1.12.3</a></li>
 <li><a class="reference internal" href="#nov-8-2017-version-1-12-2">Nov-8-2017: Version 1.12.2</a></li>
 <li><a class="reference internal" href="#oct-19-2017-version-1-12-0">Oct-19-2017: Version 1.12.0</a></li>
 <li><a class="reference internal" href="#oct-2-2017-version-1-11-14">Oct-2-2017: Version 1.11.14</a></li>
@@ -224,14 +224,19 @@
       
   <div class="section" id="change-log">
 <span id="changelog"></span><h1>Change Log<a class="headerlink" href="#change-log" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="dec-9-2017">
-<h2>Dec-9-2017<a class="headerlink" href="#dec-9-2017" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="jan-7-2018-version-1-12-3">
+<h2>Jan-7-2018: Version 1.12.3<a class="headerlink" href="#jan-7-2018-version-1-12-3" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li>For thermal displacements (and its matrices), <code class="docutils literal"><span class="pre">FMIN</span> <span class="pre">(--fmin)</span></code> and
 <code class="docutils literal"><span class="pre">FMAX</span> <span class="pre">(--fmax)</span></code> can be used to limit phonons included to the
 summation as the minimum and maximum frequenceis,
 respectively. Instead, <code class="docutils literal"><span class="pre">CUTOFF_FREQUENCY</span> <span class="pre">(--cutoff-freq)</span></code> does not
 work for thermal displacements.</li>
+<li>The way of symmetrization for translation invariance is
+modified. <code class="docutils literal"><span class="pre">FC_SYMMETRY</span></code> required to specify a number, but now it
+became unnecessary.</li>
+<li>Experimental support to parse Quantum ESPRESSO <code class="docutils literal"><span class="pre">q2r.x</span></code> output from
+python script.</li>
 </ul>
 </div>
 <div class="section" id="nov-8-2017-version-1-12-2">
@@ -425,7 +430,7 @@ tag. See <a class="reference internal" href="command-options.html#force-calculat
 <a class="reference internal" href="abinit.html#abinit-interface"><span class="std std-ref">Abinit &amp; phonopy calculation</span></a>, and <a class="reference internal" href="pwscf.html#qe-interface"><span class="std std-ref">Quantum ESPRESSO (QE) &amp; phonopy calculation</span></a>.</li>
 <li>For the <code class="docutils literal"><span class="pre">gruneisen</span></code> command, <code class="docutils literal"><span class="pre">--factor</span></code>, <code class="docutils literal"><span class="pre">--nomeshsym</span></code>,
 <code class="docutils literal"><span class="pre">--wien2k</span></code>, <code class="docutils literal"><span class="pre">--abinit</span></code>, and <code class="docutils literal"><span class="pre">--pwscf</span></code> options are
-implemented. See <a class="reference internal" href="gruneisen.html#gruneisen-calculators"><span class="std std-ref">Abinit, Pwscf, Wien2k, and CRYSTAL interfaces</span></a> and
+implemented. See <a class="reference internal" href="gruneisen.html#gruneisen-calculators"><span class="std std-ref">Abinit, Quantum ESPRESSO, Wien2k, and CRYSTAL interfaces</span></a> and
 <a class="reference internal" href="gruneisen.html#gruneisen-command-options"><span class="std std-ref">Command options</span></a>.</li>
 <li>In phonopy-API, timing to call Phonopy._set_dynamical_matrix is
 changed to reduce the number of calls of this function. This may

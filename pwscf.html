@@ -3,13 +3,13 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Quantum ESPRESSO (QE) &amp; phonopy calculation &#8212; Phonopy v.1.12.2</title>
+    <title>Quantum ESPRESSO (QE) &amp; phonopy calculation &#8212; Phonopy v.1.12.3</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.12.2',
+        VERSION:     '1.12.3',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -47,7 +47,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.12.2</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.12.3</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -104,6 +104,14 @@
 <li><a class="reference internal" href="#non-analytical-term-correction-optional">Non-analytical term correction (Optional)</a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#q2r-x">q2r.x</a><ul>
+<li><a class="reference internal" href="#non-analytical-term-correction">Non-analytical term correction</a><ul>
+<li><a class="reference internal" href="#creating-born-file">Creating BORN file</a></li>
+<li><a class="reference internal" href="#nacl-example">NaCl example</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -152,8 +160,21 @@
 <p>Quantum ESPRESSO package itself has a set of the phonon calculation
 system. But the document here explains how to calculate phonons using
 phonopy, i.e., using the finite displacement and supercell approach.</p>
+<div class="contents local topic" id="contents">
+<ul class="simple">
+<li><a class="reference internal" href="#supported-pwscf-tags" id="id1">Supported Pwscf tags</a></li>
+<li><a class="reference internal" href="#how-to-run" id="id2">How to run</a><ul>
+<li><a class="reference internal" href="#non-analytical-term-correction-optional" id="id3">Non-analytical term correction (Optional)</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#q2r-x" id="id4">q2r.x</a><ul>
+<li><a class="reference internal" href="#non-analytical-term-correction" id="id5">Non-analytical term correction</a></li>
+</ul>
+</li>
+</ul>
+</div>
 <div class="section" id="supported-pwscf-tags">
-<h2>Supported Pwscf tags<a class="headerlink" href="#supported-pwscf-tags" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id1">Supported Pwscf tags</a><a class="headerlink" href="#supported-pwscf-tags" title="Permalink to this headline">¶</a></h2>
 <p>Currently Pwscf tags that phonopy can read are shown below.  Only
 <code class="docutils literal"><span class="pre">ibrav</span> <span class="pre">=</span> <span class="pre">0</span></code> type representation of crystal structure is supported.
 More tags may be supported on request.</p>
@@ -162,7 +183,7 @@ More tags may be supported on request.</p>
 </div>
 </div>
 <div class="section" id="how-to-run">
-<h2>How to run<a class="headerlink" href="#how-to-run" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id2">How to run</a><a class="headerlink" href="#how-to-run" title="Permalink to this headline">¶</a></h2>
 <p>The procedure of Pwscf-phonopy calculation is shown below using the
 NaCl example found in <code class="docutils literal"><span class="pre">example/NaCl-pwscf</span></code> directory.</p>
 <ol class="arabic">
@@ -262,7 +283,7 @@ for examples, see <a class="reference internal" href="examples.html#examples-lin
 </li>
 </ol>
 <div class="section" id="non-analytical-term-correction-optional">
-<h3>Non-analytical term correction (Optional)<a class="headerlink" href="#non-analytical-term-correction-optional" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id3">Non-analytical term correction (Optional)</a><a class="headerlink" href="#non-analytical-term-correction-optional" title="Permalink to this headline">¶</a></h3>
 <p>To activate non-analytical term correction, <a class="reference internal" href="input-files.html#born-file"><span class="std std-ref">BORN (optional)</span></a> is
 required. This file contains the information of Born effective charge
 and dielectric constant. These physical values are also obtained from
@@ -344,6 +365,100 @@ just adding the <code class="docutils literal"><span class="pre">--nac</span></c
 </pre></div>
 </div>
 <p><a class="reference internal" href="_images/NaCl-pwscf-band-NAC.png"><img alt="pwscf-band-nac" src="_images/NaCl-pwscf-band-NAC.png" style="width: 50%;" /></a></p>
+</div>
+</div>
+<div class="section" id="q2r-x">
+<h2><a class="toc-backref" href="#id4">q2r.x</a><a class="headerlink" href="#q2r-x" title="Permalink to this headline">¶</a></h2>
+<p><strong>Experimental</strong></p>
+<p>A parser of <code class="docutils literal"><span class="pre">q2r.x</span></code> output is implemented experimentally. Currently
+command-line user interface is not prepared. Using the following
+script, the force constants file readable by phonopy is
+created. Probably thus obtained force constants are required to be
+symmetrized by the translational invariance condition using
+<code class="docutils literal"><span class="pre">FC_SYMMETRY</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>. It has to be careful that the force
+constants file can be super huge when q-point mesh is dense.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
+
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">phonopy.file_IO</span> <span class="k">import</span> <span class="n">write_FORCE_CONSTANTS</span>
+<span class="kn">from</span> <span class="nn">phonopy.file_IO</span> <span class="k">import</span> <span class="n">write_force_constants_to_hdf5</span>
+<span class="kn">from</span> <span class="nn">phonopy.interface.qe</span> <span class="k">import</span> <span class="n">read_pwscf</span><span class="p">,</span> <span class="n">PH_Q2R</span>
+
+<span class="n">primcell_filename</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">q2r_filename</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+<span class="n">cell</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">read_pwscf</span><span class="p">(</span><span class="n">primcell_filename</span><span class="p">)</span>
+<span class="n">q2r</span> <span class="o">=</span> <span class="n">PH_Q2R</span><span class="p">(</span><span class="n">q2r_filename</span><span class="p">)</span>
+<span class="n">q2r</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">cell</span><span class="p">)</span>
+<span class="n">write_force_constants_to_hdf5</span><span class="p">(</span><span class="n">q2r</span><span class="o">.</span><span class="n">fc</span><span class="p">)</span>
+<span class="c1"># write_FORCE_CONSTANTS(q2r.fc)</span>
+</pre></div>
+</div>
+<p>Saving this script as <code class="docutils literal"><span class="pre">make_fc_q2r.py</span></code>, this is used as, e.g.,</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">python</span> <span class="n">make_fc_q2r</span><span class="o">.</span><span class="n">py</span> <span class="n">NaCl</span><span class="o">.</span><span class="ow">in</span> <span class="n">NaCl</span><span class="o">.</span><span class="n">fc</span>
+</pre></div>
+</div>
+<div class="section" id="non-analytical-term-correction">
+<h3><a class="toc-backref" href="#id5">Non-analytical term correction</a><a class="headerlink" href="#non-analytical-term-correction" title="Permalink to this headline">¶</a></h3>
+<p>Treatment of non-analytical term correction (NAC) is different between
+phonopy and QE. For insulator, QE automatically calculate dielectric
+constant and Born effective charges at PH calculation when q-point
+mesh sampling mode (<code class="docutils literal"><span class="pre">ldisp</span> <span class="pre">=</span> <span class="pre">.true.</span></code>), and these data are written in
+the Gamma point dynamical matrix file (probably in <code class="docutils literal"><span class="pre">.dyn1</span></code>
+file). When running <code class="docutils literal"><span class="pre">q2r.x</span></code>, these files are read including the
+dielectric constant and Born effective charges, and the real space
+force constants where QE-NAC treatment is done are written to the q2r
+output file. This is not that phonopy expects. Therefore the
+dielectric constant and Born effective charges data have to be removed
+manually from the Gamma point dynamical matrix file before running
+<code class="docutils literal"><span class="pre">q2r.x</span></code>. Alternatively Gamma point only PH calculation with ‘epsil =
+.false.’ can generate the dynamical matrix file without the dielectric
+constant and Born effective charges data. So it is possible to replace
+the Gamma point file by this Gamma point only file to run <code class="docutils literal"><span class="pre">q2r.x</span></code>
+for phonopy.</p>
+<div class="section" id="creating-born-file">
+<h4>Creating BORN file<a class="headerlink" href="#creating-born-file" title="Permalink to this headline">¶</a></h4>
+<p>If the <code class="docutils literal"><span class="pre">q2r.x</span></code> output contains dielectric constant and Born
+effective charges, the following script can generate <code class="docutils literal"><span class="pre">BORN</span></code> format
+text.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
+
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">phonopy.structure.symmetry</span> <span class="k">import</span> <span class="n">elaborate_borns_and_epsilon</span>
+<span class="kn">from</span> <span class="nn">phonopy.interface.qe</span> <span class="k">import</span> <span class="n">read_pwscf</span><span class="p">,</span> <span class="n">PH_Q2R</span>
+
+<span class="n">primcell_filename</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">q2r_filename</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+<span class="n">cell</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">read_pwscf</span><span class="p">(</span><span class="n">primcell_filename</span><span class="p">)</span>
+<span class="n">q2r</span> <span class="o">=</span> <span class="n">PH_Q2R</span><span class="p">(</span><span class="n">q2r_filename</span><span class="p">)</span>
+<span class="n">q2r</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">cell</span><span class="p">,</span> <span class="n">parse_fc</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">q2r</span><span class="o">.</span><span class="n">epsilon</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">borns</span><span class="p">,</span> <span class="n">epsilon</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">elaborate_borns_and_epsilon</span><span class="p">(</span>
+        <span class="n">cell</span><span class="p">,</span>
+        <span class="n">q2r</span><span class="o">.</span><span class="n">borns</span><span class="p">,</span>
+        <span class="n">q2r</span><span class="o">.</span><span class="n">epsilon</span><span class="p">,</span>
+        <span class="n">supercell_matrix</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">q2r</span><span class="o">.</span><span class="n">dimension</span><span class="p">),</span>
+        <span class="n">symmetrize_tensors</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;default&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">((</span><span class="s2">&quot;</span><span class="si">%13.8f</span><span class="s2">&quot;</span> <span class="o">*</span> <span class="mi">9</span><span class="p">)</span> <span class="o">%</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">q2r</span><span class="o">.</span><span class="n">epsilon</span><span class="o">.</span><span class="n">ravel</span><span class="p">()))</span>
+    <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">q2r</span><span class="o">.</span><span class="n">borns</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">((</span><span class="s2">&quot;</span><span class="si">%13.8f</span><span class="s2">&quot;</span> <span class="o">*</span> <span class="mi">9</span><span class="p">)</span> <span class="o">%</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">z</span><span class="o">.</span><span class="n">ravel</span><span class="p">()))</span>
+</pre></div>
+</div>
+<p>Saving this script as <code class="docutils literal"><span class="pre">make_born_q2r.py</span></code>,</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">python</span> <span class="n">make_born_q2r</span><span class="o">.</span><span class="n">py</span> <span class="n">NaCl</span><span class="o">.</span><span class="ow">in</span> <span class="n">NaCl</span><span class="o">.</span><span class="n">fc</span> <span class="o">&gt;</span> <span class="n">BORN</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="nacl-example">
+<h4>NaCl example<a class="headerlink" href="#nacl-example" title="Permalink to this headline">¶</a></h4>
+<p>NaCl example is found at
+<a class="reference external" href="https://github.com/atztogo/phonopy/tree/master/example/NaCl-QE-q2r">https://github.com/atztogo/phonopy/tree/master/example/NaCl-QE-q2r</a>.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">phonopy</span> <span class="o">--</span><span class="n">qe</span> <span class="o">-</span><span class="n">c</span> <span class="n">NaCl</span><span class="o">.</span><span class="ow">in</span> <span class="o">--</span><span class="n">dim</span><span class="o">=</span><span class="s2">&quot;8 8 8&quot;</span> <span class="o">--</span><span class="n">band</span><span class="o">=</span><span class="s2">&quot;0 0 0  1/2 0 0  1/2 1/2 0  0 0 0  1/2 1/2 1/2&quot;</span> <span class="o">--</span><span class="n">readfc</span> <span class="o">--</span><span class="n">readfc</span><span class="o">-</span><span class="nb">format</span><span class="o">=</span><span class="n">hdf5</span> <span class="o">--</span><span class="n">fc</span><span class="o">-</span><span class="n">symmetry</span> <span class="o">--</span><span class="n">nac</span> <span class="o">-</span><span class="n">p</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="_images/NaCl-q2r-band-NAC.png"><img alt="q2r-band-nac" src="_images/NaCl-q2r-band-NAC.png" style="width: 50%;" /></a></p>
+</div>
 </div>
 </div>
 </div>
