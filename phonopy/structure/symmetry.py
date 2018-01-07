@@ -415,6 +415,9 @@ def symmetrize_borns_and_epsilon(borns,
             borns_[i] += similarity_transformation(r_cart, borns[j])
         borns_[i] /= count
 
+    sum_born = borns_.sum(axis=0) / len(borns_)
+    borns_ -= sum_born
+
     return borns_, epsilon_
 
 def _symmetrize_2nd_rank_tensor(tensor, symmetry_operations, lattice):
@@ -445,6 +448,7 @@ def _extract_independent_borns(borns,
     pcell = get_primitive(scell, np.dot(inv_smat, pmat), symprec=symprec)
     p2s = np.array(pcell.get_primitive_to_supercell_map(), dtype='intc')
     p_sym = Symmetry(pcell, is_symmetry=is_symmetry, symprec=symprec)
+
     s_indep_atoms = p2s[p_sym.get_independent_atoms()]
     u2u = scell.get_unitcell_to_unitcell_map()
     u_indep_atoms = [u2u[x] for x in s_indep_atoms]
