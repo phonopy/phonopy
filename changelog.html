@@ -227,14 +227,14 @@
 <div class="section" id="jan-7-2018-version-1-12-4">
 <h2>Jan-7-2018: Version 1.12.4<a class="headerlink" href="#jan-7-2018-version-1-12-4" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li>For thermal displacements (and its matrices), <code class="docutils literal"><span class="pre">FMIN</span> <span class="pre">(--fmin)</span></code> and
-<code class="docutils literal"><span class="pre">FMAX</span> <span class="pre">(--fmax)</span></code> can be used to limit phonons included to the
-summation as the minimum and maximum frequenceis,
-respectively. Instead, <code class="docutils literal"><span class="pre">CUTOFF_FREQUENCY</span> <span class="pre">(--cutoff-freq)</span></code> does not
-work for thermal displacements.</li>
-<li>The way of symmetrization for translation invariance is
-modified. <code class="docutils literal"><span class="pre">FC_SYMMETRY</span></code> required to specify a number, but now it
-became unnecessary.</li>
+<li>For thermal displacements (and its matrices), <code class="docutils literal"><span class="pre">FMIN</span></code> <cite>(`</cite>–fmin``)
+and <code class="docutils literal"><span class="pre">FMAX</span></code> (<code class="docutils literal"><span class="pre">--fmax</span></code>) can be used to limit phonons included to
+the summation as the minimum and maximum frequenceis,
+respectively. Instead, <code class="docutils literal"><span class="pre">CUTOFF_FREQUENCY</span></code> (<code class="docutils literal"><span class="pre">--cutoff-freq</span></code>) does
+not work for thermal displacements.</li>
+<li>The way of symmetrization for translation invariance is modified. As
+a result, <code class="docutils literal"><span class="pre">FC_SYMMETRY</span></code> became a Boolean, i.e., <code class="docutils literal"><span class="pre">FC_SYMMETRY</span> <span class="pre">=</span>
+<span class="pre">.TRUE.</span></code> (<code class="docutils literal"><span class="pre">--fc-symmetry</span></code>), and no need to specify a number.</li>
 <li>Experimental support to parse Quantum ESPRESSO <code class="docutils literal"><span class="pre">q2r.x</span></code> output from
 python script.</li>
 </ul>

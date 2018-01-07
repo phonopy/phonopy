@@ -6,14 +6,14 @@ Change Log
 Jan-7-2018: Version 1.12.4
 -----------------------------
 
-* For thermal displacements (and its matrices), ``FMIN (--fmin)`` and
-  ``FMAX (--fmax)`` can be used to limit phonons included to the
-  summation as the minimum and maximum frequenceis,
-  respectively. Instead, ``CUTOFF_FREQUENCY (--cutoff-freq)`` does not
-  work for thermal displacements.
-* The way of symmetrization for translation invariance is
-  modified. ``FC_SYMMETRY`` required to specify a number, but now it
-  became unnecessary.
+* For thermal displacements (and its matrices), ``FMIN`` `(``--fmin``)
+  and ``FMAX`` (``--fmax``) can be used to limit phonons included to
+  the summation as the minimum and maximum frequenceis,
+  respectively. Instead, ``CUTOFF_FREQUENCY`` (``--cutoff-freq``) does
+  not work for thermal displacements.
+* The way of symmetrization for translation invariance is modified. As
+  a result, ``FC_SYMMETRY`` became a Boolean, i.e., ``FC_SYMMETRY =
+  .TRUE.`` (``--fc-symmetry``), and no need to specify a number.
 * Experimental support to parse Quantum ESPRESSO ``q2r.x`` output from
   python script.
 
