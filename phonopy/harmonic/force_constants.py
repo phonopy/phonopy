@@ -136,7 +136,16 @@ def cutoff_force_constants(force_constants,
                 force_constants[i, j] = 0.0
 
 
-def symmetrize_force_constants(force_constants, iteration=3):
+def symmetrize_force_constants(force_constants, iteration=1):
+    """Symmetry force constants by translational and permutation symmetries.
+
+    The way of doing is currently different between C and python
+    implementations. If these give very different results, the
+    original force constants are not reliable anyway. The one
+    implemented in C is simpler and so considered better.
+
+    """
+
     try:
         import phonopy._phonopy as phonoc
         phonoc.perm_trans_symmetrize_fc(force_constants)
