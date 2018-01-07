@@ -3,7 +3,7 @@
 Change Log
 ==========
 
-Dec-9-2017
+Jan-7-2018: Version 1.12.3
 -----------------------------
 
 * For thermal displacements (and its matrices), ``FMIN (--fmin)`` and
@@ -11,6 +11,11 @@ Dec-9-2017
   summation as the minimum and maximum frequenceis,
   respectively. Instead, ``CUTOFF_FREQUENCY (--cutoff-freq)`` does not
   work for thermal displacements.
+* The way of symmetrization for translation invariance is
+  modified. ``FC_SYMMETRY`` required to specify a number, but now it
+  became unnecessary.
+* Experimental support to parse Quantum ESPRESSO ``q2r.x`` output from
+  python script.
 
 Nov-8-2017: Version 1.12.2
 -----------------------------
