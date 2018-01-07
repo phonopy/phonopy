@@ -27,6 +27,7 @@ tags:
 * ``--dos`` (``DOS = .TRUE.``)
 * ``--eigvecs``, ``--eigenvectors`` (``EIGENVECTORS = .TRUE.``)
 * ``--factor`` (``FREQUENCY_CONVERSION_FACTOR``)
+* ``--fc-symmetry`` (``FC_SYMMETRY = .TRUE.``)
 * ``--fits-debye-model`` (``DEBYE_MODEL = .TRUE.``)
 * ``--fmax`` (``FMAX``)
 * ``--fmin`` (``FMIN``)

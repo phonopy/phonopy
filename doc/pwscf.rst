@@ -7,6 +7,10 @@ Quantum ESPRESSO package itself has a set of the phonon calculation
 system. But the document here explains how to calculate phonons using
 phonopy, i.e., using the finite displacement and supercell approach.
 
+.. contents::
+   :depth: 2
+   :local:
+
 Supported Pwscf tags
 ---------------------------
 
@@ -216,3 +220,129 @@ just adding the ``--nac`` option as follows::
 
 .. |pwscf-band-nac| image:: NaCl-pwscf-band-NAC.png
                             :width: 50%
+
+q2r.x
+------
+
+**Experimental**
+
+A parser of ``q2r.x`` output is implemented experimentally. Currently
+command-line user interface is not prepared. Using the following
+script, the force constants file readable by phonopy is
+created. Probably thus obtained force constants are required to be
+symmetrized by the translational invariance condition using
+``FC_SYMMETRY = .TRUE.``. It has to be careful that the force
+constants file can be super huge when q-point mesh is dense.
+
+::
+
+    #!/usr/bin/env python
+
+    import sys
+    from phonopy.file_IO import write_FORCE_CONSTANTS
+    from phonopy.file_IO import write_force_constants_to_hdf5
+    from phonopy.interface.qe import read_pwscf, PH_Q2R
+
+    primcell_filename = sys.argv[1]
+    q2r_filename = sys.argv[2]
+    cell, _ = read_pwscf(primcell_filename)
+    q2r = PH_Q2R(q2r_filename)
+    q2r.run(cell)
+    write_force_constants_to_hdf5(q2r.fc)
+    # write_FORCE_CONSTANTS(q2r.fc)
+
+..
+      import numpy as np
+      from phonopy.structure.symmetry import elaborate_borns_and_epsilon
+      if q2r.epsilon is not None:
+          borns, epsilon, _ = elaborate_borns_and_epsilon(
+              cell,
+              q2r.borns,
+              q2r.epsilon,
+              supercell_matrix=np.diag(q2r.dimension),
+              symmetrize_tensors=True)
+          print("default")
+          print(("%13.8f" * 9) % tuple(q2r.epsilon.ravel()))
+          for z in q2r.borns:
+              print(("%13.8f" * 9) % tuple(z.ravel()))
+
+Saving this script as ``make_fc_q2r.py``, this is used as, e.g.,
+
+::
+
+   % python make_fc_q2r.py NaCl.in NaCl.fc
+
+
+Non-analytical term correction
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Treatment of non-analytical term correction (NAC) is different between
+phonopy and QE. For insulator, QE automatically calculate dielectric
+constant and Born effective charges at PH calculation when q-point
+mesh sampling mode (``ldisp = .true.``), and these data are written in
+the Gamma point dynamical matrix file (probably in ``.dyn1``
+file). When running ``q2r.x``, these files are read including the
+dielectric constant and Born effective charges, and the real space
+force constants where QE-NAC treatment is done are written to the q2r
+output file. This is not that phonopy expects. Therefore the
+dielectric constant and Born effective charges data have to be removed
+manually from the Gamma point dynamical matrix file before running
+``q2r.x``. Alternatively Gamma point only PH calculation with 'epsil =
+.false.' can generate the dynamical matrix file without the dielectric
+constant and Born effective charges data. So it is possible to replace
+the Gamma point file by this Gamma point only file to run ``q2r.x``
+for phonopy.
+
+Creating BORN file
+^^^^^^^^^^^^^^^^^^^
+
+If the ``q2r.x`` output contains dielectric constant and Born
+effective charges, the following script can generate ``BORN`` format
+text.
+
+::
+
+    #!/usr/bin/env python
+
+    import sys
+    import numpy as np
+    from phonopy.structure.symmetry import elaborate_borns_and_epsilon
+    from phonopy.interface.qe import read_pwscf, PH_Q2R
+
+    primcell_filename = sys.argv[1]
+    q2r_filename = sys.argv[2]
+    cell, _ = read_pwscf(primcell_filename)
+    q2r = PH_Q2R(q2r_filename)
+    q2r.run(cell, parse_fc=False)
+    if q2r.epsilon is not None:
+        borns, epsilon, _ = elaborate_borns_and_epsilon(
+            cell,
+            q2r.borns,
+            q2r.epsilon,
+            supercell_matrix=np.diag(q2r.dimension),
+            symmetrize_tensors=True)
+        print("default")
+        print(("%13.8f" * 9) % tuple(q2r.epsilon.ravel()))
+        for z in q2r.borns:
+            print(("%13.8f" * 9) % tuple(z.ravel()))
+
+Saving this script as ``make_born_q2r.py``,
+
+::
+
+   % python make_born_q2r.py NaCl.in NaCl.fc > BORN
+
+NaCl example
+^^^^^^^^^^^^^
+
+NaCl example is found at
+https://github.com/atztogo/phonopy/tree/master/example/NaCl-QE-q2r.
+
+::
+
+   % phonopy --qe -c NaCl.in --dim="8 8 8" --band="0 0 0  1/2 0 0  1/2 1/2 0  0 0 0  1/2 1/2 1/2" --readfc --readfc-format=hdf5 --fc-symmetry --nac -p
+
+|q2r-band-nac|
+
+.. |q2r-band-nac| image:: NaCl-q2r-band-NAC.png
+                          :width: 50%

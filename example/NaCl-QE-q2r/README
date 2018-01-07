@@ -22,7 +22,7 @@ How to run phonopy q2r.x output parser
 
 % python make_fc_q2r.py NaCl.in NaCl.fc
 
-For make_fc_q2r.py, see https://atztogo.github.io/phonopy/pwscf.html.
+About make_fc_q2r.py, see https://atztogo.github.io/phonopy/pwscf.html.
 
 % phonopy --qe -c NaCl.in --dim="8 8 8" --band="1/2 1/2 1/2 0 0 0 1/2 0 1/2" --readfc --sym-fc --readfc-format=hdf5
 
@@ -35,8 +35,17 @@ How to obtain BORN
 
 NaCl.fc is created. The force constants in this NaCl.fc is not usable for phonopy if dielectric constants and Born effective charges are contained. This is because this force constants are partially corrected by QE's implemented NAC method. Phonopy needs uncorrected force constants.
 
-% python make_born_q2r.py NaCl.in NaCl.fc
+% python make_born_q2r.py NaCl.in NaCl.fc > BORN
 
-For make_born_q2r.py, see https://atztogo.github.io/phonopy/pwscf.html.
+BORN is obtained as follows:
 
-% phonopy --qe -c NaCl.in --dim="8 8 8" --band="1/2 1/2 1/2 0 0 0 1/2 0 1/2" --readfc --sym-fc --readfc-format=hdf5 --nac
+default
+   2.47441330   0.00000000   0.00000000   0.00000000   2.47441330   0.00000000   0.00000000   0.00000000   2.47441330
+   1.10071230   0.00000000   0.00000000   0.00000000   1.10071230   0.00000000   0.00000000   0.00000000   1.10071230
+  -1.10071230   0.00000000   0.00000000   0.00000000  -1.10071230   0.00000000   0.00000000   0.00000000  -1.10071230
+
+About make_born_q2r.py, see https://atztogo.github.io/phonopy/pwscf.html.
+
+% phonopy --qe -c NaCl.in --dim="8 8 8" --band="1/2 1/2 1/2 0 0 0 1/2 0 1/2" --readfc --fc-symmetry --readfc-format=hdf5 --nac
+
+
