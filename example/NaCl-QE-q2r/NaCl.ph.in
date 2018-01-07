@@ -1,0 +1,15 @@
+phonons of NaCl
+ &inputph
+  tr2_ph=1.0d-16,
+  prefix='NaCl',
+  !epsil=.false.,
+  ldisp=.true.,
+  nq1=8, nq2=8, nq3=8
+  amass(1)=22.98976928,
+  amass(2)=35.453,
+  !outdir='/tmp/q888',
+  fildyn='NaCl.dyn',
+  !start_q=num
+  !last_q=num
+ /
+!0.0 0.0 0.0

@@ -199,9 +199,8 @@ def print_settings(settings):
         print("  Non-analytical term correction: on")
     if settings.get_fc_spg_symmetry():
         print("  Enforce space group symmetry to force constants: on")
-    if settings.get_fc_symmetry_iteration() > 0:
-        print("  Force constants symmetrization: %d times" %
-              settings.get_fc_symmetry_iteration())
+    if settings.get_fc_symmetry():
+        print("  Force constants symmetrization: on")
     if settings.get_lapack_solver():
         print("  Use Lapack solver via Lapacke: on")
     if run_mode == 'mesh' or run_mode == 'band_mesh':
@@ -283,9 +282,9 @@ if args.wien2k_mode:
 elif args.abinit_mode:
     interface_mode = 'abinit'
     from phonopy.interface.abinit import write_supercells_with_displacements
-elif args.pwscf_mode:
-    interface_mode = 'pwscf'
-    from phonopy.interface.pwscf import write_supercells_with_displacements
+elif args.qe_mode:
+    interface_mode = 'qe'
+    from phonopy.interface.qe import write_supercells_with_displacements
 elif args.elk_mode:
     interface_mode = 'elk'
     from phonopy.interface.elk import write_supercells_with_displacements
@@ -533,7 +532,7 @@ if run_mode == 'displacements':
         if (interface_mode == 'wien2k' or
             interface_mode == 'abinit' or
             interface_mode == 'elk' or
-            interface_mode == 'pwscf' or
+            interface_mode == 'qe' or
             interface_mode == 'siesta' or
             interface_mode == 'cp2k'):
             displacement_distance = 0.02
@@ -570,7 +569,7 @@ if run_mode == 'displacements':
             filename=unitcell_filename)
     elif interface_mode in ('abinit', 'cp2k'):
         write_supercells_with_displacements(supercell, cells_with_disps)
-    elif (interface_mode == 'pwscf' or
+    elif (interface_mode == 'qe' or
           interface_mode == 'elk' or
           interface_mode == 'siesta'):
         write_supercells_with_displacements(
@@ -608,7 +607,7 @@ elif os.path.exists("FORCE_SETS"):
         print("Computing force constants...")
 
     if (settings.get_write_force_constants() or
-        settings.get_fc_symmetry_iteration() > 0 or
+        settings.get_fc_symmetry() or
         settings.get_fc_spg_symmetry()):
         # Need to calculate full force constant tensors
         phonon.produce_force_constants(
@@ -670,8 +669,8 @@ if settings.get_fc_spg_symmetry():
 
 # Imporse translational invariance and index permulation symmetry to
 # force constants
-if settings.get_fc_symmetry_iteration() > 0:
-    phonon.symmetrize_force_constants(settings.get_fc_symmetry_iteration())
+if settings.get_fc_symmetry():
+    phonon.symmetrize_force_constants()
 
 # Write FORCE_CONSTANTS
 if settings.get_write_force_constants():

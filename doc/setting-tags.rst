@@ -198,11 +198,11 @@ it doesn't work for derived values like thermal properties and
 mean square displacements.
 
 The default values for calculators are those to convert frequency
-units to THz. The default conversion factors for ``wien2k``,
-``abinit``, ``pwscf``, ``elk``, and CRYSTAL are 3.44595, 21.49068, 108.9708,
-154.1079, and 15.633302 respectively. These are determined following the physical
-unit systems of the calculators. How to calcualte these conversion
-factors is explained at :ref:`physical_unit_conversion`.
+units to THz. The default conversion factors are shown at
+:ref:`frequency_default_value_interfaces`. These are determined
+following the physical unit systems of the calculators. How to
+calcualte these conversion factors is explained at
+:ref:`physical_unit_conversion`.
 
 Displacement creation tags
 --------------------------
@@ -958,14 +958,18 @@ Symmetry search on the reciprocal sampling mesh is disabled by setting
 ``FC_SYMMETRY``
 ~~~~~~~~~~~~~~~~
 
-This tag is used to symmetrize force constants partly. The number of
-iteration of the following set of symmetrization applied to force
-constants is specified. The default value is 0. In the case of VASP,
-this tag is usually unnecessary to be specified.
+**Changed at v1.12.3**
+
+Previously this tag required a number for the iteration. From version
+1.12.3, the way of symmetrization for translation invariance is
+modified and this number became unnecessary.
+
+This tag is used to symmetrize force constants by translational
+symmetry and permutation symmetry with ``.TRUE.`` or ``.FALSE.``.
 
 ::
 
-   FC_SYMMETRY = 1
+   FC_SYMMETRY = .TRUE.
 
 
 From the translation invariance condition,
@@ -976,19 +980,20 @@ From the translation invariance condition,
 
 where *i* and *j* are the atom indices, and :math:`\alpha` and
 :math:`\beta` are the Catesian indices for atoms *i* and *j*,
-respectively. Force constants are symmetric in each pair as
+respectively. When this condition is broken, the sum gives non-zero
+value. This value is subtracted from the diagonal blocks. Force
+constants are symmetric in each pair as
 
 .. math::
 
    \Phi_{ij}^{\alpha\beta}
         = \frac{\partial^2 U}{\partial u_i^\alpha \partial u_j^\beta}
         = \frac{\partial^2 U}{\partial u_j^\beta \partial u_i^\alpha}
-	= \Phi_{ji}^{\beta\alpha}
+        = \Phi_{ji}^{\beta\alpha}
 
-These symmetrizations break the symmetry conditions each other. Be
-careful that the other symmetries of force constants, i.e., the
+Mind that the other symmetries of force constants, i.e., the
 symmetry from crystal symmetry or rotational symmetry, are broken to
-force applying ``FC_SYMMETRY``.
+use ``FC_SYMMETRY``.
 
 .. Tolerance of the crystal symmetry search is given by phonopy option of
 .. ``--tolerance``.
@@ -1011,7 +1016,7 @@ force applying ``FC_SYMMETRY``.
 ..    \Phi_{ij}^{\alpha\beta}
 ..         = \frac{\partial^2 U}{\partial u_i^\alpha \partial u_j^\beta}
 ..         = \frac{\partial^2 U}{\partial u_j^\beta \partial u_i^\alpha}
-.. 	= \Phi_{ji}^{\beta\alpha}
+..      = \Phi_{ji}^{\beta\alpha}
 
 .. is imposed with ``PERMUTATION = .TRUE.``. The default value is
 .. ``.FALSE.``. This is not necessary to be set, because dynamical

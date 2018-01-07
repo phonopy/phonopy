@@ -53,7 +53,7 @@ class Settings(object):
         self._displacement_distance = None
         self._dm_decimals = None
         self._fc_decimals = None
-        self._fc_symmetry_iteration = 0
+        self._fc_symmetry = False
         self._frequency_conversion_factor = None
         self._gv_delta_q = None
         self._is_diagonal_displacement = True
@@ -133,11 +133,11 @@ class Settings(object):
     def get_displacement_distance(self):
         return self._displacement_distance
 
-    def set_fc_symmetry_iteration(self, iteration):
-        self._fc_symmetry_iteration = iteration
+    def set_fc_symmetry(self, fc_symmetry):
+        self._fc_symmetry = fc_symmetry
 
-    def get_fc_symmetry_iteration(self):
-        return self._fc_symmetry_iteration
+    def get_fc_symmetry(self):
+        return self._fc_symmetry
 
     def set_fc_decimals(self, decimals):
         self._fc_decimals = decimals
@@ -414,7 +414,7 @@ class ConfParser(object):
 
         if 'fc_symmetry' in arg_list:
             if self._args.fc_symmetry:
-                self._confs['fc_symmetry'] = self._args.fc_symmetry
+                self._confs['fc_symmetry'] = '.true.'
 
         if 'force_constants_decimals' in arg_list:
             if self._args.force_constants_decimals:
@@ -640,7 +640,11 @@ class ConfParser(object):
                     self.set_parameter('is_rotational', True)
 
             if conf_key == 'fc_symmetry':
-                self.set_parameter('fc_symmetry', confs['fc_symmetry'])
+                if confs['fc_symmetry'].lower() == '.true.':
+                    self.set_parameter('fc_symmetry', True)
+                else:
+                    self.setting_error(
+                        "FC_SYMMETRY has to be specified by .TRUE. or .FALSE.")
 
             if conf_key == 'fc_decimals':
                 self.set_parameter('fc_decimals', confs['fc_decimals'])
@@ -784,7 +788,7 @@ class ConfParser(object):
         # Enforce translational invariance and index permutation symmetry
         # to force constants?
         if 'fc_symmetry' in params:
-            self._settings.set_fc_symmetry_iteration(int(params['fc_symmetry']))
+            self._settings.set_fc_symmetry(params['fc_symmetry'])
 
         # Frequency unit conversion factor
         if 'frequency_conversion_factor' in params:
