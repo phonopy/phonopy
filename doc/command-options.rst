@@ -80,11 +80,11 @@ tags.
 Choice of force calculator
 ---------------------------
 
-Currently interfaces for VASP, Wien2k, Pwscf, Abinit, and Elk are
-prepared. Wien2k, Pwscf, Abinit, Elk and CRYSTAL interfaces are invoked with
-``--wienk2``, ``--pwscf``, ``--abinit``, ``--elk`` and ``--crystal`` options,
-respectively, and if none of these options or ``--vasp`` option is
-specified, VASP mode is invoked.
+Currently interfaces for VASP, WIEN2k, Quantum ESPRESSO (QE), ABINIT,
+Elk, SIESTA, and CRYSTAL are prepared. These interfaces are invoked
+with ``--vasp``, ``--wienk2``, ``--qe``, ``--abinit``, ``--elk``,
+``--siesta``, and ``--crystal`` options, respectively, and nothing is
+specified, ``--vasp`` is selected as the default interface.
 
 The details about these interfaces are found at :ref:`calculator_interfaces`.
 
@@ -127,18 +127,19 @@ e.g.,
 
    % phonopy --abinit -c NaCl.in band.conf
 
-.. _pwscf_mode:
+.. _qe_mode:
 
-``--pwscf``
+``--qe``
 ~~~~~~~~~~~~
 
-Pwscf mode is invoked with this option. Usually this option is used
-with ``--cell`` (``-c``) option or ``CELL_FILENAME`` tag to read Pwscf
-input file that contains the unit cell crystal structure, e.g.,
+Quantum ESPRESSO mode is invoked with this option. Usually this option
+is used with ``--cell`` (``-c``) option or ``CELL_FILENAME`` tag to
+read QE/PWscf input file that contains the unit cell crystal structure,
+e.g.,
 
 ::
 
-   % phonopy --pwscf -c NaCl.in band.conf
+   % phonopy --qe -c NaCl.in band.conf
 
 .. _siesta_mode:
 
@@ -208,12 +209,12 @@ Unit cell crystal structure file is specified with this tag.
 Without specifying this tag, default file name is searched in current
 directory. The default file names for the calculators are as follows::
 
-   VASP   | POSCAR
-   Wien2k | case.struct
-   Abinit | unitcell.in
-   Pwscf  | unitcell.in
-   Elk    | elk.in
-   CRYSTAL| crystal.o
+   VASP    | POSCAR
+   WIEN2k  | case.struct
+   ABINIT  | unitcell.in
+   PWscf   | unitcell.in
+   Elk     | elk.in
+   CRYSTAL | crystal.o
 
 Create ``FORCE_SETS``
 ----------------------
@@ -252,11 +253,11 @@ Attention:
 
 .. _abinit_force_sets_option:
 
-Abinit interface
+ABINIT interface
 ^^^^^^^^^^^^^^^^
 
-``FORCE_SETS`` file is created from ``disp.yaml`` and Abinit output
-files (``*.out``). In the reading of forces in Abinit output files,
+``FORCE_SETS`` file is created from ``disp.yaml`` and ABINIT output
+files (``*.out``). In the reading of forces in ABINIT output files,
 forces in eV/Angstrom are read. The unit conversion factor is
 determined with this unit.
 
@@ -265,19 +266,20 @@ determined with this unit.
    % phonopy --abinit -f disp-001/supercell.out disp-002/supercell.out  ...
 
 
-.. _pwscf_force_sets_option:
+.. _qe_force_sets_option:
 
-Pwscf interface
-^^^^^^^^^^^^^^^^
+Quantum ESPRESSO interface
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-``FORCE_SETS`` file is created from ``disp.yaml`` and Pwscf output
+``FORCE_SETS`` file is created from ``disp.yaml`` and PWscf output
 files.
 
 ::
 
-   % phonopy --pwscf -f disp-001/supercell.out disp-002/supercell.out  ...
+   % phonopy --qe -f disp-001/supercell.out disp-002/supercell.out  ...
 
-Here ``*.out`` files are the saved texts of standard outputs of Pwscf calculations.
+Here ``*.out`` files are the saved texts of standard outputs of PWscf
+calculations.
 
 .. _wien2k_force_sets_option:
 
@@ -294,7 +296,7 @@ http://www.wien2k.at/reg_user/unsupported/.
 file when creating supercell with displacements, and
 ``case.scf``'s, which are the WIEN2k output files. The order of
 displacements in ``disp.yaml`` file and the order of ``case.scf``'s
-have to be same. **For Wien2k struct file, only negative atom index
+have to be same. **For WIEN2k struct file, only negative atom index
 with the P lattice format is supported.**
 
 ::
@@ -446,5 +448,5 @@ printed out and phonopy stops without going to phonon analysis.
    % phonopy --symmetry
 
 This tag can be used together with the ``--cell`` (``-c``),
-``--abinit``, ``--pwscf``, ``--elk``, ``--wien2k``, ``--crystal`` or
-``--primitive_axis`` option.
+``--abinit``, ``--qe``, ``--elk``, ``--wien2k``, ``--siesta``,
+``--crystal`` or ``--primitive_axis`` option.

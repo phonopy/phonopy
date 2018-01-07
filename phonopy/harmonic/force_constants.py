@@ -136,10 +136,23 @@ def cutoff_force_constants(force_constants,
                 force_constants[i, j] = 0.0
 
 
-def symmetrize_force_constants(force_constants, iteration=3):
-    for i in range(iteration):
-        set_permutation_symmetry(force_constants)
-        set_translational_invariance(force_constants)
+def symmetrize_force_constants(force_constants, iteration=1):
+    """Symmetry force constants by translational and permutation symmetries.
+
+    The way of doing is currently different between C and python
+    implementations. If these give very different results, the
+    original force constants are not reliable anyway. The one
+    implemented in C is simpler and so considered better.
+
+    """
+
+    try:
+        import phonopy._phonopy as phonoc
+        phonoc.perm_trans_symmetrize_fc(force_constants)
+    except ImportError:
+        for i in range(iteration):
+            set_permutation_symmetry(force_constants)
+            set_translational_invariance(force_constants)
 
 def distribute_force_constants(force_constants,
                                atom_list,
@@ -194,7 +207,7 @@ def distribute_force_constants(force_constants,
         for atom_disp in atom_list:
             if atom_disp in atom_list_done:
                 continue
-    
+
             map_atom_disp, map_sym = _get_atom_mapping_by_symmetry(
                 atom_list_done,
                 atom_disp,
@@ -203,7 +216,7 @@ def distribute_force_constants(force_constants,
                 lattice,
                 positions,
                 symprec=symprec)
-    
+
             _distribute_fc2_part(force_constants,
                                  positions,
                                  atom_disp,
@@ -456,6 +469,7 @@ def set_permutation_symmetry(force_constants):
     condition is imposed when making dynamical matrix Hermite in
     dynamical_matrix.py.
     """
+
     fc_copy = force_constants.copy()
     for i in range(force_constants.shape[0]):
         for j in range(force_constants.shape[1]):

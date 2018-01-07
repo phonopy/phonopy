@@ -35,13 +35,16 @@
 import sys
 import numpy as np
 
-from phonopy.file_IO import iter_collect_forces
+from phonopy.file_IO import (iter_collect_forces, write_force_constants_to_hdf5,
+                             write_FORCE_CONSTANTS)
 from phonopy.interface.vasp import (get_scaled_positions_lines, check_forces,
                                     get_drift_forces)
 from phonopy.units import Bohr
 from phonopy.cui.settings import fracval
 from phonopy.structure.atoms import PhonopyAtoms as Atoms
 from phonopy.structure.atoms import symbol_map
+from phonopy.structure.cells import get_supercell
+from phonopy.harmonic.force_constants import distribute_force_constants
 
 def parse_set_of_forces(num_atoms,
                         forces_filenames,
@@ -188,12 +191,14 @@ def get_pwscf_structure(cell, pp_filenames=None):
 class PwscfIn(object):
     def __init__(self, lines):
         self._set_methods = {'ibrav':            self._set_ibrav,
+                             'celldm(1)':        self._set_celldm1,
                              'nat':              self._set_nat,
                              'ntyp':             self._set_ntyp,
                              'atomic_species':   self._set_atom_types,
                              'atomic_positions': self._set_positions,
                              'cell_parameters':  self._set_lattice}
         self._tags = {'ibrav':            None,
+                      'celldm(1)':        None,
                       'nat':              None,
                       'ntyp':             None,
                       'atomic_species':   None,
@@ -236,12 +241,12 @@ class PwscfIn(object):
 
         for tag in elements:
             self._values = elements[tag]
-            if tag == 'ibrav' or tag == 'nat' or tag == 'ntyp':
+            if tag in ['ibrav', 'nat', 'ntyp', 'celldm(1)']:
                 self._set_methods[tag]()
 
         for tag in elements:
             self._values = elements[tag]
-            if tag != 'ibrav' and tag != 'nat' and tag != 'ntyp':
+            if tag not in ['ibrav', 'nat', 'ntyp']:
                 self._set_methods[tag]()
 
     def _set_ibrav(self):
@@ -252,6 +257,9 @@ class PwscfIn(object):
 
         self._tags['ibrav'] = ibrav
 
+    def _set_celldm1(self):
+        self._tags['celldm(1)'] = float(self._values[0])
+
     def _set_nat(self):
         self._tags['nat'] = int(self._values[0])
 
@@ -259,11 +267,20 @@ class PwscfIn(object):
         self._tags['ntyp'] = int(self._values[0])
 
     def _set_lattice(self):
+        """Calculate and set lattice parameters.
+
+        Invoked by CELL_PARAMETERS tag.
+
+        """
+
         unit = self._values[0]
         if unit == 'alat':
-            print("Only CELL_PARAMETERS format with alat is not supported.")
-            sys.exit(1)
-        if unit == 'angstrom':
+            if not self._tags['celldm(1)']:
+                print("celldm(1) has to be specified when using alat.")
+                sys.exit(1)
+            else:
+                factor = self._tags['celldm(1)'] # in Bohr
+        elif unit == 'angstrom':
             factor = 1.0 / Bohr
         else:
             factor = 1.0
@@ -311,3 +328,193 @@ class PwscfIn(object):
                  self._values[i * 3 + 2]])
 
         self._tags['atomic_species'] = species
+
+class PH_Q2R(object):
+    """Parse QE/q2r output and create supercell force constants array
+    that is readable by phonopy. A simple usage is as follows:
+
+    ---------
+    #!/usr/bin/env python
+
+    from phonopy.file_IO import write_FORCE_CONSTANTS
+    from phonopy.interface.qe import read_pwscf, PH_Q2R
+
+    cell, _ = read_pwscf(primcell_filename)
+    q2r = PH_Q2R(q2r_filename)
+    q2r.run(cell)
+    write_FORCE_CONSTANTS(q2r.fc)
+    ---------
+
+    Treatment of non-analytical term correction (NAC) is different
+    between phonopy and QE. For insulator, QE automatically calculate
+    dielectric constant and Born effective charges at PH calculation
+    when q-point mesh sampling mode ('ldisp = .true.'). These data are
+    written in the Gamma point dynamical matrix file (probably
+    numbered as 1 among files). When running q2r.x, these files are
+    read including the dielectric constant and Born effective charges,
+    and the real space force constants where QE-NAC treatment is done
+    are written to the q2r output file. This is not that phonopy
+    expects. Therefore the dielectric constant and Born effective
+    charges data have to be removed manually from the Gamma point
+    dynamical matrix file before running q2r.x. Alternatively Gamma
+    point only PH calculation with 'epsil = .false.' can generate the
+    dynamical matrix file without the dielectric constant and Born
+    effective charges data. So it is possible to replace the Gamma
+    point file by this Gamma point only file to run q2r.x for phonopy.
+
+    """
+
+    def __init__(self, filename, symprec=1e-5):
+        self.fc = None
+        self.dimension = None
+        self.epsilon = None
+        self.borns = None
+        self._symprec = symprec
+        self._filename = filename
+
+    def run(self, cell, parse_fc=True):
+        """Run making supercell force constants readable for phonopy
+
+        Args:
+            cell(Atoms): Primitive cell used for QE/PH calculation
+
+        """
+
+        with open(self._filename) as f:
+            fc_dct = self._parse_q2r(f)
+            self.dimension = fc_dct['dimension']
+            self.epsilon = fc_dct['dielectric']
+            self.borns = fc_dct['born']
+            if parse_fc:
+                self.fc = self._arrange_supercell_fc(cell, fc_dct['fc'])
+
+    def _parse_q2r(self, f):
+        """Parse q2r output file
+
+        The format of q2r output is described at the mailing list below:
+        http://www.democritos.it/pipermail/pw_forum/2005-April/002408.html
+        http://www.democritos.it/pipermail/pw_forum/2008-September/010099.html
+        http://www.democritos.it/pipermail/pw_forum/2009-August/013613.html
+        https://www.mail-archive.com/pw_forum@pwscf.org/msg24388.html
+
+        """
+
+        natom, dim, epsilon, borns = self._parse_parameters(f)
+        fc_dct = {'fc': self._parse_fc(f, natom, dim),
+                  'dimension': dim,
+                  'dielectric': epsilon,
+                  'born': borns}
+        return fc_dct
+
+    def _parse_parameters(self, f):
+        line = f.readline()
+        ntype, natom, ibrav = (int(x) for x in line.split()[:3])
+        if ibrav == 0:
+            for i in range(3):
+                line = f.readline()
+        for i in range(ntype + natom):
+            line = f.readline()
+        line = f.readline()
+        if line.strip() == 'T':
+            epsilon, borns = self._parse_born(f, natom)
+        else:
+            epsilon = None
+            borns = None
+        line = f.readline()
+        dim = tuple(int(x) for x in line.split())
+
+        return natom, dim, epsilon, borns
+
+    def _parse_born(self, f, natom):
+        epsilon = np.zeros((3, 3), dtype='double', order='C')
+        borns = np.zeros((natom, 3, 3), dtype='double', order='C')
+        for i in range(3):
+            line = f.readline()
+            epsilon[i, :] = [float(x) for x in line.split()]
+        for i in range(natom):
+            line = f.readline()
+            for j in range(3):
+                line = f.readline()
+                borns[i, j, :] = [float(x) for x in line.split()]
+        return epsilon, borns
+
+    def _parse_fc(self, f, natom, dim):
+        """Parse force constants part
+
+        Physical unit of force cosntants in the file is Ry/au^2.
+
+        """
+
+        ndim = np.prod(dim)
+        fc = np.zeros((natom, natom * ndim, 3, 3), dtype='double', order='C')
+        for k, l, i, j in np.ndindex((3, 3, natom, natom)):
+            line = f.readline()
+            for i_dim in range(ndim):
+                line = f.readline()
+                # fc[i, j * ndim + i_dim, k, l] = float(line.split()[3])
+                fc[j, i * ndim + i_dim, l, k] = float(line.split()[3])
+        return fc
+
+    def _arrange_supercell_fc(self, cell, q2r_fc):
+        dim = self.dimension
+        q2r_spos = self._get_q2r_positions(cell)
+        scell = get_supercell(cell, np.diag(dim))
+        assert scell.get_number_of_atoms() == len(q2r_spos)
+        site_map = self._get_site_mapping(scell.get_scaled_positions(),
+                                          q2r_spos,
+                                          scell.get_cell())
+        natom = cell.get_number_of_atoms()
+        ndim = np.prod(dim)
+        natom_s = natom * ndim
+        s_indices = [np.where(site_map==(i * ndim))[0][0] for i in range(natom)]
+        fc = np.zeros((natom_s, natom_s, 3, 3), dtype='double', order='C')
+
+        for i, si in enumerate(s_indices):
+            fc[si, :] = q2r_fc[i, site_map]
+
+        self._distribute_fc2(fc, s_indices, scell)
+        return fc
+
+    def _get_q2r_positions(self, cell):
+        dim = self.dimension
+        natom = cell.get_number_of_atoms()
+        ndim = np.prod(dim)
+        spos = np.zeros((natom * np.prod(dim), 3), dtype='double', order='C')
+        trans = [x[::-1] for x in np.ndindex(dim[::-1])]
+        for i, p in enumerate(cell.get_scaled_positions()):
+            spos[i * ndim:(i + 1) * ndim] = (trans + p) / dim
+        return spos
+
+    def _get_site_mapping(self, spos, q2r_spos, lattice):
+        site_map = []
+        for i, p in enumerate(spos):
+            diff = q2r_spos - p
+            diff -= np.rint(diff)
+            distances = np.sqrt(np.sum(np.dot(diff, lattice) ** 2, axis=1))
+            indices = np.where(distances < self._symprec)[0]
+            assert len(indices) == 1, "%s" % indices
+            site_map.append(indices[0])
+
+        assert len(np.unique(site_map)) == len(spos)
+
+        return np.array(site_map)
+
+    def _distribute_fc2(self, fc, s_indices, scell):
+        dim = self.dimension
+        t = np.zeros((np.prod(dim), 3), dtype='double', order='C')
+        r = np.zeros((np.prod(dim), 3, 3), dtype='intc', order='C')
+
+        for i, (d3, d2, d1) in enumerate(np.ndindex(dim[::-1])):
+            r[i] = np.identity(3, dtype='intc')
+            t[i] = np.array([d1, d2, d3], dtype='double') / dim
+
+        natom_s = scell.get_number_of_atoms()
+        lattice = np.array(scell.get_cell().T, dtype='double', order='C')
+        distribute_force_constants(fc,
+                                   np.arange(natom_s),
+                                   s_indices,
+                                   lattice,
+                                   scell.get_scaled_positions(),
+                                   r,
+                                   t,
+                                   self._symprec)

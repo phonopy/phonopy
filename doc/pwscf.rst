@@ -1,11 +1,15 @@
-.. _pwscf_interface:
+.. _qe_interface:
 
-Pwscf & phonopy calculation
-=========================================
+Quantum ESPRESSO (QE) & phonopy calculation
+============================================
 
-Quantum espresso package itself has a set of the phonon calculation
+Quantum ESPRESSO package itself has a set of the phonon calculation
 system. But the document here explains how to calculate phonons using
 phonopy, i.e., using the finite displacement and supercell approach.
+
+.. contents::
+   :depth: 2
+   :local:
 
 Supported Pwscf tags
 ---------------------------
@@ -16,7 +20,7 @@ More tags may be supported on request.
 
 ::
 
-   nat, ntyp, ATOMIC_SPECIES, ATOMIC_POSITIONS, CELL_PARAMETERS
+   nat, ntyp, celldm(1), ATOMIC_SPECIES, ATOMIC_POSITIONS, CELL_PARAMETERS
 
 How to run
 ----------
@@ -25,9 +29,9 @@ The procedure of Pwscf-phonopy calculation is shown below using the
 NaCl example found in ``example/NaCl-pwscf`` directory.
 
 1) Read a Pwscf input file and create supercells with
-   :ref:`pwscf_mode` option::
+   :ref:`qe_mode` option::
 
-     % phonopy --pwscf -d --dim="2 2 2" -c NaCl.in
+     % phonopy --qe -d --dim="2 2 2" -c NaCl.in
 
    In this example, 2x2x2 supercells are created. ``supercell.in`` and
    ``supercell-xxx.in`` (``xxx`` are numbers) give the perfect
@@ -57,10 +61,10 @@ NaCl example found in ``example/NaCl-pwscf`` directory.
      % mpirun pw.x -i NaCl-001.in |& tee NaCl-001.out
      % mpirun pw.x -i NaCl-002.in |& tee NaCl-002.out
 
-3) To create ``FORCE_SETS``, that is used by phonopy, 
+3) To create ``FORCE_SETS``, that is used by phonopy,
    the following phonopy command is executed::
 
-     % phonopy --pwscf -f NaCl-001.out NaCl-002.out
+     % phonopy --qe -f NaCl-001.out NaCl-002.out
 
    Here ``.out`` files are the saved text files of standard outputs of the
    Pwscf calculations. If more supercells with displacements were
@@ -69,7 +73,7 @@ NaCl example found in ``example/NaCl-pwscf`` directory.
    the current directory because the information on atomic
    displacements stored in ``disp.yaml`` are used to generate
    ``FORCE_SETS``. See some more detail at
-   :ref:`pwscf_force_sets_option`.
+   :ref:`qe_force_sets_option`.
 
 4) Now post-process of phonopy is ready to run. The unit cell file
    used in the step 1 has to be specified but ``FORCE_SETS`` is
@@ -77,7 +81,7 @@ NaCl example found in ``example/NaCl-pwscf`` directory.
 
    ::
 
-     % phonopy --pwscf -c NaCl.in -p band.conf
+     % phonopy --qe -c NaCl.in -p band.conf
              _
        _ __ | |__   ___  _ __   ___   _ __  _   _
       | '_ \| '_ \ / _ \| '_ \ / _ \ | '_ \| | | |
@@ -85,7 +89,7 @@ NaCl example found in ``example/NaCl-pwscf`` directory.
       | .__/|_| |_|\___/|_| |_|\___(_) .__/ \__, |
       |_|                            |_|    |___/
                                            1.11.0
-     
+
      Python version 2.7.12
      Spglib version 1.9.2
      Calculator interface: pwscf
@@ -113,15 +117,15 @@ NaCl example found in ``example/NaCl-pwscf`` directory.
    |pwscf-band|
 
    .. |pwscf-band| image:: NaCl-pwscf-band.png
-			   :width: 50%
+                           :width: 50%
 
-   ``--pwscf -c NaCl.in`` is specific for the Pwscf-phonopy
+   ``--qe -c NaCl.in`` is specific for the Pwscf-phonopy
    calculation but the other settings are totally common among calculator
    interfaces such as
 
    ::
 
-     % phonopy --pwscf -c NaCl.in --dim="2 2 2" [other-OPTIONS] [setting-file]
+     % phonopy --qe -c NaCl.in --dim="2 2 2" [other-OPTIONS] [setting-file]
 
    For settings and command options, see
    :ref:`setting_tags` and :ref:`command_options`, respectively, and
@@ -133,7 +137,7 @@ Non-analytical term correction (Optional)
 To activate non-analytical term correction, :ref:`born_file` is
 required. This file contains the information of Born effective charge
 and dielectric constant. These physical values are also obtained from
-the pwscf (``pw.x``) & phonon (``ph.x``) codes in quantum-espresso
+the pwscf (``pw.x``) & phonon (``ph.x``) codes in Quantum ESPRESSO
 package. There are two steps. The first step is usual self-consistent
 field (SCF) calculation
 by and the second step is running its response function calculations
@@ -206,13 +210,139 @@ be something like below::
    1.105385 0 0 0 1.105385 0 0 0 1.105385
    -1.105385 0 0 0 -1.105385 0 0 0 -1.105385
 
-Once this is made, the non-analytical term correction is included 
+Once this is made, the non-analytical term correction is included
 just adding the ``--nac`` option as follows::
 
-     % phonopy --pwscf --nac -c NaCl.in -p band.conf
+     % phonopy --qe --nac -c NaCl.in -p band.conf
 
 
 |pwscf-band-nac|
 
 .. |pwscf-band-nac| image:: NaCl-pwscf-band-NAC.png
-   			    :width: 50%
+                            :width: 50%
+
+q2r.x
+------
+
+**Experimental**
+
+A parser of ``q2r.x`` output is implemented experimentally. Currently
+command-line user interface is not prepared. Using the following
+script, the force constants file readable by phonopy is
+created. Probably thus obtained force constants are required to be
+symmetrized by the translational invariance condition using
+``FC_SYMMETRY = .TRUE.``. It has to be careful that the force
+constants file can be super huge when q-point mesh is dense.
+
+::
+
+    #!/usr/bin/env python
+
+    import sys
+    from phonopy.file_IO import write_FORCE_CONSTANTS
+    from phonopy.file_IO import write_force_constants_to_hdf5
+    from phonopy.interface.qe import read_pwscf, PH_Q2R
+
+    primcell_filename = sys.argv[1]
+    q2r_filename = sys.argv[2]
+    cell, _ = read_pwscf(primcell_filename)
+    q2r = PH_Q2R(q2r_filename)
+    q2r.run(cell)
+    write_force_constants_to_hdf5(q2r.fc)
+    # write_FORCE_CONSTANTS(q2r.fc)
+
+..
+      import numpy as np
+      from phonopy.structure.symmetry import elaborate_borns_and_epsilon
+      if q2r.epsilon is not None:
+          borns, epsilon, _ = elaborate_borns_and_epsilon(
+              cell,
+              q2r.borns,
+              q2r.epsilon,
+              supercell_matrix=np.diag(q2r.dimension),
+              symmetrize_tensors=True)
+          print("default")
+          print(("%13.8f" * 9) % tuple(q2r.epsilon.ravel()))
+          for z in q2r.borns:
+              print(("%13.8f" * 9) % tuple(z.ravel()))
+
+Saving this script as ``make_fc_q2r.py``, this is used as, e.g.,
+
+::
+
+   % python make_fc_q2r.py NaCl.in NaCl.fc
+
+
+Non-analytical term correction
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Treatment of non-analytical term correction (NAC) is different between
+phonopy and QE. For insulator, QE automatically calculate dielectric
+constant and Born effective charges at PH calculation when q-point
+mesh sampling mode (``ldisp = .true.``), and these data are written in
+the Gamma point dynamical matrix file (probably in ``.dyn1``
+file). When running ``q2r.x``, these files are read including the
+dielectric constant and Born effective charges, and the real space
+force constants where QE-NAC treatment is done are written to the q2r
+output file. This is not that phonopy expects. Therefore the
+dielectric constant and Born effective charges data have to be removed
+manually from the Gamma point dynamical matrix file before running
+``q2r.x``. Alternatively Gamma point only PH calculation with 'epsil =
+.false.' can generate the dynamical matrix file without the dielectric
+constant and Born effective charges data. So it is possible to replace
+the Gamma point file by this Gamma point only file to run ``q2r.x``
+for phonopy.
+
+Creating BORN file
+^^^^^^^^^^^^^^^^^^^
+
+If the ``q2r.x`` output contains dielectric constant and Born
+effective charges, the following script can generate ``BORN`` format
+text.
+
+::
+
+    #!/usr/bin/env python
+
+    import sys
+    import numpy as np
+    from phonopy.structure.symmetry import elaborate_borns_and_epsilon
+    from phonopy.interface.qe import read_pwscf, PH_Q2R
+
+    primcell_filename = sys.argv[1]
+    q2r_filename = sys.argv[2]
+    cell, _ = read_pwscf(primcell_filename)
+    q2r = PH_Q2R(q2r_filename)
+    q2r.run(cell, parse_fc=False)
+    if q2r.epsilon is not None:
+        borns, epsilon, _ = elaborate_borns_and_epsilon(
+            cell,
+            q2r.borns,
+            q2r.epsilon,
+            supercell_matrix=np.diag(q2r.dimension),
+            symmetrize_tensors=True)
+        print("default")
+        print(("%13.8f" * 9) % tuple(q2r.epsilon.ravel()))
+        for z in q2r.borns:
+            print(("%13.8f" * 9) % tuple(z.ravel()))
+
+Saving this script as ``make_born_q2r.py``,
+
+::
+
+   % python make_born_q2r.py NaCl.in NaCl.fc > BORN
+
+NaCl example
+^^^^^^^^^^^^^
+
+NaCl example is found at
+https://github.com/atztogo/phonopy/tree/master/example/NaCl-QE-q2r.
+
+::
+
+   % phonopy --qe -c NaCl.in --dim="8 8 8" --band="0 0 0  1/2 0 0  1/2 1/2 0  0 0 0  1/2 1/2 1/2" --readfc --readfc-format=hdf5 --fc-symmetry --nac -p
+
+|q2r-band-nac|
+
+.. |q2r-band-nac| image:: NaCl-q2r-band-NAC.png
+                          :width: 50%

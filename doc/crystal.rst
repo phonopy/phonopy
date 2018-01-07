@@ -3,7 +3,7 @@
 CRYSTAL & phonopy calculation
 =========================================
 
-CRYSTAL program package has a robust built-in phonon calculation 
+CRYSTAL program package has a robust built-in phonon calculation
 workflow. However, the Phonopy interface enables convenient access
 to many phonon-related properties, such as subsequent Phono3py
 calculations of lattice thermal conductivity.
@@ -17,7 +17,7 @@ For optimization outputs, the final geometry in the file is read.
 
 If dielectric tensor and effective Born charges are present, the interface
 creates a BORN file for Non-analytical correction (:ref:`nac_tag`).
-The recommended strategy is to carry out a Gamma-point frequency calculation 
+The recommended strategy is to carry out a Gamma-point frequency calculation
 with INTENS and INTCPHF. This produces all required quantities and also confirms that
 the structure optimization has converged to a true local minimum.
 
@@ -28,10 +28,10 @@ How to run
 ----------
 
 The workflow for a CRYSTAL-Phonopy calculation is outlined here using the
-Si example found in ``example/Si-CRYSTAL``. 
+Si example found in ``example/Si-CRYSTAL``.
 
-In this example, the CRYSTAL output file is ``crystal.o``. 
-This is the default for the CRYSTAL interface, so, the ``-c crystal.o`` 
+In this example, the CRYSTAL output file is ``crystal.o``.
+This is the default for the CRYSTAL interface, so, the ``-c crystal.o``
 parameter is not needed
 
 1) Create supercells with :ref:`crystal_mode` option::
@@ -39,19 +39,19 @@ parameter is not needed
      % phonopy --crystal -d --dim="4 4 4"
 
    In this example, 4x4x4 supercells are created. For every supercell file, the
-   interface creates a .d12 input file and an .ext structure file. The files 
+   interface creates a .d12 input file and an .ext structure file. The files
    ``supercell.d12/.ext`` contain the perfect supercell. The files
    ``supercell-xxx.d12/.ext`` (``xxx`` are numbers) contain the supercells
-   with displacements. File ``disp.yaml`` is also generated, containing information 
+   with displacements. File ``disp.yaml`` is also generated, containing information
    about the supercell and the displacements.
 
-   In the case of the Si example, files ``supercell-001.d12`` and 
+   In the case of the Si example, files ``supercell-001.d12`` and
    ``supercell-001.ext`` will be created.
 
 2) To make valid CRYSTAL input files, there are two possible options:
 
-   a) Manually: modify the generated supercell-xxx.d12 files by replacing 
-      the line ``Insert basis sets and parameters here`` with the 
+   a) Manually: modify the generated supercell-xxx.d12 files by replacing
+      the line ``Insert basis sets and parameters here`` with the
       basis set and computational parameters.
 
    b) Recommended option: before generating the supercells, include a file named
@@ -60,8 +60,8 @@ parameter is not needed
       When phonopy finds this file, it automatically generates complete
       CRYSTAL input files in the step 1
 
-   Note that supercells with displacements must not be relaxed in the 
-   force calculations, because atomic forces induced by a small atomic 
+   Note that supercells with displacements must not be relaxed in the
+   force calculations, because atomic forces induced by a small atomic
    displacement are what we need for phonon calculation. To get accurate
    forces, TOLDEE parameter should be 10 or higher. Phonopy includes this
    parameter and the necessary GRADCAL keyword automatically in the inputs.
@@ -71,19 +71,18 @@ parameter is not needed
 
      % runcry14 supercell-001.d12
 
-3) To create ``FORCE_SETS``, that is used by phonopy, 
+3) To create ``FORCE_SETS``, that is used by phonopy,
    the following phonopy command is executed::
 
      % phonopy --crystal -f supercell-001.o
 
    Here ``.o`` files are the CRYSTAL output files from the force
-   calculations. saved text files of standard outputs of the
-   Pwscf calculations. All ``.o`` files corresponding to the generated
-   ``supercell-xxx.d12`` files have to be given in the above command. 
-   To run this command, ``disp.yaml`` has to be located in the current 
-   directory because the information on atomic displacements stored in 
-   ``disp.yaml`` are used to generate ``FORCE_SETS``. See some more detail at
-   :ref:`crystal_force_sets_option`.
+   calculations. All ``.o`` files corresponding to the generated
+   ``supercell-xxx.d12`` files have to be given in the above command.
+   To run this command, ``disp.yaml`` has to be located in the current
+   directory because the information on atomic displacements stored in
+   ``disp.yaml`` are used to generate ``FORCE_SETS``. See some more
+   detail at :ref:`crystal_force_sets_option`.
 
 4) Now, Phonopy post-prcessing commands can be run. ``FORCE_SETS`` is
    automatically read in. Create phonon dispersion plot with:
@@ -187,4 +186,3 @@ The workflow is very similar to the Si example below:
 
    .. |crystal-band-nac| image:: NaCl-crystal-band-NAC.png
                                :width: 33%
-

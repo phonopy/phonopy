@@ -70,8 +70,8 @@ def read_crystal_structure(filename=None,
         unitcell = read_abinit(unitcell_filename)
         return unitcell, (unitcell_filename,)
 
-    if interface_mode == 'pwscf':
-        from phonopy.interface.pwscf import read_pwscf
+    if interface_mode == 'qe':
+        from phonopy.interface.qe import read_pwscf
         unitcell, pp_filenames = read_pwscf(unitcell_filename)
         return unitcell, (unitcell_filename, pp_filenames)
 
@@ -105,7 +105,7 @@ def get_default_cell_filename(interface_mode, yaml_mode):
         return "POSCAR.yaml"
     if interface_mode is None or interface_mode == 'vasp':
         return "POSCAR"
-    if interface_mode in ('abinit', 'pwscf'):
+    if interface_mode in ('abinit', 'qe'):
         return "unitcell.in"
     if interface_mode == 'wien2k':
         return "case.struct"
@@ -126,7 +126,7 @@ def get_default_physical_units(interface_mode):
     wien2k        : Ry,      au(=borh), AMU,         mRy/au
     abinit        : hartree, au,        AMU,         eV/Angstrom
     elk           : hartree, au,        AMU,         hartree/au
-    pwscf         : Ry,      au,        AMU,         Ry/au
+    qe            : Ry,      au,        AMU,         Ry/au
     siesta        : eV,      au,        AMU,         eV/Angstroem
     CRYSTAL       : eV,      Angstrom,  AMU,         eV/Angstroem
 
@@ -148,7 +148,7 @@ def get_default_physical_units(interface_mode):
         units['factor'] = AbinitToTHz
         units['nac_factor'] = Hartree / Bohr
         units['distance_to_A'] = Bohr
-    elif interface_mode == 'pwscf':
+    elif interface_mode == 'qe':
         units['factor'] = PwscfToTHz
         units['nac_factor'] = 2.0
         units['distance_to_A'] = Bohr
@@ -187,7 +187,7 @@ def create_FORCE_SETS(interface_mode,
         interface_mode == 'vasp' or
         interface_mode == 'abinit' or
         interface_mode == 'elk' or
-        interface_mode == 'pwscf' or
+        interface_mode == 'qe' or
         interface_mode == 'siesta' or
         interface_mode == 'cp2k' or
         interface_mode == 'crystal'):
@@ -257,8 +257,8 @@ def get_force_sets(interface_mode,
         from phonopy.interface.vasp import parse_set_of_forces
     elif interface_mode == 'abinit':
         from phonopy.interface.abinit import parse_set_of_forces
-    elif interface_mode == 'pwscf':
-        from phonopy.interface.pwscf import parse_set_of_forces
+    elif interface_mode == 'qe':
+        from phonopy.interface.qe import parse_set_of_forces
     elif interface_mode == 'elk':
         from phonopy.interface.elk import parse_set_of_forces
     elif interface_mode == 'siesta':

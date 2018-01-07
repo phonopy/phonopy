@@ -13,7 +13,7 @@ How to run
 It is necessary to run three phonon calculations. One is calculated at
 the equilibrium volume and the remaining two are calculated at the
 slightly larger volume and smaller volume than the equilibrium
-volume. The unitcells at these volumes have to be fully relaxed under 
+volume. The unitcells at these volumes have to be fully relaxed under
 the constraint of each volume.
 
 Let files named ``POSCAR-unitcell``, ``FORCE_SETS`` (or ``FORCE_CONSTANTS``
@@ -64,13 +64,13 @@ plot.
 
 .. _gruneisen_calculators:
 
-Abinit, Pwscf, Wien2k, and CRYSTAL interfaces
----------------------------------------------
+Abinit, Quantum ESPRESSO, Wien2k, and CRYSTAL interfaces
+----------------------------------------------------------
 
-``--abinit``, ``--pwscf``, ``--wien2k``, or ``--crystal`` options can be specified
-for corresponding calculators and the crystal structure file format
-should be different from that of the VASP format. An Abinit example is
-as follows::
+``--abinit``, ``--qe``, ``--wien2k``, or ``--crystal`` options can be
+specified for corresponding calculators and the crystal structure file
+format should be different from that of the VASP format. An Abinit
+example is as follows::
 
    % phonopy-gruneisen orig plus minus --abinit --dim="2 2 2" --pa="0 1/2 1/2 1/2 0 1/2 1/2 1/2 0" --band="1/2 1/4 3/4 0 0 0 1/2 1/2 1/2 1/2 0.0 1/2" -p -c Si.in
 
@@ -80,11 +80,11 @@ as follows::
 Command options
 ----------------
 
-If one of ``--abinit``, ``--pwscf``, ``--wien2k``, or ``--crystal`` options is
-specified, the interface mode is changed to it. The unit conversion
-factor to THz is appropriately selected and its crystal structure file
-format is accepted. If none of them is specified, as the VASP
-interface mode is invoked as the default interface.
+If one of ``--abinit``, ``--qe``, ``--wien2k``, or ``--crystal``
+options is specified, the interface mode is changed to it. The unit
+conversion factor to THz is appropriately selected and its crystal
+structure file format is accepted. If none of them is specified, as
+the VASP interface mode is invoked as the default interface.
 
 The following command options can be used for all interface
 modes. They work similarly to those for ``phonopy`` script.

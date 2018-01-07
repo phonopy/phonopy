@@ -46,12 +46,12 @@ The following features of phonopy are highlighted:
 - :ref:`Interfaces to calculators <calculator_interfaces>`:
   :ref:`VASP <tutorial>`,
   :ref:`VASP DFPT <vasp_dfpt_interface>`,
-  :ref:`Abinit <abinit_interface>`,
-  :ref:`Pwscf <pwscf_interface>`,
-  :ref:`Siesta <siesta_interface>`,
+  :ref:`ABINIT <abinit_interface>`,
+  :ref:`Quantu ESPRESSO <qe_interface>`,
+  :ref:`SIESTA <siesta_interface>`,
   :ref:`Elk <elk_interface>`,
   :ref:`FHI-aims <FHI_aims_interface>`,
-  :ref:`Wien2k <wien2k_interface>`,
+  :ref:`WIEN2k <wien2k_interface>`,
   :ref:`CRYSTAL <crystal_interface>`
 - :ref:`Python APIs <phonopy_module>`
 
@@ -104,7 +104,7 @@ Mailing list
 
 For questions, bug reports, and comments, please visit
 https://lists.sourceforge.net/lists/listinfo/phonopy-users to
-subscribe the phonopy mailing list 
+subscribe the phonopy mailing list
 and send them to phonopy-users@lists.sourceforge.net.
 Message body including attached files has to be smaller than 300 KB.
 

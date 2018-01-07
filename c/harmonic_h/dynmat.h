@@ -36,17 +36,17 @@
 #define __dynmat_H__
 
 int get_dynamical_matrix_at_q(double *dynamical_matrix,
-			      const int num_patom, 
-			      const int num_satom,
-			      const double *fc,
-			      const double *q,
-			      const double *r,
-			      const int *multi,
-			      const double *mass,
-			      const int *s2p_map, 
-			      const int *p2s_map,
-			      const double *charge_sum,
-			      const int with_openmp);
+                              const int num_patom,
+                              const int num_satom,
+                              const double *fc,
+                              const double *q,
+                              const double *r,
+                              const int *multi,
+                              const double *mass,
+                              const int *s2p_map,
+                              const int *p2s_map,
+                              const double *charge_sum,
+                              const int with_openmp);
 void get_dipole_dipole(double *dd, /* [natom, 3, natom, 3, (real, imag)] */
                        const double *K_list, /* [num_kvec, 3] */
                        const int num_K,
@@ -59,8 +59,8 @@ void get_dipole_dipole(double *dd, /* [natom, 3, natom, 3, (real, imag)] */
                        const double *pos, /* [natom, 3] */
                        const double tolerance);
 void get_charge_sum(double *charge_sum,
-		    const int num_patom,
-		    const double factor,
-		    const double q_vector[3],
-		    const double *born);
+                    const int num_patom,
+                    const double factor,
+                    const double q_vector[3],
+                    const double *born);
 #endif

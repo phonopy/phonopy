@@ -3,7 +3,7 @@
 Change Log
 ==========
 
-Dec-9-2017
+Jan-7-2018: Version 1.12.3
 -----------------------------
 
 * For thermal displacements (and its matrices), ``FMIN (--fmin)`` and
@@ -11,6 +11,11 @@ Dec-9-2017
   summation as the minimum and maximum frequenceis,
   respectively. Instead, ``CUTOFF_FREQUENCY (--cutoff-freq)`` does not
   work for thermal displacements.
+* The way of symmetrization for translation invariance is
+  modified. ``FC_SYMMETRY`` required to specify a number, but now it
+  became unnecessary.
+* Experimental support to parse Quantum ESPRESSO ``q2r.x`` output from
+  python script.
 
 Nov-8-2017: Version 1.12.2
 -----------------------------
@@ -184,7 +189,7 @@ Jan-4-2015: Version 1.9.2
   without a unit cell structure file. The unit cell structure file is
   specified using ``--cell`` (``-c``) option or ``CELL_FILENAME``
   tag. See :ref:`force_calculators`, :ref:`wien2k_interface`,
-  :ref:`abinit_interface`, and :ref:`pwscf_interface`.
+  :ref:`abinit_interface`, and :ref:`qe_interface`.
 * For the ``gruneisen`` command, ``--factor``, ``--nomeshsym``,
   ``--wien2k``, ``--abinit``, and ``--pwscf`` options are
   implemented. See :ref:`gruneisen_calculators` and
@@ -197,8 +202,8 @@ Jan-4-2015: Version 1.9.2
 Oct-30-2014: Version 1.9.1.3
 -----------------------------
 
-* Experimental support for Abinit. See :ref:`pwscf_mode` and
-  :ref:`pwscf_force_sets_option`.
+* Experimental support for Abinit. See :ref:`qe_mode` and
+  :ref:`qe_force_sets_option`.
 
 Oct-29-2014: Version 1.9.1.2
 -----------------------------

@@ -132,7 +132,7 @@ def get_parser():
         pretend_real=False,
         primitive_axis=None,
         projection_direction=None,
-        pwscf_mode=False,
+        qe_mode=False,
         qpoints=None,
         qpoints_format=None,
         quiet=False,
@@ -244,7 +244,7 @@ def get_parser():
         "--fc-spg-symmetry", dest="fc_spg_symmetry", action="store_true",
         help="Enforce space group symmetry to force constants")
     parser.add_argument(
-        "--fc-symmetry", dest="fc_symmetry", type=int,
+        "--fc-symmetry", dest="fc_symmetry", action="store_true",
         help="Symmetrize force constants")
     parser.add_argument(
         "--fits-debye-model", dest="fits_debye_model", action="store_true",
@@ -357,8 +357,8 @@ def get_parser():
         dest="is_projected_thermal_properties", action="store_true",
         help="Output projected thermal properties")
     parser.add_argument(
-        "--pwscf", dest="pwscf_mode",
-        action="store_true", help="Invoke Pwscf mode")
+        "--qe", "--pwscf", dest="qe_mode",
+        action="store_true", help="Invoke Quantum espresso (QE) mode")
     parser.add_argument(
         "--qpoints", dest="qpoints",
         help="Calculate at specified q-points")
