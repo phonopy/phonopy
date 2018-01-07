@@ -24,7 +24,7 @@ How to run phonopy q2r.x output parser
 
 About make_fc_q2r.py, see https://atztogo.github.io/phonopy/pwscf.html.
 
-% phonopy --qe -c NaCl.in --dim="8 8 8" --band="1/2 1/2 1/2 0 0 0 1/2 0 1/2" --readfc --sym-fc --readfc-format=hdf5
+% phonopy --qe -c NaCl.in --dim="8 8 8" --band="0 0 0  1/2 0 0  1/2 1/2 0  0 0 0  1/2 1/2 1/2" --readfc --fc-symmetry --readfc-format=hdf5
 
 How to obtain BORN
 -------------------
@@ -46,6 +46,6 @@ default
 
 About make_born_q2r.py, see https://atztogo.github.io/phonopy/pwscf.html.
 
-% phonopy --qe -c NaCl.in --dim="8 8 8" --band="1/2 1/2 1/2 0 0 0 1/2 0 1/2" --readfc --fc-symmetry --readfc-format=hdf5 --nac
+% phonopy --qe -c NaCl.in --dim="8 8 8" --band="0 0 0  1/2 0 0  1/2 1/2 0  0 0 0  1/2 1/2 1/2" --readfc --fc-symmetry --readfc-format=hdf5 --nac
 
 
