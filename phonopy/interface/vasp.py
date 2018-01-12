@@ -276,8 +276,10 @@ def get_scaled_positions_lines(scaled_positions):
     return "\n".join(_get_scaled_positions_lines(scaled_positions))
 
 def _get_scaled_positions_lines(scaled_positions):
-    # map into 0 <= x <= 1
-    unit_positions = scaled_positions % 1
+    # map into 0 <= x < 1.
+    # (the purpose of the second '% 1' is to handle a surprising
+    #  edge case for small negative numbers: '-1e-30 % 1 == 1.0')
+    unit_positions = scaled_positions % 1 % 1
 
     return [
         " %19.16f %19.16f %19.16f" % tuple(vec)
