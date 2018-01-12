@@ -290,21 +290,25 @@ class Primitive(Atoms):
             raise ValueError
 
     def _supercell_to_primitive_map(self, pos):
-        frac_pos = np.dot(pos, np.linalg.inv(self._primitive_matrix))
+        frac_pos = np.dot(pos, np.linalg.inv(self._primitive_matrix).T)
 
         p2s_positions = frac_pos[self._p2s_map]
         s2p_map = []
         for s_pos in frac_pos:
 
-            diffs = p2s_positions - s_pos
-            diffs -= np.rint(diffs)
+            # Compute distances from s_pos to all positions in _p2s_map.
+            frac_diffs = p2s_positions - s_pos
+            frac_diffs -= np.rint(frac_diffs)
 
-            matches = (abs(diffs) < self._symprec).all(axis=1).tolist()
+            cart_diffs = np.dot(frac_diffs, self._primitive_matrix.T)
+            distances = np.sqrt((cart_diffs**2).sum(axis=1))
 
+            # Find the one distance that's short enough.
+            matches = (distances < self._symprec).tolist()
             assert matches.count(True) == 1
-            p_index = matches.index(True)
+            index = matches.index(True)
 
-            s2p_map.append(p_index)
+            s2p_map.append(self._p2s_map[index])
 
         self._s2p_map = np.array(s2p_map, dtype='intc')
 
