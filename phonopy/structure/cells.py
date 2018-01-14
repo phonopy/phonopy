@@ -300,7 +300,7 @@ class Primitive(Atoms):
             frac_diffs = p2s_positions - s_pos
             frac_diffs -= np.rint(frac_diffs)
 
-            cart_diffs = np.dot(frac_diffs, self._primitive_matrix.T)
+            cart_diffs = np.dot(frac_diffs, self.cell)
             distances = np.sqrt((cart_diffs**2).sum(axis=1))
 
             # Find the one distance that's short enough.
