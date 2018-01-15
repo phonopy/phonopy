@@ -276,30 +276,34 @@ def get_scaled_positions_lines(scaled_positions):
     return "\n".join(_get_scaled_positions_lines(scaled_positions))
 
 def _get_scaled_positions_lines(scaled_positions):
-    lines = []
-    for i, vec in enumerate(scaled_positions):
-        line_str = ""
-        for x in (vec - np.rint(vec)):
-            if float('%20.16f' % x) < 0.0:
-                line_str += "%20.16f" % (x + 1.0)
-            else:
-                line_str += "%20.16f" % (x)
-        lines.append(line_str)
+    # map into 0 <= x < 1.
+    # (the purpose of the second '% 1' is to handle a surprising
+    #  edge case for small negative numbers: '-1e-30 % 1 == 1.0')
+    unit_positions = scaled_positions % 1 % 1
 
-    return lines
+    return [
+        " %19.16f %19.16f %19.16f" % tuple(vec)
+        for vec in unit_positions.tolist() # lists are faster for iteration
+    ]
 
 def sort_positions_by_symbols(symbols, positions):
-    reduced_symbols = _get_reduced_symbols(symbols)
-    sorted_positions = []
-    sort_list = []
-    num_atoms = np.zeros(len(reduced_symbols), dtype=int)
-    for i, rs in enumerate(reduced_symbols):
-        for j, (s, p) in enumerate(zip(symbols, positions)):
-            if rs == s:
-                sorted_positions.append(p)
-                sort_list.append(j)
-                num_atoms[i] += 1
-    return num_atoms, reduced_symbols, np.array(sorted_positions), sort_list
+    from collections import Counter
+
+    # unique symbols in order of first appearance in 'symbols'
+    reduced_symbols = _unique_stable(symbols)
+
+    # counts of each symbol
+    counts_dict = Counter(symbols)
+    counts_list = [counts_dict[s] for s in reduced_symbols]
+
+    # sort positions by symbol (using the order defined by reduced_symbols).
+    # using a stable sort algorithm matches the behavior of previous versions
+    #  of phonopy (but is not otherwise necessary)
+    sort_keys = [reduced_symbols.index(i) for i in symbols]
+    perm = _argsort_stable(sort_keys)
+    sorted_positions = positions[perm]
+
+    return counts_list, reduced_symbols, sorted_positions, perm
 
 def get_vasp_structure_lines(atoms, direct=True, is_vasp5=False):
     (num_atoms,
@@ -327,12 +331,23 @@ def get_vasp_structure_lines(atoms, direct=True, is_vasp5=False):
 
     return lines
 
-def _get_reduced_symbols(symbols):
-    reduced_symbols = []
-    for s in symbols:
-        if not (s in reduced_symbols):
-            reduced_symbols.append(s)
-    return reduced_symbols
+# Get all unique values from a iterable.
+# Unlike `list(set(iterable))`, this is a stable algorithm;
+# items are returned in order of their first appearance.
+def _unique_stable(iterable):
+    seen_list = []
+    seen_set = set()
+    for x in iterable:
+        if x not in seen_set:
+            seen_set.add(x)
+            seen_list.append(x)
+    return seen_list
+
+# Alternative to `np.argsort(keys)` that uses a stable sorting algorithm
+# so that indices tied for the same value are listed in increasing order
+def _argsort_stable(keys):
+    # Python's built-in sort algorithm is a stable sort
+    return sorted(range(len(keys)), key=keys.__getitem__)
 
 #
 # Non-analytical term
