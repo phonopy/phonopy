@@ -52,82 +52,157 @@
 #define NUM_ATTEMPT 20
 #define INT_PREC 0.1
 
-static double change_of_basis_monocli[18][3][3] = {{{ 1, 0, 0 },
-                                                    { 0, 1, 0 },
-                                                    { 0, 0, 1 }},
-                                                   {{ 0, 0, 1 },
-                                                    { 0,-1, 0 },
-                                                    { 1, 0, 0 }},
-                                                   {{ 0, 0, 1 },
-                                                    { 1, 0, 0 },
-                                                    { 0, 1, 0 }},
-                                                   {{ 1, 0, 0 },
-                                                    { 0, 0, 1 },
-                                                    { 0,-1, 0 }},
-                                                   {{ 0, 1, 0 },
-                                                    { 0, 0, 1 },
-                                                    { 1, 0, 0 }},
-                                                   {{ 0,-1, 0 },
-                                                    { 1, 0, 0 },
-                                                    { 0, 0, 1 }},
-                                                   {{-1, 0, 1 },
-                                                    { 0, 1, 0 },
-                                                    {-1, 0, 0 }},
-                                                   {{ 1, 0,-1 },
-                                                    { 0,-1, 0 },
-                                                    { 0, 0,-1 }},
-                                                   {{ 0, 1,-1 },
-                                                    { 1, 0, 0 },
-                                                    { 0, 0,-1 }},
-                                                   {{-1,-1, 0 },
-                                                    { 0, 0, 1 },
-                                                    {-1, 0, 0 }},
-                                                   {{ 1,-1, 0 },
-                                                    { 0, 0, 1 },
-                                                    { 0,-1, 0 }},
-                                                   {{ 0, 1, 1 },
-                                                    { 1, 0, 0 },
-                                                    { 0, 1, 0 }},
-                                                   {{ 0, 0,-1 },
-                                                    { 0, 1, 0 },
-                                                    { 1, 0,-1 }},
-                                                   {{-1, 0, 0 },
-                                                    { 0,-1, 0 },
-                                                    {-1, 0, 1 }},
-                                                   {{ 0,-1, 0 },
-                                                    { 1, 0, 0 },
-                                                    { 0,-1, 1 }},
-                                                   {{ 0, 1, 0 },
-                                                    { 0, 0, 1 },
-                                                    { 1, 1, 0 }},
-                                                   {{-1, 0, 0 },
-                                                    { 0, 0, 1 },
-                                                    {-1, 1, 0 }},
-                                                   {{ 0, 0,-1 },
-                                                    { 1, 0, 0 },
-                                                    { 0,-1,-1 }}};
+static double change_of_basis_monocli[36][3][3] = {
+  {{ 1, 0, 0 }, /* b  first turn; two axes are flipped in second turn */
+   { 0, 1, 0 },
+   { 0, 0, 1 }},
+  {{ 0, 0, 1 }, /* b */
+   { 0,-1, 0 },
+   { 1, 0, 0 }},
+  {{ 0, 0, 1 }, /* a */
+   { 1, 0, 0 },
+   { 0, 1, 0 }},
+  {{ 1, 0, 0 }, /* c */
+   { 0, 0, 1 },
+   { 0,-1, 0 }},
+  {{ 0, 1, 0 }, /* c */
+   { 0, 0, 1 },
+   { 1, 0, 0 }},
+  {{ 0,-1, 0 }, /* a */
+   { 1, 0, 0 },
+   { 0, 0, 1 }},
+  {{-1, 0, 1 }, /* b */
+   { 0, 1, 0 },
+   {-1, 0, 0 }},
+  {{ 1, 0,-1 }, /* b */
+   { 0,-1, 0 },
+   { 0, 0,-1 }},
+  {{ 0, 1,-1 }, /* a */
+   { 1, 0, 0 },
+   { 0, 0,-1 }},
+  {{-1,-1, 0 }, /* c */
+   { 0, 0, 1 },
+   {-1, 0, 0 }},
+  {{ 1,-1, 0 }, /* c */
+   { 0, 0, 1 },
+   { 0,-1, 0 }},
+  {{ 0, 1, 1 }, /* a */
+   { 1, 0, 0 },
+   { 0, 1, 0 }},
+  {{ 0, 0,-1 }, /* b */
+   { 0, 1, 0 },
+   { 1, 0,-1 }},
+  {{-1, 0, 0 }, /* b */
+   { 0,-1, 0 },
+   {-1, 0, 1 }},
+  {{ 0,-1, 0 }, /* a */
+   { 1, 0, 0 },
+   { 0,-1, 1 }},
+  {{ 0, 1, 0 }, /* c */
+   { 0, 0, 1 },
+   { 1, 1, 0 }},
+  {{-1, 0, 0 }, /* c */
+   { 0, 0, 1 },
+   {-1, 1, 0 }},
+  {{ 0, 0,-1 }, /* a */
+   { 1, 0, 0 },
+   { 0,-1,-1 }},
+  {{ 1, 0, 0 }, /* b  two axes are flipped to look for non-acute axes */
+   { 0,-1, 0 },
+   { 0, 0,-1 }},
+  {{ 0, 0,-1 }, /* b */
+   { 0, 1, 0 },
+   { 1, 0, 0 }},
+  {{ 0, 0, 1 }, /* a */
+   {-1, 0, 0 },
+   { 0,-1, 0 }},
+  {{-1, 0, 0 }, /* c */
+   { 0, 0,-1 },
+   { 0,-1, 0 }},
+  {{ 0, 1, 0 }, /* c */
+   { 0, 0,-1 },
+   {-1, 0, 0 }},
+  {{ 0, 1, 0 }, /* a */
+   {-1, 0, 0 },
+   { 0, 0, 1 }},
+  {{-1, 0,-1 }, /* b */
+   { 0,-1, 0 },
+   {-1, 0, 0 }},
+  {{ 1, 0, 1 }, /* b */
+   { 0, 1, 0 },
+   { 0, 0, 1 }},
+  {{ 0,-1,-1 }, /* a */
+   {-1, 0, 0 },
+   { 0, 0,-1 }},
+  {{ 1,-1, 0 }, /* c */
+   { 0, 0,-1 },
+   { 1, 0, 0 }},
+  {{-1,-1, 0 }, /* c */
+   { 0, 0,-1 },
+   { 0,-1, 0 }},
+  {{ 0,-1, 1 }, /* a */
+   {-1, 0, 0 },
+   { 0,-1, 0 }},
+  {{ 0, 0, 1 }, /* b */
+   { 0,-1, 0 },
+   { 1, 0, 1 }},
+  {{-1, 0, 0 }, /* b */
+   { 0, 1, 0 },
+   {-1, 0,-1 }},
+  {{ 0, 1, 0 }, /* a */
+   {-1, 0, 0 },
+   { 0, 1, 1 }},
+  {{ 0, 1, 0 }, /* c */
+   { 0, 0,-1 },
+   {-1, 1, 0 }},
+  {{ 1, 0, 0 }, /* c */
+   { 0, 0,-1 },
+   { 1, 1, 0 }},
+  {{ 0, 0,-1 }, /* a */
+   {-1, 0, 0 },
+   { 0, 1,-1 }}};
 
-static Centering change_of_centering_monocli[18] = {C_FACE,
-                                                    A_FACE,
-                                                    B_FACE,
-                                                    B_FACE,
-                                                    A_FACE,
-                                                    C_FACE,
-                                                    BASE,
-                                                    BASE,
-                                                    BASE,
-                                                    BASE,
-                                                    BASE,
-                                                    BASE,
-                                                    A_FACE,
-                                                    C_FACE,
-                                                    C_FACE,
-                                                    A_FACE,
-                                                    B_FACE,
-                                                    B_FACE};
+static Centering change_of_centering_monocli[36] = {
+  C_FACE, /* first turn */
+  A_FACE,
+  B_FACE,
+  B_FACE,
+  A_FACE,
+  C_FACE,
+  BASE,
+  BASE,
+  BASE,
+  BASE,
+  BASE,
+  BASE,
+  A_FACE,
+  C_FACE,
+  C_FACE,
+  A_FACE,
+  B_FACE,
+  B_FACE,
+  C_FACE, /* second turn */
+  A_FACE,
+  B_FACE,
+  B_FACE,
+  A_FACE,
+  C_FACE,
+  BASE,
+  BASE,
+  BASE,
+  BASE,
+  BASE,
+  BASE,
+  A_FACE,
+  C_FACE,
+  C_FACE,
+  A_FACE,
+  B_FACE,
+  B_FACE};
 
-static int change_of_unique_axis_monocli[18] =
-  {1, 1, 0, 2, 2, 0, 1, 1, 0, 2, 2, 0, 1, 1, 0, 2, 2, 0};
+static int change_of_unique_axis_monocli[36] = {
+  1, 1, 0, 2, 2, 0, 1, 1, 0, 2, 2, 0, 1, 1, 0, 2, 2, 0,
+  1, 1, 0, 2, 2, 0, 1, 1, 0, 2, 2, 0, 1, 1, 0, 2, 2, 0};
 
 static double change_of_basis_ortho[6][3][3] = {{{ 1, 0, 0 },
                                                  { 0, 1, 0 },
@@ -1031,14 +1106,15 @@ static int match_hall_symbol_db_monocli(double origin_shift[3],
                                         const double symprec)
 {
   int i, j, k, l, is_found;
-  double vec[3], norms[3];
+  double vec[2][3], norms[3];
   Centering changed_centering;
   Symmetry * changed_symmetry;
   double changed_lattice[3][3];
 
   changed_symmetry = NULL;
 
-  for (i = 0; i < 18; i++) {
+  for (i = 0; i < 36; i++) {
+    /* centring type should be P or C */
     if (centering == C_FACE) {
       changed_centering = change_of_centering_monocli[i];
     } else { /* suppose PRIMITIVE */
@@ -1049,17 +1125,27 @@ static int match_hall_symbol_db_monocli(double origin_shift[3],
                            lattice,
                            change_of_basis_monocli[i]);
 
+    /* Make non-acute and length preference */
+    l = 0;
+    for (j = 0; j < 3; j++) {
+      if (j == change_of_unique_axis_monocli[i]) {continue;}
+      for (k = 0; k < 3; k++) {vec[l][k] = changed_lattice[k][j];}
+      norms[l] = mat_norm_squared_d3(vec[l]);
+      l++;
+    }
+
+    /* discard if principal angle is acute. */
+    if (vec[0][0] * vec[1][0] +
+        vec[0][1] * vec[1][1] +
+        vec[0][2] * vec[1][2] > 0) {
+      continue;
+    }
+
     /* Choose |a| < |b| < |c| if there are freedom. */
     if (num_hall_types == 3) {
-      l = 0;
-      for (j = 0; j < 3; j++) {
-        if (j == change_of_unique_axis_monocli[i]) {continue;}
-        for (k = 0; k < 3; k++) {vec[k] = changed_lattice[k][j];}
-        norms[l] = mat_norm_squared_d3(vec);
-        l++;
-      }
       if (norms[0] > norms[1]) {continue;}
     }
+
 
     if ((changed_symmetry =
          get_conventional_symmetry(change_of_basis_monocli[i],
@@ -1359,9 +1445,15 @@ static Centering get_base_center(SPGCONST int transform_mat[3][3])
   }
 
   /* body center */
-  if (abs(transform_mat[0][0]) +
-      abs(transform_mat[0][1]) +
-      abs(transform_mat[0][2]) == 2) {
+  if ((abs(transform_mat[0][0]) +
+       abs(transform_mat[0][1]) +
+       abs(transform_mat[0][2]) == 2) &&
+      (abs(transform_mat[1][0]) +
+       abs(transform_mat[1][1]) +
+       abs(transform_mat[1][2]) == 2) &&
+      (abs(transform_mat[2][0]) +
+       abs(transform_mat[2][1]) +
+       abs(transform_mat[2][2]) == 2)) {
     centering = BODY;
     goto end;
   }
