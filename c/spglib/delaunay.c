@@ -41,31 +41,31 @@
 
 #define NUM_ATTEMPT 100
 
-static int delaunay_reduce(double red_lattice[3][3], 
-			   SPGCONST double lattice[3][3],
-			   SPGCONST double symprec);
+static int delaunay_reduce(double red_lattice[3][3],
+                           SPGCONST double lattice[3][3],
+                           SPGCONST double symprec);
 static int delaunay_reduce_basis(double basis[4][3],
-				 const double symprec);
+                                 const double symprec);
 static void get_delaunay_shortest_vectors(double basis[4][3],
-					  const double symprec);
+                                          const double symprec);
 static void get_exteneded_basis(double basis[4][3],
-				SPGCONST double lattice[3][3]);
-static int delaunay_reduce_2D(double red_lattice[3][3], 
-			      SPGCONST double lattice[3][3],
-			      const int unique_axis,
-			      const double symprec);
+                                SPGCONST double lattice[3][3]);
+static int delaunay_reduce_2D(double red_lattice[3][3],
+                              SPGCONST double lattice[3][3],
+                              const int unique_axis,
+                              const double symprec);
 static int delaunay_reduce_basis_2D(double basis[3][3],
-				    const double symprec);
+                                    const double symprec);
 static void get_delaunay_shortest_vectors_2D(double basis[3][3],
-					     const double unique_vec[3],
-					     const double symprec);
+                                             const double unique_vec[3],
+                                             const double symprec);
 static void get_exteneded_basis_2D(double basis[3][3],
-				   SPGCONST double lattice[3][2]);
+                                   SPGCONST double lattice[3][2]);
 
 /* Return 0 if failed */
 int del_delaunay_reduce(double min_lattice[3][3],
-			SPGCONST double lattice[3][3],
-			const double symprec)
+                        SPGCONST double lattice[3][3],
+                        const double symprec)
 {
   debug_print("del_delaunay_reduce (tolerance = %f):\n", symprec);
 
@@ -73,9 +73,9 @@ int del_delaunay_reduce(double min_lattice[3][3],
 }
 
 int del_delaunay_reduce_2D(double min_lattice[3][3],
-			   SPGCONST double lattice[3][3],
-			   const int unique_axis,
-			   const double symprec)
+                           SPGCONST double lattice[3][3],
+                           const int unique_axis,
+                           const double symprec)
 {
   debug_print("del_delaunay_reduce_2D:\n");
   return delaunay_reduce_2D(min_lattice, lattice, unique_axis, symprec);
@@ -84,16 +84,16 @@ int del_delaunay_reduce_2D(double min_lattice[3][3],
 /* Delaunay reduction */
 /* Reference can be found in International table A. */
 /* Return 0 if failed */
-static int delaunay_reduce(double red_lattice[3][3], 
-			   SPGCONST double lattice[3][3],
-			   const double symprec)
+static int delaunay_reduce(double red_lattice[3][3],
+                           SPGCONST double lattice[3][3],
+                           const double symprec)
 {
   int i, j, attempt, succeeded;
   double volume;
   double basis[4][3];
 
   get_exteneded_basis(basis, lattice);
-  
+
   for (attempt = 0; attempt < NUM_ATTEMPT; attempt++) {
     succeeded = delaunay_reduce_basis(basis, symprec);
     if (succeeded) {
@@ -123,7 +123,7 @@ static int delaunay_reduce(double red_lattice[3][3],
     /* Flip axes */
     for (i = 0; i < 3; i++) {
       for (j = 0; j < 3; j++) {
-	red_lattice[i][j] = -red_lattice[i][j];
+        red_lattice[i][j] = -red_lattice[i][j];
       }
     }
   }
@@ -135,18 +135,18 @@ static int delaunay_reduce(double red_lattice[3][3],
 }
 
 static void get_delaunay_shortest_vectors(double basis[4][3],
-					  const double symprec)
+                                          const double symprec)
 {
   int i, j;
   double tmpmat[3][3], b[7][3], tmpvec[3];
-  
+
   /* Search in the set {b1, b2, b3, b4, b1+b2, b2+b3, b3+b1} */
   for (i = 0; i < 4; i++) {
     for (j = 0; j < 3; j++) {
       b[i][j] = basis[i][j];
     }
   }
-  
+
   for (i = 0; i < 3; i++) {
     b[4][i] = basis[0][i] + basis[1][i];
   }
@@ -156,14 +156,14 @@ static void get_delaunay_shortest_vectors(double basis[4][3],
   for (i = 0; i < 3; i++) {
     b[6][i] = basis[2][i] + basis[0][i];
   }
-  
+
   /* Bubble sort */
   for (i = 0; i < 6; i++) {
     for (j = 0; j < 6; j++) {
       if (mat_norm_squared_d3(b[j]) > mat_norm_squared_d3(b[j+1]) + symprec) {
-	mat_copy_vector_d3(tmpvec, b[j]);
-	mat_copy_vector_d3(b[j], b[j+1]);
-	mat_copy_vector_d3(b[j+1], tmpvec);
+        mat_copy_vector_d3(tmpvec, b[j]);
+        mat_copy_vector_d3(b[j], b[j+1]);
+        mat_copy_vector_d3(b[j+1], tmpvec);
       }
     }
   }
@@ -176,9 +176,9 @@ static void get_delaunay_shortest_vectors(double basis[4][3],
     }
     if (mat_Dabs(mat_get_determinant_d3(tmpmat)) > symprec) {
       for (j = 0; j < 3; j++) {
-	basis[0][j] = b[0][j];
-	basis[1][j] = b[1][j];
-	basis[2][j] = b[i][j];
+        basis[0][j] = b[0][j];
+        basis[1][j] = b[1][j];
+        basis[2][j] = b[i][j];
       }
       break;
     }
@@ -186,7 +186,7 @@ static void get_delaunay_shortest_vectors(double basis[4][3],
 }
 
 static int delaunay_reduce_basis(double basis[4][3],
-				 const double symprec)
+                                 const double symprec)
 {
   int i, j, k, l;
   double dot_product;
@@ -195,20 +195,20 @@ static int delaunay_reduce_basis(double basis[4][3],
     for (j = i+1; j < 4; j++) {
       dot_product = 0.0;
       for (k = 0; k < 3; k++) {
-	dot_product += basis[i][k] * basis[j][k];
+        dot_product += basis[i][k] * basis[j][k];
       }
       if (dot_product > symprec) {
-	for (k = 0; k < 4; k++) {
-	  if (! (k == i || k == j)) {
-	    for (l = 0; l < 3; l++) {
-	      basis[k][l] += basis[i][l];
-	    }
-	  }
-	}
-	for (k = 0; k < 3; k++) {
-	  basis[i][k] = -basis[i][k];
-	}
-	return 0;
+        for (k = 0; k < 4; k++) {
+          if (! (k == i || k == j)) {
+            for (l = 0; l < 3; l++) {
+              basis[k][l] += basis[i][l];
+            }
+          }
+        }
+        for (k = 0; k < 3; k++) {
+          basis[i][k] = -basis[i][k];
+        }
+        return 0;
       }
     }
   }
@@ -217,7 +217,7 @@ static int delaunay_reduce_basis(double basis[4][3],
 }
 
 static void get_exteneded_basis(double basis[4][3],
-				SPGCONST double lattice[3][3])
+                                SPGCONST double lattice[3][3])
 {
   int i, j;
 
@@ -233,10 +233,10 @@ static void get_exteneded_basis(double basis[4][3],
 }
 
 
-static int delaunay_reduce_2D(double red_lattice[3][3], 
-			      SPGCONST double lattice[3][3],
-			      const int unique_axis,
-			      const double symprec)
+static int delaunay_reduce_2D(double red_lattice[3][3],
+                              SPGCONST double lattice[3][3],
+                              const int unique_axis,
+                              const double symprec)
 {
   int i, j, k, attempt, succeeded;
   double volume;
@@ -250,7 +250,7 @@ static int delaunay_reduce_2D(double red_lattice[3][3],
   for (i = 0; i < 3; i++) {
     if (i != unique_axis) {
       for (j = 0; j < 3; j++) {
-	lattice_2D[j][k] = lattice[j][i];
+        lattice_2D[j][k] = lattice[j][i];
       }
       k++;
     }
@@ -276,11 +276,11 @@ static int delaunay_reduce_2D(double red_lattice[3][3],
   for (i = 0; i < 3; i++) {
     if (i == unique_axis) {
       for (j = 0; j < 3; j++) {
-	red_lattice[j][i] = lattice[j][i];
+        red_lattice[j][i] = lattice[j][i];
       }
     } else {
       for (j = 0; j < 3; j++) {
-	red_lattice[j][i] = basis[k][j];
+        red_lattice[j][i] = basis[k][j];
       }
       k++;
     }
@@ -305,7 +305,7 @@ static int delaunay_reduce_2D(double red_lattice[3][3],
 }
 
 static int delaunay_reduce_basis_2D(double basis[3][3],
-				    const double symprec)
+                                    const double symprec)
 {
   int i, j, k, l;
   double dot_product;
@@ -314,21 +314,21 @@ static int delaunay_reduce_basis_2D(double basis[3][3],
     for (j = i + 1; j < 3; j++) {
       dot_product = 0.0;
       for (k = 0; k < 3; k++) {
-	dot_product += basis[i][k] * basis[j][k];
+        dot_product += basis[i][k] * basis[j][k];
       }
       if (dot_product > symprec) {
-	for (k = 0; k < 3; k++) {
-	  if (! (k == i || k == j)) {
-	    for (l = 0; l < 3; l++) {
-	      basis[k][l] += 2 * basis[i][l];
-	    }
-	    break;
-	  }
-	}
-	for (k = 0; k < 3; k++) {
-	  basis[i][k] = -basis[i][k];
-	}
-	return 0;
+        for (k = 0; k < 3; k++) {
+          if (! (k == i || k == j)) {
+            for (l = 0; l < 3; l++) {
+              basis[k][l] += 2 * basis[i][l];
+            }
+            break;
+          }
+        }
+        for (k = 0; k < 3; k++) {
+          basis[i][k] = -basis[i][k];
+        }
+        return 0;
       }
     }
   }
@@ -337,31 +337,31 @@ static int delaunay_reduce_basis_2D(double basis[3][3],
 }
 
 static void get_delaunay_shortest_vectors_2D(double basis[3][3],
-					     const double unique_vec[3],
-					     const double symprec)
+                                             const double unique_vec[3],
+                                             const double symprec)
 {
   int i, j;
   double b[4][3], tmpmat[3][3];
   double tmpvec[3];
-  
+
   /* Search in the set {b1, b2, b3, b1+b2} */
   for (i = 0; i < 3; i++) {
     for (j = 0; j < 3; j++) {
       b[i][j] = basis[i][j];
     }
   }
-  
+
   for (i = 0; i < 3; i++) {
     b[3][i] = basis[0][i] + basis[1][i];
   }
-  
+
   /* Bubble sort */
   for (i = 0; i < 3; i++) {
     for (j = 0; j < 3; j++) {
       if (mat_norm_squared_d3(b[j]) > mat_norm_squared_d3(b[j + 1])) {
-	mat_copy_vector_d3(tmpvec, b[j]);
-	mat_copy_vector_d3(b[j], b[j + 1]);
-	mat_copy_vector_d3(b[j + 1], tmpvec);
+        mat_copy_vector_d3(tmpvec, b[j]);
+        mat_copy_vector_d3(b[j], b[j + 1]);
+        mat_copy_vector_d3(b[j + 1], tmpvec);
       }
     }
   }
@@ -370,15 +370,15 @@ static void get_delaunay_shortest_vectors_2D(double basis[3][3],
     tmpmat[i][0] = b[0][i];
     tmpmat[i][1] = unique_vec[i];
   }
-  
+
   for (i = 1; i < 4; i++) {
     for (j = 0; j < 3; j++) {
       tmpmat[j][2] = b[i][j];
     }
     if (mat_Dabs(mat_get_determinant_d3(tmpmat)) > symprec) {
       for (j = 0; j < 3; j++) {
-	basis[0][j] = b[0][j];
-	basis[1][j] = b[i][j];
+        basis[0][j] = b[0][j];
+        basis[1][j] = b[i][j];
       }
       break;
     }
@@ -386,7 +386,7 @@ static void get_delaunay_shortest_vectors_2D(double basis[3][3],
 }
 
 static void get_exteneded_basis_2D(double basis[3][3],
-				   SPGCONST double lattice[3][2])
+                                   SPGCONST double lattice[3][2])
 {
   int i, j;
 
