@@ -1,4 +1,4 @@
-/* Copyright (C) 2015 Atsushi Togo */
+/* Copyright (C) 2017 Atsushi Togo */
 /* All rights reserved. */
 
 /* This file is part of spglib. */
@@ -32,12 +32,38 @@
 /* ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE */
 /* POSSIBILITY OF SUCH DAMAGE. */
 
-#ifndef __version_H__
-#define __version_H__
+#include "mathfunc.h"
+#include "cell.h"
 
-#define SPGLIB_MAJOR_VERSION 1
-#define SPGLIB_MINOR_VERSION 10
-#define SPGLIB_MICRO_VERSION 3
+/* Contains pre-allocated memory and precomputed data for check_total_overlap. */
+typedef struct {
+  /* Number of atoms. */
+  int size;
 
-#endif
+  /* Pre-allocated memory for various things. */
+  void * argsort_work;
+  void * blob;
 
+  /* Temp areas for writing stuff. (points into blob) */
+  double (*pos_temp_1)[3];
+  double (*pos_temp_2)[3];
+
+  /* Temp area for writing lattice point distances. (points into blob) */
+  double * distance_temp; /* for lattice point distances */
+  int * perm_temp; /* for permutations during sort */
+
+  /* Sorted data of original cell. (points into blob)*/
+  double (*lattice)[3];
+  double (*pos_sorted)[3];
+  int * types_sorted;
+} OverlapChecker;
+
+OverlapChecker* ovl_overlap_checker_init(const Cell *cell);
+
+int ovl_check_total_overlap(OverlapChecker *checker,
+                            const double test_trans[3],
+                            int rot[3][3],
+                            const double symprec,
+                            const int is_identity);
+
+void ovl_overlap_checker_free(OverlapChecker *checker);

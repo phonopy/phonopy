@@ -100,6 +100,7 @@ extension_spglib = Extension(
              'c/spglib/kpoint.c',
              'c/spglib/mathfunc.c',
              'c/spglib/niggli.c',
+             'c/spglib/overlap.c',
              'c/spglib/pointgroup.c',
              'c/spglib/primitive.c',
              'c/spglib/refinement.c',

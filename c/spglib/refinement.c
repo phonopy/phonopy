@@ -78,7 +78,8 @@ static void get_conventional_lattice(double lattice[3][3],
 static void set_tricli(double lattice[3][3],
                        SPGCONST double metric[3][3]);
 static void set_monocli(double lattice[3][3],
-                        SPGCONST double metric[3][3]);
+                        SPGCONST double metric[3][3],
+                        const char choice[6]);
 static void set_ortho(double lattice[3][3],
                       SPGCONST double metric[3][3]);
 static void set_tetra(double lattice[3][3],
@@ -564,6 +565,20 @@ static void get_conventional_lattice(double lattice[3][3],
   mat_get_metric(metric, spacegroup->bravais_lattice);
 
   debug_print("bravais lattice\n");
+
+  /* printf("%f %f %f\n", */
+  /*        spacegroup->bravais_lattice[0][0], */
+  /*        spacegroup->bravais_lattice[0][1], */
+  /*        spacegroup->bravais_lattice[0][2]); */
+  /* printf("%f %f %f\n", */
+  /*        spacegroup->bravais_lattice[1][0], */
+  /*        spacegroup->bravais_lattice[1][1], */
+  /*        spacegroup->bravais_lattice[1][2]); */
+  /* printf("%f %f %f\n", */
+  /*        spacegroup->bravais_lattice[2][0], */
+  /*        spacegroup->bravais_lattice[2][1], */
+  /*        spacegroup->bravais_lattice[2][2]); */
+
   debug_print_matrix_d3(spacegroup->bravais_lattice);
   debug_print("%s\n", spacegroup->choice);
 
@@ -572,7 +587,7 @@ static void get_conventional_lattice(double lattice[3][3],
     set_tricli(lattice, metric);
     break;
   case MONOCLI: /* b-axis is the unique axis. */
-    set_monocli(lattice, metric);
+    set_monocli(lattice, metric, spacegroup->choice);
     break;
   case ORTHO:
     set_ortho(lattice, metric);
@@ -627,25 +642,52 @@ static void set_tricli(double lattice[3][3],
 }
 
 static void set_monocli(double lattice[3][3],
-                        SPGCONST double metric[3][3])
+                        SPGCONST double metric[3][3],
+                        const char choice[6])
 {
-  /* Lattice is expected to be C centring */
-  double a, b, c, beta;
+  double a, b, c, angle;
+  int pos_char;
 
   debug_print("set_monocli:\n");
   debug_print_matrix_d3(metric);
 
+  if (choice[0] == '-') {
+    pos_char = 1;
+  } else {
+    pos_char = 0;
+  }
+
   a = sqrt(metric[0][0]);
   b = sqrt(metric[1][1]);
   c = sqrt(metric[2][2]);
-  lattice[0][0] = a;
-  lattice[1][1] = b;
-  beta = acos(metric[0][2] / a / c);
-  lattice[0][2] = c * cos(beta);
-  lattice[2][2] = c * sin(beta);
 
-  debug_print("beta %f\n", beta);
-  debug_print_matrix_d3(lattice);
+  switch (choice[pos_char]) {
+  case 'a':
+    angle = acos(metric[1][2] / b / c);
+    lattice[0][2] = c;
+    lattice[1][0] = a;
+    lattice[0][1] = b * cos(angle);
+    lattice[2][1] = b * sin(angle);
+    break;
+  case 'b':
+    angle = acos(metric[0][2] / a / c);
+    lattice[0][0] = a;
+    lattice[1][1] = b;
+    lattice[0][2] = c * cos(angle);
+    lattice[2][2] = c * sin(angle);
+    break;
+  case 'c':
+    angle = acos(metric[0][1] / a / b);
+    lattice[0][1] = b;
+    lattice[1][2] = c;
+    lattice[0][0] = a * cos(angle);
+    lattice[2][0] = a * sin(angle);
+    break;
+  default:
+    warning_print("spglib: Monoclinic unique axis could not be found.");
+  }
+
+
 }
 
 static void set_ortho(double lattice[3][3],
