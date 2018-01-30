@@ -162,70 +162,26 @@ def distribute_force_constants(force_constants,
                                rotations, # scaled (fractional)
                                trans, # scaled (fractional)
                                symprec):
-    if True:
-        permutations = _compute_all_sg_permutations(positions,
-                                                    rotations,
-                                                    trans,
-                                                    lattice,
-                                                    symprec)
+    permutations = _compute_all_sg_permutations(positions,
+                                                rotations,
+                                                trans,
+                                                lattice,
+                                                symprec)
 
-        map_atoms, map_syms = _get_sym_mappings_from_permutations(
-            permutations, atom_list_done)
+    map_atoms, map_syms = _get_sym_mappings_from_permutations(
+        permutations, atom_list_done)
 
-        rots_cartesian = np.array([similarity_transformation(lattice, r)
-                                   for r in rotations],
-                                  dtype='double', order='C')
+    rots_cartesian = np.array([similarity_transformation(lattice, r)
+                               for r in rotations],
+                              dtype='double', order='C')
 
-        import phonopy._phonopy as phonoc
-        phonoc.distribute_fc2_with_mappings(force_constants,
-                                            np.array(atom_list, dtype='intc'),
-                                            rots_cartesian,
-                                            permutations,
-                                            np.array(map_atoms, dtype='intc'),
-                                            np.array(map_syms, dtype='intc'))
-
-    elif True:
-        rots_cartesian = np.array([similarity_transformation(lattice, r)
-                                   for r in rotations],
-                                  dtype='double', order='C')
-        atom_list_copied = []
-        for i in atom_list:
-            if i not in atom_list_done:
-                atom_list_copied.append(i)
-
-        import phonopy._phonopy as phonoc
-        phonoc.distribute_fc2_all(force_constants,
-                                  lattice,
-                                  positions,
-                                  np.array(atom_list_copied, dtype='intc'),
-                                  np.array(atom_list_done, dtype='intc'),
-                                  rots_cartesian,
-                                  rotations,
-                                  trans,
-                                  symprec)
-    else:
-        for atom_disp in atom_list:
-            if atom_disp in atom_list_done:
-                continue
-
-            map_atom_disp, map_sym = _get_atom_mapping_by_symmetry(
-                atom_list_done,
-                atom_disp,
-                rotations,
-                trans,
-                lattice,
-                positions,
-                symprec=symprec)
-
-            _distribute_fc2_part(force_constants,
-                                 positions,
-                                 atom_disp,
-                                 map_atom_disp,
-                                 lattice,
-                                 rotations[map_sym],
-                                 trans[map_sym],
-                                 symprec)
-
+    import phonopy._phonopy as phonoc
+    phonoc.distribute_fc2_with_mappings(force_constants,
+                                        np.array(atom_list, dtype='intc'),
+                                        rots_cartesian,
+                                        permutations,
+                                        np.array(map_atoms, dtype='intc'),
+                                        np.array(map_syms, dtype='intc'))
 
 def solve_force_constants(force_constants,
                           disp_atom_number,
@@ -698,52 +654,6 @@ def _get_force_constants_disps(force_constants,
 
     return disp_atom_list
 
-def _distribute_fc2_part(force_constants,
-                         positions,
-                         atom_disp,
-                         map_atom_disp,
-                         lattice, # column vectors
-                         r,
-                         t,
-                         symprec):
-
-    # L R L^-1
-    rot_cartesian = np.array(
-        similarity_transformation(lattice, r), dtype='double', order='C')
-
-    try:
-        import phonopy._phonopy as phonoc
-        phonoc.distribute_fc2(force_constants,
-                              lattice,
-                              positions,
-                              atom_disp,
-                              map_atom_disp,
-                              rot_cartesian,
-                              np.array(r, dtype='intc', order='C'),
-                              np.array(t, dtype='double'),
-                              symprec)
-    except ImportError:
-        for i, pos_i in enumerate(positions):
-            rot_pos = np.dot(pos_i, r.T) + t
-            rot_atom = -1
-            for j, pos_j in enumerate(positions):
-                diff = pos_j - rot_pos
-                diff -= np.rint(diff)
-                diff = np.dot(diff, lattice.T)
-                if np.linalg.norm(diff) < symprec:
-                    rot_atom = j
-                    break
-
-            if rot_atom < 0:
-                print("Input forces are not enough to calculate force constants,")
-                print("or something wrong (e.g. crystal structure does not match).")
-                raise ValueError
-
-            # R^-1 P R (inverse transformation)
-            force_constants[atom_disp, i] += similarity_transformation(
-                rot_cartesian.T,
-                force_constants[map_atom_disp, rot_atom])
-
 def _combine_force_constants_equivalent_atoms(fc_combined,
                                               force_constants,
                                               i,
@@ -819,29 +729,6 @@ def _get_shortest_distance_in_PBC(pos_i, pos_j, reduced_bases):
                 diff = pos_j + np.array([k, l, m]) - pos_i
                 distances.append(np.linalg.norm(np.dot(diff, reduced_bases)))
     return np.min(distances)
-
-def _get_atom_mapping_by_symmetry(atom_list_done,
-                                  atom_number,
-                                  rotations,
-                                  translations,
-                                  lattice, # column vectors
-                                  positions,
-                                  symprec=1e-5):
-    """
-    Find a mapping from an atom to an atom in the atom list done.
-    """
-
-    for i, (r, t) in enumerate(zip(rotations, translations)):
-        rot_pos = np.dot(positions[atom_number], r.T) + t
-        for j in atom_list_done:
-            diff = positions[j] - rot_pos
-            diff -= np.rint(diff)
-            if np.linalg.norm(np.dot(diff, lattice.T)) < symprec:
-                return j, i
-
-    print("Input forces are not enough to calculate force constants,")
-    print("or something wrong (e.g. crystal structure does not match).")
-    raise ValueError
 
 # Compute a permutation for every space group operation.
 # See '_compute_permutation_for_rotation' for more info.

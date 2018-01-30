@@ -52,22 +52,10 @@ static PyObject * py_get_nac_dynamical_matrix(PyObject *self, PyObject *args);
 static PyObject * py_get_dipole_dipole(PyObject *self, PyObject *args);
 static PyObject * py_get_derivative_dynmat(PyObject *self, PyObject *args);
 static PyObject * py_get_thermal_properties(PyObject *self, PyObject *args);
-static PyObject * py_distribute_fc2(PyObject *self, PyObject *args);
-static PyObject * py_distribute_fc2_all(PyObject *self, PyObject *args);
-static PyObject * py_distribute_fc2_with_mappings(PyObject *self, PyObject *args);
+static PyObject * py_distribute_fc2_with_mappings(PyObject *self,
+                                                  PyObject *args);
 static PyObject * py_compute_permutation(PyObject *self, PyObject *args);
 static PyObject * py_gsv_copy_smallest_vectors(PyObject *self, PyObject *args);
-
-static int distribute_fc2(double *fc2,
-                          PHPYCONST double lat[3][3],
-                          PHPYCONST double (*pos)[3],
-                          const int num_pos,
-                          const int atom_disp,
-                          const int map_atom_disp,
-                          PHPYCONST double r_cart[3][3],
-                          PHPYCONST int r[3][3],
-                          const double t[3],
-                          const double symprec);
 
 static void distribute_fc2_with_mappings(double (*fc2)[3][3],
                                          const int * atom_list,
@@ -112,13 +100,6 @@ static double get_entropy_omega(const double temperature,
 static double get_heat_capacity_omega(const double temperature,
                                       const double omega);
 /* static double get_energy_omega(double temperature, double omega); */
-static int check_overlap(PHPYCONST double (*pos)[3],
-                         const int num_pos,
-                         const double pos_orig[3],
-                         PHPYCONST double lat[3][3],
-                         PHPYCONST int r[3][3],
-                         const double t[3],
-                         const double symprec);
 static int nint(const double a);
 
 struct module_state {
@@ -148,9 +129,6 @@ static PyMethodDef _phonopy_methods[] = {
   {"dipole_dipole", py_get_dipole_dipole, METH_VARARGS, "Dipole-dipole interaction"},
   {"derivative_dynmat", py_get_derivative_dynmat, METH_VARARGS, "Q derivative of dynamical matrix"},
   {"thermal_properties", py_get_thermal_properties, METH_VARARGS, "Thermal properties"},
-  {"distribute_fc2", py_distribute_fc2, METH_VARARGS, "Distribute force constants"},
-  {"distribute_fc2_all", py_distribute_fc2_all, METH_VARARGS,
-   "Distribute force constants for all atoms in atom_list"},
   {"distribute_fc2_with_mappings", py_distribute_fc2_with_mappings, METH_VARARGS,
    "Distribute force constants for all atoms in atom_list using precomputed symmetry mappings."},
   {"compute_permutation", py_compute_permutation, METH_VARARGS,
@@ -905,152 +883,6 @@ static void gsv_copy_smallest_vectors(double (*shortest_vectors)[27][3],
   }
 }
 
-static PyObject * py_distribute_fc2(PyObject *self, PyObject *args)
-{
-  PyArrayObject* force_constants_py;
-  PyArrayObject* lattice_py;
-  PyArrayObject* positions_py;
-  PyArrayObject* rotation_py;
-  PyArrayObject* rotation_cart_py;
-  PyArrayObject* translation_py;
-  int atom_disp, map_atom_disp;
-  double symprec;
-
-  int (*r)[3];
-  double (*r_cart)[3];
-  double *fc2;
-  double *t;
-  double (*lat)[3];
-  double (*pos)[3];
-  int num_pos;
-
-  if (!PyArg_ParseTuple(args, "OOOiiOOOd",
-                        &force_constants_py,
-                        &lattice_py,
-                        &positions_py,
-                        &atom_disp,
-                        &map_atom_disp,
-                        &rotation_cart_py,
-                        &rotation_py,
-                        &translation_py,
-                        &symprec)) {
-    return NULL;
-  }
-
-  r = (int(*)[3])PyArray_DATA(rotation_py);
-  r_cart = (double(*)[3])PyArray_DATA(rotation_cart_py);
-  fc2 = (double*)PyArray_DATA(force_constants_py);
-  t = (double*)PyArray_DATA(translation_py);
-  lat = (double(*)[3])PyArray_DATA(lattice_py);
-  pos = (double(*)[3])PyArray_DATA(positions_py);
-  num_pos = PyArray_DIMS(positions_py)[0];
-
-  distribute_fc2(fc2,
-                 lat,
-                 pos,
-                 num_pos,
-                 atom_disp,
-                 map_atom_disp,
-                 r_cart,
-                 r,
-                 t,
-                 symprec);
-
-  Py_RETURN_NONE;
-}
-
-static PyObject * py_distribute_fc2_all(PyObject *self, PyObject *args)
-{
-  PyArrayObject* force_constants_py;
-  PyArrayObject* lattice_py;
-  PyArrayObject* positions_py;
-  PyArrayObject* atom_list_py;
-  PyArrayObject* atom_list_done_py;
-  PyArrayObject* rotations_py;
-  PyArrayObject* rotations_cart_py;
-  PyArrayObject* translations_py;
-  double symprec;
-
-  int (*r)[3][3];
-  int *atom_list;
-  int *atom_list_done;
-  double (*r_cart)[3][3];
-  double *fc2;
-  double (*t)[3];
-  double (*lat)[3];
-  double (*pos)[3];
-  double (*pos_done)[3];
-  int num_pos, num_rot, len_atom_list, len_atom_list_done, map_atom_disp;
-  int i, j;
-
-  if (!PyArg_ParseTuple(args, "OOOOOOOOd",
-                        &force_constants_py,
-                        &lattice_py,
-                        &positions_py,
-                        &atom_list_py,
-                        &atom_list_done_py,
-                        &rotations_cart_py,
-                        &rotations_py,
-                        &translations_py,
-                        &symprec)) {
-    return NULL;
-  }
-
-  atom_list = (int*)PyArray_DATA(atom_list_py);
-  len_atom_list = PyArray_DIMS(atom_list_py)[0];
-  atom_list_done = (int*)PyArray_DATA(atom_list_done_py);
-  len_atom_list_done = PyArray_DIMS(atom_list_done_py)[0];
-  r = (int(*)[3][3])PyArray_DATA(rotations_py);
-  num_rot = PyArray_DIMS(rotations_py)[0];
-  r_cart = (double(*)[3][3])PyArray_DATA(rotations_cart_py);
-  fc2 = (double*)PyArray_DATA(force_constants_py);
-  t = (double(*)[3])PyArray_DATA(translations_py);
-  lat = (double(*)[3])PyArray_DATA(lattice_py);
-  pos = (double(*)[3])PyArray_DATA(positions_py);
-  num_pos = PyArray_DIMS(positions_py)[0];
-
-  pos_done = (double(*)[3])malloc(sizeof(double[3]) * len_atom_list_done);
-  for (i = 0; i < len_atom_list_done; i++) {
-    for (j = 0; j < 3; j++) {
-      pos_done[i][j] = pos[atom_list_done[i]][j];
-    }
-  }
-
-#pragma omp parallel for private(j)
-  for (i = 0; i < len_atom_list; i++) {
-    for (j = 0; j < num_rot; j++) {
-      map_atom_disp = check_overlap(pos_done,
-                                    len_atom_list_done,
-                                    pos[atom_list[i]],
-                                    lat,
-                                    r[j],
-                                    t[j],
-                                    symprec);
-      if (map_atom_disp > -1) {
-        distribute_fc2(fc2,
-                       lat,
-                       pos,
-                       num_pos,
-                       atom_list[i],
-                       atom_list_done[map_atom_disp],
-                       r_cart[j],
-                       r[j],
-                       t[j],
-                       symprec);
-        break;
-      }
-    }
-    if (j == num_rot) {
-      printf("Input forces are not enough to calculate force constants,\n");
-      printf("or something wrong (e.g. crystal structure does not match).\n");
-      printf("%d, %d\n", i, j);
-    }
-  }
-
-  free(pos_done);
-  Py_RETURN_NONE;
-}
-
 static PyObject * py_distribute_fc2_with_mappings(PyObject *self, PyObject *args)
 {
   PyArrayObject* force_constants_py;
@@ -1461,67 +1293,17 @@ static PyObject * py_tetrahedron_method_dos(PyObject *self, PyObject *args)
   Py_RETURN_NONE;
 }
 
-static int distribute_fc2(double *fc2,
-                          PHPYCONST double lat[3][3],
-                          PHPYCONST double (*pos)[3],
-                          const int num_pos,
-                          const int atom_disp,
-                          const int map_atom_disp,
-                          PHPYCONST double r_cart[3][3],
-                          PHPYCONST int r[3][3],
-                          const double t[3],
-                          const double symprec)
-{
-  int i, j, k, l, m, address_new, address;
-  int is_found, rot_atom;
-
-  is_found = 1;
-  for (i = 0; i < num_pos; i++) {
-    rot_atom = check_overlap(pos,
-                             num_pos,
-                             pos[i],
-                             lat,
-                             r,
-                             t,
-                             symprec);
-
-    if (rot_atom < 0) {
-      printf("Encounter some problem in distribute_fc2.\n");
-      is_found = 0;
-      goto end;
-    }
-
-    /* R^-1 P R */
-    address = map_atom_disp * num_pos * 9 + rot_atom * 9;
-    address_new = atom_disp * num_pos * 9 + i * 9;
-    for (j = 0; j < 3; j++) {
-      for (k = 0; k < 3; k++) {
-        for (l = 0; l < 3; l++) {
-          for (m = 0; m < 3; m++) {
-            fc2[address_new + j * 3 + k] +=
-              r_cart[l][j] * r_cart[m][k] *
-              fc2[address + l * 3 + m];
-          }
-        }
-      }
-    }
-  end:
-    ;
-  }
-
-  return is_found;
-}
-
 /* Distributes all force constants using precomputed data about symmetry mappings. */
-static void distribute_fc2_with_mappings(double (*fc2)[3][3], /* shape[num_pos][num_pos] */
-                                         const int * atom_list,
-                                         const int len_atom_list,
-                                         PHPYCONST double (*r_carts)[3][3], /* shape[num_rot] */
-                                         const int * permutations, /* shape[num_rot][num_pos] */
-                                         const int * map_atoms, /* shape [num_pos] */
-                                         const int * map_syms, /* shape [num_pos] */
-                                         const int num_rot,
-                                         const int num_pos)
+static void
+distribute_fc2_with_mappings(double (*fc2)[3][3], /* shape[num_pos][num_pos] */
+                             const int * atom_list,
+                             const int len_atom_list,
+                             PHPYCONST double (*r_carts)[3][3], /* shape[num_rot] */
+                             const int * permutations, /* shape[num_rot][num_pos] */
+                             const int * map_atoms, /* shape [num_pos] */
+                             const int * map_syms, /* shape [num_pos] */
+                             const int num_rot,
+                             const int num_pos)
 {
   int i, j, k, l, m;
   int atom_todo, atom_done, atom_other;
@@ -1563,46 +1345,6 @@ static void distribute_fc2_with_mappings(double (*fc2)[3][3], /* shape[num_pos][
       }
     }
   }
-}
-
-static int check_overlap(PHPYCONST double (*pos)[3],
-                         const int num_pos,
-                         const double pos_orig[3],
-                         PHPYCONST double lat[3][3],
-                         PHPYCONST int r[3][3],
-                         const double t[3],
-                         const double symprec)
-{
-  int i, j, k;
-  double diff[3], rot_pos[3];
-  double diff_cart, distance2;
-
-  for (i = 0; i < 3; i++) {
-    rot_pos[i] = t[i];
-    for (j = 0; j < 3; j++) {
-      rot_pos[i] += r[i][j] * pos_orig[j];
-    }
-  }
-
-  for (i = 0; i < num_pos; i++) {
-    for (j = 0; j < 3; j++) {
-      diff[j] = pos[i][j] - rot_pos[j];
-      diff[j] -= nint(diff[j]);
-    }
-    distance2 = 0;
-    for (j = 0; j < 3; j++) {
-      diff_cart = 0;
-      for (k = 0; k < 3; k++) {
-        diff_cart += lat[j][k] * diff[k];
-      }
-      distance2 += diff_cart * diff_cart;
-    }
-
-    if (sqrt(distance2) < symprec) {
-      return i;
-    }
-  }
-  return -1;
 }
 
 static int nint(const double a)
