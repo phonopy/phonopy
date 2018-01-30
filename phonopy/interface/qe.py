@@ -345,6 +345,14 @@ class PH_Q2R(object):
     write_FORCE_CONSTANTS(q2r.fc)
     ---------
 
+    To save memory/storage space of force constants, the shape of
+    force constants array is (n_uatom, n_satom, 3, 3), where u_atom is
+    the number of atoms in unit cell and n_satom is the number of
+    atoms in super cell, i.e., u_atom * prod(dim). When using this
+    force constants data from phonopy with primitive cell that is
+    differnt from unit cell, force constants have to be regenerated
+    for the primitive cell, which is not done in this class.
+
     Treatment of non-analytical term correction (NAC) is different
     between phonopy and QE. For insulator, QE automatically calculate
     dielectric constant and Born effective charges at PH calculation
@@ -499,7 +507,7 @@ class PH_Q2R(object):
 
         return np.array(site_map)
 
-    def _distribute_fc2(self, fc, s_indices, scell):
+    def _distribute_fc2(self, fc, s_indices, scell, natom):
         dim = self.dimension
         t = np.zeros((np.prod(dim), 3), dtype='double', order='C')
         r = np.zeros((np.prod(dim), 3, 3), dtype='intc', order='C')
@@ -511,7 +519,7 @@ class PH_Q2R(object):
         natom_s = scell.get_number_of_atoms()
         lattice = np.array(scell.get_cell().T, dtype='double', order='C')
         distribute_force_constants(fc,
-                                   np.arange(natom_s),
+                                   np.arange(natom, dtype='intc'),
                                    s_indices,
                                    lattice,
                                    scell.get_scaled_positions(),

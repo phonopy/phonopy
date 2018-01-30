@@ -113,7 +113,14 @@ def get_fc2(supercell,
                                    symprec)
 
     if decimals:
-        return force_constants.round(decimals=decimals)
+        force_constants = force_constants.round(decimals=decimals)
+
+    if atom_list is not None:
+        fc_compress = np.zeros((len(atom_list),
+                                supercell.get_number_of_atoms(),
+                                3, 3), dtype='double')
+        fc_compress[:] = force_constants[atom_list]
+        return fc_compress
     else:
         return force_constants
 
