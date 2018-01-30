@@ -59,8 +59,7 @@ def get_fc2(supercell,
             atom_list=None,
             decimals=None,
             computation_algorithm="svd"):
-    """
-    Bare force_constants is returned.
+    """Force_constants is computed.
 
     Force constants, Phi, are calculated from sets for forces, F, and
     atomic displacement, d:
@@ -72,6 +71,7 @@ def get_fc2(supercell,
       i: Atom index of finitely displaced atom.
       j: Atom index at which force on the atom is measured.
       a, b: Cartesian direction indices = (0, 1, 2) for i and j, respectively
+
     """
 
     force_constants = np.zeros((supercell.get_number_of_atoms(),
@@ -244,13 +244,14 @@ def set_tensor_symmetry_old(force_constants,
                             lattice, # column vectors
                             positions,
                             symmetry):
-    """
-    Full force constants are symmetrized using crystal symmetry.
+    """Full force constants are symmetrized using crystal symmetry.
+
     This method extracts symmetrically equivalent sets of atomic pairs and
     take sum of their force constants and average the sum.
 
     Since get_force_constants_disps may include crystal symmetry, this method
     is usually meaningless.
+
     """
 
     rotations = symmetry.get_symmetry_operations()['rotations']
@@ -343,13 +344,14 @@ def set_tensor_symmetry_PJ(force_constants,
                            lattice,
                            positions,
                            symmetry):
-    """
-    Full force constants are symmetrized using crystal symmetry.
+    """Full force constants are symmetrized using crystal symmetry.
+
     This method extracts symmetrically equivalent sets of atomic pairs and
     take sum of their force constants and average the sum.
 
     Since get_force_constants_disps may include crystal symmetry, this method
     is usually meaningless.
+
     """
 
     rotations = symmetry.get_symmetry_operations()['rotations']
@@ -377,13 +379,16 @@ def set_tensor_symmetry_PJ(force_constants,
 
 def set_translational_invariance(force_constants,
                                  translational_symmetry_type=1):
-    """
-    Translational invariance is imposed. The type1 is quite simple
+    """Translational invariance is imposed (obsoleted)
+
+    The type1 is quite simple
     implementation, which is just taking sum of the force constants in
     an axis and an atom index. The sum has to be zero due to the
     translational invariance. If the sum is not zero, this error is
     uniformly subtracted from force constants.
+
     """
+
     for i in range(2):
        set_translational_invariance_per_index(
            force_constants,
@@ -393,29 +398,30 @@ def set_translational_invariance(force_constants,
 def set_translational_invariance_per_index(fc2,
                                            index=0,
                                            translational_symmetry_type=1):
-        for i in range(fc2.shape[1 - index]):
-            for j, k in list(np.ndindex(3, 3)):
-                if translational_symmetry_type == 2: # Type 2
-                    if index == 0:
-                        fc_abs = np.abs(fc2[:, i, j, k])
-                        fc_sum = np.sum(fc2[:, i, j, k])
-                        fc_abs_sum = np.sum(fc_abs)
-                        fc2[:, i, j, k] -= fc_sum / fc_abs_sum * fc_abs
-                    else:
-                        fc_abs = np.abs(fc2[i, :, j, k])
-                        fc_sum = np.sum(fc2[i, :, j, k])
-                        fc_abs_sum = np.sum(fc_abs)
-                        fc2[i, :, j, k] -= fc_sum / fc_abs_sum * fc_abs
-                else: # Type 1
-                    if index == 0:
-                        fc2[:, i, j, k] -= np.sum(
-                            fc2[:, i, j, k]) / fc2.shape[0]
-                    else:
-                        fc2[i, :, j, k] -= np.sum(
-                            fc2[i, :, j, k]) / fc2.shape[1]
+    for i in range(fc2.shape[1 - index]):
+        for j, k in list(np.ndindex(3, 3)):
+            if translational_symmetry_type == 2: # Type 2
+                if index == 0:
+                    fc_abs = np.abs(fc2[:, i, j, k])
+                    fc_sum = np.sum(fc2[:, i, j, k])
+                    fc_abs_sum = np.sum(fc_abs)
+                    fc2[:, i, j, k] -= fc_sum / fc_abs_sum * fc_abs
+                else:
+                    fc_abs = np.abs(fc2[i, :, j, k])
+                    fc_sum = np.sum(fc2[i, :, j, k])
+                    fc_abs_sum = np.sum(fc_abs)
+                    fc2[i, :, j, k] -= fc_sum / fc_abs_sum * fc_abs
+            else: # Type 1
+                if index == 0:
+                    fc2[:, i, j, k] -= np.sum(
+                        fc2[:, i, j, k]) / fc2.shape[0]
+                else:
+                    fc2[i, :, j, k] -= np.sum(
+                        fc2[i, :, j, k]) / fc2.shape[1]
 
 def set_permutation_symmetry(force_constants):
-    """
+    """Enforce permutation symmetry to force cosntants by
+
     Phi_ij_ab = Phi_ji_ba
 
     i, j: atom index
@@ -424,6 +430,7 @@ def set_permutation_symmetry(force_constants):
     This is not necessary for harmonic phonon calculation because this
     condition is imposed when making dynamical matrix Hermite in
     dynamical_matrix.py.
+
     """
 
     fc_copy = force_constants.copy()
@@ -436,10 +443,13 @@ def rotational_invariance(force_constants,
                           supercell,
                           primitive,
                           symprec=1e-5):
+    """*** Under development ***
+
+    Just show how force constant is close to the condition of
+    rotational invariance.
+
     """
-    *** Under development ***
-    Just show how force constant is close to the condition of rotational invariance,
-    """
+
     print("Check rotational invariance ...")
 
     fc = force_constants
@@ -533,11 +543,6 @@ def _solve_force_constants_svd(force_constants,
         force_constants[disp_atom_number, i] = -np.dot(
             inv_displacements, combined_forces)
 
-# KL(m).
-# This is very similar, but instead of using inverse displacement
-# and later multiplying it by the force a linear regression is used.
-# Force is "plotted" versus displacement and the slope is
-# calculated, together with its standard deviation.
 def _solve_force_constants_regression(force_constants,
                                       disp_atom_number,
                                       displacements,
@@ -545,6 +550,15 @@ def _solve_force_constants_regression(force_constants,
                                       supercell,
                                       site_symmetry,
                                       symprec):
+    """KL(m).
+    This is very similar, but instead of using inverse displacement
+    and later multiplying it by the force a linear regression is used.
+    Force is "plotted" versus displacement and the slope is
+    calculated, together with its standard deviation.
+
+    """
+
+
     fc_errors = np.zeros((3, 3), dtype='double')
     lattice = supercell.get_cell().T
     positions = supercell.get_scaled_positions()
@@ -598,11 +612,8 @@ def _get_force_constants_disps(force_constants,
                                dataset,
                                symmetry,
                                computation_algorithm="svd"):
-    """
-    Phi = -F / d
-    """
+    """Calculate force constants Phi = -F / d
 
-    """
     Force constants are obtained by one of the following algorithm.
 
     svd: Singular value decomposition is used, which is equivalent to
@@ -617,6 +628,7 @@ def _get_force_constants_disps(force_constants,
          tensor element. At the end we report their average value. We also
          report a maximum value among these tensor-elements-errors.
     """
+
     symprec = symmetry.get_symmetry_tolerance()
     disp_atom_list = np.unique([x['number'] for x in dataset['first_atoms']])
     for disp_atom_number in disp_atom_list:
@@ -730,15 +742,18 @@ def _get_shortest_distance_in_PBC(pos_i, pos_j, reduced_bases):
                 distances.append(np.linalg.norm(np.dot(diff, reduced_bases)))
     return np.min(distances)
 
-# Compute a permutation for every space group operation.
-# See '_compute_permutation_for_rotation' for more info.
-#
-# Output has shape (num_rot, num_pos)
 def _compute_all_sg_permutations(positions, # scaled positions
                                  rotations, # scaled
                                  translations, # scaled
                                  lattice, # column vectors
                                  symprec):
+    """Compute a permutation for every space group operation.
+
+    See '_compute_permutation_for_rotation' for more info.
+
+    Output has shape (num_rot, num_pos)
+
+    """
 
     out = [] # Finally the shape is fixed as (num_sym, num_pos_of_supercell).
     for (sym, t) in zip(rotations, translations):
@@ -749,20 +764,22 @@ def _compute_all_sg_permutations(positions, # scaled positions
                                                      symprec))
     return np.array(out, dtype='intc', order='C')
 
-# Get the overall permutation such that
-#
-#        positions_a[perm[i]] == positions_b[i]   (modulo the lattice)
-#
-# or in numpy speak,
-#
-#        positions_a[perm] == positions_b   (modulo the lattice)
-#
-# This version is optimized for the case where positions_a and positions_b
-# are related by a rotation.
 def _compute_permutation_for_rotation(positions_a, # scaled positions
                                       positions_b,
                                       lattice, # column vectors
                                       symprec):
+    """Get the overall permutation such that
+
+        positions_a[perm[i]] == positions_b[i]   (modulo the lattice)
+
+    or in numpy speak,
+
+        positions_a[perm] == positions_b   (modulo the lattice)
+
+    This version is optimized for the case where positions_a and positions_b
+    are related by a rotation.
+
+    """
 
     # Sort both sides by some measure which is likely to produce a small
     # maximum value of (sorted_rotated_index - sorted_original_index).
@@ -793,14 +810,16 @@ def _compute_permutation_for_rotation(positions_a, # scaled positions
     # 2. Associativity:   x[p][q] == x[p[q]]
     return perm_a[perm_between][np.argsort(perm_b)]
 
-# Version of '_compute_permutation_for_rotation' which just directly calls the C function,
-# without any conditioning of the data.
-#
-# Skipping the conditioning step makes this EXTREMELY slow on large structures.
 def _compute_permutation_c(positions_a, # scaled positions
                            positions_b,
                            lattice, # column vectors
                            symprec):
+    """Version of '_compute_permutation_for_rotation' which just directly
+    calls the C function, without any conditioning of the data.
+    Skipping the conditioning step makes this EXTREMELY slow on large
+    structures.
+
+    """
 
     permutation = np.zeros(shape=(len(positions_a),), dtype='intc')
 
@@ -837,24 +856,31 @@ def _compute_permutation_c(positions_a, # scaled positions
 
     return permutation
 
-# This can be thought of as computing 'map_atom_disp' and 'map_sym' for all atoms,
-# except done using permutations instead of by computing overlaps.
-#
-# Input:
-#  * permutations, shape [num_rot][num_pos]
-#  * atom_list_done
-#
-# Output:
-#  * map_atoms, shape [num_pos].
-#    Maps each atom in the full structure to its equivalent atom in atom_list_done.
-#    (each entry will be an integer found in atom_list_done)
-#
-#  * map_syms, shape [num_pos].
-#    For each atom, provides the index of a rotation that maps it into atom_list_done.
-#    (there might be more than one such rotation, but only one will be returned)
-#    (each entry will be an integer 0 <= i < num_rot)
 def _get_sym_mappings_from_permutations(permutations,
                                         atom_list_done):
+
+    """This can be thought of as computing 'map_atom_disp' and 'map_sym'
+    for all atoms, except done using permutations instead of by
+    computing overlaps.
+
+    Input:
+        * permutations, shape [num_rot][num_pos]
+        * atom_list_done
+
+    Output:
+        * map_atoms, shape [num_pos].
+        Maps each atom in the full structure to its equivalent atom in
+        atom_list_done.  (each entry will be an integer found in
+        atom_list_done)
+
+        * map_syms, shape [num_pos].
+        For each atom, provides the index of a rotation that maps it
+        into atom_list_done.  (there might be more than one such
+        rotation, but only one will be returned) (each entry will be
+        an integer 0 <= i < num_rot)
+
+    """
+
     assert permutations.ndim == 2
     num_pos = permutations.shape[1]
 
