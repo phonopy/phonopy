@@ -47,6 +47,8 @@
 
 /* Build dynamical matrix */
 static PyObject * py_perm_trans_symmetrize_fc(PyObject *self, PyObject *args);
+static PyObject *
+py_perm_trans_symmetrize_compact_fc(PyObject *self, PyObject *args);
 static PyObject * py_get_dynamical_matrix(PyObject *self, PyObject *args);
 static PyObject * py_get_nac_dynamical_matrix(PyObject *self, PyObject *args);
 static PyObject * py_get_dipole_dipole(PyObject *self, PyObject *args);
@@ -124,6 +126,9 @@ static PyMethodDef _phonopy_methods[] = {
   {"error_out", (PyCFunction)error_out, METH_NOARGS, NULL},
   {"perm_trans_symmetrize_fc", py_perm_trans_symmetrize_fc, METH_VARARGS,
    "Enforce permutation and translational symmetry of force constants"},
+  {"perm_trans_symmetrize_compact_fc", py_perm_trans_symmetrize_compact_fc,
+   METH_VARARGS,
+   "Enforce permutation and translational symmetry of compact force constants"},
   {"dynamical_matrix", py_get_dynamical_matrix, METH_VARARGS, "Dynamical matrix"},
   {"nac_dynamical_matrix", py_get_nac_dynamical_matrix, METH_VARARGS, "NAC dynamical matrix"},
   {"dipole_dipole", py_get_dipole_dipole, METH_VARARGS, "Dipole-dipole interaction"},
@@ -349,6 +354,135 @@ static PyObject * py_perm_trans_symmetrize_fc(PyObject *self, PyObject *args)
       }
     }
   }
+
+  Py_RETURN_NONE;
+}
+
+static PyObject *
+py_perm_trans_symmetrize_compact_fc(PyObject *self, PyObject *args)
+{
+  PyArrayObject* fc_py;
+  PyArrayObject* permutations_py;
+  PyArrayObject* s2p_map_py;
+  PyArrayObject* p2s_map_py;
+  double sum;
+  double *fc;
+  int *s2p;
+  int *p2s;
+  int *perms;
+  int n_patom, n_satom, nsym, i_p, i, j, k, l, m, n, target;
+  int *nsym_list;
+  int *s2pp;
+  double *fc_tmp;
+
+  nsym_list = NULL;
+  s2pp = NULL;
+  fc_tmp = NULL;
+
+  if (!PyArg_ParseTuple(args, "OOOO",
+                        &fc_py,
+                        &permutations_py,
+                        &s2p_map_py,
+                        &p2s_map_py)) {
+    return NULL;
+  }
+
+  fc = (double*)PyArray_DATA(fc_py);
+  perms = (int*)PyArray_DATA(permutations_py);
+  s2p = (int*)PyArray_DATA(s2p_map_py);
+  p2s = (int*)PyArray_DATA(p2s_map_py);
+  n_patom = PyArray_DIMS(fc_py)[0];
+  n_satom = PyArray_DIMS(fc_py)[1];
+  nsym = PyArray_DIMS(permutations_py)[0];
+
+  nsym_list = (int*) malloc(sizeof(int) * n_satom);
+  for (i = 0; i < n_satom; i++) {
+    nsym_list[i] = -1;
+  }
+
+  s2pp = (int*) malloc(sizeof(int) * n_satom);
+  for (i = 0; i < n_satom; i++) {
+    s2pp[i] = -1;
+    for (j = 0; j < n_patom; j++) {
+      if (p2s[j] == s2p[i]) {
+        s2pp[i] = j;
+        break;
+      }
+    }
+  }
+
+  fc_tmp = (double*) malloc(sizeof(double) * n_patom * n_satom * 3 * 3);
+  for (i = 0; i < n_patom * n_satom * 3 * 3; i++) {
+    fc_tmp[i] = 0;
+  }
+
+  for (i = 0; i < n_satom; i++) {
+    target = s2p[i];
+    for (j = 0; j < nsym; j++) {
+      if (perms[j * n_satom + i] == target) {
+        nsym_list[i] = j;
+        break;
+      }
+    }
+  }
+
+#pragma omp parallel for private(i_p, i, k, l, m, n)
+  for (j = 0; j < n_satom; j++) {
+    for (i_p = 0; i_p < n_patom; i_p++) {
+      i = p2s[i_p];
+      if (i == j) { /* diagnoal part */
+        for (k = 0; k < 3; k++) {
+          m = i_p * n_satom * 9 + i * 9 + k * 3 + k;
+          fc_tmp[m] = fc[m];
+        }
+        for (k = 1; k < 3; k++) {
+          for (l = k + 1; l < 3; l++) {
+            m = i_p * n_satom * 9 + i * 9 + k * 3 + l;
+            n = i_p * n_satom * 9 + i * 9 + l * 3 + k;
+            fc_tmp[m] = (fc[m] + fc[n]) / 2;
+            fc_tmp[n] = fc_tmp[m];
+          }
+        }
+      } else { /* non diagonal part */
+        for (k = 0; k < 3; k++) {
+          for (l = 0; l < 3; l++) {
+            m = i_p * n_satom * 9 + j * 9 + k * 3 + l;
+            n = s2pp[j] * n_satom * 9 + perms[nsym_list[j] * n_satom + i] * 9 + l * 3 + k;
+            fc_tmp[m] = (fc[n] + fc[m]) / 2;
+            fc_tmp[n] = fc_tmp[m];
+          }
+        }
+      }
+    }
+  }
+
+  for (i = 0; i < n_patom; i++) {
+    for (k = 0; k < 3; k++) {
+      for (l = k; l < 3; l++) {
+        sum = 0;
+        m = i * n_satom * 9 + k * 3 + l;
+        for (j = 0; j < n_satom; j++) {
+          sum += fc_tmp[m];
+          m += 9;
+        }
+        fc_tmp[i * n_satom * 9 + p2s[i] * 9 + k * 3 + l] -= sum;
+        if (k != l) {
+          fc_tmp[i * n_satom * 9 + p2s[i] * 9 + l * 3 + k] -= sum;
+        }
+      }
+    }
+  }
+
+  for (i = 0; i < n_patom * n_satom * 3 * 3; i++) {
+    fc[i] = fc_tmp[i];
+  }
+
+  free(nsym_list);
+  nsym_list = NULL;
+  free(s2pp);
+  s2pp = NULL;
+  free(fc_tmp);
+  fc_tmp = NULL;
 
   Py_RETURN_NONE;
 }

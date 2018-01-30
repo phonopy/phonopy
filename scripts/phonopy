@@ -460,7 +460,7 @@ else: # Read FORCE_SETS, FORCE_CONSTANTS, or force_constants.hdf5
         if log_level > 0:
             print("Force constants are read from %s." % fc_filename)
 
-        if fc.shape[0] != num_satom:
+        if fc.shape[1] != num_satom:
             error_text = ("Number of atoms in supercell is not consistent with "
                           "the matrix shape of\nforce constants read from ")
             if settings.get_is_hdf5() or settings.get_readfc_format() == 'hdf5':
@@ -606,13 +606,11 @@ elif os.path.exists("FORCE_SETS"):
     if log_level > 0:
         print("Computing force constants...")
 
-    if (settings.get_write_force_constants() or
-        settings.get_fc_symmetry() or
-        settings.get_fc_spg_symmetry()):
+    if settings.get_fc_spg_symmetry():
         # Need to calculate full force constant tensors
         phonon.produce_force_constants(
             computation_algorithm=settings.get_fc_computation_algorithm())
-    else: # Only force constants between atoms in primitive cell and in supercell
+    else: # Only force constants between atoms in primitive cell and supercell
         phonon.produce_force_constants(
             calculate_full_force_constants=False,
             computation_algorithm=settings.get_fc_computation_algorithm())

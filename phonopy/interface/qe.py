@@ -474,13 +474,18 @@ class PH_Q2R(object):
         natom = cell.get_number_of_atoms()
         ndim = np.prod(dim)
         natom_s = natom * ndim
-        s_indices = [np.where(site_map==(i * ndim))[0][0] for i in range(natom)]
-        fc = np.zeros((natom_s, natom_s, 3, 3), dtype='double', order='C')
 
-        for i, si in enumerate(s_indices):
-            fc[si, :] = q2r_fc[i, site_map]
+        # full force constants
+        # fc = np.zeros((natom_s, natom_s, 3, 3), dtype='double', order='C')
+        # s_indices = [np.where(site_map==(i * ndim))[0][0] for i in range(natom)]
+        # for i, si in enumerate(s_indices):
+        #     fc[si, :] = q2r_fc[i, site_map]
+        # self._distribute_fc2(fc, s_indices, scell)
 
-        self._distribute_fc2(fc, s_indices, scell)
+        # compact force constants
+        fc = np.zeros((natom, natom_s, 3, 3), dtype='double', order='C')
+        fc[:, :] = q2r_fc[:, site_map]
+
         return fc
 
     def _get_q2r_positions(self, cell):

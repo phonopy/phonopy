@@ -161,6 +161,49 @@ def symmetrize_force_constants(force_constants, iteration=1):
             set_permutation_symmetry(force_constants)
             set_translational_invariance(force_constants)
 
+def symmetrize_compact_force_constants(force_constants,
+                                       supercell,
+                                       symmetry,
+                                       s2p_map,
+                                       p2s_map):
+    """Symmetry force constants by translational and permutation symmetries.
+
+    Here force constants are stored in a compact form:
+    (n_patom, n_satom, 3, 3).
+
+    For the symmetrization, permutation array is necessary.
+
+    """
+
+    rotations = []
+    trans = []
+    identity = np.eye(3, dtype='intc')
+
+    for r, t in zip(symmetry.get_symmetry_operations()['rotations'],
+                    symmetry.get_symmetry_operations()['translations']):
+        if (r == identity).all():
+            rotations.append(r)
+            trans.append(t)
+
+    permutations = _compute_all_sg_permutations(
+        supercell.get_scaled_positions(),
+        np.array(rotations, dtype='intc', order='C'),
+        np.array(trans, dtype='double'),
+        np.array(supercell.get_cell().T, dtype='double', order='C'),
+        symmetry.get_symmetry_tolerance())
+
+    try:
+        import phonopy._phonopy as phonoc
+        phonoc.perm_trans_symmetrize_compact_fc(force_constants,
+                                                permutations,
+                                                s2p_map,
+                                                p2s_map)
+    except ImportError:
+        print("Import error at phonoc.perm_trans_symmetrize_compact_fc.")
+        print("Corresponding pytono code is not implemented.")
+        import sys
+        sys.exit(1)
+
 def distribute_force_constants(force_constants,
                                atom_list,
                                atom_list_done,

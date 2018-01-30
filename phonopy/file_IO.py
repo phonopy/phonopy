@@ -160,7 +160,7 @@ def iter_collect_forces(filename,
 def write_FORCE_CONSTANTS(force_constants, filename='FORCE_CONSTANTS'):
     with open(filename, 'w') as w:
         fc_shape = force_constants.shape
-        w.write("%4d\n" % (fc_shape[0]))
+        w.write("%4d %4d\n" % fc_shape[:2])
         for i in range(fc_shape[0]):
             for j in range(fc_shape[1]):
                 w.write("%4d%4d\n" % (i+1, j+1))
@@ -175,16 +175,19 @@ def write_force_constants_to_hdf5(force_constants,
 
 def parse_FORCE_CONSTANTS(filename="FORCE_CONSTANTS"):
     with open(filename) as fcfile:
-        num = int((fcfile.readline().strip().split())[0])
-        force_constants = np.zeros((num, num, 3, 3), dtype=float)
-        for i in range(num):
-            for j in range(num):
+        line = fcfile.readline()
+        idx = [int(x) for x in line.split()]
+        if len(idx) == 1:
+            idx = [idx[0], idx[0]]
+        force_constants = np.zeros((idx[0], idx[1], 3, 3), dtype='double')
+        for i in range(idx[0]):
+            for j in range(idx[1]):
                 fcfile.readline()
                 tensor = []
                 for k in range(3):
                     tensor.append([float(x)
-                                   for x in fcfile.readline().strip().split()])
-                force_constants[i, j] = np.array(tensor)
+                                   for x in fcfile.readline().split()])
+                force_constants[i, j] = tensor
 
         return force_constants
 
