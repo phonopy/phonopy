@@ -40,11 +40,13 @@ from phonopy.structure.symmetry import Symmetry
 from phonopy.structure.cells import get_supercell, get_primitive
 from phonopy.harmonic.displacement import (get_least_displacements,
                                            direction_to_displacement)
-from phonopy.harmonic.force_constants import (get_fc2,
-                                              symmetrize_force_constants,
-                                              rotational_invariance,
-                                              cutoff_force_constants,
-                                              set_tensor_symmetry)
+from phonopy.harmonic.force_constants import (
+    get_fc2,
+    symmetrize_force_constants,
+    symmetrize_compact_force_constants,
+    rotational_invariance,
+    cutoff_force_constants,
+    set_tensor_symmetry)
 from phonopy.harmonic.dynamical_matrix import (DynamicalMatrix,
                                                DynamicalMatrixNAC)
 from phonopy.phonon.band_structure import BandStructure
@@ -373,7 +375,16 @@ class Phonopy(object):
         return True
 
     def symmetrize_force_constants(self):
-        symmetrize_force_constants(self._force_constants)
+        if self._force_constants.shape[0] == self._force_constants.shape[1]:
+            symmetrize_force_constants(self._force_constants)
+        else:
+            s2p_map = self._primitive.get_supercell_to_primitive_map()
+            p2s_map = self._primitive.get_primitive_to_supercell_map()
+            symmetrize_compact_force_constants(self._force_constants,
+                                               self._supercell,
+                                               self._symmetry,
+                                               s2p_map,
+                                               p2s_map)
         self._set_dynamical_matrix()
 
     def symmetrize_force_constants_by_space_group(self):
