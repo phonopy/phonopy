@@ -437,8 +437,25 @@ if run_mode == 'displacements':
                      is_symmetry=settings.get_is_symmetry(),
                      log_level=log_level)
 else: # Read FORCE_SETS, FORCE_CONSTANTS, or force_constants.hdf5
+    # Overwrite frequency unit conversion factor
+    if settings.get_frequency_conversion_factor() is not None:
+        physical_units['factor'] = settings.get_frequency_conversion_factor()
+
+    phonon = Phonopy(unitcell,
+                     settings.get_supercell_matrix(),
+                     primitive_matrix=settings.get_primitive_matrix(),
+                     factor=physical_units['factor'],
+                     dynamical_matrix_decimals=settings.get_dm_decimals(),
+                     force_constants_decimals=settings.get_fc_decimals(),
+                     symprec=args.symprec,
+                     is_symmetry=settings.get_is_symmetry(),
+                     use_lapack_solver=settings.get_lapack_solver(),
+                     log_level=log_level)
+
     num_atom = unitcell.get_number_of_atoms()
     num_satom = determinant(settings.get_supercell_matrix()) * num_atom
+    p2s_map = phonon.get_primitive().get_primitive_to_supercell_map()
+
     if settings.get_read_force_constants():
         if settings.get_is_hdf5() or settings.get_readfc_format() == 'hdf5':
             try:
@@ -450,11 +467,14 @@ else: # Read FORCE_SETS, FORCE_CONSTANTS, or force_constants.hdf5
                 sys.exit(1)
 
             if file_exists("force_constants.hdf5", log_level):
-                fc = file_IO.read_force_constants_hdf5("force_constants.hdf5")
+                fc = file_IO.read_force_constants_hdf5(
+                    filename="force_constants.hdf5",
+                    p2s_map=p2s_map)
                 fc_filename = "force_constants.hdf5"
 
         elif file_exists("FORCE_CONSTANTS", log_level):
-            fc = file_IO.parse_FORCE_CONSTANTS(filename="FORCE_CONSTANTS")
+            fc = file_IO.parse_FORCE_CONSTANTS(filename="FORCE_CONSTANTS",
+                                               p2s_map=p2s_map)
             fc_filename = "FORCE_CONSTANTS"
 
         if log_level > 0:
@@ -486,20 +506,6 @@ else: # Read FORCE_SETS, FORCE_CONSTANTS, or force_constants.hdf5
                 print_error()
             sys.exit(1)
 
-    # Overwrite frequency unit conversion factor
-    if settings.get_frequency_conversion_factor() is not None:
-        physical_units['factor'] = settings.get_frequency_conversion_factor()
-
-    phonon = Phonopy(unitcell,
-                     settings.get_supercell_matrix(),
-                     primitive_matrix=settings.get_primitive_matrix(),
-                     factor=physical_units['factor'],
-                     dynamical_matrix_decimals=settings.get_dm_decimals(),
-                     force_constants_decimals=settings.get_fc_decimals(),
-                     symprec=args.symprec,
-                     is_symmetry=settings.get_is_symmetry(),
-                     use_lapack_solver=settings.get_lapack_solver(),
-                     log_level=log_level)
 
 supercell = phonon.get_supercell()
 primitive = phonon.get_primitive()
@@ -672,12 +678,15 @@ if settings.get_fc_symmetry():
 
 # Write FORCE_CONSTANTS
 if settings.get_write_force_constants():
+    p2s_map = primitive.get_primitive_to_supercell_map()
     if settings.get_is_hdf5() or settings.get_writefc_format() == 'hdf5':
-        file_IO.write_force_constants_to_hdf5(phonon.get_force_constants())
+        file_IO.write_force_constants_to_hdf5(phonon.get_force_constants(),
+                                              p2s_map=p2s_map)
         if log_level > 0:
             print("Force constants are written into force_constants.hdf5.")
     else:
-        file_IO.write_FORCE_CONSTANTS(phonon.get_force_constants())
+        file_IO.write_FORCE_CONSTANTS(phonon.get_force_constants(),
+                                      p2s_map=p2s_map)
         if log_level > 0:
             print("Force constants are written into FORCE_CONSTANTS.")
 
@@ -953,12 +962,12 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
                       "(Cartesian)" % tuple(c_direction))
             if log_level > 0:
                 print("Calculating partial PDOS...")
-            dos_range = settings.get_dos_range()
+
             phonon.set_partial_DOS(
                 sigma=settings.get_sigma(),
-                freq_min=dos_range['min'],
-                freq_max=dos_range['max'],
-                freq_pitch=dos_range['step'],
+                freq_min=settings.get_min_frequency(),
+                freq_max=settings.get_max_frequency(),
+                freq_pitch=settings.get_frequency_pitch(),
                 tetrahedron_method=settings.get_is_tetrahedron_method(),
                 direction=p_direction,
                 xyz_projection=settings.get_xyz_projection())
@@ -982,13 +991,11 @@ elif run_mode == 'band' or run_mode == 'mesh' or run_mode == 'band_mesh':
 
         # Total DOS
         elif (args.is_graph_plot or settings.get_is_dos_mode()):
-            dos_range = settings.get_dos_range()
-
             phonon.set_total_DOS(
                 sigma=settings.get_sigma(),
-                freq_min=dos_range['min'],
-                freq_max=dos_range['max'],
-                freq_pitch=dos_range['step'],
+                freq_min=settings.get_min_frequency(),
+                freq_max=settings.get_max_frequency(),
+                freq_pitch=settings.get_frequency_pitch(),
                 tetrahedron_method=settings.get_is_tetrahedron_method())
 
             if log_level > 0:

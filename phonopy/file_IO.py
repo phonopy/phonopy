@@ -157,24 +157,46 @@ def iter_collect_forces(filename,
 #
 # FORCE_CONSTANTS, force_constants.hdf5
 #
-def write_FORCE_CONSTANTS(force_constants, filename='FORCE_CONSTANTS'):
+def write_FORCE_CONSTANTS(force_constants,
+                          filename='FORCE_CONSTANTS',
+                          p2s_map=None):
+    """Write force constants in text file format.
+
+    Args:
+        force_constants(np.array(double)): Force constants
+        p2s_map(np.array(intc)):
+             Primitive atom indices in supercell index system
+
+    """
+
+    if p2s_map is not None and len(p2s_map) == force_constants.shape[0]:
+        indices = p2s_map
+    else:
+        indices = np.arange(force_constants.shape[0], dtype='intc')
+
     with open(filename, 'w') as w:
         fc_shape = force_constants.shape
         w.write("%4d %4d\n" % fc_shape[:2])
-        for i in range(fc_shape[0]):
+        for i, s_i in enumerate(indices):
             for j in range(fc_shape[1]):
-                w.write("%4d%4d\n" % (i+1, j+1))
+                w.write("%4d%4d\n" % (s_i + 1, j + 1))
                 for vec in force_constants[i][j]:
                     w.write(("%22.15f"*3 + "\n") % tuple(vec))
 
 def write_force_constants_to_hdf5(force_constants,
-                                  filename='force_constants.hdf5'):
+                                  filename='force_constants.hdf5',
+                                  p2s_map=None):
     import h5py
     with h5py.File(filename, 'w') as w:
         w.create_dataset('force_constants', data=force_constants)
+        if p2s_map is not None:
+            w.create_dataset('p2s_map', data=p2s_map)
 
-def parse_FORCE_CONSTANTS(filename="FORCE_CONSTANTS"):
+def parse_FORCE_CONSTANTS(filename="FORCE_CONSTANTS",
+                          p2s_map=None):
     with open(filename) as fcfile:
+        idx1 = []
+
         line = fcfile.readline()
         idx = [int(x) for x in line.split()]
         if len(idx) == 1:
@@ -182,20 +204,40 @@ def parse_FORCE_CONSTANTS(filename="FORCE_CONSTANTS"):
         force_constants = np.zeros((idx[0], idx[1], 3, 3), dtype='double')
         for i in range(idx[0]):
             for j in range(idx[1]):
-                fcfile.readline()
+                s_i = int(fcfile.readline().split()[0]) - 1
+                if s_i not in idx1:
+                    idx1.append(s_i)
                 tensor = []
                 for k in range(3):
                     tensor.append([float(x)
                                    for x in fcfile.readline().split()])
                 force_constants[i, j] = tensor
 
+        _check_force_constants_indices(idx, idx1, p2s_map)
+
         return force_constants
 
-def read_force_constants_hdf5(filename="force_constants.hdf5"):
+def read_force_constants_hdf5(filename="force_constants.hdf5",
+                              p2s_map=None):
     import h5py
     with h5py.File(filename, 'r') as f:
         key = list(f)[0]
-        return f[key][:]
+        fc = f[key][:]
+        if 'p2s_map' in f:
+            p2s_map_in_file = f['p2s_map'][:]
+            _check_force_constants_indices(fc.shape[:2],
+                                           p2s_map_in_file,
+                                           p2s_map)
+        return fc
+
+def _check_force_constants_indices(shape, indices, p2s_map):
+    if shape[0] != shape[1] and p2s_map is not None:
+        if (p2s_map != indices).any():
+            print("FORCE_CONSTANTS file is inconsistent with calculation "
+                  "setting.")
+            print("PRIMITIVE_AXIS is not set or is wrongly set.")
+            raise ValueError
+
 
 #
 # disp.yaml
