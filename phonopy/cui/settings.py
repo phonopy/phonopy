@@ -938,8 +938,6 @@ class PhonopySettings(Settings):
         self._band_connection = False
         self._cutoff_radius = None
         self._dos = None
-        self._dos_range = {'min':  None,
-                           'max':  None}
         self._fc_computation_algorithm = "svd"
         self._fc_spg_symmetry = False
         self._fits_Debye_model = False
@@ -1032,17 +1030,6 @@ class PhonopySettings(Settings):
 
     def get_cutoff_radius(self):
         return self._cutoff_radius
-
-    def set_dos_range(self, fmin, fmax, fpitch):
-        self._fmin = fmin
-        self._fmax = fmax
-        self._fpitch = fpitch
-
-    def get_dos_range(self):
-        dos_range = {'min': self._fmin,
-                     'max': self._fmax,
-                     'step': self._fpitch}
-        return dos_range
 
     def set_fc_computation_algorithm(self, fc_computation_algorithm):
         self._fc_computation_algorithm = fc_computation_algorithm
@@ -1909,8 +1896,9 @@ class PhonopyConfParser(ConfParser):
             fmin =  params['dos_range'][0]
             fmax =  params['dos_range'][1]
             fpitch = params['dos_range'][2]
-            self._settings.set_dos_range(fmin, fmax, fpitch)
-
+            self._settings.set_min_frequency(fmin)
+            self._settings.set_max_frequency(fmax)
+            self._settings.set_frequency_pitch(fpitch)
         if 'dos' in params:
             self._settings.set_is_dos_mode(params['dos'])
 
