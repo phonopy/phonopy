@@ -221,8 +221,10 @@ just adding the ``--nac`` option as follows::
 .. |pwscf-band-nac| image:: NaCl-pwscf-band-NAC.png
                             :width: 50%
 
-q2r.x
-------
+.. _qe_q2r:
+
+Using ``q2r.x`` to create phonopy force constants file
+-------------------------------------------------------
 
 **Experimental**
 
@@ -231,8 +233,7 @@ command-line user interface is not prepared. Using the following
 script, the force constants file readable by phonopy is
 created. Probably thus obtained force constants are required to be
 symmetrized by the translational invariance condition using
-``FC_SYMMETRY = .TRUE.``. It has to be careful that the force
-constants file can be super huge when q-point mesh is dense.
+``FC_SYMMETRY = .TRUE.``.
 
 ::
 

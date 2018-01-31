@@ -3,6 +3,17 @@
 Change Log
 ==========
 
+Jan-31-2018: Version 1.12.6
+----------------------------
+
+* Force constants file formats of ``FORCE_CONSTANTS`` and
+  ``force_constants.hdf5`` are extended to support smaller size force
+  constants. Backward compatibility is preserved. See
+  :ref:`file_force_constants`. To write out force constants, the
+  compact format is chosen as the default for usual cases.
+* Performance improvement of phonopy and spglib by Michael
+  Lamparski which is effective especially for larger unit cell systems.
+
 Jan-7-2018: Version 1.12.4
 -----------------------------
 

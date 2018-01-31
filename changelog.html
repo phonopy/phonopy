@@ -3,13 +3,13 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Change Log &#8212; Phonopy v.1.12.4</title>
+    <title>Change Log &#8212; Phonopy v.1.12.6</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.12.4',
+        VERSION:     '1.12.6',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -47,7 +47,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.12.4</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.12.6</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -99,6 +99,7 @@
       role="menu"
       aria-labelledby="dLabelLocalToc"><ul>
 <li><a class="reference internal" href="#">Change Log</a><ul>
+<li><a class="reference internal" href="#jan-31-2018-version-1-12-6">Jan-31-2018: Version 1.12.6</a></li>
 <li><a class="reference internal" href="#jan-7-2018-version-1-12-4">Jan-7-2018: Version 1.12.4</a></li>
 <li><a class="reference internal" href="#nov-8-2017-version-1-12-2">Nov-8-2017: Version 1.12.2</a></li>
 <li><a class="reference internal" href="#oct-19-2017-version-1-12-0">Oct-19-2017: Version 1.12.0</a></li>
@@ -224,6 +225,18 @@
       
   <div class="section" id="change-log">
 <span id="changelog"></span><h1>Change Log<a class="headerlink" href="#change-log" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="jan-31-2018-version-1-12-6">
+<h2>Jan-31-2018: Version 1.12.6<a class="headerlink" href="#jan-31-2018-version-1-12-6" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Force constants file formats of <code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span></code> and
+<code class="docutils literal"><span class="pre">force_constants.hdf5</span></code> are extended to support smaller size force
+constants. Backward compatibility is preserved. See
+<a class="reference internal" href="input-files.html#file-force-constants"><span class="std std-ref">FORCE_CONSTANTS and force_constants.hdf5</span></a>. To write out force constants, the
+compact format is chosen as the default for usual cases.</li>
+<li>Performance improvement of phonopy and spglib by Michael
+Lamparski which is effective especially for larger unit cell systems.</li>
+</ul>
+</div>
 <div class="section" id="jan-7-2018-version-1-12-4">
 <h2>Jan-7-2018: Version 1.12.4<a class="headerlink" href="#jan-7-2018-version-1-12-4" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">

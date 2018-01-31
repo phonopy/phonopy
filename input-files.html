@@ -3,13 +3,13 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Input files &#8212; Phonopy v.1.12.4</title>
+    <title>Input files &#8212; Phonopy v.1.12.6</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.12.4',
+        VERSION:     '1.12.6',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -47,7 +47,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.12.4</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.12.6</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -109,19 +109,19 @@
 <li><a class="reference internal" href="#example">Example</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#force-constants"><code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span></code></a><ul>
-<li><a class="reference internal" href="#format">Format</a></li>
+<li><a class="reference internal" href="#force-constants-and-force-constants-hdf5"><code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span></code> and <code class="docutils literal"><span class="pre">force_constants.hdf5</span></code></a><ul>
+<li><a class="reference internal" href="#format-of-force-constants">Format of <code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span></code></a></li>
 <li><a class="reference internal" href="#id1">Example</a></li>
+<li><a class="reference internal" href="#format-of-force-constants-hdf5">Format of <code class="docutils literal"><span class="pre">force_constants.hdf5</span></code></a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#force-constants-hdf5"><code class="docutils literal"><span class="pre">force_constants.hdf5</span></code></a></li>
 <li><a class="reference internal" href="#qpoints-optional"><code class="docutils literal"><span class="pre">QPOINTS</span></code> (optional)</a><ul>
 <li><a class="reference internal" href="#id2">Example</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#born-optional"><code class="docutils literal"><span class="pre">BORN</span></code> (optional)</a><ul>
-<li><a class="reference internal" href="#id3">Format</a></li>
-<li><a class="reference internal" href="#id4">Example</a></li>
+<li><a class="reference internal" href="#format">Format</a></li>
+<li><a class="reference internal" href="#id3">Example</a></li>
 </ul>
 </li>
 </ul>
@@ -171,35 +171,35 @@
 <h1>Input files<a class="headerlink" href="#input-files" title="Permalink to this headline">¶</a></h1>
 <div class="contents local topic" id="contents">
 <ul class="simple">
-<li><a class="reference internal" href="#setting-file" id="id5">Setting file</a></li>
-<li><a class="reference internal" href="#structure-file-poscar" id="id6">Structure file (<code class="docutils literal"><span class="pre">POSCAR</span></code>)</a><ul>
-<li><a class="reference internal" href="#example-of-rutile-type-silicon-oxide-crystal-structure-1" id="id7">Example of rutile-type silicon oxide crystal structure (1)</a></li>
-<li><a class="reference internal" href="#example-of-rutile-type-silicon-oxide-crystal-structure-2" id="id8">Example of rutile-type silicon oxide crystal structure (2)</a></li>
+<li><a class="reference internal" href="#setting-file" id="id4">Setting file</a></li>
+<li><a class="reference internal" href="#structure-file-poscar" id="id5">Structure file (<code class="docutils literal"><span class="pre">POSCAR</span></code>)</a><ul>
+<li><a class="reference internal" href="#example-of-rutile-type-silicon-oxide-crystal-structure-1" id="id6">Example of rutile-type silicon oxide crystal structure (1)</a></li>
+<li><a class="reference internal" href="#example-of-rutile-type-silicon-oxide-crystal-structure-2" id="id7">Example of rutile-type silicon oxide crystal structure (2)</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#force-file-force-sets" id="id9">Force file (<code class="docutils literal"><span class="pre">FORCE_SETS</span></code>)</a><ul>
-<li><a class="reference internal" href="#example" id="id10">Example</a></li>
+<li><a class="reference internal" href="#force-file-force-sets" id="id8">Force file (<code class="docutils literal"><span class="pre">FORCE_SETS</span></code>)</a><ul>
+<li><a class="reference internal" href="#example" id="id9">Example</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#force-constants" id="id11"><code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span></code></a><ul>
-<li><a class="reference internal" href="#format" id="id12">Format</a></li>
-<li><a class="reference internal" href="#id1" id="id13">Example</a></li>
+<li><a class="reference internal" href="#force-constants-and-force-constants-hdf5" id="id10"><code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span></code> and <code class="docutils literal"><span class="pre">force_constants.hdf5</span></code></a><ul>
+<li><a class="reference internal" href="#format-of-force-constants" id="id11">Format of <code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span></code></a></li>
+<li><a class="reference internal" href="#id1" id="id12">Example</a></li>
+<li><a class="reference internal" href="#format-of-force-constants-hdf5" id="id13">Format of <code class="docutils literal"><span class="pre">force_constants.hdf5</span></code></a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#force-constants-hdf5" id="id14"><code class="docutils literal"><span class="pre">force_constants.hdf5</span></code></a></li>
-<li><a class="reference internal" href="#qpoints-optional" id="id15"><code class="docutils literal"><span class="pre">QPOINTS</span></code> (optional)</a><ul>
-<li><a class="reference internal" href="#id2" id="id16">Example</a></li>
+<li><a class="reference internal" href="#qpoints-optional" id="id14"><code class="docutils literal"><span class="pre">QPOINTS</span></code> (optional)</a><ul>
+<li><a class="reference internal" href="#id2" id="id15">Example</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#born-optional" id="id17"><code class="docutils literal"><span class="pre">BORN</span></code> (optional)</a><ul>
-<li><a class="reference internal" href="#id3" id="id18">Format</a></li>
-<li><a class="reference internal" href="#id4" id="id19">Example</a></li>
+<li><a class="reference internal" href="#born-optional" id="id16"><code class="docutils literal"><span class="pre">BORN</span></code> (optional)</a><ul>
+<li><a class="reference internal" href="#format" id="id17">Format</a></li>
+<li><a class="reference internal" href="#id3" id="id18">Example</a></li>
 </ul>
 </li>
 </ul>
 </div>
 <div class="section" id="setting-file">
-<h2><a class="toc-backref" href="#id5">Setting file</a><a class="headerlink" href="#setting-file" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id4">Setting file</a><a class="headerlink" href="#setting-file" title="Permalink to this headline">¶</a></h2>
 <p>A setting file contains phonopy settings which are summarized at
 <a class="reference internal" href="setting-tags.html#setting-tags"><span class="std std-ref">Setting tags</span></a>. This file is passed to phonopy as an argument,
 e.g.,</p>
@@ -209,7 +209,7 @@ e.g.,</p>
 <p>where the filename is arbitrary.</p>
 </div>
 <div class="section" id="structure-file-poscar">
-<h2><a class="toc-backref" href="#id6">Structure file (<code class="docutils literal"><span class="pre">POSCAR</span></code>)</a><a class="headerlink" href="#structure-file-poscar" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id5">Structure file (<code class="docutils literal"><span class="pre">POSCAR</span></code>)</a><a class="headerlink" href="#structure-file-poscar" title="Permalink to this headline">¶</a></h2>
 <p>Crystal structure is written in VASP’s manner (for Wien2k interface,
 see <a class="reference internal" href="command-options.html#wien2k-mode"><span class="std std-ref">WIEN2k mode</span></a>). The format is
 simple. The first line is for your comment, where you can write
@@ -223,7 +223,7 @@ that the atomic positions are represented in fractional (reduced)
 coordinates. When you write chemical symbols in the first line, they
 are read and those defined by the <code class="docutils literal"><span class="pre">ATOM_NAME</span></code> tag are overwritten.</p>
 <div class="section" id="example-of-rutile-type-silicon-oxide-crystal-structure-1">
-<span id="example-poscar1"></span><h3><a class="toc-backref" href="#id7">Example of rutile-type silicon oxide crystal structure (1)</a><a class="headerlink" href="#example-of-rutile-type-silicon-oxide-crystal-structure-1" title="Permalink to this headline">¶</a></h3>
+<span id="example-poscar1"></span><h3><a class="toc-backref" href="#id6">Example of rutile-type silicon oxide crystal structure (1)</a><a class="headerlink" href="#example-of-rutile-type-silicon-oxide-crystal-structure-1" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">Si</span> <span class="n">O</span>
    <span class="mf">1.00000000000000</span>
      <span class="mf">4.2266540199664249</span>    <span class="mf">0.0000000000000000</span>    <span class="mf">0.0000000000000000</span>
@@ -245,7 +245,7 @@ this line overwrite those defined by the <code class="docutils literal"><span cl
 defined by the first line of <code class="docutils literal"><span class="pre">POSCAR</span></code>.</p>
 </div>
 <div class="section" id="example-of-rutile-type-silicon-oxide-crystal-structure-2">
-<h3><a class="toc-backref" href="#id8">Example of rutile-type silicon oxide crystal structure (2)</a><a class="headerlink" href="#example-of-rutile-type-silicon-oxide-crystal-structure-2" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id7">Example of rutile-type silicon oxide crystal structure (2)</a><a class="headerlink" href="#example-of-rutile-type-silicon-oxide-crystal-structure-2" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">Stishovite</span>
    <span class="mf">1.00000000000000</span>
      <span class="mf">4.2266540199664249</span>    <span class="mf">0.0000000000000000</span>    <span class="mf">0.0000000000000000</span>
@@ -265,7 +265,7 @@ defined by the first line of <code class="docutils literal"><span class="pre">PO
 </div>
 </div>
 <div class="section" id="force-file-force-sets">
-<span id="file-forces"></span><h2><a class="toc-backref" href="#id9">Force file (<code class="docutils literal"><span class="pre">FORCE_SETS</span></code>)</a><a class="headerlink" href="#force-file-force-sets" title="Permalink to this headline">¶</a></h2>
+<span id="file-forces"></span><h2><a class="toc-backref" href="#id8">Force file (<code class="docutils literal"><span class="pre">FORCE_SETS</span></code>)</a><a class="headerlink" href="#force-file-force-sets" title="Permalink to this headline">¶</a></h2>
 <p>This file gives sets of forces in supercells with finite atomic
 displacements. Each supercell involves one displaced atom.  The first
 line is the number of atoms in supercell. The second line gives number
@@ -286,7 +286,7 @@ until the forces of all the displacements have been written.</p>
 <p>See also <a class="reference internal" href="command-options.html#vasp-force-sets-option"><span class="std std-ref">VASP interface</span></a> and
 <a class="reference internal" href="command-options.html#wien2k-force-sets-option"><span class="std std-ref">WIEN2k interface</span></a> for VASP and Wien2k users.</p>
 <div class="section" id="example">
-<h3><a class="toc-backref" href="#id10">Example</a><a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id9">Example</a><a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="mi">48</span>
 <span class="mi">2</span>
 
@@ -307,17 +307,32 @@ until the forces of all the displacements have been written.</p>
 </div>
 </div>
 </div>
-<div class="section" id="force-constants">
-<span id="file-force-constants"></span><h2><a class="toc-backref" href="#id11"><code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span></code></a><a class="headerlink" href="#force-constants" title="Permalink to this headline">¶</a></h2>
-<p>If the force constants of a supercell are known, it is not
-necessary to prepared <code class="docutils literal"><span class="pre">FORCES</span></code>. Phonopy has an interface to read and write
-<code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span></code>.  To read and write <code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span></code> are
-controlled by <a class="reference internal" href="setting-tags.html#force-constants-tag"><span class="std std-ref">Force constants</span></a>.</p>
-<p>VASP users can use <a class="reference internal" href="command-options.html#vasp-force-constants"><span class="std std-ref">VASP DFPT interface</span></a>
-to create <code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span></code> from <code class="docutils literal"><span class="pre">vasprun.xml</span></code>.</p>
-<div class="section" id="format">
-<h3><a class="toc-backref" href="#id12">Format</a><a class="headerlink" href="#format" title="Permalink to this headline">¶</a></h3>
-<p>First line is for the number of atoms in supercell. Below second line,
+<div class="section" id="force-constants-and-force-constants-hdf5">
+<span id="file-force-constants"></span><h2><a class="toc-backref" href="#id10"><code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span></code> and <code class="docutils literal"><span class="pre">force_constants.hdf5</span></code></a><a class="headerlink" href="#force-constants-and-force-constants-hdf5" title="Permalink to this headline">¶</a></h2>
+<p>If the force constants of a supercell are known, it is not necessary
+to prepared <code class="docutils literal"><span class="pre">FORCES</span></code>. Phonopy has an interface to read and write
+<code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span></code> or <code class="docutils literal"><span class="pre">force_constants.hdf5</span></code>.  To read and write
+these files are controlled by <a class="reference internal" href="setting-tags.html#force-constants-tag"><span class="std std-ref">force constants tags</span></a> and <a class="reference internal" href="setting-tags.html#fc-format-tag"><span class="std std-ref">FC_FORMAT,  READFC_FORMAT, WRITEFC_FORMAT</span></a>. VASP users can use
+<a class="reference internal" href="command-options.html#vasp-force-constants"><span class="std std-ref">VASP DFPT interface</span></a> to create
+<code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span></code> from <code class="docutils literal"><span class="pre">vasprun.xml</span></code>. Quantum ESPRESSO users can
+use <code class="docutils literal"><span class="pre">q2r.x</span></code> to create force constants file by followng the
+instraction shown at <a class="reference internal" href="pwscf.html#qe-q2r"><span class="std std-ref">Using q2r.x to create phonopy force constants file</span></a></p>
+<p>Force constants are stored in an array whose shape is either</p>
+<ol class="arabic simple">
+<li><code class="docutils literal"><span class="pre">(n_satom,</span> <span class="pre">n_satom,</span> <span class="pre">3,</span> <span class="pre">3)</span></code></li>
+<li><code class="docutils literal"><span class="pre">(n_patom,</span> <span class="pre">n_satom,</span> <span class="pre">3,</span> <span class="pre">3)</span></code></li>
+</ol>
+<p>where <code class="docutils literal"><span class="pre">n_satom</span></code> and <code class="docutils literal"><span class="pre">n_patom</span></code> are the numbers of atoms in
+supercell and primitive cell, respectively.</p>
+<div class="section" id="format-of-force-constants">
+<h3><a class="toc-backref" href="#id11">Format of <code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span></code></a><a class="headerlink" href="#format-of-force-constants" title="Permalink to this headline">¶</a></h3>
+<p>First line contains the first two elements of the shape of the force
+constants array, i.e., for <code class="docutils literal"><span class="pre">(n_satom,</span> <span class="pre">n_satom,</span> <span class="pre">3,</span> <span class="pre">3)</span></code>, the first and
+second numbers are the same and are the number of atoms in the
+supercell, and for <code class="docutils literal"><span class="pre">(n_patom,</span> <span class="pre">n_satom,</span> <span class="pre">3,</span> <span class="pre">3)</span></code>, they are the numbers
+of atoms in the primitive cell and supercell. If the first line
+contains only one number, it is assumed same as that of the former case.</p>
+<p>Below second line,
 force constants between atoms are written by every four lines. In
 first line of the four lines, anything can be written, i.e., just
 ignored. Second to fourth lines of the four lines are for the second
@@ -329,8 +344,8 @@ rank tensor of force constant in Cartesian coordinates, i.e.::</p>
 </div>
 </div>
 <div class="section" id="id1">
-<h3><a class="toc-backref" href="#id13">Example</a><a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="mi">32</span>
+<h3><a class="toc-backref" href="#id12">Example</a><a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="mi">32</span>  <span class="mi">32</span>
 <span class="mi">1</span>   <span class="mi">1</span>
   <span class="mf">4.635786969900131</span>    <span class="o">-</span><span class="mf">0.000000000000000</span>    <span class="o">-</span><span class="mf">0.000000000000000</span>
  <span class="o">-</span><span class="mf">0.000000000000000</span>     <span class="mf">4.635786969900130</span>    <span class="o">-</span><span class="mf">0.000000000000000</span>
@@ -356,22 +371,42 @@ rank tensor of force constant in Cartesian coordinates, i.e.::</p>
 </pre></div>
 </div>
 </div>
-</div>
-<div class="section" id="force-constants-hdf5">
-<h2><a class="toc-backref" href="#id14"><code class="docutils literal"><span class="pre">force_constants.hdf5</span></code></a><a class="headerlink" href="#force-constants-hdf5" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="format-of-force-constants-hdf5">
+<h3><a class="toc-backref" href="#id13">Format of <code class="docutils literal"><span class="pre">force_constants.hdf5</span></code></a><a class="headerlink" href="#format-of-force-constants-hdf5" title="Permalink to this headline">¶</a></h3>
 <p>This is an alternative of <code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span></code> but the data is stored
 in HDF5 format. See the detail of how to obtain this file,
 <a class="reference internal" href="setting-tags.html#fc-format-tag"><span class="std std-ref">FC_FORMAT,  READFC_FORMAT, WRITEFC_FORMAT</span></a>.</p>
+<p>The data are stored as follows. <code class="docutils literal"><span class="pre">p2s_map</span></code> is introduced at version
+1.12.6. Force constants data can be stored in the array shape of
+either <code class="docutils literal"><span class="pre">(n_satom,</span> <span class="pre">n_satom,</span> <span class="pre">3,</span> <span class="pre">3)</span></code> or <code class="docutils literal"><span class="pre">(n_patom,</span> <span class="pre">n_satom,</span> <span class="pre">3,</span> <span class="pre">3)</span></code>.
+In the later case, <code class="docutils literal"><span class="pre">p2s_map</span></code> is necessary for the consistency check
+and this gives the indices of atoms in the primitive cell in supercell
+index system.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">In</span> <span class="p">[</span><span class="mi">1</span><span class="p">]:</span> <span class="kn">import</span> <span class="nn">h5py</span>
+<span class="n">f</span>
+<span class="n">In</span> <span class="p">[</span><span class="mi">2</span><span class="p">]:</span> <span class="n">f</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="s2">&quot;force_constants.hdf5&quot;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span>
+
+<span class="n">In</span> <span class="p">[</span><span class="mi">3</span><span class="p">]:</span> <span class="nb">list</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+<span class="n">Out</span><span class="p">[</span><span class="mi">3</span><span class="p">]:</span> <span class="p">[</span><span class="s1">&#39;force_constants&#39;</span><span class="p">,</span> <span class="s1">&#39;p2s_map&#39;</span><span class="p">]</span>
+
+<span class="n">In</span> <span class="p">[</span><span class="mi">4</span><span class="p">]:</span> <span class="n">f</span><span class="p">[</span><span class="s1">&#39;force_constants&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+<span class="n">Out</span><span class="p">[</span><span class="mi">4</span><span class="p">]:</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+
+<span class="n">In</span> <span class="p">[</span><span class="mi">5</span><span class="p">]:</span> <span class="n">f</span><span class="p">[</span><span class="s1">&#39;p2s_map&#39;</span><span class="p">][:]</span>
+<span class="n">Out</span><span class="p">[</span><span class="mi">5</span><span class="p">]:</span> <span class="n">array</span><span class="p">([</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">32</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">int32</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
 </div>
 <div class="section" id="qpoints-optional">
-<span id="qpoints-file"></span><h2><a class="toc-backref" href="#id15"><code class="docutils literal"><span class="pre">QPOINTS</span></code> (optional)</a><a class="headerlink" href="#qpoints-optional" title="Permalink to this headline">¶</a></h2>
+<span id="qpoints-file"></span><h2><a class="toc-backref" href="#id14"><code class="docutils literal"><span class="pre">QPOINTS</span></code> (optional)</a><a class="headerlink" href="#qpoints-optional" title="Permalink to this headline">¶</a></h2>
 <p>Specific q-points are calculated using <code class="docutils literal"><span class="pre">QPOINTS</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code> tag and
 <code class="docutils literal"><span class="pre">QPOINTS</span></code> file. The file format of <code class="docutils literal"><span class="pre">QPOINTS</span></code> is as follows. The
 first line gives the number of q-points. Then the successive lines
 give q-points in reduced coordinate of reciprocal space of the input
 unit cell.</p>
 <div class="section" id="id2">
-<h3><a class="toc-backref" href="#id16">Example</a><a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id15">Example</a><a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="mi">512</span>
 <span class="o">-</span><span class="mf">0.437500000000000</span>  <span class="o">-</span><span class="mf">0.437500000000000</span>  <span class="o">-</span><span class="mf">0.437500000000000</span>
 <span class="o">-</span><span class="mf">0.312500000000000</span>  <span class="o">-</span><span class="mf">0.437500000000000</span>  <span class="o">-</span><span class="mf">0.437500000000000</span>
@@ -382,11 +417,11 @@ unit cell.</p>
 </div>
 </div>
 <div class="section" id="born-optional">
-<span id="born-file"></span><h2><a class="toc-backref" href="#id17"><code class="docutils literal"><span class="pre">BORN</span></code> (optional)</a><a class="headerlink" href="#born-optional" title="Permalink to this headline">¶</a></h2>
+<span id="born-file"></span><h2><a class="toc-backref" href="#id16"><code class="docutils literal"><span class="pre">BORN</span></code> (optional)</a><a class="headerlink" href="#born-optional" title="Permalink to this headline">¶</a></h2>
 <p>This file is used with the <code class="docutils literal"><span class="pre">--nac</span></code> option or <code class="docutils literal"><span class="pre">NAC</span></code> tag.</p>
 <p>The formula implemented is refered to <a class="reference internal" href="formulation.html#non-analytical-term-correction-theory"><span class="std std-ref">Non-analytical term correction</span></a>.</p>
-<div class="section" id="id3">
-<h3><a class="toc-backref" href="#id18">Format</a><a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="format">
+<h3><a class="toc-backref" href="#id17">Format</a><a class="headerlink" href="#format" title="Permalink to this headline">¶</a></h3>
 <p>In the first line, unit conversion factor is given. In versions 1.10.4
 or later, the default value for each calculater can be used if
 characters than numerical number are given. The default values for the
@@ -477,8 +512,8 @@ hexagonal unit cell is used for the calculation, the Born effective
 charge tensors of atoms No. 1 and 13 have to be written in <code class="docutils literal"><span class="pre">BORN</span></code>
 file.</p>
 </div>
-<div class="section" id="id4">
-<h3><a class="toc-backref" href="#id19">Example</a><a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id3">
+<h3><a class="toc-backref" href="#id18">Example</a><a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-default"><div class="highlight"><pre><span></span> <span class="mf">14.400</span>
  <span class="mf">3.269</span>  <span class="mf">0.000</span>  <span class="mf">0.000</span>  <span class="mf">0.000</span>  <span class="mf">3.269</span>  <span class="mf">0.000</span>  <span class="mf">0.000</span>  <span class="mf">0.000</span>  <span class="mf">3.234</span>
  <span class="mf">2.981</span>  <span class="mf">0.000</span>  <span class="mf">0.000</span>  <span class="mf">0.000</span>  <span class="mf">2.981</span>  <span class="mf">0.000</span>  <span class="mf">0.000</span>  <span class="mf">0.000</span>  <span class="mf">2.952</span>
