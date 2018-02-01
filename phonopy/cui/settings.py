@@ -82,7 +82,6 @@ class Settings(object):
         self._tmax = 1000
         self._tmin = 0
         self._tstep = 10
-        self._tsym_type = 0
         self._yaml_mode = False
 
     def set_band_paths(self, band_paths):
@@ -313,16 +312,6 @@ class Settings(object):
     def get_time_reversal_symmetry(self):
         return self._is_time_reversal_symmetry
 
-    # Translational symmetry type
-    # 0: No imposition
-    # 1: Simple sum, sum(fc) / N
-    # 2: Weighted sum, sum(fc) * abs(fc) / sum(abs(fc))
-    def set_tsym_type(self, tsym_type):
-        self._tsym_type = tsym_type
-
-    def get_tsym_type(self):
-        return self._tsym_type
-
     def set_yaml_mode(self, yaml_mode):
         self._yaml_mode = yaml_mode
 
@@ -448,10 +437,6 @@ class ConfParser(object):
         if 'is_translational_symmetry' in arg_list:
             if self._args.is_translational_symmetry:
                 self._confs['translation'] = '.true.'
-
-        if 'tsym_type' in arg_list:
-            if self._args.tsym_type:
-                self._confs['tsym_type'] = self._args.tsym_type
 
         if 'is_plusminus_displacements' in arg_list:
             if self._args.is_plusminus_displacements:
@@ -631,9 +616,6 @@ class ConfParser(object):
             if conf_key == 'translation':
                 if confs['translation'].lower() == '.true.':
                     self.set_parameter('is_translation', True)
-
-            if conf_key == 'tsym_type':
-                self.set_parameter('tsym_type', confs['tsym_type'])
 
             if conf_key == 'rotational':
                 if confs['rotational'].lower() == '.true.':
@@ -890,10 +872,6 @@ class ConfParser(object):
             self._settings.set_min_temperature(params['tmin'])
         if 'tstep' in params:
             self._settings.set_temperature_step(params['tstep'])
-
-        # Choice of imposing translational invariance
-        if 'tsym_type' in params:
-            self._settings.set_tsym_type(params['tsym_type'])
 
         # Band paths
         # BAND = 0.0 0.0 0.0  0.5 0.0 0.0  0.5 0.5 0.0  0.0 0.0 0.0  0.5 0.5 0.5
