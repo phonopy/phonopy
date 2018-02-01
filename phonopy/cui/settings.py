@@ -65,7 +65,6 @@ class Settings(object):
         self._is_symmetry = True
         self._is_tetrahedron_method = False
         self._is_time_reversal_symmetry = True
-        self._is_translational_symmetry = False
         self._is_trigonal_displacement = False
         self._magmoms = None
         self._masses = None
@@ -221,12 +220,6 @@ class Settings(object):
 
     def get_is_symmetry(self):
         return self._is_symmetry
-
-    def set_is_translational_symmetry(self, is_translational_symmetry):
-        self._is_translational_symmetry = is_translational_symmetry
-
-    def get_is_translational_symmetry(self):
-        return self._is_translational_symmetry
 
     def set_magnetic_moments(self, magmoms):
         self._magmoms = magmoms
@@ -434,10 +427,6 @@ class ConfParser(object):
             if self._args.is_nosym:
                 self._confs['symmetry'] = '.false.'
 
-        if 'is_translational_symmetry' in arg_list:
-            if self._args.is_translational_symmetry:
-                self._confs['translation'] = '.true.'
-
         if 'is_plusminus_displacements' in arg_list:
             if self._args.is_plusminus_displacements:
                 self._confs['pm'] = '.true.'
@@ -612,10 +601,6 @@ class ConfParser(object):
             if conf_key == 'mesh_symmetry':
                 if confs['mesh_symmetry'].lower() == '.false.':
                     self.set_parameter('is_mesh_symmetry', False)
-
-            if conf_key == 'translation':
-                if confs['translation'].lower() == '.true.':
-                    self.set_parameter('is_translation', True)
 
             if conf_key == 'rotational':
                 if confs['rotational'].lower() == '.true.':
@@ -817,11 +802,6 @@ class ConfParser(object):
         if 'is_tetrahedron_method' in params:
             self._settings.set_is_tetrahedron_method(
                 params['is_tetrahedron_method'])
-
-        # Is translational invariance ?
-        if 'is_translation' in params:
-            self._settings.set_is_translational_symmetry(
-                params['is_translation'])
 
         # Trigonal displacement
         if 'is_trigonal_displacement' in params:
