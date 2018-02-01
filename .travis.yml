@@ -28,8 +28,8 @@ install:
     - cat __nanoversion__.txt
     - python setup.py install
 
-script: 
-    - cd test/phonopy 
+script:
+    - cd test/phonopy
     - python -m unittest discover -b
     - cd ../..
 
@@ -46,7 +46,7 @@ deploy:
         repo: atztogo/phonopy
         branch: rc
         tags: false
-        # python: 2.7
+        python: 2.7
 
     # testing anaconda
     - provider: script
@@ -69,7 +69,7 @@ deploy:
         repo: atztogo/phonopy
         branch: master
         tags: false
-        # python: 2.7  
+        python: 2.7
 
     # production anaconda
     - provider: script
