@@ -69,7 +69,7 @@ deploy:
         repo: atztogo/phonopy
         branch: master
         tags: false
-        # python: 2.7
+        python: 2.7
 
     # production anaconda
     - provider: script
