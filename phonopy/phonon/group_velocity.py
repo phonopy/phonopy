@@ -82,7 +82,7 @@ class GroupVelocity(object):
     <e(q,nu)|------|e(q,nu)>
               d q
     """
-    
+
     def __init__(self,
                  dynamical_matrix,
                  q_length=None,
@@ -179,13 +179,13 @@ class GroupVelocity(object):
             gv_sym += np.dot(r_cart, gv.T).T
 
         return gv_sym / len(rotations)
-    
+
     def _get_dD(self, q):
         if self._q_length is None:
             return self._get_dD_analytical(q)
         else:
             return self._get_dD_FD(q)
-    
+
     def _get_dD_FD(self, q): # finite difference
         ddm = []
         for dqc in self._directions * self._q_length:
@@ -193,7 +193,7 @@ class GroupVelocity(object):
             ddm.append(delta_dynamical_matrix(q, dq, self._dynmat) /
                        self._q_length / 2)
         return np.array(ddm)
-    
+
     def _get_dD_analytical(self, q):
         self._ddm.run(q)
         ddm = self._ddm.get_derivative_of_dynamical_matrix()
@@ -204,7 +204,7 @@ class GroupVelocity(object):
             for j in range(3):
                 ddm_dirs[i] += dq[j] * ddm[j]
         return ddm_dirs
-    
+
     def _perturb_D(self, ddms, eigsets):
         eigvals, eigvecs = np.linalg.eigh(
             np.dot(eigsets.T.conj(), np.dot(ddms[0], eigsets)))
@@ -215,5 +215,5 @@ class GroupVelocity(object):
             gv.append(
                 np.diag(np.dot(rot_eigsets.T.conj(),
                                np.dot(ddm, rot_eigsets))).real)
-        
+
         return np.transpose(gv)
