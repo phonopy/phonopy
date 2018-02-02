@@ -101,6 +101,10 @@ static double get_entropy_omega(const double temperature,
                                 const double omega);
 static double get_heat_capacity_omega(const double temperature,
                                       const double omega);
+static void set_index_permutation_symmetry_fc(double * fc,
+                                              const int natom);
+static void set_translational_symmetry_fc(double * fc,
+                                          const int natom);
 /* static double get_energy_omega(double temperature, double omega); */
 static int nint(const double a);
 
@@ -300,9 +304,8 @@ static PyObject * py_gsv_copy_smallest_vectors(PyObject *self, PyObject *args)
 static PyObject * py_perm_trans_symmetrize_fc(PyObject *self, PyObject *args)
 {
   PyArrayObject* force_constants;
-  double sum;
   double *fc;
-  int natom, i, j, k, l, m, n;
+  int natom;
 
   if (!PyArg_ParseTuple(args, "O", &force_constants)) {
     return NULL;
@@ -311,49 +314,8 @@ static PyObject * py_perm_trans_symmetrize_fc(PyObject *self, PyObject *args)
   fc = (double*)PyArray_DATA(force_constants);
   natom = PyArray_DIMS(force_constants)[0];
 
-#pragma omp parallel for private(j, k, l, m, n)
-  for (i = 0; i < natom; i++) {
-    /* non diagonal part */
-    for (j = i + 1; j < natom; j++) {
-      for (k = 0; k < 3; k++) {
-        for (l = 0; l < 3; l++) {
-          m = i * natom * 9 + j * 9 + k * 3 + l;
-          n = j * natom * 9 + i * 9 + l * 3 + k;
-          fc[m] += fc[n];
-          fc[m] /= 2;
-          fc[n] = fc[m];
-        }
-      }
-    }
-
-    /* diagnoal part */
-    for (k = 1; k < 3; k++) {
-      for (l = k + 1; l < 3; l++) {
-        m = i * natom * 9 + i * 9 + k * 3 + l;
-        n = i * natom * 9 + i * 9 + l * 3 + k;
-        fc[m] += fc[n];
-        fc[m] /= 2;
-        fc[n] = fc[m];
-      }
-    }
-  }
-
-  for (i = 0; i < natom; i++) {
-    for (k = 0; k < 3; k++) {
-      for (l = k; l < 3; l++) {
-        sum = 0;
-        m = i * natom * 9 + k * 3 + l;
-        for (j = 0; j < natom; j++) {
-          sum += fc[m];
-          m += 9;
-        }
-        fc[i * natom * 9 + i * 9 + k * 3 + l] -= sum;
-        if (k != l) {
-          fc[i * natom * 9 + i * 9 + l * 3 + k] -= sum;
-        }
-      }
-    }
-  }
+  set_index_permutation_symmetry_fc(fc, natom);
+  set_translational_symmetry_fc(fc, natom);
 
   Py_RETURN_NONE;
 }
@@ -1476,6 +1438,66 @@ distribute_fc2_with_mappings(double (*fc2)[3][3], /* shape[num_pos][num_pos] */
             }
           }
         }
+      }
+    }
+  }
+}
+
+static void set_index_permutation_symmetry_fc(double * fc,
+                                              const int natom)
+{
+  int i, j, k, l, m, n;
+
+#pragma omp parallel for private(j, k, l, m, n)
+  for (i = 0; i < natom; i++) {
+    /* non diagonal part */
+    for (j = i + 1; j < natom; j++) {
+      for (k = 0; k < 3; k++) {
+        for (l = 0; l < 3; l++) {
+          m = i * natom * 9 + j * 9 + k * 3 + l;
+          n = j * natom * 9 + i * 9 + l * 3 + k;
+          fc[m] += fc[n];
+          fc[m] /= 2;
+          fc[n] = fc[m];
+        }
+      }
+    }
+
+    /* diagnoal part */
+    for (k = 0; k < 2; k++) {
+      for (l = k + 1; l < 3; l++) {
+        m = i * natom * 9 + i * 9 + k * 3 + l;
+        n = i * natom * 9 + i * 9 + l * 3 + k;
+        fc[m] += fc[n];
+        fc[m] /= 2;
+        fc[n] = fc[m];
+      }
+    }
+  }
+}
+
+static void set_translational_symmetry_fc(double * fc,
+                                          const int natom)
+{
+  int i, j, k, l, m;
+  double sums[3][3];
+
+  for (i = 0; i < natom; i++) {
+    for (k = 0; k < 3; k++) {
+      for (l = 0; l < 3; l++) {
+        sums[k][l] = 0;
+        m = i * natom * 9 + k * 3 + l;
+        for (j = 0; j < natom; j++) {
+          if (i != j) {
+            sums[k][l] += fc[m];
+          }
+          m += 9;
+        }
+      }
+    }
+    for (k = 0; k < 3; k++) {
+      for (l = 0; l < 3; l++) {
+        fc[i * natom * 9 + i * 9 + k * 3 + l] = -(sums[k][l] + sums[l][k]) / 2;
       }
     }
   }
