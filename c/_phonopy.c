@@ -327,7 +327,7 @@ py_perm_trans_symmetrize_compact_fc(PyObject *self, PyObject *args)
   PyArrayObject* permutations_py;
   PyArrayObject* s2p_map_py;
   PyArrayObject* p2s_map_py;
-  double sum;
+  double sums[3][3];
   double *fc;
   int *s2p;
   int *p2s;
@@ -420,17 +420,21 @@ py_perm_trans_symmetrize_compact_fc(PyObject *self, PyObject *args)
 
   for (i = 0; i < n_patom; i++) {
     for (k = 0; k < 3; k++) {
-      for (l = k; l < 3; l++) {
-        sum = 0;
+      for (l = 0; l < 3; l++) {
+        sums[k][l] = 0;
         m = i * n_satom * 9 + k * 3 + l;
         for (j = 0; j < n_satom; j++) {
-          sum += fc_tmp[m];
+          if (i != j) {
+            sums[k][l] += fc_tmp[m];
+          }
           m += 9;
         }
-        fc_tmp[i * n_satom * 9 + p2s[i] * 9 + k * 3 + l] -= sum;
-        if (k != l) {
-          fc_tmp[i * n_satom * 9 + p2s[i] * 9 + l * 3 + k] -= sum;
-        }
+      }
+    }
+    for (k = 0; k < 3; k++) {
+      for (l = k; l < 3; l++) {
+        fc_tmp[i * n_satom * 9 + p2s[i] * 9 + k * 3 + l] =
+          -(sums[k][l] + sums[l][k]) / 2;
       }
     }
   }
