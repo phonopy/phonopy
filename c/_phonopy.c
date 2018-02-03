@@ -101,6 +101,10 @@ static double get_entropy_omega(const double temperature,
                                 const double omega);
 static double get_heat_capacity_omega(const double temperature,
                                       const double omega);
+static void set_index_permutation_symmetry_fc(double * fc,
+                                              const int natom);
+static void set_translational_symmetry_fc(double * fc,
+                                          const int natom);
 /* static double get_energy_omega(double temperature, double omega); */
 static int nint(const double a);
 
@@ -300,9 +304,8 @@ static PyObject * py_gsv_copy_smallest_vectors(PyObject *self, PyObject *args)
 static PyObject * py_perm_trans_symmetrize_fc(PyObject *self, PyObject *args)
 {
   PyArrayObject* force_constants;
-  double sum;
   double *fc;
-  int natom, i, j, k, l, m, n;
+  int natom;
 
   if (!PyArg_ParseTuple(args, "O", &force_constants)) {
     return NULL;
@@ -311,49 +314,8 @@ static PyObject * py_perm_trans_symmetrize_fc(PyObject *self, PyObject *args)
   fc = (double*)PyArray_DATA(force_constants);
   natom = PyArray_DIMS(force_constants)[0];
 
-#pragma omp parallel for private(j, k, l, m, n)
-  for (i = 0; i < natom; i++) {
-    /* non diagonal part */
-    for (j = i + 1; j < natom; j++) {
-      for (k = 0; k < 3; k++) {
-        for (l = 0; l < 3; l++) {
-          m = i * natom * 9 + j * 9 + k * 3 + l;
-          n = j * natom * 9 + i * 9 + l * 3 + k;
-          fc[m] += fc[n];
-          fc[m] /= 2;
-          fc[n] = fc[m];
-        }
-      }
-    }
-
-    /* diagnoal part */
-    for (k = 1; k < 3; k++) {
-      for (l = k + 1; l < 3; l++) {
-        m = i * natom * 9 + i * 9 + k * 3 + l;
-        n = i * natom * 9 + i * 9 + l * 3 + k;
-        fc[m] += fc[n];
-        fc[m] /= 2;
-        fc[n] = fc[m];
-      }
-    }
-  }
-
-  for (i = 0; i < natom; i++) {
-    for (k = 0; k < 3; k++) {
-      for (l = k; l < 3; l++) {
-        sum = 0;
-        m = i * natom * 9 + k * 3 + l;
-        for (j = 0; j < natom; j++) {
-          sum += fc[m];
-          m += 9;
-        }
-        fc[i * natom * 9 + i * 9 + k * 3 + l] -= sum;
-        if (k != l) {
-          fc[i * natom * 9 + i * 9 + l * 3 + k] -= sum;
-        }
-      }
-    }
-  }
+  set_index_permutation_symmetry_fc(fc, natom);
+  set_translational_symmetry_fc(fc, natom);
 
   Py_RETURN_NONE;
 }
@@ -365,7 +327,7 @@ py_perm_trans_symmetrize_compact_fc(PyObject *self, PyObject *args)
   PyArrayObject* permutations_py;
   PyArrayObject* s2p_map_py;
   PyArrayObject* p2s_map_py;
-  double sum;
+  double sums[3][3];
   double *fc;
   int *s2p;
   int *p2s;
@@ -432,15 +394,10 @@ py_perm_trans_symmetrize_compact_fc(PyObject *self, PyObject *args)
       i = p2s[i_p];
       if (i == j) { /* diagnoal part */
         for (k = 0; k < 3; k++) {
-          m = i_p * n_satom * 9 + i * 9 + k * 3 + k;
-          fc_tmp[m] = fc[m];
-        }
-        for (k = 1; k < 3; k++) {
-          for (l = k + 1; l < 3; l++) {
+          for (l = 0; l < 3; l++) {
             m = i_p * n_satom * 9 + i * 9 + k * 3 + l;
             n = i_p * n_satom * 9 + i * 9 + l * 3 + k;
             fc_tmp[m] = (fc[m] + fc[n]) / 2;
-            fc_tmp[n] = fc_tmp[m];
           }
         }
       } else { /* non diagonal part */
@@ -449,26 +406,29 @@ py_perm_trans_symmetrize_compact_fc(PyObject *self, PyObject *args)
             m = i_p * n_satom * 9 + j * 9 + k * 3 + l;
             n = s2pp[j] * n_satom * 9 + perms[nsym_list[j] * n_satom + i] * 9 + l * 3 + k;
             fc_tmp[m] = (fc[n] + fc[m]) / 2;
-            fc_tmp[n] = fc_tmp[m];
           }
         }
       }
     }
   }
 
-  for (i = 0; i < n_patom; i++) {
+  for (i_p = 0; i_p < n_patom; i_p++) {
     for (k = 0; k < 3; k++) {
-      for (l = k; l < 3; l++) {
-        sum = 0;
-        m = i * n_satom * 9 + k * 3 + l;
+      for (l = 0; l < 3; l++) {
+        sums[k][l] = 0;
+        m = i_p * n_satom * 9 + k * 3 + l;
         for (j = 0; j < n_satom; j++) {
-          sum += fc_tmp[m];
+          if (p2s[i_p] != j) {
+            sums[k][l] += fc_tmp[m];
+          }
           m += 9;
         }
-        fc_tmp[i * n_satom * 9 + p2s[i] * 9 + k * 3 + l] -= sum;
-        if (k != l) {
-          fc_tmp[i * n_satom * 9 + p2s[i] * 9 + l * 3 + k] -= sum;
-        }
+      }
+    }
+    for (k = 0; k < 3; k++) {
+      for (l = 0; l < 3; l++) {
+        fc_tmp[i_p * n_satom * 9 + p2s[i_p] * 9 + k * 3 + l] =
+          -(sums[k][l] + sums[l][k]) / 2;
       }
     }
   }
@@ -1476,6 +1436,66 @@ distribute_fc2_with_mappings(double (*fc2)[3][3], /* shape[num_pos][num_pos] */
             }
           }
         }
+      }
+    }
+  }
+}
+
+static void set_index_permutation_symmetry_fc(double * fc,
+                                              const int natom)
+{
+  int i, j, k, l, m, n;
+
+#pragma omp parallel for private(j, k, l, m, n)
+  for (i = 0; i < natom; i++) {
+    /* non diagonal part */
+    for (j = i + 1; j < natom; j++) {
+      for (k = 0; k < 3; k++) {
+        for (l = 0; l < 3; l++) {
+          m = i * natom * 9 + j * 9 + k * 3 + l;
+          n = j * natom * 9 + i * 9 + l * 3 + k;
+          fc[m] += fc[n];
+          fc[m] /= 2;
+          fc[n] = fc[m];
+        }
+      }
+    }
+
+    /* diagnoal part */
+    for (k = 0; k < 2; k++) {
+      for (l = k + 1; l < 3; l++) {
+        m = i * natom * 9 + i * 9 + k * 3 + l;
+        n = i * natom * 9 + i * 9 + l * 3 + k;
+        fc[m] += fc[n];
+        fc[m] /= 2;
+        fc[n] = fc[m];
+      }
+    }
+  }
+}
+
+static void set_translational_symmetry_fc(double * fc,
+                                          const int natom)
+{
+  int i, j, k, l, m;
+  double sums[3][3];
+
+  for (i = 0; i < natom; i++) {
+    for (k = 0; k < 3; k++) {
+      for (l = 0; l < 3; l++) {
+        sums[k][l] = 0;
+        m = i * natom * 9 + k * 3 + l;
+        for (j = 0; j < natom; j++) {
+          if (i != j) {
+            sums[k][l] += fc[m];
+          }
+          m += 9;
+        }
+      }
+    }
+    for (k = 0; k < 3; k++) {
+      for (l = 0; l < 3; l++) {
+        fc[i * natom * 9 + i * 9 + k * 3 + l] = -(sums[k][l] + sums[l][k]) / 2;
       }
     }
   }

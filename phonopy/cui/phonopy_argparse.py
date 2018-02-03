@@ -80,7 +80,7 @@ def get_parser():
         elk_mode=False,
         siesta_mode=False,
         cp2k_mode=False,
-        fc_symmetry=None,
+        fc_symmetry=False,
         fc_computation_algorithm=None,
         fc_format=None,
         fc_spg_symmetry=False,
