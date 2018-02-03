@@ -181,6 +181,8 @@ class Mesh(MeshBase):
         eigenvalues = self._eigenvalues
         natom = self._cell.get_number_of_atoms()
         rec_lattice = np.linalg.inv(self._cell.get_cell()) # column vectors
+        distances = np.sqrt(
+            np.sum(np.dot(self._qpoints, rec_lattice.T) ** 2, axis=1))
 
         w.write("mesh: [ %5d, %5d, %5d ]\n" % tuple(self._mesh))
         w.write("nqpoint: %-7d\n" % self._qpoints.shape[0])
@@ -193,8 +195,9 @@ class Mesh(MeshBase):
         w.write("\n")
         w.write("phonon:\n")
 
-        for i, q in enumerate(self._qpoints):
+        for i, (q, d) in enumerate(zip(self._qpoints, distances)):
             w.write("- q-position: [ %12.7f, %12.7f, %12.7f ]\n" % tuple(q))
+            w.write("  distance_from_gamma: %12.9f\n" % d)
             w.write("  weight: %-5d\n" % self._weights[i])
             w.write("  band:\n")
 
