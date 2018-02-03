@@ -394,15 +394,10 @@ py_perm_trans_symmetrize_compact_fc(PyObject *self, PyObject *args)
       i = p2s[i_p];
       if (i == j) { /* diagnoal part */
         for (k = 0; k < 3; k++) {
-          m = i_p * n_satom * 9 + i * 9 + k * 3 + k;
-          fc_tmp[m] = fc[m];
-        }
-        for (k = 1; k < 3; k++) {
-          for (l = k + 1; l < 3; l++) {
+          for (l = 0; l < 3; l++) {
             m = i_p * n_satom * 9 + i * 9 + k * 3 + l;
             n = i_p * n_satom * 9 + i * 9 + l * 3 + k;
             fc_tmp[m] = (fc[m] + fc[n]) / 2;
-            fc_tmp[n] = fc_tmp[m];
           }
         }
       } else { /* non diagonal part */
@@ -411,20 +406,19 @@ py_perm_trans_symmetrize_compact_fc(PyObject *self, PyObject *args)
             m = i_p * n_satom * 9 + j * 9 + k * 3 + l;
             n = s2pp[j] * n_satom * 9 + perms[nsym_list[j] * n_satom + i] * 9 + l * 3 + k;
             fc_tmp[m] = (fc[n] + fc[m]) / 2;
-            fc_tmp[n] = fc_tmp[m];
           }
         }
       }
     }
   }
 
-  for (i = 0; i < n_patom; i++) {
+  for (i_p = 0; i_p < n_patom; i_p++) {
     for (k = 0; k < 3; k++) {
       for (l = 0; l < 3; l++) {
         sums[k][l] = 0;
-        m = i * n_satom * 9 + k * 3 + l;
+        m = i_p * n_satom * 9 + k * 3 + l;
         for (j = 0; j < n_satom; j++) {
-          if (i != j) {
+          if (p2s[i_p] != j) {
             sums[k][l] += fc_tmp[m];
           }
           m += 9;
@@ -432,8 +426,8 @@ py_perm_trans_symmetrize_compact_fc(PyObject *self, PyObject *args)
       }
     }
     for (k = 0; k < 3; k++) {
-      for (l = k; l < 3; l++) {
-        fc_tmp[i * n_satom * 9 + p2s[i] * 9 + k * 3 + l] =
+      for (l = 0; l < 3; l++) {
+        fc_tmp[i_p * n_satom * 9 + p2s[i_p] * 9 + k * 3 + l] =
           -(sums[k][l] + sums[l][k]) / 2;
       }
     }
