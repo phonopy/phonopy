@@ -591,39 +591,41 @@ static PyObject * py_get_nac_dynamical_matrix(PyObject *self, PyObject *args)
 static PyObject * py_get_dipole_dipole(PyObject *self, PyObject *args)
 {
   PyArrayObject* dd_py;
-  PyArrayObject* K_list_py;
+  PyArrayObject* G_list_py;
   PyArrayObject* q_vector_py;
   PyArrayObject* q_direction_py;
   PyArrayObject* born_py;
   PyArrayObject* dielectric_py;
   PyArrayObject* pos_py;
   double factor;
+  double lambda;
   double tolerance;
 
   double* dd;
-  double* K_list;
+  double* G_list;
   double* q_vector;
   double* q_direction;
   double* born;
   double* dielectric;
   double *pos;
-  int num_patom, num_K;
+  int num_patom, num_G;
 
-  if (!PyArg_ParseTuple(args, "OOOOOOOdd",
+  if (!PyArg_ParseTuple(args, "OOOOOOOddd",
                         &dd_py,
-                        &K_list_py,
+                        &G_list_py,
                         &q_vector_py,
                         &q_direction_py,
                         &born_py,
                         &dielectric_py,
                         &pos_py,
                         &factor,
+                        &lambda,
                         &tolerance))
     return NULL;
 
 
   dd = (double*)PyArray_DATA(dd_py);
-  K_list = (double*)PyArray_DATA(K_list_py);
+  G_list = (double*)PyArray_DATA(G_list_py);
   if ((PyObject*)q_direction_py == Py_None) {
     q_direction = NULL;
   } else {
@@ -633,19 +635,20 @@ static PyObject * py_get_dipole_dipole(PyObject *self, PyObject *args)
   born = (double*)PyArray_DATA(born_py);
   dielectric = (double*)PyArray_DATA(dielectric_py);
   pos = (double*)PyArray_DATA(pos_py);
-  num_K = PyArray_DIMS(K_list_py)[0];
+  num_G = PyArray_DIMS(G_list_py)[0];
   num_patom = PyArray_DIMS(pos_py)[0];
 
   get_dipole_dipole(dd, /* [natom, 3, natom, 3, (real, imag)] */
-                    K_list, /* [num_kvec, 3] */
-                    num_K,
+                    G_list, /* [num_kvec, 3] */
+                    num_G,
                     num_patom,
                     q_vector,
                     q_direction,
                     born,
                     dielectric,
-                    factor, /* 4pi/V*unit-conv */
                     pos, /* [natom, 3] */
+                    factor, /* 4pi/V*unit-conv */
+                    lambda, /* 4 * Lambda^2 */
                     tolerance);
 
   Py_RETURN_NONE;
