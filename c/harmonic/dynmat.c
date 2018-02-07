@@ -137,20 +137,21 @@ int get_dynamical_matrix_at_q(double *dynamical_matrix,
 }
 
 void get_dipole_dipole(double *dd, /* [natom, 3, natom, 3, (real, imag)] */
-                       const double *K_list, /* [num_kvec, 3] */
-                       const int num_K,
+                       const double *G_list, /* [num_G, 3] */
+                       const int num_G,
                        const int num_patom,
                        const double *q_vector,
                        const double *q_direction,
                        const double *born,
                        const double *dielectric,
-                       const double factor, /* 4pi/V*unit-conv */
                        const double *pos, /* [natom, 3] */
+                       const double factor, /* 4pi/V*unit-conv */
+                       const double lambda,
                        const double tolerance)
 {
   int i, j, k, l, g, adrs;
   double q_K[3], q_G[3];
-  double norm, cos_phase, sin_phase, phase, z;
+  double norm, cos_phase, sin_phase, phase, z, dielectric_part, exp_damp;
   double *charge_sum;
 
   charge_sum = NULL;
@@ -158,35 +159,44 @@ void get_dipole_dipole(double *dd, /* [natom, 3, natom, 3, (real, imag)] */
   for (i = 0; i < num_patom * num_patom * 18; i++) {
     dd[i] = 0;
   }
+
   charge_sum = (double*) malloc(sizeof(double) * num_patom * num_patom * 9);
 
-  for (g = 0; g < num_K; g++) {
+  for (g = 0; g < num_G; g++) {
+    /* sum over K = G + q */
     norm = 0;
     for (i = 0; i < 3; i++) {
-      norm += K_list[g * 3 + i] * K_list[g * 3 + i];
+      q_K[i] = G_list[g * 3 + i] + q_vector[i];
+      norm += q_K[i] * q_K[i];
     }
 
     if (sqrt(norm) < tolerance) {
       if (!q_direction) {
         continue;
       } else {
-        for (i = 0; i < 3; i++) {q_K[i] = q_direction[i];}
+        dielectric_part = get_dielectric_part(q_direction, dielectric);
+        get_charge_sum(charge_sum,
+                       num_patom,
+                       factor / dielectric_part,
+                       q_direction,
+                       born);
+        exp_damp = 1;
       }
     } else {
-      for (i = 0; i < 3; i++) {q_K[i] = K_list[g * 3 + i];}
+      dielectric_part = get_dielectric_part(q_K, dielectric);
+      get_charge_sum(charge_sum,
+                     num_patom,
+                     factor / dielectric_part,
+                     q_K,
+                     born);
+      exp_damp = exp(-dielectric_part / lambda);
     }
-
-    get_charge_sum(charge_sum,
-                   num_patom,
-                   factor / get_dielectric_part(q_K, dielectric),
-                   q_K,
-                   born);
 
     for (i = 0; i < num_patom; i++) {
       for (j = 0; j < num_patom; j++) {
         phase = 0;
         for (k = 0; k < 3; k++) {
-          phase += (pos[i * 3 + k] - pos[j * 3 + k]) * K_list[g * 3 + k];
+          phase += (pos[i * 3 + k] - pos[j * 3 + k]) * q_K[k];
         }
         phase *= 2 * PI;
         cos_phase = cos(phase);
@@ -194,19 +204,18 @@ void get_dipole_dipole(double *dd, /* [natom, 3, natom, 3, (real, imag)] */
         for (k = 0; k < 3; k++) {
           for (l = 0; l < 3; l++) {
             adrs = i * num_patom * 18 + k * num_patom * 6 + j * 6 + l * 2;
-            z = charge_sum[i * num_patom * 9 + j * 9 + k * 3 + l];
+            z = charge_sum[i * num_patom * 9 + j * 9 + k * 3 + l] * exp_damp;
             dd[adrs] += z * cos_phase;
             dd[adrs + 1] += z * sin_phase;
           }
         }
       }
     }
-  }
 
-  for (g = 0; g < num_K; g++) {
+    /* sum over G */
     norm = 0;
     for (i = 0; i < 3; i++) {
-      q_G[i] = K_list[g * 3 + i] - q_vector[i];
+      q_G[i] = G_list[g * 3 + i];
       norm += q_G[i] * q_G[i];
     }
 
@@ -214,11 +223,13 @@ void get_dipole_dipole(double *dd, /* [natom, 3, natom, 3, (real, imag)] */
       continue;
     }
 
+    dielectric_part = get_dielectric_part(q_G, dielectric);
     get_charge_sum(charge_sum,
                    num_patom,
-                   factor / get_dielectric_part(q_G, dielectric),
+                   factor / dielectric_part,
                    q_G,
                    born);
+    exp_damp = exp(-dielectric_part / lambda);
 
     for (i = 0; i < num_patom; i++) {
       for (j = 0; j < num_patom; j++) {
@@ -233,7 +244,7 @@ void get_dipole_dipole(double *dd, /* [natom, 3, natom, 3, (real, imag)] */
           for (l = 0; l < 3; l++) {
             /* i is correct about the third index, not j */
             adrs = i * num_patom * 18 + k * num_patom * 6 + i * 6 + l * 2;
-            z = charge_sum[i * num_patom * 9 + j * 9 + k * 3 + l];
+            z = charge_sum[i * num_patom * 9 + j * 9 + k * 3 + l] * exp_damp;
             dd[adrs] -= z * cos_phase;
             dd[adrs + 1] -= z * sin_phase;
           }

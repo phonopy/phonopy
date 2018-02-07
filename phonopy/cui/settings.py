@@ -72,10 +72,10 @@ class Settings(object):
         self._mesh = None
         self._mesh_shift = None
         self._nac_method = None
+        self._nac_q_direction = None
         self._num_frequency_points = None
         self._primitive_matrix = None
         self._qpoints = None
-        self._nac_q_direction = None
         self._read_qpoints = False
         self._sigma = None
         self._supercell_matrix = None
@@ -257,6 +257,12 @@ class Settings(object):
 
     def get_min_temperature(self):
         return self._tmin
+
+    def set_nac_method(self, nac_method):
+        self._nac_method = nac_method
+
+    def get_nac_method(self):
+        return self._nac_method
 
     def set_nac_q_direction(self, nac_q_direction):
         self._nac_q_direction = nac_q_direction
@@ -482,6 +488,10 @@ class ConfParser(object):
             if self._args.nac_q_direction is not None:
                 self._confs['q_direction'] = self._args.nac_q_direction
 
+        if 'nac_method' in arg_list:
+            if self._args.nac_method is not None:
+                self._confs['nac_method'] = self._args.nac_method
+
         if 'read_qpoints' in arg_list:
             if self._args.read_qpoints:
                 self._confs['read_qpoints'] = '.true.'
@@ -656,6 +666,9 @@ class ConfParser(object):
             if conf_key == 'read_qpoints':
                 if confs['read_qpoints'].lower() == '.true.':
                     self.set_parameter('read_qpoints', True)
+
+            if conf_key == 'nac_method':
+                self.set_parameter('nac_method', confs['nac_method'].lower())
 
             if conf_key == 'q_direction':
                 q_direction = [fracval(x) for x in confs['q_direction'].split()]
@@ -833,6 +846,10 @@ class ConfParser(object):
         if 'read_qpoints' in params:
             if params['read_qpoints']:
                 self._settings.set_read_qpoints(params['read_qpoints'])
+
+        # non analytical term correction method
+        if 'nac_method' in params:
+            self._settings.set_nac_method(params['nac_method'])
 
         # q-direction for non analytical term correction
         if 'nac_q_direction' in params:

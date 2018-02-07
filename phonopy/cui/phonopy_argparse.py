@@ -129,6 +129,8 @@ def get_parser():
         mesh_numbers=None,
         modulation=None,
         moment_order=None,
+        nac_method=None,
+        nac_q_direction=None,
         pretend_real=False,
         primitive_axis=None,
         projection_direction=None,
@@ -136,7 +138,6 @@ def get_parser():
         qpoints=None,
         qpoints_format=None,
         quiet=False,
-        q_direction=None,
         read_fc_format=None,
         read_force_constants=False,
         read_qpoints=False,
@@ -321,6 +322,9 @@ def get_parser():
         "--nac", dest="is_nac", action="store_true",
         help="Non-analytical term correction")
     parser.add_argument(
+        "--nac-method", dest="nac_method",
+        help="Non-analytical term correction method: Wang (default) or Gonze")
+    parser.add_argument(
         "--nodiag", dest="is_nodiag", action="store_true",
         help="Set displacements parallel to axes")
     parser.add_argument(
@@ -366,7 +370,7 @@ def get_parser():
         "--qpoints-format", dest="qpoints_format",
         help="Q-points output file-format")
     parser.add_argument(
-        "--q-direction", dest="q_direction",
+        "--q-direction", dest="nac_q_direction",
         help=("Direction of q-vector perturbation used for NAC at "
               "q->0, and group velocity for degenerate phonon "
               "mode in q-points mode"))
