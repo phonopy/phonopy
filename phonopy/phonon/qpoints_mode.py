@@ -39,7 +39,7 @@ from phonopy.units import VaspToTHz
 class QpointsPhonon(object):
     def __init__(self,
                  qpoints,
-                 dynamical_matrix, 
+                 dynamical_matrix,
                  nac_q_direction=None,
                  is_eigenvectors=False,
                  group_velocity=None,
@@ -51,7 +51,7 @@ class QpointsPhonon(object):
         self._symbols = cell.get_chemical_symbols()
         self._positions = cell.get_scaled_positions()
         self._lattice = cell.get_cell()
-        
+
         self._qpoints = qpoints
         self._dynamical_matrix = dynamical_matrix
         self._nac_q_direction = nac_q_direction
@@ -72,7 +72,7 @@ class QpointsPhonon(object):
 
     def get_eigenvectors(self):
         return self._eigenvectors
-        
+
     def write_hdf5(self):
         import h5py
         with h5py.File('qpoints.hdf5', 'w') as w:
@@ -95,7 +95,7 @@ class QpointsPhonon(object):
             w.write("- [ %12.8f, %12.8f, %12.8f ] # %2s\n" %
                     (tuple(vec) + (axis,)))
         w.write("phonon:\n")
-    
+
         for i, q in enumerate(self._qpoints):
             w.write("- q-position: [ %12.7f, %12.7f, %12.7f ]\n" % tuple(q))
             if self._write_dynamical_matrix:
@@ -108,16 +108,16 @@ class QpointsPhonon(object):
                             w.write(" ]\n")
                         else:
                             w.write(", ")
-            
+
             w.write("  band:\n")
             for j, freq in enumerate(self._frequencies[i]):
                 w.write("  - # %d\n" % (j + 1))
                 w.write("    frequency: %15.10f\n" % freq)
-    
+
                 if self._gv is not None:
                     w.write("    group_velocity: [ %13.7f, %13.7f, %13.7f ]\n" %
                             tuple(self._gv[i, j]))
-    
+
                 if self._is_eigenvectors:
                     w.write("    eigenvector:\n")
                     for k in range(self._natom):
@@ -140,7 +140,7 @@ class QpointsPhonon(object):
         self._frequencies = []
         if self._is_eigenvectors:
             self._eigenvectors = []
-            
+
         for q in self._qpoints:
             dm = self._get_dynamical_matrix(q)
             if self._write_dynamical_matrix:
@@ -153,19 +153,18 @@ class QpointsPhonon(object):
             eigvals = eigvals.real
             self._frequencies.append(np.sqrt(np.abs(eigvals)) *
                                      np.sign(eigvals) * self._factor)
-            
+
         self._frequencies = np.array(self._frequencies,
                                      dtype='double', order='C')
         dtype = "c%d" % (np.dtype('double').itemsize * 2)
         self._eigenvectors = np.array(self._eigenvectors,
                                       dtype=dtype, order='C')
-                
+
     def _get_dynamical_matrix(self, q):
         if self._nac_q_direction is not None and (np.abs(q) < 1e-5).all():
             self._dynamical_matrix.set_dynamical_matrix(
-                q, q_direction=self._nac_q_direction)
+                q,
+                q_direction=self._nac_q_direction)
         else:
             self._dynamical_matrix.set_dynamical_matrix(q)
         return self._dynamical_matrix.get_dynamical_matrix()
-        
-            
