@@ -52,6 +52,7 @@ py_perm_trans_symmetrize_compact_fc(PyObject *self, PyObject *args);
 static PyObject * py_get_dynamical_matrix(PyObject *self, PyObject *args);
 static PyObject * py_get_nac_dynamical_matrix(PyObject *self, PyObject *args);
 static PyObject * py_get_dipole_dipole(PyObject *self, PyObject *args);
+static PyObject * py_get_dipole_dipole_q0(PyObject *self, PyObject *args);
 static PyObject * py_get_derivative_dynmat(PyObject *self, PyObject *args);
 static PyObject * py_get_thermal_properties(PyObject *self, PyObject *args);
 static PyObject * py_distribute_fc2_with_mappings(PyObject *self,
@@ -133,12 +134,20 @@ static PyMethodDef _phonopy_methods[] = {
   {"perm_trans_symmetrize_compact_fc", py_perm_trans_symmetrize_compact_fc,
    METH_VARARGS,
    "Enforce permutation and translational symmetry of compact force constants"},
-  {"dynamical_matrix", py_get_dynamical_matrix, METH_VARARGS, "Dynamical matrix"},
-  {"nac_dynamical_matrix", py_get_nac_dynamical_matrix, METH_VARARGS, "NAC dynamical matrix"},
-  {"dipole_dipole", py_get_dipole_dipole, METH_VARARGS, "Dipole-dipole interaction"},
-  {"derivative_dynmat", py_get_derivative_dynmat, METH_VARARGS, "Q derivative of dynamical matrix"},
-  {"thermal_properties", py_get_thermal_properties, METH_VARARGS, "Thermal properties"},
-  {"distribute_fc2_with_mappings", py_distribute_fc2_with_mappings, METH_VARARGS,
+  {"dynamical_matrix", py_get_dynamical_matrix, METH_VARARGS,
+   "Dynamical matrix"},
+  {"nac_dynamical_matrix", py_get_nac_dynamical_matrix, METH_VARARGS,
+   "NAC dynamical matrix"},
+  {"dipole_dipole", py_get_dipole_dipole, METH_VARARGS,
+   "Dipole-dipole interaction"},
+  {"dipole_dipole_q0", py_get_dipole_dipole_q0, METH_VARARGS,
+   "q=0 terms of Dipole-dipole interaction"},
+  {"derivative_dynmat", py_get_derivative_dynmat, METH_VARARGS,
+   "Q derivative of dynamical matrix"},
+  {"thermal_properties", py_get_thermal_properties, METH_VARARGS,
+   "Thermal properties"},
+  {"distribute_fc2_with_mappings", py_distribute_fc2_with_mappings,
+   METH_VARARGS,
    "Distribute force constants for all atoms in atom_list using precomputed symmetry mappings."},
   {"compute_permutation", py_compute_permutation, METH_VARARGS,
    "Compute indices of original points in a set of rotated points."},
@@ -591,39 +600,45 @@ static PyObject * py_get_nac_dynamical_matrix(PyObject *self, PyObject *args)
 static PyObject * py_get_dipole_dipole(PyObject *self, PyObject *args)
 {
   PyArrayObject* dd_py;
-  PyArrayObject* K_list_py;
+  PyArrayObject* dd_q0_py;
+  PyArrayObject* G_list_py;
   PyArrayObject* q_vector_py;
   PyArrayObject* q_direction_py;
   PyArrayObject* born_py;
   PyArrayObject* dielectric_py;
   PyArrayObject* pos_py;
   double factor;
+  double lambda;
   double tolerance;
 
   double* dd;
-  double* K_list;
+  double* dd_q0;
+  double* G_list;
   double* q_vector;
   double* q_direction;
   double* born;
   double* dielectric;
   double *pos;
-  int num_patom, num_K;
+  int num_patom, num_G;
 
-  if (!PyArg_ParseTuple(args, "OOOOOOOdd",
+  if (!PyArg_ParseTuple(args, "OOOOOOOOddd",
                         &dd_py,
-                        &K_list_py,
+                        &dd_q0_py,
+                        &G_list_py,
                         &q_vector_py,
                         &q_direction_py,
                         &born_py,
                         &dielectric_py,
                         &pos_py,
                         &factor,
+                        &lambda,
                         &tolerance))
     return NULL;
 
 
   dd = (double*)PyArray_DATA(dd_py);
-  K_list = (double*)PyArray_DATA(K_list_py);
+  dd_q0 = (double*)PyArray_DATA(dd_q0_py);
+  G_list = (double*)PyArray_DATA(G_list_py);
   if ((PyObject*)q_direction_py == Py_None) {
     q_direction = NULL;
   } else {
@@ -633,25 +648,69 @@ static PyObject * py_get_dipole_dipole(PyObject *self, PyObject *args)
   born = (double*)PyArray_DATA(born_py);
   dielectric = (double*)PyArray_DATA(dielectric_py);
   pos = (double*)PyArray_DATA(pos_py);
-  num_K = PyArray_DIMS(K_list_py)[0];
+  num_G = PyArray_DIMS(G_list_py)[0];
   num_patom = PyArray_DIMS(pos_py)[0];
 
   get_dipole_dipole(dd, /* [natom, 3, natom, 3, (real, imag)] */
-                    K_list, /* [num_kvec, 3] */
-                    num_K,
+                    dd_q0, /* [natom, 3, 3, (real, imag)] */
+                    G_list, /* [num_kvec, 3] */
+                    num_G,
                     num_patom,
                     q_vector,
                     q_direction,
                     born,
                     dielectric,
-                    factor, /* 4pi/V*unit-conv */
                     pos, /* [natom, 3] */
+                    factor, /* 4pi/V*unit-conv */
+                    lambda, /* 4 * Lambda^2 */
                     tolerance);
 
   Py_RETURN_NONE;
 }
 
+static PyObject * py_get_dipole_dipole_q0(PyObject *self, PyObject *args)
+{
+  PyArrayObject* dd_q0_py;
+  PyArrayObject* G_list_py;
+  PyArrayObject* dielectric_py;
+  PyArrayObject* pos_py;
+  double lambda;
+  double tolerance;
 
+  double* dd_q0;
+  double* G_list;
+  double* dielectric;
+  double *pos;
+  int num_patom, num_G;
+
+  if (!PyArg_ParseTuple(args, "OOOOdd",
+                        &dd_q0_py,
+                        &G_list_py,
+                        &dielectric_py,
+                        &pos_py,
+                        &lambda,
+                        &tolerance))
+    return NULL;
+
+
+  dd_q0 = (double*)PyArray_DATA(dd_q0_py);
+  G_list = (double*)PyArray_DATA(G_list_py);
+  dielectric = (double*)PyArray_DATA(dielectric_py);
+  pos = (double*)PyArray_DATA(pos_py);
+  num_G = PyArray_DIMS(G_list_py)[0];
+  num_patom = PyArray_DIMS(pos_py)[0];
+
+  get_dipole_dipole_q0(dd_q0, /* [natom, 3, 3, (real, imag)] */
+                       G_list, /* [num_kvec, 3] */
+                       num_G,
+                       num_patom,
+                       dielectric,
+                       pos, /* [natom, 3] */
+                       lambda, /* 4 * Lambda^2 */
+                       tolerance);
+
+  Py_RETURN_NONE;
+}
 
 static PyObject * py_get_derivative_dynmat(PyObject *self, PyObject *args)
 {

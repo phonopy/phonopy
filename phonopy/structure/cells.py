@@ -541,15 +541,17 @@ def _get_smallest_vectors(supercell, primitive, symprec):
     # shape: (size_super, size_prim, 27, 3)
     candidate_carts = np.dot(candidate_fracs, reduced_bases)
     # shape: (size_super, size_prim, 27)
-    lengths = np.sqrt(np.sum(candidate_carts**2, axis=-1))
+    lengths = np.array(np.sqrt(np.sum(candidate_carts**2, axis=-1)),
+                       dtype='double', order='C')
 
     # Create the output, initially consisting of all candidate vectors scaled
     # by the primitive cell.
     #
     # shape: (size_super, size_prim, 27, 3)
-    candidate_vectors = np.dot(
+    candidate_vectors = np.array(np.dot(
         candidate_fracs,
-        reduced_bases.dot(np.linalg.inv(primitive.get_cell())))
+        reduced_bases.dot(np.linalg.inv(primitive.get_cell()))),
+                                 dtype='double', order='C')
 
     # The last final bits are done in C.
     #

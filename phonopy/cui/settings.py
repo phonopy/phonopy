@@ -54,6 +54,7 @@ class Settings(object):
         self._dm_decimals = None
         self._fc_decimals = None
         self._fc_symmetry = False
+        self._fpitch = None
         self._frequency_conversion_factor = None
         self._gv_delta_q = None
         self._is_diagonal_displacement = True
@@ -70,11 +71,11 @@ class Settings(object):
         self._masses = None
         self._mesh = None
         self._mesh_shift = None
-        self._fpitch = None
+        self._nac_method = None
+        self._nac_q_direction = None
         self._num_frequency_points = None
         self._primitive_matrix = None
         self._qpoints = None
-        self._q_direction = None
         self._read_qpoints = False
         self._sigma = None
         self._supercell_matrix = None
@@ -257,11 +258,17 @@ class Settings(object):
     def get_min_temperature(self):
         return self._tmin
 
-    def set_nac_q_direction(self, q_direction):
-        self._q_direction = q_direction
+    def set_nac_method(self, nac_method):
+        self._nac_method = nac_method
+
+    def get_nac_method(self):
+        return self._nac_method
+
+    def set_nac_q_direction(self, nac_q_direction):
+        self._nac_q_direction = nac_q_direction
 
     def get_nac_q_direction(self):
-        return self._q_direction
+        return self._nac_q_direction
 
     def set_primitive_matrix(self, primitive_matrix):
         self._primitive_matrix = primitive_matrix
@@ -477,9 +484,13 @@ class ConfParser(object):
             if self._args.qpoints is not None:
                 self._confs['qpoints'] = self._args.qpoints
 
-        if 'q_direction' in arg_list:
-            if self._args.q_direction is not None:
-                self._confs['q_direction'] = self._args.q_direction
+        if 'nac_q_direction' in arg_list:
+            if self._args.nac_q_direction is not None:
+                self._confs['q_direction'] = self._args.nac_q_direction
+
+        if 'nac_method' in arg_list:
+            if self._args.nac_method is not None:
+                self._confs['nac_method'] = self._args.nac_method
 
         if 'read_qpoints' in arg_list:
             if self._args.read_qpoints:
@@ -656,12 +667,15 @@ class ConfParser(object):
                 if confs['read_qpoints'].lower() == '.true.':
                     self.set_parameter('read_qpoints', True)
 
+            if conf_key == 'nac_method':
+                self.set_parameter('nac_method', confs['nac_method'].lower())
+
             if conf_key == 'q_direction':
                 q_direction = [fracval(x) for x in confs['q_direction'].split()]
                 if len(q_direction) < 3:
                     self.setting_error("Number of elements of q_direction is less than 3")
                 else:
-                    self.set_parameter('q_direction', q_direction)
+                    self.set_parameter('nac_q_direction', q_direction)
 
             if conf_key == 'frequency_conversion_factor':
                 val = float(confs['frequency_conversion_factor'])
@@ -833,9 +847,13 @@ class ConfParser(object):
             if params['read_qpoints']:
                 self._settings.set_read_qpoints(params['read_qpoints'])
 
+        # non analytical term correction method
+        if 'nac_method' in params:
+            self._settings.set_nac_method(params['nac_method'])
+
         # q-direction for non analytical term correction
-        if 'q_direction' in params:
-            self._settings.set_nac_q_direction(params['q_direction'])
+        if 'nac_q_direction' in params:
+            self._settings.set_nac_q_direction(params['nac_q_direction'])
 
         # Smearing width
         if 'sigma' in params:
@@ -1805,10 +1823,6 @@ class PhonopyConfParser(ConfParser):
         # Whether write out mesh.yaml or mesh.hdf5
         if 'write_mesh' in params:
             self._settings.set_write_mesh(params['write_mesh'])
-
-        # q-vector direction at q->0 for non-analytical term correction
-        if 'q_direction' in params:
-            self._settings.set_nac_q_direction(params['q_direction'])
 
         # Anime mode
         if 'anime_type' in params:
