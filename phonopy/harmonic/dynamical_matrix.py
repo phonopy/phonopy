@@ -249,6 +249,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         self._G_vec_list = None
         self._G_cutoff = None
         self._Lambda = None # 4*Lambda**2 is stored.
+        self._dd_q0 = None
 
         self._nac = True
         if nac_params is not None:
@@ -287,6 +288,16 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             print("G-cutoff distance: %6.2f" % self._G_cutoff)
             print("Number of G-points: %d" % len(self._G_list))
             print("Lambda: %6.2f" % self._Lambda)
+
+            try:
+                import phonopy._phonopy as phonoc
+                self._set_c_dipole_dipole_q0()
+            except ImportError:
+                print("Python version of dipole-dipole calculation is not well "
+                      "implemented.")
+                sys.exit(1)
+
+
             self._set_Gonze_force_constants()
             self._Gonze_count = 0
 
@@ -423,17 +434,26 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             import phonopy._phonopy as phonoc
             C = self._get_c_dipole_dipole(q, q_dir_cart)
         except ImportError:
-            C = self._get_py_dipole_dipole(q, q_dir_cart)
+            print("Python version of dipole-dipole calculation is not well "
+                  "implemented.")
+            sys.exit(1)
 
         # D-type to C-type conversion and mass weighted
+        # mass = self._pcell.get_masses()
+        # num_atom = self._pcell.get_number_of_atoms()
+        # pos = self._pcell.get_positions()
+        # for i in range(num_atom):
+        #     dpos = pos - pos[i]
+        #     phase_factor = np.exp(2j * np.pi * np.dot(dpos, q))
+        #     for j in range(num_atom):
+        #         C[i, :, j, :] *= phase_factor[j] / np.sqrt(mass[i] * mass[j])
+
+        # Mass weighted
         mass = self._pcell.get_masses()
         num_atom = self._pcell.get_number_of_atoms()
-        pos = self._pcell.get_positions()
         for i in range(num_atom):
-            dpos = pos - pos[i]
-            phase_factor = np.exp(2j * np.pi * np.dot(dpos, q))
             for j in range(num_atom):
-                C[i, :, j, :] *= phase_factor[j] / np.sqrt(mass[i] * mass[j])
+                C[i, :, j, :] *= 1.0 / np.sqrt(mass[i] * mass[j])
 
         C_dd = C.reshape(num_atom * 3, num_atom * 3)
 
@@ -443,12 +463,13 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         import phonopy._phonopy as phonoc
 
         pos = self._pcell.get_positions()
-        num_atom = self._pcell.get_number_of_atoms()
+        num_atom = len(pos)
         volume = self._pcell.get_volume()
         C = np.zeros((num_atom, 3, num_atom, 3),
                      dtype=self._dtype_complex, order='C')
 
         phonoc.dipole_dipole(C.view(dtype='double'),
+                             self._dd_q0.view(dtype='double'),
                              self._G_list,
                              q,
                              q_dir_cart,
@@ -459,6 +480,20 @@ class DynamicalMatrixNAC(DynamicalMatrix):
                              self._Lambda,
                              self._symprec)
         return C
+
+    def _set_c_dipole_dipole_q0(self):
+        import phonopy._phonopy as phonoc
+
+        pos = self._pcell.get_positions()
+        self._dd_q0 = np.zeros((len(pos), 3, 3),
+                               dtype=self._dtype_complex, order='C')
+
+        phonoc.dipole_dipole_q0(self._dd_q0.view(dtype='double'),
+                                self._G_list,
+                                self._dielectric,
+                                np.array(pos, dtype='double', order='C'),
+                                self._Lambda,
+                                self._symprec)
 
     def _get_py_dipole_dipole(self, K_list, q, q_dir_cart):
         pos = self._pcell.get_positions()
