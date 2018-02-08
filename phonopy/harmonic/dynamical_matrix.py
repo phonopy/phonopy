@@ -281,12 +281,12 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             if 'Lambda' in nac_params:
                 self._Lambda = nac_params['Lambda']
             else:
-                self._Lambda = 10
+                self._Lambda = 1
 
             self._G_list = self._get_G_list()
             print("G-cutoff distance: %6.2f" % self._G_cutoff)
             print("Number of G-points: %d" % len(self._G_list))
-            print("4Lambda^2: %6.2f" % self._Lambda)
+            print("Lambda: %6.2f" % self._Lambda)
             self._set_Gonze_force_constants()
             self._Gonze_count = 0
 
@@ -425,13 +425,13 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         except ImportError:
             C = self._get_py_dipole_dipole(q, q_dir_cart)
 
+        # D-type to C-type conversion and mass weighted
         mass = self._pcell.get_masses()
         num_atom = self._pcell.get_number_of_atoms()
         pos = self._pcell.get_positions()
         for i in range(num_atom):
             dpos = pos - pos[i]
             phase_factor = np.exp(2j * np.pi * np.dot(dpos, q))
-            # phase_factor = np.ones(len(dpos))
             for j in range(num_atom):
                 C[i, :, j, :] *= phase_factor[j] / np.sqrt(mass[i] * mass[j])
 
