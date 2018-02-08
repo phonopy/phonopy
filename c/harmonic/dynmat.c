@@ -66,6 +66,16 @@ static void get_dm(double dm_real[3][3],
                    const int k);
 static double get_dielectric_part(const double q[3],
                                   const double *dielectric);
+static void get_KK(double *dd_part, /* [natom, 3, natom, 3, (real, imag)] */
+                   const double *G_list, /* [num_G, 3] */
+                   const int num_G,
+                   const int num_patom,
+                   const double *q_vector,
+                   const double *q_direction,
+                   const double *dielectric,
+                   const double *pos, /* [natom, 3] */
+                   const double lambda,
+                   const double tolerance);
 
 int get_dynamical_matrix_at_q(double *dynamical_matrix,
                               const int num_patom,
@@ -137,114 +147,136 @@ int get_dynamical_matrix_at_q(double *dynamical_matrix,
 }
 
 void get_dipole_dipole(double *dd, /* [natom, 3, natom, 3, (real, imag)] */
-                       const double *K_list, /* [num_kvec, 3] */
-                       const int num_K,
+                       const double *dd_q0, /* [natom, 3, 3, (real, imag)] */
+                       const double *G_list, /* [num_G, 3] */
+                       const int num_G,
                        const int num_patom,
                        const double *q_vector,
                        const double *q_direction,
                        const double *born,
                        const double *dielectric,
-                       const double factor, /* 4pi/V*unit-conv */
                        const double *pos, /* [natom, 3] */
+                       const double factor, /* 4pi/V*unit-conv */
+                       const double lambda,
                        const double tolerance)
 {
-  int i, j, k, l, g, adrs;
-  double q_K[3], q_G[3];
-  double norm, cos_phase, sin_phase, phase, z;
-  double *charge_sum;
+  int i, j, k, l, m, n, adrs, adrs_tmp, adrs_sum;
+  double *dd_tmp;
+ double zz;
 
-  charge_sum = NULL;
+  dd_tmp = NULL;
+  dd_tmp = (double*) malloc(sizeof(double) * num_patom * num_patom * 18);
 
   for (i = 0; i < num_patom * num_patom * 18; i++) {
     dd[i] = 0;
+    dd_tmp[i] = 0;
   }
-  charge_sum = (double*) malloc(sizeof(double) * num_patom * num_patom * 9);
 
-  for (g = 0; g < num_K; g++) {
-    norm = 0;
-    for (i = 0; i < 3; i++) {
-      norm += K_list[g * 3 + i] * K_list[g * 3 + i];
-    }
+  get_KK(dd_tmp,
+         G_list,
+         num_G,
+         num_patom,
+         q_vector,
+         q_direction,
+         dielectric,
+         pos,
+         lambda,
+         tolerance);
 
-    if (sqrt(norm) < tolerance) {
-      if (!q_direction) {
-        continue;
-      } else {
-        for (i = 0; i < 3; i++) {q_K[i] = q_direction[i];}
+  for (i = 0; i < num_patom; i++) {
+    for (k = 0; k < 3; k++) {   /* alpha */
+      for (l = 0; l < 3; l++) { /* beta */
+        adrs = i * num_patom * 18 + k * num_patom * 6 + i * 6 + l * 2;
+        adrs_sum = i * 18 + k * 6 + l * 2;
+        dd_tmp[adrs] -= dd_q0[adrs_sum];
+        dd_tmp[adrs + 1] -= dd_q0[adrs_sum + 1];
       }
-    } else {
-      for (i = 0; i < 3; i++) {q_K[i] = K_list[g * 3 + i];}
     }
+  }
 
-    get_charge_sum(charge_sum,
-                   num_patom,
-                   factor / get_dielectric_part(q_K, dielectric),
-                   q_K,
-                   born);
+  for (i = 0; i < num_patom * num_patom * 18; i++) {
+    dd_tmp[i] *= factor;
+  }
 
-    for (i = 0; i < num_patom; i++) {
-      for (j = 0; j < num_patom; j++) {
-        phase = 0;
-        for (k = 0; k < 3; k++) {
-          phase += (pos[i * 3 + k] - pos[j * 3 + k]) * K_list[g * 3 + k];
-        }
-        phase *= 2 * PI;
-        cos_phase = cos(phase);
-        sin_phase = sin(phase);
-        for (k = 0; k < 3; k++) {
-          for (l = 0; l < 3; l++) {
-            adrs = i * num_patom * 18 + k * num_patom * 6 + j * 6 + l * 2;
-            z = charge_sum[i * num_patom * 9 + j * 9 + k * 3 + l];
-            dd[adrs] += z * cos_phase;
-            dd[adrs + 1] += z * sin_phase;
+  for (i = 0; i < num_patom; i++) {
+    for (j = 0; j < num_patom; j++) {
+      for (k = 0; k < 3; k++) {   /* alpha */
+        for (l = 0; l < 3; l++) { /* beta */
+          adrs = i * num_patom * 18 + k * num_patom * 6 + j * 6 + l * 2;
+          for (m = 0; m < 3; m++) { /* alpha' */
+            for (n = 0; n < 3; n++) { /* beta' */
+              adrs_tmp = i * num_patom * 18 + m * num_patom * 6 + j * 6 + n * 2;
+              zz = born[i * 9 + k * 3 + m] * born[j * 9 + l * 3 + n];
+              dd[adrs] += dd_tmp[adrs_tmp] * zz;
+              dd[adrs + 1] += dd_tmp[adrs_tmp + 1] * zz;
+            }
           }
         }
       }
     }
   }
 
-  for (g = 0; g < num_K; g++) {
-    norm = 0;
-    for (i = 0; i < 3; i++) {
-      q_G[i] = K_list[g * 3 + i] - q_vector[i];
-      norm += q_G[i] * q_G[i];
-    }
-
-    if (sqrt(norm) < tolerance) {
-      continue;
-    }
-
-    get_charge_sum(charge_sum,
-                   num_patom,
-                   factor / get_dielectric_part(q_G, dielectric),
-                   q_G,
-                   born);
-
-    for (i = 0; i < num_patom; i++) {
-      for (j = 0; j < num_patom; j++) {
-        phase = 0;
-        for (k = 0; k < 3; k++) {
-          phase += (pos[i * 3 + k] - pos[j * 3 + k]) * q_G[k];
-        }
-        phase *= 2 * PI;
-        cos_phase = cos(phase);
-        sin_phase = sin(phase);
-        for (k = 0; k < 3; k++) {
-          for (l = 0; l < 3; l++) {
-            /* i is correct about the third index, not j */
-            adrs = i * num_patom * 18 + k * num_patom * 6 + i * 6 + l * 2;
-            z = charge_sum[i * num_patom * 9 + j * 9 + k * 3 + l];
-            dd[adrs] -= z * cos_phase;
-            dd[adrs + 1] -= z * sin_phase;
-          }
-        }
-      }
-    }
-  }
-
-  free(charge_sum);
-  charge_sum = NULL;
+  free(dd_tmp);
+  dd_tmp = NULL;
 }
+
+void get_dipole_dipole_q0(double *dd_q0, /* [natom, 3, 3, (real, imag)] */
+                          const double *G_list, /* [num_G, 3] */
+                          const int num_G,
+                          const int num_patom,
+                          const double *dielectric,
+                          const double *pos, /* [natom, 3] */
+                          const double lambda,
+                          const double tolerance)
+{
+  int i, j, k, l, adrs_tmp, adrs_sum;
+  double zero_vec[3];
+  double *dd_tmp;
+
+  dd_tmp = NULL;
+  dd_tmp = (double*) malloc(sizeof(double) * num_patom * num_patom * 18);
+
+  for (i = 0; i < num_patom * num_patom * 18; i++) {
+    dd_tmp[i] = 0;
+  }
+
+  zero_vec[0] = 0;
+  zero_vec[1] = 0;
+  zero_vec[2] = 0;
+
+  get_KK(dd_tmp,
+         G_list,
+         num_G,
+         num_patom,
+         zero_vec,
+         NULL,
+         dielectric,
+         pos,
+         lambda,
+         tolerance);
+
+  for (i = 0; i < num_patom * 18; i++) {
+    dd_q0[i] = 0;
+  }
+
+  for (i = 0; i < num_patom; i++) {
+    for (j = 0; j < num_patom; j++) {
+      for (k = 0; k < 3; k++) {   /* alpha */
+        for (l = 0; l < 3; l++) { /* beta */
+          adrs_tmp = i * num_patom * 18 + k * num_patom * 6 + j * 6 + l * 2;
+          adrs_sum = i * 18 + k * 6 + l * 2;
+          dd_q0[adrs_sum] += dd_tmp[adrs_tmp];
+          /* expected to be real, though */
+          dd_q0[adrs_sum +1] += dd_tmp[adrs_tmp + 1];
+        }
+      }
+    }
+  }
+
+  free(dd_tmp);
+  dd_tmp = NULL;
+}
+
 
 void get_charge_sum(double *charge_sum,
                     const int num_patom,
@@ -408,4 +440,77 @@ static double get_dielectric_part(const double q[3],
   }
 
   return sum;
+}
+
+static void get_KK(double *dd_part, /* [natom, 3, natom, 3, (real, imag)] */
+                   const double *G_list, /* [num_G, 3] */
+                   const int num_G,
+                   const int num_patom,
+                   const double *q_vector,
+                   const double *q_direction,
+                   const double *dielectric,
+                   const double *pos, /* [natom, 3] */
+                   const double lambda,
+                   const double tolerance)
+{
+  int i, j, k, l, g, adrs;
+  double q_K[3];
+  double norm, cos_phase, sin_phase, phase, dielectric_part, exp_damp, L2;
+  double KK[3][3];
+
+  L2 = 4 * lambda * lambda;
+
+  /* sum over K = G + q and over G (i.e. q=0) */
+  /* q_direction has values for summation over K at Gamma point. */
+  /* q_direction is NULL for summation over G */
+  for (g = 0; g < num_G; g++) {
+    norm = 0;
+    for (i = 0; i < 3; i++) {
+      q_K[i] = G_list[g * 3 + i] + q_vector[i];
+      norm += q_K[i] * q_K[i];
+    }
+
+    if (sqrt(norm) < tolerance) {
+      if (!q_direction) {
+        continue;
+      } else {
+        dielectric_part = get_dielectric_part(q_direction, dielectric);
+        for (i = 0; i < 3; i++) {
+          for (j = 0; j < 3; j++) {
+            KK[i][j] = q_direction[i] * q_direction[j] / dielectric_part;
+          }
+        }
+      }
+    } else {
+      dielectric_part = get_dielectric_part(q_K, dielectric);
+      exp_damp = exp(-dielectric_part / L2);
+      for (i = 0; i < 3; i++) {
+        for (j = 0; j < 3; j++) {
+          KK[i][j] = q_K[i] * q_K[j] / dielectric_part * exp_damp;
+        }
+      }
+    }
+
+    for (i = 0; i < num_patom; i++) {
+      for (j = 0; j < num_patom; j++) {
+        phase = 0;
+        for (k = 0; k < 3; k++) {
+          /* For D-type dynamical matrix */
+          /* phase += (pos[i * 3 + k] - pos[j * 3 + k]) * q_K[k]; */
+          /* For C-type dynamical matrix */
+          phase += (pos[i * 3 + k] - pos[j * 3 + k]) * G_list[g * 3 + k];
+        }
+        phase *= 2 * PI;
+        cos_phase = cos(phase);
+        sin_phase = sin(phase);
+        for (k = 0; k < 3; k++) {
+          for (l = 0; l < 3; l++) {
+            adrs = i * num_patom * 18 + k * num_patom * 6 + j * 6 + l * 2;
+            dd_part[adrs] += KK[k][l] * cos_phase;
+            dd_part[adrs + 1] += KK[k][l] * sin_phase;
+          }
+        }
+      }
+    }
+  }
 }

@@ -196,7 +196,9 @@ def print_settings(settings):
 
     print("Settings:")
     if settings.get_is_nac():
-        print("  Non-analytical term correction: on")
+        print("  Non-analytical term correction (NAC): on")
+        if settings.get_nac_q_direction() is not None:
+            print("  NAC q-direction: %s" % settings.get_nac_q_direction())
     if settings.get_fc_spg_symmetry():
         print("  Enforce space group symmetry to force constants: on")
     if settings.get_fc_symmetry():
@@ -636,6 +638,8 @@ if settings.get_is_nac():
             sys.exit(1)
         if nac_params['factor'] == None:
             nac_params['factor'] = physical_units['nac_factor']
+        if settings.get_nac_method() is not None:
+            nac_params['method'] = settings.get_nac_method()
         phonon.set_nac_params(nac_params=nac_params)
 
         if log_level > 1:

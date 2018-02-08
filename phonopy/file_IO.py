@@ -366,21 +366,20 @@ def get_born_parameters(f, primitive, prim_symmetry):
     if len(line_arr) < 1:
         print("BORN file format of line 1 is incorrect")
         return False
+
+    factor = None
+    G_cutoff = None
+    Lambda = None
+
     if len(line_arr) > 0:
         try:
             factor = float(line_arr[0])
-            method = None
         except (ValueError, TypeError):
             factor = None
-            method = line_arr[0]
-
-    # For Gonze type NAC
-    G_cutoff = None
-    if method is not None and len(line_arr) > 1:
-        try:
-            G_cutoff = float(line_arr[1])
-        except (ValueError, TypeError):
-            pass
+    if len(line_arr) > 1:
+        G_cutoff = float(line_arr[1])
+    if len(line_arr) > 2:
+        Lambda = float(line_arr[2])
 
     # Read dielectric constant
     line = f.readline().split()
@@ -414,11 +413,11 @@ def get_born_parameters(f, primitive, prim_symmetry):
     _expand_borns(borns, primitive, prim_symmetry)
     non_anal = {'born': borns,
                 'factor': factor,
-                'dielectric': dielectric }
-    if method is not None:
-        non_anal['method'] = method
-        if G_cutoff is not None:
-            non_anal['G_cutoff'] = G_cutoff
+                'dielectric': dielectric}
+    if G_cutoff is not None:
+        non_anal['G_cutoff'] = G_cutoff
+    if Lambda is not None:
+        non_anal['Lambda'] = Lambda
 
     return non_anal
 
