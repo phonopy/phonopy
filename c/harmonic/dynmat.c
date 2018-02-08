@@ -147,6 +147,7 @@ int get_dynamical_matrix_at_q(double *dynamical_matrix,
 }
 
 void get_dipole_dipole(double *dd, /* [natom, 3, natom, 3, (real, imag)] */
+                       const double *dd_q0, /* [natom, 3, 3, (real, imag)] */
                        const double *G_list, /* [num_G, 3] */
                        const int num_G,
                        const int num_patom,
@@ -160,16 +161,14 @@ void get_dipole_dipole(double *dd, /* [natom, 3, natom, 3, (real, imag)] */
                        const double tolerance)
 {
   int i, j, k, l, m, n, adrs, adrs_tmp, adrs_sum;
-  double zero_vec[3];
-  double *dd_tmp, *dd_sum;
-  double zz;
+  double *dd_tmp;
+ double zz;
 
   dd_tmp = NULL;
-  dd_sum = NULL;
   dd_tmp = (double*) malloc(sizeof(double) * num_patom * num_patom * 18);
-  dd_sum = (double*) malloc(sizeof(double) * num_patom * 18);
 
   for (i = 0; i < num_patom * num_patom * 18; i++) {
+    dd[i] = 0;
     dd_tmp[i] = 0;
   }
 
@@ -184,59 +183,19 @@ void get_dipole_dipole(double *dd, /* [natom, 3, natom, 3, (real, imag)] */
          lambda,
          tolerance);
 
-  for (i = 0; i < num_patom * num_patom * 18; i++) {
-    dd[i] = dd_tmp[i];
-    dd_tmp[i] = 0;
-  }
-
-  zero_vec[0] = 0;
-  zero_vec[1] = 0;
-  zero_vec[2] = 0;
-
-  get_KK(dd_tmp,
-         G_list,
-         num_G,
-         num_patom,
-         zero_vec,
-         NULL,
-         dielectric,
-         pos,
-         lambda,
-         tolerance);
-
-  for (i = 0; i < num_patom * 18; i++) {
-    dd_sum[i] = 0;
-  }
-
-  for (i = 0; i < num_patom; i++) {
-    for (j = 0; j < num_patom; j++) {
-      for (k = 0; k < 3; k++) {   /* alpha */
-        for (l = 0; l < 3; l++) { /* beta */
-          adrs_tmp = i * num_patom * 18 + k * num_patom * 6 + j * 6 + l * 2;
-          adrs_sum = i * 18 + k * 6 + l * 2;
-          dd_sum[adrs_sum] += dd_tmp[adrs_tmp];
-        }
-      }
-    }
-  }
-
-  for (i = 0; i < num_patom * num_patom * 18; i++) {
-    dd_tmp[i] = dd[i];
-  }
-
   for (i = 0; i < num_patom; i++) {
     for (k = 0; k < 3; k++) {   /* alpha */
       for (l = 0; l < 3; l++) { /* beta */
         adrs = i * num_patom * 18 + k * num_patom * 6 + i * 6 + l * 2;
         adrs_sum = i * 18 + k * 6 + l * 2;
-        dd_tmp[adrs] -= dd_sum[adrs_sum];
+        dd_tmp[adrs] -= dd_q0[adrs_sum];
+        dd_tmp[adrs + 1] -= dd_q0[adrs_sum + 1];
       }
     }
   }
 
   for (i = 0; i < num_patom * num_patom * 18; i++) {
     dd_tmp[i] *= factor;
-    dd[i] = 0;
   }
 
   for (i = 0; i < num_patom; i++) {
@@ -259,10 +218,65 @@ void get_dipole_dipole(double *dd, /* [natom, 3, natom, 3, (real, imag)] */
 
   free(dd_tmp);
   dd_tmp = NULL;
-  free(dd_sum);
-  dd_sum = NULL;
-
 }
+
+void get_dipole_dipole_q0(double *dd_q0, /* [natom, 3, 3, (real, imag)] */
+                          const double *G_list, /* [num_G, 3] */
+                          const int num_G,
+                          const int num_patom,
+                          const double *dielectric,
+                          const double *pos, /* [natom, 3] */
+                          const double lambda,
+                          const double tolerance)
+{
+  int i, j, k, l, adrs_tmp, adrs_sum;
+  double zero_vec[3];
+  double *dd_tmp;
+
+  dd_tmp = NULL;
+  dd_tmp = (double*) malloc(sizeof(double) * num_patom * num_patom * 18);
+
+  for (i = 0; i < num_patom * num_patom * 18; i++) {
+    dd_tmp[i] = 0;
+  }
+
+  zero_vec[0] = 0;
+  zero_vec[1] = 0;
+  zero_vec[2] = 0;
+
+  get_KK(dd_tmp,
+         G_list,
+         num_G,
+         num_patom,
+         zero_vec,
+         NULL,
+         dielectric,
+         pos,
+         lambda,
+         tolerance);
+
+  for (i = 0; i < num_patom * 18; i++) {
+    dd_q0[i] = 0;
+  }
+
+  for (i = 0; i < num_patom; i++) {
+    for (j = 0; j < num_patom; j++) {
+      for (k = 0; k < 3; k++) {   /* alpha */
+        for (l = 0; l < 3; l++) { /* beta */
+          adrs_tmp = i * num_patom * 18 + k * num_patom * 6 + j * 6 + l * 2;
+          adrs_sum = i * 18 + k * 6 + l * 2;
+          dd_q0[adrs_sum] += dd_tmp[adrs_tmp];
+          /* expected to be real, though */
+          dd_q0[adrs_sum +1] += dd_tmp[adrs_tmp + 1];
+        }
+      }
+    }
+  }
+
+  free(dd_tmp);
+  dd_tmp = NULL;
+}
+
 
 void get_charge_sum(double *charge_sum,
                     const int num_patom,
@@ -481,7 +495,10 @@ static void get_KK(double *dd_part, /* [natom, 3, natom, 3, (real, imag)] */
       for (j = 0; j < num_patom; j++) {
         phase = 0;
         for (k = 0; k < 3; k++) {
-          phase += (pos[i * 3 + k] - pos[j * 3 + k]) * q_K[k];
+          /* For D-type dynamical matrix */
+          /* phase += (pos[i * 3 + k] - pos[j * 3 + k]) * q_K[k]; */
+          /* For C-type dynamical matrix */
+          phase += (pos[i * 3 + k] - pos[j * 3 + k]) * G_list[g * 3 + k];
         }
         phase *= 2 * PI;
         cos_phase = cos(phase);
