@@ -77,18 +77,18 @@ static void get_KK(double *dd_part, /* [natom, 3, natom, 3, (real, imag)] */
                    const double lambda,
                    const double tolerance);
 
-int get_dynamical_matrix_at_q(double *dynamical_matrix,
-                              const int num_patom,
-                              const int num_satom,
-                              const double *fc,
-                              const double *q,
-                              const double *r,
-                              const int *multi,
-                              const double *mass,
-                              const int *s2p_map,
-                              const int *p2s_map,
-                              const double *charge_sum,
-                              const int with_openmp)
+int dym_get_dynamical_matrix_at_q(double *dynamical_matrix,
+                                  const int num_patom,
+                                  const int num_satom,
+                                  const double *fc,
+                                  const double *q,
+                                  const double *r,
+                                  const int *multi,
+                                  const double *mass,
+                                  const int *s2p_map,
+                                  const int *p2s_map,
+                                  const double *charge_sum,
+                                  const int with_openmp)
 {
   int i, j, ij, adrs, adrsT;
 
@@ -146,19 +146,19 @@ int get_dynamical_matrix_at_q(double *dynamical_matrix,
   return 0;
 }
 
-void get_dipole_dipole(double *dd, /* [natom, 3, natom, 3, (real, imag)] */
-                       const double *dd_q0, /* [natom, 3, 3, (real, imag)] */
-                       const double *G_list, /* [num_G, 3] */
-                       const int num_G,
-                       const int num_patom,
-                       const double *q_vector,
-                       const double *q_direction,
-                       const double *born,
-                       const double *dielectric,
-                       const double *pos, /* [natom, 3] */
-                       const double factor, /* 4pi/V*unit-conv */
-                       const double lambda,
-                       const double tolerance)
+void dym_get_dipole_dipole(double *dd, /* [natom, 3, natom, 3, (real, imag)] */
+                           const double *dd_q0, /* [natom, 3, 3, (real, imag)] */
+                           const double *G_list, /* [num_G, 3] */
+                           const int num_G,
+                           const int num_patom,
+                           const double *q_vector,
+                           const double *q_direction,
+                           const double *born,
+                           const double *dielectric,
+                           const double *pos, /* [natom, 3] */
+                           const double factor, /* 4pi/V*unit-conv */
+                           const double lambda,
+                           const double tolerance)
 {
   int i, j, k, l, m, n, adrs, adrs_tmp, adrs_sum;
   double *dd_tmp;
@@ -220,14 +220,14 @@ void get_dipole_dipole(double *dd, /* [natom, 3, natom, 3, (real, imag)] */
   dd_tmp = NULL;
 }
 
-void get_dipole_dipole_q0(double *dd_q0, /* [natom, 3, 3, (real, imag)] */
-                          const double *G_list, /* [num_G, 3] */
-                          const int num_G,
-                          const int num_patom,
-                          const double *dielectric,
-                          const double *pos, /* [natom, 3] */
-                          const double lambda,
-                          const double tolerance)
+void dym_get_dipole_dipole_q0(double *dd_q0, /* [natom, 3, 3, (real, imag)] */
+                              const double *G_list, /* [num_G, 3] */
+                              const int num_G,
+                              const int num_patom,
+                              const double *dielectric,
+                              const double *pos, /* [natom, 3] */
+                              const double lambda,
+                              const double tolerance)
 {
   int i, j, k, l, adrs_tmp, adrs_sum;
   double zero_vec[3];
@@ -278,11 +278,11 @@ void get_dipole_dipole_q0(double *dd_q0, /* [natom, 3, 3, (real, imag)] */
 }
 
 
-void get_charge_sum(double *charge_sum,
-                    const int num_patom,
-                    const double factor, /* 4pi/V*unit-conv and denominator */
-                    const double q_vector[3],
-                    const double *born)
+void dym_get_charge_sum(double *charge_sum,
+                        const int num_patom,
+                        const double factor, /* 4pi/V*unit-conv and denominator */
+                        const double q_vector[3],
+                        const double *born)
 {
   int i, j, k, a, b;
   double (*q_born)[3];
