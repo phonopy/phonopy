@@ -317,6 +317,60 @@ void dym_get_charge_sum(double *charge_sum,
   q_born = NULL;
 }
 
+/* fc[num_patom, num_satom, 3, 3] */
+/* dm[num_comm_points, num_patom * 3, num_patom *3] */
+/* comm_points[num_satom, num_patom, 27, 3] */
+/* shortest_vectors[num_satom, num_patom, 27, 3] */
+/* multiplicities[num_satom, num_patom] */
+void dym_transform_dynmat_to_fc(double *fc,
+                                const double *dm,
+                                PHPYCONST double (*comm_points)[3],
+                                PHPYCONST double (*shortest_vectors)[27][3],
+                                const int *multiplicities,
+                                const double *masses,
+                                const int *s2pp_map,
+                                const int num_patom,
+                                const int num_satom)
+{
+  int i, j, k, l, m, N, adrs, multi;
+  double coef, phase, cos_phase, sin_phase;
+
+  N = num_satom / num_patom;
+  for (i = 0; i < num_patom * num_satom * 9; i++) {
+    fc[i] = 0;
+  }
+
+  for (i = 0; i < num_patom; i++) {
+    for (j = 0; j < num_satom; j++) {
+      coef = sqrt(masses[i] * masses[s2pp_map[j]]) / N;
+      for (k = 0; k < N; k++) {
+        cos_phase = 0;
+        sin_phase = 0;
+        multi = multiplicities[j * num_patom + i];
+        for (l = 0; l < multi; l++) {
+          phase = 0;
+          for (m = 0; m < 3; m++) {
+            phase -= comm_points[k][m] *
+              shortest_vectors[j * num_patom + i][l][m];
+          }
+          cos_phase += cos(phase * 2 * PI);
+          sin_phase += sin(phase * 2 * PI);
+        }
+        cos_phase /=  multi;
+        sin_phase /=  multi;
+        for (l = 0; l < 3; l++) {
+          for (m = 0; m < 3; m++) {
+            adrs = k * num_patom * num_patom * 18 + i * num_patom * 18 +
+              l * num_patom * 6 + s2pp_map[j] * 6 + m * 2;
+            fc[i * num_satom * 9 + j * 9 + l * 3 + m] +=
+              (dm[adrs] * cos_phase - dm[adrs + 1] * sin_phase) * coef;
+          }
+        }
+      }
+    }
+  }
+}
+
 
 static void get_dynmat_ij(double *dynamical_matrix,
                           const int num_patom,

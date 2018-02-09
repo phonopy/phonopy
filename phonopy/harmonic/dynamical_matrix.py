@@ -242,6 +242,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
                  primitive,
                  force_constants,
                  nac_params=None,
+                 num_G_points=None, # For Gonze NAC
                  decimals=None,
                  symprec=1e-5,
                  log_level=0):
@@ -257,6 +258,10 @@ class DynamicalMatrixNAC(DynamicalMatrix):
 
         # For the method by Gonze et al.
         self._Gonze_force_constants = None
+        if num_G_points is None:
+            self._num_G_points = 300
+        else:
+            self._num_G_points = num_G_points
         self._G_vec_list = None
         self._G_cutoff = None
         self._Lambda = None # 4*Lambda**2 is stored.
@@ -285,20 +290,25 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             if 'G_cutoff' in nac_params:
                 self._G_cutoff = nac_params['G_cutoff']
             else:
-                self._G_cutoff = 10
+                self._G_cutoff = (3 * self._num_G_points / (4 * np.pi) /
+                                  self._pcell.get_volume()) ** (1.0 / 3)
             if 'Lambda' in nac_params:
                 self._Lambda = nac_params['Lambda']
             else:
-                self._Lambda = 1
+                exp_cutoff = 1e-10
+                GeG = self._G_cutoff ** 2 * np.trace(self._dielectric) / 3
+                self._Lambda= np.sqrt(- GeG / 4 / np.log(exp_cutoff))
         else:
             self._method = 'wang'
 
     def _prepare_Gonze_force_constants(self):
         self._G_list = self._get_G_list()
-        if self._log_level > 1:
-            print("G-cutoff distance: %6.2f" % self._G_cutoff)
-            print("Number of G-points: %d" % len(self._G_list))
-            print("Lambda: %6.2f" % self._Lambda)
+        if self._log_level:
+            print("NAC by Gonze et al., PRB 50, 13035(R) (1994), "
+                  "PRB 55, 10355 (1997):")
+            print("  G-cutoff distance: %5.2f" % self._G_cutoff)
+            print("  Number of G-points: %d" % len(self._G_list))
+            print("  Lambda: %6.2f" % self._Lambda)
 
         try:
             import phonopy._phonopy as phonoc
