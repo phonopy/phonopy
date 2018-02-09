@@ -196,6 +196,14 @@ class DynamicalMatrix(object):
                                     self._s2pp_map,
                                     np.arange(len(self._p2s_map), dtype='intc'))
 
+        # Data of dm array are stored in memory by the C order of
+        # (size_prim * 3, size_prim * 3, 2), where the last 2 means
+        # real and imaginary parts. This code assumes this memory
+        # order is that expected by numpy. Otherwise, numpy complex array
+        # should be created as follows:
+        #   dm_double = dm.view(dtype='double').reshape(size_prim * 3,
+        #                                               size_prim * 3, 2)
+        #   dm = dm_double[:, :, 0] + 1j * dm_double[:, :, 1]
         self._dynamical_matrix = dm
 
     def _set_py_dynamical_matrix(self, q):
@@ -234,8 +242,10 @@ class DynamicalMatrixNAC(DynamicalMatrix):
                  primitive,
                  force_constants,
                  nac_params=None,
+                 num_G_points=None, # For Gonze NAC
                  decimals=None,
-                 symprec=1e-5):
+                 symprec=1e-5,
+                 log_level=0):
 
         DynamicalMatrix.__init__(self,
                                  supercell,
@@ -244,8 +254,14 @@ class DynamicalMatrixNAC(DynamicalMatrix):
                                  decimals=decimals,
                                  symprec=1e-5)
 
+        self._log_level = log_level
+
         # For the method by Gonze et al.
         self._Gonze_force_constants = None
+        if num_G_points is None:
+            self._num_G_points = 300
+        else:
+            self._num_G_points = num_G_points
         self._G_vec_list = None
         self._G_cutoff = None
         self._Lambda = None # 4*Lambda**2 is stored.
@@ -271,35 +287,39 @@ class DynamicalMatrixNAC(DynamicalMatrix):
                                     dtype='double', order='C')
         if 'method' in nac_params and nac_params['method'] == 'gonze':
             self._method = 'gonze'
-        else:
-            self._method = 'wang'
-
-        if self._method == 'gonze':
             if 'G_cutoff' in nac_params:
                 self._G_cutoff = nac_params['G_cutoff']
             else:
-                self._G_cutoff = 10
+                self._G_cutoff = (3 * self._num_G_points / (4 * np.pi) /
+                                  self._pcell.get_volume()) ** (1.0 / 3)
             if 'Lambda' in nac_params:
                 self._Lambda = nac_params['Lambda']
             else:
-                self._Lambda = 1
+                exp_cutoff = 1e-10
+                GeG = self._G_cutoff ** 2 * np.trace(self._dielectric) / 3
+                self._Lambda= np.sqrt(- GeG / 4 / np.log(exp_cutoff))
+        else:
+            self._method = 'wang'
 
-            self._G_list = self._get_G_list()
-            print("G-cutoff distance: %6.2f" % self._G_cutoff)
-            print("Number of G-points: %d" % len(self._G_list))
-            print("Lambda: %6.2f" % self._Lambda)
+    def _prepare_Gonze_force_constants(self):
+        self._G_list = self._get_G_list()
+        if self._log_level:
+            print("NAC by Gonze et al., PRB 50, 13035(R) (1994), "
+                  "PRB 55, 10355 (1997):")
+            print("  G-cutoff distance: %5.2f" % self._G_cutoff)
+            print("  Number of G-points: %d" % len(self._G_list))
+            print("  Lambda: %6.2f" % self._Lambda)
 
-            try:
-                import phonopy._phonopy as phonoc
-                self._set_c_dipole_dipole_q0()
-            except ImportError:
-                print("Python version of dipole-dipole calculation is not well "
-                      "implemented.")
-                sys.exit(1)
+        try:
+            import phonopy._phonopy as phonoc
+            self._set_c_dipole_dipole_q0()
+        except ImportError:
+            print("Python version of dipole-dipole calculation is not well "
+                  "implemented.")
+            sys.exit(1)
 
-
-            self._set_Gonze_force_constants()
-            self._Gonze_count = 0
+        self._set_Gonze_force_constants()
+        self._Gonze_count = 0
 
     def set_dynamical_matrix(self, q_red, q_direction=None):
         rec_lat = np.linalg.inv(self._pcell.get_cell()) # column vectors
@@ -315,6 +335,8 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         if self._method == 'wang':
             self._set_Wang_dynamical_matrix(q_red, q_direction)
         else:
+            if self._Gonze_force_constants is None:
+                self._prepare_Gonze_force_constants()
             self._set_Gonze_dynamical_matrix(q_red, q_direction)
 
     def _set_Wang_dynamical_matrix(self, q_red, q_direction):
@@ -396,7 +418,8 @@ class DynamicalMatrixNAC(DynamicalMatrix):
                 fc[s1, s2] += nac_q[p1, p2] / N
 
     def _set_Gonze_dynamical_matrix(self, q_red, q_direction):
-        print("%d %s" % (self._Gonze_count + 1, q_red))
+        if self._log_level > 1:
+            print("%d %s" % (self._Gonze_count + 1, q_red))
         self._Gonze_count += 1
         fc = self._force_constants
         self._force_constants = self._Gonze_force_constants
@@ -412,7 +435,8 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         dynmat = []
         num_q = len(d2f.get_commensurate_points())
         for i, q_red in enumerate(d2f.get_commensurate_points()):
-            print("%d/%d %s" % (i + 1, num_q, q_red))
+            if self._log_level > 1:
+                print("%d/%d %s" % (i + 1, num_q, q_red))
             self._set_dynamical_matrix(q_red)
             dm_dd = self._get_Gonze_dipole_dipole(q_red, None)
             self._dynamical_matrix -= dm_dd

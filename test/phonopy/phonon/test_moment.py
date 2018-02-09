@@ -24,10 +24,10 @@ result_full_range = """
 class TestMoment(unittest.TestCase):
     def setUp(self):
         self._cell = read_vasp(os.path.join(data_dir, "../POSCAR_NaCl"))
-    
+
     def tearDown(self):
         pass
-    
+
     def test_moment(self):
         data = np.loadtxt(StringIO(result_full_range), dtype='double')
 

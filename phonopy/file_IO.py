@@ -377,9 +377,15 @@ def get_born_parameters(f, primitive, prim_symmetry):
         except (ValueError, TypeError):
             factor = None
     if len(line_arr) > 1:
-        G_cutoff = float(line_arr[1])
+        try:
+            G_cutoff = float(line_arr[1])
+        except (ValueError, TypeError):
+            G_cutoff = None
     if len(line_arr) > 2:
-        Lambda = float(line_arr[2])
+        try:
+            Lambda = float(line_arr[2])
+        except (ValueError, TypeError):
+            Lambda = None
 
     # Read dielectric constant
     line = f.readline().split()

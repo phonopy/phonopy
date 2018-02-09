@@ -35,42 +35,59 @@
 #ifndef __dynmat_H__
 #define __dynmat_H__
 
-int get_dynamical_matrix_at_q(double *dynamical_matrix,
+#define PHPYCONST
+
+int dym_get_dynamical_matrix_at_q(double *dynamical_matrix,
+                                  const int num_patom,
+                                  const int num_satom,
+                                  const double *fc,
+                                  const double *q,
+                                  const double *r,
+                                  const int *multi,
+                                  const double *mass,
+                                  const int *s2p_map,
+                                  const int *p2s_map,
+                                  const double *charge_sum,
+                                  const int with_openmp);
+void dym_get_dipole_dipole(double *dd, /* [natom, 3, natom, 3, (real, imag)] */
+                           const double *dd_q0, /* [natom, 3, 3, (real, imag)] */
+                           const double *G_list, /* [num_G, 3] */
+                           const int num_G,
+                           const int num_patom,
+                           const double *q_vector,
+                           const double *q_direction,
+                           const double *born,
+                           const double *dielectric,
+                           const double *pos, /* [natom, 3] */
+                           const double factor, /* 4pi/V*unit-conv */
+                           const double lambda,
+                           const double tolerance);
+void dym_get_dipole_dipole_q0(double *dd_q0, /* [natom, 3, 3, (real, imag)] */
+                              const double *G_list, /* [num_G, 3] */
+                              const int num_G,
                               const int num_patom,
-                              const int num_satom,
-                              const double *fc,
-                              const double *q,
-                              const double *r,
-                              const int *multi,
-                              const double *mass,
-                              const int *s2p_map,
-                              const int *p2s_map,
-                              const double *charge_sum,
-                              const int with_openmp);
-void get_dipole_dipole(double *dd, /* [natom, 3, natom, 3, (real, imag)] */
-                       const double *dd_q0, /* [natom, 3, 3, (real, imag)] */
-                       const double *G_list, /* [num_G, 3] */
-                       const int num_G,
-                       const int num_patom,
-                       const double *q_vector,
-                       const double *q_direction,
-                       const double *born,
-                       const double *dielectric,
-                       const double *pos, /* [natom, 3] */
-                       const double factor, /* 4pi/V*unit-conv */
-                       const double lambda,
-                       const double tolerance);
-void get_dipole_dipole_q0(double *dd_q0, /* [natom, 3, 3, (real, imag)] */
-                          const double *G_list, /* [num_G, 3] */
-                          const int num_G,
-                          const int num_patom,
-                          const double *dielectric,
-                          const double *pos, /* [natom, 3] */
-                          const double lambda,
-                          const double tolerance);
-void get_charge_sum(double *charge_sum,
-                    const int num_patom,
-                    const double factor,
-                    const double q_vector[3],
-                    const double *born);
+                              const double *dielectric,
+                              const double *pos, /* [natom, 3] */
+                              const double lambda,
+                              const double tolerance);
+void dym_get_charge_sum(double *charge_sum,
+                        const int num_patom,
+                        const double factor,
+                        const double q_vector[3],
+                        const double *born);
+/* fc[num_patom, num_satom, 3, 3] */
+/* dm[num_comm_points, num_patom * 3, num_patom *3] */
+/* comm_points[num_satom, num_patom, 27, 3] */
+/* shortest_vectors[num_satom, num_patom, 27, 3] */
+/* multiplicities[num_satom, num_patom] */
+void dym_transform_dynmat_to_fc(double *fc,
+                                const double *dm,
+                                PHPYCONST double (*comm_points)[3],
+                                PHPYCONST double (*shortest_vectors)[27][3],
+                                const int *multiplicities,
+                                const double *masses,
+                                const int *s2pp_map,
+                                const int num_patom,
+                                const int num_satom);
+
 #endif

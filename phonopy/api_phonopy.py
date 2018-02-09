@@ -259,7 +259,8 @@ class Phonopy(object):
 
     def set_nac_params(self, nac_params=None):
         self._nac_params = nac_params
-        self._set_dynamical_matrix()
+        if self._force_constants is not None:
+            self._set_dynamical_matrix()
 
     def set_displacement_dataset(self, displacement_dataset):
         """
@@ -1324,7 +1325,8 @@ class Phonopy(object):
                     self._force_constants,
                     nac_params=self._nac_params,
                     decimals=self._dynamical_matrix_decimals,
-                    symprec=self._symprec)
+                    symprec=self._symprec,
+                    log_level=self._log_level)
             return True
 
     def _search_symmetry(self):

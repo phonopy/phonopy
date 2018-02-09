@@ -45,7 +45,8 @@ def get_commensurate_points(supercell_matrix): # wrt primitive cell
                           pbc=True)
     rec_supercell = get_supercell(rec_primitive, supercell_matrix.T)
     q_pos = rec_supercell.get_scaled_positions()
-    return np.where(q_pos > 1 - 1e-15, q_pos - 1, q_pos)
+    return np.array(np.where(q_pos > 1 - 1e-15, q_pos - 1, q_pos),
+                    dtype='double', order='C')
 
 class DynmatToForceConstants(object):
     def __init__(self,
@@ -62,8 +63,13 @@ class DynmatToForceConstants(object):
         (self._shortest_vectors,
          self._multiplicity) = primitive.get_smallest_vectors()
         self._dynmat = None
-        n = self._supercell.get_number_of_atoms()
-        self._force_constants = np.zeros((n, n, 3, 3),
+        n_s = self._supercell.get_number_of_atoms()
+        n_p = self._primitive.get_number_of_atoms()
+        # Full fc
+        # self._force_constants = np.zeros((n_p, n_s, 3, 3),
+        #                                  dtype='double', order='C')
+        # Compact fc
+        self._force_constants = np.zeros((n_p, n_s, 3, 3),
                                          dtype='double', order='C')
         itemsize = self._force_constants.itemsize
         self._dtype_complex = ("c%d" % (itemsize * 2))
@@ -73,7 +79,8 @@ class DynmatToForceConstants(object):
 
     def run(self):
         self._inverse_transformation()
-        self._distribute_force_constants()
+        # Full fc
+        # self._distribute_force_constants()
 
     def get_force_constants(self):
         return self._force_constants
@@ -101,6 +108,28 @@ class DynmatToForceConstants(object):
         self._dynmat = np.array(dm, dtype=self._dtype_complex, order='C')
 
     def _inverse_transformation(self):
+        try:
+            import phonopy._phonopy as phonoc
+            self._c_inverse_transformation()
+        except ImportError:
+            self._py_inverse_transformation()
+
+    def _c_inverse_transformation(self):
+        import phonopy._phonopy as phonoc
+
+        s2p = self._primitive.get_supercell_to_primitive_map()
+        p2p = self._primitive.get_primitive_to_primitive_map()
+        s2pp = np.array([p2p[i] for i in s2p], dtype='intc')
+
+        phonoc.transform_dynmat_to_fc(self._force_constants,
+                                      self._dynmat.view(dtype='double'),
+                                      self._commensurate_points,
+                                      self._shortest_vectors,
+                                      self._multiplicity,
+                                      self._primitive.get_masses(),
+                                      s2pp)
+
+    def _py_inverse_transformation(self):
         s2p = self._primitive.get_supercell_to_primitive_map()
         p2s = self._primitive.get_primitive_to_supercell_map()
         p2p = self._primitive.get_primitive_to_primitive_map()
@@ -113,7 +142,22 @@ class DynmatToForceConstants(object):
         for p_i, s_i in enumerate(p2s):
             for s_j, p_j in enumerate([p2p[i] for i in s2p]):
                 coef = np.sqrt(m[p_i] * m[p_j]) / N
-                fc[s_i, s_j] = self._sum_q(p_i, s_j, p_j) * coef
+                # Full fc
+                # fc[s_i, s_j] = self._sum_q(p_i, s_j, p_j) * coef
+                # Compact fc
+                fc[p_i, s_j] = self._sum_q(p_i, s_j, p_j) * coef
+
+    def _sum_q(self, p_i, s_j, p_j):
+        multi = self._multiplicity[s_j, p_i]
+        pos = self._shortest_vectors[s_j, p_i, :multi]
+        sum_q = np.zeros((3, 3), dtype=self._dtype_complex, order='C')
+        phases = -2j * np.pi * np.dot(self._commensurate_points, pos.T)
+        phase_factors = np.exp(phases).sum(axis=1) / multi
+        for i, coef in enumerate(phase_factors):
+            sum_q += self._dynmat[i,
+                                  (p_i * 3):(p_i * 3 + 3),
+                                  (p_j * 3):(p_j * 3 + 3)] * coef
+        return sum_q.real
 
     def _distribute_force_constants(self):
         s2p = self._primitive.get_supercell_to_primitive_map()
@@ -133,15 +177,3 @@ class DynmatToForceConstants(object):
                                    rotations,
                                    trans,
                                    1e-5)
-
-    def _sum_q(self, p_i, s_j, p_j):
-        multi = self._multiplicity[s_j, p_i]
-        pos = self._shortest_vectors[s_j, p_i, :multi]
-        sum_q = np.zeros((3, 3), dtype=self._dtype_complex, order='C')
-        phases = -2j * np.pi * np.dot(self._commensurate_points, pos.T)
-        phase_factors = np.exp(phases).sum(axis=1) / multi
-        for i, coef in enumerate(phase_factors):
-            sum_q += self._dynmat[i,
-                                  (p_i * 3):(p_i * 3 + 3),
-                                  (p_j * 3):(p_j * 3 + 3)] * coef
-        return sum_q.real
