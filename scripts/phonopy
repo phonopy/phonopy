@@ -607,22 +607,6 @@ if run_mode == 'displacements':
 ########################################
 # Preparations for phonon calculations #
 ########################################
-if settings.get_read_force_constants():
-    phonon.set_force_constants(fc)
-elif os.path.exists("FORCE_SETS"):
-    phonon.set_displacement_dataset(force_sets)
-    if log_level > 0:
-        print("Computing force constants...")
-
-    if settings.get_fc_spg_symmetry():
-        # Need to calculate full force constant tensors
-        phonon.produce_force_constants(
-            computation_algorithm=settings.get_fc_computation_algorithm())
-    else: # Only force constants between atoms in primitive cell and supercell
-        phonon.produce_force_constants(
-            calculate_full_force_constants=False,
-            computation_algorithm=settings.get_fc_computation_algorithm())
-
 # Non-analytical term correction (LO-TO splitting)
 if settings.get_is_nac():
     if file_exists("BORN", log_level):
@@ -656,6 +640,23 @@ if settings.get_is_nac():
                         text = "        "
                     print("%s %12.7f %12.7f %12.7f" % ((text,) + tuple(v)))
             print("-" * 76)
+
+# Force constants
+if settings.get_read_force_constants():
+    phonon.set_force_constants(fc)
+elif os.path.exists("FORCE_SETS"):
+    phonon.set_displacement_dataset(force_sets)
+    if log_level > 0:
+        print("Computing force constants...")
+
+    if settings.get_fc_spg_symmetry():
+        # Need to calculate full force constant tensors
+        phonon.produce_force_constants(
+            computation_algorithm=settings.get_fc_computation_algorithm())
+    else: # Only force constants between atoms in primitive cell and supercell
+        phonon.produce_force_constants(
+            calculate_full_force_constants=False,
+            computation_algorithm=settings.get_fc_computation_algorithm())
 
 # Impose cutoff radius on force constants
 cutoff_radius = settings.get_cutoff_radius()

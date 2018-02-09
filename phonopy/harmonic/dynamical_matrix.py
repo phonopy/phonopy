@@ -282,10 +282,6 @@ class DynamicalMatrixNAC(DynamicalMatrix):
                                     dtype='double', order='C')
         if 'method' in nac_params and nac_params['method'] == 'gonze':
             self._method = 'gonze'
-        else:
-            self._method = 'wang'
-
-        if self._method == 'gonze':
             if 'G_cutoff' in nac_params:
                 self._G_cutoff = nac_params['G_cutoff']
             else:
@@ -294,23 +290,26 @@ class DynamicalMatrixNAC(DynamicalMatrix):
                 self._Lambda = nac_params['Lambda']
             else:
                 self._Lambda = 1
+        else:
+            self._method = 'wang'
 
-            self._G_list = self._get_G_list()
-            if self._log_level > 1:
-                print("G-cutoff distance: %6.2f" % self._G_cutoff)
-                print("Number of G-points: %d" % len(self._G_list))
-                print("Lambda: %6.2f" % self._Lambda)
+    def _prepare_Gonze_force_constants(self):
+        self._G_list = self._get_G_list()
+        if self._log_level > 1:
+            print("G-cutoff distance: %6.2f" % self._G_cutoff)
+            print("Number of G-points: %d" % len(self._G_list))
+            print("Lambda: %6.2f" % self._Lambda)
 
-            try:
-                import phonopy._phonopy as phonoc
-                self._set_c_dipole_dipole_q0()
-            except ImportError:
-                print("Python version of dipole-dipole calculation is not well "
-                      "implemented.")
-                sys.exit(1)
+        try:
+            import phonopy._phonopy as phonoc
+            self._set_c_dipole_dipole_q0()
+        except ImportError:
+            print("Python version of dipole-dipole calculation is not well "
+                  "implemented.")
+            sys.exit(1)
 
-            self._set_Gonze_force_constants()
-            self._Gonze_count = 0
+        self._set_Gonze_force_constants()
+        self._Gonze_count = 0
 
     def set_dynamical_matrix(self, q_red, q_direction=None):
         rec_lat = np.linalg.inv(self._pcell.get_cell()) # column vectors
@@ -326,6 +325,8 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         if self._method == 'wang':
             self._set_Wang_dynamical_matrix(q_red, q_direction)
         else:
+            if self._Gonze_force_constants is None:
+                self._prepare_Gonze_force_constants()
             self._set_Gonze_dynamical_matrix(q_red, q_direction)
 
     def _set_Wang_dynamical_matrix(self, q_red, q_direction):
