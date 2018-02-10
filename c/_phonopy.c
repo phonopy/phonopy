@@ -43,7 +43,8 @@
 #include <tetrahedron_method.h>
 
 #define KB 8.6173382568083159E-05
-#define PHPYCONST
+
+/* PHPYCONST is defined in dynmat.h */
 
 /* Build dynamical matrix */
 static PyObject * py_transform_dynmat_to_fc(PyObject *self, PyObject *args);
