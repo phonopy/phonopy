@@ -47,17 +47,17 @@ int dym_get_dynamical_matrix_at_q(double *dynamical_matrix,
                                   const double *mass,
                                   const int *s2p_map,
                                   const int *p2s_map,
-                                  const double *charge_sum,
+                                  PHPYCONST double (*charge_sum)[3][3],
                                   const int with_openmp);
 void dym_get_dipole_dipole(double *dd, /* [natom, 3, natom, 3, (real, imag)] */
                            const double *dd_q0, /* [natom, 3, 3, (real, imag)] */
                            const double *G_list, /* [num_G, 3] */
                            const int num_G,
                            const int num_patom,
-                           const double *q_cart,
-                           const double *q_direction,
-                           const double *born,
-                           const double *dielectric,
+                           const double q_cart[3],
+                           const double q_direction[3],
+                           PHPYCONST double (*born)[3][3],
+                           PHPYCONST double dielectric[3][3],
                            const double *pos, /* [natom, 3] */
                            const double factor, /* 4pi/V*unit-conv */
                            const double lambda,
@@ -66,15 +66,15 @@ void dym_get_dipole_dipole_q0(double *dd_q0, /* [natom, 3, 3, (real, imag)] */
                               const double *G_list, /* [num_G, 3] */
                               const int num_G,
                               const int num_patom,
-                              const double *dielectric,
+                              PHPYCONST double dielectric[3][3],
                               const double *pos, /* [natom, 3] */
                               const double lambda,
                               const double tolerance);
-void dym_get_charge_sum(double *charge_sum,
+void dym_get_charge_sum(double (*charge_sum)[3][3],
                         const int num_patom,
                         const double factor,
                         const double q_cart[3],
-                        const double *born);
+                        PHPYCONST double (*born)[3][3]);
 /* fc[num_patom, num_satom, 3, 3] */
 /* dm[num_comm_points, num_patom * 3, num_patom *3] */
 /* comm_points[num_satom, num_patom, 27, 3] */

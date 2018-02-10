@@ -587,7 +587,7 @@ static PyObject * py_get_nac_dynamical_matrix(PyObject *self, PyObject *args)
   PyArrayObject* mass;
   PyArrayObject* super2prim_map;
   PyArrayObject* prim2super_map;
-  PyArrayObject* born;
+  PyArrayObject* py_born;
   double factor;
 
   double* dm;
@@ -596,7 +596,7 @@ static PyObject * py_get_nac_dynamical_matrix(PyObject *self, PyObject *args)
   double* q;
   double (*svecs)[27][3];
   double* m;
-  double* z;
+  double (*born)[3][3];
   int* multi;
   int* s2p_map;
   int* p2s_map;
@@ -604,7 +604,7 @@ static PyObject * py_get_nac_dynamical_matrix(PyObject *self, PyObject *args)
   int num_satom;
 
   int n;
-  double *charge_sum;
+  double (*charge_sum)[3][3];
 
   if (!PyArg_ParseTuple(args, "OOOOOOOOOOd",
                         &dynamical_matrix,
@@ -616,7 +616,7 @@ static PyObject * py_get_nac_dynamical_matrix(PyObject *self, PyObject *args)
                         &super2prim_map,
                         &prim2super_map,
                         &py_q_cart,
-                        &born,
+                        &py_born,
                         &factor))
     return NULL;
 
@@ -626,17 +626,18 @@ static PyObject * py_get_nac_dynamical_matrix(PyObject *self, PyObject *args)
   q = (double*)PyArray_DATA(py_q);
   svecs = (double(*)[27][3])PyArray_DATA(py_shortest_vectors);
   m = (double*)PyArray_DATA(mass);
-  z = (double*)PyArray_DATA(born);
+  born = (double(*)[3][3])PyArray_DATA(py_born);
   multi = (int*)PyArray_DATA(multiplicity);
   s2p_map = (int*)PyArray_DATA(super2prim_map);
   p2s_map = (int*)PyArray_DATA(prim2super_map);
   num_patom = PyArray_DIMS(prim2super_map)[0];
   num_satom = PyArray_DIMS(super2prim_map)[0];
 
-  charge_sum = (double*) malloc(sizeof(double) * num_patom * num_patom * 9);
+  charge_sum = (double(*)[3][3])
+    malloc(sizeof(double[3][3]) * num_patom * num_patom);
   n = num_satom / num_patom;
 
-  dym_get_charge_sum(charge_sum, num_patom, factor / n, q_cart, z);
+  dym_get_charge_sum(charge_sum, num_patom, factor / n, q_cart, born);
   dym_get_dynamical_matrix_at_q(dm,
                                 num_patom,
                                 num_satom,
@@ -662,8 +663,8 @@ static PyObject * py_get_dipole_dipole(PyObject *self, PyObject *args)
   PyArrayObject* G_list_py;
   PyArrayObject* q_vector_py;
   PyArrayObject* q_direction_py;
-  PyArrayObject* born_py;
-  PyArrayObject* dielectric_py;
+  PyArrayObject* py_born;
+  PyArrayObject* py_dielectric;
   PyArrayObject* pos_py;
   double factor;
   double lambda;
@@ -674,8 +675,8 @@ static PyObject * py_get_dipole_dipole(PyObject *self, PyObject *args)
   double* G_list;
   double* q_vector;
   double* q_direction;
-  double* born;
-  double* dielectric;
+  double (*born)[3][3];
+  double (*dielectric)[3];
   double *pos;
   int num_patom, num_G;
 
@@ -685,8 +686,8 @@ static PyObject * py_get_dipole_dipole(PyObject *self, PyObject *args)
                         &G_list_py,
                         &q_vector_py,
                         &q_direction_py,
-                        &born_py,
-                        &dielectric_py,
+                        &py_born,
+                        &py_dielectric,
                         &pos_py,
                         &factor,
                         &lambda,
@@ -703,8 +704,8 @@ static PyObject * py_get_dipole_dipole(PyObject *self, PyObject *args)
     q_direction = (double*)PyArray_DATA(q_direction_py);
   }
   q_vector = (double*)PyArray_DATA(q_vector_py);
-  born = (double*)PyArray_DATA(born_py);
-  dielectric = (double*)PyArray_DATA(dielectric_py);
+  born = (double*)PyArray_DATA(py_born);
+  dielectric = (double(*)[3])PyArray_DATA(py_dielectric);
   pos = (double*)PyArray_DATA(pos_py);
   num_G = PyArray_DIMS(G_list_py)[0];
   num_patom = PyArray_DIMS(pos_py)[0];
@@ -730,21 +731,21 @@ static PyObject * py_get_dipole_dipole_q0(PyObject *self, PyObject *args)
 {
   PyArrayObject* dd_q0_py;
   PyArrayObject* G_list_py;
-  PyArrayObject* dielectric_py;
+  PyArrayObject* py_dielectric;
   PyArrayObject* pos_py;
   double lambda;
   double tolerance;
 
   double* dd_q0;
   double* G_list;
-  double* dielectric;
+  double (*dielectric)[3];
   double *pos;
   int num_patom, num_G;
 
   if (!PyArg_ParseTuple(args, "OOOOdd",
                         &dd_q0_py,
                         &G_list_py,
-                        &dielectric_py,
+                        &py_dielectric,
                         &pos_py,
                         &lambda,
                         &tolerance))
@@ -753,7 +754,7 @@ static PyObject * py_get_dipole_dipole_q0(PyObject *self, PyObject *args)
 
   dd_q0 = (double*)PyArray_DATA(dd_q0_py);
   G_list = (double*)PyArray_DATA(G_list_py);
-  dielectric = (double*)PyArray_DATA(dielectric_py);
+  dielectric = (double(*)[3])PyArray_DATA(py_dielectric);
   pos = (double*)PyArray_DATA(pos_py);
   num_G = PyArray_DIMS(G_list_py)[0];
   num_patom = PyArray_DIMS(pos_py)[0];
@@ -781,7 +782,7 @@ static PyObject * py_get_derivative_dynmat(PyObject *self, PyObject *args)
   PyArrayObject* mass;
   PyArrayObject* super2prim_map;
   PyArrayObject* prim2super_map;
-  PyArrayObject* born;
+  PyArrayObject* py_born;
   PyArrayObject* dielectric;
   PyArrayObject* q_direction;
   double nac_factor;
@@ -813,7 +814,7 @@ static PyObject * py_get_derivative_dynmat(PyObject *self, PyObject *args)
                         &super2prim_map,
                         &prim2super_map,
                         &nac_factor,
-                        &born,
+                        &py_born,
                         &dielectric,
                         &q_direction)) {
     return NULL;
@@ -831,10 +832,10 @@ static PyObject * py_get_derivative_dynmat(PyObject *self, PyObject *args)
   num_patom = PyArray_DIMS(prim2super_map)[0];
   num_satom = PyArray_DIMS(super2prim_map)[0];
 
-  if ((PyObject*)born == Py_None) {
+  if ((PyObject*)py_born == Py_None) {
     z = NULL;
   } else {
-    z = (double*)PyArray_DATA(born);
+    z = (double*)PyArray_DATA(py_born);
   }
   if ((PyObject*)dielectric == Py_None) {
     epsilon = NULL;
