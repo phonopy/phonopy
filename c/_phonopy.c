@@ -665,19 +665,19 @@ static PyObject * py_get_dipole_dipole(PyObject *self, PyObject *args)
   PyArrayObject* q_direction_py;
   PyArrayObject* py_born;
   PyArrayObject* py_dielectric;
-  PyArrayObject* pos_py;
+  PyArrayObject* py_positions;
   double factor;
   double lambda;
   double tolerance;
 
   double* dd;
   double* dd_q0;
-  double* G_list;
+  double (*G_list)[3];
   double* q_vector;
   double* q_direction;
   double (*born)[3][3];
   double (*dielectric)[3];
-  double *pos;
+  double (*pos)[3];
   int num_patom, num_G;
 
   if (!PyArg_ParseTuple(args, "OOOOOOOOddd",
@@ -688,7 +688,7 @@ static PyObject * py_get_dipole_dipole(PyObject *self, PyObject *args)
                         &q_direction_py,
                         &py_born,
                         &py_dielectric,
-                        &pos_py,
+                        &py_positions,
                         &factor,
                         &lambda,
                         &tolerance))
@@ -697,18 +697,18 @@ static PyObject * py_get_dipole_dipole(PyObject *self, PyObject *args)
 
   dd = (double*)PyArray_DATA(dd_py);
   dd_q0 = (double*)PyArray_DATA(dd_q0_py);
-  G_list = (double*)PyArray_DATA(G_list_py);
+  G_list = (double(*)[3])PyArray_DATA(G_list_py);
   if ((PyObject*)q_direction_py == Py_None) {
     q_direction = NULL;
   } else {
     q_direction = (double*)PyArray_DATA(q_direction_py);
   }
   q_vector = (double*)PyArray_DATA(q_vector_py);
-  born = (double*)PyArray_DATA(py_born);
+  born = (double(*)[3][3])PyArray_DATA(py_born);
   dielectric = (double(*)[3])PyArray_DATA(py_dielectric);
-  pos = (double*)PyArray_DATA(pos_py);
+  pos = (double(*)[3])PyArray_DATA(py_positions);
   num_G = PyArray_DIMS(G_list_py)[0];
-  num_patom = PyArray_DIMS(pos_py)[0];
+  num_patom = PyArray_DIMS(py_positions)[0];
 
   dym_get_dipole_dipole(dd, /* [natom, 3, natom, 3, (real, imag)] */
                         dd_q0, /* [natom, 3, 3, (real, imag)] */
@@ -732,32 +732,32 @@ static PyObject * py_get_dipole_dipole_q0(PyObject *self, PyObject *args)
   PyArrayObject* dd_q0_py;
   PyArrayObject* G_list_py;
   PyArrayObject* py_dielectric;
-  PyArrayObject* pos_py;
+  PyArrayObject* py_positions;
   double lambda;
   double tolerance;
 
   double* dd_q0;
-  double* G_list;
+  double (*G_list)[3];
   double (*dielectric)[3];
-  double *pos;
+  double (*pos)[3];
   int num_patom, num_G;
 
   if (!PyArg_ParseTuple(args, "OOOOdd",
                         &dd_q0_py,
                         &G_list_py,
                         &py_dielectric,
-                        &pos_py,
+                        &py_positions,
                         &lambda,
                         &tolerance))
     return NULL;
 
 
   dd_q0 = (double*)PyArray_DATA(dd_q0_py);
-  G_list = (double*)PyArray_DATA(G_list_py);
+  G_list = (double(*)[3])PyArray_DATA(G_list_py);
   dielectric = (double(*)[3])PyArray_DATA(py_dielectric);
-  pos = (double*)PyArray_DATA(pos_py);
+  pos = (double(*)[3])PyArray_DATA(py_positions);
   num_G = PyArray_DIMS(G_list_py)[0];
-  num_patom = PyArray_DIMS(pos_py)[0];
+  num_patom = PyArray_DIMS(py_positions)[0];
 
   dym_get_dipole_dipole_q0(dd_q0, /* [natom, 3, 3, (real, imag)] */
                            G_list, /* [num_kvec, 3] */

@@ -67,13 +67,13 @@ static void get_dm(double dm_real[3][3],
 static double get_dielectric_part(const double q_cart[3],
                                   PHPYCONST double dielectric[3][3]);
 static void get_KK(double *dd_part, /* [natom, 3, natom, 3, (real, imag)] */
-                   const double *G_list, /* [num_G, 3] */
+                   PHPYCONST double (*G_list)[3], /* [num_G, 3] */
                    const int num_G,
                    const int num_patom,
                    const double q_cart[3],
                    const double q_direction[3],
                    PHPYCONST double dielectric[3][3],
-                   const double *pos, /* [natom, 3] */
+                   PHPYCONST double (*pos)[3], /* [num_patom, 3] */
                    const double lambda,
                    const double tolerance);
 
@@ -148,14 +148,14 @@ int dym_get_dynamical_matrix_at_q(double *dynamical_matrix,
 
 void dym_get_dipole_dipole(double *dd, /* [natom, 3, natom, 3, (real, imag)] */
                            const double *dd_q0, /* [natom, 3, 3, (real, imag)] */
-                           const double *G_list, /* [num_G, 3] */
+                           PHPYCONST double (*G_list)[3], /* [num_G, 3] */
                            const int num_G,
                            const int num_patom,
                            const double q_cart[3],
                            const double q_direction[3],
                            PHPYCONST double (*born)[3][3],
                            PHPYCONST double dielectric[3][3],
-                           const double *pos, /* [natom, 3] */
+                           PHPYCONST double (*pos)[3], /* [num_patom, 3] */
                            const double factor, /* 4pi/V*unit-conv */
                            const double lambda,
                            const double tolerance)
@@ -221,11 +221,11 @@ void dym_get_dipole_dipole(double *dd, /* [natom, 3, natom, 3, (real, imag)] */
 }
 
 void dym_get_dipole_dipole_q0(double *dd_q0, /* [natom, 3, 3, (real, imag)] */
-                              const double *G_list, /* [num_G, 3] */
+                              PHPYCONST double (*G_list)[3], /* [num_G, 3] */
                               const int num_G,
                               const int num_patom,
                               PHPYCONST double dielectric[3][3],
-                              const double *pos, /* [natom, 3] */
+                              PHPYCONST double (*pos)[3], /* [num_patom, 3] */
                               const double lambda,
                               const double tolerance)
 {
@@ -496,13 +496,13 @@ static double get_dielectric_part(const double q_cart[3],
 }
 
 static void get_KK(double *dd_part, /* [natom, 3, natom, 3, (real, imag)] */
-                   const double *G_list, /* [num_G, 3] */
+                   PHPYCONST double (*G_list)[3], /* [num_G, 3] */
                    const int num_G,
                    const int num_patom,
                    const double q_cart[3],
                    const double q_direction[3],
                    PHPYCONST double dielectric[3][3],
-                   const double *pos, /* [natom, 3] */
+                   PHPYCONST double (*pos)[3], /* [num_patom, 3] */
                    const double lambda,
                    const double tolerance)
 {
@@ -519,7 +519,7 @@ static void get_KK(double *dd_part, /* [natom, 3, natom, 3, (real, imag)] */
   for (g = 0; g < num_G; g++) {
     norm = 0;
     for (i = 0; i < 3; i++) {
-      q_K[i] = G_list[g * 3 + i] + q_cart[i];
+      q_K[i] = G_list[g][i] + q_cart[i];
       norm += q_K[i] * q_K[i];
     }
 
@@ -549,9 +549,9 @@ static void get_KK(double *dd_part, /* [natom, 3, natom, 3, (real, imag)] */
         phase = 0;
         for (k = 0; k < 3; k++) {
           /* For D-type dynamical matrix */
-          /* phase += (pos[i * 3 + k] - pos[j * 3 + k]) * q_K[k]; */
+          /* phase += (pos[i][k] - pos[j][k]) * q_K[k]; */
           /* For C-type dynamical matrix */
-          phase += (pos[i * 3 + k] - pos[j * 3 + k]) * G_list[g * 3 + k];
+          phase += (pos[i][k] - pos[j][k]) * G_list[g][k];
         }
         phase *= 2 * PI;
         cos_phase = cos(phase);
