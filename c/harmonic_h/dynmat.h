@@ -41,8 +41,8 @@ int dym_get_dynamical_matrix_at_q(double *dynamical_matrix,
                                   const int num_patom,
                                   const int num_satom,
                                   const double *fc,
-                                  const double *q,
-                                  const double *r,
+                                  const double q[3],
+                                  PHPYCONST double (*svecs)[27][3],
                                   const int *multi,
                                   const double *mass,
                                   const int *s2p_map,
@@ -54,7 +54,7 @@ void dym_get_dipole_dipole(double *dd, /* [natom, 3, natom, 3, (real, imag)] */
                            const double *G_list, /* [num_G, 3] */
                            const int num_G,
                            const int num_patom,
-                           const double *q_vector,
+                           const double *q_cart,
                            const double *q_direction,
                            const double *born,
                            const double *dielectric,
@@ -73,7 +73,7 @@ void dym_get_dipole_dipole_q0(double *dd_q0, /* [natom, 3, 3, (real, imag)] */
 void dym_get_charge_sum(double *charge_sum,
                         const int num_patom,
                         const double factor,
-                        const double q_vector[3],
+                        const double q_cart[3],
                         const double *born);
 /* fc[num_patom, num_satom, 3, 3] */
 /* dm[num_comm_points, num_patom * 3, num_patom *3] */

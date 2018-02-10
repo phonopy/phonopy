@@ -517,8 +517,8 @@ static PyObject * py_get_dynamical_matrix(PyObject *self, PyObject *args)
 {
   PyArrayObject* dynamical_matrix;
   PyArrayObject* force_constants;
-  PyArrayObject* r_vector;
-  PyArrayObject* q_vector;
+  PyArrayObject* py_shortest_vectors;
+  PyArrayObject* py_q;
   PyArrayObject* multiplicity;
   PyArrayObject* mass;
   PyArrayObject* super2prim_map;
@@ -527,7 +527,7 @@ static PyObject * py_get_dynamical_matrix(PyObject *self, PyObject *args)
   double* dm;
   double* fc;
   double* q;
-  double* r;
+  double (*svecs)[27][3];
   double* m;
   int* multi;
   int* s2p_map;
@@ -538,8 +538,8 @@ static PyObject * py_get_dynamical_matrix(PyObject *self, PyObject *args)
   if (!PyArg_ParseTuple(args, "OOOOOOOO",
                         &dynamical_matrix,
                         &force_constants,
-                        &q_vector,
-                        &r_vector,
+                        &py_q,
+                        &py_shortest_vectors,
                         &multiplicity,
                         &mass,
                         &super2prim_map,
@@ -549,8 +549,8 @@ static PyObject * py_get_dynamical_matrix(PyObject *self, PyObject *args)
 
   dm = (double*)PyArray_DATA(dynamical_matrix);
   fc = (double*)PyArray_DATA(force_constants);
-  q = (double*)PyArray_DATA(q_vector);
-  r = (double*)PyArray_DATA(r_vector);
+  q = (double*)PyArray_DATA(py_q);
+  svecs = (double(*)[27][3])PyArray_DATA(py_shortest_vectors);
   m = (double*)PyArray_DATA(mass);
   multi = (int*)PyArray_DATA(multiplicity);
   s2p_map = (int*)PyArray_DATA(super2prim_map);
@@ -563,7 +563,7 @@ static PyObject * py_get_dynamical_matrix(PyObject *self, PyObject *args)
                                 num_satom,
                                 fc,
                                 q,
-                                r,
+                                svecs,
                                 multi,
                                 m,
                                 s2p_map,
@@ -579,9 +579,9 @@ static PyObject * py_get_nac_dynamical_matrix(PyObject *self, PyObject *args)
 {
   PyArrayObject* dynamical_matrix;
   PyArrayObject* force_constants;
-  PyArrayObject* r_vector;
-  PyArrayObject* q_cart_vector;
-  PyArrayObject* q_vector;
+  PyArrayObject* py_shortest_vectors;
+  PyArrayObject* py_q_cart;
+  PyArrayObject* py_q;
   PyArrayObject* multiplicity;
   PyArrayObject* mass;
   PyArrayObject* super2prim_map;
@@ -593,7 +593,7 @@ static PyObject * py_get_nac_dynamical_matrix(PyObject *self, PyObject *args)
   double* fc;
   double* q_cart;
   double* q;
-  double* r;
+  double (*svecs)[27][3];
   double* m;
   double* z;
   int* multi;
@@ -608,22 +608,22 @@ static PyObject * py_get_nac_dynamical_matrix(PyObject *self, PyObject *args)
   if (!PyArg_ParseTuple(args, "OOOOOOOOOOd",
                         &dynamical_matrix,
                         &force_constants,
-                        &q_vector,
-                        &r_vector,
+                        &py_q,
+                        &py_shortest_vectors,
                         &multiplicity,
                         &mass,
                         &super2prim_map,
                         &prim2super_map,
-                        &q_cart_vector,
+                        &py_q_cart,
                         &born,
                         &factor))
     return NULL;
 
   dm = (double*)PyArray_DATA(dynamical_matrix);
   fc = (double*)PyArray_DATA(force_constants);
-  q_cart = (double*)PyArray_DATA(q_cart_vector);
-  q = (double*)PyArray_DATA(q_vector);
-  r = (double*)PyArray_DATA(r_vector);
+  q_cart = (double*)PyArray_DATA(py_q_cart);
+  q = (double*)PyArray_DATA(py_q);
+  svecs = (double(*)[27][3])PyArray_DATA(py_shortest_vectors);
   m = (double*)PyArray_DATA(mass);
   z = (double*)PyArray_DATA(born);
   multi = (int*)PyArray_DATA(multiplicity);
@@ -641,7 +641,7 @@ static PyObject * py_get_nac_dynamical_matrix(PyObject *self, PyObject *args)
                                 num_satom,
                                 fc,
                                 q,
-                                r,
+                                svecs,
                                 multi,
                                 m,
                                 s2p_map,

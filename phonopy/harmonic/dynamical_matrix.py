@@ -262,7 +262,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             self._num_G_points = 300
         else:
             self._num_G_points = num_G_points
-        self._G_vec_list = None
+        self._G_list = None
         self._G_cutoff = None
         self._Lambda = None # 4*Lambda**2 is stored.
         self._dd_q0 = None
@@ -279,6 +279,19 @@ class DynamicalMatrixNAC(DynamicalMatrix):
 
     def get_dielectric_constant(self):
         return self._dielectric
+
+    def get_nac_method(self):
+        return self._method
+
+    def get_Gonze_nac_dataset(self):
+        if self._method == 'gonze':
+            return (self._Gonze_force_constants,
+                    self._dd_q0,
+                    self._G_cutoff,
+                    self._G_list,
+                    self._Lambda)
+        else:
+            return None
 
     def set_nac_params(self, nac_params):
         self._born = np.array(nac_params['born'], dtype='double', order='C')
@@ -297,13 +310,13 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             else:
                 exp_cutoff = 1e-10
                 GeG = self._G_cutoff ** 2 * np.trace(self._dielectric) / 3
-                self._Lambda= np.sqrt(- GeG / 4 / np.log(exp_cutoff))
+                self._Lambda = np.sqrt(- GeG / 4 / np.log(exp_cutoff))
         else:
             self._method = 'wang'
 
-    def _prepare_Gonze_force_constants(self):
-        self._G_list = self._get_G_list()
-        if self._log_level:
+    def make_Gonze_nac_dataset(self, verbose=False):
+        self._G_list = self._get_G_list(self._G_cutoff)
+        if verbose:
             print("NAC by Gonze et al., PRB 50, 13035(R) (1994), "
                   "PRB 55, 10355 (1997):")
             print("  G-cutoff distance: %5.2f" % self._G_cutoff)
@@ -336,7 +349,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             self._set_Wang_dynamical_matrix(q_red, q_direction)
         else:
             if self._Gonze_force_constants is None:
-                self._prepare_Gonze_force_constants()
+                self.make_Gonze_nac_dataset(self._log_level)
             self._set_Gonze_dynamical_matrix(q_red, q_direction)
 
     def _set_Wang_dynamical_matrix(self, q_red, q_direction):
@@ -565,7 +578,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
 
         return C
 
-    def _get_G_list(self, g_rad=100):
+    def _get_G_list(self, G_cutoff, g_rad=100):
         rec_lat = np.linalg.inv(self._pcell.get_cell()) # column vectors
         # g_rad must be greater than 0 for broadcasting.
         n = g_rad * 2 + 1
@@ -576,7 +589,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             G[:, i] = grid[i].ravel()
         G_vec_list = np.dot(G, rec_lat.T)
         G_norm2 = ((G_vec_list) ** 2).sum(axis=1)
-        return np.array(G_vec_list[G_norm2 < self._G_cutoff ** 2],
+        return np.array(G_vec_list[G_norm2 < G_cutoff ** 2],
                         dtype='double', order='C')
 
     def _get_charge_sum(self, num_atom, q, born):

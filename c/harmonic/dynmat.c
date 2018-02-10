@@ -41,8 +41,8 @@ static void get_dynmat_ij(double *dynamical_matrix,
                           const int num_patom,
                           const int num_satom,
                           const double *fc,
-                          const double *q,
-                          const double *r,
+                          const double q[3],
+                          const double (*svecs)[27][3],
                           const int *multi,
                           const double *mass,
                           const int *s2p_map,
@@ -55,8 +55,8 @@ static void get_dm(double dm_real[3][3],
                    const int num_patom,
                    const int num_satom,
                    const double *fc,
-                   const double *q,
-                   const double *r,
+                   const double q[3],
+                   const double (*svecs)[27][3],
                    const int *multi,
                    const double mass_sqrt,
                    const int *p2s_map,
@@ -64,14 +64,14 @@ static void get_dm(double dm_real[3][3],
                    const int i,
                    const int j,
                    const int k);
-static double get_dielectric_part(const double q[3],
+static double get_dielectric_part(const double q_cart[3],
                                   const double *dielectric);
 static void get_KK(double *dd_part, /* [natom, 3, natom, 3, (real, imag)] */
                    const double *G_list, /* [num_G, 3] */
                    const int num_G,
                    const int num_patom,
-                   const double *q_vector,
-                   const double *q_direction,
+                   const double q_cart[3],
+                   const double q_direction[3],
                    const double *dielectric,
                    const double *pos, /* [natom, 3] */
                    const double lambda,
@@ -81,8 +81,8 @@ int dym_get_dynamical_matrix_at_q(double *dynamical_matrix,
                                   const int num_patom,
                                   const int num_satom,
                                   const double *fc,
-                                  const double *q,
-                                  const double *r,
+                                  const double q[3],
+                                  PHPYCONST double (*svecs)[27][3],
                                   const int *multi,
                                   const double *mass,
                                   const int *s2p_map,
@@ -100,7 +100,7 @@ int dym_get_dynamical_matrix_at_q(double *dynamical_matrix,
                     num_satom,
                     fc,
                     q,
-                    r,
+                    svecs,
                     multi,
                     mass,
                     s2p_map,
@@ -117,7 +117,7 @@ int dym_get_dynamical_matrix_at_q(double *dynamical_matrix,
                       num_satom,
                       fc,
                       q,
-                      r,
+                      svecs,
                       multi,
                       mass,
                       s2p_map,
@@ -151,7 +151,7 @@ void dym_get_dipole_dipole(double *dd, /* [natom, 3, natom, 3, (real, imag)] */
                            const double *G_list, /* [num_G, 3] */
                            const int num_G,
                            const int num_patom,
-                           const double *q_vector,
+                           const double *q_cart,
                            const double *q_direction,
                            const double *born,
                            const double *dielectric,
@@ -176,7 +176,7 @@ void dym_get_dipole_dipole(double *dd, /* [natom, 3, natom, 3, (real, imag)] */
          G_list,
          num_G,
          num_patom,
-         q_vector,
+         q_cart,
          q_direction,
          dielectric,
          pos,
@@ -281,7 +281,7 @@ void dym_get_dipole_dipole_q0(double *dd_q0, /* [natom, 3, 3, (real, imag)] */
 void dym_get_charge_sum(double *charge_sum,
                         const int num_patom,
                         const double factor, /* 4pi/V*unit-conv and denominator */
-                        const double q_vector[3],
+                        const double q_cart[3],
                         const double *born)
 {
   int i, j, k, a, b;
@@ -297,7 +297,7 @@ void dym_get_charge_sum(double *charge_sum,
   for (i = 0; i < num_patom; i++) {
     for (j = 0; j < 3; j++) {
       for (k = 0; k < 3; k++) {
-        q_born[i][j] += q_vector[k] * born[i * 9 + k * 3 + j];
+        q_born[i][j] += q_cart[k] * born[i * 9 + k * 3 + j];
       }
     }
   }
@@ -376,8 +376,8 @@ static void get_dynmat_ij(double *dynamical_matrix,
                           const int num_patom,
                           const int num_satom,
                           const double *fc,
-                          const double *q,
-                          const double *r,
+                          const double q[3],
+                          const double (*svecs)[27][3],
                           const int *multi,
                           const double *mass,
                           const int *s2p_map,
@@ -409,7 +409,7 @@ static void get_dynmat_ij(double *dynamical_matrix,
            num_satom,
            fc,
            q,
-           r,
+           svecs,
            multi,
            mass_sqrt,
            p2s_map,
@@ -433,8 +433,8 @@ static void get_dm(double dm_real[3][3],
                    const int num_patom,
                    const int num_satom,
                    const double *fc,
-                   const double *q,
-                   const double *r,
+                   const double q[3],
+                   const double (*svecs)[27][3],
                    const int *multi,
                    const double mass_sqrt,
                    const int *p2s_map,
@@ -452,7 +452,7 @@ static void get_dm(double dm_real[3][3],
   for (l = 0; l < multi[k * num_patom + i]; l++) {
     phase = 0;
     for (m = 0; m < 3; m++) {
-      phase += q[m] * r[k * num_patom * 81 + i * 81 + l * 3 + m];
+      phase += q[m] * svecs[k * num_patom + i][l][m];
     }
     cos_phase += cos(phase * 2 * PI) / multi[k * num_patom + i];
     sin_phase += sin(phase * 2 * PI) / multi[k * num_patom + i];
@@ -474,7 +474,7 @@ static void get_dm(double dm_real[3][3],
   }
 }
 
-static double get_dielectric_part(const double q[3],
+static double get_dielectric_part(const double q_cart[3],
                                   const double *dielectric)
 {
   int i, j;
@@ -484,13 +484,13 @@ static double get_dielectric_part(const double q[3],
   for (i = 0; i < 3; i++) {
     x[i] = 0;
     for (j = 0; j < 3; j++) {
-      x[i] += dielectric[i * 3 + j] * q[j];
+      x[i] += dielectric[i * 3 + j] * q_cart[j];
     }
   }
 
   sum = 0;
   for (i = 0; i < 3; i++) {
-    sum += q[i] * x[i];
+    sum += q_cart[i] * x[i];
   }
 
   return sum;
@@ -500,8 +500,8 @@ static void get_KK(double *dd_part, /* [natom, 3, natom, 3, (real, imag)] */
                    const double *G_list, /* [num_G, 3] */
                    const int num_G,
                    const int num_patom,
-                   const double *q_vector,
-                   const double *q_direction,
+                   const double q_cart[3],
+                   const double q_direction[3],
                    const double *dielectric,
                    const double *pos, /* [natom, 3] */
                    const double lambda,
@@ -520,7 +520,7 @@ static void get_KK(double *dd_part, /* [natom, 3, natom, 3, (real, imag)] */
   for (g = 0; g < num_G; g++) {
     norm = 0;
     for (i = 0; i < 3; i++) {
-      q_K[i] = G_list[g * 3 + i] + q_vector[i];
+      q_K[i] = G_list[g * 3 + i] + q_cart[i];
       norm += q_K[i] * q_K[i];
     }
 
