@@ -66,12 +66,12 @@ static void get_dm(double dm_real[3][3],
                    const int k);
 static double get_dielectric_part(const double q_cart[3],
                                   PHPYCONST double dielectric[3][3]);
-static void get_KK(double *dd_part, /* [natom, 3, natom, 3, (real, imag)] */
+static void get_KK(double *dd_part, /* [natom, 3, natom, 3, (real,imag)] */
                    PHPYCONST double (*G_list)[3], /* [num_G, 3] */
                    const int num_G,
                    const int num_patom,
                    const double q_cart[3],
-                   const double q_direction[3],
+                   const double *q_direction,
                    PHPYCONST double dielectric[3][3],
                    PHPYCONST double (*pos)[3], /* [num_patom, 3] */
                    const double lambda,
@@ -146,13 +146,13 @@ int dym_get_dynamical_matrix_at_q(double *dynamical_matrix,
   return 0;
 }
 
-void dym_get_dipole_dipole(double *dd, /* [natom, 3, natom, 3, (real, imag)] */
-                           const double *dd_q0, /* [natom, 3, 3, (real, imag)] */
+void dym_get_dipole_dipole(double *dd, /* [natom, 3, natom, 3, (real,imag)] */
+                           const double *dd_q0, /* [natom, 3, 3, (real,imag)] */
                            PHPYCONST double (*G_list)[3], /* [num_G, 3] */
                            const int num_G,
                            const int num_patom,
                            const double q_cart[3],
-                           const double q_direction[3],
+                           const double *q_direction, /* must be pointer */
                            PHPYCONST double (*born)[3][3],
                            PHPYCONST double dielectric[3][3],
                            PHPYCONST double (*pos)[3], /* [num_patom, 3] */
@@ -220,7 +220,7 @@ void dym_get_dipole_dipole(double *dd, /* [natom, 3, natom, 3, (real, imag)] */
   dd_tmp = NULL;
 }
 
-void dym_get_dipole_dipole_q0(double *dd_q0, /* [natom, 3, 3, (real, imag)] */
+void dym_get_dipole_dipole_q0(double *dd_q0, /* [natom, 3, 3, (real,imag)] */
                               PHPYCONST double (*G_list)[3], /* [num_G, 3] */
                               const int num_G,
                               const int num_patom,
@@ -495,12 +495,12 @@ static double get_dielectric_part(const double q_cart[3],
   return sum;
 }
 
-static void get_KK(double *dd_part, /* [natom, 3, natom, 3, (real, imag)] */
+static void get_KK(double *dd_part, /* [natom, 3, natom, 3, (real,imag)] */
                    PHPYCONST double (*G_list)[3], /* [num_G, 3] */
                    const int num_G,
                    const int num_patom,
                    const double q_cart[3],
-                   const double q_direction[3],
+                   const double *q_direction,
                    PHPYCONST double dielectric[3][3],
                    PHPYCONST double (*pos)[3], /* [num_patom, 3] */
                    const double lambda,
