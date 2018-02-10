@@ -71,7 +71,7 @@ static void get_KK(double *dd_part, /* [natom, 3, natom, 3, (real,imag)] */
                    const int num_G,
                    const int num_patom,
                    const double q_cart[3],
-                   const double *q_direction,
+                   const double *q_direction_cart,
                    PHPYCONST double dielectric[3][3],
                    PHPYCONST double (*pos)[3], /* [num_patom, 3] */
                    const double lambda,
@@ -152,7 +152,7 @@ void dym_get_dipole_dipole(double *dd, /* [natom, 3, natom, 3, (real,imag)] */
                            const int num_G,
                            const int num_patom,
                            const double q_cart[3],
-                           const double *q_direction, /* must be pointer */
+                           const double *q_direction_cart, /* must be pointer */
                            PHPYCONST double (*born)[3][3],
                            PHPYCONST double dielectric[3][3],
                            PHPYCONST double (*pos)[3], /* [num_patom, 3] */
@@ -177,7 +177,7 @@ void dym_get_dipole_dipole(double *dd, /* [natom, 3, natom, 3, (real,imag)] */
          num_G,
          num_patom,
          q_cart,
-         q_direction,
+         q_direction_cart,
          dielectric,
          pos,
          lambda,
@@ -500,7 +500,7 @@ static void get_KK(double *dd_part, /* [natom, 3, natom, 3, (real,imag)] */
                    const int num_G,
                    const int num_patom,
                    const double q_cart[3],
-                   const double *q_direction,
+                   const double *q_direction_cart,
                    PHPYCONST double dielectric[3][3],
                    PHPYCONST double (*pos)[3], /* [num_patom, 3] */
                    const double lambda,
@@ -524,13 +524,14 @@ static void get_KK(double *dd_part, /* [natom, 3, natom, 3, (real,imag)] */
     }
 
     if (sqrt(norm) < tolerance) {
-      if (!q_direction) {
+      if (!q_direction_cart) {
         continue;
       } else {
-        dielectric_part = get_dielectric_part(q_direction, dielectric);
+        dielectric_part = get_dielectric_part(q_direction_cart, dielectric);
         for (i = 0; i < 3; i++) {
           for (j = 0; j < 3; j++) {
-            KK[i][j] = q_direction[i] * q_direction[j] / dielectric_part;
+            KK[i][j] =
+              q_direction_cart[i] * q_direction_cart[j] / dielectric_part;
           }
         }
       }

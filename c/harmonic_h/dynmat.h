@@ -55,7 +55,7 @@ void dym_get_dipole_dipole(double *dd, /* [natom, 3, natom, 3, (real,imag)] */
                            const int num_G,
                            const int num_patom,
                            const double q_cart[3],
-                           const double *q_direction, /* must be pointer */
+                           const double *q_direction_cart, /* must be pointer */
                            PHPYCONST double (*born)[3][3],
                            PHPYCONST double dielectric[3][3],
                            PHPYCONST double (*pos)[3], /* [num_patom, 3] */
