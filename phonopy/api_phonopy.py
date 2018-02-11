@@ -1238,7 +1238,8 @@ class Phonopy(object):
             self._dynamical_matrix,
             q_length=q_length,
             symmetry=self._primitive_symmetry,
-            frequency_factor_to_THz=self._factor)
+            frequency_factor_to_THz=self._factor,
+            log_level=self._log_level)
         return True
 
     def get_group_velocity(self):
