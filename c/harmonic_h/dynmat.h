@@ -66,6 +66,7 @@ void dym_get_dipole_dipole_q0(double *dd_q0, /* [natom, 3, 3, (real,imag)] */
                               PHPYCONST double (*G_list)[3], /* [num_G, 3] */
                               const int num_G,
                               const int num_patom,
+                              PHPYCONST double (*born)[3][3],
                               PHPYCONST double dielectric[3][3],
                               PHPYCONST double (*pos)[3], /* [natom, 3] */
                               const double lambda,

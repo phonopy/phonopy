@@ -527,6 +527,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
 
         phonoc.dipole_dipole_q0(self._dd_q0.view(dtype='double'),
                                 self._G_list,
+                                self._born,
                                 self._dielectric,
                                 np.array(pos, dtype='double', order='C'),
                                 self._Lambda,
