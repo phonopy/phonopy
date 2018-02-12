@@ -540,9 +540,9 @@ static void get_KK(double *dd_part, /* [natom, 3, natom, 3, (real,imag)] */
         sin_phase = sin(phase);
         for (k = 0; k < 3; k++) {
           for (l = 0; l < 3; l++) {
-            adrs = i * num_patom * 18 + k * num_patom * 6 + j * 6 + l * 2;
-            dd_part[adrs] += KK[k][l] * cos_phase;
-            dd_part[adrs + 1] += KK[k][l] * sin_phase;
+            adrs = i * num_patom * 9 + k * num_patom * 3 + j * 3 + l;
+            dd_part[adrs * 2] += KK[k][l] * cos_phase;
+            dd_part[adrs * 2 + 1] += KK[k][l] * sin_phase;
           }
         }
       }
