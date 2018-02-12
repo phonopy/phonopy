@@ -191,6 +191,7 @@ void dym_get_dipole_dipole(double *dd, /* [natom, 3, natom, 3, (real,imag)] */
     dd[i] *= factor;
   }
 
+  /* This may not be necessary. */
   make_Hermitian(dd, num_patom * 3);
 
   free(dd_tmp);
@@ -207,7 +208,7 @@ void dym_get_dipole_dipole_q0(double *dd_q0, /* [natom, 3, 3, (real,imag)] */
                               const double lambda,
                               const double tolerance)
 {
-  int i, j, k, l, adrs_tmp, adrs_sum;
+  int i, j, k, l, adrs_tmp, adrs, adrsT;
   double zero_vec[3];
   double *dd_tmp1, *dd_tmp2;
 
@@ -237,7 +238,6 @@ void dym_get_dipole_dipole_q0(double *dd_q0, /* [natom, 3, 3, (real,imag)] */
          tolerance);
 
   multiply_borns(dd_tmp2, dd_tmp1, num_patom, born);
-  make_Hermitian(dd_tmp2, num_patom * 3);
 
   for (i = 0; i < num_patom * 18; i++) {
     dd_q0[i] = 0;
@@ -246,12 +246,27 @@ void dym_get_dipole_dipole_q0(double *dd_q0, /* [natom, 3, 3, (real,imag)] */
   for (i = 0; i < num_patom; i++) {
     for (k = 0; k < 3; k++) {   /* alpha */
       for (l = 0; l < 3; l++) { /* beta */
-        adrs_sum = i * 9 + k * 3 + l;
+        adrs = i * 9 + k * 3 + l;
         for (j = 0; j < num_patom; j++) {
           adrs_tmp = i * num_patom * 9 + k * num_patom * 3 + j * 3 + l ;
-          dd_q0[adrs_sum * 2] += dd_tmp2[adrs_tmp * 2];
-          dd_q0[adrs_sum * 2 + 1] += dd_tmp2[adrs_tmp * 2 + 1];
+          dd_q0[adrs * 2] += dd_tmp2[adrs_tmp * 2];
+          dd_q0[adrs * 2 + 1] += dd_tmp2[adrs_tmp * 2 + 1];
         }
+      }
+    }
+  }
+
+  for (i = 0; i < num_patom; i++) {
+    for (k = 0; k < 3; k++) {   /* alpha */
+      for (l = 0; l < 3; l++) { /* beta */
+        adrs = i * 9 + k * 3 + l;
+        adrsT = i * 9 + l * 3 + k;
+        dd_q0[adrs * 2] += dd_q0[adrsT * 2];
+        dd_q0[adrs * 2] /= 2;
+        dd_q0[adrsT * 2] = dd_q0[adrs * 2];
+        dd_q0[adrs * 2 + 1] -= dd_q0[adrsT * 2 + 1];
+        dd_q0[adrs * 2 + 1] /= 2;
+        dd_q0[adrsT * 2 + 1] = -dd_q0[adrs * 2 + 1];
       }
     }
   }

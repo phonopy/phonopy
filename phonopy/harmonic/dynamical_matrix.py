@@ -502,10 +502,10 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         pos = self._pcell.get_positions()
         num_atom = len(pos)
         volume = self._pcell.get_volume()
-        C = np.zeros((num_atom, 3, num_atom, 3),
-                     dtype=self._dtype_complex, order='C')
+        dd = np.zeros((num_atom, 3, num_atom, 3),
+                      dtype=self._dtype_complex, order='C')
 
-        phonoc.dipole_dipole(C.view(dtype='double'),
+        phonoc.dipole_dipole(dd.view(dtype='double'),
                              self._dd_q0.view(dtype='double'),
                              self._G_list,
                              q_cart,
@@ -516,7 +516,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
                              self._unit_conversion * 4.0 * np.pi / volume,
                              self._Lambda,
                              self._symprec)
-        return C
+        return dd
 
     def _set_c_dipole_dipole_q0(self):
         import phonopy._phonopy as phonoc
