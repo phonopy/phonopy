@@ -460,7 +460,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
 
     def _get_Gonze_dipole_dipole(self, q_red, q_direction):
         rec_lat = np.linalg.inv(self._pcell.get_cell()) # column vectors
-        q = np.array(np.dot(q_red, rec_lat.T), dtype='double')
+        q_cart = np.array(np.dot(q_red, rec_lat.T), dtype='double')
         if q_direction is None:
             q_dir_cart = None
         else:
@@ -469,7 +469,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
 
         try:
             import phonopy._phonopy as phonoc
-            C = self._get_c_dipole_dipole(q, q_dir_cart)
+            C = self._get_c_dipole_dipole(q_cart, q_dir_cart)
         except ImportError:
             print("Python version of dipole-dipole calculation is not well "
                   "implemented.")
@@ -496,7 +496,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
 
         return C_dd
 
-    def _get_c_dipole_dipole(self, q, q_dir_cart):
+    def _get_c_dipole_dipole(self, q_cart, q_dir_cart):
         import phonopy._phonopy as phonoc
 
         pos = self._pcell.get_positions()
@@ -508,7 +508,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         phonoc.dipole_dipole(C.view(dtype='double'),
                              self._dd_q0.view(dtype='double'),
                              self._G_list,
-                             q,
+                             q_cart,
                              q_dir_cart,
                              self._born,
                              self._dielectric,
@@ -531,6 +531,13 @@ class DynamicalMatrixNAC(DynamicalMatrix):
                                 np.array(pos, dtype='double', order='C'),
                                 self._Lambda,
                                 self._symprec)
+
+        # Limiting contribution
+        # inv_eps = np.linalg.inv(self._dielectric)
+        # sqrt_det_eps = np.sqrt(np.linalg.det(self._dielectric))
+        # coef = (4.0 / 3 / np.sqrt(np.pi) * inv_eps
+        #         / sqrt_det_eps * self._Lambda ** 3)
+        # self._dd_q0 -= coef
 
     def _get_py_dipole_dipole(self, K_list, q, q_dir_cart):
         pos = self._pcell.get_positions()

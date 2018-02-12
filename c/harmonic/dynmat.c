@@ -58,7 +58,6 @@ static void get_dm(double dm_real[3][3],
                    const double q[3],
                    PHPYCONST double (*svecs)[27][3],
                    const int *multi,
-                   const double mass_sqrt,
                    const int *p2s_map,
                    PHPYCONST double (*charge_sum)[3][3],
                    const int i,
@@ -186,10 +185,10 @@ void dym_get_dipole_dipole(double *dd, /* [natom, 3, natom, 3, (real,imag)] */
   for (i = 0; i < num_patom; i++) {
     for (k = 0; k < 3; k++) {   /* alpha */
       for (l = 0; l < 3; l++) { /* beta */
-        adrs = i * num_patom * 18 + k * num_patom * 6 + i * 6 + l * 2;
-        adrs_sum = i * 18 + k * 6 + l * 2;
-        dd_tmp[adrs] -= dd_q0[adrs_sum];
-        dd_tmp[adrs + 1] -= dd_q0[adrs_sum + 1];
+        adrs = i * num_patom * 9 + k * num_patom * 3 + i * 3 + l;
+        adrs_sum = i * 9 + k * 3 + l;
+        dd_tmp[adrs * 2] -= dd_q0[adrs_sum * 2];
+        dd_tmp[adrs * 2 + 1] -= dd_q0[adrs_sum * 2 + 1];
       }
     }
   }
@@ -202,13 +201,13 @@ void dym_get_dipole_dipole(double *dd, /* [natom, 3, natom, 3, (real,imag)] */
     for (j = 0; j < num_patom; j++) {
       for (k = 0; k < 3; k++) {   /* alpha */
         for (l = 0; l < 3; l++) { /* beta */
-          adrs = i * num_patom * 18 + k * num_patom * 6 + j * 6 + l * 2;
+          adrs = i * num_patom * 9 + k * num_patom * 3 + j * 3 + l;
           for (m = 0; m < 3; m++) { /* alpha' */
             for (n = 0; n < 3; n++) { /* beta' */
-              adrs_tmp = i * num_patom * 18 + m * num_patom * 6 + j * 6 + n * 2;
+              adrs_tmp = i * num_patom * 9 + m * num_patom * 3 + j * 3 + n ;
               zz = born[i][k][m] * born[j][l][n];
-              dd[adrs] += dd_tmp[adrs_tmp] * zz;
-              dd[adrs + 1] += dd_tmp[adrs_tmp + 1] * zz;
+              dd[adrs * 2] += dd_tmp[adrs_tmp * 2] * zz;
+              dd[adrs * 2 + 1] += dd_tmp[adrs_tmp * 2 + 1] * zz;
             }
           }
         }
@@ -263,11 +262,11 @@ void dym_get_dipole_dipole_q0(double *dd_q0, /* [natom, 3, 3, (real,imag)] */
     for (j = 0; j < num_patom; j++) {
       for (k = 0; k < 3; k++) {   /* alpha */
         for (l = 0; l < 3; l++) { /* beta */
-          adrs_tmp = i * num_patom * 18 + k * num_patom * 6 + j * 6 + l * 2;
-          adrs_sum = i * 18 + k * 6 + l * 2;
-          dd_q0[adrs_sum] += dd_tmp[adrs_tmp];
+          adrs_tmp = i * num_patom * 9 + k * num_patom * 3 + j * 3 + l;
+          adrs_sum = i * 9 + k * 3 + l;
+          dd_q0[adrs_sum * 2] += dd_tmp[adrs_tmp * 2];
           /* expected to be real, though */
-          dd_q0[adrs_sum +1] += dd_tmp[adrs_tmp + 1];
+          dd_q0[adrs_sum * 2 + 1] += dd_tmp[adrs_tmp * 2 + 1];
         }
       }
     }
@@ -411,7 +410,6 @@ static void get_dynmat_ij(double *dynamical_matrix,
            q,
            svecs,
            multi,
-           mass_sqrt,
            p2s_map,
            charge_sum,
            i,
@@ -421,9 +419,9 @@ static void get_dynmat_ij(double *dynamical_matrix,
 
   for (k = 0; k < 3; k++) {
     for (l = 0; l < 3; l++) {
-      adrs = (i * 3 + k) * num_patom * 6 + j * 6 + l * 2;
-      dynamical_matrix[adrs] = dm_real[k][l];
-      dynamical_matrix[adrs + 1] = dm_imag[k][l];
+      adrs = (i * 3 + k) * num_patom * 3 + j * 3 + l;
+      dynamical_matrix[adrs * 2] = dm_real[k][l] / mass_sqrt;
+      dynamical_matrix[adrs * 2 + 1] = dm_imag[k][l] / mass_sqrt;
     }
   }
 }
@@ -436,7 +434,6 @@ static void get_dm(double dm_real[3][3],
                    const double q[3],
                    PHPYCONST double (*svecs)[27][3],
                    const int *multi,
-                   const double mass_sqrt,
                    const int *p2s_map,
                    PHPYCONST double (*charge_sum)[3][3],
                    const int i,
@@ -462,10 +459,9 @@ static void get_dm(double dm_real[3][3],
     for (m = 0; m < 3; m++) {
       if (charge_sum) {
         fc_elem = (fc[p2s_map[i] * num_satom * 9 + k * 9 + l * 3 + m] +
-                   charge_sum[i * num_patom + j][l][m]) / mass_sqrt;
+                   charge_sum[i * num_patom + j][l][m]);
       } else {
-        fc_elem = fc[p2s_map[i] * num_satom * 9 +
-                     k * 9 + l * 3 + m] / mass_sqrt;
+        fc_elem = fc[p2s_map[i] * num_satom * 9 + k * 9 + l * 3 + m];
       }
       dm_real[l][m] += fc_elem * cos_phase;
       dm_imag[l][m] += fc_elem * sin_phase;
