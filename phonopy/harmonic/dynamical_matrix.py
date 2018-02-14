@@ -164,8 +164,7 @@ class DynamicalMatrix(object):
             fc.flags.c_contiguous):
             self._force_constants = fc
         else:
-            self._force_constants = np.array(force_constants,
-                                             dtype='double', order='C')
+            self._force_constants = np.array(fc, dtype='double', order='C')
 
     def _set_c_dynamical_matrix(self, q):
         import phonopy._phonopy as phonoc
