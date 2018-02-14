@@ -56,6 +56,7 @@ class Settings(object):
         self._fc_symmetry = False
         self._fpitch = None
         self._frequency_conversion_factor = None
+        self._frequency_scale_factor = None
         self._gv_delta_q = None
         self._is_diagonal_displacement = True
         self._is_eigenvectors = False
@@ -155,6 +156,12 @@ class Settings(object):
 
     def get_frequency_pitch(self):
         return self._fpitch
+
+    def set_frequency_scale_factor(self, frequency_scale_factor):
+        self._frequency_scale_factor = frequency_scale_factor
+
+    def get_frequency_scale_factor(self):
+        return self._frequency_scale_factor
 
     def set_num_frequency_points(self, num_frequency_points):
         self._num_frequency_points = num_frequency_points
@@ -410,6 +417,20 @@ class ConfParser(object):
                 self._confs['fc_decimals'] = \
                     self._args.force_constants_decimals
 
+        if 'fpitch' in arg_list:
+            if self._args.fpitch:
+                self._confs['fpitch'] = self._args.fpitch
+
+        if 'frequency_conversion_factor' in arg_list:
+            freq_factor = self._args.frequency_conversion_factor
+            if freq_factor:
+                self._confs['frequency_conversion_factor'] = freq_factor
+
+        if 'frequency_scale_factor' in self._args:
+            freq_scale = self._args.frequency_scale_factor
+            if freq_scale is not None:
+                self._confs['frequency_scale_factor'] = freq_scale
+
         if 'gv_delta_q' in arg_list:
             if self._args.gv_delta_q:
                 self._confs['gv_delta_q'] = self._args.gv_delta_q
@@ -457,15 +478,6 @@ class ConfParser(object):
         if 'mesh_numbers' in arg_list:
             if self._args.mesh_numbers:
                 self._confs['mesh_numbers'] = self._args.mesh_numbers
-
-        if 'frequency_conversion_factor' in arg_list:
-            opt_freq_factor = self._args.frequency_conversion_factor
-            if opt_freq_factor:
-                self._confs['frequency_conversion_factor'] = opt_freq_factor
-
-        if 'fpitch' in arg_list:
-            if self._args.fpitch:
-                self._confs['fpitch'] = self._args.fpitch
 
         if 'num_frequency_points' in arg_list:
             opt_num_freqs = self._args.num_frequency_points
@@ -681,6 +693,10 @@ class ConfParser(object):
                 val = float(confs['frequency_conversion_factor'])
                 self.set_parameter('frequency_conversion_factor', val)
 
+            if conf_key == 'frequency_scale_factor':
+                self.set_parameter('frequency_scale_factor',
+                                   float(confs['frequency_scale_factor']))
+
             if conf_key == 'fpitch':
                 val = float(confs['fpitch'])
                 self.set_parameter('fpitch', val)
@@ -775,6 +791,13 @@ class ConfParser(object):
         if 'frequency_conversion_factor' in params:
             self._settings.set_frequency_conversion_factor(
                 params['frequency_conversion_factor'])
+
+        # This scale factor is multiplied to force constants by
+        # fc * scale_factor ** 2, therefore only changes
+        # frequencies but does not change NAC part.
+        if 'frequency_scale_factor' in params:
+            self._settings.set_frequency_scale_factor(
+                params['frequency_scale_factor'])
 
         # Spectram drawing step
         if 'fpitch' in params:

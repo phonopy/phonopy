@@ -47,8 +47,7 @@ from phonopy.harmonic.force_constants import (
     rotational_invariance,
     cutoff_force_constants,
     set_tensor_symmetry)
-from phonopy.harmonic.dynamical_matrix import (DynamicalMatrix,
-                                               DynamicalMatrixNAC)
+from phonopy.harmonic.dynamical_matrix import get_dynamical_matrix
 from phonopy.phonon.band_structure import BandStructure
 from phonopy.phonon.thermal_properties import ThermalProperties
 from phonopy.phonon.mesh import Mesh, IterMesh
@@ -73,6 +72,7 @@ class Phonopy(object):
                  nac_params=None,
                  distance=None,
                  factor=VaspToTHz,
+                 frequency_scale_factor=None,
                  is_auto_displacements=None,
                  dynamical_matrix_decimals=None,
                  force_constants_decimals=None,
@@ -98,6 +98,7 @@ class Phonopy(object):
 
         self._symprec = symprec
         self._factor = factor
+        self._frequency_scale_factor = frequency_scale_factor
         self._is_symmetry = is_symmetry
         self._use_lapack_solver = use_lapack_solver
         self._log_level = log_level
@@ -1312,22 +1313,32 @@ class Phonopy(object):
             print("Warning: Atomic masses are not correctly set.")
             return False
         else:
-            if self._nac_params is None:
-                self._dynamical_matrix = DynamicalMatrix(
-                    self._supercell,
-                    self._primitive,
-                    self._force_constants,
-                    decimals=self._dynamical_matrix_decimals,
-                    symprec=self._symprec)
-            else:
-                self._dynamical_matrix = DynamicalMatrixNAC(
-                    self._supercell,
-                    self._primitive,
-                    self._force_constants,
-                    nac_params=self._nac_params,
-                    decimals=self._dynamical_matrix_decimals,
-                    symprec=self._symprec,
-                    log_level=self._log_level)
+            self._dynamical_matrix = get_dynamical_matrix(
+                self._force_constants,
+                self._supercell,
+                self._primitive,
+                self._nac_params,
+                self._frequency_scale_factor,
+                self._dynamical_matrix_decimals,
+                symprec=self._symprec,
+                log_level=self._log_level)
+
+            # if self._nac_params is None:
+            #     self._dynamical_matrix = DynamicalMatrix(
+            #         self._supercell,
+            #         self._primitive,
+            #         self._force_constants,
+            #         decimals=self._dynamical_matrix_decimals,
+            #         symprec=self._symprec)
+            # else:
+            #     self._dynamical_matrix = DynamicalMatrixNAC(
+            #         self._supercell,
+            #         self._primitive,
+            #         self._force_constants,
+            #         nac_params=self._nac_params,
+            #         decimals=self._dynamical_matrix_decimals,
+            #         symprec=self._symprec,
+            #         log_level=self._log_level)
             return True
 
     def _search_symmetry(self):

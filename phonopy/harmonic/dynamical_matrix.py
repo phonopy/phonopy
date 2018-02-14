@@ -42,7 +42,8 @@ def get_dynamical_matrix(fc2,
                          nac_params=None,
                          frequency_scale_factor=None,
                          decimals=None,
-                         symprec=1e-5):
+                         symprec=1e-5,
+                         log_level=0):
     if frequency_scale_factor is None:
         _fc2 = fc2
     else:
@@ -61,7 +62,8 @@ def get_dynamical_matrix(fc2,
             primitive,
             _fc2,
             decimals=decimals,
-            symprec=symprec)
+            symprec=symprec,
+            log_level=log_level)
         dm.set_nac_params(nac_params)
     return dm
 
