@@ -42,7 +42,8 @@ def get_dynamical_matrix(fc2,
                          nac_params=None,
                          frequency_scale_factor=None,
                          decimals=None,
-                         symprec=1e-5):
+                         symprec=1e-5,
+                         log_level=0):
     if frequency_scale_factor is None:
         _fc2 = fc2
     else:
@@ -61,7 +62,8 @@ def get_dynamical_matrix(fc2,
             primitive,
             _fc2,
             decimals=decimals,
-            symprec=symprec)
+            symprec=symprec,
+            log_level=log_level)
         dm.set_nac_params(nac_params)
     return dm
 
@@ -162,8 +164,7 @@ class DynamicalMatrix(object):
             fc.flags.c_contiguous):
             self._force_constants = fc
         else:
-            self._force_constants = np.array(force_constants,
-                                             dtype='double', order='C')
+            self._force_constants = np.array(fc, dtype='double', order='C')
 
     def _set_c_dynamical_matrix(self, q):
         import phonopy._phonopy as phonoc
@@ -262,7 +263,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             self._num_G_points = 300
         else:
             self._num_G_points = num_G_points
-        self._G_vec_list = None
+        self._G_list = None
         self._G_cutoff = None
         self._Lambda = None # 4*Lambda**2 is stored.
         self._dd_q0 = None
@@ -279,6 +280,19 @@ class DynamicalMatrixNAC(DynamicalMatrix):
 
     def get_dielectric_constant(self):
         return self._dielectric
+
+    def get_nac_method(self):
+        return self._method
+
+    def get_Gonze_nac_dataset(self):
+        if self._method == 'gonze':
+            return (self._Gonze_force_constants,
+                    self._dd_q0,
+                    self._G_cutoff,
+                    self._G_list,
+                    self._Lambda)
+        else:
+            return None
 
     def set_nac_params(self, nac_params):
         self._born = np.array(nac_params['born'], dtype='double', order='C')
@@ -297,13 +311,13 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             else:
                 exp_cutoff = 1e-10
                 GeG = self._G_cutoff ** 2 * np.trace(self._dielectric) / 3
-                self._Lambda= np.sqrt(- GeG / 4 / np.log(exp_cutoff))
+                self._Lambda = np.sqrt(- GeG / 4 / np.log(exp_cutoff))
         else:
             self._method = 'wang'
 
-    def _prepare_Gonze_force_constants(self):
-        self._G_list = self._get_G_list()
-        if self._log_level:
+    def make_Gonze_nac_dataset(self, verbose=False):
+        self._G_list = self._get_G_list(self._G_cutoff)
+        if verbose:
             print("NAC by Gonze et al., PRB 50, 13035(R) (1994), "
                   "PRB 55, 10355 (1997):")
             print("  G-cutoff distance: %5.2f" % self._G_cutoff)
@@ -336,7 +350,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             self._set_Wang_dynamical_matrix(q_red, q_direction)
         else:
             if self._Gonze_force_constants is None:
-                self._prepare_Gonze_force_constants()
+                self.make_Gonze_nac_dataset(self._log_level)
             self._set_Gonze_dynamical_matrix(q_red, q_direction)
 
     def _set_Wang_dynamical_matrix(self, q_red, q_direction):
@@ -447,7 +461,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
 
     def _get_Gonze_dipole_dipole(self, q_red, q_direction):
         rec_lat = np.linalg.inv(self._pcell.get_cell()) # column vectors
-        q = np.array(np.dot(q_red, rec_lat.T), dtype='double')
+        q_cart = np.array(np.dot(q_red, rec_lat.T), dtype='double')
         if q_direction is None:
             q_dir_cart = None
         else:
@@ -456,7 +470,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
 
         try:
             import phonopy._phonopy as phonoc
-            C = self._get_c_dipole_dipole(q, q_dir_cart)
+            C = self._get_c_dipole_dipole(q_cart, q_dir_cart)
         except ImportError:
             print("Python version of dipole-dipole calculation is not well "
                   "implemented.")
@@ -483,19 +497,19 @@ class DynamicalMatrixNAC(DynamicalMatrix):
 
         return C_dd
 
-    def _get_c_dipole_dipole(self, q, q_dir_cart):
+    def _get_c_dipole_dipole(self, q_cart, q_dir_cart):
         import phonopy._phonopy as phonoc
 
         pos = self._pcell.get_positions()
         num_atom = len(pos)
         volume = self._pcell.get_volume()
-        C = np.zeros((num_atom, 3, num_atom, 3),
-                     dtype=self._dtype_complex, order='C')
+        dd = np.zeros((num_atom, 3, num_atom, 3),
+                      dtype=self._dtype_complex, order='C')
 
-        phonoc.dipole_dipole(C.view(dtype='double'),
+        phonoc.dipole_dipole(dd.view(dtype='double'),
                              self._dd_q0.view(dtype='double'),
                              self._G_list,
-                             q,
+                             q_cart,
                              q_dir_cart,
                              self._born,
                              self._dielectric,
@@ -503,7 +517,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
                              self._unit_conversion * 4.0 * np.pi / volume,
                              self._Lambda,
                              self._symprec)
-        return C
+        return dd
 
     def _set_c_dipole_dipole_q0(self):
         import phonopy._phonopy as phonoc
@@ -514,10 +528,18 @@ class DynamicalMatrixNAC(DynamicalMatrix):
 
         phonoc.dipole_dipole_q0(self._dd_q0.view(dtype='double'),
                                 self._G_list,
+                                self._born,
                                 self._dielectric,
                                 np.array(pos, dtype='double', order='C'),
                                 self._Lambda,
                                 self._symprec)
+
+        # Limiting contribution
+        # inv_eps = np.linalg.inv(self._dielectric)
+        # sqrt_det_eps = np.sqrt(np.linalg.det(self._dielectric))
+        # coef = (4.0 / 3 / np.sqrt(np.pi) * inv_eps
+        #         / sqrt_det_eps * self._Lambda ** 3)
+        # self._dd_q0 -= coef
 
     def _get_py_dipole_dipole(self, K_list, q, q_dir_cart):
         pos = self._pcell.get_positions()
@@ -565,7 +587,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
 
         return C
 
-    def _get_G_list(self, g_rad=100):
+    def _get_G_list(self, G_cutoff, g_rad=100):
         rec_lat = np.linalg.inv(self._pcell.get_cell()) # column vectors
         # g_rad must be greater than 0 for broadcasting.
         n = g_rad * 2 + 1
@@ -576,7 +598,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
             G[:, i] = grid[i].ravel()
         G_vec_list = np.dot(G, rec_lat.T)
         G_norm2 = ((G_vec_list) ** 2).sum(axis=1)
-        return np.array(G_vec_list[G_norm2 < self._G_cutoff ** 2],
+        return np.array(G_vec_list[G_norm2 < G_cutoff ** 2],
                         dtype='double', order='C')
 
     def _get_charge_sum(self, num_atom, q, born):

@@ -93,6 +93,7 @@ def get_parser():
         fmin=None,
         frequency_conversion_factor=None,
         fpitch=None,
+        frequency_scale_factor=None,
         gv_delta_q=None,
         is_band_connection=False,
         is_check_symmetry=False,
@@ -227,7 +228,7 @@ def get_parser():
         help="Create FORCE_SETS")
     parser.add_argument(
         "--factor", dest="frequency_conversion_factor", type=float,
-        help="Conversion factor to favorite frequency unit")
+        help="Frequency unit conversion factor")
     parser.add_argument(
         "--fc", "--force-constants", nargs=1, dest="force_constants",
         help=("Create FORCE_CONSTANTS from vaspurn.xml. "
@@ -250,6 +251,11 @@ def get_parser():
     parser.add_argument(
         "--fits-debye-model", dest="fits_debye_model", action="store_true",
         help="Fits total DOS to a Debye model")
+    parser.add_argument(
+        "--freq-scale", dest="frequency_scale_factor", type=float,
+        help=("Squared scale factor multiplied as fc2 * factor^2. Therefore "
+              "frequency is changed but the contribution from NAC is not "
+              "changed."))
     parser.add_argument(
         "--fz", "--force-sets-zero", nargs='+', dest="force_sets_zero",
         help=("Create FORCE_SETS. disp.yaml in the current directory and "

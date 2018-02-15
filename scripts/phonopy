@@ -443,16 +443,18 @@ else: # Read FORCE_SETS, FORCE_CONSTANTS, or force_constants.hdf5
     if settings.get_frequency_conversion_factor() is not None:
         physical_units['factor'] = settings.get_frequency_conversion_factor()
 
-    phonon = Phonopy(unitcell,
-                     settings.get_supercell_matrix(),
-                     primitive_matrix=settings.get_primitive_matrix(),
-                     factor=physical_units['factor'],
-                     dynamical_matrix_decimals=settings.get_dm_decimals(),
-                     force_constants_decimals=settings.get_fc_decimals(),
-                     symprec=args.symprec,
-                     is_symmetry=settings.get_is_symmetry(),
-                     use_lapack_solver=settings.get_lapack_solver(),
-                     log_level=log_level)
+    phonon = Phonopy(
+        unitcell,
+        settings.get_supercell_matrix(),
+        primitive_matrix=settings.get_primitive_matrix(),
+        factor=physical_units['factor'],
+        frequency_scale_factor=settings.get_frequency_scale_factor(),
+        dynamical_matrix_decimals=settings.get_dm_decimals(),
+        force_constants_decimals=settings.get_fc_decimals(),
+        symprec=args.symprec,
+        is_symmetry=settings.get_is_symmetry(),
+        use_lapack_solver=settings.get_lapack_solver(),
+        log_level=log_level)
 
     num_atom = unitcell.get_number_of_atoms()
     num_satom = determinant(settings.get_supercell_matrix()) * num_atom
