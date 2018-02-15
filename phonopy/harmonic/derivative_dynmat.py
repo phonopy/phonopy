@@ -35,6 +35,12 @@
 import numpy as np
 
 class DerivativeOfDynamicalMatrix(object):
+    """Compute analytical derivative of dynamical matrix
+
+    This can be used dynamical matrix without NAC or with Wang-NAC.
+
+    """
+
     def __init__(self, dynamical_matrix):
         self._dynmat = dynamical_matrix
         (self._smallest_vectors,
