@@ -593,44 +593,56 @@ class ConfParser(object):
             if conf_key == 'diag':
                 if confs['diag'].lower() == '.false.':
                     self.set_parameter('diag', False)
-                if confs['diag'].lower() == '.true.':
+                elif confs['diag'].lower() == '.true.':
                     self.set_parameter('diag', True)
 
             if conf_key == 'pm':
                 if confs['pm'].lower() == '.false.':
                     self.set_parameter('pm_displacement', False)
-                if confs['pm'].lower() == '.true.':
+                elif confs['pm'].lower() == '.true.':
                     self.set_parameter('pm_displacement', True)
 
             if conf_key == 'trigonal':
                 if confs['trigonal'].lower() == '.false.':
                     self.set_parameter('is_trigonal_displacement', False)
-                if confs['trigonal'].lower() == '.true.':
+                elif confs['trigonal'].lower() == '.true.':
                     self.set_parameter('is_trigonal_displacement', True)
 
             if conf_key == 'eigenvectors':
-                if confs['eigenvectors'].lower() == '.true.':
+                if confs['eigenvectors'].lower() == '.false.':
+                    self.set_parameter('is_eigenvectors', False)
+                elif confs['eigenvectors'].lower() == '.true.':
                     self.set_parameter('is_eigenvectors', True)
 
             if conf_key == 'nac':
-                if confs['nac'].lower() == '.true.':
+                if confs['nac'].lower() == '.false.':
+                    self.set_parameter('is_nac', False)
+                elif confs['nac'].lower() == '.true.':
                     self.set_parameter('is_nac', True)
 
             if conf_key == 'symmetry':
                 if confs['symmetry'].lower() == '.false.':
                     self.set_parameter('is_symmetry', False)
                     self.set_parameter('is_mesh_symmetry', False)
+                elif confs['symmetry'].lower() == '.true.':
+                    self.set_parameter('is_symmetry', True)
 
             if conf_key == 'mesh_symmetry':
                 if confs['mesh_symmetry'].lower() == '.false.':
                     self.set_parameter('is_mesh_symmetry', False)
+                elif confs['mesh_symmetry'].lower() == '.true.':
+                    self.set_parameter('is_mesh_symmetry', True)
 
             if conf_key == 'rotational':
-                if confs['rotational'].lower() == '.true.':
+                if confs['rotational'].lower() == '.false.':
+                    self.set_parameter('is_rotational', False)
+                elif confs['rotational'].lower() == '.true.':
                     self.set_parameter('is_rotational', True)
 
             if conf_key == 'fc_symmetry':
-                if confs['fc_symmetry'].lower() == '.true.':
+                if confs['fc_symmetry'].lower() == '.false.':
+                    self.set_parameter('fc_symmetry', False)
+                elif confs['fc_symmetry'].lower() == '.true.':
                     self.set_parameter('fc_symmetry', True)
                 else:
                     self.setting_error(
@@ -649,8 +661,7 @@ class ConfParser(object):
                 self.set_parameter('mesh_numbers', vals[:3])
 
             if conf_key == 'band_points':
-                self.set_parameter('band_points',
-                                   int(confs['band_points']))
+                self.set_parameter('band_points', int(confs['band_points']))
 
             if conf_key == 'band':
                 bands = []
@@ -676,7 +687,9 @@ class ConfParser(object):
                                            list(np.reshape(vals, (-1, 3))))
 
             if conf_key == 'read_qpoints':
-                if confs['read_qpoints'].lower() == '.true.':
+                if confs['read_qpoints'].lower() == '.false.':
+                    self.set_parameter('read_qpoints', False)
+                elif confs['read_qpoints'].lower() == '.true.':
                     self.set_parameter('read_qpoints', True)
 
             if conf_key == 'nac_method':
