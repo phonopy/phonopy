@@ -54,7 +54,7 @@ class DynmatToForceConstants(object):
                  supercell,
                  frequencies=None,
                  eigenvectors=None,
-                 is_full_fc=False,
+                 is_full_fc=True,
                  symprec=1e-5):
         self._primitive = primitive
         self._supercell = supercell
