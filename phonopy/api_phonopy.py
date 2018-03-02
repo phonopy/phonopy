@@ -349,7 +349,7 @@ class Phonopy(object):
             self._supercell)
         self.set_displacement_dataset(displacement_dataset)
 
-    def produce_force_constants(self,
+    def  produce_force_constants(self,
                                 forces=None,
                                 calculate_full_force_constants=True,
                                 computation_algorithm="svd"):
@@ -361,16 +361,17 @@ class Phonopy(object):
             if 'forces' not in disp:
                 return False
 
-        if calculate_full_force_constants:
+        # if calculate_full_force_constants:
+        if True:
             self._run_force_constants_from_forces(
                 decimals=self._force_constants_decimals,
                 computation_algorithm=computation_algorithm)
-        else:
-            p2s_map = self._primitive.get_primitive_to_supercell_map()
-            self._run_force_constants_from_forces(
-                distributed_atom_list=p2s_map,
-                decimals=self._force_constants_decimals,
-                computation_algorithm=computation_algorithm)
+        # else:
+        #     p2s_map = self._primitive.get_primitive_to_supercell_map()
+        #     self._run_force_constants_from_forces(
+        #         distributed_atom_list=p2s_map,
+        #         decimals=self._force_constants_decimals,
+        #         computation_algorithm=computation_algorithm)
 
         self._set_dynamical_matrix()
 

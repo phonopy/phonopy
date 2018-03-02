@@ -54,6 +54,7 @@ class DynmatToForceConstants(object):
                  supercell,
                  frequencies=None,
                  eigenvectors=None,
+                 is_full_fc=False,
                  symprec=1e-5):
         self._primitive = primitive
         self._supercell = supercell
@@ -65,13 +66,13 @@ class DynmatToForceConstants(object):
         self._dynmat = None
         n_s = self._supercell.get_number_of_atoms()
         n_p = self._primitive.get_number_of_atoms()
-        # Full fc
-        # self._force_constants = np.zeros((n_p, n_s, 3, 3),
-        #                                  dtype='double', order='C')
-        # Compact fc
-        self._force_constants = np.zeros((n_p, n_s, 3, 3),
-                                         dtype='double', order='C')
-        itemsize = self._force_constants.itemsize
+        if is_full_fc:
+            fc_shape = (n_s, n_s, 3, 3)
+        else:
+            fc_shape = (n_p, n_s, 3, 3)
+        self._fc = np.zeros(fc_shape, dtype='double', order='C')
+
+        itemsize = self._fc.itemsize
         self._dtype_complex = ("c%d" % (itemsize * 2))
 
         if frequencies is not None and eigenvectors is not None:
@@ -83,7 +84,7 @@ class DynmatToForceConstants(object):
         # self._distribute_force_constants()
 
     def get_force_constants(self):
-        return self._force_constants
+        return self._fc
 
     def get_commensurate_points(self):
         return self._commensurate_points
@@ -114,6 +115,9 @@ class DynmatToForceConstants(object):
         except ImportError:
             self._py_inverse_transformation()
 
+        if self._fc.shape[0] == self._fc.shape[1]:
+            self._distribute_force_constants()
+
     def _c_inverse_transformation(self):
         import phonopy._phonopy as phonoc
 
@@ -121,20 +125,26 @@ class DynmatToForceConstants(object):
         p2p = self._primitive.get_primitive_to_primitive_map()
         s2pp = np.array([p2p[i] for i in s2p], dtype='intc')
 
-        phonoc.transform_dynmat_to_fc(self._force_constants,
+        if self._fc.shape[0] == self._fc.shape[1]:
+            fc_index_map = self._primitive.get_primitive_to_supercell_map()
+        else:
+            fc_index_map = np.arange(self._fc.shape[0], dtype='intc')
+
+        phonoc.transform_dynmat_to_fc(self._fc,
                                       self._dynmat.view(dtype='double'),
                                       self._commensurate_points,
                                       self._shortest_vectors,
                                       self._multiplicity,
                                       self._primitive.get_masses(),
-                                      s2pp)
+                                      s2pp,
+                                      fc_index_map)
 
     def _py_inverse_transformation(self):
         s2p = self._primitive.get_supercell_to_primitive_map()
         p2s = self._primitive.get_primitive_to_supercell_map()
         p2p = self._primitive.get_primitive_to_primitive_map()
 
-        fc = self._force_constants
+        fc = self._fc
         m = self._primitive.get_masses()
         N = (self._supercell.get_number_of_atoms() /
              self._primitive.get_number_of_atoms())
@@ -142,10 +152,11 @@ class DynmatToForceConstants(object):
         for p_i, s_i in enumerate(p2s):
             for s_j, p_j in enumerate([p2p[i] for i in s2p]):
                 coef = np.sqrt(m[p_i] * m[p_j]) / N
-                # Full fc
-                # fc[s_i, s_j] = self._sum_q(p_i, s_j, p_j) * coef
-                # Compact fc
-                fc[p_i, s_j] = self._sum_q(p_i, s_j, p_j) * coef
+                fc_elem = self._sum_q(p_i, s_j, p_j) * coef
+                if fc.shape[0] == fc.shape[1]:
+                    fc[s_i, s_j] = fc_elem
+                else:
+                    fc[p_i, s_j] = fc_elem
 
     def _sum_q(self, p_i, s_j, p_j):
         multi = self._multiplicity[s_j, p_i]
@@ -169,7 +180,7 @@ class DynmatToForceConstants(object):
                          dtype='double', order='C')
         rotations = np.array([np.eye(3, dtype='intc')] * len(trans),
                              dtype='intc', order='C')
-        distribute_force_constants(self._force_constants,
+        distribute_force_constants(self._fc,
                                    range(self._supercell.get_number_of_atoms()),
                                    p2s,
                                    lattice,
