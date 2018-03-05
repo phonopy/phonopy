@@ -68,15 +68,15 @@ Mean square displacement matrix is defined as follows:
 .. math::
 
    \mathrm{U}_\text{cart}(j, T) = \frac{\hbar}{2Nm_j}
-   \sum_{\mathbf{q},\nu}\omega_\nu(\mathbf{q},T)^{-1}
-   (1+2n_\nu(\mathbf{q}))
+   \sum_{\mathbf{q},\nu}\omega_\nu(\mathbf{q})^{-1}
+   (1+2n_\nu(\mathbf{q},T))
    \mathbf{e}_\nu(j,\mathbf{q}) \otimes \mathbf{e}^*_\nu(j,\mathbf{q}).
 
 This is a symmetry matrix and diagonal elements are same as mean
 square displacement calculated along Cartesian x, y, z directions.
 
-Projection to an arbitrary axis from the Cartesian axes
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Projection to an arbitrary axis
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In phonopy, eigenvectors are calculated in the Cartesian axes that are
 defined in the input structure file. Mean square displacement along an
@@ -87,7 +87,7 @@ axes as follows:
 
    \left\langle |u(jl, t)|^2 \right\rangle = \frac{\hbar}{2Nm_j}
    \sum_{\mathbf{q},\nu}\omega_\nu(\mathbf{q})^{-1}
-   (1+2n_\nu(\mathbf{q}))|
+   (1+2n_\nu(\mathbf{q},T))|
    \hat{\mathbf{n}}\cdot\mathbf{e}_\nu(j,\mathbf{q})|^2
 
 where :math:`\hat{\mathbf{n}}` is an arbitrary unit direction.
