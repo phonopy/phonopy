@@ -3,9 +3,12 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
     <title>Formulations &#8212; Phonopy v.1.12.6</title>
+    
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
@@ -19,7 +22,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
@@ -115,7 +118,7 @@
 <li><a class="reference internal" href="#thermal-displacement">Thermal displacement</a><ul>
 <li><a class="reference internal" href="#mean-square-displacement">Mean square displacement</a></li>
 <li><a class="reference internal" href="#mean-square-displacement-matrix">Mean square displacement matrix</a></li>
-<li><a class="reference internal" href="#projection-to-an-arbitrary-axis-from-the-cartesian-axes">Projection to an arbitrary axis from the Cartesian axes</a></li>
+<li><a class="reference internal" href="#projection-to-an-arbitrary-axis">Projection to an arbitrary axis</a></li>
 <li><a class="reference internal" href="#mean-square-displacement-matrix-in-cif-format">Mean square displacement matrix in cif format</a></li>
 </ul>
 </li>
@@ -193,7 +196,7 @@
 <li><a class="reference internal" href="#thermal-displacement" id="id16">Thermal displacement</a><ul>
 <li><a class="reference internal" href="#mean-square-displacement" id="id17">Mean square displacement</a></li>
 <li><a class="reference internal" href="#mean-square-displacement-matrix" id="id18">Mean square displacement matrix</a></li>
-<li><a class="reference internal" href="#projection-to-an-arbitrary-axis-from-the-cartesian-axes" id="id19">Projection to an arbitrary axis from the Cartesian axes</a></li>
+<li><a class="reference internal" href="#projection-to-an-arbitrary-axis" id="id19">Projection to an arbitrary axis</a></li>
 <li><a class="reference internal" href="#mean-square-displacement-matrix-in-cif-format" id="id20">Mean square displacement matrix in cif format</a></li>
 </ul>
 </li>
@@ -476,14 +479,14 @@ expectation values of the combination of the operations, e.g.,</p>
 <p>Mean square displacement matrix is defined as follows:</p>
 <div class="math">
 \[\mathrm{U}_\text{cart}(j, T) = \frac{\hbar}{2Nm_j}
-\sum_{\mathbf{q},\nu}\omega_\nu(\mathbf{q},T)^{-1}
-(1+2n_\nu(\mathbf{q}))
+\sum_{\mathbf{q},\nu}\omega_\nu(\mathbf{q})^{-1}
+(1+2n_\nu(\mathbf{q},T))
 \mathbf{e}_\nu(j,\mathbf{q}) \otimes \mathbf{e}^*_\nu(j,\mathbf{q}).\]</div>
 <p>This is a symmetry matrix and diagonal elements are same as mean
 square displacement calculated along Cartesian x, y, z directions.</p>
 </div>
-<div class="section" id="projection-to-an-arbitrary-axis-from-the-cartesian-axes">
-<h3><a class="toc-backref" href="#id19">Projection to an arbitrary axis from the Cartesian axes</a><a class="headerlink" href="#projection-to-an-arbitrary-axis-from-the-cartesian-axes" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="projection-to-an-arbitrary-axis">
+<h3><a class="toc-backref" href="#id19">Projection to an arbitrary axis</a><a class="headerlink" href="#projection-to-an-arbitrary-axis" title="Permalink to this headline">¶</a></h3>
 <p>In phonopy, eigenvectors are calculated in the Cartesian axes that are
 defined in the input structure file. Mean square displacement along an
 arbitrary axis is obtained projecting eigenvectors in the Cartesian
@@ -491,7 +494,7 @@ axes as follows:</p>
 <div class="math">
 \[\left\langle |u(jl, t)|^2 \right\rangle = \frac{\hbar}{2Nm_j}
 \sum_{\mathbf{q},\nu}\omega_\nu(\mathbf{q})^{-1}
-(1+2n_\nu(\mathbf{q}))|
+(1+2n_\nu(\mathbf{q},T))|
 \hat{\mathbf{n}}\cdot\mathbf{e}_\nu(j,\mathbf{q})|^2\]</div>
 <p>where <span class="math">\(\hat{\mathbf{n}}\)</span> is an arbitrary unit direction.</p>
 </div>
@@ -730,7 +733,7 @@ the elements of <span class="math">\(\boldsymbol{P}^{\mathrm{T}} \mathbf{q}\)</s
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.6.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.2.<br/>
     </p>
   </div>
 </footer>
