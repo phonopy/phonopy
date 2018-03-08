@@ -44,6 +44,7 @@ from phonopy.harmonic.force_constants import (
     get_fc2,
     symmetrize_force_constants,
     symmetrize_compact_force_constants,
+    set_translational_invariance,
     rotational_invariance,
     cutoff_force_constants,
     set_tensor_symmetry)
@@ -377,6 +378,7 @@ class Phonopy(object):
         return True
 
     def symmetrize_force_constants(self):
+        set_translational_invariance(self._force_constants)
         if self._force_constants.shape[0] == self._force_constants.shape[1]:
             symmetrize_force_constants(self._force_constants)
         else:
