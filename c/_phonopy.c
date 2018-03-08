@@ -242,6 +242,7 @@ static PyObject * py_transform_dynmat_to_fc(PyObject *self, PyObject *args)
   PyArrayObject* py_multiplicities;
   PyArrayObject* py_masses;
   PyArrayObject* py_s2pp_map;
+  PyArrayObject* py_fc_index_map;
 
   double* fc;
   double* dm;
@@ -250,17 +251,19 @@ static PyObject * py_transform_dynmat_to_fc(PyObject *self, PyObject *args)
   double* masses;
   int* multiplicities;
   int* s2pp_map;
+  int* fc_index_map;
   int num_patom;
   int num_satom;
 
-  if (!PyArg_ParseTuple(args, "OOOOOOO",
+  if (!PyArg_ParseTuple(args, "OOOOOOOO",
                         &py_force_constants,
                         &py_dynamical_matrices,
                         &py_commensurate_points,
                         &py_shortest_vectors,
                         &py_multiplicities,
                         &py_masses,
-                        &py_s2pp_map)) {
+                        &py_s2pp_map,
+                        &py_fc_index_map)) {
     return NULL;
   }
 
@@ -271,6 +274,7 @@ static PyObject * py_transform_dynmat_to_fc(PyObject *self, PyObject *args)
   masses = (double*)PyArray_DATA(py_masses);
   multiplicities = (int*)PyArray_DATA(py_multiplicities);
   s2pp_map = (int*)PyArray_DATA(py_s2pp_map);
+  fc_index_map = (int*)PyArray_DATA(py_fc_index_map);
   num_patom = PyArray_DIMS(py_multiplicities)[1];
   num_satom = PyArray_DIMS(py_multiplicities)[0];
 
@@ -281,6 +285,7 @@ static PyObject * py_transform_dynmat_to_fc(PyObject *self, PyObject *args)
                              multiplicities,
                              masses,
                              s2pp_map,
+                             fc_index_map,
                              num_patom,
                              num_satom);
 

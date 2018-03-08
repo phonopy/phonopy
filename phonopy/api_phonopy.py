@@ -349,7 +349,7 @@ class Phonopy(object):
             self._supercell)
         self.set_displacement_dataset(displacement_dataset)
 
-    def produce_force_constants(self,
+    def  produce_force_constants(self,
                                 forces=None,
                                 calculate_full_force_constants=True,
                                 computation_algorithm="svd"):
@@ -1251,6 +1251,9 @@ class Phonopy(object):
             self.set_group_velocity()
         self._group_velocity.set_q_points([q_point])
         return self._group_velocity.get_group_velocity()[0]
+
+    def get_group_velocities_on_bands(self):
+        return self._band_structure.get_group_velocities()
 
     # Moment
     def set_moment(self,
