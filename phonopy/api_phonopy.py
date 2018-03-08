@@ -1252,6 +1252,9 @@ class Phonopy(object):
         self._group_velocity.set_q_points([q_point])
         return self._group_velocity.get_group_velocity()[0]
 
+    def get_group_velocities_on_bands(self):
+        return self._band_structure.get_group_velocities()
+
     # Moment
     def set_moment(self,
                    order=1,
