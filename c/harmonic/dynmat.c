@@ -328,6 +328,7 @@ void dym_transform_dynmat_to_fc(double *fc,
                                 const int *multiplicities,
                                 const double *masses,
                                 const int *s2pp_map,
+                                const int *fc_index_map,
                                 const int num_patom,
                                 const int num_satom)
 {
@@ -361,7 +362,7 @@ void dym_transform_dynmat_to_fc(double *fc,
           for (m = 0; m < 3; m++) {
             adrs = k * num_patom * num_patom * 18 + i * num_patom * 18 +
               l * num_patom * 6 + s2pp_map[j] * 6 + m * 2;
-            fc[i * num_satom * 9 + j * 9 + l * 3 + m] +=
+            fc[fc_index_map[i] * num_satom * 9 + j * 9 + l * 3 + m] +=
               (dm[adrs] * cos_phase - dm[adrs + 1] * sin_phase) * coef;
           }
         }

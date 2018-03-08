@@ -88,6 +88,7 @@ void dym_transform_dynmat_to_fc(double *fc,
                                 const int *multiplicities,
                                 const double *masses,
                                 const int *s2pp_map,
+                                const int *fc_index_map,
                                 const int num_patom,
                                 const int num_satom);
 

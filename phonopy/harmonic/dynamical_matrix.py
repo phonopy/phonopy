@@ -443,8 +443,10 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         self._dynamical_matrix += dm_dd
 
     def _set_Gonze_force_constants(self):
+        fc_shape = self._force_constants.shape
         d2f = DynmatToForceConstants(self._pcell,
                                      self._scell,
+                                     is_full_fc=(fc_shape[0] == fc_shape[1]),
                                      symprec=self._symprec)
         dynmat = []
         num_q = len(d2f.get_commensurate_points())
