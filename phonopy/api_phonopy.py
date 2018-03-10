@@ -44,6 +44,9 @@ from phonopy.harmonic.force_constants import (
     get_fc2,
     symmetrize_force_constants,
     symmetrize_compact_force_constants,
+    distribute_force_constants,
+    show_drift_force_constants,
+    set_translational_invariance_per_index,
     rotational_invariance,
     cutoff_force_constants,
     set_tensor_symmetry)
@@ -350,9 +353,10 @@ class Phonopy(object):
         self.set_displacement_dataset(displacement_dataset)
 
     def  produce_force_constants(self,
-                                forces=None,
-                                calculate_full_force_constants=True,
-                                computation_algorithm="svd"):
+                                 forces=None,
+                                 calculate_full_force_constants=True,
+                                 computation_algorithm="svd",
+                                 show_drift=True):
         if forces is not None:
             self.set_forces(forces)
 
@@ -372,12 +376,19 @@ class Phonopy(object):
                 decimals=self._force_constants_decimals,
                 computation_algorithm=computation_algorithm)
 
+        if show_drift and self._log_level:
+            self._show_drift_force_constants()
+
         self._set_dynamical_matrix()
 
         return True
 
-    def symmetrize_force_constants(self):
+    def symmetrize_force_constants(self, level=2, show_drift=True):
         if self._force_constants.shape[0] == self._force_constants.shape[1]:
+            n_satom = self._supercell.get_number_of_atoms()
+            fc = self._force_constants
+            for n in range(level):
+                set_translational_invariance_per_index(fc, index=(n % 2))
             symmetrize_force_constants(self._force_constants)
         else:
             s2p_map = self._primitive.get_supercell_to_primitive_map()
@@ -386,7 +397,12 @@ class Phonopy(object):
                                                self._supercell,
                                                self._symmetry,
                                                s2p_map,
-                                               p2s_map)
+                                               p2s_map,
+                                               level=level)
+        if show_drift and self._log_level:
+            sys.stdout.write("        after symmetrization: ")
+            self._show_drift_force_constants(values_only=True)
+
         self._set_dynamical_matrix()
 
     def symmetrize_force_constants_by_space_group(self):
@@ -1402,3 +1418,29 @@ class Phonopy(object):
             print("Creating primitive cell is failed.")
             print("PRIMITIVE_AXIS may be incorrectly specified.")
             raise
+
+    def _show_drift_force_constants(self, values_only=False):
+        if self._force_constants.shape[0] == self._force_constants.shape[1]:
+            show_drift_force_constants(self._force_constants,
+                                       values_only=values_only)
+        else:
+            p2s_map = self._primitive.get_primitive_to_supercell_map()
+            lattice = np.array(self._supercell.get_cell().T,
+                               dtype='double', order='C')
+            positions = self._supercell.get_scaled_positions()
+            rotations = self._symmetry.get_symmetry_operations()['rotations']
+            trans = self._symmetry.get_symmetry_operations()['translations']
+            symprec = self._symmetry.get_symmetry_tolerance()
+            n_satom = self._supercell.get_number_of_atoms()
+            fc = np.zeros((n_satom, n_satom, 3, 3), dtype='double', order='C')
+            for i_p, i_s in enumerate(p2s_map):
+                fc[i_s] = self._force_constants[i_p]
+            distribute_force_constants(fc,
+                                       np.arange(n_satom, dtype='intc'),
+                                       p2s_map,
+                                       lattice,
+                                       positions,
+                                       rotations,
+                                       trans,
+                                       symprec)
+            show_drift_force_constants(fc, values_only=values_only)
