@@ -166,7 +166,7 @@ def symmetrize_compact_force_constants(force_constants,
                                        symmetry,
                                        s2p_map,
                                        p2s_map,
-                                       level=1):
+                                       level=2):
     """Symmetry force constants by translational and permutation symmetries.
 
     Here force constants are stored in a compact form:
