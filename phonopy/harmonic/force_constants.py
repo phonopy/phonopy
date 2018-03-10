@@ -76,7 +76,7 @@ def get_fc2(supercell,
 
     force_constants = np.zeros((supercell.get_number_of_atoms(),
                                 supercell.get_number_of_atoms(),
-                                3, 3), dtype='double')
+                                3, 3), dtype='double', order='C')
 
     # Fill force_constants[ displaced_atoms, all_atoms_in_supercell ]
     atom_list_done = _get_force_constants_disps(
@@ -165,13 +165,19 @@ def symmetrize_compact_force_constants(force_constants,
                                        supercell,
                                        symmetry,
                                        s2p_map,
-                                       p2s_map):
+                                       p2s_map,
+                                       level=1):
     """Symmetry force constants by translational and permutation symmetries.
 
     Here force constants are stored in a compact form:
     (n_patom, n_satom, 3, 3).
 
     For the symmetrization, permutation array is necessary.
+
+    level controls the number of times the following steps repeated:
+        1) transpose fc
+        2) subtract drift-fc/n_satom from fc elements
+    where fc is overwritten.
 
     """
 
@@ -197,7 +203,8 @@ def symmetrize_compact_force_constants(force_constants,
         phonoc.perm_trans_symmetrize_compact_fc(force_constants,
                                                 permutations,
                                                 s2p_map,
-                                                p2s_map)
+                                                p2s_map,
+                                                level)
     except ImportError:
         print("Import error at phonoc.perm_trans_symmetrize_compact_fc.")
         print("Corresponding pytono code is not implemented.")
@@ -538,7 +545,9 @@ def similarity_transformation(rot, mat):
     """ R x M x R^-1 """
     return np.dot(rot, np.dot(mat, np.linalg.inv(rot)))
 
-def show_drift_force_constants(force_constants, name="force constants"):
+def show_drift_force_constants(force_constants,
+                               name="force constants",
+                               values_only=False):
     num_atom = force_constants.shape[0]
     maxval1 = 0
     maxval2 = 0
@@ -553,10 +562,13 @@ def show_drift_force_constants(force_constants, name="force constants"):
         if abs(val2) > abs(maxval2):
             maxval2 = val2
             jk2 = [j, k]
-    print("max drift of %s: %f (%s%s) %f (%s%s)" %
-          (name,
-           maxval1, "xyz"[jk1[0]], "xyz"[jk1[1]],
-           maxval2, "xyz"[jk2[0]], "xyz"[jk2[1]]))
+    if values_only:
+        text = ""
+    else:
+        text = "max drift of %s: " % name
+    text += "%f (%s%s) %f (%s%s)" % (maxval1, "xyz"[jk1[0]], "xyz"[jk1[1]],
+                                     maxval2, "xyz"[jk2[0]], "xyz"[jk2[1]])
+    print(text)
 
 
 #################
