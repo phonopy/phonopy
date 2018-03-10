@@ -120,13 +120,13 @@ static void set_translational_symmetry_compact_fc(double * fc_tmp,
                                                   const int p2s[],
                                                   const int n_satom,
                                                   const int n_patom);
-static void transpose_compact_fc(double * fc_tmp,
-                                 const int p2s[],
-                                 const int s2pp[],
-                                 const int nsym_list[],
-                                 const int perms[],
-                                 const int n_satom,
-                                 const int n_patom);
+static void perm_transpose_compact_fc(double * fc,
+                                      const int p2s[],
+                                      const int s2pp[],
+                                      const int nsym_list[],
+                                      const int perms[],
+                                      const int n_satom,
+                                      const int n_patom);
 static void set_nsym_list_and_s2pp(int nsym_list[],
                                    int s2pp[],
                                    const int s2p[],
@@ -473,15 +473,15 @@ py_perm_trans_symmetrize_compact_fc(PyObject *self, PyObject *args)
     fc_tmp[i] = 0;
   }
 
-  if (level == 1) {
+  if (level > 0) {
     for (n = 0; n < level; n++) {
-      transpose_compact_fc(fc,
-                           p2s,
-                           s2pp,
-                           nsym_list,
-                           perms,
-                           n_satom,
-                           n_patom);
+      perm_transpose_compact_fc(fc,
+                                p2s,
+                                s2pp,
+                                nsym_list,
+                                perms,
+                                n_satom,
+                                n_patom);
       for (i = 0; i < n_patom; i++) {
         for (k = 0; k < 3; k++) {
           for (l = 0; l < 3; l++) {
@@ -1579,7 +1579,6 @@ static void set_index_permutation_symmetry_fc(double * fc,
 {
   int i, j, k, l, m, n;
 
-#pragma omp parallel for private(j, k, l, m, n)
   for (i = 0; i < natom; i++) {
     /* non diagonal part */
     for (j = i + 1; j < natom; j++) {
@@ -1643,10 +1642,10 @@ static void set_index_permutation_symmetry_compact_fc(double * fc_tmp,
                                                       const int n_satom,
                                                       const int n_patom)
 {
-  int i, j, k, l, m, n, i_p;
+  int i, j, k, l, m, n, i_p, j_p;
 
-#pragma omp parallel for private(i_p, i, k, l, m, n)
   for (j = 0; j < n_satom; j++) {
+    j_p = s2pp[j];
     for (i_p = 0; i_p < n_patom; i_p++) {
       i = p2s[i_p];
       if (i == j) { /* diagnoal part */
@@ -1665,7 +1664,8 @@ static void set_index_permutation_symmetry_compact_fc(double * fc_tmp,
         for (k = 0; k < 3; k++) {
           for (l = 0; l < 3; l++) {
             m = i_p * n_satom * 9 + j * 9 + k * 3 + l;
-            n = s2pp[j] * n_satom * 9 + perms[nsym_list[j] * n_satom + i] * 9 + l * 3 + k;
+            n = j_p * n_satom * 9 +
+              perms[nsym_list[j] * n_satom + i] * 9 + l * 3 + k;
             fc_tmp[m] = (fc[n] + fc[m]) / 2;
             fc_tmp[n] = fc_tmp[m];
           }
@@ -1705,47 +1705,40 @@ static void set_translational_symmetry_compact_fc(double * fc_tmp,
   }
 }
 
-static void transpose_compact_fc(double * fc,
-                                 const int p2s[],
-                                 const int s2pp[],
-                                 const int nsym_list[],
-                                 const int perms[],
-                                 const int n_satom,
-                                 const int n_patom)
+static void perm_transpose_compact_fc(double *fc,
+                                      const int p2s[],
+                                      const int s2pp[],
+                                      const int nsym_list[],
+                                      const int perms[],
+                                      const int n_satom,
+                                      const int n_patom)
 {
-  int i, j, k, l, m, n, i_p;
-  double fc_elem;
+  int i, j, k, l, i_p, j_p;
+  double *fc_tmp;
 
-#pragma omp parallel for private(i_p, i, k, l, m, n)
-  for (j = 0; j < n_satom; j++) {
-    for (i_p = 0; i_p < n_patom; i_p++) {
-      i = p2s[i_p];
-      if (i == j) { /* diagnoal part */
-        for (k = 0; k < 3; k++) {
-          for (l = 0; l < 3; l++) {
-            if (l > k) {
-              m = i_p * n_satom * 9 + i * 9 + k * 3 + l;
-              n = i_p * n_satom * 9 + i * 9 + l * 3 + k;
-              fc_elem = fc[m];
-              fc[m] = fc[n];
-              fc[n] = fc_elem;
-            }
-          }
-        }
-      }
-      if (j > i) {
-        for (k = 0; k < 3; k++) {
-          for (l = 0; l < 3; l++) {
-            m = i_p * n_satom * 9 + j * 9 + k * 3 + l;
-            n = s2pp[j] * n_satom * 9 + perms[nsym_list[j] * n_satom + i] * 9 + l * 3 + k;
-            fc_elem = fc[m];
-            fc[m] = fc[n];
-            fc[n] = fc_elem;
-          }
+  fc_tmp = NULL;
+  fc_tmp = (double*)malloc(sizeof(double) * n_patom * n_satom * 9);
+
+  for (i_p = 0; i_p < n_patom; i_p++) {
+    i = p2s[i_p];
+    for (j = 0; j < n_satom; j++) {
+      j_p = s2pp[j];
+      for (k = 0; k < 3; k++) {
+        for (l = 0; l < 3; l++) {
+          fc_tmp[i_p * n_satom * 9 + j * 9 + k * 3 + l] =
+            fc[j_p * n_satom * 9 + perms[nsym_list[j] * n_satom + i] * 9 +
+               l * 3 + k];
         }
       }
     }
   }
+
+  for (i = 0; i < n_patom * n_satom * 9; i++) {
+    fc[i] = fc_tmp[i];
+  }
+
+  free(fc_tmp);
+  fc_tmp = NULL;
 }
 
 static void set_nsym_list_and_s2pp(int nsym_list[],
