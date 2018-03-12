@@ -68,7 +68,7 @@ def read_band_yaml(filename):
             data['segment_nqpoint'],
             labels)
 
-def read_dos_dat(filename, pdos_indices=None):
+def read_dos_dat(filename, pdos_indices=None, dos_factor=None):
     dos = []
     frequencies = []
     for line in open(filename):
@@ -89,6 +89,10 @@ def read_dos_dat(filename, pdos_indices=None):
             dos_sum.append(dos[:, indices].sum(axis=1))
         dos_sum.append(dos.sum(axis=1))
         dos = np.transpose(dos_sum)
+
+    if dos_factor:
+        dos *= dos_factor
+
     return frequencies, dos
 
 def get_options():
@@ -100,6 +104,7 @@ def get_options():
                         dos=None,
                         dos_max=None,
                         dos_min=None,
+                        dos_factor=None,
                         factor=1.0,
                         f_max=None,
                         f_min=None,
@@ -107,6 +112,7 @@ def get_options():
                         is_points=False,
                         is_vertial_line=False,
                         output_filename=None,
+                        pdos_indices=None,
                         xlabel=None,
                         ylabel=None,
                         show_legend=False,
@@ -115,14 +121,17 @@ def get_options():
         "--band-labels", dest="band_labels",
         help="Show labels at band segments")
     parser.add_argument(
-        "--dos", dest="dos",
-        help="Read dos.dat type file and plot with band structure")
-    parser.add_argument(
         "--dmax", dest="dos_max", type=float,
         help="Maximum DOS plotted")
     parser.add_argument(
         "--dmin", dest="dos_min", type=float,
         help="Minimum DOS plotted")
+    parser.add_argument(
+        "--dos", dest="dos",
+        help="Read dos.dat type file and plot with band structure")
+    parser.add_argument(
+        "--dos-factor", dest="dos_factor", type=float,
+        help="Factor to be multiplied with DOS.")
     parser.add_argument(
         "--factor", dest="factor", type=float,
         help="Conversion factor to favorite frequency unit")
@@ -208,10 +217,9 @@ def main(args):
         print("# distance  frequency (bands are separated by blank lines)")
 
     if args.dos:
-        if args.pdos_indices:
-            dos_frequencies, dos = read_dos_dat(args.dos, args.pdos_indices)
-        else:
-            dos_frequencies, dos = read_dos_dat(args.dos)
+        dos_frequencies, dos = read_dos_dat(args.dos,
+                                            pdos_indices=args.pdos_indices,
+                                            dos_factor=args.dos_factor)
 
     for i, filename in enumerate(filenames):
         (distances,
