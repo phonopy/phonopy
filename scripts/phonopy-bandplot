@@ -68,7 +68,7 @@ def read_band_yaml(filename):
             data['segment_nqpoint'],
             labels)
 
-def read_dos_dat(filename):
+def read_dos_dat(filename, pdos_indices=None):
     dos = []
     frequencies = []
     for line in open(filename):
@@ -77,7 +77,19 @@ def read_dos_dat(filename):
         ary = [float(x) for x in line.split()]
         frequencies.append(ary.pop(0))
         dos.append(ary)
-    return np.array(frequencies), np.array(dos)
+    dos = np.array(dos)
+    frequencies = np.array(frequencies)
+
+    if pdos_indices:
+        pi = []
+        for nums in pdos_indices.split(','):
+            pi.append([int(x) - 1 for x in nums.split()])
+        dos_sum = []
+        for indices in pi:
+            dos_sum.append(dos[:, indices].sum(axis=1))
+        dos_sum.append(dos.sum(axis=1))
+        dos = np.transpose(dos_sum)
+    return frequencies, dos
 
 def get_options():
     # Parse options
@@ -123,6 +135,9 @@ def get_options():
     parser.add_argument(
         "--gnuplot", dest="is_gnuplot", action="store_true",
         help="Output in gnuplot data style")
+    parser.add_argument(
+        "-i", "--indices", dest="pdos_indices",
+        help="Indices like 1 2, 3 4 5 6...")
     parser.add_argument(
         "--legend", dest="show_legend", action="store_true",
         help="Show legend")
@@ -193,7 +208,10 @@ def main(args):
         print("# distance  frequency (bands are separated by blank lines)")
 
     if args.dos:
-        dos_frequencies, dos = read_dos_dat(args.dos)
+        if args.pdos_indices:
+            dos_frequencies, dos = read_dos_dat(args.dos, args.pdos_indices)
+        else:
+            dos_frequencies, dos = read_dos_dat(args.dos)
 
     for i, filename in enumerate(filenames):
         (distances,
