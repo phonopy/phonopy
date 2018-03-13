@@ -313,6 +313,19 @@ def main(args):
             plt.legend()
 
         if args.dos:
+            arg_fmax = len(dos_frequencies)
+            if args.f_max is not None:
+                for i, f in enumerate(dos_frequencies):
+                    if f > args.f_max:
+                        arg_fmax = i
+                        break
+            arg_fmin = 0
+            if args.f_min is not None:
+                for i, f in enumerate(dos_frequencies):
+                    if f > args.f_min:
+                        if i > 0:
+                            arg_fmin = i - 1
+                        break
             ax2 = plt.subplot(gs[0, 1], sharey=ax1)
             ax2.xaxis.set_ticks_position('both')
             ax2.yaxis.set_ticks_position('both')
@@ -321,7 +334,16 @@ def main(args):
 
             plt.subplots_adjust(wspace=0.03)
             plt.setp(ax2.get_yticklabels(), visible=False)
-            plt.plot(dos, dos_frequencies)
+
+            for pdos in dos.T:
+                if args.dos_max:
+                    _pdos = _plot_dos(pdos[arg_fmin:arg_fmax],
+                                      dos_frequencies[arg_fmin:arg_fmax],
+                                      args.dos_max)
+                    plt.plot(_pdos[1], _pdos[0])
+                else:
+                    plt.plot(pdos[arg_fmin:arg_fmax],
+                             dos_frequencies[arg_fmin:arg_fmax])
             plt.xlabel('DOS')
 
             ax2.set_xlim((0, None))
@@ -341,6 +363,55 @@ def main(args):
             plt.savefig(args.output_filename)
         else:
             plt.show()
+
+def _plot_dos(d, f, dmax):
+    pdos = []
+    for f1, f2, d1, d2 in zip(f[:-1], f[1:], d[:-1], d[1:]):
+        pdos += _cut_dos([f1, d1], [f2, d2], dmax)
+    return np.transpose(pdos)
+
+def _cut_dos(p1, p2, dmax):
+    """Cut DOS at dmax
+
+    ** Cutting by fmin and fmax should be implemented someday. **
+
+    Args:
+        p1: (f1, d1)
+        p2: (f2, d2)
+
+    When d1 < dmax and d2 < dmax
+        p1: (f1, d1)
+        p2: (f2, d2)
+    When d1 < dmax and d2 > dmax
+        p1: (f1, d1)
+        pi: (fi, dmax), f1 < fi < f2
+        p2: (f2, dmax)
+    Whend1 > dmax and d2 < dmax,
+        p1: (f1, dmax)
+        pi: (fi, dmax), f1 < fi < f2
+        p2: (f2, d2)
+    When d2 > dmax and d1 > dmax
+        p1: (f1, dmax)
+        p2: (f2, dmax)
+
+    """
+
+    def _get_fi(p1, p2, dmax):
+        df = p2[0] - p1[0]
+        dd = p2[1] - p1[1]
+        fi = (dmax - p1[1]) / dd * df + p1[0]
+        return fi
+
+    if p1[1] < dmax and p2[1] < dmax:
+        return [p1, p2]
+    elif p1[1] < dmax and p2[1] > dmax:
+        fi = _get_fi(p1, p2, dmax)
+        return [p1, [fi, dmax], [p2[0], dmax]]
+    elif p1[1] > dmax and p2[1] < dmax:
+        fi = _get_fi(p1, p2, dmax)
+        return [[p1[0], dmax], [fi, dmax], p2]
+    else:
+        return [[p1[0], dmax], [p1[0], dmax]]
 
 if __name__ == "__main__":
     main(get_options())
