@@ -232,7 +232,7 @@ def read_force_constants_hdf5(filename="force_constants.hdf5",
 
 def _check_force_constants_indices(shape, indices, p2s_map):
     if shape[0] != shape[1] and p2s_map is not None:
-        if (p2s_map != indices).any():
+        if len(p2s_map) != len(indices) or (p2s_map != indices).any():
             print("FORCE_CONSTANTS file is inconsistent with calculation "
                   "setting.")
             print("PRIMITIVE_AXIS is not set or is wrongly set.")
