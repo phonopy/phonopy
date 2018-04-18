@@ -1725,6 +1725,11 @@ static void perm_transpose_compact_fc(double *fc,
       j_p = s2pp[j];
       for (k = 0; k < 3; k++) {
         for (l = 0; l < 3; l++) {
+          /* (j, i) -- nsym_list[j] --> (j', i') */
+          /* nsym_list[j] translates j to j' where j' is in */
+          /* primitive cell. The same translation sends i to i' */
+          /* where i' is not necessarily to be in primitive cell. */
+          /* Thus, i' = perms[nsym_list[j] * n_satom + i] */
           fc_tmp[i_p * n_satom * 9 + j * 9 + k * 3 + l] =
             fc[j_p * n_satom * 9 + perms[nsym_list[j] * n_satom + i] * 9 +
                l * 3 + k];
@@ -1750,6 +1755,10 @@ static void set_nsym_list_and_s2pp(int nsym_list[],
                                    const int n_patom,
                                    const int nsym)
 {
+  /* nsym_list[i] = j: */
+  /*     index list of translation operation (j) to send an atom (i) */
+  /*     to the corresponding one in the primitive cell (target) */
+
   int i, j, target;
 
   for (i = 0; i < n_satom; i++) {
