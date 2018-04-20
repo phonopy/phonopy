@@ -108,8 +108,7 @@ static void set_index_permutation_symmetry_fc(double * fc,
                                               const int natom);
 static void set_translational_symmetry_fc(double * fc,
                                           const int natom);
-static void set_index_permutation_symmetry_compact_fc(double * fc_tmp,
-                                                      const double *fc,
+static void set_index_permutation_symmetry_compact_fc(double * fc,
                                                       const int p2s[],
                                                       const int s2pp[],
                                                       const int nsym_list[],
@@ -499,19 +498,18 @@ py_perm_trans_symmetrize_compact_fc(PyObject *self, PyObject *args)
     }
   }
 
-  set_index_permutation_symmetry_compact_fc(fc_tmp,
-                                            fc,
+  set_index_permutation_symmetry_compact_fc(fc,
                                             p2s,
                                             s2pp,
                                             nsym_list,
                                             perms,
                                             n_satom,
                                             n_patom);
-  set_translational_symmetry_compact_fc(fc_tmp, p2s, n_satom, n_patom);
+  set_translational_symmetry_compact_fc(fc, p2s, n_satom, n_patom);
 
-  for (i = 0; i < n_patom * n_satom * 3 * 3; i++) {
-    fc[i] = fc_tmp[i];
-  }
+  /* for (i = 0; i < n_patom * n_satom * 3 * 3; i++) { */
+  /*   fc[i] = fc_tmp[i]; */
+  /* } */
 
   free(nsym_list);
   nsym_list = NULL;
@@ -1633,8 +1631,7 @@ static void set_translational_symmetry_fc(double * fc,
   }
 }
 
-static void set_index_permutation_symmetry_compact_fc(double * fc_tmp,
-                                                      const double *fc,
+static void set_index_permutation_symmetry_compact_fc(double * fc,
                                                       const int p2s[],
                                                       const int s2pp[],
                                                       const int nsym_list[],
@@ -1643,6 +1640,12 @@ static void set_index_permutation_symmetry_compact_fc(double * fc_tmp,
                                                       const int n_patom)
 {
   int i, j, k, l, m, n, i_p, j_p;
+  char *done;
+
+  done = (char*)malloc(sizeof(char) * n_satom * n_patom);
+  for (i = 0; i < n_satom * n_patom; i++) {
+    done[i] = 0;
+  }
 
   for (j = 0; j < n_satom; j++) {
     j_p = s2pp[j];
@@ -1654,20 +1657,21 @@ static void set_index_permutation_symmetry_compact_fc(double * fc_tmp,
             if (l > k) {
               m = i_p * n_satom * 9 + i * 9 + k * 3 + l;
               n = i_p * n_satom * 9 + i * 9 + l * 3 + k;
-              fc_tmp[m] = (fc[m] + fc[n]) / 2;
-              fc_tmp[n] = fc_tmp[m];
+              fc[m] = (fc[m] + fc[n]) / 2;
+              fc[n] = fc[m];
             }
           }
         }
       }
-      if (j > i) {
+      if (!done[i_p * n_satom + j]) {
+        done[i_p * n_satom + j] = 1;
         for (k = 0; k < 3; k++) {
           for (l = 0; l < 3; l++) {
             m = i_p * n_satom * 9 + j * 9 + k * 3 + l;
             n = j_p * n_satom * 9 +
               perms[nsym_list[j] * n_satom + i] * 9 + l * 3 + k;
-            fc_tmp[m] = (fc[n] + fc[m]) / 2;
-            fc_tmp[n] = fc_tmp[m];
+            fc[m] = (fc[n] + fc[m]) / 2;
+            fc[n] = fc[m];
           }
         }
       }
