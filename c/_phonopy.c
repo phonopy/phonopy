@@ -114,18 +114,12 @@ static void set_index_permutation_symmetry_compact_fc(double * fc,
                                                       const int nsym_list[],
                                                       const int perms[],
                                                       const int n_satom,
-                                                      const int n_patom);
-static void set_translational_symmetry_compact_fc(double * fc_tmp,
+                                                      const int n_patom,
+                                                      const int is_transpose);
+static void set_translational_symmetry_compact_fc(double * fc,
                                                   const int p2s[],
                                                   const int n_satom,
                                                   const int n_patom);
-static void perm_transpose_compact_fc(double * fc,
-                                      const int p2s[],
-                                      const int s2pp[],
-                                      const int nsym_list[],
-                                      const int perms[],
-                                      const int n_satom,
-                                      const int n_patom);
 static void set_nsym_list_and_s2pp(int nsym_list[],
                                    int s2pp[],
                                    const int s2p[],
@@ -432,7 +426,6 @@ py_perm_trans_symmetrize_compact_fc(PyObject *self, PyObject *args)
   int *perms;
   int n_patom, n_satom, nsym, i, j, k, l, n;
   double sum;
-  double *fc_tmp;
   int *nsym_list, *s2pp;
 
   if (!PyArg_ParseTuple(args, "OOOOi",
@@ -454,7 +447,6 @@ py_perm_trans_symmetrize_compact_fc(PyObject *self, PyObject *args)
 
   nsym_list = NULL;
   s2pp = NULL;
-  fc_tmp = NULL;
 
   nsym_list = (int*) malloc(sizeof(int) * n_satom);
   s2pp = (int*) malloc(sizeof(int) * n_satom);
@@ -467,20 +459,17 @@ py_perm_trans_symmetrize_compact_fc(PyObject *self, PyObject *args)
                          n_patom,
                          nsym);
 
-  fc_tmp = (double*) malloc(sizeof(double) * n_patom * n_satom * 3 * 3);
-  for (i = 0; i < n_patom * n_satom * 3 * 3; i++) {
-    fc_tmp[i] = 0;
-  }
-
   if (level > 0) {
     for (n = 0; n < level; n++) {
-      perm_transpose_compact_fc(fc,
-                                p2s,
-                                s2pp,
-                                nsym_list,
-                                perms,
-                                n_satom,
-                                n_patom);
+      /* transpose only */
+      set_index_permutation_symmetry_compact_fc(fc,
+                                                p2s,
+                                                s2pp,
+                                                nsym_list,
+                                                perms,
+                                                n_satom,
+                                                n_patom,
+                                                1);
       for (i = 0; i < n_patom; i++) {
         for (k = 0; k < 3; k++) {
           for (l = 0; l < 3; l++) {
@@ -504,19 +493,14 @@ py_perm_trans_symmetrize_compact_fc(PyObject *self, PyObject *args)
                                             nsym_list,
                                             perms,
                                             n_satom,
-                                            n_patom);
+                                            n_patom,
+                                            0);
   set_translational_symmetry_compact_fc(fc, p2s, n_satom, n_patom);
-
-  /* for (i = 0; i < n_patom * n_satom * 3 * 3; i++) { */
-  /*   fc[i] = fc_tmp[i]; */
-  /* } */
 
   free(nsym_list);
   nsym_list = NULL;
   free(s2pp);
   s2pp = NULL;
-  free(fc_tmp);
-  fc_tmp = NULL;
 
   Py_RETURN_NONE;
 }
@@ -1637,11 +1621,14 @@ static void set_index_permutation_symmetry_compact_fc(double * fc,
                                                       const int nsym_list[],
                                                       const int perms[],
                                                       const int n_satom,
-                                                      const int n_patom)
+                                                      const int n_patom,
+                                                      const int is_transpose)
 {
-  int i, j, k, l, m, n, i_p, j_p;
+  int i, j, k, l, m, n, i_p, j_p, i_trans;
+  double fc_elem;
   char *done;
 
+  done = NULL;
   done = (char*)malloc(sizeof(char) * n_satom * n_patom);
   for (i = 0; i < n_satom * n_patom; i++) {
     done[i] = 0;
@@ -1657,29 +1644,50 @@ static void set_index_permutation_symmetry_compact_fc(double * fc,
             if (l > k) {
               m = i_p * n_satom * 9 + i * 9 + k * 3 + l;
               n = i_p * n_satom * 9 + i * 9 + l * 3 + k;
-              fc[m] = (fc[m] + fc[n]) / 2;
-              fc[n] = fc[m];
+              if (is_transpose) {
+                fc_elem = fc[m];
+                fc[m] = fc[n];
+                fc[n] = fc_elem;
+              } else {
+                fc[m] = (fc[m] + fc[n]) / 2;
+                fc[n] = fc[m];
+              }
             }
           }
         }
       }
       if (!done[i_p * n_satom + j]) {
+        /* (j, i) -- nsym_list[j] --> (j', i') */
+        /* nsym_list[j] translates j to j' where j' is in */
+        /* primitive cell. The same translation sends i to i' */
+        /* where i' is not necessarily to be in primitive cell. */
+        /* Thus, i' = perms[nsym_list[j] * n_satom + i] */
+        i_trans = perms[nsym_list[j] * n_satom + i];
         done[i_p * n_satom + j] = 1;
+        done[j_p * n_satom + i_trans] = 1;
         for (k = 0; k < 3; k++) {
           for (l = 0; l < 3; l++) {
             m = i_p * n_satom * 9 + j * 9 + k * 3 + l;
-            n = j_p * n_satom * 9 +
-              perms[nsym_list[j] * n_satom + i] * 9 + l * 3 + k;
-            fc[m] = (fc[n] + fc[m]) / 2;
-            fc[n] = fc[m];
+            n = j_p * n_satom * 9 + i_trans * 9 + l * 3 + k;
+            if (is_transpose) {
+              fc_elem = fc[m];
+              fc[m] = fc[n];
+              fc[n] = fc_elem;
+            } else {
+              fc[m] = (fc[n] + fc[m]) / 2;
+              fc[n] = fc[m];
+            }
           }
         }
       }
     }
   }
+
+  free(done);
+  done = NULL;
 }
 
-static void set_translational_symmetry_compact_fc(double * fc_tmp,
+static void set_translational_symmetry_compact_fc(double * fc,
                                                   const int p2s[],
                                                   const int n_satom,
                                                   const int n_patom)
@@ -1694,7 +1702,7 @@ static void set_translational_symmetry_compact_fc(double * fc_tmp,
         m = i_p * n_satom * 9 + k * 3 + l;
         for (j = 0; j < n_satom; j++) {
           if (p2s[i_p] != j) {
-            sums[k][l] += fc_tmp[m];
+            sums[k][l] += fc[m];
           }
           m += 9;
         }
@@ -1702,52 +1710,11 @@ static void set_translational_symmetry_compact_fc(double * fc_tmp,
     }
     for (k = 0; k < 3; k++) {
       for (l = 0; l < 3; l++) {
-        fc_tmp[i_p * n_satom * 9 + p2s[i_p] * 9 + k * 3 + l] =
+        fc[i_p * n_satom * 9 + p2s[i_p] * 9 + k * 3 + l] =
           -(sums[k][l] + sums[l][k]) / 2;
       }
     }
   }
-}
-
-static void perm_transpose_compact_fc(double *fc,
-                                      const int p2s[],
-                                      const int s2pp[],
-                                      const int nsym_list[],
-                                      const int perms[],
-                                      const int n_satom,
-                                      const int n_patom)
-{
-  int i, j, k, l, i_p, j_p;
-  double *fc_tmp;
-
-  fc_tmp = NULL;
-  fc_tmp = (double*)malloc(sizeof(double) * n_patom * n_satom * 9);
-
-  for (i_p = 0; i_p < n_patom; i_p++) {
-    i = p2s[i_p];
-    for (j = 0; j < n_satom; j++) {
-      j_p = s2pp[j];
-      for (k = 0; k < 3; k++) {
-        for (l = 0; l < 3; l++) {
-          /* (j, i) -- nsym_list[j] --> (j', i') */
-          /* nsym_list[j] translates j to j' where j' is in */
-          /* primitive cell. The same translation sends i to i' */
-          /* where i' is not necessarily to be in primitive cell. */
-          /* Thus, i' = perms[nsym_list[j] * n_satom + i] */
-          fc_tmp[i_p * n_satom * 9 + j * 9 + k * 3 + l] =
-            fc[j_p * n_satom * 9 + perms[nsym_list[j] * n_satom + i] * 9 +
-               l * 3 + k];
-        }
-      }
-    }
-  }
-
-  for (i = 0; i < n_patom * n_satom * 9; i++) {
-    fc[i] = fc_tmp[i];
-  }
-
-  free(fc_tmp);
-  fc_tmp = NULL;
 }
 
 static void set_nsym_list_and_s2pp(int nsym_list[],
