@@ -3,6 +3,15 @@
 Change Log
 ==========
 
+Apr-21-2018: Version 1.13.0
+----------------------------
+
+* Non-analytical term correction by Gonze *et al.*
+  (:ref:`reference_dp_dp_NAC`) is implemented and now this is the
+  default NAC method. The former default method by Wang *et al.*
+  (:ref:`reference_wang_NAC`) can be invoked by using ``NAC_METHOD`` tag
+  (:ref:`nac_method_tag`).
+
 Jan-31-2018: Version 1.12.6
 ----------------------------
 
