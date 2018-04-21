@@ -256,6 +256,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
                                  symprec=1e-5)
 
         self._log_level = log_level
+        self._method = None
 
         # For the method by Gonze et al.
         self._Gonze_force_constants = None
@@ -299,8 +300,16 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         self._unit_conversion = nac_params['factor']
         self._dielectric = np.array(nac_params['dielectric'],
                                     dtype='double', order='C')
-        if 'method' in nac_params and nac_params['method'] == 'gonze':
+        if 'method' not in nac_params:
             self._method = 'gonze'
+        elif nac_params['method'] == 'gonze':
+            self._method = 'gonze'
+        elif nac_params['method'] == 'wang':
+            self._method = 'wang'
+        else:
+            self._method = 'gonze'
+
+        if self._method == 'gonze':
             if 'G_cutoff' in nac_params:
                 self._G_cutoff = nac_params['G_cutoff']
             else:
@@ -312,8 +321,6 @@ class DynamicalMatrixNAC(DynamicalMatrix):
                 exp_cutoff = 1e-10
                 GeG = self._G_cutoff ** 2 * np.trace(self._dielectric) / 3
                 self._Lambda = np.sqrt(- GeG / 4 / np.log(exp_cutoff))
-        else:
-            self._method = 'wang'
 
     def make_Gonze_nac_dataset(self, verbose=False):
         self._G_list = self._get_G_list(self._G_cutoff)
