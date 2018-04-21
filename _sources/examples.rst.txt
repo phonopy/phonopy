@@ -163,26 +163,31 @@ This requires to prepare BORN file.
     | |_) | | | | (_) | | | | (_) || |_) | |_| |
     | .__/|_| |_|\___/|_| |_|\___(_) .__/ \__, |
     |_|                            |_|    |___/
+                                         1.13.0
 
-                                        1.4
-
+   Python version 2.7.14
+   Spglib version 1.10.3
    Band structure mode
    Settings:
-     Non-analytical term correction: on
-     Supercell:  [2 2 2]
+     Non-analytical term correction (NAC): on
+     Supercell: [2 2 2]
      Primitive axis:
-        [ 0.   0.5  0.5]
-        [ 0.5  0.   0.5]
-        [ 0.5  0.5  0. ]
-   Spacegroup:  Fm-3m (225)
-   Calculating force constants...
-   Paths in reciprocal reduced coordinates:
+       [ 0.   0.5  0.5]
+       [ 0.5  0.   0.5]
+       [ 0.5  0.5  0. ]
+   Spacegroup: Fm-3m (225)
+   Computing force constants...
+   max drift of force constants: 0.040159 (zz) 0.000009 (zz)
+   Reciprocal space paths in reduced coordinates:
    [ 0.00  0.00  0.00] --> [ 0.50  0.00  0.00]
    [ 0.50  0.00  0.00] --> [ 0.50  0.50  0.00]
    [ 0.50  0.50  0.00] --> [-0.00 -0.00  0.00]
    [ 0.00  0.00  0.00] --> [ 0.50  0.50  0.50]
+   NAC by Gonze et al., PRB 50, 13035(R) (1994), PRB 55, 10355 (1997):
+     G-cutoff distance:  1.16
+     Number of G-points: 307
+     Lambda:   0.19
    ...
-
 
 .. |NaCl-band-NAC| image:: NaCl-band-NAC.png
                    :width: 50%
@@ -204,26 +209,24 @@ PDOS
     | |_) | | | | (_) | | | | (_) || |_) | |_| |
     | .__/|_| |_|\___/|_| |_|\___(_) .__/ \__, |
     |_|                            |_|    |___/
+                                         1.13.0
 
-                                        1.6.2
-
+   Python version 2.7.14
+   Spglib version 1.10.3
    Mesh sampling mode
    Settings:
-     Sampling mesh:  [41 41 41]
-     Supercell:  [2 2 2]
+     Sampling mesh: [41 41 41]
+     Supercell: [2 2 2]
      Primitive axis:
-        [ 0.   0.5  0.5]
-        [ 0.5  0.   0.5]
-        [ 0.5  0.5  0. ]
-   Spacegroup:  Fm-3m (225)
-   Calculating force constants...
-   Number of irreducible q-points:  1771
-                    _
-      ___ _ __   __| |
-     / _ \ '_ \ / _` |
-    |  __/ | | | (_| |
-     \___|_| |_|\__,_|
-
+       [ 0.   0.5  0.5]
+       [ 0.5  0.   0.5]
+       [ 0.5  0.5  0. ]
+   Spacegroup: Fm-3m (225)
+   Computing force constants...
+   max drift of force constants: 0.040159 (zz) 0.000009 (zz)
+   Number of q-points on sampling mesh: 68921
+   Calculating phonons on sampling mesh...
+   ...
 
 .. |NaCl-PDOS| image:: NaCl-PDOS.png
                :width: 50%
@@ -243,27 +246,29 @@ region close to :math:`\Gamma` point.
     | |_) | | | | (_) | | | | (_) || |_) | |_| |
     | .__/|_| |_|\___/|_| |_|\___(_) .__/ \__, |
     |_|                            |_|    |___/
+                                         1.13.0
 
-                                        1.6.2
-
+   Python version 2.7.14
+   Spglib version 1.10.3
    Mesh sampling mode
    Settings:
-     Non-analytical term correction: on
-     Sampling mesh:  [41 41 41]
-     Supercell:  [2 2 2]
+     Non-analytical term correction (NAC): on
+     Sampling mesh: [41 41 41]
+     Supercell: [2 2 2]
      Primitive axis:
-        [ 0.   0.5  0.5]
-        [ 0.5  0.   0.5]
-        [ 0.5  0.5  0. ]
-   Spacegroup:  Fm-3m (225)
-   Calculating force constants...
-   Number of irreducible q-points:  1771
-                    _
-      ___ _ __   __| |
-     / _ \ '_ \ / _` |
-    |  __/ | | | (_| |
-     \___|_| |_|\__,_|
-
+       [ 0.   0.5  0.5]
+       [ 0.5  0.   0.5]
+       [ 0.5  0.5  0. ]
+   Spacegroup: Fm-3m (225)
+   Computing force constants...
+   max drift of force constants: 0.040159 (zz) 0.000009 (zz)
+   Number of q-points on sampling mesh: 68921
+   Calculating phonons on sampling mesh...
+   NAC by Gonze et al., PRB 50, 13035(R) (1994), PRB 55, 10355 (1997):
+     G-cutoff distance:  1.16
+     Number of G-points: 307
+     Lambda:   0.19
+   ...
 
 .. |NaCl-PDOS-nac| image:: NaCl-PDOS-nac.png
                    :width: 50%
@@ -283,27 +288,29 @@ profile than that given by the smearing method.
     | |_) | | | | (_) | | | | (_) || |_) | |_| |
     | .__/|_| |_|\___/|_| |_|\___(_) .__/ \__, |
     |_|                            |_|    |___/
+                                         1.13.0
 
-                                        1.9.2.1
-
+   Python version 2.7.14
+   Spglib version 1.10.3
    Mesh sampling mode
    Settings:
-     Non-analytical term correction: on
-     Sampling mesh:  [41 41 41]
-     Supercell:  [2 2 2]
+     Non-analytical term correction (NAC): on
+     Sampling mesh: [41 41 41]
+     Supercell: [2 2 2]
      Primitive axis:
-        [ 0.   0.5  0.5]
-        [ 0.5  0.   0.5]
-        [ 0.5  0.5  0. ]
-   Spacegroup:  Fm-3m (225)
+       [ 0.   0.5  0.5]
+       [ 0.5  0.   0.5]
+       [ 0.5  0.5  0. ]
+   Spacegroup: Fm-3m (225)
    Computing force constants...
-   Number of irreducible q-points on sampling mesh: 1771/68921
-   Calculating partial DOS...
-                    _
-      ___ _ __   __| |
-     / _ \ '_ \ / _` |
-    |  __/ | | | (_| |
-     \___|_| |_|\__,_|
+   max drift of force constants: 0.040159 (zz) 0.000009 (zz)
+   Number of q-points on sampling mesh: 68921
+   Calculating phonons on sampling mesh...
+   NAC by Gonze et al., PRB 50, 13035(R) (1994), PRB 55, 10355 (1997):
+     G-cutoff distance:  1.16
+     Number of G-points: 307
+     Lambda:   0.19
+   ...
 
 .. |NaCl-PDOS-thm-nac| image:: NaCl-PDOS-thm-nac.png
                        :width: 50%
@@ -318,39 +325,41 @@ Band structure and DOS or PDOS can be plotted on one figure together by
 
 ::
 
-   % phonopy band-pdos.conf --nac -p
+   % phonopy band-pdos.conf --nac  --thm -p
            _
      _ __ | |__   ___  _ __   ___   _ __  _   _
     | '_ \| '_ \ / _ \| '_ \ / _ \ | '_ \| | | |
     | |_) | | | | (_) | | | | (_) || |_) | |_| |
     | .__/|_| |_|\___/|_| |_|\___(_) .__/ \__, |
     |_|                            |_|    |___/
+                                         1.13.0
 
-                                        1.9.2
-
+   Python version 2.7.14
+   Spglib version 1.10.3
    Band structure and mesh sampling mode
    Settings:
-     Non-analytical term correction: on
-     Sampling mesh:  [41 41 41]
-     Supercell:  [2 2 2]
+     Non-analytical term correction (NAC): on
+     Sampling mesh: [41 41 41]
+     Supercell: [2 2 2]
      Primitive axis:
-        [ 0.   0.5  0.5]
-        [ 0.5  0.   0.5]
-        [ 0.5  0.5  0. ]
-   Spacegroup:  Fm-3m (225)
+       [ 0.   0.5  0.5]
+       [ 0.5  0.   0.5]
+       [ 0.5  0.5  0. ]
+   Spacegroup: Fm-3m (225)
    Computing force constants...
+   max drift of force constants: 0.040159 (zz) 0.000009 (zz)
    Reciprocal space paths in reduced coordinates:
    [ 0.00  0.00  0.00] --> [ 0.50  0.00  0.00]
    [ 0.50  0.00  0.00] --> [ 0.50  0.50  0.00]
    [ 0.50  0.50  0.00] --> [-0.00 -0.00  0.00]
    [ 0.00  0.00  0.00] --> [ 0.50  0.50  0.50]
-   Number of irreducible q-points on sampling mesh: 1771/68921
-   Calculating partial DOS...
-                    _
-      ___ _ __   __| |
-     / _ \ '_ \ / _` |
-    |  __/ | | | (_| |
-     \___|_| |_|\__,_|
+   NAC by Gonze et al., PRB 50, 13035(R) (1994), PRB 55, 10355 (1997):
+     G-cutoff distance:  1.16
+     Number of G-points: 307
+     Lambda:   0.19
+   Number of q-points on sampling mesh: 68921
+   Calculating phonons on sampling mesh...
+   ...
 
 .. |NaCl-band-PDOS-NAC| image:: NaCl-band-PDOS-NAC.png
                         :width: 50%

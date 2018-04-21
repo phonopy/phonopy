@@ -3,16 +3,13 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>Setting tags &#8212; Phonopy v.1.12.6</title>
-    
+    <title>Setting tags &#8212; Phonopy v.1.13.0</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.12.6',
+        VERSION:     '1.13.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -22,7 +19,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
@@ -50,7 +47,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.12.6</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.13.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -165,6 +162,7 @@
 </li>
 <li><a class="reference internal" href="#non-analytical-term-correction">Non-analytical term correction</a><ul>
 <li><a class="reference internal" href="#nac"><code class="docutils literal"><span class="pre">NAC</span></code></a></li>
+<li><a class="reference internal" href="#nac-method"><code class="docutils literal"><span class="pre">NAC_METHOD</span></code></a></li>
 <li><a class="reference internal" href="#q-direction"><code class="docutils literal"><span class="pre">Q_DIRECTION</span></code></a></li>
 </ul>
 </li>
@@ -329,45 +327,46 @@
 </li>
 <li><a class="reference internal" href="#non-analytical-term-correction" id="id51">Non-analytical term correction</a><ul>
 <li><a class="reference internal" href="#nac" id="id52"><code class="docutils literal"><span class="pre">NAC</span></code></a></li>
-<li><a class="reference internal" href="#q-direction" id="id53"><code class="docutils literal"><span class="pre">Q_DIRECTION</span></code></a></li>
+<li><a class="reference internal" href="#nac-method" id="id53"><code class="docutils literal"><span class="pre">NAC_METHOD</span></code></a></li>
+<li><a class="reference internal" href="#q-direction" id="id54"><code class="docutils literal"><span class="pre">Q_DIRECTION</span></code></a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#group-velocity" id="id54">Group velocity</a><ul>
-<li><a class="reference internal" href="#id3" id="id55"><code class="docutils literal"><span class="pre">GROUP_VELOCITY</span></code></a></li>
-<li><a class="reference internal" href="#gv-delta-q" id="id56"><code class="docutils literal"><span class="pre">GV_DELTA_Q</span></code></a></li>
+<li><a class="reference internal" href="#group-velocity" id="id55">Group velocity</a><ul>
+<li><a class="reference internal" href="#id3" id="id56"><code class="docutils literal"><span class="pre">GROUP_VELOCITY</span></code></a></li>
+<li><a class="reference internal" href="#gv-delta-q" id="id57"><code class="docutils literal"><span class="pre">GV_DELTA_Q</span></code></a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#symmetry" id="id57">Symmetry</a><ul>
-<li><a class="reference internal" href="#symmetry-tag" id="id58"><code class="docutils literal"><span class="pre">SYMMETRY</span></code></a></li>
-<li><a class="reference internal" href="#mesh-symmetry" id="id59"><code class="docutils literal"><span class="pre">MESH_SYMMETRY</span></code></a></li>
-<li><a class="reference internal" href="#fc-symmetry" id="id60"><code class="docutils literal"><span class="pre">FC_SYMMETRY</span></code></a></li>
+<li><a class="reference internal" href="#symmetry" id="id58">Symmetry</a><ul>
+<li><a class="reference internal" href="#symmetry-tag" id="id59"><code class="docutils literal"><span class="pre">SYMMETRY</span></code></a></li>
+<li><a class="reference internal" href="#mesh-symmetry" id="id60"><code class="docutils literal"><span class="pre">MESH_SYMMETRY</span></code></a></li>
+<li><a class="reference internal" href="#fc-symmetry" id="id61"><code class="docutils literal"><span class="pre">FC_SYMMETRY</span></code></a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#force-constants" id="id61">Force constants</a><ul>
-<li><a class="reference internal" href="#id5" id="id62"><code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span></code></a></li>
-<li><a class="reference internal" href="#read-force-constants" id="id63"><code class="docutils literal"><span class="pre">READ_FORCE_CONSTANTS</span></code></a></li>
-<li><a class="reference internal" href="#write-force-constants" id="id64"><code class="docutils literal"><span class="pre">WRITE_FORCE_CONSTANTS</span></code></a></li>
+<li><a class="reference internal" href="#force-constants" id="id62">Force constants</a><ul>
+<li><a class="reference internal" href="#id5" id="id63"><code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span></code></a></li>
+<li><a class="reference internal" href="#read-force-constants" id="id64"><code class="docutils literal"><span class="pre">READ_FORCE_CONSTANTS</span></code></a></li>
+<li><a class="reference internal" href="#write-force-constants" id="id65"><code class="docutils literal"><span class="pre">WRITE_FORCE_CONSTANTS</span></code></a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#create-animation-file" id="id65">Create animation file</a><ul>
-<li><a class="reference internal" href="#anime-type" id="id66"><code class="docutils literal"><span class="pre">ANIME_TYPE</span></code></a></li>
-<li><a class="reference internal" href="#anime" id="id67"><code class="docutils literal"><span class="pre">ANIME</span></code></a></li>
+<li><a class="reference internal" href="#create-animation-file" id="id66">Create animation file</a><ul>
+<li><a class="reference internal" href="#anime-type" id="id67"><code class="docutils literal"><span class="pre">ANIME_TYPE</span></code></a></li>
+<li><a class="reference internal" href="#anime" id="id68"><code class="docutils literal"><span class="pre">ANIME</span></code></a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#create-modulated-structure" id="id68">Create modulated structure</a><ul>
-<li><a class="reference internal" href="#modulation" id="id69"><code class="docutils literal"><span class="pre">MODULATION</span></code></a></li>
+<li><a class="reference internal" href="#create-modulated-structure" id="id69">Create modulated structure</a><ul>
+<li><a class="reference internal" href="#modulation" id="id70"><code class="docutils literal"><span class="pre">MODULATION</span></code></a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#characters-of-irreducible-representations" id="id70">Characters of irreducible representations</a><ul>
-<li><a class="reference internal" href="#irreps" id="id71"><code class="docutils literal"><span class="pre">IRREPS</span></code></a></li>
-<li><a class="reference internal" href="#show-irreps" id="id72"><code class="docutils literal"><span class="pre">SHOW_IRREPS</span></code></a></li>
-<li><a class="reference internal" href="#little-cogroup" id="id73"><code class="docutils literal"><span class="pre">LITTLE_COGROUP</span></code></a></li>
+<li><a class="reference internal" href="#characters-of-irreducible-representations" id="id71">Characters of irreducible representations</a><ul>
+<li><a class="reference internal" href="#irreps" id="id72"><code class="docutils literal"><span class="pre">IRREPS</span></code></a></li>
+<li><a class="reference internal" href="#show-irreps" id="id73"><code class="docutils literal"><span class="pre">SHOW_IRREPS</span></code></a></li>
+<li><a class="reference internal" href="#little-cogroup" id="id74"><code class="docutils literal"><span class="pre">LITTLE_COGROUP</span></code></a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#input-output-file-control" id="id74">Input/Output file control</a><ul>
-<li><a class="reference internal" href="#fc-format-readfc-format-writefc-format" id="id75"><code class="docutils literal"><span class="pre">FC_FORMAT</span></code>,  <code class="docutils literal"><span class="pre">READFC_FORMAT</span></code>, <code class="docutils literal"><span class="pre">WRITEFC_FORMAT</span></code></a></li>
-<li><a class="reference internal" href="#band-format-mesh-format-qpoints-format" id="id76"><code class="docutils literal"><span class="pre">BAND_FORMAT</span></code>, <code class="docutils literal"><span class="pre">MESH_FORMAT</span></code>, <code class="docutils literal"><span class="pre">QPOINTS_FORMAT</span></code></a></li>
-<li><a class="reference internal" href="#hdf5" id="id77"><code class="docutils literal"><span class="pre">HDF5</span></code></a></li>
+<li><a class="reference internal" href="#input-output-file-control" id="id75">Input/Output file control</a><ul>
+<li><a class="reference internal" href="#fc-format-readfc-format-writefc-format" id="id76"><code class="docutils literal"><span class="pre">FC_FORMAT</span></code>,  <code class="docutils literal"><span class="pre">READFC_FORMAT</span></code>, <code class="docutils literal"><span class="pre">WRITEFC_FORMAT</span></code></a></li>
+<li><a class="reference internal" href="#band-format-mesh-format-qpoints-format" id="id77"><code class="docutils literal"><span class="pre">BAND_FORMAT</span></code>, <code class="docutils literal"><span class="pre">MESH_FORMAT</span></code>, <code class="docutils literal"><span class="pre">QPOINTS_FORMAT</span></code></a></li>
+<li><a class="reference internal" href="#hdf5" id="id78"><code class="docutils literal"><span class="pre">HDF5</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -592,7 +591,7 @@ probably necessary to place it between two $ characters.</p>
 BAND_LABELS = X $\Gamma$ L
 </pre></div>
 </div>
-<p><a class="reference internal" href="_images/band-labels.png"><img alt="bandlabels" src="_images/band-labels.png" style="width: 406.0px; height: 306.0px;" /></a></p>
+<p><a class="reference internal" href="_images/band-labels.png"><img alt="bandlabels" src="_images/band-labels.png" style="width: 320.0px; height: 240.0px;" /></a></p>
 <p>The colors of curves are automatically determined by matplotlib. The
 same color in a band segment shows the same kind of band. Between
 different band segments, the correspondence of colors doesn’t mean
@@ -609,7 +608,7 @@ number of points calculated in band segments by the <code class="docutils litera
 <span class="n">BAND_CONNECTION</span> <span class="o">=</span> <span class="o">.</span><span class="n">TRUE</span><span class="o">.</span>
 </pre></div>
 </div>
-<p><a class="reference internal" href="_images/band-connection.png"><img alt="bandconnection" src="_images/band-connection.png" style="width: 406.0px; height: 306.0px;" /></a></p>
+<p><a class="reference internal" href="_images/band-connection.png"><img alt="bandconnection" src="_images/band-connection.png" style="width: 320.0px; height: 240.0px;" /></a></p>
 </div>
 </div>
 <div class="section" id="mesh-sampling-tags">
@@ -1035,13 +1034,21 @@ NaCl at <span class="math">\(q=(0, 0.5, 0.5)\)</span> by</p>
 <h3><a class="toc-backref" href="#id52"><code class="docutils literal"><span class="pre">NAC</span></code></a><a class="headerlink" href="#nac" title="Permalink to this headline">¶</a></h3>
 <p>Non-analytical term correction is applied to dynamical
 matrix. <code class="docutils literal"><span class="pre">BORN</span></code> file has to be prepared in the current directory. See
-<a class="reference internal" href="input-files.html#born-file"><span class="std std-ref">BORN (optional)</span></a> and <a class="reference internal" href="formulation.html#non-analytical-term-correction-theory"><span class="std std-ref">Non-analytical term correction</span></a>.</p>
+<a class="reference internal" href="input-files.html#born-file"><span class="std std-ref">BORN (optional)</span></a> and <a class="reference internal" href="formulation.html#non-analytical-term-correction-theory"><span class="std std-ref">Non-analytical term correction</span></a>.
+The default method is <code class="docutils literal"><span class="pre">NAC_METHOD</span> <span class="pre">=</span> <span class="pre">GONZE</span></code> after v1.13.0.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">NAC</span> <span class="o">=</span> <span class="o">.</span><span class="n">TRUE</span><span class="o">.</span>
 </pre></div>
 </div>
 </div>
+<div class="section" id="nac-method">
+<span id="nac-method-tag"></span><h3><a class="toc-backref" href="#id53"><code class="docutils literal"><span class="pre">NAC_METHOD</span></code></a><a class="headerlink" href="#nac-method" title="Permalink to this headline">¶</a></h3>
+<p>The method of non-analytical term correction is chosen by this tag
+between two, <code class="docutils literal"><span class="pre">NAC_METHOD</span> <span class="pre">=</span> <span class="pre">GONZE</span></code> (<a class="reference internal" href="reference.html#reference-dp-dp-nac"><span class="std std-ref">Non-analytical term correction by dipole-dipole interaciton</span></a>) and
+<code class="docutils literal"><span class="pre">NAC_METHOD</span> <span class="pre">=</span> <span class="pre">WANG</span></code> (<a class="reference internal" href="reference.html#reference-wang-nac"><span class="std std-ref">Interpolation scheme at general q-points with non-analytical term correction</span></a>), and the default is
+the former after v1.13.0.</p>
+</div>
 <div class="section" id="q-direction">
-<h3><a class="toc-backref" href="#id53"><code class="docutils literal"><span class="pre">Q_DIRECTION</span></code></a><a class="headerlink" href="#q-direction" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id54"><code class="docutils literal"><span class="pre">Q_DIRECTION</span></code></a><a class="headerlink" href="#q-direction" title="Permalink to this headline">¶</a></h3>
 <p>This tag is used to activate NAC at
 <span class="math">\(\mathbf{q}\rightarrow\mathbf{0}\)</span>, i.e. practically
 <span class="math">\(\Gamma\)</span>-point. Away from <span class="math">\(\Gamma\)</span>-point, this setting is
@@ -1054,9 +1061,9 @@ ignored and the specified <strong>q</strong>-point is used as the <strong>q</str
 </div>
 </div>
 <div class="section" id="group-velocity">
-<span id="group-velocity-tag"></span><h2><a class="toc-backref" href="#id54">Group velocity</a><a class="headerlink" href="#group-velocity" title="Permalink to this headline">¶</a></h2>
+<span id="group-velocity-tag"></span><h2><a class="toc-backref" href="#id55">Group velocity</a><a class="headerlink" href="#group-velocity" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="id3">
-<h3><a class="toc-backref" href="#id55"><code class="docutils literal"><span class="pre">GROUP_VELOCITY</span></code></a><a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id56"><code class="docutils literal"><span class="pre">GROUP_VELOCITY</span></code></a><a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
 <p>Group velocities at q-points are calculated by using this tag. The
 group velocities are written into a yaml file corresponding to the run
 mode in Cartesian coordinates. The physical unit depends on physical
@@ -1069,27 +1076,30 @@ then the physical unit will be Angstrom THz.</p>
 <p>Technical details are shown at <a class="reference internal" href="formulation.html#group-velocity"><span class="std std-ref">Group velocity</span></a>.</p>
 </div>
 <div class="section" id="gv-delta-q">
-<h3><a class="toc-backref" href="#id56"><code class="docutils literal"><span class="pre">GV_DELTA_Q</span></code></a><a class="headerlink" href="#gv-delta-q" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id57"><code class="docutils literal"><span class="pre">GV_DELTA_Q</span></code></a><a class="headerlink" href="#gv-delta-q" title="Permalink to this headline">¶</a></h3>
 <p>The reciprocal distance used for finite difference method is
-specified. The default value is 1e-4.</p>
+specified. The default value is <code class="docutils literal"><span class="pre">1e-5</span></code> for the method of non-analytical
+term correction by Gonze <em>et al.</em>. In other case, unless this tag is
+specified, analytical derivative is used instead of the finite
+difference method.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">GV_DELTA_Q</span> <span class="o">=</span> <span class="mf">0.01</span>
 </pre></div>
 </div>
 </div>
 </div>
 <div class="section" id="symmetry">
-<h2><a class="toc-backref" href="#id57">Symmetry</a><a class="headerlink" href="#symmetry" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id58">Symmetry</a><a class="headerlink" href="#symmetry" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="symmetry-tag">
-<span id="id4"></span><h3><a class="toc-backref" href="#id58"><code class="docutils literal"><span class="pre">SYMMETRY</span></code></a><a class="headerlink" href="#symmetry-tag" title="Permalink to this headline">¶</a></h3>
+<span id="id4"></span><h3><a class="toc-backref" href="#id59"><code class="docutils literal"><span class="pre">SYMMETRY</span></code></a><a class="headerlink" href="#symmetry-tag" title="Permalink to this headline">¶</a></h3>
 <p>P1 symmetry is enforced to the input unit cell by setting <code class="docutils literal"><span class="pre">SYMMETRY</span> <span class="pre">=</span> <span class="pre">.FALSE</span></code>.</p>
 </div>
 <div class="section" id="mesh-symmetry">
-<span id="nomeshsym-tag"></span><h3><a class="toc-backref" href="#id59"><code class="docutils literal"><span class="pre">MESH_SYMMETRY</span></code></a><a class="headerlink" href="#mesh-symmetry" title="Permalink to this headline">¶</a></h3>
+<span id="nomeshsym-tag"></span><h3><a class="toc-backref" href="#id60"><code class="docutils literal"><span class="pre">MESH_SYMMETRY</span></code></a><a class="headerlink" href="#mesh-symmetry" title="Permalink to this headline">¶</a></h3>
 <p>Symmetry search on the reciprocal sampling mesh is disabled by setting
 <code class="docutils literal"><span class="pre">MESH_SYMMETRY</span> <span class="pre">=</span> <span class="pre">.FALSE.</span></code>.</p>
 </div>
 <div class="section" id="fc-symmetry">
-<span id="fc-symmetry-tag"></span><h3><a class="toc-backref" href="#id60"><code class="docutils literal"><span class="pre">FC_SYMMETRY</span></code></a><a class="headerlink" href="#fc-symmetry" title="Permalink to this headline">¶</a></h3>
+<span id="fc-symmetry-tag"></span><h3><a class="toc-backref" href="#id61"><code class="docutils literal"><span class="pre">FC_SYMMETRY</span></code></a><a class="headerlink" href="#fc-symmetry" title="Permalink to this headline">¶</a></h3>
 <p><strong>Changed at v1.12.3</strong></p>
 <p>Previously this tag required a number for the iteration. From version
 1.12.3, the way of symmetrization for translation invariance is
@@ -1118,9 +1128,9 @@ use <code class="docutils literal"><span class="pre">FC_SYMMETRY</span></code>.<
 </div>
 </div>
 <div class="section" id="force-constants">
-<span id="force-constants-tag"></span><h2><a class="toc-backref" href="#id61">Force constants</a><a class="headerlink" href="#force-constants" title="Permalink to this headline">¶</a></h2>
+<span id="force-constants-tag"></span><h2><a class="toc-backref" href="#id62">Force constants</a><a class="headerlink" href="#force-constants" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="id5">
-<h3><a class="toc-backref" href="#id62"><code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span></code></a><a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id63"><code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span></code></a><a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">FORCE_CONSTANTS</span> <span class="o">=</span> <span class="n">READ</span>
 </pre></div>
 </div>
@@ -1133,20 +1143,20 @@ and <code class="docutils literal"><span class="pre">.FALSE.</span></code>. The 
 <a class="reference internal" href="input-files.html#file-force-constants"><span class="std std-ref">here</span></a>.</p>
 </div>
 <div class="section" id="read-force-constants">
-<h3><a class="toc-backref" href="#id63"><code class="docutils literal"><span class="pre">READ_FORCE_CONSTANTS</span></code></a><a class="headerlink" href="#read-force-constants" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id64"><code class="docutils literal"><span class="pre">READ_FORCE_CONSTANTS</span></code></a><a class="headerlink" href="#read-force-constants" title="Permalink to this headline">¶</a></h3>
 <p><code class="docutils literal"><span class="pre">READ_FORCE_CONSTANTS</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code> is equivalent to <code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span> <span class="pre">=</span>
 <span class="pre">READ</span></code>.</p>
 </div>
 <div class="section" id="write-force-constants">
-<h3><a class="toc-backref" href="#id64"><code class="docutils literal"><span class="pre">WRITE_FORCE_CONSTANTS</span></code></a><a class="headerlink" href="#write-force-constants" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id65"><code class="docutils literal"><span class="pre">WRITE_FORCE_CONSTANTS</span></code></a><a class="headerlink" href="#write-force-constants" title="Permalink to this headline">¶</a></h3>
 <p><code class="docutils literal"><span class="pre">WRITE_FORCE_CONSTANTS</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code> is equivalent to <code class="docutils literal"><span class="pre">FORCE_CONSTANTS</span> <span class="pre">=</span>
 <span class="pre">WRITE</span></code>.</p>
 </div>
 </div>
 <div class="section" id="create-animation-file">
-<span id="animation-tag"></span><h2><a class="toc-backref" href="#id65">Create animation file</a><a class="headerlink" href="#create-animation-file" title="Permalink to this headline">¶</a></h2>
+<span id="animation-tag"></span><h2><a class="toc-backref" href="#id66">Create animation file</a><a class="headerlink" href="#create-animation-file" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="anime-type">
-<h3><a class="toc-backref" href="#id66"><code class="docutils literal"><span class="pre">ANIME_TYPE</span></code></a><a class="headerlink" href="#anime-type" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id67"><code class="docutils literal"><span class="pre">ANIME_TYPE</span></code></a><a class="headerlink" href="#anime-type" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">ANIME_TYPE</span> <span class="o">=</span> <span class="n">JMOL</span>
 </pre></div>
 </div>
@@ -1159,8 +1169,8 @@ animation images are created such as <code class="docutils literal"><span class=
 <p>There are several parameters to be set in the <code class="docutils literal"><span class="pre">ANIME</span></code> tag.</p>
 </div>
 <div class="section" id="anime">
-<h3><a class="toc-backref" href="#id67"><code class="docutils literal"><span class="pre">ANIME</span></code></a><a class="headerlink" href="#anime" title="Permalink to this headline">¶</a></h3>
-<p><strong>The format of “ANIME“ tag was modified after ver. 0.9.3.3.</strong></p>
+<h3><a class="toc-backref" href="#id68"><code class="docutils literal"><span class="pre">ANIME</span></code></a><a class="headerlink" href="#anime" title="Permalink to this headline">¶</a></h3>
+<p><strong>The format of ``ANIME`` tag was modified after ver. 0.9.3.3.</strong></p>
 <div class="section" id="for-v-sim">
 <h4>For v_sim<a class="headerlink" href="#for-v-sim" title="Permalink to this headline">¶</a></h4>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">ANIME</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="mf">0.5</span> <span class="mi">0</span>
@@ -1203,9 +1213,9 @@ however dummy values, e.g. 0, are required.</p>
 </div>
 </div>
 <div class="section" id="create-modulated-structure">
-<span id="modulation-tag"></span><h2><a class="toc-backref" href="#id68">Create modulated structure</a><a class="headerlink" href="#create-modulated-structure" title="Permalink to this headline">¶</a></h2>
+<span id="modulation-tag"></span><h2><a class="toc-backref" href="#id69">Create modulated structure</a><a class="headerlink" href="#create-modulated-structure" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="modulation">
-<h3><a class="toc-backref" href="#id69"><code class="docutils literal"><span class="pre">MODULATION</span></code></a><a class="headerlink" href="#modulation" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id70"><code class="docutils literal"><span class="pre">MODULATION</span></code></a><a class="headerlink" href="#modulation" title="Permalink to this headline">¶</a></h3>
 <p>The <code class="docutils literal"><span class="pre">MODULATION</span></code> tag is used to create a crystal structure with
 displacements along normal modes at q-point in the specified supercell
 dimension.</p>
@@ -1262,9 +1272,9 @@ vector is shown in <code class="docutils literal"><span class="pre">modulation.y
 </div>
 </div>
 <div class="section" id="characters-of-irreducible-representations">
-<span id="irreducible-representation-related-tags"></span><h2><a class="toc-backref" href="#id70">Characters of irreducible representations</a><a class="headerlink" href="#characters-of-irreducible-representations" title="Permalink to this headline">¶</a></h2>
+<span id="irreducible-representation-related-tags"></span><h2><a class="toc-backref" href="#id71">Characters of irreducible representations</a><a class="headerlink" href="#characters-of-irreducible-representations" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="irreps">
-<span id="irreps-tag"></span><h3><a class="toc-backref" href="#id71"><code class="docutils literal"><span class="pre">IRREPS</span></code></a><a class="headerlink" href="#irreps" title="Permalink to this headline">¶</a></h3>
+<span id="irreps-tag"></span><h3><a class="toc-backref" href="#id72"><code class="docutils literal"><span class="pre">IRREPS</span></code></a><a class="headerlink" href="#irreps" title="Permalink to this headline">¶</a></h3>
 <p>Characters of irreducible representations (IRs) of phonon modes are
 shown. For this calculation, a primitive cell has to be used. If the
 input unit cell is a non-primitive cell, it has to be transformed to a
@@ -1281,7 +1291,7 @@ the fourth value in the frequency unit that the user specified.</p>
 the symbols of the IRs and the rotation operations are shown.</p>
 </div>
 <div class="section" id="show-irreps">
-<h3><a class="toc-backref" href="#id72"><code class="docutils literal"><span class="pre">SHOW_IRREPS</span></code></a><a class="headerlink" href="#show-irreps" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id73"><code class="docutils literal"><span class="pre">SHOW_IRREPS</span></code></a><a class="headerlink" href="#show-irreps" title="Permalink to this headline">¶</a></h3>
 <p>Irreducible representations are shown along with character table.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">IRREPS</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="mi">3</span> <span class="mi">1</span><span class="o">/</span><span class="mi">3</span> <span class="mi">0</span>
 <span class="n">SHOW_IRREPS</span> <span class="o">=</span> <span class="o">.</span><span class="n">TRUE</span><span class="o">.</span>
@@ -1289,7 +1299,7 @@ the symbols of the IRs and the rotation operations are shown.</p>
 </div>
 </div>
 <div class="section" id="little-cogroup">
-<h3><a class="toc-backref" href="#id73"><code class="docutils literal"><span class="pre">LITTLE_COGROUP</span></code></a><a class="headerlink" href="#little-cogroup" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id74"><code class="docutils literal"><span class="pre">LITTLE_COGROUP</span></code></a><a class="headerlink" href="#little-cogroup" title="Permalink to this headline">¶</a></h3>
 <p>Show irreps of little co-group (point-group of wavevector) instead of
 little group.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">IRREPS</span> <span class="o">=</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">1</span><span class="o">/</span><span class="mi">8</span>
@@ -1299,9 +1309,9 @@ little group.</p>
 </div>
 </div>
 <div class="section" id="input-output-file-control">
-<h2><a class="toc-backref" href="#id74">Input/Output file control</a><a class="headerlink" href="#input-output-file-control" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id75">Input/Output file control</a><a class="headerlink" href="#input-output-file-control" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="fc-format-readfc-format-writefc-format">
-<span id="fc-format-tag"></span><h3><a class="toc-backref" href="#id75"><code class="docutils literal"><span class="pre">FC_FORMAT</span></code>,  <code class="docutils literal"><span class="pre">READFC_FORMAT</span></code>, <code class="docutils literal"><span class="pre">WRITEFC_FORMAT</span></code></a><a class="headerlink" href="#fc-format-readfc-format-writefc-format" title="Permalink to this headline">¶</a></h3>
+<span id="fc-format-tag"></span><h3><a class="toc-backref" href="#id76"><code class="docutils literal"><span class="pre">FC_FORMAT</span></code>,  <code class="docutils literal"><span class="pre">READFC_FORMAT</span></code>, <code class="docutils literal"><span class="pre">WRITEFC_FORMAT</span></code></a><a class="headerlink" href="#fc-format-readfc-format-writefc-format" title="Permalink to this headline">¶</a></h3>
 <p>There are two file-formats to store force constants. Currently
 <a class="reference internal" href="input-files.html#file-force-constants"><span class="std std-ref">text style</span></a> (<code class="docutils literal"><span class="pre">TEXT</span></code>) and hdf5 (<code class="docutils literal"><span class="pre">HDF5</span></code>)
 formats are supported. The default file format is the <a class="reference internal" href="input-files.html#file-force-constants"><span class="std std-ref">text
@@ -1323,7 +1333,7 @@ convert force constants format is possible:</p>
 </div>
 </div>
 <div class="section" id="band-format-mesh-format-qpoints-format">
-<span id="band-format-tag"></span><h3><a class="toc-backref" href="#id76"><code class="docutils literal"><span class="pre">BAND_FORMAT</span></code>, <code class="docutils literal"><span class="pre">MESH_FORMAT</span></code>, <code class="docutils literal"><span class="pre">QPOINTS_FORMAT</span></code></a><a class="headerlink" href="#band-format-mesh-format-qpoints-format" title="Permalink to this headline">¶</a></h3>
+<span id="band-format-tag"></span><h3><a class="toc-backref" href="#id77"><code class="docutils literal"><span class="pre">BAND_FORMAT</span></code>, <code class="docutils literal"><span class="pre">MESH_FORMAT</span></code>, <code class="docutils literal"><span class="pre">QPOINTS_FORMAT</span></code></a><a class="headerlink" href="#band-format-mesh-format-qpoints-format" title="Permalink to this headline">¶</a></h3>
 <p>There are two file-formats to write the results of band structure,
 mesh, and q-points calculations. Currently YAML (<code class="docutils literal"><span class="pre">YAML</span></code>) and hdf5
 (<code class="docutils literal"><span class="pre">HDF5</span></code>) formats are supported. The default file format is the YAML
@@ -1339,7 +1349,7 @@ format. The file format is changed as follows:</p>
 </div>
 </div>
 <div class="section" id="hdf5">
-<span id="hdf5-tag"></span><h3><a class="toc-backref" href="#id77"><code class="docutils literal"><span class="pre">HDF5</span></code></a><a class="headerlink" href="#hdf5" title="Permalink to this headline">¶</a></h3>
+<span id="hdf5-tag"></span><h3><a class="toc-backref" href="#id78"><code class="docutils literal"><span class="pre">HDF5</span></code></a><a class="headerlink" href="#hdf5" title="Permalink to this headline">¶</a></h3>
 <p><strong>This tag is deprecated.</strong></p>
 <p>The following output files are written in hdf5 format instead of their
 original formats (in parenthesis) by <code class="docutils literal"><span class="pre">HDF5</span> <span class="pre">=</span> <span class="pre">.TRUE.</span></code>.  In addition,
@@ -1406,7 +1416,7 @@ calculation results are written into <code class="docutils literal"><span class=
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.2.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.6.<br/>
     </p>
   </div>
 </footer>

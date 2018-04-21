@@ -3,16 +3,13 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>References &#8212; Phonopy v.1.12.6</title>
-    
+    <title>References &#8212; Phonopy v.1.13.0</title>
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.12.6',
+        VERSION:     '1.13.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -22,7 +19,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
     <script type="text/javascript" src="_static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
@@ -50,7 +47,7 @@
         </button>
         <a class="navbar-brand" href="index.html">
           Phonopy</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.12.6</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.13.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -107,6 +104,7 @@
 <li><a class="reference internal" href="#parlinski-li-kawazoe-method">Parlinski-Li-Kawazoe method</a></li>
 <li><a class="reference internal" href="#thermal-expansion-using-quasi-harmonic-approximation">Thermal expansion using quasi-harmonic approximation</a></li>
 <li><a class="reference internal" href="#non-analytical-term-correction">Non-analytical term correction</a></li>
+<li><a class="reference internal" href="#non-analytical-term-correction-by-dipole-dipole-interaciton">Non-analytical term correction by dipole-dipole interaciton</a></li>
 <li><a class="reference internal" href="#interpolation-scheme-at-general-q-points-with-non-analytical-term-correction">Interpolation scheme at general <em>q</em>-points with non-analytical term correction</a></li>
 </ul>
 </li>
@@ -220,16 +218,25 @@ generated macroscopic field changes force constants near
 non-analytical term correction.</p>
 <ul class="simple">
 <li>R. M. Pick, M. H. Cohen, and R. M. Martin, Phys. Rev. B 1, 910, (1970)</li>
-<li>P. Giannozzi, S. Degironcoli, P. Pavone, and S. Baroni,  Phys. Rev. B 43, 7231 (1991)</li>
+</ul>
+</div>
+<div class="section" id="non-analytical-term-correction-by-dipole-dipole-interaciton">
+<span id="reference-dp-dp-nac"></span><h3>Non-analytical term correction by dipole-dipole interaciton<a class="headerlink" href="#non-analytical-term-correction-by-dipole-dipole-interaciton" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>P. Giannozzi, S. Degironcoli, P. Pavone, and S. Baroni,
+Phys. Rev. B 43, 7231 (1991)</li>
+<li>X. Gonze, J.-C. Charlier, D.C. Allan, and M.P. Teter
+Phys. Rev. B 50, 13035(R) (1994)</li>
 <li>X. Gonze, and C. Lee, Phys. Rev. B 55, 10355 (1997)</li>
 </ul>
+<p>Currently phonopy employs the method by Gonze <em>et al.</em> written in the
+above two papers as the default method.</p>
 </div>
 <div class="section" id="interpolation-scheme-at-general-q-points-with-non-analytical-term-correction">
 <span id="reference-wang-nac"></span><h3>Interpolation scheme at general <em>q</em>-points with non-analytical term correction<a class="headerlink" href="#interpolation-scheme-at-general-q-points-with-non-analytical-term-correction" title="Permalink to this headline">¶</a></h3>
-<p>The above non-anarytical term correction can be applied only at
-<span class="math">\(\mathbf{q}\rightarrow \mathbf{0}\)</span>. To connect smoothly to
-general <strong>q</strong> points, the following interpolation scheme is employed
-in phonopy (<a class="reference internal" href="setting-tags.html#nac-tag"><span class="std std-ref">Non-analytical term correction</span></a>).</p>
+<p>This is an interpolation scheme using phonons at
+<span class="math">\(\mathbf{q}\rightarrow \mathbf{0}\)</span> with the correction by Pick
+<em>et al.</em> and other commensurate points.</p>
 <ul class="simple">
 <li>Y. Wang , J. J. Wang , W. Y. Wang , Z. G. Mei , S. L. Shang , L. Q. Chen and
 Z K Liu, J. Phys.: Condens. Matter. 22, 202201 (2010)</li>
@@ -295,7 +302,7 @@ university press</li>
     </p>
     <p>
         &copy; Copyright 2009, Atsushi Togo.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.2.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.6.<br/>
     </p>
   </div>
 </footer>
