@@ -51,6 +51,7 @@ static PyObject * py_transform_dynmat_to_fc(PyObject *self, PyObject *args);
 static PyObject * py_perm_trans_symmetrize_fc(PyObject *self, PyObject *args);
 static PyObject *
 py_perm_trans_symmetrize_compact_fc(PyObject *self, PyObject *args);
+static PyObject * py_transpose_compact_fc(PyObject *self, PyObject *args);
 static PyObject * py_get_dynamical_matrix(PyObject *self, PyObject *args);
 static PyObject * py_get_nac_dynamical_matrix(PyObject *self, PyObject *args);
 static PyObject * py_get_dipole_dipole(PyObject *self, PyObject *args);
@@ -158,6 +159,9 @@ static PyMethodDef _phonopy_methods[] = {
   {"perm_trans_symmetrize_compact_fc", py_perm_trans_symmetrize_compact_fc,
    METH_VARARGS,
    "Enforce permutation and translational symmetry of compact force constants"},
+  {"transpose_compact_fc", py_transpose_compact_fc,
+   METH_VARARGS,
+   "Transpose compact force constants"},
   {"dynamical_matrix", py_get_dynamical_matrix, METH_VARARGS,
    "Dynamical matrix"},
   {"nac_dynamical_matrix", py_get_nac_dynamical_matrix, METH_VARARGS,
@@ -496,6 +500,66 @@ py_perm_trans_symmetrize_compact_fc(PyObject *self, PyObject *args)
                                             n_patom,
                                             0);
   set_translational_symmetry_compact_fc(fc, p2s, n_satom, n_patom);
+
+  free(nsym_list);
+  nsym_list = NULL;
+  free(s2pp);
+  s2pp = NULL;
+
+  Py_RETURN_NONE;
+}
+
+static PyObject * py_transpose_compact_fc(PyObject *self, PyObject *args)
+{
+  PyArrayObject* py_fc;
+  PyArrayObject* py_permutations;
+  PyArrayObject* py_s2p_map;
+  PyArrayObject* py_p2s_map;
+  double *fc;
+  int *s2p;
+  int *p2s;
+  int *perms;
+  int n_patom, n_satom, nsym;
+  int *nsym_list, *s2pp;
+
+  if (!PyArg_ParseTuple(args, "OOOO",
+                        &py_fc,
+                        &py_permutations,
+                        &py_s2p_map,
+                        &py_p2s_map)) {
+    return NULL;
+  }
+
+  fc = (double*)PyArray_DATA(py_fc);
+  perms = (int*)PyArray_DATA(py_permutations);
+  s2p = (int*)PyArray_DATA(py_s2p_map);
+  p2s = (int*)PyArray_DATA(py_p2s_map);
+  n_patom = PyArray_DIMS(py_fc)[0];
+  n_satom = PyArray_DIMS(py_fc)[1];
+  nsym = PyArray_DIMS(py_permutations)[0];
+
+  nsym_list = NULL;
+  s2pp = NULL;
+
+  nsym_list = (int*) malloc(sizeof(int) * n_satom);
+  s2pp = (int*) malloc(sizeof(int) * n_satom);
+  set_nsym_list_and_s2pp(nsym_list,
+                         s2pp,
+                         s2p,
+                         p2s,
+                         perms,
+                         n_satom,
+                         n_patom,
+                         nsym);
+
+  set_index_permutation_symmetry_compact_fc(fc,
+                                            p2s,
+                                            s2pp,
+                                            nsym_list,
+                                            perms,
+                                            n_satom,
+                                            n_patom,
+                                            1);
 
   free(nsym_list);
   nsym_list = NULL;

@@ -647,6 +647,120 @@ def _get_smallest_vectors(supercell, primitive, symprec):
 
     return shortest_vectors, multiplicity
 
+def compute_all_sg_permutations(positions, # scaled positions
+                                rotations, # scaled
+                                translations, # scaled
+                                lattice, # column vectors
+                                symprec):
+    """Compute a permutation for every space group operation.
+
+    See '_compute_permutation_for_rotation' for more info.
+
+    Output has shape (num_rot, num_pos)
+
+    """
+
+    out = [] # Finally the shape is fixed as (num_sym, num_pos_of_supercell).
+    for (sym, t) in zip(rotations, translations):
+        rotated_positions = np.dot(positions, sym.T) + t
+        out.append(compute_permutation_for_rotation(positions,
+                                                    rotated_positions,
+                                                    lattice,
+                                                    symprec))
+    return np.array(out, dtype='intc', order='C')
+
+def compute_permutation_for_rotation(positions_a, # scaled positions
+                                     positions_b,
+                                     lattice, # column vectors
+                                     symprec):
+    """Get the overall permutation such that
+
+        positions_a[perm[i]] == positions_b[i]   (modulo the lattice)
+
+    or in numpy speak,
+
+        positions_a[perm] == positions_b   (modulo the lattice)
+
+    This version is optimized for the case where positions_a and positions_b
+    are related by a rotation.
+
+    """
+
+    # Sort both sides by some measure which is likely to produce a small
+    # maximum value of (sorted_rotated_index - sorted_original_index).
+    # The C code is optimized for this case, reducing an O(n^2)
+    # search down to ~O(n). (for O(n log n) work overall, including the sort)
+    #
+    # We choose distance from the nearest bravais lattice point as our measure.
+    def sort_by_lattice_distance(fracs):
+        carts = np.dot(fracs - np.rint(fracs), lattice.T)
+        perm = np.argsort(np.sum(carts**2, axis=1))
+        sorted_fracs = np.array(fracs[perm], dtype='double', order='C')
+        return perm, sorted_fracs
+
+    (perm_a, sorted_a) = sort_by_lattice_distance(positions_a)
+    (perm_b, sorted_b) = sort_by_lattice_distance(positions_b)
+
+    # Call the C code on our conditioned inputs.
+    perm_between = _compute_permutation_c(sorted_a,
+                                          sorted_b,
+                                          lattice,
+                                          symprec)
+
+    # Compose all of the permutations for the full permutation.
+    #
+    # Note the following properties of permutation arrays:
+    #
+    # 1. Inverse:         if  x[perm] == y  then  x == y[argsort(perm)]
+    # 2. Associativity:   x[p][q] == x[p[q]]
+    return perm_a[perm_between][np.argsort(perm_b)]
+
+def _compute_permutation_c(positions_a, # scaled positions
+                           positions_b,
+                           lattice, # column vectors
+                           symprec):
+    """Version of '_compute_permutation_for_rotation' which just directly
+    calls the C function, without any conditioning of the data.
+    Skipping the conditioning step makes this EXTREMELY slow on large
+    structures.
+
+    """
+
+    permutation = np.zeros(shape=(len(positions_a),), dtype='intc')
+
+    def permutation_error():
+        raise ValueError("Input forces are not enough to calculate force constants, "
+                         "or something wrong (e.g. crystal structure does not match).")
+
+    try:
+        import phonopy._phonopy as phonoc
+        is_found = phonoc.compute_permutation(permutation,
+                                              lattice,
+                                              positions_a,
+                                              positions_b,
+                                              symprec)
+
+        if not is_found:
+            permutation_error()
+
+    except ImportError:
+        for i, pos_b in enumerate(positions_b):
+            diffs = positions_a - pos_b
+            diffs -= np.rint(diffs)
+            diffs = np.dot(diffs, lattice.T)
+
+            possible_j = np.nonzero(
+                np.sqrt(np.sum(diffs**2, axis=1)) < symprec)[0]
+            if len(possible_j) != 1:
+                permutation_error()
+
+            permutation[i] = possible_j[0]
+
+        if -1 in permutation:
+            permutation_error()
+
+    return permutation
+
 #
 # Other tiny tools
 #

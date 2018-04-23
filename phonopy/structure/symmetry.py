@@ -35,7 +35,8 @@
 import sys
 import numpy as np
 import phonopy.structure.spglib as spg
-from phonopy.structure.cells import get_primitive, get_supercell
+from phonopy.structure.cells import (get_primitive, get_supercell,
+                                     compute_all_sg_permutations)
 from phonopy.structure.atoms import PhonopyAtoms as Atoms
 from phonopy.harmonic.force_constants import similarity_transformation
 
@@ -49,6 +50,7 @@ class Symmetry(object):
         self._dataset = None
         self._wyckoff_letters = None
         self._map_atoms = None
+        self._atomic_permutations = None
 
         magmom = cell.get_magnetic_moments()
         if type(magmom) is np.ndarray:
@@ -91,8 +93,6 @@ class Symmetry(object):
         return self._wyckoff_letters
 
     def get_dataset(self):
-        """Detail of dataset is found in spglib.get_symmetry_dataset.
-        """
         return self._dataset
 
     def get_independent_atoms(self):
@@ -130,6 +130,21 @@ class Symmetry(object):
         This is transpose of that shown in ITA (q' = qR).
         """
         return self._reciprocal_operations
+
+    def get_atomic_permutations(self):
+        if self._atomic_permutations is None:
+            positions = self._cell.get_scaled_positions()
+            lattice = np.array(self._cell.get_cell().T, dtype='double', order='C')
+            rotations = self._symmetry_operations['rotations']
+            translations = self._symmetry_operations['translations']
+            self._atomic_permutations = compute_all_sg_permutations(
+                positions, # scaled positions
+                rotations, # scaled
+                translations, # scaled
+                lattice, # column vectors
+                self._symprec)
+
+        return self._atomic_permutations
 
     def _get_pointgroup_operations(self, rotations):
         ptg_ops = []
@@ -279,6 +294,7 @@ class Symmetry(object):
             'translations': np.array(translations, dtype='double')}
         self._international_table = 'P1 (1)'
         self._wyckoff_letters = ['a'] * self._cell.get_number_of_atoms()
+
 
 def find_primitive(cell, symprec=1e-5):
     """
