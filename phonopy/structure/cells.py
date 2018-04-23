@@ -73,19 +73,45 @@ def print_cell(cell, mapping=None, stars=None):
             print(line + " > %d" % (mapping[i] + 1))
 
 class Supercell(Atoms):
-    """Build supercell from supercell matrix
-    In this function, unit cell is considered
-    [1,0,0]
-    [0,1,0]
-    [0,0,1].
-    Supercell matrix is given by relative ratio, e.g,
-    [-1, 1, 1]
-    [ 1,-1, 1]  is for FCC from simple cubic.
-    [ 1, 1,-1]
-    In this case multiplicities of surrounding simple lattice are [2,2,2].
+    """Build supercell from supercell matrix and unit cell
 
+    Note
+    ----
+
+    ``is_old_style=True`` invokes the following algorithm.
+    In this function, unit cell is considered
+      [1,0,0]
+      [0,1,0]
+      [0,0,1].
+    Supercell matrix is given by relative ratio, e.g,
+      [-1, 1, 1]
+      [ 1,-1, 1]  is for FCC from simple cubic.
+      [ 1, 1,-1].
+    In this case multiplicities of surrounding simple lattice are [2,2,2].
     First, create supercell with surrounding simple lattice.
     Second, trim the surrounding supercell with the target lattice.
+
+    ``is_old_style=False`` calls the Smith normal form.
+
+    These two algorithm may order atoms in different ways. So for the
+    backward compatibitily, ``is_old_style=True`` is the default
+    option. However the Smith normal form shows far better performance
+    in case of very large supercell multiplicities.
+
+    Parameters
+    ----------
+    unitcell: PhonopyAtoms
+        Unit cell
+    supercell_matrix: ndarray or list of list
+        Transformation matrix from unit cell to supercell. The
+        elements have to be integers.
+        shape=(3,3)
+    is_old_stype: bool
+        This swithes the algorithms. See Note.
+    symprec: float, optional
+        Tolerance to find overlapping atoms in supercell cell. The default
+        values is 1e-5.
+
     """
 
     def __init__(self,
@@ -243,7 +269,6 @@ class Primitive(Atoms):
 
     Parameters
     ----------
-
     supercell: PhonopyAtoms
         Supercell
     primitive_matrix: list of list or ndarray
@@ -333,7 +358,6 @@ def _trim_cell(relative_axes, cell, symprec):
 
     Parameters
     ----------
-
     relative_axes: ndarray
         Transformation matrix to transform supercell to a smaller cell such as::
             trimmed_lattice = np.dot(relative_axes.T, cell.get_cell())
@@ -342,6 +366,11 @@ def _trim_cell(relative_axes, cell, symprec):
         A supercell
     symprec: float
         Tolerance to find overlapping atoms in the trimmed cell
+
+    Returns
+    -------
+    tuple
+        trimmed_cell, extracted_atoms, mapping_table
 
     """
     positions = cell.get_scaled_positions()
@@ -418,7 +447,6 @@ def get_reduced_bases(lattice,
 
     Parameters
     ----------
-
     lattice: ndarray or list of list
         Basis vectors by row vectors, [a, b, c]^T
         shape=(3,3)
@@ -430,7 +458,6 @@ def get_reduced_bases(lattice,
 
     Returns
     --------
-
     Reduced basis as row vectors, [a_red, b_red, c_red]^T
 
     """
@@ -508,7 +535,6 @@ def _get_smallest_vectors(supercell, primitive, symprec):
 
     Note
     ----
-
     Shortest vectors from an atom in primitive cell to an atom in
     supercell in the fractional coordinates of primitive cell. If an
     atom in supercell is on the border centered at an atom in
