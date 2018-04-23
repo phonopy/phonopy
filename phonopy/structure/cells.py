@@ -409,17 +409,30 @@ def _trim_cell(relative_axes, cell, symprec):
         return False
 
 #
-# Delaunay reduction
+# Delaunay and Niggli reductions
 #
 def get_reduced_bases(lattice,
                       method='delaunay',
                       tolerance=1e-5):
-    """Apply reduction to basis vectors
+    """Search kinds of shortest basis vectors
 
-    args:
-        basis as row vectors, [a, b, c]^T
-    return:
-         reduced basin as row vectors, [a_red, b_red, c_red]^T
+    Parameters
+    ----------
+
+    lattice: ndarray or list of list
+        Basis vectors by row vectors, [a, b, c]^T
+        shape=(3,3)
+    method: str
+        delaunay: Delaunay reduction
+        niggli: Niggli reduction
+    tolerance: float
+        Tolerance to find shortest basis vecotrs
+
+    Returns
+    --------
+
+    Reduced basis as row vectors, [a_red, b_red, c_red]^T
+
     """
 
     if method == 'niggli':
@@ -491,20 +504,41 @@ def _get_equivalent_smallest_vectors_simple(frac_vector,
     return candidates[lengths - lengths.min() < symprec]
 
 def _get_smallest_vectors(supercell, primitive, symprec):
-    """
-    shortest_vectors:
+    """Find shortest atomic pair vectors
 
-      Shortest vectors from an atom in primitive cell to an atom in
-      supercell in the fractional coordinates. If an atom in supercell
-      is on the border centered at an atom in primitive and there are
-      multiple vectors that have the same distance and different
-      directions, several shortest vectors are stored. The
-      multiplicity is stored in another array, "multiplicity".
-      [atom_super, atom_primitive, multiple-vectors, 3]
+    Note
+    ----
 
-    multiplicity:
-      Number of multiple shortest vectors (third index of "shortest_vectors")
-      [atom_super, atom_primitive]
+    Shortest vectors from an atom in primitive cell to an atom in
+    supercell in the fractional coordinates of primitive cell. If an
+    atom in supercell is on the border centered at an atom in
+    primitive and there are multiple vectors that have the same
+    distance (up to tolerance) and different directions, several
+    shortest vectors are stored. The multiplicity is stored in another
+    array, "multiplicity".  (size_super, size_prim, multiple-vectors,
+    3)
+
+    Parameters
+    ----------
+    supercell: Supercell
+        Supercell
+    primitive: Primitive
+        Primitive cell
+    symprec: float
+        Tolerance to find equal distances of vectors
+
+    Returns
+    -------
+    tuple
+        (shortest_vectors, multiplicities)
+        shortest_vectors: ndarray
+            Shortest vectors (see Note). The 27 in shape is the possible
+            maximum number of elements.
+            shape=(size_super, size_prim, 27, 3)
+        multiplicities: ndarray
+            Number of equidistance shortest vectors
+            shape=(size_super, size_prim)
+
     """
 
     # useful data from arguments
