@@ -34,7 +34,7 @@
 
 import numpy as np
 import phonopy.structure.spglib as spg
-from phonopy.structure.atoms import PhonopyAtoms as Atoms
+from phonopy.structure.atoms import PhonopyAtoms
 
 def get_supercell(unitcell, supercell_matrix, is_old_style=True, symprec=1e-5):
     return Supercell(unitcell,
@@ -72,7 +72,7 @@ def print_cell(cell, mapping=None, stars=None):
         else:
             print(line + " > %d" % (mapping[i] + 1))
 
-class Supercell(Atoms):
+class Supercell(PhonopyAtoms):
     """Build supercell from supercell matrix and unit cell
 
     Note
@@ -176,15 +176,16 @@ class Supercell(Atoms):
             print("Probably some atoms are overwrapped. "
                   "The mapping table is give below.")
             print(mapping_table)
-            Atoms.__init__(self)
+            PhonopyAtoms.__init__(self)
         else:
-            Atoms.__init__(self,
-                           numbers=supercell.get_atomic_numbers(),
-                           masses=supercell.get_masses(),
-                           magmoms=supercell.get_magnetic_moments(),
-                           scaled_positions=supercell.get_scaled_positions(),
-                           cell=supercell.get_cell(),
-                           pbc=True)
+            PhonopyAtoms.__init__(
+                self,
+                numbers=supercell.get_atomic_numbers(),
+                masses=supercell.get_masses(),
+                magmoms=supercell.get_magnetic_moments(),
+                scaled_positions=supercell.get_scaled_positions(),
+                cell=supercell.get_cell(),
+                pbc=True)
             self._u2s_map = np.arange(num_uatom) * N
             self._u2u_map = dict([(j, i) for i, j in enumerate(self._u2s_map)])
             self._s2u_map = np.array(u2sur_map)[sur2s_map] * N
@@ -236,12 +237,12 @@ class Supercell(Atoms):
         else:
             magmoms_multi = np.repeat(magmoms, n_l)
 
-        simple_supercell = Atoms(numbers=numbers_multi,
-                                 masses=masses_multi,
-                                 magmoms=magmoms_multi,
-                                 scaled_positions=positions_multi,
-                                 cell=np.dot(mat, lattice),
-                                 pbc=True)
+        simple_supercell = PhonopyAtoms(numbers=numbers_multi,
+                                        masses=masses_multi,
+                                        magmoms=magmoms_multi,
+                                        scaled_positions=positions_multi,
+                                        cell=np.dot(mat, lattice),
+                                        pbc=True)
 
         return simple_supercell, atom_map
 
@@ -264,7 +265,7 @@ class Supercell(Atoms):
         frame = [max(axes[:,i]) - min(axes[:,i]) for i in (0,1,2)]
         return frame
 
-class Primitive(Atoms):
+class Primitive(PhonopyAtoms):
     """Primitive cell
 
     Parameters
@@ -314,13 +315,14 @@ class Primitive(Atoms):
                                    self._symprec)
         if trimmed_cell_:
             trimmed_cell, p2s_map, mapping_table = trimmed_cell_
-            Atoms.__init__(self,
-                           numbers=trimmed_cell.get_atomic_numbers(),
-                           masses=trimmed_cell.get_masses(),
-                           magmoms=trimmed_cell.get_magnetic_moments(),
-                           scaled_positions=trimmed_cell.get_scaled_positions(),
-                           cell=trimmed_cell.get_cell(),
-                           pbc=True)
+            PhonopyAtoms.__init__(
+                self,
+                numbers=trimmed_cell.get_atomic_numbers(),
+                masses=trimmed_cell.get_masses(),
+                magmoms=trimmed_cell.get_magnetic_moments(),
+                scaled_positions=trimmed_cell.get_scaled_positions(),
+                cell=trimmed_cell.get_cell(),
+                pbc=True)
             self._p2s_map = np.array(p2s_map, dtype='intc')
         else:
             raise ValueError
@@ -427,12 +429,13 @@ def _trim_cell(relative_axes, cell, symprec):
     # scale is not always to become integer.
     scale = 1.0 / np.linalg.det(relative_axes)
     if len(numbers) == np.rint(scale * len(trimmed_numbers)):
-        trimmed_cell = Atoms(numbers=trimmed_numbers,
-                             masses=trimmed_masses,
-                             magmoms=trimmed_magmoms,
-                             scaled_positions=trimmed_positions[:num_atom],
-                             cell=trimmed_lattice,
-                             pbc=True)
+        trimmed_cell = PhonopyAtoms(
+            numbers=trimmed_numbers,
+            masses=trimmed_masses,
+            magmoms=trimmed_magmoms,
+            scaled_positions=trimmed_positions[:num_atom],
+            cell=trimmed_lattice,
+            pbc=True)
         return trimmed_cell, extracted_atoms, mapping_table
     else:
         return False
