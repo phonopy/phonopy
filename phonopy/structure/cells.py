@@ -290,9 +290,11 @@ class Primitive(PhonopyAtoms):
         self._p2p_map = None
         self._smallest_vectors = None
         self._multiplicity = None
+        self._atomic_permutations = None
         self._primitive_cell(supercell)
         self._map_atomic_indices(supercell.get_scaled_positions())
         self._set_smallest_vectors(supercell)
+        self._set_atomic_permutations(supercell)
 
     def get_primitive_matrix(self):
         return self._primitive_matrix
@@ -308,6 +310,9 @@ class Primitive(PhonopyAtoms):
 
     def get_smallest_vectors(self):
         return self._smallest_vectors, self._multiplicity
+
+    def get_atomic_permutations(self):
+        return self._atomic_permutations
 
     def _primitive_cell(self, supercell):
         trimmed_cell_ = _trim_cell(self._primitive_matrix,
@@ -354,6 +359,20 @@ class Primitive(PhonopyAtoms):
     def _set_smallest_vectors(self, supercell):
         self._smallest_vectors, self._multiplicity = _get_smallest_vectors(
             supercell, self, self._symprec)
+
+    def _set_atomic_permutations(self, supercell):
+        positions = supercell.get_scaled_positions()
+        diff = positions - positions[self._p2s_map[0]]
+        trans = np.array(diff[np.where(self._s2p_map == self._p2s_map[0])[0]],
+                         dtype='double', order='C')
+        rotations = np.array([np.eye(3, dtype='intc')] * len(trans),
+                             dtype='intc', order='C')
+        self._atomic_permutations = compute_all_sg_permutations(
+            positions,
+            rotations,
+            trans,
+            np.array(supercell.get_cell().T, dtype='double', order='C'),
+            self._symprec)
 
 def _trim_cell(relative_axes, cell, symprec):
     """Trim overlapping atoms

@@ -365,14 +365,12 @@ class Phonopy(object):
             if 'forces' not in disp:
                 return False
 
-        s2p_map = self._primitive.get_supercell_to_primitive_map()
-        p2s_map = self._primitive.get_primitive_to_supercell_map()
-
         if calculate_full_force_constants:
             self._run_force_constants_from_forces(
                 decimals=self._force_constants_decimals,
                 computation_algorithm=computation_algorithm)
         else:
+            p2s_map = self._primitive.get_primitive_to_supercell_map()
             self._run_force_constants_from_forces(
                 distributed_atom_list=p2s_map,
                 decimals=self._force_constants_decimals,
@@ -381,17 +379,13 @@ class Phonopy(object):
         if show_drift and self._log_level:
             show_drift_force_constants(self._force_constants,
                                        supercell=self._supercell,
-                                       symmetry=self._symmetry,
-                                       s2p_map=s2p_map,
-                                       p2s_map=p2s_map)
+                                       primitive=self._primitive)
 
         self._set_dynamical_matrix()
 
         return True
 
     def symmetrize_force_constants(self, level=2, show_drift=True):
-        s2p_map = self._primitive.get_supercell_to_primitive_map()
-        p2s_map = self._primitive.get_primitive_to_supercell_map()
         if self._force_constants.shape[0] == self._force_constants.shape[1]:
             n_satom = self._supercell.get_number_of_atoms()
             fc = self._force_constants
@@ -401,17 +395,13 @@ class Phonopy(object):
         else:
             symmetrize_compact_force_constants(self._force_constants,
                                                self._supercell,
-                                               self._symmetry,
-                                               s2p_map,
-                                               p2s_map,
+                                               self._primitive,
                                                level=level)
         if show_drift and self._log_level:
             sys.stdout.write("        after symmetrization: ")
             show_drift_force_constants(self._force_constants,
                                        supercell=self._supercell,
-                                       symmetry=self._symmetry,
-                                       s2p_map=s2p_map,
-                                       p2s_map=p2s_map,
+                                       primitive=self._primitive,
                                        values_only=True)
 
         self._set_dynamical_matrix()

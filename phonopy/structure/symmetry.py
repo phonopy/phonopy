@@ -134,7 +134,8 @@ class Symmetry(object):
     def get_atomic_permutations(self):
         if self._atomic_permutations is None:
             positions = self._cell.get_scaled_positions()
-            lattice = np.array(self._cell.get_cell().T, dtype='double', order='C')
+            lattice = np.array(self._cell.get_cell().T,
+                               dtype='double', order='C')
             rotations = self._symmetry_operations['rotations']
             translations = self._symmetry_operations['translations']
             self._atomic_permutations = compute_all_sg_permutations(

@@ -36,7 +36,6 @@ import numpy as np
 import sys
 from phonopy.structure.cells import (get_reduced_bases,
                                      get_equivalent_smallest_vectors,
-                                     compute_all_sg_permutations,
                                      compute_permutation_for_rotation)
 
 def get_force_constants(set_of_forces,
@@ -88,19 +87,9 @@ def get_fc2(supercell,
         symmetry,
         computation_algorithm=computation_algorithm)
 
-    # Distribute non-equivalent force constants to those equivalent
-    symprec = symmetry.get_symmetry_tolerance()
     rotations = symmetry.get_symmetry_operations()['rotations']
-    trans = symmetry.get_symmetry_operations()['translations']
-    positions = supercell.get_scaled_positions()
     lattice = np.array(supercell.get_cell().T, dtype='double', order='C')
-
-    permutations = compute_all_sg_permutations(positions,
-                                               rotations,
-                                               trans,
-                                               lattice,
-                                               symprec)
-
+    permutations = symmetry.get_atomic_permutations()
     if atom_list is None:
         distribute_force_constants(force_constants,
                                    range(supercell.get_number_of_atoms()),
@@ -167,9 +156,7 @@ def symmetrize_force_constants(force_constants, iteration=1):
 
 def symmetrize_compact_force_constants(force_constants,
                                        supercell,
-                                       symmetry,
-                                       s2p_map,
-                                       p2s_map,
+                                       primitive,
                                        level=2):
     """Symmetry force constants by translational and permutation symmetries.
 
@@ -185,7 +172,9 @@ def symmetrize_compact_force_constants(force_constants,
 
     """
 
-    permutations = _get_translational_permutations(supercell, symmetry)
+    s2p_map = primitive.get_supercell_to_primitive_map()
+    p2s_map = primitive.get_primitive_to_supercell_map()
+    permutations = primitive.get_atomic_permutations()
 
     try:
         import phonopy._phonopy as phonoc
@@ -199,27 +188,6 @@ def symmetrize_compact_force_constants(force_constants,
         print("Corresponding pytono code is not implemented.")
         import sys
         sys.exit(1)
-
-
-def _get_translational_permutations(supercell, symmetry):
-    rotations = []
-    trans = []
-    identity = np.eye(3, dtype='intc')
-
-    for r, t in zip(symmetry.get_symmetry_operations()['rotations'],
-                    symmetry.get_symmetry_operations()['translations']):
-        if (r == identity).all():
-            rotations.append(r)
-            trans.append(t)
-
-    permutations = compute_all_sg_permutations(
-        supercell.get_scaled_positions(),
-        np.array(rotations, dtype='intc', order='C'),
-        np.array(trans, dtype='double'),
-        np.array(supercell.get_cell().T, dtype='double', order='C'),
-        symmetry.get_symmetry_tolerance())
-
-    return permutations
 
 def distribute_force_constants(force_constants,
                                atom_list,
@@ -387,14 +355,13 @@ def set_tensor_symmetry(force_constants,
 
         assert num_equiv_atoms * num_sitesym == len(rotations)
 
+    permutations = symmetry.get_atomic_permutations()
     distribute_force_constants(fc_new,
                                range(len(positions)),
                                indep_atoms,
                                lattice,
-                               positions,
                                rotations,
-                               translations,
-                               symprec)
+                               permutations)
 
     force_constants[:] = fc_new
 
@@ -548,9 +515,7 @@ def similarity_transformation(rot, mat):
 
 def show_drift_force_constants(force_constants,
                                supercell=None,
-                               symmetry=None,
-                               s2p_map=None,
-                               p2s_map=None,
+                               primitive=None,
                                name="force constants",
                                values_only=False):
     if force_constants.shape[0] == force_constants.shape[1]:
@@ -569,7 +534,9 @@ def show_drift_force_constants(force_constants,
                 maxval2 = val2
                 jk2 = [j, k]
     else:
-        permutations = _get_translational_permutations(supercell, symmetry)
+        s2p_map = primitive.get_supercell_to_primitive_map()
+        p2s_map = primitive.get_primitive_to_supercell_map()
+        permutations = primitive.get_atomic_permutations()
         try:
             import phonopy._phonopy as phonoc
             phonoc.transpose_compact_fc(force_constants,
