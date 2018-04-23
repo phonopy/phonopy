@@ -239,12 +239,24 @@ class Supercell(Atoms):
         return frame
 
 class Primitive(Atoms):
-    def __init__(self, supercell, primitive_matrix, symprec=1e-5):
-        """
-        primitive_matrix (3x3 matrix):
-        Primitive lattice is given with respect to supercell by
+    """Primitive cell
+
+    Parameters
+    ----------
+
+    supercell: PhonopyAtoms
+        Supercell
+    primitive_matrix: list of list or ndarray
+        Transformation matrix to transform supercell to primitive cell such as::
            np.dot(primitive_matrix.T, supercell.get_cell())
-        """
+        shape=(3,3)
+    symprec: float, optional
+        Tolerance to find overlapping atoms in primitive cell. The default
+        values is 1e-5.
+
+    """
+
+    def __init__(self, supercell, primitive_matrix, symprec=1e-5):
         self._primitive_matrix = np.array(primitive_matrix)
         self._symprec = symprec
         self._p2s_map = None
@@ -253,8 +265,7 @@ class Primitive(Atoms):
         self._smallest_vectors = None
         self._multiplicity = None
         self._primitive_cell(supercell)
-        self._supercell_to_primitive_map(supercell.get_scaled_positions())
-        self._primitive_to_primitive_map()
+        self._map_atomic_indices(supercell.get_scaled_positions())
         self._set_smallest_vectors(supercell)
 
     def get_primitive_matrix(self):
@@ -289,8 +300,8 @@ class Primitive(Atoms):
         else:
             raise ValueError
 
-    def _supercell_to_primitive_map(self, pos):
-        frac_pos = np.dot(pos, np.linalg.inv(self._primitive_matrix).T)
+    def _map_atomic_indices(self, s_pos_orig):
+        frac_pos = np.dot(s_pos_orig, np.linalg.inv(self._primitive_matrix).T)
 
         p2s_positions = frac_pos[self._p2s_map]
         s2p_map = []
@@ -311,12 +322,6 @@ class Primitive(Atoms):
             s2p_map.append(self._p2s_map[index])
 
         self._s2p_map = np.array(s2p_map, dtype='intc')
-
-    def _primitive_to_primitive_map(self):
-        """
-        Mapping table from supercell index to primitive index
-        in primitive cell
-        """
         self._p2p_map = dict([(j, i) for i, j in enumerate(self._p2s_map)])
 
     def _set_smallest_vectors(self, supercell):
@@ -324,9 +329,19 @@ class Primitive(Atoms):
             supercell, self, self._symprec)
 
 def _trim_cell(relative_axes, cell, symprec):
-    """
-    relative_axes: relative axes to supercell axes
-    Trim positions outside relative axes
+    """Trim overlapping atoms
+
+    Parameters
+    ----------
+
+    relative_axes: ndarray
+        Transformation matrix to transform supercell to a smaller cell such as::
+            trimmed_lattice = np.dot(relative_axes.T, cell.get_cell())
+        shape=(3,3)
+    cell: PhonopyAtoms
+        A supercell
+    symprec: float
+        Tolerance to find overlapping atoms in the trimmed cell
 
     """
     positions = cell.get_scaled_positions()
