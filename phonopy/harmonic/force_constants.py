@@ -174,14 +174,19 @@ def symmetrize_compact_force_constants(force_constants,
 
     s2p_map = primitive.get_supercell_to_primitive_map()
     p2s_map = primitive.get_primitive_to_supercell_map()
+    p2p_map = primitive.get_primitive_to_primitive_map()
     permutations = primitive.get_atomic_permutations()
+    s2pp_map, nsym_list = get_nsym_list_and_s2pp(s2p_map,
+                                                 p2p_map,
+                                                 permutations)
 
     try:
         import phonopy._phonopy as phonoc
         phonoc.perm_trans_symmetrize_compact_fc(force_constants,
                                                 permutations,
-                                                s2p_map,
+                                                s2pp_map,
                                                 p2s_map,
+                                                nsym_list,
                                                 level)
     except ImportError:
         print("Import error at phonoc.perm_trans_symmetrize_compact_fc.")
@@ -536,22 +541,29 @@ def show_drift_force_constants(force_constants,
     else:
         s2p_map = primitive.get_supercell_to_primitive_map()
         p2s_map = primitive.get_primitive_to_supercell_map()
+        p2p_map = primitive.get_primitive_to_primitive_map()
         permutations = primitive.get_atomic_permutations()
+        s2pp_map, nsym_list = get_nsym_list_and_s2pp(s2p_map,
+                                                     p2p_map,
+                                                     permutations)
+
         try:
             import phonopy._phonopy as phonoc
             phonoc.transpose_compact_fc(force_constants,
                                         permutations,
-                                        s2p_map,
-                                        p2s_map)
+                                        s2pp_map,
+                                        p2s_map,
+                                        nsym_list)
             maxval1, jk1 = _get_drift_per_index(force_constants)
             phonoc.transpose_compact_fc(force_constants,
                                         permutations,
-                                        s2p_map,
-                                        p2s_map)
+                                        s2pp_map,
+                                        p2s_map,
+                                        nsym_list)
             maxval2, jk2 = _get_drift_per_index(force_constants)
 
         except ImportError:
-            print("Import error at phonoc.perm_trans_symmetrize_compact_fc.")
+            print("Import error at phonoc.tranpose_compact_fc.")
             print("Corresponding pytono code is not implemented.")
             import sys
             sys.exit(1)
@@ -563,6 +575,15 @@ def show_drift_force_constants(force_constants,
     text += "%f (%s%s) %f (%s%s)" % (maxval1, "xyz"[jk1[0]], "xyz"[jk1[1]],
                                      maxval2, "xyz"[jk2[0]], "xyz"[jk2[1]])
     print(text)
+
+
+def get_nsym_list_and_s2pp(s2p_map,
+                           p2p_map,
+                           permutations):
+    s2pp = np.array([p2p_map[i] for i in s2p_map], dtype='intc')
+    nsym_list = np.array([np.where(permutations[:, i] == target)[0][0]
+                          for i, target in enumerate(s2p_map)], dtype='intc')
+    return s2pp, nsym_list
 
 def _get_drift_per_index(force_constants):
     num_atom = force_constants.shape[0]

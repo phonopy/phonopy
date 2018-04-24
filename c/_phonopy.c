@@ -121,14 +121,7 @@ static void set_translational_symmetry_compact_fc(double * fc,
                                                   const int p2s[],
                                                   const int n_satom,
                                                   const int n_patom);
-static void set_nsym_list_and_s2pp(int nsym_list[],
-                                   int s2pp[],
-                                   const int s2p[],
-                                   const int p2s[],
-                                   const int perms[],
-                                   const int n_satom,
-                                   const int n_patom,
-                                   const int nsym);
+
 /* static double get_energy_omega(double temperature, double omega); */
 static int nint(const double a);
 
@@ -421,47 +414,36 @@ py_perm_trans_symmetrize_compact_fc(PyObject *self, PyObject *args)
 {
   PyArrayObject* py_fc;
   PyArrayObject* py_permutations;
-  PyArrayObject* py_s2p_map;
+  PyArrayObject* py_s2pp_map;
   PyArrayObject* py_p2s_map;
+  PyArrayObject* py_nsym_list;
   int level;
   double *fc;
-  int *s2p;
-  int *p2s;
   int *perms;
-  int n_patom, n_satom, nsym, i, j, k, l, n;
-  double sum;
-  int *nsym_list, *s2pp;
+  int *s2pp;
+  int *p2s;
+  int *nsym_list;
 
-  if (!PyArg_ParseTuple(args, "OOOOi",
+  int n_patom, n_satom, i, j, k, l, n;
+  double sum;
+
+  if (!PyArg_ParseTuple(args, "OOOOOi",
                         &py_fc,
                         &py_permutations,
-                        &py_s2p_map,
+                        &py_s2pp_map,
                         &py_p2s_map,
+                        &py_nsym_list,
                         &level)) {
     return NULL;
   }
 
   fc = (double*)PyArray_DATA(py_fc);
   perms = (int*)PyArray_DATA(py_permutations);
-  s2p = (int*)PyArray_DATA(py_s2p_map);
+  s2pp = (int*)PyArray_DATA(py_s2pp_map);
   p2s = (int*)PyArray_DATA(py_p2s_map);
+  nsym_list = (int*)PyArray_DATA(py_nsym_list);
   n_patom = PyArray_DIMS(py_fc)[0];
   n_satom = PyArray_DIMS(py_fc)[1];
-  nsym = PyArray_DIMS(py_permutations)[0];
-
-  nsym_list = NULL;
-  s2pp = NULL;
-
-  nsym_list = (int*) malloc(sizeof(int) * n_satom);
-  s2pp = (int*) malloc(sizeof(int) * n_satom);
-  set_nsym_list_and_s2pp(nsym_list,
-                         s2pp,
-                         s2p,
-                         p2s,
-                         perms,
-                         n_satom,
-                         n_patom,
-                         nsym);
 
   if (level > 0) {
     for (n = 0; n < level; n++) {
@@ -501,11 +483,6 @@ py_perm_trans_symmetrize_compact_fc(PyObject *self, PyObject *args)
                                             0);
   set_translational_symmetry_compact_fc(fc, p2s, n_satom, n_patom);
 
-  free(nsym_list);
-  nsym_list = NULL;
-  free(s2pp);
-  s2pp = NULL;
-
   Py_RETURN_NONE;
 }
 
@@ -513,44 +490,32 @@ static PyObject * py_transpose_compact_fc(PyObject *self, PyObject *args)
 {
   PyArrayObject* py_fc;
   PyArrayObject* py_permutations;
-  PyArrayObject* py_s2p_map;
+  PyArrayObject* py_s2pp_map;
   PyArrayObject* py_p2s_map;
+  PyArrayObject* py_nsym_list;
   double *fc;
-  int *s2p;
+  int *s2pp;
   int *p2s;
+  int *nsym_list;
   int *perms;
-  int n_patom, n_satom, nsym;
-  int *nsym_list, *s2pp;
+  int n_patom, n_satom;
 
-  if (!PyArg_ParseTuple(args, "OOOO",
+  if (!PyArg_ParseTuple(args, "OOOOO",
                         &py_fc,
                         &py_permutations,
-                        &py_s2p_map,
-                        &py_p2s_map)) {
+                        &py_s2pp_map,
+                        &py_p2s_map,
+                        &py_nsym_list)) {
     return NULL;
   }
 
   fc = (double*)PyArray_DATA(py_fc);
   perms = (int*)PyArray_DATA(py_permutations);
-  s2p = (int*)PyArray_DATA(py_s2p_map);
+  s2pp = (int*)PyArray_DATA(py_s2pp_map);
   p2s = (int*)PyArray_DATA(py_p2s_map);
+  nsym_list = (int*)PyArray_DATA(py_nsym_list);
   n_patom = PyArray_DIMS(py_fc)[0];
   n_satom = PyArray_DIMS(py_fc)[1];
-  nsym = PyArray_DIMS(py_permutations)[0];
-
-  nsym_list = NULL;
-  s2pp = NULL;
-
-  nsym_list = (int*) malloc(sizeof(int) * n_satom);
-  s2pp = (int*) malloc(sizeof(int) * n_satom);
-  set_nsym_list_and_s2pp(nsym_list,
-                         s2pp,
-                         s2p,
-                         p2s,
-                         perms,
-                         n_satom,
-                         n_patom,
-                         nsym);
 
   set_index_permutation_symmetry_compact_fc(fc,
                                             p2s,
@@ -560,11 +525,6 @@ static PyObject * py_transpose_compact_fc(PyObject *self, PyObject *args)
                                             n_satom,
                                             n_patom,
                                             1);
-
-  free(nsym_list);
-  nsym_list = NULL;
-  free(s2pp);
-  s2pp = NULL;
 
   Py_RETURN_NONE;
 }
@@ -1776,46 +1736,6 @@ static void set_translational_symmetry_compact_fc(double * fc,
       for (l = 0; l < 3; l++) {
         fc[i_p * n_satom * 9 + p2s[i_p] * 9 + k * 3 + l] =
           -(sums[k][l] + sums[l][k]) / 2;
-      }
-    }
-  }
-}
-
-static void set_nsym_list_and_s2pp(int nsym_list[],
-                                   int s2pp[],
-                                   const int s2p[],
-                                   const int p2s[],
-                                   const int perms[],
-                                   const int n_satom,
-                                   const int n_patom,
-                                   const int nsym)
-{
-  /* nsym_list[i] = j: */
-  /*     index list of translation operation (j) to send an atom (i) */
-  /*     to the corresponding one in the primitive cell (target) */
-
-  int i, j, target;
-
-  for (i = 0; i < n_satom; i++) {
-    nsym_list[i] = -1;
-  }
-
-  for (i = 0; i < n_satom; i++) {
-    s2pp[i] = -1;
-    for (j = 0; j < n_patom; j++) {
-      if (p2s[j] == s2p[i]) {
-        s2pp[i] = j;
-        break;
-      }
-    }
-  }
-
-  for (i = 0; i < n_satom; i++) {
-    target = s2p[i];
-    for (j = 0; j < nsym; j++) {
-      if (perms[j * n_satom + i] == target) {
-        nsym_list[i] = j;
-        break;
       }
     }
   }

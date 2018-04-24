@@ -673,7 +673,7 @@ def compute_all_sg_permutations(positions, # scaled positions
                                 symprec):
     """Compute a permutation for every space group operation.
 
-    See '_compute_permutation_for_rotation' for more info.
+    See 'compute_permutation_for_rotation' for more info.
 
     Output has shape (num_rot, num_pos)
 
