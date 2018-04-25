@@ -44,6 +44,7 @@ tags:
 * ``--mesh-format`` (``MESH_FORMAT``)
 * ``--mp``, ``--mesh`` (``MP`` or ``MESH``)
 * ``--nac`` (``NAC = .TRUE.``)
+* ``--nac-method`` (``NAC_METHOD``)
 * ``--nosym`` (``SYMMETRY = .FALSE.``)
 * ``--nomeshsym`` (``MESH_SYMMETRY = .FALSE.``)
 * ``--nowritemesh`` (``WRITE_MESH = .FALSE.``)

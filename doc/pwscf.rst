@@ -81,38 +81,34 @@ NaCl example found in ``example/NaCl-pwscf`` directory.
 
    ::
 
-     % phonopy --qe -c NaCl.in -p band.conf
-             _
-       _ __ | |__   ___  _ __   ___   _ __  _   _
-      | '_ \| '_ \ / _ \| '_ \ / _ \ | '_ \| | | |
-      | |_) | | | | (_) | | | | (_) || |_) | |_| |
-      | .__/|_| |_|\___/|_| |_|\___(_) .__/ \__, |
-      |_|                            |_|    |___/
-                                           1.11.0
+      % phonopy --qe -c NaCl.in -p band.conf
+              _
+        _ __ | |__   ___  _ __   ___   _ __  _   _
+       | '_ \| '_ \ / _ \| '_ \ / _ \ | '_ \| | | |
+       | |_) | | | | (_) | | | | (_) || |_) | |_| |
+       | .__/|_| |_|\___/|_| |_|\___(_) .__/ \__, |
+       |_|                            |_|    |___/
+                                            1.13.0
 
-     Python version 2.7.12
-     Spglib version 1.9.2
-     Calculator interface: pwscf
-     Band structure mode
-     Settings:
-       Supercell: [2 2 2]
-       Primitive axis:
-         [ 0.   0.5  0.5]
-         [ 0.5  0.   0.5]
-         [ 0.5  0.5  0. ]
-     Spacegroup: Fm-3m (225)
-     Computing force constants...
-     Reciprocal space paths in reduced coordinates:
-     [ 0.00  0.00  0.00] --> [ 0.50  0.00  0.00]
-     [ 0.50  0.00  0.00] --> [ 0.50  0.50  0.00]
-     [ 0.50  0.50  0.00] --> [-0.00 -0.00  0.00]
-     [ 0.00  0.00  0.00] --> [ 0.50  0.50  0.50]
-                      _
-        ___ _ __   __| |
-       / _ \ '_ \ / _` |
-      |  __/ | | | (_| |
-       \___|_| |_|\__,_|
-
+      Python version 2.7.14
+      Spglib version 1.10.3
+      Calculator interface: qe
+      Band structure mode
+      Settings:
+        Supercell: [2 2 2]
+        Primitive axis:
+          [ 0.   0.5  0.5]
+          [ 0.5  0.   0.5]
+          [ 0.5  0.5  0. ]
+      Spacegroup: Fm-3m (225)
+      Computing force constants...
+      max drift of force constants: -0.001194 (zz) -0.000000 (zz)
+      Reciprocal space paths in reduced coordinates:
+      [ 0.00  0.00  0.00] --> [ 0.50  0.00  0.00]
+      [ 0.50  0.00  0.00] --> [ 0.50  0.50  0.00]
+      [ 0.50  0.50  0.00] --> [-0.00 -0.00  0.00]
+      [ 0.00  0.00  0.00] --> [ 0.50  0.50  0.50]
+      ...
 
    |pwscf-band|
 

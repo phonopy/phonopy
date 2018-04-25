@@ -33,16 +33,15 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
-from phonopy.structure.atoms import PhonopyAtoms as Atoms
-from phonopy.structure.symmetry import Symmetry
+from phonopy.structure.atoms import PhonopyAtoms
 from phonopy.structure.cells import get_supercell
 from phonopy.harmonic.force_constants import distribute_force_constants
 
 def get_commensurate_points(supercell_matrix): # wrt primitive cell
-    rec_primitive = Atoms(numbers=[1],
-                          scaled_positions=[[0, 0, 0]],
-                          cell=np.diag([1, 1, 1]),
-                          pbc=True)
+    rec_primitive = PhonopyAtoms(numbers=[1],
+                                 scaled_positions=[[0, 0, 0]],
+                                 cell=np.diag([1, 1, 1]),
+                                 pbc=True)
     rec_supercell = get_supercell(rec_primitive, supercell_matrix.T)
     q_pos = rec_supercell.get_scaled_positions()
     return np.array(np.where(q_pos > 1 - 1e-15, q_pos - 1, q_pos),
@@ -180,11 +179,10 @@ class DynmatToForceConstants(object):
                          dtype='double', order='C')
         rotations = np.array([np.eye(3, dtype='intc')] * len(trans),
                              dtype='intc', order='C')
+        permutations = self._primitive.get_atomic_permutations()
         distribute_force_constants(self._fc,
                                    range(self._supercell.get_number_of_atoms()),
                                    p2s,
                                    lattice,
-                                   positions,
                                    rotations,
-                                   trans,
-                                   1e-5)
+                                   permutations)
