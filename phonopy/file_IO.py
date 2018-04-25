@@ -186,7 +186,12 @@ def write_FORCE_CONSTANTS(force_constants,
 def write_force_constants_to_hdf5(force_constants,
                                   filename='force_constants.hdf5',
                                   p2s_map=None):
-    import h5py
+    try:
+        import h5py
+    except ImportError:
+        print("You need to install python-h5py.")
+        raise
+
     with h5py.File(filename, 'w') as w:
         w.create_dataset('force_constants', data=force_constants)
         if p2s_map is not None:
@@ -219,7 +224,12 @@ def parse_FORCE_CONSTANTS(filename="FORCE_CONSTANTS",
 
 def read_force_constants_hdf5(filename="force_constants.hdf5",
                               p2s_map=None):
-    import h5py
+    try:
+        import h5py
+    except ImportError:
+        print("You need to install python-h5py.")
+        raise
+
     with h5py.File(filename, 'r') as f:
         key = list(f)[0]
         fc = f[key][:]
@@ -247,7 +257,7 @@ def parse_disp_yaml(filename="disp.yaml", return_cell=False):
         import yaml
     except ImportError:
         print("You need to install python-yaml.")
-        sys.exit(1)
+        raise
 
     try:
         from yaml import CLoader as Loader
@@ -491,7 +501,7 @@ def read_thermal_properties_yaml(filenames, factor=1.0):
                   (fname, int(t[0]), int(t[-1]), t[1] - t[0]))
         print('')
         print("Stop phonopy-qha")
-        sys.exit(1)
+        raise RuntimeError
 
     return temperatures, cv, entropy, fe_phonon, num_modes, num_integrated_modes
 
