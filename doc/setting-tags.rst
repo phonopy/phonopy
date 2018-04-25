@@ -297,7 +297,7 @@ probably necessary to place it between two $ characters.
    BAND_LABELS = X $\Gamma$ L
 
 .. |bandlabels| image:: band-labels.png
-                :scale: 50
+                :scale: 25
 
 |bandlabels|
 
@@ -323,7 +323,7 @@ number of points calculated in band segments by the ``BAND_POINTS`` tag.
    BAND_CONNECTION = .TRUE.
 
 .. |bandconnection| image:: band-connection.png
-                    :scale: 50
+                    :scale: 25
 
 |bandconnection|
 
@@ -882,10 +882,21 @@ Non-analytical term correction
 Non-analytical term correction is applied to dynamical
 matrix. ``BORN`` file has to be prepared in the current directory. See
 :ref:`born_file` and :ref:`non_analytical_term_correction_theory`.
+The default method is ``NAC_METHOD = GONZE`` after v1.13.0.
 
 ::
 
    NAC = .TRUE.
+
+.. _nac_method_tag:
+
+``NAC_METHOD``
+~~~~~~~~~~~~~~~
+
+The method of non-analytical term correction is chosen by this tag
+between two, ``NAC_METHOD = GONZE`` (:ref:`reference_dp_dp_NAC`) and
+``NAC_METHOD = WANG`` (:ref:`reference_wang_NAC`), and the default is
+the former after v1.13.0.
 
 ``Q_DIRECTION``
 ~~~~~~~~~~~~~~~~
@@ -927,7 +938,10 @@ Technical details are shown at :ref:`group_velocity`.
 ~~~~~~~~~~~~~~~
 
 The reciprocal distance used for finite difference method is
-specified. The default value is 1e-4.
+specified. The default value is ``1e-5`` for the method of non-analytical
+term correction by Gonze *et al.*. In other case, unless this tag is
+specified, analytical derivative is used instead of the finite
+difference method.
 
 ::
 
