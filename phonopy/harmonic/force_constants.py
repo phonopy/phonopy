@@ -191,8 +191,7 @@ def symmetrize_compact_force_constants(force_constants,
     except ImportError:
         print("Import error at phonoc.perm_trans_symmetrize_compact_fc.")
         print("Corresponding pytono code is not implemented.")
-        import sys
-        sys.exit(1)
+        raise
 
 def distribute_force_constants(force_constants,
                                atom_list,
@@ -565,8 +564,7 @@ def show_drift_force_constants(force_constants,
         except ImportError:
             print("Import error at phonoc.tranpose_compact_fc.")
             print("Corresponding pytono code is not implemented.")
-            import sys
-            sys.exit(1)
+            raise
 
     if values_only:
         text = ""

@@ -242,7 +242,7 @@ def parse_FORCE_CONSTANTS(filename="FORCE_CONSTANTS",
                                    for x in fcfile.readline().split()])
                 force_constants[i, j] = tensor
 
-        _check_force_constants_indices(idx, idx1, p2s_map)
+        check_force_constants_indices(idx, idx1, p2s_map, filename)
 
         return force_constants
 
@@ -259,18 +259,18 @@ def read_force_constants_hdf5(filename="force_constants.hdf5",
         fc = f[key][:]
         if 'p2s_map' in f:
             p2s_map_in_file = f['p2s_map'][:]
-            _check_force_constants_indices(fc.shape[:2],
-                                           p2s_map_in_file,
-                                           p2s_map)
+            check_force_constants_indices(fc.shape[:2],
+                                          p2s_map_in_file,
+                                          p2s_map,
+                                          filename)
         return fc
 
-def _check_force_constants_indices(shape, indices, p2s_map):
+def check_force_constants_indices(shape, indices, p2s_map, filename):
     if shape[0] != shape[1] and p2s_map is not None:
         if len(p2s_map) != len(indices) or (p2s_map != indices).any():
-            print("FORCE_CONSTANTS file is inconsistent with calculation "
-                  "setting.")
-            print("PRIMITIVE_AXIS is not set or is wrongly set.")
-            raise ValueError
+            text = ("%s file is inconsistent with the calculation setting. "
+                    "PRIMITIVE_AXIS may not be set correctly.") % filename
+            raise RuntimeError(text)
 
 
 #
