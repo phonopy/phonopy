@@ -162,10 +162,17 @@ def write_FORCE_CONSTANTS(force_constants,
                           p2s_map=None):
     """Write force constants in text file format.
 
-    Args:
-        force_constants(np.array(double)): Force constants
-        p2s_map(np.array(intc)):
-             Primitive atom indices in supercell index system
+    Parameters
+    ----------
+    force_constants: ndarray
+        Force constants
+        shape=(n_satom,n_satom,3,3) or (n_patom,n_satom,3,3)
+        dtype=double
+    filename: str
+        Filename to be saved
+    p2s_map: ndarray
+        Primitive atom indices in supercell index system
+        dtype=intc
 
     """
 
@@ -186,6 +193,23 @@ def write_FORCE_CONSTANTS(force_constants,
 def write_force_constants_to_hdf5(force_constants,
                                   filename='force_constants.hdf5',
                                   p2s_map=None):
+    """Write force constants in hdf5 format.
+
+    Parameters
+    ----------
+    force_constants: ndarray
+        Force constants
+        shape=(n_satom,n_satom,3,3) or (n_patom,n_satom,3,3)
+        dtype=double
+    filename: str
+        Filename to be saved
+    p2s_map: ndarray
+        Primitive atom indices in supercell index system
+        shape=(n_patom,)
+        dtype=intc
+
+    """
+
     try:
         import h5py
     except ImportError:
