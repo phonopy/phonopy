@@ -255,7 +255,14 @@ def read_force_constants_hdf5(filename="force_constants.hdf5",
         raise
 
     with h5py.File(filename, 'r') as f:
-        key = list(f)[0]
+        if 'fc2' in f:
+            key = 'fc2'
+        elif 'force_constants' in f:
+            key = 'force_constants'
+        else:
+            raise RuntimeError("%s doesn't contain necessary information" %
+                               filename)
+
         fc = f[key][:]
         if 'p2s_map' in f:
             p2s_map_in_file = f['p2s_map'][:]

@@ -68,14 +68,24 @@ def get_fc2(supercell,
     This is solved by matrix pseudo-inversion.
     Crsytal symmetry is included when creating F and d matrices.
 
-    force_constants[ i, j, a, b ]
-      i: Atom index of finitely displaced atom.
-      j: Atom index at which force on the atom is measured.
-      a, b: Cartesian direction indices = (0, 1, 2) for i and j, respectively
+    Returns
+    -------
+    ndarray
+        Force constants[ i, j, a, b ]
+        i: Atom index of finitely displaced atom.
+        j: Atom index at which force on the atom is measured.
+        a, b: Cartesian direction indices = (0, 1, 2) for i and j, respectively
+        dtype=double
+        shape=(len(atom_list),n_satom,3,3),
 
     """
 
-    force_constants = np.zeros((supercell.get_number_of_atoms(),
+    if atom_list is None:
+        fc_dim0 = supercell.get_number_of_atoms()
+    else:
+        fc_dim0 = len(atom_list)
+
+    force_constants = np.zeros((fc_dim0,
                                 supercell.get_number_of_atoms(),
                                 3, 3), dtype='double', order='C')
 
@@ -85,37 +95,23 @@ def get_fc2(supercell,
         supercell,
         dataset,
         symmetry,
+        atom_list=atom_list,
         computation_algorithm=computation_algorithm)
 
     rotations = symmetry.get_symmetry_operations()['rotations']
     lattice = np.array(supercell.get_cell().T, dtype='double', order='C')
     permutations = symmetry.get_atomic_permutations()
-    if atom_list is None:
-        distribute_force_constants(force_constants,
-                                   range(supercell.get_number_of_atoms()),
-                                   atom_list_done,
-                                   lattice,
-                                   rotations,
-                                   permutations)
-    else:
-        distribute_force_constants(force_constants,
-                                   atom_list,
-                                   atom_list_done,
-                                   lattice,
-                                   rotations,
-                                   permutations)
+    distribute_force_constants(force_constants,
+                               atom_list_done,
+                               lattice,
+                               rotations,
+                               permutations,
+                               atom_list=atom_list)
 
     if decimals:
         force_constants = force_constants.round(decimals=decimals)
 
-    if atom_list is not None:
-        fc_compress = np.zeros((len(atom_list),
-                                supercell.get_number_of_atoms(),
-                                3, 3), dtype='double')
-        fc_compress[:] = force_constants[atom_list]
-        return fc_compress
-    else:
-        return force_constants
+    return force_constants
 
 def cutoff_force_constants(force_constants,
                            supercell,
@@ -189,29 +185,33 @@ def symmetrize_compact_force_constants(force_constants,
                                                 nsym_list,
                                                 level)
     except ImportError:
-        print("Import error at phonoc.perm_trans_symmetrize_compact_fc.")
-        print("Corresponding pytono code is not implemented.")
-        raise
+        text = ("Import error at phonoc.perm_trans_symmetrize_compact_fc. "
+                "Corresponding pytono code is not implemented.")
+        raise RuntimeError(text)
 
 def distribute_force_constants(force_constants,
-                               atom_list,
                                atom_list_done,
                                lattice, # column vectors
                                rotations, # scaled (fractional)
-                               permutations):
+                               permutations,
+                               atom_list=None):
     map_atoms, map_syms = _get_sym_mappings_from_permutations(
         permutations, atom_list_done)
     rots_cartesian = np.array([similarity_transformation(lattice, r)
                                for r in rotations],
                               dtype='double', order='C')
-
+    if atom_list is None:
+        targets = np.arange(force_constants.shape[1], dtype='intc')
+    else:
+        targets = np.array(atom_list, dtype='intc')
     import phonopy._phonopy as phonoc
-    phonoc.distribute_fc2_with_mappings(force_constants,
-                                        np.array(atom_list, dtype='intc'),
-                                        rots_cartesian,
-                                        permutations,
-                                        np.array(map_atoms, dtype='intc'),
-                                        np.array(map_syms, dtype='intc'))
+
+    phonoc.distribute_fc2(force_constants,
+                          targets,
+                          rots_cartesian,
+                          permutations,
+                          np.array(map_atoms, dtype='intc'),
+                          np.array(map_syms, dtype='intc'))
 
 def solve_force_constants(force_constants,
                           disp_atom_number,
@@ -220,6 +220,7 @@ def solve_force_constants(force_constants,
                           supercell,
                           site_symmetry,
                           symprec,
+                          atom_list=None,
                           computation_algorithm="svd"):
     if computation_algorithm == "regression":
         fc_info = _solve_force_constants_regression(
@@ -232,13 +233,21 @@ def solve_force_constants(force_constants,
             symprec)
         return fc_info
     else:
-        _solve_force_constants_svd(force_constants,
-                                   disp_atom_number,
-                                   displacements,
-                                   sets_of_forces,
-                                   supercell,
-                                   site_symmetry,
-                                   symprec)
+        if atom_list is None:
+            fc_index = disp_atom_number
+        else:
+            fc_index = np.where(disp_atom_number == atom_list)[0]
+            if len(fc_index) == 0:
+                raise RuntimeError
+            else:
+                fc_index = fc_index[0]
+        force_constants[fc_index] = _solve_force_constants_svd(
+            disp_atom_number,
+            displacements,
+            sets_of_forces,
+            supercell,
+            site_symmetry,
+            symprec)
         return None
 
 def get_positions_sent_by_rot_inv(lattice, # column vectors
@@ -361,7 +370,6 @@ def set_tensor_symmetry(force_constants,
 
     permutations = symmetry.get_atomic_permutations()
     distribute_force_constants(fc_new,
-                               range(len(positions)),
                                indep_atoms,
                                lattice,
                                rotations,
@@ -562,9 +570,9 @@ def show_drift_force_constants(force_constants,
             maxval2, jk2 = _get_drift_per_index(force_constants)
 
         except ImportError:
-            print("Import error at phonoc.tranpose_compact_fc.")
-            print("Corresponding pytono code is not implemented.")
-            raise
+            text = ("Import error at phonoc.tranpose_compact_fc. "
+                    "Corresponding python code is not implemented.")
+            raise RuntimeError(text)
 
     if values_only:
         text = ""
@@ -597,8 +605,7 @@ def _get_drift_per_index(force_constants):
 #################
 # Local methods #
 #################
-def _solve_force_constants_svd(force_constants,
-                               disp_atom_number,
+def _solve_force_constants_svd(disp_atom_number,
                                displacements,
                                sets_of_forces,
                                supercell,
@@ -606,7 +613,7 @@ def _solve_force_constants_svd(force_constants,
                                symprec):
     lattice = supercell.get_cell().T
     positions = supercell.get_scaled_positions()
-    pos_center = positions[disp_atom_number].copy()
+    pos_center = positions[disp_atom_number]
     positions -= pos_center
     rot_map_syms = get_positions_sent_by_rot_inv(lattice,
                                                  positions,
@@ -617,6 +624,8 @@ def _solve_force_constants_svd(force_constants,
     rot_disps = get_rotated_displacement(displacements, site_sym_cart)
     inv_displacements = np.linalg.pinv(rot_disps)
 
+    fc = np.zeros((supercell.get_number_of_atoms(), 3, 3),
+                  dtype='double', order='C')
     for i in range(supercell.get_number_of_atoms()):
         combined_forces = []
         for forces in sets_of_forces:
@@ -625,8 +634,8 @@ def _solve_force_constants_svd(force_constants,
                                    site_sym_cart))
 
         combined_forces = np.reshape(combined_forces, (-1, 3))
-        force_constants[disp_atom_number, i] = -np.dot(
-            inv_displacements, combined_forces)
+        fc[i] = -np.dot(inv_displacements, combined_forces)
+    return fc
 
 def _solve_force_constants_regression(force_constants,
                                       disp_atom_number,
@@ -696,22 +705,41 @@ def _get_force_constants_disps(force_constants,
                                supercell,
                                dataset,
                                symmetry,
+                               atom_list=None,
                                computation_algorithm="svd"):
     """Calculate force constants Phi = -F / d
 
     Force constants are obtained by one of the following algorithm.
 
-    svd: Singular value decomposition is used, which is equivalent to
-         least square fitting.
+    Parameters
+    ----------
+    force_constants: ndarray
+        Force constants
+        shape=(len(atom_list),n_satom,3,3)
+        dtype=double
+    supercell: Supercell
+        Supercell
+    dataset: dict
+        Distplacement dataset. Forces are also stored.
+    symmetry: Symmetry
+        Symmetry information of supercell
+    atom_list: list
+        List of atom indices corresponding to the first index of force
+        constants. None assigns all atoms in supercell.
+    computation_algorithm:
+        Algorithm to solve overdetermined simultaneous equations
+        svd:
+            Singular value decomposition is used, which is equivalent to
+            least square fitting.
+        regression:
+            The goal is to monitor the quality of computed force constants (FC).
+            For that the FC spread is calculated, more precisely its standard
+            deviation, i.e. sqrt(variance). Every displacement results in
+            slightly different FC (due to numerical errors) -- that is why the
+            FCs are spread. Such an FC 'error' is calculated separately for
+            every tensor element. At the end we report their average value. We
+            also report a maximum value among these tensor-elements-errors.
 
-    regression:
-         The goal is to monitor the quality of computed force constants (FC).
-         For that the FC spread is calculated, more precisely its standard
-         deviation, i.e. sqrt(variance). Every displacement results in
-         slightly different FC (due to numerical errors) -- that is why the
-         FCs are spread. Such an FC 'error' is calculated separately for every
-         tensor element. At the end we report their average value. We also
-         report a maximum value among these tensor-elements-errors.
     """
 
     symprec = symmetry.get_symmetry_tolerance()
@@ -736,6 +764,7 @@ def _get_force_constants_disps(force_constants,
             supercell,
             site_symmetry,
             symprec,
+            atom_list=atom_list,
             computation_algorithm=computation_algorithm)
 
         if fc_info is not None:
@@ -827,8 +856,7 @@ def _get_shortest_distance_in_PBC(pos_i, pos_j, reduced_bases):
                 distances.append(np.linalg.norm(np.dot(diff, reduced_bases)))
     return np.min(distances)
 
-def _get_sym_mappings_from_permutations(permutations,
-                                        atom_list_done):
+def _get_sym_mappings_from_permutations(permutations, atom_list_done):
 
     """This can be thought of as computing 'map_atom_disp' and 'map_sym'
     for all atoms, except done using permutations instead of by

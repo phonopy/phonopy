@@ -44,7 +44,6 @@ from phonopy.harmonic.force_constants import (
     get_fc2,
     symmetrize_force_constants,
     symmetrize_compact_force_constants,
-    distribute_force_constants,
     show_drift_force_constants,
     set_translational_invariance_per_index,
     rotational_invariance,
@@ -1312,11 +1311,15 @@ class Phonopy(object):
                                          decimals=None,
                                          computation_algorithm="svd"):
         if self._displacement_dataset is not None:
+            if computation_algorithm != "svd":
+                atom_list = None
+            else:
+                atom_list = distributed_atom_list
             self._force_constants = get_fc2(
                 self._supercell,
                 self._symmetry,
                 self._displacement_dataset,
-                atom_list=distributed_atom_list,
+                atom_list=atom_list,
                 decimals=decimals,
                 computation_algorithm=computation_algorithm)
 

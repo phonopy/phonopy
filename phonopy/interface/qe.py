@@ -475,14 +475,6 @@ class PH_Q2R(object):
         ndim = np.prod(dim)
         natom_s = natom * ndim
 
-        # full force constants
-        # fc = np.zeros((natom_s, natom_s, 3, 3), dtype='double', order='C')
-        # s_indices = [np.where(site_map==(i * ndim))[0][0] for i in range(natom)]
-        # for i, si in enumerate(s_indices):
-        #     fc[si, :] = q2r_fc[i, site_map]
-        # self._distribute_fc2(fc, s_indices, scell)
-
-        # compact force constants
         fc = np.zeros((natom, natom_s, 3, 3), dtype='double', order='C')
         fc[:, :] = q2r_fc[:, site_map]
 
@@ -511,23 +503,3 @@ class PH_Q2R(object):
         assert len(np.unique(site_map)) == len(spos)
 
         return np.array(site_map)
-
-    def _distribute_fc2(self, fc, s_indices, scell, natom):
-        dim = self.dimension
-        t = np.zeros((np.prod(dim), 3), dtype='double', order='C')
-        r = np.zeros((np.prod(dim), 3, 3), dtype='intc', order='C')
-
-        for i, (d3, d2, d1) in enumerate(np.ndindex(dim[::-1])):
-            r[i] = np.identity(3, dtype='intc')
-            t[i] = np.array([d1, d2, d3], dtype='double') / dim
-
-        natom_s = scell.get_number_of_atoms()
-        lattice = np.array(scell.get_cell().T, dtype='double', order='C')
-        distribute_force_constants(fc,
-                                   np.arange(natom, dtype='intc'),
-                                   s_indices,
-                                   lattice,
-                                   scell.get_scaled_positions(),
-                                   r,
-                                   t,
-                                   self._symprec)
