@@ -377,7 +377,6 @@ class Phonopy(object):
 
         if show_drift and self._log_level:
             show_drift_force_constants(self._force_constants,
-                                       supercell=self._supercell,
                                        primitive=self._primitive)
 
         self._set_dynamical_matrix()
@@ -393,13 +392,11 @@ class Phonopy(object):
             symmetrize_force_constants(self._force_constants)
         else:
             symmetrize_compact_force_constants(self._force_constants,
-                                               self._supercell,
                                                self._primitive,
                                                level=level)
         if show_drift and self._log_level:
             sys.stdout.write("        after symmetrization: ")
             show_drift_force_constants(self._force_constants,
-                                       supercell=self._supercell,
                                        primitive=self._primitive,
                                        values_only=True)
 

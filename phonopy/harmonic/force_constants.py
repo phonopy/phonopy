@@ -151,7 +151,6 @@ def symmetrize_force_constants(force_constants, iteration=1):
             set_translational_invariance(force_constants)
 
 def symmetrize_compact_force_constants(force_constants,
-                                       supercell,
                                        primitive,
                                        level=2):
     """Symmetry force constants by translational and permutation symmetries.
@@ -526,7 +525,6 @@ def similarity_transformation(rot, mat):
     return np.dot(rot, np.dot(mat, np.linalg.inv(rot)))
 
 def show_drift_force_constants(force_constants,
-                               supercell=None,
                                primitive=None,
                                name="force constants",
                                values_only=False):
