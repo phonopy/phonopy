@@ -413,8 +413,7 @@ def set_tensor_symmetry_PJ(force_constants,
                                   dtype='double',
                                   order='C')
 
-def set_translational_invariance(force_constants,
-                                 translational_symmetry_type=1):
+def set_translational_invariance(force_constants):
     """Translational invariance is imposed (obsoleted)
 
     The type1 is quite simple
@@ -426,34 +425,17 @@ def set_translational_invariance(force_constants,
     """
 
     for i in range(2):
-       set_translational_invariance_per_index(
-           force_constants,
-           index=i,
-           translational_symmetry_type=translational_symmetry_type)
+       set_translational_invariance_per_index(force_constants, index=i)
 
-def set_translational_invariance_per_index(fc2,
-                                           index=0,
-                                           translational_symmetry_type=1):
+def set_translational_invariance_per_index(fc2, index=0):
     for i in range(fc2.shape[1 - index]):
         for j, k in list(np.ndindex(3, 3)):
-            if translational_symmetry_type == 2: # Type 2
-                if index == 0:
-                    fc_abs = np.abs(fc2[:, i, j, k])
-                    fc_sum = np.sum(fc2[:, i, j, k])
-                    fc_abs_sum = np.sum(fc_abs)
-                    fc2[:, i, j, k] -= fc_sum / fc_abs_sum * fc_abs
-                else:
-                    fc_abs = np.abs(fc2[i, :, j, k])
-                    fc_sum = np.sum(fc2[i, :, j, k])
-                    fc_abs_sum = np.sum(fc_abs)
-                    fc2[i, :, j, k] -= fc_sum / fc_abs_sum * fc_abs
-            else: # Type 1
-                if index == 0:
-                    fc2[:, i, j, k] -= np.sum(
-                        fc2[:, i, j, k]) / fc2.shape[0]
-                else:
-                    fc2[i, :, j, k] -= np.sum(
-                        fc2[i, :, j, k]) / fc2.shape[1]
+            if index == 0:
+                fc2[:, i, j, k] -= np.sum(
+                    fc2[:, i, j, k]) / fc2.shape[0]
+            else:
+                fc2[i, :, j, k] -= np.sum(
+                    fc2[i, :, j, k]) / fc2.shape[1]
 
 def set_permutation_symmetry(force_constants):
     """Enforce permutation symmetry to force cosntants by
