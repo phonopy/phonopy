@@ -45,7 +45,7 @@ from phonopy.harmonic.force_constants import (
     symmetrize_force_constants,
     symmetrize_compact_force_constants,
     show_drift_force_constants,
-    set_translational_invariance_per_index,
+    set_translational_invariance,
     rotational_invariance,
     cutoff_force_constants,
     set_tensor_symmetry)
@@ -383,13 +383,9 @@ class Phonopy(object):
 
         return True
 
-    def symmetrize_force_constants(self, level=2, show_drift=True):
+    def symmetrize_force_constants(self, level=1, show_drift=True):
         if self._force_constants.shape[0] == self._force_constants.shape[1]:
-            n_satom = self._supercell.get_number_of_atoms()
-            fc = self._force_constants
-            for n in range(level):
-                set_translational_invariance_per_index(fc, index=(n % 2))
-            symmetrize_force_constants(self._force_constants)
+            symmetrize_force_constants(self._force_constants, level=level)
         else:
             symmetrize_compact_force_constants(self._force_constants,
                                                self._primitive,

@@ -390,17 +390,54 @@ static PyObject * py_perm_trans_symmetrize_fc(PyObject *self, PyObject *args)
 {
   PyArrayObject* force_constants;
   double *fc;
-  int natom;
+  int level;
 
-  if (!PyArg_ParseTuple(args, "O", &force_constants)) {
+  int n_satom, i, j, k, l, iter;
+  double sum;
+
+  if (!PyArg_ParseTuple(args, "Oi", &force_constants, &level)) {
     return NULL;
   }
 
   fc = (double*)PyArray_DATA(force_constants);
-  natom = PyArray_DIMS(force_constants)[0];
+  n_satom = PyArray_DIMS(force_constants)[0];
 
-  set_index_permutation_symmetry_fc(fc, natom);
-  set_translational_symmetry_fc(fc, natom);
+  for (iter=0; iter < level; iter++) {
+    /* Subtract drift along column */
+    for (j = 0; j < n_satom; j++) {
+      for (k = 0; k < 3; k++) {
+        for (l = 0; l < 3; l++) {
+          sum = 0;
+          for (i = 0; i < n_satom; i++) {
+            sum += fc[i * n_satom * 9 + j * 9 + k * 3 + l];
+          }
+          sum /= n_satom;
+          for (i = 0; i < n_satom; i++) {
+            fc[i * n_satom * 9 + j * 9 + k * 3 + l] -= sum;
+          }
+        }
+      }
+    }
+    /* Subtract drift along row */
+    for (i = 0; i < n_satom; i++) {
+      for (k = 0; k < 3; k++) {
+        for (l = 0; l < 3; l++) {
+          sum = 0;
+          for (j = 0; j < n_satom; j++) {
+            sum += fc[i * n_satom * 9 + j * 9 + k * 3 + l];
+          }
+          sum /= n_satom;
+          for (j = 0; j < n_satom; j++) {
+            fc[i * n_satom * 9 + j * 9 + k * 3 + l] -= sum;
+          }
+        }
+      }
+    }
+
+    set_index_permutation_symmetry_fc(fc, n_satom);
+  }
+
+  set_translational_symmetry_fc(fc, n_satom);
 
   Py_RETURN_NONE;
 }
@@ -420,7 +457,7 @@ py_perm_trans_symmetrize_compact_fc(PyObject *self, PyObject *args)
   int *p2s;
   int *nsym_list;
 
-  int n_patom, n_satom, i, j, k, l, n;
+  int n_patom, n_satom, i, j, k, l, n, iter;
   double sum;
 
   if (!PyArg_ParseTuple(args, "OOOOOi",
@@ -441,8 +478,9 @@ py_perm_trans_symmetrize_compact_fc(PyObject *self, PyObject *args)
   n_patom = PyArray_DIMS(py_fc)[0];
   n_satom = PyArray_DIMS(py_fc)[1];
 
-  if (level > 0) {
-    for (n = 0; n < level; n++) {
+  for (iter=0; iter < level; iter++) {
+
+    for (n = 0; n < 2; n++) {
       /* transpose only */
       set_index_permutation_symmetry_compact_fc(fc,
                                                 p2s,
@@ -467,16 +505,17 @@ py_perm_trans_symmetrize_compact_fc(PyObject *self, PyObject *args)
         }
       }
     }
+
+    set_index_permutation_symmetry_compact_fc(fc,
+                                              p2s,
+                                              s2pp,
+                                              nsym_list,
+                                              perms,
+                                              n_satom,
+                                              n_patom,
+                                              0);
   }
 
-  set_index_permutation_symmetry_compact_fc(fc,
-                                            p2s,
-                                            s2pp,
-                                            nsym_list,
-                                            perms,
-                                            n_satom,
-                                            n_patom,
-                                            0);
   set_translational_symmetry_compact_fc(fc, p2s, n_satom, n_patom);
 
   Py_RETURN_NONE;

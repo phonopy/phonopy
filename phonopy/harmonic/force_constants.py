@@ -132,38 +132,56 @@ def cutoff_force_constants(force_constants,
                 force_constants[i, j] = 0.0
 
 
-def symmetrize_force_constants(force_constants, iteration=1):
-    """Symmetry force constants by translational and permutation symmetries.
+def symmetrize_force_constants(force_constants, level=1):
+    """Symmetry force constants by translational and permutation symmetries
 
-    The way of doing is currently different between C and python
-    implementations. If these give very different results, the
-    original force constants are not reliable anyway. The one
-    implemented in C is simpler and so considered better.
+    Note
+    ----
+    Schemes of symmetrization are slightly different between C and
+    python implementations. If these give very different results, the
+    original force constants are not reliable anyway.
+
+    Parameters
+    ----------
+    force_constants: ndarray
+        Force constants. Symmetrized force constants are overwritten.
+        dtype=double
+        shape=(n_satom,n_satom,3,3)
+    primitive: Primitive
+        Primitive cell
+    level: int
+        Controls the number of times the following steps repeated:
+        1) Subtract drift force constants along row and column
+        2) Average fc and fc.T
 
     """
 
     try:
         import phonopy._phonopy as phonoc
-        phonoc.perm_trans_symmetrize_fc(force_constants)
+        phonoc.perm_trans_symmetrize_fc(force_constants, level)
     except ImportError:
-        for i in range(iteration):
-            set_permutation_symmetry(force_constants)
+        for i in range(level):
             set_translational_invariance(force_constants)
+            set_permutation_symmetry(force_constants)
+        set_translational_invariance(force_constants)
 
 def symmetrize_compact_force_constants(force_constants,
                                        primitive,
-                                       level=2):
-    """Symmetry force constants by translational and permutation symmetries.
+                                       level=1):
+    """Symmetry force constants by translational and permutation symmetries
 
-    Here force constants are stored in a compact form:
-    (n_patom, n_satom, 3, 3).
-
-    For the symmetrization, permutation array is necessary.
-
-    level controls the number of times the following steps repeated:
-        1) transpose fc
-        2) subtract drift-fc/n_satom from fc elements
-    where fc is overwritten.
+    Parameters
+    ----------
+    force_constants: ndarray
+        Compact force constants. Symmetrized force constants are overwritten.
+        dtype=double
+        shape=(n_patom,n_satom,3,3)
+    primitive: Primitive
+        Primitive cell
+    level: int
+        Controls the number of times the following steps repeated:
+        1) Subtract drift force constants along row and column
+        2) Average fc and fc.T
 
     """
 
@@ -174,7 +192,6 @@ def symmetrize_compact_force_constants(force_constants,
     s2pp_map, nsym_list = get_nsym_list_and_s2pp(s2p_map,
                                                  p2p_map,
                                                  permutations)
-
     try:
         import phonopy._phonopy as phonoc
         phonoc.perm_trans_symmetrize_compact_fc(force_constants,
