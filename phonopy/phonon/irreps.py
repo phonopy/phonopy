@@ -62,8 +62,16 @@ character_table = {
                                ( 0, 0,-1 )),)}}],
 
     # C2 (3)
-    '2': None,
-
+    '2': 
+    [{'rotation_list': ('E', 'C2'),
+      'character_table': {'A' : (1, 1),
+			  'B' : (1, -1)},
+      'mapping_table': {'E' : ((( 1, 0, 0 ),
+			        ( 0, 1, 0 ),
+			        ( 0, 0, 1 )),),
+			'C2': (((-1, 0, 0 ),
+				( 0, 1, 0 ),
+				( 0, 0,-1 )),)}}],
     # C1v = Cs = C1h (4)
     'm':
     [{'rotation_list': ('E', 'sgh'),
