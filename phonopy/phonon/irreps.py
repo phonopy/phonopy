@@ -512,7 +512,29 @@ character_table = {
                                   ( 0, 0,-1 )),)}}],
 
     # C3v (19)
-    '3m': None,
+    '3m':
+    [{'rotation_list': ('E', 'C3', 'sgv'),
+      'character_table': {'A1': (1, 1, 1),
+                          'A2': (1, 1,-1),
+                          'E' : (2,-1, 0)},
+      'mapping_table': {'E'   : ((( 1, 0, 0),
+                                  ( 0, 1, 0),
+                                  ( 0, 0, 1)),),
+                        'C3'  : ((( 0,-1, 0),
+                                  ( 1,-1, 0)
+                                  ( 0, 0, 1)),,
+                                 ((-1, 1, 0),
+                                  (-1, 0, 0),
+                                  ( 0, 0, 1)),),
+                        'sgv' : ((( 0,-1, 0),
+                                  (-1, 0, 0),
+                                  ( 0, 0, 1)),
+                                 ((-1, 1, 0),
+                                  ( 0, 1, 0),
+                                  ( 0, 0, 1)),
+                                 (( 1, 0, 0),
+                                  ( 1,-1, 0),
+                                  ( 0, 0, 1)),)}}],
 
     # D3d (20)
     '-3m':
@@ -561,10 +583,16 @@ character_table = {
                                   ( 0, 0, 1 )),)}}],
 
     # C6 (21)
-    '6': None,
+    '6':
+    [{'rotation_list': (),
+      'character_table': {},
+      'mapping_table': {}}],
 
     # C3h (22)
-    '-6': None,
+    '-6':
+    [{'rotation_list': (),
+      'character_table': {},
+      'mapping_table': {}}],
 
     # C6h (23)
     '6/m':
@@ -615,7 +643,10 @@ character_table = {
                                     ( 0, 0,-1 )),)}}],
 
     # D6 (24)
-    '622': None,
+    '622':
+    [{'rotation_list': (),
+      'character_table': {},
+      'mapping_table': {}}],
 
     # C6v (25)
     '6mm':
@@ -799,13 +830,22 @@ character_table = {
                                     ( 0, 0, 1 )),)}}],
 
     # T (28)
-    '23': None,
+    '23':
+    [{'rotation_list': (),
+      'character_table': {},
+      'mapping_table': {}}],
 
     # Th (29)
-    'm-3': None,
+    'm-3':
+    [{'rotation_list': (),
+      'character_table': {},
+      'mapping_table': {}}],
 
     # O (30)
-    '432': None,
+    '432':
+    [{'rotation_list': (),
+      'character_table': {},
+      'mapping_table': {}}],
 
     # Td (31)
     '-43m':
