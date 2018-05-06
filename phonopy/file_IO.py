@@ -279,7 +279,6 @@ def check_force_constants_indices(shape, indices, p2s_map, filename):
                     "PRIMITIVE_AXIS may not be set correctly.") % filename
             raise RuntimeError(text)
 
-
 #
 # disp.yaml
 #
@@ -294,8 +293,6 @@ def parse_disp_yaml(filename="disp.yaml", return_cell=False):
         from yaml import CLoader as Loader
     except ImportError:
         from yaml import Loader
-
-    from phonopy.structure.atoms import PhonopyAtoms as Atoms
 
     with open(filename) as f:
         dataset = yaml.load(f, Loader=Loader)
@@ -317,32 +314,20 @@ def parse_disp_yaml(filename="disp.yaml", return_cell=False):
         new_dataset['first_atoms'] = new_first_atoms
 
         if return_cell:
-            lattice = dataset['lattice']
-            if 'points' in dataset:
-                data_key = 'points'
-                pos_key = 'coordinates'
-            elif 'atoms' in dataset:
-                data_key = 'atoms'
-                pos_key = 'position'
-            else:
-                data_key = None
-                pos_key = None
-
-            positions = [x[pos_key] for x in dataset[data_key]]
-            symbols = [x['symbol'] for x in dataset[data_key]]
-            cell = Atoms(cell=lattice,
-                         scaled_positions=positions,
-                         symbols=symbols,
-                         pbc=True)
+            cell = get_cell_from_disp_yaml(dataset)
             return new_dataset, cell
         else:
             return new_dataset
+
+def write_disp_yaml_from_dataset(dataset, supercell, filename='disp.yaml'):
+    displacements = [(d['number'],) + tuple(d['displacement'])
+                     for d in dataset['first_atoms']]
+    write_disp_yaml(displacements, supercell, filename=filename)
 
 def write_disp_yaml(displacements,
                     supercell,
                     directions=None,
                     filename='disp.yaml'):
-
     text = []
     text.append("natom: %4d" % supercell.get_number_of_atoms())
     text.append("displacements:")
@@ -372,6 +357,32 @@ def parse_DISP(filename='DISP'):
                 displacements.append(
                     [int(a[0])-1, float(a[1]), float(a[2]), float(a[3])])
         return displacements
+
+#
+# Parse supercell in disp.yaml
+#
+def get_cell_from_disp_yaml(dataset):
+    from phonopy.structure.atoms import PhonopyAtoms
+
+    lattice = dataset['lattice']
+    if 'points' in dataset:
+        data_key = 'points'
+        pos_key = 'coordinates'
+    elif 'atoms' in dataset:
+        data_key = 'atoms'
+        pos_key = 'position'
+    else:
+        data_key = None
+        pos_key = None
+
+    positions = [x[pos_key] for x in dataset[data_key]]
+    symbols = [x['symbol'] for x in dataset[data_key]]
+    cell = PhonopyAtoms(cell=lattice,
+                        scaled_positions=positions,
+                        symbols=symbols,
+                        pbc=True)
+    return cell
+
 
 #
 # QPOINTS
