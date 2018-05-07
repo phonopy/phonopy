@@ -488,7 +488,7 @@ character_table = {
 
     # D3 (18)
     '32':
-    [{'rotation_list': ('E', 'C3', 'C2\''), #should be C2, not C2'?
+    [{'rotation_list': ('E', 'C3', 'C2\''),
       'character_table': {'A1': ( 1, 1, 1 ),
                           'A2': ( 1, 1,-1 ),
                           'E' : ( 2,-1, 0 )},
