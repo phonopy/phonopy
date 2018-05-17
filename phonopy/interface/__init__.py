@@ -200,7 +200,8 @@ def create_FORCE_SETS(interface_mode,
                                     num_atoms,
                                     num_displacements,
                                     force_filenames,
-                                    disp_filename,
+                                    disp_filename=disp_filename,
+                                    check_number_of_files=True,
                                     verbose=(log_level > 0))
 
     elif interface_mode == 'wien2k':
@@ -246,12 +247,14 @@ def get_force_sets(interface_mode,
                    num_atoms,
                    num_displacements,
                    force_filenames,
-                   disp_filename,
+                   disp_filename=None,
+                   check_number_of_files=False,
                    verbose=True):
-    if _check_number_of_files(num_displacements,
-                              force_filenames,
-                              disp_filename):
-        return []
+    if check_number_of_files:
+        if _check_number_of_files(num_displacements,
+                                  force_filenames,
+                                  disp_filename):
+            return []
 
     if interface_mode is None or interface_mode == 'vasp':
         from phonopy.interface.vasp import parse_set_of_forces

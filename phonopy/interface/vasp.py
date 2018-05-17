@@ -305,7 +305,7 @@ def sort_positions_by_symbols(symbols, positions):
 
     return counts_list, reduced_symbols, sorted_positions, perm
 
-def get_vasp_structure_lines(atoms, direct=True, is_vasp5=False):
+def get_vasp_structure_lines(atoms, direct=True, is_vasp5=True):
     (num_atoms,
      symbols,
      scaled_positions,

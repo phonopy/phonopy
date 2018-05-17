@@ -44,9 +44,8 @@ from phonopy.harmonic.force_constants import (
     get_fc2,
     symmetrize_force_constants,
     symmetrize_compact_force_constants,
-    distribute_force_constants,
     show_drift_force_constants,
-    set_translational_invariance_per_index,
+    set_translational_invariance,
     rotational_invariance,
     cutoff_force_constants,
     set_tensor_symmetry)
@@ -378,29 +377,22 @@ class Phonopy(object):
 
         if show_drift and self._log_level:
             show_drift_force_constants(self._force_constants,
-                                       supercell=self._supercell,
                                        primitive=self._primitive)
 
         self._set_dynamical_matrix()
 
         return True
 
-    def symmetrize_force_constants(self, level=2, show_drift=True):
+    def symmetrize_force_constants(self, level=1, show_drift=True):
         if self._force_constants.shape[0] == self._force_constants.shape[1]:
-            n_satom = self._supercell.get_number_of_atoms()
-            fc = self._force_constants
-            for n in range(level):
-                set_translational_invariance_per_index(fc, index=(n % 2))
-            symmetrize_force_constants(self._force_constants)
+            symmetrize_force_constants(self._force_constants, level=level)
         else:
             symmetrize_compact_force_constants(self._force_constants,
-                                               self._supercell,
                                                self._primitive,
                                                level=level)
         if show_drift and self._log_level:
             sys.stdout.write("        after symmetrization: ")
             show_drift_force_constants(self._force_constants,
-                                       supercell=self._supercell,
                                        primitive=self._primitive,
                                        values_only=True)
 
@@ -1312,11 +1304,15 @@ class Phonopy(object):
                                          decimals=None,
                                          computation_algorithm="svd"):
         if self._displacement_dataset is not None:
+            if computation_algorithm != "svd":
+                atom_list = None
+            else:
+                atom_list = distributed_atom_list
             self._force_constants = get_fc2(
                 self._supercell,
                 self._symmetry,
                 self._displacement_dataset,
-                atom_list=distributed_atom_list,
+                atom_list=atom_list,
                 decimals=decimals,
                 computation_algorithm=computation_algorithm)
 

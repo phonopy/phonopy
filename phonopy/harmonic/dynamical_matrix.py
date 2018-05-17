@@ -439,7 +439,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
                 fc[s1, s2] += nac_q[p1, p2] / N
 
     def _set_Gonze_dynamical_matrix(self, q_red, q_direction):
-        if self._log_level > 1:
+        if self._log_level > 2:
             print("%d %s" % (self._Gonze_count + 1, q_red))
         self._Gonze_count += 1
         fc = self._force_constants
@@ -458,7 +458,7 @@ class DynamicalMatrixNAC(DynamicalMatrix):
         dynmat = []
         num_q = len(d2f.get_commensurate_points())
         for i, q_red in enumerate(d2f.get_commensurate_points()):
-            if self._log_level > 1:
+            if self._log_level > 2:
                 print("%d/%d %s" % (i + 1, num_q, q_red))
             self._set_dynamical_matrix(q_red)
             dm_dd = self._get_Gonze_dipole_dipole(q_red, None)

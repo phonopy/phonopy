@@ -181,7 +181,6 @@ class DynmatToForceConstants(object):
                              dtype='intc', order='C')
         permutations = self._primitive.get_atomic_permutations()
         distribute_force_constants(self._fc,
-                                   range(self._supercell.get_number_of_atoms()),
                                    p2s,
                                    lattice,
                                    rotations,

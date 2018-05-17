@@ -162,10 +162,17 @@ def write_FORCE_CONSTANTS(force_constants,
                           p2s_map=None):
     """Write force constants in text file format.
 
-    Args:
-        force_constants(np.array(double)): Force constants
-        p2s_map(np.array(intc)):
-             Primitive atom indices in supercell index system
+    Parameters
+    ----------
+    force_constants: ndarray
+        Force constants
+        shape=(n_satom,n_satom,3,3) or (n_patom,n_satom,3,3)
+        dtype=double
+    filename: str
+        Filename to be saved
+    p2s_map: ndarray
+        Primitive atom indices in supercell index system
+        dtype=intc
 
     """
 
@@ -186,7 +193,29 @@ def write_FORCE_CONSTANTS(force_constants,
 def write_force_constants_to_hdf5(force_constants,
                                   filename='force_constants.hdf5',
                                   p2s_map=None):
-    import h5py
+    """Write force constants in hdf5 format.
+
+    Parameters
+    ----------
+    force_constants: ndarray
+        Force constants
+        shape=(n_satom,n_satom,3,3) or (n_patom,n_satom,3,3)
+        dtype=double
+    filename: str
+        Filename to be saved
+    p2s_map: ndarray
+        Primitive atom indices in supercell index system
+        shape=(n_patom,)
+        dtype=intc
+
+    """
+
+    try:
+        import h5py
+    except ImportError:
+        print("You need to install python-h5py.")
+        raise
+
     with h5py.File(filename, 'w') as w:
         w.create_dataset('force_constants', data=force_constants)
         if p2s_map is not None:
@@ -213,31 +242,42 @@ def parse_FORCE_CONSTANTS(filename="FORCE_CONSTANTS",
                                    for x in fcfile.readline().split()])
                 force_constants[i, j] = tensor
 
-        _check_force_constants_indices(idx, idx1, p2s_map)
+        check_force_constants_indices(idx, idx1, p2s_map, filename)
 
         return force_constants
 
 def read_force_constants_hdf5(filename="force_constants.hdf5",
                               p2s_map=None):
-    import h5py
+    try:
+        import h5py
+    except ImportError:
+        print("You need to install python-h5py.")
+        raise
+
     with h5py.File(filename, 'r') as f:
-        key = list(f)[0]
+        if 'fc2' in f:
+            key = 'fc2'
+        elif 'force_constants' in f:
+            key = 'force_constants'
+        else:
+            raise RuntimeError("%s doesn't contain necessary information" %
+                               filename)
+
         fc = f[key][:]
         if 'p2s_map' in f:
             p2s_map_in_file = f['p2s_map'][:]
-            _check_force_constants_indices(fc.shape[:2],
-                                           p2s_map_in_file,
-                                           p2s_map)
+            check_force_constants_indices(fc.shape[:2],
+                                          p2s_map_in_file,
+                                          p2s_map,
+                                          filename)
         return fc
 
-def _check_force_constants_indices(shape, indices, p2s_map):
+def check_force_constants_indices(shape, indices, p2s_map, filename):
     if shape[0] != shape[1] and p2s_map is not None:
         if len(p2s_map) != len(indices) or (p2s_map != indices).any():
-            print("FORCE_CONSTANTS file is inconsistent with calculation "
-                  "setting.")
-            print("PRIMITIVE_AXIS is not set or is wrongly set.")
-            raise ValueError
-
+            text = ("%s file is inconsistent with the calculation setting. "
+                    "PRIMITIVE_AXIS may not be set correctly.") % filename
+            raise RuntimeError(text)
 
 #
 # disp.yaml
@@ -247,14 +287,12 @@ def parse_disp_yaml(filename="disp.yaml", return_cell=False):
         import yaml
     except ImportError:
         print("You need to install python-yaml.")
-        sys.exit(1)
+        raise
 
     try:
         from yaml import CLoader as Loader
     except ImportError:
         from yaml import Loader
-
-    from phonopy.structure.atoms import PhonopyAtoms as Atoms
 
     with open(filename) as f:
         dataset = yaml.load(f, Loader=Loader)
@@ -276,32 +314,20 @@ def parse_disp_yaml(filename="disp.yaml", return_cell=False):
         new_dataset['first_atoms'] = new_first_atoms
 
         if return_cell:
-            lattice = dataset['lattice']
-            if 'points' in dataset:
-                data_key = 'points'
-                pos_key = 'coordinates'
-            elif 'atoms' in dataset:
-                data_key = 'atoms'
-                pos_key = 'position'
-            else:
-                data_key = None
-                pos_key = None
-
-            positions = [x[pos_key] for x in dataset[data_key]]
-            symbols = [x['symbol'] for x in dataset[data_key]]
-            cell = Atoms(cell=lattice,
-                         scaled_positions=positions,
-                         symbols=symbols,
-                         pbc=True)
+            cell = get_cell_from_disp_yaml(dataset)
             return new_dataset, cell
         else:
             return new_dataset
+
+def write_disp_yaml_from_dataset(dataset, supercell, filename='disp.yaml'):
+    displacements = [(d['number'],) + tuple(d['displacement'])
+                     for d in dataset['first_atoms']]
+    write_disp_yaml(displacements, supercell, filename=filename)
 
 def write_disp_yaml(displacements,
                     supercell,
                     directions=None,
                     filename='disp.yaml'):
-
     text = []
     text.append("natom: %4d" % supercell.get_number_of_atoms())
     text.append("displacements:")
@@ -331,6 +357,32 @@ def parse_DISP(filename='DISP'):
                 displacements.append(
                     [int(a[0])-1, float(a[1]), float(a[2]), float(a[3])])
         return displacements
+
+#
+# Parse supercell in disp.yaml
+#
+def get_cell_from_disp_yaml(dataset):
+    from phonopy.structure.atoms import PhonopyAtoms
+
+    lattice = dataset['lattice']
+    if 'points' in dataset:
+        data_key = 'points'
+        pos_key = 'coordinates'
+    elif 'atoms' in dataset:
+        data_key = 'atoms'
+        pos_key = 'position'
+    else:
+        data_key = None
+        pos_key = None
+
+    positions = [x[pos_key] for x in dataset[data_key]]
+    symbols = [x['symbol'] for x in dataset[data_key]]
+    cell = PhonopyAtoms(cell=lattice,
+                        scaled_positions=positions,
+                        symbols=symbols,
+                        pbc=True)
+    return cell
+
 
 #
 # QPOINTS
@@ -491,7 +543,7 @@ def read_thermal_properties_yaml(filenames, factor=1.0):
                   (fname, int(t[0]), int(t[-1]), t[1] - t[0]))
         print('')
         print("Stop phonopy-qha")
-        sys.exit(1)
+        raise RuntimeError
 
     return temperatures, cv, entropy, fe_phonon, num_modes, num_integrated_modes
 

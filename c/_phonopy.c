@@ -58,36 +58,11 @@ static PyObject * py_get_dipole_dipole(PyObject *self, PyObject *args);
 static PyObject * py_get_dipole_dipole_q0(PyObject *self, PyObject *args);
 static PyObject * py_get_derivative_dynmat(PyObject *self, PyObject *args);
 static PyObject * py_get_thermal_properties(PyObject *self, PyObject *args);
-static PyObject *
-py_distribute_fc2_with_mappings(PyObject *self, PyObject *args);
+static PyObject * py_distribute_fc2(PyObject *self, PyObject *args);
 static PyObject * py_compute_permutation(PyObject *self, PyObject *args);
 static PyObject * py_gsv_copy_smallest_vectors(PyObject *self, PyObject *args);
-
-static void distribute_fc2_with_mappings(double (*fc2)[3][3],
-                                         const int * atom_list,
-                                         const int len_atom_list,
-                                         PHPYCONST double (*r_carts)[3][3],
-                                         const int * permutations,
-                                         const int * map_atoms,
-                                         const int * map_syms,
-                                         const int num_rot,
-                                         const int num_pos);
-
-static int compute_permutation(int * rot_atom,
-                                  PHPYCONST double lat[3][3],
-                                  PHPYCONST double (*pos)[3],
-                                  PHPYCONST double (*rot_pos)[3],
-                                  const int num_pos,
-                                  const double symprec);
-
-static void gsv_copy_smallest_vectors(double (*shortest_vectors)[27][3],
-                                      int * multiplicity,
-                                      PHPYCONST double (*vector_lists)[27][3],
-                                      PHPYCONST double (*length_lists)[27],
-                                      const int num_lists,
-                                      const double symprec);
-
-static PyObject * py_thm_neighboring_grid_points(PyObject *self, PyObject *args);
+static PyObject *
+py_thm_neighboring_grid_points(PyObject *self, PyObject *args);
 static PyObject *
 py_thm_relative_grid_address(PyObject *self, PyObject *args);
 static PyObject *
@@ -99,6 +74,27 @@ py_thm_integration_weight_at_omegas(PyObject *self, PyObject *args);
 static PyObject * py_get_tetrahedra_frequenies(PyObject *self, PyObject *args);
 static PyObject * py_tetrahedron_method_dos(PyObject *self, PyObject *args);
 
+static void distribute_fc2(double (*fc2)[3][3],
+                           const int * atom_list,
+                           const int len_atom_list,
+                           PHPYCONST double (*r_carts)[3][3],
+                           const int * permutations,
+                           const int * map_atoms,
+                           const int * map_syms,
+                           const int num_rot,
+                           const int num_pos);
+static int compute_permutation(int * rot_atom,
+                                  PHPYCONST double lat[3][3],
+                                  PHPYCONST double (*pos)[3],
+                                  PHPYCONST double (*rot_pos)[3],
+                                  const int num_pos,
+                                  const double symprec);
+static void gsv_copy_smallest_vectors(double (*shortest_vectors)[27][3],
+                                      int * multiplicity,
+                                      PHPYCONST double (*vector_lists)[27][3],
+                                      PHPYCONST double (*length_lists)[27],
+                                      const int num_lists,
+                                      const double symprec);
 static double get_free_energy_omega(const double temperature,
                                     const double omega);
 static double get_entropy_omega(const double temperature,
@@ -167,7 +163,7 @@ static PyMethodDef _phonopy_methods[] = {
    "Q derivative of dynamical matrix"},
   {"thermal_properties", py_get_thermal_properties, METH_VARARGS,
    "Thermal properties"},
-  {"distribute_fc2_with_mappings", py_distribute_fc2_with_mappings,
+  {"distribute_fc2", py_distribute_fc2,
    METH_VARARGS,
    "Distribute force constants for all atoms in atom_list using precomputed symmetry mappings."},
   {"compute_permutation", py_compute_permutation, METH_VARARGS,
@@ -394,17 +390,54 @@ static PyObject * py_perm_trans_symmetrize_fc(PyObject *self, PyObject *args)
 {
   PyArrayObject* force_constants;
   double *fc;
-  int natom;
+  int level;
 
-  if (!PyArg_ParseTuple(args, "O", &force_constants)) {
+  int n_satom, i, j, k, l, iter;
+  double sum;
+
+  if (!PyArg_ParseTuple(args, "Oi", &force_constants, &level)) {
     return NULL;
   }
 
   fc = (double*)PyArray_DATA(force_constants);
-  natom = PyArray_DIMS(force_constants)[0];
+  n_satom = PyArray_DIMS(force_constants)[0];
 
-  set_index_permutation_symmetry_fc(fc, natom);
-  set_translational_symmetry_fc(fc, natom);
+  for (iter=0; iter < level; iter++) {
+    /* Subtract drift along column */
+    for (j = 0; j < n_satom; j++) {
+      for (k = 0; k < 3; k++) {
+        for (l = 0; l < 3; l++) {
+          sum = 0;
+          for (i = 0; i < n_satom; i++) {
+            sum += fc[i * n_satom * 9 + j * 9 + k * 3 + l];
+          }
+          sum /= n_satom;
+          for (i = 0; i < n_satom; i++) {
+            fc[i * n_satom * 9 + j * 9 + k * 3 + l] -= sum;
+          }
+        }
+      }
+    }
+    /* Subtract drift along row */
+    for (i = 0; i < n_satom; i++) {
+      for (k = 0; k < 3; k++) {
+        for (l = 0; l < 3; l++) {
+          sum = 0;
+          for (j = 0; j < n_satom; j++) {
+            sum += fc[i * n_satom * 9 + j * 9 + k * 3 + l];
+          }
+          sum /= n_satom;
+          for (j = 0; j < n_satom; j++) {
+            fc[i * n_satom * 9 + j * 9 + k * 3 + l] -= sum;
+          }
+        }
+      }
+    }
+
+    set_index_permutation_symmetry_fc(fc, n_satom);
+  }
+
+  set_translational_symmetry_fc(fc, n_satom);
 
   Py_RETURN_NONE;
 }
@@ -424,7 +457,7 @@ py_perm_trans_symmetrize_compact_fc(PyObject *self, PyObject *args)
   int *p2s;
   int *nsym_list;
 
-  int n_patom, n_satom, i, j, k, l, n;
+  int n_patom, n_satom, i, j, k, l, n, iter;
   double sum;
 
   if (!PyArg_ParseTuple(args, "OOOOOi",
@@ -445,8 +478,9 @@ py_perm_trans_symmetrize_compact_fc(PyObject *self, PyObject *args)
   n_patom = PyArray_DIMS(py_fc)[0];
   n_satom = PyArray_DIMS(py_fc)[1];
 
-  if (level > 0) {
-    for (n = 0; n < level; n++) {
+  for (iter=0; iter < level; iter++) {
+
+    for (n = 0; n < 2; n++) {
       /* transpose only */
       set_index_permutation_symmetry_compact_fc(fc,
                                                 p2s,
@@ -471,16 +505,17 @@ py_perm_trans_symmetrize_compact_fc(PyObject *self, PyObject *args)
         }
       }
     }
+
+    set_index_permutation_symmetry_compact_fc(fc,
+                                              p2s,
+                                              s2pp,
+                                              nsym_list,
+                                              perms,
+                                              n_satom,
+                                              n_patom,
+                                              0);
   }
 
-  set_index_permutation_symmetry_compact_fc(fc,
-                                            p2s,
-                                            s2pp,
-                                            nsym_list,
-                                            perms,
-                                            n_satom,
-                                            n_patom,
-                                            0);
   set_translational_symmetry_compact_fc(fc, p2s, n_satom, n_patom);
 
   Py_RETURN_NONE;
@@ -972,8 +1007,7 @@ static PyObject * py_get_thermal_properties(PyObject *self, PyObject *args)
   Py_RETURN_NONE;
 }
 
-static PyObject *
-py_distribute_fc2_with_mappings(PyObject *self, PyObject *args)
+static PyObject * py_distribute_fc2(PyObject *self, PyObject *args)
 {
   PyArrayObject* py_force_constants;
   PyArrayObject* py_permutations;
@@ -988,7 +1022,7 @@ py_distribute_fc2_with_mappings(PyObject *self, PyObject *args)
   int *map_atoms;
   int *map_syms;
   int *atom_list;
-  int num_pos, num_rot, len_atom_list;
+  npy_intp num_pos, num_rot, len_atom_list;
 
   if (!PyArg_ParseTuple(args, "OOOOOO",
                         &py_force_constants,
@@ -1028,15 +1062,15 @@ py_distribute_fc2_with_mappings(PyObject *self, PyObject *args)
     return NULL;
   }
 
-  distribute_fc2_with_mappings(fc2,
-                               atom_list,
-                               len_atom_list,
-                               r_carts,
-                               permutations,
-                               map_atoms,
-                               map_syms,
-                               num_rot,
-                               num_pos);
+  distribute_fc2(fc2,
+                 atom_list,
+                 len_atom_list,
+                 r_carts,
+                 permutations,
+                 map_atoms,
+                 map_syms,
+                 num_rot,
+                 num_pos);
   Py_RETURN_NONE;
 }
 
@@ -1526,25 +1560,34 @@ static void gsv_copy_smallest_vectors(double (*shortest_vectors)[27][3],
   }
 }
 
-/* Distributes all force constants using precomputed data about symmetry mappings. */
-static void
-distribute_fc2_with_mappings(double (*fc2)[3][3], /* shape[num_pos][num_pos] */
-                             const int * atom_list,
-                             const int len_atom_list,
-                             PHPYCONST double (*r_carts)[3][3], /* shape[num_rot] */
-                             const int * permutations, /* shape[num_rot][num_pos] */
-                             const int * map_atoms, /* shape [num_pos] */
-                             const int * map_syms, /* shape [num_pos] */
-                             const int num_rot,
-                             const int num_pos)
+static void distribute_fc2(double (*fc2)[3][3], /* shape[n_pos][n_pos] */
+                           const int * atom_list,
+                           const int len_atom_list,
+                           PHPYCONST double (*r_carts)[3][3], /* shape[n_rot] */
+                           const int * permutations, /* shape[n_rot][n_pos] */
+                           const int * map_atoms, /* shape [n_pos] */
+                           const int * map_syms, /* shape [n_pos] */
+                           const int num_rot,
+                           const int num_pos)
 {
   int i, j, k, l, m;
   int atom_todo, atom_done, atom_other;
   int sym_index;
+  int *atom_list_reverse;
   double (*fc2_done)[3];
   double (*fc2_todo)[3];
   double (*r_cart)[3];
   const int * permutation;
+
+  atom_list_reverse = NULL;
+  atom_list_reverse = (int*)malloc(sizeof(int) * num_pos);
+  /* atom_list_reverse[!atom_done] is undefined. */
+  for (i = 0; i < len_atom_list; i++) {
+    atom_done = map_atoms[atom_list[i]];
+    if (atom_done == atom_list[i]) {
+      atom_list_reverse[atom_done] = i;
+    }
+  }
 
   for (i = 0; i < len_atom_list; i++) {
     /* look up how this atom maps into the done list. */
@@ -1564,8 +1607,8 @@ distribute_fc2_with_mappings(double (*fc2)[3][3], /* shape[num_pos][num_pos] */
 
     /* distribute terms from atom_done to atom_todo */
     for (atom_other = 0; atom_other < num_pos; atom_other++) {
-      fc2_done = fc2[atom_done * num_pos + permutation[atom_other]];
-      fc2_todo = fc2[atom_todo * num_pos + atom_other];
+      fc2_done = fc2[atom_list_reverse[atom_done] * num_pos + permutation[atom_other]];
+      fc2_todo = fc2[i * num_pos + atom_other];
       for (j = 0; j < 3; j++) {
         for (k = 0; k < 3; k++) {
           for (l = 0; l < 3; l++) {
@@ -1578,6 +1621,9 @@ distribute_fc2_with_mappings(double (*fc2)[3][3], /* shape[num_pos][num_pos] */
       }
     }
   }
+
+  free(atom_list_reverse);
+  atom_list_reverse = NULL;
 }
 
 static void set_index_permutation_symmetry_fc(double * fc,
