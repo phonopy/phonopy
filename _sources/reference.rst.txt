@@ -75,17 +75,17 @@ non-analytical term correction.
 
 .. _reference_dp_dp_NAC:
 
-Non-analytical term correction by dipole-dipole interaciton
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Correction by dipole-dipole interaciton
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-- \P. Giannozzi, S. Degironcoli, P. Pavone, and S. Baroni,
-  Phys. Rev. B 43, 7231 (1991)
-- X. Gonze, J.-C. Charlier, D.C. Allan, and M.P. Teter
-  Phys. Rev. B 50, 13035(R) (1994)
-- \X. Gonze, and C. Lee, Phys. Rev. B 55, 10355 (1997)
+1. \P. Giannozzi, S. Degironcoli, P. Pavone, and S. Baroni,
+   Phys. Rev. B 43, 7231 (1991)
+2. X. Gonze, J.-C. Charlier, D.C. Allan, and M.P. Teter
+   Phys. Rev. B 50, 13035(R) (1994)
+3. \X. Gonze, and C. Lee, Phys. Rev. B 55, 10355 (1997)
 
-Currently phonopy employs the method by Gonze *et al.* written in the
-above two papers as the default method.
+Currently phonopy implements the method by Gonze *et al.* written in the
+above two papers (2 and 3) as the default method.
 
 .. _reference_wang_NAC:
 
