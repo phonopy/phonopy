@@ -114,6 +114,41 @@ class TetrahedronMesh(object):
                  ir_grid_points,
                  grid_order=None,
                  lang='C'):
+        """Linear tetrahedron method on uniform mesh for phonons
+
+        Parameters
+        ----------
+        cell : PhonopyAtoms
+            Primitive cell used to calculate frequencies
+        frequencies: ndarray
+            Phonon frequences on grid points
+            shape=(num_ir_grid_points, num_band)
+            dtype='double'
+        mesh : ndarray or list of int
+            Mesh numbers for grids
+            shape=(3,)
+            dtype='intc'
+        grid_address : ndarray
+            Addresses of all grid points given by GridPoints class.
+            shape=(prod(mesh), 3)
+            dtype='intc'
+        grid_mapping_table : ndarray
+            Mapping of grid points to irreducible grid points given by
+            GridPoints class.
+            shape=(prod(mesh),)
+            dtype='intc'
+        ir_grid_points : ndarray
+            Irreducible gird points given by GridPoints class.
+            shape=(len(np.unique(grid_mapping_table)),)
+            dtype='intc'
+        grid_order : list of int, optional
+            This controls how grid addresses are stored either C style or
+            Fortran style.
+        lang : str, 'C' or else, optional
+            With 'C', C implementation is used. Otherwise Python implementation
+            runs.
+
+        """
         self._cell = cell
         self._frequencies = frequencies
         self._mesh = np.array(mesh, dtype='intc')
@@ -142,10 +177,10 @@ class TetrahedronMesh(object):
         self._grid_point_count = 0
 
         self._prepare()
-        
+
     def __iter__(self):
         return self
-            
+
     def __next__(self):
         if self._grid_point_count == len(self._ir_grid_points):
             raise StopIteration
@@ -203,7 +238,7 @@ class TetrahedronMesh(object):
         self._gp_ir_index = np.zeros_like(self._grid_mapping_table)
         for i, gp in enumerate(self._grid_mapping_table):
             self._gp_ir_index[i] = ir_gp_indices[gp]
-        
+
     def _set_tetrahedra_frequencies(self, gp):
         self._tetrahedra_frequencies = get_tetrahedra_frequencies(
             gp,

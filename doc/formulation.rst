@@ -52,7 +52,7 @@ atoms with a finite displacement :math:`\Delta r_\alpha{(jl)}` and
 usually :math:`F_\beta(j'l') \equiv 0`.
 
 .. _force_constants_solver_theory:
-   
+
 Modified Parlinski-Li-Kawazoe method
 -------------------------------------
 
@@ -71,9 +71,9 @@ for a pair of atoms, e.g. :math:`\{jl, j'l'\}`, are given by
 
 .. math::
 
-   \mathbf{F} = 
+   \mathbf{F} =
     \begin{pmatrix}
-     F_{x} & F_{y} & F_{z} 
+     F_{x} & F_{y} & F_{z}
     \end{pmatrix},
 
 .. math::
@@ -152,7 +152,7 @@ simultaneous equations are built such as
    \mathbf{F}^{(2)}_2 \\
    \vdots \end{pmatrix} = -
    \begin{pmatrix}
-   \mathbf{U}^{(1)}_1 \\ 
+   \mathbf{U}^{(1)}_1 \\
    \vdots \\
    \mathbf{U}^{(2)}_1 \\
    \mathbf{U}^{(1)}_2 \\
@@ -196,7 +196,7 @@ where the eigenvector of the band index :math:`\nu` at
    \sum_{j \alpha j' \beta}e_\alpha(j',\mathbf{q}\nu)^* D_{\alpha\beta}(jj',\mathbf{q})
    e_\beta(j',\mathbf{q}\nu') = [\omega(\mathbf{q}\nu)]^2 \delta_{\nu\nu'}.
 
-  
+
 The atomic displacements :math:`\mathbf{u}` are given as
 
 .. math::
@@ -215,9 +215,9 @@ constant, and :math:`t` is the time.
 .. _non_analytical_term_correction_theory:
 
 Non-analytical term correction
--------------------------------
+-------------------------------------
 
-To correct long range interaction of macroscopic electric field
+To treat long range interaction of macroscopic electric field
 induced by polarization of collective ionic motions near the
 :math:`\Gamma`-point, non-analytical term is added to dynamical matrix
 (:ref:`reference_NAC`).  At
@@ -234,10 +234,9 @@ non-analytical term is given by,
     {\sum_{\alpha\beta}q_{\alpha}\epsilon_{\alpha\beta}^{\infty}
     q_{\beta}}.
 
-Phonon frequencies at general **q**-points are interpolated by the
-method of Wang *et al.* (:ref:`reference_wang_NAC`).
-
-
+Phonon frequencies at general **q**-points with long-range
+dipole-dipole interaction are calculated by the
+method of Gonze *et al.* (:ref:`reference_dp_dp_NAC`).
 
 .. _thermal_properties_expressions:
 
@@ -269,7 +268,7 @@ Constant volume heat capacity
        &= \sum_{\mathbf{q}\nu} k_\mathrm{B}
     \left(\frac{\hbar\omega(\mathbf{q}\nu)}{k_\mathrm{B} T} \right)^2
     \frac{\exp(\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B}
-    T)}{[\exp(\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B} T)-1]^2} 
+    T)}{[\exp(\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B} T)-1]^2}
 
 Partition function
 ~~~~~~~~~~~~~~~~~~~
@@ -278,7 +277,7 @@ Partition function
 
    Z = \exp(-\varphi/k_\mathrm{B} T) \prod_{\mathbf{q}\nu}
     \frac{\exp(-\hbar\omega(\mathbf{q}\nu)/2k_\mathrm{B}
-    T)}{1-\exp(-\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B} T)} 
+    T)}{1-\exp(-\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B} T)}
 
 Helmholtz free energy
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -288,7 +287,7 @@ Helmholtz free energy
     F &= -k_\mathrm{B} T \ln Z \\
       &= \varphi + \frac{1}{2} \sum_{\mathbf{q}\nu}
     \hbar\omega(\mathbf{q}\nu) + k_\mathrm{B} T \sum_{\mathbf{q}\nu} \ln
-    \bigl[1 -\exp(-\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B} T) \bigr] 
+    \bigl[1 -\exp(-\hbar\omega(\mathbf{q}\nu)/k_\mathrm{B} T) \bigr]
 
 Entropy
 ~~~~~~~~
@@ -352,7 +351,7 @@ interface, the conversion factor is :math:`(\text{hartree}
 \rightarrow \text{mRy})=2000`. For the other interfaces, the
 conversion factors are similarly calculated following the unit
 systems employed in phonopy (:ref:`calculator_interfaces`).
-      
+
 .. _definition_of_commensurate_points:
 
 Crystal structure
@@ -464,7 +463,7 @@ Similarly for the supercell, we define a relation
    \mathbf{a}_\mathrm{s} \; \mathbf{b}_\mathrm{s} \;
    \mathbf{c}_\mathrm{s} )^{-\mathbf{T}}.
 
-Then 
+Then
 
 .. math::
 
@@ -484,4 +483,3 @@ To multiply an arbitrary q-point :math:`\mathbf{q}` on both sides
 
 we find the constraint of a q-point being one of the commensurate points is
 the elements of :math:`\boldsymbol{P}^{\mathrm{T}} \mathbf{q}` to be integers.
-

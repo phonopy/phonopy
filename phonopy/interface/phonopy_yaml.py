@@ -184,8 +184,10 @@ class PhonopyYaml(object):
                          self._symmetry.get_dataset()['international'])
             lines.append("  number: %d" %
                          self._symmetry.get_dataset()['number'])
-            lines.append("  Hall_symbol: \"%s\"" %
-                         self._symmetry.get_dataset()['hall'])
+            hall_symbol = self._symmetry.get_dataset()['hall']
+            if "\"" in hall_symbol:
+                hall_symbol = hall_symbol.replace("\"", "\\\"")
+            lines.append("  Hall_symbol: \"%s\"" % hall_symbol)
             lines.append("")
 
         if self._primitive_matrix is not None:
