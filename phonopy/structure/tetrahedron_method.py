@@ -62,31 +62,49 @@ def get_neighboring_grid_points(grid_point,
                                 bz_grid_address,
                                 bz_map)
     return relative_grid_points
-    
+
 def get_tetrahedra_relative_grid_address(microzone_lattice):
+    """Returns relative (differences of) grid addresses from the central
+
+    Parameter
+    ---------
+    microzone_lattice : ndarray or list of list
+        column vectors of parallel piped microzone lattice, i.e.,
+        microzone_lattice = np.linalg.inv(cell.get_cell()) / mesh
+
     """
-    reciprocal_lattice:
-      column vectors of parallel piped microzone lattice
-      which can be obtained by:
-      microzone_lattice = np.linalg.inv(bulk.get_cell()) / mesh
-    """
-    
+
     relative_grid_address = np.zeros((24, 4, 3), dtype='intc')
     phonoc.tetrahedra_relative_grid_address(
         relative_grid_address,
         np.array(microzone_lattice, dtype='double', order='C'))
-    
+
     return relative_grid_address
 
 def get_all_tetrahedra_relative_grid_address():
     relative_grid_address = np.zeros((4, 24, 4, 3), dtype='intc')
     phonoc.all_tetrahedra_relative_grid_address(relative_grid_address)
-    
+
     return relative_grid_address
-    
+
 def get_tetrahedra_integration_weight(omegas,
                                       tetrahedra_omegas,
                                       function='I'):
+    """Returns integration weights
+
+    Parameters
+    ----------
+    omegas : float or list of float values
+        Energy(s) at which the integration weight(s) are computed.
+    tetrahedra_omegas : ndarray of list of list
+        Energies at vertices of 24 tetrahedra
+        shape=(24, 4)
+        dytpe='double'
+    function : str, 'I' or 'J'
+        'J' is for intetration and 'I' is for its derivative.
+
+    """
+
     if isinstance(omegas, float):
         return phonoc.tetrahedra_integration_weight(
             omegas,
@@ -147,7 +165,7 @@ class TetrahedronMethod(object):
             if not found:
                 unique_vertices.append(adrs)
         return np.array(unique_vertices, dtype='intc', order='C')
-    
+
     def set_tetrahedra_omegas(self, tetrahedra_omegas):
         """
         tetrahedra_omegas: (24, 4) omegas at self._relative_grid_addresses
@@ -179,7 +197,7 @@ class TetrahedronMethod(object):
         else:
             IJ = self._J
             gn = self._n
-                
+
         self._sort_indices = np.argsort(self._tetrahedra_omegas, axis=1)
         sum_value = 0.0
         self._omega = omega
@@ -218,7 +236,7 @@ class TetrahedronMethod(object):
         #  0-------1
         #
         # i: vec        neighbours
-        # 0: O          1, 2, 4    
+        # 0: O          1, 2, 4
         # 1: a          0, 3, 5
         # 2: b          0, 3, 6
         # 3: a + b      1, 2, 7
@@ -384,7 +402,7 @@ class TetrahedronMethod(object):
             return self._g_4()
         else:
             assert False
-    
+
     def _n_0(self):
         """omega < omega1"""
         return 0.0
@@ -398,7 +416,7 @@ class TetrahedronMethod(object):
         return (self._f(3, 1) * self._f(2, 1) +
                 self._f(3, 0) * self._f(1, 3) * self._f(2, 1) +
                 self._f(3, 0) * self._f(2, 0) * self._f(1, 2))
-                
+
     def _n_3(self):
         """omega2 < omega < omega3"""
         return (1.0 - self._f(0, 3) * self._f(1, 3) * self._f(2, 3))
@@ -435,7 +453,7 @@ class TetrahedronMethod(object):
 
     def _J_0(self):
         return 0.0
-    
+
     def _J_10(self):
         return (1.0 + self._f(0, 1) + self._f(0, 2) + self._f(0, 3)) / 4
 
@@ -501,7 +519,7 @@ class TetrahedronMethod(object):
 
     def _I_0(self):
         return 0.0
-    
+
     def _I_10(self):
         return (self._f(0, 1) + self._f(0, 2) + self._f(0, 3)) / 3
 
@@ -531,7 +549,7 @@ class TetrahedronMethod(object):
                 self._f(2, 0) ** 2 * self._f(1, 2) /
                 (self._f(1, 2) * self._f(2, 0) + self._f(2, 1) * self._f(1, 3))
                 ) / 3
-                
+
     def _I_23(self):
         return (self._f(3, 0) +
                 self._f(3, 1) * self._f(1, 3) * self._f(2, 1) /
@@ -552,4 +570,3 @@ class TetrahedronMethod(object):
 
     def _I_4(self):
         return 0.0
-
