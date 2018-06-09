@@ -132,6 +132,7 @@ scripts_phonopy = ['scripts/phonopy',
                    'scripts/phonopy-tdplot',
                    'scripts/phonopy-dispmanager',
                    'scripts/phonopy-gruneisen',
+                   'scripts/phonopy-gruneisenplot',
                    'scripts/phonopy-pdosplot']
 
 if __name__ == '__main__':

@@ -159,6 +159,7 @@ def get_options():
                         is_gnuplot=False,
                         cutoff_frequency=None,
                         output_filename=None,
+                        save_graph=None,
                         title=None)
     parser.add_argument(
         "--gnuplot", dest="is_gnuplot", action="store_true",
@@ -166,6 +167,9 @@ def get_options():
     parser.add_argument(
         "-o", "--output", dest="output_filename",
         help="Output filename of PDF plot")
+    parser.add_argument(
+        "-s", "--save", dest="save_graph", action="store_true",
+        help="Save plot data in pdf")
     parser.add_argument(
         "--fg", dest="is_fg", action="store_true",
         help="Plot omega x gamma")
@@ -217,6 +221,15 @@ def main(args):
         with open(filename) as f:
             data = yaml.load(f.read(), Loader=Loader)
 
+    if args.save_graph:
+        import matplotlib as mpl
+        mpl.use('Agg')
+
+    if args.output_filename:
+        pdffile = args.output_filename
+    else:
+       pdffile = "gruneisenplot.pdf"
+
     if 'path' in data:
         if args.is_gnuplot:
             print_band(data)
@@ -224,7 +237,10 @@ def main(args):
             plt = plot_band(data, args.is_fg, args.g_max, args.g_min)
             if args.title is not None:
                 plt.subtitle(args.title)
-            plt.show()
+            if args.save_graph:
+                plt.savefig(pdffile)
+            else:
+                plt.show()
 
     if 'mesh' in data:
         if args.is_hdf5:
@@ -251,7 +267,10 @@ def main(args):
         if args.g_min is not None:
             plt.ylim(ymin=args.g_min)
 
-        plt.show()
+        if args.save_graph:
+            plt.savefig(pdffile)
+        else:
+            plt.show()
 
 if __name__ == "__main__":
     main(get_options())
