@@ -354,7 +354,6 @@ class Phonopy(object):
     def  produce_force_constants(self,
                                  forces=None,
                                  calculate_full_force_constants=True,
-                                 computation_algorithm="svd",
                                  show_drift=True):
         if forces is not None:
             self.set_forces(forces)
@@ -366,14 +365,12 @@ class Phonopy(object):
 
         if calculate_full_force_constants:
             self._run_force_constants_from_forces(
-                decimals=self._force_constants_decimals,
-                computation_algorithm=computation_algorithm)
+                decimals=self._force_constants_decimals)
         else:
             p2s_map = self._primitive.get_primitive_to_supercell_map()
             self._run_force_constants_from_forces(
                 distributed_atom_list=p2s_map,
-                decimals=self._force_constants_decimals,
-                computation_algorithm=computation_algorithm)
+                decimals=self._force_constants_decimals)
 
         if show_drift and self._log_level:
             show_drift_force_constants(self._force_constants,
@@ -1301,20 +1298,14 @@ class Phonopy(object):
     #################
     def _run_force_constants_from_forces(self,
                                          distributed_atom_list=None,
-                                         decimals=None,
-                                         computation_algorithm="svd"):
+                                         decimals=None):
         if self._displacement_dataset is not None:
-            if computation_algorithm != "svd":
-                atom_list = None
-            else:
-                atom_list = distributed_atom_list
             self._force_constants = get_fc2(
                 self._supercell,
                 self._symmetry,
                 self._displacement_dataset,
-                atom_list=atom_list,
-                decimals=decimals,
-                computation_algorithm=computation_algorithm)
+                atom_list=distributed_atom_list,
+                decimals=decimals)
 
     def _set_dynamical_matrix(self):
         self._dynamical_matrix = None
