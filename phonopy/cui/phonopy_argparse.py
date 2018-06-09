@@ -81,7 +81,6 @@ def get_parser():
         siesta_mode=False,
         cp2k_mode=False,
         fc_symmetry=False,
-        fc_computation_algorithm=None,
         fc_format=None,
         fc_spg_symmetry=False,
         fits_debye_model=False,
@@ -100,6 +99,7 @@ def get_parser():
         is_displacement=False,
         is_dos_mode=False,
         is_eigenvectors=False,
+        is_full_fc=False,
         is_gamma_center=False,
         is_graph_plot=False,
         is_graph_save=False,
@@ -234,9 +234,6 @@ def get_parser():
         help=("Create FORCE_CONSTANTS from vaspurn.xml. "
               "vasprun.xml has to be passed as argument."))
     parser.add_argument(
-        "--fc-computation-algorithm", dest="fc_computation_algorithm",
-        help="Switch computation algorithm of force constants")
-    parser.add_argument(
         "--fc-decimals", dest="force_constants_decimals", type=int,
         help="Decimals of values of force constants")
     parser.add_argument(
@@ -256,6 +253,9 @@ def get_parser():
         help=("Squared scale factor multiplied as fc2 * factor^2. Therefore "
               "frequency is changed but the contribution from NAC is not "
               "changed."))
+    parser.add_argument(
+        "--full-fc", dest="is_full_fc", action="store_true",
+        help="Calculate full supercell force constants matrix")
     parser.add_argument(
         "--fz", "--force-sets-zero", nargs='+', dest="force_sets_zero",
         help=("Create FORCE_SETS. disp.yaml in the current directory and "

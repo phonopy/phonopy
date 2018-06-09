@@ -950,7 +950,6 @@ class PhonopySettings(Settings):
         self._band_connection = False
         self._cutoff_radius = None
         self._dos = None
-        self._fc_computation_algorithm = "svd"
         self._fc_spg_symmetry = False
         self._fits_Debye_model = False
         self._fmax = None
@@ -958,6 +957,7 @@ class PhonopySettings(Settings):
         self._irreps_q_point = None
         self._irreps_tolerance = 1e-5
         self._is_dos_mode = False
+        self._is_full_fc = False
         self._is_group_velocity = False
         self._is_gamma_center = False
         self._is_hdf5 = False
@@ -1043,12 +1043,6 @@ class PhonopySettings(Settings):
     def get_cutoff_radius(self):
         return self._cutoff_radius
 
-    def set_fc_computation_algorithm(self, fc_computation_algorithm):
-        self._fc_computation_algorithm = fc_computation_algorithm
-
-    def get_fc_computation_algorithm(self):
-        return self._fc_computation_algorithm
-
     def set_fc_spg_symmetry(self, fc_spg_symmetry):
         self._fc_spg_symmetry = fc_spg_symmetry
 
@@ -1097,11 +1091,11 @@ class PhonopySettings(Settings):
     def get_is_dos_mode(self):
         return self._is_dos_mode
 
-    def set_is_hdf5(self, is_hdf5):
-        self._is_hdf5 = is_hdf5
+    def set_is_full_fc(self, is_full_fc):
+        self._is_full_fc = is_full_fc
 
-    def get_is_hdf5(self):
-        return self._is_hdf5
+    def get_is_full_fc(self):
+        return self._is_full_fc
 
     def set_is_gamma_center(self, is_gamma_center):
         self._is_gamma_center = is_gamma_center
@@ -1114,6 +1108,12 @@ class PhonopySettings(Settings):
 
     def get_is_group_velocity(self):
         return self._is_group_velocity
+
+    def set_is_hdf5(self, is_hdf5):
+        self._is_hdf5 = is_hdf5
+
+    def get_is_hdf5(self):
+        return self._is_hdf5
 
     def set_is_little_cogroup(self, is_little_cogroup):
         self._is_little_cogroup = is_little_cogroup
@@ -1350,13 +1350,13 @@ class PhonopyConfParser(ConfParser):
             if self._args.xyz_projection:
                 self._confs['xyz_projection'] = '.true.'
 
-        if 'fc_computation_algorithm' in arg_list:
-            if self._args.fc_computation_algorithm is not None:
-                self._confs['fc_computation_algorithm'] = self._args.fc_computation_algorithm
-
         if 'fc_spg_symmetry' in arg_list:
             if self._args.fc_spg_symmetry:
                 self._confs['fc_spg_symmetry'] = '.true.'
+
+        if 'is_full_fc' in arg_list:
+            if self._args.is_full_fc:
+                self._confs['full_fc'] = '.true.'
 
         if 'fits_debye_model' in arg_list:
             if self._args.fits_debye_model:
@@ -1521,6 +1521,10 @@ class PhonopyConfParser(ConfParser):
                 if confs['write_force_constants'].lower() == '.true.':
                     self.set_parameter('write_force_constants', True)
 
+            if conf_key == 'full_fc':
+                if confs['full_fc'].lower() == '.true.':
+                    self.set_parameter('is_full_fc', True)
+
             if conf_key == 'cutoff_radius':
                 val = float(confs['cutoff_radius'])
                 self.set_parameter('cutoff_radius', val)
@@ -1557,10 +1561,6 @@ class PhonopyConfParser(ConfParser):
             if conf_key == 'gamma_center':
                 if confs['gamma_center'].lower() == '.true.':
                     self.set_parameter('is_gamma_center', True)
-
-            if conf_key == 'fc_computation_algorithm':
-                self.set_parameter('fc_computation_algorithm',
-                                   confs['fc_computation_algorithm'].lower())
 
             if conf_key == 'fc_spg_symmetry':
                 if confs['fc_spg_symmetry'].lower() == '.true.':
@@ -1787,10 +1787,8 @@ class PhonopyConfParser(ConfParser):
             self._settings.set_write_force_constants(
                 params['write_force_constants'])
 
-        # Switch computation algorithm of force constants
-        if 'fc_computation_algorithm' in params:
-            self._settings.set_fc_computation_algorithm(
-                params['fc_computation_algorithm'])
+        if 'is_full_fc' in params:
+            self._settings.set_is_full_fc(params['is_full_fc'])
 
         # Enforce space group symmetyr to force constants?
         if 'fc_spg_symmetry' in params:

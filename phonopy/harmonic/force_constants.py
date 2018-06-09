@@ -58,8 +58,7 @@ def get_fc2(supercell,
             symmetry,
             dataset,
             atom_list=None,
-            decimals=None,
-            computation_algorithm="svd"):
+            decimals=None):
     """Force_constants is computed.
 
     Force constants, Phi, are calculated from sets for forces, F, and
@@ -95,8 +94,7 @@ def get_fc2(supercell,
         supercell,
         dataset,
         symmetry,
-        atom_list=atom_list,
-        computation_algorithm=computation_algorithm)
+        atom_list=atom_list)
 
     rotations = symmetry.get_symmetry_operations()['rotations']
     lattice = np.array(supercell.get_cell().T, dtype='double', order='C')
@@ -236,35 +234,23 @@ def solve_force_constants(force_constants,
                           supercell,
                           site_symmetry,
                           symprec,
-                          atom_list=None,
-                          computation_algorithm="svd"):
-    if computation_algorithm == "regression":
-        fc_info = _solve_force_constants_regression(
-            force_constants,
-            disp_atom_number,
-            displacements,
-            sets_of_forces,
-            supercell,
-            site_symmetry,
-            symprec)
-        return fc_info
+                          atom_list=None):
+    if atom_list is None:
+        fc_index = disp_atom_number
     else:
-        if atom_list is None:
-            fc_index = disp_atom_number
+        fc_index = np.where(disp_atom_number == atom_list)[0]
+        if len(fc_index) == 0:
+            raise RuntimeError
         else:
-            fc_index = np.where(disp_atom_number == atom_list)[0]
-            if len(fc_index) == 0:
-                raise RuntimeError
-            else:
-                fc_index = fc_index[0]
-        force_constants[fc_index] = _solve_force_constants_svd(
-            disp_atom_number,
-            displacements,
-            sets_of_forces,
-            supercell,
-            site_symmetry,
-            symprec)
-        return None
+            fc_index = fc_index[0]
+    force_constants[fc_index] = _solve_force_constants_svd(
+        disp_atom_number,
+        displacements,
+        sets_of_forces,
+        supercell,
+        site_symmetry,
+        symprec)
+    return None
 
 def get_positions_sent_by_rot_inv(lattice, # column vectors
                                   positions,
@@ -634,76 +620,11 @@ def _solve_force_constants_svd(disp_atom_number,
         fc[i] = -np.dot(inv_displacements, combined_forces)
     return fc
 
-def _solve_force_constants_regression(force_constants,
-                                      disp_atom_number,
-                                      displacements,
-                                      sets_of_forces,
-                                      supercell,
-                                      site_symmetry,
-                                      symprec):
-    """KL(m).
-    This is very similar, but instead of using inverse displacement
-    and later multiplying it by the force a linear regression is used.
-    Force is "plotted" versus displacement and the slope is
-    calculated, together with its standard deviation.
-
-    """
-
-
-    fc_errors = np.zeros((3, 3), dtype='double')
-    lattice = supercell.get_cell().T
-    positions = supercell.get_scaled_positions()
-    pos_center = positions[disp_atom_number].copy()
-    positions -= pos_center
-    rot_map_syms = get_positions_sent_by_rot_inv(lattice,
-                                                 positions,
-                                                 site_symmetry,
-                                                 symprec)
-    site_sym_cart = [similarity_transformation(lattice, sym)
-                     for sym in site_symmetry]
-    rot_disps = get_rotated_displacement(displacements, site_sym_cart)
-    inv_displacements = np.linalg.pinv(rot_disps)
-
-    for i in range(supercell.get_number_of_atoms()):
-        combined_forces = []
-        for forces in sets_of_forces:
-            combined_forces.append(
-                get_rotated_forces(forces[rot_map_syms[:, i]],
-                                   site_sym_cart))
-
-        combined_forces = np.reshape(combined_forces, (-1, 3))
-        # KL(m).
-        # We measure the Fi-Xj slope (linear regression), see:
-# stackoverflow.com/questions/9990789/how-to-force-zero-interception-in-linear-regression
-# en.wikipedia.org/wiki/Simple_linear_regression#Linear_regression_without_the_intercept_term
-# http://courses.washington.edu/qsci483/Lectures/20.pdf
-        for x in range(3):
-            for y in range(3):
-                xLin = rot_disps.T[x]
-                yLin = combined_forces.T[y]
-                force_constants[disp_atom_number,i,x,y] = \
-                      -np.dot(xLin,yLin) / np.dot(xLin,xLin)
-                if len(xLin)<=1:
-                    # no chances for a fitting error, we have just one value
-                    err = 0
-                else:
-                    variance = np.dot(yLin,yLin)/np.dot(xLin,xLin) - \
-                                  force_constants[disp_atom_number,i,x,y]**2
-                    if variance<0 and variance>-1e-10:
-                       # in numerics, it happens. This is "numerical zero"
-                       err = 0
-                    else:
-                       err = np.sqrt(variance) / ( len(xLin)-1 )
-                fc_errors[x,y] += err
-
-    return fc_errors
-
 def _get_force_constants_disps(force_constants,
                                supercell,
                                dataset,
                                symmetry,
-                               atom_list=None,
-                               computation_algorithm="svd"):
+                               atom_list=None):
     """Calculate force constants Phi = -F / d
 
     Force constants are obtained by one of the following algorithm.
@@ -723,19 +644,6 @@ def _get_force_constants_disps(force_constants,
     atom_list: list
         List of atom indices corresponding to the first index of force
         constants. None assigns all atoms in supercell.
-    computation_algorithm:
-        Algorithm to solve overdetermined simultaneous equations
-        svd:
-            Singular value decomposition is used, which is equivalent to
-            least square fitting.
-        regression:
-            The goal is to monitor the quality of computed force constants (FC).
-            For that the FC spread is calculated, more precisely its standard
-            deviation, i.e. sqrt(variance). Every displacement results in
-            slightly different FC (due to numerical errors) -- that is why the
-            FCs are spread. Such an FC 'error' is calculated separately for
-            every tensor element. At the end we report their average value. We
-            also report a maximum value among these tensor-elements-errors.
 
     """
 
@@ -761,19 +669,7 @@ def _get_force_constants_disps(force_constants,
             supercell,
             site_symmetry,
             symprec,
-            atom_list=atom_list,
-            computation_algorithm=computation_algorithm)
-
-        if fc_info is not None:
-            # KL(m)
-            fc_errors = fc_info
-            avg_len = len(disp_atom_list) * supercell.get_number_of_atoms()
-            if avg_len <= 0:
-                print(" (Standard deviation of the force constants not available)")
-            else:
-                print(" Standard deviation of the force constants, full table:")
-                print(fc_errors / avg_len)
-                print(" Maximal table element is %f" % (fc_errors.max() / avg_len))
+            atom_list=atom_list)
 
     return disp_atom_list
 
