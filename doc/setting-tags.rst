@@ -1009,43 +1009,6 @@ Mind that the other symmetries of force constants, i.e., the
 symmetry from crystal symmetry or rotational symmetry, are broken to
 use ``FC_SYMMETRY``.
 
-.. Tolerance of the crystal symmetry search is given by phonopy option of
-.. ``--tolerance``.
-
-.. ``TRANSLATION``
-.. ~~~~~~~~~~~~~~~
-
-.. Translational invariance is forced by setting ``TRANSLATION =
-.. .TRUE.``. The default value is ``.FALSE.``. The input forces are
-.. summed up in each Cartesian axis and the average are subtracted from
-.. the forces.
-
-.. ``PERMUTATION``
-.. ~~~~~~~~~~~~~~~
-
-.. Symmetry of force constants:
-
-.. .. math::
-
-..    \Phi_{ij}^{\alpha\beta}
-..         = \frac{\partial^2 U}{\partial u_i^\alpha \partial u_j^\beta}
-..         = \frac{\partial^2 U}{\partial u_j^\beta \partial u_i^\alpha}
-..      = \Phi_{ji}^{\beta\alpha}
-
-.. is imposed with ``PERMUTATION = .TRUE.``. The default value is
-.. ``.FALSE.``. This is not necessary to be set, because dynamical
-.. matrix is always forced to be Hermitian in phonopy, i.e.,
-.. :math:`D^{\alpha\beta}_{ij} = (D^{\beta\alpha}_{ji})^*`.
-
-.. ``MP_REDUCE``
-.. ~~~~~~~~~~~~~~
-
-.. When mesh sampling, time reversal symmetry is imposed by setting
-.. ``MP_REDUCE = .TRUE.``. The default value is ``.TRUE.``. If you don't
-.. want time reversal symmetry, you have to set as ``MP_REDUCE =
-.. .FALSE.``.
-
-
 .. _force_constants_tag:
 
 Force constants
@@ -1066,6 +1029,17 @@ READ``, force constants are read from ``FORCE_CONSTANTS`` file. With
 
 The file format of ``FORCE_CONSTANTS`` is shown
 :ref:`here <file_force_constants>`.
+
+.. _full_force_constants_tag:
+
+``FULL_FORCE_CONSTANTS``
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+``FULL_FORCE_CONSTANTS = .TRUE.`` is used to compute full supercell
+constants matrix. The default setting is ``.FALSE.``. By ``.TRUE.`` or
+``.FALSE.``, the array shape becomes ``(n_patom, n_satom, 3, 3)`` or
+``(n_satom, n_satom, 3, 3)``, respectively. The detail is found at
+:ref:`file_force_constants`.
 
 ``READ_FORCE_CONSTANTS``
 ~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -32,6 +32,7 @@ tags:
 * ``--fmax`` (``FMAX``)
 * ``--fmin`` (``FMIN``)
 * ``--fpitch`` (``FPITCH``)
+* ``--full-fc`` (``FULL_FORCE_CONSTANTS``)
 * ``--gc``, ``--gamma_center`` (``GAMMA_CENTER``)
 * ``--gv``, ``--group_velocity`` (``GROUP_VELOCITY = .TRUE.``)
 * ``--gv-delta-q`` (``GV_DELTA_Q``)

@@ -3,6 +3,11 @@
 Change Log
 ==========
 
+xxx-xx-2018
+-----------
+
+* ``FULL_FORCE_CONSTANTS`` tag is created (:ref:`full_force_constants_tag`).
+
 Apr-21-2018: Version 1.13.0
 ----------------------------
 
