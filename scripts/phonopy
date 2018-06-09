@@ -651,14 +651,11 @@ elif os.path.exists("FORCE_SETS"):
     if log_level > 0:
         print("Computing force constants...")
 
-    if settings.get_fc_spg_symmetry():
+    if settings.get_fc_spg_symmetry() or settings.get_is_full_fc():
         # Need to calculate full force constant tensors
-        phonon.produce_force_constants(
-            computation_algorithm=settings.get_fc_computation_algorithm())
+        phonon.produce_force_constants()
     else: # Only force constants between atoms in primitive cell and supercell
-        phonon.produce_force_constants(
-            calculate_full_force_constants=False,
-            computation_algorithm=settings.get_fc_computation_algorithm())
+        phonon.produce_force_constants(calculate_full_force_constants=False)
 
 # Impose cutoff radius on force constants
 cutoff_radius = settings.get_cutoff_radius()
